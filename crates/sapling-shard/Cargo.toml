@@ -1,0 +1,22 @@
+[package]
+name = "sapling-shard"
+version = "0.1.0"
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+description = "A sapling shard: one thread ticking a bevy_ecs world of layers and players"
+
+[dependencies]
+sapling-api.workspace = true
+sapling-data.workspace = true
+sapling-net.workspace = true
+sapling-world.workspace = true
+acacia-proto.workspace = true
+bevy_ecs.workspace = true
+bytes.workspace = true
+tracing.workspace = true
+
+[dev-dependencies]
+acacia-auth.workspace = true
+p384.workspace = true
+rand_core.workspace = true

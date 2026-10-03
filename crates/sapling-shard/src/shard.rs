@@ -1,0 +1,176 @@
+use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::thread::JoinHandle;
+use std::time::{Duration, Instant};
+
+use bevy_ecs::prelude::*;
+use bevy_ecs::schedule::SingleThreadedExecutor;
+use sapling_api::{GameMode, Handler, Player, PlayerId};
+use sapling_net::{ConnId, Inbox, NetEvent, Outbox, VerifiedLogin};
+
+use crate::components::{Arrivals, Conn, DefaultLayer, Identity, InLayer, Layer, Net, NetId, Outgoing, PacketQueues, Players, Position, Settings, Stage, Tick};
+use crate::view::View;
+use crate::{chunks, handlers, join};
+
+pub const TICK: Duration = Duration::from_millis(50);
+
+#[derive(Debug, Clone)]
+pub struct ShardConfig {
+    pub world_name: String,
+    pub game_mode: GameMode,
+    /// Where players appear (feet), in the shard's first world.
+    pub spawn: [f32; 3],
+    /// Cap on the view distance clients ask for, in chunks.
+    pub max_view_radius: i32,
+}
+
+impl Default for ShardConfig {
+    fn default() -> Self {
+        Self { world_name: "sapling".into(), game_mode: GameMode::Survival, spawn: [0.5, 65.0, 0.5], max_view_radius: 8 }
+    }
+}
+
+/// One game thread's state: an ECS world of layers and players, ticked 20 times a second by
+/// [`Shard::spawn`] or by hand with [`Shard::tick`] (tests).
+pub struct Shard {
+    world: World,
+    schedule: Schedule,
+    inbox: Inbox,
+    handlers: Vec<Box<dyn Handler>>,
+}
+
+impl Shard {
+    /// A shard whose players arrive from `inbox` and are answered through `outbox`, with `level`
+    /// as its first world.
+    pub fn new(cfg: ShardConfig, level: sapling_world::World, inbox: Inbox, outbox: Outbox) -> Self {
+        let mut world = World::new();
+        let layer = world.spawn(Layer { world: level, spawn: cfg.spawn }).id();
+        world.insert_resource(DefaultLayer(layer));
+        world.insert_resource(Settings(cfg));
+        world.insert_resource(Net(outbox));
+        world.insert_resource(Players { next_net_id: 1, ..Players::default() });
+        world.init_resource::<Tick>();
+        world.init_resource::<Arrivals>();
+        world.init_resource::<PacketQueues>();
+
+        let mut schedule = Schedule::default();
+        // Shards scale across threads; inside one, systems run in this order every tick.
+        schedule.set_executor(SingleThreadedExecutor::new());
+        schedule.add_systems(
+            (join::resource_packs, join::chunk_radius, chunks::player_input, chunks::send_chunks, chunks::sub_chunk_requests, join::initialized, flush)
+                .chain(),
+        );
+        Self { world, schedule, inbox, handlers: Vec::new() }
+    }
+
+    pub fn add_handler(&mut self, handler: Box<dyn Handler>) {
+        self.handlers.push(handler);
+    }
+
+    /// One tick: take everything the network delivered, run the systems, then the handlers.
+    pub fn tick(&mut self) {
+        while let Ok(event) = self.inbox.try_recv() {
+            self.accept(event);
+        }
+        self.schedule.run(&mut self.world);
+        handlers::dispatch(&mut self.world, &mut self.handlers);
+        self.world.resource_mut::<PacketQueues>().clear();
+        self.world.resource_mut::<Tick>().0 += 1;
+    }
+
+    /// Runs the shard on its own thread until the handle is stopped or dropped.
+    pub fn spawn(mut self) -> ShardHandle {
+        let stop = Arc::new(AtomicBool::new(false));
+        let stopped = stop.clone();
+        let run = move || {
+            let mut next = Instant::now();
+            while !stopped.load(Ordering::Relaxed) {
+                self.tick();
+                next += TICK;
+                match next.checked_duration_since(Instant::now()) {
+                    Some(wait) => std::thread::sleep(wait),
+                    // Behind by more than a tick: skip the missed ones instead of bursting.
+                    None => next = Instant::now(),
+                }
+            }
+        };
+        let thread = std::thread::Builder::new().name("sapling-shard".into()).spawn(run).expect("spawning the shard thread");
+        ShardHandle { stop, thread: Some(thread) }
+    }
+
+    fn accept(&mut self, event: NetEvent) {
+        match event {
+            NetEvent::Joined { conn, login, .. } => self.add_player(conn, &login),
+            NetEvent::Packet { conn, packet } => {
+                if let Some(&entity) = self.world.resource::<Players>().by_conn.get(&conn) {
+                    self.world.resource_mut::<PacketQueues>().push(entity, packet);
+                }
+            }
+            NetEvent::Left { conn, reason } => {
+                if let Some(entity) = self.world.resource_mut::<Players>().by_conn.remove(&conn) {
+                    tracing::debug!(conn = conn.get(), %reason, "connection ended");
+                    self.world.resource_mut::<Arrivals>().left.push(entity);
+                }
+            }
+        }
+    }
+
+    fn add_player(&mut self, conn: ConnId, login: &VerifiedLogin) {
+        let layer = self.world.resource::<DefaultLayer>().0;
+        let spawn = self.world.get::<Layer>(layer).expect("the default layer lives as long as the shard").spawn;
+        let mut players = self.world.resource_mut::<Players>();
+        let net_id = players.next_net_id;
+        players.next_net_id += 1;
+        let identity = &login.identity;
+        let player = Player { id: PlayerId(conn.get()), name: identity.display_name.clone(), uuid: identity.uuid, xuid: identity.xuid.clone() };
+        let mut out = Outgoing::default();
+        out.push(&join::resource_packs_info());
+        let components = (
+            Conn(conn),
+            Identity(player),
+            NetId(net_id),
+            Position { feet: spawn, yaw: 0.0, pitch: 0.0 },
+            InLayer(layer),
+            Stage::PacksInfo,
+            View::default(),
+            out,
+        );
+        let entity = self.world.spawn(components).id();
+        self.world.resource_mut::<Players>().by_conn.insert(conn, entity);
+    }
+}
+
+/// Hands each player's packets of this tick to the network as one batch.
+fn flush(net: Res<Net>, mut players: Query<(&Conn, &mut Outgoing)>) {
+    for (conn, mut out) in &mut players {
+        if !out.0.is_empty() {
+            net.0.send(conn.0, std::mem::take(&mut out.0));
+        }
+    }
+}
+
+/// A running shard thread. Stopping it drops the shard's channels, which closes its listener.
+pub struct ShardHandle {
+    stop: Arc<AtomicBool>,
+    thread: Option<JoinHandle<()>>,
+}
+
+impl ShardHandle {
+    /// Stops after the current tick and waits for the thread.
+    pub fn stop(mut self) {
+        self.halt();
+    }
+
+    fn halt(&mut self) {
+        self.stop.store(true, Ordering::Relaxed);
+        if let Some(thread) = self.thread.take() {
+            let _ = thread.join();
+        }
+    }
+}
+
+impl Drop for ShardHandle {
+    fn drop(&mut self) {
+        self.halt();
+    }
+}
