@@ -1,0 +1,28 @@
+[package]
+name = "sapling"
+version = "0.1.0"
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+description = "A Rust framework for Minecraft: Bedrock Edition servers"
+
+[features]
+default = ["online"]
+# Online mode: fetches the login signing keys over HTTPS at start.
+online = ["sapling-net/online"]
+
+[dependencies]
+sapling-api.workspace = true
+sapling-net.workspace = true
+sapling-shard.workspace = true
+sapling-world.workspace = true
+thiserror.workspace = true
+tokio.workspace = true
+tracing.workspace = true
+
+[dev-dependencies]
+acacia-bot.workspace = true
+acacia-client.workspace = true
+acacia-world.workspace = true
+tokio ={ workspace = true, features = ["rt-multi-thread", "signal"] }
+tracing-subscriber.workspace = true

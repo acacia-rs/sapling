@@ -63,6 +63,41 @@ Each step ends with an acacia-bot test and a vanilla client check.
 5. **Worlds**: several worlds per shard, several shards, `/transfer`-style world moves (handoff + directory).
 6. **Protection**: cancel break/place/interact with client resync (dragonfly #749 is the trap).
 
+## Step 1 as built (Join)
+
+One listener task, one shard thread, one world. The pieces and why they are shaped this way:
+
+- **Network to game.** `sapling-net` owns everything up to PlayStatus(LoginSuccess): RakNet, the login state
+  machine with a deadline, the server-full check and the identity reservation. It then reports `Joined`,
+  `Packet`s (header parsed, body undecoded) and exactly one `Left` per connection, whoever ended it. The
+  game never guesses whether a player is still connected: it despawns on `Left` only.
+- **Game to network.** `Outbox::send` queues one batch per player per tick and never blocks. Backpressure
+  is per player: a connection whose RakNet backlog passes `NetConfig::max_queued_bytes` is kicked.
+- **Shutdown.** The shard owns the channels. Stopping it drops them, and the listener then tells every
+  player the server closed and exits.
+- **Join sequence** (`sapling-shard/src/join.rs`, stages in `components.rs`), BDS's order and gates as
+  recorded in acacia-testserver (`cargo run -p extract-data -- --list`):
+
+  | Server sends | then waits for |
+  |---|---|
+  | ResourcePacksInfo (no packs) | ResourcePackClientResponse(HaveAllPacks) |
+  | ResourcePackStack | ResourcePackClientResponse(Completed) |
+  | StartGame, ItemRegistry, BiomeDefinitionList, AvailableEntityIdentifiers, CreativeContent, UpdateAbilities, SetEntityData, UpdateAttributes | RequestChunkRadius |
+  | ChunkRadiusUpdate, NetworkChunkPublisherUpdate, a LevelChunk per column in view, PlayStatus(PlayerSpawn) | SetLocalPlayerAsInitialized |
+  | — the player is in the world: `on_join` | |
+
+  BDS starts sending chunks before the radius request arrives; sapling waits for it, so the first
+  publisher update already has the client's radius.
+- **Chunks.** Request mode without the blob cache: a LevelChunk carries biomes and the section count,
+  `SubchunkRequest`s are answered from the world's per-section encode cache. Unwritten columns share one
+  void column. Block ids on the wire are state hashes (`sapling_world::NETWORK_IDS_ARE_HASHES`), as BDS
+  sends them and as the recorded StartGame announces.
+- **Packets inside a tick.** The inbox is drained into queues by packet id; each system takes the types it
+  handles. Order is kept within a type, not across types.
+- **Handlers** run after the tick's systems, outside the schedule, with a `ShardCtx` over a `Backend`
+  trait object, so `sapling-api` depends on nothing but `uuid`.
+- **Game data** is BDS's own packets, patched (`crates/sapling-data/README.md`).
+
 ## Open items
 
 - Verify against a fresh BDS 26.5x world: chunk version byte, v9 sub-chunk Y semantics.
