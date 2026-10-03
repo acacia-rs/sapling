@@ -103,12 +103,15 @@ impl Shard {
             NetEvent::Joined { conn, login, .. } => self.add_player(conn, &login),
             NetEvent::Packet { conn, packet } => {
                 if let Some(&entity) = self.world.resource::<Players>().by_conn.get(&conn) {
+                    if self.world.get::<Stage>(entity).is_some_and(|s| *s != Stage::InWorld) {
+                        tracing::debug!(conn = conn.get(), id = packet.id, stage = ?self.world.get::<Stage>(entity), "packet while joining");
+                    }
                     self.world.resource_mut::<PacketQueues>().push(entity, packet);
                 }
             }
             NetEvent::Left { conn, reason } => {
                 if let Some(entity) = self.world.resource_mut::<Players>().by_conn.remove(&conn) {
-                    tracing::debug!(conn = conn.get(), %reason, "connection ended");
+                    tracing::debug!(conn = conn.get(), %reason, stage = ?self.world.get::<Stage>(entity), "connection ended");
                     self.world.resource_mut::<Arrivals>().left.push(entity);
                 }
             }
@@ -122,6 +125,7 @@ impl Shard {
         let net_id = players.next_net_id;
         players.next_net_id += 1;
         let identity = &login.identity;
+        tracing::debug!(conn = conn.get(), name = %identity.display_name, authenticated = login.authenticated, "login verified");
         let player = Player { id: PlayerId(conn.get()), name: identity.display_name.clone(), uuid: identity.uuid, xuid: identity.xuid.clone() };
         let mut out = Outgoing::default();
         out.push(&join::resource_packs_info());

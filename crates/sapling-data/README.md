@@ -17,7 +17,8 @@ cargo run -p extract-data -- --show StartGame,UpdateAbilities
 | File | Sent as | Patched per join |
 |---|---|---|
 | `StartGame.bin` | `start_game(&StartGameOptions)` | ids, game mode, position, world spawn, world name, tick, seed (0), `client_side_generation` (off), `block_network_ids_are_hashes` |
-| `ItemRegistry.bin`, `BiomeDefinitionList.bin`, `AvailableEntityIdentifiers.bin`, `CreativeContent.bin` | `registry_packets()`, byte for byte | nothing |
+| `ItemRegistry.bin`, `BiomeDefinitionList.bin`, `AvailableEntityIdentifiers.bin`, `FeatureRegistry.bin`, `CameraPresets.bin`, `CreativeContent.bin`, `TrimData.bin` | `registry_packets()`, byte for byte | nothing |
+| `JigsawStructureData.bin`, `VoxelShapes.bin` | `pre_start_packets()`, byte for byte, sent before StartGame (vanilla kicks with "missing structure data" without the first) | nothing |
 | `UpdateAttributes.bin` (the last one before spawn: the full list) | `update_attributes(id)` | runtime id |
 | `UpdateAbilities.bin` | `update_abilities(id)` | unique id |
 | `SetEntityData.bin` (the player's own) | `entity_data(id, name)` | runtime id, nametag |

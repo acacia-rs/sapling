@@ -7,4 +7,4 @@ mod templates;
 
 pub use player::{entity_data, update_abilities, update_attributes};
 pub use start_game::{EYE_HEIGHT, StartGameOptions, start_game};
-pub use templates::registry_packets;
+pub use templates::{pre_start_packets, registry_packets};

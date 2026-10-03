@@ -9,6 +9,11 @@ use acacia_testserver::{Script, Step};
 
 /// The first recorded packet of each of these, saved as `<name>.bin`.
 const TEMPLATES: &[&str] = &[
+    "JigsawStructureData",
+    "VoxelShapes",
+    "FeatureRegistry",
+    "CameraPresets",
+    "TrimData",
     "StartGame",
     "ItemRegistry",
     "BiomeDefinitionList",

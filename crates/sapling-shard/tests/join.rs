@@ -104,18 +104,24 @@ fn a_player_is_walked_through_the_join_sequence() {
 
     h.receive(1, &pack_response(PackStatus::Completed));
     let sent = h.tick(1);
+    use acacia_proto::packets::{CameraPresets, FeatureRegistry, JigsawStructureData, TrimData, VoxelShapes};
     let expected = [
+        JigsawStructureData::ID,
+        VoxelShapes::ID,
         StartGame::ID,
         ItemRegistry::ID,
         BiomeDefinitionList::ID,
         AvailableEntityIdentifiers::ID,
+        FeatureRegistry::ID,
+        CameraPresets::ID,
         CreativeContent::ID,
+        TrimData::ID,
         UpdateAbilities::ID,
         SetEntityData::ID,
         UpdateAttributes::ID,
     ];
     assert_eq!(ids(&sent), expected);
-    let start: StartGame = sent[0].decode().unwrap();
+    let start: StartGame = sent[2].decode().unwrap();
     assert_eq!((start.runtime_entity_id, start.world_name.as_str()), (1, "test"));
     assert_eq!((start.player_position.x, start.player_position.y, start.player_position.z), (0.5, 65.0 + sapling_data::EYE_HEIGHT, 0.5));
     assert!(h.tick(1).is_empty(), "no chunks before the client asks for a radius");
@@ -160,7 +166,7 @@ fn players_get_their_own_ids_and_leaving_early_is_not_a_quit() {
     h.shard.tick();
     while h.net.sent.try_recv().is_ok() {}
     h.receive(2, &pack_response(PackStatus::Completed));
-    let start: StartGame = h.tick(2)[0].decode().unwrap();
+    let start: StartGame = h.tick(2)[2].decode().unwrap();
     assert_eq!((start.runtime_entity_id, start.entity_id), (2, 2));
 
     // Out-of-order packets are ignored: Alex has no StartGame yet.

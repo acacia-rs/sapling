@@ -73,6 +73,7 @@ pub(crate) fn resource_packs(mut packets: ResMut<PacketQueues>, settings: Res<Se
                     tick: tick.0 as i64,
                     block_network_ids_are_hashes: sapling_world::NETWORK_IDS_ARE_HASHES,
                 };
+                out.0.extend_from_slice(sapling_data::pre_start_packets());
                 out.push(&sapling_data::start_game(&options));
                 out.0.extend_from_slice(sapling_data::registry_packets());
                 out.push(&sapling_data::update_abilities(id.0 as i64));

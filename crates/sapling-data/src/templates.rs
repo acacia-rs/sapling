@@ -2,7 +2,10 @@
 
 use std::sync::LazyLock;
 
-use acacia_proto::packets::{AvailableEntityIdentifiers, BiomeDefinitionList, CreativeContent, ItemRegistry};
+use acacia_proto::packets::{
+    AvailableEntityIdentifiers, BiomeDefinitionList, CameraPresets, CreativeContent, FeatureRegistry, ItemRegistry, JigsawStructureData,
+    TrimData, VoxelShapes,
+};
 use acacia_proto::{Packet, codec};
 use bytes::{Bytes, BytesMut};
 
@@ -22,15 +25,29 @@ fn framed<T: Packet>(body: &[u8]) -> Bytes {
     out.freeze()
 }
 
-/// ItemRegistry, BiomeDefinitionList, AvailableEntityIdentifiers and CreativeContent as BDS sent
-/// them, each with its header, in the order BDS sends them after StartGame.
+/// What BDS sends before StartGame. Without JigsawStructureData the vanilla client refuses to
+/// enter the world ("missing structure data").
+pub fn pre_start_packets() -> &'static [Bytes] {
+    static PACKETS: LazyLock<[Bytes; 2]> = LazyLock::new(|| {
+        [
+            framed::<JigsawStructureData>(include_bytes!("../data/JigsawStructureData.bin")),
+            framed::<VoxelShapes>(include_bytes!("../data/VoxelShapes.bin")),
+        ]
+    });
+    &*PACKETS
+}
+
+/// The registries as BDS sent them, each with its header, in the order BDS sends them after StartGame.
 pub fn registry_packets() -> &'static [Bytes] {
-    static PACKETS: LazyLock<[Bytes; 4]> = LazyLock::new(|| {
+    static PACKETS: LazyLock<[Bytes; 7]> = LazyLock::new(|| {
         [
             framed::<ItemRegistry>(include_bytes!("../data/ItemRegistry.bin")),
             framed::<BiomeDefinitionList>(include_bytes!("../data/BiomeDefinitionList.bin")),
             framed::<AvailableEntityIdentifiers>(include_bytes!("../data/AvailableEntityIdentifiers.bin")),
+            framed::<FeatureRegistry>(include_bytes!("../data/FeatureRegistry.bin")),
+            framed::<CameraPresets>(include_bytes!("../data/CameraPresets.bin")),
             framed::<CreativeContent>(include_bytes!("../data/CreativeContent.bin")),
+            framed::<TrimData>(include_bytes!("../data/TrimData.bin")),
         ]
     });
     &*PACKETS
@@ -45,7 +62,16 @@ mod tests {
     #[test]
     fn registry_packets_decode_in_bds_order() {
         let ids: Vec<u32> = registry_packets().iter().map(|p| RawPacket::parse(p.clone()).unwrap().id).collect();
-        assert_eq!(ids, [ItemRegistry::ID, BiomeDefinitionList::ID, AvailableEntityIdentifiers::ID, CreativeContent::ID]);
+        let expected = [
+            ItemRegistry::ID,
+            BiomeDefinitionList::ID,
+            AvailableEntityIdentifiers::ID,
+            FeatureRegistry::ID,
+            CameraPresets::ID,
+            CreativeContent::ID,
+            TrimData::ID,
+        ];
+        assert_eq!(ids, expected);
         let raw = |i: usize| RawPacket::parse(registry_packets()[i].clone()).unwrap();
         let items: ItemRegistry = raw(0).decode().unwrap();
         let shield = items.itemstates.iter().find(|i| i.name == "minecraft:shield").expect("a shield item");
@@ -53,6 +79,8 @@ mod tests {
         raw(2).decode::<AvailableEntityIdentifiers>().unwrap();
         // Item stacks only decode once the registry's shield id is known (acacia-proto docs/proto.md).
         acacia_proto::manual::set_shield_item_id(shield.runtime_id.into());
-        raw(3).decode::<CreativeContent>().unwrap();
+        raw(5).decode::<CreativeContent>().unwrap();
+        let before: Vec<u32> = pre_start_packets().iter().map(|p| RawPacket::parse(p.clone()).unwrap().id).collect();
+        assert_eq!(before, [JigsawStructureData::ID, VoxelShapes::ID]);
     }
 }
