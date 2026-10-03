@@ -1,6 +1,6 @@
 //! A hub that logs who comes and goes, in a vanilla world folder or, without one, on a stone
 //! platform in the void.
-//! `cargo run -p sapling --example hub -- [port] [world folder] [--offline]` (default port 19132,
+//! `cargo run -p sapling --example hub -- [port] [world folder] [--offline] [--no-cache]` (default port 19132,
 //! online mode). `RUST_LOG=debug` shows refused logins and ended connections.
 use std::path::Path;
 
@@ -28,7 +28,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let port = positional().find_map(|a| a.parse::<u16>().ok()).unwrap_or(19132);
     let folder = positional().find(|a| a.parse::<u16>().is_err());
 
-    let mut builder = Server::builder().bind(([0, 0, 0, 0], port).into()).name("sapling hub").game_mode(GameMode::Adventure).online_mode(!offline);
+    let mut builder = Server::builder().bind(([0, 0, 0, 0], port).into()).name("sapling hub").game_mode(GameMode::Adventure).online_mode(!offline).blob_cache(!args.iter().any(|a| a == "--no-cache"));
     if let Some(folder) = folder {
         let opened = World::open_folder(Path::new(folder))?;
         tracing::info!(folder, name = ?opened.name, spawn = ?opened.spawn, "opened the world");

@@ -5,7 +5,7 @@
 use std::collections::HashMap;
 
 use acacia_proto::packets::{NetworkChunkPublisherUpdate, PlayStatus, PlayStatusStatus, PlayerAuthInput, Subchunk, SubchunkRequest};
-use acacia_proto::types::BlockCoordinates;
+use acacia_proto::types::{BlockCoordinates, Vec3i8};
 use bevy_ecs::prelude::*;
 use sapling_data::EYE_HEIGHT;
 use sapling_world::ChunkPos;
@@ -16,6 +16,8 @@ use crate::view::View;
 
 /// Sections answered per request; vanilla asks for a few columns (under 100 sections) at a time.
 const MAX_SECTIONS_PER_REQUEST: usize = 1024;
+/// Requests a player may have waiting on column loads; more are dropped.
+const MAX_BACKLOG: usize = 64;
 /// A joining player spawns once the columns this close are sent; BDS has sent about as many
 /// (26 in acacia's capture) when it sends PlayStatus(PlayerSpawn).
 const SPAWN_RADIUS: i32 = 3;
@@ -34,6 +36,9 @@ pub(crate) fn poll_worlds(mut layers: Query<&mut Layer>) {
 pub(crate) fn player_input(mut packets: ResMut<PacketQueues>, mut players: Query<(&Stage, &mut Position)>) {
     for (entity, input) in packets.take::<PlayerAuthInput>() {
         let Ok((stage, mut position)) = players.get_mut(entity) else { continue };
+        if input.block_action.is_some() || input.transaction.is_some() || input.item_stack_request.is_some() {
+            tracing::debug!(tick = input.tick, actions = ?input.block_action, transaction = ?input.transaction, request = ?input.item_stack_request, "input with an action");
+        }
         let eyes = [input.position.x, input.position.y, input.position.z];
         if *stage < Stage::Loading || eyes.iter().any(|c| !c.is_finite()) {
             continue;
@@ -71,23 +76,53 @@ pub(crate) fn send_chunks(settings: Res<Settings>, mut layers: Query<&mut Layer>
     }
 }
 
-pub(crate) fn sub_chunk_requests(mut packets: ResMut<PacketQueues>, layers: Query<&Layer>, mut players: Query<(&InLayer, &mut BlobCache, &mut Outgoing)>) {
+/// Section requests for columns that are not loaded yet, answered once they are.
+#[derive(Component, Default)]
+pub(crate) struct SectionBacklog(Vec<SubchunkRequest>);
+
+type Requester<'a> = (&'a InLayer, &'a mut BlobCache, &'a mut SectionBacklog, &'a mut Outgoing);
+
+/// Answers section requests. A vanilla client disconnects itself ("error occurred") on a
+/// ChunkNotFound entry, so sections of unloaded columns wait in the backlog for the load.
+// TODO: refuse columns far outside the player's view instead of loading whatever is asked for.
+pub(crate) fn sub_chunk_requests(mut packets: ResMut<PacketQueues>, mut layers: Query<&mut Layer>, mut players: Query<Requester>) {
     for (entity, request) in packets.take::<SubchunkRequest>() {
-        let Ok((in_layer, mut blobs, mut out)) = players.get_mut(entity) else { continue };
-        let Ok(layer) = layers.get(in_layer.0) else { continue };
-        if request.dimension != layer.world.dimension() {
+        if let Ok((_, _, mut backlog, _)) = players.get_mut(entity) {
+            if backlog.0.len() < MAX_BACKLOG {
+                backlog.0.push(request);
+            }
+        }
+    }
+    for (in_layer, mut blobs, mut backlog, mut out) in &mut players {
+        if backlog.0.is_empty() {
             continue;
         }
-        let origin = &request.origin;
+        let requests = std::mem::take(&mut backlog.0);
+        let Ok(mut layer) = layers.get_mut(in_layer.0) else { continue };
+        let world = &mut layer.world;
         let cached = blobs.is_enabled();
-        let mut entry = |offset: &acacia_proto::types::Vec3i8| {
-            let pos = ChunkPos::new(origin.x + i32::from(offset.x), origin.z + i32::from(offset.z));
-            let answer = layer.world.sub_chunk(pos, origin.y + i32::from(offset.y), [offset.x, offset.y, offset.z], cached);
-            answer.blob.iter().for_each(|blob| blobs.advertise(blob));
-            answer.entry
-        };
-        let entries = request.requests.iter().take(MAX_SECTIONS_PER_REQUEST).map(&mut entry).collect();
-        out.push(&Subchunk { cache_enabled: cached, dimension: request.dimension, origin: request.origin.clone(), entries });
+        for mut request in requests {
+            if request.dimension != world.dimension() {
+                continue;
+            }
+            let origin = request.origin.clone();
+            let column = |o: &Vec3i8| ChunkPos::new(origin.x + i32::from(o.x), origin.z + i32::from(o.z));
+            request.requests.truncate(MAX_SECTIONS_PER_REQUEST);
+            let (ready, waiting): (Vec<_>, Vec<_>) = request.requests.into_iter().partition(|o| world.request(column(o)));
+            let mut entry = |o: &Vec3i8| {
+                let answer = world.sub_chunk(column(o), origin.y + i32::from(o.y), [o.x, o.y, o.z], cached);
+                answer.blob.iter().for_each(|blob| blobs.advertise(blob));
+                answer.entry
+            };
+            let entries: Vec<_> = ready.iter().map(&mut entry).collect();
+            if !entries.is_empty() {
+                out.push(&Subchunk { cache_enabled: cached, dimension: request.dimension, origin: origin.clone(), entries });
+            }
+            if !waiting.is_empty() {
+                tracing::debug!(origin = ?(origin.x, origin.z), sections = waiting.len(), "sections wait for their column to load");
+                backlog.0.push(SubchunkRequest { dimension: request.dimension, requests: waiting, origin });
+            }
+        }
     }
 }
 

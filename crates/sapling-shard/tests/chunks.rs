@@ -155,8 +155,7 @@ fn a_shard_keeps_ticking_while_storage_is_slow() {
     let sent = h.tick(1);
     assert_eq!(sent.len(), 2, "the radius and the publisher update, no columns: {:?}", common::ids(&sent));
     h.receive(1, &request(&[(0, 4, 0)]));
-    let answer: Subchunk = h.tick(1)[0].decode().unwrap();
-    assert_eq!(answer.entries[0].result, SubChunkEntryItemResult::ChunkNotFound);
+    // A vanilla client disconnects on ChunkNotFound: the answer waits for the column.
     (0..50).for_each(|_| assert!(h.tick(1).is_empty()));
     assert!(started.elapsed() < Duration::from_secs(2), "ticks waited on storage");
     assert_eq!(storage.loads.load(Ordering::SeqCst), 0);
@@ -165,6 +164,8 @@ fn a_shard_keeps_ticking_while_storage_is_slow() {
     let sent = tick_until_columns(&mut h, 1, 49);
     let columns: HashSet<(i32, i32)> = all::<LevelChunk>(&sent).iter().map(|c| (c.x, c.z)).collect();
     assert_eq!(columns.len(), 49);
+    let answers = all::<Subchunk>(&sent);
+    assert_eq!((answers.len(), answers[0].entries[0].result), (1, SubChunkEntryItemResult::SuccessAllAir));
     // The player spawned once, after every column within three chunks.
     let spawn = sent.iter().position(|p| p.is::<PlayStatus>()).expect("a spawn");
     let before: HashSet<(i32, i32)> = all::<LevelChunk>(&sent[..spawn]).iter().map(|c| (c.x, c.z)).collect();

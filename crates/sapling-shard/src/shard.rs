@@ -3,6 +3,8 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::thread::JoinHandle;
 use std::time::{Duration, Instant};
 
+use acacia_proto::Packet;
+use acacia_proto::packets::PlayerAuthInput;
 use bevy_ecs::prelude::*;
 use bevy_ecs::schedule::SingleThreadedExecutor;
 use sapling_api::{GameMode, Handler, Player, PlayerId};
@@ -114,8 +116,8 @@ impl Shard {
             NetEvent::Joined { conn, login, .. } => self.add_player(conn, &login),
             NetEvent::Packet { conn, packet } => {
                 if let Some(&entity) = self.world.resource::<Players>().by_conn.get(&conn) {
-                    if self.world.get::<Stage>(entity).is_some_and(|s| *s != Stage::InWorld) {
-                        tracing::debug!(conn = conn.get(), id = packet.id, stage = ?self.world.get::<Stage>(entity), "packet while joining");
+                    if packet.id != PlayerAuthInput::ID {
+                        tracing::debug!(conn = conn.get(), id = packet.id, len = packet.body.len(), stage = ?self.world.get::<Stage>(entity), "packet received");
                     }
                     self.world.resource_mut::<PacketQueues>().push(entity, packet);
                 }
@@ -149,6 +151,7 @@ impl Shard {
             Stage::PacksInfo,
             View::default(),
             BlobCache::default(),
+            chunks::SectionBacklog::default(),
             out,
         );
         let entity = self.world.spawn(components).id();
