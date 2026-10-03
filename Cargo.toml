@@ -10,7 +10,7 @@ rust-version = "1.98"
 [workspace.dependencies]
 sapling-api = { path = "crates/sapling-api" }
 sapling-data = { path = "crates/sapling-data" }
-sapling-net = { path = "crates/sapling-net" }
+sapling-net = { path = "crates/sapling-net", default-features = false }
 sapling-shard = { path = "crates/sapling-shard" }
 sapling-world = { path = "crates/sapling-world" }
 
