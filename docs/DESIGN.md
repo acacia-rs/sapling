@@ -98,9 +98,51 @@ One listener task, one shard thread, one world. The pieces and why they are shap
   trait object, so `sapling-api` depends on nothing but `uuid`.
 - **Game data** is BDS's own packets, patched (`crates/sapling-data/README.md`).
 
+## Step 2 as built (Map)
+
+- **Disk.** `sapling-leveldb` opens a world folder (`level.dat` + `db`) through the pinned rusty-leveldb
+  fork with compression ids 0, 2 (zlib) and 4 (raw deflate, used for writes). `LevelDbWorld::load_column`
+  decodes sub-chunk records (v1/8/9) into `acacia_world::Chunk` sections and re-encodes Data3D biomes into
+  the network form the chunk already reads; acacia-world is unchanged. `open` works in place, as LevelDB
+  does (log replay rewrites files); `open_in_memory` copies the folder into memory and never touches it
+  (tests, read-only maps). `Db` writes (`put`, `Batch`, `flush`); no chunk encoder for disk yet.
+- **Block states.** Palette entries resolve by name + states against acacia-world's registry, cached by
+  their raw bytes. Unknown states of a known block become its first state, unknown blocks become
+  `minecraft:info_update`; each is logged once.
+- **Storage.** `WorldStorage::load_column` (blocking) with `LevelDbStorage` and `MemoryStorage` (empty =
+  void). A storage-backed `World` owns two I/O threads: `request(pos)` queues a load, the thread reads,
+  builds the column and encodes all of it (`Column::warm`), `poll()` takes finished columns once a tick.
+  The shard only does `try_recv`. Columns storage lacks are void. A sweep every 100 ticks drops unmodified
+  columns outside every view.
+- **Sending.** A `View` keeps a nearest-first queue; each tick a player gets at most
+  `ShardConfig::columns_per_tick` (8) columns that are loaded, and only the nearest `2 x` that many are
+  asked of storage. `NetworkChunkPublisherUpdate` goes out when the player's chunk changes.
+  PlayStatus(PlayerSpawn) follows once the columns within 3 chunks are sent (BDS: 26 columns).
+  Sub-chunk requests for a column not loaded answer `ChunkNotFound`.
+- **Blob cache.** `ClientCacheStatus` turns it on per player (and `ShardConfig::blob_cache`). Each
+  section is encoded once per column with its xxh64 and shared by all players, cached or not: `LevelChunk`
+  names the biome blob, `Subchunk` entries name section blobs with an empty payload. A player holds
+  references to what it was told about until its `ClientCacheBlobStatus` answers; every status gets one
+  `ClientCacheMissResponse`. `missing` is served before `have` is dropped: a hash shared by several
+  columns arrives as missing once and under `have` for the other slots of the same status.
+- **Hub.** `hub [port] [world folder] [--offline]`; spawn from `level.dat`, on the surface (highest block
+  with collision or liquid) when SpawnY is 32767.
+- **Verified against BDS 1.26.52.3 saves** (`crates/sapling-leveldb/tests/fixtures`): chunk version 42;
+  v9 sub-chunk Y is the section index of the key; the Data3D
+  heightmap is the top light-dimming block + 1 above the floor, the rule acacia-world's heightmap uses.
+
 ## Open items
 
-- Verify against a fresh BDS 26.5x world: chunk version byte, v9 sub-chunk Y semantics.
+- **BDS only saves chunks that changed since generation.** A world folder has holes wherever nothing was
+  touched; vanilla regenerates them from the seed, sapling shows void. Maps must be fully saved (or
+  sapling needs a generator).
+- Block-state upgrader (CC0 BedrockBlockUpgradeSchema) for palettes older than the current version;
+  until then see "Block states" above. Legacy sub-chunk versions (< 8, except 1) are skipped as air.
+- Block entities are read from disk (`DiskColumn::block_entities`) but not sent: chests, signs and the
+  like show without their data.
+- Saving: `WorldStorage::store_column`, the disk sub-chunk encoder, digp/actorprefix. Written columns are
+  never unloaded meanwhile.
+- Only the overworld is opened; nether/end keys parse but no world is made for them.
 - LevelDB block compression id 2 is zlib in worlds; never enable zstd (Mojang master reuses id 2).
 - Game data source and licence (item/creative/biome/recipes) for sapling-data.
 - acacia-proto's shield item id is process-global: never run acacia-bot and sapling in one process.
