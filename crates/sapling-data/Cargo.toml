@@ -1,0 +1,11 @@
+[package]
+name = "sapling-data"
+version = "0.1.0"
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+description = "Game data a Bedrock client needs to join: StartGame defaults and registry packets"
+
+[dependencies]
+acacia-proto.workspace = true
+bytes.workspace = true

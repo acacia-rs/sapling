@@ -1,0 +1,49 @@
+[workspace]
+resolver = "3"
+members = ["crates/*", "tools/*"]
+
+[workspace.package]
+edition = "2024"
+license = "MIT"
+rust-version = "1.98"
+
+[workspace.dependencies]
+sapling-api = { path = "crates/sapling-api" }
+sapling-data = { path = "crates/sapling-data" }
+sapling-net = { path = "crates/sapling-net" }
+sapling-shard = { path = "crates/sapling-shard" }
+sapling-world = { path = "crates/sapling-world" }
+
+# Path deps on the acacia `server-support` worktree for now; these become git deps once it is merged.
+acacia-auth = { path = "../acacia/acacia-server/crates/acacia-auth", default-features = false }
+acacia-proto = { path = "../acacia/acacia-server/crates/acacia-proto" }
+acacia-raknet = { path = "../acacia/acacia-server/crates/acacia-raknet" }
+acacia-session = { path = "../acacia/acacia-server/crates/acacia-session" }
+acacia-world = { path = "../acacia/acacia-server/crates/acacia-world" }
+# Test clients and the recorded BDS join (dev-dependencies only).
+acacia-bot = { path = "../acacia/acacia-server/crates/acacia-bot" }
+acacia-client = { path = "../acacia/acacia-server/crates/acacia-client" }
+acacia-testserver = { path = "../acacia/acacia-server/crates/acacia-testserver" }
+
+bevy_ecs = { version = "0.19", default-features = false, features = ["std"] }
+bytes = "1.12.1"
+p384 = { version = "0.13", features = ["ecdsa"] }
+rand_core = { version = "0.6", features = ["getrandom"] }
+thiserror = "2.0.21"
+tokio = { version = "1.53.1", features = ["rt", "net", "time", "macros", "sync"] }
+tracing = "0.1.44"
+tracing-subscriber = { version = "0.3.23", features = ["env-filter", "fmt"] }
+uuid = "1"
+
+# Login crypto is ~100x slower unoptimised; debug servers would answer the handshake seconds late.
+[profile.dev.package]
+p384 = { opt-level = 3 }
+primeorder = { opt-level = 3 }
+elliptic-curve = { opt-level = 3 }
+ecdsa = { opt-level = 3 }
+crypto-bigint = { opt-level = 3 }
+sha2 = { opt-level = 3 }
+aes = { opt-level = 3 }
+ctr = { opt-level = 3 }
+rsa = { opt-level = 3 }
+num-bigint-dig = { opt-level = 3 }

@@ -1,0 +1,12 @@
+[package]
+name = "extract-data"
+version = "0.1.0"
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+publish = false
+description = "Copies sapling-data's packet templates out of acacia-testserver's recorded BDS join"
+
+[dependencies]
+acacia-proto.workspace = true
+acacia-testserver.workspace = true
