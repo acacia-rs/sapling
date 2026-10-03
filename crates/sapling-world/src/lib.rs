@@ -1,11 +1,22 @@
-//! Worlds as a server holds them: chunk columns built with acacia-world, served in sub-chunk
-//! request mode from a per-section encode cache. Templates, arenas and storage (docs/DESIGN.md
-//! "Arenas", "Storage") come with milestone step 2; this is the in-memory world they will back.
+//! Worlds as a server holds them: chunk columns built with acacia-world, loaded from a
+//! [`WorldStorage`] on I/O threads and served in sub-chunk request mode from a per-column encode
+//! cache that every player shares. Templates and arenas (docs/DESIGN.md "Arenas") come with
+//! milestone step 5.
 
 mod column;
+mod folder;
+mod loader;
+mod storage;
+#[cfg(test)]
+mod tests;
 mod world;
 
-pub use acacia_world::BlockRegistry;
+pub use acacia_proto::types::Blob;
+pub use acacia_world::{BlockRegistry, Chunk, Dimension, LevelChunkData};
+pub use column::SubChunkAnswer;
+pub use folder::WorldFolder;
+pub use sapling_leveldb::LevelDat;
+pub use storage::{LevelDbStorage, MemoryStorage, StorageError, StoredColumn, WorldStorage};
 pub use world::World;
 
 /// Chunk palettes carry block-state hashes, not runtime ids; StartGame must say the same.

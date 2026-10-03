@@ -73,6 +73,12 @@ impl ServerBuilder {
         self
     }
 
+    /// Whether clients that keep a blob cache get chunk data through it (default: yes).
+    pub fn blob_cache(mut self, enabled: bool) -> Self {
+        self.shard.blob_cache = enabled;
+        self
+    }
+
     /// Adds a handler; handlers are called in the order they were added.
     pub fn handler(mut self, handler: impl Handler) -> Self {
         self.handlers.push(Box::new(handler));

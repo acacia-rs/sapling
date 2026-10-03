@@ -1,29 +1,52 @@
-//! One chunk column and what has been encoded from it. Encodings are made on first request and
-//! dropped by the write that outdates them.
+//! One chunk column and what has been encoded from it. Encodings are made once, on first use or
+//! by [`Column::warm`] off the tick thread, shared by every player, and dropped by the write that
+//! outdates them.
 
 use std::sync::OnceLock;
 
-use acacia_proto::types::SubChunkEntryItem;
+use acacia_proto::types::{Blob, SubChunkEntryItem};
+use acacia_proto::xxh64;
 use acacia_world::{BlockRegistry, Chunk, ColumnHeights, Dimension, LevelChunkData, SubChunkData};
 use bytes::Bytes;
 
 /// Biome of columns nobody painted (`minecraft:plains`).
 const DEFAULT_BIOME: u32 = 1;
 
+/// One entry of a `Subchunk` answer. For a blob-cache client the section travels as `blob`,
+/// which the entry names by hash; the sender keeps it until the client says whether it has it.
+#[derive(Debug, Clone, PartialEq)]
+pub struct SubChunkAnswer {
+    pub entry: SubChunkEntryItem,
+    pub blob: Option<Blob>,
+}
+
 pub(crate) struct Column {
     chunk: Chunk,
+    /// Written since it was created or loaded.
+    modified: bool,
     heights: OnceLock<ColumnHeights>,
-    level_chunk: OnceLock<LevelChunkData>,
-    /// Section payloads, bottom first; an inner `None` is an all-air section.
-    sections: Box<[OnceLock<Option<Bytes>>]>,
+    announce: OnceLock<LevelChunkData>,
+    announce_cached: OnceLock<LevelChunkData>,
+    /// Encoded sections with their blob hashes, bottom first; an inner `None` is all air.
+    sections: Box<[OnceLock<Option<Blob>>]>,
 }
 
 impl Column {
     pub fn empty(x: i32, z: i32, dim: Dimension) -> Self {
-        let mut chunk = Chunk::empty(x, z, dim);
-        chunk.fill_biomes(DEFAULT_BIOME);
+        Self::from_chunk(Chunk::empty(x, z, dim))
+    }
+
+    /// A column around a chunk from storage; one saved without biomes gets the default.
+    pub fn from_chunk(mut chunk: Chunk) -> Self {
+        if chunk.biome(0, chunk.dimension().min_y, 0).is_none() {
+            chunk.fill_biomes(DEFAULT_BIOME);
+        }
         let sections = (0..chunk.section_count()).map(|_| OnceLock::new()).collect();
-        Self { chunk, heights: OnceLock::new(), level_chunk: OnceLock::new(), sections }
+        Self { chunk, modified: false, heights: OnceLock::new(), announce: OnceLock::new(), announce_cached: OnceLock::new(), sections }
+    }
+
+    pub fn is_modified(&self) -> bool {
+        self.modified
     }
 
     pub fn block(&self, x: i32, y: i32, z: i32) -> u32 {
@@ -32,28 +55,66 @@ impl Column {
 
     pub fn set_block(&mut self, x: i32, y: i32, z: i32, id: u32) {
         self.chunk.set(x, y, z, 0, id);
+        self.modified = true;
         self.heights.take();
-        self.level_chunk.take();
+        self.announce.take();
+        self.announce_cached.take();
         if let Some(section) = self.slot(y >> 4).and_then(|slot| self.sections.get_mut(slot)) {
             section.take();
         }
     }
 
-    /// The request-mode `LevelChunk` content: biomes, and how many sections to ask for.
-    pub fn level_chunk(&self) -> &LevelChunkData {
-        self.level_chunk.get_or_init(|| self.chunk.level_chunk_request())
+    /// The y of the highest block `counts` accepts in block column `(x, z)`.
+    pub fn top(&self, x: i32, z: i32, counts: impl Fn(u32) -> bool) -> Option<i32> {
+        let dim = self.chunk.dimension();
+        (dim.min_y..dim.min_y + dim.height as i32).rev().find(|&y| counts(self.chunk.block(x, y, z)))
+    }
+
+    /// Encodes everything a client can ask of this column.
+    pub fn warm(&self, registry: &BlockRegistry) {
+        self.level_chunk(false);
+        self.level_chunk(true);
+        let lowest = self.chunk.dimension().min_y >> 4;
+        for slot in 0..self.sections.len() as i32 {
+            self.section(lowest + slot, registry);
+        }
+    }
+
+    /// The request-mode `LevelChunk` content: how many sections to ask for, and the biomes, in
+    /// the payload or (`cached`) as the column's one blob.
+    pub fn level_chunk(&self, cached: bool) -> &LevelChunkData {
+        match cached {
+            false => self.announce.get_or_init(|| self.chunk.level_chunk_request()),
+            true => self.announce_cached.get_or_init(|| self.chunk.level_chunk_request_cached()),
+        }
     }
 
     /// The answer to a request for section `section_y`; `None` outside the dimension.
-    pub fn sub_chunk(&self, section_y: i32, registry: &BlockRegistry, offset: [i8; 3]) -> Option<SubChunkEntryItem> {
+    pub fn sub_chunk(&self, section_y: i32, registry: &BlockRegistry, offset: [i8; 3], cached: bool) -> Option<SubChunkAnswer> {
+        let section = self.section(section_y, registry)?;
+        let heightmap = self.heights(registry).sub_chunk(section_y);
+        // TODO: block entities follow the section (uncached) or are the payload (cached).
+        let (payload, blob) = match (section, cached) {
+            (None, _) => (None, None),
+            (Some(blob), false) => (Some(blob.payload.clone()), None),
+            (Some(blob), true) => (Some(Bytes::new()), Some(blob.clone())),
+        };
+        let entry = SubChunkData { payload, blob: blob.clone(), heightmap }.entry(offset[0], offset[1], offset[2]);
+        Some(SubChunkAnswer { entry, blob })
+    }
+
+    fn heights(&self, registry: &BlockRegistry) -> &ColumnHeights {
+        self.heights.get_or_init(|| self.chunk.column_heights(&|id| registry.get(id).is_some_and(|s| s.light_filter > 0)))
+    }
+
+    /// Outer `None`: outside the dimension. Inner `None`: all air.
+    fn section(&self, section_y: i32, registry: &BlockRegistry) -> Option<&Option<Blob>> {
         let cached = self.sections.get(self.slot(section_y)?)?;
-        let heights = self.heights.get_or_init(|| self.chunk.column_heights(&|id| registry.get(id).is_some_and(|s| s.light_filter > 0)));
-        let payload = cached.get_or_init(|| {
+        Some(cached.get_or_init(|| {
             let map = |id| registry.network_hash(id);
-            self.chunk.sub_chunk(section_y, heights, &[], &map).and_then(|data| data.payload)
-        });
-        let data = SubChunkData { payload: payload.clone(), blob: None, heightmap: heights.sub_chunk(section_y) };
-        Some(data.entry(offset[0], offset[1], offset[2]))
+            let payload = self.chunk.sub_chunk(section_y, self.heights(registry), &[], &map).and_then(|data| data.payload)?;
+            Some(Blob { hash: xxh64(&payload), payload })
+        }))
     }
 
     fn slot(&self, section_y: i32) -> Option<usize> {

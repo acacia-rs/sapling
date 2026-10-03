@@ -24,5 +24,7 @@ tracing.workspace = true
 acacia-bot.workspace = true
 acacia-client.workspace = true
 acacia-world.workspace = true
+bytes.workspace = true
+sapling-leveldb.workspace = true
 tokio ={ workspace = true, features = ["rt-multi-thread", "signal"] }
 tracing-subscriber.workspace = true

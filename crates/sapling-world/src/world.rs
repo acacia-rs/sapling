@@ -1,30 +1,47 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use acacia_proto::packets::LevelChunk;
-use acacia_proto::types::{SubChunkEntryItem, SubChunkEntryItemResult};
-use acacia_world::{BlockRegistry, Dimension, SubChunkData};
+use acacia_proto::types::SubChunkEntryItemResult;
+use acacia_world::{BlockRegistry, Dimension, Heightmap, LevelChunkData, SubChunkData};
 
 use crate::ChunkPos;
-use crate::column::Column;
+use crate::column::{Column, SubChunkAnswer};
+use crate::loader::{Loader, Source};
+use crate::storage::WorldStorage;
 
-/// One dimension's blocks. Columns nobody wrote to are void: they exist for every position and
-/// encode as all air.
+/// Loads in flight at once per world; each is a few milliseconds of disk and encoding.
+const IO_THREADS: usize = 2;
+
+/// One dimension's blocks.
+///
+/// Without storage every column exists: those nobody wrote to are void and encode as all air.
+/// With storage a column exists once it is loaded: [`World::request`] asks the I/O threads for
+/// it and [`World::poll`] takes what they finished, so no call here waits on disk except
+/// [`World::load_now`].
 pub struct World {
     dimension: i32,
     dim: Dimension,
     registry: Arc<BlockRegistry>,
     columns: HashMap<ChunkPos, Column>,
-    /// Stands in for every unwritten column, so they share one encoding.
+    /// Stands in for every unwritten column of a world without storage, so they share one encoding.
     void: Column,
+    loader: Option<Loader>,
 }
 
 impl World {
-    /// An empty overworld.
+    /// An empty overworld without storage.
     pub fn void() -> Self {
         let registry = BlockRegistry::vanilla_arc();
         let dim = Dimension::overworld(registry.air_id());
-        Self { dimension: 0, dim, registry, columns: HashMap::new(), void: Column::empty(0, 0, dim) }
+        Self { dimension: 0, dim, registry, columns: HashMap::new(), void: Column::empty(0, 0, dim), loader: None }
+    }
+
+    /// The overworld of `storage`. Columns it does not hold are void.
+    pub fn with_storage(storage: Arc<dyn WorldStorage>) -> Self {
+        let mut world = Self::void();
+        let source = Source { storage, registry: world.registry.clone(), dimension: world.dimension, dim: world.dim };
+        world.loader = Some(Loader::spawn(source, IO_THREADS));
+        world
     }
 
     /// The protocol dimension id (0 = overworld).
@@ -41,14 +58,71 @@ impl World {
         self.registry.states_of(name).next().map(|(id, _)| id)
     }
 
-    pub fn block(&self, x: i32, y: i32, z: i32) -> u32 {
-        self.column(ChunkPos::of_block(x, z)).block(x, y, z)
+    /// Takes the columns the I/O threads finished; returns how many. Call once a tick.
+    pub fn poll(&mut self) -> usize {
+        let Some(loader) = &mut self.loader else { return 0 };
+        let finished = loader.finished();
+        let count = finished.len();
+        for (pos, column) in finished {
+            self.columns.entry(pos).or_insert(column);
+        }
+        count
     }
 
-    /// Sets a layer-0 block by runtime id. Positions outside the dimension's height are ignored.
-    pub fn set_block(&mut self, x: i32, y: i32, z: i32, id: u32) {
+    pub fn is_loaded(&self, pos: ChunkPos) -> bool {
+        self.loader.is_none() || self.columns.contains_key(&pos)
+    }
+
+    /// Whether the column can be served now; if not, its load is queued (once).
+    pub fn request(&mut self, pos: ChunkPos) -> bool {
+        let loaded = self.is_loaded(pos);
+        if let (false, Some(loader)) = (loaded, &mut self.loader) {
+            loader.request(pos);
+        }
+        loaded
+    }
+
+    /// Loads a column on the calling thread. For startup code; a shard uses [`World::request`].
+    pub fn load_now(&mut self, pos: ChunkPos) {
+        if let (false, Some(loader)) = (self.is_loaded(pos), &self.loader) {
+            let column = loader.source().load(pos);
+            self.columns.insert(pos, column);
+        }
+    }
+
+    /// Columns held in memory, and loads on their way.
+    pub fn loaded_columns(&self) -> (usize, usize) {
+        (self.columns.len(), self.loader.as_ref().map_or(0, Loader::pending))
+    }
+
+    /// Drops the loaded columns `keep` rejects. Columns written to stay: nothing saves them yet.
+    pub fn unload(&mut self, keep: impl Fn(ChunkPos) -> bool) {
+        if self.loader.is_some() {
+            self.columns.retain(|pos, column| column.is_modified() || keep(*pos));
+        }
+    }
+
+    /// The layer-0 block at a position; air where nothing is loaded.
+    pub fn block(&self, x: i32, y: i32, z: i32) -> u32 {
+        self.column(ChunkPos::of_block(x, z)).map_or(self.dim.air, |column| column.block(x, y, z))
+    }
+
+    /// The y of the highest block in block column `(x, z)` that a player can stand on or in
+    /// (anything with collision, or a liquid). `None` when there is none or the column is not loaded.
+    pub fn surface(&self, x: i32, z: i32) -> Option<i32> {
+        let stands = |id| self.registry.get(id).is_some_and(|s| s.is_solid() || s.is_liquid());
+        self.column(ChunkPos::of_block(x, z))?.top(x, z, stands)
+    }
+
+    /// Sets a layer-0 block by runtime id; false when the column is not loaded. Positions
+    /// outside the dimension's height are ignored.
+    pub fn set_block(&mut self, x: i32, y: i32, z: i32, id: u32) -> bool {
         let pos = ChunkPos::of_block(x, z);
+        if !self.is_loaded(pos) {
+            return false;
+        }
         self.columns.entry(pos).or_insert_with(|| Column::empty(pos.x, pos.z, self.dim)).set_block(x, y, z, id);
+        true
     }
 
     /// Fills the box between two corners, both included.
@@ -63,90 +137,35 @@ impl World {
         }
     }
 
-    /// The `LevelChunk` announcing a column in sub-chunk request mode.
-    pub fn level_chunk(&self, pos: ChunkPos) -> LevelChunk {
-        self.column(pos).level_chunk().packet(pos.x, pos.z, self.dimension)
+    /// What announces a column in sub-chunk request mode: `.packet(x, z, dimension)` is the
+    /// `LevelChunk`, and for a blob-cache client (`cached`) `.blobs` holds the biomes it names.
+    /// `None` until the column is loaded.
+    pub fn level_chunk(&self, pos: ChunkPos, cached: bool) -> Option<&LevelChunkData> {
+        Some(self.column(pos)?.level_chunk(cached))
     }
 
     /// One entry of a `Subchunk` answer: section `section_y` of column `pos`, requested at
     /// `offset` from the request's origin.
-    pub fn sub_chunk(&self, pos: ChunkPos, section_y: i32, offset: [i8; 3]) -> SubChunkEntryItem {
-        self.column(pos).sub_chunk(section_y, &self.registry, offset).unwrap_or_else(|| {
-            let missing = SubChunkData { payload: None, blob: None, heightmap: acacia_world::Heightmap::TooLow };
-            SubChunkEntryItem { result: SubChunkEntryItemResult::YIndexOutOfBounds, ..missing.entry(offset[0], offset[1], offset[2]) }
-        })
+    pub fn sub_chunk(&self, pos: ChunkPos, section_y: i32, offset: [i8; 3], cached: bool) -> SubChunkAnswer {
+        let failed = |result| {
+            let missing = SubChunkData { payload: None, blob: None, heightmap: Heightmap::TooLow };
+            SubChunkAnswer { entry: acacia_proto::types::SubChunkEntryItem { result, ..missing.entry(offset[0], offset[1], offset[2]) }, blob: None }
+        };
+        let Some(column) = self.column(pos) else { return failed(SubChunkEntryItemResult::ChunkNotFound) };
+        column.sub_chunk(section_y, &self.registry, offset, cached).unwrap_or_else(|| failed(SubChunkEntryItemResult::YIndexOutOfBounds))
     }
 
-    fn column(&self, pos: ChunkPos) -> &Column {
-        self.columns.get(&pos).unwrap_or(&self.void)
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use acacia_proto::types::HeightMapDataType;
-    use acacia_world::Chunk;
-
-    use super::*;
-
-    fn platform() -> (World, u32) {
-        let mut world = World::void();
-        let stone = world.block_id("minecraft:stone").unwrap();
-        world.fill([-8, 64, -8], [7, 64, 7], stone);
-        (world, stone)
+    fn column(&self, pos: ChunkPos) -> Option<&Column> {
+        self.columns.get(&pos).or(self.loader.is_none().then_some(&self.void))
     }
 
-    #[test]
-    fn platform_spans_four_columns_and_void_stays_air() {
-        let (world, stone) = platform();
-        let air = world.registry().air_id();
-        assert_eq!((world.block(-8, 64, -8), world.block(7, 64, 7)), (stone, stone));
-        assert_eq!((world.block(8, 64, 0), world.block(0, 65, 0), world.block(0, 400, 0)), (air, air, air));
-        assert_eq!(world.columns.len(), 4);
-        // y 64 is the ninth section from the bottom (-64).
-        assert_eq!(world.level_chunk(ChunkPos::new(0, 0)).highest_subchunk_count, Some(9));
-        let void = world.level_chunk(ChunkPos::new(5, 5));
-        assert_eq!((void.x, void.z, void.highest_subchunk_count, void.cache_enabled), (5, 5, Some(0), false));
+    #[cfg(test)]
+    pub(crate) fn is_section_cached(&self, pos: ChunkPos, section_y: i32) -> bool {
+        self.columns[&pos].is_section_cached(section_y)
     }
 
-    #[test]
-    fn sections_decode_back_to_the_blocks_written() {
-        let (world, stone) = platform();
-        let entry = world.sub_chunk(ChunkPos::new(-1, 0), 4, [-1, 4, 0]);
-        assert_eq!((entry.dx, entry.dy, entry.dz, entry.result), (-1, 4, 0, SubChunkEntryItemResult::Success));
-        assert_eq!(entry.heightmap_type, HeightMapDataType::HasData);
-        let registry = world.registry();
-        let mut decoded = Chunk::empty(-1, 0, Dimension::overworld(registry.air_id()));
-        let unhash = |hash| registry.runtime_id_from_hash(hash).expect("a vanilla state hash");
-        decoded.set_sub_chunk_mapped(4, &entry.payload.unwrap(), &unhash).unwrap();
-        assert_eq!((decoded.block(-1, 64, 3), decoded.block(-1, 65, 3)), (stone, registry.air_id()));
-
-        let above = world.sub_chunk(ChunkPos::new(-1, 0), 5, [0, 0, 0]);
-        assert_eq!((above.result, above.payload, above.heightmap_type), (SubChunkEntryItemResult::SuccessAllAir, None, HeightMapDataType::TooLow));
-        let void = world.sub_chunk(ChunkPos::new(9, 9), 4, [0, 0, 0]);
-        assert_eq!(void.result, SubChunkEntryItemResult::SuccessAllAir);
-        assert_eq!(world.sub_chunk(ChunkPos::new(0, 0), 24, [0, 0, 0]).result, SubChunkEntryItemResult::YIndexOutOfBounds);
-        assert_eq!(world.sub_chunk(ChunkPos::new(0, 0), -5, [0, 0, 0]).result, SubChunkEntryItemResult::YIndexOutOfBounds);
-    }
-
-    #[test]
-    fn a_write_drops_only_its_section_from_the_cache() {
-        let (mut world, stone) = platform();
-        let pos = ChunkPos::new(0, 0);
-        let before = world.sub_chunk(pos, 4, [0, 0, 0]);
-        world.sub_chunk(pos, 0, [0, 0, 0]);
-        assert!(world.columns[&pos].is_section_cached(4) && world.columns[&pos].is_section_cached(0));
-
-        world.set_block(3, 90, 3, stone);
-        assert!(world.columns[&pos].is_section_cached(4) && world.columns[&pos].is_section_cached(0));
-        assert_eq!(world.level_chunk(pos).highest_subchunk_count, Some(10));
-        // The heightmap is not cached with the section: the new block above raises it.
-        let after = world.sub_chunk(pos, 4, [0, 0, 0]);
-        assert_eq!(after.payload, before.payload);
-        assert_ne!(after.heightmap, before.heightmap);
-
-        world.set_block(3, 64, 3, world.registry().air_id());
-        assert!(!world.columns[&pos].is_section_cached(4));
-        assert_ne!(world.sub_chunk(pos, 4, [0, 0, 0]).payload, before.payload);
+    #[cfg(test)]
+    pub(crate) fn written_columns(&self) -> usize {
+        self.columns.len()
     }
 }

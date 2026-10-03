@@ -9,8 +9,9 @@ use sapling_api::{GameMode, Handler, Player, PlayerId};
 use sapling_net::{ConnId, Inbox, NetEvent, Outbox, VerifiedLogin};
 
 use crate::components::{Arrivals, Conn, DefaultLayer, Identity, InLayer, Layer, Net, NetId, Outgoing, PacketQueues, Players, Position, Settings, Stage, Tick};
+use crate::blobs::BlobCache;
 use crate::view::View;
-use crate::{chunks, handlers, join};
+use crate::{blobs, chunks, handlers, join};
 
 pub const TICK: Duration = Duration::from_millis(50);
 
@@ -22,11 +23,22 @@ pub struct ShardConfig {
     pub spawn: [f32; 3],
     /// Cap on the view distance clients ask for, in chunks.
     pub max_view_radius: i32,
+    /// Columns announced to one player per tick.
+    pub columns_per_tick: usize,
+    /// Serve chunk data through the client blob cache to clients that report one.
+    pub blob_cache: bool,
 }
 
 impl Default for ShardConfig {
     fn default() -> Self {
-        Self { world_name: "sapling".into(), game_mode: GameMode::Survival, spawn: [0.5, 65.0, 0.5], max_view_radius: 8 }
+        Self {
+            world_name: "sapling".into(),
+            game_mode: GameMode::Survival,
+            spawn: [0.5, 65.0, 0.5],
+            max_view_radius: 8,
+            columns_per_tick: 8,
+            blob_cache: true,
+        }
     }
 }
 
@@ -56,10 +68,9 @@ impl Shard {
         let mut schedule = Schedule::default();
         // Shards scale across threads; inside one, systems run in this order every tick.
         schedule.set_executor(SingleThreadedExecutor::new());
-        schedule.add_systems(
-            (join::resource_packs, join::chunk_radius, chunks::player_input, chunks::send_chunks, chunks::sub_chunk_requests, join::initialized, flush)
-                .chain(),
-        );
+        let join = (join::resource_packs, join::chunk_radius, blobs::cache_status).chain();
+        let chunks = (chunks::poll_worlds, chunks::player_input, chunks::send_chunks, chunks::sub_chunk_requests, blobs::blob_status, chunks::unload_columns);
+        schedule.add_systems((join, chunks.chain(), join::initialized, flush).chain());
         Self { world, schedule, inbox, handlers: Vec::new() }
     }
 
@@ -137,6 +148,7 @@ impl Shard {
             InLayer(layer),
             Stage::PacksInfo,
             View::default(),
+            BlobCache::default(),
             out,
         );
         let entity = self.world.spawn(components).id();

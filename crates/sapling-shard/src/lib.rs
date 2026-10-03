@@ -2,6 +2,7 @@
 //! start of each tick, runs its systems in a fixed order, calls plugin handlers and hands each
 //! player's packets to the outbox as one batch. See docs/DESIGN.md "Threads" and "Worlds".
 
+mod blobs;
 mod chunks;
 mod components;
 mod handlers;
