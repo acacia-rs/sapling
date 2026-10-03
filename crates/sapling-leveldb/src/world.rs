@@ -1,0 +1,115 @@
+//! A world folder: `level.dat` beside the `db` directory.
+
+use std::path::{Path, PathBuf};
+use std::sync::Arc;
+
+use acacia_world::{BlockRegistry, Chunk, Dimension};
+
+use crate::data3d::Data3d;
+use crate::keys::{ChunkKey, Tag};
+use crate::states::BlockStates;
+use crate::sub_chunk::SubChunk;
+use crate::{Db, Error, LevelDat};
+
+/// One chunk column as saved.
+#[derive(Debug, Clone, PartialEq)]
+pub struct DiskColumn {
+    pub chunk: Chunk,
+    /// The chunk format version byte (41/42 on 1.21+ worlds).
+    pub version: u8,
+    /// Heightmap and biomes; the biomes are already in `chunk`.
+    pub data3d: Option<Data3d>,
+    /// TODO: sent to nobody yet. Concatenated little-endian NBT compounds, kept as stored.
+    pub block_entities: Vec<u8>,
+}
+
+pub struct LevelDbWorld {
+    folder: PathBuf,
+    level: LevelDat,
+    db: Db,
+    states: BlockStates,
+}
+
+impl LevelDbWorld {
+    /// Opens a world folder for reading and writing (see [`Db::open`]).
+    pub fn open(folder: &Path) -> Result<Self, Error> {
+        Self::with_db(folder, Db::open(&folder.join("db"))?)
+    }
+
+    /// Opens a copy of the world held in memory, leaving the folder untouched
+    /// (see [`Db::open_in_memory`]).
+    pub fn open_in_memory(folder: &Path) -> Result<Self, Error> {
+        Self::with_db(folder, Db::open_in_memory(&folder.join("db"))?)
+    }
+
+    fn with_db(folder: &Path, db: Db) -> Result<Self, Error> {
+        let level = LevelDat::read(&folder.join("level.dat"))?;
+        Ok(Self { folder: folder.to_path_buf(), level, db, states: BlockStates::new(BlockRegistry::vanilla_arc()) })
+    }
+
+    pub fn folder(&self) -> &Path {
+        &self.folder
+    }
+
+    pub fn level(&self) -> &LevelDat {
+        &self.level
+    }
+
+    pub fn db(&self) -> &Db {
+        &self.db
+    }
+
+    pub fn registry(&self) -> &Arc<BlockRegistry> {
+        self.states.registry()
+    }
+
+    /// Reads a column; `None` when it was never saved. A section that does not decode is logged
+    /// and left as air, so one damaged record does not cost the column.
+    pub fn load_column(&self, key: ChunkKey) -> Result<Option<DiskColumn>, Error> {
+        let version = match self.db.get(&key.tag(Tag::Version))? {
+            Some(version) => version,
+            None => match self.db.get(&key.tag(Tag::LegacyVersion))? {
+                Some(version) => version,
+                None => return Ok(None),
+            },
+        };
+        let dim = Dimension::from_id(key.dimension, self.registry().air_id());
+        let mut chunk = Chunk::empty(key.x, key.z, dim);
+        let lowest = dim.min_y >> 4;
+        for y in lowest..lowest + chunk.section_count() as i32 {
+            let Some(record) = self.db.get(&key.sub_chunk(y as i8))? else { continue };
+            match SubChunk::decode(&record, &self.states) {
+                Ok(section) => {
+                    if let Some(blocks) = section.layers.first() {
+                        chunk.set_section(y, blocks, section.layers.get(1).map(|liquid| &**liquid));
+                    }
+                }
+                Err(error) => tracing::warn!(x = key.x, z = key.z, y, %error, "skipping an unreadable sub-chunk"),
+            }
+        }
+        let data3d = match self.db.get(&key.tag(Tag::Data3d))?.map(|record| Data3d::decode(&record)) {
+            Some(Ok(data)) => Some(data),
+            Some(Err(error)) => {
+                tracing::warn!(x = key.x, z = key.z, %error, "skipping unreadable biomes");
+                None
+            }
+            None => None,
+        };
+        if let Some(data) = &data3d {
+            chunk.set_biomes(&data.biomes);
+        }
+        let block_entities = self.db.get(&key.tag(Tag::BlockEntities))?.unwrap_or_default();
+        Ok(Some(DiskColumn { chunk, version: version.first().copied().unwrap_or(0), data3d, block_entities }))
+    }
+
+    /// Every saved column, in key order.
+    pub fn columns(&self) -> Result<Vec<ChunkKey>, Error> {
+        let mut columns = Vec::new();
+        self.db.for_each(|key, _| {
+            if let Some(parsed) = ChunkKey::parse(key).filter(|k| k.tag == Tag::Version as u8 || k.tag == Tag::LegacyVersion as u8) {
+                columns.push(parsed.chunk);
+            }
+        })?;
+        Ok(columns)
+    }
+}
