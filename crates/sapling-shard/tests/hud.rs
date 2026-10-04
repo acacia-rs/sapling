@@ -119,12 +119,23 @@ fn a_boss_bar_is_shown_changed_and_hidden() {
     assert!(after(&mut h, |ctx| ctx.set_boss_bar(PlayerId(1), &BossBar::new("sapling hub"))).is_empty());
 
     let sent = after(&mut h, |ctx| ctx.set_boss_bar(PlayerId(1), &BossBar::new("restarting").progress(0.25).colour(BossBarColour::Red)));
-    let changed = &all::<BossEvent>(&sent)[0];
-    assert_eq!((changed.r#type, changed.title.as_str(), changed.progress, changed.color), (BossEventType::ShowBar, "restarting", 0.25, BossEventColor::Red));
+    // A bar that is shown changes by the event for each part; every event carries the whole bar.
+    let changed = all::<BossEvent>(&sent);
+    assert_eq!(changed.iter().map(|e| e.r#type).collect::<Vec<_>>(), [BossEventType::SetBarTitle, BossEventType::SetBarProgress, BossEventType::Texture]);
+    let whole = BossEvent { r#type: BossEventType::SetBarTitle, title: "restarting".into(), progress: 0.25, color: BossEventColor::Red, ..expected.clone() };
+    assert_eq!((kinds(&sent).len(), &changed[0]), (3, &whole));
+    assert!(changed.iter().all(|e| BossEvent { r#type: BossEventType::SetBarTitle, ..e.clone() } == whole));
+
+    let sent = after(&mut h, |ctx| ctx.set_boss_bar(PlayerId(1), &BossBar::new("restarting").progress(0.5).colour(BossBarColour::Red)));
+    let progress = all::<BossEvent>(&sent);
+    assert_eq!((progress.len(), progress[0].r#type, progress[0].progress, progress[0].color), (1, BossEventType::SetBarProgress, 0.5, BossEventColor::Red));
+    let sent = after(&mut h, |ctx| ctx.set_boss_bar(PlayerId(1), &BossBar::new("restarting").progress(0.5).colour(BossBarColour::Blue)));
+    let texture = all::<BossEvent>(&sent);
+    assert_eq!((texture.len(), texture[0].r#type, texture[0].color), (1, BossEventType::Texture, BossEventColor::Blue));
 
     let sent = after(&mut h, |ctx| ctx.remove_boss_bar(PlayerId(1)));
-    let hidden = &all::<BossEvent>(&sent)[0];
-    assert_eq!((kinds(&sent), hidden.r#type, hidden.target_entity_id), (vec!["BossEvent"], BossEventType::HideBar, 1));
+    let hidden = BossEvent { r#type: BossEventType::HideBar, title: String::new(), progress: 0.0, color: BossEventColor::Pink, ..expected.clone() };
+    assert_eq!((kinds(&sent), &all::<BossEvent>(&sent)[0]), (vec!["BossEvent"], &hidden));
     assert!(after(&mut h, |ctx| ctx.remove_boss_bar(PlayerId(1))).is_empty());
 }
 

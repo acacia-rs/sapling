@@ -17,7 +17,8 @@ use acacia_bot::{Bot, BotConfig, BotEvent};
 /// Commands printed with every overload.
 const SHOWN: &[&str] = &["gamemode", "tp", "title", "me", "say", "tell", "list", "kick", "help", "give", "op", "scoreboard", "xp"];
 /// Run in order, each followed by that many seconds of listening. The wither is summoned high up
-/// and killed while it still charges; its bar goes when its death animation ends.
+/// and killed while it still charges; its bar goes when its death animation ends. Out of its
+/// range BDS sends no HideBar: the ShowBar it repeats every second just stops.
 const COMMANDS: &[(&str, u64)] = &[
     ("list", 1),
     ("say hello", 1),
@@ -43,6 +44,8 @@ const COMMANDS: &[(&str, u64)] = &[
     ("scoreboard objectives remove probe", 1),
     ("difficulty easy", 1),
     ("summon wither ~ ~40 ~", 3),
+    ("tp @s ~300 ~ ~", 6),
+    ("tp @s ~-300 ~ ~", 6),
     ("kill @e[type=wither]", 20),
     ("difficulty peaceful", 1),
 ];

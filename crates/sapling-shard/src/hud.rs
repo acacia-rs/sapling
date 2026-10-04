@@ -77,14 +77,23 @@ fn colour(colour: BossBarColour) -> BossEventColor {
     }
 }
 
-/// The bar hangs on the player's own entity, which is always there to carry it. BDS sends
-/// ShowBar again for every change of its wither's bar; so does this.
-fn boss_event(id: u64, bar: Option<&BossBar>) -> BossEvent {
-    let (r#type, shown) = match bar {
-        Some(bar) => (BossEventType::ShowBar, bar.clone()),
-        None => (BossEventType::HideBar, BossBar { text: String::new(), progress: 0.0, colour: BossBarColour::Pink }),
-    };
-    BossEvent { target_entity_id: id as i64, r#type, title: shown.text, filtered_title: String::new(), progress: shown.progress, color: colour(shown.colour), overlay: BossEventOverlay::Progress }
+/// The bar hangs on the player's own entity, which is always there to carry it. Every event type
+/// has the same fields on the wire (docs/DESIGN.md "Boss bar"), so each carries the whole bar.
+fn boss_event(id: u64, r#type: BossEventType, bar: &BossBar) -> BossEvent {
+    BossEvent { target_entity_id: id as i64, r#type, title: bar.text.clone(), filtered_title: String::new(), progress: bar.progress, color: colour(bar.colour), overlay: BossEventOverlay::Progress }
+}
+
+/// The events that turn the bar `old` into `new`: a vanilla client ignores ShowBar for a bar it shows.
+fn boss_events(old: Option<&BossBar>, new: Option<&BossBar>) -> Vec<(BossEventType, BossBar)> {
+    match (old, new) {
+        (None, None) => Vec::new(),
+        (None, Some(new)) => vec![(BossEventType::ShowBar, new.clone())],
+        (Some(_), None) => vec![(BossEventType::HideBar, BossBar { text: String::new(), progress: 0.0, colour: BossBarColour::Pink })],
+        (Some(old), Some(new)) => {
+            let changes = [(old.text != new.text, BossEventType::SetBarTitle), (old.progress != new.progress, BossEventType::SetBarProgress), (old.colour != new.colour, BossEventType::Texture)];
+            changes.into_iter().filter(|(changed, _)| *changed).map(|(_, r#type)| (r#type, new.clone())).collect()
+        }
+    }
 }
 
 fn title_packet(r#type: SetTitleType, text: &str, times: [i32; 3]) -> SetTitle {
@@ -101,10 +110,10 @@ pub(crate) fn set_sidebar(world: &mut World, entity: Entity, sidebar: Option<&Si
 
 pub(crate) fn set_boss_bar(world: &mut World, entity: Entity, bar: Option<&BossBar>) {
     let Ok((id, mut hud, mut out)) = world.query::<(&NetId, &mut Hud, &mut Outgoing)>().get_mut(world, entity) else { return };
-    if hud.boss_bar.as_ref() != bar {
-        out.push(&boss_event(id.0, bar));
-        hud.boss_bar = bar.cloned();
+    for (r#type, shown) in boss_events(hud.boss_bar.as_ref(), bar) {
+        out.push(&boss_event(id.0, r#type, &shown));
     }
+    hud.boss_bar = bar.cloned();
 }
 
 /// Timing, subtitle, then the title that shows them, as `/title` needs them ordered.

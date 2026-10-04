@@ -47,6 +47,7 @@ pub(crate) fn dispatch(world: &mut World) {
             continue;
         };
         let callback = callback.into_inner().unwrap_or_else(PoisonError::into_inner);
+        tracing::debug!(player = %player.name, id = response.form_id, data = ?response.data, "form answer");
         let data = response.data.filter(|data| data.len() <= MAX_ANSWER);
         let mut backend = Ctx { world };
         callback(&mut ShardCtx::new(&mut backend), &player, data.as_deref());

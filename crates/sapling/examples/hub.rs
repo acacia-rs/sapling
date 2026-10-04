@@ -32,7 +32,8 @@ struct Settings {
 
 impl Default for Settings {
     fn default() -> Self {
-        Self { sidebar: true, colour: 0, fill: 100, greeting: String::new() }
+        // Green and half full: neither is what a client shows when it misreads ShowBar.
+        Self { sidebar: true, colour: 1, fill: 50, greeting: String::new() }
     }
 }
 
