@@ -40,7 +40,7 @@ fn resource_pack_stack() -> ResourcePackStack {
     }
 }
 
-fn wire_game_mode(mode: GameMode) -> WireGameMode {
+pub(crate) fn wire_game_mode(mode: GameMode) -> WireGameMode {
     match mode {
         GameMode::Survival => WireGameMode::Survival,
         GameMode::Creative => WireGameMode::Creative,

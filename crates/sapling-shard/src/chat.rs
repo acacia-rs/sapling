@@ -4,10 +4,10 @@
 use acacia_proto::packets::{Text, TextCategory, TextContent, TextContentChat, TextContentRaw, TextType};
 use bevy_ecs::prelude::*;
 use bytes::Bytes;
-use sapling_api::{ChatOutcome, Handler, Player, ShardCtx};
+use sapling_api::{ChatEvent, Player};
 
-use crate::components::{Identity, Outgoing, PacketQueues, Stage, in_world};
-use crate::handlers::Ctx;
+use crate::components::{Outgoing, PacketQueues, PerTick, in_world, in_world_identity};
+use crate::plugins::Plugins;
 
 /// The vanilla chat box takes 512 characters.
 const MAX_CHARS: usize = 512;
@@ -54,32 +54,20 @@ pub(crate) fn send_to_all(world: &mut World, packet: &Bytes) {
     }
 }
 
-/// What the handlers make of `message`: the text to send, or `None` once one cancels.
-fn decide(world: &mut World, handlers: &mut [Box<dyn Handler>], from: &Player, mut message: String) -> Option<String> {
-    for handler in handlers.iter_mut() {
-        match handler.on_chat(&mut ShardCtx::new(&mut Ctx { world }), from, &message) {
-            ChatOutcome::Allow => {}
-            ChatOutcome::Cancel => return None,
-            ChatOutcome::Replace(replacement) => message = replacement,
-        }
-    }
-    Some(message)
-}
-
 /// Runs this tick's chat lines through the handlers and sends what they let through.
-pub(crate) fn dispatch(world: &mut World, handlers: &mut [Box<dyn Handler>]) {
+pub(crate) fn dispatch(world: &mut World, plugins: &mut Plugins) {
     let lines = world.resource_mut::<PacketQueues>().take::<Text>();
-    let mut sent: Vec<Entity> = Vec::new();
+    let mut limit = PerTick::new(MAX_LINES_PER_TICK);
     for (entity, packet) in lines {
         let TextContent::Chat(chat) = packet.content else { continue };
-        let Some(from) = world.get::<Identity>(entity).map(|i| i.0.clone()) else { continue };
-        let in_world = world.get::<Stage>(entity) == Some(&Stage::InWorld);
-        let Some(message) = clean(&chat.message).filter(|_| in_world) else { continue };
-        sent.push(entity);
-        if sent.iter().filter(|e| **e == entity).count() > MAX_LINES_PER_TICK {
+        let Some(from) = in_world_identity(world, entity) else { continue };
+        let Some(message) = clean(&chat.message) else { continue };
+        if !limit.allow(entity) {
             continue;
         }
-        if let Some(message) = decide(world, handlers, &from, message) {
+        let event = plugins.offer(world, ChatEvent::new(message), |handler, ctx, event| handler.on_chat(ctx, &from, event));
+        // A handler may leave anything in the message; what goes out is clean again.
+        if let Some(message) = clean(&event.message).filter(|_| !event.is_cancelled()) {
             send_to_all(world, &chat_packet(&from, message));
         }
     }

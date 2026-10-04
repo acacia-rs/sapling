@@ -2,26 +2,27 @@
 //! for acting on the shard. Everything here is plain data or a borrowed handle; the ECS behind a
 //! shard never shows (docs/DESIGN.md "Plugin API").
 
+pub mod command;
 mod ctx;
+mod event;
+pub mod form;
+mod hud;
 mod player;
+#[cfg(test)]
+mod testing;
+#[cfg(test)]
+mod tests;
 
-pub use ctx::{Backend, ShardCtx};
-pub use player::{GameMode, Player, PlayerId, Position};
-
-/// What becomes of a chat message, decided by [`Handler::on_chat`].
-#[derive(Debug, Clone, PartialEq, Eq, Default)]
-pub enum ChatOutcome {
-    /// Everyone on the shard sees it under the sender's name.
-    #[default]
-    Allow,
-    /// Nobody sees it. A handler that formats chat itself cancels and uses [`ShardCtx::broadcast`].
-    Cancel,
-    /// Sent as [`ChatOutcome::Allow`] would be, with this text instead.
-    Replace(String),
-}
+pub use command::{Command, Commands, Output, Sender};
+pub use ctx::{Backend, FormCallback, ShardCtx, State};
+pub use event::{Cancellable, ChatEvent, CommandEvent, Priority};
+pub use form::{Custom, Form, FormResponse, Menu, Modal};
+pub use hud::{BossBar, BossBarColour, Sidebar, Title};
+pub use player::{GameMode, Permission, Player, PlayerId, Position};
+pub use sapling_macros::{Command, CommandEnum, Form};
 
 /// Game events, one method each, all optional. Handlers run on the shard that owns the player, in
-/// the order they were registered.
+/// [`Priority`] order.
 pub trait Handler: Send + 'static {
     /// The player's client has loaded the world and left its loading screen.
     fn on_join(&mut self, ctx: &mut ShardCtx<'_>, player: &Player) {
@@ -34,10 +35,18 @@ pub trait Handler: Send + 'static {
         let _ = (ctx, player);
     }
 
-    /// A player sent a chat message, already cleaned of control characters and cut to length.
-    /// The first handler to cancel ends it; a replacement is what later handlers are shown.
-    fn on_chat(&mut self, ctx: &mut ShardCtx<'_>, player: &Player, message: &str) -> ChatOutcome {
-        let _ = (ctx, player, message);
-        ChatOutcome::Allow
+    /// A player sent a chat message. What is left of it after the handlers goes to everyone.
+    fn on_chat(&mut self, ctx: &mut ShardCtx<'_>, player: &Player, event: &mut ChatEvent) {
+        let _ = (ctx, player, event);
+    }
+
+    /// A player sent a command, registered or not. Cancelled, it is not run and gets no answer.
+    fn on_command(&mut self, ctx: &mut ShardCtx<'_>, player: &Player, event: &mut CommandEvent) {
+        let _ = (ctx, player, event);
+    }
+
+    /// Once per tick, after the events of the tick.
+    fn on_tick(&mut self, ctx: &mut ShardCtx<'_>) {
+        let _ = ctx;
     }
 }

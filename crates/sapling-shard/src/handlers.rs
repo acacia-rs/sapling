@@ -1,12 +1,17 @@
 //! Where plugin handlers meet the ECS: they run after a tick's systems with a [`ShardCtx`] over
 //! the world, never seeing a bevy type.
 
+use std::any::TypeId;
+
+use acacia_proto::packets::UpdatePlayerGameType;
 use bevy_ecs::prelude::*;
-use sapling_api::{Backend, Handler, Player, PlayerId, ShardCtx};
+use sapling_api::{Backend, BossBar, FormCallback, GameMode, Permission, Player, PlayerId, Sidebar, State, Title};
 use sapling_net::ConnId;
 
-use crate::components::{Arrivals, Identity, Net, Outgoing, Players, Position, Stage, Tick, in_world};
-use crate::{chat, roster};
+use crate::commands::Access;
+use crate::components::{Arrivals, DefaultLayer, Identity, Layer, Mode, Net, NetId, Outgoing, Players, Position, Stage, Tick, in_world};
+use crate::plugins::{PluginState, Plugins};
+use crate::{chat, commands, forms, hud, join, movement, roster};
 
 pub(crate) struct Ctx<'w> {
     pub world: &'w mut World,
@@ -17,6 +22,10 @@ impl Ctx<'_> {
     fn entity(&self, player: PlayerId) -> Option<Entity> {
         let entity = self.world.resource::<Players>().entity(player)?;
         (self.world.get::<Stage>(entity) == Some(&Stage::InWorld)).then_some(entity)
+    }
+
+    fn out(&mut self, player: PlayerId) -> Option<Mut<'_, Outgoing>> {
+        self.entity(player).and_then(|entity| self.world.get_mut::<Outgoing>(entity))
     }
 }
 
@@ -38,6 +47,11 @@ impl Backend for Ctx<'_> {
         Some(sapling_api::Position { feet: position.feet, yaw: position.yaw, pitch: position.pitch })
     }
 
+    fn spawn(&self) -> [f32; 3] {
+        let layer = self.world.resource::<DefaultLayer>().0;
+        self.world.get::<Layer>(layer).expect("the default layer lives as long as the shard").spawn
+    }
+
     fn kick(&mut self, player: PlayerId, message: &str) {
         self.world.resource::<Net>().0.kick(ConnId::new(player.0), message);
     }
@@ -47,25 +61,97 @@ impl Backend for Ctx<'_> {
     }
 
     fn send_message(&mut self, player: PlayerId, message: &str) {
-        if let Some(mut out) = self.entity(player).and_then(|entity| self.world.get_mut::<Outgoing>(entity)) {
+        if let Some(mut out) = self.out(player) {
             out.0.push(chat::raw_packet(message));
         }
     }
+
+    fn teleport(&mut self, player: PlayerId, feet: [f32; 3]) {
+        if let Some(entity) = self.entity(player).filter(|_| feet.iter().all(|c| c.is_finite())) {
+            movement::teleport(self.world, entity, feet);
+        }
+    }
+
+    fn permission(&self, player: PlayerId) -> Option<Permission> {
+        self.world.get::<Access>(self.entity(player)?).map(|access| access.permission)
+    }
+
+    fn set_permission(&mut self, player: PlayerId, permission: Permission) {
+        // The command list follows at the end of the tick (commands::announce).
+        if let Some(mut access) = self.entity(player).and_then(|entity| self.world.get_mut::<Access>(entity)) {
+            access.permission = permission;
+        }
+    }
+
+    fn game_mode(&self, player: PlayerId) -> Option<GameMode> {
+        self.world.get::<Mode>(self.entity(player)?).map(|mode| mode.0)
+    }
+
+    fn set_game_mode(&mut self, player: PlayerId, mode: GameMode) {
+        let Some(entity) = self.entity(player) else { return };
+        let (tick, Some(id)) = (self.tick(), self.world.get::<NetId>(entity).copied()) else { return };
+        let Some(mut current) = self.world.get_mut::<Mode>(entity) else { return };
+        current.0 = mode;
+        // BDS's `/gamemode` sends this to the player itself; the others learn whom to show how.
+        let packet = UpdatePlayerGameType { gamemode: join::wire_game_mode(mode), player_unique_id: id.0 as i64, tick };
+        chat::send_to_all(self.world, &sapling_net::encode(&packet));
+    }
+
+    fn send_form(&mut self, player: PlayerId, json: String, on_answer: FormCallback) {
+        if let Some(entity) = self.entity(player) {
+            forms::send(self.world, entity, json, on_answer);
+        }
+    }
+
+    fn set_sidebar(&mut self, player: PlayerId, sidebar: Option<&Sidebar>) {
+        if let Some(entity) = self.entity(player) {
+            hud::set_sidebar(self.world, entity, sidebar);
+        }
+    }
+
+    fn set_boss_bar(&mut self, player: PlayerId, bar: Option<&BossBar>) {
+        if let Some(entity) = self.entity(player) {
+            hud::set_boss_bar(self.world, entity, bar);
+        }
+    }
+
+    fn send_title(&mut self, player: PlayerId, title: &Title) {
+        if let Some(mut out) = self.out(player) {
+            hud::send_title(&mut out, title);
+        }
+    }
+
+    fn send_actionbar(&mut self, player: PlayerId, text: &str) {
+        if let Some(mut out) = self.out(player) {
+            hud::send_actionbar(&mut out, text);
+        }
+    }
+
+    fn send_toast(&mut self, player: PlayerId, title: &str, message: &str) {
+        if let Some(mut out) = self.out(player) {
+            hud::send_toast(&mut out, title, message);
+        }
+    }
+
+    fn state(&mut self, key: TypeId, init: &dyn Fn() -> State) -> &mut State {
+        self.world.resource_mut::<PluginState>().into_inner().0.entry(key).or_insert_with(init)
+    }
 }
 
-/// Lists players whose client finished loading and calls `on_join` for them, runs the chat, then
-/// removes players whose connection ended, with `on_quit` for those who had joined.
-pub(crate) fn dispatch(world: &mut World, handlers: &mut [Box<dyn Handler>]) {
+/// Lists players whose client finished loading and calls `on_join` for them, runs chat, commands
+/// and form answers, removes players whose connection ended, with `on_quit` for those who had
+/// joined, and ends with `on_tick`.
+pub(crate) fn dispatch(world: &mut World, plugins: &mut Plugins) {
     let Arrivals { joined, left } = std::mem::take(&mut *world.resource_mut::<Arrivals>());
     for entity in joined {
         let Some(player) = world.get::<Identity>(entity).map(|i| i.0.clone()) else { continue };
         world.resource_mut::<Players>().in_world += 1;
         roster::arrive(world, entity);
-        for handler in handlers.iter_mut() {
-            handler.on_join(&mut ShardCtx::new(&mut Ctx { world }), &player);
-        }
+        plugins.each(world, |handler, ctx| handler.on_join(ctx, &player));
     }
-    chat::dispatch(world, handlers);
+    chat::dispatch(world, plugins);
+    commands::dispatch(world, plugins);
+    forms::dispatch(world);
     for entity in left {
         let had_joined = world.get::<Stage>(entity) == Some(&Stage::InWorld);
         let Some(player) = world.get::<Identity>(entity).map(|i| i.0.clone()) else { continue };
@@ -75,9 +161,8 @@ pub(crate) fn dispatch(world: &mut World, handlers: &mut [Box<dyn Handler>]) {
         world.despawn(entity);
         if had_joined {
             world.resource_mut::<Players>().in_world -= 1;
-            for handler in handlers.iter_mut() {
-                handler.on_quit(&mut ShardCtx::new(&mut Ctx { world }), &player);
-            }
+            plugins.each(world, |handler, ctx| handler.on_quit(ctx, &player));
         }
     }
+    plugins.each(world, |handler, ctx| handler.on_tick(ctx));
 }

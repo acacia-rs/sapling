@@ -6,10 +6,14 @@
 mod blobs;
 mod chat;
 mod chunks;
+mod commands;
 mod components;
+mod forms;
 mod handlers;
+mod hud;
 mod join;
 mod movement;
+mod plugins;
 mod roster;
 mod shard;
 mod skin;

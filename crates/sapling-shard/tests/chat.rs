@@ -5,7 +5,7 @@ mod common;
 use acacia_proto::Packet;
 use acacia_proto::packets::{Text, TextCategory, TextContent, TextContentChat, TextContentRaw, TextType};
 use common::{Harness, all, ids, input_at};
-use sapling_api::{ChatOutcome, Handler, Player, ShardCtx};
+use sapling_api::{ChatEvent, Handler, Player, ShardCtx};
 
 /// A chat line as a client sends it, claiming to be `claimed`.
 fn line(claimed: &str, message: &str) -> Text {
@@ -42,19 +42,20 @@ impl Handler for Moderator {
         ctx.broadcast(&format!("{} joined", player.name));
     }
 
-    fn on_chat(&mut self, ctx: &mut ShardCtx<'_>, player: &Player, message: &str) -> ChatOutcome {
-        match message {
+    fn on_chat(&mut self, ctx: &mut ShardCtx<'_>, player: &Player, event: &mut ChatEvent) {
+        match event.message.as_str() {
             "ping" => {
                 ctx.send_message(player.id, "pong");
-                ChatOutcome::Replace("PING".into())
+                event.message = "PING".into();
             }
             "where" => {
                 let names: Vec<String> = ctx.players().map(|p| p.name).collect();
                 let at = ctx.position(player.id).map(|p| (p.feet, p.yaw));
-                ChatOutcome::Replace(format!("{names:?} {at:?}"))
+                event.message = format!("{names:?} {at:?}");
             }
-            secret if secret.contains("secret") => ChatOutcome::Cancel,
-            _ => ChatOutcome::Allow,
+            "colour" => event.message = "§cred\n".into(),
+            secret if secret.contains("secret") => event.cancel(),
+            _ => {}
         }
     }
 }
@@ -63,9 +64,11 @@ impl Handler for Moderator {
 struct Shout;
 
 impl Handler for Shout {
-    fn on_chat(&mut self, _: &mut ShardCtx<'_>, _: &Player, message: &str) -> ChatOutcome {
-        assert!(!message.contains("secret"), "a cancelled line reached the next handler");
-        if message == "PING" { ChatOutcome::Replace("PING!".into()) } else { ChatOutcome::Allow }
+    fn on_chat(&mut self, _: &mut ShardCtx<'_>, _: &Player, event: &mut ChatEvent) {
+        assert!(!event.message.contains("secret"), "a cancelled line reached the next handler");
+        if event.message == "PING" {
+            event.message = "PING!".into();
+        }
     }
 }
 
@@ -118,6 +121,10 @@ fn handlers_cancel_and_replace_chat() {
     assert_eq!((alex.len(), chat(&alex[0])), (1, ("Steve§r", "PING!")));
     assert_eq!((steve.len(), raw(&steve[0]), chat(&steve[1])), (2, "pong", ("Steve§r", "PING!")));
     assert_eq!((steve[0].r#type, steve[0].category), (TextType::Raw, TextCategory::MessageOnly));
+
+    // What a handler writes into the message is cleaned like a client's line.
+    h.receive(2, &line("Steve", "colour"));
+    assert_eq!(chat(&all::<Text>(h.tick_all().to(1))[0]).1, "red");
 }
 
 #[test]

@@ -1,0 +1,98 @@
+//! Commands: a struct whose fields are the parameters, or an enum whose variants are
+//! sub-commands. `#[derive(Command)]` writes the syntax ([`CommandSyntax`]); the plugin writes
+//! [`Command::run`]. Registered commands are shown to each client that may use them, with their
+//! syntax and completions, and run on the sender's shard.
+
+mod args;
+mod output;
+mod params;
+mod registry;
+
+pub use args::{Args, ParseError};
+pub use output::{Output, OutputMessage};
+pub use params::{Parameter, Target, Text, parse_choice};
+pub use registry::Commands;
+
+use crate::{Permission, Player, ShardCtx};
+
+/// What a command does once its arguments are parsed.
+pub trait Command: CommandSyntax + 'static {
+    fn run(self, ctx: &mut ShardCtx<'_>, sender: &Sender, out: &mut Output);
+}
+
+/// A command's name, parameters and parser; written by `#[derive(Command)]`.
+pub trait CommandSyntax: Sized {
+    fn spec() -> CommandSpec;
+    fn parse(args: &mut Args<'_>) -> Result<Self, ParseError>;
+}
+
+/// Who ran a command.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum Sender {
+    Player(Player),
+    // TODO: nothing sends commands as the console yet.
+    Console,
+}
+
+impl Sender {
+    pub fn player(&self) -> Option<&Player> {
+        match self {
+            Self::Player(player) => Some(player),
+            Self::Console => None,
+        }
+    }
+
+    pub fn name(&self) -> &str {
+        self.player().map_or("Console", |p| p.name.as_str())
+    }
+}
+
+/// A command as clients are told about it.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct CommandSpec {
+    pub name: String,
+    pub aliases: Vec<String>,
+    pub description: String,
+    /// Players below this neither see nor run the command.
+    pub permission: Permission,
+    /// The ways to call it: one for a struct, one per sub-command for an enum.
+    pub overloads: Vec<Overload>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
+pub struct Overload {
+    pub parameters: Vec<ParameterSpec>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ParameterSpec {
+    pub name: String,
+    pub kind: ParamKind,
+    pub optional: bool,
+}
+
+impl ParameterSpec {
+    pub fn of<P: Parameter>(name: &str) -> Self {
+        Self { name: name.to_owned(), kind: P::kind(), optional: P::OPTIONAL }
+    }
+
+    /// The fixed word that picks sub-command `word` of `command`.
+    pub fn literal(command: &str, word: &str) -> Self {
+        Self { name: word.to_owned(), kind: ParamKind::Enum { name: format!("{command}_{word}"), values: vec![word.to_owned()] }, optional: false }
+    }
+}
+
+/// What a parameter takes, as far as the client's command line needs to know.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum ParamKind {
+    Int,
+    Float,
+    /// One word, or several in quotes.
+    String,
+    /// Everything up to the end of the line.
+    Text,
+    /// A player: a name or `@s`.
+    Target,
+    /// One of a fixed set of words, completed by the client.
+    Enum { name: String, values: Vec<String> },
+}

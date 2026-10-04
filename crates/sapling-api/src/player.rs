@@ -22,6 +22,14 @@ pub struct Position {
     pub pitch: f32,
 }
 
+/// What a player may do with commands. Set with [`crate::ShardCtx::set_permission`].
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+pub enum Permission {
+    #[default]
+    Member,
+    Operator,
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum GameMode {
     #[default]

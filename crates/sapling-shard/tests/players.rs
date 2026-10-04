@@ -4,7 +4,7 @@ mod common;
 
 use acacia_proto::Packet;
 use acacia_proto::packets::{
-    AddPlayer, Animate, AnimateActionId, LevelChunk, MovePlayer, MovePlayerMode, NetworkChunkPublisherUpdate, PlayerList, RemoveEntity, SetEntityData,
+    AddPlayer, Animate, AnimateActionId, AvailableCommands, LevelChunk, MovePlayer, MovePlayerMode, NetworkChunkPublisherUpdate, PlayerList, RemoveEntity, SetEntityData,
 };
 use acacia_proto::types::{
     GameMode, InputData, MetadataDictionaryItem, MetadataDictionaryItemKey as Key, MetadataDictionaryItemValue as Value, MetadataDictionaryItemValueDefault as Plain, MetadataFlags1,
@@ -42,11 +42,11 @@ fn players_are_listed_and_shown_to_each_other() {
     let mut h = Harness::new();
     let sent = h.enter(1, "Alex");
     let own: PlayerList = sent.to(1)[0].decode().unwrap();
-    assert_eq!((ids(sent.to(1)), added(&own).username.as_str()), (vec![PlayerList::ID], "Alex"));
+    assert_eq!((ids(sent.to(1)), added(&own).username.as_str()), (vec![PlayerList::ID, AvailableCommands::ID], "Alex"));
 
     let sent = h.enter(2, "Steve");
     assert_eq!(ids(sent.to(1)), [PlayerList::ID, AddPlayer::ID]);
-    assert_eq!(ids(sent.to(2)), [PlayerList::ID, PlayerList::ID, AddPlayer::ID]);
+    assert_eq!(ids(sent.to(2)), [PlayerList::ID, PlayerList::ID, AddPlayer::ID, AvailableCommands::ID]);
     let (steve_listed, alex_listed) = (all::<PlayerList>(sent.to(1)), all::<PlayerList>(sent.to(2)));
     let (steve, alex) = (added(&steve_listed[0]), added(&alex_listed[0]));
     assert_eq!((alex.username.as_str(), steve.username.as_str(), added(&alex_listed[1])), ("Alex", "Steve", steve));

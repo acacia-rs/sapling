@@ -7,16 +7,20 @@ use acacia_proto::Packet;
 use acacia_proto::packets::PlayerAuthInput;
 use bevy_ecs::prelude::*;
 use bevy_ecs::schedule::SingleThreadedExecutor;
-use sapling_api::{GameMode, Handler, Player, PlayerId};
+use sapling_api::{Command, Commands, GameMode, Handler, Player, PlayerId, Priority};
 use sapling_net::{ConnId, Inbox, NetEvent, Outbox, VerifiedLogin};
 
-use crate::components::{Arrivals, Conn, DefaultLayer, Identity, InLayer, Layer, Net, NetId, Outgoing, PacketQueues, Players, Position, Settings, Stage, Tick};
 use crate::blobs::BlobCache;
+use crate::commands::{Access, CommandLists};
+use crate::components::{Arrivals, Conn, DefaultLayer, Identity, InLayer, Layer, Mode, Net, NetId, Outgoing, PacketQueues, Players, Position, Settings, Stage, Tick};
+use crate::forms::Forms;
+use crate::hud::Hud;
 use crate::movement::Motion;
+use crate::plugins::{PluginState, Plugins};
 use crate::roster::Profile;
 use crate::view::View;
 use crate::visibility::{Sees, ToViewers};
-use crate::{blobs, chunks, handlers, join, movement, visibility};
+use crate::{blobs, chunks, commands, handlers, join, movement, visibility};
 
 pub const TICK: Duration = Duration::from_millis(50);
 
@@ -55,7 +59,7 @@ pub struct Shard {
     /// Runs after the handlers, so what they and this tick's arrivals caused goes out in the tick.
     after_handlers: Schedule,
     inbox: Inbox,
-    handlers: Vec<Box<dyn Handler>>,
+    plugins: Plugins,
 }
 
 impl Shard {
@@ -81,12 +85,27 @@ impl Shard {
         schedule.add_systems((join, chunks.chain(), join::initialized).chain());
         let mut after_handlers = Schedule::default();
         after_handlers.set_executor(SingleThreadedExecutor::new());
-        after_handlers.add_systems((visibility::update, movement::announce, movement::relay_swings, visibility::fan_out, flush).chain());
-        Self { world, schedule, after_handlers, inbox, handlers: Vec::new() }
+        after_handlers.add_systems((visibility::update, movement::announce, movement::relay_swings, visibility::fan_out, commands::announce, flush).chain());
+        world.insert_resource(CommandLists::new(&Commands::default()));
+        world.init_resource::<PluginState>();
+        Self { world, schedule, after_handlers, inbox, plugins: Plugins::default() }
     }
 
+    /// Adds a handler at [`Priority::Normal`].
     pub fn add_handler(&mut self, handler: Box<dyn Handler>) {
-        self.handlers.push(handler);
+        self.add_handler_at(Priority::Normal, handler);
+    }
+
+    /// Adds a handler; see [`Priority`] for when it runs.
+    pub fn add_handler_at(&mut self, priority: Priority, handler: Box<dyn Handler>) {
+        self.plugins.add(priority, handler);
+    }
+
+    /// Adds a command (see [`sapling_api::command`]). Players already in the world keep the list
+    /// they have until their permission changes.
+    pub fn add_command<C: Command>(&mut self) {
+        self.plugins.commands.register::<C>();
+        self.world.insert_resource(CommandLists::new(&self.plugins.commands));
     }
 
     /// One tick: take everything the network delivered, run the systems, then the handlers, then
@@ -96,7 +115,7 @@ impl Shard {
             self.accept(event);
         }
         self.schedule.run(&mut self.world);
-        handlers::dispatch(&mut self.world, &mut self.handlers);
+        handlers::dispatch(&mut self.world, &mut self.plugins);
         self.after_handlers.run(&mut self.world);
         self.world.resource_mut::<PacketQueues>().clear();
         self.world.resource_mut::<Tick>().0 += 1;
@@ -145,6 +164,7 @@ impl Shard {
     fn add_player(&mut self, conn: ConnId, login: &VerifiedLogin) {
         let layer = self.world.resource::<DefaultLayer>().0;
         let spawn = self.world.get::<Layer>(layer).expect("the default layer lives as long as the shard").spawn;
+        let api = (Access::default(), Mode(self.world.resource::<Settings>().0.game_mode), Forms::default(), Hud::default());
         let mut players = self.world.resource_mut::<Players>();
         let net_id = players.next_net_id;
         players.next_net_id += 1;
@@ -168,7 +188,7 @@ impl Shard {
             Profile::new(login, net_id),
             out,
         );
-        let entity = self.world.spawn(components).id();
+        let entity = self.world.spawn((components, api)).id();
         self.world.resource_mut::<Players>().by_conn.insert(conn, entity);
     }
 }

@@ -13,7 +13,7 @@ use acacia_bot::state::{Entity, Trackers};
 use acacia_bot::text::strip_formatting;
 use acacia_bot::{Bot, BotConfig, BotEvent, Events};
 use common::{GOAL, GROUND, SPAWN};
-use sapling::{ChatOutcome, Handler, Player, Server, ShardCtx};
+use sapling::{ChatEvent, Handler, Player, Server, ShardCtx};
 
 const WAIT: Duration = Duration::from_secs(10);
 
@@ -24,8 +24,10 @@ impl Handler for Hub {
         ctx.broadcast(&format!("{} joined", player.name));
     }
 
-    fn on_chat(&mut self, _: &mut ShardCtx<'_>, _: &Player, message: &str) -> ChatOutcome {
-        if message == "shh" { ChatOutcome::Cancel } else { ChatOutcome::Allow }
+    fn on_chat(&mut self, _: &mut ShardCtx<'_>, _: &Player, event: &mut ChatEvent) {
+        if event.message == "shh" {
+            event.cancel();
+        }
     }
 }
 

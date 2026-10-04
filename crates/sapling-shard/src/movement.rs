@@ -65,6 +65,9 @@ pub(crate) struct Motion {
     input_tick: u64,
     /// The shard tick until which far inputs are dropped without another correction.
     setback_until: u64,
+    /// Set by a server teleport until the client's input says it handled one: inputs before
+    /// that are from the old place. The tick is when the teleport is sent again.
+    unconfirmed_teleport: Option<u64>,
     told: Option<(Position, Pose)>,
 }
 
@@ -73,20 +76,30 @@ fn eyes(position: &Position) -> Vec3f {
     Vec3f { x, y: y + EYE_HEIGHT, z }
 }
 
-fn move_player(id: u64, position: &Position, mode: MovePlayerMode, tick: u64) -> MovePlayer {
-    let teleport = MovePlayerTeleport { cause: MovePlayerTeleportCause::UnknownValue, source_entity_type: LegacyEntityType::from_raw(TELEPORT_SOURCE) };
+/// A walk, or with `teleport` a jump the client must follow.
+fn move_player(id: u64, position: &Position, teleport: Option<MovePlayerTeleportCause>, tick: u64) -> MovePlayer {
     MovePlayer {
         runtime_id: id as u32,
         position: eyes(position),
         pitch: position.pitch,
         yaw: position.yaw,
         head_yaw: position.head_yaw,
-        mode,
+        mode: if teleport.is_some() { MovePlayerMode::Teleport } else { MovePlayerMode::Normal },
         on_ground: position.on_ground,
         ridden_runtime_id: 0,
-        teleport: (mode == MovePlayerMode::Teleport).then_some(teleport),
+        teleport: teleport.map(|cause| MovePlayerTeleport { cause, source_entity_type: LegacyEntityType::from_raw(TELEPORT_SOURCE) }),
         tick,
     }
+}
+
+/// Puts a player's feet at `feet` and tells its client, as BDS's `/tp` does. Viewers learn of it
+/// from [`announce`].
+pub(crate) fn teleport(world: &mut World, entity: Entity, feet: [f32; 3]) {
+    let tick = world.resource::<Tick>().0;
+    let Ok((id, mut position, mut motion, mut out)) = world.query::<(&NetId, &mut Position, &mut Motion, &mut Outgoing)>().get_mut(world, entity) else { return };
+    (position.feet, position.on_ground) = (feet, true);
+    motion.unconfirmed_teleport = Some(tick + SETBACK_TICKS);
+    out.push(&move_player(id.0, &position, Some(MovePlayerTeleportCause::Command), motion.input_tick));
 }
 
 fn pose_packet(id: u64, pose: Pose, tick: u64) -> SetEntityData {
@@ -114,12 +127,23 @@ pub(crate) fn player_input(mut packets: ResMut<PacketQueues>, tick: Res<Tick>, m
         if *stage < Stage::Loading || reported.iter().any(|c| !c.is_finite()) {
             continue;
         }
+        if let Some(resend_at) = motion.unconfirmed_teleport {
+            if input.input_data.contains(&InputData::HandledTeleport) {
+                motion.unconfirmed_teleport = None;
+            } else {
+                if tick.0 >= resend_at {
+                    out.push(&move_player(id.0, &position, Some(MovePlayerTeleportCause::Command), motion.input_tick));
+                    motion.unconfirmed_teleport = Some(tick.0 + SETBACK_TICKS);
+                }
+                continue;
+            }
+        }
         let feet = [reported[0], reported[1] - EYE_HEIGHT, reported[2]];
         let step: f32 = feet.iter().zip(position.feet).map(|(to, from)| (to - from).powi(2)).sum();
         if step > MAX_STEP * MAX_STEP {
             if tick.0 >= motion.setback_until {
                 tracing::debug!(player = id.0, from = ?position.feet, to = ?feet, "refusing a teleport-sized step");
-                out.push(&move_player(id.0, &position, MovePlayerMode::Teleport, 0));
+                out.push(&move_player(id.0, &position, Some(MovePlayerTeleportCause::UnknownValue), 0));
                 motion.setback_until = tick.0 + SETBACK_TICKS;
             }
             continue;
@@ -142,7 +166,7 @@ pub(crate) fn announce(mut to_viewers: ResMut<ToViewers>, mut players: Query<(En
         // A new viewer learns the current state from AddPlayer; only changes are announced.
         let Some(told) = motion.told.replace(now) else { continue };
         if told.0 != now.0 {
-            to_viewers.push(entity, &move_player(id.0, position, MovePlayerMode::Normal, tick));
+            to_viewers.push(entity, &move_player(id.0, position, None, tick));
         }
         if told.1 != now.1 {
             to_viewers.push(entity, &pose_packet(id.0, now.1, tick));

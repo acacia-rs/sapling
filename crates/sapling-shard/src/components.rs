@@ -98,6 +98,33 @@ pub(crate) fn in_world(world: &World) -> Vec<Entity> {
     players
 }
 
+/// Who `entity` is, if it is a player in the world.
+pub(crate) fn in_world_identity(world: &World, entity: Entity) -> Option<sapling_api::Player> {
+    let in_world = world.get::<Stage>(entity) == Some(&Stage::InWorld);
+    world.get::<Identity>(entity).filter(|_| in_world).map(|identity| identity.0.clone())
+}
+
+#[derive(Component)]
+pub(crate) struct Mode(pub sapling_api::GameMode);
+
+/// Counts what each player sent in a tick, to drop what exceeds `max`.
+pub(crate) struct PerTick {
+    max: usize,
+    seen: HashMap<Entity, usize>,
+}
+
+impl PerTick {
+    pub fn new(max: usize) -> Self {
+        Self { max, seen: HashMap::new() }
+    }
+
+    pub fn allow(&mut self, from: Entity) -> bool {
+        let count = self.seen.entry(from).or_default();
+        *count += 1;
+        *count <= self.max
+    }
+}
+
 /// Players whose client finished loading this tick, and players whose connection ended.
 #[derive(Resource, Default)]
 pub(crate) struct Arrivals {

@@ -39,9 +39,29 @@ impl Handler for Log {
     }
 }
 
+type Action = Box<dyn FnOnce(&mut ShardCtx<'_>) + Send>;
+
+/// Lets a test act through the context: what [`Remote::run`] queues happens in the next tick's `on_tick`.
+#[derive(Clone, Default)]
+pub struct Remote(Arc<Mutex<Vec<Action>>>);
+
+impl Remote {
+    pub fn run(&self, action: impl FnOnce(&mut ShardCtx<'_>) + Send + 'static) {
+        self.0.lock().unwrap().push(Box::new(action));
+    }
+}
+
+impl Handler for Remote {
+    fn on_tick(&mut self, ctx: &mut ShardCtx<'_>) {
+        let actions = std::mem::take(&mut *self.0.lock().unwrap());
+        actions.into_iter().for_each(|action| action(ctx));
+    }
+}
+
 pub struct Harness {
     pub shard: Shard,
     pub net: Loopback,
+    pub remote: Remote,
     log: Log,
 }
 
@@ -67,7 +87,9 @@ impl Harness {
         let mut shard = Shard::new(config, level, inbox, outbox);
         let log = Log::default();
         shard.add_handler(Box::new(log.clone()));
-        Self { shard, net, log }
+        let remote = Remote::default();
+        shard.add_handler(Box::new(remote.clone()));
+        Self { shard, net, remote, log }
     }
 
     pub fn join(&mut self, conn: u64, name: &str) {

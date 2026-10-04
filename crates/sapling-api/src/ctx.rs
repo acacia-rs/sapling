@@ -1,4 +1,10 @@
-use crate::{Player, PlayerId, Position};
+use std::any::{Any, TypeId};
+
+use crate::form::{Form, FormResponse};
+use crate::{BossBar, GameMode, Permission, Player, PlayerId, Position, Sidebar, Title};
+
+/// Called with a form's raw answer (`None`: closed) on the shard of the player it was sent to.
+pub type FormCallback = Box<dyn FnOnce(&mut ShardCtx<'_>, &Player, Option<&str>) + Send>;
 
 /// What a shard offers its handlers. Implemented by sapling-shard; plugins use [`ShardCtx`].
 pub trait Backend {
@@ -6,12 +12,30 @@ pub trait Backend {
     fn player_count(&self) -> usize;
     fn players(&self) -> Vec<Player>;
     fn position(&self, player: PlayerId) -> Option<Position>;
+    fn spawn(&self) -> [f32; 3];
     fn kick(&mut self, player: PlayerId, message: &str);
     fn broadcast(&mut self, message: &str);
     fn send_message(&mut self, player: PlayerId, message: &str);
+    fn teleport(&mut self, player: PlayerId, feet: [f32; 3]);
+    fn permission(&self, player: PlayerId) -> Option<Permission>;
+    fn set_permission(&mut self, player: PlayerId, permission: Permission);
+    fn game_mode(&self, player: PlayerId) -> Option<GameMode>;
+    fn set_game_mode(&mut self, player: PlayerId, mode: GameMode);
+    fn send_form(&mut self, player: PlayerId, json: String, on_answer: FormCallback);
+    fn set_sidebar(&mut self, player: PlayerId, sidebar: Option<&Sidebar>);
+    fn set_boss_bar(&mut self, player: PlayerId, bar: Option<&BossBar>);
+    fn send_title(&mut self, player: PlayerId, title: &Title);
+    fn send_actionbar(&mut self, player: PlayerId, text: &str);
+    fn send_toast(&mut self, player: PlayerId, title: &str, message: &str);
+    /// The value kept under `key`, made with `init` if there is none yet.
+    fn state(&mut self, key: TypeId, init: &dyn Fn() -> State) -> &mut State;
 }
 
-/// A handler's access to the shard it runs on, valid only for the call it was passed to.
+/// A value plugins keep on a shard.
+pub type State = Box<dyn Any + Send + Sync>;
+
+/// A handler's access to the shard it runs on, valid only for the call it was passed to. A call
+/// naming a player who has left does nothing.
 pub struct ShardCtx<'a> {
     backend: &'a mut dyn Backend,
 }
@@ -41,6 +65,11 @@ impl<'a> ShardCtx<'a> {
         self.backend.position(player)
     }
 
+    /// Where players appear when they join (feet).
+    pub fn spawn(&self) -> [f32; 3] {
+        self.backend.spawn()
+    }
+
     /// Disconnects a player with `message` on their screen. `on_quit` follows on a later tick.
     pub fn kick(&mut self, player: PlayerId, message: &str) {
         self.backend.kick(player, message);
@@ -55,81 +84,77 @@ impl<'a> ShardCtx<'a> {
     pub fn send_message(&mut self, player: PlayerId, message: &str) {
         self.backend.send_message(player, message);
     }
-}
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::{ChatOutcome, Handler};
-
-    #[derive(Default)]
-    struct Fake {
-        kicked: Vec<(PlayerId, String)>,
-        chat: Vec<(Option<PlayerId>, String)>,
+    /// Moves a player so that their feet are at `feet`, keeping where they look.
+    pub fn teleport(&mut self, player: PlayerId, feet: [f32; 3]) {
+        self.backend.teleport(player, feet);
     }
 
-    fn steve() -> Player {
-        Player { id: PlayerId(3), name: "Steve".into(), uuid: uuid::Uuid::nil(), xuid: String::new() }
+    pub fn permission(&self, player: PlayerId) -> Option<Permission> {
+        self.backend.permission(player)
     }
 
-    impl Backend for Fake {
-        fn tick(&self) -> u64 {
-            40
-        }
-        fn player_count(&self) -> usize {
-            1
-        }
-        fn players(&self) -> Vec<Player> {
-            vec![steve()]
-        }
-        fn position(&self, player: PlayerId) -> Option<Position> {
-            (player == PlayerId(3)).then_some(Position { feet: [1.0, 2.0, 3.0], yaw: 90.0, pitch: 0.0 })
-        }
-        fn kick(&mut self, player: PlayerId, message: &str) {
-            self.kicked.push((player, message.to_owned()));
-        }
-        fn broadcast(&mut self, message: &str) {
-            self.chat.push((None, message.to_owned()));
-        }
-        fn send_message(&mut self, player: PlayerId, message: &str) {
-            self.chat.push((Some(player), message.to_owned()));
-        }
+    /// Changes which commands a player may use; their client's command list follows.
+    pub fn set_permission(&mut self, player: PlayerId, permission: Permission) {
+        self.backend.set_permission(player, permission);
     }
 
-    struct KickEveryone;
-
-    impl Handler for KickEveryone {
-        fn on_join(&mut self, ctx: &mut ShardCtx<'_>, player: &Player) {
-            ctx.kick(player.id, &format!("full at tick {} with {}", ctx.tick(), ctx.player_count()));
-        }
+    pub fn game_mode(&self, player: PlayerId) -> Option<GameMode> {
+        self.backend.game_mode(player)
     }
 
-    struct Greeter;
-
-    impl Handler for Greeter {
-        fn on_join(&mut self, ctx: &mut ShardCtx<'_>, player: &Player) {
-            let names: Vec<String> = ctx.players().map(|p| p.name).collect();
-            let at = ctx.position(player.id).map(|p| p.feet);
-            ctx.broadcast(&format!("{} joined {names:?} at {at:?}", player.name));
-            ctx.send_message(player.id, "welcome");
-        }
+    pub fn set_game_mode(&mut self, player: PlayerId, mode: GameMode) {
+        self.backend.set_game_mode(player, mode);
     }
 
-    #[test]
-    fn handlers_act_through_the_context_and_default_to_no_ops() {
-        let mut backend = Fake::default();
-        let mut handler: Box<dyn Handler> = Box::new(KickEveryone);
-        handler.on_join(&mut ShardCtx::new(&mut backend), &steve());
-        handler.on_quit(&mut ShardCtx::new(&mut backend), &steve());
-        assert_eq!(handler.on_chat(&mut ShardCtx::new(&mut backend), &steve(), "hi"), ChatOutcome::Allow);
-        assert_eq!(backend.kicked, [(PlayerId(3), "full at tick 40 with 1".to_owned())]);
+    /// Opens `form` on a player's screen. `on_answer` runs once, on this shard, when the player
+    /// submits or closes it; never if they leave first. An answer the form does not allow counts
+    /// as a close (see [`crate::form`]).
+    pub fn send_form<F>(&mut self, player: PlayerId, form: F, on_answer: impl FnOnce(&mut ShardCtx<'_>, &Player, FormResponse<F::Response>) + Send + 'static)
+    where
+        F: Form + Send + 'static,
+    {
+        let json = form.to_json();
+        let callback = move |ctx: &mut ShardCtx<'_>, player: &Player, data: Option<&str>| on_answer(ctx, player, FormResponse::of(&form, data));
+        self.backend.send_form(player, json, Box::new(callback));
     }
 
-    #[test]
-    fn the_context_lists_players_and_sends_messages() {
-        let mut backend = Fake::default();
-        Greeter.on_join(&mut ShardCtx::new(&mut backend), &steve());
-        let expected = [(None, r#"Steve joined ["Steve"] at Some([1.0, 2.0, 3.0])"#.to_owned()), (Some(PlayerId(3)), "welcome".to_owned())];
-        assert_eq!(backend.chat, expected);
+    /// Shows `sidebar` to a player, or changes the one they have: only lines that differ are sent.
+    pub fn set_sidebar(&mut self, player: PlayerId, sidebar: &Sidebar) {
+        self.backend.set_sidebar(player, Some(sidebar));
+    }
+
+    pub fn remove_sidebar(&mut self, player: PlayerId) {
+        self.backend.set_sidebar(player, None);
+    }
+
+    /// Shows `bar` to a player, or changes the one they have.
+    pub fn set_boss_bar(&mut self, player: PlayerId, bar: &BossBar) {
+        self.backend.set_boss_bar(player, Some(bar));
+    }
+
+    pub fn remove_boss_bar(&mut self, player: PlayerId) {
+        self.backend.set_boss_bar(player, None);
+    }
+
+    pub fn send_title(&mut self, player: PlayerId, title: &Title) {
+        self.backend.send_title(player, title);
+    }
+
+    /// Shows a line above a player's hotbar for a few seconds.
+    pub fn send_actionbar(&mut self, player: PlayerId, text: &str) {
+        self.backend.send_actionbar(player, text);
+    }
+
+    /// Slides a notification in at the top of a player's screen.
+    pub fn send_toast(&mut self, player: PlayerId, title: &str, message: &str) {
+        self.backend.send_toast(player, title, message);
+    }
+
+    /// This shard's `T`, `T::default()` on first use: what handlers, commands and form callbacks
+    /// of a plugin share. Keyed by type, so a plugin's own type is its own state.
+    pub fn state<T: Default + Send + Sync + 'static>(&mut self) -> &mut T {
+        let state = self.backend.state(TypeId::of::<T>(), &|| Box::new(T::default()));
+        state.downcast_mut().expect("state is stored under its own type")
     }
 }

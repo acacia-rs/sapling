@@ -1,6 +1,6 @@
 use std::net::SocketAddr;
 
-use sapling_api::{GameMode, Handler};
+use sapling_api::{Command, GameMode, Handler, Priority};
 use sapling_net::{Listener, Motd, NetConfig, SigningKeys};
 use sapling_shard::{Shard, ShardConfig, ShardHandle};
 use sapling_world::World;
@@ -25,12 +25,14 @@ pub struct ServerBuilder {
     net: NetConfig,
     shard: ShardConfig,
     world: Option<World>,
-    handlers: Vec<Box<dyn Handler>>,
+    handlers: Vec<(Priority, Box<dyn Handler>)>,
+    /// Each registers one command type on the shard once it exists.
+    commands: Vec<fn(&mut Shard)>,
 }
 
 impl Default for ServerBuilder {
     fn default() -> Self {
-        Self { addr: ([0, 0, 0, 0], 19132).into(), net: NetConfig::default(), shard: ShardConfig::default(), world: None, handlers: Vec::new() }
+        Self { addr: ([0, 0, 0, 0], 19132).into(), net: NetConfig::default(), shard: ShardConfig::default(), world: None, handlers: Vec::new(), commands: Vec::new() }
     }
 }
 
@@ -79,9 +81,20 @@ impl ServerBuilder {
         self
     }
 
-    /// Adds a handler; handlers are called in the order they were added.
-    pub fn handler(mut self, handler: impl Handler) -> Self {
-        self.handlers.push(Box::new(handler));
+    /// Adds a handler at [`Priority::Normal`]; equal priorities are called in the order they were added.
+    pub fn handler(self, handler: impl Handler) -> Self {
+        self.handler_at(Priority::Normal, handler)
+    }
+
+    /// Adds a handler that runs before those of lower priority (see [`Priority`]).
+    pub fn handler_at(mut self, priority: Priority, handler: impl Handler) -> Self {
+        self.handlers.push((priority, Box::new(handler)));
+        self
+    }
+
+    /// Adds a command: clients that may use it see its syntax and get completions.
+    pub fn command<C: Command>(mut self) -> Self {
+        self.commands.push(|shard| shard.add_command::<C>());
         self
     }
 
@@ -91,7 +104,8 @@ impl ServerBuilder {
         let keys = if self.net.online_mode { signing_keys().await? } else { SigningKeys::empty() };
         let (listener, outbox, inbox) = sapling_net::listen(self.addr, self.net, keys).await?;
         let mut shard = Shard::new(self.shard, self.world.unwrap_or_else(platform_world), inbox, outbox);
-        self.handlers.into_iter().for_each(|h| shard.add_handler(h));
+        self.handlers.into_iter().for_each(|(priority, handler)| shard.add_handler_at(priority, handler));
+        self.commands.into_iter().for_each(|register| register(&mut shard));
         tracing::info!(addr = %listener.local_addr(), "sapling listening");
         Ok(Server { listener, shard: shard.spawn() })
     }
