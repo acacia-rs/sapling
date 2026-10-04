@@ -5,6 +5,6 @@ mod player;
 mod start_game;
 mod templates;
 
-pub use player::{entity_data, update_abilities, update_attributes};
+pub use player::{AddPlayerOptions, add_player, entity_data, player_metadata, update_abilities, update_attributes};
 pub use start_game::{EYE_HEIGHT, StartGameOptions, start_game};
 pub use templates::{pre_start_packets, registry_packets};

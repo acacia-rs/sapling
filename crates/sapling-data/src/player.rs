@@ -1,7 +1,12 @@
-//! The joining player's own state as BDS sends it to a fresh survival player, re-addressed.
+//! A player's state as BDS sends it for a fresh survival player, re-addressed: to the player
+//! itself at join, and to the players who see it (AddPlayer shape: `sapling` example `bds_probe`).
 
-use acacia_proto::packets::{SetEntityData, UpdateAbilities, UpdateAttributes};
-use acacia_proto::types::{MetadataDictionaryItemKey as Key, MetadataDictionaryItemValue as Value, MetadataDictionaryItemValueDefault as Default};
+use acacia_proto::manual::Uuid;
+use acacia_proto::packets::{AddPlayer, SetEntityData, UpdateAbilities, UpdateAttributes};
+use acacia_proto::types::{
+    DeviceOS, GameMode, ItemV4, ItemV4Extra, MetadataDictionary, MetadataDictionaryItemKey as Key, MetadataDictionaryItemValue as Value,
+    MetadataDictionaryItemValueDefault as Default, MetadataFlags1, Vec3f,
+};
 
 use crate::templates::{SET_ENTITY_DATA, UPDATE_ABILITIES, UPDATE_ATTRIBUTES, decode};
 
@@ -15,13 +20,68 @@ pub fn update_abilities(entity_unique_id: i64) -> UpdateAbilities {
     UpdateAbilities { entity_unique_id, ..decode(UPDATE_ABILITIES) }
 }
 
-/// The player's entity metadata (gravity, collision and breathing flags, hitbox), named `name`.
-pub fn entity_data(runtime_entity_id: u64, name: &str) -> SetEntityData {
-    let mut data = SetEntityData { runtime_entity_id, ..decode(SET_ENTITY_DATA) };
-    for item in data.metadata.iter_mut().filter(|i| i.key == Key::Nametag) {
-        item.value = Value::Default(Default::String(name.to_owned()));
+/// A player's entity metadata (gravity and collision flags, hitbox), named `name`, with `flags`
+/// set on top of the recorded ones.
+pub fn player_metadata(name: &str, flags: MetadataFlags1) -> MetadataDictionary {
+    let mut metadata = decode::<SetEntityData>(SET_ENTITY_DATA).metadata;
+    for item in &mut metadata {
+        match &mut item.value {
+            value if item.key == Key::Nametag => *value = Value::Default(Default::String(name.to_owned())),
+            Value::Flags(recorded) => recorded.insert(flags),
+            _ => {}
+        }
     }
-    data
+    metadata
+}
+
+/// The player's own metadata, as sent to it at join.
+pub fn entity_data(runtime_entity_id: u64, name: &str) -> SetEntityData {
+    SetEntityData { runtime_entity_id, metadata: player_metadata(name, MetadataFlags1(0)), ..decode(SET_ENTITY_DATA) }
+}
+
+/// Who appears where, for [`add_player`].
+pub struct AddPlayerOptions<'a> {
+    pub uuid: Uuid,
+    pub name: &'a str,
+    /// Both the runtime and the unique entity id.
+    pub id: u64,
+    pub feet: [f32; 3],
+    pub yaw: f32,
+    pub pitch: f32,
+    pub head_yaw: f32,
+    pub flags: MetadataFlags1,
+    pub device_id: &'a str,
+    /// `DeviceOS` of the player's client data.
+    pub device_os: i32,
+}
+
+/// A player entering someone's view, empty-handed. The position is the feet, unlike MovePlayer's.
+pub fn add_player(o: &AddPlayerOptions<'_>) -> AddPlayer {
+    let abilities: UpdateAbilities = decode(UPDATE_ABILITIES);
+    let [x, y, z] = o.feet;
+    AddPlayer {
+        uuid: o.uuid,
+        username: o.name.to_owned(),
+        runtime_id: o.id,
+        platform_chat_id: String::new(),
+        position: Vec3f { x, y, z },
+        velocity: Vec3f { x: 0.0, y: 0.0, z: 0.0 },
+        pitch: o.pitch,
+        yaw: o.yaw,
+        head_yaw: o.head_yaw,
+        held_item: ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: ItemV4Extra::Default(None) },
+        // BDS sends Fallback: the viewer shows the world's game mode.
+        gamemode: GameMode::Fallback,
+        metadata: player_metadata(o.name, o.flags),
+        properties: decode::<SetEntityData>(SET_ENTITY_DATA).properties,
+        unique_id: o.id as i64,
+        permission_level: abilities.permission_level,
+        command_permission: abilities.command_permission,
+        abilities: abilities.abilities,
+        links: Vec::new(),
+        device_id: o.device_id.to_owned(),
+        device_os: Some(DeviceOS::from_raw(o.device_os.into())),
+    }
 }
 
 #[cfg(test)]
@@ -46,5 +106,31 @@ mod tests {
         assert_eq!(data.runtime_entity_id, 9);
         let name = data.metadata.iter().find(|i| i.key == Key::Nametag).expect("a nametag");
         assert_eq!(name.value, Value::Default(Default::String("Steve".into())));
+    }
+
+    #[test]
+    fn a_player_is_added_as_bds_adds_one() {
+        let uuid: Uuid = "4c8ae710-df2e-47cd-814d-cc7bf21a3d67".parse().unwrap();
+        let options = AddPlayerOptions {
+            uuid,
+            name: "Alex",
+            id: 7,
+            feet: [1.5, 64.0, -2.5],
+            yaw: 90.0,
+            pitch: 10.0,
+            head_yaw: 95.0,
+            flags: MetadataFlags1::SNEAKING,
+            device_id: "device",
+            device_os: 1,
+        };
+        let added = roundtrip(&add_player(&options));
+        assert_eq!((added.uuid, added.username.as_str(), added.runtime_id, added.unique_id), (uuid, "Alex", 7, 7));
+        assert_eq!((added.position.y, added.yaw, added.pitch, added.head_yaw), (64.0, 90.0, 10.0, 95.0));
+        assert_eq!((added.gamemode, added.device_os, added.held_item.network_id), (GameMode::Fallback, Some(DeviceOS::Android), 0));
+        let flags = added.metadata.iter().find_map(|i| if let Value::Flags(f) = &i.value { Some(*f) } else { None }).expect("flags");
+        // The recorded flags (collision, gravity, climbing) stay; sneaking is added.
+        assert_eq!(flags.0, 844_424_930_656_256 | MetadataFlags1::SNEAKING.0);
+        assert_eq!(added.abilities, update_abilities(7).abilities);
+        assert_eq!(added.metadata.len(), entity_data(7, "Alex").metadata.len());
     }
 }
