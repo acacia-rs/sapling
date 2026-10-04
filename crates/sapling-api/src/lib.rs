@@ -2,6 +2,7 @@
 //! for acting on the shard. Everything here is plain data or a borrowed handle; the ECS behind a
 //! shard never shows (docs/DESIGN.md "Plugin API").
 
+mod block;
 pub mod command;
 mod ctx;
 mod event;
@@ -13,6 +14,7 @@ mod testing;
 #[cfg(test)]
 mod tests;
 
+pub use block::{Block, BlockPos, BreakEvent, Face, InteractEvent, PlaceEvent};
 pub use command::{Command, Commands, Output, Sender};
 pub use ctx::{Backend, FormCallback, ShardCtx, State};
 pub use event::{Cancellable, ChatEvent, CommandEvent, Priority};
@@ -42,6 +44,21 @@ pub trait Handler: Send + 'static {
 
     /// A player sent a command, registered or not. Cancelled, it is not run and gets no answer.
     fn on_command(&mut self, ctx: &mut ShardCtx<'_>, player: &Player, event: &mut CommandEvent) {
+        let _ = (ctx, player, event);
+    }
+
+    /// A player finished breaking a block (in creative mode: hit it).
+    fn on_break(&mut self, ctx: &mut ShardCtx<'_>, player: &Player, event: &mut BreakEvent) {
+        let _ = (ctx, player, event);
+    }
+
+    /// A player clicked a block with a block in hand.
+    fn on_place(&mut self, ctx: &mut ShardCtx<'_>, player: &Player, event: &mut PlaceEvent) {
+        let _ = (ctx, player, event);
+    }
+
+    /// A player clicked a block that is used rather than built on, or clicked with no block in hand.
+    fn on_interact(&mut self, ctx: &mut ShardCtx<'_>, player: &Player, event: &mut InteractEvent) {
         let _ = (ctx, player, event);
     }
 

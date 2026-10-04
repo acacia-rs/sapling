@@ -1,7 +1,7 @@
 use std::any::{Any, TypeId};
 
 use crate::form::{Form, FormResponse};
-use crate::{BossBar, GameMode, Permission, Player, PlayerId, Position, Sidebar, Title};
+use crate::{Block, BlockPos, BossBar, GameMode, Permission, Player, PlayerId, Position, Sidebar, Title};
 
 /// Called with a form's raw answer (`None`: closed) on the shard of the player it was sent to.
 pub type FormCallback = Box<dyn FnOnce(&mut ShardCtx<'_>, &Player, Option<&str>) + Send>;
@@ -16,6 +16,8 @@ pub trait Backend {
     fn set_spawn(&mut self, feet: [f32; 3]);
     fn time(&self) -> i64;
     fn set_time(&mut self, time: i64);
+    fn block(&self, pos: BlockPos) -> Option<Block>;
+    fn set_block(&mut self, pos: BlockPos, block: &Block) -> bool;
     fn kick(&mut self, player: PlayerId, message: &str);
     fn broadcast(&mut self, message: &str);
     fn send_message(&mut self, player: PlayerId, message: &str);
@@ -87,6 +89,18 @@ impl<'a> ShardCtx<'a> {
     /// Sets the time of day for everyone in the world.
     pub fn set_time(&mut self, time: i64) {
         self.backend.set_time(time);
+    }
+
+    /// The block at a position; `None` where the world is not loaded or does not reach.
+    pub fn block(&self, pos: BlockPos) -> Option<Block> {
+        self.backend.block(pos)
+    }
+
+    /// Puts a block into the world and onto the screen of everyone who sees the place. False,
+    /// with nothing changed, for a block the game does not have and where [`ShardCtx::block`]
+    /// is `None`. Raises no event.
+    pub fn set_block(&mut self, pos: BlockPos, block: &Block) -> bool {
+        self.backend.set_block(pos, block)
     }
 
     /// Disconnects a player with `message` on their screen. `on_quit` follows on a later tick.

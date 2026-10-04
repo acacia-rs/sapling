@@ -12,6 +12,7 @@ use acacia_proto::types::{
 use bevy_ecs::prelude::*;
 use sapling_data::EYE_HEIGHT;
 
+use crate::blocks::BlockInputs;
 use crate::components::{NetId, Outgoing, PacketQueues, Position, Stage, Tick};
 use crate::visibility::ToViewers;
 
@@ -117,12 +118,13 @@ type Mover<'a> = (&'a NetId, &'a Stage, &'a mut Position, &'a mut Motion, &'a mu
 
 /// Where each client says its player is. Trusted, except that non-finite values are dropped and
 /// a step no player makes in a tick is answered with a teleport back.
-pub(crate) fn player_input(mut packets: ResMut<PacketQueues>, tick: Res<Tick>, mut players: Query<Mover>) {
-    for (entity, input) in packets.take::<PlayerAuthInput>() {
+pub(crate) fn player_input(mut packets: ResMut<PacketQueues>, tick: Res<Tick>, mut blocks: ResMut<BlockInputs>, mut players: Query<Mover>) {
+    for (entity, mut input) in packets.take::<PlayerAuthInput>() {
         let Ok((id, stage, mut position, mut motion, mut out)) = players.get_mut(entity) else { continue };
         if input.block_action.is_some() || input.transaction.is_some() || input.item_stack_request.is_some() {
             tracing::debug!(tick = input.tick, actions = ?input.block_action, transaction = ?input.transaction, request = ?input.item_stack_request, "input with an action");
         }
+        blocks.take_from(entity, &mut input);
         let reported = [input.position.x, input.position.y, input.position.z, input.yaw, input.pitch, input.head_yaw];
         if *stage < Stage::Loading || reported.iter().any(|c| !c.is_finite()) {
             continue;

@@ -4,7 +4,7 @@ use std::any::TypeId;
 use std::collections::HashMap;
 
 use crate::ctx::State;
-use crate::{Backend, BossBar, FormCallback, GameMode, Permission, Player, PlayerId, Position, Sidebar, Title};
+use crate::{Backend, Block, BlockPos, BossBar, FormCallback, GameMode, Permission, Player, PlayerId, Position, Sidebar, Title};
 
 #[derive(Default)]
 pub struct Fake {
@@ -12,6 +12,8 @@ pub struct Fake {
     /// One line per call that changes something.
     pub log: Vec<String>,
     pub forms: Vec<(PlayerId, String, FormCallback)>,
+    /// What was set; everything else at y >= 0 is air, and below there is no world.
+    pub blocks: HashMap<BlockPos, Block>,
     state: HashMap<TypeId, State>,
 }
 
@@ -49,6 +51,17 @@ impl Backend for Fake {
     }
     fn set_time(&mut self, time: i64) {
         self.log.push(format!("time {time}"));
+    }
+    fn block(&self, pos: BlockPos) -> Option<Block> {
+        (pos[1] >= 0).then(|| self.blocks.get(&pos).cloned().unwrap_or_else(Block::air))
+    }
+    fn set_block(&mut self, pos: BlockPos, block: &Block) -> bool {
+        let known = pos[1] >= 0 && block.name.starts_with("minecraft:");
+        if known {
+            self.blocks.insert(pos, block.clone());
+            self.log.push(format!("block {pos:?} {} [{}]", block.name, block.properties));
+        }
+        known
     }
     fn kick(&mut self, player: PlayerId, message: &str) {
         self.log.push(format!("kick {} {message}", player.0));

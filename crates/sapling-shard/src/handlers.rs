@@ -5,13 +5,13 @@ use std::any::TypeId;
 
 use acacia_proto::packets::UpdatePlayerGameType;
 use bevy_ecs::prelude::*;
-use sapling_api::{Backend, BossBar, FormCallback, GameMode, Permission, Player, PlayerId, Sidebar, State, Title};
+use sapling_api::{Backend, Block, BlockPos, BossBar, FormCallback, GameMode, Permission, Player, PlayerId, Sidebar, State, Title};
 use sapling_net::ConnId;
 
 use crate::commands::Access;
 use crate::components::{Arrivals, DefaultLayer, Identity, Layer, Mode, Net, NetId, Outgoing, Players, Position, Stage, Tick, in_world};
 use crate::plugins::{PluginState, Plugins};
-use crate::{chat, clock, commands, forms, hud, join, movement, roster};
+use crate::{blocks, chat, clock, commands, forms, hud, join, movement, roster};
 
 pub(crate) struct Ctx<'w> {
     pub world: &'w mut World,
@@ -71,6 +71,15 @@ impl Backend for Ctx<'_> {
     fn set_time(&mut self, time: i64) {
         let layer = self.world.resource::<DefaultLayer>().0;
         clock::set(self.world, layer, time);
+    }
+
+    fn block(&self, pos: BlockPos) -> Option<Block> {
+        blocks::block_at(self.world, self.world.resource::<DefaultLayer>().0, pos)
+    }
+
+    fn set_block(&mut self, pos: BlockPos, block: &Block) -> bool {
+        let layer = self.world.resource::<DefaultLayer>().0;
+        blocks::put_block(self.world, layer, pos, block)
     }
 
     fn kick(&mut self, player: PlayerId, message: &str) {
@@ -159,9 +168,9 @@ impl Backend for Ctx<'_> {
     }
 }
 
-/// Lists players whose client finished loading and calls `on_join` for them, runs chat, commands
-/// and form answers, removes players whose connection ended, with `on_quit` for those who had
-/// joined, and ends with `on_tick`.
+/// Lists players whose client finished loading and calls `on_join` for them, runs chat, commands,
+/// block requests and form answers, removes players whose connection ended, with `on_quit` for
+/// those who had joined, and ends with `on_tick`.
 pub(crate) fn dispatch(world: &mut World, plugins: &mut Plugins) {
     let Arrivals { joined, left } = std::mem::take(&mut *world.resource_mut::<Arrivals>());
     for entity in joined {
@@ -172,6 +181,7 @@ pub(crate) fn dispatch(world: &mut World, plugins: &mut Plugins) {
     }
     chat::dispatch(world, plugins);
     commands::dispatch(world, plugins);
+    blocks::dispatch(world, plugins);
     forms::dispatch(world);
     for entity in left {
         let had_joined = world.get::<Stage>(entity) == Some(&Stage::InWorld);

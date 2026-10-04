@@ -4,6 +4,7 @@
 //! docs/DESIGN.md "Threads", "Worlds" and "Step 3 as built".
 
 mod blobs;
+mod blocks;
 mod chat;
 mod chunks;
 mod clock;

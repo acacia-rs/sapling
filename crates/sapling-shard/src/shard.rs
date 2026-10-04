@@ -21,7 +21,7 @@ use crate::roster::Profile;
 use crate::view::View;
 use crate::visibility::{Sees, ToViewers};
 use crate::mobs::SeesMobs;
-use crate::{blobs, chunks, clock, commands, handlers, join, mobs, movement, visibility};
+use crate::{blobs, blocks, chunks, clock, commands, handlers, join, mobs, movement, visibility};
 
 pub const TICK: Duration = Duration::from_millis(50);
 
@@ -79,6 +79,7 @@ impl Shard {
         world.init_resource::<Arrivals>();
         world.init_resource::<PacketQueues>();
         world.init_resource::<ToViewers>();
+        world.init_resource::<blocks::BlockInputs>();
 
         let mut schedule = Schedule::default();
         // Shards scale across threads; inside one, systems run in this order every tick.

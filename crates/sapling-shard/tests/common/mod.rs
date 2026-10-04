@@ -7,10 +7,14 @@ use std::sync::{Arc, Mutex};
 
 use acacia_auth::login::verify::{SigningKeys, Verifier};
 use acacia_proto::packets::{
-    PlayerAuthInput, PlayerAuthInputInputMode, PlayerAuthInputInteractionModel, PlayerAuthInputPlayMode, RequestChunkRadius,
-    ResourcePackClientResponse, ResourcePackClientResponseResponseStatus as PackStatus, SetLocalPlayerAsInitialized,
+    InventoryTransaction, PlayerAuthInput, PlayerAuthInputBlockActionItem, PlayerAuthInputInputMode, PlayerAuthInputInteractionModel, PlayerAuthInputPlayMode,
+    RequestChunkRadius, ResourcePackClientResponse, ResourcePackClientResponseResponseStatus as PackStatus, SetLocalPlayerAsInitialized,
 };
-use acacia_proto::types::{Vec2f, Vec3f};
+use acacia_proto::types::{
+    Action as BlockAction, BlockCoordinates, InputData, ItemV4, ItemV4Extra, Transaction, TransactionLegacy, TransactionTransactionData, TransactionTransactionType,
+    TransactionUseItem, TransactionUseItemActionType, TransactionUseItemClientCooldownState, TransactionUseItemClientPrediction, TransactionUseItemHand,
+    TransactionUseItemTriggerType, Vec2f, Vec3f, Vec3i,
+};
 use acacia_proto::{GAME_VERSION, Packet, RawPacket};
 use p384::ecdsa::SigningKey;
 use sapling_api::{Handler, Player, ShardCtx};
@@ -186,6 +190,47 @@ pub fn all<T: Packet>(packets: &[RawPacket]) -> Vec<T> {
 
 pub fn pack_response(status: PackStatus) -> ResourcePackClientResponse {
     ResourcePackClientResponse { response_status: status, response_status_name: String::new(), resourcepackids: None }
+}
+
+/// The id a block's first state has on the wire.
+pub fn hash(name: &str) -> u32 {
+    let registry = sapling_world::BlockRegistry::vanilla();
+    registry.network_hash(registry.states_of(name).next().expect("a vanilla block").0)
+}
+
+/// The input of a player at the platform's spawn whose client reports block actions on top faces.
+pub fn block_actions(actions: &[(BlockAction, [i32; 3])]) -> PlayerAuthInput {
+    let item = |&(action, [x, y, z]): &(BlockAction, [i32; 3])|PlayerAuthInputBlockActionItem { action, position: Vec3i { x, y, z }, face: 1 };
+    PlayerAuthInput { input_data: vec![InputData::BlockAction], block_action: Some(actions.iter().map(item).collect()), ..input_at([0.5, 65.0, 0.5]) }
+}
+
+/// A click on `face` of the block at `pos` by a client that says it holds the block `held`.
+pub fn click([x, y, z]: [i32; 3], face: u8, held: Option<&str>) -> InventoryTransaction {
+    let held_item = ItemV4 {
+        network_id: held.map_or(0, |_| 1),
+        count: held.map_or(0, |_| 1),
+        metadata: 0,
+        has_stack_id: false,
+        stack_id: None,
+        block_runtime_id: held.map_or(0, hash),
+        extra: ItemV4Extra::Default(None),
+    };
+    let data = TransactionUseItem {
+        action_type: TransactionUseItemActionType::ClickBlock,
+        trigger_type: TransactionUseItemTriggerType::PlayerInput,
+        block_position: BlockCoordinates { x, y, z },
+        face,
+        hotbar_slot: 0,
+        hand: TransactionUseItemHand::MainHand,
+        held_item,
+        player_pos: Vec3f { x: 0.5, y: 65.0 + sapling_data::EYE_HEIGHT, z: 0.5 },
+        click_pos: Vec3f { x: 0.5, y: 1.0, z: 0.5 },
+        block_runtime_id: 0,
+        client_prediction: TransactionUseItemClientPrediction::Success,
+        client_cooldown_state: TransactionUseItemClientCooldownState::Off,
+    };
+    let legacy = TransactionLegacy { legacy_request_id: 0, legacy_transactions: None };
+    InventoryTransaction { transaction: Transaction { legacy, transaction_type: TransactionTransactionType::ItemUse, actions: Vec::new(), transaction_data: TransactionTransactionData::ItemUse(data) } }
 }
 
 /// The input of a player standing with its feet at `feet`.

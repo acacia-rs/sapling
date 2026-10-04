@@ -41,7 +41,7 @@ impl Plugins {
             let ctx = &mut ShardCtx::new(&mut backend);
             if *priority == Priority::Monitor {
                 call(handler.as_mut(), ctx, &mut event.clone());
-            } else if !event.is_cancelled() {
+            } else if !event.is_stopped() {
                 call(handler.as_mut(), ctx, &mut event);
             }
         }

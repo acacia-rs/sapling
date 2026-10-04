@@ -5,6 +5,8 @@
 ///
 /// For an event that can be cancelled, a cancel stops the handlers that have not run yet, except
 /// `Monitor` ones: they always see the event as it ended, and what they do to it is discarded.
+/// An event that starts cancelled (a break in adventure mode) was cancelled by no handler, so all
+/// of them see it and any may `allow()` it.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 pub enum Priority {
     Highest,
@@ -57,6 +59,12 @@ impl CommandEvent {
 /// An event handlers can stop; what a shard needs to run one through its handlers.
 pub trait Cancellable: Clone {
     fn is_cancelled(&self) -> bool;
+
+    /// Whether a handler cancelled it, which is what skips the handlers after it. An event that
+    /// only started cancelled (see [`crate::BreakEvent`]) is still shown to all of them.
+    fn is_stopped(&self) -> bool {
+        self.is_cancelled()
+    }
 }
 
 macro_rules! cancellable {
