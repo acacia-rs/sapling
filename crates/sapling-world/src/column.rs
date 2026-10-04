@@ -23,6 +23,13 @@ pub struct SubChunkAnswer {
     pub blob: Option<Blob>,
 }
 
+/// The announcement of an overworld column with no blocks, encoded once: it has no sections for
+/// a client to ask for, so sending it empties whatever the client holds at that position.
+pub fn empty_column(cached: bool) -> &'static LevelChunkData {
+    static EMPTY: OnceLock<Column> = OnceLock::new();
+    EMPTY.get_or_init(|| Column::empty(0, 0, Dimension::overworld(BlockRegistry::vanilla().air_id()))).level_chunk(cached)
+}
+
 pub(crate) struct Column {
     chunk: Chunk,
     /// As stored (`StoredColumn::block_entities`). TODO: sent to nobody yet.

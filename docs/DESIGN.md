@@ -304,6 +304,17 @@ never sent yet, and BDS's order around it (a portal, `/execute in nether`) was n
   the same tick removes the old world's players and mobs (RemoveEntity) and shows the player to the
   new world; from the next tick the new world's columns go out (NetworkChunkPublisherUpdate,
   LevelChunk), then its entities. The stage stays `InWorld`: no loading screen, no PlayStatus.
+- **Leftover columns.** A vanilla 1.26.5x client kept a hub column on screen in the arena: it
+  does not drop every old column when the publisher area moves, and a column the new world never
+  sends stays. So every column the view holds that a view around the new spawn does not cover is
+  overwritten first, ahead of the teleport and while the client's publisher area is still the
+  old one, with the one empty column (`sapling_world::empty_column`: no sections, so nothing is
+  asked for; for a blob-cache client it names the biome blob like any column). The columns
+  inside the new view are overwritten by the new world's own. Across shards the view travels
+  with the player, so the new shard knows what the client holds. Nothing queued for the old
+  world goes out afterwards: the view's queue is dropped with its columns. acacia-bot answers
+  each empty column with a request for no sections; such a request is ignored, or a view's
+  worth of them would fill the section backlog and the new world's first requests be dropped.
 - **What the client still sends from the old world.** Inputs are ignored until one carries
   `HandledTeleport`, block actions and clicks with them (this holds for any teleport). A section
   request is answered only once its column was announced in the current world: until then it
@@ -444,9 +455,17 @@ block action, and takes StopBreak and AbortBreak with a position.
   against, not replaced; `USED` is a list of name endings, not block data; what a click does (doors,
   levers, containers) and its sounds; a request over the tick limit gets no resync; `on_move`,
   which needs its own resync on cancel.
-- **Step 5, only a vanilla client can confirm:** that a world swap without ChangeDimension looks
-  right: LevelChunk for a column the client already holds replaces it (also the way an arena reset
-  re-sends a column), no old terrain stays at the edge of the view, and standing in old terrain
+- **Step 5 on a vanilla client (1.26.5x, 2026-10-04).** Working: `/world` and the menu button
+  both ways (inside a shard and across), no kick, sidebar and boss bar untouched, the refusals
+  for an unknown world. Not working: one hub column stayed visible far off in the arena; old
+  columns outside the new view are now overwritten with empty ones ("Leftover columns" above),
+  which no client has seen yet.
+- **Step 5, only a vanilla client can confirm:** that the empty columns take the leftover hub
+  column away, and that the client accepts them for positions it is about to leave (they are sent
+  before the teleport and the publisher update); columns the view let go of while the player
+  walked, before the change, are not emptied: the client is trusted to have dropped those, as
+  on any walk; that LevelChunk for a column the client already holds replaces it (also the way an
+  arena reset re-sends a column), and standing in old terrain
   for the few ticks until the new columns arrive does no harm; whether the client asks again for
   the sections of a re-announced column when a request for that column was still unanswered (the
   old request is answered from the new world once the column is announced, which covers a client

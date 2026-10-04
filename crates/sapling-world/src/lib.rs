@@ -14,7 +14,7 @@ mod world;
 
 pub use acacia_proto::types::Blob;
 pub use acacia_world::{BlockRegistry, Chunk, Dimension, LevelChunkData};
-pub use column::SubChunkAnswer;
+pub use column::{SubChunkAnswer, empty_column};
 pub use folder::WorldFolder;
 pub use sapling_leveldb::LevelDat;
 pub use sapling_leveldb::{Actor, actors};

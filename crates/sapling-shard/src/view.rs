@@ -47,11 +47,16 @@ impl View {
         true
     }
 
-    /// Forgets every column: the player is in another world, where all of them are to be sent.
-    pub fn reset(&mut self) {
+    /// Forgets every column: the player is in another world, where all of them are to be sent
+    /// and nothing queued for the old one is. Returns the columns the client has that a view
+    /// around `to` will not send again, in order.
+    pub fn leave(&mut self, to: ChunkPos) -> Vec<ChunkPos> {
+        let radius = self.radius;
+        let mut left: Vec<ChunkPos> = self.sent.drain().filter(|pos| distance_sq(*pos, to) > radius * radius).collect();
+        left.sort();
         self.center = None;
-        self.sent.clear();
         self.queue.clear();
+        left
     }
 
     /// Queues a column the client has, ahead of the rest: what it was sent is outdated.

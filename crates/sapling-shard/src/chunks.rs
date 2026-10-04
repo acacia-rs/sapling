@@ -79,7 +79,8 @@ type Requester<'a> = (&'a InLayer, &'a View, &'a mut BlobCache, &'a mut SectionB
 pub(crate) fn sub_chunk_requests(mut packets: ResMut<PacketQueues>, mut layers: Query<&mut Layer>, mut players: Query<Requester>) {
     for (entity, request) in packets.take::<SubchunkRequest>() {
         if let Ok((_, _, _, mut backlog, _)) = players.get_mut(entity) {
-            if backlog.0.len() < MAX_BACKLOG {
+            // A client may ask for no sections of a column that has none; that is not a request.
+            if !request.requests.is_empty() && backlog.0.len() < MAX_BACKLOG {
                 backlog.0.push(request);
             }
         }

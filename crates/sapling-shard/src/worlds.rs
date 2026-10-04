@@ -7,10 +7,11 @@ mod ctx;
 use std::collections::HashMap;
 
 use bevy_ecs::prelude::*;
+use sapling_world::ChunkPos;
 
 use crate::blobs::BlobCache;
 use crate::chunks::SectionBacklog;
-use crate::components::{DefaultLayer, InLayer, Layer, in_world_identity};
+use crate::components::{DefaultLayer, InLayer, Layer, Outgoing, in_world_identity};
 use crate::handoff::{Peers, ShardMsg};
 use crate::plugins::Plugins;
 use crate::view::View;
@@ -118,11 +119,18 @@ pub(crate) fn focus_on(world: &mut World, player: Entity) {
 /// held from the old world, its feet on the new spawn and the new world's time. The entities of
 /// the old world leave with the next visibility diff, which no longer finds them in view.
 pub(crate) fn settle(world: &mut World, player: Entity, layer: Entity) {
-    let Some(spawn) = world.get::<Layer>(layer).map(|layer| layer.spawn) else { return };
-    if let Ok((mut view, mut blobs, mut backlog)) = world.query::<(&mut View, &mut BlobCache, &mut SectionBacklog)>().get_mut(world, player) {
-        view.reset();
+    let Some((spawn, dimension)) = world.get::<Layer>(layer).map(|layer| (layer.spawn, layer.world.dimension())) else { return };
+    let to = ChunkPos::of_block(spawn[0].floor() as i32, spawn[2].floor() as i32);
+    if let Ok((mut view, mut blobs, mut backlog, mut out)) = world.query::<(&mut View, &mut BlobCache, &mut SectionBacklog, &mut Outgoing)>().get_mut(world, player) {
         blobs.release();
         backlog.clear();
+        // A vanilla client keeps some of the old world's columns the new view does not cover:
+        // each is overwritten with an empty one, while its publisher area is still the old one.
+        let empty = sapling_world::empty_column(blobs.is_enabled());
+        for pos in view.leave(to) {
+            empty.blobs.iter().for_each(|blob| blobs.advertise(blob));
+            out.push(&empty.packet(pos.x, pos.z, dimension));
+        }
     }
     // Inputs are ignored until the client says it followed: they are positions in the old world.
     movement::teleport(world, player, spawn);
