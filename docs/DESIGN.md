@@ -161,7 +161,8 @@ One listener task, one shard thread, one world. The pieces and why they are shap
   `ShardConfig::columns_per_tick` (8) columns that are loaded, and only the nearest `2 x` that many are
   asked of storage. `NetworkChunkPublisherUpdate` goes out when the player's chunk changes.
   PlayStatus(PlayerSpawn) follows once the columns within 3 chunks are sent (BDS: 26 columns).
-  Sub-chunk requests for a column not loaded answer `ChunkNotFound`.
+  Sub-chunk requests for a column not loaded wait (`SectionBacklog`, 64 requests a player) and are
+  answered once it is: a vanilla client disconnects itself on a `ChunkNotFound` entry.
 - **Blob cache.** `ClientCacheStatus` turns it on per player (and `ShardConfig::blob_cache`). Each
   section is encoded once per column with its xxh64 and shared by all players, cached or not: `LevelChunk`
   names the biome blob, `Subchunk` entries name section blobs with an empty payload. A player holds
@@ -270,8 +271,93 @@ it sends for `/title`, `/scoreboard`, `/gamemode`, `/tp`, a wither's bar and com
 - **Game mode.** `ctx.set_game_mode` sends UpdatePlayerGameType to everyone in the world, the player
   included: all BDS's `/gamemode` sends besides chat lines (no SetPlayerGameType, no UpdateAbilities).
 
+## Step 6 as built (Protection)
+
+Ground truth: `cargo run -p sapling --example bds_block_probe -- <server>`: an actor bot breaks, places and
+clicks blocks in creative, survival and adventure, also what no client should get away with, while a
+watcher bot stands by; both print the block, sound and inventory packets they get. BDS 1.26.52.3 gave:
+
+| The actor | got itself | the watcher got |
+|---|---|---|
+| StartBreak | LevelEvent `ParticlePunchBlock<face>` (block centre, data = block hash); in survival and adventure also `BlockStartBreak` (block corner, data = 65535 / break ticks) and `BlockBreakSpeed` | the same |
+| PredictBreak, taken | LevelEvent `ParticleDestroy` (centre, hash), UpdateBlock air (flags 3: Neighbors, Network; layer 0); in survival the dropped item | the same |
+| PredictBreak, refused (adventure; survival, finished at once) | UpdateBlock of the block, the one above it (twice) and the next above, layer 0 | nothing more |
+| ClickBlock with a block in hand, taken | UpdateBlock of the clicked block and the cells around it, its inventory, then UpdateBlock of the new block (flags 3, layer 0) and LevelSoundEvent `place` (centre, extra data = hash, no entity) | the last two |
+| ClickBlock, refused (adventure; too far) | UpdateBlock of the clicked block, the cell on the clicked face and the cells before and beyond them, layer 0, and its inventory | nothing |
+| ClickBlock on a trapdoor | UpdateBlock of the new state, LevelSoundEvent `trapdoor.open` | the same |
+
+BDS took a click whose block centre was 6.4 blocks from the eye in survival and 12.2 in creative and
+refused 7.3 and 13.2. In creative StartBreak alone breaks nothing: PredictBreak does. A survival break
+finished at once is refused and BDS then breaks the block itself when its time is up (it mines along
+from StartBreak). It closes the connection of a client that sends `CreativePlayerDestroyBlock` as a
+block action, and takes StopBreak and AbortBreak with a position.
+
+- **Requests** (`sapling-shard/src/blocks.rs`, packets in `blocks/send.rs`). `movement::player_input` hands
+  an input's block actions and item use to `BlockInputs`; `InventoryTransaction` ItemUse packets join them;
+  `blocks::dispatch` runs with the other handlers. PredictBreak, or an item use of type BreakBlock, is a
+  break (the same position twice in a tick is one break). StartBreak sends the punch particles to
+  everyone who sees the block. ClickBlock is a place when the item names a block and the clicked block is
+  not one a click uses (`USED`: doors, buttons, chests and the like by the end of their name; sneaking
+  builds on them too), otherwise an interaction.
+- **Checks before any event.** The position is inside the world's height, its column is loaded, and its
+  centre is within 7 blocks of the player's eye (13 in creative). A break needs a block that is not air or
+  liquid. A place needs a face 0..=5, a clicked block that is not air, a free cell (air or liquid, inside
+  the height, loaded) and, for a block with collision, no player standing in it.
+- **Events.** `Handler::on_break(ctx, player, &mut BreakEvent)`, `on_place(.., &mut PlaceEvent)`,
+  `on_interact(.., &mut InteractEvent)`: plain data (`BlockPos = [i32; 3]`, `Face`, `Block { name,
+  properties }` with the registry's `key=value,..` text), `cancel()`, `allow()`, `is_cancelled()`.
+  `PlaceEvent::block` is public: a handler may place something else. Priorities and monitors as for chat.
+- **Defaults by game mode.** A break starts allowed in survival and creative and cancelled in adventure
+  and spectator; a place starts allowed in creative only; an interaction starts cancelled for spectators.
+  A cancelled start is not a handler's cancel: every handler still sees the event (`Cancellable::is_stopped`)
+  and any may `allow()` it, so a plugin can open one region to adventure players. A handler's `cancel()`
+  stops the handlers after it, as for chat.
+- **Taken.** A break writes air, or the water the block stood in (layer 1 is emptied), and everyone whose
+  view covers the column, the breaker included and players still loading too, gets UpdateBlock (flags 3)
+  and `ParticleDestroy`. A place writes the event's block and sends UpdateBlock and the `place` sound.
+  `World::set_block` marks the column for saving and drops its cached section and heightmap encodings, so
+  a later joiner, cached or not, gets the new section under a new blob hash (tested with a shard and a bot).
+- **Refused: the resync** (dragonfly #749). The client predicted, so it is shown the truth: after a break
+  the block and the one above it; after a place the clicked block **and** the cell on the clicked face,
+  where the client put its block; after an interaction those two and the blocks above and below (a door
+  is two blocks). Each position goes out on both storage layers (layer 1: the water or air), flags 3, to
+  that player only. BDS's captures show layer 0 only; none had water in them.
+- **Interactions** change nothing yet, allowed or cancelled: the event is raised and the click is resynced,
+  so a door a client opened on its own screen closes again.
+- **Trust.** There are no inventories: the block placed is the one the client's item names, which is why
+  only creative places by default and a handler that allows a survival place vouches for the item. A
+  break counts when the client says it is finished: no mining-time check in any mode. Positions and the
+  eye are the server's own; the packet's `player_pos`, `click_pos` and clicked block id are ignored.
+- **Limits.** 16 block actions and 4 clicks a player a tick; an input's action list is cut to 16. What
+  exceeds them is dropped without an answer. Absurd positions (the edges of `i32`, outside the height)
+  are refused before anything is computed from them.
+- **API.** `ctx.block(pos) -> Option<Block>` (`None` where not loaded or outside the height) and
+  `ctx.set_block(pos, &block) -> bool`, which shows the block to its viewers and raises no event. The hub's
+  whole protection is `if !may_build(ctx, player) { event.cancel() }` in `on_break` and `on_place`, with
+  `may_build` = operator and in creative mode.
+
 ## Open items
 
+- **Step 6, only a vanilla client can confirm:** which actions a creative client sends for an instant
+  break (sapling breaks on PredictBreak and on an item use of type BreakBlock, never on StartBreak
+  alone; `RUST_LOG=debug` logs every "input with an action"); that an input carrying StopBreak or
+  AbortBreak decodes (acacia-proto reads a position for every block action, which BDS accepted from the
+  probe); that a block picked from the creative inventory stays in the hand though no ItemStackRequest is
+  answered; that the held item's `block_runtime_id` is the block's hash; the resync after a refused break
+  and place (no ghost block, no hole), also with the blob cache on; a door opened on screen closing
+  again; `ParticleDestroy` and the `place` sound seen and heard by a second client; a block placed while
+  another client is still loading the column.
+- **Blocks, left out of step 6:** inventories and ItemStackRequest; item drops; block entities' contents
+  (a broken chest's record is dropped, nothing is created); mining time and tool speed, so also the crack
+  animation others see (`BlockStartBreak` carries the break time); block updates and physics (sand, water,
+  torches losing their support, fences and stairs reconnecting); orientation: the item's own state is
+  placed, so stairs and logs ignore where the player looks; replaceable plants (tall grass) are built
+  against, not replaced; `USED` is a list of name endings, not block data; what a click does (doors,
+  levers, containers) and its sounds; a request over the tick limit gets no resync; `ctx.block` and
+  `ctx.set_block` act on the shard's first world; `on_move`, which needs its own resync on cancel.
+- A blob-cache client told a section hash before a block changed and asking for the blob after gets the
+  old section, though it already applied the UpdateBlock: re-send the block updates of a tick with the
+  blobs, or name blobs by content and time.
 - **Only a vanilla client can confirm** (bots decode all of these): the plain fallback skin
   (`geometry.humanoid.custom`, 64x64); `trusted` = "false" for skins that claim to be untrusted; one
   PlayerList packet per record instead of one packet with many; the correction teleport's
@@ -294,7 +380,6 @@ it sends for `/title`, `/scoreboard`, `/gamemode`, `/tp`, a wither's bar and com
   (UpdateSoftEnum) for dynamic completions, several overloads for a struct, permission nodes.
 - Forms: images are untested, `ServerSettings`, ClientboundCloseForm, a timeout for unanswered forms.
 - HUD: list and below-name objectives, several boss bars (needs an entity each), `/title` clear and reset.
-- `on_move` and the other cancellable world events (break, place, interact) come with step 6.
 - acacia-proto: `AvailableCommands` value type names are stale for 1.26.5x (string 56, block position 64,
   position 65, message 68, raw text 70, json 74, block states 84, command 90).
 - Not sent yet, though BDS sends them for other players: UpdateAbilities, UpdateAdventureSettings,
