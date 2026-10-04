@@ -31,6 +31,15 @@ pub enum Permission {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum Difficulty {
+    #[default]
+    Peaceful,
+    Easy,
+    Normal,
+    Hard,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum GameMode {
     #[default]
     Survival,

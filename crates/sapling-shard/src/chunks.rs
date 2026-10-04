@@ -20,8 +20,8 @@ const MAX_BACKLOG: usize = 64;
 /// A joining player spawns once the columns this close are sent; BDS has sent about as many
 /// (26 in acacia's capture) when it sends PlayStatus(PlayerSpawn).
 const SPAWN_RADIUS: i32 = 3;
-/// Ticks between sweeps for columns nobody sees any more.
-const UNLOAD_INTERVAL: u64 = 100;
+/// Ticks between sweeps for columns to save and columns nobody sees any more.
+pub(crate) const UNLOAD_INTERVAL: u64 = 100;
 
 /// Takes the columns the I/O threads loaded since the last tick.
 pub(crate) fn poll_worlds(mut layers: Query<&mut Layer>) {
@@ -109,8 +109,9 @@ pub(crate) fn sub_chunk_requests(mut packets: ResMut<PacketQueues>, mut layers: 
     }
 }
 
-/// Every few seconds, drops the loaded columns that are in no player's view.
-pub(crate) fn unload_columns(tick: Res<Tick>, mut layers: Query<(Entity, &mut Layer)>, players: Query<(&InLayer, &View)>) {
+/// Every few seconds, hands the columns written since the last sweep to storage and drops the
+/// loaded ones that are in no player's view.
+pub(crate) fn save_and_unload_columns(tick: Res<Tick>, mut layers: Query<(Entity, &mut Layer)>, players: Query<(&InLayer, &View)>) {
     if tick.0 % UNLOAD_INTERVAL != 0 {
         return;
     }
@@ -120,6 +121,7 @@ pub(crate) fn unload_columns(tick: Res<Tick>, mut layers: Query<(Entity, &mut La
     }
     for (entity, mut layer) in &mut layers {
         let seen_by = views.get(&entity).map_or(&[][..], Vec::as_slice);
+        layer.world.save_modified();
         layer.world.unload(|pos| seen_by.iter().any(|view| view.covers(pos)));
     }
 }

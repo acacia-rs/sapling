@@ -105,15 +105,58 @@ One listener task, one shard thread, one world. The pieces and why they are shap
   decodes sub-chunk records (v1/8/9) into `acacia_world::Chunk` sections and re-encodes Data3D biomes into
   the network form the chunk already reads; acacia-world is unchanged. `open` works in place, as LevelDB
   does (log replay rewrites files); `open_in_memory` copies the folder into memory and never touches it
-  (tests, read-only maps). `Db` writes (`put`, `Batch`, `flush`); no chunk encoder for disk yet.
+  (tests, read-only maps). `LevelDbWorld::store_column` writes a column as one batch: version 42,
+  FinalizedState 2, Data3D (heightmap recomputed, biome headers with bit 0 set as BDS has them) and v9
+  sub-chunks, one layer unless a block is waterlogged; sections of air are deleted. The block-entity
+  record is written as the world holds it; pending ticks are left as stored.
+  `LevelDbWorld::flush` writes the memtable out and replaces `level.dat` with the one it is given,
+  keeping the old file as `level.dat_old`; a world opened in memory never touches its folder.
+- **Actors** (`actors.rs`). A column's mobs and items are read through `digp` + `actorprefix`, or the
+  legacy `Entity` tag, into one record of compounds, and written back the current way (stale
+  `actorprefix` keys deleted, the legacy tag removed); a record equal to what is stored writes nothing.
+  Reads the 73 actors of the hub world; `cargo run -p sapling-leveldb --example actor_dump -- <world>`
+  prints one of each kind.
+- **Checked against BDS 1.26.52** (2026-10-04): the fixture rewritten column by column with
+  `cargo run -p sapling-leveldb --example rewrite -- <world> <new world>` (markers in every column: a
+  byte, an int and a string state, and a waterlogged block), BDS started on a copy, and
+  `cargo run -p sapling --example bds_world_check -- <server> <new world>` comparing what a bot is sent
+  with the folder: 25 columns, 0 blocks differ, as for the untouched fixture. The bot needs physics on,
+  or BDS sends only the 3x3 columns at the spawn. BDS recomputes a stair's `minecraft:corner`.
 - **Block states.** Palette entries resolve by name + states against acacia-world's registry, cached by
   their raw bytes. Unknown states of a known block become its first state, unknown blocks become
-  `minecraft:info_update`; each is logged once.
+  `minecraft:info_update`; each is logged once. Writing needs typed values (byte or int) and the
+  registry keeps text: the typing whose `{name, states}` NBT reproduces the state's network hash is used
+  (`states.rs`), and a test writes and reads back every vanilla state.
 - **Storage.** `WorldStorage::load_column` (blocking) with `LevelDbStorage` and `MemoryStorage` (empty =
   void). A storage-backed `World` owns two I/O threads: `request(pos)` queues a load, the thread reads,
   builds the column and encodes all of it (`Column::warm`), `poll()` takes finished columns once a tick.
-  The shard only does `try_recv`. Columns storage lacks are void. A sweep every 100 ticks drops unmodified
-  columns outside every view.
+  The shard only does `try_recv`. Columns storage lacks are void. A sweep every 100 ticks hands the
+  columns written since the last one to the same threads (`WorldStorage::store_column`, a copy of the
+  chunk) and drops the saved columns outside every view. One save per column is in flight at a time and
+  a column is not unloaded before its save is back, so saves cannot land out of order or be overtaken by
+  a load; a failed save leaves the column unsaved for the next sweep. A stopping shard saves and waits
+  (`World::save_and_wait`), then flushes storage with the world's `Level` (below). The only other calls that wait on disk are `World::open_folder`
+  and `open_folder_in_memory`. A storage call that panics on an I/O thread is caught and counts as a
+  failed load or save. A column storage could not read is served as void and refuses writes, so it is
+  never saved over.
+- **Block entities.** A column keeps its record as stored and saves it back. `set_block` drops the
+  compounds at a position when the block there becomes another kind (a different name).
+- **Level.** A world keeps a `Level`: spawn block, time of day counter, whether the daylight cycle runs.
+  A folder's comes from `level.dat`, and closing the world writes it back with `LastPlayed`, and with
+  `lastOpenedWithVersion` when the folder was last written by another game version. So a folder opened
+  in place gets a new `level.dat` every run; `open_folder_in_memory` leaves it alone.
+  `ServerBuilder::folder` also takes the default game mode and the difficulty from it. Handlers have
+  `ShardCtx::time`, `set_time` and `set_spawn`.
+- **Clock** (`clock.rs`, ground truth `bds_entity_probe`). BDS 1.26.52 sends no SetTime: a joining
+  player gets `SyncWorldClocks` InitializeRegistry (one clock, `minecraft:overworld`, six time markers,
+  ids as BDS sent them), then SyncState about every 256 ticks and when the time is set; `paused` is the
+  daylight cycle off, and StartGame's `dodaylightcycle` rule says the same.
+- **Mobs** (`mobs.rs`). The stored actors of a loaded column become shard entities, shown with AddEntity
+  to players whose view covers the column and removed with it. They are statues: nothing moves them and
+  no interaction reaches them, and the column saves them back unchanged. Sent: kind, position, rotation,
+  `Variant`, `MarkVariant`, `Color`, the baby flag, the name tag. Not sent, though BDS does: attributes,
+  some forty more metadata items, and the kind's hitbox, which is in no file (every mob gets 0.9 x 0.9).
+  Item entities are skipped.
 - **Sending.** A `View` keeps a nearest-first queue; each tick a player gets at most
   `ShardConfig::columns_per_tick` (8) columns that are loaded, and only the nearest `2 x` that many are
   asked of storage. `NetworkChunkPublisherUpdate` goes out when the player's chunk changes.
@@ -213,7 +256,13 @@ it sends for `/title`, `/scoreboard`, `/gamemode`, `/tp`, a wither's bar and com
   removed and set again (the client keeps the text of an entry it knows), a new title rebuilds the board,
   15 lines at most.
 - **Boss bar.** One per player, on the player's own entity id (dragonfly's way: no extra entity).
-  Every change sends ShowBar again, as BDS does for its wither; `remove_boss_bar` sends HideBar.
+  A new bar is ShowBar, `remove_boss_bar` HideBar; a bar that is shown changes by SetBarTitle,
+  SetBarProgress and Texture (colour), one for each part that differs. A vanilla client ignores ShowBar
+  for a bar it already shows, though BDS repeats ShowBar once a second for its wither (there the client
+  reads the entity). BossEvent is flat in 1.26.5x: every type has id, type, title, filtered title,
+  progress, colour, overlay, so each event carries the whole bar and HideBar carries an empty one. BDS's
+  ShowBar bytes prove that layout (acacia `docs/proto.md`); BDS sends no other type, not even when the
+  player leaves the wither's range, so the others rest on gophertunnel.
 - **Titles.** SetDurations, SetSubtitle, SetTitle in that order, unset times -1, as `/title` sends them;
   `send_actionbar`; `send_toast` (ToastRequest).
 - **Teleport.** `ctx.teleport` sends MovePlayer mode Teleport, cause Command, as `/tp`; the player's inputs
@@ -228,15 +277,19 @@ it sends for `/title`, `/scoreboard`, `/gamemode`, `/tp`, a wither's bar and com
   PlayerList packet per record instead of one packet with many; the correction teleport's
   `cause: Unknown`; smoothness of MovePlayer sent on change instead of every tick as BDS does;
   BoundingboxHeight sent with every pose change (BDS: only when sneaking changes).
-- **Step 4, only a vanilla client can confirm:** `AvailableCommands` as a whole (a wrong one crashes or
-  kicks; the bot only decodes it) and whether completion shows with every command at permission "any" while
-  StartGame is the recorded one; plain text as `CommandOutput` message ids (a `%` in it may be read as a
-  format); the form JSON (legacy `buttons`, no `tooltip`/`submit` keys) and the bytes of a closed form; a
+- **Step 4 on a vanilla client (1.26.5x, 2026-10-04).** Working: title, sidebar, the boss bar showing,
+  chat, the `AvailableCommands` list and completion, `/hub` teleport, creative flight via `/gamemode`
+  (no UpdateAbilities needed), the menu form and the custom form (answers arrive as
+  `[null,true,1,100.0,""]`: a label is answered with null). Not working: a second ShowBar with another
+  colour or progress changed nothing on screen; changes are now sent as SetBarTitle / SetBarProgress /
+  Texture ("Boss bar" above), which no client has seen yet.
+- **Step 4, only a vanilla client can confirm:** boss bar changes by SetBarTitle / SetBarProgress /
+  Texture, and if they do nothing, HideBar then ShowBar as dragonfly sends every change; the hub's first
+  bar (green, half full: ShowBar's colour and progress); HideBar (`/clear` in the hub); plain text as
+  `CommandOutput` message ids (a `%` in it may be read as a format); the bytes of a closed form; a
   sidebar with two lines of the same text; removing and re-adding a line in one batch without flicker;
-  RemoveObjective alone to hide the sidebar (BDS also clears the slot); the boss bar on the player's own
-  entity, its colours, and HideBar's layout (BDS never sent one in 20 s: its bar goes with the entity, and
-  acacia-proto gives every BossEvent the ShowBar layout); ToastRequest; UpdatePlayerGameType for another
-  player's id; whether creative flight works without an UpdateAbilities.
+  RemoveObjective alone to hide the sidebar (BDS also clears the slot); ToastRequest;
+  UpdatePlayerGameType for another player's id.
 - Commands: console sender, `@a`/`@p`/`@r` selectors, position and item parameters, soft enums
   (UpdateSoftEnum) for dynamic completions, several overloads for a struct, permission nodes.
 - Forms: images are untested, `ServerSettings`, ClientboundCloseForm, a timeout for unanswered forms.
@@ -260,8 +313,14 @@ it sends for `/title`, `/scoreboard`, `/gamemode`, `/tp`, a wither's bar and com
   until then see "Block states" above. Legacy sub-chunk versions (< 8, except 1) are skipped as air.
 - Block entities are read from disk (`DiskColumn::block_entities`) but not sent: chests, signs and the
   like show without their data.
-- Saving: `WorldStorage::store_column`, the disk sub-chunk encoder, digp/actorprefix. Written columns are
-  never unloaded meanwhile.
+- Saving: a vanilla client has not opened a sapling-written world (BDS has), and the BDS check does not
+  cover biomes, block entities or actors; block entities are only ever removed, never created or edited.
+- Mobs: a vanilla client has not seen them (bots decode AddEntity); per-kind hitboxes and attributes
+  would have to be recorded from BDS kind by kind; item entities; movement, AI, damage, riding. The mob
+  diff is O(players x mobs) a tick.
+- Clock and level: a vanilla client has not confirmed `SyncWorldClocks` as sapling sends it; SetDifficulty,
+  GameRulesChanged and SetSpawnPosition, which BDS sends at the join, are not sent; `set_spawn` tells no
+  client; game rules other than the daylight cycle are not read from `level.dat`.
 - Only the overworld is opened; nether/end keys parse but no world is made for them.
 - LevelDB block compression id 2 is zlib in worlds; never enable zstd (Mojang master reuses id 2).
 - Game data source and licence (item/creative/biome/recipes) for sapling-data.

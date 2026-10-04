@@ -18,7 +18,7 @@ pub use ctx::{Backend, FormCallback, ShardCtx, State};
 pub use event::{Cancellable, ChatEvent, CommandEvent, Priority};
 pub use form::{Custom, Form, FormResponse, Menu, Modal};
 pub use hud::{BossBar, BossBarColour, Sidebar, Title};
-pub use player::{GameMode, Permission, Player, PlayerId, Position};
+pub use player::{Difficulty, GameMode, Permission, Player, PlayerId, Position};
 pub use sapling_macros::{Command, CommandEnum, Form};
 
 /// Game events, one method each, all optional. Handlers run on the shard that owns the player, in

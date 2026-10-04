@@ -11,7 +11,8 @@ use bevy_ecs::prelude::*;
 use sapling_api::GameMode;
 use sapling_data::StartGameOptions;
 
-use crate::components::{Arrivals, Conn, Identity, Net, NetId, Outgoing, PacketQueues, Position, Settings, Stage, Tick};
+use crate::clock;
+use crate::components::{Arrivals, Conn, Identity, InLayer, Layer, Net, NetId, Outgoing, PacketQueues, Position, Settings, Stage, Tick};
 use crate::view::View;
 
 /// Below this the client's own minimum render distance shows holes.
@@ -49,12 +50,20 @@ pub(crate) fn wire_game_mode(mode: GameMode) -> WireGameMode {
     }
 }
 
-type Joining<'a> = (&'a Conn, &'a Identity, &'a NetId, &'a Position, &'a mut Stage, &'a mut Outgoing);
+type Joining<'a> = (&'a Conn, &'a Identity, &'a NetId, &'a Position, &'a InLayer, &'a mut Stage, &'a mut Outgoing);
 
-/// Pack negotiation, then StartGame with the registries and the player's own state.
-pub(crate) fn resource_packs(mut packets: ResMut<PacketQueues>, settings: Res<Settings>, tick: Res<Tick>, net: Res<Net>, mut players: Query<Joining>) {
+/// Pack negotiation, then StartGame with the registries, the player's own state and the time.
+pub(crate) fn resource_packs(
+    mut packets: ResMut<PacketQueues>,
+    settings: Res<Settings>,
+    tick: Res<Tick>,
+    net: Res<Net>,
+    layers: Query<&Layer>,
+    mut players: Query<Joining>,
+) {
     for (entity, response) in packets.take::<ResourcePackClientResponse>() {
-        let Ok((conn, identity, id, position, mut stage, mut out)) = players.get_mut(entity) else { continue };
+        let Ok((conn, identity, id, position, in_layer, mut stage, mut out)) = players.get_mut(entity) else { continue };
+        let Ok(level) = layers.get(in_layer.0).map(|layer| *layer.world.level()) else { continue };
         match (*stage, response.response_status) {
             (Stage::PacksInfo, PackStatus::HaveAllPacks) => {
                 out.push(&resource_pack_stack());
@@ -71,6 +80,8 @@ pub(crate) fn resource_packs(mut packets: ResMut<PacketQueues>, settings: Res<Se
                     world_spawn: position.feet.map(|c| c.floor() as i32),
                     world_name: settings.0.world_name.clone(),
                     tick: tick.0 as i64,
+                    difficulty: settings.0.difficulty as i32,
+                    daylight_cycle: level.daylight_cycle,
                     block_network_ids_are_hashes: sapling_world::NETWORK_IDS_ARE_HASHES,
                 };
                 out.0.extend_from_slice(sapling_data::pre_start_packets());
@@ -79,6 +90,7 @@ pub(crate) fn resource_packs(mut packets: ResMut<PacketQueues>, settings: Res<Se
                 out.push(&sapling_data::update_abilities(id.0 as i64));
                 out.push(&sapling_data::entity_data(id.0, &identity.0.name));
                 out.push(&sapling_data::update_attributes(id.0));
+                out.push(&clock::registry(&level));
                 *stage = Stage::StartGame;
             }
             (_, PackStatus::Refused) => net.0.kick(conn.0, "disconnectionScreen.resourcePack"),

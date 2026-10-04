@@ -1,17 +1,22 @@
 //! Vanilla Bedrock world folders: the LevelDB store with Mojang's compressions, the chunk key
 //! layout, `level.dat`, and the disk chunk codec, decoding into acacia-world chunks. Formats and
-//! sources: research/worlds-and-ecs.md §1. This step reads; [`Db`] already writes.
+//! sources: research/worlds-and-ecs.md §1.
 
+mod actors;
+mod block_entities;
 mod data3d;
 mod db;
 mod keys;
 mod level_dat;
+mod records;
 mod states;
 mod sub_chunk;
 mod world;
 
 use std::path::PathBuf;
 
+pub use actors::{Actor, actors};
+pub use block_entities::without_block_entity;
 pub use data3d::Data3d;
 pub use db::{Batch, Db};
 pub use keys::{ChunkKey, ParsedKey, Tag};
@@ -32,6 +37,10 @@ pub enum Error {
     SubChunkVersion(u8),
     #[error("sub-chunk: {0}")]
     SubChunk(&'static str),
+    #[error("actors: {0}")]
+    Actor(&'static str),
+    #[error("block state {0} cannot be written")]
+    State(String),
     #[error("biomes: {0}")]
     Biomes(&'static str),
     #[error(transparent)]

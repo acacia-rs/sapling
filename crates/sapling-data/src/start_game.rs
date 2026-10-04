@@ -1,9 +1,11 @@
 use std::sync::LazyLock;
 
 use acacia_proto::packets::StartGame;
-use acacia_proto::types::{BlockCoordinates, GameMode, Vec2f, Vec3f};
+use acacia_proto::types::{BlockCoordinates, GameMode, GameRuleI32Value, Vec2f, Vec3f};
 
 use crate::templates::{START_GAME, decode};
+
+const DAYLIGHT_CYCLE: &str = "dodaylightcycle";
 
 /// Player positions on the wire are the eyes, this far above the feet.
 pub const EYE_HEIGHT: f32 = 1.62;
@@ -21,6 +23,10 @@ pub struct StartGameOptions {
     pub world_spawn: [i32; 3],
     pub world_name: String,
     pub tick: i64,
+    /// 0 peaceful to 3 hard.
+    pub difficulty: i32,
+    /// Whether the client advances the time of day by itself (the `dodaylightcycle` game rule).
+    pub daylight_cycle: bool,
     /// Whether chunk palettes and block updates carry state hashes instead of runtime ids.
     pub block_network_ids_are_hashes: bool,
 }
@@ -29,7 +35,13 @@ pub fn start_game(o: &StartGameOptions) -> StartGame {
     static TEMPLATE: LazyLock<StartGame> = LazyLock::new(|| decode(START_GAME));
     let [x, y, z] = o.position;
     let [sx, sy, sz] = o.world_spawn;
+    let mut gamerules = TEMPLATE.gamerules.clone();
+    for rule in gamerules.iter_mut().filter(|rule| rule.name.eq_ignore_ascii_case(DAYLIGHT_CYCLE)) {
+        rule.value = GameRuleI32Value::Bool(o.daylight_cycle);
+    }
     StartGame {
+        difficulty: o.difficulty,
+        gamerules,
         entity_id: o.entity_id,
         runtime_entity_id: o.runtime_entity_id,
         player_gamemode: o.game_mode,
@@ -66,6 +78,8 @@ mod tests {
             world_spawn: [0, 65, 0],
             world_name: "hub".into(),
             tick: 12,
+            difficulty: 2,
+            daylight_cycle: false,
             block_network_ids_are_hashes: true,
         }
     }
@@ -88,5 +102,7 @@ mod tests {
         assert_eq!((sg.player_position.x, sg.player_position.y, sg.player_position.z), (0.5, 65.0 + EYE_HEIGHT, 0.5));
         assert_eq!((sg.world_name.as_str(), sg.current_tick, sg.client_side_generation), ("hub", 12, false));
         assert!(!sg.block_properties.is_empty(), "data-driven vanilla blocks are kept");
+        let cycle: Vec<_> = sg.gamerules.iter().filter(|rule| rule.name.eq_ignore_ascii_case(DAYLIGHT_CYCLE)).map(|rule| rule.value.clone()).collect();
+        assert_eq!((sg.difficulty, cycle), (2, vec![GameRuleI32Value::Bool(false)]), "BDS lists the rule, so it can be set");
     }
 }

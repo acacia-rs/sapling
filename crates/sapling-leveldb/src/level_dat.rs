@@ -2,7 +2,7 @@
 
 use std::path::Path;
 
-use acacia_proto::nbt::{self, LittleEndian, Nbt, Value};
+use acacia_proto::nbt::{self, List, LittleEndian, Nbt, Value};
 use bytes::BytesMut;
 
 use crate::Error;
@@ -39,6 +39,41 @@ impl LevelDat {
         [&self.storage_version.to_le_bytes()[..], &(body.len() as i32).to_le_bytes(), &body].concat()
     }
 
+    /// Replaces the file, keeping the one it replaces as `level.dat_old` the way the game does.
+    pub fn write(&self, path: &Path) -> Result<(), Error> {
+        let io = |error| Error::Io(path.to_path_buf(), error);
+        let new = path.with_extension("dat_new");
+        std::fs::write(&new, self.to_bytes()).map_err(io)?;
+        if path.exists() {
+            std::fs::copy(path, path.with_extension("dat_old")).map_err(io)?;
+        }
+        std::fs::rename(&new, path).map_err(io)
+    }
+
+    /// Sets a field of the root, in place when it is there already.
+    pub fn set(&mut self, key: &str, new: Value) {
+        let Value::Compound(fields) = &mut self.root else { return };
+        match fields.iter_mut().find(|(name, _)| name == key) {
+            Some((_, value)) => *value = new,
+            None => fields.push((key.into(), new)),
+        }
+    }
+
+    /// When the world was last closed, in unix seconds.
+    pub fn set_last_played(&mut self, seconds: i64) {
+        self.set("LastPlayed", Value::Long(seconds));
+    }
+
+    /// The game version that last wrote the world, e.g. `[1, 26, 52, 0, 0]`.
+    pub fn last_opened_with(&self) -> Option<Vec<i32>> {
+        let Value::List(list) = self.root.get("lastOpenedWithVersion")? else { return None };
+        list.items.iter().map(|part| if let Value::Int(part) = part { Some(*part) } else { None }).collect()
+    }
+
+    pub fn set_last_opened_with(&mut self, version: [i32; 5]) {
+        self.set("lastOpenedWithVersion", Value::List(List { tag: Value::Int(0).tag(), items: version.map(Value::Int).into() }));
+    }
+
     pub fn name(&self) -> Option<&str> {
         match self.root.get("LevelName")? {
             Value::String(name) => Some(name),
@@ -53,17 +88,49 @@ impl LevelDat {
         }
     }
 
-    pub fn seed(&self) -> Option<i64> {
-        match self.root.get("RandomSeed")? {
+    pub fn long(&self, key: &str) -> Option<i64> {
+        match self.root.get(key)? {
             Value::Long(v) => Some(*v),
             _ => None,
         }
+    }
+
+    pub fn seed(&self) -> Option<i64> {
+        self.long("RandomSeed")
     }
 
     /// The world spawn as saved. Worlds whose spawn was never set by hand keep y 32767 ("the
     /// surface"): callers pick the y from the terrain.
     pub fn spawn(&self) -> Option<[i32; 3]> {
         Some([self.int("SpawnX")?, self.int("SpawnY")?, self.int("SpawnZ")?])
+    }
+
+    pub fn set_spawn(&mut self, [x, y, z]: [i32; 3]) {
+        [("SpawnX", x), ("SpawnY", y), ("SpawnZ", z)].into_iter().for_each(|(key, at)| self.set(key, Value::Int(at)));
+    }
+
+    /// The time of day counter: it runs on past 24000, a day's length.
+    pub fn time(&self) -> Option<i64> {
+        self.long("Time")
+    }
+
+    pub fn set_time(&mut self, time: i64) {
+        self.set("Time", Value::Long(time));
+    }
+
+    /// Whether the time of day advances (the `dodaylightcycle` game rule; on when absent).
+    pub fn daylight_cycle(&self) -> bool {
+        !matches!(self.root.get("dodaylightcycle"), Some(Value::Byte(0)))
+    }
+
+    /// The default game mode: 0 survival, 1 creative, 2 adventure, 6 spectator.
+    pub fn game_type(&self) -> Option<i32> {
+        self.int("GameType")
+    }
+
+    /// 0 peaceful to 3 hard.
+    pub fn difficulty(&self) -> Option<i32> {
+        self.int("Difficulty")
     }
 }
 

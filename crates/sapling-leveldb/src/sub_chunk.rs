@@ -3,6 +3,8 @@
 //! order with no index spanning words, an `i32` entry count (absent when `bits` is 0), and the
 //! entries as NBT (states.rs).
 
+use std::collections::HashMap;
+
 use acacia_proto::codec::{read_li32, read_u8, take};
 use acacia_world::SECTION_VOLUME;
 
@@ -34,6 +36,38 @@ impl SubChunk {
         let layers = (0..count).map(|_| layer(r, states)).collect::<Result<_, _>>()?;
         Ok(Self { y, layers })
     }
+
+    /// The version 9 record. Fails without `y`, and on a state [`BlockStates::write`] refuses.
+    pub fn encode(&self, states: &BlockStates) -> Result<Vec<u8>, Error> {
+        let y = self.y.ok_or(Error::SubChunk("a version 9 record carries its y"))?;
+        let mut out = vec![9, self.layers.len() as u8, y as u8];
+        self.layers.iter().try_for_each(|ids| write_layer(ids, states, &mut out))?;
+        Ok(out)
+    }
+}
+
+fn write_layer(ids: &[u32; SECTION_VOLUME], states: &BlockStates, out: &mut Vec<u8>) -> Result<(), Error> {
+    let mut palette = Vec::new();
+    let mut slots = HashMap::new();
+    let mut slot = |id: u32| {
+        *slots.entry(id).or_insert_with(|| {
+            palette.push(id);
+            palette.len() as u32 - 1
+        })
+    };
+    let indices: Vec<u32> = ids.iter().map(|&id| slot(id)).collect();
+    if let [only] = palette[..] {
+        out.push(0);
+        return states.write(only, out);
+    }
+    let bits = *VALID_BITS.iter().find(|&&bits| palette.len() <= 1 << bits).expect("4096 entries fit 16 bits");
+    out.push(bits << 1);
+    for word in indices.chunks(32 / bits as usize) {
+        let packed = word.iter().enumerate().fold(0u32, |packed, (i, index)| packed | index << (i * bits as usize));
+        out.extend(packed.to_le_bytes());
+    }
+    out.extend((palette.len() as i32).to_le_bytes());
+    palette.iter().try_for_each(|&id| states.write(id, out))
 }
 
 fn layer(r: &mut &[u8], states: &BlockStates) -> Result<Layer, Error> {
@@ -131,6 +165,20 @@ pub(crate) mod tests {
         assert_eq!((eight.y, eight.layers.len()), (None, 2));
         let water_id = states.registry().find("minecraft:water", "liquid_depth=0").unwrap();
         assert_eq!((eight.layers[1][0], eight.layers[1][1]), (states.registry().air_id(), water_id));
+    }
+
+    #[test]
+    fn encoded_records_decode_to_the_same_layers_at_every_width() {
+        let states = states();
+        let count = states.registry().len();
+        for distinct in [1, 2, 3, 5, 9, 17, 33, 65, 257, 4096] {
+            let blocks: Layer = Box::new(std::array::from_fn(|i| ((i * 31 + i / 16) % distinct * 7 % count) as u32));
+            let section = SubChunk { y: Some(-4), layers: vec![blocks.clone(), blocks] };
+            let record = section.encode(&states).unwrap();
+            assert_eq!(record[..3], [9, 2, 0xfc]);
+            assert_eq!(SubChunk::decode(&record, &states).unwrap(), section, "{distinct} entries");
+        }
+        assert!(SubChunk { y: None, layers: Vec::new() }.encode(&states).is_err());
     }
 
     #[test]

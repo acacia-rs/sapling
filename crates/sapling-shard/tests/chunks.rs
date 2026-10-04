@@ -133,6 +133,10 @@ impl WorldStorage for Gated {
         self.loads.fetch_add(1, Ordering::SeqCst);
         MemoryStorage::default().load_column(pos, dimension)
     }
+
+    fn store_column(&self, _: ChunkPos, _: i32, _: &StoredColumn) -> Result<(), StorageError> {
+        Ok(())
+    }
 }
 
 /// Ticks, pausing between, until `conn` was sent `count` columns in total.

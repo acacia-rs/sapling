@@ -8,6 +8,9 @@ use acacia_proto::types::{Blob, SubChunkEntryItem};
 use acacia_proto::xxh64;
 use acacia_world::{BlockRegistry, Chunk, ColumnHeights, Dimension, LevelChunkData, SubChunkData};
 use bytes::Bytes;
+use sapling_leveldb::without_block_entity;
+
+use crate::storage::StoredColumn;
 
 /// Biome of columns nobody painted (`minecraft:plains`).
 const DEFAULT_BIOME: u32 = 1;
@@ -22,8 +25,13 @@ pub struct SubChunkAnswer {
 
 pub(crate) struct Column {
     chunk: Chunk,
-    /// Written since it was created or loaded.
+    /// As stored (`StoredColumn::block_entities`). TODO: sent to nobody yet.
+    block_entities: Vec<u8>,
+    /// As stored (`StoredColumn::actors`): nothing here moves or changes them.
+    actors: Vec<u8>,
+    /// Written since it was created, loaded or last handed to storage.
     modified: bool,
+    damaged: bool,
     heights: OnceLock<ColumnHeights>,
     announce: OnceLock<LevelChunkData>,
     announce_cached: OnceLock<LevelChunkData>,
@@ -33,27 +41,65 @@ pub(crate) struct Column {
 
 impl Column {
     pub fn empty(x: i32, z: i32, dim: Dimension) -> Self {
-        Self::from_chunk(Chunk::empty(x, z, dim))
+        Self::from_stored(StoredColumn::of(Chunk::empty(x, z, dim)))
     }
 
-    /// A column around a chunk from storage; one saved without biomes gets the default.
-    pub fn from_chunk(mut chunk: Chunk) -> Self {
+    /// Stands in for a column storage holds but could not read: void, and never written or
+    /// saved, so what storage holds survives.
+    pub fn damaged(x: i32, z: i32, dim: Dimension) -> Self {
+        Self { damaged: true, ..Self::empty(x, z, dim) }
+    }
+
+    /// A column as storage holds it; one saved without biomes gets the default.
+    pub fn from_stored(StoredColumn { mut chunk, block_entities, actors }: StoredColumn) -> Self {
         if chunk.biome(0, chunk.dimension().min_y, 0).is_none() {
             chunk.fill_biomes(DEFAULT_BIOME);
         }
         let sections = (0..chunk.section_count()).map(|_| OnceLock::new()).collect();
-        Self { chunk, modified: false, heights: OnceLock::new(), announce: OnceLock::new(), announce_cached: OnceLock::new(), sections }
+        Self { chunk, block_entities, actors, modified: false, damaged: false, heights: OnceLock::new(), announce: OnceLock::new(), announce_cached: OnceLock::new(), sections }
+    }
+
+    pub fn is_damaged(&self) -> bool {
+        self.damaged
     }
 
     pub fn is_modified(&self) -> bool {
         self.modified
     }
 
+    /// Storage holds, or is being handed, the column as it is now.
+    pub fn mark_saved(&mut self) {
+        self.modified = false;
+    }
+
+    /// The save did not happen: the column is unsaved again.
+    pub fn mark_modified(&mut self) {
+        self.modified = true;
+    }
+
+    /// A copy of the column as storage should hold it.
+    pub fn stored(&self) -> StoredColumn {
+        StoredColumn { chunk: self.chunk.clone(), block_entities: self.block_entities.clone(), actors: self.actors.clone() }
+    }
+
+    pub fn actors(&self) -> &[u8] {
+        &self.actors
+    }
+
     pub fn block(&self, x: i32, y: i32, z: i32) -> u32 {
         self.chunk.block(x, y, z)
     }
 
-    pub fn set_block(&mut self, x: i32, y: i32, z: i32, id: u32) {
+    /// Sets a layer-0 block. A block entity belongs to the block it was saved with, so one at
+    /// this position goes when the block becomes another kind.
+    pub fn set_block(&mut self, x: i32, y: i32, z: i32, id: u32, registry: &BlockRegistry) {
+        let name = |id| registry.get(id).map(|state| state.name);
+        if !self.block_entities.is_empty() && name(self.chunk.block(x, y, z)) != name(id) {
+            match without_block_entity(&self.block_entities, [x, y, z]) {
+                Ok(rest) => self.block_entities = rest,
+                Err(error) => tracing::warn!(x, y, z, %error, "unreadable block entities are kept as they are"),
+            }
+        }
         self.chunk.set(x, y, z, 0, id);
         self.modified = true;
         self.heights.take();

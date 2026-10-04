@@ -11,7 +11,7 @@ use sapling_net::ConnId;
 use crate::commands::Access;
 use crate::components::{Arrivals, DefaultLayer, Identity, Layer, Mode, Net, NetId, Outgoing, Players, Position, Stage, Tick, in_world};
 use crate::plugins::{PluginState, Plugins};
-use crate::{chat, commands, forms, hud, join, movement, roster};
+use crate::{chat, clock, commands, forms, hud, join, movement, roster};
 
 pub(crate) struct Ctx<'w> {
     pub world: &'w mut World,
@@ -22,6 +22,11 @@ impl Ctx<'_> {
     fn entity(&self, player: PlayerId) -> Option<Entity> {
         let entity = self.world.resource::<Players>().entity(player)?;
         (self.world.get::<Stage>(entity) == Some(&Stage::InWorld)).then_some(entity)
+    }
+
+    fn layer(&self) -> &Layer {
+        let layer = self.world.resource::<DefaultLayer>().0;
+        self.world.get::<Layer>(layer).expect("the default layer lives as long as the shard")
     }
 
     fn out(&mut self, player: PlayerId) -> Option<Mut<'_, Outgoing>> {
@@ -48,8 +53,24 @@ impl Backend for Ctx<'_> {
     }
 
     fn spawn(&self) -> [f32; 3] {
+        self.layer().spawn
+    }
+
+    fn set_spawn(&mut self, feet: [f32; 3]) {
         let layer = self.world.resource::<DefaultLayer>().0;
-        self.world.get::<Layer>(layer).expect("the default layer lives as long as the shard").spawn
+        if let Some(mut layer) = self.world.get_mut::<Layer>(layer).filter(|_| feet.iter().all(|c| c.is_finite())) {
+            layer.spawn = feet;
+            layer.world.level_mut().spawn = Some(feet.map(|c| c.floor() as i32));
+        }
+    }
+
+    fn time(&self) -> i64 {
+        self.layer().world.level().time
+    }
+
+    fn set_time(&mut self, time: i64) {
+        let layer = self.world.resource::<DefaultLayer>().0;
+        clock::set(self.world, layer, time);
     }
 
     fn kick(&mut self, player: PlayerId, message: &str) {

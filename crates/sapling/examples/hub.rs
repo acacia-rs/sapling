@@ -178,13 +178,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let port = positional().find_map(|a| a.parse::<u16>().ok()).unwrap_or(19132);
     let folder = positional().find(|a| a.parse::<u16>().is_err());
 
-    let mut builder = Server::builder().bind(([0, 0, 0, 0], port).into()).name(NAME).game_mode(GameMode::Adventure).online_mode(!offline).blob_cache(!args.iter().any(|a| a == "--no-cache"));
+    let mut builder = Server::builder().bind(([0, 0, 0, 0], port).into()).name(NAME).online_mode(!offline).blob_cache(!args.iter().any(|a| a == "--no-cache"));
     if let Some(folder) = folder {
         let opened = sapling::World::open_folder(Path::new(folder))?;
-        tracing::info!(folder, name = ?opened.name, spawn = ?opened.spawn, "opened the world");
-        builder = builder.world(opened.world, opened.spawn);
+        tracing::info!(folder, name = ?opened.name, spawn = ?opened.spawn, time = opened.world.level().time, "opened the world");
+        builder = builder.folder(opened);
     }
-    let builder = builder.handler(Hub { operators }).command::<HubCommand>().command::<GameModeCommand>().command::<MenuCommand>().command::<SettingsCommand>();
+    // A hub is looked at, not dug up, whatever the folder's own game mode.
+    let builder = builder.game_mode(GameMode::Adventure).handler(Hub { operators }).command::<HubCommand>().command::<GameModeCommand>().command::<MenuCommand>().command::<SettingsCommand>();
     let server = builder.start().await?;
     tokio::signal::ctrl_c().await?;
     tracing::info!("shutting down");

@@ -12,8 +12,8 @@
 mod server;
 
 pub use sapling_api::{
-    BossBar, BossBarColour, ChatEvent, Command, CommandEnum, CommandEvent, Custom, Form, FormResponse, GameMode, Handler, Menu, Modal, Output, Permission, Player, PlayerId,
-    Position, Priority, Sender, ShardCtx, Sidebar, Title, command, form,
+    BossBar, BossBarColour, ChatEvent, Command, CommandEnum, CommandEvent, Custom, Difficulty, Form, FormResponse, GameMode, Handler, Menu, Modal, Output, Permission, Player,
+    PlayerId, Position, Priority, Sender, ShardCtx, Sidebar, Title, command, form,
 };
-pub use sapling_world::{ChunkPos, LevelDbStorage, MemoryStorage, World, WorldFolder, WorldStorage};
+pub use sapling_world::{ChunkPos, Level, LevelDbStorage, MemoryStorage, World, WorldFolder, WorldStorage};
 pub use server::{Server, ServerBuilder, StartError};

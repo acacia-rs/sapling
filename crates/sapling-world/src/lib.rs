@@ -16,7 +16,8 @@ pub use acacia_world::{BlockRegistry, Chunk, Dimension, LevelChunkData};
 pub use column::SubChunkAnswer;
 pub use folder::WorldFolder;
 pub use sapling_leveldb::LevelDat;
-pub use storage::{LevelDbStorage, MemoryStorage, StorageError, StoredColumn, WorldStorage};
+pub use sapling_leveldb::{Actor, actors};
+pub use storage::{Level, LevelDbStorage, MemoryStorage, StorageError, StoredColumn, WorldStorage};
 pub use world::World;
 
 /// Chunk palettes carry block-state hashes, not runtime ids; StartGame must say the same.

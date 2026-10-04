@@ -1,9 +1,9 @@
 use std::net::SocketAddr;
 
-use sapling_api::{Command, GameMode, Handler, Priority};
+use sapling_api::{Command, Difficulty, GameMode, Handler, Priority};
 use sapling_net::{Listener, Motd, NetConfig, SigningKeys};
 use sapling_shard::{Shard, ShardConfig, ShardHandle};
-use sapling_world::World;
+use sapling_world::{World, WorldFolder};
 
 /// Half the side of the default spawn platform, in blocks.
 const PLATFORM_HALF: i32 = 8;
@@ -72,6 +72,21 @@ impl ServerBuilder {
     pub fn world(mut self, world: World, spawn: [f32; 3]) -> Self {
         self.world = Some(world);
         self.shard.spawn = spawn;
+        self
+    }
+
+    /// A world opened from a folder, with the spawn, default game mode and difficulty its
+    /// `level.dat` names. Call [`ServerBuilder::game_mode`] after it to override the folder's.
+    pub fn folder(mut self, opened: WorldFolder) -> Self {
+        let game_mode = opened.game_type.and_then(|saved| [(0, GameMode::Survival), (1, GameMode::Creative), (2, GameMode::Adventure), (6, GameMode::Spectator)].into_iter().find(|(id, _)| *id == saved));
+        let difficulty = opened.difficulty.and_then(|saved| [Difficulty::Peaceful, Difficulty::Easy, Difficulty::Normal, Difficulty::Hard].get(usize::try_from(saved).ok()?).copied());
+        self.shard.game_mode = game_mode.map_or(self.shard.game_mode, |(_, mode)| mode);
+        self.shard.difficulty = difficulty.unwrap_or(self.shard.difficulty);
+        self.world(opened.world, opened.spawn)
+    }
+
+    pub fn difficulty(mut self, difficulty: Difficulty) -> Self {
+        self.shard.difficulty = difficulty;
         self
     }
 

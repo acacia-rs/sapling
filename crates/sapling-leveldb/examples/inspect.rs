@@ -2,7 +2,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::PathBuf;
 
-use sapling_leveldb::{ChunkKey, LevelDbWorld};
+use sapling_leveldb::{ChunkKey, LevelDbWorld, actors};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let folder = PathBuf::from(std::env::args().nth(1).ok_or("usage: inspect <world folder>")?);
@@ -21,12 +21,18 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let columns = world.columns()?;
     let (xs, zs) = (columns.iter().map(|c| c.x), columns.iter().map(|c| c.z));
     println!("{} columns, x {:?}..={:?}, z {:?}..={:?}", columns.len(), xs.clone().min(), xs.max(), zs.clone().min(), zs.max());
+    println!("time {:?} (cycle {}), game type {:?}, difficulty {:?}", level.time(), level.daylight_cycle(), level.game_type(), level.difficulty());
     let mut versions: BTreeMap<u8, usize> = BTreeMap::new();
+    let mut kinds: BTreeMap<String, usize> = BTreeMap::new();
     for &key in &columns {
         let column = world.load_column(key)?.ok_or("a listed column is missing")?;
         *versions.entry(column.version).or_default() += 1;
+        for actor in actors(&column.actors)? {
+            *kinds.entry(actor.identifier).or_default() += 1;
+        }
     }
     println!("chunk versions: {versions:?}");
+    println!("actors: {kinds:?}");
 
     // BDS saves only chunks that changed: the map shows the holes sapling would serve as void.
     let overworld: BTreeSet<(i32, i32)> = columns.iter().filter(|c| c.dimension == 0).map(|c| (c.x, c.z)).collect();

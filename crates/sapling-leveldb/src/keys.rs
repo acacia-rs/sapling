@@ -13,6 +13,8 @@ pub enum Tag {
     SubChunk = 0x2f,
     /// Concatenated little-endian NBT compounds.
     BlockEntities = 0x31,
+    /// Where worlds older than 1.18.30 keep their actors (actors.rs).
+    Entity = 0x32,
     PendingTicks = 0x33,
     FinalizedState = 0x36,
     /// Where worlds older than 1.16.100 keep the version byte.
@@ -55,6 +57,11 @@ impl ChunkKey {
         let mut key = self.prefix();
         key.push(tag as u8);
         key
+    }
+
+    /// The key of the column's actor id list (actors.rs).
+    pub fn actor_digest(&self) -> Vec<u8> {
+        [b"digp", &self.prefix()[..]].concat()
     }
 
     /// The key of section `y` (world y >> 4).
@@ -106,7 +113,6 @@ mod tests {
         for other in ["mobevents", "scoreboard", "Overworld", "BiomeData", "~local_player", "portals", "AutonomousEntities"] {
             assert_eq!(ChunkKey::parse(other.as_bytes()), None, "{other}");
         }
-        let actor_digest = [b"digp".as_slice(), &ChunkKey::new(1, 2, 0).prefix()].concat();
-        assert_eq!(ChunkKey::parse(&actor_digest), None);
+        assert_eq!(ChunkKey::parse(&ChunkKey::new(1, 2, 0).actor_digest()), None);
     }
 }

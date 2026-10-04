@@ -1,11 +1,13 @@
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
+use acacia_proto::nbt::{self, LittleEndian, Nbt, Value};
 use acacia_proto::types::{HeightMapDataType, SubChunkEntryItemResult};
+use bytes::BytesMut;
 use acacia_proto::xxh64;
 use acacia_world::{Chunk, Dimension};
 
-use crate::{ChunkPos, MemoryStorage, World};
+use crate::{ChunkPos, Level, MemoryStorage, StorageError, StoredColumn, World, WorldStorage};
 
 fn platform() -> (World, u32) {
     let mut world = World::void();
@@ -149,6 +151,118 @@ fn unloading_keeps_what_is_wanted_or_written() {
     // Loading again reads storage again.
     world.load_now(positions[0]);
     assert_eq!(world.block(33, 70, 49), stone);
+}
+
+#[test]
+fn written_columns_reach_storage_and_only_then_unload() {
+    let storage = Arc::new(MemoryStorage::default());
+    let mut world = World::with_storage(storage.clone());
+    let stone = world.block_id("minecraft:stone").unwrap();
+    let (pos, other) = (ChunkPos::new(0, 0), ChunkPos::new(4, 4));
+    let stored = |pos: ChunkPos, [x, y, z]: [i32; 3]| storage.load_column(pos, 0).unwrap().map(|column| column.chunk.block(x, y, z));
+    world.load_now(pos);
+    world.load_now(other);
+    assert!(world.set_block(1, 10, 1, stone));
+    world.unload(|_| false);
+    assert_eq!((world.is_loaded(pos), world.is_loaded(other), stored(pos, [1, 10, 1])), (true, false, None), "unsaved columns stay");
+
+    assert_eq!((world.save_modified(), world.save_modified()), (1, 0));
+    // Written again while its save is on its way, or after it: the second save waits for the first.
+    assert!(world.set_block(2, 10, 2, stone));
+    world.unload(|_| false);
+    assert!(world.is_loaded(pos));
+    assert_eq!(world.save_and_wait(), 0);
+    assert_eq!((stored(pos, [1, 10, 1]), stored(pos, [2, 10, 2]), stored(other, [0, 0, 0])), (Some(stone), Some(stone), None));
+
+    world.unload(|_| false);
+    assert!(!world.is_loaded(pos), "a saved column unloads");
+    world.load_now(pos);
+    assert_eq!((world.block(1, 10, 1), world.block(2, 10, 2)), (stone, stone));
+}
+
+#[test]
+fn a_refused_save_keeps_the_column_unsaved() {
+    /// Refuses saves; panics instead for the column at x 1, and cannot read the one at x 2.
+    struct Broken;
+    impl WorldStorage for Broken {
+        fn load_column(&self, pos: ChunkPos, _: i32) -> Result<Option<StoredColumn>, StorageError> {
+            if pos.x == 2 { Err("unreadable".into()) } else { Ok(None) }
+        }
+        fn store_column(&self, pos: ChunkPos, _: i32, _: &StoredColumn) -> Result<(), StorageError> {
+            assert!(pos.x != 1, "storage panics");
+            Err("read-only".into())
+        }
+    }
+    let mut world = World::with_storage(Arc::new(Broken));
+    let stone = world.block_id("minecraft:stone").unwrap();
+    (0..3).for_each(|x| world.load_now(ChunkPos::new(x, 0)));
+    assert!(world.set_block(1, 10, 1, stone) && world.set_block(17, 10, 1, stone));
+    assert!(!world.set_block(33, 10, 1, stone), "a column storage could not read is not written over");
+    assert_eq!(world.save_and_wait(), 2, "the panic costs its save, not the wait");
+    world.unload(|_| false);
+    assert_eq!((world.block(1, 10, 1), world.block(17, 10, 1)), (stone, stone), "what storage refused is still in memory");
+}
+
+#[test]
+fn a_block_entity_leaves_with_its_block() {
+    let entity = |[x, y, z]: [i32; 3]| {
+        let fields = [("id", Value::String("Chest".into())), ("x", Value::Int(x)), ("y", Value::Int(y)), ("z", Value::Int(z))];
+        let mut out = BytesMut::new();
+        nbt::write::<LittleEndian>(&mut out, &Nbt { name: String::new(), value: Value::Compound(fields.map(|(key, value)| (key.to_string(), value)).into()) });
+        out.to_vec()
+    };
+    let storage = Arc::new(MemoryStorage::default());
+    let registry = acacia_world::BlockRegistry::vanilla();
+    let (pos, chunk) = (ChunkPos::new(0, 0), Chunk::empty(0, 0, Dimension::overworld(registry.air_id())));
+    let (kept, replaced) = (entity([3, 10, 3]), entity([4, 10, 4]));
+    storage.store_column(pos, 0, &StoredColumn { block_entities: [&kept[..], &replaced].concat(), ..StoredColumn::of(chunk) }).unwrap();
+
+    let mut world = World::with_storage(storage.clone());
+    world.load_now(pos);
+    let (air, stone) = (world.registry().air_id(), world.block_id("minecraft:stone").unwrap());
+    assert!(world.set_block(3, 10, 3, air), "the same kind of block: its entity stays");
+    assert!(world.set_block(4, 10, 4, stone));
+    assert_eq!(world.save_and_wait(), 0);
+    assert_eq!(storage.load_column(pos, 0).unwrap().unwrap().block_entities, kept);
+}
+
+#[test]
+fn actors_and_the_level_go_back_to_storage_with_the_world() {
+    #[derive(Default)]
+    struct Recording {
+        columns: MemoryStorage,
+        flushed: Mutex<Option<Level>>,
+    }
+    impl WorldStorage for Recording {
+        fn load_column(&self, pos: ChunkPos, dimension: i32) -> Result<Option<StoredColumn>, StorageError> {
+            self.columns.load_column(pos, dimension)
+        }
+        fn store_column(&self, pos: ChunkPos, dimension: i32, column: &StoredColumn) -> Result<(), StorageError> {
+            self.columns.store_column(pos, dimension, column)
+        }
+        fn flush(&self, level: &Level) -> Result<(), StorageError> {
+            *self.flushed.lock().unwrap() = Some(*level);
+            Ok(())
+        }
+    }
+    let storage = Arc::new(Recording::default());
+    let (pos, chunk) = (ChunkPos::new(0, 0), Chunk::empty(0, 0, Dimension::overworld(acacia_world::BlockRegistry::vanilla().air_id())));
+    storage.store_column(pos, 0, &StoredColumn { actors: b"two cows".to_vec(), ..StoredColumn::of(chunk) }).unwrap();
+
+    let mut world = World::with_storage(storage.clone());
+    assert_eq!((*world.level(), world.take_arrived()), (Level::default(), Vec::new()));
+    world.load_now(pos);
+    world.request(ChunkPos::new(5, 5));
+    wait_loaded(&mut world, ChunkPos::new(5, 5));
+    assert_eq!((world.take_arrived(), world.take_arrived()), (vec![pos, ChunkPos::new(5, 5)], Vec::new()), "each column arrives once");
+    assert_eq!((world.actors(pos), world.actors(ChunkPos::new(5, 5)), world.actors(ChunkPos::new(9, 9))), (&b"two cows"[..], &[][..], &[][..]));
+
+    let stone = world.block_id("minecraft:stone").unwrap();
+    assert!(world.set_block(1, 10, 1, stone));
+    *world.level_mut() = Level { spawn: Some([4, 70, -2]), time: 18_000, daylight_cycle: false };
+    assert_eq!(world.save_and_wait(), 0);
+    assert_eq!(storage.load_column(pos, 0).unwrap().unwrap().actors, b"two cows");
+    assert_eq!(*storage.flushed.lock().unwrap(), Some(Level { spawn: Some([4, 70, -2]), time: 18_000, daylight_cycle: false }));
 }
 
 #[test]

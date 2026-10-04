@@ -2,12 +2,11 @@
 #![allow(dead_code)]
 
 use std::path::{Path, PathBuf};
-use std::sync::Arc;
 use std::time::Duration;
 
 use acacia_bot::{Bot, BotConfig};
 use acacia_client::{Client, ClientBuilder, TransportKind};
-use sapling::{LevelDbStorage, Server, ServerBuilder, World};
+use sapling::{Server, ServerBuilder, World};
 
 /// The fixture's spawn block column and the y of the grass under it.
 pub const SPAWN: (i32, i32) = (21, 205);
@@ -21,12 +20,9 @@ pub fn fixture() -> PathBuf {
 
 /// Starts `builder` offline on a free port with the fixture as its world.
 pub async fn start(builder: ServerBuilder) -> Server {
-    let storage = Arc::new(LevelDbStorage::open_in_memory(&fixture()).expect("the fixture opens"));
-    let saved = storage.level().spawn().expect("a saved spawn");
-    let mut world = World::with_storage(storage);
-    let spawn = world.spawn_at(saved);
-    assert_eq!(spawn, [SPAWN.0 as f32 + 0.5, GROUND as f32 + 1.0, SPAWN.1 as f32 + 0.5]);
-    builder.bind("127.0.0.1:0".parse().unwrap()).online_mode(false).world(world, spawn).start().await.expect("the server starts")
+    let opened = World::open_folder_in_memory(&fixture()).expect("the fixture opens");
+    assert_eq!(opened.spawn, [SPAWN.0 as f32 + 0.5, GROUND as f32 + 1.0, SPAWN.1 as f32 + 0.5]);
+    builder.bind("127.0.0.1:0".parse().unwrap()).online_mode(false).world(opened.world, opened.spawn).start().await.expect("the server starts")
 }
 
 pub fn client(server: &Server, name: &str) -> ClientBuilder {

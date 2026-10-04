@@ -7,7 +7,7 @@ use acacia_proto::Packet;
 use acacia_proto::packets::PlayerAuthInput;
 use bevy_ecs::prelude::*;
 use bevy_ecs::schedule::SingleThreadedExecutor;
-use sapling_api::{Command, Commands, GameMode, Handler, Player, PlayerId, Priority};
+use sapling_api::{Command, Commands, Difficulty, GameMode, Handler, Player, PlayerId, Priority};
 use sapling_net::{ConnId, Inbox, NetEvent, Outbox, VerifiedLogin};
 
 use crate::blobs::BlobCache;
@@ -20,7 +20,8 @@ use crate::plugins::{PluginState, Plugins};
 use crate::roster::Profile;
 use crate::view::View;
 use crate::visibility::{Sees, ToViewers};
-use crate::{blobs, chunks, commands, handlers, join, movement, visibility};
+use crate::mobs::SeesMobs;
+use crate::{blobs, chunks, clock, commands, handlers, join, mobs, movement, visibility};
 
 pub const TICK: Duration = Duration::from_millis(50);
 
@@ -28,6 +29,7 @@ pub const TICK: Duration = Duration::from_millis(50);
 pub struct ShardConfig {
     pub world_name: String,
     pub game_mode: GameMode,
+    pub difficulty: Difficulty,
     /// Where players appear (feet), in the shard's first world.
     pub spawn: [f32; 3],
     /// Cap on the view distance clients ask for, in chunks.
@@ -43,6 +45,7 @@ impl Default for ShardConfig {
         Self {
             world_name: "sapling".into(),
             game_mode: GameMode::Survival,
+            difficulty: Difficulty::Peaceful,
             spawn: [0.5, 65.0, 0.5],
             max_view_radius: 8,
             columns_per_tick: 8,
@@ -81,11 +84,20 @@ impl Shard {
         // Shards scale across threads; inside one, systems run in this order every tick.
         schedule.set_executor(SingleThreadedExecutor::new());
         let join = (join::resource_packs, join::chunk_radius, blobs::cache_status).chain();
-        let chunks = (chunks::poll_worlds, movement::player_input, chunks::send_chunks, chunks::sub_chunk_requests, blobs::blob_status, chunks::unload_columns);
-        schedule.add_systems((join, chunks.chain(), join::initialized).chain());
+        let chunks = (
+            chunks::poll_worlds,
+            mobs::spawn_arrived,
+            movement::player_input,
+            chunks::send_chunks,
+            chunks::sub_chunk_requests,
+            blobs::blob_status,
+            chunks::save_and_unload_columns,
+            mobs::despawn_unloaded,
+        );
+        schedule.add_systems((join, clock::advance, chunks.chain(), join::initialized).chain());
         let mut after_handlers = Schedule::default();
         after_handlers.set_executor(SingleThreadedExecutor::new());
-        after_handlers.add_systems((visibility::update, movement::announce, movement::relay_swings, visibility::fan_out, commands::announce, flush).chain());
+        after_handlers.add_systems((visibility::update, mobs::update, movement::announce, movement::relay_swings, visibility::fan_out, commands::announce, flush).chain());
         world.insert_resource(CommandLists::new(&Commands::default()));
         world.init_resource::<PluginState>();
         Self { world, schedule, after_handlers, inbox, plugins: Plugins::default() }
@@ -121,7 +133,7 @@ impl Shard {
         self.world.resource_mut::<Tick>().0 += 1;
     }
 
-    /// Runs the shard on its own thread until the handle is stopped or dropped.
+    /// Runs the shard on its own thread until the handle is stopped or dropped, then saves its worlds.
     pub fn spawn(mut self) -> ShardHandle {
         let stop = Arc::new(AtomicBool::new(false));
         let stopped = stop.clone();
@@ -136,9 +148,21 @@ impl Shard {
                     None => next = Instant::now(),
                 }
             }
+            self.save_worlds();
         };
         let thread = std::thread::Builder::new().name("sapling-shard".into()).spawn(run).expect("spawning the shard thread");
         ShardHandle { stop, thread: Some(thread) }
+    }
+
+    /// Saves what every world still has unsaved and waits for storage: a stopping shard's last act.
+    pub fn save_worlds(&mut self) {
+        let mut layers = self.world.query::<&mut Layer>();
+        for mut layer in layers.iter_mut(&mut self.world) {
+            let failed = layer.world.save_and_wait();
+            if failed > 0 {
+                tracing::error!(failed, "columns could not be saved and are lost");
+            }
+        }
     }
 
     fn accept(&mut self, event: NetEvent) {
@@ -185,6 +209,7 @@ impl Shard {
             chunks::SectionBacklog::default(),
             Motion::default(),
             Sees::default(),
+            SeesMobs::default(),
             Profile::new(login, net_id),
             out,
         );

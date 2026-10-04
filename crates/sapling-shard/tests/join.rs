@@ -23,7 +23,7 @@ fn a_player_is_walked_through_the_join_sequence() {
 
     h.receive(1, &pack_response(PackStatus::Completed));
     let sent = h.tick(1);
-    use acacia_proto::packets::{CameraPresets, FeatureRegistry, JigsawStructureData, TrimData, VoxelShapes};
+    use acacia_proto::packets::{CameraPresets, FeatureRegistry, JigsawStructureData, SyncWorldClocks, TrimData, VoxelShapes};
     let expected = [
         JigsawStructureData::ID,
         VoxelShapes::ID,
@@ -38,6 +38,7 @@ fn a_player_is_walked_through_the_join_sequence() {
         UpdateAbilities::ID,
         SetEntityData::ID,
         UpdateAttributes::ID,
+        SyncWorldClocks::ID,
     ];
     assert_eq!(ids(&sent), expected);
     let start: StartGame = sent[2].decode().unwrap();

@@ -1,4 +1,5 @@
-use std::collections::HashMap;
+use std::collections::hash_map::Entry;
+use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 
 use acacia_proto::types::SubChunkEntryItemResult;
@@ -6,8 +7,8 @@ use acacia_world::{BlockRegistry, Dimension, Heightmap, LevelChunkData, SubChunk
 
 use crate::ChunkPos;
 use crate::column::{Column, SubChunkAnswer};
-use crate::loader::{Loader, Source};
-use crate::storage::WorldStorage;
+use crate::loader::{Finished, Loader, Source};
+use crate::storage::{Level, WorldStorage};
 
 /// Loads in flight at once per world; each is a few milliseconds of disk and encoding.
 const IO_THREADS: usize = 2;
@@ -16,8 +17,8 @@ const IO_THREADS: usize = 2;
 ///
 /// Without storage every column exists: those nobody wrote to are void and encode as all air.
 /// With storage a column exists once it is loaded: [`World::request`] asks the I/O threads for
-/// it and [`World::poll`] takes what they finished, so no call here waits on disk except
-/// [`World::load_now`].
+/// it, [`World::save_modified`] hands them what was written and [`World::poll`] takes what they
+/// finished. Only opening a folder (folder.rs) and [`World::save_and_wait`] wait on disk.
 pub struct World {
     dimension: i32,
     dim: Dimension,
@@ -26,6 +27,9 @@ pub struct World {
     /// Stands in for every unwritten column of a world without storage, so they share one encoding.
     void: Column,
     loader: Option<Loader>,
+    level: Level,
+    /// Columns that came from storage and [`World::take_arrived`] has not handed out.
+    arrived: Vec<ChunkPos>,
 }
 
 impl World {
@@ -33,7 +37,7 @@ impl World {
     pub fn void() -> Self {
         let registry = BlockRegistry::vanilla_arc();
         let dim = Dimension::overworld(registry.air_id());
-        Self { dimension: 0, dim, registry, columns: HashMap::new(), void: Column::empty(0, 0, dim), loader: None }
+        Self { dimension: 0, dim, registry, columns: HashMap::new(), void: Column::empty(0, 0, dim), loader: None, level: Level::default(), arrived: Vec::new() }
     }
 
     /// The overworld of `storage`. Columns it does not hold are void.
@@ -53,20 +57,96 @@ impl World {
         &self.registry
     }
 
+    pub fn level(&self) -> &Level {
+        &self.level
+    }
+
+    /// The spawn, the time and what else storage saves when the world closes.
+    pub fn level_mut(&mut self) -> &mut Level {
+        &mut self.level
+    }
+
+    /// The columns that came from storage since the last call: their actors are new to the caller.
+    pub fn take_arrived(&mut self) -> Vec<ChunkPos> {
+        std::mem::take(&mut self.arrived)
+    }
+
+    /// The stored actors of a loaded column (`StoredColumn::actors`); empty when it has none.
+    pub fn actors(&self, pos: ChunkPos) -> &[u8] {
+        self.columns.get(&pos).map_or(&[], Column::actors)
+    }
+
     /// The runtime id of a block's default-ordered first state, e.g. `minecraft:stone`.
     pub fn block_id(&self, name: &str) -> Option<u32> {
         self.registry.states_of(name).next().map(|(id, _)| id)
     }
 
-    /// Takes the columns the I/O threads finished; returns how many. Call once a tick.
+    /// Takes what the I/O threads finished; returns how many columns they loaded. Call once a tick.
     pub fn poll(&mut self) -> usize {
         let Some(loader) = &mut self.loader else { return 0 };
         let finished = loader.finished();
-        let count = finished.len();
-        for (pos, column) in finished {
-            self.columns.entry(pos).or_insert(column);
+        finished.into_iter().map(|done| self.accept(done)).filter(|&loaded| loaded).count()
+    }
+
+    /// Applies one finished job; true for a loaded column. A failed save leaves its column unsaved.
+    fn accept(&mut self, done: Finished) -> bool {
+        match done {
+            Finished::Loaded(pos, column) => {
+                self.insert_loaded(pos, column);
+                true
+            }
+            Finished::Saved { pos, ok } => {
+                if let (false, Some(column)) = (ok, self.columns.get_mut(&pos)) {
+                    column.mark_modified();
+                }
+                false
+            }
         }
-        count
+    }
+
+    /// Hands every column written since its last save to the I/O threads; returns how many.
+    /// A column whose previous save is still on its way waits for the next call.
+    pub fn save_modified(&mut self) -> usize {
+        self.queue_saves(&HashSet::new())
+    }
+
+    fn insert_loaded(&mut self, pos: ChunkPos, column: Column) {
+        if let Entry::Vacant(slot) = self.columns.entry(pos) {
+            slot.insert(column);
+            self.arrived.push(pos);
+        }
+    }
+
+    /// Saves every written column, waits for the I/O threads and flushes storage with the
+    /// world's [`Level`]; returns how many columns could not be saved. Blocks on disk: for a
+    /// world that is being closed, never for a tick.
+    pub fn save_and_wait(&mut self) -> usize {
+        let mut failed = HashSet::new();
+        loop {
+            self.queue_saves(&failed);
+            let Some(done) = self.loader.as_mut().and_then(Loader::wait) else { break };
+            if let Finished::Saved { pos, ok: false } = &done {
+                failed.insert(*pos);
+            }
+            self.accept(done);
+        }
+        if let Some(Err(error)) = self.loader.as_ref().map(|loader| loader.source().storage.flush(&self.level)) {
+            tracing::error!(%error, "flushing storage failed");
+        }
+        failed.len()
+    }
+
+    fn queue_saves(&mut self, skip: &HashSet<ChunkPos>) -> usize {
+        let Some(loader) = &mut self.loader else { return 0 };
+        let mut queued = 0;
+        for (pos, column) in &mut self.columns {
+            if column.is_modified() && !loader.is_saving(*pos) && !skip.contains(pos) {
+                loader.save(*pos, column.stored());
+                column.mark_saved();
+                queued += 1;
+            }
+        }
+        queued
     }
 
     pub fn is_loaded(&self, pos: ChunkPos) -> bool {
@@ -82,23 +162,24 @@ impl World {
         loaded
     }
 
-    /// Loads a column on the calling thread. For startup code; a shard uses [`World::request`].
-    pub fn load_now(&mut self, pos: ChunkPos) {
+    /// Loads a column on the calling thread: for opening a world (folder.rs), not for a shard.
+    pub(crate) fn load_now(&mut self, pos: ChunkPos) {
         if let (false, Some(loader)) = (self.is_loaded(pos), &self.loader) {
             let column = loader.source().load(pos);
-            self.columns.insert(pos, column);
+            self.insert_loaded(pos, column);
         }
     }
 
     /// Columns held in memory, and loads on their way.
     pub fn loaded_columns(&self) -> (usize, usize) {
-        (self.columns.len(), self.loader.as_ref().map_or(0, Loader::pending))
+        (self.columns.len(), self.loader.as_ref().map_or(0, Loader::loading))
     }
 
-    /// Drops the loaded columns `keep` rejects. Columns written to stay: nothing saves them yet.
+    /// Drops the loaded columns `keep` rejects, except those storage does not hold yet: unsaved
+    /// ones, and ones whose save is on its way (a reload could read the column before the save).
     pub fn unload(&mut self, keep: impl Fn(ChunkPos) -> bool) {
-        if self.loader.is_some() {
-            self.columns.retain(|pos, column| column.is_modified() || keep(*pos));
+        if let Some(loader) = &self.loader {
+            self.columns.retain(|pos, column| column.is_modified() || loader.is_saving(*pos) || keep(*pos));
         }
     }
 
@@ -114,14 +195,18 @@ impl World {
         self.column(ChunkPos::of_block(x, z))?.top(x, z, stands)
     }
 
-    /// Sets a layer-0 block by runtime id; false when the column is not loaded. Positions
-    /// outside the dimension's height are ignored.
+    /// Sets a layer-0 block by runtime id; false when the column is not loaded or storage
+    /// could not read it. Positions outside the dimension's height are ignored.
     pub fn set_block(&mut self, x: i32, y: i32, z: i32, id: u32) -> bool {
         let pos = ChunkPos::of_block(x, z);
         if !self.is_loaded(pos) {
             return false;
         }
-        self.columns.entry(pos).or_insert_with(|| Column::empty(pos.x, pos.z, self.dim)).set_block(x, y, z, id);
+        let column = self.columns.entry(pos).or_insert_with(|| Column::empty(pos.x, pos.z, self.dim));
+        if column.is_damaged() {
+            return false;
+        }
+        column.set_block(x, y, z, id, &self.registry);
         true
     }
 

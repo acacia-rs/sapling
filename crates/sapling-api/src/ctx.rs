@@ -13,6 +13,9 @@ pub trait Backend {
     fn players(&self) -> Vec<Player>;
     fn position(&self, player: PlayerId) -> Option<Position>;
     fn spawn(&self) -> [f32; 3];
+    fn set_spawn(&mut self, feet: [f32; 3]);
+    fn time(&self) -> i64;
+    fn set_time(&mut self, time: i64);
     fn kick(&mut self, player: PlayerId, message: &str);
     fn broadcast(&mut self, message: &str);
     fn send_message(&mut self, player: PlayerId, message: &str);
@@ -68,6 +71,22 @@ impl<'a> ShardCtx<'a> {
     /// Where players appear when they join (feet).
     pub fn spawn(&self) -> [f32; 3] {
         self.backend.spawn()
+    }
+
+    /// Moves where players appear; a world with storage saves it as its spawn.
+    pub fn set_spawn(&mut self, feet: [f32; 3]) {
+        self.backend.set_spawn(feet);
+    }
+
+    /// The world's time of day counter: a day is 24000 long (0 sunrise, 6000 noon, 18000
+    /// midnight) and the count runs on past it.
+    pub fn time(&self) -> i64 {
+        self.backend.time()
+    }
+
+    /// Sets the time of day for everyone in the world.
+    pub fn set_time(&mut self, time: i64) {
+        self.backend.set_time(time);
     }
 
     /// Disconnects a player with `message` on their screen. `on_quit` follows on a later tick.

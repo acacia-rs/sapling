@@ -41,6 +41,15 @@ impl Backend for Fake {
     fn spawn(&self) -> [f32; 3] {
         [0.5, 65.0, 0.5]
     }
+    fn set_spawn(&mut self, feet: [f32; 3]) {
+        self.log.push(format!("spawn {feet:?}"));
+    }
+    fn time(&self) -> i64 {
+        6000
+    }
+    fn set_time(&mut self, time: i64) {
+        self.log.push(format!("time {time}"));
+    }
     fn kick(&mut self, player: PlayerId, message: &str) {
         self.log.push(format!("kick {} {message}", player.0));
     }
