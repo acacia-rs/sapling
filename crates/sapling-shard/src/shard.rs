@@ -25,7 +25,7 @@ use crate::roster::{Elsewhere, Profile};
 use crate::view::View;
 use crate::visibility::ToViewers;
 use crate::worlds::{Atlas, Changes, Scope};
-use crate::{blobs, blocks, chunks, clock, commands, handlers, handoff, join, mobs, movement, visibility, worlds};
+use crate::{arenas, blobs, blocks, chunks, clock, commands, handlers, handoff, join, mobs, movement, visibility, worlds};
 
 /// The disconnect screen of the players of a shard that stops.
 const CLOSED: &str = "disconnect.closed";
@@ -62,6 +62,7 @@ impl Shard {
         world.init_resource::<Changes>();
         world.init_resource::<Handoffs>();
         world.init_resource::<Elsewhere>();
+        world.init_resource::<arenas::Templates>();
         world.init_resource::<Tick>();
         world.init_resource::<Arrivals>();
         world.init_resource::<PacketQueues>();
@@ -98,6 +99,12 @@ impl Shard {
     /// name this shard already has or knows of another shard.
     pub fn add_world(&mut self, name: &str, level: sapling_world::World, spawn: [f32; 3]) -> bool {
         worlds::add(&mut self.world, name, level, spawn).is_some()
+    }
+
+    /// Adds a template handlers make worlds from (`ShardCtx::create_world`), with where players
+    /// appear in such a world (feet).
+    pub fn add_template(&mut self, name: &str, template: Arc<sapling_world::Template>, spawn: [f32; 3]) {
+        self.world.resource_mut::<arenas::Templates>().add(name, template, spawn);
     }
 
     /// Adds a handler at [`Priority::Normal`].

@@ -1,9 +1,10 @@
 use std::net::SocketAddr;
+use std::sync::Arc;
 
 use sapling_api::{Command, Difficulty, GameMode, Handler, Priority};
 use sapling_net::{Listener, Motd, NetConfig, SigningKeys};
 use sapling_shard::{Link, Shard, ShardConfig, ShardHandle};
-use sapling_world::{World, WorldFolder};
+use sapling_world::{Template, World, WorldFolder};
 
 use crate::layout::{self, WorldSpec};
 
@@ -36,6 +37,7 @@ pub struct ServerBuilder {
     world: Option<World>,
     worlds: Vec<WorldSpec>,
     join: Option<String>,
+    templates: Vec<(String, Arc<Template>, [f32; 3])>,
     handlers: Vec<(Priority, Box<dyn Handler>)>,
     handlers_each: Vec<(Priority, HandlerFactory)>,
     /// Each registers one command type on a shard once it exists.
@@ -51,6 +53,7 @@ impl Default for ServerBuilder {
             world: None,
             worlds: Vec::new(),
             join: None,
+            templates: Vec::new(),
             handlers: Vec::new(),
             handlers_each: Vec::new(),
             commands: Vec::new(),
@@ -132,6 +135,13 @@ impl ServerBuilder {
         self.add_world_on(shard, name, layout::platform_world(), ShardConfig::default().spawn)
     }
 
+    /// A map every shard can make worlds from at runtime (`ShardCtx::create_world`), with where
+    /// players appear in such a world (feet). The worlds share its blocks until they change them.
+    pub fn template(mut self, name: impl Into<String>, template: Arc<Template>, spawn: [f32; 3]) -> Self {
+        self.templates.push((name.into(), template, spawn));
+        self
+    }
+
     /// The world players enter when they join the server (default: the default world).
     pub fn join_world(mut self, name: impl Into<String>) -> Self {
         self.join = Some(name.into());
@@ -200,6 +210,7 @@ impl ServerBuilder {
             for world in worlds {
                 shard.add_world(&world.name, world.world, world.spawn);
             }
+            self.templates.iter().for_each(|(name, template, spawn)| shard.add_template(name, template.clone(), *spawn));
             single.take().into_iter().flatten().for_each(|(priority, handler)| shard.add_handler_at(priority, handler));
             self.handlers_each.iter().for_each(|(priority, make)| shard.add_handler_at(*priority, make()));
             self.commands.iter().for_each(|register| register(&mut shard));

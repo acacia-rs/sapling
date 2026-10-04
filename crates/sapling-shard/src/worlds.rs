@@ -48,6 +48,11 @@ impl Atlas {
         self.elsewhere.remove(name);
     }
 
+    /// Takes a world of this shard off the map.
+    pub fn remove(&mut self, name: &str) {
+        self.here.remove(name);
+    }
+
     pub fn names(&self) -> Vec<String> {
         let mut names: Vec<String> = self.here.keys().chain(self.elsewhere.keys()).cloned().collect();
         names.sort();

@@ -54,6 +54,13 @@ impl View {
         self.queue.clear();
     }
 
+    /// Queues a column the client has, ahead of the rest: what it was sent is outdated.
+    pub fn resend(&mut self, pos: ChunkPos) {
+        if self.sent.remove(&pos) {
+            self.queue.insert(0, pos);
+        }
+    }
+
     /// Whether the client was sent the column and still has it.
     pub fn has_sent(&self, pos: ChunkPos) -> bool {
         self.sent.contains(&pos)

@@ -1,12 +1,13 @@
 //! Worlds as a server holds them: chunk columns built with acacia-world, loaded from a
 //! [`WorldStorage`] on I/O threads and served in sub-chunk request mode from a per-column encode
-//! cache that every player shares. Templates and arenas (docs/DESIGN.md "Arenas") come with
-//! milestone step 5.
+//! cache that every player shares. A [`Template`] is a world frozen in memory that arenas
+//! (`World::arena`) read until they write (docs/DESIGN.md "Arenas").
 
 mod column;
 mod folder;
 mod loader;
 mod storage;
+mod template;
 #[cfg(test)]
 mod tests;
 mod world;
@@ -18,6 +19,7 @@ pub use folder::WorldFolder;
 pub use sapling_leveldb::LevelDat;
 pub use sapling_leveldb::{Actor, actors};
 pub use storage::{Level, LevelDbStorage, MemoryStorage, StorageError, StoredColumn, WorldStorage};
+pub use template::Template;
 pub use world::World;
 
 /// Chunk palettes carry block-state hashes, not runtime ids; StartGame must say the same.

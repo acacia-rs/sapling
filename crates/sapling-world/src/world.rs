@@ -9,6 +9,7 @@ use crate::ChunkPos;
 use crate::column::{Column, SubChunkAnswer};
 use crate::loader::{Finished, Loader, Source};
 use crate::storage::{Level, WorldStorage};
+use crate::template::Template;
 
 /// Loads in flight at once per world; each is a few milliseconds of disk and encoding.
 const IO_THREADS: usize = 2;
@@ -20,16 +21,20 @@ const IO_THREADS: usize = 2;
 /// it, [`World::save_modified`] hands them what was written and [`World::poll`] takes what they
 /// finished. Only opening a folder (folder.rs) and [`World::save_and_wait`] wait on disk.
 pub struct World {
-    dimension: i32,
-    dim: Dimension,
-    registry: Arc<BlockRegistry>,
-    columns: HashMap<ChunkPos, Column>,
+    pub(crate) dimension: i32,
+    pub(crate) dim: Dimension,
+    pub(crate) registry: Arc<BlockRegistry>,
+    /// Of an arena: only the columns that were written to.
+    pub(crate) columns: HashMap<ChunkPos, Column>,
     /// Stands in for every unwritten column of a world without storage, so they share one encoding.
-    void: Column,
-    loader: Option<Loader>,
-    level: Level,
+    pub(crate) void: Column,
+    pub(crate) loader: Option<Loader>,
+    pub(crate) level: Level,
     /// Columns that came from storage and [`World::take_arrived`] has not handed out.
-    arrived: Vec<ChunkPos>,
+    pub(crate) arrived: Vec<ChunkPos>,
+    /// Of an arena: where every column it has not written to is read from (template.rs).
+    pub(crate) base: Option<Arc<Template>>,
+    pub(crate) base_actors_taken: bool,
 }
 
 impl World {
@@ -37,7 +42,8 @@ impl World {
     pub fn void() -> Self {
         let registry = BlockRegistry::vanilla_arc();
         let dim = Dimension::overworld(registry.air_id());
-        Self { dimension: 0, dim, registry, columns: HashMap::new(), void: Column::empty(0, 0, dim), loader: None, level: Level::default(), arrived: Vec::new() }
+        let (columns, void) = (HashMap::new(), Column::empty(0, 0, dim));
+        Self { dimension: 0, dim, registry, columns, void, loader: None, level: Level::default(), arrived: Vec::new(), base: None, base_actors_taken: false }
     }
 
     /// The overworld of `storage`. Columns it does not hold are void.
@@ -66,14 +72,17 @@ impl World {
         &mut self.level
     }
 
-    /// The columns that came from storage since the last call: their actors are new to the caller.
+    /// The columns that came from storage since the last call, and once an arena's template
+    /// columns with actors: their actors are new to the caller.
     pub fn take_arrived(&mut self) -> Vec<ChunkPos> {
-        std::mem::take(&mut self.arrived)
+        let mut arrived = self.take_base_actors();
+        arrived.append(&mut self.arrived);
+        arrived
     }
 
     /// The stored actors of a loaded column (`StoredColumn::actors`); empty when it has none.
     pub fn actors(&self, pos: ChunkPos) -> &[u8] {
-        self.columns.get(&pos).map_or(&[], Column::actors)
+        self.column(pos).map_or(&[], Column::actors)
     }
 
     /// The runtime id of a block's default-ordered first state, e.g. `minecraft:stone`.
@@ -198,16 +207,19 @@ impl World {
     /// Sets a layer-0 block by runtime id; false when the column is not loaded or storage
     /// could not read it. Positions outside the dimension's height are ignored.
     pub fn set_block(&mut self, x: i32, y: i32, z: i32, id: u32) -> bool {
-        let pos = ChunkPos::of_block(x, z);
+        let registry = self.registry.clone();
+        self.column_mut(ChunkPos::of_block(x, z)).map(|column| column.set_block(x, y, z, id, &registry)).is_some()
+    }
+
+    /// The column to write to, if it is loaded and storage could read it. An arena's first
+    /// write to a column makes it the arena's own (`Column::fork`).
+    fn column_mut(&mut self, pos: ChunkPos) -> Option<&mut Column> {
         if !self.is_loaded(pos) {
-            return false;
+            return None;
         }
-        let column = self.columns.entry(pos).or_insert_with(|| Column::empty(pos.x, pos.z, self.dim));
-        if column.is_damaged() {
-            return false;
-        }
-        column.set_block(x, y, z, id, &self.registry);
-        true
+        let (base, dim) = (&self.base, self.dim);
+        let fresh = || base.as_ref().and_then(|template| template.column(pos)).map_or_else(|| Column::empty(pos.x, pos.z, dim), Column::fork);
+        Some(self.columns.entry(pos).or_insert_with(fresh)).filter(|column| !column.is_damaged())
     }
 
     /// The layer-1 block at a position: water around a waterlogged block, air otherwise.
@@ -218,8 +230,9 @@ impl World {
     /// Sets a layer-1 block; false where [`World::set_block`] is.
     pub fn set_liquid(&mut self, x: i32, y: i32, z: i32, id: u32) -> bool {
         let pos = ChunkPos::of_block(x, z);
-        let column = self.columns.get_mut(&pos).filter(|column| !column.is_damaged());
-        column.map(|column| column.set_liquid(x, y, z, id)).is_some()
+        // A column nobody wrote to has no block for a liquid to stand in.
+        let written = self.columns.contains_key(&pos) || self.base.as_ref().is_some_and(|template| template.column(pos).is_some());
+        written && self.column_mut(pos).map(|column| column.set_liquid(x, y, z, id)).is_some()
     }
 
     /// Whether blocks exist at this height.
@@ -258,7 +271,8 @@ impl World {
     }
 
     fn column(&self, pos: ChunkPos) -> Option<&Column> {
-        self.columns.get(&pos).or(self.loader.is_none().then_some(&self.void))
+        let own = self.columns.get(&pos).or_else(|| self.base.as_ref().and_then(|template| template.column(pos)));
+        own.or(self.loader.is_none().then_some(&self.void))
     }
 
     #[cfg(test)]

@@ -59,6 +59,23 @@ impl Column {
         Self { chunk, block_entities, actors, modified: false, damaged: false, heights: OnceLock::new(), announce: OnceLock::new(), announce_cached: OnceLock::new(), sections }
     }
 
+    /// A copy for an arena to write to. The blocks are copied; the encodings are the same bytes
+    /// until a write outdates one.
+    // TODO: copy only the written section: needs `Arc` sections inside `acacia_world::Chunk`.
+    pub fn fork(&self) -> Self {
+        Self {
+            chunk: self.chunk.clone(),
+            block_entities: self.block_entities.clone(),
+            actors: self.actors.clone(),
+            modified: false,
+            damaged: false,
+            heights: self.heights.clone(),
+            announce: self.announce.clone(),
+            announce_cached: self.announce_cached.clone(),
+            sections: self.sections.clone(),
+        }
+    }
+
     pub fn is_damaged(&self) -> bool {
         self.damaged
     }

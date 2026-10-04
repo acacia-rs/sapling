@@ -16,5 +16,5 @@ pub use sapling_api::{
     Block, BlockPos, BossBar, BossBarColour, BreakEvent, ChatEvent, Command, CommandEnum, CommandEvent, Custom, Difficulty, Face, Form, FormResponse, GameMode, Handler,
     InteractEvent, Menu, Modal, Output, Permission, PlaceEvent, Player, PlayerId, Position, Priority, Sender, ShardCtx, Sidebar, Title, command, form,
 };
-pub use sapling_world::{ChunkPos, Level, LevelDbStorage, MemoryStorage, World, WorldFolder, WorldStorage};
+pub use sapling_world::{ChunkPos, Level, LevelDbStorage, MemoryStorage, Template, World, WorldFolder, WorldStorage};
 pub use server::{Server, ServerBuilder, StartError};
