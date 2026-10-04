@@ -173,6 +173,54 @@ gave the shapes below; run against sapling it shows the same packets.
   Regenerating: touch every chunk (100-chunk ticking areas, bedrock floor to stone and back) with a bot
   online, let the bot leave so its chunks unload, then `stop`. Never `save hold` before `stop`: BDS hangs.
 
+## Step 4 as built (API)
+
+Ground truth: `cargo run -p sapling --example bds_ui_probe -- <server>` prints BDS's command list and what
+it sends for `/title`, `/scoreboard`, `/gamemode`, `/tp`, a wither's bar and commands that fail.
+
+- **Handlers.** `Server::builder().handler_at(Priority, h)`; `Highest` runs first, `Lowest` last, `Monitor`
+  after all. `on_chat` and `on_command` get a mutable event (`ChatEvent::message`, `cancel()`); a cancel stops
+  the handlers that have not run, except monitors, which get a copy of the final event and cannot change it.
+  `on_tick` runs once a tick after the events. `on_move` was left out: it needs a resync on cancel.
+- **State.** `ctx.state::<T>()` is a per-shard `T::default()` keyed by type: what a plugin's handler,
+  commands and form callbacks share (commands are types, not values, so they hold nothing).
+- **Commands** (`sapling-api/src/command`, `sapling-shard/src/commands.rs`). `#[derive(Command)]` on a struct
+  (fields = parameters) or an enum (variants = sub-commands) writes `CommandSyntax`; the plugin writes
+  `Command::run(self, ctx, sender, out)`. Parameters: integers, floats, `bool`, `String` (a word or a quoted
+  run), `Text` (rest of the line), `Target` (an online player or `@s`), `GameMode`, any `#[derive(CommandEnum)]`,
+  and `Option<T>` for trailing optional ones. `Sender` is `Player | Console`; only players send yet.
+  - `AvailableCommands` is built once per permission level and sent when a player enters the world and when
+    `ctx.set_permission` changes its level (`Member` / `Operator`). Hidden commands are left out entirely and
+    answer as unknown; every command sent carries permission `"any"` and flags 0.
+  - Wire shape as BDS 1.26.52: enum values and enums deduplicated; an enum parameter carries its enum index
+    with flag 0x30; a sub-command word is a one-value enum; aliases are an enum `<name>CommandAliases` led by
+    the name. Type ids from the capture: int 1, float 3, target 8, string 56, message 68 (acacia-proto names
+    44 and 55 for the last two: an older protocol). A test compares them with the recorded BDS list.
+  - Answers are `CommandOutput` with the request's origin echoed, `output_type` "alloutput", and BDS's keys
+    for failures: `commands.generic.unknown [name]`, `commands.generic.syntax [before, token, after]`,
+    `commands.generic.noTargetMatch`. `out.print` / `out.error` send text as the message id, as dragonfly does.
+  - Three lines a tick per player, 512 characters, control characters dropped.
+- **Forms** (`sapling-api/src/form`, `sapling-shard/src/forms.rs`). `Menu` (answer: button index), `Modal`
+  (bool), `Custom` (one `Value` per element), and `#[derive(Form)]`: a struct whose value holds the defaults
+  and whose answer is the struct filled in. `ctx.send_form(player, form, |ctx, player, response| ..)`; the
+  response is `Submitted(T)` or `Closed`. Ids count up per player; an answer to an id that is not open is
+  ignored; 16 forms may be pending; all are dropped when the player leaves. Answers are checked against the
+  form: array length, null for labels, types, slider bounds, option indices, input length (256 characters
+  unless `max_len`), 32 KiB in total. Anything that fails is `Closed`. JSON as in acacia's
+  `docs/research/forms.md` (menus use the legacy `buttons` array).
+- **Sidebar** (`hud.rs`). One objective `sapling` in slot `sidebar`, ascending, one fake player per line
+  (id = line + 1, score = line). `ctx.set_sidebar` diffs against what the player was shown: changed lines are
+  removed and set again (the client keeps the text of an entry it knows), a new title rebuilds the board,
+  15 lines at most.
+- **Boss bar.** One per player, on the player's own entity id (dragonfly's way: no extra entity).
+  Every change sends ShowBar again, as BDS does for its wither; `remove_boss_bar` sends HideBar.
+- **Titles.** SetDurations, SetSubtitle, SetTitle in that order, unset times -1, as `/title` sends them;
+  `send_actionbar`; `send_toast` (ToastRequest).
+- **Teleport.** `ctx.teleport` sends MovePlayer mode Teleport, cause Command, as `/tp`; the player's inputs
+  are ignored until one carries `HandledTeleport`, and the teleport is repeated after 20 ticks without one.
+- **Game mode.** `ctx.set_game_mode` sends UpdatePlayerGameType to everyone in the world, the player
+  included: all BDS's `/gamemode` sends besides chat lines (no SetPlayerGameType, no UpdateAbilities).
+
 ## Open items
 
 - **Only a vanilla client can confirm** (bots decode all of these): the plain fallback skin
@@ -180,15 +228,31 @@ gave the shapes below; run against sapling it shows the same packets.
   PlayerList packet per record instead of one packet with many; the correction teleport's
   `cause: Unknown`; smoothness of MovePlayer sent on change instead of every tick as BDS does;
   BoundingboxHeight sent with every pose change (BDS: only when sneaking changes).
+- **Step 4, only a vanilla client can confirm:** `AvailableCommands` as a whole (a wrong one crashes or
+  kicks; the bot only decodes it) and whether completion shows with every command at permission "any" while
+  StartGame is the recorded one; plain text as `CommandOutput` message ids (a `%` in it may be read as a
+  format); the form JSON (legacy `buttons`, no `tooltip`/`submit` keys) and the bytes of a closed form; a
+  sidebar with two lines of the same text; removing and re-adding a line in one batch without flicker;
+  RemoveObjective alone to hide the sidebar (BDS also clears the slot); the boss bar on the player's own
+  entity, its colours, and HideBar's layout (BDS never sent one in 20 s: its bar goes with the entity, and
+  acacia-proto gives every BossEvent the ShowBar layout); ToastRequest; UpdatePlayerGameType for another
+  player's id; whether creative flight works without an UpdateAbilities.
+- Commands: console sender, `@a`/`@p`/`@r` selectors, position and item parameters, soft enums
+  (UpdateSoftEnum) for dynamic completions, several overloads for a struct, permission nodes.
+- Forms: images are untested, `ServerSettings`, ClientboundCloseForm, a timeout for unanswered forms.
+- HUD: list and below-name objectives, several boss bars (needs an entity each), `/title` clear and reset.
+- `on_move` and the other cancellable world events (break, place, interact) come with step 6.
+- acacia-proto: `AvailableCommands` value type names are stale for 1.26.5x (string 56, block position 64,
+  position 65, message 68, raw text 70, json 74, block states 84, command 90).
 - Not sent yet, though BDS sends them for other players: UpdateAbilities, UpdateAdventureSettings,
   UpdateAttributes (sprint speed), PlayerLocation / LocatorBar, the MOVING flag and the FlagsExtended bit
   that changes with sneaking, held items and armour.
-- Movement: physics validation (acacia-physics), server-side teleports, on-ground from collision.
+- Movement: physics validation (acacia-physics), on-ground from collision.
 - Broadcasts are encoded once but compressed per player; `SharedBatch` needs a per-layer batch in
   sapling-net. Visibility and fan-out are O(players²) per layer: index players by chunk.
 - A newcomer gets every skin at once (about 290 KB each before compression); throttle before the
   per-player backlog limit (16 MB) matters. Skin changes in game (PlayerSkin) are ignored.
-- Chat: proper rate limiting, private messages, commands (`/`), profanity filter fields.
+- Chat: proper rate limiting, private messages, profanity filter fields.
 - **BDS only saves chunks that changed since generation.** A world folder has holes wherever nothing was
   touched; vanilla regenerates them from the seed, sapling shows void. Maps must be fully saved (or
   sapling needs a generator).
