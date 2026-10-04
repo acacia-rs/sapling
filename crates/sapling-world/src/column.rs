@@ -100,7 +100,22 @@ impl Column {
                 Err(error) => tracing::warn!(x, y, z, %error, "unreadable block entities are kept as they are"),
             }
         }
-        self.chunk.set(x, y, z, 0, id);
+        self.write(x, y, z, 0, id);
+    }
+
+    /// The layer-1 block: the water a waterlogged block stands in, air otherwise.
+    pub fn liquid(&self, x: i32, y: i32, z: i32) -> u32 {
+        self.chunk.liquid(x, y, z)
+    }
+
+    pub fn set_liquid(&mut self, x: i32, y: i32, z: i32, id: u32) {
+        self.write(x, y, z, 1, id);
+    }
+
+    /// Writes one block and drops every encoding it outdates: a later reader, cached or not,
+    /// gets the section as it is now, under a new blob hash.
+    fn write(&mut self, x: i32, y: i32, z: i32, layer: u32, id: u32) {
+        self.chunk.set(x, y, z, layer, id);
         self.modified = true;
         self.heights.take();
         self.announce.take();

@@ -210,6 +210,23 @@ impl World {
         true
     }
 
+    /// The layer-1 block at a position: water around a waterlogged block, air otherwise.
+    pub fn liquid(&self, x: i32, y: i32, z: i32) -> u32 {
+        self.column(ChunkPos::of_block(x, z)).map_or(self.dim.air, |column| column.liquid(x, y, z))
+    }
+
+    /// Sets a layer-1 block; false where [`World::set_block`] is.
+    pub fn set_liquid(&mut self, x: i32, y: i32, z: i32, id: u32) -> bool {
+        let pos = ChunkPos::of_block(x, z);
+        let column = self.columns.get_mut(&pos).filter(|column| !column.is_damaged());
+        column.map(|column| column.set_liquid(x, y, z, id)).is_some()
+    }
+
+    /// Whether blocks exist at this height.
+    pub fn in_height(&self, y: i32) -> bool {
+        (self.dim.min_y..self.dim.min_y + self.dim.height as i32).contains(&y)
+    }
+
     /// Fills the box between two corners, both included.
     pub fn fill(&mut self, from: [i32; 3], to: [i32; 3], id: u32) {
         let range = |axis: usize| from[axis].min(to[axis])..=from[axis].max(to[axis]);

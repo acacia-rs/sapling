@@ -89,7 +89,16 @@ fn a_write_drops_only_its_section_from_the_cache() {
 
     world.set_block(3, 64, 3, world.registry().air_id());
     assert!(!world.is_section_cached(pos, 4));
-    assert_ne!(world.sub_chunk(pos, 4, [0, 0, 0], false).entry.payload, before.payload);
+    let broken = world.sub_chunk(pos, 4, [0, 0, 0], true);
+    assert_ne!(broken.blob.as_ref().map(|blob| blob.hash), Some(xxh64(&before.payload.unwrap())), "a new blob for cache clients");
+
+    // The water layer is part of the section too.
+    let (water, air) = (world.block_id("minecraft:water").unwrap(), world.registry().air_id());
+    assert!(world.set_liquid(3, 64, 3, water) && !world.is_section_cached(pos, 4));
+    assert_eq!((world.liquid(3, 64, 3), world.block(3, 64, 3), world.liquid(3, 65, 3)), (water, air, air));
+    assert_ne!(world.sub_chunk(pos, 4, [0, 0, 0], true).blob, broken.blob);
+    assert!(!world.set_liquid(100, 64, 100, water), "nothing was ever written there");
+    assert!(world.in_height(-64) && world.in_height(319) && !world.in_height(-65) && !world.in_height(320));
 }
 
 #[test]
