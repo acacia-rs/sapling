@@ -2,36 +2,23 @@
 //! sapling-leveldb fixture), stands on the terrain it was sent, checks that terrain against the
 //! save, and walks across it. Run with the client blob cache on and off.
 
-use std::path::{Path, PathBuf};
+mod common;
+
 use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::time::Duration;
 
 use acacia_bot::pathfind::{Goal, GotoOpts, NavStatus, Navigator};
 use acacia_bot::{Bot, BotConfig};
-use acacia_client::{BlobStore, Client, DisconnectReason, MemoryBlobStore, TransportKind};
+use acacia_client::{BlobStore, DisconnectReason, MemoryBlobStore};
 use acacia_world::{BlockAccess, BlockRegistry, Chunk};
 use bytes::Bytes;
-use sapling::{LevelDbStorage, Server, World};
+use common::{GOAL, GROUND, SPAWN, fixture};
+use sapling::Server;
 use sapling_leveldb::{ChunkKey, LevelDbWorld};
 
-/// The fixture's spawn block column and the y of the grass under it.
-const SPAWN: (i32, i32) = (21, 205);
-const GROUND: i32 = 71;
-/// A walk BDS let the same bot make on this terrain.
-const GOAL: (i32, i32) = (45, 213);
-
-fn fixture() -> PathBuf {
-    Path::new(env!("CARGO_MANIFEST_DIR")).join("../sapling-leveldb/tests/fixtures/world")
-}
-
 async fn start() -> Server {
-    let storage = Arc::new(LevelDbStorage::open_in_memory(&fixture()).expect("the fixture opens"));
-    let saved = storage.level().spawn().expect("a saved spawn");
-    let mut world = World::with_storage(storage);
-    let spawn = world.spawn_at(saved);
-    assert_eq!(spawn, [SPAWN.0 as f32 + 0.5, GROUND as f32 + 1.0, SPAWN.1 as f32 + 0.5]);
-    Server::builder().bind("127.0.0.1:0".parse().unwrap()).online_mode(false).world(world, spawn).start().await.expect("the server starts")
+    common::start(Server::builder()).await
 }
 
 /// A blob store that counts what the server had to send.
@@ -60,19 +47,12 @@ impl BlobStore for Counting {
 }
 
 async fn join(server: &Server, name: &str, store: Option<Arc<Counting>>) -> Bot {
-    let client = Client::builder(server.local_addr().to_string()).offline(name).transport(TransportKind::RakNet);
+    let client = common::client(server, name);
     let client = match store {
         Some(store) => client.blob_store(store),
         None => client.without_blob_cache(),
     };
-    let mut bot = Bot::connect(client, BotConfig { physics: true, ..BotConfig::default() }).await.expect("the bot spawns");
-    let started = tokio::time::timeout(Duration::from_secs(5), async {
-        while !bot.movement().is_some_and(|m| m.is_started()) {
-            bot.wait_ticks(1).await.expect("connected");
-        }
-    });
-    started.await.expect("terrain under the spawn arrives");
-    bot
+    common::spawn(client, BotConfig::default()).await
 }
 
 /// The saved chunks around the spawn chunk, straight from the fixture.

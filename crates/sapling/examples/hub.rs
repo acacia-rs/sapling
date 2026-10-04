@@ -1,20 +1,32 @@
-//! A hub that logs who comes and goes, in a vanilla world folder or, without one, on a stone
-//! platform in the void.
+//! A hub that announces who comes and goes and logs the chat, in a vanilla world folder or,
+//! without one, on a stone platform in the void.
 //! `cargo run -p sapling --example hub -- [port] [world folder] [--offline] [--no-cache]` (default port 19132,
 //! online mode). `RUST_LOG=debug` shows refused logins and ended connections.
 use std::path::Path;
 
-use sapling::{GameMode, Handler, Player, Server, ShardCtx, World};
+use sapling::{ChatOutcome, GameMode, Handler, Player, Server, ShardCtx, World};
 
 struct Greeter;
 
 impl Handler for Greeter {
     fn on_join(&mut self, ctx: &mut ShardCtx<'_>, player: &Player) {
         tracing::info!(name = %player.name, xuid = %player.xuid, uuid = %player.uuid, online = ctx.player_count(), "joined");
+        ctx.broadcast(&format!("§e{} joined the game", player.name));
+        let others: Vec<String> = ctx.players().filter(|p| p.id != player.id).map(|p| p.name).collect();
+        if !others.is_empty() {
+            ctx.send_message(player.id, &format!("§7Here: {}", others.join(", ")));
+        }
     }
 
     fn on_quit(&mut self, ctx: &mut ShardCtx<'_>, player: &Player) {
         tracing::info!(name = %player.name, online = ctx.player_count(), "left");
+        ctx.broadcast(&format!("§e{} left the game", player.name));
+    }
+
+    fn on_chat(&mut self, ctx: &mut ShardCtx<'_>, player: &Player, message: &str) -> ChatOutcome {
+        let at = ctx.position(player.id).map(|p| p.feet.map(|c| c.floor() as i32));
+        tracing::info!(name = %player.name, ?at, message, "chat");
+        ChatOutcome::Allow
     }
 }
 

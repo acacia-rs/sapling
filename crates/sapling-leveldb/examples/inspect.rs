@@ -1,5 +1,5 @@
 //! Prints what a world folder holds: `cargo run -p sapling-leveldb --example inspect -- <world>`.
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::path::PathBuf;
 
 use sapling_leveldb::{ChunkKey, LevelDbWorld};
@@ -27,5 +27,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         *versions.entry(column.version).or_default() += 1;
     }
     println!("chunk versions: {versions:?}");
+
+    // BDS saves only chunks that changed: the map shows the holes sapling would serve as void.
+    let overworld: BTreeSet<(i32, i32)> = columns.iter().filter(|c| c.dimension == 0).map(|c| (c.x, c.z)).collect();
+    let (xs, zs) = (overworld.iter().map(|c| c.0), overworld.iter().map(|c| c.1));
+    if let (Some(x0), Some(x1), Some(z0), Some(z1)) = (xs.clone().min(), xs.max(), zs.clone().min(), zs.max()) {
+        println!("overworld columns saved (#) in x {x0}..={x1} (left to right), z {z0}..={z1} (top to bottom):");
+        for z in z0..=z1 {
+            println!("{}", (x0..=x1).map(|x| if overworld.contains(&(x, z)) { '#' } else { '.' }).collect::<String>());
+        }
+    }
     Ok(())
 }

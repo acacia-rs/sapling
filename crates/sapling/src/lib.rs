@@ -11,6 +11,6 @@
 
 mod server;
 
-pub use sapling_api::{GameMode, Handler, Player, PlayerId, ShardCtx};
+pub use sapling_api::{ChatOutcome, GameMode, Handler, Player, PlayerId, Position, ShardCtx};
 pub use sapling_world::{ChunkPos, LevelDbStorage, MemoryStorage, World, WorldFolder, WorldStorage};
 pub use server::{Server, ServerBuilder, StartError};
