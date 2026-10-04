@@ -41,11 +41,18 @@ pub(crate) fn advance(tick: Res<Tick>, mut layers: Query<(Entity, &mut Layer)>, 
     }
 }
 
-/// Sets a world's time and tells the players at once.
-// TODO: only the players of `layer`, once a shard holds more than one world.
+/// Sets a world's time and tells its players at once.
 pub(crate) fn set(world: &mut World, layer: Entity, time: i64) {
-    let Some(mut layer) = world.get_mut::<Layer>(layer) else { return };
-    layer.world.level_mut().time = time;
-    let now = sapling_net::encode(&state(layer.world.level()));
-    chat::send_to_all(world, &now);
+    let Some(mut level) = world.get_mut::<Layer>(layer) else { return };
+    level.world.level_mut().time = time;
+    let now = sapling_net::encode(&state(level.world.level()));
+    chat::send_to_layer(world, layer, &now);
+}
+
+/// Tells a player who came from another world what time it is in this one.
+pub(crate) fn tell(world: &mut World, layer: Entity, player: Entity) {
+    let Some(now) = world.get::<Layer>(layer).map(|layer| state(layer.world.level())) else { return };
+    if let Some(mut out) = world.get_mut::<Outgoing>(player) {
+        out.push(&now);
+    }
 }

@@ -29,6 +29,13 @@ pub(crate) struct Mob {
 #[derive(Component, Default)]
 pub(crate) struct SeesMobs(HashMap<Entity, u64>);
 
+impl SeesMobs {
+    /// The ids of the mobs the client has, emptying the set: they are about to be removed.
+    pub fn take_ids(&mut self) -> Vec<u64> {
+        self.0.drain().map(|(_, id)| id).collect()
+    }
+}
+
 /// Makes entities of the actors in the columns that came from storage this tick.
 pub(crate) fn spawn_arrived(mut commands: Commands, mut players: ResMut<Players>, mut layers: Query<(Entity, &mut Layer)>) {
     for (layer, mut level) in &mut layers {

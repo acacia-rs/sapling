@@ -16,6 +16,7 @@ use sapling_world::BlockRegistry;
 use crate::components::{InLayer, Layer, Mode, PacketQueues, PerTick, Position, Stage, in_world_identity};
 use crate::movement::Motion;
 use crate::plugins::Plugins;
+use crate::worlds;
 
 /// Block actions looked at per player per tick; a client holding a break sends two or three.
 const MAX_ACTIONS_PER_TICK: usize = 16;
@@ -114,6 +115,11 @@ pub(crate) fn dispatch(world: &mut World, plugins: &mut Plugins) {
     let mut broken = HashSet::new();
     for (entity, input) in inputs {
         let Some(player) = in_world_identity(world, entity) else { continue };
+        // See `movement::player_input`: until a teleport is followed, clicks are from the old place.
+        if matches!(input, Input::Click(_)) && world.get::<Motion>(entity).is_some_and(Motion::awaits_teleport) {
+            continue;
+        }
+        worlds::focus_on(world, entity);
         let mut request = Request { world: &mut *world, plugins: &mut *plugins, entity, player: &player };
         match input {
             Input::Actions(items) => {

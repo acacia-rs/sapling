@@ -6,8 +6,9 @@ use bevy_ecs::prelude::*;
 use bytes::Bytes;
 use sapling_api::{ChatEvent, Player};
 
-use crate::components::{Outgoing, PacketQueues, PerTick, in_world, in_world_identity};
+use crate::components::{InLayer, Outgoing, PacketQueues, PerTick, in_world, in_world_identity};
 use crate::plugins::Plugins;
+use crate::worlds;
 
 /// The vanilla chat box takes 512 characters.
 const MAX_CHARS: usize = 512;
@@ -46,10 +47,20 @@ pub(crate) fn raw_packet(message: &str) -> Bytes {
     text(TextType::Raw, TextCategory::MessageOnly, TextContent::Raw(TextContentRaw { message: message.to_owned() }), "")
 }
 
+/// To everyone in a world of this shard.
 pub(crate) fn send_to_all(world: &mut World, packet: &Bytes) {
     for player in in_world(world) {
         if let Some(mut out) = world.get_mut::<Outgoing>(player) {
             out.0.push(packet.clone());
+        }
+    }
+}
+
+/// To everyone in one world.
+pub(crate) fn send_to_layer(world: &mut World, layer: Entity, packet: &Bytes) {
+    for player in in_world(world) {
+        if world.get::<InLayer>(player).is_some_and(|in_layer| in_layer.0 == layer) {
+            world.get_mut::<Outgoing>(player).expect("players have an outbox").0.push(packet.clone());
         }
     }
 }
@@ -65,10 +76,13 @@ pub(crate) fn dispatch(world: &mut World, plugins: &mut Plugins) {
         if !limit.allow(entity) {
             continue;
         }
+        worlds::focus_on(world, entity);
         let event = plugins.offer(world, ChatEvent::new(message), |handler, ctx, event| handler.on_chat(ctx, &from, event));
         // A handler may leave anything in the message; what goes out is clean again.
-        if let Some(message) = clean(&event.message).filter(|_| !event.is_cancelled()) {
-            send_to_all(world, &chat_packet(&from, message));
+        let Some(message) = clean(&event.message).filter(|_| !event.is_cancelled()) else { continue };
+        // The line stays in the sender's world, wherever a handler has moved them by now.
+        if let Some(layer) = world.get::<InLayer>(entity).map(|in_layer| in_layer.0) {
+            send_to_layer(world, layer, &chat_packet(&from, message));
         }
     }
 }

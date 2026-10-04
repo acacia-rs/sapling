@@ -13,10 +13,12 @@ mod player;
 mod testing;
 #[cfg(test)]
 mod tests;
+mod world;
 
 pub use block::{Block, BlockPos, BreakEvent, Face, InteractEvent, PlaceEvent};
 pub use command::{Command, Commands, Output, Sender};
 pub use ctx::{Backend, FormCallback, ShardCtx, State};
+pub use world::WorldBackend;
 pub use event::{Cancellable, ChatEvent, CommandEvent, Priority};
 pub use form::{Custom, Form, FormResponse, Menu, Modal};
 pub use hud::{BossBar, BossBarColour, Sidebar, Title};
@@ -31,10 +33,24 @@ pub trait Handler: Send + 'static {
         let _ = (ctx, player);
     }
 
-    /// A player `on_join` was called for has left, for any reason. They are already gone from
-    /// the shard: `ctx` no longer counts them and cannot reach them.
+    /// A player `on_join` was called for has left the server, for any reason. They are already
+    /// gone from the shard: `ctx` no longer counts them and cannot reach them. Called on the
+    /// shard they were on last, which need not be the one `on_join` ran on.
     fn on_quit(&mut self, ctx: &mut ShardCtx<'_>, player: &Player) {
         let _ = (ctx, player);
+    }
+
+    /// A player was moved from world `from` to world `to` ([`ShardCtx::transfer`], or a world
+    /// that was removed). Called on the shard of `to`, with the player already there; `from`
+    /// may be on another shard.
+    fn on_world_change(&mut self, ctx: &mut ShardCtx<'_>, player: &Player, from: &str, to: &str) {
+        let _ = (ctx, player, from, to);
+    }
+
+    /// A transfer [`ShardCtx::transfer`] accepted could not be made: the shard of world `to`
+    /// refused or did not answer. The player is where they were.
+    fn on_transfer_failed(&mut self, ctx: &mut ShardCtx<'_>, player: &Player, to: &str) {
+        let _ = (ctx, player, to);
     }
 
     /// A player sent a chat message. What is left of it after the handlers goes to everyone.

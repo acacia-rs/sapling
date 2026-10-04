@@ -47,6 +47,18 @@ impl View {
         true
     }
 
+    /// Forgets every column: the player is in another world, where all of them are to be sent.
+    pub fn reset(&mut self) {
+        self.center = None;
+        self.sent.clear();
+        self.queue.clear();
+    }
+
+    /// Whether the client was sent the column and still has it.
+    pub fn has_sent(&self, pos: ChunkPos) -> bool {
+        self.sent.contains(&pos)
+    }
+
     /// Whether the column is in view, sent or not.
     pub fn covers(&self, pos: ChunkPos) -> bool {
         self.center.is_some_and(|center| distance_sq(pos, center) <= self.radius * self.radius)

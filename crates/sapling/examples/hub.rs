@@ -1,6 +1,8 @@
 //! A hub, in a vanilla world folder or, without one, on a stone platform in the void: a title and
 //! a boss bar on join, a sidebar with who is online and where you stand, `/hub`, `/menu`,
 //! `/settings` and, for operators, `/gamemode`. Only operators in creative mode change blocks.
+//! A second world, `arena`, is a stone platform on a second shard, where anyone may dig and
+//! build: `/world arena` and `/world hub` (or the menu) move you between them.
 //! `cargo run -p sapling --example hub -- [port] [world folder] [--offline] [--no-cache] [--op=Name]`
 //! (default port 19132, online mode). `RUST_LOG=debug` shows refused logins and ended connections.
 use std::collections::HashMap;
@@ -13,6 +15,8 @@ use sapling::{
 };
 
 const NAME: &str = "sapling hub";
+const HUB: &str = "hub";
+const ARENA: &str = "arena";
 const COLOURS: [BossBarColour; 4] = [BossBarColour::Purple, BossBarColour::Green, BossBarColour::Blue, BossBarColour::Red];
 /// Ticks between sidebar updates.
 const SIDEBAR_EVERY: u64 = 10;
@@ -55,8 +59,19 @@ fn show_sidebar(ctx: &mut ShardCtx<'_>, player: PlayerId) {
         return ctx.remove_sidebar(player);
     }
     let Some([x, y, z]) = ctx.position(player).map(|p| p.feet.map(|c| c.floor() as i32)) else { return };
-    let sidebar = Sidebar::new(format!("§l§a{NAME}")).line(format!("Online: §e{}", ctx.player_count())).line("").line(format!("§7{x} {y} {z}"));
+    let world = ctx.world_of(player).unwrap_or_default();
+    let here = ctx.players_in(&world).len();
+    let sidebar = Sidebar::new(format!("§l§a{NAME}")).line(format!("World: §b{world}")).line(format!("Here: §e{here}")).line("").line(format!("§7{x} {y} {z}"));
     ctx.set_sidebar(player, &sidebar);
+}
+
+/// Sends a player to another world; they hear at once if that cannot be.
+fn change_world(ctx: &mut ShardCtx<'_>, player: PlayerId, world: &str) -> bool {
+    let moving = ctx.transfer(player, world);
+    if !moving {
+        ctx.send_message(player, &format!("§cYou cannot go to {world} from here"));
+    }
+    moving
 }
 
 fn to_spawn(ctx: &mut ShardCtx<'_>, player: PlayerId) {
@@ -64,9 +79,10 @@ fn to_spawn(ctx: &mut ShardCtx<'_>, player: PlayerId) {
     ctx.send_actionbar(player, "§aBack at the spawn");
 }
 
-/// The hub's protection: operators in creative mode build, nobody else changes a block.
+/// The protection: in the arena anyone digs and builds; in the hub only operators in creative
+/// mode change a block.
 fn may_build(ctx: &ShardCtx<'_>, player: &Player) -> bool {
-    ctx.permission(player.id) == Some(Permission::Operator) && ctx.game_mode(player.id) == Some(GameMode::Creative)
+    ctx.world() == ARENA || ctx.permission(player.id) == Some(Permission::Operator) && ctx.game_mode(player.id) == Some(GameMode::Creative)
 }
 
 struct Hub {
@@ -76,7 +92,7 @@ struct Hub {
 impl Handler for Hub {
     fn on_join(&mut self, ctx: &mut ShardCtx<'_>, player: &Player) {
         tracing::info!(name = %player.name, xuid = %player.xuid, uuid = %player.uuid, online = ctx.player_count(), "joined");
-        ctx.broadcast(&format!("§e{} joined the game", player.name));
+        ctx.broadcast_all(&format!("§e{} joined the game", player.name));
         if self.operators.contains(&player.name) {
             ctx.set_permission(player.id, Permission::Operator);
         }
@@ -88,7 +104,23 @@ impl Handler for Hub {
     fn on_quit(&mut self, ctx: &mut ShardCtx<'_>, player: &Player) {
         tracing::info!(name = %player.name, online = ctx.player_count(), "left");
         ctx.state::<Chosen>().0.remove(&player.id);
-        ctx.broadcast(&format!("§e{} left the game", player.name));
+        ctx.broadcast_all(&format!("§e{} left the game", player.name));
+    }
+
+    /// A move is not a leave: each world hears where the player went or came from.
+    fn on_world_change(&mut self, ctx: &mut ShardCtx<'_>, player: &Player, from: &str, to: &str) {
+        tracing::info!(name = %player.name, from, to, "changed world");
+        ctx.broadcast_in(from, &format!("§7{} went to {to}", player.name));
+        ctx.broadcast_in(to, &format!("§7{} came from {from}", player.name));
+        ctx.send_title(player.id, &Title::new(format!("§b{to}")).times(5, 30, 10));
+        // Settings are kept per shard: on another one the player starts with the defaults.
+        let chosen = settings(ctx, player.id);
+        show_boss_bar(ctx, player.id, &chosen);
+        show_sidebar(ctx, player.id);
+    }
+
+    fn on_transfer_failed(&mut self, ctx: &mut ShardCtx<'_>, player: &Player, to: &str) {
+        ctx.send_message(player.id, &format!("§c{to} is not taking players right now"));
     }
 
     fn on_chat(&mut self, _: &mut ShardCtx<'_>, player: &Player, event: &mut ChatEvent) {
@@ -96,15 +128,11 @@ impl Handler for Hub {
     }
 
     fn on_break(&mut self, ctx: &mut ShardCtx<'_>, player: &Player, event: &mut BreakEvent) {
-        if !may_build(ctx, player) {
-            event.cancel();
-        }
+        if may_build(ctx, player) { event.allow() } else { event.cancel() }
     }
 
     fn on_place(&mut self, ctx: &mut ShardCtx<'_>, player: &Player, event: &mut PlaceEvent) {
-        if !may_build(ctx, player) {
-            event.cancel();
-        }
+        if may_build(ctx, player) { event.allow() } else { event.cancel() }
     }
 
     fn on_interact(&mut self, _: &mut ShardCtx<'_>, player: &Player, event: &mut InteractEvent) {
@@ -152,14 +180,33 @@ struct MenuCommand;
 impl Command for MenuCommand {
     fn run(self, ctx: &mut ShardCtx<'_>, sender: &Sender, out: &mut Output) {
         let Some(player) = sender.player() else { return out.error("Only a player can open the menu") };
-        let menu = Menu::new(NAME).body("What would you like?").button("Back to the spawn").button("Greet everyone").button("A toast").button("Settings");
-        ctx.send_form(player.id, menu, |ctx, player, response| match response {
+        let other = if ctx.world_of(player.id).as_deref() == Some(ARENA) { HUB } else { ARENA };
+        let menu = Menu::new(NAME).body("What would you like?").button("Back to the spawn").button("Greet everyone").button("A toast").button("Settings").button(format!("Go to the {other}"));
+        ctx.send_form(player.id, menu, move |ctx, player, response| match response {
             FormResponse::Submitted(0) => to_spawn(ctx, player.id),
             FormResponse::Submitted(1) => ctx.broadcast(&format!("§d{} says hello!", player.name)),
             FormResponse::Submitted(2) => ctx.send_toast(player.id, NAME, &format!("{} online", ctx.player_count())),
-            FormResponse::Submitted(_) => open_settings(ctx, player.id),
+            FormResponse::Submitted(3) => open_settings(ctx, player.id),
+            FormResponse::Submitted(_) => drop(change_world(ctx, player.id, other)),
             FormResponse::Closed => {}
         });
+    }
+}
+
+#[derive(Command)]
+#[command(name = "world", aliases = ["transfer"], description = "Takes you to another world, or lists them")]
+struct WorldCommand {
+    name: Option<String>,
+}
+
+impl Command for WorldCommand {
+    fn run(self, ctx: &mut ShardCtx<'_>, sender: &Sender, out: &mut Output) {
+        let Some(player) = sender.player() else { return out.error("Only a player can change worlds") };
+        match self.name {
+            Some(name) if change_world(ctx, player.id, &name) => out.print(format!("Going to {name}")),
+            Some(name) => out.error(format!("No way to {name}")),
+            None => out.print(format!("You are in {}. Worlds: {}", ctx.world(), ctx.worlds().join(", "))),
+        }
     }
 }
 
@@ -195,7 +242,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     tracing_subscriber::fmt().with_env_filter(filter).init();
     let args: Vec<String> = std::env::args().skip(1).collect();
     let offline = args.iter().any(|a| a == "--offline");
-    let operators = args.iter().filter_map(|a| a.strip_prefix("--op=")).map(str::to_owned).collect();
+    let operators: Vec<String> = args.iter().filter_map(|a| a.strip_prefix("--op=")).map(str::to_owned).collect();
     let positional = || args.iter().filter(|a| !a.starts_with("--"));
     let port = positional().find_map(|a| a.parse::<u16>().ok()).unwrap_or(19132);
     let folder = positional().find(|a| a.parse::<u16>().is_err());
@@ -206,8 +253,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         tracing::info!(folder, name = ?opened.name, spawn = ?opened.spawn, time = opened.world.level().time, "opened the world");
         builder = builder.folder(opened);
     }
+    // The arena is on a second shard, so a move between the worlds is a handoff between threads.
+    let builder = builder.default_world_name(HUB).add_platform_on(1, ARENA).handler_each(move || Hub { operators: operators.clone() });
     // A hub is looked at, not dug up, whatever the folder's own game mode.
-    let builder = builder.game_mode(GameMode::Adventure).handler(Hub { operators }).command::<HubCommand>().command::<GameModeCommand>().command::<MenuCommand>().command::<SettingsCommand>();
+    let builder = builder.game_mode(GameMode::Adventure).command::<HubCommand>().command::<GameModeCommand>().command::<MenuCommand>().command::<SettingsCommand>().command::<WorldCommand>();
     let server = builder.start().await?;
     tokio::signal::ctrl_c().await?;
     tracing::info!("shutting down");

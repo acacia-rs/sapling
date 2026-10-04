@@ -9,6 +9,7 @@
 //! # Ok(()) }
 //! ```
 
+mod layout;
 mod server;
 
 pub use sapling_api::{

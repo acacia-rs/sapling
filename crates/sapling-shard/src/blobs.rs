@@ -33,6 +33,13 @@ impl BlobCache {
         self.awaiting.len() >= BACKLOG
     }
 
+    /// Lets go of every blob held for the client: they are of a world the player left. A status
+    /// that still names one is answered without it.
+    pub fn release(&mut self) {
+        self.awaiting.clear();
+        self.order.clear();
+    }
+
     /// Remembers a blob whose hash is about to be sent.
     pub fn advertise(&mut self, blob: &Blob) {
         if self.awaiting.insert(blob.hash, blob.payload.clone()).is_none() {

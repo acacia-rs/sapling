@@ -1,0 +1,42 @@
+use std::time::Duration;
+
+use sapling_api::{Difficulty, GameMode};
+
+pub const TICK: Duration = Duration::from_millis(50);
+
+/// Entity ids are unique across a server: a shard counts its own up from its index times this,
+/// and a player keeps its id on every shard. MovePlayer carries 32 bits of an id.
+pub(crate) const IDS_PER_SHARD: u64 = 1 << 24;
+
+#[derive(Debug, Clone)]
+pub struct ShardConfig {
+    /// The name clients show for the world (StartGame).
+    pub world_name: String,
+    /// The name handlers know the shard's first world by.
+    pub world_id: String,
+    pub game_mode: GameMode,
+    pub difficulty: Difficulty,
+    /// Where players appear (feet), in the shard's first world.
+    pub spawn: [f32; 3],
+    /// Cap on the view distance clients ask for, in chunks.
+    pub max_view_radius: i32,
+    /// Columns announced to one player per tick.
+    pub columns_per_tick: usize,
+    /// Serve chunk data through the client blob cache to clients that report one.
+    pub blob_cache: bool,
+}
+
+impl Default for ShardConfig {
+    fn default() -> Self {
+        Self {
+            world_name: "sapling".into(),
+            world_id: "default".into(),
+            game_mode: GameMode::Survival,
+            difficulty: Difficulty::Peaceful,
+            spawn: [0.5, 65.0, 0.5],
+            max_view_radius: 8,
+            columns_per_tick: 8,
+            blob_cache: true,
+        }
+    }
+}
