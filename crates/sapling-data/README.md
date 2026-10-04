@@ -21,7 +21,8 @@ cargo run -p extract-data -- --show StartGame,UpdateAbilities
 | `JigsawStructureData.bin`, `VoxelShapes.bin` | `pre_start_packets()`, byte for byte, sent before StartGame (vanilla kicks with "missing structure data" without the first) | nothing |
 | `UpdateAttributes.bin` (the last one before spawn: the full list) | `update_attributes(id)` | runtime id |
 | `UpdateAbilities.bin` | `update_abilities(id)` | unique id |
-| `SetEntityData.bin` (the player's own) | `entity_data(id, name)` | runtime id, nametag |
+| `SetEntityData.bin` (the player's own) | `entity_data(id, name)`, `player_metadata(name, flags)` | runtime id, nametag, extra flags |
+| the two above | `add_player(&AddPlayerOptions)`: a player for its viewers (shape from `bds_probe`, DESIGN.md "Step 3 as built") | identity, position, flags, device |
 
 BDS sends more before spawn (PlayerList, CraftingData, AvailableCommands, VoxelShapes, FeatureRegistry,
 JigsawStructureData, camera presets, inventory, game rules). sapling does not replay those: they are world

@@ -131,8 +131,64 @@ One listener task, one shard thread, one world. The pieces and why they are shap
   v9 sub-chunk Y is the section index of the key; the Data3D
   heightmap is the top light-dimming block + 1 above the floor, the rule acacia-world's heightmap uses.
 
+## Step 3 as built (Players)
+
+Ground truth: `cargo run -p sapling --example bds_probe -- <server>` prints what a server tells one bot
+about another that joins, walks, sneaks, sprints, swings, chats and leaves. Run against BDS 1.26.52 it
+gave the shapes below; run against sapling it shows the same packets.
+
+- **Tick order.** Systems (join, input, chunks), then handlers (arrivals, chat, departures), then a second
+  schedule: visibility, announcements, fan-out, flush. What a handler or an arrival causes leaves in the
+  same tick.
+- **Player list** (`roster.rs`). Shard-wide, independent of views. On entering the world a player gets one
+  `PlayerList` per player in the world, itself included, and everyone else gets its entry; on quit, a
+  remove. Each packet holds one record and is encoded once at login. Record prefix as BDS: add
+  `type 1, legacy_type 0`, remove `type 0, legacy_type 1`.
+- **Skins** (`skin.rs`). The login's client-data claims converted to the wire `Skin`; a test compares the
+  result with what BDS sent back for the same claims (colours are `#aarrggbb` byte-swapped, piece types
+  lose `persona_`, geometry is re-serialised compact). Claims are untrusted and go to every client: sizes,
+  base64, JSON and counts are checked, and a skin that fails becomes a plain grey one.
+- **Visibility** (`visibility.rs`). A player is an entity for the players of its layer whose chunk `View`
+  covers its chunk. `Sees` is diffed once a tick: `AddPlayer` (feet position, `Fallback` game mode, the
+  recorded metadata and Base ability layer, device id and OS) or `RemoveEntity`. AddPlayer is encoded once
+  per tick per appearing player.
+- **Movement** (`movement.rs`). `MovePlayer` mode Normal with the eye position, head yaw, on-ground and the
+  mover's input tick: what BDS sends for other players (it uses MoveEntityDelta for other entities).
+  Sent only when position or rotation changed, encoded once per mover, shared by its viewers as `Bytes`.
+  On-ground is `VerticalCollision && delta.y <= 0` from the input.
+- **Trust.** Positions are the client's word. Non-finite values are dropped; a step over 10 blocks is
+  answered with `MovePlayer` mode Teleport back to the server's position (shape of BDS's `/tp`), repeated
+  at most every 20 ticks.
+- **Pose and swings.** StartSneaking/Sprinting/Swimming and their stops set entity flags; viewers get
+  `SetEntityData` with the Flags item (recorded flags + BREATHING + pose) and BoundingboxHeight (1.49
+  sneaking, 1.8 otherwise). `Animate(SwingArm)` is relayed under the sender's own id, once a tick.
+- **Chat** (`chat.rs`). Only `Text` of type Chat from players in the world. Control characters and `§`
+  codes are stripped, 512 characters kept, 3 lines a tick per player. `Handler::on_chat` returns
+  `ChatOutcome` (Allow / Cancel / Replace); what passes goes to everyone in the world as BDS relays it:
+  type Chat, category Authored, `source_name` = verified name + `§r`, verified XUID.
+- **API.** `ShardCtx::players()`, `position(id)`, `broadcast(msg)`, `send_message(id, msg)` (Raw text).
+  Join/quit announcements are the server binary's job (the hub example broadcasts them).
+- **Hub world.** `worlds/hub` (gitignored) is BDS seed 20261003, chunks x -19..=20, z -8..=31 all saved.
+  `cargo run -p sapling-leveldb --example inspect -- <world>` draws which columns a folder holds.
+  Regenerating: touch every chunk (100-chunk ticking areas, bedrock floor to stone and back) with a bot
+  online, let the bot leave so its chunks unload, then `stop`. Never `save hold` before `stop`: BDS hangs.
+
 ## Open items
 
+- **Only a vanilla client can confirm** (bots decode all of these): the plain fallback skin
+  (`geometry.humanoid.custom`, 64x64); `trusted` = "false" for skins that claim to be untrusted; one
+  PlayerList packet per record instead of one packet with many; the correction teleport's
+  `cause: Unknown`; smoothness of MovePlayer sent on change instead of every tick as BDS does;
+  BoundingboxHeight sent with every pose change (BDS: only when sneaking changes).
+- Not sent yet, though BDS sends them for other players: UpdateAbilities, UpdateAdventureSettings,
+  UpdateAttributes (sprint speed), PlayerLocation / LocatorBar, the MOVING flag and the FlagsExtended bit
+  that changes with sneaking, held items and armour.
+- Movement: physics validation (acacia-physics), server-side teleports, on-ground from collision.
+- Broadcasts are encoded once but compressed per player; `SharedBatch` needs a per-layer batch in
+  sapling-net. Visibility and fan-out are O(players²) per layer: index players by chunk.
+- A newcomer gets every skin at once (about 290 KB each before compression); throttle before the
+  per-player backlog limit (16 MB) matters. Skin changes in game (PlayerSkin) are ignored.
+- Chat: proper rate limiting, private messages, commands (`/`), profanity filter fields.
 - **BDS only saves chunks that changed since generation.** A world folder has holes wherever nothing was
   touched; vanilla regenerates them from the seed, sapling shows void. Maps must be fully saved (or
   sapling needs a generator).
