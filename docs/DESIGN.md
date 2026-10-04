@@ -34,7 +34,8 @@ sapling                 umbrella: Server builder, re-exports
  ├─ sapling-shard       shard thread: bevy World/Schedule, layers, players/entities, viewers, broadcast buffers,
  │                      inbox/outbox, directory + handoff
  ├─ sapling-net         tokio I/O: RakNet socket sharding, NetherNet HTTP listener, LAN advert, login state
- │                      driver, signing-key fetch, bans/rate limits/duplicate-UUID reservation
+ │                      driver, signing-key fetch, bans/rate limits/duplicate-UUID reservation, the
+ │                      directory (connection → shard)
  ├─ sapling-world       sections/palettes, Template/Arena CoW, network encode cache, WorldStorage trait
  │   └─ sapling-leveldb vanilla keys, level.dat, sub-chunk codec, block-state upgrader
  └─ sapling-data        block/item/biome/creative/command data and StartGame defaults
@@ -271,6 +272,94 @@ it sends for `/title`, `/scoreboard`, `/gamemode`, `/tp`, a wither's bar and com
 - **Game mode.** `ctx.set_game_mode` sends UpdatePlayerGameType to everyone in the world, the player
   included: all BDS's `/gamemode` sends besides chat lines (no SetPlayerGameType, no UpdateAbilities).
 
+## Step 5 as built (Worlds)
+
+No BDS capture exists for this step: BDS has one world per dimension. The client side of a world
+change follows dragonfly @ 1793369 (`session.handleWorldSwitch`, `Loader.ChangeWorld`), whose
+same-dimension case sends no ChangeDimension: it hides the old world's entities, teleports and
+sends every column of the view again. Every sapling world is the overworld, so ChangeDimension is
+never sent yet, and BDS's order around it (a portal, `/execute in nether`) was not recorded.
+
+- **Worlds in a shard** (`worlds.rs`). A world is a layer entity with a name. `Atlas` maps names to
+  layers, and to a shard index for worlds elsewhere, which a shard learns by message (`WorldAdded`,
+  `WorldRemoved`). Chunk views, the section backlog, mobs, block changes and their viewers,
+  visibility, the clock, the saving sweep and the spawn already went by the player's layer; chat
+  and `set_time` now do.
+- **Scope.** The `ShardCtx` calls that name no world (`block`, `set_block`, `spawn`, `set_spawn`,
+  `time`, `set_time`) act on the world of the event: the player's for join, quit, chat, command,
+  block and form events and `on_world_change`, the shard's first world in `on_tick`.
+  `ctx.within(world, |ctx| ..)` runs them on a named world of the shard (`block_in`,
+  `set_block_in` are shorthands); `ctx.world()` names the world in scope.
+- **Who hears what.** A player's chat goes to its world. `broadcast` is the shard, as it was;
+  `broadcast_in(world, ..)` is one world on whichever shard; `broadcast_all` is the server.
+  `players()` and `player_count()` are the shard's, `players_in(world)` a world's.
+- **Player list.** The server's: a join or quit is told to the other shards (`Listed`,
+  `Unlisted`), which keep the entries (`roster::Elsewhere`) for their own newcomers. A transfer
+  sends no list packet. Entity ids are unique across shards (a shard counts up from
+  `index << 24`: MovePlayer carries 32 bits) and a player keeps its id, so its list entry, its
+  boss bar and what others were told of it stay valid.
+- **A move inside a shard** (`worlds::enter`): the player's layer is written, its view forgets every
+  column, its blob references and waiting section requests are dropped, and it is sent MovePlayer
+  mode Teleport to the new world's spawn and that world's clock (SyncState). The visibility diff of
+  the same tick removes the old world's players and mobs (RemoveEntity) and shows the player to the
+  new world; from the next tick the new world's columns go out (NetworkChunkPublisherUpdate,
+  LevelChunk), then its entities. The stage stays `InWorld`: no loading screen, no PlayStatus.
+- **What the client still sends from the old world.** Inputs are ignored until one carries
+  `HandledTeleport`, block actions and clicks with them (this holds for any teleport). A section
+  request is answered only once its column was announced in the current world: until then it
+  waits in the backlog, so nothing is answered `ChunkNotFound` or from the old world; outside the
+  view it is dropped, and the backlog is emptied by the next move. A blob status naming released
+  blobs gets the empty reply every status gets.
+- **Shards.** `Link::mesh(n)` gives each shard a mailbox and the others' senders (std mpsc);
+  nothing else is shared between shards, no lock and no condition variable.
+  `sapling_net::Router` is the directory, connection to shard, on the network task.
+  `Outbox::route` moves a connection, and the old shard is told `Rerouted` through its inbox,
+  behind the last event it was sent.
+- **A move across shards** (`handoff.rs`):
+
+  | Step | Old shard | New shard |
+  |---|---|---|
+  | `Ask` | the player plays on; another transfer of it is refused | answers whether it has the world |
+  | `Answer` | refused, or none in 100 ticks: `on_transfer_failed` | |
+  | `Commit` | takes the player's components off the entity and sends them, its unsent packets and the RemoveEntity of all it saw among them; removes it for its viewers; tells the directory; despawns | spawns the player in the world (its first world if that one is gone), settles it as above, `on_world_change` |
+  | until `Rerouted` | buffers what the network still delivers, a disconnect included | holds what the network delivers directly |
+  | `Forward` | sends the buffer | takes the forwarded events, then the held ones |
+
+  Every packet is handled once, in order, by the shard that owns the player then, and no shard
+  waits on another. A commit to a shard that is gone comes back and the player is put together
+  again. A connection that ended before the reroute is reported as left to the new shard by the
+  directory. A stopping shard takes in what was committed to it, sends the forwards it owes,
+  withdraws its worlds and disconnects its players (`Shard::close`); the directory closes a
+  connection whose shard is gone. A held player whose forward does not come in 100 ticks is let
+  in without it.
+- **What goes with the player** (`player.rs`): identity, entity id, permission and the command
+  list it was told, game mode, rotation and pose, view radius, blob-cache setting, list entry and
+  skin, HUD state (the client keeps its sidebar and boss bar; nothing is sent again, a later
+  change is a diff), open forms with their callbacks (they run on the shard the answer reaches)
+  and unsent packets. Not `ctx.state`: that is per shard.
+- **Events.** A transfer raises no `on_quit` and no `on_join`. `on_world_change(ctx, player, from,
+  to)` runs on the destination shard, before what the player then sends; `on_quit` runs on the
+  shard the player is on when it leaves.
+- **Builder.** `world` / `folder` are the default world (`"default"`, or `default_world_name`),
+  on shard 0; `add_world(name, ..)`, `add_world_on(shard, name, ..)`, `add_platform_on(shard,
+  name)`, `join_world(name)`, `template(name, template, spawn)`. One thread per shard index
+  used; a shard's first world is its fallback. `handler_each(|| h)` makes a handler per shard;
+  `handler(h)` is for servers of one shard (`StartError::HandlerPerShard` otherwise). Commands
+  and templates go to every shard.
+- **Arenas** (`sapling-world/src/template.rs`, `sapling-shard/src/arenas.rs`).
+  `Template::of(world)` freezes a world in memory (`World::load_all` first for a folder) with
+  every encoding made; `World::arena(&template)` copies nothing and reads the template, void
+  beyond it. The first write to a column copies that column's blocks into the arena
+  (`Column::fork`) and keeps the template's encoded sections, as the same bytes under the same
+  blob hashes, for all but the section written. So arenas of one map share one encoding in
+  memory and one set of blobs in a client's cache. `ctx.create_world(name, template)`,
+  `reset_world(name)` (the changed columns are dropped and announced again to the players
+  inside, who stay) and `remove_world(name)` (players go to the shard's first world, mobs go
+  with the arena) act on the handler's shard; an arena is never saved.
+- **Hub.** `hub` is the default world and `arena` a stone platform on a second shard; `/world
+  [name]` and a menu button move between them; each world hears who came and went; anyone may
+  build in the arena.
+
 ## Step 6 as built (Protection)
 
 Ground truth: `cargo run -p sapling --example bds_block_probe -- <server>`: an actor bot breaks, places and
@@ -353,8 +442,31 @@ block action, and takes StopBreak and AbortBreak with a position.
   torches losing their support, fences and stairs reconnecting); orientation: the item's own state is
   placed, so stairs and logs ignore where the player looks; replaceable plants (tall grass) are built
   against, not replaced; `USED` is a list of name endings, not block data; what a click does (doors,
-  levers, containers) and its sounds; a request over the tick limit gets no resync; `ctx.block` and
-  `ctx.set_block` act on the shard's first world; `on_move`, which needs its own resync on cancel.
+  levers, containers) and its sounds; a request over the tick limit gets no resync; `on_move`,
+  which needs its own resync on cancel.
+- **Step 5, only a vanilla client can confirm:** that a world swap without ChangeDimension looks
+  right: LevelChunk for a column the client already holds replaces it (also the way an arena reset
+  re-sends a column), no old terrain stays at the edge of the view, and standing in old terrain
+  for the few ticks until the new columns arrive does no harm; whether the client asks again for
+  the sections of a re-announced column when a request for that column was still unanswered (the
+  old request is answered from the new world once the column is announced, which covers a client
+  that does not); that RemoveEntity for every old entity, sent before the teleport on a cross-shard
+  move and after it inside a shard, leaves no ghost; that the sidebar and boss bar survive the
+  swap untouched; that a form opened before a cross-shard move can still be answered; that
+  `HandledTeleport` comes after a teleport into columns that are not there yet; the hub's `/world`
+  both ways with the blob cache on and off.
+- **Worlds, left out of step 5:** worlds of another dimension and with them ChangeDimension (BDS's
+  order around it is not recorded; dragonfly sends ChangeDimension, StopSound, PlayStatus
+  PlayerSpawn and PlayerAction DimensionChangeDone); a loading screen or an intermediate dimension
+  to hide the swap; shards created or stopped at runtime through `Server` (a `Link` is fixed at
+  start; `Shard::close` exists); an arena's first write copies its column, not one section: that
+  needs `Arc` sections inside `acacia_world::Chunk`; `create_world` makes the arena on the
+  handler's own shard only, and nothing balances arenas over shards; two shards that create a
+  world of the same name in the same tick both keep theirs; with three or more shards a player in
+  flight between two can miss a list entry a third announces meanwhile; a player on another
+  shard cannot be addressed (`send_message`, `position`, `Target` in commands are the shard's);
+  per-world game mode, difficulty and StartGame name; `on_quit` is not raised for a player whose
+  shard stopped; a template is built from a world held in memory whole.
 - A blob-cache client told a section hash before a block changed and asking for the blob after gets the
   old section, though it already applied the UpdateBlock: re-send the block updates of a tick with the
   blobs, or name blobs by content and time.
