@@ -1,6 +1,6 @@
 //! A hub, in a vanilla world folder or, without one, on a stone platform in the void: a title and
 //! a boss bar on join, a sidebar with who is online and where you stand, `/hub`, `/menu`,
-//! `/settings` and, for operators, `/gamemode`.
+//! `/settings` and, for operators, `/gamemode`. Only operators in creative mode change blocks.
 //! `cargo run -p sapling --example hub -- [port] [world folder] [--offline] [--no-cache] [--op=Name]`
 //! (default port 19132, online mode). `RUST_LOG=debug` shows refused logins and ended connections.
 use std::collections::HashMap;
@@ -8,7 +8,8 @@ use std::path::Path;
 
 use sapling::command::Target;
 use sapling::{
-    BossBar, BossBarColour, ChatEvent, Command, Form, FormResponse, GameMode, Handler, Menu, Output, Permission, Player, PlayerId, Sender, Server, ShardCtx, Sidebar, Title,
+    BossBar, BossBarColour, BreakEvent, ChatEvent, Command, Form, FormResponse, GameMode, Handler, InteractEvent, Menu, Output, Permission, PlaceEvent, Player, PlayerId, Sender,
+    Server, ShardCtx, Sidebar, Title,
 };
 
 const NAME: &str = "sapling hub";
@@ -63,6 +64,11 @@ fn to_spawn(ctx: &mut ShardCtx<'_>, player: PlayerId) {
     ctx.send_actionbar(player, "§aBack at the spawn");
 }
 
+/// The hub's protection: operators in creative mode build, nobody else changes a block.
+fn may_build(ctx: &ShardCtx<'_>, player: &Player) -> bool {
+    ctx.permission(player.id) == Some(Permission::Operator) && ctx.game_mode(player.id) == Some(GameMode::Creative)
+}
+
 struct Hub {
     operators: Vec<String>,
 }
@@ -87,6 +93,22 @@ impl Handler for Hub {
 
     fn on_chat(&mut self, _: &mut ShardCtx<'_>, player: &Player, event: &mut ChatEvent) {
         tracing::info!(name = %player.name, message = %event.message, "chat");
+    }
+
+    fn on_break(&mut self, ctx: &mut ShardCtx<'_>, player: &Player, event: &mut BreakEvent) {
+        if !may_build(ctx, player) {
+            event.cancel();
+        }
+    }
+
+    fn on_place(&mut self, ctx: &mut ShardCtx<'_>, player: &Player, event: &mut PlaceEvent) {
+        if !may_build(ctx, player) {
+            event.cancel();
+        }
+    }
+
+    fn on_interact(&mut self, _: &mut ShardCtx<'_>, player: &Player, event: &mut InteractEvent) {
+        tracing::debug!(name = %player.name, block = %event.block().name, at = ?event.pos(), "clicked a block");
     }
 
     fn on_tick(&mut self, ctx: &mut ShardCtx<'_>) {
