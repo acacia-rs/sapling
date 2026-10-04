@@ -2563,6 +2563,8 @@ version = "0.1.0"
 dependencies = [
  "acacia-auth",
  "acacia-proto",
+ "acacia-testserver",
+ "base64 0.22.1",
  "bevy_ecs",
  "bytes",
  "p384",
@@ -2571,6 +2573,7 @@ dependencies = [
  "sapling-data",
  "sapling-net",
  "sapling-world",
+ "serde_json",
  "tracing",
 ]
 

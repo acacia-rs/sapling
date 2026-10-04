@@ -14,6 +14,14 @@ pub struct Player {
     pub xuid: String,
 }
 
+/// Where a player stands and looks. Angles are in degrees.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct Position {
+    pub feet: [f32; 3],
+    pub yaw: f32,
+    pub pitch: f32,
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum GameMode {
     #[default]

@@ -2,12 +2,13 @@
 //! packet is checked in order without sockets or clocks.
 #![allow(dead_code)]
 
+use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
 use acacia_auth::login::verify::{SigningKeys, Verifier};
 use acacia_proto::packets::{
     PlayerAuthInput, PlayerAuthInputInputMode, PlayerAuthInputInteractionModel, PlayerAuthInputPlayMode, RequestChunkRadius,
-    ResourcePackClientResponse, ResourcePackClientResponseResponseStatus as PackStatus,
+    ResourcePackClientResponse, ResourcePackClientResponseResponseStatus as PackStatus, SetLocalPlayerAsInitialized,
 };
 use acacia_proto::types::{Vec2f, Vec3f};
 use acacia_proto::{GAME_VERSION, Packet, RawPacket};
@@ -96,6 +97,35 @@ impl Harness {
         sent
     }
 
+    /// Ticks once and returns what the shard sent, by connection.
+    pub fn tick_all(&mut self) -> Sent {
+        self.shard.tick();
+        let mut sent = Sent::default();
+        while let Ok(command) = self.net.sent.try_recv() {
+            match command {
+                Outbound::Send { conn, packets } => sent.0.entry(conn.get()).or_default().extend(packets.into_iter().map(|p| RawPacket::parse(p).unwrap())),
+                other => panic!("unexpected {other:?}"),
+            }
+        }
+        sent
+    }
+
+    /// Walks `name` through the whole join and returns what was sent on the tick it entered the
+    /// world.
+    pub fn enter(&mut self, conn: u64, name: &str) -> Sent {
+        self.join(conn, name);
+        self.tick_all();
+        self.receive(conn, &pack_response(PackStatus::HaveAllPacks));
+        self.tick_all();
+        self.receive(conn, &pack_response(PackStatus::Completed));
+        self.tick_all();
+        self.receive(conn, &RequestChunkRadius { chunk_radius: 4, max_radius: 4 });
+        // 49 columns at 16 a tick.
+        (0..5).for_each(|_| drop(self.tick_all()));
+        self.receive(conn, &SetLocalPlayerAsInitialized { runtime_entity_id: 0 });
+        self.tick_all()
+    }
+
     /// Walks `conn` through packs and StartGame up to its chunk radius request; the next tick
     /// starts the chunks.
     pub fn join_to_radius(&mut self, conn: u64, radius: i32) {
@@ -110,6 +140,16 @@ impl Harness {
 
     pub fn log(&self) -> Vec<String> {
         self.log.0.lock().unwrap().clone()
+    }
+}
+
+/// One tick's packets by connection.
+#[derive(Default)]
+pub struct Sent(HashMap<u64, Vec<RawPacket>>);
+
+impl Sent {
+    pub fn to(&self, conn: u64) -> &[RawPacket] {
+        self.0.get(&conn).map_or(&[], Vec::as_slice)
     }
 }
 

@@ -71,8 +71,9 @@ fn a_player_is_walked_through_the_join_sequence() {
     assert_eq!(results, [SubChunkEntryItemResult::Success, SubChunkEntryItemResult::SuccessAllAir, SubChunkEntryItemResult::YIndexOutOfBounds]);
     assert!(!answer.cache_enabled);
 
+    // In the world, the player is listed, for itself too (tests/players.rs).
     h.receive(1, &SetLocalPlayerAsInitialized { runtime_entity_id: 1 });
-    assert!(h.tick(1).is_empty());
+    assert_eq!(ids(&h.tick(1)), [acacia_proto::packets::PlayerList::ID]);
     assert_eq!(h.log(), ["join Steve (1 online)"]);
 
     h.leave(1);

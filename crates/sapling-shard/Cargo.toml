@@ -11,12 +11,15 @@ sapling-api.workspace = true
 sapling-data.workspace = true
 sapling-net.workspace = true
 sapling-world.workspace = true
+acacia-auth.workspace = true
 acacia-proto.workspace = true
+base64.workspace = true
 bevy_ecs.workspace = true
 bytes.workspace = true
+serde_json.workspace = true
 tracing.workspace = true
 
 [dev-dependencies]
-acacia-auth.workspace = true
+acacia-testserver.workspace = true
 p384.workspace = true
 rand_core.workspace = true

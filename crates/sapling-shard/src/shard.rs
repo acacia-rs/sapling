@@ -12,8 +12,11 @@ use sapling_net::{ConnId, Inbox, NetEvent, Outbox, VerifiedLogin};
 
 use crate::components::{Arrivals, Conn, DefaultLayer, Identity, InLayer, Layer, Net, NetId, Outgoing, PacketQueues, Players, Position, Settings, Stage, Tick};
 use crate::blobs::BlobCache;
+use crate::movement::Motion;
+use crate::roster::Profile;
 use crate::view::View;
-use crate::{blobs, chunks, handlers, join};
+use crate::visibility::{Sees, ToViewers};
+use crate::{blobs, chunks, handlers, join, movement, visibility};
 
 pub const TICK: Duration = Duration::from_millis(50);
 
@@ -49,6 +52,8 @@ impl Default for ShardConfig {
 pub struct Shard {
     world: World,
     schedule: Schedule,
+    /// Runs after the handlers, so what they and this tick's arrivals caused goes out in the tick.
+    after_handlers: Schedule,
     inbox: Inbox,
     handlers: Vec<Box<dyn Handler>>,
 }
@@ -66,27 +71,33 @@ impl Shard {
         world.init_resource::<Tick>();
         world.init_resource::<Arrivals>();
         world.init_resource::<PacketQueues>();
+        world.init_resource::<ToViewers>();
 
         let mut schedule = Schedule::default();
         // Shards scale across threads; inside one, systems run in this order every tick.
         schedule.set_executor(SingleThreadedExecutor::new());
         let join = (join::resource_packs, join::chunk_radius, blobs::cache_status).chain();
-        let chunks = (chunks::poll_worlds, chunks::player_input, chunks::send_chunks, chunks::sub_chunk_requests, blobs::blob_status, chunks::unload_columns);
-        schedule.add_systems((join, chunks.chain(), join::initialized, flush).chain());
-        Self { world, schedule, inbox, handlers: Vec::new() }
+        let chunks = (chunks::poll_worlds, movement::player_input, chunks::send_chunks, chunks::sub_chunk_requests, blobs::blob_status, chunks::unload_columns);
+        schedule.add_systems((join, chunks.chain(), join::initialized).chain());
+        let mut after_handlers = Schedule::default();
+        after_handlers.set_executor(SingleThreadedExecutor::new());
+        after_handlers.add_systems((visibility::update, movement::announce, movement::relay_swings, visibility::fan_out, flush).chain());
+        Self { world, schedule, after_handlers, inbox, handlers: Vec::new() }
     }
 
     pub fn add_handler(&mut self, handler: Box<dyn Handler>) {
         self.handlers.push(handler);
     }
 
-    /// One tick: take everything the network delivered, run the systems, then the handlers.
+    /// One tick: take everything the network delivered, run the systems, then the handlers, then
+    /// tell players about each other and send what the tick produced.
     pub fn tick(&mut self) {
         while let Ok(event) = self.inbox.try_recv() {
             self.accept(event);
         }
         self.schedule.run(&mut self.world);
         handlers::dispatch(&mut self.world, &mut self.handlers);
+        self.after_handlers.run(&mut self.world);
         self.world.resource_mut::<PacketQueues>().clear();
         self.world.resource_mut::<Tick>().0 += 1;
     }
@@ -146,12 +157,15 @@ impl Shard {
             Conn(conn),
             Identity(player),
             NetId(net_id),
-            Position { feet: spawn, yaw: 0.0, pitch: 0.0 },
+            Position { feet: spawn, yaw: 0.0, pitch: 0.0, head_yaw: 0.0, on_ground: true },
             InLayer(layer),
             Stage::PacksInfo,
             View::default(),
             BlobCache::default(),
             chunks::SectionBacklog::default(),
+            Motion::default(),
+            Sees::default(),
+            Profile::new(login, net_id),
             out,
         );
         let entity = self.world.spawn(components).id();

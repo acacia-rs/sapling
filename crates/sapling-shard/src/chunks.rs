@@ -4,10 +4,9 @@
 
 use std::collections::HashMap;
 
-use acacia_proto::packets::{NetworkChunkPublisherUpdate, PlayStatus, PlayStatusStatus, PlayerAuthInput, Subchunk, SubchunkRequest};
+use acacia_proto::packets::{NetworkChunkPublisherUpdate, PlayStatus, PlayStatusStatus, Subchunk, SubchunkRequest};
 use acacia_proto::types::{BlockCoordinates, Vec3i8};
 use bevy_ecs::prelude::*;
-use sapling_data::EYE_HEIGHT;
 use sapling_world::ChunkPos;
 
 use crate::blobs::BlobCache;
@@ -28,22 +27,6 @@ const UNLOAD_INTERVAL: u64 = 100;
 pub(crate) fn poll_worlds(mut layers: Query<&mut Layer>) {
     for mut layer in &mut layers {
         layer.world.poll();
-    }
-}
-
-/// Where the client says it is. Not validated yet: movement is the client's word until physics
-/// checks arrive with milestone step 3.
-pub(crate) fn player_input(mut packets: ResMut<PacketQueues>, mut players: Query<(&Stage, &mut Position)>) {
-    for (entity, input) in packets.take::<PlayerAuthInput>() {
-        let Ok((stage, mut position)) = players.get_mut(entity) else { continue };
-        if input.block_action.is_some() || input.transaction.is_some() || input.item_stack_request.is_some() {
-            tracing::debug!(tick = input.tick, actions = ?input.block_action, transaction = ?input.transaction, request = ?input.item_stack_request, "input with an action");
-        }
-        let eyes = [input.position.x, input.position.y, input.position.z];
-        if *stage < Stage::Loading || eyes.iter().any(|c| !c.is_finite()) {
-            continue;
-        }
-        *position = Position { feet: [eyes[0], eyes[1] - EYE_HEIGHT, eyes[2]], yaw: input.yaw, pitch: input.pitch };
     }
 }
 

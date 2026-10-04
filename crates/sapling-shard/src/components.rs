@@ -19,11 +19,13 @@ pub(crate) struct Identity(pub sapling_api::Player);
 #[derive(Component, Clone, Copy)]
 pub(crate) struct NetId(pub u64);
 
-#[derive(Component, Clone, Copy)]
+#[derive(Component, Clone, Copy, PartialEq)]
 pub(crate) struct Position {
     pub feet: [f32; 3],
     pub yaw: f32,
     pub pitch: f32,
+    pub head_yaw: f32,
+    pub on_ground: bool,
 }
 
 #[derive(Component)]
@@ -80,6 +82,20 @@ pub(crate) struct Players {
     /// Those `on_join` ran for and `on_quit` has not.
     pub in_world: usize,
     pub next_net_id: u64,
+}
+
+impl Players {
+    pub fn entity(&self, id: sapling_api::PlayerId) -> Option<Entity> {
+        self.by_conn.get(&ConnId::new(id.0)).copied()
+    }
+}
+
+/// The players in the world (past their loading screen), in join order.
+pub(crate) fn in_world(world: &World) -> Vec<Entity> {
+    let is_in = |entity: &Entity| world.get::<Stage>(*entity) == Some(&Stage::InWorld);
+    let mut players: Vec<Entity> = world.resource::<Players>().by_conn.values().copied().filter(is_in).collect();
+    players.sort_by_key(|entity| world.get::<NetId>(*entity).map(|id| id.0));
+    players
 }
 
 /// Players whose client finished loading this tick, and players whose connection ended.
