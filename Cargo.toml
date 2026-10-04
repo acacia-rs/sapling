@@ -11,6 +11,7 @@ rust-version = "1.98"
 sapling-api = { path = "crates/sapling-api" }
 sapling-data = { path = "crates/sapling-data" }
 sapling-leveldb = { path = "crates/sapling-leveldb" }
+sapling-macros = { path = "crates/sapling-macros" }
 sapling-net = { path = "crates/sapling-net", default-features = false }
 sapling-shard = { path = "crates/sapling-shard" }
 sapling-world = { path = "crates/sapling-world" }

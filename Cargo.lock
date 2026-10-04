@@ -2515,6 +2515,8 @@ dependencies = [
 name = "sapling-api"
 version = "0.1.0"
 dependencies = [
+ "sapling-macros",
+ "serde_json",
  "uuid",
 ]
 
@@ -2537,6 +2539,15 @@ dependencies = [
  "rusty-leveldb",
  "thiserror",
  "tracing",
+]
+
+[[package]]
+name = "sapling-macros"
+version = "0.1.0"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.119",
 ]
 
 [[package]]
