@@ -4,21 +4,13 @@
 //! `cargo run -p sapling --example bds_probe -- <server> > probe.txt` (an offline-mode server)
 use std::time::{Duration, Instant};
 
+#[path = "shared/dump.rs"]
+mod dump;
+
 use acacia_bot::client::{Client, PacketFilter};
-use acacia_bot::proto::{Packet, RawPacket, packets};
+use acacia_bot::proto::RawPacket;
 use acacia_bot::{ActionError, Bot, BotConfig, BotEvent};
 
-/// Terrain and clock traffic that says nothing about the other player.
-const NOISE: &[&str] = &[
-    "level_chunk",
-    "subchunk",
-    "network_chunk_publisher_update",
-    "client_cache_miss_response",
-    "sync_world_clocks",
-    "current_structure_feature",
-    "set_time",
-    "update_block",
-];
 /// Characters of a decoded packet shown from each end.
 const SHOWN: usize = 1500;
 
@@ -62,11 +54,8 @@ async fn act(mut bot: Bot) -> Result<(), ActionError> {
 }
 
 fn show(start: Instant, packet: &RawPacket) {
-    let name = acacia_bot::proto::packet_name(packet.id).unwrap_or("?");
-    if NOISE.iter().any(|n| name.eq_ignore_ascii_case(&n.replace('_', ""))) {
-        return;
-    }
-    let text = dump(packet).unwrap_or_else(|| "<no decoder>".into());
+    let Some(name) = dump::name(packet) else { return };
+    let text = dump::dump(packet).unwrap_or_else(|| "<no decoder>".into());
     let chars: Vec<char> = text.chars().collect();
     let text = if chars.len() > 2 * SHOWN {
         let (head, tail): (String, String) = (chars[..SHOWN].iter().collect(), chars[chars.len() - SHOWN..].iter().collect());
@@ -112,18 +101,3 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     observer.disconnect().await;
     Ok(())
 }
-
-macro_rules! dumper {
-    ($($t:ident),* $(,)?) => {
-        fn dump(p: &RawPacket) -> Option<String> {
-            $(if p.id == <packets::$t>::ID {
-                return Some(match p.decode::<packets::$t>() {
-                    Ok(v) => format!("{v:?}"),
-                    Err(e) => format!("<decode error: {e}>"),
-                });
-            })*
-            None
-        }
-    };
-}
-acacia_bot::proto::for_each_packet!(dumper);

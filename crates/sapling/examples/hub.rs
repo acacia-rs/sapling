@@ -1,32 +1,168 @@
-//! A hub that announces who comes and goes and logs the chat, in a vanilla world folder or,
-//! without one, on a stone platform in the void.
-//! `cargo run -p sapling --example hub -- [port] [world folder] [--offline] [--no-cache]` (default port 19132,
-//! online mode). `RUST_LOG=debug` shows refused logins and ended connections.
+//! A hub, in a vanilla world folder or, without one, on a stone platform in the void: a title and
+//! a boss bar on join, a sidebar with who is online and where you stand, `/hub`, `/menu`,
+//! `/settings` and, for operators, `/gamemode`.
+//! `cargo run -p sapling --example hub -- [port] [world folder] [--offline] [--no-cache] [--op=Name]`
+//! (default port 19132, online mode). `RUST_LOG=debug` shows refused logins and ended connections.
+use std::collections::HashMap;
 use std::path::Path;
 
-use sapling::{ChatOutcome, GameMode, Handler, Player, Server, ShardCtx, World};
+use sapling::command::Target;
+use sapling::{
+    BossBar, BossBarColour, ChatEvent, Command, Form, FormResponse, GameMode, Handler, Menu, Output, Permission, Player, PlayerId, Sender, Server, ShardCtx, Sidebar, Title,
+};
 
-struct Greeter;
+const NAME: &str = "sapling hub";
+const COLOURS: [BossBarColour; 4] = [BossBarColour::Purple, BossBarColour::Green, BossBarColour::Blue, BossBarColour::Red];
+/// Ticks between sidebar updates.
+const SIDEBAR_EVERY: u64 = 10;
 
-impl Handler for Greeter {
+/// What a player chose in `/settings`.
+#[derive(Form, Clone)]
+#[form(title = "Settings")]
+struct Settings {
+    #[form(note = "These last until you leave.", label = "Show the sidebar")]
+    sidebar: bool,
+    #[form(label = "Boss bar colour", options = ["Purple", "Green", "Blue", "Red"])]
+    colour: usize,
+    #[form(label = "Boss bar fill (%)", min = 0, max = 100, step = 10)]
+    fill: u32,
+    #[form(label = "Greet me with", placeholder = "a title of your own", max_len = 32)]
+    greeting: String,
+}
+
+impl Default for Settings {
+    fn default() -> Self {
+        Self { sidebar: true, colour: 0, fill: 100, greeting: String::new() }
+    }
+}
+
+/// The settings of everyone online, shared by the handler, the commands and the forms.
+#[derive(Default)]
+struct Chosen(HashMap<PlayerId, Settings>);
+
+fn settings(ctx: &mut ShardCtx<'_>, player: PlayerId) -> Settings {
+    ctx.state::<Chosen>().0.entry(player).or_default().clone()
+}
+
+fn show_boss_bar(ctx: &mut ShardCtx<'_>, player: PlayerId, settings: &Settings) {
+    ctx.set_boss_bar(player, &BossBar::new(NAME).progress(settings.fill as f32 / 100.0).colour(COLOURS[settings.colour]));
+}
+
+fn show_sidebar(ctx: &mut ShardCtx<'_>, player: PlayerId) {
+    if !settings(ctx, player).sidebar {
+        return ctx.remove_sidebar(player);
+    }
+    let Some([x, y, z]) = ctx.position(player).map(|p| p.feet.map(|c| c.floor() as i32)) else { return };
+    let sidebar = Sidebar::new(format!("§l§a{NAME}")).line(format!("Online: §e{}", ctx.player_count())).line("").line(format!("§7{x} {y} {z}"));
+    ctx.set_sidebar(player, &sidebar);
+}
+
+fn to_spawn(ctx: &mut ShardCtx<'_>, player: PlayerId) {
+    ctx.teleport(player, ctx.spawn());
+    ctx.send_actionbar(player, "§aBack at the spawn");
+}
+
+struct Hub {
+    operators: Vec<String>,
+}
+
+impl Handler for Hub {
     fn on_join(&mut self, ctx: &mut ShardCtx<'_>, player: &Player) {
         tracing::info!(name = %player.name, xuid = %player.xuid, uuid = %player.uuid, online = ctx.player_count(), "joined");
         ctx.broadcast(&format!("§e{} joined the game", player.name));
-        let others: Vec<String> = ctx.players().filter(|p| p.id != player.id).map(|p| p.name).collect();
-        if !others.is_empty() {
-            ctx.send_message(player.id, &format!("§7Here: {}", others.join(", ")));
+        if self.operators.contains(&player.name) {
+            ctx.set_permission(player.id, Permission::Operator);
         }
+        ctx.send_title(player.id, &Title::new("§aWelcome").subtitle(format!("to the {NAME}, {}", player.name)).times(10, 60, 20));
+        show_boss_bar(ctx, player.id, &Settings::default());
+        show_sidebar(ctx, player.id);
     }
 
     fn on_quit(&mut self, ctx: &mut ShardCtx<'_>, player: &Player) {
         tracing::info!(name = %player.name, online = ctx.player_count(), "left");
+        ctx.state::<Chosen>().0.remove(&player.id);
         ctx.broadcast(&format!("§e{} left the game", player.name));
     }
 
-    fn on_chat(&mut self, ctx: &mut ShardCtx<'_>, player: &Player, message: &str) -> ChatOutcome {
-        let at = ctx.position(player.id).map(|p| p.feet.map(|c| c.floor() as i32));
-        tracing::info!(name = %player.name, ?at, message, "chat");
-        ChatOutcome::Allow
+    fn on_chat(&mut self, _: &mut ShardCtx<'_>, player: &Player, event: &mut ChatEvent) {
+        tracing::info!(name = %player.name, message = %event.message, "chat");
+    }
+
+    fn on_tick(&mut self, ctx: &mut ShardCtx<'_>) {
+        if ctx.tick() % SIDEBAR_EVERY == 0 {
+            ctx.players().for_each(|player| show_sidebar(ctx, player.id));
+        }
+    }
+}
+
+#[derive(Command)]
+#[command(name = "hub", aliases = ["lobby", "spawn"], description = "Takes you back to the spawn")]
+struct HubCommand;
+
+impl Command for HubCommand {
+    fn run(self, ctx: &mut ShardCtx<'_>, sender: &Sender, out: &mut Output) {
+        let Some(player) = sender.player() else { return out.error("Only a player can go to the hub") };
+        to_spawn(ctx, player.id);
+        out.print("Back at the spawn");
+    }
+}
+
+#[derive(Command)]
+#[command(name = "gamemode", description = "Sets a player's game mode", permission = "operator")]
+struct GameModeCommand {
+    mode: GameMode,
+    player: Option<Target>,
+}
+
+impl Command for GameModeCommand {
+    fn run(self, ctx: &mut ShardCtx<'_>, sender: &Sender, out: &mut Output) {
+        let Some(target) = self.player.map(|target| target.0).or_else(|| sender.player().cloned()) else { return out.error("Name a player") };
+        ctx.set_game_mode(target.id, self.mode);
+        out.print(format!("{} is now in {:?} mode", target.name, self.mode));
+    }
+}
+
+#[derive(Command)]
+#[command(name = "menu", description = "Opens the hub menu")]
+struct MenuCommand;
+
+impl Command for MenuCommand {
+    fn run(self, ctx: &mut ShardCtx<'_>, sender: &Sender, out: &mut Output) {
+        let Some(player) = sender.player() else { return out.error("Only a player can open the menu") };
+        let menu = Menu::new(NAME).body("What would you like?").button("Back to the spawn").button("Greet everyone").button("A toast").button("Settings");
+        ctx.send_form(player.id, menu, |ctx, player, response| match response {
+            FormResponse::Submitted(0) => to_spawn(ctx, player.id),
+            FormResponse::Submitted(1) => ctx.broadcast(&format!("§d{} says hello!", player.name)),
+            FormResponse::Submitted(2) => ctx.send_toast(player.id, NAME, &format!("{} online", ctx.player_count())),
+            FormResponse::Submitted(_) => open_settings(ctx, player.id),
+            FormResponse::Closed => {}
+        });
+    }
+}
+
+fn open_settings(ctx: &mut ShardCtx<'_>, player: PlayerId) {
+    let current = settings(ctx, player);
+    ctx.send_form(player, current, |ctx, player, response| {
+        let FormResponse::Submitted(chosen) = response else { return };
+        show_boss_bar(ctx, player.id, &chosen);
+        if !chosen.greeting.is_empty() {
+            ctx.send_title(player.id, &Title::new(chosen.greeting.clone()));
+        }
+        ctx.state::<Chosen>().0.insert(player.id, chosen);
+        show_sidebar(ctx, player.id);
+    });
+}
+
+#[derive(Command)]
+#[command(name = "settings", description = "Changes what the hub shows you")]
+struct SettingsCommand;
+
+impl Command for SettingsCommand {
+    fn run(self, ctx: &mut ShardCtx<'_>, sender: &Sender, out: &mut Output) {
+        match sender.player() {
+            Some(player) => open_settings(ctx, player.id),
+            None => out.error("Only a player has settings"),
+        }
     }
 }
 
@@ -36,17 +172,19 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     tracing_subscriber::fmt().with_env_filter(filter).init();
     let args: Vec<String> = std::env::args().skip(1).collect();
     let offline = args.iter().any(|a| a == "--offline");
+    let operators = args.iter().filter_map(|a| a.strip_prefix("--op=")).map(str::to_owned).collect();
     let positional = || args.iter().filter(|a| !a.starts_with("--"));
     let port = positional().find_map(|a| a.parse::<u16>().ok()).unwrap_or(19132);
     let folder = positional().find(|a| a.parse::<u16>().is_err());
 
-    let mut builder = Server::builder().bind(([0, 0, 0, 0], port).into()).name("sapling hub").game_mode(GameMode::Adventure).online_mode(!offline).blob_cache(!args.iter().any(|a| a == "--no-cache"));
+    let mut builder = Server::builder().bind(([0, 0, 0, 0], port).into()).name(NAME).game_mode(GameMode::Adventure).online_mode(!offline).blob_cache(!args.iter().any(|a| a == "--no-cache"));
     if let Some(folder) = folder {
-        let opened = World::open_folder(Path::new(folder))?;
+        let opened = sapling::World::open_folder(Path::new(folder))?;
         tracing::info!(folder, name = ?opened.name, spawn = ?opened.spawn, "opened the world");
         builder = builder.world(opened.world, opened.spawn);
     }
-    let server = builder.handler(Greeter).start().await?;
+    let builder = builder.handler(Hub { operators }).command::<HubCommand>().command::<GameModeCommand>().command::<MenuCommand>().command::<SettingsCommand>();
+    let server = builder.start().await?;
     tokio::signal::ctrl_c().await?;
     tracing::info!("shutting down");
     server.shutdown().await;
