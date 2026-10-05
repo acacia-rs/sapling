@@ -1,17 +1,19 @@
 //! Placing: which block a click builds, where it may go, and what it costs the placer.
 
+use acacia_proto::nbt::Value;
 use acacia_proto::types::ItemV4;
 use bevy_ecs::prelude::*;
-use sapling_api::{Block, BlockPos, Face, GameMode, PlaceEvent};
-use sapling_world::BlockRegistry;
+use sapling_api::{Block, BlockPos, GameMode, PlaceEvent};
+use sapling_world::{BlockRegistry, new_block_entity};
 
 use super::facing::{self, Click};
-use super::{Request, Site, doors, level, send, updates};
+use super::{Request, Site, doors, items, level, send, updates};
 use crate::components::{InLayer, Position, Stage};
 use crate::inventory::{self, Inventory, Place};
 
 const PLAYER_HALF_WIDTH: f32 = 0.3;
 const PLAYER_HEIGHT: f32 = 1.8;
+const BED: &str = "minecraft:bed";
 /// Blocks a block placed into their cell takes the place of, by the end of their name: those
 /// the Java game marks replaceable, in Bedrock's names.
 const REPLACED: &[&str] = &[
@@ -21,16 +23,30 @@ const REPLACED: &[&str] = &[
 /// A snow layer gives way while it is a single one.
 const THIN_SNOW: (&str, &str) = ("minecraft:snow_layer", "height=0");
 
+/// The block a stack places: the one it names by `hash`, or the one its item builds (items.rs).
+fn block_of_stack(registry: &BlockRegistry, hash: Option<u32>, item: Option<&str>) -> Option<u32> {
+    let named = hash.and_then(|hash| registry.runtime_id_from_hash(hash)).filter(|id| registry.get(*id).is_some_and(|state| !state.is_air()));
+    named.or_else(|| items::block_of(registry, item?))
+}
+
 /// The block the item a client says it holds places.
 pub(super) fn claimed_block(registry: &BlockRegistry, item: &ItemV4) -> Option<u32> {
-    let id = registry.runtime_id_from_hash(item.block_runtime_id).filter(|_| item.network_id != 0 && item.count > 0)?;
-    registry.get(id).is_some_and(|state| !state.is_air()).then_some(id)
+    let is_held = item.network_id != 0 && item.count > 0;
+    block_of_stack(registry, Some(item.block_runtime_id).filter(|hash| *hash != 0), sapling_data::item_name(item.network_id.into())).filter(|_| is_held)
 }
 
 /// The block the stack in a player's hand places, by the server's own inventory.
 pub(super) fn held_block(world: &World, player: Entity, registry: &BlockRegistry) -> Option<u32> {
-    let hash = world.get::<Inventory>(player)?.in_hand().as_ref()?.stack.block?;
-    registry.runtime_id_from_hash(hash).filter(|id| registry.get(*id).is_some_and(|state| !state.is_air()))
+    let stack = &world.get::<Inventory>(player)?.in_hand().as_ref()?.stack;
+    block_of_stack(registry, stack.block, Some(&stack.name))
+}
+
+fn bed_entity(pos: BlockPos, colour: i16) -> Value {
+    let mut entity = new_block_entity("Bed", pos);
+    if let Value::Compound(fields) = &mut entity {
+        fields.push(("color".to_owned(), Value::Byte(colour as _)));
+    }
+    entity
 }
 
 /// Whether a block placed into the cell of block `id` takes its place.
@@ -74,9 +90,11 @@ impl Request<'_> {
         let into_clicked = gives_way(registry, level.block(against[0], against[1], against[2]));
         let pos = if into_clicked { against } else { click.face.neighbour(against) };
         let is_free = level.in_height(pos[1]) && level.is_loaded(send::column(pos)) && gives_way(registry, level.block(pos[0], pos[1], pos[2]));
-        let id = facing::oriented(registry, id, click);
-        let above = Face::Up.neighbour(pos);
-        let has_headroom = !doors::is_tall(registry, id) || level.in_height(above[1]) && gives_way(registry, level.block(above[0], above[1], above[2]));
+        let id = doors::hinged(level, facing::oriented(registry, id, click), pos, click.quarter());
+        let gives = |cell: BlockPos| level.in_height(cell[1]) && level.is_loaded(send::column(cell)) && gives_way(registry, level.block(cell[0], cell[1], cell[2]));
+        let stands = |cell: BlockPos| registry.get(level.block(cell[0], cell[1] - 1, cell[2])).is_some_and(|state| !state.is_air());
+        // A second cell beside the first is a bed's: both halves lie on something.
+        let has_headroom = doors::second_cell(registry, id, pos).is_none_or(|(cell, _)| gives(cell) && (cell[1] != pos[1] || stands(cell) && stands(pos)));
         let (block, is_solid) = (send::describe(registry, id), registry.get(id).is_some_and(|state| state.is_solid()));
         let is_held_up = !updates::lacks_support(self.world, site.layer, pos, id);
         if !is_free || !has_headroom || !is_held_up || is_solid && is_occupied(self.world, site.layer, pos) {
@@ -101,7 +119,14 @@ impl Request<'_> {
         let placed = send::set(self.world, site.layer, pos, id);
         if placed {
             send::to_viewers(self.world, site.layer, pos, &[sound]);
-            doors::place_upper_half(self.world, site.layer, pos);
+            let second = doors::place_second_cell(self.world, site.layer, pos);
+            if block.name == BED {
+                // The colour is the item's, which the block cannot say.
+                let colour = self.world.get::<Inventory>(self.entity).and_then(|inventory| inventory.in_hand().as_ref()).map_or(0, |held| held.stack.damage);
+                for cell in [Some(pos), second].into_iter().flatten() {
+                    send::keep_entity(self.world, site.layer, cell, &bed_entity(cell, colour));
+                }
+            }
             crate::containers::furnish(self.world, site.layer, pos, &block.name);
             updates::settle(self.world, site.layer, pos);
         }

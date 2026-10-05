@@ -4,6 +4,7 @@
 
 mod doors;
 mod facing;
+mod items;
 mod loot;
 mod mining;
 mod place;
@@ -15,7 +16,7 @@ pub(crate) use doors::{release_buttons, with as with_property};
 pub(crate) use loot::Dice;
 pub(crate) use water::tick as flow_water;
 pub(crate) use mining::Breaking;
-pub(crate) use send::{block_at, block_entity_data, put_block, set, sound, to_viewers};
+pub(crate) use send::{block_at, keep_entity, put_block, set, sound, to_viewers};
 
 use std::collections::HashSet;
 

@@ -1,7 +1,7 @@
 //! Blocks on the wire, as BDS sends them (`sapling` example `bds_block_probe`), and between the
 //! world's runtime ids and the API's names.
 
-use acacia_proto::nbt::Nbt;
+use acacia_proto::nbt::{Nbt, Value};
 use acacia_proto::packets::{BlockEntityData, LevelEvent, LevelEventEvent, LevelSoundEvent, UpdateBlock};
 use acacia_proto::types::{BlockCoordinates, UpdateBlockFlags, Vec3f};
 use bevy_ecs::prelude::*;
@@ -93,6 +93,16 @@ pub(crate) fn to_viewers(world: &mut World, layer: Entity, pos: BlockPos, packet
             out.0.extend_from_slice(packets);
         }
     }
+}
+
+/// Makes `entity` what the block at `pos` holds and shows it to those who see the block.
+pub(crate) fn keep_entity(world: &mut World, layer: Entity, pos: BlockPos, entity: &Value) {
+    let Some(mut level) = world.get_mut::<Layer>(layer) else { return };
+    if !level.world.set_block_entity(pos, entity) {
+        return tracing::warn!(?pos, "a block's entity could not be kept");
+    }
+    let shown: Vec<_> = level.world.block_entity(pos).map(|entity| block_entity_data(pos, entity)).into_iter().collect();
+    to_viewers(world, layer, pos, &shown);
 }
 
 /// Writes a layer-0 block and shows it to everyone who sees the place. False, with nothing

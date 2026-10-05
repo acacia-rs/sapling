@@ -81,6 +81,11 @@ pub fn is_item(name: &str) -> bool {
     NETWORK_IDS.contains_key(name)
 }
 
+/// The name of the item a stack on the wire names by `network_id`.
+pub fn item_name(network_id: i32) -> Option<&'static str> {
+    NAMES.get(&i16::try_from(network_id).ok()?).copied()
+}
+
 /// What a client names by `entry_id` when it takes an item from the creative inventory.
 pub fn creative_item(entry_id: u32) -> Option<&'static CreativeItem> {
     CREATIVE.get(&entry_id)

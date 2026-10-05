@@ -8,7 +8,7 @@ use acacia_proto::nbt::Value;
 use bevy_ecs::prelude::*;
 use sapling_api::BlockPos;
 
-use super::{keep_entity, kind, shut_out};
+use super::{CHEST, keep_entity, kind, shut_out};
 use crate::components::Layer;
 
 const LEAD: &str = "pairlead";
@@ -53,7 +53,7 @@ fn single_chest(world: &World, layer: Entity, pos: BlockPos) -> Option<(&'static
     let level = &world.get::<Layer>(layer)?.world;
     let state = level.registry().get(level.block(pos[0], pos[1], pos[2]))?;
     let facing = state.properties.split(',').find_map(|pair| pair.strip_prefix(FACING))?;
-    let is_free = kind(state.name) == Some("Chest") && level.block_entity(pos).is_some_and(|entity| partner(&entity.nbt).is_none());
+    let is_free = kind(state.name).is_some_and(|kind| kind.entity == CHEST.entity) && level.block_entity(pos).is_some_and(|entity| partner(&entity.nbt).is_none());
     is_free.then_some((state.name, facing))
 }
 

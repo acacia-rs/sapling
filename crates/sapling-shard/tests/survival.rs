@@ -142,6 +142,33 @@ fn a_door_is_two_cells_that_are_placed_opened_and_broken_together() {
 }
 
 #[test]
+fn a_second_door_hinges_on_the_other_side_and_a_bed_lies_ahead_of_its_placer() {
+    let registry = sapling_world::BlockRegistry::vanilla();
+    let is_hinged_right = |hash: u32| registry.get(registry.runtime_id_from_hash(hash).expect("a block")).expect("a state").properties.contains("door_hinge_bit=1");
+    let mut h = with_in_hand(Some(Item::new("minecraft:spruce_door", 2)));
+    // Alex looks south, so east is to the left: the door placed west of the first is its pair.
+    h.receive(1, &click([2, 64, 0], 1, None));
+    let first = blocks(h.tick_all().to(2));
+    h.receive(1, &click(NEAR, 1, None));
+    let second = blocks(h.tick_all().to(2));
+    assert_eq!([first.len(), second.len()], [2, 2], "{first:?} {second:?}");
+    assert!(first.iter().all(|cell| !is_hinged_right(cell.1)) && second.iter().all(|cell| is_hinged_right(cell.1)));
+
+    let mut h = with_in_hand(Some(Item::new("minecraft:bed", 1)));
+    let head = [1, 65, 1];
+    h.receive(1, &click(NEAR, 1, None));
+    let placed = blocks(h.tick_all().to(2));
+    assert_eq!([placed[0].0, placed[1].0], [ABOVE, head], "{placed:?}");
+    assert_ne!(placed[0].1, placed[1].1, "the head says that it is one");
+    h.remote.run(|ctx| ctx.set_game_mode(ALEX, sapling_api::GameMode::Creative));
+    h.tick_all();
+    h.receive(1, &block_actions(&[(Action::PredictBreak, head)]));
+    let mut gone = blocks(h.tick_all().to(2));
+    gone.sort();
+    assert_eq!(gone, [(ABOVE, hash(AIR)), (head, hash(AIR))]);
+}
+
+#[test]
 fn sand_falls_a_torch_goes_with_its_block_and_a_button_comes_out_again() {
     let mut h = with_in_hand(None);
     let (pillar, sand, torch, button) = ([2, 65, 0], [2, 66, 0], [2, 67, 0], [2, 65, 1]);

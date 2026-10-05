@@ -1,6 +1,7 @@
 //! Blocks a hand moves (doors, trapdoors, fence gates and levers open and shut, buttons go in
-//! for a second) and doors' second cell, which is placed, opened and broken with the first.
-// TODO: no pressure plates, no redstone, a bed's second cell is not handled, a gate does not
+//! for a second) and the second cell of doors and beds, which is placed, opened and broken with
+//! the first.
+// TODO: no pressure plates, no redstone, nobody sleeps in a bed, a gate does not
 // swing away from its user, and `door.open`/`door.close` are named by the pattern of the other
 // sounds: the server's binary holds those as plain strings, but not these two.
 
@@ -14,6 +15,12 @@ use crate::components::Tick;
 const OPEN: &str = "open_bit";
 const UPPER: &str = "upper_block_bit";
 const PRESSED: &str = "button_pressed_bit";
+const HEAD: &str = "head_piece_bit";
+const HINGE: &str = "door_hinge_bit";
+/// The step a bed's `direction` takes from foot to head: 0 south, 1 west, 2 north, 3 east.
+const AHEAD: [[i32; 2]; 4] = [[0, 1], [-1, 0], [0, -1], [1, 0]];
+/// The step to the left of a look into each quarter, numbered the same way.
+const LEFT: [[i32; 2]; 4] = [[1, 0], [0, 1], [-1, 0], [0, -1]];
 /// Ticks a button stays in (BDS `ButtonBlock::buttonPressed`): the stone ones, and every other.
 const STONE_PRESS_TICKS: u64 = 20;
 const WOODEN_PRESS_TICKS: u64 = 30;
@@ -31,26 +38,51 @@ pub(crate) fn with(registry: &BlockRegistry, id: u32, key: &str, value: &str) ->
     registry.find(state.name, &state.properties.split(',').map(set).collect::<Vec<_>>().join(","))
 }
 
+/// The cell a bed's head lies in, seen from its foot.
+fn ahead(registry: &BlockRegistry, id: u32, [x, y, z]: BlockPos, steps: i32) -> Option<BlockPos> {
+    let [across, along] = *AHEAD.get(property(registry, id, "direction")?.parse::<usize>().ok()?)?;
+    Some([x + across * steps, y, z + along * steps])
+}
+
 /// Where the other cell of the two-cell block at `pos` is, when it is there.
 fn other_half(world: &World, layer: Entity, pos: BlockPos) -> Option<BlockPos> {
     let level = level(world, layer)?;
     let (registry, id) = (level.registry(), level.block(pos[0], pos[1], pos[2]));
-    let other = if property(registry, id, UPPER)? == "1" { Face::Down.neighbour(pos) } else { Face::Up.neighbour(pos) };
+    let other = match (property(registry, id, UPPER), property(registry, id, HEAD)) {
+        (Some(upper), _) => if upper == "1" { Face::Down.neighbour(pos) } else { Face::Up.neighbour(pos) },
+        (None, Some(head)) => ahead(registry, id, pos, if head == "1" { -1 } else { 1 })?,
+        (None, None) => return None,
+    };
     let same = level.in_height(other[1]) && registry.get(level.block(other[0], other[1], other[2]))?.name == registry.get(id)?.name;
     same.then_some(other)
 }
 
-/// Whether placing `id` also fills the cell above.
-pub(super) fn is_tall(registry: &BlockRegistry, id: u32) -> bool {
-    property(registry, id, UPPER).is_some()
+/// The second cell of the two-cell block `id` whose first goes to `pos`, and what fills it: a
+/// door's upper half above, a bed's head ahead of its foot.
+pub(super) fn second_cell(registry: &BlockRegistry, id: u32, pos: BlockPos) -> Option<(BlockPos, u32)> {
+    if let Some(upper) = with(registry, id, UPPER, "1") {
+        return Some((Face::Up.neighbour(pos), upper));
+    }
+    Some((ahead(registry, id, pos, 1)?, with(registry, id, HEAD, "1")?))
 }
 
-/// Puts the upper cell over the lower cell of a two-cell block just placed at `pos`.
-pub(super) fn place_upper_half(world: &mut World, layer: Entity, pos: BlockPos) {
-    let Some(level) = level(world, layer) else { return };
-    if let Some(upper) = with(level.registry(), level.block(pos[0], pos[1], pos[2]), UPPER, "1") {
-        send::set(world, layer, Face::Up.neighbour(pos), upper);
-    }
+/// Fills the second cell of a two-cell block just placed at `pos`; where that cell is.
+pub(super) fn place_second_cell(world: &mut World, layer: Entity, pos: BlockPos) -> Option<BlockPos> {
+    let level = level(world, layer)?;
+    let (cell, state) = second_cell(level.registry(), level.block(pos[0], pos[1], pos[2]), pos)?;
+    send::set(world, layer, cell, state).then_some(cell)
+}
+
+/// The door `id` about to stand at `pos`, placed by a look into `quarter`, hinged on the right
+/// where the same door stands to its left or only its right has a solid block to hang on: the
+/// Java game's `DoorBlock.getHinge` without its tie-break by where the click fell
+/// (docs/research/block-rules.md). Any other block is left as it is.
+pub(super) fn hinged(level: &sapling_world::World, id: u32, pos: BlockPos, quarter: usize) -> u32 {
+    let (registry, [x, z]) = (level.registry(), LEFT[quarter % 4]);
+    let beside = |side: i32| registry.get(level.block(pos[0] + side * x, pos[1], pos[2] + side * z));
+    let is_pair = beside(1).map(|state| state.name) == registry.get(id).map(|state| state.name);
+    let hangs_right = beside(-1).is_some_and(|state| state.is_solid()) && !beside(1).is_some_and(|state| state.is_solid());
+    Some(id).filter(|_| is_pair || hangs_right).and_then(|id| with(registry, id, HINGE, "1")).unwrap_or(id)
 }
 
 /// Takes the other cell of a two-cell block out of the world; call before the cell at `pos` goes.

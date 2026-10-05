@@ -470,7 +470,14 @@ block action, and takes StopBreak and AbortBreak with a position.
   slabs and trapdoors' upper half, furnace-like blocks facing the placer, doors and anvils across the
   look, fence gates along it, torches, ladders, buttons, wall signs, levers, standing signs, hoppers,
   rods, dispensers, droppers, barrels, observers, pistons (other servers' code only: unverified).
-  Not turned: a door's hinge, beds, rails, skulls, banners. A block is placed into the cell of a block
+  A door hinges on the right where the same door stands to its left, or only its right has a solid
+  block (the Java game's `DoorBlock.getHinge` less its tie-break by where the click fell). A bed's foot
+  goes into the clicked cell and its head one cell along the look (`blocks/doors.rs`); both need
+  something under them, each gets a `Bed` block entity with the item's colour, and breaking either
+  takes both (a broken bed drops a white one: the colour is not read back). Doors, beds, hoppers and
+  cake are items that name no block, so the block is found by the item's name (`blocks/items.rs`);
+  signs, skulls, banners, flower pots, cauldrons, crops and redstone are not placed yet.
+  Not turned: rails, skulls, banners. A block is placed into the cell of a block
   the Java game marks replaceable (grass, ferns, vines, fire, a single snow layer, nether roots and
   the like) instead of against it. A block that needs something to stand or hang on (next bullet) is
   not placed where that is not solid.
@@ -576,7 +583,23 @@ block action, and takes StopBreak and AbortBreak with a position.
   (`ContainerClose`, server true). The evidence for all of it, mostly decompiled from an older BDS
   build with its symbols, is `docs/research/containers-crafting.md`; no chest traffic of a real BDS
   was ever recorded. Not done: a chest's own sounds (their names in this protocol were not found),
-  furnaces, hoppers, shulker and ender chests, a reach check while open, a chest blocked from above.
+  shulker and ender chests, a reach check while open, a chest blocked from above. A hopper opens as a
+  container of five (window type Hopper) and moves no items.
+- **Furnaces, blast furnaces and smokers** (`furnaces.rs`, `sapling_data::smelted`). Containers of
+  three slots (input 0, fuel 1, result 2; window types Furnace, BlastFurnace, Smoker), which requests
+  name by slot type (`FurnaceIngredient` and its two kin, `FurnaceFuel`, `FurnaceOutput`). One that
+  was opened ticks in BDS's order (`FurnaceBlockActor::tick`): the fire burns down; an unlit one with
+  something it can smelt lights its next piece of fuel (a lava bucket leaves its bucket); a lit one
+  cooks, and at 200 ticks (100 in the other two) the result grows, shown to the screens before the
+  input shrinks; an unlit one loses two ticks of cooking a tick. Recipes are the `furnace`,
+  `blast_furnace` and `smoker` ones of the recorded `CraftingData`. Screens are told the three times
+  as `ContainerSetData` (0 cooked, 1 fire left, 2 what the fuel gave) when they change. Lighting and
+  going out swaps the block for its `lit_` one, facing kept, and writes the block entity again
+  (`BurnTime`, `CookTime`, `BurnDuration` beside `Items`). A furnace is let go once it is out, cooks
+  nothing and nobody looks. Not as the game: burn times are a table from its wiki in
+  `furnaces/fuel.rs`, not read from BDS, and lack the rarer wooden things (stairs, fences, doors,
+  signs). Not done: experience, the crackling sound, a result slot that refuses items, and a furnace
+  that was burning when its world was saved stays as it was until someone opens it.
 - **Double chests** (`containers/pairs.rs`). Two chests of one kind, side by side and facing the same
   way, name each other in their block entities (`pairx`, `pairz`, `pairlead`), which clients are sent
   and draw one large chest from. A chest placed beside a single one pairs with it, the old one leading
@@ -595,8 +618,12 @@ block action, and takes StopBreak and AbortBreak with a position.
   needs the slot empty. Screens' own slots are the `Ui` window's: the grids' cells 28 to 40
   (`CraftingInput`), the stonecutter's input 3; what is left in them goes back among the items when a
   screen closes. A recipe that does not fit 2x2 needs a crafting table's screen (`ContainerOpen`, type
-  Workbench), a stonecutter's recipe its own (type Stonecutter); a click on the block opens it. Not as
-  BDS: where the items lie in the grid is not matched against the recipe. Not done: furnaces, smithing,
+  Workbench), a stonecutter's recipe its own (type Stonecutter); a click on the block opens it. A
+  `CraftRecipe` in a grid is held to the grid as BDS holds it (`_handleCraftAction`): the recipe must be
+  laid out in the cells (`Recipe::is_laid_out`: a shaped one anywhere, mirrored or not, the mirroring
+  from memory of the game and not decompiled; a shapeless one in any cells; nothing beside it), and the
+  request must consume the crafts' count from each filled cell and from nowhere else. A
+  `CraftRecipeAuto` is held only to what it used. Not done: smithing,
   the special recipes (maps, fireworks).
 - **API.** `ctx.item`, `set_item`, `give` (returns what did not fit), `clear_inventory`, `held_slot`,
   `held_item`, with `Item { name, count, damage }` and `Slot::{Main, Armor, Offhand}`; every change
@@ -670,8 +697,8 @@ acacia-world = { path = "../acacia/acacia/crates/acacia-world" }
   and place (no ghost block, no hole), also with the blob cache on; a door opened on screen closing
   again; `ParticleDestroy` and the `place` sound seen and heard by a second client; a block placed while
   another client is still loading the column.
-- **Blocks, left out of step 6:** block entities other than chests' and barrels' (a placed sign or
-  furnace gets none); lava, buckets, and fences and stairs reconnecting; door hinges, beds and rails;
+- **Blocks, left out of step 6:** block entities other than containers' (a placed sign gets
+  none); lava, buckets, and fences and stairs reconnecting; sleeping in a bed, and rails;
   falling blocks as entities; pressure plates and redstone; `USED` and the lists of blocks that fall,
   need support or give way are name endings, not block data; a request over the tick limit gets no
   resync; `on_move`, which needs its own resync on cancel.

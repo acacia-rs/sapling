@@ -1,8 +1,10 @@
 //! The server's side of a craft: a request names a recipe, uses items up and takes the result,
 //! and is done only if what it used up is what the recipe asks for (requests.rs). How BDS does
 //! it, where this follows it and where not: docs/research/containers-crafting.md, sections E, F.
-// TODO: where the items lie in the grid is not checked, only which were used (BDS matches the
-// grid against the recipe); no recipe unlocking.
+// TODO: a craft by the recipe book is only held to what it used, not to where it took it from;
+// no recipe unlocking.
+
+use std::ops::Range;
 
 use bevy_ecs::prelude::*;
 use sapling_data::{Ingredient, Recipe, Station};
@@ -11,28 +13,44 @@ use sapling_world::ItemStack;
 use super::{Inventory, Place, UI, change};
 use crate::drops;
 
+/// The `Ui` slots of the crafting grids, row by row: the inventory screen's and a table's.
+const HAND_GRID: Range<usize> = 28..32;
+const TABLE_GRID: Range<usize> = 32..41;
+
 /// The craft a request asked for, and what it has used up so far.
 pub(super) struct Craft {
     recipe: &'static Recipe,
     times: u8,
     used: Vec<ItemStack>,
+    /// The grid cells a craft by hand has yet to use up, `times` of each.
+    cells: Option<Vec<Place>>,
     /// Which of the recipe's results is being handed out, and how many of it are still to come
     /// once the created-output slot has room: it holds one stack at a time.
     result: usize,
     pending: u32,
 }
 
+/// The filled cells of the grid a player crafts in at `at`, if the recipe is laid out in it.
+fn laid_out(inventory: &Inventory, recipe: &Recipe, at: Station) -> Result<Vec<Place>, ()> {
+    let cells = if at == Station::Table { TABLE_GRID } else { HAND_GRID };
+    let held = |slot: usize| inventory.slot(Place::Ui(slot)).and_then(Option::as_ref);
+    let grid: Vec<Option<(&str, i16)>> = cells.clone().map(|slot| held(slot).map(|held| (held.stack.name.as_str(), held.stack.damage))).collect();
+    recipe.is_laid_out(&grid).then(|| cells.filter(|slot| held(*slot).is_some()).map(Place::Ui).collect()).ok_or(())
+}
+
 impl Craft {
     /// Starts `times` crafts of the recipe a client names, at the screen the player has open.
-    /// A recipe's only result lies in the created-output slot at once; of several, each waits
-    /// for the request to ask for it ([`Craft::create`]).
-    pub fn start(inventory: &mut Inventory, network_id: u32, times: u8, at: Station) -> Result<Self, ()> {
+    /// One made by hand in a grid needs the recipe laid out there, and is then held to using up
+    /// those cells. A recipe's only result lies in the created-output slot at once; of several,
+    /// each waits for the request to ask for it ([`Craft::create`]).
+    pub fn start(inventory: &mut Inventory, network_id: u32, times: u8, at: Station, by_hand: bool) -> Result<Self, ()> {
         let fits = |recipe: &&Recipe| match recipe.station {
             Station::Hand => at != Station::Stonecutter,
             station => station == at,
         };
         let recipe = sapling_data::recipe(network_id).filter(fits).filter(|_| times > 0).ok_or(())?;
-        let mut craft = Self { recipe, times, used: Vec::new(), result: 0, pending: 0 };
+        let cells = (by_hand && at != Station::Stonecutter).then(|| laid_out(inventory, recipe, at)).transpose()?;
+        let mut craft = Self { recipe, times, used: Vec::new(), cells, result: 0, pending: 0 };
         if recipe.outputs.len() == 1 {
             craft.create(inventory, 0)?;
         }
@@ -62,12 +80,22 @@ impl Craft {
         inventory.put(Place::Created, Some(ItemStack { name: item.name.to_owned(), count, damage: item.damage, block: item.block, tag: item.tag.clone() }));
     }
 
-    pub fn use_up(&mut self, stack: ItemStack) {
+    /// Counts `stack`, taken from `from`, as used up; a craft by hand takes `times` from each
+    /// filled cell of its grid, once, and from nowhere else.
+    pub fn use_up(&mut self, from: Place, stack: ItemStack) -> Result<(), ()> {
+        if let Some(cells) = self.cells.as_mut() {
+            let cell = cells.iter().position(|cell| *cell == from).filter(|_| stack.count == self.times).ok_or(())?;
+            cells.swap_remove(cell);
+        }
         self.used.push(stack);
+        Ok(())
     }
 
     /// Whether what was used up is what the crafts need, no more and no less.
     pub fn is_paid(&self) -> bool {
+        if self.cells.as_ref().is_some_and(|cells| !cells.is_empty()) {
+            return false;
+        }
         let mut left: Vec<(&ItemStack, u16)> = self.used.iter().map(|stack| (stack, stack.count.into())).collect();
         // Named cells first, so that a tag does not take what only a name can.
         let mut cells: Vec<&(Ingredient, u8)> = self.recipe.inputs.iter().collect();

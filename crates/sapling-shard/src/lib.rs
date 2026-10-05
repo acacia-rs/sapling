@@ -15,6 +15,7 @@ mod config;
 mod containers;
 mod drops;
 mod forms;
+mod furnaces;
 mod grid;
 mod handlers;
 mod handoff;

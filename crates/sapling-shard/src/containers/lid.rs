@@ -16,7 +16,9 @@ pub(super) const REPEAT: u64 = 80;
 const BARREL: &str = "minecraft:barrel";
 
 fn event(world: &mut World, layer: Entity, halves: &[BlockPos], open: bool) {
-    for &[x, y, z] in halves {
+    let has_lid = |pos: &&BlockPos| super::block_name(world, layer, **pos).and_then(super::kind).is_some_and(|kind| kind.has_lid);
+    let lidded: Vec<BlockPos> = halves.iter().filter(has_lid).copied().collect();
+    for [x, y, z] in lidded {
         let lid = BlockEvent { position: BlockCoordinates { x, y, z }, r#type: BlockEventType::ChangeState, data: open.into() };
         blocks::to_viewers(world, layer, [x, y, z], &[sapling_net::encode(&lid)]);
     }

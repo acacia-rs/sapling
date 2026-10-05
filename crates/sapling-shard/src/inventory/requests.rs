@@ -40,6 +40,9 @@ fn place(info: &StackRequestSlotInfo) -> Option<Place> {
     match info.slot_type.container_id {
         // Which slots there are is the open container's to say: none while nothing is open.
         ContainerSlotType::Container | ContainerSlotType::Barrel => Some(Place::Container(slot)),
+        ContainerSlotType::FurnaceIngredient | ContainerSlotType::BlastFurnaceIngredient | ContainerSlotType::SmokerIngredient => Some(Place::Container(0)),
+        ContainerSlotType::FurnaceFuel => Some(Place::Container(1)),
+        ContainerSlotType::FurnaceOutput => Some(Place::Container(2)),
         ContainerSlotType::CraftingInput if GRIDS.contains(&slot) => Some(Place::Ui(slot)),
         ContainerSlotType::StonecutterInput if slot == STONECUTTER_INPUT => Some(Place::Ui(slot)),
         ContainerSlotType::Hotbar | ContainerSlotType::Inventory | ContainerSlotType::HotbarAndInventory if slot < MAIN => Some(Place::Main(slot)),
@@ -79,12 +82,12 @@ fn apply(inventory: &mut Inventory, request: &Request, creative: bool, at: Stati
     let mut craft: Option<Craft> = None;
     for action in &request.actions {
         match &action.content {
-            Action::CraftRecipe(asked) if craft.is_none() => craft = Some(Craft::start(inventory, asked.recipe_network_id, asked.times_crafted, at)?),
-            Action::CraftRecipeAuto(asked) if craft.is_none() => craft = Some(Craft::start(inventory, asked.recipe_network_id, asked.times_crafted, at)?),
+            Action::CraftRecipe(asked) if craft.is_none() => craft = Some(Craft::start(inventory, asked.recipe_network_id, asked.times_crafted, at, true)?),
+            Action::CraftRecipeAuto(asked) if craft.is_none() => craft = Some(Craft::start(inventory, asked.recipe_network_id, asked.times_crafted, at, false)?),
             Action::Create(asked) => craft.as_mut().ok_or(())?.create(inventory, asked.result_slot_id.into())?,
             Action::Consume(used) => {
                 let from = applied.named(inventory, &used.source)?;
-                craft.as_mut().ok_or(())?.use_up(inventory.take(from, used.count)?);
+                craft.as_mut().ok_or(())?.use_up(from, inventory.take(from, used.count)?)?;
             }
             Action::Take(take) => applied.transfer(inventory, take.count, &take.source, &take.destination)?,
             Action::Place(place) => applied.transfer(inventory, place.count, &place.source, &place.destination)?,

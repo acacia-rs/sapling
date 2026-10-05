@@ -1,7 +1,7 @@
 //! The state a placed block takes from how it was placed: which face was clicked, how high on
 //! it, and which way the placer looked.
-// TODO: only the properties below; a door's hinge, a bed's head, rails, skulls and the rest keep
-// the item's own value. Each value's evidence is in docs/research/block-rules.md: collision
+// TODO: only the properties below; rails, skulls and the rest keep the item's own value (a
+// door's hinge, which its neighbours decide, is doors.rs's). Each value's evidence is in docs/research/block-rules.md: collision
 // boxes per state, the Java game's placement code, and for pistons only other servers' code.
 
 use sapling_api::Face;
@@ -21,7 +21,7 @@ pub(super) struct Click {
 
 impl Click {
     /// The quarter the placer looks into: 0 south, 1 west, 2 north, 3 east.
-    fn quarter(&self) -> usize {
+    pub(super) fn quarter(&self) -> usize {
         // Half-way turns go up, as the game rounds them: `round()` would send -45 the other way.
         if self.yaw.is_finite() { (self.yaw / 90.0 + 0.5).floor().rem_euclid(4.0) as usize % 4 } else { 0 }
     }
@@ -66,6 +66,8 @@ impl Click {
             // A hopper's spout points into the clicked block.
             "facing_direction" if block.ends_with("hopper") => ["0", "0", "3", "2", "5", "4"][self.face as usize],
             "facing_direction" if ends(&["end_rod", "lightning_rod"]) => ["0", "1", "2", "3", "4", "5"][self.face as usize],
+            // A bed's head lies the way its placer looks.
+            "direction" if block.ends_with(":bed") => ["0", "1", "2", "3"][self.quarter()],
             "direction" if ends(&["loom", "beehive", "bee_nest"]) => ["2", "3", "0", "1"][self.quarter()],
             // A door and an anvil stand across the look; a gate swings the way its placer looks.
             "minecraft:cardinal_direction" if ends(&["_door", "anvil"]) && !block.ends_with("trapdoor") => ["west", "north", "east", "south"][self.quarter()],
@@ -137,5 +139,6 @@ mod tests {
         assert!(placed("minecraft:spruce_door", Face::Up, 1.0, 0.0).contains("minecraft:cardinal_direction=west"), "across the look");
         assert!(placed("minecraft:oak_stairs", Face::Up, 1.0, -45.0).ends_with("weirdo_direction=2"), "half-way between east and south is south");
         assert!(placed("minecraft:standing_sign", Face::Up, 1.0, 0.0).contains("ground_sign_direction=8"));
+        assert!(placed("minecraft:bed", Face::Up, 1.0, 90.0).contains("direction=1"), "head to the west");
     }
 }
