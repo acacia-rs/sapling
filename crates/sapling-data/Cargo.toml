@@ -7,5 +7,6 @@ rust-version.workspace = true
 description = "Game data a Bedrock client needs to join: StartGame defaults and registry packets"
 
 [dependencies]
+acacia-molang.workspace = true
 acacia-proto.workspace = true
 bytes.workspace = true

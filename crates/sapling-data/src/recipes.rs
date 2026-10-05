@@ -13,6 +13,8 @@ use acacia_proto::types::{ItemLegacy, RecipeIngredient, RecipeIngredientContent 
 use crate::items::{CreativeItem, described};
 use crate::templates::{CRAFTING_DATA, decode};
 
+mod molang;
+
 const GRID: &str = "crafting_table";
 /// The metadata of an ingredient that takes any.
 const ANY: i32 = 32767;
@@ -24,6 +26,8 @@ pub enum Ingredient {
     Item { name: String, damage: Option<i16> },
     /// Any item carrying one of these tags.
     Tagged(Vec<String>),
+    /// Any item this MoLang expression holds for (`query.any_tag('minecraft:planks')`).
+    Expression(String),
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -93,15 +97,11 @@ pub fn smelted(station: Station, name: &str, damage: i16) -> Option<&'static (Cr
 
 /// What a cell of a recipe takes and how many of it; `None` for a cell that takes nothing.
 fn ingredient(cell: &RecipeIngredient) -> Option<(Ingredient, u8)> {
-    let any_tag = |expression: &str| {
-        let arguments = expression.split_once("any_tag(").map_or("", |(_, rest)| rest.split(')').next().unwrap_or(""));
-        arguments.split(',').map(|tag| tag.trim().trim_matches(['\'', '"']).to_owned()).filter(|tag| !tag.is_empty()).collect()
-    };
     let Content::Valid(valid) = &cell.content else { return None };
     let ingredient = match &valid.content {
         Valid::Name(item) => Ingredient::Item { name: item.name.clone(), damage: Some(item.metadata).filter(|damage| ![ANY, -1].contains(damage)).map(|damage| damage as i16) },
         Valid::ItemTag(tagged) => Ingredient::Tagged(vec![tagged.tag.clone()]),
-        Valid::Molang(molang) => Ingredient::Tagged(any_tag(&molang.expression)),
+        Valid::Molang(molang) => Ingredient::Expression(molang.expression.clone()),
         Valid::Empty(_) | Valid::Default => return None,
     };
     Some((ingredient, u8::try_from(cell.count).ok().filter(|count| *count > 0)?))
@@ -141,7 +141,7 @@ impl Recipe {
             let mut free: Vec<(&str, i16)> = grid.iter().flatten().copied().collect();
             // Named cells first, so that a tag does not take what only a name can.
             let mut cells: Vec<&Ingredient> = self.inputs.iter().map(|(cell, _)| cell).collect();
-            cells.sort_by_key(|cell| matches!(cell, Ingredient::Tagged(_)));
+            cells.sort_by_key(|cell| !matches!(cell, Ingredient::Item { .. }));
             let all_found = cells.iter().all(|cell| free.iter().position(|(name, damage)| cell.accepts(name, *damage)).map(|found| free.swap_remove(found)).is_some());
             return all_found && free.is_empty();
         };
@@ -180,6 +180,7 @@ impl Ingredient {
         match self {
             Ingredient::Item { name: wanted, damage: of } => wanted == name && of.is_none_or(|of| of == damage),
             Ingredient::Tagged(tags) => tags.iter().any(|tag| has_tag(name, tag)),
+            Ingredient::Expression(expression) => molang::accepts(expression, name),
         }
     }
 }

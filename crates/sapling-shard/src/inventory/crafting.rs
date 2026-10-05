@@ -99,7 +99,7 @@ impl Craft {
         let mut left: Vec<(&ItemStack, u16)> = self.used.iter().map(|stack| (stack, stack.count.into())).collect();
         // Named cells first, so that a tag does not take what only a name can.
         let mut cells: Vec<&(Ingredient, u8)> = self.recipe.inputs.iter().collect();
-        cells.sort_by_key(|(cell, _)| matches!(cell, Ingredient::Tagged(_)));
+        cells.sort_by_key(|(cell, _)| !matches!(cell, Ingredient::Item { .. }));
         for (cell, count) in cells {
             let mut need = u16::from(*count) * u16::from(self.times);
             for entry in left.iter_mut().filter(|entry| cell.accepts(&entry.0.name, entry.0.damage)) {
