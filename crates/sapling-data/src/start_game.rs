@@ -7,8 +7,9 @@ use crate::templates::{START_GAME, decode};
 
 const DAYLIGHT_CYCLE: &str = "dodaylightcycle";
 
-/// Player positions on the wire are the eyes, this far above the feet.
-pub const EYE_HEIGHT: f32 = 1.62;
+/// Player positions on the wire are the eyes, this far above the feet: BDS's own offset
+/// (acacia-physics `DEFAULT_PLAYER_HEIGHT_OFFSET`), not the round 1.62.
+pub const EYE_HEIGHT: f32 = 1.62001;
 
 /// What a server decides per join; every other StartGame field keeps BDS's value.
 #[derive(Debug, Clone, PartialEq)]

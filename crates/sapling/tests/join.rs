@@ -6,7 +6,7 @@ use std::time::Duration;
 use acacia_bot::{Bot, BotConfig};
 use acacia_client::{Client, ClientBuilder, DisconnectReason, Event, TransportKind};
 use acacia_world::BlockAccess;
-use sapling::{Handler, Player, Server, ShardCtx};
+use sapling::{Handler, NetherNet, Player, Server, ServerBuilder, ShardCtx};
 use tokio::sync::mpsc;
 
 const WAIT: Duration = Duration::from_secs(10);
@@ -24,8 +24,12 @@ impl Handler for Report {
 }
 
 async fn start() -> (Server, mpsc::UnboundedReceiver<String>) {
+    start_with(Server::builder()).await
+}
+
+async fn start_with(builder: ServerBuilder) -> (Server, mpsc::UnboundedReceiver<String>) {
     let (reports, events) = mpsc::unbounded_channel();
-    let builder = Server::builder().bind("127.0.0.1:0".parse().unwrap()).online_mode(false).handler(Report(reports));
+    let builder = builder.bind("127.0.0.1:0".parse().unwrap()).online_mode(false).handler(Report(reports));
     (builder.start().await.expect("the server starts"), events)
 }
 
@@ -99,5 +103,31 @@ async fn a_physics_bot_stands_on_the_platform() {
     bot.disconnect().await;
     assert!(matches!(bot.disconnect_reason(), Some(DisconnectReason::LocalClose)));
     assert_eq!(next(&mut events).await, "quit Walker (0 online)");
+    server.shutdown().await;
+}
+
+/// The whole join and the chunk answers through WebRTC's message framing instead of RakNet's.
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn a_physics_bot_joins_over_nethernet() {
+    let host_key = sapling::host_key(&std::env::temp_dir().join("sapling-join-test-host.key")).expect("a host key");
+    let (server, mut events) = start_with(Server::builder().nethernet(NetherNet::new(host_key))).await;
+    let config = BotConfig { physics: true, ..BotConfig::default() };
+    let client = client(&server, "Webber").transport(TransportKind::NetherNet);
+    let mut bot = Bot::connect(client, config).await.expect("the bot spawns");
+    let started = tokio::time::timeout(Duration::from_secs(5), async {
+        while !bot.movement().is_some_and(|m| m.is_started()) {
+            bot.wait_ticks(1).await.expect("connected");
+        }
+    });
+    started.await.expect("terrain under the spawn arrives");
+    assert_eq!(next(&mut events).await, "join Webber (1 online)");
+
+    bot.wait_ticks(40).await.expect("connected for 2 more seconds");
+    let movement = bot.movement().expect("physics enabled");
+    assert!(movement.on_ground(), "the bot is falling: {:?}", movement.position());
+    assert_eq!((movement.corrections, bot.disconnect_reason()), (0, None));
+
+    bot.disconnect().await;
+    assert_eq!(next(&mut events).await, "quit Webber (0 online)");
     server.shutdown().await;
 }
