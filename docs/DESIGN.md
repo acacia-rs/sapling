@@ -50,7 +50,8 @@ acacia-{proto,raknet,nethernet,session,auth}  (git deps; acacia-auth with defaul
    `cpk` = client key), client-data signature, legacy Mojang chain, offline self-signed. Lenient `ClientData`.
 3. Server login state machine in acacia-session, plus compress-once/encrypt-per-player and a "none" compression.
 4. Chunk encoders in acacia-world: palette compaction, v9 sections, biomes, LevelChunk/SubChunk, heightmaps.
-5. NetherNet: verify the client offer identity; per-connection routing on a shared socket.
+5. NetherNet: verify the client offer identity; per-connection routing on a shared socket; a trickled
+   answer for LAN (done: acacia `nethernet/host`).
 
 ## Milestone 1: hub server
 
@@ -336,7 +337,43 @@ block action, and takes StopBreak and AbortBreak with a position.
   whole protection is `if !may_build(ctx, player) { event.cancel() }` in `on_break` and `on_place`, with
   `may_build` = operator and in creative mode.
 
+## NetherNet (as built)
+
+Off unless `ServerBuilder::nethernet` is called: a vanilla client probes `GET /v1/join` first and
+only falls back to RakNet when that fails, so turning it on moves every vanilla player over.
+
+- **One port.** RakNet and WebRTC share the game's UDP socket; HTTP signaling listens on the same
+  port number over TCP. `acacia_nethernet::host::Host` claims a datagram if it is an ICE binding
+  request carrying one of its connections' credentials, or comes from an address such a request
+  bound; everything else goes to RakNet. An address can only be re-bound by a request that passes
+  the STUN integrity check, so a spoofed datagram cannot steal a player's route.
+- **Links.** `sapling-net/src/links.rs` puts both transports behind `Link`; the login sessions,
+  backlog limit, kicks and `Left` reports are the same code for either. A NetherNet session starts
+  when both data channels are open and stays plaintext after the handshake (DTLS encrypts).
+- **Direct connect** (`http.rs`): one request per TCP connection, as BDS serves it. A TLS hello gets
+  the alert that makes the client retry over HTTP. `GET /v1/join` answers the status JSON (the
+  NetherNet pong); `POST /v1/join/{id}` answers the SDP with one host candidate: the address the
+  request arrived on, or `NetherNet::public_ip` behind a forwarded port.
+- **LAN** (`lan.rs`, `NetherNet::lan`): answers discovery on UDP 7551 with the same name and counts,
+  and takes `CONNECTREQUEST` / `CANDIDATEADD` in discovery Messages, answering with a trickled
+  candidate on the interface that routes to the client. The port is bound shared, because a game
+  on the same machine holds it too.
+- **Identity.** An offer's `a=identity` must be signed by the key its token names
+  (`acacia_nethernet::verify_offer`). Online mode refuses an offer without the auth service's token
+  with error 37, as BDS does; offline takes a self-signed one or none. The Login that follows must
+  be signed by the offer's key, and it is the Login that verifies the token itself.
+- **Host key.** Every answer is signed by `NetherNet::host_key`; clients pin it per address on
+  first use, so `sapling::host_key(path)` keeps it in a file.
+- Tests: `sapling-net/tests/nethernet.rs` (both signaling paths, beside RakNet) and the NetherNet
+  bot in `sapling/tests/join.rs`.
+
 ## Open items
+
+- **NetherNet, only a vanilla client can confirm:** a direct-connect join and a LAN join by the real
+  game (bots only so far); whether it wants the status JSON or BDS's empty body; whether the LAN
+  list shows a server that answers from a dedicated process.
+- **NetherNet, left out:** the signaling service (friends list, Realms-style joins), TURN and
+  server-reflexive candidates, HTTPS signaling, IPv6 LAN discovery, rate limits on signaling.
 
 - **Step 6, only a vanilla client can confirm:** which actions a creative client sends for an instant
   break (sapling breaks on PredictBreak and on an item use of type BreakBlock, never on StartBreak

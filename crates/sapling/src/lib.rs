@@ -16,4 +16,5 @@ pub use sapling_api::{
     InteractEvent, Menu, Modal, Output, Permission, PlaceEvent, Player, PlayerId, Position, Priority, Sender, ShardCtx, Sidebar, Title, command, form,
 };
 pub use sapling_world::{ChunkPos, Level, LevelDbStorage, MemoryStorage, World, WorldFolder, WorldStorage};
+pub use sapling_net::{Advert, Lan, NetherNet, host_key};
 pub use server::{Server, ServerBuilder, StartError};

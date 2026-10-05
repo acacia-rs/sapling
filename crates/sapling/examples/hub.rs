@@ -1,18 +1,21 @@
 //! A hub, in a vanilla world folder or, without one, on a stone platform in the void: a title and
 //! a boss bar on join, a sidebar with who is online and where you stand, `/hub`, `/menu`,
 //! `/settings` and, for operators, `/gamemode`. Only operators in creative mode change blocks.
-//! `cargo run -p sapling --example hub -- [port] [world folder] [--offline] [--no-cache] [--op=Name]`
-//! (default port 19132, online mode). `RUST_LOG=debug` shows refused logins and ended connections.
+//! `cargo run -p sapling --example hub -- [port] [world folder] [--offline] [--no-cache] [--op=Name] [--nethernet] [--lan]`
+//! (default port 19132, online mode). `--nethernet` also hosts over NetherNet direct connect;
+//! `--lan` adds the LAN list to that. `RUST_LOG=debug` shows refused logins and ended connections.
 use std::collections::HashMap;
 use std::path::Path;
 
 use sapling::command::Target;
 use sapling::{
     BossBar, BossBarColour, BreakEvent, ChatEvent, Command, Form, FormResponse, GameMode, Handler, InteractEvent, Menu, Output, Permission, PlaceEvent, Player, PlayerId, Sender,
-    Server, ShardCtx, Sidebar, Title,
+    Lan, NetherNet, Server, ShardCtx, Sidebar, Title,
 };
 
 const NAME: &str = "sapling hub";
+/// In the working directory; clients pin the key in it per server address.
+const HOST_KEY_FILE: &str = "nethernet-host.key";
 const COLOURS: [BossBarColour; 4] = [BossBarColour::Purple, BossBarColour::Green, BossBarColour::Blue, BossBarColour::Red];
 /// Ticks between sidebar updates.
 const SIDEBAR_EVERY: u64 = 10;
@@ -201,6 +204,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let folder = positional().find(|a| a.parse::<u16>().is_err());
 
     let mut builder = Server::builder().bind(([0, 0, 0, 0], port).into()).name(NAME).online_mode(!offline).blob_cache(!args.iter().any(|a| a == "--no-cache"));
+    let lan = args.iter().any(|a| a == "--lan");
+    if lan || args.iter().any(|a| a == "--nethernet") {
+        let nethernet = NetherNet { lan: lan.then(Lan::default), ..NetherNet::new(sapling::host_key(Path::new(HOST_KEY_FILE))?) };
+        builder = builder.nethernet(nethernet);
+    }
     if let Some(folder) = folder {
         let opened = sapling::World::open_folder(Path::new(folder))?;
         tracing::info!(folder, name = ?opened.name, spawn = ?opened.spawn, time = opened.world.level().time, "opened the world");

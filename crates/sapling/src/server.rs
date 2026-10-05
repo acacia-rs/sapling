@@ -1,7 +1,7 @@
 use std::net::SocketAddr;
 
 use sapling_api::{Command, Difficulty, GameMode, Handler, Priority};
-use sapling_net::{Listener, Motd, NetConfig, SigningKeys};
+use sapling_net::{Advert, Listener, Motd, NetConfig, NetherNet, SigningKeys};
 use sapling_shard::{Shard, ShardConfig, ShardHandle};
 use sapling_world::{World, WorldFolder};
 
@@ -46,6 +46,13 @@ impl ServerBuilder {
     /// Admit only players Xbox Live vouches for (default). Off, anyone joins under any name.
     pub fn online_mode(mut self, online: bool) -> Self {
         self.net.online_mode = online;
+        self
+    }
+
+    /// Also host over NetherNet: direct connect on the TCP side of the port, and the LAN list if
+    /// `nethernet.lan` is set. Vanilla clients that find it no longer join over RakNet.
+    pub fn nethernet(mut self, nethernet: NetherNet) -> Self {
+        self.net.nethernet = Some(nethernet);
         self
     }
 
@@ -160,6 +167,11 @@ impl Server {
 
     pub fn local_addr(&self) -> SocketAddr {
         self.listener.local_addr()
+    }
+
+    /// Where the server answers LAN discovery, if it does.
+    pub fn lan(&self) -> Option<Advert> {
+        self.listener.lan()
     }
 
     /// Stops the game, disconnects every player and closes the socket.

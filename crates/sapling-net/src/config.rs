@@ -1,17 +1,22 @@
+use std::net::IpAddr;
 use std::time::Duration;
 
+use acacia_nethernet::lan::{DISCOVERY_PORT, ServerData};
 use acacia_proto::{GAME_VERSION, PROTOCOL_VERSION};
+use p384::ecdsa::SigningKey;
 
 #[derive(Debug, Clone)]
 pub struct NetConfig {
     /// Admit only logins the authorization service or Mojang signed.
     pub online_mode: bool,
-    /// From the RakNet connection to PlayStatus(LoginSuccess); slower clients are dropped.
+    /// From the connection to PlayStatus(LoginSuccess); slower clients are dropped.
     pub login_timeout: Duration,
     pub max_players: usize,
     pub motd: Motd,
     /// A player whose unsent backlog grows past this is kicked rather than buffered without end.
     pub max_queued_bytes: usize,
+    /// NetherNet beside RakNet. Off by default: a vanilla client that finds it stops using RakNet.
+    pub nethernet: Option<NetherNet>,
 }
 
 impl Default for NetConfig {
@@ -22,7 +27,40 @@ impl Default for NetConfig {
             max_players: 100,
             motd: Motd::default(),
             max_queued_bytes: 16 * 1024 * 1024,
+            nethernet: None,
         }
+    }
+}
+
+/// NetherNet (WebRTC) hosting; see docs/DESIGN.md "NetherNet". Direct connect is signaled over
+/// HTTP on the TCP side of the game port, and its datagrams share the game's UDP socket.
+#[derive(Debug, Clone)]
+pub struct NetherNet {
+    /// Signs every answer. Clients pin it per server address on first use, so keep it across
+    /// restarts ([`crate::host_key`]).
+    pub host_key: SigningKey,
+    /// The address players reach the server at, when it is not the one their signaling arrives on
+    /// (a forwarded port): answers advertise it as the WebRTC candidate.
+    pub public_ip: Option<IpAddr>,
+    /// Answer LAN discovery, which lists the server for clients on the same network.
+    pub lan: Option<Lan>,
+}
+
+impl NetherNet {
+    pub fn new(host_key: SigningKey) -> Self {
+        Self { host_key, public_ip: None, lan: None }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Lan {
+    /// Vanilla clients only broadcast to 7551; 0 picks a free port (tests).
+    pub port: u16,
+}
+
+impl Default for Lan {
+    fn default() -> Self {
+        Self { port: DISCOVERY_PORT }
     }
 }
 
@@ -47,6 +85,45 @@ impl Motd {
         let (name, sub_name, game_mode) = (clean(&self.name), clean(&self.sub_name), clean(&self.game_mode));
         format!("MCPE;{name};{PROTOCOL_VERSION};{GAME_VERSION};{players};{max_players};{guid};{sub_name};{game_mode};1;{port};{port};0;")
     }
+
+    /// The body of `GET /v1/join`: NetherNet's pong.
+    pub(crate) fn status(&self, players: usize, max_players: usize) -> String {
+        serde_json::json!({
+            "name": self.name,
+            "protocol": PROTOCOL_VERSION,
+            "version": GAME_VERSION,
+            "level": self.sub_name,
+            "players": players,
+            "maxPlayers": max_players,
+            "gameType": self.game_type(),
+        })
+        .to_string()
+    }
+
+    /// What a LAN discovery answer carries.
+    pub(crate) fn server_data(&self, players: usize, max_players: usize, online_mode: bool) -> ServerData {
+        ServerData {
+            server_name: self.name.clone(),
+            protocol: PROTOCOL_VERSION,
+            version: GAME_VERSION.to_owned(),
+            level_name: self.sub_name.clone(),
+            player_count: players as i32,
+            max_player_count: max_players as i32,
+            game_type: self.game_type(),
+            accepts_online_auth: online_mode,
+            accepts_self_signed_auth: !online_mode,
+            connection_type: 4,
+            ..ServerData::default()
+        }
+    }
+
+    fn game_type(&self) -> i32 {
+        match self.game_mode.to_ascii_lowercase().as_str() {
+            "creative" => 1,
+            "adventure" => 2,
+            _ => 0,
+        }
+    }
 }
 
 #[cfg(test)]
@@ -61,5 +138,14 @@ mod tests {
         assert_eq!(fields[..2], ["MCPE", "ab"]);
         assert_eq!(fields[2], PROTOCOL_VERSION.to_string());
         assert_eq!(fields[4..12], ["3", "20", "7", "sapling", "Survival", "1", "19132", "19132"]);
+    }
+
+    #[test]
+    fn nethernet_status_and_lan_advert_carry_the_same_counts() {
+        let motd = Motd { name: "hub \"1\"".into(), game_mode: "Creative".into(), ..Motd::default() };
+        let status: serde_json::Value = serde_json::from_str(&motd.status(3, 20)).unwrap();
+        assert_eq!((status["name"].as_str(), status["players"].as_i64(), status["gameType"].as_i64()), (Some("hub \"1\""), Some(3), Some(1)));
+        let data = motd.server_data(3, 20, true);
+        assert_eq!((data.player_count, data.max_player_count, data.game_type, data.accepts_self_signed_auth), (3, 20, 1, false));
     }
 }
