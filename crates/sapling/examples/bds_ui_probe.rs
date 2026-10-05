@@ -79,7 +79,7 @@ fn commands(p: &AvailableCommands) {
         );
         for overload in &command.overloads {
             for parameter in &overload.parameters {
-                let kind = format!("{:?}/{:?} raw {}:{}", parameter.value_type, parameter.enum_type, parameter.value_type.to_raw(), parameter.enum_type.to_raw());
+                let kind = format!("{:?}/{:?} raw {}:{}", parameter.value_type, parameter.enum_type, parameter.value_type, parameter.enum_type.to_raw());
                 kinds.entry(kind).or_insert_with(|| format!("/{} {}", command.name, parameter.parameter_name));
             }
             if SHOWN.contains(&command.name.as_str()) {

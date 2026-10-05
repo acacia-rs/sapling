@@ -209,7 +209,7 @@ impl ServerBuilder {
         let count = layout.len();
         let mut single = Some(self.handlers);
         let mut shards = Vec::with_capacity(count);
-        for ((worlds, inbox), link) in layout.into_iter().zip(inboxes).zip(Link::mesh(count)) {
+        for ((worlds, inbox), link) in layout.into_iter().zip(inboxes).zip(Link::mesh(count, entry)) {
             let mut worlds = worlds.into_iter();
             let first = worlds.next().expect("the plan leaves no shard empty");
             let cfg = ShardConfig { world_id: first.name, spawn: first.spawn, ..self.shard.clone() };
@@ -225,7 +225,7 @@ impl ServerBuilder {
         }
         tracing::info!(addr = %listener.local_addr(), shards = count, "sapling listening");
         // Started together: each shard's first tick finds the others' worlds announced.
-        Ok(Server { listener, shards: shards.into_iter().map(Shard::spawn).collect() })
+        Ok(Server { listener, shards: shards.into_iter().map(Shard::spawn).collect(), entry })
     }
 }
 
@@ -246,6 +246,8 @@ async fn signing_keys() -> Result<SigningKeys, StartError> {
 pub struct Server {
     listener: Listener,
     shards: Vec<ShardHandle>,
+    /// The shard new players join on, which keeps what is kept of every player.
+    entry: usize,
 }
 
 impl Server {
@@ -269,9 +271,11 @@ impl Server {
 
     /// Stops the game, disconnects every player and closes the socket.
     pub async fn shutdown(self) {
-        let Server { listener, shards } = self;
+        let Server { listener, mut shards, entry } = self;
+        // The entry shard last: the others hand it their players' items as they stop.
+        let last = shards.remove(entry);
         // Joining the game threads can take a tick; keep that off the async runtime.
-        let _ = tokio::task::spawn_blocking(move || shards.into_iter().for_each(ShardHandle::stop)).await;
+        let _ = tokio::task::spawn_blocking(move || shards.into_iter().chain([last]).for_each(ShardHandle::stop)).await;
         listener.closed().await;
     }
 }

@@ -48,7 +48,7 @@ fn command<'a>(list: &'a AvailableCommands, name: &str) -> &'a CommandData {
 
 /// (name, type or enum index, flag bits, optional) of each parameter of an overload.
 fn shape(command: &CommandData, overload: usize) -> Vec<(&str, i64, i64, bool)> {
-    command.overloads[overload].parameters.iter().map(|p| (p.parameter_name.as_str(), p.value_type.to_raw(), p.enum_type.to_raw(), p.optional)).collect()
+    command.overloads[overload].parameters.iter().map(|p| (p.parameter_name.as_str(), i64::from(p.value_type), p.enum_type.to_raw(), p.optional)).collect()
 }
 
 fn words<'a>(list: &'a AvailableCommands, index: i64) -> (&'a str, Vec<&'a str>) {
@@ -106,7 +106,7 @@ fn parameter_types_are_the_ones_bds_uses() {
     let ours_of = |name: &str, overload: usize, parameter: usize| shape(command(&ours, name), overload)[parameter];
     let bds_of = |name: &str, parameter: &str| {
         let found = command(&bds, name).overloads.iter().flat_map(|o| &o.parameters).find(|p| p.parameter_name == parameter);
-        found.map(|p| (p.value_type.to_raw(), p.enum_type.to_raw())).unwrap_or_else(|| panic!("BDS has no /{name} {parameter}"))
+        found.map(|p| (i64::from(p.value_type), p.enum_type.to_raw())).unwrap_or_else(|| panic!("BDS has no /{name} {parameter}"))
     };
     let kind = |(_, value, flags, _): (&str, i64, i64, bool)| (value, flags);
     assert_eq!(kind(ours_of("gamemode", 0, 1)), bds_of("gamemode", "player"));

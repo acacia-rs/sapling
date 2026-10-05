@@ -18,7 +18,7 @@ use crate::components::Outgoing;
 pub(crate) use crafting::clear_grid;
 pub(crate) use equipment::{announce, in_hand, screens, select, spawn_packets};
 pub(crate) use requests::dispatch;
-pub(crate) use store::{load, save, save_all, save_changed, send_own};
+pub(crate) use store::{keep_here, load, save, save_all, save_changed, send_own};
 pub(crate) use wear::wear_tool_in_hand;
 
 pub(crate) const MAIN: usize = 36;

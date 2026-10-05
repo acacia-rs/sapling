@@ -62,7 +62,7 @@ async fn a_client_spawns_stays_and_leaves() {
     let closed = tokio::time::timeout(WAIT, async {
         loop {
             match client.recv().await {
-                Some(Event::Packet(_)) => {}
+                Some(Event::Packet(_) | Event::Violation(_)) => {}
                 Some(Event::Disconnected(reason)) => return Some(reason),
                 None => return None,
             }

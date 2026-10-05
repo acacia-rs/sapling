@@ -55,7 +55,7 @@ impl Shard {
     /// has for this shard's index, `outbox` is shared by all.
     pub fn linked(cfg: ShardConfig, level: sapling_world::World, inbox: Inbox, outbox: Outbox, link: Link) -> Self {
         let mut world = World::new();
-        world.insert_resource(Peers::new(link.index, link.peers));
+        world.insert_resource(Peers::new(link.index, link.entry, link.peers));
         world.insert_resource(Net(outbox));
         world.insert_resource(Players { next_net_id: link.index as u64 * IDS_PER_SHARD + 1, ..Players::default() });
         world.init_resource::<Atlas>();

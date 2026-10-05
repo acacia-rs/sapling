@@ -639,6 +639,21 @@ only falls back to RakNet when that fails, so turning it on moves every vanilla 
 - Tests: `sapling-net/tests/nethernet.rs` (both signaling paths, beside RakNet) and the NetherNet
   bot in `sapling/tests/join.rs`.
 
+## Building against a local acacia
+
+`Cargo.toml` takes the acacia crates from GitHub at one commit. To build against a checkout beside
+this one (to try an acacia change before it is pushed), put a patch for each crate in
+`.cargo/config.toml`, which git ignores:
+
+```toml
+[patch."https://github.com/acacia-rs/acacia"]
+acacia-proto = { path = "../acacia/acacia/crates/acacia-proto" }
+acacia-world = { path = "../acacia/acacia/crates/acacia-world" }
+# ... and the others `Cargo.toml` names
+```
+
+`Cargo.lock` then names the paths: do not commit it while the patch is in place.
+
 ## Open items
 
 - **NetherNet, only a vanilla client can confirm:** a direct-connect join and a LAN join by the real
@@ -660,15 +675,17 @@ only falls back to RakNet when that fails, so turning it on moves every vanilla 
   falling blocks as entities; pressure plates and redstone; `USED` and the lists of blocks that fall,
   need support or give way are name endings, not block data; a request over the tick limit gets no
   resync; `on_move`, which needs its own resync on cancel.
-- **A world change can leave a player a little inside the floor.** The teleport goes out before the
-  new world's columns, so a client that keeps simulating falls until the floor arrives: acacia's bot
-  (master's physics) falls one tick, 0.0784, and stays that deep in the platform, and sapling takes
-  the position as reported, where BDS would correct it. `sapling/tests/worlds.rs` forgives a tenth
-  of a block for it. Fix: send the destination's spawn column before the teleport, or check the
-  first position after one. What a vanilla client does there is not known.
-- **Items and several worlds:** a player's items go with it to another shard, but each shard keeps
-  players in its own first world's storage, so what a player has when it logs in again is what the
-  shard it joins on last saved. Lying items and open containers are per world and do not travel.
+- **Landing after a world change.** The teleport goes out before the new world's columns, so a
+  client that keeps simulating falls until the floor arrives (acacia's bot falls a tick, 0.0784).
+  A player teleported onto a world's spawn is therefore watched for 100 ticks
+  (`movement::teleport_onto_ground`): an input below the spawn and within a block of it sideways is
+  answered with the teleport again, until one stands there. It stands in for the correction BDS's
+  own simulation would send. What a vanilla client does while the columns are missing is not known.
+- **Items and several worlds:** a player's items go with it to another shard. They are kept by one
+  shard only, the one players join on (`Peers::entry`), in its first world's storage: every other
+  shard hands it what it would save (`ShardMsg::KeepPlayer`), and `Server::shutdown` stops it last
+  so that it is there to take them. A shard that stops on its own while the entry shard is gone
+  loses what its players changed since. Lying items and open containers are per world and do not travel.
 - **Step 5 on a vanilla client (1.26.5x, 2026-10-04).** Working: `/world` and the menu button
   both ways (inside a shard and across), no kick, sidebar and boss bar untouched, the refusals
   for an unknown world. Not working: one hub column stayed visible far off in the arena; old
@@ -725,8 +742,6 @@ only falls back to RakNet when that fails, so turning it on moves every vanilla 
   (UpdateSoftEnum) for dynamic completions, several overloads for a struct, permission nodes.
 - Forms: images are untested, `ServerSettings`, ClientboundCloseForm, a timeout for unanswered forms.
 - HUD: list and below-name objectives, several boss bars (needs an entity each), `/title` clear and reset.
-- acacia-proto: `AvailableCommands` value type names are stale for 1.26.5x (string 56, block position 64,
-  position 65, message 68, raw text 70, json 74, block states 84, command 90).
 - Not sent yet, though BDS sends them for other players: UpdateAbilities, UpdateAdventureSettings,
   UpdateAttributes (sprint speed), PlayerLocation / LocatorBar, the MOVING flag and the FlagsExtended bit
   that changes with sneaking, held items and armour.

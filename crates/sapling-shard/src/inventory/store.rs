@@ -7,6 +7,7 @@ use sapling_world::{PlayerData, PlayerLoad};
 use super::{ARMOR, Held, Inventory, MAIN, Place};
 use crate::chunks::UNLOAD_INTERVAL;
 use crate::components::{DefaultLayer, Identity, Layer, Outgoing, Stage, Tick};
+use crate::handoff::{Peers, ShardMsg};
 
 fn fill(inventory: &mut Inventory, data: PlayerData) {
     for (slot, stack) in data.main.into_iter().take(MAIN).enumerate() {
@@ -54,15 +55,27 @@ pub(crate) fn send_own(mut players: Query<(&Stage, &mut Inventory, &mut Outgoing
     }
 }
 
-/// Hands a player's items to storage if they changed since it last had them.
+/// Has a player's items kept if they changed since they last were: by this shard's storage, or
+/// by the entry shard's when this is another (`Peers::entry`).
 pub(crate) fn save(world: &mut World, player: Entity) {
     let Some(id) = world.get::<Identity>(player).map(|identity| identity.0.uuid.to_string()) else { return };
     let Some(mut inventory) = world.get_mut::<Inventory>(player).filter(|inventory| inventory.keep && inventory.unsaved) else { return };
     inventory.unsaved = false;
     let data = kept(&inventory);
+    let (index, entry) = (world.resource::<Peers>().index, world.resource::<Peers>().entry);
+    if index == entry {
+        return keep_here(world, &id, data);
+    }
+    if world.resource::<Peers>().tell(entry, ShardMsg::KeepPlayer { id, data: Box::new(data) }).is_err() {
+        tracing::warn!("the shard that keeps players is gone: a player's items are not saved");
+    }
+}
+
+/// Hands a player's items to the storage of this shard's first world.
+pub(crate) fn keep_here(world: &mut World, id: &str, data: PlayerData) {
     let layer = world.resource::<DefaultLayer>().0;
     if let Some(mut layer) = world.get_mut::<Layer>(layer) {
-        layer.world.save_player(&id, data);
+        layer.world.save_player(id, data);
     }
 }
 

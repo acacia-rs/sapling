@@ -133,7 +133,7 @@ pub(crate) fn settle(world: &mut World, player: Entity, layer: Entity) {
         }
     }
     // Inputs are ignored until the client says it followed: they are positions in the old world.
-    movement::teleport(world, player, spawn);
+    movement::teleport_onto_ground(world, player, spawn);
     clock::tell(world, layer, player);
 }
 

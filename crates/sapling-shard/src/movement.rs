@@ -20,6 +20,12 @@ use crate::visibility::ToViewers;
 const MAX_STEP: f32 = 10.0;
 /// Ticks a refused player has to obey the correction before it is sent again.
 const SETBACK_TICKS: u64 = 20;
+/// Ticks a player teleported onto ground has to come to stand on it: time for its columns.
+const LANDING_TICKS: u64 = 100;
+/// How far sideways a landing player may be from where it was put before it counts as gone.
+const LANDING_REACH: f32 = 1.0;
+/// Feet this little under the floor are on it: the eye offset costs a float's last digits.
+const LANDING_SLACK: f32 = 1e-3;
 /// `source_entity_type` of BDS's own teleports.
 const TELEPORT_SOURCE: i64 = 1;
 const STANDING_HEIGHT: f32 = 1.8;
@@ -69,6 +75,8 @@ pub(crate) struct Motion {
     /// Set by a server teleport until the client's input says it handled one: inputs before
     /// that are from the old place. The tick is when the teleport is sent again.
     unconfirmed_teleport: Option<u64>,
+    /// Where a teleport onto ground put the feet, and the tick the landing is given up.
+    landing: Option<([f32; 3], u64)>,
     told: Option<(Position, Pose)>,
 }
 
@@ -108,6 +116,29 @@ pub(crate) fn teleport(world: &mut World, entity: Entity, feet: [f32; 3]) {
     (position.feet, position.on_ground) = (feet, true);
     motion.unconfirmed_teleport = Some(tick + SETBACK_TICKS);
     out.push(&move_player(id.0, &position, Some(MovePlayerTeleportCause::Command), motion.input_tick));
+}
+
+/// [`teleport`] onto ground the client may not have yet (another world's spawn): until it
+/// stands there, a client that fell meanwhile is put back, as BDS's own simulation would
+/// correct it.
+pub(crate) fn teleport_onto_ground(world: &mut World, entity: Entity, feet: [f32; 3]) {
+    teleport(world, entity, feet);
+    let until = world.resource::<Tick>().0 + LANDING_TICKS;
+    if let Some(mut motion) = world.get_mut::<Motion>(entity) {
+        motion.landing = Some((feet, until));
+    }
+}
+
+/// Whether a player still landing has fallen below where it was put; the landing is over once
+/// it stands there, walks off or its time is up.
+fn fell_while_landing(motion: &mut Motion, feet: [f32; 3], on_ground: bool, tick: u64) -> bool {
+    let Some((target, until)) = motion.landing else { return false };
+    let is_near = (feet[0] - target[0]).abs() < LANDING_REACH && (feet[2] - target[2]).abs() < LANDING_REACH;
+    let is_below = feet[1] < target[1] - LANDING_SLACK;
+    if tick >= until || !is_near || on_ground && !is_below {
+        motion.landing = None;
+    }
+    motion.landing.is_some() && is_below
 }
 
 fn pose_packet(id: u64, pose: Pose, tick: u64) -> SetEntityData {
@@ -160,10 +191,15 @@ pub(crate) fn player_input(mut packets: ResMut<PacketQueues>, tick: Res<Tick>, m
             }
             continue;
         }
-        motion.pose.apply(&input.input_data);
-        motion.input_tick = input.tick;
         // The client reports no on-ground flag; BDS derives one. Close enough for viewers' animation.
         let on_ground = input.input_data.contains(&InputData::VerticalCollision) && input.delta.y <= 0.0;
+        if fell_while_landing(&mut motion, feet, on_ground, tick.0) {
+            out.push(&move_player(id.0, &position, Some(MovePlayerTeleportCause::Command), motion.input_tick));
+            motion.unconfirmed_teleport = Some(tick.0 + SETBACK_TICKS);
+            continue;
+        }
+        motion.pose.apply(&input.input_data);
+        motion.input_tick = input.tick;
         *position = Position { feet, yaw: input.yaw, pitch: input.pitch, head_yaw: input.head_yaw, on_ground };
     }
 }

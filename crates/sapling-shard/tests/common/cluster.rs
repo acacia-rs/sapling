@@ -72,7 +72,7 @@ impl Cluster {
         let (net, outbox, inboxes) = sapling_net::loopback_shards(layout.len(), 0);
         let journal = Arc::new(Mutex::new(Vec::new()));
         let (mut shards, mut remotes) = (Vec::new(), Vec::new());
-        for ((index, (names, inbox)), link) in layout.iter().zip(inboxes).enumerate().zip(Link::mesh(layout.len())) {
+        for ((index, (names, inbox)), link) in layout.iter().zip(inboxes).enumerate().zip(Link::mesh(layout.len(), 0)) {
             let block = |name: &&str| if index == 0 && *name == names[0] { "minecraft:stone" } else { "minecraft:sandstone" };
             // Creative: the tests here break blocks at once, which survival times.
             let cfg = ShardConfig { world_id: names[0].to_owned(), game_mode: sapling_api::GameMode::Creative, ..config() };

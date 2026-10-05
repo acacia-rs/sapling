@@ -11,6 +11,7 @@ use acacia_proto::packets::RemoveEntity;
 use bevy_ecs::prelude::*;
 use bytes::Bytes;
 use sapling_net::{ConnId, NetEvent};
+use sapling_world::PlayerData;
 
 use crate::components::{Conn, DefaultLayer, InLayer, Net, NetId, Outgoing, Players, Stage, Tick};
 use crate::mobs::SeesMobs;
@@ -46,11 +47,14 @@ pub(crate) enum ShardMsg {
     Unlisted { conn: ConnId },
     WorldAdded { name: String, shard: usize },
     WorldRemoved { name: String },
+    /// A player's items, for the shard that keeps players to store (inventory/store.rs).
+    KeepPlayer { id: String, data: Box<PlayerData> },
 }
 
 /// A shard's place among the shards of a server: its index and the mailboxes.
 pub struct Link {
     pub(crate) index: usize,
+    pub(crate) entry: usize,
     pub(crate) mailbox: Receiver<ShardMsg>,
     pub(crate) peers: Vec<Sender<ShardMsg>>,
 }
@@ -58,13 +62,14 @@ pub struct Link {
 impl Link {
     /// The link of a server's only shard.
     pub fn alone() -> Self {
-        Self::mesh(1).remove(0)
+        Self::mesh(1, 0).remove(0)
     }
 
-    /// Links for `count` shards that reach each other; the shard given link `i` is shard `i`.
-    pub fn mesh(count: usize) -> Vec<Self> {
+    /// Links for `count` shards that reach each other; the shard given link `i` is shard `i`,
+    /// and shard `entry` is the one new players join on.
+    pub fn mesh(count: usize, entry: usize) -> Vec<Self> {
         let (peers, mailboxes): (Vec<_>, Vec<_>) = (0..count).map(|_| channel()).unzip();
-        mailboxes.into_iter().enumerate().map(|(index, mailbox)| Self { index, mailbox, peers: peers.clone() }).collect()
+        mailboxes.into_iter().enumerate().map(|(index, mailbox)| Self { index, entry, mailbox, peers: peers.clone() }).collect()
     }
 
     pub fn index(&self) -> usize {
@@ -75,12 +80,15 @@ impl Link {
 #[derive(Resource)]
 pub(crate) struct Peers {
     pub index: usize,
+    /// The shard new players join on: the only one that reads what is kept of players, so the
+    /// one that keeps it.
+    pub entry: usize,
     senders: Vec<Sender<ShardMsg>>,
 }
 
 impl Peers {
-    pub fn new(index: usize, senders: Vec<Sender<ShardMsg>>) -> Self {
-        Self { index, senders }
+    pub fn new(index: usize, entry: usize, senders: Vec<Sender<ShardMsg>>) -> Self {
+        Self { index, entry, senders }
     }
 
     /// Hands a message to a shard; gives it back when that shard is gone.
@@ -222,6 +230,7 @@ pub(crate) fn receive(world: &mut World, message: ShardMsg) -> Vec<NetEvent> {
         }
         ShardMsg::Say { world: None, packet } => crate::chat::send_to_all(world, &packet),
         ShardMsg::Listed { conn, entry } => roster::listed(world, conn, entry),
+        ShardMsg::KeepPlayer { id, data } => inventory::keep_here(world, &id, *data),
         ShardMsg::Unlisted { conn } => roster::unlisted(world, conn),
         ShardMsg::WorldAdded { name, shard } => world.resource_mut::<Atlas>().learn(name, shard),
         ShardMsg::WorldRemoved { name } => world.resource_mut::<Atlas>().forget(&name),

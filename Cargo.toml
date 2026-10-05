@@ -16,17 +16,18 @@ sapling-net = { path = "crates/sapling-net", default-features = false }
 sapling-shard = { path = "crates/sapling-shard" }
 sapling-world = { path = "crates/sapling-world" }
 
-# Path deps on acacia's main checkout, which stays on `master`; these become git deps later.
-acacia-auth = { path = "../acacia/acacia/crates/acacia-auth", default-features = false }
-acacia-nethernet = { path = "../acacia/acacia/crates/acacia-nethernet" }
-acacia-proto = { path = "../acacia/acacia/crates/acacia-proto" }
-acacia-raknet = { path = "../acacia/acacia/crates/acacia-raknet" }
-acacia-session = { path = "../acacia/acacia/crates/acacia-session" }
-acacia-world = { path = "../acacia/acacia/crates/acacia-world" }
+# acacia at one commit of its `master`: bump every `rev` together. To build against a checkout
+# beside this one instead, see docs/DESIGN.md "Building against a local acacia".
+acacia-auth = { git = "https://github.com/acacia-rs/acacia", rev = "b4f0cbe35fe2cabfe9eb4ade6b76f75c98d9518a", default-features = false }
+acacia-nethernet = { git = "https://github.com/acacia-rs/acacia", rev = "b4f0cbe35fe2cabfe9eb4ade6b76f75c98d9518a" }
+acacia-proto = { git = "https://github.com/acacia-rs/acacia", rev = "b4f0cbe35fe2cabfe9eb4ade6b76f75c98d9518a" }
+acacia-raknet = { git = "https://github.com/acacia-rs/acacia", rev = "b4f0cbe35fe2cabfe9eb4ade6b76f75c98d9518a" }
+acacia-session = { git = "https://github.com/acacia-rs/acacia", rev = "b4f0cbe35fe2cabfe9eb4ade6b76f75c98d9518a" }
+acacia-world = { git = "https://github.com/acacia-rs/acacia", rev = "b4f0cbe35fe2cabfe9eb4ade6b76f75c98d9518a" }
 # Test clients and the recorded BDS join (dev-dependencies only).
-acacia-bot = { path = "../acacia/acacia/crates/acacia-bot" }
-acacia-client = { path = "../acacia/acacia/crates/acacia-client" }
-acacia-testserver = { path = "../acacia/acacia/crates/acacia-testserver" }
+acacia-bot = { git = "https://github.com/acacia-rs/acacia", rev = "b4f0cbe35fe2cabfe9eb4ade6b76f75c98d9518a" }
+acacia-client = { git = "https://github.com/acacia-rs/acacia", rev = "b4f0cbe35fe2cabfe9eb4ade6b76f75c98d9518a" }
+acacia-testserver = { git = "https://github.com/acacia-rs/acacia", rev = "b4f0cbe35fe2cabfe9eb4ade6b76f75c98d9518a" }
 
 base64 = "0.22"
 bevy_ecs = { version = "0.19", default-features = false, features = ["std"] }

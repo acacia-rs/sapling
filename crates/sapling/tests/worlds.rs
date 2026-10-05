@@ -164,12 +164,10 @@ fn block(bot: &Bot, [x, y, z]: [i32; 3]) -> &'static str {
     registry.get(view.block(x, y, z)).expect("a known block").name
 }
 
-/// The block a bot stands in.
-// TODO: a bot teleported into a world whose columns are still on their way falls for a tick
-// (0.0784) before the floor arrives and then stands that far inside it; BDS would correct it,
-// sapling does not check movement (docs/DESIGN.md "Open items"). Until then a tenth is forgiven.
+/// The block a bot stands in. Feet that come back from a teleport's eye position can be a
+/// float's last digit under the floor they stand on.
 fn column(bot: &Bot) -> [i32; 3] {
-    bot.movement().and_then(|m| m.position()).expect("movement started").map(|c| (c + 0.1).floor() as i32)
+    bot.movement().and_then(|m| m.position()).expect("movement started").map(|c| (c + 1e-3).floor() as i32)
 }
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
@@ -197,9 +195,11 @@ async fn a_bot_goes_to_a_world_on_another_shard_and_back() {
     let (radius_sq, mut held) = (view_radius_sq(&held), (held, columns(&mut alice).await));
     assert_swapped(&held.0, &held.1, radius_sq, ARENA_CHUNK);
     assert!(seen(&bob, "Alice").is_none() && bob.state().player_list.by_name("Alice").is_some(), "gone from the world, not from the server");
-    // She stands on the arena's platform, which her client was sent, and followed one teleport.
+    // She stands on the arena's platform, which her client was sent: put there once, and again
+    // for each tick she fell before the platform arrived.
     assert_eq!((column(&alice), block(&alice, [0, 64, 0]), block(&alice, [0, 65, 0])), ([0, 65, 0], "minecraft:stone", "minecraft:air"));
-    assert_eq!(alice.movement().expect("physics").teleports, 1);
+    let to_arena = alice.movement().expect("physics").teleports;
+    assert!((1..=4).contains(&to_arena), "{to_arena} teleports");
 
     // The other shard hears her: a command, and chat that stays in her world.
     assert_eq!(run(&mut alice, "where").await, (r#"arena of ["arena", "hub"], 1 here"#.to_owned(), true));
@@ -219,7 +219,9 @@ async fn a_bot_goes_to_a_world_on_another_shard_and_back() {
     assert_eq!(seen(&bob, "Alice").map(|e| e.runtime_id), Some(id), "the same entity id on every shard");
     assert_eq!(column(&alice), [SPAWN.0, GROUND + 1, SPAWN.1]);
     assert_ne!(block(&alice, [SPAWN.0, GROUND, SPAWN.1]), "minecraft:air");
-    assert_eq!((alice.movement().expect("physics").teleports, alice.disconnect_reason(), bob.disconnect_reason()), (2, None, None));
+    let teleports = alice.movement().expect("physics").teleports;
+    assert!((to_arena + 1..=to_arena + 4).contains(&teleports), "{teleports} teleports after {to_arena}");
+    assert_eq!((alice.disconnect_reason(), bob.disconnect_reason()), (None, None));
 
     // She leaves from the arena: the hub's shard unlists her and hears where she left.
     assert_eq!(run(&mut alice, "world arena").await, ("to arena".to_owned(), true));

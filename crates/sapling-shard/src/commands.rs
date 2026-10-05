@@ -4,7 +4,7 @@
 use acacia_proto::packets::{
     AvailableCommands, AvailableCommandsCommandDataItem as CommandData, AvailableCommandsCommandDataItemOverloadsItem as OverloadData,
     AvailableCommandsCommandDataItemOverloadsItemParametersItem as ParameterData, AvailableCommandsCommandDataItemOverloadsItemParametersItemEnumType as EnumType,
-    AvailableCommandsCommandDataItemOverloadsItemParametersItemValueType as ValueType, AvailableCommandsEnumsItem, CommandOutput, CommandOutputOutputItem, CommandRequest,
+    AvailableCommandsEnumsItem, CommandOutput, CommandOutputOutputItem, CommandRequest,
 };
 use acacia_proto::types::{CommandFlags, CommandOrigin};
 use bevy_ecs::prelude::*;
@@ -16,10 +16,14 @@ use crate::components::{Outgoing, PacketQueues, PerTick, Stage, in_world_identit
 use crate::handlers::Ctx;
 use crate::plugins::Plugins;
 
-/// What BDS 1.26.52 sends for a string and for a rest-of-line message. acacia-proto's names for
-/// these (`String` 44, `Message` 55) are an older protocol's ids.
-const STRING: i64 = 56;
-const MESSAGE: i64 = 68;
+/// A parameter's `value_type` as BDS 1.26.52 numbers them (acacia docs/proto.md has the list and
+/// why the schema's own numbers are stale).
+const INT: u16 = 1;
+const FLOAT: u16 = 3;
+const TARGET: u16 = 8;
+const STRING: u16 = 56;
+/// The rest of the line.
+const MESSAGE: u16 = 68;
 /// Every command is sent at this level: the list is filtered per player on the server instead.
 const ANYONE: &str = "any";
 /// The chat box takes 512 characters.
@@ -74,13 +78,13 @@ impl Tables {
 
     fn parameter(&mut self, name: &str, kind: &ParamKind, optional: bool) -> ParameterData {
         let (value_type, enum_type) = match kind {
-            ParamKind::Int => (ValueType::Int, EnumType::Valid),
-            ParamKind::Float => (ValueType::Float, EnumType::Valid),
-            ParamKind::String => (ValueType::from_raw(STRING), EnumType::Valid),
-            ParamKind::Text => (ValueType::from_raw(MESSAGE), EnumType::Valid),
-            ParamKind::Target => (ValueType::Target, EnumType::Valid),
+            ParamKind::Int => (INT, EnumType::Valid),
+            ParamKind::Float => (FLOAT, EnumType::Valid),
+            ParamKind::String => (STRING, EnumType::Valid),
+            ParamKind::Text => (MESSAGE, EnumType::Valid),
+            ParamKind::Target => (TARGET, EnumType::Valid),
             // An enum parameter carries its enum's index where the others carry a type.
-            ParamKind::Enum { name, values } => (ValueType::from_raw(self.enumeration(name, values) as i64), EnumType::Enum),
+            ParamKind::Enum { name, values } => (self.enumeration(name, values) as u16, EnumType::Enum),
         };
         let options = CommandFlags { unused: 0, collapse_enum: 0, has_semantic_constraint: 0, as_chained_command: 0, unknown2: 0 };
         ParameterData { parameter_name: name.to_owned(), value_type, enum_type, optional, options }
