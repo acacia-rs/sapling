@@ -72,6 +72,13 @@ pub(crate) struct Motion {
     told: Option<(Position, Pose)>,
 }
 
+impl Motion {
+    /// Whether the client has yet to follow a teleport: what it sends is from the old place.
+    pub fn awaits_teleport(&self) -> bool {
+        self.unconfirmed_teleport.is_some()
+    }
+}
+
 fn eyes(position: &Position) -> Vec3f {
     let [x, y, z] = position.feet;
     Vec3f { x, y: y + EYE_HEIGHT, z }
@@ -124,7 +131,10 @@ pub(crate) fn player_input(mut packets: ResMut<PacketQueues>, tick: Res<Tick>, m
         if input.block_action.is_some() || input.transaction.is_some() || input.item_stack_request.is_some() {
             tracing::debug!(tick = input.tick, actions = ?input.block_action, transaction = ?input.transaction, request = ?input.item_stack_request, "input with an action");
         }
-        blocks.take_from(entity, &mut input);
+        // A teleport may have crossed worlds: the blocks an older input names are not these.
+        if !motion.awaits_teleport() || input.input_data.contains(&InputData::HandledTeleport) {
+            blocks.take_from(entity, &mut input);
+        }
         let reported = [input.position.x, input.position.y, input.position.z, input.yaw, input.pitch, input.head_yaw];
         if *stage < Stage::Loading || reported.iter().any(|c| !c.is_finite()) {
             continue;

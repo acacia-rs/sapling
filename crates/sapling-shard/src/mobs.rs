@@ -40,6 +40,14 @@ pub(crate) struct SeesMobs {
     made_for: Option<(u64, u64)>,
 }
 
+impl SeesMobs {
+    /// The ids of the mobs the client has, emptying the set: they are about to be removed.
+    pub fn take_ids(&mut self) -> Vec<u64> {
+        self.made_for = None;
+        self.mobs.drain().map(|(_, id)| id).collect()
+    }
+}
+
 /// Every mob with its id, by the column it is in.
 #[derive(Resource, Default)]
 pub(crate) struct MobGrid {

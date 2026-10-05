@@ -61,6 +61,10 @@ pub trait WorldStorage: Send + Sync + 'static {
     fn store_player(&self, _id: &str, _player: &PlayerData) -> Result<(), StorageError> {
         Ok(())
     }
+    /// Every column storage holds in a dimension, for loading a world whole (`World::load_all`).
+    fn columns(&self, _dimension: i32) -> Result<Vec<ChunkPos>, StorageError> {
+        Ok(Vec::new())
+    }
     /// Saves `level` and makes what was stored durable. Called once, when the world closes.
     fn flush(&self, _level: &Level) -> Result<(), StorageError> {
         Ok(())
@@ -98,6 +102,12 @@ impl WorldStorage for MemoryStorage {
     fn store_player(&self, id: &str, player: &PlayerData) -> Result<(), StorageError> {
         self.players.lock().expect("memory storage lock").insert(id.to_string(), player.clone());
         Ok(())
+    }
+
+    fn columns(&self, dimension: i32) -> Result<Vec<ChunkPos>, StorageError> {
+        let mut held: Vec<ChunkPos> = self.columns.lock().expect("memory storage lock").keys().filter(|(dim, _)| *dim == dimension).map(|(_, pos)| *pos).collect();
+        held.sort();
+        Ok(held)
     }
 }
 
@@ -149,6 +159,10 @@ impl WorldStorage for LevelDbStorage {
 
     fn store_player(&self, id: &str, player: &PlayerData) -> Result<(), StorageError> {
         Ok(self.0.store_player(id, player)?)
+    }
+
+    fn columns(&self, dimension: i32) -> Result<Vec<ChunkPos>, StorageError> {
+        Ok(self.0.columns()?.into_iter().filter(|key| key.dimension == dimension).map(|key| ChunkPos::new(key.x, key.z)).collect())
     }
 
     fn flush(&self, level: &Level) -> Result<(), StorageError> {

@@ -5,6 +5,8 @@ use acacia_proto::RawPacket;
 use bytes::Bytes;
 use tokio::sync::mpsc;
 
+use crate::router::Router;
+
 /// One logged-in connection. Never reused within a process, so a late message for a player who
 /// left cannot reach whoever connects next.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
@@ -29,6 +31,8 @@ pub enum NetEvent {
     /// Header parsed, body left to decode on demand.
     Packet { conn: ConnId, packet: RawPacket },
     Left { conn: ConnId, reason: String },
+    /// The answer to [`Outbox::route`]: nothing more of `conn` comes to this shard.
+    Rerouted { conn: ConnId },
 }
 
 #[derive(Debug)]
@@ -37,6 +41,8 @@ pub enum Outbound {
     Send { conn: ConnId, packets: Vec<Bytes> },
     /// Shows `message` on the client's disconnect screen and closes the connection.
     Kick { conn: ConnId, message: String },
+    /// Hands the connection's events to shard `to` from here on ([`crate::Router::reroute`]).
+    Route { conn: ConnId, from: usize, to: usize },
 }
 
 /// The game's handle for sending. Sends queue without blocking; a connection that has gone is
@@ -54,6 +60,11 @@ impl Outbox {
     pub fn kick(&self, conn: ConnId, message: impl Into<String>) {
         let _ = self.0.send(Outbound::Kick { conn, message: message.into() });
     }
+
+    /// Moves a connection to another shard; shard `from` gets [`NetEvent::Rerouted`] when done.
+    pub fn route(&self, conn: ConnId, from: usize, to: usize) {
+        let _ = self.0.send(Outbound::Route { conn, from, to });
+    }
 }
 
 /// Where the game reads [`NetEvent`]s; `try_recv` works from any thread.
@@ -69,4 +80,31 @@ pub fn loopback() -> (Loopback, Outbox, Inbox) {
     let (events, inbox) = mpsc::unbounded_channel();
     let (outbox, sent) = mpsc::unbounded_channel();
     (Loopback { events, sent }, Outbox(outbox), inbox)
+}
+
+/// The network's side of several shards, for driving them without a listener (tests).
+pub struct ShardsLoopback {
+    pub router: Router,
+    sent: mpsc::UnboundedReceiver<Outbound>,
+}
+
+impl ShardsLoopback {
+    /// What the shards sent since the last call; their reroutes are carried out, in order.
+    pub fn pump(&mut self) -> Vec<Outbound> {
+        let mut sent = Vec::new();
+        while let Ok(command) = self.sent.try_recv() {
+            match command {
+                Outbound::Route { conn, from, to } => drop(self.router.reroute(conn, from, to)),
+                other => sent.push(other),
+            }
+        }
+        sent
+    }
+}
+
+/// `shards` inboxes behind one router whose new connections join shard `entry`.
+pub fn loopback_shards(shards: usize, entry: usize) -> (ShardsLoopback, Outbox, Vec<Inbox>) {
+    let (senders, inboxes) = (0..shards).map(|_| mpsc::unbounded_channel()).unzip();
+    let (outbox, sent) = mpsc::unbounded_channel();
+    (ShardsLoopback { router: Router::new(senders, entry), sent }, Outbox(outbox), inboxes)
 }

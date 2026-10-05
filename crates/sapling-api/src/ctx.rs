@@ -1,13 +1,14 @@
 use std::any::{Any, TypeId};
 
 use crate::form::{Form, FormResponse};
+use crate::world::WorldBackend;
 use crate::{Block, BlockPos, BossBar, Difficulty, GameMode, Item, Permission, Player, PlayerId, Position, Sidebar, Slot, Title};
 
 /// Called with a form's raw answer (`None`: closed) on the shard of the player it was sent to.
 pub type FormCallback = Box<dyn FnOnce(&mut ShardCtx<'_>, &Player, Option<&str>) + Send>;
 
 /// What a shard offers its handlers. Implemented by sapling-shard; plugins use [`ShardCtx`].
-pub trait Backend {
+pub trait Backend: WorldBackend {
     fn tick(&self) -> u64;
     fn player_count(&self) -> usize;
     fn players(&self) -> Vec<Player>;
@@ -49,7 +50,7 @@ pub type State = Box<dyn Any + Send + Sync>;
 /// A handler's access to the shard it runs on, valid only for the call it was passed to. A call
 /// naming a player who has left does nothing.
 pub struct ShardCtx<'a> {
-    backend: &'a mut dyn Backend,
+    pub(crate) backend: &'a mut dyn Backend,
 }
 
 impl<'a> ShardCtx<'a> {
@@ -124,7 +125,8 @@ impl<'a> ShardCtx<'a> {
         self.backend.kick(player, message);
     }
 
-    /// Shows `message` in the chat of every player in the world. `§` codes format it.
+    /// Shows `message` in the chat of every player on this shard, whatever world they are in
+    /// (see [`ShardCtx::broadcast_in`] and [`ShardCtx::broadcast_all`]). `§` codes format it.
     pub fn broadcast(&mut self, message: &str) {
         self.backend.broadcast(message);
     }
@@ -232,7 +234,8 @@ impl<'a> ShardCtx<'a> {
     }
 
     /// This shard's `T`, `T::default()` on first use: what handlers, commands and form callbacks
-    /// of a plugin share. Keyed by type, so a plugin's own type is its own state.
+    /// of a plugin share. Keyed by type, so a plugin's own type is its own state. Each shard has
+    /// its own: nothing here follows a player to a world on another shard.
     pub fn state<T: Default + Send + Sync + 'static>(&mut self) -> &mut T {
         let state = self.backend.state(TypeId::of::<T>(), &|| Box::new(T::default()));
         state.downcast_mut().expect("state is stored under its own type")

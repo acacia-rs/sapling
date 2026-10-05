@@ -72,6 +72,22 @@ fn state_is_kept_per_type_between_calls() {
 }
 
 #[test]
+fn worlds_are_named_and_within_puts_the_focus_back() {
+    let mut backend = Fake::with(&["Steve"]);
+    let mut ctx = ShardCtx::new(&mut backend);
+    assert_eq!((ctx.worlds(), ctx.world(), ctx.world_of(PlayerId(1))), (vec!["arena".to_owned(), "hub".to_owned()], "hub".to_owned(), Some("hub".to_owned())));
+    assert_eq!(ctx.within("arena", |ctx| (ctx.world(), ctx.players_in("hub").len())), Some(("arena".to_owned(), 1)));
+    assert_eq!((ctx.world(), ctx.within("nowhere", |_| ())), ("hub".to_owned(), None));
+    assert!(ctx.transfer(PlayerId(1), "arena") && !ctx.transfer(PlayerId(1), "nowhere"));
+    assert_eq!(ctx.block_in("nowhere", [0, 1, 0]), None);
+    ctx.broadcast_in("arena", "go");
+    ctx.broadcast_all("hello");
+    assert!(ctx.create_world("a1", "arena") && ctx.reset_world("a1") && ctx.remove_world("a1"));
+    let expected = ["transfer 1 arena", "transfer 1 nowhere", "broadcast in arena go", "broadcast all hello", "create a1 from arena", "reset a1", "remove a1"];
+    assert_eq!(backend.log, expected);
+}
+
+#[test]
 fn events_cancel_and_priorities_order() {
     let mut chat = ChatEvent::new("hi".into());
     chat.cancel();

@@ -59,6 +59,30 @@ impl View {
         true
     }
 
+    /// Forgets every column: the player is in another world, where all of them are to be sent
+    /// and nothing queued for the old one is. Returns the columns the client has that a view
+    /// around `to` will not send again, in order.
+    pub fn leave(&mut self, to: ChunkPos) -> Vec<ChunkPos> {
+        let radius = self.radius;
+        let mut left: Vec<ChunkPos> = self.sent.drain().filter(|pos| distance_sq(*pos, to) > radius * radius).collect();
+        left.sort();
+        self.center = None;
+        self.queue.clear();
+        left
+    }
+
+    /// Queues a column the client has, ahead of the rest: what it was sent is outdated.
+    pub fn resend(&mut self, pos: ChunkPos) {
+        if self.sent.remove(&pos) {
+            self.queue.insert(0, pos);
+        }
+    }
+
+    /// Whether the client was sent the column and still has it.
+    pub fn has_sent(&self, pos: ChunkPos) -> bool {
+        self.sent.contains(&pos)
+    }
+
     /// Whether the column is in view, sent or not.
     pub fn covers(&self, pos: ChunkPos) -> bool {
         self.center.is_some_and(|center| distance_sq(pos, center) <= self.radius * self.radius)

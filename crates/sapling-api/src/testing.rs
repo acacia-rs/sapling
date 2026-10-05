@@ -16,6 +16,8 @@ pub struct Fake {
     pub blocks: HashMap<BlockPos, Block>,
     /// One inventory for every player.
     pub items: HashMap<Slot, Item>,
+    /// The world in focus; `None` is "hub".
+    pub world: Option<String>,
     state: HashMap<TypeId, State>,
 }
 
@@ -26,6 +28,50 @@ pub fn player(id: u64, name: &str) -> Player {
 impl Fake {
     pub fn with(names: &[&str]) -> Self {
         Self { players: names.iter().zip(1..).map(|(name, id)| player(id, name)).collect(), ..Self::default() }
+    }
+}
+
+impl crate::WorldBackend for Fake {
+    fn worlds(&self) -> Vec<String> {
+        vec!["arena".into(), "hub".into()]
+    }
+    fn world(&self) -> String {
+        self.world.clone().unwrap_or_else(|| "hub".into())
+    }
+    fn focus(&mut self, world: Option<&str>) -> bool {
+        let known = world.is_none_or(|world| self.worlds().iter().any(|w| w == world));
+        if known {
+            self.world = world.map(str::to_owned);
+        }
+        known
+    }
+    fn world_of(&self, player: PlayerId) -> Option<String> {
+        self.players.iter().any(|p| p.id == player).then(|| "hub".into())
+    }
+    fn players_in(&self, world: &str) -> Vec<Player> {
+        if world == "hub" { self.players.clone() } else { Vec::new() }
+    }
+    fn transfer(&mut self, player: PlayerId, world: &str) -> bool {
+        self.log.push(format!("transfer {} {world}", player.0));
+        world == "arena"
+    }
+    fn broadcast_in(&mut self, world: &str, message: &str) {
+        self.log.push(format!("broadcast in {world} {message}"));
+    }
+    fn broadcast_all(&mut self, message: &str) {
+        self.log.push(format!("broadcast all {message}"));
+    }
+    fn create_world(&mut self, name: &str, template: &str) -> bool {
+        self.log.push(format!("create {name} from {template}"));
+        true
+    }
+    fn remove_world(&mut self, name: &str) -> bool {
+        self.log.push(format!("remove {name}"));
+        true
+    }
+    fn reset_world(&mut self, name: &str) -> bool {
+        self.log.push(format!("reset {name}"));
+        true
     }
 }
 

@@ -63,20 +63,29 @@ pub(crate) fn send_chunks(settings: Res<Settings>, mut layers: Query<&mut Layer>
 #[derive(Component, Default)]
 pub(crate) struct SectionBacklog(Vec<SubchunkRequest>);
 
-type Requester<'a> = (&'a InLayer, &'a mut BlobCache, &'a mut SectionBacklog, &'a mut Outgoing);
+impl SectionBacklog {
+    /// Drops what waits: the player left the world these requests were about.
+    pub fn clear(&mut self) {
+        self.0.clear();
+    }
+}
+
+type Requester<'a> = (&'a InLayer, &'a View, &'a mut BlobCache, &'a mut SectionBacklog, &'a mut Outgoing);
 
 /// Answers section requests. A vanilla client disconnects itself ("error occurred") on a
-/// ChunkNotFound entry, so sections of unloaded columns wait in the backlog for the load.
-// TODO: refuse columns far outside the player's view instead of loading whatever is asked for.
+/// ChunkNotFound entry, so sections wait in the backlog until their column was announced: one
+/// that is still loading, and after a world change one the client asked for in the old world,
+/// which is then answered from the new one. Sections outside the view are dropped.
 pub(crate) fn sub_chunk_requests(mut packets: ResMut<PacketQueues>, mut layers: Query<&mut Layer>, mut players: Query<Requester>) {
     for (entity, request) in packets.take::<SubchunkRequest>() {
-        if let Ok((_, _, mut backlog, _)) = players.get_mut(entity) {
-            if backlog.0.len() < MAX_BACKLOG {
+        if let Ok((_, _, _, mut backlog, _)) = players.get_mut(entity) {
+            // A client may ask for no sections of a column that has none; that is not a request.
+            if !request.requests.is_empty() && backlog.0.len() < MAX_BACKLOG {
                 backlog.0.push(request);
             }
         }
     }
-    for (in_layer, mut blobs, mut backlog, mut out) in &mut players {
+    for (in_layer, view, mut blobs, mut backlog, mut out) in &mut players {
         if backlog.0.is_empty() {
             continue;
         }
@@ -91,7 +100,8 @@ pub(crate) fn sub_chunk_requests(mut packets: ResMut<PacketQueues>, mut layers: 
             let origin = request.origin.clone();
             let column = |o: &Vec3i8| ChunkPos::new(origin.x + i32::from(o.x), origin.z + i32::from(o.z));
             request.requests.truncate(MAX_SECTIONS_PER_REQUEST);
-            let (ready, waiting): (Vec<_>, Vec<_>) = request.requests.into_iter().partition(|o| world.request(column(o)));
+            request.requests.retain(|o| view.covers(column(o)));
+            let (ready, waiting): (Vec<_>, Vec<_>) = request.requests.into_iter().partition(|o| view.has_sent(column(o)) && world.request(column(o)));
             let mut entry = |o: &Vec3i8| {
                 let answer = world.sub_chunk(column(o), origin.y + i32::from(o.y), [o.x, o.y, o.z], cached);
                 answer.blob.iter().for_each(|blob| blobs.advertise(blob));

@@ -9,10 +9,10 @@ use sapling_api::{Backend, Block, BlockPos, BossBar, Difficulty, FormCallback, G
 use sapling_net::ConnId;
 
 use crate::commands::Access;
-use crate::components::{Arrivals, DefaultLayer, Identity, Layer, Mode, Net, NetId, Outgoing, Players, Position, Settings, Stage, Tick, in_world};
+use crate::components::{Arrivals, Identity, Layer, Mode, Net, NetId, Outgoing, Players, Position, Settings, Stage, Tick, in_world};
 use crate::inventory::Inventory;
 use crate::plugins::{PluginState, Plugins};
-use crate::{blocks, chat, clock, commands, containers, drops, forms, hud, inventory, join, movement, roster};
+use crate::{blocks, chat, clock, commands, containers, drops, forms, hud, inventory, join, movement, roster, worlds};
 
 pub(crate) struct Ctx<'w> {
     pub world: &'w mut World,
@@ -20,14 +20,14 @@ pub(crate) struct Ctx<'w> {
 
 impl Ctx<'_> {
     /// The entity of a player who is in the world.
-    fn entity(&self, player: PlayerId) -> Option<Entity> {
+    pub(crate) fn entity(&self, player: PlayerId) -> Option<Entity> {
         let entity = self.world.resource::<Players>().entity(player)?;
         (self.world.get::<Stage>(entity) == Some(&Stage::InWorld)).then_some(entity)
     }
 
+    /// The world in scope (`worlds::current`): the calls that name no world act on it.
     fn layer(&self) -> &Layer {
-        let layer = self.world.resource::<DefaultLayer>().0;
-        self.world.get::<Layer>(layer).expect("the default layer lives as long as the shard")
+        self.world.get::<Layer>(worlds::current(self.world)).expect("the world in scope exists")
     }
 
     fn out(&mut self, player: PlayerId) -> Option<Mut<'_, Outgoing>> {
@@ -58,12 +58,12 @@ impl Backend for Ctx<'_> {
     }
 
     fn set_spawn(&mut self, feet: [f32; 3]) {
-        let layer = self.world.resource::<DefaultLayer>().0;
+        let layer = worlds::current(self.world);
         let Some(mut layer) = self.world.get_mut::<Layer>(layer).filter(|_| feet.iter().all(|c| c.is_finite())) else { return };
         let block = feet.map(|c| c.floor() as i32);
         layer.spawn = feet;
         layer.world.level_mut().spawn = Some(block);
-        // TODO: only the players of the layer, once a shard holds more than one world.
+        // TODO: only the players of the world in scope.
         chat::send_to_all(self.world, &sapling_net::encode(&sapling_data::world_spawn(block)));
     }
 
@@ -72,7 +72,7 @@ impl Backend for Ctx<'_> {
     }
 
     fn set_time(&mut self, time: i64) {
-        let layer = self.world.resource::<DefaultLayer>().0;
+        let layer = worlds::current(self.world);
         clock::set(self.world, layer, time);
     }
 
@@ -86,11 +86,11 @@ impl Backend for Ctx<'_> {
     }
 
     fn block(&self, pos: BlockPos) -> Option<Block> {
-        blocks::block_at(self.world, self.world.resource::<DefaultLayer>().0, pos)
+        blocks::block_at(self.world, worlds::current(self.world), pos)
     }
 
     fn set_block(&mut self, pos: BlockPos, block: &Block) -> bool {
-        let layer = self.world.resource::<DefaultLayer>().0;
+        let layer = worlds::current(self.world);
         blocks::put_block(self.world, layer, pos, block)
     }
 
@@ -212,10 +212,13 @@ impl Backend for Ctx<'_> {
 /// those who had joined, and ends with `on_tick`.
 pub(crate) fn dispatch(world: &mut World, plugins: &mut Plugins) {
     let Arrivals { joined, left } = std::mem::take(&mut *world.resource_mut::<Arrivals>());
+    // Players who came from another shard at the start of the tick, before what they then sent.
+    worlds::dispatch(world, plugins);
     for entity in joined {
         let Some(player) = world.get::<Identity>(entity).map(|i| i.0.clone()) else { continue };
         world.resource_mut::<Players>().in_world += 1;
         roster::arrive(world, entity);
+        worlds::focus_on(world, entity);
         plugins.each(world, |handler, ctx| handler.on_join(ctx, &player));
     }
     chat::dispatch(world, plugins);
@@ -236,11 +239,14 @@ pub(crate) fn dispatch(world: &mut World, plugins: &mut Plugins) {
         if had_joined {
             roster::depart(world, entity);
         }
+        worlds::focus_on(world, entity);
         world.despawn(entity);
         if had_joined {
             world.resource_mut::<Players>().in_world -= 1;
             plugins.each(world, |handler, ctx| handler.on_quit(ctx, &player));
         }
     }
+    worlds::focus(world, None);
     plugins.each(world, |handler, ctx| handler.on_tick(ctx));
+    worlds::dispatch(world, plugins);
 }

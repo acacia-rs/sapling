@@ -14,11 +14,14 @@ use acacia_session::server::ServerConnection;
 use acacia_session::server::login::{LoginConfig, ServerLogin};
 use bytes::Bytes;
 use p384::ecdsa::SigningKey;
-use tokio::sync::mpsc;
 use uuid::Uuid;
 
 use crate::config::NetConfig;
 use crate::event::{ConnId, NetEvent, Outbound};
+use crate::router::Router;
+
+/// The disconnect screen of a player whose server, or whose part of it, stopped.
+const CLOSED: &str = "disconnect.closed";
 
 struct Pending {
     login: ServerLogin,
@@ -34,7 +37,7 @@ struct Player {
 pub(crate) struct Sessions {
     cfg: NetConfig,
     verifier: Verifier,
-    inbox: mpsc::UnboundedSender<NetEvent>,
+    router: Router,
     logins: HashMap<SocketAddr, Pending>,
     players: HashMap<SocketAddr, Player>,
     addrs: HashMap<ConnId, SocketAddr>,
@@ -45,17 +48,17 @@ pub(crate) struct Sessions {
 }
 
 impl Sessions {
-    pub fn new(cfg: NetConfig, verifier: Verifier, inbox: mpsc::UnboundedSender<NetEvent>) -> Self {
-        Self { cfg, verifier, inbox, logins: HashMap::new(), players: HashMap::new(), addrs: HashMap::new(), identities: HashSet::new(), next_id: 1 }
+    pub fn new(cfg: NetConfig, verifier: Verifier, router: Router) -> Self {
+        Self { cfg, verifier, router, logins: HashMap::new(), players: HashMap::new(), addrs: HashMap::new(), identities: HashSet::new(), next_id: 1 }
     }
 
     pub fn player_count(&self) -> usize {
         self.players.len()
     }
 
-    /// False once the game dropped its inbox: nobody is left to play for.
+    /// False once the game dropped its inboxes: nobody is left to play for.
     pub fn has_game(&self) -> bool {
-        !self.inbox.is_closed()
+        self.router.is_open()
     }
 
     pub fn on_event(&mut self, server: &mut Server, event: ServerEvent, now: Instant) {
@@ -88,6 +91,11 @@ impl Sessions {
                     self.close_player(server, addr, "kicked", &message, now);
                 }
             }
+            Outbound::Route { conn, from, to } => {
+                if let (false, Some(&addr)) = (self.router.reroute(conn, from, to), self.addrs.get(&conn)) {
+                    self.close_player(server, addr, "its shard is gone", CLOSED, now);
+                }
+            }
         }
     }
 
@@ -111,7 +119,7 @@ impl Sessions {
             server.close(addr, now);
         }
         for addr in self.players.keys().copied().collect::<Vec<_>>() {
-            self.close_player(server, addr, "server closed", "disconnect.closed", now);
+            self.close_player(server, addr, "server closed", CLOSED, now);
         }
     }
 
@@ -158,7 +166,9 @@ impl Sessions {
         self.next_id += 1;
         self.addrs.insert(id, addr);
         self.players.insert(addr, Player { id, conn, uuid });
-        let _ = self.inbox.send(NetEvent::Joined { conn: id, addr, login });
+        if !self.router.deliver(NetEvent::Joined { conn: id, addr, login }) {
+            self.close_player(server, addr, "its shard is gone", CLOSED, now);
+        }
     }
 
     fn on_game_message(&mut self, server: &mut Server, addr: SocketAddr, msg: &[u8], now: Instant) {
@@ -168,8 +178,10 @@ impl Sessions {
         });
         match packets {
             Ok(packets) => {
-                for packet in packets {
-                    let _ = self.inbox.send(NetEvent::Packet { conn: player.id, packet });
+                let id = player.id;
+                let delivered = packets.into_iter().all(|packet| self.router.deliver(NetEvent::Packet { conn: id, packet }));
+                if !delivered {
+                    self.close_player(server, addr, "its shard is gone", CLOSED, now);
                 }
             }
             Err(error) => {
@@ -193,7 +205,7 @@ impl Sessions {
         let Some(player) = self.players.remove(&addr) else { return };
         self.addrs.remove(&player.id);
         self.identities.remove(&player.uuid);
-        let _ = self.inbox.send(NetEvent::Left { conn: player.id, reason });
+        self.router.deliver(NetEvent::Left { conn: player.id, reason });
     }
 }
 

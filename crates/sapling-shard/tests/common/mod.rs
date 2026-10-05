@@ -2,6 +2,8 @@
 //! packet is checked in order without sockets or clocks.
 #![allow(dead_code)]
 
+pub mod cluster;
+
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 

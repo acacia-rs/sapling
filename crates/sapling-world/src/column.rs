@@ -24,6 +24,13 @@ pub struct SubChunkAnswer {
     pub blob: Option<Blob>,
 }
 
+/// The announcement of an overworld column with no blocks, encoded once: it has no sections for
+/// a client to ask for, so sending it empties whatever the client holds at that position.
+pub fn empty_column(cached: bool) -> &'static LevelChunkData {
+    static EMPTY: OnceLock<Column> = OnceLock::new();
+    EMPTY.get_or_init(|| Column::empty(0, 0, Dimension::overworld(BlockRegistry::vanilla().air_id()))).level_chunk(cached)
+}
+
 pub(crate) struct Column {
     chunk: Chunk,
     /// As stored (`StoredColumn::block_entities`).
@@ -60,6 +67,24 @@ impl Column {
         }
         let sections = (0..chunk.section_count()).map(|_| OnceLock::new()).collect();
         Self { chunk, block_entities, tiles: OnceLock::new(), actors, modified: false, damaged: false, heights: OnceLock::new(), announce: OnceLock::new(), announce_cached: OnceLock::new(), sections }
+    }
+
+    /// A copy for an arena to write to. The blocks are copied; the encodings are the same bytes
+    /// until a write outdates one.
+    // TODO: copy only the written section: needs `Arc` sections inside `acacia_world::Chunk`.
+    pub fn fork(&self) -> Self {
+        Self {
+            chunk: self.chunk.clone(),
+            block_entities: self.block_entities.clone(),
+            tiles: self.tiles.clone(),
+            actors: self.actors.clone(),
+            modified: false,
+            damaged: false,
+            heights: self.heights.clone(),
+            announce: self.announce.clone(),
+            announce_cached: self.announce_cached.clone(),
+            sections: self.sections.clone(),
+        }
     }
 
     pub fn is_damaged(&self) -> bool {

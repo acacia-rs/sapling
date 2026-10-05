@@ -167,6 +167,7 @@ pub(crate) fn dispatch(world: &mut World, plugins: &mut Plugins) {
     for (entity, request) in requests {
         let Some(player) = in_world_identity(world, entity) else { continue };
         let Some(line) = clean(&request.command).filter(|_| limit.allow(entity)) else { continue };
+        crate::worlds::focus_on(world, entity);
         let event = plugins.offer(world, CommandEvent::new(line), |handler, ctx, event| handler.on_command(ctx, &player, event));
         if event.is_cancelled() {
             continue;
