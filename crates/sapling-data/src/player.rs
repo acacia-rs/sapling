@@ -4,7 +4,7 @@
 use acacia_proto::manual::Uuid;
 use acacia_proto::packets::{AddPlayer, SetEntityData, UpdateAbilities, UpdateAttributes};
 use acacia_proto::types::{
-    DeviceOS, GameMode, ItemV4, ItemV4Extra, MetadataDictionary, MetadataDictionaryItemKey as Key, MetadataDictionaryItemValue as Value,
+    DeviceOS, GameMode, ItemV4, MetadataDictionary, MetadataDictionaryItemKey as Key, MetadataDictionaryItemValue as Value,
     MetadataDictionaryItemValueDefault as Default, MetadataFlags1, Vec3f,
 };
 
@@ -53,9 +53,11 @@ pub struct AddPlayerOptions<'a> {
     pub device_id: &'a str,
     /// `DeviceOS` of the player's client data.
     pub device_os: i32,
+    /// What is in the player's hand ([`crate::no_item`] for nothing).
+    pub held: ItemV4,
 }
 
-/// A player entering someone's view, empty-handed. The position is the feet, unlike MovePlayer's.
+/// A player entering someone's view. The position is the feet, unlike MovePlayer's.
 pub fn add_player(o: &AddPlayerOptions<'_>) -> AddPlayer {
     let abilities: UpdateAbilities = decode(UPDATE_ABILITIES);
     let [x, y, z] = o.feet;
@@ -69,7 +71,7 @@ pub fn add_player(o: &AddPlayerOptions<'_>) -> AddPlayer {
         pitch: o.pitch,
         yaw: o.yaw,
         head_yaw: o.head_yaw,
-        held_item: ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: ItemV4Extra::Default(None) },
+        held_item: o.held.clone(),
         // BDS sends Fallback: the viewer shows the world's game mode.
         gamemode: GameMode::Fallback,
         metadata: player_metadata(o.name, o.flags),
@@ -122,6 +124,7 @@ mod tests {
             flags: MetadataFlags1::SNEAKING,
             device_id: "device",
             device_os: 1,
+            held: crate::no_item(),
         };
         let added = roundtrip(&add_player(&options));
         assert_eq!((added.uuid, added.username.as_str(), added.runtime_id, added.unique_id), (uuid, "Alex", 7, 7));

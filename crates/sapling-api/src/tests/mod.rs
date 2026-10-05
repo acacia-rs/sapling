@@ -1,6 +1,7 @@
 mod blocks;
 mod commands;
 mod forms;
+mod items;
 
 use crate::testing::{Fake, player};
 use crate::{BossBar, BossBarColour, ChatEvent, CommandEvent, GameMode, Handler, Permission, Player, PlayerId, Priority, ShardCtx, Sidebar, Title};

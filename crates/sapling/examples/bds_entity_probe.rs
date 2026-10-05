@@ -11,16 +11,21 @@ mod dump;
 
 use acacia_bot::client::{Client, PacketFilter};
 use acacia_bot::proto::packets::AddEntity;
+use acacia_bot::proto::types::MetadataDictionaryItemKey as Key;
 use acacia_bot::proto::{Packet, packet_name};
 use acacia_bot::{Bot, BotConfig, BotEvent};
 
 /// Packets shown in full, the first [`SHOWN`] of each; of the rest only the count.
-const WATCHED: &[&str] = &["SetTime", "SyncWorldClocks", "SetSpawnPosition", "SetDifficulty", "GameRulesChanged", "AddItemEntity", "SetEntityData", "UpdateAttributes"];
+const WATCHED: &[&str] = &["SetTime", "SyncWorldClocks", "SetSpawnPosition", "SetDifficulty", "GameRulesChanged", "AddItemEntity", "SetEntityData", "UpdateAttributes", "AddPainting", "MobEquipment", "MobArmorEquipment"];
 const SHOWN: usize = 3;
 /// Characters of a decoded packet shown.
 const LENGTH: usize = 6000;
 const PATIENCE: Duration = Duration::from_secs(90);
 const WATCH: Duration = Duration::from_secs(25);
+
+fn text_of(add: &AddEntity, key: Key) -> String {
+    add.metadata.iter().find(|item| item.key == key).map(|item| format!("{:?}", item.value)).unwrap_or_default()
+}
 
 async fn connect(server: &str) -> Result<Bot, Box<dyn std::error::Error>> {
     let deadline = Instant::now() + PATIENCE;
@@ -38,7 +43,7 @@ async fn connect(server: &str) -> Result<Bot, Box<dyn std::error::Error>> {
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let server = std::env::args().nth(1).ok_or("usage: bds_entity_probe <server>")?;
     let mut bot = connect(&server).await?;
-    let (mut counts, mut kinds): (BTreeMap<&str, usize>, BTreeMap<String, usize>) = Default::default();
+    let (mut counts, mut kinds, mut named): (BTreeMap<&str, usize>, BTreeMap<String, usize>, BTreeMap<String, usize>) = Default::default();
     let end = tokio::time::Instant::now() + WATCH;
     while let Ok(Some(event)) = tokio::time::timeout_at(end, bot.next()).await {
         let BotEvent::Packet(packet) = event else { continue };
@@ -48,8 +53,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         let text = || dump::dump(&packet).unwrap_or_default().chars().take(LENGTH).collect::<String>();
         if packet.id == AddEntity::ID {
             // One of each kind in full: the metadata differs by kind.
-            let kind = packet.decode::<AddEntity>().map(|add| add.entity_type).unwrap_or_default();
-            let of_kind = kinds.entry(kind).or_default();
+            let Ok(add) = packet.decode::<AddEntity>() else { continue };
+            *named.entry(format!("{} {:?} wool {}", add.entity_type, text_of(&add, Key::Nametag), text_of(&add, Key::Color))).or_default() += 1;
+            let of_kind = kinds.entry(add.entity_type).or_default();
             *of_kind += 1;
             if *of_kind == 1 {
                 println!("{}", text());
@@ -60,6 +66,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
     bot.disconnect().await;
     println!("## entities by kind: {kinds:?}");
+    println!("## entities by kind, name tag and colour: {named:#?}");
     println!("## packets: {counts:?}");
     Ok(())
 }

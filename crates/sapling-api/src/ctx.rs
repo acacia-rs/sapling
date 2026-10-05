@@ -1,7 +1,7 @@
 use std::any::{Any, TypeId};
 
 use crate::form::{Form, FormResponse};
-use crate::{Block, BlockPos, BossBar, GameMode, Permission, Player, PlayerId, Position, Sidebar, Title};
+use crate::{Block, BlockPos, BossBar, Difficulty, GameMode, Item, Permission, Player, PlayerId, Position, Sidebar, Slot, Title};
 
 /// Called with a form's raw answer (`None`: closed) on the shard of the player it was sent to.
 pub type FormCallback = Box<dyn FnOnce(&mut ShardCtx<'_>, &Player, Option<&str>) + Send>;
@@ -16,6 +16,8 @@ pub trait Backend {
     fn set_spawn(&mut self, feet: [f32; 3]);
     fn time(&self) -> i64;
     fn set_time(&mut self, time: i64);
+    fn difficulty(&self) -> Difficulty;
+    fn set_difficulty(&mut self, difficulty: Difficulty);
     fn block(&self, pos: BlockPos) -> Option<Block>;
     fn set_block(&mut self, pos: BlockPos, block: &Block) -> bool;
     fn kick(&mut self, player: PlayerId, message: &str);
@@ -26,6 +28,11 @@ pub trait Backend {
     fn set_permission(&mut self, player: PlayerId, permission: Permission);
     fn game_mode(&self, player: PlayerId) -> Option<GameMode>;
     fn set_game_mode(&mut self, player: PlayerId, mode: GameMode);
+    fn item(&self, player: PlayerId, slot: Slot) -> Option<Item>;
+    fn set_item(&mut self, player: PlayerId, slot: Slot, item: Option<&Item>) -> bool;
+    fn give(&mut self, player: PlayerId, item: &Item) -> u8;
+    fn clear_inventory(&mut self, player: PlayerId);
+    fn held_slot(&self, player: PlayerId) -> Option<u8>;
     fn send_form(&mut self, player: PlayerId, json: String, on_answer: FormCallback);
     fn set_sidebar(&mut self, player: PlayerId, sidebar: Option<&Sidebar>);
     fn set_boss_bar(&mut self, player: PlayerId, bar: Option<&BossBar>);
@@ -91,6 +98,15 @@ impl<'a> ShardCtx<'a> {
         self.backend.set_time(time);
     }
 
+    pub fn difficulty(&self) -> Difficulty {
+        self.backend.difficulty()
+    }
+
+    /// Sets the difficulty for everyone on the shard, and for who joins later. It is not saved.
+    pub fn set_difficulty(&mut self, difficulty: Difficulty) {
+        self.backend.set_difficulty(difficulty);
+    }
+
     /// The block at a position; `None` where the world is not loaded or does not reach.
     pub fn block(&self, pos: BlockPos) -> Option<Block> {
         self.backend.block(pos)
@@ -138,6 +154,37 @@ impl<'a> ShardCtx<'a> {
 
     pub fn set_game_mode(&mut self, player: PlayerId, mode: GameMode) {
         self.backend.set_game_mode(player, mode);
+    }
+
+    /// What a slot of a player's inventory holds; `None` when it is empty or does not exist.
+    pub fn item(&self, player: PlayerId, slot: Slot) -> Option<Item> {
+        self.backend.item(player, slot)
+    }
+
+    /// Puts a stack into a slot, replacing what it held, or empties it. False, with nothing
+    /// changed, for a slot that does not exist and an item the game does not have.
+    pub fn set_item(&mut self, player: PlayerId, slot: Slot, item: Option<&Item>) -> bool {
+        self.backend.set_item(player, slot, item)
+    }
+
+    /// Adds a stack to a player's hotbar and inventory, onto stacks of the same item first, and
+    /// returns how many did not fit.
+    pub fn give(&mut self, player: PlayerId, item: &Item) -> u8 {
+        self.backend.give(player, item)
+    }
+
+    /// Empties a player's hotbar, inventory, armour and offhand.
+    pub fn clear_inventory(&mut self, player: PlayerId) {
+        self.backend.clear_inventory(player);
+    }
+
+    /// The hotbar slot a player has in hand (0 to 8).
+    pub fn held_slot(&self, player: PlayerId) -> Option<u8> {
+        self.backend.held_slot(player)
+    }
+
+    pub fn held_item(&self, player: PlayerId) -> Option<Item> {
+        self.backend.item(player, Slot::Main(self.backend.held_slot(player)?))
     }
 
     /// Opens `form` on a player's screen. `on_answer` runs once, on this shard, when the player

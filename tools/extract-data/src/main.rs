@@ -19,6 +19,8 @@ const TEMPLATES: &[&str] = &[
     "BiomeDefinitionList",
     "AvailableEntityIdentifiers",
     "CreativeContent",
+    "CraftingData",
+    "UnlockedRecipes",
     "UpdateAbilities",
     "SetEntityData",
 ];

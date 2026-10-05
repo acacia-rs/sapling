@@ -83,7 +83,7 @@ impl Handler for WestIsProtected {
 
 #[test]
 fn a_break_changes_the_world_for_everyone_who_sees_the_block() {
-    let mut h = two_players(GameMode::Survival);
+    let mut h = two_players(GameMode::Creative);
     h.receive(1, &block_actions(&[(Action::StartBreak, NEAR)]));
     let sent = h.tick_all();
     for conn in [1, 2] {
@@ -112,7 +112,7 @@ fn a_waterlogged_block_leaves_its_water_behind() {
     let water = level.block_id(WATER).unwrap();
     level.set_block(1, 65, 0, level.block_id("minecraft:iron_bars").unwrap());
     assert!(level.set_liquid(1, 65, 0, water));
-    let mut h = Harness::with(config(), level);
+    let mut h = Harness::with(ShardConfig { game_mode: GameMode::Creative, ..config() }, level);
     h.enter(1, "Alex");
     h.receive(1, &block_actions(&[(Action::PredictBreak, ABOVE)]));
     assert_eq!(updates(&h.tick(1)), [(ABOVE, hash(WATER), 0), (ABOVE, hash(AIR), 1)]);
@@ -201,18 +201,18 @@ fn a_click_that_places_nothing_is_an_interaction_and_shows_the_blocks_again() {
     let mut h = two_players(GameMode::Creative);
     let seen = WestIsProtected::default();
     h.shard.add_handler(Box::new(seen.clone()));
-    let lever = [2, 65, 0];
-    h.remote.run(move |ctx| assert!(ctx.set_block(lever, &Block::new("lever"))));
-    assert_eq!(updates(h.tick_all().to(2)), [(lever, hash("minecraft:lever"), 0)], "a handler's block reaches the viewers");
+    let table = [2, 65, 0];
+    h.remote.run(move |ctx| assert!(ctx.set_block(table, &Block::new("crafting_table"))));
+    assert_eq!(updates(h.tick_all().to(2)), [(table, hash("minecraft:crafting_table"), 0)], "a handler's block reaches the viewers");
 
-    // An empty hand on stone, then a block in hand on a lever: neither builds.
+    // An empty hand on stone, then a block in hand on a table: neither builds.
     h.receive(1, &click(NEAR, UP, None));
-    h.receive(1, &click(lever, UP, Some(DIRT)));
+    h.receive(1, &click(table, UP, Some(DIRT)));
     let sent = h.tick_all();
-    let expected = [shown(NEAR, STONE), shown(ABOVE, AIR), shown([1, 63, 0], AIR), shown(lever, "minecraft:lever"), shown([2, 66, 0], AIR), shown([2, 64, 0], STONE)].concat();
+    let expected = [shown(NEAR, STONE), shown(ABOVE, AIR), shown([1, 63, 0], AIR), shown(table, "minecraft:crafting_table"), shown([2, 66, 0], AIR), shown([2, 64, 0], STONE)].concat();
     assert_eq!(updates(sent.to(1)), expected);
     assert!(quiet(sent.to(2)));
-    assert_eq!(*seen.0.lock().unwrap(), ["Alex clicked minecraft:stone at [1, 64, 0] Up", "Alex clicked minecraft:lever at [2, 65, 0] Up"]);
+    assert_eq!(*seen.0.lock().unwrap(), ["Alex clicked minecraft:stone at [1, 64, 0] Up", "Alex clicked minecraft:crafting_table at [2, 65, 0] Up"]);
 }
 
 #[test]

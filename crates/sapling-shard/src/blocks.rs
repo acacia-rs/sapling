@@ -2,18 +2,32 @@
 //! handlers and then either done for everyone who sees the place or undone on the client that
 //! predicted it (docs/DESIGN.md "Step 6 as built").
 
+mod doors;
+mod facing;
+mod loot;
+mod mining;
+mod place;
 mod send;
+mod updates;
+mod water;
+
+pub(crate) use doors::{release_buttons, with as with_property};
+pub(crate) use loot::Dice;
+pub(crate) use water::tick as flow_water;
+pub(crate) use mining::Breaking;
+pub(crate) use send::{block_at, block_entity_data, put_block, set, sound, to_viewers};
 
 use std::collections::HashSet;
 
 use acacia_proto::packets::{InventoryTransaction, PlayerAuthInput, PlayerAuthInputBlockActionItem};
-use acacia_proto::types::{Action, ItemV4, TransactionTransactionData, TransactionUseItem, TransactionUseItemActionType};
+use acacia_proto::types::{Action, TransactionTransactionData, TransactionUseItem, TransactionUseItemActionType};
 use bevy_ecs::prelude::*;
-use sapling_api::{Block, BlockPos, BreakEvent, Face, GameMode, InteractEvent, PlaceEvent, Player};
+use facing::Click;
+use sapling_api::{Block, BlockPos, BreakEvent, Face, GameMode, InteractEvent, Player};
 use sapling_data::EYE_HEIGHT;
 use sapling_world::BlockRegistry;
 
-use crate::components::{InLayer, Layer, Mode, PacketQueues, PerTick, Position, Stage, in_world_identity};
+use crate::components::{InLayer, Layer, Mode, PacketQueues, PerTick, Position, in_world_identity};
 use crate::movement::Motion;
 use crate::plugins::Plugins;
 
@@ -25,8 +39,6 @@ const MAX_CLICKS_PER_TICK: usize = 4;
 /// refused 7.3 and 13.2.
 const REACH: f32 = 7.0;
 const CREATIVE_REACH: f32 = 13.0;
-const PLAYER_HALF_WIDTH: f32 = 0.3;
-const PLAYER_HEIGHT: f32 = 1.8;
 /// Blocks a click uses rather than builds on, by the end of their name. TODO: a per-block flag.
 const USED: &[&str] = &[
     "door", "button", "lever", "fence_gate", "chest", "barrel", "shulker_box", "furnace", "smoker", "crafting_table", "anvil", "enchanting_table", "hopper",
@@ -84,23 +96,6 @@ fn is_used(name: &str) -> bool {
     USED.iter().any(|end| name.ends_with(end))
 }
 
-/// The block a held item places. The item is the client's word: there are no inventories yet.
-fn held_block(registry: &BlockRegistry, item: &ItemV4) -> Option<u32> {
-    let id = registry.runtime_id_from_hash(item.block_runtime_id).filter(|_| item.network_id != 0 && item.count > 0)?;
-    registry.get(id).is_some_and(|state| !state.is_air()).then_some(id)
-}
-
-/// Whether a player of `layer` stands in the cell at `pos`.
-fn is_occupied(world: &mut World, layer: Entity, pos: BlockPos) -> bool {
-    let [x, y, z] = pos.map(|c| c as f32);
-    let overlaps = |feet: [f32; 3]| {
-        let across = |at: f32, min: f32| at + PLAYER_HALF_WIDTH > min && at - PLAYER_HALF_WIDTH < min + 1.0;
-        across(feet[0], x) && across(feet[2], z) && feet[1] + PLAYER_HEIGHT > y && feet[1] < y + 1.0
-    };
-    let mut players = world.query::<(&InLayer, &Stage, &Position)>();
-    players.iter(world).any(|(in_layer, stage, position)| in_layer.0 == layer && *stage == Stage::InWorld && overlaps(position.feet))
-}
-
 /// Runs this tick's block requests through the checks and the handlers.
 pub(crate) fn dispatch(world: &mut World, plugins: &mut Plugins) {
     let mut inputs = std::mem::take(&mut world.resource_mut::<BlockInputs>().0);
@@ -122,6 +117,7 @@ pub(crate) fn dispatch(world: &mut World, plugins: &mut Plugins) {
                     match item.action {
                         Action::StartBreak => request.punch(pos, u32::try_from(item.face).ok().and_then(Face::from_index)),
                         Action::PredictBreak if broken.insert((entity, pos)) => request.break_block(pos),
+                        Action::AbortBreak => request.abort_break(),
                         _ => {}
                     }
                 }
@@ -129,7 +125,7 @@ pub(crate) fn dispatch(world: &mut World, plugins: &mut Plugins) {
             Input::Click(click) if clicks.allow(entity) => {
                 let pos = [click.block_position.x, click.block_position.y, click.block_position.z];
                 match click.action_type {
-                    TransactionUseItemActionType::ClickBlock => request.click(pos, Face::from_index(u32::from(click.face)), &click.held_item),
+                    TransactionUseItemActionType::ClickBlock => request.click(pos, Face::from_index(u32::from(click.face)), &click),
                     TransactionUseItemActionType::BreakBlock if broken.insert((entity, pos)) => request.break_block(pos),
                     _ => {}
                 }
@@ -161,25 +157,42 @@ impl Request<'_> {
     fn punch(&mut self, pos: BlockPos, face: Option<Face>) {
         let (Some(site), Some(face)) = (site(self.world, self.entity, pos), face) else { return };
         let Some((registry, id)) = self.block(&site, pos) else { return };
-        if site.mode != GameMode::Spectator && registry.get(id).is_some_and(|state| !state.is_air() && !state.is_liquid()) {
-            let packet = send::punch_particles(registry, pos, face, id);
-            send::to_viewers(self.world, site.layer, pos, &[packet]);
+        let Some(state) = registry.get(id).filter(|state| site.mode != GameMode::Spectator && !state.is_air() && !state.is_liquid()) else { return };
+        let (packet, hardness) = (send::punch_particles(registry, pos, face, id), state.mining);
+        send::to_viewers(self.world, site.layer, pos, &[packet]);
+        if site.mode == GameMode::Survival {
+            mining::start(self.world, self.entity, site.layer, pos, &hardness);
         }
     }
 
-    /// The client finished breaking a block. TODO: no check that it took the time the block needs.
+    fn abort_break(&mut self) {
+        if let Some(layer) = self.world.get::<InLayer>(self.entity).map(|layer| layer.0) {
+            mining::abort(self.world, self.entity, layer);
+        }
+    }
+
+    /// The client finished breaking a block. In survival the event starts refused unless the
+    /// break was started and took its time (mining.rs); a handler may still allow it.
     fn break_block(&mut self, pos: BlockPos) {
         let above = Face::Up.neighbour(pos);
+        let took_its_time = mining::finish(self.world, self.entity, pos);
         let Some(site) = site(self.world, self.entity, pos) else { return self.resync(&[pos, above]) };
         let Some((registry, id)) = self.block(&site, pos) else { return };
-        if registry.get(id).is_none_or(|state| state.is_air() || state.is_liquid()) {
-            return self.resync(&[pos, above]);
-        }
-        let allowed = matches!(site.mode, GameMode::Survival | GameMode::Creative);
-        let (event, player) = (BreakEvent::new(pos, send::describe(registry, id), allowed), self.player);
+        let Some(state) = registry.get(id).filter(|state| !state.is_air() && !state.is_liquid()) else { return self.resync(&[pos, above]) };
+        let (block, mining) = (send::describe(registry, id), state.mining);
+        let by = mining::breaker(self.world, self.entity, &mining);
+        let drops = if site.mode == GameMode::Survival { loot::thrown(self.world, &block.name, &block.properties, &by) } else { Vec::new() };
+        let allowed = site.mode == GameMode::Creative || site.mode == GameMode::Survival && took_its_time;
+        let (event, player) = (BreakEvent::new(pos, block, drops, allowed), self.player);
         let event = self.plugins.offer(self.world, event, |handler, ctx, event| handler.on_break(ctx, player, event));
-        if event.is_cancelled() || !self.remove(&site, pos) {
-            self.resync(&[pos, above]);
+        match !event.is_cancelled() && self.remove(&site, pos) {
+            true => {
+                loot::spill(self.world, site.layer, pos, &event.drops);
+                if site.mode == GameMode::Survival && mining.hardness > 0.0 {
+                    crate::inventory::wear_tool_in_hand(self.world, self.entity);
+                }
+            }
+            false => self.resync(&[pos, above]),
         }
     }
 
@@ -188,76 +201,46 @@ impl Request<'_> {
         let Some(level) = level(self.world, site.layer) else { return false };
         let (id, left) = (level.block(x, y, z), level.liquid(x, y, z));
         let particles = send::destroy_particles(level.registry(), [x, y, z], id);
+        doors::remove_other_half(self.world, site.layer, [x, y, z]);
+        crate::containers::spill(self.world, site.layer, [x, y, z]);
         if !send::set(self.world, site.layer, [x, y, z], left) {
             return false;
         }
         send::clear_liquid(self.world, site.layer, [x, y, z]);
         send::to_viewers(self.world, site.layer, [x, y, z], &[particles]);
+        updates::settle(self.world, site.layer, [x, y, z]);
         true
     }
 
-    /// A click on `face` of the block at `pos`: a placement if the client holds a block and the
-    /// clicked block is not one a click uses, an interaction otherwise.
-    fn click(&mut self, pos: BlockPos, face: Option<Face>, held: &ItemV4) {
+    /// A click on `face` of the block at `pos`: a placement if the player holds a block and the
+    /// clicked block is not one a click uses, an interaction otherwise. The block is the one in
+    /// the server's copy of the hand; in creative mode, where any block is to be had, and where
+    /// the hand holds none, it is the one the client names.
+    fn click(&mut self, pos: BlockPos, face: Option<Face>, click: &TransactionUseItem) {
         let Some(face) = face else { return self.resync(&[pos]) };
         let target = face.neighbour(pos);
         let Some(site) = site(self.world, self.entity, pos) else { return self.resync(&[pos, target]) };
         let Some((registry, clicked)) = self.block(&site, pos) else { return };
         let Some(state) = registry.get(clicked).filter(|state| !state.is_air()) else { return self.resync(&[pos, target]) };
-        match held_block(registry, held).filter(|_| site.sneaking || !is_used(state.name)) {
-            Some(id) => self.place(&site, pos, face, id),
+        let in_hand = place::held_block(self.world, self.entity, registry).filter(|_| site.mode != GameMode::Creative);
+        let (yaw, pitch) = self.world.get::<Position>(self.entity).map_or((0.0, 0.0), |position| (position.yaw, position.pitch));
+        match in_hand.or_else(|| place::claimed_block(registry, &click.held_item)).filter(|_| site.sneaking || !is_used(state.name)) {
+            Some(id) => self.place(&site, pos, &Click { face, height: click.click_pos.y, yaw, pitch }, id, in_hand.is_some()),
             None => self.interact(&site, pos, face, send::describe(registry, clicked)),
         }
     }
 
-    fn place(&mut self, site: &Site, against: BlockPos, face: Face, id: u32) {
-        let pos = face.neighbour(against);
-        let Some(level) = level(self.world, site.layer) else { return };
-        let registry = level.registry();
-        let is_free = level.in_height(pos[1])
-            && level.is_loaded(send::column(pos))
-            && registry.get(level.block(pos[0], pos[1], pos[2])).is_some_and(|state| state.is_air() || state.is_liquid());
-        let (block, is_solid) = (send::describe(registry, id), registry.get(id).is_some_and(|state| state.is_solid()));
-        if !is_free || is_solid && is_occupied(self.world, site.layer, pos) {
-            return self.resync(&[against, pos]);
-        }
-        let (event, player) = (PlaceEvent::new(pos, against, face, block, site.mode == GameMode::Creative), self.player);
-        let event = self.plugins.offer(self.world, event, |handler, ctx, event| handler.on_place(ctx, player, event));
-        if event.is_cancelled() || !self.put(site, pos, &event.block) {
-            self.resync(&[against, pos]);
-        }
-    }
-
-    /// Puts what a place event ended with into the world; false for a block the game lacks.
-    fn put(&mut self, site: &Site, pos: BlockPos, block: &Block) -> bool {
-        let Some(registry) = level(self.world, site.layer).map(|level| level.registry()) else { return false };
-        let Some(id) = send::resolve(registry, block).filter(|_| !block.is_air()) else { return false };
-        let sound = send::place_sound(registry, pos, id);
-        let placed = send::set(self.world, site.layer, pos, id);
-        if placed {
-            send::to_viewers(self.world, site.layer, pos, &[sound]);
-        }
-        placed
-    }
-
-    /// Nothing is implemented for any block yet, so allowed or not the click changes nothing and
-    /// the client is shown the block and its neighbours as they are (a door is two blocks).
+    /// Allowed, a chest or barrel shows what it holds (containers.rs) and a block that moves by
+    /// hand moves (doors.rs); nothing else is implemented.
+    /// Either way the client is shown the block and its neighbours as they are (a door is two
+    /// blocks), which undoes what it predicted.
     fn interact(&mut self, site: &Site, pos: BlockPos, face: Face, block: Block) {
+        let name = block.name.clone();
         let (event, player) = (InteractEvent::new(pos, face, block, site.mode != GameMode::Spectator), self.player);
-        self.plugins.offer(self.world, event, |handler, ctx, event| handler.on_interact(ctx, player, event));
+        let event = self.plugins.offer(self.world, event, |handler, ctx, event| handler.on_interact(ctx, player, event));
+        if !event.is_cancelled() && !crate::containers::open(self.world, self.entity, site.layer, pos, &name) {
+            doors::use_by_hand(self.world, site.layer, pos, &name);
+        }
         self.resync(&[pos, face.neighbour(pos), Face::Up.neighbour(pos), Face::Down.neighbour(pos)]);
     }
-}
-
-/// The block at `pos` of a layer's world; `None` where it is not loaded or does not reach.
-pub(crate) fn block_at(world: &World, layer: Entity, pos: BlockPos) -> Option<Block> {
-    let level = level(world, layer)?;
-    let known = level.in_height(pos[1]) && level.is_loaded(send::column(pos));
-    known.then(|| send::describe(level.registry(), level.block(pos[0], pos[1], pos[2])))
-}
-
-/// Sets a block for a handler: no event, and everyone who sees the place is shown it.
-pub(crate) fn put_block(world: &mut World, layer: Entity, pos: BlockPos, block: &Block) -> bool {
-    let Some(id) = level(world, layer).and_then(|level| send::resolve(level.registry(), block)) else { return false };
-    send::set(world, layer, pos, id)
 }

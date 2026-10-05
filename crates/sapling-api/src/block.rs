@@ -1,5 +1,6 @@
 //! Blocks as plugins see them: a position, a face, and a state by name.
 
+use crate::Item;
 use crate::event::Cancellable;
 
 /// A block's place in the world: x, y, z.
@@ -81,12 +82,16 @@ impl Block {
 /// A player is about to break a block. Allowed, the block becomes air (or the water it stood
 /// in) for everyone; cancelled, the breaker's client is shown the block again.
 ///
-/// Starts cancelled for players in adventure and spectator mode: [`BreakEvent::allow`] lets one
-/// through. See [`crate::Priority`] for which handlers still run after a cancel.
+/// Starts cancelled for players in adventure and spectator mode, and in survival for a break
+/// that did not take the time the block needs with the tool in hand: [`BreakEvent::allow`] lets
+/// one through. See [`crate::Priority`] for which handlers still run after a cancel.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct BreakEvent {
     pos: BlockPos,
     block: Block,
+    /// What the block leaves lying where it stood; a handler may change it. Filled in survival
+    /// when the tool in hand harvests the block, empty otherwise.
+    pub drops: Vec<Item>,
     allowed: bool,
     stopped: bool,
 }
@@ -95,8 +100,10 @@ pub struct BreakEvent {
 /// [`PlaceEvent::pos`] for everyone; cancelled, the placer's client is shown what is really
 /// there and at the block it clicked.
 ///
-/// The block is the one the client says it holds (there are no inventories yet), so the event
-/// starts cancelled for everyone but players in creative mode.
+/// In survival the block is the one in the player's hand, and placing takes one from the stack.
+/// In creative it is the one the client says it holds. Otherwise (adventure, spectator, a hand
+/// without a block) the event starts cancelled, and a handler that allows it vouches for the
+/// client's block.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct PlaceEvent {
     pos: BlockPos,
@@ -121,8 +128,8 @@ pub struct InteractEvent {
 }
 
 impl BreakEvent {
-    pub fn new(pos: BlockPos, block: Block, allowed: bool) -> Self {
-        Self { pos, block, allowed, stopped: false }
+    pub fn new(pos: BlockPos, block: Block, drops: Vec<Item>, allowed: bool) -> Self {
+        Self { pos, block, drops, allowed, stopped: false }
     }
 
     pub fn pos(&self) -> BlockPos {

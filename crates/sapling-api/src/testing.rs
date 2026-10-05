@@ -4,7 +4,7 @@ use std::any::TypeId;
 use std::collections::HashMap;
 
 use crate::ctx::State;
-use crate::{Backend, Block, BlockPos, BossBar, FormCallback, GameMode, Permission, Player, PlayerId, Position, Sidebar, Title};
+use crate::{Backend, Block, BlockPos, BossBar, Difficulty, FormCallback, GameMode, Item, Permission, Player, PlayerId, Position, Sidebar, Slot, Title};
 
 #[derive(Default)]
 pub struct Fake {
@@ -14,6 +14,8 @@ pub struct Fake {
     pub forms: Vec<(PlayerId, String, FormCallback)>,
     /// What was set; everything else at y >= 0 is air, and below there is no world.
     pub blocks: HashMap<BlockPos, Block>,
+    /// One inventory for every player.
+    pub items: HashMap<Slot, Item>,
     state: HashMap<TypeId, State>,
 }
 
@@ -52,6 +54,12 @@ impl Backend for Fake {
     fn set_time(&mut self, time: i64) {
         self.log.push(format!("time {time}"));
     }
+    fn difficulty(&self) -> Difficulty {
+        Difficulty::Peaceful
+    }
+    fn set_difficulty(&mut self, difficulty: Difficulty) {
+        self.log.push(format!("difficulty {difficulty:?}"));
+    }
     fn block(&self, pos: BlockPos) -> Option<Block> {
         (pos[1] >= 0).then(|| self.blocks.get(&pos).cloned().unwrap_or_else(Block::air))
     }
@@ -86,6 +94,28 @@ impl Backend for Fake {
     }
     fn set_game_mode(&mut self, player: PlayerId, mode: GameMode) {
         self.log.push(format!("game mode {} {mode:?}", player.0));
+    }
+    fn item(&self, _: PlayerId, slot: Slot) -> Option<Item> {
+        self.items.get(&slot).cloned()
+    }
+    fn set_item(&mut self, player: PlayerId, slot: Slot, item: Option<&Item>) -> bool {
+        self.log.push(format!("item {} {slot:?} {:?}", player.0, item.map(|item| (&item.name, item.count))));
+        match item {
+            Some(item) => drop(self.items.insert(slot, item.clone())),
+            None => drop(self.items.remove(&slot)),
+        }
+        true
+    }
+    fn give(&mut self, player: PlayerId, item: &Item) -> u8 {
+        self.log.push(format!("give {} {} x{}", player.0, item.name, item.count));
+        0
+    }
+    fn clear_inventory(&mut self, player: PlayerId) {
+        self.log.push(format!("clear {}", player.0));
+        self.items.clear();
+    }
+    fn held_slot(&self, _: PlayerId) -> Option<u8> {
+        Some(2)
     }
     fn send_form(&mut self, player: PlayerId, json: String, on_answer: FormCallback) {
         self.forms.push((player, json, on_answer));

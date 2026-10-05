@@ -23,7 +23,9 @@ fn a_player_is_walked_through_the_join_sequence() {
 
     h.receive(1, &pack_response(PackStatus::Completed));
     let sent = h.tick(1);
-    use acacia_proto::packets::{CameraPresets, FeatureRegistry, JigsawStructureData, SyncWorldClocks, TrimData, VoxelShapes};
+    use acacia_proto::packets::{
+        CameraPresets, FeatureRegistry, GameRulesChanged, InventoryContent, JigsawStructureData, PlayerHotbar, SetDifficulty, SetSpawnPosition, SyncWorldClocks, TrimData, VoxelShapes,
+    };
     let expected = [
         JigsawStructureData::ID,
         VoxelShapes::ID,
@@ -35,10 +37,20 @@ fn a_player_is_walked_through_the_join_sequence() {
         CameraPresets::ID,
         CreativeContent::ID,
         TrimData::ID,
+        acacia_proto::packets::CraftingData::ID,
+        acacia_proto::packets::UnlockedRecipes::ID,
         UpdateAbilities::ID,
         SetEntityData::ID,
         UpdateAttributes::ID,
+        SetSpawnPosition::ID,
         SyncWorldClocks::ID,
+        SetDifficulty::ID,
+        GameRulesChanged::ID,
+        InventoryContent::ID,
+        InventoryContent::ID,
+        InventoryContent::ID,
+        InventoryContent::ID,
+        PlayerHotbar::ID,
     ];
     assert_eq!(ids(&sent), expected);
     let start: StartGame = sent[2].decode().unwrap();

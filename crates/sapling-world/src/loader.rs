@@ -8,9 +8,11 @@ use std::sync::mpsc::{Receiver, Sender, channel};
 use std::sync::{Arc, Mutex};
 
 use acacia_world::{BlockRegistry, Dimension};
+use sapling_leveldb::PlayerData;
 
 use crate::ChunkPos;
 use crate::column::Column;
+use crate::players::PlayerLoad;
 use crate::storage::{StoredColumn, WorldStorage};
 
 /// What every load and save needs besides the position.
@@ -51,17 +53,39 @@ impl Source {
         }
         false
     }
+
+    fn load_player(&self, id: &str) -> PlayerLoad {
+        match catch_unwind(AssertUnwindSafe(|| self.storage.load_player(id))) {
+            Ok(Ok(Some(data))) => return PlayerLoad::Stored(data),
+            Ok(Ok(None)) => return PlayerLoad::New,
+            Ok(Err(error)) => tracing::error!(player = id, %error, "loading a player failed; they start empty and are not saved"),
+            Err(_) => tracing::error!(player = id, "storage panicked loading a player; they start empty and are not saved"),
+        }
+        PlayerLoad::Unreadable
+    }
+
+    fn save_player(&self, id: &str, data: &PlayerData) {
+        match catch_unwind(AssertUnwindSafe(|| self.storage.store_player(id, data))) {
+            Ok(Ok(())) => {}
+            Ok(Err(error)) => tracing::error!(player = id, %error, "saving a player failed"),
+            Err(_) => tracing::error!(player = id, "storage panicked saving a player"),
+        }
+    }
 }
 
 enum Job {
     Load(ChunkPos),
     Save(ChunkPos, StoredColumn),
+    LoadPlayer(String),
+    SavePlayer(String, PlayerData),
 }
 
 /// One job the I/O threads are done with.
 pub(crate) enum Finished {
     Loaded(ChunkPos, Column),
     Saved { pos: ChunkPos, ok: bool },
+    PlayerLoaded(String, PlayerLoad),
+    PlayerSaved(String, PlayerData),
 }
 
 pub(crate) struct Loader {
@@ -71,6 +95,8 @@ pub(crate) struct Loader {
     finished: Mutex<Receiver<Finished>>,
     loading: HashSet<ChunkPos>,
     saving: HashSet<ChunkPos>,
+    /// Player loads and saves on their way.
+    player_jobs: usize,
 }
 
 impl Loader {
@@ -88,6 +114,14 @@ impl Loader {
                     let done = match next {
                         Ok(Job::Load(pos)) => Finished::Loaded(pos, source.load(pos)),
                         Ok(Job::Save(pos, chunk)) => Finished::Saved { pos, ok: source.save(pos, &chunk) },
+                        Ok(Job::LoadPlayer(id)) => {
+                            let load = source.load_player(&id);
+                            Finished::PlayerLoaded(id, load)
+                        }
+                        Ok(Job::SavePlayer(id, data)) => {
+                            source.save_player(&id, &data);
+                            Finished::PlayerSaved(id, data)
+                        }
                         Err(_) => return,
                     };
                     // Nobody listens once the world is gone, but the saves still queued must happen.
@@ -96,7 +130,7 @@ impl Loader {
             };
             std::thread::Builder::new().name(format!("sapling-world-io-{index}")).spawn(work).expect("spawning a world I/O thread");
         }
-        Self { source, jobs, finished: Mutex::new(finished), loading: HashSet::new(), saving: HashSet::new() }
+        Self { source, jobs, finished: Mutex::new(finished), loading: HashSet::new(), saving: HashSet::new(), player_jobs: 0 }
     }
 
     pub fn source(&self) -> &Source {
@@ -126,6 +160,17 @@ impl Loader {
         let _ = self.jobs.send(Job::Save(pos, column));
     }
 
+    pub fn load_player(&mut self, id: String) {
+        self.player_jobs += 1;
+        let _ = self.jobs.send(Job::LoadPlayer(id));
+    }
+
+    /// Queues a save; players.rs keeps two of one player from being on their way at once.
+    pub fn save_player(&mut self, id: String, data: PlayerData) {
+        self.player_jobs += 1;
+        let _ = self.jobs.send(Job::SavePlayer(id, data));
+    }
+
     /// The jobs finished since the last call, without waiting.
     pub fn finished(&mut self) -> Vec<Finished> {
         let finished: Vec<_> = self.finished.get_mut().expect("loader results lock").try_iter().collect();
@@ -135,7 +180,7 @@ impl Loader {
 
     /// Waits for the next job to finish; `None` when none is on its way.
     pub fn wait(&mut self) -> Option<Finished> {
-        if self.loading.is_empty() && self.saving.is_empty() {
+        if self.loading.is_empty() && self.saving.is_empty() && self.player_jobs == 0 {
             return None;
         }
         let done = self.finished.get_mut().expect("loader results lock").recv().ok()?;
@@ -145,8 +190,9 @@ impl Loader {
 
     fn settle(&mut self, done: &Finished) {
         match done {
-            Finished::Loaded(pos, _) => self.loading.remove(pos),
-            Finished::Saved { pos, .. } => self.saving.remove(pos),
-        };
+            Finished::Loaded(pos, _) => drop(self.loading.remove(pos)),
+            Finished::Saved { pos, .. } => drop(self.saving.remove(pos)),
+            Finished::PlayerLoaded(..) | Finished::PlayerSaved(..) => self.player_jobs -= 1,
+        }
     }
 }

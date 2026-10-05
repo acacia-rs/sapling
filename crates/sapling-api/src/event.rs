@@ -87,4 +87,4 @@ macro_rules! cancellable {
         }
     )*};
 }
-cancellable!(ChatEvent, CommandEvent);
+cancellable!(ChatEvent, CommandEvent, crate::DropEvent);

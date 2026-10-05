@@ -4,7 +4,8 @@
 use std::path::{Path, PathBuf};
 use std::time::Duration;
 
-use acacia_bot::{Bot, BotConfig};
+use acacia_bot::proto::Packet;
+use acacia_bot::{Bot, BotConfig, BotEvent};
 use acacia_client::{Client, ClientBuilder, TransportKind};
 use sapling::{Server, ServerBuilder, World};
 
@@ -27,6 +28,21 @@ pub async fn start(builder: ServerBuilder) -> Server {
 
 pub fn client(server: &Server, name: &str) -> ClientBuilder {
     Client::builder(server.local_addr().to_string()).offline(name).transport(TransportKind::RakNet)
+}
+
+/// The next `T` the bot is sent; other packets are dropped.
+pub async fn packet<T: Packet>(bot: &mut Bot) -> T {
+    let found = tokio::time::timeout(Duration::from_secs(5), async {
+        loop {
+            match bot.next().await {
+                Some(BotEvent::Packet(packet)) if packet.id == T::ID => return packet.decode::<T>().expect("the bot decodes what sapling sent"),
+                Some(BotEvent::Disconnected(reason)) => panic!("disconnected: {reason:?}"),
+                Some(_) => {}
+                None => panic!("the connection is gone"),
+            }
+        }
+    });
+    found.await.unwrap_or_else(|_| panic!("no {} in time", T::NAME))
 }
 
 /// Connects a physics bot and waits until it stands on terrain it decoded.

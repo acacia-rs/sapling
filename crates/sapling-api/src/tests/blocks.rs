@@ -28,7 +28,7 @@ impl Handler for Plot {
 
 #[test]
 fn block_events_end_as_the_last_handler_left_them() {
-    let mut event = BreakEvent::new([1, 2, 3], Block::new("stone"), false);
+    let mut event = BreakEvent::new([1, 2, 3], Block::new("stone"), Vec::new(), false);
     assert!(event.is_cancelled() && !event.is_stopped(), "refused by default, yet every handler sees it");
     event.allow();
     assert!(!event.is_cancelled() && !event.is_stopped());
@@ -62,7 +62,7 @@ fn handlers_decide_about_blocks_and_change_the_world_through_the_context() {
     assert!(!ShardCtx::new(&mut backend).set_block([0, -1, 0], &Block::new("stone")), "no world there");
     assert!(!ShardCtx::new(&mut backend).set_block([0, 65, 0], &Block::new("mod:lamp")), "no such block");
 
-    let mut broken = BreakEvent::new([0, 64, 0], Block::new("stone"), false);
+    let mut broken = BreakEvent::new([0, 64, 0], Block::new("stone"), Vec::new(), false);
     handler.on_break(&mut ShardCtx::new(&mut backend), &alex, &mut broken);
     assert!(broken.is_cancelled());
     handler.on_break(&mut ShardCtx::new(&mut backend), &steve, &mut broken);

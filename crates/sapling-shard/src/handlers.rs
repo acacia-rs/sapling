@@ -3,15 +3,16 @@
 
 use std::any::TypeId;
 
-use acacia_proto::packets::UpdatePlayerGameType;
+use acacia_proto::packets::{SetDifficulty, UpdatePlayerGameType};
 use bevy_ecs::prelude::*;
-use sapling_api::{Backend, Block, BlockPos, BossBar, FormCallback, GameMode, Permission, Player, PlayerId, Sidebar, State, Title};
+use sapling_api::{Backend, Block, BlockPos, BossBar, Difficulty, FormCallback, GameMode, Item, Permission, Player, PlayerId, Sidebar, Slot, State, Title};
 use sapling_net::ConnId;
 
 use crate::commands::Access;
-use crate::components::{Arrivals, DefaultLayer, Identity, Layer, Mode, Net, NetId, Outgoing, Players, Position, Stage, Tick, in_world};
+use crate::components::{Arrivals, DefaultLayer, Identity, Layer, Mode, Net, NetId, Outgoing, Players, Position, Settings, Stage, Tick, in_world};
+use crate::inventory::Inventory;
 use crate::plugins::{PluginState, Plugins};
-use crate::{blocks, chat, clock, commands, forms, hud, join, movement, roster};
+use crate::{blocks, chat, clock, commands, containers, drops, forms, hud, inventory, join, movement, roster};
 
 pub(crate) struct Ctx<'w> {
     pub world: &'w mut World,
@@ -58,10 +59,12 @@ impl Backend for Ctx<'_> {
 
     fn set_spawn(&mut self, feet: [f32; 3]) {
         let layer = self.world.resource::<DefaultLayer>().0;
-        if let Some(mut layer) = self.world.get_mut::<Layer>(layer).filter(|_| feet.iter().all(|c| c.is_finite())) {
-            layer.spawn = feet;
-            layer.world.level_mut().spawn = Some(feet.map(|c| c.floor() as i32));
-        }
+        let Some(mut layer) = self.world.get_mut::<Layer>(layer).filter(|_| feet.iter().all(|c| c.is_finite())) else { return };
+        let block = feet.map(|c| c.floor() as i32);
+        layer.spawn = feet;
+        layer.world.level_mut().spawn = Some(block);
+        // TODO: only the players of the layer, once a shard holds more than one world.
+        chat::send_to_all(self.world, &sapling_net::encode(&sapling_data::world_spawn(block)));
     }
 
     fn time(&self) -> i64 {
@@ -71,6 +74,15 @@ impl Backend for Ctx<'_> {
     fn set_time(&mut self, time: i64) {
         let layer = self.world.resource::<DefaultLayer>().0;
         clock::set(self.world, layer, time);
+    }
+
+    fn difficulty(&self) -> Difficulty {
+        self.world.resource::<Settings>().0.difficulty
+    }
+
+    fn set_difficulty(&mut self, difficulty: Difficulty) {
+        self.world.resource_mut::<Settings>().0.difficulty = difficulty;
+        chat::send_to_all(self.world, &sapling_net::encode(&SetDifficulty { difficulty: difficulty as u32 }));
     }
 
     fn block(&self, pos: BlockPos) -> Option<Block> {
@@ -127,6 +139,33 @@ impl Backend for Ctx<'_> {
         chat::send_to_all(self.world, &sapling_net::encode(&packet));
     }
 
+    fn item(&self, player: PlayerId, slot: Slot) -> Option<Item> {
+        inventory::item_at(self.world, self.entity(player)?, slot)
+    }
+
+    fn set_item(&mut self, player: PlayerId, slot: Slot, item: Option<&Item>) -> bool {
+        let Some(entity) = self.entity(player) else { return false };
+        match item.map(|item| inventory::stored(item, self.layer().world.registry())) {
+            Some(None) => false,
+            stack => inventory::set_item(self.world, entity, slot, stack.flatten()),
+        }
+    }
+
+    fn give(&mut self, player: PlayerId, item: &Item) -> u8 {
+        let stack = self.entity(player).zip(inventory::stored(item, self.layer().world.registry()));
+        stack.and_then(|(entity, stack)| inventory::change(self.world, entity, |inventory| inventory.add(&stack))).unwrap_or(item.count)
+    }
+
+    fn clear_inventory(&mut self, player: PlayerId) {
+        if let Some(entity) = self.entity(player) {
+            inventory::change(self.world, entity, |inventory| inventory.clear());
+        }
+    }
+
+    fn held_slot(&self, player: PlayerId) -> Option<u8> {
+        self.world.get::<Inventory>(self.entity(player)?).map(|inventory| inventory.selected)
+    }
+
     fn send_form(&mut self, player: PlayerId, json: String, on_answer: FormCallback) {
         if let Some(entity) = self.entity(player) {
             forms::send(self.world, entity, json, on_answer);
@@ -181,10 +220,18 @@ pub(crate) fn dispatch(world: &mut World, plugins: &mut Plugins) {
     }
     chat::dispatch(world, plugins);
     commands::dispatch(world, plugins);
+    blocks::release_buttons(world);
+    blocks::flow_water(world);
     blocks::dispatch(world, plugins);
+    inventory::dispatch(world, plugins);
+    containers::dispatch_closes(world);
+    containers::show_lids_again(world);
+    drops::pick_up(world);
     forms::dispatch(world);
     for entity in left {
         let had_joined = world.get::<Stage>(entity) == Some(&Stage::InWorld);
+        containers::close(world, entity);
+        inventory::save(world, entity);
         let Some(player) = world.get::<Identity>(entity).map(|i| i.0.clone()) else { continue };
         if had_joined {
             roster::depart(world, entity);

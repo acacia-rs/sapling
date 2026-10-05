@@ -6,7 +6,7 @@ use std::sync::Mutex;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use acacia_world::Chunk;
-use sapling_leveldb::{ChunkKey, LevelDat, LevelDbWorld};
+use sapling_leveldb::{ChunkKey, LevelDat, LevelDbWorld, PlayerData};
 
 use crate::ChunkPos;
 
@@ -53,6 +53,14 @@ pub trait WorldStorage: Send + Sync + 'static {
     fn load_column(&self, pos: ChunkPos, dimension: i32) -> Result<Option<StoredColumn>, StorageError>;
     /// Saves the column at `pos`; what else storage holds there is kept.
     fn store_column(&self, pos: ChunkPos, dimension: i32, column: &StoredColumn) -> Result<(), StorageError>;
+    /// What was kept of the player with this id (its UUID as text); `None` for a first visit.
+    fn load_player(&self, _id: &str) -> Result<Option<PlayerData>, StorageError> {
+        Ok(None)
+    }
+    /// Keeps a player's items for their next visit.
+    fn store_player(&self, _id: &str, _player: &PlayerData) -> Result<(), StorageError> {
+        Ok(())
+    }
     /// Saves `level` and makes what was stored durable. Called once, when the world closes.
     fn flush(&self, _level: &Level) -> Result<(), StorageError> {
         Ok(())
@@ -63,6 +71,7 @@ pub trait WorldStorage: Send + Sync + 'static {
 #[derive(Default)]
 pub struct MemoryStorage {
     columns: Mutex<HashMap<(i32, ChunkPos), StoredColumn>>,
+    players: Mutex<HashMap<String, PlayerData>>,
 }
 
 impl MemoryStorage {
@@ -79,6 +88,15 @@ impl WorldStorage for MemoryStorage {
 
     fn store_column(&self, pos: ChunkPos, dimension: i32, column: &StoredColumn) -> Result<(), StorageError> {
         self.columns.lock().expect("memory storage lock").insert((dimension, pos), column.clone());
+        Ok(())
+    }
+
+    fn load_player(&self, id: &str) -> Result<Option<PlayerData>, StorageError> {
+        Ok(self.players.lock().expect("memory storage lock").get(id).cloned())
+    }
+
+    fn store_player(&self, id: &str, player: &PlayerData) -> Result<(), StorageError> {
+        self.players.lock().expect("memory storage lock").insert(id.to_string(), player.clone());
         Ok(())
     }
 }
@@ -123,6 +141,14 @@ impl WorldStorage for LevelDbStorage {
 
     fn store_column(&self, pos: ChunkPos, dimension: i32, column: &StoredColumn) -> Result<(), StorageError> {
         Ok(self.0.store_column(ChunkKey::new(pos.x, pos.z, dimension), &column.chunk, &column.block_entities, &column.actors)?)
+    }
+
+    fn load_player(&self, id: &str) -> Result<Option<PlayerData>, StorageError> {
+        Ok(self.0.load_player(id)?)
+    }
+
+    fn store_player(&self, id: &str, player: &PlayerData) -> Result<(), StorageError> {
+        Ok(self.0.store_player(id, player)?)
     }
 
     fn flush(&self, level: &Level) -> Result<(), StorageError> {

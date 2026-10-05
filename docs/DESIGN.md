@@ -140,7 +140,10 @@ One listener task, one shard thread, one world. The pieces and why they are shap
   failed load or save. A column storage could not read is served as void and refuses writes, so it is
   never saved over.
 - **Block entities.** A column keeps its record as stored and saves it back. `set_block` drops the
-  compounds at a position when the block there becomes another kind (a different name).
+  compounds at a position when the block there becomes another kind (a different name). Clients get
+  each compound whole, as network NBT, with the section it is in: after the section's bytes, or as the
+  entry's payload for a blob-cache client (the blob is the section alone). A resync, which would leave
+  the client's block without its data, is followed by `BlockEntityData` for the positions that have any.
 - **Level.** A world keeps a `Level`: spawn block, time of day counter, whether the daylight cycle runs.
   A folder's comes from `level.dat`, and closing the world writes it back with `LastPlayed`, and with
   `lastOpenedWithVersion` when the folder was last written by another game version. So a folder opened
@@ -151,12 +154,27 @@ One listener task, one shard thread, one world. The pieces and why they are shap
   player gets `SyncWorldClocks` InitializeRegistry (one clock, `minecraft:overworld`, six time markers,
   ids as BDS sent them), then SyncState about every 256 ticks and when the time is set; `paused` is the
   daylight cycle off, and StartGame's `dodaylightcycle` rule says the same.
-- **Mobs** (`mobs.rs`). The stored actors of a loaded column become shard entities, shown with AddEntity
-  to players whose view covers the column and removed with it. They are statues: nothing moves them and
-  no interaction reaches them, and the column saves them back unchanged. Sent: kind, position, rotation,
-  `Variant`, `MarkVariant`, `Color`, the baby flag, the name tag. Not sent, though BDS does: attributes,
-  some forty more metadata items, and the kind's hitbox, which is in no file (every mob gets 0.9 x 0.9).
-  Item entities are skipped.
+- **Mobs** (`mobs.rs`). The stored actors of a loaded column become shard entities, shown to players
+  whose view covers the column and removed with it. They are statues: nothing moves them and no
+  interaction reaches them, and the column saves them back unchanged. A mob is announced with the
+  AddEntity BDS sent for a summoned one of its kind (hitbox, attributes, flags, all metadata; recorded
+  for 110 kinds, sapling-data README "Mobs"), with the stored position, rotation, `Variant`,
+  `MarkVariant`, `Color`, name tag and baby flag, and the flags of what it stores as saddled, tamed,
+  sheared, chested or sitting. A stored `minecraft:villager` or `minecraft:zombie_villager` is sent as
+  its v2 kind, as BDS does. Stored health sets the `minecraft:health` attribute. What it wears and holds
+  (`Armor`, `Mainhand`, `Offhand`) follows as MobArmorEquipment and MobEquipment. A painting is an
+  AddPainting of its `Motif` and `Direction` at its stored position. A dropped item is an AddItemEntity of its stored stack
+  (name to network id through the bundled ItemRegistry; a block item's state by its network hash); one
+  whose name the registry lacks is not shown.
+- **Join, world state.** After the player's own state a joining player gets, as from BDS:
+  SetSpawnPosition (no spawn of its own), the clock, SetDifficulty and GameRulesChanged (StartGame's
+  rules). `set_spawn` sends the players SetSpawnPosition in the shape BDS uses for `/setworldspawn`.
+- **Actors checked against BDS 1.26.52** (2026-10-04): the hub world rewritten with the `rewrite`
+  example, which renames every stored actor and adds one sheep per column holding only the fields
+  `Actor` reads. BDS announced both to a bot (`bds_entity_probe`) with the names and wool written. The
+  example also adds an armour stand (helmet, boots, sword, shield) and a painting per column: BDS's
+  AddPainting, MobArmorEquipment and MobEquipment for them are the shapes sapling sends, except that
+  BDS adds `Damage` to the tag of an item that wears.
 - **Sending.** A `View` keeps a nearest-first queue; each tick a player gets at most
   `ShardConfig::columns_per_tick` (8) columns that are loaded, and only the nearest `2 x` that many are
   asked of storage. `NetworkChunkPublisherUpdate` goes out when the player's chunk changes.
@@ -324,10 +342,83 @@ block action, and takes StopBreak and AbortBreak with a position.
   that player only. BDS's captures show layer 0 only; none had water in them.
 - **Interactions** change nothing yet, allowed or cancelled: the event is raised and the click is resynced,
   so a door a client opened on its own screen closes again.
-- **Trust.** There are no inventories: the block placed is the one the client's item names, which is why
-  only creative places by default and a handler that allows a survival place vouches for the item. A
-  break counts when the client says it is finished: no mining-time check in any mode. Positions and the
-  eye are the server's own; the packet's `player_pos`, `click_pos` and clicked block id are ignored.
+- **Trust.** Positions and the eye are the server's own; the packet's `player_pos`, `click_pos` and
+  clicked block id are ignored.
+- **Placing.** In survival the block is the one in the server's copy of the hand, whatever the client
+  names; a place that happens takes one from the stack. In creative, where any block is to be had, it is
+  the block the client names and nothing is taken. In adventure and spectator, and with a hand that
+  holds no block, the event starts cancelled and a handler that allows it vouches for the client's
+  block. Outside creative the placer is sent its four windows after every attempt, as from BDS: its
+  client counted one off the stack whether the place happened or not.
+- **Breaking time** (`blocks/mining.rs`). In survival StartBreak starts a clock: the break needs
+  hardness x 30 ticks over the tool's speed when the tool in the server's hand harvests the block, x 100
+  at speed 1 when it does not; Efficiency adds level² + 1. The formula and its sources are acacia-bot's
+  (`interact/break_time.rs`). PredictBreak on the same block counts when that many ticks have passed,
+  less 3 for inputs that run ahead (with a sword or shears in hand at once: their speeds here are
+  Java's, an upper bound on Bedrock's); otherwise the BreakEvent starts cancelled (a handler may allow it)
+  and the client is shown the block. AbortBreak ends the clock. Unbreakable blocks and blocks of unknown
+  hardness never pass in survival. Viewers get `BlockStartBreak` (block corner, 65535 / ticks) at the
+  start and `BlockStopBreak` on an abort. Creative breaks at once, as before. Not taken into account,
+  each of which would only lengthen a break: haste and mining fatigue (there are no effects), water and
+  being off the ground (the server's on-ground flag is a guess). BDS also sends `BlockBreakSpeed` and
+  breaks the block itself when a refused break's time is up; sapling does neither.
+- **Turning and replacing** (`blocks/facing.rs`, `blocks/place.rs`). A placed block's state comes from
+  the clicked face, how high on it the click was, and the placer's yaw and pitch. Every rule and its
+  evidence is a row of `docs/research/block-rules.md`, section 1 (collision boxes per state, the Java
+  game's placement code mapped to Bedrock's states, acacia-bot's runs on BDS): logs' axis, stairs,
+  slabs and trapdoors' upper half, furnace-like blocks facing the placer, doors and anvils across the
+  look, fence gates along it, torches, ladders, buttons, wall signs, levers, standing signs, hoppers,
+  rods, dispensers, droppers, barrels, observers, pistons (other servers' code only: unverified).
+  Not turned: a door's hinge, beds, rails, skulls, banners. A block is placed into the cell of a block
+  the Java game marks replaceable (grass, ferns, vines, fire, a single snow layer, nether roots and
+  the like) instead of against it. A block that needs something to stand or hang on (next bullet) is
+  not placed where that is not solid.
+- **Opening, and doors' two cells** (`blocks/doors.rs`). An allowed click on a door, trapdoor, fence gate
+  or lever (not an iron one) flips its `open_bit` for everyone, on both cells of a door; a button goes in
+  for 20 ticks if of stone, 30 otherwise (BDS `ButtonBlock::buttonPressed`). Each is heard:
+  `LevelSoundEvent` `button.click_on` / `button.click_off` (levers too, as BDS's `LeverBlock::toggle`),
+  `trapdoor.open` / `.close`, `fence_gate.open` / `.close`, `door.open` / `.close`, with the block's
+  network id as extra data. The names are strings in the server binary except the door's, which follow
+  the pattern. A block with an `upper_block_bit` needs the cell above free, is placed with its upper
+  cell, and loses its other cell when one is broken (one drop). No pressure plates or redstone; beds
+  are one cell; a gate does not swing away from its user.
+- **Neighbours** (`blocks/updates.rs`). After a player's break or place: sand, gravel, concrete powder,
+  anvils and snow layers over a cell that gives way move to the lowest such cell at once (BDS spawns
+  a falling-block entity instead); what stood on a block that is gone (the Java game's `canSurvive`
+  blocks: plants, rails, carpets, doors, standing torches and signs, candles, floor buttons and levers)
+  and what hung on it (wall torches, ladders, buttons, levers, wall signs and banners) breaks and
+  leaves its loot; each of these is followed up, 512 cells at most for one change. Support is "the
+  cell is solid", where the game asks the face. `ctx.set_block` settles nothing.
+- **Water** (`blocks/water.rs`). The rule is the Bedrock server's own, `LiquidBlock::_tick` as decompiled
+  with bdsre (`docs/research/water.md` has the pseudo-code, the addresses and what stayed unverified).
+  Water next to a change is queued and moves 5 ticks later, 512 cells a tick at most. A flowing cell
+  takes the least depth beside it plus one (`liquid_depth` 0 source, 1 to 7 by distance; falling water
+  beside counts as 0), or 8 plus the depth of the water above it (8 to 15: falling water keeps the depth
+  of its stream), or dries up when nothing feeds it; two sources beside, or one beside and one above,
+  over a floor or a source make it a source. Then it falls into room below and does nothing else; over
+  water only a source goes on; on a floor it runs one deeper towards the nearest drop, found up to 5
+  cells away (4, 3, 2 for depths 5, 6, 7), every equally near way, or every open way when there is no
+  drop. It never overwrites water. Not as the game: layer 0 only (waterlogged blocks neither feed nor
+  take water), no lava, and what gives way is the placing code's list of plants, each leaving its item,
+  where the game has a reaction per block (leave loot, vanish, block, or take the water in).
+- **Tool wear** (`inventory/wear.rs`). A survival break of a block with hardness above 0 counts one use
+  (a sword: two) in the `Damage` tag of the tool in the hand, where the game keeps it; the tool is gone
+  when its damage would pass its durability, so a wooden tool lasts 60 uses (BDS
+  `ItemStackBase::hurtAndBreak`: breaks on `max < new`). One throw in a hundred decides whether a use
+  counts: always, or 100 / (level + 1) with Unbreaking (the formula is other servers', the single
+  throw is BDS's), never with an `Unbreakable` tag. No break sound; `Item::damage` does not show it.
+- **What a block leaves** (`blocks/loot.rs`, `sapling_data::block_loot`). `BreakEvent::drops` starts as
+  what the game's loot table for the block gives, in survival when the tool in the server's hand
+  harvests the block; empty otherwise. The tables are the Java game's (`data/block-loot.tsv`, made from
+  its jar; sapling-data's README says how): Bedrock keeps most block loot in code, and the 99 tables
+  its server does ship matched Java's where sampled. A row drops when its tool condition (Silk Touch,
+  shears, neither), its block states and its chance hold; counts and Fortune follow the game's three
+  formulas. Rows name Java block states, read off the Bedrock block where that is known: a crop's `age`
+  from `growth`, a double slab from its block name, counts that start at one (candles, snow layers,
+  sea pickles) from Bedrock's that start at zero; a row about any other state is skipped. Handlers may
+  change the list. Each stack then lies in the middle of the emptied cell as a thrown item does, to be
+  picked up after 10 ticks. Stems leave nothing, a bed drops per cell broken, and the dice are a
+  fixed-seed xorshift.
 - **Limits.** 16 block actions and 4 clicks a player a tick; an input's action list is cut to 16. What
   exceeds them is dropped without an answer. Absurd positions (the edges of `i32`, outside the height)
   are refused before anything is computed from them.
@@ -336,23 +427,102 @@ block action, and takes StopBreak and AbortBreak with a position.
   whole protection is `if !may_build(ctx, player) { event.cancel() }` in `on_break` and `on_place`, with
   `may_build` = operator and in creative mode.
 
+## Inventories (as built)
+
+- **The server's copy rules.** Every player has an `Inventory` (36 slots, hotbar first; 4 armour; offhand;
+  cursor). Each stack has an id the client names it by. A whole stack keeps its id when it moves; a part
+  split off gets a new one; a merge keeps the id of the stack merged onto.
+- **Join.** After the world state packets: `InventoryContent` for windows Inventory (36), Armor (5, the
+  last is the body slot), Ui (54, the first is the cursor) and Offhand (1), then `PlayerHotbar`
+  (`select_slot` true). Shapes are BDS's recorded ones (`extract-data --show InventoryContent,PlayerHotbar`).
+  They go out once storage has answered for the player, which in a world without storage is the StartGame tick.
+- **Requests.** One `ItemStackRequest` is done whole or not at all, on a copy first. Take and Place move
+  a count into an empty slot or onto a stack of the same kind (up to 64: an item's own limit is the
+  client's to keep); Swap; Drop; in creative mode Destroy and CraftCreative, which puts 64 of the entry
+  (`CreativeContent.bin`) into the created-output slot (50) until the request ends. A slot named with a
+  positive stack id must hold that stack. Done: `ItemStackResponse` Ok with every slot the request named.
+  Anything else (crafting, a wrong id, more than is there): Error, then all four windows as they are.
+  32 requests a player a tick.
+- **Others see** the hand in `AddPlayer`, then `MobArmorEquipment` and an offhand `MobEquipment` if there
+  is something to show; later changes go to viewers as `MobEquipment` / `MobArmorEquipment`, once a tick.
+  A client's own `MobEquipment` only moves the selected slot (0 to 8).
+- **Screen.** `Interact OpenInventory` is answered with `ContainerOpen` (type Inventory, the player's
+  block, entity -1 as BDS's `ServerPlayer::openInventory` passes, window ids counting up from 2), and
+  every `ContainerClose` is echoed: clients wait for both.
+- **Thrown items.** A Drop raises `on_drop` (cancellable; cancelled, the request is refused). The stack
+  then lies 1.5 blocks in front of the player, on the first solid block below that spot (it lands at
+  once and does not move again), as an item entity shown through the mob grid. After 40
+  ticks a player in the world within 1.3 blocks who has room takes it, or as much as fits:
+  `TakeItemEntity` to those who see the column, the entity is removed, the taker's windows are resent.
+- **Kept between visits.** The first world's storage keeps hotbar, inventory, armour, offhand and the
+  selected slot under `sapling_player_<uuid>`, with the game's field names (`Inventory` with `Slot`,
+  `Armor`, `Offhand`, `SelectedInventorySlot`) and item layout. It is not the game's own
+  `player_server_<id>` record: one holding only items is not a player BDS can load. Loads and saves run
+  on the world's I/O threads; a save happens when the player leaves, every 100 ticks while the items
+  changed, and when the shard stops. One save per player is in flight at a time, and a player back
+  before it lands is given what is being saved. A record that cannot be read is never written over.
+- **Chests and barrels** (`containers.rs`). 27 slots, kept where the game keeps them: the `Items` of the
+  block's entity, so a world's own chests open with what they hold. A placed chest gets an empty entity
+  (`BlockEntityData` to viewers); clients are never sent `Items`, in chunks or otherwise. An allowed
+  click opens it: `ContainerOpen` (type Container, the block, entity -1) and `InventoryContent` for that
+  window, and the first viewer raises the lid (`BlockEvent` ChangeState 1, 0 when the last one closes).
+  While open, the slots live in the shard under stack ids from 2^24 up; a request reaches them as
+  container `Container` or `Barrel`, borrowed into the player's inventory for the length of the request,
+  and an accepted one is written to the block entity and sent to the other viewers as one
+  `InventorySlot` per changed slot (BDS `ServerPlayer::slotChanged`). The open lid is shown again every
+  80 ticks (BDS `ChestBlockActor::tick`). A barrel's block takes `open_bit` while open and sounds
+  `block.barrel.open` / `block.barrel.close`. Breaking the block spills its items and closes its screens
+  (`ContainerClose`, server true). The evidence for all of it, mostly decompiled from an older BDS
+  build with its symbols, is `docs/research/containers-crafting.md`; no chest traffic of a real BDS
+  was ever recorded. Not done: a chest's own sounds (their names in this protocol were not found),
+  furnaces, hoppers, shulker and ender chests, a reach check while open, a chest blocked from above.
+- **Double chests** (`containers/pairs.rs`). Two chests of one kind, side by side and facing the same
+  way, name each other in their block entities (`pairx`, `pairz`, `pairlead`), which clients are sent
+  and draw one large chest from. A chest placed beside a single one pairs with it, the old one leading
+  (BDS `ChestBlockActor::onPlace`); the pair opens as one window of 54 at the lead half, slots 0 to 26
+  the lead's, each half keeping its own 27. Breaking a half spills that half and leaves the other a
+  single chest.
+- **Crafting** (`inventory/crafting.rs`, `sapling_data::recipe`). Clients are sent BDS's recorded
+  `CraftingData` and `UnlockedRecipes` with the registries. A request that starts with `CraftRecipe`
+  (by hand) or `CraftRecipeAuto` (the recipe book) names a recipe by its network id. `Consume` actions
+  use items up, and the request is done only if what they used is exactly what the recipe's cells take
+  (an item by name, or any item carrying a tag; no packet carries the tags, so their members come from
+  `data/item-tags.tsv`, the Java game's tags checked against a dump of Bedrock's). The result lies in
+  the created-output slot (50), one stack at a time: what a shift-click makes beyond a stack follows as
+  the request empties the slot (BDS keeps the surplus pending the same way). Of a recipe with several
+  results (cake, honey block, sugar from honey bottles) each is laid there by a `Create` action, which
+  needs the slot empty. Screens' own slots are the `Ui` window's: the grids' cells 28 to 40
+  (`CraftingInput`), the stonecutter's input 3; what is left in them goes back among the items when a
+  screen closes. A recipe that does not fit 2x2 needs a crafting table's screen (`ContainerOpen`, type
+  Workbench), a stonecutter's recipe its own (type Stonecutter); a click on the block opens it. Not as
+  BDS: where the items lie in the grid is not matched against the recipe. Not done: furnaces, smithing,
+  the special recipes (maps, fireworks).
+- **API.** `ctx.item`, `set_item`, `give` (returns what did not fit), `clear_inventory`, `held_slot`,
+  `held_item`, with `Item { name, count, damage }` and `Slot::{Main, Armor, Offhand}`; every change
+  resends the four windows, as BDS does after `/give`. A stack's tag stays with it but does not show.
+
+## Who is near (as built)
+
+`grid.rs` buckets things by cells of 8 chunks. Players are bucketed every tick and a viewer looks only at
+the cells its view reaches into; packets about a player go to the viewers found by inverting the `Sees`
+sets once a tick. Mobs sit in a grid that changes only when they come or go, and a player's mob set is
+remade only when its view moved or the grid changed.
+
 ## Open items
 
 - **Step 6, only a vanilla client can confirm:** which actions a creative client sends for an instant
   break (sapling breaks on PredictBreak and on an item use of type BreakBlock, never on StartBreak
   alone; `RUST_LOG=debug` logs every "input with an action"); that an input carrying StopBreak or
   AbortBreak decodes (acacia-proto reads a position for every block action, which BDS accepted from the
-  probe); that a block picked from the creative inventory stays in the hand though no ItemStackRequest is
-  answered; that the held item's `block_runtime_id` is the block's hash; the resync after a refused break
+  probe); that the held item's `block_runtime_id` is the block's hash; the resync after a refused break
   and place (no ghost block, no hole), also with the blob cache on; a door opened on screen closing
   again; `ParticleDestroy` and the `place` sound seen and heard by a second client; a block placed while
   another client is still loading the column.
-- **Blocks, left out of step 6:** inventories and ItemStackRequest; item drops; block entities' contents
-  (a broken chest's record is dropped, nothing is created); mining time and tool speed, so also the crack
-  animation others see (`BlockStartBreak` carries the break time); block updates and physics (sand, water,
-  torches losing their support, fences and stairs reconnecting); orientation: the item's own state is
-  placed, so stairs and logs ignore where the player looks; replaceable plants (tall grass) are built
-  against, not replaced; `USED` is a list of name endings, not block data; what a click does (doors,
+- **Blocks, left out of step 6:** loot of the less common blocks and crops; block entities other than
+  chests' and barrels' (a placed sign or furnace gets none); lava, buckets, and fences and
+  stairs reconnecting; orientation beyond the properties
+  above (door hinges, hoppers, beds); `USED` and the plants that give
+  way are lists of name endings, not block data; what a click does beyond opening (buttons,
   levers, containers) and its sounds; a request over the tick limit gets no resync; `ctx.block` and
   `ctx.set_block` act on the shard's first world; `on_move`, which needs its own resync on cancel.
 - A blob-cache client told a section hash before a block changed and asking for the blob after gets the
@@ -387,7 +557,7 @@ block action, and takes StopBreak and AbortBreak with a position.
   that changes with sneaking, held items and armour.
 - Movement: physics validation (acacia-physics), on-ground from collision.
 - Broadcasts are encoded once but compressed per player; `SharedBatch` needs a per-layer batch in
-  sapling-net. Visibility and fan-out are O(players²) per layer: index players by chunk.
+  sapling-net. Block changes and chat still look at every player of the shard per event.
 - A newcomer gets every skin at once (about 290 KB each before compression); throttle before the
   per-player backlog limit (16 MB) matters. Skin changes in game (PlayerSkin) are ignored.
 - Chat: proper rate limiting, private messages, profanity filter fields.
@@ -396,16 +566,28 @@ block action, and takes StopBreak and AbortBreak with a position.
   sapling needs a generator).
 - Block-state upgrader (CC0 BedrockBlockUpgradeSchema) for palettes older than the current version;
   until then see "Block states" above. Legacy sub-chunk versions (< 8, except 1) are skipped as air.
-- Block entities are read from disk (`DiskColumn::block_entities`) but not sent: chests, signs and the
-  like show without their data.
+- Block entities: no vanilla client has seen them (bots decode them), and what BDS itself puts into a
+  chunk for them was not recorded: sapling sends the stored compound without `Items`. Only chests and
+  barrels are opened, edited or created; the container shapes (`InventoryContent` naming no container,
+  the lid's `BlockEvent`) are what acacia-bot accepts, not what BDS was recorded sending.
+- Inventories: no vanilla client has used them (the shard tests play the client). Unverified against a
+  client: the entity id in the inventory screen's `ContainerOpen` (the player's id is sent; blocks use
+  -1), an offhand `MobEquipment` for a player (the stored-mob shape is used), `item_stack_id` 0 for an
+  emptied slot. Not built: wear of anything but tools, armour only in armour slots,
+  `PlayerAuthInput`'s own stack request (MineBlock), a pickup event. Stack sizes for `give` are a list
+  of name endings (`sapling_data::max_stack`). Items given in `on_join` before a slow storage answers are
+  replaced by the stored ones. Lying items land once and stay, are not saved, and stored item entities
+  cannot be picked up. Only the first world's storage keeps players.
 - Saving: a vanilla client has not opened a sapling-written world (BDS has), and the BDS check does not
-  cover biomes, block entities or actors; block entities are only ever removed, never created or edited.
-- Mobs: a vanilla client has not seen them (bots decode AddEntity); per-kind hitboxes and attributes
-  would have to be recorded from BDS kind by kind; item entities; movement, AI, damage, riding. The mob
-  diff is O(players x mobs) a tick.
-- Clock and level: a vanilla client has not confirmed `SyncWorldClocks` as sapling sends it; SetDifficulty,
-  GameRulesChanged and SetSpawnPosition, which BDS sends at the join, are not sent; `set_spawn` tells no
-  client; game rules other than the daylight cycle are not read from `level.dat`.
+  cover biomes or block entities, which sapling now also writes (chests, barrels).
+- Mobs: a vanilla client has not seen them or the dropped items (bots decode both). A mob looks like a
+  freshly summoned one of its kind: what it stores beyond the fields above (a villager's profession, a
+  horse's armour slot, effects) is not shown. A stored block
+  item saved by an older game version carries old states, whose hash a client may not know. Movement,
+  AI, damage, riding.
+- Clock and level: a vanilla client has not confirmed `SyncWorldClocks` or the other join packets as
+  sapling sends them; game rules other than the daylight cycle are not read from `level.dat`. A
+  difficulty set while the server runs (`ShardCtx::set_difficulty`) is not saved.
 - Only the overworld is opened; nether/end keys parse but no world is made for them.
 - LevelDB block compression id 2 is zlib in worlds; never enable zstd (Mojang master reuses id 2).
 - Game data source and licence (item/creative/biome/recipes) for sapling-data.

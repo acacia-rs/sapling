@@ -8,6 +8,7 @@ mod ctx;
 mod event;
 pub mod form;
 mod hud;
+mod item;
 mod player;
 #[cfg(test)]
 mod testing;
@@ -20,6 +21,7 @@ pub use ctx::{Backend, FormCallback, ShardCtx, State};
 pub use event::{Cancellable, ChatEvent, CommandEvent, Priority};
 pub use form::{Custom, Form, FormResponse, Menu, Modal};
 pub use hud::{BossBar, BossBarColour, Sidebar, Title};
+pub use item::{DropEvent, Item, Slot};
 pub use player::{Difficulty, GameMode, Permission, Player, PlayerId, Position};
 pub use sapling_macros::{Command, CommandEnum, Form};
 
@@ -59,6 +61,11 @@ pub trait Handler: Send + 'static {
 
     /// A player clicked a block that is used rather than built on, or clicked with no block in hand.
     fn on_interact(&mut self, ctx: &mut ShardCtx<'_>, player: &Player, event: &mut InteractEvent) {
+        let _ = (ctx, player, event);
+    }
+
+    /// A player threw a stack out of their inventory; it becomes an item lying in the world.
+    fn on_drop(&mut self, ctx: &mut ShardCtx<'_>, player: &Player, event: &mut DropEvent) {
         let _ = (ctx, player, event);
     }
 

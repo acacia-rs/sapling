@@ -95,7 +95,7 @@ const AIR: &str = "minecraft:air";
 
 #[test]
 fn a_cancel_stops_later_handlers_and_a_monitor_changes_nothing() {
-    let (mut h, log) = harness(GameMode::Survival);
+    let (mut h, log) = harness(GameMode::Creative);
     h.receive(1, &block_actions(&[(Action::PredictBreak, [3, 64, 0])]));
     assert_eq!(changes(&mut h, 1), [([3, 64, 0], hash(STONE)), ([3, 65, 0], hash(AIR))], "cancelled: shown again");
     assert_eq!(taken(&log), ["highest break 3", "high break 3", "monitor break 3 cancelled"]);
@@ -168,7 +168,7 @@ fn decoded(payload: &[u8]) -> [&'static str; 2] {
 
 #[test]
 fn a_player_who_loads_the_column_later_gets_the_changed_section_under_a_new_hash() {
-    let (mut h, _) = harness(GameMode::Survival);
+    let (mut h, _) = harness(GameMode::Creative);
     // The section is encoded and cached before the break.
     h.receive(1, &section_request());
     let before = all::<Subchunk>(&h.tick(1))[0].entries[0].payload.clone().expect("a payload");

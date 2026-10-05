@@ -21,7 +21,8 @@ use crate::roster::Profile;
 use crate::view::View;
 use crate::visibility::{Sees, ToViewers};
 use crate::mobs::SeesMobs;
-use crate::{blobs, blocks, chunks, clock, commands, handlers, join, mobs, movement, visibility};
+use crate::inventory::Inventory;
+use crate::{blobs, blocks, chunks, clock, commands, handlers, inventory, join, mobs, movement, visibility};
 
 pub const TICK: Duration = Duration::from_millis(50);
 
@@ -79,6 +80,7 @@ impl Shard {
         world.init_resource::<Arrivals>();
         world.init_resource::<PacketQueues>();
         world.init_resource::<ToViewers>();
+        world.init_resource::<mobs::MobGrid>();
         world.init_resource::<blocks::BlockInputs>();
 
         let mut schedule = Schedule::default();
@@ -95,10 +97,13 @@ impl Shard {
             chunks::save_and_unload_columns,
             mobs::despawn_unloaded,
         );
-        schedule.add_systems((join, clock::advance, chunks.chain(), join::initialized).chain());
+        let items = (inventory::load, inventory::send_own, inventory::select, inventory::screens, inventory::save_changed);
+        schedule.add_systems((join, clock::advance, chunks.chain(), items.chain(), join::initialized).chain());
         let mut after_handlers = Schedule::default();
         after_handlers.set_executor(SingleThreadedExecutor::new());
-        after_handlers.add_systems((visibility::update, mobs::update, movement::announce, movement::relay_swings, visibility::fan_out, commands::announce, flush).chain());
+        let viewers = (visibility::update, mobs::update, movement::announce, movement::relay_swings, inventory::announce, visibility::fan_out);
+        after_handlers.add_systems((viewers.chain(), commands::announce, flush).chain());
+        sapling_data::set_shield_item_id();
         world.insert_resource(CommandLists::new(&Commands::default()));
         world.init_resource::<PluginState>();
         Self { world, schedule, after_handlers, inbox, plugins: Plugins::default() }
@@ -157,6 +162,7 @@ impl Shard {
 
     /// Saves what every world still has unsaved and waits for storage: a stopping shard's last act.
     pub fn save_worlds(&mut self) {
+        inventory::save_all(&mut self.world);
         let mut layers = self.world.query::<&mut Layer>();
         for mut layer in layers.iter_mut(&mut self.world) {
             let failed = layer.world.save_and_wait();
@@ -188,8 +194,10 @@ impl Shard {
 
     fn add_player(&mut self, conn: ConnId, login: &VerifiedLogin) {
         let layer = self.world.resource::<DefaultLayer>().0;
-        let spawn = self.world.get::<Layer>(layer).expect("the default layer lives as long as the shard").spawn;
-        let api = (Access::default(), Mode(self.world.resource::<Settings>().0.game_mode), Forms::default(), Hud::default());
+        let mut level = self.world.get_mut::<Layer>(layer).expect("the default layer lives as long as the shard");
+        level.world.request_player(&login.identity.uuid.to_string());
+        let spawn = level.spawn;
+        let api = (Access::default(), Mode(self.world.resource::<Settings>().0.game_mode), Forms::default(), Hud::default(), Inventory::default());
         let mut players = self.world.resource_mut::<Players>();
         let net_id = players.next_net_id;
         players.next_net_id += 1;
@@ -211,6 +219,7 @@ impl Shard {
             Motion::default(),
             Sees::default(),
             SeesMobs::default(),
+            blocks::Breaking::default(),
             Profile::new(login, net_id),
             out,
         );

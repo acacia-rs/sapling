@@ -1,18 +1,43 @@
-//! A mob entering someone's view. BDS sends each kind's hitbox, attributes and some fifty
-//! metadata items (`sapling` example `bds_entity_probe`); this sends the few that say what the
-//! mob looks like.
-// TODO: per-kind hitboxes and attributes. Neither is in a world folder or in BDS's files; they
-// would have to be recorded from BDS kind by kind.
+//! A mob entering someone's view: what BDS announced one of its kind with (`data/Mobs.bin`,
+//! README "Mobs"), placed and dressed as the stored one. That brings the kind's hitbox,
+//! attributes and flags. A kind BDS was not recorded for gets [`plain`].
 
-use acacia_proto::packets::AddEntity;
+use std::collections::HashMap;
+use std::sync::LazyLock;
+
+use acacia_proto::packets::{AddEntity, AddPainting};
 use acacia_proto::types::{
     EntityProperties, MetadataDictionaryItem as Item, MetadataDictionaryItemKey as Key, MetadataDictionaryItemType as Type, MetadataDictionaryItemValue as Value,
     MetadataDictionaryItemValueDefault as Plain, MetadataFlags1, Vec3f,
 };
 
-/// The hitbox every kind gets, in blocks.
+use crate::templates::{decode, records};
+
+/// The hitbox of a kind without a recording, in blocks.
 const WIDTH: f32 = 0.9;
 const HEIGHT: f32 = 0.9;
+const HEALTH: &str = "minecraft:health";
+
+struct Recorded {
+    grown: AddEntity,
+    baby: Option<AddEntity>,
+}
+
+static RECORDED: LazyLock<HashMap<String, Recorded>> = LazyLock::new(|| {
+    let (mut grown, mut babies) = (HashMap::new(), HashMap::new());
+    for body in records(include_bytes!("../data/Mobs.bin")) {
+        let mob: AddEntity = decode(body);
+        if is_baby(&mob) { &mut babies } else { &mut grown }.insert(mob.entity_type.clone(), mob);
+    }
+    let mut kinds: HashMap<String, Recorded> = grown.into_iter().map(|(kind, grown)| (kind.clone(), Recorded { grown, baby: babies.remove(&kind) })).collect();
+    // A kind that is only ever a baby (a tadpole) is its own grown one.
+    kinds.extend(babies.into_iter().map(|(kind, baby)| (kind, Recorded { grown: baby, baby: None })));
+    kinds
+});
+
+fn is_baby(mob: &AddEntity) -> bool {
+    mob.metadata.iter().any(|item| matches!(&item.value, Value::Flags(flags) if flags.contains(MetadataFlags1::BABY)))
+}
 
 /// What appears where, for [`add_entity`].
 pub struct AddEntityOptions<'a> {
@@ -29,8 +54,21 @@ pub struct AddEntityOptions<'a> {
     /// E.g. a sheep's wool.
     pub color: i8,
     pub baby: bool,
+    /// Set on top of the kind's own, e.g. `SADDLED`.
+    pub flags: MetadataFlags1,
+    /// The health it has left; `None` for the kind's full health.
+    pub health: Option<f32>,
     /// The name tag; empty for none.
     pub name: &'a str,
+}
+
+/// Kinds a world may still store that BDS announces as their successors.
+const SUCCEEDED: [(&str, &str); 2] = [("minecraft:villager", "minecraft:villager_v2"), ("minecraft:zombie_villager", "minecraft:zombie_villager_v2")];
+
+/// A painting on its wall: `direction` 0 south, 1 west, 2 north, 3 east; `motif` names the picture.
+pub fn add_painting(id: u64, position: [f32; 3], direction: i32, motif: &str) -> AddPainting {
+    let [x, y, z] = position;
+    AddPainting { entity_id_self: id as i64, runtime_entity_id: id, coordinates: Vec3f { x, y, z }, direction, title: motif.to_owned() }
 }
 
 fn item(key: Key, value: Plain) -> Item {
@@ -45,36 +83,67 @@ fn item(key: Key, value: Plain) -> Item {
     Item { key, r#type, legacy_type, value: Value::Default(value) }
 }
 
-pub fn add_entity(o: &AddEntityOptions<'_>) -> AddEntity {
-    let [x, y, z] = o.feet;
-    let mut flags = MetadataFlags1(MetadataFlags1::HAS_COLLISION.0 | MetadataFlags1::AFFECTED_BY_GRAVITY.0);
-    if o.baby {
-        flags.insert(MetadataFlags1::BABY);
-    }
+/// A mob of no particular kind: it collides, falls and has the few items [`add_entity`] sets.
+fn plain(identifier: &str) -> AddEntity {
+    let flags = MetadataFlags1(MetadataFlags1::HAS_COLLISION.0 | MetadataFlags1::AFFECTED_BY_GRAVITY.0);
     let metadata = vec![
         Item { key: Key::Flags, r#type: Type::Long, legacy_type: 7, value: Value::Flags(flags) },
-        item(Key::Variant, Plain::Int(o.variant)),
-        item(Key::Color, Plain::Byte(o.color)),
-        item(Key::Nametag, Plain::String(o.name.to_owned())),
+        item(Key::Variant, Plain::Int(0)),
+        item(Key::Color, Plain::Byte(0)),
+        item(Key::Nametag, Plain::String(String::new())),
         item(Key::Scale, Plain::Float(1.0)),
-        item(Key::MarkVariant, Plain::Int(o.mark_variant)),
+        item(Key::MarkVariant, Plain::Int(0)),
         item(Key::BoundingboxWidth, Plain::Float(WIDTH)),
         item(Key::BoundingboxHeight, Plain::Float(HEIGHT)),
     ];
+    let still = Vec3f { x: 0.0, y: 0.0, z: 0.0 };
+    AddEntity {
+        unique_id: 0,
+        runtime_id: 0,
+        entity_type: identifier.to_owned(),
+        position: still.clone(),
+        velocity: still,
+        pitch: 0.0,
+        yaw: 0.0,
+        head_yaw: 0.0,
+        body_yaw: 0.0,
+        attributes: Vec::new(),
+        metadata,
+        properties: EntityProperties { ints: Vec::new(), floats: Vec::new() },
+        links: Vec::new(),
+    }
+}
+
+pub fn add_entity(o: &AddEntityOptions<'_>) -> AddEntity {
+    let identifier = SUCCEEDED.iter().find(|(old, _)| *old == o.identifier).map_or(o.identifier, |(_, new)| new);
+    let recorded = RECORDED.get(identifier);
+    let baby = recorded.and_then(|kind| kind.baby.as_ref()).filter(|_| o.baby);
+    let mut mob = baby.or(recorded.map(|kind| &kind.grown)).cloned().unwrap_or_else(|| plain(identifier));
+    let extra = MetadataFlags1(o.flags.0 | if o.baby { MetadataFlags1::BABY.0 } else { 0 });
+    for item in &mut mob.metadata {
+        match (&item.key, &mut item.value) {
+            (Key::Flags, Value::Flags(flags)) => flags.insert(extra),
+            (Key::Variant, value) => *value = Value::Default(Plain::Int(o.variant)),
+            (Key::MarkVariant, value) => *value = Value::Default(Plain::Int(o.mark_variant)),
+            (Key::Color, value) => *value = Value::Default(Plain::Byte(o.color)),
+            (Key::Nametag, value) => *value = Value::Default(Plain::String(o.name.to_owned())),
+            _ => {}
+        }
+    }
+    for attribute in mob.attributes.iter_mut().filter(|attribute| attribute.name == HEALTH) {
+        attribute.value = o.health.map_or(attribute.value, |health| health.clamp(attribute.min, attribute.max));
+    }
+    let [x, y, z] = o.feet;
     AddEntity {
         unique_id: o.id as i64,
         runtime_id: o.id,
-        entity_type: o.identifier.to_owned(),
         position: Vec3f { x, y, z },
         velocity: Vec3f { x: 0.0, y: 0.0, z: 0.0 },
         pitch: o.pitch,
         yaw: o.yaw,
         head_yaw: o.yaw,
         body_yaw: o.yaw,
-        attributes: Vec::new(),
-        metadata,
-        properties: EntityProperties { ints: Vec::new(), floats: Vec::new() },
-        links: Vec::new(),
+        ..mob
     }
 }
 
@@ -85,17 +154,51 @@ mod tests {
 
     use super::*;
 
+    fn options<'a>(identifier: &'a str, baby: bool) -> AddEntityOptions<'a> {
+        AddEntityOptions { id: 9, identifier, feet: [1.5, 64.0, -2.5], yaw: 90.0, pitch: 0.0, variant: 3, mark_variant: 2, color: 0, baby, flags: MetadataFlags1::SADDLED, health: Some(5.5), name: "Bill" }
+    }
+
+    fn float(mob: &AddEntity, key: Key) -> Option<f32> {
+        mob.metadata.iter().find(|item| item.key == key).and_then(|item| if let Value::Default(Plain::Float(float)) = item.value { Some(float) } else { None })
+    }
+
     #[test]
     fn a_mob_survives_the_wire_with_its_look() {
-        let options = AddEntityOptions { id: 9, identifier: "minecraft:horse", feet: [1.5, 64.0, -2.5], yaw: 90.0, pitch: 0.0, variant: 3, mark_variant: 2, color: 0, baby: true, name: "Bill" };
-        let packet = add_entity(&options);
-        let mut out = BytesMut::new();
-        packet.encode(&mut out);
-        let read = AddEntity::decode(&mut &out[..]).unwrap();
-        assert_eq!(read, packet);
-        assert_eq!((read.unique_id, read.runtime_id, read.entity_type.as_str(), read.body_yaw), (9, 9, "minecraft:horse", 90.0));
-        let value = |key: Key| read.metadata.iter().find(|item| item.key == key).map(|item| item.value.clone());
-        assert_eq!(value(Key::Variant), Some(Value::Default(Plain::Int(3))));
-        assert!(matches!(value(Key::Flags), Some(Value::Flags(flags)) if flags.contains(MetadataFlags1::BABY)));
+        for kind in ["minecraft:horse", "sapling:nothing_recorded"] {
+            let packet = add_entity(&options(kind, true));
+            let mut out = BytesMut::new();
+            packet.encode(&mut out);
+            let read = AddEntity::decode(&mut &out[..]).unwrap();
+            assert_eq!(read, packet);
+            assert_eq!((read.unique_id, read.runtime_id, read.entity_type.as_str(), read.body_yaw), (9, 9, kind, 90.0));
+            assert_eq!((read.position.x, read.position.y, read.position.z, read.velocity.y), (1.5, 64.0, -2.5, 0.0));
+            let value = |key: Key| read.metadata.iter().find(|item| item.key == key).map(|item| item.value.clone());
+            assert_eq!(value(Key::Variant), Some(Value::Default(Plain::Int(3))));
+            assert_eq!(value(Key::MarkVariant), Some(Value::Default(Plain::Int(2))));
+            assert_eq!(value(Key::Nametag), Some(Value::Default(Plain::String("Bill".into()))));
+            assert!(is_baby(&read));
+        }
+    }
+
+    #[test]
+    fn a_recorded_kind_has_its_own_hitbox_and_attributes() {
+        let horse = add_entity(&options("minecraft:horse", false));
+        assert_eq!((float(&horse, Key::BoundingboxWidth), float(&horse, Key::BoundingboxHeight)), (Some(1.4), Some(1.6)));
+        assert!(horse.attributes.iter().any(|attribute| attribute.name == HEALTH && attribute.value == 5.5 && attribute.max > 5.5) && !is_baby(&horse));
+        assert!(horse.metadata.iter().any(|item| matches!(&item.value, Value::Flags(flags) if flags.contains(MetadataFlags1::SADDLED))));
+        assert_eq!(add_entity(&options("minecraft:villager", false)).entity_type, "minecraft:villager_v2");
+        let unknown = add_entity(&options("sapling:nothing_recorded", false));
+        assert_eq!((float(&unknown, Key::BoundingboxWidth), unknown.attributes.len()), (Some(WIDTH), 0));
+    }
+
+    #[test]
+    fn every_recorded_kind_has_a_grown_one() {
+        // Some kinds are summoned as a baby by chance; the recorder summons those again.
+        let mut only_babies: Vec<&str> = RECORDED.iter().filter(|(_, kind)| is_baby(&kind.grown)).map(|(kind, _)| kind.as_str()).collect();
+        only_babies.sort();
+        assert_eq!(only_babies, ["minecraft:tadpole"]);
+        assert!(RECORDED.len() > 100 && RECORDED.values().all(|kind| kind.baby.as_ref().is_none_or(is_baby)), "{} kinds", RECORDED.len());
+        let foal = add_entity(&options("minecraft:horse", true));
+        assert!(float(&foal, Key::Scale).is_some_and(|scale| scale < 1.0), "a foal is recorded as one");
     }
 }

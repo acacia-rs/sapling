@@ -9,7 +9,7 @@ use acacia_proto::nbt::Value;
 
 use crate::keys::{ChunkKey, Tag};
 use crate::records::compounds;
-use crate::{Batch, Db, Error};
+use crate::{Batch, Db, Error, ItemStack};
 
 const ACTOR: &[u8] = b"actorprefix";
 
@@ -31,6 +31,39 @@ pub struct Actor {
     pub baby: bool,
     /// The name tag (`CustomName`); empty for none.
     pub name: String,
+    /// What a `minecraft:item` lies there as.
+    pub item: Option<ItemStack>,
+    /// What a `minecraft:painting` shows.
+    pub painting: Option<Painting>,
+    /// What the mob wears or has become, of [`STATES`].
+    pub states: Vec<State>,
+    /// What it wears (`Armor`): helmet, chestplate, leggings, boots, in that order.
+    pub armor: Vec<Option<ItemStack>>,
+    pub mainhand: Option<ItemStack>,
+    pub offhand: Option<ItemStack>,
+    /// The `minecraft:health` it has left, when it stores any.
+    pub health: Option<f32>,
+}
+
+/// A stored byte that shows on the mob.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum State {
+    Saddled,
+    Tamed,
+    Sheared,
+    Chested,
+    Sitting,
+}
+
+const STATES: [(&str, State); 5] =
+    [("Saddled", State::Saddled), ("IsTamed", State::Tamed), ("Sheared", State::Sheared), ("Chested", State::Chested), ("Sitting", State::Sitting)];
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct Painting {
+    /// The picture's name, e.g. `Kebab` (`Motif`; `Motive` in older worlds).
+    pub motif: String,
+    /// The way it faces (`Direction`): 0 south, 1 west, 2 north, 3 east.
+    pub direction: i8,
 }
 
 impl Actor {
@@ -44,7 +77,14 @@ impl Actor {
         };
         let (Some(Value::Long(unique_id)), Some(Value::String(identifier))) = (actor.get("UniqueID"), actor.get("identifier")) else { return None };
         let (position, rotation) = (floats("Pos")?, floats("Rotation")?);
+        let list = |key: &str| if let Some(Value::List(list)) = actor.get(key) { &list.items[..] } else { &[] };
+        let slots = |key: &str| list(key).iter().map(ItemStack::parse).collect::<Vec<_>>();
+        let health = list("Attributes").iter().find(|attribute| matches!(attribute.get("Name"), Some(Value::String(name)) if name == "minecraft:health"));
         Some(Self {
+            armor: slots("Armor"),
+            mainhand: slots("Mainhand").into_iter().next().flatten(),
+            offhand: slots("Offhand").into_iter().next().flatten(),
+            health: health.and_then(|health| if let Some(Value::Float(current)) = health.get("Current") { Some(*current) } else { None }),
             unique_id: *unique_id,
             identifier: identifier.clone(),
             position: position.get(..3)?.try_into().ok()?,
@@ -55,6 +95,12 @@ impl Actor {
             color: byte("Color"),
             baby: byte("IsBaby") != 0,
             name,
+            item: actor.get("Item").and_then(ItemStack::parse),
+            painting: match actor.get("Motif").or(actor.get("Motive")) {
+                Some(Value::String(motif)) => Some(Painting { motif: motif.clone(), direction: byte("Direction") }),
+                _ => None,
+            },
+            states: STATES.iter().filter(|(key, _)| byte(key) != 0).map(|(_, state)| *state).collect(),
         })
     }
 }
@@ -107,6 +153,15 @@ mod tests {
         Value::List(List { tag: 5, items: items.iter().map(|&item| Value::Float(item)).collect() })
     }
 
+    fn fields(fields: Vec<(&str, Value)>) -> Value {
+        Value::Compound(fields.into_iter().map(|(key, value)| (key.to_string(), value)).collect())
+    }
+
+    fn stacks(names: &[&str]) -> Value {
+        let stack = |name: &&str| fields(vec![("Name", Value::String(name.to_string())), ("Count", Value::Byte(1)), ("Damage", Value::Short(0))]);
+        Value::List(List { tag: 10, items: names.iter().map(stack).collect() })
+    }
+
     #[test]
     fn actors_are_read_from_their_compounds() {
         let cow = compound(vec![
@@ -116,6 +171,11 @@ mod tests {
             ("Rotation", floats(&[90.0, -10.0])),
             ("Variant", Value::Int(3)),
             ("IsBaby", Value::Byte(1)),
+            ("Saddled", Value::Byte(1)),
+            ("Sheared", Value::Byte(0)),
+            ("Armor", stacks(&["", "minecraft:golden_boots"])),
+            ("Mainhand", stacks(&[""])),
+            ("Attributes", Value::List(List { tag: 10, items: vec![fields(vec![("Name", Value::String("minecraft:health".into())), ("Current", Value::Float(7.5))])] })),
             ("CustomName", Value::String("Bill".into())),
         ]);
         let nameless = compound(vec![("UniqueID", Value::Long(3))]);
@@ -131,8 +191,32 @@ mod tests {
             color: 0,
             baby: true,
             name: "Bill".into(),
+            item: None,
+            painting: None,
+            states: vec![State::Saddled],
+            armor: vec![None, Some(ItemStack { name: "minecraft:golden_boots".into(), count: 1, damage: 0, block: None, tag: None })],
+            mainhand: None,
+            offhand: None,
+            health: Some(7.5),
         };
         assert_eq!(found, [expected]);
         assert!(actors(&cow[..cow.len() - 1]).is_err());
+    }
+
+    #[test]
+    fn an_item_entity_says_what_lies_there() {
+        let block = fields(vec![("name", Value::String("minecraft:stone".into())), ("states", fields(vec![])), ("version", Value::Int(1))]);
+        let stack = fields(vec![("Name", Value::String("minecraft:stone".into())), ("Count", Value::Byte(12)), ("Damage", Value::Short(0)), ("Block", block)]);
+        let item = compound(vec![
+            ("UniqueID", Value::Long(7)),
+            ("identifier", Value::String("minecraft:item".into())),
+            ("Pos", floats(&[0.5, 64.0, 0.5])),
+            ("Rotation", floats(&[0.0, 0.0])),
+            ("Item", stack),
+        ]);
+        let found = actors(&item).unwrap().remove(0).item.expect("an item");
+        let stone = acacia_world::BlockRegistry::vanilla();
+        let hash = (0..stone.len() as u32).filter_map(|id| stone.get(id)).find(|state| state.name == "minecraft:stone").unwrap().network_hash;
+        assert_eq!((found.name.as_str(), found.count, found.damage, found.block, found.tag), ("minecraft:stone", 12, 0, Some(hash), None));
     }
 }

@@ -114,6 +114,19 @@ fn fnv1a_32(bytes: &[u8]) -> u32 {
     bytes.iter().fold(0x811c_9dc5, |hash: u32, &byte| (hash ^ u32::from(byte)).wrapping_mul(0x0100_0193))
 }
 
+/// The network hash of a stored `{name, states}` compound, whatever else it holds.
+pub(crate) fn network_hash(block: &Value) -> Option<u32> {
+    let (name, states) = (block.get("name")?.clone(), block.get("states")?.clone());
+    Some(fnv1a_32(&compound(vec![("name".into(), name), ("states".into(), states)])))
+}
+
+/// The `{name, states, version}` compound of the state a network hash names, as an item stack
+/// stores the block it places.
+pub(crate) fn block_of_hash(registry: &BlockRegistry, hash: u32) -> Option<Value> {
+    let state = registry.get(registry.runtime_id_from_hash(hash)?)?;
+    Some(Value::Compound(vec![name_field(state), ("states".into(), typed_states(state)?), ("version".into(), Value::Int(STATE_VERSION))]))
+}
+
 /// A state's values with their NBT types. The registry keeps them as text, where a number may be
 /// a byte or an int; the network hash is over the typed `{name, states}`, so the typing that
 /// reproduces it is the right one. `None` when none does; a state without numbers needs no hash

@@ -1,7 +1,7 @@
 use std::sync::LazyLock;
 
-use acacia_proto::packets::StartGame;
-use acacia_proto::types::{BlockCoordinates, GameMode, GameRuleI32Value, Vec2f, Vec3f};
+use acacia_proto::packets::{GameRulesChanged, StartGame};
+use acacia_proto::types::{BlockCoordinates, GameMode, GameRuleI32, GameRuleI32Value, Vec2f, Vec3f};
 
 use crate::templates::{START_GAME, decode};
 
@@ -31,17 +31,27 @@ pub struct StartGameOptions {
     pub block_network_ids_are_hashes: bool,
 }
 
+static TEMPLATE: LazyLock<StartGame> = LazyLock::new(|| decode(START_GAME));
+
+fn rules(daylight_cycle: bool) -> Vec<GameRuleI32> {
+    let mut rules = TEMPLATE.gamerules.clone();
+    for rule in rules.iter_mut().filter(|rule| rule.name.eq_ignore_ascii_case(DAYLIGHT_CYCLE)) {
+        rule.value = GameRuleI32Value::Bool(daylight_cycle);
+    }
+    rules
+}
+
+/// Every game rule with BDS's value but the daylight cycle's; BDS repeats them after StartGame.
+pub fn game_rules(daylight_cycle: bool) -> GameRulesChanged {
+    GameRulesChanged { rules: rules(daylight_cycle) }
+}
+
 pub fn start_game(o: &StartGameOptions) -> StartGame {
-    static TEMPLATE: LazyLock<StartGame> = LazyLock::new(|| decode(START_GAME));
     let [x, y, z] = o.position;
     let [sx, sy, sz] = o.world_spawn;
-    let mut gamerules = TEMPLATE.gamerules.clone();
-    for rule in gamerules.iter_mut().filter(|rule| rule.name.eq_ignore_ascii_case(DAYLIGHT_CYCLE)) {
-        rule.value = GameRuleI32Value::Bool(o.daylight_cycle);
-    }
     StartGame {
         difficulty: o.difficulty,
-        gamerules,
+        gamerules: rules(o.daylight_cycle),
         entity_id: o.entity_id,
         runtime_entity_id: o.runtime_entity_id,
         player_gamemode: o.game_mode,
@@ -104,5 +114,6 @@ mod tests {
         assert!(!sg.block_properties.is_empty(), "data-driven vanilla blocks are kept");
         let cycle: Vec<_> = sg.gamerules.iter().filter(|rule| rule.name.eq_ignore_ascii_case(DAYLIGHT_CYCLE)).map(|rule| rule.value.clone()).collect();
         assert_eq!((sg.difficulty, cycle), (2, vec![GameRuleI32Value::Bool(false)]), "BDS lists the rule, so it can be set");
+        assert_eq!(game_rules(false).rules, sg.gamerules);
     }
 }

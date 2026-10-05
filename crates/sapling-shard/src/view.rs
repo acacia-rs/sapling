@@ -9,6 +9,7 @@ use sapling_world::ChunkPos;
 pub(crate) struct View {
     radius: i32,
     center: Option<ChunkPos>,
+    moves: u64,
     sent: HashSet<ChunkPos>,
     /// Columns in the circle not sent yet, nearest first.
     queue: Vec<ChunkPos>,
@@ -23,11 +24,21 @@ impl View {
         self.radius
     }
 
+    pub fn center(&self) -> Option<ChunkPos> {
+        self.center
+    }
+
+    /// How often the view moved or changed size: what it covers is the same while this is.
+    pub fn moves(&self) -> u64 {
+        self.moves
+    }
+
     /// Takes effect at the next [`View::recenter`], even without moving.
     pub fn set_radius(&mut self, radius: i32) {
         if self.radius != radius {
             self.radius = radius;
             self.center = None;
+            self.moves += 1;
         }
     }
 
@@ -38,6 +49,7 @@ impl View {
             return false;
         }
         self.center = Some(center);
+        self.moves += 1;
         let radius = self.radius;
         let inside = |p: &ChunkPos| distance_sq(*p, center) <= radius * radius;
         self.sent.retain(inside);

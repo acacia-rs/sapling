@@ -4,7 +4,7 @@
 use acacia_proto::manual::Uuid;
 use acacia_proto::packets::{
     ChunkRadiusUpdate, RequestChunkRadius, ResourcePackClientResponse, ResourcePackClientResponseResponseStatus as PackStatus, ResourcePackStack,
-    ResourcePacksInfo, ResourcePacksInfoWorldTemplate, SetLocalPlayerAsInitialized,
+    ResourcePacksInfo, ResourcePacksInfoWorldTemplate, SetDifficulty, SetLocalPlayerAsInitialized,
 };
 use acacia_proto::types::GameMode as WireGameMode;
 use bevy_ecs::prelude::*;
@@ -52,7 +52,8 @@ pub(crate) fn wire_game_mode(mode: GameMode) -> WireGameMode {
 
 type Joining<'a> = (&'a Conn, &'a Identity, &'a NetId, &'a Position, &'a InLayer, &'a mut Stage, &'a mut Outgoing);
 
-/// Pack negotiation, then StartGame with the registries, the player's own state and the time.
+/// Pack negotiation, then StartGame with the registries, the player's own state and the world's:
+/// spawn, time, difficulty and rules.
 pub(crate) fn resource_packs(
     mut packets: ResMut<PacketQueues>,
     settings: Res<Settings>,
@@ -90,7 +91,10 @@ pub(crate) fn resource_packs(
                 out.push(&sapling_data::update_abilities(id.0 as i64));
                 out.push(&sapling_data::entity_data(id.0, &identity.0.name));
                 out.push(&sapling_data::update_attributes(id.0));
+                out.push(&sapling_data::no_player_spawn());
                 out.push(&clock::registry(&level));
+                out.push(&SetDifficulty { difficulty: settings.0.difficulty as u32 });
+                out.push(&sapling_data::game_rules(level.daylight_cycle));
                 *stage = Stage::StartGame;
             }
             (_, PackStatus::Refused) => net.0.kick(conn.0, "disconnectionScreen.resourcePack"),

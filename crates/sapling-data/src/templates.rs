@@ -3,8 +3,8 @@
 use std::sync::LazyLock;
 
 use acacia_proto::packets::{
-    AvailableEntityIdentifiers, BiomeDefinitionList, CameraPresets, CreativeContent, FeatureRegistry, ItemRegistry, JigsawStructureData,
-    TrimData, VoxelShapes,
+    AvailableEntityIdentifiers, BiomeDefinitionList, CameraPresets, CraftingData, CreativeContent, FeatureRegistry, ItemRegistry,
+    JigsawStructureData, TrimData, UnlockedRecipes, VoxelShapes,
 };
 use acacia_proto::{Packet, codec};
 use bytes::{Bytes, BytesMut};
@@ -13,9 +13,22 @@ pub(crate) const START_GAME: &[u8] = include_bytes!("../data/StartGame.bin");
 pub(crate) const UPDATE_ATTRIBUTES: &[u8] = include_bytes!("../data/UpdateAttributes.bin");
 pub(crate) const UPDATE_ABILITIES: &[u8] = include_bytes!("../data/UpdateAbilities.bin");
 pub(crate) const SET_ENTITY_DATA: &[u8] = include_bytes!("../data/SetEntityData.bin");
+pub(crate) const ITEM_REGISTRY: &[u8] = include_bytes!("../data/ItemRegistry.bin");
+pub(crate) const CREATIVE_CONTENT: &[u8] = include_bytes!("../data/CreativeContent.bin");
+pub(crate) const CRAFTING_DATA: &[u8] = include_bytes!("../data/CraftingData.bin");
 
 pub(crate) fn decode<T: Packet>(body: &[u8]) -> T {
     T::decode(&mut &body[..]).unwrap_or_else(|e| panic!("bundled {} template: {e}", T::NAME))
+}
+
+/// The bodies in a file of several recordings, each behind its length (u32, little-endian).
+pub(crate) fn records(mut file: &'static [u8]) -> impl Iterator<Item = &'static [u8]> {
+    std::iter::from_fn(move || {
+        let (length, rest) = file.split_first_chunk::<4>()?;
+        let (body, rest) = rest.split_at(u32::from_le_bytes(*length) as usize);
+        file = rest;
+        Some(body)
+    })
 }
 
 fn framed<T: Packet>(body: &[u8]) -> Bytes {
@@ -39,15 +52,19 @@ pub fn pre_start_packets() -> &'static [Bytes] {
 
 /// The registries as BDS sent them, each with its header, in the order BDS sends them after StartGame.
 pub fn registry_packets() -> &'static [Bytes] {
-    static PACKETS: LazyLock<[Bytes; 7]> = LazyLock::new(|| {
+    static PACKETS: LazyLock<[Bytes; 9]> = LazyLock::new(|| {
         [
-            framed::<ItemRegistry>(include_bytes!("../data/ItemRegistry.bin")),
+            framed::<ItemRegistry>(ITEM_REGISTRY),
             framed::<BiomeDefinitionList>(include_bytes!("../data/BiomeDefinitionList.bin")),
             framed::<AvailableEntityIdentifiers>(include_bytes!("../data/AvailableEntityIdentifiers.bin")),
             framed::<FeatureRegistry>(include_bytes!("../data/FeatureRegistry.bin")),
             framed::<CameraPresets>(include_bytes!("../data/CameraPresets.bin")),
-            framed::<CreativeContent>(include_bytes!("../data/CreativeContent.bin")),
+            framed::<CreativeContent>(CREATIVE_CONTENT),
             framed::<TrimData>(include_bytes!("../data/TrimData.bin")),
+            // BDS sends the recipes after the player's own windows; here they go with the rest.
+            framed::<CraftingData>(CRAFTING_DATA),
+            // StartGame says recipes unlock: without this list a recipe book has little in it.
+            framed::<UnlockedRecipes>(include_bytes!("../data/UnlockedRecipes.bin")),
         ]
     });
     &*PACKETS
@@ -70,6 +87,8 @@ mod tests {
             CameraPresets::ID,
             CreativeContent::ID,
             TrimData::ID,
+            CraftingData::ID,
+            UnlockedRecipes::ID,
         ];
         assert_eq!(ids, expected);
         let raw = |i: usize| RawPacket::parse(registry_packets()[i].clone()).unwrap();

@@ -4,10 +4,13 @@
 
 mod actors;
 mod block_entities;
+mod container;
 mod data3d;
 mod db;
+mod item;
 mod keys;
 mod level_dat;
+mod player;
 mod records;
 mod states;
 mod sub_chunk;
@@ -15,8 +18,11 @@ mod world;
 
 use std::path::PathBuf;
 
-pub use actors::{Actor, actors};
-pub use block_entities::without_block_entity;
+pub use actors::{Actor, Painting, State, actors};
+pub use item::ItemStack;
+pub use player::PlayerData;
+pub use block_entities::{BlockEntity, block_entities, with_block_entity, without_block_entity};
+pub use container::{container_items, new_block_entity, with_container_items};
 pub use data3d::Data3d;
 pub use db::{Batch, Db};
 pub use keys::{ChunkKey, ParsedKey, Tag};
@@ -37,6 +43,8 @@ pub enum Error {
     SubChunkVersion(u8),
     #[error("sub-chunk: {0}")]
     SubChunk(&'static str),
+    #[error("player: {0}")]
+    Player(&'static str),
     #[error("actors: {0}")]
     Actor(&'static str),
     #[error("block state {0} cannot be written")]

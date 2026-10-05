@@ -229,8 +229,19 @@ fn a_block_entity_leaves_with_its_block() {
     let mut world = World::with_storage(storage.clone());
     world.load_now(pos);
     let (air, stone) = (world.registry().air_id(), world.block_id("minecraft:stone").unwrap());
+    assert!(world.set_block(9, 10, 9, stone));
+    let wire = |world: &World, at| world.block_entity(at).map(|entity| entity.network().to_vec()).unwrap_or_default();
+    let both = [wire(&world, [3, 10, 3]), wire(&world, [4, 10, 4])].concat();
+    let payload = |world: &World, section, cached| world.sub_chunk(pos, section, [0; 3], cached).entry.payload.unwrap_or_default().to_vec();
+    assert_eq!(both.len(), 2 * wire(&world, [3, 10, 3]).len());
+    assert_eq!(payload(&world, 0, true), both, "a cached section's payload is its block entities");
+    assert!(payload(&world, 0, false).ends_with(&both) && payload(&world, 0, false).len() > both.len());
+    assert!(world.block_entity([3, 26, 3]).is_none());
+
     assert!(world.set_block(3, 10, 3, air), "the same kind of block: its entity stays");
     assert!(world.set_block(4, 10, 4, stone));
+    assert_eq!(payload(&world, 0, true), wire(&world, [3, 10, 3]));
+    assert!(world.block_entity([4, 10, 4]).is_none());
     assert_eq!(world.save_and_wait(), 0);
     assert_eq!(storage.load_column(pos, 0).unwrap().unwrap().block_entities, kept);
 }

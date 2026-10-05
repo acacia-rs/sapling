@@ -1,12 +1,13 @@
 //! Blocks on the wire, as BDS sends them (`sapling` example `bds_block_probe`), and between the
 //! world's runtime ids and the API's names.
 
-use acacia_proto::packets::{LevelEvent, LevelEventEvent, LevelSoundEvent, UpdateBlock};
+use acacia_proto::nbt::Nbt;
+use acacia_proto::packets::{BlockEntityData, LevelEvent, LevelEventEvent, LevelSoundEvent, UpdateBlock};
 use acacia_proto::types::{BlockCoordinates, UpdateBlockFlags, Vec3f};
 use bevy_ecs::prelude::*;
 use bytes::Bytes;
 use sapling_api::{Block, BlockPos, Face};
-use sapling_world::{BlockRegistry, ChunkPos};
+use sapling_world::{BlockEntity, BlockRegistry, ChunkPos};
 
 use crate::components::{InLayer, Layer, Outgoing, Stage};
 use crate::view::View;
@@ -50,6 +51,11 @@ fn update(registry: &BlockRegistry, [x, y, z]: BlockPos, id: u32, layer: u32) ->
     sapling_net::encode(&UpdateBlock { position: BlockCoordinates { x, y, z }, block_runtime_id: registry.network_hash(id), flags: FLAGS, layer })
 }
 
+/// What a block holds, as clients are shown it.
+pub(crate) fn block_entity_data([x, y, z]: BlockPos, entity: &BlockEntity) -> Bytes {
+    sapling_net::encode(&BlockEntityData { position: BlockCoordinates { x, y, z }, nbt: Nbt { name: String::new(), value: entity.shown() } })
+}
+
 /// The burst of fragments when a block of `id` breaks.
 pub(crate) fn destroy_particles(registry: &BlockRegistry, pos: BlockPos, id: u32) -> Bytes {
     sapling_net::encode(&LevelEvent { event: LevelEventEvent::ParticleDestroy, position: centre(pos), data: registry.network_hash(id) as i32 })
@@ -61,8 +67,13 @@ pub(crate) fn punch_particles(registry: &BlockRegistry, pos: BlockPos, face: Fac
 }
 
 pub(crate) fn place_sound(registry: &BlockRegistry, pos: BlockPos, id: u32) -> Bytes {
+    sound("place", registry, pos, id)
+}
+
+/// The sound `name` of the block `id`, which tells the client what the block is made of.
+pub(crate) fn sound(name: &str, registry: &BlockRegistry, pos: BlockPos, id: u32) -> Bytes {
     sapling_net::encode(&LevelSoundEvent {
-        sound_id: "place".into(),
+        sound_id: name.into(),
         position: centre(pos),
         extra_data: registry.network_hash(id) as i32,
         entity_type: String::new(),
@@ -97,6 +108,19 @@ pub(crate) fn set(world: &mut World, layer: Entity, pos: BlockPos, id: u32) -> b
     true
 }
 
+/// The block at `pos` of a layer's world; `None` where it is not loaded or does not reach.
+pub(crate) fn block_at(world: &World, layer: Entity, pos: BlockPos) -> Option<Block> {
+    let level = &world.get::<Layer>(layer)?.world;
+    let known = level.in_height(pos[1]) && level.is_loaded(column(pos));
+    known.then(|| describe(level.registry(), level.block(pos[0], pos[1], pos[2])))
+}
+
+/// Sets a block for a handler: no event, and everyone who sees the place is shown it.
+pub(crate) fn put_block(world: &mut World, layer: Entity, pos: BlockPos, block: &Block) -> bool {
+    let Some(id) = world.get::<Layer>(layer).and_then(|layer| resolve(layer.world.registry(), block)) else { return false };
+    set(world, layer, pos, id)
+}
+
 /// Empties layer 1 at `pos` for everyone, if it held something.
 pub(crate) fn clear_liquid(world: &mut World, layer: Entity, pos: BlockPos) {
     let Some(mut level) = world.get_mut::<Layer>(layer) else { return };
@@ -120,6 +144,8 @@ pub(crate) fn resync(world: &mut World, player: Entity, positions: &[BlockPos]) 
         }
         packets.push(update(level.registry(), pos, level.block(x, y, z), 0));
         packets.push(update(level.registry(), pos, level.liquid(x, y, z), 1));
+        // An UpdateBlock leaves the client's block without what it held.
+        packets.extend(level.block_entity(pos).map(|entity| block_entity_data(pos, entity)));
     }
     if let Some(mut out) = world.get_mut::<Outgoing>(player) {
         out.0.extend(packets);

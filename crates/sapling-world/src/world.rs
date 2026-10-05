@@ -4,10 +4,12 @@ use std::sync::Arc;
 
 use acacia_proto::types::SubChunkEntryItemResult;
 use acacia_world::{BlockRegistry, Dimension, Heightmap, LevelChunkData, SubChunkData};
+use sapling_leveldb::BlockEntity;
 
 use crate::ChunkPos;
 use crate::column::{Column, SubChunkAnswer};
 use crate::loader::{Finished, Loader, Source};
+use crate::players::Players;
 use crate::storage::{Level, WorldStorage};
 
 /// Loads in flight at once per world; each is a few milliseconds of disk and encoding.
@@ -26,10 +28,11 @@ pub struct World {
     columns: HashMap<ChunkPos, Column>,
     /// Stands in for every unwritten column of a world without storage, so they share one encoding.
     void: Column,
-    loader: Option<Loader>,
+    pub(crate) loader: Option<Loader>,
     level: Level,
     /// Columns that came from storage and [`World::take_arrived`] has not handed out.
     arrived: Vec<ChunkPos>,
+    pub(crate) players: Players,
 }
 
 impl World {
@@ -37,7 +40,7 @@ impl World {
     pub fn void() -> Self {
         let registry = BlockRegistry::vanilla_arc();
         let dim = Dimension::overworld(registry.air_id());
-        Self { dimension: 0, dim, registry, columns: HashMap::new(), void: Column::empty(0, 0, dim), loader: None, level: Level::default(), arrived: Vec::new() }
+        Self { dimension: 0, dim, registry, columns: HashMap::new(), void: Column::empty(0, 0, dim), loader: None, level: Level::default(), arrived: Vec::new(), players: Players::default() }
     }
 
     /// The overworld of `storage`. Columns it does not hold are void.
@@ -101,8 +104,19 @@ impl World {
                 }
                 false
             }
+            Finished::PlayerLoaded(id, load) => {
+                self.players.loaded(id, load);
+                false
+            }
+            Finished::PlayerSaved(id, written) => {
+                if let Some(loader) = &mut self.loader {
+                    self.players.saved(loader, id, &written);
+                }
+                false
+            }
         }
     }
+
 
     /// Hands every column written since its last save to the I/O threads; returns how many.
     /// A column whose previous save is still on its way waits for the next call.
@@ -208,6 +222,18 @@ impl World {
         }
         column.set_block(x, y, z, id, &self.registry);
         true
+    }
+
+    /// What the block at a position holds beyond its state, if storage had something for it.
+    pub fn block_entity(&self, pos: [i32; 3]) -> Option<&BlockEntity> {
+        self.columns.get(&ChunkPos::of_block(pos[0], pos[2]))?.block_entity(pos)
+    }
+
+    /// Makes `entity` what the block at `pos` holds; false where the column is not loaded or its
+    /// block entities cannot be read.
+    pub fn set_block_entity(&mut self, pos: [i32; 3], entity: &acacia_proto::nbt::Value) -> bool {
+        let column = self.columns.get_mut(&ChunkPos::of_block(pos[0], pos[2])).filter(|column| !column.is_damaged());
+        column.is_some_and(|column| column.set_block_entity(pos, entity))
     }
 
     /// The layer-1 block at a position: water around a waterlogged block, air otherwise.

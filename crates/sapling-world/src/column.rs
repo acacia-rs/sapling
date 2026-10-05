@@ -4,11 +4,12 @@
 
 use std::sync::OnceLock;
 
+use acacia_proto::nbt::Value;
 use acacia_proto::types::{Blob, SubChunkEntryItem};
 use acacia_proto::xxh64;
 use acacia_world::{BlockRegistry, Chunk, ColumnHeights, Dimension, LevelChunkData, SubChunkData};
 use bytes::Bytes;
-use sapling_leveldb::without_block_entity;
+use sapling_leveldb::{BlockEntity, block_entities, with_block_entity, without_block_entity};
 
 use crate::storage::StoredColumn;
 
@@ -25,8 +26,10 @@ pub struct SubChunkAnswer {
 
 pub(crate) struct Column {
     chunk: Chunk,
-    /// As stored (`StoredColumn::block_entities`). TODO: sent to nobody yet.
+    /// As stored (`StoredColumn::block_entities`).
     block_entities: Vec<u8>,
+    /// The same, read, each with its bytes on the wire.
+    tiles: OnceLock<Vec<(BlockEntity, Bytes)>>,
     /// As stored (`StoredColumn::actors`): nothing here moves or changes them.
     actors: Vec<u8>,
     /// Written since it was created, loaded or last handed to storage.
@@ -56,7 +59,7 @@ impl Column {
             chunk.fill_biomes(DEFAULT_BIOME);
         }
         let sections = (0..chunk.section_count()).map(|_| OnceLock::new()).collect();
-        Self { chunk, block_entities, actors, modified: false, damaged: false, heights: OnceLock::new(), announce: OnceLock::new(), announce_cached: OnceLock::new(), sections }
+        Self { chunk, block_entities, tiles: OnceLock::new(), actors, modified: false, damaged: false, heights: OnceLock::new(), announce: OnceLock::new(), announce_cached: OnceLock::new(), sections }
     }
 
     pub fn is_damaged(&self) -> bool {
@@ -96,11 +99,23 @@ impl Column {
         let name = |id| registry.get(id).map(|state| state.name);
         if !self.block_entities.is_empty() && name(self.chunk.block(x, y, z)) != name(id) {
             match without_block_entity(&self.block_entities, [x, y, z]) {
-                Ok(rest) => self.block_entities = rest,
+                Ok(rest) => {
+                    self.block_entities = rest;
+                    self.tiles.take();
+                }
                 Err(error) => tracing::warn!(x, y, z, %error, "unreadable block entities are kept as they are"),
             }
         }
         self.write(x, y, z, 0, id);
+    }
+
+    /// Makes `entity` the block entity of the block at `pos`; false when the column's block
+    /// entities are unreadable, which are kept as they are.
+    pub fn set_block_entity(&mut self, pos: [i32; 3], entity: &Value) -> bool {
+        let Ok(record) = with_block_entity(&self.block_entities, pos, entity) else { return false };
+        (self.block_entities, self.modified) = (record, true);
+        self.tiles.take();
+        true
     }
 
     /// The layer-1 block: the water a waterlogged block stands in, air otherwise.
@@ -135,6 +150,7 @@ impl Column {
     pub fn warm(&self, registry: &BlockRegistry) {
         self.level_chunk(false);
         self.level_chunk(true);
+        self.tiles();
         let lowest = self.chunk.dimension().min_y >> 4;
         for slot in 0..self.sections.len() as i32 {
             self.section(lowest + slot, registry);
@@ -154,14 +170,31 @@ impl Column {
     pub fn sub_chunk(&self, section_y: i32, registry: &BlockRegistry, offset: [i8; 3], cached: bool) -> Option<SubChunkAnswer> {
         let section = self.section(section_y, registry)?;
         let heightmap = self.heights(registry).sub_chunk(section_y);
-        // TODO: block entities follow the section (uncached) or are the payload (cached).
+        // Block entities follow the section (uncached) or are the payload (cached).
+        let in_section = |(tile, _): &&(BlockEntity, Bytes)| tile.pos[1] >> 4 == section_y;
+        let tiles: Vec<u8> = self.tiles().iter().filter(in_section).flat_map(|(_, wire)| wire.iter().copied()).collect();
         let (payload, blob) = match (section, cached) {
             (None, _) => (None, None),
-            (Some(blob), false) => (Some(blob.payload.clone()), None),
-            (Some(blob), true) => (Some(Bytes::new()), Some(blob.clone())),
+            (Some(blob), false) if tiles.is_empty() => (Some(blob.payload.clone()), None),
+            (Some(blob), false) => (Some([&blob.payload[..], &tiles].concat().into()), None),
+            (Some(blob), true) => (Some(tiles.into()), Some(blob.clone())),
         };
         let entry = SubChunkData { payload, blob: blob.clone(), heightmap }.entry(offset[0], offset[1], offset[2]);
         Some(SubChunkAnswer { entry, blob })
+    }
+
+    pub fn block_entity(&self, pos: [i32; 3]) -> Option<&BlockEntity> {
+        self.tiles().iter().map(|(tile, _)| tile).find(|tile| tile.pos == pos)
+    }
+
+    fn tiles(&self) -> &[(BlockEntity, Bytes)] {
+        self.tiles.get_or_init(|| match block_entities(&self.block_entities) {
+            Ok(tiles) => tiles.into_iter().map(|tile| (tile.network(), tile)).map(|(wire, tile)| (tile, wire)).collect(),
+            Err(error) => {
+                tracing::warn!(%error, "a column's block entities are unreadable; showing none of them");
+                Vec::new()
+            }
+        })
     }
 
     fn heights(&self, registry: &BlockRegistry) -> &ColumnHeights {

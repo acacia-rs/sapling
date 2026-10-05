@@ -9,7 +9,7 @@ use crate::data3d::Data3d;
 use crate::keys::{ChunkKey, Tag};
 use crate::states::BlockStates;
 use crate::sub_chunk::SubChunk;
-use crate::{Batch, Db, Error, LevelDat, actors};
+use crate::{Batch, Db, Error, LevelDat, PlayerData, actors, player};
 
 /// The chunk format version written; BDS 1.26.52 saves carry the same (tests/world.rs).
 const CHUNK_VERSION: u8 = 42;
@@ -24,7 +24,7 @@ pub struct DiskColumn {
     pub version: u8,
     /// Heightmap and biomes; the biomes are already in `chunk`.
     pub data3d: Option<Data3d>,
-    /// TODO: sent to nobody yet. Concatenated little-endian NBT compounds, kept as stored.
+    /// Concatenated little-endian NBT compounds, kept as stored (block_entities.rs).
     pub block_entities: Vec<u8>,
     /// The column's actors as one record of compounds (actors.rs).
     pub actors: Vec<u8>,
@@ -140,6 +140,15 @@ impl LevelDbWorld {
             batch.put(&key.sub_chunk(y), &SubChunk { y: Some(y), layers }.encode(&self.states)?);
         }
         self.db.write(batch)
+    }
+
+    /// What was kept of the player with this id (its UUID as text); `None` for a first visit.
+    pub fn load_player(&self, id: &str) -> Result<Option<PlayerData>, Error> {
+        self.db.get(&player::key(id))?.map(|record| PlayerData::decode(&record)).transpose()
+    }
+
+    pub fn store_player(&self, id: &str, player: &PlayerData) -> Result<(), Error> {
+        self.db.put(&player::key(id), &player.encode(self.registry()))
     }
 
     /// Writes what was stored out as a table file and replaces `level.dat` with `level`. A world
