@@ -16,17 +16,17 @@ sapling-net = { path = "crates/sapling-net", default-features = false }
 sapling-shard = { path = "crates/sapling-shard" }
 sapling-world = { path = "crates/sapling-world" }
 
-# Path deps on the acacia `nethernet/host` worktree (master plus the NetherNet host) until it is merged.
-acacia-auth = { path = "../acacia/acacia-nethernet/crates/acacia-auth", default-features = false }
-acacia-nethernet = { path = "../acacia/acacia-nethernet/crates/acacia-nethernet" }
-acacia-proto = { path = "../acacia/acacia-nethernet/crates/acacia-proto" }
-acacia-raknet = { path = "../acacia/acacia-nethernet/crates/acacia-raknet" }
-acacia-session = { path = "../acacia/acacia-nethernet/crates/acacia-session" }
-acacia-world = { path = "../acacia/acacia-nethernet/crates/acacia-world" }
+# Path deps on acacia's main checkout, which stays on `master`; these become git deps later.
+acacia-auth = { path = "../acacia/acacia/crates/acacia-auth", default-features = false }
+acacia-nethernet = { path = "../acacia/acacia/crates/acacia-nethernet" }
+acacia-proto = { path = "../acacia/acacia/crates/acacia-proto" }
+acacia-raknet = { path = "../acacia/acacia/crates/acacia-raknet" }
+acacia-session = { path = "../acacia/acacia/crates/acacia-session" }
+acacia-world = { path = "../acacia/acacia/crates/acacia-world" }
 # Test clients and the recorded BDS join (dev-dependencies only).
-acacia-bot = { path = "../acacia/acacia-nethernet/crates/acacia-bot" }
-acacia-client = { path = "../acacia/acacia-nethernet/crates/acacia-client" }
-acacia-testserver = { path = "../acacia/acacia-nethernet/crates/acacia-testserver" }
+acacia-bot = { path = "../acacia/acacia/crates/acacia-bot" }
+acacia-client = { path = "../acacia/acacia/crates/acacia-client" }
+acacia-testserver = { path = "../acacia/acacia/crates/acacia-testserver" }
 
 base64 = "0.22"
 bevy_ecs = { version = "0.19", default-features = false, features = ["std"] }
