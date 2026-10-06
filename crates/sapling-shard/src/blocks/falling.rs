@@ -15,7 +15,6 @@ use sapling_world::BlockRegistry;
 use super::place::gives_way;
 use super::{level, send};
 use crate::components::Tick;
-use crate::mobs;
 
 /// Snow layers fall on Bedrock (`TopSnowBlock` ticks as a falling block), where Java breaks them.
 const FALLS: &[&str] = &[":sand", "red_sand", "suspicious_sand", "suspicious_gravel", "gravel", "concrete_powder", "dragon_egg", "anvil", "snow_layer"];
@@ -88,13 +87,11 @@ fn slide(world: &mut World, layer: Entity, pos: BlockPos) -> Option<BlockPos> {
         return None;
     }
     let (registry, id) = block(world, layer, lowest)?;
-    let (hash, air) = (registry.network_hash(id), registry.air_id());
+    let air = registry.air_id();
     if !send::set(world, layer, lowest, air) {
         return None;
     }
-    let falling = flight::FallingBlock::leaving(level(world, layer)?, layer, id, lowest);
-    let entity = mobs::spawn_shown(world, layer, falling.at(), |net_id| Some(falling.announcement(net_id, hash)))?;
-    world.entity_mut(entity).insert(falling);
+    flight::start(world, layer, id, lowest)?;
     Some(lowest)
 }
 

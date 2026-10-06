@@ -686,6 +686,17 @@ block action, and takes StopBreak and AbortBreak with a position.
   of the axes moved more than 0.01 (tick fields 0), a `SetEntityMotion` when the motion changed by
   more than 0.2 since the last one or stopped; a falling block on BDS was sent exactly that. Not
   done: water and lava, being pushed out of a block.
+- **Entities and their API** (`entities.rs`, `creatures.rs`; `sapling_api::EntityId`, `EntityInfo`).
+  Whatever moves has a `Kind`, a `Body` and what its viewers were `Told`, beside its own part
+  (`Dropped`, `Orb`, `FallingBlock`, `Creature`); the generic code finds, lists, moves and removes
+  any of them by those alone, and files each under the column it is in every tick, so it is shown
+  and unloaded with that column. `ctx.spawn_entity(kind, feet)` makes a mob of a kind BDS was
+  recorded announcing (`Mobs.bin`; its box from there), in a loaded column; it falls and slides with
+  the Java game's living-entity physics (gravity 0.08, drag 0.98 down and 0.91 across, 0.546 on the
+  ground) and does nothing else. `ctx.entity(id)`, `entities()` (the world in focus, oldest first),
+  `move_entity`, `set_velocity` and `remove_entity` reach every kind: items, falling blocks and orbs
+  too. Mobs press every pressure plate, items and falling blocks wooden and weighted ones, orbs none.
+  Not done: AI, damage, saving; the mobs a world folder stores are still statues outside this.
 - **Kept between visits.** The first world's storage keeps hotbar, inventory, armour, offhand and the
   selected slot, the ender chest's slots and the experience under `sapling_player_<uuid>`, with the
   game's field names (`Inventory` with `Slot`, `Armor`, `Offhand`, `SelectedInventorySlot`,

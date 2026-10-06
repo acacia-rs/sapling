@@ -16,7 +16,7 @@ mod templates;
 
 pub use block_loot::{BlockLoot, Fortune, LootRow, StateTest, Tooling, block_loot, java_block, ripe_age};
 pub use clock::{clock_state, world_clocks};
-pub use entity::{AddEntityOptions, add_entity, add_experience_orb, add_falling_block, add_painting};
+pub use entity::{AddEntityOptions, add_entity, add_experience_orb, add_falling_block, add_painting, mob_size};
 pub use liquid_reaction::{LiquidDetection, LiquidReaction, liquid_detection};
 pub use inventory::{block_screen,inventory_content, inventory_screen, player_hotbar};
 pub use item_entity::{add_item_entity, mob_armor, mob_hand};

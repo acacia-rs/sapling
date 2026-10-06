@@ -13,10 +13,9 @@ use sapling_world::{ChunkPos, ItemStack};
 
 use crate::blocks::Dice;
 use crate::body::{Body, Physics};
-use crate::components::{InLayer, Layer, NetId, Position, Stage, Tick};
+use crate::components::{InLayer, NetId, Position, Stage, Tick};
 use crate::inventory::Inventory;
-use crate::sync::Told;
-use crate::{blocks, inventory, mobs};
+use crate::{blocks, entities, inventory, mobs};
 
 /// Ticks before a thrown item can be picked up, by anyone.
 const PICKUP_DELAY: u64 = 40;
@@ -40,14 +39,15 @@ const REACH: [f32; 2] = [1.0, 0.5];
 const PLAYER_HALF_WIDTH: f32 = 0.3;
 const PLAYER_HEIGHT: f32 = 1.8;
 
+/// An item's own part; its [`Body`] and what viewers were [`Told`] are beside it (entities.rs).
 #[derive(Component)]
 pub(crate) struct Dropped {
     stack: ItemStack,
-    body: Body,
-    told: Told,
     pickup_from: u64,
     age: u32,
 }
+
+const KIND: &str = "minecraft:item";
 
 fn wire([x, y, z]: [f32; 3]) -> [f32; 3] {
     [x, y + SIZE / 2.0, z]
@@ -59,9 +59,9 @@ fn dice(world: &mut World) -> Mut<'_, Dice> {
 
 /// Lets `stack` go with the bottom of its box at `at`, moving at `motion`.
 fn lay(world: &mut World, layer: Entity, stack: ItemStack, at: [f32; 3], motion: [f32; 3], pickup_from: u64) {
-    let shown = mobs::spawn_shown(world, layer, at, |id| mobs::item_announcement(id, &stack, wire(at), motion));
+    let shown = entities::spawn(world, layer, KIND, Body::new(at, motion, [SIZE; 2]), wire(at), |id| mobs::item_announcement(id, &stack, wire(at), motion));
     match shown {
-        Some(item) => drop(world.entity_mut(item).insert(Dropped { stack, body: Body::new(at, motion, [SIZE; 2]), told: Told::new(wire(at)), pickup_from, age: 0 })),
+        Some(item) => drop(world.entity_mut(item).insert(Dropped { stack, pickup_from, age: 0 })),
         None => tracing::debug!(item = %stack.name, "an item no client knows; it is gone"),
     }
 }
@@ -87,23 +87,18 @@ pub(crate) fn spill(world: &mut World, layer: Entity, stack: ItemStack, pos: Blo
     lay(world, layer, stack, [at[0], at[1] - SIZE / 2.0, at[2]], motion, from);
 }
 
-/// Where each lying item is, with its world.
-pub(crate) fn lying(world: &mut World) -> Vec<(Entity, [f32; 3])> {
-    world.query::<(&Dropped, &InLayer)>().iter(world).map(|(item, layer)| (layer.0, item.body.at)).collect()
-}
-
 /// The items lying in `layer` inside the box from `min` to `max`, oldest first.
 pub(crate) fn lying_in(world: &mut World, layer: Entity, min: [f32; 3], max: [f32; 3]) -> Vec<(Entity, ItemStack)> {
     let inside = |at: &[f32; 3]| (0..3).all(|axis| (min[axis]..=max[axis]).contains(&at[axis]));
-    let mut lying = world.query::<(Entity, &Dropped, &InLayer, &NetId)>();
-    let mut found: Vec<_> = lying.iter(world).filter(|(_, item, in_layer, _)| in_layer.0 == layer && inside(&item.body.at)).map(|(entity, item, _, id)| (id.0, entity, item.stack.clone())).collect();
+    let mut lying = world.query::<(Entity, &Dropped, &Body, &InLayer, &NetId)>();
+    let mut found: Vec<_> = lying.iter(world).filter(|(_, _, body, in_layer, _)| in_layer.0 == layer && inside(&body.at)).map(|(entity, item, _, _, id)| (id.0, entity, item.stack.clone())).collect();
     found.sort_unstable_by_key(|(id, ..)| *id);
     found.into_iter().map(|(_, entity, stack)| (entity, stack)).collect()
 }
 
 /// Takes `count` of the lying item `item` away; what is left lies on as a new item.
 pub(crate) fn take(world: &mut World, item: Entity, count: u8) {
-    let Some((stack, at, layer, pickup_from)) = world.query::<(&Dropped, &InLayer)>().get(world, item).ok().map(|(item, layer)| (item.stack.clone(), item.body.at, layer.0, item.pickup_from)) else { return };
+    let Some((stack, at, layer, pickup_from)) = world.query::<(&Dropped, &Body, &InLayer)>().get(world, item).ok().map(|(item, body, layer)| (item.stack.clone(), body.at, layer.0, item.pickup_from)) else { return };
     mobs::remove(world, item);
     if stack.count > count {
         lay(world, layer, ItemStack { count: stack.count - count, ..stack }, at, [0.0; 3], pickup_from);
@@ -114,23 +109,18 @@ pub(crate) fn take(world: &mut World, item: Entity, count: u8) {
 pub(crate) fn fly(world: &mut World) {
     let items: Vec<(Entity, Entity, u64)> = world.query::<(Entity, &Dropped, &InLayer, &NetId)>().iter(world).map(|(entity, _, layer, id)| (entity, layer.0, id.0)).collect();
     for (entity, layer, id) in items {
-        let Some(mut item) = world.entity_mut(entity).take::<Dropped>() else { continue };
+        let Some(mut item) = world.get_mut::<Dropped>(entity) else { continue };
         item.age += 1;
         if item.age >= LIFETIME {
             mobs::remove(world, entity);
             continue;
         }
-        if let Some(level) = world.get::<Layer>(layer).map(|layer| &layer.world) {
-            item.body.step(level, &Physics::ITEM);
-        }
-        let packets = item.told.update(id, wire(item.body.at), item.body.motion, item.body.on_ground);
+        let Some((body, packets)) = entities::step(world, entity, layer, id, &Physics::ITEM, SIZE / 2.0) else { continue };
         if !packets.is_empty() {
-            blocks::to_viewers(world, layer, item.body.at.map(|c| c.floor() as i32), &packets);
-            if let Some(shown) = mobs::item_announcement(id, &item.stack, wire(item.body.at), item.body.motion) {
-                mobs::reannounce(world, entity, shown);
-            }
+            blocks::to_viewers(world, layer, body.at.map(|c| c.floor() as i32), &packets);
+            let shown = world.get::<Dropped>(entity).and_then(|item| mobs::item_announcement(id, &item.stack, wire(body.at), body.motion));
+            shown.into_iter().for_each(|shown| mobs::reannounce(world, entity, shown));
         }
-        world.entity_mut(entity).insert(item);
     }
 }
 
@@ -149,8 +139,8 @@ fn reaches(feet: [f32; 3], item: [f32; 3]) -> bool {
 /// much as fits; what is left lies on as a new item.
 pub(crate) fn pick_up(world: &mut World) {
     let tick = world.resource::<Tick>().0;
-    let mut lying = world.query::<(Entity, &Dropped, &InLayer, &NetId)>();
-    let ready: Vec<_> = lying.iter(world).filter(|(_, item, ..)| item.pickup_from <= tick).map(|(entity, item, layer, id)| (entity, item.stack.clone(), item.body.at, layer.0, id.0)).collect();
+    let mut lying = world.query::<(Entity, &Dropped, &Body, &InLayer, &NetId)>();
+    let ready: Vec<_> = lying.iter(world).filter(|(_, item, ..)| item.pickup_from <= tick).map(|(entity, item, body, layer, id)| (entity, item.stack.clone(), body.at, layer.0, id.0)).collect();
     if ready.is_empty() {
         return;
     }

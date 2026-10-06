@@ -152,6 +152,23 @@ pub(crate) fn reannounce(world: &mut World, mob: Entity, announcement: Vec<Bytes
     }
 }
 
+/// Files the entity under the column of `at` when it moved into another: it is shown to those
+/// who see that one, and unloaded with it.
+pub(crate) fn follow(world: &mut World, mob: Entity, at: [f32; 3]) {
+    let home = ChunkPos::of_block(at[0].floor() as i32, at[2].floor() as i32);
+    let Some((old, id, layer)) = world.query::<(&Mob, &NetId, &InLayer)>().get(world, mob).ok().map(|(mob, id, layer)| (mob.home, id.0, layer.0)) else { return };
+    if old == home {
+        return;
+    }
+    if let Some(mut shown) = world.get_mut::<Mob>(mob) {
+        shown.home = home;
+    }
+    let mut grid = world.resource_mut::<MobGrid>();
+    grid.grid.remove(layer, old, &(mob, id));
+    grid.grid.insert(layer, home, (mob, id));
+    grid.changes += 1;
+}
+
 /// Takes a mob out of the world; those who saw it are told by [`update`].
 pub(crate) fn remove(world: &mut World, mob: Entity) {
     let Some((home, id, layer)) = world.query::<(&Mob, &NetId, &InLayer)>().get(world, mob).ok().map(|(mob, id, layer)| (mob.home, id.0, layer.0)) else { return };

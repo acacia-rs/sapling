@@ -75,6 +75,29 @@ impl crate::WorldBackend for Fake {
     }
 }
 
+/// No entities: spawns are logged and refused.
+impl crate::EntityBackend for Fake {
+    fn spawn_entity(&mut self, kind: &str, feet: [f32; 3]) -> Option<crate::EntityId> {
+        self.log.push(format!("spawn {kind} at {feet:?}"));
+        None
+    }
+    fn entity(&self, _: crate::EntityId) -> Option<crate::EntityInfo> {
+        None
+    }
+    fn entities(&self) -> Vec<crate::EntityInfo> {
+        Vec::new()
+    }
+    fn move_entity(&mut self, _: crate::EntityId, _: [f32; 3]) -> bool {
+        false
+    }
+    fn set_velocity(&mut self, _: crate::EntityId, _: [f32; 3]) -> bool {
+        false
+    }
+    fn remove_entity(&mut self, _: crate::EntityId) -> bool {
+        false
+    }
+}
+
 impl Backend for Fake {
     fn tick(&self) -> u64 {
         40

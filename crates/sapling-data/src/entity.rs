@@ -115,6 +115,14 @@ fn plain(identifier: &str) -> AddEntity {
     }
 }
 
+/// The width and height of a grown mob of `identifier`'s box, as BDS announced one; `None` for
+/// a kind it was not recorded announcing.
+pub fn mob_size(identifier: &str) -> Option<[f32; 2]> {
+    let grown = &RECORDED.get(identifier)?.grown;
+    let size = |key: Key| grown.metadata.iter().find(|item| item.key == key).and_then(|item| if let Value::Default(Plain::Float(size)) = item.value { Some(size) } else { None });
+    Some([size(Key::BoundingboxWidth)?, size(Key::BoundingboxHeight)?])
+}
+
 /// A falling block: BDS names the block by its network id in `Variant`; the hitbox is Java's.
 pub fn add_falling_block(id: u64, position: [f32; 3], velocity: [f32; 3], block_hash: u32) -> AddEntity {
     let options = AddEntityOptions {
@@ -222,6 +230,7 @@ mod tests {
         assert!(horse.attributes.iter().any(|attribute| attribute.name == HEALTH && attribute.value == 5.5 && attribute.max > 5.5) && !is_baby(&horse));
         assert!(horse.metadata.iter().any(|item| matches!(&item.value, Value::Flags(flags) if flags.contains(MetadataFlags1::SADDLED))));
         assert_eq!(add_entity(&options("minecraft:villager", false)).entity_type, "minecraft:villager_v2");
+        assert_eq!([mob_size("minecraft:horse"), mob_size("sapling:nothing_recorded")], [Some([1.4, 1.6]), None]);
         let unknown = add_entity(&options("sapling:nothing_recorded", false));
         assert_eq!((float(&unknown, Key::BoundingboxWidth), unknown.attributes.len()), (Some(WIDTH), 0));
     }

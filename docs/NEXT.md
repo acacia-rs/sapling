@@ -13,9 +13,9 @@ it does on BDS and the two captures can be diffed:
    pos)`, `entity(id)`, `entities()`, `move_entity`, `set_velocity`, `remove_entity`. Bodies are
    simulated on the server with BDS's gravity and drag and collide with blocks; no AI. One model for
    spawned mobs, the mobs a world folder stores (today statues, `mobs.rs`), lying items and falling
-   blocks; the shared body and sync are built (`body.rs`, `sync.rs`), what is left is the API and
-   mobs on it, an entity's grid cell following it, and saving them. Mobs press stone plates,
-   everything presses wooden ones.
+   blocks; the shared body and sync, the API and spawned mobs are built (`body.rs`, `sync.rs`,
+   `entities.rs`, `creatures.rs`). Left: the stored mobs as entities, and saving entities with
+   their column (an actor NBT writer).
 2. **Vanilla commands**, opt-in: a `sapling::vanilla` module on the public API,
    `Server::builder().vanilla_commands()`: /setblock, /fill, /tp, /give, /clear, /gamemode (the hub's
    moves there), /summon, /kill, /gamerule. /setblock and /fill write through a new

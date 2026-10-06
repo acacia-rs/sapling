@@ -4,6 +4,7 @@
 // TODO: no water or lava: BDS lifts items and orbs in them and slows them; nothing pushes a body
 // out of a block it is stuck in.
 
+use bevy_ecs::prelude::Component;
 use sapling_world::World as Level;
 
 /// Room left between boxes that touch, against float error.
@@ -13,8 +14,10 @@ const EPS: f32 = 1e-5;
 #[derive(Clone, Copy, Debug)]
 pub(crate) struct Physics {
     pub gravity: f32,
-    /// Motion kept from one tick to the next in the air.
+    /// Horizontal motion kept from one tick to the next in the air.
     pub air_drag: f32,
+    /// Vertical motion kept from one tick to the next.
+    pub fall_drag: f32,
     /// Horizontal motion kept on the ground: a normal block's friction 0.6 x 0.98.
     pub ground_drag: f32,
     /// What the vertical motion is multiplied by on the ground.
@@ -23,14 +26,17 @@ pub(crate) struct Physics {
 
 impl Physics {
     /// Experience orbs, which bounce (BDS `ExperienceOrb::normalTick`).
-    pub const ORB: Physics = Physics { gravity: 0.04, air_drag: 0.98, ground_drag: 0.588, bounce: -0.5 };
+    pub const ORB: Physics = Physics { gravity: 0.04, air_drag: 0.98, fall_drag: 0.98, ground_drag: 0.588, bounce: -0.5 };
     /// Items, which do not (BDS `ItemActor::postNormalTick`, docs/research/items.md).
-    pub const ITEM: Physics = Physics { gravity: 0.04, air_drag: 0.98, ground_drag: 0.588, bounce: 0.0 };
+    pub const ITEM: Physics = Physics { gravity: 0.04, air_drag: 0.98, fall_drag: 0.98, ground_drag: 0.588, bounce: 0.0 };
     /// A falling block, which stops where it lands (BDS `FallingBlockActor::normalTick`).
-    pub const FALLING_BLOCK: Physics = Physics { gravity: 0.04, air_drag: 0.98, ground_drag: 0.0, bounce: 0.0 };
+    pub const FALLING_BLOCK: Physics = Physics { gravity: 0.04, air_drag: 0.98, fall_drag: 0.98, ground_drag: 0.0, bounce: 0.0 };
+    /// A mob that does not walk: the Java game's living entity (`LivingEntity.travel`), 0.6 x 0.91
+    /// on the ground. BDS's were not looked up.
+    pub const MOB: Physics = Physics { gravity: 0.08, air_drag: 0.91, fall_drag: 0.98, ground_drag: 0.546, bounce: 0.0 };
 }
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Component, Clone, Copy, Debug, PartialEq)]
 pub(crate) struct Body {
     /// The middle of its bottom face.
     pub at: [f32; 3],
@@ -62,7 +68,7 @@ impl Body {
         for axis in [0, 2] {
             self.motion[axis] *= if landed { physics.ground_drag } else { physics.air_drag };
         }
-        self.motion[1] *= physics.air_drag;
+        self.motion[1] *= physics.fall_drag;
         if landed {
             self.motion[1] *= physics.bounce;
         }

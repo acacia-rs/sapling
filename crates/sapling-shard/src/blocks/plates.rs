@@ -1,7 +1,7 @@
 //! Pressure plates: down the tick something is on one, checked again while down and up on the
 //! first check that finds nothing, by BDS's `BasePressurePlateBlock`
 //! (docs/research/pressure-plates.md).
-// TODO: no redstone behind them; stored mobs, which never move, press nothing.
+// TODO: no redstone behind them; stored mobs, which are statues outside entities.rs, press nothing.
 
 use std::collections::HashMap;
 
@@ -12,14 +12,16 @@ use sapling_api::{BlockPos, GameMode};
 use super::place::{PLAYER_HALF_WIDTH, PLAYER_HEIGHT};
 use super::{doors, level, send};
 use crate::components::{InLayer, Mode, Position, Stage, Tick};
-use crate::drops;
+use crate::entities;
+
+const ORB: &str = "minecraft:xp_orb";
+/// Entities that press a plate but are no mob.
+const NOT_MOBS: [&str; 2] = ["minecraft:item", "minecraft:falling_block"];
 
 const SIGNAL: &str = "redstone_signal";
 /// The part of a plate's cell that feels a press: 1/16 in from each side, a quarter high.
 const INSET: f32 = 1.0 / 16.0;
 const FELT_HEIGHT: f32 = 0.25;
-const ITEM_HALF_WIDTH: f32 = 0.125;
-const ITEM_HEIGHT: f32 = 0.25;
 const PLAIN_DELAY: u64 = 20;
 const WEIGHTED_DELAY: u64 = 10;
 const FULL: u32 = 15;
@@ -118,7 +120,9 @@ fn bodies(world: &mut World) -> Vec<Body> {
         .filter(|(_, stage, ..)| **stage == Stage::InWorld)
         .map(|(layer, _, position, mode)| Body::around(layer.0, position.feet, PLAYER_HALF_WIDTH, PLAYER_HEIGHT, true, mode.0 == GameMode::Spectator))
         .collect();
-    bodies.extend(drops::lying(world).into_iter().map(|(layer, at)| Body::around(layer, at, ITEM_HALF_WIDTH, ITEM_HEIGHT, false, false)));
+    // Experience orbs press nothing; anything else but a mob only wooden and weighted plates.
+    let others = entities::bodies(world).into_iter().filter(|(_, kind, _)| kind != ORB);
+    bodies.extend(others.map(|(layer, kind, body)| Body::around(layer, body.at, body.size[0] / 2.0, body.size[1], !NOT_MOBS.contains(&kind.as_str()), false)));
     bodies
 }
 

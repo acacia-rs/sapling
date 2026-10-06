@@ -5,13 +5,14 @@
 
 use acacia_proto::packets::{MoveEntityDelta, SetEntityMotion};
 use acacia_proto::types::Vec3f;
+use bevy_ecs::prelude::Component;
 use bytes::Bytes;
 
 const MOVED: f32 = 0.01;
 const NEW_MOTION: f32 = 0.2;
 
 /// What viewers were last told of an entity.
-#[derive(Clone, Copy, Debug)]
+#[derive(Component, Clone, Copy, Debug)]
 pub(crate) struct Told {
     at: [f32; 3],
     motion: [f32; 3],
