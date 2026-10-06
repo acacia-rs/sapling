@@ -66,16 +66,28 @@ pub(crate) fn punch_particles(registry: &BlockRegistry, pos: BlockPos, face: Fac
     sapling_net::encode(&LevelEvent { event: PUNCH[face as usize], position: centre(pos), data: registry.network_hash(id) as i32 })
 }
 
+/// The sound of the block `id` placed: BDS names the block's first state, not the one placed.
 pub(crate) fn place_sound(registry: &BlockRegistry, pos: BlockPos, id: u32) -> Bytes {
-    sound("place", registry, pos, id)
+    let first = registry.get(id).and_then(|state| registry.states_of(state.name).next()).map_or(id, |(first, _)| first);
+    sound("place", registry, pos, first)
 }
 
 /// The sound `name` of the block `id`, which tells the client what the block is made of.
 pub(crate) fn sound(name: &str, registry: &BlockRegistry, pos: BlockPos, id: u32) -> Bytes {
+    sound_at(name, registry, centre(pos), id)
+}
+
+/// [`sound`] from a point other than the block's centre.
+pub(crate) fn sound_at(name: &str, registry: &BlockRegistry, position: Vec3f, id: u32) -> Bytes {
+    noise(name, position, registry.network_hash(id) as i32)
+}
+
+/// The sound `name` at `position`, with what it says of itself in `extra_data` (-1: nothing).
+pub(crate) fn noise(name: &str, position: Vec3f, extra_data: i32) -> Bytes {
     sapling_net::encode(&LevelSoundEvent {
         sound_id: name.into(),
-        position: centre(pos),
-        extra_data: registry.network_hash(id) as i32,
+        position,
+        extra_data,
         entity_type: String::new(),
         is_baby_mob: false,
         is_global: false,
@@ -105,13 +117,23 @@ pub(crate) fn keep_entity(world: &mut World, layer: Entity, pos: BlockPos, entit
     to_viewers(world, layer, pos, &shown);
 }
 
-/// Writes a layer-0 block and shows it to everyone who sees the place. False, with nothing
-/// changed, outside the world's height and where the column is not loaded or cannot be written.
+/// Writes a layer-0 block, and layer 1 as the block decides (waterlog.rs), and shows the layer-0
+/// block to everyone who sees the place: their clients move the water between layers by the same
+/// rule, and BDS sends nothing for it. False, with nothing changed, outside the world's height
+/// and where the column is not loaded or cannot be written.
 pub(crate) fn set(world: &mut World, layer: Entity, pos: BlockPos, id: u32) -> bool {
     let Some(mut level) = world.get_mut::<Layer>(layer) else { return false };
     let [x, y, z] = pos;
-    if !level.world.in_height(y) || !level.world.set_block(x, y, z, id) {
+    if !level.world.in_height(y) {
         return false;
+    }
+    let held = level.world.liquid(x, y, z);
+    let (id, now_held) = super::waterlog::written(level.world.registry(), id, level.world.block(x, y, z), held);
+    if !level.world.set_block(x, y, z, id) {
+        return false;
+    }
+    if now_held != held {
+        level.world.set_liquid(x, y, z, now_held);
     }
     let packet = update(level.world.registry(), pos, id, 0);
     to_viewers(world, layer, pos, &[packet]);
@@ -138,12 +160,21 @@ pub(crate) fn put_block(world: &mut World, layer: Entity, pos: BlockPos, block: 
 
 /// Empties layer 1 at `pos` for everyone, if it held something.
 pub(crate) fn clear_liquid(world: &mut World, layer: Entity, pos: BlockPos) {
-    let Some(mut level) = world.get_mut::<Layer>(layer) else { return };
-    let ([x, y, z], air) = (pos, level.world.registry().air_id());
-    if level.world.liquid(x, y, z) != air && level.world.set_liquid(x, y, z, air) {
-        let packet = update(level.world.registry(), pos, air, 1);
-        to_viewers(world, layer, pos, &[packet]);
+    let Some(air) = world.get::<Layer>(layer).map(|level| level.world.registry().air_id()) else { return };
+    set_liquid(world, layer, pos, air);
+}
+
+/// Writes layer 1, where a waterlogged block keeps its water, and shows it to everyone who sees
+/// the place; false when it held that already or cannot be written.
+pub(crate) fn set_liquid(world: &mut World, layer: Entity, pos: BlockPos, id: u32) -> bool {
+    let Some(mut level) = world.get_mut::<Layer>(layer) else { return false };
+    let [x, y, z] = pos;
+    if !level.world.in_height(y) || level.world.liquid(x, y, z) == id || !level.world.set_liquid(x, y, z, id) {
+        return false;
     }
+    let packet = update(level.world.registry(), pos, id, 1);
+    to_viewers(world, layer, pos, &[packet]);
+    true
 }
 
 /// Shows one player both layers of each position as the world has them, undoing what its client

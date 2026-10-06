@@ -78,6 +78,14 @@ Rows keep Java's block ids; `java_block` maps a Bedrock block name to one (a han
 renamed blocks, and `*_double_slab` to its slab). This is Java's behaviour: where Bedrock's hard-coded
 drops differ, nothing here knows.
 
+## Liquid reactions
+
+`liquid-reactions.tsv` (read by `liquid_reaction.rs`): for each of 736 vanilla blocks, what water
+does to it (Broken, Popped, Blocking, Noreaction) and whether it keeps a water source beside itself.
+Read statically off BDS's block registration, not out of a pack or the Java jar; how, and which rows
+are less certain: sapling's `docs/research/waterlogging.md`. A block not listed is Blocking and keeps
+nothing, BDS's default.
+
 `game_rules`, `no_player_spawn` and `world_spawn` are built, not recorded: the rules are StartGame's, the
 spawn packets have the shape `bds_entity_probe` (join) and `bds_mob_recorder` (`/setworldspawn`) print.
 

@@ -1,8 +1,7 @@
-//! What a changed block does to its neighbours: sand and gravel over a gap fall, and what stood
-//! on or hung off a block that is gone breaks and leaves its item.
-// TODO: a falling block lands at once, without the falling entity; the lists are name endings,
-// not block data; levers, vines, wall banners and beds are not looked at; `ctx.set_block`
-// settles nothing.
+//! What a changed block does to its neighbours: sand and gravel over a gap start to fall
+//! (falling.rs), and what stood on or hung off a block that is gone breaks and leaves its item.
+// TODO: the lists are name endings, not block data; levers, vines, wall banners and beds are not
+// looked at; `ctx.set_block` settles nothing.
 
 use std::collections::VecDeque;
 
@@ -10,13 +9,11 @@ use bevy_ecs::prelude::*;
 use sapling_api::{BlockPos, Face};
 use sapling_world::BlockRegistry;
 
-use super::place::gives_way;
-use super::{doors, level, loot, send, water};
+use super::falling::{self, Change};
+use super::{doors, level, liquid, loot, send};
 
 /// Cells looked at for one change: a tower of sand is one cell a step.
 const MAX_STEPS: usize = 512;
-/// Snow layers fall on Bedrock (`TopSnowBlock` ticks as a falling block), where Java breaks them.
-const FALLS: &[&str] = &[":sand", "red_sand", "suspicious_sand", "gravel", "concrete_powder", "dragon_egg", "anvil", "snow_layer"];
 /// Blocks that need the block under them (the Java game's `canSurvive`).
 const STANDS: &[&str] = &[
     "_door", "carpet", "rail", "sapling", "short_grass", "tall_grass", "fern", "deadbush", "poppy", "dandelion", "tulip", "orchid", "allium", "bluet", "daisy",
@@ -72,16 +69,6 @@ fn block(world: &World, layer: Entity, [x, y, z]: BlockPos) -> Option<(&BlockReg
     (level.in_height(y) && level.is_loaded(send::column([x, y, z]))).then(|| (level.registry(), level.block(x, y, z)))
 }
 
-/// Moves the falling block at `pos` to the lowest cell under it that gives way; false when it
-/// stays.
-fn fall(world: &mut World, layer: Entity, pos: BlockPos) -> bool {
-    let Some((registry, id)) = block(world, layer, pos).filter(|(registry, id)| registry.get(*id).is_some_and(|state| ends(state.name, FALLS))) else { return false };
-    let air = registry.air_id();
-    let free = |y: i32| block(world, layer, [pos[0], y, pos[2]]).is_some_and(|(registry, id)| gives_way(registry, id));
-    let Some(lowest) = (1..).map(|down| pos[1] - down).take_while(|y| free(*y)).last() else { return false };
-    send::set(world, layer, pos, air) && send::set(world, layer, [pos[0], lowest, pos[2]], id)
-}
-
 /// Breaks the block at `pos` as one that lost its hold: it leaves its item.
 fn pop(world: &mut World, layer: Entity, pos: BlockPos) {
     let Some((registry, id)) = block(world, layer, pos) else { return };
@@ -100,10 +87,10 @@ pub(super) fn settle(world: &mut World, layer: Entity, pos: BlockPos) {
     let mut changed = VecDeque::from([pos]);
     for _ in 0..MAX_STEPS {
         let Some(pos) = changed.pop_front() else { return };
-        water::disturb(world, layer, pos);
-        if fall(world, layer, pos) {
-            changed.push_back(pos);
-            continue;
+        liquid::disturb(world, layer, pos);
+        falling::unsettled(world, layer, pos, Change::Placed);
+        for face in Face::ALL {
+            falling::unsettled(world, layer, face.neighbour(pos), if face == Face::Up { Change::Below } else { Change::Beside });
         }
         if block(world, layer, pos).is_none_or(|(registry, id)| registry.get(id).is_some_and(|state| state.is_solid())) {
             continue;
@@ -113,8 +100,6 @@ pub(super) fn settle(world: &mut World, layer: Entity, pos: BlockPos) {
             let Some((registry, id)) = block(world, layer, beside) else { continue };
             if depended(registry, id, face) {
                 pop(world, layer, beside);
-                changed.push_back(beside);
-            } else if face == Face::Up && registry.get(id).is_some_and(|state| ends(state.name, FALLS)) {
                 changed.push_back(beside);
             }
         }

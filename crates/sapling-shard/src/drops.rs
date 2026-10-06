@@ -68,6 +68,11 @@ pub(crate) fn spill(world: &mut World, layer: Entity, stack: ItemStack, [x, y, z
     lay(world, layer, stack, [x as f32 + 0.5, y as f32, z as f32 + 0.5], from);
 }
 
+/// Where each lying item is, with its world.
+pub(crate) fn lying(world: &mut World) -> Vec<(Entity, [f32; 3])> {
+    world.query::<(&Dropped, &InLayer)>().iter(world).map(|(item, layer)| (layer.0, item.at)).collect()
+}
+
 /// The items lying in `layer` inside the box from `min` to `max`, oldest first.
 pub(crate) fn lying_in(world: &mut World, layer: Entity, min: [f32; 3], max: [f32; 3]) -> Vec<(Entity, ItemStack)> {
     let inside = |at: &[f32; 3]| (0..3).all(|axis| (min[axis]..=max[axis]).contains(&at[axis]));

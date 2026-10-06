@@ -16,6 +16,7 @@ use crate::templates::{decode, records};
 /// The hitbox of a kind without a recording, in blocks.
 const WIDTH: f32 = 0.9;
 const HEIGHT: f32 = 0.9;
+const FALLING_BLOCK_SIZE: f32 = 0.98;
 const HEALTH: &str = "minecraft:health";
 
 struct Recorded {
@@ -112,6 +113,32 @@ fn plain(identifier: &str) -> AddEntity {
         properties: EntityProperties { ints: Vec::new(), floats: Vec::new() },
         links: Vec::new(),
     }
+}
+
+/// A falling block: BDS names the block by its network id in `Variant`; the hitbox is Java's.
+pub fn add_falling_block(id: u64, position: [f32; 3], velocity: [f32; 3], block_hash: u32) -> AddEntity {
+    let options = AddEntityOptions {
+        id,
+        identifier: "minecraft:falling_block",
+        feet: position,
+        yaw: 0.0,
+        pitch: 0.0,
+        variant: block_hash as i32,
+        mark_variant: 0,
+        color: 0,
+        baby: false,
+        flags: MetadataFlags1(0),
+        health: None,
+        name: "",
+    };
+    let mut block = add_entity(&options);
+    for item in &mut block.metadata {
+        if matches!(item.key, Key::BoundingboxWidth | Key::BoundingboxHeight) {
+            item.value = Value::Default(Plain::Float(FALLING_BLOCK_SIZE));
+        }
+    }
+    let [x, y, z] = velocity;
+    AddEntity { velocity: Vec3f { x, y, z }, ..block }
 }
 
 /// An experience orb worth `value` at `at`, moving at `velocity`.

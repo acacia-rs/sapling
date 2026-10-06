@@ -2,19 +2,24 @@
 //! handlers and then either done for everyone who sees the place or undone on the client that
 //! predicted it (docs/DESIGN.md "Step 6 as built").
 
+mod buckets;
 mod doors;
 mod facing;
+mod falling;
 mod items;
+mod liquid;
 mod loot;
 mod mining;
 mod place;
+mod plates;
 mod send;
 mod updates;
-mod water;
+mod waterlog;
 
 pub(crate) use doors::{release_buttons, with as with_property};
+pub(crate) use plates::press_plates;
 pub(crate) use loot::Dice;
-pub(crate) use water::tick as flow_water;
+pub(crate) use liquid::tick as flow_liquids;
 pub(crate) use mining::Breaking;
 pub(crate) use send::{block_at, keep_entity, put_block, set, sound, to_viewers};
 
@@ -96,6 +101,13 @@ fn site(world: &World, player: Entity, pos: BlockPos) -> Option<Site> {
 
 fn is_used(name: &str) -> bool {
     USED.iter().any(|end| name.ends_with(end))
+}
+
+/// Moves falling blocks and starts the falls that are due, then settles what they changed.
+pub(crate) fn fall_blocks(world: &mut World) {
+    for (layer, pos) in falling::tick(world) {
+        updates::settle(world, layer, pos);
+    }
 }
 
 /// Runs this tick's block requests through the checks and the handlers.
@@ -206,14 +218,13 @@ impl Request<'_> {
     /// Takes the block at `pos` out of the world: what is left is the water it stood in, or air.
     fn remove(&mut self, site: &Site, [x, y, z]: BlockPos) -> bool {
         let Some(level) = level(self.world, site.layer) else { return false };
-        let (id, left) = (level.block(x, y, z), level.liquid(x, y, z));
+        let (id, air) = (level.block(x, y, z), level.registry().air_id());
         let particles = send::destroy_particles(level.registry(), [x, y, z], id);
         doors::remove_other_half(self.world, site.layer, [x, y, z]);
         crate::containers::spill(self.world, site.layer, [x, y, z], site.mode == GameMode::Creative);
-        if !send::set(self.world, site.layer, [x, y, z], left) {
+        if !send::set(self.world, site.layer, [x, y, z], air) {
             return false;
         }
-        send::clear_liquid(self.world, site.layer, [x, y, z]);
         send::to_viewers(self.world, site.layer, [x, y, z], &[particles]);
         updates::settle(self.world, site.layer, [x, y, z]);
         true
@@ -228,13 +239,27 @@ impl Request<'_> {
         let target = face.neighbour(pos);
         let Some(site) = site(self.world, self.entity, pos) else { return self.resync(&[pos, target]) };
         let Some((registry, clicked)) = self.block(&site, pos) else { return };
-        let Some(state) = registry.get(clicked).filter(|state| !state.is_air()) else { return self.resync(&[pos, target]) };
+        let Some(name) = registry.get(clicked).filter(|state| !state.is_air()).map(|state| state.name) else { return self.resync(&[pos, target]) };
+        // The clicked block's own use comes first, unless the player sneaks.
+        let builds = site.sneaking || !is_used(name);
+        if builds && self.held_item(site.mode, click).is_some_and(|held| self.use_bucket(&site, pos, face, &held)) {
+            return;
+        }
+        let Some((registry, clicked)) = self.block(&site, pos) else { return };
         let in_hand = place::held_block(self.world, self.entity, registry).filter(|_| site.mode != GameMode::Creative);
         let (yaw, pitch) = self.world.get::<Position>(self.entity).map_or((0.0, 0.0), |position| (position.yaw, position.pitch));
-        match in_hand.or_else(|| place::claimed_block(registry, &click.held_item)).filter(|_| site.sneaking || !is_used(state.name)) {
+        match in_hand.or_else(|| place::claimed_block(registry, &click.held_item)).filter(|_| builds) {
             Some(id) => self.place(&site, pos, &Click { face, height: click.click_pos.y, yaw, pitch }, id, in_hand.is_some()),
             None => self.interact(&site, pos, face, send::describe(registry, clicked)),
         }
+    }
+
+    /// The name of the item in the server's copy of the hand; in creative mode, where any item is
+    /// to be had, the one the client names when the hand holds none.
+    fn held_item(&self, mode: GameMode, click: &TransactionUseItem) -> Option<String> {
+        let held = self.world.get::<crate::inventory::Inventory>(self.entity).and_then(|inventory| inventory.in_hand().as_ref()).map(|held| held.stack.name.clone());
+        let claimed = || sapling_data::item_name(click.held_item.network_id.into()).filter(|_| mode == GameMode::Creative && click.held_item.count > 0).map(str::to_owned);
+        held.or_else(claimed)
     }
 
     /// Allowed, a chest or barrel shows what it holds (containers.rs) and a block that moves by
