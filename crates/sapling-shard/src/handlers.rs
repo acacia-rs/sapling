@@ -224,11 +224,14 @@ pub(crate) fn dispatch(world: &mut World, plugins: &mut Plugins) {
     chat::dispatch(world, plugins);
     commands::dispatch(world, plugins);
     blocks::release_buttons(world);
-    blocks::flow_water(world);
+    blocks::press_plates(world);
+    blocks::flow_liquids(world);
     blocks::dispatch(world, plugins);
     blocks::dispatch_sign_edits(world);
     sleep::tick(world);
     campfires::tick(world);
+    // After the requests: a block placed over a gap falls in the tick it was placed, as on BDS.
+    blocks::fall_blocks(world);
     inventory::dispatch(world, plugins);
     containers::dispatch_closes(world);
     containers::show_lids_again(world);

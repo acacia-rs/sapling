@@ -39,19 +39,27 @@ fn seeds_go_into_farmland_only() {
 
 #[test]
 fn sugar_cane_needs_water_beside_its_ground() {
-    let mut h = with("minecraft:sugar_cane", &[([2, 64, 0], "sand"), ([3, 64, 0], "water"), ([2, 64, 1], "sand")]);
-    assert_eq!(placed_on(&mut h, [2, 64, 1]), None, "no water beside");
-    assert_eq!(placed_on(&mut h, [2, 64, 0]), Some("minecraft:reeds"));
-    assert_eq!(placed_on(&mut h, [2, 65, 0]), Some("minecraft:reeds"), "on cane");
+    // Sand on the platform, beside water walled in so that it does not run.
+    let mut h = with("minecraft:sugar_cane", &[
+        ([2, 65, 0], "sand"),
+        ([3, 65, 0], "water"),
+        ([4, 65, 0], "stone"),
+        ([3, 65, 1], "stone"),
+        ([3, 65, -1], "stone"),
+        ([2, 65, -2], "sand"),
+    ]);
+    assert_eq!(placed_on(&mut h, [2, 65, -2]), None, "no water beside");
+    assert_eq!(placed_on(&mut h, [2, 65, 0]), Some("minecraft:reeds"));
+    assert_eq!(placed_on(&mut h, [2, 66, 0]), Some("minecraft:reeds"), "on cane");
 
     // Stone where the water was: both canes break.
     h.remote.run(|ctx| ctx.set_game_mode(ALEX, sapling_api::GameMode::Creative));
     h.tick_all();
-    h.receive(1, &click([4, 64, 0], 4, Some("minecraft:stone")));
+    h.receive(1, &click([3, 64, 0], 1, Some("minecraft:stone")));
     let registry = sapling_world::BlockRegistry::vanilla();
     let air = registry.network_hash(registry.air_id());
     let gone: Vec<_> = all::<UpdateBlock>(h.tick_all().to(2)).iter().filter(|update| update.block_runtime_id == air).map(|update| [update.position.x, update.position.y, update.position.z]).collect();
-    assert_eq!(gone, [[2, 65, 0], [2, 66, 0]]);
+    assert_eq!(gone, [[2, 66, 0], [2, 67, 0]]);
 }
 
 #[test]

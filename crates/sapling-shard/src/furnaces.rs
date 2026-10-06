@@ -116,14 +116,11 @@ pub(crate) fn forget(world: &mut World, layer: Entity, pos: BlockPos) {
     containers::unpin(world, layer, pos);
 }
 
-/// What a player may not put into a furnace: anything into the result, what does not burn into
-/// the fuel (BDS `isItemAllowedInFuelSlot`, which also takes a bucket).
+/// What a player may not put into a furnace: what does not burn into the fuel (BDS
+/// `isItemAllowedInFuelSlot`, which also takes a bucket). BDS takes anything into the result
+/// (REC: `bds_container_probe`), and so does this.
 pub(crate) fn refuses(slot: usize, item: &ItemStack) -> bool {
-    match slot {
-        FUEL => fuel::burn_ticks(&item.name, 1).is_none() && item.name != fuel::BUCKET,
-        OUTPUT => true,
-        _ => false,
-    }
+    slot == FUEL && fuel::burn_ticks(&item.name, 1).is_none() && item.name != fuel::BUCKET
 }
 
 /// A hopper above fills the input with anything; one beside, the fuel with what burns.

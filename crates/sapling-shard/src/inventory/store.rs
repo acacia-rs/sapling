@@ -58,7 +58,7 @@ pub(crate) fn send_own(mut players: Query<(&NetId, &Stage, &mut Inventory, &mut 
             inventory.send_all(&mut out);
             out.push(&sapling_data::player_hotbar(inventory.selected, true));
             if inventory.experience != Experience::default() {
-                out.push(&experience::attributes(id, &inventory.experience));
+                out.push(&experience::attributes(id, &inventory.experience, true));
             }
             inventory.sent = true;
         }

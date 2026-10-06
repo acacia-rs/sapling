@@ -539,8 +539,8 @@ block action, and takes StopBreak and AbortBreak with a position.
   `trapdoor.open` / `.close`, `fence_gate.open` / `.close`, `door.open` / `.close`, with the block's
   network id as extra data. The names are strings in the server binary except the door's, which follow
   the pattern. A block with an `upper_block_bit` needs the cell above free, is placed with its upper
-  cell, and loses its other cell when one is broken (one drop). No pressure plates or redstone; beds
-  are one cell; a gate does not swing away from its user.
+  cell, and loses its other cell when one is broken (one drop). No redstone; beds are one cell; a
+  gate does not swing away from its user.
 - **Sleeping** (`sleep.rs`, `docs/research/beds-and-containers.md` sections 1 to 4). An allowed
   click on a bed checks as BDS's `BedBlock::use_sleep` does: occupied by another sleeper
   (`tile.bed.occupied`; a stale `occupied_bit` is cleared), eyes more than 3, 4, 3 blocks from
@@ -555,25 +555,72 @@ block action, and takes StopBreak and AbortBreak with a position.
   of how many: `LevelEventGeneric` 9801 with the Ints `ableToSleep`, `overworldPlayerCount`,
   `sleepingPlayerCount` (BDS `updateSleepingPlayerList`). Not done: monsters near the bed (mobs
   are statues), weather, BDS's stand-up search, and the spawn is never used.
-- **Neighbours** (`blocks/updates.rs`). After a player's break or place: sand, gravel, concrete powder,
-  anvils and snow layers over a cell that gives way move to the lowest such cell at once (BDS spawns
-  a falling-block entity instead); what stood on a block that is gone (the Java game's `canSurvive`
+- **Ground truth for what follows**: `cargo build -p sapling --example bds_mechanism_probe`, then
+  `tools/bds-drill.sh <bds dir> <port> bds_mechanism_probe <out>` runs drills (falls, plates, buckets,
+  lava, waterlogging, the odd cases too) on a BDS with a fresh world. The 2026-10-06 run and what it
+  showed against sapling: `research/captures/bds-mechanisms*.{txt,md}`.
+- **Neighbours** (`blocks/updates.rs`). After a player's break or place: falling blocks around are
+  queued to fall (next bullet); what stood on a block that is gone (the Java game's `canSurvive`
   blocks: plants, rails, carpets, doors, standing torches and signs, candles, floor buttons and levers)
   and what hung on it (wall torches, ladders, buttons, levers, wall signs and banners) breaks and
   leaves its loot; each of these is followed up, 512 cells at most for one change. Support is "the
   cell is solid", where the game asks the face. `ctx.set_block` settles nothing.
-- **Water** (`blocks/water.rs`). The rule is the Bedrock server's own, `LiquidBlock::_tick` as decompiled
-  with bdsre (`docs/research/water.md` has the pseudo-code, the addresses and what stayed unverified).
-  Water next to a change is queued and moves 5 ticks later, 512 cells a tick at most. A flowing cell
-  takes the least depth beside it plus one (`liquid_depth` 0 source, 1 to 7 by distance; falling water
-  beside counts as 0), or 8 plus the depth of the water above it (8 to 15: falling water keeps the depth
-  of its stream), or dries up when nothing feeds it; two sources beside, or one beside and one above,
-  over a floor or a source make it a source. Then it falls into room below and does nothing else; over
-  water only a source goes on; on a floor it runs one deeper towards the nearest drop, found up to 5
-  cells away (4, 3, 2 for depths 5, 6, 7), every equally near way, or every open way when there is no
-  drop. It never overwrites water. Not as the game: layer 0 only (waterlogged blocks neither feed nor
-  take water), no lava, and what gives way is the placing code's list of plants, each leaving its item,
-  where the game has a reaction per block (leave loot, vanish, block, or take the water in).
+- **Falling blocks** (`blocks/falling.rs`, `falling/flight.rs`). Sand, gravel, concrete powder, anvils,
+  the dragon egg and snow layers over a cell that is free (gives way, a snow layer, coral) fall: a
+  placed one in its tick, one whose block below changed a tick later, others two (BDS `FallingBlock`,
+  and the capture). The lowest of a stack goes first. The cell becomes air and a
+  `minecraft:falling_block` entity (`Variant` = the block's network id, box 0.98) drops by BDS's
+  gravity 0.04 and drag 0.98, shown a tick into its fall at the box bottom + 0.49, with a
+  MoveEntityDelta each tick (tick fields 0) and SetEntityMotion 0 on landing. Where it comes to rest
+  on a collision box it is placed a tick later and removed three after that; a cell that does not
+  give way (a torch, a slab) or a brushable block breaks it at once: particles at the entity and the
+  block's own item (a snowball for snow), nothing for brushables. 600 ticks in the air also break it;
+  below the world it vanishes. Anvils thud (LevelEvent 1022 at the cell's corner). Not done:
+  UpdateBlockSynced at start and landing (BDS's; acacia-proto reads its entity id as zigzag), the
+  `MOVING` flag, `Health` 1, the splash into water, concrete hardening, fall damage.
+- **Water and lava** (`blocks/liquid.rs`, `liquid/flow.rs`, `liquid/harden.rs`). The rule is the
+  Bedrock server's own, `LiquidBlock::_tick` as decompiled with bdsre (`docs/research/water.md`,
+  `buckets-lava.md`). A liquid next to a change is queued and moves after its delay, 512 cells a tick
+  at most: water 5 ticks, lava 30 (10 in the nether). A flowing cell takes the least depth beside it
+  plus the drop-off (water 1, lava 2, 1 in the nether; `liquid_depth` 0 source, up to 7 by
+  distance; falling liquid beside counts as 0), or 8 plus the depth above it (8 to 15: falling liquid
+  keeps the depth of its stream), or dries up when nothing feeds it; for water, two sources beside,
+  or one beside and one above, over a floor or a source make it a source. Lava thinning out waits 4
+  times as long three times in four. Then it falls into room below and does nothing else; over a
+  liquid only a source goes on; on a floor it runs towards the nearest drop, looked for 4 steps out
+  for water (less for depths 5 to 7) and 2 for lava, every equally near way, or every open way. Water
+  stops at a block whose BDS liquid reaction is Blocking, replaces Popped (with its loot) and Broken
+  ones, and takes Noreaction ones in beside them (layer 1); lava stops at blocks with collision and
+  burns the rest with a hiss. The water a waterlogged block keeps in layer 1 is the cell's water to
+  every rule. Lava touching water through its sides or top hardens (obsidian from a source, cobblestone
+  otherwise, basalt by blue ice over soul soil); lava falling onto water makes stone; each hisses
+  (LevelEvent 1004 at the centre, pitch 2.6 ± 0.8 x 1000). Neither overwrites lava or its own kind.
+  Not done: lava setting fire, BDS's per-block `isLavaBlocking` (collision stands in).
+- **Waterlogged blocks** (`blocks/waterlog.rs`, `sapling_data::liquid_detection`). Each vanilla block's
+  liquid reaction and whether it can contain liquid were read off BDS's block registration
+  (`docs/research/waterlogging.md`, `sapling-data/data/liquid-reactions.tsv`). Every layer-0 write
+  (`send::set`) applies BDS's `LevelChunk::setBlock` rule: a block that can contain liquid written
+  over a water source keeps it in layer 1; any other block clears layer 1; air lets layer-1 water take
+  the cell. Viewers are sent layer 0 only, as BDS does: their clients apply the same rule.
+- **Buckets** (`blocks/buckets.rs`, BDS `BucketItem::_useOn`). A click with a bucket, unless the clicked
+  block is one a click uses and the player is not sneaking. An empty bucket takes the source clicked
+  (from layer 1 of a waterlogged block too; never flowing liquid; water walled in by sources and solid
+  blocks on all six sides stays). A full one pours a source into the clicked block when it is water
+  and the block can contain it (layer 1), else into the cell on the clicked face, or the snow layer
+  under it, which is cleared; a solid block, a portal or something else in layer 1 refuses it; a
+  Popped block there leaves its loot; water poured in the nether only hisses. Taking is offered to
+  handlers as a `BreakEvent` and pouring as a `PlaceEvent` (both start allowed in survival and
+  creative), so build protection covers buckets. Sounds `bucket.fill.*` / `bucket.empty.*` at the
+  player's feet. Outside creative the hand's bucket swaps (a stack of empties: one fills into a
+  free slot, or is thrown). Not done: powder snow, fish, milk, cauldrons, evaporation particles.
+- **Pressure plates** (`blocks/plates.rs`, BDS `BasePressurePlateBlock`). A plate goes down the tick
+  a body is in its sensitive box (1/16 in from each side, a quarter high): players for every plate
+  (not spectators on plain ones), lying items for wooden and weighted ones. While down it is checked
+  again every 20 ticks (weighted: 10) and comes up on the first check that finds it empty; a weighted
+  plate's signal is `ceil(min(n, max) / max x 15)`, max 15 or 150. A plain plate stores
+  `redstone_signal` 1 when down. `pressure_plate.click_on` / `click_off` at y + 0.1 between up and
+  down, extra data the new state. Unverified: the drill pressed no plate on BDS at all, not even
+  under a walking chicken (research/captures/bds-mechanisms-findings.md); no redstone behind them.
 - **Tool wear** (`inventory/wear.rs`). A survival break of a block with hardness above 0 counts one use
   (a sword: two) in the `Damage` tag of the tool in the hand, where the game keeps it; the tool is gone
   when its damage would pass its durability, so a wooden tool lasts 60 uses (BDS
@@ -660,7 +707,8 @@ block action, and takes StopBreak and AbortBreak with a position.
   the face clicked, from memory) that refuses shulker boxes. Broken, it spills nothing: it drops
   itself with its items in the item's tag as `Items` (in creative only when it holds something), and
   the loot table drops nothing more; placed, the tag's `Items` become the new entity's. An empty box
-  drops without a tag, so it stacks with new ones (BDS may tag it `Items: []`: not settled). An ender
+  is tagged `Items: []` (a list of no type), as recorded from BDS, so it does not stack with new
+  ones. An ender
   chest (entity `EnderChest`, request container `Container`) opens its player's own 27 slots, kept
   with the player's items as `EnderChestInventory`; the lid is the block's, shared by its viewers.
   Both sound (`shulkerbox.open`/`.closed`, `enderchest.open`/`.closed`, names from BDS's binary).
@@ -675,8 +723,8 @@ block action, and takes StopBreak and AbortBreak with a position.
   its first slot that can give one into the container it faces (`facing_direction`), then pulls one
   from the container above or, when the block above is no container, takes the first item lying in
   the box 0.625 to 2 blocks over it, as much as fits in two slots. A move sets the cooldown to 8
-  ticks (BDS's code says 4 of its hopper ticks; hoppers are measured at 2.5 items a second); an
-  empty hopper that is given an item waits a whole cooldown. A furnace takes from above into its
+  ticks (recorded from BDS: an item every 400 ms into a chest; its code says 4 of its hopper
+  ticks, so those are two game ticks each); an empty hopper that is given an item waits a whole cooldown. A furnace takes from above into its
   input, from the sides only fuel, and gives its result (and an empty bucket in its fuel slot)
   downwards; ender chests are not reached. Not done: BDS ticks the hoppers below first, so a chain
   moves an item in one tick; composters; minecarts.
@@ -694,18 +742,21 @@ block action, and takes StopBreak and AbortBreak with a position.
   going out swaps the block for its `lit_` one, facing kept, and gives it the old entity
   (`BurnTime`, `CookTime`, `BurnDuration`, `StoredXPInt` beside `Items`). Burn times are BDS's
   `getBurnDuration` rules (`furnaces/fuel.rs`; wood is told by name where BDS reads a material),
-  truncated. A player may not put anything into the result, nor what does not burn into the fuel.
+  truncated. A player may not put what does not burn into the fuel (BDS answers status 55; sapling
+  Error); into the result it may put anything. Both as recorded with stone.
   Taking results pays `count x` the result's share (`furnaces/xp.rs`) plus what hoppers left owed
-  (`StoredXPInt`, hundredths), each rounded at random, as orbs at the player; breaking pays the
-  result's at the block. BDS seems to accept a Place into the result (not refused in its validation,
-  not tried live): sapling refuses it, as an honest client never sends it.
+  (`StoredXPInt`, hundredths), each rounded at random, as orbs at the player's eyes; breaking pays
+  the result's at the block.
 - **Experience** (`experience.rs`, `orbs.rs`; `docs/research/experience.md`). Orbs split as BDS's
   `spawnOrbs` (2477 down to 1; 13 equal ones above 12000), thrown a little up and aside, shown as
-  `minecraft:xp_orb` with `ExperienceValue` and moved by the server (`MoveEntity` to those who see
-  the column; the client does not move them). One falls, slides to a stop, and from 21 to 120 of its
-  ticks looks for the nearest player within 8 blocks every 20, flies to it and is taken
-  (`LevelEvent` SoundOrb). A player's level and progress follow BDS's `addExperience` (the Java
-  formula), go to its client as the `player.level` / `player.experience` attributes and are kept
+  `minecraft:xp_orb` with `ExperienceValue` and moved by the server (`MoveEntityDelta` with the
+  axes that changed, every tick it moves, to those who see the column, as recorded; the client does
+  not move them). One falls, slides to a stop, and from 21 to 120 of its ticks looks for the nearest
+  player within 8 blocks every 20 and flies to it; a player whose box, grown by a block across and
+  half a block up and down (Java's), touches it takes it once it is 7 ticks old, also before it
+  looks (BDS took one let out at the player after 7 ticks) (`LevelEvent` SoundOrb). A player's level and progress follow BDS's
+  `addExperience` (the Java formula), go to its client as the `player.experience` attribute, with
+  `player.level` when the level changed (as recorded), and are kept
   with its items (`PlayerLevel`, `PlayerLevelProgress`); a fifth level sounds `levelup`. Not done:
   orbs merging, colliding beyond the block they fall into, being saved; Mending.
 - **Double chests** (`containers/pairs.rs`). Two chests of one kind, side by side and facing the same
@@ -805,7 +856,7 @@ acacia-world = { path = "../acacia/acacia/crates/acacia-world" }
   and place (no ghost block, no hole), also with the blob cache on; a door opened on screen closing
   again; `ParticleDestroy` and the `place` sound seen and heard by a second client; a block placed while
   another client is still loading the column.
-- **Blocks, left out of step 6:** lava and buckets; falling blocks as entities; pressure plates and redstone; `USED` and the lists of blocks that fall,
+- **Blocks, left out of step 6:** redstone; `USED` and the lists of blocks that fall,
   need support or give way are name endings, not block data; a request over the tick limit gets no
   resync; `on_move`, which needs its own resync on cancel.
 - **Landing after a world change.** The teleport goes out before the new world's columns, so a

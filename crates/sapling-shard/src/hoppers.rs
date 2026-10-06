@@ -19,8 +19,8 @@ use crate::containers::{self, Kind};
 use crate::inventory::{Held, stacks_with};
 use crate::{drops, furnaces};
 
-/// Ticks from one move to the next. BDS's code waits 4 hopper ticks; hoppers are measured at
-/// 2.5 items a second, so they are taken to tick every other game tick (hoppers.md, Not settled).
+/// Ticks from one move to the next: BDS was recorded moving an item every 400 ms
+/// (`examples/bds_container_probe.rs`); its code waits 4 hopper ticks, so those are 2 game ticks.
 const MOVE_TICKS: u32 = 8;
 const FACING: &str = "facing_direction";
 const POWERED: &str = "toggle_bit";

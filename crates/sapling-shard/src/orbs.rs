@@ -1,12 +1,13 @@
 //! Experience orbs, as BDS's `ExperienceOrb` makes and moves them (docs/research/experience.md,
-//! sections 1 to 3). The server moves them: the client only shows where they are. An orb falls,
-//! slides to a stop, and from 21 to 120 ticks after it appears looks for the nearest player within
-//! eight blocks every twenty, flies to it and is taken, worth its experience.
+//! sections 1 to 3; the packets as recorded, `examples/bds_container_probe.rs`). The server moves
+//! them: the client only shows where they are. An orb falls, slides to a stop, and from 21 to 120
+//! ticks after it appears looks for the nearest player within eight blocks every twenty and flies
+//! to it; a player it touches on the way, or before, takes it, worth its experience.
 // TODO: orbs do not merge (BDS merges those whose ids agree mod 13, and spreads new experience
 // over 13 orbs already in a cell), collide only with the block they fall into, and are not saved.
 
-use acacia_proto::packets::{LevelEvent, LevelEventEvent, MoveEntity};
-use acacia_proto::types::{Rotation, Vec3f};
+use acacia_proto::packets::{LevelEvent, LevelEventEvent, MoveEntityDelta};
+use acacia_proto::types::Vec3f;
 use bevy_ecs::prelude::*;
 
 use crate::blocks::{self, Dice};
@@ -29,7 +30,13 @@ const SEARCH_EVERY: u64 = 20;
 const TOUCH: f32 = 0.225;
 /// Where on a player an orb flies to, above its feet.
 const BODY: f32 = 0.9;
-const ON_GROUND: u8 = 1;
+/// How far from a player's feet an orb is touched: across, and from below to above.
+const TOUCH_ACROSS: f32 = 1.55;
+const TOUCH_BELOW: f32 = -1.0;
+const TOUCH_ABOVE: f32 = 2.3;
+/// An orb is not taken by touch before it is this old: BDS took one let out at the player
+/// after 7 ticks (one recording).
+const TOUCH_AFTER: u32 = 7;
 
 #[derive(Component)]
 pub(crate) struct Orb {
@@ -85,10 +92,23 @@ fn nearest(world: &mut World, layer: Entity, at: [f32; 3]) -> Option<Entity> {
     near.filter(|(_, distance)| *distance < FOLLOW * FOLLOW).min_by(|a, b| a.1.total_cmp(&b.1)).map(|(player, _)| player)
 }
 
+/// A player of `layer` whose reach touches the orb at `at`: its box grown by one block across and
+/// half a block up and down (Java's pickup box; BDS took an orb 1.1 blocks off in 7 ticks).
+fn touching(world: &mut World, layer: Entity, at: [f32; 3]) -> Option<Entity> {
+    let mut players = world.query::<(Entity, &Stage, &InLayer, &Position)>();
+    let touches = |feet: [f32; 3]| (at[0] - feet[0]).abs() <= TOUCH_ACROSS && (at[2] - feet[2]).abs() <= TOUCH_ACROSS && (TOUCH_BELOW..=TOUCH_ABOVE).contains(&(at[1] - feet[1]));
+    let mut near = players.iter(world).filter(|(_, stage, in_layer, position)| **stage == Stage::InWorld && in_layer.0 == layer && touches(position.feet));
+    near.next().map(|(player, ..)| player)
+}
+
 /// One tick of the orb `entity`; false once it is gone.
 fn step(world: &mut World, entity: Entity, orb: &mut Orb, layer: Entity, id: u64) -> bool {
     orb.age += 1;
     if orb.age >= LIFETIME {
+        return false;
+    }
+    if let Some(player) = touching(world, layer, orb.at).filter(|_| orb.age >= TOUCH_AFTER) {
+        taken(world, layer, orb, player);
         return false;
     }
     orb.motion[1] -= GRAVITY;
@@ -112,8 +132,22 @@ fn step(world: &mut World, entity: Entity, orb: &mut Orb, layer: Entity, id: u64
     let before = orb.at;
     fall(world, layer, orb);
     if before != orb.at {
-        let [x, y, z] = orb.at;
-        let moved = MoveEntity { runtime_entity_id: id, flags: if orb.on_ground { ON_GROUND } else { 0 }, position: Vec3f { x, y, z }, rotation: Rotation { yaw: 0.0, pitch: 0.0, head_yaw: 0.0 } };
+        // As BDS moves them: the axes that changed, every tick it moves.
+        let changed = |axis: usize| (before[axis] != orb.at[axis]).then_some(orb.at[axis]);
+        let moved = MoveEntityDelta {
+            runtime_entity_id: id,
+            x: changed(0),
+            y: changed(1),
+            z: changed(2),
+            rot_x: None,
+            rot_y: None,
+            rot_z: None,
+            on_ground: orb.on_ground,
+            force_move: false,
+            force_move_local_entity: false,
+            force_completion: false,
+            ticks: 0,
+        };
         blocks::to_viewers(world, layer, orb.at.map(|c| c.floor() as i32), &[sapling_net::encode(&moved)]);
         mobs::reannounce(world, entity, announce(id, orb));
     }
