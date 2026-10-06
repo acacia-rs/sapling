@@ -41,7 +41,7 @@ cargo run -p sapling --example bds_mob_recorder -- <BDS folder> <its address> cr
 | File | Sent as | Patched per mob |
 |---|---|---|
 | `Mobs.bin` (110 kinds, 40 of them also as a baby) | `add_entity(&AddEntityOptions)` | ids, position, rotation, velocity (none), `Variant`, `MarkVariant`, `Color`, name tag, the baby flag, extra flags, health |
-| `ItemEntity.bin` | `add_item_entity(id, &Stack, feet)` | ids, position, velocity (none), the stack (network id from `ItemRegistry.bin`) |
+| `ItemEntity.bin` | `add_item_entity(id, &Stack, position, velocity)` | ids, position, velocity, the stack (network id from `ItemRegistry.bin`) |
 
 A kind's hitbox, attributes and flags are whatever BDS gave the summoned one. `minecraft:villager` and
 `minecraft:zombie_villager` are not recorded (BDS announces their v2 kinds instead) and are sent as

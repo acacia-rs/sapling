@@ -3,13 +3,15 @@
 //! slides to a stop, and from 21 to 120 ticks after it appears looks for the nearest player within
 //! eight blocks every twenty, flies to it and is taken, worth its experience.
 // TODO: orbs do not merge (BDS merges those whose ids agree mod 13, and spreads new experience
-// over 13 orbs already in a cell), collide only with the block they fall into, and are not saved.
+// over 13 orbs already in a cell), and are not saved.
 
-use acacia_proto::packets::{LevelEvent, LevelEventEvent, MoveEntity};
-use acacia_proto::types::{Rotation, Vec3f};
+use acacia_proto::packets::{LevelEvent, LevelEventEvent};
+use acacia_proto::types::Vec3f;
 use bevy_ecs::prelude::*;
 
 use crate::blocks::{self, Dice};
+use crate::body::{Body, Physics};
+use crate::sync::Told;
 use crate::components::{InLayer, Layer, NetId, Position, Stage};
 use crate::{experience, mobs};
 
@@ -18,10 +20,8 @@ const SPLITS: [i32; 11] = [2477, 1237, 617, 307, 149, 73, 37, 17, 7, 3, 1];
 const MANY: i32 = 12_000;
 const MANY_ORBS: i32 = 13;
 const LIFETIME: u32 = 6000;
-const GRAVITY: f32 = 0.04;
-const AIR_FRICTION: f32 = 0.98;
-const GROUND_FRICTION: f32 = 0.588;
-const BOUNCE: f32 = -0.5;
+/// Its box, wide and high (from memory of the game: unverified).
+const SIZE: f32 = 0.25;
 /// Players further than this are not followed.
 const FOLLOW: f32 = 8.0;
 const SEARCH_EVERY: u64 = 20;
@@ -29,17 +29,15 @@ const SEARCH_EVERY: u64 = 20;
 const TOUCH: f32 = 0.225;
 /// Where on a player an orb flies to, above its feet.
 const BODY: f32 = 0.9;
-const ON_GROUND: u8 = 1;
 
 #[derive(Component)]
 pub(crate) struct Orb {
     value: i32,
-    at: [f32; 3],
-    motion: [f32; 3],
+    body: Body,
+    told: Told,
     age: u32,
     last_search: u64,
     target: Option<Entity>,
-    on_ground: bool,
 }
 
 /// The orbs `points` of experience come as (BDS `ExperienceOrb::spawnOrbs`).
@@ -57,13 +55,12 @@ fn split(mut points: i32) -> Vec<i32> {
     orbs
 }
 
-/// A number from 0 to 1 off the shard's dice.
 fn random(world: &mut World) -> f32 {
-    world.get_resource_or_insert_with(Dice::default).roll(1 << 20) as f32 / (1 << 20) as f32
+    world.get_resource_or_insert_with(Dice::default).fraction()
 }
 
 fn announce(id: u64, orb: &Orb) -> Vec<bytes::Bytes> {
-    vec![sapling_net::encode(&sapling_data::add_experience_orb(id, orb.at, orb.motion, orb.value))]
+    vec![sapling_net::encode(&sapling_data::add_experience_orb(id, orb.body.at, orb.body.motion, orb.value))]
 }
 
 /// Lets `points` of experience out at `at` as orbs, each thrown a little up and aside.
@@ -71,7 +68,7 @@ pub(crate) fn spawn(world: &mut World, layer: Entity, at: [f32; 3], points: i32)
     for value in split(points) {
         let mut throw = || random(world) * 0.2;
         let motion = [(throw() - 0.1) * 2.0, throw() * 2.0, (throw() - 0.1) * 2.0];
-        let orb = Orb { value, at, motion, age: 0, last_search: 0, target: None, on_ground: false };
+        let orb = Orb { value, body: Body::new(at, motion, [SIZE; 2]), told: Told::new(at), age: 0, last_search: 0, target: None };
         let Some(entity) = mobs::spawn_shown(world, layer, at, |id| Some(announce(id, &orb))) else { continue };
         world.entity_mut(entity).insert(orb);
     }
@@ -91,52 +88,40 @@ fn step(world: &mut World, entity: Entity, orb: &mut Orb, layer: Entity, id: u64
     if orb.age >= LIFETIME {
         return false;
     }
-    orb.motion[1] -= GRAVITY;
     // Counted in the orb's own ticks, so that the first search is 21 to 120 ticks after it appeared.
     if u64::from(orb.age) > orb.last_search + SEARCH_EVERY + id % 100 {
         orb.last_search = u64::from(orb.age);
-        orb.target = nearest(world, layer, orb.at);
+        orb.target = nearest(world, layer, orb.body.at);
     }
-    let body = orb.target.and_then(|player| world.get::<Position>(player)).map(|position| [position.feet[0], position.feet[1] + BODY, position.feet[2]]);
-    if let (Some(player), Some(body)) = (orb.target, body) {
-        let gap = [0, 1, 2].map(|axis| (body[axis] - orb.at[axis]) / FOLLOW);
+    let chest = orb.target.and_then(|player| world.get::<Position>(player)).map(|position| [position.feet[0], position.feet[1] + BODY, position.feet[2]]);
+    if let (Some(player), Some(chest)) = (orb.target, chest) {
+        let gap = [0, 1, 2].map(|axis| (chest[axis] - orb.body.at[axis]) / FOLLOW);
         let across = gap[0].hypot(gap[2]);
         if across <= TOUCH {
-            orb.at = [0, 1, 2].map(|axis| orb.at[axis] + gap[axis]);
+            orb.body.at = [0, 1, 2].map(|axis| orb.body.at[axis] + gap[axis]);
             taken(world, layer, orb, player);
             return false;
         }
         let pull = (1.0 - across).max(0.0).powi(2) * 0.1 / across;
-        (0..3).for_each(|axis| orb.motion[axis] += gap[axis] * pull);
+        (0..3).for_each(|axis| orb.body.motion[axis] += gap[axis] * pull);
     }
-    let before = orb.at;
-    fall(world, layer, orb);
-    if before != orb.at {
-        let [x, y, z] = orb.at;
-        let moved = MoveEntity { runtime_entity_id: id, flags: if orb.on_ground { ON_GROUND } else { 0 }, position: Vec3f { x, y, z }, rotation: Rotation { yaw: 0.0, pitch: 0.0, head_yaw: 0.0 } };
-        blocks::to_viewers(world, layer, orb.at.map(|c| c.floor() as i32), &[sapling_net::encode(&moved)]);
+    if let Some(level) = world.get::<Layer>(layer).map(|layer| &layer.world) {
+        orb.body.step(level, &Physics::ORB);
+    }
+    let packets = orb.told.update(id, orb.body.at, orb.body.motion, orb.body.on_ground);
+    if !packets.is_empty() {
+        blocks::to_viewers(world, layer, orb.body.at.map(|c| c.floor() as i32), &packets);
         mobs::reannounce(world, entity, announce(id, orb));
     }
     true
 }
 
-/// Moves the orb by its motion, onto the block it would fall into, and slows it down.
-fn fall(world: &World, layer: Entity, orb: &mut Orb) {
-    let next = [0, 1, 2].map(|axis| orb.at[axis] + orb.motion[axis]);
-    let level = world.get::<Layer>(layer).map(|layer| &layer.world);
-    let [x, y, z] = next.map(|c| c.floor() as i32);
-    let is_solid = level.is_some_and(|level| level.in_height(y) && level.registry().get(level.block(x, y, z)).is_some_and(|state| state.is_solid()));
-    orb.on_ground = is_solid && orb.motion[1] < 0.0;
-    orb.at = if orb.on_ground { [next[0], (y + 1) as f32, next[2]] } else { next };
-    let friction = if orb.on_ground { GROUND_FRICTION } else { AIR_FRICTION };
-    orb.motion = [orb.motion[0] * friction, orb.motion[1] * if orb.on_ground { BOUNCE } else { AIR_FRICTION }, orb.motion[2] * friction];
-}
 
 /// A player takes an orb: it hears it, and gets its experience.
 fn taken(world: &mut World, layer: Entity, orb: &Orb, player: Entity) {
-    let [x, y, z] = orb.at;
+    let [x, y, z] = orb.body.at;
     let sound = LevelEvent { event: LevelEventEvent::SoundOrb, position: Vec3f { x, y, z }, data: 0 };
-    blocks::to_viewers(world, layer, orb.at.map(|c| c.floor() as i32), &[sapling_net::encode(&sound)]);
+    blocks::to_viewers(world, layer, orb.body.at.map(|c| c.floor() as i32), &[sapling_net::encode(&sound)]);
     experience::give(world, player, orb.value);
 }
 

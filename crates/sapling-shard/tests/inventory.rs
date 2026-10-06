@@ -148,12 +148,14 @@ fn others_see_what_a_player_holds_and_wears_and_pick_up_what_it_throws() {
     let sent = h.tick_all();
     assert_eq!(answer(sent.to(1)), (Status::Ok, vec![(Container::Hotbar, 4, 0, 0)]));
     let lying: Vec<AddItemEntity> = [1, 2].iter().map(|conn| all::<AddItemEntity>(sent.to(*conn))[0].clone()).collect();
-    assert_eq!((lying[0].item.count, lying[0].position.z, lying[0].runtime_entity_id), (5, 2.0, lying[1].runtime_entity_id));
+    assert_eq!((lying[0].item.count, lying[0].runtime_entity_id), (5, lying[1].runtime_entity_id));
+    // Thrown south, the way Steve looks, at 0.3 give or take the spread (docs/research/items.md).
+    assert!((lying[0].velocity.z - 0.3).abs() <= 0.021 && lying[0].velocity.x.abs() <= 0.021, "{:?}", lying[0].velocity);
     assert_eq!(all::<MobEquipment>(sent.to(2))[0].item.network_id, 0, "the hand is empty now");
 
     // Nobody stands on them; once they can be taken, Alex walks over and has them.
     assert!((0..45).all(|_| all::<TakeItemEntity>(h.tick_all().to(2)).is_empty()));
-    h.receive(2, &input_at([0.5, 65.0, 1.5]));
+    h.receive(2, &input_at([0.5, 65.0, 2.5]));
     let sent = h.tick_all();
     let taken = &all::<TakeItemEntity>(sent.to(1))[0];
     assert_eq!((taken.runtime_entity_id, all::<TakeItemEntity>(sent.to(2)).len()), (lying[0].runtime_entity_id, 1));

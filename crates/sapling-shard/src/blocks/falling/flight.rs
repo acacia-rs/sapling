@@ -1,7 +1,7 @@
 //! A falling block in the air: BDS `FallingBlockActor::normalTick`, with the packets and timing
 //! a BDS was recorded sending (research/captures/bds-mechanisms-findings.md "Falling blocks").
 
-use acacia_proto::packets::{LevelEvent, LevelEventEvent, MoveEntityDelta, SetEntityMotion};
+use acacia_proto::packets::{LevelEvent, LevelEventEvent};
 use acacia_proto::types::Vec3f;
 use bevy_ecs::prelude::*;
 use bytes::Bytes;
@@ -10,11 +10,13 @@ use sapling_api::{BlockPos, Item};
 use super::super::place::gives_way;
 use super::super::{level, loot, send};
 use super::{SNOW, block};
+use crate::body::{Body, Physics};
 use crate::components::NetId;
 use crate::mobs;
+use crate::sync::Told;
 
-const GRAVITY: f32 = 0.04;
-const DRAG: f32 = 0.98;
+/// Its box is 0.98 wide and high.
+const SIZE: f32 = 0.98;
 /// Ticks in the air before it gives up and leaves its item; below the world, before it vanishes.
 const MAX_AIRBORNE: u32 = 600;
 const MAX_BELOW_WORLD: u32 = 100;
@@ -30,29 +32,26 @@ const SPAWN_LIFT: f32 = 0.01;
 pub(crate) struct FallingBlock {
     layer: Entity,
     block: u32,
-    /// The middle of its bottom face.
-    bottom: [f32; 3],
-    fall_speed: f32,
+    body: Body,
+    told: Told,
     airborne: u32,
     landed_for: Option<u32>,
 }
 
 impl FallingBlock {
     /// The block `block` leaving `cell`, a tick into its fall, as BDS first shows one.
-    pub(super) fn leaving(layer: Entity, block: u32, [x, y, z]: BlockPos) -> Self {
-        let mut falling = Self { layer, block, bottom: [x as f32 + 0.5, y as f32 + SPAWN_LIFT, z as f32 + 0.5], fall_speed: 0.0, airborne: 0, landed_for: None };
-        falling.airborne = 1;
-        falling.bottom[1] -= GRAVITY;
-        falling.fall_speed = GRAVITY * DRAG;
-        falling
+    pub(super) fn leaving(level: &sapling_world::World, layer: Entity, block: u32, [x, y, z]: BlockPos) -> Self {
+        let mut body = Body::new([x as f32 + 0.5, y as f32 + SPAWN_LIFT, z as f32 + 0.5], [0.0; 3], [SIZE, SIZE]);
+        body.step(level, &Physics::FALLING_BLOCK);
+        Self { layer, block, body, told: Told::new(wire(body.at)), airborne: 1, landed_for: None }
     }
 
     pub(super) fn at(&self) -> [f32; 3] {
-        self.bottom
+        self.body.at
     }
 
     pub(super) fn announcement(&self, id: u64, hash: u32) -> Vec<Bytes> {
-        vec![sapling_net::encode(&sapling_data::add_falling_block(id, wire(self.bottom), [0.0, -self.fall_speed, 0.0], hash))]
+        vec![sapling_net::encode(&sapling_data::add_falling_block(id, wire(self.body.at), self.body.motion, hash))]
     }
 }
 
@@ -64,42 +63,8 @@ fn cell_of(at: [f32; 3]) -> BlockPos {
     at.map(|c| c.floor() as i32)
 }
 
-/// The top of the highest collision box in the cells from `from` down to `to`, if one is in
-/// that span: where a block falling from `from` to `to` comes to rest.
-fn floor_between(world: &World, layer: Entity, [x, from, z]: [f32; 3], to: f32) -> Option<f32> {
-    let level = level(world, layer)?;
-    let cell = [x.floor() as i32, z.floor() as i32];
-    (to.floor() as i32..=from.floor() as i32).rev().find_map(|y| {
-        let state = level.in_height(y).then(|| level.registry().get(level.block(cell[0], y, cell[1]))).flatten()?;
-        let top = y as f32 + state.boxes.iter().map(|aabb| aabb.max[1]).fold(f32::NAN, f32::max);
-        (top <= from && top >= to).then_some(top)
-    })
-}
-
 fn event(event: LevelEventEvent, [x, y, z]: [f32; 3], data: i32) -> Bytes {
     sapling_net::encode(&LevelEvent { event, position: Vec3f { x, y, z }, data })
-}
-
-/// BDS sends 0 in the tick fields of a falling block's movement.
-fn moved(id: u64, [_, y, _]: [f32; 3], on_ground: bool) -> Bytes {
-    sapling_net::encode(&MoveEntityDelta {
-        runtime_entity_id: id,
-        x: None,
-        y: Some(y),
-        z: None,
-        rot_x: None,
-        rot_y: None,
-        rot_z: None,
-        on_ground,
-        force_move: false,
-        force_move_local_entity: false,
-        force_completion: false,
-        ticks: 0,
-    })
-}
-
-fn stopped(id: u64) -> Bytes {
-    sapling_net::encode(&SetEntityMotion { runtime_entity_id: id, velocity: Vec3f { x: 0.0, y: 0.0, z: 0.0 }, tick: 0 })
 }
 
 /// The falling block `block` breaks where it is: its own item, not its loot, and its fragments
@@ -123,37 +88,37 @@ fn takes(world: &World, layer: Entity, block: u32, cell: BlockPos) -> bool {
 fn step(world: &mut World, entity: Entity) -> Option<BlockPos> {
     let id = world.get::<NetId>(entity)?.0;
     let falling = world.get::<FallingBlock>(entity)?;
-    let (layer, block_id, bottom) = (falling.layer, falling.block, falling.bottom);
+    let (layer, block_id, mut body) = (falling.layer, falling.block, falling.body);
     if let Some(waited) = falling.landed_for.map(|waited| waited + 1) {
         world.get_mut::<FallingBlock>(entity)?.landed_for = Some(waited);
         if waited >= PLACE_AFTER + LINGER {
             mobs::remove(world, entity);
         }
-        let cell = cell_of(bottom);
+        let cell = cell_of(body.at);
         return (waited == PLACE_AFTER && send::set(world, layer, cell, block_id)).then_some(cell);
     }
-    let (speed, airborne) = (falling.fall_speed + GRAVITY, falling.airborne + 1);
-    let floor = floor_between(world, layer, bottom, bottom[1] - speed);
-    let at = [bottom[0], floor.unwrap_or(bottom[1] - speed), bottom[2]];
+    let airborne = falling.airborne + 1;
+    body.step(level(world, layer)?, &Physics::FALLING_BLOCK);
+    let (at, landed) = (body.at, body.on_ground);
     let below_world = level(world, layer).is_some_and(|level| !level.in_height(cell_of(at)[1]) && !level.in_height(cell_of(at)[1] + 1));
-    let refused = floor.is_some() && !takes(world, layer, block_id, cell_of(at));
-    if refused || floor.is_none() && (airborne > MAX_AIRBORNE || airborne > MAX_BELOW_WORLD && below_world) {
+    let refused = landed && !takes(world, layer, block_id, cell_of(at));
+    if refused || !landed && (airborne > MAX_AIRBORNE || airborne > MAX_BELOW_WORLD && below_world) {
         mobs::remove(world, entity);
         if !below_world {
             break_up(world, layer, block_id, at);
         }
         return None;
     }
+    if landed {
+        body.motion = [0.0; 3];
+    }
     let mut falling = world.get_mut::<FallingBlock>(entity)?;
-    (falling.bottom, falling.airborne) = (at, airborne);
-    falling.fall_speed = if floor.is_some() { 0.0 } else { speed * DRAG };
-    falling.landed_for = floor.map(|_| 0);
+    (falling.body, falling.airborne, falling.landed_for) = (body, airborne, landed.then_some(0));
+    let mut packets = falling.told.update(id, wire(at), body.motion, landed);
     let hash = level(world, layer).map_or(0, |level| level.registry().network_hash(block_id));
     let shown = world.get::<FallingBlock>(entity)?.announcement(id, hash);
     mobs::reannounce(world, entity, shown);
-    let mut packets = vec![moved(id, wire(at), floor.is_some())];
-    if floor.is_some() {
-        packets.push(stopped(id));
+    if landed {
         let is_anvil = block(world, layer, cell_of(at)).and_then(|(registry, _)| registry.get(block_id)).is_some_and(|state| state.name.ends_with("anvil"));
         if is_anvil {
             packets.push(event(LevelEventEvent::SoundAnvilFall, cell_of(at).map(|c| c as f32), 0));

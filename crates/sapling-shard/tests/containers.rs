@@ -104,7 +104,9 @@ fn a_shulker_box_keeps_what_it_holds_when_broken_and_placed_again() {
     assert_eq!(dropped.len(), 1, "the box, not what it held");
     assert_eq!(held_items(&dropped[0].item), [(4, 5)]);
 
-    // Picked up into the empty first slot, then placed where it was.
+    // Picked up into the empty first slot by Alex beside the cell (it was tossed out of it at
+    // random), then placed where it was.
+    h.receive(1, &common::input_at([1.5, 65.0, 1.5]));
     ticks(&mut h, 15);
     h.remote.run(|ctx| ctx.set_game_mode(ALEX, GameMode::Survival));
     h.tick(1);

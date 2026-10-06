@@ -234,6 +234,7 @@ pub(crate) fn dispatch(world: &mut World, plugins: &mut Plugins) {
     containers::show_lids_again(world);
     furnaces::tick(world);
     hoppers::tick(world);
+    drops::fly(world);
     drops::pick_up(world);
     orbs::tick(world);
     forms::dispatch(world);

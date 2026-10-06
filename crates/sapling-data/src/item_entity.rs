@@ -16,16 +16,16 @@ fn item(stack: &Stack<'_>) -> Option<ItemV4> {
     crate::items::item(stack, None)
 }
 
-/// A stack lying at `feet`, under `id` as both runtime and unique id; `None` for an item the
-/// registry does not list.
-pub fn add_item_entity(id: u64, stack: &Stack<'_>, feet: [f32; 3]) -> Option<AddItemEntity> {
-    let [x, y, z] = feet;
+/// A stack at `position` moving at `velocity`, under `id` as both runtime and unique id; `None`
+/// for an item the registry does not list.
+pub fn add_item_entity(id: u64, stack: &Stack<'_>, position: [f32; 3], velocity: [f32; 3]) -> Option<AddItemEntity> {
+    let ([x, y, z], [dx, dy, dz]) = (position, velocity);
     Some(AddItemEntity {
         entity_id_self: id as i64,
         runtime_entity_id: id,
         item: item(stack)?,
         position: Vec3f { x, y, z },
-        velocity: Vec3f { x: 0.0, y: 0.0, z: 0.0 },
+        velocity: Vec3f { x: dx, y: dy, z: dz },
         is_from_fishing: false,
         ..TEMPLATE.clone()
     })
@@ -70,11 +70,11 @@ mod tests {
         acacia_proto::manual::set_shield_item_id(NETWORK_IDS[SHIELD].into());
         let tag = nbt::Value::Compound(vec![("Damage".into(), nbt::Value::Int(4))]);
         for (name, tag) in [("minecraft:diamond", None), ("minecraft:iron_sword", Some(&tag)), (SHIELD, None), (SHIELD, Some(&tag))] {
-            let read = reread(&add_item_entity(12, &stack(name, tag), [1.5, 64.0, -2.5]).expect("a vanilla item"));
+            let read = reread(&add_item_entity(12, &stack(name, tag), [1.5, 64.0, -2.5], [0.0; 3]).expect("a vanilla item"));
             assert_eq!((read.runtime_entity_id, read.item.count, read.item.network_id), (12, 3, NETWORK_IDS[name]));
             assert!(!read.metadata.is_empty(), "BDS's metadata comes along");
         }
-        assert!(add_item_entity(12, &stack("sapling:no_such_item", None), [0.0; 3]).is_none());
+        assert!(add_item_entity(12, &stack("sapling:no_such_item", None), [0.0; 3], [0.0; 3]).is_none());
     }
 
     #[test]

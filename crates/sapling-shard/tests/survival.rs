@@ -67,7 +67,9 @@ fn a_break_takes_the_time_the_block_and_the_tool_need() {
     let left = all::<AddItemEntity>(sent.to(2));
     let cobblestone = sapling_data::item(&Stack { name: "minecraft:cobblestone", count: 1, damage: 0, block: None, tag: None }, None).unwrap();
     assert_eq!((left.len(), left[0].item.network_id, left[0].item.count), (1, cobblestone.network_id, 1), "a pickaxe makes stone leave cobblestone");
-    assert_eq!([left[0].position.x, left[0].position.y, left[0].position.z], [1.5, 64.0, 0.5]);
+    // BDS tosses it up from somewhere in the cell, 0.15 in from its sides (docs/research/items.md).
+    let at = [left[0].position.x - 1.0, left[0].position.y - 64.0, left[0].position.z];
+    assert!(at.iter().all(|c| (0.15..=0.85).contains(c)) && left[0].velocity.y == 0.2, "{:?} {:?}", left[0].position, left[0].velocity);
     let windows = all::<InventoryContent>(sent.to(1));
     let ItemV4Extra::Default(Some(pickaxe)) = &windows[0].input[0].extra else { panic!("{:?}", windows[0].input[0]) };
     assert_eq!(pickaxe.nbt.as_ref().expect("a tag").nbt.value.get("Damage"), Some(&Value::Int(1)), "the break cost the pickaxe a use");

@@ -55,6 +55,11 @@ impl Dice {
         self.0 ^= self.0 << 17;
         ((self.0 >> 32) as u32) % sides.max(1)
     }
+
+    /// A number from 0 up to 1.
+    pub fn fraction(&mut self) -> f32 {
+        self.roll(1 << 20) as f32 / (1 << 20) as f32
+    }
 }
 
 fn some(name: &str, count: u32) -> Vec<Item> {

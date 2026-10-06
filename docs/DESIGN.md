@@ -505,8 +505,8 @@ block action, and takes StopBreak and AbortBreak with a position.
   placed one in its tick, one whose block below changed a tick later, others two (BDS `FallingBlock`,
   and the capture). The lowest of a stack goes first. The cell becomes air and a
   `minecraft:falling_block` entity (`Variant` = the block's network id, box 0.98) drops by BDS's
-  gravity 0.04 and drag 0.98, shown a tick into its fall at the box bottom + 0.49, with a
-  MoveEntityDelta each tick (tick fields 0) and SetEntityMotion 0 on landing. Where it comes to rest
+  gravity 0.04 and drag 0.98 as a body (`body.rs`, kept up by `sync.rs`), shown a tick into its
+  fall at the box bottom + 0.49. Where it comes to rest
   on a collision box it is placed a tick later and removed three after that; a cell that does not
   give way (a torch, a slab) or a brushable block breaks it at once: particles at the entity and the
   block's own item (a snowball for snow), nothing for brushables. 600 ticks in the air also break it;
@@ -571,8 +571,8 @@ block action, and takes StopBreak and AbortBreak with a position.
   formulas. Rows name Java block states, read off the Bedrock block where that is known: a crop's `age`
   from `growth`, a double slab from its block name, counts that start at one (candles, snow layers,
   sea pickles) from Bedrock's that start at zero; a row about any other state is skipped. Handlers may
-  change the list. Each stack then lies in the middle of the emptied cell as a thrown item does, to be
-  picked up after 10 ticks. Stems leave nothing, a bed drops per cell broken, and the dice are a
+  change the list. Each stack is then tossed up out of the emptied cell as an item (next section), to
+  be picked up after 10 ticks. Stems leave nothing, a bed drops per cell broken, and the dice are a
   fixed-seed xorshift.
 - **Limits.** 16 block actions and 4 clicks a player a tick; an input's action list is cut to 16. What
   exceeds them is dropped without an answer. Absurd positions (the edges of `i32`, outside the height)
@@ -604,11 +604,23 @@ block action, and takes StopBreak and AbortBreak with a position.
 - **Screen.** `Interact OpenInventory` is answered with `ContainerOpen` (type Inventory, the player's
   block, entity -1 as BDS's `ServerPlayer::openInventory` passes, window ids counting up from 2), and
   every `ContainerClose` is echoed: clients wait for both.
-- **Thrown items.** A Drop raises `on_drop` (cancellable; cancelled, the request is refused). The stack
-  then lies 1.5 blocks in front of the player, on the first solid block below that spot (it lands at
-  once and does not move again), as an item entity shown through the mob grid. After 40
-  ticks a player in the world within 1.3 blocks who has room takes it, or as much as fits:
-  `TakeItemEntity` to those who see the column, the entity is removed, the taker's windows are resent.
+- **Thrown items** (`drops.rs`, `docs/research/items.md`). A Drop raises `on_drop` (cancellable;
+  cancelled, the request is refused). The stack is thrown from half a block under the eye at 0.3
+  along the look, give or take 0.02 (BDS `Player::drop`); a broken block's items appear at a random
+  point 0.15 to 0.85 into its cell, tossed up at 0.2 and up to 0.1 aside (`Spawner::spawnItem`). An
+  item is a body (next bullet) 0.25 across that slides on the ground and does not bounce, shown
+  through the mob grid at the middle of its box, gone after 6000 ticks. After 40 ticks (10 for a
+  block's) a player whose box, grown by 1 across and 0.5 up and down, touches it and who has room
+  takes it, or as much as fits: `TakeItemEntity` to those who see the column, the entity is removed,
+  the taker's windows are resent. Not done: merging, floating in water, burning in lava, being saved;
+  an item stays in the mob grid's cell for the column it was let go in.
+- **Bodies the server moves** (`body.rs`, `sync.rs`). Falling blocks, items and orbs share one body:
+  gravity (0.04), then the move, cut short by the collision boxes of the blocks in its way (up and
+  down first, then across, as the game does), then drag (0.98 in the air; on the ground 0.588 across
+  and the kind's bounce). Viewers are kept up as BDS's generic actor sync does: a `MoveEntityDelta`
+  of the axes moved more than 0.01 (tick fields 0), a `SetEntityMotion` when the motion changed by
+  more than 0.2 since the last one or stopped; a falling block on BDS was sent exactly that. Not
+  done: water and lava, being pushed out of a block.
 - **Kept between visits.** The first world's storage keeps hotbar, inventory, armour, offhand and the
   selected slot, the ender chest's slots and the experience under `sapling_player_<uuid>`, with the
   game's field names (`Inventory` with `Slot`, `Armor`, `Offhand`, `SelectedInventorySlot`,
@@ -678,13 +690,13 @@ block action, and takes StopBreak and AbortBreak with a position.
   not tried live): sapling refuses it, as an honest client never sends it.
 - **Experience** (`experience.rs`, `orbs.rs`; `docs/research/experience.md`). Orbs split as BDS's
   `spawnOrbs` (2477 down to 1; 13 equal ones above 12000), thrown a little up and aside, shown as
-  `minecraft:xp_orb` with `ExperienceValue` and moved by the server (`MoveEntity` to those who see
-  the column; the client does not move them). One falls, slides to a stop, and from 21 to 120 of its
+  `minecraft:xp_orb` with `ExperienceValue` and moved by the server as a body that bounces (the
+  client does not move them). One falls, slides to a stop, and from 21 to 120 of its
   ticks looks for the nearest player within 8 blocks every 20, flies to it and is taken
   (`LevelEvent` SoundOrb). A player's level and progress follow BDS's `addExperience` (the Java
   formula), go to its client as the `player.level` / `player.experience` attributes and are kept
   with its items (`PlayerLevel`, `PlayerLevelProgress`); a fifth level sounds `levelup`. Not done:
-  orbs merging, colliding beyond the block they fall into, being saved; Mending.
+  orbs merging, being saved; Mending.
 - **Double chests** (`containers/pairs.rs`). Two chests of one kind, side by side and facing the same
   way, name each other in their block entities (`pairx`, `pairz`, `pairlead`), which clients are sent
   and draw one large chest from. A chest placed beside a single one pairs with it, the old one leading

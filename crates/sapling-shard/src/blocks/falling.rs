@@ -92,7 +92,7 @@ fn slide(world: &mut World, layer: Entity, pos: BlockPos) -> Option<BlockPos> {
     if !send::set(world, layer, lowest, air) {
         return None;
     }
-    let falling = flight::FallingBlock::leaving(layer, id, lowest);
+    let falling = flight::FallingBlock::leaving(level(world, layer)?, layer, id, lowest);
     let entity = mobs::spawn_shown(world, layer, falling.at(), |net_id| Some(falling.announcement(net_id, hash)))?;
     world.entity_mut(entity).insert(falling);
     Some(lowest)

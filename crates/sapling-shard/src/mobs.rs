@@ -59,7 +59,7 @@ pub(crate) struct MobGrid {
 /// `None` for a dropped item that names no item a client knows.
 fn announcement(actor: &Actor, id: u64) -> Option<Vec<Bytes>> {
     if actor.identifier == ITEM {
-        let item = sapling_data::add_item_entity(id, &stack(actor.item.as_ref()?), actor.position)?;
+        let item = sapling_data::add_item_entity(id, &stack(actor.item.as_ref()?), actor.position, [0.0; 3])?;
         return Some(vec![sapling_net::encode(&item)]);
     }
     if let Some(painting) = &actor.painting {
@@ -125,10 +125,10 @@ pub(crate) fn spawn_arrived(mut commands: Commands, mut players: ResMut<Players>
     }
 }
 
-/// Puts a stack into the world as an item lying at `feet`, shown like a stored one; `None` for
-/// an item no client knows.
-pub(crate) fn spawn_item(world: &mut World, layer: Entity, item: &ItemStack, feet: [f32; 3]) -> Option<Entity> {
-    spawn_shown(world, layer, feet, |id| Some(vec![sapling_net::encode(&sapling_data::add_item_entity(id, &stack(item), feet)?)]))
+/// What shows a stack as an item at `position` moving at `velocity`; `None` for an item no
+/// client knows.
+pub(crate) fn item_announcement(id: u64, item: &ItemStack, position: [f32; 3], velocity: [f32; 3]) -> Option<Vec<Bytes>> {
+    Some(vec![sapling_net::encode(&sapling_data::add_item_entity(id, &stack(item), position, velocity)?)])
 }
 
 /// Puts an entity into the world at `feet`, shown to those who see its column by what
