@@ -15,6 +15,7 @@ sapling-macros = { path = "crates/sapling-macros" }
 sapling-net = { path = "crates/sapling-net", default-features = false }
 sapling-shard = { path = "crates/sapling-shard" }
 sapling-world = { path = "crates/sapling-world" }
+sapling-worldgen = { path = "crates/sapling-worldgen" }
 
 # acacia at one commit of its `master`: bump every `rev` together. To build against a checkout
 # beside this one instead, see docs/DESIGN.md "Building against a local acacia".

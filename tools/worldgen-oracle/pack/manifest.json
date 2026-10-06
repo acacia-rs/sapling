@@ -1,0 +1,21 @@
+{
+  "format_version": 2,
+  "header": {
+    "name": "worldgen oracle",
+    "description": "Loads regions of chunks and touches every one so BDS saves them as generated",
+    "uuid": "7a3d2f60-5c1e-4b8a-9d47-0e6f1b2c3a01",
+    "version": [1, 0, 0],
+    "min_engine_version": [1, 26, 0]
+  },
+  "modules": [
+    { "type": "data", "uuid": "7a3d2f60-5c1e-4b8a-9d47-0e6f1b2c3a02", "version": [1, 0, 0] },
+    {
+      "type": "script",
+      "language": "javascript",
+      "uuid": "7a3d2f60-5c1e-4b8a-9d47-0e6f1b2c3a03",
+      "version": [1, 0, 0],
+      "entry": "scripts/main.js"
+    }
+  ],
+  "dependencies": [{ "module_name": "@minecraft/server", "version": "2.0.0" }]
+}
