@@ -183,14 +183,14 @@ fn sand_falls_a_torch_goes_with_its_block_and_a_button_comes_out_again() {
     });
     h.tick_all();
 
-    // The dirt goes: the sand comes down into its cell, and the torch that stood on the sand
-    // breaks and leaves a torch.
+    // The dirt goes: the sand falls into its cell, and the torch that stood on the sand breaks
+    // and leaves a torch.
     h.receive(1, &block_actions(&[(Action::PredictBreak, pillar)]));
-    let sent = h.tick_all();
-    let after: std::collections::HashMap<_, _> = blocks(sent.to(2)).into_iter().collect();
+    let sent: Vec<RawPacket> = (0..20).flat_map(|_| h.tick_all().to(2).to_vec()).collect();
+    let after: std::collections::HashMap<_, _> = blocks(&sent).into_iter().collect();
     let now = [pillar, sand, torch].map(|pos| after.get(&pos).copied());
     assert_eq!(now, [Some(hash("minecraft:sand")), Some(hash(AIR)), Some(hash(AIR))], "{after:?}");
-    assert_eq!(all::<AddItemEntity>(sent.to(2)).len(), 1, "the torch lies there");
+    assert_eq!(all::<AddItemEntity>(&sent).len(), 1, "the torch lies there");
 
     let pressed = |sent: &[RawPacket]| blocks(sent).iter().filter(|(pos, _)| *pos == button).count();
     h.receive(1, &click(button, 1, None));

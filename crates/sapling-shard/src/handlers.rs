@@ -224,7 +224,9 @@ pub(crate) fn dispatch(world: &mut World, plugins: &mut Plugins) {
     chat::dispatch(world, plugins);
     commands::dispatch(world, plugins);
     blocks::release_buttons(world);
-    blocks::flow_water(world);
+    blocks::press_plates(world);
+    blocks::fall_blocks(world);
+    blocks::flow_liquids(world);
     blocks::dispatch(world, plugins);
     inventory::dispatch(world, plugins);
     containers::dispatch_closes(world);

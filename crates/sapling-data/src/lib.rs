@@ -7,6 +7,7 @@ mod entity;
 mod inventory;
 mod item_entity;
 mod items;
+mod liquid_reaction;
 mod player;
 mod recipes;
 mod spawn;
@@ -15,7 +16,8 @@ mod templates;
 
 pub use block_loot::{BlockLoot, Fortune, LootRow, StateTest, Tooling, block_loot, java_block, ripe_age};
 pub use clock::{clock_state, world_clocks};
-pub use entity::{AddEntityOptions, add_entity, add_painting};
+pub use entity::{AddEntityOptions, add_entity, add_falling_block, add_painting};
+pub use liquid_reaction::{LiquidDetection, LiquidReaction, liquid_detection};
 pub use inventory::{block_screen,inventory_content, inventory_screen, player_hotbar};
 pub use item_entity::{add_item_entity, mob_armor, mob_hand};
 pub use items::{CreativeItem, Stack, creative_item, is_item, item, item_name, max_stack, no_item, set_shield_item_id};

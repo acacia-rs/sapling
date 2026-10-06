@@ -11,8 +11,8 @@ use super::{Request, Site, doors, items, level, send, updates};
 use crate::components::{InLayer, Position, Stage};
 use crate::inventory::{self, Inventory, Place};
 
-const PLAYER_HALF_WIDTH: f32 = 0.3;
-const PLAYER_HEIGHT: f32 = 1.8;
+pub(super) const PLAYER_HALF_WIDTH: f32 = 0.3;
+pub(super) const PLAYER_HEIGHT: f32 = 1.8;
 const BED: &str = "minecraft:bed";
 /// Blocks a block placed into their cell takes the place of, by the end of their name: those
 /// the Java game marks replaceable, in Bedrock's names.
