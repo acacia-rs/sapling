@@ -2,7 +2,7 @@
 
 Read 2026-10-06 from `acacia/.testserver/bds-molang/bedrock_server.exe` (build stamp `6ab54bee`, the same exe as
 `water.md`; the old `bds/` path is gone, so bdsre was run with `BDS_EXE` pointing there). No `name` labels were added.
-Per-block data: `liquid-reactions.tsv` (name, reaction, can_contain). Read `water.md` first for the flow rule.
+Per-block data: `crates/sapling-data/data/liquid-reactions.tsv` (name, reaction, can_contain). Read `water.md` first for the flow rule.
 
 ## Data layout (verified)
 

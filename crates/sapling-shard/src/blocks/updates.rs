@@ -9,7 +9,8 @@ use bevy_ecs::prelude::*;
 use sapling_api::{BlockPos, Face};
 use sapling_world::BlockRegistry;
 
-use super::{doors, falling, level, liquid, loot, send};
+use super::falling::{self, Change};
+use super::{doors, level, liquid, loot, send};
 
 /// Cells looked at for one change: a tower of sand is one cell a step.
 const MAX_STEPS: usize = 512;
@@ -87,9 +88,9 @@ pub(super) fn settle(world: &mut World, layer: Entity, pos: BlockPos) {
     for _ in 0..MAX_STEPS {
         let Some(pos) = changed.pop_front() else { return };
         liquid::disturb(world, layer, pos);
-        falling::unsettled(world, layer, pos, false);
+        falling::unsettled(world, layer, pos, Change::Placed);
         for face in Face::ALL {
-            falling::unsettled(world, layer, face.neighbour(pos), face == Face::Up);
+            falling::unsettled(world, layer, face.neighbour(pos), if face == Face::Up { Change::Below } else { Change::Beside });
         }
         if block(world, layer, pos).is_none_or(|(registry, id)| registry.get(id).is_some_and(|state| state.is_solid())) {
             continue;

@@ -66,8 +66,10 @@ pub(crate) fn punch_particles(registry: &BlockRegistry, pos: BlockPos, face: Fac
     sapling_net::encode(&LevelEvent { event: PUNCH[face as usize], position: centre(pos), data: registry.network_hash(id) as i32 })
 }
 
+/// The sound of the block `id` placed: BDS names the block's first state, not the one placed.
 pub(crate) fn place_sound(registry: &BlockRegistry, pos: BlockPos, id: u32) -> Bytes {
-    sound("place", registry, pos, id)
+    let first = registry.get(id).and_then(|state| registry.states_of(state.name).next()).map_or(id, |(first, _)| first);
+    sound("place", registry, pos, first)
 }
 
 /// The sound `name` of the block `id`, which tells the client what the block is made of.
@@ -115,9 +117,10 @@ pub(crate) fn keep_entity(world: &mut World, layer: Entity, pos: BlockPos, entit
     to_viewers(world, layer, pos, &shown);
 }
 
-/// Writes a layer-0 block, and layer 1 as the block decides (waterlog.rs), and shows it to
-/// everyone who sees the place. False, with nothing changed, outside the world's height and
-/// where the column is not loaded or cannot be written.
+/// Writes a layer-0 block, and layer 1 as the block decides (waterlog.rs), and shows the layer-0
+/// block to everyone who sees the place: their clients move the water between layers by the same
+/// rule, and BDS sends nothing for it. False, with nothing changed, outside the world's height
+/// and where the column is not loaded or cannot be written.
 pub(crate) fn set(world: &mut World, layer: Entity, pos: BlockPos, id: u32) -> bool {
     let Some(mut level) = world.get_mut::<Layer>(layer) else { return false };
     let [x, y, z] = pos;
@@ -129,11 +132,11 @@ pub(crate) fn set(world: &mut World, layer: Entity, pos: BlockPos, id: u32) -> b
     if !level.world.set_block(x, y, z, id) {
         return false;
     }
-    let mut packets = vec![update(level.world.registry(), pos, id, 0)];
-    if now_held != held && level.world.set_liquid(x, y, z, now_held) {
-        packets.push(update(level.world.registry(), pos, now_held, 1));
+    if now_held != held {
+        level.world.set_liquid(x, y, z, now_held);
     }
-    to_viewers(world, layer, pos, &packets);
+    let packet = update(level.world.registry(), pos, id, 0);
+    to_viewers(world, layer, pos, &[packet]);
     true
 }
 

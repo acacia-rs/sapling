@@ -124,9 +124,10 @@ fn stairs_placed_into_a_source_keep_it_beside_them_and_give_it_back_when_broken(
     h.tick_all();
     let stairs = |at: &[(u32, u32)]| at.iter().any(|(layer, block)| *layer == 0 && *block != hash("minecraft:air") && *block != liquid("minecraft:water", 0));
 
+    // Clients keep the source beside the stairs by the same rule: BDS sends layer 0 only.
     h.receive(1, &click([2, 64, 0], 1, None));
     let placed = layers_at(&mut h, 2, wet);
-    assert!(stairs(&placed) && placed.contains(&(1, liquid("minecraft:water", 0))), "the source stays beside the stairs: {placed:?}");
+    assert!(stairs(&placed) && placed.len() == 1, "{placed:?}");
 
     // A water bucket poured on dry stairs fills them.
     h.receive(1, &click([3, 64, 0], 1, None));
@@ -140,7 +141,7 @@ fn stairs_placed_into_a_source_keep_it_beside_them_and_give_it_back_when_broken(
     h.tick_all();
     h.receive(1, &block_actions(&[(Action::PredictBreak, wet)]));
     let broken = layers_at(&mut h, 2, wet);
-    assert_eq!(broken, [(0, liquid("minecraft:water", 0)), (1, hash("minecraft:air"))], "the water takes the cell");
+    assert_eq!(broken, [(0, liquid("minecraft:water", 0))], "the source kept beside the stairs takes the cell");
 }
 
 #[test]

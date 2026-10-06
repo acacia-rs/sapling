@@ -5,6 +5,7 @@
 // TODO: no powder snow, fish, milk or cauldrons; a handler's change of the event's block is not
 // followed; the nether's evaporation particles are not sent.
 
+use acacia_proto::packets::{LevelEvent, LevelEventEvent};
 use acacia_proto::types::Vec3f;
 use sapling_api::{Block, BlockPos, BreakEvent, Face, GameMode, PlaceEvent};
 use sapling_data::LiquidReaction;
@@ -109,8 +110,11 @@ impl Request<'_> {
             return false;
         }
         if snow_under {
-            let particles = super::level(self.world, site.layer).map(|level| send::destroy_particles(level.registry(), target, snow));
-            send::to_viewers(self.world, site.layer, target, &particles.into_iter().collect::<Vec<_>>());
+            // At the cell's corner, where BDS puts them for a cleared snow layer.
+            let hash = super::level(self.world, site.layer).map_or(0, |level| level.registry().network_hash(snow));
+            let [x, y, z] = target.map(|c| c as f32);
+            let particles = sapling_net::encode(&LevelEvent { event: LevelEventEvent::ParticleDestroy, position: Vec3f { x, y, z }, data: hash as i32 });
+            send::to_viewers(self.world, site.layer, target, &[particles]);
         }
         if is_water && liquid::is_hot(self.world, site.layer) {
             let [x, y, z] = target.map(|c| c as f32 + 0.5);

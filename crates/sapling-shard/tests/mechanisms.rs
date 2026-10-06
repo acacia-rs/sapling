@@ -78,9 +78,11 @@ fn sand_falls_as_an_entity_and_breaks_up_on_a_torch() {
     let falling: Vec<AddEntity> = all::<AddEntity>(&sent).into_iter().filter(|entity| entity.entity_type == "minecraft:falling_block").collect();
     assert_eq!(falling.len(), 2);
     let variant = falling[0].metadata.iter().find(|item| item.key == Key::Variant).map(|item| item.value.clone());
-    assert_eq!((variant, falling[0].position.y), (Some(Value::Default(Plain::Int(sand as i32))), 68.5), "it names its block and starts where it was");
+    // BDS shows it a tick into its fall, 0.49 above the bottom of its box (research/captures/).
+    assert_eq!(variant, Some(Value::Default(Plain::Int(sand as i32))), "it names its block");
+    assert!((falling[0].position.y - 68.46).abs() < 1e-4 && (falling[0].velocity.y + 0.0392).abs() < 1e-6, "{:?} {:?}", falling[0].position, falling[0].velocity);
     let heights: Vec<f32> = all::<MoveEntityDelta>(&sent).iter().filter(|moved| moved.runtime_entity_id == falling[0].runtime_id).filter_map(|moved| moved.y).collect();
-    assert!(heights.windows(2).all(|pair| pair[1] <= pair[0]) && heights.last() == Some(&65.5), "down to the platform: {heights:?}");
+    assert!(heights.windows(2).all(|pair| pair[1] <= pair[0]) && heights.last() == Some(&65.49), "down to the platform: {heights:?}");
     assert_eq!(all::<RemoveEntity>(&sent).len(), 2, "both entities go");
     let items: Vec<AddItemEntity> = all::<AddItemEntity>(&sent);
     let sand_item = sapling_data::item(&sapling_data::Stack { name: "minecraft:sand", count: 1, damage: 0, block: None, tag: None }, None).unwrap();

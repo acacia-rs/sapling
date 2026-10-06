@@ -6,7 +6,7 @@ use acacia_proto::types::Vec3f;
 use bevy_ecs::prelude::*;
 use sapling_api::{BlockPos, Face};
 
-use super::super::{level, send};
+use super::super::{Dice, level, send};
 use super::{Cell, Liquid, cell};
 
 const OBSIDIAN: &str = "minecraft:obsidian";
@@ -17,8 +17,9 @@ const BLUE_ICE: &str = "minecraft:blue_ice";
 const SOUL_SOIL: &str = "minecraft:soul_soil";
 /// Lava hardens through its sides and its top, never from below.
 const TOUCHING: [Face; 5] = [Face::South, Face::North, Face::East, Face::West, Face::Up];
-/// The hiss's pitch, x 1000.
+/// The hiss's pitch x 1000, and how far each of its two throws moves it.
 const FIZZ_PITCH: i32 = 2600;
+const FIZZ_SPREAD: u32 = 800;
 
 fn name_at(world: &World, layer: Entity, [x, y, z]: BlockPos) -> Option<&'static str> {
     let level = level(world, layer).filter(|level| level.in_height(y) && level.is_loaded(send::column([x, y, z])))?;
@@ -50,10 +51,12 @@ pub(super) fn turn(world: &mut World, layer: Entity, pos: BlockPos, name: &str) 
     turned
 }
 
-/// The hiss of lava meeting water or burning a block (BDS `LiquidBlock::_triggerFizzEffect`, which
-/// throws the pitch around 2.6; its smoke is the client's own).
+/// The hiss of lava meeting water or burning a block (BDS `LiquidBlock::_triggerFizzEffect`: the
+/// pitch x 1000 is `((r - r) * 0.8 + 2.6) * 1000`; its smoke is the client's own).
 pub(super) fn fizz(world: &mut World, layer: Entity, pos: BlockPos) {
     let [x, y, z] = pos.map(|c| c as f32 + 0.5);
-    let hiss = sapling_net::encode(&LevelEvent { event: LevelEventEvent::SoundFizz, position: Vec3f { x, y, z }, data: FIZZ_PITCH });
+    let mut dice = world.get_resource_or_insert_with(Dice::default);
+    let spread = dice.roll(FIZZ_SPREAD) as i32 - dice.roll(FIZZ_SPREAD) as i32;
+    let hiss = sapling_net::encode(&LevelEvent { event: LevelEventEvent::SoundFizz, position: Vec3f { x, y, z }, data: FIZZ_PITCH + spread });
     send::to_viewers(world, layer, pos, &[hiss]);
 }

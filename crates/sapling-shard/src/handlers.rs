@@ -225,9 +225,10 @@ pub(crate) fn dispatch(world: &mut World, plugins: &mut Plugins) {
     commands::dispatch(world, plugins);
     blocks::release_buttons(world);
     blocks::press_plates(world);
-    blocks::fall_blocks(world);
     blocks::flow_liquids(world);
     blocks::dispatch(world, plugins);
+    // After the requests: a block placed over a gap falls in the tick it was placed, as on BDS.
+    blocks::fall_blocks(world);
     inventory::dispatch(world, plugins);
     containers::dispatch_closes(world);
     containers::show_lids_again(world);
