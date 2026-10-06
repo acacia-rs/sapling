@@ -26,7 +26,7 @@ use crate::view::View;
 use crate::inventory::Inventory;
 use crate::visibility::ToViewers;
 use crate::worlds::{Atlas, Changes, Scope};
-use crate::{arenas, blobs, blocks, chunks, clock, commands, handlers, handoff, inventory, join, mobs, movement, visibility, worlds};
+use crate::{arenas, blobs, blocks, chunks, clock, commands, handlers, handoff, inventory, join, mobs, movement, ticking, visibility, worlds};
 
 /// The disconnect screen of the players of a shard that stops.
 const CLOSED: &str = "disconnect.closed";
@@ -85,6 +85,7 @@ impl Shard {
             chunks::send_chunks,
             chunks::sub_chunk_requests,
             blobs::blob_status,
+            ticking::sweep,
             chunks::save_and_unload_columns,
             mobs::despawn_unloaded,
         );

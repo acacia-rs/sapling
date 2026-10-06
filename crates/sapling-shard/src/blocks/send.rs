@@ -144,10 +144,15 @@ pub(crate) fn block_at(world: &World, layer: Entity, pos: BlockPos) -> Option<Bl
     known.then(|| describe(level.registry(), level.block(pos[0], pos[1], pos[2])))
 }
 
-/// Sets a block for a handler: no event, and everyone who sees the place is shown it.
+/// Sets a block for a handler: no event, and everyone who sees the place is shown it. A
+/// container gets its block entity.
 pub(crate) fn put_block(world: &mut World, layer: Entity, pos: BlockPos, block: &Block) -> bool {
     let Some(id) = world.get::<Layer>(layer).and_then(|layer| resolve(layer.world.registry(), block)) else { return false };
-    set(world, layer, pos, id)
+    let placed = set(world, layer, pos, id);
+    if let Some(name) = world.get::<Layer>(layer).and_then(|layer| layer.world.registry().get(id)).map(|state| state.name).filter(|_| placed) {
+        crate::containers::furnish(world, layer, pos, name, None, sapling_api::Face::Up);
+    }
+    placed
 }
 
 /// Empties layer 1 at `pos` for everyone, if it held something.

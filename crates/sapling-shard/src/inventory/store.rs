@@ -4,9 +4,10 @@
 use bevy_ecs::prelude::*;
 use sapling_world::{PlayerData, PlayerLoad};
 
-use super::{ARMOR, Held, Inventory, MAIN, Place};
+use super::{ARMOR, ENDER, Held, Inventory, MAIN, Place};
 use crate::chunks::UNLOAD_INTERVAL;
-use crate::components::{DefaultLayer, Identity, Layer, Outgoing, Stage, Tick};
+use crate::components::{DefaultLayer, Identity, Layer, NetId, Outgoing, Stage, Tick};
+use crate::experience::{self, Experience};
 use crate::handoff::{Peers, ShardMsg};
 
 fn fill(inventory: &mut Inventory, data: PlayerData) {
@@ -17,6 +18,10 @@ fn fill(inventory: &mut Inventory, data: PlayerData) {
         inventory.put(Place::Armor(slot), stack);
     }
     inventory.put(Place::Offhand, data.offhand);
+    for (slot, stack) in data.ender.into_iter().take(ENDER).enumerate() {
+        inventory.ender[slot] = stack.map(|stack| Held { stack, id: inventory.new_id() });
+    }
+    inventory.experience = Experience::new(data.level, data.progress);
     (inventory.selected, inventory.unsaved) = (data.selected, false);
 }
 
@@ -27,7 +32,9 @@ fn kept(inventory: &Inventory) -> PlayerData {
         inventory.add(&held.stack);
     }
     let stacks = |slots: Vec<Option<Held>>| slots.into_iter().map(|slot| slot.map(|held| held.stack)).collect();
-    PlayerData { main: stacks(inventory.main), armor: stacks(inventory.armor), offhand: inventory.offhand.map(|held| held.stack), selected: inventory.selected }
+    let (level, progress) = (inventory.experience.level, inventory.experience.progress);
+    let (main, armor, ender, offhand) = (stacks(inventory.main), stacks(inventory.armor), stacks(inventory.ender), inventory.offhand.map(|held| held.stack));
+    PlayerData { main, armor, offhand, selected: inventory.selected, ender, level, progress }
 }
 
 /// Gives the players storage answered for their items.
@@ -45,11 +52,14 @@ pub(crate) fn load(mut layers: Query<&mut Layer>, mut players: Query<(&Identity,
 
 /// Sends each joining player its windows once it has items to show, in BDS's order: inventory,
 /// armour, the screen's own slots, offhand, then the slot in hand.
-pub(crate) fn send_own(mut players: Query<(&Stage, &mut Inventory, &mut Outgoing)>) {
-    for (stage, mut inventory, mut out) in &mut players {
+pub(crate) fn send_own(mut players: Query<(&NetId, &Stage, &mut Inventory, &mut Outgoing)>) {
+    for (id, stage, mut inventory, mut out) in &mut players {
         if *stage >= Stage::StartGame && inventory.loaded && !inventory.sent {
             inventory.send_all(&mut out);
             out.push(&sapling_data::player_hotbar(inventory.selected, true));
+            if inventory.experience != Experience::default() {
+                out.push(&experience::attributes(id, &inventory.experience));
+            }
             inventory.sent = true;
         }
     }

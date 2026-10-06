@@ -131,7 +131,8 @@ fn count(row: &LootRow, fortune: u8, roll: &mut dyn FnMut(u32) -> u32) -> u32 {
 /// What the block `block` (namespaced) with `properties` leaves when `by` breaks it; nothing
 /// for a block no item stands for. `roll(n)` throws a number below `n`.
 pub(super) fn of(block: &str, properties: &str, by: &Breaker, roll: &mut dyn FnMut(u32) -> u32) -> Vec<Item> {
-    if !by.harvests {
+    // A shulker box drops itself with what it holds (containers::spill).
+    if !by.harvests || crate::containers::is_shulker_box(block) {
         return Vec::new();
     }
     let name = block.strip_prefix("minecraft:").unwrap_or(block);

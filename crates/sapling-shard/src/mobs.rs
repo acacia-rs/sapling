@@ -128,16 +128,16 @@ pub(crate) fn spawn_arrived(mut commands: Commands, mut players: ResMut<Players>
 /// Puts a stack into the world as an item lying at `feet`, shown like a stored one; `None` for
 /// an item no client knows.
 pub(crate) fn spawn_item(world: &mut World, layer: Entity, item: &ItemStack, feet: [f32; 3]) -> Option<Entity> {
-    spawn(world, layer, feet, |id| Some(vec![sapling_net::encode(&sapling_data::add_item_entity(id, &stack(item), feet)?)]))
+    spawn_shown(world, layer, feet, |id| Some(vec![sapling_net::encode(&sapling_data::add_item_entity(id, &stack(item), feet)?)]))
 }
 
-/// Puts an entity into the column of `at`, shown by what `announce` makes for the id it gets;
-/// `None`, with no id spent, when that is nothing.
-pub(crate) fn spawn(world: &mut World, layer: Entity, at: [f32; 3], announce: impl FnOnce(u64) -> Option<Vec<Bytes>>) -> Option<Entity> {
+/// Puts an entity into the world at `feet`, shown to those who see its column by what
+/// `announce` makes of its id; `None` when that makes nothing.
+pub(crate) fn spawn_shown(world: &mut World, layer: Entity, feet: [f32; 3], announce: impl FnOnce(u64) -> Option<Vec<Bytes>>) -> Option<Entity> {
     let id = world.resource::<Players>().next_net_id;
     let announcement = announce(id)?;
     world.resource_mut::<Players>().next_net_id += 1;
-    let home = ChunkPos::of_block(at[0].floor() as i32, at[2].floor() as i32);
+    let home = ChunkPos::of_block(feet[0].floor() as i32, feet[2].floor() as i32);
     let mob = world.spawn((Mob { announcement, home }, NetId(id), InLayer(layer))).id();
     let mut grid = world.resource_mut::<MobGrid>();
     grid.grid.insert(layer, home, (mob, id));
@@ -145,8 +145,8 @@ pub(crate) fn spawn(world: &mut World, layer: Entity, at: [f32; 3], announce: im
     Some(mob)
 }
 
-/// What a client that comes to see the entity from now on is shown of it.
-pub(crate) fn announce_as(world: &mut World, mob: Entity, announcement: Vec<Bytes>) {
+/// What players who come to see a moving entity later are told of it.
+pub(crate) fn reannounce(world: &mut World, mob: Entity, announcement: Vec<Bytes>) {
     if let Some(mut mob) = world.get_mut::<Mob>(mob) {
         mob.announcement = announcement;
     }

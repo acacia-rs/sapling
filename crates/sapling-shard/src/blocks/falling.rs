@@ -100,7 +100,7 @@ fn slide(world: &mut World, layer: Entity, pos: BlockPos) -> Option<BlockPos> {
     }
     let at = [lowest[0] as f32 + 0.5, lowest[1] as f32, lowest[2] as f32 + 0.5];
     let falling = FallingBlock { layer, block: id, at, fall_speed: 0.0, airborne: 0, landed_for: None };
-    let entity = mobs::spawn(world, layer, at, |net_id| Some(announcement(net_id, &falling, hash)))?;
+    let entity = mobs::spawn_shown(world, layer, at,|net_id| Some(announcement(net_id, &falling, hash)))?;
     world.entity_mut(entity).insert(falling);
     Some(lowest)
 }
@@ -200,7 +200,7 @@ fn fall(world: &mut World, entity: Entity) -> Option<BlockPos> {
     let velocity = Vec3f { x: 0.0, y: -falling.fall_speed, z: 0.0 };
     let hash = level(world, layer).map_or(0, |level| level.registry().network_hash(block));
     let shown = world.get::<FallingBlock>(entity).map(|falling| announcement(id, falling, hash))?;
-    mobs::announce_as(world, entity, shown);
+    mobs::reannounce(world, entity, shown);
     let cell = at.map(|c| c.floor() as i32);
     let motion = sapling_net::encode(&SetEntityMotion { runtime_entity_id: id, velocity, tick });
     send::to_viewers(world, layer, cell, &[moved(id, wire(at), floor.is_some(), tick), motion]);

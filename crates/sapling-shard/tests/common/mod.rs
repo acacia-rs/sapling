@@ -3,6 +3,7 @@
 #![allow(dead_code)]
 
 pub mod cluster;
+pub mod requests;
 
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};

@@ -14,6 +14,7 @@ use sapling_data::Stack;
 use sapling_world::ItemStack;
 
 use crate::components::Outgoing;
+use crate::experience::Experience;
 
 pub(crate) use crafting::clear_grid;
 pub(crate) use equipment::{announce, in_hand, screens, select, spawn_packets};
@@ -24,6 +25,8 @@ pub(crate) use wear::wear_tool_in_hand;
 pub(crate) const MAIN: usize = 36;
 pub(crate) const HOTBAR: usize = 9;
 const ARMOR: usize = 4;
+/// Slots of the container every ender chest opens for its player.
+pub(crate) const ENDER: usize = 27;
 /// The `Ui` window's slots; the first is the cursor.
 const UI: usize = 54;
 /// The most a client stacks of anything; an item's own limit is the client's to keep
@@ -64,6 +67,11 @@ pub(crate) struct Inventory {
     grid: Vec<Option<Held>>,
     /// The open container's slots, lent for the length of a request.
     pub container: Vec<Option<Held>>,
+    /// What the open container refuses in a slot, while it is lent.
+    pub refuses: Option<fn(usize, &ItemStack) -> bool>,
+    /// What the player's ender chests hold.
+    pub ender: Vec<Option<Held>>,
+    pub experience: Experience,
     /// The hotbar slot in the hand.
     pub selected: u8,
     next_id: i32,
@@ -90,6 +98,9 @@ impl Default for Inventory {
             created: None,
             grid: vec![None; UI],
             container: Vec::new(),
+            refuses: None,
+            ender: vec![None; ENDER],
+            experience: Experience::default(),
             selected: 0,
             next_id: 1,
             loaded: false,
@@ -112,7 +123,7 @@ pub(crate) fn wire(slot: &Option<Held>, with_id: bool) -> ItemV4 {
 }
 
 /// Whether two stacks are of one kind, so that one can go onto the other.
-fn stacks_with(a: &ItemStack, b: &ItemStack) -> bool {
+pub(crate) fn stacks_with(a: &ItemStack, b: &ItemStack) -> bool {
     (&a.name, a.damage, a.block, &a.tag) == (&b.name, b.damage, b.block, &b.tag)
 }
 
@@ -157,6 +168,9 @@ impl Inventory {
     /// same kind. A whole stack keeps its id; a part gets a new one.
     pub fn transfer(&mut self, from: Place, to: Place, count: u8) -> Result<(), ()> {
         let source = self.slot(from).and_then(Option::as_ref).filter(|held| count > 0 && held.stack.count >= count).cloned().ok_or(())?;
+        if from != to && self.is_refused(to, &source.stack) {
+            return Err(());
+        }
         let target = self.slot(to).ok_or(())?.clone();
         let moved = match target {
             None if source.stack.count == count => source.clone(),
@@ -173,9 +187,18 @@ impl Inventory {
 
     pub fn swap(&mut self, a: Place, b: Place) -> Result<(), ()> {
         let (first, second) = (self.slot(a).ok_or(())?.clone(), self.slot(b).ok_or(())?.clone());
+        let refused = |place, held: &Option<Held>| held.as_ref().is_some_and(|held| self.is_refused(place, &held.stack));
+        if refused(a, &second) || refused(b, &first) {
+            return Err(());
+        }
         *self.slot_mut(a).ok_or(())? = second;
         *self.slot_mut(b).ok_or(())? = first;
         Ok(())
+    }
+
+    /// Whether the open container will not have `stack` in `place`.
+    fn is_refused(&self, place: Place, stack: &ItemStack) -> bool {
+        matches!((place, self.refuses), (Place::Container(slot), Some(refuses)) if refuses(slot, stack))
     }
 
     /// Removes `count` of the stack at `place` and returns them.

@@ -221,7 +221,7 @@ impl Request<'_> {
         let (id, air) = (level.block(x, y, z), level.registry().air_id());
         let particles = send::destroy_particles(level.registry(), [x, y, z], id);
         doors::remove_other_half(self.world, site.layer, [x, y, z]);
-        crate::containers::spill(self.world, site.layer, [x, y, z]);
+        crate::containers::spill(self.world, site.layer, [x, y, z], site.mode == GameMode::Creative);
         if !send::set(self.world, site.layer, [x, y, z], air) {
             return false;
         }

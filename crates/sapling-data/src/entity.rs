@@ -141,6 +141,14 @@ pub fn add_falling_block(id: u64, position: [f32; 3], velocity: [f32; 3], block_
     AddEntity { velocity: Vec3f { x, y, z }, ..block }
 }
 
+/// An experience orb worth `value` at `at`, moving at `velocity`.
+pub fn add_experience_orb(id: u64, at: [f32; 3], velocity: [f32; 3], value: i32) -> AddEntity {
+    let mut orb = plain("minecraft:xp_orb");
+    orb.metadata.push(item(Key::ExperienceValue, Plain::Int(value)));
+    let ([x, y, z], [dx, dy, dz]) = (at, velocity);
+    AddEntity { unique_id: id as i64, runtime_id: id, position: Vec3f { x, y, z }, velocity: Vec3f { x: dx, y: dy, z: dz }, ..orb }
+}
+
 pub fn add_entity(o: &AddEntityOptions<'_>) -> AddEntity {
     let identifier = SUCCEEDED.iter().find(|(old, _)| *old == o.identifier).map_or(o.identifier, |(_, new)| new);
     let recorded = RECORDED.get(identifier);

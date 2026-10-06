@@ -3,7 +3,7 @@
 use acacia_proto::nbt::Value;
 use acacia_proto::types::ItemV4;
 use bevy_ecs::prelude::*;
-use sapling_api::{Block, BlockPos, GameMode, PlaceEvent};
+use sapling_api::{Block, BlockPos, Face, GameMode, PlaceEvent};
 use sapling_world::{BlockRegistry, new_block_entity};
 
 use super::facing::{self, Click};
@@ -104,7 +104,7 @@ impl Request<'_> {
         let allowed = site.mode == GameMode::Creative || site.mode == GameMode::Survival && from_hand;
         let (event, player) = (PlaceEvent::new(pos, against, click.face, block, allowed), self.player);
         let event = self.plugins.offer(self.world, event, |handler, ctx, event| handler.on_place(ctx, player, event));
-        let placed = !event.is_cancelled() && self.put(site, pos, &event.block);
+        let placed = !event.is_cancelled() && self.put(site, pos, &event.block, click.face);
         if !placed {
             self.resync(&[against, pos]);
         }
@@ -112,7 +112,7 @@ impl Request<'_> {
     }
 
     /// Puts what a place event ended with into the world; false for a block the game lacks.
-    fn put(&mut self, site: &Site, pos: BlockPos, block: &Block) -> bool {
+    fn put(&mut self, site: &Site, pos: BlockPos, block: &Block, face: Face) -> bool {
         let Some(registry) = level(self.world, site.layer).map(|level| level.registry()) else { return false };
         let Some(id) = send::resolve(registry, block).filter(|_| !block.is_air()) else { return false };
         let sound = send::place_sound(registry, pos, id);
@@ -127,7 +127,8 @@ impl Request<'_> {
                     send::keep_entity(self.world, site.layer, cell, &bed_entity(cell, colour));
                 }
             }
-            crate::containers::furnish(self.world, site.layer, pos, &block.name);
+            let tag = self.world.get::<Inventory>(self.entity).and_then(|inventory| inventory.in_hand().as_ref()).and_then(|held| held.stack.tag.clone());
+            crate::containers::furnish(self.world, site.layer, pos, &block.name, tag.as_ref(), face);
             updates::settle(self.world, site.layer, pos);
         }
         placed

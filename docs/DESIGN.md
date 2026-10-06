@@ -563,8 +563,9 @@ block action, and takes StopBreak and AbortBreak with a position.
   ticks a player in the world within 1.3 blocks who has room takes it, or as much as fits:
   `TakeItemEntity` to those who see the column, the entity is removed, the taker's windows are resent.
 - **Kept between visits.** The first world's storage keeps hotbar, inventory, armour, offhand and the
-  selected slot under `sapling_player_<uuid>`, with the game's field names (`Inventory` with `Slot`,
-  `Armor`, `Offhand`, `SelectedInventorySlot`) and item layout. It is not the game's own
+  selected slot, the ender chest's slots and the experience under `sapling_player_<uuid>`, with the
+  game's field names (`Inventory` with `Slot`, `Armor`, `Offhand`, `SelectedInventorySlot`,
+  `EnderChestInventory`, `PlayerLevel`, `PlayerLevelProgress`) and item layout. It is not the game's own
   `player_server_<id>` record: one holding only items is not a player BDS can load. Loads and saves run
   on the world's I/O threads; a save happens when the player leaves, every 100 ticks while the items
   changed, and when the shard stops. One save per player is in flight at a time, and a player back
@@ -582,24 +583,61 @@ block action, and takes StopBreak and AbortBreak with a position.
   `block.barrel.open` / `block.barrel.close`. Breaking the block spills its items and closes its screens
   (`ContainerClose`, server true). The evidence for all of it, mostly decompiled from an older BDS
   build with its symbols, is `docs/research/containers-crafting.md`; no chest traffic of a real BDS
-  was ever recorded. Not done: a chest's own sounds (their names in this protocol were not found),
-  shulker and ender chests, a reach check while open, a chest blocked from above. A hopper opens as a
-  container of five (window type Hopper) and moves no items.
-- **Furnaces, blast furnaces and smokers** (`furnaces.rs`, `sapling_data::smelted`). Containers of
-  three slots (input 0, fuel 1, result 2; window types Furnace, BlastFurnace, Smoker), which requests
-  name by slot type (`FurnaceIngredient` and its two kin, `FurnaceFuel`, `FurnaceOutput`). One that
-  was opened ticks in BDS's order (`FurnaceBlockActor::tick`): the fire burns down; an unlit one with
+  was ever recorded. A block a handler sets gets its empty entity too. Not done: a chest's own sounds
+  (their names in this protocol were not found), a reach check while open, a chest blocked from above.
+- **Shulker boxes and ender chests** (`containers/shulker.rs`; `docs/research/shulker-ender.md`). A
+  shulker box is a chest of 27 (request container `Shulker`, entity `ShulkerBox` with a `facing` byte:
+  the face clicked, from memory) that refuses shulker boxes. Broken, it spills nothing: it drops
+  itself with its items in the item's tag as `Items` (in creative only when it holds something), and
+  the loot table drops nothing more; placed, the tag's `Items` become the new entity's. An empty box
+  drops without a tag, so it stacks with new ones (BDS may tag it `Items: []`: not settled). An ender
+  chest (entity `EnderChest`, request container `Container`) opens its player's own 27 slots, kept
+  with the player's items as `EnderChestInventory`; the lid is the block's, shared by its viewers.
+  Both sound (`shulkerbox.open`/`.closed`, `enderchest.open`/`.closed`, names from BDS's binary).
+- **Ticking block entities** (`ticking.rs`). Furnaces and hoppers tick while a player's view covers
+  their column, as BDS ticks block actors near players. On the column sweep (every 100 ticks, before
+  saving) those in seen columns with work start (a furnace whose entity says it was burning or
+  cooking, every hopper) and those in columns nobody sees stop, their state written to their entity.
+  A placed hopper and an opened furnace start at once. A ticking container's slots stay held
+  (`containers::pin`); hoppers reach other containers through `containers::with_slots`.
+- **Hoppers** (`hoppers.rs`; `docs/research/hoppers.md`). A container of five. Each tick its cooldown
+  counts down; when it is over and the hopper is not powered (`toggle_bit`), it pushes one item from
+  its first slot that can give one into the container it faces (`facing_direction`), then pulls one
+  from the container above or, when the block above is no container, takes the first item lying in
+  the box 0.625 to 2 blocks over it, as much as fits in two slots. A move sets the cooldown to 8
+  ticks (BDS's code says 4 of its hopper ticks; hoppers are measured at 2.5 items a second); an
+  empty hopper that is given an item waits a whole cooldown. A furnace takes from above into its
+  input, from the sides only fuel, and gives its result (and an empty bucket in its fuel slot)
+  downwards; ender chests are not reached. Not done: BDS ticks the hoppers below first, so a chain
+  moves an item in one tick; composters; minecarts.
+- **Furnaces, blast furnaces and smokers** (`furnaces.rs`, `sapling_data::smelted`;
+  `docs/research/furnaces.md`). Containers of three slots (input 0, fuel 1, result 2; window types
+  Furnace, BlastFurnace, Smoker), which requests name by slot type (`FurnaceIngredient` and its two
+  kin, `FurnaceFuel`, `FurnaceOutput`). A ticking one (above) ticks in BDS's order
+  (`FurnaceBlockActor::tick`): while lit it crackles every 20 to 99 ticks (`block.furnace.lit`,
+  `block.blastfurnace.fire_crackle`, `block.smoker.smoke`) and the fire burns down; an unlit one with
   something it can smelt lights its next piece of fuel (a lava bucket leaves its bucket); a lit one
   cooks, and at 200 ticks (100 in the other two) the result grows, shown to the screens before the
   input shrinks; an unlit one loses two ticks of cooking a tick. Recipes are the `furnace`,
   `blast_furnace` and `smoker` ones of the recorded `CraftingData`. Screens are told the three times
   as `ContainerSetData` (0 cooked, 1 fire left, 2 what the fuel gave) when they change. Lighting and
-  going out swaps the block for its `lit_` one, facing kept, and writes the block entity again
-  (`BurnTime`, `CookTime`, `BurnDuration` beside `Items`). A furnace is let go once it is out, cooks
-  nothing and nobody looks. Not as the game: burn times are a table from its wiki in
-  `furnaces/fuel.rs`, not read from BDS, and lack the rarer wooden things (stairs, fences, doors,
-  signs). Not done: experience, the crackling sound, a result slot that refuses items, and a furnace
-  that was burning when its world was saved stays as it was until someone opens it.
+  going out swaps the block for its `lit_` one, facing kept, and gives it the old entity
+  (`BurnTime`, `CookTime`, `BurnDuration`, `StoredXPInt` beside `Items`). Burn times are BDS's
+  `getBurnDuration` rules (`furnaces/fuel.rs`; wood is told by name where BDS reads a material),
+  truncated. A player may not put anything into the result, nor what does not burn into the fuel.
+  Taking results pays `count x` the result's share (`furnaces/xp.rs`) plus what hoppers left owed
+  (`StoredXPInt`, hundredths), each rounded at random, as orbs at the player; breaking pays the
+  result's at the block. BDS seems to accept a Place into the result (not refused in its validation,
+  not tried live): sapling refuses it, as an honest client never sends it.
+- **Experience** (`experience.rs`, `orbs.rs`; `docs/research/experience.md`). Orbs split as BDS's
+  `spawnOrbs` (2477 down to 1; 13 equal ones above 12000), thrown a little up and aside, shown as
+  `minecraft:xp_orb` with `ExperienceValue` and moved by the server (`MoveEntity` to those who see
+  the column; the client does not move them). One falls, slides to a stop, and from 21 to 120 of its
+  ticks looks for the nearest player within 8 blocks every 20, flies to it and is taken
+  (`LevelEvent` SoundOrb). A player's level and progress follow BDS's `addExperience` (the Java
+  formula), go to its client as the `player.level` / `player.experience` attributes and are kept
+  with its items (`PlayerLevel`, `PlayerLevelProgress`); a fifth level sounds `levelup`. Not done:
+  orbs merging, colliding beyond the block they fall into, being saved; Mending.
 - **Double chests** (`containers/pairs.rs`). Two chests of one kind, side by side and facing the same
   way, name each other in their block entities (`pairx`, `pairz`, `pairlead`), which clients are sent
   and draw one large chest from. A chest placed beside a single one pairs with it, the old one leading
