@@ -76,6 +76,18 @@ pub(super) fn block_of(registry: &BlockRegistry, name: &str, face: Face) -> Opti
     first(name).filter(|_| places)
 }
 
+/// The hanging sign `id`, about to hang under the block `above`, hung from one chain where that
+/// block has no whole bottom face to take two, or its placer sneaks (Java `HangingSignItem`,
+/// `CeilingHangingSignBlock`); any other block as it is.
+pub(super) fn attached(registry: &BlockRegistry, id: u32, above: u32, sneaking: bool) -> u32 {
+    let hangs = registry.get(id).is_some_and(|state| state.name.ends_with("_hanging_sign") && state.property("hanging") == Some("1"));
+    let whole_bottom = registry.get(above).is_some_and(|state| state.boxes.iter().any(|shape| shape.min[1] <= 0.0 && shape.min[0] <= 0.0 && shape.max[0] >= 1.0 && shape.min[2] <= 0.0 && shape.max[2] >= 1.0));
+    match hangs && (sneaking || !whole_bottom) {
+        true => doors::with(registry, id, "attached_bit", "1").unwrap_or(id),
+        false => id,
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -109,5 +121,14 @@ mod tests {
         for (item, block) in RENAMED {
             assert_eq!(placed(item, Face::Up), Some(*block));
         }
+    }
+
+    #[test]
+    fn a_hanging_sign_hangs_from_one_chain_under_what_is_not_a_whole_bottom() {
+        let registry = BlockRegistry::vanilla();
+        let sign = block_of(&registry, "minecraft:oak_hanging_sign", Face::Down).expect("a hanging sign");
+        let first = |name: &str| registry.states_of(name).next().expect("a block").0;
+        let chained = |above: &str, sneaking: bool| registry.get(attached(&registry, sign, first(above), sneaking)).and_then(|state| state.property("attached_bit"));
+        assert_eq!([chained("minecraft:stone", false), chained("minecraft:oak_fence", false), chained("minecraft:stone", true)], [Some("0"), Some("1"), Some("1")]);
     }
 }

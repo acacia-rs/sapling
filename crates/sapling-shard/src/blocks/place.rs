@@ -82,6 +82,7 @@ impl Request<'_> {
         let pos = if into_clicked { against } else { click.face.neighbour(against) };
         let is_free = level.in_height(pos[1]) && level.is_loaded(send::column(pos)) && gives_way(registry, level.block(pos[0], pos[1], pos[2]));
         let id = doors::hinged(level, facing::oriented(registry, id, click), pos, click.quarter());
+        let id = items::attached(registry, id, level.block(against[0], against[1], against[2]), site.sneaking);
         let gives = |cell: BlockPos| level.in_height(cell[1]) && level.is_loaded(send::column(cell)) && gives_way(registry, level.block(cell[0], cell[1], cell[2]));
         let stands = |cell: BlockPos| registry.get(level.block(cell[0], cell[1] - 1, cell[2])).is_some_and(|state| !state.is_air());
         // A second cell beside the first is a bed's: both halves lie on something.

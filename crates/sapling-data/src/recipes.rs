@@ -1,8 +1,8 @@
 //! The crafting recipes clients are told of (`CraftingData.bin`, BDS's own list), read for the
 //! server's side of a craft: what a recipe uses up and what it makes.
-// TODO: the crafting grid's shaped and shapeless recipes, the stonecutter's and the three
-// smelters'; smithing, campfires and the special recipes (maps, fireworks, dyed armour) are sent
-// to clients but not read here.
+// TODO: the crafting grid's shaped and shapeless recipes, the stonecutter's, the three
+// smelters' and campfires'; smithing and the special recipes (maps, fireworks, dyed armour) are
+// sent to clients but not read here.
 
 use std::collections::{HashMap, HashSet};
 use std::sync::LazyLock;
@@ -59,11 +59,19 @@ pub enum Station {
     Furnace,
     BlastFurnace,
     Smoker,
+    /// A campfire or soul campfire, which the game lists separately with the same recipes.
+    Campfire,
 }
 
 /// The stations whose recipes are shapeless ones of one input, by the block the list names.
-const BY_BLOCK: [(&str, Station); 4] =
-    [("stonecutter", Station::Stonecutter), ("furnace", Station::Furnace), ("blast_furnace", Station::BlastFurnace), ("smoker", Station::Smoker)];
+const BY_BLOCK: [(&str, Station); 6] = [
+    ("stonecutter", Station::Stonecutter),
+    ("furnace", Station::Furnace),
+    ("blast_furnace", Station::BlastFurnace),
+    ("smoker", Station::Smoker),
+    ("campfire", Station::Campfire),
+    ("soul_campfire", Station::Campfire),
+];
 
 static RECIPES: LazyLock<HashMap<u32, Recipe>> = LazyLock::new(|| {
     crate::set_shield_item_id();
@@ -83,9 +91,9 @@ static RECIPES: LazyLock<HashMap<u32, Recipe>> = LazyLock::new(|| {
     shaped.chain(shapeless).filter(|(_, recipe)| !recipe.inputs.is_empty() && !recipe.outputs.is_empty()).collect()
 });
 
-/// The recipes of the three smelters: one input, one result.
+/// The recipes of the three smelters and campfires: one input, one result.
 static SMELTING: LazyLock<Vec<&'static Recipe>> = LazyLock::new(|| {
-    let smelts = |recipe: &&Recipe| matches!(recipe.station, Station::Furnace | Station::BlastFurnace | Station::Smoker);
+    let smelts = |recipe: &&Recipe| matches!(recipe.station, Station::Furnace | Station::BlastFurnace | Station::Smoker | Station::Campfire);
     RECIPES.values().filter(smelts).filter(|recipe| recipe.inputs.len() == 1 && recipe.outputs.len() == 1).collect()
 });
 
@@ -210,6 +218,7 @@ mod tests {
         let smelt = |station, item: &str| smelted(station, item, 0).map(|(made, count)| (made.name, *count));
         assert_eq!([smelt(Station::Furnace, "minecraft:raw_iron"), smelt(Station::BlastFurnace, "minecraft:raw_iron")], [Some(("minecraft:iron_ingot", 1)); 2]);
         assert_eq!([smelt(Station::Smoker, "minecraft:raw_iron"), smelt(Station::Smoker, "minecraft:beef"), smelt(Station::Table, "minecraft:beef")], [None, Some(("minecraft:cooked_beef", 1)), None]);
+        assert_eq!([smelt(Station::Campfire, "minecraft:beef"), smelt(Station::Campfire, "minecraft:raw_iron")], [Some(("minecraft:cooked_beef", 1)), None]);
         // A pickaxe lies one way only; an axe also mirrored; sticks anywhere but not across.
         let (plank, stick) = (Some(("minecraft:oak_planks", 0)), Some(("minecraft:stick", 0)));
         let pick = [plank, plank, plank, None, stick, None, None, stick, None];

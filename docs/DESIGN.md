@@ -478,7 +478,8 @@ block action, and takes StopBreak and AbortBreak with a position.
   hoppers, cake, flower pots, cauldrons, brewing stands, campfires, seeds and the like (wheat seeds
   build `wheat`, sugar cane `reeds`, redstone `redstone_wire`, string `trip_wire`); a sign or
   banner stands on a top and goes on the wall on a side (dark oak's are `darkoak_`), a hanging
-  sign hangs under a ceiling or sticks out of a wall. Skulls are block items and turn to the
+  sign hangs under a ceiling (from one chain, `attached_bit`, under a block without a whole bottom
+  face or when its placer sneaks) or sticks out of a wall. Skulls are block items and turn to the
   clicked face; a campfire faces the way its placer looks. A block is placed into the cell of a block
   the Java game marks replaceable (grass, ferns, vines, fire, a single snow layer, nether roots and
   the like) instead of against it. A block that needs something to stand or hang on (next bullet) is
@@ -487,17 +488,18 @@ block action, and takes StopBreak and AbortBreak with a position.
   sign, hanging sign, skull, banner, flower pot, cauldron or campfire gets the entity BDS writes on
   placement (`Sign` with empty `FrontText`/`BackText`, `Skull` with the floor rotation, `Banner`
   with `Base` = the item's damage, ...); a brewing stand is a container of five (window type
-  BrewingStand; ingredient, three bottles, fuel), which holds and brews nothing. Breaking gives
+  BrewingStand; ingredient, three bottles, fuel) whose block shows a bottle in each place that
+  holds something (`containers/brewing.rs`); it brews nothing. Breaking gives
   the item back what the entity kept: a bed's and a banner's colour, a pot's plant, a campfire's
   food. Signs of every wood leave their wood's sign, banners `banner`. Not done: cauldrons hold
-  nothing, a banner's patterns are lost (`Item` has no tag), the brewing stand's bottle states.
+  nothing, a banner's patterns are lost (`Item` has no tag).
 - **Pots and campfires by hand** (`blocks/pots.rs`, `campfires.rs`). A click on an empty flower pot
   with a plant the Java game pots (saplings, flowers, mushrooms, fern, dead bush, cactus, bamboo,
   azaleas, fungi, roots) puts it in as `PlantBlock` (the block's `{name, states, version}`, as BDS
   keeps it) and takes one in survival; an empty hand takes it back. A click on a lit campfire with
-  food lays one on its first free place (`Item1` to `Item4`); 600 ticks later it drops off cooked.
-  What cooks is the smoker's recipes (the campfire ones are not read), and a campfire cooking when
-  its world was saved stands still until food is added again.
+  food lays one on its first free place (`Item1` to `Item4`); 600 ticks later it drops off cooked,
+  by the `campfire` recipes of the recorded `CraftingData` (`Station::Campfire`). A campfire with
+  food ticks while its column is seen, as furnaces do (`ticking.rs`).
 - **Writing on signs** (`blocks/signs.rs`). The placer of a sign is sent `OpenSign` (front), and a
   click on a sign that is not waxed opens the side the clicker stands on (Java
   `SignBlock.isFacingFrontText`: a standing sign faces its 16th of a turn, a wall sign its face).
@@ -516,7 +518,8 @@ block action, and takes StopBreak and AbortBreak with a position.
   a wall under it) take the state their neighbours decide: fences, panes and bars
   `minecraft:connection_*` (to their own kind, a gate across their line, a full block other than
   leaves, pumpkins, melons, shulker boxes); walls BDS's `tryFixWallStates` (an arm is tall where
-  the block above reaches into it, the post rule for straight and crossing lines); stairs
+  the block above reaches into it, the post rule for straight and crossing lines; a changed wall
+  makes the wall under it look again, since a post raises one under it); stairs
   `minecraft:corner` by the Java game's `getStairsShape`; a fence gate's `in_wall_bit`. Who joins
   whom is the Java game's lists; outlines are collision boxes.
 - **Rails** (`blocks/rails.rs`). A placed rail starts along the look, then takes the shape the
@@ -655,10 +658,10 @@ block action, and takes StopBreak and AbortBreak with a position.
   chest (entity `EnderChest`, request container `Container`) opens its player's own 27 slots, kept
   with the player's items as `EnderChestInventory`; the lid is the block's, shared by its viewers.
   Both sound (`shulkerbox.open`/`.closed`, `enderchest.open`/`.closed`, names from BDS's binary).
-- **Ticking block entities** (`ticking.rs`). Furnaces and hoppers tick while a player's view covers
-  their column, as BDS ticks block actors near players. On the column sweep (every 100 ticks, before
-  saving) those in seen columns with work start (a furnace whose entity says it was burning or
-  cooking, every hopper) and those in columns nobody sees stop, their state written to their entity.
+- **Ticking block entities** (`ticking.rs`). Furnaces, hoppers and campfires tick while a player's
+  view covers their column, as BDS ticks block actors near players. On the column sweep (every 100
+  ticks, before saving) those in seen columns with work start (a furnace whose entity says it was
+  burning or cooking, every hopper, a campfire with food on it) and those in columns nobody sees stop, their state written to their entity.
   A placed hopper and an opened furnace start at once. A ticking container's slots stay held
   (`containers::pin`); hoppers reach other containers through `containers::with_slots`.
 - **Hoppers** (`hoppers.rs`; `docs/research/hoppers.md`). A container of five. Each tick its cooldown

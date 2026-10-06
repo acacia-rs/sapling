@@ -2,8 +2,7 @@
 //! drops off cooked (Java `CampfireBlockEntity`). The four places are the entity's `Item1` to
 //! `Item4` with their `ItemTime1` to `ItemTime4`, as BDS keeps them
 //! (docs/research/block-entities.md).
-// TODO: what cooks is the smoker's recipes (the campfire ones are not read from CraftingData);
-// one that was cooking when its world was saved stands still until food is added again.
+// One ticks while its column is seen, as furnaces do (ticking.rs).
 
 use std::collections::HashSet;
 
@@ -48,8 +47,28 @@ fn is_lit(world: &World, layer: Entity, [x, y, z]: BlockPos) -> bool {
 }
 
 fn cooked(stack: &ItemStack) -> Option<ItemStack> {
-    let (item, count) = sapling_data::smelted(Station::Smoker, &stack.name, stack.damage)?;
+    let (item, count) = sapling_data::smelted(Station::Campfire, &stack.name, stack.damage)?;
     Some(ItemStack { name: item.name.to_owned(), count: *count, damage: item.damage, block: item.block, tag: item.tag.clone() })
+}
+
+/// Whether a campfire's entity has food on it: one to tick when its column comes into view.
+pub(crate) fn is_cooking(entity: &Value) -> bool {
+    PLACES.iter().any(|(place, _)| entity.get(place).is_some())
+}
+
+pub(crate) fn watch(world: &mut World, layer: Entity, pos: BlockPos) {
+    world.get_resource_or_insert_with(Cooking::default).0.insert((layer, pos));
+}
+
+/// Stops ticking a campfire; what it cooks is in its entity already.
+pub(crate) fn forget(world: &mut World, layer: Entity, pos: BlockPos) {
+    if let Some(mut cooking) = world.get_resource_mut::<Cooking>() {
+        cooking.0.remove(&(layer, pos));
+    }
+}
+
+pub(crate) fn watched(world: &World) -> Vec<(Entity, BlockPos)> {
+    world.get_resource::<Cooking>().map(|cooking| cooking.0.iter().copied().collect()).unwrap_or_default()
 }
 
 /// A click on the block `name` at `pos`: a lit campfire takes one of the food in the hand into
@@ -67,7 +86,7 @@ pub(crate) fn cook(world: &mut World, player: Entity, layer: Entity, pos: BlockP
     set_field(&mut fields, place, Some(Value::Compound(ItemStack { count: 1, ..stack }.fields(registry))));
     set_field(&mut fields, time, Some(Value::Int(0)));
     keep_entity(world, layer, pos, &Value::Compound(fields));
-    world.get_resource_or_insert_with(Cooking::default).0.insert((layer, pos));
+    watch(world, layer, pos);
     if world.get::<Mode>(player).is_none_or(|mode| mode.0 != GameMode::Creative) {
         inventory::change(world, player, |inventory| inventory.take(Place::Main(inventory.selected.into()), 1).is_ok());
     }

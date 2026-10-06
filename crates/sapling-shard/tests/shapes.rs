@@ -52,6 +52,17 @@ fn a_wall_reaches_to_a_block_and_stands_on_a_post_where_it_does_not_run_straight
 }
 
 #[test]
+fn a_wall_with_a_post_on_a_straight_wall_raises_a_post_under_it() {
+    const STRAIGHT: &str = "wall_connection_type_east=none,wall_connection_type_north=short,wall_connection_type_south=short,wall_connection_type_west=none,wall_post_bit=0";
+    let mut h = with("minecraft:cobblestone_wall", &[([1, 65, -1], "stone", ""), ([1, 65, 1], "stone", ""), (ABOVE, "cobblestone_wall", STRAIGHT)]);
+    h.receive(1, &click(ABOVE, 1, None));
+    let registry = sapling_world::BlockRegistry::vanilla();
+    let updates = all::<UpdateBlock>(h.tick_all().to(2));
+    let below: Vec<_> = updates.iter().filter(|update| [update.position.x, update.position.y, update.position.z] == ABOVE).filter_map(|update| registry.get(registry.runtime_id_from_hash(update.block_runtime_id)?)).map(|state| state.properties).collect();
+    assert_eq!(below, [STRAIGHT.replace("wall_post_bit=0", "wall_post_bit=1")]);
+}
+
+#[test]
 fn a_rail_between_two_rails_curves_to_both_and_they_turn_to_it() {
     let mut h = with("minecraft:rail", &[([2, 65, 0], "rail", "rail_direction=0"), ([1, 65, 1], "rail", "rail_direction=1")]);
     let seen = place(&mut h);

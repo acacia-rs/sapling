@@ -6,6 +6,7 @@
 //! the evidence: docs/research/containers-crafting.md, shulker-ender.md, hoppers.md, furnaces.md.
 
 mod access;
+mod brewing;
 mod lid;
 mod pairs;
 mod screens;

@@ -1,11 +1,14 @@
-//! Blocks a click with an item uses: a pot takes a plant, a campfire takes food.
+//! Blocks a click with an item uses: a pot takes a plant, a campfire takes food, a brewing stand
+//! shows its bottles.
 
 mod common;
 
 use std::sync::{Arc, Mutex};
 
 use acacia_proto::nbt::Value;
-use acacia_proto::packets::{AddItemEntity, BlockEntityData};
+use acacia_proto::packets::{AddItemEntity, BlockEntityData, ContainerOpen, UpdateBlock};
+use acacia_proto::types::{ContainerSlotType as Container, ItemStackResponsesItemStatus as Status};
+use common::requests::{answer, place, request, slot};
 use common::{Harness, all, click};
 use sapling_api::{Block, Item, PlayerId, Slot};
 
@@ -54,6 +57,19 @@ fn a_pot_takes_a_plant_and_gives_it_back_to_an_empty_hand() {
     let shown = all::<BlockEntityData>(h.tick_all().to(2));
     assert_eq!(shown.iter().map(plant).collect::<Vec<_>>(), [None]);
     assert_eq!(held(&mut h).map(|item| (item.name, item.count)), Some(("minecraft:poppy".to_owned(), 1)));
+}
+
+#[test]
+fn a_bottle_put_into_a_brewing_stand_shows_on_it() {
+    let mut h = at("brewing_stand", Item::new("minecraft:potion", 1));
+    h.receive(1, &click(AT, 1, None));
+    assert!(!all::<ContainerOpen>(h.tick_all().to(1)).is_empty());
+    h.receive(1, &request(-3, vec![place(1, slot(Container::Hotbar, 0, 0), slot(Container::BrewingResult, 1, 0))]));
+    let sent = h.tick_all();
+    assert_eq!(answer(sent.to(1)).0, Status::Ok);
+    let registry = sapling_world::BlockRegistry::vanilla();
+    let states: Vec<_> = all::<UpdateBlock>(sent.to(2)).iter().filter_map(|update| registry.get(registry.runtime_id_from_hash(update.block_runtime_id)?)).map(|state| state.properties).collect();
+    assert_eq!(states, ["brewing_stand_slot_a_bit=1,brewing_stand_slot_b_bit=0,brewing_stand_slot_c_bit=0"]);
 }
 
 #[test]

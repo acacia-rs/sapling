@@ -161,16 +161,24 @@ fn with_all(registry: &BlockRegistry, id: u32, set: &[(String, &str)]) -> Option
     registry.find(state.name, &state.properties.split(',').map(pair).collect::<Vec<_>>().join(","))
 }
 
-/// Gives the blocks a change at `pos` can reshape (it, the four beside it, and a wall under it)
-/// the state their neighbours now decide, for everyone who sees them.
+/// Walls a change can run down: a post raises one under it, so a column of walls is a chain.
+const MAX_WALL_RUN: usize = 64;
+
+/// Gives the blocks a change at `pos` can reshape (it, the four beside it, and the walls under
+/// any of them that changed) the state their neighbours now decide, for everyone who sees them.
 pub(super) fn reshape_around(world: &mut World, layer: Entity, pos: BlockPos) {
     let [x, y, z] = pos;
-    for cell in [pos, [x, y, z - 1], [x + 1, y, z], [x, y, z + 1], [x - 1, y, z], [x, y - 1, z]] {
+    let mut cells = vec![pos, [x, y, z - 1], [x + 1, y, z], [x, y, z + 1], [x - 1, y, z], [x, y - 1, z]];
+    let mut runs = 0;
+    while let Some(cell) = cells.pop() {
         let Some(level) = level(world, layer).filter(|level| level.in_height(cell[1]) && level.is_loaded(send::column(cell))) else { continue };
         let id = level.block(cell[0], cell[1], cell[2]);
         let set = decided(level, cell);
-        if let Some(new) = (!set.is_empty()).then(|| with_all(level.registry(), id, &set)).flatten().filter(|new| *new != id) {
-            send::set(world, layer, cell, new);
+        let Some(new) = (!set.is_empty()).then(|| with_all(level.registry(), id, &set)).flatten().filter(|new| *new != id) else { continue };
+        let is_wall = set.iter().any(|(key, _)| key == "wall_post_bit");
+        if send::set(world, layer, cell, new) && is_wall && runs < MAX_WALL_RUN {
+            runs += 1;
+            cells.push([cell[0], cell[1] - 1, cell[2]]);
         }
     }
 }
