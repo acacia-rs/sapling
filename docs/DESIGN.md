@@ -505,7 +505,13 @@ block action, and takes StopBreak and AbortBreak with a position.
   `SignBlock.isFacingFrontText`: a standing sign faces its 16th of a turn, a wall sign its face).
   That player may answer once with `BlockActorData`: of it only each side's `Text` is kept (512
   bytes at most, a cap of sapling's), with `TextOwner` = the writer's XUID, and shown to everyone.
-  Anyone else's `BlockActorData` is ignored. Not done: dyes, glow ink and honeycomb on a sign.
+  Anyone else's `BlockActorData` is ignored. Before the editor, a click goes as BDS's
+  (`blocks/sign_ink.rs`, `docs/research/sign-dyes.md`): nothing in adventure mode; a waxed sign
+  only sounds (`block.sign.waxed_interact_fail`); honeycomb waxes it (`IsWaxed`, LevelEvent
+  `ParticleWaxOn`); on a side with words, glow ink lights it and an ink sac puts it out
+  (`IgnoreLighting`, `InkSackUsed`), and one of the 16 dyes sets its `SignTextColor` from BDS's
+  table (`DyeUsed`), each taking one outside creative mode. One that changes nothing opens the
+  editor instead.
 - **Ground** (`blocks/ground.rs`, `docs/research/standing-and-shapes.md` part A). BDS's own rule for
   where crops and stems (farmland), nether wart (soul sand), sweet berries, sugar cane (cane, or
   dirt or sand with water or frosted ice beside that ground block), cocoa (a jungle log on the

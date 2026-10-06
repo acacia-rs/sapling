@@ -1,16 +1,15 @@
 //! Writing on a sign: its placer, and anyone who clicks it later, is shown the editor, and the
 //! text the client sends back is kept, as BDS does (docs/research/block-entities.md, "Sign
 //! editing").
-// TODO: dyes, glow ink and honeycomb on a sign are not applied; a click with them edits it.
 
 use acacia_proto::nbt::Value;
 use acacia_proto::packets::{BlockEntityData, OpenSign};
 use acacia_proto::types::BlockCoordinates;
 use bevy_ecs::prelude::*;
-use sapling_api::BlockPos;
+use sapling_api::{BlockPos, GameMode};
 
-use super::send;
-use crate::components::{Identity, InLayer, Layer, Outgoing, PacketQueues, Position};
+use super::{send, sign_ink};
+use crate::components::{Identity, InLayer, Layer, Mode, Outgoing, PacketQueues, Position};
 
 const SIDES: [&str; 2] = ["FrontText", "BackText"];
 /// BDS's sign code sets no limit; this keeps a client from filling the world's storage.
@@ -51,17 +50,26 @@ fn front(properties: &str) -> Option<[f32; 2]> {
     })
 }
 
-/// A click on the block `name` at `pos`: a sign that is not waxed shows the player the editor
-/// for the side it stands on (Java `SignBlock.isFacingFrontText`). False for any other block.
+/// A click on the block `name` at `pos`, as BDS's sign interaction goes: nothing in adventure
+/// mode; a waxed sign only sounds; what the player holds may dye, light or wax the side it stands
+/// on (sign_ink.rs); else that side's editor opens (Java `SignBlock.isFacingFrontText`). False
+/// for any other block.
 pub(crate) fn edit_by_click(world: &mut World, player: Entity, layer: Entity, pos: BlockPos, name: &str) -> bool {
-    if !name.ends_with("_sign") {
-        return false;
+    if !name.ends_with("_sign") || world.get::<Mode>(player).is_some_and(|mode| mode.0 == GameMode::Adventure) {
+        return name.ends_with("_sign");
     }
     let Some(level) = world.get::<Layer>(layer).map(|layer| &layer.world) else { return true };
     let is_waxed = level.block_entity(pos).is_some_and(|kept| matches!(kept.nbt.get("IsWaxed"), Some(Value::Byte(1))));
     let facing = level.registry().get(level.block(pos[0], pos[1], pos[2])).and_then(|state| front(state.properties));
-    let (Some([fx, fz]), Some(feet)) = (facing.filter(|_| !is_waxed), world.get::<Position>(player).map(|position| position.feet)) else { return true };
+    if is_waxed {
+        sign_ink::refuse_waxed(world, layer, pos);
+        return true;
+    }
+    let (Some([fx, fz]), Some(feet)) = (facing, world.get::<Position>(player).map(|position| position.feet)) else { return true };
     let is_front = (feet[0] - pos[0] as f32 - 0.5) * fx + (feet[2] - pos[2] as f32 - 0.5) * fz >= 0.0;
+    if sign_ink::apply(world, player, layer, pos, SIDES[usize::from(!is_front)]) {
+        return true;
+    }
     let [x, y, z] = pos;
     let Some(mut out) = world.get_mut::<Outgoing>(player) else { return true };
     out.push(&OpenSign { position: BlockCoordinates { x, y, z }, is_front });

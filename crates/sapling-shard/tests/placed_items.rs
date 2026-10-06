@@ -4,7 +4,7 @@ mod common;
 
 use acacia_proto::RawPacket;
 use acacia_proto::nbt::{Nbt, Value};
-use acacia_proto::packets::{AddItemEntity, BlockEntityData, OpenSign, UpdateBlock};
+use acacia_proto::packets::{AddItemEntity, BlockEntityData, LevelEvent, LevelEventEvent, LevelSoundEvent, OpenSign, UpdateBlock};
 use acacia_proto::types::{Action, BlockCoordinates};
 use common::{Harness, all, block_actions, click, input_at};
 use sapling_api::{Item, PlayerId, Slot};
@@ -85,6 +85,37 @@ fn a_placed_sign_opens_its_editor_and_keeps_what_its_placer_writes() {
     let registry = sapling_world::BlockRegistry::vanilla();
     let names: Vec<_> = placed.iter().filter_map(|hash| registry.get(registry.runtime_id_from_hash(*hash)?)).map(|state| (state.name, state.properties)).collect();
     assert_eq!(names, [("minecraft:wall_sign", "facing_direction=4")]);
+}
+
+#[test]
+fn a_dye_colours_a_written_sign_and_a_waxed_one_only_sounds() {
+    let mut h = with_in_hand(Item::new("minecraft:oak_sign", 1));
+    h.receive(1, &click(NEAR, 1, None));
+    h.tick_all();
+    let side = Value::Compound(vec![("Text".into(), Value::String("Hello".into()))]);
+    let nbt = Nbt { name: String::new(), value: Value::Compound(vec![("FrontText".into(), side)]) };
+    h.receive(1, &BlockEntityData { position: BlockCoordinates { x: ABOVE[0], y: ABOVE[1], z: ABOVE[2] }, nbt });
+    h.tick_all();
+    // In front of the sign, which faces north.
+    h.receive(1, &input_at([1.5, 65.0, -1.5]));
+    h.tick_all();
+
+    let hold = |h: &mut Harness, item: &'static str| {
+        h.remote.run(move |ctx| assert!(ctx.set_item(ALEX, Slot::Main(0), Some(&Item::new(item, 1)))));
+        h.tick_all();
+        h.receive(1, &click(ABOVE, 2, None));
+        h.tick_all()
+    };
+    let sent = hold(&mut h, "minecraft:red_dye");
+    let shown = entities(sent.to(2));
+    assert_eq!(shown[0].1.get("FrontText").and_then(|side| side.get("SignTextColor")), Some(&Value::Int(-5_231_066)));
+    assert_eq!(all::<LevelEvent>(sent.to(2)).iter().map(|event| event.event).collect::<Vec<_>>(), [LevelEventEvent::DyeUsed]);
+    assert!(all::<OpenSign>(sent.to(1)).is_empty(), "no editor");
+
+    hold(&mut h, "minecraft:honeycomb");
+    let sent = hold(&mut h, "minecraft:blue_dye");
+    assert!(entities(sent.to(2)).is_empty() && all::<OpenSign>(sent.to(1)).is_empty(), "waxed: nothing changes");
+    assert_eq!(all::<LevelSoundEvent>(sent.to(2)).iter().map(|sound| sound.sound_id.as_str()).collect::<Vec<_>>(), ["block.sign.waxed_interact_fail"]);
 }
 
 #[test]
