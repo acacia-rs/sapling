@@ -3,17 +3,17 @@
 mod common;
 
 use std::sync::{Arc, Mutex};
-use std::time::{Duration, Instant};
 
 use acacia_proto::RawPacket;
 use acacia_proto::nbt::{self, List, LittleEndian, Nbt, Network, Value};
 use acacia_proto::packets::{
-    AddEntity, AddItemEntity, AddPainting, BlockEntityData, GameRulesChanged, InventoryContent, MobEquipment, PlayStatus, RemoveEntity, ResourcePackClientResponseResponseStatus as PackStatus,
-    SetDifficulty, SetLocalPlayerAsInitialized, SetSpawnPosition, SetSpawnPositionSpawnType as SpawnType, StartGame, Subchunk, SubchunkRequest, SyncWorldClocks,
+    AddEntity, AddItemEntity, AddPainting, BlockEntityData, GameRulesChanged, InventoryContent, MobEquipment, RemoveEntity, ResourcePackClientResponseResponseStatus as PackStatus,
+    SetDifficulty, SetSpawnPosition, SetSpawnPositionSpawnType as SpawnType, StartGame, Subchunk, SubchunkRequest, SyncWorldClocks,
     SyncWorldClocksContent as Clocks,
 };
 use acacia_proto::types::{GameRuleI32Value, MetadataDictionaryItemValue as Metadata, MetadataFlags1, Vec3i8, Vec3li};
 use bytes::BytesMut;
+use common::stored::{actor, compound, enter_stored, floor_with};
 use common::{Harness, all, click, config, pack_response, platform};
 use sapling_api::{Difficulty, Item, PlayerId, Slot};
 use sapling_shard::ShardConfig;
@@ -121,25 +121,6 @@ fn the_difficulty_can_be_changed() {
     assert_eq!((seen.lock().unwrap().clone(), told), (vec![Difficulty::Peaceful, Difficulty::Normal], vec![2]));
 }
 
-fn compound<const N: usize>(fields: [(&str, Value); N]) -> Value {
-    Value::Compound(fields.map(|(key, value)| (key.to_string(), value)).into())
-}
-
-/// A stored actor with one field of its kind's own.
-fn actor(id: i64, identifier: &str, feet: [f32; 3], own: (&str, Value)) -> Vec<u8> {
-    let floats = |items: &[f32]| Value::List(List { tag: 5, items: items.iter().map(|&item| Value::Float(item)).collect() });
-    let fields = [
-        ("UniqueID", Value::Long(id)),
-        ("identifier", Value::String(identifier.into())),
-        ("Pos", floats(&feet)),
-        ("Rotation", floats(&[90.0, 0.0])),
-        own,
-    ];
-    let mut out = BytesMut::new();
-    nbt::write::<LittleEndian>(&mut out, &Nbt { name: String::new(), value: Value::Compound(fields.map(|(key, value)| (key.to_string(), value)).into()) });
-    out.to_vec()
-}
-
 #[test]
 fn a_stored_block_entity_comes_with_its_section_and_after_a_resync() {
     let registry = BlockRegistry::vanilla();
@@ -163,21 +144,6 @@ fn a_stored_block_entity_comes_with_its_section_and_after_a_resync() {
     h.receive(1, &click([3, 67, 3], 1, None));
     let shown = all::<BlockEntityData>(&h.tick(1));
     assert_eq!(shown.iter().map(|data| (data.position.y, &data.nbt.value)).collect::<Vec<_>>(), [(67, &chest)]);
-}
-
-/// Joins `conn` and ticks until it is in the world; returns everything it was sent.
-fn enter_stored(h: &mut Harness, conn: u64) -> Vec<RawPacket> {
-    h.join_to_radius(conn, 2);
-    let deadline = Instant::now() + Duration::from_secs(10);
-    let mut sent = Vec::new();
-    while all::<PlayStatus>(&sent).is_empty() {
-        assert!(Instant::now() < deadline, "the player never spawned");
-        sent.extend(h.tick(conn));
-        std::thread::sleep(Duration::from_millis(1));
-    }
-    h.receive(conn, &SetLocalPlayerAsInitialized { runtime_entity_id: 0 });
-    (0..3).for_each(|_| sent.extend(h.tick(conn)));
-    sent
 }
 
 #[test]
@@ -216,8 +182,6 @@ fn a_players_items_wait_in_storage_for_the_next_visit() {
 
 #[test]
 fn stored_mobs_are_shown_and_leave_with_their_column() {
-    let storage = Arc::new(MemoryStorage::default());
-    let chunk = Chunk::empty(0, 0, Dimension::overworld(BlockRegistry::vanilla().air_id()));
     let stack = |name: &str| ("Item", compound([("Name", Value::String(name.into())), ("Count", Value::Byte(5)), ("Damage", Value::Short(0))]));
     let actors = [
         actor(-5, "minecraft:horse", [4.5, 64.0, 6.5], ("Saddled", Value::Byte(1))),
@@ -227,14 +191,15 @@ fn stored_mobs_are_shown_and_leave_with_their_column() {
         actor(-8, "minecraft:item", [6.0, 64.0, 5.0], stack("sapling:no_such_item")),
     ]
     .concat();
-    storage.store_column(ChunkPos::new(0, 0), 0, &StoredColumn { actors, ..StoredColumn::of(chunk) }).unwrap();
 
-    let mut h = Harness::with(config(), World::with_storage(storage));
+    let mut h = Harness::with(config(), World::with_storage(floor_with(actors)));
     let sent = enter_stored(&mut h, 1);
     let mut mobs = all::<AddEntity>(&sent);
     mobs.sort_by(|a, b| a.entity_type.cmp(&b.entity_type));
-    let shown: Vec<_> = mobs.iter().map(|mob| (mob.entity_type.as_str(), [mob.position.x, mob.position.y, mob.position.z], mob.yaw)).collect();
-    assert_eq!(shown, [("minecraft:bat", [9.5, 70.0, 2.5], 90.0), ("minecraft:horse", [4.5, 64.0, 6.5], 90.0)]);
+    let shown: Vec<_> = mobs.iter().map(|mob| (mob.entity_type.as_str(), [mob.position.x, mob.position.z], mob.yaw)).collect();
+    assert_eq!(shown, [("minecraft:bat", [9.5, 2.5], 90.0), ("minecraft:horse", [4.5, 6.5], 90.0)]);
+    // The horse stands on the floor; the bat, which does not fly here, is falling to it.
+    assert!(mobs[1].position.y == 64.0 && (64.0..=70.0).contains(&mobs[0].position.y), "{:?}", mobs.iter().map(|mob| mob.position.y).collect::<Vec<_>>());
     assert!(mobs.iter().all(|mob| !mob.attributes.is_empty()), "each as BDS announces its kind");
     let saddled = |mob: &AddEntity| mob.metadata.iter().any(|item| matches!(&item.value, Metadata::Flags(flags) if flags.contains(MetadataFlags1::SADDLED)));
     assert_eq!(mobs.iter().map(saddled).collect::<Vec<_>>(), [false, true], "the horse wears what it was stored with");
@@ -243,7 +208,8 @@ fn stored_mobs_are_shown_and_leave_with_their_column() {
     assert_eq!(all::<AddPainting>(&sent).iter().map(|painting| painting.title.as_str()).collect::<Vec<_>>(), ["Kebab"]);
     let items = all::<AddItemEntity>(&sent);
     let lying: Vec<_> = items.iter().map(|item| (item.item.count, [item.position.x, item.position.y, item.position.z])).collect();
-    assert_eq!(lying, [(5, [5.0, 64.0, 5.0])], "the item no client knows is left out");
+    // Shown at the middle of its box, which rests on the floor where it was stored.
+    assert_eq!(lying, [(5, [5.0, 64.125, 5.0])], "the item no client knows is left out");
     let ids: Vec<u64> = mobs.iter().map(|mob| mob.runtime_id).chain([items[0].runtime_entity_id]).collect();
     assert!(ids[0] != ids[1] && ids[1] != ids[2] && ids[0] != ids[2] && mobs.iter().all(|mob| mob.unique_id == mob.runtime_id as i64));
     assert!((0..300).all(|_| all::<AddEntity>(&h.tick(1)).is_empty()), "a mob is announced once");

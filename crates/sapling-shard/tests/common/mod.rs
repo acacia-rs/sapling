@@ -4,6 +4,7 @@
 
 pub mod cluster;
 pub mod requests;
+pub mod stored;
 
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};

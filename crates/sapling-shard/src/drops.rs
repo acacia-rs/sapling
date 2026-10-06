@@ -58,12 +58,24 @@ fn dice(world: &mut World) -> Mut<'_, Dice> {
 }
 
 /// Lets `stack` go with the bottom of its box at `at`, moving at `motion`.
-fn lay(world: &mut World, layer: Entity, stack: ItemStack, at: [f32; 3], motion: [f32; 3], pickup_from: u64) {
+fn lay(world: &mut World, layer: Entity, stack: ItemStack, at: [f32; 3], motion: [f32; 3], pickup_from: u64) -> Option<Entity> {
     let shown = entities::spawn(world, layer, KIND, Body::new(at, motion, [SIZE; 2]), wire(at), |id| mobs::item_announcement(id, &stack, wire(at), motion));
     match shown {
-        Some(item) => drop(world.entity_mut(item).insert(Dropped { stack, pickup_from, age: 0 })),
-        None => tracing::debug!(item = %stack.name, "an item no client knows; it is gone"),
+        Some(item) => Some(world.entity_mut(item).insert(Dropped { stack, pickup_from, age: 0 }).id()),
+        None => {
+            tracing::debug!(item = %stack.name, "an item no client knows; it is gone");
+            None
+        }
     }
+}
+
+/// Makes an item a world folder kept (its actor compound `compound`) lie in `layer` again, to be
+/// picked up at once; false for one no client knows, which stays in the folder as it was.
+pub(crate) fn from_storage(world: &mut World, layer: Entity, stack: ItemStack, at: [f32; 3], unique_id: i64, compound: Vec<u8>) -> bool {
+    let tick = world.resource::<Tick>().0;
+    let Some(item) = lay(world, layer, stack, at, [0.0; 3], tick) else { return false };
+    entities::keep(world, item, layer, unique_id, compound);
+    true
 }
 
 /// Throws `stack` from under the player's eye along its look (BDS `Player::drop`).

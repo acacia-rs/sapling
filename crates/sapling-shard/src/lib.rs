@@ -3,6 +3,7 @@
 //! about each other and hands each player's packets to the outbox as one batch. See
 //! docs/DESIGN.md "Threads", "Worlds", "Step 3 as built" and "Step 5 as built".
 
+mod actors;
 mod arenas;
 mod blobs;
 mod blocks;

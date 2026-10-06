@@ -114,6 +114,14 @@ impl Column {
         &self.actors
     }
 
+    /// Replaces the column's actors; it needs saving when they changed.
+    pub fn set_actors(&mut self, actors: Vec<u8>) {
+        if actors != self.actors {
+            self.actors = actors;
+            self.modified = true;
+        }
+    }
+
     pub fn block(&self, x: i32, y: i32, z: i32) -> u32 {
         self.chunk.block(x, y, z)
     }

@@ -5,13 +5,16 @@
 
 use std::collections::HashSet;
 
-use acacia_proto::nbt::Value;
+use acacia_proto::nbt::{self, LittleEndian, List, Value};
 
 use crate::keys::{ChunkKey, Tag};
 use crate::records::compounds;
 use crate::{Batch, Db, Error, ItemStack};
 
 const ACTOR: &[u8] = b"actorprefix";
+/// NBT tag numbers of a list's items.
+const FLOAT_TAG: u8 = 5;
+const STRING_TAG: u8 = 8;
 
 /// What every stored actor says about itself; the rest of its compound is its kind's business.
 #[derive(Debug, Clone, PartialEq)]
@@ -110,6 +113,51 @@ pub fn actors(record: &[u8]) -> Result<Vec<Actor>, Error> {
     Ok(compounds(record)?.iter().filter_map(|(_, actor)| Actor::parse(actor)).collect())
 }
 
+/// Each compound of a record as stored, with what [`Actor`] reads of it (`None` where that is not
+/// enough) and its `UniqueID`. Writing the compounds one after another gives the record back.
+pub fn stored_actors(record: &[u8]) -> Result<Vec<(Option<Actor>, Option<i64>, Vec<u8>)>, Error> {
+    let id = |actor: &Value| if let Some(Value::Long(id)) = actor.get("UniqueID") { Some(*id) } else { None };
+    Ok(compounds(record)?.into_iter().map(|(raw, actor)| (Actor::parse(&actor), id(&actor), raw.to_vec())).collect())
+}
+
+fn floats(items: &[f32]) -> Value {
+    Value::List(List { tag: FLOAT_TAG, items: items.iter().map(|&item| Value::Float(item)).collect() })
+}
+
+fn written(value: Value) -> Vec<u8> {
+    let mut out = bytes::BytesMut::new();
+    nbt::write::<LittleEndian>(&mut out, &nbt::Nbt { name: String::new(), value });
+    out.to_vec()
+}
+
+/// One stored actor's compound with its feet at `position` and moving at `motion`; the rest of
+/// what the game keeps of it as it was.
+pub fn moved_actor(compound: &[u8], position: [f32; 3], motion: [f32; 3]) -> Result<Vec<u8>, Error> {
+    let Value::Compound(mut fields) = nbt::read::<LittleEndian>(&mut &compound[..])?.value else { return Err(Error::Actor("an actor that is no compound")) };
+    for (key, value) in [("Pos", floats(&position)), ("Motion", floats(&motion))] {
+        match fields.iter_mut().find(|(name, _)| name == key) {
+            Some((_, old)) => *old = value,
+            None => fields.push((key.to_owned(), value)),
+        }
+    }
+    Ok(written(Value::Compound(fields)))
+}
+
+/// A new actor of `identifier`: its id, kind, where it is and how it moves, the least the game
+/// reads to know one. Its `definitions` are BDS's way of naming the kind's behaviour.
+pub fn new_actor(unique_id: i64, identifier: &str, position: [f32; 3], motion: [f32; 3]) -> Vec<u8> {
+    let definitions = Value::List(List { tag: STRING_TAG, items: vec![Value::String(format!("+{identifier}"))] });
+    let fields = [
+        ("UniqueID", Value::Long(unique_id)),
+        ("identifier", Value::String(identifier.to_owned())),
+        ("definitions", definitions),
+        ("Pos", floats(&position)),
+        ("Rotation", floats(&[0.0, 0.0])),
+        ("Motion", floats(&motion)),
+    ];
+    written(Value::Compound(fields.into_iter().map(|(key, value)| (key.to_owned(), value)).collect()))
+}
+
 fn actor_key(id: &[u8]) -> Vec<u8> {
     [ACTOR, id].concat()
 }
@@ -201,6 +249,27 @@ mod tests {
         };
         assert_eq!(found, [expected]);
         assert!(actors(&cow[..cow.len() - 1]).is_err());
+    }
+
+    #[test]
+    fn a_moved_actor_keeps_the_rest_and_a_new_one_reads_back() {
+        let cow = compound(vec![
+            ("UniqueID", Value::Long(9)),
+            ("identifier", Value::String("minecraft:cow".into())),
+            ("Pos", floats(&[1.5, 64.0, -2.5])),
+            ("Rotation", floats(&[90.0, 0.0])),
+            ("Variant", Value::Int(3)),
+        ]);
+        let moved = moved_actor(&cow, [1.5, 60.0, -2.5], [0.0, -0.2, 0.0]).unwrap();
+        let read = actors(&moved).unwrap().remove(0);
+        assert_eq!((read.position, read.variant, read.unique_id), ([1.5, 60.0, -2.5], 3, 9));
+        let pig = new_actor(-7, "minecraft:pig", [0.5, 65.0, 0.5], [0.0; 3]);
+        let record = [&moved[..], &pig].concat();
+        let stored = stored_actors(&record).unwrap();
+        assert_eq!(stored.iter().map(|(actor, id, raw)| (actor.as_ref().map(|a| a.identifier.clone()), *id, raw.len())).collect::<Vec<_>>(), [
+            (Some("minecraft:cow".into()), Some(9), moved.len()),
+            (Some("minecraft:pig".into()), Some(-7), pig.len())
+        ]);
     }
 
     #[test]

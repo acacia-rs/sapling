@@ -156,9 +156,13 @@ One listener task, one shard thread, one world. The pieces and why they are shap
   player gets `SyncWorldClocks` InitializeRegistry (one clock, `minecraft:overworld`, six time markers,
   ids as BDS sent them), then SyncState about every 256 ticks and when the time is set; `paused` is the
   daylight cycle off, and StartGame's `dodaylightcycle` rule says the same.
-- **Mobs** (`mobs.rs`). The stored actors of a loaded column become shard entities, shown to players
-  whose view covers the column and removed with it. They are statues: nothing moves them and no
-  interaction reaches them, and the column saves them back unchanged. A mob is announced with the
+- **Mobs** (`mobs.rs`, `actors.rs`). The stored actors of a loaded column become shard entities,
+  shown to players whose view covers the column they are in and removed with it. Mobs of a kind
+  with a recorded box are creatures and stored items lying items, which move ("Entities and their
+  API" below); paintings and other kinds are statues. Before a save every column's actors are written
+  anew: the compounds of what the shard does not move as they were, each moved one's stored compound
+  with its `Pos` and `Motion` now, under the column it is in now, nothing of one that is gone. A mob
+  is announced with the
   AddEntity BDS sent for a summoned one of its kind (hitbox, attributes, flags, all metadata; recorded
   for 110 kinds, sapling-data README "Mobs"), with the stored position, rotation, `Variant`,
   `MarkVariant`, `Color`, name tag and baby flag, and the flags of what it stores as saddled, tamed,
@@ -696,7 +700,10 @@ block action, and takes StopBreak and AbortBreak with a position.
   ground) and does nothing else. `ctx.entity(id)`, `entities()` (the world in focus, oldest first),
   `move_entity`, `set_velocity` and `remove_entity` reach every kind: items, falling blocks and orbs
   too. Mobs press every pressure plate, items and falling blocks wooden and weighted ones, orbs none.
-  Not done: AI, damage, saving; the mobs a world folder stores are still statues outside this.
+  A spawned mob is saved with its column as a new actor (`UniqueID`, `identifier`, `definitions`,
+  `Pos`, `Rotation`, `Motion`: what BDS reads of one is untried). Not done: AI, damage; saving the
+  items players throw, orbs and falling blocks; a kept entity that wanders into a column that is not
+  loaded is lost with it.
 - **Kept between visits.** The first world's storage keeps hotbar, inventory, armour, offhand and the
   selected slot, the ender chest's slots and the experience under `sapling_player_<uuid>`, with the
   game's field names (`Inventory` with `Slot`, `Armor`, `Offhand`, `SelectedInventorySlot`,

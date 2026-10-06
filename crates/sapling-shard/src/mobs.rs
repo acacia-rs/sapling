@@ -1,8 +1,7 @@
-//! The mobs and dropped items a world's storage holds, shown to players. Each stored actor of a
-//! loaded column is an entity that stays where it was saved: nothing moves it, and nothing a
-//! player does reaches it. It leaves with its column, and the column saves it back as it was
-//! (`sapling_world::Column`).
-// TODO: everything that makes a mob more than a statue.
+//! Entities shown to players: each is filed under the column it is in and announced to whoever
+//! sees that column, and removed from their screens when it goes or leaves their view. Stored
+//! actors the shard does not move (paintings, kinds without a recorded box) are statues here;
+//! the rest are entities (entities.rs, actors.rs).
 
 use std::collections::HashMap;
 
@@ -56,8 +55,9 @@ pub(crate) struct MobGrid {
     changes: u64,
 }
 
-/// `None` for a dropped item that names no item a client knows.
-fn announcement(actor: &Actor, id: u64) -> Option<Vec<Bytes>> {
+/// What shows a stored actor as it was stored; `None` for a dropped item that names no item a
+/// client knows.
+pub(crate) fn announcement(actor: &Actor, id: u64) -> Option<Vec<Bytes>> {
     if actor.identifier == ITEM {
         let item = sapling_data::add_item_entity(id, &stack(actor.item.as_ref()?), actor.position, [0.0; 3])?;
         return Some(vec![sapling_net::encode(&item)]);
@@ -94,35 +94,6 @@ fn announcement(actor: &Actor, id: u64) -> Option<Vec<Bytes>> {
         packets.extend(held.as_ref().and_then(|held| sapling_data::mob_hand(id, &stack(held), offhand)).map(|held| sapling_net::encode(&held)));
     }
     Some(packets)
-}
-
-/// Makes entities of the actors in the columns that came from storage this tick.
-pub(crate) fn spawn_arrived(mut commands: Commands, mut players: ResMut<Players>, mut grid: ResMut<MobGrid>, mut layers: Query<(Entity, &mut Layer)>) {
-    let before = players.next_net_id;
-    for (layer, mut level) in &mut layers {
-        for home in level.world.take_arrived() {
-            let stored = match sapling_world::actors(level.world.actors(home)) {
-                Ok(stored) => stored,
-                Err(error) => {
-                    tracing::warn!(x = home.x, z = home.z, %error, "a column's actors are unreadable; showing none of them");
-                    continue;
-                }
-            };
-            for actor in stored {
-                let id = players.next_net_id;
-                let Some(announcement) = announcement(&actor, id) else {
-                    tracing::debug!(x = home.x, z = home.z, item = ?actor.item, "a dropped item no client knows; not shown");
-                    continue;
-                };
-                players.next_net_id += 1;
-                let mob = commands.spawn((Mob { announcement, home }, NetId(id), InLayer(layer))).id();
-                grid.grid.insert(layer, home, (mob, id));
-            }
-        }
-    }
-    if players.next_net_id != before {
-        grid.changes += 1;
-    }
 }
 
 /// What shows a stack as an item at `position` moving at `velocity`; `None` for an item no

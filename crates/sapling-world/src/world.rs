@@ -87,6 +87,16 @@ impl World {
         self.column(pos).map_or(&[], Column::actors)
     }
 
+    /// Replaces a loaded column's actors, to be saved with it; false where none is loaded.
+    pub fn set_actors(&mut self, pos: ChunkPos, actors: Vec<u8>) -> bool {
+        self.column_mut(pos).map(|column| column.set_actors(actors)).is_some()
+    }
+
+    /// The loaded columns that hold actors.
+    pub fn columns_with_actors(&self) -> Vec<ChunkPos> {
+        self.columns.iter().filter(|(_, column)| !column.actors().is_empty()).map(|(pos, _)| *pos).collect()
+    }
+
     /// The runtime id of a block's default-ordered first state, e.g. `minecraft:stone`.
     pub fn block_id(&self, name: &str) -> Option<u32> {
         self.registry.states_of(name).next().map(|(id, _)| id)

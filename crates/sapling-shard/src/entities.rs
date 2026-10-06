@@ -17,6 +17,24 @@ use crate::sync::Told;
 #[derive(Component, Clone, Debug)]
 pub(crate) struct Kind(pub String);
 
+/// What a world folder keeps of an entity: its actor compound, written back with its place and
+/// motion when its column is saved (actors.rs).
+#[derive(Component, Clone, Debug)]
+pub(crate) struct Stored {
+    pub compound: Vec<u8>,
+}
+
+/// The stored actors (by world and `UniqueID`) that the shard moves as entities: their stored
+/// compounds give way to what the entities are now, or to nothing once they are gone.
+#[derive(Resource, Default)]
+pub(crate) struct Managed(pub std::collections::HashSet<(Entity, i64)>);
+
+/// Makes the entity one a world folder keeps.
+pub(crate) fn keep(world: &mut World, entity: Entity, layer: Entity, unique_id: i64, compound: Vec<u8>) {
+    world.get_resource_or_insert_with(Managed::default).0.insert((layer, unique_id));
+    world.entity_mut(entity).insert(Stored { compound });
+}
+
 /// Puts an entity of `kind` with `body` into the world, shown by what `announce` makes of its
 /// id; viewers start out knowing it at `wire`, where the wire puts it.
 pub(crate) fn spawn(world: &mut World, layer: Entity, kind: &str, body: Body, wire: [f32; 3], announce: impl FnOnce(u64) -> Option<Vec<Bytes>>) -> Option<Entity> {

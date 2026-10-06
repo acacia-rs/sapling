@@ -1,7 +1,8 @@
-//! Mobs spawned through the plugin API: bodies (body.rs) that fall and collide and do nothing
-//! else, shown as BDS announced their kind (`sapling_data::add_entity`); and the entity side of
-//! the handlers' context.
-// TODO: no AI, no damage, not saved; their physics are the Java game's (`Physics::MOB`).
+//! Mobs, spawned through the plugin API or kept by a world folder: bodies (body.rs) that fall and
+//! collide and do nothing else, shown as BDS announced their kind (`sapling_data::add_entity`) or
+//! as they were stored; and the entity side of the handlers' context.
+// TODO: no AI, no damage; their physics are the Java game's (`Physics::MOB`); a spawned mob is
+// saved with the least a compound needs, which BDS was not tried on.
 
 use bevy_ecs::prelude::*;
 use bytes::Bytes;
@@ -9,16 +10,24 @@ use acacia_proto::types::MetadataFlags1;
 use sapling_api::{EntityBackend, EntityId, EntityInfo};
 use sapling_data::AddEntityOptions;
 
+use sapling_world::Actor;
+
 use crate::body::{Body, Physics};
-use crate::components::{InLayer, Layer, NetId};
+use crate::components::{InLayer, Layer, NetId, Tick};
 use crate::handlers::Ctx;
 use crate::{blocks, entities, mobs, worlds};
 
-/// A mob the API spawned; its [`Body`] and [`entities::Kind`] are beside it.
+/// A mob: spawned through the API, or kept by a world folder and dressed as it was stored
+/// (`look`). Its [`Body`] and [`entities::Kind`] are beside it.
 #[derive(Component)]
-pub(crate) struct Creature;
+pub(crate) struct Creature {
+    look: Option<Actor>,
+}
 
-fn announcement(id: u64, kind: &str, body: &Body) -> Vec<Bytes> {
+fn announcement(id: u64, kind: &str, body: &Body, look: Option<&Actor>) -> Vec<Bytes> {
+    if let Some(shown) = look.and_then(|look| mobs::announcement(&Actor { position: body.at, ..look.clone() }, id)) {
+        return shown;
+    }
     let options = AddEntityOptions {
         id,
         identifier: kind,
@@ -46,9 +55,25 @@ fn spawn(world: &mut World, layer: Entity, kind: &str, feet: [f32; 3]) -> Option
         return None;
     }
     let body = Body::new(feet, [0.0; 3], size);
-    let entity = entities::spawn(world, layer, kind, body, feet, |id| Some(announcement(id, kind, &body)))?;
-    world.entity_mut(entity).insert(Creature);
-    Some(EntityId(world.get::<NetId>(entity)?.0))
+    let entity = entities::spawn(world, layer, kind, body, feet, |id| Some(announcement(id, kind, &body, None)))?;
+    world.entity_mut(entity).insert(Creature { look: None });
+    let id = world.get::<NetId>(entity)?.0;
+    // Kept by the world folder as BDS numbers actors: a high word that differs, a counter below.
+    let unique_id = ((world.resource::<Tick>().0 as i64) << 32) | (id as i64 & 0xffff_ffff);
+    entities::keep(world, entity, layer, unique_id, sapling_world::new_actor(unique_id, kind, feet, [0.0; 3]));
+    Some(EntityId(id))
+}
+
+/// Makes the stored mob `actor` (its compound `compound`) an entity of `layer`; false for a kind
+/// with no recorded box, which stays a statue.
+pub(crate) fn from_storage(world: &mut World, layer: Entity, actor: Actor, unique_id: i64, compound: Vec<u8>) -> bool {
+    let Some(size) = sapling_data::mob_size(&actor.identifier) else { return false };
+    let body = Body::new(actor.position, [0.0; 3], size);
+    let kind = actor.identifier.clone();
+    let Some(entity) = entities::spawn(world, layer, &kind, body, actor.position, |id| Some(announcement(id, &kind, &body, Some(&actor)))) else { return false };
+    world.entity_mut(entity).insert(Creature { look: Some(actor) });
+    entities::keep(world, entity, layer, unique_id, compound);
+    true
 }
 
 /// Moves every spawned mob a tick.
@@ -59,7 +84,8 @@ pub(crate) fn tick(world: &mut World) {
         let Some((body, packets)) = entities::step(world, entity, layer, id, &Physics::MOB, 0.0) else { continue };
         if !packets.is_empty() {
             blocks::to_viewers(world, layer, body.at.map(|c| c.floor() as i32), &packets);
-            mobs::reannounce(world, entity, announcement(id, &kind, &body));
+            let shown = announcement(id, &kind, &body, world.get::<Creature>(entity).and_then(|creature| creature.look.as_ref()));
+            mobs::reannounce(world, entity, shown);
         }
     }
 }

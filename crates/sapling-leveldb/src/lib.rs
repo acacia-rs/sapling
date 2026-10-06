@@ -18,7 +18,7 @@ mod world;
 
 use std::path::PathBuf;
 
-pub use actors::{Actor, Painting, State, actors};
+pub use actors::{Actor, Painting, State, actors, moved_actor, new_actor, stored_actors};
 pub use item::ItemStack;
 pub use player::PlayerData;
 pub use block_entities::{BlockEntity, block_entities, with_block_entity, without_block_entity};

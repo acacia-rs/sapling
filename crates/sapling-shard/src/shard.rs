@@ -26,7 +26,7 @@ use crate::view::View;
 use crate::inventory::Inventory;
 use crate::visibility::ToViewers;
 use crate::worlds::{Atlas, Changes, Scope};
-use crate::{arenas, blobs, blocks, chunks, clock, commands, handlers, handoff, inventory, join, mobs, movement, ticking, visibility, worlds};
+use crate::{actors, arenas, blobs, blocks, chunks, clock, commands, handlers, handoff, inventory, join, mobs, movement, ticking, visibility, worlds};
 
 /// The disconnect screen of the players of a shard that stops.
 const CLOSED: &str = "disconnect.closed";
@@ -80,12 +80,13 @@ impl Shard {
         let join = (join::resource_packs, join::chunk_radius, blobs::cache_status).chain();
         let chunks = (
             chunks::poll_worlds,
-            mobs::spawn_arrived,
+            actors::arrive,
             movement::player_input,
             chunks::send_chunks,
             chunks::sub_chunk_requests,
             blobs::blob_status,
             ticking::sweep,
+            actors::write_back_before_saving,
             chunks::save_and_unload_columns,
             mobs::despawn_unloaded,
         );
@@ -187,6 +188,7 @@ impl Shard {
     /// Saves what every world still has unsaved and waits for storage.
     pub fn save_worlds(&mut self) {
         inventory::save_all(&mut self.world);
+        actors::write_back(&mut self.world);
         let mut layers = self.world.query::<&mut Layer>();
         for mut layer in layers.iter_mut(&mut self.world) {
             let failed = layer.world.save_and_wait();
