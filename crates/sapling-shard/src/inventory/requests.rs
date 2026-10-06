@@ -39,7 +39,7 @@ fn place(info: &StackRequestSlotInfo) -> Option<Place> {
     let slot = usize::from(info.slot);
     match info.slot_type.container_id {
         // Which slots there are is the open container's to say: none while nothing is open.
-        ContainerSlotType::Container | ContainerSlotType::Barrel => Some(Place::Container(slot)),
+        ContainerSlotType::Container | ContainerSlotType::Barrel | ContainerSlotType::Shulker => Some(Place::Container(slot)),
         ContainerSlotType::FurnaceIngredient | ContainerSlotType::BlastFurnaceIngredient | ContainerSlotType::SmokerIngredient => Some(Place::Container(0)),
         ContainerSlotType::FurnaceFuel => Some(Place::Container(1)),
         ContainerSlotType::FurnaceOutput => Some(Place::Container(2)),
@@ -156,15 +156,16 @@ fn answer(world: &mut World, plugins: &mut Plugins, entity: Entity, player: &Pla
     let creative = world.get::<Mode>(entity).is_some_and(|mode| mode.0 == GameMode::Creative);
     let Some(mut trial) = world.get::<Inventory>(entity).filter(|inventory| inventory.loaded).cloned() else { return };
     let (open, at) = (containers::slots_of(world, entity), containers::station(world, entity));
-    trial.container = open.clone().unwrap_or_default();
+    let refuses = containers::refusal(world, entity);
+    (trial.container, trial.refuses) = (open.clone().unwrap_or_default(), refuses);
     // Tried on a copy first: the handlers see a drop before anything has left the inventory.
     let allowed = apply(&mut trial, request, creative, at).is_ok_and(|applied| may_drop(world, plugins, player, &applied.dropped));
     let mut query = world.query::<(&mut Inventory, &mut Outgoing)>();
     let Ok((mut inventory, mut out)) = query.get_mut(world, entity) else { return };
-    inventory.container = open.unwrap_or_default();
+    (inventory.container, inventory.refuses) = (open.unwrap_or_default(), refuses);
     let applied = if allowed { apply(&mut inventory, request, creative, at).ok() } else { None };
     out.push(&response(&inventory, request.request_id, applied.as_ref()));
-    let container = std::mem::take(&mut inventory.container);
+    let (container, _) = (std::mem::take(&mut inventory.container), inventory.refuses.take());
     match applied {
         Some(applied) => {
             containers::store(world, entity, container);

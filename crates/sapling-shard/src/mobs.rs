@@ -128,8 +128,14 @@ pub(crate) fn spawn_arrived(mut commands: Commands, mut players: ResMut<Players>
 /// Puts a stack into the world as an item lying at `feet`, shown like a stored one; `None` for
 /// an item no client knows.
 pub(crate) fn spawn_item(world: &mut World, layer: Entity, item: &ItemStack, feet: [f32; 3]) -> Option<Entity> {
+    spawn_shown(world, layer, feet, |id| Some(vec![sapling_net::encode(&sapling_data::add_item_entity(id, &stack(item), feet)?)]))
+}
+
+/// Puts an entity into the world at `feet`, shown to those who see its column by what
+/// `announce` makes of its id; `None` when that makes nothing.
+pub(crate) fn spawn_shown(world: &mut World, layer: Entity, feet: [f32; 3], announce: impl FnOnce(u64) -> Option<Vec<Bytes>>) -> Option<Entity> {
     let id = world.resource::<Players>().next_net_id;
-    let announcement = vec![sapling_net::encode(&sapling_data::add_item_entity(id, &stack(item), feet)?)];
+    let announcement = announce(id)?;
     world.resource_mut::<Players>().next_net_id += 1;
     let home = ChunkPos::of_block(feet[0].floor() as i32, feet[2].floor() as i32);
     let mob = world.spawn((Mob { announcement, home }, NetId(id), InLayer(layer))).id();
@@ -137,6 +143,13 @@ pub(crate) fn spawn_item(world: &mut World, layer: Entity, item: &ItemStack, fee
     grid.grid.insert(layer, home, (mob, id));
     grid.changes += 1;
     Some(mob)
+}
+
+/// What players who come to see a moving entity later are told of it.
+pub(crate) fn reannounce(world: &mut World, mob: Entity, announcement: Vec<Bytes>) {
+    if let Some(mut mob) = world.get_mut::<Mob>(mob) {
+        mob.announcement = announcement;
+    }
 }
 
 /// Takes a mob out of the world; those who saw it are told by [`update`].

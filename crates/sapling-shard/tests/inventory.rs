@@ -5,49 +5,19 @@ mod common;
 
 use acacia_proto::RawPacket;
 use acacia_proto::packets::{
-    AddItemEntity, AddPlayer, CreativeContent, InventoryContent, ItemStackRequest, ItemStackResponse, MobArmorEquipment, MobEquipment, PlayerHotbar, RemoveEntity,
+    AddItemEntity, AddPlayer, CreativeContent, InventoryContent, MobArmorEquipment, MobEquipment, PlayerHotbar, RemoveEntity,
     ResourcePackClientResponseResponseStatus as PackStatus, TakeItemEntity,
 };
 use acacia_proto::types::{
-    ContainerSlotType as Container, FullContainerName, ItemStackRequest as Request, ItemStackRequestActionsItem as ActionItem,
-    ItemStackRequestActionsItemContent as Action, ItemStackRequestActionsItemContentCraftCreative as Pick, ItemStackRequestActionsItemContentDestroy as Destroy,
-    ItemStackRequestActionsItemContentDrop as Throw, ItemStackRequestActionsItemContentPlace as Place, ItemStackRequestActionsItemContentTake as Take,
-    ItemStackRequestActionsItemTypeId as Kind, ItemStackRequestCause, ItemStackResponsesItemStatus as Status, StackRequestSlotInfo, WindowID,
+    ContainerSlotType as Container, ItemStackRequestActionsItemContent as Action, ItemStackRequestActionsItemContentCraftCreative as Pick,
+    ItemStackRequestActionsItemContentDestroy as Destroy, ItemStackRequestActionsItemContentDrop as Throw, ItemStackRequestActionsItemContentPlace as Place,
+    ItemStackResponsesItemStatus as Status, WindowID,
 };
+use common::requests::{answer, request, slot, take};
 use common::{Harness, all, hash, input_at, pack_response};
 use sapling_api::{DropEvent, GameMode, Handler, Item, Player, PlayerId, ShardCtx, Slot};
 
 const STEVE: PlayerId = PlayerId(1);
-
-fn slot(container_id: Container, slot: u8, stack_id: i32) -> StackRequestSlotInfo {
-    StackRequestSlotInfo { slot_type: FullContainerName { container_id, dynamic_container_id: None }, slot, stack_id }
-}
-
-/// One request as a vanilla client sends it: alone in its packet.
-fn request(request_id: i32, actions: Vec<Action>) -> ItemStackRequest {
-    let kind = |action: &Action| match action {
-        Action::Take(_) => (Kind::Take, 0),
-        Action::Place(_) => (Kind::Place, 1),
-        Action::Drop(_) => (Kind::Drop, 3),
-        Action::Destroy(_) => (Kind::Destroy, 4),
-        Action::CraftCreative(_) => (Kind::CraftCreative, 12),
-        other => panic!("{other:?}"),
-    };
-    let actions = actions.into_iter().map(|content| ActionItem { type_id: kind(&content).0, legacy_type_id: kind(&content).1, content }).collect();
-    ItemStackRequest { requests: vec![Request { request_id, actions, custom_names: Vec::new(), cause: ItemStackRequestCause::Unknown(-1) }] }
-}
-
-fn take(count: u8, source: StackRequestSlotInfo, destination: StackRequestSlotInfo) -> Action {
-    Action::Take(Take { count, source, destination })
-}
-
-/// The answer among `sent`: whether it was done, and the slots it names as (container, slot, count, stack id).
-fn answer(sent: &[RawPacket]) -> (Status, Vec<(Container, u8, u8, i32)>) {
-    let answers = all::<ItemStackResponse>(sent);
-    let answer = &answers[0].responses[0];
-    let slots = answer.containers.iter().flatten().flat_map(|container| container.slots.iter().map(move |slot| (container.slot_type.container_id, slot.slot, slot.count, slot.item_stack_id.unwrap_or(0))));
-    (answer.status, slots.collect())
-}
 
 #[test]
 fn a_joining_player_is_sent_its_windows() {

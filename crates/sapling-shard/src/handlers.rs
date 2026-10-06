@@ -12,7 +12,7 @@ use crate::commands::Access;
 use crate::components::{Arrivals, Identity, Layer, Mode, Net, NetId, Outgoing, Players, Position, Settings, Stage, Tick, in_world};
 use crate::inventory::Inventory;
 use crate::plugins::{PluginState, Plugins};
-use crate::{blocks, chat, clock, commands, containers, drops, forms, furnaces, hud, inventory, join, movement, roster, worlds};
+use crate::{blocks, chat, clock, commands, containers, drops, forms, furnaces, hoppers, hud, inventory, join, movement, orbs, roster, worlds};
 
 pub(crate) struct Ctx<'w> {
     pub world: &'w mut World,
@@ -230,7 +230,9 @@ pub(crate) fn dispatch(world: &mut World, plugins: &mut Plugins) {
     containers::dispatch_closes(world);
     containers::show_lids_again(world);
     furnaces::tick(world);
+    hoppers::tick(world);
     drops::pick_up(world);
+    orbs::tick(world);
     forms::dispatch(world);
     for entity in left {
         let had_joined = world.get::<Stage>(entity) == Some(&Stage::InWorld);

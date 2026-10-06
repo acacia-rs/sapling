@@ -1,40 +1,38 @@
-//! Blocks that hold items (chests, barrels, hoppers and the three furnaces), kept in the block's entity as
-//! the game keeps them, shown to the players who have the block open and changed by their
-//! inventory requests (inventory/requests.rs). Two paired chests are one container of 54
-//! (pairs.rs); a furnace also burns (furnaces.rs). A crafting table's and a stonecutter's
-//! screens open and close the same way, with nothing to hold. What BDS does, and the evidence:
-//! docs/research/containers-crafting.md, sections A to D.
-// TODO: a hopper holds items but moves none; no shulker or ender chests; a player can stay at an open container from any
-// distance; a chest under a solid block still opens; anything goes into a furnace's output slot.
+//! Blocks that hold items (chests, barrels, shulker boxes, ender chests, hoppers and the three
+//! furnaces), kept in the block's entity as the game keeps them, shown to the players who have
+//! the block open (screens.rs) and changed by their inventory requests (inventory/requests.rs),
+//! by a furnace's burning (furnaces.rs) and by hoppers (hoppers.rs). Two paired chests are one
+//! container of 54 (pairs.rs); an ender chest opens its player's own 27 slots. What BDS does, and
+//! the evidence: docs/research/containers-crafting.md, shulker-ender.md, hoppers.md, furnaces.md.
 
 mod lid;
 mod pairs;
+mod screens;
+mod shulker;
 mod slots;
 
 use std::collections::HashMap;
 
-use acacia_proto::packets::ContainerClose;
-use acacia_proto::types::{WindowID, WindowIDVarint, WindowType};
+use acacia_proto::nbt::Value;
+use acacia_proto::types::{WindowIDVarint, WindowType};
 use bevy_ecs::prelude::*;
-use sapling_api::BlockPos;
-use sapling_data::Station;
-use sapling_world::{container_items, new_block_entity};
+use sapling_api::{BlockPos, Face};
+use sapling_world::{ItemStack, container_items, new_block_entity};
 
-use crate::components::{Layer, Outgoing, PacketQueues, Tick};
-use crate::inventory::{Held, Inventory, wire};
 use crate::blocks::keep_entity;
-use crate::{furnaces, inventory};
+use crate::components::Layer;
+use crate::inventory::{Held, wire};
 
-pub(crate) use slots::{new_held, release, resend, rewrite, set_slots, slots_at, slots_of, spill, store, viewers};
+pub(crate) use screens::{close, dispatch_closes, open, show_lids_again, station};
+pub(crate) use shulker::is_shulker_box;
+pub(crate) use slots::{new_held, refusal, resend, set_slots, slots_at, slots_of, spill, store, viewers};
 
 /// Stack ids of what a container held when it was opened; players' own count up from 1.
 const FIRST_ID: i32 = 1 << 24;
-const TABLE: &str = "minecraft:crafting_table";
-const STONECUTTER: &str = "minecraft:stonecutter_block";
 
 /// What kind of container a block is.
 #[derive(Clone, Copy)]
-struct Kind {
+pub(crate) struct Kind {
     /// The `id` of its block entity.
     entity: &'static str,
     /// A double chest has them twice, the lead half's first.
@@ -42,26 +40,54 @@ struct Kind {
     window: WindowType,
     /// Whether those near see it open and shut.
     has_lid: bool,
+    /// What it will not hold in a slot.
+    refuses: Option<fn(usize, &ItemStack) -> bool>,
+    /// An ender chest: what it holds is its player's.
+    is_per_player: bool,
 }
 
-const CHEST: Kind = Kind { entity: "Chest", slots: 27, window: WindowType::Container, has_lid: true };
+const CHEST: Kind = Kind { entity: "Chest", slots: 27, window: WindowType::Container, has_lid: true, refuses: None, is_per_player: false };
+pub(crate) const HOPPER: Kind = Kind { entity: "Hopper", slots: 5, window: WindowType::Hopper, has_lid: false, ..CHEST };
 const SMELTER_SLOTS: usize = 3;
 
 impl Kind {
     fn is_smelter(self) -> bool {
         self.slots == SMELTER_SLOTS
     }
+
+    /// Whether it keeps its own slots, which hoppers can reach.
+    pub fn holds_items(self) -> bool {
+        !self.is_per_player
+    }
+
+    pub fn is_hopper(self) -> bool {
+        self.entity == HOPPER.entity
+    }
+
+    /// Whether a hopper may put `item` into `slot` through the container's face `face`
+    /// (BDS `canPushInItem`; docs/research/hoppers.md, "Container rules").
+    pub fn takes_from_hopper(self, slot: usize, face: Face, item: &ItemStack) -> bool {
+        if self.is_smelter() { crate::furnaces::takes_from_hopper(slot, face, item) } else { self.refuses.is_none_or(|refuses| !refuses(slot, item)) }
+    }
+
+    /// Whether a hopper may take `item` out of `slot` through the container's face `face`
+    /// (BDS `canPullOutItem`).
+    pub fn gives_to_hopper(self, slot: usize, face: Face, item: &ItemStack) -> bool {
+        !self.is_smelter() || crate::furnaces::gives_to_hopper(slot, face, item)
+    }
 }
 
-fn kind(block: &str) -> Option<Kind> {
-    let smelter = |entity, window| Kind { entity, slots: SMELTER_SLOTS, window, has_lid: false };
+pub(crate) fn kind(block: &str) -> Option<Kind> {
+    let smelter = |entity, window| Kind { entity, slots: SMELTER_SLOTS, window, has_lid: false, refuses: Some(crate::furnaces::refuses), is_per_player: false };
     Some(match block {
         "minecraft:chest" | "minecraft:trapped_chest" => CHEST,
         "minecraft:barrel" => Kind { entity: "Barrel", ..CHEST },
-        "minecraft:hopper" => Kind { entity: "Hopper", slots: 5, window: WindowType::Hopper, has_lid: false },
+        "minecraft:ender_chest" => Kind { entity: "EnderChest", is_per_player: true, ..CHEST },
+        "minecraft:hopper" => HOPPER,
         "minecraft:furnace" | "minecraft:lit_furnace" => smelter("Furnace", WindowType::Furnace),
         "minecraft:blast_furnace" | "minecraft:lit_blast_furnace" => smelter("BlastFurnace", WindowType::BlastFurnace),
         "minecraft:smoker" | "minecraft:lit_smoker" => smelter("Smoker", WindowType::Smoker),
+        _ if is_shulker_box(block) => Kind { entity: "ShulkerBox", refuses: Some(shulker::refuses), ..CHEST },
         _ => return None,
     })
 }
@@ -71,32 +97,24 @@ pub(crate) fn block_name(world: &World, layer: Entity, [x, y, z]: BlockPos) -> O
     level.registry().get(level.block(x, y, z)).map(|state| state.name)
 }
 
-#[derive(Clone, Copy, PartialEq)]
-enum Screen {
-    Container,
-    Station(Station),
-}
-
-/// The block whose screen a player has open, and the window its client knows it as. For a
-/// double chest the block is its lead half.
-#[derive(Component, Clone, Copy)]
-pub(crate) struct Viewing {
-    layer: Entity,
-    pos: BlockPos,
-    window: u8,
-    screen: Screen,
+/// The kind of container the block at `pos` is.
+pub(crate) fn kind_at(world: &World, layer: Entity, pos: BlockPos) -> Option<Kind> {
+    block_name(world, layer, pos).and_then(kind)
 }
 
 struct Chest {
     /// Its cells, the lead half first.
     halves: Vec<BlockPos>,
     per_half: usize,
+    /// Empty for an ender chest, whose slots are each viewer's own.
     slots: Vec<Option<Held>>,
     viewers: Vec<Entity>,
+    /// Ticking (a furnace burning, a hopper): kept while nobody looks.
+    pinned: bool,
 }
 
-/// The containers whose slots the shard holds: each while someone has it open, a furnace also
-/// while it has something to burn. By their lead half.
+/// The containers whose slots the shard holds: each while someone has it open or it ticks. By
+/// their lead half.
 #[derive(Resource, Default)]
 pub(crate) struct OpenContainers {
     chests: HashMap<(Entity, BlockPos), Chest>,
@@ -111,12 +129,23 @@ fn content(window: u8, slots: &[Option<Held>]) -> acacia_proto::packets::Invento
     sapling_data::inventory_content(WindowIDVarint::from_raw(window.into()), slots.iter().map(|slot| wire(slot, true)).collect())
 }
 
-/// Gives a container block that was just placed at `pos` its empty block entity, and a chest
-/// its other half if one stands beside it; other blocks are left alone.
-pub(crate) fn furnish(world: &mut World, layer: Entity, pos: BlockPos, block: &str) {
-    if let Some(kind) = kind(block) {
-        keep_entity(world, layer, pos, &new_block_entity(kind.entity, pos));
+/// Gives a container block that was just placed at `pos` its block entity: empty, or for a
+/// shulker box what the placed item held (`item_tag`) and the face it was put against. A chest
+/// gets its other half if one stands beside it; a block that has its entity keeps it, and other
+/// blocks are left alone. A hopper starts ticking.
+pub(crate) fn furnish(world: &mut World, layer: Entity, pos: BlockPos, block: &str, item_tag: Option<&Value>, face: Face) {
+    let Some(kind) = kind(block) else { return };
+    let Some(level) = world.get::<Layer>(layer).map(|layer| &layer.world) else { return };
+    if level.block_entity(pos).is_none() {
+        let mut entity = new_block_entity(kind.entity, pos);
+        if is_shulker_box(block) {
+            entity = shulker::placed(entity, item_tag, face, level.registry());
+        }
+        keep_entity(world, layer, pos, &entity);
         pairs::pair_placed(world, layer, pos);
+    }
+    if kind.is_hopper() {
+        crate::hoppers::watch(world, layer, pos);
     }
 }
 
@@ -130,124 +159,47 @@ fn stored_slots(world: &mut World, layer: Entity, pos: BlockPos, count: usize) -
     slots
 }
 
-/// Opens the screen of the block `block` at `pos` for a player: a container's with what it
-/// holds, a crafting table's, a stonecutter's. False for a block without one.
-pub(crate) fn open(world: &mut World, player: Entity, layer: Entity, pos: BlockPos, block: &str) -> bool {
-    let station = [(TABLE, Station::Table), (STONECUTTER, Station::Stonecutter)].into_iter().find(|(name, _)| *name == block);
-    if let Some((_, station)) = station {
-        let window = if station == Station::Table { WindowType::Workbench } else { WindowType::Stonecutter };
-        return show_screen(world, player, Viewing { layer, pos, window: 0, screen: Screen::Station(station) }, window, None);
-    }
-    let Some(kind) = kind(block) else { return false };
-    close(world, player);
+/// Makes the container at `pos` one the shard holds, from its block entities, unless it is
+/// already; returns its lead half. `None` for a block that is no container.
+fn hold(world: &mut World, layer: Entity, pos: BlockPos) -> Option<BlockPos> {
+    let kind = kind_at(world, layer, pos)?;
     let halves = if kind.entity == CHEST.entity { pairs::halves(world, layer, pos) } else { vec![pos] };
     let key = (layer, halves[0]);
     if !opened(world).chests.contains_key(&key) {
         let mut slots = Vec::new();
-        for half in &halves {
+        for half in halves.iter().filter(|_| kind.holds_items()) {
             slots.extend(stored_slots(world, layer, *half, kind.slots));
         }
-        opened(world).chests.insert(key, Chest { halves: halves.clone(), per_half: kind.slots, slots, viewers: Vec::new() });
+        opened(world).chests.insert(key, Chest { halves, per_half: kind.slots, slots, viewers: Vec::new(), pinned: false });
     }
-    let Some((slots, is_first)) = opened(world).chests.get_mut(&key).map(|chest| {
-        chest.viewers.push(player);
-        (chest.slots.clone(), chest.viewers.len() == 1)
-    }) else {
-        return false;
-    };
-    let shown = show_screen(world, player, Viewing { layer, pos: key.1, window: 0, screen: Screen::Container }, kind.window, Some(&slots));
-    if shown && is_first {
-        lid::set(world, layer, &halves, true);
-    }
-    if kind.is_smelter() {
-        furnaces::watch(world, layer, pos);
-    }
-    shown
+    Some(key.1)
 }
 
-/// Sends a player the screen of the block it now looks into, under the next window id, with
-/// the slots of a container.
-fn show_screen(world: &mut World, player: Entity, viewing: Viewing, window_type: WindowType, slots: Option<&[Option<Held>]>) -> bool {
-    close(world, player);
-    let mut query = world.query::<(&mut Inventory, &mut Outgoing)>();
-    let Ok((mut inventory, mut out)) = query.get_mut(world, player) else { return false };
-    let window = inventory.next_window();
-    out.push(&sapling_data::block_screen(WindowID::from_raw(window.into()), window_type, viewing.pos));
-    if let Some(slots) = slots {
-        out.push(&content(window, slots));
+/// Keeps the container at `pos` held while it ticks; false for a block that is no container.
+pub(crate) fn pin(world: &mut World, layer: Entity, pos: BlockPos) -> bool {
+    let Some(lead) = hold(world, layer, pos) else { return false };
+    if let Some(chest) = opened(world).chests.get_mut(&(layer, lead)) {
+        chest.pinned = true;
     }
-    world.entity_mut(player).insert(Viewing { window, ..viewing });
     true
 }
 
-/// Where a player crafts: at the table or stonecutter whose screen it has open, or by hand.
-pub(crate) fn station(world: &World, player: Entity) -> Station {
-    match world.get::<Viewing>(player).map(|viewing| viewing.screen) {
-        Some(Screen::Station(station)) => station,
-        _ => Station::Hand,
+/// Lets go of a container that stopped ticking, unless someone looks into it.
+pub(crate) fn unpin(world: &mut World, layer: Entity, pos: BlockPos) {
+    if let Some(chest) = opened(world).chests.get_mut(&(layer, pos)) {
+        chest.pinned = false;
     }
+    slots::release(world, layer, pos);
 }
 
-/// Ends a player's look into a block's screen. The last one to leave a container shuts its lid,
-/// and its slots are let go unless it is a furnace still at work.
-pub(crate) fn close(world: &mut World, player: Entity) {
-    let Some(viewing) = stop_viewing(world, player) else { return };
-    let key = (viewing.layer, viewing.pos);
-    let Some(chest) = opened(world).into_inner().chests.get_mut(&key) else { return };
-    chest.viewers.retain(|viewer| *viewer != player);
-    if !chest.viewers.is_empty() {
-        return;
-    }
-    let halves = chest.halves.clone();
-    lid::set(world, viewing.layer, &halves, false);
-    if !furnaces::is_watched(world, viewing.layer, viewing.pos) {
-        release(world, viewing.layer, viewing.pos);
-    }
-}
-
-fn stop_viewing(world: &mut World, player: Entity) -> Option<Viewing> {
-    let viewing = world.get::<Viewing>(player).copied()?;
-    world.entity_mut(player).remove::<Viewing>();
-    Some(viewing)
-}
-
-/// Shuts the screens of everyone at the container whose lead half is `lead`, as the server's
-/// doing, and forgets its slots: they are kept in its block entities.
-fn shut_out(world: &mut World, layer: Entity, lead: BlockPos) -> Option<Chest> {
-    let chest = opened(world).chests.remove(&(layer, lead))?;
-    for viewer in &chest.viewers {
-        let Some(viewing) = stop_viewing(world, *viewer) else { continue };
-        if let Some(mut out) = world.get_mut::<Outgoing>(*viewer) {
-            out.push(&ContainerClose { window_id: WindowID::from_raw(viewing.window.into()), window_type: WindowType::Container, server: true });
-        }
-    }
-    Some(chest)
-}
-
-/// Confirms every screen a client closes, which it waits for, and ends its look into the
-/// block that screen showed.
-pub(crate) fn dispatch_closes(world: &mut World) {
-    let closes = world.resource_mut::<PacketQueues>().take::<ContainerClose>();
-    for (player, closed) in closes {
-        let window = closed.window_id.to_raw();
-        if let Some(mut out) = world.get_mut::<Outgoing>(player) {
-            out.push(&ContainerClose { server: false, ..closed });
-        }
-        if world.get::<Viewing>(player).is_some_and(|viewing| i64::from(viewing.window) == window) {
-            close(world, player);
-        }
-        inventory::clear_grid(world, player);
-    }
-}
-
-/// Every [`lid::REPEAT`] ticks, shows the open lids again: to those who came by since.
-pub(crate) fn show_lids_again(world: &mut World) {
-    if world.resource::<Tick>().0 % lid::REPEAT != 0 {
-        return;
-    }
-    let Some(open) = world.get_resource::<OpenContainers>() else { return };
-    let lids: Vec<(Entity, Vec<BlockPos>)> = open.chests.iter().filter(|(_, chest)| !chest.viewers.is_empty()).map(|((layer, _), chest)| (*layer, chest.halves.clone())).collect();
-    for (layer, halves) in lids {
-        lid::show_open(world, layer, &halves);
-    }
+/// Runs `change` on the slots of the container at `pos` (a double chest's 54) and keeps what it
+/// leaves them as; `None` for a block that holds no items of its own.
+pub(crate) fn with_slots<T>(world: &mut World, layer: Entity, pos: BlockPos, change: impl FnOnce(&mut World, &mut Vec<Option<Held>>) -> T) -> Option<T> {
+    kind_at(world, layer, pos).filter(|kind| kind.holds_items())?;
+    let lead = hold(world, layer, pos)?;
+    let mut slots = slots_at(world, layer, lead)?;
+    let result = change(world, &mut slots);
+    set_slots(world, layer, lead, slots, None);
+    slots::release(world, layer, lead);
+    Some(result)
 }

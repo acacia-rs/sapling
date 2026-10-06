@@ -8,7 +8,8 @@ use acacia_proto::nbt::Value;
 use bevy_ecs::prelude::*;
 use sapling_api::BlockPos;
 
-use super::{CHEST, keep_entity, kind, shut_out};
+use super::screens::shut_out;
+use super::{CHEST, keep_entity, kind};
 use crate::components::Layer;
 
 const LEAD: &str = "pairlead";

@@ -209,7 +209,11 @@ impl Column {
     }
 
     pub fn block_entity(&self, pos: [i32; 3]) -> Option<&BlockEntity> {
-        self.tiles().iter().map(|(tile, _)| tile).find(|tile| tile.pos == pos)
+        self.block_entities().find(|tile| tile.pos == pos)
+    }
+
+    pub fn block_entities(&self) -> impl Iterator<Item = &BlockEntity> {
+        self.tiles().iter().map(|(tile, _)| tile)
     }
 
     fn tiles(&self) -> &[(BlockEntity, Bytes)] {

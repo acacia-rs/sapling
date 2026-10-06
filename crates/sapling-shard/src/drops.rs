@@ -68,6 +68,24 @@ pub(crate) fn spill(world: &mut World, layer: Entity, stack: ItemStack, [x, y, z
     lay(world, layer, stack, [x as f32 + 0.5, y as f32, z as f32 + 0.5], from);
 }
 
+/// The items lying in `layer` inside the box from `min` to `max`, oldest first.
+pub(crate) fn lying_in(world: &mut World, layer: Entity, min: [f32; 3], max: [f32; 3]) -> Vec<(Entity, ItemStack)> {
+    let inside = |at: &[f32; 3]| (0..3).all(|axis| (min[axis]..=max[axis]).contains(&at[axis]));
+    let mut lying = world.query::<(Entity, &Dropped, &InLayer, &NetId)>();
+    let mut found: Vec<_> = lying.iter(world).filter(|(_, item, in_layer, _)| in_layer.0 == layer && inside(&item.at)).map(|(entity, item, _, id)| (id.0, entity, item.stack.clone())).collect();
+    found.sort_unstable_by_key(|(id, ..)| *id);
+    found.into_iter().map(|(_, entity, stack)| (entity, stack)).collect()
+}
+
+/// Takes `count` of the lying item `item` away; what is left lies on as a new item.
+pub(crate) fn take(world: &mut World, item: Entity, count: u8) {
+    let Some((stack, at, layer, pickup_from)) = world.query::<(&Dropped, &InLayer)>().get(world, item).ok().map(|(item, layer)| (item.stack.clone(), item.at, layer.0, item.pickup_from)) else { return };
+    mobs::remove(world, item);
+    if stack.count > count {
+        lay(world, layer, ItemStack { count: stack.count - count, ..stack }, at, pickup_from);
+    }
+}
+
 fn column(at: [f32; 3]) -> ChunkPos {
     ChunkPos::of_block(at[0].floor() as i32, at[2].floor() as i32)
 }

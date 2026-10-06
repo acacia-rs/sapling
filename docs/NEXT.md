@@ -19,17 +19,10 @@ Each needs its rule looked up first (`bdsre` for BDS, the Java jar for data), th
    in what presses them. No redstone behind them yet, so only the state and the sound.
 4. **Waterlogged blocks.** A block placed into water keeps the water in layer 1 where the game
    does; a broken one leaves it. Layer 1 is stored and sent already.
-5. **Shulker boxes and ender chests.** A shulker box keeps its items in the item when broken; an
-   ender chest is one container per player, kept with the player's record.
-6. **Hoppers move items.** They open as containers of five and do nothing else.
-7. **Furnace leftovers.** Experience on taking the result, the crackling sound, a result slot that
-   refuses items, the rarer wooden fuels, and a furnace that was burning when its world was saved
-   (it stands still until someone opens it). Burn times are a table from the wiki in
-   `furnaces/fuel.rs`; read them from BDS.
-8. **Items that name no block, the rest.** Signs, skulls, banners, flower pots, cauldrons, brewing
+5. **Items that name no block, the rest.** Signs, skulls, banners, flower pots, cauldrons, brewing
    stands and campfires need their block entities; crops, sugar cane and redstone need their rules
    for where they may stand. A broken bed drops a white one: read the colour back from its entity.
-9. **Sleeping in a bed**, rails, fences and stairs reconnecting, a reach check while a container is
+6. **Sleeping in a bed**, rails, fences and stairs reconnecting, a reach check while a container is
    open, a chest blocked from above.
 
 ## 2. Things assumed, not verified
@@ -42,6 +35,11 @@ Each needs its rule looked up first (`bdsre` for BDS, the Java jar for data), th
 - Piston orientation comes from other servers' code only.
 - Block loot is the Java game's tables under Bedrock names (`sapling-data/data/block-loot.tsv`).
 - Whether a vanilla client names a hopper's slots `Container` is the bot's assumption.
+- A hopper moves an item every 8 ticks; BDS's code says 4 of its hopper ticks (`hoppers.md`).
+- A placed shulker box's `facing` is the face clicked; an empty broken one drops without a tag
+  (BDS may write `Items: []`); a Place into a furnace's result is refused though BDS's validation
+  seems to allow it (`shulker-ender.md`, `furnaces.md`).
+- Wooden blocks burn by a list of names where BDS reads a material (`furnaces/fuel.rs`).
 
 ## 3. A vanilla client session
 
@@ -54,5 +52,6 @@ picture. Needs a person at the client.
 
 Record the bot doing the same things against the BDS in `acacia/.testserver` and diff the packets
 with sapling's: chest and furnace traffic was never recorded (`research/containers-crafting.md`
-says where it is decompiled only), nor door and bed placement. One agent at a time uses that
+says where it is decompiled only), nor door and bed placement. Also time a hopper into a chest,
+break a filled and an empty shulker box, and take results from a furnace (orb movement packets). One agent at a time uses that
 server.
