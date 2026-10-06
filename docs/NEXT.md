@@ -35,10 +35,9 @@ Each needs its rule looked up first (`bdsre` for BDS, the Java jar for data), th
 - Piston orientation comes from other servers' code only.
 - Block loot is the Java game's tables under Bedrock names (`sapling-data/data/block-loot.tsv`).
 - Whether a vanilla client names a hopper's slots `Container` is the bot's assumption.
-- A hopper moves an item every 8 ticks; BDS's code says 4 of its hopper ticks (`hoppers.md`).
-- A placed shulker box's `facing` is the face clicked; an empty broken one drops without a tag
-  (BDS may write `Items: []`); a Place into a furnace's result is refused though BDS's validation
-  seems to allow it (`shulker-ender.md`, `furnaces.md`).
+- A placed shulker box's `facing` is the face clicked (`shulker-ender.md`).
+- An orb is taken within Java's pickup box once 7 ticks old (`orbs.rs`): one recorded pickup; BDS's
+  touch rule was not decompiled.
 - Wooden blocks burn by a list of names where BDS reads a material (`furnaces/fuel.rs`).
 
 ## 3. A vanilla client session
@@ -52,6 +51,6 @@ picture. Needs a person at the client.
 
 Record the bot doing the same things against the BDS in `acacia/.testserver` and diff the packets
 with sapling's: chest and furnace traffic was never recorded (`research/containers-crafting.md`
-says where it is decompiled only), nor door and bed placement. Also time a hopper into a chest,
-break a filled and an empty shulker box, and take results from a furnace (orb movement packets). One agent at a time uses that
-server.
+says where it is decompiled only), nor door and bed placement. One agent at a time uses that
+server. A hopper's rate, shulker box drops, a furnace's result slot and experience orbs were recorded
+on a testbox BDS by `cargo run -p sapling --example bds_container_probe` (2026-10-06).

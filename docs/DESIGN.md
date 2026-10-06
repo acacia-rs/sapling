@@ -590,7 +590,8 @@ block action, and takes StopBreak and AbortBreak with a position.
   the face clicked, from memory) that refuses shulker boxes. Broken, it spills nothing: it drops
   itself with its items in the item's tag as `Items` (in creative only when it holds something), and
   the loot table drops nothing more; placed, the tag's `Items` become the new entity's. An empty box
-  drops without a tag, so it stacks with new ones (BDS may tag it `Items: []`: not settled). An ender
+  is tagged `Items: []` (a list of no type), as recorded from BDS, so it does not stack with new
+  ones. An ender
   chest (entity `EnderChest`, request container `Container`) opens its player's own 27 slots, kept
   with the player's items as `EnderChestInventory`; the lid is the block's, shared by its viewers.
   Both sound (`shulkerbox.open`/`.closed`, `enderchest.open`/`.closed`, names from BDS's binary).
@@ -605,8 +606,8 @@ block action, and takes StopBreak and AbortBreak with a position.
   its first slot that can give one into the container it faces (`facing_direction`), then pulls one
   from the container above or, when the block above is no container, takes the first item lying in
   the box 0.625 to 2 blocks over it, as much as fits in two slots. A move sets the cooldown to 8
-  ticks (BDS's code says 4 of its hopper ticks; hoppers are measured at 2.5 items a second); an
-  empty hopper that is given an item waits a whole cooldown. A furnace takes from above into its
+  ticks (recorded from BDS: an item every 400 ms into a chest; its code says 4 of its hopper
+  ticks, so those are two game ticks each); an empty hopper that is given an item waits a whole cooldown. A furnace takes from above into its
   input, from the sides only fuel, and gives its result (and an empty bucket in its fuel slot)
   downwards; ender chests are not reached. Not done: BDS ticks the hoppers below first, so a chain
   moves an item in one tick; composters; minecarts.
@@ -624,18 +625,21 @@ block action, and takes StopBreak and AbortBreak with a position.
   going out swaps the block for its `lit_` one, facing kept, and gives it the old entity
   (`BurnTime`, `CookTime`, `BurnDuration`, `StoredXPInt` beside `Items`). Burn times are BDS's
   `getBurnDuration` rules (`furnaces/fuel.rs`; wood is told by name where BDS reads a material),
-  truncated. A player may not put anything into the result, nor what does not burn into the fuel.
+  truncated. A player may not put what does not burn into the fuel (BDS answers status 55; sapling
+  Error); into the result it may put anything. Both as recorded with stone.
   Taking results pays `count x` the result's share (`furnaces/xp.rs`) plus what hoppers left owed
-  (`StoredXPInt`, hundredths), each rounded at random, as orbs at the player; breaking pays the
-  result's at the block. BDS seems to accept a Place into the result (not refused in its validation,
-  not tried live): sapling refuses it, as an honest client never sends it.
+  (`StoredXPInt`, hundredths), each rounded at random, as orbs at the player's eyes; breaking pays
+  the result's at the block.
 - **Experience** (`experience.rs`, `orbs.rs`; `docs/research/experience.md`). Orbs split as BDS's
   `spawnOrbs` (2477 down to 1; 13 equal ones above 12000), thrown a little up and aside, shown as
-  `minecraft:xp_orb` with `ExperienceValue` and moved by the server (`MoveEntity` to those who see
-  the column; the client does not move them). One falls, slides to a stop, and from 21 to 120 of its
-  ticks looks for the nearest player within 8 blocks every 20, flies to it and is taken
-  (`LevelEvent` SoundOrb). A player's level and progress follow BDS's `addExperience` (the Java
-  formula), go to its client as the `player.level` / `player.experience` attributes and are kept
+  `minecraft:xp_orb` with `ExperienceValue` and moved by the server (`MoveEntityDelta` with the
+  axes that changed, every tick it moves, to those who see the column, as recorded; the client does
+  not move them). One falls, slides to a stop, and from 21 to 120 of its ticks looks for the nearest
+  player within 8 blocks every 20 and flies to it; a player whose box, grown by a block across and
+  half a block up and down (Java's), touches it takes it once it is 7 ticks old, also before it
+  looks (BDS took one let out at the player after 7 ticks) (`LevelEvent` SoundOrb). A player's level and progress follow BDS's
+  `addExperience` (the Java formula), go to its client as the `player.experience` attribute, with
+  `player.level` when the level changed (as recorded), and are kept
   with its items (`PlayerLevel`, `PlayerLevelProgress`); a fifth level sounds `levelup`. Not done:
   orbs merging, colliding beyond the block they fall into, being saved; Mending.
 - **Double chests** (`containers/pairs.rs`). Two chests of one kind, side by side and facing the same
