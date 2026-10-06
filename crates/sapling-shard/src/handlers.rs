@@ -12,7 +12,7 @@ use crate::commands::Access;
 use crate::components::{Arrivals, Identity, Layer, Mode, Net, NetId, Outgoing, Players, Position, Settings, Stage, Tick, in_world};
 use crate::inventory::Inventory;
 use crate::plugins::{PluginState, Plugins};
-use crate::{blocks, chat, clock, commands, containers, drops, forms, furnaces, hoppers, hud, inventory, join, movement, orbs, roster, worlds};
+use crate::{blocks, campfires, chat, clock, commands, containers, drops, forms, furnaces, hoppers, hud, inventory, join, movement, orbs, roster, sleep, worlds};
 
 pub(crate) struct Ctx<'w> {
     pub world: &'w mut World,
@@ -226,9 +226,13 @@ pub(crate) fn dispatch(world: &mut World, plugins: &mut Plugins) {
     blocks::release_buttons(world);
     blocks::flow_water(world);
     blocks::dispatch(world, plugins);
+    blocks::dispatch_sign_edits(world);
+    sleep::tick(world);
+    campfires::tick(world);
     inventory::dispatch(world, plugins);
     containers::dispatch_closes(world);
     containers::show_lids_again(world);
+    containers::close_out_of_reach(world);
     furnaces::tick(world);
     hoppers::tick(world);
     drops::pick_up(world);

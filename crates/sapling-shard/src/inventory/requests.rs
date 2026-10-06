@@ -43,6 +43,10 @@ fn place(info: &StackRequestSlotInfo) -> Option<Place> {
         ContainerSlotType::FurnaceIngredient | ContainerSlotType::BlastFurnaceIngredient | ContainerSlotType::SmokerIngredient => Some(Place::Container(0)),
         ContainerSlotType::FurnaceFuel => Some(Place::Container(1)),
         ContainerSlotType::FurnaceOutput => Some(Place::Container(2)),
+        // A brewing stand: the ingredient, three bottles, the blaze powder.
+        ContainerSlotType::BrewingInput => Some(Place::Container(0)),
+        ContainerSlotType::BrewingResult if (1..=3).contains(&slot) => Some(Place::Container(slot)),
+        ContainerSlotType::BrewingFuel => Some(Place::Container(4)),
         ContainerSlotType::CraftingInput if GRIDS.contains(&slot) => Some(Place::Ui(slot)),
         ContainerSlotType::StonecutterInput if slot == STONECUTTER_INPUT => Some(Place::Ui(slot)),
         ContainerSlotType::Hotbar | ContainerSlotType::Inventory | ContainerSlotType::HotbarAndInventory if slot < MAIN => Some(Place::Main(slot)),

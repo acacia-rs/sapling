@@ -42,9 +42,21 @@ impl Click {
         TURNS[((yaw + 180.0) * 16.0 / 360.0 + 0.5).floor().rem_euclid(16.0) as usize % 16]
     }
 
+    /// A hanging sign's `facing_direction`: under a ceiling it faces its placer; on a wall its
+    /// board sticks out, facing away from the way along the wall the placer looks (Java
+    /// `CeilingHangingSignBlock`, `WallHangingSignBlock`).
+    fn hanging_sign_facing(&self) -> &'static str {
+        let yaw = if self.yaw.is_finite() { self.yaw.to_radians() } else { 0.0 };
+        match self.face {
+            Face::North | Face::South => if -yaw.sin() < 0.0 { "5" } else { "4" },
+            Face::West | Face::East => if yaw.cos() > 0.0 { "2" } else { "3" },
+            Face::Down | Face::Up => ["2", "5", "3", "4"][self.quarter()],
+        }
+    }
+
     fn value(&self, block: &str, property: &str) -> Option<&'static str> {
         let ends = |list: &[&str]| list.iter().any(|end| block.ends_with(end));
-        let on_a_face = ends(&["ladder", "button", "wall_sign"]);
+        let on_a_face = ends(&["ladder", "button", "wall_sign", "wall_banner", "_skull", "_head"]);
         let (looks_down, looks_up) = (self.pitch > 45.0, self.pitch < -45.0);
         Some(match property {
             // Dispensers and the like face their placer, up or down under a steep look.
@@ -69,9 +81,14 @@ impl Click {
             // A bed's head lies the way its placer looks.
             "direction" if block.ends_with(":bed") => ["0", "1", "2", "3"][self.quarter()],
             "direction" if ends(&["loom", "beehive", "bee_nest"]) => ["2", "3", "0", "1"][self.quarter()],
+            // A cocoa pod names the side its log is on: the clicked one.
+            "direction" if block.ends_with(":cocoa") => ["0", "0", "0", "2", "1", "3"][self.face as usize],
+            // A rail starts along the look; rails.rs then joins it to its neighbours.
+            "rail_direction" => ["0", "1"][self.quarter() % 2],
             // A door and an anvil stand across the look; a gate swings the way its placer looks.
             "minecraft:cardinal_direction" if ends(&["_door", "anvil"]) && !block.ends_with("trapdoor") => ["west", "north", "east", "south"][self.quarter()],
-            "minecraft:cardinal_direction" if block.ends_with("fence_gate") => ["south", "west", "north", "east"][self.quarter()],
+            "minecraft:cardinal_direction" if ends(&["fence_gate", "campfire"]) => ["south", "west", "north", "east"][self.quarter()],
+            "facing_direction" if block.ends_with("_hanging_sign") => self.hanging_sign_facing(),
             "lever_direction" => match (self.face, self.quarter() % 2 == 1) {
                 (Face::Up, false) => "up_north_south",
                 (Face::Up, true) => "up_east_west",

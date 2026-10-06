@@ -6,6 +6,7 @@
 mod arenas;
 mod blobs;
 mod blocks;
+mod campfires;
 mod chat;
 mod chunks;
 mod clock;
@@ -32,6 +33,7 @@ mod plugins;
 mod roster;
 mod shard;
 mod skin;
+mod sleep;
 mod ticking;
 mod view;
 mod visibility;

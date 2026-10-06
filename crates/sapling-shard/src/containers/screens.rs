@@ -35,6 +35,9 @@ pub(crate) struct Viewing {
 /// Opens the screen of the block `block` at `pos` for a player: a container's with what it
 /// holds, a crafting table's, a stonecutter's. False for a block without one.
 pub(crate) fn open(world: &mut World, player: Entity, layer: Entity, pos: BlockPos, block: &str) -> bool {
+    if super::access::is_blocked(world, layer, pos, block) {
+        return true;
+    }
     let station = [(TABLE, Station::Table), (STONECUTTER, Station::Stonecutter)].into_iter().find(|(name, _)| *name == block);
     if let Some((_, station)) = station {
         let window = if station == Station::Table { WindowType::Workbench } else { WindowType::Stonecutter };

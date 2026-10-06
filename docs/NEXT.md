@@ -19,11 +19,6 @@ Each needs its rule looked up first (`bdsre` for BDS, the Java jar for data), th
    in what presses them. No redstone behind them yet, so only the state and the sound.
 4. **Waterlogged blocks.** A block placed into water keeps the water in layer 1 where the game
    does; a broken one leaves it. Layer 1 is stored and sent already.
-5. **Items that name no block, the rest.** Signs, skulls, banners, flower pots, cauldrons, brewing
-   stands and campfires need their block entities; crops, sugar cane and redstone need their rules
-   for where they may stand. A broken bed drops a white one: read the colour back from its entity.
-6. **Sleeping in a bed**, rails, fences and stairs reconnecting, a reach check while a container is
-   open, a chest blocked from above.
 
 ## 2. Things assumed, not verified
 
@@ -40,6 +35,13 @@ Each needs its rule looked up first (`bdsre` for BDS, the Java jar for data), th
   (BDS may write `Items: []`); a Place into a furnace's result is refused though BDS's validation
   seems to allow it (`shulker-ender.md`, `furnaces.md`).
 - Wooden blocks burn by a list of names where BDS reads a material (`furnaces/fuel.rs`).
+- Who fences, panes and walls join, and what gives a rail, wire or repeater support, are the Java
+  game's lists and collision boxes; the dirt and sand tags sugar cane asks for are Java's
+  (`docs/research/standing-and-shapes.md`, "Open checks").
+- Stair corners and hanging-sign states by Java's rules; a placed skull's `SkullType` (-1 as BDS
+  leaves it), the cauldron's `PotionId` defaults (`docs/research/block-entities.md`, "Open checks").
+- The distance at which BDS closes an open container, whether a double chest asks both halves
+  above, and the handler for `PlayerAction StopSleeping` (`docs/research/beds-and-containers.md`).
 
 ## 3. A vanilla client session
 

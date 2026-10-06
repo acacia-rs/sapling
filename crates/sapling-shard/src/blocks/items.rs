@@ -1,32 +1,113 @@
 //! Items that place a block without being block items: a stack of them names no block (its
 //! `block_runtime_id` is 0), and the game knows which block each one builds
-//! (docs/research/block-rules.md, "Items whose block has another name").
-// TODO: only those whose block needs nothing sapling lacks. Signs, skulls, banners, flower pots,
-// cauldrons, brewing stands and campfires need their block entities; crops, reeds and redstone
-// need their rules for where they may stand.
+//! (docs/research/block-rules.md, "Items whose block has another name";
+//! docs/research/block-entities.md, section 1).
 
+use sapling_api::Face;
 use sapling_world::BlockRegistry;
 
-/// Items whose block carries their own name: every door, and these.
-const SAME_NAME: &[&str] = &["minecraft:bed", "minecraft:hopper", "minecraft:cake"];
+use super::doors;
 
-/// The block the item `name` places, in the state the item gives it before it is turned.
-pub(super) fn block_of(registry: &BlockRegistry, name: &str) -> Option<u32> {
+/// Items whose block carries their own name: every door, and these.
+const SAME_NAME: &[&str] =
+    &["minecraft:bed", "minecraft:hopper", "minecraft:cake", "minecraft:flower_pot", "minecraft:cauldron", "minecraft:brewing_stand", "minecraft:campfire", "minecraft:soul_campfire"];
+
+/// Items whose block has another name: seeds and the like, and redstone's
+/// (docs/research/standing-and-shapes.md, A1).
+const RENAMED: &[(&str, &str)] = &[
+    ("minecraft:wheat_seeds", "minecraft:wheat"),
+    ("minecraft:carrot", "minecraft:carrots"),
+    ("minecraft:potato", "minecraft:potatoes"),
+    ("minecraft:beetroot_seeds", "minecraft:beetroot"),
+    ("minecraft:torchflower_seeds", "minecraft:torchflower_crop"),
+    ("minecraft:pitcher_pod", "minecraft:pitcher_crop"),
+    ("minecraft:melon_seeds", "minecraft:melon_stem"),
+    ("minecraft:pumpkin_seeds", "minecraft:pumpkin_stem"),
+    ("minecraft:nether_wart", "minecraft:nether_wart"),
+    ("minecraft:sweet_berries", "minecraft:sweet_berry_bush"),
+    ("minecraft:cocoa_beans", "minecraft:cocoa"),
+    ("minecraft:glow_berries", "minecraft:cave_vines"),
+    ("minecraft:sugar_cane", "minecraft:reeds"),
+    ("minecraft:redstone", "minecraft:redstone_wire"),
+    ("minecraft:repeater", "minecraft:unpowered_repeater"),
+    ("minecraft:comparator", "minecraft:unpowered_comparator"),
+    ("minecraft:string", "minecraft:trip_wire"),
+];
+
+/// The block a sign or banner item builds on `face`: standing on a top, on the wall on a side,
+/// none under a ceiling.
+fn standing_or_wall(name: &str, face: Face) -> Option<String> {
+    let (standing, wall) = match name {
+        "minecraft:banner" => ("minecraft:standing_banner".to_owned(), "minecraft:wall_banner".to_owned()),
+        "minecraft:oak_sign" => ("minecraft:standing_sign".to_owned(), "minecraft:wall_sign".to_owned()),
+        _ => {
+            let wood = name.strip_suffix("_sign").filter(|_| !name.ends_with("_hanging_sign"))?;
+            let wood = if wood == "minecraft:dark_oak" { "minecraft:darkoak" } else { wood };
+            (format!("{wood}_standing_sign"), format!("{wood}_wall_sign"))
+        }
+    };
+    match face {
+        Face::Up => Some(standing),
+        Face::Down => None,
+        _ => Some(wall),
+    }
+}
+
+/// The block the item `name` places on `face`, in the state the item gives it before it is
+/// turned.
+pub(super) fn block_of(registry: &BlockRegistry, name: &str, face: Face) -> Option<u32> {
+    let first = |block: &str| registry.states_of(block).next().map(|(id, _)| id);
+    if name.ends_with("_hanging_sign") {
+        // Under a ceiling it hangs, on a wall it sticks out; it does not stand.
+        let hanging = match face {
+            Face::Up => return None,
+            Face::Down => "1",
+            _ => "0",
+        };
+        return doors::with(registry, first(name)?, "hanging", hanging);
+    }
+    if let Some(block) = standing_or_wall(name, face) {
+        return first(&block);
+    }
+    if let Some((_, block)) = RENAMED.iter().find(|(item, _)| *item == name) {
+        return first(block);
+    }
     let places = name.ends_with("_door") && !name.ends_with("trapdoor") || SAME_NAME.contains(&name);
-    registry.states_of(name).next().filter(|_| places).map(|(id, _)| id)
+    first(name).filter(|_| places)
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
+    fn placed(item: &str, face: Face) -> Option<&'static str> {
+        let registry = BlockRegistry::vanilla();
+        assert!(sapling_data::is_item(item), "{item}");
+        block_of(&registry, item, face).and_then(|id| registry.get(id)).map(|state| state.name)
+    }
+
     #[test]
     fn doors_beds_and_hoppers_place_the_block_of_their_name() {
-        let registry = BlockRegistry::vanilla();
         let items = ["minecraft:wooden_door", "minecraft:spruce_door", "minecraft:iron_door", "minecraft:copper_door", "minecraft:bed", "minecraft:hopper", "minecraft:cake"];
         for item in items {
-            assert!(sapling_data::is_item(item) && block_of(&registry, item).is_some(), "{item}");
+            assert_eq!(placed(item, Face::Up), Some(item), "{item}");
         }
-        assert_eq!([block_of(&registry, "minecraft:diamond"), block_of(&registry, "minecraft:stone"), block_of(&registry, "minecraft:oak_trapdoor")], [None; 3]);
+        assert_eq!([placed("minecraft:diamond", Face::Up), placed("minecraft:stone", Face::Up), placed("minecraft:spruce_trapdoor", Face::Up)], [None; 3]);
+    }
+
+    #[test]
+    fn signs_and_banners_stand_on_a_top_and_hang_on_a_side() {
+        assert_eq!([placed("minecraft:oak_sign", Face::Up), placed("minecraft:oak_sign", Face::North)], [Some("minecraft:standing_sign"), Some("minecraft:wall_sign")]);
+        assert_eq!(placed("minecraft:dark_oak_sign", Face::East), Some("minecraft:darkoak_wall_sign"));
+        assert_eq!(placed("minecraft:spruce_sign", Face::Up), Some("minecraft:spruce_standing_sign"));
+        assert_eq!([placed("minecraft:banner", Face::Up), placed("minecraft:banner", Face::West)], [Some("minecraft:standing_banner"), Some("minecraft:wall_banner")]);
+        assert_eq!([placed("minecraft:oak_sign", Face::Down), placed("minecraft:oak_hanging_sign", Face::Up)], [None, None]);
+        assert_eq!(placed("minecraft:oak_hanging_sign", Face::Down), Some("minecraft:oak_hanging_sign"));
+        for item in ["minecraft:flower_pot", "minecraft:cauldron", "minecraft:brewing_stand", "minecraft:campfire", "minecraft:soul_campfire"] {
+            assert_eq!(placed(item, Face::South), Some(item));
+        }
+        for (item, block) in RENAMED {
+            assert_eq!(placed(item, Face::Up), Some(*block));
+        }
     }
 }

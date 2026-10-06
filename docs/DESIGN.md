@@ -474,13 +474,55 @@ block action, and takes StopBreak and AbortBreak with a position.
   block (the Java game's `DoorBlock.getHinge` less its tie-break by where the click fell). A bed's foot
   goes into the clicked cell and its head one cell along the look (`blocks/doors.rs`); both need
   something under them, each gets a `Bed` block entity with the item's colour, and breaking either
-  takes both (a broken bed drops a white one: the colour is not read back). Doors, beds, hoppers and
-  cake are items that name no block, so the block is found by the item's name (`blocks/items.rs`);
-  signs, skulls, banners, flower pots, cauldrons, crops and redstone are not placed yet.
-  Not turned: rails, skulls, banners. A block is placed into the cell of a block
+  takes both. Items that name no block find theirs by name (`blocks/items.rs`): doors, beds,
+  hoppers, cake, flower pots, cauldrons, brewing stands, campfires, seeds and the like (wheat seeds
+  build `wheat`, sugar cane `reeds`, redstone `redstone_wire`, string `trip_wire`); a sign or
+  banner stands on a top and goes on the wall on a side (dark oak's are `darkoak_`), a hanging
+  sign hangs under a ceiling or sticks out of a wall. Skulls are block items and turn to the
+  clicked face; a campfire faces the way its placer looks. A block is placed into the cell of a block
   the Java game marks replaceable (grass, ferns, vines, fire, a single snow layer, nether roots and
   the like) instead of against it. A block that needs something to stand or hang on (next bullet) is
   not placed where that is not solid.
+- **Block entities from items** (`blocks/entities.rs`, `docs/research/block-entities.md`). A placed
+  sign, hanging sign, skull, banner, flower pot, cauldron or campfire gets the entity BDS writes on
+  placement (`Sign` with empty `FrontText`/`BackText`, `Skull` with the floor rotation, `Banner`
+  with `Base` = the item's damage, ...); a brewing stand is a container of five (window type
+  BrewingStand; ingredient, three bottles, fuel), which holds and brews nothing. Breaking gives
+  the item back what the entity kept: a bed's and a banner's colour, a pot's plant, a campfire's
+  food. Signs of every wood leave their wood's sign, banners `banner`. Not done: cauldrons hold
+  nothing, a banner's patterns are lost (`Item` has no tag), the brewing stand's bottle states.
+- **Pots and campfires by hand** (`blocks/pots.rs`, `campfires.rs`). A click on an empty flower pot
+  with a plant the Java game pots (saplings, flowers, mushrooms, fern, dead bush, cactus, bamboo,
+  azaleas, fungi, roots) puts it in as `PlantBlock` (the block's `{name, states, version}`, as BDS
+  keeps it) and takes one in survival; an empty hand takes it back. A click on a lit campfire with
+  food lays one on its first free place (`Item1` to `Item4`); 600 ticks later it drops off cooked.
+  What cooks is the smoker's recipes (the campfire ones are not read), and a campfire cooking when
+  its world was saved stands still until food is added again.
+- **Writing on signs** (`blocks/signs.rs`). The placer of a sign is sent `OpenSign` (front), and a
+  click on a sign that is not waxed opens the side the clicker stands on (Java
+  `SignBlock.isFacingFrontText`: a standing sign faces its 16th of a turn, a wall sign its face).
+  That player may answer once with `BlockActorData`: of it only each side's `Text` is kept (512
+  bytes at most, a cap of sapling's), with `TextOwner` = the writer's XUID, and shown to everyone.
+  Anyone else's `BlockActorData` is ignored. Not done: dyes, glow ink and honeycomb on a sign.
+- **Ground** (`blocks/ground.rs`, `docs/research/standing-and-shapes.md` part A). BDS's own rule for
+  where crops and stems (farmland), nether wart (soul sand), sweet berries, sugar cane (cane, or
+  dirt or sand with water or frosted ice beside that ground block), cocoa (a jungle log on the
+  side it names), cave vines, redstone wire, repeaters, comparators and rails may stand; string
+  stands anywhere. It replaces the "something solid below" rule for these blocks, is asked before
+  a place, and after any change for the six cells around it, which pop where it fails. "Support"
+  is read off collision boxes: a top under the middle of the face. Cane one up and beside a change
+  is asked too, so cane whose water goes breaks at once (BDS waits for a random tick).
+- **Shapes** (`blocks/shapes.rs`, part B). After any change the block and the four beside it (and
+  a wall under it) take the state their neighbours decide: fences, panes and bars
+  `minecraft:connection_*` (to their own kind, a gate across their line, a full block other than
+  leaves, pumpkins, melons, shulker boxes); walls BDS's `tryFixWallStates` (an arm is tall where
+  the block above reaches into it, the post rule for straight and crossing lines); stairs
+  `minecraft:corner` by the Java game's `getStairsShape`; a fence gate's `in_wall_bit`. Who joins
+  whom is the Java game's lists; outlines are collision boxes.
+- **Rails** (`blocks/rails.rs`). A placed rail starts along the look, then takes the shape the
+  Java game's `RailState.place` gives it among the rails around it (curves for plain rails,
+  rising to a rail one up), and those rails turn to it. Taking one away leaves the others. No
+  power: `rail_data_bit` stays 0, junctions never switch.
 - **Opening, and doors' two cells** (`blocks/doors.rs`). An allowed click on a door, trapdoor, fence gate
   or lever (not an iron one) flips its `open_bit` for everyone, on both cells of a door; a button goes in
   for 20 ticks if of stone, 30 otherwise (BDS `ButtonBlock::buttonPressed`). Each is heard:
@@ -490,6 +532,20 @@ block action, and takes StopBreak and AbortBreak with a position.
   the pattern. A block with an `upper_block_bit` needs the cell above free, is placed with its upper
   cell, and loses its other cell when one is broken (one drop). No pressure plates or redstone; beds
   are one cell; a gate does not swing away from its user.
+- **Sleeping** (`sleep.rs`, `docs/research/beds-and-containers.md` sections 1 to 4). An allowed
+  click on a bed checks as BDS's `BedBlock::use_sleep` does: occupied by another sleeper
+  (`tile.bed.occupied`; a stale `occupied_bit` is cleared), eyes more than 3, 4, 3 blocks from
+  the head's corner (`tooFar`), then the bed becomes the player's spawn (`SetSpawnPosition`, and
+  `respawnSet` when it is a new one), then only between ticks 12541 and 23459 of the day
+  (`noSleep`). Messages are BDS's grey JSON `Text`. Lying down: the head gets `occupied_bit`, the
+  player's `PlayerFlags` sleep bit and `PlayerBedPosition` go to it and its viewers, and it lies
+  at the head facing along the bed. It gets up on `PlayerAction StopSleeping`, when its bed is
+  gone or day comes: `Animate WakeUp`, the bit and flag cleared, put back where it lay down from.
+  When every non-spectator of a world has slept 100 ticks, all wake and the time jumps to the next
+  day's tick 0. Whenever someone lies down or gets up, the world's players are told how many sleep
+  of how many: `LevelEventGeneric` 9801 with the Ints `ableToSleep`, `overworldPlayerCount`,
+  `sleepingPlayerCount` (BDS `updateSleepingPlayerList`). Not done: monsters near the bed (mobs
+  are statues), weather, BDS's stand-up search, and the spawn is never used.
 - **Neighbours** (`blocks/updates.rs`). After a player's break or place: sand, gravel, concrete powder,
   anvils and snow layers over a cell that gives way move to the lowest such cell at once (BDS spawns
   a falling-block entity instead); what stood on a block that is gone (the Java game's `canSurvive`
@@ -583,8 +639,13 @@ block action, and takes StopBreak and AbortBreak with a position.
   `block.barrel.open` / `block.barrel.close`. Breaking the block spills its items and closes its screens
   (`ContainerClose`, server true). The evidence for all of it, mostly decompiled from an older BDS
   build with its symbols, is `docs/research/containers-crafting.md`; no chest traffic of a real BDS
-  was ever recorded. A block a handler sets gets its empty entity too. Not done: a chest's own sounds
-  (their names in this protocol were not found), a reach check while open, a chest blocked from above.
+  was ever recorded. A block a handler sets gets its empty entity too. A chest, trapped chest or
+  ender chest does not open while a block above either half collides with the space its lid needs
+  (BDS `ChestBlockActor::_canOpenThis`: x and z 1/16 to 15/16, half a block up; slabs and glass hold
+  it down, torches do not), and a screen closes (`ContainerClose`, server true) on a player whose
+  eyes are further from the block's middle than a click reaches (`containers/access.rs`; BDS's own
+  distance was not found). Not done: a chest's own sounds (their names in this protocol were not
+  found), sitting cats on chests.
 - **Shulker boxes and ender chests** (`containers/shulker.rs`; `docs/research/shulker-ender.md`). A
   shulker box is a chest of 27 (request container `Shulker`, entity `ShulkerBox` with a `facing` byte:
   the face clicked, from memory) that refuses shulker boxes. Broken, it spills nothing: it drops
@@ -735,9 +796,7 @@ acacia-world = { path = "../acacia/acacia/crates/acacia-world" }
   and place (no ghost block, no hole), also with the blob cache on; a door opened on screen closing
   again; `ParticleDestroy` and the `place` sound seen and heard by a second client; a block placed while
   another client is still loading the column.
-- **Blocks, left out of step 6:** block entities other than containers' (a placed sign gets
-  none); lava, buckets, and fences and stairs reconnecting; sleeping in a bed, and rails;
-  falling blocks as entities; pressure plates and redstone; `USED` and the lists of blocks that fall,
+- **Blocks, left out of step 6:** lava and buckets; falling blocks as entities; pressure plates and redstone; `USED` and the lists of blocks that fall,
   need support or give way are name endings, not block data; a request over the tick limit gets no
   resync; `on_move`, which needs its own resync on cancel.
 - **Landing after a world change.** The teleport goes out before the new world's columns, so a
