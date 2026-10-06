@@ -122,7 +122,7 @@ pub(crate) fn network_hash(block: &Value) -> Option<u32> {
 
 /// The `{name, states, version}` compound of the state a network hash names, as an item stack
 /// stores the block it places.
-pub(crate) fn block_of_hash(registry: &BlockRegistry, hash: u32) -> Option<Value> {
+pub fn block_of_hash(registry: &BlockRegistry, hash: u32) -> Option<Value> {
     let state = registry.get(registry.runtime_id_from_hash(hash)?)?;
     Some(Value::Compound(vec![name_field(state), ("states".into(), typed_states(state)?), ("version".into(), Value::Int(STATE_VERSION))]))
 }

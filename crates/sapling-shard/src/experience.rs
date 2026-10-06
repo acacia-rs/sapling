@@ -50,9 +50,9 @@ impl Experience {
     }
 }
 
-/// What the client is told of a player's experience.
-pub(crate) fn attributes(id: &NetId, experience: &Experience) -> acacia_proto::packets::UpdateAttributes {
-    sapling_data::experience_attributes(id.0, experience.level, experience.progress)
+/// What the client is told of a player's experience: the level too when `with_level`.
+pub(crate) fn attributes(id: &NetId, experience: &Experience, with_level: bool) -> acacia_proto::packets::UpdateAttributes {
+    sapling_data::experience_attributes(id.0, Some(experience.level).filter(|_| with_level), experience.progress)
 }
 
 /// Gives a player `points` of experience, which it is shown; a fifth level sounds, once in
@@ -62,8 +62,9 @@ pub(crate) fn give(world: &mut World, player: Entity, points: i32) {
     let mut query = world.query::<(&NetId, &Position, &mut Inventory, &mut Outgoing)>();
     let Ok((id, position, mut inventory, mut out)) = query.get_mut(world, player) else { return };
     let experience = &mut inventory.experience;
+    let level = experience.level;
     let sounds = experience.add(points) && experience.sounded.is_none_or(|last| tick >= last + SOUND_EVERY);
-    out.push(&attributes(id, experience));
+    out.push(&attributes(id, experience, experience.level != level));
     if sounds {
         experience.sounded = Some(tick);
         // A volume: louder up to level 30 (BDS `Player::addLevels`).

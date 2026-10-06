@@ -4,20 +4,28 @@
 
 mod buckets;
 mod doors;
+mod entities;
 mod facing;
 mod falling;
+mod ground;
 mod items;
 mod liquid;
 mod loot;
 mod mining;
 mod place;
 mod plates;
+mod pots;
+mod rails;
 mod send;
+mod shapes;
+mod sign_ink;
+mod signs;
 mod updates;
 mod waterlog;
 
-pub(crate) use doors::{release_buttons, with as with_property};
+pub(crate) use doors::{bed_head, release_buttons, with as with_property};
 pub(crate) use plates::press_plates;
+pub(crate) use signs::dispatch_edits as dispatch_sign_edits;
 pub(crate) use loot::Dice;
 pub(crate) use liquid::tick as flow_liquids;
 pub(crate) use mining::Breaking;
@@ -50,7 +58,7 @@ const CREATIVE_REACH: f32 = 13.0;
 const USED: &[&str] = &[
     "door", "button", "lever", "fence_gate", "chest", "barrel", "shulker_box", "furnace", "smoker", "crafting_table", "anvil", "enchanting_table", "hopper",
     "dropper", "dispenser", "_sign", "noteblock", "repeater", "comparator", "brewing_stand", "beacon", "loom", "grindstone", "stonecutter_block", ":bed",
-    "cartography_table", "smithing_table",
+    "cartography_table", "smithing_table", "flower_pot",
 ];
 
 enum Input {
@@ -90,17 +98,32 @@ fn level(world: &World, layer: Entity) -> Option<&sapling_world::World> {
 /// not loaded or further from the player's eyes than its game mode reaches.
 fn site(world: &World, player: Entity, pos: BlockPos) -> Option<Site> {
     let (layer, mode) = (world.get::<InLayer>(player)?.0, world.get::<Mode>(player)?.0);
-    let (position, level) = (world.get::<Position>(player)?, level(world, layer)?);
-    let eye = [position.feet[0], position.feet[1] + EYE_HEIGHT, position.feet[2]];
-    let distance: f32 = (0..3).map(|axis| (pos[axis] as f32 + 0.5 - eye[axis]).powi(2)).sum();
-    let reach = if mode == GameMode::Creative { CREATIVE_REACH } else { REACH };
+    let level = level(world, layer)?;
     let known = level.in_height(pos[1]) && level.is_loaded(send::column(pos));
     let sneaking = world.get::<Motion>(player).is_some_and(|motion| motion.pose.sneaking);
-    (known && distance <= reach * reach).then_some(Site { layer, mode, sneaking })
+    (known && reaches(world, player, pos)).then_some(Site { layer, mode, sneaking })
+}
+
+/// Whether the middle of the block at `pos` is within the player's reach of its eyes.
+pub(crate) fn reaches(world: &World, player: Entity, pos: BlockPos) -> bool {
+    let (Some(position), Some(mode)) = (world.get::<Position>(player), world.get::<Mode>(player)) else { return false };
+    let eye = [position.feet[0], position.feet[1] + EYE_HEIGHT, position.feet[2]];
+    let distance: f32 = (0..3).map(|axis| (pos[axis] as f32 + 0.5 - eye[axis]).powi(2)).sum();
+    let reach = if mode.0 == GameMode::Creative { CREATIVE_REACH } else { REACH };
+    distance <= reach * reach
 }
 
 fn is_used(name: &str) -> bool {
     USED.iter().any(|end| name.ends_with(end))
+}
+
+/// What a click on the block `name` at `pos` does beyond moving it by hand: a container opens,
+/// a bed is slept in, a sign is written on, a pot takes or gives a plant, a campfire takes food.
+/// False when it does none of these.
+fn use_block(world: &mut World, player: Entity, layer: Entity, pos: BlockPos, name: &str) -> bool {
+    let uses: [fn(&mut World, Entity, Entity, BlockPos, &str) -> bool; 5] =
+        [crate::containers::open, crate::sleep::lie_down, signs::edit_by_click, pots::use_pot, crate::campfires::cook];
+    uses.iter().any(|used| used(world, player, layer, pos, name))
 }
 
 /// Moves falling blocks and starts the falls that are due, then settles what they changed.
@@ -200,7 +223,11 @@ impl Request<'_> {
         let Some(state) = registry.get(id).filter(|state| !state.is_air() && !state.is_liquid()) else { return self.resync(&[pos, above]) };
         let (block, mining) = (send::describe(registry, id), state.mining);
         let by = mining::breaker(self.world, self.entity, &mining);
-        let drops = if site.mode == GameMode::Survival { loot::thrown(self.world, &block.name, &block.properties, &by) } else { Vec::new() };
+        let mut drops = Vec::new();
+        if site.mode == GameMode::Survival {
+            drops = loot::thrown(self.world, &block.name, &block.properties, &by);
+            loot::add_entity_loot(self.world, site.layer, pos, &mut drops);
+        }
         let allowed = site.mode == GameMode::Creative || site.mode == GameMode::Survival && took_its_time;
         let (event, player) = (BreakEvent::new(pos, block, drops, allowed), self.player);
         let event = self.plugins.offer(self.world, event, |handler, ctx, event| handler.on_break(ctx, player, event));
@@ -246,9 +273,9 @@ impl Request<'_> {
             return;
         }
         let Some((registry, clicked)) = self.block(&site, pos) else { return };
-        let in_hand = place::held_block(self.world, self.entity, registry).filter(|_| site.mode != GameMode::Creative);
+        let in_hand = place::held_block(self.world, self.entity, registry, face).filter(|_| site.mode != GameMode::Creative);
         let (yaw, pitch) = self.world.get::<Position>(self.entity).map_or((0.0, 0.0), |position| (position.yaw, position.pitch));
-        match in_hand.or_else(|| place::claimed_block(registry, &click.held_item)).filter(|_| builds) {
+        match in_hand.or_else(|| place::claimed_block(registry, &click.held_item, face)).filter(|_| builds) {
             Some(id) => self.place(&site, pos, &Click { face, height: click.click_pos.y, yaw, pitch }, id, in_hand.is_some()),
             None => self.interact(&site, pos, face, send::describe(registry, clicked)),
         }
@@ -262,15 +289,14 @@ impl Request<'_> {
         held.or_else(claimed)
     }
 
-    /// Allowed, a chest or barrel shows what it holds (containers.rs) and a block that moves by
-    /// hand moves (doors.rs); nothing else is implemented.
+    /// Allowed, the block is used ([`use_block`]) or, if it moves by hand, moved (doors.rs).
     /// Either way the client is shown the block and its neighbours as they are (a door is two
     /// blocks), which undoes what it predicted.
     fn interact(&mut self, site: &Site, pos: BlockPos, face: Face, block: Block) {
         let name = block.name.clone();
         let (event, player) = (InteractEvent::new(pos, face, block, site.mode != GameMode::Spectator), self.player);
         let event = self.plugins.offer(self.world, event, |handler, ctx, event| handler.on_interact(ctx, player, event));
-        if !event.is_cancelled() && !crate::containers::open(self.world, self.entity, site.layer, pos, &name) {
+        if !event.is_cancelled() && !use_block(self.world, self.entity, site.layer, pos, &name) {
             doors::use_by_hand(self.world, site.layer, pos, &name);
         }
         self.resync(&[pos, face.neighbour(pos), Face::Up.neighbour(pos), Face::Down.neighbour(pos)]);

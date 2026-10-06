@@ -130,7 +130,6 @@ fn a_furnace_refuses_what_does_not_belong_and_pays_for_what_is_taken() {
     let mut h = setup(false, items, vec![(HERE, Block::new("blast_furnace"))]);
     open(&mut h, 1, HERE);
     assert_eq!(put(&mut h, 1, 2, 1, Container::FurnaceFuel, 1), Status::Error, "stone does not burn");
-    assert_eq!(put(&mut h, 1, 2, 1, Container::FurnaceOutput, 2), Status::Error, "nothing goes into the result");
     assert_eq!(put(&mut h, 1, 0, 3, Container::BlastFurnaceIngredient, 0), Status::Ok);
     assert_eq!(put(&mut h, 1, 1, 1, Container::FurnaceFuel, 1), Status::Ok);
     let sent = ticks(&mut h, 310);

@@ -30,11 +30,6 @@ Each needs its rule looked up first (`bdsre` for BDS, the Java jar for data), th
    first), the `MOVING` flag, `Health` 1, the splash, concrete powder hardening.
 2. **Pressure plates on BDS.** The drill pressed none, not even under a walking chicken; rerun with a
    hand-placed plate, a bot walking on with input, and `/testforblock` (findings file, "Drill bugs").
-3. **Items that name no block, the rest.** Signs, skulls, banners, flower pots, cauldrons, brewing
-   stands and campfires need their block entities; crops, sugar cane and redstone need their rules
-   for where they may stand. A broken bed drops a white one: read the colour back from its entity.
-4. **Sleeping in a bed**, rails, fences and stairs reconnecting, a reach check while a container is
-   open, a chest blocked from above.
 
 ## 3. Things assumed, not verified
 
@@ -46,11 +41,17 @@ Each needs its rule looked up first (`bdsre` for BDS, the Java jar for data), th
 - Piston orientation comes from other servers' code only.
 - Block loot is the Java game's tables under Bedrock names (`sapling-data/data/block-loot.tsv`).
 - Whether a vanilla client names a hopper's slots `Container` is the bot's assumption.
-- A hopper moves an item every 8 ticks; BDS's code says 4 of its hopper ticks (`hoppers.md`).
-- A placed shulker box's `facing` is the face clicked; an empty broken one drops without a tag
-  (BDS may write `Items: []`); a Place into a furnace's result is refused though BDS's validation
-  seems to allow it (`shulker-ender.md`, `furnaces.md`).
+- A placed shulker box's `facing` is the face clicked (`shulker-ender.md`).
+- An orb is taken within Java's pickup box once 7 ticks old (`orbs.rs`): one recorded pickup; BDS's
+  touch rule was not decompiled.
 - Wooden blocks burn by a list of names where BDS reads a material (`furnaces/fuel.rs`).
+- Who fences, panes and walls join, and what gives a rail, wire or repeater support, are the Java
+  game's lists and collision boxes; the dirt and sand tags sugar cane asks for are Java's
+  (`docs/research/standing-and-shapes.md`, "Open checks").
+- Stair corners and hanging-sign states by Java's rules; a placed skull's `SkullType` (-1 as BDS
+  leaves it), the cauldron's `PotionId` defaults (`docs/research/block-entities.md`, "Open checks").
+- The distance at which BDS closes an open container, whether a double chest asks both halves
+  above, and the handler for `PlayerAction StopSleeping` (`docs/research/beds-and-containers.md`).
 - Which block each liquid rule belongs to was read by where the block's name sits in BDS's code:
   sure for whole families (stairs, slabs, walls), not for single blocks (`waterlogging.md`).
 - Lava burns what has no collision; BDS asks each block (`isLavaBlocking`, 23 overriding classes).
@@ -68,6 +69,6 @@ picture. Needs a person at the client.
 Record the bot doing the same things against the BDS in `acacia/.testserver` and diff the packets
 with sapling's (`tools/bds-drill.sh` runs a probe on a fresh world; `bds-blocks` is a copy kept for
 the drills, port 19182): chest and furnace traffic was never recorded (`research/containers-crafting.md`
-says where it is decompiled only), nor door and bed placement. Also time a hopper into a chest,
-break a filled and an empty shulker box, and take results from a furnace (orb movement packets). One agent at a time uses that
-server.
+says where it is decompiled only), nor door and bed placement. One agent at a time uses that
+server. A hopper's rate, shulker box drops, a furnace's result and fuel slots and experience orbs
+were recorded on a testbox BDS by `cargo run -p sapling --example bds_container_probe` (2026-10-06).

@@ -27,7 +27,7 @@ pub use data3d::Data3d;
 pub use db::{Batch, Db};
 pub use keys::{ChunkKey, ParsedKey, Tag};
 pub use level_dat::LevelDat;
-pub use states::{BlockStates, PLACEHOLDER};
+pub use states::{BlockStates, PLACEHOLDER, block_of_hash};
 pub use sub_chunk::{Layer, SubChunk};
 pub use world::{DiskColumn, LevelDbWorld};
 

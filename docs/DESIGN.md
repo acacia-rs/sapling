@@ -474,13 +474,64 @@ block action, and takes StopBreak and AbortBreak with a position.
   block (the Java game's `DoorBlock.getHinge` less its tie-break by where the click fell). A bed's foot
   goes into the clicked cell and its head one cell along the look (`blocks/doors.rs`); both need
   something under them, each gets a `Bed` block entity with the item's colour, and breaking either
-  takes both (a broken bed drops a white one: the colour is not read back). Doors, beds, hoppers and
-  cake are items that name no block, so the block is found by the item's name (`blocks/items.rs`);
-  signs, skulls, banners, flower pots, cauldrons, crops and redstone are not placed yet.
-  Not turned: rails, skulls, banners. A block is placed into the cell of a block
+  takes both. Items that name no block find theirs by name (`blocks/items.rs`): doors, beds,
+  hoppers, cake, flower pots, cauldrons, brewing stands, campfires, seeds and the like (wheat seeds
+  build `wheat`, sugar cane `reeds`, redstone `redstone_wire`, string `trip_wire`); a sign or
+  banner stands on a top and goes on the wall on a side (dark oak's are `darkoak_`), a hanging
+  sign hangs under a ceiling (from one chain, `attached_bit`, under a block without a whole bottom
+  face or when its placer sneaks) or sticks out of a wall. Skulls are block items and turn to the
+  clicked face; a campfire faces the way its placer looks. A block is placed into the cell of a block
   the Java game marks replaceable (grass, ferns, vines, fire, a single snow layer, nether roots and
   the like) instead of against it. A block that needs something to stand or hang on (next bullet) is
   not placed where that is not solid.
+- **Block entities from items** (`blocks/entities.rs`, `docs/research/block-entities.md`). A placed
+  sign, hanging sign, skull, banner, flower pot, cauldron or campfire gets the entity BDS writes on
+  placement (`Sign` with empty `FrontText`/`BackText`, `Skull` with the floor rotation, `Banner`
+  with `Base` = the item's damage, ...); a brewing stand is a container of five (window type
+  BrewingStand; ingredient, three bottles, fuel) whose block shows a bottle in each place that
+  holds something (`containers/brewing.rs`); it brews nothing. Breaking gives
+  the item back what the entity kept: a bed's and a banner's colour, a pot's plant, a campfire's
+  food. Signs of every wood leave their wood's sign, banners `banner`. Not done: cauldrons hold
+  nothing, a banner's patterns are lost (`Item` has no tag).
+- **Pots and campfires by hand** (`blocks/pots.rs`, `campfires.rs`). A click on an empty flower pot
+  with a plant the Java game pots (saplings, flowers, mushrooms, fern, dead bush, cactus, bamboo,
+  azaleas, fungi, roots) puts it in as `PlantBlock` (the block's `{name, states, version}`, as BDS
+  keeps it) and takes one in survival; an empty hand takes it back. A click on a lit campfire with
+  food lays one on its first free place (`Item1` to `Item4`); 600 ticks later it drops off cooked,
+  by the `campfire` recipes of the recorded `CraftingData` (`Station::Campfire`). A campfire with
+  food ticks while its column is seen, as furnaces do (`ticking.rs`).
+- **Writing on signs** (`blocks/signs.rs`). The placer of a sign is sent `OpenSign` (front), and a
+  click on a sign that is not waxed opens the side the clicker stands on (Java
+  `SignBlock.isFacingFrontText`: a standing sign faces its 16th of a turn, a wall sign its face).
+  That player may answer once with `BlockActorData`: of it only each side's `Text` is kept (512
+  bytes at most, a cap of sapling's), with `TextOwner` = the writer's XUID, and shown to everyone.
+  Anyone else's `BlockActorData` is ignored. Before the editor, a click goes as BDS's
+  (`blocks/sign_ink.rs`, `docs/research/sign-dyes.md`): nothing in adventure mode; a waxed sign
+  only sounds (`block.sign.waxed_interact_fail`); honeycomb waxes it (`IsWaxed`, LevelEvent
+  `ParticleWaxOn`); on a side with words, glow ink lights it and an ink sac puts it out
+  (`IgnoreLighting`, `InkSackUsed`), and one of the 16 dyes sets its `SignTextColor` from BDS's
+  table (`DyeUsed`), each taking one outside creative mode. One that changes nothing opens the
+  editor instead.
+- **Ground** (`blocks/ground.rs`, `docs/research/standing-and-shapes.md` part A). BDS's own rule for
+  where crops and stems (farmland), nether wart (soul sand), sweet berries, sugar cane (cane, or
+  dirt or sand with water or frosted ice beside that ground block), cocoa (a jungle log on the
+  side it names), cave vines, redstone wire, repeaters, comparators and rails may stand; string
+  stands anywhere. It replaces the "something solid below" rule for these blocks, is asked before
+  a place, and after any change for the six cells around it, which pop where it fails. "Support"
+  is read off collision boxes: a top under the middle of the face. Cane one up and beside a change
+  is asked too, so cane whose water goes breaks at once (BDS waits for a random tick).
+- **Shapes** (`blocks/shapes.rs`, part B). After any change the block and the four beside it (and
+  a wall under it) take the state their neighbours decide: fences, panes and bars
+  `minecraft:connection_*` (to their own kind, a gate across their line, a full block other than
+  leaves, pumpkins, melons, shulker boxes); walls BDS's `tryFixWallStates` (an arm is tall where
+  the block above reaches into it, the post rule for straight and crossing lines; a changed wall
+  makes the wall under it look again, since a post raises one under it); stairs
+  `minecraft:corner` by the Java game's `getStairsShape`; a fence gate's `in_wall_bit`. Who joins
+  whom is the Java game's lists; outlines are collision boxes.
+- **Rails** (`blocks/rails.rs`). A placed rail starts along the look, then takes the shape the
+  Java game's `RailState.place` gives it among the rails around it (curves for plain rails,
+  rising to a rail one up), and those rails turn to it. Taking one away leaves the others. No
+  power: `rail_data_bit` stays 0, junctions never switch.
 - **Opening, and doors' two cells** (`blocks/doors.rs`). An allowed click on a door, trapdoor, fence gate
   or lever (not an iron one) flips its `open_bit` for everyone, on both cells of a door; a button goes in
   for 20 ticks if of stone, 30 otherwise (BDS `ButtonBlock::buttonPressed`). Each is heard:
@@ -490,6 +541,20 @@ block action, and takes StopBreak and AbortBreak with a position.
   the pattern. A block with an `upper_block_bit` needs the cell above free, is placed with its upper
   cell, and loses its other cell when one is broken (one drop). No redstone; beds are one cell; a
   gate does not swing away from its user.
+- **Sleeping** (`sleep.rs`, `docs/research/beds-and-containers.md` sections 1 to 4). An allowed
+  click on a bed checks as BDS's `BedBlock::use_sleep` does: occupied by another sleeper
+  (`tile.bed.occupied`; a stale `occupied_bit` is cleared), eyes more than 3, 4, 3 blocks from
+  the head's corner (`tooFar`), then the bed becomes the player's spawn (`SetSpawnPosition`, and
+  `respawnSet` when it is a new one), then only between ticks 12541 and 23459 of the day
+  (`noSleep`). Messages are BDS's grey JSON `Text`. Lying down: the head gets `occupied_bit`, the
+  player's `PlayerFlags` sleep bit and `PlayerBedPosition` go to it and its viewers, and it lies
+  at the head facing along the bed. It gets up on `PlayerAction StopSleeping`, when its bed is
+  gone or day comes: `Animate WakeUp`, the bit and flag cleared, put back where it lay down from.
+  When every non-spectator of a world has slept 100 ticks, all wake and the time jumps to the next
+  day's tick 0. Whenever someone lies down or gets up, the world's players are told how many sleep
+  of how many: `LevelEventGeneric` 9801 with the Ints `ableToSleep`, `overworldPlayerCount`,
+  `sleepingPlayerCount` (BDS `updateSleepingPlayerList`). Not done: monsters near the bed (mobs
+  are statues), weather, BDS's stand-up search, and the spawn is never used.
 - **Ground truth for what follows**: `cargo build -p sapling --example bds_mechanism_probe`, then
   `tools/bds-drill.sh <bds dir> <port> bds_mechanism_probe <out>` runs drills (falls, plates, buckets,
   lava, waterlogging, the odd cases too) on a BDS with a fresh world. The 2026-10-06 run and what it
@@ -642,21 +707,27 @@ block action, and takes StopBreak and AbortBreak with a position.
   `block.barrel.open` / `block.barrel.close`. Breaking the block spills its items and closes its screens
   (`ContainerClose`, server true). The evidence for all of it, mostly decompiled from an older BDS
   build with its symbols, is `docs/research/containers-crafting.md`; no chest traffic of a real BDS
-  was ever recorded. A block a handler sets gets its empty entity too. Not done: a chest's own sounds
-  (their names in this protocol were not found), a reach check while open, a chest blocked from above.
+  was ever recorded. A block a handler sets gets its empty entity too. A chest, trapped chest or
+  ender chest does not open while a block above either half collides with the space its lid needs
+  (BDS `ChestBlockActor::_canOpenThis`: x and z 1/16 to 15/16, half a block up; slabs and glass hold
+  it down, torches do not), and a screen closes (`ContainerClose`, server true) on a player whose
+  eyes are further from the block's middle than a click reaches (`containers/access.rs`; BDS's own
+  distance was not found). Not done: a chest's own sounds (their names in this protocol were not
+  found), sitting cats on chests.
 - **Shulker boxes and ender chests** (`containers/shulker.rs`; `docs/research/shulker-ender.md`). A
   shulker box is a chest of 27 (request container `Shulker`, entity `ShulkerBox` with a `facing` byte:
   the face clicked, from memory) that refuses shulker boxes. Broken, it spills nothing: it drops
   itself with its items in the item's tag as `Items` (in creative only when it holds something), and
   the loot table drops nothing more; placed, the tag's `Items` become the new entity's. An empty box
-  drops without a tag, so it stacks with new ones (BDS may tag it `Items: []`: not settled). An ender
+  is tagged `Items: []` (a list of no type), as recorded from BDS, so it does not stack with new
+  ones. An ender
   chest (entity `EnderChest`, request container `Container`) opens its player's own 27 slots, kept
   with the player's items as `EnderChestInventory`; the lid is the block's, shared by its viewers.
   Both sound (`shulkerbox.open`/`.closed`, `enderchest.open`/`.closed`, names from BDS's binary).
-- **Ticking block entities** (`ticking.rs`). Furnaces and hoppers tick while a player's view covers
-  their column, as BDS ticks block actors near players. On the column sweep (every 100 ticks, before
-  saving) those in seen columns with work start (a furnace whose entity says it was burning or
-  cooking, every hopper) and those in columns nobody sees stop, their state written to their entity.
+- **Ticking block entities** (`ticking.rs`). Furnaces, hoppers and campfires tick while a player's
+  view covers their column, as BDS ticks block actors near players. On the column sweep (every 100
+  ticks, before saving) those in seen columns with work start (a furnace whose entity says it was
+  burning or cooking, every hopper, a campfire with food on it) and those in columns nobody sees stop, their state written to their entity.
   A placed hopper and an opened furnace start at once. A ticking container's slots stay held
   (`containers::pin`); hoppers reach other containers through `containers::with_slots`.
 - **Hoppers** (`hoppers.rs`; `docs/research/hoppers.md`). A container of five. Each tick its cooldown
@@ -664,8 +735,8 @@ block action, and takes StopBreak and AbortBreak with a position.
   its first slot that can give one into the container it faces (`facing_direction`), then pulls one
   from the container above or, when the block above is no container, takes the first item lying in
   the box 0.625 to 2 blocks over it, as much as fits in two slots. A move sets the cooldown to 8
-  ticks (BDS's code says 4 of its hopper ticks; hoppers are measured at 2.5 items a second); an
-  empty hopper that is given an item waits a whole cooldown. A furnace takes from above into its
+  ticks (recorded from BDS: an item every 400 ms into a chest; its code says 4 of its hopper
+  ticks, so those are two game ticks each); an empty hopper that is given an item waits a whole cooldown. A furnace takes from above into its
   input, from the sides only fuel, and gives its result (and an empty bucket in its fuel slot)
   downwards; ender chests are not reached. Not done: BDS ticks the hoppers below first, so a chain
   moves an item in one tick; composters; minecarts.
@@ -683,18 +754,21 @@ block action, and takes StopBreak and AbortBreak with a position.
   going out swaps the block for its `lit_` one, facing kept, and gives it the old entity
   (`BurnTime`, `CookTime`, `BurnDuration`, `StoredXPInt` beside `Items`). Burn times are BDS's
   `getBurnDuration` rules (`furnaces/fuel.rs`; wood is told by name where BDS reads a material),
-  truncated. A player may not put anything into the result, nor what does not burn into the fuel.
+  truncated. A player may not put what does not burn into the fuel (BDS answers status 55; sapling
+  Error); into the result it may put anything. Both as recorded with stone.
   Taking results pays `count x` the result's share (`furnaces/xp.rs`) plus what hoppers left owed
-  (`StoredXPInt`, hundredths), each rounded at random, as orbs at the player; breaking pays the
-  result's at the block. BDS seems to accept a Place into the result (not refused in its validation,
-  not tried live): sapling refuses it, as an honest client never sends it.
+  (`StoredXPInt`, hundredths), each rounded at random, as orbs at the player's eyes; breaking pays
+  the result's at the block.
 - **Experience** (`experience.rs`, `orbs.rs`; `docs/research/experience.md`). Orbs split as BDS's
   `spawnOrbs` (2477 down to 1; 13 equal ones above 12000), thrown a little up and aside, shown as
-  `minecraft:xp_orb` with `ExperienceValue` and moved by the server as a body that bounces (the
-  client does not move them). One falls, slides to a stop, and from 21 to 120 of its
-  ticks looks for the nearest player within 8 blocks every 20, flies to it and is taken
-  (`LevelEvent` SoundOrb). A player's level and progress follow BDS's `addExperience` (the Java
-  formula), go to its client as the `player.level` / `player.experience` attributes and are kept
+  `minecraft:xp_orb` with `ExperienceValue` and moved by the server as a body that bounces (kept up
+  by the actor sync: a `MoveEntityDelta` of the axes that changed every tick it moves, as recorded;
+  the client does not move them). One falls, slides to a stop, and from 21 to 120 of its ticks looks for the nearest
+  player within 8 blocks every 20 and flies to it; a player whose box, grown by a block across and
+  half a block up and down (Java's), touches it takes it once it is 7 ticks old, also before it
+  looks (BDS took one let out at the player after 7 ticks) (`LevelEvent` SoundOrb). A player's level and progress follow BDS's
+  `addExperience` (the Java formula), go to its client as the `player.experience` attribute, with
+  `player.level` when the level changed (as recorded), and are kept
   with its items (`PlayerLevel`, `PlayerLevelProgress`); a fifth level sounds `levelup`. Not done:
   orbs merging, being saved; Mending.
 - **Double chests** (`containers/pairs.rs`). Two chests of one kind, side by side and facing the same
@@ -794,9 +868,7 @@ acacia-world = { path = "../acacia/acacia/crates/acacia-world" }
   and place (no ghost block, no hole), also with the blob cache on; a door opened on screen closing
   again; `ParticleDestroy` and the `place` sound seen and heard by a second client; a block placed while
   another client is still loading the column.
-- **Blocks, left out of step 6:** block entities other than containers' (a placed sign gets
-  none); fences and stairs reconnecting; sleeping in a bed, and rails; redstone; `USED` and the
-  lists of blocks that fall,
+- **Blocks, left out of step 6:** redstone; `USED` and the lists of blocks that fall,
   need support or give way are name endings, not block data; a request over the tick limit gets no
   resync; `on_move`, which needs its own resync on cancel.
 - **Landing after a world change.** The teleport goes out before the new world's columns, so a

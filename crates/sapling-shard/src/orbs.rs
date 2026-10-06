@@ -1,7 +1,8 @@
 //! Experience orbs, as BDS's `ExperienceOrb` makes and moves them (docs/research/experience.md,
-//! sections 1 to 3). The server moves them: the client only shows where they are. An orb falls,
-//! slides to a stop, and from 21 to 120 ticks after it appears looks for the nearest player within
-//! eight blocks every twenty, flies to it and is taken, worth its experience.
+//! sections 1 to 3; the packets as recorded, `examples/bds_container_probe.rs`). The server moves
+//! them: the client only shows where they are. An orb falls, slides to a stop, and from 21 to 120
+//! ticks after it appears looks for the nearest player within eight blocks every twenty and flies
+//! to it; a player it touches on the way, or before, takes it, worth its experience.
 // TODO: orbs do not merge (BDS merges those whose ids agree mod 13, and spreads new experience
 // over 13 orbs already in a cell), and are not saved.
 
@@ -29,6 +30,13 @@ const SEARCH_EVERY: u64 = 20;
 const TOUCH: f32 = 0.225;
 /// Where on a player an orb flies to, above its feet.
 const BODY: f32 = 0.9;
+/// How far from a player's feet an orb is touched: across, and from below to above.
+const TOUCH_ACROSS: f32 = 1.55;
+const TOUCH_BELOW: f32 = -1.0;
+const TOUCH_ABOVE: f32 = 2.3;
+/// An orb is not taken by touch before it is this old: BDS took one let out at the player
+/// after 7 ticks (one recording).
+const TOUCH_AFTER: u32 = 7;
 
 #[derive(Component)]
 pub(crate) struct Orb {
@@ -82,10 +90,23 @@ fn nearest(world: &mut World, layer: Entity, at: [f32; 3]) -> Option<Entity> {
     near.filter(|(_, distance)| *distance < FOLLOW * FOLLOW).min_by(|a, b| a.1.total_cmp(&b.1)).map(|(player, _)| player)
 }
 
+/// A player of `layer` whose reach touches the orb at `at`: its box grown by one block across and
+/// half a block up and down (Java's pickup box; BDS took an orb 1.1 blocks off in 7 ticks).
+fn touching(world: &mut World, layer: Entity, at: [f32; 3]) -> Option<Entity> {
+    let mut players = world.query::<(Entity, &Stage, &InLayer, &Position)>();
+    let touches = |feet: [f32; 3]| (at[0] - feet[0]).abs() <= TOUCH_ACROSS && (at[2] - feet[2]).abs() <= TOUCH_ACROSS && (TOUCH_BELOW..=TOUCH_ABOVE).contains(&(at[1] - feet[1]));
+    let mut near = players.iter(world).filter(|(_, stage, in_layer, position)| **stage == Stage::InWorld && in_layer.0 == layer && touches(position.feet));
+    near.next().map(|(player, ..)| player)
+}
+
 /// One tick of the orb `entity`; false once it is gone.
 fn step(world: &mut World, entity: Entity, orb: &mut Orb, layer: Entity, id: u64) -> bool {
     orb.age += 1;
     if orb.age >= LIFETIME {
+        return false;
+    }
+    if let Some(player) = touching(world, layer, orb.body.at).filter(|_| orb.age >= TOUCH_AFTER) {
+        taken(world, layer, orb, player);
         return false;
     }
     // Counted in the orb's own ticks, so that the first search is 21 to 120 ticks after it appeared.

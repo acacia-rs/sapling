@@ -21,7 +21,7 @@ pub struct ItemStack {
 }
 
 impl ItemStack {
-    pub(crate) fn parse(item: &Value) -> Option<Self> {
+    pub fn parse(item: &Value) -> Option<Self> {
         // An empty slot is a stack without a name.
         let Some(Value::String(name)) = item.get("Name").filter(|name| !matches!(name, Value::String(name) if name.is_empty())) else { return None };
         let count = if let Some(Value::Byte(count)) = item.get("Count") { *count as u8 } else { 1 };
@@ -30,7 +30,7 @@ impl ItemStack {
     }
 
     /// The stack's fields; a block the registry cannot name is left out.
-    pub(crate) fn fields(&self, registry: &BlockRegistry) -> Vec<(String, Value)> {
+    pub fn fields(&self, registry: &BlockRegistry) -> Vec<(String, Value)> {
         let mut fields = vec![("Name".to_string(), Value::String(self.name.clone())), ("Count".into(), Value::Byte(self.count as i8)), ("Damage".into(), Value::Short(self.damage))];
         fields.extend(self.block.and_then(|hash| block_of_hash(registry, hash)).map(|block| ("Block".to_string(), block)));
         fields.extend(self.tag.clone().map(|tag| ("tag".to_string(), tag)));

@@ -108,6 +108,7 @@ pub(crate) fn set_slots(world: &mut World, layer: Entity, pos: BlockPos, slots: 
             tracing::warn!(?half, "a container's items could not be kept");
         }
     }
+    super::brewing::show_bottles(world, layer, pos, &slots);
 }
 
 /// The block entity at `pos` holding `held`; a container a handler set, or one stored without

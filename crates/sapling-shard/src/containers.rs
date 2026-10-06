@@ -1,15 +1,19 @@
-//! Blocks that hold items (chests, barrels, shulker boxes, ender chests, hoppers and the three
-//! furnaces), kept in the block's entity as the game keeps them, shown to the players who have
+//! Blocks that hold items (chests, barrels, shulker boxes, ender chests, hoppers, brewing stands
+//! and the three furnaces), kept in the block's entity as the game keeps them, shown to the players who have
 //! the block open (screens.rs) and changed by their inventory requests (inventory/requests.rs),
 //! by a furnace's burning (furnaces.rs) and by hoppers (hoppers.rs). Two paired chests are one
 //! container of 54 (pairs.rs); an ender chest opens its player's own 27 slots. What BDS does, and
 //! the evidence: docs/research/containers-crafting.md, shulker-ender.md, hoppers.md, furnaces.md.
 
+mod access;
+mod brewing;
 mod lid;
 mod pairs;
 mod screens;
 mod shulker;
 mod slots;
+
+pub(crate) use access::close_out_of_reach;
 
 use std::collections::HashMap;
 
@@ -84,6 +88,7 @@ pub(crate) fn kind(block: &str) -> Option<Kind> {
         "minecraft:barrel" => Kind { entity: "Barrel", ..CHEST },
         "minecraft:ender_chest" => Kind { entity: "EnderChest", is_per_player: true, ..CHEST },
         "minecraft:hopper" => HOPPER,
+        "minecraft:brewing_stand" => Kind { entity: "BrewingStand", slots: 5, window: WindowType::BrewingStand, has_lid: false, ..CHEST },
         "minecraft:furnace" | "minecraft:lit_furnace" => smelter("Furnace", WindowType::Furnace),
         "minecraft:blast_furnace" | "minecraft:lit_blast_furnace" => smelter("BlastFurnace", WindowType::BlastFurnace),
         "minecraft:smoker" | "minecraft:lit_smoker" => smelter("Smoker", WindowType::Smoker),

@@ -26,8 +26,10 @@ const RENAMED: &[(&str, &str)] = &[
     ("powered_repeater", "repeater"),
     ("unpowered_comparator", "comparator"),
     ("powered_comparator", "comparator"),
-    ("standing_sign", "oak_sign"),
-    ("wall_sign", "oak_sign"),
+    ("standing_sign", "oak_wall_sign"),
+    ("wall_sign", "oak_wall_sign"),
+    ("standing_banner", "white_banner"),
+    ("wall_banner", "white_wall_banner"),
     ("lit_furnace", "furnace"),
     ("lit_blast_furnace", "blast_furnace"),
     ("lit_smoker", "smoker"),
@@ -182,6 +184,13 @@ static TABLES: LazyLock<HashMap<&'static str, Vec<LootRow>>> = LazyLock::new(|| 
 pub fn java_block(bedrock: &str) -> (&str, bool) {
     if let Some(wood) = bedrock.strip_suffix("_double_slab") {
         return (SLABS.iter().find(|slab| slab.strip_suffix("_slab") == Some(wood)).copied().unwrap_or(bedrock), true);
+    }
+    // A sign of either kind leaves what Java's wall sign of its wood leaves: the wood's sign.
+    if let Some(wood) = bedrock.strip_suffix("_standing_sign").or_else(|| bedrock.strip_suffix("_wall_sign")) {
+        let wood = if wood == "darkoak" { "dark_oak" } else { wood };
+        if let Some(java) = TABLES.keys().find(|block| block.strip_suffix("_wall_sign") == Some(wood)) {
+            return (java, false);
+        }
     }
     (RENAMED.iter().find(|(from, _)| *from == bedrock).map_or(bedrock, |(_, java)| java), false)
 }

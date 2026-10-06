@@ -1,7 +1,7 @@
 //! Blocks a hand moves (doors, trapdoors, fence gates and levers open and shut, buttons go in
 //! for a second) and the second cell of doors and beds, which is placed, opened and broken with
 //! the first.
-// TODO: no pressure plates, no redstone, nobody sleeps in a bed, a gate does not
+// TODO: no pressure plates, no redstone, a gate does not
 // swing away from its user, and `door.open`/`door.close` are named by the pattern of the other
 // sounds: the server's binary holds those as plain strings, but not these two.
 
@@ -55,6 +55,15 @@ fn other_half(world: &World, layer: Entity, pos: BlockPos) -> Option<BlockPos> {
     };
     let same = level.in_height(other[1]) && registry.get(level.block(other[0], other[1], other[2]))?.name == registry.get(id)?.name;
     same.then_some(other)
+}
+
+/// The cell of the head of the bed one of whose cells is at `pos`.
+pub(crate) fn bed_head(world: &World, layer: Entity, pos: BlockPos) -> Option<BlockPos> {
+    let level = level(world, layer)?;
+    match property(level.registry(), level.block(pos[0], pos[1], pos[2]), HEAD)? {
+        "1" => Some(pos),
+        _ => other_half(world, layer, pos),
+    }
 }
 
 /// The second cell of the two-cell block `id` whose first goes to `pos`, and what fills it: a
