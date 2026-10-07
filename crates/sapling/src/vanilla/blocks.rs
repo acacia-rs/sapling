@@ -8,6 +8,12 @@ use super::origin;
 /// The most blocks one `/fill` changes, as vanilla.
 const MAX_FILL: i64 = 32_768;
 
+/// Writes the block as `/setblock` does; whether the cell changed (vanilla counts no other).
+fn changed(ctx: &mut ShardCtx<'_>, pos: BlockPos, block: &Block) -> bool {
+    let before = ctx.block(pos);
+    ctx.update_block(pos, block) && ctx.block(pos) != before
+}
+
 fn block(name: &str, states: Option<&States>) -> Block {
     let block = Block::new(name);
     match states {
@@ -27,9 +33,9 @@ pub(crate) struct SetBlock {
 impl Command for SetBlock {
     fn run(self, ctx: &mut ShardCtx<'_>, sender: &Sender, out: &mut Output) {
         let pos = self.position.from(origin(ctx, sender));
-        match ctx.update_block(pos, &block(&self.block, self.states.as_ref())) {
+        match changed(ctx, pos, &block(&self.block, self.states.as_ref())) {
             true => out.print("Block placed"),
-            false => out.error(format!("Cannot place {} at {pos:?}", self.block)),
+            false => out.error("The block couldn't be placed"),
         }
     }
 }
@@ -57,7 +63,7 @@ impl Command for Fill {
         for x in low[0]..=high[0] {
             for y in low[1]..=high[1] {
                 for z in low[2]..=high[2] {
-                    filled += u32::from(ctx.update_block([x, y, z], &block));
+                    filled += u32::from(changed(ctx, [x, y, z], &block));
                 }
             }
         }

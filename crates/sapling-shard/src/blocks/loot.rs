@@ -176,12 +176,23 @@ pub(super) fn thrown(world: &mut World, block: &str, properties: &str, by: &Brea
     of(block, properties, by, &mut |sides| dice.roll(sides))
 }
 
-/// Lays `items` where the block at `pos` was. Items the game lacks are left out.
+/// `items` as stacks; items the game lacks are left out.
+fn stacks(world: &World, layer: Entity, items: &[Item]) -> Vec<sapling_world::ItemStack> {
+    let Some(registry) = world.get::<Layer>(layer).map(|layer| layer.world.registry()) else { return Vec::new() };
+    items.iter().filter(|item| item.count > 0).filter_map(|item| inventory::stored(item, registry)).collect()
+}
+
+/// Lays `items` where the block at `pos` was, tossed out of its cell.
 pub(super) fn spill(world: &mut World, layer: Entity, pos: BlockPos, items: &[Item]) {
-    let Some(registry) = world.get::<Layer>(layer).map(|layer| layer.world.registry()) else { return };
-    let stacks: Vec<_> = items.iter().filter(|item| item.count > 0).filter_map(|item| inventory::stored(item, registry)).collect();
-    for stack in stacks {
+    for stack in stacks(world, layer, items) {
         drops::spill(world, layer, stack, pos);
+    }
+}
+
+/// Lets `items` go still with their bottom at `at`.
+pub(super) fn let_go(world: &mut World, layer: Entity, at: [f32; 3], items: &[Item]) {
+    for stack in stacks(world, layer, items) {
+        drops::let_go(world, layer, stack, at);
     }
 }
 

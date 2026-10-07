@@ -132,9 +132,20 @@ fn schedule(world: &mut World, layer: Entity, pos: BlockPos, delay: u64) {
     }
 }
 
-/// After a change at `pos`: lava there or beside it that now touches water hardens, and the
-/// liquid there and beside it is queued to move (BDS `LiquidBlock::neighborChanged`).
+/// After a liquid moved into or out of `pos`: the liquid there and beside it is queued to move,
+/// and lava that now touches water hardens.
 pub(super) fn disturb(world: &mut World, layer: Entity, pos: BlockPos) {
+    wake(world, layer, pos, true);
+}
+
+/// After a block at `pos` changed for another reason (a break, a place, a handler's write): only
+/// the liquid beside it is queued, as BDS's `neighborChanged` reaches the neighbours; a liquid
+/// written there itself waits for them (`setblock water` stands still). Lava hardens all the same.
+pub(super) fn neighbours_changed(world: &mut World, layer: Entity, pos: BlockPos) {
+    wake(world, layer, pos, false);
+}
+
+fn wake(world: &mut World, layer: Entity, pos: BlockPos, itself: bool) {
     let hot = is_hot(world, layer);
     let mut changed = vec![pos];
     let mut looked = 0;
@@ -146,7 +157,7 @@ pub(super) fn disturb(world: &mut World, layer: Entity, pos: BlockPos) {
             }
             if harden::meets_water(world, layer, near) {
                 changed.push(near);
-            } else if let Cell::Liquid(liquid, _) = cell(world, layer, near) {
+            } else if let (Cell::Liquid(liquid, _), true) = (cell(world, layer, near), itself || near != pos) {
                 schedule(world, layer, near, liquid.delay(hot));
             }
         }

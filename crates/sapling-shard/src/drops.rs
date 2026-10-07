@@ -99,6 +99,13 @@ pub(crate) fn spill(world: &mut World, layer: Entity, stack: ItemStack, pos: Blo
     lay(world, layer, stack, [at[0], at[1] - SIZE / 2.0, at[2]], motion, from);
 }
 
+/// Lets `stack` go still with the bottom of its box at `at`, as what an entity that broke up
+/// leaves where it was (BDS `FallingBlockActor::breakBlock`).
+pub(crate) fn let_go(world: &mut World, layer: Entity, stack: ItemStack, at: [f32; 3]) {
+    let from = world.resource::<Tick>().0 + SPILL_DELAY;
+    lay(world, layer, stack, at, [0.0; 3], from);
+}
+
 /// The items lying in `layer` inside the box from `min` to `max`, oldest first.
 pub(crate) fn lying_in(world: &mut World, layer: Entity, min: [f32; 3], max: [f32; 3]) -> Vec<(Entity, ItemStack)> {
     let inside = |at: &[f32; 3]| (0..3).all(|axis| (min[axis]..=max[axis]).contains(&at[axis]));

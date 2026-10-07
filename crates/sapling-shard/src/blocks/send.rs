@@ -124,17 +124,17 @@ pub(crate) fn keep_entity(world: &mut World, layer: Entity, pos: BlockPos, entit
 
 /// Writes a layer-0 block, and layer 1 as the block decides (waterlog.rs), and shows the layer-0
 /// block to everyone who sees the place: their clients move the water between layers by the same
-/// rule, and BDS sends nothing for it. False, with nothing changed, outside the world's height
-/// and where the column is not loaded or cannot be written.
+/// rule, and BDS sends nothing for it. False, with nothing changed, where the cell already is so,
+/// outside the world's height and where the column is not loaded or cannot be written.
 pub(crate) fn set(world: &mut World, layer: Entity, pos: BlockPos, id: u32) -> bool {
     let Some(mut level) = world.get_mut::<Layer>(layer) else { return false };
     let [x, y, z] = pos;
-    if !level.world.in_height(y) {
+    if !level.world.in_height(y) || !level.world.is_loaded(column(pos)) {
         return false;
     }
-    let held = level.world.liquid(x, y, z);
-    let (id, now_held) = super::waterlog::written(level.world.registry(), id, level.world.block(x, y, z), held);
-    if !level.world.set_block(x, y, z, id) {
+    let (old, held) = (level.world.block(x, y, z), level.world.liquid(x, y, z));
+    let (id, now_held) = super::waterlog::written(level.world.registry(), id, old, held);
+    if (id, now_held) == (old, held) || !level.world.set_block(x, y, z, id) {
         return false;
     }
     if now_held != held {
@@ -153,14 +153,20 @@ pub(crate) fn block_at(world: &World, layer: Entity, pos: BlockPos) -> Option<Bl
 }
 
 /// Sets a block for a handler: no event, and everyone who sees the place is shown it. A
-/// container gets its block entity.
-pub(crate) fn put_block(world: &mut World, layer: Entity, pos: BlockPos, block: &Block) -> bool {
-    let Some(id) = world.get::<Layer>(layer).and_then(|layer| resolve(layer.world.registry(), block)) else { return false };
-    let placed = set(world, layer, pos, id);
-    if let Some(name) = world.get::<Layer>(layer).and_then(|layer| layer.world.registry().get(id)).map(|state| state.name).filter(|_| placed) {
+/// container gets its block entity. Whether the cell changed; `None` where it could not be set.
+pub(crate) fn put_block(world: &mut World, layer: Entity, pos: BlockPos, block: &Block) -> Option<bool> {
+    let level = &world.get::<Layer>(layer)?.world;
+    let id = resolve(level.registry(), block)?;
+    if block_at(world, layer, pos)? == describe(level.registry(), id) {
+        return Some(false);
+    }
+    if !set(world, layer, pos, id) {
+        return None;
+    }
+    if let Some(name) = world.get::<Layer>(layer).and_then(|layer| layer.world.registry().get(id)).map(|state| state.name) {
         crate::containers::furnish(world, layer, pos, name, None, sapling_api::Face::Up);
     }
-    placed
+    Some(true)
 }
 
 /// Empties layer 1 at `pos` for everyone, if it held something.

@@ -124,7 +124,7 @@ impl<'a> ShardCtx<'a> {
 
     /// [`ShardCtx::set_block`], and then what is around the block reacts as to a player's place:
     /// liquids move, sand over a gap falls, a torch that lost its block breaks. What vanilla's
-    /// `/setblock` does.
+    /// `/setblock` does. A cell that already holds `block` is left alone, and that is true too.
     pub fn update_block(&mut self, pos: BlockPos, block: &Block) -> bool {
         self.backend.update_block(pos, block)
     }

@@ -9,7 +9,7 @@ use bytes::Bytes;
 use sapling_api::{EntityId, EntityInfo};
 
 use crate::body::{Body, Physics};
-use crate::components::{InLayer, Layer, NetId};
+use crate::components::{InLayer, Layer, NetId, Tick};
 use crate::mobs;
 use crate::sync::Told;
 
@@ -35,11 +35,17 @@ pub(crate) fn keep(world: &mut World, entity: Entity, layer: Entity, unique_id: 
     world.entity_mut(entity).insert(Stored { compound });
 }
 
+/// The tick an entity appeared in: its viewers are told of it after the tick's handlers, so a
+/// move in that tick would reach them before the entity does.
+#[derive(Component)]
+struct Born(u64);
+
 /// Puts an entity of `kind` with `body` into the world, shown by what `announce` makes of its
 /// id; viewers start out knowing it at `wire`, where the wire puts it.
 pub(crate) fn spawn(world: &mut World, layer: Entity, kind: &str, body: Body, wire: [f32; 3], announce: impl FnOnce(u64) -> Option<Vec<Bytes>>) -> Option<Entity> {
     let entity = mobs::spawn_shown(world, layer, body.at, announce)?;
-    world.entity_mut(entity).insert((Kind(kind.to_owned()), body, Told::new(wire)));
+    let tick = world.resource::<Tick>().0;
+    world.entity_mut(entity).insert((Kind(kind.to_owned()), body, Told::new(wire), Born(tick)));
     Some(entity)
 }
 
@@ -73,9 +79,13 @@ pub(crate) fn listed(world: &World, layer: Entity) -> Vec<EntityInfo> {
 pub(crate) fn step(world: &mut World, entity: Entity, layer: Entity, id: u64, physics: &Physics, lift: f32) -> Option<(Body, Vec<Bytes>)> {
     let mut body = *world.get::<Body>(entity)?;
     body.step(&world.get::<Layer>(layer)?.world, physics);
+    *world.get_mut::<Body>(entity)? = body;
+    // Not yet announced: the next tick's packets carry this move.
+    if world.get::<Born>(entity).is_some_and(|born| born.0 == world.resource::<Tick>().0) {
+        return Some((body, Vec::new()));
+    }
     let [x, y, z] = body.at;
     let packets = world.get_mut::<Told>(entity)?.update(id, [x, y + lift, z], body.motion, body.on_ground);
-    *world.get_mut::<Body>(entity)? = body;
     Some((body, packets))
 }
 

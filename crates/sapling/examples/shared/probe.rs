@@ -42,7 +42,8 @@ fn show(start: Instant, shown: &[&str], who: &str, event: Option<BotEvent>) -> R
 
 pub async fn connect(server: &str, name: &str) -> Result<Bot, Box<dyn std::error::Error>> {
     let config = BotConfig { physics: true, subscribe: PacketFilter::all(), ..BotConfig::default() };
-    Ok(Bot::connect(Client::builder(server).offline(name), config).await?)
+    // Wide enough that both bots see every drill, which spread over a hundred blocks.
+    Ok(Bot::connect(Client::builder(server).offline(name).chunk_radius(8), config).await?)
 }
 
 impl Probe {

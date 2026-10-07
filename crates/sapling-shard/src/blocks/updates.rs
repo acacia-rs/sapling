@@ -89,7 +89,7 @@ pub(super) fn settle(world: &mut World, layer: Entity, pos: BlockPos) {
     let mut changed = VecDeque::from([pos]);
     for _ in 0..MAX_STEPS {
         let Some(pos) = changed.pop_front() else { return };
-        liquid::disturb(world, layer, pos);
+        liquid::neighbours_changed(world, layer, pos);
         shapes::reshape_around(world, layer, pos);
         falling::unsettled(world, layer, pos, Change::Placed);
         for face in Face::ALL {

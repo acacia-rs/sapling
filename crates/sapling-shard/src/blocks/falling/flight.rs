@@ -71,7 +71,7 @@ fn break_up(world: &mut World, layer: Entity, block: u32, bottom: [f32; 3]) {
     let cell = cell_of(bottom);
     send::to_viewers(world, layer, cell, &[event(LevelEventEvent::ParticleDestroy, wire(bottom), hash as i32)]);
     if !name.contains("suspicious_") {
-        loot::spill(world, layer, cell, &[Item::new(if name == SNOW { "minecraft:snowball" } else { name }, 1)]);
+        loot::let_go(world, layer, bottom, &[Item::new(if name == SNOW { "minecraft:snowball" } else { name }, 1)]);
     }
 }
 
@@ -106,8 +106,10 @@ fn step(world: &mut World, entity: Entity, layer: Entity, id: u64) -> Option<Blo
     }
     let mut falling = world.get_mut::<FallingBlock>(entity)?;
     (falling.airborne, falling.landed_for) = (airborne, landed.then_some(0));
-    let hash = level(world, layer).map_or(0, |level| level.registry().network_hash(block_id));
-    mobs::reannounce(world, entity, announcement(id, &body, hash));
+    if !packets.is_empty() {
+        let hash = level(world, layer).map_or(0, |level| level.registry().network_hash(block_id));
+        mobs::reannounce(world, entity, announcement(id, &body, hash));
+    }
     if landed {
         let is_anvil = block(world, layer, cell_of(at)).and_then(|(registry, _)| registry.get(block_id)).is_some_and(|state| state.name.ends_with("anvil"));
         if is_anvil {

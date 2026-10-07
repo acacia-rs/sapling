@@ -97,12 +97,15 @@ fn slide(world: &mut World, layer: Entity, pos: BlockPos) -> Option<BlockPos> {
 
 /// Moves the falling blocks and starts the falls that are due; the cells that changed, for their
 /// neighbours to settle.
+/// A fall starts before the tick's moves: on BDS a new falling block is a second tick on at once.
 pub(super) fn tick(world: &mut World) -> Vec<(Entity, BlockPos)> {
-    let mut changed = flight::fly(world);
     let now = world.resource::<Tick>().0;
-    let Some(mut slides) = world.get_resource_mut::<Slides>() else { return changed };
-    let (due, waiting): (Vec<_>, Vec<_>) = std::mem::take(&mut slides.0).into_iter().partition(|(when, ..)| *when <= now);
-    slides.0 = waiting;
-    changed.extend(due.into_iter().filter_map(|(_, layer, pos)| Some((layer, slide(world, layer, pos)?))));
+    let mut changed = Vec::new();
+    if let Some(mut slides) = world.get_resource_mut::<Slides>() {
+        let (due, waiting): (Vec<_>, Vec<_>) = std::mem::take(&mut slides.0).into_iter().partition(|(when, ..)| *when <= now);
+        slides.0 = waiting;
+        changed.extend(due.into_iter().filter_map(|(_, layer, pos)| Some((layer, slide(world, layer, pos)?))));
+    }
+    changed.extend(flight::fly(world));
     changed
 }

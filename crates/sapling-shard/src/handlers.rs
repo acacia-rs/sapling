@@ -91,7 +91,7 @@ impl Backend for Ctx<'_> {
 
     fn set_block(&mut self, pos: BlockPos, block: &Block) -> bool {
         let layer = worlds::current(self.world);
-        blocks::put_block(self.world, layer, pos, block)
+        blocks::put_block(self.world, layer, pos, block).is_some()
     }
 
     fn update_block(&mut self, pos: BlockPos, block: &Block) -> bool {
