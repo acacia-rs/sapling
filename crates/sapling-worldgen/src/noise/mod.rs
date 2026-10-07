@@ -5,6 +5,7 @@ mod blended;
 mod improved;
 mod normal;
 mod perlin;
+mod simplex;
 #[cfg(test)]
 mod tests;
 
@@ -12,6 +13,7 @@ pub use blended::{BlendedNoise, CELL_COLUMNS, CELL_COUNT, CELL_ROWS, CellGrid};
 pub use improved::ImprovedNoise;
 pub use normal::NormalNoise;
 pub use perlin::PerlinNoise;
+pub use simplex::SimplexNoise;
 
 use crate::random::Xoroshiro;
 

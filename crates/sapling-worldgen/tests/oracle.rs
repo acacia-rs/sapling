@@ -5,7 +5,7 @@
 
 mod oracle_support;
 
-use oracle_support::{BiomeTally, Region, Tally, TopTally, bds_cell, open};
+use oracle_support::{BdsCell, BiomeTally, Region, Tally, TopTally, bds_cell, open, terrain_top};
 use sapling_leveldb::ChunkKey;
 
 use sapling_worldgen::{MIN_Y, OverworldGenerator};
@@ -35,17 +35,21 @@ fn compare(seed: i64, world: &str, regions: &[Region]) {
                     for y in MIN_Y..=biome_top {
                         biome_tally.add(biomes.biome(x, y, z), a.biome(wx, y, wz), (wx, y, wz));
                     }
-                    let mut top_seen = false;
-                    for y in (MIN_Y..=LAST_Y).rev() {
-                        let bds = bds_cell(&primary, &a, wx, y, wz);
-                        let stable = bds == bds_cell(&twin, &b, wx, y, wz);
-                        let block = ours.block(x, y, z);
-                        tally.add(block, &bds, stable, (wx, y, wz));
-                        if !top_seen && block.is_solid() {
-                            top_seen = true;
-                            if stable {
-                                top.add(block, &bds, (wx, y, wz));
-                            }
+                    let column: Vec<(i32, BdsCell, bool)> = (MIN_Y..=LAST_Y)
+                        .rev()
+                        .map(|y| {
+                            let bds = bds_cell(&primary, &a, wx, y, wz);
+                            let stable = bds == bds_cell(&twin, &b, wx, y, wz);
+                            (y, bds, stable)
+                        })
+                        .collect();
+                    let our_top = (MIN_Y..=LAST_Y).rev().find(|&y| ours.block(x, y, z).is_solid());
+                    let reshaped = our_top != terrain_top(column.iter().map(|(y, cell, _)| (*y, cell)));
+                    for (y, bds, stable) in &column {
+                        let block = ours.block(x, *y, z);
+                        tally.add(block, bds, *stable, (wx, *y, wz), reshaped);
+                        if Some(*y) == our_top && *stable {
+                            top.add(block, bds, (wx, *y, wz), reshaped);
                         }
                     }
                 }

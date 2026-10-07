@@ -119,8 +119,21 @@ pub enum Verdict {
     Later(&'static str),
 }
 
-/// Who decides a cell and whether sapling got it right.
-pub fn judge(ours: Block, bds: &BdsCell, y: i32) -> Verdict {
+/// Who decides a cell and whether sapling got it right. `reshaped`: the column's top terrain block
+/// is not at the same height in both, so BDS's carvers or lakes moved the surface after it was built.
+pub fn judge(ours: Block, bds: &BdsCell, y: i32, reshaped: bool) -> Verdict {
+    match judge_cell(ours, bds, y) {
+        Verdict::Error(Stage::Surface) if reshaped => Verdict::Later("carvers, lakes (column top moved)"),
+        verdict => verdict,
+    }
+}
+
+/// The highest terrain block of a column, from the top down; snow and ice of the freeze pass don't count.
+pub fn terrain_top<'a>(cells: impl Iterator<Item = (i32, &'a BdsCell)>) -> Option<i32> {
+    cells.filter(|(_, cell)| cell.terrain().is_some_and(|b| !matches!(b, Block::SnowLayer | Block::Ice))).map(|(y, _)| y).next()
+}
+
+fn judge_cell(ours: Block, bds: &BdsCell, y: i32) -> Verdict {
     if bds.is(ours) {
         return Verdict::Match(stage_of(ours, y));
     }
@@ -149,8 +162,11 @@ pub fn judge(ours: Block, bds: &BdsCell, y: i32) -> Verdict {
     if base(ours) && VEIN_BLOCKS.contains(&theirs) && !matches!(theirs, Block::RawCopperBlock | Block::RawIronBlock) {
         return Verdict::Later("ore features (or a missed vein)");
     }
-    if base(ours) && matches!(theirs, Block::Dirt | Block::Gravel | Block::Calcite) && y < 60 {
+    if base(ours) && matches!(theirs, Block::Dirt | Block::Gravel | Block::Calcite) {
         return Verdict::Later("ore features (or a missed vein)");
+    }
+    if matches!(ours, Block::Dirt | Block::GrassBlock) && matches!(bds.block.as_str(), "sand" | "gravel" | "clay") {
+        return Verdict::Later("disk features (sand, gravel, clay over dirt)");
     }
     if VEIN_BLOCKS.contains(&ours) || VEIN_BLOCKS.contains(&theirs) {
         return Verdict::Error(Stage::Veins);

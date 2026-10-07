@@ -8,19 +8,24 @@ use super::{BdsCell, Stage, Verdict, judge};
 
 type At = (i32, i32, i32);
 
+/// Per label: the count and a few sample positions (the 1st, 10th, 100th, ... occurrence).
 #[derive(Default)]
-struct Pairs(BTreeMap<String, (u64, At)>);
+struct Pairs(BTreeMap<String, (u64, Vec<At>)>);
 
 impl Pairs {
     fn add(&mut self, label: String, at: At) {
-        self.0.entry(label).or_insert((0, at)).0 += 1;
+        let entry = self.0.entry(label).or_default();
+        entry.0 += 1;
+        if [1, 10, 100, 1000, 10000].contains(&entry.0) {
+            entry.1.push(at);
+        }
     }
 
     fn print(&self, indent: &str, limit: usize) {
         let mut pairs: Vec<_> = self.0.iter().collect();
         pairs.sort_by(|a, b| b.1.0.cmp(&a.1.0));
         for (label, (count, at)) in pairs.iter().take(limit) {
-            println!("{indent}{count:>9}  {label}  first {at:?}");
+            println!("{indent}{count:>9}  {label}  at {at:?}");
         }
     }
 }
@@ -39,12 +44,12 @@ pub struct Tally {
 }
 
 impl Tally {
-    pub fn add(&mut self, ours: Block, bds: &BdsCell, stable: bool, at: At) {
+    pub fn add(&mut self, ours: Block, bds: &BdsCell, stable: bool, at: At, reshaped: bool) {
         if !stable {
             self.unstable += 1;
             return;
         }
-        match judge(ours, bds, at.1) {
+        match judge(ours, bds, at.1, reshaped) {
             Verdict::Match(stage) => *self.matched.entry(stage).or_default() += 1,
             Verdict::Error(stage) => self.errors.entry(stage).or_default().add(label(ours, bds), at),
             Verdict::Later(why) => self.later.entry(why).or_default().add(label(ours, bds), at),
@@ -80,8 +85,8 @@ pub struct TopTally {
 }
 
 impl TopTally {
-    pub fn add(&mut self, ours: Block, bds: &BdsCell, at: At) {
-        match judge(ours, bds, at.1) {
+    pub fn add(&mut self, ours: Block, bds: &BdsCell, at: At, reshaped: bool) {
+        match judge(ours, bds, at.1, reshaped) {
             Verdict::Match(_) => self.matched += 1,
             Verdict::Later(_) => self.later += 1,
             Verdict::Error(_) => self.errors.add(label(ours, bds), at),

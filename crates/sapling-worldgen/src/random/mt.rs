@@ -44,6 +44,11 @@ impl Mt19937 {
         y ^ (y >> 18)
     }
 
+    /// The raw draw times 2^-32 in f64, rounded to f32 (141188db0).
+    pub fn next_float(&mut self) -> f32 {
+        (self.next_u32() as f64 * 2.328_306_436_538_696_3e-10) as f32
+    }
+
     /// `Random::nextInt(n)`: the raw draw modulo n, 0 for n <= 0.
     pub fn next_int(&mut self, bound: i32) -> i32 {
         if bound <= 0 { 0 } else { (self.next_u32() % bound as u32) as i32 }
