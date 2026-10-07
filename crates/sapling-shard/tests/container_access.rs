@@ -3,7 +3,7 @@
 
 mod common;
 
-use acacia_proto::packets::{ContainerClose, ContainerOpen};
+use acacia_proto::packets::{ContainerClose, ContainerOpen, LevelSoundEvent};
 use common::{Harness, all, click, input_at};
 use sapling_api::Block;
 
@@ -34,6 +34,20 @@ fn a_chest_under_a_block_does_not_open_and_one_under_a_torch_does() {
         h.receive(1, &ContainerClose { window_id: acacia_proto::types::WindowID::from_raw(0), window_type: acacia_proto::types::WindowType::Container, server: false });
         h.tick(1);
     }
+}
+
+#[test]
+fn a_chest_is_heard_a_tick_after_it_opens_and_five_after_it_shuts_as_on_bds() {
+    let mut h = at_a_chest();
+    let heard = |sent: &[acacia_proto::RawPacket]| all::<LevelSoundEvent>(sent).into_iter().map(|sound| sound.sound_id).collect::<Vec<_>>();
+    h.receive(1, &click(CHEST, 1, None));
+    let opened = h.tick(1);
+    let window_id = all::<ContainerOpen>(&opened)[0].window_id;
+    let opening: Vec<Vec<String>> = std::iter::once(heard(&opened)).chain((0..2).map(|_| heard(&h.tick(1)))).collect();
+    assert_eq!(opening, [vec![], vec!["chest.open".to_owned()], vec![]]);
+    h.receive(1, &ContainerClose { window_id, window_type: acacia_proto::types::WindowType::Container, server: false });
+    let shutting: Vec<Vec<String>> = (0..7).map(|_| heard(&h.tick(1))).collect();
+    assert_eq!(shutting.iter().position(|sounds| sounds == &["chest.closed"]), Some(5), "{shutting:?}");
 }
 
 #[test]

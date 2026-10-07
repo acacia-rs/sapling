@@ -99,6 +99,27 @@ impl Backend for Ctx<'_> {
         blocks::update_block(self.world, layer, pos, block)
     }
 
+    fn set_container_item(&mut self, pos: BlockPos, slot: usize, item: Option<&Item>) -> bool {
+        let layer = worlds::current(self.world);
+        let stack = match item.map(|item| inventory::stored(item, self.layer().world.registry())) {
+            Some(None) => return false,
+            stack => stack.flatten(),
+        };
+        let put = |world: &mut World, slots: &mut Vec<Option<inventory::Held>>| {
+            let fits = slot < slots.len();
+            if fits {
+                slots[slot] = stack.map(|stack| containers::new_held(world, stack));
+            }
+            fits
+        };
+        containers::with_slots(self.world, layer, pos, put).unwrap_or(false)
+    }
+
+    fn container_size(&mut self, pos: BlockPos) -> Option<usize> {
+        let layer = worlds::current(self.world);
+        containers::with_slots(self.world, layer, pos, |_, slots| slots.len())
+    }
+
     fn kick(&mut self, player: PlayerId, message: &str) {
         self.world.resource::<Net>().0.kick(ConnId::new(player.0), message);
     }
@@ -245,6 +266,7 @@ pub(crate) fn dispatch(world: &mut World, plugins: &mut Plugins) {
     inventory::dispatch(world, plugins);
     containers::dispatch_closes(world);
     containers::show_lids_again(world);
+    containers::play_late_sounds(world);
     containers::close_out_of_reach(world);
     furnaces::tick(world);
     hoppers::tick(world);

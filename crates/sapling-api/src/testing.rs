@@ -155,6 +155,16 @@ impl Backend for Fake {
         self.set_block(pos, block)
     }
 
+    fn set_container_item(&mut self, pos: BlockPos, slot: usize, item: Option<&Item>) -> bool {
+        self.log.push(format!("container {pos:?} {slot} {:?}", item.map(|item| (&item.name, item.count))));
+        true
+    }
+
+    /// A chest wherever one was set.
+    fn container_size(&mut self, pos: BlockPos) -> Option<usize> {
+        self.blocks.get(&pos).filter(|block| block.name == "minecraft:chest").map(|_| 27)
+    }
+
     fn set_block(&mut self, pos: BlockPos, block: &Block) -> bool {
         let known = pos[1] >= 0 && block.name.starts_with("minecraft:");
         if known {

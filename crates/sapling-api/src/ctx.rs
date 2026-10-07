@@ -23,6 +23,8 @@ pub trait Backend: WorldBackend + EntityBackend {
     fn block(&self, pos: BlockPos) -> Option<Block>;
     fn set_block(&mut self, pos: BlockPos, block: &Block) -> bool;
     fn update_block(&mut self, pos: BlockPos, block: &Block) -> bool;
+    fn set_container_item(&mut self, pos: BlockPos, slot: usize, item: Option<&Item>) -> bool;
+    fn container_size(&mut self, pos: BlockPos) -> Option<usize>;
     fn kick(&mut self, player: PlayerId, message: &str);
     fn broadcast(&mut self, message: &str);
     fn send_message(&mut self, player: PlayerId, message: &str);
@@ -128,6 +130,20 @@ impl<'a> ShardCtx<'a> {
     /// `/setblock` does. A cell that already holds `block` is left alone, and that is true too.
     pub fn update_block(&mut self, pos: BlockPos, block: &Block) -> bool {
         self.backend.update_block(pos, block)
+    }
+
+    /// Puts `item` (`None`: nothing) into slot `slot` of the container block at `pos` (a chest,
+    /// a furnace, a hopper; a double chest's slots run on through its other half), on the screens
+    /// of those who have it open too. False for a block that holds no items, a slot it does not
+    /// have, and an item the game does not have.
+    pub fn set_container_item(&mut self, pos: BlockPos, slot: usize, item: Option<&Item>) -> bool {
+        self.backend.set_container_item(pos, slot, item)
+    }
+
+    /// How many slots the container block at `pos` has (54 for a double chest); `None` for a
+    /// block that holds no items. `&mut` because a container nobody has open is read in.
+    pub fn container_size(&mut self, pos: BlockPos) -> Option<usize> {
+        self.backend.container_size(pos)
     }
 
     /// Disconnects a player with `message` on their screen. `on_quit` follows on a later tick.
