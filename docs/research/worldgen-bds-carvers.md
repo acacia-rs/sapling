@@ -47,5 +47,9 @@ Companion to [worldgen-bds.md](worldgen-bds.md) (pipeline, RNGs, labels). They r
   over dirt/coarse dirt (14ccdb858) → the dirt becomes that block. Canyon: a per-column flag set by any grass block met
   in the ellipsoid (replaceable or not); while set, dirt/coarse dirt below each carved cell becomes grass. No sandstone.
 - Oracle (carver cells only; cells next to feature blocks, decorated afterwards, or on noise-cave floors counted apart):
-  seed 20261003 near origin 99.49% precision / 99.44% recall, far out 99.61 / 99.41, seed −4172144997902289642 99.86 /
-  99.86. Residue: liquid flow and aquifer fluid differences (wrong fluid), ore blobs over aquifer-barrier cells.
+  seed 20261003 near origin 99.53% precision / 99.44% recall, far out 99.61 / 99.41, seed −4172144997902289642 99.86 /
+  99.86; no extra cells left (all were bedrock). Residue: liquid flow and aquifer fluid differences (wrong fluid), ore
+  blobs over aquifer-barrier cells, ~50–130-cell missed pockets per region (unexplained; eroded badlands has a dome in
+  terracotta at y 94–99 no carver of ours reaches). Iceberg cut-outs and geodes in carved cells are filed as later.
+- Old growth pine taiga (biomes world, ~−5310 72 5450): the shape and carver misses sit under a structure (barrel,
+  campfire, chest, straw bed, grass path); BDS's terrain adaptation, not carvers.

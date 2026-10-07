@@ -116,6 +116,10 @@ fn judge_cell(ours: Block, bds: &BdsCell, y: i32, context: Context) -> Verdict {
     if bds.liquid.is_some() {
         return Verdict::Later("features, structures (waterlogged)");
     }
+    // Caves would have carved calcite too, so calcite in a carved cell is a geode shell placed later.
+    if context.carved && theirs == Block::Calcite {
+        return Verdict::Later("geodes over carved cells");
+    }
     if !ours.is_solid() {
         return Verdict::Error(if context.laked || context.carved { stage_of(ours, y, context) } else { Stage::Shape });
     }
