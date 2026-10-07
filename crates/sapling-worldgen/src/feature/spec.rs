@@ -116,6 +116,29 @@ pub enum Feature {
     Seagrass { count: i32, tall: f32 },
     /// The legacy land plants BDS builds in code (land.rs, flowers.rs).
     Legacy(Legacy),
+    Geode(Geode),
+}
+
+/// `minecraft:geode_feature` (geode.rs); ranges are `[min, max]` as the JSON gives them.
+#[derive(Debug)]
+pub struct Geode {
+    pub filler: Block,
+    pub inner: Block,
+    pub alternate_inner: Block,
+    pub middle: Block,
+    pub outer: Block,
+    /// Down-facing buds (`Block::faced`).
+    pub placements: &'static [Block],
+    pub wall: [i32; 2],
+    pub points: [i32; 2],
+    pub point_offset: [i32; 2],
+    pub max_radius: i32,
+    pub crack_point_offset: f32,
+    pub noise_multiplier: f32,
+    pub potential_placements_chance: f32,
+    pub alternate_chance: f32,
+    pub placements_require_alternate: bool,
+    pub invalid_blocks_threshold: i32,
 }
 
 #[derive(Debug, Clone, Copy)]

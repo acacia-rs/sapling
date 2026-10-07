@@ -83,6 +83,34 @@ blocks! {
     DeepslateEmeraldOre => "deepslate_emerald_ore" "",
     InfestedStone => "infested_stone" "",
     InfestedDeepslate => "infested_deepslate" "pillar_axis=y",
+    AmethystBlock => "amethyst_block" "",
+    BuddingAmethyst => "budding_amethyst" "",
+    SmoothBasalt => "smooth_basalt" "",
+    // Buds by face in FacingID order: down, up, north, south, west, east (`Block::faced`).
+    AmethystClusterDown => "amethyst_cluster" "minecraft:block_face=down",
+    AmethystClusterUp => "amethyst_cluster" "minecraft:block_face=up",
+    AmethystClusterNorth => "amethyst_cluster" "minecraft:block_face=north",
+    AmethystClusterSouth => "amethyst_cluster" "minecraft:block_face=south",
+    AmethystClusterWest => "amethyst_cluster" "minecraft:block_face=west",
+    AmethystClusterEast => "amethyst_cluster" "minecraft:block_face=east",
+    LargeAmethystBudDown => "large_amethyst_bud" "minecraft:block_face=down",
+    LargeAmethystBudUp => "large_amethyst_bud" "minecraft:block_face=up",
+    LargeAmethystBudNorth => "large_amethyst_bud" "minecraft:block_face=north",
+    LargeAmethystBudSouth => "large_amethyst_bud" "minecraft:block_face=south",
+    LargeAmethystBudWest => "large_amethyst_bud" "minecraft:block_face=west",
+    LargeAmethystBudEast => "large_amethyst_bud" "minecraft:block_face=east",
+    MediumAmethystBudDown => "medium_amethyst_bud" "minecraft:block_face=down",
+    MediumAmethystBudUp => "medium_amethyst_bud" "minecraft:block_face=up",
+    MediumAmethystBudNorth => "medium_amethyst_bud" "minecraft:block_face=north",
+    MediumAmethystBudSouth => "medium_amethyst_bud" "minecraft:block_face=south",
+    MediumAmethystBudWest => "medium_amethyst_bud" "minecraft:block_face=west",
+    MediumAmethystBudEast => "medium_amethyst_bud" "minecraft:block_face=east",
+    SmallAmethystBudDown => "small_amethyst_bud" "minecraft:block_face=down",
+    SmallAmethystBudUp => "small_amethyst_bud" "minecraft:block_face=up",
+    SmallAmethystBudNorth => "small_amethyst_bud" "minecraft:block_face=north",
+    SmallAmethystBudSouth => "small_amethyst_bud" "minecraft:block_face=south",
+    SmallAmethystBudWest => "small_amethyst_bud" "minecraft:block_face=west",
+    SmallAmethystBudEast => "small_amethyst_bud" "minecraft:block_face=east",
     // Plants from here on, waterlogged ones from Seagrass on (`is_plant`, `is_waterlogged`).
     ShortGrass => "short_grass" "",
     Fern => "fern" "",
@@ -217,6 +245,12 @@ impl Block {
     /// The feature blocks that are full blocks: they block motion and light.
     pub fn is_crop_block(self) -> bool {
         matches!(self, Block::Cactus | Block::MelonBlock | Block::PumpkinSouth | Block::PumpkinWest | Block::PumpkinNorth | Block::PumpkinEast)
+    }
+
+    /// A down-facing bud turned to `face` (FacingID 0..6).
+    pub fn faced(self, face: usize) -> Block {
+        let index = Block::ALL.iter().position(|&block| block == self).expect("in ALL");
+        Block::ALL[index + face]
     }
 
     /// The block for a `minecraft:` name, without states.

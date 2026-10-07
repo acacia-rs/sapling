@@ -6,7 +6,7 @@ import re
 
 ORDERS = {'xyz', 'xzy', 'yxz', 'yzx', 'zxy', 'zyx'}
 PORTED = {'minecraft:ore_feature', 'minecraft:scatter_feature', 'minecraft:aggregate_feature', 'minecraft:sequence_feature',
-          'minecraft:weighted_random_feature', 'minecraft:single_block_feature'}
+          'minecraft:weighted_random_feature', 'minecraft:single_block_feature', 'minecraft:geode_feature'}
 # Features BDS builds in code (registered in 1482f4580), with the parameters it passes them.
 _SOIL = 'needs: &[Block::Water], replaces: &[Block::Dirt, Block::CoarseDirt, Block::GrassBlock]'
 # 1482f4580 sizes these from a flag (kelp/seagrass 1 or 10 tries, flowers/mushrooms/berries 64 or 1)
@@ -185,7 +185,24 @@ class Features:
             return f'Feature::WeightedRandom(&[{children}])'
         if kind == 'minecraft:single_block_feature':
             return self.single_block(body)
+        if kind == 'minecraft:geode_feature':
+            return self.geode(body)
         raise NotPorted(kind)
+
+    def geode(self, body):
+        layers = ', '.join(f'{field}: {block(body[key])}' for field, key in (
+            ('filler', 'filler'), ('inner', 'inner_layer'), ('alternate_inner', 'alternate_inner_layer'),
+            ('middle', 'middle_layer'), ('outer', 'outer_layer')))
+        span = lambda key: f'[{int(body["min_" + key])}, {int(body["max_" + key])}]'  # noqa: E731
+        num = lambda key: repr(float(body[key]))  # noqa: E731
+        return (f'Feature::Geode(Geode {{ {layers}, placements: {blocks(body.get("inner_placements", []))}, '
+                f'wall: {span("outer_wall_distance")}, points: {span("distribution_points")}, '
+                f'point_offset: {span("point_offset")}, max_radius: {int(body["max_radius"])}, '
+                f'crack_point_offset: {num("crack_point_offset")}, noise_multiplier: {num("noise_multiplier")}, '
+                f'potential_placements_chance: {num("use_potential_placements_chance")}, '
+                f'alternate_chance: {num("use_alternate_layer0_chance")}, '
+                f'placements_require_alternate: {str(body["placements_require_layer0_alternate"]).lower()}, '
+                f'invalid_blocks_threshold: {int(body["invalid_blocks_threshold"])} }})')
 
     def single_block(self, body):
         if body.get('may_attach_to') or body.get('randomize_rotation'):

@@ -1,7 +1,7 @@
 //! Java `NormalNoise` as BDS computes it (`NormalNoise::getValue` 145e26660).
 
 use super::PerlinNoise;
-use crate::random::PositionalFactory;
+use crate::random::{Mt19937, PositionalFactory};
 
 const INPUT_FACTOR: f32 = 1.018_126_8;
 
@@ -20,6 +20,13 @@ impl NormalNoise {
         let first = PerlinNoise::new(&positional, first_octave, amplitudes);
         let positional = random.fork_positional();
         let second = PerlinNoise::new(&positional, first_octave, amplitudes);
+        Self { first, second, value_factor: value_factor(amplitudes) }
+    }
+
+    /// Both halves in legacy mode from one MT, first then second.
+    pub fn from_mt(random: &mut Mt19937, first_octave: i32, amplitudes: &[f32]) -> Self {
+        let first = PerlinNoise::from_mt(random, first_octave, amplitudes);
+        let second = PerlinNoise::from_mt(random, first_octave, amplitudes);
         Self { first, second, value_factor: value_factor(amplitudes) }
     }
 

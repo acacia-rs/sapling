@@ -8,6 +8,7 @@ mod decorate;
 mod disk;
 mod flowers;
 mod freeze;
+mod geode;
 mod land;
 mod molang;
 mod ore;
