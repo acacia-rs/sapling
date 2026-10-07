@@ -3,6 +3,7 @@
 //! structure sets.
 
 mod area;
+mod bury;
 mod canvas;
 mod kind;
 mod locate;
@@ -25,6 +26,7 @@ use std::sync::{Arc, Mutex, OnceLock};
 
 use crate::density::Density;
 pub use area::BoundingBox;
+pub use bury::bury;
 pub use kind::StructureKind;
 use kind::*;
 use probe::Probe;
@@ -42,6 +44,7 @@ pub struct Structures {
     strongholds: OnceLock<Vec<(i32, i32)>>,
     mineshafts: Mutex<HashMap<(i32, i32), Arc<mineshaft::Mineshaft>>>,
     monuments: Mutex<HashMap<(i32, i32), Arc<monument::Monument>>>,
+    stronghold_pieces: Mutex<HashMap<(i32, i32), Arc<stronghold::Stronghold>>>,
 }
 
 impl Structures {
@@ -56,6 +59,7 @@ impl Structures {
             strongholds: OnceLock::new(),
             mineshafts: Mutex::new(HashMap::new()),
             monuments: Mutex::new(HashMap::new()),
+            stronghold_pieces: Mutex::new(HashMap::new()),
         }
     }
 

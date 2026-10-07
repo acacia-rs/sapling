@@ -120,4 +120,12 @@ impl MineshaftSeed {
         let roll = random.next_int(80);
         (chance < 0.004 && roll < x.unsigned_abs().max(z.unsigned_abs()) as i32, random)
     }
+
+    /// `createBlueprints`' generator for a chunk (141ef9dc0: `a*x + b*z ^ levelSeed`, unlike the
+    /// mineshaft's own xor), one draw skipped; `createStructureStart` draws from it.
+    pub fn blueprint(&self, (x, z): (i32, i32)) -> Mt19937 {
+        let mut random = Mt19937::new((self.b.wrapping_mul(z).wrapping_add(self.a.wrapping_mul(x))) as u32 ^ self.level_seed);
+        random.next_int_unbounded();
+        random
+    }
 }

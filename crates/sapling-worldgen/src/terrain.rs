@@ -91,6 +91,12 @@ impl Corners {
 
 impl Density {
     pub fn chunk_shape(&self, chunk_x: i32, chunk_z: i32) -> ChunkShape {
+        self.adjusted_chunk_shape(chunk_x, chunk_z, None)
+    }
+
+    /// `chunk_shape` with structure terrain adjustments (`crate::structure::bury`) added to each
+    /// block's density before the aquifer.
+    pub fn adjusted_chunk_shape(&self, chunk_x: i32, chunk_z: i32, adjust: Option<&dyn Fn([i32; 3]) -> f64>) -> ChunkShape {
         let climate = |qx: i32, qz: i32| -> QuartClimate { self.climate.sample(qx, qz) };
         let cells = self.cells(chunk_x, chunk_z, &climate);
         let mut aquifer = AquiferCache::default();
@@ -108,7 +114,10 @@ impl Density {
                                 let (x, z) = (cx * 4 + dx as usize, cz * 4 + dz as usize);
                                 let y = (MIN_CELL_Y + cy as i32) * 8 + dy as i32;
                                 let position = [chunk_x * 16 + x as i32, y, chunk_z * 16 + z as i32];
-                                let value = block_density(density.at(dx, dy, dz), &noodle, [dx, dy, dz], y);
+                                let mut value = block_density(density.at(dx, dy, dz), &noodle, [dx, dy, dz], y);
+                                if let Some(adjust) = adjust {
+                                    value = (adjust(position) + value as f64) as f32;
+                                }
                                 let block = match self.block_kind(&mut aquifer, position, value) {
                                     CellKind::Air => Block::Air,
                                     CellKind::Water => Block::Water,

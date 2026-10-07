@@ -9,6 +9,7 @@ use super::mineshaft::{self, MESA_BIOMES, Materials, Mineshaft};
 use super::monument::{self, Monument};
 use super::probe::Probe;
 use super::scattered::Scattered;
+use super::stronghold::{self, Stronghold};
 use super::{BoundingBox, StructureKind, Structures, stairs, treasure};
 use crate::biome::ChunkBiomes;
 use crate::block::Block;
@@ -18,6 +19,8 @@ use crate::terrain::ChunkShape;
 
 /// Pieces stay within 80 blocks of the start's room plus a corridor, about 7 chunks.
 const MINESHAFT_REACH: i32 = 7;
+/// Stronghold doors stay within 112 blocks of the start; pieces and the portal room fallback reach further.
+const STRONGHOLD_REACH: i32 = 9;
 /// A desert pyramid reaches one chunk past its start in x and z.
 const TEMPLE_REACH: i32 = 1;
 /// A monument's building spans its start chunk and two chunks either way.
@@ -35,6 +38,12 @@ impl Structures {
         biomes: &ChunkBiomes,
     ) -> Option<(i32, i32)> {
         let column = BoundingBox::chunk(chunk.0, chunk.1);
+        let strongholds: Vec<Arc<Stronghold>> = self
+            .starts_near(density, StructureKind::Stronghold, chunk, STRONGHOLD_REACH)
+            .into_iter()
+            .map(|start| self.stronghold(start))
+            .filter(|s| s.bb.intersects(&column))
+            .collect();
         let temples: Vec<Scattered> = self
             .starts_near(density, StructureKind::Temple, chunk, TEMPLE_REACH)
             .into_iter()
@@ -54,13 +63,17 @@ impl Structures {
             .map(|start| self.monument(start))
             .filter(|m| m.building.bb.intersects(&column))
             .collect();
-        if temples.is_empty() && mineshafts.is_empty() && !treasure && monuments.is_empty() {
+        if strongholds.is_empty() && temples.is_empty() && mineshafts.is_empty() && !treasure && monuments.is_empty() {
             return None;
         }
         let mut canvas = Canvas::new(shape, chunk, neighbour);
         let seeds = LargeFeatureSeed::new(self.level_seed);
         let chunk_random = |(x, z): (i32, i32)| Mt19937::new(seeds.chunk(x, z));
-        let mut placed: Vec<BoundingBox> = mineshafts.iter().map(|m| m.bb).collect();
+        let mut placed: Vec<BoundingBox> = mineshafts.iter().map(|m| m.bb).chain(strongholds.iter().map(|s| s.bb)).collect();
+        let mut random = chunk_random(chunk);
+        for stronghold in &strongholds {
+            stronghold.post_process(&mut canvas, &mut random);
+        }
         let mut random = chunk_random(chunk);
         for temple in &temples {
             placed.extend(temple.post_process(&mut canvas, &mut random, &chunk_random));
@@ -96,6 +109,11 @@ impl Structures {
         built
     }
 
+    pub(super) fn stronghold(&self, start: (i32, i32)) -> Arc<Stronghold> {
+        let build = || Arc::new(stronghold::generate(&mut self.mineshaft_seed.blueprint(start), start));
+        self.stronghold_pieces.lock().unwrap().entry(start).or_insert_with(build).clone()
+    }
+
     fn monument(&self, start: (i32, i32)) -> Arc<Monument> {
         self.monuments.lock().unwrap().entry(start).or_insert_with(|| Arc::new(monument::generate(self.level_seed, start))).clone()
     }
@@ -114,6 +132,8 @@ pub fn rejoin_connections(shape: &mut ChunkShape, chunk: (i32, i32), (low, high)
                 let block = canvas.get(x, y, z);
                 if let Some(materials) = woods.iter().find(|m| m.is_fence(block)) {
                     rejoined.push(((x, y, z), mineshaft::fence_at(*materials, &canvas, (x, y, z))));
+                } else if stronghold::is_bars(block) {
+                    rejoined.push(((x, y, z), stronghold::bars_at(&canvas, (x, y, z))));
                 } else if stairs::is_stairs(block) {
                     rejoined.push(((x, y, z), stairs::rejoin(&canvas, (x, y, z), block)));
                 }

@@ -10,9 +10,10 @@ mod jungle;
 
 use super::BoundingBox;
 use super::canvas::Canvas;
-use super::piece::{Frame, SOUTH};
+use super::piece::{EAST, Frame, SOUTH, WEST};
 use crate::block::Block;
 use crate::random::Mt19937;
+pub use desert::create_chest;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Temple {
@@ -31,15 +32,16 @@ pub struct Scattered {
 /// Legacy facing data for east, west, south and north, as BDS passes it to `getOrientationData`.
 pub const STAIRS_DATA: [u8; 4] = [0, 1, 2, 3];
 
-/// The stairs of `family` (by weirdo_direction) for facing `data` in the piece's orientation.
+/// The stairs of `family` (by weirdo_direction) for facing `data` in the piece's orientation, by
+/// `getOrientationData`'s table (141f4a1d0).
 pub fn stairs(f: &Frame, family: [Block; 4], data: u8) -> Block {
-    // getOrientationData (141f4a1d0) swaps south and north for pieces facing south.
-    let weirdo = match (f.orientation, data) {
-        (Some(SOUTH), 2) => 3,
-        (Some(SOUTH), 3) => 2,
-        _ => data,
+    let table: [u8; 4] = match f.orientation {
+        Some(SOUTH) => [0, 1, 3, 2],
+        Some(WEST) => [2, 3, 0, 1],
+        Some(EAST) => [2, 3, 1, 0],
+        _ => [0, 1, 2, 3],
     };
-    family[weirdo as usize]
+    family[table[data as usize] as usize]
 }
 
 impl Scattered {

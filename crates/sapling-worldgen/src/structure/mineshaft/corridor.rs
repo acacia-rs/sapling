@@ -137,6 +137,7 @@ pub fn full_solid(block: Block) -> bool {
     block.is_solid()
         && !matches!(block, Block::SnowLayer | Block::Web | Block::MobSpawner | Block::IronChain)
         && !(Block::RailNorthSouth..=Block::DarkOakFence15).contains(&block)
+        && !(Block::StoneBrickSlab..=Block::EndPortal).contains(&block)
 }
 
 /// Air, liquids and the thin plants structures may overwrite (141f5b7e0).

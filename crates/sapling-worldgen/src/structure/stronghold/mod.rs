@@ -1,8 +1,76 @@
-//! Stronghold starts (`StrongholdFeature::isFeatureChunk` 148373d00): three at village starts
+//! Strongholds. Starts (`StrongholdFeature::isFeatureChunk` 148373d00): three at village starts
 //! found on a spiral around the origin (1483740e0), plus at most one per 200x200-chunk cell.
+//! Pieces (`createStructureStart` 148375450): BDS's port of Java's legacy stronghold, see layout.rs.
 
+mod common;
+mod corridors;
+mod layout;
+mod portal;
+mod rooms;
+
+use super::BoundingBox;
+use super::canvas::Canvas;
+use super::piece::Frame;
 use crate::mth;
 use crate::random::Mt19937;
+pub use common::{bars_at, is_bars};
+pub use layout::generate;
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Door {
+    Opening,
+    Wood,
+    Grates,
+    Iron,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Kind {
+    Straight,
+    PrisonHall,
+    LeftTurn,
+    RightTurn,
+    RoomCrossing,
+    StraightStairsDown,
+    StairsDown,
+    FiveCrossing,
+    ChestCorridor,
+    Library,
+    PortalRoom,
+    Filler,
+}
+
+#[derive(Debug, Clone)]
+pub struct Piece {
+    pub kind: Kind,
+    pub frame: Frame,
+    pub door: Door,
+    /// Straight: left, right; FiveCrossing: left low, left high, right low, right high; Library:
+    /// tall; StairsDown: the start.
+    pub flags: [bool; 4],
+    /// RoomCrossing's room type, Filler's length.
+    pub value: i32,
+}
+
+#[derive(Debug, Clone)]
+pub struct Stronghold {
+    pub pieces: Vec<Piece>,
+    pub bb: BoundingBox,
+}
+
+impl Stronghold {
+    /// The pieces reaching the chunk, in start order, on the chunk's structure generator.
+    pub fn post_process(&self, canvas: &mut Canvas, random: &mut Mt19937) {
+        let column = canvas.bb;
+        for p in self.pieces.iter().filter(|p| p.frame.bb.intersects(&column)) {
+            match p.kind {
+                Kind::PortalRoom => portal::portal_room(&p.frame, canvas, random),
+                Kind::RoomCrossing | Kind::FiveCrossing | Kind::Library => rooms::post_process(p, canvas, random),
+                _ => corridors::post_process(p, canvas, random),
+            }
+        }
+    }
+}
 
 /// The first three village starts met on BDS's spiral: from a random angle and a radius of
 /// 40-55 chunks, each step scans 16x16 chunks around the point; a hit turns 0.6 pi and moves 8

@@ -104,7 +104,9 @@ impl OverworldGenerator {
 
     /// The terrain stages in BDS's `loadChunk` order, up to (not including) carvers.
     pub fn surfaced_blocks(&self, chunk_x: i32, chunk_z: i32) -> ChunkShape {
-        let mut shape = self.density.chunk_shape(chunk_x, chunk_z);
+        let buried = self.structures.bury_boxes(&self.density, (chunk_x, chunk_z));
+        let adjust = |position: [i32; 3]| structure::bury(&buried, position);
+        let mut shape = self.density.adjusted_chunk_shape(chunk_x, chunk_z, (!buried.is_empty()).then_some(&adjust as &dyn Fn([i32; 3]) -> f64));
         let mut random = floor::chunk_random(chunk_x, chunk_z);
         floor::place_bedrock_floor(&mut shape, &mut random);
         let biomes = self.chunk_biomes(chunk_x, chunk_z);
