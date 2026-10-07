@@ -60,6 +60,7 @@ impl LegacyTree {
                     rock(ctx.view, ctx.random, [x, ctx.view.heightmap(x, z), z]);
                 }
             }
+            LegacyTree::HugeMushroom => return super::huge_mushroom::place(ctx.view, ctx.random, at).then_some(at),
             LegacyTree::FlowerBed { petals } => {
                 let growth = ctx.random.next_int(4) as usize;
                 let facing = ctx.random.next_int(4) as usize;

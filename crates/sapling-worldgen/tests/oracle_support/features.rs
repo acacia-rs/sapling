@@ -53,6 +53,7 @@ fn family(name: &str) -> Option<&'static str> {
         "bee_nest" => "bee nests",
         "podzol" => "podzol",
         "mossy_cobblestone" => "forest rocks",
+        "brown_mushroom_block" | "red_mushroom_block" | "mushroom_stem" => "huge mushrooms",
         "mangrove_roots" | "muddy_mangrove_roots" => "mangrove roots",
         "moss_carpet" => "moss carpets",
         "mangrove_propagule" => "propagules",

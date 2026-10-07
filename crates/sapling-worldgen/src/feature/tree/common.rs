@@ -51,7 +51,10 @@ pub fn is_replaceable_plant(block: Block) -> bool {
             | Block::Vine2
             | Block::Vine4
             | Block::Vine8
-    )
+            | Block::ShortDryGrass
+            | Block::TallDryGrass
+            | Block::Bush
+    ) || (Block::LeafLitter0South..=Block::LeafLitter3East).contains(&block)
 }
 
 /// The canopies' leaf gate: air, leaves or a replaceable plant (`may_replace` is not asked).

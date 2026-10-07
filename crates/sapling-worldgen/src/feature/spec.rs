@@ -150,6 +150,8 @@ pub enum LegacyTree {
     ForestRock,
     /// `LeafLitterFeature` (also pink petals): one flower bed of a random size and facing.
     FlowerBed { petals: bool },
+    /// `HugeMushroomFeature` of a random type (huge_mushroom.rs).
+    HugeMushroom,
 }
 
 /// The per-type tree pickers of `LegacyTreeFeature` (its constructor's lambdas), each drawing
