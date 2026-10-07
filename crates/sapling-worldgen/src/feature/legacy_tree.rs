@@ -197,9 +197,10 @@ fn forest_foliage(view: &mut View, random: &mut Mt19937, at: [i32; 3], flower_fo
             let dx = random.next_int(16);
             let dz = random.next_int(16);
             let (x, z) = (at[0] + dx, at[2] + dz);
-            let height = view.heightmap(x, z) - MIN_Y;
+            // The bound is the absolute heightmap y plus 32, so heights run from 0, not the world bottom.
+            let height = view.heightmap(x, z);
             if height + 32 > 0 {
-                let y = random.next_int(height + 32) + MIN_Y;
+                let y = random.next_int(height + 32);
                 double_plant(view, random, [x, y, z], plant);
             }
         }
