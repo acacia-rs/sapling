@@ -72,6 +72,12 @@ impl<'a> Args<'a> {
         Ok(word)
     }
 
+    /// The next word without taking it.
+    pub fn peek(&self) -> Option<&'a str> {
+        let rest = &self.line[self.pos..];
+        rest.split_whitespace().next()
+    }
+
     /// Everything left, as typed.
     pub fn rest(&mut self) -> Result<&'a str, ParseError> {
         let start = self.pos;

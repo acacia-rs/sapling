@@ -126,6 +126,15 @@ fn use_block(world: &mut World, player: Entity, layer: Entity, pos: BlockPos, na
     uses.iter().any(|used| used(world, player, layer, pos, name))
 }
 
+/// Sets a block for a handler, and settles what is around it as after a player's place.
+pub(crate) fn update_block(world: &mut World, layer: Entity, pos: BlockPos, block: &Block) -> bool {
+    let put = put_block(world, layer, pos, block);
+    if put {
+        updates::settle(world, layer, pos);
+    }
+    put
+}
+
 /// Moves falling blocks and starts the falls that are due, then settles what they changed.
 pub(crate) fn fall_blocks(world: &mut World) {
     for (layer, pos) in falling::tick(world) {

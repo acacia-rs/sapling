@@ -11,6 +11,7 @@
 
 mod layout;
 mod server;
+pub mod vanilla;
 
 pub use sapling_api::{
     Block, BlockPos, BossBar, BossBarColour, BreakEvent, ChatEvent, Command, CommandEnum, CommandEvent, Custom, Difficulty, DropEvent, EntityId, EntityInfo, Face, Form, FormResponse, GameMode,

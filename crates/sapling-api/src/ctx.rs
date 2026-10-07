@@ -22,6 +22,7 @@ pub trait Backend: WorldBackend + EntityBackend {
     fn set_difficulty(&mut self, difficulty: Difficulty);
     fn block(&self, pos: BlockPos) -> Option<Block>;
     fn set_block(&mut self, pos: BlockPos, block: &Block) -> bool;
+    fn update_block(&mut self, pos: BlockPos, block: &Block) -> bool;
     fn kick(&mut self, player: PlayerId, message: &str);
     fn broadcast(&mut self, message: &str);
     fn send_message(&mut self, player: PlayerId, message: &str);
@@ -119,6 +120,13 @@ impl<'a> ShardCtx<'a> {
     /// is `None`. Raises no event.
     pub fn set_block(&mut self, pos: BlockPos, block: &Block) -> bool {
         self.backend.set_block(pos, block)
+    }
+
+    /// [`ShardCtx::set_block`], and then what is around the block reacts as to a player's place:
+    /// liquids move, sand over a gap falls, a torch that lost its block breaks. What vanilla's
+    /// `/setblock` does.
+    pub fn update_block(&mut self, pos: BlockPos, block: &Block) -> bool {
+        self.backend.update_block(pos, block)
     }
 
     /// Disconnects a player with `message` on their screen. `on_quit` follows on a later tick.

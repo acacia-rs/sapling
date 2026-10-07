@@ -94,6 +94,11 @@ impl Backend for Ctx<'_> {
         blocks::put_block(self.world, layer, pos, block)
     }
 
+    fn update_block(&mut self, pos: BlockPos, block: &Block) -> bool {
+        let layer = worlds::current(self.world);
+        blocks::update_block(self.world, layer, pos, block)
+    }
+
     fn kick(&mut self, player: PlayerId, message: &str) {
         self.world.resource::<Net>().0.kick(ConnId::new(player.0), message);
     }

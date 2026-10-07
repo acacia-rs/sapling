@@ -22,8 +22,11 @@ const INT: u16 = 1;
 const FLOAT: u16 = 3;
 const TARGET: u16 = 8;
 const STRING: u16 = 56;
+const BLOCK_POSITION: u16 = 64;
+const POSITION: u16 = 65;
 /// The rest of the line.
 const MESSAGE: u16 = 68;
+const BLOCK_STATES: u16 = 84;
 /// Every command is sent at this level: the list is filtered per player on the server instead.
 const ANYONE: &str = "any";
 /// The chat box takes 512 characters.
@@ -83,6 +86,9 @@ impl Tables {
             ParamKind::String => (STRING, EnumType::Valid),
             ParamKind::Text => (MESSAGE, EnumType::Valid),
             ParamKind::Target => (TARGET, EnumType::Valid),
+            ParamKind::Position => (POSITION, EnumType::Valid),
+            ParamKind::BlockPosition => (BLOCK_POSITION, EnumType::Valid),
+            ParamKind::BlockStates => (BLOCK_STATES, EnumType::Valid),
             // An enum parameter carries its enum's index where the others carry a type.
             ParamKind::Enum { name, values } => (self.enumeration(name, values) as u16, EnumType::Enum),
         };

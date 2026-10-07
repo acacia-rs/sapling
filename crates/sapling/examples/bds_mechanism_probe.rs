@@ -38,7 +38,13 @@ impl Probe {
     /// Moves the actor onto `pos` and lets it arrive.
     async fn stand(&mut self, pos: [i32; 3]) -> Result<(), String> {
         self.setup(&[format!("tp @s {}.5 {} {}.5", pos[0], pos[1], pos[2])]).await?;
-        self.actor.wait_ticks(10).await.map_err(|e| e.to_string())?;
+        // Until the actor's client has the drill's cells: a server may still be sending them.
+        for _ in 0..50 {
+            self.actor.wait_ticks(2).await.map_err(|e| e.to_string())?;
+            if [[0, 0, 2], [14, 0, 2], [0, 0, -3]].iter().all(|cell| self.name(at(pos, *cell)) != "?") {
+                break;
+            }
+        }
         self.quiet().await;
         Ok(())
     }

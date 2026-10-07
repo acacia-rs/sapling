@@ -195,6 +195,14 @@ impl ServerBuilder {
         self
     }
 
+    /// Adds vanilla's commands for operators ([`crate::vanilla`]): `/setblock`, `/fill`, `/tp`,
+    /// `/give`, `/clear`, `/gamemode`, `/summon` and `/kill`. A command added later under the same
+    /// name replaces one of these.
+    pub fn vanilla_commands(self) -> Self {
+        use crate::vanilla::*;
+        self.command::<SetBlock>().command::<Fill>().command::<Teleport>().command::<Give>().command::<Clear>().command::<GameModeCommand>().command::<Summon>().command::<Kill>()
+    }
+
     /// Fetches the signing keys (online mode), binds the socket on the current tokio runtime and
     /// starts the game threads, one per shard.
     pub async fn start(self) -> Result<Server, StartError> {

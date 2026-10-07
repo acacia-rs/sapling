@@ -132,6 +132,11 @@ impl Backend for Fake {
     fn block(&self, pos: BlockPos) -> Option<Block> {
         (pos[1] >= 0).then(|| self.blocks.get(&pos).cloned().unwrap_or_else(Block::air))
     }
+    /// Neighbours do nothing here: the same as [`Fake::set_block`].
+    fn update_block(&mut self, pos: BlockPos, block: &Block) -> bool {
+        self.set_block(pos, block)
+    }
+
     fn set_block(&mut self, pos: BlockPos, block: &Block) -> bool {
         let known = pos[1] >= 0 && block.name.starts_with("minecraft:");
         if known {

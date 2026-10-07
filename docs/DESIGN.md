@@ -561,8 +561,22 @@ block action, and takes StopBreak and AbortBreak with a position.
   are statues), weather, BDS's stand-up search, and the spawn is never used.
 - **Ground truth for what follows**: `cargo build -p sapling --example bds_mechanism_probe`, then
   `tools/bds-drill.sh <bds dir> <port> bds_mechanism_probe <out>` runs drills (falls, plates, buckets,
-  lava, waterlogging, the odd cases too) on a BDS with a fresh world. The 2026-10-06 run and what it
-  showed against sapling: `research/captures/bds-mechanisms*.{txt,md}`.
+  lava, waterlogging, the odd cases too) on a BDS with a fresh world, and `tools/sapling-drill.sh
+  <port> bds_mechanism_probe <out>` the same on sapling's `drill_server` example (offline, flat
+  ground, everyone an operator, vanilla commands, nothing protected). The runs and what they showed:
+  `research/captures/`.
+- **Vanilla commands** (`sapling::vanilla`, opted into with `ServerBuilder::vanilla_commands`; on the
+  plugin API alone). For operators: `/setblock <pos> <block> [states]` and `/fill <from> <to>
+  <block> [states]` (32768 blocks at most) write with `ctx.update_block`, which settles neighbours
+  as a player's place does (`ctx.set_block` still settles nothing); `/tp [victim] <pos>` moves
+  players and entities; `/give <player> <item> [amount]`, `/clear [player]`, `/gamemode <mode>
+  [player]`, `/summon <kind> [pos]` (`ctx.spawn_entity`) and `/kill [target]`, which removes
+  entities and leaves players alone (no damage). Positions take `~` and `~<offset>` from the sender;
+  whole numbers are the middle of their block across, as Bedrock reads them. Targets: `@s`, `@p`,
+  `@a`, `@e` with `[type=...]`, a name. Block states come as typed, `["liquid_depth"=3]`, and a
+  block named with some of its states takes the rest from its first state. The client is told the
+  parameters as BDS types them (position 65, block position 64, block states 84). Not done:
+  `/gamerule` and the rest of vanilla's commands, `@r` and selector arguments besides `type`.
 - **Neighbours** (`blocks/updates.rs`). After a player's break or place: falling blocks around are
   queued to fall (next bullet); what stood on a block that is gone (the Java game's `canSurvive`
   blocks: plants, rails, carpets, doors, standing torches and signs, candles, floor buttons and levers)

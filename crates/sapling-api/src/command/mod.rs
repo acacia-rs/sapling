@@ -6,11 +6,13 @@
 mod args;
 mod output;
 mod params;
+mod places;
 mod registry;
 
 pub use args::{Args, ParseError};
 pub use output::{Output, OutputMessage};
 pub use params::{Parameter, Target, Text, parse_choice};
+pub use places::{Axis, BlockCoords, Coords, Selector, States};
 pub use registry::Commands;
 
 use crate::{Permission, Player, ShardCtx};
@@ -95,4 +97,10 @@ pub enum ParamKind {
     Target,
     /// One of a fixed set of words, completed by the client.
     Enum { name: String, values: Vec<String> },
+    /// Three numbers, each perhaps `~` and an offset: a point.
+    Position,
+    /// The same, naming a block.
+    BlockPosition,
+    /// A block's states in brackets.
+    BlockStates,
 }
