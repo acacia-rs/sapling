@@ -21,6 +21,7 @@ pub enum CellKind {
 }
 
 /// One chunk column: `kind(x, y, z)` with y from -64 to 319.
+#[derive(Clone)]
 pub struct ChunkShape {
     kinds: Vec<CellKind>,
 }
@@ -32,6 +33,10 @@ impl ChunkShape {
 
     pub fn kind(&self, x: usize, y: i32, z: usize) -> CellKind {
         self.kinds[Self::index(x, y, z)]
+    }
+
+    pub(crate) fn set(&mut self, x: usize, y: i32, z: usize, kind: CellKind) {
+        self.kinds[Self::index(x, y, z)] = kind;
     }
 }
 

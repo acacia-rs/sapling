@@ -1,5 +1,9 @@
 //! Reading oracle worlds and summarising where sapling and BDS disagree.
 
+mod carver;
+
+pub use carver::CarverTally;
+
 use std::collections::BTreeMap;
 use std::path::PathBuf;
 

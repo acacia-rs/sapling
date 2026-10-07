@@ -4,7 +4,7 @@
 
 mod oracle_support;
 
-use oracle_support::{BiomeTally, Region, Tally, bds_cell, open};
+use oracle_support::{BiomeTally, CarverTally, Region, Tally, bds_cell, open};
 use sapling_leveldb::ChunkKey;
 use std::collections::BTreeMap;
 
@@ -23,13 +23,16 @@ fn compare(seed: i64, world: &str, regions: &[Region]) {
     for region in regions {
         let mut tally = Tally::default();
         let mut biome_tally = BiomeTally::default();
+        let mut carver_tally = CarverTally::default();
         // Our highest non-air cell minus BDS's highest terrain cell, per column.
         let mut top_offsets: BTreeMap<i32, (u64, (i32, i32))> = BTreeMap::new();
         for (cx, cz) in region.chunks() {
             let key = ChunkKey::new(cx, cz, 0);
             let a = primary.load_column(key).unwrap().expect("chunk saved").chunk;
             let b = twin.load_column(key).unwrap().expect("twin chunk saved").chunk;
-            let ours = generator.chunk_shape(cx, cz);
+            let uncarved = generator.chunk_shape(cx, cz);
+            let mut ours = uncarved.clone();
+            generator.carve(&mut ours, cx, cz);
             let biomes = generator.chunk_biomes(cx, cz);
             let biome_top = highest_section_top(&primary, &a, cx, cz);
             for z in 0..16 {
@@ -44,6 +47,9 @@ fn compare(seed: i64, world: &str, regions: &[Region]) {
                         let stable = bds.kind == bds_cell(&twin, &b, wx, y, wz).kind;
                         let kind = ours.kind(x, y, z);
                         tally.add(kind, &bds, stable, (wx, y, wz));
+                        if stable {
+                            carver_tally.add(uncarved.kind(x, y, z), kind, &bds, (wx, y, wz));
+                        }
                         if our_top.is_none() && kind != CellKind::Air {
                             our_top = Some(y);
                         }
@@ -57,6 +63,7 @@ fn compare(seed: i64, world: &str, regions: &[Region]) {
         }
         println!("seed {seed} {}:", region.name);
         tally.print();
+        carver_tally.print();
         biome_tally.print();
         let offsets: Vec<String> = top_offsets.iter().map(|(d, (n, at))| format!("{d:+}:{n} {at:?}")).collect();
         println!("  top of terrain, ours minus BDS, columns: {}", offsets.join(" "));
