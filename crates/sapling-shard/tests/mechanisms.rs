@@ -71,6 +71,25 @@ fn sand_placed_over_a_gap_falls_two_ticks_later_as_on_bds() {
     assert_eq!(falls(h.tick_all().to(2)), 1, "falling on the second tick after");
 }
 
+#[test]
+fn sand_falling_into_water_splashes_once_as_on_bds() {
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    h.enter(2, "Steve");
+    h.remote.run(|ctx| {
+        assert!(ctx.set_block([6, 65, 0], &Block::new("water")) && ctx.set_block([6, 67, 0], &Block::new("stone")) && ctx.set_block([6, 68, 0], &Block::new("sand")));
+        ctx.set_game_mode(PlayerId(1), GameMode::Creative);
+    });
+    h.tick_all();
+    h.receive(1, &block_actions(&[(Action::PredictBreak, [6, 67, 0])]));
+    let sent: Vec<RawPacket> = (0..30).flat_map(|_| h.tick_all().to(2).to_vec()).collect();
+    let splashes: Vec<LevelSoundEvent> = all::<LevelSoundEvent>(&sent).into_iter().filter(|sound| sound.sound_id == "splash").collect();
+    assert_eq!(splashes.len(), 1, "{splashes:?}");
+    let splash = &splashes[0];
+    // Heard from the middle of its box; louder the faster it went in (docs/research/splash-sound.md).
+    assert!(splash.entity_type == "minecraft:falling_block" && splash.extra_data > 0 && (splash.position.x, splash.position.z) == (6.5, 0.5), "{splash:?}");
+}
+
 /// The layer-0 changes among `packets` at `x`, as (y, block).
 fn column_changes(packets: &[RawPacket], x: i32) -> Vec<(i32, u32)> {
     block_changes(packets).into_iter().filter(|([at_x, _, z], _)| (*at_x, *z) == (x, 0)).map(|([_, y, _], block)| (y, block)).collect()

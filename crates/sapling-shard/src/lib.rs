@@ -39,6 +39,7 @@ mod rules;
 mod shard;
 mod skin;
 mod sleep;
+mod splash;
 mod sync;
 mod ticking;
 mod view;

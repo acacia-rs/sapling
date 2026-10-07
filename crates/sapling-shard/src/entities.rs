@@ -11,7 +11,7 @@ use sapling_api::{EntityId, EntityInfo};
 use crate::body::{Body, Physics};
 use crate::components::{InLayer, Layer, NetId, Tick};
 use crate::sync::Told;
-use crate::{mobs, view};
+use crate::{mobs, splash, view};
 
 /// What an entity is, namespaced: `minecraft:pig`, `minecraft:item` and so on.
 #[derive(Component, Clone, Debug)]
@@ -103,12 +103,15 @@ pub(crate) fn listed(world: &World, layer: Entity) -> Vec<EntityInfo> {
 pub(crate) fn step(world: &mut World, entity: Entity, layer: Entity, id: u64, physics: &Physics, lift: f32) -> Option<(Body, Vec<Bytes>)> {
     let mut body = *world.get::<Body>(entity)?;
     let started_on_ground = body.on_ground;
+    let moved = [body.motion[0], body.motion[1] - physics.gravity, body.motion[2]];
     body.step(&world.get::<Layer>(layer)?.world, physics);
     *world.get_mut::<Body>(entity)? = body;
+    let kind = world.get::<Kind>(entity)?.0.clone();
+    let splash = splash::check(world, entity, layer, id, &kind, moved, &body);
     let [x, y, z] = body.at;
     let mut told = world.get_mut::<Told>(entity)?;
     let flags = told.moving(id, started_on_ground);
-    let packets: Vec<Bytes> = flags.into_iter().chain(told.update(id, [x, y + lift, z], body.motion, body.on_ground)).collect();
+    let packets: Vec<Bytes> = flags.into_iter().chain(told.update(id, [x, y + lift, z], body.motion, body.on_ground)).chain(splash).collect();
     // Not yet announced: this move follows the announcement, in the same batch, as on BDS.
     if world.get::<Born>(entity).is_some_and(|born| born.0 == world.resource::<Tick>().0) {
         after_announcing(world, layer, body.at.map(|c| c.floor() as i32), packets);
