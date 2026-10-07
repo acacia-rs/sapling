@@ -71,7 +71,7 @@ fn break_up(world: &mut World, layer: Entity, block: u32, bottom: [f32; 3]) {
     let cell = cell_of(bottom);
     send::to_viewers(world, layer, cell, &[event(LevelEventEvent::ParticleDestroy, wire(bottom), hash as i32)]);
     if !name.contains("suspicious_") {
-        loot::let_go(world, layer, bottom, &[Item::new(if name == SNOW { "minecraft:snowball" } else { name }, 1)]);
+        loot::let_go(world, layer, wire(bottom), &[Item::new(if name == SNOW { "minecraft:snowball" } else { name }, 1)]);
     }
 }
 

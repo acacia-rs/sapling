@@ -1,131 +1,93 @@
-# sapling vs BDS: mechanisms capture
+# sapling vs BDS: mechanisms capture, round 2
 
 Sources: `bds-mechanisms.txt` (ground truth) and `sapling-mechanisms.txt`, same probe
-(`crates/sapling/examples/bds_mechanism_probe.rs`), compared drill by drill. Ticks = ms / 50; watcher times are the
-reliable ones (bds-mechanisms-findings.md has the format). Sapling y = BDS y + 124. Not repeated here: the known
-items in the brief (UpdateSubchunkBlocks batching, UpdateBlockSynced, MOVING/Health metadata, plates never pressed,
-wet-stairs break logged Rejected).
+(`crates/sapling/examples/bds_mechanism_probe.rs`, radius 8, `stand()` waits for cells). `B:n` / `S:n` = line n of
+the BDS / sapling capture; ticks = watcher ms / 50. Sapling y = BDS y + 124. Known items from the brief are not
+repeated (UpdateSubchunkBlocks, UpdateBlockSynced, falling-block MOVING/Health, plates, wet-stairs Rejected, command
+Text, spawn/splash sounds, mob loot/death delay).
 
-Fixed since bds-mechanisms-findings.md, now matching BDS: falling-block spawn state (+0.46, vy -0.0392), wire offset
-0.49, motion only at |dv| > 0.2 and on landing, `ticks` 0, block at L+1 and removal ~3 ticks later, refused landing
-without on_ground packets with particles at the wire position, anvil sound at the cell corner on L, hand-placed sand
-falling in its tick, random fizz pitch, no implicit layer-1 packet, place sound from the default state, snow
-particles at the corner.
+## The round-1 fixes
 
-## Commands (setblock / fill / tp / summon / kill)
+| Fix | Now | Evidence |
+|---|---|---|
+| (1) unchanged writes not sent | agrees | No setup flood: sapling's first packet is the slab drill's punch at 13.4 s (S:8), every later drill found its cells loaded, 315 watcher UpdateBlocks in the whole run (was ~13k). The setup itself is not printed, so this is indirect. |
+| (2) /setblock liquid: neighbours only | agrees | Bucket drill: `water[liquid_depth=3]` stays depth 3 with no packets on both (B:5315-5350, S:368-377). Lava column: setblock -> first fall 30 ticks on BDS (B:6434 216568 -> B:6441 218078), 31 on sapling (S:761 199894 -> S:763 201429); was 15. |
+| (4) falls start before the tick's moves | agrees | Per-tick positions now match: support break T, AddEntity T+1, y = L+0.263 at T+2 on both (B:1127/1228/1236, S:12/17/19). Anvil: on_ground +12, block +13, RemoveEntity +16 ticks on both (B:1483-1692, S:50-87). Stack: one start per tick on both (BDS flushed two ticks in one batch at 88052-88054: entity 18 has two deltas, B:3058/3064). |
+| (5) no move packet in the spawn tick | overshoots, see D2 | BDS *does* send the spawn tick's move, after the announcement, in the same batch: falling block AddEntity + SetEntityData + `MoveEntityDelta y -56.6192` (actor and watcher 36712, B:1228-1233); item AddItemEntity + SetEntityData + delta (actor 37257, B:1273-1276). Sapling now sends none (S:17 -> first delta S:19 a tick later). |
+| (6) refused block's item where the entity was | partly | x/z now exact (-31.5, 2.5) on both. y and motion still differ, see D3. |
 
-1. **/fill and /setblock send and count cells that did not change.** `send::set` (send.rs:129-146) writes and
-   broadcasts with no "same block" check (sapling-world world.rs:232 always writes), and `updates::settle` runs per
-   cell. The probe's `fill ... air` over air (109 x 7 x 17 = 12971 cells) became ~13k UpdateBlocks: still arriving
-   at 11 s (~28 a tick, x -32..-16, sapling lines 6-1398), and the first two drills found their cells "not loaded"
-   because chunks queued behind them. BDS sends nothing for an unchanged cell. Fix: in `send::set` return false when
-   block and layer 1 are already what would be written; `vanilla/blocks.rs:60` then counts only real changes
-   (BDS: setblock of the same block is a failure, "The block couldn't be placed").
-2. **A liquid placed by /setblock schedules its own tick; on BDS only its neighbours are woken.**
-   `update_block` -> `updates::settle` (updates.rs:92) -> `liquid::disturb` includes the cell itself
-   (liquid.rs:142, `.chain([at])`). Evidence, two drills:
-   - bucket drill: `setblock water ["liquid_depth"=3]` with no source stayed depth 3 on BDS for the whole step
-     (before and after the click); on sapling it had dried to air before the click.
-   - lava column: BDS lava (placed in setup) first fell 30 ticks after the neighbour `/setblock stone`
-     (221697 -> 223202); sapling 15 ticks after (200925 -> 201674): its own tick from the setup was already running.
-   Fix: settle's disturb for the changed cell should queue only neighbours (BDS `neighborChanged`); `liquid::set`,
-   `pour` and `take` keep queueing the cell themselves.
-3. **No command feedback Text.** BDS sends the tp'd player `Text commands.tp.successVictim` and every other operator a
-   grey `§7§o[MechActor: commands.tp.success.coordinates]` (also `commands.summon.success`, `commands.kill.successful`,
-   `commands.setblock.success`; 23 Text packets). Sapling sends no Text at all; output goes only to the sender as
-   CommandOutput (commands.rs:159-170). Fix: an admin-broadcast of the output to other operators (gamerule
-   sendcommandfeedback) and the victim line in `/tp` (vanilla/players.rs:46-58). Its English output strings vs BDS's
-   translation keys were not captured (CommandOutput is not in SHOWN).
-4. **/summon:** BDS follows AddEntity with `LevelSoundEvent "spawn"` (entity_type set, near the mob's centre: chicken y+0.68, pig y+0.77, armor stand y+1.68),
-   a full-metadata SetEntityData and a flags SetEntityData; AddEntity velocity y -1e-5; the chicken and pig then
-   moved/turned. Sapling: AddEntity only, mob never moves (creatures.rs:4 TODO, no AI). Add the spawn sound in
-   `spawn_entity` (creatures.rs); the rest is the known AI gap.
-5. **/kill:** BDS drops loot at once (chicken: item 275; pig: porkchop 262 x3, both with the item SetEntityData
-   sequence) and removes the mob ~20 ticks later (death); armor stand: removed at once, no drop. Sapling removes
-   every mob at once with no loot (players.rs:143-152). Low until mobs have damage/death.
+## The two moved bucket clicks
 
-## Falling blocks
+- **Lava bucket aimed into the ground** (face Down onto dirt): refused on both, no block change, no sound, nothing
+  to the watcher. BDS resyncs 6 layer-0 cells only (target, above, below x2, target, two below; B:5746-5778) and
+  sends no InventoryContent; sapling resyncs target, below, two below in layers 0 and 1 and sends InventoryContent
+  (4 windows) (S:528-539). See D7.
+- **Creative water bucket**: works on both. Same UpdateBlock (source at +1y), `bucket.empty.water` at the player,
+  same flow cells and depths, first spread +5/+6 ticks (B:5788-5836, S:543-567). BDS sends one InventoryContent set
+  (bucket kept, id 365) before the block (actor 171404); sapling sends none in creative (buckets.rs:53). Low.
 
-6. **The whole flight is one tick behind BDS.** BDS sends AddEntity (state 1 tick in) *and* the 2-tick delta
-   (y -0.0792) in the spawn batch (52178 both); sapling sends the first delta a tick later (34422 -> 34474, 47186
-   -> 47236, 72906 -> 72955). Same delta sequence, so on_ground, the block (L+1) and removal all come one tick later
-   relative to the support break (anvil: 12 vs 13 ticks). Cause: falling.rs:101-106 moves existing entities
-   (`flight::fly`) before starting new falls, and `flight::start` (flight.rs:45-53) steps once. Fix: step a second
-   time in `start` and send that delta after the announcement (needs item 7's ordering fix first).
-7. **Entities stepped in their spawn tick send a MoveEntityDelta before their AddEntity.** Refused sand on the slab:
-   `22596 MoveEntityDelta rid 4` -> `AddItemEntity rid 4` -> second delta. `drops::fly` (handlers.rs:246,
-   drops.rs:121-136) steps and sends deltas straight to `Outgoing`, while the announcement waits for `mobs::update`
-   (shard.rs:97); `reannounce` also makes AddItemEntity carry the post-step state (vy 0.1568). BDS: AddItemEntity
-   with the spawn state (vy 0.2), then SetEntityData (full metadata) + delta + motion the next tick. Affects every
-   item spilled before `drops::fly` in a tick (block breaks, buckets, falling blocks). Fix: don't step an entity in
-   the tick it spawned, or push its announcement to current viewers at spawn.
-8. **Refused landing: item spawned at a random point of the cell, inside the slab.** `break_up` -> `loot::spill`
-   -> `drops::spill` (flight.rs:69-75, drops.rs:94-100) picks x/y/z in 0.15..0.85 of the cell; sapling's sand item
-   started at bottom ~64.19 under the slab top 64.5 and, with nothing pushing it out (body.rs:4 TODO), fell through
-   the slab to the dirt. BDS: item at the entity's exact x/z, item bottom = entity wire y
-   (AddItemEntity `(-31.5, -58.885, 2.5)` for wire -59.01), velocity (+-0.1, 0.2, +-0.1). Fix: lay the item at
-   `[x, bottom + 0.49, z]` with spill's motion.
-9. Refused landing timing: BDS ParticleDestroy on L, AddItemEntity + RemoveEntity on L+1; sapling all on L
-   (flight.rs:100-105). Low.
-10. Anvil: BDS `SoundAnvilFall` precedes the on_ground delta in the batch; sapling appends it after delta + motion
-    (flight.rs:111-117). Landing SetEntityMotion y is `-0.0` on sapling (body.rs:73, `*= bounce 0.0`), `0.0` on
-    BDS. Both cosmetic.
-11. Concrete powder: still no `splash` LevelSoundEvent (BDS on the landing tick, before the on_ground delta,
-    `extra_data 1653280`, entity_type falling_block, at the entity). Landing y, block and no hardening match.
-12. Snow, anvil, stack (one start per tick), hand-placed sand (falls in its tick): match apart from item 6.
-13. Untested on sapling: "sand onto dirt" and "gravel onto a torch" (cells not loaded, item 1).
+## Remaining and new differences, most important first
 
-## Buckets
+**D1. Sapling's first two drills never ran (setup cells air).** "sand, three cells onto dirt" and "gravel onto a
+torch" (x -36, -34, chunk x -3) report `nothing to break ... minecraft:air` (S:3-6); BDS ran both (B:3-966). The
+drill's `/setblock stone` + block at y 66/67 left air on the actor's client, while the same setup at x -32 worked.
+Cause not in the capture: `Probe::setup` swallows CommandOutput and `stand()` checks only that cells are loaded.
+Probably sapling (drill_server's world has no loader, so `World::set_block` should not refuse), possibly a send
+race on the first tp. Fix the probe first: print setup's CommandOutput errors and check the drill's cells after
+`setup` (fail the drill if they are not what was set); then rerun. These two drills are the only refused-landing
+and on-dirt checks besides the slab.
 
-14. **Item 2 again:** the "empty bucket on flowing water" drill clicked air on sapling; nothing to compare.
-15. Water players walk into: BDS sends `LevelSoundEvent "splash"` at the player (y + 0.9, extra_data ~263904) when
-    flowing water reaches it (bucket and lava drills); sapling never does. Low, client-side physics otherwise.
-16. Refusals (adventure lava bucket, lava aimed into the ground): sapling sends InventoryContent (buckets.rs:53-55
-    runs on failure too); BDS sent no inventory packets for the adventure refusal. Resync positions/layers differ as
-    already noted (buckets.rs:51 vs BDS's 6 layer-0 cells). Low.
-17. BDS delivers the bucket's block change + sound one batch after the resync/InventoryContent (26-55 ms later);
-    sapling sends block + sound first, then InventoryContent twice (each with all four windows). Equivalent.
-18. Water into grass: BDS dropped seeds (item 291), sapling none; seeds are a chance roll (buckets.rs:124-127 does
-    roll), one sample proves nothing.
-19. Sounds at the feet with -1, item swaps (363/365/366), snow particles at the corner, flow from the snow and grass
-    sources (including the infinite source between them): match.
+**D2. Spawn tick's move not sent (fix 5 went too far).** BDS: announcement with the pre-step state, then the
+tick's delta in the same batch (falling block -0.0792, item its first step). Sapling: entities.rs:83-86 drops the
+move. Fix: keep the packets and send them after the announcement in the same tick (push the announcement to the
+current viewers at spawn, or have `mobs::update` flush deltas of `Born == now` entities after announcing). BDS is right.
 
-## Lava
+**D3. Refused falling block's item: 0.49 too low and motionless.** BDS AddItemEntity `(-31.5, -58.885, 2.5)`
+= item bottom at the falling block's *wire* y (-59.01; item wire = bottom + 0.125), velocity `(-0.051, 0.2,
+-0.031)` (gravel: `(0.008, 0.2, 0.050)`), then it hops and settles on the slab (B:1273-1366). Sapling `(-31.5,
+64.625, 2.5)` = bottom at the entity's bottom 64.5, velocity 0, never moves (S:42). Fix: flight.rs:103 pass
+`wire(at)` instead of `at`; drops.rs:104-107 `let_go` gives spill's motion (`±SPILL_ACROSS, SPILL_UP`). BDS is right.
 
-20. Fizz timing: BDS sends `SoundFizz` a tick before the hardened block (214894 fizz -> 214942 cobblestone;
-    226144 -> 226198 stone; 229142 -> 229191); sapling sends block then fizz in one tick (harden.rs:45-51).
-    Probably BDS flushing block changes a tick late, not a different rule. Low.
-21. Sapling writes flowing lava into a cell and hardens it in the same tick: two UpdateBlocks for one cell
-    (207675 `(18,64,-4)` lava then cobblestone; also `(19,64,-3)`). BDS never showed that. Low (wire noise).
-22. Drop-off, 30-tick steps, lava -> cobblestone/stone, wall-break timings (+30 ticks), water 5 ticks: match.
+**D4. Waterlogged stairs leak through their full face (round-1 item 23, still open).** Water bucket on east-facing
+stairs: BDS spreads to (-2,1) and (-2,3) only (B:5377, +5 ticks), never east; sapling to (-1,64,2) east first
+(S:391, +5 ticks) and on into the pit. Fix as before: flow.rs `slope`/`spread_to` (flow.rs:67-104) skip sides whose
+face of the layer-1 holder is full; confirm in `LiquidBlock::_canSpreadTo`. BDS is right.
 
-## Waterlogging
+**D5. Lava column after the first hardening runs late (new, medium-low confidence).** Steps 1-3 match (+30, +60,
++90/93 ticks, (18,64,-3) -> stone). Step 4: BDS +120 ticks, y65 side cells (17,-3),(19,-3),(18,-4) as 2704000175
+(B:6491); sapling +131, (17,-3),(18,-4),(18,-2) as 2396626060 and only (19,-3) as 2704000175 (S:786-789). Last
+fizz/harden: BDS +149 (B:6498-6505), sapling +164 (S:801-811). Elsewhere sapling holds 30-tick lava and 5-tick water
+steps, so not tick drift. Likely the depth/tick rule for flowing lava fed from above beside a falling column
+(flow.rs `fed`, 38-55). Needs a dedicated drill with tick numbers before fixing.
 
-23. **Water leaves a waterlogged block through every side on sapling; BDS keeps it out of the stairs' full face.**
-    Water bucket on east-facing `oak_stairs` (weirdo_direction=0) beside the emptied pit 2 east: BDS spread
-    north and south only ((-2,1), (-2,3) depth 1, +6 ticks), never east, though east is the short way to the
-    drop; sapling spread east only ((-1,64,2) depth 1, +5 ticks, then down into the pit). flow.rs `slope` /
-    `spread_to` (flow.rs:61-104) check only the target cell, not the face of the waterlogged source block.
-    Fix: when the flowing cell holds its water in layer 1, skip sides whose face of that block is full (stairs
-    back, etc.); confirm the exact rule in the decompile (`LiquidBlock::_canSpreadTo` / `canContainLiquid`).
-    Medium confidence (one drill), but the E-vs-N/S split is unambiguous. Also the first neighbour: BDS +6 ticks,
-    sapling +5.
-24. Breaking a block: BDS sends ParticleDestroy before the UpdateBlock (every break in both captures); sapling the
-    other way round (blocks.rs:261-264). Cosmetic.
-25. Stairs into a source / stone into a source / stairs into flowing water: same packets and sounds (layer 0 only,
-    place sound -122484237); BDS staggers a receding stream's cells over neighbouring ticks, sapling steps all on
-    exact 5-tick boundaries. Equivalent.
+**D6. Hand-placed sand: BDS disagrees with itself.** Round 1: falls in the placement batch. This run: place +
+sound at 93642, UpdateBlockSynced + AddEntity at actor 93765/93770, ~2.5 ticks later (B:3304-3313). Sapling falls
+in the placement batch (S:276-279). Needs a third BDS sample or the decompile (`onPlace` tick delay) before changing.
 
-## Drill and bot issues (not sapling bugs)
+**D7. Refused bucket: resync and inventory.** As round-1 item 16: sapling sends InventoryContent on a refusal
+(buckets.rs:53-55 runs whatever `worked` is) and resyncs `pos, face neighbour, below it` in both layers
+(buckets.rs:51); BDS sends no inventory packets and 6 layer-0 cells. Fix: only `inventory::change` when the bucket
+was used; match BDS's cell list. Low.
 
-- Bots ask for chunk radius 2 (acacia-client client.rs:90 default; probe.rs:45 sets none) and sapling grants 2
-  (join.rs:19, 113). The watcher (just west of 0) never had chunk (1,-1) or x >= 32: it missed the whole lava column,
-  the waterlogging placements and breaks, and the bots dropped each other (RemoveEntity 1/2 at 195947) when water
-  pushed the actor to z < 0. BDS's watcher saw all of these, so BDS grants more than 2 (its ChunkRadiusUpdate was
-  not captured; worth checking whether BDS has a minimum radius sapling should copy). Fix the probe:
-  `.chunk_radius(8)` in `shared/probe.rs::connect`.
-- `stand` gives up silently after 100 ticks; make it fail so "not loaded" drills stop there.
-- The moved bucket clicks ("lava aimed into the ground", "creative water bucket") now succeed on sapling but were
-  out of reach on BDS: rerun the probe on BDS.
-- Punch-to-break takes ~7.6 s for stone on both servers: the bot's break, not the server.
-- Pressure plates, armor stand/pig stillness and the flooded lava column: as in bds-mechanisms-findings.md.
+**D8. Refused landing order and tick.** BDS: ParticleDestroy on L (B:1265), RemoveEntity then AddItemEntity on L+1
+(B:1268/1273, actor and watcher). Sapling: particle, AddItemEntity, RemoveEntity all on L (S:41-43; flight.rs:100-105).
+Low.
+
+**D9. Item entity metadata.** BDS follows AddItemEntity with a full SetEntityData (Flags + Health ...), Flags |=
+MOVING the next tick, cleared on landing (B:1274, 1277, 1315). Sapling sends none. Same family as the known
+falling-block gap. Low.
+
+**D10. Cosmetic, unchanged from round 1.** Fizz: BDS sends `SoundFizz` a tick before the hardened block (209500 ->
+209548, 221023 -> 221062, 224012 -> 224058); sapling same batch (harden.rs:56). Sapling writes a cell twice in one tick
+(lava then cobblestone, S:803-804, 809-810). Anvil: BDS `SoundAnvilFall` before the on_ground delta (B:1670-1672),
+sapling after it (flight.rs:113-119); landing motion `-0.0` vs `0.0`. Block break: BDS ParticleDestroy before the
+UpdateBlock, sapling after (blocks.rs:259-265).
+
+## Matching now
+
+Falling blocks (slab, anvil, concrete powder into water incl. -0.4527 motion and landing at -60.51/63.49, snow
+layer, stack, hand-placed flight): same deltas, ticks and blocks. Buckets: fill/empty sounds at the feet, layer-1
+stairs water, lava pit, snow layer (particle at the corner, 4-way flow), grass (no seeds on either this time),
+adventure refusal. Lava: east wall 30-tick steps, both walls, water/lava fizz cells. Waterlogging: stairs into a
+source, wet-stairs break (3 s, restored), stone into a source, stairs into flowing water (spread then recede, +5
+ticks). /summon, /kill: AddEntity/RemoveEntity as before (rest known).

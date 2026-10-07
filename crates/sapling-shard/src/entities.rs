@@ -10,8 +10,8 @@ use sapling_api::{EntityId, EntityInfo};
 
 use crate::body::{Body, Physics};
 use crate::components::{InLayer, Layer, NetId, Tick};
-use crate::mobs;
 use crate::sync::Told;
+use crate::{mobs, view};
 
 /// What an entity is, namespaced: `minecraft:pig`, `minecraft:item` and so on.
 #[derive(Component, Clone, Debug)]
@@ -39,6 +39,18 @@ pub(crate) fn keep(world: &mut World, entity: Entity, layer: Entity, unique_id: 
 /// move in that tick would reach them before the entity does.
 #[derive(Component)]
 struct Born(u64);
+
+/// Moves of entities that appeared this tick, for their viewers once they are told of them.
+#[derive(Resource, Default)]
+pub(crate) struct AfterAnnouncing(Vec<(Entity, [i32; 3], Vec<Bytes>)>);
+
+/// Sends the moves held back by [`step`]; runs after the tick's announcements (mobs.rs).
+pub(crate) fn send_held_moves(world: &mut World) {
+    let Some(held) = world.get_resource_mut::<AfterAnnouncing>().map(|mut held| std::mem::take(&mut held.0)) else { return };
+    for (layer, cell, packets) in held {
+        view::to_viewers(world, layer, cell, &packets);
+    }
+}
 
 /// Puts an entity of `kind` with `body` into the world, shown by what `announce` makes of its
 /// id; viewers start out knowing it at `wire`, where the wire puts it.
@@ -80,12 +92,13 @@ pub(crate) fn step(world: &mut World, entity: Entity, layer: Entity, id: u64, ph
     let mut body = *world.get::<Body>(entity)?;
     body.step(&world.get::<Layer>(layer)?.world, physics);
     *world.get_mut::<Body>(entity)? = body;
-    // Not yet announced: the next tick's packets carry this move.
-    if world.get::<Born>(entity).is_some_and(|born| born.0 == world.resource::<Tick>().0) {
-        return Some((body, Vec::new()));
-    }
     let [x, y, z] = body.at;
     let packets = world.get_mut::<Told>(entity)?.update(id, [x, y + lift, z], body.motion, body.on_ground);
+    // Not yet announced: this move follows the announcement, in the same batch, as on BDS.
+    if world.get::<Born>(entity).is_some_and(|born| born.0 == world.resource::<Tick>().0) {
+        world.get_resource_or_insert_with(AfterAnnouncing::default).0.push((layer, body.at.map(|c| c.floor() as i32), packets));
+        return Some((body, Vec::new()));
+    }
     Some((body, packets))
 }
 

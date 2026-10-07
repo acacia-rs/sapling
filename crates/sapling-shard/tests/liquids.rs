@@ -145,6 +145,32 @@ fn stairs_placed_into_a_source_keep_it_beside_them_and_give_it_back_when_broken(
 }
 
 #[test]
+fn water_leaves_stairs_through_their_open_faces_only() {
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    h.enter(2, "Steve");
+    // Stairs whose back is east (`weirdo_direction` 0), on the platform; a slab over a hole.
+    let (stairs, slab) = ([2, 65, 0], [-2, 64, 2]);
+    h.remote.run(move |ctx| {
+        set(ctx, [-2, 63, 2], "air");
+        assert!(ctx.set_block(stairs, &Block::new("oak_stairs").with("minecraft:corner=none,upside_down_bit=0,weirdo_direction=0")));
+        assert!(ctx.set_block(slab, &Block::new("oak_slab").with("minecraft:vertical_half=bottom")));
+        assert!(ctx.set_item(ALEX, Slot::Main(0), Some(&Item::new("minecraft:water_bucket", 1))));
+    });
+    h.tick_all();
+    h.receive(1, &click(stairs, 1, None));
+    h.tick_all();
+    h.remote.run(|ctx| assert!(ctx.set_item(ALEX, Slot::Main(0), Some(&Item::new("minecraft:water_bucket", 1)))));
+    h.tick_all();
+    h.receive(1, &click(slab, 1, None));
+    let ran = changes_over(&mut h, 2, 12);
+    let wet = |pos: [i32; 3]| ran.iter().any(|(at, block)| *at == pos && *block == liquid("minecraft:water", 1));
+    assert!(wet([1, 65, 0]) && wet([2, 65, 1]) && wet([2, 65, -1]), "out of the front and the sides: {ran:?}");
+    assert!(!ran.iter().any(|(at, _)| *at == [3, 65, 0]), "never out of the back");
+    assert!(!ran.iter().any(|(at, _)| *at == [-2, 63, 2]), "a bottom slab keeps its water over a hole");
+}
+
+#[test]
 fn water_that_reaches_a_lava_source_turns_it_to_obsidian() {
     let mut h = pool_of("lava");
     h.remote.run(|ctx| {

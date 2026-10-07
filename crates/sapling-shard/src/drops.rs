@@ -90,20 +90,26 @@ pub(crate) fn throw(world: &mut World, player: Entity, stack: ItemStack) {
     lay(world, layer, stack, at, motion, from);
 }
 
-/// Tosses `stack` out of the cell a broken block left (BDS `Spawner::spawnItem`).
-pub(crate) fn spill(world: &mut World, layer: Entity, stack: ItemStack, pos: BlockPos) {
+/// Tosses `stack` up from `centre` (the middle of its box), as BDS's `Spawner::spawnItem` does
+/// every item it makes.
+fn toss(world: &mut World, layer: Entity, stack: ItemStack, centre: [f32; 3]) {
     let mut dice = dice(world);
-    let at: [f32; 3] = std::array::from_fn(|axis| pos[axis] as f32 + SPILL_INSET + dice.fraction() * (1.0 - 2.0 * SPILL_INSET));
     let motion = [dice.fraction() * 2.0 * SPILL_ACROSS - SPILL_ACROSS, SPILL_UP, dice.fraction() * 2.0 * SPILL_ACROSS - SPILL_ACROSS];
     let from = world.resource::<Tick>().0 + SPILL_DELAY;
-    lay(world, layer, stack, [at[0], at[1] - SIZE / 2.0, at[2]], motion, from);
+    lay(world, layer, stack, [centre[0], centre[1] - SIZE / 2.0, centre[2]], motion, from);
 }
 
-/// Lets `stack` go still with the bottom of its box at `at`, as what an entity that broke up
-/// leaves where it was (BDS `FallingBlockActor::breakBlock`).
-pub(crate) fn let_go(world: &mut World, layer: Entity, stack: ItemStack, at: [f32; 3]) {
-    let from = world.resource::<Tick>().0 + SPILL_DELAY;
-    lay(world, layer, stack, at, [0.0; 3], from);
+/// Tosses `stack` out of somewhere in the cell a broken block left.
+pub(crate) fn spill(world: &mut World, layer: Entity, stack: ItemStack, pos: BlockPos) {
+    let mut dice = dice(world);
+    let centre: [f32; 3] = std::array::from_fn(|axis| pos[axis] as f32 + SPILL_INSET + dice.fraction() * (1.0 - 2.0 * SPILL_INSET));
+    toss(world, layer, stack, centre);
+}
+
+/// Tosses `stack` out of where an entity that broke up was, `centre` being the entity's position
+/// on the wire (BDS `FallingBlockActor::breakBlock`).
+pub(crate) fn let_go(world: &mut World, layer: Entity, stack: ItemStack, centre: [f32; 3]) {
+    toss(world, layer, stack, centre);
 }
 
 /// The items lying in `layer` inside the box from `min` to `max`, oldest first.

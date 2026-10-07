@@ -6,7 +6,7 @@ use sapling_data::LiquidReaction;
 
 use super::super::loot::{self, Breaker};
 use super::super::{Dice, level};
-use super::{Cell, Liquid, cell, disturb, harden, is_hot, schedule, set};
+use super::{Cell, Liquid, cell, disturb, faces, harden, is_hot, schedule, set};
 
 const FARTHEST: u8 = 7;
 const FALLING: u8 = 8;
@@ -28,15 +28,18 @@ fn is_solid(world: &World, layer: Entity, [x, y, z]: BlockPos) -> bool {
     level(world, layer).is_some_and(|level| level.in_height(y) && level.registry().get(level.block(x, y, z)).is_some_and(|state| state.is_solid()))
 }
 
-/// Whether `liquid` cannot run into the cell; lava is also kept out of a waterlogged block.
-fn stopped(world: &World, layer: Entity, pos: BlockPos, liquid: Liquid) -> bool {
-    cell(world, layer, pos).stops(liquid) || liquid == Liquid::Lava && is_solid(world, layer, pos)
+/// Whether `liquid` at `from` cannot run into the cell on `toward`: that cell keeps it out (lava
+/// a waterlogged block too), or, for water, a face between them is closed (faces.rs).
+fn stopped(world: &World, layer: Entity, from: BlockPos, toward: Face, liquid: Liquid) -> bool {
+    let to = toward.neighbour(from);
+    cell(world, layer, to).stops(liquid) || liquid == Liquid::Lava && is_solid(world, layer, to) || liquid == Liquid::Water && !faces::passes(world, layer, from, toward)
 }
 
 /// What the flowing liquid at `pos` should be, going by what is beside and above it: `None` when
-/// nothing feeds it any more.
+/// nothing feeds it any more. A neighbour feeds only through an open face of its own.
 fn fed(world: &World, layer: Entity, pos: BlockPos, liquid: Liquid, drop_off: u8) -> Option<u8> {
-    let beside: Vec<u8> = SIDES.iter().filter_map(|side| depth(world, layer, side.neighbour(pos), liquid)).collect();
+    let feeds = |side: &&Face| liquid == Liquid::Lava || faces::open(world, layer, side.neighbour(pos), faces::opposite(**side));
+    let beside: Vec<u8> = SIDES.iter().filter(feeds).filter_map(|side| depth(world, layer, side.neighbour(pos), liquid)).collect();
     let (above, below) = (depth(world, layer, Face::Up.neighbour(pos), liquid), Face::Down.neighbour(pos));
     let sources = beside.iter().filter(|depth| **depth == 0).count();
     // Two sources beside, or one beside and one above, over a floor or a source: a pool refills.
@@ -54,12 +57,13 @@ fn fed(world: &World, layer: Entity, pos: BlockPos, liquid: Liquid, drop_off: u8
 
 /// Whether `liquid` that ran into `to` could go down there.
 fn drops_at(world: &World, layer: Entity, to: BlockPos, liquid: Liquid) -> bool {
-    !stopped(world, layer, Face::Down.neighbour(to), liquid)
+    !stopped(world, layer, to, Face::Down, liquid)
 }
 
-/// Whether `liquid` can run into the cell: not through a block, and not into its own source.
-fn takes_a_stream(world: &World, layer: Entity, pos: BlockPos, liquid: Liquid) -> bool {
-    !stopped(world, layer, pos, liquid) && depth(world, layer, pos, liquid) != Some(0)
+/// Whether `liquid` at `from` can run into the cell on `toward`: not through a block or a closed
+/// face, and not into its own source.
+fn takes_a_stream(world: &World, layer: Entity, from: BlockPos, toward: Face, liquid: Liquid) -> bool {
+    !stopped(world, layer, from, toward, liquid) && depth(world, layer, toward.neighbour(from), liquid) != Some(0)
 }
 
 /// How many steps from `pos` the nearest drop is, having come `came` (an index into [`SIDES`])
@@ -68,7 +72,7 @@ fn slope(world: &World, layer: Entity, pos: BlockPos, liquid: Liquid, step: u8, 
     let mut best = NO_DROP;
     for (way, side) in SIDES.iter().enumerate().filter(|(way, _)| *way != came ^ 1) {
         let next = side.neighbour(pos);
-        if !takes_a_stream(world, layer, next, liquid) {
+        if !takes_a_stream(world, layer, pos, *side, liquid) {
             continue;
         }
         if drops_at(world, layer, next, liquid) {
@@ -84,10 +88,11 @@ fn slope(world: &World, layer: Entity, pos: BlockPos, liquid: Liquid, step: u8, 
 /// Lets `liquid` of `depth` into the cell, unless it holds the same liquid or lava, or keeps it
 /// out (BDS `_trySpreadTo`). Water leaves a Popped block's loot and takes in a Noreaction one
 /// beside itself; lava burns what it takes the place of, and boils water away.
-fn spread_to(world: &mut World, layer: Entity, pos: BlockPos, liquid: Liquid, depth: u8) {
-    if stopped(world, layer, pos, liquid) {
+fn spread_to(world: &mut World, layer: Entity, from: BlockPos, toward: Face, liquid: Liquid, depth: u8) {
+    if stopped(world, layer, from, toward, liquid) {
         return;
     }
+    let pos = toward.neighbour(from);
     match (cell(world, layer, pos), liquid) {
         (Cell::Liquid(Liquid::Lava, _), _) | (Cell::Liquid(Liquid::Water, _), Liquid::Water) | (Cell::Unknown, _) => return,
         (Cell::Liquid(..) | Cell::Block(..), Liquid::Lava) => harden::fizz(world, layer, pos),
@@ -132,7 +137,7 @@ pub(super) fn flow(world: &mut World, layer: Entity, pos: BlockPos) {
         return disturb(world, layer, pos);
     }
     let below = Face::Down.neighbour(pos);
-    if !stopped(world, layer, below, liquid) {
+    if !stopped(world, layer, pos, Face::Down, liquid) {
         match cell(world, layer, below) {
             Cell::Liquid(Liquid::Water, _) if liquid == Liquid::Lava => {
                 if harden::turn(world, layer, below, harden::STONE) {
@@ -143,7 +148,7 @@ pub(super) fn flow(world: &mut World, layer: Entity, pos: BlockPos) {
             // Flowing over a liquid goes no way but down; a source still spreads.
             Cell::Liquid(..) if depth != 0 => return,
             Cell::Liquid(..) => {}
-            _ => return spread_to(world, layer, below, liquid, falling(depth)),
+            _ => return spread_to(world, layer, pos, Face::Down, liquid, falling(depth)),
         }
     }
     let next = if depth >= FALLING { 1 } else { depth + drop_off };
@@ -154,7 +159,7 @@ pub(super) fn flow(world: &mut World, layer: Entity, pos: BlockPos) {
     let first_step = if (5..=FARTHEST).contains(&depth) { depth - 3 } else { 1 };
     let costs = [0, 1, 2, 3].map(|way| {
         let to = SIDES[way].neighbour(pos);
-        match takes_a_stream(world, layer, to, liquid) {
+        match takes_a_stream(world, layer, pos, SIDES[way], liquid) {
             false => None,
             true if drops_at(world, layer, to, liquid) => Some(0),
             true => Some(slope(world, layer, to, liquid, first_step, way)),
@@ -162,6 +167,6 @@ pub(super) fn flow(world: &mut World, layer: Entity, pos: BlockPos) {
     });
     let Some(cheapest) = costs.iter().flatten().min().copied() else { return };
     for way in (0..SIDES.len()).filter(|way| costs[*way] == Some(cheapest)) {
-        spread_to(world, layer, SIDES[way].neighbour(pos), liquid, next);
+        spread_to(world, layer, pos, SIDES[way], liquid, next);
     }
 }

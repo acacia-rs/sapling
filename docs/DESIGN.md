@@ -610,7 +610,11 @@ block action, and takes StopBreak and AbortBreak with a position.
   stops at a block whose BDS liquid reaction is Blocking, replaces Popped (with its loot) and Broken
   ones, and takes Noreaction ones in beside them (layer 1); lava stops at blocks with collision and
   burns the rest with a hiss. The water a waterlogged block keeps in layer 1 is the cell's water to
-  every rule. Lava touching water through its sides or top hardens (obsidian from a source, cobblestone
+  every rule. Water passes between two cells only through two open faces (`liquid/faces.rs`, BDS
+  `liquidCanFlowIntoFromDirection`, `docs/research/liquid-faces.md`): a stair closes its back and
+  its floor (its top when upside down) and a side where an inner corner fills it, a slab its floor
+  or its top, sculk sensors and heavy cores their floor, a shelf its back; every other block is
+  open all round. Lava ignores faces. Lava touching water through its sides or top hardens (obsidian from a source, cobblestone
   otherwise, basalt by blue ice over soul soil); lava falling onto water makes stone; each hisses
   (LevelEvent 1004 at the centre, pitch 2.6 ± 0.8 x 1000). Neither overwrites lava or its own kind.
   Not done: lava setting fire, BDS's per-block `isLavaBlocking` (collision stands in).

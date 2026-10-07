@@ -6,6 +6,7 @@ use std::time::{Duration, Instant};
 
 use acacia_bot::client::{Client, PacketFilter};
 use acacia_bot::interact::Face;
+use acacia_bot::proto::{Packet, packets};
 use acacia_bot::{Bot, BotConfig, BotEvent};
 use acacia_world::BlockAccess;
 
@@ -78,13 +79,22 @@ impl Probe {
         }
     }
 
-    /// Runs commands as setup: each is given a moment, and nothing they cause is printed.
+    /// Runs commands as setup: each is given a moment, and nothing they cause is printed but a
+    /// command that failed.
     pub async fn setup(&mut self, lines: &[String]) -> Result<(), String> {
         for line in lines {
             self.actor.client().command(line);
             self.actor.wait_ticks(4).await.map_err(|e| e.to_string())?;
         }
         self.actor.wait_ticks(10).await.map_err(|e| e.to_string())?;
+        while let Ok(Some(event)) = tokio::time::timeout(Duration::from_millis(5), self.actor.next()).await {
+            let BotEvent::Packet(packet) = event else { continue };
+            let failed = packet.decode::<packets::CommandOutput>().ok().filter(|answer| packet.id == packets::CommandOutput::ID && answer.success_count == 0);
+            if let Some(answer) = failed {
+                let said: Vec<String> = answer.output.iter().map(|line| format!("{} {:?}", line.message_id, line.parameters)).collect();
+                println!("## setup failed ({}): {}", lines.join(" | ").chars().take(200).collect::<String>(), said.join("; "));
+            }
+        }
         self.quiet().await;
         Ok(())
     }

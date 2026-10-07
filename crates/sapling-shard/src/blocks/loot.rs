@@ -189,10 +189,10 @@ pub(super) fn spill(world: &mut World, layer: Entity, pos: BlockPos, items: &[It
     }
 }
 
-/// Lets `items` go still with their bottom at `at`.
-pub(super) fn let_go(world: &mut World, layer: Entity, at: [f32; 3], items: &[Item]) {
+/// Tosses `items` out of `centre`, where an entity that broke up was.
+pub(super) fn let_go(world: &mut World, layer: Entity, centre: [f32; 3], items: &[Item]) {
     for stack in stacks(world, layer, items) {
-        drops::let_go(world, layer, stack, at);
+        drops::let_go(world, layer, stack, centre);
     }
 }
 

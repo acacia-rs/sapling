@@ -9,8 +9,7 @@ use bytes::Bytes;
 use sapling_api::{Block, BlockPos, Face};
 use sapling_world::{BlockEntity, BlockRegistry, ChunkPos};
 
-use crate::components::{InLayer, Layer, Outgoing, Stage};
-use crate::view::View;
+use crate::components::{InLayer, Layer, Outgoing};
 
 /// BDS sets these two on every UpdateBlock it sends.
 const FLAGS: UpdateBlockFlags = UpdateBlockFlags(UpdateBlockFlags::NEIGHBORS.0 | UpdateBlockFlags::NETWORK.0);
@@ -101,16 +100,7 @@ pub(crate) fn noise(name: &str, position: Vec3f, extra_data: i32) -> Bytes {
     })
 }
 
-/// Hands `packets` to every player of `layer` whose view covers the column of `pos`, joined or
-/// still loading: a client that was sent the column must hear what happens in it.
-pub(crate) fn to_viewers(world: &mut World, layer: Entity, pos: BlockPos, packets: &[Bytes]) {
-    let mut players = world.query::<(&InLayer, &Stage, &View, &mut Outgoing)>();
-    for (in_layer, stage, view, mut out) in players.iter_mut(world) {
-        if in_layer.0 == layer && *stage >= Stage::Chunks && view.covers(column(pos)) {
-            out.0.extend_from_slice(packets);
-        }
-    }
-}
+pub(crate) use crate::view::to_viewers;
 
 /// Makes `entity` what the block at `pos` holds and shows it to those who see the block.
 pub(crate) fn keep_entity(world: &mut World, layer: Entity, pos: BlockPos, entity: &Value) {

@@ -6,6 +6,7 @@
 // TODO: lava sets nothing on fire; which blocks lava burns is "has no collision", where BDS asks
 // each block; `ctx.set_block` starts nothing.
 
+mod faces;
 mod flow;
 mod harden;
 
