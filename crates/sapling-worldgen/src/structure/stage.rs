@@ -36,7 +36,8 @@ impl Structures {
             .collect();
         let treasure = self.is_start(density, StructureKind::BuriedTreasure, chunk);
         let igloos = self.igloos_near(density, chunk);
-        if mineshafts.is_empty() && !treasure && igloos.is_empty() {
+        let ruins = self.ocean_ruins_near(density, chunk);
+        if mineshafts.is_empty() && !treasure && igloos.is_empty() && ruins.is_empty() {
             return None;
         }
         let mut canvas = Canvas::new(shape, chunk, neighbour);
@@ -49,6 +50,7 @@ impl Structures {
         if treasure {
             treasure::place(&mut canvas, &mut Mt19937::new(seed), chunk);
         }
+        Self::place_ocean_ruins(&mut canvas, &ruins, seed);
         Some(mineshafts.iter().fold((i32::MAX, i32::MIN), |(lo, hi), m| (lo.min(m.bb.y0 - 1), hi.max(m.bb.y1 + 1))))
     }
 

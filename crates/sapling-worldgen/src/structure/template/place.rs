@@ -46,19 +46,24 @@ pub struct Placement {
     pub ignore_jigsaws: bool,
     /// Air placed below sea level becomes water (ocean ruins, shipwrecks).
     pub flood: bool,
+    /// Blocks of this name are left out, before their integrity draw (template pieces skip air).
+    pub ignore: Option<&'static str>,
     /// Where blocks may land; the canvas clips further to its chunk.
     pub bb: BoundingBox,
 }
 
 impl Placement {
     pub fn new(rotation: Rotation, bb: BoundingBox) -> Self {
-        Self { rotation, integrity: 1.0, seed: 0, ignore_jigsaws: true, flood: false, bb }
+        Self { rotation, integrity: 1.0, seed: 0, ignore_jigsaws: true, flood: false, ignore: None, bb }
     }
 
     /// The template positions BDS writes at `origin`, each with its block, in placement order.
     pub fn blocks<'a>(&'a self, template: &'a Template, origin: (i32, i32, i32)) -> impl Iterator<Item = ((i32, i32, i32), Block)> + 'a {
         let mut random = (self.integrity < 1.0).then(|| Mt19937::new(self.seed));
         template.blocks.iter().filter_map(move |b| {
+            if self.ignore.is_some_and(|name| b.state.block(Rotation::None).name() == name) {
+                return None;
+            }
             match b.state.kind() {
                 Kind::StructureBlock => return None,
                 Kind::Jigsaw if self.ignore_jigsaws => return None,

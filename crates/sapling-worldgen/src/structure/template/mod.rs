@@ -91,6 +91,13 @@ fn data() -> &'static Data {
     DATA_PARSED.get_or_init(|| parse(DATA))
 }
 
+/// A block structure code places itself, by its saved name and states; panics on one that is
+/// neither a `Block` variant nor in `TEMPLATE_BLOCKS` (scripts/templates_to_rust.py `EXTRA`).
+pub fn named(name: &str, states: &str, waterlogged: bool) -> Block {
+    let index = TEMPLATE_BLOCKS.iter().position(|&(n, s, w, _)| n == name && s == states && w == waterlogged);
+    palette_block(index.unwrap_or_else(|| panic!("no template block {name}[{states}]")) as u16)
+}
+
 /// A `TEMPLATE_BLOCKS` entry as a block: the `Block` variant with its name, states and water when
 /// there is one (so terrain code recognises it), else `Block::Template`.
 fn palette_block(index: u16) -> Block {

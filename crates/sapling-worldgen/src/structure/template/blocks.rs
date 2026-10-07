@@ -2,7 +2,7 @@
 
 /// Every Bedrock block templates place: name, states, waterlogged, flags (`FULL_CUBE`,
 /// `COLLIDES`). Entries equal to a `Block` variant load as it, the rest as `Block::Template`.
-pub static TEMPLATE_BLOCKS: [(&str, &str, bool, u8); 807] = [
+pub static TEMPLATE_BLOCKS: [(&str, &str, bool, u8); 810] = [
     ("air", "", false, 0), ("deepslate", "pillar_axis=y", false, 3), ("deepslate_tiles", "", false, 3), ("polished_basalt", "pillar_axis=y", false, 3), ("polished_basalt", "pillar_axis=z", false, 3),
     ("polished_basalt", "pillar_axis=x", false, 3), ("smooth_basalt", "", false, 3), ("polished_deepslate", "", false, 3), ("deepslate_bricks", "", false, 3), ("chiseled_deepslate", "", false, 3),
     ("deepslate_tile_stairs", "minecraft:corner=none,upside_down_bit=0,weirdo_direction=3", false, 2), ("deepslate_tile_stairs", "minecraft:corner=none,upside_down_bit=0,weirdo_direction=0", false, 2), ("deepslate_tile_stairs", "minecraft:corner=none,upside_down_bit=0,weirdo_direction=2", false, 2), ("deepslate_tile_stairs", "minecraft:corner=none,upside_down_bit=0,weirdo_direction=1", false, 2), ("deepslate_brick_stairs", "minecraft:corner=none,upside_down_bit=0,weirdo_direction=1", false, 2),
@@ -164,5 +164,5 @@ pub static TEMPLATE_BLOCKS: [(&str, &str, bool, u8); 807] = [
     ("spruce_trapdoor", "direction=0,open_bit=0,upside_down_bit=1", false, 2), ("spruce_trapdoor", "direction=2,open_bit=0,upside_down_bit=1", false, 2), ("spruce_trapdoor", "direction=1,open_bit=0,upside_down_bit=1", false, 2), ("spruce_trapdoor", "direction=1,open_bit=0,upside_down_bit=0", false, 2), ("spruce_trapdoor", "direction=3,open_bit=0,upside_down_bit=0", false, 2),
     ("spruce_trapdoor", "direction=0,open_bit=0,upside_down_bit=0", false, 2), ("spruce_trapdoor", "direction=2,open_bit=0,upside_down_bit=0", false, 2), ("purple_carpet", "", false, 2), ("spruce_pressure_plate", "redstone_signal=0", false, 0), ("pumpkin_stem", "facing_direction=0,growth=7", false, 0),
     ("spruce_wall_sign", "facing_direction=2", false, 0), ("spruce_wall_sign", "facing_direction=5", false, 0), ("spruce_wall_sign", "facing_direction=3", false, 0), ("spruce_wall_sign", "facing_direction=4", false, 0), ("spruce_wood", "pillar_axis=x", false, 3),
-    ("spruce_wood", "pillar_axis=z", false, 3), ("spruce_wood", "pillar_axis=y", false, 3),
+    ("spruce_wood", "pillar_axis=z", false, 3), ("spruce_wood", "pillar_axis=y", false, 3), ("chest", "minecraft:cardinal_direction=east", true, 2), ("suspicious_gravel", "brushed_progress=0,hanging=1", false, 3), ("suspicious_sand", "brushed_progress=0,hanging=1", false, 3),
 ];

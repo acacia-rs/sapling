@@ -9,6 +9,7 @@ mod kind;
 mod locate;
 mod mineshaft;
 mod nearby;
+mod ocean_ruin;
 mod piece;
 mod placement;
 mod probe;
@@ -41,6 +42,7 @@ pub struct Structures {
     mineshaft_chunks: Mutex<HashMap<(i32, i32), bool>>,
     strongholds: OnceLock<Vec<(i32, i32)>>,
     mineshafts: Mutex<HashMap<(i32, i32), Arc<mineshaft::Mineshaft>>>,
+    templates: templated::TemplateStarts,
 }
 
 impl Structures {
@@ -54,6 +56,7 @@ impl Structures {
             mineshaft_chunks: Mutex::new(HashMap::new()),
             strongholds: OnceLock::new(),
             mineshafts: Mutex::new(HashMap::new()),
+            templates: Default::default(),
         }
     }
 

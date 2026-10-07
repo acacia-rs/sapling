@@ -19,7 +19,7 @@ use sapling_worldgen::{Block, CellKind, MIN_Y, OverworldGenerator};
 
 const LAST_Y: i32 = 319;
 /// The kinds whose blocks the structure stage places.
-const PORTED: &[StructureKind] = &[StructureKind::Mineshaft, StructureKind::BuriedTreasure, StructureKind::Temple];
+const PORTED: &[StructureKind] = &[StructureKind::Mineshaft, StructureKind::BuriedTreasure, StructureKind::Temple, StructureKind::OceanRuins];
 
 #[derive(Default)]
 struct Tallies {

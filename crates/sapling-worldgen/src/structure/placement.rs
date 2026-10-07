@@ -26,6 +26,12 @@ impl Grid {
 
     /// The candidate chunk of the region holding `chunk` (legacy MT seeding, 32-bit seed).
     pub fn candidate(&self, level_seed: u32, chunk: (i32, i32)) -> (i32, i32) {
+        self.candidate_random(level_seed, chunk).0
+    }
+
+    /// The candidate and the generator after its draws: BDS reseeds the blueprint generator it is
+    /// given, so a start drawn after grid checks goes on from the last one.
+    pub fn candidate_random(&self, level_seed: u32, chunk: (i32, i32)) -> ((i32, i32), Mt19937) {
         let (rx, rz) = (chunk.0.div_euclid(self.spacing), chunk.1.div_euclid(self.spacing));
         let seed = (rx.wrapping_mul(-0x66c6_0af8)).wrapping_add(rz.wrapping_mul(-0x0ea9_a42b)) as u32;
         let mut random = Mt19937::new(seed.wrapping_add(level_seed).wrapping_add(self.salt as u32));
@@ -36,7 +42,7 @@ impl Grid {
         };
         let x = draw();
         let z = draw();
-        (rx * self.spacing + x, rz * self.spacing + z)
+        ((rx * self.spacing + x, rz * self.spacing + z), random)
     }
 
     /// The candidate chunk with Java's LCG on the full 64-bit seed (v2 `RandomSpreadPlacement`).

@@ -58,7 +58,7 @@ impl<'a> Canvas<'a> {
     }
 
     /// One above the highest block that is neither air nor a see-through plant.
-    fn height(&self, x: i32, z: i32) -> i32 {
+    pub fn height(&self, x: i32, z: i32) -> i32 {
         if let Some(&h) = self.heights.borrow().get(&(x, z)) {
             return h;
         }
