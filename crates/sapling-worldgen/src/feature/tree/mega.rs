@@ -94,8 +94,8 @@ impl MegaBranches {
             let (mut tip_x, mut tip_z) = (x, z);
             for step in 0..self.length {
                 let s = step as f32;
-                tip_x = (cos * s + 1.5 + x as f32) as i32;
-                tip_z = (sin * s + 1.5 + z as f32) as i32;
+                tip_x = x + (cos * s + 1.5) as i32;
+                tip_z = z + (sin * s + 1.5) as i32;
                 view.set_block(tip_x, (s * self.slope + start) as i32, tip_z, block);
             }
             if let Some(canopy) = self.canopy {
