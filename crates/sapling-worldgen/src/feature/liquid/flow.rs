@@ -50,7 +50,7 @@ fn blocking(view: &View, p: [i32; 3]) -> bool {
 /// the 3x3's edge waits for the next generation (its neighbours' chunks are not in the source).
 pub fn run(view: &mut View, tick: Tick) {
     if !view.can_tick(tick.at[0], tick.at[2]) {
-        if view.has_block(tick.at[0], MIN_Y, tick.at[2]) {
+        if !view.ticks.game && view.has_block(tick.at[0], MIN_Y, tick.at[2]) {
             view.ticks.add(tick.at, tick.lava, 0);
         }
         return;
@@ -61,10 +61,9 @@ pub fn run(view: &mut View, tick: Tick) {
 }
 
 /// `neighborChanged` for the liquid in each neighbour: lava may harden, then a tick unless one is due.
+/// Instaticking passes it on too: LiquidBlock's constructor (148b5c4c0) sets the BlockLegacy flag
+/// (+0x163 bit 3) that 1415f87d0 asks for then.
 pub fn update_neighbors(view: &mut View, at: [i32; 3]) {
-    if view.ticks.instaticking && !insta_notify() {
-        return;
-    }
     for d in NEIGHBORS {
         let n = add(at, d);
         let l = liquid(view, n);
@@ -76,16 +75,9 @@ pub fn update_neighbors(view: &mut View, at: [i32; 3]) {
             solidify(view, n);
         }
         if depth(view, n, lava).is_some() && !view.ticks.has(n, lava, delay(lava)) {
-            view.ticks.add(n, lava, delay(lava));
+            view.schedule(n, lava, delay(lava));
         }
     }
-}
-
-/// Whether neighbour updates reach liquids while instaticking (1415f87d0 lets through only blocks
-/// with BlockLegacy flag +0x163 bit 3, unread for liquids); `SAPLING_LIQUID_INSTA_NOTIFY=0` turns it off.
-fn insta_notify() -> bool {
-    static ON: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
-    *ON.get_or_init(|| std::env::var("SAPLING_LIQUID_INSTA_NOTIFY").map_or(true, |v| v != "0"))
 }
 
 /// `LiquidBlockBase::solidify` (148b60f90): lava touching water beside or above turns to
@@ -135,7 +127,7 @@ fn tick(view: &mut View, p: [i32; 3], lava: bool) {
             } else {
                 set(view, p, Block::liquid(lava, new as u8));
                 update_neighbors(view, p);
-                view.ticks.add(p, lava, delay(lava));
+                view.schedule(p, lava, delay(lava));
             }
             d = new;
         }
@@ -218,5 +210,5 @@ fn spread_to(view: &mut View, n: [i32; 3], depth: i32, lava: bool) {
         solidify(view, n);
     }
     update_neighbors(view, n);
-    view.ticks.add(n, lava, delay(lava));
+    view.schedule(n, lava, delay(lava));
 }

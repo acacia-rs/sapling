@@ -85,6 +85,18 @@ impl<'a> View<'a> {
         shape.fluid_ticks().iter().map(|&(index, lava)| (at(index as i32), lava)).collect()
     }
 
+    /// `BlockSource::addToTickingQueue` (1415f50f0): a tick joins the block source's queue only when
+    /// every chunk within 8 blocks of the cell is in the region; else it goes to its chunk's own queue,
+    /// which runs in game, after decoration (`TickQueue::in_game`).
+    pub fn schedule(&mut self, at: [i32; 3], lava: bool, delay: u64) {
+        let near = |x: i32, z: i32| [x - 8, x + 8].iter().all(|&x| [z - 8, z + 8].iter().all(|&z| self.has_block(x, MIN_Y, z)));
+        if self.ticks.game || near(at[0], at[2]) {
+            self.ticks.add(at, lava, delay);
+        } else {
+            self.ticks.in_game.push((at, lava, delay));
+        }
+    }
+
     /// Whether every chunk within a block of the column is in the region (an instatick's range).
     pub fn can_tick(&self, x: i32, z: i32) -> bool {
         [x - 1, x + 1].iter().all(|&x| [z - 1, z + 1].iter().all(|&z| self.has_block(x, MIN_Y, z)))

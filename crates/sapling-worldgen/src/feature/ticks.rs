@@ -73,13 +73,18 @@ impl Heap {
 pub struct TickQueue {
     now: u64,
     pending: Heap,
-    /// `BlockSource::isInstaticking`: true while `run_generation` runs.
+    /// `BlockSource::isInstaticking`: true while instatick generations run.
     pub instaticking: bool,
+    /// Ticks whose cells lie too near the region's edge for this queue (`View::schedule`): BDS
+    /// queues them on their chunk, to run in game. (cell, lava, delay), in the order they came.
+    pub in_game: Vec<([i32; 3], bool, u64)>,
+    /// The in-game queue: every tick joins it.
+    pub game: bool,
 }
 
 impl Default for TickQueue {
     fn default() -> Self {
-        Self { now: 1, pending: Heap::default(), instaticking: false }
+        Self { now: 1, pending: Heap::default(), instaticking: false, in_game: Vec::new(), game: false }
     }
 }
 
@@ -106,17 +111,35 @@ impl TickQueue {
         self.pending.0.is_empty()
     }
 
-    /// One `tickPendingTicks(MAX, INT_MAX, instatick)` call: every pending tick, in heap order,
-    /// moved to an active heap; `run` ticks each and may add new ones for the next call.
     /// The ticks of the next `tickPendingTicks(MAX, INT_MAX, instatick)` call, in the order it
     /// runs them: every pending tick moved to an active heap. Ticks added meanwhile wait for the next.
     pub fn take_generation(&mut self) -> Vec<Tick> {
-        self.now = u64::MAX;
+        self.take_due(u64::MAX)
+    }
+
+    /// `tickPendingTicks(until, ..)`: the clock set to `until`, the ticks due by then in run order.
+    pub fn take_due(&mut self, until: u64) -> Vec<Tick> {
+        self.now = until;
         let mut active = Heap::default();
-        while let Some(tick) = self.pending.pop() {
-            active.push(tick);
+        while self.pending.0.first().is_some_and(|t| t.time <= until) {
+            active.push(self.pending.pop().expect("non-empty"));
         }
         std::iter::from_fn(|| active.pop()).collect()
+    }
+
+    /// The pending ticks, in heap order, emptying the queue.
+    pub fn drain(&mut self) -> Vec<Tick> {
+        std::iter::from_fn(|| self.pending.pop()).collect()
+    }
+
+    /// A tick at an absolute time.
+    pub fn add_at(&mut self, at: [i32; 3], lava: bool, time: u64) {
+        self.pending.push(Tick { at, lava, time });
+    }
+
+    /// An in-game queue whose clock starts at 0.
+    pub fn game() -> Self {
+        Self { now: 0, game: true, ..Self::default() }
     }
 }
 

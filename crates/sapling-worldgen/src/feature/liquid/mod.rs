@@ -37,6 +37,41 @@ pub fn settle(view: &mut View) {
         }
         view.ticks.instaticking = false;
     }
+    play(view);
+}
+
+/// The chunk's queue in game after decoration: the ticks that could not join the block source's
+/// queue, then the instaticks left over, run by game tick for `game_ticks()` ticks over the same
+/// 3x3 (BDS then has every neighbour; this is the approximation).
+fn play(view: &mut View) {
+    let budget = game_ticks();
+    let mut game = TickQueue::game();
+    for (at, lava, delay) in std::mem::take(&mut view.ticks.in_game) {
+        game.add(at, lava, delay + 1);
+    }
+    // Leftover instaticks keep their wrapped times (delay - 1); deferred ones (u64::MAX) never come due.
+    for tick in view.ticks.drain() {
+        game.add_at(tick.at, tick.lava, tick.time);
+    }
+    if budget == 0 || game.is_empty() {
+        return;
+    }
+    let decoration = std::mem::replace(&mut view.ticks, game);
+    for now in 1..=budget {
+        if view.ticks.is_empty() {
+            break;
+        }
+        for tick in view.ticks.take_due(now) {
+            flow::run(view, tick);
+        }
+    }
+    view.ticks = decoration;
+}
+
+/// Game ticks the oracle's chunks ticked after decoration; `SAPLING_LIQUID_GAME_TICKS` overrides.
+fn game_ticks() -> u64 {
+    static TICKS: std::sync::OnceLock<u64> = std::sync::OnceLock::new();
+    *TICKS.get_or_init(|| std::env::var("SAPLING_LIQUID_GAME_TICKS").ok().and_then(|v| v.parse().ok()).unwrap_or(0))
 }
 
 /// The chunk's border columns up to the light heightmap, bottom up: the lowest cell of each run
@@ -58,7 +93,7 @@ fn reset_border_water(view: &mut View) {
                 if view.block(x, y, z) != Block::Water {
                     view.set_block_quiet(x, y, z, Block::Water);
                 }
-                view.ticks.add([x, y, z], false, 1);
+                view.schedule([x, y, z], false, 1);
             }
             below_dry = !water;
         }

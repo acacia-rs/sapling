@@ -55,6 +55,6 @@ fn spring(view: &mut View, [x, y, z]: [i32; 3], lava: bool) {
     let air = around.iter().filter(|&&b| b == Block::Air).count();
     if rocks == 4 && air == 1 {
         view.set_block(x, y, z, Block::liquid(lava, 0));
-        view.ticks.add([x, y, z], lava, 1);
+        view.schedule([x, y, z], lava, 1);
     }
 }
