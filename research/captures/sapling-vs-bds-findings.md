@@ -22,6 +22,11 @@ without either; none with `doMobLoot` off. The loot lands at once, lifted out of
 BDS also sends the summoner `EntityEvent EntitySpawn` with data `(actor type id << 16) | 2`, and repeats an item's
 whole metadata in a SetEntityData after AddItemEntity (D9).
 
+Plates (`bds_plate_probe`, `bds-plates.txt` vs `sapling-plates.txt`, 2026-10-07): walking on and off a written and
+a hand-placed plate gives the same states, clicks, positions and data on both. Sapling pressed under a summoned
+chicken in the summon's tick, BDS the tick after: fixed (entities.rs `bodies`). Left: redstone (BDS lights the lamp
+beside the plate; sapling has none).
+
 ## The round-1 fixes
 
 | Fix | Now | Evidence |

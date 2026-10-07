@@ -25,8 +25,8 @@ Each needs its rule looked up first (`bdsre` for BDS, the Java jar for data), th
 
 1. **Falling blocks on the wire as BDS sends them**: left the splash sound (being decompiled,
    `docs/research/splash-sound.md`); concrete powder hardening (the drill's landing matched BDS's).
-2. **Pressure plates on BDS.** The drill pressed none, not even under a walking chicken; rerun with a
-   hand-placed plate, a bot walking on with input, and `/testforblock` (findings file, "Drill bugs").
+2. **Redstone.** Plates now match BDS when walked on (`bds_plate_probe`); what they power (the lamp
+   in that drill) does nothing on sapling.
 
 ## 3. Things assumed, not verified
 

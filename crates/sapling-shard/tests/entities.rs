@@ -61,6 +61,20 @@ fn a_spawned_mob_is_heard_at_its_head_after_it_is_shown_as_on_bds() {
 }
 
 #[test]
+fn a_mob_spawned_on_a_plate_presses_it_the_tick_after_as_on_bds() {
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    h.enter(2, "Steve");
+    let plate = [3, 65, 0];
+    h.remote.run(move |ctx| assert!(ctx.set_block(plate, &Block::new("wooden_pressure_plate"))));
+    h.tick_all();
+    h.remote.run(move |ctx| assert!(ctx.spawn_entity("minecraft:pig", [3.5, 65.0, 0.5]).is_some()));
+    let at_plate = |sent: &[acacia_proto::RawPacket]| all::<UpdateBlock>(sent).iter().filter(|u| [u.position.x, u.position.y, u.position.z] == plate).count();
+    let (spawned, after) = (h.tick_all().to(2).to_vec(), h.tick_all().to(2).to_vec());
+    assert_eq!((all::<AddEntity>(&spawned).len(), at_plate(&spawned), at_plate(&after)), (1, 0, 1));
+}
+
+#[test]
 fn a_killed_mob_dies_leaves_its_loot_and_goes_a_second_later_as_on_bds() {
     let mut h = Harness::new();
     h.enter(1, "Alex");

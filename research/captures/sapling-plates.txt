@@ -1,0 +1,62 @@
+## setup failed (gamemode creative | gamerule domobspawning false | fill -4 63 -2 6 63 6 dirt | fill -4 64 -2 6 67 6 air | setblock 0 64 3 stone_pressure_plate | setblock 3 64 4 redstone_lamp | clear @s | give @s wood): No blocks filled []
+## setup failed (gamemode creative | gamerule domobspawning false | fill -4 63 -2 6 63 6 dirt | fill -4 64 -2 6 67 6 air | setblock 0 64 3 stone_pressure_plate | setblock 3 64 4 redstone_lamp | clear @s | give @s wood): commands.clear.failure.no.items ["PlateActor"]
+## actor feet [0, 64, 0]
+## /testforblock 0 64 3 stone_pressure_plate ["redstone_signal"=0]
+   2147 actor   CommandOutput CommandOutput { origin: CommandOrigin { type: "player", uuid: Uuid([209, 65, 245, 41, 214, 61, 73, 175, 80, 191, 164, 29, 214, 217, 86, 179]), request_id: "", player_entity_id: 0 }, output_type: "alloutput", success_count: 0, output: [CommandOutputOutputItem { message_id: "commands.generic.unknown", success: false, parameters: ["testforblock"] }], has_data: false, data: None }
+## onto the written stone plate: walk to [0, 64, 3]
+   3297 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 0, y: 64, z: 3 }, block_runtime_id: 3186832517, flags: UpdateBlockFlags(3), layer: 0 }
+   3400 watcher LevelSoundEvent LevelSoundEvent { sound_id: "pressure_plate.click_on", position: Vec3f { x: 0.5, y: 64.1, z: 3.5 }, extra_data: -1108134779, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## -> Ok(())
+   3634 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 0, y: 64, z: 3 }, block_runtime_id: 3186832517, flags: UpdateBlockFlags(3), layer: 0 }
+   3634 actor   LevelSoundEvent LevelSoundEvent { sound_id: "pressure_plate.click_on", position: Vec3f { x: 0.5, y: 64.1, z: 3.5 }, extra_data: -1108134779, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /testforblock 0 64 3 stone_pressure_plate ["redstone_signal"=1]
+   6647 actor   CommandOutput CommandOutput { origin: CommandOrigin { type: "player", uuid: Uuid([224, 67, 126, 38, 119, 88, 159, 74, 35, 136, 233, 119, 173, 237, 199, 140]), request_id: "", player_entity_id: 0 }, output_type: "alloutput", success_count: 0, output: [CommandOutputOutputItem { message_id: "commands.generic.unknown", success: false, parameters: ["testforblock"] }], has_data: false, data: None }
+## off it: walk to [0, 64, 0]
+## -> Ok(())
+   8297 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 0, y: 64, z: 3 }, block_runtime_id: 3248307340, flags: UpdateBlockFlags(3), layer: 0 }
+   8297 actor   LevelSoundEvent LevelSoundEvent { sound_id: "pressure_plate.click_off", position: Vec3f { x: 0.5, y: 64.1, z: 3.5 }, extra_data: -1046659956, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+   8297 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 0, y: 64, z: 3 }, block_runtime_id: 3248307340, flags: UpdateBlockFlags(3), layer: 0 }
+   8297 watcher LevelSoundEvent LevelSoundEvent { sound_id: "pressure_plate.click_off", position: Vec3f { x: 0.5, y: 64.1, z: 3.5 }, extra_data: -1046659956, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /testforblock 0 64 3 stone_pressure_plate ["redstone_signal"=0]
+  11147 actor   CommandOutput CommandOutput { origin: CommandOrigin { type: "player", uuid: Uuid([179, 65, 193, 232, 252, 16, 197, 44, 33, 176, 73, 180, 100, 101, 217, 176]), request_id: "", player_entity_id: 0 }, output_type: "alloutput", success_count: 0, output: [CommandOutputOutputItem { message_id: "commands.generic.unknown", success: false, parameters: ["testforblock"] }], has_data: false, data: None }
+## a wooden plate by hand: place against [3, 63, 3] (minecraft:dirt []) face Up
+  11753 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 64, z: 3 }, block_runtime_id: 3694949172, flags: UpdateBlockFlags(3), layer: 0 }
+  11753 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 64, z: 3 }, block_runtime_id: 3694949172, flags: UpdateBlockFlags(3), layer: 0 }
+  11753 watcher LevelSoundEvent LevelSoundEvent { sound_id: "place", position: Vec3f { x: 3.5, y: 64.5, z: 3.5 }, extra_data: -600018124, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  11753 actor   LevelSoundEvent LevelSoundEvent { sound_id: "place", position: Vec3f { x: 3.5, y: 64.5, z: 3.5 }, extra_data: -600018124, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## -> Ok(()), [3, 64, 3] is now minecraft:wooden_pressure_plate [redstone_signal=0]
+## onto the placed wooden plate: walk to [3, 64, 3]
+  15597 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 64, z: 3 }, block_runtime_id: 3633474349, flags: UpdateBlockFlags(3), layer: 0 }
+  15597 watcher LevelSoundEvent LevelSoundEvent { sound_id: "pressure_plate.click_on", position: Vec3f { x: 3.5, y: 64.1, z: 3.5 }, extra_data: -661492947, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## -> Ok(())
+  15932 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 64, z: 3 }, block_runtime_id: 3633474349, flags: UpdateBlockFlags(3), layer: 0 }
+  15932 actor   LevelSoundEvent LevelSoundEvent { sound_id: "pressure_plate.click_on", position: Vec3f { x: 3.5, y: 64.1, z: 3.5 }, extra_data: -661492947, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /testforblock 3 64 3 wooden_pressure_plate ["redstone_signal"=1]
+  18947 actor   CommandOutput CommandOutput { origin: CommandOrigin { type: "player", uuid: Uuid([161, 78, 166, 14, 151, 248, 110, 220, 184, 105, 126, 85, 215, 26, 189, 177]), request_id: "", player_entity_id: 0 }, output_type: "alloutput", success_count: 0, output: [CommandOutputOutputItem { message_id: "commands.generic.unknown", success: false, parameters: ["testforblock"] }], has_data: false, data: None }
+## off it: walk to [0, 64, 0]
+  20597 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 64, z: 3 }, block_runtime_id: 3694949172, flags: UpdateBlockFlags(3), layer: 0 }
+  20597 watcher LevelSoundEvent LevelSoundEvent { sound_id: "pressure_plate.click_off", position: Vec3f { x: 3.5, y: 64.1, z: 3.5 }, extra_data: -600018124, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## -> Ok(())
+  20651 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 64, z: 3 }, block_runtime_id: 3694949172, flags: UpdateBlockFlags(3), layer: 0 }
+  20652 actor   LevelSoundEvent LevelSoundEvent { sound_id: "pressure_plate.click_off", position: Vec3f { x: 3.5, y: 64.1, z: 3.5 }, extra_data: -600018124, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /testforblock 3 64 3 wooden_pressure_plate ["redstone_signal"=0]
+  23697 actor   CommandOutput CommandOutput { origin: CommandOrigin { type: "player", uuid: Uuid([206, 66, 153, 88, 137, 250, 201, 181, 145, 7, 89, 141, 103, 45, 142, 146]), request_id: "", player_entity_id: 0 }, output_type: "alloutput", success_count: 0, output: [CommandOutputOutputItem { message_id: "commands.generic.unknown", success: false, parameters: ["testforblock"] }], has_data: false, data: None }
+## /summon chicken 3.5 64 3.5
+  24304 actor   CommandOutput CommandOutput { origin: CommandOrigin { type: "player", uuid: Uuid([1, 71, 128, 14, 92, 181, 115, 70, 134, 209, 154, 32, 173, 173, 41, 144]), request_id: "", player_entity_id: 0 }, output_type: "alloutput", success_count: 1, output: [CommandOutputOutputItem { message_id: "commands.summon.success", success: true, parameters: [] }], has_data: false, data: None }
+  24304 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 64, z: 3 }, block_runtime_id: 3633474349, flags: UpdateBlockFlags(3), layer: 0 }
+  24304 actor   LevelSoundEvent LevelSoundEvent { sound_id: "pressure_plate.click_on", position: Vec3f { x: 3.5, y: 64.1, z: 3.5 }, extra_data: -661492947, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  24305 actor   AddEntity AddEntity { unique_id: 3, runtime_id: 3, entity_type: "minecraft:chicken", position: Vec3f { x: 3.5, y: 64.0, z: 3.5 }, velocity: Vec3f { x: 0.0, y: 0.0, z: 0.0 }, pitch: 0.0, yaw: 0.0, head_yaw: 0.0, body_yaw: 0.0, attributes: [EntityAttributesItem { name: "minecraft:health", min: 0.0, value: 4.0, max: 4.0 }, EntityAttributesItem { name: "minecraft:movement", min: 0.0, value: 0.25, max: 3.4028235e38 }, EntityAttributesItem { name: "minecraft:underwater_movement", min: 0.0, value: 0.02, max: 3.4028235e38 }, EntityAttributesItem { name: "minecraft:lava_movement", min: 0.0, value: 0.02, max: 3.4
+  24305 actor   LevelSoundEvent LevelSoundEvent { sound_id: "spawn", position: Vec3f { x: 3.5, y: 64.68, z: 4.01 }, extra_data: -1, entity_type: "minecraft:chicken", is_baby_mob: false, is_global: false, entity_unique_id: 3, fire_at_position: None }
+  24305 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 64, z: 3 }, block_runtime_id: 3633474349, flags: UpdateBlockFlags(3), layer: 0 }
+  24305 watcher LevelSoundEvent LevelSoundEvent { sound_id: "pressure_plate.click_on", position: Vec3f { x: 3.5, y: 64.1, z: 3.5 }, extra_data: -661492947, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  24305 watcher AddEntity AddEntity { unique_id: 3, runtime_id: 3, entity_type: "minecraft:chicken", position: Vec3f { x: 3.5, y: 64.0, z: 3.5 }, velocity: Vec3f { x: 0.0, y: 0.0, z: 0.0 }, pitch: 0.0, yaw: 0.0, head_yaw: 0.0, body_yaw: 0.0, attributes: [EntityAttributesItem { name: "minecraft:health", min: 0.0, value: 4.0, max: 4.0 }, EntityAttributesItem { name: "minecraft:movement", min: 0.0, value: 0.25, max: 3.4028235e38 }, EntityAttributesItem { name: "minecraft:underwater_movement", min: 0.0, value: 0.02, max: 3.4028235e38 }, EntityAttributesItem { name: "minecraft:lava_movement", min: 0.0, value: 0.02, max: 3.4
+  24305 watcher LevelSoundEvent LevelSoundEvent { sound_id: "spawn", position: Vec3f { x: 3.5, y: 64.68, z: 4.01 }, extra_data: -1, entity_type: "minecraft:chicken", is_baby_mob: false, is_global: false, entity_unique_id: 3, fire_at_position: None }
+## /testforblock 3 64 3 wooden_pressure_plate ["redstone_signal"=1]
+  27297 actor   CommandOutput CommandOutput { origin: CommandOrigin { type: "player", uuid: Uuid([238, 73, 155, 9, 18, 151, 88, 100, 78, 197, 13, 182, 255, 38, 48, 129]), request_id: "", player_entity_id: 0 }, output_type: "alloutput", success_count: 0, output: [CommandOutputOutputItem { message_id: "commands.generic.unknown", success: false, parameters: ["testforblock"] }], has_data: false, data: None }
+## /kill @e[type=chicken]
+  27899 actor   CommandOutput CommandOutput { origin: CommandOrigin { type: "player", uuid: Uuid([231, 71, 215, 178, 125, 92, 78, 215, 106, 86, 160, 58, 18, 38, 62, 185]), request_id: "", player_entity_id: 0 }, output_type: "alloutput", success_count: 1, output: [CommandOutputOutputItem { message_id: "commands.kill.successful", success: true, parameters: ["Chicken"] }], has_data: false, data: None }
+  28947 actor   RemoveEntity RemoveEntity { entity_id_self: 3 }
+  28947 watcher RemoveEntity RemoveEntity { entity_id_self: 3 }
+## /testforblock 3 64 3 wooden_pressure_plate ["redstone_signal"=0]
+  30897 actor   CommandOutput CommandOutput { origin: CommandOrigin { type: "player", uuid: Uuid([80, 71, 55, 29, 14, 0, 202, 61, 141, 217, 188, 223, 155, 14, 120, 162]), request_id: "", player_entity_id: 0 }, output_type: "alloutput", success_count: 0, output: [CommandOutputOutputItem { message_id: "commands.generic.unknown", success: false, parameters: ["testforblock"] }], has_data: false, data: None }
+probe exit 0

@@ -117,9 +117,12 @@ pub(crate) fn step(world: &mut World, entity: Entity, layer: Entity, id: u64, ph
     Some((body, packets))
 }
 
-/// Every entity's world, kind and body.
+/// The world, kind and body of every entity that has had a tick of its own: on BDS one appearing
+/// on a plate presses it the tick after (research/captures/bds-plates.txt).
 pub(crate) fn bodies(world: &World) -> Vec<(Entity, String, Body)> {
-    world.iter_entities().filter_map(|entity| Some((entity.get::<InLayer>()?.0, entity.get::<Kind>()?.0.clone(), *entity.get::<Body>()?))).collect()
+    let now = world.resource::<Tick>().0;
+    let ticked = |entity: &bevy_ecs::world::EntityRef<'_>| entity.get::<Born>().is_none_or(|born| born.0 < now);
+    world.iter_entities().filter(ticked).filter_map(|entity| Some((entity.get::<InLayer>()?.0, entity.get::<Kind>()?.0.clone(), *entity.get::<Body>()?))).collect()
 }
 
 /// Changes the body of the entity `id`; false when it is gone.

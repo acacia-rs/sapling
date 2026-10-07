@@ -102,6 +102,10 @@ General wire facts seen everywhere:
   plain plate (plates.rs:61-66, from the decompile only), and mobs never press (plates.rs:114-123).
 
 ### Drill bugs
+- Resolved 2026-10-07 by `bds_plate_probe` (`bds-plates.txt`): walked onto with movement input, written and
+  hand-placed plates press and release (`pressure_plate.click_on`/`off` at the plate's centre + 0.1 up,
+  `/testforblock` agrees), a lamp beside lights, and a summoned chicken presses a wooden plate the tick after
+  it appears. The drill's teleports were what pressed nothing. Earlier notes, kept:
 - Not only a teleport problem: even a summoned chicken walking across a wooden plate pressed nothing, so the
   usual "a teleported player skips entityInside" explanation does not cover it. Unexplained; candidates: the
   undecoded `entityInside` early return (pressure-plates.md "Unverified", `actor+0x210 bit0`), or plates placed by
