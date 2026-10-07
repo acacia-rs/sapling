@@ -4,7 +4,7 @@
 
 mod oracle_support;
 
-use oracle_support::{BiomeTally, CarverTally, Region, Tally, bds_cell, open};
+use oracle_support::{BiomeTally, CarverTally, Ours, Region, Tally, bds_cell, open};
 use sapling_leveldb::ChunkKey;
 use std::collections::BTreeMap;
 
@@ -48,7 +48,9 @@ fn compare(seed: i64, world: &str, regions: &[Region]) {
                         let kind = ours.kind(x, y, z);
                         tally.add(kind, &bds, stable, (wx, y, wz));
                         if stable {
-                            carver_tally.add(uncarved.kind(x, y, z), kind, &bds, (wx, y, wz));
+                            let next_to_cave = [y - 1, y + 1].iter().any(|&ny| ny <= LAST_Y && uncarved.kind(x, ny, z) != CellKind::Solid);
+                            let cell = Ours { before: uncarved.kind(x, y, z), after: kind, next_to_cave };
+                            carver_tally.add(cell, &bds, (wx, y, wz), &primary, &a);
                         }
                         if our_top.is_none() && kind != CellKind::Air {
                             our_top = Some(y);

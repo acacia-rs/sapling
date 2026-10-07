@@ -8,7 +8,10 @@ fn main() {
     let [seed, x, z] = args[..] else { panic!("usage: column <seed> <x> <z>") };
     let (x, z) = (x as i32, z as i32);
     let generator = OverworldGenerator::new(seed);
-    let shape = generator.chunk_shape(x >> 4, z >> 4);
+    let mut shape = generator.chunk_shape(x >> 4, z >> 4);
+    if std::env::var_os("CARVE").is_some() {
+        generator.carve(&mut shape, x >> 4, z >> 4);
+    }
     let kind = |y| shape.kind((x & 15) as usize, y, (z & 15) as usize);
     let mut top = 319;
     for y in (MIN_Y..=319).rev() {

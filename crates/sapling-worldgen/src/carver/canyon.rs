@@ -8,24 +8,23 @@ use crate::density::{AquiferCache, Density};
 use crate::random::{Mt19937, unit};
 use crate::terrain::{CellKind, ChunkShape, MIN_Y};
 
-/// Static canyon configs (14a925900/910/920), chosen in `loadChunk` by base game version.
+/// A static canyon config (14a925900/910/920, chosen in `loadChunk` by base game version). The
+/// legacy ones (docs/research/worldgen-bds.md) are not ported.
 pub struct CanyonSettings {
     chance: u32,
     y_offset: i32,
     max_y: i32,
-    /// `+8`: no biome test before carving.
-    any_biome: bool,
     /// `+9`: one canyon in twenty may be giant.
     giant: bool,
     /// `+10`: start height `nextInt(58) + 10` instead of `nextInt(nextInt(40) + 8) + 20`.
     flat_start: bool,
 }
 
-pub const CANYON_1_18: CanyonSettings = CanyonSettings { chance: 100, y_offset: 64, max_y: 312, any_biome: true, giant: false, flat_start: true };
-pub const CANYON_LEGACY: CanyonSettings = CanyonSettings { chance: 150, y_offset: 64, max_y: 120, any_biome: false, giant: true, flat_start: false };
+/// 14a925920, what new worlds use; its `+8` flag also skips the legacy per-step biome test.
+pub const CANYON_1_18: CanyonSettings = CanyonSettings { chance: 100, y_offset: 64, max_y: 312, giant: false, flat_start: true };
 
 /// One carving step of a canyon, in 0-based local y.
-#[derive(Clone, Copy)]
+#[derive(Debug, Clone, Copy)]
 pub struct CanyonStep {
     center: [f32; 3],
     horizontal_radius: f32,
@@ -33,6 +32,7 @@ pub struct CanyonStep {
     remaining: i32,
 }
 
+#[derive(Debug)]
 pub struct Canyon {
     thickness: f32,
     /// Width factor per local y (`rs`), indexed by block y - 2.
@@ -43,10 +43,6 @@ pub struct Canyon {
 impl CanyonSettings {
     pub fn max_y(&self) -> i32 {
         self.max_y
-    }
-
-    pub fn any_biome(&self) -> bool {
-        self.any_biome
     }
 
     /// The canyon starting in this chunk, if any; `random` is seeded per chunk.
@@ -146,7 +142,6 @@ impl Walk {
 impl Canyon {
     /// Carves the steps that reach the chunk; BDS stops the whole canyon at the first step out of
     /// range, so later steps never carve this chunk.
-    // TODO: CANYON_LEGACY stops at steps whose biome has some tag (1439150b0 on the level's registry); not ported.
     pub fn carve(&self, shape: &mut ChunkShape, density: &Density, aquifer: &mut AquiferCache, chunk: (i32, i32), max_y: i32) {
         let (mid_x, mid_z) = ((chunk.0 * 16 + 8) as f32, (chunk.1 * 16 + 8) as f32);
         let reach = 2.0 + self.thickness + 16.0;

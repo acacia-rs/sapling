@@ -15,7 +15,9 @@ fn main() {
     let (seed, cx, cz): (i64, i32, i32) = (seed.parse().unwrap(), cx.parse().unwrap(), cz.parse().unwrap());
     let (primary, _) = open(world).expect("oracle world");
     let chunk = primary.load_column(ChunkKey::new(cx, cz, 0)).unwrap().expect("chunk saved").chunk;
-    let shape = OverworldGenerator::new(seed).chunk_shape(cx, cz);
+    let generator = OverworldGenerator::new(seed);
+    let mut shape = generator.chunk_shape(cx, cz);
+    generator.carve(&mut shape, cx, cz);
     for z in 0..16 {
         for x in 0..16 {
             let (wx, wz) = (cx * 16 + x as i32, cz * 16 + z as i32);

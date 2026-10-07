@@ -18,11 +18,10 @@ pub struct Segment {
     pub thickness: f32,
 }
 
-/// `minecraft:underground_extra_cave_carver_feature`, the only cave carver a vanilla feature rule
-/// places (`overworld_extra_cave_carver_feature`, pregeneration_pass), plus the constructor
-/// defaults (1482817d0) the JSON does not set.
+/// A `minecraft:cave_carver_feature` JSON plus the constructor defaults (1482817d0) it does not
+/// set. Only the extra carver has a vanilla feature rule, yet BDS runs both (oracle-confirmed).
 pub struct CaveSettings {
-    pub skip_carve_chance: u32,
+    skip_carve_chance: u32,
     pub height_limit: i32,
     y_scale: (f32, f32),
     horizontal_radius_multiplier: (f32, f32),
@@ -36,6 +35,7 @@ pub struct CaveSettings {
     steep_chance: u32,
 }
 
+/// `minecraft:underground_extra_cave_carver_feature`.
 pub const EXTRA_CAVE_CARVER: CaveSettings = CaveSettings { skip_carve_chance: 66, height_limit: 103, ..UNDERGROUND_CAVE_CARVER };
 
 /// `minecraft:underground_cave_carver_feature`.

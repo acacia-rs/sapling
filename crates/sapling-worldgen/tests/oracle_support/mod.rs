@@ -2,7 +2,9 @@
 
 mod carver;
 
-pub use carver::CarverTally;
+// Shared by the oracle test and the examples; each uses a different part.
+#[allow(unused_imports)]
+pub use carver::{CarverTally, Ours, near_feature};
 
 use std::collections::BTreeMap;
 use std::path::PathBuf;
@@ -43,7 +45,7 @@ pub fn open(world: &str) -> Option<(LevelDbWorld, LevelDbWorld)> {
 
 /// Blocks the terrain stages (shape, surface, ore veins, deepslate) place; any other solid block
 /// is decoration (features, structures, carvers' side effects).
-const TERRAIN_BLOCKS: &[&str] = &[
+pub const TERRAIN_BLOCKS: &[&str] = &[
     "stone", "deepslate", "granite", "diorite", "andesite", "tuff", "dirt", "grass_block", "coarse_dirt", "podzol", "mycelium",
     "sand", "red_sand", "sandstone", "red_sandstone", "gravel", "clay", "mud", "snow", "powder_snow", "ice", "packed_ice",
     "blue_ice", "bedrock", "terracotta", "white_terracotta", "orange_terracotta", "yellow_terracotta",
