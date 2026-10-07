@@ -2,7 +2,8 @@
 //! world's runtime ids and the API's names.
 
 use acacia_proto::nbt::{Nbt, Value};
-use acacia_proto::packets::{BlockEntityData, LevelEvent, LevelEventEvent, LevelSoundEvent, UpdateBlock};
+pub(crate) use acacia_proto::packets::UpdateBlockSyncedTransitionType as Transition;
+use acacia_proto::packets::{BlockEntityData, LevelEvent, LevelEventEvent, LevelSoundEvent, UpdateBlock, UpdateBlockSynced};
 use acacia_proto::types::{BlockCoordinates, UpdateBlockFlags, Vec3f};
 use bevy_ecs::prelude::*;
 use bytes::Bytes;
@@ -117,22 +118,44 @@ pub(crate) fn keep_entity(world: &mut World, layer: Entity, pos: BlockPos, entit
 /// rule, and BDS sends nothing for it. False, with nothing changed, where the cell already is so,
 /// outside the world's height and where the column is not loaded or cannot be written.
 pub(crate) fn set(world: &mut World, layer: Entity, pos: BlockPos, id: u32) -> bool {
-    let Some(mut level) = world.get_mut::<Layer>(layer) else { return false };
+    let Some(id) = write(world, layer, pos, id) else { return false };
+    let Some(packet) = world.get::<Layer>(layer).map(|level| update(level.world.registry(), pos, id, 0)) else { return false };
+    to_viewers(world, layer, pos, &[packet]);
+    true
+}
+
+/// [`set`] without telling anyone; [`tell_synced`] does, once the entity it was for exists.
+pub(crate) fn set_quietly(world: &mut World, layer: Entity, pos: BlockPos, id: u32) -> bool {
+    write(world, layer, pos, id).is_some()
+}
+
+/// Writes layer 0 as [`set`] does: the state written, or `None` when nothing changed.
+fn write(world: &mut World, layer: Entity, pos: BlockPos, id: u32) -> Option<u32> {
+    let mut level = world.get_mut::<Layer>(layer)?;
     let [x, y, z] = pos;
     if !level.world.in_height(y) || !level.world.is_loaded(column(pos)) {
-        return false;
+        return None;
     }
     let (old, held) = (level.world.block(x, y, z), level.world.liquid(x, y, z));
     let (id, now_held) = super::waterlog::written(level.world.registry(), id, old, held);
     if (id, now_held) == (old, held) || !level.world.set_block(x, y, z, id) {
-        return false;
+        return None;
     }
     if now_held != held {
         level.world.set_liquid(x, y, z, now_held);
     }
-    let packet = update(level.world.registry(), pos, id, 0);
+    Some(id)
+}
+
+/// Shows everyone who sees `pos` its block as the entity `entity` took it (`Create`: a falling
+/// block leaving it) or left it (`Destroy`: one landing), as BDS does in UpdateBlockSynced.
+pub(crate) fn tell_synced(world: &mut World, layer: Entity, pos: BlockPos, entity: u64, transition: Transition) {
+    let Some(level) = world.get::<Layer>(layer).map(|layer| &layer.world) else { return };
+    let [x, y, z] = pos;
+    let block_runtime_id = level.registry().network_hash(level.block(x, y, z));
+    let packet = UpdateBlockSynced { position: BlockCoordinates { x, y, z }, block_runtime_id, flags: FLAGS, layer: 0, entity_unique_id: entity, transition_type: transition };
+    let packet = sapling_net::encode(&packet);
     to_viewers(world, layer, pos, &[packet]);
-    true
 }
 
 /// The block at `pos` of a layer's world; `None` where it is not loaded or does not reach.

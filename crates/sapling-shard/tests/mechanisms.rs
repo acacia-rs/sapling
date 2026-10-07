@@ -4,9 +4,11 @@
 mod common;
 
 use acacia_proto::RawPacket;
-use acacia_proto::packets::{AddEntity, AddItemEntity, LevelSoundEvent, MoveEntityDelta, RemoveEntity, UpdateBlock};
+use acacia_proto::packets::{
+    AddEntity, AddItemEntity, LevelSoundEvent, MoveEntityDelta, RemoveEntity, UpdateBlock, UpdateBlockSynced, UpdateBlockSyncedTransitionType as Transition,
+};
 use acacia_proto::types::{Action, MetadataDictionaryItemKey as Key, MetadataDictionaryItemValue as Value, MetadataDictionaryItemValueDefault as Plain};
-use common::{Harness, all, block_actions, click, hash, input_at};
+use common::{Harness, all, block_actions, block_changes, click, hash, input_at};
 use sapling_api::{Block, GameMode, Item, PlayerId, Slot};
 
 const PLATE: [i32; 3] = [2, 65, 0];
@@ -71,7 +73,7 @@ fn sand_placed_over_a_gap_falls_two_ticks_later_as_on_bds() {
 
 /// The layer-0 changes among `packets` at `x`, as (y, block).
 fn column_changes(packets: &[RawPacket], x: i32) -> Vec<(i32, u32)> {
-    all::<UpdateBlock>(packets).iter().filter(|u| u.layer == 0 && u.position.x == x && u.position.z == 0).map(|u| (u.position.y, u.block_runtime_id)).collect()
+    block_changes(packets).into_iter().filter(|([at_x, _, z], _)| (*at_x, *z) == (x, 0)).map(|([_, y, _], block)| (y, block)).collect()
 }
 
 #[test]
@@ -95,11 +97,16 @@ fn sand_falls_as_an_entity_and_breaks_up_on_a_torch() {
     let (sand, air) = (hash("minecraft:sand"), hash("minecraft:air"));
     assert_eq!(column_changes(&sent, 3), [(67, air), (68, air), (65, sand)], "the stone, the sand leaving, the sand landing");
     assert_eq!(column_changes(&sent, 4), [(67, air), (68, air)], "the second never lands");
+    // As BDS: the cell a falling block leaves and the one it lands in name it.
+    let synced: Vec<_> = all::<UpdateBlockSynced>(&sent).iter().map(|u| (u.position.x, u.position.y, u.transition_type.clone())).collect();
+    assert_eq!(synced, [(3, 68, Transition::Create), (4, 68, Transition::Create), (3, 65, Transition::Destroy)]);
     let falling: Vec<AddEntity> = all::<AddEntity>(&sent).into_iter().filter(|entity| entity.entity_type == "minecraft:falling_block").collect();
     assert_eq!(falling.len(), 2);
     let variant = falling[0].metadata.iter().find(|item| item.key == Key::Variant).map(|item| item.value.clone());
     // BDS shows it a tick into its fall, 0.49 above the bottom of its box (research/captures/).
     assert_eq!(variant, Some(Value::Default(Plain::Int(sand as i32))), "it names its block");
+    let keys: Vec<Key> = falling[0].metadata.iter().take(3).map(|item| item.key.clone()).collect();
+    assert_eq!(keys, [Key::Flags, Key::Health, Key::Variant], "BDS's order");
     assert!((falling[0].position.y - 68.46).abs() < 1e-4 && (falling[0].velocity.y + 0.0392).abs() < 1e-6, "{:?} {:?}", falling[0].position, falling[0].velocity);
     let heights: Vec<f32> = all::<MoveEntityDelta>(&sent).iter().filter(|moved| moved.runtime_entity_id == falling[0].runtime_id).filter_map(|moved| moved.y).collect();
     assert!(heights.windows(2).all(|pair| pair[1] <= pair[0]) && heights.last() == Some(&65.49), "down to the platform: {heights:?}");

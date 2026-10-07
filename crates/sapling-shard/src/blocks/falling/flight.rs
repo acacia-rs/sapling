@@ -103,7 +103,11 @@ fn step(world: &mut World, entity: Entity, layer: Entity, id: u64) -> Option<Blo
         if waited >= PLACE_AFTER + LINGER {
             mobs::remove(world, entity);
         }
-        return (waited == PLACE_AFTER && send::set(world, layer, cell, block_id)).then_some(cell);
+        if waited != PLACE_AFTER || !send::set_quietly(world, layer, cell, block_id) {
+            return None;
+        }
+        send::tell_synced(world, layer, cell, id, send::Transition::Destroy);
+        return Some(cell);
     }
     let (body, mut packets) = entities::step(world, entity, layer, id, &Physics::FALLING_BLOCK, WIRE_OFFSET)?;
     let (at, landed) = (body.at, body.on_ground);

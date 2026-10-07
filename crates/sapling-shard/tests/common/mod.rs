@@ -192,6 +192,18 @@ pub fn all<T: Packet>(packets: &[RawPacket]) -> Vec<T> {
     packets.iter().filter(|p| p.id == T::ID).map(|p| p.decode().unwrap()).collect()
 }
 
+/// The layer-0 block changes among `packets`, in order, as (position, block hash): UpdateBlock and
+/// the UpdateBlockSynced a falling block leaving or landing is told in.
+#[allow(dead_code)]
+pub fn block_changes(packets: &[RawPacket]) -> Vec<([i32; 3], u32)> {
+    let change = |packet: &RawPacket| match packet.id {
+        acacia_proto::packets::UpdateBlock::ID => packet.decode::<acacia_proto::packets::UpdateBlock>().ok().map(|u| (u.layer, u.position, u.block_runtime_id)),
+        acacia_proto::packets::UpdateBlockSynced::ID => packet.decode::<acacia_proto::packets::UpdateBlockSynced>().ok().map(|u| (u.layer, u.position, u.block_runtime_id)),
+        _ => None,
+    };
+    packets.iter().filter_map(change).filter(|(layer, ..)| *layer == 0).map(|(_, p, block)| ([p.x, p.y, p.z], block)).collect()
+}
+
 pub fn pack_response(status: PackStatus) -> ResourcePackClientResponse {
     ResourcePackClientResponse { response_status: status, response_status_name: String::new(), resourcepackids: None }
 }

@@ -23,9 +23,8 @@ it does on BDS and the two captures can be diffed:
 
 Each needs its rule looked up first (`bdsre` for BDS, the Java jar for data), then a shard test.
 
-1. **Falling blocks on the wire as BDS sends them**: UpdateBlockSynced at the start and the landing
-   (acacia-proto reads its entity id with zigzag where BDS writes an unsigned varint: fix the schema
-   first), the `MOVING` flag, `Health` 1, the splash, concrete powder hardening.
+1. **Falling blocks on the wire as BDS sends them**: left the splash sound (being decompiled,
+   `docs/research/splash-sound.md`); concrete powder hardening (the drill's landing matched BDS's).
 2. **Pressure plates on BDS.** The drill pressed none, not even under a walking chicken; rerun with a
    hand-placed plate, a bot walking on with input, and `/testforblock` (findings file, "Drill bugs").
 

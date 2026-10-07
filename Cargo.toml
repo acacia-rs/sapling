@@ -18,17 +18,17 @@ sapling-world = { path = "crates/sapling-world" }
 
 # acacia at one commit of its `master`: bump every `rev` together. To build against a checkout
 # beside this one instead, see docs/DESIGN.md "Building against a local acacia".
-acacia-auth = { git = "https://github.com/acacia-rs/acacia", rev = "ef7fa3ff5cea64149a42351c991bfe57d9e1aa68", default-features = false }
-acacia-molang = { git = "https://github.com/acacia-rs/acacia", rev = "ef7fa3ff5cea64149a42351c991bfe57d9e1aa68" }
-acacia-nethernet = { git = "https://github.com/acacia-rs/acacia", rev = "ef7fa3ff5cea64149a42351c991bfe57d9e1aa68" }
-acacia-proto = { git = "https://github.com/acacia-rs/acacia", rev = "ef7fa3ff5cea64149a42351c991bfe57d9e1aa68" }
-acacia-raknet = { git = "https://github.com/acacia-rs/acacia", rev = "ef7fa3ff5cea64149a42351c991bfe57d9e1aa68" }
-acacia-session = { git = "https://github.com/acacia-rs/acacia", rev = "ef7fa3ff5cea64149a42351c991bfe57d9e1aa68" }
-acacia-world = { git = "https://github.com/acacia-rs/acacia", rev = "ef7fa3ff5cea64149a42351c991bfe57d9e1aa68" }
+acacia-auth = { git = "https://github.com/acacia-rs/acacia", rev = "d8b6919a7630a953b21846b1fc5ed6cab18d2058", default-features = false }
+acacia-molang = { git = "https://github.com/acacia-rs/acacia", rev = "d8b6919a7630a953b21846b1fc5ed6cab18d2058" }
+acacia-nethernet = { git = "https://github.com/acacia-rs/acacia", rev = "d8b6919a7630a953b21846b1fc5ed6cab18d2058" }
+acacia-proto = { git = "https://github.com/acacia-rs/acacia", rev = "d8b6919a7630a953b21846b1fc5ed6cab18d2058" }
+acacia-raknet = { git = "https://github.com/acacia-rs/acacia", rev = "d8b6919a7630a953b21846b1fc5ed6cab18d2058" }
+acacia-session = { git = "https://github.com/acacia-rs/acacia", rev = "d8b6919a7630a953b21846b1fc5ed6cab18d2058" }
+acacia-world = { git = "https://github.com/acacia-rs/acacia", rev = "d8b6919a7630a953b21846b1fc5ed6cab18d2058" }
 # Test clients and the recorded BDS join (dev-dependencies only).
-acacia-bot = { git = "https://github.com/acacia-rs/acacia", rev = "ef7fa3ff5cea64149a42351c991bfe57d9e1aa68" }
-acacia-client = { git = "https://github.com/acacia-rs/acacia", rev = "ef7fa3ff5cea64149a42351c991bfe57d9e1aa68" }
-acacia-testserver = { git = "https://github.com/acacia-rs/acacia", rev = "ef7fa3ff5cea64149a42351c991bfe57d9e1aa68" }
+acacia-bot = { git = "https://github.com/acacia-rs/acacia", rev = "d8b6919a7630a953b21846b1fc5ed6cab18d2058" }
+acacia-client = { git = "https://github.com/acacia-rs/acacia", rev = "d8b6919a7630a953b21846b1fc5ed6cab18d2058" }
+acacia-testserver = { git = "https://github.com/acacia-rs/acacia", rev = "d8b6919a7630a953b21846b1fc5ed6cab18d2058" }
 
 base64 = "0.22"
 bevy_ecs = { version = "0.19", default-features = false, features = ["std"] }

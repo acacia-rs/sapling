@@ -6,7 +6,7 @@ mod common;
 use std::sync::{Arc, Mutex};
 
 use acacia_proto::RawPacket;
-use acacia_proto::packets::{AddItemEntity, InventoryContent, LevelEvent, LevelEventEvent, UpdateBlock};
+use acacia_proto::packets::{AddItemEntity, InventoryContent, LevelEvent, LevelEventEvent};
 use acacia_proto::nbt::Value;
 use acacia_proto::types::{Action, ItemV4Extra};
 use common::{Harness, all, block_actions, click, hash};
@@ -22,7 +22,7 @@ const ALEX: PlayerId = PlayerId(1);
 
 /// The layer-0 blocks among `packets` as (position, block).
 fn blocks(packets: &[RawPacket]) -> Vec<([i32; 3], u32)> {
-    all::<UpdateBlock>(packets).iter().filter(|u| u.layer == 0).map(|u| ([u.position.x, u.position.y, u.position.z], u.block_runtime_id)).collect()
+    common::block_changes(packets)
 }
 
 /// Alex, in survival (the default), with `item` in the hand, and Steve watching.

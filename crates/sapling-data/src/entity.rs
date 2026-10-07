@@ -123,7 +123,8 @@ pub fn mob_size(identifier: &str) -> Option<[f32; 2]> {
     Some([size(Key::BoundingboxWidth)?, size(Key::BoundingboxHeight)?])
 }
 
-/// A falling block: BDS names the block by its network id in `Variant`; the hitbox is Java's.
+/// A falling block: BDS names the block by its network id in `Variant`, after `Health` 1; the
+/// hitbox is Java's.
 pub fn add_falling_block(id: u64, position: [f32; 3], velocity: [f32; 3], block_hash: u32) -> AddEntity {
     let options = AddEntityOptions {
         id,
@@ -145,6 +146,8 @@ pub fn add_falling_block(id: u64, position: [f32; 3], velocity: [f32; 3], block_
             item.value = Value::Default(Plain::Float(FALLING_BLOCK_SIZE));
         }
     }
+    let after_flags = block.metadata.iter().position(|item| item.key == Key::Flags).map_or(0, |at| at + 1);
+    block.metadata.insert(after_flags, item(Key::Health, Plain::Int(1)));
     let [x, y, z] = velocity;
     AddEntity { velocity: Vec3f { x, y, z }, ..block }
 }

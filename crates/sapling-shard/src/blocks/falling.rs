@@ -2,9 +2,7 @@
 //! gravity (flight.rs) and is placed where it lands, or leaves its item where it cannot be, by
 //! BDS's `FallingBlock` (docs/research/falling-blocks.md, and research/captures/ for what BDS sent).
 // TODO: what is free to fall into and what breaks a falling block are name lists, not block
-// data; concrete powder does not harden; no fall damage or splash; the fall starts
-// and lands with UpdateBlock where BDS sends UpdateBlockSynced (acacia-proto reads its entity id
-// with the wrong varint).
+// data; concrete powder does not harden; no fall damage or splash.
 
 mod flight;
 
@@ -14,7 +12,7 @@ use sapling_world::BlockRegistry;
 
 use super::place::gives_way;
 use super::{level, send};
-use crate::components::Tick;
+use crate::components::{NetId, Tick};
 
 /// Snow layers fall on Bedrock (`TopSnowBlock` ticks as a falling block), where Java breaks them.
 const FALLS: &[&str] = &[":sand", "red_sand", "suspicious_sand", "suspicious_gravel", "gravel", "concrete_powder", "dragon_egg", "anvil", "snow_layer"];
@@ -87,10 +85,12 @@ fn slide(world: &mut World, layer: Entity, pos: BlockPos) -> Option<BlockPos> {
     }
     let (registry, id) = block(world, layer, lowest)?;
     let air = registry.air_id();
-    if !send::set(world, layer, lowest, air) {
+    if !send::set_quietly(world, layer, lowest, air) {
         return None;
     }
-    flight::start(world, layer, id, lowest)?;
+    let falling = flight::start(world, layer, id, lowest)?;
+    let falling = world.get::<NetId>(falling)?.0;
+    send::tell_synced(world, layer, lowest, falling, send::Transition::Create);
     Some(lowest)
 }
 
