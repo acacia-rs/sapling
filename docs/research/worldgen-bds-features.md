@@ -153,4 +153,7 @@ block it replaced; a column replays the 9 sources around it by phase, then x, th
 the replaced block is still there. The freeze pass runs at the end of each source's decoration, over its own
 columns. Near origin this took wrong cells from 103.8k to 8.1k (seagrass 74.8 -> 99.9%, coal 90.7 -> 99.8%).
 Cost: per column one decoration (cached) plus up to three phase snapshots per neighbour chunk; the oracle suite went
-from 85 s to 160-210 s on testbox (geodes and icebergs included), not profiled further.
+from 85 s to 160-210 s on testbox (geodes and icebergs included). perf then showed terrain recomputation, not the
+replays: `SourceCache` cleared every entry when full, the aquifer maps hashed with SipHash, biome picks ran in
+single-biome lattice cells; with those fixed (`examples/bench_columns.rs`, 16x16 near origin) `chunk_blocks` costs
+31.5 ms per column (was 47.4; terrain alone 5.1) and the suite, liquids included, runs in about 75 s.

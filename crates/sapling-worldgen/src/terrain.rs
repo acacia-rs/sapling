@@ -24,9 +24,20 @@ pub enum CellKind {
 #[derive(Clone)]
 pub struct ChunkShape {
     blocks: Vec<Block>,
+    /// Fluid cells the aquifer asked to tick (index, lava), in the order generation placed them:
+    /// the chunk's tick queue when its decoration starts.
+    fluid_ticks: Vec<(u32, bool)>,
 }
 
 impl ChunkShape {
+    pub(crate) fn schedule_fluid(&mut self, index: usize, lava: bool) {
+        self.fluid_ticks.push((index as u32, lava));
+    }
+
+    pub(crate) fn fluid_ticks(&self) -> &[(u32, bool)] {
+        &self.fluid_ticks
+    }
+
     pub(crate) fn index(x: usize, y: i32, z: usize) -> usize {
         ((y - MIN_Y) as usize * 16 + z) * 16 + x
     }
@@ -50,8 +61,8 @@ impl ChunkShape {
     pub fn kind(&self, x: usize, y: i32, z: usize) -> CellKind {
         match self.block(x, y, z) {
             Block::Air => CellKind::Air,
-            Block::Water => CellKind::Water,
-            Block::Lava => CellKind::Lava,
+            block if block.is_lava() => CellKind::Lava,
+            block if block.is_fluid() => CellKind::Water,
             _ => CellKind::Solid,
         }
     }
@@ -94,7 +105,7 @@ impl Density {
         let climate = |qx: i32, qz: i32| -> QuartClimate { self.climate.sample(qx, qz) };
         let cells = self.cells(chunk_x, chunk_z, &climate);
         let mut aquifer = AquiferCache::default();
-        let mut blocks = vec![Block::Air; 16 * 16 * HEIGHT];
+        let mut shape = ChunkShape { blocks: vec![Block::Air; 16 * 16 * HEIGHT], fluid_ticks: Vec::new() };
         for cx in 0..4 {
             for cz in 0..4 {
                 let rows = self.generated_rows(&cells, chunk_x * 4 + cx as i32, chunk_z * 4 + cz as i32, cx, cz);
@@ -109,20 +120,25 @@ impl Density {
                                 let y = (MIN_CELL_Y + cy as i32) * 8 + dy as i32;
                                 let position = [chunk_x * 16 + x as i32, y, chunk_z * 16 + z as i32];
                                 let value = block_density(density.at(dx, dy, dz), &noodle, [dx, dy, dz], y);
-                                let block = match self.block_kind(&mut aquifer, position, value) {
+                                let (kind, update) = self.block_kind(&mut aquifer, position, value);
+                                let block = match kind {
                                     CellKind::Air => Block::Air,
                                     CellKind::Water => Block::Water,
                                     CellKind::Lava => Block::Lava,
                                     CellKind::Solid => self.solid_block(position, veins.each_ref().map(|v| v.at(dx, dy, dz))),
                                 };
-                                blocks[ChunkShape::index(x, y, z)] = block;
+                                let index = ChunkShape::index(x, y, z);
+                                shape.blocks[index] = block;
+                                if update {
+                                    shape.schedule_fluid(index, kind == CellKind::Lava);
+                                }
                             }
                         }
                     }
                 }
             }
         }
-        ChunkShape { blocks }
+        shape
     }
 
     /// Cell rows to fill in one cell column: BDS skips rows whose four corner columns are all
@@ -148,19 +164,21 @@ impl Density {
         rows
     }
 
-    fn block_kind(&self, aquifer: &mut AquiferCache, position: [i32; 3], density: f32) -> CellKind {
+    /// The cell's kind, and whether its fluid gets a tick (`_prepareHeights` hands those to the
+    /// chunk's tick queue through loadChunk's lambda 148263880).
+    fn block_kind(&self, aquifer: &mut AquiferCache, position: [i32; 3], density: f32) -> (CellKind, bool) {
         let mut density = density;
         if density > 0.0 {
-            return CellKind::Solid;
+            return (CellKind::Solid, false);
         }
         let answer = self.aquifer(aquifer, position);
         density += answer.barrier;
         if density > 0.0 {
-            CellKind::Solid
+            (CellKind::Solid, false)
         } else if position[1] < answer.fluid.level {
-            if answer.fluid.lava { CellKind::Lava } else { CellKind::Water }
+            (if answer.fluid.lava { CellKind::Lava } else { CellKind::Water }, answer.update)
         } else {
-            CellKind::Air
+            (CellKind::Air, false)
         }
     }
 }

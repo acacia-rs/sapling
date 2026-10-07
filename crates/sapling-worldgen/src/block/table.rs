@@ -6,8 +6,21 @@ macro_rules! with_solid_blocks {
     ($($plants:tt)*) => {
         blocks! {
             Air => "air" "",
+            // Liquids by `liquid_depth`, sources first (`Block::liquid`): 1..7 flowing, 8..15 falling.
             Water => "water" "liquid_depth=0",
+            Water1 => "water" "liquid_depth=1", Water2 => "water" "liquid_depth=2", Water3 => "water" "liquid_depth=3",
+            Water4 => "water" "liquid_depth=4", Water5 => "water" "liquid_depth=5", Water6 => "water" "liquid_depth=6",
+            Water7 => "water" "liquid_depth=7", Water8 => "water" "liquid_depth=8", Water9 => "water" "liquid_depth=9",
+            Water10 => "water" "liquid_depth=10", Water11 => "water" "liquid_depth=11", Water12 => "water" "liquid_depth=12",
+            Water13 => "water" "liquid_depth=13", Water14 => "water" "liquid_depth=14", Water15 => "water" "liquid_depth=15",
             Lava => "lava" "liquid_depth=0",
+            Lava1 => "lava" "liquid_depth=1", Lava2 => "lava" "liquid_depth=2", Lava3 => "lava" "liquid_depth=3",
+            Lava4 => "lava" "liquid_depth=4", Lava5 => "lava" "liquid_depth=5", Lava6 => "lava" "liquid_depth=6",
+            Lava7 => "lava" "liquid_depth=7", Lava8 => "lava" "liquid_depth=8", Lava9 => "lava" "liquid_depth=9",
+            Lava10 => "lava" "liquid_depth=10", Lava11 => "lava" "liquid_depth=11", Lava12 => "lava" "liquid_depth=12",
+            Lava13 => "lava" "liquid_depth=13", Lava14 => "lava" "liquid_depth=14", Lava15 => "lava" "liquid_depth=15",
+            Obsidian => "obsidian" "",
+            Cobblestone => "cobblestone" "",
             Bedrock => "bedrock" "infiniburn_bit=0",
             Stone => "stone" "",
             Deepslate => "deepslate" "pillar_axis=y",

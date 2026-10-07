@@ -5,6 +5,7 @@
 use std::collections::HashMap;
 
 use super::Density;
+use crate::fxhash::FxBuild;
 
 pub const SEA_LEVEL: i32 = 63;
 /// Below this BDS answers lava without sampling anything.
@@ -21,24 +22,26 @@ pub struct FluidStatus {
     pub lava: bool,
 }
 
-/// What the aquifer decided for one block: the barrier to add to the density, and the fluid
-/// to place if the block stays empty.
+/// What the aquifer decided for one block: the barrier to add to the density, the fluid to
+/// place if the block stays empty, and whether that fluid gets a tick (BDS +0x25, Java's
+/// `shouldScheduleFluidUpdate`): its two nearest centres are close to equidistant.
 #[derive(Debug, Clone, Copy)]
 pub struct AquiferAnswer {
     pub barrier: f32,
     pub fluid: FluidStatus,
+    pub update: bool,
 }
 
 #[derive(Default)]
 pub struct AquiferCache {
-    centers: HashMap<(i32, i32, i32), (i32, i32, i32)>,
-    statuses: HashMap<(i32, i32, i32), FluidStatus>,
+    centers: HashMap<(i32, i32, i32), (i32, i32, i32), FxBuild>,
+    statuses: HashMap<(i32, i32, i32), FluidStatus, FxBuild>,
 }
 
 impl Density {
     pub fn aquifer(&self, cache: &mut AquiferCache, [x, y, z]: [i32; 3]) -> AquiferAnswer {
         if y < LAVA_LEVEL {
-            return AquiferAnswer { barrier: 0.0, fluid: FluidStatus { level: LAVA_LEVEL, lava: true } };
+            return AquiferAnswer { barrier: 0.0, fluid: FluidStatus { level: LAVA_LEVEL, lava: true }, update: y == LAVA_LEVEL - 1 };
         }
         let (gx, gy, gz) = ((x - 5).div_euclid(16), (y + 1).div_euclid(12), (z - 5).div_euclid(16));
         let mut nearest = [(u32::MAX, (0, 0, 0)); 3];
@@ -60,8 +63,9 @@ impl Density {
         }
         let first = self.fluid_status(cache, nearest[0].1);
         let similarity_12 = similarity(nearest[0].0, nearest[1].0);
+        let update = -0.4 < similarity_12;
         if !(-1.0 < similarity_12) {
-            return AquiferAnswer { barrier: 0.0, fluid: first };
+            return AquiferAnswer { barrier: 0.0, fluid: first, update };
         }
         let second = self.fluid_status(cache, nearest[1].1);
         let third = self.fluid_status(cache, nearest[2].1);
@@ -96,7 +100,7 @@ impl Density {
         let similarity_23 = similarity(nearest[1].0, nearest[2].0).max(0.0);
         let others = (similarity_13 * p13).max(similarity_23 * p23);
         let barrier = (similarity_12.max(0.0) * 2.0 * p12.max(others)).max(0.0);
-        AquiferAnswer { barrier, fluid: first }
+        AquiferAnswer { barrier, fluid: first, update }
     }
 
     fn aquifer_center(&self, cache: &mut AquiferCache, cell: (i32, i32, i32)) -> (i32, i32, i32) {

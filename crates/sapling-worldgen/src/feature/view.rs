@@ -5,6 +5,7 @@
 use std::cell::RefCell;
 use std::sync::Arc;
 
+use super::ticks::TickQueue;
 use crate::block::Block;
 use crate::terrain::{ChunkShape, HEIGHT, MIN_Y};
 
@@ -55,11 +56,61 @@ pub struct View<'a> {
     writes: Vec<Vec<Write>>,
     /// Per slot, `highest_block` once asked.
     tops: RefCell<Vec<Option<i32>>>,
+    /// The block source's tick queue (liquid/mod.rs).
+    pub ticks: TickQueue,
+    /// Run after each `set_block`: `setBlock`'s neighbour updates (liquid/mod.rs).
+    pub on_write: Option<fn(&mut View, [i32; 3])>,
 }
 
 impl<'a> View<'a> {
     pub fn new(chunk: (i32, i32), load: &'a dyn Fn(i32, i32) -> Arc<ChunkShape>) -> Self {
-        Self { chunk, load, shapes: RefCell::new(vec![None; SIDE * SIDE]), writes: vec![Vec::new(); SIDE * SIDE], tops: RefCell::new(vec![None; SIDE * SIDE]) }
+        let slots = SIDE * SIDE;
+        Self {
+            chunk,
+            load,
+            shapes: RefCell::new(vec![None; slots]),
+            writes: vec![Vec::new(); slots],
+            tops: RefCell::new(vec![None; slots]),
+            ticks: TickQueue::default(),
+            on_write: None,
+        }
+    }
+
+    pub fn chunk(&self) -> (i32, i32) {
+        self.chunk
+    }
+
+    /// `BlockSource::hasBlock`: inside the world's height and the writable region.
+    pub fn has_block(&self, x: i32, y: i32, z: i32) -> bool {
+        self.locate(x, y, z).is_some()
+    }
+
+    /// The decorated chunk's own fluid ticks from generation, as world positions.
+    pub fn own_fluid_ticks(&self) -> Vec<([i32; 3], bool)> {
+        let slot = slot(0, 0).expect("centre");
+        let (x0, z0) = (self.chunk.0 * 16, self.chunk.1 * 16);
+        self.read(slot, 0);
+        let shapes = self.shapes.borrow();
+        let shape = shapes[slot].as_ref().expect("read just above");
+        let at = |i: i32| [x0 + (i & 15), i / 256 + MIN_Y, z0 + ((i >> 4) & 15)];
+        shape.fluid_ticks().iter().map(|&(index, lava)| (at(index as i32), lava)).collect()
+    }
+
+    /// `BlockSource::addToTickingQueue` (1415f50f0): a tick joins the block source's queue only when
+    /// every chunk within 8 blocks of the cell is in the region; else it goes to its chunk's own queue,
+    /// which runs in game, after decoration (`TickQueue::in_game`).
+    pub fn schedule(&mut self, at: [i32; 3], lava: bool, delay: u64) {
+        let near = |x: i32, z: i32| [x - 8, x + 8].iter().all(|&x| [z - 8, z + 8].iter().all(|&z| self.has_block(x, MIN_Y, z)));
+        if self.ticks.game || near(at[0], at[2]) {
+            self.ticks.add(at, lava, delay);
+        } else {
+            self.ticks.in_game.push((at, lava, delay));
+        }
+    }
+
+    /// Whether every chunk within a block of the column is in the region (an instatick's range).
+    pub fn can_tick(&self, x: i32, z: i32) -> bool {
+        [x - 1, x + 1].iter().all(|&x| [z - 1, z + 1].iter().all(|&z| self.has_block(x, MIN_Y, z)))
     }
 
     /// The slot and column index of a block, if it lies in the writable region.
@@ -85,8 +136,17 @@ impl<'a> View<'a> {
         self.locate(x, y, z).map_or(Block::Air, |(slot, index)| self.read(slot, index))
     }
 
-    /// False, writing nothing, outside the world's height and the writable region.
+    /// A feature's write (`setBlock` with flags 3): `set_block_quiet`, then `on_write`.
     pub fn set_block(&mut self, x: i32, y: i32, z: i32, block: Block) -> bool {
+        let written = self.set_block_quiet(x, y, z, block);
+        if let Some(hook) = self.on_write.filter(|_| written) {
+            hook(self, [x, y, z]);
+        }
+        written
+    }
+
+    /// False, writing nothing, outside the world's height and the writable region.
+    pub fn set_block_quiet(&mut self, x: i32, y: i32, z: i32, block: Block) -> bool {
         let Some((slot, index)) = self.locate(x, y, z) else { return false };
         let seen = self.read(slot, index);
         let mut shapes = self.shapes.borrow_mut();

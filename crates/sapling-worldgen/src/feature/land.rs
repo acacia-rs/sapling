@@ -51,6 +51,7 @@ impl Legacy {
             Legacy::Mushroom { block, count } => super::flowers::mushroom(ctx.view, ctx.random, at, block, count),
             Legacy::Flower { kind, count } => super::flowers::flowers(ctx.view, ctx.random, at, kind, count),
             Legacy::Iceberg => super::iceberg::ice_feature(ctx.view, ctx.random, at),
+            Legacy::Springs => super::springs::springs(ctx, at),
         }
     }
 }

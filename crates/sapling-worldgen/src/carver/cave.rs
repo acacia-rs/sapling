@@ -69,11 +69,16 @@ fn in_range(random: &mut Mt19937, (min, max): (f32, f32)) -> f32 {
 impl CaveSettings {
     /// Every segment the caves starting in this chunk carve; `random` is seeded per chunk.
     pub fn segments(&self, random: &mut Mt19937, chunk_x: i32, chunk_z: i32) -> Vec<Segment> {
+        self.segments_gated(random, chunk_x, chunk_z, true)
+    }
+
+    /// `segments`, with the skip-carve draw ignored when `skip_gate` is false (probes only).
+    pub fn segments_gated(&self, random: &mut Mt19937, chunk_x: i32, chunk_z: i32, skip_gate: bool) -> Vec<Segment> {
         let bound = random.next_int(self.cave_bound);
         let bound = random.next_int(bound + 1);
         let count = random.next_int(bound + 1);
         let mut out = Vec::new();
-        if count == 0 || random.next_int(self.skip_carve_chance) != 0 {
+        if count == 0 || random.next_int(self.skip_carve_chance) != 0 && skip_gate {
             return out;
         }
         for _ in 0..count {

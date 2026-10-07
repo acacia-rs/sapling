@@ -1,23 +1,29 @@
-//! `bench_columns [seed] [chunks]`: wall time per whole column (`chunk_blocks`) over a square of
-//! chunks from 0,0, on one fresh generator (neighbour caches amortised as when generating an area).
+//! `bench_columns [seed] [chunk x0] [chunk z0] [side] [reps]` (defaults 20261003 0 0 8 1): time per
+//! column of `loaded_blocks` alone and of `chunk_blocks` (everything, what `Generated::load_column`
+//! pays), each on a fresh generator sweeping the square x outer, z inner as the oracle does; the best
+//! of `reps` sweeps.
 
 use std::time::Instant;
 
 use sapling_worldgen::OverworldGenerator;
 
-fn main() {
-    let mut args = std::env::args().skip(1);
-    let seed: i64 = args.next().map_or(20261003, |a| a.parse().expect("seed"));
-    let side: i32 = args.next().map_or(8, |a| a.parse().expect("chunk count per side"));
+fn sweep(seed: i64, x0: i32, z0: i32, side: i32, stage: impl Fn(&OverworldGenerator, i32, i32)) -> f64 {
     let generator = OverworldGenerator::new(seed);
     let start = Instant::now();
-    let mut solid = 0usize;
-    for cx in 0..side {
-        for cz in 0..side {
-            let shape = generator.chunk_blocks(cx, cz);
-            solid += usize::from(shape.block(0, 0, 0).is_solid());
+    for x in x0..x0 + side {
+        for z in z0..z0 + side {
+            stage(&generator, x, z);
         }
     }
-    let ms = start.elapsed().as_secs_f64() * 1000.0 / f64::from(side * side);
-    println!("{:.2} ms per column over {} columns ({solid} solid at y 0)", ms, side * side);
+    start.elapsed().as_secs_f64() * 1000.0 / (side * side) as f64
+}
+
+fn main() {
+    let args: Vec<i64> = std::env::args().skip(1).map(|a| a.parse().expect("integer argument")).collect();
+    let arg = |i: usize, default: i64| args.get(i).copied().unwrap_or(default);
+    let (seed, x0, z0, side) = (arg(0, 20261003), arg(1, 0) as i32, arg(2, 0) as i32, arg(3, 8) as i32);
+    let reps = arg(4, 1);
+    let best = |stage: &dyn Fn(&OverworldGenerator, i32, i32)| (0..reps).map(|_| sweep(seed, x0, z0, side, stage)).fold(f64::MAX, f64::min);
+    println!("loaded_blocks: {:.2} ms/column", best(&|g, x, z| drop(g.loaded_blocks(x, z))));
+    println!("chunk_blocks:  {:.2} ms/column", best(&|g, x, z| drop(g.chunk_blocks(x, z))));
 }

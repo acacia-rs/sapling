@@ -13,6 +13,7 @@ mod decoration;
 pub mod density;
 mod feature;
 mod floor;
+mod fxhash;
 mod mth;
 pub mod noise;
 pub mod random;
@@ -120,6 +121,12 @@ impl OverworldGenerator {
     pub fn source_feature_writes(&self, chunk_x: i32, chunk_z: i32) -> Vec<([i32; 3], Block, Block)> {
         let writes = self.features.source_writes((chunk_x, chunk_z), &|x, z| self.loaded(x, z), &|x, z| self.chunk_biomes(x, z));
         writes.world_writes((chunk_x, chunk_z))
+    }
+
+    /// Cave segments near a column, for probes (`Carvers::segments_near`).
+    #[doc(hidden)]
+    pub fn cave_segments_near(&self, x: i32, z: i32, reach: f32, skip_gate: bool) -> Vec<(usize, [f32; 3], f32, f32)> {
+        self.carvers.segments_near(x, z, reach, skip_gate)
     }
 
     /// Bedrock biome ids per block, cached for the stages and neighbours that read them again.

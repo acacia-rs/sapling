@@ -29,7 +29,8 @@ fn main() {
                 for z in 0..16 {
                     for x in 0..16 {
                         let Some(bds) = chunk.biome(cx * 16 + x as i32, y, cz * 16 + z as i32) else { continue };
-                        let entry = points.entry(biomes.lattice_point(x, y, z)).or_insert((biomes.biome(x, y, z), BTreeMap::new()));
+                        let Some(point) = biomes.lattice_point(x, y, z) else { continue };
+                        let entry = points.entry(point).or_insert((biomes.biome(x, y, z), BTreeMap::new()));
                         *entry.1.entry(bds).or_default() += 1;
                     }
                 }

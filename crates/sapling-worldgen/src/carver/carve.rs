@@ -101,5 +101,8 @@ pub fn empty_cell(shape: &mut ChunkShape, density: &Density, aquifer: &mut Aquif
         fluid if fluid.lava => Block::Lava,
         _ => Block::Water,
     };
+    if block.is_fluid() && answer.update {
+        shape.schedule_fluid(ChunkShape::index(x, y, z), block.is_lava());
+    }
     shape.set_block(x, y, z, block);
 }

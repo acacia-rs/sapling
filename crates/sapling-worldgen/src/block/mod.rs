@@ -65,8 +65,25 @@ pub const KELP: [Block; 26] = [
 ];
 
 impl Block {
+    /// Water or lava of any depth.
     pub fn is_fluid(self) -> bool {
-        matches!(self, Block::Water | Block::Lava)
+        (Block::Water..=Block::Lava15).contains(&self)
+    }
+
+    pub fn is_lava(self) -> bool {
+        (Block::Lava..=Block::Lava15).contains(&self)
+    }
+
+    /// The `liquid_depth` of water or lava.
+    pub fn liquid_depth(self) -> Option<u8> {
+        let base = if self.is_lava() { Block::Lava } else { Block::Water };
+        self.is_fluid().then(|| (self as usize - base as usize) as u8)
+    }
+
+    /// Water or lava with `liquid_depth` `depth` (0..16).
+    pub fn liquid(lava: bool, depth: u8) -> Block {
+        let base = if lava { Block::Lava } else { Block::Water };
+        Block::ALL[base as usize + depth as usize]
     }
 
     /// Plants placed by features: no collision, no light blocking, never terrain.
@@ -93,7 +110,7 @@ impl Block {
     }
 
     pub fn is_solid(self) -> bool {
-        !matches!(self, Block::Air | Block::Water | Block::Lava) && !self.is_plant()
+        self != Block::Air && !self.is_fluid() && !self.is_plant()
     }
 
     /// Solid for movement: everything but air, fluids, snow layers and the plants without collision.
