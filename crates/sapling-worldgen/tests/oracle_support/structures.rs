@@ -142,10 +142,11 @@ impl StructureTally {
         }
     }
 
-    /// One stable cell: our block before and after the structure stage, BDS's, and its kind.
-    pub fn add(&mut self, before: Block, after: Block, bds: &BdsCell, kind: Option<StructureKind>) {
+    /// One stable cell: our block before and after the structure stage, BDS's, the ported kind
+    /// whose area holds it (what placed it) and the kind of any structure there (what BDS wants).
+    pub fn add(&mut self, before: Block, after: Block, bds: &BdsCell, placer: Option<StructureKind>, kind: Option<StructureKind>) {
         if before != after {
-            let counts = self.kinds.entry(kind.map_or("unattributed", |k| k.name())).or_default();
+            let counts = self.kinds.entry(placer.map_or("unattributed", |k| k.name())).or_default();
             counts.placed += 1;
             counts.hits += u64::from(bds.is(after));
             if after != Block::Air {

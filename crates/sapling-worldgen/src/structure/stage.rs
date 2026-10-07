@@ -55,7 +55,7 @@ impl Structures {
             return found.clone();
         }
         let mesa = MESA_BIOMES.contains(&density.climate.biome_at(start.0 * 16, 0, start.1 * 16));
-        let built = Arc::new(mineshaft::generate(self.level_seed, start, mesa, &|qx, qz| density.preliminary_surface(qx, qz)));
+        let built = Arc::new(mineshaft::generate(&self.mineshaft_seed, start, mesa, &|qx, qz| density.preliminary_surface(qx, qz)));
         self.mineshafts.lock().unwrap().insert(start, built.clone());
         built
     }

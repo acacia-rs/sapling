@@ -33,13 +33,25 @@ const SEA_LEVEL: i32 = 63;
 pub struct Structures {
     seed: i64,
     level_seed: u32,
+    mineshaft_seed: placement::MineshaftSeed,
+    /// Mineshaft chances already drawn: every column asks for the 15x15 chunks around it.
+    mineshaft_chunks: Mutex<HashMap<(i32, i32), bool>>,
     strongholds: OnceLock<Vec<(i32, i32)>>,
     mineshafts: Mutex<HashMap<(i32, i32), Arc<mineshaft::Mineshaft>>>,
 }
 
 impl Structures {
     pub fn new(seed: i64) -> Self {
-        Self { seed, level_seed: seed as u32, strongholds: OnceLock::new(), mineshafts: Mutex::new(HashMap::new()) }
+        let level_seed = seed as u32;
+        let mineshaft_seed = placement::MineshaftSeed::new(level_seed);
+        Self {
+            seed,
+            level_seed,
+            mineshaft_seed,
+            mineshaft_chunks: Mutex::new(HashMap::new()),
+            strongholds: OnceLock::new(),
+            mineshafts: Mutex::new(HashMap::new()),
+        }
     }
 
     /// Whether `kind` starts in `chunk` (`isFeatureChunk`; for v2 sets the grid and a biome).
@@ -64,7 +76,7 @@ impl Structures {
                 let (x, y, z) = centre(probe.surface(chunk));
                 TEMPLE_BIOMES.contains(&probe.biome(x, y, z)) && probe.min_height(chunk) >= SEA_LEVEL
             }
-            StructureKind::Mineshaft => placement::is_mineshaft_chunk(seed, chunk),
+            StructureKind::Mineshaft => *self.mineshaft_chunks.lock().unwrap().entry(chunk).or_insert_with(|| self.mineshaft_seed.is_start(chunk)),
             StructureKind::Mansion => probe.contains_only(centre(probe.surface(chunk)), 32, MANSION_BIOMES),
             StructureKind::BuriedTreasure => probe.contains_only(centre(probe.surface(chunk)), 3, BURIED_TREASURE_BIOMES),
             StructureKind::Outpost => probe.contains_only(centre(probe.surface(chunk)), 0, OUTPOST_BIOMES),

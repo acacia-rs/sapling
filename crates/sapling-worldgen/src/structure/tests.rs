@@ -34,5 +34,5 @@ fn bds_locate_answers_are_starts() {
 #[test]
 fn mineshaft_chance_needs_distance_from_origin() {
     // nextInt(80) < max(|x|, |z|): no mineshaft can start in the origin chunk.
-    assert!(!super::placement::is_mineshaft_chunk(20261003, (0, 0)));
+    assert!(!super::placement::MineshaftSeed::new(20261003).is_start((0, 0)));
 }

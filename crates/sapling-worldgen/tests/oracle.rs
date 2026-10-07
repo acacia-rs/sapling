@@ -14,9 +14,12 @@ use oracle_support::{
 };
 use sapling_leveldb::ChunkKey;
 
+use sapling_worldgen::structure::StructureKind;
 use sapling_worldgen::{Block, CellKind, MIN_Y, OverworldGenerator};
 
 const LAST_Y: i32 = 319;
+/// The kinds whose blocks the structure stage places.
+const PORTED: &[StructureKind] = &[StructureKind::Mineshaft, StructureKind::BuriedTreasure];
 
 #[derive(Default)]
 struct Tallies {
@@ -50,6 +53,8 @@ fn compare(seed: i64, world: &str, regions: &[Region]) {
             generator.place_structures(&mut structured, cx, cz);
             let areas = generator.structure_areas(cx, cz);
             tallies.structures.note_areas(&areas);
+            // Our structure stage writes only the ported kinds' blocks.
+            let ported: Vec<_> = areas.iter().filter(|(kind, _, _)| PORTED.contains(kind)).copied().collect();
             let mut laked = structured.clone();
             generator.decorate(&mut laked, cx, cz);
             let mut ours = laked.clone();
@@ -82,7 +87,7 @@ fn compare(seed: i64, world: &str, regions: &[Region]) {
                         tallies.blocks.add(block, bds, stable, at, context);
                         if stable {
                             tallies.features.add(laked.block(x, y, z), block, bds);
-                            tallies.structures.add(loaded.block(x, y, z), structured.block(x, y, z), bds, attribute(&areas, at));
+                            tallies.structures.add(loaded.block(x, y, z), structured.block(x, y, z), bds, attribute(&ported, at), attribute(&areas, at));
                             if Some(y) == our_top {
                                 tallies.top.add(block, bds, at, context);
                             }
@@ -175,6 +180,31 @@ fn blocks_match_bds_biomes() {
         Region::new("warm ocean", 242, -494, 245, -491),
     ];
     compare(20261003, "20261003-biomes", &regions);
+}
+
+/// Regions around one start of each kind (`/locate` answers from near the origin).
+#[test]
+#[ignore = "needs worlds/oracle; slow"]
+fn blocks_match_bds_structures() {
+    let regions = [
+        Region::new("village", -66, 4, -59, 11),
+        Region::new("igloo, snowy slopes", 40, -29, 44, -25),
+        Region::new("igloo, snowy plains", -58, -179, -54, -175),
+        Region::new("jungle temple", 79, 4, 83, 8),
+        Region::new("desert pyramid", -385, -222, -381, -218),
+        Region::new("swamp hut", 238, -116, 242, -112),
+        Region::new("shipwreck", -9, -26, -5, -22),
+        Region::new("monument", -27, -26, -19, -18),
+        Region::new("ruined portal", 9, 16, 13, 20),
+        Region::new("trial chambers", 2, 14, 12, 24),
+        Region::new("trail ruins", -58, 20, -52, 26),
+        Region::new("ancient city", -74, 75, -66, 83),
+        Region::new("pillager outpost", 115, -73, 121, -67),
+        Region::new("stronghold", -93, -126, -85, -118),
+        Region::new("mansion", -516, 992, -508, 1000),
+        Region::new("ocean ruins", 18, -40, 22, -36),
+    ];
+    compare(20261003, "20261003-structures", &regions);
 }
 
 #[test]

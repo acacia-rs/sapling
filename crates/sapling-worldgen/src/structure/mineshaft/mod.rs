@@ -8,7 +8,7 @@ mod rooms;
 use super::BoundingBox;
 use super::canvas::Canvas;
 use super::piece::{Frame, NORTH, SOUTH, WEST};
-use super::placement::mineshaft_random;
+use super::placement::MineshaftSeed;
 use crate::biome::ChunkBiomes;
 use crate::block::Block;
 use crate::random::Mt19937;
@@ -88,8 +88,8 @@ pub(super) fn frame(bb: BoundingBox, orientation: Option<u8>, depth: i32) -> Fra
 
 /// A start's pieces; `mesa` from the point biome at the chunk corner, y 0; `surface` is the
 /// preliminary surface at a quart column.
-pub fn generate(level_seed: u32, chunk: (i32, i32), mesa: bool, surface: &dyn Fn(i32, i32) -> i32) -> Mineshaft {
-    let (_, mut random) = mineshaft_random(level_seed, chunk);
+pub fn generate(seed: &MineshaftSeed, chunk: (i32, i32), mesa: bool, surface: &dyn Fn(i32, i32) -> i32) -> Mineshaft {
+    let (_, mut random) = seed.random(chunk);
     let materials = Materials { dark: mesa, room_chance: if mesa { 0.5 } else { 1.0 } };
     let (x, z) = (chunk.0 * 16, chunk.1 * 16);
     // C++ evaluates the box's arguments last to first.

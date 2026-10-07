@@ -93,18 +93,31 @@ impl JavaRandom {
 /// Mineshafts (`MineshaftFeature::isFeatureChunk` 14831b070): a chunk seed from two `nextInt()`s
 /// multiplied, not forced odd, and xored; then one skipped draw, `nextFloat() < 0.004` and
 /// `nextInt(80) < max(|x|, |z|)`, both always drawn.
-pub fn is_mineshaft_chunk(level_seed: u32, chunk: (i32, i32)) -> bool {
-    mineshaft_random(level_seed, chunk).0
+#[derive(Debug, Clone, Copy)]
+pub struct MineshaftSeed {
+    level_seed: u32,
+    a: i32,
+    b: i32,
 }
 
-/// The mineshaft chance and the generator after its draws, which the start's pieces go on with.
-pub fn mineshaft_random(level_seed: u32, (x, z): (i32, i32)) -> (bool, Mt19937) {
-    let mut random = Mt19937::new(level_seed);
-    let a = random.next_int_unbounded();
-    let b = random.next_int_unbounded();
-    let mut random = Mt19937::new((b.wrapping_mul(z) ^ a.wrapping_mul(x)) as u32 ^ level_seed);
-    random.next_int_unbounded();
-    let chance = random.next_float();
-    let roll = random.next_int(80);
-    (chance < 0.004 && roll < x.unsigned_abs().max(z.unsigned_abs()) as i32, random)
+impl MineshaftSeed {
+    pub fn new(level_seed: u32) -> Self {
+        let mut random = Mt19937::new(level_seed);
+        let a = random.next_int_unbounded();
+        let b = random.next_int_unbounded();
+        Self { level_seed, a, b }
+    }
+
+    pub fn is_start(&self, chunk: (i32, i32)) -> bool {
+        self.random(chunk).0
+    }
+
+    /// The mineshaft chance and the generator after its draws, which the start's pieces go on with.
+    pub fn random(&self, (x, z): (i32, i32)) -> (bool, Mt19937) {
+        let mut random = Mt19937::new((self.b.wrapping_mul(z) ^ self.a.wrapping_mul(x)) as u32 ^ self.level_seed);
+        random.next_int_unbounded();
+        let chance = random.next_float();
+        let roll = random.next_int(80);
+        (chance < 0.004 && roll < x.unsigned_abs().max(z.unsigned_abs()) as i32, random)
+    }
 }
