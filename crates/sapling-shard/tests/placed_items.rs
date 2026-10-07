@@ -33,7 +33,7 @@ fn break_by_hand(h: &mut Harness, pos: [i32; 3], ticks: usize) -> Vec<AddItemEnt
 
 /// The block entities among `packets` as (position, entity).
 fn entities(packets: &[RawPacket]) -> Vec<([i32; 3], Value)> {
-    all::<BlockEntityData>(packets).into_iter().map(|data| ([data.position.x, data.position.y, data.position.z], data.nbt.value)).collect()
+    all::<BlockEntityData>(packets).into_iter().map(|data| ([data.position.x, data.position.y, data.position.z], data.nbt.decode().unwrap().value)).collect()
 }
 
 fn text(entity: &Value, side: &str) -> Option<Value> {
@@ -49,20 +49,20 @@ fn a_placed_sign_opens_its_editor_and_keeps_what_its_placer_writes() {
     assert_eq!(opened.iter().map(|open| ([open.position.x, open.position.y, open.position.z], open.is_front)).collect::<Vec<_>>(), [(ABOVE, true)]);
     let shown = entities(sent.to(2));
     assert_eq!((shown[0].0, shown[0].1.get("id")), (ABOVE, Some(&Value::String("Sign".into()))));
-    assert_eq!(text(&shown[0].1, "FrontText"), Some(Value::String(String::new())));
+    assert_eq!(text(&shown[0].1, "FrontText"), Some(Value::String(Default::default())));
 
     // Steve was shown no editor: what his client says about the sign is ignored.
     let written = |words: &str| {
         let side = Value::Compound(vec![("Text".into(), Value::String(words.into()))]);
         let nbt = Nbt { name: String::new(), value: Value::Compound(vec![("FrontText".into(), side)]) };
-        BlockEntityData { position: BlockCoordinates { x: ABOVE[0], y: ABOVE[1], z: ABOVE[2] }, nbt }
+        BlockEntityData { position: BlockCoordinates { x: ABOVE[0], y: ABOVE[1], z: ABOVE[2] }, nbt: nbt.into() }
     };
     h.receive(2, &written("Steve was here"));
     assert!(entities(h.tick_all().to(1)).is_empty());
     h.receive(1, &written("Hello"));
     let shown = entities(h.tick_all().to(2));
     assert_eq!(text(&shown[0].1, "FrontText"), Some(Value::String("Hello".into())));
-    assert_eq!(text(&shown[0].1, "BackText"), Some(Value::String(String::new())), "the back is as it was");
+    assert_eq!(text(&shown[0].1, "BackText"), Some(Value::String(Default::default())), "the back is as it was");
     h.receive(1, &written("Again"));
     assert!(entities(h.tick_all().to(2)).is_empty(), "the editor was closed");
 
@@ -94,7 +94,7 @@ fn a_dye_colours_a_written_sign_and_a_waxed_one_only_sounds() {
     h.tick_all();
     let side = Value::Compound(vec![("Text".into(), Value::String("Hello".into()))]);
     let nbt = Nbt { name: String::new(), value: Value::Compound(vec![("FrontText".into(), side)]) };
-    h.receive(1, &BlockEntityData { position: BlockCoordinates { x: ABOVE[0], y: ABOVE[1], z: ABOVE[2] }, nbt });
+    h.receive(1, &BlockEntityData { position: BlockCoordinates { x: ABOVE[0], y: ABOVE[1], z: ABOVE[2] }, nbt: nbt.into() });
     h.tick_all();
     // In front of the sign, which faces north.
     h.receive(1, &input_at([1.5, 65.0, -1.5]));

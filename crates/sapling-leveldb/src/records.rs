@@ -19,7 +19,7 @@ pub(crate) fn compounds(record: &[u8]) -> Result<Vec<(&[u8], Value)>, Error> {
 #[cfg(test)]
 pub(crate) fn compound(fields: Vec<(&str, Value)>) -> Vec<u8> {
     let mut out = bytes::BytesMut::new();
-    let value = Value::Compound(fields.into_iter().map(|(key, value)| (key.to_string(), value)).collect());
+    let value = Value::Compound(fields.into_iter().map(|(key, value)| (key.into(), value)).collect());
     nbt::write::<LittleEndian>(&mut out, &nbt::Nbt { name: String::new(), value });
     out.to_vec()
 }

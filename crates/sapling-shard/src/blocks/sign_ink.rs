@@ -2,7 +2,7 @@
 //! sign interaction (`148b55920`) does it before it would open the editor; and the sound a waxed
 //! sign makes instead (docs/research/sign-dyes.md).
 
-use acacia_proto::nbt::Value;
+use acacia_proto::nbt::{Str, Value};
 use acacia_proto::packets::{LevelEvent, LevelEventEvent, LevelSoundEvent};
 use acacia_proto::types::Vec3f;
 use bevy_ecs::prelude::*;
@@ -34,13 +34,13 @@ const DYES: [(&str, i32); 16] = [
     ("minecraft:white_dye", -986_896),
 ];
 
-fn get<'a>(fields: &'a [(String, Value)], key: &str) -> Option<&'a Value> {
+fn get<'a>(fields: &'a [(Str, Value)], key: &str) -> Option<&'a Value> {
     fields.iter().find(|(name, _)| name == key).map(|(_, value)| value)
 }
 
-fn put(fields: &mut Vec<(String, Value)>, key: &str, value: Value) {
+fn put(fields: &mut Vec<(Str, Value)>, key: &str, value: Value) {
     fields.retain(|(name, _)| name != key);
-    fields.push((key.to_owned(), value));
+    fields.push((key.into(), value));
 }
 
 /// The sign entity `kept` with the item `item` applied to its side `side`, and the event that

@@ -29,7 +29,7 @@ fn horse() -> Vec<u8> {
         ("Variant", Value::Int(3)),
     ];
     let mut out = BytesMut::new();
-    nbt::write::<LittleEndian>(&mut out, &Nbt { name: String::new(), value: Value::Compound(fields.map(|(key, value)| (key.to_string(), value)).into()) });
+    nbt::write::<LittleEndian>(&mut out, &Nbt { name: String::new(), value: Value::Compound(fields.map(|(key, value)| (nbt::Str::from(key), value)).into()) });
     out.to_vec()
 }
 

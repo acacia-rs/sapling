@@ -96,7 +96,7 @@ fn written(kept: &Value, sent: &Value, owner: &str) -> Option<Value> {
         let Some(new) = text(sent.get(key)).filter(|new| new.len() <= MAX_TEXT && Some(*new) != text(Some(side))) else { continue };
         let Value::Compound(side) = side else { continue };
         side.retain(|(key, _)| key != "Text" && key != "TextOwner");
-        side.extend([("Text".to_owned(), Value::String(new.to_owned())), ("TextOwner".to_owned(), Value::String(owner.to_owned()))]);
+        side.extend([("Text".into(), Value::String(new.into())), ("TextOwner".into(), Value::String(owner.into()))]);
         changed = true;
     }
     changed.then_some(Value::Compound(fields))
@@ -115,7 +115,7 @@ pub(crate) fn dispatch_edits(world: &mut World) {
         }
         let owner = world.get::<Identity>(player).map(|identity| identity.0.xuid.clone()).unwrap_or_default();
         let kept = world.get::<Layer>(editing.layer).and_then(|layer| layer.world.block_entity(pos)).map(|kept| kept.nbt.clone());
-        if let Some(entity) = kept.and_then(|kept| written(&kept, &edit.nbt.value, &owner)) {
+        if let Some(entity) = kept.and_then(|kept| written(&kept, &edit.nbt.decode().ok()?.value, &owner)) {
             send::keep_entity(world, editing.layer, pos, &entity);
         }
     }

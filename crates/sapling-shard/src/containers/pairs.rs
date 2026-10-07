@@ -32,7 +32,7 @@ fn paired(entity: &Value, with: Option<(BlockPos, bool)>) -> Value {
     let mut fields = if let Value::Compound(fields) = entity { fields.clone() } else { Vec::new() };
     fields.retain(|(key, _)| ![LEAD, X, Z].contains(&key.as_str()));
     if let Some(([x, _, z], leads)) = with {
-        fields.extend([(LEAD.to_owned(), Value::Byte(leads.into())), (X.to_owned(), Value::Int(x)), (Z.to_owned(), Value::Int(z))]);
+        fields.extend([(LEAD.into(), Value::Byte(leads.into())), (X.into(), Value::Int(x)), (Z.into(), Value::Int(z))]);
     }
     Value::Compound(fields)
 }

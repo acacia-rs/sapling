@@ -65,7 +65,7 @@ pub(crate) fn forget(world: &mut World, layer: Entity, pos: BlockPos) {
     let entity = world.get::<Layer>(layer).and_then(|level| level.world.block_entity(pos)).map(|entity| entity.nbt.clone());
     if let Some(Value::Compound(mut fields)) = entity {
         fields.retain(|(key, _)| key != COOLDOWN);
-        fields.push((COOLDOWN.to_owned(), Value::Int(hopper.cooldown as i32)));
+        fields.push((COOLDOWN.into(),Value::Int(hopper.cooldown as i32)));
         if let Some(mut level) = world.get_mut::<Layer>(layer) {
             level.world.set_block_entity(pos, &Value::Compound(fields));
         }

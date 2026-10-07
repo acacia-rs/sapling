@@ -7,7 +7,7 @@
 use std::collections::{HashMap, HashSet};
 use std::sync::{Arc, Mutex};
 
-use acacia_proto::nbt::{self, LittleEndian, Nbt, Value};
+use acacia_proto::nbt::{self, LittleEndian, Nbt, Str, Value};
 use acacia_world::{BlockRegistry, BlockState};
 use bytes::BytesMut;
 
@@ -100,11 +100,11 @@ impl BlockStates {
     }
 }
 
-fn name_field(state: &BlockState) -> (String, Value) {
+fn name_field(state: &BlockState) -> (Str, Value) {
     ("name".into(), Value::String(state.name.into()))
 }
 
-fn compound(fields: Vec<(String, Value)>) -> Vec<u8> {
+fn compound(fields: Vec<(Str, Value)>) -> Vec<u8> {
     let mut out = BytesMut::new();
     nbt::write::<LittleEndian>(&mut out, &Nbt { name: String::new(), value: Value::Compound(fields) });
     out.to_vec()
@@ -135,20 +135,20 @@ fn typed_states(state: &BlockState) -> Option<Value> {
     let pairs: Vec<(&str, &str)> = state.properties.split(',').filter_map(|pair| pair.split_once('=')).collect();
     let numbers = pairs.iter().filter(|(_, value)| value.parse::<i32>().is_ok()).count();
     if numbers == 0 {
-        return Some(Value::Compound(pairs.iter().map(|(key, text)| (key.to_string(), Value::String(text.to_string()))).collect()));
+        return Some(Value::Compound(pairs.iter().map(|(key, text)| (Str::from(*key), Value::String(Str::from(*text)))).collect()));
     }
     (0..1u32 << numbers).find_map(|ints| {
         let mut number = 0;
         let mut typed = Vec::with_capacity(pairs.len());
         for (key, text) in &pairs {
             let value = match text.parse::<i32>() {
-                Err(_) => Value::String(text.to_string()),
+                Err(_) => Value::String(Str::from(*text)),
                 Ok(int) => {
                     number += 1;
                     if ints >> (number - 1) & 1 == 1 { Value::Int(int) } else { Value::Byte(i8::try_from(int).ok()?) }
                 }
             };
-            typed.push((key.to_string(), value));
+            typed.push((Str::from(*key), value));
         }
         let states = Value::Compound(typed);
         (fnv1a_32(&compound(vec![name_field(state), ("states".into(), states.clone())])) == state.network_hash).then_some(states)
@@ -162,7 +162,7 @@ fn properties(states: &Value) -> String {
         Value::Byte(v) => v.to_string(),
         Value::Short(v) => v.to_string(),
         Value::Int(v) => v.to_string(),
-        Value::String(v) => v.clone(),
+        Value::String(v) => v.to_string(),
         other => format!("{other:?}"),
     };
     let mut pairs: Vec<String> = entries.iter().map(|(key, value)| format!("{key}={}", text(value))).collect();
@@ -175,11 +175,11 @@ pub(crate) mod tests {
     use super::*;
 
     pub fn entry(name: &str, states: &[(&str, Value)]) -> Vec<u8> {
-        let states = states.iter().map(|(k, v)| (k.to_string(), v.clone())).collect();
+        let states = states.iter().map(|(k, v)| (Str::from(*k), v.clone())).collect();
         compound(vec![
-            ("name".to_string(), Value::String(name.into())),
-            ("states".to_string(), Value::Compound(states)),
-            ("version".to_string(), Value::Int(STATE_VERSION)),
+            ("name".into(), Value::String(name.into())),
+            ("states".into(), Value::Compound(states)),
+            ("version".into(), Value::Int(STATE_VERSION)),
         ])
     }
 

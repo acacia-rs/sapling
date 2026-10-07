@@ -52,9 +52,10 @@ async fn connect(server: &str) -> Result<Bot, Failure> {
 }
 
 fn summonable(identifiers: &AvailableEntityIdentifiers) -> Vec<String> {
-    let Some(Value::List(list)) = identifiers.nbt.value.get("idlist") else { return Vec::new() };
+    let Ok(nbt) = identifiers.nbt.decode() else { return Vec::new() };
+    let Some(Value::List(list)) = nbt.value.get("idlist") else { return Vec::new() };
     let kind = |entry: &Value| match (entry.get("id"), entry.get("summonable")) {
-        (Some(Value::String(id)), Some(Value::Byte(1))) if id != PLAYER => Some(id.clone()),
+        (Some(Value::String(id)), Some(Value::Byte(1))) if id != PLAYER => Some(id.to_string()),
         _ => None,
     };
     list.items.iter().filter_map(kind).collect()

@@ -142,7 +142,7 @@ fn owe(world: &mut World, layer: Entity, pos: BlockPos, change: impl FnOnce(i32)
     let Some(Value::Compound(mut fields)) = entity(world, layer, pos) else { return 0 };
     let owed = xp::stored(&Value::Compound(fields.clone()));
     fields.retain(|(key, _)| key != xp::STORED);
-    fields.push((xp::STORED.to_owned(), Value::Int(change(owed))));
+    fields.push((xp::STORED.into(),Value::Int(change(owed))));
     keep(world, layer, pos, &Value::Compound(fields));
     owed
 }
@@ -179,7 +179,7 @@ pub(crate) fn broken(world: &mut World, layer: Entity, pos: BlockPos, slots: &[O
 fn keep_times(world: &mut World, layer: Entity, pos: BlockPos, fire: &Fire) {
     let Some(Value::Compound(mut fields)) = entity(world, layer, pos) else { return };
     fields.retain(|(key, _)| !FIELDS.contains(&key.as_str()));
-    fields.extend(FIELDS.iter().zip(fire.times()).map(|(field, ticks)| ((*field).to_owned(), Value::Short(ticks as i16))));
+    fields.extend(FIELDS.iter().zip(fire.times()).map(|(field, ticks)| ((*field).into(), Value::Short(ticks as i16))));
     keep(world, layer, pos, &Value::Compound(fields));
 }
 

@@ -48,7 +48,7 @@ fn marked_actors(record: &[u8], made: i64, feet: [f32; 3]) -> Result<Vec<u8>, Bo
         ("Color", Value::Byte(MADE_WOOL)),
         ("CustomName", Value::String(MADE.into())),
     ];
-    let compound = |fields: Vec<(&str, Value)>| Value::Compound(fields.into_iter().map(|(key, value)| (key.to_string(), value)).collect());
+    let compound = |fields: Vec<(&str, Value)>| Value::Compound(fields.into_iter().map(|(key, value)| (key.into(), value)).collect());
     let stack = |name: &str| compound(vec![("Name", Value::String(name.into())), ("Count", Value::Byte(if name.is_empty() { 0 } else { 1 })), ("Damage", Value::Short(0))]);
     let stacks = |names: &[&str]| Value::List(List { tag: 10, items: names.iter().map(|name| stack(name)).collect() });
     // Which slot BDS takes each list entry for is part of what is being checked.

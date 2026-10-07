@@ -33,7 +33,7 @@ fn holding(kept: Option<Value>, pos: BlockPos, plant: Option<Value>) -> Value {
         },
     };
     fields.retain(|(key, _)| key != PLANT);
-    fields.extend(plant.map(|plant| (PLANT.to_owned(), plant)));
+    fields.extend(plant.map(|plant| (PLANT.into(), plant)));
     Value::Compound(fields)
 }
 

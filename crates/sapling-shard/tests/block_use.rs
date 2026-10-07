@@ -37,7 +37,7 @@ fn held(h: &mut Harness) -> Option<Item> {
 }
 
 fn plant(entity: &BlockEntityData) -> Option<Value> {
-    entity.nbt.value.get("PlantBlock")?.get("name").cloned()
+    entity.nbt.decode().unwrap().value.get("PlantBlock")?.get("name").cloned()
 }
 
 #[test]
@@ -77,7 +77,7 @@ fn food_on_a_lit_campfire_drops_off_cooked() {
     let mut h = at("campfire", Item::new("minecraft:beef", 3));
     h.receive(1, &click(AT, 1, None));
     let shown = all::<BlockEntityData>(h.tick_all().to(2));
-    assert!(shown[0].nbt.value.get("Item1").is_some(), "{shown:?}");
+    assert!(shown[0].nbt.decode().unwrap().value.get("Item1").is_some(), "{shown:?}");
     assert_eq!(held(&mut h).map(|item| item.count), Some(2));
     let cooked_beef = sapling_data::item(&sapling_data::Stack { name: "minecraft:cooked_beef", count: 1, damage: 0, block: None, tag: None }, None).unwrap();
     let dropped: Vec<_> = (0..600).flat_map(|_| all::<AddItemEntity>(h.tick_all().to(2))).collect();

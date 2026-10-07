@@ -6,7 +6,7 @@
 
 use std::collections::HashSet;
 
-use acacia_proto::nbt::Value;
+use acacia_proto::nbt::{Str, Value};
 use bevy_ecs::prelude::*;
 use sapling_api::{BlockPos, GameMode};
 use sapling_data::Station;
@@ -26,20 +26,20 @@ const COOK_TICKS: i32 = 600;
 #[derive(Resource, Default)]
 pub(crate) struct Cooking(HashSet<(Entity, BlockPos)>);
 
-fn kept(world: &World, layer: Entity, pos: BlockPos) -> Option<Vec<(String, Value)>> {
+fn kept(world: &World, layer: Entity, pos: BlockPos) -> Option<Vec<(Str, Value)>> {
     match world.get::<Layer>(layer)?.world.block_entity(pos)?.nbt.clone() {
         Value::Compound(fields) => Some(fields),
         _ => None,
     }
 }
 
-fn field<'a>(fields: &'a [(String, Value)], key: &str) -> Option<&'a Value> {
+fn field<'a>(fields: &'a [(Str, Value)], key: &str) -> Option<&'a Value> {
     fields.iter().find(|(name, _)| name == key).map(|(_, value)| value)
 }
 
-fn set_field(fields: &mut Vec<(String, Value)>, key: &str, value: Option<Value>) {
+fn set_field(fields: &mut Vec<(Str, Value)>, key: &str, value: Option<Value>) {
     fields.retain(|(name, _)| name != key);
-    fields.extend(value.map(|value| (key.to_owned(), value)));
+    fields.extend(value.map(|value| (key.into(), value)));
 }
 
 fn is_lit(world: &World, layer: Entity, [x, y, z]: BlockPos) -> bool {

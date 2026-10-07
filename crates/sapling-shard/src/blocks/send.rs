@@ -57,7 +57,7 @@ fn update(registry: &BlockRegistry, [x, y, z]: BlockPos, id: u32, layer: u32) ->
 
 /// What a block holds, as clients are shown it.
 pub(crate) fn block_entity_data([x, y, z]: BlockPos, entity: &BlockEntity) -> Bytes {
-    sapling_net::encode(&BlockEntityData { position: BlockCoordinates { x, y, z }, nbt: Nbt { name: String::new(), value: entity.shown() } })
+    sapling_net::encode(&BlockEntityData { position: BlockCoordinates { x, y, z }, nbt: Nbt { name: String::new(), value: entity.shown() }.into() })
 }
 
 /// The burst of fragments when a block of `id` breaks.

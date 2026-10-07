@@ -139,12 +139,12 @@ mod tests {
     use super::*;
 
     fn sample() -> LevelDat {
-        let fields = [
-            ("LevelName".to_string(), Value::String("lobby".into())),
-            ("RandomSeed".to_string(), Value::Long(-77)),
-            ("SpawnX".to_string(), Value::Int(12)),
-            ("SpawnY".to_string(), Value::Int(32767)),
-            ("SpawnZ".to_string(), Value::Int(-4)),
+        let fields: [(nbt::Str, Value); 5] = [
+            ("LevelName".into(), Value::String("lobby".into())),
+            ("RandomSeed".into(), Value::Long(-77)),
+            ("SpawnX".into(), Value::Int(12)),
+            ("SpawnY".into(), Value::Int(32767)),
+            ("SpawnZ".into(), Value::Int(-4)),
         ];
         LevelDat { storage_version: 10, root: Value::Compound(fields.into()) }
     }

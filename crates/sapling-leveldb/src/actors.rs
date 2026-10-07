@@ -73,7 +73,7 @@ impl Actor {
     fn parse(actor: &Value) -> Option<Self> {
         let int = |key: &str| if let Some(Value::Int(int)) = actor.get(key) { *int } else { 0 };
         let byte = |key: &str| if let Some(Value::Byte(byte)) = actor.get(key) { *byte } else { 0 };
-        let name = if let Some(Value::String(name)) = actor.get("CustomName") { name.clone() } else { String::new() };
+        let name = if let Some(Value::String(name)) = actor.get("CustomName") { name.to_string() } else { String::new() };
         let floats = |key: &str| match actor.get(key)? {
             Value::List(list) => list.items.iter().map(|item| if let Value::Float(float) = item { Some(*float) } else { None }).collect::<Option<Vec<f32>>>(),
             _ => None,
@@ -89,7 +89,7 @@ impl Actor {
             offhand: slots("Offhand").into_iter().next().flatten(),
             health: health.and_then(|health| if let Some(Value::Float(current)) = health.get("Current") { Some(*current) } else { None }),
             unique_id: *unique_id,
-            identifier: identifier.clone(),
+            identifier: identifier.to_string(),
             position: position.get(..3)?.try_into().ok()?,
             yaw: *rotation.first()?,
             pitch: *rotation.get(1)?,
@@ -100,7 +100,7 @@ impl Actor {
             name,
             item: actor.get("Item").and_then(ItemStack::parse),
             painting: match actor.get("Motif").or(actor.get("Motive")) {
-                Some(Value::String(motif)) => Some(Painting { motif: motif.clone(), direction: byte("Direction") }),
+                Some(Value::String(motif)) => Some(Painting { motif: motif.to_string(), direction: byte("Direction") }),
                 _ => None,
             },
             states: STATES.iter().filter(|(key, _)| byte(key) != 0).map(|(_, state)| *state).collect(),
@@ -137,7 +137,7 @@ pub fn moved_actor(compound: &[u8], position: [f32; 3], motion: [f32; 3]) -> Res
     for (key, value) in [("Pos", floats(&position)), ("Motion", floats(&motion))] {
         match fields.iter_mut().find(|(name, _)| name == key) {
             Some((_, old)) => *old = value,
-            None => fields.push((key.to_owned(), value)),
+            None => fields.push((key.into(), value)),
         }
     }
     Ok(written(Value::Compound(fields)))
@@ -146,16 +146,16 @@ pub fn moved_actor(compound: &[u8], position: [f32; 3], motion: [f32; 3]) -> Res
 /// A new actor of `identifier`: its id, kind, where it is and how it moves, the least the game
 /// reads to know one. Its `definitions` are BDS's way of naming the kind's behaviour.
 pub fn new_actor(unique_id: i64, identifier: &str, position: [f32; 3], motion: [f32; 3]) -> Vec<u8> {
-    let definitions = Value::List(List { tag: STRING_TAG, items: vec![Value::String(format!("+{identifier}"))] });
+    let definitions = Value::List(List { tag: STRING_TAG, items: vec![Value::String(format!("+{identifier}").into())] });
     let fields = [
         ("UniqueID", Value::Long(unique_id)),
-        ("identifier", Value::String(identifier.to_owned())),
+        ("identifier", Value::String(identifier.into())),
         ("definitions", definitions),
         ("Pos", floats(&position)),
         ("Rotation", floats(&[0.0, 0.0])),
         ("Motion", floats(&motion)),
     ];
-    written(Value::Compound(fields.into_iter().map(|(key, value)| (key.to_owned(), value)).collect()))
+    written(Value::Compound(fields.into_iter().map(|(key, value)| (key.into(), value)).collect()))
 }
 
 fn actor_key(id: &[u8]) -> Vec<u8> {
@@ -202,11 +202,11 @@ mod tests {
     }
 
     fn fields(fields: Vec<(&str, Value)>) -> Value {
-        Value::Compound(fields.into_iter().map(|(key, value)| (key.to_string(), value)).collect())
+        Value::Compound(fields.into_iter().map(|(key, value)| (key.into(), value)).collect())
     }
 
     fn stacks(names: &[&str]) -> Value {
-        let stack = |name: &&str| fields(vec![("Name", Value::String(name.to_string())), ("Count", Value::Byte(1)), ("Damage", Value::Short(0))]);
+        let stack = |name: &&str| fields(vec![("Name", Value::String((*name).into())), ("Count", Value::Byte(1)), ("Damage", Value::Short(0))]);
         Value::List(List { tag: 10, items: names.iter().map(stack).collect() })
     }
 

@@ -143,7 +143,7 @@ fn a_stored_block_entity_comes_with_its_section_and_after_a_resync() {
     // A click is answered with the blocks as they are, which would leave the chest nameless.
     h.receive(1, &click([3, 67, 3], 1, None));
     let shown = all::<BlockEntityData>(&h.tick(1));
-    assert_eq!(shown.iter().map(|data| (data.position.y, &data.nbt.value)).collect::<Vec<_>>(), [(67, &chest)]);
+    assert_eq!(shown.iter().map(|data| (data.position.y, data.nbt.decode().unwrap().value)).collect::<Vec<_>>(), [(67, chest)]);
 }
 
 #[test]

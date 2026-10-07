@@ -82,7 +82,7 @@ impl PlayerData {
     /// The record; `registry` names the blocks that block items place.
     pub fn encode(&self, registry: &BlockRegistry) -> Vec<u8> {
         let fields = vec![
-            ("Inventory".to_string(), slotted(&self.main, registry)),
+            ("Inventory".into(), slotted(&self.main, registry)),
             ("Armor".into(), stacks(&self.armor, registry)),
             ("Offhand".into(), stacks(std::slice::from_ref(&self.offhand), registry)),
             ("SelectedInventorySlot".into(), Value::Int(self.selected.into())),

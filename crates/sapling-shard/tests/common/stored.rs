@@ -12,7 +12,7 @@ use sapling_world::{BlockRegistry, Chunk, ChunkPos, Dimension, MemoryStorage, St
 use super::{Harness, all};
 
 pub fn compound<const N: usize>(fields: [(&str, Value); N]) -> Value {
-    Value::Compound(fields.map(|(key, value)| (key.to_string(), value)).into())
+    Value::Compound(fields.map(|(key, value)| (nbt::Str::from(key), value)).into())
 }
 
 /// A stored actor with one field of its kind's own.

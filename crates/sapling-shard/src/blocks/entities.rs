@@ -1,7 +1,7 @@
 //! What a block placed by a player holds from the start, as BDS writes it on placement, and what
 //! its item gets back from it when it breaks (docs/research/block-entities.md).
 
-use acacia_proto::nbt::{List, Value};
+use acacia_proto::nbt::{List, Str, Value};
 use sapling_api::{BlockPos, Item};
 use sapling_world::new_block_entity;
 
@@ -32,10 +32,10 @@ fn sign_side() -> Value {
         ("HideGlowOutline", Value::Byte(0)),
         ("SignTextColor", Value::Int(BLACK)),
         ("PersistFormatting", Value::Byte(1)),
-        ("TextOwner", Value::String(String::new())),
-        ("Text", Value::String(String::new())),
+        ("TextOwner", Value::String(Str::default())),
+        ("Text", Value::String(Str::default())),
     ];
-    Value::Compound(fields.into_iter().map(|(key, value)| (key.to_owned(), value)).collect())
+    Value::Compound(fields.into_iter().map(|(key, value)| (key.into(), value)).collect())
 }
 
 /// A floor skull's turn: the placer's yaw in sixteenths, unwrapped (BDS `142efa9c0`).
@@ -67,7 +67,7 @@ pub(super) fn placed(block: &str, pos: BlockPos, placing: &Placing) -> Option<Va
     };
     let mut entity = new_block_entity(id, pos);
     if let Value::Compound(entries) = &mut entity {
-        entries.extend(fields.into_iter().map(|(key, value)| (key.to_owned(), value)));
+        entries.extend(fields.into_iter().map(|(key, value)| (key.into(), value)));
     }
     Some(entity)
 }
