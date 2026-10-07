@@ -47,6 +47,7 @@ impl SimpleTrunk {
         let top = top?;
         tree.place_canopies(ctx, &[Anchor { at: [x, top + 1, z], candidates: Vec::new() }]);
         tree.place_base_block(ctx.view, [x, y - 1, z]);
-        Some(origin)
+        // BDS returns one above the top log: a sequence's next feature (jungle cocoa) starts there.
+        Some([x, top + 1, z])
     }
 }
