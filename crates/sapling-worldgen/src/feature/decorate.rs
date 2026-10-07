@@ -2,24 +2,17 @@
 //! the passes, `BiomeDecorationSystem::decorate` (14580bb90) the chunk's biomes in palette order,
 //! `decorateBiome` (14580b170) each biome's rules for the pass.
 
+use std::sync::Arc;
+
 use super::data::{FEATURES, RULES};
 use super::molang::{Molang, Scope, World};
-use super::scatter;
-use super::spec::{Feature, Pass, Rule};
+use super::place::Ctx;
+use super::scatter::{self, Draws};
+use super::spec::{Pass, Rule};
 use super::view::View;
 use crate::biome::ChunkBiomes;
 use crate::random::{LargeFeatureSeed, Mt19937};
 use crate::terrain::{HEIGHT, MIN_Y};
-
-impl Feature {
-    /// Whether the feature placed anything.
-    pub fn place(&self, view: &mut View, at: [i32; 3], random: &mut Mt19937) -> bool {
-        match self {
-            Feature::Ore(ore) => ore.place(view, at, random),
-            Feature::Disk(disk) => disk.place(view, at, random),
-        }
-    }
-}
 
 /// Bedrock's `HashedString` hash: 64-bit FNV-1 (multiply, then xor), 0 for "".
 const fn hashed_string(name: &str) -> u64 {
@@ -43,52 +36,75 @@ fn rule_seed(chunk_seed: u32, name: &str) -> u32 {
     chunk_seed ^ hash.wrapping_add(0x9E37_79B9).wrapping_add(chunk_seed << 6).wrapping_add(chunk_seed >> 2)
 }
 
-pub fn decorate_chunk(seed: &LargeFeatureSeed, (chunk_x, chunk_z): (i32, i32), biomes: &ChunkBiomes, view: &mut View) {
-    let chunk_seed = seed.chunk(chunk_x, chunk_z);
-    let order = palette_order(biomes);
+/// What every rule of one source chunk shares.
+struct Source<'a> {
+    chunk: (i32, i32),
+    chunk_seed: u32,
+    /// The chunk's own generator, seeded with the chunk seed: rules' `math.random` draws from it.
+    random: Mt19937,
+    biomes: &'a dyn Fn(i32, i32) -> Arc<ChunkBiomes>,
+}
+
+pub fn decorate_chunk(seed: &LargeFeatureSeed, chunk: (i32, i32), biomes: &dyn Fn(i32, i32) -> Arc<ChunkBiomes>, view: &mut View) {
+    let chunk_seed = seed.chunk(chunk.0, chunk.1);
+    let own = biomes(chunk.0, chunk.1);
+    let order = palette_order(&own);
+    let mut source = Source { chunk, chunk_seed, random: Mt19937::new(chunk_seed), biomes };
     let mut scope = Scope::new();
     for pass in Pass::ALL {
         for &biome in &order {
             // With one biome BDS places every position without looking up its biome.
             let only = (order.len() > 1).then_some(biome);
             for rule in RULES.iter().filter(|rule| rule.pass == pass && rule.biomes.contains(biome)) {
-                run(rule, chunk_seed, (chunk_x, chunk_z), only, biomes, view, &mut scope);
+                run(rule, &mut source, only, &own, view, &mut scope);
             }
         }
     }
 }
 
 /// The positions come from one generator, the features draw from a second seeded alike.
-fn run(rule: &Rule, chunk_seed: u32, chunk: (i32, i32), only: Option<u32>, biomes: &ChunkBiomes, view: &mut View, scope: &mut Scope) {
-    let seed = rule_seed(chunk_seed, rule.name);
+fn run(rule: &Rule, source: &mut Source, only: Option<u32>, own: &ChunkBiomes, view: &mut View, scope: &mut Scope) {
+    let seed = rule_seed(source.chunk_seed, rule.name);
     let mut positions = Mt19937::new(seed);
-    let origin = [chunk.0 * 16, 0, chunk.1 * 16];
+    let origin = [source.chunk.0 * 16, 0, source.chunk.1 * 16];
     scope.set_origin(origin);
-    let above_top_solid = scope.above_top_solid;
-    let world = World { view, above_top_solid };
-    let count = scatter::iterations(&rule.distribution, &mut positions, &mut Molang { scope, host: &world });
+    let queries = scope.queries;
+    let count = {
+        let host = World { view, queries };
+        let draws = &mut Draws { positions: &mut positions, molang: Some(&mut source.random) };
+        scatter::iterations(&rule.distribution, draws, &mut Molang { scope, host: &host })
+    };
     if count == 0 {
         return;
     }
     let mut placing = Mt19937::new(seed);
+    let biomes = source.biomes;
+    let biome = |[x, y, z]: [i32; 3]| biome_at(&biomes(x.div_euclid(16), z.div_euclid(16)), [x, y, z]);
     for index in (0..count).rev() {
-        let host = World { view, above_top_solid };
-        let at = scatter::position(&rule.distribution, index, origin, &mut positions, &mut Molang { scope, host: &host });
-        if only.is_some_and(|biome| biome_at(biomes, chunk, at) != Some(biome)) {
+        let at = {
+            let host = World { view, queries };
+            let draws = &mut Draws { positions: &mut positions, molang: Some(&mut source.random) };
+            scatter::position(&rule.distribution, index, origin, draws, &mut Molang { scope, host: &host })
+        };
+        if only.is_some_and(|wanted| in_chunk(source.chunk, at).then(|| biome_at(own, at)).flatten() != Some(wanted)) {
             continue;
         }
-        FEATURES[rule.feature].place(view, at, &mut placing);
+        let ctx = &mut Ctx { view, random: &mut placing, scope, biome: &biome };
+        FEATURES[rule.feature].place(ctx, at);
     }
+}
+
+fn in_chunk(chunk: (i32, i32), [x, _, z]: [i32; 3]) -> bool {
+    x.div_euclid(16) == chunk.0 && z.div_euclid(16) == chunk.1
 }
 
 /// None outside the world's height: such positions match no biome (oracle: diamond and redstone
 /// rules scatter below -64), so they never place nor draw.
-fn biome_at(biomes: &ChunkBiomes, chunk: (i32, i32), [x, y, z]: [i32; 3]) -> Option<u32> {
-    let (lx, lz) = (x - chunk.0 * 16, z - chunk.1 * 16);
-    if !(0..16).contains(&lx) || !(0..16).contains(&lz) || !(MIN_Y..MIN_Y + HEIGHT as i32).contains(&y) {
+fn biome_at(biomes: &ChunkBiomes, [x, y, z]: [i32; 3]) -> Option<u32> {
+    if !(MIN_Y..MIN_Y + HEIGHT as i32).contains(&y) {
         return None;
     }
-    Some(biomes.biome(lx as usize, y, lz as usize))
+    Some(biomes.biome(x.rem_euclid(16) as usize, y, z.rem_euclid(16) as usize))
 }
 
 /// The chunk's biomes as BDS lists them (1438c8450): sub-chunk palettes bottom up, first seen first.

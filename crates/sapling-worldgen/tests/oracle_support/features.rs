@@ -26,6 +26,12 @@ fn family(name: &str) -> Option<&'static str> {
         "diamond_ore" => "diamond",
         "emerald_ore" => "emerald",
         "infested_stone" | "infested_deepslate" => "infested",
+        "short_grass" | "fern" | "tall_grass" | "large_fern" => "grass, ferns",
+        "short_dry_grass" | "tall_dry_grass" => "dry grass",
+        "bush" => "bushes",
+        "sunflower" => "sunflowers",
+        "seagrass" => "seagrass",
+        "kelp" => "kelp",
         _ => return None,
     })
 }
@@ -48,7 +54,7 @@ impl FeatureTally {
             return;
         }
         let featured = before != ours;
-        let hit = featured && bds.block == ours.name() && bds.states == ours.states() && bds.liquid.is_none();
+        let hit = featured && bds.is(ours);
         if featured && let Some(family) = family(ours.name()) {
             let counts = self.0.entry(family).or_default();
             counts.placed += 1;

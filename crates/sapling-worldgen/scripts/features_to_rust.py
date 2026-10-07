@@ -5,40 +5,17 @@ src/feature/data.rs.
 
 Documents are read as bds_packs.documents describes. Biome filters are evaluated here against each
 overworld biome's tags, as BDS does when it attaches rules to biomes at load. A rule is kept only when
-every feature it reaches has a ported type; the others are listed in a comment.
+every feature it reaches is ported (features_data.py); the others are listed on stderr.
 """
 import os
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from bds_packs import IDS, biomes, documents, load_order  # noqa: E402
+from features_data import Features, distribution  # noqa: E402
 
 PASSES = ['first_pass', 'before_underground_pass', 'underground_pass', 'after_underground_pass', 'before_surface_pass',
           'surface_pass', 'after_surface_pass', 'before_sky_pass', 'sky_pass', 'after_sky_pass', 'final_pass']
-PORTED = {'minecraft:ore_feature'}
-# Features BDS builds in code (registered in 1482f4580), not JSON.
-_SOIL = 'needs: &[Block::Water], replaces: &[Block::Dirt, Block::CoarseDirt, Block::GrassBlock]'
-HARDCODED = {
-    'minecraft:sand_feature': f'Feature::Disk(Disk {{ block: Block::Sand, radius: 7, half_height: 2, {_SOIL} }})',
-    'minecraft:gravel_feature': f'Feature::Disk(Disk {{ block: Block::Gravel, radius: 6, half_height: 2, {_SOIL} }})',
-    'minecraft:clay_feature': 'Feature::Disk(Disk { block: Block::Clay, radius: 4, half_height: 1, '
-                              'needs: &[Block::Water, Block::Clay], replaces: &[Block::Dirt, Block::CoarseDirt, Block::Mud] })',
-}
-ORDERS = {'xyz', 'xzy', 'yxz', 'yzx', 'zxy', 'zyx'}
-# Blocks whose Rust variant is not the CamelCase of their name (with states BDS flattens).
-VARIANTS = {('stone', 'andesite'): 'Andesite', ('stone', 'diorite'): 'Diorite', ('stone', 'granite'): 'Granite',
-            ('hardened_clay', None): 'Terracotta'}
-
-
-def block(value):
-    if isinstance(value, dict):
-        name = value['name']
-        states = value.get('states') or {}
-    else:
-        name, states = value, {}
-    name = name.removeprefix('minecraft:')
-    variant = VARIANTS.get((name, states.get('stone_type')))
-    return 'Block::' + (variant or ''.join(part.title() for part in name.split('_')))
 
 
 def tested(test, tags):
@@ -68,85 +45,6 @@ def biome_set(filter_, tags_by_id):
         if accepts(filter_, tags):
             words[biome_id >> 6] |= 1 << (biome_id & 63)
     return 'BiomeSet([' + ', '.join(f'{w:#x}' for w in words) + '])'
-
-
-def expr(value):
-    if isinstance(value, bool):
-        return f'Expr::Const({float(value)!r})'
-    if isinstance(value, (int, float)):
-        return f'Expr::Const({float(value)!r})'
-    try:
-        return f'Expr::Const({float(value)!r})'
-    except ValueError:
-        return f'Expr::Molang({value!r})'.replace("'", '"') if '"' not in value else f'Expr::Molang(r#"{value}"#)'
-
-
-def constant(value):
-    return isinstance(value, (int, float)) and not isinstance(value, bool)
-
-
-def coordinate(value):
-    if not isinstance(value, dict):
-        return f'Coordinate::Fixed({expr(value if value is not None else 0)})'
-    kind = value['distribution']
-    lo, hi = value['extent']
-    extent = f'[{expr(lo)}, {expr(hi)}]'
-    if kind in ('fixed_grid', 'jittered_grid'):
-        step, offset = int(value.get('step_size', 1)), int(value.get('grid_offset', 0))
-        return f'Coordinate::{"Fixed" if kind == "fixed_grid" else "Jittered"}Grid {{ extent: {extent}, step: {step}, offset: {offset} }}'
-    return f'Coordinate::{"".join(p.title() for p in kind.split("_"))}({extent})'
-
-
-def distribution(dist):
-    """The scatter parameters with BDS's load-time rewrites of bad constants."""
-    iterations = dist.get('iterations', 0)
-    if constant(iterations) and iterations < 0:
-        iterations = 1
-    chance = dist.get('scatter_chance')
-    if isinstance(chance, dict):
-        num, den = int(chance.get('numerator', 0)), int(chance.get('denominator', 0))
-        chance = f'Chance::Fraction({num}, {den if den > num else 1})'
-    else:
-        if chance is None or (constant(chance) and not 0 < chance <= 100):
-            chance = 100
-        chance = f'Chance::Percent({expr(chance)})'
-    order = dist.get('coordinate_eval_order', 'xzy')
-    assert order in ORDERS, order
-    axes = ', '.join(f'Axis::{c.upper()}' for c in order)
-    return (f'Distribution {{ iterations: {expr(iterations)}, chance: {chance}, order: [{axes}], '
-            f'x: {coordinate(dist.get("x"))}, y: {coordinate(dist.get("y"))}, z: {coordinate(dist.get("z"))} }}')
-
-
-class Features:
-    def __init__(self, docs):
-        self.docs = {}
-        for doc in docs.values():
-            kind = next(k for k in doc if k.startswith('minecraft:'))
-            self.docs[doc[kind]['description']['identifier'].lower()] = (kind, doc[kind])
-        self.emitted = {}
-
-    def kind(self, name):
-        found = self.docs.get(name.lower())
-        return found[0] if found else '(hardcoded)'
-
-    def ported(self, name):
-        return self.kind(name) in PORTED or name.lower() in HARDCODED
-
-    def index(self, name):
-        name = name.lower()
-        if name not in self.emitted:
-            rust = HARDCODED[name] if name in HARDCODED else self.rust(*self.docs[name])
-            self.emitted[name] = (len(self.emitted), rust)
-        return self.emitted[name][0]
-
-    def rust(self, kind, body):
-        if kind == 'minecraft:ore_feature':
-            rules = ', '.join(
-                f'ReplaceRule {{ places: {block(r["places_block"])}, may_replace: &[{", ".join(block(b) for b in r["may_replace"])}] }}'
-                for r in body.get('replace_rules', []))
-            discard = float(body.get('discard_chance_on_air_exposure', 0.0))
-            return f'Feature::Ore(Ore {{ count: {int(body["count"])}, discard_on_air: {discard!r}, rules: &[{rules}] }})'
-        raise SystemExit(f'{kind} is not ported')
 
 
 def hashed_string(text):

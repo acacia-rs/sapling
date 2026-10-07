@@ -90,6 +90,16 @@ impl<'a> View<'a> {
         (MIN_Y..top).rev().find(|&y| self.block(x, y, z).blocks_motion()).map_or(MIN_Y, |y| y + 1)
     }
 
+    /// `query.heightmap` (lambda 1411a2740): the chunk's light heightmap, one above the highest block
+    /// that is neither air nor a plant (water counts); the world's top outside the region.
+    pub fn heightmap(&self, x: i32, z: i32) -> i32 {
+        let top = MIN_Y + HEIGHT as i32;
+        if self.locate(x, MIN_Y, z).is_none() {
+            return top;
+        }
+        (MIN_Y..top).rev().find(|&y| !matches!(self.block(x, y, z), Block::Air) && !self.block(x, y, z).is_plant()).map_or(MIN_Y, |y| y + 1)
+    }
+
     pub fn into_writes(self) -> ChunkWrites {
         ChunkWrites(self.writes)
     }

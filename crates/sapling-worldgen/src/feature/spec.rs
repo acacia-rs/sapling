@@ -96,10 +96,50 @@ pub struct Rule {
     pub distribution: Distribution,
 }
 
+/// Feature references are indices into `FEATURES`.
 #[derive(Debug)]
 pub enum Feature {
     Ore(Ore),
     Disk(Disk),
+    Scatter(Scatter),
+    /// `aggregate_feature`: every feature at the same position.
+    Aggregate(&'static [usize], EarlyOut),
+    /// `sequence_feature`: each feature at the position the previous one placed at.
+    Sequence(&'static [usize], EarlyOut),
+    /// `weighted_random_feature`: (feature, weight).
+    WeightedRandom(&'static [(usize, f32)]),
+    SingleBlock(SingleBlock),
+    /// `KelpFeature`: `count` tries at one column each, ±7 around the position.
+    Kelp { count: i32 },
+    /// `SeagrassFeature`: `count` tries, double with chance `tall`.
+    Seagrass { count: i32, tall: f32 },
+}
+
+/// `minecraft:scatter_feature`: the distribution drawn from the placing generator.
+#[derive(Debug)]
+pub struct Scatter {
+    pub distribution: Distribution,
+    pub project_to_floor: bool,
+    pub feature: usize,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum EarlyOut {
+    None,
+    FirstFailure,
+    FirstSuccess,
+}
+
+/// `minecraft:single_block_feature` (`SingleBlockFeature::place` 143badfc0).
+#[derive(Debug)]
+pub struct SingleBlock {
+    /// (block, weight); one is drawn even when there is a single entry.
+    pub blocks: &'static [(Block, i32)],
+    pub may_replace: &'static [Block],
+    pub placement: bool,
+    pub survival: bool,
+    /// `may_not_attach_to.bottom`.
+    pub not_on: &'static [Block],
 }
 
 /// A hardcoded disk: placed only where the block at its position is one of `needs`.

@@ -84,8 +84,10 @@ pub fn bds_cell(world: &LevelDbWorld, chunk: &Chunk, x: i32, y: i32, z: i32) -> 
 }
 
 impl BdsCell {
-    fn is(&self, block: Block) -> bool {
-        self.block == block.name() && self.states == block.states() && self.liquid.is_none()
+    /// The same block and states, with water in the second layer exactly when the block is waterlogged.
+    pub fn is(&self, block: Block) -> bool {
+        let liquid = block.is_waterlogged().then_some("water");
+        self.block == block.name() && self.states == block.states() && self.liquid.as_deref() == liquid
     }
 
     pub fn is_empty(&self) -> bool {

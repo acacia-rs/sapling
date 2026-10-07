@@ -1,31 +1,80 @@
 //! The Molang fields of feature data, compiled once per expression and evaluated with the scatter's
-//! `variable.origin{x,y,z}` and `variable.world{x,y,z}`.
+//! `variable.origin{x,y,z}` and `variable.world{x,y,z}`. `math.random` draws `nextFloat` from the
+//! generator `ScatterParams::initMolangParams` captured: the chunk's own one for rules, the placing
+//! one inside `scatter_feature`.
 
+use std::cell::RefCell;
 use std::collections::HashMap;
+use std::sync::OnceLock;
 
 use acacia_molang::{Compiler, Env, Host, Program, Query, Scratch, Structs, Value, Variable, Variables};
 
 use super::spec::{Axis, Expr};
 use super::view::View;
+use crate::noise::SimplexNoise;
+use crate::random::Mt19937;
 
 /// The world-generation queries a feature field may ask, answered from a source chunk's view.
 pub struct World<'a, 'b> {
     pub view: &'a View<'b>,
-    pub above_top_solid: Query,
+    pub queries: Queries,
+}
+
+#[derive(Clone, Copy)]
+pub struct Queries {
+    above_top_solid: Query,
+    heightmap: Query,
+    noise: Query,
+}
+
+/// `query.noise` (lambda 1411a24c0): one simplex octave from an MT seeded 2345, whatever the world.
+fn noise() -> &'static SimplexNoise {
+    static NOISE: OnceLock<SimplexNoise> = OnceLock::new();
+    NOISE.get_or_init(|| {
+        let mut mt = Mt19937::new(2345);
+        let [a, b, c] = [mt.next_float(), mt.next_float(), mt.next_float()];
+        SimplexNoise::new([c, b, a], |bound| mt.next_int(bound as i32))
+    })
 }
 
 impl Host for World<'_, '_> {
     fn query(&self, query: Query, args: &[Value], _structs: &mut Structs<'_>) -> Value {
-        let arg = |i: usize| args.get(i).map_or(0.0, |v| v.num()).round() as i32;
-        if query == self.above_top_solid {
+        let num = |i: usize| args.get(i).map_or(0.0, |v| v.num());
+        let arg = |i: usize| num(i).round() as i32;
+        if query == self.queries.above_top_solid {
             return Value::Num(self.view.above_top_solid(arg(0), arg(1)) as f32);
+        }
+        if query == self.queries.heightmap {
+            return Value::Num(self.view.heightmap(arg(0), arg(1)) as f32);
+        }
+        if query == self.queries.noise {
+            return Value::Num(noise().value(num(0), num(1)));
         }
         Value::ZERO
     }
 }
 
+/// A host whose `math.random` draws from `random`.
+struct Drawing<'a> {
+    host: &'a dyn Host,
+    random: RefCell<&'a mut Mt19937>,
+}
+
+impl Host for Drawing<'_> {
+    fn query(&self, query: Query, args: &[Value], structs: &mut Structs<'_>) -> Value {
+        self.host.query(query, args, structs)
+    }
+
+    fn random(&self) -> f32 {
+        self.random.borrow_mut().next_float()
+    }
+}
+
+/// The scatter variables of one scope, saved around a nested scatter, which BDS runs on a copy.
+pub struct Saved([Option<Value>; 6]);
+
 pub struct Scope {
-    pub above_top_solid: Query,
+    pub queries: Queries,
     compiler: Compiler,
     programs: HashMap<&'static str, Program>,
     variables: Variables,
@@ -39,8 +88,9 @@ impl Scope {
         let mut compiler = Compiler::new();
         let origin = ["originx", "originy", "originz"].map(|name| compiler.variable(name));
         let world = ["worldx", "worldy", "worldz"].map(|name| compiler.variable(name));
-        let above_top_solid = compiler.query("above_top_solid");
-        Self { above_top_solid, compiler, programs: HashMap::new(), variables: Variables::new(), scratch: Scratch::new(), origin, world }
+        let queries =
+            Queries { above_top_solid: compiler.query("above_top_solid"), heightmap: compiler.query("heightmap"), noise: compiler.query("noise") };
+        Self { queries, compiler, programs: HashMap::new(), variables: Variables::new(), scratch: Scratch::new(), origin, world }
     }
 
     pub fn set_origin(&mut self, origin: [i32; 3]) {
@@ -58,8 +108,19 @@ impl Scope {
         self.variables.set(self.world[slot], value as f32);
     }
 
+    pub fn save(&self) -> Saved {
+        let mut all = self.origin.into_iter().chain(self.world);
+        Saved(std::array::from_fn(|_| self.variables.get(all.next().expect("six variables"))))
+    }
+
+    pub fn restore(&mut self, saved: Saved) {
+        for (variable, value) in self.origin.into_iter().chain(self.world).zip(saved.0) {
+            self.variables.set(variable, value.unwrap_or(Value::ZERO));
+        }
+    }
+
     /// An expression that fails to compile is 0, as BDS loads such a field and evaluates it to 0.
-    pub fn eval(&mut self, expr: Expr, host: &dyn Host) -> f32 {
+    pub fn eval(&mut self, expr: Expr, host: &dyn Host, random: &mut Mt19937) -> f32 {
         let source = match expr {
             Expr::Const(value) => return value,
             Expr::Molang(source) => source,
@@ -68,7 +129,8 @@ impl Scope {
             let program = self.compiler.compile(source).unwrap_or_else(|_| Compiler::constant(0.0));
             self.programs.insert(source, program);
         }
-        let env = &mut Env { host, variables: &mut self.variables, scratch: &mut self.scratch, this: 0.0 };
+        let host = Drawing { host, random: RefCell::new(random) };
+        let env = &mut Env { host: &host, variables: &mut self.variables, scratch: &mut self.scratch, this: 0.0 };
         self.programs[source].eval(env).num()
     }
 }
@@ -80,8 +142,8 @@ pub struct Molang<'a> {
 }
 
 impl Molang<'_> {
-    pub fn eval(&mut self, expr: Expr) -> f32 {
-        self.scope.eval(expr, self.host)
+    pub fn eval(&mut self, expr: Expr, random: &mut Mt19937) -> f32 {
+        self.scope.eval(expr, self.host, random)
     }
 
     pub fn set_world(&mut self, axis: Axis, value: i32) {

@@ -2,11 +2,14 @@
 //! each source chunk is decorated alone over its neighbours' terrain, and a column replays the
 //! writes of every source chunk that reaches it (docs/research/worldgen-bds.md, Feature placement).
 
+mod aquatic;
 mod data;
 mod decorate;
 mod disk;
 mod molang;
 mod ore;
+mod place;
+mod plants;
 mod scatter;
 mod spec;
 mod view;
@@ -47,7 +50,7 @@ impl Features {
             for source_z in chunk_z - REACH..=chunk_z + REACH {
                 let writes = self.writes.get((source_x, source_z), || {
                     let mut view = View::new((source_x, source_z), loaded);
-                    decorate::decorate_chunk(&self.seed, (source_x, source_z), &biomes(source_x, source_z), &mut view);
+                    decorate::decorate_chunk(&self.seed, (source_x, source_z), biomes, &mut view);
                     view.into_writes()
                 });
                 for write in writes.towards(chunk_x - source_x, chunk_z - source_z) {
