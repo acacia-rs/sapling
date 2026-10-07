@@ -81,7 +81,9 @@ fn compare(seed: i64, world: &str, regions: &[Region]) {
                             }
                             let next_to_cave = [y - 1, y + 1].iter().any(|&ny| (MIN_Y..=LAST_Y).contains(&ny) && !surfaced.block(x, ny, z).is_solid());
                             let iceberg = matches!(before, Block::PackedIce | Block::Snow);
-                            let cell = Ours { before: surfaced.kind(x, y, z), after: ours.kind(x, y, z), next_to_cave, iceberg };
+                            // Kelp and seagrass stand in water, as BDS's cells with a water layer count.
+                            let after = if block.is_waterlogged() { CellKind::Water } else { ours.kind(x, y, z) };
+                            let cell = Ours { before: surfaced.kind(x, y, z), after, next_to_cave, iceberg };
                             tallies.carvers.add(cell, bds, at, &primary, &a);
                         }
                         if our_highest.is_none() && ours.kind(x, y, z) != CellKind::Air {
