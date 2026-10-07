@@ -74,6 +74,17 @@ impl<'a> View<'a> {
         self.locate(x, y, z).is_some()
     }
 
+    /// The decorated chunk's own fluid ticks from generation, as world positions.
+    pub fn own_fluid_ticks(&self) -> Vec<([i32; 3], bool)> {
+        let slot = slot(0, 0).expect("centre");
+        let (x0, z0) = (self.chunk.0 * 16, self.chunk.1 * 16);
+        self.read(slot, 0);
+        let shapes = self.shapes.borrow();
+        let shape = shapes[slot].as_ref().expect("read just above");
+        let at = |i: i32| [x0 + (i & 15), i / 256 + MIN_Y, z0 + ((i >> 4) & 15)];
+        shape.fluid_ticks().iter().map(|&(index, lava)| (at(index as i32), lava)).collect()
+    }
+
     /// Whether every chunk within a block of the column is in the region (an instatick's range).
     pub fn can_tick(&self, x: i32, z: i32) -> bool {
         [x - 1, x + 1].iter().all(|&x| [z - 1, z + 1].iter().all(|&z| self.has_block(x, MIN_Y, z)))

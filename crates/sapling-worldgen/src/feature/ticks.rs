@@ -95,6 +95,13 @@ impl TickQueue {
         self.pending.0.iter().any(|t| t.at == at && t.lava == lava && t.time == time)
     }
 
+    /// `acquireAllTicks` (141607780): `other`'s pending ticks popped in its heap order into this queue.
+    pub fn acquire(&mut self, mut other: TickQueue) {
+        while let Some(tick) = other.pending.pop() {
+            self.pending.push(tick);
+        }
+    }
+
     pub fn is_empty(&self) -> bool {
         self.pending.0.is_empty()
     }

@@ -6,6 +6,7 @@
 
 mod flow;
 
+use super::ticks::TickQueue;
 use super::view::View;
 use crate::block::Block;
 
@@ -20,6 +21,11 @@ pub fn write_hook() -> Option<fn(&mut View, [i32; 3])> {
 
 pub fn settle(view: &mut View) {
     reset_border_water(view);
+    let mut generated = TickQueue::default();
+    for (at, lava) in view.own_fluid_ticks() {
+        generated.add(at, lava, 1);
+    }
+    view.ticks.acquire(generated);
     for _ in 0..GENERATIONS {
         if view.ticks.is_empty() {
             break;
