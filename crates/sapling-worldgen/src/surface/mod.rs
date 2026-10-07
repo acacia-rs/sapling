@@ -4,9 +4,12 @@
 
 mod biomes;
 mod column;
+mod frozen;
+mod mesa;
 mod noise;
 mod overworld;
 mod spec;
+mod swamp;
 
 pub use noise::SurfaceNoises;
 
@@ -18,8 +21,8 @@ use crate::terrain::{ChunkShape, MIN_Y};
 use column::Column;
 use spec::{Builder, Materials, Steep, SurfaceSpec};
 
-/// The y of the column position the adjustment noise samples (the chunk's minimum y).
-const ADJUSTMENT_Y: i32 = MIN_Y;
+/// The y of the column position the adjustment noise samples.
+const ADJUSTMENT_Y: i32 = 0;
 /// The block buffer ends at y 255.
 const TOP_Y: i32 = 255;
 
@@ -73,12 +76,16 @@ impl SurfaceNoises {
     fn build_column(&self, column: &mut Column, spec: &SurfaceSpec, tops: &[[i32; 16]; 16], random: &mut Mt19937) {
         let materials = self.adjusted_materials(spec, column.world);
         let depth_noise = self.depth(column.world.0, column.world.1);
+        if let Builder::Mesa(mesa) = spec.builder {
+            return mesa::build(column, materials, mesa, &self.mesa, depth_noise, random);
+        }
+        match spec.builder {
+            Builder::FrozenOcean if !frozen::build_iceberg(column, &self.iceberg, spec.temperature) => return,
+            Builder::Swamp { max_puddle_depth } => swamp::build_puddle(column, &self.puddle, max_puddle_depth),
+            _ => {}
+        }
         let depth = overworld::surface_depth(random, depth_noise);
         let steep = spec.steep.filter(|s| is_steep(s, tops, column.x, column.z)).map(|s| s.material);
-        match spec.builder {
-            Builder::Overworld | Builder::FrozenOcean | Builder::Swamp { .. } | Builder::Mesa(_) => {
-                overworld::build(column, materials, steep, spec.sea_floor_depth, spec.temperature, depth, random)
-            }
-        }
+        overworld::build(column, materials, steep, spec.sea_floor_depth, spec.temperature, depth, random)
     }
 }

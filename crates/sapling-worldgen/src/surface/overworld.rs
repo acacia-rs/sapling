@@ -14,7 +14,7 @@ const SANDS: &[Block] = &[Block::Sand, Block::RedSand];
 
 const NO_SEA: i32 = 0x8000_03e8_u32 as i32;
 
-/// Sand over air turns to sandstone, red sand to red sandstone, gravel to the foundation.
+/// Sand over air or fluid turns to sandstone, red sand to red sandstone, gravel to the foundation.
 fn prop_up_floating_sand(column: &mut Column, y: i32, foundation: Block) {
     let replacement = match column.get(y) {
         Block::Sand => Block::Sandstone,
@@ -44,7 +44,7 @@ pub fn build(column: &mut Column, materials: Materials, steep: Option<Block>, se
     let mut y = column.start;
     while y > column.lower {
         let block = column.get(y);
-        if run >= 0 && block == Block::Air {
+        if run >= 0 && matches!(block, Block::Air | Block::Water | Block::Lava) {
             prop_up_floating_sand(column, y + 1, materials.foundation);
         }
         if steep.is_some() {

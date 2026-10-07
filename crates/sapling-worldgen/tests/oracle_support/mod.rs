@@ -119,18 +119,29 @@ pub enum Verdict {
     Later(&'static str),
 }
 
-/// Who decides a cell and whether sapling got it right. `reshaped`: the column's top terrain block
-/// is not at the same height in both, so BDS's carvers or lakes moved the surface after it was built.
+/// Who decides a cell and whether sapling got it right. `reshaped`: BDS's column was solid in other
+/// places above the cell (column_reshaped), so the surface builder saw a different column there.
 pub fn judge(ours: Block, bds: &BdsCell, y: i32, reshaped: bool) -> Verdict {
     match judge_cell(ours, bds, y) {
-        Verdict::Error(Stage::Surface) if reshaped => Verdict::Later("carvers, lakes (column top moved)"),
+        Verdict::Error(Stage::Surface) if reshaped => Verdict::Later("carvers, lakes, shape (column differs above)"),
         verdict => verdict,
     }
 }
 
-/// The highest terrain block of a column, from the top down; snow and ice of the freeze pass don't count.
-pub fn terrain_top<'a>(cells: impl Iterator<Item = (i32, &'a BdsCell)>) -> Option<i32> {
-    cells.filter(|(_, cell)| cell.terrain().is_some_and(|b| !matches!(b, Block::SnowLayer | Block::Ice))).map(|(y, _)| y).next()
+/// For every cell of a column (top down, as `cells`), whether ours and BDS disagree on what is solid
+/// within the 8 blocks above it or on the column top: carvers, lakes or a shape difference then fed
+/// BDS's surface builder another column. Feature blocks and freeze-pass snow and ice count as either.
+pub fn column_reshaped(ours_solid: impl Fn(i32) -> bool, cells: &[(i32, BdsCell)]) -> Vec<bool> {
+    let bds_solid = |cell: &BdsCell| -> Option<bool> {
+        if cell.is_empty() || cell.is_fluid() {
+            return Some(false);
+        }
+        cell.terrain().filter(|b| !matches!(b, Block::SnowLayer | Block::Ice)).map(|_| true)
+    };
+    let differs: Vec<bool> = cells.iter().map(|(y, cell)| bds_solid(cell).is_some_and(|solid| solid != ours_solid(*y))).collect();
+    let our_top = cells.iter().find(|(y, _)| ours_solid(*y)).map(|(y, _)| *y);
+    let bds_top = cells.iter().find(|(_, cell)| bds_solid(cell) == Some(true)).map(|(y, _)| *y);
+    (0..cells.len()).map(|i| our_top != bds_top || differs[i.saturating_sub(8)..i].iter().any(|d| *d)).collect()
 }
 
 fn judge_cell(ours: Block, bds: &BdsCell, y: i32) -> Verdict {
@@ -146,8 +157,11 @@ fn judge_cell(ours: Block, bds: &BdsCell, y: i32) -> Verdict {
     let Some(theirs) = bds.terrain() else {
         return Verdict::Later("features, structures (non-terrain block)");
     };
-    if ours == Block::Water && matches!(theirs, Block::Ice | Block::SnowLayer) {
-        return Verdict::Later("freeze pass (ice, snow on water)");
+    if matches!(ours, Block::Water | Block::Air) && matches!(theirs, Block::Ice | Block::SnowLayer) {
+        return Verdict::Later("freeze pass (ice, snow layers)");
+    }
+    if matches!(ours, Block::Water | Block::Air | Block::PackedIce | Block::Snow) && matches!(theirs, Block::PackedIce | Block::Snow) {
+        return Verdict::Later("iceberg features");
     }
     if bds.liquid.is_some() {
         return Verdict::Later("features, structures (waterlogged)");
@@ -165,8 +179,22 @@ fn judge_cell(ours: Block, bds: &BdsCell, y: i32) -> Verdict {
     if base(ours) && matches!(theirs, Block::Dirt | Block::Gravel | Block::Calcite) {
         return Verdict::Later("ore features (or a missed vein)");
     }
-    if matches!(ours, Block::Dirt | Block::GrassBlock) && matches!(bds.block.as_str(), "sand" | "gravel" | "clay") {
-        return Verdict::Later("disk features (sand, gravel, clay over dirt)");
+    if matches!(ours, Block::GrassBlock | Block::Snow | Block::Podzol | Block::CoarseDirt | Block::Mycelium) && theirs == Block::Dirt {
+        return Verdict::Later("trees (dirt under trunks)");
+    }
+    if ours == Block::Mud && matches!(theirs, Block::Dirt | Block::GrassBlock) {
+        return Verdict::Later("mangrove features (dirt, grass over mud)");
+    }
+    if matches!(ours, Block::GrassBlock | Block::CoarseDirt | Block::Dirt) && theirs == Block::Podzol {
+        return Verdict::Later("giant spruces (podzol around)");
+    }
+    if matches!(ours, Block::Snow | Block::Dirt | Block::GrassBlock | Block::Stone) && theirs == Block::PackedIce {
+        return Verdict::Later("ice spikes");
+    }
+    if matches!(ours, Block::Dirt | Block::GrassBlock) && matches!(bds.block.as_str(), "sand" | "gravel" | "clay")
+        || ours == Block::Stone && bds.block == "sand"
+    {
+        return Verdict::Later("sand, gravel, clay disks (over dirt or dirt blobs)");
     }
     if VEIN_BLOCKS.contains(&ours) || VEIN_BLOCKS.contains(&theirs) {
         return Verdict::Error(Stage::Veins);

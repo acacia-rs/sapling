@@ -1,13 +1,19 @@
-//! The two noises the surface builders read: the depth noise ("minecraft:surface", 4 simplex
-//! octaves summed by `loadChunk` into a 16x16 buffer) and the material-adjustment noise (3
-//! octaves from an MT on the 32-bit seed, built in the generator's constructor 14821f6f0).
+//! The noises the surface builders read: the depth noise ("minecraft:surface", 4 simplex octaves
+//! summed by `loadChunk` into a 16x16 buffer), the material-adjustment noise (3 octaves from an MT
+//! on the 32-bit seed, built in the generator's constructor 14821f6f0), and the builders' own.
 
+use super::frozen::IcebergNoises;
+use super::mesa::MesaNoises;
+use super::swamp::PuddleNoise;
 use crate::noise::SimplexNoise;
 use crate::random::{Mt19937, PositionalFactory};
 
 pub struct SurfaceNoises {
     depth: Vec<SimplexNoise>,
     adjustment: Vec<SimplexNoise>,
+    pub mesa: MesaNoises,
+    pub iceberg: IcebergNoises,
+    pub puddle: PuddleNoise,
 }
 
 impl SurfaceNoises {
@@ -29,7 +35,7 @@ impl SurfaceNoises {
                 SimplexNoise::new([c, b, a], |bound| mt.next_int(bound as i32))
             })
             .collect();
-        Self { depth, adjustment }
+        Self { depth, adjustment, mesa: MesaNoises::new(seed), iceberg: IcebergNoises::new(seed), puddle: PuddleNoise::new(seed) }
     }
 
     /// The adjustment noise at `position * scale` (143907ca0): octaves at doubling wavelength,

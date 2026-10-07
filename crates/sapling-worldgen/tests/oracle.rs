@@ -5,7 +5,7 @@
 
 mod oracle_support;
 
-use oracle_support::{BdsCell, BiomeTally, Region, Tally, TopTally, bds_cell, open, terrain_top};
+use oracle_support::{BdsCell, BiomeTally, Region, Tally, TopTally, bds_cell, column_reshaped, open};
 use sapling_leveldb::ChunkKey;
 
 use sapling_worldgen::{MIN_Y, OverworldGenerator};
@@ -35,20 +35,14 @@ fn compare(seed: i64, world: &str, regions: &[Region]) {
                     for y in MIN_Y..=biome_top {
                         biome_tally.add(biomes.biome(x, y, z), a.biome(wx, y, wz), (wx, y, wz));
                     }
-                    let column: Vec<(i32, BdsCell, bool)> = (MIN_Y..=LAST_Y)
-                        .rev()
-                        .map(|y| {
-                            let bds = bds_cell(&primary, &a, wx, y, wz);
-                            let stable = bds == bds_cell(&twin, &b, wx, y, wz);
-                            (y, bds, stable)
-                        })
-                        .collect();
+                    let column: Vec<(i32, BdsCell)> = (MIN_Y..=LAST_Y).rev().map(|y| (y, bds_cell(&primary, &a, wx, y, wz))).collect();
+                    let reshaped = column_reshaped(|y| ours.block(x, y, z).is_solid(), &column);
                     let our_top = (MIN_Y..=LAST_Y).rev().find(|&y| ours.block(x, y, z).is_solid());
-                    let reshaped = our_top != terrain_top(column.iter().map(|(y, cell, _)| (*y, cell)));
-                    for (y, bds, stable) in &column {
+                    for ((y, bds), reshaped) in column.iter().zip(reshaped) {
+                        let stable = *bds == bds_cell(&twin, &b, wx, *y, wz);
                         let block = ours.block(x, *y, z);
-                        tally.add(block, bds, *stable, (wx, *y, wz), reshaped);
-                        if Some(*y) == our_top && *stable {
+                        tally.add(block, bds, stable, (wx, *y, wz), reshaped);
+                        if Some(*y) == our_top && stable {
                             top.add(block, bds, (wx, *y, wz), reshaped);
                         }
                     }
@@ -93,6 +87,35 @@ fn blocks_match_bds_far_out() {
 #[ignore = "needs worlds/oracle; slow"]
 fn blocks_match_bds_negative_seed() {
     compare(-4172144997902289642, "-4172144997902289642", &[Region::new("chunks -4..3", -4, -4, 3, 3)]);
+}
+
+/// 4x4-chunk regions picked by examples/find_biomes.rs, one per surface builder or material case.
+#[test]
+#[ignore = "needs worlds/oracle; slow"]
+fn blocks_match_bds_biomes() {
+    let regions = [
+        Region::new("badlands", 594, -350, 597, -347),
+        Region::new("eroded badlands", 170, -598, 173, -595),
+        Region::new("wooded badlands", 298, -558, 301, -555),
+        Region::new("swamp", 314, 306, 317, 309),
+        Region::new("mangrove swamp", -502, 514, -499, 517),
+        Region::new("frozen ocean", 474, 570, 477, 573),
+        Region::new("deep frozen ocean", 450, 458, 453, 461),
+        Region::new("jagged peaks", -406, -382, -403, -379),
+        Region::new("frozen peaks", 442, 306, 445, 309),
+        Region::new("stony peaks", -230, 258, -227, 261),
+        Region::new("snowy slopes", 282, 66, 285, 69),
+        Region::new("grove", -446, 66, -443, 69),
+        Region::new("windswept hills", 226, -102, 229, -99),
+        Region::new("windswept gravelly hills", -126, -350, -123, -347),
+        Region::new("old growth pine taiga", -334, 338, -331, 341),
+        Region::new("windswept savanna", -590, -214, -587, -211),
+        Region::new("desert", -446, 554, -443, 557),
+        Region::new("ice spikes", -22, -198, -19, -195),
+        Region::new("mushroom fields", -46, 354, -43, 357),
+        Region::new("warm ocean", 242, -494, 245, -491),
+    ];
+    compare(20261003, "20261003-biomes", &regions);
 }
 
 #[test]

@@ -54,11 +54,6 @@ impl OverworldGenerator {
         self.density.climate.chunk_biomes(self.seed, chunk_x, chunk_z)
     }
 
-    /// The surface material-adjustment noise at a block position and frequency scale.
-    pub fn adjustment_noise(&self, position: [i32; 3], scale: f32) -> f32 {
-        self.surface.adjustment(position, scale)
-    }
-
     pub fn density(&self) -> &Density {
         &self.density
     }
