@@ -3,8 +3,12 @@
 Sources: `bds-mechanisms.txt` (ground truth) and `sapling-mechanisms.txt`, same probe
 (`crates/sapling/examples/bds_mechanism_probe.rs`, radius 8, `stand()` waits for cells). `B:n` / `S:n` = line n of
 the BDS / sapling capture; ticks = watcher ms / 50. Sapling y = BDS y + 124. Known items from the brief are not
-repeated (UpdateSubchunkBlocks, UpdateBlockSynced, falling-block MOVING/Health, plates, wet-stairs Rejected, command
-Text, spawn/splash sounds, mob loot/death delay).
+repeated (UpdateSubchunkBlocks, UpdateBlockSynced, falling-block MOVING/Health, plates, wet-stairs Rejected,
+spawn/splash sounds, mob loot/death delay).
+
+Command Text (round 3, sapling run on testbox, 2026-10-07): all 23 lines agree with BDS's in kind, receiver,
+order and JSON, after adding BDS's trailing newline. BDS's `/kill @e[type=chicken]` named three chickens to
+sapling's one: its world had two more within range.
 
 ## The round-1 fixes
 

@@ -47,9 +47,10 @@ pub(crate) fn raw_packet(message: &str) -> Bytes {
     text(TextType::Raw, TextCategory::MessageOnly, TextContent::Raw(TextContentRaw { message: message.to_owned() }), "")
 }
 
-/// A line of the client's own text (`{"rawtext":[...]}`), in each player's language.
+/// A line of the client's own text (`{"rawtext":[...]}`), in each player's language. BDS ends
+/// the JSON with a newline.
 pub(crate) fn json_packet(parts: Vec<serde_json::Value>) -> Bytes {
-    let message = serde_json::json!({ "rawtext": parts }).to_string();
+    let message = format!("{}\n", serde_json::json!({ "rawtext": parts }));
     text(TextType::Json, TextCategory::MessageOnly, TextContent::Json(TextContentJson { message }), "")
 }
 

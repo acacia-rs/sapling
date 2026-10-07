@@ -144,7 +144,8 @@ fn an_operators_command_is_echoed_to_the_other_operators_as_bds_echoes_it() {
 
     h.receive(1, &request("/gamemode creative", 2));
     let sent = h.tick_all();
-    let echo = r#"{"rawtext":[{"text":"§7§o["},{"translate":"Alex"},{"text":": "},{"translate":"Alex is now in Creative","with":{"rawtext":null}},{"text":"]"}]}"#;
+    let echo = r#"{"rawtext":[{"text":"§7§o["},{"translate":"Alex"},{"text":": "},{"translate":"Alex is now in Creative","with":{"rawtext":null}},{"text":"]"}]}
+"#;
     assert_eq!((json_lines(sent.to(1)), json_lines(sent.to(2)), json_lines(sent.to(3))), (vec![], vec![echo.to_owned()], vec![]));
     // Not a failure, and not a command members may run.
     h.receive(1, &request("/gamemode creative Nobody", 3));
@@ -157,7 +158,8 @@ fn a_translated_line_is_filled_in_by_the_client() {
     let mut h = harness();
     h.enter(1, "Alex");
     h.remote.run(|ctx| ctx.send_translation(PlayerId(1), "commands.tp.successVictim", &["1.00, 2.00, 3.00".into()]));
-    let line = r#"{"rawtext":[{"translate":"commands.tp.successVictim","with":{"rawtext":[{"text":"1.00, 2.00, 3.00"}]}}]}"#;
+    let line = r#"{"rawtext":[{"translate":"commands.tp.successVictim","with":{"rawtext":[{"text":"1.00, 2.00, 3.00"}]}}]}
+"#;
     assert_eq!(json_lines(&h.tick(1)), [line]);
 }
 
