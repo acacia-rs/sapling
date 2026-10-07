@@ -85,11 +85,12 @@ impl Tree {
         if !(0..width).all(|dx| (0..width).all(|dz| allows(self.may_grow_on, view.block(x + dx, y - 1, z + dz)))) {
             return false;
         }
-        if self.may_grow_through.is_empty() {
-            return true;
-        }
-        // The list BDS checks behaves as may_grow_through plus may_replace (oracle: trees grow through air and leaves, not logs).
-        let through = |block| self.may_grow_through.contains(&block) || allows(self.may_replace, block);
+        // The list BDS checks behaves as may_grow_through plus may_replace (oracle: trees grow through air and leaves, not
+        // logs); without may_grow_through only air and water pass (oracle: swamp oaks fail under leaves).
+        let through = |block: Block| match self.may_grow_through.is_empty() {
+            true => matches!(block, Block::Air | Block::Water),
+            false => self.may_grow_through.contains(&block) || allows(self.may_replace, block),
+        };
         (y..=(y + height + 1).min(top - 1)).all(|cy| {
             let r = if cy >= y + height - 1 { 2 } else { i32::from(cy != y) };
             (x - r..=x + r).all(|cx| (z - r..=z + r).all(|cz| through(view.block(cx, cy, cz))))
