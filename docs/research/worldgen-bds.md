@@ -20,8 +20,8 @@ names, same octave/amplitude tables, same Xoroshiro128++ seeding by MD5 of the n
 | Base 3D density (`LegacyBlendedNoise` "minecraft:terrain") | hardcoded | Java BlendedNoise, 684.412/80/160 | high |
 | Caves (cheese, spaghetti 2D/3D, entrances, pillars, noodles) | hardcoded `Cavifier`/`NoodleCavifier` | Java 1.18.1 NoiseSampler names/structure | med-high |
 | Aquifers | hardcoded `Aquifer` | Java 1.18.1 NoiseBasedAquifer (13 surface sample offsets) | medium |
-| Ore veins | in `_prepareHeights` | Java OreVeinifier constants (0.4/0.08/0.1/0.3/0.02/-0.3/0.2) | med-high |
-| Deepslate transition | `DepthBasedBlockSupplier` "minecraft:depth_based_layer" | Java's vertical-gradient rule, own name | medium |
+| Ore veins | in `_prepareHeights` | Java 1.18.1 OreVeinifier, ported and matched | high |
+| Deepslate transition | `DepthBasedBlockSupplier` "minecraft:depth_based_layer" | Java's vertical-gradient rule, own name; ported and matched | high |
 | Biomes | hardcoded `OverworldBiomeBuilder` + `RTree` + `BlendedMultiNoiseBiomeProvider`, 3D (`BiomeSource3d`) | Java OverworldBiomeBuilder port + Bedrock extras (sulfur caves, 1.21.60 plateau variant) | medium |
 | Surface | **Bedrock** data-driven: biome JSON `minecraft:surface_builder` → `BiomeSurfaceSystem` / `VanillaSurfaceBuilders` | **not** Java SurfaceRules; uses PerlinSimplex surface noise + material-adjustment noise | high |
 | Bedrock floor | hardcoded, MT seeded by chunk pos only (no world seed) | **Bedrock-only** | high |
@@ -121,7 +121,7 @@ ChunkSource tasks (strings): `_launchGenerationTask` → `loadChunk`; `_launchSt
 6. `_prepareHeights` (slot 62, 14822eb60): density cells (`generateDensityCellsForChunk` 14822d010 → 14822d4b0),
    trilinear interpolation, Cavifier/noodles, aquifer fluid pick, ore veins, deepslate supplier.
 7. Bedrock floor (see below).
-8. Material-adjustment noise (slot 60): PerlinSimplex octaves, coord·0.125·k, amp 0.55/k, k halves per octave → 16×16 buffer.
+8. Depth noise (slot 60 `minecraft:surface`): PerlinSimplex octaves, coord·0.125·k, amp 0.55/k, k halves per octave → 16×16 buffer.
 9. `BiomeSurfaceSystem::findBiomesAndPrepareChunkParams` 14580c660 → `buildChunkSurface` 14580d280
    (per-biome surface builders from biome JSON; resolved by `resolveBuilderImplementation(LevelSeed64)`).
 10. If an experiment/level flag (vt+0xbe0) is set: second surface pass per vertical run of 3D biomes (underground biomes).
@@ -158,9 +158,71 @@ Biome feature rules run through `decorateWorldGenPostProcess` (slot 54, 14821f40
 - `FeatureTerrainAdjustments::setBeardifier / setBeardAndShaver / setBury` → Java `Beardifier` analogue for structures.
 
 ### Bedrock floor (loadChunk 1482117a4..148211860)
-`for x in 0..16, for z in 0..16: n = rand.nextInt(4); fill y = minY .. minY+n+1` (loop count n+2) with
-`minecraft:bedrock`, using the chunk-pos-seeded MT of step 3 (consumed after aquifer/biome fill, before surface).
-Count (n+1 vs n+2) and x/z loop nesting should be checked against a BDS chunk; seed independence is the key fact.
+`for x in 0..16 { for z in 0..16 { n = rand.nextInt(4); fill y -64 ..= -64+n+1 } }` (2 to 5 layers) with
+`bedrock[infiniburn_bit=0]`, on the chunk MT of step 3 (seed `cx*0x14609048 + cz*0x7EBE2D5`, nothing drawn from it
+before). The surface builders continue on the same MT. MT: standard MT19937 output (lazy init), `nextInt(n)` =
+`genrand % n` (141188e50), `nextFloat` = `(float)(genrand * 2^-32 as f64)` (141188db0), `nextBoolean` = bit 27
+(141188bc0). Confirmed 100% on all oracle worlds.
+
+### Deepslate and ore veins (`_prepareHeights` 14822fc96..1482300af)
+Solid blocks only (density > 0 after the aquifer barrier). Base: y < 0 deepslate; 0 <= y <= 8 deepslate unless
+`at(x,y,z).nextFloat() >= (y/8 > 1 ? 0 : 1 - y/8)`; else stone. Positional random: `fromHashOf(
+"minecraft:depth_based_layer").forkPositional()` off the world factory, `Mth.getSeed` with `sar`.
+Veins: Java 1.18.1 `OreVeinifier` exactly (constants above), positional `fromHashOf("minecraft:ore")
+.forkPositional()`. Noises `ore_veininess` -8 [1] at (x,y,z)*1.5, `ore_vein_a/b` -7 [1] at *4 (cell corners,
+clamped to [-1,1], interpolated like the density), `ore_gap` -5 [1] at the block. Vein table (OreVeinifier ctor
+1481f0380): copper (veininess > 0) y 0..50 `copper_ore`/`raw_copper_block`/`granite`; iron y -60..-8
+`deepslate_iron_ore`/`raw_iron_block`/`tuff`. The interpolator buffers default to 1.0 (noodle 14822ed79, veins
+1481f0380), so corners below -150 read 1.0, not 0. Vein granite inside the surface run is replaced by the
+foundation (see the overworld builder), which is why copper filler vanishes under shallow sea floors.
+
+### Surface (`buildChunkSurface` 14580d280)
+- Per column, x outer, z inner. Biome: `LevelChunk::getBiome` at the heightmap (one above the highest non-air
+  block, fluids included) (`findBiomesAndPrepareChunkParams` 14580c660). Lower bound: `getPreliminarySurfaceLevel`
+  of the quart column (4x4 cache 144cd2f80) minus 8, clamped to [-64, 255]; builders work from the heightmap down.
+- Depth noise: `minecraft:surface` PerlinSimplex, 4 octaves (Xoroshiro, offsets `nextFloat*256` x,y,z in order),
+  `sum simplex2(x*k/8 + xo, z*k/8 + zo) * 0.55/k`, k = 1, 1/2, 1/4, 1/8 (loadChunk 148211560). Simplex 2D/3D are
+  Java's in f32 (145e27a70/145e27d50) except `floor(v) = (int)v - (v <= 0)`.
+- Material adjustments (143907ca0): noise = generator +0xd50, 3 octaves of 3D simplex from an MT on the low 32
+  seed bits after 20202 raw draws (offsets drawn z,y,x, unused), `sum simplex3(p*s*k)/k * 1/7`, k = 1, 1/2, 1/4,
+  p = (x, 0, z). In range `[min, max)` replaces the listed materials; later adjustments win.
+- Overworld builder (145809ef0) = Java 1.17 `DefaultSurfaceBuilder` with: depth `(int)(mt.nextFloat()*0.25 +
+  noise/3 + 3)`; sea level = 1 + top of the last water/lava run above, reset to 0x800003e8 by air (dry columns
+  never see "underwater"); replaceable = stone, granite, diorite, andesite (+ polished); first replaceable:
+  y in [sea-4, sea+1] takes top/mid, y < sea-1 takes mid, or sea floor (then foundation) when
+  `y == lower+1 || y < sea - (sea_floor_depth + depth)`; after the run every replaceable becomes the foundation;
+  a run ending on sand/red sand/suspicious sand continues as sandstone for `nextInt(4) + max(0, y - sea)`;
+  air/water/lava under a run turns sand/red sand above it to sandstone/red sandstone, gravel to the foundation;
+  water becomes the sea material. Steep (mountain_parameters): north = `h(z+1) - h(z-1) > 3`, south the reverse,
+  east = `h(x-1) - h(x+1) > 3`, west the reverse (h = top non-air, neighbours clamped to the chunk); replaces
+  top and mid at every block.
+- Mesa (1487dcb80, init 1487dd550; 1487db280 is an older variant): Java 1.17 badlands with 192 bands from
+  MT(seed32) (`generateBands` with nextInt(10)+6 runs, white `nextInt(7)+9` times), band offset
+  `round(clay_bands_offset(x,0,z)*4)`, NormalNoises `clay_bands_offset` -8 [1], `badlands_surface` -6 [1,1,1],
+  `badlands_pillar` -2 [1;4], `badlands_pillar_roof` -8 [1] from `Xoroshiro(seed32 zero-extended).fork`.
+  Fixed sea 63; skips columns whose top is fluid; only `stone` counts; plain/orange/band split at y 63..255.
+- Frozen ocean (1487e4350, init 1487e18e0): Java 1.17 icebergs with `iceberg_pillar` -6 [1;4] (x1.28),
+  `iceberg_surface` -6 [1;3], `iceberg_pillar_roof` -3 [1] (x1.17) from `Xoroshiro(seed32 sign-extended).fork`,
+  positional `at(x,0,z)` for the snow/ice draws. Only where `min(|surface*8.25|, pillar*15) > 1.8` does it call
+  the overworld builder; other frozen-ocean columns keep bare stone and draw nothing from the chunk MT.
+- Swamp (1487e4d10, init 1487e4870): 2 simplex octaves from MT(seed32), `sum simplex2(x/4*k, z/4*k)/k`; if > 0 and
+  the top is below y 63, the topmost non-water block down to `63 - max_puddle_depth` becomes water; then overworld.
+- Biome parameters come from the vanilla behaviour packs (`behavior_packs/vanilla*/__brarchive/biomes.brarchive`,
+  newest pack wins), transcribed by `crates/sapling-worldgen/scripts/surface_to_rust.py` (the BDS folder is not
+  in the repo, so no build-time read).
+
+### Biome tree (`OverworldBiomeBuilder::addBiomes` 148230a70, `RTree::create` 1480610f0)
+- Entries: Java's builder order and slices (mid 1481f9850, high 1482009c0, peaks 148206880, low 14820bae0,
+  valleys inline), Bedrock ids in u16 tables on the stack, version-gated: 1.21.60+ plateau table (pale garden in
+  `PLATEAU[2][4]`), swamp/mangrove split in valleys; `MIDDLE_VARIANT[1][0]` = 195 (dappled forest) resolves to
+  nothing without its experiment. Underground: dripstone, lush, sulfur caves (c [-0.19, 0.55], e [0.45, 1.0],
+  d [0.2, 0.9], w [-1.1, -0.85]), deep dark. 7594 entries = cubiomes btree262's leaves.
+- Ranges quantize through f64 (`Climate::quantizeCoord` 14805fad0): -0.45f is -4499, Java -4500.
+- Build (148060510): Java's, but sorts with MSVC `std::sort` (148089fd0: introsort, insertion <= 32, ninther
+  > 40); comparator chains (min+max)/2 of params p..p+6 (abs when sorting buckets); < 7 children sort by
+  `sum (min+max)/2` (no abs, unlike Java); bucket size `pow(6, floorf(logf(n - 0.01f)/1.791759f))`.
+  Search (1480616f0): depth-first, descend while `distance < best`, ties keep the earlier leaf. With this tree
+  biomes match every oracle block.
 
 ## Data-driven vs hardcoded
 
@@ -211,11 +273,11 @@ Unlabelled but identified: 145e24e60 multi-octave noise from positional factory 
    (port the float version for Bedrock parity).
 2. Cavifier/Aquifer/OreVeinifier internals not decompiled constant-by-constant (only spot checks); `_prepareHeights`
    14822eb60 and 14822d4b0 are the functions to transcribe.
-3. Biome placement: confirm vanilla uses hardcoded `OverworldBiomeBuilder` (+ sulfur caves, version-gated arrays) and
-   when JSON `multinoise_generation_rules` override it; `BlendedMultiNoiseBiomeProvider` not read.
-4. Surface builders (VanillaSurfaceBuilders: Capped, NoiseGradient, Mesa, FrozenOcean, TheEnd, Swamp…) are Bedrock
-   code, separate port; PerlinSimplex surface noise seeding not mapped.
-5. Bedrock floor layer count and x/z order; decoration a/b-to-x/z pairing; who calls slot 54.
+3. Biome placement: when JSON `multinoise_generation_rules` override the hardcoded builder (never, for vanilla).
+4. Surface builders not ported: Capped, TheEnd, NoiseGradient (sulfur caves), the subsurface second pass
+   (step 10, flag vt+0xbe0); the legacy mesa variant 1487db280 (which worlds pick it?); `Biome::getTemperature`
+   (base temperature used for ice/iceberg checks).
+5. Decoration a/b-to-x/z pairing; who calls slot 54.
 6. Structures (legacy `StructureFeature` vs jigsaw `br::worldgen`, `worldgen/structure_sets`) unmapped.
 7. Lighting/heightmap stage and `OverworldGenerator2d` selection rule (legacy worlds, `no_legacy_worldgen` 14393d890).
 
@@ -234,8 +296,8 @@ Unlabelled but identified: 145e24e60 multi-octave noise from positional factory 
 - Biomes are per block: the tree is sampled on an 8-block lattice (warm-started up each column) and every block takes
   the nearest jittered lattice point (`java.util.Random` step on `Mth.getSeed` ^ low 32 seed bits, offsets x0.9).
   BDS saves sub-chunks above the highest non-empty one as biome copies of it.
-- Known gap: BDS builds its RTree from its own leaf list with MSVC `std::sort` (`RTree::Node::sort` 148060320,
-  build 148060510, create 1480610f0); sapling uses cubiomes' Java tree (btree262). Exact-boundary ties
+- Former gap (fixed, see Biome tree): BDS builds its RTree from its own leaf list with MSVC `std::sort` (`RTree::Node::sort` 148060320,
+  build 148060510, create 1480610f0); cubiomes' Java tree (btree262) let exact-boundary ties
   (quantized value == shared range end) then resolve differently (0.075% of blocks near origin).
 
 New labels: 14822d4b0 `_computeDensityCells`, 14822e160 `getPreliminarySurfaceLevel`, 145e24e60
@@ -246,3 +308,13 @@ sampleClimate,terrainInfo}`, 14822cb50 `ChunkLocalNoiseCache::ChunkLocalNoiseCac
 `CubicSpline::{apply,applyMultipoint}`, 14805f140 `BiomeSource3d::fillBiomes`, 14805eb90 `fillLattice`, 148a73c40/
 148a72d90/142f67a10/148a72910 `BiomeVolume::{fuzzyZoom,latticeJitter,nearestCorner,uniformCellMask}`, 14805fad0/
 14805fb30/1480616f0/14805fc20 `Climate::{quantizeCoord,RTreeNode::distance,RTree::search,TargetPoint}`.
+
+Milestone 2a labels: 148230a70 `OverworldBiomeBuilder::addBiomes`, 1481f9850/1482009c0/148206880/14820bae0
+`::{addMidSlice,addHighSlice,addPeaks,addLowSlice}`, 1481f95f0 `::addSurfaceBiome`, 14805fa80 `Climate::Parameter::span`,
+14805fd00 `Climate::parameters`, 1480610f0/148060510/148060320/14805ff10 `RTree::{create,build,Node::sort,
+Node::makeSubTree}`, 14808bb60 `RTree::Node::sort::less`, 148089fd0/14808ced0 `std::sort<RTree::Node>` (by params,
+by key), 145809ef0/145809370/1487dcb80/1487e4350/1487e4d10 `VanillaSurfaceBuilders::{Overworld,Capped,Mesa,
+FrozenOcean,Swamp}SurfaceBuilder::buildSurfaceAt`, 1487dd550/1487e18e0/1487e4870 `::{Mesa,FrozenOcean,Swamp}
+SurfaceBuilder::init`, 143907ca0 `SurfaceMaterialAdjustments::evaluate`, 1481f0380 `OreVeinifier::OreVeinifier`,
+145e2a730 `PerlinSimplexNoise::addOctave`, 145e27a70/145e27d50 `SimplexNoise::{getValue2D,getValue3D}`,
+141188be0/141188db0/141188e50/141188bc0 `Random::{_genRandInt32,nextFloat,nextInt,nextBoolean}`.

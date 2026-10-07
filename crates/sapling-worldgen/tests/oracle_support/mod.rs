@@ -129,8 +129,9 @@ pub fn judge(ours: Block, bds: &BdsCell, y: i32, reshaped: bool) -> Verdict {
 }
 
 /// For every cell of a column (top down, as `cells`), whether ours and BDS disagree on what is solid
-/// within the 8 blocks above it or on the column top: carvers, lakes or a shape difference then fed
-/// BDS's surface builder another column. Feature blocks and freeze-pass snow and ice count as either.
+/// within 8 blocks of it or on the column top: carvers, lakes (whose borders turn to stone) or a
+/// shape difference then reworked the surface. Feature blocks and freeze-pass snow and ice count as
+/// either.
 pub fn column_reshaped(ours_solid: impl Fn(i32) -> bool, cells: &[(i32, BdsCell)]) -> Vec<bool> {
     let bds_solid = |cell: &BdsCell| -> Option<bool> {
         if cell.is_empty() || cell.is_fluid() {
@@ -141,7 +142,7 @@ pub fn column_reshaped(ours_solid: impl Fn(i32) -> bool, cells: &[(i32, BdsCell)
     let differs: Vec<bool> = cells.iter().map(|(y, cell)| bds_solid(cell).is_some_and(|solid| solid != ours_solid(*y))).collect();
     let our_top = cells.iter().find(|(y, _)| ours_solid(*y)).map(|(y, _)| *y);
     let bds_top = cells.iter().find(|(_, cell)| bds_solid(cell) == Some(true)).map(|(y, _)| *y);
-    (0..cells.len()).map(|i| our_top != bds_top || differs[i.saturating_sub(8)..i].iter().any(|d| *d)).collect()
+    (0..cells.len()).map(|i| our_top != bds_top || differs[i.saturating_sub(8)..(i + 9).min(cells.len())].iter().any(|d| *d)).collect()
 }
 
 fn judge_cell(ours: Block, bds: &BdsCell, y: i32) -> Verdict {
@@ -191,10 +192,19 @@ fn judge_cell(ours: Block, bds: &BdsCell, y: i32) -> Verdict {
     if matches!(ours, Block::Snow | Block::Dirt | Block::GrassBlock | Block::Stone) && theirs == Block::PackedIce {
         return Verdict::Later("ice spikes");
     }
-    if matches!(ours, Block::Dirt | Block::GrassBlock) && matches!(bds.block.as_str(), "sand" | "gravel" | "clay")
-        || ours == Block::Stone && bds.block == "sand"
-    {
-        return Verdict::Later("sand, gravel, clay disks (over dirt or dirt blobs)");
+    let disked = match ours {
+        Block::Dirt | Block::GrassBlock | Block::CoarseDirt => matches!(bds.block.as_str(), "sand" | "gravel" | "clay"),
+        Block::Gravel => matches!(bds.block.as_str(), "sand" | "dirt" | "clay"),
+        Block::Stone => bds.block == "sand",
+        _ => false,
+    };
+    if disked {
+        return Verdict::Later("sand, gravel, clay disks and dirt blobs");
+    }
+    let soil = matches!(ours, Block::Dirt | Block::GrassBlock | Block::CoarseDirt | Block::Gravel | Block::Sand);
+    let blob = matches!(theirs, Block::Granite | Block::Tuff | Block::Calcite | Block::CopperOre | Block::IronOre);
+    if soil && blob || VEIN_BLOCKS.contains(&ours) && theirs == Block::Calcite {
+        return Verdict::Later("ore features and geodes over surface or vein blocks");
     }
     if VEIN_BLOCKS.contains(&ours) || VEIN_BLOCKS.contains(&theirs) {
         return Verdict::Error(Stage::Veins);
