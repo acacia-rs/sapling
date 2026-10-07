@@ -141,6 +141,14 @@ One listener task, one shard thread, one world. The pieces and why they are shap
   and `open_folder_in_memory`. A storage call that panics on an I/O thread is caught and counts as a
   failed load or save. A column storage could not read is served as void and refuses writes, so it is
   never saved over.
+- **Generation.** `Generated<S>` wraps any storage: an overworld column the inner storage lacks is made
+  by sapling-worldgen's `OverworldGenerator` (one per world, shared by the I/O threads) and converted to
+  a `Chunk` by name + states (`generated/convert.rs`; water and lava in layer 0, as BDS saves them).
+  Other dimensions stay void. A generated column is saved only once written, as BDS saves only changed
+  chunks. `World::with_storage(Arc::new(Generated::new(MemoryStorage::default(), seed)))` is a pure
+  generated world; `World::open_folder(path)?.generate_missing()` fills a folder's holes from its
+  `level.dat` seed. `World::load_spawn` puts a world without a spawn on the surface above (0, 0).
+  Generation stops at lava lakes: no features or structures (`docs/NEXT.md`).
 - **Block entities.** A column keeps its record as stored and saves it back. `set_block` drops the
   compounds at a position when the block there becomes another kind (a different name). Clients get
   each compound whole, as network NBT, with the section it is in: after the section's bytes, or as the
@@ -816,9 +824,9 @@ acacia-world = { path = "../acacia/acacia/crates/acacia-world" }
 - A newcomer gets every skin at once (about 290 KB each before compression); throttle before the
   per-player backlog limit (16 MB) matters. Skin changes in game (PlayerSkin) are ignored.
 - Chat: proper rate limiting, private messages, profanity filter fields.
-- **BDS only saves chunks that changed since generation.** A world folder has holes wherever nothing was
-  touched; vanilla regenerates them from the seed, sapling shows void. Maps must be fully saved (or
-  sapling needs a generator).
+- **BDS only saves chunks that changed since generation.** A folder's holes are void unless it is
+  opened with `generate_missing`, which fills them with terrain only, without features or structures
+  ("Generation").
 - Block-state upgrader (CC0 BedrockBlockUpgradeSchema) for palettes older than the current version;
   until then see "Block states" above. Legacy sub-chunk versions (< 8, except 1) are skipped as air.
 - Block entities: no vanilla client has seen them (bots decode them), and what BDS itself puts into a

@@ -55,3 +55,11 @@ with sapling's: chest and furnace traffic was never recorded (`research/containe
 says where it is decompiled only), nor door and bed placement. Also time a hopper into a chest,
 break a filled and an empty shulker box, and take results from a furnace (orb movement packets). One agent at a time uses that
 server.
+
+## 5. World generation, the rest
+
+`Generated` serves terrain through lava lakes only: features (trees, ores, disks, icebergs,
+geodes), structures, the freeze pass and liquid flow are missing (sapling-worldgen tests/oracle.rs
+counts each). A column costs ~40 ms in release against ~1.7 ms from LevelDB
+(`cargo run --release -p sapling-world --example generation_time`): ~25 ms terrain shape and
+surface, ~7 ms biomes, ~8 ms conversion to a `Chunk` (not profiled).
