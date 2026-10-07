@@ -27,6 +27,15 @@ impl BoundingBox {
         (self.x0..=self.x1).contains(&x) && (self.y0..=self.y1).contains(&y) && (self.z0..=self.z1).contains(&z)
     }
 
+    pub fn union(&self, o: &BoundingBox) -> Self {
+        Self::new(self.x0.min(o.x0), self.y0.min(o.y0), self.z0.min(o.z0), self.x1.max(o.x1), self.y1.max(o.y1), self.z1.max(o.z1))
+    }
+
+    pub fn move_y(&mut self, dy: i32) {
+        self.y0 += dy;
+        self.y1 += dy;
+    }
+
     /// The box of one chunk column, all heights.
     pub fn chunk(chunk_x: i32, chunk_z: i32) -> Self {
         Self::new(chunk_x * 16, -64, chunk_z * 16, chunk_x * 16 + 15, 319, chunk_z * 16 + 15)

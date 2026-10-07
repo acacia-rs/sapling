@@ -106,7 +106,7 @@ pub fn near_feature(world: &LevelDbWorld, chunk: &Chunk, (x, y, z): (i32, i32, i
         for nz in (z - r).max(z0)..=(z + r).min(z0 + 15) {
             for ny in y - r..=y + r {
                 let cell = bds_cell(world, chunk, nx, ny, nz);
-                if cell.kind() == CellKind::Solid &&!TERRAIN_BLOCKS.contains(&cell.block.as_str()) {
+                if cell.kind() == CellKind::Solid && !TERRAIN_BLOCKS.contains(&cell.block.as_str()) {
                     return true;
                 }
             }

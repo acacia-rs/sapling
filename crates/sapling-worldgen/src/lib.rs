@@ -48,6 +48,8 @@ pub struct OverworldGenerator {
     decoration: Decoration,
     features: Features,
     structures: structure::Structures,
+    carved: SourceCache<(i32, i32), ChunkShape>,
+    pieced: SourceCache<(i32, i32), ChunkShape>,
     loaded: SourceCache<(i32, i32), ChunkShape>,
     biomes: SourceCache<(i32, i32), ChunkBiomes>,
 }
@@ -63,6 +65,8 @@ impl OverworldGenerator {
             decoration: Decoration::new(seed),
             features: Features::new(seed),
             structures: structure::Structures::new(seed),
+            carved: SourceCache::new(LOADED_LIMIT),
+            pieced: SourceCache::new(LOADED_LIMIT),
             loaded: SourceCache::new(LOADED_LIMIT),
             biomes: SourceCache::new(BIOMES_LIMIT),
         }
@@ -84,10 +88,18 @@ impl OverworldGenerator {
     /// BDS's `loadChunk` (`surfaced_blocks`, then `carve`) and its structure post-process
     /// (`place_structures`): what decoration starts from, here and in the neighbours.
     pub fn loaded_blocks(&self, chunk_x: i32, chunk_z: i32) -> ChunkShape {
-        let mut shape = self.surfaced_blocks(chunk_x, chunk_z);
-        self.carve(&mut shape, chunk_x, chunk_z);
+        let mut shape = (*self.carved(chunk_x, chunk_z)).clone();
         self.place_structures(&mut shape, chunk_x, chunk_z);
         shape
+    }
+
+    /// `surfaced_blocks` then `carve`, kept for the structure stage's reads past its chunk.
+    fn carved(&self, chunk_x: i32, chunk_z: i32) -> Arc<ChunkShape> {
+        self.carved.get((chunk_x, chunk_z), || {
+            let mut shape = self.surfaced_blocks(chunk_x, chunk_z);
+            self.carve(&mut shape, chunk_x, chunk_z);
+            shape
+        })
     }
 
     /// The terrain stages in BDS's `loadChunk` order, up to (not including) carvers.
@@ -128,7 +140,26 @@ impl OverworldGenerator {
     /// The structure stage (`structurePostProcessChunk`, after carvers and before decoration):
     /// the pieces of every structure reaching the chunk, written inside it only.
     pub fn place_structures(&self, shape: &mut ChunkShape, chunk_x: i32, chunk_z: i32) {
-        self.structures.place(&self.density, shape, (chunk_x, chunk_z));
+        if let Some(heights) = self.place_pieces(shape, chunk_x, chunk_z) {
+            let neighbour = |x: i32, y: i32, z: i32| self.pieced(x >> 4, z >> 4).block((x & 15) as usize, y, (z & 15) as usize);
+            structure::rejoin_fences(shape, (chunk_x, chunk_z), heights, &neighbour);
+        }
+    }
+
+    /// The structure pieces alone, reading past the chunk through the neighbours' carved terrain.
+    fn place_pieces(&self, shape: &mut ChunkShape, chunk_x: i32, chunk_z: i32) -> Option<(i32, i32)> {
+        let neighbour = |x: i32, y: i32, z: i32| self.carved(x >> 4, z >> 4).block((x & 15) as usize, y, (z & 15) as usize);
+        let biomes = self.chunk_biomes(chunk_x, chunk_z);
+        self.structures.place(&self.density, shape, (chunk_x, chunk_z), &neighbour, &biomes)
+    }
+
+    /// `carved` plus the structure pieces, for the neighbours' fence connections.
+    fn pieced(&self, chunk_x: i32, chunk_z: i32) -> Arc<ChunkShape> {
+        self.pieced.get((chunk_x, chunk_z), || {
+            let mut shape = (*self.carved(chunk_x, chunk_z)).clone();
+            self.place_pieces(&mut shape, chunk_x, chunk_z);
+            shape
+        })
     }
 
     /// Structures that may place blocks in the chunk: kind, start chunk, and a box around what

@@ -60,13 +60,57 @@ pub fn open(world: &str) -> Option<(LevelDbWorld, LevelDbWorld)> {
 /// Blocks the terrain stages (shape, surface, ore veins, deepslate) place; any other solid block
 /// is decoration (features, structures, carvers' side effects).
 pub const TERRAIN_BLOCKS: &[&str] = &[
-    "stone", "deepslate", "granite", "diorite", "andesite", "tuff", "dirt", "grass_block", "coarse_dirt", "podzol", "mycelium",
-    "sand", "red_sand", "sandstone", "red_sandstone", "gravel", "clay", "mud", "snow", "powder_snow", "ice", "packed_ice",
-    "blue_ice", "bedrock", "hardened_clay", "white_terracotta", "orange_terracotta", "yellow_terracotta",
-    "brown_terracotta", "red_terracotta", "light_gray_terracotta", "copper_ore", "deepslate_copper_ore", "raw_copper_block",
-    "iron_ore", "deepslate_iron_ore", "raw_iron_block", "coal_ore", "deepslate_coal_ore", "gold_ore", "deepslate_gold_ore",
-    "redstone_ore", "deepslate_redstone_ore", "lapis_ore", "deepslate_lapis_ore", "diamond_ore", "deepslate_diamond_ore",
-    "emerald_ore", "deepslate_emerald_ore", "infested_stone", "infested_deepslate",
+    "stone",
+    "deepslate",
+    "granite",
+    "diorite",
+    "andesite",
+    "tuff",
+    "dirt",
+    "grass_block",
+    "coarse_dirt",
+    "podzol",
+    "mycelium",
+    "sand",
+    "red_sand",
+    "sandstone",
+    "red_sandstone",
+    "gravel",
+    "clay",
+    "mud",
+    "snow",
+    "powder_snow",
+    "ice",
+    "packed_ice",
+    "blue_ice",
+    "bedrock",
+    "hardened_clay",
+    "white_terracotta",
+    "orange_terracotta",
+    "yellow_terracotta",
+    "brown_terracotta",
+    "red_terracotta",
+    "light_gray_terracotta",
+    "copper_ore",
+    "deepslate_copper_ore",
+    "raw_copper_block",
+    "iron_ore",
+    "deepslate_iron_ore",
+    "raw_iron_block",
+    "coal_ore",
+    "deepslate_coal_ore",
+    "gold_ore",
+    "deepslate_gold_ore",
+    "redstone_ore",
+    "deepslate_redstone_ore",
+    "lapis_ore",
+    "deepslate_lapis_ore",
+    "diamond_ore",
+    "deepslate_diamond_ore",
+    "emerald_ore",
+    "deepslate_emerald_ore",
+    "infested_stone",
+    "infested_deepslate",
 ];
 
 /// A saved cell: block name without `minecraft:`, its states, and the name of a liquid in it.
@@ -79,7 +123,9 @@ pub struct BdsCell {
 
 pub fn bds_cell(world: &LevelDbWorld, chunk: &Chunk, x: i32, y: i32, z: i32) -> BdsCell {
     let registry = world.registry();
-    let state = |id| registry.get(id).map_or(("?".to_string(), String::new()), |s| (s.name.trim_start_matches("minecraft:").to_string(), s.properties.to_string()));
+    let state = |id| {
+        registry.get(id).map_or(("?".to_string(), String::new()), |s| (s.name.trim_start_matches("minecraft:").to_string(), s.properties.to_string()))
+    };
     let (block, states) = state(chunk.block(x, y, z));
     let liquid = chunk.liquid(x, y, z);
     let liquid = (liquid != registry.air_id()).then(|| state(liquid).0);

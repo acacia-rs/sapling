@@ -104,8 +104,13 @@ fn structure_block(bds: &BdsCell, in_area: bool) -> bool {
 #[derive(Default)]
 struct Counts {
     placed: u64,
-    wanted: u64,
     hits: u64,
+    /// Placed cells that are not air, and those BDS has too.
+    solid_placed: u64,
+    solid_hits: u64,
+    wanted: u64,
+    /// Wanted cells where our block is BDS's.
+    found: u64,
     blocks: BTreeMap<String, u64>,
 }
 
@@ -143,6 +148,10 @@ impl StructureTally {
             let counts = self.kinds.entry(kind.map_or("unattributed", |k| k.name())).or_default();
             counts.placed += 1;
             counts.hits += u64::from(bds.is(after));
+            if after != Block::Air {
+                counts.solid_placed += 1;
+                counts.solid_hits += u64::from(bds.is(after));
+            }
         }
         if bds.is(before) || !structure_block(bds, kind.is_some()) {
             return;
@@ -151,6 +160,7 @@ impl StructureTally {
             Some(kind) => {
                 let counts = self.kinds.entry(kind.name()).or_default();
                 counts.wanted += 1;
+                counts.found += u64::from(bds.is(after));
                 *counts.blocks.entry(bds.block.clone()).or_default() += 1;
             }
             None => *self.unattributed.entry(bds.block.clone()).or_default() += 1,
@@ -164,16 +174,19 @@ impl StructureTally {
             v.sort_by(|a, b| b.1.cmp(a.1));
             v.iter().take(5).map(|(name, n)| format!("{name} {n}")).collect::<Vec<_>>().join(", ")
         };
-        println!("  structures: kind, precision (hits/placed), recall (hits/wanted), BDS blocks wanted");
+        println!("  structures: kind, precision (hits/placed; non-air only), recall (found/wanted structure blocks), BDS blocks wanted");
         for (kind, c) in &self.kinds {
             let starts = self.starts.get(kind).map_or(String::new(), |s| format!(" starts {s:?}"));
             println!(
-                "    {kind:>16}: precision {:7.3}% ({}/{}), recall {:7.3}% ({}/{}){starts}",
+                "    {kind:>16}: precision {:7.3}% ({}/{}; {:.3}% {}/{}), recall {:7.3}% ({}/{}){starts}",
                 percent(c.hits, c.placed),
                 c.hits,
                 c.placed,
-                percent(c.hits, c.wanted),
-                c.hits,
+                percent(c.solid_hits, c.solid_placed),
+                c.solid_hits,
+                c.solid_placed,
+                percent(c.found, c.wanted),
+                c.found,
                 c.wanted
             );
             if !c.blocks.is_empty() {

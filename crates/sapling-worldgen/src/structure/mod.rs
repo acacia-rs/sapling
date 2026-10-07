@@ -3,39 +3,44 @@
 //! structure sets.
 
 mod area;
+mod canvas;
 mod kind;
 mod locate;
+mod mineshaft;
 mod nearby;
+mod piece;
 mod placement;
 mod probe;
+mod stage;
 mod stronghold;
 #[cfg(test)]
 mod tests;
+mod treasure;
 
-use std::sync::OnceLock;
+use std::collections::HashMap;
+use std::sync::{Arc, Mutex, OnceLock};
 
 use crate::density::Density;
 pub use area::BoundingBox;
 pub use kind::StructureKind;
 use kind::*;
 use probe::Probe;
+pub use stage::rejoin_fences;
 
 const SEA_LEVEL: i32 = 63;
 
-/// Structure starts for one world seed.
+/// Structure starts for one world seed, and the pieces of those already generated.
 pub struct Structures {
     seed: i64,
     level_seed: u32,
     strongholds: OnceLock<Vec<(i32, i32)>>,
+    mineshafts: Mutex<HashMap<(i32, i32), Arc<mineshaft::Mineshaft>>>,
 }
 
 impl Structures {
     pub fn new(seed: i64) -> Self {
-        Self { seed, level_seed: seed as u32, strongholds: OnceLock::new() }
+        Self { seed, level_seed: seed as u32, strongholds: OnceLock::new(), mineshafts: Mutex::new(HashMap::new()) }
     }
-
-    /// Writes the pieces of every ported structure reaching `chunk` into it.
-    pub fn place(&self, _density: &Density, _shape: &mut crate::ChunkShape, _chunk: (i32, i32)) {}
 
     /// Whether `kind` starts in `chunk` (`isFeatureChunk`; for v2 sets the grid and a biome).
     pub fn is_start(&self, density: &Density, kind: StructureKind, chunk: (i32, i32)) -> bool {

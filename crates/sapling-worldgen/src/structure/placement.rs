@@ -93,7 +93,12 @@ impl JavaRandom {
 /// Mineshafts (`MineshaftFeature::isFeatureChunk` 14831b070): a chunk seed from two `nextInt()`s
 /// multiplied, not forced odd, and xored; then one skipped draw, `nextFloat() < 0.004` and
 /// `nextInt(80) < max(|x|, |z|)`, both always drawn.
-pub fn is_mineshaft_chunk(level_seed: u32, (x, z): (i32, i32)) -> bool {
+pub fn is_mineshaft_chunk(level_seed: u32, chunk: (i32, i32)) -> bool {
+    mineshaft_random(level_seed, chunk).0
+}
+
+/// The mineshaft chance and the generator after its draws, which the start's pieces go on with.
+pub fn mineshaft_random(level_seed: u32, (x, z): (i32, i32)) -> (bool, Mt19937) {
     let mut random = Mt19937::new(level_seed);
     let a = random.next_int_unbounded();
     let b = random.next_int_unbounded();
@@ -101,5 +106,5 @@ pub fn is_mineshaft_chunk(level_seed: u32, (x, z): (i32, i32)) -> bool {
     random.next_int_unbounded();
     let chance = random.next_float();
     let roll = random.next_int(80);
-    chance < 0.004 && roll < x.unsigned_abs().max(z.unsigned_abs()) as i32
+    (chance < 0.004 && roll < x.unsigned_abs().max(z.unsigned_abs()) as i32, random)
 }
