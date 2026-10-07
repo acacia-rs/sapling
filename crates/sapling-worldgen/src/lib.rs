@@ -81,10 +81,12 @@ impl OverworldGenerator {
         self.loaded.get((chunk_x, chunk_z), || self.loaded_blocks(chunk_x, chunk_z))
     }
 
-    /// BDS's `loadChunk`: `surfaced_blocks`, then `carve`.
+    /// BDS's `loadChunk` (`surfaced_blocks`, then `carve`) and its structure post-process
+    /// (`place_structures`): what decoration starts from, here and in the neighbours.
     pub fn loaded_blocks(&self, chunk_x: i32, chunk_z: i32) -> ChunkShape {
         let mut shape = self.surfaced_blocks(chunk_x, chunk_z);
         self.carve(&mut shape, chunk_x, chunk_z);
+        self.place_structures(&mut shape, chunk_x, chunk_z);
         shape
     }
 
@@ -121,6 +123,18 @@ impl OverworldGenerator {
     /// Bedrock biome ids per block, cached for the stages and neighbours that read them again.
     pub fn chunk_biomes(&self, chunk_x: i32, chunk_z: i32) -> Arc<ChunkBiomes> {
         self.biomes.get((chunk_x, chunk_z), || self.density.climate.chunk_biomes(self.seed, chunk_x, chunk_z))
+    }
+
+    /// The structure stage (`structurePostProcessChunk`, after carvers and before decoration):
+    /// the pieces of every structure reaching the chunk, written inside it only.
+    pub fn place_structures(&self, shape: &mut ChunkShape, chunk_x: i32, chunk_z: i32) {
+        self.structures.place(&self.density, shape, (chunk_x, chunk_z));
+    }
+
+    /// Structures that may place blocks in the chunk: kind, start chunk, and a box around what
+    /// the structure covers (its pieces where ported, a rough area otherwise).
+    pub fn structure_areas(&self, chunk_x: i32, chunk_z: i32) -> Vec<(structure::StructureKind, (i32, i32), structure::BoundingBox)> {
+        self.structures.areas_touching(&self.density, (chunk_x, chunk_z))
     }
 
     /// Whether a structure of `kind` starts in the chunk.

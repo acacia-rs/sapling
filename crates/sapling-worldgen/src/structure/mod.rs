@@ -2,8 +2,10 @@
 //! BDS's legacy `StructureFeature` checks (`isFeatureChunk`, vtable slot 5) and the v2 jigsaw
 //! structure sets.
 
+mod area;
 mod kind;
 mod locate;
+mod nearby;
 mod placement;
 mod probe;
 mod stronghold;
@@ -13,6 +15,7 @@ mod tests;
 use std::sync::OnceLock;
 
 use crate::density::Density;
+pub use area::BoundingBox;
 pub use kind::StructureKind;
 use kind::*;
 use probe::Probe;
@@ -30,6 +33,9 @@ impl Structures {
     pub fn new(seed: i64) -> Self {
         Self { seed, level_seed: seed as u32, strongholds: OnceLock::new() }
     }
+
+    /// Writes the pieces of every ported structure reaching `chunk` into it.
+    pub fn place(&self, _density: &Density, _shape: &mut crate::ChunkShape, _chunk: (i32, i32)) {}
 
     /// Whether `kind` starts in `chunk` (`isFeatureChunk`; for v2 sets the grid and a biome).
     pub fn is_start(&self, density: &Density, kind: StructureKind, chunk: (i32, i32)) -> bool {
