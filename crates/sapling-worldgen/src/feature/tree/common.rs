@@ -74,13 +74,26 @@ impl Tree {
         }
     }
 
-    /// The ground check of every trunk: inside the world and every cell under the footprint is
-    /// `may_grow_on`.
+    /// `TreeHelper::prepareSpawn` (1438eac70): inside the world, `may_grow_on` under the footprint,
+    /// and every cell of the trunk's volume (radius 0 at the base, 1 above, 2 from one under the
+    /// top to one over it) growable through.
     pub fn prepare(&self, view: &View, [x, y, z]: [i32; 3], height: i32, width: i32) -> bool {
-        if y <= crate::terrain::MIN_Y || y + height >= crate::terrain::MIN_Y + crate::terrain::HEIGHT as i32 {
+        let top = crate::terrain::MIN_Y + crate::terrain::HEIGHT as i32;
+        if y <= crate::terrain::MIN_Y || y + height >= top {
             return false;
         }
-        (0..width).all(|dx| (0..width).all(|dz| allows(self.may_grow_on, view.block(x + dx, y - 1, z + dz))))
+        if !(0..width).all(|dx| (0..width).all(|dz| allows(self.may_grow_on, view.block(x + dx, y - 1, z + dz)))) {
+            return false;
+        }
+        if self.may_grow_through.is_empty() {
+            return true;
+        }
+        // The list BDS checks behaves as may_grow_through plus may_replace (oracle: trees grow through air and leaves, not logs).
+        let through = |block| self.may_grow_through.contains(&block) || allows(self.may_replace, block);
+        (y..=(y + height + 1).min(top - 1)).all(|cy| {
+            let r = if cy >= y + height - 1 { 2 } else { i32::from(cy != y) };
+            (x - r..=x + r).all(|cx| (z - r..=z + r).all(|cz| through(view.block(cx, cy, cz))))
+        })
     }
 }
 

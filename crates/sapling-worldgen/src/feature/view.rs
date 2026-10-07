@@ -104,7 +104,7 @@ impl<'a> View<'a> {
         if self.locate(x, MIN_Y, z).is_none() {
             return top;
         }
-        let blocks_light = |block: Block| block != Block::Air && (!block.is_plant() || block.is_crop_block());
+        let blocks_light = |block: Block| block != Block::Air && (!block.is_plant() || block.is_crop_block()) && !block.is_leaves();
         (MIN_Y..top).rev().find(|&y| blocks_light(self.block(x, y, z))).map_or(MIN_Y, |y| y + 1)
     }
 
