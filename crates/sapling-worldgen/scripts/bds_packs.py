@@ -78,5 +78,21 @@ def documents(bds, kind):
     return found
 
 
+def load_order(bds, kind):
+    """`kind` documents in the order BDS loads them: each `vanilla*` pack newest first in brarchive entry order,
+    then `definitions/<kind>` by name."""
+    packs_dir = os.path.join(bds, 'behavior_packs')
+    packs = sorted((p for p in os.listdir(packs_dir) if p == 'vanilla' or p.startswith('vanilla_')), key=_version, reverse=True)
+    for pack in packs:
+        path = os.path.join(packs_dir, pack, '__brarchive', kind + '.brarchive')
+        if os.path.exists(path):
+            for _, raw in brarchive(path):
+                yield jsonc(raw)
+    loose = os.path.join(bds, 'definitions', kind)
+    if os.path.isdir(loose):
+        for name in sorted(os.listdir(loose)):
+            yield jsonc(open(os.path.join(loose, name), 'rb').read())
+
+
 def biomes(bds):
     return {name.removesuffix('.biome.json'): doc for name, doc in documents(bds, 'biomes').items()}

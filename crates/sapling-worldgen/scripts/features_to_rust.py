@@ -11,7 +11,7 @@ import os
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from bds_packs import IDS, biomes, documents  # noqa: E402
+from bds_packs import IDS, biomes, documents, load_order  # noqa: E402
 
 PASSES = ['first_pass', 'before_underground_pass', 'underground_pass', 'after_underground_pass', 'before_surface_pass',
           'surface_pass', 'after_surface_pass', 'before_sky_pass', 'sky_pass', 'after_sky_pass', 'final_pass']
@@ -140,6 +140,57 @@ class Features:
         raise SystemExit(f'{kind} is not ported')
 
 
+def hashed_string(text):
+    """Bedrock's HashedString: 64-bit FNV-1 (multiply, then xor)."""
+    h = 0xCBF29CE484222325
+    for byte in text.encode():
+        h = (h * 0x100000001B3 & 0xFFFFFFFFFFFFFFFF) ^ byte
+    return h
+
+
+class MsvcMap:
+    """The iteration order of an MSVC std::unordered_map with unique keys: a key whose bucket is empty goes to
+    the list's end, else in front of its bucket's first node; 8 buckets, load factor 1, x8 growth below 512
+    (x2 above), a rehash re-placing the old list in order."""
+
+    def __init__(self):
+        self.keys, self.buckets, self.first = [], 8, {}
+
+    def _place(self, key):
+        bucket = hashed_string(key) & (self.buckets - 1)
+        if bucket in self.first:
+            self.keys.insert(self.keys.index(self.first[bucket]), key)
+        else:
+            self.keys.append(key)
+        self.first[bucket] = key
+
+    def insert(self, key):
+        if key in self.keys:
+            return False
+        if len(self.keys) + 1 > self.buckets:
+            self.buckets *= 8 if self.buckets < 512 else 2
+            old, self.keys, self.first = self.keys, [], {}
+            for k in old:
+                self._place(k)
+        self._place(key)
+        return True
+
+
+def rule_order(bds):
+    """Rules as BDS attaches them to a biome: its store is an unordered_map of pass to an unordered_map of
+    identifier (HashedString) to rule, filled in load order with the first of an identifier kept; attaching walks
+    passes, then each pass's rules, in map order. Within a pass the decoration order is the inner map's."""
+    store = {}
+    for doc in load_order(bds, 'feature_rules'):
+        rule = doc['minecraft:feature_rules']
+        inner = store.setdefault(rule['conditions']['placement_pass'], (MsvcMap(), {}))
+        if inner[0].insert(rule['description']['identifier']):
+            inner[1][rule['description']['identifier']] = rule
+    for keys, by_name in store.values():
+        for key in keys.keys:
+            yield by_name[key]
+
+
 def main():
     bds = sys.argv[1]
     tags_by_id = {}
@@ -148,8 +199,7 @@ def main():
             tags_by_id[IDS[name]] = set(doc['minecraft:biome']['components'].get('minecraft:tags', {}).get('tags', []))
     features = Features(documents(bds, 'features'))
     rules, skipped = [], []
-    for file, doc in sorted(documents(bds, 'feature_rules').items()):
-        rule = doc['minecraft:feature_rules']
+    for rule in rule_order(bds):
         name, places = rule['description']['identifier'], rule['description']['places_feature']
         conditions = rule['conditions']
         pass_ = conditions['placement_pass']
