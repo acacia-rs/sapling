@@ -23,6 +23,12 @@ const LEAF_LITTER: [[Block; 4]; 4] = [
     [Block::LeafLitter2South, Block::LeafLitter2West, Block::LeafLitter2North, Block::LeafLitter2East],
     [Block::LeafLitter3South, Block::LeafLitter3West, Block::LeafLitter3North, Block::LeafLitter3East],
 ];
+const PINK_PETALS: [[Block; 4]; 4] = [
+    [Block::PinkPetals0South, Block::PinkPetals0West, Block::PinkPetals0North, Block::PinkPetals0East],
+    [Block::PinkPetals1South, Block::PinkPetals1West, Block::PinkPetals1North, Block::PinkPetals1East],
+    [Block::PinkPetals2South, Block::PinkPetals2West, Block::PinkPetals2North, Block::PinkPetals2East],
+    [Block::PinkPetals3South, Block::PinkPetals3West, Block::PinkPetals3North, Block::PinkPetals3East],
+];
 
 impl LegacyTree {
     pub fn place(&self, ctx: &mut Ctx, at: [i32; 3]) -> Option<[i32; 3]> {
@@ -54,12 +60,17 @@ impl LegacyTree {
                     rock(ctx.view, ctx.random, [x, ctx.view.heightmap(x, z), z]);
                 }
             }
-            LegacyTree::LeafLitter => {
+            LegacyTree::FlowerBed { petals } => {
                 let growth = ctx.random.next_int(4) as usize;
                 let facing = ctx.random.next_int(4) as usize;
                 let [x, y, z] = at;
-                let block = LEAF_LITTER[growth][facing];
-                let placed = ctx.view.block(x, y, z) == Block::Air && ctx.view.block(x, y - 1, z).blocks_motion();
+                let below = ctx.view.block(x, y - 1, z);
+                let (block, supported) = if petals {
+                    (PINK_PETALS[growth][facing], super::plants::is_soil(below))
+                } else {
+                    (LEAF_LITTER[growth][facing], below.blocks_motion())
+                };
+                let placed = ctx.view.block(x, y, z) == Block::Air && supported;
                 return (placed && ctx.view.set_block(x, y, z, block)).then_some(at);
             }
         }

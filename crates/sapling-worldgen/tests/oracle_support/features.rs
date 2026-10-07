@@ -57,6 +57,7 @@ fn family(name: &str) -> Option<&'static str> {
         "moss_carpet" => "moss carpets",
         "mangrove_propagule" => "propagules",
         "leaf_litter" => "leaf litter",
+        "pink_petals" => "pink petals",
         _ => return None,
     })
 }

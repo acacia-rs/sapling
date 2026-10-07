@@ -82,6 +82,9 @@ impl CherryTrunk {
             start_b += 1;
         }
         let direction = random.next_int(4) as usize;
+        if std::env::var_os("TRACE_TREES").is_some() {
+            eprintln!("cherry at {origin:?} height {height} type {tree_type} a {start_a} b {start_b} dir {direction} drawn {}", random.drawn);
+        }
         start_a = start_a.max(0);
         let stems = match tree_type {
             1 => start_a.max(start_b) + 1,
