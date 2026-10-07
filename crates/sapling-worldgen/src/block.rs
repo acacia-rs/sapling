@@ -1,9 +1,14 @@
 //! The blocks the terrain stages place, with their Bedrock names and states.
 
+use crate::structure::template::{COLLIDES, TEMPLATE_BLOCKS};
+
 macro_rules! blocks {
     ($($variant:ident => $name:literal $states:literal,)*) => {
         #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
         pub enum Block {
+            /// A block only structure templates place: an index into `TEMPLATE_BLOCKS`. First, so
+            /// the plant ranges below never hold it.
+            Template(u16),
             $($variant,)*
         }
 
@@ -13,6 +18,7 @@ macro_rules! blocks {
             /// The Bedrock name without the `minecraft:` prefix.
             pub fn name(self) -> &'static str {
                 match self {
+                    Block::Template(i) => TEMPLATE_BLOCKS[i as usize].0,
                     $(Block::$variant => $name,)*
                 }
             }
@@ -20,6 +26,7 @@ macro_rules! blocks {
             /// Non-default states as BDS saves them, `key=value` comma-separated.
             pub fn states(self) -> &'static str {
                 match self {
+                    Block::Template(i) => TEMPLATE_BLOCKS[i as usize].1,
                     $(Block::$variant => $states,)*
                 }
             }
@@ -245,7 +252,7 @@ impl Block {
 
     /// Plants that stand in water: BDS saves them with water in the second layer.
     pub fn is_waterlogged(self) -> bool {
-        self >= Block::Seagrass
+        self >= Block::Seagrass || matches!(self, Block::Template(i) if TEMPLATE_BLOCKS[i as usize].2)
     }
 
     pub fn is_kelp(self) -> bool {
@@ -253,7 +260,10 @@ impl Block {
     }
 
     pub fn is_solid(self) -> bool {
-        !matches!(self, Block::Air | Block::Water | Block::Lava) && !self.is_plant()
+        match self {
+            Block::Template(i) => TEMPLATE_BLOCKS[i as usize].3 & COLLIDES != 0,
+            _ => !matches!(self, Block::Air | Block::Water | Block::Lava) && !self.is_plant(),
+        }
     }
 
     /// Solid for movement: everything but air, fluids, snow layers and the plants without collision.

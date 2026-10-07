@@ -35,10 +35,12 @@ impl Structures {
             .filter(|m| m.bb.intersects(&column))
             .collect();
         let treasure = self.is_start(density, StructureKind::BuriedTreasure, chunk);
-        if mineshafts.is_empty() && !treasure {
+        let igloos = self.igloos_near(density, chunk);
+        if mineshafts.is_empty() && !treasure && igloos.is_empty() {
             return None;
         }
         let mut canvas = Canvas::new(shape, chunk, neighbour);
+        self.place_igloos(&mut canvas, &igloos);
         let seed = LargeFeatureSeed::new(self.level_seed).chunk(chunk.0, chunk.1);
         let mut random = Mt19937::new(seed);
         for mineshaft in &mineshafts {

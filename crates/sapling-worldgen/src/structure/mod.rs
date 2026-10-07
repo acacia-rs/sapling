@@ -4,6 +4,7 @@
 
 mod area;
 mod canvas;
+mod igloo;
 mod kind;
 mod locate;
 mod mineshaft;
@@ -13,6 +14,8 @@ mod placement;
 mod probe;
 mod stage;
 mod stronghold;
+pub(crate) mod template;
+mod templated;
 #[cfg(test)]
 mod tests;
 mod treasure;
