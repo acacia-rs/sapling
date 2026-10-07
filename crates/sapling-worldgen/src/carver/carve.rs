@@ -6,6 +6,7 @@ use crate::block::Block;
 use crate::terrain::{ChunkShape, MIN_Y};
 
 use super::cave::Segment;
+use super::replace::cave_replaceable;
 
 /// Local block bounds of a segment inside the target chunk; y in BDS's 0-based local y.
 struct Bounds {
@@ -45,7 +46,7 @@ fn bounds(segment: &Segment, chunk_x: i32, chunk_z: i32, height_cap: i32) -> Bou
     Bounds { x: horizontal(x, chunk_x * 16), y: (low, high), z: horizontal(z, chunk_z * 16) }
 }
 
-/// Solid cells inside the ellipsoid become air above the aquifer's fluid level and its fluid
+/// Replaceable cells inside the ellipsoid become air above the aquifer's fluid level and its fluid
 /// below; aquifer barriers stay solid.
 // TODO: BDS also turns sand above a carved cell into sandstone and regrows grass on the dirt below a carved grass block; neither changes the shape.
 pub fn carve(shape: &mut ChunkShape, density: &Density, aquifer: &mut AquiferCache, segment: &Segment, chunk: (i32, i32), height_cap: i32) {
@@ -68,20 +69,19 @@ pub fn carve(shape: &mut ChunkShape, density: &Density, aquifer: &mut AquiferCac
                 if !(dy > segment.floor_level) || !(dy * dy + dx2 + dz2 < 1.0) {
                     continue;
                 }
-                carve_cell(shape, density, aquifer, [wx, local_y + MIN_Y, wz]);
+                let at = [wx, local_y + MIN_Y, wz];
+                if cave_replaceable(shape.block(lx as usize, at[1], lz as usize)) {
+                    empty_cell(shape, density, aquifer, at);
+                }
             }
         }
     }
 }
 
-/// Empties one solid cell the way `Aquifer::computeSubstance` at density 0 fills it: nothing
-/// behind a barrier, else air at or above the fluid level and the fluid below it.
-pub fn carve_cell(shape: &mut ChunkShape, density: &Density, aquifer: &mut AquiferCache, [wx, y, wz]: [i32; 3]) {
+/// Empties one cell the way `Aquifer::computeSubstance` at density 0 fills it: nothing behind a
+/// barrier, else air at or above the fluid level and the fluid below it.
+pub fn empty_cell(shape: &mut ChunkShape, density: &Density, aquifer: &mut AquiferCache, [wx, y, wz]: [i32; 3]) {
     let (x, z) = (wx.rem_euclid(16) as usize, wz.rem_euclid(16) as usize);
-    // BDS's block test (148281400) accepts every terrain block, so solid is enough.
-    if !shape.block(x, y, z).is_solid() {
-        return;
-    }
     let answer = density.aquifer(aquifer, [wx, y, wz]);
     if answer.barrier > 0.0 {
         return;

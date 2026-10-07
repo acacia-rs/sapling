@@ -8,6 +8,8 @@ use crate::density::{AquiferCache, Density};
 use crate::random::{Mt19937, unit};
 use crate::terrain::{ChunkShape, MIN_Y};
 
+use super::replace::canyon_replaceable;
+
 /// A static canyon config (14a925900/910/920, chosen in `loadChunk` by base game version). The
 /// legacy ones (docs/research/worldgen-bds-carvers.md) are not ported.
 pub struct CanyonSettings {
@@ -189,7 +191,10 @@ impl Canyon {
                     if !((dy * dy) / 6.0 + self.widths[(local_y - 2) as usize] * horizontal < 1.0) {
                         continue;
                     }
-                    super::carve::carve_cell(shape, density, aquifer, [wx, local_y + MIN_Y, wz]);
+                    let at = [wx, local_y + MIN_Y, wz];
+                    if canyon_replaceable(shape.block(lx as usize, at[1], lz as usize)) {
+                        super::carve::empty_cell(shape, density, aquifer, at);
+                    }
                 }
             }
         }

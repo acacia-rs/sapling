@@ -5,6 +5,7 @@
 mod canyon;
 mod cave;
 mod carve;
+mod replace;
 
 use std::collections::HashMap;
 use std::hash::Hash;
