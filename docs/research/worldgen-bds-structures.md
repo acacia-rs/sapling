@@ -105,20 +105,67 @@ Piece writes go through `placeBlock` (141f59f90: clipped to the chunk, `canBeRep
   len-3; rails over full blocks, `nextFloat() < 0.7` interior else 0.9. Crossings and stairs: Java's boxes, floors
   like corridors. Room: dirt floor under existing blocks, air up to 3, entrances, upper half ellipsoid (f32).
 - Bedrock 1.26 fences save `connection_*` states that follow their final neighbours, across chunk borders:
-  sapling sets them after the chunk's pieces from its neighbours' pieces (`rejoin_fences`).
+  sapling sets them after the chunk's pieces from its neighbours' pieces (`rejoin_connections`).
 
 Buried treasure (148312c40): one chest (north) at (x*16+8, z*16+8): from 4 or 5 (`nextInt(2)`) below the highest
 solid block (fluids passed) down until enclosed by solid blocks above and around, then down to solid ground.
 
-Scattered (14835a7b0): biome at the centre picks desert pyramid (2, 17; 21x15x21), jungle temple (21, 22;
-12x10x15), swamp hut (6, 134; 7x7x9) or igloo (12, 30, 184; 7x5x8), at (x*16, 64, z*16), orientation always 0.
-Not ported.
+## Scattered (src/structure/scattered, 14835a7b0)
+Biome at the centre picks desert pyramid (2, 17; 21x15x21), jungle temple (21, 22; 12x10x15), swamp hut (6, 134;
+7x7x9) or igloo (12, 30, 184; template, not here), at (x*16, 64, z*16), orientation always 0 (south).
+- Height is fixed in the first chunk BDS post-processes the piece in (we assume the start chunk) and cached.
+  Pyramid (148360db0): draws `nextInt(3)` on every postProcess; height = min floor height over the box columns in
+  that chunk minus that chunk's draw. Hut and jungle temple: `updateAverageGroundHeight` (148360c00) = mean of the
+  top (fluids count) over the box columns in the chunk, plus 1 (hut) or 0.
+- Pyramid cellar (1.20 suspicious sand): Java Xoroshiro on `Mth.getSeed` of world (16, -4, 13) truncated to i32,
+  `std::shuffle` (j = `nextInt(i+1)`); a loot draw per suspicious sand only when its chunk is the current one or
+  was processed earlier (z-major assumed); stair sand `nextBoolean` on the chunk generator. (1, 1, 2) and
+  (W-2, 1, 2) are unturned east stairs.
+- `createChest` (141f49ef0) / `createDispenser` (141f4a850): set only inside the chunk and where no chest is, then
+  one `nextIntUnbounded`. `getOrientationData` (141f4a1d0) leaves chests alone (data 2 N, 3 S, 4 W, 5 E as given).
+- Jungle selector (148321b40): `nextFloat() < 0.4` cobblestone else mossy, a draw per cell.
+
+`getOrientationData` per state (orientation 0 S, 1 W, 2 N, 3 E; 2 = identity): weirdo_direction 0..3: S [0,1,3,2],
+W [2,3,0,1], E [2,3,1,0]; facing_direction 2..5: S [3,2,5,4], W [4,5,3,2], E [5,4,2,3]; direction 0..3: S [2,3,0,1],
+W [3,0,1,2], E [1,2,3,0]. Door direction 0..3 saves as cardinal south, west, north, east. Torch data 1..5 = west,
+east, north, south, top; pieces inline it (Java east wall torch: [1,3,1,3] by orientation, west [2,4,2,4],
+south [4,1,3,2], north [3,2,4,1]). Bedrock 1.26 saves stair corners, fence and iron bar connections from the final
+neighbours (`rejoin_connections`).
+
+## Monuments (src/structure/monument, 148332c00, MonumentBuilding 148334260)
+MT(levelSeed): a, b = two `nextFloat()`; start seed `(a*cx) as i64 as u32 ^ (b*cz) ^ levelSeed`; facing
+`nextInt(4)+2` (Bedrock facing 2 N, 3 S, 4 W, 5 E). Java 1.18's room graph, fitters and pieces, except: the room
+shuffle uses a fresh MT on the start seed (`nextInt(i)`, i from n-1 down); no 58x58 water clearing box; water boxes
+write water below y 63 and air above (no keep); wing design `nextIntUnbounded() & 1`, and design 0 lacks Java's
+(15,0,21)-(16,4,21) box; chunk tests for the lower back (0,51)-(57,57) and middle left (7,21)-(13,54).
+
+## Strongholds (src/structure/stronghold, 148375450)
+- Start on the blueprint generator (`a*x + b*z ^ levelSeed`, a/b the mineshaft's two `nextInt()`, one draw skipped):
+  stairs down (x*16+2, 64, z*16+2)-(+4, 74, +4), orientation `nextInt(4)`, imposes a five-way crossing.
+- Weights in BDS order (weight, max, least depth): straight 40, prison 5/5, left 20, right 20, room 10/6, straight
+  stairs 5/5, stairs 5/5, five-way 5/4, chest corridor 5/4, library 10/2/5, portal room 10/1/6.
+- `generatePieceFromSmallDoor` (14809b270): depth <= 50, within 112 of the start's corner; works on a **copy** of
+  the generator (siblings draw the same numbers; only the pending pick `nextInt(len)` advances the start's
+  generator); imposed piece first; 5 tries of `genrand % total`: break when exhausted, too shallow, or the previous
+  kind (if more than one weight left); else filler (`findPieceBox`, y > 1). `createPiece` (148099bd0): Java's
+  boxes, y0 > 10, no collision; door `nextInt(5)` (2 wood, 3 grates, 4 iron); straight two `nextInt(2)==0`; room
+  `nextInt(5)`; five-way `nextBoolean` x3 then `nextInt(3) > 0`; library tall if 11 high fits.
+- No portal room: the last piece is dropped and a portal room put beside the piece before it (14809c9e0), unless
+  that one is below y 11. Then `j = span - 62` (+`nextInt(53 - j)` below 53), shift by `j - maxY`.
+- Pieces as Java's, but selector boxes fill air too and draw for every edge cell (148099b60: < 0.2 cracked, < 0.5
+  mossy, < 0.55 infested); slabs are stone brick slabs; the prison hall has no iron doors; the storeroom torch is
+  the default state (facing unknown); chests west (corridor, library, storeroom) and north (tall library).
+- Terrain buries the pieces: `setBury` per piece box (144d065e0, via 144cd0700); `_prepareHeights` adds, after the
+  noodle caves and before the aquifer, `clamp(1 - sqrt(dx² + (dy/2)² + dz²)/6)` per box (dx, dz outside the box,
+  dy from its floor, |dy| < 12) from a f32 table (144cd3d40, summed in f64 by 144cd50c0): src/structure/bury.rs.
+  Beards (villages, outposts) and v2 adaptations are not ported.
 
 ## Terrain adaptation
-`WorldGenerator::prepareHeights(..., factorInBeardsAndShavers)` and `FeatureTerrainAdjustments::setBeardifier/
-setBeardAndShaver/setBury` exist (v2 `terrain_adaptation`: trail ruins bury, abandoned camp beard_thin; legacy
-villages/outposts beard): BDS 1.26's terrain does bend around jigsaw structures. Not ported; it shows as terrain
-cells near villages and trial chambers.
+`FeatureTerrainAdjustments::setBeardifier/setBeardAndShaver/setBury`: kinds 1 bury (dx, dz <= 5), 2-4 beard
+kernels (x0.8). Of the hardcoded structures only strongholds register (bury, above); jigsaw ones beard.
+
+Woodland mansion (1480a8c20): Java's room grid in code, then `.nbt` templates for every room; left to the
+template port.
 
 ## Oracle (2026-10-07)
 New world `20261003-structures` (+`-run2`): 807 chunks in 16 regions around one start of each kind
@@ -126,8 +173,13 @@ New world `20261003-structures` (+`-run2`): 807 chunks in 16 regions around one 
 structure stage changed (credited to ported kinds), wanted = BDS structure blocks in a kind's rough area.
 Mineshaft non-air precision 98.6% near origin, 99.2% far out, 100% badlands (dark oak), 90-97% swamps; the far-out
 trial chamber shows as 5710 wanted cells (tuff bricks, waxed copper, chiseled tuff). Buried treasure exact (4/4).
-Known gaps: eroded badlands' mesa mineshafts (BDS places nothing there; ours carves at y 93), rails desync in a
-few corridors, cross-chunk reads use the neighbours' carved terrain (BDS may already see their structures).
+Precision (non-air) / recall: desert pyramid 100/99.7%, swamp hut 100/99.2%, jungle temple 99.9/78% (misses are
+vines and features), monument 98.4/99.8% (water against kelp), stronghold 96.5/71% (the rest under trial chambers,
+a mineshaft and village blocks).
+Known gaps: eroded badlands' mesa mineshafts (BDS places nothing there; ours a room at y 93: the height getter
+(createStructureStart's param_7) gives the same value as ours elsewhere; unresolved), rails and webs desync in a
+few corridors (frozen ocean 79% non-air), cross-chunk reads use the neighbours' carved terrain; plains villages
+near rivers (the six /locate misses) not looked into.
 
 ## Prior art and licences
 Bedrock finders (scratchpad `st/prior-art.md`): bedrock-dev/MCBEStructureFinder (MIT, pre-1.18), stirante/
@@ -162,4 +214,16 @@ agree on the region seed and the legacy table; all values above were re-derived 
 141f5aa60/141f5aff0/141f5b3d0/141f59c80/141f5b7e0/141f4a1d0 StructurePiece::{generateMaybeBox,
   maybeGenerateBlockIfNotFloating,generateUpperHalfSphere,isInInvalidLocation,isReplaceableByStructures,getOrientationData}
 1409ddfc0 ChunkSource::_launchNextTask
+148360db0/148366d30/14836f380 {DesertPyramidPiece,JunglePyramidPiece}::postProcess, SwamplandHut::postProcessMobsAt
+148360c00 ScatteredFeaturePiece::updateAverageGroundHeight   141f49ef0/141f4a850 StructurePiece::{createChest,createDispenser}
+148332c00/148375450/1480a8c20 {OceanMonument,Stronghold,WoodlandMansion}Feature::createStructureStart
+148337c70/148340f10 OceanMonumentBuilding::{postProcess,generateWing}; room pieces 148342020..14834fb70 (entry, simple,
+  simple top, double y/x/z/xy/yz, core, wing, penthouse)
+14809b270 StrongholdPieces::generatePieceFromSmallDoor   148099bd0 ::createPiece   14809c9e0 ::placePortalRoomFallback
+14809bdf0 StrongholdPiece::generateSmallDoor   14809c840/14809c940 ::generateSmallDoorChild{Forward,LeftRight}
+148099b60 SmoothStoneSelector::next   Stronghold* postProcess: 14809d0f0 stairs, 14809d650 chest, 14809dbe0 filler,
+  14809e1f0 five-way, 14809ef60/14809f220 turns, 14809f4f0 library, 1480a1b20 portal, 1480a4b10 prison,
+  1480a50f0 room, 1480a6f90 straight, 1480a76b0 straight stairs
+144cd0700 FeatureTerrainAdjustments::setBury   144cd50c0 ::calculateContribution   144cd3800/144cd3d40 ::init{Beard,Bury}Kernel
+14822eb60 OverworldGeneratorMultinoise::_prepareHeights   149e9dae0 MonsterRoomFeature::place   149e923b0 LakeFeature::place
 ```

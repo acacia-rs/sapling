@@ -26,7 +26,7 @@ names, same octave/amplitude tables, same Xoroshiro128++ seeding by MD5 of the n
 | Surface | **Bedrock** data-driven: biome JSON `minecraft:surface_builder` → `BiomeSurfaceSystem` / `VanillaSurfaceBuilders` | **not** Java SurfaceRules; uses PerlinSimplex surface noise + material-adjustment noise | high |
 | Bedrock floor | hardcoded, MT seeded by chunk pos only (no world seed) | **Bedrock-only** | high |
 | Carvers | 2 `cave_carver_feature`s in `pregeneration_pass` + hardcoded canyon | legacy pre-1.18 style, **not** Java carvers; ported, oracle 99.5% precision/recall | high |
-| Lakes / monster rooms / freeze | hardcoded in `decorationPostProcessChunk` | Java-legacy shapes, MT RNG; lava lakes ported | high (lakes) |
+| Lakes / monster rooms / freeze | hardcoded in `decorationPostProcessChunk` | Java-legacy shapes, MT RNG; lava lakes and monster rooms ported | high (lakes) |
 | Features | data-driven `feature_rules` + `features` JSON, 12 named passes, MT per rule | **Bedrock-only** | high |
 | Structures | legacy `StructureFeature` (MT grids) + jigsaw v2 (`br::worldgen`, Java LCG grids); placed between generation and decoration | **Bedrock-only** (v2 grids as Java); starts and mineshafts ported, [worldgen-bds-structures.md](worldgen-bds-structures.md) | high (starts) |
 
@@ -146,7 +146,11 @@ MT reseeded with the large-feature chunk seed (worldgen-bds-carvers.md). Then, i
   `((8−s)−4)*f+2+s/2`), border: liquid at grid y≥4 or non-solid non-lava below fails; lava below grid y 4, air above.
   Oracle: the one lava lake in the oracle regions matches cell for cell.
 - Monster rooms (`MonsterRoomFeature::place` 149e9dae0): if minY < 0, 4 tries at y `nextInt(|minY+6|)+minY+6`, then 10
-  (else 8) tries at y `nextInt(genHeight)`; x/z `nextInt(16)+(c·16|8)`. Not ported.
+  (else 8) tries at y `nextInt(320)`; x/z `nextInt(16)+(c·16|8)`; the generator continues after the lava lake (its
+  border-to-stone pass draws `nextInt(2)` per border cell in the upper half). Java's room, but the chest offsets
+  draw z before x, no chest/spawner test on the interior, and the chest faces by BDS's own branches; loot
+  `nextIntUnbounded`, mob `nextInt(4)`. Ported (src/decoration/monster.rs), reading the neighbours with their
+  structures; a room crossed by a corridor our mineshaft places differently is where it still misses.
 - Feature rules (vt slot 54 via cfg dispatch), MT reseeded again with the chunk seed.
 - Freeze pass per column: heightmap top; `Biome::shouldFreeze` 14119e860 on top−1 (temperature ≤ 0.15, in build range,
   light < 10, water source) → ice; `shouldSnow` 14119e740 on top → snow layer. `Biome::getTemperature` 14119c8c0 has a
