@@ -81,6 +81,8 @@ impl Search {
 impl Scatter {
     /// `ScatterFeature::place` (143b9b5d0): optionally down to the first non-air block, then the
     /// distribution around the position, every draw from the placing generator. The last success wins.
+    /// BDS copies the rule's render params into the Molang environment before giving them the block
+    /// source, so the rule's first scatter sees no world: `query.has_biome_tag` is false there.
     fn place(&self, ctx: &mut Ctx, mut at: [i32; 3]) -> Option<[i32; 3]> {
         if self.project_to_floor {
             while at[1] > crate::terrain::MIN_Y && ctx.view.block(at[0], at[1] - 1, at[2]) == crate::block::Block::Air {
@@ -89,7 +91,9 @@ impl Scatter {
         }
         let saved = ctx.scope.save();
         let by_biome = matches!(self.distribution.chance, super::spec::Chance::Percent(super::spec::Expr::ByBiome(_)));
-        let saved_biome = std::mem::replace(&mut ctx.scope.biome, if by_biome { (ctx.biome)(at) } else { None });
+        let biome = if by_biome && ctx.scope.world_bound { (ctx.biome)(at) } else { None };
+        ctx.scope.world_bound = true;
+        let saved_biome = std::mem::replace(&mut ctx.scope.biome, biome);
         ctx.scope.set_origin(at);
         let queries = ctx.scope.queries;
         let count = {

@@ -84,6 +84,8 @@ pub struct Scope {
     world: [Variable; 3],
     /// The biome `query.has_biome_tag` asks about: a scatter's origin's.
     pub biome: Option<u32>,
+    /// Whether a scatter of this rule has run yet: see `Scatter::place`.
+    pub world_bound: bool,
 }
 
 impl Scope {
@@ -93,7 +95,7 @@ impl Scope {
         let world = ["worldx", "worldy", "worldz"].map(|name| compiler.variable(name));
         let queries =
             Queries { above_top_solid: compiler.query("above_top_solid"), heightmap: compiler.query("heightmap"), noise: compiler.query("noise") };
-        Self { queries, compiler, programs: HashMap::new(), variables: Variables::new(), scratch: Scratch::new(), origin, world, biome: None }
+        Self { queries, compiler, programs: HashMap::new(), variables: Variables::new(), scratch: Scratch::new(), origin, world, biome: None, world_bound: false }
     }
 
     pub fn set_origin(&mut self, origin: [i32; 3]) {

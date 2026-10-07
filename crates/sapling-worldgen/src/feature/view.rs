@@ -102,13 +102,15 @@ impl<'a> View<'a> {
     }
 
     /// `query.above_top_solid` (`LevelChunk::getAboveTopSolidBlock` 140a08bb0): one above the highest block
-    /// that blocks motion (not fluids or snow layers); the world's top outside the region, its bottom if none.
+    /// that blocks motion (not fluids, snow layers or leaves: oracle, grove pines stand under spruce
+    /// canopies); the world's top outside the region, its bottom if none.
     pub fn above_top_solid(&self, x: i32, z: i32) -> i32 {
         let top = MIN_Y + HEIGHT as i32;
         if self.locate(x, MIN_Y, z).is_none() {
             return top;
         }
-        (MIN_Y..top).rev().find(|&y| self.block(x, y, z).blocks_motion()).map_or(MIN_Y, |y| y + 1)
+        let solid = |block: Block| block.blocks_motion() && !block.is_leaves();
+        (MIN_Y..top).rev().find(|&y| solid(self.block(x, y, z))).map_or(MIN_Y, |y| y + 1)
     }
 
     /// `query.heightmap` (lambda 1411a2740): the chunk's light heightmap, one above the highest block
