@@ -2617,6 +2617,7 @@ dependencies = [
  "acacia-world",
  "bytes",
  "sapling-leveldb",
+ "sapling-worldgen",
  "tracing",
 ]
 

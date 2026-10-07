@@ -8,6 +8,7 @@ description = "Server-side worlds: chunk columns, their storage and their cached
 
 [dependencies]
 sapling-leveldb.workspace = true
+sapling-worldgen.workspace = true
 acacia-proto.workspace = true
 acacia-world.workspace = true
 bytes.workspace = true

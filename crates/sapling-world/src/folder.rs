@@ -3,7 +3,8 @@
 use std::path::Path;
 use std::sync::Arc;
 
-use crate::storage::LevelDbStorage;
+use crate::generated::Generated;
+use crate::storage::{Level, LevelDbStorage, WorldStorage};
 use crate::{ChunkPos, World};
 
 /// `SpawnY` of a world whose spawn was never set by hand: "on the surface".
@@ -23,18 +24,30 @@ pub struct WorldFolder {
     pub game_type: Option<i32>,
     /// 0 peaceful to 3 hard.
     pub difficulty: Option<i32>,
+    storage: Arc<LevelDbStorage>,
 }
 
 impl WorldFolder {
     /// Loads the spawn column on the calling thread.
     fn of(storage: LevelDbStorage) -> Self {
         let storage = Arc::new(storage);
-        let (dat, level) = (storage.level_dat(), storage.level());
+        let dat = storage.level_dat();
         let (name, game_type, difficulty) = (dat.name().map(str::to_owned), dat.game_type(), dat.difficulty());
-        let mut world = World::with_storage(storage);
-        *world.level_mut() = level;
-        let spawn = world.spawn_at(level.spawn.unwrap_or([0, SURFACE, 0]));
-        Self { world, name, spawn, game_type, difficulty }
+        let (world, spawn) = World::with_level(storage.clone(), storage.level());
+        Self { world, name, spawn, game_type, difficulty, storage }
+    }
+
+    /// The same folder with every overworld column it lacks generated from its `level.dat` seed,
+    /// as the game fills the chunks it never saved ([`Generated`]). Reopens the world, so the
+    /// spawn column is loaded again on the calling thread. Without a seed the holes stay void.
+    pub fn generate_missing(self) -> Self {
+        let Some(seed) = self.storage.level_dat().seed() else {
+            tracing::warn!("level.dat has no RandomSeed; columns the folder lacks stay void");
+            return self;
+        };
+        let level = *self.world.level();
+        let (world, spawn) = World::with_level(Arc::new(Generated::new(self.storage.clone(), seed)), level);
+        Self { world, spawn, ..self }
     }
 }
 
@@ -49,6 +62,20 @@ impl World {
     /// saved is lost with the world.
     pub fn open_folder_in_memory(folder: &Path) -> Result<WorldFolder, sapling_leveldb::Error> {
         LevelDbStorage::open_in_memory(folder).map(WorldFolder::of)
+    }
+
+    /// The world of `storage` with `level`, and its spawn as [`World::load_spawn`] finds it.
+    fn with_level(storage: Arc<dyn WorldStorage>, level: Level) -> (World, [f32; 3]) {
+        let mut world = World::with_storage(storage);
+        world.level = level;
+        let spawn = world.load_spawn();
+        (world, spawn)
+    }
+
+    /// The feet position of the world's spawn ([`Level::spawn`]; without one, the surface above
+    /// block (0, 0)). Loads the spawn column on the calling thread.
+    pub fn load_spawn(&mut self) -> [f32; 3] {
+        self.spawn_at(self.level.spawn.unwrap_or([0, SURFACE, 0]))
     }
 
     /// The feet position for a spawn block: centred on it, and when its y is not a real height,

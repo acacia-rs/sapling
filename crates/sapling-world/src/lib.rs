@@ -5,6 +5,7 @@
 
 mod column;
 mod folder;
+mod generated;
 mod loader;
 mod players;
 mod storage;
@@ -18,6 +19,7 @@ pub use acacia_proto::types::Blob;
 pub use acacia_world::{BlockRegistry, Chunk, Dimension, LevelChunkData, Material, Mining, Tool, ToolKind, ToolTier};
 pub use column::{SubChunkAnswer, empty_column};
 pub use folder::WorldFolder;
+pub use generated::Generated;
 pub use sapling_leveldb::LevelDat;
 pub use players::PlayerLoad;
 pub use sapling_leveldb::{

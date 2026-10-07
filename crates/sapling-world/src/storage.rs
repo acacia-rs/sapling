@@ -71,6 +71,28 @@ pub trait WorldStorage: Send + Sync + 'static {
     }
 }
 
+/// Shared storage, e.g. a folder's database wrapped in [`crate::Generated`] while still held.
+impl<S: WorldStorage + ?Sized> WorldStorage for std::sync::Arc<S> {
+    fn load_column(&self, pos: ChunkPos, dimension: i32) -> Result<Option<StoredColumn>, StorageError> {
+        (**self).load_column(pos, dimension)
+    }
+    fn store_column(&self, pos: ChunkPos, dimension: i32, column: &StoredColumn) -> Result<(), StorageError> {
+        (**self).store_column(pos, dimension, column)
+    }
+    fn load_player(&self, id: &str) -> Result<Option<PlayerData>, StorageError> {
+        (**self).load_player(id)
+    }
+    fn store_player(&self, id: &str, player: &PlayerData) -> Result<(), StorageError> {
+        (**self).store_player(id, player)
+    }
+    fn columns(&self, dimension: i32) -> Result<Vec<ChunkPos>, StorageError> {
+        (**self).columns(dimension)
+    }
+    fn flush(&self, level: &Level) -> Result<(), StorageError> {
+        (**self).flush(level)
+    }
+}
+
 /// Columns kept in memory: empty, it is the void.
 #[derive(Default)]
 pub struct MemoryStorage {
