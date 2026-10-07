@@ -107,7 +107,11 @@ the container's content twice more (B:10-15, B:58-62, B:82-86); a `/give` with a
 container and plays `pop` at the eye ~1 tick later (B:53, B:71-72). Sapling: neither (`containers/screens.rs`
 `show_screen`; `vanilla/players.rs` Give). `chest.open/closed` extra_data: BDS -1132117234, sapling 741882976
 (S:9, S:27): both should be the chest block's network id, so the two chests' states differ (setblock default
-facing?) or BDS sends something else; compare with the chest's `UpdateBlock` id. Fix: add the `pop` (cheap);
+facing?) or BDS sends something else; compare with the chest's `UpdateBlock` id. Settled 2026-10-07 by
+`bds_command_probe defaults` (`bds-defaults.txt`, `sapling-defaults.txt`): the sound is right, the chests differ.
+BDS's `/setblock chest` is `cardinal_direction=north`, sapling's (the first state) `south`; furnace (south),
+oak_stairs and hopper agree. Sapling has no block's default state, only its first: find where BDS keeps defaults
+(perhaps the block item's recorded state) before changing `send::resolve`. Fix: add the `pop` (cheap);
 resends optional; settle the extra_data from the registry. Low.
 
 **D10. Shulker item NBT.** BDS's per-item compound: `Count, Damage, Name, Slot, WasPickedUp: 0b` (B:412, B:698);

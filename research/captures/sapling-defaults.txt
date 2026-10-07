@@ -1,0 +1,35 @@
+## /setblock ~2 ~ ~ chest
+     35 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 2, y: 64, z: 0 }, block_runtime_id: 741882976, flags: UpdateBlockFlags(3), layer: 0 }
+     36 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+     36 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 2, y: 64, z: 0 }, block_runtime_id: 741882976, flags: UpdateBlockFlags(3), layer: 0 }
+     36 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /testforblock ~2 ~ ~ chest ["minecraft:cardinal_direction"="north"]
+   1234 actor   CommandOutput success_count=0 data=None commands.generic.unknown success=false ["testforblock"]
+## /testforblock ~2 ~ ~ chest ["minecraft:cardinal_direction"="south"]
+   2434 actor   CommandOutput success_count=0 data=None commands.generic.unknown success=false ["testforblock"]
+## /setblock ~3 ~ ~ furnace
+   3636 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 64, z: 0 }, block_runtime_id: 3463497305, flags: UpdateBlockFlags(3), layer: 0 }
+   3636 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+   3637 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 64, z: 0 }, block_runtime_id: 3463497305, flags: UpdateBlockFlags(3), layer: 0 }
+   3637 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /testforblock ~3 ~ ~ furnace ["minecraft:cardinal_direction"="north"]
+   4834 actor   CommandOutput success_count=0 data=None commands.generic.unknown success=false ["testforblock"]
+## /testforblock ~3 ~ ~ furnace ["minecraft:cardinal_direction"="south"]
+   6034 actor   CommandOutput success_count=0 data=None commands.generic.unknown success=false ["testforblock"]
+## /setblock ~4 ~ ~ oak_stairs
+   7235 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 64, z: 0 }, block_runtime_id: 4172483059, flags: UpdateBlockFlags(3), layer: 0 }
+   7235 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+   7235 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 64, z: 0 }, block_runtime_id: 4172483059, flags: UpdateBlockFlags(3), layer: 0 }
+   7235 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /testforblock ~4 ~ ~ oak_stairs ["weirdo_direction"=0]
+   8434 actor   CommandOutput success_count=0 data=None commands.generic.unknown success=false ["testforblock"]
+## /setblock ~5 ~ ~ hopper
+   9636 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 64, z: 0 }, block_runtime_id: 3036911681, flags: UpdateBlockFlags(3), layer: 0 }
+   9636 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+   9637 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 64, z: 0 }, block_runtime_id: 3036911681, flags: UpdateBlockFlags(3), layer: 0 }
+   9637 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  10734 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 6513, paused: false }] }) }
+  10734 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 6513, paused: false }] }) }
+## /testforblock ~5 ~ ~ hopper ["facing_direction"=0]
+  10834 actor   CommandOutput success_count=0 data=None commands.generic.unknown success=false ["testforblock"]
+probe exit 0

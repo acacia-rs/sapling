@@ -81,6 +81,21 @@ const REPLACEITEM: &[&str] = &[
 ];
 const REPLACEITEM_SHOWN: &[&str] = &["InventorySlot", "InventoryContent", "BlockEntityData"];
 
+/// Which state `/setblock` gives a block named without states.
+const DEFAULTS: &[&str] = &[
+    "setblock ~2 ~ ~ chest",
+    "testforblock ~2 ~ ~ chest [\"minecraft:cardinal_direction\"=\"north\"]",
+    "testforblock ~2 ~ ~ chest [\"minecraft:cardinal_direction\"=\"south\"]",
+    "setblock ~3 ~ ~ furnace",
+    "testforblock ~3 ~ ~ furnace [\"minecraft:cardinal_direction\"=\"north\"]",
+    "testforblock ~3 ~ ~ furnace [\"minecraft:cardinal_direction\"=\"south\"]",
+    "setblock ~4 ~ ~ oak_stairs",
+    "testforblock ~4 ~ ~ oak_stairs [\"weirdo_direction\"=0]",
+    "setblock ~5 ~ ~ hopper",
+    "testforblock ~5 ~ ~ hopper [\"facing_direction\"=0]",
+];
+const DEFAULTS_SHOWN: &[&str] = &["UpdateBlock"];
+
 const KILL_SHOWN: &[&str] = &["EntityEvent", "AddEntity", "AddItemEntity", "RemoveEntity", "LevelSoundEvent", "SetEntityData", "Animate", "MobEffect"];
 /// How long each line of the kill drill is watched: a dead mob goes a second after.
 const KILL_SETTLE: Duration = Duration::from_millis(2500);
@@ -119,6 +134,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         None | Some("gamerule") => (GAMERULE, &[][..], SETTLE),
         Some("kill") => (KILL, KILL_SHOWN, KILL_SETTLE),
         Some("replaceitem") => (REPLACEITEM, REPLACEITEM_SHOWN, SETTLE),
+        Some("defaults") => (DEFAULTS, DEFAULTS_SHOWN, SETTLE),
         Some(other) => return Err(format!("no drill {other}").into()),
     };
     let (mut actor, mut watcher) = (connect(&server, "CmdActor").await?, connect(&server, "CmdWatcher").await?);
