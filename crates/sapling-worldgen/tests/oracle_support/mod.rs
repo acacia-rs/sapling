@@ -100,7 +100,7 @@ impl BdsCell {
 
     /// A block the terrain stages can place (whatever its states); trees' solid blocks are not.
     fn terrain(&self) -> Option<Block> {
-        let tree = |b: Block| b.is_wood() || matches!(b, Block::MossyCobblestone | Block::MangroveRoots | Block::MuddyMangroveRoots | Block::BeeNest);
+        let tree = |b: Block| b.is_wood() || matches!(b, Block::MossyCobblestone | Block::MangroveRoots | Block::MuddyMangroveRoots | Block::BeeNest | Block::BrownMushroomBlock1 | Block::RedMushroomBlock1 | Block::MushroomStem);
         Block::from_name(&self.block).filter(|&b| b.is_solid() && !tree(b))
     }
 

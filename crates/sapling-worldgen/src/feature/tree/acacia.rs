@@ -20,7 +20,7 @@ impl AcaciaTrunk {
     pub fn place(&self, tree: &Tree, ctx: &mut Ctx, origin: [i32; 3]) -> Option<[i32; 3]> {
         let height = self.height_base + self.height_intervals.iter().map(|&i| ctx.random.next_int(i)).sum::<i32>();
         let origin = tree.roots_then(ctx, origin, height)?;
-        if height < 1 || !tree.prepare(ctx.view, origin, height, self.width) {
+        if height < 1 || !tree.prepare(ctx.view, origin, height, 1) {
             return None;
         }
         let [ox, oy, oz] = origin;
@@ -42,9 +42,14 @@ impl AcaciaTrunk {
                 z += LEAN[direction].1;
             }
             let y = oy + i.min(height - 1);
+            // 143bd34c0: the leaning column gates the layer; without diagonal growth logs stay over the origin.
+            if !valid_tree_position(ctx.view, [x, y, z], tree.may_replace) {
+                continue;
+            }
+            let (cx, cy, cz) = if self.allow_diagonal { (x, y, z) } else { (ox, oy + i, oz) };
             for dx in 0..self.width {
                 for dz in 0..self.width {
-                    let p = [x + dx, y, z + dz];
+                    let p = [cx + dx, cy, cz + dz];
                     if !valid_tree_position(ctx.view, p, tree.may_replace) {
                         continue;
                     }
@@ -58,12 +63,9 @@ impl AcaciaTrunk {
                 }
             }
         }
-        // BDS hands a trunk that never cleared min_height_for_canopy a zeroed anchor; nothing grows there.
-        let anchor = candidates.last().copied();
-        if let Some(at) = anchor {
-            tree.place_canopies(ctx, &[Anchor { at, candidates }]);
-        }
-        let anchor = anchor.unwrap_or([0; 3]);
+        // A trunk that never cleared min_height_for_canopy hands its canopy a zeroed anchor (draws still happen).
+        let anchor = candidates.last().copied().unwrap_or([0; 3]);
+        tree.place_canopies(ctx, &[Anchor { at: anchor, candidates }]);
         if self.allow_diagonal {
             self.branches.leaning(self, tree, ctx, origin, height, direction, lean_start);
         } else {

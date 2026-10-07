@@ -53,6 +53,5 @@ LEGACY.update({
         f'grass: {index(GRASS)} }})'),
     'minecraft:legacy:forest_rock_feature': lambda index: 'Feature::LegacyTree(LegacyTree::ForestRock)',
     'minecraft:leaf_litter_feature': lambda index: 'Feature::LegacyTree(LegacyTree::LeafLitter)',
-    # TODO: HugeMushroomFeature; until then it places nothing and draws nothing.
-    'minecraft:huge_mushroom_feature': lambda index: 'Feature::Aggregate(&[], EarlyOut::None)',
+    'minecraft:huge_mushroom_feature': lambda index: 'Feature::LegacyTree(LegacyTree::HugeMushroom)',
 })

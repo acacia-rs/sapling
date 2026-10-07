@@ -150,6 +150,8 @@ pub enum LegacyTree {
     ForestRock,
     /// `LeafLitterFeature`: one leaf litter of a random size and facing.
     LeafLitter,
+    /// `HugeMushroomFeature` of a random type (huge_mushroom.rs).
+    HugeMushroom,
 }
 
 /// The per-type tree pickers of `LegacyTreeFeature` (its constructor's lambdas), each drawing

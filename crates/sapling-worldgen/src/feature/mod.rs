@@ -12,6 +12,7 @@ mod freeze;
 mod geode;
 mod iceberg;
 mod land;
+mod huge_mushroom;
 mod legacy_tree;
 mod molang;
 mod ore;
