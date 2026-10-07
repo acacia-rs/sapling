@@ -10,7 +10,6 @@ pub struct Mt19937 {
     seed: u32,
     state: [u32; N],
     index: usize,
-    pub drawn: u64,
 }
 
 impl Mt19937 {
@@ -20,7 +19,7 @@ impl Mt19937 {
         for i in 1..N {
             state[i] = (state[i - 1] ^ (state[i - 1] >> 30)).wrapping_mul(0x6C07_8965).wrapping_add(i as u32);
         }
-        Self { seed, state, index: N, drawn: 0 }
+        Self { seed, state, index: N }
     }
 
     /// The seed this generator was last seeded with (BDS keeps it at `+8`).
@@ -34,7 +33,6 @@ impl Mt19937 {
         }
         let mut y = self.state[self.index];
         self.index += 1;
-        self.drawn += 1;
         y ^= y >> 11;
         y ^= (y << 7) & 0x9D2C_5680;
         y ^= (y << 15) & 0xEFC6_0000;

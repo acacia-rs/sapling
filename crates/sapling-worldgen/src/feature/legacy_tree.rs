@@ -99,13 +99,7 @@ fn trees(ctx: &mut Ctx, at: [i32; 3], count: i32, grass: usize, mut pick: impl F
         let z = at[2] + ctx.random.next_int(14) + 1;
         let x = at[0] + ctx.random.next_int(14) + 1;
         let p = [x, ctx.view.heightmap(x, z), z];
-        let before = ctx.random.drawn;
-        let trace = std::env::var_os("TRACE_TREES").is_some();
-        let column: String = if trace { (p[1] - 6..p[1] + 10).map(|y| ctx.view.block(x, y, z).name().chars().next().unwrap_or('?')).collect() } else { String::new() };
-        let placed = FEATURES[feature].place(ctx, p);
-        if trace {
-            eprintln!("tree {feature} from {at:?} at {p:?} -> {placed:?} draws {before}..{} column from y-6 {column}", ctx.random.drawn);
-        }
+        FEATURES[feature].place(ctx, p);
         FEATURES[grass].place(ctx, p);
     }
 }
