@@ -69,20 +69,28 @@ pub fn carve(shape: &mut ChunkShape, density: &Density, aquifer: &mut AquiferCac
                 }
                 let y = local_y + MIN_Y;
                 let (x, z) = (lx as usize, lz as usize);
+                // BDS's block test (148281400) accepts every terrain block, so solid is enough.
                 if shape.kind(x, y, z) != CellKind::Solid {
                     continue;
                 }
-                let answer = density.aquifer(aquifer, [wx, y, wz]);
-                if answer.barrier > 0.0 {
-                    continue;
+                if let Some(kind) = aquifer_fill(density, aquifer, [wx, y, wz]) {
+                    shape.set(x, y, z, kind);
                 }
-                let kind = match answer.fluid {
-                    fluid if y >= fluid.level => CellKind::Air,
-                    fluid if fluid.lava => CellKind::Lava,
-                    _ => CellKind::Water,
-                };
-                shape.set(x, y, z, kind);
             }
         }
     }
+}
+
+/// What a carved cell becomes (`Aquifer::computeSubstance` at density 0): nothing behind a
+/// barrier, else air at or above the fluid level and the fluid below it.
+pub fn aquifer_fill(density: &Density, aquifer: &mut AquiferCache, position: [i32; 3]) -> Option<CellKind> {
+    let answer = density.aquifer(aquifer, position);
+    if answer.barrier > 0.0 {
+        return None;
+    }
+    Some(match answer.fluid {
+        fluid if position[1] >= fluid.level => CellKind::Air,
+        fluid if fluid.lava => CellKind::Lava,
+        _ => CellKind::Water,
+    })
 }
