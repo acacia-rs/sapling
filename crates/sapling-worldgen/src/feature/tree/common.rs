@@ -229,3 +229,10 @@ pub fn log_along(log: Block, dx: i32, dz: i32) -> Block {
         _ => z,
     }
 }
+
+impl Tree {
+    /// A cell a trunk may grow through: the same rule as `prepare`'s volume check.
+    pub fn grows_through(&self, block: Block) -> bool {
+        self.may_grow_through.contains(&block) || allows(self.may_replace, block)
+    }
+}
