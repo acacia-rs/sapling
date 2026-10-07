@@ -12,7 +12,7 @@ use bytes::Bytes;
 use sapling_api::command::{CommandSpec, ParamKind};
 use sapling_api::{CommandEvent, Commands, Output, Permission, Sender, ShardCtx};
 
-use crate::components::{Outgoing, PacketQueues, PerTick, Stage, in_world_identity};
+use crate::components::{Outgoing, PacketQueues, PerTick, Stage, in_world, in_world_identity};
 use crate::handlers::Ctx;
 use crate::plugins::Plugins;
 
@@ -184,10 +184,35 @@ pub(crate) fn dispatch(world: &mut World, plugins: &mut Plugins) {
         }
         // An earlier handler may have kicked the sender or changed what it may run.
         let Some(permission) = world.get::<Access>(entity).map(|a| a.permission) else { continue };
+        let name = player.name.clone();
         let mut backend = Ctx { world };
         let out = plugins.commands.run(&mut ShardCtx::new(&mut backend), &Sender::Player(player), permission, event.line());
         if let Some(mut outgoing) = world.get_mut::<Outgoing>(entity).filter(|_| !out.messages().is_empty()) {
             outgoing.push(&output_packet(&request.origin, &out));
+        }
+        echo(world, entity, &name, &out);
+    }
+}
+
+/// Shows the other operators on the shard what an operator's command did, as BDS does: a grey
+/// italic `[name: line]`.
+fn echo(world: &mut World, sender: Entity, name: &str, out: &Output) {
+    let lines: Vec<Bytes> = out
+        .echoed()
+        .map(|m| {
+            let part = |text: &str| serde_json::json!({ "text": text });
+            crate::chat::json_packet(vec![part("§7§o["), serde_json::json!({ "translate": name }), part(": "), crate::chat::translation(&m.text, &m.parameters), part("]")])
+        })
+        .collect();
+    if lines.is_empty() {
+        return;
+    }
+    for operator in in_world(world) {
+        if operator == sender || world.get::<Access>(operator).is_none_or(|access| access.permission != Permission::Operator) {
+            continue;
+        }
+        if let Some(mut outgoing) = world.get_mut::<Outgoing>(operator) {
+            outgoing.0.extend(lines.iter().cloned());
         }
     }
 }

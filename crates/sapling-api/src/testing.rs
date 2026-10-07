@@ -154,6 +154,9 @@ impl Backend for Fake {
     fn send_message(&mut self, player: PlayerId, message: &str) {
         self.log.push(format!("message {} {message}", player.0));
     }
+    fn send_translation(&mut self, player: PlayerId, key: &str, parameters: &[String]) {
+        self.log.push(format!("translation {} {key} {parameters:?}", player.0));
+    }
     fn teleport(&mut self, player: PlayerId, feet: [f32; 3]) {
         self.log.push(format!("teleport {} {feet:?}", player.0));
     }
@@ -184,9 +187,11 @@ impl Backend for Fake {
         self.log.push(format!("give {} {} x{}", player.0, item.name, item.count));
         0
     }
-    fn clear_inventory(&mut self, player: PlayerId) {
+    fn clear_inventory(&mut self, player: PlayerId) -> u32 {
         self.log.push(format!("clear {}", player.0));
+        let removed = self.items.values().map(|item| u32::from(item.count)).sum();
         self.items.clear();
+        removed
     }
     fn held_slot(&self, _: PlayerId) -> Option<u8> {
         Some(2)

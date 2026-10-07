@@ -1,7 +1,7 @@
 //! Chat: a client's line is cleaned, shown to the handlers and sent to everyone in the world
 //! under the sender's verified name, whatever name the packet claims.
 
-use acacia_proto::packets::{Text, TextCategory, TextContent, TextContentChat, TextContentRaw, TextType};
+use acacia_proto::packets::{Text, TextCategory, TextContent, TextContentChat, TextContentJson, TextContentRaw, TextType};
 use bevy_ecs::prelude::*;
 use bytes::Bytes;
 use sapling_api::{ChatEvent, Player};
@@ -45,6 +45,19 @@ fn chat_packet(from: &Player, message: String) -> Bytes {
 /// A line without a sender.
 pub(crate) fn raw_packet(message: &str) -> Bytes {
     text(TextType::Raw, TextCategory::MessageOnly, TextContent::Raw(TextContentRaw { message: message.to_owned() }), "")
+}
+
+/// A line of the client's own text (`{"rawtext":[...]}`), in each player's language.
+pub(crate) fn json_packet(parts: Vec<serde_json::Value>) -> Bytes {
+    let message = serde_json::json!({ "rawtext": parts }).to_string();
+    text(TextType::Json, TextCategory::MessageOnly, TextContent::Json(TextContentJson { message }), "")
+}
+
+/// The part of a [`json_packet`] that is translation key `key` with `parameters`; BDS leaves
+/// `with` null when there are none.
+pub(crate) fn translation(key: &str, parameters: &[String]) -> serde_json::Value {
+    let with = (!parameters.is_empty()).then(|| parameters.iter().map(|p| serde_json::json!({ "text": p })).collect::<Vec<_>>());
+    serde_json::json!({ "translate": key, "with": { "rawtext": with } })
 }
 
 /// To everyone in a world of this shard.

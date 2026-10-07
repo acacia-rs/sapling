@@ -113,6 +113,12 @@ impl Backend for Ctx<'_> {
         }
     }
 
+    fn send_translation(&mut self, player: PlayerId, key: &str, parameters: &[String]) {
+        if let Some(mut out) = self.out(player) {
+            out.0.push(chat::json_packet(vec![chat::translation(key, parameters)]));
+        }
+    }
+
     fn teleport(&mut self, player: PlayerId, feet: [f32; 3]) {
         if let Some(entity) = self.entity(player).filter(|_| feet.iter().all(|c| c.is_finite())) {
             movement::teleport(self.world, entity, feet);
@@ -161,10 +167,9 @@ impl Backend for Ctx<'_> {
         stack.and_then(|(entity, stack)| inventory::change(self.world, entity, |inventory| inventory.add(&stack))).unwrap_or(item.count)
     }
 
-    fn clear_inventory(&mut self, player: PlayerId) {
-        if let Some(entity) = self.entity(player) {
-            inventory::change(self.world, entity, |inventory| inventory.clear());
-        }
+    fn clear_inventory(&mut self, player: PlayerId) -> u32 {
+        let Some(entity) = self.entity(player) else { return 0 };
+        inventory::change(self.world, entity, |inventory| inventory.clear()).unwrap_or(0)
     }
 
     fn held_slot(&self, player: PlayerId) -> Option<u8> {

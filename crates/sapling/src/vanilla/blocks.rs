@@ -34,8 +34,8 @@ impl Command for SetBlock {
     fn run(self, ctx: &mut ShardCtx<'_>, sender: &Sender, out: &mut Output) {
         let pos = self.position.from(origin(ctx, sender));
         match changed(ctx, pos, &block(&self.block, self.states.as_ref())) {
-            true => out.print("Block placed"),
-            false => out.error("The block couldn't be placed"),
+            true => out.translate("commands.setblock.success", Vec::new(), true),
+            false => out.translate("commands.setblock.noChange", Vec::new(), false),
         }
     }
 }
@@ -56,7 +56,7 @@ impl Command for Fill {
         let (low, high): (BlockPos, BlockPos) = (std::array::from_fn(|axis| from[axis].min(to[axis])), std::array::from_fn(|axis| from[axis].max(to[axis])));
         let count: i64 = (0..3).map(|axis| i64::from(high[axis] - low[axis]) + 1).product();
         if count > MAX_FILL {
-            return out.error(format!("Too many blocks in the specified area ({count} > {MAX_FILL})"));
+            return out.translate("commands.fill.tooManyBlocks", vec![count.to_string(), MAX_FILL.to_string()], false);
         }
         let block = block(&self.block, self.states.as_ref());
         let mut filled = 0;
@@ -68,8 +68,9 @@ impl Command for Fill {
             }
         }
         match filled {
+            // BDS's line for this has no key in its own strings.
             0 => out.error("No blocks filled"),
-            _ => out.print(format!("{filled} blocks filled")),
+            _ => out.translate("commands.fill.success", vec![filled.to_string()], true),
         }
     }
 }

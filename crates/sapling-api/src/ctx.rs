@@ -26,6 +26,7 @@ pub trait Backend: WorldBackend + EntityBackend {
     fn kick(&mut self, player: PlayerId, message: &str);
     fn broadcast(&mut self, message: &str);
     fn send_message(&mut self, player: PlayerId, message: &str);
+    fn send_translation(&mut self, player: PlayerId, key: &str, parameters: &[String]);
     fn teleport(&mut self, player: PlayerId, feet: [f32; 3]);
     fn permission(&self, player: PlayerId) -> Option<Permission>;
     fn set_permission(&mut self, player: PlayerId, permission: Permission);
@@ -34,7 +35,7 @@ pub trait Backend: WorldBackend + EntityBackend {
     fn item(&self, player: PlayerId, slot: Slot) -> Option<Item>;
     fn set_item(&mut self, player: PlayerId, slot: Slot, item: Option<&Item>) -> bool;
     fn give(&mut self, player: PlayerId, item: &Item) -> u8;
-    fn clear_inventory(&mut self, player: PlayerId);
+    fn clear_inventory(&mut self, player: PlayerId) -> u32;
     fn held_slot(&self, player: PlayerId) -> Option<u8>;
     fn send_form(&mut self, player: PlayerId, json: String, on_answer: FormCallback);
     fn set_sidebar(&mut self, player: PlayerId, sidebar: Option<&Sidebar>);
@@ -145,6 +146,12 @@ impl<'a> ShardCtx<'a> {
         self.backend.send_message(player, message);
     }
 
+    /// Shows one player the client's line under translation key `key` (`commands.tp.successVictim`),
+    /// in their language, with `parameters` filled in.
+    pub fn send_translation(&mut self, player: PlayerId, key: &str, parameters: &[String]) {
+        self.backend.send_translation(player, key, parameters);
+    }
+
     /// Moves a player so that their feet are at `feet`, keeping where they look.
     pub fn teleport(&mut self, player: PlayerId, feet: [f32; 3]) {
         self.backend.teleport(player, feet);
@@ -184,9 +191,9 @@ impl<'a> ShardCtx<'a> {
         self.backend.give(player, item)
     }
 
-    /// Empties a player's hotbar, inventory, armour and offhand.
-    pub fn clear_inventory(&mut self, player: PlayerId) {
-        self.backend.clear_inventory(player);
+    /// Empties a player's hotbar, inventory, armour and offhand; how many items went.
+    pub fn clear_inventory(&mut self, player: PlayerId) -> u32 {
+        self.backend.clear_inventory(player)
     }
 
     /// The hotbar slot a player has in hand (0 to 8).

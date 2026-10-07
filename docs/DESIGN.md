@@ -267,6 +267,9 @@ it sends for `/title`, `/scoreboard`, `/gamemode`, `/tp`, a wither's bar and com
   - Answers are `CommandOutput` with the request's origin echoed, `output_type` "alloutput", and BDS's keys
     for failures: `commands.generic.unknown [name]`, `commands.generic.syntax [before, token, after]`,
     `commands.generic.noTargetMatch`. `out.print` / `out.error` send text as the message id, as dragonfly does.
+  - An operator command's success lines are echoed to the other operators on the shard as BDS echoes them:
+    a Json `Text`, `§7§o[` + the sender's name + `: ` + the line + `]`. `ctx.send_translation` sends one
+    player a Json line under a key, as BDS tells a `/tp` victim (`commands.tp.successVictim`).
   - Three lines a tick per player, 512 characters, control characters dropped.
 - **Forms** (`sapling-api/src/form`, `sapling-shard/src/forms.rs`). `Menu` (answer: button index), `Modal`
   (bool), `Custom` (one `Value` per element), and `#[derive(Form)]`: a struct whose value holds the defaults

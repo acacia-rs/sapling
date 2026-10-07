@@ -239,9 +239,13 @@ impl Inventory {
         self.main.iter().any(|slot| slot.as_ref().is_none_or(|held| stacks_with(&held.stack, stack) && held.stack.count < limit))
     }
 
-    pub fn clear(&mut self) {
+    /// Empties every slot; how many items went.
+    pub fn clear(&mut self) -> u32 {
+        let slots = self.main.iter().chain(&self.armor).chain([&self.offhand, &self.cursor]);
+        let removed = slots.flatten().map(|held| u32::from(held.stack.count)).sum();
         (self.main, self.armor) = (vec![None; MAIN], vec![None; ARMOR]);
         (self.offhand, self.cursor, self.unsaved) = (None, None, true);
+        removed
     }
 
     pub fn in_hand(&self) -> &Option<Held> {

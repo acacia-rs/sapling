@@ -11,7 +11,22 @@ pub(crate) use blocks::{Fill, SetBlock};
 pub(crate) use players::{Clear, GameModeCommand, Give, Kill, Summon, Teleport};
 
 use sapling_api::command::Selector;
-use sapling_api::{EntityInfo, Player, Sender, ShardCtx};
+use sapling_api::{EntityInfo, Output, Player, Sender, ShardCtx};
+
+fn no_target(out: &mut Output) {
+    out.translate("commands.generic.noTargetMatch", Vec::new(), false);
+}
+
+/// An entity type or item as BDS names it in a command's answer: `minecraft:armor_stand` is
+/// `Armor Stand`.
+fn display_name(id: &str) -> String {
+    let words = id.rsplit(':').next().unwrap_or(id).split('_');
+    let capitalised = words.map(|word| {
+        let mut chars = word.chars();
+        chars.next().map_or_else(String::new, |first| first.to_uppercase().chain(chars).collect())
+    });
+    capitalised.collect::<Vec<_>>().join(" ")
+}
 
 /// Where the sender is, as `~` counts from: its feet, or the spawn for the console.
 fn origin(ctx: &ShardCtx<'_>, sender: &Sender) -> [f32; 3] {

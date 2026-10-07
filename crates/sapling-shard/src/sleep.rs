@@ -8,7 +8,7 @@
 use std::collections::HashMap;
 
 use acacia_proto::nbt::{Nbt, Value as NbtValue};
-use acacia_proto::packets::{Animate, AnimateActionId, LevelEventGeneric, PlayerAction, SetEntityData, SetSpawnPosition, SetSpawnPositionSpawnType, Text, TextCategory, TextContent, TextContentJson, TextType};
+use acacia_proto::packets::{Animate, AnimateActionId, LevelEventGeneric, PlayerAction, SetEntityData, SetSpawnPosition, SetSpawnPositionSpawnType};
 use acacia_proto::types::{
     Action, BlockCoordinates, EntityProperties, MetadataDictionaryItem, MetadataDictionaryItemKey as Key, MetadataDictionaryItemType as Type,
     MetadataDictionaryItemValue as Value, MetadataDictionaryItemValueDefault as Plain, Vec3i,
@@ -60,11 +60,9 @@ fn coordinates([x, y, z]: BlockPos) -> BlockCoordinates {
 
 /// Tells a player why it did not lie down, as BDS does: the game's own grey line.
 fn tell(world: &mut World, player: Entity, key: &str) {
-    let message = format!(r#"{{"rawtext":[{{"text":"§7"}},{{"translate":"tile.bed.{key}"}}]}}"#);
-    let content = TextContent::Json(TextContentJson { message });
-    let packet = Text { needs_translation: false, category: TextCategory::MessageOnly, r#type: TextType::Json, content, xuid: String::new(), platform_chat_id: String::new(), has_filtered_message: false, filtered_message: None };
+    let packet = crate::chat::json_packet(vec![serde_json::json!({ "text": "§7" }), serde_json::json!({ "translate": format!("tile.bed.{key}") })]);
     if let Some(mut out) = world.get_mut::<Outgoing>(player) {
-        out.push(&packet);
+        out.0.push(packet);
     }
 }
 
