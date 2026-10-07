@@ -198,3 +198,21 @@ pub fn pick_weighted(blocks: &[(Block, i32)], random: &mut Mt19937) -> Block {
     }
     blocks[blocks.len() - 1].0
 }
+
+/// A log lying along the dominant horizontal component of `(dx, dz)` (x on ties), upright when
+/// both are 0; logs without x/z variants stay upright.
+pub fn log_along(log: Block, dx: i32, dz: i32) -> Block {
+    let [up, x, z] = match log {
+        Block::OakLog => [Block::OakLog, Block::OakLogX, Block::OakLogZ],
+        Block::SpruceLog => [Block::SpruceLog, Block::SpruceLogX, Block::SpruceLogZ],
+        Block::BirchLog => [Block::BirchLog, Block::BirchLogX, Block::BirchLogZ],
+        Block::JungleLog => [Block::JungleLog, Block::JungleLogX, Block::JungleLogZ],
+        Block::CherryLog => [Block::CherryLog, Block::CherryLogX, Block::CherryLogZ],
+        _ => return log,
+    };
+    match (dx.abs(), dz.abs()) {
+        (0, 0) => up,
+        (ax, az) if ax >= az => x,
+        _ => z,
+    }
+}
