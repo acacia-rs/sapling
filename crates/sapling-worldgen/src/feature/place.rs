@@ -36,6 +36,10 @@ impl Feature {
             Feature::Search(search) => search.place(ctx, at),
             Feature::LegacyTree(legacy) => legacy.place(ctx, at),
             Feature::Geode(geode) => geode.place(ctx, at),
+            Feature::SnapToSurface(snap) => snap.place(ctx, at),
+            Feature::VegetationPatch(patch) => patch.place(ctx, at),
+            Feature::GrowingPlant(plant) => plant.place(ctx, at),
+            Feature::Lush(lush) => lush.place(ctx, at),
         }
     }
 }

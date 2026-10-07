@@ -2,6 +2,7 @@
 `Feature` of src/feature/spec.rs, the features it places first, and the scatter parameters they share
 with rules. A feature is ported when its type is and every feature it places is."""
 import biome_expr
+import cave_data
 import legacy_data
 import trees_data
 from blocks_data import NotPorted, block, blocks
@@ -9,7 +10,8 @@ from blocks_data import NotPorted, block, blocks
 ORDERS = {'xyz', 'xzy', 'yxz', 'yzx', 'zxy', 'zyx'}
 PORTED = {'minecraft:ore_feature', 'minecraft:scatter_feature', 'minecraft:aggregate_feature', 'minecraft:sequence_feature',
           'minecraft:weighted_random_feature', 'minecraft:single_block_feature', 'minecraft:tree_feature', 'minecraft:search_feature',
-          'minecraft:geode_feature'}
+          'minecraft:geode_feature'} | cave_data.PORTED
+_HANDWRITTEN = {**legacy_data.LEGACY, **cave_data.LEGACY}
 # Features BDS builds in code (registered in 1482f4580), with the parameters it passes them.
 _SOIL = 'needs: &[Block::Water], replaces: &[Block::Dirt, Block::CoarseDirt, Block::GrassBlock]'
 # 1482f4580 sizes these from a flag (kelp/seagrass 1 or 10 tries, flowers/mushrooms/berries 64 or 1)
@@ -121,9 +123,9 @@ class Features:
             index = len(self.emitted)
             if name in HARDCODED:
                 self.emitted[name] = (index, HARDCODED[name])
-            elif name in legacy_data.LEGACY:
+            elif name in _HANDWRITTEN:
                 self.emitted[name] = (index, None)
-                self.emitted[name] = (index, legacy_data.LEGACY[name](self.index))
+                self.emitted[name] = (index, _HANDWRITTEN[name](self.index))
             elif name in self.docs and self.docs[name][0] in PORTED:
                 self.emitted[name] = (index, None)
                 self.emitted[name] = (index, self.rust(*self.docs[name]))
@@ -163,6 +165,8 @@ class Features:
                     f'required: {int(body.get("required_successes", 1))} }})')
         if kind == 'minecraft:geode_feature':
             return self.geode(body)
+        if kind in cave_data.PORTED:
+            return cave_data.rust(kind, body, self.index)
         raise NotPorted(kind)
 
     def geode(self, body):

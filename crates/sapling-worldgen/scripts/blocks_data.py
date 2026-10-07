@@ -13,9 +13,14 @@ class NotPorted(Exception):
 
 def _rust_blocks():
     """(name, states) -> variant, from the `blocks!` table."""
-    path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'src', 'block', 'table.rs')
-    text = open(path, encoding='utf-8').read()
-    return {(m[2], m[3]): m[1] for m in re.finditer(r'^\s*(\w+) => "([a-z_]+)" "([^"]*)",', text, re.M)}
+    found = {}
+    for table in ('table.rs', 'plant_table.rs'):
+        path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'src', 'block', table)
+        text = open(path, encoding='utf-8').read()
+        # The first variant of a (name, states) pair wins: the waterlogged twins come later.
+        for m in re.finditer(r'^\s*(\w+) => "([a-z_]+)" "([^"]*)",', text, re.M):
+            found.setdefault((m[2], m[3]), m[1])
+    return found
 
 
 BLOCKS = _rust_blocks()
@@ -33,10 +38,20 @@ def block(value):
     flattened = next((v for k, v in states.items() if k in ('stone_type', 'tall_grass_type')), None)
     name = ALIASES.get((name, flattened), name)
     wanted = {k: str(int(v) if isinstance(v, bool) else v) for k, v in states.items() if k not in ('stone_type', 'tall_grass_type')}
-    for (n, text), variant in BLOCKS.items():
-        if n == name and wanted.items() <= _states(text).items():
-            return 'Block::' + variant
+    for attempt in (wanted, _cardinal(wanted)):
+        for (n, text), variant in BLOCKS.items():
+            if n == name and attempt.items() <= _states(text).items():
+                return 'Block::' + variant
     raise NotPorted(f'block {name} {wanted}')
+
+
+def _cardinal(states):
+    """The old integer `direction` (0 south, 1 west, 2 north, 3 east) as `minecraft:cardinal_direction`."""
+    if 'direction' not in states:
+        return states
+    out = {k: v for k, v in states.items() if k != 'direction'}
+    out['minecraft:cardinal_direction'] = ['south', 'west', 'north', 'east'][int(states['direction'])]
+    return out
 
 
 def blocks(values):

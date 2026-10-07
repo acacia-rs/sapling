@@ -4,6 +4,8 @@
 
 mod aquatic;
 mod attach;
+mod cave;
+mod cave_spec;
 mod data;
 mod decorate;
 mod disk;
@@ -14,6 +16,7 @@ mod iceberg;
 mod land;
 mod huge_mushroom;
 mod legacy_tree;
+mod lush;
 mod molang;
 mod ore;
 mod place;

@@ -59,6 +59,12 @@ fn family(name: &str) -> Option<&'static str> {
         "mangrove_propagule" => "propagules",
         "leaf_litter" => "leaf litter",
         "pink_petals" => "pink petals",
+        "moss_block" => "moss",
+        "cave_vines" | "cave_vines_body_with_berries" | "cave_vines_head_with_berries" => "cave vines",
+        "big_dripleaf" | "small_dripleaf_block" => "dripleaves",
+        "azalea" | "flowering_azalea" => "azaleas",
+        "spore_blossom" => "spore blossoms",
+        "dirt_with_roots" | "hanging_roots" => "azalea roots",
         _ => return None,
     })
 }
