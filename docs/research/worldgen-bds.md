@@ -28,7 +28,7 @@ names, same octave/amplitude tables, same Xoroshiro128++ seeding by MD5 of the n
 | Carvers | 2 `cave_carver_feature`s in `pregeneration_pass` + hardcoded canyon | legacy pre-1.18 style, **not** Java carvers; ported, oracle 99.5% precision/recall | high |
 | Lakes / monster rooms / freeze | hardcoded in `decorationPostProcessChunk` | Java-legacy shapes, MT RNG; lava lakes ported | high (lakes) |
 | Features | data-driven `feature_rules` + `features` JSON, 12 named passes, MT per rule | **Bedrock-only** | high |
-| Structures | legacy `StructureFeature` + jigsaw v2 (`br::worldgen`, `worldgen/structures` JSON) | separate system | low (not mapped) |
+| Structures | legacy `StructureFeature` (MT grids) + jigsaw v2 (`br::worldgen`, Java LCG grids); placed between generation and decoration | **Bedrock-only** (v2 grids as Java); starts and mineshafts ported, [worldgen-bds-structures.md](worldgen-bds-structures.md) | high (starts) |
 
 ## Class hierarchy (LeviLamina headers + vtables)
 
@@ -239,7 +239,8 @@ nextFloat,consumeCount}`.
    (base temperature used for ice/iceberg checks).
 5. Who calls slot 54; which rule places `underground_cave_carver_feature`; structure post-process a/b pairing
    (assumed as the large-feature seed's).
-6. Structures (legacy `StructureFeature` vs jigsaw `br::worldgen`, `worldgen/structure_sets`) unmapped.
+6. Structures: mapped in [worldgen-bds-structures.md](worldgen-bds-structures.md); templates, jigsaw and the
+   beardifier not ported.
 7. Lighting/heightmap stage and `OverworldGenerator2d` selection rule (legacy worlds, `no_legacy_worldgen` 14393d890).
 
 ## Terrain port findings (crates/sapling-worldgen, 2026-10-06)
