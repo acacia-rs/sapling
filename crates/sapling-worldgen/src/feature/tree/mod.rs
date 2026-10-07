@@ -12,6 +12,7 @@ mod mangrove;
 mod mangrove_canopy;
 mod mangrove_roots;
 mod mega;
+mod mega_canopy;
 mod roofed;
 mod simple;
 pub mod spec;
