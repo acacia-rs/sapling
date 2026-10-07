@@ -122,6 +122,12 @@ impl OverworldGenerator {
         writes.world_writes((chunk_x, chunk_z))
     }
 
+    /// Cave segments near a column, for probes (`Carvers::segments_near`).
+    #[doc(hidden)]
+    pub fn cave_segments_near(&self, x: i32, z: i32, reach: f32, skip_gate: bool) -> Vec<(usize, [f32; 3], f32, f32)> {
+        self.carvers.segments_near(x, z, reach, skip_gate)
+    }
+
     /// Bedrock biome ids per block, cached for the stages and neighbours that read them again.
     pub fn chunk_biomes(&self, chunk_x: i32, chunk_z: i32) -> Arc<ChunkBiomes> {
         self.biomes.get((chunk_x, chunk_z), || self.density.climate.chunk_biomes(self.seed, chunk_x, chunk_z))

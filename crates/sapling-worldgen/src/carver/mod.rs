@@ -54,6 +54,23 @@ impl Carvers {
         }
     }
 
+    /// Every cave segment (carver index, center in 0-based y, horizontal and vertical radius) whose
+    /// centre lies within `reach` blocks of the column, from either carver, skip gate included or not.
+    pub fn segments_near(&self, x: i32, z: i32, reach: f32, skip_gate: bool) -> Vec<(usize, [f32; 3], f32, f32)> {
+        let (cx, cz) = (x >> 4, z >> 4);
+        let mut out = Vec::new();
+        for (carver, settings) in CAVE_CARVERS.iter().enumerate() {
+            for sx in cx - RANGE..=cx + RANGE {
+                for sz in cz - RANGE..=cz + RANGE {
+                    let segments = settings.segments_gated(&mut self.random(sx, sz), sx, sz, skip_gate);
+                    let near = segments.into_iter().filter(|s| (s.center[0] - x as f32).hypot(s.center[2] - z as f32) < reach);
+                    out.extend(near.map(|s| (carver, s.center, s.horizontal_radius, s.vertical_radius)));
+                }
+            }
+        }
+        out
+    }
+
     fn random(&self, chunk_x: i32, chunk_z: i32) -> Mt19937 {
         Mt19937::new(self.seed.chunk(chunk_x, chunk_z))
     }
