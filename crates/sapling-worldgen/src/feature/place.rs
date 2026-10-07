@@ -84,7 +84,8 @@ impl Scatter {
             }
         }
         let saved = ctx.scope.save();
-        let saved_biome = std::mem::replace(&mut ctx.scope.biome, (ctx.biome)(at));
+        let by_biome = matches!(self.distribution.chance, super::spec::Chance::Percent(super::spec::Expr::ByBiome(_)));
+        let saved_biome = std::mem::replace(&mut ctx.scope.biome, if by_biome { (ctx.biome)(at) } else { None });
         ctx.scope.set_origin(at);
         let queries = ctx.scope.queries;
         let count = {
