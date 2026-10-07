@@ -7,6 +7,7 @@ mod data;
 mod decorate;
 mod disk;
 mod flowers;
+mod freeze;
 mod land;
 mod molang;
 mod ore;
@@ -98,6 +99,7 @@ impl Features {
             let base = |x: i32, z: i32| self.before((x, z), phase_limit, loaded, biomes);
             let mut view = View::new(source, &base);
             decorate::decorate_chunk(&self.seed, source, biomes, &mut view);
+            freeze::freeze_chunk(source, &biomes(source.0, source.1), &mut view);
             view.into_writes()
         })
     }
