@@ -35,14 +35,16 @@ fn generated_column_matches_bds_wherever_the_generator_does() {
             cells += 1;
             let generated = shape.block(x, y, z);
             let bds_block = state(registry, theirs.block(wx, y, wz)).unwrap();
-            let bds_dry = theirs.liquid(wx, y, wz) == registry.air_id();
+            let bds_liquid = theirs.liquid(wx, y, wz);
+            let bds_wet = bds_liquid != registry.air_id();
             biomes_agree += usize::from(theirs.biome(wx, y, wz) == Some(biomes.biome(x, y, z)));
-            if !(bds_dry && bds_block.0.strip_prefix("minecraft:") == Some(generated.name()) && bds_block.1 == generated.states()) {
+            let same = bds_block.0.strip_prefix("minecraft:") == Some(generated.name()) && bds_block.1 == generated.states();
+            if !same || bds_wet != generated.is_waterlogged() {
                 continue;
             }
             matching += 1;
             assert_eq!(state(vanilla, ours.block(wx, y, wz)), Some(bds_block), "block at {x} {y} {z}");
-            assert_eq!(ours.liquid(wx, y, wz), vanilla.air_id(), "liquid at {x} {y} {z}");
+            assert_eq!(state(vanilla, ours.liquid(wx, y, wz)), state(registry, bds_liquid), "liquid at {x} {y} {z}");
         }
     }
     println!("chunk 0, 0: {matching} of {cells} cells match BDS and convert to its state; biomes agree in {biomes_agree} (BDS copies its highest sub-chunk's upward)");

@@ -16,17 +16,10 @@ const PLAINS: [Block; 4] = [Block::Poppy, Block::AzureBluet, Block::OxeyeDaisy, 
 const SHADE: [[i32; 2]; 13] =
     [[0, 0], [0, -1], [1, 0], [0, 1], [-1, 0], [1, -1], [-1, -1], [1, 1], [-1, 1], [0, -2], [2, 0], [0, 2], [-2, 0]];
 
-/// The flower of one call: nothing is drawn for swamps, one or two draws otherwise.
+/// The flower of one call: nothing is drawn for swamps, one to two draws otherwise.
 fn pick(kind: FlowerKind, [x, _, z]: [i32; 3], random: &mut Mt19937) -> Block {
     match kind {
         FlowerKind::Swamp => Block::BlueOrchid,
-        FlowerKind::Forest => {
-            if random.next_boolean() {
-                Block::LilyOfTheValley
-            } else {
-                Block::Dandelion
-            }
-        }
         FlowerKind::Plains => {
             let value = noise().value(x as f32 / 200.0, z as f32 / 200.0);
             if (value as f64) < -0.8 {
@@ -37,7 +30,7 @@ fn pick(kind: FlowerKind, [x, _, z]: [i32; 3], random: &mut Mt19937) -> Block {
                 Block::Dandelion
             }
         }
-        FlowerKind::Overworld | FlowerKind::FlowerForest => {
+        FlowerKind::Overworld => {
             if random.next_int(3) == 0 {
                 Block::Dandelion
             } else {

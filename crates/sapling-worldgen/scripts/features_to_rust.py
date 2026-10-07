@@ -128,8 +128,7 @@ def main():
     for _, name, pass_, biome_filter, places, dist in sorted(rules, key=lambda r: r[0]):
         pass_rust = ''.join(p.title() for p in pass_.removesuffix('_pass').split('_'))
         print(f'    Rule {{ name: "{name}", pass: Pass::{pass_rust}, biomes: {biome_set(biome_filter, tags_by_id)}, '
-              f'feature: {features.index(places)},')
-        print(f'        distribution: {distribution(dist)} }},')
+              f'feature: {features.index(places)}, distribution: {distribution(dist)} }},')
     print('];')
     print()
     print('pub static FEATURES: &[Feature] = &[')

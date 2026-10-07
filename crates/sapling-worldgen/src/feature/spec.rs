@@ -105,6 +105,7 @@ pub enum Feature {
     /// `aggregate_feature`: every feature at the same position.
     Aggregate(&'static [usize], EarlyOut),
     /// `sequence_feature`: each feature at the position the previous one placed at.
+    #[allow(dead_code, reason = "no ported vanilla rule reaches one yet")]
     Sequence(&'static [usize], EarlyOut),
     /// `weighted_random_feature`: (feature, weight).
     WeightedRandom(&'static [(usize, f32)]),
@@ -132,11 +133,10 @@ pub enum Legacy {
     Flower { kind: FlowerKind, count: i32 },
 }
 
-/// The flower table of a `LegacyFlowerFeature` (1438ef3b0's switch).
+/// The flower table of a `LegacyFlowerFeature` (1438ef3b0's switch; the forest and flower forest
+/// tables are not ported).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum FlowerKind {
-    FlowerForest,
-    Forest,
     Overworld,
     Plains,
     Swamp,
@@ -152,6 +152,7 @@ pub struct Scatter {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum EarlyOut {
+    #[allow(dead_code, reason = "every ported aggregate has an early out")]
     None,
     FirstFailure,
     FirstSuccess,
