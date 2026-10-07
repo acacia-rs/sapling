@@ -85,12 +85,7 @@ impl Tree {
         if !(0..width).all(|dx| (0..width).all(|dz| allows(self.may_grow_on, view.block(x + dx, y - 1, z + dz)))) {
             return false;
         }
-        // The list BDS checks behaves as may_grow_through plus may_replace (oracle: trees grow through air and leaves, not
-        // logs); without may_grow_through only air and water pass (oracle: swamp oaks fail under leaves).
-        let through = |block: Block| match self.may_grow_through.is_empty() {
-            true => matches!(block, Block::Air | Block::Water),
-            false => self.may_grow_through.contains(&block) || allows(self.may_replace, block),
-        };
+        let through = |block| self.grows_through(block);
         (y..=(y + height + 1).min(top - 1)).all(|cy| {
             let r = if cy >= y + height - 1 { 2 } else { i32::from(cy != y) };
             (x - r..=x + r).all(|cx| (z - r..=z + r).all(|cz| through(view.block(cx, cy, cz))))
@@ -232,8 +227,13 @@ pub fn log_along(log: Block, dx: i32, dz: i32) -> Block {
 }
 
 impl Tree {
-    /// A cell a trunk may grow through: the same rule as `prepare`'s volume check.
+    /// A spawn-volume cell a trunk may grow through. BDS's list behaves as may_grow_through plus
+    /// may_replace (oracle: trees grow through air and leaves, not logs); without may_grow_through
+    /// only air and water pass (oracle: swamp oaks fail under leaves).
     pub fn grows_through(&self, block: Block) -> bool {
+        if self.may_grow_through.is_empty() {
+            return matches!(block, Block::Air | Block::Water);
+        }
         self.may_grow_through.contains(&block) || allows(self.may_replace, block)
     }
 }

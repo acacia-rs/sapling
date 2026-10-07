@@ -1,33 +1,36 @@
-//! `mega_trunk` (giant spruces and pines, mega jungle trees): the top canopy first, then the
-//! branches with their own canopies, the trunk column, the base block and the `base_cluster`.
+//! `MegaTreeTrunk::placeTrunk` (1438f2ba0; height 1438f4080): its own spawn check, the top canopy,
+//! the branches with their canopies, the trunk column, the base block and the `base_cluster`.
 
 use super::Anchor;
-use super::common::{allows, valid_tree_position};
+use super::common::allows;
 use super::spec::{BaseCluster, MegaBranches, MegaTrunk, Tree};
 use crate::block::Block;
 use crate::feature::place::Ctx;
 use crate::feature::view::View;
 use crate::random::Mt19937;
+use crate::terrain::{HEIGHT, MIN_Y};
 
 pub use super::mega_canopy::canopy;
+
+const TOP: i32 = MIN_Y + HEIGHT as i32;
 
 impl MegaTrunk {
     pub fn place(&self, tree: &Tree, ctx: &mut Ctx, origin: [i32; 3]) -> Option<[i32; 3]> {
         let height = self.height_intervals.iter().fold(self.height_base, |h, &i| h + ctx.random.next_int(i));
         let origin = tree.roots_then(ctx, origin, height)?;
-        if height < 1 || !tree.prepare(ctx.view, origin, height, self.width) {
+        if !self.spawn(tree, ctx.view, origin, height) {
             return None;
         }
         let [x, y, z] = origin;
-        // The top canopy is placed before any branch or log, above the origin column.
+        let width = self.width;
         tree.place_canopies(ctx, &[Anchor::at([x, y + height, z])]);
         if let Some(branches) = &self.branches {
             branches.place(tree, ctx.view, ctx.random, origin, height, self.block);
         }
-        let width = self.width;
+        let replaceable = |view: &View, [x, y, z]: [i32; 3]| allows(tree.may_replace, view.block(x, y, z));
         for dx in 0..width {
             for dz in 0..width {
-                if valid_tree_position(ctx.view, [x + dx, y, z + dz], tree.may_replace) {
+                if replaceable(ctx.view, [x + dx, y, z + dz]) {
                     ctx.view.set_block(x + dx, y, z + dz, self.block);
                 }
             }
@@ -36,10 +39,9 @@ impl MegaTrunk {
             for dx in 0..width {
                 for dz in 0..width {
                     let p = [x + dx, y + dy, z + dz];
-                    if !valid_tree_position(ctx.view, p, tree.may_replace) {
+                    if !replaceable(ctx.view, p) || !ctx.view.set_block(p[0], p[1], p[2], self.block) {
                         continue;
                     }
-                    ctx.view.set_block(p[0], p[1], p[2], self.block);
                     if let Some(decoration) = &self.decoration {
                         // West, east, north, south; east/south only when not also the west/north edge.
                         let mask = [dx == 0, dx != 0 && dx == width - 1, dz == 0, dz != 0 && dz == width - 1];
@@ -48,7 +50,7 @@ impl MegaTrunk {
                 }
             }
         }
-        if valid_tree_position(ctx.view, [x, y + height - 1, z], tree.may_replace) {
+        if replaceable(ctx.view, [x, y + height - 1, z]) {
             ctx.view.set_block(x, y + height - 1, z, self.block);
         }
         for dx in 0..width {
@@ -61,29 +63,40 @@ impl MegaTrunk {
         }
         Some(origin)
     }
+
+    /// In the world, `may_grow_on` under the origin cell only, and a volume around the origin column
+    /// (radius `max(|width - 1|, 1)` at the base, `width` above, up to one over the top) growable through.
+    fn spawn(&self, tree: &Tree, view: &View, [x, y, z]: [i32; 3], height: i32) -> bool {
+        if y <= MIN_Y || y + height >= TOP || !allows(tree.may_grow_on, view.block(x, y - 1, z)) {
+            return false;
+        }
+        (0..height + 2).all(|dy| {
+            let r = if dy == 0 { (self.width - 1).abs().max(1) } else { self.width };
+            (MIN_Y..TOP).contains(&(y + dy))
+                && (x - r..=x + r).all(|cx| (z - r..=z + r).all(|cz| tree.grows_through(view.block(cx, y + dy, cz))))
+        })
+    }
 }
 
 impl MegaBranches {
-    /// From `altitude_factor.1` of the height down to `.0`, a branch every `interval`, each a
-    /// sloped line of logs at a random angle (Mth table trig) with its canopy at the tip.
+    /// From `altitude_factor.1` of the height (less an interval) down to `.0`, a branch every
+    /// `interval`: a sloped line of logs at a random angle (Mth table) with its canopy at the tip.
     fn place(&self, tree: &Tree, view: &mut View, random: &mut Mt19937, [x, y, z]: [i32; 3], height: i32, block: Block) {
         if self.length < 1 {
             return;
         }
-        let top = (height as f32 * self.altitude_factor.1) as i32 + y;
-        let low = (height as f32 * self.altitude_factor.0) as i32 + y;
-        let mut level = top - self.interval.draw(random);
-        while level > low {
+        let h = height as f32;
+        let mut level = ((y - self.interval.draw(random)) as f32 + self.altitude_factor.1 * h) as i32;
+        while self.altitude_factor.0 * h + (y as f32) < level as f32 {
             let angle = random.next_float() * std::f32::consts::PI * 2.0;
             let (cos, sin) = (crate::mth::cos(angle), crate::mth::sin(angle));
-            let start = ((level - 1) as f32 - self.slope * (self.length - 1) as f32) as i32;
+            let start = (level - 1) as f32 - (self.length - 1) as f32 * self.slope;
             let (mut tip_x, mut tip_z) = (x, z);
             for step in 0..self.length {
-                let bx = x + (1.5 + cos * step as f32) as i32;
-                let bz = z + (1.5 + sin * step as f32) as i32;
-                let by = (start as f32 + self.slope * step as f32) as i32;
-                view.set_block(bx, by, bz, block);
-                (tip_x, tip_z) = (bx, bz);
+                let s = step as f32;
+                tip_x = x + (cos * s + 1.5) as i32;
+                tip_z = z + (sin * s + 1.5) as i32;
+                view.set_block(tip_x, (s * self.slope + start) as i32, tip_z, block);
             }
             if let Some(canopy) = self.canopy {
                 canopy.place(tree, view, random, &Anchor::at([tip_x, level, tip_z]));
