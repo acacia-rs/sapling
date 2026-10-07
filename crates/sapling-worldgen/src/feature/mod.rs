@@ -4,6 +4,7 @@
 
 mod data;
 mod decorate;
+mod disk;
 mod molang;
 mod ore;
 mod scatter;

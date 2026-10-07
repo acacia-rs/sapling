@@ -16,6 +16,14 @@ from bds_packs import IDS, biomes, documents, load_order  # noqa: E402
 PASSES = ['first_pass', 'before_underground_pass', 'underground_pass', 'after_underground_pass', 'before_surface_pass',
           'surface_pass', 'after_surface_pass', 'before_sky_pass', 'sky_pass', 'after_sky_pass', 'final_pass']
 PORTED = {'minecraft:ore_feature'}
+# Features BDS builds in code (registered in 1482f4580), not JSON.
+_SOIL = 'needs: &[Block::Water], replaces: &[Block::Dirt, Block::CoarseDirt, Block::GrassBlock]'
+HARDCODED = {
+    'minecraft:sand_feature': f'Feature::Disk(Disk {{ block: Block::Sand, radius: 7, half_height: 2, {_SOIL} }})',
+    'minecraft:gravel_feature': f'Feature::Disk(Disk {{ block: Block::Gravel, radius: 6, half_height: 2, {_SOIL} }})',
+    'minecraft:clay_feature': 'Feature::Disk(Disk { block: Block::Clay, radius: 4, half_height: 1, '
+                              'needs: &[Block::Water, Block::Clay], replaces: &[Block::Dirt, Block::CoarseDirt, Block::Mud] })',
+}
 ORDERS = {'xyz', 'xzy', 'yxz', 'yzx', 'zxy', 'zyx'}
 # Blocks whose Rust variant is not the CamelCase of their name (with states BDS flattens).
 VARIANTS = {('stone', 'andesite'): 'Andesite', ('stone', 'diorite'): 'Diorite', ('stone', 'granite'): 'Granite',
@@ -121,13 +129,14 @@ class Features:
         found = self.docs.get(name.lower())
         return found[0] if found else '(hardcoded)'
 
-    def ported(self, name, seen=()):
-        return self.kind(name) in PORTED
+    def ported(self, name):
+        return self.kind(name) in PORTED or name.lower() in HARDCODED
 
     def index(self, name):
         name = name.lower()
         if name not in self.emitted:
-            self.emitted[name] = (len(self.emitted), self.rust(*self.docs[name]))
+            rust = HARDCODED[name] if name in HARDCODED else self.rust(*self.docs[name])
+            self.emitted[name] = (len(self.emitted), rust)
         return self.emitted[name][0]
 
     def rust(self, kind, body):

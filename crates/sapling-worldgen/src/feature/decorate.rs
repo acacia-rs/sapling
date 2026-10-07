@@ -2,10 +2,8 @@
 //! the passes, `BiomeDecorationSystem::decorate` (14580bb90) the chunk's biomes in palette order,
 //! `decorateBiome` (14580b170) each biome's rules for the pass.
 
-use acacia_molang::Host;
-
 use super::data::{FEATURES, RULES};
-use super::molang::{Molang, Scope};
+use super::molang::{Molang, Scope, World};
 use super::scatter;
 use super::spec::{Feature, Pass, Rule};
 use super::view::View;
@@ -13,13 +11,12 @@ use crate::biome::ChunkBiomes;
 use crate::random::{LargeFeatureSeed, Mt19937};
 use crate::terrain::{HEIGHT, MIN_Y};
 
-impl Host for View<'_> {}
-
 impl Feature {
     /// Whether the feature placed anything.
     pub fn place(&self, view: &mut View, at: [i32; 3], random: &mut Mt19937) -> bool {
         match self {
             Feature::Ore(ore) => ore.place(view, at, random),
+            Feature::Disk(disk) => disk.place(view, at, random),
         }
     }
 }
@@ -67,13 +64,16 @@ fn run(rule: &Rule, chunk_seed: u32, chunk: (i32, i32), only: Option<u32>, biome
     let mut positions = Mt19937::new(seed);
     let origin = [chunk.0 * 16, 0, chunk.1 * 16];
     scope.set_origin(origin);
-    let count = scatter::iterations(&rule.distribution, &mut positions, &mut Molang { scope, host: view });
+    let above_top_solid = scope.above_top_solid;
+    let world = World { view, above_top_solid };
+    let count = scatter::iterations(&rule.distribution, &mut positions, &mut Molang { scope, host: &world });
     if count == 0 {
         return;
     }
     let mut placing = Mt19937::new(seed);
     for index in (0..count).rev() {
-        let at = scatter::position(&rule.distribution, index, origin, &mut positions, &mut Molang { scope, host: view });
+        let host = World { view, above_top_solid };
+        let at = scatter::position(&rule.distribution, index, origin, &mut positions, &mut Molang { scope, host: &host });
         if only.is_some_and(|biome| biome_at(biomes, chunk, at) != Some(biome)) {
             continue;
         }

@@ -99,6 +99,17 @@ pub struct Rule {
 #[derive(Debug)]
 pub enum Feature {
     Ore(Ore),
+    Disk(Disk),
+}
+
+/// A hardcoded disk: placed only where the block at its position is one of `needs`.
+#[derive(Debug)]
+pub struct Disk {
+    pub block: Block,
+    pub radius: i32,
+    pub half_height: i32,
+    pub needs: &'static [Block],
+    pub replaces: &'static [Block],
 }
 
 #[derive(Debug)]

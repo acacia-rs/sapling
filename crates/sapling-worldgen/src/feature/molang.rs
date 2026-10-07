@@ -3,11 +3,29 @@
 
 use std::collections::HashMap;
 
-use acacia_molang::{Compiler, Env, Host, Program, Scratch, Variable, Variables};
+use acacia_molang::{Compiler, Env, Host, Program, Query, Scratch, Structs, Value, Variable, Variables};
 
 use super::spec::{Axis, Expr};
+use super::view::View;
+
+/// The world-generation queries a feature field may ask, answered from a source chunk's view.
+pub struct World<'a, 'b> {
+    pub view: &'a View<'b>,
+    pub above_top_solid: Query,
+}
+
+impl Host for World<'_, '_> {
+    fn query(&self, query: Query, args: &[Value], _structs: &mut Structs<'_>) -> Value {
+        let arg = |i: usize| args.get(i).map_or(0.0, |v| v.num()).round() as i32;
+        if query == self.above_top_solid {
+            return Value::Num(self.view.above_top_solid(arg(0), arg(1)) as f32);
+        }
+        Value::ZERO
+    }
+}
 
 pub struct Scope {
+    pub above_top_solid: Query,
     compiler: Compiler,
     programs: HashMap<&'static str, Program>,
     variables: Variables,
@@ -21,7 +39,8 @@ impl Scope {
         let mut compiler = Compiler::new();
         let origin = ["originx", "originy", "originz"].map(|name| compiler.variable(name));
         let world = ["worldx", "worldy", "worldz"].map(|name| compiler.variable(name));
-        Self { compiler, programs: HashMap::new(), variables: Variables::new(), scratch: Scratch::new(), origin, world }
+        let above_top_solid = compiler.query("above_top_solid");
+        Self { above_top_solid, compiler, programs: HashMap::new(), variables: Variables::new(), scratch: Scratch::new(), origin, world }
     }
 
     pub fn set_origin(&mut self, origin: [i32; 3]) {

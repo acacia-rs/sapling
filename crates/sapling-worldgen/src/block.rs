@@ -94,6 +94,11 @@ impl Block {
         !matches!(self, Block::Air | Block::Water | Block::Lava)
     }
 
+    /// Solid for movement: everything but air, fluids and snow layers.
+    pub fn blocks_motion(self) -> bool {
+        self.is_solid() && self != Block::SnowLayer
+    }
+
     /// The block for a `minecraft:` name, without states.
     pub fn from_name(name: &str) -> Option<Block> {
         let name = name.strip_prefix("minecraft:").unwrap_or(name);
