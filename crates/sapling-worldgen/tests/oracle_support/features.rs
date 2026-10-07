@@ -69,9 +69,7 @@ impl FeatureTally {
             counts.placed += 1;
             counts.hits += u64::from(hit);
         }
-        if bds.block != before.name()
-            && let Some(family) = family(&bds.block)
-        {
+        if bds.block != before.name() && let Some(family) = family(&bds.block) {
             self.0.entry(family).or_default().wanted += 1;
         }
     }
