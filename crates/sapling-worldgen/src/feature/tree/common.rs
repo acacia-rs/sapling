@@ -174,3 +174,27 @@ impl CanopyDecoration {
         }
     }
 }
+
+impl Odds {
+    /// `ChanceInformation::isValid`: a fraction needs a denominator, a percent must not be negative.
+    pub fn is_valid(self) -> bool {
+        match self {
+            Odds::Fraction(_, d) => d != 0,
+            Odds::Percent(p) => p >= 0.0,
+        }
+    }
+}
+
+/// The random-spread and mangrove canopies' leaf pick: `nextInt` of the truncated weight sum (no
+/// draw when 0), then the first entry the remainder, truncated after each step, goes negative at.
+pub fn pick_weighted(blocks: &[(Block, i32)], random: &mut Mt19937) -> Block {
+    let sum: i32 = blocks.iter().map(|&(_, weight)| weight).sum();
+    let mut left = if sum != 0 { random.next_int(sum) } else { 0 };
+    for &(block, weight) in blocks {
+        left -= weight;
+        if left < 0 {
+            return block;
+        }
+    }
+    blocks[blocks.len() - 1].0
+}
