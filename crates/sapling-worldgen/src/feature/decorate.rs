@@ -81,13 +81,14 @@ fn run(rule: &Rule, chunk_seed: u32, chunk: (i32, i32), only: Option<u32>, biome
     }
 }
 
-// TODO: BDS's answer above and below the world (rules scatter up to y 480); clamped until known.
+/// None outside the world's height: such positions match no biome (oracle: diamond and redstone
+/// rules scatter below -64), so they never place nor draw.
 fn biome_at(biomes: &ChunkBiomes, chunk: (i32, i32), [x, y, z]: [i32; 3]) -> Option<u32> {
     let (lx, lz) = (x - chunk.0 * 16, z - chunk.1 * 16);
-    if !(0..16).contains(&lx) || !(0..16).contains(&lz) {
+    if !(0..16).contains(&lx) || !(0..16).contains(&lz) || !(MIN_Y..MIN_Y + HEIGHT as i32).contains(&y) {
         return None;
     }
-    Some(biomes.biome(lx as usize, y.clamp(MIN_Y, MIN_Y + HEIGHT as i32 - 1), lz as usize))
+    Some(biomes.biome(lx as usize, y, lz as usize))
 }
 
 /// The chunk's biomes as BDS lists them (1438c8450): sub-chunk palettes bottom up, first seen first.
