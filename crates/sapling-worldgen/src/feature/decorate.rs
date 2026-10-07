@@ -90,11 +90,7 @@ fn run(rule: &Rule, source: &mut Source, only: Option<u32>, own: &ChunkBiomes, v
             continue;
         }
         let ctx = &mut Ctx { view, random: &mut placing, scope, biome: &biome };
-        let before = ctx.random.drawn;
-        let placed = FEATURES[rule.feature].place(ctx, at);
-        if std::env::var("TRACE_RULE").is_ok_and(|name| rule.name.contains(&name)) {
-            eprintln!("rule {} chunk {:?} #{index} at {at:?} -> {placed:?} draws {before}..{}", rule.name, source.chunk, ctx.random.drawn);
-        }
+        FEATURES[rule.feature].place(ctx, at);
     }
 }
 
