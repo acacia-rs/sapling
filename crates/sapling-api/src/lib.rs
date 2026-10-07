@@ -21,7 +21,7 @@ pub use block::{Block, BlockPos, BreakEvent, Face, InteractEvent, PlaceEvent};
 pub use command::{Command, Commands, Output, Sender};
 pub use ctx::{Backend, FormCallback, ShardCtx, State};
 pub use entity::{EntityBackend, EntityId, EntityInfo};
-pub use world::WorldBackend;
+pub use world::{RuleValue, WorldBackend};
 pub use event::{Cancellable, ChatEvent, CommandEvent, Priority};
 pub use form::{Custom, Form, FormResponse, Menu, Modal};
 pub use hud::{BossBar, BossBarColour, Sidebar, Title};

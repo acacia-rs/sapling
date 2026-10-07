@@ -44,6 +44,11 @@ struct Born(u64);
 #[derive(Resource, Default)]
 pub(crate) struct AfterAnnouncing(Vec<(Entity, [i32; 3], Vec<Bytes>)>);
 
+/// Has `packets` sent to the viewers of `cell` once this tick's new entities are announced to them.
+pub(crate) fn after_announcing(world: &mut World, layer: Entity, cell: [i32; 3], packets: Vec<Bytes>) {
+    world.get_resource_or_insert_with(AfterAnnouncing::default).0.push((layer, cell, packets));
+}
+
 /// Sends the moves held back by [`step`]; runs after the tick's announcements (mobs.rs).
 pub(crate) fn send_held_moves(world: &mut World) {
     let Some(held) = world.get_resource_mut::<AfterAnnouncing>().map(|mut held| std::mem::take(&mut held.0)) else { return };
@@ -106,7 +111,7 @@ pub(crate) fn step(world: &mut World, entity: Entity, layer: Entity, id: u64, ph
     let packets: Vec<Bytes> = flags.into_iter().chain(told.update(id, [x, y + lift, z], body.motion, body.on_ground)).collect();
     // Not yet announced: this move follows the announcement, in the same batch, as on BDS.
     if world.get::<Born>(entity).is_some_and(|born| born.0 == world.resource::<Tick>().0) {
-        world.get_resource_or_insert_with(AfterAnnouncing::default).0.push((layer, body.at.map(|c| c.floor() as i32), packets));
+        after_announcing(world, layer, body.at.map(|c| c.floor() as i32), packets);
         return Some((body, Vec::new()));
     }
     Some((body, packets))

@@ -15,7 +15,7 @@ use acacia_proto::types::{GameRuleI32Value, MetadataDictionaryItemValue as Metad
 use bytes::BytesMut;
 use common::stored::{actor, compound, enter_stored, floor_with};
 use common::{Harness, all, click, config, pack_response, platform};
-use sapling_api::{Difficulty, Item, PlayerId, Slot};
+use sapling_api::{Difficulty, Item, PlayerId, RuleValue, Slot};
 use sapling_shard::ShardConfig;
 use sapling_world::{BlockRegistry, Chunk, ChunkPos, Dimension, Level, MemoryStorage, StoredColumn, World, WorldStorage};
 
@@ -39,7 +39,7 @@ fn world_at(level: Level) -> World {
 
 #[test]
 fn a_player_joins_at_the_worlds_time_and_difficulty() {
-    let level = Level { spawn: None, time: 13_000, daylight_cycle: true };
+    let level = Level { time: 13_000, ..Level::default() };
     let mut h = Harness::with(ShardConfig { difficulty: Difficulty::Hard, ..config() }, world_at(level));
     h.join(1, "Steve");
     h.tick(1);
@@ -60,7 +60,7 @@ fn a_player_joins_at_the_worlds_time_and_difficulty() {
 
 #[test]
 fn the_clock_runs_is_set_and_reminds_players() {
-    let mut h = Harness::with(config(), world_at(Level { spawn: None, time: 100, daylight_cycle: true }));
+    let mut h = Harness::with(config(), world_at(Level { time: 100, ..Level::default() }));
     h.enter(1, "Steve");
     let seen = Arc::new(Mutex::new(Vec::new()));
     let times = seen.clone();
@@ -82,10 +82,22 @@ fn the_clock_runs_is_set_and_reminds_players() {
 
 #[test]
 fn a_stopped_daylight_cycle_keeps_the_time() {
-    let mut h = Harness::with(config(), world_at(Level { spawn: None, time: 6_000, daylight_cycle: false }));
+    let mut h = Harness::with(config(), world_at(Level { time: 6_000, ..Level::default() }));
     h.enter(1, "Steve");
+    h.remote.run(|ctx| {
+        assert!(!ctx.set_game_rule("dodaylightcycle", RuleValue::Int(0)), "a switch takes no number");
+        assert!(ctx.set_game_rule("dodaylightcycle", RuleValue::Bool(false)));
+        assert_eq!(ctx.game_rule("DODAYLIGHTCYCLE"), Some(("doDayLightCycle".to_owned(), RuleValue::Bool(false))));
+    });
+    let sent = h.tick(1);
+    let told: Vec<_> = all::<GameRulesChanged>(&sent).iter().flat_map(|changed| changed.rules.iter().map(|rule| (rule.name.clone(), rule.value.clone()))).collect();
+    assert_eq!(told, [("doDayLightCycle".to_owned(), GameRuleI32Value::Bool(false))], "only the rule that changed, as BDS");
+    let stopped_at = clocks(&sent);
+    assert!(matches!(stopped_at[..], [(_, true)]), "{stopped_at:?}");
     let reminders: Vec<(i32, bool)> = (0..300).flat_map(|_| clocks(&h.tick(1))).collect();
-    assert!(!reminders.is_empty() && reminders.iter().all(|reminder| *reminder == (6_000, true)), "{reminders:?}");
+    assert!(!reminders.is_empty() && reminders.iter().all(|reminder| *reminder == stopped_at[0]), "{reminders:?}");
+    h.remote.run(|ctx| assert!(ctx.set_game_rule("doDayLightCycle", RuleValue::Bool(false))));
+    assert!(all::<GameRulesChanged>(&h.tick(1)).is_empty(), "no change, nothing told");
 }
 
 #[test]

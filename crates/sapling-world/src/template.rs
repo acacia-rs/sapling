@@ -55,7 +55,7 @@ impl World {
             columns: HashMap::new(),
             void: Column::empty(0, 0, template.dim),
             loader: None,
-            level: template.level,
+            level: template.level.clone(),
             arrived: Vec::new(),
             base: Some(template.clone()),
             base_actors_taken: false,

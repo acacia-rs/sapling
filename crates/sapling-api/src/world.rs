@@ -1,9 +1,45 @@
+use std::fmt;
+
 use crate::{Block, BlockPos, Player, PlayerId, ShardCtx};
 
+/// A game rule's value: a switch or a number.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum RuleValue {
+    Bool(bool),
+    Int(i32),
+}
+
+/// As `/gamerule` shows it: `true`, `5`.
+impl fmt::Display for RuleValue {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Bool(on) => write!(f, "{on}"),
+            Self::Int(n) => write!(f, "{n}"),
+        }
+    }
+}
+
 /// Worlds are named. A server's worlds are spread over its shards; the calls of [`ShardCtx`] that
-/// name no world (`block`, `set_block`, `spawn`, `set_spawn`, `time`, `set_time`) act on the world
-/// of the event being handled: the player's, or in `on_tick` the shard's first.
+/// name no world (`block`, `set_block`, `spawn`, `set_spawn`, `time`, `set_time`, the game rules)
+/// act on the world of the event being handled: the player's, or in `on_tick` the shard's first.
 impl ShardCtx<'_> {
+    /// The world's game rules, each under its own name (`doDayLightCycle`), in vanilla's order.
+    /// Sapling acts on `doDayLightCycle`; the others are kept and saved for plugins to read.
+    pub fn game_rules(&self) -> Vec<(String, RuleValue)> {
+        self.backend.game_rules()
+    }
+
+    /// The game rule `name`, in any case: its own name and value.
+    pub fn game_rule(&self, name: &str) -> Option<(String, RuleValue)> {
+        self.game_rules().into_iter().find(|(rule, _)| rule.eq_ignore_ascii_case(name))
+    }
+
+    /// Sets the game rule `name`, in any case, and tells the world's players of a change; a world
+    /// with storage saves it. False, with nothing changed, for no such rule or a value of the other kind.
+    pub fn set_game_rule(&mut self, name: &str, value: RuleValue) -> bool {
+        self.backend.set_game_rule(name, value)
+    }
+
     /// Every world of the server, on this shard or another, sorted by name.
     pub fn worlds(&self) -> Vec<String> {
         self.backend.worlds()
@@ -105,4 +141,6 @@ pub trait WorldBackend {
     fn create_world(&mut self, name: &str, template: &str) -> bool;
     fn remove_world(&mut self, name: &str) -> bool;
     fn reset_world(&mut self, name: &str) -> bool;
+    fn game_rules(&self) -> Vec<(String, RuleValue)>;
+    fn set_game_rule(&mut self, name: &str, value: RuleValue) -> bool;
 }

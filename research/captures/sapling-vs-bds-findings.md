@@ -4,11 +4,17 @@ Sources: `bds-mechanisms.txt` (ground truth) and `sapling-mechanisms.txt`, same 
 (`crates/sapling/examples/bds_mechanism_probe.rs`, radius 8, `stand()` waits for cells). `B:n` / `S:n` = line n of
 the BDS / sapling capture; ticks = watcher ms / 50. Sapling y = BDS y + 124. Known items from the brief are not
 repeated (UpdateSubchunkBlocks, UpdateBlockSynced, falling-block MOVING/Health, plates, wet-stairs Rejected,
-spawn/splash sounds, mob loot/death delay).
+splash sounds, mob loot/death delay). Spawn sounds since 2026-10-07: at the head BDS computes (creatures.rs,
+docs/research/spawn-sound.md).
 
 Command Text (round 3, sapling run on testbox, 2026-10-07): all 23 lines agree with BDS's in kind, receiver,
 order and JSON, after adding BDS's trailing newline. BDS's `/kill @e[type=chicken]` named three chickens to
 sapling's one: its world had two more within range.
+
+/gamerule (`bds_command_probe`, `bds-gamerule.txt` vs `sapling-gamerule.txt`, both on testbox, 2026-10-07): all 33
+commands answered alike (CommandOutput, echo, GameRulesChanged) but for the starting values: BDS's fresh world had
+`doMobSpawning = false` and `playersSleepingPercentage = 150` (source not found; the drill wipes the world), so its
+`playerssleepingpercentage 150` changed nothing and sent no GameRulesChanged, as sapling does for no change.
 
 ## The round-1 fixes
 

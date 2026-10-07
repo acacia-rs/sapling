@@ -6,7 +6,8 @@ mod common;
 use std::sync::{Arc, Mutex};
 
 use acacia_proto::nbt::Value;
-use acacia_proto::packets::{AddEntity, MoveEntityDelta, RemoveEntity, UpdateBlock};
+use acacia_proto::Packet;
+use acacia_proto::packets::{AddEntity, LevelSoundEvent, MoveEntityDelta, RemoveEntity, UpdateBlock};
 use common::stored::{actor, enter_stored, floor_with};
 use common::{Harness, all, hash};
 use sapling_api::{Block, EntityId, EntityInfo};
@@ -42,6 +43,21 @@ fn a_spawned_mob_falls_onto_the_floor_and_is_listed() {
     let now = info(&mut h, pig).expect("still there");
     assert_eq!((now.kind.as_str(), now.feet, now.on_ground), ("minecraft:pig", [3.5, 65.0, 0.5], true));
     assert_eq!(ask(&mut h, |ctx| ctx.entities()).iter().map(|entity| entity.id).collect::<Vec<_>>(), [pig]);
+}
+
+#[test]
+fn a_spawned_mob_is_heard_at_its_head_after_it_is_shown_as_on_bds() {
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    h.enter(2, "Steve");
+    h.remote.run(|ctx| assert!(ctx.spawn_entity("minecraft:pig", [3.5, 65.0, 0.5]).is_some()));
+    let sent = h.tick_all();
+    let ids: Vec<u32> = sent.to(2).iter().map(|packet| packet.id).filter(|id| [AddEntity::ID, LevelSoundEvent::ID].contains(id)).collect();
+    assert_eq!(ids, [AddEntity::ID, LevelSoundEvent::ID]);
+    let sound = &all::<LevelSoundEvent>(sent.to(2))[0];
+    // A pig is 0.9 wide and high; its head 0.85 of that up and, an animal's, forward.
+    let at = [sound.position.x, sound.position.y, sound.position.z];
+    assert!((sound.sound_id.as_str(), sound.entity_type.as_str()) == ("spawn", "minecraft:pig") && (0..3).all(|axis| (at[axis] - [3.5, 65.765, 1.265][axis]).abs() < 1e-4), "{sound:?}");
 }
 
 #[test]

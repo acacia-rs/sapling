@@ -175,6 +175,11 @@ One listener task, one shard thread, one world. The pieces and why they are shap
 - **Join, world state.** After the player's own state a joining player gets, as from BDS:
   SetSpawnPosition (no spawn of its own), the clock, SetDifficulty and GameRulesChanged (StartGame's
   rules). `set_spawn` sends the players SetSpawnPosition in the shape BDS uses for `/setworldspawn`.
+- **Game rules** (`sapling_data::GameRules`, `Level::rules`, shard `rules.rs`). Every rule BDS has,
+  its names, order and defaults those of the recorded StartGame; a world's are read from and saved to
+  `level.dat` as BDS keeps them (lower-case root fields, a byte for a switch). `set_game_rule` tells
+  the world's players of the one rule that changed, nothing when it did not, as BDS. Sapling acts on
+  `doDayLightCycle` only; the rest are kept for plugins.
 - **Actors checked against BDS 1.26.52** (2026-10-04): the hub world rewritten with the `rewrite`
   example, which renames every stored actor and adds one sheep per column holding only the fields
   `Actor` reads. BDS announced both to a bot (`bds_entity_probe`) with the names and wool written. The
@@ -578,8 +583,10 @@ block action, and takes StopBreak and AbortBreak with a position.
   whole numbers are the middle of their block across, as Bedrock reads them. Targets: `@s`, `@p`,
   `@a`, `@e` with `[type=...]`, a name. Block states come as typed, `["liquid_depth"=3]`, and a
   block named with some of its states takes the rest from its first state. The client is told the
-  parameters as BDS types them (position 65, block position 64, block states 84). Not done:
-  `/gamerule` and the rest of vanilla's commands, `@r` and selector arguments besides `type`.
+  parameters as BDS types them (position 65, block position 64, block states 84). `/gamerule`
+  lists, shows and sets the world's rules with BDS's answers, bounds and errors
+  (`research/captures/bds-gamerule.txt`); its rule names are not completed. Not done: the rest of
+  vanilla's commands, `@r` and selector arguments besides `type`.
 - **Neighbours** (`blocks/updates.rs`). After a player's break or place: falling blocks around are
   queued to fall (next bullet); what stood on a block that is gone (the Java game's `canSurvive`
   blocks: plants, rails, carpets, doors, standing torches and signs, candles, floor buttons and levers)

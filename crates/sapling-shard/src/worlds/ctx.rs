@@ -1,14 +1,14 @@
 //! The worlds side of the handlers' context.
 
 use bevy_ecs::prelude::*;
-use sapling_api::{Player, PlayerId, WorldBackend};
+use sapling_api::{Player, PlayerId, RuleValue, WorldBackend};
 use sapling_net::ConnId;
 
 use super::{Atlas, Place, Scope, current, enter, name_of};
 use crate::components::{Identity, InLayer, in_world};
 use crate::handlers::Ctx;
 use crate::handoff::{self, Peers, ShardMsg};
-use crate::{arenas, chat};
+use crate::{arenas, chat, rules};
 
 impl Ctx<'_> {
     fn place(&self, name: &str) -> Option<Place> {
@@ -89,5 +89,14 @@ impl WorldBackend for Ctx<'_> {
 
     fn reset_world(&mut self, name: &str) -> bool {
         arenas::reset(self.world, name)
+    }
+
+    fn game_rules(&self) -> Vec<(String, RuleValue)> {
+        rules::all(self.world, current(self.world))
+    }
+
+    fn set_game_rule(&mut self, name: &str, value: RuleValue) -> bool {
+        let layer = current(self.world);
+        rules::set(self.world, layer, name, value)
     }
 }

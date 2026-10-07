@@ -1,14 +1,16 @@
 //! Vanilla's commands, for operators, built on the plugin API alone: `/setblock`, `/fill`, `/tp`,
-//! `/give`, `/clear`, `/gamemode`, `/summon`, `/kill`. Opt in with
+//! `/give`, `/clear`, `/gamemode`, `/summon`, `/kill`, `/gamerule`. Opt in with
 //! [`crate::ServerBuilder::vanilla_commands`]. Positions take `~`; targets take `@s`, `@p`, `@a`,
 //! `@e[type=...]` and names. Blocks are written as `/setblock` writes them: their neighbours react.
-// TODO: /gamerule and the other vanilla commands; `@r` and selector arguments besides `type`.
+// TODO: the other vanilla commands; `@r` and selector arguments besides `type`.
 
 mod blocks;
 mod players;
+mod rules;
 
 pub(crate) use blocks::{Fill, SetBlock};
 pub(crate) use players::{Clear, GameModeCommand, Give, Kill, Summon, Teleport};
+pub(crate) use rules::GameRule;
 
 use sapling_api::command::Selector;
 use sapling_api::{EntityInfo, Output, Player, Sender, ShardCtx};

@@ -4,7 +4,7 @@ use std::any::TypeId;
 use std::collections::HashMap;
 
 use crate::ctx::State;
-use crate::{Backend, Block, BlockPos, BossBar, Difficulty, FormCallback, GameMode, Item, Permission, Player, PlayerId, Position, Sidebar, Slot, Title};
+use crate::{Backend, Block, BlockPos, BossBar, Difficulty, FormCallback, GameMode, Item, Permission, Player, PlayerId, Position, RuleValue, Sidebar, Slot, Title};
 
 #[derive(Default)]
 pub struct Fake {
@@ -18,6 +18,7 @@ pub struct Fake {
     pub items: HashMap<Slot, Item>,
     /// The world in focus; `None` is "hub".
     pub world: Option<String>,
+    rules: HashMap<String, RuleValue>,
     state: HashMap<TypeId, State>,
 }
 
@@ -72,6 +73,20 @@ impl crate::WorldBackend for Fake {
     fn reset_world(&mut self, name: &str) -> bool {
         self.log.push(format!("reset {name}"));
         true
+    }
+    /// Two rules.
+    fn game_rules(&self) -> Vec<(String, RuleValue)> {
+        let defaults = [("doDayLightCycle", RuleValue::Bool(true)), ("randomTickSpeed", RuleValue::Int(1))];
+        defaults.into_iter().map(|(name, value)| (name.to_owned(), self.rules.get(name).copied().unwrap_or(value))).collect()
+    }
+    fn set_game_rule(&mut self, name: &str, value: RuleValue) -> bool {
+        let Some((rule, now)) = self.game_rules().into_iter().find(|(rule, _)| rule.eq_ignore_ascii_case(name)) else { return false };
+        let same_kind = std::mem::discriminant(&now) == std::mem::discriminant(&value);
+        if same_kind {
+            self.log.push(format!("rule {rule} {value}"));
+            self.rules.insert(rule, value);
+        }
+        same_kind
     }
 }
 

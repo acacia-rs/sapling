@@ -1,0 +1,119 @@
+## /gamerule
+     34 actor   CommandOutput success_count=1 data=None commandBlockOutput = true, doDayLightCycle = true, doEntityDrops = true, doFireTick = true, recipesUnlock = true, doLimitedCrafting = false, doMobLoot = true, doMobSpawning = true, doTileDrops = true, doWeatherCycle = true, drowningDamage = true, fallDamage = true, fireDamage = true, keepInventory = false, mobGriefing = true, pvp = true, showCoordinates = false, playerWaypoints = everyone, locatorbar = true, showDaysPlayed = false, naturalRegeneration = true, tntExplodes = true, sendCommandFeedback = true, maxCommandChainLength = 65535, doInsomnia = true, commandBlocksEnabled = true, randomTickSpeed = 1, doImmediateRespawn = false, showDeathMessages = true, functionCommandLimit = 10000, spawnRadius = 10, showTags = true, freezeDamage = true, respawnBlocksExplode = true, showBorderEffect = true, showRecipeMessages = true, playersSleepingPercentage = 100, projectilesCanBreakBlocks = true, tntExplosionDropDecay = false success=true []
+     34 watcher Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commandBlockOutput = true, doDayLightCycle = true, doEntityDrops = true, doFireTick = true, recipesUnlock = true, doLimitedCrafting = false, doMobLoot = true, doMobSpawning = true, doTileDrops = true, doWeatherCycle = true, drowningDamage = true, fallDamage = true, fireDamage = true, keepInventory = false, mobGriefing = true, pvp = true, showCoordinates = false, playerWaypoints = everyone, locatorbar = true, showDaysPlayed = false, naturalRegeneration = true, tntExplodes = true, sendCommandFeedback = true, maxCommandChainLength = 65535, doInsomnia = true, commandBlocksEnabled = true, randomTickSpeed = 1, doImmediateRespawn = false, showDeathMessages = true, functionCommandLimit = 10000, spawnRadius = 10, showTags = true, freezeDamage = true, respawnBlocksExplode = true, showBorderEffect = true, showRecipeMessages = true, playersSleepingPercentage = 100, projectilesCanBreakBlocks = true, tntExplosionDropDecay = false\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule dodaylightcycle
+   1234 actor   CommandOutput success_count=1 data=None dodaylightcycle = true success=true []
+   1234 watcher Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"dodaylightcycle = true\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule dodaylightcycle false
+   2434 actor   GameRulesChanged doDayLightCycle=Bool(false)
+   2443 actor   SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 6314, paused: true }] }) }
+   2443 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["dodaylightcycle", "false"]
+   2443 watcher GameRulesChanged doDayLightCycle=Bool(false)
+   2443 watcher SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 6314, paused: true }] }) }
+   2443 watcher Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"dodaylightcycle\"},{\"text\":\"false\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule dodaylightcycle false
+   3633 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["dodaylightcycle", "false"]
+   3634 watcher Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"dodaylightcycle\"},{\"text\":\"false\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule DoDaylightCycle true
+   4834 actor   GameRulesChanged doDayLightCycle=Bool(true)
+   4834 actor   SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 6314, paused: false }] }) }
+   4834 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["DoDaylightCycle", "true"]
+   4834 watcher GameRulesChanged doDayLightCycle=Bool(true)
+   4834 watcher SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 6314, paused: false }] }) }
+   4834 watcher Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"DoDaylightCycle\"},{\"text\":\"true\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule randomtickspeed
+   6034 actor   CommandOutput success_count=1 data=None randomtickspeed = 1 success=true []
+   6034 watcher Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"randomtickspeed = 1\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule randomtickspeed 5
+   7234 watcher GameRulesChanged randomTickSpeed=Int(5)
+   7234 actor   GameRulesChanged randomTickSpeed=Int(5)
+   7234 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["randomtickspeed", "5"]
+   7234 watcher Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"randomtickspeed\"},{\"text\":\"5\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule randomtickspeed true
+   8433 actor   CommandOutput success_count=0 data=None commands.generic.syntax success=false ["tickspeed ", "true", ""]
+## /gamerule randomtickspeed -3
+   9633 actor   CommandOutput success_count=0 data=None commands.generic.num.tooSmall success=false ["-3", "0"]
+## /gamerule dodaylightcycle 3
+  10833 actor   CommandOutput success_count=0 data=None commands.generic.syntax success=false ["ightcycle ", "3", ""]
+## /gamerule nosuchrule true
+  12033 actor   CommandOutput success_count=0 data=None commands.generic.syntax success=false ["/gamerule ", "nosuchrule", " true"]
+  12383 actor   SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 6465, paused: false }] }) }
+  12384 watcher SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 6465, paused: false }] }) }
+## /gamerule spawnradius 2000000000
+  13233 actor   CommandOutput success_count=0 data=None commands.generic.num.tooBig success=false ["2000000000", "128"]
+## /gamerule playerssleepingpercentage 150
+  14434 actor   GameRulesChanged playersSleepingPercentage=Int(150)
+  14434 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["playerssleepingpercentage", "150"]
+  14434 watcher GameRulesChanged playersSleepingPercentage=Int(150)
+  14434 watcher Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"playerssleepingpercentage\"},{\"text\":\"150\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule playerssleepingpercentage -1
+  15634 actor   GameRulesChanged playersSleepingPercentage=Int(-1)
+  15634 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["playerssleepingpercentage", "-1"]
+  15634 watcher GameRulesChanged playersSleepingPercentage=Int(-1)
+  15634 watcher Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"playerssleepingpercentage\"},{\"text\":\"-1\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule playerssleepingpercentage 100
+  16834 actor   GameRulesChanged playersSleepingPercentage=Int(100)
+  16834 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["playerssleepingpercentage", "100"]
+  16834 watcher GameRulesChanged playersSleepingPercentage=Int(100)
+  16834 watcher Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"playerssleepingpercentage\"},{\"text\":\"100\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule randomtickspeed 1
+  18033 watcher GameRulesChanged randomTickSpeed=Int(1)
+  18033 actor   GameRulesChanged randomTickSpeed=Int(1)
+  18033 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["randomtickspeed", "1"]
+  18033 watcher Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"randomtickspeed\"},{\"text\":\"1\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule randomtickspeed 4097
+  19233 actor   CommandOutput success_count=0 data=None commands.generic.num.tooBig success=false ["4097", "4096"]
+## /gamerule spawnradius 128
+  20434 watcher GameRulesChanged spawnRadius=Int(128)
+  20434 actor   GameRulesChanged spawnRadius=Int(128)
+  20434 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["spawnradius", "128"]
+  20434 watcher Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"spawnradius\"},{\"text\":\"128\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule spawnradius -1
+  21633 actor   CommandOutput success_count=0 data=None commands.generic.num.tooSmall success=false ["-1", "0"]
+## /gamerule functioncommandlimit 0
+  22834 actor   GameRulesChanged functionCommandLimit=Int(0)
+  22834 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["functioncommandlimit", "0"]
+  22834 watcher GameRulesChanged functionCommandLimit=Int(0)
+  22834 watcher Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"functioncommandlimit\"},{\"text\":\"0\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule functioncommandlimit 10001
+  24033 actor   CommandOutput success_count=0 data=None commands.generic.num.tooBig success=false ["10001", "10000"]
+  25183 actor   SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 6721, paused: false }] }) }
+  25184 watcher SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 6721, paused: false }] }) }
+## /gamerule maxcommandchainlength -1
+  25234 actor   GameRulesChanged maxCommandChainLength=Int(-1)
+  25234 watcher GameRulesChanged maxCommandChainLength=Int(-1)
+  25234 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["maxcommandchainlength", "-1"]
+  25234 watcher Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"maxcommandchainlength\"},{\"text\":\"-1\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule DoDaylightCycle
+  26434 actor   CommandOutput success_count=1 data=None DoDaylightCycle = true success=true []
+  26434 watcher Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"DoDaylightCycle = true\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule playerwaypoints
+  27633 actor   CommandOutput success_count=0 data=None commands.generic.syntax success=false ["rwaypoints", "", ""]
+## /gamerule playerwaypoints banana
+  28834 actor   CommandOutput success_count=0 data=None commands.generic.syntax success=false ["waypoints ", "banana", ""]
+## /gamerule playerwaypoints off
+  30084 actor   GameRulesChanged playerWaypoints=Int(0)
+  30084 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["playerwaypoints", "off"]
+  30085 watcher GameRulesChanged playerWaypoints=Int(0)
+  30085 watcher Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"playerwaypoints\"},{\"text\":\"off\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule playerwaypoints 0
+  31283 actor   CommandOutput success_count=0 data=None commands.generic.syntax success=false ["waypoints ", "0", ""]
+## /gamerule playerwaypoints everyone
+  32484 watcher GameRulesChanged playerWaypoints=Int(1)
+  32484 actor   GameRulesChanged playerWaypoints=Int(1)
+  32484 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["playerwaypoints", "everyone"]
+  32484 watcher Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"playerwaypoints\"},{\"text\":\"everyone\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule locatorbar
+  33683 actor   CommandOutput success_count=0 data=None commands.generic.syntax success=false ["/gamerule ", "locatorbar", ""]
+## /gamerule locatorbar false
+  34883 actor   CommandOutput success_count=0 data=None commands.generic.syntax success=false ["/gamerule ", "locatorbar", " false"]
+## /gamerule locatorbar true
+  36083 actor   CommandOutput success_count=0 data=None commands.generic.syntax success=false ["/gamerule ", "locatorbar", " true"]
+## /gamerule dodaylightcycle true extra
+  37283 actor   CommandOutput success_count=0 data=None commands.generic.syntax success=false ["ycle true ", "extra", ""]
+  37984 watcher SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 6977, paused: false }] }) }
+  37984 actor   SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 6977, paused: false }] }) }
+## /gamerule
+  38484 actor   CommandOutput success_count=1 data=None commandBlockOutput = true, doDayLightCycle = true, doEntityDrops = true, doFireTick = true, recipesUnlock = true, doLimitedCrafting = false, doMobLoot = true, doMobSpawning = true, doTileDrops = true, doWeatherCycle = true, drowningDamage = true, fallDamage = true, fireDamage = true, keepInventory = false, mobGriefing = true, pvp = true, showCoordinates = false, playerWaypoints = everyone, locatorbar = true, showDaysPlayed = false, naturalRegeneration = true, tntExplodes = true, sendCommandFeedback = true, maxCommandChainLength = -1, doInsomnia = true, commandBlocksEnabled = true, randomTickSpeed = 1, doImmediateRespawn = false, showDeathMessages = true, functionCommandLimit = 0, spawnRadius = 128, showTags = true, freezeDamage = true, respawnBlocksExplode = true, showBorderEffect = true, showRecipeMessages = true, playersSleepingPercentage = 100, projectilesCanBreakBlocks = true, tntExplosionDropDecay = false success=true []
+  38484 watcher Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commandBlockOutput = true, doDayLightCycle = true, doEntityDrops = true, doFireTick = true, recipesUnlock = true, doLimitedCrafting = false, doMobLoot = true, doMobSpawning = true, doTileDrops = true, doWeatherCycle = true, drowningDamage = true, fallDamage = true, fireDamage = true, keepInventory = false, mobGriefing = true, pvp = true, showCoordinates = false, playerWaypoints = everyone, locatorbar = true, showDaysPlayed = false, naturalRegeneration = true, tntExplodes = true, sendCommandFeedback = true, maxCommandChainLength = -1, doInsomnia = true, commandBlocksEnabled = true, randomTickSpeed = 1, doImmediateRespawn = false, showDeathMessages = true, functionCommandLimit = 0, spawnRadius = 128, showTags = true, freezeDamage = true, respawnBlocksExplode = true, showBorderEffect = true, showRecipeMessages = true, playersSleepingPercentage = 100, projectilesCanBreakBlocks = true, tntExplosionDropDecay = false\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+probe exit 0

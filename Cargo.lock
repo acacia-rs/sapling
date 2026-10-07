@@ -2649,6 +2649,7 @@ dependencies = [
  "acacia-proto",
  "acacia-world",
  "bytes",
+ "sapling-data",
  "sapling-leveldb",
  "tracing",
 ]

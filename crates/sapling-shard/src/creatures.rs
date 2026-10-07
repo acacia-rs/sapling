@@ -6,7 +6,8 @@
 
 use bevy_ecs::prelude::*;
 use bytes::Bytes;
-use acacia_proto::types::MetadataFlags1;
+use acacia_proto::packets::LevelSoundEvent;
+use acacia_proto::types::{MetadataFlags1, Vec3f};
 use sapling_api::{EntityBackend, EntityId, EntityInfo};
 use sapling_data::AddEntityOptions;
 
@@ -45,8 +46,27 @@ fn announcement(id: u64, kind: &str, body: &Body, look: Option<&Actor>) -> Vec<B
     vec![sapling_net::encode(&sapling_data::add_entity(&options))]
 }
 
+/// Kinds whose head sits forward of their feet, by this much of their width (BDS's `Animal`
+/// constructors); every other mob's is straight up (docs/research/spawn-sound.md).
+const ANIMALS: &[&str] = &[
+    "minecraft:chicken", "minecraft:cow", "minecraft:mooshroom", "minecraft:rabbit", "minecraft:ocelot", "minecraft:horse", "minecraft:llama", "minecraft:turtle", "minecraft:cat",
+    "minecraft:pig",
+];
+const HEAD_FORWARD: f32 = 0.85;
+/// A mob's head is this much of its height up.
+const HEAD_UP: f32 = 0.85;
+
+/// The sound a mob makes as it appears, at its head as BDS places it; it faces +z (yaw 0).
+fn spawn_sound(id: u64, kind: &str, body: &Body) -> Bytes {
+    let ([x, y, z], [width, height]) = (body.at, body.size);
+    let forward = if ANIMALS.contains(&kind) { HEAD_FORWARD * width } else { 0.0 };
+    let position = Vec3f { x, y: y + HEAD_UP * height, z: z + forward };
+    let sound = LevelSoundEvent { sound_id: "spawn".into(), position, extra_data: -1, entity_type: kind.into(), is_baby_mob: false, is_global: false, entity_unique_id: id as i64, fire_at_position: None };
+    sapling_net::encode(&sound)
+}
+
 /// A mob of `kind` with its feet at `feet` in `layer`: one BDS was recorded announcing, in a
-/// loaded column.
+/// loaded column. It is heard appearing.
 fn spawn(world: &mut World, layer: Entity, kind: &str, feet: [f32; 3]) -> Option<EntityId> {
     let size = sapling_data::mob_size(kind)?;
     let level = &world.get::<Layer>(layer)?.world;
@@ -58,6 +78,7 @@ fn spawn(world: &mut World, layer: Entity, kind: &str, feet: [f32; 3]) -> Option
     let entity = entities::spawn(world, layer, kind, body, feet, |id| Some(announcement(id, kind, &body, None)))?;
     world.entity_mut(entity).insert(Creature { look: None });
     let id = world.get::<NetId>(entity)?.0;
+    entities::after_announcing(world, layer, [x, y, z], vec![spawn_sound(id, kind, &body)]);
     // Kept by the world folder as BDS numbers actors: a high word that differs, a counter below.
     let unique_id = ((world.resource::<Tick>().0 as i64) << 32) | (id as i64 & 0xffff_ffff);
     entities::keep(world, entity, layer, unique_id, sapling_world::new_actor(unique_id, kind, feet, [0.0; 3]));

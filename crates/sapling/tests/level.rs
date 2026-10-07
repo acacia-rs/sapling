@@ -14,7 +14,7 @@ use acacia_bot::proto::packets::{AddEntity, StartGame, SyncWorldClocks, SyncWorl
 use acacia_bot::{BotConfig, BotEvent};
 use bytes::BytesMut;
 use common::{GROUND, SPAWN, fixture};
-use sapling::{Handler, Server, ShardCtx, World};
+use sapling::{Handler, RuleValue, Server, ShardCtx, World};
 use sapling_leveldb::{ChunkKey, LevelDbWorld, actors};
 
 const HORSE: [f32; 3] = [SPAWN.0 as f32 + 2.5, GROUND as f32 + 1.0, SPAWN.1 as f32 + 0.5];
@@ -55,13 +55,14 @@ fn spawn_column() -> ChunkKey {
     ChunkKey::new(SPAWN.0 >> 4, SPAWN.1 >> 4, 0)
 }
 
-/// Sets the time once somebody is there to be told.
+/// Sets the time once somebody is there to be told, and two game rules.
 struct Dusk;
 
 impl Handler for Dusk {
     fn on_tick(&mut self, ctx: &mut ShardCtx<'_>) {
         if ctx.player_count() > 0 && ctx.time() < 100_000 {
             ctx.set_time(112_000);
+            assert!(ctx.set_game_rule("randomTickSpeed", RuleValue::Int(3)) && ctx.set_game_rule("domobloot", RuleValue::Bool(false)));
         }
     }
 }
@@ -106,6 +107,8 @@ async fn a_folder_brings_its_time_and_mobs_and_takes_the_time_back() {
     let after = LevelDbWorld::open_in_memory(&folder).unwrap();
     let time = after.level().time().unwrap();
     assert!((112_000..114_000).contains(&time), "saved at {time}");
+    let rules = (after.level().int("randomtickspeed"), after.level().root.get("domobloot"));
+    assert_eq!(rules, (Some(3), Some(&Value::Byte(0))), "the rules are saved as BDS saves them");
     let stored = actors(&after.load_column(spawn_column()).unwrap().unwrap().actors).unwrap();
     assert_eq!(stored.iter().map(|actor| (actor.identifier.as_str(), actor.position, actor.variant)).collect::<Vec<_>>(), [("minecraft:horse", HORSE, 3)]);
     drop(after);

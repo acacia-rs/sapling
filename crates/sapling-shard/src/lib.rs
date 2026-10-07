@@ -35,6 +35,7 @@ mod orbs;
 mod player;
 mod plugins;
 mod roster;
+mod rules;
 mod shard;
 mod skin;
 mod sleep;

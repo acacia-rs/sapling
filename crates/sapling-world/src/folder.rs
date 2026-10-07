@@ -32,8 +32,8 @@ impl WorldFolder {
         let (dat, level) = (storage.level_dat(), storage.level());
         let (name, game_type, difficulty) = (dat.name().map(str::to_owned), dat.game_type(), dat.difficulty());
         let mut world = World::with_storage(storage);
-        *world.level_mut() = level;
         let spawn = world.spawn_at(level.spawn.unwrap_or([0, SURFACE, 0]));
+        *world.level_mut() = level;
         Self { world, name, spawn, game_type, difficulty }
     }
 }

@@ -90,12 +90,15 @@ impl<'a> Args<'a> {
     }
 
     /// The error for the argument that started at `mark`, as BDS reports one: `/gamemode banana`
-    /// is `("/gamemode ", "banana", "")`, a missing argument `("/gamemode", "", "")`.
+    /// is `("/gamemode ", "banana", "")`, a missing argument `("/gamemode", "", "")`. BDS keeps
+    /// only the last ten characters before it: `/gamerule randomtickspeed true` is `("tickspeed ", "true", "")`.
     pub fn error_at(&self, mark: usize) -> ParseError {
+        const BEFORE_KEPT: usize = 10;
         let rest = &self.line[mark..];
         let end = mark + rest.find(char::is_whitespace).unwrap_or(rest.len());
-        let before = if rest.is_empty() { self.line.trim_end() } else { &self.line[..mark] };
-        ParseError::Syntax { before: format!("/{before}"), token: self.line[mark..end].to_owned(), after: self.line[end..].to_owned() }
+        let before = format!("/{}", if rest.is_empty() { self.line.trim_end() } else { &self.line[..mark] });
+        let cut = before.char_indices().rev().nth(BEFORE_KEPT - 1).map_or(0, |(at, _)| at);
+        ParseError::Syntax { before: before[cut..].to_owned(), token: self.line[mark..end].to_owned(), after: self.line[end..].to_owned() }
     }
 
     /// An error if arguments are left over.

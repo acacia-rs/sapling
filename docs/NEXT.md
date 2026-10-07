@@ -16,8 +16,8 @@ it does on BDS and the two captures can be diffed:
    blocks: built (`body.rs`, `sync.rs`, `entities.rs`, `creatures.rs`, `actors.rs`), stored mobs
    saved back where they are. Left: saving thrown items, orbs and falling blocks.
 2. **Vanilla commands**: built (`sapling::vanilla`); the drill probe runs on sapling
-   (`tools/sapling-drill.sh`). Left: /gamerule, and fixing what the BDS-against-sapling diff of the
-   drill captures shows (`research/captures/sapling-vs-bds-findings.md`).
+   (`tools/sapling-drill.sh`, on testbox `tools/remote-drill.sh`). Left: what the BDS-against-sapling
+   diff of the drill captures still shows (`research/captures/sapling-vs-bds-findings.md`).
 
 ## 2. Survival gaps still open
 

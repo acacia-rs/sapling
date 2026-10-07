@@ -64,7 +64,7 @@ pub(crate) fn resource_packs(
 ) {
     for (entity, response) in packets.take::<ResourcePackClientResponse>() {
         let Ok((conn, identity, id, position, in_layer, mut stage, mut out)) = players.get_mut(entity) else { continue };
-        let Ok(level) = layers.get(in_layer.0).map(|layer| *layer.world.level()) else { continue };
+        let Ok(level) = layers.get(in_layer.0).map(|layer| layer.world.level()) else { continue };
         match (*stage, response.response_status) {
             (Stage::PacksInfo, PackStatus::HaveAllPacks) => {
                 out.push(&resource_pack_stack());
@@ -82,7 +82,7 @@ pub(crate) fn resource_packs(
                     world_name: settings.0.world_name.clone(),
                     tick: tick.0 as i64,
                     difficulty: settings.0.difficulty as i32,
-                    daylight_cycle: level.daylight_cycle,
+                    rules: level.rules.clone(),
                     block_network_ids_are_hashes: sapling_world::NETWORK_IDS_ARE_HASHES,
                 };
                 out.0.extend_from_slice(sapling_data::pre_start_packets());
@@ -92,9 +92,9 @@ pub(crate) fn resource_packs(
                 out.push(&sapling_data::entity_data(id.0, &identity.0.name));
                 out.push(&sapling_data::update_attributes(id.0));
                 out.push(&sapling_data::no_player_spawn());
-                out.push(&clock::registry(&level));
+                out.push(&clock::registry(level));
                 out.push(&SetDifficulty { difficulty: settings.0.difficulty as u32 });
-                out.push(&sapling_data::game_rules(level.daylight_cycle));
+                out.push(&level.rules.packet());
                 *stage = Stage::StartGame;
             }
             (_, PackStatus::Refused) => net.0.kick(conn.0, "disconnectionScreen.resourcePack"),
