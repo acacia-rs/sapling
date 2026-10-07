@@ -1,6 +1,7 @@
 //! `structure_layers <seed> <world> <x0> <y0> <z0> <x1> <y1> <z1>`: BDS's blocks in a box, one
 //! y layer at a time (rows z, columns x, two-letter codes with a legend), each followed by our
 //! loaded blocks where they differ (`..` where equal); for porting structure pieces.
+//! `STAGE=decorated` compares the fully decorated chunk instead.
 #![allow(dead_code)]
 
 #[path = "../tests/oracle_support/mod.rs"]
@@ -18,6 +19,7 @@ fn main() {
     let n: Vec<i32> = rest.iter().map(|v| v.parse().unwrap()).collect();
     let (x0, y0, z0, x1, y1, z1) = (n[0], n[1], n[2], n[3], n[4], n[5]);
     let generator = OverworldGenerator::new(seed.parse().unwrap());
+    let decorated = std::env::var("STAGE").is_ok_and(|s| s == "decorated");
     let (primary, _) = open(world).expect("oracle world");
     let mut legend: BTreeMap<String, String> = BTreeMap::new();
     let mut code = |name: String| {
@@ -34,7 +36,7 @@ fn main() {
                 let (cx, cz) = (x.div_euclid(16), z.div_euclid(16));
                 let (column, shape) = chunks.entry((cx, cz)).or_insert_with(|| {
                     let column = primary.load_column(ChunkKey::new(cx, cz, 0)).unwrap().expect("chunk saved").chunk;
-                    (column, generator.loaded_blocks(cx, cz))
+                    (column, if decorated { generator.chunk_blocks(cx, cz) } else { generator.loaded_blocks(cx, cz) })
                 });
                 let bds = bds_cell(&primary, column, x, y, z);
                 let block = shape.block((x & 15) as usize, y, (z & 15) as usize);

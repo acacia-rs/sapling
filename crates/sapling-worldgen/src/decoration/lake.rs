@@ -114,6 +114,22 @@ impl Lake {
         true
     }
 
+    /// The `nextInt(2)` draws of turning the border into stone: one per border cell in the upper half.
+    pub fn border_draws(&self) -> usize {
+        let mut count = 0;
+        for x in 0..16 {
+            for z in 0..16 {
+                for y in 4..8 {
+                    let near = [(1, 0, 0), (-1, 0, 0), (0, 1, 0), (0, -1, 0), (0, 0, 1), (0, 0, -1)];
+                    if !self.filled(x, z, y) && near.iter().any(|&(dx, dz, dy)| self.filled(x + dx, z + dz, y + dy)) {
+                        count += 1;
+                    }
+                }
+            }
+        }
+        count
+    }
+
     /// Writes the lake's cells inside one chunk: lava in its lower half, air above.
     // TODO: BDS then turns the lake's solid border into stone (and draws a nextInt(2) per border cell); shape is unchanged.
     pub fn apply(&self, chunk_x: i32, chunk_z: i32, mut set: impl FnMut(usize, i32, usize, Block)) {
