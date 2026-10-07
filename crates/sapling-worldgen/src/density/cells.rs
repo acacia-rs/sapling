@@ -11,8 +11,11 @@ const CELL_COUNT_Y: i32 = 48;
 
 pub struct Cells {
     pub density: Box<CellGrid>,
-    /// Noodle toggle, thickness, ridge A, ridge B; zero where the corner density is below -150.
+    /// Noodle toggle, thickness, ridge A, ridge B; 1.0 where the corner density is below -150
+    /// (BDS fills its interpolator buffers with 1.0, 14822ed79 and 1481f0380).
     pub noodle: [Box<CellGrid>; 4],
+    /// Ore veininess, vein A, vein B, clamped to [-1, 1]; 1.0 below -150 as the noodles.
+    pub veins: [Box<CellGrid>; 3],
 }
 
 pub fn cell_index(x: usize, z: usize, y: usize) -> usize {
@@ -24,7 +27,8 @@ impl Density {
         let origin = [(chunk_x * 4) as f32, MIN_CELL_Y as f32, (chunk_z * 4) as f32];
         let blended = self.blended.fill(origin);
         let mut density = Box::new([0.0f32; CELL_COUNT]);
-        let mut noodle = std::array::from_fn(|_| Box::new([0.0f32; CELL_COUNT]));
+        let mut noodle = std::array::from_fn(|_| Box::new([1.0f32; CELL_COUNT]));
+        let mut veins = std::array::from_fn(|_| Box::new([1.0f32; CELL_COUNT]));
         for cx in 0..CELL_COLUMNS {
             let x = ((cx as f32) + origin[0]) * 4.0;
             for cz in 0..CELL_COLUMNS {
@@ -36,6 +40,9 @@ impl Density {
                     let value = self.corner_density(blended[i], &column, cy as i32, [x, y, z]);
                     density[i] = value;
                     if -150.0 <= value {
+                        veins[0][i] = clamp_unit(self.veins.veininess.sample(x * 1.5, y * 1.5, z * 1.5));
+                        veins[1][i] = clamp_unit(self.veins.vein_a.sample(x * 4.0, y * 4.0, z * 4.0));
+                        veins[2][i] = clamp_unit(self.veins.vein_b.sample(x * 4.0, y * 4.0, z * 4.0));
                         let (scaled, ridge) = (y, y * 2.666_666_7);
                         noodle[0][i] = clamp_unit(self.noodles.toggle.sample(x, scaled, z));
                         noodle[1][i] = clamp_unit(self.noodles.thickness.sample(x, scaled, z));
@@ -45,7 +52,7 @@ impl Density {
                 }
             }
         }
-        Cells { density, noodle }
+        Cells { density, noodle, veins }
     }
 
     fn corner_density(&self, blended: f32, column: &QuartClimate, cy: i32, position: [f32; 3]) -> f32 {

@@ -72,3 +72,11 @@ fn position_seed_matches_mth_get_seed() {
     let l: i64 = 3129871;
     assert_eq!(position_seed(1, 0, 0), l.wrapping_mul(l).wrapping_mul(42317861).wrapping_add(l * 11) >> 16);
 }
+
+#[test]
+fn mt19937_matches_reference_output() {
+    let mut random = Mt19937::new(5489);
+    assert_eq!(random.next_u32(), 3_499_211_612);
+    let mut random = Mt19937::new(5489);
+    assert_eq!((0..10_000).map(|_| random.next_u32()).last(), Some(4_123_659_995));
+}

@@ -71,6 +71,30 @@ impl NoodleNoises {
     }
 }
 
+/// Java 1.18.1 `OreVeinifier`'s noises, and the deepslate gradient's random.
+#[derive(Debug, Clone)]
+pub struct VeinNoises {
+    pub veininess: NormalNoise,
+    pub vein_a: NormalNoise,
+    pub vein_b: NormalNoise,
+    pub gap: NormalNoise,
+    pub ore: PositionalFactory,
+    pub deepslate: PositionalFactory,
+}
+
+impl VeinNoises {
+    pub fn new(factory: &PositionalFactory) -> Self {
+        Self {
+            veininess: noise(factory, "ore_veininess", -8, &[1.0]),
+            vein_a: noise(factory, "ore_vein_a", -7, &[1.0]),
+            vein_b: noise(factory, "ore_vein_b", -7, &[1.0]),
+            gap: noise(factory, "ore_gap", -5, &[1.0]),
+            ore: factory.from_hash_of("minecraft:ore").fork_positional(),
+            deepslate: factory.from_hash_of("minecraft:depth_based_layer").fork_positional(),
+        }
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct AquiferNoises {
     pub barrier: NormalNoise,

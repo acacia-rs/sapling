@@ -1,7 +1,7 @@
-//! A chunk column's shape, as `_prepareHeights` (14822eb60) fills it: cell densities
-//! interpolated per block, noodle caves, the aquifer's barrier and fluid. Ore veins, the bedrock
-//! floor, surfaces, carvers and features are not applied.
+//! A chunk column as `_prepareHeights` (14822eb60) fills it: cell densities interpolated per
+//! block, noodle caves, the aquifer's barrier and fluid, deepslate and ore veins in the solid.
 
+use crate::block::Block;
 use crate::climate::QuartClimate;
 use crate::density::{AquiferCache, Cells, Density, MIN_CELL_Y, cell_index};
 
@@ -20,9 +20,9 @@ pub enum CellKind {
     Solid,
 }
 
-/// One chunk column: `kind(x, y, z)` with y from -64 to 319.
+/// One chunk column: `block(x, y, z)` with y from -64 to 319.
 pub struct ChunkShape {
-    kinds: Vec<CellKind>,
+    blocks: Vec<Block>,
 }
 
 impl ChunkShape {
@@ -30,8 +30,21 @@ impl ChunkShape {
         ((y - MIN_Y) as usize * 16 + z) * 16 + x
     }
 
+    pub fn block(&self, x: usize, y: i32, z: usize) -> Block {
+        self.blocks[Self::index(x, y, z)]
+    }
+
+    pub fn set_block(&mut self, x: usize, y: i32, z: usize, block: Block) {
+        self.blocks[Self::index(x, y, z)] = block;
+    }
+
     pub fn kind(&self, x: usize, y: i32, z: usize) -> CellKind {
-        self.kinds[Self::index(x, y, z)]
+        match self.block(x, y, z) {
+            Block::Air => CellKind::Air,
+            Block::Water => CellKind::Water,
+            Block::Lava => CellKind::Lava,
+            _ => CellKind::Solid,
+        }
     }
 }
 
@@ -72,13 +85,14 @@ impl Density {
         let climate = |qx: i32, qz: i32| -> QuartClimate { self.climate.sample(qx, qz) };
         let cells = self.cells(chunk_x, chunk_z, &climate);
         let mut aquifer = AquiferCache::default();
-        let mut kinds = vec![CellKind::Air; 16 * 16 * HEIGHT];
+        let mut blocks = vec![Block::Air; 16 * 16 * HEIGHT];
         for cx in 0..4 {
             for cz in 0..4 {
                 let rows = self.generated_rows(&cells, chunk_x * 4 + cx as i32, chunk_z * 4 + cz as i32, cx, cz);
                 for cy in 0..rows {
                     let density = Corners::load(&cells.density[..], cx, cz, cy);
                     let noodle = cells.noodle.each_ref().map(|grid| Corners::load(&grid[..], cx, cz, cy));
+                    let veins = cells.veins.each_ref().map(|grid| Corners::load(&grid[..], cx, cz, cy));
                     for dz in 0..4u8 {
                         for dx in 0..4u8 {
                             for dy in 0..8u8 {
@@ -86,14 +100,20 @@ impl Density {
                                 let y = (MIN_CELL_Y + cy as i32) * 8 + dy as i32;
                                 let position = [chunk_x * 16 + x as i32, y, chunk_z * 16 + z as i32];
                                 let value = block_density(density.at(dx, dy, dz), &noodle, [dx, dy, dz], y);
-                                kinds[ChunkShape::index(x, y, z)] = self.block_kind(&mut aquifer, position, value);
+                                let block = match self.block_kind(&mut aquifer, position, value) {
+                                    CellKind::Air => Block::Air,
+                                    CellKind::Water => Block::Water,
+                                    CellKind::Lava => Block::Lava,
+                                    CellKind::Solid => self.solid_block(position, veins.each_ref().map(|v| v.at(dx, dy, dz))),
+                                };
+                                blocks[ChunkShape::index(x, y, z)] = block;
                             }
                         }
                     }
                 }
             }
         }
-        ChunkShape { kinds }
+        ChunkShape { blocks }
     }
 
     /// Cell rows to fill in one cell column: BDS skips rows whose four corner columns are all

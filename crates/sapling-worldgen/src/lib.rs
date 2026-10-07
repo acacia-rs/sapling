@@ -1,17 +1,20 @@
-//! Bedrock overworld terrain generation, ported from BDS 1.26.5x: which cells are solid, air,
-//! water or lava, and the biome of every 4x4x4 cell. BDS's terrain is a C++ port of Java
-//! 1.18.1's `NoiseSampler` done in f32; this crate follows BDS's arithmetic, not Java's
+//! Bedrock overworld terrain generation, ported from BDS 1.26.5x: the blocks of a chunk up to its
+//! surface, and the biome of every block. BDS's terrain is a C++ port of Java 1.18.1's
+//! `NoiseSampler` done in f32; this crate follows BDS's arithmetic, not Java's
 //! (docs/research/worldgen-bds.md).
 
 pub mod biome;
+mod block;
 pub mod climate;
 pub mod density;
+mod floor;
 pub mod noise;
 pub mod random;
 pub mod shaper;
 mod terrain;
 
 pub use biome::ChunkBiomes;
+pub use block::Block;
 pub use terrain::{CellKind, ChunkShape, HEIGHT, MIN_Y};
 
 use density::Density;
@@ -29,6 +32,14 @@ impl OverworldGenerator {
         Self { seed, density: Density::new(&factory) }
     }
 
+    /// The terrain stages in BDS's `loadChunk` order, up to (not including) carvers and features.
+    pub fn chunk_blocks(&self, chunk_x: i32, chunk_z: i32) -> ChunkShape {
+        let mut shape = self.density.chunk_shape(chunk_x, chunk_z);
+        floor::place_bedrock_floor(&mut shape, chunk_x, chunk_z);
+        shape
+    }
+
+    /// Density, aquifers, deepslate and ore veins only.
     pub fn chunk_shape(&self, chunk_x: i32, chunk_z: i32) -> ChunkShape {
         self.density.chunk_shape(chunk_x, chunk_z)
     }

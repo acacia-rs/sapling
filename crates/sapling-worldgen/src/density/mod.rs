@@ -5,10 +5,11 @@ mod aquifer;
 mod cavifier;
 mod cells;
 mod noises;
+mod veins;
 
 pub use aquifer::{AquiferAnswer, AquiferCache, FluidStatus, SEA_LEVEL};
 pub use cells::{Cells, MIN_CELL_Y, bottom_slide, cell_index, top_slide};
-pub use noises::{AquiferNoises, CaveNoises, NoodleNoises};
+pub use noises::{AquiferNoises, CaveNoises, NoodleNoises, VeinNoises};
 
 use crate::climate::ClimateNoises;
 use crate::noise::BlendedNoise;
@@ -23,6 +24,7 @@ pub struct Density {
     caves: CaveNoises,
     noodles: NoodleNoises,
     aquifer_noises: AquiferNoises,
+    veins: VeinNoises,
 }
 
 impl Density {
@@ -33,6 +35,7 @@ impl Density {
             caves: CaveNoises::new(factory),
             noodles: NoodleNoises::new(factory),
             aquifer_noises: AquiferNoises::new(factory),
+            veins: VeinNoises::new(factory),
         }
     }
 
