@@ -49,3 +49,19 @@ features, foliage, rocks, flower beds and huge mushrooms come from bdsre.
   above); dark oaks keep their logs over the origin and skip layers whose leaning column is invalid; fancy trunks
   check their lines against may_grow_through and set limb log axes per cell; cherry heights draw `nextInt(i+1)` per
   interval; mangrove trunks have no spawn check of their own (see the git log of each module for details).
+- Mangrove roots run prepareSpawn over roots plus trunk (1438f0d00); a root cell may hold may_grow_through, air,
+  water, leaves or replaceable plants (1438f16f0); the canopy (1438ef7d0) keeps a leaf only when its write succeeds.
+
+## Oracle (2026-10-07, after merging worldgen/residue)
+Worlds `20261003-trees` (+`-run2`): 20 regions of tree biomes, test `blocks_match_bds_trees`. Logs and leaves are
+100/100 (precision/recall) in birch, old growth birch, taiga, snowy taiga, snowy plains, savanna (+ plateau),
+windswept forest, forest and old growth spruce taiga (podzol 99.9); dark forest 96-97 (huge mushrooms 100), cherry
+95, flower forest 86-95, grove 99-100, jungle 66-84, bamboo jungle 36-66, mangrove 20-37.
+
+## Left
+- Mangrove: after a chunk's first tree the draws drift (BDS's second tree starts 166 draws earlier); ~150 vanish if
+  leaf writes into the unsaved chunk north fail, ~16 look like skipped propagule rolls. Waterlogged roots/leaves.
+- Jungle: some trees (jungle bushes) grow where short grass or ferns sit in BDS but not here; the
+  `jungle_after_surface_vines` rule (vines_feature) and bamboo (`jungle_after_surface_bamboo`, podzol) are unported.
+- Pale garden: its rule needs the pale moss patch and hanging moss decorations (vegetation_patch, blocks).
+- Flower forest and meadow flower tables, wildflowers; HugeMushroomFeature's sinking branch (141603120).

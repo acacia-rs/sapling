@@ -125,13 +125,13 @@ structure air BDS has and sapling lacks shifts the rest of the rule's draws. Lus
 dripleaves, vines) need snap_to_surface, vegetation_patch, growing_plant and the hardcoded moss_vegetation and
 dripleaf features; glow lichen and sculk (multiface, sculk_patch) are not ported either.
 
-## What trees need
-Surface-pass rules place hardcoded `legacy:*_tree_feature`s (`LegacyTreeFeature` by type, registered in 1482f4580),
-JSON `tree_feature` (grove pines), aggregate/weighted trees (mangrove, cherry, pale oak, roofed forest), beehives
-(search_feature over a weighted pick of aggregates of single blocks with `may_attach_to`), forest rocks and the
-`legacy:*_foliage` first-pass features. Trees change what later rules see: leaves raise the light heightmap and
-shade mushrooms, trunks turn grass to dirt, giant spruces lay podzol; pine taiga grass recall (48%) and mangrove
-grass (26%) wait on them.
+## Trees
+See [worldgen-bds-trees.md](worldgen-bds-trees.md). `search_feature` (143ba64d0) runs its feature over the box in the
+axis's loop order until `required_successes`; `single_block_feature`'s `may_attach_to` (feature/attach.rs) checks
+top, bottom and diagonals hard and counts the four sides, auto-rotating toward the last match. A `sequence_feature`
+stops at its first failed step. A rule's first `scatter_feature` sees no biome (its Molang environment is copied
+before the world is bound), so its `query.has_biome_tag` chance is 0 and draws nothing. `query.above_top_solid` and
+the tree loop's heightmap skip leaves.
 
 ## Decoration order
 BDS decorates a chunk once its 3x3 neighbourhood is loaded and lets its features write into those 9 chunks; writes
