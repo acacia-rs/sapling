@@ -39,11 +39,13 @@ pub struct View<'a> {
     load: &'a dyn Fn(i32, i32) -> Arc<ChunkShape>,
     shapes: RefCell<Vec<Option<Arc<ChunkShape>>>>,
     writes: Vec<Vec<Write>>,
+    /// Per slot, `highest_block` once asked.
+    tops: RefCell<Vec<Option<i32>>>,
 }
 
 impl<'a> View<'a> {
     pub fn new(chunk: (i32, i32), load: &'a dyn Fn(i32, i32) -> Arc<ChunkShape>) -> Self {
-        Self { chunk, load, shapes: RefCell::new(vec![None; SIDE * SIDE]), writes: vec![Vec::new(); SIDE * SIDE] }
+        Self { chunk, load, shapes: RefCell::new(vec![None; SIDE * SIDE]), writes: vec![Vec::new(); SIDE * SIDE], tops: RefCell::new(vec![None; SIDE * SIDE]) }
     }
 
     /// The slot and column index of a block, if it lies in the writable region.
@@ -77,6 +79,11 @@ impl<'a> View<'a> {
         let shape = shapes[slot].as_mut().expect("read just above");
         Arc::make_mut(shape).set_at(index, block);
         self.writes[slot].push(Write { index: index as u32, block, seen });
+        if let Some(top) = &mut self.tops.get_mut()[slot]
+            && block != Block::Air
+        {
+            *top = (*top).max(y);
+        }
         true
     }
 
@@ -99,6 +106,22 @@ impl<'a> View<'a> {
         }
         let blocks_light = |block: Block| block != Block::Air && (!block.is_plant() || block.is_crop_block());
         (MIN_Y..top).rev().find(|&y| blocks_light(self.block(x, y, z))).map_or(MIN_Y, |y| y + 1)
+    }
+
+    /// `LevelChunk` +0xf88 plus the minimum y: the highest non-air block of the chunk holding
+    /// `(x, z)`, raised by this view's writes; None outside the region.
+    pub fn highest_block(&self, x: i32, z: i32) -> Option<i32> {
+        let (slot, _) = self.locate(x, MIN_Y, z)?;
+        if let Some(top) = self.tops.borrow()[slot] {
+            return Some(top);
+        }
+        let (cx, cz) = (x.div_euclid(16) * 16, z.div_euclid(16) * 16);
+        let top = (MIN_Y..MIN_Y + HEIGHT as i32)
+            .rev()
+            .find(|&y| (0..16).any(|dx| (0..16).any(|dz| self.block(cx + dx, y, cz + dz) != Block::Air)))
+            .unwrap_or(MIN_Y);
+        self.tops.borrow_mut()[slot] = Some(top);
+        Some(top)
     }
 
     pub fn into_writes(self) -> ChunkWrites {

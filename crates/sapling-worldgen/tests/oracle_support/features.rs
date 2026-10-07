@@ -7,8 +7,12 @@ use sapling_worldgen::Block;
 
 use super::BdsCell;
 
-/// The family of a block a feature places: ores without their deepslate variant, stone blobs.
+/// The family of a block a feature places: ores without their deepslate variant, stone blobs,
+/// logs and leaves per species.
 fn family(name: &str) -> Option<&'static str> {
+    if let Some(wood) = WOOD.iter().find(|(block, _)| *block == name) {
+        return Some(wood.1);
+    }
     let name = name.strip_prefix("deepslate_").unwrap_or(name);
     Some(match name {
         "andesite" | "diorite" | "granite" => "stone blobs",
@@ -41,9 +45,42 @@ fn family(name: &str) -> Option<&'static str> {
         "sweet_berry_bush" => "sweet berries",
         "poppy" | "dandelion" | "blue_orchid" | "azure_bluet" | "red_tulip" | "orange_tulip" | "white_tulip" | "pink_tulip" | "oxeye_daisy"
         | "cornflower" | "lily_of_the_valley" | "allium" => "flowers",
+        "lilac" | "rose_bush" | "peony" => "tall flowers",
+        "vine" => "vines",
+        "cocoa" => "cocoa",
+        "bee_nest" => "bee nests",
+        "podzol" => "podzol",
+        "mossy_cobblestone" => "forest rocks",
+        "mangrove_roots" | "muddy_mangrove_roots" => "mangrove roots",
+        "moss_carpet" => "moss carpets",
+        "mangrove_propagule" => "propagules",
+        "leaf_litter" => "leaf litter",
         _ => return None,
     })
 }
+
+const WOOD: &[(&str, &str)] = &[
+    ("oak_log", "oak logs"),
+    ("spruce_log", "spruce logs"),
+    ("birch_log", "birch logs"),
+    ("jungle_log", "jungle logs"),
+    ("acacia_log", "acacia logs"),
+    ("dark_oak_log", "dark oak logs"),
+    ("mangrove_log", "mangrove logs"),
+    ("cherry_log", "cherry logs"),
+    ("pale_oak_log", "pale oak logs"),
+    ("oak_leaves", "oak leaves"),
+    ("spruce_leaves", "spruce leaves"),
+    ("birch_leaves", "birch leaves"),
+    ("jungle_leaves", "jungle leaves"),
+    ("acacia_leaves", "acacia leaves"),
+    ("dark_oak_leaves", "dark oak leaves"),
+    ("mangrove_leaves", "mangrove leaves"),
+    ("cherry_leaves", "cherry leaves"),
+    ("pale_oak_leaves", "pale oak leaves"),
+    ("azalea_leaves", "azalea leaves"),
+    ("azalea_leaves_flowered", "azalea leaves"),
+];
 
 #[derive(Default)]
 struct Counts {

@@ -98,9 +98,10 @@ impl BdsCell {
         matches!(self.block.as_str(), "water" | "flowing_water" | "lava" | "flowing_lava")
     }
 
-    /// A block the terrain stages can place (whatever its states).
+    /// A block the terrain stages can place (whatever its states); trees' solid blocks are not.
     fn terrain(&self) -> Option<Block> {
-        Block::from_name(&self.block).filter(|b| b.is_solid())
+        let tree = |b: Block| b.is_wood() || matches!(b, Block::MossyCobblestone | Block::MangroveRoots | Block::MuddyMangroveRoots | Block::BeeNest0);
+        Block::from_name(&self.block).filter(|&b| b.is_solid() && !tree(b))
     }
 
     /// Air, water, lava or solid; a waterlogged block counts as water.

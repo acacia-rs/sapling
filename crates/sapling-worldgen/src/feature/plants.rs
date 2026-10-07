@@ -15,11 +15,16 @@ impl SingleBlock {
         }
         let total: i32 = self.blocks.iter().map(|&(_, weight)| weight).sum();
         let mut left = if total == 0 { 0 } else { ctx.random.next_int(total) };
-        let &(block, _) = self.blocks.iter().find(|&&(_, weight)| {
+        let &(picked, _) = self.blocks.iter().find(|&&(_, weight)| {
             left -= weight;
             left < 0
         })?;
         let view = &mut *ctx.view;
+        let placing = match self.attach {
+            Some(attach) => attach.check(view, [x, y, z], picked)?,
+            None => picked,
+        };
+        let block = picked;
         if self.placement && !may_place(view, [x, y, z], block) {
             return None;
         }
@@ -29,7 +34,7 @@ impl SingleBlock {
         if !self.may_replace.is_empty() && !self.may_replace.contains(&view.block(x, y, z)) {
             return None;
         }
-        view.set_block(x, y, z, block).then_some([x, y, z])
+        view.set_block(x, y, z, placing).then_some([x, y, z])
     }
 }
 
@@ -56,7 +61,7 @@ fn is_dry_soil(block: Block) -> bool {
 
 /// Whether `block` may stand at `at`; a double plant's lower half also needs air above.
 pub fn may_place(view: &View, [x, y, z]: [i32; 3], block: Block) -> bool {
-    let double = matches!(block, Block::TallGrass | Block::LargeFern | Block::Sunflower);
+    let double = matches!(block, Block::TallGrass | Block::LargeFern | Block::Sunflower | Block::Lilac | Block::RoseBush | Block::Peony);
     can_survive(view, [x, y, z], block) && (!double || view.block(x, y + 1, z) == Block::Air)
 }
 
@@ -67,7 +72,10 @@ pub fn can_survive(view: &View, [x, y, z]: [i32; 3], block: Block) -> bool {
     let sides = [(-1, 0), (1, 0), (0, -1), (0, 1)];
     match block {
         Block::ShortDryGrass | Block::TallDryGrass | Block::Deadbush => is_dry_soil(below),
-        Block::TallGrassTop | Block::LargeFernTop | Block::SunflowerTop => true,
+        Block::TallGrassTop | Block::LargeFernTop | Block::SunflowerTop | Block::LilacTop | Block::RoseBushTop | Block::PeonyTop => true,
+        Block::Vine1 | Block::Vine2 | Block::Vine4 | Block::Vine8 | Block::MangrovePropagule => true,
+        _ if (Block::Cocoa0South..=Block::Cocoa2East).contains(&block) => true,
+        _ if (Block::LeafLitter0South..=Block::LeafLitter3East).contains(&block) => below.blocks_motion(),
         Block::Reeds => {
             below == Block::Reeds
                 || (is_soil(below) || matches!(below, Block::Sand | Block::RedSand))

@@ -3,17 +3,20 @@
 //! writes of every source chunk that reaches it (docs/research/worldgen-bds.md, Feature placement).
 
 mod aquatic;
+mod attach;
 mod data;
 mod decorate;
 mod disk;
 mod flowers;
 mod land;
+mod legacy_tree;
 mod molang;
 mod ore;
 mod place;
 mod plants;
 mod scatter;
 mod spec;
+mod tree;
 mod view;
 
 use std::sync::Arc;

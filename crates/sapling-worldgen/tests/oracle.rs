@@ -167,6 +167,35 @@ fn blocks_match_bds_biomes() {
     compare(20261003, "20261003-biomes", &regions);
 }
 
+/// 4x4-chunk regions of the tree biomes the biome regions lack (examples/find_biomes.rs).
+#[test]
+#[ignore = "needs worlds/oracle; slow"]
+fn blocks_match_bds_trees() {
+    let regions = [
+        Region::new("plains", -62, -46, -59, -43),
+        Region::new("forest", 186, 506, 189, 509),
+        Region::new("taiga", -382, 130, -379, 133),
+        Region::new("birch forest", -126, 42, -123, 45),
+        Region::new("dark forest", -590, 410, -587, 413),
+        Region::new("snowy taiga", 322, 402, 325, 405),
+        Region::new("jungle", 498, -30, 501, -27),
+        Region::new("sparse jungle", 82, -630, 85, -627),
+        Region::new("bamboo jungle", 170, 346, 173, 349),
+        Region::new("savanna", 90, -502, 93, -499),
+        Region::new("flower forest", -190, 626, -187, 629),
+        Region::new("old growth birch forest", -310, 282, -307, 285),
+        Region::new("meadow", 370, -510, 373, -507),
+        Region::new("cherry grove", 346, -454, 349, -451),
+        Region::new("pale garden", -470, -286, -467, -283),
+        Region::new("old growth spruce taiga", -534, -30, -531, -27),
+        Region::new("windswept forest", -230, -190, -227, -187),
+        Region::new("snowy plains", 570, 402, 573, 405),
+        Region::new("sunflower plains", -310, 162, -307, 165),
+        Region::new("savanna plateau", 562, -390, 565, -387),
+    ];
+    compare(20261003, "20261003-trees", &regions);
+}
+
 #[test]
 #[ignore = "needs worlds/oracle"]
 fn one_chunk_smoke() {

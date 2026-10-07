@@ -1,31 +1,5 @@
-//! The blocks the terrain stages place, with their Bedrock names and states.
-
-macro_rules! blocks {
-    ($($variant:ident => $name:literal $states:literal,)*) => {
-        #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
-        pub enum Block {
-            $($variant,)*
-        }
-
-        impl Block {
-            pub const ALL: &[Block] = &[$(Block::$variant,)*];
-
-            /// The Bedrock name without the `minecraft:` prefix.
-            pub fn name(self) -> &'static str {
-                match self {
-                    $(Block::$variant => $name,)*
-                }
-            }
-
-            /// Non-default states as BDS saves them, `key=value` comma-separated.
-            pub fn states(self) -> &'static str {
-                match self {
-                    $(Block::$variant => $states,)*
-                }
-            }
-        }
-    };
-}
+//! Every block the stages place, with its Bedrock name and saved states. Variant order matters:
+//! plants start at `ShortGrass`, kelp at `Kelp0` (see the predicates in mod.rs).
 
 blocks! {
     Air => "air" "",
@@ -83,6 +57,42 @@ blocks! {
     DeepslateEmeraldOre => "deepslate_emerald_ore" "",
     InfestedStone => "infested_stone" "",
     InfestedDeepslate => "infested_deepslate" "pillar_axis=y",
+    MossyCobblestone => "mossy_cobblestone" "",
+    MangroveRoots => "mangrove_roots" "",
+    MuddyMangroveRoots => "muddy_mangrove_roots" "pillar_axis=y",
+    BeeNest => "bee_nest" "direction=0,honey_level=0",
+    // Wood from here to the last leaves (`is_wood`).
+    OakLog => "oak_log" "pillar_axis=y",
+    OakLogX => "oak_log" "pillar_axis=x",
+    OakLogZ => "oak_log" "pillar_axis=z",
+    SpruceLog => "spruce_log" "pillar_axis=y",
+    SpruceLogX => "spruce_log" "pillar_axis=x",
+    SpruceLogZ => "spruce_log" "pillar_axis=z",
+    BirchLog => "birch_log" "pillar_axis=y",
+    BirchLogX => "birch_log" "pillar_axis=x",
+    BirchLogZ => "birch_log" "pillar_axis=z",
+    JungleLog => "jungle_log" "pillar_axis=y",
+    JungleLogX => "jungle_log" "pillar_axis=x",
+    JungleLogZ => "jungle_log" "pillar_axis=z",
+    CherryLog => "cherry_log" "pillar_axis=y",
+    CherryLogX => "cherry_log" "pillar_axis=x",
+    CherryLogZ => "cherry_log" "pillar_axis=z",
+    AcaciaLog => "acacia_log" "pillar_axis=y",
+    DarkOakLog => "dark_oak_log" "pillar_axis=y",
+    MangroveLog => "mangrove_log" "pillar_axis=y",
+    PaleOakLog => "pale_oak_log" "pillar_axis=y",
+    // Leaves from here to the last wood (`is_leaves`).
+    OakLeaves => "oak_leaves" "persistent_bit=0,update_bit=0",
+    SpruceLeaves => "spruce_leaves" "persistent_bit=0,update_bit=0",
+    BirchLeaves => "birch_leaves" "persistent_bit=0,update_bit=0",
+    JungleLeaves => "jungle_leaves" "persistent_bit=0,update_bit=0",
+    AcaciaLeaves => "acacia_leaves" "persistent_bit=0,update_bit=0",
+    DarkOakLeaves => "dark_oak_leaves" "persistent_bit=0,update_bit=0",
+    MangroveLeaves => "mangrove_leaves" "persistent_bit=0,update_bit=0",
+    CherryLeaves => "cherry_leaves" "persistent_bit=0,update_bit=0",
+    PaleOakLeaves => "pale_oak_leaves" "persistent_bit=0,update_bit=0",
+    AzaleaLeaves => "azalea_leaves" "persistent_bit=0,update_bit=0",
+    AzaleaLeavesFlowered => "azalea_leaves_flowered" "persistent_bit=0,update_bit=0",
     // Plants from here on, waterlogged ones from Seagrass on (`is_plant`, `is_waterlogged`).
     ShortGrass => "short_grass" "",
     Fern => "fern" "",
@@ -92,6 +102,12 @@ blocks! {
     LargeFernTop => "large_fern" "upper_block_bit=1",
     Sunflower => "sunflower" "upper_block_bit=0",
     SunflowerTop => "sunflower" "upper_block_bit=1",
+    Lilac => "lilac" "upper_block_bit=0",
+    LilacTop => "lilac" "upper_block_bit=1",
+    RoseBush => "rose_bush" "upper_block_bit=0",
+    RoseBushTop => "rose_bush" "upper_block_bit=1",
+    Peony => "peony" "upper_block_bit=0",
+    PeonyTop => "peony" "upper_block_bit=1",
     Bush => "bush" "",
     ShortDryGrass => "short_dry_grass" "",
     TallDryGrass => "tall_dry_grass" "",
@@ -125,6 +141,40 @@ blocks! {
     OxeyeDaisy => "oxeye_daisy" "",
     Cornflower => "cornflower" "",
     LilyOfTheValley => "lily_of_the_valley" "",
+    Vine1 => "vine" "vine_direction_bits=1",
+    Vine2 => "vine" "vine_direction_bits=2",
+    Vine4 => "vine" "vine_direction_bits=4",
+    Vine8 => "vine" "vine_direction_bits=8",
+    MossCarpet => "moss_carpet" "",
+    LeafLitter0South => "leaf_litter" "growth=0,minecraft:cardinal_direction=south",
+    LeafLitter1South => "leaf_litter" "growth=1,minecraft:cardinal_direction=south",
+    LeafLitter2South => "leaf_litter" "growth=2,minecraft:cardinal_direction=south",
+    LeafLitter3South => "leaf_litter" "growth=3,minecraft:cardinal_direction=south",
+    LeafLitter0West => "leaf_litter" "growth=0,minecraft:cardinal_direction=west",
+    LeafLitter1West => "leaf_litter" "growth=1,minecraft:cardinal_direction=west",
+    LeafLitter2West => "leaf_litter" "growth=2,minecraft:cardinal_direction=west",
+    LeafLitter3West => "leaf_litter" "growth=3,minecraft:cardinal_direction=west",
+    LeafLitter0North => "leaf_litter" "growth=0,minecraft:cardinal_direction=north",
+    LeafLitter1North => "leaf_litter" "growth=1,minecraft:cardinal_direction=north",
+    LeafLitter2North => "leaf_litter" "growth=2,minecraft:cardinal_direction=north",
+    LeafLitter3North => "leaf_litter" "growth=3,minecraft:cardinal_direction=north",
+    LeafLitter0East => "leaf_litter" "growth=0,minecraft:cardinal_direction=east",
+    LeafLitter1East => "leaf_litter" "growth=1,minecraft:cardinal_direction=east",
+    LeafLitter2East => "leaf_litter" "growth=2,minecraft:cardinal_direction=east",
+    LeafLitter3East => "leaf_litter" "growth=3,minecraft:cardinal_direction=east",
+    MangrovePropagule => "mangrove_propagule" "hanging=1,propagule_stage=0",
+    Cocoa0South => "cocoa" "age=0,direction=0",
+    Cocoa0West => "cocoa" "age=0,direction=1",
+    Cocoa0North => "cocoa" "age=0,direction=2",
+    Cocoa0East => "cocoa" "age=0,direction=3",
+    Cocoa1South => "cocoa" "age=1,direction=0",
+    Cocoa1West => "cocoa" "age=1,direction=1",
+    Cocoa1North => "cocoa" "age=1,direction=2",
+    Cocoa1East => "cocoa" "age=1,direction=3",
+    Cocoa2South => "cocoa" "age=2,direction=0",
+    Cocoa2West => "cocoa" "age=2,direction=1",
+    Cocoa2North => "cocoa" "age=2,direction=2",
+    Cocoa2East => "cocoa" "age=2,direction=3",
     Seagrass => "seagrass" "sea_grass_type=default",
     SeagrassBottom => "seagrass" "sea_grass_type=double_bot",
     SeagrassTop => "seagrass" "sea_grass_type=double_top",
@@ -154,74 +204,4 @@ blocks! {
     Kelp23 => "kelp" "kelp_age=23",
     Kelp24 => "kelp" "kelp_age=24",
     Kelp25 => "kelp" "kelp_age=25",
-}
-
-/// Kelp by `kelp_age`.
-pub const KELP: [Block; 26] = [
-    Block::Kelp0,
-    Block::Kelp1,
-    Block::Kelp2,
-    Block::Kelp3,
-    Block::Kelp4,
-    Block::Kelp5,
-    Block::Kelp6,
-    Block::Kelp7,
-    Block::Kelp8,
-    Block::Kelp9,
-    Block::Kelp10,
-    Block::Kelp11,
-    Block::Kelp12,
-    Block::Kelp13,
-    Block::Kelp14,
-    Block::Kelp15,
-    Block::Kelp16,
-    Block::Kelp17,
-    Block::Kelp18,
-    Block::Kelp19,
-    Block::Kelp20,
-    Block::Kelp21,
-    Block::Kelp22,
-    Block::Kelp23,
-    Block::Kelp24,
-    Block::Kelp25,
-];
-
-impl Block {
-    pub fn is_fluid(self) -> bool {
-        matches!(self, Block::Water | Block::Lava)
-    }
-
-    /// Plants placed by features: no collision, no light blocking, never terrain.
-    pub fn is_plant(self) -> bool {
-        self >= Block::ShortGrass
-    }
-
-    /// Plants that stand in water: BDS saves them with water in the second layer.
-    pub fn is_waterlogged(self) -> bool {
-        self >= Block::Seagrass
-    }
-
-    pub fn is_kelp(self) -> bool {
-        self >= Block::Kelp0
-    }
-
-    pub fn is_solid(self) -> bool {
-        !matches!(self, Block::Air | Block::Water | Block::Lava) && !self.is_plant()
-    }
-
-    /// Solid for movement: everything but air, fluids, snow layers and the plants without collision.
-    pub fn blocks_motion(self) -> bool {
-        self.is_solid() && self != Block::SnowLayer || self.is_crop_block()
-    }
-
-    /// The feature blocks that are full blocks: they block motion and light.
-    pub fn is_crop_block(self) -> bool {
-        matches!(self, Block::Cactus | Block::MelonBlock | Block::PumpkinSouth | Block::PumpkinWest | Block::PumpkinNorth | Block::PumpkinEast)
-    }
-
-    /// The block for a `minecraft:` name, without states.
-    pub fn from_name(name: &str) -> Option<Block> {
-        let name = name.strip_prefix("minecraft:").unwrap_or(name);
-        Block::ALL.iter().copied().find(|block| block.name() == name)
-    }
 }

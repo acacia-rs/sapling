@@ -4,7 +4,7 @@
 use super::data::FEATURES;
 use super::molang::{Molang, Scope, World};
 use super::scatter::{self, Draws};
-use super::spec::{EarlyOut, Feature, Scatter};
+use super::spec::{Axis, EarlyOut, Feature, Scatter, Search};
 use super::view::View;
 use crate::random::Mt19937;
 
@@ -32,7 +32,44 @@ impl Feature {
             Feature::Kelp { count } => placed(super::aquatic::kelp(ctx, at, *count)),
             Feature::Seagrass { count, tall } => placed(super::aquatic::seagrass(ctx, at, *count, *tall)),
             Feature::Legacy(legacy) => placed(legacy.place(ctx, at)),
+            Feature::Tree(tree) => tree.place(ctx, at),
+            Feature::Search(search) => search.place(ctx, at),
+            Feature::LegacyTree(legacy) => legacy.place(ctx, at),
         }
+    }
+}
+
+impl Search {
+    /// `SearchFeature::place` (143ba64d0): the feature at each cell of the box, loops in BDS's
+    /// order for the axis, until `required` succeed (the last success is returned).
+    fn place(&self, ctx: &mut Ctx, at: [i32; 3]) -> Option<[i32; 3]> {
+        let mut successes = 0;
+        let values = |(_, sign, [lo, hi]): (Axis, i32, [i32; 2])| -> Vec<i32> {
+            if sign > 0 { (lo..=hi).collect() } else { (lo..=hi).rev().collect() }
+        };
+        let slot = |axis: Axis| match axis {
+            Axis::X => 0,
+            Axis::Y => 1,
+            Axis::Z => 2,
+        };
+        let [outer, middle, inner] = self.loops;
+        for a in values(outer) {
+            for b in values(middle) {
+                for c in values(inner) {
+                    let mut p = at;
+                    p[slot(outer.0)] += a;
+                    p[slot(middle.0)] += b;
+                    p[slot(inner.0)] += c;
+                    if let Some(done) = FEATURES[self.feature].place(ctx, p) {
+                        successes += 1;
+                        if successes == self.required {
+                            return Some(done);
+                        }
+                    }
+                }
+            }
+        }
+        None
     }
 }
 
@@ -46,6 +83,7 @@ impl Scatter {
             }
         }
         let saved = ctx.scope.save();
+        let saved_biome = std::mem::replace(&mut ctx.scope.biome, (ctx.biome)(at));
         ctx.scope.set_origin(at);
         let queries = ctx.scope.queries;
         let count = {
@@ -63,6 +101,7 @@ impl Scatter {
             placed = FEATURES[self.feature].place(ctx, position).or(placed);
         }
         ctx.scope.restore(saved);
+        ctx.scope.biome = saved_biome;
         placed
     }
 }

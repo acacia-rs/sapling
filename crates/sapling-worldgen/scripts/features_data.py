@@ -1,12 +1,14 @@
 """The features half of features_to_rust.py: each feature document (or hardcoded feature) as the Rust
 `Feature` of src/feature/spec.rs, the features it places first, and the scatter parameters they share
 with rules. A feature is ported when its type is and every feature it places is."""
-import os
-import re
+import biome_expr
+import legacy_data
+import trees_data
+from blocks_data import NotPorted, block, blocks
 
 ORDERS = {'xyz', 'xzy', 'yxz', 'yzx', 'zxy', 'zyx'}
 PORTED = {'minecraft:ore_feature', 'minecraft:scatter_feature', 'minecraft:aggregate_feature', 'minecraft:sequence_feature',
-          'minecraft:weighted_random_feature', 'minecraft:single_block_feature'}
+          'minecraft:weighted_random_feature', 'minecraft:single_block_feature', 'minecraft:tree_feature', 'minecraft:search_feature'}
 # Features BDS builds in code (registered in 1482f4580), with the parameters it passes them.
 _SOIL = 'needs: &[Block::Water], replaces: &[Block::Dirt, Block::CoarseDirt, Block::GrassBlock]'
 # 1482f4580 sizes these from a flag (kelp/seagrass 1 or 10 tries, flowers/mushrooms/berries 64 or 1)
@@ -38,50 +40,8 @@ HARDCODED = {
     'minecraft:legacy:swamp_flower_feature': _LEGACY.format(f'Flower {{ kind: FlowerKind::Swamp, count: {_PATCH_COUNT} }}'),
 }
 EARLY_OUT = {'none': 'EarlyOut::None', 'first_failure': 'EarlyOut::FirstFailure', 'first_success': 'EarlyOut::FirstSuccess'}
-# Old names and states BDS flattens into the blocks of src/block.rs.
-ALIASES = {('stone', 'andesite'): 'andesite', ('stone', 'diorite'): 'diorite', ('stone', 'granite'): 'granite',
-           ('tallgrass', 'tall'): 'short_grass', ('tallgrass', 'default'): 'short_grass', ('tallgrass', 'fern'): 'fern'}
-
-
-class NotPorted(Exception):
-    pass
-
-
-def _rust_blocks():
-    """(name, states) -> variant, from the `blocks!` table of src/block.rs."""
-    path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'src', 'block.rs')
-    text = open(path, encoding='utf-8').read()
-    return {(m[2], m[3]): m[1] for m in re.finditer(r'^\s*(\w+) => "([a-z_]+)" "([^"]*)",', text, re.M)}
-
-
-BLOCKS = _rust_blocks()
-
-
-def block(value):
-    """The Rust block for a JSON block reference; NotPorted when src/block.rs lacks it."""
-    name, states = (value['name'], value.get('states') or {}) if isinstance(value, dict) else (value, {})
-    name = name.removeprefix('minecraft:')
-    flattened = next((v for k, v in states.items() if k in ('stone_type', 'tall_grass_type')), None)
-    name = ALIASES.get((name, flattened), name)
-    states = {k: v for k, v in states.items() if k not in ('stone_type', 'tall_grass_type')}
-    text = ','.join(f'{k}={int(v) if isinstance(v, bool) else v}' for k, v in states.items())
-    variant = BLOCKS.get((name, text))
-    if variant is None and not text:
-        variant = next((v for (n, _), v in BLOCKS.items() if n == name), None)
-    if variant is None:
-        raise NotPorted(f'block {name} [{text}]')
-    return 'Block::' + variant
-
-
-def blocks(values):
-    """A block list that may name blocks sapling never generates (dropped: nothing can match them)."""
-    out = []
-    for value in values if isinstance(values, list) else [values]:
-        try:
-            out.append(block(value))
-        except NotPorted:
-            pass
-    return '&[' + ', '.join(out) + ']'
+SEARCH_LOOPS = {'-x': ('x-', 'y+', 'z-'), '+x': ('x+', 'y+', 'z+'), '-y': ('y-', 'z+', 'x-'), '+y': ('y+', 'z+', 'x+'),
+                '-z': ('z-', 'y+', 'x+'), '+z': ('z+', 'y+', 'x-')}
 
 
 def expr(value):
@@ -90,6 +50,8 @@ def expr(value):
     try:
         return f'Expr::Const({float(value)!r})'
     except ValueError:
+        if 'has_biome_tag' in value:
+            return biome_expr.by_biome(value)
         return f'Expr::Molang({value!r})'.replace("'", '"') if '"' not in value else f'Expr::Molang(r#"{value}"#)'
 
 
@@ -157,6 +119,9 @@ class Features:
             index = len(self.emitted)
             if name in HARDCODED:
                 self.emitted[name] = (index, HARDCODED[name])
+            elif name in legacy_data.LEGACY:
+                self.emitted[name] = (index, None)
+                self.emitted[name] = (index, legacy_data.LEGACY[name](self.index))
             elif name in self.docs and self.docs[name][0] in PORTED:
                 self.emitted[name] = (index, None)
                 self.emitted[name] = (index, self.rust(*self.docs[name]))
@@ -185,11 +150,20 @@ class Features:
             return f'Feature::WeightedRandom(&[{children}])'
         if kind == 'minecraft:single_block_feature':
             return self.single_block(body)
+        if kind == 'minecraft:tree_feature':
+            return trees_data.tree(body, self.index)
+        if kind == 'minecraft:search_feature':
+            volume = body['search_volume']
+            axes = {'x': 0, 'y': 1, 'z': 2}
+            loops = ', '.join(f'(Axis::{a[0].upper()}, {1 if a[1] == "+" else -1}, [{int(volume["min"][axes[a[0]]])}, '
+                              f'{int(volume["max"][axes[a[0]]])}])' for a in SEARCH_LOOPS[body['search_axis']])
+            return (f'Feature::Search(Search {{ feature: {self.index(body["places_feature"])}, loops: [{loops}], '
+                    f'required: {int(body.get("required_successes", 1))} }})')
         raise NotPorted(kind)
 
     def single_block(self, body):
-        if body.get('may_attach_to') or body.get('randomize_rotation'):
-            raise NotPorted('single_block_feature with may_attach_to or randomize_rotation')
+        if body.get('randomize_rotation'):
+            raise NotPorted('single_block_feature with randomize_rotation')
         not_attach = body.get('may_not_attach_to') or {}
         if set(not_attach) - {'bottom'}:
             raise NotPorted('may_not_attach_to beyond bottom')
@@ -199,4 +173,14 @@ class Features:
         flag = lambda key: 'true' if body.get(key, False) else 'false'  # noqa: E731
         return (f'Feature::SingleBlock(SingleBlock {{ blocks: &[{weighted}], may_replace: {blocks(body.get("may_replace", []))}, '
                 f'placement: {flag("enforce_placement_rules")}, survival: {flag("enforce_survivability_rules")}, '
-                f'not_on: {blocks(not_attach.get("bottom", []))} }})')
+                f'not_on: {blocks(not_attach.get("bottom", []))}, attach: {attach(body.get("may_attach_to"))} }})')
+
+
+def attach(value):
+    if not value:
+        return 'None'
+    lists = {key: trees_data.block_set(value.get(key, [])) for key in
+             ('top', 'bottom', 'diagonal', 'north', 'east', 'south', 'west', 'sides', 'all')}
+    return (f'Some(&Attach {{ top: {lists["top"]}, bottom: {lists["bottom"]}, diagonal: {lists["diagonal"]}, '
+            f'side: [{lists["north"]}, {lists["east"]}, {lists["south"]}, {lists["west"]}], sides: {lists["sides"]}, all: {lists["all"]}, '
+            f'min_sides: {int(value.get("min_sides_must_attach", 4))}, auto_rotate: {str(value.get("auto_rotate", True)).lower()} }})')
