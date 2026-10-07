@@ -1,13 +1,12 @@
 //! `mangrove_roots`: before the trunk, a root column of `y_offset` cells and four recursive root
 //! branches (north, east, south, west); the trunk then starts on top of the column.
 
-use super::common::allows;
+use super::common::valid_tree_position;
 use super::spec::{Decoration, MangroveRoots, Tree};
 use crate::block::Block;
 use crate::feature::place::Ctx;
 use crate::feature::view::View;
 use crate::random::Mt19937;
-use crate::terrain::{HEIGHT, MIN_Y};
 
 /// North, east, south, west: BDS's order, not shuffled.
 const DIRECTIONS: [[i32; 3]; 4] = [[0, 0, -1], [1, 0, 0], [0, 0, 1], [-1, 0, 0]];
@@ -21,7 +20,8 @@ impl MangroveRoots {
         let [x, y, z] = origin;
         let value = self.y_offset.draw(ctx.random);
         let top = y + value;
-        if y <= MIN_Y || y + value + height >= MIN_Y + HEIGHT as i32 || !allows(tree.may_grow_on, ctx.view.block(x, y - 1, z)) {
+        // MangroveTreeRoots::placeRoots (1438f0d00) runs prepareSpawn over the roots and the trunk together.
+        if !tree.prepare(ctx.view, origin, height + value, 1) {
             return None;
         }
         if (y..top).any(|cy| !self.can_place(ctx.view, [x, cy, z])) {
@@ -44,11 +44,9 @@ impl MangroveRoots {
         Some(base)
     }
 
-    /// Approximated (featurelab) as `roots_may_grow_through` or water; BDS also accepts some
-    /// material classes by block-level predicates.
-    fn can_place(&self, view: &View, [x, y, z]: [i32; 3]) -> bool {
-        let block = view.block(x, y, z);
-        allows(self.may_grow_through, block) || block == Block::Water
+    /// `roots_may_grow_through`, or air, water, leaves or a plant a tree grows through (1438f16f0).
+    fn can_place(&self, view: &View, at: [i32; 3]) -> bool {
+        valid_tree_position(view, at, self.may_grow_through)
     }
 
     /// Down only beyond `max_width`; within `max_width - 3` a float (< 0.2: down) then a boolean
@@ -100,9 +98,7 @@ impl MangroveRoots {
             Decoration::place_decorated(decoration, view, at, self.muddy_root, random);
             return;
         }
-        if !Decoration::place_decorated(decoration, view, at, self.root, random) {
-            return;
-        }
+        Decoration::place_decorated(decoration, view, at, self.root, random);
         let Some((block, odds)) = self.above_root else { return };
         if !odds.is_valid() || !odds.roll(random) {
             return;

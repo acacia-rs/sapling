@@ -17,6 +17,12 @@ fn glyph(name: &str) -> char {
         n if n.ends_with("_log") => 'L',
         n if n.ends_with("leaves") => '#',
         "vine" => 'v',
+        "mud" => 'm',
+        "seagrass" => 's',
+        "moss_carpet" => 'c',
+        "mangrove_propagule" => 'p',
+        "mangrove_roots" => 'r',
+        "muddy_mangrove_roots" => 'u',
         _ => 'o',
     }
 }
