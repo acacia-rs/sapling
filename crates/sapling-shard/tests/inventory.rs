@@ -5,7 +5,7 @@ mod common;
 
 use acacia_proto::RawPacket;
 use acacia_proto::packets::{
-    AddItemEntity, AddPlayer, CreativeContent, InventoryContent, MobArmorEquipment, MobEquipment, PlayerHotbar, RemoveEntity,
+    AddItemEntity, AddPlayer, CreativeContent, InventoryContent, LevelSoundEvent, MobArmorEquipment, MobEquipment, PlayerHotbar, RemoveEntity,
     ResourcePackClientResponseResponseStatus as PackStatus, TakeItemEntity,
 };
 use acacia_proto::types::{
@@ -78,6 +78,20 @@ fn requests_move_stacks_and_a_wrong_one_is_undone() {
     h.remote.run(move |ctx| items.lock().unwrap().extend([Slot::Main(1), Slot::Main(20), Slot::Main(0), Slot::Offhand].map(|slot| ctx.item(STEVE, slot))));
     h.tick(1);
     assert_eq!(*seen.lock().unwrap(), [Some(Item::new("minecraft:stone", 16)), Some(Item::new("minecraft:stone", 54)), None, None]);
+}
+
+#[test]
+fn a_given_item_pops_at_the_eyes_a_tick_later() {
+    let mut h = Harness::new();
+    h.enter(1, "Steve");
+    let pops = |sent: &[RawPacket]| all::<LevelSoundEvent>(sent).into_iter().filter(|sound| sound.sound_id == "pop").collect::<Vec<_>>();
+    h.remote.run(|ctx| _ = ctx.give(STEVE, &Item::new("minecraft:stone", 3)));
+    assert!(pops(&h.tick(1)).is_empty());
+    let popped = pops(&h.tick(1));
+    assert_eq!((popped.len(), popped[0].extra_data), (1, -1));
+    h.remote.run(|ctx| _ = ctx.give(STEVE, &Item::new("sapling:no_such_item", 3)));
+    h.tick(1);
+    assert!(pops(&h.tick(1)).is_empty(), "nothing given, nothing heard");
 }
 
 #[test]

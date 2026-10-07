@@ -6,30 +6,14 @@
 use acacia_proto::packets::{BlockEvent, BlockEventType};
 use acacia_proto::types::BlockCoordinates;
 use bevy_ecs::prelude::*;
-use bytes::Bytes;
 use sapling_api::BlockPos;
 
-use crate::blocks;
-use crate::components::{Layer, Tick};
+use crate::components::Layer;
+use crate::{blocks, late_sounds};
 
 /// Ticks from a chest's opening and shutting to its sound, as BDS sent them
 /// (research/captures/containers-findings.md D5): the lid swings first.
 const CHEST_LATE: [u64; 2] = [1, 5];
-
-/// Sounds due later: when, the world, where, the sound.
-#[derive(Resource, Default)]
-pub(crate) struct LateSounds(Vec<(u64, Entity, BlockPos, Bytes)>);
-
-/// Plays the sounds whose time has come.
-pub(crate) fn play_late_sounds(world: &mut World) {
-    let now = world.resource::<Tick>().0;
-    let Some(mut late) = world.get_resource_mut::<LateSounds>() else { return };
-    let (due, waiting): (Vec<_>, Vec<_>) = std::mem::take(&mut late.0).into_iter().partition(|(when, ..)| *when <= now);
-    late.0 = waiting;
-    for (_, layer, pos, sound) in due {
-        blocks::to_viewers(world, layer, pos, &[sound]);
-    }
-}
 
 /// Ticks between two showings of an open lid (BDS `ChestBlockActor::tick`).
 pub(super) const REPEAT: u64 = 80;
@@ -75,11 +59,5 @@ pub(super) fn set(world: &mut World, layer: Entity, halves: &[BlockPos], open: b
     if let Some(turned) = turned {
         blocks::set(world, layer, pos, turned);
     }
-    match late[usize::from(!open)] {
-        0 => blocks::to_viewers(world, layer, pos, &[heard]),
-        after => {
-            let due = world.resource::<Tick>().0 + after;
-            world.get_resource_or_insert_with(LateSounds::default).0.push((due, layer, pos, heard));
-        }
-    }
+    late_sounds::play_later(world, late[usize::from(!open)], layer, pos, heard);
 }

@@ -93,6 +93,24 @@ const DEFAULTS: &[&str] = &[
     "testforblock ~4 ~ ~ oak_stairs [\"weirdo_direction\"=0]",
     "setblock ~5 ~ ~ hopper",
     "testforblock ~5 ~ ~ hopper [\"facing_direction\"=0]",
+    // Blocks whose creative item records another state than their first.
+    "setblock ~6 ~ ~ dropper",
+    "testforblock ~6 ~ ~ dropper [\"facing_direction\"=3]",
+    "setblock ~7 ~ ~ piston",
+    "testforblock ~7 ~ ~ piston [\"facing_direction\"=1]",
+    "setblock ~8 ~ ~ amethyst_cluster",
+    "testforblock ~8 ~ ~ amethyst_cluster [\"minecraft:block_face\"=\"up\"]",
+    "setblock ~9 ~ ~ brown_mushroom_block",
+    "testforblock ~9 ~ ~ brown_mushroom_block [\"huge_mushroom_bits\"=14]",
+    "setblock ~10 ~ ~ pointed_dripstone",
+    "testforblock ~10 ~ ~ pointed_dripstone [\"hanging\"=true]",
+    "setblock ~11 ~ ~ small_dripleaf_block",
+    "testforblock ~11 ~ ~ small_dripleaf_block [\"upper_block_bit\"=true]",
+    "testforblock ~11 ~ ~ small_dripleaf_block [\"minecraft:cardinal_direction\"=\"east\"]",
+    "setblock ~12 ~ ~ stonecutter_block",
+    "testforblock ~12 ~ ~ stonecutter_block [\"minecraft:cardinal_direction\"=\"north\"]",
+    "setblock ~13 ~ ~ suspicious_sand",
+    "testforblock ~13 ~ ~ suspicious_sand [\"hanging\"=true]",
 ];
 const DEFAULTS_SHOWN: &[&str] = &["UpdateBlock"];
 

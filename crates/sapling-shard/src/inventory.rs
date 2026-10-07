@@ -3,6 +3,7 @@
 
 mod crafting;
 mod equipment;
+mod give;
 mod requests;
 mod store;
 mod wear;
@@ -18,6 +19,7 @@ use crate::experience::Experience;
 
 pub(crate) use crafting::clear_grid;
 pub(crate) use equipment::{announce, in_hand, screens, select, spawn_packets};
+pub(crate) use give::give_and_pop;
 pub(crate) use requests::dispatch;
 pub(crate) use store::{keep_here, load, save, save_all, save_changed, send_own};
 pub(crate) use wear::wear_tool_in_hand;

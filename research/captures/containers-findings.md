@@ -110,13 +110,15 @@ container and plays `pop` at the eye ~1 tick later (B:53, B:71-72). Sapling: nei
 facing?) or BDS sends something else; compare with the chest's `UpdateBlock` id. Settled 2026-10-07 by
 `bds_command_probe defaults` (`bds-defaults.txt`, `sapling-defaults.txt`): the sound is right, the chests differ.
 BDS's `/setblock chest` is `cardinal_direction=north`, sapling's (the first state) `south`; furnace (south),
-oak_stairs and hopper agree. Sapling has no block's default state, only its first: find where BDS keeps defaults
-(perhaps the block item's recorded state) before changing `send::resolve`. Fix: add the `pop` (cheap);
-resends optional; settle the extra_data from the registry. Low.
+oak_stairs and hopper agree. Neither the first state nor the creative item's state is BDS's default (dropper,
+piston, mushroom blocks disagree with the creative one). Fixed 2026-10-07: `bds_defaults_probe` sets every block
+bare (`bds-block-defaults.txt`); the 34 that differ from their first state are `sapling-data/data/block-defaults.tsv`,
+which `send::resolve` starts from; the rerun drill's UpdateBlock ids all match, the chest's hash is BDS's sound
+extra_data. `pop` fixed the same day (`inventory/give.rs`, a tick late, at the eyes). Window resends still open.
 
 **D10. Shulker item NBT.** BDS's per-item compound: `Count, Damage, Name, Slot, WasPickedUp: 0b` (B:412, B:698);
 sapling's: `Name, Count, Damage, Slot` (S:100, S:150). Order should not matter to the client; `WasPickedUp`
-might (item stacking/comparison). Fix: write `WasPickedUp: 0b` in sapling-world's `with_container_items`. Low.
+might (item stacking/comparison). Fixed 2026-10-07: sapling-leveldb's `with_container_items` writes it.
 
 **D11. Hopper duplicates and lid phase.** BDS sends every hopper slot change twice (B:19-39); don't copy. Lid
 repeat: sapling on `Tick % 80` (`screens.rs:146`), BDS ~80 ticks after the open in this one sample (B:9 -> B:31);

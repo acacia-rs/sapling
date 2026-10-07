@@ -39,16 +39,17 @@ pub(crate) fn describe(registry: &BlockRegistry, id: u32) -> Block {
     registry.get(id).map_or_else(Block::air, |state| Block { name: state.name.to_owned(), properties: state.properties.to_owned() })
 }
 
-/// The runtime id of a named state: the block's first state with the properties it names set, so
-/// that `water` with `liquid_depth=3` needs no other.
+/// The runtime id of a named state: the block's default state (`sapling_data::default_properties`)
+/// with the properties it names set, so that `water` with `liquid_depth=3` needs no other.
 pub(crate) fn resolve(registry: &BlockRegistry, block: &Block) -> Option<u32> {
     let first = registry.states_of(&block.name).next().map(|(id, _)| id)?;
+    let default = sapling_data::default_properties(&block.name).and_then(|properties| registry.find(&block.name, properties)).unwrap_or(first);
     if block.properties.is_empty() {
-        return Some(first);
+        return Some(default);
     }
     registry.find(&block.name, &block.properties).or_else(|| {
         let mut pairs = block.properties.split(',').map(|pair| pair.split_once('='));
-        pairs.try_fold(first, |id, pair| pair.and_then(|(key, value)| super::with_property(registry, id, key, value)))
+        pairs.try_fold(default, |id, pair| pair.and_then(|(key, value)| super::with_property(registry, id, key, value)))
     })
 }
 

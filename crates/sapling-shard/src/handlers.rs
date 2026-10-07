@@ -12,7 +12,7 @@ use crate::commands::Access;
 use crate::components::{Arrivals, Identity, Layer, Mode, Net, NetId, Outgoing, Players, Position, Settings, Stage, Tick, in_world};
 use crate::inventory::Inventory;
 use crate::plugins::{PluginState, Plugins};
-use crate::{blocks, campfires, chat, clock, commands, containers, creatures, drops, entities, forms, furnaces, hoppers, hud, inventory, join, movement, orbs, roster, sleep, worlds};
+use crate::{blocks, campfires, chat, clock, commands, containers, creatures, drops, entities, forms, furnaces, hoppers, hud, inventory, join, late_sounds, movement, orbs, roster, sleep, worlds};
 
 pub(crate) struct Ctx<'w> {
     pub world: &'w mut World,
@@ -185,7 +185,7 @@ impl Backend for Ctx<'_> {
 
     fn give(&mut self, player: PlayerId, item: &Item) -> u8 {
         let stack = self.entity(player).zip(inventory::stored(item, self.layer().world.registry()));
-        stack.and_then(|(entity, stack)| inventory::change(self.world, entity, |inventory| inventory.add(&stack))).unwrap_or(item.count)
+        stack.and_then(|(entity, stack)| inventory::give_and_pop(self.world, entity, &stack)).unwrap_or(item.count)
     }
 
     fn clear_inventory(&mut self, player: PlayerId) -> u32 {
@@ -266,7 +266,7 @@ pub(crate) fn dispatch(world: &mut World, plugins: &mut Plugins) {
     inventory::dispatch(world, plugins);
     containers::dispatch_closes(world);
     containers::show_lids_again(world);
-    containers::play_late_sounds(world);
+    late_sounds::play_due(world);
     containers::close_out_of_reach(world);
     furnaces::tick(world);
     hoppers::tick(world);

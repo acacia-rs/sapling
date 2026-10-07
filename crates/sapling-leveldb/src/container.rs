@@ -29,6 +29,8 @@ pub fn with_container_items(entity: &Value, items: &[(u8, ItemStack)], registry:
     let stored = |(slot, stack): &(u8, ItemStack)| {
         let mut fields = stack.fields(registry);
         fields.push(("Slot".into(), Value::Byte(*slot as i8)));
+        // BDS writes it into every stack a container holds (containers-findings D10).
+        fields.push(("WasPickedUp".into(), Value::Byte(0)));
         Value::Compound(fields)
     };
     let mut fields = if let Value::Compound(fields) = entity { fields.clone() } else { Vec::new() };

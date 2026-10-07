@@ -29,6 +29,7 @@ mod hoppers;
 mod hud;
 mod inventory;
 mod join;
+mod late_sounds;
 mod mobs;
 mod movement;
 mod orbs;
