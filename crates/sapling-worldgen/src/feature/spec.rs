@@ -1,5 +1,7 @@
 //! The shapes of transcribed feature rules and features (data.rs, scripts/features_to_rust.py).
 
+pub use super::cave_spec::{GrowingPlant, SnapToSurface, VegetationPatch};
+pub use super::lush::Lush;
 use crate::block::Block;
 
 /// The decoration passes in BDS's registry order; `pregeneration_pass` (carvers) is not one.
@@ -126,6 +128,11 @@ pub enum Feature {
     Search(Search),
     /// The legacy tree, foliage and rock features BDS builds in code (legacy_tree.rs).
     LegacyTree(LegacyTree),
+    SnapToSurface(SnapToSurface),
+    VegetationPatch(VegetationPatch),
+    GrowingPlant(GrowingPlant),
+    /// The lush caves features BDS builds in code (lush.rs).
+    Lush(Lush),
 }
 
 /// `minecraft:search_feature` with its axis loops in order (outer, middle, inner), each an axis,

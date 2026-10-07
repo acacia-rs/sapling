@@ -28,9 +28,11 @@ macro_rules! blocks {
     };
 }
 
+#[macro_use]
 mod table;
+mod plant_table;
 
-pub use table::Block;
+pub use plant_table::Block;
 
 /// Kelp by `kelp_age`.
 pub const KELP: [Block; 26] = [

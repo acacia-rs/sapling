@@ -40,7 +40,10 @@ impl SingleBlock {
 
 /// Soil a bush-like plant stands on (Java's `BlockTags.DIRT` among the blocks sapling places).
 pub fn is_soil(block: Block) -> bool {
-    matches!(block, Block::GrassBlock | Block::Dirt | Block::CoarseDirt | Block::Podzol | Block::Mycelium | Block::Mud)
+    matches!(
+        block,
+        Block::GrassBlock | Block::Dirt | Block::CoarseDirt | Block::Podzol | Block::Mycelium | Block::Mud | Block::DirtWithRoots | Block::MossBlock
+    )
 }
 
 fn is_dry_soil(block: Block) -> bool {
@@ -86,6 +89,12 @@ pub fn can_survive(view: &View, [x, y, z]: [i32; 3], block: Block) -> bool {
                 && sides.iter().all(|&(dx, dz)| !view.block(x + dx, y, z + dz).blocks_motion())
         }
         Block::BrownMushroom | Block::RedMushroom => below.blocks_motion(),
+        Block::SporeBlossom | Block::HangingRoots => view.block(x, y + 1, z).blocks_motion(),
+        Block::MossCarpet => below != Block::Air,
+        Block::Azalea | Block::FloweringAzalea => is_soil(below) || below == Block::Clay,
+        _ if (Block::SmallDripleafSouth..=Block::SmallDripleafEast).contains(&block) => {
+            matches!(below, Block::Clay | Block::MossBlock) || view.block(x, y, z) == Block::Water && is_soil(below)
+        }
         _ if block.is_plant() && !block.is_waterlogged() => is_soil(below),
         _ => true,
     }

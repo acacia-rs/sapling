@@ -5,7 +5,7 @@
 mod acacia;
 mod canopy;
 mod cherry;
-mod common;
+pub mod common;
 mod fallen;
 mod fancy;
 mod mangrove;
@@ -73,8 +73,9 @@ impl Canopy {
             Canopy::Roofed { .. } => roofed::canopy(self, tree, view, random, anchor),
             Canopy::Mangrove(canopy) => canopy.place(tree, view, random, anchor),
             Canopy::Cherry(canopy) => canopy.place(tree, view, random, anchor),
-            // TODO: random_spread_canopy (azalea trees of lush caves).
-            Canopy::RandomSpread { .. } => {}
+            Canopy::RandomSpread { leaves, height, radius, attempts } => {
+                canopy::random_spread(view, random, anchor.at, leaves, [*height, *radius], *attempts)
+            }
             _ => canopy::place(self, tree, view, random, anchor),
         }
     }

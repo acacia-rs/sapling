@@ -27,6 +27,23 @@ pub fn place(canopy: &Canopy, tree: &Tree, view: &mut View, random: &mut Mt19937
     }
 }
 
+/// `random_spread_canopy` (azalea trees), not decompiled: Java's `RandomSpreadFoliagePlacer`, a
+/// leaf per attempt at `nextInt(r) - nextInt(r)` on each axis, the leaf picked first as mangroves do.
+pub fn random_spread(view: &mut View, random: &mut Mt19937, [x, y, z]: [i32; 3], leaves: &[(Block, i32)], [height, radius]: [i32; 2], attempts: i32) {
+    for _ in 0..attempts {
+        let leaf = super::common::pick_weighted(leaves, random);
+        let mut jitter = |bound: i32| {
+            let a = random.next_int(bound);
+            a - random.next_int(bound)
+        };
+        let (dx, dy, dz) = (jitter(radius), jitter(height), jitter(radius));
+        let existing = view.block(x + dx, y + dy, z + dz);
+        if leaf_replaceable(existing) {
+            view.set_block(x + dx, y + dy, z + dz, leaf);
+        }
+    }
+}
+
 /// Writes `leaf` where the cell passes `gate`.
 fn put(view: &mut View, [x, y, z]: [i32; 3], leaf: Block, gate: impl Fn(Block) -> bool) {
     if gate(view.block(x, y, z)) {
