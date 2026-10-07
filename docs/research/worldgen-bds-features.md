@@ -6,7 +6,7 @@ Companion to [worldgen-bds.md](worldgen-bds.md). Feature rules run in `decoratio
 - Rules and features are the vanilla pack JSON: `behavior_packs/vanilla_<ver>/__brarchive/{feature_rules,features}
   .brarchive` (256-byte entries: length byte + name, u32 offset/size at +248) plus `definitions/` (old 1.13 files).
   The 1.18+ ores (`*_lower`/`*_upper`, tuff, copper) exist only in the packs; the old unsplit rules there have
-  iterations 0. `scripts/features_to_rust.py` transcribes them into `src/feature/data.rs` (the BDS install is not in
+  iterations 0. `scripts/features_to_rust.py` transcribes them into `src/feature/data/` (the BDS install is not in
   the repo, and rule and feature data is static); biome filters are evaluated there against each biome's tags, as
   BDS does when it attaches rules to biomes at load. Rules reaching any unported feature are left out (each rule
   has its own generators, so leaving one out shifts no other). `scripts/features_data.py` turns feature documents

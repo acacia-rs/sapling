@@ -1,4 +1,4 @@
-//! BDS's data-driven feature rules (`feature_rules`/`features` JSON, transcribed into data.rs):
+//! BDS's data-driven feature rules (`feature_rules`/`features` JSON, transcribed into data/):
 //! each source chunk is decorated alone over its neighbours' terrain, and a column replays the
 //! writes of every source chunk that reaches it (docs/research/worldgen-bds.md, Feature placement).
 
@@ -15,6 +15,7 @@ mod geode;
 mod iceberg;
 mod land;
 mod huge_mushroom;
+mod legacy_spec;
 mod legacy_tree;
 mod lush;
 mod molang;

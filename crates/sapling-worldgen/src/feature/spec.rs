@@ -1,4 +1,4 @@
-//! The shapes of transcribed feature rules and features (data.rs, scripts/features_to_rust.py).
+//! The shapes of transcribed feature rules and features (data/, scripts/features_to_rust.py).
 
 pub use super::cave_spec::{GrowingPlant, SnapToSurface, VegetationPatch};
 pub use super::lush::Lush;
@@ -144,52 +144,7 @@ pub struct Search {
     pub required: i32,
 }
 
-#[derive(Debug)]
-pub enum LegacyTree {
-    /// `LegacyTreeFeature`: a count drawn from `count`, then per tree a feature `choice` picks
-    /// from `features`, at a random column of the chunk's heightmap.
-    Trees { count: f32, choice: TreeChoice, features: &'static [usize], grass: usize },
-    /// `LegacyForestFoliageFeature`: double plants (lilac, rose bush, peony) at random heights.
-    ForestFoliage { flower_forest: bool },
-    /// `LegacySwampFoliageFeature`: seagrass tries, then swamp oaks or a huge mushroom.
-    SwampFoliage { seagrass: usize, tree: usize, huge_mushroom: usize, grass: usize },
-    /// `LegacyForestRockFeature`: up to two mossy cobblestone blobs.
-    ForestRock,
-    /// `LeafLitterFeature` (also pink petals): one flower bed of a random size and facing.
-    FlowerBed { petals: bool },
-    /// `HugeMushroomFeature` of a random type (huge_mushroom.rs).
-    HugeMushroom,
-}
-
-/// The per-type tree pickers of `LegacyTreeFeature` (its constructor's lambdas), each drawing
-/// its own sequence; the doc names the index each outcome picks.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum TreeChoice {
-    /// Always 0.
-    First,
-    /// `nextInt(3) == 0` → 0, else 1.
-    OneInThree,
-    /// `nextInt(5) > 0` → 0, else 1.
-    FourInFive,
-    /// `nextInt(5) == 0` → 0, else `nextBoolean` → 1 or 0.
-    BirchMutated,
-    /// `nextInt(3) > 0` → 0, else `nextInt(10) == 0` → 1, else 2.
-    ExtremeHills,
-    /// `nextInt(5) == 0` → 0, else `nextInt(10) == 0` → 1, else 2.
-    Forest,
-    /// `nextBoolean` → 0, else 1.
-    Meadow,
-    /// `nextInt(10) == 0` → 0, else `nextInt(2) == 0` → 1, else `nextInt(3) == 0` → 2, else 3.
-    Jungle,
-    /// `nextInt(10) == 0` → 0, else `nextInt(2) == 0` → 1, else 2.
-    JungleEdge,
-    /// `nextInt(20) == 0` → 0, else `nextInt(20) < 3` → 1, else `nextInt(10) < 7` → 2, else 3.
-    BambooJungle,
-    /// `nextInt(3) == 0` → (`nextInt(13) == 0` → 0, else 1), else `nextInt(3) == 0` → 2, else 3.
-    MegaTaiga,
-    /// `nextInt(3) == 0` → 0, else `nextInt(3) == 0` → 1, else 2.
-    RedwoodMutated,
-}
+pub use super::legacy_spec::{LegacyTree, TreeChoice};
 
 /// `minecraft:geode_feature` (geode.rs); ranges are `[min, max]` as the JSON gives them.
 #[derive(Debug)]
