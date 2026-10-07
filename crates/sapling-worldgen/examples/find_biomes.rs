@@ -5,7 +5,7 @@
 use std::collections::HashMap;
 
 use sapling_worldgen::OverworldGenerator;
-use sapling_worldgen::biome::{bedrock_id, nearest};
+use sapling_worldgen::biome::overworld_tree;
 
 fn main() {
     let args: Vec<i64> = std::env::args().skip(1).map(|a| a.parse().expect("integer argument")).collect();
@@ -21,7 +21,8 @@ fn main() {
             let depth = (surface + 8) as f32 * -0.007_812_5 + 1.0 + climate.offset;
             let point = [climate.temperature, climate.humidity, climate.continentalness, climate.erosion, depth, climate.weirdness]
                 .map(|v| (v as f64 * 10000.0) as i64);
-            let Some(biome) = bedrock_id(nearest(&point, None).biome()) else { continue };
+            let tree = overworld_tree();
+            let biome = tree.biome(tree.nearest(&point, None));
             *tiles.entry((biome, cx.div_euclid(8), cz.div_euclid(8))).or_default() += 1;
         }
     }

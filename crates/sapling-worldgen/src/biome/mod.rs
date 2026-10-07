@@ -2,11 +2,18 @@
 //! multi-noise tree sampled on an 8-block lattice (14805eb90), then a jittered nearest-lattice-point
 //! zoom to single blocks (148a72d90 offsets, 142f67a10 pick).
 
+#[cfg(test)]
 mod btree;
+mod builder;
+#[cfg(test)]
 mod ids;
+mod rtree;
+#[cfg(test)]
+mod tests;
 
-pub use btree::{ClimatePoint, Leaf, nearest};
-pub use ids::bedrock_id;
+pub use rtree::{ClimatePoint, Leaf, RTree};
+
+use std::sync::OnceLock;
 
 use crate::climate::ClimateNoises;
 use crate::terrain::{HEIGHT, MIN_Y};
@@ -59,19 +66,26 @@ fn jitter(seed: i64, [x, y, z]: [i32; 3]) -> [f32; 3] {
     })
 }
 
+/// BDS's overworld biome tree, built once.
+pub fn overworld_tree() -> &'static RTree {
+    static TREE: OnceLock<RTree> = OnceLock::new();
+    TREE.get_or_init(|| RTree::new(&builder::overworld_entries()))
+}
+
 impl ClimateNoises {
     /// One lattice column, bottom up, each search warm-started from the one below.
     fn lattice_column(&self, lx: i32, lz: i32) -> Vec<u32> {
         let climate = self.sample(lx * 2, lz * 2);
+        let tree = overworld_tree();
         let mut warm = None;
         (0..LATTICE_ROWS as i32)
             .map(|row| {
                 let y = (LATTICE_MIN_Y + row) * 8;
                 let depth = y as f32 * -0.007_812_5 + 1.0 + climate.offset;
                 let point = [climate.temperature, climate.humidity, climate.continentalness, climate.erosion, depth, climate.weirdness].map(quantize);
-                let leaf = nearest(&point, warm);
+                let leaf = tree.nearest(&point, warm);
                 warm = Some(leaf);
-                bedrock_id(leaf.biome()).unwrap_or(u32::MAX)
+                tree.biome(leaf)
             })
             .collect()
     }
