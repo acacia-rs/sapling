@@ -52,8 +52,13 @@ Companion to [worldgen-bds.md](worldgen-bds.md) (pipeline, RNGs, labels). They r
   "missed pockets" were mostly kelp and seagrass over flooded caves (tally artefact). Extra cells now are our geode
   interiors where BDS skipped the geode (structures). Residue: wrong fluid (liquid flow, aquifer fluid), mineshaft
   corridors (structures; x −256..−216 near origin), a few lava/water pockets at y −44..−32 with no structure nearby.
-- The eroded badlands dome (371 cells, terracotta at y 94–127, enclosed, twin-stable, no structure blocks): no carver
-  of ours reaches it even with every terracotta replaceable, so not a replace-list gap; unexplained.
+- The eroded badlands "dome" (2722..2730, 94..99, −9566..−9558): a 9x9 air box with flat walls three blocks high and
+  a half-sphere roof inside solid terrain (our density there is +130..147, x128 scale): the shape of Java's
+  `MineShaftRoom` (box, then `generateUpperHalfSphere`), a badlands mineshaft whose corridors leave the region, so
+  a structure. No cave segment of either carver, skip gate or not, comes near it (`examples/room_probe.rs`).
+- Carvers queue a tick for each fluid cell they fill when the aquifer asks (worldgen-bds-liquids.md).
+- Biome regions (`MODE=carve examples/shape_diff.rs`): every larger carver miss cluster sits next to structure
+  blocks (mineshaft planks/fences/rails, ruined portal obsidian, mesa mineshaft dark oak) or inside geodes.
 - `overworld_underwater_cave_carver_feature` (skip 15, y scale 0.5, height 120, water) has an empty `any_of` biome
   filter: run as a third cave carver it carves 668k extra cells near origin, so BDS treats empty `any_of` as false.
 - Ice spikes (x −290..−289, y −16..2, 200 cells): BDS has solid where our noise cave is, at the region edge, no

@@ -151,8 +151,9 @@ MT reseeded with the large-feature chunk seed (worldgen-bds-carvers.md). Then, i
 - Freeze pass per column: rain top; `Biome::shouldFreeze` 14119e860 on top−1 (temperature ≤ 0.15, in build range,
   light < 10, water source) → ice; `shouldSnow` 14119e740 on top → snow layer. Ported with `Biome::getTemperature`
   (worldgen-bds-features.md, "Geodes, icebergs, freeze pass").
-- Then 60 border positions (14a923c90) schedule water ticks, and pending ticks run up to 128 times (1416042f0) when
-  the dimension flag allows: the liquid flow the oracle files under "liquid flow"; not ported.
+- Then the 60 border columns (14a923c90) tick their water, and the decoration's tick queue (springs, feature writes'
+  neighbour updates, the aquifer's ticks from loadChunk) runs as instaticks, up to 128 generations (1416042f0):
+  ported, [worldgen-bds-liquids.md](worldgen-bds-liquids.md).
 Biome feature rules run through `decorateWorldGenPostProcess` (slot 54, 14821f400 → `BiomeDecorationSystem::decorate`
 14580bb90 → `decorateBiome` 14580b170 per pass); exact caller of slot 54 not pinned.
 
@@ -174,7 +175,7 @@ Biome feature rules run through `decorateWorldGenPostProcess` (slot 54, 14821f40
 Floor, deepslate, ore veins, surface builders and the biome tree: [worldgen-bds-surface.md](worldgen-bds-surface.md).
 Cave carvers and canyons: [worldgen-bds-carvers.md](worldgen-bds-carvers.md).
 Feature rules (order, seeding, cross-chunk scheme), ores, disks, wrapper features and vegetation (with their labels):
-[worldgen-bds-features.md](worldgen-bds-features.md).
+[worldgen-bds-features.md](worldgen-bds-features.md). Springs and liquid flow: [worldgen-bds-liquids.md](worldgen-bds-liquids.md).
 
 ## Data-driven vs hardcoded
 
@@ -230,8 +231,7 @@ nextFloat,consumeCount}`.
 
 ## Unknowns / next
 
-1. Float-vs-double drift: measure BDS vs a Java-1.18.1 double port at large coords before choosing what sapling ports
-   (port the float version for Bedrock parity).
+1. Float-vs-double drift: settled, the f32 port matches BDS 1.6M blocks out (see Terrain port findings).
 2. Cavifier/Aquifer/OreVeinifier internals not decompiled constant-by-constant (only spot checks); `_prepareHeights`
    14822eb60 and 14822d4b0 are the functions to transcribe.
 3. Biome placement: when JSON `multinoise_generation_rules` override the hardcoded builder (never, for vanilla).
@@ -252,6 +252,9 @@ nextFloat,consumeCount}`.
   `(float)(nextDouble()*256)`. Biome climate is quantized as `(long)((double)f * 10000)`.
 - BlendedNoise fills the 5x41x5 cell grid per octave (`LegacyBlendedNoise::fillOctave` 145e23fc0) and reuses the
   previous sample's gradients while the y lattice index is unchanged, across columns too (port it as is).
+- Far from origin (chunks 100000..100007) the shape matches but for 2.4k cells, all within a block of trial-chamber
+  blocks (tuff bricks) or cobblestone, structure terrain adaptation (`examples/shape_diff.rs`): no f32 drift showed
+  up at 1.6M blocks out, so Java's `wrap` and doubles stay out.
 - Not Java: noodles have no y-limit in the cells (block test `y >= minY+4` instead), corners below -150 skip caves and
   zero the noodle/vein noises, the global fluid picker is water at sea level 63 below everything but y < -54 lava,
   Java 1.19's deep-dark aquifer test is present, pillars clamp after the min (max(min(..), pillar)).
@@ -293,3 +296,11 @@ queue (pending vector +0x70), _checkForUnblockingChunks, std::sort of tasks}`, 1
 `GeodeFeature::{place,scan row}`, 149e96790/149e8f460/149e90f80/14827ec60 `{LegacyIceFeature,IcebergFeature,
 IcebergFeature::carve,BlueIceFeature}::place`, 1411a3e60 `LevelChunk` temperature-noise cache, 140a09950
 `LevelChunk::getTopRainBlockPos`, 1408741f0 `IRandom::nextDouble` (MT: raw x 2^-32), 14a7125a0 Random's IRandom vtable.
+
+Liquid labels (2026-10-07): 149e96f20/149e97230 `SpringsFeature::{SpringsFeature,place}` (vtable 14a98e800),
+149d65900/149d65e10 `SpringFeature::{place,isRock}` (vtable 14a98ad40), 141603c30/1416042f0/141607780
+`BlockTickingQueue::{add,tickPendingTicks,acquireAllTicks}`, 141603fd0/1415f50f0 `{BlockTickingQueue,BlockSource}::
+addToTickingQueue`, 1415f6ae0/1415f6fd0 `BlockSource::{setBlock impl,_blockChanged}` (vtable 14a753900, setBlock
+slot +0x100), 1415f89a0/1415f87d0 `BlockSource::{updateNeighborsAt,updateNeighbor}`, 1415f46f0
+`BlockSource::isInstaticking`, 148263880 loadChunk lambda_11 (fluid ticks), 14393d890 `VanillaBiomeTags` init
+(registry tag ids 0x18 apart from ocean at +0x98: frozen +0x128, swamp +0x158, mutated +0x1d0, ice_plains +0x218).

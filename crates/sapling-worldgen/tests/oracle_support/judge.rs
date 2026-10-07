@@ -125,7 +125,7 @@ fn judge_cell(ours: Block, bds: &BdsCell, y: i32, context: Context) -> Verdict {
     if bds.is(ours) {
         return Verdict::Match(stage_of(ours, y, context));
     }
-    if !ours.is_solid() && (bds.is_fluid() || bds.is_empty()) {
+    if (ours == Block::Air || ours.is_fluid()) && (bds.is_fluid() || bds.is_empty()) {
         return Verdict::Error(Stage::Liquids);
     }
     if context.featured {
