@@ -1,30 +1,30 @@
-"""Transcribes BDS's structure templates (Java .nbt files in the vanilla behaviour packs) into
-src/structure/template/templates.bin and the Bedrock blocks they place into src/structure/template/blocks.rs.
-The kept template families are FAMILIES.
+"""Transcribes BDS's structure templates (Java .nbt files in the vanilla behaviour packs, the families in
+FAMILIES) and the Bedrock blocks they place into src/structure/template/templates.bin.
 
     py -3 -I scripts/templates_to_rust.py <bds>
 
 A Java state becomes, per rotation, the Bedrock block in scripts/data/template_blocks.tsv: what BDS placed
-for it, read off probe worlds (scripts/template_probe). Fluids are converted here as BDS's converter does
+for it, read off probe worlds (scripts/template_probe). Fluids are converted as BDS's converter does
 (`level` to `liquid_depth`); jigsaws and structure blocks keep their own kinds for the placement code.
 
-templates.bin, little-endian: b'SPT1', u32 count; per template: u8 name length, name, u16 x3 size,
-u32 block count, then per block u8 x, u16 y, u8 z, u16 state (an index into STATES); then u16 special
-count, per special: u32 block index, u8 kind (0 jigsaw: name, target, pool, joint strings and a u16
-final state; 1 data marker: metadata string; 2 chest whose block entity draws a loot seed), strings
-as u8 length + bytes; then the state table (see `state_table`).
+templates.bin, little-endian: b'SPT1', the palette (templates_palette.py), u32 count; per template: u8 name length, name, u16 x3 size,
+u32 block count, then per block u8 x, u16 y, u8 z, u16 state (an index into the state table); then u16
+special count, per special: u32 block index, u8 kind (0 jigsaw: name, target, pool, joint strings and a
+u16 final state; 1 data marker: metadata string; 2 chest whose block entity draws a loot seed), strings
+as u8 length + bytes; then the state table (templates_palette.py).
 """
 import gzip
 import os
-import re
 import struct
 import sys
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from templates_palette import DATA, JIGSAW, palette_bytes, state_table  # noqa: E402
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(HERE, '..', 'src', 'structure', 'template')
 FAMILIES = ['igloo', 'shipwreck', 'ruin', 'ruined_portal', 'village', 'pillageroutpost', 'ancient_city',
             'trial_chambers', 'trail_ruins', 'fossils']
-JIGSAW, DATA = 'minecraft:jigsaw', 'minecraft:structure_block'
 
 
 def version(pack):
@@ -105,30 +105,6 @@ def parse_key(text):
     return key_of(name, props)
 
 
-AIR = ('air', '', False, 0)
-WATERLOGGABLE = 4
-# Blocks the structure code places itself (template::named), flags as in the probe table.
-EXTRA = [
-    ('chest', 'minecraft:cardinal_direction=east', False, 2),
-    ('chest', 'minecraft:cardinal_direction=east', True, 2),
-    ('stone_bricks', '', False, 3),
-    ('suspicious_gravel', 'brushed_progress=0,hanging=1', False, 3),
-    ('suspicious_sand', 'brushed_progress=0,hanging=1', False, 3),
-]
-
-
-def wood_families():
-    """WOOD_FAMILIES of src/structure/template/wood.rs: every wood of a family a template block is in."""
-    text = open(os.path.join(OUT, 'wood.rs')).read()
-    table = text.split('WOOD_FAMILIES')[1].split('];\n')[0]
-    return [re.findall(r'"(\w+)"', row) for row in table.split('\n') if '"' in row]
-
-
-def fluid(key):
-    m = re.fullmatch(r'minecraft:(water|lava)\[level=(\d+)\]', key)
-    return (m.group(1), f'liquid_depth={min(int(m.group(2)), 8)}', False, 0) if m else None
-
-
 def brewing_stand(key, nbt):
     """BDS sets a brewing stand's bottle bits from its items' raw slot numbers (Java 0-2 bottles, Bedrock
     1-3): the stand gets its own state key, the same block at every rotation."""
@@ -181,54 +157,10 @@ def main():
                 out += bytes([len(s.encode())]) + s.encode()
             if final is not None:
                 out += struct.pack('<H', final)
-    out += state_table(keys, table)
+    states, palette = state_table(keys, table)
+    out = b'SPT1' + palette_bytes(palette) + out[4:] + states
     open(os.path.join(OUT, 'templates.bin'), 'wb').write(out)
-
-
-def state_table(keys, table):
-    """The state table (u16 count; per state u8 kind, then the TEMPLATE_BLOCKS index placed at each
-    clockwise rotation), writing TEMPLATE_BLOCKS to blocks.rs on the way."""
-    bedrock = {AIR: 0}
-    out, missing = bytearray(struct.pack('<H', len(keys))), []
-    for key in sorted(keys, key=keys.get):
-        kind = 1 if key.startswith(JIGSAW) else 2 if key.startswith(DATA) else 0
-        out += bytes([kind])
-        for rot in range(4):
-            got = AIR if kind else fluid(key) or table.get((key, rot))
-            if got is None:
-                missing.append((key, rot))
-                got = AIR
-            out += struct.pack('<H', bedrock.setdefault(got, len(bedrock)))
-    if missing:
-        print(f'{len(missing)} states without a probed block, placed as air: {missing[:8]}', file=sys.stderr)
-    for extra in EXTRA:
-        bedrock.setdefault(extra, len(bedrock))
-    for (name, states, wl, flags) in list(bedrock):
-        for family in wood_families():
-            if name in family:
-                for other in family:
-                    bedrock.setdefault((other, states, wl, flags), len(bedrock))
-    # Flooded placement waterlogs what BDS lets hold water (scripts/data/waterloggable.txt, from a probe).
-    waterloggable = {line.strip() for line in open(os.path.join(HERE, 'data', 'waterloggable.txt'))}
-    flagged = {}
-    for (name, states, wl, flags), i in bedrock.items():
-        extra = WATERLOGGABLE if name in waterloggable else 0
-        flagged[(name, states, wl, flags | extra)] = i
-    for (name, states, wl, flags) in list(flagged):
-        if flags & WATERLOGGABLE:
-            flagged.setdefault((name, states, True, flags), len(flagged))
-    bedrock = flagged
-    entries = [f'("{n}", "{s}", {str(w).lower()}, {fl})' for (n, s, w, fl) in sorted(bedrock, key=bedrock.get)]
-    with open(os.path.join(OUT, 'blocks.rs'), 'w', newline='\n') as f:
-        f.write('//! Generated by scripts/templates_to_rust.py; do not edit.\n\n')
-        f.write('/// Every Bedrock block templates place: name, states, waterlogged, flags (`FULL_CUBE`,\n')
-        f.write('/// `COLLIDES`, `WATERLOGGABLE`). Entries equal to a `Block` variant load as it, the rest as\n')
-        f.write('/// `Block::Template`.\n')
-        f.write(f'pub static TEMPLATE_BLOCKS: [(&str, &str, bool, u8); {len(entries)}] = [\n')
-        for i in range(0, len(entries), 5):
-            f.write('    ' + ' '.join(e + ',' for e in entries[i:i + 5]) + '\n')
-        f.write('];\n')
-    return out
+    print(f'{len(templates)} templates, {len(keys)} states, {len(palette)} blocks, {len(out)} bytes')
 
 
 if __name__ == '__main__':
