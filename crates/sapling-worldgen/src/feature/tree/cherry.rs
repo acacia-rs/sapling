@@ -21,7 +21,8 @@ fn log(view: &mut View, tree: &Tree, [x, y, z]: [i32; 3], block: Block) {
 
 impl CherryTrunk {
     fn height(&self, random: &mut Mt19937) -> i32 {
-        self.height_base + self.height_intervals.iter().map(|&i| Range(0, i).draw_inclusive(random)).sum::<i32>()
+        // 1438eb670: nextInt(i + 1) per interval, drawn even for 0.
+        self.height_base + self.height_intervals.iter().map(|&i| if i < 0 { 0 } else { random.next_int(i + 1) }).sum::<i32>()
     }
 
     /// 0 one branch, 1 two branches, 2 two branches and the trunk; an exhausted scan (-1) acts as 0.

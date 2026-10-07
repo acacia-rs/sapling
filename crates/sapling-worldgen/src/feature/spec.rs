@@ -148,8 +148,8 @@ pub enum LegacyTree {
     SwampFoliage { seagrass: usize, tree: usize, huge_mushroom: usize, grass: usize },
     /// `LegacyForestRockFeature`: up to two mossy cobblestone blobs.
     ForestRock,
-    /// `LeafLitterFeature`: one leaf litter of a random size and facing.
-    LeafLitter,
+    /// `LeafLitterFeature` (also pink petals): one flower bed of a random size and facing.
+    FlowerBed { petals: bool },
 }
 
 /// The per-type tree pickers of `LegacyTreeFeature` (its constructor's lambdas), each drawing

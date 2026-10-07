@@ -39,7 +39,7 @@ impl SingleBlock {
 }
 
 /// Soil a bush-like plant stands on (Java's `BlockTags.DIRT` among the blocks sapling places).
-fn is_soil(block: Block) -> bool {
+pub fn is_soil(block: Block) -> bool {
     matches!(block, Block::GrassBlock | Block::Dirt | Block::CoarseDirt | Block::Podzol | Block::Mycelium | Block::Mud)
 }
 

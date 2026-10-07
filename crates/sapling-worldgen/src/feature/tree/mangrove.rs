@@ -2,7 +2,7 @@
 //! branch cell becomes a canopy candidate.
 
 use super::Anchor;
-use super::common::{allows, valid_tree_position};
+use super::common::valid_tree_position;
 use super::spec::{MangroveTrunk, Tree};
 use crate::feature::place::Ctx;
 use crate::feature::view::View;
@@ -16,13 +16,8 @@ impl MangroveTrunk {
         let a = ctx.random.next_int(self.height_rand_a + 1);
         let height = self.height_base + a + ctx.random.next_int(self.height_rand_b + 1);
         let origin = tree.roots_then(ctx, origin, height)?;
+        // MangroveTreeTrunk::placeTrunk (1438f1c30) has no spawn check of its own.
         let [x, y, z] = origin;
-        if y <= crate::terrain::MIN_Y
-            || y + height >= crate::terrain::MIN_Y + crate::terrain::HEIGHT as i32
-            || !allows(tree.may_grow_on, ctx.view.block(x, y - 1, z))
-        {
-            return None;
-        }
         let mut candidates = Vec::new();
         let mut anchor = origin;
         for i in 0..height {
@@ -96,6 +91,7 @@ impl Branch<'_> {
             }
         }
         if tip - base > 1 {
+            candidates.push([last_x, tip, last_z]);
             candidates.push([last_x, tip - 2, last_z]);
         }
     }
