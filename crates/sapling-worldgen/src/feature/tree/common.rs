@@ -229,3 +229,10 @@ pub fn log_along(log: Block, dx: i32, dz: i32) -> Block {
         _ => z,
     }
 }
+
+impl Tree {
+    /// A spawn-volume cell a trunk may grow through: as `prepare` reads BDS's list (see there).
+    pub fn grows_through(&self, block: Block) -> bool {
+        self.may_grow_through.is_empty() || self.may_grow_through.contains(&block) || allows(self.may_replace, block)
+    }
+}
