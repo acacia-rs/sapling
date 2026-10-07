@@ -115,18 +115,21 @@ pub(super) fn is_hot(world: &World, layer: Entity) -> bool {
     level(world, layer).is_some_and(|level| level.dimension() == NETHER)
 }
 
-/// The cells whose liquid is due to move, by when and in the order they were queued.
+/// The cells whose liquid is due to move, by when and in the order they were queued. A cell can
+/// be queued for several ticks at once, and moves at each (docs/research/tick-queue.md).
 #[derive(Resource, Default)]
 pub(crate) struct Flows {
     due: BTreeMap<(u64, u64), (Entity, BlockPos)>,
-    queued: HashSet<(Entity, BlockPos)>,
+    queued: HashSet<(Entity, BlockPos, u64)>,
     queued_ever: u64,
 }
 
-fn schedule(world: &mut World, layer: Entity, pos: BlockPos, delay: u64) {
+/// Queues the liquid at `pos` to move in `delay` ticks; a neighbour's change does not queue it
+/// twice for the same tick (BDS `LiquidBlock::neighborChanged`).
+fn schedule(world: &mut World, layer: Entity, pos: BlockPos, delay: u64, by_neighbour: bool) {
     let due = world.resource::<Tick>().0 + delay;
     let mut flows = world.get_resource_or_insert_with(Flows::default);
-    if flows.queued.insert((layer, pos)) {
+    if flows.queued.insert((layer, pos, due)) || !by_neighbour {
         let order = flows.queued_ever;
         flows.queued_ever += 1;
         flows.due.insert((due, order), (layer, pos));
@@ -159,7 +162,7 @@ fn wake(world: &mut World, layer: Entity, pos: BlockPos, itself: bool) {
             if harden::meets_water(world, layer, near) {
                 changed.push(near);
             } else if let (Cell::Liquid(liquid, _), true) = (cell(world, layer, near), itself || near != pos) {
-                schedule(world, layer, near, liquid.delay(hot));
+                schedule(world, layer, near, liquid.delay(hot), true);
             }
         }
     }
@@ -218,8 +221,9 @@ pub(crate) fn tick(world: &mut World) {
     let mut moving = Vec::new();
     while moving.len() < MAX_PER_TICK {
         let Some(entry) = flows.due.first_entry().filter(|entry| entry.key().0 <= now) else { break };
+        let due = entry.key().0;
         let (layer, pos) = entry.remove();
-        flows.queued.remove(&(layer, pos));
+        flows.queued.remove(&(layer, pos, due));
         moving.push((layer, pos));
     }
     for (layer, pos) in moving {

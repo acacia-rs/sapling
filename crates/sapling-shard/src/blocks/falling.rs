@@ -2,7 +2,7 @@
 //! gravity (flight.rs) and is placed where it lands, or leaves its item where it cannot be, by
 //! BDS's `FallingBlock` (docs/research/falling-blocks.md, and research/captures/ for what BDS sent).
 // TODO: what is free to fall into and what breaks a falling block are name lists, not block
-// data; concrete powder does not harden; no fall damage, splash or MOVING flag; the fall starts
+// data; concrete powder does not harden; no fall damage or splash; the fall starts
 // and lands with UpdateBlock where BDS sends UpdateBlockSynced (acacia-proto reads its entity id
 // with the wrong varint).
 
@@ -22,7 +22,7 @@ const FALLS: &[&str] = &[":sand", "red_sand", "suspicious_sand", "suspicious_gra
 const SNOW: &str = "minecraft:snow_layer";
 
 /// What changed for a falling block, which decides how soon it falls (BDS `onPlace`,
-/// `neighborChanged`; a block placed by hand fell in the tick it was placed).
+/// `neighborChanged`; a block placed by hand fell two ticks after, in three BDS runs of four).
 #[derive(Clone, Copy)]
 pub(super) enum Change {
     Placed,
@@ -33,9 +33,8 @@ pub(super) enum Change {
 impl Change {
     fn delay(self) -> u64 {
         match self {
-            Change::Placed => 0,
             Change::Below => 1,
-            Change::Beside => 2,
+            Change::Placed | Change::Beside => 2,
         }
     }
 }

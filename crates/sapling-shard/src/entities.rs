@@ -61,6 +61,13 @@ pub(crate) fn spawn(world: &mut World, layer: Entity, kind: &str, body: Body, wi
     Some(entity)
 }
 
+/// Has the entity's viewers told when it is moving (sync.rs [`Told::flag_moving`]).
+pub(crate) fn flag_moving(world: &mut World, entity: Entity, ticked: bool) {
+    if let Some(mut told) = world.get_mut::<Told>(entity) {
+        told.flag_moving(ticked);
+    }
+}
+
 /// Each entity with a body: its ECS entity, world and what the API is told of it.
 fn all(world: &World) -> impl Iterator<Item = (Entity, Entity, EntityInfo)> + '_ {
     world.iter_entities().filter_map(|entity| {
@@ -90,10 +97,13 @@ pub(crate) fn listed(world: &World, layer: Entity) -> Vec<EntityInfo> {
 /// puts it `lift` above the bottom of its box.
 pub(crate) fn step(world: &mut World, entity: Entity, layer: Entity, id: u64, physics: &Physics, lift: f32) -> Option<(Body, Vec<Bytes>)> {
     let mut body = *world.get::<Body>(entity)?;
+    let started_on_ground = body.on_ground;
     body.step(&world.get::<Layer>(layer)?.world, physics);
     *world.get_mut::<Body>(entity)? = body;
     let [x, y, z] = body.at;
-    let packets = world.get_mut::<Told>(entity)?.update(id, [x, y + lift, z], body.motion, body.on_ground);
+    let mut told = world.get_mut::<Told>(entity)?;
+    let flags = told.moving(id, started_on_ground);
+    let packets: Vec<Bytes> = flags.into_iter().chain(told.update(id, [x, y + lift, z], body.motion, body.on_ground)).collect();
     // Not yet announced: this move follows the announcement, in the same batch, as on BDS.
     if world.get::<Born>(entity).is_some_and(|born| born.0 == world.resource::<Tick>().0) {
         world.get_resource_or_insert_with(AfterAnnouncing::default).0.push((layer, body.at.map(|c| c.floor() as i32), packets));

@@ -40,18 +40,18 @@ fn source(liquid: Liquid) -> Block {
 
 impl Request<'_> {
     /// A click with `held` in the hand on `face` of the block at `pos`; false when `held` is no
-    /// bucket. A client that predicted is shown the truth whether it worked or not.
+    /// bucket. As BDS: a refusal resends the cells the client may have predicted and not the
+    /// inventory; a use resends the inventory, in creative too.
     pub(super) fn use_bucket(&mut self, site: &Site, pos: BlockPos, face: Face, held: &str) -> bool {
         let Some(contents) = contents(held) else { return false };
         let worked = match contents {
             None => self.fill(site, pos),
             Some(liquid) => self.pour(site, pos, face, liquid),
         };
-        if !worked {
-            self.resync(&[pos, face.neighbour(pos), Face::Down.neighbour(face.neighbour(pos))]);
-        }
-        if site.mode != GameMode::Creative {
-            inventory::change(self.world, self.entity, |_| {});
+        let target = face.neighbour(pos);
+        match worked {
+            true => drop(inventory::change(self.world, self.entity, |_| {})),
+            false => self.resync(&[pos, Face::Up.neighbour(pos), target, Face::Down.neighbour(target)]),
         }
         true
     }

@@ -32,7 +32,8 @@ sapling's one: its world had two more within range.
 
 ## Remaining and new differences, most important first
 
-**D1. Sapling's first two drills never ran (setup cells air).** "sand, three cells onto dirt" and "gravel onto a
+**D1. Sapling's first two drills never ran (setup cells air).** Fixed: both run in the round-3 capture
+(`sapling-mechanisms.txt` S:14). "sand, three cells onto dirt" and "gravel onto a
 torch" (x -36, -34, chunk x -3) report `nothing to break ... minecraft:air` (S:3-6); BDS ran both (B:3-966). The
 drill's `/setblock stone` + block at y 66/67 left air on the actor's client, while the same setup at x -32 worked.
 Cause not in the capture: `Probe::setup` swallows CommandOutput and `stand()` checks only that cells are loaded.
@@ -41,47 +42,59 @@ race on the first tp. Fix the probe first: print setup's CommandOutput errors an
 `setup` (fail the drill if they are not what was set); then rerun. These two drills are the only refused-landing
 and on-dirt checks besides the slab.
 
-**D2. Spawn tick's move not sent (fix 5 went too far).** BDS: announcement with the pre-step state, then the
+**D2. Spawn tick's move not sent (fix 5 went too far).** Fixed (entities.rs `AfterAnnouncing`; round 3
+S:14-17: AddEntity then the delta, same batch). BDS: announcement with the pre-step state, then the
 tick's delta in the same batch (falling block -0.0792, item its first step). Sapling: entities.rs:83-86 drops the
 move. Fix: keep the packets and send them after the announcement in the same tick (push the announcement to the
 current viewers at spawn, or have `mobs::update` flush deltas of `Born == now` entities after announcing). BDS is right.
 
-**D3. Refused falling block's item: 0.49 too low and motionless.** BDS AddItemEntity `(-31.5, -58.885, 2.5)`
+**D3. Refused falling block's item: 0.49 too low and motionless.** Fixed: spill motion by round 3, and
+2026-10-07 the item's box starts at the falling block's wire y (drops.rs `let_go`; round 3 was still 0.125 low). BDS AddItemEntity `(-31.5, -58.885, 2.5)`
 = item bottom at the falling block's *wire* y (-59.01; item wire = bottom + 0.125), velocity `(-0.051, 0.2,
 -0.031)` (gravel: `(0.008, 0.2, 0.050)`), then it hops and settles on the slab (B:1273-1366). Sapling `(-31.5,
 64.625, 2.5)` = bottom at the entity's bottom 64.5, velocity 0, never moves (S:42). Fix: flight.rs:103 pass
 `wire(at)` instead of `at`; drops.rs:104-107 `let_go` gives spill's motion (`±SPILL_ACROSS, SPILL_UP`). BDS is right.
 
-**D4. Waterlogged stairs leak through their full face (round-1 item 23, still open).** Water bucket on east-facing
+**D4. Waterlogged stairs leak through their full face (round-1 item 23).** Fixed in `2048a45`. Water bucket on east-facing
 stairs: BDS spreads to (-2,1) and (-2,3) only (B:5377, +5 ticks), never east; sapling to (-1,64,2) east first
 (S:391, +5 ticks) and on into the pit. Fix as before: flow.rs `slope`/`spread_to` (flow.rs:67-104) skip sides whose
 face of the layer-1 holder is full; confirm in `LiquidBlock::_canSpreadTo`. BDS is right.
 
-**D5. Lava column after the first hardening runs late (new, medium-low confidence).** Steps 1-3 match (+30, +60,
+**D5. Lava column after the first hardening runs late (new, medium-low confidence).** 2026-10-07: partly
+explained, partly not matchable. Sapling dropped a second queued tick for a cell already queued; BDS keeps both
+(liquid.rs `Flows` now does, apart from `neighborChanged`'s same-tick check). The step-4 winner between the falling
+L10 and the sideways L1 follows BDS's per-chunk heap order and its unseeded lava rolls, so the three BDS runs
+disagree among themselves; mask those cells rather than copy one (docs/research/tick-queue.md). Steps 1-3 match (+30, +60,
 +90/93 ticks, (18,64,-3) -> stone). Step 4: BDS +120 ticks, y65 side cells (17,-3),(19,-3),(18,-4) as 2704000175
 (B:6491); sapling +131, (17,-3),(18,-4),(18,-2) as 2396626060 and only (19,-3) as 2704000175 (S:786-789). Last
 fizz/harden: BDS +149 (B:6498-6505), sapling +164 (S:801-811). Elsewhere sapling holds 30-tick lava and 5-tick water
 steps, so not tick drift. Likely the depth/tick rule for flowing lava fed from above beside a falling column
 (flow.rs `fed`, 38-55). Needs a dedicated drill with tick numbers before fixing.
 
-**D6. Hand-placed sand: BDS disagrees with itself.** Round 1: falls in the placement batch. This run: place +
-sound at 93642, UpdateBlockSynced + AddEntity at actor 93765/93770, ~2.5 ticks later (B:3304-3313). Sapling falls
-in the placement batch (S:276-279). Needs a third BDS sample or the decompile (`onPlace` tick delay) before changing.
+**D6. Hand-placed sand: BDS disagrees with itself.** Settled 2026-10-07: two more BDS runs on testbox
+(`bds-run-a.txt`, `bds-run-b.txt`) both fall 2 ticks after the place, as this run did; sapling now waits 2
+(falling.rs `Change::Placed`). Round 1: falls in the placement batch. This run: place +
+sound at 93642, UpdateBlockSynced + AddEntity at actor 93765/93770, ~2.5 ticks later (B:3304-3313). Sapling fell
+in the placement batch (S:276-279).
 
-**D7. Refused bucket: resync and inventory.** As round-1 item 16: sapling sends InventoryContent on a refusal
+**D7. Refused bucket: resync and inventory.** Fixed 2026-10-07 (buckets.rs `use_bucket`: refusal resends clicked,
+above, target, below target; a use resends the inventory in creative too). As round-1 item 16: sapling sends InventoryContent on a refusal
 (buckets.rs:53-55 runs whatever `worked` is) and resyncs `pos, face neighbour, below it` in both layers
 (buckets.rs:51); BDS sends no inventory packets and 6 layer-0 cells. Fix: only `inventory::change` when the bucket
 was used; match BDS's cell list. Low.
 
-**D8. Refused landing order and tick.** BDS: ParticleDestroy on L (B:1265), RemoveEntity then AddItemEntity on L+1
+**D8. Refused landing order and tick.** Fixed 2026-10-07 (flight.rs: particle on L, entity and item on L+1). BDS: ParticleDestroy on L (B:1265), RemoveEntity then AddItemEntity on L+1
 (B:1268/1273, actor and watcher). Sapling: particle, AddItemEntity, RemoveEntity all on L (S:41-43; flight.rs:100-105).
 Low.
 
-**D9. Item entity metadata.** BDS follows AddItemEntity with a full SetEntityData (Flags + Health ...), Flags |=
+**D9. Item entity metadata.** 2026-10-07: MOVING now follows BDS for items and falling blocks (sync.rs
+`Told::moving`: set a tick after a tick that began in the air, cleared two after landing). Still missing: the full
+SetEntityData BDS repeats after AddItemEntity, which only restates the announcement. BDS follows AddItemEntity with a full SetEntityData (Flags + Health ...), Flags |=
 MOVING the next tick, cleared on landing (B:1274, 1277, 1315). Sapling sends none. Same family as the known
 falling-block gap. Low.
 
-**D10. Cosmetic, unchanged from round 1.** Fizz: BDS sends `SoundFizz` a tick before the hardened block (209500 ->
+**D10. Cosmetic.** 2026-10-07: anvil sound and break particles now go first. The fizz "a tick early" is BDS sending
+block changes in a later UpdateSubchunkBlocks batch while events go at once (same tick); not copied. Fizz: BDS sends `SoundFizz` a tick before the hardened block (209500 ->
 209548, 221023 -> 221062, 224012 -> 224058); sapling same batch (harden.rs:56). Sapling writes a cell twice in one tick
 (lava then cobblestone, S:803-804, 809-810). Anvil: BDS `SoundAnvilFall` before the on_ground delta (B:1670-1672),
 sapling after it (flight.rs:113-119); landing motion `-0.0` vs `0.0`. Block break: BDS ParticleDestroy before the

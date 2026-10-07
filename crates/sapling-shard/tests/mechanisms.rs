@@ -6,8 +6,8 @@ mod common;
 use acacia_proto::RawPacket;
 use acacia_proto::packets::{AddEntity, AddItemEntity, LevelSoundEvent, MoveEntityDelta, RemoveEntity, UpdateBlock};
 use acacia_proto::types::{Action, MetadataDictionaryItemKey as Key, MetadataDictionaryItemValue as Value, MetadataDictionaryItemValueDefault as Plain};
-use common::{Harness, all, block_actions, hash, input_at};
-use sapling_api::{Block, GameMode, PlayerId};
+use common::{Harness, all, block_actions, click, hash, input_at};
+use sapling_api::{Block, GameMode, Item, PlayerId, Slot};
 
 const PLATE: [i32; 3] = [2, 65, 0];
 
@@ -49,6 +49,26 @@ fn a_plate_goes_down_under_a_player_and_up_a_check_after_it_left() {
     assert_eq!((after[0].0.as_slice(), after[0].1.len()), ([plate_state(0)].as_slice(), 1));
 }
 
+#[test]
+fn sand_placed_over_a_gap_falls_two_ticks_later_as_on_bds() {
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    h.enter(2, "Steve");
+    let sand = Item::new("minecraft:sand", 8);
+    h.remote.run(move |ctx| {
+        assert!(ctx.set_item(PlayerId(1), Slot::Main(0), Some(&sand)));
+        assert!(ctx.set_block([2, 67, 0], &Block::new("stone")));
+    });
+    h.tick_all();
+    // On the east face of the stone: sand at (3, 67, 0), over three cells of air.
+    h.receive(1, &click([2, 67, 0], 5, Some("minecraft:sand")));
+    let falls = |sent: &[RawPacket]| all::<AddEntity>(sent).iter().filter(|entity| entity.entity_type == "minecraft:falling_block").count();
+    let placed = h.tick_all();
+    assert_eq!((column_changes(placed.to(2), 3), falls(placed.to(2))), (vec![(67, hash("minecraft:sand"))], 0), "placed, still");
+    assert_eq!(falls(h.tick_all().to(2)), 0);
+    assert_eq!(falls(h.tick_all().to(2)), 1, "falling on the second tick after");
+}
+
 /// The layer-0 changes among `packets` at `x`, as (y, block).
 fn column_changes(packets: &[RawPacket], x: i32) -> Vec<(i32, u32)> {
     all::<UpdateBlock>(packets).iter().filter(|u| u.layer == 0 && u.position.x == x && u.position.z == 0).map(|u| (u.position.y, u.block_runtime_id)).collect()
@@ -86,5 +106,7 @@ fn sand_falls_as_an_entity_and_breaks_up_on_a_torch() {
     assert_eq!(all::<RemoveEntity>(&sent).len(), 2, "both entities go");
     let items: Vec<AddItemEntity> = all::<AddItemEntity>(&sent);
     let sand_item = sapling_data::item(&sapling_data::Stack { name: "minecraft:sand", count: 1, damage: 0, block: None, tag: None }, None).unwrap();
-    assert!(items.iter().any(|item| item.item.network_id == sand_item.network_id), "the second leaves sand where the torch is");
+    let left = items.iter().find(|item| item.item.network_id == sand_item.network_id).expect("the second leaves sand where the torch is");
+    // On BDS the item's box starts where the falling block's wire position was: 65.49, plus 0.125.
+    assert!((left.position.y - 65.615).abs() < 1e-4 && left.velocity.y == 0.2, "{:?} {:?}", left.position, left.velocity);
 }

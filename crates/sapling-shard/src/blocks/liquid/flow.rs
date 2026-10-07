@@ -127,7 +127,7 @@ pub(super) fn flow(world: &mut World, layer: Entity, pos: BlockPos) {
         if now != depth {
             // Lava that thins out lingers.
             if liquid == Liquid::Lava && depth < FALLING && now < FALLING && depth < now && world.get_resource_or_insert_with(Dice::default).roll(4) != 0 {
-                schedule(world, layer, pos, liquid.delay(hot) * SLOWED);
+                schedule(world, layer, pos, liquid.delay(hot) * SLOWED, false);
             }
             set(world, layer, pos, liquid, Some(now));
             (depth, changed) = (now, true);

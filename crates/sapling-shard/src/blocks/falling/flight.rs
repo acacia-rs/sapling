@@ -33,6 +33,7 @@ pub(crate) struct FallingBlock {
     block: u32,
     airborne: u32,
     landed_for: Option<u32>,
+    refused: bool,
 }
 
 const KIND: &str = "minecraft:falling_block";
@@ -48,7 +49,8 @@ pub(super) fn start(world: &mut World, layer: Entity, block: u32, [x, y, z]: Blo
     body.step(level, &Physics::FALLING_BLOCK);
     let hash = level.registry().network_hash(block);
     let entity = entities::spawn(world, layer, KIND, body, wire(body.at), |id| Some(announcement(id, &body, hash)))?;
-    world.entity_mut(entity).insert(FallingBlock { block, airborne: 1, landed_for: None });
+    entities::flag_moving(world, entity, true);
+    world.entity_mut(entity).insert(FallingBlock { block, airborne: 1, landed_for: None, refused: false });
     Some(entity)
 }
 
@@ -64,12 +66,16 @@ fn event(event: LevelEventEvent, [x, y, z]: [f32; 3], data: i32) -> Bytes {
     sapling_net::encode(&LevelEvent { event, position: Vec3f { x, y, z }, data })
 }
 
-/// The falling block `block` breaks where it is: its own item, not its loot, and its fragments
-/// at the entity (BDS `FallingBlockActor::breakBlock`). A brushable block leaves nothing.
-fn break_up(world: &mut World, layer: Entity, block: u32, bottom: [f32; 3]) {
-    let Some((name, hash)) = level(world, layer).and_then(|level| Some((level.registry().get(block)?.name, level.registry().network_hash(block)))) else { return };
-    let cell = cell_of(bottom);
-    send::to_viewers(world, layer, cell, &[event(LevelEventEvent::ParticleDestroy, wire(bottom), hash as i32)]);
+/// The fragments of the falling block `block` breaking at the entity (BDS
+/// `FallingBlockActor::breakBlock`).
+fn shatter(world: &mut World, layer: Entity, block: u32, bottom: [f32; 3]) {
+    let Some(hash) = level(world, layer).map(|level| level.registry().network_hash(block)) else { return };
+    send::to_viewers(world, layer, cell_of(bottom), &[event(LevelEventEvent::ParticleDestroy, wire(bottom), hash as i32)]);
+}
+
+/// What a broken falling block leaves: its own item, not its loot; a brushable block nothing.
+fn leave_item(world: &mut World, layer: Entity, block: u32, bottom: [f32; 3]) {
+    let Some(name) = level(world, layer).and_then(|level| level.registry().get(block)).map(|state| state.name) else { return };
     if !name.contains("suspicious_") {
         loot::let_go(world, layer, wire(bottom), &[Item::new(if name == SNOW { "minecraft:snowball" } else { name }, 1)]);
     }
@@ -85,6 +91,12 @@ fn takes(world: &World, layer: Entity, block: u32, cell: BlockPos) -> bool {
 fn step(world: &mut World, entity: Entity, layer: Entity, id: u64) -> Option<BlockPos> {
     let falling = world.get::<FallingBlock>(entity)?;
     let (block_id, airborne) = (falling.block, falling.airborne + 1);
+    if falling.refused {
+        let at = world.get::<Body>(entity)?.at;
+        mobs::remove(world, entity);
+        leave_item(world, layer, block_id, at);
+        return None;
+    }
     if let Some(waited) = falling.landed_for.map(|waited| waited + 1) {
         world.get_mut::<FallingBlock>(entity)?.landed_for = Some(waited);
         let cell = cell_of(world.get::<Body>(entity)?.at);
@@ -96,11 +108,17 @@ fn step(world: &mut World, entity: Entity, layer: Entity, id: u64) -> Option<Blo
     let (body, mut packets) = entities::step(world, entity, layer, id, &Physics::FALLING_BLOCK, WIRE_OFFSET)?;
     let (at, landed) = (body.at, body.on_ground);
     let below_world = level(world, layer).is_some_and(|level| !level.in_height(cell_of(at)[1]) && !level.in_height(cell_of(at)[1] + 1));
-    let refused = landed && !takes(world, layer, block_id, cell_of(at));
-    if refused || !landed && (airborne > MAX_AIRBORNE || airborne > MAX_BELOW_WORLD && below_world) {
+    // Refused: it shatters now and goes, leaving its item, the next tick, as BDS was seen to.
+    if landed && !takes(world, layer, block_id, cell_of(at)) {
+        shatter(world, layer, block_id, at);
+        world.get_mut::<FallingBlock>(entity)?.refused = true;
+        return None;
+    }
+    if !landed && (airborne > MAX_AIRBORNE || airborne > MAX_BELOW_WORLD && below_world) {
         mobs::remove(world, entity);
         if !below_world {
-            break_up(world, layer, block_id, at);
+            shatter(world, layer, block_id, at);
+            leave_item(world, layer, block_id, at);
         }
         return None;
     }
@@ -112,8 +130,9 @@ fn step(world: &mut World, entity: Entity, layer: Entity, id: u64) -> Option<Blo
     }
     if landed {
         let is_anvil = block(world, layer, cell_of(at)).and_then(|(registry, _)| registry.get(block_id)).is_some_and(|state| state.name.ends_with("anvil"));
+        // BDS sends the sound before the landing move.
         if is_anvil {
-            packets.push(event(LevelEventEvent::SoundAnvilFall, cell_of(at).map(|c| c as f32), 0));
+            packets.insert(0, event(LevelEventEvent::SoundAnvilFall, cell_of(at).map(|c| c as f32), 0));
         }
     }
     send::to_viewers(world, layer, cell_of(at), &packets);

@@ -259,10 +259,11 @@ impl Request<'_> {
         let particles = send::destroy_particles(level.registry(), [x, y, z], id);
         doors::remove_other_half(self.world, site.layer, [x, y, z]);
         crate::containers::spill(self.world, site.layer, [x, y, z], site.mode == GameMode::Creative);
+        // BDS sends the fragments before the block; the cell is loaded and not air, so it changes.
+        send::to_viewers(self.world, site.layer, [x, y, z], &[particles]);
         if !send::set(self.world, site.layer, [x, y, z], air) {
             return false;
         }
-        send::to_viewers(self.world, site.layer, [x, y, z], &[particles]);
         updates::settle(self.world, site.layer, [x, y, z]);
         true
     }

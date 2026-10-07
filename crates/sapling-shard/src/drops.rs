@@ -61,7 +61,10 @@ fn dice(world: &mut World) -> Mut<'_, Dice> {
 fn lay(world: &mut World, layer: Entity, stack: ItemStack, at: [f32; 3], motion: [f32; 3], pickup_from: u64) -> Option<Entity> {
     let shown = entities::spawn(world, layer, KIND, Body::new(at, motion, [SIZE; 2]), wire(at), |id| mobs::item_announcement(id, &stack, wire(at), motion));
     match shown {
-        Some(item) => Some(world.entity_mut(item).insert(Dropped { stack, pickup_from, age: 0 }).id()),
+        Some(item) => {
+            entities::flag_moving(world, item, false);
+            Some(world.entity_mut(item).insert(Dropped { stack, pickup_from, age: 0 }).id())
+        }
         None => {
             tracing::debug!(item = %stack.name, "an item no client knows; it is gone");
             None
@@ -106,10 +109,10 @@ pub(crate) fn spill(world: &mut World, layer: Entity, stack: ItemStack, pos: Blo
     toss(world, layer, stack, centre);
 }
 
-/// Tosses `stack` out of where an entity that broke up was, `centre` being the entity's position
-/// on the wire (BDS `FallingBlockActor::breakBlock`).
-pub(crate) fn let_go(world: &mut World, layer: Entity, stack: ItemStack, centre: [f32; 3]) {
-    toss(world, layer, stack, centre);
+/// Tosses `stack` out of where an entity that broke up was, its box's bottom at `at`, the entity's
+/// position on the wire (BDS `FallingBlockActor::breakBlock`, research/captures/).
+pub(crate) fn let_go(world: &mut World, layer: Entity, stack: ItemStack, [x, y, z]: [f32; 3]) {
+    toss(world, layer, stack, [x, y + SIZE / 2.0, z]);
 }
 
 /// The items lying in `layer` inside the box from `min` to `max`, oldest first.
