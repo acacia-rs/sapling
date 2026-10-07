@@ -21,6 +21,7 @@ pub enum CellKind {
 }
 
 /// One chunk column: `block(x, y, z)` with y from -64 to 319.
+#[derive(Clone)]
 pub struct ChunkShape {
     blocks: Vec<Block>,
 }

@@ -1,5 +1,5 @@
 //! Worldgen randomness: Xoroshiro128++ seeded from the world seed, forked per noise by the MD5 of
-//! its name.
+//! its name; Bedrock's MT19937 for everything after the terrain shape.
 
 mod md5;
 mod mt;
@@ -8,5 +8,5 @@ mod tests;
 mod xoroshiro;
 
 pub use md5::md5;
-pub use mt::Mt19937;
+pub use mt::{LargeFeatureSeed, Mt19937, force_odd, unit};
 pub use xoroshiro::{PositionalFactory, Xoroshiro, position_seed};

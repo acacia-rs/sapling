@@ -1,16 +1,28 @@
-//! Exact blocks and biomes against BDS-saved oracle worlds (tools/worldgen-oracle/README.md).
-//! Needs the git-ignored oracle worlds (`WORLDGEN_ORACLE_DIR`); run with `--ignored --nocapture`.
+//! Exact blocks, carvers and biomes against BDS-saved oracle worlds (tools/worldgen-oracle/README.md).
+//! Needs the git-ignored oracle worlds (`$SAPLING_ORACLE_WORLDS`); run with `--ignored --nocapture`.
 //! Cells where the world and its `-run2` twin disagree are counted apart, and cells that stages
 //! sapling does not run yet may change are reported per stage, not as mismatches.
 
 mod oracle_support;
 
-use oracle_support::{BdsCell, BiomeTally, Region, Tally, TopTally, bds_cell, column_reshaped, open};
+use std::collections::BTreeMap;
+
+use oracle_support::{BdsCell, BiomeTally, CarverTally, Context, Ours, Region, Tally, TopTally, bds_cell, column_reshaped, near_feature, open};
 use sapling_leveldb::ChunkKey;
 
-use sapling_worldgen::{MIN_Y, OverworldGenerator};
+use sapling_worldgen::{CellKind, MIN_Y, OverworldGenerator};
 
 const LAST_Y: i32 = 319;
+
+#[derive(Default)]
+struct Tallies {
+    blocks: Tally,
+    top: TopTally,
+    biomes: BiomeTally,
+    carvers: CarverTally,
+    /// Our highest non-air cell minus BDS's highest terrain cell, per column.
+    top_offsets: BTreeMap<i32, (u64, (i32, i32))>,
+}
 
 fn compare(seed: i64, world: &str, regions: &[Region]) {
     let Some((primary, twin)) = open(world) else {
@@ -19,40 +31,68 @@ fn compare(seed: i64, world: &str, regions: &[Region]) {
     };
     let generator = OverworldGenerator::new(seed);
     for region in regions {
-        let mut tally = Tally::default();
-        let mut top = TopTally::default();
-        let mut biome_tally = BiomeTally::default();
+        let mut tallies = Tallies::default();
         for (cx, cz) in region.chunks() {
             let key = ChunkKey::new(cx, cz, 0);
             let a = primary.load_column(key).unwrap().expect("chunk saved").chunk;
             let b = twin.load_column(key).unwrap().expect("twin chunk saved").chunk;
-            let ours = generator.chunk_blocks(cx, cz);
+            let surfaced = generator.surfaced_blocks(cx, cz);
+            let mut loaded = surfaced.clone();
+            generator.carve(&mut loaded, cx, cz);
+            let mut ours = loaded.clone();
+            generator.decorate(&mut ours, cx, cz);
             let biomes = generator.chunk_biomes(cx, cz);
             let biome_top = highest_section_top(&primary, &a, cx, cz);
             for z in 0..16 {
                 for x in 0..16 {
                     let (wx, wz) = (cx * 16 + x as i32, cz * 16 + z as i32);
                     for y in MIN_Y..=biome_top {
-                        biome_tally.add(biomes.biome(x, y, z), a.biome(wx, y, wz), (wx, y, wz));
+                        tallies.biomes.add(biomes.biome(x, y, z), a.biome(wx, y, wz), (wx, y, wz));
                     }
                     let column: Vec<(i32, BdsCell)> = (MIN_Y..=LAST_Y).rev().map(|y| (y, bds_cell(&primary, &a, wx, y, wz))).collect();
                     let reshaped = column_reshaped(|y| ours.block(x, y, z).is_solid(), &column);
                     let our_top = (MIN_Y..=LAST_Y).rev().find(|&y| ours.block(x, y, z).is_solid());
+                    let (mut our_highest, mut bds_highest) = (None, None);
                     for ((y, bds), reshaped) in column.iter().zip(reshaped) {
-                        let stable = *bds == bds_cell(&twin, &b, wx, *y, wz);
-                        let block = ours.block(x, *y, z);
-                        tally.add(block, bds, stable, (wx, *y, wz), reshaped);
-                        if Some(*y) == our_top && stable {
-                            top.add(block, bds, (wx, *y, wz), reshaped);
+                        let (y, at) = (*y, (wx, *y, wz));
+                        let stable = *bds == bds_cell(&twin, &b, wx, y, wz);
+                        let block = ours.block(x, y, z);
+                        let before = surfaced.block(x, y, z);
+                        let bds_emptied = bds.is_empty() || bds.is_fluid();
+                        let context = Context {
+                            carved: before.is_solid() && !loaded.block(x, y, z).is_solid(),
+                            laked: loaded.block(x, y, z) != block,
+                            feature_emptied: stable && block.is_solid() && bds_emptied && near_feature(&primary, &a, at),
+                            reshaped,
+                        };
+                        tallies.blocks.add(block, bds, stable, at, context);
+                        if stable {
+                            if Some(y) == our_top {
+                                tallies.top.add(block, bds, at, context);
+                            }
+                            let next_to_cave = [y - 1, y + 1].iter().any(|&ny| (MIN_Y..=LAST_Y).contains(&ny) && !surfaced.block(x, ny, z).is_solid());
+                            let cell = Ours { before: surfaced.kind(x, y, z), after: ours.kind(x, y, z), next_to_cave };
+                            tallies.carvers.add(cell, bds, at, &primary, &a);
+                        }
+                        if our_highest.is_none() && ours.kind(x, y, z) != CellKind::Air {
+                            our_highest = Some(y);
+                        }
+                        if bds_highest.is_none() && bds.is_terrain() {
+                            bds_highest = Some(y);
                         }
                     }
+                    let offset = our_highest.unwrap_or(0) - bds_highest.unwrap_or(0);
+                    tallies.top_offsets.entry(offset).or_insert((0, (wx, wz))).0 += 1;
                 }
             }
         }
         println!("seed {seed} {}:", region.name);
-        tally.print();
-        top.print();
-        biome_tally.print();
+        tallies.blocks.print();
+        tallies.top.print();
+        tallies.carvers.print();
+        tallies.biomes.print();
+        let offsets: Vec<String> = tallies.top_offsets.iter().map(|(d, (n, at))| format!("{d:+}:{n} {at:?}")).collect();
+        println!("  top of terrain, ours minus BDS, columns: {}", offsets.join(" "));
     }
 }
 

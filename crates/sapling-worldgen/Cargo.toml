@@ -4,7 +4,7 @@ version = "0.1.0"
 edition.workspace = true
 license.workspace = true
 rust-version.workspace = true
-description = "Bedrock overworld terrain generation, ported from BDS: terrain, biomes, surfaces and the bedrock floor"
+description = "Bedrock overworld terrain generation, ported from BDS: terrain, biomes, surfaces, the bedrock floor, carvers and lakes"
 
 [dependencies]
 

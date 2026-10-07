@@ -66,6 +66,16 @@ fn fork_positional_matches_java_fork() {
 }
 
 #[test]
+fn mt19937_reference_outputs() {
+    // mt19937ar's first output for 5489, and C++'s required 10000th output of std::mt19937.
+    let mut random = Mt19937::new(5489);
+    assert_eq!(random.next_u32(), 3499211612);
+    random.consume_count(9998);
+    assert_eq!(random.next_u32(), 4123659995);
+    assert_eq!(Mt19937::new(1).next_u32(), 1791095845);
+}
+
+#[test]
 fn position_seed_matches_mth_get_seed() {
     assert_eq!(position_seed(0, 0, 0), 0);
     // (1*3129871)^0^0 = 3129871; l*l*42317861 + l*11, >> 16
@@ -79,4 +89,16 @@ fn mt19937_matches_reference_output() {
     assert_eq!(random.next_u32(), 3_499_211_612);
     let mut random = Mt19937::new(5489);
     assert_eq!((0..10_000).map(|_| random.next_u32()).last(), Some(4_123_659_995));
+}
+
+#[test]
+fn mt19937_wrappers_derive_from_the_raw_draw() {
+    let raw = Mt19937::new(5489).next_u32();
+    let draw = || Mt19937::new(5489);
+    assert_eq!(draw().next_int(1000), (raw % 1000) as i32);
+    assert_eq!(draw().next_int(0), 0);
+    assert_eq!(draw().next_int(-5), 0);
+    assert_eq!(draw().next_int_unbounded(), (raw >> 1) as i32);
+    assert_eq!(draw().next_boolean(), raw >> 27 & 1 == 1);
+    assert_eq!(draw().next_float(), unit(raw));
 }

@@ -26,9 +26,7 @@ impl SurfaceNoises {
             })
             .collect();
         let mut mt = Mt19937::new(seed as u32);
-        for _ in 0..20202 {
-            mt.next_u32();
-        }
+        mt.consume_count(20202);
         let adjustment = (0..3)
             .map(|_| {
                 let [a, b, c] = [mt.next_float(), mt.next_float(), mt.next_float()];

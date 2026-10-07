@@ -46,6 +46,8 @@ Legend: **[code]** = I read the source. **[readme]** = README/page claim, not ch
   commented-out ChunkBiomesGUI code use `|1` (ChunkBiomesGUI marks it "unverified"). featurelab
   states it is `v/2*2+1` (round toward zero), which differs for odd negatives. featurelab's
   version is the only one that claims measurement against a game build (1.26.50/1.26.60).
+  **Resolved (BDS 1.26.52 decompile, 2026-10-07):** BDS compiles `v/2*2+1`, but `nextInt()` is `u32 >> 1`, never
+  negative, so both forms agree (worldgen-bds.md, Carvers).
 - Carver/mineshaft seed: the same, without forcing odd. [code] BedrockUtil `getCarverSeed`,
   ChunkBiomesGUI `bedrockChunkGenerateRnd`.
 - Per-feature-entry seed: `s ^ (fnv1_32(name) + 0x9E3779B9 + (s<<6) + (s>>2))` (Boost

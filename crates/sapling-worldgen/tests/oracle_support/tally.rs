@@ -4,7 +4,8 @@ use std::collections::BTreeMap;
 
 use sapling_worldgen::Block;
 
-use super::{BdsCell, Stage, Verdict, judge};
+use super::BdsCell;
+use super::judge::{Context, Stage, Verdict, judge};
 
 type At = (i32, i32, i32);
 
@@ -21,6 +22,10 @@ impl Pairs {
         }
     }
 
+    fn count(&self) -> u64 {
+        self.0.values().map(|v| v.0).sum()
+    }
+
     fn print(&self, indent: &str, limit: usize) {
         let mut pairs: Vec<_> = self.0.iter().collect();
         pairs.sort_by(|a, b| b.1.0.cmp(&a.1.0));
@@ -35,6 +40,10 @@ fn label(ours: Block, bds: &BdsCell) -> String {
     format!("ours {} bds {}[{}]{liquid}", ours.name(), bds.block, bds.states)
 }
 
+fn percent(n: u64, of: u64) -> f64 {
+    100.0 * n as f64 / of.max(1) as f64
+}
+
 #[derive(Default)]
 pub struct Tally {
     unstable: u64,
@@ -44,12 +53,12 @@ pub struct Tally {
 }
 
 impl Tally {
-    pub fn add(&mut self, ours: Block, bds: &BdsCell, stable: bool, at: At, reshaped: bool) {
+    pub fn add(&mut self, ours: Block, bds: &BdsCell, stable: bool, at: At, context: Context) {
         if !stable {
             self.unstable += 1;
             return;
         }
-        match judge(ours, bds, at.1, reshaped) {
+        match judge(ours, bds, at.1, context) {
             Verdict::Match(stage) => *self.matched.entry(stage).or_default() += 1,
             Verdict::Error(stage) => self.errors.entry(stage).or_default().add(label(ours, bds), at),
             Verdict::Later(why) => self.later.entry(why).or_default().add(label(ours, bds), at),
@@ -57,20 +66,27 @@ impl Tally {
     }
 
     pub fn print(&self) {
-        println!("  {} cells unstable between BDS runs", self.unstable);
-        for stage in [Stage::Floor, Stage::Deepslate, Stage::Veins, Stage::Surface, Stage::Shape] {
+        let matched: u64 = self.matched.values().sum();
+        let wrong: u64 = self.errors.values().map(Pairs::count).sum();
+        let later: u64 = self.later.values().map(Pairs::count).sum();
+        let stable = matched + wrong + later;
+        println!(
+            "  exact blocks: {stable} stable cells, {:.4}% identical, {wrong} wrong, {later} left to later stages; {} unstable between BDS runs",
+            percent(matched, stable),
+            self.unstable
+        );
+        for stage in [Stage::Floor, Stage::Deepslate, Stage::Veins, Stage::Surface, Stage::Carvers, Stage::Lakes, Stage::Shape] {
             let matched = self.matched.get(&stage).copied().unwrap_or(0);
             let errors = self.errors.get(&stage);
-            let wrong: u64 = errors.map_or(0, |p| p.0.values().map(|v| v.0).sum());
+            let wrong = errors.map_or(0, Pairs::count);
             let total = matched + wrong;
-            println!("  {stage:?}: {total} cells, {:.4}% agree, {wrong} differ", 100.0 * matched as f64 / total.max(1) as f64);
+            println!("  {stage:?}: {total} cells, {:.4}% agree, {wrong} differ", percent(matched, total));
             if let Some(errors) = errors {
                 errors.print("    ", 8);
             }
         }
         for (why, pairs) in &self.later {
-            let count: u64 = pairs.0.values().map(|v| v.0).sum();
-            println!("  later stages, {why}: {count}");
+            println!("  later stages, {why}: {}", pairs.count());
             pairs.print("    ", 4);
         }
     }
@@ -85,8 +101,8 @@ pub struct TopTally {
 }
 
 impl TopTally {
-    pub fn add(&mut self, ours: Block, bds: &BdsCell, at: At, reshaped: bool) {
-        match judge(ours, bds, at.1, reshaped) {
+    pub fn add(&mut self, ours: Block, bds: &BdsCell, at: At, context: Context) {
+        match judge(ours, bds, at.1, context) {
             Verdict::Match(_) => self.matched += 1,
             Verdict::Later(_) => self.later += 1,
             Verdict::Error(_) => self.errors.add(label(ours, bds), at),
@@ -94,11 +110,11 @@ impl TopTally {
     }
 
     pub fn print(&self) {
-        let wrong: u64 = self.errors.0.values().map(|v| v.0).sum();
+        let wrong = self.errors.count();
         let total = self.matched + wrong;
         println!(
             "  surface top block: {total} columns, {:.4}% agree, {wrong} differ, {} covered by later stages",
-            100.0 * self.matched as f64 / total.max(1) as f64,
+            percent(self.matched, total),
             self.later
         );
         self.errors.print("    ", 10);
@@ -124,7 +140,7 @@ impl BiomeTally {
     pub fn print(&self) {
         let mismatched: u64 = self.pairs.values().map(|p| p.0).sum();
         let total = self.matched + mismatched;
-        println!("  biomes: {total} blocks, {:.4}% agree, {mismatched} differ", 100.0 * self.matched as f64 / total.max(1) as f64);
+        println!("  biomes: {total} blocks, {:.4}% agree, {mismatched} differ", percent(self.matched, total));
         let mut pairs: Vec<_> = self.pairs.iter().collect();
         pairs.sort_by(|a, b| b.1.0.cmp(&a.1.0));
         for ((ours, bds), (count, at)) in pairs.iter().take(12) {
