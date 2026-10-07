@@ -72,6 +72,11 @@ impl<'a> Canvas<'a> {
         (MIN_Y..=TOP).rev().find(|&y| self.get(x, y, z).is_solid()).map_or(MIN_Y, |y| y + 1)
     }
 
+    /// One above the highest solid block, or fluid too when `fluids`.
+    pub fn top(&self, x: i32, z: i32, fluids: bool) -> i32 {
+        (MIN_Y..=TOP).rev().find(|&y| self.get(x, y, z).is_solid() || fluids && self.get(x, y, z).is_fluid()).map_or(MIN_Y, |y| y + 1)
+    }
+
     /// Below the light heightmap (BDS's structure "interior" test); never at the world's top.
     pub fn interior(&self, x: i32, y: i32, z: i32) -> bool {
         y < TOP + 1 && (y < MIN_Y || self.height(x, z) > y)

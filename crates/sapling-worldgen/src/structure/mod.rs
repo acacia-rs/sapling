@@ -11,7 +11,9 @@ mod nearby;
 mod piece;
 mod placement;
 mod probe;
+mod scattered;
 mod stage;
+mod stairs;
 mod stronghold;
 #[cfg(test)]
 mod tests;
@@ -25,7 +27,7 @@ pub use area::BoundingBox;
 pub use kind::StructureKind;
 use kind::*;
 use probe::Probe;
-pub use stage::rejoin_fences;
+pub use stage::rejoin_connections;
 
 const SEA_LEVEL: i32 = 63;
 

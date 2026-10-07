@@ -1,31 +1,5 @@
-//! The blocks the terrain stages place, with their Bedrock names and states.
-
-macro_rules! blocks {
-    ($($variant:ident => $name:literal $states:literal,)*) => {
-        #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
-        pub enum Block {
-            $($variant,)*
-        }
-
-        impl Block {
-            pub const ALL: &[Block] = &[$(Block::$variant,)*];
-
-            /// The Bedrock name without the `minecraft:` prefix.
-            pub fn name(self) -> &'static str {
-                match self {
-                    $(Block::$variant => $name,)*
-                }
-            }
-
-            /// Non-default states as BDS saves them, `key=value` comma-separated.
-            pub fn states(self) -> &'static str {
-                match self {
-                    $(Block::$variant => $states,)*
-                }
-            }
-        }
-    };
-}
+//! Every block the stages place, with its Bedrock name and saved states. Variant order matters:
+//! plants start at `ShortGrass`, kelp at `Kelp0` (see the predicates in mod.rs).
 
 blocks! {
     Air => "air" "",
@@ -130,6 +104,56 @@ blocks! {
     DarkOakFence13 => "dark_oak_fence" "minecraft:connection_east=1,minecraft:connection_north=0,minecraft:connection_south=1,minecraft:connection_west=1",
     DarkOakFence14 => "dark_oak_fence" "minecraft:connection_east=0,minecraft:connection_north=1,minecraft:connection_south=1,minecraft:connection_west=1",
     DarkOakFence15 => "dark_oak_fence" "minecraft:connection_east=1,minecraft:connection_north=1,minecraft:connection_south=1,minecraft:connection_west=1",
+    // Hardcoded structure pieces (temples); stairs by weirdo_direction, found by states for corners.
+    SprucePlanks => "spruce_planks" "",
+    CraftingTable => "crafting_table" "",
+    FlowerPot => "flower_pot" "update_bit=1",
+    Cauldron2 => "cauldron" "cauldron_liquid=water,fill_level=2",
+    Cauldron4 => "cauldron" "cauldron_liquid=water,fill_level=4",
+    Cauldron6 => "cauldron" "cauldron_liquid=water,fill_level=6",
+    SpruceStairsEast => "spruce_stairs" "minecraft:corner=none,upside_down_bit=0,weirdo_direction=0",
+    SpruceStairsWest => "spruce_stairs" "minecraft:corner=none,upside_down_bit=0,weirdo_direction=1",
+    SpruceStairsSouth => "spruce_stairs" "minecraft:corner=none,upside_down_bit=0,weirdo_direction=2",
+    SpruceStairsNorth => "spruce_stairs" "minecraft:corner=none,upside_down_bit=0,weirdo_direction=3",
+    SpruceStairsSouthOuterLeft => "spruce_stairs" "minecraft:corner=outer_left,upside_down_bit=0,weirdo_direction=2",
+    SpruceStairsSouthOuterRight => "spruce_stairs" "minecraft:corner=outer_right,upside_down_bit=0,weirdo_direction=2",
+    SpruceStairsNorthOuterLeft => "spruce_stairs" "minecraft:corner=outer_left,upside_down_bit=0,weirdo_direction=3",
+    SpruceStairsNorthOuterRight => "spruce_stairs" "minecraft:corner=outer_right,upside_down_bit=0,weirdo_direction=3",
+    SandstoneStairsEast => "sandstone_stairs" "minecraft:corner=none,upside_down_bit=0,weirdo_direction=0",
+    SandstoneStairsWest => "sandstone_stairs" "minecraft:corner=none,upside_down_bit=0,weirdo_direction=1",
+    SandstoneStairsSouth => "sandstone_stairs" "minecraft:corner=none,upside_down_bit=0,weirdo_direction=2",
+    SandstoneStairsNorth => "sandstone_stairs" "minecraft:corner=none,upside_down_bit=0,weirdo_direction=3",
+    CutSandstone => "cut_sandstone" "",
+    ChiseledSandstone => "chiseled_sandstone" "",
+    BlueTerracotta => "blue_terracotta" "",
+    SandstoneSlab => "sandstone_slab" "minecraft:vertical_half=bottom",
+    SuspiciousSand => "suspicious_sand" "brushed_progress=0,hanging=1",
+    StonePressurePlate => "stone_pressure_plate" "redstone_signal=0",
+    Tnt => "tnt" "explode_bit=0",
+    ChestSouth => "chest" "minecraft:cardinal_direction=south",
+    ChestWest => "chest" "minecraft:cardinal_direction=west",
+    ChestEast => "chest" "minecraft:cardinal_direction=east",
+    Cobblestone => "cobblestone" "",
+    MossyCobblestone => "mossy_cobblestone" "",
+    ChiseledStoneBricks => "chiseled_stone_bricks" "",
+    StoneStairsEast => "stone_stairs" "minecraft:corner=none,upside_down_bit=0,weirdo_direction=0",
+    StoneStairsWest => "stone_stairs" "minecraft:corner=none,upside_down_bit=0,weirdo_direction=1",
+    StoneStairsSouth => "stone_stairs" "minecraft:corner=none,upside_down_bit=0,weirdo_direction=2",
+    StoneStairsNorth => "stone_stairs" "minecraft:corner=none,upside_down_bit=0,weirdo_direction=3",
+    TripwireHookEast => "tripwire_hook" "attached_bit=1,direction=3,powered_bit=0",
+    TripwireHookWest => "tripwire_hook" "attached_bit=1,direction=1,powered_bit=0",
+    TripwireHookSouth => "tripwire_hook" "attached_bit=0,direction=0,powered_bit=0",
+    TripwireHookNorth => "tripwire_hook" "attached_bit=0,direction=2,powered_bit=0",
+    TripWireEastWest => "trip_wire" "attached_bit=1,disarmed_bit=0,minecraft:connection_east=1,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=1,powered_bit=0,suspended_bit=0",
+    TripWireNorthSouth => "trip_wire" "attached_bit=1,disarmed_bit=0,minecraft:connection_east=0,minecraft:connection_north=1,minecraft:connection_south=1,minecraft:connection_west=0,powered_bit=0,suspended_bit=0",
+    RedstoneWire => "redstone_wire" "redstone_signal=0",
+    DispenserSouth => "dispenser" "facing_direction=3,triggered_bit=0",
+    DispenserWest => "dispenser" "facing_direction=4,triggered_bit=0",
+    VineAllSides => "vine" "vine_direction_bits=15",
+    LeverSouth => "lever" "lever_direction=south,open_bit=0",
+    StickyPistonUp => "sticky_piston" "facing_direction=1",
+    StickyPistonWest => "sticky_piston" "facing_direction=5",
+    RepeaterSouth => "unpowered_repeater" "minecraft:cardinal_direction=south,repeater_delay=0",
     // Plants from here on, waterlogged ones from Seagrass on (`is_plant`, `is_waterlogged`).
     ShortGrass => "short_grass" "",
     Fern => "fern" "",
@@ -201,74 +225,4 @@ blocks! {
     Kelp23 => "kelp" "kelp_age=23",
     Kelp24 => "kelp" "kelp_age=24",
     Kelp25 => "kelp" "kelp_age=25",
-}
-
-/// Kelp by `kelp_age`.
-pub const KELP: [Block; 26] = [
-    Block::Kelp0,
-    Block::Kelp1,
-    Block::Kelp2,
-    Block::Kelp3,
-    Block::Kelp4,
-    Block::Kelp5,
-    Block::Kelp6,
-    Block::Kelp7,
-    Block::Kelp8,
-    Block::Kelp9,
-    Block::Kelp10,
-    Block::Kelp11,
-    Block::Kelp12,
-    Block::Kelp13,
-    Block::Kelp14,
-    Block::Kelp15,
-    Block::Kelp16,
-    Block::Kelp17,
-    Block::Kelp18,
-    Block::Kelp19,
-    Block::Kelp20,
-    Block::Kelp21,
-    Block::Kelp22,
-    Block::Kelp23,
-    Block::Kelp24,
-    Block::Kelp25,
-];
-
-impl Block {
-    pub fn is_fluid(self) -> bool {
-        matches!(self, Block::Water | Block::Lava)
-    }
-
-    /// Plants placed by features: no collision, no light blocking, never terrain.
-    pub fn is_plant(self) -> bool {
-        self >= Block::ShortGrass
-    }
-
-    /// Plants that stand in water: BDS saves them with water in the second layer.
-    pub fn is_waterlogged(self) -> bool {
-        self >= Block::Seagrass
-    }
-
-    pub fn is_kelp(self) -> bool {
-        self >= Block::Kelp0
-    }
-
-    pub fn is_solid(self) -> bool {
-        !matches!(self, Block::Air | Block::Water | Block::Lava) && !self.is_plant()
-    }
-
-    /// Solid for movement: everything but air, fluids, snow layers and the plants without collision.
-    pub fn blocks_motion(self) -> bool {
-        self.is_solid() && self != Block::SnowLayer || self.is_crop_block()
-    }
-
-    /// The feature blocks that are full blocks: they block motion and light.
-    pub fn is_crop_block(self) -> bool {
-        matches!(self, Block::Cactus | Block::MelonBlock | Block::PumpkinSouth | Block::PumpkinWest | Block::PumpkinNorth | Block::PumpkinEast)
-    }
-
-    /// The block for a `minecraft:` name, without states.
-    pub fn from_name(name: &str) -> Option<Block> {
-        let name = name.strip_prefix("minecraft:").unwrap_or(name);
-        Block::ALL.iter().copied().find(|block| block.name() == name)
-    }
 }

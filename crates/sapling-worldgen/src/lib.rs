@@ -142,7 +142,7 @@ impl OverworldGenerator {
     pub fn place_structures(&self, shape: &mut ChunkShape, chunk_x: i32, chunk_z: i32) {
         if let Some(heights) = self.place_pieces(shape, chunk_x, chunk_z) {
             let neighbour = |x: i32, y: i32, z: i32| self.pieced(x >> 4, z >> 4).block((x & 15) as usize, y, (z & 15) as usize);
-            structure::rejoin_fences(shape, (chunk_x, chunk_z), heights, &neighbour);
+            structure::rejoin_connections(shape, (chunk_x, chunk_z), heights, &neighbour);
         }
     }
 

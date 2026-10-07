@@ -6,6 +6,7 @@ use super::BoundingBox;
 use super::canvas::Canvas;
 use crate::block::Block;
 use crate::random::Mt19937;
+use crate::terrain::MIN_Y;
 
 /// Bedrock's legacy directions, as pieces store their orientation.
 pub const SOUTH: u8 = 0;
@@ -138,6 +139,26 @@ impl Frame {
                     }
                 }
             }
+        }
+    }
+
+    /// `fillColumnDown` (141f4abf0): from (x, y, z) down through air and fluids with `block`,
+    /// unclipped below; grass where it stops turns to dirt.
+    pub fn fill_column_down(&self, canvas: &mut Canvas, block: Block, x: i32, y: i32, z: i32) {
+        let (wx, mut wy, wz) = self.world(x, y, z);
+        if !canvas.bb.contains(wx, wy, wz) {
+            return;
+        }
+        loop {
+            let here = canvas.get(wx, wy, wz);
+            if here != Block::Air && !here.is_fluid() && !here.is_plant() || wy <= MIN_Y + 1 {
+                break;
+            }
+            canvas.set(wx, wy, wz, block);
+            wy -= 1;
+        }
+        if canvas.get(wx, wy, wz) == Block::GrassBlock {
+            canvas.set(wx, wy, wz, Block::Dirt);
         }
     }
 
