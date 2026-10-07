@@ -162,10 +162,10 @@ pub(crate) struct Kill {
 }
 
 impl Command for Kill {
-    /// Players are not hurt: sapling has no damage. Every other entity named is removed.
+    /// Players are not hurt: sapling has no damage. Every other entity named dies (`kill_entity`).
     fn run(self, ctx: &mut ShardCtx<'_>, _: &Sender, out: &mut Output) {
         let named = self.target.as_ref().map_or_else(Vec::new, |target| entities(ctx, target));
-        let killed: Vec<String> = named.iter().filter(|entity| ctx.remove_entity(entity.id)).map(|entity| display_name(&entity.kind)).collect();
+        let killed: Vec<String> = named.iter().filter(|entity| ctx.kill_entity(entity.id)).map(|entity| display_name(&entity.kind)).collect();
         match killed.is_empty() {
             true => no_target(out),
             false => out.translate("commands.kill.successful", vec![killed.join(", ")], true),

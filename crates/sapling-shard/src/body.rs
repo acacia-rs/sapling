@@ -1,8 +1,8 @@
 //! A body the server alone moves (falling blocks, items, orbs), as BDS moves such actors: gravity,
 //! then the move, cut short by the collision boxes of blocks, then drag
 //! (docs/research/falling-blocks.md, experience.md, items.md). What viewers are told: sync.rs.
-// TODO: no water or lava: BDS lifts items and orbs in them and slows them; nothing pushes a body
-// out of a block it is stuck in.
+// TODO: no water or lava: BDS lifts items and orbs in them and slows them; only items are lifted
+// out of a block they are in, and only up.
 
 use bevy_ecs::prelude::Component;
 use sapling_world::World as Level;
@@ -57,6 +57,16 @@ impl Body {
     fn bounds(&self) -> Bounds {
         let half = self.size[0] / 2.0;
         ([self.at[0] - half, self.at[1], self.at[2] - half], [self.at[0] + half, self.at[1] + self.size[1], self.at[2] + half])
+    }
+
+    /// Lifts a body whose box is in a block onto that block's top, stopped, as BDS did an item
+    /// dropped 0.05 into the floor (research/captures/bds-kill.txt); the tick's step lands it.
+    pub fn lift_out(&mut self, level: &Level) {
+        let (min, max) = self.bounds();
+        let overlaps = |(low, high): &Bounds| (0..3).all(|axis| min[axis] < high[axis] - EPS && max[axis] > low[axis] + EPS);
+        if let Some(top) = boxes_in(level, (min, max)).iter().filter(|other| overlaps(other)).map(|(_, high)| high[1]).reduce(f32::max) {
+            (self.at[1], self.motion) = (top, [0.0; 3]);
+        }
     }
 
     /// One tick: gravity, the move, then drag; on the ground, friction and the bounce.

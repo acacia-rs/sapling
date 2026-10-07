@@ -78,6 +78,14 @@ Rows keep Java's block ids; `java_block` maps a Bedrock block name to one (a han
 renamed blocks, and `*_double_slab` to its slab). This is Java's behaviour: where Bedrock's hard-coded
 drops differ, nothing here knows.
 
+## Mob loot
+
+`mob-loot.json` (read by `mob_loot.rs`) is BDS's own: `data/generate/mob-loot.py` takes each entity's
+loot table from the vanilla behaviour packs (their `.brarchive`s, the newest pack version winning), the
+adult's in its default state, and every table those name, with old item names renamed (checked against
+`ItemRegistry.bin` by a test). Fox and piglin name tables no pack holds; slimes and magma cubes, whose
+loot goes by size, have none here.
+
 ## Liquid reactions
 
 `liquid-reactions.tsv` (read by `liquid_reaction.rs`): for each of 736 vanilla blocks, what water

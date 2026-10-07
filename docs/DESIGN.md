@@ -578,8 +578,8 @@ block action, and takes StopBreak and AbortBreak with a position.
   <block> [states]` (32768 blocks at most) write with `ctx.update_block`, which settles neighbours
   as a player's place does (`ctx.set_block` still settles nothing); `/tp [victim] <pos>` moves
   players and entities; `/give <player> <item> [amount]`, `/clear [player]`, `/gamemode <mode>
-  [player]`, `/summon <kind> [pos]` (`ctx.spawn_entity`) and `/kill [target]`, which removes
-  entities and leaves players alone (no damage). Positions take `~` and `~<offset>` from the sender;
+  [player]`, `/summon <kind> [pos]` (`ctx.spawn_entity`) and `/kill [target]` (`ctx.kill_entity`),
+  which leaves players alone (no damage). Positions take `~` and `~<offset>` from the sender;
   whole numbers are the middle of their block across, as Bedrock reads them. Targets: `@s`, `@p`,
   `@a`, `@e` with `[type=...]`, a name. Block states come as typed, `["liquid_depth"=3]`, and a
   block named with some of its states takes the rest from its first state. The client is told the
@@ -727,7 +727,10 @@ block action, and takes StopBreak and AbortBreak with a position.
   the Java game's living-entity physics (gravity 0.08, drag 0.98 down and 0.91 across, 0.546 on the
   ground) and does nothing else. `ctx.entity(id)`, `entities()` (the world in focus, oldest first),
   `move_entity`, `set_velocity` and `remove_entity` reach every kind: items, falling blocks and orbs
-  too. Mobs press every pressure plate, items and falling blocks wooden and weighted ones, orbs none.
+  too. `kill_entity` kills a mob as BDS's `/kill` does: DeathAnimation, its loot (`sapling_data::mob_loot`,
+  BDS's tables, under `doMobLoot`) at its feet, gone 21 ticks later; anything else, and an armor
+  stand, goes at once. A spawned mob is heard (`spawn` at its head, docs/research/spawn-sound.md).
+  Mobs press every pressure plate, items and falling blocks wooden and weighted ones, orbs none.
   A spawned mob is saved with its column as a new actor (`UniqueID`, `identifier`, `definitions`,
   `Pos`, `Rotation`, `Motion`: what BDS reads of one is untried). Not done: AI, damage; saving the
   items players throw, orbs and falling blocks; a kept entity that wanders into a column that is not

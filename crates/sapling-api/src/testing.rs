@@ -111,6 +111,9 @@ impl crate::EntityBackend for Fake {
     fn remove_entity(&mut self, _: crate::EntityId) -> bool {
         false
     }
+    fn kill_entity(&mut self, _: crate::EntityId) -> bool {
+        false
+    }
 }
 
 impl Backend for Fake {

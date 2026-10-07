@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Runs a built probe example against the drill_server example, then stops it: the same drill as
 # tools/bds-drill.sh, on sapling. Build both examples first.
-# usage: tools/sapling-drill.sh <port> <example name> <output file>
+# usage: tools/sapling-drill.sh <port> <example name> <output file> [probe args...]
 set -uo pipefail
 port=$1 out=$(realpath -m "$3")
 examples="$(dirname "$0")/../target/debug/examples"
@@ -11,7 +11,7 @@ exe=$([ -f "$examples/drill_server.exe" ] && echo .exe)
 server=$!
 n=0
 until grep -q 'started' "$log" || [ "$n" -ge 60 ]; do sleep 0.5; n=$((n + 1)); done
-"$examples/$2$exe" "127.0.0.1:$port" >"$out" 2>&1
+"$examples/$2$exe" "127.0.0.1:$port" "${@:4}" >"$out" 2>&1
 echo "probe exit $?" >>"$out"
 kill "$server" 2>/dev/null
 wait "$server" 2>/dev/null

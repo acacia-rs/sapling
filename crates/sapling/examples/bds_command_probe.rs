@@ -1,8 +1,8 @@
-//! Runs command lines as an operator bot while a second operator watches, and prints what each
-//! was answered: CommandOutput in full, Text, GameRulesChanged as `rule=value`. The ground truth
-//! for sapling's vanilla commands (`sapling::vanilla`).
-//! `cargo run -p sapling --example bds_command_probe -- <server> [command...]` (offline mode,
-//! operators by default); without commands it runs the /gamerule drill.
+//! Runs a drill of command lines as an operator bot while a second operator watches, and prints
+//! what each was answered: CommandOutput in full, Text, GameRulesChanged as `rule=value`, and the
+//! drill's own packets. The ground truth for sapling's vanilla commands (`sapling::vanilla`).
+//! `cargo run -p sapling --example bds_command_probe -- <server> [gamerule|kill]` (offline mode,
+//! operators by default; `gamerule` when none is named).
 #[path = "shared/dump.rs"]
 #[allow(dead_code)]
 mod dump;
@@ -52,7 +52,25 @@ const GAMERULE: &[&str] = &[
     "gamerule",
 ];
 
-fn show(start: Instant, who: &str, event: Option<BotEvent>) -> Result<(), String> {
+/// Mobs killed: the death, the loot and when they go; with `domobloot` off, no loot.
+const KILL: &[&str] = &[
+    "gamerule domobspawning false",
+    "summon chicken ~2 ~ ~",
+    "kill @e[type=chicken]",
+    "summon pig ~-2 ~ ~",
+    "kill @e[type=pig]",
+    "summon armor_stand ~ ~ ~2",
+    "kill @e[type=armor_stand]",
+    "gamerule domobloot false",
+    "summon chicken ~2 ~ ~",
+    "kill @e[type=chicken]",
+    "gamerule domobloot true",
+];
+const KILL_SHOWN: &[&str] = &["EntityEvent", "AddEntity", "AddItemEntity", "RemoveEntity", "LevelSoundEvent", "SetEntityData", "Animate", "MobEffect"];
+/// How long each line of the kill drill is watched: a dead mob goes a second after.
+const KILL_SETTLE: Duration = Duration::from_millis(2500);
+
+fn show(start: Instant, shown: &[&str], who: &str, event: Option<BotEvent>) -> Result<(), String> {
     let packet = match event {
         Some(BotEvent::Packet(packet)) => packet,
         Some(BotEvent::Disconnected(reason)) => return Err(format!("{who} disconnected: {reason:?}")),
@@ -68,18 +86,25 @@ fn show(start: Instant, who: &str, event: Option<BotEvent>) -> Result<(), String
         let rules = packet.decode::<packets::GameRulesChanged>().map_err(|e| e.to_string())?;
         let shown: Vec<String> = rules.rules.iter().map(|rule| format!("{}={:?}", rule.name, rule.value)).collect();
         println!("{ms:>7} {who:<7} GameRulesChanged {}", shown.join(" "));
-    } else if matches!(acacia_bot::proto::packet_name(packet.id), Some("Text" | "SetTime" | "SyncWorldClocks")) {
-        println!("{ms:>7} {who:<7} {}", dump::dump(&packet).unwrap_or_default());
+    } else if let Some(name) = acacia_bot::proto::packet_name(packet.id).filter(|name| ["Text", "SetTime", "SyncWorldClocks"].contains(name) || shown.contains(name)) {
+        let text: String = dump::dump(&packet).unwrap_or_default().chars().take(SHOWN).collect();
+        println!("{ms:>7} {who:<7} {name} {text}");
     }
     Ok(())
 }
 
+/// Characters of a drill's own packets shown.
+const SHOWN: usize = 900;
+
 #[tokio::main(flavor = "current_thread")]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut args = std::env::args().skip(1);
-    let server = args.next().ok_or("usage: bds_command_probe <server> [command...]")?;
-    let given: Vec<String> = args.collect();
-    let lines: Vec<String> = if given.is_empty() { GAMERULE.iter().map(|line| line.to_string()).collect() } else { given };
+    let server = args.next().ok_or("usage: bds_command_probe <server> [gamerule|kill]")?;
+    let (lines, shown, settle) = match args.next().as_deref() {
+        None | Some("gamerule") => (GAMERULE, &[][..], SETTLE),
+        Some("kill") => (KILL, KILL_SHOWN, KILL_SETTLE),
+        Some(other) => return Err(format!("no drill {other}").into()),
+    };
     let (mut actor, mut watcher) = (connect(&server, "CmdActor").await?, connect(&server, "CmdWatcher").await?);
     watcher.wait_ticks(60).await?;
     actor.wait_ticks(60).await?;
@@ -87,14 +112,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         while let Ok(Some(_)) = tokio::time::timeout(Duration::from_millis(5), bot.next()).await {}
     }
     let start = Instant::now();
-    for line in &lines {
+    for line in lines {
         println!("## /{line}");
         actor.client().command(line);
-        let end = tokio::time::Instant::now() + SETTLE;
+        let end = tokio::time::Instant::now() + settle;
         loop {
             tokio::select! {
-                event = actor.next() => show(start, "actor", event)?,
-                event = watcher.next() => show(start, "watcher", event)?,
+                event = actor.next() => show(start, shown, "actor", event)?,
+                event = watcher.next() => show(start, shown, "watcher", event)?,
                 _ = tokio::time::sleep_until(end) => break,
             }
         }

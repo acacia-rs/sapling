@@ -2577,6 +2577,7 @@ dependencies = [
  "acacia-molang",
  "acacia-proto",
  "bytes",
+ "serde_json",
 ]
 
 [[package]]

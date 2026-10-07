@@ -54,6 +54,13 @@ impl ShardCtx<'_> {
     pub fn remove_entity(&mut self, id: EntityId) -> bool {
         self.backend.remove_entity(id)
     }
+
+    /// Kills an entity as `/kill` does: a mob dies, leaves its loot (the world's `doMobLoot`
+    /// allowing) and is gone a second later; anything else goes at once. False for one that is
+    /// gone or already dying.
+    pub fn kill_entity(&mut self, id: EntityId) -> bool {
+        self.backend.kill_entity(id)
+    }
 }
 
 /// The entities side of [`crate::Backend`].
@@ -64,4 +71,5 @@ pub trait EntityBackend {
     fn move_entity(&mut self, id: EntityId, feet: [f32; 3]) -> bool;
     fn set_velocity(&mut self, id: EntityId, velocity: [f32; 3]) -> bool;
     fn remove_entity(&mut self, id: EntityId) -> bool;
+    fn kill_entity(&mut self, id: EntityId) -> bool;
 }

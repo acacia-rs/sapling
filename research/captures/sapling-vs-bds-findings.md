@@ -16,6 +16,12 @@ commands answered alike (CommandOutput, echo, GameRulesChanged) but for the star
 `doMobSpawning = false` and `playersSleepingPercentage = 150` (source not found; the drill wipes the world), so its
 `playerssleepingpercentage 150` changed nothing and sent no GameRulesChanged, as sapling does for no change.
 
+/kill (`bds_command_probe kill`, `bds-kill.txt` vs `sapling-kill.txt`, 2026-10-07): DeathAnimation with the answer,
+loot (BDS's tables) at the mob's feet + 0.075 in the same tick, RemoveEntity 21 ticks on; the armor stand goes at once
+without either; none with `doMobLoot` off. The loot lands at once, lifted out of the floor (body.rs `lift_out`). Left:
+BDS also sends the summoner `EntityEvent EntitySpawn` with data `(actor type id << 16) | 2`, and repeats an item's
+whole metadata in a SetEntityData after AddItemEntity (D9).
+
 ## The round-1 fixes
 
 | Fix | Now | Evidence |

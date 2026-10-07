@@ -7,7 +7,7 @@ use std::sync::{Arc, Mutex};
 
 use acacia_proto::nbt::Value;
 use acacia_proto::Packet;
-use acacia_proto::packets::{AddEntity, LevelSoundEvent, MoveEntityDelta, RemoveEntity, UpdateBlock};
+use acacia_proto::packets::{AddEntity, AddItemEntity, EntityEvent, EntityEventEventId, LevelSoundEvent, MoveEntityDelta, RemoveEntity, UpdateBlock};
 use common::stored::{actor, enter_stored, floor_with};
 use common::{Harness, all, hash};
 use sapling_api::{Block, EntityId, EntityInfo};
@@ -58,6 +58,36 @@ fn a_spawned_mob_is_heard_at_its_head_after_it_is_shown_as_on_bds() {
     // A pig is 0.9 wide and high; its head 0.85 of that up and, an animal's, forward.
     let at = [sound.position.x, sound.position.y, sound.position.z];
     assert!((sound.sound_id.as_str(), sound.entity_type.as_str()) == ("spawn", "minecraft:pig") && (0..3).all(|axis| (at[axis] - [3.5, 65.765, 1.265][axis]).abs() < 1e-4), "{sound:?}");
+}
+
+#[test]
+fn a_killed_mob_dies_leaves_its_loot_and_goes_a_second_later_as_on_bds() {
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    h.enter(2, "Steve");
+    let pig = ask(&mut h, |ctx| ctx.spawn_entity("minecraft:pig", [3.5, 65.0, 0.5])).expect("a pig");
+    (0..5).for_each(|_| drop(h.tick_all()));
+    h.remote.run(move |ctx| assert!(ctx.kill_entity(pig) && !ctx.kill_entity(pig), "dies once"));
+    let died = h.tick_all();
+    let events: Vec<_> = all::<EntityEvent>(died.to(2)).iter().map(|event| (event.runtime_entity_id, event.event_id.clone())).collect();
+    assert_eq!(events, [(pig.0, EntityEventEventId::DeathAnimation)]);
+    let loot = all::<AddItemEntity>(died.to(2));
+    assert!(!loot.is_empty() && loot.iter().all(|item| (item.position.y - 65.075).abs() < 1e-4 && item.velocity.y == 0.2), "porkchops at the pig: {loot:?}");
+    // 0.05 into the floor, each is lifted onto it and stays, as BDS's did.
+    let porkchop = loot[0].runtime_entity_id;
+    let ticks: Vec<_> = (1..=25).map(|_| h.tick_all().to(2).to_vec()).collect();
+    let moves: Vec<_> = std::iter::once(died.to(2)).chain(ticks.iter().map(Vec::as_slice)).flat_map(all::<MoveEntityDelta>).filter(|moved| moved.runtime_entity_id == porkchop).map(|moved| (moved.x, moved.y, moved.on_ground)).collect();
+    assert_eq!(moves, [(None, Some(65.125), true)]);
+    let gone: Vec<usize> = (1..=25).filter(|tick| all::<RemoveEntity>(&ticks[tick - 1]).iter().any(|remove| remove.entity_id_self == pig.0 as i64)).collect();
+    assert_eq!(gone, [21], "gone 21 ticks after it died");
+
+    let calf = ask(&mut h, |ctx| {
+        assert!(ctx.set_game_rule("doMobLoot", sapling_api::RuleValue::Bool(false)));
+        ctx.spawn_entity("minecraft:pig", [5.5, 65.0, 0.5])
+    })
+    .expect("another pig");
+    h.remote.run(move |ctx| assert!(ctx.kill_entity(calf)));
+    assert!(all::<AddItemEntity>(h.tick_all().to(2)).is_empty(), "no loot without doMobLoot");
 }
 
 #[test]

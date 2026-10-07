@@ -6,17 +6,20 @@
 
 use bevy_ecs::prelude::*;
 use bytes::Bytes;
-use acacia_proto::packets::LevelSoundEvent;
+use acacia_proto::packets::{EntityEvent, EntityEventEventId, LevelSoundEvent};
 use acacia_proto::types::{MetadataFlags1, Vec3f};
-use sapling_api::{EntityBackend, EntityId, EntityInfo};
+use sapling_api::{EntityBackend, EntityId, EntityInfo, Item};
 use sapling_data::AddEntityOptions;
 
 use sapling_world::Actor;
 
+use crate::blocks::Dice;
 use crate::body::{Body, Physics};
 use crate::components::{InLayer, Layer, NetId, Tick};
 use crate::handlers::Ctx;
-use crate::{blocks, entities, mobs, worlds};
+use crate::{blocks, drops, entities, inventory, mobs, worlds};
+
+const MOB_LOOT: &str = "doMobLoot";
 
 /// A mob: spawned through the API, or kept by a world folder and dressed as it was stored
 /// (`look`). Its [`Body`] and [`entities::Kind`] are beside it.
@@ -97,8 +100,54 @@ pub(crate) fn from_storage(world: &mut World, layer: Entity, actor: Actor, uniqu
     true
 }
 
-/// Moves every spawned mob a tick.
+/// A mob that died at the tick it holds; it goes [`DYING`] ticks after.
+#[derive(Component)]
+struct Dying(u64);
+
+/// Ticks from a mob's death to its going, and how far above its feet its loot appears (where the
+/// wire puts it), as BDS was seen to (research/captures/bds-kill.txt).
+const DYING: u64 = 21;
+const LOOT_LIFT: f32 = 0.075;
+/// Killed, these go at once, without a death or loot, as BDS's armor stand.
+const NO_DEATH: &[&str] = &["minecraft:armor_stand"];
+
+/// Kills the entity `id` (see `ShardCtx::kill_entity`).
+fn kill(world: &mut World, id: EntityId) -> bool {
+    let Some(entity) = entities::find(world, id).filter(|entity| world.get::<Dying>(*entity).is_none()) else { return false };
+    let (Some(kind), Some(body), Some(layer)) = (world.get::<entities::Kind>(entity).map(|kind| kind.0.clone()), world.get::<Body>(entity).copied(), world.get::<InLayer>(entity).map(|layer| layer.0)) else { return false };
+    if world.get::<Creature>(entity).is_none() || NO_DEATH.contains(&kind.as_str()) {
+        mobs::remove(world, entity);
+        return true;
+    }
+    let now = world.resource::<Tick>().0;
+    world.entity_mut(entity).insert(Dying(now));
+    let death = EntityEvent { runtime_entity_id: id.0, event_id: EntityEventEventId::DeathAnimation, data: 0, fire_at_position: None };
+    blocks::to_viewers(world, layer, body.at.map(|c| c.floor() as i32), &[sapling_net::encode(&death)]);
+    if world.get::<Layer>(layer).is_some_and(|layer| layer.world.level().rules.on(MOB_LOOT)) {
+        leave_loot(world, layer, &kind, body.at);
+    }
+    true
+}
+
+fn leave_loot(world: &mut World, layer: Entity, kind: &str, [x, y, z]: [f32; 3]) {
+    let loot = {
+        let mut dice = world.get_resource_or_insert_with(Dice::default);
+        sapling_data::mob_loot(kind, &mut || dice.fraction())
+    };
+    let Some(registry) = world.get::<Layer>(layer).map(|layer| layer.world.registry()) else { return };
+    let stacks: Vec<_> = loot.into_iter().filter_map(|(name, count)| inventory::stored(&Item::new(name, count.min(64) as u8), registry)).collect();
+    for stack in stacks {
+        drops::toss(world, layer, stack, [x, y + LOOT_LIFT, z]);
+    }
+}
+
+/// Moves every spawned mob a tick; a dead one goes once it has died.
 pub(crate) fn tick(world: &mut World) {
+    let now = world.resource::<Tick>().0;
+    let dead: Vec<Entity> = world.query::<(Entity, &Dying)>().iter(world).filter(|(_, dying)| now >= dying.0 + DYING).map(|(entity, _)| entity).collect();
+    for entity in dead {
+        mobs::remove(world, entity);
+    }
     let all: Vec<(Entity, Entity, u64, String)> =
         world.query_filtered::<(Entity, &InLayer, &NetId, &entities::Kind), With<Creature>>().iter(world).map(|(entity, layer, id, kind)| (entity, layer.0, id.0, kind.0.clone())).collect();
     for (entity, layer, id, kind) in all {
@@ -135,5 +184,9 @@ impl EntityBackend for Ctx<'_> {
 
     fn remove_entity(&mut self, id: EntityId) -> bool {
         entities::remove(self.world, id)
+    }
+
+    fn kill_entity(&mut self, id: EntityId) -> bool {
+        kill(self.world, id)
     }
 }

@@ -13,7 +13,7 @@ use sapling_world::{ChunkPos, ItemStack};
 
 use crate::blocks::Dice;
 use crate::body::{Body, Physics};
-use crate::components::{InLayer, NetId, Position, Stage, Tick};
+use crate::components::{InLayer, Layer, NetId, Position, Stage, Tick};
 use crate::inventory::Inventory;
 use crate::{blocks, entities, inventory, mobs};
 
@@ -93,9 +93,9 @@ pub(crate) fn throw(world: &mut World, player: Entity, stack: ItemStack) {
     lay(world, layer, stack, at, motion, from);
 }
 
-/// Tosses `stack` up from `centre` (the middle of its box), as BDS's `Spawner::spawnItem` does
-/// every item it makes.
-fn toss(world: &mut World, layer: Entity, stack: ItemStack, centre: [f32; 3]) {
+/// Tosses `stack` up from `centre` (the middle of its box, where the wire puts it), as BDS's
+/// `Spawner::spawnItem` does every item it makes.
+pub(crate) fn toss(world: &mut World, layer: Entity, stack: ItemStack, centre: [f32; 3]) {
     let mut dice = dice(world);
     let motion = [dice.fraction() * 2.0 * SPILL_ACROSS - SPILL_ACROSS, SPILL_UP, dice.fraction() * 2.0 * SPILL_ACROSS - SPILL_ACROSS];
     let from = world.resource::<Tick>().0 + SPILL_DELAY;
@@ -143,12 +143,21 @@ pub(crate) fn fly(world: &mut World) {
             mobs::remove(world, entity);
             continue;
         }
+        lift_out(world, entity, layer);
         let Some((body, packets)) = entities::step(world, entity, layer, id, &Physics::ITEM, SIZE / 2.0) else { continue };
         if !packets.is_empty() {
             blocks::to_viewers(world, layer, body.at.map(|c| c.floor() as i32), &packets);
             let shown = world.get::<Dropped>(entity).and_then(|item| mobs::item_announcement(id, &item.stack, wire(body.at), body.motion));
             shown.into_iter().for_each(|shown| mobs::reannounce(world, entity, shown));
         }
+    }
+}
+
+fn lift_out(world: &mut World, entity: Entity, layer: Entity) {
+    let (Some(level), Some(mut body)) = (world.get::<Layer>(layer), world.get::<Body>(entity).copied()) else { return };
+    body.lift_out(&level.world);
+    if let Some(mut stored) = world.get_mut::<Body>(entity) {
+        *stored = body;
     }
 }
 
