@@ -1,0 +1,21 @@
+{
+  "format_version": 2,
+  "header": {
+    "name": "template probe",
+    "description": "Loads Java templates through BDS's structure manager",
+    "uuid": "5b8e1c42-7d3a-4f19-a2c6-3e9d0f4b7a11",
+    "version": [1, 0, 0],
+    "min_engine_version": [1, 26, 0]
+  },
+  "modules": [
+    { "type": "data", "uuid": "5b8e1c42-7d3a-4f19-a2c6-3e9d0f4b7a12", "version": [1, 0, 0] },
+    {
+      "type": "script",
+      "language": "javascript",
+      "uuid": "5b8e1c42-7d3a-4f19-a2c6-3e9d0f4b7a13",
+      "version": [1, 0, 0],
+      "entry": "scripts/main.js"
+    }
+  ],
+  "dependencies": [{ "module_name": "@minecraft/server", "version": "2.0.0" }]
+}
