@@ -42,7 +42,11 @@ pub struct FeatureTally(BTreeMap<&'static str, Counts>);
 
 impl FeatureTally {
     /// One stable cell: our block before and after features, and BDS's.
+    /// Cells BDS gave a block no terrain stage or ported feature places (sulfur caves, structures) are skipped.
     pub fn add(&mut self, before: Block, ours: Block, bds: &BdsCell) {
+        if Block::from_name(&bds.block).is_none() && !bds.is_empty() && !bds.is_fluid() {
+            return;
+        }
         let featured = before != ours;
         let hit = featured && bds.block == ours.name() && bds.states == ours.states() && bds.liquid.is_none();
         if featured && let Some(family) = family(ours.name()) {

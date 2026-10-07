@@ -23,12 +23,20 @@ Companion to [worldgen-bds.md](worldgen-bds.md). Feature rules run in `decoratio
 - Per rule: seed = boost `hash_combine(chunkSeed, (u32)FNV1_64(identifier))` with the large-feature chunk seed;
   MT1 draws the scatter (chance gate, iterations, one position per iteration, index counting down, axes in
   `coordinate_eval_order`, origin = chunk min corner, y 0); MT2, seeded alike, is handed to every placement.
-- With more than one biome in the chunk, a position places only if its block's biome is the one being decorated;
-  positions outside y -64..319 have no biome and are skipped without drawing (oracle: diamond and redstone rules
-  scatter below the world; 73-81% to 99% precision). A one-biome chunk places every position.
-- `ore_feature`: featurelab's port (Java legacy vein in f32, the Mth sine table, sphere pruning, cell-centre test,
-  x/z/y loop); `may_replace` by block type; discard roll per matching rule when 0 < chance < 1, then the 6-face
-  air test.
+- With more than one biome in the chunk, a position places only if its block's biome is the one being decorated
+  (`BlockSource::getBiome` 141602f90, by id). Outside y -64..319 that returns the dimension's default biome, which
+  sapling treats as matching none (oracle: diamond and redstone rules scatter below the world; 73-81% to 99%
+  precision). A one-biome chunk places every position. Palettes fill in x, z, y storage order (1438cb860).
+- Scatter (`ScatterParams::initScatter` 14478ea70, `getPosConst`/`getPosMolang` 14478fbe0/14478fe20,
+  `sampleDistribution` 14478f9f0): extents `roundf`; uniform `min + nextInt(max-min)`, no draw if max <= min;
+  triangle `min + nextInt(R/2+1) + nextInt(R-R/2+1)`; percent gate draws only for 0 < pct < 100.
+- `ore_feature` (`OreFeature::place` 143b8dcb0): featurelab's port (Java legacy vein in f32 centred on origin+8,
+  the Mth sine table, sphere pruning, cell-centre test, x/z/y loop); `may_replace` by block type; per matching
+  (cell, rule) a discard roll when 0 < chance < 1, drawn before the 6-face test for `minecraft:air` (143b7fdc0).
+- Disks (hardcoded, at `query.above_top_solid` = one above the highest motion-blocking block, fluids passed,
+  140a08bb0): `SandFeature` 149d60440 (sand r 7, gravel r 6) and `ClayFeature` 148287a70 (r 4) need water at the
+  position (clay: or clay), draw `nextInt(r-2)+2`, replace dirt, coarse dirt and grass (clay: mud instead of
+  grass) within 2 (clay 1) blocks vertically, x then z then y.
 
 ## Cross-chunk scheme
 BDS decorates a chunk once its neighbours are generated and lets its features write into the 3x3 chunks around it;

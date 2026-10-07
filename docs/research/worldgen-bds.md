@@ -269,6 +269,12 @@ sampleClimate,terrainInfo}`, 14822cb50 `ChunkLocalNoiseCache::ChunkLocalNoiseCac
 148a72d90/142f67a10/148a72910 `BiomeVolume::{fuzzyZoom,latticeJitter,nearestCorner,uniformCellMask}`, 14805fad0/
 14805fb30/1480616f0/14805fc20 `Climate::{quantizeCoord,RTreeNode::distance,RTree::search,TargetPoint}`.
 
+Feature labels (2026-10-07): 144c03360/144bffc40 `FeatureRulesLoader::{loadAndAttach,parseRule}`, 14027dd40
+`HashedString::HashedString`, 14478ea70/14478fbe0/14478fe20/14478f9f0/1447a4400 `ScatterParams::{initScatter,
+getPosConst,getPosMolang,sampleDistribution,evalCoordinate}`, 143b8dcb0/143b7fdc0 `OreFeature::{place,isExposedTo}`,
+149d60440 `SandFeature::place`, 148287a70 `ClayFeature::place`, 141602f90/1415f7a50 `BlockSource::{getBiome,
+getAboveTopSolidBlock}`, 140a08bb0 `LevelChunk::getAboveTopSolidBlock`.
+
 Milestone 2a labels: 148230a70 `OverworldBiomeBuilder::addBiomes`, 1481f9850/1482009c0/148206880/14820bae0
 `::{addMidSlice,addHighSlice,addPeaks,addLowSlice}`, 1481f95f0 `::addSurfaceBiome`, 14805fa80 `Climate::Parameter::span`,
 14805fd00 `Climate::parameters`, 1480610f0/148060510/148060320/14805ff10 `RTree::{create,build,Node::sort,

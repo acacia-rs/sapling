@@ -92,7 +92,7 @@ fn biome_at(biomes: &ChunkBiomes, chunk: (i32, i32), [x, y, z]: [i32; 3]) -> Opt
 }
 
 /// The chunk's biomes as BDS lists them (1438c8450): sub-chunk palettes bottom up, first seen first.
-// TODO: palette insertion order inside a sub-chunk follows fillBiomes' write order; x, z, y assumed.
+/// Inside a sub-chunk the palette fills in storage order, x then z then y (1438cb860).
 fn palette_order(biomes: &ChunkBiomes) -> Vec<u32> {
     let mut order = Vec::new();
     for base in (MIN_Y..MIN_Y + HEIGHT as i32).step_by(16) {

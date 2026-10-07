@@ -119,6 +119,9 @@ fn judge_cell(ours: Block, bds: &BdsCell, y: i32, context: Context) -> Verdict {
         return Verdict::Match(stage_of(ours, y, context));
     }
     if context.featured {
+        if bds.terrain().is_none() && !bds.is_empty() && !bds.is_fluid() {
+            return Verdict::Later("features, structures over our features (non-terrain block)");
+        }
         return Verdict::Error(Stage::Features);
     }
     if ours.is_solid() && (bds.is_empty() || bds.is_fluid()) {
