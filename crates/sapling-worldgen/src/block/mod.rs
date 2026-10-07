@@ -104,6 +104,12 @@ impl Block {
         matches!(self, Block::Cactus | Block::MelonBlock | Block::PumpkinSouth | Block::PumpkinWest | Block::PumpkinNorth | Block::PumpkinEast)
     }
 
+    /// A down-facing bud turned to `face` (FacingID 0..6).
+    pub fn faced(self, face: usize) -> Block {
+        let index = Block::ALL.iter().position(|&block| block == self).expect("in ALL");
+        Block::ALL[index + face]
+    }
+
     /// The block for a `minecraft:` name, without states.
     pub fn from_name(name: &str) -> Option<Block> {
         let name = name.strip_prefix("minecraft:").unwrap_or(name);

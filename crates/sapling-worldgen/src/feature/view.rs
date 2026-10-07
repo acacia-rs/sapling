@@ -28,6 +28,20 @@ impl ChunkWrites {
     pub fn towards(&self, dx: i32, dz: i32) -> &[Write] {
         slot(dx, dz).map_or(&[], |slot| &self.0[slot])
     }
+
+    /// Every write in order of its target chunk, as world (x, y, z), block, seen.
+    pub fn world_writes(&self, source: (i32, i32)) -> Vec<([i32; 3], Block, Block)> {
+        let mut out = Vec::new();
+        for (slot, writes) in self.0.iter().enumerate() {
+            let (dx, dz) = ((slot / SIDE) as i32 - REACH, (slot % SIDE) as i32 - REACH);
+            let (x0, z0) = ((source.0 + dx) * 16, (source.1 + dz) * 16);
+            for w in writes {
+                let i = w.index as i32;
+                out.push(([x0 + (i & 15), i / 256 + MIN_Y, z0 + ((i >> 4) & 15)], w.block, w.seen));
+            }
+        }
+        out
+    }
 }
 
 fn slot(dx: i32, dz: i32) -> Option<usize> {

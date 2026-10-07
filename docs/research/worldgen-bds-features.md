@@ -91,15 +91,39 @@ Tries move by `(r & m) - (r & m)` per axis, two raw MT outputs each; most draw z
   cornflower by `nextInt(4)`, else dandelion. Forest and flower forest tables (noise x/48) not ported.
 - Waterlogged plants keep water in the second layer; seagrass and kelp are not water material.
 
+## Geodes, icebergs, freeze pass
+- `geode_feature` (`GeodeFeature::place` 149e845f0, row lambda 149e867f0): Java 1.17's geode in f32 on the placing
+  MT. Draws: points `min + nextInt(max - min)` (the maximum is never reached, as for every range here), then the
+  NormalNoise (-4, [1]) in legacy mode from that MT (`PerlinNoise::from_mt`: octave 0's ImprovedNoise first, 262-draw
+  skips, `nextDouble` = one raw draw x 2^-32), the crack float and the crack chance (0.95 and base size 2 hardcoded),
+  per point x, y, z offsets and the point offset. Layers 1/sqrt(2.2|3.2|4.2 + d), filling 0x3f4457d1; inverse
+  square roots are the float 0x5f3759df with one Newton step. The scan walks x from the origin up then down, per x
+  y up then down, z inner; cracks are set at once, layers buffered and set after the scan, buds tried up, down,
+  north, south, west, east (14a7445a0). Anchors in air, liquids, ice, packed/blue ice or bedrock count as invalid.
+  It returns early when the position is inside a structure (query at 149e845f0's start): not modelled.
+- `legacy:ice_feature` (149e96790): `nextInt(8) == 0` places `IcebergFeature` (149e8f460, cut-out 149e90f80) at
+  `x + 12 + nextInt(8)`, sea level, `z + 12 + nextInt(8)`; then `nextInt(20)` `BlueIceFeature` (14827ec60) tries at
+  `nextInt(16) + 8`, `nextInt(32) + 30`, `nextInt(16) + 8`. The iceberg is Java 1.17's with every shape draw up front
+  (11 - nextInt(5), 3 + nextInt(3), nextInt(6), nextInt(15), ellipse when a float > 0.8, ...), no `getEllipseC`
+  narrowing, a 1% blue-ice body; blue ice grows only next to 1..4 blue ice blocks.
+- Freeze pass (end of `decorationPostProcessChunk`, x outer, z inner): the rain top (140a09950, first block from the
+  top that is not air or a plant) and `Biome::getTemperature` (14119c8c0): frozen oceans (`partially_frozen`) take
+  0.2 where `sum 3 octaves (seed 3456, x0.05) + 1 octave (seed 2345, x0.2) < 0.3` and the 2345 noise at x0.09 is
+  below 0.8; above y 80 temperature falls by `(y + c/8 - 80) * 0.05 / 40`, c the chunk's per-column byte
+  `(i8)(noise(seed 1234, x/8, z/8) * 64)` (1411a3e60). 14119c8c0 picks sea + 17 and x8 against sea + 1 and x4 on
+  version flags; the oracle fits +17/x8 (the other branch snows 1.1k cells too low in windswept gravelly hills).
+  Water under the top freezes at <= 0.15 (`shouldFreeze` 14119e860); the top snows (`shouldSnow` 14119e740) over a
+  motion-blocking block other than ice and powder snow (packed ice holds snow).
+
 ## Oracle (2026-10-07, 20261003 near origin unless named)
-Precision/recall: grass and ferns 99.3/99.3, kelp 93.8/95.9, seagrass 74.8/75.1 (59-84 elsewhere), flowers
-87.4/92.4, sunflowers 82.8/85.7, bushes 100/98.3, sugar cane 100/67; biome regions: dead bushes and dry grass
-98.5-100, lily pads 85-97, mushrooms 85 (taiga) and 100 (mushroom fields), sweet berries 100, cacti 60/75.
-Seagrass misses are decoration order: a source chunk whose scatter overlaps a neighbour's that BDS decorated
-first meets its seagrass, skips the float draw and desyncs. Neither x- nor z-major neighbour orders fit (each
-fixes some chunks and breaks others). Lush caves (moss, clay pools, dripleaves, vines; 1.4k grass and 8.7k clay
-cells in the negative-seed region) need snap_to_surface, vegetation_patch, growing_plant and the hardcoded
-moss_vegetation and dripleaf features.
+Precision/recall near origin: stone blobs 99.93/99.98, coal 99.79/99.90, seagrass 99.95/99.93, kelp 99.89/99.88,
+diamond 97.0/97.2, redstone 98.6/98.5, geode shells 98.0/100 and buds 99.0/100 (BDS skips geodes inside
+structures), grass and ferns 99.8/99.9, flowers, sunflowers, sugar cane 100. Biome regions: geode shells and buds
+100/100 everywhere; dead bushes and dry grass 98.5-100, lily pads 85-97, mushrooms 85 (taiga) and 100, cacti 60/75.
+The diamond and redstone shifts sit beside mineshafts: their blobs draw a discard float per exposed cell, so
+structure air BDS has and sapling lacks shifts the rest of the rule's draws. Lush caves (moss, clay pools,
+dripleaves, vines) need snap_to_surface, vegetation_patch, growing_plant and the hardcoded moss_vegetation and
+dripleaf features; glow lichen and sculk (multiface, sculk_patch) are not ported either.
 
 ## What trees need
 Surface-pass rules place hardcoded `legacy:*_tree_feature`s (`LegacyTreeFeature` by type, registered in 1482f4580),
@@ -109,18 +133,24 @@ JSON `tree_feature` (grove pines), aggregate/weighted trees (mangrove, cherry, p
 shade mushrooms, trunks turn grass to dirt, giant spruces lay podzol; pine taiga grass recall (48%) and mangrove
 grass (26%) wait on them.
 
-## Cross-chunk scheme
-BDS decorates a chunk once its neighbours are generated and lets its features write into the 3x3 chunks around it;
-writes further out are dropped (oracle: allowing two chunks is no better). Which neighbour decorates first depends
-on load order, so cells two chunks' features both claim, and draws that depend on blocks a neighbour's features
-changed, are not reproducible (the `-run2` worlds mask some of it).
+## Decoration order
+BDS decorates a chunk once its 3x3 neighbourhood is loaded and lets its features write into those 9 chunks; writes
+further out are dropped. The scheduler (`ChunkSource::_spawnChunkGenerationTasks` 1409ddfc0) takes the pending
+{chunk, stage} set, sorts it by `ChunkBuildOrderPolicy::getChunkRebuildPriority` (Dimension +0x3b0, vt slot 1; MSVC
+`std::sort` 140a0cbd0) and launches from the highest; the decoration task (140a16cd0) runs
+`decorationPostProcessChunk`, which first takes `PostprocessingManager::tryLock` (1438df8f0) on the 3x3 and, failing,
+returns the chunk to the queue (1409e3920); success unblocks neighbours (1409e09d0). Ticking areas register a box
+influence (142fe8f60, even-aligned bounds). What the oracle shows, with no exception in 3.3k neighbour pairs over
+all four worlds (`examples/decoration_order.rs`: votes from cells two chunks' stone-only ore blobs both claim):
+neighbours decorate in parity phases, x even z even first, then x odd z even, both odd, x even z odd. Chunks of a
+phase are never neighbours; their mutual order (same phase, two apart) is not measured. The oracle's ring of
+chunks around each region is decorated too (leaving its features out makes every region worse).
 
-sapling decorates each source chunk alone, over its 3x3 neighbours' terrain before features (cached loaded
-columns), and logs each write with the block it replaced. A column replays the logs of the 9 source chunks around
-it, x then z, applying a write only where the replaced block is still there, so the first source to claim a cell
-keeps it. A column depends only on the seed, not on generation order. Seeding a source's view with its
-neighbours' writes (several orders tried) changes nothing measurable for ores and makes seagrass worse overall.
-Cost: per column one decoration (cached for the neighbours) plus the loaded columns of a 5x5 area, amortised to one
-per column when generating an area; chunk biomes (a byte per block) are cached too and shared by the surface, the
-decoration and the caller (whole column 27.4 -> 21.7 ms on testbox, 20261003 chunks 0..7, cycles -21%; the
-vegetation rules cost nothing measurable there).
+sapling models that order and it is what a server-side generator should use (it depends on the seed only): each
+source chunk is decorated over its 3x3 as the earlier phases left it (the chunk's terrain before features plus the
+replayed writes of every lower-phase source around it, cached per chunk and phase), and logs each write with the
+block it replaced; a column replays the 9 sources around it by phase, then x, then z, applying a write only where
+the replaced block is still there. The freeze pass runs at the end of each source's decoration, over its own
+columns. Near origin this took wrong cells from 103.8k to 8.1k (seagrass 74.8 -> 99.9%, coal 90.7 -> 99.8%).
+Cost: per column one decoration (cached) plus up to three phase snapshots per neighbour chunk; the oracle suite went
+from 85 s to 160-210 s on testbox (geodes and icebergs included), not profiled further.

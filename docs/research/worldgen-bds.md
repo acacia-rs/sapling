@@ -26,7 +26,7 @@ names, same octave/amplitude tables, same Xoroshiro128++ seeding by MD5 of the n
 | Surface | **Bedrock** data-driven: biome JSON `minecraft:surface_builder` → `BiomeSurfaceSystem` / `VanillaSurfaceBuilders` | **not** Java SurfaceRules; uses PerlinSimplex surface noise + material-adjustment noise | high |
 | Bedrock floor | hardcoded, MT seeded by chunk pos only (no world seed) | **Bedrock-only** | high |
 | Carvers | 2 `cave_carver_feature`s in `pregeneration_pass` + hardcoded canyon | legacy pre-1.18 style, **not** Java carvers; ported, oracle 99.5% precision/recall | high |
-| Lakes / monster rooms / freeze | hardcoded in `decorationPostProcessChunk` | Java-legacy shapes, MT RNG; lava lakes ported | high (lakes) |
+| Lakes / monster rooms / freeze | hardcoded in `decorationPostProcessChunk` | Java-legacy shapes, MT RNG; lava lakes and freeze ported | high (lakes) |
 | Features | data-driven `feature_rules` + `features` JSON, 12 named passes, MT per rule | **Bedrock-only** | high |
 | Structures | legacy `StructureFeature` + jigsaw v2 (`br::worldgen`, `worldgen/structures` JSON) | separate system | low (not mapped) |
 
@@ -148,10 +148,11 @@ MT reseeded with the large-feature chunk seed (worldgen-bds-carvers.md). Then, i
 - Monster rooms (`MonsterRoomFeature::place` 149e9dae0): if minY < 0, 4 tries at y `nextInt(|minY+6|)+minY+6`, then 10
   (else 8) tries at y `nextInt(genHeight)`; x/z `nextInt(16)+(c·16|8)`. Not ported.
 - Feature rules (vt slot 54 via cfg dispatch), MT reseeded again with the chunk seed.
-- Freeze pass per column: heightmap top; `Biome::shouldFreeze` 14119e860 on top−1 (temperature ≤ 0.15, in build range,
-  light < 10, water source) → ice; `shouldSnow` 14119e740 on top → snow layer. `Biome::getTemperature` 14119c8c0 has a
-  noise path for a biome component (two PerlinSimplex sums, 0.05 and 0.2 scale, `< 0.3`) and a per-column chunk cache
-  above sea level + 1 (+17 in legacy). Not ported: no frozen water in the oracle regions to test against.
+- Freeze pass per column: rain top; `Biome::shouldFreeze` 14119e860 on top−1 (temperature ≤ 0.15, in build range,
+  light < 10, water source) → ice; `shouldSnow` 14119e740 on top → snow layer. Ported with `Biome::getTemperature`
+  (worldgen-bds-features.md, "Geodes, icebergs, freeze pass").
+- Then 60 border positions (14a923c90) schedule water ticks, and pending ticks run up to 128 times (1416042f0) when
+  the dimension flag allows: the liquid flow the oracle files under "liquid flow"; not ported.
 Biome feature rules run through `decorateWorldGenPostProcess` (slot 54, 14821f400 → `BiomeDecorationSystem::decorate`
 14580bb90 → `decorateBiome` 14580b170 per pass); exact caller of slot 54 not pinned.
 
@@ -285,3 +286,10 @@ FrozenOcean,Swamp}SurfaceBuilder::buildSurfaceAt`, 1487dd550/1487e18e0/1487e4870
 SurfaceBuilder::init`, 143907ca0 `SurfaceMaterialAdjustments::evaluate`, 1481f0380 `OreVeinifier::OreVeinifier`,
 145e2a730 `PerlinSimplexNoise::addOctave`, 145e27a70/145e27d50 `SimplexNoise::{getValue2D,getValue3D}`,
 141188be0/141188db0/141188e50/141188bc0 `Random::{_genRandInt32,nextFloat,nextInt,nextBoolean}`.
+
+Residue labels (2026-10-07): 1409ddfc0/1409e3920/1409e09d0/140a0cbd0 `ChunkSource::{_spawnChunkGenerationTasks,
+queue (pending vector +0x70), _checkForUnblockingChunks, std::sort of tasks}`, 140a16cd0 decoration task lambda,
+1438df8f0 `PostprocessingManager::tryLock`, 142fe8f60 `TickingAreaView::tick` (influence), 149e845f0/149e867f0
+`GeodeFeature::{place,scan row}`, 149e96790/149e8f460/149e90f80/14827ec60 `{LegacyIceFeature,IcebergFeature,
+IcebergFeature::carve,BlueIceFeature}::place`, 1411a3e60 `LevelChunk` temperature-noise cache, 140a09950
+`LevelChunk::getTopRainBlockPos`, 1408741f0 `IRandom::nextDouble` (MT: raw x 2^-32), 14a7125a0 Random's IRandom vtable.

@@ -35,6 +35,7 @@ impl Feature {
             Feature::Tree(tree) => tree.place(ctx, at),
             Feature::Search(search) => search.place(ctx, at),
             Feature::LegacyTree(legacy) => legacy.place(ctx, at),
+            Feature::Geode(geode) => geode.place(ctx, at),
         }
     }
 }

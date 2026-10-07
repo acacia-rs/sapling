@@ -115,6 +115,13 @@ impl OverworldGenerator {
         self.features.place(shape, (chunk_x, chunk_z), &|x, z| self.loaded(x, z), &|x, z| self.chunk_biomes(x, z));
     }
 
+    /// One source chunk's feature writes, decorated alone: world (x, y, z), block placed, block replaced.
+    #[doc(hidden)]
+    pub fn source_feature_writes(&self, chunk_x: i32, chunk_z: i32) -> Vec<([i32; 3], Block, Block)> {
+        let writes = self.features.source_writes((chunk_x, chunk_z), &|x, z| self.loaded(x, z), &|x, z| self.chunk_biomes(x, z));
+        writes.world_writes((chunk_x, chunk_z))
+    }
+
     /// Bedrock biome ids per block, cached for the stages and neighbours that read them again.
     pub fn chunk_biomes(&self, chunk_x: i32, chunk_z: i32) -> Arc<ChunkBiomes> {
         self.biomes.get((chunk_x, chunk_z), || self.density.climate.chunk_biomes(self.seed, chunk_x, chunk_z))

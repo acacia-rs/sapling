@@ -1,7 +1,7 @@
 //! Multi-octave Perlin noise (BDS `MultiOctaveNoiseImpl`, ctor 145e24e60, positional mode).
 
 use super::ImprovedNoise;
-use crate::random::PositionalFactory;
+use crate::random::{Mt19937, PositionalFactory};
 
 #[derive(Debug, Clone)]
 struct Octave {
@@ -34,6 +34,37 @@ impl PerlinNoise {
             let value_factor = (1i32 << (count - 1 - i as u32)) as f32 / denominator;
             octaves.push(Octave { noise, input_factor: 2f64.powi(octave) as f32, weight: value_factor * amplitude });
         }
+        Self { octaves }
+    }
+
+    /// The legacy mode of 145e24e60 (Java's `PerlinNoise(RandomSource, ...)`) on an MT: octave 0's noise
+    /// is drawn first, then from the octave below 0 down, each octave beyond the amplitudes or with
+    /// amplitude 0 skipping 262 draws.
+    pub fn from_mt(random: &mut Mt19937, first_octave: i32, amplitudes: &[f32]) -> Self {
+        let count = amplitudes.len() as i32;
+        let denominator = !(-1i32 << count) as f32;
+        let mut noises: Vec<Option<ImprovedNoise>> = vec![None; amplitudes.len()];
+        let top = -first_octave;
+        let first = ImprovedNoise::new(random);
+        if (0..count).contains(&top) && amplitudes[top as usize] != 0.0 {
+            noises[top as usize] = Some(first);
+        }
+        for i in (0..top).rev() {
+            if i < count && amplitudes[i as usize] != 0.0 {
+                noises[i as usize] = Some(ImprovedNoise::new(random));
+            } else {
+                random.consume_count(262);
+            }
+        }
+        let octaves = noises
+            .into_iter()
+            .enumerate()
+            .filter_map(|(i, noise)| {
+                let value_factor = (1i32 << (count - 1 - i as i32)) as f32 / denominator;
+                let input_factor = 2f64.powi(first_octave + i as i32) as f32;
+                noise.map(|noise| Octave { noise, input_factor, weight: value_factor * amplitudes[i] })
+            })
+            .collect();
         Self { octaves }
     }
 

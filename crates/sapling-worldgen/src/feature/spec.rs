@@ -119,6 +119,7 @@ pub enum Feature {
     Seagrass { count: i32, tall: f32 },
     /// The legacy land plants BDS builds in code (land.rs, flowers.rs).
     Legacy(Legacy),
+    Geode(Geode),
     /// `minecraft:tree_feature`.
     Tree(super::tree::spec::Tree),
     /// `minecraft:search_feature`: the feature at each cell of a box until enough succeed.
@@ -181,6 +182,28 @@ pub enum TreeChoice {
     RedwoodMutated,
 }
 
+/// `minecraft:geode_feature` (geode.rs); ranges are `[min, max]` as the JSON gives them.
+#[derive(Debug)]
+pub struct Geode {
+    pub filler: Block,
+    pub inner: Block,
+    pub alternate_inner: Block,
+    pub middle: Block,
+    pub outer: Block,
+    /// Down-facing buds (`Block::faced`).
+    pub placements: &'static [Block],
+    pub wall: [i32; 2],
+    pub points: [i32; 2],
+    pub point_offset: [i32; 2],
+    pub max_radius: i32,
+    pub crack_point_offset: f32,
+    pub noise_multiplier: f32,
+    pub potential_placements_chance: f32,
+    pub alternate_chance: f32,
+    pub placements_require_alternate: bool,
+    pub invalid_blocks_threshold: i32,
+}
+
 #[derive(Debug, Clone, Copy)]
 pub enum Legacy {
     DeadBush,
@@ -194,6 +217,8 @@ pub enum Legacy {
     SweetBerries { count: i32 },
     Mushroom { block: Block, count: i32 },
     Flower { kind: FlowerKind, count: i32 },
+    /// `legacy:ice_feature`: an iceberg in 1 of 8 chunks (iceberg.rs).
+    Iceberg,
 }
 
 /// The flower table of a `LegacyFlowerFeature` (1438ef3b0's switch; the forest and flower forest

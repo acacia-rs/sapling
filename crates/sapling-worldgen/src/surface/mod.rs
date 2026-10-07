@@ -26,6 +26,11 @@ const ADJUSTMENT_Y: i32 = 0;
 /// The block buffer ends at y 255.
 const TOP_Y: i32 = 255;
 
+/// A biome's `minecraft:climate` temperature; None for the biomes without a ported surface builder.
+pub fn biome_temperature(biome: u32) -> Option<f32> {
+    biomes::surface_spec(biome).map(|spec| spec.temperature)
+}
+
 /// The highest non-air block of every column, `MIN_Y - 1` for an empty one.
 fn column_tops(shape: &ChunkShape) -> [[i32; 16]; 16] {
     std::array::from_fn(|x| std::array::from_fn(|z| (MIN_Y..=TOP_Y).rev().find(|&y| shape.block(x, y, z) != Block::Air).unwrap_or(MIN_Y - 1)))

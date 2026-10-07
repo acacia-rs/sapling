@@ -46,10 +46,17 @@ Companion to [worldgen-bds.md](worldgen-bds.md) (pipeline, RNGs, labels). They r
   all in the sand list → y+1 becomes plain `sandstone` (red sand too). After: original grass or mycelium (148281750)
   over dirt/coarse dirt (14ccdb858) → the dirt becomes that block. Canyon: a per-column flag set by any grass block met
   in the ellipsoid (replaceable or not); while set, dirt/coarse dirt below each carved cell becomes grass. No sandstone.
-- Oracle (carver cells only; cells next to feature blocks, decorated afterwards, or on noise-cave floors counted apart):
-  seed 20261003 near origin 99.53% precision / 99.44% recall, far out 99.61 / 99.41, seed −4172144997902289642 99.86 /
-  99.86; no extra cells left (all were bedrock). Residue: liquid flow and aquifer fluid differences (wrong fluid), ore
-  blobs over aquifer-barrier cells, ~50–130-cell missed pockets per region (unexplained; eroded badlands has a dome in
-  terracotta at y 94–99 no carver of ours reaches). Iceberg cut-outs and geodes in carved cells are filed as later.
+- Oracle (carver cells only; cells next to feature blocks, decorated afterwards, or on noise-cave floors counted apart;
+  our kelp and seagrass count as water, as BDS's water layer does): seed 20261003 near origin 99.40% precision /
+  99.42% recall (missed 288), far out 99.20 / 99.27, seed −4172144997902289642 99.88 / 99.85 (missed 8). The old
+  "missed pockets" were mostly kelp and seagrass over flooded caves (tally artefact). Extra cells now are our geode
+  interiors where BDS skipped the geode (structures). Residue: wrong fluid (liquid flow, aquifer fluid), mineshaft
+  corridors (structures; x −256..−216 near origin), a few lava/water pockets at y −44..−32 with no structure nearby.
+- The eroded badlands dome (371 cells, terracotta at y 94–127, enclosed, twin-stable, no structure blocks): no carver
+  of ours reaches it even with every terracotta replaceable, so not a replace-list gap; unexplained.
+- `overworld_underwater_cave_carver_feature` (skip 15, y scale 0.5, height 120, water) has an empty `any_of` biome
+  filter: run as a third cave carver it carves 668k extra cells near origin, so BDS treats empty `any_of` as false.
+- Ice spikes (x −290..−289, y −16..2, 200 cells): BDS has solid where our noise cave is, at the region edge, no
+  structure blocks in the region; most likely a structure's terrain adaptation (encapsulate) from the ring chunk.
 - Old growth pine taiga (biomes world, ~−5310 72 5450): the shape and carver misses sit under a structure (barrel,
   campfire, chest, straw bed, grass path); BDS's terrain adaptation, not carvers.

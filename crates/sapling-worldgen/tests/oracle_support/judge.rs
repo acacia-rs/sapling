@@ -36,6 +36,8 @@ pub struct Context {
     pub feature_emptied: bool,
     /// See `column_reshaped`.
     pub reshaped: bool,
+    /// BDS has a non-terrain block (a tree, an ice spike) higher in the column.
+    pub bds_feature_above: bool,
 }
 
 const VEIN_BLOCKS: &[Block] = &[
@@ -119,6 +121,11 @@ fn judge_cell(ours: Block, bds: &BdsCell, y: i32, context: Context) -> Verdict {
         return Verdict::Match(stage_of(ours, y, context));
     }
     if context.featured {
+        // The freeze pass snows on the rain top, which unported trees, ice spikes and icebergs move in BDS.
+        let moved_top = context.bds_feature_above || context.reshaped || bds.block == "packed_ice";
+        if ours == Block::SnowLayer && (moved_top || bds.terrain().is_none() && !bds.is_empty()) {
+            return Verdict::Later("freeze pass on a column top features sapling lacks move (trees, ice spikes, icebergs)");
+        }
         if bds.terrain().is_none() && !bds.is_empty() && !bds.is_fluid() {
             return Verdict::Later("features, structures over our features (non-terrain block)");
         }

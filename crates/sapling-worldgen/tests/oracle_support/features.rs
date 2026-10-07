@@ -36,6 +36,8 @@ fn family(name: &str) -> Option<&'static str> {
         "sunflower" => "sunflowers",
         "seagrass" => "seagrass",
         "kelp" => "kelp",
+        "amethyst_block" | "budding_amethyst" | "smooth_basalt" | "calcite" => "geode shells",
+        "amethyst_cluster" | "large_amethyst_bud" | "medium_amethyst_bud" | "small_amethyst_bud" => "amethyst buds",
         "deadbush" => "dead bushes",
         "reeds" => "sugar cane",
         "cactus" => "cacti",
