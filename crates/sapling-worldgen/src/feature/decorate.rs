@@ -68,6 +68,7 @@ fn run(rule: &Rule, source: &mut Source, only: Option<u32>, own: &ChunkBiomes, v
     let mut positions = Mt19937::new(seed);
     let origin = [source.chunk.0 * 16, 0, source.chunk.1 * 16];
     scope.set_origin(origin);
+    scope.world_bound = false;
     let queries = scope.queries;
     let count = {
         let host = World { view, queries };
