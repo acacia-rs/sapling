@@ -22,9 +22,9 @@ pub struct EntityInfo {
 /// Mobs do nothing else: no AI, no damage. The calls that name no world act on the world of the
 /// event being handled.
 impl ShardCtx<'_> {
-    /// Spawns a mob of `kind` (e.g. `minecraft:pig`) with its feet at `feet`. `None` for a kind
-    /// the game does not have or the game alone makes (items, falling blocks, orbs), and where
-    /// the world is not loaded.
+    /// Spawns a mob of `kind` (e.g. `minecraft:pig`) with its feet at `feet`; `minecraft:xp_orb`
+    /// is an orb worth 1, thrown as `/summon` throws one. `None` for a kind the game does not have
+    /// or the game alone makes (items, falling blocks), and where the world is not loaded.
     pub fn spawn_entity(&mut self, kind: &str, feet: [f32; 3]) -> Option<EntityId> {
         self.backend.spawn_entity(kind, feet)
     }

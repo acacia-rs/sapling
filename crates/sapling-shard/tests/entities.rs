@@ -7,7 +7,9 @@ use std::sync::{Arc, Mutex};
 
 use acacia_proto::nbt::Value;
 use acacia_proto::Packet;
-use acacia_proto::packets::{AddEntity, AddItemEntity, EntityEvent, EntityEventEventId, LevelSoundEvent, MoveEntityDelta, RemoveEntity, UpdateBlock};
+use acacia_proto::packets::{
+    AddEntity, AddItemEntity, EntityEvent, EntityEventEventId, LevelEvent, LevelEventEvent, LevelSoundEvent, MoveEntityDelta, RemoveEntity, UpdateBlock,
+};
 use common::stored::{actor, enter_stored, floor_with};
 use common::{Harness, all, hash};
 use sapling_api::{Block, EntityId, EntityInfo};
@@ -58,6 +60,21 @@ fn a_spawned_mob_is_heard_at_its_head_after_it_is_shown_as_on_bds() {
     // A pig is 0.9 wide and high; its head 0.85 of that up and, an animal's, forward.
     let at = [sound.position.x, sound.position.y, sound.position.z];
     assert!((sound.sound_id.as_str(), sound.entity_type.as_str()) == ("spawn", "minecraft:pig") && (0..3).all(|axis| (at[axis] - [3.5, 65.765, 1.265][axis]).abs() < 1e-4), "{sound:?}");
+}
+
+#[test]
+fn orbs_at_a_player_are_taken_two_ticks_apart_and_go_the_tick_after_as_on_bds() {
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    let feet = ask(&mut h, |ctx| ctx.position(sapling_api::PlayerId(1)).expect("Alex").feet);
+    h.remote.run(move |ctx| assert!((0..2).all(|_| ctx.spawn_entity("minecraft:xp_orb", feet).is_some()), "an orb is an entity of its own"));
+    // From the tick they appear in: BDS took one then.
+    let ticks: Vec<_> = (0..8).map(|_| h.tick_all().to(1).to_vec()).collect();
+    let when = |found: &dyn Fn(&[acacia_proto::RawPacket]) -> usize| -> Vec<usize> { ticks.iter().enumerate().flat_map(|(tick, sent)| std::iter::repeat_n(tick, found(sent))).collect() };
+    let taken = when(&|sent| all::<LevelEvent>(sent).iter().filter(|event| event.event == LevelEventEvent::SoundOrb).count());
+    let gone = when(&|sent| all::<RemoveEntity>(sent).len());
+    assert_eq!(taken.len(), 2, "{taken:?}");
+    assert_eq!((taken[1] - taken[0], gone), (2, vec![taken[0] + 1, taken[1] + 1]));
 }
 
 #[test]

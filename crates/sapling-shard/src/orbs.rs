@@ -33,9 +33,9 @@ const BODY: f32 = 0.9;
 const TOUCH_ACROSS: f32 = 1.55;
 const TOUCH_BELOW: f32 = -1.0;
 const TOUCH_ABOVE: f32 = 2.3;
-/// An orb is not taken by touch before it is this old: BDS took one let out at the player
-/// after 7 ticks (one recording).
-const TOUCH_AFTER: u32 = 7;
+/// A player takes an orb a touch no sooner than this many ticks after the last; the orb goes the
+/// tick after (BDS took a furnace's two orbs 2 ticks apart, research/captures/containers-findings.md).
+const TAKE_EVERY: u64 = 2;
 
 #[derive(Component)]
 pub(crate) struct Orb {
@@ -43,7 +43,12 @@ pub(crate) struct Orb {
     age: u32,
     last_search: u64,
     target: Option<Entity>,
+    taken: bool,
 }
+
+/// The tick a player last took an orb.
+#[derive(Component)]
+pub(crate) struct LastOrb(u64);
 
 const KIND: &str = "minecraft:xp_orb";
 
@@ -73,11 +78,27 @@ fn announce(id: u64, value: i32, body: &Body) -> Vec<bytes::Bytes> {
 /// Lets `points` of experience out at `at` as orbs, each thrown a little up and aside.
 pub(crate) fn spawn(world: &mut World, layer: Entity, at: [f32; 3], points: i32) {
     for value in split(points) {
-        let mut throw = || random(world) * 0.2;
-        let body = Body::new(at, [(throw() - 0.1) * 2.0, throw() * 2.0, (throw() - 0.1) * 2.0], [SIZE; 2]);
-        let Some(entity) = entities::spawn(world, layer, KIND, body, at, |id| Some(announce(id, value, &body))) else { continue };
-        world.entity_mut(entity).insert(Orb { value, age: 0, last_search: 0, target: None });
+        throw(world, layer, at, value);
     }
+}
+
+/// One orb worth `value`, thrown a little up and aside from `at`.
+pub(crate) fn throw(world: &mut World, layer: Entity, at: [f32; 3], value: i32) -> Option<Entity> {
+    let mut throw = || random(world) * 0.2;
+    let body = Body::new(at, [(throw() - 0.1) * 2.0, throw() * 2.0, (throw() - 0.1) * 2.0], [SIZE; 2]);
+    let entity = entities::spawn(world, layer, KIND, body, at, |id| Some(announce(id, value, &body)))?;
+    world.entity_mut(entity).insert(Orb { value, age: 0, last_search: 0, target: None, taken: false });
+    Some(entity)
+}
+
+/// Whether `player` may take an orb this tick, and if so, that it has.
+fn takes(world: &mut World, player: Entity) -> bool {
+    let now = world.resource::<crate::components::Tick>().0;
+    if world.get::<LastOrb>(player).is_some_and(|last| now < last.0 + TAKE_EVERY) {
+        return false;
+    }
+    world.entity_mut(player).insert(LastOrb(now));
+    true
 }
 
 /// The nearest player of `layer` in the world within [`FOLLOW`] blocks of `at`.
@@ -100,10 +121,11 @@ fn touching(world: &mut World, layer: Entity, at: [f32; 3]) -> Option<Entity> {
 /// One tick of the orb `entity`; false once it is gone.
 fn step(world: &mut World, entity: Entity, orb: &mut Orb, layer: Entity, id: u64) -> bool {
     orb.age += 1;
-    let Some(mut body) = world.get::<Body>(entity).copied().filter(|_| orb.age < LIFETIME) else { return false };
-    if let Some(player) = touching(world, layer, body.at).filter(|_| orb.age >= TOUCH_AFTER) {
+    let Some(mut body) = world.get::<Body>(entity).copied().filter(|_| orb.age < LIFETIME && !orb.taken) else { return false };
+    if let Some(player) = touching(world, layer, body.at).filter(|player| takes(world, *player)) {
         taken(world, layer, orb.value, body.at, player);
-        return false;
+        orb.taken = true;
+        return true;
     }
     // Counted in the orb's own ticks, so that the first search is 21 to 120 ticks after it appeared.
     if u64::from(orb.age) > orb.last_search + SEARCH_EVERY + id % 100 {
@@ -114,9 +136,10 @@ fn step(world: &mut World, entity: Entity, orb: &mut Orb, layer: Entity, id: u64
     if let (Some(player), Some(chest)) = (orb.target, chest) {
         let gap = [0, 1, 2].map(|axis| (chest[axis] - body.at[axis]) / FOLLOW);
         let across = gap[0].hypot(gap[2]);
-        if across <= TOUCH {
+        if across <= TOUCH && takes(world, player) {
             taken(world, layer, orb.value, [0, 1, 2].map(|axis| body.at[axis] + gap[axis]), player);
-            return false;
+            orb.taken = true;
+            return true;
         }
         let pull = (1.0 - across).max(0.0).powi(2) * 0.1 / across;
         (0..3).for_each(|axis| body.motion[axis] += gap[axis] * pull);

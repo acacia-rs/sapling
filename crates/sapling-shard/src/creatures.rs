@@ -17,9 +17,10 @@ use crate::blocks::Dice;
 use crate::body::{Body, Physics};
 use crate::components::{InLayer, Layer, NetId, Tick};
 use crate::handlers::Ctx;
-use crate::{blocks, drops, entities, inventory, mobs, worlds};
+use crate::{blocks, drops, entities, inventory, mobs, orbs, worlds};
 
 const MOB_LOOT: &str = "doMobLoot";
+const ORB: &str = "minecraft:xp_orb";
 
 /// A mob: spawned through the API, or kept by a world folder and dressed as it was stored
 /// (`look`). Its [`Body`] and [`entities::Kind`] are beside it.
@@ -161,8 +162,13 @@ pub(crate) fn tick(world: &mut World) {
 }
 
 impl EntityBackend for Ctx<'_> {
+    /// An orb is an orb, worth 1 and thrown as orbs are, as BDS's `/summon xp_orb` makes one.
     fn spawn_entity(&mut self, kind: &str, feet: [f32; 3]) -> Option<EntityId> {
         let layer = worlds::current(self.world);
+        if kind == ORB {
+            let orb = orbs::throw(self.world, layer, feet, 1)?;
+            return Some(EntityId(self.world.get::<NetId>(orb)?.0));
+        }
         spawn(self.world, layer, kind, feet)
     }
 
