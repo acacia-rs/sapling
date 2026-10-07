@@ -2625,6 +2625,7 @@ dependencies = [
 name = "sapling-worldgen"
 version = "0.1.0"
 dependencies = [
+ "acacia-molang",
  "acacia-world",
  "sapling-leveldb",
 ]
