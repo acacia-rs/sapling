@@ -4,6 +4,7 @@
 use super::common::allows;
 use super::spec::{SimpleTrunk, Tree};
 use super::Anchor;
+use crate::block::Block;
 use crate::feature::place::Ctx;
 
 impl SimpleTrunk {
@@ -12,12 +13,14 @@ impl SimpleTrunk {
         let origin = tree.roots_then(ctx, origin, height)?;
         let [x, y0, z] = origin;
         let mut y = y0;
-        if self.max_depth >= 1 && allows(tree.may_grow_through, ctx.view.block(x, y - 1, z)) {
+        // Without may_grow_through the descent still stops at the ground (oracle: swamp oaks stand on the bottom).
+        let sinks = |block: Block| if tree.may_grow_through.is_empty() { block == Block::Water } else { tree.may_grow_through.contains(&block) };
+        if self.max_depth >= 1 && sinks(ctx.view.block(x, y - 1, z)) {
             let mut budget = self.max_depth;
             loop {
                 budget -= 1;
                 y -= 1;
-                if budget <= 0 || !allows(tree.may_grow_through, ctx.view.block(x, y - 1, z)) {
+                if budget <= 0 || !sinks(ctx.view.block(x, y - 1, z)) {
                     break;
                 }
             }
