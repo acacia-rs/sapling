@@ -18,6 +18,7 @@ fn main() {
     let generator = OverworldGenerator::new(seed);
     let mut shape = generator.chunk_shape(cx, cz);
     generator.carve(&mut shape, cx, cz);
+    generator.decorate(&mut shape, cx, cz);
     for z in 0..16 {
         for x in 0..16 {
             let (wx, wz) = (cx * 16 + x as i32, cz * 16 + z as i32);

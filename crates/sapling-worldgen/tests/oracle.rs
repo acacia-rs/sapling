@@ -33,6 +33,7 @@ fn compare(seed: i64, world: &str, regions: &[Region]) {
             let uncarved = generator.chunk_shape(cx, cz);
             let mut ours = uncarved.clone();
             generator.carve(&mut ours, cx, cz);
+            generator.decorate(&mut ours, cx, cz);
             let biomes = generator.chunk_biomes(cx, cz);
             let biome_top = highest_section_top(&primary, &a, cx, cz);
             for z in 0..16 {
