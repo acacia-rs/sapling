@@ -25,8 +25,8 @@ names, same octave/amplitude tables, same Xoroshiro128++ seeding by MD5 of the n
 | Biomes | hardcoded `OverworldBiomeBuilder` + `RTree` + `BlendedMultiNoiseBiomeProvider`, 3D (`BiomeSource3d`) | Java OverworldBiomeBuilder port + Bedrock extras (sulfur caves, 1.21.60 plateau variant) | medium |
 | Surface | **Bedrock** data-driven: biome JSON `minecraft:surface_builder` → `BiomeSurfaceSystem` / `VanillaSurfaceBuilders` | **not** Java SurfaceRules; uses PerlinSimplex surface noise + material-adjustment noise | high |
 | Bedrock floor | hardcoded, MT seeded by chunk pos only (no world seed) | **Bedrock-only** | high |
-| Carvers | feature rules in `pregeneration_pass` (`cave_carver_feature`, …) + hardcoded `CanyonFeature`/`UnderwaterCanyonFeature` | legacy pre-1.18 style, **not** Java carvers | med-high |
-| Lakes / monster rooms / freeze | hardcoded in `decorationPostProcessChunk` | Java-legacy shapes, MT RNG | medium |
+| Carvers | 2 `cave_carver_feature`s in `pregeneration_pass` + hardcoded canyon | legacy pre-1.18 style, **not** Java carvers; ported, oracle 99.5% precision/recall | high |
+| Lakes / monster rooms / freeze | hardcoded in `decorationPostProcessChunk` | Java-legacy shapes, MT RNG; lava lakes ported | high (lakes) |
 | Features | data-driven `feature_rules` + `features` JSON, 12 named passes, MT per rule | **Bedrock-only** | high |
 | Structures | legacy `StructureFeature` + jigsaw v2 (`br::worldgen`, `worldgen/structures` JSON) | separate system | low (not mapped) |
 
@@ -66,7 +66,7 @@ Density grid: `MultidimensionalArray<float,5,5,41>` (4-wide xz cells, 8-tall y c
 | Xoroshiro128++ | `0x9E3779B97F4A7C15`, `0x6A09E667F3BCC909`, Stafford mix13 `0xBF58476D1CE4E5B9`/`0x94D049BB133111EB`, `rol 17/49, shl 21` (14821fa49) | world seed → `upgradeSeedTo128bit` → `forkPositional`; every named noise; aquifer/ore positional randoms; nextFloat = bits24·2⁻²⁴ (5.960464e-08 in `_prepareHeights`) |
 | MD5 | TLS hasher vtable (+0x228 update/final), result bytes byte-swapped to two BE u64, XOR seedLo/seedHi (1481d9b10) | Java `fromHashOf(name)`; zero state → golden/silver fallback (Java Xoroshiro ctor) |
 | `"octave_"+i` | inline imm `0x5f657661` ("ave_") in 145e24e60 | per-octave `fromHashOf`, as Java PerlinNoise |
-| MT19937 (`Random`, 2560 B) | init `0x6C078965`, `0x9908B0DF`, `0x9D2C5680` | bedrock floor, decoration, structures post-process, canyons, nether/end legacy noises |
+| MT19937 (`Random`, 2560 B) | init `0x6C078965`, `0x9908B0DF`, `0x9D2C5680`; lazy init, standard outputs | bedrock floor, carvers, canyons, decoration, structures post-process, nether/end legacy noises |
 | Java LCG `0x5DEECE66D` | 40+ sites (14593d6cb…, 1436d3762…) | not on the overworld terrain path (likely legacy structures/`JavaRandom` helpers; unmapped) |
 | Java pos hash `0x2FC20F`/`0x6EBFFF5`/`0x285B825` | 23 sites | `Mth.getSeed(x,y,z)` analogue (block-variant/positional); unmapped |
 
@@ -127,7 +127,8 @@ ChunkSource tasks (strings): `_launchGenerationTask` → `loadChunk`; `_launchSt
 10. If an experiment/level flag (vt+0xbe0) is set: second surface pass per vertical run of 3D biomes (underground biomes).
 11. `decorateWorldGenLoadChunk` (slot 53, 1481ebd30 → `BiomeDecorationSystem::decorateLargeFeature` 14580c470):
     the `pregeneration_pass` ("cave_carver_feature is the only valid feature in pregeneration_pass").
-12. Hardcoded `CanyonFeature` / `UnderwaterCanyonFeature` (14827f840 ×2, members at +0x258/+0x268).
+12. Hardcoded canyons (`CanyonFeature::apply` 14827f840): +0x268 (vt 14a98ad98) only in legacy worlds, then +0x258
+    (vt 14a925930). See "Carvers" below.
 13. Commit block volume to `LevelChunk`, set generator, state → generated (1409f8eb0, 1409e29f0, 1409e1fa0).
 
 ### `structurePostProcessChunk` 148213a20 (slot 9)
@@ -136,10 +137,21 @@ to x/z: verify), then `postProcessStructureFeatures` 14196b2c0 (legacy structure
 14196c5f0 (jigsaw v2).
 
 ### `decorationPostProcessChunk` 1482143a0 (slot 10)
-Same MT reseed (`levelSeed ^ (cx*a + cz*b)`, Java-legacy population formula on a 32-bit MT). Then, gated by biome:
-water lake 1/4 (1/32 under flag) at (nextInt(9)+3, nextInt(128), nextInt(9)+3); lava lake via nextInt(8)/9/120/10;
-monster rooms: 8 tries at ((cx<<4|8)+nextInt(16), nextInt(genHeight), …), +4 tries below y=0 (deepslate); then freeze
-pass (ice/snow via shouldFreeze 14119e860 / shouldSnow 14119e740); light/heightmap bookkeeping.
+MT reseeded with the large-feature chunk seed (see Carvers). Then, in order:
+- Water lake (1/4, 1/32 under vt+0xbe0; not in desert ids 2/0x11): only with the legacy flag, so never in new worlds.
+- Lava lake (if generator +0x18c is 0): `nextInt(8)==0`, x=`nextInt(9)`, y=`nextInt(nextInt(120)+8)` (absolute),
+  z=`nextInt(9)`; skipped if y < 60 (dimension +0xcc = 63, minus 3); y > 63 also needs `nextInt(10)==0`. Placed at
+  (cx·16+3+x, y, cz·16+3+z) by `LakeFeature::place` 149e923b0 = Java legacy lake in f32: corner −8, descend while the
+  corner is air, base = y−4, `nextInt(4)+4` blobs (sizes `f*6+3`, `f*4+2`, `f*6+3`, centres `((16−s)−2)*f+1+s/2`,
+  `((8−s)−4)*f+2+s/2`), border: liquid at grid y≥4 or non-solid non-lava below fails; lava below grid y 4, air above.
+  Oracle: the one lava lake in the oracle regions matches cell for cell.
+- Monster rooms (`MonsterRoomFeature::place` 149e9dae0): if minY < 0, 4 tries at y `nextInt(|minY+6|)+minY+6`, then 10
+  (else 8) tries at y `nextInt(genHeight)`; x/z `nextInt(16)+(c·16|8)`. Not ported.
+- Feature rules (vt slot 54 via cfg dispatch), MT reseeded again with the chunk seed.
+- Freeze pass per column: heightmap top; `Biome::shouldFreeze` 14119e860 on top−1 (temperature ≤ 0.15, in build range,
+  light < 10, water source) → ice; `shouldSnow` 14119e740 on top → snow layer. `Biome::getTemperature` 14119c8c0 has a
+  noise path for a biome component (two PerlinSimplex sums, 0.05 and 0.2 scale, `< 0.3`) and a per-column chunk cache
+  above sea level + 1 (+17 in legacy). Not ported: no frozen water in the oracle regions to test against.
 Biome feature rules run through `decorateWorldGenPostProcess` (slot 54, 14821f400 → `BiomeDecorationSystem::decorate`
 14580bb90 → `decorateBiome` 14580b170 per pass); exact caller of slot 54 not pinned.
 
@@ -156,6 +168,42 @@ Biome feature rules run through `decorateWorldGenPostProcess` (slot 54, 14821f40
   Sequence, ConditionalList, BeardAndShaver, RectLayout, ScanSurface, SurfaceRelativeThreshold, HeightDifferenceFilter,
   CaveCarver / NetherCaveCarver / UnderwaterCaveCarver, LegacyTree/VanillaTree, Speleothem, UnderwaterCave.
 - `FeatureTerrainAdjustments::setBeardifier / setBeardAndShaver / setBury` → Java `Beardifier` analogue for structures.
+
+### Carvers (crates/sapling-worldgen/src/carver, 2026-10-07)
+
+- `Random` wrapper (vt 14a7125a0): `nextInt(n)` = `u32 % n` (0 if n=0), `nextInt()` = `u32 >> 1` (never negative),
+  `nextFloat` = `(float)(u32 * 2^-32 as double)`, vt+0x40 skips n draws.
+- Large-feature chunk seed (cave `place` 148281d10, canyon `apply` 14827f840, decoration post-process): MT seeded with
+  the low 32 bits of the world seed; `a = nextInt()`, `b = nextInt()`, forced odd as `(v − (v>>31)) | 1` = `v/2*2+1`;
+  `seed(x,z) = (z·b' + x·a') ^ levelSeed`. Since `nextInt()` ≥ 0 this equals `|1`. Source chunks x outer, z inner,
+  ±8 around the target.
+- Vanilla data: only `overworld_extra_cave_carver_feature` (pregeneration_pass, overworld tags) places a carver
+  (`underground_extra_cave_carver_feature`: skip 66, height_limit 103). The unreferenced
+  `underground_cave_carver_feature` (skip 33, height_limit 236) also runs (oracle: +3k matched cells, no extras);
+  where its rule comes from is unmapped. Both see the same chunk seeds (each rule reseeds with the level seed).
+- `CaveFeature::addFeature` 148284810: count `nextInt(nextInt(nextInt(40)+1)+1)`, then `nextInt(skip) != 0` drops it;
+  per cave z=`nextInt(16)`, y=`getCaveY`, x=`nextInt(16)` (MSVC right-to-left args), then horizontal/vertical radius
+  multipliers and floor level (each `min+(max−min)·f` when min≠max); room on `nextInt(4)==0`, then `nextInt(4)` extra
+  tunnels; tunnel yaw `2(fπ)`, pitch `2(f−0.5)/8`, thickness, length `112−nextInt(28)`.
+  Ctor defaults 1482817d0: +0x70 {0.9, 0.75, 0.92, 0.7}, +0x80 6, +0x84 4, +0x88 40, +0x8c 4, +0x90 4, +0x94 1 (cached).
+- 1.18 config 14a925940 (picked unless legacy flags): y `nextInt(h)+8`, thickness `2f+f` ×`(3f·f+1)` 1 in 10, local y
+  0-based (offset −64), no y<11 lava. Legacy 14a925970: y `nextInt(nextInt(h)+8)`, thickness `2f+f`, lava below 11.
+- `addTunnel` 148283530: child MT from parent `nextInt()`; branch step `u%(len/2)+len/4`; steep 1 in 6 → pitch decay
+  0.92 else 0.7; per step 6 raw draws before anything else; pitch/yaw change decay 0.9/0.75, gains 2 and 4, step 0.1;
+  branch (thickness > 1) at mid with `0.5u+0.5`, yaw ∓π/2, pitch/3; skip segment 1 in 4. Tunnel segments carry raw
+  radii (multipliers unused); rooms (`addRoom` 1482830a0: `1+6f`, own MT: y_scale then length) apply them.
+- Cached mode (+0x94): segments per source chunk; per target: `(dz²+dx²) − (len−step)² ≤ (t+2+16)²`, centre within
+  `2hr+16` of the chunk middle, then `carveBlocks` 148283e70: y from top down, `dy=((y−1)+0.5−cy)/vr`, `dy > floor`,
+  `(dy²+dx²)+dz² < 1`; `canReplaceBlock` 148281400 takes all terrain blocks; `Aquifer::computeSubstance` at y−64: barrier
+  > 0 keeps the block, else air at/above the fluid level, fluid below. Water-boundary abort only without an aquifer.
+- Canyon (`addFeature` 14827faa0, carve vt0 148280880), configs 14a925900/910/920 {y offset, max y, flags, chance}: new
+  worlds use 920 {64, 312, any-biome, no giant, flat start, 1/100}: x, y=`nextInt(58)+74` + skip, skip, z, yaw, pitch
+  `(f−0.5)/4`, thickness `3f₂+3f₁`, giant float; child seed → two MTs: walk + `rs[0..128)`, fresh one for `rs[128..320)`;
+  length `120−u%30`; 9 draws per step; out-of-range step ends the canyon; `dy²/6 + rs[y−2]·(dz²+dx²) < 1`.
+  Legacy 910 {64, 120, biome test, giant 1/20 ×2 and y-scale 40, `nextInt(nextInt(40)+8)+84`, 1/150}.
+- Oracle (carver cells only; cells next to feature blocks, decorated afterwards, or on noise-cave floors counted apart):
+  seed 20261003 near origin 99.49% precision / 99.44% recall, far out 99.61 / 99.41, seed −4172144997902289642 99.86 /
+  99.86. Residue: liquid flow and aquifer fluid differences (wrong fluid), ore blobs over aquifer-barrier cells.
 
 ### Bedrock floor (loadChunk 1482117a4..148211860)
 `for x in 0..16, for z in 0..16: n = rand.nextInt(4); fill y = minY .. minY+n+1` (loop count n+2) with
@@ -202,8 +250,17 @@ Count (n+1 vs n+2) and x/z loop nesting should be checked against a BDS chunk; s
 14196b2c0 WorldGenerator::postProcessStructureFeatures      14196c5f0 WorldGenerator::postProcessStructures
 14196b7b0 WorldGenerator::preProcessStructures              14196b5f0 WorldGenerator::prepareStructureFeatureBlueprints
 ```
-Unlabelled but identified: 145e24e60 multi-octave noise from positional factory ("octave_"+i), 14827f840 canyon
-`LargeFeature::apply`, 14580bd50 per-biome large-feature decorate, 148263740 ThreadData accessor.
+Unlabelled but identified: 145e24e60 multi-octave noise from positional factory ("octave_"+i), 148263740 ThreadData
+accessor.
+
+Carver labels (2026-10-07): 14827f840/14827faa0/148280880 `CanyonFeature::{apply,addFeature,carveEllipsoid}`,
+148281d10/148284810/1482830a0/148283530/148283e70/148281400 `CaveFeature::{place,addFeature,addRoom,addTunnel,
+carveBlocks,canReplaceBlock}`, 1482810b0/148281070/1482817b0/148281770/148281160 `CaveFeature::{getThickness,
+getThicknessLegacy,getCaveY,getCaveYLegacy,getTunnelLength}`, 1482817d0 `CaveCarverFeature::CaveCarverFeature`,
+14580bd50 `BiomeDecorationSystem::_decorateLargeFeatureRules`, 149e923b0/149e91f50 `LakeFeature::{place,LakeFeature}`,
+149e9dae0 `MonsterRoomFeature::place`, 14119e860/14119e740/14119c8c0 `Biome::{shouldFreeze,shouldSnow,getTemperature}`,
+141188be0 `Random::_genRandInt32`, 140874110/140874140/1408741c0/140874390 `IRandom::{nextInt,nextIntUnbounded,
+nextFloat,consumeCount}`.
 
 ## Unknowns / next
 
@@ -215,7 +272,7 @@ Unlabelled but identified: 145e24e60 multi-octave noise from positional factory 
    when JSON `multinoise_generation_rules` override it; `BlendedMultiNoiseBiomeProvider` not read.
 4. Surface builders (VanillaSurfaceBuilders: Capped, NoiseGradient, Mesa, FrozenOcean, TheEnd, Swamp…) are Bedrock
    code, separate port; PerlinSimplex surface noise seeding not mapped.
-5. Bedrock floor layer count and x/z order; decoration a/b-to-x/z pairing; who calls slot 54.
+5. Bedrock floor layer count and x/z order; who calls slot 54; which rule places `underground_cave_carver_feature`.
 6. Structures (legacy `StructureFeature` vs jigsaw `br::worldgen`, `worldgen/structure_sets`) unmapped.
 7. Lighting/heightmap stage and `OverworldGenerator2d` selection rule (legacy worlds, `no_legacy_worldgen` 14393d890).
 

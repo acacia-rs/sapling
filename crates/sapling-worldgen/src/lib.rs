@@ -1,5 +1,6 @@
 //! Bedrock overworld terrain generation, ported from BDS 1.26.5x: which cells are solid, air,
-//! water or lava, and the biome of every 4x4x4 cell. BDS's terrain is a C++ port of Java
+//! water or lava, and the biome of every 4x4x4 cell; then BDS's legacy carvers and lava lakes, which
+//! use Bedrock's MT19937 rather than Java's randoms. BDS's terrain is a C++ port of Java
 //! 1.18.1's `NoiseSampler` done in f32; this crate follows BDS's arithmetic, not Java's
 //! (docs/research/worldgen-bds.md).
 

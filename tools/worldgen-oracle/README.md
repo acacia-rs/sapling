@@ -54,4 +54,6 @@ each `oracle.txt` and the server log, not in `release-notes.txt`):
 | `20261003`, `20261003-run2` | `20261003` | `-16,-16,15,15` and, for float drift, `100000,100000,100007,100007` |
 | `-4172144997902289642`, `-4172144997902289642-run2` | `-4172144997902289642` | `-4,-4,3,3` |
 
-Rebuild one with the `run.sh` line above and the seed and regions from this table.
+Rebuild one with the `run.sh` line above and the seed and regions from this table. The `sapling-worldgen` oracle
+test and examples read them from `$SAPLING_ORACLE_WORLDS` (default: `worlds/oracle` of the checkout), so a worktree
+can point at the main checkout's copy.
