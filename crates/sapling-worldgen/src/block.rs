@@ -95,6 +95,36 @@ blocks! {
     Bush => "bush" "",
     ShortDryGrass => "short_dry_grass" "",
     TallDryGrass => "tall_dry_grass" "",
+    Deadbush => "deadbush" "",
+    Reeds => "reeds" "age=0",
+    Cactus => "cactus" "age=0",
+    BrownMushroom => "brown_mushroom" "",
+    RedMushroom => "red_mushroom" "",
+    Waterlily => "waterlily" "",
+    MelonBlock => "melon_block" "",
+    PumpkinSouth => "pumpkin" "minecraft:cardinal_direction=south",
+    PumpkinWest => "pumpkin" "minecraft:cardinal_direction=west",
+    PumpkinNorth => "pumpkin" "minecraft:cardinal_direction=north",
+    PumpkinEast => "pumpkin" "minecraft:cardinal_direction=east",
+    SweetBerryBush0 => "sweet_berry_bush" "growth=0",
+    SweetBerryBush1 => "sweet_berry_bush" "growth=1",
+    SweetBerryBush2 => "sweet_berry_bush" "growth=2",
+    SweetBerryBush3 => "sweet_berry_bush" "growth=3",
+    SweetBerryBush4 => "sweet_berry_bush" "growth=4",
+    SweetBerryBush5 => "sweet_berry_bush" "growth=5",
+    SweetBerryBush6 => "sweet_berry_bush" "growth=6",
+    SweetBerryBush7 => "sweet_berry_bush" "growth=7",
+    Poppy => "poppy" "",
+    Dandelion => "dandelion" "",
+    BlueOrchid => "blue_orchid" "",
+    AzureBluet => "azure_bluet" "",
+    RedTulip => "red_tulip" "",
+    OrangeTulip => "orange_tulip" "",
+    WhiteTulip => "white_tulip" "",
+    PinkTulip => "pink_tulip" "",
+    OxeyeDaisy => "oxeye_daisy" "",
+    Cornflower => "cornflower" "",
+    LilyOfTheValley => "lily_of_the_valley" "",
     Seagrass => "seagrass" "sea_grass_type=default",
     SeagrassBottom => "seagrass" "sea_grass_type=double_bot",
     SeagrassTop => "seagrass" "sea_grass_type=double_top",
@@ -179,9 +209,14 @@ impl Block {
         !matches!(self, Block::Air | Block::Water | Block::Lava) && !self.is_plant()
     }
 
-    /// Solid for movement: everything but air, fluids, plants and snow layers.
+    /// Solid for movement: everything but air, fluids, snow layers and the plants without collision.
     pub fn blocks_motion(self) -> bool {
-        self.is_solid() && self != Block::SnowLayer
+        self.is_solid() && self != Block::SnowLayer || self.is_crop_block()
+    }
+
+    /// The feature blocks that are full blocks: they block motion and light.
+    pub fn is_crop_block(self) -> bool {
+        matches!(self, Block::Cactus | Block::MelonBlock | Block::PumpkinSouth | Block::PumpkinWest | Block::PumpkinNorth | Block::PumpkinEast)
     }
 
     /// The block for a `minecraft:` name, without states.

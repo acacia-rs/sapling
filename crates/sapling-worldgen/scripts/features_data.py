@@ -9,7 +9,11 @@ PORTED = {'minecraft:ore_feature', 'minecraft:scatter_feature', 'minecraft:aggre
           'minecraft:weighted_random_feature', 'minecraft:single_block_feature'}
 # Features BDS builds in code (registered in 1482f4580), with the parameters it passes them.
 _SOIL = 'needs: &[Block::Water], replaces: &[Block::Dirt, Block::CoarseDirt, Block::GrassBlock]'
+# 1482f4580 sizes these from a flag (kelp/seagrass 1 or 10 tries, flowers/mushrooms/berries 64 or 1)
+# that could not be read statically; the oracle fits 1 try for all of them.
 _KELP_COUNT = 1
+_PATCH_COUNT = 1
+_LEGACY = 'Feature::Legacy(Legacy::{})'
 HARDCODED = {
     'minecraft:sand_feature': f'Feature::Disk(Disk {{ block: Block::Sand, radius: 7, half_height: 2, {_SOIL} }})',
     'minecraft:gravel_feature': f'Feature::Disk(Disk {{ block: Block::Gravel, radius: 6, half_height: 2, {_SOIL} }})',
@@ -20,6 +24,18 @@ HARDCODED = {
     'minecraft:shortest_seagrass_feature': 'Feature::Seagrass { count: 1, tall: 0.3 }',
     'minecraft:shorter_seagrass_feature': 'Feature::Seagrass { count: 1, tall: 0.4 }',
     'minecraft:taller_seagrass_feature': 'Feature::Seagrass { count: 1, tall: 0.8 }',
+    'minecraft:dead_bush_feature': _LEGACY.format('DeadBush'),
+    'minecraft:reeds_feature': _LEGACY.format('Reeds'),
+    'minecraft:cactus_feature': _LEGACY.format('Cactus'),
+    'minecraft:melon_feature': _LEGACY.format('Melon'),
+    'minecraft:waterlily_feature': _LEGACY.format('Waterlily'),
+    'minecraft:pumpkin_feature': _LEGACY.format('Pumpkin { count: 96 }'),
+    'minecraft:sweet_berry_bush_feature': _LEGACY.format(f'SweetBerries {{ count: {_PATCH_COUNT} }}'),
+    'minecraft:brown_mushroom_feature': _LEGACY.format(f'Mushroom {{ block: Block::BrownMushroom, count: {_PATCH_COUNT} }}'),
+    'minecraft:red_mushroom_feature': _LEGACY.format(f'Mushroom {{ block: Block::RedMushroom, count: {_PATCH_COUNT} }}'),
+    'minecraft:legacy:overworld_flower_feature': _LEGACY.format(f'Flower {{ kind: FlowerKind::Overworld, count: {_PATCH_COUNT} }}'),
+    'minecraft:legacy:plains_flower_feature': _LEGACY.format(f'Flower {{ kind: FlowerKind::Plains, count: {_PATCH_COUNT} }}'),
+    'minecraft:legacy:swamp_flower_feature': _LEGACY.format(f'Flower {{ kind: FlowerKind::Swamp, count: {_PATCH_COUNT} }}'),
 }
 EARLY_OUT = {'none': 'EarlyOut::None', 'first_failure': 'EarlyOut::FirstFailure', 'first_success': 'EarlyOut::FirstSuccess'}
 # Old names and states BDS flattens into the blocks of src/block.rs.

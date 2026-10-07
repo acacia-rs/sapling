@@ -27,8 +27,9 @@ pub struct Queries {
     noise: Query,
 }
 
-/// `query.noise` (lambda 1411a24c0): one simplex octave from an MT seeded 2345, whatever the world.
-fn noise() -> &'static SimplexNoise {
+/// `query.noise` (lambda 1411a24c0) and the legacy flower features' noise: one simplex octave from
+/// an MT seeded 2345, whatever the world.
+pub fn noise() -> &'static SimplexNoise {
     static NOISE: OnceLock<SimplexNoise> = OnceLock::new();
     NOISE.get_or_init(|| {
         let mut mt = Mt19937::new(2345);

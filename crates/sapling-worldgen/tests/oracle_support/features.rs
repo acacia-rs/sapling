@@ -32,6 +32,15 @@ fn family(name: &str) -> Option<&'static str> {
         "sunflower" => "sunflowers",
         "seagrass" => "seagrass",
         "kelp" => "kelp",
+        "deadbush" => "dead bushes",
+        "reeds" => "sugar cane",
+        "cactus" => "cacti",
+        "brown_mushroom" | "red_mushroom" => "mushrooms",
+        "waterlily" => "lily pads",
+        "pumpkin" | "melon_block" => "pumpkins, melons",
+        "sweet_berry_bush" => "sweet berries",
+        "poppy" | "dandelion" | "blue_orchid" | "azure_bluet" | "red_tulip" | "orange_tulip" | "white_tulip" | "pink_tulip" | "oxeye_daisy"
+        | "cornflower" | "lily_of_the_valley" | "allium" => "flowers",
         _ => return None,
     })
 }

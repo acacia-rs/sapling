@@ -60,12 +60,24 @@ pub fn may_place(view: &View, [x, y, z]: [i32; 3], block: Block) -> bool {
     can_survive(view, [x, y, z], block) && (!double || view.block(x, y + 1, z) == Block::Air)
 }
 
-/// Whether `block` survives at `at`: plants on soil, dry plants on sand and terracotta too.
+/// Whether `block` survives at `at`: plants on soil, dry plants on sand and terracotta too, sugar
+/// cane by water, cactus on sand with nothing solid beside it, mushrooms on anything solid.
 pub fn can_survive(view: &View, [x, y, z]: [i32; 3], block: Block) -> bool {
     let below = view.block(x, y - 1, z);
+    let sides = [(-1, 0), (1, 0), (0, -1), (0, 1)];
     match block {
-        Block::ShortDryGrass | Block::TallDryGrass => is_dry_soil(below),
+        Block::ShortDryGrass | Block::TallDryGrass | Block::Deadbush => is_dry_soil(below),
         Block::TallGrassTop | Block::LargeFernTop | Block::SunflowerTop => true,
+        Block::Reeds => {
+            below == Block::Reeds
+                || (is_soil(below) || matches!(below, Block::Sand | Block::RedSand))
+                    && sides.iter().any(|&(dx, dz)| view.block(x + dx, y - 1, z + dz) == Block::Water)
+        }
+        Block::Cactus => {
+            matches!(below, Block::Cactus | Block::Sand | Block::RedSand)
+                && sides.iter().all(|&(dx, dz)| !view.block(x + dx, y, z + dz).blocks_motion())
+        }
+        Block::BrownMushroom | Block::RedMushroom => below.blocks_motion(),
         _ if block.is_plant() && !block.is_waterlogged() => is_soil(below),
         _ => true,
     }

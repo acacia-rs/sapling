@@ -113,6 +113,33 @@ pub enum Feature {
     Kelp { count: i32 },
     /// `SeagrassFeature`: `count` tries, double with chance `tall`.
     Seagrass { count: i32, tall: f32 },
+    /// The legacy land plants BDS builds in code (land.rs, flowers.rs).
+    Legacy(Legacy),
+}
+
+#[derive(Debug, Clone, Copy)]
+pub enum Legacy {
+    DeadBush,
+    Reeds,
+    Cactus,
+    Melon,
+    Waterlily,
+    /// `BlockPileFeature` with a pumpkin, `count` tries.
+    Pumpkin { count: i32 },
+    /// `BlockPileFeature` with a sweet berry bush, `count` tries.
+    SweetBerries { count: i32 },
+    Mushroom { block: Block, count: i32 },
+    Flower { kind: FlowerKind, count: i32 },
+}
+
+/// The flower table of a `LegacyFlowerFeature` (1438ef3b0's switch).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum FlowerKind {
+    FlowerForest,
+    Forest,
+    Overworld,
+    Plains,
+    Swamp,
 }
 
 /// `minecraft:scatter_feature`: the distribution drawn from the placing generator.

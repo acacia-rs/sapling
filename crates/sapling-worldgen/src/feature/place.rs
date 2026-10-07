@@ -31,6 +31,7 @@ impl Feature {
             Feature::SingleBlock(single) => single.place(ctx, at),
             Feature::Kelp { count } => placed(super::aquatic::kelp(ctx, at, *count)),
             Feature::Seagrass { count, tall } => placed(super::aquatic::seagrass(ctx, at, *count, *tall)),
+            Feature::Legacy(legacy) => placed(legacy.place(ctx, at)),
         }
     }
 }
