@@ -34,11 +34,16 @@ struct LatticePoint {
     jitter: [f32; 3],
 }
 
+/// Bedrock biome ids (all below 256) per block, a byte each so neighbours' biomes stay cached cheaply.
 pub struct ChunkBiomes {
-    ids: Vec<u32>,
-    /// Which lattice point each block took, for diagnosing (lattice x, y, z).
-    picks: Vec<[i32; 3]>,
+    chunk: (i32, i32),
+    ids: Vec<u8>,
+    /// Which corner of its lattice cell each block took (`CORNERS`), for diagnosing.
+    corners: Vec<u8>,
 }
+
+/// Lattice cell corners in BDS's tie order z, y, zy, x, xz, xy, xyz (142f67a10), as [x, y, z].
+const CORNERS: [[i32; 3]; 8] = [[0, 0, 0], [0, 0, 1], [0, 1, 0], [0, 1, 1], [1, 0, 0], [1, 0, 1], [1, 1, 0], [1, 1, 1]];
 
 fn block_index(x: usize, y: i32, z: usize) -> usize {
     ((y - MIN_Y) as usize * 16 + z) * 16 + x
@@ -46,11 +51,14 @@ fn block_index(x: usize, y: i32, z: usize) -> usize {
 
 impl ChunkBiomes {
     pub fn biome(&self, x: usize, y: i32, z: usize) -> u32 {
-        self.ids[block_index(x, y, z)]
+        u32::from(self.ids[block_index(x, y, z)])
     }
 
+    /// The lattice point (x, y, z in lattice units) the block took its biome from.
     pub fn lattice_point(&self, x: usize, y: i32, z: usize) -> [i32; 3] {
-        self.picks[block_index(x, y, z)]
+        let corner = CORNERS[self.corners[block_index(x, y, z)] as usize];
+        let block = [self.chunk.0 * 16 + x as i32, y, self.chunk.1 * 16 + z as i32];
+        std::array::from_fn(|axis| (block[axis] >> 3) + corner[axis])
     }
 }
 
@@ -103,7 +111,7 @@ impl ClimateNoises {
             }
         }
         let mut ids = vec![0; 16 * 16 * HEIGHT];
-        let mut picks = vec![[0; 3]; 16 * 16 * HEIGHT];
+        let mut corners = vec![0; 16 * 16 * HEIGHT];
         for y in MIN_Y..MIN_Y + HEIGHT as i32 {
             for z in 0..16 {
                 for x in 0..16 {
@@ -112,40 +120,30 @@ impl ClimateNoises {
                     let base = (((cell[0] - origin[0]) as usize * LATTICE_COLUMNS) + (cell[2] - origin[2]) as usize) * LATTICE_ROWS
                         + (cell[1] - origin[1]) as usize;
                     let frac = block.map(|v| (v & 7) as f32 * 0.125);
-                    let picked = pick(&lattice, base, frac);
-                    ids[block_index(x, y, z)] = lattice[picked].biome;
-                    let row = picked % LATTICE_ROWS;
-                    let column = picked / LATTICE_ROWS;
-                    let (gx, gz) = (column / LATTICE_COLUMNS, column % LATTICE_COLUMNS);
-                    picks[block_index(x, y, z)] = [origin[0] + gx as i32, origin[1] + row as i32, origin[2] + gz as i32];
+                    let corner = pick(&lattice, base, frac);
+                    let [cx, cy, cz] = CORNERS[corner];
+                    let picked = base + cx as usize * LATTICE_ROWS * LATTICE_COLUMNS + cz as usize * LATTICE_ROWS + cy as usize;
+                    ids[block_index(x, y, z)] = lattice[picked].biome as u8;
+                    corners[block_index(x, y, z)] = corner as u8;
                 }
             }
         }
-        ChunkBiomes { ids, picks }
+        ChunkBiomes { chunk: (chunk_x, chunk_z), ids, corners }
     }
 }
 
-/// The lattice corner nearest the block after jitter; ties keep the earlier corner, in BDS's
-/// order z, y, zy, x, xz, xy, xyz (142f67a10).
-fn pick(lattice: &[LatticePoint], base: usize, [fx, fy, fz]: [f32; 3]) -> usize {
-    let (y_step, z_step, x_step) = (1, LATTICE_ROWS, LATTICE_ROWS * LATTICE_COLUMNS);
-    let corners = [
-        (0, [fx, fy, fz]),
-        (z_step, [fx, fy, fz - 1.0]),
-        (y_step, [fx, fy - 1.0, fz]),
-        (z_step + y_step, [fx, fy - 1.0, fz - 1.0]),
-        (x_step, [fx - 1.0, fy, fz]),
-        (x_step + z_step, [fx - 1.0, fy, fz - 1.0]),
-        (x_step + y_step, [fx - 1.0, fy - 1.0, fz]),
-        (x_step + z_step + y_step, [fx - 1.0, fy - 1.0, fz - 1.0]),
-    ];
-    let mut best = (base, f32::MAX);
-    for (offset, [dx, dy, dz]) in corners {
-        let [jx, jy, jz] = lattice[base + offset].jitter;
+/// The index into `CORNERS` of the lattice corner nearest the block after jitter; ties keep the
+/// earlier corner.
+fn pick(lattice: &[LatticePoint], base: usize, frac: [f32; 3]) -> usize {
+    let mut best = (0, f32::MAX);
+    for (index, corner) in CORNERS.iter().enumerate() {
+        let point = base + corner[0] as usize * LATTICE_ROWS * LATTICE_COLUMNS + corner[2] as usize * LATTICE_ROWS + corner[1] as usize;
+        let [jx, jy, jz] = lattice[point].jitter;
+        let [dx, dy, dz] = std::array::from_fn(|axis| frac[axis] - corner[axis] as f32);
         let (ex, ey, ez) = (jx + dx, jy + dy, jz + dz);
         let distance = ez * ez + ey * ey + ex * ex;
         if distance < best.1 {
-            best = (base + offset, distance);
+            best = (index, distance);
         }
     }
     best.0

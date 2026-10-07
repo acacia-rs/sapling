@@ -41,7 +41,7 @@ impl Features {
         shape: &mut ChunkShape,
         (chunk_x, chunk_z): (i32, i32),
         loaded: &dyn Fn(i32, i32) -> Arc<ChunkShape>,
-        biomes: &dyn Fn(i32, i32) -> ChunkBiomes,
+        biomes: &dyn Fn(i32, i32) -> Arc<ChunkBiomes>,
     ) {
         for source_x in chunk_x - REACH..=chunk_x + REACH {
             for source_z in chunk_z - REACH..=chunk_z + REACH {

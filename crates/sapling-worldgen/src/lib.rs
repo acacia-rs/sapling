@@ -35,6 +35,8 @@ use random::Xoroshiro;
 
 /// Loaded columns (about 100 kB each) kept for neighbours' lakes and features.
 const LOADED_LIMIT: usize = 256;
+/// Chunk biomes (about 200 kB each), shared by the surface, decoration and the caller.
+const BIOMES_LIMIT: usize = 256;
 
 /// The overworld generator for one world seed.
 pub struct OverworldGenerator {
@@ -45,6 +47,7 @@ pub struct OverworldGenerator {
     decoration: Decoration,
     features: Features,
     loaded: SourceCache<(i32, i32), ChunkShape>,
+    biomes: SourceCache<(i32, i32), ChunkBiomes>,
 }
 
 impl OverworldGenerator {
@@ -58,6 +61,7 @@ impl OverworldGenerator {
             decoration: Decoration::new(seed),
             features: Features::new(seed),
             loaded: SourceCache::new(LOADED_LIMIT),
+            biomes: SourceCache::new(BIOMES_LIMIT),
         }
     }
 
@@ -111,9 +115,9 @@ impl OverworldGenerator {
         self.features.place(shape, (chunk_x, chunk_z), &|x, z| self.loaded(x, z), &|x, z| self.chunk_biomes(x, z));
     }
 
-    /// Bedrock biome ids per block.
-    pub fn chunk_biomes(&self, chunk_x: i32, chunk_z: i32) -> ChunkBiomes {
-        self.density.climate.chunk_biomes(self.seed, chunk_x, chunk_z)
+    /// Bedrock biome ids per block, cached for the stages and neighbours that read them again.
+    pub fn chunk_biomes(&self, chunk_x: i32, chunk_z: i32) -> Arc<ChunkBiomes> {
+        self.biomes.get((chunk_x, chunk_z), || self.density.climate.chunk_biomes(self.seed, chunk_x, chunk_z))
     }
 
     pub fn density(&self) -> &Density {
