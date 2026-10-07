@@ -30,14 +30,28 @@ Companion to [worldgen-bds.md](worldgen-bds.md). The flow rule itself (`LiquidBl
   meanwhile land at `MAX + delay` (wrapped: water 4, lava 29) and wait for the next call, so a call is one BFS
   generation. Heaps are MSVC `push_heap`/`pop_heap` on (time, priority); their order among equal keys decides which
   cell flows first, so sapling replicates them (ticks.rs).
+- `BlockSource::addToTickingQueue` (1415f50f0) takes a tick into that local queue only when every chunk within 8
+  blocks of the cell is in the block source (the 3x3); otherwise the tick goes to the cell's own chunk queue
+  (141603fd0) and waits for the game. Springs, border water, spreads, depth changes and neighbour updates all pass
+  through it; loadChunk's aquifer ticks and the requeue below do not. So decoration flows liquid only in the
+  32x32 blocks centred on the decorated chunk.
 - An instatick needs every chunk within a block of the cell in the 3x3; otherwise it is requeued with delay 0 (time
   `MAX`, never due in game). Leftovers go back to the chunk's queue; in game they run at the next ticks.
+- sapling outputs decoration's result; the chunk-queue ticks can be played afterwards as game ticks on the source's
+  3x3 (`SAPLING_LIQUID_GAME_TICKS`, default 0). TODO: hand them to the server's own ticking instead.
 - While instaticking, `neighborChanged` reaches only blocks with BlockLegacy +0x163 bit 3, which `LiquidBlock`'s
   constructor (148b5c4c0) sets: liquids do hear their neighbours. `spread_to` replaces whatever it enters without
   drops or waterlogging, and calls `updateNeighborsAt` again.
 
 ## Oracle (2026-10-07)
-Near origin the fluid cells differing went 12.0k -> 1.4k (Liquids stage 88.7% of 12.8k cells). The rest is order:
-our water forms infinite sources BDS's does not (and then floods lava into obsidian), or stops a cell short; no
-missing tick source stood out. Not modelled: lake and monster-room writes' updates, lava's 3-in-4 recede delay (TLS
-random), in-game ticking of leftovers, waterlogged plants losing water.
+Fluid cells differing near origin went 12.0k -> 1.7k. The 8-block routing removed most of our over-flow (infinite
+sources BDS's water never formed, lava floods into obsidian: water-over-air cells 383 -> 71, far out 218 -> 108
+Liquids errors, negative seed 42 -> 3). What remains near origin is about 1.3k cells of BDS water where ours is air:
+flows BDS ran in game from chunk queues while the oracle's tiles were ticking. How long a world ticked depends on the
+oracle run (a long game phase fixes near origin and breaks the small worlds), so it is not modelled.
+Not modelled either: lake and monster-room writes' updates, lava's 3-in-4 recede delay (TLS random), waterlogged
+plants losing water; about 100 lava cells near origin still spread where BDS's did not (a falling lava cell that
+made stone below then spreads sideways in ours), unexplained.
+In biome regions the liquid residue of windswept gravelly hills (sulfur caves), old growth pine taiga (lush caves)
+and the desert's extra lava spring (dripstone) sits where BDS's unported cave features changed the walls a spring
+or a flow needed.
