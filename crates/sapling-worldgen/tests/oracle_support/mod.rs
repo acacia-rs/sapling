@@ -27,7 +27,9 @@ impl Region {
 
 /// The world and its `-run2` twin, or None when the oracle worlds are absent.
 pub fn open(world: &str) -> Option<(LevelDbWorld, LevelDbWorld)> {
-    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../worlds/oracle");
+    let root = std::env::var_os("SAPLING_ORACLE_WORLDS")
+        .map(PathBuf::from)
+        .unwrap_or_else(|| PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../worlds/oracle"));
     let (a, b) = (root.join(world), root.join(format!("{world}-run2")));
     if !a.exists() || !b.exists() {
         return None;

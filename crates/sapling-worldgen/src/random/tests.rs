@@ -66,6 +66,16 @@ fn fork_positional_matches_java_fork() {
 }
 
 #[test]
+fn mt19937_reference_outputs() {
+    // mt19937ar's first output for 5489, and C++'s required 10000th output of std::mt19937.
+    let mut random = Mt19937::new(5489);
+    assert_eq!(random.next_u32(), 3499211612);
+    random.skip(9998);
+    assert_eq!(random.next_u32(), 4123659995);
+    assert_eq!(Mt19937::new(1).next_u32(), 1791095845);
+}
+
+#[test]
 fn position_seed_matches_mth_get_seed() {
     assert_eq!(position_seed(0, 0, 0), 0);
     // (1*3129871)^0^0 = 3129871; l*l*42317861 + l*11, >> 16
