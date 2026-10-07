@@ -154,6 +154,8 @@ pub enum Legacy {
     SweetBerries { count: i32 },
     Mushroom { block: Block, count: i32 },
     Flower { kind: FlowerKind, count: i32 },
+    /// `legacy:ice_feature`: an iceberg in 1 of 8 chunks (iceberg.rs).
+    Iceberg,
 }
 
 /// The flower table of a `LegacyFlowerFeature` (1438ef3b0's switch; the forest and flower forest

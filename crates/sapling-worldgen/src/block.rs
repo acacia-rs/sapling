@@ -59,6 +59,7 @@ blocks! {
     PowderSnow => "powder_snow" "",
     Ice => "ice" "",
     PackedIce => "packed_ice" "",
+    BlueIce => "blue_ice" "",
     Terracotta => "hardened_clay" "",
     WhiteTerracotta => "white_terracotta" "",
     OrangeTerracotta => "orange_terracotta" "",

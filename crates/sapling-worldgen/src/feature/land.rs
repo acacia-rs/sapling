@@ -50,6 +50,7 @@ impl Legacy {
             Legacy::SweetBerries { count } => pile(ctx.view, ctx.random, at, count, |random| SWEET_BERRIES[random.next_int(8) as usize]),
             Legacy::Mushroom { block, count } => super::flowers::mushroom(ctx.view, ctx.random, at, block, count),
             Legacy::Flower { kind, count } => super::flowers::flowers(ctx.view, ctx.random, at, kind, count),
+            Legacy::Iceberg => super::iceberg::ice_feature(ctx.view, ctx.random, at),
         }
     }
 }
