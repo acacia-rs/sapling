@@ -1,6 +1,7 @@
 //! `structure_slice <seed> <world> <x0> <z0> <x1> <z1> <y0> <y1>`: per layer, our blocks after the
 //! structure stage beside BDS's, one letter per block name (legend after each layer; `.` air,
-//! `~` water, lowercase where the two disagree), for seeing how a placed structure is offset.
+//! `~` water, lowercase where the two disagree), for seeing how a placed structure is offset;
+//! with `DIFF` set, one line per differing cell instead.
 #![allow(dead_code)]
 
 #[path = "../tests/oracle_support/mod.rs"]
@@ -35,6 +36,15 @@ fn main() {
                 }
             }
         }
+    }
+    if std::env::var_os("DIFF").is_some() {
+        for (pos, a) in &ours {
+            let b = &theirs[pos];
+            if a != b {
+                println!("{} {} {} ours {a} bds {b}", pos.0, pos.1, pos.2);
+            }
+        }
+        return;
     }
     let mut letters: BTreeMap<String, char> = BTreeMap::new();
     let mut letter = |name: &str| -> char {

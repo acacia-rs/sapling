@@ -26,13 +26,18 @@ const SPREAD: [f32; 14] = [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.9, 0.9, 0.8, 0.7
 /// chunk centre) and `biome_at` any block's.
 pub fn place(canvas: &mut Canvas, random: &mut Mt19937, start: (i32, i32), biome: u32, biome_at: &dyn Fn(i32, i32, i32) -> u32) {
     let cold = ICE.contains(&biome);
+    let (cx, cz) = (start.0 * 16, start.1 * 16);
+    canvas.begin_spill(BoundingBox::new(cx - 16, MIN_Y, cz - 16, cx + 31, 319, cz + 31));
     let surface = random.next_float() >= 0.5;
     let desert = DESERT.contains(&biome);
     let sea_floor = OCEAN.contains(&biome) || SWAMP.contains(&biome);
     let rotation = Rotation::from_index(random.next_int(4));
     let mirror = random.next_float() >= 0.5;
     let (x0, z0) = (start.0 * 16, start.1 * 16);
-    let top = |canvas: &Canvas, x: i32, z: i32| surface_height(canvas, x, z, !sea_floor);
+    // BDS's post-process BlockSource holds the start's 3x3 chunks; heights beyond are its min height.
+    let top = |canvas: &Canvas, x: i32, z: i32| {
+        if ((x >> 4) - start.0).abs() > 1 || ((z >> 4) - start.1).abs() > 1 { MIN_Y } else { surface_height(canvas, x, z, !sea_floor) }
+    };
     let h0 = top(canvas, x0, z0);
     let name = if random.next_float() >= 0.05 { format!("portal_{}", random.next_int(10) + 1) } else { format!("giant_portal_{}", random.next_int(3) + 1) };
     let template = Template::get(&format!("ruined_portal/{name}"));
@@ -87,6 +92,7 @@ pub fn place(canvas: &mut Canvas, random: &mut Mt19937, start: (i32, i32), biome
         _ => 0.2,
     };
     super::ruined_portal_age::age(canvas, random, &b, mossiness, cold, sea_floor);
+    canvas.end_spill();
 }
 
 /// `BlockSource::getAboveTopSolidBlock` as vt+0x178 asks it: one above the highest solid block,
