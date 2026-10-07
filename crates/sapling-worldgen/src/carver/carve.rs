@@ -6,7 +6,9 @@ use crate::block::Block;
 use crate::terrain::{ChunkShape, MIN_Y};
 
 use super::cave::Segment;
-use super::replace::cave_replaceable;
+use super::replace::{cave_replaceable, is_dirt, is_sand};
+
+const LAST_Y: i32 = MIN_Y + crate::terrain::HEIGHT as i32 - 1;
 
 /// Local block bounds of a segment inside the target chunk; y in BDS's 0-based local y.
 struct Bounds {
@@ -47,8 +49,8 @@ fn bounds(segment: &Segment, chunk_x: i32, chunk_z: i32, height_cap: i32) -> Bou
 }
 
 /// Replaceable cells inside the ellipsoid become air above the aquifer's fluid level and its fluid
-/// below; aquifer barriers stay solid.
-// TODO: BDS also turns sand above a carved cell into sandstone and regrows grass on the dirt below a carved grass block; neither changes the shape.
+/// below; aquifer barriers stay solid. Each also props up a sand stack above it and regrows its
+/// grass or mycelium on the dirt below, barrier or not.
 pub fn carve(shape: &mut ChunkShape, density: &Density, aquifer: &mut AquiferCache, segment: &Segment, chunk: (i32, i32), height_cap: i32) {
     let (chunk_x, chunk_z) = chunk;
     let bounds = bounds(segment, chunk_x, chunk_z, height_cap);
@@ -69,9 +71,17 @@ pub fn carve(shape: &mut ChunkShape, density: &Density, aquifer: &mut AquiferCac
                 if !(dy > segment.floor_level) || !(dy * dy + dx2 + dz2 < 1.0) {
                     continue;
                 }
-                let at = [wx, local_y + MIN_Y, wz];
-                if cave_replaceable(shape.block(lx as usize, at[1], lz as usize)) {
-                    empty_cell(shape, density, aquifer, at);
+                let (x, y, z) = (lx as usize, local_y + MIN_Y, lz as usize);
+                let original = shape.block(x, y, z);
+                if !cave_replaceable(original) {
+                    continue;
+                }
+                if y + 3 <= LAST_Y && (1..=3).all(|d| is_sand(shape.block(x, y + d, z))) {
+                    shape.set_block(x, y + 1, z, Block::Sandstone);
+                }
+                empty_cell(shape, density, aquifer, [wx, y, wz]);
+                if matches!(original, Block::GrassBlock | Block::Mycelium) && is_dirt(shape.block(x, y - 1, z)) {
+                    shape.set_block(x, y - 1, z, original);
                 }
             }
         }

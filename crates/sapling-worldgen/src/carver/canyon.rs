@@ -8,7 +8,8 @@ use crate::density::{AquiferCache, Density};
 use crate::random::{Mt19937, unit};
 use crate::terrain::{ChunkShape, MIN_Y};
 
-use super::replace::canyon_replaceable;
+use super::replace::{canyon_replaceable, is_dirt};
+use crate::block::Block;
 
 /// A static canyon config (14a925900/910/920, chosen in `loadChunk` by base game version). The
 /// legacy ones (docs/research/worldgen-bds-carvers.md) are not ported.
@@ -186,14 +187,22 @@ impl Canyon {
                 if !(horizontal < 1.0) {
                     continue;
                 }
+                // Once the column has met grass, every carved cell regrows it on the dirt below.
+                let mut grass = false;
                 for local_y in (y0 + 1..=y1).rev() {
                     let dy = (((local_y - 1) as f32 + 0.5) - cy) / vr;
                     if !((dy * dy) / 6.0 + self.widths[(local_y - 2) as usize] * horizontal < 1.0) {
                         continue;
                     }
-                    let at = [wx, local_y + MIN_Y, wz];
-                    if canyon_replaceable(shape.block(lx as usize, at[1], lz as usize)) {
-                        super::carve::empty_cell(shape, density, aquifer, at);
+                    let (x, y, z) = (lx as usize, local_y + MIN_Y, lz as usize);
+                    let block = shape.block(x, y, z);
+                    grass |= block == Block::GrassBlock;
+                    if !canyon_replaceable(block) {
+                        continue;
+                    }
+                    super::carve::empty_cell(shape, density, aquifer, [wx, y, wz]);
+                    if grass && is_dirt(shape.block(x, y - 1, z)) {
+                        shape.set_block(x, y - 1, z, Block::GrassBlock);
                     }
                 }
             }

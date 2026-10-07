@@ -42,6 +42,10 @@ Companion to [worldgen-bds.md](worldgen-bds.md) (pipeline, RNGs, labels). They r
 - Canyon test 148280800: list 14ccd27e8 (54, Java's carver replaceables): stone, granite, diorite, andesite, tuff,
   deepslate, calcite, dirt, coarse dirt, mud, podzol, mycelium, grass, rooted dirt, terracotta and the 16 stained,
   sandstones, sands, iron/copper ores and raw blocks, snow, snow layer, packed ice, gravel, sulfur, cinnabar.
+- Fix-ups, per replaceable cell (run even when an aquifer barrier keeps it). Cave, before emptying: blocks y+1..y+3
+  all in the sand list → y+1 becomes plain `sandstone` (red sand too). After: original grass or mycelium (148281750)
+  over dirt/coarse dirt (14ccdb858) → the dirt becomes that block. Canyon: a per-column flag set by any grass block met
+  in the ellipsoid (replaceable or not); while set, dirt/coarse dirt below each carved cell becomes grass. No sandstone.
 - Oracle (carver cells only; cells next to feature blocks, decorated afterwards, or on noise-cave floors counted apart):
   seed 20261003 near origin 99.49% precision / 99.44% recall, far out 99.61 / 99.41, seed −4172144997902289642 99.86 /
   99.86. Residue: liquid flow and aquifer fluid differences (wrong fluid), ore blobs over aquifer-barrier cells.

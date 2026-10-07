@@ -15,6 +15,16 @@ pub fn cave_replaceable(block: Block) -> bool {
     )
 }
 
+/// The cave carver's 14ccd9470: sand, red sand, suspicious sand.
+pub fn is_sand(block: Block) -> bool {
+    matches!(block, Block::Sand | Block::RedSand)
+}
+
+/// 14ccdb858: what both carvers regrow grass on.
+pub fn is_dirt(block: Block) -> bool {
+    matches!(block, Block::Dirt | Block::CoarseDirt)
+}
+
 /// The canyon's list 14ccd27e8 (tested by 148280800): Java's overworld carver replaceables.
 pub fn canyon_replaceable(block: Block) -> bool {
     use Block::*;
