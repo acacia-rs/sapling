@@ -4,7 +4,7 @@
 use std::collections::HashSet;
 
 use super::Anchor;
-use super::common::{allows, pick_weighted};
+use super::common::{pick_weighted, valid_tree_position};
 use super::spec::{MangroveCanopy, Tree};
 use crate::block::Block;
 use crate::feature::view::View;
@@ -32,10 +32,8 @@ impl MangroveCanopy {
                 let dy = jitter(height);
                 let dz = jitter(radius);
                 let p = [x + dx, y + dy, z + dz];
-                // featurelab approximates BDS's material gate as may_replace or air.
-                let existing = view.block(p[0], p[1], p[2]);
-                if allows(tree.may_replace, existing) || existing == Block::Air {
-                    view.set_block(p[0], p[1], p[2], leaf);
+                // MangroveTreeCanopy::placeCanopy (1438ef7d0) keeps only leaves whose write succeeded.
+                if valid_tree_position(view, p, tree.may_replace) && view.set_block(p[0], p[1], p[2], leaf) {
                     leaves.push(p);
                 }
             }
