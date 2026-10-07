@@ -92,6 +92,10 @@ fn judge_cell(ours: Block, bds: &BdsCell, y: i32, context: Context) -> Verdict {
         return Verdict::Match(stage_of(ours, y, context));
     }
     if ours.is_solid() && (bds.is_empty() || bds.is_fluid()) {
+        // The iceberg feature cuts its shape out of any packed ice and snow, the surface's too.
+        if matches!(ours, Block::PackedIce | Block::Snow) {
+            return Verdict::Later("iceberg features");
+        }
         if context.feature_emptied {
             return Verdict::Later("features (BDS emptied it next to a feature block)");
         }

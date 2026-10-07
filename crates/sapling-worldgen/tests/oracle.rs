@@ -2,6 +2,7 @@
 //! Needs the git-ignored oracle worlds (`$SAPLING_ORACLE_WORLDS`); run with `--ignored --nocapture`.
 //! Cells where the world and its `-run2` twin disagree are counted apart, and cells that stages
 //! sapling does not run yet may change are reported per stage, not as mismatches.
+//! `SAPLING_ORACLE_REGION=<substring>` keeps only the regions whose name contains it.
 
 mod oracle_support;
 
@@ -10,7 +11,7 @@ use std::collections::BTreeMap;
 use oracle_support::{BdsCell, BiomeTally, CarverTally, Context, Ours, Region, Tally, TopTally, bds_cell, column_reshaped, near_feature, open};
 use sapling_leveldb::ChunkKey;
 
-use sapling_worldgen::{CellKind, MIN_Y, OverworldGenerator};
+use sapling_worldgen::{Block, CellKind, MIN_Y, OverworldGenerator};
 
 const LAST_Y: i32 = 319;
 
@@ -30,7 +31,8 @@ fn compare(seed: i64, world: &str, regions: &[Region]) {
         return;
     };
     let generator = OverworldGenerator::new(seed);
-    for region in regions {
+    let only = std::env::var("SAPLING_ORACLE_REGION").ok();
+    for region in regions.iter().filter(|r| only.as_deref().is_none_or(|only| r.name.contains(only))) {
         let mut tallies = Tallies::default();
         for (cx, cz) in region.chunks() {
             let key = ChunkKey::new(cx, cz, 0);
@@ -71,7 +73,8 @@ fn compare(seed: i64, world: &str, regions: &[Region]) {
                                 tallies.top.add(block, bds, at, context);
                             }
                             let next_to_cave = [y - 1, y + 1].iter().any(|&ny| (MIN_Y..=LAST_Y).contains(&ny) && !surfaced.block(x, ny, z).is_solid());
-                            let cell = Ours { before: surfaced.kind(x, y, z), after: ours.kind(x, y, z), next_to_cave };
+                            let iceberg = matches!(before, Block::PackedIce | Block::Snow);
+                            let cell = Ours { before: surfaced.kind(x, y, z), after: ours.kind(x, y, z), next_to_cave, iceberg };
                             tallies.carvers.add(cell, bds, at, &primary, &a);
                         }
                         if our_highest.is_none() && ours.kind(x, y, z) != CellKind::Air {

@@ -38,7 +38,7 @@ pub struct CarverTally {
 impl CarverTally {
     /// Unstable cells are skipped by the caller.
     pub fn add(&mut self, ours: Ours, bds: &BdsCell, at: (i32, i32, i32), world: &LevelDbWorld, chunk: &Chunk) {
-        let Ours { before, after, next_to_cave } = ours;
+        let Ours { before, after, next_to_cave, iceberg } = ours;
         if before != CellKind::Solid {
             return;
         }
@@ -54,7 +54,7 @@ impl CarverTally {
                 *self.extra_by_band.entry(band).or_default() += 1;
                 self.first_extra.get_or_insert(at);
             }
-            (false, true) if near_feature(world, chunk, at) => self.by_features += 1,
+            (false, true) if iceberg || near_feature(world, chunk, at) => self.by_features += 1,
             (false, true) => {
                 self.missed += 1;
                 *self.missed_by_band.entry(band).or_default() += 1;
@@ -94,6 +94,8 @@ pub struct Ours {
     pub before: CellKind,
     pub after: CellKind,
     pub next_to_cave: bool,
+    /// Packed ice or snow, which the iceberg feature also cuts out (see judge.rs).
+    pub iceberg: bool,
 }
 
 /// Any non-terrain solid block within `FEATURE_RADIUS`, looking inside this chunk only.
