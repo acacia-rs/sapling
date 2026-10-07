@@ -154,6 +154,12 @@ blocks! {
     StickyPistonUp => "sticky_piston" "facing_direction=1",
     StickyPistonWest => "sticky_piston" "facing_direction=5",
     RepeaterSouth => "unpowered_repeater" "minecraft:cardinal_direction=south,repeater_delay=0",
+    Prismarine => "prismarine" "",
+    PrismarineBricks => "prismarine_bricks" "",
+    DarkPrismarine => "dark_prismarine" "",
+    SeaLantern => "sea_lantern" "",
+    WetSponge => "wet_sponge" "",
+    GoldBlock => "gold_block" "",
     // Plants from here on, waterlogged ones from Seagrass on (`is_plant`, `is_waterlogged`).
     ShortGrass => "short_grass" "",
     Fern => "fern" "",

@@ -6,6 +6,7 @@ use std::sync::Arc;
 
 use super::canvas::Canvas;
 use super::mineshaft::{self, MESA_BIOMES, Materials, Mineshaft};
+use super::monument::{self, Monument};
 use super::probe::Probe;
 use super::scattered::Scattered;
 use super::{BoundingBox, StructureKind, Structures, stairs, treasure};
@@ -19,6 +20,8 @@ use crate::terrain::ChunkShape;
 const MINESHAFT_REACH: i32 = 7;
 /// A desert pyramid reaches one chunk past its start in x and z.
 const TEMPLE_REACH: i32 = 1;
+/// A monument's building spans its start chunk and two chunks either way.
+const MONUMENT_REACH: i32 = 2;
 
 impl Structures {
     /// The pieces reaching the chunk, reading past it through `neighbour`; returns the heights
@@ -45,7 +48,13 @@ impl Structures {
             .filter(|m| m.bb.intersects(&column))
             .collect();
         let treasure = self.is_start(density, StructureKind::BuriedTreasure, chunk);
-        if temples.is_empty() && mineshafts.is_empty() && !treasure {
+        let monuments: Vec<Arc<Monument>> = self
+            .starts_near(density, StructureKind::Monument, chunk, MONUMENT_REACH)
+            .into_iter()
+            .map(|start| self.monument(start))
+            .filter(|m| m.building.bb.intersects(&column))
+            .collect();
+        if temples.is_empty() && mineshafts.is_empty() && !treasure && monuments.is_empty() {
             return None;
         }
         let mut canvas = Canvas::new(shape, chunk, neighbour);
@@ -62,6 +71,11 @@ impl Structures {
         }
         if treasure {
             treasure::place(&mut canvas, &mut chunk_random(chunk), chunk);
+        }
+        let mut random = chunk_random(chunk);
+        for monument in &monuments {
+            monument.post_process(&mut canvas, &mut random);
+            placed.push(monument.building.bb);
         }
         Some(placed.iter().fold((i32::MAX, i32::MIN), |(lo, hi), b| (lo.min(b.y0 - 1), hi.max(b.y1 + 1))))
     }
@@ -80,6 +94,10 @@ impl Structures {
         let built = Arc::new(mineshaft::generate(&self.mineshaft_seed, start, mesa, &|qx, qz| density.preliminary_surface(qx, qz)));
         self.mineshafts.lock().unwrap().insert(start, built.clone());
         built
+    }
+
+    fn monument(&self, start: (i32, i32)) -> Arc<Monument> {
+        self.monuments.lock().unwrap().entry(start).or_insert_with(|| Arc::new(monument::generate(self.level_seed, start))).clone()
     }
 }
 

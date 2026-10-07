@@ -7,6 +7,7 @@ mod canvas;
 mod kind;
 mod locate;
 mod mineshaft;
+mod monument;
 mod nearby;
 mod piece;
 mod placement;
@@ -40,6 +41,7 @@ pub struct Structures {
     mineshaft_chunks: Mutex<HashMap<(i32, i32), bool>>,
     strongholds: OnceLock<Vec<(i32, i32)>>,
     mineshafts: Mutex<HashMap<(i32, i32), Arc<mineshaft::Mineshaft>>>,
+    monuments: Mutex<HashMap<(i32, i32), Arc<monument::Monument>>>,
 }
 
 impl Structures {
@@ -53,6 +55,7 @@ impl Structures {
             mineshaft_chunks: Mutex::new(HashMap::new()),
             strongholds: OnceLock::new(),
             mineshafts: Mutex::new(HashMap::new()),
+            monuments: Mutex::new(HashMap::new()),
         }
     }
 
