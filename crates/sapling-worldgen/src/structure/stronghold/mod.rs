@@ -89,7 +89,7 @@ pub fn spiral(level_seed: u32, is_village: &dyn Fn((i32, i32)) -> bool) -> Vec<(
                 found.push(chunk);
                 (8, 1.884_955_8)
             }
-            None => (4, 0.785_398_2),
+            None => (4, std::f32::consts::FRAC_PI_4),
         };
         if found.len() > 2 {
             break;
