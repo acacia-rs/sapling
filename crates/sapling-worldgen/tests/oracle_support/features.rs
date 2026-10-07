@@ -8,7 +8,7 @@ use sapling_worldgen::Block;
 use super::BdsCell;
 
 /// The family of a block a feature places: ores without their deepslate variant, stone blobs.
-fn family(name: &str) -> Option<&'static str> {
+pub(super) fn family(name: &str) -> Option<&'static str> {
     let name = name.strip_prefix("deepslate_").unwrap_or(name);
     Some(match name {
         "andesite" | "diorite" | "granite" => "stone blobs",
