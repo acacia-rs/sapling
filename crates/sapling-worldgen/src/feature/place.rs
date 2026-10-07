@@ -114,11 +114,16 @@ fn aggregate(ctx: &mut Ctx, at: [i32; 3], features: &[usize], early_out: EarlyOu
     let mut placed = None;
     for &feature in features {
         let position = if sequence { placed.unwrap_or(at) } else { at };
-        if let Some(done) = FEATURES[feature].place(ctx, position) {
-            placed = Some(done);
-            if early_out == EarlyOut::FirstSuccess {
-                return placed;
+        match FEATURES[feature].place(ctx, position) {
+            Some(done) => {
+                placed = Some(done);
+                if early_out == EarlyOut::FirstSuccess {
+                    return placed;
+                }
             }
+            // A sequence has no position to go on from (oracle: jungle cocoa is not tried under a failed tree).
+            None if sequence => return None,
+            None => {}
         }
         if early_out == EarlyOut::FirstFailure && placed.is_none() {
             break;
