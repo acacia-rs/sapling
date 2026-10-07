@@ -43,7 +43,14 @@ pub(crate) struct Orb {
     age: u32,
     last_search: u64,
     target: Option<Entity>,
-    taken: bool,
+}
+
+/// What became of an orb in a tick.
+enum Fate {
+    Stays,
+    /// Gone of age, or with its column.
+    Gone,
+    Taken,
 }
 
 /// The tick a player last took an orb.
@@ -87,7 +94,7 @@ pub(crate) fn throw(world: &mut World, layer: Entity, at: [f32; 3], value: i32) 
     let mut throw = || random(world) * 0.2;
     let body = Body::new(at, [(throw() - 0.1) * 2.0, throw() * 2.0, (throw() - 0.1) * 2.0], [SIZE; 2]);
     let entity = entities::spawn(world, layer, KIND, body, at, |id| Some(announce(id, value, &body)))?;
-    world.entity_mut(entity).insert(Orb { value, age: 0, last_search: 0, target: None, taken: false });
+    world.entity_mut(entity).insert(Orb { value, age: 0, last_search: 0, target: None });
     Some(entity)
 }
 
@@ -118,14 +125,13 @@ fn touching(world: &mut World, layer: Entity, at: [f32; 3]) -> Option<Entity> {
     near.next().map(|(player, ..)| player)
 }
 
-/// One tick of the orb `entity`; false once it is gone.
-fn step(world: &mut World, entity: Entity, orb: &mut Orb, layer: Entity, id: u64) -> bool {
+/// One tick of the orb `entity`.
+fn step(world: &mut World, entity: Entity, orb: &mut Orb, layer: Entity, id: u64) -> Fate {
     orb.age += 1;
-    let Some(mut body) = world.get::<Body>(entity).copied().filter(|_| orb.age < LIFETIME && !orb.taken) else { return false };
+    let Some(mut body) = world.get::<Body>(entity).copied().filter(|_| orb.age < LIFETIME) else { return Fate::Gone };
     if let Some(player) = touching(world, layer, body.at).filter(|player| takes(world, *player)) {
         taken(world, layer, orb.value, body.at, player);
-        orb.taken = true;
-        return true;
+        return Fate::Taken;
     }
     // Counted in the orb's own ticks, so that the first search is 21 to 120 ticks after it appeared.
     if u64::from(orb.age) > orb.last_search + SEARCH_EVERY + id % 100 {
@@ -138,19 +144,18 @@ fn step(world: &mut World, entity: Entity, orb: &mut Orb, layer: Entity, id: u64
         let across = gap[0].hypot(gap[2]);
         if across <= TOUCH && takes(world, player) {
             taken(world, layer, orb.value, [0, 1, 2].map(|axis| body.at[axis] + gap[axis]), player);
-            orb.taken = true;
-            return true;
+            return Fate::Taken;
         }
         let pull = (1.0 - across).max(0.0).powi(2) * 0.1 / across;
         (0..3).for_each(|axis| body.motion[axis] += gap[axis] * pull);
         world.entity_mut(entity).insert(body);
     }
-    let Some((body, packets)) = entities::step(world, entity, layer, id, &Physics::ORB, 0.0) else { return false };
+    let Some((body, packets)) = entities::step(world, entity, layer, id, &Physics::ORB, 0.0) else { return Fate::Gone };
     if !packets.is_empty() {
         blocks::to_viewers(world, layer, body.at.map(|c| c.floor() as i32), &packets);
         mobs::reannounce(world, entity, announce(id, orb.value, &body));
     }
-    true
+    Fate::Stays
 }
 
 /// A player takes an orb worth `value` at `at`: it hears it, and gets its experience.
@@ -168,8 +173,9 @@ pub(crate) fn tick(world: &mut World) {
     for (entity, layer, id) in all {
         let Some(mut orb) = world.entity_mut(entity).take::<Orb>() else { continue };
         match step(world, entity, &mut orb, layer, id) {
-            true => drop(world.entity_mut(entity).insert(orb)),
-            false => mobs::remove(world, entity),
+            Fate::Stays => drop(world.entity_mut(entity).insert(orb)),
+            Fate::Gone => mobs::remove(world, entity),
+            Fate::Taken => entities::leave(world, entity),
         }
     }
 }

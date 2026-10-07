@@ -44,6 +44,26 @@ struct Born(u64);
 #[derive(Resource, Default)]
 pub(crate) struct AfterAnnouncing(Vec<(Entity, [i32; 3], Vec<Bytes>)>);
 
+/// An entity taken by a player: it goes from screens the tick after, as BDS sends an item's or
+/// an orb's RemoveEntity (research/captures/containers-findings.md D3, D6).
+#[derive(Component)]
+struct Leaving(u64);
+
+/// Has the entity go the tick after this one; call once nothing moves or takes it any more.
+pub(crate) fn leave(world: &mut World, entity: Entity) {
+    let next = world.resource::<Tick>().0 + 1;
+    world.entity_mut(entity).insert(Leaving(next));
+}
+
+/// Takes away the entities whose time to go has come.
+pub(crate) fn remove_left(world: &mut World) {
+    let now = world.resource::<Tick>().0;
+    let due: Vec<Entity> = world.query::<(Entity, &Leaving)>().iter(world).filter(|(_, leaving)| leaving.0 <= now).map(|(entity, _)| entity).collect();
+    for entity in due {
+        mobs::remove(world, entity);
+    }
+}
+
 /// Has `packets` sent to the viewers of `cell` once this tick's new entities are announced to them.
 pub(crate) fn after_announcing(world: &mut World, layer: Entity, cell: [i32; 3], packets: Vec<Bytes>) {
     world.get_resource_or_insert_with(AfterAnnouncing::default).0.push((layer, cell, packets));

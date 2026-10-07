@@ -197,7 +197,8 @@ pub(crate) fn pick_up(world: &mut World) {
         let left = inventory::change(world, player, |inventory| inventory.add(&stack)).unwrap_or(stack.count);
         let taken = sapling_net::encode(&TakeItemEntity { runtime_entity_id: item_id, target: player_id as u32 });
         blocks::to_viewers(world, layer, at.map(|c| c.floor() as i32), &[taken]);
-        mobs::remove(world, item);
+        world.entity_mut(item).remove::<Dropped>();
+        entities::leave(world, item);
         if left > 0 {
             lay(world, layer, ItemStack { count: left, ..stack }, at, [0.0; 3], tick);
         }

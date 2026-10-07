@@ -249,7 +249,7 @@ fn step(world: &mut World, layer: Entity, pos: BlockPos, fire: &mut Fire) -> boo
             }
             // The result is shown before the input goes, the game's order: a client that waits
             // for the input to empty has the whole result by then.
-            containers::set_slots(world, layer, pos, slots.clone(), None);
+            containers::set_slots(world, layer, pos, slots.clone());
             take_one(&mut slots[INPUT]);
         }
         Some(_) => fire.cook += 1,
@@ -257,7 +257,7 @@ fn step(world: &mut World, layer: Entity, pos: BlockPos, fire: &mut Fire) -> boo
         None => fire.cook = fire.cook.saturating_sub(2),
     }
     if slots != before {
-        containers::set_slots(world, layer, pos, slots, None);
+        containers::set_slots(world, layer, pos, slots);
     }
     if (fire.lit > 0) != was_lit {
         relight(world, layer, pos, &smelter, fire.lit > 0, fire);

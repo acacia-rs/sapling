@@ -270,6 +270,7 @@ pub(crate) fn dispatch(world: &mut World, plugins: &mut Plugins) {
     containers::close_out_of_reach(world);
     furnaces::tick(world);
     hoppers::tick(world);
+    entities::remove_left(world);
     drops::fly(world);
     drops::pick_up(world);
     orbs::tick(world);

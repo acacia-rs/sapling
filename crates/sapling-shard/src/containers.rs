@@ -205,7 +205,7 @@ pub(crate) fn with_slots<T>(world: &mut World, layer: Entity, pos: BlockPos, cha
     let lead = hold(world, layer, pos)?;
     let mut slots = slots_at(world, layer, lead)?;
     let result = change(world, &mut slots);
-    set_slots(world, layer, lead, slots, None);
+    set_slots(world, layer, lead, slots);
     slots::release(world, layer, lead);
     Some(result)
 }

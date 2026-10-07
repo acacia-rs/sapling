@@ -140,7 +140,7 @@ fn response(inventory: &Inventory, request_id: i32, applied: &Applied) -> ItemSt
             slot: *slot,
             hotbar_slot: *slot,
             count: held.map_or(0, |held| held.stack.count),
-            item_stack_id: Some(held.map_or(0, |held| held.id)),
+            item_stack_id: held.map(|held| held.id),
             custom_name: String::new(),
             filtered_custom_name: String::new(),
             durability_correction: 0,
@@ -176,19 +176,21 @@ fn answer(world: &mut World, plugins: &mut Plugins, entity: Entity, player: &Pla
     let Ok((mut inventory, mut out)) = query.get_mut(world, entity) else { return };
     (inventory.container, inventory.refuses) = (open.unwrap_or_default(), refuses);
     let applied = if allowed { apply(&mut inventory, request, creative, at).ok() } else { None };
-    // Answered before the container's slots are taken back out: the answer names them.
-    if let Some(applied) = &applied {
-        out.push(&response(&inventory, request.request_id, applied));
-    }
+    // Made before the container's slots are taken back out (the answer names them), sent after
+    // the container's slots are shown, as BDS does.
+    let answer = applied.as_ref().map(|applied| response(&inventory, request.request_id, applied));
     let (container, _) = (std::mem::take(&mut inventory.container), inventory.refuses.take());
-    match applied {
-        Some(applied) => {
+    match (applied, answer) {
+        (Some(applied), Some(answer)) => {
             containers::store(world, entity, container);
+            if let Some(mut out) = world.get_mut::<Outgoing>(entity) {
+                out.push(&answer);
+            }
             applied.dropped.into_iter().for_each(|stack| drops::throw(world, entity, stack));
         }
         // Only the container's refusal stood in the way: the client undoes it by itself.
-        None if failed && apply(&mut unrefused, request, creative, at).is_ok() => out.push(&refusal(request.request_id, CANNOT_HOLD)),
-        None => {
+        _ if failed && apply(&mut unrefused, request, creative, at).is_ok() => out.push(&refusal(request.request_id, CANNOT_HOLD)),
+        _ => {
             tracing::debug!(player = %player.name, ?request, "refusing an inventory request");
             out.push(&refusal(request.request_id, Status::Error));
             inventory.send_all(&mut out);

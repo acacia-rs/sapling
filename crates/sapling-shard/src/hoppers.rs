@@ -185,7 +185,7 @@ fn step(world: &mut World, layer: Entity, pos: BlockPos, facing: Face) -> bool {
         Some(_) => false,
         None => pull_lying(world, layer, pos, &mut slots),
     };
-    containers::set_slots(world, layer, pos, slots, None);
+    containers::set_slots(world, layer, pos, slots);
     pushed || pulled
 }
 

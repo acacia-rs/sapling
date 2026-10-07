@@ -52,13 +52,13 @@ pub(crate) fn load(mut layers: Query<&mut Layer>, mut players: Query<(&Identity,
 
 /// Sends each joining player its windows once it has items to show, in BDS's order: inventory,
 /// armour, the screen's own slots, offhand, then the slot in hand.
-pub(crate) fn send_own(mut players: Query<(&NetId, &Stage, &mut Inventory, &mut Outgoing)>) {
+pub(crate) fn send_own(tick: Res<Tick>, mut players: Query<(&NetId, &Stage, &mut Inventory, &mut Outgoing)>) {
     for (id, stage, mut inventory, mut out) in &mut players {
         if *stage >= Stage::StartGame && inventory.loaded && !inventory.sent {
             inventory.send_all(&mut out);
             out.push(&sapling_data::player_hotbar(inventory.selected, true));
             if inventory.experience != Experience::default() {
-                out.push(&experience::attributes(id, &inventory.experience, true));
+                out.push(&experience::attributes(id, &inventory.experience, true, tick.0));
             }
             inventory.sent = true;
         }

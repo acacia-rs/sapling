@@ -161,6 +161,8 @@ fn others_see_what_a_player_holds_and_wears_and_pick_up_what_it_throws() {
     assert_eq!((taken.runtime_entity_id, all::<TakeItemEntity>(sent.to(2)).len()), (lying[0].runtime_entity_id, 1));
     assert!(u64::from(taken.target) != steve.runtime_id, "Alex took them");
     assert_eq!(all::<InventoryContent>(sent.to(2))[0].input[0].count, 5);
-    let gone: Vec<i64> = [1, 2].iter().flat_map(|conn| all::<RemoveEntity>(sent.to(*conn))).map(|remove| remove.entity_id_self).collect();
-    assert_eq!(gone, [lying[0].runtime_entity_id as i64; 2]);
+    // Gone from both screens the tick after it was taken, as on BDS.
+    let next = h.tick_all();
+    let gone = |sent: &common::Sent| -> Vec<i64> { [1, 2].iter().flat_map(|conn| all::<RemoveEntity>(sent.to(*conn))).map(|remove| remove.entity_id_self).collect() };
+    assert_eq!((gone(&sent), gone(&next)), (vec![], vec![lying[0].runtime_entity_id as i64; 2]));
 }

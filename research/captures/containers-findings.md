@@ -73,7 +73,8 @@ is the one thing to confirm.
 
 **D4. Fuel refusal.** Fixed 2026-10-07 (`requests.rs` `CANNOT_HOLD`): status 55 and no resync on both (B:75, S:46).
 
-**D5. Orb announcement and xp attributes.** Orb AddEntity: sapling's metadata is Flags, Variant, Color, Nametag,
+**D5. Orb announcement and xp attributes.** Fixed 2026-10-07 (orb from the recorded entry; progress named twice
+with the server tick); the full SetEntityData after AddEntity and the random yaw are still not sent. Orb AddEntity: sapling's metadata is Flags, Variant, Color, Nametag,
 Scale, MarkVariant, BoundingboxWidth/Height, ExperienceValue (S:55); BDS's is the full recorded set (Health,
 OwnerEid, Air, ChargeAmount, LeadHolderEid, InteractiveTag, ...; B:90), followed by a full SetEntityData and MOVING
 toggles (B:94, B:105-108), and a random yaw (B:90-91). `sapling_data::add_experience_orb` (sapling-data
@@ -83,12 +84,14 @@ UpdateAttributes: sapling lists `player.experience` four times with `tick: 0` (S
 server tick (B:93). `experience_attributes` (sapling-data `player.rs:21-33`) keeps every PROGRESS entry of the
 template: keep the first two (or dedupe the template to BDS's), and fill `tick`. Low-medium.
 
-**D6. Item pickup packets.** Sapling: 4 InventoryContent, TakeItemEntity, RemoveEntity, one tick (S:163-168;
+**D6. Item pickup packets.** RemoveEntity a tick after TakeItemEntity since 2026-10-07 (`entities::leave`, shared
+with orbs); the inventory update is kept, as the fix said. Sapling: 4 InventoryContent, TakeItemEntity, RemoveEntity, one tick (S:163-168;
 `drops.rs:197-200`). BDS: TakeItemEntity, RemoveEntity one tick later (B:692-693), no InventoryContent or
 InventorySlot in the next 2.5 s. Fix: defer `mobs::remove` one tick (share D3's deferral). Leave the inventory update
 until a recording with all packet kinds shows how BDS tells the client (it must, somehow). Medium-low.
 
-**D7. Requester's InventorySlot and emptied ids.** BDS sends the changed container slot's InventorySlot to the
+**D7. Requester's InventorySlot and emptied ids.** Fixed 2026-10-07 (the requester gets the slot before its
+answer; an emptied slot has no stack id). BDS sends the changed container slot's InventorySlot to the
 player whose request changed it, before the response (B:64, B:88); `containers/slots.rs:98` skips that player
 (`knows`). BDS answers an emptied slot `item_stack_id: None` (B:65, B:89); sapling `Some(0)` (S:39, S:54;
 `inventory/requests.rs:143`). Fix: `item_stack_id: held.map(|held| held.id)`; drop the `knows` filter. Low.
