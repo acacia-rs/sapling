@@ -172,7 +172,8 @@ Biome feature rules run through `decorateWorldGenPostProcess` (slot 54, 14821f40
 ### Ported stages
 Floor, deepslate, ore veins, surface builders and the biome tree: [worldgen-bds-surface.md](worldgen-bds-surface.md).
 Cave carvers and canyons: [worldgen-bds-carvers.md](worldgen-bds-carvers.md).
-Feature rules (order, seeding, cross-chunk scheme) and ore features: [worldgen-bds-features.md](worldgen-bds-features.md).
+Feature rules (order, seeding, cross-chunk scheme), ores, disks, wrapper features and vegetation (with their labels):
+[worldgen-bds-features.md](worldgen-bds-features.md).
 
 ## Data-driven vs hardcoded
 

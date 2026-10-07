@@ -1,6 +1,6 @@
 //! The hardcoded part of `decorationPostProcessChunk` (1482143a0), after carvers: lava lakes.
-//! Water lakes and the legacy cave and canyon configs only run in legacy worlds. Monster rooms,
-//! feature rules and the freeze pass are not ported.
+//! Water lakes and the legacy cave and canyon configs only run in legacy worlds. Monster rooms and
+//! the freeze pass are not ported; feature rules are `crate::feature`.
 
 mod lake;
 
