@@ -28,18 +28,20 @@ fn main() {
     let generator = OverworldGenerator::new(seed);
     println!("seed {seed}: generator built in {:.1} ms; {} columns", setup.as_secs_f64() * 1000.0, positions.len());
 
-    let [mut surfaced, mut carved, mut decorated, mut biomes, mut whole] = [Duration::ZERO; 5];
+    let [mut surfaced, mut carved, mut decorated, mut featured, mut biomes, mut whole] = [Duration::ZERO; 6];
     for &pos in &positions {
         let mut shape = timed(&mut surfaced, || generator.surfaced_blocks(pos.x, pos.z));
         timed(&mut carved, || generator.carve(&mut shape, pos.x, pos.z));
         timed(&mut decorated, || generator.decorate(&mut shape, pos.x, pos.z));
+        timed(&mut featured, || generator.place_features(&mut shape, pos.x, pos.z));
         timed(&mut biomes, || generator.chunk_biomes(pos.x, pos.z));
         timed(&mut whole, || generated.load_column(pos, 0).expect("generated"));
     }
-    let stages = surfaced + carved + decorated + biomes;
+    let stages = surfaced + carved + decorated + featured + biomes;
     println!("  surfaced blocks {:.2} ms (shape, floor, surface)", per_column(surfaced));
     println!("  carvers         {:.2} ms", per_column(carved));
-    println!("  lava lakes      {:.2} ms (neighbours regenerated only where a lake starts)", per_column(decorated));
+    println!("  lava lakes      {:.2} ms (neighbours' terrain generated once, cached)", per_column(decorated));
+    println!("  features        {:.2} ms (with the neighbours' terrain and decoration they need)", per_column(featured));
     println!("  biomes          {:.2} ms", per_column(biomes));
     println!("  to a Chunk      {:.2} ms (whole minus the stages)", per_column(whole.saturating_sub(stages)));
     println!("  whole column    {:.2} ms through Generated::load_column", per_column(whole));

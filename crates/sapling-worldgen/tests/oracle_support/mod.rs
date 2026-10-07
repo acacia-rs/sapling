@@ -4,6 +4,7 @@
 #![allow(dead_code)]
 
 mod carver;
+mod features;
 mod judge;
 mod tally;
 
@@ -16,6 +17,8 @@ use sapling_worldgen::{Block, CellKind};
 // Shared by the oracle test and the examples; each uses a different part.
 #[allow(unused_imports)]
 pub use carver::{CarverTally, Ours, near_feature};
+#[allow(unused_imports)]
+pub use features::FeatureTally;
 #[allow(unused_imports)]
 pub use judge::{Context, column_reshaped};
 #[allow(unused_imports)]
@@ -58,7 +61,9 @@ pub const TERRAIN_BLOCKS: &[&str] = &[
     "sand", "red_sand", "sandstone", "red_sandstone", "gravel", "clay", "mud", "snow", "powder_snow", "ice", "packed_ice",
     "blue_ice", "bedrock", "hardened_clay", "white_terracotta", "orange_terracotta", "yellow_terracotta",
     "brown_terracotta", "red_terracotta", "light_gray_terracotta", "copper_ore", "deepslate_copper_ore", "raw_copper_block",
-    "iron_ore", "deepslate_iron_ore", "raw_iron_block",
+    "iron_ore", "deepslate_iron_ore", "raw_iron_block", "coal_ore", "deepslate_coal_ore", "gold_ore", "deepslate_gold_ore",
+    "redstone_ore", "deepslate_redstone_ore", "lapis_ore", "deepslate_lapis_ore", "diamond_ore", "deepslate_diamond_ore",
+    "emerald_ore", "deepslate_emerald_ore", "infested_stone", "infested_deepslate",
 ];
 
 /// A saved cell: block name without `minecraft:`, its states, and the name of a liquid in it.

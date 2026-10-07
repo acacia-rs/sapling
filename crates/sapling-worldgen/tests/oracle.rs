@@ -8,7 +8,7 @@ mod oracle_support;
 
 use std::collections::BTreeMap;
 
-use oracle_support::{BdsCell, BiomeTally, CarverTally, Context, Ours, Region, Tally, TopTally, bds_cell, column_reshaped, near_feature, open};
+use oracle_support::{BdsCell, BiomeTally, CarverTally, Context, FeatureTally, Ours, Region, Tally, TopTally, bds_cell, column_reshaped, near_feature, open};
 use sapling_leveldb::ChunkKey;
 
 use sapling_worldgen::{Block, CellKind, MIN_Y, OverworldGenerator};
@@ -21,6 +21,7 @@ struct Tallies {
     top: TopTally,
     biomes: BiomeTally,
     carvers: CarverTally,
+    features: FeatureTally,
     /// Our highest non-air cell minus BDS's highest terrain cell, per column.
     top_offsets: BTreeMap<i32, (u64, (i32, i32))>,
 }
@@ -41,8 +42,10 @@ fn compare(seed: i64, world: &str, regions: &[Region]) {
             let surfaced = generator.surfaced_blocks(cx, cz);
             let mut loaded = surfaced.clone();
             generator.carve(&mut loaded, cx, cz);
-            let mut ours = loaded.clone();
-            generator.decorate(&mut ours, cx, cz);
+            let mut laked = loaded.clone();
+            generator.decorate(&mut laked, cx, cz);
+            let mut ours = laked.clone();
+            generator.place_features(&mut ours, cx, cz);
             let biomes = generator.chunk_biomes(cx, cz);
             let biome_top = highest_section_top(&primary, &a, cx, cz);
             for z in 0..16 {
@@ -63,12 +66,14 @@ fn compare(seed: i64, world: &str, regions: &[Region]) {
                         let bds_emptied = bds.is_empty() || bds.is_fluid();
                         let context = Context {
                             carved: before.is_solid() && !loaded.block(x, y, z).is_solid(),
-                            laked: loaded.block(x, y, z) != block,
+                            laked: loaded.block(x, y, z) != laked.block(x, y, z),
+                            featured: laked.block(x, y, z) != block,
                             feature_emptied: stable && block.is_solid() && bds_emptied && near_feature(&primary, &a, at),
                             reshaped,
                         };
                         tallies.blocks.add(block, bds, stable, at, context);
                         if stable {
+                            tallies.features.add(laked.block(x, y, z), block, bds);
                             if Some(y) == our_top {
                                 tallies.top.add(block, bds, at, context);
                             }
@@ -92,6 +97,7 @@ fn compare(seed: i64, world: &str, regions: &[Region]) {
         println!("seed {seed} {}:", region.name);
         tallies.blocks.print();
         tallies.top.print();
+        tallies.features.print();
         tallies.carvers.print();
         tallies.biomes.print();
         let offsets: Vec<String> = tallies.top_offsets.iter().map(|(d, (n, at))| format!("{d:+}:{n} {at:?}")).collect();

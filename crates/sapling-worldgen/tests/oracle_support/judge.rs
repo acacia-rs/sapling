@@ -14,6 +14,7 @@ pub enum Stage {
     Surface,
     Carvers,
     Lakes,
+    Features,
 }
 
 pub enum Verdict {
@@ -29,6 +30,8 @@ pub struct Context {
     pub carved: bool,
     /// Our lava lake rewrote it.
     pub laked: bool,
+    /// Our feature rules rewrote it.
+    pub featured: bool,
     /// BDS emptied it next to a feature block (geode interiors, lush-cave pools).
     pub feature_emptied: bool,
     /// See `column_reshaped`.
@@ -46,7 +49,31 @@ const VEIN_BLOCKS: &[Block] = &[
     Block::RawIronBlock,
 ];
 
+/// Blocks only the ore features place (besides the vein blocks).
+const ORE_FEATURE_BLOCKS: &[Block] = &[
+    Block::Andesite,
+    Block::Diorite,
+    Block::Clay,
+    Block::CoalOre,
+    Block::DeepslateCoalOre,
+    Block::GoldOre,
+    Block::DeepslateGoldOre,
+    Block::RedstoneOre,
+    Block::DeepslateRedstoneOre,
+    Block::LapisOre,
+    Block::DeepslateLapisOre,
+    Block::DiamondOre,
+    Block::DeepslateDiamondOre,
+    Block::EmeraldOre,
+    Block::DeepslateEmeraldOre,
+    Block::InfestedStone,
+    Block::InfestedDeepslate,
+];
+
 fn stage_of(block: Block, y: i32, context: Context) -> Stage {
+    if context.featured {
+        return Stage::Features;
+    }
     if context.laked {
         return Stage::Lakes;
     }
@@ -90,6 +117,9 @@ pub fn column_reshaped(ours_solid: impl Fn(i32) -> bool, cells: &[(i32, BdsCell)
 fn judge_cell(ours: Block, bds: &BdsCell, y: i32, context: Context) -> Verdict {
     if bds.is(ours) {
         return Verdict::Match(stage_of(ours, y, context));
+    }
+    if context.featured {
+        return Verdict::Error(Stage::Features);
     }
     if ours.is_solid() && (bds.is_empty() || bds.is_fluid()) {
         // The iceberg feature cuts its shape out of any packed ice and snow, the surface's too.
@@ -142,7 +172,8 @@ fn judge_cell(ours: Block, bds: &BdsCell, y: i32, context: Context) -> Verdict {
 /// Solid terrain against solid terrain that a feature sapling does not run explains.
 fn later_feature(ours: Block, theirs: Block, bds: &BdsCell) -> Option<&'static str> {
     let base = |b: Block| matches!(b, Block::Stone | Block::Deepslate);
-    if base(ours) && VEIN_BLOCKS.contains(&theirs) && !matches!(theirs, Block::RawCopperBlock | Block::RawIronBlock) {
+    let ore_feature = ORE_FEATURE_BLOCKS.contains(&theirs);
+    if base(ours) && (ore_feature || VEIN_BLOCKS.contains(&theirs) && !matches!(theirs, Block::RawCopperBlock | Block::RawIronBlock)) {
         return Some("ore features (or a missed vein)");
     }
     if base(ours) && matches!(theirs, Block::Dirt | Block::Gravel | Block::Calcite) {
@@ -170,8 +201,8 @@ fn later_feature(ours: Block, theirs: Block, bds: &BdsCell) -> Option<&'static s
         return Some("sand, gravel, clay disks and dirt blobs");
     }
     let soil = matches!(ours, Block::Dirt | Block::GrassBlock | Block::CoarseDirt | Block::Gravel | Block::Sand);
-    let blob = matches!(theirs, Block::Granite | Block::Tuff | Block::Calcite | Block::CopperOre | Block::IronOre);
-    if soil && blob || VEIN_BLOCKS.contains(&ours) && theirs == Block::Calcite {
+    let blob = ore_feature || matches!(theirs, Block::Granite | Block::Tuff | Block::Calcite | Block::CopperOre | Block::IronOre);
+    if soil && blob || VEIN_BLOCKS.contains(&ours) && (theirs == Block::Calcite || ore_feature) {
         return Some("ore features and geodes over surface or vein blocks");
     }
     None

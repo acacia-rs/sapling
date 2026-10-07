@@ -66,6 +66,23 @@ blocks! {
     BrownTerracotta => "brown_terracotta" "",
     RedTerracotta => "red_terracotta" "",
     LightGrayTerracotta => "light_gray_terracotta" "",
+    Andesite => "andesite" "",
+    Diorite => "diorite" "",
+    Clay => "clay" "",
+    CoalOre => "coal_ore" "",
+    DeepslateCoalOre => "deepslate_coal_ore" "",
+    GoldOre => "gold_ore" "",
+    DeepslateGoldOre => "deepslate_gold_ore" "",
+    RedstoneOre => "redstone_ore" "",
+    DeepslateRedstoneOre => "deepslate_redstone_ore" "",
+    LapisOre => "lapis_ore" "",
+    DeepslateLapisOre => "deepslate_lapis_ore" "",
+    DiamondOre => "diamond_ore" "",
+    DeepslateDiamondOre => "deepslate_diamond_ore" "",
+    EmeraldOre => "emerald_ore" "",
+    DeepslateEmeraldOre => "deepslate_emerald_ore" "",
+    InfestedStone => "infested_stone" "",
+    InfestedDeepslate => "infested_deepslate" "pillar_axis=y",
 }
 
 impl Block {

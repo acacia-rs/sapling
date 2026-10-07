@@ -7,10 +7,7 @@ mod cave;
 mod carve;
 mod replace;
 
-use std::collections::HashMap;
-use std::hash::Hash;
-use std::sync::{Arc, Mutex};
-
+use crate::cache::SourceCache;
 use crate::density::{AquiferCache, Density};
 use crate::random::{LargeFeatureSeed, Mt19937};
 use crate::terrain::ChunkShape;
@@ -22,6 +19,8 @@ const RANGE: i32 = 8;
 /// Every feature rule reseeds with the level seed, so both carvers see the same chunk seeds.
 const CAVE_CARVERS: [&CaveSettings; 2] = [&UNDERGROUND_CAVE_CARVER, &EXTRA_CAVE_CARVER];
 const CANYON: &CanyonSettings = &CANYON_1_18;
+/// BDS drops its cave cache every 1200 placements (148281d10).
+const CACHE_LIMIT: usize = 16384;
 
 pub struct Carvers {
     seed: LargeFeatureSeed,
@@ -32,7 +31,8 @@ pub struct Carvers {
 impl Carvers {
     /// BDS seeds the decoration generator with the low 32 bits of the world seed.
     pub fn new(world_seed: i64) -> Self {
-        Self { seed: LargeFeatureSeed::new(world_seed as u32), caves: SourceCache::default(), canyons: SourceCache::default() }
+        let seed = LargeFeatureSeed::new(world_seed as u32);
+        Self { seed, caves: SourceCache::new(CACHE_LIMIT), canyons: SourceCache::new(CACHE_LIMIT) }
     }
 
     pub fn carve(&self, density: &Density, shape: &mut ChunkShape, chunk_x: i32, chunk_z: i32) {
@@ -56,32 +56,5 @@ impl Carvers {
 
     fn random(&self, chunk_x: i32, chunk_z: i32) -> Mt19937 {
         Mt19937::new(self.seed.chunk(chunk_x, chunk_z))
-    }
-}
-
-/// What a source chunk generated, kept while neighbouring chunks are carved. BDS drops its cave
-/// cache every 1200 placements (148281d10); any bound works here.
-struct SourceCache<K, V> {
-    entries: Mutex<HashMap<K, Arc<V>>>,
-}
-
-impl<K, V> Default for SourceCache<K, V> {
-    fn default() -> Self {
-        Self { entries: Mutex::new(HashMap::new()) }
-    }
-}
-
-impl<K: Hash + Eq, V> SourceCache<K, V> {
-    const LIMIT: usize = 16384;
-
-    fn get(&self, key: K, make: impl FnOnce() -> V) -> Arc<V> {
-        let mut entries = self.entries.lock().unwrap();
-        if let Some(value) = entries.get(&key) {
-            return value.clone();
-        }
-        if entries.len() >= Self::LIMIT {
-            entries.clear();
-        }
-        entries.entry(key).or_insert_with(|| Arc::new(make())).clone()
     }
 }

@@ -1,30 +1,40 @@
 //! Bedrock overworld terrain generation, ported from BDS 1.26.5x: the blocks of a chunk through
-//! its surface, BDS's legacy carvers and lava lakes, and the biome of every block. BDS's terrain
-//! is a C++ port of Java 1.18.1's `NoiseSampler` done in f32; this crate follows BDS's
-//! arithmetic, not Java's. Everything after the terrain shape uses Bedrock's MT19937
-//! (docs/research/worldgen-bds.md).
+//! its surface, BDS's legacy carvers and lava lakes, its data-driven feature rules, and the biome
+//! of every block. BDS's terrain is a C++ port of Java 1.18.1's `NoiseSampler` done in f32; this
+//! crate follows BDS's arithmetic, not Java's. Everything after the terrain shape uses Bedrock's
+//! MT19937 (docs/research/worldgen-bds.md).
 
 pub mod biome;
 mod block;
+mod cache;
 mod carver;
 pub mod climate;
 mod decoration;
 pub mod density;
+mod feature;
 mod floor;
+mod mth;
 pub mod noise;
 pub mod random;
 pub mod shaper;
 mod surface;
 mod terrain;
 
+use std::sync::Arc;
+
 pub use biome::ChunkBiomes;
 pub use block::Block;
 pub use terrain::{CellKind, ChunkShape, HEIGHT, MIN_Y};
 
+use cache::SourceCache;
 use carver::Carvers;
 use decoration::Decoration;
 use density::Density;
+use feature::Features;
 use random::Xoroshiro;
+
+/// Loaded columns (about 100 kB each) kept for neighbours' lakes and features.
+const LOADED_LIMIT: usize = 256;
 
 /// The overworld generator for one world seed.
 pub struct OverworldGenerator {
@@ -33,6 +43,8 @@ pub struct OverworldGenerator {
     surface: surface::SurfaceNoises,
     carvers: Carvers,
     decoration: Decoration,
+    features: Features,
+    loaded: SourceCache<(i32, i32), ChunkShape>,
 }
 
 impl OverworldGenerator {
@@ -44,14 +56,22 @@ impl OverworldGenerator {
             surface: surface::SurfaceNoises::new(&factory, seed),
             carvers: Carvers::new(seed),
             decoration: Decoration::new(seed),
+            features: Features::new(seed),
+            loaded: SourceCache::new(LOADED_LIMIT),
         }
     }
 
-    /// Every ported stage: `loaded_blocks`, then `decorate`.
+    /// Every ported stage: `loaded_blocks`, `decorate`, then `place_features`.
     pub fn chunk_blocks(&self, chunk_x: i32, chunk_z: i32) -> ChunkShape {
-        let mut shape = self.loaded_blocks(chunk_x, chunk_z);
+        let mut shape = (*self.loaded(chunk_x, chunk_z)).clone();
         self.decorate(&mut shape, chunk_x, chunk_z);
+        self.place_features(&mut shape, chunk_x, chunk_z);
         shape
+    }
+
+    /// `loaded_blocks`, kept for the neighbours that read it.
+    fn loaded(&self, chunk_x: i32, chunk_z: i32) -> Arc<ChunkShape> {
+        self.loaded.get((chunk_x, chunk_z), || self.loaded_blocks(chunk_x, chunk_z))
     }
 
     /// BDS's `loadChunk`: `surfaced_blocks`, then `carve`.
@@ -83,7 +103,12 @@ impl OverworldGenerator {
 
     /// The hardcoded post-process decoration (lava lakes), applied after `carve`.
     pub fn decorate(&self, shape: &mut ChunkShape, chunk_x: i32, chunk_z: i32) {
-        self.decoration.decorate(shape, chunk_x, chunk_z, &|x, z| self.loaded_blocks(x, z));
+        self.decoration.decorate(shape, chunk_x, chunk_z, &|x, z| self.loaded(x, z));
+    }
+
+    /// The feature rules of every chunk whose features reach this one, applied after `decorate`.
+    pub fn place_features(&self, shape: &mut ChunkShape, chunk_x: i32, chunk_z: i32) {
+        self.features.place(shape, (chunk_x, chunk_z), &|x, z| self.loaded(x, z), &|x, z| self.chunk_biomes(x, z));
     }
 
     /// Bedrock biome ids per block.

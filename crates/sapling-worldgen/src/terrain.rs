@@ -27,8 +27,16 @@ pub struct ChunkShape {
 }
 
 impl ChunkShape {
-    fn index(x: usize, y: i32, z: usize) -> usize {
+    pub(crate) fn index(x: usize, y: i32, z: usize) -> usize {
         ((y - MIN_Y) as usize * 16 + z) * 16 + x
+    }
+
+    pub(crate) fn block_at(&self, index: usize) -> Block {
+        self.blocks[index]
+    }
+
+    pub(crate) fn set_at(&mut self, index: usize, block: Block) {
+        self.blocks[index] = block;
     }
 
     pub fn block(&self, x: usize, y: i32, z: usize) -> Block {
