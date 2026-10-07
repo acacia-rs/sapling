@@ -9,7 +9,7 @@ use std::sync::{Arc, Mutex};
 use super::canvas::Canvas;
 use super::kind::MONUMENT;
 use super::probe::Probe;
-use super::{BoundingBox, StructureKind, Structures, igloo, ocean_ruin, shipwreck};
+use super::{BoundingBox, StructureKind, Structures, igloo, ocean_ruin, ruined_portal, shipwreck};
 use crate::density::Density;
 use crate::random::{LargeFeatureSeed, Mt19937};
 
@@ -60,6 +60,19 @@ impl Structures {
         let seeds = LargeFeatureSeed::new(self.level_seed);
         for &(start, beached) in shipwrecks {
             shipwreck::place(canvas, &mut Mt19937::new(seeds.chunk(start.0, start.1)), start, beached);
+        }
+    }
+
+    pub(super) fn portals_near(&self, density: &Density, chunk: (i32, i32)) -> Vec<(i32, i32)> {
+        self.starts_near(density, StructureKind::RuinedPortal, chunk, 1)
+    }
+
+    pub(super) fn place_portals(&self, density: &Density, canvas: &mut Canvas, portals: &[(i32, i32)]) {
+        let seeds = LargeFeatureSeed::new(self.level_seed);
+        let biome_at = |x: i32, y: i32, z: i32| density.climate.biome_at(x, y, z);
+        for &start in portals {
+            let biome = Self::centre_biome(density, start);
+            ruined_portal::place(canvas, &mut Mt19937::new(seeds.chunk(start.0, start.1)), start, biome, &biome_at);
         }
     }
 

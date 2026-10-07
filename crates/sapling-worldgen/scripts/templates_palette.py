@@ -24,7 +24,19 @@ EXTRA = [
     ('stone_bricks', '', False, 3),
     ('suspicious_gravel', 'brushed_progress=0,hanging=1', False, 3),
     ('suspicious_sand', 'brushed_progress=0,hanging=1', False, 3),
-]
+    # Ruined portal ageing (src/structure/ruined_portal.rs).
+    ('cracked_stone_bricks', '', False, 3),
+    ('mossy_stone_bricks', '', False, 3),
+    ('crying_obsidian', '', False, 3),
+    ('magma', '', False, 3),
+    ('netherrack', '', False, 3),
+    ('normal_stone_slab', 'minecraft:vertical_half=bottom', False, 2),
+    ('stone_brick_slab', 'minecraft:vertical_half=bottom', False, 2),
+    ('mossy_stone_brick_slab', 'minecraft:vertical_half=bottom', False, 2),
+    ('mossy_stone_brick_wall', ','.join(f'wall_connection_type_{d}=none' for d in ('east', 'north', 'south', 'west'))
+     + ',wall_post_bit=0', False, 2),
+] + [(stairs, f'minecraft:corner=none,upside_down_bit={up},weirdo_direction={w}', False, 2)
+     for stairs in ('stone_brick_stairs', 'mossy_stone_brick_stairs') for up in range(2) for w in range(4)]
 CONNECTIONS = [f'minecraft:connection_{d}' for d in ('east', 'north', 'south', 'west')]
 WALL_SIDES = [f'wall_connection_type_{d}' for d in ('east', 'north', 'south', 'west')]
 SHAPED = {

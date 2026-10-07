@@ -2,6 +2,7 @@
 //! (141ef1240): blocks in file order, structure blocks and jigsaws skipped, an integrity draw
 //! per block, positions turned about the origin, writes clipped to the settings' box.
 
+use super::mirror::mirror;
 use super::wood::rewood;
 use super::{Kind, Template, WATERLOGGABLE, flags, named};
 use crate::block::Block;
@@ -51,13 +52,15 @@ pub struct Placement {
     pub ignore: Option<&'static str>,
     /// New wood per wood type for wooden blocks (shipwrecks).
     pub wood: Option<[Option<u8>; 6]>,
+    /// Template z flipped before turning (ruined portals).
+    pub mirror: bool,
     /// Where blocks may land; the canvas clips further to its chunk.
     pub bb: BoundingBox,
 }
 
 impl Placement {
     pub fn new(rotation: Rotation, bb: BoundingBox) -> Self {
-        Self { rotation, integrity: 1.0, seed: 0, ignore_jigsaws: true, flood: false, ignore: None, wood: None, bb }
+        Self { rotation, integrity: 1.0, seed: 0, ignore_jigsaws: true, flood: false, ignore: None, wood: None, mirror: false, bb }
     }
 
     /// The template positions BDS writes at `origin`, each with its block and template block
@@ -78,12 +81,16 @@ impl Placement {
             {
                 return None;
             }
-            let (dx, dy, dz) = self.rotation.apply(b.pos);
+            let pos = if self.mirror { (b.pos.0, b.pos.1, -b.pos.2) } else { b.pos };
+            let (dx, dy, dz) = self.rotation.apply(pos);
             let at = (origin.0 + dx, origin.1 + dy, origin.2 + dz);
             if !self.bb.contains(at.0, at.1, at.2) {
                 return None;
             }
             let mut block = b.state.block(self.rotation);
+            if self.mirror {
+                block = mirror(block, self.rotation);
+            }
             if let Some(remap) = &self.wood {
                 block = rewood(block, remap);
             }

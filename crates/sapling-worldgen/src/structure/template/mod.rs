@@ -6,6 +6,7 @@
 mod connect;
 mod load;
 mod markers;
+mod mirror;
 mod place;
 mod wood;
 

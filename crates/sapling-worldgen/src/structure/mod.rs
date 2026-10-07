@@ -13,6 +13,8 @@ mod ocean_ruin;
 mod piece;
 mod placement;
 mod probe;
+mod ruined_portal;
+mod ruined_portal_age;
 mod shipwreck;
 mod stage;
 mod stronghold;
