@@ -54,11 +54,12 @@ impl ChunkBiomes {
         u32::from(self.ids[block_index(x, y, z)])
     }
 
-    /// The lattice point (x, y, z in lattice units) the block took its biome from.
-    pub fn lattice_point(&self, x: usize, y: i32, z: usize) -> [i32; 3] {
-        let corner = CORNERS[self.corners[block_index(x, y, z)] as usize];
+    /// The lattice point (x, y, z in lattice units) the block took its biome from; None inside a
+    /// lattice cell of one biome, where no corner was picked.
+    pub fn lattice_point(&self, x: usize, y: i32, z: usize) -> Option<[i32; 3]> {
+        let corner = CORNERS.get(self.corners[block_index(x, y, z)] as usize)?;
         let block = [self.chunk.0 * 16 + x as i32, y, self.chunk.1 * 16 + z as i32];
-        std::array::from_fn(|axis| (block[axis] >> 3) + corner[axis])
+        Some(std::array::from_fn(|axis| (block[axis] >> 3) + corner[axis]))
     }
 }
 
@@ -111,7 +112,8 @@ impl ClimateNoises {
             }
         }
         let mut ids = vec![0; 16 * 16 * HEIGHT];
-        let mut corners = vec![0; 16 * 16 * HEIGHT];
+        let mut corners = vec![UNIFORM; 16 * 16 * HEIGHT];
+        let point = |base: usize, [cx, cy, cz]: [i32; 3]| base + cx as usize * LATTICE_ROWS * LATTICE_COLUMNS + cz as usize * LATTICE_ROWS + cy as usize;
         for y in MIN_Y..MIN_Y + HEIGHT as i32 {
             for z in 0..16 {
                 for x in 0..16 {
@@ -119,11 +121,14 @@ impl ClimateNoises {
                     let cell = [block[0] >> 3, block[1] >> 3, block[2] >> 3];
                     let base = (((cell[0] - origin[0]) as usize * LATTICE_COLUMNS) + (cell[2] - origin[2]) as usize) * LATTICE_ROWS
                         + (cell[1] - origin[1]) as usize;
+                    let first = lattice[base].biome;
+                    if CORNERS.iter().all(|&corner| lattice[point(base, corner)].biome == first) {
+                        ids[block_index(x, y, z)] = first as u8;
+                        continue;
+                    }
                     let frac = block.map(|v| (v & 7) as f32 * 0.125);
                     let corner = pick(&lattice, base, frac);
-                    let [cx, cy, cz] = CORNERS[corner];
-                    let picked = base + cx as usize * LATTICE_ROWS * LATTICE_COLUMNS + cz as usize * LATTICE_ROWS + cy as usize;
-                    ids[block_index(x, y, z)] = lattice[picked].biome as u8;
+                    ids[block_index(x, y, z)] = lattice[point(base, CORNERS[corner])].biome as u8;
                     corners[block_index(x, y, z)] = corner as u8;
                 }
             }
@@ -131,6 +136,10 @@ impl ClimateNoises {
         ChunkBiomes { chunk: (chunk_x, chunk_z), ids, corners }
     }
 }
+
+/// `ChunkBiomes::corners` of a block whose lattice cell has one biome at every corner: any
+/// corner gives it, so none was picked.
+const UNIFORM: u8 = u8::MAX;
 
 /// The index into `CORNERS` of the lattice corner nearest the block after jitter; ties keep the
 /// earlier corner.

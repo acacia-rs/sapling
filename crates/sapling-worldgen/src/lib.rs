@@ -13,6 +13,7 @@ mod decoration;
 pub mod density;
 mod feature;
 mod floor;
+mod fxhash;
 mod mth;
 pub mod noise;
 pub mod random;

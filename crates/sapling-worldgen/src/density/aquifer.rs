@@ -5,6 +5,7 @@
 use std::collections::HashMap;
 
 use super::Density;
+use crate::fxhash::FxBuild;
 
 pub const SEA_LEVEL: i32 = 63;
 /// Below this BDS answers lava without sampling anything.
@@ -33,8 +34,8 @@ pub struct AquiferAnswer {
 
 #[derive(Default)]
 pub struct AquiferCache {
-    centers: HashMap<(i32, i32, i32), (i32, i32, i32)>,
-    statuses: HashMap<(i32, i32, i32), FluidStatus>,
+    centers: HashMap<(i32, i32, i32), (i32, i32, i32), FxBuild>,
+    statuses: HashMap<(i32, i32, i32), FluidStatus, FxBuild>,
 }
 
 impl Density {
