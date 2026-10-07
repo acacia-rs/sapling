@@ -75,7 +75,7 @@ impl Tally {
             percent(matched, stable),
             self.unstable
         );
-        for stage in [Stage::Floor, Stage::Deepslate, Stage::Veins, Stage::Surface, Stage::Carvers, Stage::Lakes, Stage::Features, Stage::Shape] {
+        for stage in [Stage::Floor, Stage::Deepslate, Stage::Veins, Stage::Surface, Stage::Carvers, Stage::Lakes, Stage::Features, Stage::Liquids, Stage::Shape] {
             let matched = self.matched.get(&stage).copied().unwrap_or(0);
             let errors = self.errors.get(&stage);
             let wrong = errors.map_or(0, Pairs::count);

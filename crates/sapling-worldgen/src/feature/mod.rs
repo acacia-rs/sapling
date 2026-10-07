@@ -11,12 +11,15 @@ mod freeze;
 mod geode;
 mod iceberg;
 mod land;
+mod liquid;
 mod molang;
 mod ore;
 mod place;
 mod plants;
 mod scatter;
 mod spec;
+mod springs;
+mod ticks;
 mod view;
 
 use std::sync::Arc;
@@ -100,8 +103,10 @@ impl Features {
             let phase_limit = phase(source);
             let base = |x: i32, z: i32| self.before((x, z), phase_limit, loaded, biomes);
             let mut view = View::new(source, &base);
+            view.on_write = liquid::write_hook();
             decorate::decorate_chunk(&self.seed, source, biomes, &mut view);
             freeze::freeze_chunk(source, &biomes(source.0, source.1), &mut view);
+            liquid::settle(&mut view);
             view.into_writes()
         })
     }

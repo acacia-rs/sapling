@@ -15,6 +15,8 @@ pub enum Stage {
     Carvers,
     Lakes,
     Features,
+    /// Decoration's liquid flow (springs, border water), and any fluid cell either side has flowing.
+    Liquids,
 }
 
 pub enum Verdict {
@@ -73,6 +75,9 @@ const ORE_FEATURE_BLOCKS: &[Block] = &[
 ];
 
 fn stage_of(block: Block, y: i32, context: Context) -> Stage {
+    if context.featured && block.is_fluid() {
+        return Stage::Liquids;
+    }
     if context.featured {
         return Stage::Features;
     }
@@ -120,6 +125,9 @@ fn judge_cell(ours: Block, bds: &BdsCell, y: i32, context: Context) -> Verdict {
     if bds.is(ours) {
         return Verdict::Match(stage_of(ours, y, context));
     }
+    if !ours.is_solid() && (bds.is_fluid() || bds.is_empty()) {
+        return Verdict::Error(Stage::Liquids);
+    }
     if context.featured {
         // The freeze pass snows on the rain top, which unported trees, ice spikes and icebergs move in BDS.
         let moved_top = context.bds_feature_above || context.reshaped || bds.block == "packed_ice";
@@ -140,9 +148,6 @@ fn judge_cell(ours: Block, bds: &BdsCell, y: i32, context: Context) -> Verdict {
             return Verdict::Later("features (BDS emptied it next to a feature block)");
         }
         return Verdict::Error(Stage::Carvers);
-    }
-    if !ours.is_solid() && (bds.is_fluid() || bds.is_empty()) {
-        return Verdict::Later("liquid flow (fluid cells differ)");
     }
     let Some(theirs) = bds.terrain() else {
         return Verdict::Later("features, structures (non-terrain block)");

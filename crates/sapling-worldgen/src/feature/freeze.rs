@@ -95,10 +95,10 @@ pub fn freeze_chunk(chunk: (i32, i32), biomes: &ChunkBiomes, view: &mut View) {
             let top = rain_top(view, x, z);
             let below = top - 1;
             if view.block(x, below, z) == Block::Water && cold(biomes, [x, below, z]) {
-                view.set_block(x, below, z, Block::Ice);
+                view.set_block_quiet(x, below, z, Block::Ice);
             }
             if view.block(x, top, z) == Block::Air && holds_snow(view.block(x, below, z)) && cold(biomes, [x, top, z]) {
-                view.set_block(x, top, z, Block::SnowLayer);
+                view.set_block_quiet(x, top, z, Block::SnowLayer);
             }
         }
     }

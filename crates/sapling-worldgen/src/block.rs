@@ -29,8 +29,21 @@ macro_rules! blocks {
 
 blocks! {
     Air => "air" "",
+    // Liquids by `liquid_depth`, sources first (`Block::liquid`): 1..7 flowing, 8..15 falling.
     Water => "water" "liquid_depth=0",
+    Water1 => "water" "liquid_depth=1", Water2 => "water" "liquid_depth=2", Water3 => "water" "liquid_depth=3",
+    Water4 => "water" "liquid_depth=4", Water5 => "water" "liquid_depth=5", Water6 => "water" "liquid_depth=6",
+    Water7 => "water" "liquid_depth=7", Water8 => "water" "liquid_depth=8", Water9 => "water" "liquid_depth=9",
+    Water10 => "water" "liquid_depth=10", Water11 => "water" "liquid_depth=11", Water12 => "water" "liquid_depth=12",
+    Water13 => "water" "liquid_depth=13", Water14 => "water" "liquid_depth=14", Water15 => "water" "liquid_depth=15",
     Lava => "lava" "liquid_depth=0",
+    Lava1 => "lava" "liquid_depth=1", Lava2 => "lava" "liquid_depth=2", Lava3 => "lava" "liquid_depth=3",
+    Lava4 => "lava" "liquid_depth=4", Lava5 => "lava" "liquid_depth=5", Lava6 => "lava" "liquid_depth=6",
+    Lava7 => "lava" "liquid_depth=7", Lava8 => "lava" "liquid_depth=8", Lava9 => "lava" "liquid_depth=9",
+    Lava10 => "lava" "liquid_depth=10", Lava11 => "lava" "liquid_depth=11", Lava12 => "lava" "liquid_depth=12",
+    Lava13 => "lava" "liquid_depth=13", Lava14 => "lava" "liquid_depth=14", Lava15 => "lava" "liquid_depth=15",
+    Obsidian => "obsidian" "",
+    Cobblestone => "cobblestone" "",
     Bedrock => "bedrock" "infiniburn_bit=0",
     Stone => "stone" "",
     Deepslate => "deepslate" "pillar_axis=y",
@@ -216,8 +229,25 @@ pub const KELP: [Block; 26] = [
 ];
 
 impl Block {
+    /// Water or lava of any depth.
     pub fn is_fluid(self) -> bool {
-        matches!(self, Block::Water | Block::Lava)
+        (Block::Water..=Block::Lava15).contains(&self)
+    }
+
+    pub fn is_lava(self) -> bool {
+        (Block::Lava..=Block::Lava15).contains(&self)
+    }
+
+    /// The `liquid_depth` of water or lava.
+    pub fn liquid_depth(self) -> Option<u8> {
+        let base = if self.is_lava() { Block::Lava } else { Block::Water };
+        self.is_fluid().then(|| (self as usize - base as usize) as u8)
+    }
+
+    /// Water or lava with `liquid_depth` `depth` (0..16).
+    pub fn liquid(lava: bool, depth: u8) -> Block {
+        let base = if lava { Block::Lava } else { Block::Water };
+        Block::ALL[base as usize + depth as usize]
     }
 
     /// Plants placed by features: no collision, no light blocking, never terrain.
@@ -235,7 +265,7 @@ impl Block {
     }
 
     pub fn is_solid(self) -> bool {
-        !matches!(self, Block::Air | Block::Water | Block::Lava) && !self.is_plant()
+        self != Block::Air && !self.is_fluid() && !self.is_plant()
     }
 
     /// Solid for movement: everything but air, fluids, snow layers and the plants without collision.

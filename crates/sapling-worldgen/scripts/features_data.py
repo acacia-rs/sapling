@@ -37,6 +37,7 @@ HARDCODED = {
     'minecraft:legacy:plains_flower_feature': _LEGACY.format(f'Flower {{ kind: FlowerKind::Plains, count: {_PATCH_COUNT} }}'),
     'minecraft:legacy:swamp_flower_feature': _LEGACY.format(f'Flower {{ kind: FlowerKind::Swamp, count: {_PATCH_COUNT} }}'),
     'minecraft:legacy:ice_feature': _LEGACY.format('Iceberg'),
+    'minecraft:legacy:springs_feature': _LEGACY.format('Springs'),
 }
 EARLY_OUT = {'none': 'EarlyOut::None', 'first_failure': 'EarlyOut::FirstFailure', 'first_success': 'EarlyOut::FirstSuccess'}
 # Old names and states BDS flattens into the blocks of src/block.rs.

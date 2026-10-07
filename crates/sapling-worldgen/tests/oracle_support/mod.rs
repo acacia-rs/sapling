@@ -100,7 +100,8 @@ impl BdsCell {
 
     /// A block the terrain stages can place (whatever its states).
     fn terrain(&self) -> Option<Block> {
-        Block::from_name(&self.block).filter(|b| b.is_solid())
+        // Liquids harden to these, but monster rooms and structures place far more of them.
+        Block::from_name(&self.block).filter(|b| b.is_solid() && !matches!(b, Block::Cobblestone | Block::Obsidian))
     }
 
     /// Air, water, lava or solid; a waterlogged block counts as water.

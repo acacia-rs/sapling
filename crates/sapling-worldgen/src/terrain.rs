@@ -50,8 +50,8 @@ impl ChunkShape {
     pub fn kind(&self, x: usize, y: i32, z: usize) -> CellKind {
         match self.block(x, y, z) {
             Block::Air => CellKind::Air,
-            Block::Water => CellKind::Water,
-            Block::Lava => CellKind::Lava,
+            block if block.is_lava() => CellKind::Lava,
+            block if block.is_fluid() => CellKind::Water,
             _ => CellKind::Solid,
         }
     }

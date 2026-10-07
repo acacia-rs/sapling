@@ -156,6 +156,8 @@ pub enum Legacy {
     Flower { kind: FlowerKind, count: i32 },
     /// `legacy:ice_feature`: an iceberg in 1 of 8 chunks (iceberg.rs).
     Iceberg,
+    /// `legacy:springs_feature`: water and lava springs in cave walls (springs.rs).
+    Springs,
 }
 
 /// The flower table of a `LegacyFlowerFeature` (1438ef3b0's switch; the forest and flower forest
