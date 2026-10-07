@@ -18,8 +18,9 @@ fn main() {
     let generator = OverworldGenerator::new(seed.parse().unwrap());
     let (primary, _) = open(world).expect("oracle world");
     let mut springs: BTreeMap<(i32, i32, i32), (Option<&str>, Option<String>)> = BTreeMap::new();
-    for cx in n[0]..=n[2] {
-        for cz in n[1]..=n[3] {
+    let chunks = n.chunks(4).flat_map(|r| (r[0]..=r[2]).flat_map(move |x| (r[1]..=r[3]).map(move |z| (x, z))));
+    for (cx, cz) in chunks {
+        {
             let a = primary.load_column(ChunkKey::new(cx, cz, 0)).unwrap().expect("chunk").chunk;
             let loaded = generator.loaded_blocks(cx, cz);
             let ours = generator.chunk_blocks(cx, cz);
@@ -44,9 +45,19 @@ fn main() {
     }
     let both = springs.values().filter(|(a, b)| a.is_some() && a.map(str::to_string) == *b).count();
     println!("springs: {} ours, {} BDS, {both} both", springs.values().filter(|s| s.0.is_some()).count(), springs.values().filter(|s| s.1.is_some()).count());
-    for (at, (ours, bds)) in &springs {
+    let mut lava_by_biome: BTreeMap<u32, [u32; 3]> = BTreeMap::new();
+    for (&(x, y, z), (ours, bds)) in &springs {
+        let biome = generator.chunk_biomes(x >> 4, z >> 4).biome((x & 15) as usize, y, (z & 15) as usize);
+        let counts = lava_by_biome.entry(biome).or_default();
+        counts[0] += (*ours == Some("lava")) as u32;
+        counts[1] += (bds.as_deref() == Some("lava")) as u32;
+        counts[2] += (*ours == Some("lava") && bds.as_deref() == Some("lava")) as u32;
+    }
+    println!("lava springs by biome [ours, bds, both]: {lava_by_biome:?}");
+    for (&(x, y, z), (ours, bds)) in &springs {
         if ours.map(str::to_string) != *bds {
-            println!("  {at:?} ours {ours:?} bds {bds:?}");
+            let biome = generator.chunk_biomes(x >> 4, z >> 4).biome((x & 15) as usize, y, (z & 15) as usize);
+            println!("  {:?} biome {biome} ours {ours:?} bds {bds:?}", (x, y, z));
         }
     }
 }

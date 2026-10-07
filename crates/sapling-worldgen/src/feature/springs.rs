@@ -13,7 +13,10 @@ const LAVA_TRIES: usize = 20;
 const WATER_RANGE: i32 = 256;
 const LAVA_RANGE: i32 = 240;
 const LAVA_FLOOR: i32 = MIN_Y + 8;
-const DEEP_DARK: u32 = 190;
+/// Where lava tries are skipped: deep dark (by id) and the biomes tagged frozen and ocean, or
+/// ice_plains and mutated (tag table offsets 0x128 & 0x98, 0x218 & 0x1d0: VanillaBiomeTags
+/// 14393d890 order at 0x18 each from ocean at 0x98): frozen oceans and ice spikes.
+const NO_LAVA: [u32; 4] = [190, 46, 47, 140];
 
 pub fn springs(ctx: &mut Ctx, [x0, _, z0]: [i32; 3]) -> bool {
     for _ in 0..WATER_TRIES {
@@ -29,8 +32,7 @@ pub fn springs(ctx: &mut Ctx, [x0, _, z0]: [i32; 3]) -> bool {
         let y = ctx.random.next_int(bound) + LAVA_FLOOR;
         let x = ctx.random.next_int(16);
         let at = [x0 + x, y, z0 + z];
-        // TODO: BDS also skips two biome tag pairs (149e97230, tag offsets 0x128/0x98, 0x218/0x1d0) not yet named.
-        if (ctx.biome)(at) != Some(DEEP_DARK) {
+        if (ctx.biome)(at).is_none_or(|biome| !NO_LAVA.contains(&biome)) {
             spring(ctx.view, at, true);
         }
     }
