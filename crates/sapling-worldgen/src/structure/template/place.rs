@@ -2,7 +2,8 @@
 //! (141ef1240): blocks in file order, structure blocks and jigsaws skipped, an integrity draw
 //! per block, positions turned about the origin, writes clipped to the settings' box.
 
-use super::{Kind, Template};
+use super::wood::rewood;
+use super::{Kind, Template, WATERLOGGABLE, flags, named};
 use crate::block::Block;
 use crate::random::Mt19937;
 use crate::structure::BoundingBox;
@@ -48,19 +49,22 @@ pub struct Placement {
     pub flood: bool,
     /// Blocks of this name are left out, before their integrity draw (template pieces skip air).
     pub ignore: Option<&'static str>,
+    /// New wood per wood type for wooden blocks (shipwrecks).
+    pub wood: Option<[Option<u8>; 6]>,
     /// Where blocks may land; the canvas clips further to its chunk.
     pub bb: BoundingBox,
 }
 
 impl Placement {
     pub fn new(rotation: Rotation, bb: BoundingBox) -> Self {
-        Self { rotation, integrity: 1.0, seed: 0, ignore_jigsaws: true, flood: false, ignore: None, bb }
+        Self { rotation, integrity: 1.0, seed: 0, ignore_jigsaws: true, flood: false, ignore: None, wood: None, bb }
     }
 
-    /// The template positions BDS writes at `origin`, each with its block, in placement order.
-    pub fn blocks<'a>(&'a self, template: &'a Template, origin: (i32, i32, i32)) -> impl Iterator<Item = ((i32, i32, i32), Block)> + 'a {
+    /// The template positions BDS writes at `origin`, each with its block and template block
+    /// index, in placement order.
+    pub fn blocks<'a>(&'a self, template: &'a Template, origin: (i32, i32, i32)) -> impl Iterator<Item = ((i32, i32, i32), Block, usize)> + 'a {
         let mut random = (self.integrity < 1.0).then(|| Mt19937::new(self.seed));
-        template.blocks.iter().filter_map(move |b| {
+        template.blocks.iter().enumerate().filter_map(move |(index, b)| {
             if self.ignore.is_some_and(|name| b.state.block(Rotation::None).name() == name) {
                 return None;
             }
@@ -79,15 +83,28 @@ impl Placement {
             if !self.bb.contains(at.0, at.1, at.2) {
                 return None;
             }
-            let block = b.state.block(self.rotation);
-            let block = if self.flood && block == Block::Air && at.1 < SEA_LEVEL { Block::Water } else { block };
-            Some((at, block))
+            let mut block = b.state.block(self.rotation);
+            if let Some(remap) = &self.wood {
+                block = rewood(block, remap);
+            }
+            if self.flood && at.1 < SEA_LEVEL {
+                if block == Block::Air {
+                    block = Block::Water;
+                } else if !block.is_waterlogged() && flags(block) & WATERLOGGABLE != 0 {
+                    block = named(block.name(), block.states(), true);
+                }
+            }
+            Some((at, block, index))
         })
     }
 
-    pub fn place(&self, canvas: &mut Canvas, template: &Template, origin: (i32, i32, i32)) {
-        for ((x, y, z), block) in self.blocks(template, origin) {
+    /// Writes the template; returns how many loot chests it placed (each drew a loot seed).
+    pub fn place(&self, canvas: &mut Canvas, template: &Template, origin: (i32, i32, i32)) -> usize {
+        let mut chests = 0;
+        for ((x, y, z), block, index) in self.blocks(template, origin) {
             canvas.set(x, y, z, block);
+            chests += usize::from(template.loot_chests.contains(&index));
         }
+        chests
     }
 }

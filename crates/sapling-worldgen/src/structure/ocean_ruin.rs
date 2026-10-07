@@ -159,7 +159,7 @@ impl RuinPiece {
         placement.ignore = Some("air");
         let floor = if self.warm { Block::Sand } else { Block::Gravel };
         let mut buried = Vec::new();
-        for ((x, y, z), block) in placement.blocks(self.template, origin) {
+        for ((x, y, z), block, _) in placement.blocks(self.template, origin) {
             canvas.set(x, y, z, block);
             if block == floor {
                 buried.push((x, y, z));

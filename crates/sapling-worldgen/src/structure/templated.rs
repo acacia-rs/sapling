@@ -9,7 +9,7 @@ use std::sync::{Arc, Mutex};
 use super::canvas::Canvas;
 use super::kind::MONUMENT;
 use super::probe::Probe;
-use super::{BoundingBox, StructureKind, Structures, igloo, ocean_ruin};
+use super::{BoundingBox, StructureKind, Structures, igloo, ocean_ruin, shipwreck};
 use crate::density::Density;
 use crate::random::{LargeFeatureSeed, Mt19937};
 
@@ -38,6 +38,28 @@ impl Structures {
         let seeds = LargeFeatureSeed::new(self.level_seed);
         for &start in igloos {
             igloo::place(canvas, &mut Mt19937::new(seeds.chunk(start.0, start.1)), start);
+        }
+    }
+
+    /// Shipwreck starts whose template may reach `chunk`, each with whether it is beached: the
+    /// start's box sits at y 62 or 30 by the biome at its centre, and the piece tests the biome
+    /// at the box's corner one above that.
+    pub(super) fn shipwrecks_near(&self, density: &Density, chunk: (i32, i32)) -> Vec<((i32, i32), bool)> {
+        let beach = |x: i32, y: i32, z: i32| shipwreck::BEACHES.contains(&density.climate.biome_at(x, y, z));
+        let starts = self.starts_near(density, StructureKind::Shipwreck, chunk, 1);
+        starts
+            .into_iter()
+            .map(|(x, z)| {
+                let y = if beach(x * 16 + 8, 63, z * 16 + 8) { 63 } else { 31 };
+                ((x, z), beach(x * 16, y, z * 16))
+            })
+            .collect()
+    }
+
+    pub(super) fn place_shipwrecks(&self, canvas: &mut Canvas, shipwrecks: &[((i32, i32), bool)]) {
+        let seeds = LargeFeatureSeed::new(self.level_seed);
+        for &(start, beached) in shipwrecks {
+            shipwreck::place(canvas, &mut Mt19937::new(seeds.chunk(start.0, start.1)), start, beached);
         }
     }
 

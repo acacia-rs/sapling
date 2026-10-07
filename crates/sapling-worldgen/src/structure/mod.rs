@@ -13,6 +13,7 @@ mod ocean_ruin;
 mod piece;
 mod placement;
 mod probe;
+mod shipwreck;
 mod stage;
 mod stronghold;
 pub(crate) mod template;

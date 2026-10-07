@@ -23,7 +23,8 @@ pub fn place(canvas: &mut Canvas, random: &mut Mt19937, start: (i32, i32)) {
         placement.place(canvas, Template::get("igloo/igloo_top_no_trapdoor"), origin);
         return;
     }
-    placement.place(canvas, Template::get("igloo/igloo_top_trapdoor"), origin);
+    let chests = placement.place(canvas, Template::get("igloo/igloo_top_trapdoor"), origin);
+    random.consume_count(chests as u32);
     let connected = |a: (i32, i32, i32), b: (i32, i32, i32)| {
         let (a, b) = (rotation.apply(a), rotation.apply(b));
         (origin.0 + a.0 - b.0, origin.1 + a.1 - b.1, origin.2 + a.2 - b.2)

@@ -4,7 +4,9 @@
 //! 141f71f20) and rotation (141f70580) make it.
 
 mod blocks;
+mod markers;
 mod place;
+mod wood;
 
 use std::collections::HashMap;
 use std::sync::OnceLock;
@@ -20,6 +22,14 @@ static DATA: &[u8] = include_bytes!("templates.bin");
 /// `TEMPLATE_BLOCKS` flags.
 pub const FULL_CUBE: u8 = 1;
 pub const COLLIDES: u8 = 2;
+pub const WATERLOGGABLE: u8 = 4;
+
+/// A block's `TEMPLATE_BLOCKS` flags (0 for blocks templates never place).
+pub fn flags(block: Block) -> u8 {
+    static INDEX: OnceLock<HashMap<(&str, &str, bool), u8>> = OnceLock::new();
+    let index = INDEX.get_or_init(|| TEMPLATE_BLOCKS.iter().map(|&(n, s, w, f)| ((n, s, w), f)).collect());
+    index.get(&(block.name(), block.states(), block.is_waterlogged())).copied().unwrap_or(0)
+}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(super) enum Kind {
@@ -68,6 +78,9 @@ pub struct Template {
     pub jigsaws: Vec<Jigsaw>,
     /// Data structure blocks: block index and metadata.
     pub markers: Vec<(usize, String)>,
+    /// Chests with block entity data: placing one draws a loot table seed from the piece's
+    /// generator (placeInWorld, block actor type 2 without `LootTableSeed`).
+    pub loot_chests: Vec<usize>,
 }
 
 impl Template {
@@ -94,8 +107,10 @@ fn data() -> &'static Data {
 /// A block structure code places itself, by its saved name and states; panics on one that is
 /// neither a `Block` variant nor in `TEMPLATE_BLOCKS` (scripts/templates_to_rust.py `EXTRA`).
 pub fn named(name: &str, states: &str, waterlogged: bool) -> Block {
-    let index = TEMPLATE_BLOCKS.iter().position(|&(n, s, w, _)| n == name && s == states && w == waterlogged);
-    palette_block(index.unwrap_or_else(|| panic!("no template block {name}[{states}]")) as u16)
+    static INDEX: OnceLock<HashMap<(&str, &str, bool), u16>> = OnceLock::new();
+    let index = INDEX.get_or_init(|| TEMPLATE_BLOCKS.iter().enumerate().map(|(i, &(n, s, w, _))| ((n, s, w), i as u16)).collect());
+    let found = index.get(&(name, states, waterlogged)).unwrap_or_else(|| panic!("no template block {name}[{states}]"));
+    palette_block(*found)
 }
 
 /// A `TEMPLATE_BLOCKS` entry as a block: the `Block` variant with its name, states and water when
@@ -147,17 +162,19 @@ fn parse(data: &[u8]) -> Data {
                 TemplateBlock { pos: (x, y, z), state: State(r.u16()) }
             })
             .collect();
-        let (mut jigsaws, mut markers) = (Vec::new(), Vec::new());
+        let (mut jigsaws, mut markers, mut loot_chests) = (Vec::new(), Vec::new(), Vec::new());
         for _ in 0..r.u16() {
             let block = r.u32() as usize;
-            if r.u8() == 0 {
-                let (name, target, pool, joint) = (r.string(), r.string(), r.string(), r.string());
-                jigsaws.push(Jigsaw { block, name, target, pool, joint, final_state: State(r.u16()) });
-            } else {
-                markers.push((block, r.string()));
+            match r.u8() {
+                0 => {
+                    let (name, target, pool, joint) = (r.string(), r.string(), r.string(), r.string());
+                    jigsaws.push(Jigsaw { block, name, target, pool, joint, final_state: State(r.u16()) });
+                }
+                1 => markers.push((block, r.string())),
+                _ => loot_chests.push(block),
             }
         }
-        templates.insert(name.clone(), Template { name, size, blocks, jigsaws, markers });
+        templates.insert(name.clone(), Template { name, size, blocks, jigsaws, markers, loot_chests });
     }
     let mut blocks: HashMap<u16, Block> = HashMap::new();
     let states = (0..r.u16())
