@@ -36,6 +36,20 @@ pub struct Data {
     pub pools: HashMap<String, Pool>,
     /// Alias set name -> (pool, replacement) pairs.
     pub aliases: HashMap<String, Vec<(String, String)>>,
+    /// Structure sets of several v2 structures, each in the set's order.
+    pub sets: HashMap<String, Vec<SetEntry>>,
+}
+
+/// One structure of a v2 structure set (the pack's `structure_sets` and `structures` JSON).
+pub struct SetEntry {
+    pub name: String,
+    pub weight: i32,
+    pub pool: String,
+    pub max_depth: i32,
+    pub horizontal: i32,
+    pub padding: i32,
+    /// The biomes its `biome_filters` accept.
+    pub biomes: Vec<u32>,
 }
 
 impl Data {
@@ -98,7 +112,7 @@ fn parse(text: &str) -> Data {
     let mut lists = HashMap::new();
     let mut rules: HashMap<String, &'static [Rule]> = HashMap::new();
     let mut capped: HashMap<String, Vec<Capped>> = HashMap::new();
-    let (mut elements, mut pools, mut aliases) = (HashMap::new(), Vec::new(), HashMap::new());
+    let (mut elements, mut pools, mut aliases, mut sets) = (HashMap::new(), Vec::new(), HashMap::new(), HashMap::new());
     for line in text.lines().filter(|l| !l.starts_with('#')) {
         let fields: Vec<&str> = line.split(' ').collect();
         match fields[0] {
@@ -119,6 +133,12 @@ fn parse(text: &str) -> Data {
             "a" => {
                 let pairs = fields[2..].iter().map(|p| p.split_once('=').unwrap()).map(|(a, b)| (a.to_string(), b.to_string())).collect();
                 aliases.insert(fields[1].to_string(), pairs);
+            }
+            "s" => {
+                let int = |i: usize| fields[i].parse().unwrap();
+                let biomes = fields[8].split(',').filter(|b| *b != "-").map(|b| b.parse().unwrap()).collect();
+                let entry = SetEntry { name: fields[2].into(), weight: int(3), pool: fields[4].into(), max_depth: int(5), horizontal: int(6), padding: int(7), biomes };
+                sets.entry(fields[1].to_string()).or_insert_with(Vec::new).push(entry);
             }
             _ => panic!("bad pools.txt line {line}"),
         }
@@ -159,5 +179,5 @@ fn parse(text: &str) -> Data {
             (f[0].clone(), Pool { name: f[0].clone(), fallback, list })
         })
         .collect();
-    Data { elements: elements_ref, pools, aliases }
+    Data { elements: elements_ref, pools, aliases, sets }
 }

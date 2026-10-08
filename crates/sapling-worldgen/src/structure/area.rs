@@ -50,7 +50,7 @@ impl StructureKind {
             Self::Village | Self::TrialChambers | Self::AncientCity => 7,
             Self::Stronghold => 8,
             Self::Mansion => 5,
-            Self::Monument | Self::TrailRuins | Self::Outpost => 3,
+            Self::Monument | Self::TrailRuins | Self::Outpost | Self::AbandonedCamp => 3,
             Self::Temple | Self::Shipwreck | Self::OceanRuins | Self::RuinedPortal => 2,
             Self::BuriedTreasure => 0,
         }

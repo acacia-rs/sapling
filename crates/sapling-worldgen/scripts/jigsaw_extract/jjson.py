@@ -11,7 +11,7 @@ from bds_packs import _version, brarchive, jsonc  # noqa: E402
 import jtrial_data as jtrial  # noqa: E402
 
 # Pools of the structures a world without experiments generates.
-STRUCTURES = ['trail_ruins']
+STRUCTURES = ['trail_ruins', 'abandoned_camp']
 # Pre-flattening states the packs still use, as BDS upgrades them.
 UPGRADES = {('dirt', 'dirt_type=coarse'): 'coarse_dirt', ('suspicious_gravel', ''): 'suspicious_gravel[brushed_progress=0,hanging=1]'}
 
@@ -89,7 +89,37 @@ def pack_data(bds, procs, elements, pools):
         pools[name] = (d.get('fallback'), [(element_name(i['element']), i['weight']) for i in d['elements']])
 
 
-def write(out_path, procs, elements, pools, aliases):
+def structure_data(bds):
+    """`s` lines for the structure sets of several jigsaw structures (abandoned camps), in the set's order:
+    set, structure, weight, start pool, max depth, horizontal reach, padding, the biome ids its filter accepts."""
+    from bds_packs import IDS, biomes
+
+    def accepts(tests, have):
+        """A list of `has_biome_tag` tests, all of which must hold (the camps' filters)."""
+        return all((t['value'] in have) == (t.get('operator', '==') in ('==', 'equals')) for t in tests)
+    tags ={IDS[n]: set(d['minecraft:biome']['components'].get('minecraft:tags', {}).get('tags', []))
+            for n, d in biomes(bds).items() if n in IDS}
+    structures = {}
+    for doc in archives(bds, 'structures'):
+        if 'minecraft:jigsaw' in doc:
+            d = doc['minecraft:jigsaw']
+            structures[short(d['description']['identifier'])] = d
+    lines = []
+    for doc in archives(bds, 'structure_sets'):
+        d = doc['minecraft:structure_set']
+        entries = d['structures']
+        if len(entries) < 2:
+            continue
+        for e in entries:
+            s = structures[short(e['structure'])]
+            ids = ','.join(str(i) for i in sorted(tags) if accepts(s.get('biome_filters'), tags[i])) or '-'
+            lines.append(f"s {short(d['description']['identifier'])} {short(e['structure'])} {e['weight']} "
+                         f"{short(s['start_pool'])} {s['max_depth']} {s['max_distance_from_center']['horizontal']} "
+                         f"{s.get('dimension_padding', 0)} {ids}")
+    return lines
+
+
+def write(out_path, procs, elements, pools, aliases, structures=()):
     with open(out_path, 'w', newline='\n') as out:
         out.write('# BDS v2 jigsaw data (behaviour pack worldgen JSON, trial chambers from C++); scripts/jigsaw_extract/jjson.py\n')
         for name, lines in procs.items():
@@ -105,6 +135,8 @@ def write(out_path, procs, elements, pools, aliases):
             out.write(f"p {name} {fb} " + ' '.join(f"{e}*{w}" for e, w in items) + '\n')
         for name, pairs in aliases.items():
             out.write(f"a {name} " + ' '.join(f'{a}={b}' for a, b in pairs) + '\n')
+        for line in structures:
+            out.write(line + '\n')
     print(len(procs), 'processor lists', len(elements), 'elements', len(pools), 'pools', len(aliases), 'alias sets')
 
 
@@ -112,7 +144,7 @@ def main(bds, out_path, trial_jsonl):
     procs, elements, pools, aliases = {}, {}, {}, {}
     pack_data(bds, procs, elements, pools)
     jtrial.load(trial_jsonl, procs, elements, pools, aliases)
-    write(out_path, procs, elements, pools, aliases)
+    write(out_path, procs, elements, pools, aliases, structure_data(bds))
 
 
 if __name__ == '__main__':

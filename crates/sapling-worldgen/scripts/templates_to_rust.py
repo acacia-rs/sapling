@@ -25,7 +25,7 @@ from templates_palette import DATA, JIGSAW, palette_bytes, state_table  # noqa: 
 HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(HERE, '..', 'src', 'structure', 'template')
 FAMILIES = ['igloo', 'shipwreck', 'ruin', 'ruined_portal', 'village', 'pillageroutpost', 'ancient_city',
-            'trial_chambers', 'trail_ruins', 'fossils', 'mansion']
+            'trial_chambers', 'trail_ruins', 'fossils', 'mansion', 'abandoned_camp']
 
 
 def version(pack):

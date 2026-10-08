@@ -10,7 +10,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from scan import effective, load, state_key
 
 FAMILIES = ['igloo', 'shipwreck', 'ruin', 'ruined_portal', 'village', 'pillageroutpost', 'ancient_city', 'trial_chambers',
-            'trail_ruins', 'fossils', 'mansion']
+            'trail_ruins', 'fossils', 'mansion', 'abandoned_camp']
 SKIP = ('minecraft:jigsaw', 'minecraft:structure_block', 'minecraft:water', 'minecraft:lava')
 
 

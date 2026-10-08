@@ -146,6 +146,26 @@ minecraft:acacia_fence_gate[facing=south,in_wall=false,open=false,powered=false]
 minecraft:acacia_fence_gate[facing=south,in_wall=false,open=false,powered=false]	1	acacia_fence_gate	in_wall_bit=0,minecraft:cardinal_direction=west,open_bit=0	0	2
 minecraft:acacia_fence_gate[facing=south,in_wall=false,open=false,powered=false]	2	acacia_fence_gate	in_wall_bit=0,minecraft:cardinal_direction=north,open_bit=0	0	2
 minecraft:acacia_fence_gate[facing=south,in_wall=false,open=false,powered=false]	3	acacia_fence_gate	in_wall_bit=0,minecraft:cardinal_direction=east,open_bit=0	0	2
+minecraft:acacia_leaves[distance=1,persistent=false,waterlogged=false]	0	acacia_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:acacia_leaves[distance=1,persistent=false,waterlogged=false]	1	acacia_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:acacia_leaves[distance=1,persistent=false,waterlogged=false]	2	acacia_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:acacia_leaves[distance=1,persistent=false,waterlogged=false]	3	acacia_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:acacia_leaves[distance=1,persistent=true,waterlogged=false]	0	acacia_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:acacia_leaves[distance=1,persistent=true,waterlogged=false]	1	acacia_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:acacia_leaves[distance=1,persistent=true,waterlogged=false]	2	acacia_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:acacia_leaves[distance=1,persistent=true,waterlogged=false]	3	acacia_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:acacia_leaves[distance=2,persistent=false,waterlogged=false]	0	acacia_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:acacia_leaves[distance=2,persistent=false,waterlogged=false]	1	acacia_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:acacia_leaves[distance=2,persistent=false,waterlogged=false]	2	acacia_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:acacia_leaves[distance=2,persistent=false,waterlogged=false]	3	acacia_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:acacia_leaves[distance=2,persistent=true,waterlogged=false]	0	acacia_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:acacia_leaves[distance=2,persistent=true,waterlogged=false]	1	acacia_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:acacia_leaves[distance=2,persistent=true,waterlogged=false]	2	acacia_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:acacia_leaves[distance=2,persistent=true,waterlogged=false]	3	acacia_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:acacia_leaves[distance=3,persistent=false,waterlogged=false]	0	acacia_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:acacia_leaves[distance=3,persistent=false,waterlogged=false]	1	acacia_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:acacia_leaves[distance=3,persistent=false,waterlogged=false]	2	acacia_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:acacia_leaves[distance=3,persistent=false,waterlogged=false]	3	acacia_leaves	persistent_bit=0,update_bit=0	0	3
 minecraft:acacia_log	0	acacia_log	pillar_axis=y	0	3
 minecraft:acacia_log	1	acacia_log	pillar_axis=y	0	3
 minecraft:acacia_log	2	acacia_log	pillar_axis=y	0	3
@@ -278,6 +298,10 @@ minecraft:air	0	air		0	0
 minecraft:air	1	air		0	0
 minecraft:air	2	air		0	0
 minecraft:air	3	air		0	0
+minecraft:allium	0	allium		0	0
+minecraft:allium	1	allium		0	0
+minecraft:allium	2	allium		0	0
+minecraft:allium	3	allium		0	0
 minecraft:anvil[damage=2,facing=west]	0	damaged_anvil	minecraft:cardinal_direction=west	0	2
 minecraft:anvil[damage=2,facing=west]	1	damaged_anvil	minecraft:cardinal_direction=north	0	2
 minecraft:anvil[damage=2,facing=west]	2	damaged_anvil	minecraft:cardinal_direction=east	0	2
@@ -286,10 +310,42 @@ minecraft:attached_melon_stem[facing=east]	0	melon_stem	facing_direction=5,growt
 minecraft:attached_melon_stem[facing=east]	1	melon_stem	facing_direction=3,growth=0	0	0
 minecraft:attached_melon_stem[facing=east]	2	melon_stem	facing_direction=4,growth=0	0	0
 minecraft:attached_melon_stem[facing=east]	3	melon_stem	facing_direction=2,growth=0	0	0
+minecraft:azure_bluet	0	azure_bluet		0	0
+minecraft:azure_bluet	1	azure_bluet		0	0
+minecraft:azure_bluet	2	azure_bluet		0	0
+minecraft:azure_bluet	3	azure_bluet		0	0
+minecraft:bamboo_fence[east=false,north=false,south=false,waterlogged=false,west=false]	0	bamboo_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:bamboo_fence[east=false,north=false,south=false,waterlogged=false,west=false]	1	bamboo_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:bamboo_fence[east=false,north=false,south=false,waterlogged=false,west=false]	2	bamboo_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:bamboo_fence[east=false,north=false,south=false,waterlogged=false,west=false]	3	bamboo_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:bamboo_fence[east=false,north=false,south=false,waterlogged=false,west=true]	0	bamboo_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:bamboo_fence[east=false,north=false,south=false,waterlogged=false,west=true]	1	bamboo_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:bamboo_fence[east=false,north=false,south=false,waterlogged=false,west=true]	2	bamboo_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:bamboo_fence[east=false,north=false,south=false,waterlogged=false,west=true]	3	bamboo_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:bamboo_fence[east=false,north=false,south=true,waterlogged=false,west=false]	0	bamboo_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:bamboo_fence[east=false,north=false,south=true,waterlogged=false,west=false]	1	bamboo_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:bamboo_fence[east=false,north=false,south=true,waterlogged=false,west=false]	2	bamboo_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:bamboo_fence[east=false,north=false,south=true,waterlogged=false,west=false]	3	bamboo_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:bamboo_fence[east=false,north=true,south=false,waterlogged=false,west=false]	0	bamboo_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:bamboo_fence[east=false,north=true,south=false,waterlogged=false,west=false]	1	bamboo_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:bamboo_fence[east=false,north=true,south=false,waterlogged=false,west=false]	2	bamboo_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:bamboo_fence[east=false,north=true,south=false,waterlogged=false,west=false]	3	bamboo_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:bamboo_fence[east=true,north=false,south=false,waterlogged=false,west=false]	0	bamboo_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:bamboo_fence[east=true,north=false,south=false,waterlogged=false,west=false]	1	bamboo_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:bamboo_fence[east=true,north=false,south=false,waterlogged=false,west=false]	2	bamboo_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:bamboo_fence[east=true,north=false,south=false,waterlogged=false,west=false]	3	bamboo_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
 minecraft:barrel[facing=down]	0	barrel	facing_direction=0,open_bit=0	0	3
 minecraft:barrel[facing=down]	1	barrel	facing_direction=0,open_bit=0	0	3
 minecraft:barrel[facing=down]	2	barrel	facing_direction=0,open_bit=0	0	3
 minecraft:barrel[facing=down]	3	barrel	facing_direction=0,open_bit=0	0	3
+minecraft:barrel[facing=east,open=false]	0	barrel	facing_direction=5,open_bit=0	0	3
+minecraft:barrel[facing=east,open=false]	1	barrel	facing_direction=3,open_bit=0	0	3
+minecraft:barrel[facing=east,open=false]	2	barrel	facing_direction=4,open_bit=0	0	3
+minecraft:barrel[facing=east,open=false]	3	barrel	facing_direction=2,open_bit=0	0	3
+minecraft:barrel[facing=north,open=false]	0	barrel	facing_direction=2,open_bit=0	0	3
+minecraft:barrel[facing=north,open=false]	1	barrel	facing_direction=5,open_bit=0	0	3
+minecraft:barrel[facing=north,open=false]	2	barrel	facing_direction=3,open_bit=0	0	3
+minecraft:barrel[facing=north,open=false]	3	barrel	facing_direction=4,open_bit=0	0	3
 minecraft:barrel[facing=south,open=false]	0	barrel	facing_direction=3,open_bit=0	0	3
 minecraft:barrel[facing=south,open=false]	1	barrel	facing_direction=4,open_bit=0	0	3
 minecraft:barrel[facing=south,open=false]	2	barrel	facing_direction=2,open_bit=0	0	3
@@ -302,6 +358,10 @@ minecraft:barrel[facing=up]	0	barrel	facing_direction=1,open_bit=0	0	3
 minecraft:barrel[facing=up]	1	barrel	facing_direction=1,open_bit=0	0	3
 minecraft:barrel[facing=up]	2	barrel	facing_direction=1,open_bit=0	0	3
 minecraft:barrel[facing=up]	3	barrel	facing_direction=1,open_bit=0	0	3
+minecraft:barrel[facing=west,open=false]	0	barrel	facing_direction=4,open_bit=0	0	3
+minecraft:barrel[facing=west,open=false]	1	barrel	facing_direction=2,open_bit=0	0	3
+minecraft:barrel[facing=west,open=false]	2	barrel	facing_direction=5,open_bit=0	0	3
+minecraft:barrel[facing=west,open=false]	3	barrel	facing_direction=3,open_bit=0	0	3
 minecraft:bell[attachment=ceiling,facing=east]	0	bell	attachment=hanging,direction=3,toggle_bit=0	0	2
 minecraft:bell[attachment=ceiling,facing=east]	1	bell	attachment=hanging,direction=0,toggle_bit=0	0	2
 minecraft:bell[attachment=ceiling,facing=east]	2	bell	attachment=hanging,direction=1,toggle_bit=0	0	2
@@ -326,10 +386,54 @@ minecraft:bell[attachment=floor,facing=west]	0	bell	attachment=standing,directio
 minecraft:bell[attachment=floor,facing=west]	1	bell	attachment=standing,direction=2,toggle_bit=0	0	2
 minecraft:bell[attachment=floor,facing=west]	2	bell	attachment=standing,direction=3,toggle_bit=0	0	2
 minecraft:bell[attachment=floor,facing=west]	3	bell	attachment=standing,direction=0,toggle_bit=0	0	2
+minecraft:birch_fence[east=false,north=false,south=false,waterlogged=false,west=false]	0	birch_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:birch_fence[east=false,north=false,south=false,waterlogged=false,west=false]	1	birch_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:birch_fence[east=false,north=false,south=false,waterlogged=false,west=false]	2	birch_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:birch_fence[east=false,north=false,south=false,waterlogged=false,west=false]	3	birch_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
 minecraft:birch_fence[east=false,north=false,south=false,west=false]	0	birch_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
 minecraft:birch_fence[east=false,north=false,south=false,west=false]	1	birch_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
 minecraft:birch_fence[east=false,north=false,south=false,west=false]	2	birch_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
 minecraft:birch_fence[east=false,north=false,south=false,west=false]	3	birch_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:birch_fence[east=false,north=false,south=true,waterlogged=false,west=false]	0	birch_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:birch_fence[east=false,north=false,south=true,waterlogged=false,west=false]	1	birch_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:birch_fence[east=false,north=false,south=true,waterlogged=false,west=false]	2	birch_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:birch_fence[east=false,north=false,south=true,waterlogged=false,west=false]	3	birch_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:birch_fence[east=false,north=true,south=false,waterlogged=false,west=false]	0	birch_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:birch_fence[east=false,north=true,south=false,waterlogged=false,west=false]	1	birch_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:birch_fence[east=false,north=true,south=false,waterlogged=false,west=false]	2	birch_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:birch_fence[east=false,north=true,south=false,waterlogged=false,west=false]	3	birch_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:birch_fence[east=true,north=false,south=false,waterlogged=false,west=false]	0	birch_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:birch_fence[east=true,north=false,south=false,waterlogged=false,west=false]	1	birch_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:birch_fence[east=true,north=false,south=false,waterlogged=false,west=false]	2	birch_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:birch_fence[east=true,north=false,south=false,waterlogged=false,west=false]	3	birch_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:birch_leaves[distance=1,persistent=false,waterlogged=false]	0	birch_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:birch_leaves[distance=1,persistent=false,waterlogged=false]	1	birch_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:birch_leaves[distance=1,persistent=false,waterlogged=false]	2	birch_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:birch_leaves[distance=1,persistent=false,waterlogged=false]	3	birch_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:birch_leaves[distance=2,persistent=false,waterlogged=false]	0	birch_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:birch_leaves[distance=2,persistent=false,waterlogged=false]	1	birch_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:birch_leaves[distance=2,persistent=false,waterlogged=false]	2	birch_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:birch_leaves[distance=2,persistent=false,waterlogged=false]	3	birch_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:birch_leaves[distance=3,persistent=false,waterlogged=false]	0	birch_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:birch_leaves[distance=3,persistent=false,waterlogged=false]	1	birch_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:birch_leaves[distance=3,persistent=false,waterlogged=false]	2	birch_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:birch_leaves[distance=3,persistent=false,waterlogged=false]	3	birch_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:birch_leaves[distance=4,persistent=false,waterlogged=false]	0	birch_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:birch_leaves[distance=4,persistent=false,waterlogged=false]	1	birch_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:birch_leaves[distance=4,persistent=false,waterlogged=false]	2	birch_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:birch_leaves[distance=4,persistent=false,waterlogged=false]	3	birch_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:birch_log[axis=x]	0	birch_log	pillar_axis=x	0	3
+minecraft:birch_log[axis=x]	1	birch_log	pillar_axis=z	0	3
+minecraft:birch_log[axis=x]	2	birch_log	pillar_axis=x	0	3
+minecraft:birch_log[axis=x]	3	birch_log	pillar_axis=z	0	3
+minecraft:birch_log[axis=y]	0	birch_log	pillar_axis=y	0	3
+minecraft:birch_log[axis=y]	1	birch_log	pillar_axis=y	0	3
+minecraft:birch_log[axis=y]	2	birch_log	pillar_axis=y	0	3
+minecraft:birch_log[axis=y]	3	birch_log	pillar_axis=y	0	3
+minecraft:birch_log[axis=z]	0	birch_log	pillar_axis=z	0	3
+minecraft:birch_log[axis=z]	1	birch_log	pillar_axis=x	0	3
+minecraft:birch_log[axis=z]	2	birch_log	pillar_axis=z	0	3
+minecraft:birch_log[axis=z]	3	birch_log	pillar_axis=x	0	3
 minecraft:birch_planks	0	birch_planks		0	3
 minecraft:birch_planks	1	birch_planks		0	3
 minecraft:birch_planks	2	birch_planks		0	3
@@ -374,6 +478,10 @@ minecraft:birch_stairs[facing=west,half=bottom,shape=outer_right]	0	birch_stairs
 minecraft:birch_stairs[facing=west,half=bottom,shape=outer_right]	1	birch_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=3	0	2
 minecraft:birch_stairs[facing=west,half=bottom,shape=outer_right]	2	birch_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=0	0	2
 minecraft:birch_stairs[facing=west,half=bottom,shape=outer_right]	3	birch_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=2	0	2
+minecraft:birch_stairs[facing=west,half=bottom,shape=straight,waterlogged=false]	0	birch_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=1	0	2
+minecraft:birch_stairs[facing=west,half=bottom,shape=straight,waterlogged=false]	1	birch_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=3	0	2
+minecraft:birch_stairs[facing=west,half=bottom,shape=straight,waterlogged=false]	2	birch_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=0	0	2
+minecraft:birch_stairs[facing=west,half=bottom,shape=straight,waterlogged=false]	3	birch_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=2	0	2
 minecraft:birch_stairs[facing=west,half=bottom,shape=straight]	0	birch_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=1	0	2
 minecraft:birch_stairs[facing=west,half=bottom,shape=straight]	1	birch_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=3	0	2
 minecraft:birch_stairs[facing=west,half=bottom,shape=straight]	2	birch_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=0	0	2
@@ -450,6 +558,10 @@ minecraft:blue_ice	0	blue_ice		0	3
 minecraft:blue_ice	1	blue_ice		0	3
 minecraft:blue_ice	2	blue_ice		0	3
 minecraft:blue_ice	3	blue_ice		0	3
+minecraft:blue_orchid	0	blue_orchid		0	0
+minecraft:blue_orchid	1	blue_orchid		0	0
+minecraft:blue_orchid	2	snow_layer	covered_bit=0,height=0	0	0
+minecraft:blue_orchid	3	blue_orchid		0	0
 minecraft:blue_terracotta	0	blue_terracotta		0	3
 minecraft:blue_terracotta	1	blue_terracotta		0	3
 minecraft:blue_terracotta	2	blue_terracotta		0	3
@@ -570,6 +682,42 @@ minecraft:brown_mushroom	0	brown_mushroom		0	0
 minecraft:brown_mushroom	1	brown_mushroom		0	0
 minecraft:brown_mushroom	2	brown_mushroom		0	0
 minecraft:brown_mushroom	3	brown_mushroom		0	0
+minecraft:brown_mushroom_block[down=true,east=false,north=false,south=false,up=true,west=false]	0	brown_mushroom_block	huge_mushroom_bits=14	0	3
+minecraft:brown_mushroom_block[down=true,east=false,north=false,south=false,up=true,west=false]	1	brown_mushroom_block	huge_mushroom_bits=14	0	3
+minecraft:brown_mushroom_block[down=true,east=false,north=false,south=false,up=true,west=false]	2	brown_mushroom_block	huge_mushroom_bits=14	0	3
+minecraft:brown_mushroom_block[down=true,east=false,north=false,south=false,up=true,west=false]	3	brown_mushroom_block	huge_mushroom_bits=14	0	3
+minecraft:brown_mushroom_block[down=true,east=false,north=false,south=false,up=true,west=true]	0	brown_mushroom_block	huge_mushroom_bits=14	0	3
+minecraft:brown_mushroom_block[down=true,east=false,north=false,south=false,up=true,west=true]	1	brown_mushroom_block	huge_mushroom_bits=14	0	3
+minecraft:brown_mushroom_block[down=true,east=false,north=false,south=false,up=true,west=true]	2	brown_mushroom_block	huge_mushroom_bits=14	0	3
+minecraft:brown_mushroom_block[down=true,east=false,north=false,south=false,up=true,west=true]	3	brown_mushroom_block	huge_mushroom_bits=14	0	3
+minecraft:brown_mushroom_block[down=true,east=false,north=false,south=true,up=true,west=false]	0	brown_mushroom_block	huge_mushroom_bits=14	0	3
+minecraft:brown_mushroom_block[down=true,east=false,north=false,south=true,up=true,west=false]	1	brown_mushroom_block	huge_mushroom_bits=14	0	3
+minecraft:brown_mushroom_block[down=true,east=false,north=false,south=true,up=true,west=false]	2	brown_mushroom_block	huge_mushroom_bits=14	0	3
+minecraft:brown_mushroom_block[down=true,east=false,north=false,south=true,up=true,west=false]	3	brown_mushroom_block	huge_mushroom_bits=14	0	3
+minecraft:brown_mushroom_block[down=true,east=false,north=false,south=true,up=true,west=true]	0	brown_mushroom_block	huge_mushroom_bits=14	0	3
+minecraft:brown_mushroom_block[down=true,east=false,north=false,south=true,up=true,west=true]	1	brown_mushroom_block	huge_mushroom_bits=14	0	3
+minecraft:brown_mushroom_block[down=true,east=false,north=false,south=true,up=true,west=true]	2	brown_mushroom_block	huge_mushroom_bits=14	0	3
+minecraft:brown_mushroom_block[down=true,east=false,north=false,south=true,up=true,west=true]	3	brown_mushroom_block	huge_mushroom_bits=14	0	3
+minecraft:brown_mushroom_block[down=true,east=false,north=true,south=false,up=true,west=false]	0	brown_mushroom_block	huge_mushroom_bits=14	0	3
+minecraft:brown_mushroom_block[down=true,east=false,north=true,south=false,up=true,west=false]	1	brown_mushroom_block	huge_mushroom_bits=14	0	3
+minecraft:brown_mushroom_block[down=true,east=false,north=true,south=false,up=true,west=false]	2	brown_mushroom_block	huge_mushroom_bits=14	0	3
+minecraft:brown_mushroom_block[down=true,east=false,north=true,south=false,up=true,west=false]	3	brown_mushroom_block	huge_mushroom_bits=14	0	3
+minecraft:brown_mushroom_block[down=true,east=false,north=true,south=false,up=true,west=true]	0	brown_mushroom_block	huge_mushroom_bits=14	0	3
+minecraft:brown_mushroom_block[down=true,east=false,north=true,south=false,up=true,west=true]	1	brown_mushroom_block	huge_mushroom_bits=14	0	3
+minecraft:brown_mushroom_block[down=true,east=false,north=true,south=false,up=true,west=true]	2	brown_mushroom_block	huge_mushroom_bits=14	0	3
+minecraft:brown_mushroom_block[down=true,east=false,north=true,south=false,up=true,west=true]	3	brown_mushroom_block	huge_mushroom_bits=14	0	3
+minecraft:brown_mushroom_block[down=true,east=true,north=false,south=false,up=true,west=false]	0	brown_mushroom_block	huge_mushroom_bits=14	0	3
+minecraft:brown_mushroom_block[down=true,east=true,north=false,south=false,up=true,west=false]	1	brown_mushroom_block	huge_mushroom_bits=14	0	3
+minecraft:brown_mushroom_block[down=true,east=true,north=false,south=false,up=true,west=false]	2	brown_mushroom_block	huge_mushroom_bits=14	0	3
+minecraft:brown_mushroom_block[down=true,east=true,north=false,south=false,up=true,west=false]	3	brown_mushroom_block	huge_mushroom_bits=14	0	3
+minecraft:brown_mushroom_block[down=true,east=true,north=false,south=true,up=true,west=false]	0	brown_mushroom_block	huge_mushroom_bits=14	0	3
+minecraft:brown_mushroom_block[down=true,east=true,north=false,south=true,up=true,west=false]	1	brown_mushroom_block	huge_mushroom_bits=14	0	3
+minecraft:brown_mushroom_block[down=true,east=true,north=false,south=true,up=true,west=false]	2	brown_mushroom_block	huge_mushroom_bits=14	0	3
+minecraft:brown_mushroom_block[down=true,east=true,north=false,south=true,up=true,west=false]	3	brown_mushroom_block	huge_mushroom_bits=14	0	3
+minecraft:brown_mushroom_block[down=true,east=true,north=true,south=false,up=true,west=false]	0	brown_mushroom_block	huge_mushroom_bits=14	0	3
+minecraft:brown_mushroom_block[down=true,east=true,north=true,south=false,up=true,west=false]	1	brown_mushroom_block	huge_mushroom_bits=14	0	3
+minecraft:brown_mushroom_block[down=true,east=true,north=true,south=false,up=true,west=false]	2	brown_mushroom_block	huge_mushroom_bits=14	0	3
+minecraft:brown_mushroom_block[down=true,east=true,north=true,south=false,up=true,west=false]	3	brown_mushroom_block	huge_mushroom_bits=14	0	3
 minecraft:brown_stained_glass	0	brown_stained_glass		0	3
 minecraft:brown_stained_glass	1	brown_stained_glass		0	3
 minecraft:brown_stained_glass	2	brown_stained_glass		0	3
@@ -594,22 +742,42 @@ minecraft:brown_wall_banner[facing=west]	0	wall_banner	facing_direction=4	0	0
 minecraft:brown_wall_banner[facing=west]	1	wall_banner	facing_direction=2	0	0
 minecraft:brown_wall_banner[facing=west]	2	wall_banner	facing_direction=5	0	0
 minecraft:brown_wall_banner[facing=west]	3	wall_banner	facing_direction=3	0	0
+minecraft:bush	0	bush		0	0
+minecraft:bush	1	bush		0	0
+minecraft:bush	2	bush		0	0
+minecraft:bush	3	bush		0	0
 minecraft:cactus[age=0]	0	cactus	age=0	0	2
 minecraft:cactus[age=0]	1	cactus	age=0	0	2
 minecraft:cactus[age=0]	2	cactus	age=0	0	2
 minecraft:cactus[age=0]	3	cactus	age=0	0	2
+minecraft:cactus_flower	0	cactus_flower		0	0
+minecraft:cactus_flower	1	cactus_flower		0	0
+minecraft:cactus_flower	2	cactus_flower		0	0
+minecraft:cactus_flower	3	cactus_flower		0	0
 minecraft:campfire[facing=east,lit=false,signal_fire=false,waterlogged=false]	0	campfire	extinguished=1,minecraft:cardinal_direction=east	0	2
 minecraft:campfire[facing=east,lit=false,signal_fire=false,waterlogged=false]	1	campfire	extinguished=1,minecraft:cardinal_direction=south	0	2
 minecraft:campfire[facing=east,lit=false,signal_fire=false,waterlogged=false]	2	campfire	extinguished=1,minecraft:cardinal_direction=west	0	2
 minecraft:campfire[facing=east,lit=false,signal_fire=false,waterlogged=false]	3	campfire	extinguished=1,minecraft:cardinal_direction=north	0	2
+minecraft:campfire[facing=east,lit=false,signal_fire=true,waterlogged=false]	0	campfire	extinguished=1,minecraft:cardinal_direction=east	0	2
+minecraft:campfire[facing=east,lit=false,signal_fire=true,waterlogged=false]	1	campfire	extinguished=1,minecraft:cardinal_direction=south	0	2
+minecraft:campfire[facing=east,lit=false,signal_fire=true,waterlogged=false]	2	campfire	extinguished=1,minecraft:cardinal_direction=west	0	2
+minecraft:campfire[facing=east,lit=false,signal_fire=true,waterlogged=false]	3	campfire	extinguished=1,minecraft:cardinal_direction=north	0	2
 minecraft:campfire[facing=north,lit=false,signal_fire=false,waterlogged=false]	0	campfire	extinguished=1,minecraft:cardinal_direction=north	0	2
 minecraft:campfire[facing=north,lit=false,signal_fire=false,waterlogged=false]	1	campfire	extinguished=1,minecraft:cardinal_direction=east	0	2
 minecraft:campfire[facing=north,lit=false,signal_fire=false,waterlogged=false]	2	campfire	extinguished=1,minecraft:cardinal_direction=south	0	2
 minecraft:campfire[facing=north,lit=false,signal_fire=false,waterlogged=false]	3	campfire	extinguished=1,minecraft:cardinal_direction=west	0	2
+minecraft:campfire[facing=north,lit=false,signal_fire=true,waterlogged=false]	0	campfire	extinguished=1,minecraft:cardinal_direction=north	0	2
+minecraft:campfire[facing=north,lit=false,signal_fire=true,waterlogged=false]	1	campfire	extinguished=1,minecraft:cardinal_direction=east	0	2
+minecraft:campfire[facing=north,lit=false,signal_fire=true,waterlogged=false]	2	campfire	extinguished=1,minecraft:cardinal_direction=south	0	2
+minecraft:campfire[facing=north,lit=false,signal_fire=true,waterlogged=false]	3	campfire	extinguished=1,minecraft:cardinal_direction=west	0	2
 minecraft:campfire[facing=north,lit=true,signal_fire=false,waterlogged=false]	0	campfire	extinguished=0,minecraft:cardinal_direction=north	0	2
 minecraft:campfire[facing=north,lit=true,signal_fire=false,waterlogged=false]	1	campfire	extinguished=0,minecraft:cardinal_direction=east	0	2
 minecraft:campfire[facing=north,lit=true,signal_fire=false,waterlogged=false]	2	campfire	extinguished=0,minecraft:cardinal_direction=south	0	2
 minecraft:campfire[facing=north,lit=true,signal_fire=false,waterlogged=false]	3	campfire	extinguished=0,minecraft:cardinal_direction=west	0	2
+minecraft:campfire[facing=south,lit=false,signal_fire=false,waterlogged=false]	0	campfire	extinguished=1,minecraft:cardinal_direction=south	0	2
+minecraft:campfire[facing=south,lit=false,signal_fire=false,waterlogged=false]	1	campfire	extinguished=1,minecraft:cardinal_direction=west	0	2
+minecraft:campfire[facing=south,lit=false,signal_fire=false,waterlogged=false]	2	campfire	extinguished=1,minecraft:cardinal_direction=north	0	2
+minecraft:campfire[facing=south,lit=false,signal_fire=false,waterlogged=false]	3	campfire	extinguished=1,minecraft:cardinal_direction=east	0	2
 minecraft:campfire[facing=west,lit=false,signal_fire=false,waterlogged=false]	0	campfire	extinguished=1,minecraft:cardinal_direction=west	0	2
 minecraft:campfire[facing=west,lit=false,signal_fire=false,waterlogged=false]	1	campfire	extinguished=1,minecraft:cardinal_direction=north	0	2
 minecraft:campfire[facing=west,lit=false,signal_fire=false,waterlogged=false]	2	campfire	extinguished=1,minecraft:cardinal_direction=east	0	2
@@ -746,6 +914,54 @@ minecraft:chain[axis=y,waterlogged=false]	0	iron_chain	pillar_axis=y	0	2
 minecraft:chain[axis=y,waterlogged=false]	1	iron_chain	pillar_axis=y	0	2
 minecraft:chain[axis=y,waterlogged=false]	2	iron_chain	pillar_axis=y	0	2
 minecraft:chain[axis=y,waterlogged=false]	3	iron_chain	pillar_axis=y	0	2
+minecraft:cherry_fence[east=false,north=false,south=false,waterlogged=false,west=false]	0	cherry_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:cherry_fence[east=false,north=false,south=false,waterlogged=false,west=false]	1	cherry_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:cherry_fence[east=false,north=false,south=false,waterlogged=false,west=false]	2	cherry_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:cherry_fence[east=false,north=false,south=false,waterlogged=false,west=false]	3	cherry_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:cherry_fence[east=false,north=false,south=false,waterlogged=false,west=true]	0	cherry_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:cherry_fence[east=false,north=false,south=false,waterlogged=false,west=true]	1	cherry_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:cherry_fence[east=false,north=false,south=false,waterlogged=false,west=true]	2	cherry_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:cherry_fence[east=false,north=false,south=false,waterlogged=false,west=true]	3	cherry_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:cherry_fence[east=false,north=false,south=true,waterlogged=false,west=false]	0	cherry_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:cherry_fence[east=false,north=false,south=true,waterlogged=false,west=false]	1	cherry_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:cherry_fence[east=false,north=false,south=true,waterlogged=false,west=false]	2	cherry_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:cherry_fence[east=false,north=false,south=true,waterlogged=false,west=false]	3	cherry_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:cherry_fence[east=false,north=true,south=false,waterlogged=false,west=false]	0	cherry_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:cherry_fence[east=false,north=true,south=false,waterlogged=false,west=false]	1	cherry_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:cherry_fence[east=false,north=true,south=false,waterlogged=false,west=false]	2	cherry_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:cherry_fence[east=false,north=true,south=false,waterlogged=false,west=false]	3	cherry_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:cherry_fence[east=true,north=false,south=false,waterlogged=false,west=false]	0	cherry_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:cherry_fence[east=true,north=false,south=false,waterlogged=false,west=false]	1	cherry_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:cherry_fence[east=true,north=false,south=false,waterlogged=false,west=false]	2	cherry_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:cherry_fence[east=true,north=false,south=false,waterlogged=false,west=false]	3	cherry_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:cherry_leaves[distance=1,persistent=false,waterlogged=false]	0	cherry_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:cherry_leaves[distance=1,persistent=false,waterlogged=false]	1	cherry_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:cherry_leaves[distance=1,persistent=false,waterlogged=false]	2	cherry_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:cherry_leaves[distance=1,persistent=false,waterlogged=false]	3	cherry_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:cherry_leaves[distance=1,persistent=true,waterlogged=false]	0	cherry_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:cherry_leaves[distance=1,persistent=true,waterlogged=false]	1	cherry_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:cherry_leaves[distance=1,persistent=true,waterlogged=false]	2	cherry_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:cherry_leaves[distance=1,persistent=true,waterlogged=false]	3	cherry_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:cherry_leaves[distance=2,persistent=false,waterlogged=false]	0	cherry_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:cherry_leaves[distance=2,persistent=false,waterlogged=false]	1	cherry_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:cherry_leaves[distance=2,persistent=false,waterlogged=false]	2	cherry_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:cherry_leaves[distance=2,persistent=false,waterlogged=false]	3	cherry_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:cherry_log[axis=x]	0	cherry_log	pillar_axis=x	0	3
+minecraft:cherry_log[axis=x]	1	cherry_log	pillar_axis=z	0	3
+minecraft:cherry_log[axis=x]	2	cherry_log	pillar_axis=x	0	3
+minecraft:cherry_log[axis=x]	3	cherry_log	pillar_axis=z	0	3
+minecraft:cherry_log[axis=y]	0	cherry_log	pillar_axis=y	0	3
+minecraft:cherry_log[axis=y]	1	cherry_log	pillar_axis=y	0	3
+minecraft:cherry_log[axis=y]	2	cherry_log	pillar_axis=y	0	3
+minecraft:cherry_log[axis=y]	3	cherry_log	pillar_axis=y	0	3
+minecraft:cherry_log[axis=z]	0	cherry_log	pillar_axis=z	0	3
+minecraft:cherry_log[axis=z]	1	cherry_log	pillar_axis=x	0	3
+minecraft:cherry_log[axis=z]	2	cherry_log	pillar_axis=z	0	3
+minecraft:cherry_log[axis=z]	3	cherry_log	pillar_axis=x	0	3
+minecraft:cherry_sapling[stage=1]	0	cherry_sapling	age_bit=0	0	0
+minecraft:cherry_sapling[stage=1]	1	cherry_sapling	age_bit=0	0	0
+minecraft:cherry_sapling[stage=1]	2	cherry_sapling	age_bit=0	0	0
+minecraft:cherry_sapling[stage=1]	3	cherry_sapling	age_bit=0	0	0
 minecraft:chest[facing=east,type=single,waterlogged=false]	0	chest	minecraft:cardinal_direction=east	0	2
 minecraft:chest[facing=east,type=single,waterlogged=false]	1	chest	minecraft:cardinal_direction=south	0	2
 minecraft:chest[facing=east,type=single,waterlogged=false]	2	chest	minecraft:cardinal_direction=west	0	2
@@ -754,6 +970,14 @@ minecraft:chest[facing=east]	0	chest	minecraft:cardinal_direction=east	0	2
 minecraft:chest[facing=east]	1	chest	minecraft:cardinal_direction=south	0	2
 minecraft:chest[facing=east]	2	chest	minecraft:cardinal_direction=west	0	2
 minecraft:chest[facing=east]	3	chest	minecraft:cardinal_direction=north	0	2
+minecraft:chest[facing=north,type=left,waterlogged=false]	0	chest	minecraft:cardinal_direction=north	0	2
+minecraft:chest[facing=north,type=left,waterlogged=false]	1	chest	minecraft:cardinal_direction=east	0	2
+minecraft:chest[facing=north,type=left,waterlogged=false]	2	chest	minecraft:cardinal_direction=south	0	2
+minecraft:chest[facing=north,type=left,waterlogged=false]	3	chest	minecraft:cardinal_direction=west	0	2
+minecraft:chest[facing=north,type=right,waterlogged=false]	0	chest	minecraft:cardinal_direction=north	0	2
+minecraft:chest[facing=north,type=right,waterlogged=false]	1	chest	minecraft:cardinal_direction=east	0	2
+minecraft:chest[facing=north,type=right,waterlogged=false]	2	chest	minecraft:cardinal_direction=south	0	2
+minecraft:chest[facing=north,type=right,waterlogged=false]	3	chest	minecraft:cardinal_direction=west	0	2
 minecraft:chest[facing=north,type=single,waterlogged=false]	0	chest	minecraft:cardinal_direction=north	0	2
 minecraft:chest[facing=north,type=single,waterlogged=false]	1	chest	minecraft:cardinal_direction=east	0	2
 minecraft:chest[facing=north,type=single,waterlogged=false]	2	chest	minecraft:cardinal_direction=south	0	2
@@ -770,6 +994,14 @@ minecraft:chest[facing=south]	0	chest	minecraft:cardinal_direction=south	0	2
 minecraft:chest[facing=south]	1	chest	minecraft:cardinal_direction=west	0	2
 minecraft:chest[facing=south]	2	chest	minecraft:cardinal_direction=north	0	2
 minecraft:chest[facing=south]	3	chest	minecraft:cardinal_direction=east	0	2
+minecraft:chest[facing=west,type=left,waterlogged=false]	0	chest	minecraft:cardinal_direction=west	0	2
+minecraft:chest[facing=west,type=left,waterlogged=false]	1	chest	minecraft:cardinal_direction=north	0	2
+minecraft:chest[facing=west,type=left,waterlogged=false]	2	chest	minecraft:cardinal_direction=east	0	2
+minecraft:chest[facing=west,type=left,waterlogged=false]	3	chest	minecraft:cardinal_direction=south	0	2
+minecraft:chest[facing=west,type=right,waterlogged=false]	0	chest	minecraft:cardinal_direction=west	0	2
+minecraft:chest[facing=west,type=right,waterlogged=false]	1	chest	minecraft:cardinal_direction=north	0	2
+minecraft:chest[facing=west,type=right,waterlogged=false]	2	chest	minecraft:cardinal_direction=east	0	2
+minecraft:chest[facing=west,type=right,waterlogged=false]	3	chest	minecraft:cardinal_direction=south	0	2
 minecraft:chest[facing=west,type=single,waterlogged=false]	0	chest	minecraft:cardinal_direction=west	0	2
 minecraft:chest[facing=west,type=single,waterlogged=false]	1	chest	minecraft:cardinal_direction=north	0	2
 minecraft:chest[facing=west,type=single,waterlogged=false]	2	chest	minecraft:cardinal_direction=east	0	2
@@ -802,10 +1034,18 @@ minecraft:clay	0	clay		0	3
 minecraft:clay	1	clay		0	3
 minecraft:clay	2	clay		0	3
 minecraft:clay	3	clay		0	3
+minecraft:closed_eyeblossom	0	closed_eyeblossom		0	0
+minecraft:closed_eyeblossom	1	closed_eyeblossom		0	0
+minecraft:closed_eyeblossom	2	closed_eyeblossom		0	0
+minecraft:closed_eyeblossom	3	closed_eyeblossom		0	0
 minecraft:coal_block	0	coal_block		0	3
 minecraft:coal_block	1	coal_block		0	3
 minecraft:coal_block	2	coal_block		0	3
 minecraft:coal_block	3	coal_block		0	3
+minecraft:coal_ore	0	coal_ore		0	3
+minecraft:coal_ore	1	coal_ore		0	3
+minecraft:coal_ore	2	coal_ore		0	3
+minecraft:coal_ore	3	coal_ore		0	3
 minecraft:coarse_dirt	0	coarse_dirt		0	3
 minecraft:coarse_dirt	1	coarse_dirt		0	3
 minecraft:coarse_dirt	2	coarse_dirt		0	3
@@ -1006,10 +1246,22 @@ minecraft:cobblestone_wall[east=false,north=true,south=true,up=false,waterlogged
 minecraft:cobblestone_wall[east=false,north=true,south=true,up=false,waterlogged=false,west=false]	1	cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
 minecraft:cobblestone_wall[east=false,north=true,south=true,up=false,waterlogged=false,west=false]	2	cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
 minecraft:cobblestone_wall[east=false,north=true,south=true,up=false,waterlogged=false,west=false]	3	cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:cobblestone_wall[east=low,north=low,south=none,up=true,waterlogged=false,west=none]	0	cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:cobblestone_wall[east=low,north=low,south=none,up=true,waterlogged=false,west=none]	1	cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:cobblestone_wall[east=low,north=low,south=none,up=true,waterlogged=false,west=none]	2	cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:cobblestone_wall[east=low,north=low,south=none,up=true,waterlogged=false,west=none]	3	cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:cobblestone_wall[east=low,north=none,south=low,up=true,waterlogged=false,west=none]	0	cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:cobblestone_wall[east=low,north=none,south=low,up=true,waterlogged=false,west=none]	1	cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:cobblestone_wall[east=low,north=none,south=low,up=true,waterlogged=false,west=none]	2	cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:cobblestone_wall[east=low,north=none,south=low,up=true,waterlogged=false,west=none]	3	cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
 minecraft:cobblestone_wall[east=low,north=none,south=none,up=false,waterlogged=false,west=low]	0	cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
 minecraft:cobblestone_wall[east=low,north=none,south=none,up=false,waterlogged=false,west=low]	1	cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
 minecraft:cobblestone_wall[east=low,north=none,south=none,up=false,waterlogged=false,west=low]	2	cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
 minecraft:cobblestone_wall[east=low,north=none,south=none,up=false,waterlogged=false,west=low]	3	cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:cobblestone_wall[east=low,north=none,south=none,up=true,waterlogged=false,west=none]	0	cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:cobblestone_wall[east=low,north=none,south=none,up=true,waterlogged=false,west=none]	1	cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:cobblestone_wall[east=low,north=none,south=none,up=true,waterlogged=false,west=none]	2	cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:cobblestone_wall[east=low,north=none,south=none,up=true,waterlogged=false,west=none]	3	cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
 minecraft:cobblestone_wall[east=none,north=low,south=low,up=false,waterlogged=false,west=none]	0	cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
 minecraft:cobblestone_wall[east=none,north=low,south=low,up=false,waterlogged=false,west=none]	1	cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
 minecraft:cobblestone_wall[east=none,north=low,south=low,up=false,waterlogged=false,west=none]	2	cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
@@ -1018,6 +1270,10 @@ minecraft:cobblestone_wall[east=none,north=low,south=none,up=true,waterlogged=fa
 minecraft:cobblestone_wall[east=none,north=low,south=none,up=true,waterlogged=false,west=low]	1	cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
 minecraft:cobblestone_wall[east=none,north=low,south=none,up=true,waterlogged=false,west=low]	2	cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
 minecraft:cobblestone_wall[east=none,north=low,south=none,up=true,waterlogged=false,west=low]	3	cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:cobblestone_wall[east=none,north=none,south=low,up=true,waterlogged=false,west=low]	0	cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:cobblestone_wall[east=none,north=none,south=low,up=true,waterlogged=false,west=low]	1	cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:cobblestone_wall[east=none,north=none,south=low,up=true,waterlogged=false,west=low]	2	cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:cobblestone_wall[east=none,north=none,south=low,up=true,waterlogged=false,west=low]	3	cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
 minecraft:cobblestone_wall[east=none,north=none,south=low,up=true,waterlogged=false,west=none]	0	cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
 minecraft:cobblestone_wall[east=none,north=none,south=low,up=true,waterlogged=false,west=none]	1	cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
 minecraft:cobblestone_wall[east=none,north=none,south=low,up=true,waterlogged=false,west=none]	2	cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
@@ -1074,6 +1330,22 @@ minecraft:cobweb	0	web		0	0
 minecraft:cobweb	1	web		0	0
 minecraft:cobweb	2	web		0	0
 minecraft:cobweb	3	web		0	0
+minecraft:cocoa[age=2,facing=east]	0	cocoa	age=2,direction=3	0	2
+minecraft:cocoa[age=2,facing=east]	1	cocoa	age=2,direction=0	0	2
+minecraft:cocoa[age=2,facing=east]	2	cocoa	age=2,direction=1	0	2
+minecraft:cocoa[age=2,facing=east]	3	cocoa	age=2,direction=2	0	2
+minecraft:cocoa[age=2,facing=north]	0	cocoa	age=2,direction=2	0	2
+minecraft:cocoa[age=2,facing=north]	1	cocoa	age=2,direction=3	0	2
+minecraft:cocoa[age=2,facing=north]	2	cocoa	age=2,direction=0	0	2
+minecraft:cocoa[age=2,facing=north]	3	cocoa	age=2,direction=1	0	2
+minecraft:cocoa[age=2,facing=south]	0	cocoa	age=2,direction=0	0	2
+minecraft:cocoa[age=2,facing=south]	1	cocoa	age=2,direction=1	0	2
+minecraft:cocoa[age=2,facing=south]	2	cocoa	age=2,direction=2	0	2
+minecraft:cocoa[age=2,facing=south]	3	cocoa	age=2,direction=3	0	2
+minecraft:cocoa[age=2,facing=west]	0	cocoa	age=2,direction=1	0	2
+minecraft:cocoa[age=2,facing=west]	1	cocoa	age=2,direction=2	0	2
+minecraft:cocoa[age=2,facing=west]	2	cocoa	age=2,direction=3	0	2
+minecraft:cocoa[age=2,facing=west]	3	cocoa	age=2,direction=0	0	2
 minecraft:comparator[facing=east,mode=compare,powered=false]	0	unpowered_comparator	minecraft:cardinal_direction=east,output_lit_bit=0,output_subtract_bit=0	0	2
 minecraft:comparator[facing=east,mode=compare,powered=false]	1	unpowered_comparator	minecraft:cardinal_direction=south,output_lit_bit=0,output_subtract_bit=0	0	2
 minecraft:comparator[facing=east,mode=compare,powered=false]	2	unpowered_comparator	minecraft:cardinal_direction=west,output_lit_bit=0,output_subtract_bit=0	0	2
@@ -1106,6 +1378,10 @@ minecraft:copper_block	0	copper_block		0	3
 minecraft:copper_block	1	copper_block		0	3
 minecraft:copper_block	2	copper_block		0	3
 minecraft:copper_block	3	copper_block		0	3
+minecraft:cornflower	0	cornflower		0	0
+minecraft:cornflower	1	cornflower		0	0
+minecraft:cornflower	2	cornflower		0	0
+minecraft:cornflower	3	cornflower		0	0
 minecraft:cracked_deepslate_bricks	0	cracked_deepslate_bricks		0	3
 minecraft:cracked_deepslate_bricks	1	cracked_deepslate_bricks		0	3
 minecraft:cracked_deepslate_bricks	2	cracked_deepslate_bricks		0	3
@@ -1122,6 +1398,10 @@ minecraft:crafting_table	0	crafting_table		0	3
 minecraft:crafting_table	1	crafting_table		0	3
 minecraft:crafting_table	2	crafting_table		0	3
 minecraft:crafting_table	3	crafting_table		0	3
+minecraft:creaking_heart[axis=y,creaking_heart_state=dormant,natural=false]	0	creaking_heart	creaking_heart_state=uprooted,natural=0,pillar_axis=y	0	3
+minecraft:creaking_heart[axis=y,creaking_heart_state=dormant,natural=false]	1	creaking_heart	creaking_heart_state=uprooted,natural=0,pillar_axis=y	0	3
+minecraft:creaking_heart[axis=y,creaking_heart_state=dormant,natural=false]	2	creaking_heart	creaking_heart_state=uprooted,natural=0,pillar_axis=y	0	3
+minecraft:creaking_heart[axis=y,creaking_heart_state=dormant,natural=false]	3	creaking_heart	creaking_heart_state=uprooted,natural=0,pillar_axis=y	0	3
 minecraft:cut_sandstone	0	cut_sandstone		0	3
 minecraft:cut_sandstone	1	cut_sandstone		0	3
 minecraft:cut_sandstone	2	cut_sandstone		0	3
@@ -1818,6 +2098,10 @@ minecraft:dirt[snowy=false,variant=dirt]	0	dirt		0	3
 minecraft:dirt[snowy=false,variant=dirt]	1	dirt		0	3
 minecraft:dirt[snowy=false,variant=dirt]	2	dirt		0	3
 minecraft:dirt[snowy=false,variant=dirt]	3	dirt		0	3
+minecraft:dirt_path	0	grass_path		0	2
+minecraft:dirt_path	1	grass_path		0	2
+minecraft:dirt_path	2	grass_path		0	2
+minecraft:dirt_path	3	grass_path		0	2
 minecraft:dispenser[facing=east,triggered=false]	0	dispenser	facing_direction=5,triggered_bit=0	0	3
 minecraft:dispenser[facing=east,triggered=false]	1	dispenser	facing_direction=3,triggered_bit=0	0	3
 minecraft:dispenser[facing=east,triggered=false]	2	dispenser	facing_direction=4,triggered_bit=0	0	3
@@ -1858,6 +2142,10 @@ minecraft:fern	0	fern		0	0
 minecraft:fern	1	fern		0	0
 minecraft:fern	2	fern		0	0
 minecraft:fern	3	fern		0	0
+minecraft:firefly_bush	0	firefly_bush		0	0
+minecraft:firefly_bush	1	firefly_bush		0	0
+minecraft:firefly_bush	2	firefly_bush		0	0
+minecraft:firefly_bush	3	firefly_bush		0	0
 minecraft:fletching_table	0	fletching_table		0	3
 minecraft:fletching_table	1	fletching_table		0	3
 minecraft:fletching_table	2	fletching_table		0	3
@@ -1938,6 +2226,10 @@ minecraft:gold_block	0	gold_block		0	3
 minecraft:gold_block	1	gold_block		0	3
 minecraft:gold_block	2	gold_block		0	3
 minecraft:gold_block	3	gold_block		0	3
+minecraft:gold_ore	0	gold_ore		0	3
+minecraft:gold_ore	1	gold_ore		0	3
+minecraft:gold_ore	2	gold_ore		0	3
+minecraft:gold_ore	3	gold_ore		0	3
 minecraft:granite	0	granite		0	3
 minecraft:granite	1	granite		0	3
 minecraft:granite	2	granite		0	3
@@ -2154,6 +2446,10 @@ minecraft:iron_door[facing=west,half=upper,hinge=right,open=false,powered=false]
 minecraft:iron_door[facing=west,half=upper,hinge=right,open=false,powered=false]	1	iron_door	door_hinge_bit=1,minecraft:cardinal_direction=south,open_bit=0,upper_block_bit=1	0	2
 minecraft:iron_door[facing=west,half=upper,hinge=right,open=false,powered=false]	2	iron_door	door_hinge_bit=1,minecraft:cardinal_direction=south,open_bit=0,upper_block_bit=1	0	2
 minecraft:iron_door[facing=west,half=upper,hinge=right,open=false,powered=false]	3	iron_door	door_hinge_bit=1,minecraft:cardinal_direction=south,open_bit=0,upper_block_bit=1	0	2
+minecraft:iron_ore	0	iron_ore		0	3
+minecraft:iron_ore	1	iron_ore		0	3
+minecraft:iron_ore	2	iron_ore		0	3
+minecraft:iron_ore	3	iron_ore		0	3
 minecraft:iron_trapdoor[facing=north,half=top,open=false,powered=false,waterlogged=false]	0	iron_trapdoor	direction=3,open_bit=0,upside_down_bit=1	0	2
 minecraft:iron_trapdoor[facing=north,half=top,open=false,powered=false,waterlogged=false]	1	iron_trapdoor	direction=0,open_bit=0,upside_down_bit=1	0	2
 minecraft:iron_trapdoor[facing=north,half=top,open=false,powered=false,waterlogged=false]	2	iron_trapdoor	direction=2,open_bit=0,upside_down_bit=1	0	2
@@ -2254,6 +2550,22 @@ minecraft:jungle_door[facing=west,half=upper,hinge=right,open=false,powered=fals
 minecraft:jungle_door[facing=west,half=upper,hinge=right,open=false,powered=false]	1	jungle_door	door_hinge_bit=1,minecraft:cardinal_direction=south,open_bit=0,upper_block_bit=1	0	2
 minecraft:jungle_door[facing=west,half=upper,hinge=right,open=false,powered=false]	2	jungle_door	door_hinge_bit=1,minecraft:cardinal_direction=south,open_bit=0,upper_block_bit=1	0	2
 minecraft:jungle_door[facing=west,half=upper,hinge=right,open=false,powered=false]	3	jungle_door	door_hinge_bit=1,minecraft:cardinal_direction=south,open_bit=0,upper_block_bit=1	0	2
+minecraft:jungle_fence[east=false,north=false,south=false,waterlogged=false,west=false]	0	jungle_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:jungle_fence[east=false,north=false,south=false,waterlogged=false,west=false]	1	jungle_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:jungle_fence[east=false,north=false,south=false,waterlogged=false,west=false]	2	jungle_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:jungle_fence[east=false,north=false,south=false,waterlogged=false,west=false]	3	jungle_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:jungle_fence[east=false,north=false,south=false,waterlogged=false,west=true]	0	jungle_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:jungle_fence[east=false,north=false,south=false,waterlogged=false,west=true]	1	jungle_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:jungle_fence[east=false,north=false,south=false,waterlogged=false,west=true]	2	jungle_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:jungle_fence[east=false,north=false,south=false,waterlogged=false,west=true]	3	jungle_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:jungle_fence[east=false,north=false,south=true,waterlogged=false,west=false]	0	jungle_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:jungle_fence[east=false,north=false,south=true,waterlogged=false,west=false]	1	jungle_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:jungle_fence[east=false,north=false,south=true,waterlogged=false,west=false]	2	jungle_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:jungle_fence[east=false,north=false,south=true,waterlogged=false,west=false]	3	jungle_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:jungle_fence[east=false,north=true,south=false,waterlogged=false,west=false]	0	jungle_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:jungle_fence[east=false,north=true,south=false,waterlogged=false,west=false]	1	jungle_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:jungle_fence[east=false,north=true,south=false,waterlogged=false,west=false]	2	jungle_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:jungle_fence[east=false,north=true,south=false,waterlogged=false,west=false]	3	jungle_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
 minecraft:jungle_fence[east=true,north=false,south=false,waterlogged=false,west=true]	0	jungle_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
 minecraft:jungle_fence[east=true,north=false,south=false,waterlogged=false,west=true]	1	jungle_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
 minecraft:jungle_fence[east=true,north=false,south=false,waterlogged=false,west=true]	2	jungle_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
@@ -2262,6 +2574,46 @@ minecraft:jungle_fence_gate[facing=south,in_wall=true,open=false,powered=false]	
 minecraft:jungle_fence_gate[facing=south,in_wall=true,open=false,powered=false]	1	jungle_fence_gate	in_wall_bit=1,minecraft:cardinal_direction=west,open_bit=0	0	2
 minecraft:jungle_fence_gate[facing=south,in_wall=true,open=false,powered=false]	2	jungle_fence_gate	in_wall_bit=1,minecraft:cardinal_direction=north,open_bit=0	0	2
 minecraft:jungle_fence_gate[facing=south,in_wall=true,open=false,powered=false]	3	jungle_fence_gate	in_wall_bit=1,minecraft:cardinal_direction=east,open_bit=0	0	2
+minecraft:jungle_leaves[distance=1,persistent=false,waterlogged=false]	0	jungle_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:jungle_leaves[distance=1,persistent=false,waterlogged=false]	1	jungle_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:jungle_leaves[distance=1,persistent=false,waterlogged=false]	2	jungle_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:jungle_leaves[distance=1,persistent=false,waterlogged=false]	3	jungle_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:jungle_leaves[distance=1,persistent=true,waterlogged=false]	0	jungle_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:jungle_leaves[distance=1,persistent=true,waterlogged=false]	1	jungle_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:jungle_leaves[distance=1,persistent=true,waterlogged=false]	2	jungle_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:jungle_leaves[distance=1,persistent=true,waterlogged=false]	3	jungle_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:jungle_leaves[distance=2,persistent=false,waterlogged=false]	0	jungle_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:jungle_leaves[distance=2,persistent=false,waterlogged=false]	1	jungle_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:jungle_leaves[distance=2,persistent=false,waterlogged=false]	2	jungle_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:jungle_leaves[distance=2,persistent=false,waterlogged=false]	3	jungle_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:jungle_leaves[distance=2,persistent=true,waterlogged=false]	0	jungle_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:jungle_leaves[distance=2,persistent=true,waterlogged=false]	1	jungle_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:jungle_leaves[distance=2,persistent=true,waterlogged=false]	2	jungle_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:jungle_leaves[distance=2,persistent=true,waterlogged=false]	3	jungle_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:jungle_leaves[distance=3,persistent=false,waterlogged=false]	0	jungle_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:jungle_leaves[distance=3,persistent=false,waterlogged=false]	1	jungle_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:jungle_leaves[distance=3,persistent=false,waterlogged=false]	2	jungle_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:jungle_leaves[distance=3,persistent=false,waterlogged=false]	3	jungle_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:jungle_leaves[distance=4,persistent=false,waterlogged=false]	0	jungle_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:jungle_leaves[distance=4,persistent=false,waterlogged=false]	1	jungle_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:jungle_leaves[distance=4,persistent=false,waterlogged=false]	2	jungle_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:jungle_leaves[distance=4,persistent=false,waterlogged=false]	3	jungle_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:jungle_log[axis=x]	0	jungle_log	pillar_axis=x	0	3
+minecraft:jungle_log[axis=x]	1	jungle_log	pillar_axis=z	0	3
+minecraft:jungle_log[axis=x]	2	jungle_log	pillar_axis=x	0	3
+minecraft:jungle_log[axis=x]	3	jungle_log	pillar_axis=z	0	3
+minecraft:jungle_log[axis=y]	0	jungle_log	pillar_axis=y	0	3
+minecraft:jungle_log[axis=y]	1	jungle_log	pillar_axis=y	0	3
+minecraft:jungle_log[axis=y]	2	jungle_log	pillar_axis=y	0	3
+minecraft:jungle_log[axis=y]	3	jungle_log	pillar_axis=y	0	3
+minecraft:jungle_log[axis=z]	0	jungle_log	pillar_axis=z	0	3
+minecraft:jungle_log[axis=z]	1	jungle_log	pillar_axis=x	0	3
+minecraft:jungle_log[axis=z]	2	jungle_log	pillar_axis=z	0	3
+minecraft:jungle_log[axis=z]	3	jungle_log	pillar_axis=x	0	3
+minecraft:jungle_sapling[stage=1]	0	jungle_sapling	age_bit=0	0	0
+minecraft:jungle_sapling[stage=1]	1	jungle_sapling	age_bit=0	0	0
+minecraft:jungle_sapling[stage=1]	2	jungle_sapling	age_bit=0	0	0
+minecraft:jungle_sapling[stage=1]	3	jungle_sapling	age_bit=0	0	0
 minecraft:jungle_trapdoor[facing=east,half=bottom,open=true,powered=false,waterlogged=false]	0	jungle_trapdoor	direction=0,open_bit=1,upside_down_bit=0	0	2
 minecraft:jungle_trapdoor[facing=east,half=bottom,open=true,powered=false,waterlogged=false]	1	jungle_trapdoor	direction=2,open_bit=1,upside_down_bit=0	0	2
 minecraft:jungle_trapdoor[facing=east,half=bottom,open=true,powered=false,waterlogged=false]	2	jungle_trapdoor	direction=1,open_bit=1,upside_down_bit=0	0	2
@@ -2334,6 +2686,34 @@ minecraft:large_fern[half=upper]	0	large_fern	upper_block_bit=1	0	0
 minecraft:large_fern[half=upper]	1	large_fern	upper_block_bit=1	0	0
 minecraft:large_fern[half=upper]	2	large_fern	upper_block_bit=1	0	0
 minecraft:large_fern[half=upper]	3	large_fern	upper_block_bit=1	0	0
+minecraft:leaf_litter[facing=east,segment_amount=1]	0	leaf_litter	growth=0,minecraft:cardinal_direction=east	0	0
+minecraft:leaf_litter[facing=east,segment_amount=1]	1	leaf_litter	growth=0,minecraft:cardinal_direction=south	0	0
+minecraft:leaf_litter[facing=east,segment_amount=1]	2	leaf_litter	growth=0,minecraft:cardinal_direction=west	0	0
+minecraft:leaf_litter[facing=east,segment_amount=1]	3	leaf_litter	growth=0,minecraft:cardinal_direction=north	0	0
+minecraft:leaf_litter[facing=east,segment_amount=2]	0	leaf_litter	growth=0,minecraft:cardinal_direction=east	0	0
+minecraft:leaf_litter[facing=east,segment_amount=2]	1	leaf_litter	growth=0,minecraft:cardinal_direction=south	0	0
+minecraft:leaf_litter[facing=east,segment_amount=2]	2	leaf_litter	growth=0,minecraft:cardinal_direction=west	0	0
+minecraft:leaf_litter[facing=east,segment_amount=2]	3	leaf_litter	growth=0,minecraft:cardinal_direction=north	0	0
+minecraft:leaf_litter[facing=south,segment_amount=1]	0	leaf_litter	growth=0,minecraft:cardinal_direction=south	0	0
+minecraft:leaf_litter[facing=south,segment_amount=1]	1	leaf_litter	growth=0,minecraft:cardinal_direction=west	0	0
+minecraft:leaf_litter[facing=south,segment_amount=1]	2	leaf_litter	growth=0,minecraft:cardinal_direction=north	0	0
+minecraft:leaf_litter[facing=south,segment_amount=1]	3	leaf_litter	growth=0,minecraft:cardinal_direction=east	0	0
+minecraft:leaf_litter[facing=south,segment_amount=3]	0	leaf_litter	growth=0,minecraft:cardinal_direction=south	0	0
+minecraft:leaf_litter[facing=south,segment_amount=3]	1	leaf_litter	growth=0,minecraft:cardinal_direction=west	0	0
+minecraft:leaf_litter[facing=south,segment_amount=3]	2	leaf_litter	growth=0,minecraft:cardinal_direction=north	0	0
+minecraft:leaf_litter[facing=south,segment_amount=3]	3	leaf_litter	growth=0,minecraft:cardinal_direction=east	0	0
+minecraft:leaf_litter[facing=south,segment_amount=4]	0	leaf_litter	growth=0,minecraft:cardinal_direction=south	0	0
+minecraft:leaf_litter[facing=south,segment_amount=4]	1	leaf_litter	growth=0,minecraft:cardinal_direction=west	0	0
+minecraft:leaf_litter[facing=south,segment_amount=4]	2	leaf_litter	growth=0,minecraft:cardinal_direction=north	0	0
+minecraft:leaf_litter[facing=south,segment_amount=4]	3	leaf_litter	growth=0,minecraft:cardinal_direction=east	0	0
+minecraft:leaf_litter[facing=west,segment_amount=1]	0	leaf_litter	growth=0,minecraft:cardinal_direction=west	0	0
+minecraft:leaf_litter[facing=west,segment_amount=1]	1	leaf_litter	growth=0,minecraft:cardinal_direction=north	0	0
+minecraft:leaf_litter[facing=west,segment_amount=1]	2	leaf_litter	growth=0,minecraft:cardinal_direction=east	0	0
+minecraft:leaf_litter[facing=west,segment_amount=1]	3	leaf_litter	growth=0,minecraft:cardinal_direction=south	0	0
+minecraft:leaf_litter[facing=west,segment_amount=3]	0	leaf_litter	growth=0,minecraft:cardinal_direction=west	0	0
+minecraft:leaf_litter[facing=west,segment_amount=3]	1	leaf_litter	growth=0,minecraft:cardinal_direction=north	0	0
+minecraft:leaf_litter[facing=west,segment_amount=3]	2	leaf_litter	growth=0,minecraft:cardinal_direction=east	0	0
+minecraft:leaf_litter[facing=west,segment_amount=3]	3	leaf_litter	growth=0,minecraft:cardinal_direction=south	0	0
 minecraft:leaves2[check_decay=false,decayable=false,variant=dark_oak]	0	dark_oak_leaves	persistent_bit=0,update_bit=0	0	3
 minecraft:leaves2[check_decay=false,decayable=false,variant=dark_oak]	1	dark_oak_leaves	persistent_bit=0,update_bit=0	0	3
 minecraft:leaves2[check_decay=false,decayable=false,variant=dark_oak]	2	dark_oak_leaves	persistent_bit=0,update_bit=0	0	3
@@ -2438,6 +2818,22 @@ minecraft:light_gray_terracotta	0	light_gray_terracotta		0	3
 minecraft:light_gray_terracotta	1	light_gray_terracotta		0	3
 minecraft:light_gray_terracotta	2	light_gray_terracotta		0	3
 minecraft:light_gray_terracotta	3	light_gray_terracotta		0	3
+minecraft:lilac[half=lower]	0	lilac	upper_block_bit=0	0	0
+minecraft:lilac[half=lower]	1	lilac	upper_block_bit=0	0	0
+minecraft:lilac[half=lower]	2	lilac	upper_block_bit=0	0	0
+minecraft:lilac[half=lower]	3	lilac	upper_block_bit=0	0	0
+minecraft:lilac[half=upper]	0	lilac	upper_block_bit=1	0	0
+minecraft:lilac[half=upper]	1	lilac	upper_block_bit=1	0	0
+minecraft:lilac[half=upper]	2	lilac	upper_block_bit=1	0	0
+minecraft:lilac[half=upper]	3	lilac	upper_block_bit=1	0	0
+minecraft:lily_of_the_valley	0	lily_of_the_valley		0	0
+minecraft:lily_of_the_valley	1	lily_of_the_valley		0	0
+minecraft:lily_of_the_valley	2	lily_of_the_valley		0	0
+minecraft:lily_of_the_valley	3	lily_of_the_valley		0	0
+minecraft:lily_pad	0	waterlily		0	2
+minecraft:lily_pad	1	waterlily		0	2
+minecraft:lily_pad	2	waterlily		0	2
+minecraft:lily_pad	3	waterlily		0	2
 minecraft:lime_bed[facing=east,occupied=false,part=foot]	0	bed	direction=3,head_piece_bit=0,occupied_bit=0	0	2
 minecraft:lime_bed[facing=east,occupied=false,part=foot]	1	bed	direction=0,head_piece_bit=0,occupied_bit=0	0	2
 minecraft:lime_bed[facing=east,occupied=false,part=foot]	2	bed	direction=1,head_piece_bit=0,occupied_bit=0	0	2
@@ -2682,6 +3078,34 @@ minecraft:mossy_cobblestone_wall[east=false,north=false,south=false,up=true,wate
 minecraft:mossy_cobblestone_wall[east=false,north=false,south=false,up=true,waterlogged=false,west=false]	1	mossy_cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
 minecraft:mossy_cobblestone_wall[east=false,north=false,south=false,up=true,waterlogged=false,west=false]	2	mossy_cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
 minecraft:mossy_cobblestone_wall[east=false,north=false,south=false,up=true,waterlogged=false,west=false]	3	mossy_cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:mossy_cobblestone_wall[east=low,north=none,south=low,up=true,waterlogged=false,west=none]	0	mossy_cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:mossy_cobblestone_wall[east=low,north=none,south=low,up=true,waterlogged=false,west=none]	1	mossy_cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:mossy_cobblestone_wall[east=low,north=none,south=low,up=true,waterlogged=false,west=none]	2	mossy_cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:mossy_cobblestone_wall[east=low,north=none,south=low,up=true,waterlogged=false,west=none]	3	mossy_cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:mossy_cobblestone_wall[east=low,north=none,south=none,up=false,waterlogged=false,west=low]	0	mossy_cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:mossy_cobblestone_wall[east=low,north=none,south=none,up=false,waterlogged=false,west=low]	1	mossy_cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:mossy_cobblestone_wall[east=low,north=none,south=none,up=false,waterlogged=false,west=low]	2	mossy_cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:mossy_cobblestone_wall[east=low,north=none,south=none,up=false,waterlogged=false,west=low]	3	mossy_cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:mossy_cobblestone_wall[east=low,north=none,south=none,up=true,waterlogged=false,west=none]	0	mossy_cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:mossy_cobblestone_wall[east=low,north=none,south=none,up=true,waterlogged=false,west=none]	1	mossy_cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:mossy_cobblestone_wall[east=low,north=none,south=none,up=true,waterlogged=false,west=none]	2	mossy_cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:mossy_cobblestone_wall[east=low,north=none,south=none,up=true,waterlogged=false,west=none]	3	mossy_cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:mossy_cobblestone_wall[east=none,north=low,south=low,up=false,waterlogged=false,west=none]	0	mossy_cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:mossy_cobblestone_wall[east=none,north=low,south=low,up=false,waterlogged=false,west=none]	1	mossy_cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:mossy_cobblestone_wall[east=none,north=low,south=low,up=false,waterlogged=false,west=none]	2	mossy_cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:mossy_cobblestone_wall[east=none,north=low,south=low,up=false,waterlogged=false,west=none]	3	mossy_cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:mossy_cobblestone_wall[east=none,north=low,south=none,up=true,waterlogged=false,west=none]	0	mossy_cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:mossy_cobblestone_wall[east=none,north=low,south=none,up=true,waterlogged=false,west=none]	1	mossy_cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:mossy_cobblestone_wall[east=none,north=low,south=none,up=true,waterlogged=false,west=none]	2	mossy_cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:mossy_cobblestone_wall[east=none,north=low,south=none,up=true,waterlogged=false,west=none]	3	mossy_cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:mossy_cobblestone_wall[east=none,north=none,south=low,up=true,waterlogged=false,west=none]	0	mossy_cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:mossy_cobblestone_wall[east=none,north=none,south=low,up=true,waterlogged=false,west=none]	1	mossy_cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:mossy_cobblestone_wall[east=none,north=none,south=low,up=true,waterlogged=false,west=none]	2	mossy_cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:mossy_cobblestone_wall[east=none,north=none,south=low,up=true,waterlogged=false,west=none]	3	mossy_cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:mossy_cobblestone_wall[east=none,north=none,south=none,up=true,waterlogged=false,west=low]	0	mossy_cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:mossy_cobblestone_wall[east=none,north=none,south=none,up=true,waterlogged=false,west=low]	1	mossy_cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:mossy_cobblestone_wall[east=none,north=none,south=none,up=true,waterlogged=false,west=low]	2	mossy_cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:mossy_cobblestone_wall[east=none,north=none,south=none,up=true,waterlogged=false,west=low]	3	mossy_cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
 minecraft:mossy_stone_bricks	0	mossy_stone_bricks		0	3
 minecraft:mossy_stone_bricks	1	mossy_stone_bricks		0	3
 minecraft:mossy_stone_bricks	2	mossy_stone_bricks		0	3
@@ -2798,6 +3222,22 @@ minecraft:muddy_mangrove_roots[axis=x]	0	muddy_mangrove_roots	pillar_axis=x	0	3
 minecraft:muddy_mangrove_roots[axis=x]	1	muddy_mangrove_roots	pillar_axis=z	0	3
 minecraft:muddy_mangrove_roots[axis=x]	2	muddy_mangrove_roots	pillar_axis=x	0	3
 minecraft:muddy_mangrove_roots[axis=x]	3	muddy_mangrove_roots	pillar_axis=z	0	3
+minecraft:mushroom_stem[down=false,east=true,north=true,south=true,up=false,west=true]	0	mushroom_stem	huge_mushroom_bits=15	0	3
+minecraft:mushroom_stem[down=false,east=true,north=true,south=true,up=false,west=true]	1	mushroom_stem	huge_mushroom_bits=15	0	3
+minecraft:mushroom_stem[down=false,east=true,north=true,south=true,up=false,west=true]	2	mushroom_stem	huge_mushroom_bits=15	0	3
+minecraft:mushroom_stem[down=false,east=true,north=true,south=true,up=false,west=true]	3	mushroom_stem	huge_mushroom_bits=15	0	3
+minecraft:mushroom_stem[down=false,east=true,north=true,south=true,up=true,west=true]	0	mushroom_stem	huge_mushroom_bits=15	0	3
+minecraft:mushroom_stem[down=false,east=true,north=true,south=true,up=true,west=true]	1	mushroom_stem	huge_mushroom_bits=15	0	3
+minecraft:mushroom_stem[down=false,east=true,north=true,south=true,up=true,west=true]	2	mushroom_stem	huge_mushroom_bits=15	0	3
+minecraft:mushroom_stem[down=false,east=true,north=true,south=true,up=true,west=true]	3	mushroom_stem	huge_mushroom_bits=15	0	3
+minecraft:mushroom_stem[down=true,east=true,north=true,south=true,up=false,west=true]	0	mushroom_stem	huge_mushroom_bits=15	0	3
+minecraft:mushroom_stem[down=true,east=true,north=true,south=true,up=false,west=true]	1	mushroom_stem	huge_mushroom_bits=15	0	3
+minecraft:mushroom_stem[down=true,east=true,north=true,south=true,up=false,west=true]	2	mushroom_stem	huge_mushroom_bits=15	0	3
+minecraft:mushroom_stem[down=true,east=true,north=true,south=true,up=false,west=true]	3	mushroom_stem	huge_mushroom_bits=15	0	3
+minecraft:mycelium[snowy=false]	0	mycelium		0	3
+minecraft:mycelium[snowy=false]	1	mycelium		0	3
+minecraft:mycelium[snowy=false]	2	mycelium		0	3
+minecraft:mycelium[snowy=false]	3	mycelium		0	3
 minecraft:netherrack	0	netherrack		0	3
 minecraft:netherrack	1	netherrack		0	3
 minecraft:netherrack	2	netherrack		0	3
@@ -2934,10 +3374,26 @@ minecraft:oak_fence[east=true,north=false,south=true,waterlogged=false,west=fals
 minecraft:oak_fence[east=true,north=false,south=true,waterlogged=false,west=false]	1	oak_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
 minecraft:oak_fence[east=true,north=false,south=true,waterlogged=false,west=false]	2	oak_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
 minecraft:oak_fence[east=true,north=false,south=true,waterlogged=false,west=false]	3	oak_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:oak_fence[east=true,north=false,south=true,waterlogged=false,west=true]	0	oak_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:oak_fence[east=true,north=false,south=true,waterlogged=false,west=true]	1	oak_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:oak_fence[east=true,north=false,south=true,waterlogged=false,west=true]	2	oak_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:oak_fence[east=true,north=false,south=true,waterlogged=false,west=true]	3	oak_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
 minecraft:oak_fence[east=true,north=true,south=false,waterlogged=false,west=false]	0	oak_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
 minecraft:oak_fence[east=true,north=true,south=false,waterlogged=false,west=false]	1	oak_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
 minecraft:oak_fence[east=true,north=true,south=false,waterlogged=false,west=false]	2	oak_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
 minecraft:oak_fence[east=true,north=true,south=false,waterlogged=false,west=false]	3	oak_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:oak_fence[east=true,north=true,south=false,waterlogged=false,west=true]	0	oak_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:oak_fence[east=true,north=true,south=false,waterlogged=false,west=true]	1	oak_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:oak_fence[east=true,north=true,south=false,waterlogged=false,west=true]	2	oak_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:oak_fence[east=true,north=true,south=false,waterlogged=false,west=true]	3	oak_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:oak_fence[east=true,north=true,south=true,waterlogged=false,west=false]	0	oak_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:oak_fence[east=true,north=true,south=true,waterlogged=false,west=false]	1	oak_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:oak_fence[east=true,north=true,south=true,waterlogged=false,west=false]	2	oak_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:oak_fence[east=true,north=true,south=true,waterlogged=false,west=false]	3	oak_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:oak_fence[east=true,north=true,south=true,waterlogged=false,west=true]	0	oak_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:oak_fence[east=true,north=true,south=true,waterlogged=false,west=true]	1	oak_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:oak_fence[east=true,north=true,south=true,waterlogged=false,west=true]	2	oak_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:oak_fence[east=true,north=true,south=true,waterlogged=false,west=true]	3	oak_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
 minecraft:oak_fence_gate[facing=east,in_wall=false,open=false,powered=false]	0	fence_gate	in_wall_bit=0,minecraft:cardinal_direction=east,open_bit=0	0	2
 minecraft:oak_fence_gate[facing=east,in_wall=false,open=false,powered=false]	1	fence_gate	in_wall_bit=0,minecraft:cardinal_direction=south,open_bit=0	0	2
 minecraft:oak_fence_gate[facing=east,in_wall=false,open=false,powered=false]	2	fence_gate	in_wall_bit=0,minecraft:cardinal_direction=west,open_bit=0	0	2
@@ -2950,6 +3406,10 @@ minecraft:oak_fence_gate[facing=south,in_wall=false,open=false,powered=false]	0	
 minecraft:oak_fence_gate[facing=south,in_wall=false,open=false,powered=false]	1	fence_gate	in_wall_bit=0,minecraft:cardinal_direction=west,open_bit=0	0	2
 minecraft:oak_fence_gate[facing=south,in_wall=false,open=false,powered=false]	2	fence_gate	in_wall_bit=0,minecraft:cardinal_direction=north,open_bit=0	0	2
 minecraft:oak_fence_gate[facing=south,in_wall=false,open=false,powered=false]	3	fence_gate	in_wall_bit=0,minecraft:cardinal_direction=east,open_bit=0	0	2
+minecraft:oak_leaves[distance=1,persistent=false,waterlogged=false]	0	oak_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:oak_leaves[distance=1,persistent=false,waterlogged=false]	1	oak_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:oak_leaves[distance=1,persistent=false,waterlogged=false]	2	oak_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:oak_leaves[distance=1,persistent=false,waterlogged=false]	3	oak_leaves	persistent_bit=0,update_bit=0	0	3
 minecraft:oak_leaves[distance=1,persistent=false]	0	oak_leaves	persistent_bit=0,update_bit=0	0	3
 minecraft:oak_leaves[distance=1,persistent=false]	1	oak_leaves	persistent_bit=0,update_bit=0	0	3
 minecraft:oak_leaves[distance=1,persistent=false]	2	oak_leaves	persistent_bit=0,update_bit=0	0	3
@@ -2962,6 +3422,10 @@ minecraft:oak_leaves[distance=1,persistent=true]	0	oak_leaves	persistent_bit=0,u
 minecraft:oak_leaves[distance=1,persistent=true]	1	oak_leaves	persistent_bit=0,update_bit=0	0	3
 minecraft:oak_leaves[distance=1,persistent=true]	2	oak_leaves	persistent_bit=0,update_bit=0	0	3
 minecraft:oak_leaves[distance=1,persistent=true]	3	oak_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:oak_leaves[distance=2,persistent=false,waterlogged=false]	0	oak_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:oak_leaves[distance=2,persistent=false,waterlogged=false]	1	oak_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:oak_leaves[distance=2,persistent=false,waterlogged=false]	2	oak_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:oak_leaves[distance=2,persistent=false,waterlogged=false]	3	oak_leaves	persistent_bit=0,update_bit=0	0	3
 minecraft:oak_leaves[distance=2,persistent=false]	0	oak_leaves	persistent_bit=0,update_bit=0	0	3
 minecraft:oak_leaves[distance=2,persistent=false]	1	oak_leaves	persistent_bit=0,update_bit=0	0	3
 minecraft:oak_leaves[distance=2,persistent=false]	2	oak_leaves	persistent_bit=0,update_bit=0	0	3
@@ -2974,6 +3438,10 @@ minecraft:oak_leaves[distance=2,persistent=true]	0	oak_leaves	persistent_bit=0,u
 minecraft:oak_leaves[distance=2,persistent=true]	1	oak_leaves	persistent_bit=0,update_bit=0	0	3
 minecraft:oak_leaves[distance=2,persistent=true]	2	oak_leaves	persistent_bit=0,update_bit=0	0	3
 minecraft:oak_leaves[distance=2,persistent=true]	3	oak_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:oak_leaves[distance=3,persistent=false,waterlogged=false]	0	oak_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:oak_leaves[distance=3,persistent=false,waterlogged=false]	1	oak_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:oak_leaves[distance=3,persistent=false,waterlogged=false]	2	oak_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:oak_leaves[distance=3,persistent=false,waterlogged=false]	3	oak_leaves	persistent_bit=0,update_bit=0	0	3
 minecraft:oak_leaves[distance=3,persistent=true,waterlogged=false]	0	oak_leaves	persistent_bit=0,update_bit=0	0	3
 minecraft:oak_leaves[distance=3,persistent=true,waterlogged=false]	1	oak_leaves	persistent_bit=0,update_bit=0	0	3
 minecraft:oak_leaves[distance=3,persistent=true,waterlogged=false]	2	oak_leaves	persistent_bit=0,update_bit=0	0	3
@@ -2982,6 +3450,30 @@ minecraft:oak_leaves[distance=3,persistent=true]	0	oak_leaves	persistent_bit=0,u
 minecraft:oak_leaves[distance=3,persistent=true]	1	oak_leaves	persistent_bit=0,update_bit=0	0	3
 minecraft:oak_leaves[distance=3,persistent=true]	2	oak_leaves	persistent_bit=0,update_bit=0	0	3
 minecraft:oak_leaves[distance=3,persistent=true]	3	oak_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:oak_leaves[distance=4,persistent=false,waterlogged=false]	0	oak_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:oak_leaves[distance=4,persistent=false,waterlogged=false]	1	oak_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:oak_leaves[distance=4,persistent=false,waterlogged=false]	2	oak_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:oak_leaves[distance=4,persistent=false,waterlogged=false]	3	oak_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:oak_leaves[distance=4,persistent=true,waterlogged=false]	0	oak_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:oak_leaves[distance=4,persistent=true,waterlogged=false]	1	oak_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:oak_leaves[distance=4,persistent=true,waterlogged=false]	2	oak_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:oak_leaves[distance=4,persistent=true,waterlogged=false]	3	oak_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:oak_leaves[distance=5,persistent=false,waterlogged=false]	0	oak_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:oak_leaves[distance=5,persistent=false,waterlogged=false]	1	oak_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:oak_leaves[distance=5,persistent=false,waterlogged=false]	2	oak_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:oak_leaves[distance=5,persistent=false,waterlogged=false]	3	oak_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:oak_leaves[distance=5,persistent=true,waterlogged=false]	0	oak_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:oak_leaves[distance=5,persistent=true,waterlogged=false]	1	oak_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:oak_leaves[distance=5,persistent=true,waterlogged=false]	2	oak_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:oak_leaves[distance=5,persistent=true,waterlogged=false]	3	oak_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:oak_leaves[distance=6,persistent=false,waterlogged=false]	0	oak_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:oak_leaves[distance=6,persistent=false,waterlogged=false]	1	oak_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:oak_leaves[distance=6,persistent=false,waterlogged=false]	2	oak_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:oak_leaves[distance=6,persistent=false,waterlogged=false]	3	oak_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:oak_leaves[distance=6,persistent=true,waterlogged=false]	0	oak_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:oak_leaves[distance=6,persistent=true,waterlogged=false]	1	oak_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:oak_leaves[distance=6,persistent=true,waterlogged=false]	2	oak_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:oak_leaves[distance=6,persistent=true,waterlogged=false]	3	oak_leaves	persistent_bit=0,update_bit=0	0	3
 minecraft:oak_log	0	oak_log	pillar_axis=y	0	3
 minecraft:oak_log	1	oak_log	pillar_axis=y	0	3
 minecraft:oak_log	2	oak_log	pillar_axis=y	0	3
@@ -3270,6 +3762,10 @@ minecraft:orange_terracotta	0	orange_terracotta		0	3
 minecraft:orange_terracotta	1	orange_terracotta		0	3
 minecraft:orange_terracotta	2	orange_terracotta		0	3
 minecraft:orange_terracotta	3	orange_terracotta		0	3
+minecraft:orange_tulip	0	orange_tulip		0	0
+minecraft:orange_tulip	1	orange_tulip		0	0
+minecraft:orange_tulip	2	orange_tulip		0	0
+minecraft:orange_tulip	3	orange_tulip		0	0
 minecraft:oxeye_daisy	0	oxeye_daisy		0	0
 minecraft:oxeye_daisy	1	oxeye_daisy		0	0
 minecraft:oxeye_daisy	2	oxeye_daisy		0	0
@@ -3278,6 +3774,62 @@ minecraft:oxidized_chiseled_copper	0	oxidized_chiseled_copper		0	3
 minecraft:oxidized_chiseled_copper	1	oxidized_chiseled_copper		0	3
 minecraft:oxidized_chiseled_copper	2	oxidized_chiseled_copper		0	3
 minecraft:oxidized_chiseled_copper	3	oxidized_chiseled_copper		0	3
+minecraft:oxidized_copper_chest[facing=east,type=single,waterlogged=false]	0	oxidized_copper_chest	minecraft:cardinal_direction=east	0	2
+minecraft:oxidized_copper_chest[facing=east,type=single,waterlogged=false]	1	oxidized_copper_chest	minecraft:cardinal_direction=south	0	2
+minecraft:oxidized_copper_chest[facing=east,type=single,waterlogged=false]	2	oxidized_copper_chest	minecraft:cardinal_direction=west	0	2
+minecraft:oxidized_copper_chest[facing=east,type=single,waterlogged=false]	3	oxidized_copper_chest	minecraft:cardinal_direction=north	0	2
+minecraft:oxidized_copper_chest[facing=east,type=single,waterlogged=true]	0	oxidized_copper_chest	minecraft:cardinal_direction=east	1	2
+minecraft:oxidized_copper_chest[facing=east,type=single,waterlogged=true]	1	oxidized_copper_chest	minecraft:cardinal_direction=south	1	2
+minecraft:oxidized_copper_chest[facing=east,type=single,waterlogged=true]	2	oxidized_copper_chest	minecraft:cardinal_direction=west	1	2
+minecraft:oxidized_copper_chest[facing=east,type=single,waterlogged=true]	3	oxidized_copper_chest	minecraft:cardinal_direction=north	1	2
+minecraft:oxidized_copper_chest[facing=north,type=single,waterlogged=false]	0	oxidized_copper_chest	minecraft:cardinal_direction=north	0	2
+minecraft:oxidized_copper_chest[facing=north,type=single,waterlogged=false]	1	oxidized_copper_chest	minecraft:cardinal_direction=east	0	2
+minecraft:oxidized_copper_chest[facing=north,type=single,waterlogged=false]	2	oxidized_copper_chest	minecraft:cardinal_direction=south	0	2
+minecraft:oxidized_copper_chest[facing=north,type=single,waterlogged=false]	3	oxidized_copper_chest	minecraft:cardinal_direction=west	0	2
+minecraft:oxidized_copper_chest[facing=south,type=single,waterlogged=false]	0	oxidized_copper_chest	minecraft:cardinal_direction=south	0	2
+minecraft:oxidized_copper_chest[facing=south,type=single,waterlogged=false]	1	oxidized_copper_chest	minecraft:cardinal_direction=west	0	2
+minecraft:oxidized_copper_chest[facing=south,type=single,waterlogged=false]	2	oxidized_copper_chest	minecraft:cardinal_direction=north	0	2
+minecraft:oxidized_copper_chest[facing=south,type=single,waterlogged=false]	3	oxidized_copper_chest	minecraft:cardinal_direction=east	0	2
+minecraft:oxidized_copper_chest[facing=south,type=single,waterlogged=true]	0	oxidized_copper_chest	minecraft:cardinal_direction=south	1	2
+minecraft:oxidized_copper_chest[facing=south,type=single,waterlogged=true]	1	oxidized_copper_chest	minecraft:cardinal_direction=west	1	2
+minecraft:oxidized_copper_chest[facing=south,type=single,waterlogged=true]	2	oxidized_copper_chest	minecraft:cardinal_direction=north	1	2
+minecraft:oxidized_copper_chest[facing=south,type=single,waterlogged=true]	3	oxidized_copper_chest	minecraft:cardinal_direction=east	1	2
+minecraft:oxidized_copper_chest[facing=west,type=single,waterlogged=false]	0	oxidized_copper_chest	minecraft:cardinal_direction=west	0	2
+minecraft:oxidized_copper_chest[facing=west,type=single,waterlogged=false]	1	oxidized_copper_chest	minecraft:cardinal_direction=north	0	2
+minecraft:oxidized_copper_chest[facing=west,type=single,waterlogged=false]	2	oxidized_copper_chest	minecraft:cardinal_direction=east	0	2
+minecraft:oxidized_copper_chest[facing=west,type=single,waterlogged=false]	3	oxidized_copper_chest	minecraft:cardinal_direction=south	0	2
+minecraft:oxidized_copper_golem_statue[copper_golem_pose=running,facing=north,waterlogged=false]	0	oxidized_copper_golem_statue	minecraft:cardinal_direction=north	0	2
+minecraft:oxidized_copper_golem_statue[copper_golem_pose=running,facing=north,waterlogged=false]	1	oxidized_copper_golem_statue	minecraft:cardinal_direction=east	0	2
+minecraft:oxidized_copper_golem_statue[copper_golem_pose=running,facing=north,waterlogged=false]	2	oxidized_copper_golem_statue	minecraft:cardinal_direction=south	0	2
+minecraft:oxidized_copper_golem_statue[copper_golem_pose=running,facing=north,waterlogged=false]	3	oxidized_copper_golem_statue	minecraft:cardinal_direction=west	0	2
+minecraft:oxidized_copper_golem_statue[copper_golem_pose=sitting,facing=east,waterlogged=false]	0	oxidized_copper_golem_statue	minecraft:cardinal_direction=east	0	2
+minecraft:oxidized_copper_golem_statue[copper_golem_pose=sitting,facing=east,waterlogged=false]	1	oxidized_copper_golem_statue	minecraft:cardinal_direction=south	0	2
+minecraft:oxidized_copper_golem_statue[copper_golem_pose=sitting,facing=east,waterlogged=false]	2	oxidized_copper_golem_statue	minecraft:cardinal_direction=west	0	2
+minecraft:oxidized_copper_golem_statue[copper_golem_pose=sitting,facing=east,waterlogged=false]	3	oxidized_copper_golem_statue	minecraft:cardinal_direction=north	0	2
+minecraft:oxidized_copper_golem_statue[copper_golem_pose=sitting,facing=north,waterlogged=false]	0	oxidized_copper_golem_statue	minecraft:cardinal_direction=north	0	2
+minecraft:oxidized_copper_golem_statue[copper_golem_pose=sitting,facing=north,waterlogged=false]	1	oxidized_copper_golem_statue	minecraft:cardinal_direction=east	0	2
+minecraft:oxidized_copper_golem_statue[copper_golem_pose=sitting,facing=north,waterlogged=false]	2	oxidized_copper_golem_statue	minecraft:cardinal_direction=south	0	2
+minecraft:oxidized_copper_golem_statue[copper_golem_pose=sitting,facing=north,waterlogged=false]	3	oxidized_copper_golem_statue	minecraft:cardinal_direction=west	0	2
+minecraft:oxidized_copper_golem_statue[copper_golem_pose=sitting,facing=west,waterlogged=false]	0	oxidized_copper_golem_statue	minecraft:cardinal_direction=west	0	2
+minecraft:oxidized_copper_golem_statue[copper_golem_pose=sitting,facing=west,waterlogged=false]	1	oxidized_copper_golem_statue	minecraft:cardinal_direction=north	0	2
+minecraft:oxidized_copper_golem_statue[copper_golem_pose=sitting,facing=west,waterlogged=false]	2	oxidized_copper_golem_statue	minecraft:cardinal_direction=east	0	2
+minecraft:oxidized_copper_golem_statue[copper_golem_pose=sitting,facing=west,waterlogged=false]	3	oxidized_copper_golem_statue	minecraft:cardinal_direction=south	0	2
+minecraft:oxidized_copper_golem_statue[copper_golem_pose=standing,facing=south,waterlogged=false]	0	oxidized_copper_golem_statue	minecraft:cardinal_direction=south	0	2
+minecraft:oxidized_copper_golem_statue[copper_golem_pose=standing,facing=south,waterlogged=false]	1	oxidized_copper_golem_statue	minecraft:cardinal_direction=west	0	2
+minecraft:oxidized_copper_golem_statue[copper_golem_pose=standing,facing=south,waterlogged=false]	2	oxidized_copper_golem_statue	minecraft:cardinal_direction=north	0	2
+minecraft:oxidized_copper_golem_statue[copper_golem_pose=standing,facing=south,waterlogged=false]	3	oxidized_copper_golem_statue	minecraft:cardinal_direction=east	0	2
+minecraft:oxidized_copper_golem_statue[copper_golem_pose=star,facing=west,waterlogged=false]	0	oxidized_copper_golem_statue	minecraft:cardinal_direction=west	0	2
+minecraft:oxidized_copper_golem_statue[copper_golem_pose=star,facing=west,waterlogged=false]	1	oxidized_copper_golem_statue	minecraft:cardinal_direction=north	0	2
+minecraft:oxidized_copper_golem_statue[copper_golem_pose=star,facing=west,waterlogged=false]	2	oxidized_copper_golem_statue	minecraft:cardinal_direction=east	0	2
+minecraft:oxidized_copper_golem_statue[copper_golem_pose=star,facing=west,waterlogged=false]	3	oxidized_copper_golem_statue	minecraft:cardinal_direction=south	0	2
+minecraft:oxidized_copper_lantern[hanging=false,waterlogged=false]	0	oxidized_copper_lantern	hanging=0	0	2
+minecraft:oxidized_copper_lantern[hanging=false,waterlogged=false]	1	oxidized_copper_lantern	hanging=0	0	2
+minecraft:oxidized_copper_lantern[hanging=false,waterlogged=false]	2	oxidized_copper_lantern	hanging=0	0	2
+minecraft:oxidized_copper_lantern[hanging=false,waterlogged=false]	3	oxidized_copper_lantern	hanging=0	0	2
+minecraft:oxidized_copper_lantern[hanging=true,waterlogged=false]	0	oxidized_copper_lantern	hanging=1	0	2
+minecraft:oxidized_copper_lantern[hanging=true,waterlogged=false]	1	oxidized_copper_lantern	hanging=1	0	2
+minecraft:oxidized_copper_lantern[hanging=true,waterlogged=false]	2	oxidized_copper_lantern	hanging=1	0	2
+minecraft:oxidized_copper_lantern[hanging=true,waterlogged=false]	3	oxidized_copper_lantern	hanging=1	0	2
 minecraft:oxidized_copper_trapdoor[facing=east,half=top,open=false,powered=false,waterlogged=false]	0	oxidized_copper_trapdoor	direction=0,open_bit=0,upside_down_bit=1	0	2
 minecraft:oxidized_copper_trapdoor[facing=east,half=top,open=false,powered=false,waterlogged=false]	1	oxidized_copper_trapdoor	direction=2,open_bit=0,upside_down_bit=1	0	2
 minecraft:oxidized_copper_trapdoor[facing=east,half=top,open=false,powered=false,waterlogged=false]	2	oxidized_copper_trapdoor	direction=1,open_bit=0,upside_down_bit=1	0	2
@@ -3302,6 +3854,206 @@ minecraft:packed_mud	0	packed_mud		0	3
 minecraft:packed_mud	1	packed_mud		0	3
 minecraft:packed_mud	2	packed_mud		0	3
 minecraft:packed_mud	3	packed_mud		0	3
+minecraft:pale_hanging_moss[tip=false]	0	pale_hanging_moss	tip=0	0	0
+minecraft:pale_hanging_moss[tip=false]	1	pale_hanging_moss	tip=0	0	0
+minecraft:pale_hanging_moss[tip=false]	2	pale_hanging_moss	tip=0	0	0
+minecraft:pale_hanging_moss[tip=false]	3	pale_hanging_moss	tip=0	0	0
+minecraft:pale_hanging_moss[tip=true]	0	pale_hanging_moss	tip=0	0	0
+minecraft:pale_hanging_moss[tip=true]	1	pale_hanging_moss	tip=0	0	0
+minecraft:pale_hanging_moss[tip=true]	2	pale_hanging_moss	tip=0	0	0
+minecraft:pale_hanging_moss[tip=true]	3	pale_hanging_moss	tip=0	0	0
+minecraft:pale_moss_block	0	pale_moss_block		0	3
+minecraft:pale_moss_block	1	pale_moss_block		0	3
+minecraft:pale_moss_block	2	pale_moss_block		0	3
+minecraft:pale_moss_block	3	pale_moss_block		0	3
+minecraft:pale_moss_carpet[bottom=false,east=none,north=low,south=none,west=none]	0	pale_moss_carpet	pale_moss_carpet_side_east=none,pale_moss_carpet_side_north=none,pale_moss_carpet_side_south=none,pale_moss_carpet_side_west=none,upper_block_bit=0	0	2
+minecraft:pale_moss_carpet[bottom=false,east=none,north=low,south=none,west=none]	1	pale_moss_carpet	pale_moss_carpet_side_east=none,pale_moss_carpet_side_north=none,pale_moss_carpet_side_south=none,pale_moss_carpet_side_west=none,upper_block_bit=0	0	2
+minecraft:pale_moss_carpet[bottom=false,east=none,north=low,south=none,west=none]	2	pale_moss_carpet	pale_moss_carpet_side_east=none,pale_moss_carpet_side_north=none,pale_moss_carpet_side_south=none,pale_moss_carpet_side_west=none,upper_block_bit=0	0	2
+minecraft:pale_moss_carpet[bottom=false,east=none,north=low,south=none,west=none]	3	pale_moss_carpet	pale_moss_carpet_side_east=none,pale_moss_carpet_side_north=none,pale_moss_carpet_side_south=none,pale_moss_carpet_side_west=none,upper_block_bit=0	0	2
+minecraft:pale_moss_carpet[bottom=false,east=none,north=none,south=low,west=none]	0	pale_moss_carpet	pale_moss_carpet_side_east=none,pale_moss_carpet_side_north=none,pale_moss_carpet_side_south=none,pale_moss_carpet_side_west=none,upper_block_bit=0	0	2
+minecraft:pale_moss_carpet[bottom=false,east=none,north=none,south=low,west=none]	1	pale_moss_carpet	pale_moss_carpet_side_east=none,pale_moss_carpet_side_north=none,pale_moss_carpet_side_south=none,pale_moss_carpet_side_west=none,upper_block_bit=0	0	2
+minecraft:pale_moss_carpet[bottom=false,east=none,north=none,south=low,west=none]	2	pale_moss_carpet	pale_moss_carpet_side_east=none,pale_moss_carpet_side_north=none,pale_moss_carpet_side_south=none,pale_moss_carpet_side_west=none,upper_block_bit=0	0	2
+minecraft:pale_moss_carpet[bottom=false,east=none,north=none,south=low,west=none]	3	pale_moss_carpet	pale_moss_carpet_side_east=none,pale_moss_carpet_side_north=none,pale_moss_carpet_side_south=none,pale_moss_carpet_side_west=none,upper_block_bit=0	0	2
+minecraft:pale_moss_carpet[bottom=false,east=none,north=none,south=none,west=low]	0	pale_moss_carpet	pale_moss_carpet_side_east=none,pale_moss_carpet_side_north=none,pale_moss_carpet_side_south=none,pale_moss_carpet_side_west=none,upper_block_bit=0	0	2
+minecraft:pale_moss_carpet[bottom=false,east=none,north=none,south=none,west=low]	1	pale_moss_carpet	pale_moss_carpet_side_east=none,pale_moss_carpet_side_north=none,pale_moss_carpet_side_south=none,pale_moss_carpet_side_west=none,upper_block_bit=0	0	2
+minecraft:pale_moss_carpet[bottom=false,east=none,north=none,south=none,west=low]	2	pale_moss_carpet	pale_moss_carpet_side_east=none,pale_moss_carpet_side_north=none,pale_moss_carpet_side_south=none,pale_moss_carpet_side_west=none,upper_block_bit=0	0	2
+minecraft:pale_moss_carpet[bottom=false,east=none,north=none,south=none,west=low]	3	pale_moss_carpet	pale_moss_carpet_side_east=none,pale_moss_carpet_side_north=none,pale_moss_carpet_side_south=none,pale_moss_carpet_side_west=none,upper_block_bit=0	0	2
+minecraft:pale_moss_carpet[bottom=true,east=low,north=low,south=low,west=low]	0	pale_moss_carpet	pale_moss_carpet_side_east=none,pale_moss_carpet_side_north=none,pale_moss_carpet_side_south=none,pale_moss_carpet_side_west=none,upper_block_bit=0	0	2
+minecraft:pale_moss_carpet[bottom=true,east=low,north=low,south=low,west=low]	1	pale_moss_carpet	pale_moss_carpet_side_east=none,pale_moss_carpet_side_north=none,pale_moss_carpet_side_south=none,pale_moss_carpet_side_west=none,upper_block_bit=0	0	2
+minecraft:pale_moss_carpet[bottom=true,east=low,north=low,south=low,west=low]	2	pale_moss_carpet	pale_moss_carpet_side_east=none,pale_moss_carpet_side_north=none,pale_moss_carpet_side_south=none,pale_moss_carpet_side_west=none,upper_block_bit=0	0	2
+minecraft:pale_moss_carpet[bottom=true,east=low,north=low,south=low,west=low]	3	pale_moss_carpet	pale_moss_carpet_side_east=none,pale_moss_carpet_side_north=none,pale_moss_carpet_side_south=none,pale_moss_carpet_side_west=none,upper_block_bit=0	0	2
+minecraft:pale_moss_carpet[bottom=true,east=low,north=low,south=none,west=none]	0	pale_moss_carpet	pale_moss_carpet_side_east=none,pale_moss_carpet_side_north=none,pale_moss_carpet_side_south=none,pale_moss_carpet_side_west=none,upper_block_bit=0	0	2
+minecraft:pale_moss_carpet[bottom=true,east=low,north=low,south=none,west=none]	1	pale_moss_carpet	pale_moss_carpet_side_east=none,pale_moss_carpet_side_north=none,pale_moss_carpet_side_south=none,pale_moss_carpet_side_west=none,upper_block_bit=0	0	2
+minecraft:pale_moss_carpet[bottom=true,east=low,north=low,south=none,west=none]	2	pale_moss_carpet	pale_moss_carpet_side_east=none,pale_moss_carpet_side_north=none,pale_moss_carpet_side_south=none,pale_moss_carpet_side_west=none,upper_block_bit=0	0	2
+minecraft:pale_moss_carpet[bottom=true,east=low,north=low,south=none,west=none]	3	pale_moss_carpet	pale_moss_carpet_side_east=none,pale_moss_carpet_side_north=none,pale_moss_carpet_side_south=none,pale_moss_carpet_side_west=none,upper_block_bit=0	0	2
+minecraft:pale_moss_carpet[bottom=true,east=low,north=none,south=low,west=none]	0	pale_moss_carpet	pale_moss_carpet_side_east=none,pale_moss_carpet_side_north=none,pale_moss_carpet_side_south=none,pale_moss_carpet_side_west=none,upper_block_bit=0	0	2
+minecraft:pale_moss_carpet[bottom=true,east=low,north=none,south=low,west=none]	1	pale_moss_carpet	pale_moss_carpet_side_east=none,pale_moss_carpet_side_north=none,pale_moss_carpet_side_south=none,pale_moss_carpet_side_west=none,upper_block_bit=0	0	2
+minecraft:pale_moss_carpet[bottom=true,east=low,north=none,south=low,west=none]	2	pale_moss_carpet	pale_moss_carpet_side_east=none,pale_moss_carpet_side_north=none,pale_moss_carpet_side_south=none,pale_moss_carpet_side_west=none,upper_block_bit=0	0	2
+minecraft:pale_moss_carpet[bottom=true,east=low,north=none,south=low,west=none]	3	pale_moss_carpet	pale_moss_carpet_side_east=none,pale_moss_carpet_side_north=none,pale_moss_carpet_side_south=none,pale_moss_carpet_side_west=none,upper_block_bit=0	0	2
+minecraft:pale_moss_carpet[bottom=true,east=low,north=none,south=none,west=none]	0	pale_moss_carpet	pale_moss_carpet_side_east=none,pale_moss_carpet_side_north=none,pale_moss_carpet_side_south=none,pale_moss_carpet_side_west=none,upper_block_bit=0	0	2
+minecraft:pale_moss_carpet[bottom=true,east=low,north=none,south=none,west=none]	1	pale_moss_carpet	pale_moss_carpet_side_east=none,pale_moss_carpet_side_north=none,pale_moss_carpet_side_south=none,pale_moss_carpet_side_west=none,upper_block_bit=0	0	2
+minecraft:pale_moss_carpet[bottom=true,east=low,north=none,south=none,west=none]	2	pale_moss_carpet	pale_moss_carpet_side_east=none,pale_moss_carpet_side_north=none,pale_moss_carpet_side_south=none,pale_moss_carpet_side_west=none,upper_block_bit=0	0	2
+minecraft:pale_moss_carpet[bottom=true,east=low,north=none,south=none,west=none]	3	pale_moss_carpet	pale_moss_carpet_side_east=none,pale_moss_carpet_side_north=none,pale_moss_carpet_side_south=none,pale_moss_carpet_side_west=none,upper_block_bit=0	0	2
+minecraft:pale_moss_carpet[bottom=true,east=low,north=tall,south=none,west=low]	0	pale_moss_carpet	pale_moss_carpet_side_east=none,pale_moss_carpet_side_north=none,pale_moss_carpet_side_south=none,pale_moss_carpet_side_west=none,upper_block_bit=0	0	2
+minecraft:pale_moss_carpet[bottom=true,east=low,north=tall,south=none,west=low]	1	pale_moss_carpet	pale_moss_carpet_side_east=none,pale_moss_carpet_side_north=none,pale_moss_carpet_side_south=none,pale_moss_carpet_side_west=none,upper_block_bit=0	0	2
+minecraft:pale_moss_carpet[bottom=true,east=low,north=tall,south=none,west=low]	2	pale_moss_carpet	pale_moss_carpet_side_east=none,pale_moss_carpet_side_north=none,pale_moss_carpet_side_south=none,pale_moss_carpet_side_west=none,upper_block_bit=0	0	2
+minecraft:pale_moss_carpet[bottom=true,east=low,north=tall,south=none,west=low]	3	pale_moss_carpet	pale_moss_carpet_side_east=none,pale_moss_carpet_side_north=none,pale_moss_carpet_side_south=none,pale_moss_carpet_side_west=none,upper_block_bit=0	0	2
+minecraft:pale_moss_carpet[bottom=true,east=none,north=low,south=low,west=low]	0	pale_moss_carpet	pale_moss_carpet_side_east=none,pale_moss_carpet_side_north=none,pale_moss_carpet_side_south=none,pale_moss_carpet_side_west=none,upper_block_bit=0	0	2
+minecraft:pale_moss_carpet[bottom=true,east=none,north=low,south=low,west=low]	1	pale_moss_carpet	pale_moss_carpet_side_east=none,pale_moss_carpet_side_north=none,pale_moss_carpet_side_south=none,pale_moss_carpet_side_west=none,upper_block_bit=0	0	2
+minecraft:pale_moss_carpet[bottom=true,east=none,north=low,south=low,west=low]	2	pale_moss_carpet	pale_moss_carpet_side_east=none,pale_moss_carpet_side_north=none,pale_moss_carpet_side_south=none,pale_moss_carpet_side_west=none,upper_block_bit=0	0	2
+minecraft:pale_moss_carpet[bottom=true,east=none,north=low,south=low,west=low]	3	pale_moss_carpet	pale_moss_carpet_side_east=none,pale_moss_carpet_side_north=none,pale_moss_carpet_side_south=none,pale_moss_carpet_side_west=none,upper_block_bit=0	0	2
+minecraft:pale_moss_carpet[bottom=true,east=none,north=low,south=none,west=low]	0	pale_moss_carpet	pale_moss_carpet_side_east=none,pale_moss_carpet_side_north=none,pale_moss_carpet_side_south=none,pale_moss_carpet_side_west=none,upper_block_bit=0	0	2
+minecraft:pale_moss_carpet[bottom=true,east=none,north=low,south=none,west=low]	1	pale_moss_carpet	pale_moss_carpet_side_east=none,pale_moss_carpet_side_north=none,pale_moss_carpet_side_south=none,pale_moss_carpet_side_west=none,upper_block_bit=0	0	2
+minecraft:pale_moss_carpet[bottom=true,east=none,north=low,south=none,west=low]	2	pale_moss_carpet	pale_moss_carpet_side_east=none,pale_moss_carpet_side_north=none,pale_moss_carpet_side_south=none,pale_moss_carpet_side_west=none,upper_block_bit=0	0	2
+minecraft:pale_moss_carpet[bottom=true,east=none,north=low,south=none,west=low]	3	pale_moss_carpet	pale_moss_carpet_side_east=none,pale_moss_carpet_side_north=none,pale_moss_carpet_side_south=none,pale_moss_carpet_side_west=none,upper_block_bit=0	0	2
+minecraft:pale_moss_carpet[bottom=true,east=none,north=low,south=none,west=none]	0	pale_moss_carpet	pale_moss_carpet_side_east=none,pale_moss_carpet_side_north=none,pale_moss_carpet_side_south=none,pale_moss_carpet_side_west=none,upper_block_bit=0	0	2
+minecraft:pale_moss_carpet[bottom=true,east=none,north=low,south=none,west=none]	1	pale_moss_carpet	pale_moss_carpet_side_east=none,pale_moss_carpet_side_north=none,pale_moss_carpet_side_south=none,pale_moss_carpet_side_west=none,upper_block_bit=0	0	2
+minecraft:pale_moss_carpet[bottom=true,east=none,north=low,south=none,west=none]	2	pale_moss_carpet	pale_moss_carpet_side_east=none,pale_moss_carpet_side_north=none,pale_moss_carpet_side_south=none,pale_moss_carpet_side_west=none,upper_block_bit=0	0	2
+minecraft:pale_moss_carpet[bottom=true,east=none,north=low,south=none,west=none]	3	pale_moss_carpet	pale_moss_carpet_side_east=none,pale_moss_carpet_side_north=none,pale_moss_carpet_side_south=none,pale_moss_carpet_side_west=none,upper_block_bit=0	0	2
+minecraft:pale_moss_carpet[bottom=true,east=none,north=low,south=none,west=tall]	0	pale_moss_carpet	pale_moss_carpet_side_east=none,pale_moss_carpet_side_north=none,pale_moss_carpet_side_south=none,pale_moss_carpet_side_west=none,upper_block_bit=0	0	2
+minecraft:pale_moss_carpet[bottom=true,east=none,north=low,south=none,west=tall]	1	pale_moss_carpet	pale_moss_carpet_side_east=none,pale_moss_carpet_side_north=none,pale_moss_carpet_side_south=none,pale_moss_carpet_side_west=none,upper_block_bit=0	0	2
+minecraft:pale_moss_carpet[bottom=true,east=none,north=low,south=none,west=tall]	2	pale_moss_carpet	pale_moss_carpet_side_east=none,pale_moss_carpet_side_north=none,pale_moss_carpet_side_south=none,pale_moss_carpet_side_west=none,upper_block_bit=0	0	2
+minecraft:pale_moss_carpet[bottom=true,east=none,north=low,south=none,west=tall]	3	pale_moss_carpet	pale_moss_carpet_side_east=none,pale_moss_carpet_side_north=none,pale_moss_carpet_side_south=none,pale_moss_carpet_side_west=none,upper_block_bit=0	0	2
+minecraft:pale_moss_carpet[bottom=true,east=none,north=none,south=low,west=low]	0	pale_moss_carpet	pale_moss_carpet_side_east=none,pale_moss_carpet_side_north=none,pale_moss_carpet_side_south=none,pale_moss_carpet_side_west=none,upper_block_bit=0	0	2
+minecraft:pale_moss_carpet[bottom=true,east=none,north=none,south=low,west=low]	1	pale_moss_carpet	pale_moss_carpet_side_east=none,pale_moss_carpet_side_north=none,pale_moss_carpet_side_south=none,pale_moss_carpet_side_west=none,upper_block_bit=0	0	2
+minecraft:pale_moss_carpet[bottom=true,east=none,north=none,south=low,west=low]	2	pale_moss_carpet	pale_moss_carpet_side_east=none,pale_moss_carpet_side_north=none,pale_moss_carpet_side_south=none,pale_moss_carpet_side_west=none,upper_block_bit=0	0	2
+minecraft:pale_moss_carpet[bottom=true,east=none,north=none,south=low,west=low]	3	pale_moss_carpet	pale_moss_carpet_side_east=none,pale_moss_carpet_side_north=none,pale_moss_carpet_side_south=none,pale_moss_carpet_side_west=none,upper_block_bit=0	0	2
+minecraft:pale_moss_carpet[bottom=true,east=none,north=none,south=low,west=none]	0	pale_moss_carpet	pale_moss_carpet_side_east=none,pale_moss_carpet_side_north=none,pale_moss_carpet_side_south=none,pale_moss_carpet_side_west=none,upper_block_bit=0	0	2
+minecraft:pale_moss_carpet[bottom=true,east=none,north=none,south=low,west=none]	1	pale_moss_carpet	pale_moss_carpet_side_east=none,pale_moss_carpet_side_north=none,pale_moss_carpet_side_south=none,pale_moss_carpet_side_west=none,upper_block_bit=0	0	2
+minecraft:pale_moss_carpet[bottom=true,east=none,north=none,south=low,west=none]	2	pale_moss_carpet	pale_moss_carpet_side_east=none,pale_moss_carpet_side_north=none,pale_moss_carpet_side_south=none,pale_moss_carpet_side_west=none,upper_block_bit=0	0	2
+minecraft:pale_moss_carpet[bottom=true,east=none,north=none,south=low,west=none]	3	pale_moss_carpet	pale_moss_carpet_side_east=none,pale_moss_carpet_side_north=none,pale_moss_carpet_side_south=none,pale_moss_carpet_side_west=none,upper_block_bit=0	0	2
+minecraft:pale_moss_carpet[bottom=true,east=none,north=none,south=none,west=low]	0	pale_moss_carpet	pale_moss_carpet_side_east=none,pale_moss_carpet_side_north=none,pale_moss_carpet_side_south=none,pale_moss_carpet_side_west=none,upper_block_bit=0	0	2
+minecraft:pale_moss_carpet[bottom=true,east=none,north=none,south=none,west=low]	1	pale_moss_carpet	pale_moss_carpet_side_east=none,pale_moss_carpet_side_north=none,pale_moss_carpet_side_south=none,pale_moss_carpet_side_west=none,upper_block_bit=0	0	2
+minecraft:pale_moss_carpet[bottom=true,east=none,north=none,south=none,west=low]	2	pale_moss_carpet	pale_moss_carpet_side_east=none,pale_moss_carpet_side_north=none,pale_moss_carpet_side_south=none,pale_moss_carpet_side_west=none,upper_block_bit=0	0	2
+minecraft:pale_moss_carpet[bottom=true,east=none,north=none,south=none,west=low]	3	pale_moss_carpet	pale_moss_carpet_side_east=none,pale_moss_carpet_side_north=none,pale_moss_carpet_side_south=none,pale_moss_carpet_side_west=none,upper_block_bit=0	0	2
+minecraft:pale_moss_carpet[bottom=true,east=none,north=none,south=none,west=none]	0	pale_moss_carpet	pale_moss_carpet_side_east=none,pale_moss_carpet_side_north=none,pale_moss_carpet_side_south=none,pale_moss_carpet_side_west=none,upper_block_bit=0	0	2
+minecraft:pale_moss_carpet[bottom=true,east=none,north=none,south=none,west=none]	1	pale_moss_carpet	pale_moss_carpet_side_east=none,pale_moss_carpet_side_north=none,pale_moss_carpet_side_south=none,pale_moss_carpet_side_west=none,upper_block_bit=0	0	2
+minecraft:pale_moss_carpet[bottom=true,east=none,north=none,south=none,west=none]	2	pale_moss_carpet	pale_moss_carpet_side_east=none,pale_moss_carpet_side_north=none,pale_moss_carpet_side_south=none,pale_moss_carpet_side_west=none,upper_block_bit=0	0	2
+minecraft:pale_moss_carpet[bottom=true,east=none,north=none,south=none,west=none]	3	pale_moss_carpet	pale_moss_carpet_side_east=none,pale_moss_carpet_side_north=none,pale_moss_carpet_side_south=none,pale_moss_carpet_side_west=none,upper_block_bit=0	0	2
+minecraft:pale_moss_carpet[bottom=true,east=none,north=none,south=tall,west=none]	0	pale_moss_carpet	pale_moss_carpet_side_east=none,pale_moss_carpet_side_north=none,pale_moss_carpet_side_south=none,pale_moss_carpet_side_west=none,upper_block_bit=0	0	2
+minecraft:pale_moss_carpet[bottom=true,east=none,north=none,south=tall,west=none]	1	pale_moss_carpet	pale_moss_carpet_side_east=none,pale_moss_carpet_side_north=none,pale_moss_carpet_side_south=none,pale_moss_carpet_side_west=none,upper_block_bit=0	0	2
+minecraft:pale_moss_carpet[bottom=true,east=none,north=none,south=tall,west=none]	2	pale_moss_carpet	pale_moss_carpet_side_east=none,pale_moss_carpet_side_north=none,pale_moss_carpet_side_south=none,pale_moss_carpet_side_west=none,upper_block_bit=0	0	2
+minecraft:pale_moss_carpet[bottom=true,east=none,north=none,south=tall,west=none]	3	pale_moss_carpet	pale_moss_carpet_side_east=none,pale_moss_carpet_side_north=none,pale_moss_carpet_side_south=none,pale_moss_carpet_side_west=none,upper_block_bit=0	0	2
+minecraft:pale_moss_carpet[bottom=true,east=none,north=tall,south=none,west=low]	0	pale_moss_carpet	pale_moss_carpet_side_east=none,pale_moss_carpet_side_north=none,pale_moss_carpet_side_south=none,pale_moss_carpet_side_west=none,upper_block_bit=0	0	2
+minecraft:pale_moss_carpet[bottom=true,east=none,north=tall,south=none,west=low]	1	pale_moss_carpet	pale_moss_carpet_side_east=none,pale_moss_carpet_side_north=none,pale_moss_carpet_side_south=none,pale_moss_carpet_side_west=none,upper_block_bit=0	0	2
+minecraft:pale_moss_carpet[bottom=true,east=none,north=tall,south=none,west=low]	2	pale_moss_carpet	pale_moss_carpet_side_east=none,pale_moss_carpet_side_north=none,pale_moss_carpet_side_south=none,pale_moss_carpet_side_west=none,upper_block_bit=0	0	2
+minecraft:pale_moss_carpet[bottom=true,east=none,north=tall,south=none,west=low]	3	pale_moss_carpet	pale_moss_carpet_side_east=none,pale_moss_carpet_side_north=none,pale_moss_carpet_side_south=none,pale_moss_carpet_side_west=none,upper_block_bit=0	0	2
+minecraft:pale_oak_fence[east=false,north=false,south=false,waterlogged=false,west=false]	0	pale_oak_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:pale_oak_fence[east=false,north=false,south=false,waterlogged=false,west=false]	1	pale_oak_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:pale_oak_fence[east=false,north=false,south=false,waterlogged=false,west=false]	2	pale_oak_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:pale_oak_fence[east=false,north=false,south=false,waterlogged=false,west=false]	3	pale_oak_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:pale_oak_fence[east=false,north=false,south=false,waterlogged=false,west=true]	0	pale_oak_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:pale_oak_fence[east=false,north=false,south=false,waterlogged=false,west=true]	1	pale_oak_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:pale_oak_fence[east=false,north=false,south=false,waterlogged=false,west=true]	2	pale_oak_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:pale_oak_fence[east=false,north=false,south=false,waterlogged=false,west=true]	3	pale_oak_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:pale_oak_fence[east=false,north=false,south=true,waterlogged=false,west=false]	0	pale_oak_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:pale_oak_fence[east=false,north=false,south=true,waterlogged=false,west=false]	1	pale_oak_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:pale_oak_fence[east=false,north=false,south=true,waterlogged=false,west=false]	2	pale_oak_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:pale_oak_fence[east=false,north=false,south=true,waterlogged=false,west=false]	3	pale_oak_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:pale_oak_fence[east=false,north=true,south=false,waterlogged=false,west=false]	0	pale_oak_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:pale_oak_fence[east=false,north=true,south=false,waterlogged=false,west=false]	1	pale_oak_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:pale_oak_fence[east=false,north=true,south=false,waterlogged=false,west=false]	2	pale_oak_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:pale_oak_fence[east=false,north=true,south=false,waterlogged=false,west=false]	3	pale_oak_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:pale_oak_leaves[distance=1,persistent=false,waterlogged=false]	0	pale_oak_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:pale_oak_leaves[distance=1,persistent=false,waterlogged=false]	1	pale_oak_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:pale_oak_leaves[distance=1,persistent=false,waterlogged=false]	2	pale_oak_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:pale_oak_leaves[distance=1,persistent=false,waterlogged=false]	3	pale_oak_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:pale_oak_leaves[distance=2,persistent=false,waterlogged=false]	0	pale_oak_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:pale_oak_leaves[distance=2,persistent=false,waterlogged=false]	1	pale_oak_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:pale_oak_leaves[distance=2,persistent=false,waterlogged=false]	2	pale_oak_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:pale_oak_leaves[distance=2,persistent=false,waterlogged=false]	3	pale_oak_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:pale_oak_leaves[distance=3,persistent=false,waterlogged=false]	0	pale_oak_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:pale_oak_leaves[distance=3,persistent=false,waterlogged=false]	1	pale_oak_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:pale_oak_leaves[distance=3,persistent=false,waterlogged=false]	2	pale_oak_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:pale_oak_leaves[distance=3,persistent=false,waterlogged=false]	3	pale_oak_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:pale_oak_leaves[distance=4,persistent=false,waterlogged=false]	0	pale_oak_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:pale_oak_leaves[distance=4,persistent=false,waterlogged=false]	1	pale_oak_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:pale_oak_leaves[distance=4,persistent=false,waterlogged=false]	2	pale_oak_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:pale_oak_leaves[distance=4,persistent=false,waterlogged=false]	3	pale_oak_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:pale_oak_leaves[distance=5,persistent=false,waterlogged=false]	0	pale_oak_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:pale_oak_leaves[distance=5,persistent=false,waterlogged=false]	1	pale_oak_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:pale_oak_leaves[distance=5,persistent=false,waterlogged=false]	2	pale_oak_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:pale_oak_leaves[distance=5,persistent=false,waterlogged=false]	3	pale_oak_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:pale_oak_log[axis=x]	0	pale_oak_log	pillar_axis=x	0	3
+minecraft:pale_oak_log[axis=x]	1	pale_oak_log	pillar_axis=z	0	3
+minecraft:pale_oak_log[axis=x]	2	pale_oak_log	pillar_axis=x	0	3
+minecraft:pale_oak_log[axis=x]	3	pale_oak_log	pillar_axis=z	0	3
+minecraft:pale_oak_log[axis=y]	0	pale_oak_log	pillar_axis=y	0	3
+minecraft:pale_oak_log[axis=y]	1	pale_oak_log	pillar_axis=y	0	3
+minecraft:pale_oak_log[axis=y]	2	pale_oak_log	pillar_axis=y	0	3
+minecraft:pale_oak_log[axis=y]	3	pale_oak_log	pillar_axis=y	0	3
+minecraft:peony[half=lower]	0	peony	upper_block_bit=0	0	0
+minecraft:peony[half=lower]	1	peony	upper_block_bit=0	0	0
+minecraft:peony[half=lower]	2	peony	upper_block_bit=0	0	0
+minecraft:peony[half=lower]	3	peony	upper_block_bit=0	0	0
+minecraft:peony[half=upper]	0	peony	upper_block_bit=1	0	0
+minecraft:peony[half=upper]	1	peony	upper_block_bit=1	0	0
+minecraft:peony[half=upper]	2	peony	upper_block_bit=1	0	0
+minecraft:peony[half=upper]	3	peony	upper_block_bit=1	0	0
+minecraft:pink_petals[facing=east,flower_amount=1]	0	pink_petals	growth=0,minecraft:cardinal_direction=east	0	0
+minecraft:pink_petals[facing=east,flower_amount=1]	1	pink_petals	growth=0,minecraft:cardinal_direction=south	0	0
+minecraft:pink_petals[facing=east,flower_amount=1]	2	pink_petals	growth=0,minecraft:cardinal_direction=west	0	0
+minecraft:pink_petals[facing=east,flower_amount=1]	3	pink_petals	growth=0,minecraft:cardinal_direction=north	0	0
+minecraft:pink_petals[facing=east,flower_amount=2]	0	pink_petals	growth=0,minecraft:cardinal_direction=east	0	0
+minecraft:pink_petals[facing=east,flower_amount=2]	1	pink_petals	growth=0,minecraft:cardinal_direction=south	0	0
+minecraft:pink_petals[facing=east,flower_amount=2]	2	pink_petals	growth=0,minecraft:cardinal_direction=west	0	0
+minecraft:pink_petals[facing=east,flower_amount=2]	3	pink_petals	growth=0,minecraft:cardinal_direction=north	0	0
+minecraft:pink_petals[facing=east,flower_amount=3]	0	pink_petals	growth=0,minecraft:cardinal_direction=east	0	0
+minecraft:pink_petals[facing=east,flower_amount=3]	1	pink_petals	growth=0,minecraft:cardinal_direction=south	0	0
+minecraft:pink_petals[facing=east,flower_amount=3]	2	pink_petals	growth=0,minecraft:cardinal_direction=west	0	0
+minecraft:pink_petals[facing=east,flower_amount=3]	3	pink_petals	growth=0,minecraft:cardinal_direction=north	0	0
+minecraft:pink_petals[facing=east,flower_amount=4]	0	pink_petals	growth=0,minecraft:cardinal_direction=east	0	0
+minecraft:pink_petals[facing=east,flower_amount=4]	1	pink_petals	growth=0,minecraft:cardinal_direction=south	0	0
+minecraft:pink_petals[facing=east,flower_amount=4]	2	pink_petals	growth=0,minecraft:cardinal_direction=west	0	0
+minecraft:pink_petals[facing=east,flower_amount=4]	3	pink_petals	growth=0,minecraft:cardinal_direction=north	0	0
+minecraft:pink_petals[facing=north,flower_amount=1]	0	pink_petals	growth=0,minecraft:cardinal_direction=north	0	0
+minecraft:pink_petals[facing=north,flower_amount=1]	1	pink_petals	growth=0,minecraft:cardinal_direction=east	0	0
+minecraft:pink_petals[facing=north,flower_amount=1]	2	pink_petals	growth=0,minecraft:cardinal_direction=south	0	0
+minecraft:pink_petals[facing=north,flower_amount=1]	3	pink_petals	growth=0,minecraft:cardinal_direction=west	0	0
+minecraft:pink_petals[facing=north,flower_amount=2]	0	pink_petals	growth=0,minecraft:cardinal_direction=north	0	0
+minecraft:pink_petals[facing=north,flower_amount=2]	1	pink_petals	growth=0,minecraft:cardinal_direction=east	0	0
+minecraft:pink_petals[facing=north,flower_amount=2]	2	pink_petals	growth=0,minecraft:cardinal_direction=south	0	0
+minecraft:pink_petals[facing=north,flower_amount=2]	3	pink_petals	growth=0,minecraft:cardinal_direction=west	0	0
+minecraft:pink_petals[facing=north,flower_amount=3]	0	pink_petals	growth=0,minecraft:cardinal_direction=north	0	0
+minecraft:pink_petals[facing=north,flower_amount=3]	1	pink_petals	growth=0,minecraft:cardinal_direction=east	0	0
+minecraft:pink_petals[facing=north,flower_amount=3]	2	pink_petals	growth=0,minecraft:cardinal_direction=south	0	0
+minecraft:pink_petals[facing=north,flower_amount=3]	3	pink_petals	growth=0,minecraft:cardinal_direction=west	0	0
+minecraft:pink_petals[facing=north,flower_amount=4]	0	pink_petals	growth=0,minecraft:cardinal_direction=north	0	0
+minecraft:pink_petals[facing=north,flower_amount=4]	1	pink_petals	growth=0,minecraft:cardinal_direction=east	0	0
+minecraft:pink_petals[facing=north,flower_amount=4]	2	pink_petals	growth=0,minecraft:cardinal_direction=south	0	0
+minecraft:pink_petals[facing=north,flower_amount=4]	3	pink_petals	growth=0,minecraft:cardinal_direction=west	0	0
+minecraft:pink_petals[facing=south,flower_amount=1]	0	pink_petals	growth=0,minecraft:cardinal_direction=south	0	0
+minecraft:pink_petals[facing=south,flower_amount=1]	1	pink_petals	growth=0,minecraft:cardinal_direction=west	0	0
+minecraft:pink_petals[facing=south,flower_amount=1]	2	pink_petals	growth=0,minecraft:cardinal_direction=north	0	0
+minecraft:pink_petals[facing=south,flower_amount=1]	3	pink_petals	growth=0,minecraft:cardinal_direction=east	0	0
+minecraft:pink_petals[facing=south,flower_amount=2]	0	pink_petals	growth=0,minecraft:cardinal_direction=south	0	0
+minecraft:pink_petals[facing=south,flower_amount=2]	1	pink_petals	growth=0,minecraft:cardinal_direction=west	0	0
+minecraft:pink_petals[facing=south,flower_amount=2]	2	pink_petals	growth=0,minecraft:cardinal_direction=north	0	0
+minecraft:pink_petals[facing=south,flower_amount=2]	3	pink_petals	growth=0,minecraft:cardinal_direction=east	0	0
+minecraft:pink_petals[facing=south,flower_amount=3]	0	pink_petals	growth=0,minecraft:cardinal_direction=south	0	0
+minecraft:pink_petals[facing=south,flower_amount=3]	1	pink_petals	growth=0,minecraft:cardinal_direction=west	0	0
+minecraft:pink_petals[facing=south,flower_amount=3]	2	pink_petals	growth=0,minecraft:cardinal_direction=north	0	0
+minecraft:pink_petals[facing=south,flower_amount=3]	3	pink_petals	growth=0,minecraft:cardinal_direction=east	0	0
+minecraft:pink_petals[facing=south,flower_amount=4]	0	pink_petals	growth=0,minecraft:cardinal_direction=south	0	0
+minecraft:pink_petals[facing=south,flower_amount=4]	1	pink_petals	growth=0,minecraft:cardinal_direction=west	0	0
+minecraft:pink_petals[facing=south,flower_amount=4]	2	pink_petals	growth=0,minecraft:cardinal_direction=north	0	0
+minecraft:pink_petals[facing=south,flower_amount=4]	3	pink_petals	growth=0,minecraft:cardinal_direction=east	0	0
+minecraft:pink_petals[facing=west,flower_amount=1]	0	pink_petals	growth=0,minecraft:cardinal_direction=west	0	0
+minecraft:pink_petals[facing=west,flower_amount=1]	1	pink_petals	growth=0,minecraft:cardinal_direction=north	0	0
+minecraft:pink_petals[facing=west,flower_amount=1]	2	pink_petals	growth=0,minecraft:cardinal_direction=east	0	0
+minecraft:pink_petals[facing=west,flower_amount=1]	3	pink_petals	growth=0,minecraft:cardinal_direction=south	0	0
+minecraft:pink_petals[facing=west,flower_amount=2]	0	pink_petals	growth=0,minecraft:cardinal_direction=west	0	0
+minecraft:pink_petals[facing=west,flower_amount=2]	1	pink_petals	growth=0,minecraft:cardinal_direction=north	0	0
+minecraft:pink_petals[facing=west,flower_amount=2]	2	pink_petals	growth=0,minecraft:cardinal_direction=east	0	0
+minecraft:pink_petals[facing=west,flower_amount=2]	3	pink_petals	growth=0,minecraft:cardinal_direction=south	0	0
+minecraft:pink_petals[facing=west,flower_amount=3]	0	pink_petals	growth=0,minecraft:cardinal_direction=west	0	0
+minecraft:pink_petals[facing=west,flower_amount=3]	1	pink_petals	growth=0,minecraft:cardinal_direction=north	0	0
+minecraft:pink_petals[facing=west,flower_amount=3]	2	pink_petals	growth=0,minecraft:cardinal_direction=east	0	0
+minecraft:pink_petals[facing=west,flower_amount=3]	3	pink_petals	growth=0,minecraft:cardinal_direction=south	0	0
+minecraft:pink_tulip	0	pink_tulip		0	0
+minecraft:pink_tulip	1	pink_tulip		0	0
+minecraft:pink_tulip	2	pink_tulip		0	0
+minecraft:pink_tulip	3	pink_tulip		0	0
 minecraft:piston_head[facing=north,short=false,type=sticky]	0	air		0	0
 minecraft:piston_head[facing=north,short=false,type=sticky]	1	air		0	0
 minecraft:piston_head[facing=north,short=false,type=sticky]	2	air		0	0
@@ -3322,6 +4074,10 @@ minecraft:planks[variant=oak]	0	oak_planks		0	3
 minecraft:planks[variant=oak]	1	oak_planks		0	3
 minecraft:planks[variant=oak]	2	oak_planks		0	3
 minecraft:planks[variant=oak]	3	oak_planks		0	3
+minecraft:podzol	0	podzol		0	3
+minecraft:podzol	1	podzol		0	3
+minecraft:podzol	2	podzol		0	3
+minecraft:podzol	3	podzol		0	3
 minecraft:podzol[snowy=false]	0	podzol		0	3
 minecraft:podzol[snowy=false]	1	podzol		0	3
 minecraft:podzol[snowy=false]	2	podzol		0	3
@@ -3430,10 +4186,42 @@ minecraft:polished_tuff_slab[type=top,waterlogged=false]	0	polished_tuff_slab	mi
 minecraft:polished_tuff_slab[type=top,waterlogged=false]	1	polished_tuff_slab	minecraft:vertical_half=top	0	2
 minecraft:polished_tuff_slab[type=top,waterlogged=false]	2	polished_tuff_slab	minecraft:vertical_half=top	0	2
 minecraft:polished_tuff_slab[type=top,waterlogged=false]	3	polished_tuff_slab	minecraft:vertical_half=top	0	2
+minecraft:poplar_fence[east=false,north=false,south=false,waterlogged=false,west=false]	0	poplar_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:poplar_fence[east=false,north=false,south=false,waterlogged=false,west=false]	1	poplar_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:poplar_fence[east=false,north=false,south=false,waterlogged=false,west=false]	2	poplar_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:poplar_fence[east=false,north=false,south=false,waterlogged=false,west=false]	3	poplar_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:poplar_fence[east=false,north=false,south=false,waterlogged=false,west=true]	0	poplar_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:poplar_fence[east=false,north=false,south=false,waterlogged=false,west=true]	1	poplar_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:poplar_fence[east=false,north=false,south=false,waterlogged=false,west=true]	2	poplar_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:poplar_fence[east=false,north=false,south=false,waterlogged=false,west=true]	3	poplar_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:poplar_fence[east=false,north=false,south=true,waterlogged=false,west=false]	0	poplar_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:poplar_fence[east=false,north=false,south=true,waterlogged=false,west=false]	1	poplar_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:poplar_fence[east=false,north=false,south=true,waterlogged=false,west=false]	2	poplar_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:poplar_fence[east=false,north=false,south=true,waterlogged=false,west=false]	3	poplar_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:poplar_fence[east=false,north=true,south=false,waterlogged=false,west=false]	0	poplar_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:poplar_fence[east=false,north=true,south=false,waterlogged=false,west=false]	1	poplar_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:poplar_fence[east=false,north=true,south=false,waterlogged=false,west=false]	2	poplar_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:poplar_fence[east=false,north=true,south=false,waterlogged=false,west=false]	3	poplar_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:poplar_log[axis=x]	0	poplar_log	pillar_axis=x	0	3
+minecraft:poplar_log[axis=x]	1	poplar_log	pillar_axis=z	0	3
+minecraft:poplar_log[axis=x]	2	poplar_log	pillar_axis=x	0	3
+minecraft:poplar_log[axis=x]	3	poplar_log	pillar_axis=z	0	3
+minecraft:poplar_log[axis=y]	0	poplar_log	pillar_axis=y	0	3
+minecraft:poplar_log[axis=y]	1	poplar_log	pillar_axis=y	0	3
+minecraft:poplar_log[axis=y]	2	poplar_log	pillar_axis=y	0	3
+minecraft:poplar_log[axis=y]	3	poplar_log	pillar_axis=y	0	3
+minecraft:poplar_log[axis=z]	0	poplar_log	pillar_axis=z	0	3
+minecraft:poplar_log[axis=z]	1	poplar_log	pillar_axis=x	0	3
+minecraft:poplar_log[axis=z]	2	poplar_log	pillar_axis=z	0	3
+minecraft:poplar_log[axis=z]	3	poplar_log	pillar_axis=x	0	3
 minecraft:poppy	0	poppy		0	0
 minecraft:poppy	1	poppy		0	0
 minecraft:poppy	2	poppy		0	0
 minecraft:poppy	3	poppy		0	0
+minecraft:potatoes[age=7]	0	potatoes	growth=7	0	0
+minecraft:potatoes[age=7]	1	potatoes	growth=7	0	0
+minecraft:potatoes[age=7]	2	potatoes	growth=7	0	0
+minecraft:potatoes[age=7]	3	potatoes	growth=7	0	0
 minecraft:potted_cactus	0	flower_pot	update_bit=0	0	2
 minecraft:potted_cactus	1	flower_pot	update_bit=0	0	2
 minecraft:potted_cactus	2	flower_pot	update_bit=0	0	2
@@ -3606,10 +4394,106 @@ minecraft:red_mushroom	0	red_mushroom		0	0
 minecraft:red_mushroom	1	red_mushroom		0	0
 minecraft:red_mushroom	2	red_mushroom		0	0
 minecraft:red_mushroom	3	red_mushroom		0	0
+minecraft:red_mushroom_block[down=false,east=false,north=false,south=false,up=false,west=true]	0	red_mushroom_block	huge_mushroom_bits=14	0	3
+minecraft:red_mushroom_block[down=false,east=false,north=false,south=false,up=false,west=true]	1	red_mushroom_block	huge_mushroom_bits=14	0	3
+minecraft:red_mushroom_block[down=false,east=false,north=false,south=false,up=false,west=true]	2	red_mushroom_block	huge_mushroom_bits=14	0	3
+minecraft:red_mushroom_block[down=false,east=false,north=false,south=false,up=false,west=true]	3	red_mushroom_block	huge_mushroom_bits=14	0	3
+minecraft:red_mushroom_block[down=false,east=false,north=false,south=false,up=true,west=false]	0	red_mushroom_block	huge_mushroom_bits=14	0	3
+minecraft:red_mushroom_block[down=false,east=false,north=false,south=false,up=true,west=false]	1	red_mushroom_block	huge_mushroom_bits=14	0	3
+minecraft:red_mushroom_block[down=false,east=false,north=false,south=false,up=true,west=false]	2	red_mushroom_block	huge_mushroom_bits=14	0	3
+minecraft:red_mushroom_block[down=false,east=false,north=false,south=false,up=true,west=false]	3	red_mushroom_block	huge_mushroom_bits=14	0	3
+minecraft:red_mushroom_block[down=false,east=false,north=false,south=false,up=true,west=true]	0	red_mushroom_block	huge_mushroom_bits=14	0	3
+minecraft:red_mushroom_block[down=false,east=false,north=false,south=false,up=true,west=true]	1	red_mushroom_block	huge_mushroom_bits=14	0	3
+minecraft:red_mushroom_block[down=false,east=false,north=false,south=false,up=true,west=true]	2	red_mushroom_block	huge_mushroom_bits=14	0	3
+minecraft:red_mushroom_block[down=false,east=false,north=false,south=false,up=true,west=true]	3	red_mushroom_block	huge_mushroom_bits=14	0	3
+minecraft:red_mushroom_block[down=false,east=false,north=false,south=true,up=false,west=false]	0	red_mushroom_block	huge_mushroom_bits=14	0	3
+minecraft:red_mushroom_block[down=false,east=false,north=false,south=true,up=false,west=false]	1	red_mushroom_block	huge_mushroom_bits=14	0	3
+minecraft:red_mushroom_block[down=false,east=false,north=false,south=true,up=false,west=false]	2	red_mushroom_block	huge_mushroom_bits=14	0	3
+minecraft:red_mushroom_block[down=false,east=false,north=false,south=true,up=false,west=false]	3	red_mushroom_block	huge_mushroom_bits=14	0	3
+minecraft:red_mushroom_block[down=false,east=false,north=false,south=true,up=false,west=true]	0	red_mushroom_block	huge_mushroom_bits=14	0	3
+minecraft:red_mushroom_block[down=false,east=false,north=false,south=true,up=false,west=true]	1	red_mushroom_block	huge_mushroom_bits=14	0	3
+minecraft:red_mushroom_block[down=false,east=false,north=false,south=true,up=false,west=true]	2	red_mushroom_block	huge_mushroom_bits=14	0	3
+minecraft:red_mushroom_block[down=false,east=false,north=false,south=true,up=false,west=true]	3	red_mushroom_block	huge_mushroom_bits=14	0	3
+minecraft:red_mushroom_block[down=false,east=false,north=false,south=true,up=true,west=false]	0	red_mushroom_block	huge_mushroom_bits=14	0	3
+minecraft:red_mushroom_block[down=false,east=false,north=false,south=true,up=true,west=false]	1	red_mushroom_block	huge_mushroom_bits=14	0	3
+minecraft:red_mushroom_block[down=false,east=false,north=false,south=true,up=true,west=false]	2	red_mushroom_block	huge_mushroom_bits=14	0	3
+minecraft:red_mushroom_block[down=false,east=false,north=false,south=true,up=true,west=false]	3	red_mushroom_block	huge_mushroom_bits=14	0	3
+minecraft:red_mushroom_block[down=false,east=false,north=false,south=true,up=true,west=true]	0	red_mushroom_block	huge_mushroom_bits=14	0	3
+minecraft:red_mushroom_block[down=false,east=false,north=false,south=true,up=true,west=true]	1	red_mushroom_block	huge_mushroom_bits=14	0	3
+minecraft:red_mushroom_block[down=false,east=false,north=false,south=true,up=true,west=true]	2	red_mushroom_block	huge_mushroom_bits=14	0	3
+minecraft:red_mushroom_block[down=false,east=false,north=false,south=true,up=true,west=true]	3	red_mushroom_block	huge_mushroom_bits=14	0	3
+minecraft:red_mushroom_block[down=false,east=false,north=true,south=false,up=false,west=false]	0	red_mushroom_block	huge_mushroom_bits=14	0	3
+minecraft:red_mushroom_block[down=false,east=false,north=true,south=false,up=false,west=false]	1	red_mushroom_block	huge_mushroom_bits=14	0	3
+minecraft:red_mushroom_block[down=false,east=false,north=true,south=false,up=false,west=false]	2	red_mushroom_block	huge_mushroom_bits=14	0	3
+minecraft:red_mushroom_block[down=false,east=false,north=true,south=false,up=false,west=false]	3	red_mushroom_block	huge_mushroom_bits=14	0	3
+minecraft:red_mushroom_block[down=false,east=false,north=true,south=false,up=false,west=true]	0	red_mushroom_block	huge_mushroom_bits=14	0	3
+minecraft:red_mushroom_block[down=false,east=false,north=true,south=false,up=false,west=true]	1	red_mushroom_block	huge_mushroom_bits=14	0	3
+minecraft:red_mushroom_block[down=false,east=false,north=true,south=false,up=false,west=true]	2	red_mushroom_block	huge_mushroom_bits=14	0	3
+minecraft:red_mushroom_block[down=false,east=false,north=true,south=false,up=false,west=true]	3	red_mushroom_block	huge_mushroom_bits=14	0	3
+minecraft:red_mushroom_block[down=false,east=false,north=true,south=false,up=true,west=false]	0	red_mushroom_block	huge_mushroom_bits=14	0	3
+minecraft:red_mushroom_block[down=false,east=false,north=true,south=false,up=true,west=false]	1	red_mushroom_block	huge_mushroom_bits=14	0	3
+minecraft:red_mushroom_block[down=false,east=false,north=true,south=false,up=true,west=false]	2	red_mushroom_block	huge_mushroom_bits=14	0	3
+minecraft:red_mushroom_block[down=false,east=false,north=true,south=false,up=true,west=false]	3	red_mushroom_block	huge_mushroom_bits=14	0	3
+minecraft:red_mushroom_block[down=false,east=false,north=true,south=false,up=true,west=true]	0	red_mushroom_block	huge_mushroom_bits=14	0	3
+minecraft:red_mushroom_block[down=false,east=false,north=true,south=false,up=true,west=true]	1	red_mushroom_block	huge_mushroom_bits=14	0	3
+minecraft:red_mushroom_block[down=false,east=false,north=true,south=false,up=true,west=true]	2	red_mushroom_block	huge_mushroom_bits=14	0	3
+minecraft:red_mushroom_block[down=false,east=false,north=true,south=false,up=true,west=true]	3	red_mushroom_block	huge_mushroom_bits=14	0	3
+minecraft:red_mushroom_block[down=false,east=true,north=false,south=false,up=false,west=false]	0	red_mushroom_block	huge_mushroom_bits=14	0	3
+minecraft:red_mushroom_block[down=false,east=true,north=false,south=false,up=false,west=false]	1	red_mushroom_block	huge_mushroom_bits=14	0	3
+minecraft:red_mushroom_block[down=false,east=true,north=false,south=false,up=false,west=false]	2	red_mushroom_block	huge_mushroom_bits=14	0	3
+minecraft:red_mushroom_block[down=false,east=true,north=false,south=false,up=false,west=false]	3	red_mushroom_block	huge_mushroom_bits=14	0	3
+minecraft:red_mushroom_block[down=false,east=true,north=false,south=false,up=true,west=false]	0	red_mushroom_block	huge_mushroom_bits=14	0	3
+minecraft:red_mushroom_block[down=false,east=true,north=false,south=false,up=true,west=false]	1	red_mushroom_block	huge_mushroom_bits=14	0	3
+minecraft:red_mushroom_block[down=false,east=true,north=false,south=false,up=true,west=false]	2	red_mushroom_block	huge_mushroom_bits=14	0	3
+minecraft:red_mushroom_block[down=false,east=true,north=false,south=false,up=true,west=false]	3	red_mushroom_block	huge_mushroom_bits=14	0	3
+minecraft:red_mushroom_block[down=false,east=true,north=false,south=true,up=false,west=false]	0	red_mushroom_block	huge_mushroom_bits=14	0	3
+minecraft:red_mushroom_block[down=false,east=true,north=false,south=true,up=false,west=false]	1	red_mushroom_block	huge_mushroom_bits=14	0	3
+minecraft:red_mushroom_block[down=false,east=true,north=false,south=true,up=false,west=false]	2	red_mushroom_block	huge_mushroom_bits=14	0	3
+minecraft:red_mushroom_block[down=false,east=true,north=false,south=true,up=false,west=false]	3	red_mushroom_block	huge_mushroom_bits=14	0	3
+minecraft:red_mushroom_block[down=false,east=true,north=false,south=true,up=true,west=false]	0	red_mushroom_block	huge_mushroom_bits=14	0	3
+minecraft:red_mushroom_block[down=false,east=true,north=false,south=true,up=true,west=false]	1	red_mushroom_block	huge_mushroom_bits=14	0	3
+minecraft:red_mushroom_block[down=false,east=true,north=false,south=true,up=true,west=false]	2	red_mushroom_block	huge_mushroom_bits=14	0	3
+minecraft:red_mushroom_block[down=false,east=true,north=false,south=true,up=true,west=false]	3	red_mushroom_block	huge_mushroom_bits=14	0	3
+minecraft:red_mushroom_block[down=false,east=true,north=true,south=false,up=false,west=false]	0	red_mushroom_block	huge_mushroom_bits=14	0	3
+minecraft:red_mushroom_block[down=false,east=true,north=true,south=false,up=false,west=false]	1	red_mushroom_block	huge_mushroom_bits=14	0	3
+minecraft:red_mushroom_block[down=false,east=true,north=true,south=false,up=false,west=false]	2	red_mushroom_block	huge_mushroom_bits=14	0	3
+minecraft:red_mushroom_block[down=false,east=true,north=true,south=false,up=false,west=false]	3	red_mushroom_block	huge_mushroom_bits=14	0	3
+minecraft:red_mushroom_block[down=false,east=true,north=true,south=false,up=true,west=false]	0	red_mushroom_block	huge_mushroom_bits=14	0	3
+minecraft:red_mushroom_block[down=false,east=true,north=true,south=false,up=true,west=false]	1	red_mushroom_block	huge_mushroom_bits=14	0	3
+minecraft:red_mushroom_block[down=false,east=true,north=true,south=false,up=true,west=false]	2	red_mushroom_block	huge_mushroom_bits=14	0	3
+minecraft:red_mushroom_block[down=false,east=true,north=true,south=false,up=true,west=false]	3	red_mushroom_block	huge_mushroom_bits=14	0	3
+minecraft:red_mushroom_block[down=true,east=false,north=false,south=false,up=true,west=false]	0	red_mushroom_block	huge_mushroom_bits=14	0	3
+minecraft:red_mushroom_block[down=true,east=false,north=false,south=false,up=true,west=false]	1	red_mushroom_block	huge_mushroom_bits=14	0	3
+minecraft:red_mushroom_block[down=true,east=false,north=false,south=false,up=true,west=false]	2	red_mushroom_block	huge_mushroom_bits=14	0	3
+minecraft:red_mushroom_block[down=true,east=false,north=false,south=false,up=true,west=false]	3	red_mushroom_block	huge_mushroom_bits=14	0	3
+minecraft:red_poplar_leaves[distance=1,persistent=false,waterlogged=false]	0	red_poplar_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:red_poplar_leaves[distance=1,persistent=false,waterlogged=false]	1	red_poplar_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:red_poplar_leaves[distance=1,persistent=false,waterlogged=false]	2	red_poplar_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:red_poplar_leaves[distance=1,persistent=false,waterlogged=false]	3	red_poplar_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:red_poplar_leaves[distance=2,persistent=false,waterlogged=false]	0	red_poplar_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:red_poplar_leaves[distance=2,persistent=false,waterlogged=false]	1	red_poplar_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:red_poplar_leaves[distance=2,persistent=false,waterlogged=false]	2	red_poplar_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:red_poplar_leaves[distance=2,persistent=false,waterlogged=false]	3	red_poplar_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:red_poplar_leaves[distance=3,persistent=false,waterlogged=false]	0	red_poplar_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:red_poplar_leaves[distance=3,persistent=false,waterlogged=false]	1	red_poplar_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:red_poplar_leaves[distance=3,persistent=false,waterlogged=false]	2	red_poplar_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:red_poplar_leaves[distance=3,persistent=false,waterlogged=false]	3	red_poplar_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:red_sand	0	red_sand		0	3
+minecraft:red_sand	1	red_sand		0	3
+minecraft:red_sand	2	red_sand		0	3
+minecraft:red_sand	3	red_sand		0	3
+minecraft:red_sandstone	0	red_sandstone		0	3
+minecraft:red_sandstone	1	red_sandstone		0	3
+minecraft:red_sandstone	2	red_sandstone		0	3
+minecraft:red_sandstone	3	red_sandstone		0	3
 minecraft:red_terracotta	0	red_terracotta		0	3
 minecraft:red_terracotta	1	red_terracotta		0	3
 minecraft:red_terracotta	2	red_terracotta		0	3
 minecraft:red_terracotta	3	red_terracotta		0	3
+minecraft:red_tulip	0	red_tulip		0	0
+minecraft:red_tulip	1	red_tulip		0	0
+minecraft:red_tulip	2	red_tulip		0	0
+minecraft:red_tulip	3	red_tulip		0	0
 minecraft:redstone_block	0	redstone_block		0	3
 minecraft:redstone_block	1	redstone_block		0	3
 minecraft:redstone_block	2	redstone_block		0	3
@@ -3846,6 +4730,18 @@ minecraft:repeater[delay=3,facing=south,locked=false,powered=false]	0	unpowered_
 minecraft:repeater[delay=3,facing=south,locked=false,powered=false]	1	unpowered_repeater	minecraft:cardinal_direction=west,repeater_delay=2	0	2
 minecraft:repeater[delay=3,facing=south,locked=false,powered=false]	2	unpowered_repeater	minecraft:cardinal_direction=north,repeater_delay=2	0	2
 minecraft:repeater[delay=3,facing=south,locked=false,powered=false]	3	unpowered_repeater	minecraft:cardinal_direction=east,repeater_delay=2	0	2
+minecraft:resin_block	0	resin_block		0	3
+minecraft:resin_block	1	resin_block		0	3
+minecraft:resin_block	2	resin_block		0	3
+minecraft:resin_block	3	resin_block		0	3
+minecraft:rose_bush[half=lower]	0	rose_bush	upper_block_bit=0	0	0
+minecraft:rose_bush[half=lower]	1	rose_bush	upper_block_bit=0	0	0
+minecraft:rose_bush[half=lower]	2	rose_bush	upper_block_bit=0	0	0
+minecraft:rose_bush[half=lower]	3	rose_bush	upper_block_bit=0	0	0
+minecraft:rose_bush[half=upper]	0	rose_bush	upper_block_bit=1	0	0
+minecraft:rose_bush[half=upper]	1	rose_bush	upper_block_bit=1	0	0
+minecraft:rose_bush[half=upper]	2	rose_bush	upper_block_bit=1	0	0
+minecraft:rose_bush[half=upper]	3	rose_bush	upper_block_bit=1	0	0
 minecraft:sand	0	sand		0	3
 minecraft:sand	1	sand		0	3
 minecraft:sand	2	sand		0	3
@@ -3966,6 +4862,18 @@ minecraft:sea_pickle[pickles=2,waterlogged=false]	0	sea_pickle	cluster_count=1,d
 minecraft:sea_pickle[pickles=2,waterlogged=false]	1	sea_pickle	cluster_count=1,dead_bit=1	0	0
 minecraft:sea_pickle[pickles=2,waterlogged=false]	2	sea_pickle	cluster_count=1,dead_bit=1	0	0
 minecraft:sea_pickle[pickles=2,waterlogged=false]	3	sea_pickle	cluster_count=1,dead_bit=1	0	0
+minecraft:seagrass	0	seagrass	sea_grass_type=default	1	0
+minecraft:seagrass	1	seagrass	sea_grass_type=default	1	0
+minecraft:seagrass	2	seagrass	sea_grass_type=default	1	0
+minecraft:seagrass	3	seagrass	sea_grass_type=default	1	0
+minecraft:short_dry_grass	0	short_dry_grass		0	0
+minecraft:short_dry_grass	1	short_dry_grass		0	0
+minecraft:short_dry_grass	2	short_dry_grass		0	0
+minecraft:short_dry_grass	3	short_dry_grass		0	0
+minecraft:short_grass	0	short_grass		0	0
+minecraft:short_grass	1	short_grass		0	0
+minecraft:short_grass	2	short_grass		0	0
+minecraft:short_grass	3	short_grass		0	0
 minecraft:skeleton_skull[rotation=14]	0	skeleton_skull	facing_direction=1	0	2
 minecraft:skeleton_skull[rotation=14]	1	skeleton_skull	facing_direction=1	0	2
 minecraft:skeleton_skull[rotation=14]	2	skeleton_skull	facing_direction=1	0	2
@@ -4354,6 +5262,18 @@ minecraft:spruce_fence_gate[facing=south,in_wall=false,open=false,powered=false]
 minecraft:spruce_fence_gate[facing=south,in_wall=false,open=false,powered=false]	1	spruce_fence_gate	in_wall_bit=0,minecraft:cardinal_direction=west,open_bit=0	0	2
 minecraft:spruce_fence_gate[facing=south,in_wall=false,open=false,powered=false]	2	spruce_fence_gate	in_wall_bit=0,minecraft:cardinal_direction=north,open_bit=0	0	2
 minecraft:spruce_fence_gate[facing=south,in_wall=false,open=false,powered=false]	3	spruce_fence_gate	in_wall_bit=0,minecraft:cardinal_direction=east,open_bit=0	0	2
+minecraft:spruce_leaves[distance=1,persistent=false,waterlogged=false]	0	spruce_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:spruce_leaves[distance=1,persistent=false,waterlogged=false]	1	spruce_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:spruce_leaves[distance=1,persistent=false,waterlogged=false]	2	spruce_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:spruce_leaves[distance=1,persistent=false,waterlogged=false]	3	spruce_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:spruce_leaves[distance=2,persistent=false,waterlogged=false]	0	spruce_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:spruce_leaves[distance=2,persistent=false,waterlogged=false]	1	spruce_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:spruce_leaves[distance=2,persistent=false,waterlogged=false]	2	spruce_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:spruce_leaves[distance=2,persistent=false,waterlogged=false]	3	spruce_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:spruce_leaves[distance=3,persistent=false,waterlogged=false]	0	spruce_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:spruce_leaves[distance=3,persistent=false,waterlogged=false]	1	spruce_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:spruce_leaves[distance=3,persistent=false,waterlogged=false]	2	spruce_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:spruce_leaves[distance=3,persistent=false,waterlogged=false]	3	spruce_leaves	persistent_bit=0,update_bit=0	0	3
 minecraft:spruce_log[axis=x]	0	spruce_log	pillar_axis=x	0	3
 minecraft:spruce_log[axis=x]	1	spruce_log	pillar_axis=z	0	3
 minecraft:spruce_log[axis=x]	2	spruce_log	pillar_axis=x	0	3
@@ -4834,6 +5754,38 @@ minecraft:stonecutter[facing=north]	0	stonecutter_block	minecraft:cardinal_direc
 minecraft:stonecutter[facing=north]	1	stonecutter_block	minecraft:cardinal_direction=east	0	2
 minecraft:stonecutter[facing=north]	2	stonecutter_block	minecraft:cardinal_direction=south	0	2
 minecraft:stonecutter[facing=north]	3	stonecutter_block	minecraft:cardinal_direction=west	0	2
+minecraft:straw_bed[facing=east,occupied=false,part=foot]	0	straw_bed	head_piece_bit=0,minecraft:cardinal_direction=east,occupied_bit=0	0	2
+minecraft:straw_bed[facing=east,occupied=false,part=foot]	1	straw_bed	head_piece_bit=0,minecraft:cardinal_direction=south,occupied_bit=0	0	2
+minecraft:straw_bed[facing=east,occupied=false,part=foot]	2	straw_bed	head_piece_bit=0,minecraft:cardinal_direction=west,occupied_bit=0	0	2
+minecraft:straw_bed[facing=east,occupied=false,part=foot]	3	straw_bed	head_piece_bit=0,minecraft:cardinal_direction=north,occupied_bit=0	0	2
+minecraft:straw_bed[facing=east,occupied=false,part=head]	0	straw_bed	head_piece_bit=1,minecraft:cardinal_direction=east,occupied_bit=0	0	2
+minecraft:straw_bed[facing=east,occupied=false,part=head]	1	straw_bed	head_piece_bit=1,minecraft:cardinal_direction=south,occupied_bit=0	0	2
+minecraft:straw_bed[facing=east,occupied=false,part=head]	2	straw_bed	head_piece_bit=1,minecraft:cardinal_direction=west,occupied_bit=0	0	2
+minecraft:straw_bed[facing=east,occupied=false,part=head]	3	straw_bed	head_piece_bit=1,minecraft:cardinal_direction=north,occupied_bit=0	0	2
+minecraft:straw_bed[facing=north,occupied=false,part=foot]	0	straw_bed	head_piece_bit=0,minecraft:cardinal_direction=north,occupied_bit=0	0	2
+minecraft:straw_bed[facing=north,occupied=false,part=foot]	1	straw_bed	head_piece_bit=0,minecraft:cardinal_direction=east,occupied_bit=0	0	2
+minecraft:straw_bed[facing=north,occupied=false,part=foot]	2	straw_bed	head_piece_bit=0,minecraft:cardinal_direction=south,occupied_bit=0	0	2
+minecraft:straw_bed[facing=north,occupied=false,part=foot]	3	straw_bed	head_piece_bit=0,minecraft:cardinal_direction=west,occupied_bit=0	0	2
+minecraft:straw_bed[facing=north,occupied=false,part=head]	0	straw_bed	head_piece_bit=1,minecraft:cardinal_direction=north,occupied_bit=0	0	2
+minecraft:straw_bed[facing=north,occupied=false,part=head]	1	straw_bed	head_piece_bit=1,minecraft:cardinal_direction=east,occupied_bit=0	0	2
+minecraft:straw_bed[facing=north,occupied=false,part=head]	2	straw_bed	head_piece_bit=1,minecraft:cardinal_direction=south,occupied_bit=0	0	2
+minecraft:straw_bed[facing=north,occupied=false,part=head]	3	straw_bed	head_piece_bit=1,minecraft:cardinal_direction=west,occupied_bit=0	0	2
+minecraft:straw_bed[facing=south,occupied=false,part=foot]	0	straw_bed	head_piece_bit=0,minecraft:cardinal_direction=south,occupied_bit=0	0	2
+minecraft:straw_bed[facing=south,occupied=false,part=foot]	1	straw_bed	head_piece_bit=0,minecraft:cardinal_direction=west,occupied_bit=0	0	2
+minecraft:straw_bed[facing=south,occupied=false,part=foot]	2	straw_bed	head_piece_bit=0,minecraft:cardinal_direction=north,occupied_bit=0	0	2
+minecraft:straw_bed[facing=south,occupied=false,part=foot]	3	straw_bed	head_piece_bit=0,minecraft:cardinal_direction=east,occupied_bit=0	0	2
+minecraft:straw_bed[facing=south,occupied=false,part=head]	0	straw_bed	head_piece_bit=1,minecraft:cardinal_direction=south,occupied_bit=0	0	2
+minecraft:straw_bed[facing=south,occupied=false,part=head]	1	straw_bed	head_piece_bit=1,minecraft:cardinal_direction=west,occupied_bit=0	0	2
+minecraft:straw_bed[facing=south,occupied=false,part=head]	2	straw_bed	head_piece_bit=1,minecraft:cardinal_direction=north,occupied_bit=0	0	2
+minecraft:straw_bed[facing=south,occupied=false,part=head]	3	straw_bed	head_piece_bit=1,minecraft:cardinal_direction=east,occupied_bit=0	0	2
+minecraft:straw_bed[facing=west,occupied=false,part=foot]	0	straw_bed	head_piece_bit=0,minecraft:cardinal_direction=west,occupied_bit=0	0	2
+minecraft:straw_bed[facing=west,occupied=false,part=foot]	1	straw_bed	head_piece_bit=0,minecraft:cardinal_direction=north,occupied_bit=0	0	2
+minecraft:straw_bed[facing=west,occupied=false,part=foot]	2	straw_bed	head_piece_bit=0,minecraft:cardinal_direction=east,occupied_bit=0	0	2
+minecraft:straw_bed[facing=west,occupied=false,part=foot]	3	straw_bed	head_piece_bit=0,minecraft:cardinal_direction=south,occupied_bit=0	0	2
+minecraft:straw_bed[facing=west,occupied=false,part=head]	0	straw_bed	head_piece_bit=1,minecraft:cardinal_direction=west,occupied_bit=0	0	2
+minecraft:straw_bed[facing=west,occupied=false,part=head]	1	straw_bed	head_piece_bit=1,minecraft:cardinal_direction=north,occupied_bit=0	0	2
+minecraft:straw_bed[facing=west,occupied=false,part=head]	2	straw_bed	head_piece_bit=1,minecraft:cardinal_direction=east,occupied_bit=0	0	2
+minecraft:straw_bed[facing=west,occupied=false,part=head]	3	straw_bed	head_piece_bit=1,minecraft:cardinal_direction=south,occupied_bit=0	0	2
 minecraft:stripped_acacia_log[axis=x]	0	stripped_acacia_log	pillar_axis=x	0	3
 minecraft:stripped_acacia_log[axis=x]	1	stripped_acacia_log	pillar_axis=z	0	3
 minecraft:stripped_acacia_log[axis=x]	2	stripped_acacia_log	pillar_axis=x	0	3
@@ -4886,6 +5838,18 @@ minecraft:stripped_spruce_wood[axis=z]	0	stripped_spruce_wood	pillar_axis=z	0	3
 minecraft:stripped_spruce_wood[axis=z]	1	stripped_spruce_wood	pillar_axis=x	0	3
 minecraft:stripped_spruce_wood[axis=z]	2	stripped_spruce_wood	pillar_axis=z	0	3
 minecraft:stripped_spruce_wood[axis=z]	3	stripped_spruce_wood	pillar_axis=x	0	3
+minecraft:sugar_cane[age=0]	0	reeds	age=0	0	0
+minecraft:sugar_cane[age=0]	1	reeds	age=0	0	0
+minecraft:sugar_cane[age=0]	2	reeds	age=0	0	0
+minecraft:sugar_cane[age=0]	3	reeds	age=0	0	0
+minecraft:sweet_berry_bush[age=3]	0	sweet_berry_bush	growth=3	0	0
+minecraft:sweet_berry_bush[age=3]	1	sweet_berry_bush	growth=3	0	0
+minecraft:sweet_berry_bush[age=3]	2	sweet_berry_bush	growth=3	0	0
+minecraft:sweet_berry_bush[age=3]	3	sweet_berry_bush	growth=3	0	0
+minecraft:tall_dry_grass	0	tall_dry_grass		0	0
+minecraft:tall_dry_grass	1	tall_dry_grass		0	0
+minecraft:tall_dry_grass	2	tall_dry_grass		0	0
+minecraft:tall_dry_grass	3	tall_dry_grass		0	0
 minecraft:tall_grass[half=lower]	0	tall_grass	upper_block_bit=0	0	0
 minecraft:tall_grass[half=lower]	1	tall_grass	upper_block_bit=0	0	0
 minecraft:tall_grass[half=lower]	2	tall_grass	upper_block_bit=0	0	0
@@ -5026,6 +5990,10 @@ minecraft:vine[east=false,north=false,south=false,up=false,west=true]	0	vine	vin
 minecraft:vine[east=false,north=false,south=false,up=false,west=true]	1	vine	vine_direction_bits=4	0	0
 minecraft:vine[east=false,north=false,south=false,up=false,west=true]	2	vine	vine_direction_bits=8	0	0
 minecraft:vine[east=false,north=false,south=false,up=false,west=true]	3	vine	vine_direction_bits=1	0	0
+minecraft:vine[east=false,north=false,south=false,up=true,west=false]	0	vine	vine_direction_bits=1	0	0
+minecraft:vine[east=false,north=false,south=false,up=true,west=false]	1	vine	vine_direction_bits=2	0	0
+minecraft:vine[east=false,north=false,south=false,up=true,west=false]	2	vine	vine_direction_bits=4	0	0
+minecraft:vine[east=false,north=false,south=false,up=true,west=false]	3	vine	vine_direction_bits=8	0	0
 minecraft:vine[east=false,north=false,south=false,up=true,west=true]	0	vine	vine_direction_bits=2	0	0
 minecraft:vine[east=false,north=false,south=false,up=true,west=true]	1	vine	vine_direction_bits=4	0	0
 minecraft:vine[east=false,north=false,south=false,up=true,west=true]	2	vine	vine_direction_bits=8	0	0
@@ -5058,10 +6026,18 @@ minecraft:vine[east=false,north=true,south=false,up=true,west=false]	0	vine	vine
 minecraft:vine[east=false,north=true,south=false,up=true,west=false]	1	vine	vine_direction_bits=2	0	0
 minecraft:vine[east=false,north=true,south=false,up=true,west=false]	2	vine	vine_direction_bits=4	0	0
 minecraft:vine[east=false,north=true,south=false,up=true,west=false]	3	vine	vine_direction_bits=8	0	0
+minecraft:vine[east=false,north=true,south=true,up=false,west=false]	0	vine	vine_direction_bits=1	0	0
+minecraft:vine[east=false,north=true,south=true,up=false,west=false]	1	vine	vine_direction_bits=2	0	0
+minecraft:vine[east=false,north=true,south=true,up=false,west=false]	2	vine	vine_direction_bits=4	0	0
+minecraft:vine[east=false,north=true,south=true,up=false,west=false]	3	vine	vine_direction_bits=8	0	0
 minecraft:vine[east=true,north=false,south=false,up=false,west=false]	0	vine	vine_direction_bits=8	0	0
 minecraft:vine[east=true,north=false,south=false,up=false,west=false]	1	vine	vine_direction_bits=1	0	0
 minecraft:vine[east=true,north=false,south=false,up=false,west=false]	2	vine	vine_direction_bits=2	0	0
 minecraft:vine[east=true,north=false,south=false,up=false,west=false]	3	vine	vine_direction_bits=4	0	0
+minecraft:vine[east=true,north=false,south=false,up=false,west=true]	0	vine	vine_direction_bits=2	0	0
+minecraft:vine[east=true,north=false,south=false,up=false,west=true]	1	vine	vine_direction_bits=4	0	0
+minecraft:vine[east=true,north=false,south=false,up=false,west=true]	2	vine	vine_direction_bits=8	0	0
+minecraft:vine[east=true,north=false,south=false,up=false,west=true]	3	vine	vine_direction_bits=1	0	0
 minecraft:vine[east=true,north=false,south=false,up=true,west=false]	0	vine	vine_direction_bits=1	0	0
 minecraft:vine[east=true,north=false,south=false,up=true,west=false]	1	vine	vine_direction_bits=2	0	0
 minecraft:vine[east=true,north=false,south=false,up=true,west=false]	2	vine	vine_direction_bits=4	0	0
@@ -5110,6 +6086,10 @@ minecraft:wall_torch[facing=west]	0	torch	torch_facing_direction=east	0	0
 minecraft:wall_torch[facing=west]	1	torch	torch_facing_direction=south	0	0
 minecraft:wall_torch[facing=west]	2	torch	torch_facing_direction=west	0	0
 minecraft:wall_torch[facing=west]	3	torch	torch_facing_direction=north	0	0
+minecraft:water_cauldron[level=3]	0	cauldron	cauldron_liquid=water,fill_level=6	0	2
+minecraft:water_cauldron[level=3]	1	cauldron	cauldron_liquid=water,fill_level=6	0	2
+minecraft:water_cauldron[level=3]	2	cauldron	cauldron_liquid=water,fill_level=6	0	2
+minecraft:water_cauldron[level=3]	3	cauldron	cauldron_liquid=water,fill_level=6	0	2
 minecraft:waterlily	0	waterlily		0	2
 minecraft:waterlily	1	waterlily		0	2
 minecraft:waterlily	2	waterlily		0	2
@@ -5450,10 +6430,86 @@ minecraft:white_terracotta	0	white_terracotta		0	3
 minecraft:white_terracotta	1	white_terracotta		0	3
 minecraft:white_terracotta	2	white_terracotta		0	3
 minecraft:white_terracotta	3	white_terracotta		0	3
+minecraft:white_tulip	0	white_tulip		0	0
+minecraft:white_tulip	1	white_tulip		0	0
+minecraft:white_tulip	2	white_tulip		0	0
+minecraft:white_tulip	3	white_tulip		0	0
 minecraft:white_wool	0	white_wool		0	3
 minecraft:white_wool	1	white_wool		0	3
 minecraft:white_wool	2	white_wool		0	3
 minecraft:white_wool	3	white_wool		0	3
+minecraft:white_wool_stairs[facing=north,half=bottom,shape=straight,waterlogged=false]	0	white_wool_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=3	0	2
+minecraft:white_wool_stairs[facing=north,half=bottom,shape=straight,waterlogged=false]	1	white_wool_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=0	0	2
+minecraft:white_wool_stairs[facing=north,half=bottom,shape=straight,waterlogged=false]	2	white_wool_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=2	0	2
+minecraft:white_wool_stairs[facing=north,half=bottom,shape=straight,waterlogged=false]	3	white_wool_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=1	0	2
+minecraft:white_wool_stairs[facing=south,half=bottom,shape=straight,waterlogged=false]	0	white_wool_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=2	0	2
+minecraft:white_wool_stairs[facing=south,half=bottom,shape=straight,waterlogged=false]	1	white_wool_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=1	0	2
+minecraft:white_wool_stairs[facing=south,half=bottom,shape=straight,waterlogged=false]	2	white_wool_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=3	0	2
+minecraft:white_wool_stairs[facing=south,half=bottom,shape=straight,waterlogged=false]	3	white_wool_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=0	0	2
+minecraft:wildflowers[facing=east,flower_amount=1]	0	wildflowers	growth=0,minecraft:cardinal_direction=east	0	0
+minecraft:wildflowers[facing=east,flower_amount=1]	1	wildflowers	growth=0,minecraft:cardinal_direction=south	0	0
+minecraft:wildflowers[facing=east,flower_amount=1]	2	wildflowers	growth=0,minecraft:cardinal_direction=west	0	0
+minecraft:wildflowers[facing=east,flower_amount=1]	3	wildflowers	growth=0,minecraft:cardinal_direction=north	0	0
+minecraft:wildflowers[facing=east,flower_amount=2]	0	wildflowers	growth=0,minecraft:cardinal_direction=east	0	0
+minecraft:wildflowers[facing=east,flower_amount=2]	1	wildflowers	growth=0,minecraft:cardinal_direction=south	0	0
+minecraft:wildflowers[facing=east,flower_amount=2]	2	wildflowers	growth=0,minecraft:cardinal_direction=west	0	0
+minecraft:wildflowers[facing=east,flower_amount=2]	3	wildflowers	growth=0,minecraft:cardinal_direction=north	0	0
+minecraft:wildflowers[facing=east,flower_amount=3]	0	wildflowers	growth=0,minecraft:cardinal_direction=east	0	0
+minecraft:wildflowers[facing=east,flower_amount=3]	1	wildflowers	growth=0,minecraft:cardinal_direction=south	0	0
+minecraft:wildflowers[facing=east,flower_amount=3]	2	wildflowers	growth=0,minecraft:cardinal_direction=west	0	0
+minecraft:wildflowers[facing=east,flower_amount=3]	3	wildflowers	growth=0,minecraft:cardinal_direction=north	0	0
+minecraft:wildflowers[facing=east,flower_amount=4]	0	wildflowers	growth=0,minecraft:cardinal_direction=east	0	0
+minecraft:wildflowers[facing=east,flower_amount=4]	1	wildflowers	growth=0,minecraft:cardinal_direction=south	0	0
+minecraft:wildflowers[facing=east,flower_amount=4]	2	wildflowers	growth=0,minecraft:cardinal_direction=west	0	0
+minecraft:wildflowers[facing=east,flower_amount=4]	3	wildflowers	growth=0,minecraft:cardinal_direction=north	0	0
+minecraft:wildflowers[facing=north,flower_amount=1]	0	wildflowers	growth=0,minecraft:cardinal_direction=north	0	0
+minecraft:wildflowers[facing=north,flower_amount=1]	1	wildflowers	growth=0,minecraft:cardinal_direction=east	0	0
+minecraft:wildflowers[facing=north,flower_amount=1]	2	wildflowers	growth=0,minecraft:cardinal_direction=south	0	0
+minecraft:wildflowers[facing=north,flower_amount=1]	3	wildflowers	growth=0,minecraft:cardinal_direction=west	0	0
+minecraft:wildflowers[facing=north,flower_amount=2]	0	wildflowers	growth=0,minecraft:cardinal_direction=north	0	0
+minecraft:wildflowers[facing=north,flower_amount=2]	1	wildflowers	growth=0,minecraft:cardinal_direction=east	0	0
+minecraft:wildflowers[facing=north,flower_amount=2]	2	wildflowers	growth=0,minecraft:cardinal_direction=south	0	0
+minecraft:wildflowers[facing=north,flower_amount=2]	3	wildflowers	growth=0,minecraft:cardinal_direction=west	0	0
+minecraft:wildflowers[facing=north,flower_amount=3]	0	wildflowers	growth=0,minecraft:cardinal_direction=north	0	0
+minecraft:wildflowers[facing=north,flower_amount=3]	1	wildflowers	growth=0,minecraft:cardinal_direction=east	0	0
+minecraft:wildflowers[facing=north,flower_amount=3]	2	wildflowers	growth=0,minecraft:cardinal_direction=south	0	0
+minecraft:wildflowers[facing=north,flower_amount=3]	3	wildflowers	growth=0,minecraft:cardinal_direction=west	0	0
+minecraft:wildflowers[facing=north,flower_amount=4]	0	wildflowers	growth=0,minecraft:cardinal_direction=north	0	0
+minecraft:wildflowers[facing=north,flower_amount=4]	1	wildflowers	growth=0,minecraft:cardinal_direction=east	0	0
+minecraft:wildflowers[facing=north,flower_amount=4]	2	wildflowers	growth=0,minecraft:cardinal_direction=south	0	0
+minecraft:wildflowers[facing=north,flower_amount=4]	3	wildflowers	growth=0,minecraft:cardinal_direction=west	0	0
+minecraft:wildflowers[facing=south,flower_amount=1]	0	wildflowers	growth=0,minecraft:cardinal_direction=south	0	0
+minecraft:wildflowers[facing=south,flower_amount=1]	1	wildflowers	growth=0,minecraft:cardinal_direction=west	0	0
+minecraft:wildflowers[facing=south,flower_amount=1]	2	wildflowers	growth=0,minecraft:cardinal_direction=north	0	0
+minecraft:wildflowers[facing=south,flower_amount=1]	3	wildflowers	growth=0,minecraft:cardinal_direction=east	0	0
+minecraft:wildflowers[facing=south,flower_amount=2]	0	wildflowers	growth=0,minecraft:cardinal_direction=south	0	0
+minecraft:wildflowers[facing=south,flower_amount=2]	1	wildflowers	growth=0,minecraft:cardinal_direction=west	0	0
+minecraft:wildflowers[facing=south,flower_amount=2]	2	wildflowers	growth=0,minecraft:cardinal_direction=north	0	0
+minecraft:wildflowers[facing=south,flower_amount=2]	3	wildflowers	growth=0,minecraft:cardinal_direction=east	0	0
+minecraft:wildflowers[facing=south,flower_amount=3]	0	wildflowers	growth=0,minecraft:cardinal_direction=south	0	0
+minecraft:wildflowers[facing=south,flower_amount=3]	1	wildflowers	growth=0,minecraft:cardinal_direction=west	0	0
+minecraft:wildflowers[facing=south,flower_amount=3]	2	wildflowers	growth=0,minecraft:cardinal_direction=north	0	0
+minecraft:wildflowers[facing=south,flower_amount=3]	3	wildflowers	growth=0,minecraft:cardinal_direction=east	0	0
+minecraft:wildflowers[facing=south,flower_amount=4]	0	wildflowers	growth=0,minecraft:cardinal_direction=south	0	0
+minecraft:wildflowers[facing=south,flower_amount=4]	1	wildflowers	growth=0,minecraft:cardinal_direction=west	0	0
+minecraft:wildflowers[facing=south,flower_amount=4]	2	wildflowers	growth=0,minecraft:cardinal_direction=north	0	0
+minecraft:wildflowers[facing=south,flower_amount=4]	3	wildflowers	growth=0,minecraft:cardinal_direction=east	0	0
+minecraft:wildflowers[facing=west,flower_amount=1]	0	wildflowers	growth=0,minecraft:cardinal_direction=west	0	0
+minecraft:wildflowers[facing=west,flower_amount=1]	1	wildflowers	growth=0,minecraft:cardinal_direction=north	0	0
+minecraft:wildflowers[facing=west,flower_amount=1]	2	wildflowers	growth=0,minecraft:cardinal_direction=east	0	0
+minecraft:wildflowers[facing=west,flower_amount=1]	3	wildflowers	growth=0,minecraft:cardinal_direction=south	0	0
+minecraft:wildflowers[facing=west,flower_amount=2]	0	wildflowers	growth=0,minecraft:cardinal_direction=west	0	0
+minecraft:wildflowers[facing=west,flower_amount=2]	1	wildflowers	growth=0,minecraft:cardinal_direction=north	0	0
+minecraft:wildflowers[facing=west,flower_amount=2]	2	wildflowers	growth=0,minecraft:cardinal_direction=east	0	0
+minecraft:wildflowers[facing=west,flower_amount=2]	3	wildflowers	growth=0,minecraft:cardinal_direction=south	0	0
+minecraft:wildflowers[facing=west,flower_amount=3]	0	wildflowers	growth=0,minecraft:cardinal_direction=west	0	0
+minecraft:wildflowers[facing=west,flower_amount=3]	1	wildflowers	growth=0,minecraft:cardinal_direction=north	0	0
+minecraft:wildflowers[facing=west,flower_amount=3]	2	wildflowers	growth=0,minecraft:cardinal_direction=east	0	0
+minecraft:wildflowers[facing=west,flower_amount=3]	3	wildflowers	growth=0,minecraft:cardinal_direction=south	0	0
+minecraft:wildflowers[facing=west,flower_amount=4]	0	wildflowers	growth=0,minecraft:cardinal_direction=west	0	0
+minecraft:wildflowers[facing=west,flower_amount=4]	1	wildflowers	growth=0,minecraft:cardinal_direction=north	0	0
+minecraft:wildflowers[facing=west,flower_amount=4]	2	wildflowers	growth=0,minecraft:cardinal_direction=east	0	0
+minecraft:wildflowers[facing=west,flower_amount=4]	3	wildflowers	growth=0,minecraft:cardinal_direction=south	0	0
 minecraft:wooden_door[facing=east,half=upper,hinge=left,open=false,powered=false]	0	wooden_door	door_hinge_bit=0,minecraft:cardinal_direction=south,open_bit=0,upper_block_bit=1	0	2
 minecraft:wooden_door[facing=east,half=upper,hinge=left,open=false,powered=false]	1	wooden_door	door_hinge_bit=0,minecraft:cardinal_direction=south,open_bit=0,upper_block_bit=1	0	2
 minecraft:wooden_door[facing=east,half=upper,hinge=left,open=false,powered=false]	2	wooden_door	door_hinge_bit=0,minecraft:cardinal_direction=south,open_bit=0,upper_block_bit=1	0	2

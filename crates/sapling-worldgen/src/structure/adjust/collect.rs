@@ -33,6 +33,7 @@ impl Structures {
         for (kind, pieces) in self.v2_reaching(density, (cx, cz), &near) {
             let adaptation = match kind {
                 StructureKind::TrailRuins => Adaptation::Bury,
+                StructureKind::AbandonedCamp => Adaptation::BeardThin,
                 _ => Adaptation::Encapsulate,
             };
             for piece in pieces.iter().filter(|p| near(&p.bb)) {

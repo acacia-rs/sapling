@@ -21,10 +21,12 @@ pub enum StructureKind {
     /// Jigsaw ("v2") structure sets, placed by Java's LCG.
     TrialChambers,
     TrailRuins,
+    /// The `abandoned_camp` set: one of 18 biome variants by weight.
+    AbandonedCamp,
 }
 
 impl StructureKind {
-    pub const ALL: [StructureKind; 14] = [
+    pub const ALL: [StructureKind; 15] = [
         Self::Village,
         Self::Stronghold,
         Self::Temple,
@@ -39,6 +41,7 @@ impl StructureKind {
         Self::AncientCity,
         Self::TrialChambers,
         Self::TrailRuins,
+        Self::AbandonedCamp,
     ];
 
     /// The name `/locate structure` takes.
@@ -58,6 +61,7 @@ impl StructureKind {
             Self::AncientCity => "ancient_city",
             Self::TrialChambers => "trial_chambers",
             Self::TrailRuins => "trail_ruins",
+            Self::AbandonedCamp => "abandoned_camp",
         }
     }
 
@@ -83,6 +87,7 @@ impl StructureKind {
         Some(match self {
             Self::TrialChambers => Grid::new(34, 12, 94_251_327, Spread::Linear),
             Self::TrailRuins => Grid::new(34, 8, 83_469_867, Spread::Linear),
+            Self::AbandonedCamp => Grid::new(37, 8, 91_231_127, Spread::Linear),
             _ => return None,
         })
     }

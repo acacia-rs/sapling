@@ -34,6 +34,7 @@ const PORTED: &[StructureKind] = &[
     StructureKind::TrailRuins,
     StructureKind::TrialChambers,
     StructureKind::Mansion,
+    StructureKind::AbandonedCamp,
 ];
 
 #[derive(Default)]

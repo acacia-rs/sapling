@@ -113,14 +113,7 @@ impl Structures {
             StructureKind::Shipwreck => self.shipwreck_biomes(&probe, chunk) && !self.near_monument(&probe, chunk),
             StructureKind::RuinedPortal => true,
             StructureKind::AncientCity => probe.contains_only((chunk.0 * 16, -27, chunk.1 * 16), 0, DEEP_DARK),
-            StructureKind::TrialChambers => {
-                let (x, y, z) = self.v2_position(density, kind, chunk);
-                !DEEP_DARK.contains(&probe.biome(x, y, z))
-            }
-            StructureKind::TrailRuins => {
-                let (x, y, z) = self.v2_position(density, kind, chunk);
-                TRAIL_RUINS_BIOMES.contains(&probe.biome(x, y, z))
-            }
+            StructureKind::TrialChambers | StructureKind::TrailRuins | StructureKind::AbandonedCamp => self.v2_starts(density, kind, chunk),
         }
     }
 
