@@ -47,6 +47,8 @@ impl Corridor {
             f.generate_maybe_box(canvas, random, 0.6, (0, 0, 0), (2, 1, length - 1), (Block::Web, air), false, true);
         }
         let orientation = f.orientation.unwrap_or(SOUTH) as usize;
+        // BDS stops drawing spawner positions once the piece has placed its spawner.
+        let mut spawner_placed = false;
         for k in 0..self.sections {
             let z = k * 5 + 2;
             if supported(f, canvas, z) {
@@ -85,11 +87,12 @@ impl Corridor {
                     f.maybe_block_if_not_floating(canvas, random, chance, (x, 2, at - 1), Block::Web);
                 }
             }
-            if self.spider {
+            if self.spider && !spawner_placed {
                 let spawner = random.next_int(3) + base + 1;
                 let (wx, wy, wz) = f.world(1, 0, spawner);
                 if canvas.bb.contains(wx, wy, wz) && canvas.interior(wx, wy, wz) {
                     canvas.set(wx, wy, wz, Block::MobSpawner);
+                    spawner_placed = true;
                 }
             }
         }

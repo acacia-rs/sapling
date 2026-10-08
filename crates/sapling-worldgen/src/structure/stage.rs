@@ -79,7 +79,8 @@ impl Structures {
             placed.extend(temple.post_process(&mut canvas, &mut random, &chunk_random));
         }
         let mut random = chunk_random(chunk);
-        for mineshaft in &mineshafts {
+        // BDS visits a chunk's starts in hash-map order; descending x then z matches it on the oracle.
+        for mineshaft in mineshafts.iter().rev() {
             mineshaft.post_process(&mut canvas, &mut random, biomes);
         }
         if treasure {
