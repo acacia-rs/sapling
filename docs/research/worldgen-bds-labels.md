@@ -61,3 +61,11 @@ Coral labels (2026-10-08, coral; LeviLamina names): 14828b9e0 `CoralFeature::_pl
 `LegacyTreeFeature` tree loop; block lists 0x14ccda7e8 (10 coral blocks), 0x14ccd9410/9440/9458/3250 (live coral
 blocks, plants, fans, wall fans); 0x14cce2b78 blue ice. IBlockWorldGenAPI slots: 0x20 getBlock, 0x58 setBlock, 0x78
 mayPlace, 0x88 canSurvive, 0x98/0xa0 max/min height, 0xb0 getHeightmap, 0xb8 isLegacyLevel.
+
+Feat3 labels (2026-10-08): 14a73fa30 the decoration's IBlockWorldGenAPI vtable (forwards to its `BlockSource` at
++8; 0xb0 = 1411a0a60 heightmap: `LevelChunk` +0xb80 i16 per column + minimum y), 1438f0d00
+`MangroveTreeRoots::placeRoots` (vtable 14a98e1f8), 1438f16f0 its root simulation, 14a681437 its facing table,
+1438f24d0 `MangroveTreeTrunk::getTreeHeight`, 1438f4080 `MegaTreeTrunk::getTreeHeight`, 1438ed7d0 block
+normaliser before `BlockDescriptor::matches`, 143bcfb10 `WeightedRandomFeature::place`, 1438ef7d0
+`MangroveTreeCanopy::placeCanopy`; IRandom vtable 14a7125a0 slots 0x8 nextInt(n), 0x10 nextIntUnbounded, 0x18
+two raw draws as a 64-bit value, 0x20 nextBoolean (bit 27), 0x28 nextFloat.
