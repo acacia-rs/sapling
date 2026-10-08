@@ -19,7 +19,7 @@ fn is_cold(biome: u32) -> bool {
 
 /// `isSolidBlockingBlock` (vtable 0x1b0): leaves are not (oracle: seagrass reaches the water under
 /// mangrove canopies).
-fn solid(view: &View, x: i32, y: i32, z: i32) -> bool {
+pub(super) fn solid(view: &View, x: i32, y: i32, z: i32) -> bool {
     let block = view.block(x, y, z);
     block.blocks_motion() && !block.is_leaves()
 }

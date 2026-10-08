@@ -62,6 +62,10 @@ impl Legacy {
             Legacy::Eyeblossom => super::pale::eyeblossom(ctx.view, at),
             Legacy::MeadowFlower => super::flowers::meadow(ctx.view, at),
             Legacy::GrassDisc => super::disk::grass_disc(ctx.view, ctx.random, at),
+            Legacy::CoralCrust => super::coral::crust(ctx.view, ctx.random, at),
+            Legacy::Coral => super::coral::coral(ctx.view, ctx.random, at),
+            Legacy::CoralHang => super::coral::hang(ctx.view, ctx.random, at),
+            Legacy::SeaAnemone => super::coral::anemone(ctx.view, ctx.random, at),
         }
     }
 }

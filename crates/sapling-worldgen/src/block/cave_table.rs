@@ -1,4 +1,4 @@
-//! The solid blocks of the cave biomes' surface builders and features, after table.rs's and before
+//! The solid blocks of the cave biomes' surface builders and features (and coral), after table.rs's and before
 //! plant_table.rs's. Speleothems run thickness tip, frustum, middle, base, merge, each standing
 //! then hanging (`Block::speleothem`).
 
@@ -15,6 +15,13 @@ macro_rules! with_cave_blocks {
             SculkCatalyst => "sculk_catalyst" "bloom=0",
             SculkSensor => "sculk_sensor" "sculk_sensor_phase=0",
             SculkShrieker => "sculk_shrieker" "active=0,can_summon=1",
+            // Warm ocean coral by `CoralColor` (tube, brain, bubble, fire, horn), live then dead (feature/coral).
+            TubeCoralBlock => "tube_coral_block" "", BrainCoralBlock => "brain_coral_block" "",
+            BubbleCoralBlock => "bubble_coral_block" "", FireCoralBlock => "fire_coral_block" "",
+            HornCoralBlock => "horn_coral_block" "",
+            DeadTubeCoralBlock => "dead_tube_coral_block" "", DeadBrainCoralBlock => "dead_brain_coral_block" "",
+            DeadBubbleCoralBlock => "dead_bubble_coral_block" "", DeadFireCoralBlock => "dead_fire_coral_block" "",
+            DeadHornCoralBlock => "dead_horn_coral_block" "",
             // By Bedrock's Direction: south, west, north, east (`Block::CHESTS`).
             ChestSouth => "chest" "minecraft:cardinal_direction=south",
             ChestWest => "chest" "minecraft:cardinal_direction=west",

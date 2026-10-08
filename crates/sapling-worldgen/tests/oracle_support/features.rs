@@ -79,6 +79,10 @@ pub(super) fn family(name: &str) -> Option<&'static str> {
         "bubble_column" => "bubble columns",
         "packed_ice" => "packed ice",
         "cobblestone" | "mob_spawner" | "chest" => "monster rooms",
+        "sea_pickle" => "sea pickles",
+        n if n.ends_with("coral_block") => "coral blocks",
+        n if n.ends_with("coral_fan") || n.ends_with("coral_wall_fan") => "coral fans",
+        n if n.ends_with("_coral") => "coral plants",
         _ => return None,
     })
 }

@@ -19,6 +19,7 @@ use std::sync::OnceLock;
 pub use connect::rejoin;
 pub use java::{Capped, JavaPlacement};
 pub use load::palette;
+pub(crate) use markers::hash as marker_hash;
 #[allow(unused_imports)]
 pub use place::{Placement, Rotation};
 pub use rules::{Predicate, Rule};

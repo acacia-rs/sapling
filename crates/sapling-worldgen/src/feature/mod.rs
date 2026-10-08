@@ -5,6 +5,7 @@
 mod aquatic;
 mod attach;
 mod blob;
+mod coral;
 mod cave;
 mod cave_spec;
 mod data;

@@ -5,7 +5,7 @@
 use super::{Rotation, Template};
 
 /// BDS's `std::hash<BlockPos>`: FNV-1a of each coordinate's bytes, boost-combined x, y, z.
-fn hash((x, y, z): (i32, i32, i32)) -> u64 {
+pub(crate) fn hash((x, y, z): (i32, i32, i32)) -> u64 {
     let fnv = |v: i32| v.to_le_bytes().iter().fold(0xcbf2_9ce4_8422_2325_u64, |h, &b| (h ^ b as u64).wrapping_mul(0x100_0000_01b3));
     let combine = |seed: u64, v: u64| v.wrapping_add(0x9e37_79b9).wrapping_add(seed >> 2).wrapping_add(seed << 6) ^ seed;
     let h = fnv(x).wrapping_add(0x9e37_79b9);

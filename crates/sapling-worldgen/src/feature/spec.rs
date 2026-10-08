@@ -214,6 +214,12 @@ pub enum Legacy {
     MeadowFlower,
     /// `grass_disc_feature` (disk.rs).
     GrassDisc,
+    /// The warm ocean's `coral_crust_feature`, `coral_feature`, `coral_hang_feature` and
+    /// `sea_anemone_feature` (coral/).
+    CoralCrust,
+    Coral,
+    CoralHang,
+    SeaAnemone,
 }
 
 /// The flower table of a `LegacyFlowerFeature` (1438ef3b0's switch; its forest case is not ported).
