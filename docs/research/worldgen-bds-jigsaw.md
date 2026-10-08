@@ -38,6 +38,28 @@ Companion to [worldgen-bds-templates.md](worldgen-bds-templates.md) (template lo
   delegate until `limit` blocks changed (both of a list's capped processors use the same order). Jigsaws
   become their final states in place; structure blocks drop out.
 
+## Feature elements (`FeaturePoolElement`, vtable 14a89acf0; `src/feature/element.rs`)
+- Size (0, 0, 0) (slot 0, 140906d00), so the shared box code (145e1aa90) makes an inverted box one off
+  the origin by rotation: x (x, x-1) for none/ccw90, (x+1, x) for cw90/180; z (z, z-1) for none/cw90,
+  (z+1, z) for 180/ccw90; y (y, y-1). It meets one chunk, or none when the origin is on that chunk's
+  edge (such a feature is never placed); the foundation fill loops over no columns (no draws); rigid
+  pieces still register a beard with that box. Village pine at (-1016,85,160) is the oracle's example.
+- Projection 0 (rigid), post flags 3 (ctor 145e137d0 -> 145e132d0): the class check runs, then the
+  feature, then plug holes.
+- Legacy place (slot 8, 145e141d0, called by `PoolElementStructurePiece::postProcess` 141ef21e0): the
+  feature at the piece origin with the chunk's structure generator (shared with the other pieces'
+  fills), through the post-process's 3x3 block source. v2 place (slot 7, 145e144c0): its own MT seeded
+  `Mth.getSeed(x, y, z) >> 16` (x times 3129871 in 64 bits).
+- sapling (`structured.rs`): a chunk's features write into its neighbours as spills, seeing the
+  neighbours' carved terrain; a spill lands after the target's own pieces where the replaced block is
+  still there. Ordering neighbours by the decoration phases (features seeing earlier neighbours with
+  their pieces) matched worse (ancient city +204 cells).
+- Piles (`hay_pile_feature` and the others, one class, place 14827e1e0, block 14827ea50): Java's
+  `BlockPileFeature` (`nextInt(2)` x and z radius, x, y (two layers), z; `10 f - 6 f` ellipse else 3.1%)
+  on a full block top or a path (list 0x14ccd3208 = grass_path), no `nextBoolean` for paths; hay on
+  axis y/x by `nextInt(2)`, packed ice 1 in 7 blue (`nextInt(7)`), pumpkins carved when a float >= 0.95.
+  Poplar trees (camps) are not ported (new trunk and canopy types).
+
 ## Placers (`jigsaw/assemble.rs`)
 | | Legacy (villages) | Queued (ancient cities) | V2 (trail ruins, trial chambers) |
 |---|---|---|---|
@@ -89,17 +111,18 @@ column, piece y = -27 - anchor dy - y0 - 1, within 128 of the centre, depth 7; d
 ## Oracle (20261003-structures and -biomes, 2026-10-08)
 | kind | precision (non-air) | recall | what is left |
 |---|---|---|---|
-| village | 99.0% | 98.4% | tree and pile feature elements; a few paths a block low; fence/wall joins |
-| ancient city | 82.4% | 96.7% | sculk patch feature elements; later stages over the city |
+| village | 99.5% | 99.3% | 20 path cells a block low (terrain there, below) |
+| ancient city | 82.2% | 96.6% | sculk patches spread differently; later stages over the city |
 | trail ruins | 99.7% | 84.7% | |
 | trial chambers | 99.8% | 99.6% | (other starts 97.9-99.9%; geodes overwrite one in the mansion region) |
-| abandoned camp | 91.8 / 96.4 / 99.2% | 42.5 / 96.1 / 99.7% | tree feature elements; forest rocks count as wanted |
+| abandoned camp | 93.9 / 96.4 / 99.2% | 42.5 / 96.1 / 99.7% | podzol under a camp tree; forest rocks count as wanted |
 All 840 ruin-material cells of the trail ruin match, suspicious gravel included.
 
 ## Gaps
-- Feature elements (village and camp trees, piles, ancient city sculk patches) place nothing: BDS places them
-  through the 3x3 block source from the chunk holding their 1x1x1 box, drawing from that chunk's generator.
-- Village paths sit one block low in a few columns next to trees (shape cells there too).
+- Village terrain (Shape, ~570 cells): BDS's beards fill noise caves near rigid pieces more than ours.
+  The clearest: north of the taiga meeting point (box x -992..-975, z 107..128, y0 77) BDS's terrain
+  stays at 76-77 over x -984..-973, z 101..107, where ours drops to 53-71; the paths on it follow.
+- Ancient city sculk patches: placed, but their sculk lands elsewhere than BDS's (not traced yet).
 - Pool alias random picks (trial chamber spawner kinds) are not drawn; blocks agree either way.
 
 ## Labels
@@ -113,4 +136,7 @@ All 840 ruin-material cells of the trail ruin match, suspicious gravel included.
 1481318c0 trial chamber pools   1480ba050 copper bulb list   141f82140 trial chambers structure
 141fa20f0 trial chamber pool aliases   1480bbe90 village pools   1480fe430 ancient city pools
 141f7a9c0/ab60/abb0 village piece class   141edf3a0 ancient city piece class
+145e137d0 FeaturePoolElement ctor   145e141d0/145e144c0 FeaturePoolElement place (legacy/v2)
+145e1aa90 StructurePoolElement::getBoundingBox   140906d00 zero getSize   14a89acf0 FeaturePoolElement vtable
+14827e1e0/14827ea50 pile feature place/block   0x14ccd3208 pile path list (grass_path)
 ```

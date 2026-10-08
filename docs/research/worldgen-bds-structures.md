@@ -201,7 +201,11 @@ Known gaps: eroded badlands' mesa mineshafts (BDS shows none; ours sit at y 93, 
 cells; the mesa test, box and preliminary surface (80-128 there) match our reading, cause not found), remaining
 rail/web desync, cross-chunk reads use the neighbours' carved terrain. Plains villages near rivers (the six
 /locate misses): VillageFeature::isFeatureChunk (1480a80e0) is containsOnly(x*16+8, prelim surface or 1, z*16+8,
-r 2), as ours; locate (141efb740) adds a flag-gated per-chunk filter (feature +0x1d8, vt 0x28) not identified.
+r 2), as ours; locate (141efb740) adds a flag-gated per-chunk filter (feature +0x1d8, vt 0x28) not identified,
+and (flag at +0x30 of its settings, +0x5c7..+0x686) a biome test at (x*16+8, preliminary surface or 1,
+z*16+8) through the biome source (vt+0x50) and 143914da0. Testing that point's biome against the village
+list changed none of the six: our six answers are plains at the centre with surface 56, like one BDS
+answer. These filters are /locate's only; generation is unaffected.
 
 ## Prior art and licences
 Bedrock finders (scratchpad `st/prior-art.md`): bedrock-dev/MCBEStructureFinder (MIT, pre-1.18), stirante/

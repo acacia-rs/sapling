@@ -45,6 +45,11 @@ slot +0x100), 1415f89a0/1415f87d0 `BlockSource::{updateNeighborsAt,updateNeighbo
 Residue labels (2026-10-08): 148299570 `GrassDiscFeature::place`; block ids 0x14cce09b8 mud, 0x14cce0838 dirt,
 0x14cce1af8 tuff, 0x14cce38b0 stone (unnamed in the initialiser, placed by alphabetical runs), 0x14ccf9950 air.
 
+Structure feature labels (2026-10-08, structfeat): 145e137d0 `FeaturePoolElement` ctor (vtable 14a89acf0),
+145e141d0/145e144c0 its legacy/v2 place, 145e1aa90 `StructurePoolElement::getBoundingBox`, 14827e1e0/14827ea50
+pile feature place/block, 141f79610 `TemplateStructurePiece` box, 148358d80 `PillagerOutpostPiece::postProcess`
+(details in worldgen-bds-jigsaw.md and worldgen-bds-templates.md).
+
 Feature residue labels (2026-10-08, feat2): 141882f10 `Dimension::getDefaultBiomeId` (vtables 14a75bd80,
 14a75c020, slot 0xc8; nether 14880e9e0 = 8, end 148276900 = 9), 141602f90 `BlockSource::getBiome`, 1438eac70
 `TreeHelper::prepareSpawn`, 1438f2ba0 `MegaTreeTrunk::placeTrunk`, 143bd34c0 `AcaciaTreeTrunk::placeTrunk`,

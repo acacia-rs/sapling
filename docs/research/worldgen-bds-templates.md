@@ -112,9 +112,16 @@ netherrack by sea floor and ice), gold (0.3: lava beside lava, else air).
 
 ## Pillager outposts (start 148357080, start postProcess 148358490)
 Watchtower, then the overgrown watchtower (integrity 0.05), then up to four feature pieces from seven
-templates around it. Each piece's y comes from five heightmap points of its own footprint; the start's
-postProcess fills under each piece's bottom layer down through air and fluids with that block (cobblestone
-where it is not a full cube).
+templates around it. Each piece's y comes from five heightmap points of its box (piece postProcess
+148358d80): middle, middle + half in x, in z, x0 at the middle z, z0 at the middle x; features take the
+middle's height when the spread is under 9 and no point's top is a liquid, else fail without caching
+(the next chunk tries again); the tower takes (low + high) / 2, or high - 4. The start's postProcess
+fills under each piece's bottom layer down through air and fluids with that block (cobblestone where
+it is not a full cube).
+- `TemplateStructurePiece`'s box (141f79610, also ocean ruins and mansion pieces) spans size + 1 blocks:
+  x (x, x + sx) unturned, (x - sz, x) cw90, (x - sx, x) 180, (x, x + sz) ccw90, z likewise; so the
+  height points sit one further from the origin than the template's own box (`template::piece_box`).
+  That put the oracle's 180-turned tent a block lower than ours (98.0 -> 99.4% precision).
 
 ## Woodland mansions (start 1480a8c20, placer 1480abea0, start postProcess 1480ab380; `src/structure/mansion`)
 Java's 1.11 mansion on BDS's MT, with BDS's own details:
@@ -141,11 +148,12 @@ Java's 1.11 mansion on BDS's MT, with BDS's own details:
 | ocean ruins | 99.2% | 92.6% |
 | shipwreck | 99.8% | 62.9% (the rest is a dungeon and features) |
 | ruined portal | 99.8% | 99.8% |
-| pillager outpost | 98.0% | 89.9% (two feature pieces on uneven ground sit off by one) |
-| woodland mansion | 99.5% | 89.9% (the rest is trees and moss carpets around it) |
+| pillager outpost | 99.4% | 93.4% (overgrowth vines) |
+| woodland mansion | 99.9% | 90.3% (the rest is trees and moss carpets around it) |
 Jigsaw structures: [worldgen-bds-jigsaw.md](worldgen-bds-jigsaw.md).
-Remaining: iron bar/fence/wall joins to a few non-cube neighbours, water a basement cut open
-(liquid stage).
+Joins (`template/connect.rs`, `wall.rs`): walls are set top down, so a side is tall under the final wall
+above; chests and stairs' fronts are not sturdy (palette flags decide for every block the palette has),
+composter sides are. Remaining: water a basement cut open (liquid stage).
 
 ## Labels
 ```
@@ -161,7 +169,8 @@ Remaining: iron bar/fence/wall joins to a few non-cube neighbours, water a basem
 14393d890 VanillaBiomeTags init  14837f180 template name globals (portals, igloo, shipwreck)
 1480a83a0 VillageFeature::createStructureStart 141f79aa0 village start pieces 141ee6a70 JigsawPlacement::addPieces
 141ee7000 jigsaw piece recursion 141ee7770 jigsaw candidates 14816cc00 village elements 1480bbe90 village pools
-148357080 outpost start   148358490 outpost start postProcess
+148357080 outpost start   148358490 outpost start postProcess   148358d80 outpost piece postProcess
+1483587c0 outpost piece ctor   141f79610 TemplateStructurePiece box setup
 1480a8980 WoodlandMansionFeature::isFeatureChunk   1480a8c20 mansion start   1480abea0 createMansion
 1480b72e0 mansion corridors   1480b7780 cleanEdges   1480b7a60 identifyRooms   1480b69c0 isRoomId
 1480b3800 traverseOuterWalls   1480b3cc0 wall piece   1480b3eb0 createRoof   1480b1930/1a70 mansion piece ctor
