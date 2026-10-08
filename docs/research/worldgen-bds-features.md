@@ -8,8 +8,9 @@ Companion to [worldgen-bds.md](worldgen-bds.md). Feature rules run in `decoratio
   The 1.18+ ores (`*_lower`/`*_upper`, tuff, copper) exist only in the packs; the old unsplit rules there have
   iterations 0. `scripts/features_to_rust.py` transcribes them into `src/feature/data/` (the BDS install is not in
   the repo, and rule and feature data is static); biome filters are evaluated there against each biome's tags, as
-  BDS does when it attaches rules to biomes at load. Rules reaching any unported feature are left out (each rule
-  has its own generators, so leaving one out shifts no other). `scripts/features_data.py` turns feature documents
+  BDS does when it attaches rules to biomes at load. Rules reaching an unported feature are kept with a placeholder
+  that places nothing: their `math.random` iterations draw from the generator all rules of the chunk share (glow
+  lichen's `Math.Random(104, 157)` runs before every after-surface rule). `scripts/features_data.py` turns feature documents
   and the hardcoded features into `FEATURES`, reading the block table of `src/block.rs` for block names.
 - Rule store (loader 144c03360): `unordered_map<pass, unordered_map<HashedString id, rule>>`, filled from the pack
   stack newest first (brarchive entry order), then `definitions/` by name; the first rule of an identifier wins.
@@ -62,9 +63,9 @@ generator, so a rule's whole feature tree draws from its second MT in call order
   `canSurvive`), `may_replace`, `setBlock`. Survival as ported (plants.rs): grass, ferns, flowers, double plants on
   dirt-like blocks, a double plant's lower half also needs air above, dry plants and dead bushes on sand and
   terracotta too.
-- `search_feature` 143ba64d0, `snap_to_surface_feature` 143bb7720 (its search 143bb7ac0), `vegetation_patch_feature`
-  143bc8310, `growing_plant_feature` 144c15200, `multiface` 143b83e50, `surface_relative_threshold` 143bc69b0: located,
-  not ported.
+- `search_feature` 143ba64d0, `vegetation_patch_feature` 143bc8310, `growing_plant_feature` 144c15200: see Trees and
+  cave.rs. `snap_to_surface_feature`, `multiface_feature`, `surface_relative_threshold_feature` and
+  `partially_exposed_blob_feature`: [worldgen-bds-caves.md](worldgen-bds-caves.md).
 
 ## Vegetation (hardcoded features, registered in 1482f4580; vtable slot 4 is place(BlockSource, pos, Random))
 Tries move by `(r & m) - (r & m)` per axis, two raw MT outputs each; most draw z, y, x (±7, ±3, ±7) after the try.
@@ -121,9 +122,8 @@ diamond 97.0/97.2, redstone 98.6/98.5, geode shells 98.0/100 and buds 99.0/100 (
 structures), grass and ferns 99.8/99.9, flowers, sunflowers, sugar cane 100. Biome regions: geode shells and buds
 100/100 everywhere; dead bushes and dry grass 98.5-100, lily pads 85-97, mushrooms 85 (taiga) and 100, cacti 60/75.
 The diamond and redstone shifts sit beside mineshafts: their blobs draw a discard float per exposed cell, so
-structure air BDS has and sapling lacks shifts the rest of the rule's draws. Lush caves (moss, clay pools,
-dripleaves, vines) need snap_to_surface, vegetation_patch, growing_plant and the hardcoded moss_vegetation and
-dripleaf features; glow lichen and sculk (multiface, sculk_patch) are not ported either.
+structure air BDS has and sapling lacks shifts the rest of the rule's draws. Cave features (speleothems, glow
+lichen, magma, monster rooms, sulfur pools, ice spikes) and what is left: [worldgen-bds-caves.md](worldgen-bds-caves.md).
 
 ## Trees
 See [worldgen-bds-trees.md](worldgen-bds-trees.md). `search_feature` (143ba64d0) runs its feature over the box in the

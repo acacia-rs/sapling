@@ -52,6 +52,6 @@ oracle run (a long game phase fixes near origin and breaks the small worlds), so
 Not modelled either: lake and monster-room writes' updates, lava's 3-in-4 recede delay (TLS random), waterlogged
 plants losing water; about 100 lava cells near origin still spread where BDS's did not (a falling lava cell that
 made stone below then spreads sideways in ours), unexplained.
-In biome regions the liquid residue of windswept gravelly hills (sulfur caves), old growth pine taiga (lush caves)
-and the desert's extra lava spring (dripstone) sits where BDS's unported cave features changed the walls a spring
-or a flow needed.
+In biome regions the liquid residue of old growth pine taiga (lush caves) and of the cave regions sits where
+cave features still differ ([worldgen-bds-caves.md](worldgen-bds-caves.md)) and changed the walls a spring or a
+flow needed. Bubble columns over magma grow by ticks: near a source's 8-block edge they wait for game time.

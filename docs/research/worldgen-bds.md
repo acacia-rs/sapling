@@ -124,7 +124,8 @@ ChunkSource tasks (strings): `_launchGenerationTask` → `loadChunk`; `_launchSt
 8. Depth noise (slot 60 `minecraft:surface`): PerlinSimplex octaves, coord·0.125·k, amp 0.55/k, k halves per octave → 16×16 buffer.
 9. `BiomeSurfaceSystem::findBiomesAndPrepareChunkParams` 14580c660 → `buildChunkSurface` 14580d280
    (per-biome surface builders from biome JSON; resolved by `resolveBuilderImplementation(LevelSeed64)`).
-10. If an experiment/level flag (vt+0xbe0) is set: second surface pass per vertical run of 3D biomes (underground biomes).
+10. If an experiment/level flag (vt+0xbe0) is set: second surface pass per vertical run of 3D biomes (underground biomes;
+    the sulfur caves' noise gradient, [worldgen-bds-caves.md](worldgen-bds-caves.md)).
 11. `decorateWorldGenLoadChunk` (slot 53, 1481ebd30 → `BiomeDecorationSystem::decorateLargeFeature` 14580c470):
     the `pregeneration_pass` ("cave_carver_feature is the only valid feature in pregeneration_pass").
 12. Hardcoded canyons (`CanyonFeature::apply` 14827f840): +0x268 (vt 14a98ad98) only in legacy worlds, then +0x258
@@ -146,7 +147,7 @@ MT reseeded with the large-feature chunk seed (worldgen-bds-carvers.md). Then, i
   `((8−s)−4)*f+2+s/2`), border: liquid at grid y≥4 or non-solid non-lava below fails; lava below grid y 4, air above.
   Oracle: the one lava lake in the oracle regions matches cell for cell.
 - Monster rooms (`MonsterRoomFeature::place` 149e9dae0): if minY < 0, 4 tries at y `nextInt(|minY+6|)+minY+6`, then 10
-  (else 8) tries at y `nextInt(genHeight)`; x/z `nextInt(16)+(c·16|8)`. Not ported.
+  (else 8) tries at y `nextInt(320)` (144a184d0); x/z `nextInt(16)+(c·16|8)`. Ported ([worldgen-bds-caves.md](worldgen-bds-caves.md)).
 - Feature rules (vt slot 54 via cfg dispatch), MT reseeded again with the chunk seed.
 - Freeze pass per column: rain top; `Biome::shouldFreeze` 14119e860 on top−1 (temperature ≤ 0.15, in build range,
   light < 10, water source) → ice; `shouldSnow` 14119e740 on top → snow layer. Ported with `Biome::getTemperature`
@@ -176,6 +177,7 @@ Floor, deepslate, ore veins, surface builders and the biome tree: [worldgen-bds-
 Cave carvers and canyons: [worldgen-bds-carvers.md](worldgen-bds-carvers.md).
 Feature rules (order, seeding, cross-chunk scheme), ores, disks, wrapper features and vegetation (with their labels):
 [worldgen-bds-features.md](worldgen-bds-features.md). Springs and liquid flow: [worldgen-bds-liquids.md](worldgen-bds-liquids.md).
+Cave features, the sulfur caves' subsurface builder and monster rooms: [worldgen-bds-caves.md](worldgen-bds-caves.md).
 
 ## Data-driven vs hardcoded
 
@@ -235,9 +237,8 @@ nextFloat,consumeCount}`.
 2. Cavifier/Aquifer/OreVeinifier internals not decompiled constant-by-constant (only spot checks); `_prepareHeights`
    14822eb60 and 14822d4b0 are the functions to transcribe.
 3. Biome placement: when JSON `multinoise_generation_rules` override the hardcoded builder (never, for vanilla).
-4. Surface builders not ported: Capped, TheEnd, NoiseGradient (sulfur caves), the subsurface second pass
-   (step 10, flag vt+0xbe0); the legacy mesa variant 1487db280 (which worlds pick it?); `Biome::getTemperature`
-   (base temperature used for ice/iceberg checks).
+4. Surface builders not ported: Capped, TheEnd, NoiseGradient as a top-of-column surface builder (the subsurface
+   pass is); the legacy mesa variant 1487db280 (which worlds pick it?).
 5. Who calls slot 54; which rule places `underground_cave_carver_feature`; structure post-process a/b pairing
    (assumed as the large-feature seed's).
 6. Structures (legacy `StructureFeature` vs jigsaw `br::worldgen`, `worldgen/structure_sets`) unmapped.

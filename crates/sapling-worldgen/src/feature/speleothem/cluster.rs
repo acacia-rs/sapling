@@ -46,9 +46,6 @@ pub fn place(ctx: &mut Ctx, blocks: &SpeleothemBlocks, height: [i32; 2], wetness
     let rx = ctx.random.next_int(6) + 2;
     let rz = ctx.random.next_int(6) + 2;
     let shape = Shape { height, wetness, density };
-    if trace() {
-        eprintln!("CLUSTER {at:?} r {rx} {rz} h {height} wet {wetness} dens {density}");
-    }
     for dx in -rx..=rx {
         for dz in -rz..=rz {
             let edge = (rx - dx.abs()).min(rz - dz.abs()) as f32 / 3.0;
@@ -143,9 +140,6 @@ fn column(ctx: &mut Ctx, blocks: &SpeleothemBlocks, shape: &Shape, at: [i32; 3],
         stalagmite = meet - f - 1;
         stalactite = c - meet;
     }
-    if trace() {
-        eprintln!("  COL {at:?} floor {floor:?} ceil {ceiling:?} up {stalactite} down {stalagmite}");
-    }
     let joined = ctx.random.next_boolean();
     let merge = match (ceiling, floor) {
         (Some(c), Some(f)) => joined && stalactite > 0 && stalagmite > 0 && stalactite + stalagmite == c - f - 1,
@@ -168,11 +162,6 @@ fn can_pool(view: &View, blocks: &SpeleothemBlocks, [x, y, z]: [i32; 3]) -> bool
     }
     let holds = |b: Block| matches!(b, Block::Stone | Block::Deepslate | Block::Tuff) || water(b);
     [(0, 0, -1), (1, 0, 0), (0, 0, 1), (-1, 0, 0), (0, -1, 0)].iter().all(|&(dx, dy, dz)| holds(view.block(x + dx, y + dy, z + dz)))
-}
-
-pub fn trace() -> bool {
-    static ON: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
-    *ON.get_or_init(|| std::env::var_os("SAPLING_TRACE_SPELEO").is_some())
 }
 
 fn same_type(block: Block, spike: Block) -> bool {
