@@ -3,6 +3,7 @@
 //! own generator, so the later ones depend on the earlier only through the blocks they left.
 //! Decompile map: docs/research/worldgen-bds-caves.md, "Coral".
 
+mod arm;
 mod crust;
 mod shape;
 
