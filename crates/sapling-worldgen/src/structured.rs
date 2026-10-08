@@ -20,6 +20,9 @@ pub struct Pieced {
     shape: Arc<ChunkShape>,
     /// Its pieces' features' writes into the neighbours.
     spilled: Vec<Spill>,
+    /// Its mineshaft floors' writes into the neighbours.
+    unclipped: Vec<Spill>,
+    spawners: structure::Spawners,
     /// The heights it changed, for `rejoin_connections`.
     touched: Option<(i32, i32)>,
 }
@@ -35,14 +38,20 @@ impl OverworldGenerator {
         let pieced = self.pieced(chunk);
         *shape = (*pieced.shape).clone();
         let mut heights = pieced.touched;
-        for source in self.structures.feature_sources(&self.density, chunk) {
-            for &([x, y, z], block, seen) in self.pieced(source).spilled.iter().filter(|(p, ..)| (p[0] >> 4, p[2] >> 4) == chunk) {
+        let mut land = |spills: &[Spill]| {
+            for &([x, y, z], block, seen) in spills.iter().filter(|(p, ..)| (p[0] >> 4, p[2] >> 4) == chunk) {
                 let (lx, lz) = ((x & 15) as usize, (z & 15) as usize);
                 if shape.block(lx, y, lz) == seen {
                     shape.set_block(lx, y, lz, block);
                     heights = widen(heights, y);
                 }
             }
+        };
+        for source in self.structures.feature_sources(&self.density, chunk) {
+            land(&self.pieced(source).spilled);
+        }
+        for source in self.structures.later_mineshaft_writers(&self.density, chunk) {
+            land(&self.pieced(source).unclipped);
         }
         if let Some(heights) = heights {
             let neighbour = |x: i32, y: i32, z: i32| self.pieced((x >> 4, z >> 4)).shape.block((x & 15) as usize, y, (z & 15) as usize);
@@ -63,18 +72,24 @@ impl OverworldGenerator {
             let mut shape = (*self.carved(chunk.0, chunk.1)).clone();
             let placed = self.place_pieces(&mut shape, chunk);
             let touched = placed.as_ref().map(|p| p.touched);
-            Pieced { shape: Arc::new(shape), spilled: placed.map_or_else(Vec::new, |p| p.spilled), touched }
+            let (spilled, unclipped, spawners) = placed.map_or_else(Default::default, |p| (p.spilled, p.unclipped, p.spawners));
+            Pieced { shape: Arc::new(shape), spilled, unclipped, spawners, touched }
         })
     }
 
     /// The chunk's pieces, reading past it through the neighbours' carved terrain.
     fn place_pieces(&self, shape: &mut ChunkShape, chunk: (i32, i32)) -> Option<structure::Placed> {
+        let earlier = |n: (i32, i32)| feature::phase(n) < feature::phase(chunk);
         let carved = |x: i32, y: i32, z: i32| self.carved(x >> 4, z >> 4).block((x & 15) as usize, y, (z & 15) as usize);
         let placed = |x: i32, y: i32, z: i32| {
             let n = (x >> 4, z >> 4);
-            if feature::phase(n) < feature::phase(chunk) { self.pieced(n).shape.block((x & 15) as usize, y, (z & 15) as usize) } else { carved(x, y, z) }
+            if earlier(n) { self.pieced(n).shape.block((x & 15) as usize, y, (z & 15) as usize) } else { carved(x, y, z) }
         };
-        let neighbours = structure::Neighbours { carved: &carved, placed: &placed };
+        let spawners = || {
+            let around = (chunk.0 - 1..=chunk.0 + 1).flat_map(|x| (chunk.1 - 1..=chunk.1 + 1).map(move |z| (x, z)));
+            around.filter(|&n| earlier(n)).flat_map(|n| self.pieced(n).spawners.clone()).collect()
+        };
+        let neighbours = structure::Neighbours { carved: &carved, placed: &placed, spawners: &spawners };
         let biomes = self.chunk_biomes(chunk.0, chunk.1);
         let load = |x: i32, z: i32| self.carved(x, z);
         let biome = |[x, y, z]: [i32; 3]| Some(self.chunk_biomes(x >> 4, z >> 4).biome((x & 15) as usize, y, (z & 15) as usize));

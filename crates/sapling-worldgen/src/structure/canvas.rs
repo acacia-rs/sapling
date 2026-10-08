@@ -2,7 +2,7 @@
 //! chunks): writes land in the chunk only, reads may reach the neighbours' loaded terrain.
 
 use std::cell::RefCell;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 
 use super::BoundingBox;
@@ -13,12 +13,18 @@ use crate::terrain::{ChunkShape, MIN_Y};
 
 const TOP: i32 = 319;
 
+/// Spider corridors (start, piece index) that placed their spawner: BDS keeps the flag (+0x5a)
+/// on the piece across the chunks it post-processes in.
+pub type Spawners = HashSet<((i32, i32), usize)>;
+
 /// What a chunk's structure stage reads past it: the neighbours' carved terrain, and the
-/// neighbours BDS post-processed earlier (decoration phases) with their pieces.
+/// neighbours BDS post-processed earlier (decoration phases) with their pieces and the
+/// spawners they placed.
 #[derive(Clone, Copy)]
 pub struct Neighbours<'a> {
     pub carved: &'a dyn Fn(i32, i32, i32) -> Block,
     pub placed: &'a dyn Fn(i32, i32, i32) -> Block,
+    pub spawners: &'a dyn Fn() -> Spawners,
 }
 
 pub struct Canvas<'a> {
@@ -39,6 +45,8 @@ pub struct Canvas<'a> {
     features: Option<&'a ElementWorld<'a>>,
     /// Features' writes into the neighbours: (position, block, block replaced).
     pub spilled: Vec<([i32; 3], Block, Block)>,
+    /// `setBlock` writes into the neighbours (mineshaft floors), as `spilled`.
+    pub unclipped: Vec<([i32; 3], Block, Block)>,
 }
 
 impl<'a> Canvas<'a> {
@@ -56,6 +64,7 @@ impl<'a> Canvas<'a> {
             touched: (i32::MAX, i32::MIN),
             features: None,
             spilled: Vec::new(),
+            unclipped: Vec::new(),
         }
     }
 
@@ -133,6 +142,17 @@ impl<'a> Canvas<'a> {
             && area.contains(x, y, z)
         {
             cells.insert((x, y, z), block);
+        }
+    }
+
+    /// `BlockSource::setBlock` past the chunk box: the chunk's own cells, or a write into a
+    /// neighbour that lands where the block read here is still there (structured.rs).
+    pub fn set_unclipped(&mut self, x: i32, y: i32, z: i32, block: Block) {
+        if self.inside(x, z) {
+            self.set(x, y, z, block);
+        } else if (MIN_Y..=TOP).contains(&y) {
+            let seen = self.get(x, y, z);
+            self.unclipped.push(([x, y, z], block, seen));
         }
     }
 

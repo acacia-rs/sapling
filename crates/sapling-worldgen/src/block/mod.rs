@@ -147,6 +147,12 @@ impl Block {
         self >= Block::Kelp0
     }
 
+    /// `BlockType::mFalling` (+0x163 bit 0x10): blocks that fall when unsupported.
+    pub fn falls(self) -> bool {
+        let name = self.name();
+        matches!(name, "sand" | "red_sand" | "gravel" | "suspicious_sand" | "suspicious_gravel" | "anvil" | "dragon_egg") || name.ends_with("concrete_powder")
+    }
+
     /// Logs and leaves.
     pub fn is_wood(self) -> bool {
         (Block::OakLog..=Block::AzaleaLeavesFlowered).contains(&self)

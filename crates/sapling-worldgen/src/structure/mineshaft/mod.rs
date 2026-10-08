@@ -7,7 +7,7 @@ pub mod probe;
 mod rooms;
 
 use super::BoundingBox;
-use super::canvas::Canvas;
+use super::canvas::{Canvas, Spawners};
 use super::piece::{Frame, NORTH, SOUTH, WEST};
 use super::placement::MineshaftSeed;
 use crate::biome::ChunkBiomes;
@@ -181,7 +181,7 @@ impl Builder {
 
 impl Mineshaft {
     /// The pieces reaching the chunk, in start order, on the chunk's structure generator.
-    pub fn post_process(&self, canvas: &mut Canvas, random: &mut Mt19937, biomes: &ChunkBiomes) {
+    pub fn post_process(&self, canvas: &mut Canvas, random: &mut Mt19937, biomes: &ChunkBiomes, spawners: &mut Spawners) {
         let column = canvas.bb;
         for (index, piece) in self.pieces.iter().enumerate().filter(|(_, p)| p.frame.bb.intersects(&column)) {
             probe::before_piece(self.start, (column.x0 >> 4, column.z0 >> 4), index, random);
@@ -190,7 +190,13 @@ impl Mineshaft {
             }
             match &piece.kind {
                 Kind::Room(entrances) => rooms::room(&piece.frame, entrances, canvas),
-                Kind::Corridor(c) => c.post_process(&piece.frame, self.materials, canvas, random),
+                Kind::Corridor(c) => {
+                    let mut placed = spawners.contains(&(self.start, index));
+                    c.post_process(&piece.frame, self.materials, canvas, random, &mut placed);
+                    if placed {
+                        spawners.insert((self.start, index));
+                    }
+                }
                 Kind::Crossing { two_floors, .. } => rooms::crossing(&piece.frame, *two_floors, self.materials, canvas),
                 Kind::Stairs => rooms::stairs(&piece.frame, canvas),
             }

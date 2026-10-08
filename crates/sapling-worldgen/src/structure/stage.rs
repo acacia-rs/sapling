@@ -4,7 +4,7 @@
 
 use std::sync::Arc;
 
-use super::canvas::{Canvas, Neighbours};
+use super::canvas::{Canvas, Neighbours, Spawners};
 use super::jigsaw::{ElementKind, Piece};
 use super::mineshaft::{self, MESA_BIOMES, Mineshaft};
 use super::monument::{self, Monument};
@@ -34,6 +34,10 @@ pub struct Placed {
     pub touched: (i32, i32),
     /// Pieces' features' writes into the neighbours: (position, block, block replaced).
     pub spilled: Vec<([i32; 3], Block, Block)>,
+    /// Mineshaft floors' writes into the neighbours, likewise.
+    pub unclipped: Vec<([i32; 3], Block, Block)>,
+    /// Spider corridors whose spawner is placed by the end of this chunk.
+    pub spawners: Spawners,
 }
 
 impl Structures {
@@ -116,8 +120,9 @@ impl Structures {
         // Their supports read neighbours BDS post-processed earlier with those neighbours' pieces;
         // other kinds matched worse that way (village trees, pyramid heights).
         canvas.read_placed = true;
+        let mut spawners = if mineshafts.is_empty() { Spawners::new() } else { (neighbours.spawners)() };
         for mineshaft in mineshafts.iter().rev() {
-            mineshaft.post_process(&mut canvas, &mut random, biomes);
+            mineshaft.post_process(&mut canvas, &mut random, biomes, &mut spawners);
         }
         canvas.read_placed = false;
         Self::place_mansions(&mut canvas, &mansions);
@@ -136,7 +141,21 @@ impl Structures {
         Self::place_ancient_cities(&mut canvas, &cities, seed);
         self.place_v2(&mut canvas, &v2);
         let touched = placed.iter().fold(canvas.touched, |(lo, hi), b| (lo.min(b.y0 - 1), hi.max(b.y1 + 1)));
-        Some(Placed { touched, spilled: std::mem::take(&mut canvas.spilled) })
+        Some(Placed { touched, spilled: std::mem::take(&mut canvas.spilled), unclipped: std::mem::take(&mut canvas.unclipped), spawners })
+    }
+
+    /// The neighbours BDS post-processes after `chunk` (decoration phases) that share a
+    /// mineshaft piece with it: their floor writes land in it after its own pieces.
+    pub fn later_mineshaft_writers(&self, density: &Density, chunk: (i32, i32)) -> Vec<(i32, i32)> {
+        let column = BoundingBox::chunk(chunk.0, chunk.1);
+        let starts = self.starts_near(density, StructureKind::Mineshaft, chunk, MINESHAFT_REACH + 1);
+        let shafts: Vec<Arc<Mineshaft>> = starts.into_iter().map(|s| self.mineshaft(density, s)).filter(|m| m.bb.intersects(&column)).collect();
+        let shared = |n: (i32, i32)| {
+            let other = BoundingBox::chunk(n.0, n.1);
+            shafts.iter().any(|m| m.pieces.iter().any(|p| p.frame.bb.intersects(&column) && p.frame.bb.intersects(&other)))
+        };
+        let later = |n: (i32, i32)| crate::feature::phase(n) > crate::feature::phase(chunk);
+        (chunk.0 - 1..=chunk.0 + 1).flat_map(|x| (chunk.1 - 1..=chunk.1 + 1).map(move |z| (x, z))).filter(|&n| later(n) && shared(n)).collect()
     }
 
     /// The chunks around `chunk` (not itself) holding a feature element's piece, whose features

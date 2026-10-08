@@ -44,7 +44,7 @@ pub use kind::StructureKind;
 pub use mineshaft::probe as mineshaft_probe;
 use kind::*;
 use probe::Probe;
-pub use canvas::Neighbours;
+pub use canvas::{Neighbours, Spawners};
 pub use stage::{Placed, rejoin_connections};
 
 const SEA_LEVEL: i32 = 63;

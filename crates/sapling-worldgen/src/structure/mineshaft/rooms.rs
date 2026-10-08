@@ -112,7 +112,7 @@ pub fn crossing(f: &Frame, two_floors: bool, materials: Materials, canvas: &mut 
     for x in b.x0..=b.x1 {
         for z in b.z0..=b.z1 {
             if canvas.interior(x, b.y0, z) && matches!(canvas.get(x, b.y0 - 1, z), Block::Air | Block::IronChain) {
-                canvas.set(x, b.y0 - 1, z, planks);
+                canvas.set_unclipped(x, b.y0 - 1, z, planks);
             }
         }
     }

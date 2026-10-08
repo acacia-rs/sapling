@@ -184,14 +184,14 @@ impl Piece {
         for x in mx - 12..=mx + 12 {
             for z in mz - 12..=mz + 12 {
                 let top = canvas.get(x, y, z);
-                if !falls(top) {
+                if !top.falls() {
                     continue;
                 }
                 let plug = class.plug(top);
                 let mut below = y - 1;
                 while below > -64 {
                     let block = canvas.get(x, below, z);
-                    if !falls(block) {
+                    if !block.falls() {
                         if block == Block::Air || block.name() == "water" {
                             canvas.set(x, below, z, plug);
                         }
@@ -202,12 +202,6 @@ impl Piece {
             }
         }
     }
-}
-
-/// Blocks with `BlockType::mFalling` (+0x163 bit 0x10), the ones a plug holds up.
-fn falls(block: Block) -> bool {
-    let name = block.name();
-    matches!(name, "sand" | "red_sand" | "gravel" | "suspicious_sand" | "suspicious_gravel" | "anvil" | "dragon_egg") || name.ends_with("concrete_powder")
 }
 
 /// Ancient city pieces (141edf3a0 / 3b0): no fill, deepslate plugs.
