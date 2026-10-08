@@ -27,11 +27,17 @@ def rng(value):
     return f'Range({int(value)}, {int(value)})'
 
 
+# Plain-string names BDS matches as the blocks they were before renames and stone flattening (oracle:
+# lush-cave clay pools replace andesite, diorite and granite; ores' {"name": "minecraft:stone"} does not).
+LEGACY_NAMES = {'minecraft:stone': ['minecraft:stone', 'minecraft:granite', 'minecraft:diorite', 'minecraft:andesite'],
+                'minecraft:grass': ['minecraft:grass_block']}
+
+
 def every_state(values):
     """A replaceable list: block types match whatever their states (the first variant of each
     (name, states) pair: the waterlogged twins never stand in terrain)."""
     out = []
-    for value in values:
+    for value in [n for v in values for n in (LEGACY_NAMES.get(v, [v]) if isinstance(v, str) else [v])]:
         try:
             single = block(value)
         except NotPorted:
