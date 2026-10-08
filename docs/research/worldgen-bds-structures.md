@@ -74,7 +74,9 @@ Chunk tasks (1409ddfc0): Gen (`loadChunk`: terrain, surface, carvers) → **Stru
 feature rules) → CFRD → Relight. Structures are placed before features. `structurePostProcessChunk`
 148213a20 → `postProcessStructureFeatures` 14196b2c0: per feature in registry order, the chunk MT reseeded with
 the large-feature chunk seed (`levelSeed ^ (cx*a + cz*b)`, a/b forced odd), then each cached start whose box meets
-the chunk (`foreachIntersectingStructureStart`, hash-map order), `StructureStart::postProcess` 141f60830: every
+the chunk (`foreachIntersectingStructureStart` 141efb070: the start map's MSVC list, i.e. insertion order from
+the first `createBlueprints` scan that found each start, x-major then z, radius feature+0xc0 = 8; so it follows
+BDS's chunk load order), `StructureStart::postProcess` 141f60830: every
 piece whose box meets the chunk, sharing the generator; failed pieces are not dropped. Starts and their pieces
 are made once (`createBlueprints` 141ef9dc0: per chunk an MT seeded `xScale*x + zScale*z ^ levelSeed`, one draw
 skipped, `isFeatureChunk`, then `createStructureStart` on the same generator) and cached.
@@ -100,10 +102,22 @@ Piece writes go through `placeBlock` (141f59f90: clipped to the chunk, `canBeRep
   `nextInt(4)` planks at both ends or across plus torches (`nextFloat() < 0.05` each, facing by orientation);
   eight cobwebs `(chance, x, z)` that test the interior at (x, 3, z) but place at (x, 2, z-1)
   (`maybeGenerateBlockIfNotFloating`: float < chance, two non-air neighbours in the chunk); the spawner
-  `nextInt(3)`. Then floors: planks where the block below is air or chain and the corridor floor is under the
-  heightmap (unclipped setBlock); log pillars down (10) or fence + chains up (20) under floor planks at z 2 and
-  len-3; rails over full blocks, `nextFloat() < 0.7` interior else 0.9. Crossings and stairs: Java's boxes, floors
-  like corridors. Room: dirt floor under existing blocks, air up to 3, entrances, upper half ellipsoid (f32).
+  `nextInt(3)` until the piece placed one (flag +0x5a, kept on the piece across chunks: a chunk starts from
+  the flags its earlier-phase neighbours set). Then floors: planks where the block below is air or chain and the
+  corridor floor is under the heightmap, over the whole piece through unclipped `setBlock` (a neighbour
+  post-processed later lays planks into this chunk after its pieces: `Canvas::set_unclipped`); log pillars
+  down (10) or fence + chains up (20) under floor planks at z 2 and len-3 (148320130: the up search ends at the
+  first non-replaceable block and hangs the chain only if it holds one, sturdy bottom centre and not falling,
+  so a support's own fence ends it with nothing hung); rails over full blocks, `nextFloat() < 0.7` interior else
+  0.9. Crossings and stairs: Java's boxes, floors like corridors. Room: air up to 3, entrances, upper half
+  ellipsoid (f32).
+- One version gate (global 0x14cc486b8, the level's base game version against 0x14cc486a0) picks old-world
+  behaviour in four places: the room's dirt floor (14831d010), `canBeReplaced` ignoring its kept list (planks,
+  log and fence of the piece's wood, chains, bedrock; 14831c830), the old start height (14831b270) and plain
+  cobweb floats (14831d770). Our worlds take the new branch everywhere: no dirt floor.
+- Reads past the chunk (support tests at y0+3, floors, interior heightmaps) see the neighbours BDS
+  post-processed earlier in the decoration phases with their pieces (`Neighbours::placed`, mineshafts only:
+  village trees and pyramid heights matched worse with it).
 - Bedrock 1.26 fences save `connection_*` states that follow their final neighbours, across chunk borders:
   sapling sets them after the chunk's pieces from its neighbours' pieces (`rejoin_connections`).
 
@@ -201,9 +215,16 @@ Mineshafts sharing a chunk run in descending start order (BDS's hash-map visit o
 79 -> 83%, mangrove 81 -> 87%); a spider corridor stops drawing spawner positions once it placed one (+0x5a,
 which BDS also keeps across chunks: not modelled, our chunks are re-run for neighbours). Monument double Y rooms
 open their floor on the south bit (148346980), a BDS quirk.
-Known gaps: eroded badlands' mesa mineshafts (BDS shows none; ours sit at y 93, mostly in a canyon: 81 visible
-cells; the mesa test, box and preliminary surface (80-128 there) match our reading, cause not found), remaining
-rail/web desync, cross-chunk reads use the neighbours' carved terrain. Plains villages near rivers (the six
+2026-10-08 (struct3): the room floor, phase-ordered neighbour reads, floor writes past the chunk, chain
+hanging and spawner flags took mineshaft non-air precision to 95.6-99.3% in every region (swamp 90 -> 98.5%,
+frozen ocean 83 -> 98.3%); the eroded badlands mesa mineshaft was only its dirt floor (it sits in a canyon).
+Tallies (tests/oracle_support/structures.rs) also print an "own" precision without cells where either side has
+a decoration-family block, and recall skips blocks our later stages place as BDS has them (monster rooms).
+Remaining mineshaft drift: draws a few per chunk off (`examples/mineshaft_draws`: per-piece draw trace and
+shift search; `chunk_float_find` locates BDS's rail runs in the chunk stream). Discriminator: stronghold chunk
+(-90,-123) draws one more than BDS before piece 55's rails (348 vs 347) because piece 24's support at z -1978
+reads planks a crossing's floor left in phase-0 chunk (-90,-124); BDS read air there. Neither "carved" nor
+"after its pieces" neighbours fit every case; phase order fits better overall. Plains villages near rivers (the six
 /locate misses): VillageFeature::isFeatureChunk (1480a80e0) is containsOnly(x*16+8, prelim surface or 1, z*16+8,
 r 2), as ours; locate (141efb740) adds a flag-gated per-chunk filter (feature +0x1d8, vt 0x28) not identified,
 and (flag at +0x30 of its settings, +0x5c7..+0x686) a biome test at (x*16+8, preliminary surface or 1,
@@ -239,6 +260,8 @@ agree on the region seed and the legacy table; all values above were re-derived 
 14831bf70 MineshaftPiece::generateAndAddPiece       14831dd40 MineshaftPiece::isInInvalidLocation   14831c830 ::canBeReplaced
 14831ca70/14831d010 MineshaftRoom::{addChildren,postProcess}   14831d360/14831de50/14831da00 MineshaftCorridor::{addChildren,postProcess,postProcessMobsAt}
 14831d770/148320130 MineshaftCorridor::{_placeCobWeb,_fillPillarDownOrChainUp}
+141efb070 StructureFeature::foreachIntersectingStructureStart   141ef97c0 StructureFeature ctor (+0xc0 radius 8)
+1415f5900 BlockSource::getChunk (state >= 2 with +0x1c, else >= 11)
 1483205e0/148320950 MineshaftCrossing   148321790/148321870 MineshaftStairs
 141f59f30/141f59f60/141f59f90/141f5a1b0 StructurePiece::{getWorldX,getWorldZ,placeBlock,generateBox}
 141f5aa60/141f5aff0/141f5b3d0/141f59c80/141f5b7e0/141f4a1d0 StructurePiece::{generateMaybeBox,

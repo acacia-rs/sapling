@@ -58,7 +58,8 @@ Companion to [worldgen-bds-templates.md](worldgen-bds-templates.md) (template lo
   `BlockPileFeature` (`nextInt(2)` x and z radius, x, y (two layers), z; `10 f - 6 f` ellipse else 3.1%)
   on a full block top or a path (list 0x14ccd3208 = grass_path), no `nextBoolean` for paths; hay on
   axis y/x by `nextInt(2)`, packed ice 1 in 7 blue (`nextInt(7)`), pumpkins carved when a float >= 0.95.
-  Poplar trees (camps) are not ported (new trunk and canopy types).
+  Poplar trees (camps) are not ported: 1.26.50 `poplar_trunk`/`poplar_canopy` (shelf-mushroom decoration,
+  poplar logs and leaves) need their own RE, and no oracle camp uses them to check a port against.
 
 ## Placers (`jigsaw/assemble.rs`)
 | | Legacy (villages) | Queued (ancient cities) | V2 (trail ruins, trial chambers) |
@@ -112,8 +113,8 @@ column, piece y = -27 - anchor dy - y0 - 1, within 128 of the centre, depth 7; d
 | kind | precision (non-air) | recall | what is left |
 |---|---|---|---|
 | village | 99.98% | 99.93% | one wall join |
-| ancient city | 82.2% | 96.6% | sculk patches (thread-local in BDS, see Gaps); later stages over the city |
-| trail ruins | 99.7% | 84.7% | |
+| ancient city | 82.2% (own 99.5%) | 99.3% | sculk patches (thread-local in BDS, see Gaps); later stages over the city |
+| trail ruins | 99.7% | 99.4% | wall joins (the old 84.7% recall counted monster-room cobblestone) |
 | trial chambers | 99.8% | 99.6% | (other starts 97.9-99.9%; geodes overwrite one in the mansion region) |
 | abandoned camp | 93.9 / 96.4 / 99.2% | 42.5 / 96.1 / 99.7% | podzol under a camp tree; forest rocks count as wanted |
 All 840 ruin-material cells of the trail ruin match, suspicious gravel included.
@@ -123,6 +124,8 @@ All 840 ruin-material cells of the trail ruin match, suspicious gravel included.
   picks with a thread-local generator, so the catalyst draw after it varies by run. Discriminator: the
   city feature at (-1059,-50,1235) has a catalyst in the -run2 twin and none in the main run; 20 of 69
   catalyst cells and 10286 of 36985 sculk-family cells in the region differ between the two BDS runs.
+  The tally's "own" precision (cells where neither side has a decoration-family block) separates it: the
+  city's own blocks are 99.5% (2026-10-08); the rest of the precision gap is sculk over city blocks.
 - Pool alias random picks (trial chamber spawner kinds) are not drawn; blocks agree either way.
 
 ## Labels
