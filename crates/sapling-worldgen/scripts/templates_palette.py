@@ -35,6 +35,17 @@ EXTRA = [
     ('mossy_stone_brick_slab', 'minecraft:vertical_half=bottom', False, 2),
     ('mossy_stone_brick_wall', ','.join(f'wall_connection_type_{d}=none' for d in ('east', 'north', 'south', 'west'))
      + ',wall_post_bit=0', False, 2),
+    # Jigsaw pool processor outputs (src/structure/jigsaw/pools.txt).
+    ('cracked_deepslate_bricks', '', False, 3),
+    ('cracked_deepslate_tiles', '', False, 3),
+    ('mossy_cobblestone', '', False, 3),
+    ('web', '', False, 0),
+    ('brown_stained_glass_pane', '', False, 2),
+    ('grass_block', '', False, 3),
+    ('oak_planks', '', False, 3),
+    ('spruce_planks', '', False, 3),
+    ('acacia_planks', '', False, 3),
+    ('deepslate', 'pillar_axis=y', False, 3),
 ] + [(stairs, f'minecraft:corner=none,upside_down_bit={up},weirdo_direction={w}', False, 2)
      for stairs in ('stone_brick_stairs', 'mossy_stone_brick_stairs') for up in range(2) for w in range(4)]
 CONNECTIONS = [f'minecraft:connection_{d}' for d in ('east', 'north', 'south', 'west')]

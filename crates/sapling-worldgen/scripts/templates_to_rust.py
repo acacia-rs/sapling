@@ -9,9 +9,10 @@ for it, read off probe worlds (scripts/template_probe). Fluids are converted as 
 
 templates.bin, little-endian: b'SPT1', the palette (templates_palette.py), u32 count; per template: u8 name length, name, u16 x3 size,
 u32 block count, then per block u8 x, u16 y, u8 z, u16 state (an index into the state table); then u16
-special count, per special: u32 block index, u8 kind (0 jigsaw: name, target, pool, joint strings and a
-u16 final state; 1 data marker: metadata string; 2 chest whose block entity draws a loot seed), strings
-as u8 length + bytes; then the state table (templates_palette.py).
+special count, per special: u32 block index, u8 kind (0 jigsaw: name, target, pool, joint, orientation
+strings, u16 final state, i32 selection and placement priorities; 1 data marker: metadata string; 2 chest
+whose block entity draws a loot seed), strings as u8 length + bytes; then the state table
+(templates_palette.py).
 """
 import gzip
 import os
@@ -105,6 +106,20 @@ def parse_key(text):
     return key_of(name, props)
 
 
+# Pre-1.16 jigsaws (villages): `facing` and one attachment name for both ends, as Java's datafixer reads them.
+OLD_FACING = {'down': 'down_south', 'up': 'up_north'}
+
+
+def jigsaw_strings(nbt, props):
+    """name, target, pool, joint, orientation of a jigsaw block."""
+    if 'attachement_type' in nbt:
+        facing = props.get('facing', 'north')
+        orientation = OLD_FACING.get(facing, f'{facing}_up')
+        kind = nbt['attachement_type']
+        return [kind, kind, nbt.get('target_pool', ''), '', orientation]
+    return [nbt.get('name', ''), nbt.get('target', ''), nbt.get('pool', ''), nbt.get('joint', ''), props.get('orientation', 'north_up')]
+
+
 def brewing_stand(key, nbt):
     """BDS sets a brewing stand's bottle bits from its items' raw slot numbers (Java 0-2 bottles, Bedrock
     1-3): the stand gets its own state key, the same block at every rotation."""
@@ -144,8 +159,10 @@ def main():
             out += struct.pack('<BHBH', x, y, z, index(key))
             if key.startswith(JIGSAW):
                 final = parse_key(nbt.get('final_state', 'minecraft:air'))
-                strings = [nbt.get('name', ''), nbt.get('target', ''), nbt.get('pool', ''), nbt.get('joint', '')]
-                specials.append((i, 0, strings, index(final)))
+                props = (t.get('palette') or t['palettes'][0])[b['state']].get('Properties', {})
+                strings = jigsaw_strings(nbt, props)
+                priorities = (nbt.get('selection_priority', 0), nbt.get('placement_priority', 0))
+                specials.append((i, 0, strings, (index(final), priorities)))
             elif key.startswith(DATA) and 'mode=data' in key:
                 specials.append((i, 1, [nbt.get('metadata', '')], None))
             elif nbt.get('id') in ('minecraft:chest', 'minecraft:trapped_chest') and 'LootTableSeed' not in nbt:
@@ -156,7 +173,7 @@ def main():
             for s in strings:
                 out += bytes([len(s.encode())]) + s.encode()
             if final is not None:
-                out += struct.pack('<H', final)
+                out += struct.pack('<Hii', final[0], *final[1])
     states, palette = state_table(keys, table)
     out = b'SPT1' + palette_bytes(palette) + out[4:] + states
     open(os.path.join(OUT, 'templates.bin'), 'wb').write(out)

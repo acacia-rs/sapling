@@ -105,8 +105,10 @@ fn parse() -> Data {
             let block = r.u32() as usize;
             match r.u8() {
                 0 => {
-                    let (name, target, pool, joint) = (r.string(), r.string(), r.string(), r.string());
-                    jigsaws.push(Jigsaw { block, name, target, pool, joint, final_state: State(r.u16()) });
+                    let (name, target, pool, joint, orientation) = (r.string(), r.string(), r.string(), r.string(), r.string());
+                    let final_state = State(r.u16());
+                    let (selection_priority, placement_priority) = (r.u32() as i32, r.u32() as i32);
+                    jigsaws.push(Jigsaw { block, name, target, pool, joint, orientation, final_state, selection_priority, placement_priority });
                 }
                 1 => markers.push((block, r.string())),
                 _ => loot_chests.push(block),

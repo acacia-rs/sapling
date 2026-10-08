@@ -2,10 +2,12 @@
 //! BDS's legacy `StructureFeature` checks (`isFeatureChunk`, vtable slot 5) and the v2 jigsaw
 //! structure sets.
 
+mod ancient_city;
 mod area;
 mod canvas;
 mod igloo;
 mod kind;
+mod jigsaw;
 mod locate;
 mod mineshaft;
 mod nearby;

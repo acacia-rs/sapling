@@ -3,6 +3,7 @@
 //! per block, positions turned about the origin, writes clipped to the settings' box.
 
 use super::mirror::mirror;
+use super::rules::{Rule, apply};
 use super::wood::rewood;
 use super::{Kind, Template, WATERLOGGABLE, flags, named};
 use crate::block::Block;
@@ -56,17 +57,29 @@ pub struct Placement {
     pub mirror: bool,
     /// Where blocks may land; the canvas clips further to its chunk.
     pub bb: BoundingBox,
+    /// Pool element processors, drawing from the integrity generator.
+    pub rules: &'static [Rule],
 }
 
 impl Placement {
     pub fn new(rotation: Rotation, bb: BoundingBox) -> Self {
-        Self { rotation, integrity: 1.0, seed: 0, ignore_jigsaws: true, flood: false, ignore: None, wood: None, mirror: false, bb }
+        Self { rotation, integrity: 1.0, seed: 0, ignore_jigsaws: true, flood: false, ignore: None, wood: None, mirror: false, bb, rules: &[] }
     }
 
     /// The template positions BDS writes at `origin`, each with its block and template block
     /// index, in placement order.
     pub fn blocks<'a>(&'a self, template: &'a Template, origin: (i32, i32, i32)) -> impl Iterator<Item = ((i32, i32, i32), Block, usize)> + 'a {
-        let mut random = (self.integrity < 1.0).then(|| Mt19937::new(self.seed));
+        self.blocks_in(template, origin, &|_, _, _| Block::Air)
+    }
+
+    /// `blocks`, rule locations testing what `world` holds.
+    pub fn blocks_in<'a>(
+        &'a self,
+        template: &'a Template,
+        origin: (i32, i32, i32),
+        world: &'a dyn Fn(i32, i32, i32) -> Block,
+    ) -> impl Iterator<Item = ((i32, i32, i32), Block, usize)> + 'a {
+        let mut random = (self.integrity < 1.0 || !self.rules.is_empty()).then(|| Mt19937::new(self.seed));
         template.blocks.iter().enumerate().filter_map(move |(index, b)| {
             if self.ignore.is_some_and(|name| b.state.block(Rotation::None).name() == name) {
                 return None;
@@ -77,6 +90,7 @@ impl Placement {
                 _ => {}
             }
             if let Some(random) = random.as_mut()
+                && self.integrity < 1.0
                 && self.integrity < random.next_float()
             {
                 return None;
@@ -93,6 +107,11 @@ impl Placement {
             }
             if let Some(remap) = &self.wood {
                 block = rewood(block, remap);
+            }
+            if let Some(random) = random.as_mut()
+                && !self.rules.is_empty()
+            {
+                block = apply(self.rules, block, world(at.0, at.1, at.2), random);
             }
             if self.flood && at.1 < SEA_LEVEL {
                 if block == Block::Air {

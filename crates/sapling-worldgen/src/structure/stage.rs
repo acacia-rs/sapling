@@ -40,7 +40,9 @@ impl Structures {
         let shipwrecks = self.shipwrecks_near(density, chunk);
         let portals = self.portals_near(density, chunk);
         let outposts = self.outposts_near(density, chunk);
-        let templated = !(igloos.is_empty() && ruins.is_empty() && shipwrecks.is_empty() && portals.is_empty() && outposts.is_empty());
+        let cities = self.ancient_cities_near(density, chunk);
+        let templated =
+            !(igloos.is_empty() && ruins.is_empty() && shipwrecks.is_empty() && portals.is_empty() && outposts.is_empty() && cities.is_empty());
         if mineshafts.is_empty() && !treasure && !templated {
             return None;
         }
@@ -58,6 +60,7 @@ impl Structures {
         Self::place_ocean_ruins(&mut canvas, &ruins, seed);
         self.place_shipwrecks(&mut canvas, &shipwrecks);
         self.place_portals(density, &mut canvas, &portals);
+        Self::place_ancient_cities(&mut canvas, &cities, seed);
         let start = if templated { (-64, 319) } else { (i32::MAX, i32::MIN) };
         Some(mineshafts.iter().fold(start, |(lo, hi), m| (lo.min(m.bb.y0 - 1), hi.max(m.bb.y1 + 1))))
     }

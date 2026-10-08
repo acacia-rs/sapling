@@ -22,6 +22,7 @@ const OUTPOST_REACH: i32 = 3;
 pub(super) struct TemplateStarts {
     ocean_ruins: Mutex<HashMap<(i32, i32), Arc<ocean_ruin::OceanRuin>>>,
     outposts: Mutex<HashMap<(i32, i32), Arc<outpost::Outpost>>>,
+    pub(super) ancient_cities: Mutex<HashMap<(i32, i32), Arc<super::ancient_city::AncientCity>>>,
 }
 
 impl Structures {

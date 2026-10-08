@@ -8,6 +8,7 @@ mod load;
 mod markers;
 mod mirror;
 mod place;
+mod rules;
 mod wood;
 
 use std::collections::HashMap;
@@ -17,6 +18,7 @@ pub use connect::rejoin;
 pub use load::palette;
 #[allow(unused_imports)]
 pub use place::{Placement, Rotation};
+pub use rules::{Predicate, Rule};
 
 use crate::block::Block;
 use load::{data, palette_block};
@@ -77,7 +79,11 @@ pub struct Jigsaw {
     pub target: String,
     pub pool: String,
     pub joint: String,
+    /// Java's `orientation` state, front then top (e.g. "down_east").
+    pub orientation: String,
     pub final_state: State,
+    pub selection_priority: i32,
+    pub placement_priority: i32,
 }
 
 #[derive(Debug)]

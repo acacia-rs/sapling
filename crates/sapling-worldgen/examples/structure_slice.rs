@@ -1,7 +1,8 @@
 //! `structure_slice <seed> <world> <x0> <z0> <x1> <z1> <y0> <y1>`: per layer, our blocks after the
 //! structure stage beside BDS's, one letter per block name (legend after each layer; `.` air,
 //! `~` water, lowercase where the two disagree), for seeing how a placed structure is offset;
-//! with `DIFF` set, one line per differing cell instead.
+//! with `DIFF` set, one line per differing cell instead (`SAME` adds our non-air matches);
+//! `BDSDUMP` lists BDS's non-air cells.
 #![allow(dead_code)]
 
 #[path = "../tests/oracle_support/mod.rs"]
@@ -37,10 +38,16 @@ fn main() {
             }
         }
     }
+    if std::env::var_os("BDSDUMP").is_some() {
+        for (pos, b) in theirs.iter().filter(|(_, b)| b.as_str() != "air") {
+            println!("{} {} {} {b}", pos.0, pos.1, pos.2);
+        }
+        return;
+    }
     if std::env::var_os("DIFF").is_some() {
         for (pos, a) in &ours {
             let b = &theirs[pos];
-            if a != b {
+            if a != b || std::env::var_os("SAME").is_some() && a != "air" {
                 println!("{} {} {} ours {a} bds {b}", pos.0, pos.1, pos.2);
             }
         }
