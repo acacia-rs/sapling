@@ -113,7 +113,8 @@ Family precision / recall (stable cells): monster rooms 98.8/93.1 near origin, 1
   (`nextInt(5)` of 0x14ccd9440)) draw after them on the shared generator, so they wait for crust and coral.
 - Sulfur springs (`random_sulfur_spring_with_tuff_feature`: structure templates) and the spring trail.
 - Fossils (`fossil_feature`, desert/swamp 1 in 64 chunks) and the desert well: structure templates.
-- Multi-direction lichen spreads and lichen/vein faces (thread-local in BDS).
+- Multi-direction lichen spreads and lichen/vein faces (thread-local in BDS): the oracle no longer grades face
+  states of either (worldgen-bds-features.md, "Feature residue").
 - Dripstone residue: world-state differences (lichen spreads, sculk) shift whole clusters' column draws.
 - The ~100 lava cells that spread sideways after a fall made stone below: BDS's `_tick` sets stone with flags 3 and
   returns like sapling (148b5d060); not resolved.

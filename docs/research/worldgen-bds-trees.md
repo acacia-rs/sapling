@@ -103,6 +103,8 @@ sync; swamp huge mushrooms sink through one or two water blocks (143b7f230, biom
 - Pale garden: BDS's 4th tree of chunk (-469,-285) at (-7489,132,-4558) fails. The next try then matches from
   draw 593 or 616 (`draw_search`), and BDS has tall grass in its trunk volume that no earlier-phase source writes
   here. Not resolved.
+- Both items below: newer evidence in worldgen-bds-features.md, "Feature residue" (BDS's first tree fails; the
+  forced-failure test; the neighbour grass rule's draw shift).
 - Bamboo jungle (2740,100,5576): not a terrain hole. Both have grass at 99. Our first mega jungle tree of chunk
   171,348 overhangs a one-block drop and writes its base dirt into air (trunks place base blocks unconditionally,
   1438eaf00). BDS doesn't grow that tree, probably because of a fern that a phase-0 neighbour's after-surface

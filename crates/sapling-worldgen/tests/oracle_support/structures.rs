@@ -91,7 +91,7 @@ const AMBIGUOUS: &[&str] = &["cobblestone", "mossy_cobblestone", "mob_spawner", 
 const DECORATION_PARTS: &[&str] = &["sculk", "coral", "sea_pickle", "sulfur", "cinnabar"];
 
 /// A block BDS saved that no terrain stage, ported feature or known decoration explains.
-fn structure_block(bds: &BdsCell, in_area: bool) -> bool {
+pub(super) fn structure_block(bds: &BdsCell, in_area: bool) -> bool {
     let name = bds.block.as_str();
     if bds.is_empty() || bds.is_fluid() {
         return false;

@@ -26,9 +26,12 @@ Companion to [worldgen-bds.md](worldgen-bds.md). Feature rules run in `decoratio
   MT1 draws the scatter (chance gate, iterations, one position per iteration, index counting down, axes in
   `coordinate_eval_order`, origin = chunk min corner, y 0); MT2, seeded alike, is handed to every placement.
 - With more than one biome in the chunk, a position places only if its block's biome is the one being decorated
-  (`BlockSource::getBiome` 141602f90, by id). Outside y -64..319 that returns the dimension's default biome, which
-  sapling treats as matching none (oracle: diamond and redstone rules scatter below the world; 73-81% to 99%
-  precision). A one-biome chunk places every position. Palettes fill in x, z, y storage order (1438cb860).
+  (`BlockSource::getBiome` 141602f90, by id): the block's chunk in the 3x3 (rules scattering past x/z 16, such as
+  sea pickles' 0..24, read the neighbour's biome), else, and outside y -64..319, the dimension's default
+  (`Dimension::getDefaultBiomeId` 141882f10, vtable slot 0xc8: ocean; nether 8 and end 9 override it). So diamond
+  and redstone rules that scatter below the world place (drawing their blob) while a chunk's ocean is decorated;
+  treating such positions as matching nothing desynced every later blob of the rule (near origin 1.1k cells). A
+  one-biome chunk places every position. Palettes fill in x, z, y storage order (1438cb860).
 - Scatter (`ScatterParams::initScatter` 14478ea70, `getPosConst`/`getPosMolang` 14478fbe0/14478fe20,
   `sampleDistribution` 14478f9f0): extents `roundf`; uniform `min + nextInt(max-min)`, no draw if max <= min;
   triangle `min + nextInt(R/2+1) + nextInt(R-R/2+1)`; percent gate draws only for 0 < pct < 100.
@@ -160,3 +163,53 @@ from 85 s to 160-210 s on testbox (geodes and icebergs included). perf then show
 replays: `SourceCache` cleared every entry when full, the aquifer maps hashed with SipHash, biome picks ran in
 single-biome lattice cells; with those fixed (`examples/bench_columns.rs`, 16x16 near origin) `chunk_blocks` costs
 31.5 ms per column (was 47.4; terrain alone 5.1) and the suite, liquids included, runs in about 75 s.
+
+## Feature residue (2026-10-08, worldgen/feat2)
+`SAPLING_ORACLE_DUMP=<dir>` makes the oracle write every Features-stage error (and every feature cell the `-run2`
+twin disagrees on) to a TSV per region; `scripts/feature_residue.py <dir> [world] [--by-region] [--cells <family>]`
+splits them by family, kind (ours-extra: BDS kept the block from before features; bds-only: ours did; both) and
+cause: (a) the twin disagrees (not counted as wrong), (b) thread-local generator in BDS (glow lichen and sculk
+vein faces and spreads, sculk walks they steer), (c) a BDS structure block within 6 cells or an unported
+structure's area holds the cell, (d) deterministic, (e) as d in a chunk on the region's edge.
+
+| world | Features wrong | b | c | d | e | (a) |
+|---|---|---|---|---|---|---|
+| near origin | 2674 → 1570 | 87 | 1328 → 1227 | 1159 → 229 | 100 → 27 | 953 |
+| far out | 1848 | 13 | 1765 | 0 | 70 | 102 |
+| negative seed | 674 | 4 | 0 | 98 | 572 | 1331 |
+| biome regions | 13581 → 12906 | 4648 | 2288 → 2106 | 1725 → 1401 | 4921 → 4751 | 3658 |
+| tree regions | 22947 → 21272 | 940 | 4122 → 3979 | 4566 → 4282 | 13319 → 12071 | 2406 |
+| structures | 107773 → 106095 | 8633 | 97710 → 96134 | 292 | 1138 → 1036 | 8280 |
+
+(b) and (a) counts are before the judge stopped grading lichen/vein faces (below). In 4x4 regions 12 of 16
+chunks are edge chunks, so e is not by itself an edge excess; in the 8x8 negative seed region it is (572 of 670).
+Fixed: rule positions use `getBiome`'s 3x3 and ocean default (above; near origin diamond/redstone 1035 -> 0
+d cells), and lush-cave clay pools match andesite, diorite, granite and grass blocks (scripts/cave_data.py:
+the 1.16-format plain-string names `minecraft:stone` and `minecraft:grass` match the pre-flattening blocks;
+ores' `{"name": "minecraft:stone"}` matches stone only, as the decoration-order vote showed; grove 414 -> 12
+wrong). Glow lichen and sculk vein faces are not judged (`judge.rs` THREAD_LOCAL_FACES): `MultifaceFeature::place`
+shuffles them with the generator at `gs:[0x58]` slot +0xe60 (143b84002), so BDS's own two runs disagree.
+
+What is left, largest first:
+- Trees in tree regions (d 2657, e 5114): bamboo jungle (chunk 171,348) and pale garden (-469,-285) each start
+  from one tree BDS does not grow. Forcing our first bamboo-jungle tree (mega jungle at 2739,101,5575) to fail
+  after its two height draws puts the next tree on BDS's trunk (2744,103,5570) and writes 3 -> 76 matching logs,
+  so BDS's tree fails; its spawn volume (1438f2ba0: may_grow_on under the origin only, radius 1 then 2) must have
+  held a non-grow-through block (BDS has a vine at 2738,101,5575 and a fern at 2740,101,5574 there). The phase-0
+  neighbour 170,348's jungle grass rule already differs at its draw ~4478 (fern against our short grass at
+  2726,104,5567) while every earlier try draws a constant 8, so a `not_on` podzol check or a world difference
+  shifts it earlier. Pale garden: the acacia-style trunk (143bd34c0) runs prepareSpawn (1438eac70) only.
+- Dripstone (biomes d 565, e 2537; trees d 430, e 3105): about half within 8 cells of a lichen or sculk
+  difference (column scans stop at lichen); mostly edge chunks.
+- Edge chunks generally: ring-last decoration (ring chunks after every region chunk) made every region worse
+  (near origin 3379 -> 5642 wrong, negative seed 677 -> 2205), so the parity model holds for the ring too; the
+  negative seed's kelp/seagrass cluster (chunks 0,3 and -1,3) is a draw desync of kelp and deep warm-ocean
+  seagrass whose first divergent try is a seagrass try over a neighbour's kelp column.
+- Coral (warm ocean, ~1.8k BDS cells booked as later stages): `CoralFeature::place` 14828af70 climbs to water
+  below sea level - 4, skips a floor of coral blocks (list 0x14ccd9410), draws `nextInt(5)` (colour), builds tops
+  and sides in 14828b9e0 (three shapes by `nextInt(3)`, helpers 148290ad0, 1482914f0, 148291d20), then per top a
+  fan from list 0x14ccd9458 (`nextInt(n)`, `nextInt(2)` state) and per side `nextInt(3)` of a facing table
+  (0x14a925e68) and, on water beside coral or stone, a wall fan `nextInt(2) + 2 * nextInt(3)` from 0x14ccd3250.
+  Each rule has its own generator, so hang (148294070) and anemone (149d60d10) depend on crust and coral only
+  through the world, not through draws. Not ported.
+- Near origin d (229): bubble columns (111, grown by ticks), lichen spreads (69), lava/water hardening (47).

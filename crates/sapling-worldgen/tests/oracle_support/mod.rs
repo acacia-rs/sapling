@@ -4,6 +4,7 @@
 #![allow(dead_code)]
 
 mod carver;
+mod dump;
 mod features;
 mod judge;
 mod structures;
@@ -18,6 +19,8 @@ use sapling_worldgen::{Block, CellKind};
 // Shared by the oracle test and the examples; each uses a different part.
 #[allow(unused_imports)]
 pub use carver::{CarverTally, Ours, near_feature};
+#[allow(unused_imports)]
+pub use dump::Dump;
 #[allow(unused_imports)]
 pub use features::FeatureTally;
 #[allow(unused_imports)]

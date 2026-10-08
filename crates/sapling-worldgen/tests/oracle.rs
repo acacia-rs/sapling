@@ -9,7 +9,7 @@ mod oracle_support;
 use std::collections::BTreeMap;
 
 use oracle_support::{
-    BdsCell, BiomeTally, CarverTally, Context, FeatureTally, Ours, Region, StructureTally, Tally, TopTally, attribute, bds_cell, column_reshaped,
+    BdsCell, BiomeTally, CarverTally, Context, Dump, FeatureTally, Ours, Region, StructureTally, Tally, TopTally, attribute, bds_cell, column_reshaped,
     near_feature, open,
 };
 use sapling_leveldb::ChunkKey;
@@ -58,6 +58,7 @@ fn compare(seed: i64, world: &str, regions: &[Region]) {
     let only = std::env::var("SAPLING_ORACLE_REGION").ok();
     for region in regions.iter().filter(|r| only.as_deref().is_none_or(|only| r.name.contains(only))) {
         let mut tallies = Tallies::default();
+        let mut dump = Dump::open(world, region.name);
         for (cx, cz) in region.chunks() {
             let key = ChunkKey::new(cx, cz, 0);
             let a = primary.load_column(key).unwrap().expect("chunk saved").chunk;
@@ -90,7 +91,8 @@ fn compare(seed: i64, world: &str, regions: &[Region]) {
                     let (mut our_highest, mut bds_highest) = (None, None);
                     for ((y, bds), reshaped) in column.iter().zip(reshaped) {
                         let (y, at) = (*y, (wx, *y, wz));
-                        let stable = *bds == bds_cell(&twin, &b, wx, y, wz);
+                        let twin_cell = bds_cell(&twin, &b, wx, y, wz);
+                        let stable = *bds == twin_cell;
                         let block = ours.block(x, y, z);
                         let before = surfaced.block(x, y, z);
                         let bds_emptied = bds.is_empty() || bds.is_fluid();
@@ -104,6 +106,7 @@ fn compare(seed: i64, world: &str, regions: &[Region]) {
                             bds_feature_above: bds_feature_top.is_some_and(|top| top > y),
                         };
                         tallies.blocks.add(block, bds, stable, at, context);
+                        dump.cell(at, laked.block(x, y, z), block, (bds, &twin_cell), context, &areas, PORTED, (&primary, &a));
                         if stable {
                             tallies.features.add(laked.block(x, y, z), block, bds);
                             tallies.structures.add(loaded.block(x, y, z), structured.block(x, y, z), bds, attribute(&ported, at), attribute(&areas, at));
