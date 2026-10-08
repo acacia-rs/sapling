@@ -61,6 +61,7 @@ impl Legacy {
             Legacy::PaleMossVegetation => super::pale::vegetation(ctx.view, ctx.random, at),
             Legacy::Eyeblossom => super::pale::eyeblossom(ctx.view, at),
             Legacy::MeadowFlower => super::flowers::meadow(ctx.view, at),
+            Legacy::GrassDisc => super::disk::grass_disc(ctx.view, ctx.random, at),
         }
     }
 }

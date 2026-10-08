@@ -212,6 +212,8 @@ pub enum Legacy {
     Eyeblossom,
     /// `meadow_flower_feature` (flowers.rs).
     MeadowFlower,
+    /// `grass_disc_feature` (disk.rs).
+    GrassDisc,
 }
 
 /// The flower table of a `LegacyFlowerFeature` (1438ef3b0's switch; its forest case is not ported).

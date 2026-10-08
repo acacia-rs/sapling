@@ -63,6 +63,7 @@ HARDCODED = {
     'minecraft:pale_moss_vegetation_feature': _LEGACY.format('PaleMossVegetation'),
     'minecraft:eyeblossom_feature': _LEGACY.format('Eyeblossom'),
     'minecraft:meadow_flower_feature': _LEGACY.format('MeadowFlower'),
+    'minecraft:grass_disc_feature': _LEGACY.format('GrassDisc'),
 }
 EARLY_OUT = {'none': 'EarlyOut::None', 'first_failure': 'EarlyOut::FirstFailure', 'first_success': 'EarlyOut::FirstSuccess'}
 SEARCH_LOOPS = {'-x': ('x-', 'y+', 'z-'), '+x': ('x+', 'y+', 'z+'), '-y': ('y-', 'z+', 'x-'), '+y': ('y+', 'z+', 'x+'),
