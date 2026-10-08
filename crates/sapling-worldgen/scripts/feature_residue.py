@@ -4,10 +4,13 @@ usage: py -3 feature_residue.py <dump dir> [world prefix] [--cells <family>]
 
 Per world: stable feature errors by family and kind (ours-extra: BDS kept the block from before
 features; bds-only: our features left it; both: both changed it, differently), split into
-  b  thread-local generator in BDS (glow lichen and sculk vein faces, and sculk walks they steer),
+  b  thread-local generator in BDS (glow lichen and sculk vein faces, and sculk walks they steer; also
+     a cell where either side holds a lichen or sculk block, e.g. sculk over a tuff blob),
   c  within 8 blocks of a structure's area (* = a kind sapling does not place),
   d  the rest, deterministic as far as the -run2 twin shows,
-  e  as d, in a chunk on the region's edge (ring chunks BDS decorates differently, see worldgen-bds-features.md);
+  e  as d, in a chunk on the region's edge (ring chunks BDS decorates differently, see worldgen-bds-features.md),
+  f  as d or e, a column-scanning cave family (dripstone, sulfur) within 10 blocks of a lichen or sculk
+     difference: the scan stopped at a thread-local block, so the floor, not a port bug;
 plus (a), cells the twin disagrees on (not counted as wrong by the oracle).
 """
 
@@ -17,6 +20,8 @@ import re
 import sys
 
 THREAD_LOCAL = {'glow_lichen', 'sculk_vein'}
+# Families whose features scan columns that a lichen or sculk cell (thread-local in BDS) can stop.
+SCANNING = {'dripstone', 'sulfur spikes', 'sulfur'}
 SCULK = {'sculk', 'sculk_sensor', 'sculk_catalyst', 'sculk_shrieker'}
 GROUPS = {
     'coral': ('coral', 'sea_pickle'),
@@ -55,13 +60,36 @@ def classify(row):
     if kind == 'both' and name(row['bds']) in ('air', 'water'):
         block = name(row['ours'])
     fam = group(block)
-    if fam in THREAD_LOCAL or fam == 'sculk' or name(row['ours']) in THREAD_LOCAL:
+    sides = (group(name(row['ours'])), group(name(row['bds'])))
+    if fam in THREAD_LOCAL or fam == 'sculk' or any(s in THREAD_LOCAL or s == 'sculk' for s in sides):
         cat = 'b'
     elif row['structure']:
         cat = 'c'
     else:
         cat = 'd'
     return kind, fam, cat
+
+
+def thread_local_cells(file):
+    """Buckets (8-block cells) of every lichen or sculk difference, stable or not, for `near_thread_local`."""
+    buckets = collections.defaultdict(list)
+    for row in rows(file):
+        if any(group(name(row[k])) in THREAD_LOCAL or group(name(row[k])) == 'sculk' for k in ('ours', 'bds')):
+            p = (int(row['x']), int(row['y']), int(row['z']))
+            buckets[tuple(v // 8 for v in p)].append(p)
+    return buckets
+
+
+def near_thread_local(buckets, row, reach=10):
+    p = (int(row['x']), int(row['y']), int(row['z']))
+    b = tuple(v // 8 for v in p)
+    for dx in (-2, -1, 0, 1, 2):
+        for dy in (-2, -1, 0, 1, 2):
+            for dz in (-2, -1, 0, 1, 2):
+                for q in buckets.get((b[0] + dx, b[1] + dy, b[2] + dz), ()):
+                    if sum((u - v) ** 2 for u, v in zip(p, q)) <= reach * reach:
+                        return True
+    return False
 
 
 def region_bounds():
@@ -106,9 +134,12 @@ def main():
         structures = collections.Counter()
         for file in files:
             region = os.path.basename(file).split('.', 1)[1].rsplit('.', 1)[0]
+            local = thread_local_cells(file)
             for row in rows(file):
                 kind, fam, cat = classify(row)
-                if cat == 'd' and on_edge(BOUNDS.get(region), row):
+                if cat == 'd' and fam in SCANNING and near_thread_local(local, row):
+                    cat = 'f'
+                elif cat == 'd' and on_edge(BOUNDS.get(region), row):
                     cat = 'e'
                 if row['stable'] == 'U':
                     unstable[fam] += 1
@@ -125,7 +156,7 @@ def main():
         for (fam, _, _), n in table.items():
             fams[fam] += n
         for fam, total in fams.most_common(25):
-            parts = ' '.join(f'{k}/{c}:{table[(fam, k, c)]}' for k in ('ours-extra', 'bds-only', 'both') for c in 'bcde' if table[(fam, k, c)])
+            parts = ' '.join(f'{k}/{c}:{table[(fam, k, c)]}' for k in ('ours-extra', 'bds-only', 'both') for c in 'bcdef' if table[(fam, k, c)])
             print(f'  {fam:>18} {total:>6}  {parts}  (a {unstable[fam]})')
         if structures:
             print('  structures (c): ' + ', '.join(f'{s} {n}' for s, n in structures.most_common(8)))

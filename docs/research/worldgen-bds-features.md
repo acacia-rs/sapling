@@ -214,7 +214,22 @@ What is left, largest first:
   seagrass whose first divergent try is a seagrass try over a neighbour's kelp column.
 - Coral: ported (worldgen-bds-caves.md, "Coral"). Geodes in structures: fixed (above); far out 99.9636 →
   99.9787%, near origin 99.9960 → 99.9971%, geode shells 100/100 in every world.
-- Other d families after that (2026-10-08): mangrove swamp trees (358) and old growth pine taiga trees (651, camp
-  terrain); a desynced coal blob in mushroom fields (chunk -44,354, next to a mineshaft); sulfur in windswept
-  gravelly hills (110); tuff in badlands and frozen peaks (~100).
+- Other d families after that (2026-10-08): mangrove swamp trees (358) and old growth pine taiga trees (651);
+  both open, see worldgen-bds-trees.md ("Refused 2x2 trees", "Mangrove chunk -500,515").
+- Explained on 2026-10-08 (worldgen/feat3), none a feature bug:
+  - Mushroom fields coal (87): our terrain is one block lower at the single column (-693,72,5674) (mycelium
+    over dirt one cell down), so blob #14 of `coal_ore_lower` in chunk -44,354 counts one stone cell fewer and
+    every later blob of the rule shifts; starting #13 one to three draws later takes the chunk from 47 to 3 wrong
+    (`draw_search`). A shape/surface difference, not the mineshaft.
+  - Tuff in badlands and frozen peaks: every cell is tuff on one side and sculk on the other (sculk floor).
+  - Sulfur in windswept gravelly hills (137 cinnabar turned sulfur by spike clusters): 97 lie within 10 blocks of
+    a glow lichen difference and the `-run2` twin itself has our block at some of them; cinnabar is replaceable
+    (1720 such writes in the region's chunks agree with BDS). The clusters' column scans stop at lichen.
+  - Dripstone: the same mechanism; e.g. badlands chunk 596,-349's cluster #63 desyncs beside a lichen BDS's two
+    runs place differently, and the next cluster (#21) is then wholly off.
+  `feature_residue.py` now files these as b (lichen or sculk on either side) and f (dripstone or sulfur within 10
+  blocks of a lichen or sculk difference): biome regions d 2107 → 1667 + f 1074 of the old d/e, tree regions
+  f 1641, structures f 2577.
+- Template data markers (structure/template/markers.rs) insert a new key in front of its bucket's first element,
+  as MSVC's `_Find_last` scans a bucket back to its low end; the structures oracle did not change.
 - Near origin d (229): bubble columns (111, grown by ticks), lichen spreads (69), lava/water hardening (47).

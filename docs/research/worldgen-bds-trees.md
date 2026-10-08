@@ -63,6 +63,11 @@ features, foliage, rocks, flower beds and huge mushrooms come from bdsre.
 - Debugging desyncs: decorate a phase-0 chunk (no neighbour writes) with `examples/trace_source` (needs the
   uncommitted trace hooks of the trees2 session: per-write lines with BDS's block), then `examples/draw_search`
   (start a try at draw k, score its writes) and `examples/mt_find` (`b:v`, `b<v`, `b>v` runs) to pin BDS's draws.
+  The feat3 session kept these as an uncommitted patch: an env-listed chunk trace (each rule try with its draw
+  range, each write with the block it replaced), a thread-local per-try override (replace try N by k draws, or
+  start it at draw k) and a per-draw extra-draw injector, driven by a `draw_search` example that scores a box
+  against BDS per value on 16 threads. Quote `<`/`>` patterns when they pass through ssh (`"'100>85'"`): the
+  remote shell otherwise redirects and drops the term.
 
 ## Jungle, pale garden and flower features
 - `BambooFeature::place` (14827b960): on air over grass, podzol, dirt or rooted dirt; height `nextInt(((h >> 24) %
@@ -105,7 +110,7 @@ sync; swamp huge mushrooms sink through one or two water blocks (143b7f230, biom
   here. Not resolved.
 - Both items below: newer evidence in worldgen-bds-features.md, "Feature residue" (BDS's first tree fails; the
   forced-failure test; the neighbour grass rule's draw shift).
-- Both refused trees: still open; what was ruled out (neighbour grass/vine sync, structures, ground under every
+- Both refused trees: still open (now three, "Refused 2x2 trees" below); what was ruled out (neighbour grass/vine sync, structures, ground under every
   trunk cell, FNV-1a rule order) is in worldgen-bds-features.md, "Feature residue". The fern/vine theory below is
   wrong: those blocks come after the failed tree, from 171,348's own after-surface rules.
 - Bamboo jungle (2740,100,5576): not a terrain hole. Both have grass at 99. Our first mega jungle tree of chunk
@@ -114,5 +119,35 @@ sync; swamp huge mushrooms sink through one or two water blocks (143b7f230, biom
   grass leaves at (2740,101,5574) in its spawn volume, and which sapling's neighbour doesn't place.
 - Old growth pine taiga extra spruce leaves: an abandoned camp's terrain adaptation near (-5320,72,5447) (BDS
   ground 3-4 blocks higher) lifts the same mega spruces; not a tree or shape bug (worldgen-bds-carvers.md).
+  The larger part (the 651 d cells, worldgen/feat3) is a third refused 2x2 tree: chunk -332,340's first tree, a
+  mega pine at (-5309,74,5447) of height 22, which BDS drops right after its two height draws (`tree_draws`
+  with the rule `minecraft:mega_taiga_surface_trees_feature`: BDS's next trunk is at draw 10). That chunk is
+  phase 0 and the tree is its first, the ground is flat podzol, nothing is carved under it and BDS's final
+  blocks leave the spawn volume clear; the camp starts in the chunk to the south. See "Refused 2x2 trees".
+
+## Refused 2x2 trees (open)
+Bamboo jungle (2739,101,5575), pale garden (-7489,132,-4558) and old growth pine taiga (-5309,74,5447): BDS
+spends exactly the trunk's height draws and grows nothing; we grow the tree. Ruled out so far: the neighbour
+grass rule's sync, structures (no structure near the first two), ground under all four trunk cells, FNV-1a rule
+order, a stale pre-carver heightmap (tops before and after carvers are equal at all 12 trunk columns), the drop
+(the pine stands on flat ground) and neighbour writes (the pine's chunk is phase 0). Read again on 2026-10-08
+and identical to ours: `MegaTreeTrunk::placeTrunk` (1438f2ba0: may_grow_on under the origin only, then radius
+max(|w-1|,1) at the base and w above, up to height+1, against the +0x68 list), its height (1438f4080),
+`TreeHelper::prepareSpawn` (1438eac70), `TreeFeature::place` (143b7ff60), the tree loop (149e97fc0) and the
+world-gen API's heightmap (vtable 14a73fa30, slot 0xb0 = 1411a0a60: `LevelChunk` +0xb80 plus the minimum y of
+the position's chunk; getBlock and min/max height forward to the `BlockSource`).
+
+The oracle's judge (tests/oracle_support/judge.rs) counts a BDS feature block over a cell our features left
+alone as `Later` (non-terrain block), not wrong: tree residue therefore shows only as ours-extra, and a tree
+BDS grows that we do not (mangrove chunk -500,515's (-7997,62,8247)) is invisible in the exact %.
+
+## Mangrove chunk -500,515 (open)
+Phase 3. BDS's try #15 of `mangrove_swamp_mangrove_tree_feature` at (-7988,61,8243) grows nothing (forcing
+it to fail takes the chunk from 644 to 190 wrong cells) and BDS has a regular mangrove (height 4, root offset 1)
+at (-7997,61,8247), tries #9 and #2. No start draw for #2 among every one matching its pick, height and offset
+reproduces BDS's roots and canopy (best 136 wrong; scoring only a box around it, 258 and up), and one extra
+draw anywhere in #15 or #2 does not either. BDS's root code (1438f0d00, simulation 1438f16f0, facing table
+14a681437 = north, east, south, west), mangrove height (1438f24d0) and canopy propagule logic (1438ef7d0) read
+as ours. The world #2 grows into, or a draw count before it, differs; not found.
 - The forest case of the flower table is unused (its rule `forest_surface_flowers_feature` is filtered by the
   `deprecated` tag). Jungle edges come from ring-chunk decoration.
