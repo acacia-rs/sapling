@@ -32,17 +32,19 @@ pub(super) fn shape(block: Block) -> Option<Shape> {
     }
 }
 
+/// By the palette's flags where it has the block (chests and stairs are not full), else solid.
 pub(super) fn full_cube(block: Block) -> bool {
-    match block {
-        Block::Template(_) => flags(block) & FULL_CUBE != 0,
-        _ => full_solid(block),
+    match (block, flags(block)) {
+        (Block::Template(_), f) => f & FULL_CUBE != 0,
+        (_, 0) => full_solid(block),
+        (_, f) => f & FULL_CUBE != 0,
     }
 }
 
 /// Whether `neighbour`, lying `(dx, dz)` from the connecting block, shows it a full face: any
-/// face of a full cube, the tall back of stairs.
+/// face of a full cube, the tall back of stairs, a composter's sides.
 pub(super) fn sturdy(neighbour: Block, (dx, dz): (i32, i32)) -> bool {
-    full_cube(neighbour) || shape(neighbour) == Some(Shape::Stairs) && facing(neighbour) == (-dx, -dz)
+    full_cube(neighbour) || shape(neighbour) == Some(Shape::Stairs) && facing(neighbour) == (-dx, -dz) || neighbour.name() == "composter"
 }
 
 fn joins(kind: Shape, neighbour: Block, side: (i32, i32)) -> bool {
@@ -105,16 +107,25 @@ fn corner(canvas: &Canvas, stairs: Block, (x, y, z): (i32, i32, i32)) -> &'stati
 /// Every neighbour-shaped template block of `canvas`'s chunk between heights `low` and `high`.
 pub fn rejoin(canvas: &mut Canvas, (low, high): (i32, i32)) {
     let b = canvas.bb;
-    let mut changed = Vec::new();
-    for y in low.max(b.y0)..=high.min(b.y1) {
+    let (low, high) = (low.max(b.y0), high.min(b.y1));
+    // Top down, so each wall sees the final sides of the wall above it.
+    for y in (low..=high).rev() {
         for z in b.z0..=b.z1 {
             for x in b.x0..=b.x1 {
                 let block = canvas.get(x, y, z);
                 if wall::is_wall(block) {
-                    changed.push(((x, y, z), with_states(block, &wall::changes(canvas, (x, y, z)))));
-                    continue;
+                    let joined = with_states(block, &wall::changes(canvas, (x, y, z)));
+                    canvas.set(x, y, z, joined);
                 }
-                let Some(kind) = shape(block) else { continue };
+            }
+        }
+    }
+    let mut changed = Vec::new();
+    for y in low..=high {
+        for z in b.z0..=b.z1 {
+            for x in b.x0..=b.x1 {
+                let block = canvas.get(x, y, z);
+                let Some(kind) = shape(block).filter(|_| !wall::is_wall(block)) else { continue };
                 let changes: Vec<(String, String)> = if kind == Shape::Stairs {
                     vec![("minecraft:corner".into(), corner(canvas, block, (x, y, z)).into())]
                 } else {
