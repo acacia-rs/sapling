@@ -63,7 +63,7 @@ pub const TERRAIN_BLOCKS: &[&str] = &[
     "brown_terracotta", "red_terracotta", "light_gray_terracotta", "copper_ore", "deepslate_copper_ore", "raw_copper_block",
     "iron_ore", "deepslate_iron_ore", "raw_iron_block", "coal_ore", "deepslate_coal_ore", "gold_ore", "deepslate_gold_ore",
     "redstone_ore", "deepslate_redstone_ore", "lapis_ore", "deepslate_lapis_ore", "diamond_ore", "deepslate_diamond_ore",
-    "emerald_ore", "deepslate_emerald_ore", "infested_stone", "infested_deepslate",
+    "emerald_ore", "deepslate_emerald_ore", "infested_stone", "infested_deepslate", "sulfur", "cinnabar",
 ];
 
 /// A saved cell: block name without `minecraft:`, its states, and the name of a liquid in it.

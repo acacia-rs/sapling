@@ -5,6 +5,7 @@
 mod biomes;
 mod column;
 mod frozen;
+mod gradient;
 mod mesa;
 mod noise;
 mod overworld;
@@ -61,6 +62,7 @@ impl SurfaceNoises {
                 self.build_column(&mut column, &spec, &tops, random);
             }
         }
+        self.gradients.build_subsurface(shape, biomes, density, chunk);
     }
 
     /// The biome's materials with every adjustment whose noise is in range applied, in order.

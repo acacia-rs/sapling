@@ -47,6 +47,17 @@ pub enum Builder {
     Mesa(Mesa),
 }
 
+/// `minecraft:noise_gradient` (gradient.rs): per block, the block of the band whose `(min, max]`
+/// holds the named NormalNoise; blocks in `keep` stay.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct Gradient {
+    pub noise: &'static str,
+    pub first_octave: i32,
+    pub amplitudes: &'static [f32],
+    pub keep: &'static [Block],
+    pub bands: &'static [(f32, f32, Block)],
+}
+
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct SurfaceSpec {
     pub builder: Builder,

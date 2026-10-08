@@ -2,7 +2,7 @@
 //! waterlogged ones from `Seagrass` on, kelp from `Kelp0` (`is_plant`, `is_waterlogged`,
 //! `is_kelp`). The `...Wet` dripleaves are the same states with water in the second layer.
 
-with_solid_blocks! {
+with_cave_blocks! {
     ShortGrass => "short_grass" "",
     Fern => "fern" "",
     TallGrass => "tall_grass" "upper_block_bit=0",

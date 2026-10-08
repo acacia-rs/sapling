@@ -30,6 +30,8 @@ macro_rules! blocks {
 
 #[macro_use]
 mod table;
+#[macro_use]
+mod cave_table;
 mod plant_table;
 
 pub use plant_table::Block;

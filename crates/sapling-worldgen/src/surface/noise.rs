@@ -3,6 +3,7 @@
 //! on the 32-bit seed, built in the generator's constructor 14821f6f0), and the builders' own.
 
 use super::frozen::IcebergNoises;
+use super::gradient::GradientNoises;
 use super::mesa::MesaNoises;
 use super::swamp::PuddleNoise;
 use crate::noise::SimplexNoise;
@@ -14,6 +15,7 @@ pub struct SurfaceNoises {
     pub mesa: MesaNoises,
     pub iceberg: IcebergNoises,
     pub puddle: PuddleNoise,
+    pub gradients: GradientNoises,
 }
 
 impl SurfaceNoises {
@@ -33,7 +35,14 @@ impl SurfaceNoises {
                 SimplexNoise::new([c, b, a], |bound| mt.next_int(bound as i32))
             })
             .collect();
-        Self { depth, adjustment, mesa: MesaNoises::new(seed), iceberg: IcebergNoises::new(seed), puddle: PuddleNoise::new(seed) }
+        Self {
+            depth,
+            adjustment,
+            mesa: MesaNoises::new(seed),
+            iceberg: IcebergNoises::new(seed),
+            puddle: PuddleNoise::new(seed),
+            gradients: GradientNoises::new(factory),
+        }
     }
 
     /// The adjustment noise at `position * scale` (143907ca0): octaves at doubling wavelength,
