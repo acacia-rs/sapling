@@ -101,11 +101,21 @@ impl Parameter for States {
         let mut pairs: Vec<String> = inner
             .split(',')
             .filter(|pair| !pair.trim().is_empty())
-            .map(|pair| pair.split_once('=').map(|(key, value)| format!("{}={}", key.trim().trim_matches('"'), value.trim().trim_matches('"'))))
+            .map(|pair| pair.split_once('=').map(|(key, value)| format!("{}={}", key.trim().trim_matches('"'), state_value(value.trim()))))
             .collect::<Option<_>>()
             .ok_or_else(|| args.error_at(mark))?;
         pairs.sort();
         Ok(Self(pairs.join(",")))
+    }
+}
+
+/// A state's value as the block table stores it: an unquoted `true` or `false` is a bool state,
+/// kept as 1 or 0.
+fn state_value(value: &str) -> &str {
+    match value {
+        "true" => "1",
+        "false" => "0",
+        _ => value.trim_matches('"'),
     }
 }
 
@@ -132,6 +142,7 @@ mod tests {
     fn states_and_selectors_read_as_vanilla_writes_them() {
         assert_eq!(parsed::<States>(r#"["torch_facing_direction"="top", "a"=1]"#).unwrap(), States("a=1,torch_facing_direction=top".into()));
         assert!(parsed::<States>("liquid_depth=3").is_err(), "brackets are required");
+        assert_eq!(parsed::<States>(r#"["open_bit"=true,"b"=false,"c"="true"]"#).unwrap(), States("b=0,c=true,open_bit=1".into()), "bools as the table keeps them");
         let sender = Sender::Console;
         let mut args = Args::new(r#"["a"=1, "b"=2] destroy"#, 0, &sender, &[]);
         let (states, after) = (States::parse(&mut args).unwrap(), args.word().unwrap());

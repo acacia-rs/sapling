@@ -74,6 +74,7 @@ pub(crate) fn update_block(world: &mut World, layer: Entity, pos: BlockPos, bloc
     };
     let put = put_block(world, layer, pos, swapped.as_ref().unwrap_or(block));
     if put == Some(true) {
+        doors::put_upper_half(world, layer, pos);
         updates::settle(world, layer, pos);
     }
     put.is_some()

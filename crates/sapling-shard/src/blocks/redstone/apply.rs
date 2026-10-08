@@ -3,11 +3,11 @@
 //! and gates open with their sound, a hopper locks, a torch flips.
 
 use bevy_ecs::prelude::*;
-use sapling_api::{BlockPos, Face};
+use sapling_api::BlockPos;
 
 use super::parts::{Opens, Part, SIGNAL, User};
 use super::{Circuits, Due, power_at};
-use crate::blocks::{level, send, with_property};
+use crate::blocks::{doors, level, send, with_property};
 use crate::components::Tick;
 
 /// Ticks a lamp stays lit once its signal ended (`RedstoneLampBlock`, a queued tick of 4).
@@ -90,14 +90,9 @@ fn use_signal(world: &mut World, layer: Entity, pos: BlockPos, id: u32, user: Us
 /// Opens or shuts a door, trapdoor or gate to match its signal, with its sound. A door is powered
 /// by either half and only its lower half stores `open_bit`; its upper is shown again with it.
 fn open(world: &mut World, layer: Entity, pos: BlockPos, opens: Opens, signal: u8) {
-    let is_upper = level(world, layer).is_some_and(|level| {
-        let state = level.registry().get(level.block(pos[0], pos[1], pos[2]));
-        state.is_some_and(|state| state.properties.split(',').any(|pair| pair == "upper_block_bit=1"))
-    });
-    let (lower, upper) = match (opens, is_upper) {
-        (Opens::Door, true) => (Face::Down.neighbour(pos), Some(pos)),
-        (Opens::Door, false) => (pos, Some(Face::Up.neighbour(pos)).filter(|up| at(world, layer, *up).is_some_and(|(_, part)| part == Part::User(User::Opens(Opens::Door))))),
-        _ => (pos, None),
+    let (lower, upper) = match doors::other_half(world, layer, pos).filter(|_| opens == Opens::Door) {
+        Some(other) if other[1] < pos[1] => (other, Some(pos)),
+        other => (pos, other),
     };
     let powered = signal > 0 || [Some(lower), upper].into_iter().flatten().any(|half| power_at(world, layer, half) > 0);
     let Some(id) = with(world, layer, lower, "open_bit", if powered { "1" } else { "0" }) else { return };

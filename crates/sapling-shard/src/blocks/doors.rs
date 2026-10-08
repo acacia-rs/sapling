@@ -1,8 +1,7 @@
 //! Blocks a hand moves (doors, trapdoors, fence gates and levers open and shut, buttons go in
 //! for a second) and the second cell of doors and beds, which is placed, opened and broken with
 //! the first.
-// TODO: no pressure plates, no redstone, a gate does not
-// swing away from its user, and `door.open`/`door.close` are named by the pattern of the other
+// TODO: a gate does not swing away from its user, and `door.open`/`door.close` are named by the pattern of the other
 // sounds: the server's binary holds those as plain strings, but not these two.
 
 use bevy_ecs::prelude::*;
@@ -45,7 +44,7 @@ fn ahead(registry: &BlockRegistry, id: u32, [x, y, z]: BlockPos, steps: i32) -> 
 }
 
 /// Where the other cell of the two-cell block at `pos` is, when it is there.
-fn other_half(world: &World, layer: Entity, pos: BlockPos) -> Option<BlockPos> {
+pub(super) fn other_half(world: &World, layer: Entity, pos: BlockPos) -> Option<BlockPos> {
     let level = level(world, layer)?;
     let (registry, id) = (level.registry(), level.block(pos[0], pos[1], pos[2]));
     let other = match (property(registry, id, UPPER), property(registry, id, HEAD)) {
@@ -80,6 +79,18 @@ pub(super) fn place_second_cell(world: &mut World, layer: Entity, pos: BlockPos)
     let level = level(world, layer)?;
     let (cell, state) = second_cell(level.registry(), level.block(pos[0], pos[1], pos[2]), pos)?;
     send::set(world, layer, cell, state).then_some(cell)
+}
+
+/// Stands the upper half of a door whose lower half was just put at `pos`, shut, when the cell
+/// above is air: BDS's `/setblock` shows both (research/captures/bds-redstone.txt).
+pub(super) fn put_upper_half(world: &mut World, layer: Entity, [x, y, z]: BlockPos) {
+    let Some(level) = level(world, layer) else { return };
+    let (registry, id) = (level.registry(), level.block(x, y, z));
+    let is_free = level.in_height(y + 1) && level.block(x, y + 1, z) == registry.air_id();
+    let upper = with(registry, id, UPPER, "1").and_then(|upper| with(registry, upper, OPEN, "0"));
+    if let Some(upper) = upper.filter(|_| is_free && property(registry, id, UPPER) == Some("0")) {
+        send::set(world, layer, [x, y + 1, z], upper);
+    }
 }
 
 /// The door `id` about to stand at `pos`, placed by a look into `quarter`, hinged on the right

@@ -203,6 +203,50 @@ const REDSTONE: &[&str] = &[
     "setblock ~16 ~1 ~12 wooden_button [\"facing_direction\"=1,\"button_pressed_bit\"=true]",
     "testforblock ~16 ~1 ~12 wooden_button [\"button_pressed_bit\"=true]",
 ];
+/// A block of redstone put by a lamp, an iron door and a hopper and taken away again, 20 times,
+/// [`PHASE_SETTLE`] apart so the toggles fall on both ticks of the 2-tick evaluation (research C1).
+const REDSTONE_PHASE: &[&str] = &[
+    "fill ~2 ~-1 ~4 ~6 ~-1 ~6 stone",
+    "fill ~2 ~ ~4 ~6 ~2 ~6 air",
+    "setblock ~3 ~ ~5 redstone_lamp",
+    "setblock ~5 ~ ~5 iron_door",
+    "setblock ~4 ~ ~6 hopper",
+    "setblock ~4 ~ ~5 redstone_block",
+    "setblock ~4 ~ ~5 air",
+    "setblock ~4 ~ ~5 redstone_block",
+    "setblock ~4 ~ ~5 air",
+    "setblock ~4 ~ ~5 redstone_block",
+    "setblock ~4 ~ ~5 air",
+    "setblock ~4 ~ ~5 redstone_block",
+    "setblock ~4 ~ ~5 air",
+    "setblock ~4 ~ ~5 redstone_block",
+    "setblock ~4 ~ ~5 air",
+    "setblock ~4 ~ ~5 redstone_block",
+    "setblock ~4 ~ ~5 air",
+    "setblock ~4 ~ ~5 redstone_block",
+    "setblock ~4 ~ ~5 air",
+    "setblock ~4 ~ ~5 redstone_block",
+    "setblock ~4 ~ ~5 air",
+    "setblock ~4 ~ ~5 redstone_block",
+    "setblock ~4 ~ ~5 air",
+    "setblock ~4 ~ ~5 redstone_block",
+    "setblock ~4 ~ ~5 air",
+    "setblock ~4 ~ ~5 redstone_block",
+    "setblock ~4 ~ ~5 air",
+    "setblock ~4 ~ ~5 redstone_block",
+    "setblock ~4 ~ ~5 air",
+    "setblock ~4 ~ ~5 redstone_block",
+    "setblock ~4 ~ ~5 air",
+    "setblock ~4 ~ ~5 redstone_block",
+    "setblock ~4 ~ ~5 air",
+    "setblock ~4 ~ ~5 redstone_block",
+    "setblock ~4 ~ ~5 air",
+    "setblock ~4 ~ ~5 redstone_block",
+    "setblock ~4 ~ ~5 air",
+];
+/// 10.5 ticks: a lamp is out 6 after its power goes, and each toggle lands half a tick later in
+/// the 2-tick cycle than the one before.
+const PHASE_SETTLE: Duration = Duration::from_millis(525);
 const REDSTONE_SHOWN: &[&str] = &["UpdateBlock", "UpdateBlockSynced", "UpdateSubchunkBlocks", "LevelSoundEvent", "LevelEvent", "BlockEvent"];
 
 /// Long enough to see a thing sink or rise through the pool.
@@ -242,7 +286,7 @@ const SHOWN: usize = 4000;
 #[tokio::main(flavor = "current_thread")]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut args = std::env::args().skip(1);
-    let server = args.next().ok_or("usage: bds_command_probe <server> [gamerule|kill|replaceitem|defaults|concrete|water|lava|redstone]")?;
+    let server = args.next().ok_or("usage: bds_command_probe <server> [gamerule|kill|replaceitem|defaults|concrete|water|lava|redstone|redstone-phase]")?;
     let (lines, shown, settle) = match args.next().as_deref() {
         None | Some("gamerule") => (GAMERULE, &[][..], SETTLE),
         Some("kill") => (KILL, KILL_SHOWN, KILL_SETTLE),
@@ -252,6 +296,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         Some("water") => (WATER, WATER_SHOWN, WATER_SETTLE),
         Some("lava") => (LAVA, LAVA_SHOWN, WATER_SETTLE),
         Some("redstone") => (REDSTONE, REDSTONE_SHOWN, KILL_SETTLE),
+        Some("redstone-phase") => (REDSTONE_PHASE, REDSTONE_SHOWN, PHASE_SETTLE),
         Some(other) => return Err(format!("no drill {other}").into()),
     };
     let (mut actor, mut watcher) = (connect(&server, "CmdActor").await?, connect(&server, "CmdWatcher").await?);

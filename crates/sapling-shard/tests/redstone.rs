@@ -25,7 +25,7 @@ fn ready() -> Harness {
     h
 }
 
-/// Puts `blocks` as a handler's `update_block` does, then runs a tick.
+/// Puts `blocks` as a handler's `update_block` does, in the next tick: the first that [`watch`] sees.
 fn put(h: &mut Harness, blocks: &[([i32; 3], &str, &str)]) {
     let blocks: Vec<([i32; 3], Block)> = blocks.iter().map(|(pos, name, properties)| (*pos, Block::new(*name).with(*properties))).collect();
     h.remote.run(move |ctx| {
@@ -61,7 +61,7 @@ fn dust_carries_a_block_of_redstone_15_blocks_to_a_lamp_and_the_lamp_goes_out_4_
     put(&mut h, &[([-7, 65, 4], "redstone_block", ""), ([-7, 65, 6], "redstone_block", "")]);
     let on = watch(&mut h, 6);
     let lit = when(&on, [9, 65, 4], hash("minecraft:lit_redstone_lamp")).unwrap_or_else(|| panic!("the lamp lit: {:?}", on.iter().map(|sent| block_changes(sent)).collect::<Vec<_>>()));
-    assert!(lit <= 2, "within two ticks, as BDS: {lit}");
+    assert!((2..=3).contains(&lit), "2 or 3 ticks after, by the 2-tick phase, as BDS: {lit}");
     let shown = block_changes(&on[lit]);
     for (x, signal) in [(-6, 15), (1, 8), (8, 1)] {
         assert!(shown.contains(&([x, 65, 4], dust(signal))), "dust at {x} with the lamp: {signal}");
@@ -94,7 +94,7 @@ fn a_lever_powers_a_lamp_through_its_block_and_puts_out_a_torch_on_it() {
 
     put(&mut h, &[([3, 66, 8], "lever", "lever_direction=up_north_south,open_bit=1"), ([6, 65, 8], "lever", "lever_direction=west,open_bit=1")]);
     let thrown = watch(&mut h, 12);
-    assert!(when(&thrown, [4, 65, 8], hash("minecraft:lit_redstone_lamp")).is_some_and(|tick| tick <= 2), "the lamp beside the lever's block");
+    assert!(when(&thrown, [4, 65, 8], hash("minecraft:lit_redstone_lamp")).is_some_and(|tick| (2..=3).contains(&tick)), "the lamp beside the lever's block");
     let out = when(&thrown, [7, 66, 8], state("minecraft:unlit_redstone_torch", "torch_facing_direction=top")).expect("the torch went out");
     assert_eq!(when(&thrown, [7, 67, 8], hash("minecraft:redstone_lamp")).map(|tick| tick > out), Some(true), "and then its lamp");
 }
@@ -104,8 +104,9 @@ fn a_powered_iron_door_opens_its_lower_half_with_a_sound_and_shuts_again() {
     let mut h = ready();
     let door = |upper: u8, open: u8| format!("door_hinge_bit=0,minecraft:cardinal_direction=south,open_bit={open},upper_block_bit={upper}");
     let (lower, upper) = (door(0, 0), door(1, 0));
-    put(&mut h, &[([10, 65, 8], "iron_door", &lower), ([10, 66, 8], "iron_door", &upper)]);
-    watch(&mut h, 4);
+    put(&mut h, &[([10, 65, 8], "iron_door", &lower)]);
+    let placed: Vec<RawPacket> = watch(&mut h, 4).concat();
+    assert!(block_changes(&placed).contains(&([10, 66, 8], state("minecraft:iron_door", &upper))), "its upper half comes with it, as /setblock on BDS");
 
     put(&mut h, &[([11, 65, 8], "redstone_block", "")]);
     let opened: Vec<RawPacket> = watch(&mut h, 4).concat();

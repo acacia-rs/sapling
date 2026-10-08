@@ -229,9 +229,7 @@ immediate signal 148a82ae0): DirectionalProducer with `direction = mStronglyPowe
 
 ## Open checks (live drill)
 
-- C1 Press → lamp lag: 1 or 2 ticks by phase of the 2-tick evaluation (R1/R4). Place lamp next to a lever, toggle
-  20×, histogram tick deltas on one client; expect only 1 and 2.
-- C2 Release → lamp off 5–6 ticks (R23 4-tick delay + 1–2). Repeat with a lever: expect 5–6 off, 1–2 on.
+- C1, C2: done, see the end: 2–3 ticks on, 6–7 off for `/setblock` changes.
 - C3 Evaluation phase: two levers flipped in consecutive ticks should update lamps in the same tick sometimes.
 - C4 Chunk ticking before lambda_76 (R4): if lamps never update, the order is reversed; capture says they do.
 - C5 Conductors: which blocks have `redstone_conductivity` / `Block+0x90` (glass, slabs, leaves, glowstone, ice,
@@ -255,7 +253,12 @@ immediate signal 148a82ae0): DirectionalProducer with `direction = mStronglyPowe
 - Lever on top of a block: the lamp beside the block lights 2 ticks after, goes out 6 after it is thrown back.
 - A block of redstone beside a torch's block does not put the torch out (C7: it powers no block).
 - Iron door beside a block of redstone: only the lower half's `open_bit` changes, the upper is sent again
-  unchanged, `door.open`/`door.close` from the lower half's centre, about 3 ticks after (lamps: 2). Hopper:
-  `toggle_bit`, about 3 ticks.
+  unchanged, `door.open`/`door.close` from the lower half's centre. Hopper: `toggle_bit`. `/setblock` of a
+  lower door half also places its upper half, shut.
 - A button put pressed by `/setblock` stays pressed: no queued tick springs it back.
+- C1/C2 (`bds_command_probe redstone-phase`, research/captures/bds-redstone-phase.txt): a block of redstone
+  put by `/setblock` 20 times, 10.5 ticks apart. Lamp, door and hopper all change in the same tick, 2 or 3
+  ticks after the block, alternating with the phase (one stray 1); the lamp goes out 4 after. So a change is
+  first evaluated in the tick after it (not R4's 1–2), and doors and hoppers lag lamps by nothing — the
+  2-against-3 above was phase.
 

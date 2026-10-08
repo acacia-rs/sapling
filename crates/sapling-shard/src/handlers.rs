@@ -37,6 +37,10 @@ impl Ctx<'_> {
 /// block requests and form answers, removes players whose connection ended, with `on_quit` for
 /// those who had joined, and ends with `on_tick`.
 pub(crate) fn dispatch(world: &mut World, plugins: &mut Plugins) {
+    // First: a block changed in a tick reaches its circuit in the next, as on BDS
+    // (research/captures/bds-redstone-phase.txt), and what an evaluation finds shows a tick later.
+    blocks::apply_redstone(world);
+    blocks::evaluate_redstone(world);
     let Arrivals { joined, left } = std::mem::take(&mut *world.resource_mut::<Arrivals>());
     // Players who came from another shard at the start of the tick, before what they then sent.
     worlds::dispatch(world, plugins);
@@ -51,7 +55,6 @@ pub(crate) fn dispatch(world: &mut World, plugins: &mut Plugins) {
     commands::dispatch(world, plugins);
     blocks::release_buttons(world);
     blocks::press_plates(world);
-    blocks::apply_redstone(world);
     blocks::flow_liquids(world);
     blocks::dispatch(world, plugins);
     blocks::dispatch_sign_edits(world);
@@ -91,6 +94,4 @@ pub(crate) fn dispatch(world: &mut World, plugins: &mut Plugins) {
     worlds::focus(world, None);
     plugins.each(world, |handler, ctx| handler.on_tick(ctx));
     worlds::dispatch(world, plugins);
-    // Last: BDS evaluates circuits at the end of its tick, after all that changed blocks.
-    blocks::evaluate_redstone(world);
 }
