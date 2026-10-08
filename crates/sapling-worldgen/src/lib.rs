@@ -173,6 +173,12 @@ impl OverworldGenerator {
         self.structures.feature_pieces(&self.density, (chunk_x, chunk_z))
     }
 
+    /// Whether structure terrain adjustments reach the chunk, for probes.
+    #[doc(hidden)]
+    pub fn has_terrain_adjustments(&self, chunk_x: i32, chunk_z: i32) -> bool {
+        !self.structures.adjustments(&self.density, (chunk_x, chunk_z)).is_empty()
+    }
+
     #[doc(hidden)]
     pub fn village_pieces(&self, chunk_x: i32, chunk_z: i32) -> Vec<String> {
         self.structures.village_pieces(&self.density, (chunk_x, chunk_z))
