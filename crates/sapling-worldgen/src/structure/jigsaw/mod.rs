@@ -12,9 +12,9 @@ use std::sync::OnceLock;
 use super::template::{Predicate, Rule, Template, named};
 use crate::block::Block;
 
-pub use assemble::{Assembler, Variant};
+pub use assemble::{Assembler, Variant, middle};
 pub use element::{Element, ElementKind, Projection};
-pub use piece::Piece;
+pub use piece::{AncientCityClass, Piece, PieceClass, VillageClass};
 
 pub struct Pool {
     pub name: String,
@@ -47,10 +47,11 @@ fn leak<T>(value: T) -> &'static T {
 }
 
 fn output(name: &str) -> Block {
-    match name {
-        "air" => Block::Air,
-        "water" => Block::Water,
-        _ => named(name, "", false),
+    match name.split_once('[') {
+        Some((name, states)) => named(name, states.trim_end_matches(']'), false),
+        None if name == "air" => Block::Air,
+        None if name == "water" => Block::Water,
+        None => named(name, "", false),
     }
 }
 

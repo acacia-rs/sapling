@@ -41,14 +41,21 @@ impl Structures {
         let portals = self.portals_near(density, chunk);
         let outposts = self.outposts_near(density, chunk);
         let cities = self.ancient_cities_near(density, chunk);
-        let templated =
-            !(igloos.is_empty() && ruins.is_empty() && shipwrecks.is_empty() && portals.is_empty() && outposts.is_empty() && cities.is_empty());
+        let villages = self.villages_near(density, chunk);
+        let templated = !(igloos.is_empty()
+            && ruins.is_empty()
+            && shipwrecks.is_empty()
+            && portals.is_empty()
+            && outposts.is_empty()
+            && cities.is_empty()
+            && villages.is_empty());
         if mineshafts.is_empty() && !treasure && !templated {
             return None;
         }
         let mut canvas = Canvas::new(shape, chunk, neighbour);
-        self.place_igloos(&mut canvas, &igloos);
         let seed = LargeFeatureSeed::new(self.level_seed).chunk(chunk.0, chunk.1);
+        Self::place_villages(density, &mut canvas, &villages, seed);
+        self.place_igloos(&mut canvas, &igloos);
         let mut random = Mt19937::new(seed);
         for mineshaft in &mineshafts {
             mineshaft.post_process(&mut canvas, &mut random, biomes);

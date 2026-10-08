@@ -46,7 +46,8 @@ EXTRA = [
     ('spruce_planks', '', False, 3),
     ('acacia_planks', '', False, 3),
     ('deepslate', 'pillar_axis=y', False, 3),
-] + [(stairs, f'minecraft:corner=none,upside_down_bit={up},weirdo_direction={w}', False, 2)
+    ('red_sandstone', '', False, 3),
+] + [(crop, 'growth=7', False, 0) for crop in ('wheat', 'potatoes', 'carrots', 'beetroot')] + [(stairs, f'minecraft:corner=none,upside_down_bit={up},weirdo_direction={w}', False, 2)
      for stairs in ('stone_brick_stairs', 'mossy_stone_brick_stairs') for up in range(2) for w in range(4)]
 CONNECTIONS = [f'minecraft:connection_{d}' for d in ('east', 'north', 'south', 'west')]
 WALL_SIDES = [f'wall_connection_type_{d}' for d in ('east', 'north', 'south', 'west')]

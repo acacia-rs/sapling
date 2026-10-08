@@ -7,6 +7,20 @@ predicate being `*`, `b=<block>`, `rb=<block>@<p>`, `nl=<list>` or `lr=<list>@<p
 import json
 import sys
 
+# The farm lists' crop rules (BlockMatch -> the crop at growth 7, its state set in code, so jpools.py
+# misses them), read off the disassembly; they come first in each list.
+CROPS = {
+    'wheat_wheat_farm': [('carrots', 'wheat')],
+    'wheat_potato_farm': [('carrots', 'potatoes')],
+    'wheat_beet_farm': [('carrots', 'beetroot')],
+    'potato_potato_farm': [('wheat', 'potatoes'), ('carrots', 'potatoes')],
+    'potato_beet_farm': [('wheat', 'potatoes'), ('carrots', 'beetroot')],
+    'potato_carrot_farm': [('wheat', 'potatoes')],
+    'beet_beet_farm': [('wheat', 'beetroot'), ('carrots', 'beetroot')],
+    'beet_carrot_farm': [('wheat', 'beetroot')],
+    'carrot_carrot_farm': [('wheat', 'carrots')],
+}
+
 lists, procs, elements, pools, aliases, feature_recs = {}, {}, {}, [], [], {}
 
 
@@ -48,7 +62,8 @@ for path in sys.argv[2:]:
             rules = [f"{pred(r['input'])}|{pred(r['location'])}|{r['output']}" for r in d['rules']]
             if r_pos := [r for r in d['rules'] if r['position'][0] != 'always_true']:
                 raise ValueError(r_pos)
-            procs[d['processors']] = rules
+            crops = CROPS.get(short(d['processors']).removeprefix('abandoned_'), [])
+            procs[d['processors']] = [f'b={a}|*|{b}[growth=7]' for a, b in crops] + rules
         elif 'feature_rec' in d:
             feature_recs[d['feature_rec']] = d['def']
         elif 'element' in d and d['element']:

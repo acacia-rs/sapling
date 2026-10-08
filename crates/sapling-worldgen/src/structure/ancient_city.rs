@@ -6,7 +6,7 @@
 use std::sync::Arc;
 
 use super::canvas::Canvas;
-use super::jigsaw::{Assembler, Piece, Variant, data};
+use super::jigsaw::{AncientCityClass, Assembler, Piece, Variant, data};
 use super::template::Rotation;
 use super::{BoundingBox, StructureKind, Structures};
 use crate::density::Density;
@@ -46,8 +46,9 @@ impl Structures {
     /// Every city piece meeting the canvas's chunk, in assembly order.
     pub(super) fn place_ancient_cities(canvas: &mut Canvas, cities: &[Arc<AncientCity>], seed: u32) {
         let column = canvas.bb;
+        let mut random = crate::random::Mt19937::new(seed);
         for piece in cities.iter().flat_map(|c| c.pieces.iter()).filter(|p| p.bb.intersects(&column)) {
-            piece.post_process(canvas, seed);
+            piece.post_process(canvas, seed, &mut random, &AncientCityClass, &|_, _| 0);
         }
     }
 }

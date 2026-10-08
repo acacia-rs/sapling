@@ -26,6 +26,7 @@ mod templated;
 #[cfg(test)]
 mod tests;
 mod treasure;
+mod village;
 
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex, OnceLock};
