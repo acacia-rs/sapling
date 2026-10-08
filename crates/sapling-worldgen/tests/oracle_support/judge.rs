@@ -123,7 +123,13 @@ fn stage_of(block: Block, y: i32, context: Context) -> Stage {
     }
 }
 
+/// Multiface blocks whose faces BDS picks with a thread-local generator (worldgen-bds-caves.md).
+const THREAD_LOCAL_FACES: &[&str] = &["glow_lichen", "sculk_vein"];
+
 pub fn judge(ours: Block, bds: &BdsCell, y: i32, context: Context) -> Verdict {
+    if !bds.is(ours) && bds.block == ours.name() && THREAD_LOCAL_FACES.contains(&bds.block.as_str()) {
+        return Verdict::Later("multiface faces (thread-local random in BDS)");
+    }
     match judge_cell(ours, bds, y, context) {
         Verdict::Error(Stage::Surface) if context.reshaped => Verdict::Later("surface under a solid-shape difference (carver miss, feature, shape)"),
         Verdict::Error(Stage::Surface | Stage::Shape | Stage::Carvers) if FEATURE_ONLY.contains(&bds.block.as_str()) => Verdict::Error(Stage::Features),
