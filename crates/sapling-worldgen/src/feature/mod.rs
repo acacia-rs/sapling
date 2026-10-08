@@ -13,6 +13,7 @@ mod flowers;
 mod freeze;
 mod geode;
 mod iceberg;
+mod jungle;
 mod land;
 mod huge_mushroom;
 mod legacy_spec;

@@ -52,6 +52,9 @@ impl Legacy {
             Legacy::Flower { kind, count } => super::flowers::flowers(ctx.view, ctx.random, at, kind, count),
             Legacy::Iceberg => super::iceberg::ice_feature(ctx.view, ctx.random, at),
             Legacy::Springs => super::springs::springs(ctx, at),
+            Legacy::Bamboo => super::jungle::bamboo(ctx.view, ctx.random, at),
+            Legacy::PodzolArea => super::jungle::podzol_area(ctx.view, ctx.random, at),
+            Legacy::Vines => super::jungle::vines(ctx.view, ctx.random, at),
         }
     }
 }

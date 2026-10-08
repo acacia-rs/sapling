@@ -185,6 +185,10 @@ pub enum Legacy {
     Iceberg,
     /// `legacy:springs_feature`: water and lava springs in cave walls (springs.rs).
     Springs,
+    /// `bamboo_feature`, `podzol_area_feature` and `vines_feature` (jungle.rs).
+    Bamboo,
+    PodzolArea,
+    Vines,
 }
 
 /// The flower table of a `LegacyFlowerFeature` (1438ef3b0's switch; the forest and flower forest
