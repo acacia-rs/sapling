@@ -24,6 +24,7 @@ pub(super) struct TemplateStarts {
     outposts: Mutex<HashMap<(i32, i32), Arc<outpost::Outpost>>>,
     pub(super) ancient_cities: Mutex<HashMap<(i32, i32), Arc<super::ancient_city::AncientCity>>>,
     pub(super) villages: Mutex<HashMap<(i32, i32), Arc<super::village::Village>>>,
+    pub(super) mansions: Mutex<HashMap<(i32, i32), Arc<super::mansion::Mansion>>>,
     /// v2 jigsaw structures' pieces by kind and start.
     pub(super) v2: Mutex<HashMap<(super::StructureKind, (i32, i32)), Arc<Vec<super::jigsaw::Piece>>>>,
 }

@@ -278,6 +278,10 @@ minecraft:air	0	air		0	0
 minecraft:air	1	air		0	0
 minecraft:air	2	air		0	0
 minecraft:air	3	air		0	0
+minecraft:anvil[damage=2,facing=west]	0	damaged_anvil	minecraft:cardinal_direction=west	0	2
+minecraft:anvil[damage=2,facing=west]	1	damaged_anvil	minecraft:cardinal_direction=north	0	2
+minecraft:anvil[damage=2,facing=west]	2	damaged_anvil	minecraft:cardinal_direction=east	0	2
+minecraft:anvil[damage=2,facing=west]	3	damaged_anvil	minecraft:cardinal_direction=south	0	2
 minecraft:attached_melon_stem[facing=east]	0	melon_stem	facing_direction=5,growth=0	0	0
 minecraft:attached_melon_stem[facing=east]	1	melon_stem	facing_direction=3,growth=0	0	0
 minecraft:attached_melon_stem[facing=east]	2	melon_stem	facing_direction=4,growth=0	0	0
@@ -322,10 +326,66 @@ minecraft:bell[attachment=floor,facing=west]	0	bell	attachment=standing,directio
 minecraft:bell[attachment=floor,facing=west]	1	bell	attachment=standing,direction=2,toggle_bit=0	0	2
 minecraft:bell[attachment=floor,facing=west]	2	bell	attachment=standing,direction=3,toggle_bit=0	0	2
 minecraft:bell[attachment=floor,facing=west]	3	bell	attachment=standing,direction=0,toggle_bit=0	0	2
+minecraft:birch_fence[east=false,north=false,south=false,west=false]	0	birch_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:birch_fence[east=false,north=false,south=false,west=false]	1	birch_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:birch_fence[east=false,north=false,south=false,west=false]	2	birch_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:birch_fence[east=false,north=false,south=false,west=false]	3	birch_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
 minecraft:birch_planks	0	birch_planks		0	3
 minecraft:birch_planks	1	birch_planks		0	3
 minecraft:birch_planks	2	birch_planks		0	3
 minecraft:birch_planks	3	birch_planks		0	3
+minecraft:birch_stairs[facing=east,half=bottom,shape=outer_right]	0	birch_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=0	0	2
+minecraft:birch_stairs[facing=east,half=bottom,shape=outer_right]	1	birch_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=2	0	2
+minecraft:birch_stairs[facing=east,half=bottom,shape=outer_right]	2	birch_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=1	0	2
+minecraft:birch_stairs[facing=east,half=bottom,shape=outer_right]	3	birch_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=3	0	2
+minecraft:birch_stairs[facing=east,half=top,shape=outer_right]	0	birch_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=0	0	2
+minecraft:birch_stairs[facing=east,half=top,shape=outer_right]	1	birch_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=2	0	2
+minecraft:birch_stairs[facing=east,half=top,shape=outer_right]	2	birch_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=1	0	2
+minecraft:birch_stairs[facing=east,half=top,shape=outer_right]	3	birch_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=3	0	2
+minecraft:birch_stairs[facing=east,half=top,shape=straight]	0	birch_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=0	0	2
+minecraft:birch_stairs[facing=east,half=top,shape=straight]	1	birch_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=2	0	2
+minecraft:birch_stairs[facing=east,half=top,shape=straight]	2	birch_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=1	0	2
+minecraft:birch_stairs[facing=east,half=top,shape=straight]	3	birch_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=3	0	2
+minecraft:birch_stairs[facing=north,half=bottom,shape=outer_right]	0	birch_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=3	0	2
+minecraft:birch_stairs[facing=north,half=bottom,shape=outer_right]	1	birch_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=0	0	2
+minecraft:birch_stairs[facing=north,half=bottom,shape=outer_right]	2	birch_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=2	0	2
+minecraft:birch_stairs[facing=north,half=bottom,shape=outer_right]	3	birch_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=1	0	2
+minecraft:birch_stairs[facing=north,half=bottom,shape=straight]	0	birch_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=3	0	2
+minecraft:birch_stairs[facing=north,half=bottom,shape=straight]	1	birch_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=0	0	2
+minecraft:birch_stairs[facing=north,half=bottom,shape=straight]	2	birch_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=2	0	2
+minecraft:birch_stairs[facing=north,half=bottom,shape=straight]	3	birch_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=1	0	2
+minecraft:birch_stairs[facing=north,half=top,shape=straight]	0	birch_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=3	0	2
+minecraft:birch_stairs[facing=north,half=top,shape=straight]	1	birch_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=0	0	2
+minecraft:birch_stairs[facing=north,half=top,shape=straight]	2	birch_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=2	0	2
+minecraft:birch_stairs[facing=north,half=top,shape=straight]	3	birch_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=1	0	2
+minecraft:birch_stairs[facing=south,half=bottom,shape=outer_right]	0	birch_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=2	0	2
+minecraft:birch_stairs[facing=south,half=bottom,shape=outer_right]	1	birch_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=1	0	2
+minecraft:birch_stairs[facing=south,half=bottom,shape=outer_right]	2	birch_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=3	0	2
+minecraft:birch_stairs[facing=south,half=bottom,shape=outer_right]	3	birch_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=0	0	2
+minecraft:birch_stairs[facing=south,half=bottom,shape=straight]	0	birch_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=2	0	2
+minecraft:birch_stairs[facing=south,half=bottom,shape=straight]	1	birch_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=1	0	2
+minecraft:birch_stairs[facing=south,half=bottom,shape=straight]	2	birch_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=3	0	2
+minecraft:birch_stairs[facing=south,half=bottom,shape=straight]	3	birch_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=0	0	2
+minecraft:birch_stairs[facing=south,half=top,shape=straight]	0	birch_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=2	0	2
+minecraft:birch_stairs[facing=south,half=top,shape=straight]	1	birch_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=1	0	2
+minecraft:birch_stairs[facing=south,half=top,shape=straight]	2	birch_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=3	0	2
+minecraft:birch_stairs[facing=south,half=top,shape=straight]	3	birch_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=0	0	2
+minecraft:birch_stairs[facing=west,half=bottom,shape=outer_right]	0	birch_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=1	0	2
+minecraft:birch_stairs[facing=west,half=bottom,shape=outer_right]	1	birch_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=3	0	2
+minecraft:birch_stairs[facing=west,half=bottom,shape=outer_right]	2	birch_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=0	0	2
+minecraft:birch_stairs[facing=west,half=bottom,shape=outer_right]	3	birch_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=2	0	2
+minecraft:birch_stairs[facing=west,half=bottom,shape=straight]	0	birch_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=1	0	2
+minecraft:birch_stairs[facing=west,half=bottom,shape=straight]	1	birch_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=3	0	2
+minecraft:birch_stairs[facing=west,half=bottom,shape=straight]	2	birch_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=0	0	2
+minecraft:birch_stairs[facing=west,half=bottom,shape=straight]	3	birch_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=2	0	2
+minecraft:birch_stairs[facing=west,half=top,shape=outer_right]	0	birch_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=1	0	2
+minecraft:birch_stairs[facing=west,half=top,shape=outer_right]	1	birch_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=3	0	2
+minecraft:birch_stairs[facing=west,half=top,shape=outer_right]	2	birch_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=0	0	2
+minecraft:birch_stairs[facing=west,half=top,shape=outer_right]	3	birch_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=2	0	2
+minecraft:birch_stairs[facing=west,half=top,shape=straight]	0	birch_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=1	0	2
+minecraft:birch_stairs[facing=west,half=top,shape=straight]	1	birch_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=3	0	2
+minecraft:birch_stairs[facing=west,half=top,shape=straight]	2	birch_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=0	0	2
+minecraft:birch_stairs[facing=west,half=top,shape=straight]	3	birch_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=2	0	2
 minecraft:black_glazed_terracotta[facing=east]	0	black_glazed_terracotta	facing_direction=5	0	3
 minecraft:black_glazed_terracotta[facing=east]	1	black_glazed_terracotta	facing_direction=3	0	3
 minecraft:black_glazed_terracotta[facing=east]	2	black_glazed_terracotta	facing_direction=4	0	3
@@ -502,6 +562,14 @@ minecraft:brown_bed[facing=west,occupied=false,part=head]	0	bed	direction=1,head
 minecraft:brown_bed[facing=west,occupied=false,part=head]	1	bed	direction=2,head_piece_bit=1,occupied_bit=0	0	2
 minecraft:brown_bed[facing=west,occupied=false,part=head]	2	bed	direction=3,head_piece_bit=1,occupied_bit=0	0	2
 minecraft:brown_bed[facing=west,occupied=false,part=head]	3	bed	direction=0,head_piece_bit=1,occupied_bit=0	0	2
+minecraft:brown_carpet	0	brown_carpet		0	2
+minecraft:brown_carpet	1	brown_carpet		0	2
+minecraft:brown_carpet	2	brown_carpet		0	2
+minecraft:brown_carpet	3	brown_carpet		0	2
+minecraft:brown_mushroom	0	brown_mushroom		0	0
+minecraft:brown_mushroom	1	brown_mushroom		0	0
+minecraft:brown_mushroom	2	brown_mushroom		0	0
+minecraft:brown_mushroom	3	brown_mushroom		0	0
 minecraft:brown_stained_glass	0	brown_stained_glass		0	3
 minecraft:brown_stained_glass	1	brown_stained_glass		0	3
 minecraft:brown_stained_glass	2	brown_stained_glass		0	3
@@ -582,10 +650,66 @@ minecraft:candle[candles=4,lit=true,waterlogged=false]	0	candle	candles=3,lit=1	
 minecraft:candle[candles=4,lit=true,waterlogged=false]	1	candle	candles=3,lit=1	0	2
 minecraft:candle[candles=4,lit=true,waterlogged=false]	2	candle	candles=3,lit=1	0	2
 minecraft:candle[candles=4,lit=true,waterlogged=false]	3	candle	candles=3,lit=1	0	2
+minecraft:carpet[color=black]	0	black_carpet		0	2
+minecraft:carpet[color=black]	1	black_carpet		0	2
+minecraft:carpet[color=black]	2	black_carpet		0	2
+minecraft:carpet[color=black]	3	black_carpet		0	2
+minecraft:carpet[color=blue]	0	blue_carpet		0	2
+minecraft:carpet[color=blue]	1	blue_carpet		0	2
+minecraft:carpet[color=blue]	2	blue_carpet		0	2
+minecraft:carpet[color=blue]	3	blue_carpet		0	2
+minecraft:carpet[color=brown]	0	brown_carpet		0	2
+minecraft:carpet[color=brown]	1	brown_carpet		0	2
+minecraft:carpet[color=brown]	2	brown_carpet		0	2
+minecraft:carpet[color=brown]	3	brown_carpet		0	2
+minecraft:carpet[color=cyan]	0	cyan_carpet		0	2
+minecraft:carpet[color=cyan]	1	cyan_carpet		0	2
+minecraft:carpet[color=cyan]	2	cyan_carpet		0	2
+minecraft:carpet[color=cyan]	3	cyan_carpet		0	2
+minecraft:carpet[color=gray]	0	gray_carpet		0	2
+minecraft:carpet[color=gray]	1	gray_carpet		0	2
+minecraft:carpet[color=gray]	2	gray_carpet		0	2
+minecraft:carpet[color=gray]	3	gray_carpet		0	2
+minecraft:carpet[color=green]	0	green_carpet		0	2
+minecraft:carpet[color=green]	1	green_carpet		0	2
+minecraft:carpet[color=green]	2	green_carpet		0	2
+minecraft:carpet[color=green]	3	green_carpet		0	2
+minecraft:carpet[color=light_blue]	0	light_blue_carpet		0	2
+minecraft:carpet[color=light_blue]	1	light_blue_carpet		0	2
+minecraft:carpet[color=light_blue]	2	light_blue_carpet		0	2
+minecraft:carpet[color=light_blue]	3	light_blue_carpet		0	2
+minecraft:carpet[color=lime]	0	lime_carpet		0	2
+minecraft:carpet[color=lime]	1	lime_carpet		0	2
+minecraft:carpet[color=lime]	2	lime_carpet		0	2
+minecraft:carpet[color=lime]	3	lime_carpet		0	2
+minecraft:carpet[color=magenta]	0	magenta_carpet		0	2
+minecraft:carpet[color=magenta]	1	magenta_carpet		0	2
+minecraft:carpet[color=magenta]	2	magenta_carpet		0	2
+minecraft:carpet[color=magenta]	3	magenta_carpet		0	2
+minecraft:carpet[color=pink]	0	pink_carpet		0	2
+minecraft:carpet[color=pink]	1	pink_carpet		0	2
+minecraft:carpet[color=pink]	2	pink_carpet		0	2
+minecraft:carpet[color=pink]	3	pink_carpet		0	2
+minecraft:carpet[color=purple]	0	purple_carpet		0	2
+minecraft:carpet[color=purple]	1	purple_carpet		0	2
+minecraft:carpet[color=purple]	2	purple_carpet		0	2
+minecraft:carpet[color=purple]	3	purple_carpet		0	2
 minecraft:carpet[color=red]	0	red_carpet		0	2
 minecraft:carpet[color=red]	1	red_carpet		0	2
 minecraft:carpet[color=red]	2	red_carpet		0	2
 minecraft:carpet[color=red]	3	red_carpet		0	2
+minecraft:carpet[color=silver]	0	light_gray_carpet		0	2
+minecraft:carpet[color=silver]	1	light_gray_carpet		0	2
+minecraft:carpet[color=silver]	2	light_gray_carpet		0	2
+minecraft:carpet[color=silver]	3	light_gray_carpet		0	2
+minecraft:carpet[color=white]	0	white_carpet		0	2
+minecraft:carpet[color=white]	1	white_carpet		0	2
+minecraft:carpet[color=white]	2	white_carpet		0	2
+minecraft:carpet[color=white]	3	white_carpet		0	2
+minecraft:carpet[color=yellow]	0	yellow_carpet		0	2
+minecraft:carpet[color=yellow]	1	yellow_carpet		0	2
+minecraft:carpet[color=yellow]	2	yellow_carpet		0	2
+minecraft:carpet[color=yellow]	3	yellow_carpet		0	2
 minecraft:carrots[age=7]	0	carrots	growth=7	0	0
 minecraft:carrots[age=7]	1	carrots	growth=7	0	0
 minecraft:carrots[age=7]	2	carrots	growth=7	0	0
@@ -602,6 +726,10 @@ minecraft:cauldron	0	cauldron	cauldron_liquid=water,fill_level=0	0	2
 minecraft:cauldron	1	cauldron	cauldron_liquid=water,fill_level=0	0	2
 minecraft:cauldron	2	cauldron	cauldron_liquid=water,fill_level=0	0	2
 minecraft:cauldron	3	cauldron	cauldron_liquid=water,fill_level=0	0	2
+minecraft:cauldron[level=0]	0	cauldron	cauldron_liquid=water,fill_level=0	0	2
+minecraft:cauldron[level=0]	1	cauldron	cauldron_liquid=water,fill_level=0	0	2
+minecraft:cauldron[level=0]	2	cauldron	cauldron_liquid=water,fill_level=0	0	2
+minecraft:cauldron[level=0]	3	cauldron	cauldron_liquid=water,fill_level=0	0	2
 minecraft:cauldron[level=2]	0	cauldron	cauldron_liquid=water,fill_level=4	0	2
 minecraft:cauldron[level=2]	1	cauldron	cauldron_liquid=water,fill_level=4	0	2
 minecraft:cauldron[level=2]	2	cauldron	cauldron_liquid=water,fill_level=4	0	2
@@ -842,6 +970,10 @@ minecraft:cobblestone_stairs[facing=west,half=top,shape=straight,waterlogged=fal
 minecraft:cobblestone_stairs[facing=west,half=top,shape=straight,waterlogged=false]	1	stone_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=3	0	2
 minecraft:cobblestone_stairs[facing=west,half=top,shape=straight,waterlogged=false]	2	stone_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=0	0	2
 minecraft:cobblestone_stairs[facing=west,half=top,shape=straight,waterlogged=false]	3	stone_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=2	0	2
+minecraft:cobblestone_wall[east=false,north=false,south=false,up=false,variant=cobblestone,west=false]	0	cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:cobblestone_wall[east=false,north=false,south=false,up=false,variant=cobblestone,west=false]	1	cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:cobblestone_wall[east=false,north=false,south=false,up=false,variant=cobblestone,west=false]	2	cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:cobblestone_wall[east=false,north=false,south=false,up=false,variant=cobblestone,west=false]	3	cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
 minecraft:cobblestone_wall[east=false,north=false,south=false,up=true,waterlogged=false,west=false]	0	cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
 minecraft:cobblestone_wall[east=false,north=false,south=false,up=true,waterlogged=false,west=false]	1	cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
 minecraft:cobblestone_wall[east=false,north=false,south=false,up=true,waterlogged=false,west=false]	2	cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
@@ -874,6 +1006,50 @@ minecraft:cobblestone_wall[east=false,north=true,south=true,up=false,waterlogged
 minecraft:cobblestone_wall[east=false,north=true,south=true,up=false,waterlogged=false,west=false]	1	cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
 minecraft:cobblestone_wall[east=false,north=true,south=true,up=false,waterlogged=false,west=false]	2	cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
 minecraft:cobblestone_wall[east=false,north=true,south=true,up=false,waterlogged=false,west=false]	3	cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:cobblestone_wall[east=low,north=none,south=none,up=false,waterlogged=false,west=low]	0	cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:cobblestone_wall[east=low,north=none,south=none,up=false,waterlogged=false,west=low]	1	cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:cobblestone_wall[east=low,north=none,south=none,up=false,waterlogged=false,west=low]	2	cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:cobblestone_wall[east=low,north=none,south=none,up=false,waterlogged=false,west=low]	3	cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:cobblestone_wall[east=none,north=low,south=low,up=false,waterlogged=false,west=none]	0	cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:cobblestone_wall[east=none,north=low,south=low,up=false,waterlogged=false,west=none]	1	cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:cobblestone_wall[east=none,north=low,south=low,up=false,waterlogged=false,west=none]	2	cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:cobblestone_wall[east=none,north=low,south=low,up=false,waterlogged=false,west=none]	3	cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:cobblestone_wall[east=none,north=low,south=none,up=true,waterlogged=false,west=low]	0	cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:cobblestone_wall[east=none,north=low,south=none,up=true,waterlogged=false,west=low]	1	cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:cobblestone_wall[east=none,north=low,south=none,up=true,waterlogged=false,west=low]	2	cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:cobblestone_wall[east=none,north=low,south=none,up=true,waterlogged=false,west=low]	3	cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:cobblestone_wall[east=none,north=none,south=low,up=true,waterlogged=false,west=none]	0	cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:cobblestone_wall[east=none,north=none,south=low,up=true,waterlogged=false,west=none]	1	cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:cobblestone_wall[east=none,north=none,south=low,up=true,waterlogged=false,west=none]	2	cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:cobblestone_wall[east=none,north=none,south=low,up=true,waterlogged=false,west=none]	3	cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:cobblestone_wall[east=none,north=none,south=none,up=true,waterlogged=false,west=low]	0	cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:cobblestone_wall[east=none,north=none,south=none,up=true,waterlogged=false,west=low]	1	cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:cobblestone_wall[east=none,north=none,south=none,up=true,waterlogged=false,west=low]	2	cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:cobblestone_wall[east=none,north=none,south=none,up=true,waterlogged=false,west=low]	3	cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:cobblestone_wall[east=none,north=none,south=none,up=true,waterlogged=false,west=tall]	0	cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:cobblestone_wall[east=none,north=none,south=none,up=true,waterlogged=false,west=tall]	1	cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:cobblestone_wall[east=none,north=none,south=none,up=true,waterlogged=false,west=tall]	2	cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:cobblestone_wall[east=none,north=none,south=none,up=true,waterlogged=false,west=tall]	3	cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:cobblestone_wall[east=none,north=none,south=tall,up=true,waterlogged=false,west=none]	0	cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:cobblestone_wall[east=none,north=none,south=tall,up=true,waterlogged=false,west=none]	1	cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:cobblestone_wall[east=none,north=none,south=tall,up=true,waterlogged=false,west=none]	2	cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:cobblestone_wall[east=none,north=none,south=tall,up=true,waterlogged=false,west=none]	3	cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:cobblestone_wall[east=none,north=tall,south=tall,up=false,waterlogged=false,west=none]	0	cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:cobblestone_wall[east=none,north=tall,south=tall,up=false,waterlogged=false,west=none]	1	cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:cobblestone_wall[east=none,north=tall,south=tall,up=false,waterlogged=false,west=none]	2	cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:cobblestone_wall[east=none,north=tall,south=tall,up=false,waterlogged=false,west=none]	3	cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:cobblestone_wall[east=tall,north=none,south=none,up=false,waterlogged=false,west=tall]	0	cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:cobblestone_wall[east=tall,north=none,south=none,up=false,waterlogged=false,west=tall]	1	cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:cobblestone_wall[east=tall,north=none,south=none,up=false,waterlogged=false,west=tall]	2	cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:cobblestone_wall[east=tall,north=none,south=none,up=false,waterlogged=false,west=tall]	3	cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:cobblestone_wall[east=tall,north=none,south=tall,up=true,waterlogged=false,west=none]	0	cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:cobblestone_wall[east=tall,north=none,south=tall,up=true,waterlogged=false,west=none]	1	cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:cobblestone_wall[east=tall,north=none,south=tall,up=true,waterlogged=false,west=none]	2	cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:cobblestone_wall[east=tall,north=none,south=tall,up=true,waterlogged=false,west=none]	3	cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:cobblestone_wall[east=tall,north=tall,south=none,up=true,waterlogged=false,west=none]	0	cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:cobblestone_wall[east=tall,north=tall,south=none,up=true,waterlogged=false,west=none]	1	cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:cobblestone_wall[east=tall,north=tall,south=none,up=true,waterlogged=false,west=none]	2	cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:cobblestone_wall[east=tall,north=tall,south=none,up=true,waterlogged=false,west=none]	3	cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
 minecraft:cobblestone_wall[east=true,north=false,south=false,up=true,waterlogged=false,west=false]	0	cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
 minecraft:cobblestone_wall[east=true,north=false,south=false,up=true,waterlogged=false,west=false]	1	cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
 minecraft:cobblestone_wall[east=true,north=false,south=false,up=true,waterlogged=false,west=false]	2	cobblestone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
@@ -990,6 +1166,14 @@ minecraft:dandelion	0	dandelion		0	0
 minecraft:dandelion	1	dandelion		0	0
 minecraft:dandelion	2	dandelion		0	0
 minecraft:dandelion	3	dandelion		0	0
+minecraft:dark_oak_door[facing=east,half=upper,hinge=right,open=false,powered=false]	0	dark_oak_door	door_hinge_bit=1,minecraft:cardinal_direction=south,open_bit=0,upper_block_bit=1	0	2
+minecraft:dark_oak_door[facing=east,half=upper,hinge=right,open=false,powered=false]	1	dark_oak_door	door_hinge_bit=1,minecraft:cardinal_direction=south,open_bit=0,upper_block_bit=1	0	2
+minecraft:dark_oak_door[facing=east,half=upper,hinge=right,open=false,powered=false]	2	dark_oak_door	door_hinge_bit=1,minecraft:cardinal_direction=south,open_bit=0,upper_block_bit=1	0	2
+minecraft:dark_oak_door[facing=east,half=upper,hinge=right,open=false,powered=false]	3	dark_oak_door	door_hinge_bit=1,minecraft:cardinal_direction=south,open_bit=0,upper_block_bit=1	0	2
+minecraft:dark_oak_door[facing=north,half=lower,hinge=right,open=false,powered=false]	0	dark_oak_door	door_hinge_bit=0,minecraft:cardinal_direction=east,open_bit=0,upper_block_bit=0	0	2
+minecraft:dark_oak_door[facing=north,half=lower,hinge=right,open=false,powered=false]	1	dark_oak_door	door_hinge_bit=0,minecraft:cardinal_direction=south,open_bit=0,upper_block_bit=0	0	2
+minecraft:dark_oak_door[facing=north,half=lower,hinge=right,open=false,powered=false]	2	dark_oak_door	door_hinge_bit=0,minecraft:cardinal_direction=west,open_bit=0,upper_block_bit=0	0	2
+minecraft:dark_oak_door[facing=north,half=lower,hinge=right,open=false,powered=false]	3	dark_oak_door	door_hinge_bit=0,minecraft:cardinal_direction=north,open_bit=0,upper_block_bit=0	0	2
 minecraft:dark_oak_fence[east=false,north=false,south=false,waterlogged=false,west=false]	0	dark_oak_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
 minecraft:dark_oak_fence[east=false,north=false,south=false,waterlogged=false,west=false]	1	dark_oak_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
 minecraft:dark_oak_fence[east=false,north=false,south=false,waterlogged=false,west=false]	2	dark_oak_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
@@ -1058,6 +1242,10 @@ minecraft:dark_oak_fence[east=true,north=true,south=true,waterlogged=false,west=
 minecraft:dark_oak_fence[east=true,north=true,south=true,waterlogged=false,west=true]	1	dark_oak_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
 minecraft:dark_oak_fence[east=true,north=true,south=true,waterlogged=false,west=true]	2	dark_oak_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
 minecraft:dark_oak_fence[east=true,north=true,south=true,waterlogged=false,west=true]	3	dark_oak_fence	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:dark_oak_fence_gate[facing=east,in_wall=false,open=false,powered=false]	0	dark_oak_fence_gate	in_wall_bit=0,minecraft:cardinal_direction=east,open_bit=0	0	2
+minecraft:dark_oak_fence_gate[facing=east,in_wall=false,open=false,powered=false]	1	dark_oak_fence_gate	in_wall_bit=0,minecraft:cardinal_direction=south,open_bit=0	0	2
+minecraft:dark_oak_fence_gate[facing=east,in_wall=false,open=false,powered=false]	2	dark_oak_fence_gate	in_wall_bit=0,minecraft:cardinal_direction=west,open_bit=0	0	2
+minecraft:dark_oak_fence_gate[facing=east,in_wall=false,open=false,powered=false]	3	dark_oak_fence_gate	in_wall_bit=0,minecraft:cardinal_direction=north,open_bit=0	0	2
 minecraft:dark_oak_log[axis=x]	0	dark_oak_log	pillar_axis=x	0	3
 minecraft:dark_oak_log[axis=x]	1	dark_oak_log	pillar_axis=z	0	3
 minecraft:dark_oak_log[axis=x]	2	dark_oak_log	pillar_axis=x	0	3
@@ -1090,6 +1278,10 @@ minecraft:dark_oak_stairs[facing=east,half=bottom,shape=straight,waterlogged=fal
 minecraft:dark_oak_stairs[facing=east,half=bottom,shape=straight,waterlogged=false]	1	dark_oak_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=2	0	2
 minecraft:dark_oak_stairs[facing=east,half=bottom,shape=straight,waterlogged=false]	2	dark_oak_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=1	0	2
 minecraft:dark_oak_stairs[facing=east,half=bottom,shape=straight,waterlogged=false]	3	dark_oak_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=3	0	2
+minecraft:dark_oak_stairs[facing=east,half=bottom,shape=straight]	0	dark_oak_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=0	0	2
+minecraft:dark_oak_stairs[facing=east,half=bottom,shape=straight]	1	dark_oak_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=2	0	2
+minecraft:dark_oak_stairs[facing=east,half=bottom,shape=straight]	2	dark_oak_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=1	0	2
+minecraft:dark_oak_stairs[facing=east,half=bottom,shape=straight]	3	dark_oak_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=3	0	2
 minecraft:dark_oak_stairs[facing=east,half=top,shape=outer_right]	0	dark_oak_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=0	0	2
 minecraft:dark_oak_stairs[facing=east,half=top,shape=outer_right]	1	dark_oak_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=2	0	2
 minecraft:dark_oak_stairs[facing=east,half=top,shape=outer_right]	2	dark_oak_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=1	0	2
@@ -1098,6 +1290,10 @@ minecraft:dark_oak_stairs[facing=east,half=top,shape=straight,waterlogged=false]
 minecraft:dark_oak_stairs[facing=east,half=top,shape=straight,waterlogged=false]	1	dark_oak_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=2	0	2
 minecraft:dark_oak_stairs[facing=east,half=top,shape=straight,waterlogged=false]	2	dark_oak_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=1	0	2
 minecraft:dark_oak_stairs[facing=east,half=top,shape=straight,waterlogged=false]	3	dark_oak_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=3	0	2
+minecraft:dark_oak_stairs[facing=east,half=top,shape=straight]	0	dark_oak_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=0	0	2
+minecraft:dark_oak_stairs[facing=east,half=top,shape=straight]	1	dark_oak_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=2	0	2
+minecraft:dark_oak_stairs[facing=east,half=top,shape=straight]	2	dark_oak_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=1	0	2
+minecraft:dark_oak_stairs[facing=east,half=top,shape=straight]	3	dark_oak_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=3	0	2
 minecraft:dark_oak_stairs[facing=north,half=bottom,shape=outer_right]	0	dark_oak_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=3	0	2
 minecraft:dark_oak_stairs[facing=north,half=bottom,shape=outer_right]	1	dark_oak_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=0	0	2
 minecraft:dark_oak_stairs[facing=north,half=bottom,shape=outer_right]	2	dark_oak_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=2	0	2
@@ -1106,6 +1302,10 @@ minecraft:dark_oak_stairs[facing=north,half=bottom,shape=straight,waterlogged=fa
 minecraft:dark_oak_stairs[facing=north,half=bottom,shape=straight,waterlogged=false]	1	dark_oak_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=0	0	2
 minecraft:dark_oak_stairs[facing=north,half=bottom,shape=straight,waterlogged=false]	2	dark_oak_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=2	0	2
 minecraft:dark_oak_stairs[facing=north,half=bottom,shape=straight,waterlogged=false]	3	dark_oak_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=1	0	2
+minecraft:dark_oak_stairs[facing=north,half=bottom,shape=straight]	0	dark_oak_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=3	0	2
+minecraft:dark_oak_stairs[facing=north,half=bottom,shape=straight]	1	dark_oak_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=0	0	2
+minecraft:dark_oak_stairs[facing=north,half=bottom,shape=straight]	2	dark_oak_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=2	0	2
+minecraft:dark_oak_stairs[facing=north,half=bottom,shape=straight]	3	dark_oak_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=1	0	2
 minecraft:dark_oak_stairs[facing=north,half=top,shape=outer_right]	0	dark_oak_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=3	0	2
 minecraft:dark_oak_stairs[facing=north,half=top,shape=outer_right]	1	dark_oak_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=0	0	2
 minecraft:dark_oak_stairs[facing=north,half=top,shape=outer_right]	2	dark_oak_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=2	0	2
@@ -1114,6 +1314,10 @@ minecraft:dark_oak_stairs[facing=north,half=top,shape=straight,waterlogged=false
 minecraft:dark_oak_stairs[facing=north,half=top,shape=straight,waterlogged=false]	1	dark_oak_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=0	0	2
 minecraft:dark_oak_stairs[facing=north,half=top,shape=straight,waterlogged=false]	2	dark_oak_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=2	0	2
 minecraft:dark_oak_stairs[facing=north,half=top,shape=straight,waterlogged=false]	3	dark_oak_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=1	0	2
+minecraft:dark_oak_stairs[facing=north,half=top,shape=straight]	0	dark_oak_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=3	0	2
+minecraft:dark_oak_stairs[facing=north,half=top,shape=straight]	1	dark_oak_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=0	0	2
+minecraft:dark_oak_stairs[facing=north,half=top,shape=straight]	2	dark_oak_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=2	0	2
+minecraft:dark_oak_stairs[facing=north,half=top,shape=straight]	3	dark_oak_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=1	0	2
 minecraft:dark_oak_stairs[facing=south,half=bottom,shape=outer_right]	0	dark_oak_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=2	0	2
 minecraft:dark_oak_stairs[facing=south,half=bottom,shape=outer_right]	1	dark_oak_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=1	0	2
 minecraft:dark_oak_stairs[facing=south,half=bottom,shape=outer_right]	2	dark_oak_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=3	0	2
@@ -1122,6 +1326,10 @@ minecraft:dark_oak_stairs[facing=south,half=bottom,shape=straight,waterlogged=fa
 minecraft:dark_oak_stairs[facing=south,half=bottom,shape=straight,waterlogged=false]	1	dark_oak_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=1	0	2
 minecraft:dark_oak_stairs[facing=south,half=bottom,shape=straight,waterlogged=false]	2	dark_oak_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=3	0	2
 minecraft:dark_oak_stairs[facing=south,half=bottom,shape=straight,waterlogged=false]	3	dark_oak_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=0	0	2
+minecraft:dark_oak_stairs[facing=south,half=bottom,shape=straight]	0	dark_oak_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=2	0	2
+minecraft:dark_oak_stairs[facing=south,half=bottom,shape=straight]	1	dark_oak_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=1	0	2
+minecraft:dark_oak_stairs[facing=south,half=bottom,shape=straight]	2	dark_oak_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=3	0	2
+minecraft:dark_oak_stairs[facing=south,half=bottom,shape=straight]	3	dark_oak_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=0	0	2
 minecraft:dark_oak_stairs[facing=south,half=top,shape=outer_right]	0	dark_oak_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=2	0	2
 minecraft:dark_oak_stairs[facing=south,half=top,shape=outer_right]	1	dark_oak_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=1	0	2
 minecraft:dark_oak_stairs[facing=south,half=top,shape=outer_right]	2	dark_oak_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=3	0	2
@@ -1130,6 +1338,10 @@ minecraft:dark_oak_stairs[facing=south,half=top,shape=straight,waterlogged=false
 minecraft:dark_oak_stairs[facing=south,half=top,shape=straight,waterlogged=false]	1	dark_oak_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=1	0	2
 minecraft:dark_oak_stairs[facing=south,half=top,shape=straight,waterlogged=false]	2	dark_oak_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=3	0	2
 minecraft:dark_oak_stairs[facing=south,half=top,shape=straight,waterlogged=false]	3	dark_oak_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=0	0	2
+minecraft:dark_oak_stairs[facing=south,half=top,shape=straight]	0	dark_oak_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=2	0	2
+minecraft:dark_oak_stairs[facing=south,half=top,shape=straight]	1	dark_oak_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=1	0	2
+minecraft:dark_oak_stairs[facing=south,half=top,shape=straight]	2	dark_oak_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=3	0	2
+minecraft:dark_oak_stairs[facing=south,half=top,shape=straight]	3	dark_oak_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=0	0	2
 minecraft:dark_oak_stairs[facing=west,half=bottom,shape=outer_right]	0	dark_oak_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=1	0	2
 minecraft:dark_oak_stairs[facing=west,half=bottom,shape=outer_right]	1	dark_oak_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=3	0	2
 minecraft:dark_oak_stairs[facing=west,half=bottom,shape=outer_right]	2	dark_oak_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=0	0	2
@@ -1138,6 +1350,10 @@ minecraft:dark_oak_stairs[facing=west,half=bottom,shape=straight,waterlogged=fal
 minecraft:dark_oak_stairs[facing=west,half=bottom,shape=straight,waterlogged=false]	1	dark_oak_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=3	0	2
 minecraft:dark_oak_stairs[facing=west,half=bottom,shape=straight,waterlogged=false]	2	dark_oak_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=0	0	2
 minecraft:dark_oak_stairs[facing=west,half=bottom,shape=straight,waterlogged=false]	3	dark_oak_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=2	0	2
+minecraft:dark_oak_stairs[facing=west,half=bottom,shape=straight]	0	dark_oak_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=1	0	2
+minecraft:dark_oak_stairs[facing=west,half=bottom,shape=straight]	1	dark_oak_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=3	0	2
+minecraft:dark_oak_stairs[facing=west,half=bottom,shape=straight]	2	dark_oak_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=0	0	2
+minecraft:dark_oak_stairs[facing=west,half=bottom,shape=straight]	3	dark_oak_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=2	0	2
 minecraft:dark_oak_stairs[facing=west,half=top,shape=outer_right]	0	dark_oak_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=1	0	2
 minecraft:dark_oak_stairs[facing=west,half=top,shape=outer_right]	1	dark_oak_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=3	0	2
 minecraft:dark_oak_stairs[facing=west,half=top,shape=outer_right]	2	dark_oak_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=0	0	2
@@ -1146,6 +1362,10 @@ minecraft:dark_oak_stairs[facing=west,half=top,shape=straight,waterlogged=false]
 minecraft:dark_oak_stairs[facing=west,half=top,shape=straight,waterlogged=false]	1	dark_oak_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=3	0	2
 minecraft:dark_oak_stairs[facing=west,half=top,shape=straight,waterlogged=false]	2	dark_oak_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=0	0	2
 minecraft:dark_oak_stairs[facing=west,half=top,shape=straight,waterlogged=false]	3	dark_oak_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=2	0	2
+minecraft:dark_oak_stairs[facing=west,half=top,shape=straight]	0	dark_oak_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=1	0	2
+minecraft:dark_oak_stairs[facing=west,half=top,shape=straight]	1	dark_oak_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=3	0	2
+minecraft:dark_oak_stairs[facing=west,half=top,shape=straight]	2	dark_oak_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=0	0	2
+minecraft:dark_oak_stairs[facing=west,half=top,shape=straight]	3	dark_oak_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=2	0	2
 minecraft:dead_bush	0	deadbush		0	0
 minecraft:dead_bush	1	deadbush		0	0
 minecraft:dead_bush	2	deadbush		0	0
@@ -1546,6 +1766,10 @@ minecraft:deepslate_tiles	0	deepslate_tiles		0	3
 minecraft:deepslate_tiles	1	deepslate_tiles		0	3
 minecraft:deepslate_tiles	2	deepslate_tiles		0	3
 minecraft:deepslate_tiles	3	deepslate_tiles		0	3
+minecraft:diamond_block	0	diamond_block		0	3
+minecraft:diamond_block	1	diamond_block		0	3
+minecraft:diamond_block	2	diamond_block		0	3
+minecraft:diamond_block	3	diamond_block		0	3
 minecraft:diorite	0	diorite		0	3
 minecraft:diorite	1	diorite		0	3
 minecraft:diorite	2	diorite		0	3
@@ -1586,6 +1810,14 @@ minecraft:dirt	0	dirt		0	3
 minecraft:dirt	1	dirt		0	3
 minecraft:dirt	2	dirt		0	3
 minecraft:dirt	3	dirt		0	3
+minecraft:dirt[snowy=false,variant=coarse_dirt]	0	coarse_dirt		0	3
+minecraft:dirt[snowy=false,variant=coarse_dirt]	1	coarse_dirt		0	3
+minecraft:dirt[snowy=false,variant=coarse_dirt]	2	coarse_dirt		0	3
+minecraft:dirt[snowy=false,variant=coarse_dirt]	3	coarse_dirt		0	3
+minecraft:dirt[snowy=false,variant=dirt]	0	dirt		0	3
+minecraft:dirt[snowy=false,variant=dirt]	1	dirt		0	3
+minecraft:dirt[snowy=false,variant=dirt]	2	dirt		0	3
+minecraft:dirt[snowy=false,variant=dirt]	3	dirt		0	3
 minecraft:dispenser[facing=east,triggered=false]	0	dispenser	facing_direction=5,triggered_bit=0	0	3
 minecraft:dispenser[facing=east,triggered=false]	1	dispenser	facing_direction=3,triggered_bit=0	0	3
 minecraft:dispenser[facing=east,triggered=false]	2	dispenser	facing_direction=4,triggered_bit=0	0	3
@@ -1598,6 +1830,10 @@ minecraft:dispenser[facing=west,triggered=false]	0	dispenser	facing_direction=4,
 minecraft:dispenser[facing=west,triggered=false]	1	dispenser	facing_direction=2,triggered_bit=0	0	3
 minecraft:dispenser[facing=west,triggered=false]	2	dispenser	facing_direction=5,triggered_bit=0	0	3
 minecraft:dispenser[facing=west,triggered=false]	3	dispenser	facing_direction=3,triggered_bit=0	0	3
+minecraft:double_stone_slab[seamless=false,variant=smoothstone]	0	smooth_stone_double_slab	minecraft:vertical_half=bottom	0	3
+minecraft:double_stone_slab[seamless=false,variant=smoothstone]	1	smooth_stone_double_slab	minecraft:vertical_half=bottom	0	3
+minecraft:double_stone_slab[seamless=false,variant=smoothstone]	2	smooth_stone_double_slab	minecraft:vertical_half=bottom	0	3
+minecraft:double_stone_slab[seamless=false,variant=smoothstone]	3	smooth_stone_double_slab	minecraft:vertical_half=bottom	0	3
 minecraft:double_wooden_slab[variant=dark_oak]	0	dark_oak_double_slab	minecraft:vertical_half=bottom	0	3
 minecraft:double_wooden_slab[variant=dark_oak]	1	dark_oak_double_slab	minecraft:vertical_half=bottom	0	3
 minecraft:double_wooden_slab[variant=dark_oak]	2	dark_oak_double_slab	minecraft:vertical_half=bottom	0	3
@@ -1606,6 +1842,10 @@ minecraft:double_wooden_slab[variant=oak]	0	oak_double_slab	minecraft:vertical_h
 minecraft:double_wooden_slab[variant=oak]	1	oak_double_slab	minecraft:vertical_half=bottom	0	3
 minecraft:double_wooden_slab[variant=oak]	2	oak_double_slab	minecraft:vertical_half=bottom	0	3
 minecraft:double_wooden_slab[variant=oak]	3	oak_double_slab	minecraft:vertical_half=bottom	0	3
+minecraft:farmland[moisture=0]	0	farmland	moisturized_amount=0	0	2
+minecraft:farmland[moisture=0]	1	farmland	moisturized_amount=0	0	2
+minecraft:farmland[moisture=0]	2	farmland	moisturized_amount=0	0	2
+minecraft:farmland[moisture=0]	3	farmland	moisturized_amount=0	0	2
 minecraft:farmland[moisture=7]	0	farmland	moisturized_amount=0	0	2
 minecraft:farmland[moisture=7]	1	farmland	moisturized_amount=0	0	2
 minecraft:farmland[moisture=7]	2	farmland	moisturized_amount=0	0	2
@@ -1630,6 +1870,10 @@ minecraft:flower_pot[contents=cactus,legacy_data=0]	0	flower_pot	update_bit=0	0	
 minecraft:flower_pot[contents=cactus,legacy_data=0]	1	flower_pot	update_bit=0	0	2
 minecraft:flower_pot[contents=cactus,legacy_data=0]	2	flower_pot	update_bit=0	0	2
 minecraft:flower_pot[contents=cactus,legacy_data=0]	3	flower_pot	update_bit=0	0	2
+minecraft:flower_pot[contents=empty,legacy_data=0]	0	flower_pot	update_bit=0	0	2
+minecraft:flower_pot[contents=empty,legacy_data=0]	1	flower_pot	update_bit=0	0	2
+minecraft:flower_pot[contents=empty,legacy_data=0]	2	flower_pot	update_bit=0	0	2
+minecraft:flower_pot[contents=empty,legacy_data=0]	3	flower_pot	update_bit=0	0	2
 minecraft:furnace[facing=east,lit=false]	0	furnace	minecraft:cardinal_direction=east	0	3
 minecraft:furnace[facing=east,lit=false]	1	furnace	minecraft:cardinal_direction=south	0	3
 minecraft:furnace[facing=east,lit=false]	2	furnace	minecraft:cardinal_direction=west	0	3
@@ -1654,6 +1898,10 @@ minecraft:glass_pane[east=false,north=false,south=false,waterlogged=false,west=t
 minecraft:glass_pane[east=false,north=false,south=false,waterlogged=false,west=true]	1	glass_pane	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
 minecraft:glass_pane[east=false,north=false,south=false,waterlogged=false,west=true]	2	glass_pane	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
 minecraft:glass_pane[east=false,north=false,south=false,waterlogged=false,west=true]	3	glass_pane	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:glass_pane[east=false,north=false,south=false,west=false]	0	glass_pane	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:glass_pane[east=false,north=false,south=false,west=false]	1	glass_pane	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:glass_pane[east=false,north=false,south=false,west=false]	2	glass_pane	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:glass_pane[east=false,north=false,south=false,west=false]	3	glass_pane	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
 minecraft:glass_pane[east=false,north=false,south=true,waterlogged=false,west=false]	0	glass_pane	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
 minecraft:glass_pane[east=false,north=false,south=true,waterlogged=false,west=false]	1	glass_pane	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
 minecraft:glass_pane[east=false,north=false,south=true,waterlogged=false,west=false]	2	glass_pane	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
@@ -1870,6 +2118,42 @@ minecraft:iron_bars[east=true,north=true,south=false,waterlogged=false,west=true
 minecraft:iron_bars[east=true,north=true,south=false,waterlogged=false,west=true]	1	iron_bars	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
 minecraft:iron_bars[east=true,north=true,south=false,waterlogged=false,west=true]	2	iron_bars	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
 minecraft:iron_bars[east=true,north=true,south=false,waterlogged=false,west=true]	3	iron_bars	minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0	0	2
+minecraft:iron_door[facing=east,half=upper,hinge=left,open=false,powered=false]	0	iron_door	door_hinge_bit=0,minecraft:cardinal_direction=south,open_bit=0,upper_block_bit=1	0	2
+minecraft:iron_door[facing=east,half=upper,hinge=left,open=false,powered=false]	1	iron_door	door_hinge_bit=0,minecraft:cardinal_direction=south,open_bit=0,upper_block_bit=1	0	2
+minecraft:iron_door[facing=east,half=upper,hinge=left,open=false,powered=false]	2	iron_door	door_hinge_bit=0,minecraft:cardinal_direction=south,open_bit=0,upper_block_bit=1	0	2
+minecraft:iron_door[facing=east,half=upper,hinge=left,open=false,powered=false]	3	iron_door	door_hinge_bit=0,minecraft:cardinal_direction=south,open_bit=0,upper_block_bit=1	0	2
+minecraft:iron_door[facing=east,half=upper,hinge=right,open=false,powered=false]	0	iron_door	door_hinge_bit=1,minecraft:cardinal_direction=south,open_bit=0,upper_block_bit=1	0	2
+minecraft:iron_door[facing=east,half=upper,hinge=right,open=false,powered=false]	1	iron_door	door_hinge_bit=1,minecraft:cardinal_direction=south,open_bit=0,upper_block_bit=1	0	2
+minecraft:iron_door[facing=east,half=upper,hinge=right,open=false,powered=false]	2	iron_door	door_hinge_bit=1,minecraft:cardinal_direction=south,open_bit=0,upper_block_bit=1	0	2
+minecraft:iron_door[facing=east,half=upper,hinge=right,open=false,powered=false]	3	iron_door	door_hinge_bit=1,minecraft:cardinal_direction=south,open_bit=0,upper_block_bit=1	0	2
+minecraft:iron_door[facing=north,half=lower,hinge=right,open=false,powered=false]	0	iron_door	door_hinge_bit=0,minecraft:cardinal_direction=east,open_bit=0,upper_block_bit=0	0	2
+minecraft:iron_door[facing=north,half=lower,hinge=right,open=false,powered=false]	1	iron_door	door_hinge_bit=0,minecraft:cardinal_direction=south,open_bit=0,upper_block_bit=0	0	2
+minecraft:iron_door[facing=north,half=lower,hinge=right,open=false,powered=false]	2	iron_door	door_hinge_bit=0,minecraft:cardinal_direction=west,open_bit=0,upper_block_bit=0	0	2
+minecraft:iron_door[facing=north,half=lower,hinge=right,open=false,powered=false]	3	iron_door	door_hinge_bit=0,minecraft:cardinal_direction=north,open_bit=0,upper_block_bit=0	0	2
+minecraft:iron_door[facing=south,half=lower,hinge=right,open=false,powered=false]	0	iron_door	door_hinge_bit=0,minecraft:cardinal_direction=west,open_bit=0,upper_block_bit=0	0	2
+minecraft:iron_door[facing=south,half=lower,hinge=right,open=false,powered=false]	1	iron_door	door_hinge_bit=0,minecraft:cardinal_direction=north,open_bit=0,upper_block_bit=0	0	2
+minecraft:iron_door[facing=south,half=lower,hinge=right,open=false,powered=false]	2	iron_door	door_hinge_bit=0,minecraft:cardinal_direction=east,open_bit=0,upper_block_bit=0	0	2
+minecraft:iron_door[facing=south,half=lower,hinge=right,open=false,powered=false]	3	iron_door	door_hinge_bit=0,minecraft:cardinal_direction=south,open_bit=0,upper_block_bit=0	0	2
+minecraft:iron_door[facing=south,half=upper,hinge=right,open=false,powered=false]	0	iron_door	door_hinge_bit=1,minecraft:cardinal_direction=south,open_bit=0,upper_block_bit=1	0	2
+minecraft:iron_door[facing=south,half=upper,hinge=right,open=false,powered=false]	1	iron_door	door_hinge_bit=1,minecraft:cardinal_direction=south,open_bit=0,upper_block_bit=1	0	2
+minecraft:iron_door[facing=south,half=upper,hinge=right,open=false,powered=false]	2	iron_door	door_hinge_bit=1,minecraft:cardinal_direction=south,open_bit=0,upper_block_bit=1	0	2
+minecraft:iron_door[facing=south,half=upper,hinge=right,open=false,powered=false]	3	iron_door	door_hinge_bit=1,minecraft:cardinal_direction=south,open_bit=0,upper_block_bit=1	0	2
+minecraft:iron_door[facing=west,half=lower,hinge=left,open=false,powered=false]	0	iron_door	door_hinge_bit=0,minecraft:cardinal_direction=north,open_bit=0,upper_block_bit=0	0	2
+minecraft:iron_door[facing=west,half=lower,hinge=left,open=false,powered=false]	1	iron_door	door_hinge_bit=0,minecraft:cardinal_direction=east,open_bit=0,upper_block_bit=0	0	2
+minecraft:iron_door[facing=west,half=lower,hinge=left,open=false,powered=false]	2	iron_door	door_hinge_bit=0,minecraft:cardinal_direction=south,open_bit=0,upper_block_bit=0	0	2
+minecraft:iron_door[facing=west,half=lower,hinge=left,open=false,powered=false]	3	iron_door	door_hinge_bit=0,minecraft:cardinal_direction=west,open_bit=0,upper_block_bit=0	0	2
+minecraft:iron_door[facing=west,half=lower,hinge=right,open=false,powered=false]	0	iron_door	door_hinge_bit=0,minecraft:cardinal_direction=north,open_bit=0,upper_block_bit=0	0	2
+minecraft:iron_door[facing=west,half=lower,hinge=right,open=false,powered=false]	1	iron_door	door_hinge_bit=0,minecraft:cardinal_direction=east,open_bit=0,upper_block_bit=0	0	2
+minecraft:iron_door[facing=west,half=lower,hinge=right,open=false,powered=false]	2	iron_door	door_hinge_bit=0,minecraft:cardinal_direction=south,open_bit=0,upper_block_bit=0	0	2
+minecraft:iron_door[facing=west,half=lower,hinge=right,open=false,powered=false]	3	iron_door	door_hinge_bit=0,minecraft:cardinal_direction=west,open_bit=0,upper_block_bit=0	0	2
+minecraft:iron_door[facing=west,half=upper,hinge=left,open=false,powered=false]	0	iron_door	door_hinge_bit=0,minecraft:cardinal_direction=south,open_bit=0,upper_block_bit=1	0	2
+minecraft:iron_door[facing=west,half=upper,hinge=left,open=false,powered=false]	1	iron_door	door_hinge_bit=0,minecraft:cardinal_direction=south,open_bit=0,upper_block_bit=1	0	2
+minecraft:iron_door[facing=west,half=upper,hinge=left,open=false,powered=false]	2	iron_door	door_hinge_bit=0,minecraft:cardinal_direction=south,open_bit=0,upper_block_bit=1	0	2
+minecraft:iron_door[facing=west,half=upper,hinge=left,open=false,powered=false]	3	iron_door	door_hinge_bit=0,minecraft:cardinal_direction=south,open_bit=0,upper_block_bit=1	0	2
+minecraft:iron_door[facing=west,half=upper,hinge=right,open=false,powered=false]	0	iron_door	door_hinge_bit=1,minecraft:cardinal_direction=south,open_bit=0,upper_block_bit=1	0	2
+minecraft:iron_door[facing=west,half=upper,hinge=right,open=false,powered=false]	1	iron_door	door_hinge_bit=1,minecraft:cardinal_direction=south,open_bit=0,upper_block_bit=1	0	2
+minecraft:iron_door[facing=west,half=upper,hinge=right,open=false,powered=false]	2	iron_door	door_hinge_bit=1,minecraft:cardinal_direction=south,open_bit=0,upper_block_bit=1	0	2
+minecraft:iron_door[facing=west,half=upper,hinge=right,open=false,powered=false]	3	iron_door	door_hinge_bit=1,minecraft:cardinal_direction=south,open_bit=0,upper_block_bit=1	0	2
 minecraft:iron_trapdoor[facing=north,half=top,open=false,powered=false,waterlogged=false]	0	iron_trapdoor	direction=3,open_bit=0,upside_down_bit=1	0	2
 minecraft:iron_trapdoor[facing=north,half=top,open=false,powered=false,waterlogged=false]	1	iron_trapdoor	direction=0,open_bit=0,upside_down_bit=1	0	2
 minecraft:iron_trapdoor[facing=north,half=top,open=false,powered=false,waterlogged=false]	2	iron_trapdoor	direction=2,open_bit=0,upside_down_bit=1	0	2
@@ -1998,6 +2282,10 @@ minecraft:ladder[facing=east,waterlogged=false]	0	ladder	facing_direction=5	0	2
 minecraft:ladder[facing=east,waterlogged=false]	1	ladder	facing_direction=3	0	2
 minecraft:ladder[facing=east,waterlogged=false]	2	ladder	facing_direction=4	0	2
 minecraft:ladder[facing=east,waterlogged=false]	3	ladder	facing_direction=2	0	2
+minecraft:ladder[facing=east]	0	ladder	facing_direction=5	0	2
+minecraft:ladder[facing=east]	1	ladder	facing_direction=3	0	2
+minecraft:ladder[facing=east]	2	ladder	facing_direction=4	0	2
+minecraft:ladder[facing=east]	3	ladder	facing_direction=2	0	2
 minecraft:ladder[facing=north,waterlogged=false]	0	ladder	facing_direction=2	0	2
 minecraft:ladder[facing=north,waterlogged=false]	1	ladder	facing_direction=5	0	2
 minecraft:ladder[facing=north,waterlogged=false]	2	ladder	facing_direction=3	0	2
@@ -2010,10 +2298,18 @@ minecraft:ladder[facing=south,waterlogged=false]	0	ladder	facing_direction=3	0	2
 minecraft:ladder[facing=south,waterlogged=false]	1	ladder	facing_direction=4	0	2
 minecraft:ladder[facing=south,waterlogged=false]	2	ladder	facing_direction=2	0	2
 minecraft:ladder[facing=south,waterlogged=false]	3	ladder	facing_direction=5	0	2
+minecraft:ladder[facing=south]	0	ladder	facing_direction=3	0	2
+minecraft:ladder[facing=south]	1	ladder	facing_direction=4	0	2
+minecraft:ladder[facing=south]	2	ladder	facing_direction=2	0	2
+minecraft:ladder[facing=south]	3	ladder	facing_direction=5	0	2
 minecraft:ladder[facing=west,waterlogged=false]	0	ladder	facing_direction=4	0	2
 minecraft:ladder[facing=west,waterlogged=false]	1	ladder	facing_direction=2	0	2
 minecraft:ladder[facing=west,waterlogged=false]	2	ladder	facing_direction=5	0	2
 minecraft:ladder[facing=west,waterlogged=false]	3	ladder	facing_direction=3	0	2
+minecraft:ladder[facing=west]	0	ladder	facing_direction=4	0	2
+minecraft:ladder[facing=west]	1	ladder	facing_direction=2	0	2
+minecraft:ladder[facing=west]	2	ladder	facing_direction=5	0	2
+minecraft:ladder[facing=west]	3	ladder	facing_direction=3	0	2
 minecraft:lantern[hanging=false]	0	lantern	hanging=0	0	2
 minecraft:lantern[hanging=false]	1	lantern	hanging=0	0	2
 minecraft:lantern[hanging=false]	2	lantern	hanging=0	0	2
@@ -2026,6 +2322,10 @@ minecraft:lantern[hanging=true]	0	lantern	hanging=1	0	2
 minecraft:lantern[hanging=true]	1	lantern	hanging=1	0	2
 minecraft:lantern[hanging=true]	2	lantern	hanging=1	0	2
 minecraft:lantern[hanging=true]	3	lantern	hanging=1	0	2
+minecraft:lapis_block	0	lapis_block		0	3
+minecraft:lapis_block	1	lapis_block		0	3
+minecraft:lapis_block	2	lapis_block		0	3
+minecraft:lapis_block	3	lapis_block		0	3
 minecraft:large_fern[half=lower]	0	large_fern	upper_block_bit=0	0	0
 minecraft:large_fern[half=lower]	1	large_fern	upper_block_bit=0	0	0
 minecraft:large_fern[half=lower]	2	large_fern	upper_block_bit=0	0	0
@@ -2034,6 +2334,14 @@ minecraft:large_fern[half=upper]	0	large_fern	upper_block_bit=1	0	0
 minecraft:large_fern[half=upper]	1	large_fern	upper_block_bit=1	0	0
 minecraft:large_fern[half=upper]	2	large_fern	upper_block_bit=1	0	0
 minecraft:large_fern[half=upper]	3	large_fern	upper_block_bit=1	0	0
+minecraft:leaves2[check_decay=false,decayable=false,variant=dark_oak]	0	dark_oak_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:leaves2[check_decay=false,decayable=false,variant=dark_oak]	1	dark_oak_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:leaves2[check_decay=false,decayable=false,variant=dark_oak]	2	dark_oak_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:leaves2[check_decay=false,decayable=false,variant=dark_oak]	3	dark_oak_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:leaves2[check_decay=true,decayable=false,variant=dark_oak]	0	dark_oak_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:leaves2[check_decay=true,decayable=false,variant=dark_oak]	1	dark_oak_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:leaves2[check_decay=true,decayable=false,variant=dark_oak]	2	dark_oak_leaves	persistent_bit=0,update_bit=0	0	3
+minecraft:leaves2[check_decay=true,decayable=false,variant=dark_oak]	3	dark_oak_leaves	persistent_bit=0,update_bit=0	0	3
 minecraft:lectern[facing=east,has_book=false,powered=false]	0	lectern	minecraft:cardinal_direction=east,powered_bit=0	0	2
 minecraft:lectern[facing=east,has_book=false,powered=false]	1	lectern	minecraft:cardinal_direction=south,powered_bit=0	0	2
 minecraft:lectern[facing=east,has_book=false,powered=false]	2	lectern	minecraft:cardinal_direction=west,powered_bit=0	0	2
@@ -2058,10 +2366,22 @@ minecraft:lever[face=floor,facing=west,powered=false]	0	lever	lever_direction=up
 minecraft:lever[face=floor,facing=west,powered=false]	1	lever	lever_direction=up_east_west,open_bit=0	0	0
 minecraft:lever[face=floor,facing=west,powered=false]	2	lever	lever_direction=up_east_west,open_bit=0	0	0
 minecraft:lever[face=floor,facing=west,powered=false]	3	lever	lever_direction=up_east_west,open_bit=0	0	0
+minecraft:lever[face=wall,facing=east,powered=false]	0	lever	lever_direction=east,open_bit=0	0	0
+minecraft:lever[face=wall,facing=east,powered=false]	1	lever	lever_direction=south,open_bit=0	0	0
+minecraft:lever[face=wall,facing=east,powered=false]	2	lever	lever_direction=west,open_bit=0	0	0
+minecraft:lever[face=wall,facing=east,powered=false]	3	lever	lever_direction=north,open_bit=0	0	0
+minecraft:lever[face=wall,facing=north,powered=false]	0	lever	lever_direction=north,open_bit=0	0	0
+minecraft:lever[face=wall,facing=north,powered=false]	1	lever	lever_direction=east,open_bit=0	0	0
+minecraft:lever[face=wall,facing=north,powered=false]	2	lever	lever_direction=south,open_bit=0	0	0
+minecraft:lever[face=wall,facing=north,powered=false]	3	lever	lever_direction=west,open_bit=0	0	0
 minecraft:lever[face=wall,facing=north,powered=true]	0	lever	lever_direction=north,open_bit=1	0	0
 minecraft:lever[face=wall,facing=north,powered=true]	1	lever	lever_direction=east,open_bit=1	0	0
 minecraft:lever[face=wall,facing=north,powered=true]	2	lever	lever_direction=south,open_bit=1	0	0
 minecraft:lever[face=wall,facing=north,powered=true]	3	lever	lever_direction=west,open_bit=1	0	0
+minecraft:lever[facing=south,powered=false]	0	lever	lever_direction=south,open_bit=0	0	0
+minecraft:lever[facing=south,powered=false]	1	lever	lever_direction=west,open_bit=0	0	0
+minecraft:lever[facing=south,powered=false]	2	lever	lever_direction=north,open_bit=0	0	0
+minecraft:lever[facing=south,powered=false]	3	lever	lever_direction=east,open_bit=0	0	0
 minecraft:light_blue_carpet	0	light_blue_carpet		0	2
 minecraft:light_blue_carpet	1	light_blue_carpet		0	2
 minecraft:light_blue_carpet	2	light_blue_carpet		0	2
@@ -2174,6 +2494,18 @@ minecraft:lime_terracotta	0	lime_terracotta		0	3
 minecraft:lime_terracotta	1	lime_terracotta		0	3
 minecraft:lime_terracotta	2	lime_terracotta		0	3
 minecraft:lime_terracotta	3	lime_terracotta		0	3
+minecraft:log2[axis=x,variant=dark_oak]	0	dark_oak_log	pillar_axis=x	0	3
+minecraft:log2[axis=x,variant=dark_oak]	1	dark_oak_log	pillar_axis=z	0	3
+minecraft:log2[axis=x,variant=dark_oak]	2	dark_oak_log	pillar_axis=x	0	3
+minecraft:log2[axis=x,variant=dark_oak]	3	dark_oak_log	pillar_axis=z	0	3
+minecraft:log2[axis=y,variant=dark_oak]	0	dark_oak_log	pillar_axis=y	0	3
+minecraft:log2[axis=y,variant=dark_oak]	1	dark_oak_log	pillar_axis=y	0	3
+minecraft:log2[axis=y,variant=dark_oak]	2	dark_oak_log	pillar_axis=y	0	3
+minecraft:log2[axis=y,variant=dark_oak]	3	dark_oak_log	pillar_axis=y	0	3
+minecraft:log2[axis=z,variant=dark_oak]	0	dark_oak_log	pillar_axis=z	0	3
+minecraft:log2[axis=z,variant=dark_oak]	1	dark_oak_log	pillar_axis=x	0	3
+minecraft:log2[axis=z,variant=dark_oak]	2	dark_oak_log	pillar_axis=z	0	3
+minecraft:log2[axis=z,variant=dark_oak]	3	dark_oak_log	pillar_axis=x	0	3
 minecraft:loom[facing=east]	0	loom	direction=1	0	3
 minecraft:loom[facing=east]	1	loom	direction=2	0	3
 minecraft:loom[facing=east]	2	loom	direction=3	0	3
@@ -2242,6 +2574,10 @@ minecraft:melon	0	melon_block		0	3
 minecraft:melon	1	melon_block		0	3
 minecraft:melon	2	melon_block		0	3
 minecraft:melon	3	melon_block		0	3
+minecraft:melon_block	0	melon_block		0	3
+minecraft:melon_block	1	melon_block		0	3
+minecraft:melon_block	2	melon_block		0	3
+minecraft:melon_block	3	melon_block		0	3
 minecraft:melon_stem[age=1]	0	melon_stem	facing_direction=0,growth=1	0	0
 minecraft:melon_stem[age=1]	1	melon_stem	facing_direction=0,growth=1	0	0
 minecraft:melon_stem[age=1]	2	melon_stem	facing_direction=0,growth=1	0	0
@@ -2266,14 +2602,26 @@ minecraft:melon_stem[age=6]	0	melon_stem	facing_direction=0,growth=6	0	0
 minecraft:melon_stem[age=6]	1	melon_stem	facing_direction=0,growth=6	0	0
 minecraft:melon_stem[age=6]	2	melon_stem	facing_direction=0,growth=6	0	0
 minecraft:melon_stem[age=6]	3	melon_stem	facing_direction=0,growth=6	0	0
+minecraft:melon_stem[age=7,facing=east]	0	melon_stem	facing_direction=5,growth=7	0	0
+minecraft:melon_stem[age=7,facing=east]	1	melon_stem	facing_direction=3,growth=7	0	0
+minecraft:melon_stem[age=7,facing=east]	2	melon_stem	facing_direction=4,growth=7	0	0
+minecraft:melon_stem[age=7,facing=east]	3	melon_stem	facing_direction=2,growth=7	0	0
 minecraft:melon_stem[age=7]	0	melon_stem	facing_direction=0,growth=7	0	0
 minecraft:melon_stem[age=7]	1	melon_stem	facing_direction=0,growth=7	0	0
 minecraft:melon_stem[age=7]	2	melon_stem	facing_direction=0,growth=7	0	0
 minecraft:melon_stem[age=7]	3	melon_stem	facing_direction=0,growth=7	0	0
+minecraft:mob_spawner	0	mob_spawner		0	3
+minecraft:mob_spawner	1	mob_spawner		0	3
+minecraft:mob_spawner	2	mob_spawner		0	3
+minecraft:mob_spawner	3	mob_spawner		0	3
 minecraft:monster_egg[variant=chiseled_brick]	0	infested_chiseled_stone_bricks		0	3
 minecraft:monster_egg[variant=chiseled_brick]	1	infested_chiseled_stone_bricks		0	3
 minecraft:monster_egg[variant=chiseled_brick]	2	infested_chiseled_stone_bricks		0	3
 minecraft:monster_egg[variant=chiseled_brick]	3	infested_chiseled_stone_bricks		0	3
+minecraft:monster_egg[variant=cobblestone]	0	infested_cobblestone		0	3
+minecraft:monster_egg[variant=cobblestone]	1	infested_cobblestone		0	3
+minecraft:monster_egg[variant=cobblestone]	2	infested_cobblestone		0	3
+minecraft:monster_egg[variant=cobblestone]	3	infested_cobblestone		0	3
 minecraft:monster_egg[variant=mossy_brick]	0	infested_mossy_stone_bricks		0	3
 minecraft:monster_egg[variant=mossy_brick]	1	infested_mossy_stone_bricks		0	3
 minecraft:monster_egg[variant=mossy_brick]	2	infested_mossy_stone_bricks		0	3
@@ -2694,6 +3042,10 @@ minecraft:oak_stairs[facing=east,half=bottom,shape=straight,waterlogged=false]	0
 minecraft:oak_stairs[facing=east,half=bottom,shape=straight,waterlogged=false]	1	oak_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=2	0	2
 minecraft:oak_stairs[facing=east,half=bottom,shape=straight,waterlogged=false]	2	oak_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=1	0	2
 minecraft:oak_stairs[facing=east,half=bottom,shape=straight,waterlogged=false]	3	oak_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=3	0	2
+minecraft:oak_stairs[facing=east,half=bottom,shape=straight]	0	oak_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=0	0	2
+minecraft:oak_stairs[facing=east,half=bottom,shape=straight]	1	oak_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=2	0	2
+minecraft:oak_stairs[facing=east,half=bottom,shape=straight]	2	oak_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=1	0	2
+minecraft:oak_stairs[facing=east,half=bottom,shape=straight]	3	oak_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=3	0	2
 minecraft:oak_stairs[facing=east,half=top,shape=outer_right]	0	oak_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=0	0	2
 minecraft:oak_stairs[facing=east,half=top,shape=outer_right]	1	oak_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=2	0	2
 minecraft:oak_stairs[facing=east,half=top,shape=outer_right]	2	oak_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=1	0	2
@@ -2702,6 +3054,10 @@ minecraft:oak_stairs[facing=east,half=top,shape=straight,waterlogged=false]	0	oa
 minecraft:oak_stairs[facing=east,half=top,shape=straight,waterlogged=false]	1	oak_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=2	0	2
 minecraft:oak_stairs[facing=east,half=top,shape=straight,waterlogged=false]	2	oak_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=1	0	2
 minecraft:oak_stairs[facing=east,half=top,shape=straight,waterlogged=false]	3	oak_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=3	0	2
+minecraft:oak_stairs[facing=east,half=top,shape=straight]	0	oak_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=0	0	2
+minecraft:oak_stairs[facing=east,half=top,shape=straight]	1	oak_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=2	0	2
+minecraft:oak_stairs[facing=east,half=top,shape=straight]	2	oak_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=1	0	2
+minecraft:oak_stairs[facing=east,half=top,shape=straight]	3	oak_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=3	0	2
 minecraft:oak_stairs[facing=north,half=bottom,shape=inner_left,waterlogged=false]	0	oak_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=3	0	2
 minecraft:oak_stairs[facing=north,half=bottom,shape=inner_left,waterlogged=false]	1	oak_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=0	0	2
 minecraft:oak_stairs[facing=north,half=bottom,shape=inner_left,waterlogged=false]	2	oak_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=2	0	2
@@ -2726,6 +3082,10 @@ minecraft:oak_stairs[facing=north,half=bottom,shape=straight,waterlogged=false]	
 minecraft:oak_stairs[facing=north,half=bottom,shape=straight,waterlogged=false]	1	oak_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=0	0	2
 minecraft:oak_stairs[facing=north,half=bottom,shape=straight,waterlogged=false]	2	oak_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=2	0	2
 minecraft:oak_stairs[facing=north,half=bottom,shape=straight,waterlogged=false]	3	oak_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=1	0	2
+minecraft:oak_stairs[facing=north,half=bottom,shape=straight]	0	oak_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=3	0	2
+minecraft:oak_stairs[facing=north,half=bottom,shape=straight]	1	oak_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=0	0	2
+minecraft:oak_stairs[facing=north,half=bottom,shape=straight]	2	oak_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=2	0	2
+minecraft:oak_stairs[facing=north,half=bottom,shape=straight]	3	oak_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=1	0	2
 minecraft:oak_stairs[facing=north,half=top,shape=outer_right]	0	oak_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=3	0	2
 minecraft:oak_stairs[facing=north,half=top,shape=outer_right]	1	oak_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=0	0	2
 minecraft:oak_stairs[facing=north,half=top,shape=outer_right]	2	oak_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=2	0	2
@@ -2734,6 +3094,10 @@ minecraft:oak_stairs[facing=north,half=top,shape=straight,waterlogged=false]	0	o
 minecraft:oak_stairs[facing=north,half=top,shape=straight,waterlogged=false]	1	oak_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=0	0	2
 minecraft:oak_stairs[facing=north,half=top,shape=straight,waterlogged=false]	2	oak_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=2	0	2
 minecraft:oak_stairs[facing=north,half=top,shape=straight,waterlogged=false]	3	oak_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=1	0	2
+minecraft:oak_stairs[facing=north,half=top,shape=straight]	0	oak_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=3	0	2
+minecraft:oak_stairs[facing=north,half=top,shape=straight]	1	oak_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=0	0	2
+minecraft:oak_stairs[facing=north,half=top,shape=straight]	2	oak_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=2	0	2
+minecraft:oak_stairs[facing=north,half=top,shape=straight]	3	oak_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=1	0	2
 minecraft:oak_stairs[facing=south,half=bottom,shape=inner_left,waterlogged=false]	0	oak_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=2	0	2
 minecraft:oak_stairs[facing=south,half=bottom,shape=inner_left,waterlogged=false]	1	oak_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=1	0	2
 minecraft:oak_stairs[facing=south,half=bottom,shape=inner_left,waterlogged=false]	2	oak_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=3	0	2
@@ -2758,6 +3122,10 @@ minecraft:oak_stairs[facing=south,half=bottom,shape=straight,waterlogged=false]	
 minecraft:oak_stairs[facing=south,half=bottom,shape=straight,waterlogged=false]	1	oak_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=1	0	2
 minecraft:oak_stairs[facing=south,half=bottom,shape=straight,waterlogged=false]	2	oak_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=3	0	2
 minecraft:oak_stairs[facing=south,half=bottom,shape=straight,waterlogged=false]	3	oak_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=0	0	2
+minecraft:oak_stairs[facing=south,half=bottom,shape=straight]	0	oak_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=2	0	2
+minecraft:oak_stairs[facing=south,half=bottom,shape=straight]	1	oak_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=1	0	2
+minecraft:oak_stairs[facing=south,half=bottom,shape=straight]	2	oak_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=3	0	2
+minecraft:oak_stairs[facing=south,half=bottom,shape=straight]	3	oak_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=0	0	2
 minecraft:oak_stairs[facing=south,half=top,shape=outer_right]	0	oak_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=2	0	2
 minecraft:oak_stairs[facing=south,half=top,shape=outer_right]	1	oak_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=1	0	2
 minecraft:oak_stairs[facing=south,half=top,shape=outer_right]	2	oak_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=3	0	2
@@ -2766,6 +3134,10 @@ minecraft:oak_stairs[facing=south,half=top,shape=straight,waterlogged=false]	0	o
 minecraft:oak_stairs[facing=south,half=top,shape=straight,waterlogged=false]	1	oak_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=1	0	2
 minecraft:oak_stairs[facing=south,half=top,shape=straight,waterlogged=false]	2	oak_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=3	0	2
 minecraft:oak_stairs[facing=south,half=top,shape=straight,waterlogged=false]	3	oak_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=0	0	2
+minecraft:oak_stairs[facing=south,half=top,shape=straight]	0	oak_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=2	0	2
+minecraft:oak_stairs[facing=south,half=top,shape=straight]	1	oak_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=1	0	2
+minecraft:oak_stairs[facing=south,half=top,shape=straight]	2	oak_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=3	0	2
+minecraft:oak_stairs[facing=south,half=top,shape=straight]	3	oak_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=0	0	2
 minecraft:oak_stairs[facing=west,half=bottom,shape=inner_left,waterlogged=false]	0	oak_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=1	0	2
 minecraft:oak_stairs[facing=west,half=bottom,shape=inner_left,waterlogged=false]	1	oak_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=3	0	2
 minecraft:oak_stairs[facing=west,half=bottom,shape=inner_left,waterlogged=false]	2	oak_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=0	0	2
@@ -2790,6 +3162,10 @@ minecraft:oak_stairs[facing=west,half=bottom,shape=straight,waterlogged=false]	0
 minecraft:oak_stairs[facing=west,half=bottom,shape=straight,waterlogged=false]	1	oak_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=3	0	2
 minecraft:oak_stairs[facing=west,half=bottom,shape=straight,waterlogged=false]	2	oak_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=0	0	2
 minecraft:oak_stairs[facing=west,half=bottom,shape=straight,waterlogged=false]	3	oak_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=2	0	2
+minecraft:oak_stairs[facing=west,half=bottom,shape=straight]	0	oak_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=1	0	2
+minecraft:oak_stairs[facing=west,half=bottom,shape=straight]	1	oak_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=3	0	2
+minecraft:oak_stairs[facing=west,half=bottom,shape=straight]	2	oak_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=0	0	2
+minecraft:oak_stairs[facing=west,half=bottom,shape=straight]	3	oak_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=2	0	2
 minecraft:oak_stairs[facing=west,half=top,shape=outer_right]	0	oak_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=1	0	2
 minecraft:oak_stairs[facing=west,half=top,shape=outer_right]	1	oak_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=3	0	2
 minecraft:oak_stairs[facing=west,half=top,shape=outer_right]	2	oak_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=0	0	2
@@ -2798,6 +3174,10 @@ minecraft:oak_stairs[facing=west,half=top,shape=straight,waterlogged=false]	0	oa
 minecraft:oak_stairs[facing=west,half=top,shape=straight,waterlogged=false]	1	oak_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=3	0	2
 minecraft:oak_stairs[facing=west,half=top,shape=straight,waterlogged=false]	2	oak_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=0	0	2
 minecraft:oak_stairs[facing=west,half=top,shape=straight,waterlogged=false]	3	oak_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=2	0	2
+minecraft:oak_stairs[facing=west,half=top,shape=straight]	0	oak_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=1	0	2
+minecraft:oak_stairs[facing=west,half=top,shape=straight]	1	oak_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=3	0	2
+minecraft:oak_stairs[facing=west,half=top,shape=straight]	2	oak_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=0	0	2
+minecraft:oak_stairs[facing=west,half=top,shape=straight]	3	oak_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=2	0	2
 minecraft:oak_trapdoor[facing=east,half=bottom,open=true,powered=false,waterlogged=false]	0	trapdoor	direction=0,open_bit=1,upside_down_bit=0	0	2
 minecraft:oak_trapdoor[facing=east,half=bottom,open=true,powered=false,waterlogged=false]	1	trapdoor	direction=2,open_bit=1,upside_down_bit=0	0	2
 minecraft:oak_trapdoor[facing=east,half=bottom,open=true,powered=false,waterlogged=false]	2	trapdoor	direction=1,open_bit=1,upside_down_bit=0	0	2
@@ -2930,6 +3310,10 @@ minecraft:piston_head[facing=south,short=false,type=sticky]	0	air		0	0
 minecraft:piston_head[facing=south,short=false,type=sticky]	1	air		0	0
 minecraft:piston_head[facing=south,short=false,type=sticky]	2	air		0	0
 minecraft:piston_head[facing=south,short=false,type=sticky]	3	air		0	0
+minecraft:planks[variant=birch]	0	birch_planks		0	3
+minecraft:planks[variant=birch]	1	birch_planks		0	3
+minecraft:planks[variant=birch]	2	birch_planks		0	3
+minecraft:planks[variant=birch]	3	birch_planks		0	3
 minecraft:planks[variant=dark_oak]	0	dark_oak_planks		0	3
 minecraft:planks[variant=dark_oak]	1	dark_oak_planks		0	3
 minecraft:planks[variant=dark_oak]	2	dark_oak_planks		0	3
@@ -3082,6 +3466,18 @@ minecraft:pumpkin	0	pumpkin	minecraft:cardinal_direction=south	0	3
 minecraft:pumpkin	1	pumpkin	minecraft:cardinal_direction=west	0	3
 minecraft:pumpkin	2	pumpkin	minecraft:cardinal_direction=north	0	3
 minecraft:pumpkin	3	pumpkin	minecraft:cardinal_direction=east	0	3
+minecraft:pumpkin[facing=east]	0	pumpkin	minecraft:cardinal_direction=east	0	3
+minecraft:pumpkin[facing=east]	1	pumpkin	minecraft:cardinal_direction=south	0	3
+minecraft:pumpkin[facing=east]	2	pumpkin	minecraft:cardinal_direction=west	0	3
+minecraft:pumpkin[facing=east]	3	pumpkin	minecraft:cardinal_direction=north	0	3
+minecraft:pumpkin[facing=north]	0	pumpkin	minecraft:cardinal_direction=north	0	3
+minecraft:pumpkin[facing=north]	1	pumpkin	minecraft:cardinal_direction=east	0	3
+minecraft:pumpkin[facing=north]	2	pumpkin	minecraft:cardinal_direction=south	0	3
+minecraft:pumpkin[facing=north]	3	pumpkin	minecraft:cardinal_direction=west	0	3
+minecraft:pumpkin_stem[age=7,facing=east]	0	pumpkin_stem	facing_direction=5,growth=7	0	0
+minecraft:pumpkin_stem[age=7,facing=east]	1	pumpkin_stem	facing_direction=3,growth=7	0	0
+minecraft:pumpkin_stem[age=7,facing=east]	2	pumpkin_stem	facing_direction=4,growth=7	0	0
+minecraft:pumpkin_stem[age=7,facing=east]	3	pumpkin_stem	facing_direction=2,growth=7	0	0
 minecraft:pumpkin_stem[age=7]	0	pumpkin_stem	facing_direction=0,growth=7	0	0
 minecraft:pumpkin_stem[age=7]	1	pumpkin_stem	facing_direction=0,growth=7	0	0
 minecraft:pumpkin_stem[age=7]	2	pumpkin_stem	facing_direction=0,growth=7	0	0
@@ -3138,6 +3534,22 @@ minecraft:purple_glazed_terracotta[facing=west]	0	purple_glazed_terracotta	facin
 minecraft:purple_glazed_terracotta[facing=west]	1	purple_glazed_terracotta	facing_direction=2	0	3
 minecraft:purple_glazed_terracotta[facing=west]	2	purple_glazed_terracotta	facing_direction=5	0	3
 minecraft:purple_glazed_terracotta[facing=west]	3	purple_glazed_terracotta	facing_direction=3	0	3
+minecraft:rail[shape=east_west]	0	rail	rail_direction=0	0	0
+minecraft:rail[shape=east_west]	1	rail	rail_direction=0	0	0
+minecraft:rail[shape=east_west]	2	rail	rail_direction=0	0	0
+minecraft:rail[shape=east_west]	3	rail	rail_direction=0	0	0
+minecraft:rail[shape=north_east]	0	rail	rail_direction=0	0	0
+minecraft:rail[shape=north_east]	1	rail	rail_direction=0	0	0
+minecraft:rail[shape=north_east]	2	rail	rail_direction=0	0	0
+minecraft:rail[shape=north_east]	3	rail	rail_direction=0	0	0
+minecraft:rail[shape=north_south]	0	rail	rail_direction=0	0	0
+minecraft:rail[shape=north_south]	1	rail	rail_direction=0	0	0
+minecraft:rail[shape=north_south]	2	rail	rail_direction=0	0	0
+minecraft:rail[shape=north_south]	3	rail	rail_direction=0	0	0
+minecraft:rail[shape=south_east]	0	rail	rail_direction=0	0	0
+minecraft:rail[shape=south_east]	1	rail	rail_direction=0	0	0
+minecraft:rail[shape=south_east]	2	rail	rail_direction=0	0	0
+minecraft:rail[shape=south_east]	3	rail	rail_direction=0	0	0
 minecraft:red_bed[facing=east,occupied=false,part=foot]	0	bed	direction=3,head_piece_bit=0,occupied_bit=0	0	2
 minecraft:red_bed[facing=east,occupied=false,part=foot]	1	bed	direction=0,head_piece_bit=0,occupied_bit=0	0	2
 minecraft:red_bed[facing=east,occupied=false,part=foot]	2	bed	direction=1,head_piece_bit=0,occupied_bit=0	0	2
@@ -3246,6 +3658,10 @@ minecraft:redstone_wall_torch[facing=west,lit=true]	0	redstone_torch	torch_facin
 minecraft:redstone_wall_torch[facing=west,lit=true]	1	redstone_torch	torch_facing_direction=south	0	0
 minecraft:redstone_wall_torch[facing=west,lit=true]	2	redstone_torch	torch_facing_direction=west	0	0
 minecraft:redstone_wall_torch[facing=west,lit=true]	3	redstone_torch	torch_facing_direction=north	0	0
+minecraft:redstone_wire[east=none,north=none,power=0,south=none,west=none]	0	redstone_wire	redstone_signal=0	0	0
+minecraft:redstone_wire[east=none,north=none,power=0,south=none,west=none]	1	redstone_wire	redstone_signal=0	0	0
+minecraft:redstone_wire[east=none,north=none,power=0,south=none,west=none]	2	redstone_wire	redstone_signal=0	0	0
+minecraft:redstone_wire[east=none,north=none,power=0,south=none,west=none]	3	redstone_wire	redstone_signal=0	0	0
 minecraft:redstone_wire[east=none,north=none,power=0,south=side,west=side]	0	redstone_wire	redstone_signal=0	0	0
 minecraft:redstone_wire[east=none,north=none,power=0,south=side,west=side]	1	redstone_wire	redstone_signal=0	0	0
 minecraft:redstone_wire[east=none,north=none,power=0,south=side,west=side]	2	redstone_wire	redstone_signal=0	0	0
@@ -3530,6 +3946,10 @@ minecraft:sandstone_wall[east=true,north=true,south=true,up=true,waterlogged=fal
 minecraft:sandstone_wall[east=true,north=true,south=true,up=true,waterlogged=false,west=false]	1	sandstone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
 minecraft:sandstone_wall[east=true,north=true,south=true,up=true,waterlogged=false,west=false]	2	sandstone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
 minecraft:sandstone_wall[east=true,north=true,south=true,up=true,waterlogged=false,west=false]	3	sandstone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:sapling[stage=0,type=dark_oak]	0	dark_oak_sapling	age_bit=0	0	0
+minecraft:sapling[stage=0,type=dark_oak]	1	dark_oak_sapling	age_bit=0	0	0
+minecraft:sapling[stage=0,type=dark_oak]	2	dark_oak_sapling	age_bit=0	0	0
+minecraft:sapling[stage=0,type=dark_oak]	3	dark_oak_sapling	age_bit=0	0	0
 minecraft:sculk_sensor[power=0,sculk_sensor_phase=inactive,waterlogged=false]	0	sculk_sensor	sculk_sensor_phase=0	0	2
 minecraft:sculk_sensor[power=0,sculk_sensor_phase=inactive,waterlogged=false]	1	sculk_sensor	sculk_sensor_phase=0	0	2
 minecraft:sculk_sensor[power=0,sculk_sensor_phase=inactive,waterlogged=false]	2	sculk_sensor	sculk_sensor_phase=0	0	2
@@ -4314,6 +4734,18 @@ minecraft:stone_pressure_plate[powered=false]	0	stone_pressure_plate	redstone_si
 minecraft:stone_pressure_plate[powered=false]	1	stone_pressure_plate	redstone_signal=0	0	0
 minecraft:stone_pressure_plate[powered=false]	2	stone_pressure_plate	redstone_signal=0	0	0
 minecraft:stone_pressure_plate[powered=false]	3	stone_pressure_plate	redstone_signal=0	0	0
+minecraft:stone_slab[half=bottom,variant=cobblestone]	0	cobblestone_slab	minecraft:vertical_half=bottom	0	2
+minecraft:stone_slab[half=bottom,variant=cobblestone]	1	cobblestone_slab	minecraft:vertical_half=bottom	0	2
+minecraft:stone_slab[half=bottom,variant=cobblestone]	2	cobblestone_slab	minecraft:vertical_half=bottom	0	2
+minecraft:stone_slab[half=bottom,variant=cobblestone]	3	cobblestone_slab	minecraft:vertical_half=bottom	0	2
+minecraft:stone_slab[half=bottom,variant=smoothstone]	0	smooth_stone_slab	minecraft:vertical_half=bottom	0	2
+minecraft:stone_slab[half=bottom,variant=smoothstone]	1	smooth_stone_slab	minecraft:vertical_half=bottom	0	2
+minecraft:stone_slab[half=bottom,variant=smoothstone]	2	smooth_stone_slab	minecraft:vertical_half=bottom	0	2
+minecraft:stone_slab[half=bottom,variant=smoothstone]	3	smooth_stone_slab	minecraft:vertical_half=bottom	0	2
+minecraft:stone_slab[half=top,variant=smoothstone]	0	smooth_stone_slab	minecraft:vertical_half=top	0	2
+minecraft:stone_slab[half=top,variant=smoothstone]	1	smooth_stone_slab	minecraft:vertical_half=top	0	2
+minecraft:stone_slab[half=top,variant=smoothstone]	2	smooth_stone_slab	minecraft:vertical_half=top	0	2
+minecraft:stone_slab[half=top,variant=smoothstone]	3	smooth_stone_slab	minecraft:vertical_half=top	0	2
 minecraft:stone_slab[type=bottom,waterlogged=false]	0	smooth_stone_slab	minecraft:vertical_half=bottom	0	2
 minecraft:stone_slab[type=bottom,waterlogged=false]	1	smooth_stone_slab	minecraft:vertical_half=bottom	0	2
 minecraft:stone_slab[type=bottom,waterlogged=false]	2	smooth_stone_slab	minecraft:vertical_half=bottom	0	2
@@ -4322,6 +4754,66 @@ minecraft:stone_slab[type=double,waterlogged=false]	0	smooth_stone_double_slab	m
 minecraft:stone_slab[type=double,waterlogged=false]	1	smooth_stone_double_slab	minecraft:vertical_half=bottom	0	3
 minecraft:stone_slab[type=double,waterlogged=false]	2	smooth_stone_double_slab	minecraft:vertical_half=bottom	0	3
 minecraft:stone_slab[type=double,waterlogged=false]	3	smooth_stone_double_slab	minecraft:vertical_half=bottom	0	3
+minecraft:stone_stairs[facing=east,half=bottom,shape=outer_right]	0	stone_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=0	0	2
+minecraft:stone_stairs[facing=east,half=bottom,shape=outer_right]	1	stone_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=2	0	2
+minecraft:stone_stairs[facing=east,half=bottom,shape=outer_right]	2	stone_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=1	0	2
+minecraft:stone_stairs[facing=east,half=bottom,shape=outer_right]	3	stone_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=3	0	2
+minecraft:stone_stairs[facing=east,half=bottom,shape=straight]	0	stone_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=0	0	2
+minecraft:stone_stairs[facing=east,half=bottom,shape=straight]	1	stone_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=2	0	2
+minecraft:stone_stairs[facing=east,half=bottom,shape=straight]	2	stone_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=1	0	2
+minecraft:stone_stairs[facing=east,half=bottom,shape=straight]	3	stone_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=3	0	2
+minecraft:stone_stairs[facing=east,half=top,shape=outer_right]	0	stone_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=0	0	2
+minecraft:stone_stairs[facing=east,half=top,shape=outer_right]	1	stone_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=2	0	2
+minecraft:stone_stairs[facing=east,half=top,shape=outer_right]	2	stone_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=1	0	2
+minecraft:stone_stairs[facing=east,half=top,shape=outer_right]	3	stone_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=3	0	2
+minecraft:stone_stairs[facing=north,half=bottom,shape=outer_right]	0	stone_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=3	0	2
+minecraft:stone_stairs[facing=north,half=bottom,shape=outer_right]	1	stone_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=0	0	2
+minecraft:stone_stairs[facing=north,half=bottom,shape=outer_right]	2	stone_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=2	0	2
+minecraft:stone_stairs[facing=north,half=bottom,shape=outer_right]	3	stone_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=1	0	2
+minecraft:stone_stairs[facing=north,half=bottom,shape=straight]	0	stone_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=3	0	2
+minecraft:stone_stairs[facing=north,half=bottom,shape=straight]	1	stone_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=0	0	2
+minecraft:stone_stairs[facing=north,half=bottom,shape=straight]	2	stone_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=2	0	2
+minecraft:stone_stairs[facing=north,half=bottom,shape=straight]	3	stone_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=1	0	2
+minecraft:stone_stairs[facing=north,half=top,shape=outer_right]	0	stone_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=3	0	2
+minecraft:stone_stairs[facing=north,half=top,shape=outer_right]	1	stone_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=0	0	2
+minecraft:stone_stairs[facing=north,half=top,shape=outer_right]	2	stone_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=2	0	2
+minecraft:stone_stairs[facing=north,half=top,shape=outer_right]	3	stone_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=1	0	2
+minecraft:stone_stairs[facing=north,half=top,shape=straight]	0	stone_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=3	0	2
+minecraft:stone_stairs[facing=north,half=top,shape=straight]	1	stone_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=0	0	2
+minecraft:stone_stairs[facing=north,half=top,shape=straight]	2	stone_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=2	0	2
+minecraft:stone_stairs[facing=north,half=top,shape=straight]	3	stone_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=1	0	2
+minecraft:stone_stairs[facing=south,half=bottom,shape=outer_right]	0	stone_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=2	0	2
+minecraft:stone_stairs[facing=south,half=bottom,shape=outer_right]	1	stone_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=1	0	2
+minecraft:stone_stairs[facing=south,half=bottom,shape=outer_right]	2	stone_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=3	0	2
+minecraft:stone_stairs[facing=south,half=bottom,shape=outer_right]	3	stone_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=0	0	2
+minecraft:stone_stairs[facing=south,half=bottom,shape=straight]	0	stone_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=2	0	2
+minecraft:stone_stairs[facing=south,half=bottom,shape=straight]	1	stone_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=1	0	2
+minecraft:stone_stairs[facing=south,half=bottom,shape=straight]	2	stone_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=3	0	2
+minecraft:stone_stairs[facing=south,half=bottom,shape=straight]	3	stone_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=0	0	2
+minecraft:stone_stairs[facing=south,half=top,shape=outer_right]	0	stone_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=2	0	2
+minecraft:stone_stairs[facing=south,half=top,shape=outer_right]	1	stone_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=1	0	2
+minecraft:stone_stairs[facing=south,half=top,shape=outer_right]	2	stone_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=3	0	2
+minecraft:stone_stairs[facing=south,half=top,shape=outer_right]	3	stone_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=0	0	2
+minecraft:stone_stairs[facing=south,half=top,shape=straight]	0	stone_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=2	0	2
+minecraft:stone_stairs[facing=south,half=top,shape=straight]	1	stone_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=1	0	2
+minecraft:stone_stairs[facing=south,half=top,shape=straight]	2	stone_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=3	0	2
+minecraft:stone_stairs[facing=south,half=top,shape=straight]	3	stone_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=0	0	2
+minecraft:stone_stairs[facing=west,half=bottom,shape=outer_right]	0	stone_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=1	0	2
+minecraft:stone_stairs[facing=west,half=bottom,shape=outer_right]	1	stone_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=3	0	2
+minecraft:stone_stairs[facing=west,half=bottom,shape=outer_right]	2	stone_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=0	0	2
+minecraft:stone_stairs[facing=west,half=bottom,shape=outer_right]	3	stone_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=2	0	2
+minecraft:stone_stairs[facing=west,half=bottom,shape=straight]	0	stone_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=1	0	2
+minecraft:stone_stairs[facing=west,half=bottom,shape=straight]	1	stone_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=3	0	2
+minecraft:stone_stairs[facing=west,half=bottom,shape=straight]	2	stone_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=0	0	2
+minecraft:stone_stairs[facing=west,half=bottom,shape=straight]	3	stone_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=2	0	2
+minecraft:stone_stairs[facing=west,half=top,shape=outer_right]	0	stone_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=1	0	2
+minecraft:stone_stairs[facing=west,half=top,shape=outer_right]	1	stone_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=3	0	2
+minecraft:stone_stairs[facing=west,half=top,shape=outer_right]	2	stone_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=0	0	2
+minecraft:stone_stairs[facing=west,half=top,shape=outer_right]	3	stone_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=2	0	2
+minecraft:stone_stairs[facing=west,half=top,shape=straight]	0	stone_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=1	0	2
+minecraft:stone_stairs[facing=west,half=top,shape=straight]	1	stone_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=3	0	2
+minecraft:stone_stairs[facing=west,half=top,shape=straight]	2	stone_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=0	0	2
+minecraft:stone_stairs[facing=west,half=top,shape=straight]	3	stone_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=2	0	2
 minecraft:stonebrick[variant=chiseled_stonebrick]	0	chiseled_stone_bricks		0	3
 minecraft:stonebrick[variant=chiseled_stonebrick]	1	chiseled_stone_bricks		0	3
 minecraft:stonebrick[variant=chiseled_stonebrick]	2	chiseled_stone_bricks		0	3
@@ -4410,10 +4902,18 @@ minecraft:terracotta	0	hardened_clay		0	3
 minecraft:terracotta	1	hardened_clay		0	3
 minecraft:terracotta	2	hardened_clay		0	3
 minecraft:terracotta	3	hardened_clay		0	3
+minecraft:tnt[explode=false]	0	tnt	explode_bit=0	0	3
+minecraft:tnt[explode=false]	1	tnt	explode_bit=0	0	3
+minecraft:tnt[explode=false]	2	tnt	explode_bit=0	0	3
+minecraft:tnt[explode=false]	3	tnt	explode_bit=0	0	3
 minecraft:torch	0	torch	torch_facing_direction=top	0	0
 minecraft:torch	1	torch	torch_facing_direction=top	0	0
 minecraft:torch	2	torch	torch_facing_direction=top	0	0
 minecraft:torch	3	torch	torch_facing_direction=top	0	0
+minecraft:torch[facing=east]	0	torch	torch_facing_direction=west	0	0
+minecraft:torch[facing=east]	1	torch	torch_facing_direction=north	0	0
+minecraft:torch[facing=east]	2	torch	torch_facing_direction=east	0	0
+minecraft:torch[facing=east]	3	torch	torch_facing_direction=south	0	0
 minecraft:torch[facing=north]	0	torch	torch_facing_direction=south	0	0
 minecraft:torch[facing=north]	1	torch	torch_facing_direction=west	0	0
 minecraft:torch[facing=north]	2	torch	torch_facing_direction=north	0	0
@@ -4422,6 +4922,14 @@ minecraft:torch[facing=south]	0	torch	torch_facing_direction=north	0	0
 minecraft:torch[facing=south]	1	torch	torch_facing_direction=east	0	0
 minecraft:torch[facing=south]	2	torch	torch_facing_direction=south	0	0
 minecraft:torch[facing=south]	3	torch	torch_facing_direction=west	0	0
+minecraft:torch[facing=up]	0	torch	torch_facing_direction=top	0	0
+minecraft:torch[facing=up]	1	torch	torch_facing_direction=top	0	0
+minecraft:torch[facing=up]	2	torch	torch_facing_direction=top	0	0
+minecraft:torch[facing=up]	3	torch	torch_facing_direction=top	0	0
+minecraft:torch[facing=west]	0	torch	torch_facing_direction=east	0	0
+minecraft:torch[facing=west]	1	torch	torch_facing_direction=south	0	0
+minecraft:torch[facing=west]	2	torch	torch_facing_direction=west	0	0
+minecraft:torch[facing=west]	3	torch	torch_facing_direction=north	0	0
 minecraft:trapdoor[facing=east,half=bottom,open=false]	0	trapdoor	direction=0,open_bit=0,upside_down_bit=0	0	2
 minecraft:trapdoor[facing=east,half=bottom,open=false]	1	trapdoor	direction=2,open_bit=0,upside_down_bit=0	0	2
 minecraft:trapdoor[facing=east,half=bottom,open=false]	2	trapdoor	direction=1,open_bit=0,upside_down_bit=0	0	2
@@ -4462,6 +4970,10 @@ minecraft:trapdoor[facing=west,half=top,open=false]	0	trapdoor	direction=1,open_
 minecraft:trapdoor[facing=west,half=top,open=false]	1	trapdoor	direction=3,open_bit=0,upside_down_bit=1	0	2
 minecraft:trapdoor[facing=west,half=top,open=false]	2	trapdoor	direction=0,open_bit=0,upside_down_bit=1	0	2
 minecraft:trapdoor[facing=west,half=top,open=false]	3	trapdoor	direction=2,open_bit=0,upside_down_bit=1	0	2
+minecraft:trapped_chest[facing=south]	0	trapped_chest	minecraft:cardinal_direction=south	0	2
+minecraft:trapped_chest[facing=south]	1	trapped_chest	minecraft:cardinal_direction=west	0	2
+minecraft:trapped_chest[facing=south]	2	trapped_chest	minecraft:cardinal_direction=north	0	2
+minecraft:trapped_chest[facing=south]	3	trapped_chest	minecraft:cardinal_direction=east	0	2
 minecraft:trial_spawner[ominous=false,trial_spawner_state=waiting_for_players]	0	trial_spawner	ominous=0,trial_spawner_state=0	0	3
 minecraft:trial_spawner[ominous=false,trial_spawner_state=waiting_for_players]	1	trial_spawner	ominous=0,trial_spawner_state=0	0	3
 minecraft:trial_spawner[ominous=false,trial_spawner_state=waiting_for_players]	2	trial_spawner	ominous=0,trial_spawner_state=0	0	3
@@ -4570,6 +5082,14 @@ minecraft:vine[east=true,north=true,south=false,up=true,west=false]	0	vine	vine_
 minecraft:vine[east=true,north=true,south=false,up=true,west=false]	1	vine	vine_direction_bits=2	0	0
 minecraft:vine[east=true,north=true,south=false,up=true,west=false]	2	vine	vine_direction_bits=4	0	0
 minecraft:vine[east=true,north=true,south=false,up=true,west=false]	3	vine	vine_direction_bits=8	0	0
+minecraft:wall_banner[facing=north]	0	wall_banner	facing_direction=2	0	0
+minecraft:wall_banner[facing=north]	1	wall_banner	facing_direction=5	0	0
+minecraft:wall_banner[facing=north]	2	wall_banner	facing_direction=3	0	0
+minecraft:wall_banner[facing=north]	3	wall_banner	facing_direction=4	0	0
+minecraft:wall_banner[facing=south]	0	wall_banner	facing_direction=3	0	0
+minecraft:wall_banner[facing=south]	1	wall_banner	facing_direction=4	0	0
+minecraft:wall_banner[facing=south]	2	wall_banner	facing_direction=2	0	0
+minecraft:wall_banner[facing=south]	3	wall_banner	facing_direction=5	0	0
 minecraft:wall_sign[facing=south]	0	wall_sign	facing_direction=3	0	0
 minecraft:wall_sign[facing=south]	1	wall_sign	facing_direction=4	0	0
 minecraft:wall_sign[facing=south]	2	wall_sign	facing_direction=2	0	0
@@ -4590,6 +5110,10 @@ minecraft:wall_torch[facing=west]	0	torch	torch_facing_direction=east	0	0
 minecraft:wall_torch[facing=west]	1	torch	torch_facing_direction=south	0	0
 minecraft:wall_torch[facing=west]	2	torch	torch_facing_direction=west	0	0
 minecraft:wall_torch[facing=west]	3	torch	torch_facing_direction=north	0	0
+minecraft:waterlily	0	waterlily		0	2
+minecraft:waterlily	1	waterlily		0	2
+minecraft:waterlily	2	waterlily		0	2
+minecraft:waterlily	3	waterlily		0	2
 minecraft:waxed_chiseled_copper	0	waxed_chiseled_copper		0	3
 minecraft:waxed_chiseled_copper	1	waxed_chiseled_copper		0	3
 minecraft:waxed_chiseled_copper	2	waxed_chiseled_copper		0	3
@@ -4942,6 +5466,10 @@ minecraft:wooden_door[facing=south,half=lower,hinge=right,open=false,powered=fal
 minecraft:wooden_door[facing=south,half=lower,hinge=right,open=false,powered=false]	1	wooden_door	door_hinge_bit=0,minecraft:cardinal_direction=north,open_bit=0,upper_block_bit=0	0	2
 minecraft:wooden_door[facing=south,half=lower,hinge=right,open=false,powered=false]	2	wooden_door	door_hinge_bit=0,minecraft:cardinal_direction=east,open_bit=0,upper_block_bit=0	0	2
 minecraft:wooden_door[facing=south,half=lower,hinge=right,open=false,powered=false]	3	wooden_door	door_hinge_bit=0,minecraft:cardinal_direction=south,open_bit=0,upper_block_bit=0	0	2
+minecraft:wooden_slab[half=bottom,variant=birch]	0	oak_slab	minecraft:vertical_half=bottom	0	2
+minecraft:wooden_slab[half=bottom,variant=birch]	1	oak_slab	minecraft:vertical_half=bottom	0	2
+minecraft:wooden_slab[half=bottom,variant=birch]	2	oak_slab	minecraft:vertical_half=bottom	0	2
+minecraft:wooden_slab[half=bottom,variant=birch]	3	oak_slab	minecraft:vertical_half=bottom	0	2
 minecraft:wooden_slab[half=bottom,variant=dark_oak]	0	dark_oak_slab	minecraft:vertical_half=bottom	0	2
 minecraft:wooden_slab[half=bottom,variant=dark_oak]	1	dark_oak_slab	minecraft:vertical_half=bottom	0	2
 minecraft:wooden_slab[half=bottom,variant=dark_oak]	2	dark_oak_slab	minecraft:vertical_half=bottom	0	2
@@ -4950,6 +5478,10 @@ minecraft:wooden_slab[half=bottom,variant=oak]	0	oak_slab	minecraft:vertical_hal
 minecraft:wooden_slab[half=bottom,variant=oak]	1	oak_slab	minecraft:vertical_half=bottom	0	2
 minecraft:wooden_slab[half=bottom,variant=oak]	2	oak_slab	minecraft:vertical_half=bottom	0	2
 minecraft:wooden_slab[half=bottom,variant=oak]	3	oak_slab	minecraft:vertical_half=bottom	0	2
+minecraft:wooden_slab[half=top,variant=birch]	0	oak_slab	minecraft:vertical_half=top	0	2
+minecraft:wooden_slab[half=top,variant=birch]	1	oak_slab	minecraft:vertical_half=top	0	2
+minecraft:wooden_slab[half=top,variant=birch]	2	oak_slab	minecraft:vertical_half=top	0	2
+minecraft:wooden_slab[half=top,variant=birch]	3	oak_slab	minecraft:vertical_half=top	0	2
 minecraft:wooden_slab[half=top,variant=dark_oak]	0	dark_oak_slab	minecraft:vertical_half=top	0	2
 minecraft:wooden_slab[half=top,variant=dark_oak]	1	dark_oak_slab	minecraft:vertical_half=top	0	2
 minecraft:wooden_slab[half=top,variant=dark_oak]	2	dark_oak_slab	minecraft:vertical_half=top	0	2
@@ -4962,6 +5494,58 @@ minecraft:wooden_slab[half=top,variant=spruce]	0	spruce_slab	minecraft:vertical_
 minecraft:wooden_slab[half=top,variant=spruce]	1	spruce_slab	minecraft:vertical_half=top	0	2
 minecraft:wooden_slab[half=top,variant=spruce]	2	spruce_slab	minecraft:vertical_half=top	0	2
 minecraft:wooden_slab[half=top,variant=spruce]	3	spruce_slab	minecraft:vertical_half=top	0	2
+minecraft:wool[color=black]	0	black_wool		0	3
+minecraft:wool[color=black]	1	black_wool		0	3
+minecraft:wool[color=black]	2	black_wool		0	3
+minecraft:wool[color=black]	3	black_wool		0	3
+minecraft:wool[color=blue]	0	blue_wool		0	3
+minecraft:wool[color=blue]	1	blue_wool		0	3
+minecraft:wool[color=blue]	2	blue_wool		0	3
+minecraft:wool[color=blue]	3	blue_wool		0	3
+minecraft:wool[color=brown]	0	brown_wool		0	3
+minecraft:wool[color=brown]	1	brown_wool		0	3
+minecraft:wool[color=brown]	2	brown_wool		0	3
+minecraft:wool[color=brown]	3	brown_wool		0	3
+minecraft:wool[color=cyan]	0	cyan_wool		0	3
+minecraft:wool[color=cyan]	1	cyan_wool		0	3
+minecraft:wool[color=cyan]	2	cyan_wool		0	3
+minecraft:wool[color=cyan]	3	cyan_wool		0	3
+minecraft:wool[color=gray]	0	gray_wool		0	3
+minecraft:wool[color=gray]	1	gray_wool		0	3
+minecraft:wool[color=gray]	2	gray_wool		0	3
+minecraft:wool[color=gray]	3	gray_wool		0	3
+minecraft:wool[color=green]	0	green_wool		0	3
+minecraft:wool[color=green]	1	green_wool		0	3
+minecraft:wool[color=green]	2	green_wool		0	3
+minecraft:wool[color=green]	3	green_wool		0	3
+minecraft:wool[color=light_blue]	0	light_blue_wool		0	3
+minecraft:wool[color=light_blue]	1	light_blue_wool		0	3
+minecraft:wool[color=light_blue]	2	light_blue_wool		0	3
+minecraft:wool[color=light_blue]	3	light_blue_wool		0	3
+minecraft:wool[color=lime]	0	lime_wool		0	3
+minecraft:wool[color=lime]	1	lime_wool		0	3
+minecraft:wool[color=lime]	2	lime_wool		0	3
+minecraft:wool[color=lime]	3	lime_wool		0	3
+minecraft:wool[color=orange]	0	orange_wool		0	3
+minecraft:wool[color=orange]	1	orange_wool		0	3
+minecraft:wool[color=orange]	2	orange_wool		0	3
+minecraft:wool[color=orange]	3	orange_wool		0	3
+minecraft:wool[color=red]	0	red_wool		0	3
+minecraft:wool[color=red]	1	red_wool		0	3
+minecraft:wool[color=red]	2	red_wool		0	3
+minecraft:wool[color=red]	3	red_wool		0	3
+minecraft:wool[color=silver]	0	light_gray_wool		0	3
+minecraft:wool[color=silver]	1	light_gray_wool		0	3
+minecraft:wool[color=silver]	2	light_gray_wool		0	3
+minecraft:wool[color=silver]	3	light_gray_wool		0	3
+minecraft:wool[color=white]	0	white_wool		0	3
+minecraft:wool[color=white]	1	white_wool		0	3
+minecraft:wool[color=white]	2	white_wool		0	3
+minecraft:wool[color=white]	3	white_wool		0	3
+minecraft:wool[color=yellow]	0	yellow_wool		0	3
+minecraft:wool[color=yellow]	1	yellow_wool		0	3
+minecraft:wool[color=yellow]	2	yellow_wool		0	3
+minecraft:wool[color=yellow]	3	yellow_wool		0	3
 minecraft:yellow_bed[facing=east,occupied=false,part=foot]	0	bed	direction=3,head_piece_bit=0,occupied_bit=0	0	2
 minecraft:yellow_bed[facing=east,occupied=false,part=foot]	1	bed	direction=0,head_piece_bit=0,occupied_bit=0	0	2
 minecraft:yellow_bed[facing=east,occupied=false,part=foot]	2	bed	direction=1,head_piece_bit=0,occupied_bit=0	0	2

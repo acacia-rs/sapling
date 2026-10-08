@@ -10,6 +10,7 @@ mod igloo;
 mod kind;
 mod jigsaw;
 mod locate;
+mod mansion;
 mod mineshaft;
 mod nearby;
 mod ocean_ruin;

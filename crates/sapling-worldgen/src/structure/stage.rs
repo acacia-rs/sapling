@@ -43,8 +43,10 @@ impl Structures {
         let cities = self.ancient_cities_near(density, chunk);
         let villages = self.villages_near(density, chunk);
         let v2 = self.v2_near(density, chunk);
+        let mansions = self.mansions_near(density, chunk);
         let templated = !(igloos.is_empty()
             && v2.is_empty()
+            && mansions.is_empty()
             && ruins.is_empty()
             && shipwrecks.is_empty()
             && portals.is_empty()
@@ -57,6 +59,7 @@ impl Structures {
         let mut canvas = Canvas::new(shape, chunk, neighbour);
         let seed = LargeFeatureSeed::new(self.level_seed).chunk(chunk.0, chunk.1);
         Self::place_villages(density, &mut canvas, &villages, seed);
+        Self::place_mansions(&mut canvas, &mansions);
         self.place_igloos(&mut canvas, &igloos);
         let mut random = Mt19937::new(seed);
         for mineshaft in &mineshafts {
