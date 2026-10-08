@@ -14,15 +14,16 @@ pub(crate) fn hash((x, y, z): (i32, i32, i32)) -> u64 {
 }
 
 /// Keys in an MSVC unordered map's iteration order after inserting them in `keys`' order: a key
-/// whose bucket is empty goes to the list's end, else after its bucket's last element. Holds
-/// while there are no more keys than the initial eight buckets (no rehash).
+/// whose bucket is empty goes to the list's end, else in front of its bucket's first element
+/// (`_Find_last` scans the bucket back to its low end). Holds while there are no more keys than
+/// the initial eight buckets (no rehash).
 fn msvc_order(keys: &[(i32, i32, i32)]) -> Vec<usize> {
     debug_assert!(keys.len() <= 8, "MSVC rehash not modelled");
     let mut list: Vec<(usize, u64)> = Vec::new();
     for (i, &key) in keys.iter().enumerate() {
         let bucket = hash(key) & 7;
-        match list.iter().rposition(|&(_, b)| b == bucket) {
-            Some(last) => list.insert(last + 1, (i, bucket)),
+        match list.iter().position(|&(_, b)| b == bucket) {
+            Some(first) => list.insert(first, (i, bucket)),
             None => list.push((i, bucket)),
         }
     }
