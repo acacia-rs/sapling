@@ -50,11 +50,10 @@ pub fn room_children(builder: &mut Builder, index: usize, random: &mut Mt19937) 
     }
 }
 
-/// A dirt floor under the room's air, the room hollowed up to 3 high, the entrances, and a
-/// dome above.
+/// The room hollowed up to 3 high, the entrances, and a dome above. The dirt floor is old
+/// worlds' only (the version gate `canBeReplaced` shares, 14831d010).
 pub fn room(f: &Frame, entrances: &[BoundingBox], canvas: &mut Canvas) {
     let (b, air) = (f.bb, Block::Air);
-    f.generate_box(canvas, (b.x0, b.y0, b.z0), (b.x1, b.y0, b.z1), Block::Dirt, air, true);
     f.generate_box(canvas, (b.x0, b.y0 + 1, b.z0), (b.x1, (b.y0 + 3).min(b.y1), b.z1), air, air, false);
     for e in entrances {
         f.generate_box(canvas, (e.x0, e.y1 - 2, e.z0), (e.x1, e.y1, e.z1), air, air, false);
