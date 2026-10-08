@@ -111,18 +111,18 @@ column, piece y = -27 - anchor dy - y0 - 1, within 128 of the centre, depth 7; d
 ## Oracle (20261003-structures and -biomes, 2026-10-08)
 | kind | precision (non-air) | recall | what is left |
 |---|---|---|---|
-| village | 99.5% | 99.3% | 20 path cells a block low (terrain there, below) |
-| ancient city | 82.2% | 96.6% | sculk patches spread differently; later stages over the city |
+| village | 99.98% | 99.93% | one wall join |
+| ancient city | 82.2% | 96.6% | sculk patches (thread-local in BDS, see Gaps); later stages over the city |
 | trail ruins | 99.7% | 84.7% | |
 | trial chambers | 99.8% | 99.6% | (other starts 97.9-99.9%; geodes overwrite one in the mansion region) |
 | abandoned camp | 93.9 / 96.4 / 99.2% | 42.5 / 96.1 / 99.7% | podzol under a camp tree; forest rocks count as wanted |
 All 840 ruin-material cells of the trail ruin match, suspicious gravel included.
 
 ## Gaps
-- Village terrain (Shape, ~570 cells): BDS's beards fill noise caves near rigid pieces more than ours.
-  The clearest: north of the taiga meeting point (box x -992..-975, z 107..128, y0 77) BDS's terrain
-  stays at 76-77 over x -984..-973, z 101..107, where ours drops to 53-71; the paths on it follow.
-- Ancient city sculk patches: placed, but their sculk lands elsewhere than BDS's (not traced yet).
+- Ancient city sculk patches are a determinism floor: the patch's walk draws depend on vein faces BDS
+  picks with a thread-local generator, so the catalyst draw after it varies by run. Discriminator: the
+  city feature at (-1059,-50,1235) has a catalyst in the -run2 twin and none in the main run; 20 of 69
+  catalyst cells and 10286 of 36985 sculk-family cells in the region differ between the two BDS runs.
 - Pool alias random picks (trial chamber spawner kinds) are not drawn; blocks agree either way.
 
 ## Labels

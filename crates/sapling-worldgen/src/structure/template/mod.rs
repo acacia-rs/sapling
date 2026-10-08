@@ -32,8 +32,8 @@ pub const COLLIDES: u8 = 2;
 pub const WATERLOGGABLE: u8 = 4;
 
 /// A `TemplateStructurePiece`'s x/z box over all heights (141f79610): it spans size + 1 blocks,
-/// one more than the template on the side away from the origin. Height samples and the chunks
-/// that post-process the piece follow it.
+/// one more than the template on the side away from the origin (outposts; ocean ruins do not,
+/// docs/research/worldgen-bds-templates.md).
 pub fn piece_box((x, z): (i32, i32), rotation: Rotation, (sx, _, sz): (i32, i32, i32)) -> super::BoundingBox {
     let (dx, _, dz) = rotation.apply((sx, 0, sz));
     super::BoundingBox::new(x.min(x + dx), -64, z.min(z + dz), x.max(x + dx), 319, z.max(z + dz))

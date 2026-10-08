@@ -160,6 +160,10 @@ write water below y 63 and air above (no keep); wing design `nextIntUnbounded() 
 ## Terrain adaptation (src/structure/adjust)
 `_prepareHeights` (14822eb60) adjusts each block's density after the noodle caves and before the aquifer, from two
 separate systems: `d1 = f32(density + v2)`, then `density = d1 + legacy(d1)`.
+- A chunk with any entry (legacy beards, buries or shavers, v2 rigids or junctions; flag at stack +0x21d8,
+  set after 144ccf620/710/800 and 144cd4450) generates every cell row: the skip of all-negative rows above
+  the preliminary surface and sea level is off. Skipping there left a 20-block noise-cave pit beside the
+  taiga meeting point that BDS's beard filled (village region 800 -> 30 wrong, stronghold 5298 -> 4506).
 - **Legacy store** (`FeatureTerrainAdjustments` at WorldGenerator +0x268, per chunk; an entry is filed under every
   chunk its box +-12 meets, 144ccf020). Registered by the hardcoded jigsaw placers for each **rigid** piece
   (addPieces 141ee6a70, candidates 141ee7770, queued 141edde60/141ee5600) by the piece class's
