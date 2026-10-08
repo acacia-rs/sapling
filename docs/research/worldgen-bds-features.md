@@ -88,7 +88,7 @@ Tries move by `(r & m) - (r & m)` per axis, two raw MT outputs each; most draw z
 - Flowers (`LegacyFlowerFeature` 149e95670, table 1438ef3b0): nothing unless the position is air; one flower per
   call: swamp blue orchid; overworld `nextInt(3) == 0` dandelion else poppy; plains noise(x/200, z/200) < -0.8 gives
   a tulip `nextInt(4)` (red, orange, white, pink), else `nextInt(4) > 0` picks poppy, azure bluet, oxeye daisy,
-  cornflower by `nextInt(4)`, else dandelion. Forest and flower forest tables (noise x/48) not ported.
+  cornflower by `nextInt(4)`, else dandelion. Flower forest and meadow: see worldgen-bds-trees.md; the forest table is not ported.
 - Waterlogged plants keep water in the second layer; seagrass and kelp are not water material.
 
 ## Geodes, icebergs, freeze pass

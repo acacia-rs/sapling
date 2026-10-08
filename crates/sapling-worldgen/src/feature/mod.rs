@@ -22,6 +22,7 @@ mod liquid;
 mod lush;
 mod molang;
 mod ore;
+mod pale;
 mod place;
 mod plants;
 mod scatter;

@@ -16,19 +16,6 @@ use crate::terrain::MIN_Y;
 
 const DOUBLE_PLANTS: [(Block, Block); 3] = [(Block::Lilac, Block::LilacTop), (Block::RoseBush, Block::RoseBushTop), (Block::Peony, Block::PeonyTop)];
 const ROCK_GROUND: [Block; 4] = [Block::GrassBlock, Block::Stone, Block::Dirt, Block::CoarseDirt];
-/// `cardinal_direction` 0..4 (south, west, north, east) by `growth` 0..4.
-const LEAF_LITTER: [[Block; 4]; 4] = [
-    [Block::LeafLitter0South, Block::LeafLitter0West, Block::LeafLitter0North, Block::LeafLitter0East],
-    [Block::LeafLitter1South, Block::LeafLitter1West, Block::LeafLitter1North, Block::LeafLitter1East],
-    [Block::LeafLitter2South, Block::LeafLitter2West, Block::LeafLitter2North, Block::LeafLitter2East],
-    [Block::LeafLitter3South, Block::LeafLitter3West, Block::LeafLitter3North, Block::LeafLitter3East],
-];
-const PINK_PETALS: [[Block; 4]; 4] = [
-    [Block::PinkPetals0South, Block::PinkPetals0West, Block::PinkPetals0North, Block::PinkPetals0East],
-    [Block::PinkPetals1South, Block::PinkPetals1West, Block::PinkPetals1North, Block::PinkPetals1East],
-    [Block::PinkPetals2South, Block::PinkPetals2West, Block::PinkPetals2North, Block::PinkPetals2East],
-    [Block::PinkPetals3South, Block::PinkPetals3West, Block::PinkPetals3North, Block::PinkPetals3East],
-];
 
 impl LegacyTree {
     pub fn place(&self, ctx: &mut Ctx, at: [i32; 3]) -> Option<[i32; 3]> {
@@ -61,16 +48,14 @@ impl LegacyTree {
                 }
             }
             LegacyTree::HugeMushroom => return super::huge_mushroom::place(ctx.view, ctx.random, at).then_some(at),
-            LegacyTree::FlowerBed { petals } => {
+            LegacyTree::FlowerBed { bed } => {
                 let growth = ctx.random.next_int(4) as usize;
                 let facing = ctx.random.next_int(4) as usize;
                 let [x, y, z] = at;
                 let below = ctx.view.block(x, y - 1, z);
-                let (block, supported) = if petals {
-                    (PINK_PETALS[growth][facing], super::plants::is_soil(below))
-                } else {
-                    (LEAF_LITTER[growth][facing], below.blocks_motion())
-                };
+                // The bed's variants run growth-inner, facing-outer (south, west, north, east).
+                let block = Block::ALL[bed as usize + facing * 4 + growth];
+                let supported = if bed == Block::LeafLitter0South { below.blocks_motion() } else { super::plants::is_soil(below) };
                 let placed = ctx.view.block(x, y, z) == Block::Air && supported;
                 return (placed && ctx.view.set_block(x, y, z, block)).then_some(at);
             }

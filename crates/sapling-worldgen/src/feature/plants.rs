@@ -42,7 +42,15 @@ impl SingleBlock {
 pub fn is_soil(block: Block) -> bool {
     matches!(
         block,
-        Block::GrassBlock | Block::Dirt | Block::CoarseDirt | Block::Podzol | Block::Mycelium | Block::Mud | Block::DirtWithRoots | Block::MossBlock
+        Block::GrassBlock
+            | Block::Dirt
+            | Block::CoarseDirt
+            | Block::Podzol
+            | Block::Mycelium
+            | Block::Mud
+            | Block::DirtWithRoots
+            | Block::MossBlock
+            | Block::PaleMossBlock
     )
 }
 

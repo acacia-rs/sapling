@@ -16,15 +16,16 @@ fn main() {
     let chunk_seed = LargeFeatureSeed::new(seed as u32).chunk(cx.parse().unwrap(), cz.parse().unwrap());
     let hash = hashed_string(rule) as u32;
     let rule_seed = chunk_seed ^ hash.wrapping_add(0x9E37_79B9).wrapping_add(chunk_seed << 6).wrapping_add(chunk_seed >> 2);
-    let wanted: Vec<(u32, u32)> = wanted
+    // `b:v` wants nextInt(b) == v, `b<v` wants it below v, `b>v` at least v.
+    let wanted: Vec<(u32, u32, char)> = wanted
         .iter()
         .map(|w| {
-            let (b, v) = w.split_once(':').unwrap();
-            (b.parse().unwrap(), v.parse().unwrap())
+            let at = w.find([':', '<', '>']).expect("b:v, b<v or b>v");
+            (w[..at].parse().unwrap(), w[at + 1..].parse().unwrap(), w.as_bytes()[at] as char)
         })
         .collect();
     let mut mt = Mt19937::new(rule_seed);
-    let draws: Vec<u32> = (0..20000).map(|_| mt.next_u32()).collect();
+    let draws: Vec<u32> = (0..60000).map(|_| mt.next_u32()).collect();
     if let Ok(range) = std::env::var("DUMP") {
         let (a, b) = range.split_once("..").unwrap();
         for i in a.parse::<usize>().unwrap()..b.parse().unwrap() {
@@ -34,7 +35,12 @@ fn main() {
         return;
     }
     for i in 0..draws.len() - wanted.len() {
-        if wanted.iter().enumerate().all(|(k, &(bound, value))| draws[i + k] % bound == value) {
+        let ok = |k: usize, (bound, value, op): (u32, u32, char)| match op {
+            '<' => draws[i + k] % bound < value,
+            '>' => draws[i + k] % bound >= value,
+            _ => draws[i + k] % bound == value,
+        };
+        if wanted.iter().enumerate().all(|(k, &w)| ok(k, w)) {
             println!("match at draw {i}");
         }
     }

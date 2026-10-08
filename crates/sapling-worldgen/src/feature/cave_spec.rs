@@ -10,6 +10,9 @@ pub struct SnapToSurface {
     pub feature: usize,
     pub range: i32,
     pub ceiling: bool,
+    /// `allowed_surface_blocks`: when given, the surface must be one of them instead of sturdy
+    /// (`_findSnapPosInDirection` lambda 88, 143beb0d0).
+    pub allowed: &'static [Block],
 }
 
 /// `minecraft:vegetation_patch_feature` (143bc8310): a patch of `ground` on a floor or ceiling,

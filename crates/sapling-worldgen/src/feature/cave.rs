@@ -41,7 +41,9 @@ impl SnapToSurface {
             steps += 1;
             cur[1] += dy;
         }
-        if !sturdy(ctx.view.block(cur[0], cur[1], cur[2])) {
+        let surface = ctx.view.block(cur[0], cur[1], cur[2]);
+        let held = if self.allowed.is_empty() { sturdy(surface) } else { self.allowed.contains(&surface) };
+        if !held {
             return None;
         }
         let snapped = [at[0], at[1] + dy * steps, at[2]];

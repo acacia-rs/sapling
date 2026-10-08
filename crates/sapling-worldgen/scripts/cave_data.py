@@ -47,7 +47,8 @@ def rust(kind, body, index):
         if body.get('allow_air_placement', True) is False or body.get('allow_underwater_placement') or body.get('allow_non_air_placement'):
             raise NotPorted('snap_to_surface placement flags')
         return (f'Feature::SnapToSurface(SnapToSurface {{ feature: {index(body["feature_to_snap"])}, '
-                f'range: {int(body["vertical_search_range"])}, ceiling: {str(body.get("surface") == "ceiling").lower()} }})')
+                f'range: {int(body["vertical_search_range"])}, ceiling: {str(body.get("surface") == "ceiling").lower()}, '
+                f'allowed: {every_state(body.get("allowed_surface_blocks", []))} }})')
     if kind == 'minecraft:vegetation_patch_feature':
         num = lambda key: repr(float(body.get(key, 0.0)))  # noqa: E731
         return (f'Feature::VegetationPatch(VegetationPatch {{ replaceable: {every_state(body["replaceable_blocks"])}, '

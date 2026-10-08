@@ -51,6 +51,35 @@ features, foliage, rocks, flower beds and huge mushrooms come from bdsre.
   interval; mangrove trunks have no spawn check of their own (see the git log of each module for details).
 - Mangrove roots run prepareSpawn over roots plus trunk (1438f0d00); a root cell may hold may_grow_through, air,
   water, leaves or replaceable plants (1438f16f0); the canopy (1438ef7d0) keeps a leaf only when its write succeeds.
+- `BlockSource::setBlock` (1415f6ae0) reports whether the cell's block changed: a leaf over a leaf is not a success,
+  so the mangrove canopy's leaf list (shuffle, vines, propagules) holds each changed cell once. The canopy's
+  constant height and radius still draw `nextInt(1)` (inlined `min <= max`); propagules keep a box x±1, y-1±1, z±1
+  free (constructor 1438ef460: +0x1e4 depth 2, +0x1e8/+0x1ec radii 1). Roots written over a water source keep the
+  water (`MangroveRootsWet`).
+- `TreeHelper::isValidTreePosition` (inlined) passes the block list, air, `BlockProperty::Leaves` (+0x130 & 0x20),
+  Plant material the block lets be built over, and Water/Leaves material: seagrass counts as replaceable. A tree's
+  `may_replace` entries are also pushed into its +0x68 list (setter 149e81320), which is why prepareSpawn behaves
+  as may_grow_through plus may_replace.
+- Debugging desyncs: decorate a phase-0 chunk (no neighbour writes) with `examples/trace_source` (needs the
+  uncommitted trace hooks of the trees2 session: per-write lines with BDS's block), then `examples/draw_search`
+  (start a try at draw k, score its writes) and `examples/mt_find` (`b:v`, `b<v`, `b>v` runs) to pin BDS's draws.
+
+## Jungle, pale garden and flower features
+- `BambooFeature::place` (14827b960): on air over grass, podzol, dirt or rooted dirt; height `nextInt(((h >> 24) %
+  5) | 8) + 5`, h = `(x*0x2fc20f ^ z*0x6ebfff5)` then `h*(h*0x285b825 + 0xb)` in u32; three or more stalks get
+  large, large, small leaves on top. `PodzolAreaFeature::place` (149d5fdf0): disc of radius `nextInt(4)+1` turns dirt
+  and grass one below into podzol. `VinesFeature::place` (149d99a70): y 64 up to the highest block of the chunks
+  within 3 columns, a vine on the first supported side (support south, north, east, west), else the column moves
+  ±3 (two raw draws per axis) around the start.
+- Pale garden: the pale oak is the roofed tree; `pale_moss_vegetation_feature` (149d99710, weights in 149e815b0:
+  carpet 25, short grass 25, tall grass 10) and `PaleMossCarpetBlock::placeAt` (1465f64a0: per side a wall check,
+  with air above a float > 0.5 makes it tall and adds the upper half); `snap_to_surface` with
+  `allowed_surface_blocks` matches those blocks instead of a sturdy face (lambda 143beb0d0). Eyeblossoms
+  (149e82050) are closed at generation time.
+- `LegacyFlowerFeature` flower forest case (1438eec60): `(noise(x/48, z/48) + 1) / 2` clamped to 0.9999 indexes
+  Java's 11-flower list, no draws. `MeadowFlowerFeature` (149e9d1d0, list in 149e9d080): palette of 1..4 noise-picked
+  flowers (x*0.0005, shifted by `i*0x3936d`), one picked by the noise at x*0.1. Wildflowers are the flower-bed
+  feature (149e82710) with the wildflowers block.
 
 ## Oracle (2026-10-07, after merging worldgen/residue)
 Worlds `20261003-trees` (+`-run2`): 20 regions of tree biomes, test `blocks_match_bds_trees`. Logs and leaves are
@@ -58,10 +87,14 @@ Worlds `20261003-trees` (+`-run2`): 20 regions of tree biomes, test `blocks_matc
 windswept forest, forest and old growth spruce taiga (podzol 99.9); dark forest 96-97 (huge mushrooms 100), cherry
 95, flower forest 86-95, grove 99-100, jungle 66-84, bamboo jungle 36-66, mangrove 20-37.
 
+2026-10-08 (worldgen/trees2): mangrove swamp 96.94 -> 98.25% identical (every tree of a phase-0 chunk matches;
+later phases still cascade from neighbour seagrass/roots), tree regions 98.75 -> 98.87%, jungle and bamboo jungle
+interiors in sync (left-over errors sit on the region edge rows, from ring chunks, and on one terrain hole in
+bamboo jungle chunk 171,348 at (2740,100,5576)), pale garden 98.63 -> 99.40%, wildflowers 397/398.
+
 ## Left
-- Mangrove: after a chunk's first tree the draws drift (BDS's second tree starts 166 draws earlier); ~150 vanish if
-  leaf writes into the unsaved chunk north fail, ~16 look like skipped propagule rolls. Waterlogged roots/leaves.
-- Jungle: some trees (jungle bushes) grow where short grass or ferns sit in BDS but not here; the
-  `jungle_after_surface_vines` rule (vines_feature) and bamboo (`jungle_after_surface_bamboo`, podzol) are unported.
-- Pale garden: its rule needs the pale moss patch and hanging moss decorations (vegetation_patch, blocks).
-- Flower forest and meadow flower tables, wildflowers; HugeMushroomFeature's sinking branch (141603120).
+- Mangrove: phase-1..3 chunks still drift once a neighbour's writes differ (cascade); hanging propagules BDS later
+  breaks (block updates) are not modelled.
+- Pale garden: the 4th tree of chunk (-469,-285) fails in BDS but not here (its trunk volume reaches chunk -468).
+- Jungle edges (ring-chunk decoration), the forest case of the flower table, HugeMushroomFeature's sinking branch
+  (141603120), old growth pine taiga mega spruces (767 extra leaves).

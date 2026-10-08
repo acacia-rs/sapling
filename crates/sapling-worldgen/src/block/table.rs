@@ -77,6 +77,8 @@ macro_rules! with_solid_blocks {
             InfestedDeepslate => "infested_deepslate" "pillar_axis=y",
             MossyCobblestone => "mossy_cobblestone" "",
             MossBlock => "moss_block" "",
+            PaleMossBlock => "pale_moss_block" "",
+            CreakingHeart => "creaking_heart" "creaking_heart_state=dormant,natural=1,pillar_axis=y",
             MangroveRoots => "mangrove_roots" "",
             MuddyMangroveRoots => "muddy_mangrove_roots" "pillar_axis=y",
             BeeNest => "bee_nest" "direction=0,honey_level=0",
