@@ -8,6 +8,7 @@ use sapling_worldgen::{Block, ChunkBiomes, ChunkShape, MIN_Y};
 /// The runtime id of every [`Block`] the generator places, looked up once by name and states.
 pub(crate) struct BlockIds {
     ids: Vec<u32>,
+    templates: Vec<u32>,
     water: u32,
 }
 
@@ -18,11 +19,14 @@ impl BlockIds {
             let name = format!("minecraft:{}", block.name());
             registry.find(&name, block.states()).unwrap_or_else(|| panic!("the registry has no {name} [{}]", block.states()))
         };
-        Self { ids: Block::ALL.iter().map(|&block| id(block)).collect(), water: id(Block::Water) }
+        Self { ids: Block::ALL.iter().map(|&block| id(block)).collect(), templates: Block::templates().map(id).collect(), water: id(Block::Water) }
     }
 
     fn id(&self, block: Block) -> u32 {
-        self.ids[block as usize]
+        match block {
+            Block::Template(i) => self.templates[i as usize],
+            _ => self.ids[block.index()],
+        }
     }
 }
 

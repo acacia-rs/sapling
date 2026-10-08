@@ -39,7 +39,7 @@ impl Materials {
     /// A fence joined to the solid blocks beside it (east 1, north 2, south 4, west 8).
     pub fn fence(self, bits: u8) -> Block {
         let first = if self.dark { Block::DarkOakFence0 } else { Block::OakFence0 };
-        Block::ALL[first as usize + bits as usize]
+        Block::ALL[first.index() + bits as usize]
     }
 
     pub fn is_fence(self, block: Block) -> bool {

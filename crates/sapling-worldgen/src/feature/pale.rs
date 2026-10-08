@@ -54,10 +54,10 @@ fn carpet(view: &mut View, random: &mut Mt19937, [x, y, z]: [i32; 3]) {
         top[i] = usize::from(wall && tall);
     }
     let [n, s, w, e] = base;
-    view.set_block(x, y, z, Block::ALL[Block::PaleMossCarpet0 as usize + n * 27 + e * 9 + s * 3 + w]);
+    view.set_block(x, y, z, Block::ALL[Block::PaleMossCarpet0.index() + n * 27 + e * 9 + s * 3 + w]);
     if top.iter().any(|&t| t != 0) {
         let [n, s, w, e] = top;
-        view.set_block(x, y + 1, z, Block::ALL[Block::PaleMossCarpetTop0 as usize + n * 8 + e * 4 + s * 2 + w]);
+        view.set_block(x, y + 1, z, Block::ALL[Block::PaleMossCarpetTop0.index() + n * 8 + e * 4 + s * 2 + w]);
     }
 }
 

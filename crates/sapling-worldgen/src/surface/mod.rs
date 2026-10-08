@@ -12,6 +12,7 @@ mod overworld;
 mod spec;
 mod swamp;
 
+pub(crate) use biomes::surface_spec;
 pub use noise::SurfaceNoises;
 
 use crate::biome::ChunkBiomes;

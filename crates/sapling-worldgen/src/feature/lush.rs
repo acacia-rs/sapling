@@ -39,8 +39,8 @@ pub fn sturdy(block: Block) -> bool {
 
 /// The waterlogged twin of a dripleaf (the same states, saved with water).
 pub fn wet(block: Block) -> Block {
-    let offset = Block::BigDripleafSouthWet as usize - Block::BigDripleafSouth as usize;
-    if (Block::BigDripleafSouth..=Block::SmallDripleafTopEast).contains(&block) { Block::ALL[block as usize + offset] } else { block }
+    let offset = Block::BigDripleafSouthWet.index() - Block::BigDripleafSouth.index();
+    if (Block::BigDripleafSouth..=Block::SmallDripleafTopEast).contains(&block) { Block::ALL[block.index() + offset] } else { block }
 }
 
 impl Lush {
@@ -73,7 +73,7 @@ fn double_or_single(view: &mut View, [x, y, z]: [i32; 3], block: Block) -> bool 
     }
     let top = match block {
         Block::TallGrass => Some(Block::TallGrassTop),
-        b if (Block::SmallDripleafSouth..=Block::SmallDripleafEast).contains(&b) => Some(Block::ALL[b as usize + 4]),
+        b if (Block::SmallDripleafSouth..=Block::SmallDripleafEast).contains(&b) => Some(Block::ALL[b.index() + 4]),
         _ => None,
     };
     let in_water = |view: &View, y| view.block(x, y, z) == Block::Water;

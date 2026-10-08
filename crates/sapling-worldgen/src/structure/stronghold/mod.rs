@@ -13,7 +13,6 @@ use super::canvas::Canvas;
 use super::piece::Frame;
 use crate::mth;
 use crate::random::Mt19937;
-pub use common::{bars_at, is_bars};
 pub use layout::generate;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

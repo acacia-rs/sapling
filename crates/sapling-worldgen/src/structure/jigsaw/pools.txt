@@ -1,0 +1,814 @@
+# BDS hardcoded jigsaw data (village, ancient city); docs/research/worldgen-bds-jigsaw.md
+l list0 mob_spawner,bedrock,sculk_sensor,redstone_lamp,lit_redstone_lamp,reinforced_deepslate,redstone_wire,powered_repeater,unpowered_repeater,powered_comparator,unpowered_comparator
+l list1 deepslate,deepslate_bricks,deepslate_tiles,deepslate_brick_slab,deepslate_tile_slab,deepslate_brick_stairs,cobbled_deepslate,cracked_deepslate_bricks,cracked_deepslate_tiles,gray_wool
+r cobblestone_building_low_decay rb=cobblestone@0.1|*|mossy_cobblestone
+r cobblestone_building_decay rb=cobblestone@0.2|*|mossy_cobblestone
+r cobblestone_building_high_decay rb=cobblestone@0.7|*|mossy_cobblestone
+r abandoned_plains_decay rb=cobblestone@0.8|*|mossy_cobblestone;b=wooden_door|*|air;b=torch|*|air;rb=cobblestone@0.07|*|web;rb=mossy_cobblestone@0.07|*|web;rb=white_terracotta@0.07|*|web;rb=oak_log@0.05|*|web;rb=oak_planks@0.1|*|web;rb=oak_stairs@0.1|*|web;rb=stripped_oak_log@0.02|*|web;rb=glass_pane@0.5|*|web;rb=white_stained_glass_pane@0.2|*|web;b=glass_pane|*|brown_stained_glass_pane
+r abandoned_savanna_decay b=acacia_door|*|air;b=torch|*|air;rb=white_terracotta@0.05|*|web;rb=acacia_log@0.05|*|web;rb=oak_planks@0.2|*|web;rb=acacia_stairs@0.2|*|web;rb=oak_wood@0.05|*|web;rb=glass_pane@0.5|*|web;rb=white_stained_glass_pane@0.2|*|web;b=glass_pane|*|brown_stained_glass_pane
+r abandoned_snowy_decay b=spruce_door|*|air;b=torch|*|air;b=lantern|*|air;rb=oak_log@0.05|*|web;rb=oak_planks@0.2|*|web;rb=oak_slab@0.4|*|web;rb=oak_wood@0.05|*|web;rb=glass_pane@0.5|*|web;rb=white_stained_glass_pane@0.2|*|web;b=glass_pane|*|brown_stained_glass_pane
+r abandoned_taiga_decay rb=cobblestone@0.8|*|mossy_cobblestone;b=spruce_door|*|air;b=torch|*|air;rb=cobblestone@0.08|*|web;rb=oak_log@0.08|*|web;rb=glass_pane@0.5|*|web;rb=white_stained_glass_pane@0.2|*|web;b=glass_pane|*|brown_stained_glass_pane
+r abandoned_desert_decay b=jungle_door|*|air;b=torch|*|air;rb=sandstone@0.09|*|web;rb=hardened_clay@0.08|*|web;rb=smooth_sandstone_stairs@0.08|*|web;rb=smooth_sandstone_slab@0.08|*|web
+r plains_path_decay b=grass_block|b=water|oak_planks;b=grass_block|b=air|air;rb=grass_block@0.025|*|grass_block;b=grass_block|b=water|water;b=dirt|b=water|water
+r desert_path_decay b=grass_block|b=air|air
+r savanna_path_decay b=grass_block|b=water|acacia_planks;b=grass_block|b=air|air;rb=grass_block@0.05|*|grass_block;b=grass_block|b=water|water;b=dirt|b=water|water
+r snowy_path_decay b=grass_block|b=water|spruce_planks;b=grass_block|b=air|air;rb=grass_block@0.05|*|grass_block;b=grass_block|b=water|water;b=dirt|b=water|water
+r taiga_path_decay b=grass_block|b=water|spruce_planks;b=grass_block|b=air|air;rb=grass_block@0.05|*|grass_block;b=grass_block|b=water|water;b=dirt|b=water|water
+r wheat_wheat_farm b=carrots|*|wheat[growth=7]
+r wheat_potato_farm b=carrots|*|potatoes[growth=7]
+r wheat_beet_farm b=carrots|*|beetroot[growth=7]
+r potato_potato_farm b=wheat|*|potatoes[growth=7];b=carrots|*|potatoes[growth=7]
+r potato_beet_farm b=wheat|*|potatoes[growth=7];b=carrots|*|beetroot[growth=7]
+r potato_carrot_farm b=wheat|*|potatoes[growth=7]
+r beet_beet_farm b=wheat|*|beetroot[growth=7];b=carrots|*|beetroot[growth=7]
+r beet_carrot_farm b=wheat|*|beetroot[growth=7]
+r carrot_carrot_farm b=wheat|*|carrots[growth=7]
+r abandoned_wheat_wheat_farm b=carrots|*|wheat[growth=7];b=torch|*|air;b=lantern|*|air;rb=sandstone@0.08|*|web;rb=oak_log@0.05|*|web;rb=acacia_log@0.05|*|web;rb=oak_planks@0.1|*|web;rb=acacia_stairs@0.2|*|web;rb=oak_wood@0.05|*|web
+r abandoned_wheat_potato_farm b=carrots|*|potatoes[growth=7];b=torch|*|air;b=lantern|*|air;rb=sandstone@0.08|*|web;rb=oak_log@0.05|*|web;rb=acacia_log@0.05|*|web;rb=oak_planks@0.1|*|web;rb=acacia_stairs@0.2|*|web;rb=oak_wood@0.05|*|web
+r abandoned_wheat_beet_farm b=carrots|*|beetroot[growth=7];b=torch|*|air;b=lantern|*|air;rb=sandstone@0.08|*|web;rb=oak_log@0.05|*|web;rb=acacia_log@0.05|*|web;rb=oak_planks@0.2|*|web;rb=acacia_stairs@0.2|*|web;rb=oak_wood@0.05|*|web
+r abandoned_potato_potato_farm b=wheat|*|potatoes[growth=7];b=carrots|*|potatoes[growth=7];b=torch|*|air;b=lantern|*|air;rb=sandstone@0.08|*|web;rb=oak_log@0.05|*|web;rb=acacia_log@0.05|*|web;rb=oak_planks@0.2|*|web;rb=acacia_stairs@0.2|*|web;rb=oak_wood@0.05|*|web
+r abandoned_potato_beet_farm b=wheat|*|potatoes[growth=7];b=carrots|*|beetroot[growth=7];b=torch|*|air;b=lantern|*|air;rb=sandstone@0.08|*|web;rb=oak_log@0.05|*|web;rb=acacia_log@0.05|*|web;rb=oak_planks@0.2|*|web;rb=acacia_stairs@0.2|*|web;rb=oak_wood@0.05|*|web
+r abandoned_potato_carrot_farm b=wheat|*|potatoes[growth=7];b=torch|*|air;b=lantern|*|air;rb=sandstone@0.08|*|web;rb=oak_log@0.05|*|web;rb=acacia_log@0.05|*|web;rb=oak_planks@0.2|*|web;rb=acacia_stairs@0.2|*|web;rb=oak_wood@0.05|*|web
+r abandoned_beet_beet_farm b=wheat|*|beetroot[growth=7];b=carrots|*|beetroot[growth=7];b=torch|*|air;b=lantern|*|air;rb=sandstone@0.08|*|web;rb=oak_log@0.05|*|web;rb=acacia_log@0.05|*|web;rb=oak_planks@0.2|*|web;rb=acacia_stairs@0.2|*|web;rb=oak_wood@0.05|*|web
+r abandoned_beet_carrot_farm b=wheat|*|beetroot[growth=7];b=torch|*|air;b=lantern|*|air;rb=sandstone@0.08|*|web;rb=oak_log@0.05|*|web;rb=acacia_log@0.05|*|web;rb=oak_planks@0.2|*|web;rb=acacia_stairs@0.2|*|web;rb=oak_wood@0.05|*|web
+r abandoned_carrot_carrot_farm b=wheat|*|carrots[growth=7];b=torch|*|air;b=lantern|*|air;rb=sandstone@0.08|*|web;rb=oak_log@0.05|*|web;rb=acacia_log@0.05|*|web;rb=oak_planks@0.2|*|web;rb=acacia_stairs@0.2|*|web;rb=oak_wood@0.05|*|web
+r ancient_city_start_degradation rb=deepslate_bricks@0.3|nl=list0|cracked_deepslate_bricks;rb=deepslate_tiles@0.3|nl=list0|cracked_deepslate_tiles;rb=soul_lantern@0.05|nl=list0|air
+r ancient_city_generic_degradation rb=deepslate_bricks@0.3|nl=list0|cracked_deepslate_bricks;rb=deepslate_tiles@0.3|nl=list0|cracked_deepslate_tiles;rb=soul_lantern@0.05|nl=list0|air;lr=list1@0.05|nl=list0|air
+r ancient_city_walls_degradation rb=deepslate_bricks@0.3|nl=list0|cracked_deepslate_bricks;rb=deepslate_tiles@0.3|nl=list0|cracked_deepslate_tiles;rb=deepslate_tile_slab@0.3|nl=list0|air;rb=soul_lantern@0.05|nl=list0|air;lr=list1@0.05|nl=list0|air
+e plains_fountain_1 t village/plains/town_centers/plains_fountain_01 cobblestone_building_decay 0 3 -
+e plains_meeting_point_1 t village/plains/town_centers/plains_meeting_point_1 cobblestone_building_decay 0 3 -
+e plains_meeting_point_2 t village/plains/town_centers/plains_meeting_point_2 - 0 3 -
+e plains_meeting_point_3 t village/plains/town_centers/plains_meeting_point_3 cobblestone_building_high_decay 0 3 -
+e savanna_meeting_point_1 t village/savanna/town_centers/savanna_meeting_point_1 - 0 3 -
+e savanna_meeting_point_2 t village/savanna/town_centers/savanna_meeting_point_2 - 0 3 -
+e savanna_meeting_point_3 t village/savanna/town_centers/savanna_meeting_point_3 - 0 3 -
+e savanna_meeting_point_4 t village/savanna/town_centers/savanna_meeting_point_4 - 0 3 -
+e snowy_meeting_point_1 t village/snowy/town_centers/snowy_meeting_point_1 - 0 3 -
+e snowy_meeting_point_2 t village/snowy/town_centers/snowy_meeting_point_2 - 0 3 -
+e snowy_meeting_point_3 t village/snowy/town_centers/snowy_meeting_point_3 - 0 3 -
+e taiga_meeting_point_1 t village/taiga/town_centers/taiga_meeting_point_1 - 0 3 -
+e taiga_meeting_point_2 t village/taiga/town_centers/taiga_meeting_point_2 cobblestone_building_low_decay 0 3 -
+e desert_meeting_point_1 t village/desert/town_centers/desert_meeting_point_1 - 0 3 -
+e desert_meeting_point_2 t village/desert/town_centers/desert_meeting_point_2 - 0 3 -
+e desert_meeting_point_3 t village/desert/town_centers/desert_meeting_point_3 - 0 3 -
+e abandoned_plains_fountain_1 t village/plains/town_centers/plains_fountain_01 abandoned_plains_decay 0 3 plains_abandoned_targets
+e abandoned_plains_meeting_point_1 t village/plains/town_centers/plains_meeting_point_1 abandoned_plains_decay 0 3 plains_abandoned_targets
+e abandoned_plains_meeting_point_2 t village/plains/town_centers/plains_meeting_point_2 abandoned_plains_decay 0 3 plains_abandoned_targets
+e abandoned_plains_meeting_point_3 t village/plains/town_centers/plains_meeting_point_3 abandoned_plains_decay 0 3 plains_abandoned_targets
+e abandoned_savanna_meeting_point_1 t village/savanna/town_centers/savanna_meeting_point_1 abandoned_savanna_decay 0 3 savanna_abandoned_targets
+e abandoned_savanna_meeting_point_2 t village/savanna/town_centers/savanna_meeting_point_2 abandoned_savanna_decay 0 3 savanna_abandoned_targets
+e abandoned_savanna_meeting_point_3 t village/savanna/town_centers/savanna_meeting_point_3 abandoned_savanna_decay 0 3 savanna_abandoned_targets
+e abandoned_savanna_meeting_point_4 t village/savanna/town_centers/savanna_meeting_point_4 abandoned_savanna_decay 0 3 savanna_abandoned_targets
+e abandoned_snowy_meeting_point_1 t village/snowy/town_centers/snowy_meeting_point_1 abandoned_snowy_decay 0 3 snowy_abandoned_targets
+e abandoned_snowy_meeting_point_2 t village/snowy/town_centers/snowy_meeting_point_2 abandoned_snowy_decay 0 3 snowy_abandoned_targets
+e abandoned_snowy_meeting_point_3 t village/snowy/town_centers/snowy_meeting_point_3 abandoned_snowy_decay 0 3 snowy_abandoned_targets
+e abandoned_taiga_meeting_point_1 t village/taiga/town_centers/taiga_meeting_point_1 abandoned_taiga_decay 0 3 taiga_abandoned_targets
+e abandoned_taiga_meeting_point_2 t village/taiga/town_centers/taiga_meeting_point_2 abandoned_taiga_decay 0 3 taiga_abandoned_targets
+e abandoned_desert_meeting_point_1 t village/desert/town_centers/desert_meeting_point_1 abandoned_desert_decay 0 3 desert_abandoned_targets
+e abandoned_desert_meeting_point_2 t village/desert/town_centers/desert_meeting_point_2 abandoned_desert_decay 0 3 desert_abandoned_targets
+e abandoned_desert_meeting_point_3 t village/desert/town_centers/desert_meeting_point_3 abandoned_desert_decay 0 3 desert_abandoned_targets
+e plains_corner_1 t village/plains/streets/corner_01 plains_path_decay 1 3 -
+e plains_corner_2 t village/plains/streets/corner_02 plains_path_decay 1 3 -
+e plains_corner_3 t village/plains/streets/corner_03 plains_path_decay 1 3 -
+e plains_straight_1 t village/plains/streets/straight_01 plains_path_decay 1 3 -
+e plains_straight_2 t village/plains/streets/straight_02 plains_path_decay 1 3 -
+e plains_straight_3 t village/plains/streets/straight_03 plains_path_decay 1 3 -
+e plains_straight_4 t village/plains/streets/straight_04 plains_path_decay 1 3 -
+e plains_straight_5 t village/plains/streets/straight_05 plains_path_decay 1 3 -
+e plains_straight_6 t village/plains/streets/straight_06 plains_path_decay 1 3 -
+e plains_crossroad_1 t village/plains/streets/crossroad_01 plains_path_decay 1 3 -
+e plains_crossroad_2 t village/plains/streets/crossroad_02 plains_path_decay 1 3 -
+e plains_crossroad_3 t village/plains/streets/crossroad_03 plains_path_decay 1 3 -
+e plains_crossroad_4 t village/plains/streets/crossroad_04 plains_path_decay 1 3 -
+e plains_crossroad_5 t village/plains/streets/crossroad_05 plains_path_decay 1 3 -
+e plains_crossroad_6 t village/plains/streets/crossroad_06 plains_path_decay 1 3 -
+e plains_turn_1 t village/plains/streets/turn_01 plains_path_decay 1 3 -
+e savanna_corner_1 t village/savanna/streets/corner_01 savanna_path_decay 1 3 -
+e savanna_corner_3 t village/savanna/streets/corner_03 savanna_path_decay 1 3 -
+e savanna_straight_2 t village/savanna/streets/straight_02 savanna_path_decay 1 3 -
+e savanna_straight_4 t village/savanna/streets/straight_04 savanna_path_decay 1 3 -
+e savanna_straight_5 t village/savanna/streets/straight_05 savanna_path_decay 1 3 -
+e savanna_straight_6 t village/savanna/streets/straight_06 savanna_path_decay 1 3 -
+e savanna_straight_8 t village/savanna/streets/straight_08 savanna_path_decay 1 3 -
+e savanna_straight_9 t village/savanna/streets/straight_09 savanna_path_decay 1 3 -
+e savanna_straight_10 t village/savanna/streets/straight_10 savanna_path_decay 1 3 -
+e savanna_straight_11 t village/savanna/streets/straight_11 savanna_path_decay 1 3 -
+e savanna_crossroad_2 t village/savanna/streets/crossroad_02 savanna_path_decay 1 3 -
+e savanna_crossroad_3 t village/savanna/streets/crossroad_03 savanna_path_decay 1 3 -
+e savanna_crossroad_4 t village/savanna/streets/crossroad_04 savanna_path_decay 1 3 -
+e savanna_crossroad_5 t village/savanna/streets/crossroad_05 savanna_path_decay 1 3 -
+e savanna_crossroad_6 t village/savanna/streets/crossroad_06 savanna_path_decay 1 3 -
+e savanna_crossroad_7 t village/savanna/streets/crossroad_07 savanna_path_decay 1 3 -
+e savanna_split_1 t village/savanna/streets/split_01 savanna_path_decay 1 3 -
+e savanna_split_2 t village/savanna/streets/split_02 savanna_path_decay 1 3 -
+e savanna_turn_1 t village/savanna/streets/turn_01 savanna_path_decay 1 3 -
+e snowy_corner_1 t village/snowy/streets/corner_01 snowy_path_decay 1 3 -
+e snowy_corner_2 t village/snowy/streets/corner_02 snowy_path_decay 1 3 -
+e snowy_corner_3 t village/snowy/streets/corner_03 snowy_path_decay 1 3 -
+e snowy_square_1 t village/snowy/streets/square_01 snowy_path_decay 1 3 -
+e snowy_straight_1 t village/snowy/streets/straight_01 snowy_path_decay 1 3 -
+e snowy_straight_2 t village/snowy/streets/straight_02 snowy_path_decay 1 3 -
+e snowy_straight_3 t village/snowy/streets/straight_03 snowy_path_decay 1 3 -
+e snowy_straight_4 t village/snowy/streets/straight_04 snowy_path_decay 1 3 -
+e snowy_straight_6 t village/snowy/streets/straight_06 snowy_path_decay 1 3 -
+e snowy_straight_8 t village/snowy/streets/straight_08 snowy_path_decay 1 3 -
+e snowy_crossroad_2 t village/snowy/streets/crossroad_02 snowy_path_decay 1 3 -
+e snowy_crossroad_3 t village/snowy/streets/crossroad_03 snowy_path_decay 1 3 -
+e snowy_crossroad_4 t village/snowy/streets/crossroad_04 snowy_path_decay 1 3 -
+e snowy_crossroad_5 t village/snowy/streets/crossroad_05 snowy_path_decay 1 3 -
+e snowy_crossroad_6 t village/snowy/streets/crossroad_06 snowy_path_decay 1 3 -
+e snowy_turn_1 t village/snowy/streets/turn_01 snowy_path_decay 1 3 -
+e taiga_corner_1 t village/taiga/streets/corner_01 taiga_path_decay 1 3 -
+e taiga_corner_2 t village/taiga/streets/corner_02 taiga_path_decay 1 3 -
+e taiga_corner_3 t village/taiga/streets/corner_03 taiga_path_decay 1 3 -
+e taiga_straight_1 t village/taiga/streets/straight_01 taiga_path_decay 1 3 -
+e taiga_straight_2 t village/taiga/streets/straight_02 taiga_path_decay 1 3 -
+e taiga_straight_3 t village/taiga/streets/straight_03 taiga_path_decay 1 3 -
+e taiga_straight_4 t village/taiga/streets/straight_04 taiga_path_decay 1 3 -
+e taiga_straight_5 t village/taiga/streets/straight_05 taiga_path_decay 1 3 -
+e taiga_straight_6 t village/taiga/streets/straight_06 taiga_path_decay 1 3 -
+e taiga_crossroad_1 t village/taiga/streets/crossroad_01 taiga_path_decay 1 3 -
+e taiga_crossroad_2 t village/taiga/streets/crossroad_02 taiga_path_decay 1 3 -
+e taiga_crossroad_4 t village/taiga/streets/crossroad_04 taiga_path_decay 1 3 -
+e taiga_crossroad_5 t village/taiga/streets/crossroad_05 taiga_path_decay 1 3 -
+e taiga_crossroad_6 t village/taiga/streets/crossroad_06 taiga_path_decay 1 3 -
+e taiga_turn_1 t village/taiga/streets/turn_01 taiga_path_decay 1 3 -
+e desert_corner_1 t village/desert/streets/corner_01 desert_path_decay 1 3 -
+e desert_corner_2 t village/desert/streets/corner_02 desert_path_decay 1 3 -
+e desert_straight_1 t village/desert/streets/straight_01 desert_path_decay 1 3 -
+e desert_straight_2 t village/desert/streets/straight_02 desert_path_decay 1 3 -
+e desert_straight_3 t village/desert/streets/straight_03 desert_path_decay 1 3 -
+e desert_crossroad_1 t village/desert/streets/crossroad_01 desert_path_decay 1 3 -
+e desert_crossroad_2 t village/desert/streets/crossroad_02 desert_path_decay 1 3 -
+e desert_crossroad_3 t village/desert/streets/crossroad_03 desert_path_decay 1 3 -
+e desert_square_1 t village/desert/streets/square_01 desert_path_decay 1 3 -
+e desert_square_2 t village/desert/streets/square_02 desert_path_decay 1 3 -
+e desert_turn_1 t village/desert/streets/turn_01 desert_path_decay 1 3 -
+e abandoned_plains_corner_1 t village/plains/streets/corner_01 plains_path_decay 1 3 plains_abandoned_targets
+e abandoned_plains_corner_2 t village/plains/streets/corner_02 plains_path_decay 1 3 plains_abandoned_targets
+e abandoned_plains_corner_3 t village/plains/streets/corner_03 plains_path_decay 1 3 plains_abandoned_targets
+e abandoned_plains_straight_1 t village/plains/streets/straight_01 plains_path_decay 1 3 plains_abandoned_targets
+e abandoned_plains_straight_2 t village/plains/streets/straight_02 plains_path_decay 1 3 plains_abandoned_targets
+e abandoned_plains_straight_3 t village/plains/streets/straight_03 plains_path_decay 1 3 plains_abandoned_targets
+e abandoned_plains_straight_4 t village/plains/streets/straight_04 plains_path_decay 1 3 plains_abandoned_targets
+e abandoned_plains_straight_5 t village/plains/streets/straight_05 plains_path_decay 1 3 plains_abandoned_targets
+e abandoned_plains_straight_6 t village/plains/streets/straight_06 plains_path_decay 1 3 plains_abandoned_targets
+e abandoned_plains_crossroad_1 t village/plains/streets/crossroad_01 plains_path_decay 1 3 plains_abandoned_targets
+e abandoned_plains_crossroad_2 t village/plains/streets/crossroad_02 plains_path_decay 1 3 plains_abandoned_targets
+e abandoned_plains_crossroad_3 t village/plains/streets/crossroad_03 plains_path_decay 1 3 plains_abandoned_targets
+e abandoned_plains_crossroad_4 t village/plains/streets/crossroad_04 plains_path_decay 1 3 plains_abandoned_targets
+e abandoned_plains_crossroad_5 t village/plains/streets/crossroad_05 plains_path_decay 1 3 plains_abandoned_targets
+e abandoned_plains_crossroad_6 t village/plains/streets/crossroad_06 plains_path_decay 1 3 plains_abandoned_targets
+e abandoned_plains_turn_1 t village/plains/streets/turn_01 plains_path_decay 1 3 plains_abandoned_targets
+e abandoned_savanna_corner_1 t village/savanna/streets/corner_01 savanna_path_decay 1 3 savanna_abandoned_targets
+e abandoned_savanna_corner_3 t village/savanna/streets/corner_03 savanna_path_decay 1 3 savanna_abandoned_targets
+e abandoned_savanna_straight_2 t village/savanna/streets/straight_02 savanna_path_decay 1 3 savanna_abandoned_targets
+e abandoned_savanna_straight_4 t village/savanna/streets/straight_04 savanna_path_decay 1 3 savanna_abandoned_targets
+e abandoned_savanna_straight_5 t village/savanna/streets/straight_05 savanna_path_decay 1 3 savanna_abandoned_targets
+e abandoned_savanna_straight_6 t village/savanna/streets/straight_06 savanna_path_decay 1 3 savanna_abandoned_targets
+e abandoned_savanna_straight_8 t village/savanna/streets/straight_08 savanna_path_decay 1 3 savanna_abandoned_targets
+e abandoned_savanna_straight_9 t village/savanna/streets/straight_09 savanna_path_decay 1 3 savanna_abandoned_targets
+e abandoned_savanna_straight_10 t village/savanna/streets/straight_10 savanna_path_decay 1 3 savanna_abandoned_targets
+e abandoned_savanna_straight_11 t village/savanna/streets/straight_11 savanna_path_decay 1 3 savanna_abandoned_targets
+e abandoned_savanna_crossroad_2 t village/savanna/streets/crossroad_02 savanna_path_decay 1 3 savanna_abandoned_targets
+e abandoned_savanna_crossroad_3 t village/savanna/streets/crossroad_03 savanna_path_decay 1 3 savanna_abandoned_targets
+e abandoned_savanna_crossroad_4 t village/savanna/streets/crossroad_04 savanna_path_decay 1 3 savanna_abandoned_targets
+e abandoned_savanna_crossroad_5 t village/savanna/streets/crossroad_05 savanna_path_decay 1 3 savanna_abandoned_targets
+e abandoned_savanna_crossroad_6 t village/savanna/streets/crossroad_06 savanna_path_decay 1 3 savanna_abandoned_targets
+e abandoned_savanna_crossroad_7 t village/savanna/streets/crossroad_07 savanna_path_decay 1 3 savanna_abandoned_targets
+e abandoned_savanna_split_1 t village/savanna/streets/split_01 savanna_path_decay 1 3 savanna_abandoned_targets
+e abandoned_savanna_split_2 t village/savanna/streets/split_02 savanna_path_decay 1 3 savanna_abandoned_targets
+e abandoned_savanna_turn_1 t village/savanna/streets/turn_01 savanna_path_decay 1 3 savanna_abandoned_targets
+e abandoned_snowy_corner_1 t village/snowy/streets/corner_01 snowy_path_decay 1 3 snowy_abandoned_targets
+e abandoned_snowy_corner_2 t village/snowy/streets/corner_02 snowy_path_decay 1 3 snowy_abandoned_targets
+e abandoned_snowy_corner_3 t village/snowy/streets/corner_03 snowy_path_decay 1 3 snowy_abandoned_targets
+e abandoned_snowy_square_1 t village/snowy/streets/square_01 snowy_path_decay 1 3 snowy_abandoned_targets
+e abandoned_snowy_straight_1 t village/snowy/streets/straight_01 snowy_path_decay 1 3 snowy_abandoned_targets
+e abandoned_snowy_straight_2 t village/snowy/streets/straight_02 snowy_path_decay 1 3 snowy_abandoned_targets
+e abandoned_snowy_straight_3 t village/snowy/streets/straight_03 snowy_path_decay 1 3 snowy_abandoned_targets
+e abandoned_snowy_straight_4 t village/snowy/streets/straight_04 snowy_path_decay 1 3 snowy_abandoned_targets
+e abandoned_snowy_straight_6 t village/snowy/streets/straight_06 snowy_path_decay 1 3 snowy_abandoned_targets
+e abandoned_snowy_straight_8 t village/snowy/streets/straight_08 snowy_path_decay 1 3 snowy_abandoned_targets
+e abandoned_snowy_crossroad_2 t village/snowy/streets/crossroad_02 snowy_path_decay 1 3 snowy_abandoned_targets
+e abandoned_snowy_crossroad_3 t village/snowy/streets/crossroad_03 snowy_path_decay 1 3 snowy_abandoned_targets
+e abandoned_snowy_crossroad_4 t village/snowy/streets/crossroad_04 snowy_path_decay 1 3 snowy_abandoned_targets
+e abandoned_snowy_crossroad_5 t village/snowy/streets/crossroad_05 snowy_path_decay 1 3 snowy_abandoned_targets
+e abandoned_snowy_crossroad_6 t village/snowy/streets/crossroad_06 snowy_path_decay 1 3 snowy_abandoned_targets
+e abandoned_snowy_turn_1 t village/snowy/streets/turn_01 snowy_path_decay 1 3 snowy_abandoned_targets
+e abandoned_taiga_corner_1 t village/taiga/streets/corner_01 taiga_path_decay 1 3 taiga_abandoned_targets
+e abandoned_taiga_corner_2 t village/taiga/streets/corner_02 taiga_path_decay 1 3 taiga_abandoned_targets
+e abandoned_taiga_corner_3 t village/taiga/streets/corner_03 taiga_path_decay 1 3 taiga_abandoned_targets
+e abandoned_taiga_straight_1 t village/taiga/streets/straight_01 taiga_path_decay 1 3 taiga_abandoned_targets
+e abandoned_taiga_straight_2 t village/taiga/streets/straight_02 taiga_path_decay 1 3 taiga_abandoned_targets
+e abandoned_taiga_straight_3 t village/taiga/streets/straight_03 taiga_path_decay 1 3 taiga_abandoned_targets
+e abandoned_taiga_straight_4 t village/taiga/streets/straight_04 taiga_path_decay 1 3 taiga_abandoned_targets
+e abandoned_taiga_straight_5 t village/taiga/streets/straight_05 taiga_path_decay 1 3 taiga_abandoned_targets
+e abandoned_taiga_straight_6 t village/taiga/streets/straight_06 taiga_path_decay 1 3 taiga_abandoned_targets
+e abandoned_taiga_crossroad_1 t village/taiga/streets/crossroad_01 taiga_path_decay 1 3 taiga_abandoned_targets
+e abandoned_taiga_crossroad_2 t village/taiga/streets/crossroad_02 taiga_path_decay 1 3 taiga_abandoned_targets
+e abandoned_taiga_crossroad_4 t village/taiga/streets/crossroad_04 taiga_path_decay 1 3 taiga_abandoned_targets
+e abandoned_taiga_crossroad_5 t village/taiga/streets/crossroad_05 taiga_path_decay 1 3 taiga_abandoned_targets
+e abandoned_taiga_crossroad_6 t village/taiga/streets/crossroad_06 taiga_path_decay 1 3 taiga_abandoned_targets
+e abandoned_taiga_turn_1 t village/taiga/streets/turn_01 taiga_path_decay 1 3 taiga_abandoned_targets
+e abandoned_desert_corner_1 t village/desert/streets/corner_01 desert_path_decay 1 3 desert_abandoned_targets
+e abandoned_desert_corner_2 t village/desert/streets/corner_02 desert_path_decay 1 3 desert_abandoned_targets
+e abandoned_desert_straight_1 t village/desert/streets/straight_01 desert_path_decay 1 3 desert_abandoned_targets
+e abandoned_desert_straight_2 t village/desert/streets/straight_02 desert_path_decay 1 3 desert_abandoned_targets
+e abandoned_desert_straight_3 t village/desert/streets/straight_03 desert_path_decay 1 3 desert_abandoned_targets
+e abandoned_desert_crossroad_1 t village/desert/streets/crossroad_01 desert_path_decay 1 3 desert_abandoned_targets
+e abandoned_desert_crossroad_2 t village/desert/streets/crossroad_02 desert_path_decay 1 3 desert_abandoned_targets
+e abandoned_desert_crossroad_3 t village/desert/streets/crossroad_03 desert_path_decay 1 3 desert_abandoned_targets
+e abandoned_desert_square_1 t village/desert/streets/square_01 desert_path_decay 1 3 desert_abandoned_targets
+e abandoned_desert_square_2 t village/desert/streets/square_02 desert_path_decay 1 3 desert_abandoned_targets
+e abandoned_desert_turn_1 t village/desert/streets/turn_01 desert_path_decay 1 3 desert_abandoned_targets
+e plains_house_1 t village/plains/houses/plains_small_house_1 cobblestone_building_low_decay 0 3 -
+e plains_house_2 t village/plains/houses/plains_small_house_2 cobblestone_building_low_decay 0 3 -
+e plains_house_3 t village/plains/houses/plains_small_house_3 cobblestone_building_low_decay 0 3 -
+e plains_house_4 t village/plains/houses/plains_small_house_4 cobblestone_building_low_decay 0 3 -
+e plains_house_5 t village/plains/houses/plains_small_house_5 cobblestone_building_low_decay 0 3 -
+e plains_house_6 t village/plains/houses/plains_small_house_6 cobblestone_building_low_decay 0 3 -
+e plains_house_7 t village/plains/houses/plains_small_house_7 cobblestone_building_low_decay 0 3 -
+e plains_house_8 t village/plains/houses/plains_small_house_8 cobblestone_building_low_decay 0 3 -
+e plains_medium_house_1 t village/plains/houses/plains_medium_house_1 cobblestone_building_low_decay 0 3 -
+e plains_medium_house_2 t village/plains/houses/plains_medium_house_2 cobblestone_building_low_decay 0 3 -
+e plains_big_house_1 t village/plains/houses/plains_big_house_1 cobblestone_building_low_decay 0 3 -
+e plains_butcher_1 t village/plains/houses/plains_butcher_shop_1 cobblestone_building_low_decay 0 3 -
+e plains_butcher_2 t village/plains/houses/plains_butcher_shop_2 cobblestone_building_low_decay 0 3 -
+e plains_toolsmith_1 t village/plains/houses/plains_tool_smith_1 cobblestone_building_low_decay 0 3 -
+e plains_feltcher_1 t village/plains/houses/plains_fletcher_house_1 cobblestone_building_low_decay 0 3 -
+e plains_shepherds_1 t village/plains/houses/plains_shepherds_house_1 - 0 3 -
+e plains_armorer_1 t village/plains/houses/plains_armorer_house_1 cobblestone_building_low_decay 0 3 -
+e plains_fisher_1 t village/plains/houses/plains_fisher_cottage_1 cobblestone_building_low_decay 0 3 -
+e plains_tannery_1 t village/plains/houses/plains_tannery_1 cobblestone_building_low_decay 0 3 -
+e plains_cartographer_1 t village/plains/houses/plains_cartographer_1 cobblestone_building_low_decay 0 3 -
+e plains_library_1 t village/plains/houses/plains_library_1 cobblestone_building_low_decay 0 3 -
+e plains_library_2 t village/plains/houses/plains_library_2 cobblestone_building_low_decay 0 3 -
+e plains_mason_1 t village/plains/houses/plains_masons_house_1 cobblestone_building_low_decay 0 3 -
+e plains_weaponsmith_1 t village/plains/houses/plains_weaponsmith_1 cobblestone_building_low_decay 0 3 -
+e plains_temple_3 t village/plains/houses/plains_temple_3 cobblestone_building_low_decay 0 3 -
+e plains_temple_4 t village/plains/houses/plains_temple_4 cobblestone_building_low_decay 0 3 -
+e plains_stable_1 t village/plains/houses/plains_stable_1 cobblestone_building_low_decay 0 3 -
+e plains_stable_2 t village/plains/houses/plains_stable_2 - 0 3 -
+e plains_large_farm_1_ww t village/plains/houses/plains_large_farm_1 wheat_wheat_farm 0 3 -
+e plains_large_farm_1_wp t village/plains/houses/plains_large_farm_1 wheat_potato_farm 0 3 -
+e plains_large_farm_1_wb t village/plains/houses/plains_large_farm_1 wheat_beet_farm 0 3 -
+e plains_large_farm_1_wc t village/plains/houses/plains_large_farm_1 - 0 3 -
+e plains_large_farm_1_pp t village/plains/houses/plains_large_farm_1 potato_potato_farm 0 3 -
+e plains_large_farm_1_pb t village/plains/houses/plains_large_farm_1 potato_beet_farm 0 3 -
+e plains_large_farm_1_pc t village/plains/houses/plains_large_farm_1 potato_carrot_farm 0 3 -
+e plains_large_farm_1_bb t village/plains/houses/plains_large_farm_1 beet_beet_farm 0 3 -
+e plains_large_farm_1_bc t village/plains/houses/plains_large_farm_1 beet_carrot_farm 0 3 -
+e plains_large_farm_1_cc t village/plains/houses/plains_large_farm_1 carrot_carrot_farm 0 3 -
+e plains_small_farm_1_ww t village/plains/houses/plains_small_farm_1 wheat_wheat_farm 0 3 -
+e plains_small_farm_1_wp t village/plains/houses/plains_small_farm_1 wheat_potato_farm 0 3 -
+e plains_small_farm_1_wb t village/plains/houses/plains_small_farm_1 wheat_beet_farm 0 3 -
+e plains_small_farm_1_wc t village/plains/houses/plains_small_farm_1 - 0 3 -
+e plains_small_farm_1_pp t village/plains/houses/plains_small_farm_1 potato_potato_farm 0 3 -
+e plains_small_farm_1_pb t village/plains/houses/plains_small_farm_1 potato_beet_farm 0 3 -
+e plains_small_farm_1_pc t village/plains/houses/plains_small_farm_1 potato_carrot_farm 0 3 -
+e plains_small_farm_1_bb t village/plains/houses/plains_small_farm_1 beet_beet_farm 0 3 -
+e plains_small_farm_1_bc t village/plains/houses/plains_small_farm_1 beet_carrot_farm 0 3 -
+e plains_small_farm_1_cc t village/plains/houses/plains_small_farm_1 carrot_carrot_farm 0 3 -
+e plains_animal_pen_1 t village/plains/houses/plains_animal_pen_1 - 0 3 -
+e plains_animal_pen_2 t village/plains/houses/plains_animal_pen_2 - 0 3 -
+e plains_animal_pen_3 t village/plains/houses/plains_animal_pen_3 - 0 3 -
+e plains_acessory_1 t village/plains/houses/plains_acessory_1 - 0 3 -
+e plains_meeting_point_4 t village/plains/houses/plains_meeting_point_4 cobblestone_building_low_decay 0 3 -
+e plains_meeting_point_5 t village/plains/houses/plains_meeting_point_5 - 0 3 -
+e savanna_small_house_1 t village/savanna/houses/savanna_small_house_1 - 0 3 -
+e savanna_small_house_2 t village/savanna/houses/savanna_small_house_2 - 0 3 -
+e savanna_small_house_3 t village/savanna/houses/savanna_small_house_3 - 0 3 -
+e savanna_small_house_4 t village/savanna/houses/savanna_small_house_4 - 0 3 -
+e savanna_small_house_5 t village/savanna/houses/savanna_small_house_5 - 0 3 -
+e savanna_small_house_6 t village/savanna/houses/savanna_small_house_6 - 0 3 -
+e savanna_small_house_7 t village/savanna/houses/savanna_small_house_7 - 0 3 -
+e savanna_small_house_8 t village/savanna/houses/savanna_small_house_8 - 0 3 -
+e savanna_medium_house_1 t village/savanna/houses/savanna_medium_house_1 - 0 3 -
+e savanna_medium_house_2 t village/savanna/houses/savanna_medium_house_2 - 0 3 -
+e savanna_butchers_1 t village/savanna/houses/savanna_butchers_shop_1 - 0 3 -
+e savanna_butchers_2 t village/savanna/houses/savanna_butchers_shop_2 - 0 3 -
+e savanna_toolsmith_1 t village/savanna/houses/savanna_tool_smith_1 - 0 3 -
+e savanna_fletcher_1 t village/savanna/houses/savanna_fletcher_house_1 - 0 3 -
+e savanna_shepherd_1 t village/savanna/houses/savanna_shepherd_1 - 0 3 -
+e savanna_armorer_1 t village/savanna/houses/savanna_armorer_1 - 0 3 -
+e savanna_fisher_1 t village/savanna/houses/savanna_fisher_cottage_1 - 0 3 -
+e savanna_tannery_1 t village/savanna/houses/savanna_tannery_1 - 0 3 -
+e savanna_cartographer_1 t village/savanna/houses/savanna_cartographer_1 - 0 3 -
+e savanna_library_1 t village/savanna/houses/savanna_library_1 - 0 3 -
+e savanna_mason_1 t village/savanna/houses/savanna_mason_1 - 0 3 -
+e savanna_weaponsmith_1 t village/savanna/houses/savanna_weaponsmith_1 - 0 3 -
+e savanna_weaponsmith_2 t village/savanna/houses/savanna_weaponsmith_2 - 0 3 -
+e savanna_temple_1 t village/savanna/houses/savanna_temple_1 - 0 3 -
+e savanna_temple_2 t village/savanna/houses/savanna_temple_2 - 0 3 -
+e savanna_large_farm_1_ww t village/savanna/houses/savanna_large_farm_1 wheat_wheat_farm 0 3 -
+e savanna_large_farm_1_wp t village/savanna/houses/savanna_large_farm_1 wheat_potato_farm 0 3 -
+e savanna_large_farm_1_wb t village/savanna/houses/savanna_large_farm_1 wheat_beet_farm 0 3 -
+e savanna_large_farm_1_wc t village/savanna/houses/savanna_large_farm_1 - 0 3 -
+e savanna_large_farm_1_pp t village/savanna/houses/savanna_large_farm_1 potato_potato_farm 0 3 -
+e savanna_large_farm_1_pb t village/savanna/houses/savanna_large_farm_1 potato_beet_farm 0 3 -
+e savanna_large_farm_1_pc t village/savanna/houses/savanna_large_farm_1 potato_carrot_farm 0 3 -
+e savanna_large_farm_1_bb t village/savanna/houses/savanna_large_farm_1 beet_beet_farm 0 3 -
+e savanna_large_farm_1_bc t village/savanna/houses/savanna_large_farm_1 beet_carrot_farm 0 3 -
+e savanna_large_farm_1_cc t village/savanna/houses/savanna_large_farm_1 carrot_carrot_farm 0 3 -
+e savanna_large_farm_2_wc t village/savanna/houses/savanna_large_farm_2 - 0 3 -
+e savanna_large_farm_2_pp t village/savanna/houses/savanna_large_farm_2 potato_potato_farm 0 3 -
+e savanna_large_farm_2_bb t village/savanna/houses/savanna_large_farm_2 beet_beet_farm 0 3 -
+e savanna_large_farm_2_cc t village/savanna/houses/savanna_large_farm_2 carrot_carrot_farm 0 3 -
+e savanna_small_farm_wc t village/savanna/houses/savanna_small_farm - 0 3 -
+e savanna_small_farm_pp t village/savanna/houses/savanna_small_farm potato_potato_farm 0 3 -
+e savanna_small_farm_bb t village/savanna/houses/savanna_small_farm beet_beet_farm 0 3 -
+e savanna_small_farm_cc t village/savanna/houses/savanna_small_farm carrot_carrot_farm 0 3 -
+e savanna_animal_pen_1 t village/savanna/houses/savanna_animal_pen_1 - 0 3 -
+e savanna_animal_pen_2 t village/savanna/houses/savanna_animal_pen_2 - 0 3 -
+e savanna_animal_pen_3 t village/savanna/houses/savanna_animal_pen_3 - 0 3 -
+e snowy_small_house_1 t village/snowy/houses/snowy_small_house_1 - 0 3 -
+e snowy_small_house_2 t village/snowy/houses/snowy_small_house_2 - 0 3 -
+e snowy_small_house_3 t village/snowy/houses/snowy_small_house_3 - 0 3 -
+e snowy_small_house_4 t village/snowy/houses/snowy_small_house_4 - 0 3 -
+e snowy_small_house_5 t village/snowy/houses/snowy_small_house_5 - 0 3 -
+e snowy_small_house_6 t village/snowy/houses/snowy_small_house_6 - 0 3 -
+e snowy_small_house_7 t village/snowy/houses/snowy_small_house_7 - 0 3 -
+e snowy_small_house_8 t village/snowy/houses/snowy_small_house_8 - 0 3 -
+e snowy_medium_house_1 t village/snowy/houses/snowy_medium_house_1 - 0 3 -
+e snowy_medium_house_2 t village/snowy/houses/snowy_medium_house_2 - 0 3 -
+e snowy_medium_house_3 t village/snowy/houses/snowy_medium_house_3 - 0 3 -
+e snowy_butchers_1 t village/snowy/houses/snowy_butchers_shop_1 - 0 3 -
+e snowy_butchers_2 t village/snowy/houses/snowy_butchers_shop_2 - 0 3 -
+e snowy_toolsmith_1 t village/snowy/houses/snowy_tool_smith_1 - 0 3 -
+e snowy_fletcher_1 t village/snowy/houses/snowy_fletcher_house_1 - 0 3 -
+e snowy_shepherds_1 t village/snowy/houses/snowy_shepherds_house_1 - 0 3 -
+e snowy_armorer_1 t village/snowy/houses/snowy_armorer_house_1 - 0 3 -
+e snowy_armorer_2 t village/snowy/houses/snowy_armorer_house_2 - 0 3 -
+e snowy_fisher_1 t village/snowy/houses/snowy_fisher_cottage - 0 3 -
+e snowy_tannery_1 t village/snowy/houses/snowy_tannery_1 - 0 3 -
+e snowy_cartographer_1 t village/snowy/houses/snowy_cartographer_house_1 - 0 3 -
+e snowy_library_1 t village/snowy/houses/snowy_library_1 - 0 3 -
+e snowy_masons_1 t village/snowy/houses/snowy_masons_house_1 - 0 3 -
+e snowy_masons_2 t village/snowy/houses/snowy_masons_house_2 - 0 3 -
+e snowy_weaponsmith_1 t village/snowy/houses/snowy_weapon_smith_1 - 0 3 -
+e snowy_temple_1 t village/snowy/houses/snowy_temple_1 - 0 3 -
+e snowy_farm_1_wc t village/snowy/houses/snowy_farm_1 - 0 3 -
+e snowy_farm_1_pp t village/snowy/houses/snowy_farm_1 potato_potato_farm 0 3 -
+e snowy_farm_1_bb t village/snowy/houses/snowy_farm_1 beet_beet_farm 0 3 -
+e snowy_farm_1_cc t village/snowy/houses/snowy_farm_1 carrot_carrot_farm 0 3 -
+e snowy_farm_2_wc t village/snowy/houses/snowy_farm_2 - 0 3 -
+e snowy_farm_2_pp t village/snowy/houses/snowy_farm_2 potato_potato_farm 0 3 -
+e snowy_farm_2_bb t village/snowy/houses/snowy_farm_2 beet_beet_farm 0 3 -
+e snowy_farm_2_cc t village/snowy/houses/snowy_farm_2 carrot_carrot_farm 0 3 -
+e snowy_animal_pen_1 t village/snowy/houses/snowy_animal_pen_1 - 0 3 -
+e snowy_animal_pen_2 t village/snowy/houses/snowy_animal_pen_2 - 0 3 -
+e taiga_small_house_1 t village/taiga/houses/taiga_small_house_1 cobblestone_building_low_decay 0 3 -
+e taiga_small_house_2 t village/taiga/houses/taiga_small_house_2 cobblestone_building_low_decay 0 3 -
+e taiga_small_house_3 t village/taiga/houses/taiga_small_house_3 cobblestone_building_low_decay 0 3 -
+e taiga_small_house_4 t village/taiga/houses/taiga_small_house_4 cobblestone_building_low_decay 0 3 -
+e taiga_small_house_5 t village/taiga/houses/taiga_small_house_5 cobblestone_building_low_decay 0 3 -
+e taiga_medium_house_1 t village/taiga/houses/taiga_medium_house_1 cobblestone_building_low_decay 0 3 -
+e taiga_medium_house_2 t village/taiga/houses/taiga_medium_house_2 cobblestone_building_low_decay 0 3 -
+e taiga_medium_house_3 t village/taiga/houses/taiga_medium_house_3 cobblestone_building_low_decay 0 3 -
+e taiga_medium_house_4 t village/taiga/houses/taiga_medium_house_4 cobblestone_building_low_decay 0 3 -
+e taiga_butcher_1 t village/taiga/houses/taiga_butcher_shop_1 cobblestone_building_low_decay 0 3 -
+e taiga_toolsmith_1 t village/taiga/houses/taiga_tool_smith_1 cobblestone_building_low_decay 0 3 -
+e taiga_fletcher_1 t village/taiga/houses/taiga_fletcher_house_1 cobblestone_building_low_decay 0 3 -
+e taiga_shepherds_1 t village/taiga/houses/taiga_shepherds_house_1 cobblestone_building_low_decay 0 3 -
+e taiga_armorer_1 t village/taiga/houses/taiga_armorer_house_1 cobblestone_building_low_decay 0 3 -
+e taiga_armorer_2 t village/taiga/houses/taiga_armorer_house_2 cobblestone_building_low_decay 0 3 -
+e taiga_fisher_1 t village/taiga/houses/taiga_fisher_cottage_1 cobblestone_building_low_decay 0 3 -
+e taiga_tannery_1 t village/taiga/houses/taiga_tannery_1 cobblestone_building_low_decay 0 3 -
+e taiga_cartographer_1 t village/taiga/houses/taiga_cartographer_house_1 cobblestone_building_low_decay 0 3 -
+e taiga_library_1 t village/taiga/houses/taiga_library_1 cobblestone_building_low_decay 0 3 -
+e taiga_masons_1 t village/taiga/houses/taiga_masons_house_1 cobblestone_building_low_decay 0 3 -
+e taiga_weaponsmith_1 t village/taiga/houses/taiga_weaponsmith_1 cobblestone_building_low_decay 0 3 -
+e taiga_weaponsmith_2 t village/taiga/houses/taiga_weaponsmith_2 cobblestone_building_low_decay 0 3 -
+e taiga_temple_1 t village/taiga/houses/taiga_temple_1 cobblestone_building_low_decay 0 3 -
+e taiga_large_farm_1_wc t village/taiga/houses/taiga_large_farm_1 - 0 3 -
+e taiga_large_farm_1_pp t village/taiga/houses/taiga_large_farm_1 potato_potato_farm 0 3 -
+e taiga_large_farm_1_bb t village/taiga/houses/taiga_large_farm_1 beet_beet_farm 0 3 -
+e taiga_large_farm_1_cc t village/taiga/houses/taiga_large_farm_1 carrot_carrot_farm 0 3 -
+e taiga_large_farm_2_wc t village/taiga/houses/taiga_large_farm_2 - 0 3 -
+e taiga_large_farm_2_pp t village/taiga/houses/taiga_large_farm_2 potato_potato_farm 0 3 -
+e taiga_large_farm_2_bb t village/taiga/houses/taiga_large_farm_2 beet_beet_farm 0 3 -
+e taiga_large_farm_2_cc t village/taiga/houses/taiga_large_farm_2 carrot_carrot_farm 0 3 -
+e taiga_small_farm_1 t village/taiga/houses/taiga_small_farm_1 cobblestone_building_low_decay 0 3 -
+e taiga_animal_pen_1 t village/taiga/houses/taiga_animal_pen_1 - 0 3 -
+e desert_small_house_1 t village/desert/houses/desert_small_house_1 - 0 3 -
+e desert_small_house_2 t village/desert/houses/desert_small_house_2 - 0 3 -
+e desert_small_house_3 t village/desert/houses/desert_small_house_3 - 0 3 -
+e desert_small_house_4 t village/desert/houses/desert_small_house_4 - 0 3 -
+e desert_small_house_5 t village/desert/houses/desert_small_house_5 - 0 3 -
+e desert_small_house_6 t village/desert/houses/desert_small_house_6 - 0 3 -
+e desert_small_house_7 t village/desert/houses/desert_small_house_7 - 0 3 -
+e desert_small_house_8 t village/desert/houses/desert_small_house_8 - 0 3 -
+e desert_medium_house_1 t village/desert/houses/desert_medium_house_1 - 0 3 -
+e desert_medium_house_2 t village/desert/houses/desert_medium_house_2 - 0 3 -
+e desert_butcher_1 t village/desert/houses/desert_butcher_shop_1 - 0 3 -
+e desert_toolsmith_1 t village/desert/houses/desert_tool_smith_1 - 0 3 -
+e desert_fletcher_1 t village/desert/houses/desert_fletcher_house_1 - 0 3 -
+e desert_shepherd_1 t village/desert/houses/desert_shepherd_house_1 - 0 3 -
+e desert_armorer_1 t village/desert/houses/desert_armorer_1 - 0 3 -
+e desert_fisher_1 t village/desert/houses/desert_fisher_1 - 0 3 -
+e desert_tannery_1 t village/desert/houses/desert_tannery_1 - 0 3 -
+e desert_cartographer_1 t village/desert/houses/desert_cartographer_house_1 - 0 3 -
+e desert_library_1 t village/desert/houses/desert_library_1 - 0 3 -
+e desert_mason_1 t village/desert/houses/desert_mason_1 - 0 3 -
+e desert_weaponsmith_1 t village/desert/houses/desert_weaponsmith_1 - 0 3 -
+e desert_temple_1 t village/desert/houses/desert_temple_1 - 0 3 -
+e desert_temple_2 t village/desert/houses/desert_temple_2 - 0 3 -
+e desert_farm_1_wc t village/desert/houses/desert_farm_1 - 0 3 -
+e desert_farm_1_pp t village/desert/houses/desert_farm_1 potato_potato_farm 0 3 -
+e desert_farm_1_bb t village/desert/houses/desert_farm_1 beet_beet_farm 0 3 -
+e desert_farm_1_cc t village/desert/houses/desert_farm_1 carrot_carrot_farm 0 3 -
+e desert_farm_2_wc t village/desert/houses/desert_farm_2 - 0 3 -
+e desert_farm_2_pp t village/desert/houses/desert_farm_2 potato_potato_farm 0 3 -
+e desert_farm_2_bb t village/desert/houses/desert_farm_2 beet_beet_farm 0 3 -
+e desert_farm_2_cc t village/desert/houses/desert_farm_2 carrot_carrot_farm 0 3 -
+e desert_large_farm_1_wc t village/desert/houses/desert_large_farm_1 - 0 3 -
+e desert_large_farm_1_pp t village/desert/houses/desert_large_farm_1 potato_potato_farm 0 3 -
+e desert_large_farm_1_bb t village/desert/houses/desert_large_farm_1 beet_beet_farm 0 3 -
+e desert_large_farm_1_cc t village/desert/houses/desert_large_farm_1 carrot_carrot_farm 0 3 -
+e desert_animal_pen_1 t village/desert/houses/desert_animal_pen_1 - 0 3 -
+e desert_animal_pen_2 t village/desert/houses/desert_animal_pen_2 - 0 3 -
+e abandoned_plains_house_1 t village/plains/houses/plains_small_house_1 abandoned_plains_decay 0 3 plains_abandoned_targets
+e abandoned_plains_house_2 t village/plains/houses/plains_small_house_2 abandoned_plains_decay 0 3 plains_abandoned_targets
+e abandoned_plains_house_3 t village/plains/houses/plains_small_house_3 abandoned_plains_decay 0 3 plains_abandoned_targets
+e abandoned_plains_house_4 t village/plains/houses/plains_small_house_4 abandoned_plains_decay 0 3 plains_abandoned_targets
+e abandoned_plains_house_5 t village/plains/houses/plains_small_house_5 abandoned_plains_decay 0 3 plains_abandoned_targets
+e abandoned_plains_house_6 t village/plains/houses/plains_small_house_6 abandoned_plains_decay 0 3 plains_abandoned_targets
+e abandoned_plains_house_7 t village/plains/houses/plains_small_house_7 abandoned_plains_decay 0 3 plains_abandoned_targets
+e abandoned_plains_house_8 t village/plains/houses/plains_small_house_8 abandoned_plains_decay 0 3 plains_abandoned_targets
+e abandoned_plains_medium_house_1 t village/plains/houses/plains_medium_house_1 abandoned_plains_decay 0 3 plains_abandoned_targets
+e abandoned_plains_medium_house_2 t village/plains/houses/plains_medium_house_2 abandoned_plains_decay 0 3 plains_abandoned_targets
+e abandoned_plains_big_house_1 t village/plains/houses/plains_big_house_1 abandoned_plains_decay 0 3 plains_abandoned_targets
+e abandoned_plains_butcher_1 t village/plains/houses/plains_butcher_shop_1 abandoned_plains_decay 0 3 plains_abandoned_targets
+e abandoned_plains_butcher_2 t village/plains/houses/plains_butcher_shop_2 abandoned_plains_decay 0 3 plains_abandoned_targets
+e abandoned_plains_toolsmith_1 t village/plains/houses/plains_tool_smith_1 abandoned_plains_decay 0 3 plains_abandoned_targets
+e abandoned_plains_feltcher_1 t village/plains/houses/plains_fletcher_house_1 abandoned_plains_decay 0 3 plains_abandoned_targets
+e abandoned_plains_shepherds_1 t village/plains/houses/plains_shepherds_house_1 abandoned_plains_decay 0 3 plains_abandoned_targets
+e abandoned_plains_armorer_1 t village/plains/houses/plains_armorer_house_1 abandoned_plains_decay 0 3 plains_abandoned_targets
+e abandoned_plains_fisher_1 t village/plains/houses/plains_fisher_cottage_1 abandoned_plains_decay 0 3 plains_abandoned_targets
+e abandoned_plains_tannery_1 t village/plains/houses/plains_tannery_1 abandoned_plains_decay 0 3 plains_abandoned_targets
+e abandoned_plains_cartographer_1 t village/plains/houses/plains_cartographer_1 abandoned_plains_decay 0 3 plains_abandoned_targets
+e abandoned_plains_library_1 t village/plains/houses/plains_library_1 abandoned_plains_decay 0 3 plains_abandoned_targets
+e abandoned_plains_library_2 t village/plains/houses/plains_library_2 abandoned_plains_decay 0 3 plains_abandoned_targets
+e abandoned_plains_mason_1 t village/plains/houses/plains_masons_house_1 abandoned_plains_decay 0 3 plains_abandoned_targets
+e abandoned_plains_weaponsmith_1 t village/plains/houses/plains_weaponsmith_1 abandoned_plains_decay 0 3 plains_abandoned_targets
+e abandoned_plains_temple_3 t village/plains/houses/plains_temple_3 abandoned_plains_decay 0 3 plains_abandoned_targets
+e abandoned_plains_temple_4 t village/plains/houses/plains_temple_4 abandoned_plains_decay 0 3 plains_abandoned_targets
+e abandoned_plains_stable_1 t village/plains/houses/plains_stable_1 abandoned_plains_decay 0 3 plains_abandoned_targets
+e abandoned_plains_stable_2 t village/plains/houses/plains_stable_2 abandoned_plains_decay 0 3 plains_abandoned_targets
+e abandoned_plains_large_farm_1_ww t village/plains/houses/plains_large_farm_1 abandoned_wheat_wheat_farm 0 3 plains_abandoned_targets
+e abandoned_plains_large_farm_1_wp t village/plains/houses/plains_large_farm_1 abandoned_wheat_potato_farm 0 3 plains_abandoned_targets
+e abandoned_plains_large_farm_1_wb t village/plains/houses/plains_large_farm_1 abandoned_wheat_beet_farm 0 3 plains_abandoned_targets
+e abandoned_plains_large_farm_1_wc t village/plains/houses/plains_large_farm_1 abandoned_plains_decay 0 3 plains_abandoned_targets
+e abandoned_plains_large_farm_1_pp t village/plains/houses/plains_large_farm_1 abandoned_potato_potato_farm 0 3 plains_abandoned_targets
+e abandoned_plains_large_farm_1_pb t village/plains/houses/plains_large_farm_1 abandoned_potato_beet_farm 0 3 plains_abandoned_targets
+e abandoned_plains_large_farm_1_pc t village/plains/houses/plains_large_farm_1 abandoned_potato_carrot_farm 0 3 plains_abandoned_targets
+e abandoned_plains_large_farm_1_bb t village/plains/houses/plains_large_farm_1 abandoned_beet_beet_farm 0 3 plains_abandoned_targets
+e abandoned_plains_large_farm_1_bc t village/plains/houses/plains_large_farm_1 abandoned_beet_carrot_farm 0 3 plains_abandoned_targets
+e abandoned_plains_large_farm_1_cc t village/plains/houses/plains_large_farm_1 abandoned_carrot_carrot_farm 0 3 plains_abandoned_targets
+e abandoned_plains_small_farm_1_ww t village/plains/houses/plains_small_farm_1 abandoned_wheat_wheat_farm 0 3 plains_abandoned_targets
+e abandoned_plains_small_farm_1_wp t village/plains/houses/plains_small_farm_1 abandoned_wheat_potato_farm 0 3 plains_abandoned_targets
+e abandoned_plains_small_farm_1_wb t village/plains/houses/plains_small_farm_1 abandoned_wheat_beet_farm 0 3 plains_abandoned_targets
+e abandoned_plains_small_farm_1_wc t village/plains/houses/plains_small_farm_1 abandoned_plains_decay 0 3 plains_abandoned_targets
+e abandoned_plains_small_farm_1_pp t village/plains/houses/plains_small_farm_1 abandoned_potato_potato_farm 0 3 plains_abandoned_targets
+e abandoned_plains_small_farm_1_pb t village/plains/houses/plains_small_farm_1 abandoned_potato_beet_farm 0 3 plains_abandoned_targets
+e abandoned_plains_small_farm_1_pc t village/plains/houses/plains_small_farm_1 abandoned_potato_carrot_farm 0 3 plains_abandoned_targets
+e abandoned_plains_small_farm_1_bb t village/plains/houses/plains_small_farm_1 abandoned_beet_beet_farm 0 3 plains_abandoned_targets
+e abandoned_plains_small_farm_1_bc t village/plains/houses/plains_small_farm_1 abandoned_beet_carrot_farm 0 3 plains_abandoned_targets
+e abandoned_plains_small_farm_1_cc t village/plains/houses/plains_small_farm_1 abandoned_carrot_carrot_farm 0 3 plains_abandoned_targets
+e abandoned_plains_animal_pen_1 t village/plains/houses/plains_animal_pen_1 abandoned_plains_decay 0 3 plains_abandoned_targets
+e abandoned_plains_animal_pen_2 t village/plains/houses/plains_animal_pen_2 abandoned_plains_decay 0 3 plains_abandoned_targets
+e abandoned_plains_animal_pen_3 t village/plains/houses/plains_animal_pen_3 abandoned_plains_decay 0 3 plains_abandoned_targets
+e abandoned_plains_meeting_point_4 t village/plains/houses/plains_meeting_point_4 abandoned_plains_decay 0 3 plains_abandoned_targets
+e abandoned_plains_meeting_point_5 t village/plains/houses/plains_meeting_point_5 abandoned_plains_decay 0 3 plains_abandoned_targets
+e abandoned_savanna_small_house_1 t village/savanna/houses/savanna_small_house_1 abandoned_savanna_decay 0 3 savanna_abandoned_targets
+e abandoned_savanna_small_house_2 t village/savanna/houses/savanna_small_house_2 abandoned_savanna_decay 0 3 savanna_abandoned_targets
+e abandoned_savanna_small_house_3 t village/savanna/houses/savanna_small_house_3 abandoned_savanna_decay 0 3 savanna_abandoned_targets
+e abandoned_savanna_small_house_4 t village/savanna/houses/savanna_small_house_4 abandoned_savanna_decay 0 3 savanna_abandoned_targets
+e abandoned_savanna_small_house_5 t village/savanna/houses/savanna_small_house_5 abandoned_savanna_decay 0 3 savanna_abandoned_targets
+e abandoned_savanna_small_house_6 t village/savanna/houses/savanna_small_house_6 abandoned_savanna_decay 0 3 savanna_abandoned_targets
+e abandoned_savanna_small_house_7 t village/savanna/houses/savanna_small_house_7 abandoned_savanna_decay 0 3 savanna_abandoned_targets
+e abandoned_savanna_small_house_8 t village/savanna/houses/savanna_small_house_8 abandoned_savanna_decay 0 3 savanna_abandoned_targets
+e abandoned_savanna_medium_house_1 t village/savanna/houses/savanna_medium_house_1 abandoned_savanna_decay 0 3 savanna_abandoned_targets
+e abandoned_savanna_medium_house_2 t village/savanna/houses/savanna_medium_house_2 abandoned_savanna_decay 0 3 savanna_abandoned_targets
+e abandoned_savanna_butchers_1 t village/savanna/houses/savanna_butchers_shop_1 abandoned_savanna_decay 0 3 savanna_abandoned_targets
+e abandoned_savanna_butchers_2 t village/savanna/houses/savanna_butchers_shop_2 abandoned_savanna_decay 0 3 savanna_abandoned_targets
+e abandoned_savanna_toolsmith_1 t village/savanna/houses/savanna_tool_smith_1 abandoned_savanna_decay 0 3 savanna_abandoned_targets
+e abandoned_savanna_fletcher_1 t village/savanna/houses/savanna_fletcher_house_1 abandoned_savanna_decay 0 3 savanna_abandoned_targets
+e abandoned_savanna_shepherd_1 t village/savanna/houses/savanna_shepherd_1 abandoned_savanna_decay 0 3 savanna_abandoned_targets
+e abandoned_savanna_armorer_1 t village/savanna/houses/savanna_armorer_1 abandoned_savanna_decay 0 3 savanna_abandoned_targets
+e abandoned_savanna_fisher_1 t village/savanna/houses/savanna_fisher_cottage_1 abandoned_savanna_decay 0 3 savanna_abandoned_targets
+e abandoned_savanna_tannery_1 t village/savanna/houses/savanna_tannery_1 abandoned_savanna_decay 0 3 savanna_abandoned_targets
+e abandoned_savanna_cartographer_1 t village/savanna/houses/savanna_cartographer_1 abandoned_savanna_decay 0 3 savanna_abandoned_targets
+e abandoned_savanna_library_1 t village/savanna/houses/savanna_library_1 abandoned_savanna_decay 0 3 savanna_abandoned_targets
+e abandoned_savanna_mason_1 t village/savanna/houses/savanna_mason_1 abandoned_savanna_decay 0 3 savanna_abandoned_targets
+e abandoned_savanna_weaponsmith_1 t village/savanna/houses/savanna_weaponsmith_1 abandoned_savanna_decay 0 3 savanna_abandoned_targets
+e abandoned_savanna_weaponsmith_2 t village/savanna/houses/savanna_weaponsmith_2 abandoned_savanna_decay 0 3 savanna_abandoned_targets
+e abandoned_savanna_temple_1 t village/savanna/houses/savanna_temple_1 abandoned_savanna_decay 0 3 savanna_abandoned_targets
+e abandoned_savanna_temple_2 t village/savanna/houses/savanna_temple_2 abandoned_savanna_decay 0 3 savanna_abandoned_targets
+e abandoned_savanna_large_farm_1_ww t village/savanna/houses/savanna_large_farm_1 abandoned_wheat_wheat_farm 0 3 savanna_abandoned_targets
+e abandoned_savanna_large_farm_1_wp t village/savanna/houses/savanna_large_farm_1 abandoned_wheat_potato_farm 0 3 savanna_abandoned_targets
+e abandoned_savanna_large_farm_1_wb t village/savanna/houses/savanna_large_farm_1 abandoned_wheat_beet_farm 0 3 savanna_abandoned_targets
+e abandoned_savanna_large_farm_1_wc t village/savanna/houses/savanna_large_farm_1 abandoned_savanna_decay 0 3 savanna_abandoned_targets
+e abandoned_savanna_large_farm_1_pp t village/savanna/houses/savanna_large_farm_1 abandoned_potato_potato_farm 0 3 savanna_abandoned_targets
+e abandoned_savanna_large_farm_1_pb t village/savanna/houses/savanna_large_farm_1 abandoned_potato_beet_farm 0 3 savanna_abandoned_targets
+e abandoned_savanna_large_farm_1_pc t village/savanna/houses/savanna_large_farm_1 abandoned_potato_carrot_farm 0 3 savanna_abandoned_targets
+e abandoned_savanna_large_farm_1_bb t village/savanna/houses/savanna_large_farm_1 abandoned_beet_beet_farm 0 3 savanna_abandoned_targets
+e abandoned_savanna_large_farm_1_bc t village/savanna/houses/savanna_large_farm_1 abandoned_beet_carrot_farm 0 3 savanna_abandoned_targets
+e abandoned_savanna_large_farm_1_cc t village/savanna/houses/savanna_large_farm_1 abandoned_carrot_carrot_farm 0 3 savanna_abandoned_targets
+e abandoned_savanna_large_farm_2_wc t village/savanna/houses/savanna_large_farm_2 abandoned_savanna_decay 0 3 savanna_abandoned_targets
+e abandoned_savanna_large_farm_2_pp t village/savanna/houses/savanna_large_farm_2 abandoned_potato_potato_farm 0 3 savanna_abandoned_targets
+e abandoned_savanna_large_farm_2_bb t village/savanna/houses/savanna_large_farm_2 abandoned_beet_beet_farm 0 3 savanna_abandoned_targets
+e abandoned_savanna_large_farm_2_cc t village/savanna/houses/savanna_large_farm_2 abandoned_carrot_carrot_farm 0 3 savanna_abandoned_targets
+e abandoned_savanna_small_farm_wc t village/savanna/houses/savanna_small_farm abandoned_savanna_decay 0 3 savanna_abandoned_targets
+e abandoned_savanna_small_farm_pp t village/savanna/houses/savanna_small_farm abandoned_potato_potato_farm 0 3 savanna_abandoned_targets
+e abandoned_savanna_small_farm_bb t village/savanna/houses/savanna_small_farm abandoned_beet_beet_farm 0 3 savanna_abandoned_targets
+e abandoned_savanna_small_farm_cc t village/savanna/houses/savanna_small_farm abandoned_carrot_carrot_farm 0 3 savanna_abandoned_targets
+e abandoned_savanna_animal_pen_1 t village/savanna/houses/savanna_animal_pen_1 abandoned_savanna_decay 0 3 savanna_abandoned_targets
+e abandoned_savanna_animal_pen_2 t village/savanna/houses/savanna_animal_pen_2 abandoned_savanna_decay 0 3 savanna_abandoned_targets
+e abandoned_savanna_animal_pen_3 t village/savanna/houses/savanna_animal_pen_3 abandoned_savanna_decay 0 3 savanna_abandoned_targets
+e abandoned_snowy_small_house_1 t village/snowy/houses/snowy_small_house_1 abandoned_snowy_decay 0 3 snowy_abandoned_targets
+e abandoned_snowy_small_house_2 t village/snowy/houses/snowy_small_house_2 abandoned_snowy_decay 0 3 snowy_abandoned_targets
+e abandoned_snowy_small_house_3 t village/snowy/houses/snowy_small_house_3 abandoned_snowy_decay 0 3 snowy_abandoned_targets
+e abandoned_snowy_small_house_4 t village/snowy/houses/snowy_small_house_4 abandoned_snowy_decay 0 3 snowy_abandoned_targets
+e abandoned_snowy_small_house_5 t village/snowy/houses/snowy_small_house_5 abandoned_snowy_decay 0 3 snowy_abandoned_targets
+e abandoned_snowy_small_house_6 t village/snowy/houses/snowy_small_house_6 abandoned_snowy_decay 0 3 snowy_abandoned_targets
+e abandoned_snowy_small_house_7 t village/snowy/houses/snowy_small_house_7 abandoned_snowy_decay 0 3 snowy_abandoned_targets
+e abandoned_snowy_small_house_8 t village/snowy/houses/snowy_small_house_8 abandoned_snowy_decay 0 3 snowy_abandoned_targets
+e abandoned_snowy_medium_house_1 t village/snowy/houses/snowy_medium_house_1 abandoned_snowy_decay 0 3 snowy_abandoned_targets
+e abandoned_snowy_medium_house_2 t village/snowy/houses/snowy_medium_house_2 abandoned_snowy_decay 0 3 snowy_abandoned_targets
+e abandoned_snowy_medium_house_3 t village/snowy/houses/snowy_medium_house_3 abandoned_snowy_decay 0 3 snowy_abandoned_targets
+e abandoned_snowy_butchers_1 t village/snowy/houses/snowy_butchers_shop_1 abandoned_snowy_decay 0 3 snowy_abandoned_targets
+e abandoned_snowy_butchers_2 t village/snowy/houses/snowy_butchers_shop_2 abandoned_snowy_decay 0 3 snowy_abandoned_targets
+e abandoned_snowy_toolsmith_1 t village/snowy/houses/snowy_tool_smith_1 abandoned_snowy_decay 0 3 snowy_abandoned_targets
+e abandoned_snowy_fletcher_1 t village/snowy/houses/snowy_fletcher_house_1 abandoned_snowy_decay 0 3 snowy_abandoned_targets
+e abandoned_snowy_shepherds_1 t village/snowy/houses/snowy_shepherds_house_1 abandoned_snowy_decay 0 3 snowy_abandoned_targets
+e abandoned_snowy_armorer_1 t village/snowy/houses/snowy_armorer_house_1 abandoned_snowy_decay 0 3 snowy_abandoned_targets
+e abandoned_snowy_armorer_2 t village/snowy/houses/snowy_armorer_house_2 abandoned_snowy_decay 0 3 snowy_abandoned_targets
+e abandoned_snowy_fisher_1 t village/snowy/houses/snowy_fisher_cottage abandoned_snowy_decay 0 3 snowy_abandoned_targets
+e abandoned_snowy_tannery_1 t village/snowy/houses/snowy_tannery_1 abandoned_snowy_decay 0 3 snowy_abandoned_targets
+e abandoned_snowy_cartographer_1 t village/snowy/houses/snowy_cartographer_house_1 abandoned_snowy_decay 0 3 snowy_abandoned_targets
+e abandoned_snowy_library_1 t village/snowy/houses/snowy_library_1 abandoned_snowy_decay 0 3 snowy_abandoned_targets
+e abandoned_snowy_masons_1 t village/snowy/houses/snowy_masons_house_1 abandoned_snowy_decay 0 3 snowy_abandoned_targets
+e abandoned_snowy_masons_2 t village/snowy/houses/snowy_masons_house_2 abandoned_snowy_decay 0 3 snowy_abandoned_targets
+e abandoned_snowy_weaponsmith_1 t village/snowy/houses/snowy_weapon_smith_1 abandoned_snowy_decay 0 3 snowy_abandoned_targets
+e abandoned_snowy_temple_1 t village/snowy/houses/snowy_temple_1 abandoned_snowy_decay 0 3 snowy_abandoned_targets
+e abandoned_snowy_farm_1_wc t village/snowy/houses/snowy_farm_1 abandoned_snowy_decay 0 3 snowy_abandoned_targets
+e abandoned_snowy_farm_1_pp t village/snowy/houses/snowy_farm_1 abandoned_potato_potato_farm 0 3 snowy_abandoned_targets
+e abandoned_snowy_farm_1_bb t village/snowy/houses/snowy_farm_1 abandoned_beet_beet_farm 0 3 snowy_abandoned_targets
+e abandoned_snowy_farm_1_cc t village/snowy/houses/snowy_farm_1 abandoned_carrot_carrot_farm 0 3 snowy_abandoned_targets
+e abandoned_snowy_farm_2_wc t village/snowy/houses/snowy_farm_2 abandoned_snowy_decay 0 3 snowy_abandoned_targets
+e abandoned_snowy_farm_2_pp t village/snowy/houses/snowy_farm_2 abandoned_potato_potato_farm 0 3 snowy_abandoned_targets
+e abandoned_snowy_farm_2_bb t village/snowy/houses/snowy_farm_2 abandoned_beet_beet_farm 0 3 snowy_abandoned_targets
+e abandoned_snowy_farm_2_cc t village/snowy/houses/snowy_farm_2 abandoned_carrot_carrot_farm 0 3 snowy_abandoned_targets
+e abandoned_snowy_animal_pen_1 t village/snowy/houses/snowy_animal_pen_1 abandoned_snowy_decay 0 3 snowy_abandoned_targets
+e abandoned_snowy_animal_pen_2 t village/snowy/houses/snowy_animal_pen_2 abandoned_snowy_decay 0 3 snowy_abandoned_targets
+e abandoned_taiga_small_house_1 t village/taiga/houses/taiga_small_house_1 abandoned_taiga_decay 0 3 taiga_abandoned_targets
+e abandoned_taiga_small_house_2 t village/taiga/houses/taiga_small_house_2 abandoned_taiga_decay 0 3 taiga_abandoned_targets
+e abandoned_taiga_small_house_3 t village/taiga/houses/taiga_small_house_3 abandoned_taiga_decay 0 3 taiga_abandoned_targets
+e abandoned_taiga_small_house_4 t village/taiga/houses/taiga_small_house_4 abandoned_taiga_decay 0 3 taiga_abandoned_targets
+e abandoned_taiga_small_house_5 t village/taiga/houses/taiga_small_house_5 abandoned_taiga_decay 0 3 taiga_abandoned_targets
+e abandoned_taiga_medium_house_1 t village/taiga/houses/taiga_medium_house_1 abandoned_taiga_decay 0 3 taiga_abandoned_targets
+e abandoned_taiga_medium_house_2 t village/taiga/houses/taiga_medium_house_2 abandoned_taiga_decay 0 3 taiga_abandoned_targets
+e abandoned_taiga_medium_house_3 t village/taiga/houses/taiga_medium_house_3 abandoned_taiga_decay 0 3 taiga_abandoned_targets
+e abandoned_taiga_medium_house_4 t village/taiga/houses/taiga_medium_house_4 abandoned_taiga_decay 0 3 taiga_abandoned_targets
+e abandoned_taiga_butcher_1 t village/taiga/houses/taiga_butcher_shop_1 abandoned_taiga_decay 0 3 taiga_abandoned_targets
+e abandoned_taiga_toolsmith_1 t village/taiga/houses/taiga_tool_smith_1 abandoned_taiga_decay 0 3 taiga_abandoned_targets
+e abandoned_taiga_fletcher_1 t village/taiga/houses/taiga_fletcher_house_1 abandoned_taiga_decay 0 3 taiga_abandoned_targets
+e abandoned_taiga_shepherds_1 t village/taiga/houses/taiga_shepherds_house_1 abandoned_taiga_decay 0 3 taiga_abandoned_targets
+e abandoned_taiga_armorer_1 t village/taiga/houses/taiga_armorer_house_1 abandoned_taiga_decay 0 3 taiga_abandoned_targets
+e abandoned_taiga_armorer_2 t village/taiga/houses/taiga_armorer_house_2 abandoned_taiga_decay 0 3 taiga_abandoned_targets
+e abandoned_taiga_fisher_1 t village/taiga/houses/taiga_fisher_cottage_1 abandoned_taiga_decay 0 3 taiga_abandoned_targets
+e abandoned_taiga_tannery_1 t village/taiga/houses/taiga_tannery_1 abandoned_taiga_decay 0 3 taiga_abandoned_targets
+e abandoned_taiga_cartographer_1 t village/taiga/houses/taiga_cartographer_house_1 abandoned_taiga_decay 0 3 taiga_abandoned_targets
+e abandoned_taiga_library_1 t village/taiga/houses/taiga_library_1 abandoned_taiga_decay 0 3 taiga_abandoned_targets
+e abandoned_taiga_masons_1 t village/taiga/houses/taiga_masons_house_1 abandoned_taiga_decay 0 3 taiga_abandoned_targets
+e abandoned_taiga_weaponsmith_1 t village/taiga/houses/taiga_weaponsmith_1 abandoned_taiga_decay 0 3 taiga_abandoned_targets
+e abandoned_taiga_weaponsmith_2 t village/taiga/houses/taiga_weaponsmith_2 abandoned_taiga_decay 0 3 taiga_abandoned_targets
+e abandoned_taiga_temple_1 t village/taiga/houses/taiga_temple_1 abandoned_taiga_decay 0 3 taiga_abandoned_targets
+e abandoned_taiga_large_farm_1_wc t village/taiga/houses/taiga_large_farm_1 abandoned_taiga_decay 0 3 taiga_abandoned_targets
+e abandoned_taiga_large_farm_1_pp t village/taiga/houses/taiga_large_farm_1 abandoned_potato_potato_farm 0 3 taiga_abandoned_targets
+e abandoned_taiga_large_farm_1_bb t village/taiga/houses/taiga_large_farm_1 abandoned_beet_beet_farm 0 3 taiga_abandoned_targets
+e abandoned_taiga_large_farm_1_cc t village/taiga/houses/taiga_large_farm_1 abandoned_carrot_carrot_farm 0 3 taiga_abandoned_targets
+e abandoned_taiga_large_farm_2_wc t village/taiga/houses/taiga_large_farm_2 abandoned_taiga_decay 0 3 taiga_abandoned_targets
+e abandoned_taiga_large_farm_2_pp t village/taiga/houses/taiga_large_farm_2 abandoned_potato_potato_farm 0 3 taiga_abandoned_targets
+e abandoned_taiga_large_farm_2_bb t village/taiga/houses/taiga_large_farm_2 abandoned_beet_beet_farm 0 3 taiga_abandoned_targets
+e abandoned_taiga_large_farm_2_cc t village/taiga/houses/taiga_large_farm_2 abandoned_carrot_carrot_farm 0 3 taiga_abandoned_targets
+e abandoned_taiga_small_farm_1 t village/taiga/houses/taiga_small_farm_1 abandoned_taiga_decay 0 3 taiga_abandoned_targets
+e abandoned_taiga_animal_pen_1 t village/taiga/houses/taiga_animal_pen_1 abandoned_taiga_decay 0 3 taiga_abandoned_targets
+e abandoned_desert_small_house_1 t village/desert/houses/desert_small_house_1 abandoned_desert_decay 0 3 desert_abandoned_targets
+e abandoned_desert_small_house_2 t village/desert/houses/desert_small_house_2 abandoned_desert_decay 0 3 desert_abandoned_targets
+e abandoned_desert_small_house_3 t village/desert/houses/desert_small_house_3 abandoned_desert_decay 0 3 desert_abandoned_targets
+e abandoned_desert_small_house_4 t village/desert/houses/desert_small_house_4 abandoned_desert_decay 0 3 desert_abandoned_targets
+e abandoned_desert_small_house_5 t village/desert/houses/desert_small_house_5 abandoned_desert_decay 0 3 desert_abandoned_targets
+e abandoned_desert_small_house_6 t village/desert/houses/desert_small_house_6 abandoned_desert_decay 0 3 desert_abandoned_targets
+e abandoned_desert_small_house_7 t village/desert/houses/desert_small_house_7 abandoned_desert_decay 0 3 desert_abandoned_targets
+e abandoned_desert_small_house_8 t village/desert/houses/desert_small_house_8 abandoned_desert_decay 0 3 desert_abandoned_targets
+e abandoned_desert_medium_house_1 t village/desert/houses/desert_medium_house_1 abandoned_desert_decay 0 3 desert_abandoned_targets
+e abandoned_desert_medium_house_2 t village/desert/houses/desert_medium_house_2 abandoned_desert_decay 0 3 desert_abandoned_targets
+e abandoned_desert_butcher_1 t village/desert/houses/desert_butcher_shop_1 abandoned_desert_decay 0 3 desert_abandoned_targets
+e abandoned_desert_toolsmith_1 t village/desert/houses/desert_tool_smith_1 abandoned_desert_decay 0 3 desert_abandoned_targets
+e abandoned_desert_fletcher_1 t village/desert/houses/desert_fletcher_house_1 abandoned_desert_decay 0 3 desert_abandoned_targets
+e abandoned_desert_shepherd_1 t village/desert/houses/desert_shepherd_house_1 abandoned_desert_decay 0 3 desert_abandoned_targets
+e abandoned_desert_armorer_1 t village/desert/houses/desert_armorer_1 abandoned_desert_decay 0 3 desert_abandoned_targets
+e abandoned_desert_fisher_1 t village/desert/houses/desert_fisher_1 abandoned_desert_decay 0 3 desert_abandoned_targets
+e abandoned_desert_tannery_1 t village/desert/houses/desert_tannery_1 abandoned_desert_decay 0 3 desert_abandoned_targets
+e abandoned_desert_cartographer_1 t village/desert/houses/desert_cartographer_house_1 abandoned_desert_decay 0 3 desert_abandoned_targets
+e abandoned_desert_library_1 t village/desert/houses/desert_library_1 abandoned_desert_decay 0 3 desert_abandoned_targets
+e abandoned_desert_mason_1 t village/desert/houses/desert_mason_1 abandoned_desert_decay 0 3 desert_abandoned_targets
+e abandoned_desert_weaponsmith_1 t village/desert/houses/desert_weaponsmith_1 abandoned_desert_decay 0 3 desert_abandoned_targets
+e abandoned_desert_temple_1 t village/desert/houses/desert_temple_1 abandoned_desert_decay 0 3 desert_abandoned_targets
+e abandoned_desert_temple_2 t village/desert/houses/desert_temple_2 abandoned_desert_decay 0 3 desert_abandoned_targets
+e abandoned_desert_farm_1_wc t village/desert/houses/desert_farm_1 abandoned_desert_decay 0 3 desert_abandoned_targets
+e abandoned_desert_farm_1_pp t village/desert/houses/desert_farm_1 abandoned_potato_potato_farm 0 3 desert_abandoned_targets
+e abandoned_desert_farm_1_bb t village/desert/houses/desert_farm_1 abandoned_beet_beet_farm 0 3 desert_abandoned_targets
+e abandoned_desert_farm_1_cc t village/desert/houses/desert_farm_1 abandoned_carrot_carrot_farm 0 3 desert_abandoned_targets
+e abandoned_desert_farm_2_wc t village/desert/houses/desert_farm_2 abandoned_desert_decay 0 3 desert_abandoned_targets
+e abandoned_desert_farm_2_pp t village/desert/houses/desert_farm_2 abandoned_potato_potato_farm 0 3 desert_abandoned_targets
+e abandoned_desert_farm_2_bb t village/desert/houses/desert_farm_2 abandoned_beet_beet_farm 0 3 desert_abandoned_targets
+e abandoned_desert_farm_2_cc t village/desert/houses/desert_farm_2 abandoned_carrot_carrot_farm 0 3 desert_abandoned_targets
+e abandoned_desert_large_farm_1_wc t village/desert/houses/desert_large_farm_1 abandoned_desert_decay 0 3 desert_abandoned_targets
+e abandoned_desert_large_farm_1_pp t village/desert/houses/desert_large_farm_1 abandoned_potato_potato_farm 0 3 desert_abandoned_targets
+e abandoned_desert_large_farm_1_bb t village/desert/houses/desert_large_farm_1 abandoned_beet_beet_farm 0 3 desert_abandoned_targets
+e abandoned_desert_large_farm_1_cc t village/desert/houses/desert_large_farm_1 abandoned_carrot_carrot_farm 0 3 desert_abandoned_targets
+e abandoned_desert_animal_pen_1 t village/desert/houses/desert_animal_pen_1 abandoned_desert_decay 0 3 desert_abandoned_targets
+e abandoned_desert_animal_pen_2 t village/desert/houses/desert_animal_pen_2 abandoned_desert_decay 0 3 desert_abandoned_targets
+e plains_terminator_1 t village/plains/terminators/terminator_01 plains_path_decay 1 3 -
+e plains_terminator_2 t village/plains/terminators/terminator_02 plains_path_decay 1 3 -
+e plains_terminator_3 t village/plains/terminators/terminator_03 plains_path_decay 1 3 -
+e plains_terminator_4 t village/plains/terminators/terminator_04 plains_path_decay 1 3 -
+e savanna_terminator_1 t village/plains/terminators/terminator_01 savanna_path_decay 1 3 -
+e savanna_terminator_2 t village/plains/terminators/terminator_02 savanna_path_decay 1 3 -
+e savanna_terminator_3 t village/plains/terminators/terminator_03 savanna_path_decay 1 3 -
+e savanna_terminator_4 t village/plains/terminators/terminator_04 savanna_path_decay 1 3 -
+e savanna_terminator_5 t village/savanna/terminators/terminator_05 savanna_path_decay 1 3 -
+e desert_terminator_1 t village/desert/terminators/terminator_01 desert_path_decay 1 3 -
+e desert_terminator_2 t village/desert/terminators/terminator_02 desert_path_decay 1 3 -
+e snowy_terminator_1 t village/plains/terminators/terminator_01 snowy_path_decay 1 3 -
+e snowy_terminator_2 t village/plains/terminators/terminator_02 snowy_path_decay 1 3 -
+e snowy_terminator_3 t village/plains/terminators/terminator_03 snowy_path_decay 1 3 -
+e snowy_terminator_4 t village/plains/terminators/terminator_04 snowy_path_decay 1 3 -
+e taiga_terminator_1 t village/plains/terminators/terminator_01 taiga_path_decay 1 3 -
+e taiga_terminator_2 t village/plains/terminators/terminator_02 taiga_path_decay 1 3 -
+e taiga_terminator_3 t village/plains/terminators/terminator_03 taiga_path_decay 1 3 -
+e taiga_terminator_4 t village/plains/terminators/terminator_04 taiga_path_decay 1 3 -
+e plains_lamp t village/plains/plains_lamp_1 - 0 3 -
+e savanna_lamp t village/savanna/savanna_lamp_post_01 - 0 3 -
+e snowy_lamp_1 t village/snowy/snowy_lamp_post_01 - 0 3 -
+e snowy_lamp_2 t village/snowy/snowy_lamp_post_02 - 0 3 -
+e snowy_lamp_3 t village/snowy/snowy_lamp_post_03 - 0 3 -
+e desert_lamp t village/desert/desert_lamp_1 - 0 3 -
+e taiga_lamp t village/taiga/taiga_lamp_post_01 - 0 3 -
+e taiga_decoration_1 t village/taiga/taiga_decoration_1 - 0 3 -
+e taiga_decoration_2 t village/taiga/taiga_decoration_2 - 0 3 -
+e taiga_decoration_3 t village/taiga/taiga_decoration_3 - 0 3 -
+e taiga_decoration_4 t village/taiga/taiga_decoration_4 - 0 3 -
+e taiga_decoration_5 t village/taiga/taiga_decoration_5 - 0 3 -
+e abandoned_plains_lamp t village/plains/plains_lamp_1 abandoned_plains_decay 0 3 -
+e abandoned_savanna_lamp t village/savanna/savanna_lamp_post_01 abandoned_savanna_decay 0 3 -
+e abandoned_snowy_lamp_1 t village/snowy/snowy_lamp_post_01 abandoned_snowy_decay 0 3 -
+e abandoned_snowy_lamp_2 t village/snowy/snowy_lamp_post_02 abandoned_snowy_decay 0 3 -
+e abandoned_snowy_lamp_3 t village/snowy/snowy_lamp_post_03 abandoned_snowy_decay 0 3 -
+e abandoned_desert_lamp t village/desert/desert_lamp_1 abandoned_desert_decay 0 3 -
+e oak_tree f select_oak_tree_feature
+e savanna_tree f savanna_tree_feature
+e spruce_tree f select_spruce_tree_feature
+e pine_tree f pine_tree_feature
+e fern f fern_feature
+e cactus f cactus_feature
+e melon_pile f melon_pile_feature
+e pumpkin_pile f pumpkin_pile_feature
+e hay_pile f hay_pile_feature
+e snow_pile f snow_pile_feature
+e ice_pile f ice_pile_feature
+e sweet_berry_bush f scatter_sweet_berry_bush_feature
+e animals_cow t village/common/animals/cows_1 - 0 3 -
+e animals_pig t village/common/animals/pigs_1 - 0 3 -
+e animals_horses_1 t village/common/animals/horses_1 - 0 3 -
+e animals_horses_2 t village/common/animals/horses_2 - 0 3 -
+e animals_sheep_1 t village/common/animals/sheep_1 - 0 3 -
+e animals_cat t village/common/animals/cat - 0 3 -
+e well t village/common/well_bottom - 0 3 -
+e villagers t village/common/villager - 0 3 -
+e ancient_city_city_center_city_center_1 t ancient_city/city_center/city_center_1 ancient_city_start_degradation 0 0 -
+e ancient_city_city_center_city_center_2 t ancient_city/city_center/city_center_2 ancient_city_start_degradation 0 0 -
+e ancient_city_city_center_city_center_3 t ancient_city/city_center/city_center_3 ancient_city_start_degradation 0 0 -
+e ancient_city_structures_barracks t ancient_city/structures/barracks ancient_city_generic_degradation 0 0 -
+e ancient_city_structures_chamber_1 t ancient_city/structures/chamber_1 ancient_city_generic_degradation 0 0 -
+e ancient_city_structures_chamber_2 t ancient_city/structures/chamber_2 ancient_city_generic_degradation 0 0 -
+e ancient_city_structures_chamber_3 t ancient_city/structures/chamber_3 ancient_city_generic_degradation 0 0 -
+e ancient_city_structures_sauna_1 t ancient_city/structures/sauna_1 ancient_city_generic_degradation 0 0 -
+e ancient_city_structures_small_statue t ancient_city/structures/small_statue ancient_city_generic_degradation 0 0 -
+e ancient_city_structures_large_ruin_1 t ancient_city/structures/large_ruin_1 ancient_city_generic_degradation 0 0 -
+e ancient_city_structures_tall_ruin_1 t ancient_city/structures/tall_ruin_1 ancient_city_generic_degradation 0 0 -
+e ancient_city_structures_tall_ruin_2 t ancient_city/structures/tall_ruin_2 ancient_city_generic_degradation 0 0 -
+e ancient_city_structures_tall_ruin_3 t ancient_city/structures/tall_ruin_3 ancient_city_generic_degradation 0 0 -
+e ancient_city_structures_tall_ruin_4 t ancient_city/structures/tall_ruin_4 ancient_city_generic_degradation 0 0 -
+e ancient_city_structures_medium_ruin_1 t ancient_city/structures/medium_ruin_1 ancient_city_generic_degradation 0 0 -
+e ancient_city_structures_medium_ruin_2 t ancient_city/structures/medium_ruin_2 ancient_city_generic_degradation 0 0 -
+e ancient_city_structures_small_ruin_1 t ancient_city/structures/small_ruin_1 ancient_city_generic_degradation 0 0 -
+e ancient_city_structures_small_ruin_2 t ancient_city/structures/small_ruin_2 ancient_city_generic_degradation 0 0 -
+e ancient_city_structures_large_pillar_1 t ancient_city/structures/large_pillar_1 ancient_city_generic_degradation 0 0 -
+e ancient_city_structures_medium_pillar_1 t ancient_city/structures/medium_pillar_1 ancient_city_generic_degradation 0 0 -
+e ancient_city_structures_ice_box_1 t ancient_city/structures/ice_box_1 ancient_city_generic_degradation 0 0 -
+e ancient_city_structures_camp_1 t ancient_city/structures/camp_1 ancient_city_generic_degradation 0 0 -
+e ancient_city_structures_camp_2 t ancient_city/structures/camp_2 ancient_city_generic_degradation 0 0 -
+e ancient_city_structures_camp_3 t ancient_city/structures/camp_3 ancient_city_generic_degradation 0 0 -
+e sculk_catalyst_with_patches_city f sculk_patch_feature_ancient_city
+e ancient_city_walls_intact_corner_wall_1 t ancient_city/walls/intact_corner_wall_1 ancient_city_walls_degradation 0 0 -
+e ancient_city_walls_intact_intersection_wall_1 t ancient_city/walls/intact_intersection_wall_1 ancient_city_walls_degradation 0 0 -
+e ancient_city_walls_intact_lshape_wall_1 t ancient_city/walls/intact_lshape_wall_1 ancient_city_walls_degradation 0 0 -
+e ancient_city_walls_intact_horizontal_wall_1 t ancient_city/walls/intact_horizontal_wall_1 ancient_city_walls_degradation 0 0 -
+e ancient_city_walls_intact_horizontal_wall_2 t ancient_city/walls/intact_horizontal_wall_2 ancient_city_walls_degradation 0 0 -
+e ancient_city_walls_intact_horizontal_wall_stairs_1 t ancient_city/walls/intact_horizontal_wall_stairs_1 ancient_city_walls_degradation 0 0 -
+e ancient_city_walls_intact_horizontal_wall_stairs_2 t ancient_city/walls/intact_horizontal_wall_stairs_2 ancient_city_walls_degradation 0 0 -
+e ancient_city_walls_intact_horizontal_wall_stairs_3 t ancient_city/walls/intact_horizontal_wall_stairs_3 ancient_city_walls_degradation 0 0 -
+e ancient_city_walls_intact_horizontal_wall_stairs_4 t ancient_city/walls/intact_horizontal_wall_stairs_4 ancient_city_walls_degradation 0 0 -
+e ancient_city_walls_intact_horizontal_wall_passage_1 t ancient_city/walls/intact_horizontal_wall_passage_1 ancient_city_walls_degradation 0 0 -
+e ancient_city_walls_ruined_corner_wall_1 t ancient_city/walls/ruined_corner_wall_1 ancient_city_walls_degradation 0 0 -
+e ancient_city_walls_ruined_corner_wall_2 t ancient_city/walls/ruined_corner_wall_2 ancient_city_walls_degradation 0 0 -
+e ancient_city_walls_ruined_horizontal_wall_stairs_1 t ancient_city/walls/ruined_horizontal_wall_stairs_1 ancient_city_walls_degradation 0 0 -
+e ancient_city_walls_ruined_horizontal_wall_stairs_2 t ancient_city/walls/ruined_horizontal_wall_stairs_2 ancient_city_walls_degradation 0 0 -
+e ancient_city_walls_ruined_horizontal_wall_stairs_3 t ancient_city/walls/ruined_horizontal_wall_stairs_3 ancient_city_walls_degradation 0 0 -
+e ancient_city_walls_ruined_horizontal_wall_stairs_4 t ancient_city/walls/ruined_horizontal_wall_stairs_4 ancient_city_walls_degradation 0 0 -
+e ancient_city_walls_intact_horizontal_wall_bridge t ancient_city/walls/intact_horizontal_wall_bridge ancient_city_walls_degradation 0 0 -
+e ancient_city_city_center_walls_bottom_1 t ancient_city/city_center/walls/bottom_1 ancient_city_generic_degradation 0 0 -
+e ancient_city_city_center_walls_bottom_2 t ancient_city/city_center/walls/bottom_2 ancient_city_generic_degradation 0 0 -
+e ancient_city_city_center_walls_bottom_left_corner t ancient_city/city_center/walls/bottom_left_corner ancient_city_generic_degradation 0 0 -
+e ancient_city_city_center_walls_bottom_right_corner_1 t ancient_city/city_center/walls/bottom_right_corner_1 ancient_city_generic_degradation 0 0 -
+e ancient_city_city_center_walls_bottom_right_corner_2 t ancient_city/city_center/walls/bottom_right_corner_2 ancient_city_generic_degradation 0 0 -
+e ancient_city_city_center_walls_left t ancient_city/city_center/walls/left ancient_city_generic_degradation 0 0 -
+e ancient_city_city_center_walls_right t ancient_city/city_center/walls/right ancient_city_generic_degradation 0 0 -
+e ancient_city_city_center_walls_top t ancient_city/city_center/walls/top ancient_city_generic_degradation 0 0 -
+e ancient_city_city_center_walls_top_right_corner t ancient_city/city_center/walls/top_right_corner ancient_city_generic_degradation 0 0 -
+e ancient_city_city_center_walls_top_left_corner t ancient_city/city_center/walls/top_left_corner ancient_city_generic_degradation 0 0 -
+e ancient_city_city_entrance_entrance_connector t ancient_city/city/entrance/entrance_connector ancient_city_generic_degradation 0 0 -
+e ancient_city_city_entrance_entrance_path_1 t ancient_city/city/entrance/entrance_path_1 ancient_city_generic_degradation 0 0 -
+e ancient_city_city_entrance_entrance_path_2 t ancient_city/city/entrance/entrance_path_2 ancient_city_generic_degradation 0 0 -
+e ancient_city_city_entrance_entrance_path_3 t ancient_city/city/entrance/entrance_path_3 ancient_city_generic_degradation 0 0 -
+e ancient_city_city_entrance_entrance_path_4 t ancient_city/city/entrance/entrance_path_4 ancient_city_generic_degradation 0 0 -
+e ancient_city_city_entrance_entrance_path_5 t ancient_city/city/entrance/entrance_path_5 ancient_city_generic_degradation 0 0 -
+p village/plains/town_centers - plains_fountain_1*1 plains_meeting_point_1*1 plains_meeting_point_2*1 plains_meeting_point_3*1
+p village/savanna/town_centers - savanna_meeting_point_1*2 savanna_meeting_point_2*1 savanna_meeting_point_3*3 savanna_meeting_point_4*3
+p village/snowy/town_centers - snowy_meeting_point_1*2 snowy_meeting_point_2*1 snowy_meeting_point_3*3
+p village/taiga/town_centers - taiga_meeting_point_1*2 taiga_meeting_point_2*2
+p village/desert/town_centers - desert_meeting_point_1*3 desert_meeting_point_2*3 desert_meeting_point_3*1
+p village/plains/streets village/plains/terminators plains_corner_1*2 plains_corner_2*2 plains_corner_3*2 plains_straight_1*4 plains_straight_2*4 plains_straight_3*7 plains_straight_4*7 plains_straight_5*3 plains_straight_6*4 plains_crossroad_1*2 plains_crossroad_2*1 plains_crossroad_3*2 plains_crossroad_4*2 plains_crossroad_5*2 plains_crossroad_6*2 plains_turn_1*3
+p village/savanna/streets village/savanna/terminators savanna_corner_1*2 savanna_corner_3*2 savanna_straight_2*4 savanna_straight_4*7 savanna_straight_5*3 savanna_straight_6*4 savanna_straight_8*4 savanna_straight_9*4 savanna_straight_10*4 savanna_straight_11*4 savanna_crossroad_2*1 savanna_crossroad_3*2 savanna_crossroad_4*2 savanna_crossroad_5*2 savanna_crossroad_6*2 savanna_crossroad_7*2 savanna_split_1*2 savanna_split_2*2 savanna_turn_1*3
+p village/snowy/streets village/snowy/terminators snowy_corner_1*2 snowy_corner_2*2 snowy_corner_3*2 snowy_square_1*2 snowy_straight_1*4 snowy_straight_2*4 snowy_straight_3*4 snowy_straight_4*7 snowy_straight_6*4 snowy_straight_8*4 snowy_crossroad_2*1 snowy_crossroad_3*2 snowy_crossroad_4*2 snowy_crossroad_5*2 snowy_crossroad_6*2 snowy_turn_1*3
+p village/taiga/streets village/taiga/terminators taiga_corner_1*2 taiga_corner_2*2 taiga_corner_3*2 taiga_straight_1*4 taiga_straight_2*4 taiga_straight_3*4 taiga_straight_4*7 taiga_straight_5*7 taiga_straight_6*4 taiga_crossroad_1*1 taiga_crossroad_2*1 taiga_crossroad_4*2 taiga_crossroad_5*2 taiga_crossroad_6*2 taiga_turn_1*3
+p village/desert/streets village/desert/terminators desert_corner_1*3 desert_corner_2*3 desert_straight_1*4 desert_straight_2*4 desert_straight_3*3 desert_crossroad_1*3 desert_crossroad_2*3 desert_crossroad_3*3 desert_square_1*3 desert_square_2*3 desert_turn_1*3
+p village/plains/houses village/plains/terminators plains_house_1*3 plains_house_2*3 plains_house_3*3 plains_house_4*3 plains_house_5*3 plains_house_6*2 plains_house_7*3 plains_house_8*3 plains_medium_house_1*4 plains_medium_house_2*4 plains_big_house_1*4 plains_butcher_1*4 plains_butcher_2*4 plains_toolsmith_1*4 plains_shepherds_1*4 plains_armorer_1*4 plains_fisher_1*4 plains_tannery_1*4 plains_cartographer_1*2 plains_library_1*6 plains_library_2*2 plains_mason_1*4 plains_weaponsmith_1*4 plains_temple_3*4 plains_temple_4*4 plains_stable_1*4 plains_stable_2*4 plains_large_farm_1_ww*1 plains_large_farm_1_wp*1 plains_large_farm_1_wb*1 plains_large_farm_1_wc*1 plains_large_farm_1_pp*1 plains_large_farm_1_pb*1 plains_large_farm_1_pc*1 plains_large_farm_1_bb*1 plains_large_farm_1_bc*1 plains_large_farm_1_cc*1 plains_small_farm_1_ww*1 plains_small_farm_1_wp*1 plains_small_farm_1_wb*1 plains_small_farm_1_wc*1 plains_small_farm_1_pp*1 plains_small_farm_1_pb*1 plains_small_farm_1_pc*1 plains_small_farm_1_bb*1 plains_small_farm_1_bc*1 plains_small_farm_1_cc*1 plains_animal_pen_1*2 plains_animal_pen_2*2 plains_animal_pen_3*8 plains_acessory_1*2 plains_meeting_point_4*6 plains_meeting_point_5*2
+p village/savanna/houses village/savanna/terminators savanna_small_house_1*4 savanna_small_house_2*4 savanna_small_house_3*4 savanna_small_house_4*4 savanna_small_house_5*4 savanna_small_house_6*4 savanna_small_house_7*4 savanna_small_house_8*4 savanna_medium_house_1*4 savanna_medium_house_2*4 savanna_butchers_1*4 savanna_butchers_2*4 savanna_toolsmith_1*4 savanna_fletcher_1*4 savanna_shepherd_1*4 savanna_armorer_1*4 savanna_fisher_1*4 savanna_tannery_1*4 savanna_cartographer_1*2 savanna_library_1*4 savanna_mason_1*4 savanna_weaponsmith_1*4 savanna_weaponsmith_2*4 savanna_temple_1*2 savanna_temple_2*6 savanna_large_farm_1_ww*1 savanna_large_farm_1_wp*1 savanna_large_farm_1_wb*1 savanna_large_farm_1_wc*1 savanna_large_farm_1_pp*1 savanna_large_farm_1_pb*1 savanna_large_farm_1_pc*1 savanna_large_farm_1_bb*1 savanna_large_farm_1_bc*1 savanna_large_farm_1_cc*1 savanna_large_farm_2_wc*2 savanna_large_farm_2_pp*2 savanna_large_farm_2_bb*2 savanna_large_farm_2_cc*2 savanna_small_farm_wc*2 savanna_small_farm_pp*2 savanna_small_farm_bb*2 savanna_small_farm_cc*2 savanna_animal_pen_1*4 savanna_animal_pen_2*4 savanna_animal_pen_3*4
+p village/snowy/houses village/snowy/terminators snowy_small_house_1*2 snowy_small_house_2*2 snowy_small_house_3*2 snowy_small_house_4*2 snowy_small_house_5*2 snowy_small_house_6*2 snowy_small_house_7*2 snowy_small_house_8*2 snowy_medium_house_1*2 snowy_medium_house_2*2 snowy_medium_house_3*1 snowy_butchers_1*2 snowy_butchers_2*2 snowy_toolsmith_1*2 snowy_fletcher_1*2 snowy_shepherds_1*2 snowy_armorer_1*2 snowy_armorer_2*2 snowy_fisher_1*2 snowy_tannery_1*2 snowy_cartographer_1*2 snowy_library_1*2 snowy_masons_1*2 snowy_masons_2*2 snowy_weaponsmith_1*2 snowy_temple_1*2 snowy_farm_1_wc*1 snowy_farm_1_pp*1 snowy_farm_1_bb*1 snowy_farm_1_cc*1 snowy_farm_2_wc*1 snowy_farm_2_pp*1 snowy_farm_2_bb*1 snowy_farm_2_cc*1 snowy_animal_pen_1*2 snowy_animal_pen_2*2
+p village/taiga/houses village/taiga/terminators taiga_small_house_1*2 taiga_small_house_2*2 taiga_small_house_3*2 taiga_small_house_4*2 taiga_small_house_5*2 taiga_medium_house_1*2 taiga_medium_house_2*2 taiga_medium_house_3*2 taiga_medium_house_4*2 taiga_butcher_1*2 taiga_toolsmith_1*2 taiga_fletcher_1*1 taiga_shepherds_1*2 taiga_armorer_1*1 taiga_armorer_2*1 taiga_fisher_1*2 taiga_tannery_1*2 taiga_cartographer_1*2 taiga_library_1*2 taiga_masons_1*2 taiga_weaponsmith_1*2 taiga_weaponsmith_2*2 taiga_temple_1*3 taiga_large_farm_1_wc*2 taiga_large_farm_1_pp*2 taiga_large_farm_1_bb*2 taiga_large_farm_1_cc*2 taiga_large_farm_2_wc*2 taiga_large_farm_2_pp*2 taiga_large_farm_2_bb*2 taiga_large_farm_2_cc*2 taiga_small_farm_1*1 taiga_animal_pen_1*2
+p village/desert/houses village/desert/terminators desert_small_house_1*1 desert_small_house_2*1 desert_small_house_3*1 desert_small_house_4*1 desert_small_house_5*1 desert_small_house_6*1 desert_small_house_7*1 desert_small_house_8*1 desert_medium_house_1*2 desert_medium_house_2*2 desert_butcher_1*2 desert_toolsmith_1*2 desert_fletcher_1*2 desert_shepherd_1*2 desert_armorer_1*1 desert_fisher_1*2 desert_tannery_1*2 desert_cartographer_1*2 desert_library_1*2 desert_mason_1*2 desert_weaponsmith_1*2 desert_temple_1*2 desert_temple_2*2 desert_large_farm_1_wc*2 desert_large_farm_1_pp*2 desert_large_farm_1_bb*2 desert_large_farm_1_cc*2 desert_farm_1_wc*1 desert_farm_1_pp*1 desert_farm_1_bb*1 desert_farm_1_cc*1 desert_farm_2_wc*1 desert_farm_2_pp*1 desert_farm_2_bb*1 desert_farm_2_cc*1 desert_animal_pen_1*2 desert_animal_pen_2*2
+p village/plains/terminators - plains_terminator_1*1 plains_terminator_2*1 plains_terminator_3*1 plains_terminator_4*1
+p village/savanna/terminators - savanna_terminator_1*1 savanna_terminator_2*1 savanna_terminator_3*1 savanna_terminator_4*1 savanna_terminator_5*1
+p village/snowy/terminators - snowy_terminator_1*1 snowy_terminator_2*1 snowy_terminator_3*1 snowy_terminator_4*1
+p village/taiga/terminators - taiga_terminator_1*1 taiga_terminator_2*1 taiga_terminator_3*1 taiga_terminator_4*1
+p village/desert/terminators - desert_terminator_1*1 desert_terminator_2*1
+p village/plains/trees - oak_tree*1
+p village/savanna/trees - savanna_tree*1
+p village/snowy/trees - spruce_tree*1
+p village/plains/decor - plains_lamp*2 oak_tree*1 hay_pile*1 empty*3
+p village/savanna/decor - savanna_lamp*4 savanna_tree*4 hay_pile*4 melon_pile*1 empty*4
+p village/snowy/decor - snowy_lamp_1*4 snowy_lamp_2*4 snowy_lamp_3*1 spruce_tree*4 snow_pile*4 ice_pile*1 empty*9
+p village/taiga/decor - taiga_lamp*10 taiga_decoration_1*4 taiga_decoration_2*1 taiga_decoration_3*1 taiga_decoration_4*1 taiga_decoration_5*2 pine_tree*4 pumpkin_pile*2 fern*4 sweet_berry_bush*1 empty*4
+p village/desert/decor - desert_lamp*10 cactus*4 hay_pile*4 empty*10
+p village/common/well_bottom - well*1
+p village/common/animals - animals_cow*7 animals_pig*7 animals_horses_1*3 animals_horses_2*2 animals_sheep_1*2
+p village/common/sheep - animals_sheep_1*1
+p village/common/butcher_animals - animals_cow*3 animals_pig*3 animals_sheep_1*2
+p village/common/cats - animals_cat*1
+p village/abandoned/plains/town_centers - abandoned_plains_fountain_1*1 abandoned_plains_meeting_point_1*1 abandoned_plains_meeting_point_2*1 abandoned_plains_meeting_point_3*1
+p village/abandoned/savanna/town_centers - abandoned_savanna_meeting_point_1*2 abandoned_savanna_meeting_point_2*1 abandoned_savanna_meeting_point_3*3 abandoned_savanna_meeting_point_4*3
+p village/abandoned/snowy/town_centers - abandoned_snowy_meeting_point_1*2 abandoned_snowy_meeting_point_2*1 abandoned_snowy_meeting_point_3*3
+p village/abandoned/taiga/town_centers - abandoned_taiga_meeting_point_1*2 abandoned_taiga_meeting_point_2*2
+p village/abandoned/desert/town_centers - abandoned_desert_meeting_point_1*3 abandoned_desert_meeting_point_2*3 abandoned_desert_meeting_point_3*1
+p village/abandoned/plains/streets village/plains/terminators abandoned_plains_corner_1*2 abandoned_plains_corner_2*2 abandoned_plains_corner_3*2 abandoned_plains_straight_1*4 abandoned_plains_straight_2*4 abandoned_plains_straight_3*7 abandoned_plains_straight_4*7 abandoned_plains_straight_5*3 abandoned_plains_straight_6*4 abandoned_plains_crossroad_1*2 abandoned_plains_crossroad_2*1 abandoned_plains_crossroad_3*2 abandoned_plains_crossroad_4*2 abandoned_plains_crossroad_5*2 abandoned_plains_crossroad_6*2 abandoned_plains_turn_1*3
+p village/abandoned/savanna/streets village/savanna/terminators abandoned_savanna_corner_1*2 abandoned_savanna_corner_3*2 abandoned_savanna_straight_2*4 abandoned_savanna_straight_4*7 abandoned_savanna_straight_5*3 abandoned_savanna_straight_6*4 abandoned_savanna_straight_8*4 abandoned_savanna_straight_9*4 abandoned_savanna_straight_10*4 abandoned_savanna_straight_11*4 abandoned_savanna_crossroad_2*1 abandoned_savanna_crossroad_3*2 abandoned_savanna_crossroad_4*2 abandoned_savanna_crossroad_5*2 abandoned_savanna_crossroad_6*2 abandoned_savanna_crossroad_7*2 abandoned_savanna_split_1*2 abandoned_savanna_split_2*2 abandoned_savanna_turn_1*3
+p village/abandoned/snowy/streets village/snowy/terminators abandoned_snowy_corner_1*2 abandoned_snowy_corner_2*2 abandoned_snowy_corner_3*2 abandoned_snowy_square_1*2 abandoned_snowy_straight_1*4 abandoned_snowy_straight_2*4 abandoned_snowy_straight_3*4 abandoned_snowy_straight_4*7 abandoned_snowy_straight_6*4 abandoned_snowy_straight_8*4 abandoned_snowy_crossroad_2*1 abandoned_snowy_crossroad_3*2 abandoned_snowy_crossroad_4*2 abandoned_snowy_crossroad_5*2 abandoned_snowy_crossroad_6*2 abandoned_snowy_turn_1*3
+p village/abandoned/taiga/streets village/taiga/terminators abandoned_taiga_corner_1*2 abandoned_taiga_corner_2*2 abandoned_taiga_corner_3*2 abandoned_taiga_straight_1*4 abandoned_taiga_straight_2*4 abandoned_taiga_straight_3*4 abandoned_taiga_straight_4*7 abandoned_taiga_straight_5*7 abandoned_taiga_straight_6*4 abandoned_taiga_crossroad_1*1 abandoned_taiga_crossroad_2*1 abandoned_taiga_crossroad_4*2 abandoned_taiga_crossroad_5*2 abandoned_taiga_crossroad_6*2 abandoned_taiga_turn_1*3
+p village/abandoned/desert/streets village/desert/terminators abandoned_desert_corner_1*3 abandoned_desert_corner_2*3 abandoned_desert_straight_1*4 abandoned_desert_straight_2*4 abandoned_desert_straight_3*3 abandoned_desert_crossroad_1*3 abandoned_desert_crossroad_2*3 abandoned_desert_crossroad_3*3 abandoned_desert_square_1*3 abandoned_desert_square_2*3 abandoned_desert_turn_1*3
+p village/abandoned/plains/houses village/plains/terminators abandoned_plains_house_1*3 abandoned_plains_house_2*3 abandoned_plains_house_3*3 abandoned_plains_house_4*3 abandoned_plains_house_5*3 abandoned_plains_house_6*2 abandoned_plains_house_7*3 abandoned_plains_house_8*3 abandoned_plains_medium_house_1*4 abandoned_plains_medium_house_2*4 abandoned_plains_big_house_1*4 abandoned_plains_butcher_1*4 abandoned_plains_butcher_2*4 abandoned_plains_toolsmith_1*4 abandoned_plains_shepherds_1*4 abandoned_plains_armorer_1*4 abandoned_plains_fisher_1*4 abandoned_plains_tannery_1*4 abandoned_plains_cartographer_1*2 abandoned_plains_library_1*6 abandoned_plains_library_2*2 abandoned_plains_mason_1*4 abandoned_plains_weaponsmith_1*4 abandoned_plains_temple_3*4 abandoned_plains_temple_4*4 abandoned_plains_stable_1*4 abandoned_plains_stable_2*4 abandoned_plains_large_farm_1_ww*1 abandoned_plains_large_farm_1_wp*1 abandoned_plains_large_farm_1_wb*1 abandoned_plains_large_farm_1_wc*1 abandoned_plains_large_farm_1_pp*1 abandoned_plains_large_farm_1_pb*1 abandoned_plains_large_farm_1_pc*1 abandoned_plains_large_farm_1_bb*1 abandoned_plains_large_farm_1_bc*1 abandoned_plains_large_farm_1_cc*1 abandoned_plains_small_farm_1_ww*1 abandoned_plains_small_farm_1_wp*1 abandoned_plains_small_farm_1_wb*1 abandoned_plains_small_farm_1_wc*1 abandoned_plains_small_farm_1_pp*1 abandoned_plains_small_farm_1_pb*1 abandoned_plains_small_farm_1_pc*1 abandoned_plains_small_farm_1_bb*1 abandoned_plains_small_farm_1_bc*1 abandoned_plains_small_farm_1_cc*1 abandoned_plains_animal_pen_1*2 abandoned_plains_animal_pen_2*2 abandoned_plains_animal_pen_3*8 abandoned_plains_meeting_point_4*6 abandoned_plains_meeting_point_5*2
+p village/abandoned/savanna/houses village/savanna/terminators abandoned_savanna_small_house_1*4 abandoned_savanna_small_house_2*4 abandoned_savanna_small_house_3*4 abandoned_savanna_small_house_4*4 abandoned_savanna_small_house_5*4 abandoned_savanna_small_house_6*4 abandoned_savanna_small_house_7*4 abandoned_savanna_small_house_8*4 abandoned_savanna_medium_house_1*4 abandoned_savanna_medium_house_2*4 abandoned_savanna_butchers_1*4 abandoned_savanna_butchers_2*4 abandoned_savanna_toolsmith_1*4 abandoned_savanna_fletcher_1*4 abandoned_savanna_shepherd_1*4 abandoned_savanna_armorer_1*4 abandoned_savanna_fisher_1*4 abandoned_savanna_tannery_1*4 abandoned_savanna_cartographer_1*2 abandoned_savanna_library_1*4 abandoned_savanna_mason_1*4 abandoned_savanna_weaponsmith_1*4 abandoned_savanna_weaponsmith_2*4 abandoned_savanna_temple_1*2 abandoned_savanna_temple_2*6 abandoned_savanna_large_farm_1_ww*1 abandoned_savanna_large_farm_1_wp*1 abandoned_savanna_large_farm_1_wb*1 abandoned_savanna_large_farm_1_wc*1 abandoned_savanna_large_farm_1_pp*1 abandoned_savanna_large_farm_1_pb*1 abandoned_savanna_large_farm_1_pc*1 abandoned_savanna_large_farm_1_bb*1 abandoned_savanna_large_farm_1_bc*1 abandoned_savanna_large_farm_1_cc*1 abandoned_savanna_large_farm_2_wc*2 abandoned_savanna_large_farm_2_pp*2 abandoned_savanna_large_farm_2_bb*2 abandoned_savanna_large_farm_2_cc*2 abandoned_savanna_small_farm_wc*2 abandoned_savanna_small_farm_pp*2 abandoned_savanna_small_farm_bb*2 abandoned_savanna_small_farm_cc*2 abandoned_savanna_animal_pen_1*4 abandoned_savanna_animal_pen_2*4 abandoned_savanna_animal_pen_3*4
+p village/abandoned/snowy/houses village/snowy/terminators abandoned_snowy_small_house_1*2 abandoned_snowy_small_house_2*2 abandoned_snowy_small_house_3*2 abandoned_snowy_small_house_4*2 abandoned_snowy_small_house_5*2 abandoned_snowy_small_house_6*2 abandoned_snowy_small_house_7*2 abandoned_snowy_small_house_8*2 abandoned_snowy_medium_house_1*2 abandoned_snowy_medium_house_2*2 abandoned_snowy_medium_house_3*1 abandoned_snowy_butchers_1*2 abandoned_snowy_butchers_2*2 abandoned_snowy_toolsmith_1*2 abandoned_snowy_fletcher_1*2 abandoned_snowy_shepherds_1*2 abandoned_snowy_armorer_1*2 abandoned_snowy_armorer_2*2 abandoned_snowy_fisher_1*2 abandoned_snowy_tannery_1*2 abandoned_snowy_cartographer_1*2 abandoned_snowy_library_1*2 abandoned_snowy_masons_1*2 abandoned_snowy_masons_2*2 abandoned_snowy_weaponsmith_1*2 abandoned_snowy_temple_1*2 abandoned_snowy_farm_1_wc*1 abandoned_snowy_farm_1_pp*1 abandoned_snowy_farm_1_bb*1 abandoned_snowy_farm_1_cc*1 abandoned_snowy_farm_2_wc*1 abandoned_snowy_farm_2_pp*1 abandoned_snowy_farm_2_bb*1 abandoned_snowy_farm_2_cc*1 abandoned_snowy_animal_pen_1*2 abandoned_snowy_animal_pen_2*2
+p village/abandoned/taiga/houses village/taiga/terminators abandoned_taiga_small_house_1*2 abandoned_taiga_small_house_2*2 abandoned_taiga_small_house_3*2 abandoned_taiga_small_house_4*2 abandoned_taiga_small_house_5*2 abandoned_taiga_medium_house_1*2 abandoned_taiga_medium_house_2*2 abandoned_taiga_medium_house_3*2 abandoned_taiga_medium_house_4*2 abandoned_taiga_butcher_1*2 abandoned_taiga_toolsmith_1*2 abandoned_taiga_fletcher_1*1 abandoned_taiga_shepherds_1*2 abandoned_taiga_armorer_1*1 abandoned_taiga_armorer_2*1 abandoned_taiga_fisher_1*2 abandoned_taiga_tannery_1*2 abandoned_taiga_cartographer_1*2 abandoned_taiga_library_1*2 abandoned_taiga_masons_1*2 abandoned_taiga_weaponsmith_1*2 abandoned_taiga_weaponsmith_2*2 abandoned_taiga_temple_1*3 abandoned_taiga_large_farm_1_wc*2 abandoned_taiga_large_farm_1_pp*2 abandoned_taiga_large_farm_1_bb*2 abandoned_taiga_large_farm_1_cc*2 abandoned_taiga_large_farm_2_wc*2 abandoned_taiga_large_farm_2_pp*2 abandoned_taiga_large_farm_2_bb*2 abandoned_taiga_large_farm_2_cc*2 abandoned_taiga_small_farm_1*1 abandoned_taiga_animal_pen_1*2
+p village/abandoned/desert/houses village/desert/terminators abandoned_desert_small_house_1*1 abandoned_desert_small_house_2*1 abandoned_desert_small_house_3*1 abandoned_desert_small_house_4*1 abandoned_desert_small_house_5*1 abandoned_desert_small_house_6*1 abandoned_desert_small_house_7*1 abandoned_desert_small_house_8*1 abandoned_desert_medium_house_1*2 abandoned_desert_medium_house_2*2 abandoned_desert_butcher_1*2 abandoned_desert_toolsmith_1*2 abandoned_desert_fletcher_1*2 abandoned_desert_shepherd_1*2 abandoned_desert_armorer_1*1 abandoned_desert_fisher_1*2 abandoned_desert_tannery_1*2 abandoned_desert_cartographer_1*2 abandoned_desert_library_1*2 abandoned_desert_mason_1*2 abandoned_desert_weaponsmith_1*2 abandoned_desert_temple_1*2 abandoned_desert_temple_2*2 abandoned_desert_large_farm_1_wc*2 abandoned_desert_large_farm_1_pp*2 abandoned_desert_large_farm_1_bb*2 abandoned_desert_large_farm_1_cc*2 abandoned_desert_farm_1_wc*1 abandoned_desert_farm_1_pp*1 abandoned_desert_farm_1_bb*1 abandoned_desert_farm_1_cc*1 abandoned_desert_farm_2_wc*1 abandoned_desert_farm_2_pp*1 abandoned_desert_farm_2_bb*1 abandoned_desert_farm_2_cc*1 abandoned_desert_animal_pen_1*2 abandoned_desert_animal_pen_2*2
+p village/abandoned/plains/decor - abandoned_plains_lamp*1 oak_tree*1 hay_pile*1 empty*3
+p village/abandoned/savanna/decor - abandoned_savanna_lamp*4 savanna_tree*4 hay_pile*4 melon_pile*1 empty*4
+p village/abandoned/snowy/decor - abandoned_snowy_lamp_1*1 abandoned_snowy_lamp_2*1 abandoned_snowy_lamp_3*1 spruce_tree*4 snow_pile*4 ice_pile*4 empty*7
+p village/abandoned/taiga/decor - taiga_decoration_1*4 taiga_decoration_2*1 taiga_decoration_3*1 taiga_decoration_4*1 pine_tree*4 pumpkin_pile*2 fern*4 sweet_berry_bush*1 empty*4
+p village/abandoned/desert/decor - abandoned_desert_lamp*10 cactus*4 hay_pile*4 empty*10
+p ancient_city/city_center - ancient_city_city_center_city_center_1*1 ancient_city_city_center_city_center_2*1 ancient_city_city_center_city_center_3*1
+p ancient_city/structures - empty*7 ancient_city_structures_barracks*4 ancient_city_structures_chamber_1*4 ancient_city_structures_chamber_2*4 ancient_city_structures_chamber_3*4 ancient_city_structures_sauna_1*4 ancient_city_structures_small_statue*4 ancient_city_structures_large_ruin_1*1 ancient_city_structures_tall_ruin_1*1 ancient_city_structures_tall_ruin_2*1 ancient_city_structures_tall_ruin_3*2 ancient_city_structures_tall_ruin_4*2 ancient_city_structures_medium_ruin_1*1 ancient_city_structures_medium_ruin_2*1 ancient_city_structures_small_ruin_1*1 ancient_city_structures_small_ruin_2*1 ancient_city_structures_large_pillar_1*1 ancient_city_structures_medium_pillar_1*1 ancient_city_structures_ice_box_1*1 ancient_city_structures_camp_1*1 ancient_city_structures_camp_2*1 ancient_city_structures_camp_3*1
+p ancient_city/sculk - sculk_catalyst_with_patches_city*6 empty*1
+p ancient_city/walls - ancient_city_walls_intact_corner_wall_1*1 ancient_city_walls_intact_intersection_wall_1*1 ancient_city_walls_intact_lshape_wall_1*1 ancient_city_walls_intact_horizontal_wall_1*1 ancient_city_walls_intact_horizontal_wall_2*1 ancient_city_walls_intact_horizontal_wall_stairs_1*1 ancient_city_walls_intact_horizontal_wall_stairs_2*1 ancient_city_walls_intact_horizontal_wall_stairs_3*1 ancient_city_walls_intact_horizontal_wall_stairs_4*4 ancient_city_walls_intact_horizontal_wall_passage_1*3 ancient_city_walls_ruined_corner_wall_1*1 ancient_city_walls_ruined_corner_wall_2*1 ancient_city_walls_ruined_horizontal_wall_stairs_1*2 ancient_city_walls_ruined_horizontal_wall_stairs_2*2 ancient_city_walls_ruined_horizontal_wall_stairs_3*3 ancient_city_walls_ruined_horizontal_wall_stairs_4*3
+p ancient_city/walls/no_corners - ancient_city_walls_intact_horizontal_wall_1*1 ancient_city_walls_intact_horizontal_wall_2*1 ancient_city_walls_intact_horizontal_wall_stairs_1*1 ancient_city_walls_intact_horizontal_wall_stairs_2*1 ancient_city_walls_intact_horizontal_wall_stairs_3*1 ancient_city_walls_intact_horizontal_wall_stairs_4*1 ancient_city_walls_intact_horizontal_wall_bridge*1
+p ancient_city/city_center/walls - ancient_city_city_center_walls_bottom_1*1 ancient_city_city_center_walls_bottom_2*1 ancient_city_city_center_walls_bottom_left_corner*1 ancient_city_city_center_walls_bottom_right_corner_1*1 ancient_city_city_center_walls_bottom_right_corner_2*1 ancient_city_city_center_walls_left*1 ancient_city_city_center_walls_right*1 ancient_city_city_center_walls_top*1 ancient_city_city_center_walls_top_right_corner*1 ancient_city_city_center_walls_top_left_corner*1
+p ancient_city/city/entrance - ancient_city_city_entrance_entrance_connector*1 ancient_city_city_entrance_entrance_path_1*1 ancient_city_city_entrance_entrance_path_2*1 ancient_city_city_entrance_entrance_path_3*1 ancient_city_city_entrance_entrance_path_4*1 ancient_city_city_entrance_entrance_path_5*1
+a plains_abandoned_targets village/plains/streets=village/abandoned/plains/streets village/plains/houses=village/abandoned/plains/houses village/plains/decor=village/abandoned/plains/decor
+a savanna_abandoned_targets village/savanna/houses=village/abandoned/savanna/houses village/savanna/decor=village/abandoned/savanna/decor
+a snowy_abandoned_targets village/snowy/streets=village/abandoned/snowy/streets village/snowy/houses=village/abandoned/snowy/houses village/snowy/decor=village/abandoned/snowy/decor
+a taiga_abandoned_targets village/taiga/streets=village/abandoned/taiga/streets village/taiga/houses=village/abandoned/taiga/houses village/taiga/decor=village/abandoned/taiga/decor
+a desert_abandoned_targets village/desert/streets=village/abandoned/desert/streets village/desert/houses=village/abandoned/desert/houses village/desert/decor=village/abandoned/desert/decor

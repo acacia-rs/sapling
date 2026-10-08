@@ -2,24 +2,36 @@
 //! BDS's legacy `StructureFeature` checks (`isFeatureChunk`, vtable slot 5) and the v2 jigsaw
 //! structure sets.
 
+mod ancient_city;
 mod area;
 mod bury;
 mod canvas;
+mod data_driven;
+mod igloo;
 mod kind;
+mod jigsaw;
 mod locate;
+mod mansion;
 mod mineshaft;
 mod monument;
 mod nearby;
+mod ocean_ruin;
+mod outpost;
 mod piece;
 mod placement;
 mod probe;
+mod ruined_portal;
+mod ruined_portal_age;
 mod scattered;
+mod shipwreck;
 mod stage;
-mod stairs;
 mod stronghold;
+pub(crate) mod template;
+mod templated;
 #[cfg(test)]
 mod tests;
 mod treasure;
+mod village;
 
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex, OnceLock};
@@ -41,10 +53,13 @@ pub struct Structures {
     mineshaft_seed: placement::MineshaftSeed,
     /// Mineshaft chances already drawn: every column asks for the 15x15 chunks around it.
     mineshaft_chunks: Mutex<HashMap<(i32, i32), bool>>,
+    /// Grid candidates' start checks, which every chunk around them repeats.
+    grid_starts: Mutex<HashMap<(StructureKind, (i32, i32)), bool>>,
     strongholds: OnceLock<Vec<(i32, i32)>>,
     mineshafts: Mutex<HashMap<(i32, i32), Arc<mineshaft::Mineshaft>>>,
     monuments: Mutex<HashMap<(i32, i32), Arc<monument::Monument>>>,
     stronghold_pieces: Mutex<HashMap<(i32, i32), Arc<stronghold::Stronghold>>>,
+    templates: templated::TemplateStarts,
 }
 
 impl Structures {
@@ -56,10 +71,12 @@ impl Structures {
             level_seed,
             mineshaft_seed,
             mineshaft_chunks: Mutex::new(HashMap::new()),
+            grid_starts: Mutex::new(HashMap::new()),
             strongholds: OnceLock::new(),
             mineshafts: Mutex::new(HashMap::new()),
             monuments: Mutex::new(HashMap::new()),
             stronghold_pieces: Mutex::new(HashMap::new()),
+            templates: Default::default(),
         }
     }
 
@@ -96,9 +113,14 @@ impl Structures {
             StructureKind::Shipwreck => self.shipwreck_biomes(&probe, chunk) && !self.near_monument(&probe, chunk),
             StructureKind::RuinedPortal => true,
             StructureKind::AncientCity => probe.contains_only((chunk.0 * 16, -27, chunk.1 * 16), 0, DEEP_DARK),
-            // TODO: BDS checks the biome at the jigsaw start piece's centre (14196cc20); the chunk centre approximates it.
-            StructureKind::TrialChambers => !DEEP_DARK.contains(&probe.biome(chunk.0 * 16 + 8, -30, chunk.1 * 16 + 8)),
-            StructureKind::TrailRuins => TRAIL_RUINS_BIOMES.contains(&probe.biome(chunk.0 * 16 + 8, probe.surface(chunk) - 15, chunk.1 * 16 + 8)),
+            StructureKind::TrialChambers => {
+                let (x, y, z) = self.v2_position(density, kind, chunk);
+                !DEEP_DARK.contains(&probe.biome(x, y, z))
+            }
+            StructureKind::TrailRuins => {
+                let (x, y, z) = self.v2_position(density, kind, chunk);
+                TRAIL_RUINS_BIOMES.contains(&probe.biome(x, y, z))
+            }
         }
     }
 

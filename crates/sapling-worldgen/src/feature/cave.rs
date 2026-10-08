@@ -230,5 +230,5 @@ fn aged(block: Block, age: i32) -> Block {
         Block::CaveVinesHeadBerries17 => block,
         _ => return block,
     };
-    Block::ALL[base as usize + (age.clamp(17, 25) - 17) as usize]
+    Block::ALL[base.index() + (age.clamp(17, 25) - 17) as usize]
 }

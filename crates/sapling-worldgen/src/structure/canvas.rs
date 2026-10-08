@@ -17,11 +17,26 @@ pub struct Canvas<'a> {
     neighbour: &'a dyn Fn(i32, i32, i32) -> Block,
     /// Light heightmap per column, as `LevelChunk` +0xb80 keeps it.
     heights: RefCell<HashMap<(i32, i32), i32>>,
+    /// Writes outside the chunk kept (and read back) while a piece placed whole is being drawn.
+    spill: Option<(BoundingBox, HashMap<(i32, i32, i32), Block>)>,
+    /// The lowest and highest y written inside the chunk.
+    pub touched: (i32, i32),
 }
 
 impl<'a> Canvas<'a> {
     pub fn new(shape: &'a mut ChunkShape, chunk: (i32, i32), neighbour: &'a dyn Fn(i32, i32, i32) -> Block) -> Self {
-        Self { shape, chunk, bb: BoundingBox::chunk(chunk.0, chunk.1), neighbour, heights: RefCell::new(HashMap::new()) }
+        let bb = BoundingBox::chunk(chunk.0, chunk.1);
+        Self { shape, chunk, bb, neighbour, heights: RefCell::new(HashMap::new()), spill: None, touched: (i32::MAX, i32::MIN) }
+    }
+
+    /// Until `end_spill`, writes inside `area` but outside the chunk are kept for later reads, as
+    /// the 3x3 `BlockSource` of a post-process placing a whole piece shows them.
+    pub fn begin_spill(&mut self, area: BoundingBox) {
+        self.spill = Some((area, HashMap::new()));
+    }
+
+    pub fn end_spill(&mut self) {
+        self.spill = None;
     }
 
     fn inside(&self, x: i32, z: i32) -> bool {
@@ -34,6 +49,8 @@ impl<'a> Canvas<'a> {
             Block::Air
         } else if self.inside(x, z) {
             self.shape.block((x & 15) as usize, y, (z & 15) as usize)
+        } else if let Some(&block) = self.spill.as_ref().and_then(|(_, cells)| cells.get(&(x, y, z))) {
+            block
         } else {
             (self.neighbour)(x, y, z)
         }
@@ -48,17 +65,22 @@ impl<'a> Canvas<'a> {
     pub fn set(&mut self, x: i32, y: i32, z: i32, block: Block) {
         if self.bb.contains(x, y, z) {
             self.shape.set_block((x & 15) as usize, y, (z & 15) as usize, block);
+            self.touched = (self.touched.0.min(y), self.touched.1.max(y));
             let mut heights = self.heights.borrow_mut();
             if let Some(h) = heights.get_mut(&(x, z))
                 && counts_for_height(block)
             {
                 *h = (*h).max(y + 1);
             }
+        } else if let Some((area, cells)) = &mut self.spill
+            && area.contains(x, y, z)
+        {
+            cells.insert((x, y, z), block);
         }
     }
 
     /// One above the highest block that is neither air nor a see-through plant.
-    fn height(&self, x: i32, z: i32) -> i32 {
+    pub fn height(&self, x: i32, z: i32) -> i32 {
         if let Some(&h) = self.heights.borrow().get(&(x, z)) {
             return h;
         }

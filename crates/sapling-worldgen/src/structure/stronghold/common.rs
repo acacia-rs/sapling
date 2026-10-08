@@ -6,7 +6,6 @@ use crate::block::Block;
 use crate::random::Mt19937;
 use crate::structure::BoundingBox;
 use crate::structure::canvas::Canvas;
-use crate::structure::mineshaft::full_solid;
 use crate::structure::piece::{EAST, Frame, NORTH, SOUTH, WEST};
 
 /// Java's `BoundingBox.orientBox`.
@@ -84,7 +83,7 @@ fn button(f: &Frame, data: u8) -> Block {
 fn door(f: &Frame, iron: bool) -> (Block, Block) {
     let first = if iron { Block::IronDoorEast } else { Block::WoodenDoorEast };
     // Legacy door direction 0..3 is south, west, north, east; the table lists east, south, west, north.
-    let index = first as usize + [1, 2, 3, 0][direction(f, 3) as usize] * 2;
+    let index = first.index() + [1, 2, 3, 0][direction(f, 3) as usize] * 2;
     (Block::ALL[index], Block::ALL[index + 1])
 }
 
@@ -151,19 +150,7 @@ pub fn small_door(f: &Frame, canvas: &mut Canvas, kind: Door, (x, y, z): (i32, i
 /// An end portal frame facing legacy direction `data`.
 pub fn portal_frame(data: u8, eye: bool) -> Block {
     let first = if eye { Block::EndPortalFrameSouthEye } else { Block::EndPortalFrameSouth };
-    Block::ALL[first as usize + data as usize]
+    Block::ALL[first.index() + data as usize]
 }
 
 pub const NORTH_OR_EAST: [u8; 2] = [NORTH, EAST];
-
-pub fn is_bars(block: Block) -> bool {
-    (Block::IronBars0..=Block::IronBars15).contains(&block)
-}
-
-/// Iron bars joined to the bars and full blocks beside them (east 1, north 2, south 4, west 8).
-pub fn bars_at(canvas: &Canvas, (x, y, z): (i32, i32, i32)) -> Block {
-    let joins = |b: Block| is_bars(b) || full_solid(b);
-    let bits: usize =
-        [(1, 0, 1), (0, -1, 2), (0, 1, 4), (-1, 0, 8)].iter().filter(|(dx, dz, _)| joins(canvas.get(x + dx, y, z + dz))).map(|t| t.2).sum();
-    Block::ALL[Block::IronBars0 as usize + bits]
-}

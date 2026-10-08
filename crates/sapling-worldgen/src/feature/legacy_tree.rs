@@ -57,7 +57,7 @@ impl LegacyTree {
                 let [x, y, z] = at;
                 let below = ctx.view.block(x, y - 1, z);
                 // The bed's variants run growth-inner, facing-outer (south, west, north, east).
-                let block = Block::ALL[bed as usize + facing * 4 + growth];
+                let block = Block::ALL[bed.index() + facing * 4 + growth];
                 let supported = if bed == Block::LeafLitter0South { below.blocks_motion() } else { super::plants::is_soil(below) };
                 let placed = ctx.view.block(x, y, z) == Block::Air && supported;
                 return (placed && ctx.view.set_block(x, y, z, block)).then_some(at);

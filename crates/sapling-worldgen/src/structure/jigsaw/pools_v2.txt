@@ -1,0 +1,298 @@
+# BDS v2 jigsaw data (behaviour pack worldgen JSON, trial chambers from C++); scripts/jigsaw_extract/jjson.py
+r trail_ruins_houses_archaeology rb=gravel@0.2|*|dirt;rb=gravel@0.1|*|coarse_dirt;rb=mud_bricks@0.1|*|packed_mud
+c trail_ruins_houses_archaeology 6 b=gravel|*|suspicious_gravel[brushed_progress=0,hanging=1]
+c trail_ruins_houses_archaeology 3 b=gravel|*|suspicious_gravel[brushed_progress=0,hanging=1]
+r trail_ruins_roads_archaeology rb=gravel@0.2|*|dirt;rb=gravel@0.1|*|gravel;rb=mud_bricks@0.1|*|packed_mud
+c trail_ruins_roads_archaeology 2 b=gravel|*|suspicious_gravel[brushed_progress=0,hanging=1]
+r trail_ruins_tower_top_archaeology -
+c trail_ruins_tower_top_archaeology 2 b=gravel|*|suspicious_gravel[brushed_progress=0,hanging=1]
+r trial_chambers_copper_bulb_degradation rb=waxed_copper_bulb@0.1|*|waxed_oxidized_copper_bulb[lit=1,powered_bit=0];rb=waxed_copper_bulb@0.33333334|*|waxed_weathered_copper_bulb[lit=1,powered_bit=0];rb=waxed_copper_bulb@0.5|*|waxed_exposed_copper_bulb[lit=1,powered_bit=0]
+e trail_ruins/buildings/group_hall_1 j trail_ruins/buildings/group_hall_1 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/buildings/group_hall_2 j trail_ruins/buildings/group_hall_2 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/buildings/group_hall_3 j trail_ruins/buildings/group_hall_3 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/buildings/group_hall_4 j trail_ruins/buildings/group_hall_4 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/buildings/group_hall_5 j trail_ruins/buildings/group_hall_5 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/buildings/large_room_1 j trail_ruins/buildings/large_room_1 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/buildings/large_room_2 j trail_ruins/buildings/large_room_2 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/buildings/large_room_3 j trail_ruins/buildings/large_room_3 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/buildings/large_room_4 j trail_ruins/buildings/large_room_4 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/buildings/large_room_5 j trail_ruins/buildings/large_room_5 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/buildings/one_room_1 j trail_ruins/buildings/one_room_1 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/buildings/one_room_2 j trail_ruins/buildings/one_room_2 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/buildings/one_room_3 j trail_ruins/buildings/one_room_3 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/buildings/one_room_4 j trail_ruins/buildings/one_room_4 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/buildings/one_room_5 j trail_ruins/buildings/one_room_5 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/decor/decor_1 j trail_ruins/decor/decor_1 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/decor/decor_2 j trail_ruins/decor/decor_2 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/decor/decor_3 j trail_ruins/decor/decor_3 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/decor/decor_4 j trail_ruins/decor/decor_4 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/decor/decor_5 j trail_ruins/decor/decor_5 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/decor/decor_6 j trail_ruins/decor/decor_6 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/decor/decor_7 j trail_ruins/decor/decor_7 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/roads/long_road_end j trail_ruins/roads/long_road_end trail_ruins_roads_archaeology 0 0 -
+e trail_ruins/roads/road_end_1 j trail_ruins/roads/road_end_1 trail_ruins_roads_archaeology 0 0 -
+e trail_ruins/roads/road_section_1 j trail_ruins/roads/road_section_1 trail_ruins_roads_archaeology 0 0 -
+e trail_ruins/roads/road_section_2 j trail_ruins/roads/road_section_2 trail_ruins_roads_archaeology 0 0 -
+e trail_ruins/roads/road_section_3 j trail_ruins/roads/road_section_3 trail_ruins_roads_archaeology 0 0 -
+e trail_ruins/roads/road_section_4 j trail_ruins/roads/road_section_4 trail_ruins_roads_archaeology 0 0 -
+e trail_ruins/roads/road_spacer_1 j trail_ruins/roads/road_spacer_1 trail_ruins_roads_archaeology 0 0 -
+e trail_ruins/tower/tower_1 j trail_ruins/tower/tower_1 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/tower/tower_2 j trail_ruins/tower/tower_2 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/tower/tower_3 j trail_ruins/tower/tower_3 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/tower/tower_4 j trail_ruins/tower/tower_4 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/tower/tower_5 j trail_ruins/tower/tower_5 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/buildings/group_full_1 j trail_ruins/buildings/group_full_1 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/buildings/group_full_2 j trail_ruins/buildings/group_full_2 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/buildings/group_full_3 j trail_ruins/buildings/group_full_3 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/buildings/group_full_4 j trail_ruins/buildings/group_full_4 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/buildings/group_full_5 j trail_ruins/buildings/group_full_5 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/buildings/group_lower_1 j trail_ruins/buildings/group_lower_1 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/buildings/group_lower_2 j trail_ruins/buildings/group_lower_2 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/buildings/group_lower_3 j trail_ruins/buildings/group_lower_3 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/buildings/group_lower_4 j trail_ruins/buildings/group_lower_4 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/buildings/group_lower_5 j trail_ruins/buildings/group_lower_5 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/buildings/group_upper_1 j trail_ruins/buildings/group_upper_1 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/buildings/group_upper_2 j trail_ruins/buildings/group_upper_2 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/buildings/group_upper_3 j trail_ruins/buildings/group_upper_3 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/buildings/group_upper_4 j trail_ruins/buildings/group_upper_4 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/buildings/group_upper_5 j trail_ruins/buildings/group_upper_5 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/buildings/group_room_1 j trail_ruins/buildings/group_room_1 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/buildings/group_room_2 j trail_ruins/buildings/group_room_2 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/buildings/group_room_3 j trail_ruins/buildings/group_room_3 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/buildings/group_room_4 j trail_ruins/buildings/group_room_4 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/buildings/group_room_5 j trail_ruins/buildings/group_room_5 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/tower/hall_1 j trail_ruins/tower/hall_1 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/tower/hall_2 j trail_ruins/tower/hall_2 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/tower/hall_3 j trail_ruins/tower/hall_3 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/tower/hall_4 j trail_ruins/tower/hall_4 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/tower/hall_5 j trail_ruins/tower/hall_5 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/tower/large_hall_1 j trail_ruins/tower/large_hall_1 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/tower/large_hall_2 j trail_ruins/tower/large_hall_2 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/tower/large_hall_3 j trail_ruins/tower/large_hall_3 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/tower/large_hall_4 j trail_ruins/tower/large_hall_4 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/tower/large_hall_5 j trail_ruins/tower/large_hall_5 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/tower/one_room_1 j trail_ruins/tower/one_room_1 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/tower/one_room_2 j trail_ruins/tower/one_room_2 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/tower/one_room_3 j trail_ruins/tower/one_room_3 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/tower/one_room_4 j trail_ruins/tower/one_room_4 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/tower/one_room_5 j trail_ruins/tower/one_room_5 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/tower/platform_1 j trail_ruins/tower/platform_1 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/tower/platform_2 j trail_ruins/tower/platform_2 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/tower/platform_3 j trail_ruins/tower/platform_3 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/tower/platform_4 j trail_ruins/tower/platform_4 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/tower/platform_5 j trail_ruins/tower/platform_5 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/tower/stable_1 j trail_ruins/tower/stable_1 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/tower/stable_2 j trail_ruins/tower/stable_2 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/tower/stable_3 j trail_ruins/tower/stable_3 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/tower/stable_4 j trail_ruins/tower/stable_4 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/tower/stable_5 j trail_ruins/tower/stable_5 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/tower/tower_top_1 j trail_ruins/tower/tower_top_1 trail_ruins_tower_top_archaeology 0 0 -
+e trail_ruins/tower/tower_top_2 j trail_ruins/tower/tower_top_2 trail_ruins_tower_top_archaeology 0 0 -
+e trail_ruins/tower/tower_top_3 j trail_ruins/tower/tower_top_3 trail_ruins_tower_top_archaeology 0 0 -
+e trail_ruins/tower/tower_top_4 j trail_ruins/tower/tower_top_4 trail_ruins_tower_top_archaeology 0 0 -
+e trail_ruins/tower/tower_top_5 j trail_ruins/tower/tower_top_5 trail_ruins_tower_top_archaeology 0 0 -
+e trial_chambers/corridor/end_1 j trial_chambers/corridor/end_1 trial_chambers_copper_bulb_degradation 0 0 -
+e trial_chambers/corridor/end_2 j trial_chambers/corridor/end_2 trial_chambers_copper_bulb_degradation 0 0 -
+e trial_chambers/chamber/entrance_cap j trial_chambers/chamber/entrance_cap trial_chambers_copper_bulb_degradation 0 0 -
+e trial_chambers/chamber/chamber_1 j trial_chambers/chamber/chamber_1 trial_chambers_copper_bulb_degradation 0 0 -
+e trial_chambers/chamber/assembly j trial_chambers/chamber/assembly trial_chambers_copper_bulb_degradation 0 0 -
+e trial_chambers/chamber/eruption j trial_chambers/chamber/eruption trial_chambers_copper_bulb_degradation 0 0 -
+e trial_chambers/chamber/slanted j trial_chambers/chamber/slanted trial_chambers_copper_bulb_degradation 0 0 -
+e trial_chambers/corridor/second_plate j trial_chambers/corridor/second_plate - 0 0 -
+e trial_chambers/intersection/intersection_1 j trial_chambers/intersection/intersection_1 trial_chambers_copper_bulb_degradation 0 0 -
+e trial_chambers/intersection/intersection_2 j trial_chambers/intersection/intersection_2 trial_chambers_copper_bulb_degradation 0 0 -
+e trial_chambers/intersection/intersection_3 j trial_chambers/intersection/intersection_3 trial_chambers_copper_bulb_degradation 0 0 -
+e trial_chambers/corridor/first_plate j trial_chambers/corridor/first_plate - 0 0 -
+e trial_chambers/corridor/atrium_1 j trial_chambers/corridor/atrium_1 trial_chambers_copper_bulb_degradation 0 0 -
+e trial_chambers/corridor/entrance_1 j trial_chambers/corridor/entrance_1 trial_chambers_copper_bulb_degradation 0 0 -
+e trial_chambers/corridor/entrance_2 j trial_chambers/corridor/entrance_2 trial_chambers_copper_bulb_degradation 0 0 -
+e trial_chambers/corridor/entrance_3 j trial_chambers/corridor/entrance_3 trial_chambers_copper_bulb_degradation 0 0 -
+e trial_chambers/chamber/addon/full_stacked_walkway j trial_chambers/chamber/addon/full_stacked_walkway - 0 0 -
+e trial_chambers/chamber/addon/full_stacked_walkway_2 j trial_chambers/chamber/addon/full_stacked_walkway_2 - 0 0 -
+e trial_chambers/chamber/addon/full_corner_column j trial_chambers/chamber/addon/full_corner_column - 0 0 -
+e trial_chambers/chamber/addon/grate_bridge j trial_chambers/chamber/addon/grate_bridge - 0 0 -
+e trial_chambers/chamber/addon/hanging_platform j trial_chambers/chamber/addon/hanging_platform - 0 0 -
+e trial_chambers/chamber/addon/short_grate_platform j trial_chambers/chamber/addon/short_grate_platform - 0 0 -
+e trial_chambers/chamber/addon/short_platform j trial_chambers/chamber/addon/short_platform - 0 0 -
+e trial_chambers/chamber/addon/lower_staircase_down j trial_chambers/chamber/addon/lower_staircase_down - 0 0 -
+e trial_chambers/chamber/addon/walkway_with_bridge_1 j trial_chambers/chamber/addon/walkway_with_bridge_1 - 0 0 -
+e trial_chambers/chamber/addon/c1_breeze j trial_chambers/chamber/addon/c1_breeze - 0 0 -
+e trial_chambers/chamber/assembly/full_column j trial_chambers/chamber/assembly/full_column - 0 0 -
+e trial_chambers/chamber/assembly/cover_1 j trial_chambers/chamber/assembly/cover_1 - 0 0 -
+e trial_chambers/chamber/assembly/cover_2 j trial_chambers/chamber/assembly/cover_2 - 0 0 -
+e trial_chambers/chamber/assembly/cover_3 j trial_chambers/chamber/assembly/cover_3 - 0 0 -
+e trial_chambers/chamber/assembly/cover_4 j trial_chambers/chamber/assembly/cover_4 - 0 0 -
+e trial_chambers/chamber/assembly/cover_5 j trial_chambers/chamber/assembly/cover_5 - 0 0 -
+e trial_chambers/chamber/assembly/cover_6 j trial_chambers/chamber/assembly/cover_6 - 0 0 -
+e trial_chambers/chamber/assembly/cover_7 j trial_chambers/chamber/assembly/cover_7 - 0 0 -
+e trial_chambers/chamber/assembly/platform_1 j trial_chambers/chamber/assembly/platform_1 - 0 0 -
+e trial_chambers/chamber/assembly/spawner_1 j trial_chambers/chamber/assembly/spawner_1 - 0 0 -
+e trial_chambers/chamber/assembly/hanging_1 j trial_chambers/chamber/assembly/hanging_1 - 0 0 -
+e trial_chambers/chamber/assembly/hanging_2 j trial_chambers/chamber/assembly/hanging_2 - 0 0 -
+e trial_chambers/chamber/assembly/hanging_3 j trial_chambers/chamber/assembly/hanging_3 - 0 0 -
+e trial_chambers/chamber/assembly/hanging_4 j trial_chambers/chamber/assembly/hanging_4 - 0 0 -
+e trial_chambers/chamber/assembly/hanging_5 j trial_chambers/chamber/assembly/hanging_5 - 0 0 -
+e trial_chambers/chamber/assembly/left_staircase_1 j trial_chambers/chamber/assembly/left_staircase_1 - 0 0 -
+e trial_chambers/chamber/assembly/left_staircase_2 j trial_chambers/chamber/assembly/left_staircase_2 - 0 0 -
+e trial_chambers/chamber/assembly/left_staircase_3 j trial_chambers/chamber/assembly/left_staircase_3 - 0 0 -
+e trial_chambers/chamber/assembly/right_staircase_1 j trial_chambers/chamber/assembly/right_staircase_1 - 0 0 -
+e trial_chambers/chamber/assembly/right_staircase_2 j trial_chambers/chamber/assembly/right_staircase_2 - 0 0 -
+e trial_chambers/chamber/assembly/right_staircase_3 j trial_chambers/chamber/assembly/right_staircase_3 - 0 0 -
+e trial_chambers/chamber/eruption/center_1 j trial_chambers/chamber/eruption/center_1 - 0 0 -
+e trial_chambers/chamber/eruption/breeze_slice_1 j trial_chambers/chamber/eruption/breeze_slice_1 - 0 0 -
+e trial_chambers/chamber/eruption/slice_1 j trial_chambers/chamber/eruption/slice_1 - 0 0 -
+e trial_chambers/chamber/eruption/slice_2 j trial_chambers/chamber/eruption/slice_2 - 0 0 -
+e trial_chambers/chamber/eruption/slice_3 j trial_chambers/chamber/eruption/slice_3 - 0 0 -
+e trial_chambers/chamber/eruption/quadrant_1 j trial_chambers/chamber/eruption/quadrant_1 - 0 0 -
+e trial_chambers/chamber/eruption/quadrant_2 j trial_chambers/chamber/eruption/quadrant_2 - 0 0 -
+e trial_chambers/chamber/eruption/quadrant_3 j trial_chambers/chamber/eruption/quadrant_3 - 0 0 -
+e trial_chambers/chamber/eruption/quadrant_4 j trial_chambers/chamber/eruption/quadrant_4 - 0 0 -
+e trial_chambers/chamber/eruption/quadrant_5 j trial_chambers/chamber/eruption/quadrant_5 - 0 0 -
+e trial_chambers/chamber/slanted/center j trial_chambers/chamber/slanted/center - 0 0 -
+e trial_chambers/chamber/slanted/hallway_1 j trial_chambers/chamber/slanted/hallway_1 - 0 0 -
+e trial_chambers/chamber/slanted/hallway_2 j trial_chambers/chamber/slanted/hallway_2 - 0 0 -
+e trial_chambers/chamber/slanted/hallway_3 j trial_chambers/chamber/slanted/hallway_3 - 0 0 -
+e trial_chambers/chamber/slanted/hallway_4 j trial_chambers/chamber/slanted/hallway_4 - 0 0 -
+e trial_chambers/chamber/slanted/hallway_5 j trial_chambers/chamber/slanted/hallway_5 - 0 0 -
+e trial_chambers/chamber/slanted/quadrant_1 j trial_chambers/chamber/slanted/quadrant_1 - 0 0 -
+e trial_chambers/chamber/slanted/quadrant_2 j trial_chambers/chamber/slanted/quadrant_2 - 0 0 -
+e trial_chambers/chamber/slanted/quadrant_3 j trial_chambers/chamber/slanted/quadrant_3 - 0 0 -
+e trial_chambers/chamber/slanted/quadrant_4 j trial_chambers/chamber/slanted/quadrant_4 - 0 0 -
+e trial_chambers/chamber/slanted/ramp_1 j trial_chambers/chamber/slanted/ramp_1 - 0 0 -
+e trial_chambers/chamber/slanted/ramp_2 j trial_chambers/chamber/slanted/ramp_2 - 0 0 -
+e trial_chambers/chamber/slanted/ramp_3 j trial_chambers/chamber/slanted/ramp_3 - 0 0 -
+e trial_chambers/chamber/slanted/ramp_4 j trial_chambers/chamber/slanted/ramp_4 - 0 0 -
+e trial_chambers/chamber/slanted/ominous_upper_arm_1 j trial_chambers/chamber/slanted/ominous_upper_arm_1 - 0 0 -
+e trial_chambers/chamber/pedestal/center_1 j trial_chambers/chamber/pedestal/center_1 - 0 0 -
+e trial_chambers/chamber/pedestal/slice_1 j trial_chambers/chamber/pedestal/slice_1 - 0 0 -
+e trial_chambers/chamber/pedestal/slice_2 j trial_chambers/chamber/pedestal/slice_2 - 0 0 -
+e trial_chambers/chamber/pedestal/slice_3 j trial_chambers/chamber/pedestal/slice_3 - 0 0 -
+e trial_chambers/chamber/pedestal/slice_4 j trial_chambers/chamber/pedestal/slice_4 - 0 0 -
+e trial_chambers/chamber/pedestal/slice_5 j trial_chambers/chamber/pedestal/slice_5 - 0 0 -
+e trial_chambers/chamber/pedestal/ominous_slice_1 j trial_chambers/chamber/pedestal/ominous_slice_1 - 0 0 -
+e trial_chambers/chamber/pedestal/quadrant_1 j trial_chambers/chamber/pedestal/quadrant_1 - 0 0 -
+e trial_chambers/chamber/pedestal/quadrant_2 j trial_chambers/chamber/pedestal/quadrant_2 - 0 0 -
+e trial_chambers/chamber/pedestal/quadrant_3 j trial_chambers/chamber/pedestal/quadrant_3 - 0 0 -
+e trial_chambers/corridor/straight_1 j trial_chambers/corridor/straight_1 trial_chambers_copper_bulb_degradation 0 0 -
+e trial_chambers/corridor/straight_2 j trial_chambers/corridor/straight_2 trial_chambers_copper_bulb_degradation 0 0 -
+e trial_chambers/corridor/straight_3 j trial_chambers/corridor/straight_3 trial_chambers_copper_bulb_degradation 0 0 -
+e trial_chambers/corridor/straight_4 j trial_chambers/corridor/straight_4 trial_chambers_copper_bulb_degradation 0 0 -
+e trial_chambers/corridor/straight_5 j trial_chambers/corridor/straight_5 trial_chambers_copper_bulb_degradation 0 0 -
+e trial_chambers/corridor/straight_6 j trial_chambers/corridor/straight_6 trial_chambers_copper_bulb_degradation 0 0 -
+e trial_chambers/corridor/straight_7 j trial_chambers/corridor/straight_7 trial_chambers_copper_bulb_degradation 0 0 -
+e trial_chambers/corridor/straight_8 j trial_chambers/corridor/straight_8 trial_chambers_copper_bulb_degradation 0 0 -
+e trial_chambers/hallway/rubble j trial_chambers/hallway/rubble - 0 0 -
+e trial_chambers/hallway/rubble_chamber j trial_chambers/hallway/rubble_chamber trial_chambers_copper_bulb_degradation 0 0 -
+e trial_chambers/hallway/rubble_thin j trial_chambers/hallway/rubble_thin - 0 0 -
+e trial_chambers/hallway/rubble_chamber_thin j trial_chambers/hallway/rubble_chamber_thin trial_chambers_copper_bulb_degradation 0 0 -
+e trial_chambers/hallway/corridor_connector_1 j trial_chambers/hallway/corridor_connector_1 - 0 0 -
+e trial_chambers/hallway/upper_hallway_connector j trial_chambers/hallway/upper_hallway_connector trial_chambers_copper_bulb_degradation 0 0 -
+e trial_chambers/hallway/lower_hallway_connector j trial_chambers/hallway/lower_hallway_connector trial_chambers_copper_bulb_degradation 0 0 -
+e trial_chambers/chamber/chamber_2 j trial_chambers/chamber/chamber_2 trial_chambers_copper_bulb_degradation 0 0 -
+e trial_chambers/chamber/chamber_4 j trial_chambers/chamber/chamber_4 trial_chambers_copper_bulb_degradation 0 0 -
+e trial_chambers/chamber/chamber_8 j trial_chambers/chamber/chamber_8 trial_chambers_copper_bulb_degradation 0 0 -
+e trial_chambers/chamber/pedestal j trial_chambers/chamber/pedestal trial_chambers_copper_bulb_degradation 0 0 -
+e trial_chambers/hallway/cache_1 j trial_chambers/hallway/cache_1 trial_chambers_copper_bulb_degradation 0 0 -
+e trial_chambers/hallway/left_corner j trial_chambers/hallway/left_corner trial_chambers_copper_bulb_degradation 0 0 -
+e trial_chambers/hallway/right_corner j trial_chambers/hallway/right_corner trial_chambers_copper_bulb_degradation 0 0 -
+e trial_chambers/hallway/corner_staircase j trial_chambers/hallway/corner_staircase trial_chambers_copper_bulb_degradation 0 0 -
+e trial_chambers/hallway/corner_staircase_down j trial_chambers/hallway/corner_staircase_down trial_chambers_copper_bulb_degradation 0 0 -
+e trial_chambers/hallway/long_straight_staircase j trial_chambers/hallway/long_straight_staircase trial_chambers_copper_bulb_degradation 0 0 -
+e trial_chambers/hallway/long_straight_staircase_down j trial_chambers/hallway/long_straight_staircase_down trial_chambers_copper_bulb_degradation 0 0 -
+e trial_chambers/hallway/straight j trial_chambers/hallway/straight trial_chambers_copper_bulb_degradation 0 0 -
+e trial_chambers/hallway/straight_staircase j trial_chambers/hallway/straight_staircase trial_chambers_copper_bulb_degradation 0 0 -
+e trial_chambers/hallway/straight_staircase_down j trial_chambers/hallway/straight_staircase_down trial_chambers_copper_bulb_degradation 0 0 -
+e trial_chambers/corridor/addon/staircase j trial_chambers/corridor/addon/staircase - 0 0 -
+e trial_chambers/corridor/addon/wall j trial_chambers/corridor/addon/wall - 0 0 -
+e trial_chambers/corridor/addon/ladder_to_middle j trial_chambers/corridor/addon/ladder_to_middle - 0 0 -
+e trial_chambers/corridor/addon/arrow_dispenser j trial_chambers/corridor/addon/arrow_dispenser - 0 0 -
+e trial_chambers/corridor/addon/bridge_lower j trial_chambers/corridor/addon/bridge_lower - 0 0 -
+e trial_chambers/corridor/addon/open_walkway j trial_chambers/corridor/addon/open_walkway - 0 0 -
+e trial_chambers/corridor/addon/walled_walkway j trial_chambers/corridor/addon/walled_walkway - 0 0 -
+e trial_chambers/corridor/addon/open_walkway_upper j trial_chambers/corridor/addon/open_walkway_upper - 0 0 -
+e trial_chambers/corridor/addon/chandelier_upper j trial_chambers/corridor/addon/chandelier_upper - 0 0 -
+e trial_chambers/corridor/addon/decoration_upper j trial_chambers/corridor/addon/decoration_upper - 0 0 -
+e trial_chambers/corridor/addon/head_upper j trial_chambers/corridor/addon/head_upper - 0 0 -
+e trial_chambers/corridor/addon/reward_upper j trial_chambers/corridor/addon/reward_upper - 0 0 -
+e trial_chambers/corridor/atrium/bogged_relief j trial_chambers/corridor/atrium/bogged_relief - 0 0 -
+e trial_chambers/corridor/atrium/breeze_relief j trial_chambers/corridor/atrium/breeze_relief - 0 0 -
+e trial_chambers/corridor/atrium/spiral_relief j trial_chambers/corridor/atrium/spiral_relief - 0 0 -
+e trial_chambers/corridor/atrium/spider_relief j trial_chambers/corridor/atrium/spider_relief - 0 0 -
+e trial_chambers/corridor/atrium/grand_staircase_1 j trial_chambers/corridor/atrium/grand_staircase_1 - 0 0 -
+e trial_chambers/corridor/atrium/grand_staircase_2 j trial_chambers/corridor/atrium/grand_staircase_2 - 0 0 -
+e trial_chambers/corridor/atrium/grand_staircase_3 j trial_chambers/corridor/atrium/grand_staircase_3 - 0 0 -
+e trial_chambers/decor/EMPTY_pot j trial_chambers/decor/EMPTY_pot - 0 0 -
+e trial_chambers/decor/dead_bush_pot j trial_chambers/decor/dead_bush_pot - 0 0 -
+e trial_chambers/decor/undecorated_pot j trial_chambers/decor/undecorated_pot - 0 0 -
+e trial_chambers/decor/flow_pot j trial_chambers/decor/flow_pot - 0 0 -
+e trial_chambers/decor/guster_pot j trial_chambers/decor/guster_pot - 0 0 -
+e trial_chambers/decor/scrape_pot j trial_chambers/decor/scrape_pot - 0 0 -
+e trial_chambers/decor/candle_1 j trial_chambers/decor/candle_1 - 0 0 -
+e trial_chambers/decor/candle_2 j trial_chambers/decor/candle_2 - 0 0 -
+e trial_chambers/decor/candle_3 j trial_chambers/decor/candle_3 - 0 0 -
+e trial_chambers/decor/candle_4 j trial_chambers/decor/candle_4 - 0 0 -
+e trial_chambers/decor/barrel j trial_chambers/decor/barrel - 0 0 -
+e trial_chambers/corridor/addon/display_1 j trial_chambers/corridor/addon/display_1 - 0 0 -
+e trial_chambers/corridor/addon/display_2 j trial_chambers/corridor/addon/display_2 - 0 0 -
+e trial_chambers/corridor/addon/display_3 j trial_chambers/corridor/addon/display_3 - 0 0 -
+e trial_chambers/reward/vault j trial_chambers/reward/vault - 0 0 -
+e trial_chambers/reward/ominous_vault j trial_chambers/reward/ominous_vault - 0 0 -
+e trial_chambers/chests/connectors/supply j trial_chambers/chests/connectors/supply - 0 0 -
+e trial_chambers/chests/supply j trial_chambers/chests/supply - 0 0 -
+e trial_chambers/spawner/connectors/ranged j trial_chambers/spawner/connectors/ranged - 0 0 -
+e trial_chambers/spawner/connectors/slow_ranged j trial_chambers/spawner/connectors/slow_ranged - 0 0 -
+e trial_chambers/spawner/connectors/melee j trial_chambers/spawner/connectors/melee - 0 0 -
+e trial_chambers/spawner/connectors/small_melee j trial_chambers/spawner/connectors/small_melee - 0 0 -
+e trial_chambers/spawner/connectors/breeze j trial_chambers/spawner/connectors/breeze - 0 0 -
+e trial_chambers/spawner/breeze/breeze j trial_chambers/spawner/breeze/breeze - 0 0 -
+e trial_chambers/dispensers/chamber j trial_chambers/dispensers/chamber - 0 0 -
+e trial_chambers/dispensers/wall_dispenser j trial_chambers/dispensers/wall_dispenser - 0 0 -
+e trial_chambers/dispensers/floor_dispenser j trial_chambers/dispensers/floor_dispenser - 0 0 -
+e trial_chambers/spawner/ranged/skeleton j trial_chambers/spawner/ranged/skeleton - 0 0 -
+e trial_chambers/spawner/slow_ranged/skeleton j trial_chambers/spawner/slow_ranged/skeleton - 0 0 -
+e trial_chambers/spawner/melee/zombie j trial_chambers/spawner/melee/zombie - 0 0 -
+e trial_chambers/spawner/small_melee/slime j trial_chambers/spawner/small_melee/slime - 0 0 -
+p trail_ruins/buildings - trail_ruins/buildings/group_hall_1*1 trail_ruins/buildings/group_hall_2*1 trail_ruins/buildings/group_hall_3*1 trail_ruins/buildings/group_hall_4*1 trail_ruins/buildings/group_hall_5*1 trail_ruins/buildings/large_room_1*1 trail_ruins/buildings/large_room_2*1 trail_ruins/buildings/large_room_3*1 trail_ruins/buildings/large_room_4*1 trail_ruins/buildings/large_room_5*1 trail_ruins/buildings/one_room_1*1 trail_ruins/buildings/one_room_2*1 trail_ruins/buildings/one_room_3*1 trail_ruins/buildings/one_room_4*1 trail_ruins/buildings/one_room_5*1
+p trail_ruins/decor - trail_ruins/decor/decor_1*1 trail_ruins/decor/decor_2*1 trail_ruins/decor/decor_3*1 trail_ruins/decor/decor_4*1 trail_ruins/decor/decor_5*1 trail_ruins/decor/decor_6*1 trail_ruins/decor/decor_7*1
+p trail_ruins/roads - trail_ruins/roads/long_road_end*1 trail_ruins/roads/road_end_1*1 trail_ruins/roads/road_section_1*1 trail_ruins/roads/road_section_2*1 trail_ruins/roads/road_section_3*1 trail_ruins/roads/road_section_4*1 trail_ruins/roads/road_spacer_1*1
+p trail_ruins/tower - trail_ruins/tower/tower_1*1 trail_ruins/tower/tower_2*1 trail_ruins/tower/tower_3*1 trail_ruins/tower/tower_4*1 trail_ruins/tower/tower_5*1
+p trail_ruins/buildings/grouped - trail_ruins/buildings/group_full_1*1 trail_ruins/buildings/group_full_2*1 trail_ruins/buildings/group_full_3*1 trail_ruins/buildings/group_full_4*1 trail_ruins/buildings/group_full_5*1 trail_ruins/buildings/group_lower_1*1 trail_ruins/buildings/group_lower_2*1 trail_ruins/buildings/group_lower_3*1 trail_ruins/buildings/group_lower_4*1 trail_ruins/buildings/group_lower_5*1 trail_ruins/buildings/group_upper_1*1 trail_ruins/buildings/group_upper_2*1 trail_ruins/buildings/group_upper_3*1 trail_ruins/buildings/group_upper_4*1 trail_ruins/buildings/group_upper_5*1 trail_ruins/buildings/group_room_1*1 trail_ruins/buildings/group_room_2*1 trail_ruins/buildings/group_room_3*1 trail_ruins/buildings/group_room_4*1 trail_ruins/buildings/group_room_5*1
+p trail_ruins/tower/additions - trail_ruins/tower/hall_1*1 trail_ruins/tower/hall_2*1 trail_ruins/tower/hall_3*1 trail_ruins/tower/hall_4*1 trail_ruins/tower/hall_5*1 trail_ruins/tower/large_hall_1*1 trail_ruins/tower/large_hall_2*1 trail_ruins/tower/large_hall_3*1 trail_ruins/tower/large_hall_4*1 trail_ruins/tower/large_hall_5*1 trail_ruins/tower/one_room_1*1 trail_ruins/tower/one_room_2*1 trail_ruins/tower/one_room_3*1 trail_ruins/tower/one_room_4*1 trail_ruins/tower/one_room_5*1 trail_ruins/tower/platform_1*1 trail_ruins/tower/platform_2*1 trail_ruins/tower/platform_3*1 trail_ruins/tower/platform_4*1 trail_ruins/tower/platform_5*1 trail_ruins/tower/stable_1*1 trail_ruins/tower/stable_2*1 trail_ruins/tower/stable_3*1 trail_ruins/tower/stable_4*1 trail_ruins/tower/stable_5*1
+p trail_ruins/tower/tower_top - trail_ruins/tower/tower_top_1*1 trail_ruins/tower/tower_top_2*1 trail_ruins/tower/tower_top_3*1 trail_ruins/tower/tower_top_4*1 trail_ruins/tower/tower_top_5*1
+p trial_chambers/chamber/end - trial_chambers/corridor/end_1*1 trial_chambers/corridor/end_2*1
+p trial_chambers/chamber/entrance_cap trial_chambers/chamber/entrance_cap trial_chambers/chamber/entrance_cap*1
+p trial_chambers/chambers/end trial_chambers/hallway/fallback trial_chambers/chamber/chamber_1*1 trial_chambers/chamber/assembly*1 trial_chambers/chamber/eruption*1 trial_chambers/chamber/slanted*1
+p trial_chambers/corridor - trial_chambers/corridor/second_plate*1 trial_chambers/intersection/intersection_1*1 trial_chambers/intersection/intersection_2*1 trial_chambers/intersection/intersection_3*1 trial_chambers/corridor/first_plate*1 trial_chambers/corridor/atrium_1*1 trial_chambers/corridor/entrance_1*1 trial_chambers/corridor/entrance_2*1 trial_chambers/corridor/entrance_3*1
+p trial_chambers/chamber/addon - trial_chambers/chamber/addon/full_stacked_walkway*1 trial_chambers/chamber/addon/full_stacked_walkway_2*1 trial_chambers/chamber/addon/full_corner_column*1 trial_chambers/chamber/addon/grate_bridge*1 trial_chambers/chamber/addon/hanging_platform*1 trial_chambers/chamber/addon/short_grate_platform*1 trial_chambers/chamber/addon/short_platform*1 trial_chambers/chamber/addon/lower_staircase_down*1 trial_chambers/chamber/addon/walkway_with_bridge_1*1 trial_chambers/chamber/addon/c1_breeze*1
+p trial_chambers/chamber/assembly - trial_chambers/chamber/assembly/full_column*2 trial_chambers/chamber/assembly/cover_1*2 trial_chambers/chamber/assembly/cover_2*2 trial_chambers/chamber/assembly/cover_3*2 trial_chambers/chamber/assembly/cover_4*2 trial_chambers/chamber/assembly/cover_5*2 trial_chambers/chamber/assembly/cover_6*2 trial_chambers/chamber/assembly/cover_7*5 trial_chambers/chamber/assembly/platform_1*2 trial_chambers/chamber/assembly/spawner_1*1 trial_chambers/chamber/assembly/hanging_1*2 trial_chambers/chamber/assembly/hanging_2*1 trial_chambers/chamber/assembly/hanging_3*2 trial_chambers/chamber/assembly/hanging_4*2 trial_chambers/chamber/assembly/hanging_5*4 trial_chambers/chamber/assembly/left_staircase_1*1 trial_chambers/chamber/assembly/left_staircase_2*1 trial_chambers/chamber/assembly/left_staircase_3*1 trial_chambers/chamber/assembly/right_staircase_1*1 trial_chambers/chamber/assembly/right_staircase_2*1 trial_chambers/chamber/assembly/right_staircase_3*1
+p trial_chambers/chamber/eruption - trial_chambers/chamber/eruption/center_1*1 trial_chambers/chamber/eruption/breeze_slice_1*1 trial_chambers/chamber/eruption/slice_1*1 trial_chambers/chamber/eruption/slice_2*1 trial_chambers/chamber/eruption/slice_3*1 trial_chambers/chamber/eruption/quadrant_1*1 trial_chambers/chamber/eruption/quadrant_2*1 trial_chambers/chamber/eruption/quadrant_3*1 trial_chambers/chamber/eruption/quadrant_4*1 trial_chambers/chamber/eruption/quadrant_5*1
+p trial_chambers/chamber/slanted - trial_chambers/chamber/slanted/center*1 trial_chambers/chamber/slanted/hallway_1*1 trial_chambers/chamber/slanted/hallway_2*1 trial_chambers/chamber/slanted/hallway_3*1 trial_chambers/chamber/slanted/hallway_4*1 trial_chambers/chamber/slanted/hallway_5*1 trial_chambers/chamber/slanted/quadrant_1*1 trial_chambers/chamber/slanted/quadrant_2*1 trial_chambers/chamber/slanted/quadrant_3*1 trial_chambers/chamber/slanted/quadrant_4*1 trial_chambers/chamber/slanted/ramp_1*1 trial_chambers/chamber/slanted/ramp_2*1 trial_chambers/chamber/slanted/ramp_3*1 trial_chambers/chamber/slanted/ramp_4*1 trial_chambers/chamber/slanted/ominous_upper_arm_1*1
+p trial_chambers/chamber/pedestal - trial_chambers/chamber/pedestal/center_1*1 trial_chambers/chamber/pedestal/slice_1*1 trial_chambers/chamber/pedestal/slice_2*3 trial_chambers/chamber/pedestal/slice_3*3 trial_chambers/chamber/pedestal/slice_4*3 trial_chambers/chamber/pedestal/slice_5*3 trial_chambers/chamber/pedestal/ominous_slice_1*1 trial_chambers/chamber/pedestal/quadrant_1*1 trial_chambers/chamber/pedestal/quadrant_2*1 trial_chambers/chamber/pedestal/quadrant_3*1 trial_chambers/chamber/slanted/quadrant_1*1 trial_chambers/chamber/slanted/quadrant_2*1 trial_chambers/chamber/slanted/quadrant_3*1 trial_chambers/chamber/slanted/quadrant_4*1
+p trial_chambers/corridor/slices - trial_chambers/corridor/straight_1*1 trial_chambers/corridor/straight_2*2 trial_chambers/corridor/straight_3*2 trial_chambers/corridor/straight_4*2 trial_chambers/corridor/straight_5*2 trial_chambers/corridor/straight_6*2 trial_chambers/corridor/straight_7*1 trial_chambers/corridor/straight_8*2
+p trial_chambers/hallway/fallback - trial_chambers/hallway/rubble*1 trial_chambers/hallway/rubble_chamber*1 trial_chambers/hallway/rubble_thin*1 trial_chambers/hallway/rubble_chamber_thin*1
+p trial_chambers/hallway trial_chambers/hallway/fallback trial_chambers/hallway/corridor_connector_1*1 trial_chambers/hallway/upper_hallway_connector*1 trial_chambers/hallway/lower_hallway_connector*1 trial_chambers/hallway/rubble*1 trial_chambers/chamber/chamber_1*150 trial_chambers/chamber/chamber_2*150 trial_chambers/chamber/chamber_4*150 trial_chambers/chamber/chamber_8*150 trial_chambers/chamber/assembly*150 trial_chambers/chamber/eruption*150 trial_chambers/chamber/slanted*150 trial_chambers/chamber/pedestal*150 trial_chambers/hallway/rubble_chamber*10 trial_chambers/hallway/rubble_chamber_thin*1 trial_chambers/hallway/cache_1*1 trial_chambers/hallway/left_corner*1 trial_chambers/hallway/right_corner*1 trial_chambers/hallway/corner_staircase*1 trial_chambers/hallway/corner_staircase_down*1 trial_chambers/hallway/long_straight_staircase*1 trial_chambers/hallway/long_straight_staircase_down*1 trial_chambers/hallway/straight*1 trial_chambers/hallway/straight_staircase*1 trial_chambers/hallway/straight_staircase_down*1
+p trial_chambers/corridors/addon/lower - empty*8 trial_chambers/corridor/addon/staircase*1 trial_chambers/corridor/addon/wall*1 trial_chambers/corridor/addon/ladder_to_middle*1 trial_chambers/corridor/addon/arrow_dispenser*1 trial_chambers/corridor/addon/bridge_lower*2
+p trial_chambers/corridors/addon/middle - empty*8 trial_chambers/corridor/addon/open_walkway*2 trial_chambers/corridor/addon/walled_walkway*1
+p trial_chambers/corridors/addon/middle_upper - empty*6 trial_chambers/corridor/addon/open_walkway_upper*2 trial_chambers/corridor/addon/chandelier_upper*1 trial_chambers/corridor/addon/decoration_upper*1 trial_chambers/corridor/addon/head_upper*1 trial_chambers/corridor/addon/reward_upper*1
+p trial_chambers/atrium - trial_chambers/corridor/atrium/bogged_relief*1 trial_chambers/corridor/atrium/breeze_relief*1 trial_chambers/corridor/atrium/spiral_relief*1 trial_chambers/corridor/atrium/spider_relief*1 trial_chambers/corridor/atrium/grand_staircase_1*1 trial_chambers/corridor/atrium/grand_staircase_2*1 trial_chambers/corridor/atrium/grand_staircase_3*1
+p trial_chambers/decor - empty*22 trial_chambers/decor/EMPTY_pot*2 trial_chambers/decor/dead_bush_pot*2 trial_chambers/decor/undecorated_pot*10 trial_chambers/decor/flow_pot*1 trial_chambers/decor/guster_pot*1 trial_chambers/decor/scrape_pot*1 trial_chambers/decor/candle_1*1 trial_chambers/decor/candle_2*1 trial_chambers/decor/candle_3*1 trial_chambers/decor/candle_4*1 trial_chambers/decor/barrel*2
+p trial_chambers/entrance - trial_chambers/corridor/addon/display_1*1 trial_chambers/corridor/addon/display_2*1 trial_chambers/corridor/addon/display_3*1
+p trial_chambers/decor/chamber - empty*4 trial_chambers/decor/undecorated_pot*1
+p trial_chambers/reward/all - trial_chambers/reward/vault*1
+p trial_chambers/reward/ominous_vault - trial_chambers/reward/ominous_vault*1
+p trial_chambers/reward/contents/default - trial_chambers/reward/vault*1
+p trial_chambers/chests/supply - trial_chambers/chests/connectors/supply*1
+p trial_chambers/chests/contents/supply - trial_chambers/chests/supply*1
+p trial_chambers/spawner/ranged - trial_chambers/spawner/connectors/ranged*1
+p trial_chambers/spawner/slow_ranged - trial_chambers/spawner/connectors/slow_ranged*1
+p trial_chambers/spawner/melee - trial_chambers/spawner/connectors/melee*1
+p trial_chambers/spawner/small_melee - trial_chambers/spawner/connectors/small_melee*1
+p trial_chambers/spawner/breeze - trial_chambers/spawner/connectors/breeze*1
+p trial_chambers/spawner/all - trial_chambers/spawner/connectors/ranged*1 trial_chambers/spawner/connectors/melee*1 trial_chambers/spawner/connectors/small_melee*1
+p trial_chambers/spawner/contents/breeze - trial_chambers/spawner/breeze/breeze*1
+p trial_chambers/dispensers/chamber - empty*1 trial_chambers/dispensers/chamber*1 trial_chambers/dispensers/wall_dispenser*1 trial_chambers/dispensers/floor_dispenser*1
+p trial_chambers/spawner/ranged/skeleton - trial_chambers/spawner/ranged/skeleton*1
+p trial_chambers/spawner/slow_ranged/skeleton - trial_chambers/spawner/slow_ranged/skeleton*1
+p trial_chambers/spawner/melee/zombie - trial_chambers/spawner/melee/zombie*1
+p trial_chambers/spawner/small_melee/slime - trial_chambers/spawner/small_melee/slime*1
+a trial_chambers trial_chambers/spawner/contents/ranged=trial_chambers/spawner/ranged/skeleton trial_chambers/spawner/contents/slow_ranged=trial_chambers/spawner/slow_ranged/skeleton trial_chambers/spawner/contents/melee=trial_chambers/spawner/melee/zombie trial_chambers/spawner/contents/small_melee=trial_chambers/spawner/small_melee/slime

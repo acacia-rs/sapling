@@ -14,10 +14,10 @@ impl Structures {
             (_, Some((grid, java))) => {
                 let s = grid.spacing;
                 let regions = |a: i32, b: i32| a.div_euclid(s)..=b.div_euclid(s);
-                regions(x0, x1)
+                let candidates = regions(x0, x1)
                     .flat_map(|rx| regions(z0, z1).map(move |rz| (rx * s, rz * s)))
-                    .map(|region| if java { grid.java_candidate(self.seed, region) } else { grid.candidate(self.level_seed, region) })
-                    .collect()
+                    .map(|region| if java { grid.java_candidate(self.seed, region) } else { grid.candidate(self.level_seed, region) });
+                return candidates.filter(|&c| inside(c) && self.grid_start(density, kind, c)).collect();
             }
             (StructureKind::Stronghold, _) => {
                 let cells = |a: i32, b: i32| (a as f32 / 200.0).floor() as i32..=(b as f32 / 200.0).floor() as i32;
@@ -29,6 +29,17 @@ impl Structures {
             _ => (x0..=x1).flat_map(|x| (z0..=z1).map(move |z| (x, z))).collect(),
         };
         candidates.into_iter().filter(|&c| inside(c) && self.is_start(density, kind, c)).collect()
+    }
+
+    /// `is_start` for a grid candidate, remembered: every chunk around a candidate asks again, and
+    /// the biome tests (a mansion's 32-block box, a projected jigsaw start) are costly.
+    fn grid_start(&self, density: &Density, kind: StructureKind, chunk: (i32, i32)) -> bool {
+        if let Some(&known) = self.grid_starts.lock().unwrap().get(&(kind, chunk)) {
+            return known;
+        }
+        let start = self.is_start(density, kind, chunk);
+        self.grid_starts.lock().unwrap().insert((kind, chunk), start);
+        start
     }
 
     /// Every structure whose rough area reaches the chunk, with its start chunk.
