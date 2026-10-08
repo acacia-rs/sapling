@@ -92,9 +92,23 @@ later phases still cascade from neighbour seagrass/roots), tree regions 98.75 ->
 interiors in sync (left-over errors sit on the region edge rows, from ring chunks, and on one terrain hole in
 bamboo jungle chunk 171,348 at (2740,100,5576)), pale garden 98.63 -> 99.40%, wildflowers 397/398.
 
+Later the same day: seagrass descends through leaves (not solid-blocking), which put mangrove phase-1/2 chunks in
+sync; swamp huge mushrooms sink through one or two water blocks (143b7f230, biome via 141603120): mangrove swamp
+98.80%, swamp huge mushrooms 154/154.
+
 ## Left
-- Mangrove: phase-1..3 chunks still drift once a neighbour's writes differ (cascade); hanging propagules BDS later
-  breaks (block updates) are not modelled.
-- Pale garden: the 4th tree of chunk (-469,-285) fails in BDS but not here (its trunk volume reaches chunk -468).
-- Jungle edges (ring-chunk decoration), the forest case of the flower table, HugeMushroomFeature's sinking branch
-  (141603120), old growth pine taiga mega spruces (767 extra leaves).
+- Mangrove phase-3 chunks: BDS turns the top one or two mud cells into dirt (oracle class "dirt, grass over mud",
+  ~600 cells), which changes later roots. Not the grass disc: `grass_disc_feature` (148299570, radius
+  `nextInt(3)+2`, y±2) only converts dirt, coarse dirt (list at 0x14ccdb858), grass and mycelium; the source is
+  unknown. Some hanging propagules BDS removes after placement; no discriminator found.
+- Pale garden: BDS's 4th tree of chunk (-469,-285) at (-7489,132,-4558) fails. The next try then matches from
+  draw 593 or 616 (`draw_search`), and BDS has tall grass in its trunk volume that no earlier-phase source writes
+  here. Not resolved.
+- Bamboo jungle (2740,100,5576): not a terrain hole. Both have grass at 99. Our first mega jungle tree of chunk
+  171,348 overhangs a one-block drop and writes its base dirt into air (trunks place base blocks unconditionally,
+  1438eaf00). BDS doesn't grow that tree, probably because of a fern that a phase-0 neighbour's after-surface
+  grass leaves at (2740,101,5574) in its spawn volume, and which sapling's neighbour doesn't place.
+- Old growth pine taiga extra spruce leaves: a terrain-shape bump near (-5320,72,5447) (BDS ground 3-4 blocks
+  higher) lifts the same mega spruces; not a tree bug.
+- The forest case of the flower table is unused (its rule `forest_surface_flowers_feature` is filtered by the
+  `deprecated` tag). Jungle edges come from ring-chunk decoration.
