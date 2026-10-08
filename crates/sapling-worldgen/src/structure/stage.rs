@@ -74,8 +74,7 @@ impl Structures {
         self.place_portals(density, &mut canvas, &portals);
         Self::place_ancient_cities(&mut canvas, &cities, seed);
         self.place_v2(&mut canvas, &v2);
-        let start = if templated { (-64, 319) } else { (i32::MAX, i32::MIN) };
-        Some(mineshafts.iter().fold(start, |(lo, hi), m| (lo.min(m.bb.y0 - 1), hi.max(m.bb.y1 + 1))))
+        Some(mineshafts.iter().fold(canvas.touched, |(lo, hi), m| (lo.min(m.bb.y0 - 1), hi.max(m.bb.y1 + 1))))
     }
 
     fn mineshaft(&self, density: &Density, start: (i32, i32)) -> Arc<Mineshaft> {

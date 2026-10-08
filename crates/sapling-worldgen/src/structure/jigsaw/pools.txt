@@ -1,4 +1,4 @@
-# BDS hardcoded jigsaw data (village, ancient city); scripts/jigsaw_extract/README.md
+# BDS hardcoded jigsaw data (village, ancient city); docs/research/worldgen-bds-jigsaw.md
 l list0 mob_spawner,bedrock,sculk_sensor,redstone_lamp,lit_redstone_lamp,reinforced_deepslate,redstone_wire,powered_repeater,unpowered_repeater,powered_comparator,unpowered_comparator
 l list1 deepslate,deepslate_bricks,deepslate_tiles,deepslate_brick_slab,deepslate_tile_slab,deepslate_brick_stairs,cobbled_deepslate,cracked_deepslate_bricks,cracked_deepslate_tiles,gray_wool
 r cobblestone_building_low_decay rb=cobblestone@0.1|*|mossy_cobblestone

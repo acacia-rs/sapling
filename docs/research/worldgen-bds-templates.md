@@ -7,7 +7,7 @@ Companion to [worldgen-bds-structures.md](worldgen-bds-structures.md) (starts, p
 - Files: the Java `.nbt` templates in `behavior_packs/vanilla*/structures/**` (newest pack wins; loose files,
   the brarchive entries are empty stubs). `scripts/templates_to_rust.py <bds>` transcribes the families in
   `FAMILIES` (igloo, shipwreck, ruin, ruined_portal, village, pillageroutpost, ancient_city, trial_chambers,
-  trail_ruins, fossils) into `src/structure/template/templates.bin` (~4 MB, include_bytes): palette, templates
+  trail_ruins, fossils, mansion) into `src/structure/template/templates.bin` (~4.6 MB, include_bytes): palette, templates
   (blocks in file order, jigsaw/data-marker/loot-chest specials), and a state table (template state -> palette
   block per clockwise rotation). Palette entries equal to a `Block` variant load as it; the rest are
   `Block::Template(index)` (one enum variant, names and states from the palette).
@@ -22,7 +22,9 @@ Companion to [worldgen-bds-structures.md](worldgen-bds-structures.md) (starts, p
   registry's keys, `registry.py` from acacia's blocks.bin). Only chunks within one of the start get blocks, so a
   second flat layout (x, z < 16) fills the rotations the first missed. Result: `scripts/data/template_blocks.tsv`
   (Java state, rotation, Bedrock name, states, waterlogged, flags). Brewing stands take their bottle bits from
-  the block entity's raw item slots (Java 0-2 read as Bedrock 1-3), set by the generator.
+  the block entity's raw item slots (Java 0-2 read as Bedrock 1-3), set by the generator. New families need a
+  rerun for their missing states only (mkprobe's state list; the mansion's 1.11-era states took one run,
+  `PROBE_SEED=20261003`, level type DEFAULT, `PROBE_REGISTRY` for parse_probe; lily pads mapped by hand).
 - A second probe swaps all shipwreck templates (flooded placement) to list what BDS waterlogs:
   `scripts/data/waterloggable.txt` (stairs, slabs, fences, walls, panes, bars, doors, trapdoors, chests, ...;
   never double slabs).
@@ -103,33 +105,42 @@ slabs (50%: cracked/mossy or random stairs), stone brick stairs (50%: slabs or m
 (mossiness -> mossy, default states), netherrack (0.1 magma unless ice), obsidian (0.2 crying), lava (magma /
 netherrack by sea floor and ice), gold (0.3: lava beside lava, else air).
 
+## Pillager outposts (start 148357080, start postProcess 148358490)
+Watchtower, then the overgrown watchtower (integrity 0.05), then up to four feature pieces from seven
+templates around it. Each piece's y comes from five heightmap points of its own footprint; the start's
+postProcess fills under each piece's bottom layer down through air and fluids with that block (cobblestone
+where it is not a full cube).
+
+## Woodland mansions (start 1480a8c20, placer 1480abea0, start postProcess 1480ab380; `src/structure/mansion`)
+Java's 1.11 mansion on BDS's MT, with BDS's own details:
+- Start: rotation nextInt(4); the lowest first-free height at local (7,7), (7,oz), (ox,7), (ox,oz) of the start
+  chunk's generated terrain (ox/oz 12, or 2 where the rotation turns that way); origin (x*16+8, lowest+1,
+  z*16+8). No y >= 60 test.
+- Grid: Java's MansionGrid, but `from2DDataValue` is BDS's table (N, S, W, E; 14a7fe150), corridors 1480b72e0,
+  rooms 1480b7a60 shuffled Sattolo-style (`nextInt(i)` for i from the last index down, never i itself).
+- Pieces: `mansion/<name>` templates; BDS names drop Java's `_1` (carpet_south, carpet_west, indoors_wall,
+  indoors_door) and add corridor_floor_2 above the first floor. Mirror 1 flips template z (Java LEFT_RIGHT),
+  2 flips x (FRONT_BACK = LEFT_RIGHT a half turn further).
+- Pieces are `TemplateStructurePiece`s (141f797b0): air placed, structure blocks skipped. Markers (1480b2360):
+  Chest<Side> -> a chest facing the side turned by the piece (mirrors swap N/S resp. E/W), not over a chest;
+  "Group of Allays" -> air; Warrior and Mage spawn only.
+- Start postProcess: pieces, then cobblestone under the start box's bottom layer wherever a piece stands, then
+  two pairs of stone stair runs out of the entrance (1480abb80), all stepping down through air and fluids no
+  lower than y 2.
+
 ## Oracle (world 20261003-structures + run2, `blocks_match_bds_structures`)
 | kind | precision (non-air) | recall |
 |---|---|---|
 | igloo, snowy slopes | 100% | 100% |
 | igloo, snowy plains (basement) | 98.3% (98.9%) | 99.5% |
-| ocean ruins | 97.2% (93.4%) | trial chamber blocks dominate "wanted" |
+| ocean ruins | 99.2% | 92.6% |
 | shipwreck | 99.8% | 62.9% (the rest is a dungeon and features) |
-| ruined portal | 99.9% | 99.8% |
-Remaining: iron bar/fence joins to a few non-cube neighbours, water a basement cut open (liquid stage).
-
-## Jigsaw (not ported; RE so far)
-- Villages: `VillageFeature::createStructureStart` 1480a83a0: village type from the biome's VillageType
-  component (default 4 plains); 141f79aa0: rotation nextInt(4), zombie = nextFloat() < 0.02, start pool
-  `minecraft:village/<type>/town_centers` or `minecraft:village/abandoned/<type>/town_centers`, start element
-  uniform over the pool's weight-expanded list, then JigsawPlacement (ctor 141ee6920, max depth 6) `addPieces`
-  141ee6a70: start piece moved to the generated height at its centre, beard registration (144cd0700/
-  144cd05a0/144ccf8f0, the hardcoded agent's terrain adaptation), then 141ee7000: **recursive** (depth-first)
-  per piece: jigsaws shuffled (141ee53d0), target pool, at max depth only the fallback; 141ee7770 tries
-  elements (weighted list shuffled) and rotations shuffled with MSVC `std::shuffle` over raw MT draws, then
-  `_tryPlacingPiece` (lambda_17 141f06d00).
-- Pool data is C++: elements in 14816cc00 (processor list by name 141f7dc50; factories 1481d8670 / 8940 / 8c00 /
-  8f00 / 91f0 / 9500 into element ctor 145e18510 (projection byte, element type 3); register by name
-  141f7f8b0; feature elements 145e137d0/1481113c0 with features like `minecraft:select_oak_tree_feature`); pools in
-  1480bbe90: element by name 141f80c00, weight stored beside it, pool (name, fallback, list) 1481d97f0, register
-  141f89b50; abandoned villages via PoolAliasBinding targets. The disassembly is regular enough to parse.
-- v2 (trail ruins, trial chambers): `br::worldgen::JigsawAssembler` (lambda 144d11120); trail ruins pools and
-  processors are pack JSON (worldgen-bds-structures.md).
+| ruined portal | 99.8% | 99.8% |
+| pillager outpost | 98.0% | 89.9% (two feature pieces on uneven ground sit off by one) |
+| woodland mansion | 99.5% | 89.9% (the rest is trees and moss carpets around it) |
+Jigsaw structures: [worldgen-bds-jigsaw.md](worldgen-bds-jigsaw.md).
+Remaining: iron bar/fence joins to a few non-cube neighbours, walls not reshaped, water a basement cut open
+(liquid stage).
 
 ## Labels
 ```
@@ -145,4 +156,9 @@ Remaining: iron bar/fence joins to a few non-cube neighbours, water a basement c
 14393d890 VanillaBiomeTags init  14837f180 template name globals (portals, igloo, shipwreck)
 1480a83a0 VillageFeature::createStructureStart 141f79aa0 village start pieces 141ee6a70 JigsawPlacement::addPieces
 141ee7000 jigsaw piece recursion 141ee7770 jigsaw candidates 14816cc00 village elements 1480bbe90 village pools
+148357080 outpost start   148358490 outpost start postProcess
+1480a8980 WoodlandMansionFeature::isFeatureChunk   1480a8c20 mansion start   1480abea0 createMansion
+1480b72e0 mansion corridors   1480b7780 cleanEdges   1480b7a60 identifyRooms   1480b69c0 isRoomId
+1480b3800 traverseOuterWalls   1480b3cc0 wall piece   1480b3eb0 createRoof   1480b1930/1a70 mansion piece ctor
+1480b2360 mansion markers   1480ab380 mansion start postProcess   1480abb80 entrance stair run
 ```

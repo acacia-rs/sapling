@@ -49,6 +49,8 @@ pub struct Structures {
     mineshaft_seed: placement::MineshaftSeed,
     /// Mineshaft chances already drawn: every column asks for the 15x15 chunks around it.
     mineshaft_chunks: Mutex<HashMap<(i32, i32), bool>>,
+    /// Grid candidates' start checks, which every chunk around them repeats.
+    grid_starts: Mutex<HashMap<(StructureKind, (i32, i32)), bool>>,
     strongholds: OnceLock<Vec<(i32, i32)>>,
     mineshafts: Mutex<HashMap<(i32, i32), Arc<mineshaft::Mineshaft>>>,
     templates: templated::TemplateStarts,
@@ -63,6 +65,7 @@ impl Structures {
             level_seed,
             mineshaft_seed,
             mineshaft_chunks: Mutex::new(HashMap::new()),
+            grid_starts: Mutex::new(HashMap::new()),
             strongholds: OnceLock::new(),
             mineshafts: Mutex::new(HashMap::new()),
             templates: Default::default(),
@@ -103,11 +106,11 @@ impl Structures {
             StructureKind::RuinedPortal => true,
             StructureKind::AncientCity => probe.contains_only((chunk.0 * 16, -27, chunk.1 * 16), 0, DEEP_DARK),
             StructureKind::TrialChambers => {
-                let (x, y, z) = data_driven::position(density, self.seed, kind, chunk);
+                let (x, y, z) = self.v2_position(density, kind, chunk);
                 !DEEP_DARK.contains(&probe.biome(x, y, z))
             }
             StructureKind::TrailRuins => {
-                let (x, y, z) = data_driven::position(density, self.seed, kind, chunk);
+                let (x, y, z) = self.v2_position(density, kind, chunk);
                 TRAIL_RUINS_BIOMES.contains(&probe.biome(x, y, z))
             }
         }

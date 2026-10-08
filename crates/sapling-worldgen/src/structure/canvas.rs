@@ -19,11 +19,14 @@ pub struct Canvas<'a> {
     heights: RefCell<HashMap<(i32, i32), i32>>,
     /// Writes outside the chunk kept (and read back) while a piece placed whole is being drawn.
     spill: Option<(BoundingBox, HashMap<(i32, i32, i32), Block>)>,
+    /// The lowest and highest y written inside the chunk.
+    pub touched: (i32, i32),
 }
 
 impl<'a> Canvas<'a> {
     pub fn new(shape: &'a mut ChunkShape, chunk: (i32, i32), neighbour: &'a dyn Fn(i32, i32, i32) -> Block) -> Self {
-        Self { shape, chunk, bb: BoundingBox::chunk(chunk.0, chunk.1), neighbour, heights: RefCell::new(HashMap::new()), spill: None }
+        let bb = BoundingBox::chunk(chunk.0, chunk.1);
+        Self { shape, chunk, bb, neighbour, heights: RefCell::new(HashMap::new()), spill: None, touched: (i32::MAX, i32::MIN) }
     }
 
     /// Until `end_spill`, writes inside `area` but outside the chunk are kept for later reads, as
@@ -62,6 +65,7 @@ impl<'a> Canvas<'a> {
     pub fn set(&mut self, x: i32, y: i32, z: i32, block: Block) {
         if self.bb.contains(x, y, z) {
             self.shape.set_block((x & 15) as usize, y, (z & 15) as usize, block);
+            self.touched = (self.touched.0.min(y), self.touched.1.max(y));
             let mut heights = self.heights.borrow_mut();
             if let Some(h) = heights.get_mut(&(x, z))
                 && counts_for_height(block)

@@ -8,6 +8,7 @@ use super::rules::{Rule, apply_first};
 use super::{Kind, Rotation, Template};
 use crate::block::Block;
 use crate::random::JavaRandom;
+use crate::structure::BoundingBox;
 
 #[derive(Debug, Clone)]
 pub struct Capped {
@@ -23,9 +24,10 @@ pub struct JavaPlacement<'a> {
 }
 
 impl JavaPlacement<'_> {
-    /// Every processed block of `template` at `origin`, in placement order; `world` is what the
-    /// world holds where a rule's location predicate looks.
-    pub fn blocks(&self, template: &Template, origin: (i32, i32, i32), world: &dyn Fn(i32, i32, i32) -> Block) -> Vec<((i32, i32, i32), Block)> {
+    /// The processed blocks of `template` at `origin` within `clip`, in placement order; `world` is
+    /// what the world holds where a rule's location predicate looks. Without capped processors a
+    /// block's result depends on nothing outside it, so the rest is skipped.
+    pub fn blocks(&self, template: &Template, origin: (i32, i32, i32), clip: &BoundingBox, world: &dyn Fn(i32, i32, i32) -> Block) -> Vec<((i32, i32, i32), Block)> {
         let mut out = Vec::with_capacity(template.blocks.len());
         for (index, b) in template.blocks.iter().enumerate() {
             let mut block = match b.state.kind() {
@@ -41,6 +43,9 @@ impl JavaPlacement<'_> {
             }
             let (dx, dy, dz) = self.rotation.apply(b.pos);
             let at = (origin.0 + dx, origin.1 + dy, origin.2 + dz);
+            if self.capped.is_empty() && !clip.contains(at.0, at.1, at.2) {
+                continue;
+            }
             if let Some(output) = apply_first(self.rules, block, world(at.0, at.1, at.2), at) {
                 block = output;
             }

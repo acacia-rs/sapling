@@ -102,7 +102,7 @@ for path in sys.argv[2:]:
             aliases.append(f"a {short(d['aliases'])} " + ' '.join(f'{short(a)}={short(b)}' for a, b in d['pairs']))
 
 with open(sys.argv[1], 'w', newline='\n') as out:
-    out.write('# BDS hardcoded jigsaw data (village, ancient city); scripts/jigsaw_extract/README.md\n')
+    out.write('# BDS hardcoded jigsaw data (village, ancient city); docs/research/worldgen-bds-jigsaw.md\n')
     for name, blocks in lists.items():
         out.write(f"l {name} {','.join(blocks)}\n")
     for name, rules in procs.items():

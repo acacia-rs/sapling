@@ -42,13 +42,13 @@ fn start(kind: StructureKind) -> (&'static V2Start, i32) {
     }
 }
 
-/// Where `kind`'s biome test looks for a start in `chunk`.
-pub fn position(density: &Density, seed: i64, kind: StructureKind, chunk: (i32, i32)) -> (i32, i32, i32) {
-    let raw = RawHeights::new(density);
-    start(kind).0.start_piece(&mut JavaRandom::large_feature(seed, chunk.0, chunk.1), chunk, &|x, z| raw.at(x, z)).1
-}
-
 impl Structures {
+    /// Where `kind`'s biome test looks for a start in `chunk`.
+    pub(super) fn v2_position(&self, density: &Density, kind: StructureKind, chunk: (i32, i32)) -> (i32, i32, i32) {
+        let raw = RawHeights::new(density);
+        start(kind).0.start_piece(&mut JavaRandom::large_feature(self.seed, chunk.0, chunk.1), chunk, &|x, z| raw.at(x, z)).1
+    }
+
     /// The pieces of every trail ruin and trial chamber with a piece meeting `chunk`.
     pub(super) fn v2_near(&self, density: &Density, chunk: (i32, i32)) -> Vec<Arc<Vec<Piece>>> {
         let column = BoundingBox::chunk(chunk.0, chunk.1);
