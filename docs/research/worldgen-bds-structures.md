@@ -15,7 +15,7 @@ bdsre scratch copy; VAs absolute. Labels at the end.
   strongholds, monuments, pyramids, swamp huts and buried treasure are pure code.
 - **v2 jigsaw (`br::worldgen`)**: structure sets with `RandomSpreadPlacement` (144cfea60). From pack JSON
   (`behavior_packs/vanilla_1.19.80/__brarchive/worldgen/*`): trail ruins; `vanilla_1.26.50`: abandoned camp (18
-  biome variants, 37/8, salt 91231127, not ported). Trial chambers are a C++ v2 set (no JSON; neither the salt nor
+  biome variants, 37/8, salt 91231127; `data_driven.rs`). Trial chambers are a C++ v2 set (no JSON; neither the salt nor
   any spacing appears as an immediate). Starts are made in `loadChunk` (`preProcessStructures` 14196b7b0 →
   `_tryGenerateStructure` 14196cc20; several structures per set pick by Java `setLargeFeatureSeed` weights).
 - Data inventory (pack archives, 1300 `.nbt` templates in Java NBT with Java block names, 15 `.mcstructure`): the
@@ -155,14 +155,30 @@ write water below y 63 and air above (no keep); wing design `nextIntUnbounded() 
 - Pieces as Java's, but selector boxes fill air too and draw for every edge cell (148099b60: < 0.2 cracked, < 0.5
   mossy, < 0.55 infested); slabs are stone brick slabs; the prison hall has no iron doors; the storeroom torch is
   the default state (facing unknown); chests west (corridor, library, storeroom) and north (tall library).
-- Terrain buries the pieces: `setBury` per piece box (144d065e0, via 144cd0700); `_prepareHeights` adds, after the
-  noodle caves and before the aquifer, `clamp(1 - sqrt(dx² + (dy/2)² + dz²)/6)` per box (dx, dz outside the box,
-  dy from its floor, |dy| < 12) from a f32 table (144cd3d40, summed in f64 by 144cd50c0): src/structure/bury.rs.
-  Beards (villages, outposts) and v2 adaptations are not ported.
+- Terrain buries the pieces: `setBury` per piece box (legacy store, below).
 
-## Terrain adaptation
-`FeatureTerrainAdjustments::setBeardifier/setBeardAndShaver/setBury`: kinds 1 bury (dx, dz <= 5), 2-4 beard
-kernels (x0.8). Of the hardcoded structures only strongholds register (bury, above); jigsaw ones beard.
+## Terrain adaptation (src/structure/adjust)
+`_prepareHeights` (14822eb60) adjusts each block's density after the noodle caves and before the aquifer, from two
+separate systems: `d1 = f32(density + v2)`, then `density = d1 + legacy(d1)`.
+- **Legacy store** (`FeatureTerrainAdjustments` at WorldGenerator +0x268, per chunk; an entry is filed under every
+  chunk its box +-12 meets, 144ccf020). Registered by the hardcoded jigsaw placers for each **rigid** piece
+  (addPieces 141ee6a70, candidates 141ee7770, queued 141edde60/141ee5600) by the piece class's
+  `getTerrainAdjustmentEffect` (vt+0x80: village 0 beard, ancient city 1 beard-and-shave, 2 bury), with the ground
+  offset 1 for the start piece and the attaching jigsaw's template y for children; strongholds call `setBury` per
+  piece. Lambdas 144d05940/05f60/065e0 store: beards and shavers with the box grown by 2 in x/z, ground = y0 +
+  offset, middle and half size (max of (x1-x0+5)/2, (z1-z0+5)/2); shavers margins 1.0 below / 5.0 above ground.
+  Evaluated in f32 by 144cd11f0: shavers `beard(dx, y - clamp(y, ground, y1), dz) * (1.5 - d/R)` when d <= R
+  (d from the middle, R = half size + margin), beards `beard(dx, y - ground, dz) * 0.8`, then, only where
+  d1 + that sum <= 0, buries `1 - floor(sqrt(dx² + dz² + trunc((y - clamp(y, y0, y1))/2)²))/6` clamped. The legacy
+  beard kernel (145e28450, f32): `-d * fastInvSqrt_f32((d² + r²)/2) / 2 * powf(e, -(d²/16 + r²/16))`, d = dy + 0.5.
+- **v2** (144cd4450 collects, `calculateContribution` 144cd50c0 sums in f64): every piece of a v2 start whose box
+  is within 12 of the chunk; rigid ones by the structure's adaptation (1 bury, 2 beard_thin, 3 beard_box, 4
+  encapsulate) with Java's ground level delta, and all junctions with x and z in chunk start..start+27 (Java widens
+  the lower bound by 12; BDS does not), x0.4. Kernels: initBeardKernel 144cd3800 (4D f32 table; f64 Java formula
+  with the double fast-inverse-sqrt constant 0x5fe6eb50c7b537a9 and `exp(-((dy+0.5)² + dx² + dz²)/16)`),
+  initBuryKernel 144cd3d40 (half-block steps: bury reads (2dx, 2dz, dy), encapsulate (dx, dz, dy) x0.8).
+Trail ruins bury, trial chambers encapsulate, abandoned camps beard_thin. Outposts and other template structures
+register nothing.
 
 Woodland mansion (1480a8c20): Java's room grid in code, then `.nbt` templates for every room; left to the
 template port.
@@ -174,8 +190,9 @@ structure stage changed (credited to ported kinds), wanted = BDS structure block
 Mineshaft non-air precision 98.6% near origin, 99.2% far out, 100% badlands (dark oak), 90-97% swamps; the far-out
 trial chamber shows as 5710 wanted cells (tuff bricks, waxed copper, chiseled tuff). Buried treasure exact (4/4).
 Precision (non-air) / recall: desert pyramid 100/99.7%, swamp hut 100/99.2%, jungle temple 99.9/78% (misses are
-vines and features), monument 98.4/99.8% (water against kelp), stronghold 96.5/71% (the rest under trial chambers,
-a mineshaft and village blocks).
+vines and features), monument 98.4/99.8% (water against kelp), stronghold 98.4/95.8% (2026-10-08, with the legacy
+burying and every kind ported). Terrain adjustments took the structures world from 98.86% to 99.92% exact (Shape
+70k -> 0.9k cells, carver-looking cells 112k -> 22) and far out 99.83 -> 99.96% (trial chamber encapsulation).
 Mineshafts sharing a chunk run in descending start order (BDS's hash-map visit order; frozen ocean non-air
 79 -> 83%, mangrove 81 -> 87%); a spider corridor stops drawing spawner positions once it placed one (+0x5a,
 which BDS also keeps across chunks: not modelled, our chunks are re-run for neighbours). Monument double Y rooms
@@ -231,4 +248,8 @@ agree on the region seed and the legacy table; all values above were re-derived 
   1480a50f0 room, 1480a6f90 straight, 1480a76b0 straight stairs
 144cd0700 FeatureTerrainAdjustments::setBury   144cd50c0 ::calculateContribution   144cd3800/144cd3d40 ::init{Beard,Bury}Kernel
 14822eb60 OverworldGeneratorMultinoise::_prepareHeights   149e9dae0 MonsterRoomFeature::place   149e923b0 LakeFeature::place
+144ccf8f0/144cd05a0 FeatureTerrainAdjustments::{setBeardifier,setBeardAndShaver}   144cd11f0 ::legacyContribution
+144cd4450 ::collectJigsawAdjustments   144ccf020 ::chunksAround   144ccfa40 ::_addToChunks   144cd0ba0 ::copyForChunk
+145e28350/145e28450 LegacyBeard::{getBeardContribution,initKernel}   141ef21e0 PoolElementStructurePiece::postProcess
+148358d80 PillagerOutpostPiece::postProcess
 ```

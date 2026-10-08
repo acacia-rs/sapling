@@ -64,32 +64,42 @@ Companion to [worldgen-bds-templates.md](worldgen-bds-templates.md) (template lo
   density shape, water counts, at least -64). Start moved to height(middle) - 1.
 - Piece class (141f7a9c0/ab60/abb0): skips a rigid piece whose middle two below and four bottom corners one
   below are all air; flag 1 fills under bottom-layer blocks 2-4 deep (`nextInt(3)` per filled column from
-  the chunk MT) with the biome's top material (dirt for grass, nothing under leaves); flag 2 plugs the first
-  hole under solid blocks within 12 of the middle (sand -> sandstone, red sand -> red sandstone, else stone).
-  Terrain matching puts each block at heightmap(x, z) + template y - 1.
+  the chunk MT) with the biome's top material (dirt for grass, nothing under leaves); flag 2, within 12 of the
+  middle, under each falling block (`BlockType` +0x163 bit 0x10 = mFalling: sand, gravel) one below the piece,
+  plugs the first non-falling block if air or water (sand -> sandstone, red sand -> red sandstone, else stone).
+  Terrain matching puts each block at heightmap(x, z) + template y - 1. Rigid pieces beard the terrain
+  (worldgen-bds-structures.md, Terrain adaptation).
 
 ## Ancient cities (`ancient_city.rs`; start 1483117d0 -> 141edd690)
 Rotation, centre element, then the queued placer from the `minecraft:city_anchor` jigsaw at the start
 column, piece y = -27 - anchor dy - y0 - 1, within 128 of the centre, depth 7; deepslate plugs.
 
-## Trail ruins and trial chambers (`data_driven.rs`)
-- Trail ruins: pool `trail_ruins/tower`, depth 7, 80 around, start -15 projected on the surface, bury (the
-  terrain stage's).
+## V2 structures (`data_driven.rs`, `jigsaw/junction.rs`)
+- Trail ruins: pool `trail_ruins/tower`, depth 7, 80 around, start -15 projected on the surface, bury.
 - Trial chambers (141f82140): pool `trial_chambers/chamber/end`, depth 20, 116 around, start uniform
-  -40..-20, padding 10, alias set `trial_chambers`.
+  -40..-20, padding 10, alias set `trial_chambers`, encapsulate.
+- Abandoned camps (pack `abandoned_camp` set, 37/8, salt 91231127; `s` lines of pools_v2.txt from jjson.py):
+  18 structures of weight 1, picked as Java's `tryGenerateStructure` does (large-feature Random,
+  `nextInt(total)`, a variant whose start-piece biome fails its `has_biome_tag` filters is dropped and the pick
+  repeats); start pool `abandoned_camp/tent/<biome>`, depth 3, 116 around, start 0 projected, padding 10,
+  beard_thin. Tents attach a campsite, both attach tree feature elements.
+- Pieces keep Java's ground level delta (start 1; rigid child: source delta - k, k = jigsaw y above the source
+  bottom - candidate jigsaw y + front step y) and junctions (`tryPlacingChildren`), for the terrain stage.
 
-## Oracle (20261003-structures, `blocks_match_bds_structures`)
+## Oracle (20261003-structures and -biomes, 2026-10-08)
 | kind | precision (non-air) | recall | what is left |
 |---|---|---|---|
-| village | 55.2% | 85.0% | the beard (terrain adaptation, not ported) and paths on the heights it moves; feature elements |
-| ancient city | 84.8% | 95.5% | sculk patch feature elements; later stages over the city |
-| trail ruins | 99.7% | 84.7% | the bury adaptation (terrain stage) |
+| village | 99.0% | 98.4% | tree and pile feature elements; a few paths a block low; fence/wall joins |
+| ancient city | 82.4% | 96.7% | sculk patch feature elements; later stages over the city |
+| trail ruins | 99.7% | 84.7% | |
 | trial chambers | 99.8% | 99.6% | (other starts 97.9-99.9%; geodes overwrite one in the mansion region) |
+| abandoned camp | 91.8 / 96.4 / 99.2% | 42.5 / 96.1 / 99.7% | tree feature elements; forest rocks count as wanted |
 All 840 ruin-material cells of the trail ruin match, suspicious gravel included.
 
 ## Gaps
-- Feature elements (village trees and piles, ancient city sculk patches) place nothing yet.
-- Village paths sit one block off in some columns (BDS's heightmap there is one higher).
+- Feature elements (village and camp trees, piles, ancient city sculk patches) place nothing: BDS places them
+  through the 3x3 block source from the chunk holding their 1x1x1 box, drawing from that chunk's generator.
+- Village paths sit one block low in a few columns next to trees (shape cells there too).
 - Pool alias random picks (trial chamber spawner kinds) are not drawn; blocks agree either way.
 
 ## Labels

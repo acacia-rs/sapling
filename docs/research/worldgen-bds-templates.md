@@ -25,6 +25,9 @@ Companion to [worldgen-bds-structures.md](worldgen-bds-structures.md) (starts, p
   the block entity's raw item slots (Java 0-2 read as Bedrock 1-3), set by the generator. New families need a
   rerun for their missing states only (mkprobe's state list; the mansion's 1.11-era states took one run,
   `PROBE_SEED=20261003`, level type DEFAULT, `PROBE_REGISTRY` for parse_probe; lily pads mapped by hand).
+  The pack's `scripts/data.js` is written per run: `CELLS` from mkprobe's states.tsv, `CANDIDATES` igloo starts
+  in block coordinates (temple starts whose point biome is 12, 30 or 184); 30 igloos cover all four rotations.
+  The abandoned camps' 262 states took one run (podzol and full water cauldrons mapped by hand).
 - A second probe swaps all shipwreck templates (flooded placement) to list what BDS waterlogs:
   `scripts/data/waterloggable.txt` (stairs, slabs, fences, walls, panes, bars, doors, trapdoors, chests, ...;
   never double slabs).
@@ -45,7 +48,9 @@ After all blocks 141f5c5d0 updates shapes against neighbours. Saved worlds show 
 stair corners following the *final* neighbours (also across chunks), so `template/connect.rs` sets them after
 every chunk's pieces (with `rejoin_fences`): fences join their kind, gates and sturdy faces (full cubes, stair
 backs); panes and bars join panes, bars, walls and sturdy faces; stairs take Java's `getStairsShape`, corners
-named as Bedrock saves them. Walls are not reshaped yet.
+named as Bedrock saves them; walls (`template/wall.rs`) take Java's `WallBlock` shape: sides join walls, panes,
+bars, fence gates across them and sturdy faces, `tall` where the block above covers that side, post by Java's
+`shouldRaisePost`. Hardcoded pieces' fences, bars and stairs go through the same pass (`rejoin_connections`).
 Markers (`getMarkers` 141ee8850) come back in an MSVC `unordered_map<BlockPos, string>`: FNV-1a per coordinate,
 boost-combined; list order = insertion order, a key whose bucket is taken goes after that bucket's last key
 (`template/markers.rs`, no rehash below 9 keys). Order matters where marker handling draws.
@@ -139,7 +144,7 @@ Java's 1.11 mansion on BDS's MT, with BDS's own details:
 | pillager outpost | 98.0% | 89.9% (two feature pieces on uneven ground sit off by one) |
 | woodland mansion | 99.5% | 89.9% (the rest is trees and moss carpets around it) |
 Jigsaw structures: [worldgen-bds-jigsaw.md](worldgen-bds-jigsaw.md).
-Remaining: iron bar/fence joins to a few non-cube neighbours, walls not reshaped, water a basement cut open
+Remaining: iron bar/fence/wall joins to a few non-cube neighbours, water a basement cut open
 (liquid stage).
 
 ## Labels
