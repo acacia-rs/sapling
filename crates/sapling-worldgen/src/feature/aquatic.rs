@@ -17,9 +17,11 @@ fn is_cold(biome: u32) -> bool {
     matches!(biome, 11 | 12 | 26 | 30 | 46 | 140 | 182 | 183 | 184 | 185)
 }
 
-/// `isSolidBlockingBlock`.
+/// `isSolidBlockingBlock` (vtable 0x1b0): leaves are not (oracle: seagrass reaches the water under
+/// mangrove canopies).
 fn solid(view: &View, x: i32, y: i32, z: i32) -> bool {
-    view.block(x, y, z).blocks_motion()
+    let block = view.block(x, y, z);
+    block.blocks_motion() && !block.is_leaves()
 }
 
 /// Up from `p` to the first water or air block (seagrass and kelp are not water: oracle).
@@ -91,8 +93,7 @@ pub fn seagrass(ctx: &mut Ctx, at: [i32; 3], count: i32, tall: f32) -> bool {
     for _ in 0..count {
         climb(view, &mut p);
         let [px, py, pz] = p;
-        let water: [bool; 3] = std::array::from_fn(|dy| view.block(px, py + dy as i32, pz) == Block::Water);
-        // The float is drawn only once the seagrass may stand here (oracle: drawing it always desyncs).
+        let water: [bool; 3] = std::array::from_fn(|dy| view.block(px, py + dy as i32, pz) == Block::Water);        // The float is drawn only once the seagrass may stand here (oracle: drawing it always desyncs).
         if water[0] && solid(view, px, py - 1, pz) {
             if tall > ctx.random.next_float() {
                 if water[1] && (!cold || water[2]) {
