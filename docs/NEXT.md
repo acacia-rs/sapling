@@ -23,10 +23,11 @@ it does on BDS and the two captures can be diffed:
 
 Each needs its rule looked up first (`bdsre` for BDS, the Java jar for data), then a shard test.
 
-1. **Water for entities**: items float, orbs bob, mobs sink, as on BDS (`body/water.rs`,
-   `docs/research/water-movement.md` 7); concrete powder sets (`bds_command_probe concrete`). Left:
-   lava for bodies; BDS's 1-in-33 big wave for orbs; powder put beside water shows as powder for a
-   moment before its concrete.
+1. **Water and lava for entities**: items float and burn, orbs bob and are thrown out of lava,
+   mobs sink, as on BDS (`body/liquid.rs`, `docs/research/water-movement.md` 7 and 8); concrete
+   powder sets (`bds_command_probe concrete`). Left: mobs set on fire and hurt in lava (no mob
+   health yet); an item's `MOVING` flag in water; BDS's 1-in-33 big wave for orbs; powder put
+   beside water shows as powder for a moment before its concrete.
 2. **Redstone.** Plates now match BDS when walked on (`bds_plate_probe`); what they power (the lamp
    in that drill) does nothing on sapling.
 
@@ -55,6 +56,8 @@ Each needs its rule looked up first (`bdsre` for BDS, the Java jar for data), th
   sure for whole families (stairs, slabs, walls), not for single blocks (`waterlogging.md`).
 - Lava burns what has no collision; BDS asks each block (`isLavaBlocking`, 23 overriding classes).
 - A pressed plain plate stores `redstone_signal` 1 (decompile only).
+- Which items lava does not burn: netherite's and ancient debris, by name (`drops.rs` `fireproof`);
+  BDS reads a flag of each item.
 
 ## 4. A vanilla client session
 

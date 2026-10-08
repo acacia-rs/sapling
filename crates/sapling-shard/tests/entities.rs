@@ -8,8 +8,9 @@ use std::sync::{Arc, Mutex};
 use acacia_proto::nbt::Value;
 use acacia_proto::Packet;
 use acacia_proto::packets::{
-    AddEntity, AddItemEntity, EntityEvent, EntityEventEventId, LevelEvent, LevelEventEvent, LevelSoundEvent, MoveEntityDelta, RemoveEntity, UpdateBlock,
+    AddEntity, AddItemEntity, EntityEvent, EntityEventEventId, LevelEvent, LevelEventEvent, LevelSoundEvent, MoveEntityDelta, RemoveEntity, SetEntityData, UpdateBlock,
 };
+use acacia_proto::types::MetadataDictionaryItemValue as MetaValue;
 use common::stored::{actor, enter_stored, floor_with};
 use common::{Harness, all, hash};
 use sapling_api::{Block, EntityId, EntityInfo};
@@ -60,6 +61,32 @@ fn a_spawned_mob_is_heard_at_its_head_after_it_is_shown_as_on_bds() {
     // A pig is 0.9 wide and high; its head 0.85 of that up and, an animal's, forward.
     let at = [sound.position.x, sound.position.y, sound.position.z];
     assert!((sound.sound_id.as_str(), sound.entity_type.as_str()) == ("spawn", "minecraft:pig") && (0..3).all(|axis| (at[axis] - [3.5, 65.765, 1.265][axis]).abs() < 1e-4), "{sound:?}");
+}
+
+#[test]
+fn an_item_in_lava_fizzes_burns_and_goes_as_on_bds() {
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    h.enter(2, "Steve");
+    // Dirt broken over lava set in the floor, walled in so that its item falls into the lava.
+    h.remote.run(|ctx| {
+        for y in 63..=66 {
+            for [dx, dz] in [[-1, 0], [1, 0], [0, -1], [0, 1]] {
+                assert!(ctx.set_block([6 + dx, y, dz], &Block::new("stone")));
+            }
+        }
+        assert!(ctx.set_block([6, 63, 0], &Block::new("stone")) && ctx.set_block([6, 64, 0], &Block::new("lava")) && ctx.set_block([6, 65, 0], &Block::new("dirt")) && ctx.break_block([6, 65, 0]));
+    });
+    let ticks: Vec<_> = (0..40).map(|_| h.tick_all().to(2).to_vec()).collect();
+    let sent: Vec<_> = ticks.concat();
+    let item = all::<AddItemEntity>(&sent)[0].runtime_entity_id;
+    let when = |found: &dyn Fn(&[acacia_proto::RawPacket]) -> bool| ticks.iter().position(|sent| found(sent));
+    let burning = when(&|sent| all::<SetEntityData>(sent).iter().any(|data| data.runtime_entity_id == item && matches!(data.metadata[0].value, MetaValue::Flags(flags) if flags.0 & 1 == 1)));
+    let gone = when(&|sent| !all::<RemoveEntity>(sent).is_empty());
+    let fizzes: Vec<usize> = ticks.iter().enumerate().filter(|(_, sent)| all::<LevelSoundEvent>(sent).iter().any(|sound| sound.sound_id == "fizz")).map(|(tick, _)| tick).collect();
+    let burning = burning.expect("set on fire");
+    // On fire as it is lifted, a fizz a tick late for each of its two ticks in lava, gone with the second.
+    assert_eq!((fizzes, gone), (vec![burning + 1, burning + 2], Some(burning + 2)));
 }
 
 #[test]

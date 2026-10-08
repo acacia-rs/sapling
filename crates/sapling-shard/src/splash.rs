@@ -1,5 +1,5 @@
 //! The splash an entity makes going into water, as BDS's `Actor::doWaterSplashEffect` and its
-//! in-water check make it (docs/research/splash-sound.md).
+//! in-water check make it (docs/research/splash-sound.md), and its fizz in lava.
 // TODO: a rider's mount splashes louder (0.9 for 0.2); nothing rides here.
 
 use acacia_proto::packets::LevelSoundEvent;
@@ -7,8 +7,9 @@ use acacia_proto::types::Vec3f;
 use bevy_ecs::prelude::*;
 use bytes::Bytes;
 
-use crate::body::{Body, Water, in_water};
+use crate::body::{Body, InLiquid, Liquid, in_liquid};
 use crate::components::{InLayer, Layer};
+use crate::late_sounds;
 
 /// How much of the move's speed across counts, and how loud speed makes it.
 const ACROSS_WEIGHT: f32 = 0.2;
@@ -18,12 +19,12 @@ const LOUDNESS: f32 = 0.2;
 #[derive(Component)]
 pub(crate) struct InWater;
 
-/// After the entity `kind` (`id`), whose body water treats by `water`, moved by `moved` to
+/// After the entity `kind` (`id`), whose body water treats by `rule`, moved by `moved` to
 /// `body`: the splash if that took it into water. BDS's volume, packed as its sounds pack one, is
 /// from the move's motion before drag.
-pub(crate) fn check(world: &mut World, entity: Entity, id: u64, kind: &str, moved: [f32; 3], body: &Body, water: Water) -> Option<Bytes> {
+pub(crate) fn check(world: &mut World, entity: Entity, id: u64, kind: &str, moved: [f32; 3], body: &Body, rule: InLiquid) -> Option<Bytes> {
     let layer = world.get::<InLayer>(entity)?.0;
-    let wet = in_water(&world.get::<Layer>(layer)?.world, body, water);
+    let wet = in_liquid(&world.get::<Layer>(layer)?.world, body, rule, Liquid::Water);
     let was = world.get::<InWater>(entity).is_some();
     match (wet, was) {
         (true, false) => drop(world.entity_mut(entity).insert(InWater)),
@@ -48,6 +49,26 @@ pub(crate) fn check(world: &mut World, entity: Entity, id: u64, kind: &str, move
         fire_at_position: None,
     };
     Some(sapling_net::encode(&sound))
+}
+
+/// BDS's fizz reached viewers a tick after the move it went with.
+const FIZZ_LATE: u64 = 1;
+
+/// The fizz of a body in lava, from the middle of its box where the tick started, `start`
+/// (research/captures/bds-lava.txt: an item and an orb).
+pub(crate) fn fizz(world: &mut World, layer: Entity, start: &Body) {
+    let [x, y, z] = start.at;
+    let sound = LevelSoundEvent {
+        sound_id: "fizz".into(),
+        position: Vec3f { x, y: y + start.size[1] / 2.0, z },
+        extra_data: 0,
+        entity_type: String::new(),
+        is_baby_mob: false,
+        is_global: false,
+        entity_unique_id: -1,
+        fire_at_position: None,
+    };
+    late_sounds::play_later(world, FIZZ_LATE, layer, start.at.map(|c| c.floor() as i32), sapling_net::encode(&sound));
 }
 
 #[cfg(test)]

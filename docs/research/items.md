@@ -77,7 +77,7 @@ post_normal_tick(it):                                                 # 1459892e
     if HeadInWater:
         gravity = falling
         if not falling: v.y = v.y + 0.0005 + (0.06 - (v.y + 0.0005)) * 0.01; v.x *= 0.99; v.z *= 0.99
-    elif aabb touches Lava (material 6):                              # fcn.140d2a4c0, inferred
+    elif aabb touches Lava (material 6):                              # fcn.140d2a4c0; matched, water-movement.md 8
         gravity = falling
         if not falling: same v.y; v.x *= 0.95; v.z *= 0.95
         if not item.fire_resistant (Item+0x152 & 0x20): LevelSoundEvent 27 Fizz at pos

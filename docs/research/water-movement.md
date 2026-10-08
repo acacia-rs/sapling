@@ -311,3 +311,20 @@ An item from `/setblock .. air destroy`, a `/summon`ed orb and armour stand, dro
   `/summon`'s random starting speed.
 - Moves sent: BDS's rule of items.md 5 (distance over 0.01 in all, or 0.001 once all but stopped, every changed
   axis), which `sync.rs` now follows: the orb's sends of 0.0100 to 0.0101, the item's of 0.007 at the bottom of a bob.
+- Flags (research/captures/bds-water-flags.txt): an item's `AFFECTED_BY_GRAVITY` is cleared on each tick water lifts
+  it and set again on each tick it bobs out, sent with that tick's move. Its `MOVING` was cleared about 10 ticks after
+  it went in, while it still moved: that rule is not known.
+
+## 8. Lava, checked on BDS (2026-10-08, `bds_command_probe lava`, research/captures/bds-lava.txt)
+
+The water drill over lava. sapling: `body/liquid.rs`, `drops.rs`, `splash.rs` (the fizz).
+
+- Item: lifted from the first tick its unshrunk box touches lava, by the water rule of section 1 but `v.xz *= 0.95`
+  (matched to 1e-4). That tick's flags clear `AFFECTED_BY_GRAVITY` and set `ONFIRE`, with its move. It fizzes from
+  the middle of its box where the tick started, heard a tick late. On its second tick in lava it burns (5 health, 4
+  a tick): no move is sent, and the next tick brings the second fizz and `RemoveEntity`.
+- Orb: no buoyancy in lava. With its feet in a lava cell its motion becomes `((r-r)*0.2, 0.2, (r-r)*0.2)`, then it
+  moves (`dy` exactly +0.2) and drags; it fizzes as the item does and is never set on fire.
+- Armour stand: `v *= 0.5; v.y -= 0.02` by the state a tick late, as in water (terminal -0.04, exact). It gets
+  `ONFIRE` and a `HurtAnimation` every 10 ticks from the tick its box reached lava, and was still alive after 8 s.
+  sapling has no mob health and does neither.

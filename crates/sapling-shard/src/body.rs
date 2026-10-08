@@ -1,27 +1,14 @@
 //! A body the server alone moves (falling blocks, items, orbs, mobs), as BDS moves such actors: gravity,
 //! then the move, cut short by the collision boxes of blocks, then drag
-//! (docs/research/falling-blocks.md, experience.md, items.md), and water (water.rs). What viewers
-//! are told: sync.rs.
-// TODO: no lava: BDS lifts items in it and slows them, and throws orbs out; only items are lifted
-// out of a block they are in, and only up.
+//! (docs/research/falling-blocks.md, experience.md, items.md), and water and lava (liquid.rs).
+//! What viewers are told: sync.rs.
+// TODO: only items are lifted out of a block they are in, and only up.
 
-mod water;
+mod liquid;
 
 use bevy_ecs::prelude::Component;
+pub(crate) use liquid::{InLiquid, Liquid, in_liquid};
 use sapling_world::World as Level;
-pub(crate) use water::{Water, in_water};
-
-/// An item in water rises toward this speed, closing this much of the gap a tick
-/// (BDS `ItemActor::postNormalTick`).
-const RISE: f32 = 0.06;
-const RISE_EASE: f32 = 0.01;
-const RISE_NUDGE: f32 = 0.0005;
-/// What a floating item keeps of its speed across, before the usual drag.
-const FLOAT_DRAG: f32 = 0.99;
-/// What a mob in water keeps of its speed each tick, and its pull down there (BDS
-/// `WaterDrag::apply`, `MobWaterGravity`).
-const SINK_DRAG: f32 = 0.8;
-const SINK_GRAVITY: f32 = 0.02;
 
 /// Room left between boxes that touch, against float error.
 const EPS: f32 = 1e-5;
@@ -38,20 +25,25 @@ pub(crate) struct Physics {
     pub ground_drag: f32,
     /// What the vertical motion is multiplied by on the ground.
     pub bounce: f32,
-    pub water: Water,
+    pub liquid: InLiquid,
+    /// Whether lava sets it on fire.
+    pub burns: bool,
 }
 
 impl Physics {
     /// Experience orbs, which bounce (BDS `ExperienceOrb::normalTick`), and float.
-    pub const ORB: Physics = Physics { gravity: 0.04, air_drag: 0.98, fall_drag: 0.98, ground_drag: 0.588, bounce: -0.5, water: Water::Buoyant };
+    pub const ORB: Physics = Physics { gravity: 0.04, air_drag: 0.98, fall_drag: 0.98, ground_drag: 0.588, bounce: -0.5, liquid: InLiquid::Buoyant, burns: false };
     /// Items, which do not (BDS `ItemActor::postNormalTick`, docs/research/items.md).
-    pub const ITEM: Physics = Physics { gravity: 0.04, air_drag: 0.98, fall_drag: 0.98, ground_drag: 0.588, bounce: 0.0, water: Water::Floats };
+    pub const ITEM: Physics = Physics { gravity: 0.04, air_drag: 0.98, fall_drag: 0.98, ground_drag: 0.588, bounce: 0.0, liquid: InLiquid::Floats, burns: true };
+    pub const FIREPROOF_ITEM: Physics = Physics { burns: false, ..Physics::ITEM };
     /// A falling block, which stops where it lands (BDS `FallingBlockActor::normalTick`).
-    pub const FALLING_BLOCK: Physics = Physics { gravity: 0.04, air_drag: 0.98, fall_drag: 0.98, ground_drag: 0.0, bounce: 0.0, water: Water::Ignores };
+    pub const FALLING_BLOCK: Physics = Physics { gravity: 0.04, air_drag: 0.98, fall_drag: 0.98, ground_drag: 0.0, bounce: 0.0, liquid: InLiquid::Ignores, burns: false };
     /// A mob that does not walk, as BDS moved an armour stand: its speed is worked out before the
     /// move (research/captures/bds-water.txt). The drag across, 0.91 in the air and 0.6 x 0.91 on
     /// the ground, is the Java game's (`LivingEntity.travel`).
-    pub const MOB: Physics = Physics { gravity: 0.08, air_drag: 0.91, fall_drag: 0.98, ground_drag: 0.546, bounce: 0.0, water: Water::Sinks };
+    // TODO: BDS sets it on fire in lava and hurts it every 10 ticks (research/captures/bds-lava.txt);
+    // mobs have no health here.
+    pub const MOB: Physics = Physics { gravity: 0.08, air_drag: 0.91, fall_drag: 0.98, ground_drag: 0.546, bounce: 0.0, liquid: InLiquid::Sinks, burns: false };
 }
 
 #[derive(Component, Clone, Copy, Debug, PartialEq)]
@@ -62,8 +54,8 @@ pub(crate) struct Body {
     /// Width and height.
     pub size: [f32; 2],
     pub on_ground: bool,
-    /// Whether water acted on it, by its rule, where the last tick started.
-    wet: bool,
+    /// The liquid found to act on it, by its rule, where the last tick started.
+    liquid: Option<Liquid>,
     /// Where the wave a buoyant body bobs on has got to.
     wave: f32,
 }
@@ -73,7 +65,12 @@ type Bounds = ([f32; 3], [f32; 3]);
 
 impl Body {
     pub fn new(at: [f32; 3], motion: [f32; 3], size: [f32; 2]) -> Self {
-        Self { at, motion, size, on_ground: false, wet: false, wave: 0.0 }
+        Self { at, motion, size, on_ground: false, liquid: None, wave: 0.0 }
+    }
+
+    /// The liquid found to act on it where the last tick started; a mob went by the one before.
+    pub fn liquid(&self) -> Option<Liquid> {
+        self.liquid
     }
 
     fn bounds(&self) -> Bounds {
@@ -91,26 +88,21 @@ impl Body {
         }
     }
 
-    /// One tick: gravity, the move, then drag; on the ground, friction and the bounce. In water,
-    /// by the body's [`Water`] rule, judged where the tick starts; a mob by [`Body::mob_step`].
-    /// The motion it moved by.
-    pub fn step(&mut self, level: &Level, physics: &Physics) -> [f32; 3] {
-        let wet = water::acts_on(level, self, physics.water);
-        match (physics.water, wet) {
+    /// One tick: gravity, the move, then drag; on the ground, friction and the bounce. In water or
+    /// lava, by the body's [`InLiquid`] rule, judged where the tick starts; a mob by
+    /// [`Body::mob_step`]. `random` is drawn on for an orb thrown out of lava. The motion it moved by.
+    pub fn step(&mut self, level: &Level, physics: &Physics, random: &mut impl FnMut() -> f32) -> [f32; 3] {
+        let found = liquid::acting(level, self, physics.liquid);
+        let before = std::mem::replace(&mut self.liquid, found);
+        match (physics.liquid, found) {
             // A mob goes by what was found a tick before (research/captures/bds-water.txt, the armour stand).
-            (Water::Sinks, _) => {
-                let was_wet = std::mem::replace(&mut self.wet, wet);
-                return self.mob_step(level, physics, was_wet);
-            }
-            (Water::Floats, true) => {
-                let nudged = self.motion[1] + RISE_NUDGE;
-                self.motion[1] = nudged + (RISE - nudged) * RISE_EASE;
-                (self.motion[0], self.motion[2]) = (self.motion[0] * FLOAT_DRAG, self.motion[2] * FLOAT_DRAG);
-            }
-            (Water::Buoyant, true) => {
-                water::buoy(level, self);
+            (InLiquid::Sinks, _) => return self.mob_step(level, physics, before),
+            (InLiquid::Floats, Some(liquid)) => liquid::lift(self, liquid),
+            (InLiquid::Buoyant, Some(Liquid::Water)) => {
+                liquid::buoy(level, self);
                 self.motion[1] -= physics.gravity;
             }
+            (InLiquid::Buoyant, Some(Liquid::Lava)) => liquid::throw_up(self, random),
             _ => self.motion[1] -= physics.gravity,
         }
         let wanted = self.motion;
@@ -126,12 +118,11 @@ impl Body {
         wanted
     }
 
-    /// A mob's tick: its speed first, by drag and gravity in the air or `wet`, then the move; the
-    /// motion it moved by.
-    fn mob_step(&mut self, level: &Level, physics: &Physics, wet: bool) -> [f32; 3] {
-        if wet {
-            self.motion = self.motion.map(|speed| speed * SINK_DRAG);
-            self.motion[1] -= SINK_GRAVITY;
+    /// A mob's tick: its speed first, by drag and gravity in the air or in `liquid`, then the move;
+    /// the motion it moved by.
+    fn mob_step(&mut self, level: &Level, physics: &Physics, liquid: Option<Liquid>) -> [f32; 3] {
+        if let Some(liquid) = liquid {
+            liquid::sink(self, liquid);
         } else {
             let across = if self.on_ground { physics.ground_drag } else { physics.air_drag };
             (self.motion[0], self.motion[2]) = (self.motion[0] * across, self.motion[2] * across);
@@ -216,7 +207,7 @@ mod tests {
 
     fn fall(mut body: Body, physics: &Physics, ticks: usize) -> Body {
         let level = level();
-        (0..ticks).for_each(|_| _ = body.step(&level, physics));
+        (0..ticks).for_each(|_| _ = body.step(&level, physics, &mut || 0.5));
         body
     }
 
@@ -243,10 +234,10 @@ mod tests {
         let stone = level.block_id("minecraft:stone").unwrap();
         level.set_block(1, 65, 3, stone);
         let mut body = Body::new([0.5, 65.0, 3.5], [0.5, 0.0, 0.0], [0.25, 0.25]);
-        body.step(&level, &Physics::ITEM);
+        body.step(&level, &Physics::ITEM, &mut || 0.5);
         assert!((body.at[0] - 0.875).abs() < 1e-6 && body.motion[0] == 0.0, "stopped at the wall: {body:?}");
         let mut sliding = Body::new([-2.5, 65.0, 0.5], [0.2, 0.0, 0.0], [0.25, 0.25]);
-        sliding.step(&level, &Physics::ITEM);
+        sliding.step(&level, &Physics::ITEM, &mut || 0.5);
         assert!(sliding.on_ground && (sliding.motion[0] - 0.2 * 0.588).abs() < 1e-6, "{sliding:?}");
     }
 }

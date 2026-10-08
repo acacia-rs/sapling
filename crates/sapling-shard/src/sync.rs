@@ -23,39 +23,45 @@ fn length(v: [f32; 3]) -> f32 {
 pub(crate) struct Told {
     at: [f32; 3],
     motion: [f32; 3],
-    moving: Option<Moving>,
+    flags: Option<Shown>,
 }
 
-/// Whether viewers were told the entity is `MOVING`, and whether the last tick started on the ground.
+/// The flags viewers were told the entity has, and whether the last tick started on the ground.
 #[derive(Clone, Copy, Debug)]
-struct Moving {
-    set: bool,
+struct Shown {
+    moving: bool,
+    lifted: bool,
+    burning: bool,
     started_on_ground: Option<bool>,
 }
 
 impl Told {
     /// An entity just announced at `at`; its announced motion does not count.
     pub fn new(at: [f32; 3]) -> Self {
-        Self { at, motion: [0.0; 3], moving: None }
+        Self { at, motion: [0.0; 3], flags: None }
     }
 
-    /// Tells viewers when the entity is moving, as BDS tells them of items and falling blocks;
-    /// `ticked` when its body already ran a tick, from the air, that viewers were not told of.
+    /// Tells viewers when the entity is moving, lifted and burning, as BDS tells them of items and
+    /// falling blocks; `ticked` when its body already ran a tick, from the air, that viewers were
+    /// not told of.
     pub fn flag_moving(&mut self, ticked: bool) {
-        self.moving = Some(Moving { set: false, started_on_ground: ticked.then_some(false) });
+        self.flags = Some(Shown { moving: false, lifted: false, burning: false, started_on_ground: ticked.then_some(false) });
     }
 
-    /// The flags of the entity `id` when its `MOVING` changed, the tick starting `on_ground`. On
-    /// BDS it follows whether the tick before started in the air: an item thrown at tick s was
-    /// flagged at s+1 and, landing at L, cleared at L+2 (research/captures/bds-mechanisms.txt B:1269-1312).
-    pub fn moving(&mut self, id: u64, on_ground: bool) -> Option<Bytes> {
-        let moving = self.moving.as_mut()?;
-        let now = !std::mem::replace(&mut moving.started_on_ground, Some(on_ground))?;
-        if now == moving.set {
+    /// The flags of the entity `id` when they changed, the tick starting `on_ground`, a liquid
+    /// holding it up in place of gravity (`lifted`) and lava `burning` it. On BDS `MOVING` follows
+    /// whether the tick before started in the air: an item thrown at tick s was flagged at s+1 and,
+    /// landing at L, cleared at L+2 (research/captures/bds-mechanisms.txt B:1269-1312); the rest
+    /// go with the tick's move (bds-water-flags.txt, bds-lava.txt).
+    pub fn flags(&mut self, id: u64, on_ground: bool, lifted: bool, burning: bool) -> Option<Bytes> {
+        let shown = self.flags.as_mut()?;
+        let moving = std::mem::replace(&mut shown.started_on_ground, Some(on_ground)).map_or(shown.moving, |before| !before);
+        if (moving, lifted, burning) == (shown.moving, shown.lifted, shown.burning) {
             return None;
         }
-        moving.set = now;
-        let flags = Flags(Flags::HAS_COLLISION.0 | Flags::AFFECTED_BY_GRAVITY.0 | if now { Flags::MOVING.0 } else { 0 });
+        (shown.moving, shown.lifted, shown.burning) = (moving, lifted, burning);
+        let bit = |on: bool, flag: Flags| if on { flag.0 } else { 0 };
+        let flags = Flags(Flags::HAS_COLLISION.0 | bit(!lifted, Flags::AFFECTED_BY_GRAVITY) | bit(moving, Flags::MOVING) | bit(burning, Flags::ONFIRE));
         let item = MetadataDictionaryItem { key: Key::Flags, r#type: Type::Long, legacy_type: 7, value: Value::Flags(flags) };
         Some(sapling_net::encode(&SetEntityData { runtime_entity_id: id, metadata: vec![item], properties: EntityProperties { ints: Vec::new(), floats: Vec::new() }, tick: 0 }))
     }
@@ -140,13 +146,31 @@ mod tests {
     #[test]
     fn moving_is_flagged_a_tick_after_a_tick_in_the_air_began_and_cleared_two_after_landing() {
         let mut told = Told::new([0.0; 3]);
-        assert!(told.moving(1, false).is_none(), "only for kinds that asked");
+        assert!(told.flags(1, false, false, false).is_none(), "only for kinds that asked");
         told.flag_moving(false);
         // Ticks start: thrown, in the air, landed during the third, on the ground, on the ground.
-        let sent: Vec<bool> = [false, false, false, true, true].into_iter().map(|on_ground| told.moving(1, on_ground).is_some()).collect();
+        let sent: Vec<bool> = [false, false, false, true, true].into_iter().map(|on_ground| told.flags(1, on_ground, false, false).is_some()).collect();
         assert_eq!(sent, [false, true, false, false, true]);
         let mut fallen = Told::new([0.0; 3]);
         fallen.flag_moving(true);
-        assert!(fallen.moving(1, false).is_some(), "a falling block is flagged as it is shown");
+        assert!(fallen.flags(1, false, false, false).is_some(), "a falling block is flagged as it is shown");
+    }
+
+    fn sent_flags(packet: &Bytes) -> i64 {
+        let data: SetEntityData = RawPacket::parse(packet.clone()).unwrap().decode().unwrap();
+        match data.metadata[0].value {
+            Value::Flags(flags) => flags.0,
+            ref other => panic!("{other:?}"),
+        }
+    }
+
+    #[test]
+    fn a_lifted_item_loses_its_gravity_and_one_in_lava_burns_as_on_bds() {
+        let mut told = Told::new([0.0; 3]);
+        told.flag_moving(true);
+        // BDS's item into water, then lava: 281492156579840 and 281492156579841.
+        assert_eq!(sent_flags(&told.flags(1, false, true, false).unwrap()), 281_492_156_579_840);
+        assert_eq!(sent_flags(&told.flags(1, false, true, true).unwrap()), 281_492_156_579_841);
+        assert!(told.flags(1, false, true, true).is_none());
     }
 }

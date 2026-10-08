@@ -1,8 +1,9 @@
 //! Items players throw out of their inventories and items broken blocks leave, as BDS's `ItemActor`
 //! (docs/research/items.md): each falls and slides as a body (body.rs) and is picked up by a player
-//! with room for it who walks over it, once its delay is over; it is gone after 6000 ticks.
-// TODO: items do not merge, float in water or burn in lava, and are not saved: they go with their
-// column, the one they were let go in. Whether a throw starts at the eye is unsettled.
+//! with room for it who walks over it, once its delay is over; it is gone after 6000 ticks, or
+//! burnt in lava.
+// TODO: items do not merge and are not saved: they go with their column, the one they were let go
+// in. Whether a throw starts at the eye is unsettled.
 
 use std::collections::HashMap;
 
@@ -12,7 +13,7 @@ use sapling_api::BlockPos;
 use sapling_world::{ChunkPos, ItemStack};
 
 use crate::blocks::Dice;
-use crate::body::{Body, Physics};
+use crate::body::{Body, Liquid, Physics};
 use crate::components::{InLayer, Layer, NetId, Position, Stage, Tick};
 use crate::inventory::Inventory;
 use crate::{blocks, entities, inventory, mobs};
@@ -38,6 +39,9 @@ const THROW_SPREAD: f32 = 0.02;
 const REACH: [f32; 2] = [1.0, 0.5];
 const PLAYER_HALF_WIDTH: f32 = 0.3;
 const PLAYER_HEIGHT: f32 = 1.8;
+/// Lava burns an item away in this many ticks: its 5 health, 4 a tick. BDS's went the tick after,
+/// without moving again (research/captures/bds-lava.txt).
+const BURNT_IN: u8 = 2;
 
 /// An item's own part; its [`Body`] and what viewers were [`Told`] are beside it (entities.rs).
 #[derive(Component)]
@@ -45,6 +49,14 @@ pub(crate) struct Dropped {
     stack: ItemStack,
     pickup_from: u64,
     age: u32,
+    /// Ticks it has spent in lava.
+    burnt: u8,
+}
+
+/// Netherite and ancient debris, which lava does not burn.
+// TODO: by name, from the Java game's list: BDS reads a flag of each item.
+fn fireproof(name: &str) -> bool {
+    name == "minecraft:ancient_debris" || (name.starts_with("minecraft:netherite_") && !name.ends_with("_template"))
 }
 
 const KIND: &str = "minecraft:item";
@@ -63,7 +75,7 @@ fn lay(world: &mut World, layer: Entity, stack: ItemStack, at: [f32; 3], motion:
     match shown {
         Some(item) => {
             entities::flag_moving(world, item, false);
-            Some(world.entity_mut(item).insert(Dropped { stack, pickup_from, age: 0 }).id())
+            Some(world.entity_mut(item).insert(Dropped { stack, pickup_from, age: 0, burnt: 0 }).id())
         }
         None => {
             tracing::debug!(item = %stack.name, "an item no client knows; it is gone");
@@ -133,18 +145,26 @@ pub(crate) fn take(world: &mut World, item: Entity, count: u8) {
     }
 }
 
-/// Moves every item a tick and lets go of those whose time is up.
+/// Moves every item a tick and lets go of those whose time is up, or that lava burnt.
 pub(crate) fn fly(world: &mut World) {
     let items: Vec<(Entity, Entity, u64)> = world.query::<(Entity, &Dropped, &InLayer, &NetId)>().iter(world).map(|(entity, _, layer, id)| (entity, layer.0, id.0)).collect();
     for (entity, layer, id) in items {
         let Some(mut item) = world.get_mut::<Dropped>(entity) else { continue };
         item.age += 1;
-        if item.age >= LIFETIME {
+        if item.age >= LIFETIME || item.burnt >= BURNT_IN {
             mobs::remove(world, entity);
             continue;
         }
+        let physics = if fireproof(&item.stack.name) { Physics::FIREPROOF_ITEM } else { Physics::ITEM };
         lift_out(world, entity, layer);
-        let Some((body, packets)) = entities::step(world, entity, layer, id, &Physics::ITEM, SIZE / 2.0) else { continue };
+        let Some((body, packets)) = entities::step(world, entity, layer, id, &physics, SIZE / 2.0) else { continue };
+        let Some(mut item) = world.get_mut::<Dropped>(entity) else { continue };
+        if physics.burns && body.liquid() == Some(Liquid::Lava) {
+            item.burnt += 1;
+            if item.burnt >= BURNT_IN {
+                continue;
+            }
+        }
         if !packets.is_empty() {
             blocks::to_viewers(world, layer, body.at.map(|c| c.floor() as i32), &packets);
             let shown = world.get::<Dropped>(entity).and_then(|item| mobs::item_announcement(id, &item.stack, wire(body.at), body.motion));

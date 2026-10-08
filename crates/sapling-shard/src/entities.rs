@@ -8,7 +8,8 @@ use bevy_ecs::prelude::*;
 use bytes::Bytes;
 use sapling_api::{EntityId, EntityInfo};
 
-use crate::body::{Body, Physics};
+use crate::blocks::Dice;
+use crate::body::{Body, InLiquid, Liquid, Physics};
 use crate::components::{InLayer, Layer, NetId, Tick};
 use crate::sync::Told;
 use crate::{mobs, splash, view};
@@ -119,17 +120,23 @@ pub(crate) fn listed(world: &World, layer: Entity) -> Vec<EntityInfo> {
 }
 
 /// Moves the entity a tick by `physics`; its body now, and what tells its viewers, whose wire
-/// puts it `lift` above the bottom of its box.
+/// puts it `lift` above the bottom of its box. An item lava burns, and an orb it throws out, fizz.
 pub(crate) fn step(world: &mut World, entity: Entity, layer: Entity, id: u64, physics: &Physics, lift: f32) -> Option<(Body, Vec<Bytes>)> {
     let mut body = *world.get::<Body>(entity)?;
-    let started_on_ground = body.on_ground;
-    let moved = body.step(&world.get::<Layer>(layer)?.world, physics);
+    let start = body;
+    world.get_resource_or_insert_with(Dice::default);
+    let moved = world.resource_scope(|world, mut dice: Mut<Dice>| Some(body.step(&world.get::<Layer>(layer)?.world, physics, &mut || dice.fraction())))?;
     *world.get_mut::<Body>(entity)? = body;
     let kind = world.get::<Kind>(entity)?.0.clone();
-    let splash = splash::check(world, entity, id, &kind, moved, &body, physics.water);
+    let splash = splash::check(world, entity, id, &kind, moved, &body, physics.liquid);
+    let in_lava = body.liquid() == Some(Liquid::Lava);
+    if in_lava && (physics.burns || physics.liquid == InLiquid::Buoyant) {
+        splash::fizz(world, layer, &start);
+    }
+    let lifted = physics.liquid == InLiquid::Floats && body.liquid().is_some();
     let [x, y, z] = body.at;
     let mut told = world.get_mut::<Told>(entity)?;
-    let flags = told.moving(id, started_on_ground);
+    let flags = told.flags(id, start.on_ground, lifted, physics.burns && in_lava);
     let packets: Vec<Bytes> = flags.into_iter().chain(told.update(id, [x, y + lift, z], body.motion, body.on_ground)).chain(splash).collect();
     // Not yet announced: this move follows the announcement, in the same batch, as on BDS.
     if world.get::<Born>(entity).is_some_and(|born| born.0 == world.resource::<Tick>().0) {

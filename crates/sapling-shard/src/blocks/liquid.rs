@@ -26,21 +26,9 @@ const MAX_DISTURBED: usize = 4096;
 const NETHER: i32 = 1;
 const BUBBLE_COLUMN: &str = "minecraft:bubble_column";
 
-#[derive(Clone, Copy, PartialEq, Eq, Debug)]
-pub(super) enum Liquid {
-    Water,
-    Lava,
-}
+pub(super) use crate::body::Liquid;
 
 impl Liquid {
-    fn of(name: &str) -> Option<Liquid> {
-        match name {
-            "minecraft:water" | "minecraft:flowing_water" => Some(Liquid::Water),
-            "minecraft:lava" | "minecraft:flowing_lava" => Some(Liquid::Lava),
-            _ => None,
-        }
-    }
-
     /// Every cell a liquid writes is of this block, never the `flowing_` one.
     pub(super) fn name(self) -> &'static str {
         match self {

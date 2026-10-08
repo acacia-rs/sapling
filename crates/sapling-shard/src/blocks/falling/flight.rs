@@ -46,7 +46,8 @@ fn announcement(id: u64, body: &Body, hash: u32) -> Vec<Bytes> {
 pub(super) fn start(world: &mut World, layer: Entity, block: u32, [x, y, z]: BlockPos) -> Option<Entity> {
     let level = level(world, layer)?;
     let mut body = Body::new([x as f32 + 0.5, y as f32 + SPAWN_LIFT, z as f32 + 0.5], [0.0; 3], [SIZE, SIZE]);
-    body.step(level, &Physics::FALLING_BLOCK);
+    // A falling block draws on no chance.
+    body.step(level, &Physics::FALLING_BLOCK, &mut || 0.5);
     let hash = level.registry().network_hash(block);
     let entity = entities::spawn(world, layer, KIND, body, wire(body.at), |id| Some(announcement(id, &body, hash)))?;
     entities::flag_moving(world, entity, true);
