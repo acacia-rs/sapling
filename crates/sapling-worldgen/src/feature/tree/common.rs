@@ -60,6 +60,9 @@ pub fn is_replaceable_plant(block: Block) -> bool {
             | Block::ShortDryGrass
             | Block::TallDryGrass
             | Block::Bush
+            | Block::Seagrass
+            | Block::SeagrassBottom
+            | Block::SeagrassTop
     ) || (Block::LeafLitter0South..=Block::LeafLitter3East).contains(&block)
 }
 
