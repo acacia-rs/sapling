@@ -10,6 +10,7 @@ mod locate;
 mod mineshaft;
 mod nearby;
 mod ocean_ruin;
+mod outpost;
 mod piece;
 mod placement;
 mod probe;

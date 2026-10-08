@@ -9,16 +9,19 @@ use std::sync::{Arc, Mutex};
 use super::canvas::Canvas;
 use super::kind::MONUMENT;
 use super::probe::Probe;
-use super::{BoundingBox, StructureKind, Structures, igloo, ocean_ruin, ruined_portal, shipwreck};
+use super::{BoundingBox, StructureKind, Structures, igloo, ocean_ruin, outpost, ruined_portal, shipwreck};
 use crate::density::Density;
 use crate::random::{LargeFeatureSeed, Mt19937};
 
 /// Ruin pieces stay within the big ruin's chunk and the cluster spots up to 32 blocks around it.
 const OCEAN_RUIN_REACH: i32 = 3;
+/// Outpost features sit up to 28 blocks from the tower's middle.
+const OUTPOST_REACH: i32 = 3;
 
 #[derive(Default)]
 pub(super) struct TemplateStarts {
     ocean_ruins: Mutex<HashMap<(i32, i32), Arc<ocean_ruin::OceanRuin>>>,
+    outposts: Mutex<HashMap<(i32, i32), Arc<outpost::Outpost>>>,
 }
 
 impl Structures {
@@ -73,6 +76,38 @@ impl Structures {
         for &start in portals {
             let biome = Self::centre_biome(density, start);
             ruined_portal::place(canvas, &mut Mt19937::new(seeds.chunk(start.0, start.1)), start, biome, &biome_at);
+        }
+    }
+
+    /// The outposts with a piece meeting `chunk`.
+    pub(super) fn outposts_near(&self, density: &Density, chunk: (i32, i32)) -> Vec<Arc<outpost::Outpost>> {
+        let column = BoundingBox::chunk(chunk.0, chunk.1);
+        let starts = self.starts_near(density, StructureKind::Outpost, chunk, OUTPOST_REACH);
+        let mut cache = self.templates.outposts.lock().unwrap();
+        starts
+            .into_iter()
+            .map(|start| {
+                let grid = StructureKind::Outpost.grid().unwrap();
+                cache.entry(start).or_insert_with(|| Arc::new(outpost::generate(&mut grid.candidate_random(self.level_seed, start).1, start))).clone()
+            })
+            .filter(|o| o.pieces.iter().any(|p| p.bb.intersects(&column)))
+            .collect()
+    }
+
+    /// Every outpost piece meeting the canvas's chunk, each at the height it finds before any is placed.
+    pub(super) fn place_outposts(canvas: &mut Canvas, outposts: &[Arc<outpost::Outpost>], seed: u32) {
+        let column = canvas.bb;
+        let placed: Vec<Vec<_>> = outposts
+            .iter()
+            .map(|o| o.pieces.iter().filter(|p| p.bb.intersects(&column)).filter_map(|p| p.height(canvas).map(|y| (p, y))).collect())
+            .collect();
+        for pieces in placed {
+            for &(piece, y) in &pieces {
+                piece.post_process(canvas, y, seed);
+            }
+            for &(piece, y) in &pieces {
+                piece.fill_below(canvas, y);
+            }
         }
     }
 
