@@ -160,7 +160,8 @@ pub fn simple_top(f: &Frame, piece: &Piece, canvas: &mut Canvas, random: &mut Mt
 pub fn double_y(f: &Frame, piece: &Piece, canvas: &mut Canvas) {
     let (low, up) = (piece.rooms[0], piece.rooms[1]);
     if piece.index / 25 > 0 {
-        default_floor(f, canvas, 0, 0, low.open[DOWN]);
+        // BDS tests the south opening here (bit 3), not the floor's.
+        default_floor(f, canvas, 0, 0, low.open[SOUTH]);
     }
     if !up.linked_up {
         box_on_water(f, canvas, (1, 8, 1), (6, 8, 6), PRISMARINE);
