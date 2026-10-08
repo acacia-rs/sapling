@@ -12,6 +12,7 @@ pub struct Mt19937 {
     index: usize,
     /// The second value of the last polar-method pair (`+0x9d4`, flag `+0x9e4`).
     gaussian: Option<f32>,
+    draws: u32,
 }
 
 impl Mt19937 {
@@ -21,7 +22,12 @@ impl Mt19937 {
         for i in 1..N {
             state[i] = (state[i - 1] ^ (state[i - 1] >> 30)).wrapping_mul(0x6C07_8965).wrapping_add(i as u32);
         }
-        Self { seed, state, index: N, gaussian: None }
+        Self { seed, state, index: N, gaussian: None, draws: 0 }
+    }
+
+    /// Raw draws taken since seeding.
+    pub fn draws(&self) -> u32 {
+        self.draws
     }
 
     /// The seed this generator was last seeded with (BDS keeps it at `+8`).
@@ -35,6 +41,7 @@ impl Mt19937 {
         }
         let mut y = self.state[self.index];
         self.index += 1;
+        self.draws = self.draws.wrapping_add(1);
         y ^= y >> 11;
         y ^= (y << 7) & 0x9D2C_5680;
         y ^= (y << 15) & 0xEFC6_0000;

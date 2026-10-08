@@ -1,6 +1,6 @@
 //! The hardcoded part of `decorationPostProcessChunk` (1482143a0), after carvers: lava lakes.
-//! Water lakes and the legacy cave and canyon configs only run in legacy worlds. Monster rooms and
-//! the freeze pass are not ported; feature rules are `crate::feature`.
+//! Water lakes and the legacy cave and canyon configs only run in legacy worlds. Monster rooms run
+//! with the feature rules (`crate::feature`), on the generator the lake leaves.
 
 pub mod lake;
 
@@ -18,7 +18,8 @@ const LAKE_REACH: i32 = 1;
 
 pub struct Decoration {
     seed: LargeFeatureSeed,
-    lakes: SourceCache<(i32, i32), Option<Lake>>,
+    /// Each chunk's lava lake and the raw draws its attempt took.
+    lakes: SourceCache<(i32, i32), (Option<Lake>, u32)>,
 }
 
 impl Decoration {
@@ -32,22 +33,22 @@ impl Decoration {
     pub fn decorate(&self, shape: &mut ChunkShape, chunk_x: i32, chunk_z: i32, carved: &dyn Fn(i32, i32) -> Arc<ChunkShape>) {
         for source_x in chunk_x - LAKE_REACH..=chunk_x + LAKE_REACH {
             for source_z in chunk_z - LAKE_REACH..=chunk_z + LAKE_REACH {
-                if let Some(lake) = self.lake(source_x, source_z, carved).as_ref() {
+                if let Some(lake) = self.lake(source_x, source_z, carved).0.as_ref() {
                     lake.apply(chunk_x, chunk_z, |x, y, z, block| shape.set_block(x, y, z, block));
                 }
             }
         }
     }
 
-    /// The chunk's post-process generator as the lava lake attempt leaves it, for the monster rooms.
-    // TODO: a placed lake then draws a nextInt(2) per border cell (lake.rs), not replayed here.
-    pub fn after_lake(seed: &LargeFeatureSeed, chunk_x: i32, chunk_z: i32) -> Mt19937 {
-        let mut random = Mt19937::new(seed.chunk(chunk_x, chunk_z));
-        lake::lava_lake(&mut random, chunk_x, chunk_z, &mut |_, _, _| CellKind::Solid);
+    /// The chunk's post-process generator as the lava lake (with its border pass) leaves it, for
+    /// the monster rooms.
+    pub fn after_lake(&self, chunk_x: i32, chunk_z: i32, carved: &dyn Fn(i32, i32) -> Arc<ChunkShape>) -> Mt19937 {
+        let mut random = Mt19937::new(self.seed.chunk(chunk_x, chunk_z));
+        random.consume_count(self.lake(chunk_x, chunk_z, carved).1);
         random
     }
 
-    fn lake(&self, chunk_x: i32, chunk_z: i32, carved: &dyn Fn(i32, i32) -> Arc<ChunkShape>) -> Arc<Option<Lake>> {
+    fn lake(&self, chunk_x: i32, chunk_z: i32, carved: &dyn Fn(i32, i32) -> Arc<ChunkShape>) -> Arc<(Option<Lake>, u32)> {
         self.lakes.get((chunk_x, chunk_z), || {
             let mut shapes: HashMap<(i32, i32), Arc<ChunkShape>> = HashMap::new();
             let mut kind = |x: i32, y: i32, z: i32| {
@@ -59,7 +60,8 @@ impl Decoration {
                 shape.kind(x.rem_euclid(16) as usize, y, z.rem_euclid(16) as usize)
             };
             let mut random = Mt19937::new(self.seed.chunk(chunk_x, chunk_z));
-            lake::lava_lake(&mut random, chunk_x, chunk_z, &mut kind)
+            let lake = lake::lava_lake(&mut random, chunk_x, chunk_z, &mut kind);
+            (lake, random.draws())
         })
     }
 }

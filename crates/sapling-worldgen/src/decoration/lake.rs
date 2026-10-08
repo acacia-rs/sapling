@@ -12,6 +12,8 @@ const SEA_LEVEL: i32 = 63;
 pub struct Lake {
     corner: [i32; 3],
     cells: Box<[bool; 2048]>,
+    /// Border cells (from the corner) the border pass turned into stone.
+    stone: Vec<[i32; 3]>,
 }
 
 fn index(x: i32, z: i32, y: i32) -> usize {
@@ -36,7 +38,13 @@ pub fn lava_lake(random: &mut Mt19937, chunk_x: i32, chunk_z: i32, kind: &mut im
 
 fn place(random: &mut Mt19937, at: [i32; 3], kind: &mut impl FnMut(i32, i32, i32) -> CellKind) -> Option<Lake> {
     let lake = shape(random, at, &mut |x, y, z| kind(x, y, z) == CellKind::Air)?;
-    lake.fits(kind).then_some(lake)
+    let mut lake = lake;
+    if !lake.fits(kind) {
+        return None;
+    }
+    let [x0, y0, z0] = lake.corner;
+    lake.border_pass(random, |x, z, y| kind(x0 + x, y0 + y, z0 + z) == CellKind::Solid);
+    Some(lake)
 }
 
 /// The lake's corner (down through air from the position, minus 8, 8 and 4) and blobs, unchecked.
@@ -57,7 +65,7 @@ pub fn shape(random: &mut Mt19937, [x, mut y, z]: [i32; 3], air: &mut impl FnMut
     for _ in 0..blobs {
         blob(random, &mut cells);
     }
-    Some(Lake { corner, cells })
+    Some(Lake { corner, cells, stone: Vec::new() })
 }
 
 /// One ellipsoid; the in-blob sums keep BDS's addition order.
@@ -126,8 +134,21 @@ impl Lake {
         true
     }
 
-    /// Writes the lake's cells inside one chunk: lava in its lower half, air above.
-    // TODO: BDS then turns the lake's solid border into stone (and draws a nextInt(2) per border cell); shape is unchanged.
+    /// The border pass of 149e923b0 with stone: solid border cells, those of the upper half only
+    /// when `nextInt(2) != 0` (drawn for every upper border cell); x, z, y order.
+    fn border_pass(&mut self, random: &mut Mt19937, mut solid: impl FnMut(i32, i32, i32) -> bool) {
+        for x in 0..16 {
+            for z in 0..16 {
+                for y in 0..8 {
+                    if self.border(x, z, y) && (y < 4 || random.next_int(2) != 0) && solid(x, z, y) {
+                        self.stone.push([x, y, z]);
+                    }
+                }
+            }
+        }
+    }
+
+    /// Writes the lake's cells inside one chunk: lava in its lower half, air above, stone border.
     pub fn apply(&self, chunk_x: i32, chunk_z: i32, mut set: impl FnMut(usize, i32, usize, Block)) {
         for x in 0..16 {
             for z in 0..16 {
@@ -141,6 +162,12 @@ impl Lake {
                         set(wx.rem_euclid(16) as usize, self.corner[1] + y, wz.rem_euclid(16) as usize, block);
                     }
                 }
+            }
+        }
+        for &[x, y, z] in &self.stone {
+            let (wx, wz) = (self.corner[0] + x, self.corner[2] + z);
+            if wx.div_euclid(16) == chunk_x && wz.div_euclid(16) == chunk_z {
+                set(wx.rem_euclid(16) as usize, self.corner[1] + y, wz.rem_euclid(16) as usize, Block::Stone);
             }
         }
     }

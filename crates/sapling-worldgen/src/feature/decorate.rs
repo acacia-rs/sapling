@@ -2,8 +2,6 @@
 //! the passes, `BiomeDecorationSystem::decorate` (14580bb90) the chunk's biomes in palette order,
 //! `decorateBiome` (14580b170) each biome's rules for the pass.
 
-use std::sync::Arc;
-
 use super::data::{FEATURES, RULES};
 use super::molang::{Molang, Scope, World};
 use super::place::Ctx;

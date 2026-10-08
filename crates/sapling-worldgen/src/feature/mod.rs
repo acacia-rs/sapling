@@ -60,6 +60,8 @@ pub struct Inputs<'a> {
     pub loaded: Load<'a>,
     pub biomes: Biomes<'a>,
     pub surface: &'a dyn Fn(i32, i32) -> i32,
+    /// A chunk's post-process generator after its lava lake (monster_room.rs).
+    pub after_lake: &'a dyn Fn(i32, i32) -> crate::random::Mt19937,
 }
 
 /// When BDS decorates a chunk relative to its neighbours: x and z even first, then x odd, both odd,
@@ -127,7 +129,7 @@ impl Features {
             let base = |x: i32, z: i32| self.before((x, z), phase_limit, inputs);
             let mut view = View::new(source, &base);
             view.on_write = liquid::write_hook();
-            monster_room::monster_rooms(&self.seed, source, &mut view);
+            monster_room::monster_rooms((inputs.after_lake)(source.0, source.1), source, &mut view);
             decorate::decorate_chunk(&self.seed, source, inputs, &mut view);
             freeze::freeze_chunk(source, &(inputs.biomes)(source.0, source.1), &mut view);
             liquid::settle(&mut view);

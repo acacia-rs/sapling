@@ -4,15 +4,14 @@
 
 use super::view::View;
 use crate::block::Block;
-use crate::decoration::Decoration;
-use crate::random::{LargeFeatureSeed, Mt19937};
+use crate::random::Mt19937;
 use crate::terrain::MIN_Y;
 
 /// `OverworldGenerator`'s generation height (144a184d0).
 const GENERATION_HEIGHT: i32 = 320;
 
-pub fn monster_rooms(seed: &LargeFeatureSeed, chunk: (i32, i32), view: &mut View) {
-    let mut random = Decoration::after_lake(seed, chunk.0, chunk.1);
+/// `random` is the chunk's post-process generator after its lava lake.
+pub fn monster_rooms(mut random: Mt19937, chunk: (i32, i32), view: &mut View) {
     let (x0, z0) = (chunk.0 * 16 | 8, chunk.1 * 16 | 8);
     let deep = (MIN_Y + 6).abs();
     for _ in 0..4 {

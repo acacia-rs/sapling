@@ -127,7 +127,8 @@ impl OverworldGenerator {
         let loaded = |x, z| self.loaded(x, z);
         let biomes = |x, z| self.chunk_biomes(x, z);
         let surface = |qx, qz| self.density.preliminary_surface(qx, qz);
-        run(feature::Inputs { loaded: &loaded, biomes: &biomes, surface: &surface })
+        let after_lake = |x, z| self.decoration.after_lake(x, z, &|cx, cz| self.loaded(cx, cz));
+        run(feature::Inputs { loaded: &loaded, biomes: &biomes, surface: &surface, after_lake: &after_lake })
     }
 
     /// Cave segments near a column, for probes (`Carvers::segments_near`).
