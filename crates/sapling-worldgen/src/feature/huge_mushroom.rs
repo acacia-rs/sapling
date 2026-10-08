@@ -29,6 +29,11 @@ const RED: [Block; 9] = [
     Block::RedMushroomBlock9,
 ];
 
+/// Swamp and swamp hills: the biome 141603120 compares against (the biome registry's +0x308).
+pub fn is_swamp(biome: u32) -> bool {
+    matches!(biome, 6 | 134)
+}
+
 fn is_soil(block: Block) -> bool {
     matches!(block, Block::Dirt | Block::CoarseDirt | Block::Mycelium | Block::Podzol | Block::GrassBlock)
 }
@@ -40,7 +45,7 @@ fn solid_blocking(block: Block) -> bool {
 
 /// Type (`nextInt(2)`: brown, red), height `nextInt(3) + 4`, doubled one time in 12; the space
 /// above (radius 0 up to 3 over the base, 3 beyond) must be air or leaves.
-pub fn place(view: &mut View, random: &mut Mt19937, [x, y, z]: [i32; 3]) -> bool {
+pub fn place(view: &mut View, random: &mut Mt19937, [x, y, z]: [i32; 3], swamp: bool) -> bool {
     let red = random.next_int(2) == 1;
     let base = random.next_int(3) + 4;
     let height = base << i32::from(random.next_int(12) == 0);
@@ -63,11 +68,18 @@ pub fn place(view: &mut View, random: &mut Mt19937, [x, y, z]: [i32; 3]) -> bool
             }
         }
     }
-    if !is_soil(view.block(x, y - 1, z)) {
-        // TODO: BDS's other branch (143b7f230 via 141603120) sinks the stem through a block under the base.
-        return false;
-    }
     let top = y + height;
+    // 143b7f230: off soil, in a swamp (141603120's biome), the stem may root through one or two water blocks.
+    let sink = if is_soil(view.block(x, y - 1, z)) {
+        0
+    } else if swamp && view.block(x, y - 1, z) == Block::Water && is_soil(view.block(x, y - 2, z)) {
+        1
+    } else if swamp && view.block(x, y - 1, z) == Block::Water && view.block(x, y - 2, z) == Block::Water && is_soil(view.block(x, y - 3, z)) {
+        2
+    } else {
+        return false;
+    };
+    let y = y - sink;
     let caps = if red { &RED } else { &BROWN };
     for cy in (if red { top - 3 } else { top })..=top {
         let r = if !red { 3 } else if cy < top { 2 } else { 1 };

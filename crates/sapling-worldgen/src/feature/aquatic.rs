@@ -93,7 +93,8 @@ pub fn seagrass(ctx: &mut Ctx, at: [i32; 3], count: i32, tall: f32) -> bool {
     for _ in 0..count {
         climb(view, &mut p);
         let [px, py, pz] = p;
-        let water: [bool; 3] = std::array::from_fn(|dy| view.block(px, py + dy as i32, pz) == Block::Water);        // The float is drawn only once the seagrass may stand here (oracle: drawing it always desyncs).
+        let water: [bool; 3] = std::array::from_fn(|dy| view.block(px, py + dy as i32, pz) == Block::Water);
+        // The float is drawn only once the seagrass may stand here (oracle: drawing it always desyncs).
         if water[0] && solid(view, px, py - 1, pz) {
             if tall > ctx.random.next_float() {
                 if water[1] && (!cold || water[2]) {
