@@ -77,6 +77,26 @@ const ORE_FEATURE_BLOCKS: &[Block] = &[
     Block::InfestedDeepslate,
 ];
 
+/// Solid blocks only features place (dripstone, sculk, sulfur spikes, moss, bamboo, geodes): a
+/// miss of one is a feature error, whatever terrain sapling has there.
+const FEATURE_ONLY: &[&str] = &[
+    "dripstone_block",
+    "pointed_dripstone",
+    "sulfur_spike",
+    "potent_sulfur",
+    "sculk",
+    "sculk_vein",
+    "sculk_sensor",
+    "sculk_catalyst",
+    "sculk_shrieker",
+    "moss_block",
+    "pale_moss_block",
+    "bamboo",
+    "amethyst_block",
+    "budding_amethyst",
+    "smooth_basalt",
+];
+
 fn stage_of(block: Block, y: i32, context: Context) -> Stage {
     if context.featured && block.is_fluid() {
         return Stage::Liquids;
@@ -106,6 +126,7 @@ fn stage_of(block: Block, y: i32, context: Context) -> Stage {
 pub fn judge(ours: Block, bds: &BdsCell, y: i32, context: Context) -> Verdict {
     match judge_cell(ours, bds, y, context) {
         Verdict::Error(Stage::Surface) if context.reshaped => Verdict::Later("surface under a solid-shape difference (carver miss, feature, shape)"),
+        Verdict::Error(Stage::Surface | Stage::Shape | Stage::Carvers) if FEATURE_ONLY.contains(&bds.block.as_str()) => Verdict::Error(Stage::Features),
         verdict => verdict,
     }
 }

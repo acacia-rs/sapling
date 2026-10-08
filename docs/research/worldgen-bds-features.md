@@ -44,7 +44,10 @@ Companion to [worldgen-bds.md](worldgen-bds.md). Feature rules run in `decoratio
 - Disks (hardcoded, at `query.above_top_solid` = one above the highest motion-blocking block, fluids passed,
   140a08bb0): `SandFeature` 149d60440 (sand r 7, gravel r 6) and `ClayFeature` 148287a70 (r 4) need water at the
   position (clay: or clay), draw `nextInt(r-2)+2`, replace dirt, coarse dirt and grass (clay: mud instead of
-  grass) within 2 (clay 1) blocks vertically, x then z then y.
+  grass) within 2 (clay 1) blocks vertically, x then z then y. `GrassDiscFeature` 148299570 (mangrove swamp, r 5)
+  tests nothing at the position and always succeeds: dirt, coarse dirt, grass and mud within 2 become grass under
+  air, dirt elsewhere (so mud under water turns to dirt). Its mud id 0x14cce09b8 has no `lea` in the initialiser;
+  it sits between magenta and orange concrete powder in an alphabetical run (once misread as mycelium).
 
 ## Wrapper features (IFeature vtable: dtor, place(ctx), isValidPlacement, upgradeFormat)
 A placement context is {world-gen API, position, generator, Molang scope, ...}; children get their parent's

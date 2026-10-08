@@ -97,10 +97,9 @@ sync; swamp huge mushrooms sink through one or two water blocks (143b7f230, biom
 98.80%, swamp huge mushrooms 154/154.
 
 ## Left
-- Mangrove phase-3 chunks: BDS turns the top one or two mud cells into dirt (oracle class "dirt, grass over mud",
-  ~600 cells), which changes later roots. Not the grass disc: `grass_disc_feature` (148299570, radius
-  `nextInt(3)+2`, y±2) only converts dirt, coarse dirt (list at 0x14ccdb858), grass and mycelium; the source is
-  unknown. Some hanging propagules BDS removes after placement; no discriminator found.
+- Mangrove mud turned to dirt (~600 cells) was the grass disc, which takes mud too (worldgen-bds-features.md,
+  disks); ported, mangrove swamp 98.92 -> 99.79%. Some hanging propagules BDS removes after placement; no
+  discriminator found.
 - Pale garden: BDS's 4th tree of chunk (-469,-285) at (-7489,132,-4558) fails. The next try then matches from
   draw 593 or 616 (`draw_search`), and BDS has tall grass in its trunk volume that no earlier-phase source writes
   here. Not resolved.
@@ -108,7 +107,7 @@ sync; swamp huge mushrooms sink through one or two water blocks (143b7f230, biom
   171,348 overhangs a one-block drop and writes its base dirt into air (trunks place base blocks unconditionally,
   1438eaf00). BDS doesn't grow that tree, probably because of a fern that a phase-0 neighbour's after-surface
   grass leaves at (2740,101,5574) in its spawn volume, and which sapling's neighbour doesn't place.
-- Old growth pine taiga extra spruce leaves: a terrain-shape bump near (-5320,72,5447) (BDS ground 3-4 blocks
-  higher) lifts the same mega spruces; not a tree bug.
+- Old growth pine taiga extra spruce leaves: an abandoned camp's terrain adaptation near (-5320,72,5447) (BDS
+  ground 3-4 blocks higher) lifts the same mega spruces; not a tree or shape bug (worldgen-bds-carvers.md).
 - The forest case of the flower table is unused (its rule `forest_surface_flowers_feature` is filtered by the
   `deprecated` tag). Jungle edges come from ring-chunk decoration.

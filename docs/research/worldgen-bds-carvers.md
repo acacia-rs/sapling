@@ -41,7 +41,9 @@ Companion to [worldgen-bds.md](worldgen-bds.md) (pipeline, RNGs, labels). They r
   snow, ice. Legacy config's test is 148281190.
 - Canyon test 148280800: list 14ccd27e8 (54, Java's carver replaceables): stone, granite, diorite, andesite, tuff,
   deepslate, calcite, dirt, coarse dirt, mud, podzol, mycelium, grass, rooted dirt, terracotta and the 16 stained,
-  sandstones, sands, iron/copper ores and raw blocks, snow, snow layer, packed ice, gravel, sulfur, cinnabar.
+  sandstones, sands, iron/copper ores and raw blocks, snow, snow layer, packed ice, gravel, sulfur, cinnabar. Read
+  off the `.rdata` block `VanillaBlockTypeIds::init` memcpys into it (14261bf44, 0x1b0 bytes). Canyons run after the
+  sulfur caves' subsurface pass, so they cut through sulfur and cinnabar; caves (list above) do not.
 - Fix-ups, per replaceable cell (run even when an aquifer barrier keeps it). Cave, before emptying: blocks y+1..y+3
   all in the sand list → y+1 becomes plain `sandstone` (red sand too). After: original grass or mycelium (148281750)
   over dirt/coarse dirt (14ccdb858) → the dirt becomes that block. Canyon: a per-column flag set by any grass block met
@@ -62,6 +64,12 @@ Companion to [worldgen-bds.md](worldgen-bds.md) (pipeline, RNGs, labels). They r
 - `overworld_underwater_cave_carver_feature` (skip 15, y scale 0.5, height 120, water) has an empty `any_of` biome
   filter: run as a third cave carver it carves 668k extra cells near origin, so BDS treats empty `any_of` as false.
 - Ice spikes (x −290..−289, y −16..2, 200 cells): BDS has solid where our noise cave is, at the region edge, no
-  structure blocks in the region; most likely a structure's terrain adaptation (encapsulate) from the ring chunk.
-- Old growth pine taiga (biomes world, ~−5310 72 5450): the shape and carver misses sit under a structure (barrel,
-  campfire, chest, straw bed, grass path); BDS's terrain adaptation, not carvers.
+  structure blocks in the region; trial chambers start at chunk (−13, −198), six chunks east (encapsulate).
+- Old growth pine taiga (biomes world, ~−5310 72 5450): BDS's ground 3-4 blocks higher under an **abandoned camp**
+  (barrel, campfire, straw beds, white wool stairs, oxidized copper chest, grass path): the v2 set (37/8, salt
+  91231127, Java LCG grid) starts at chunk (−332, 341); its terrain adaptation lifts the ground and moves the mega
+  spruces. Unported structure, not shape or carvers.
+- Other shape residue (2026-10-08): warm ocean (x 3923..3935, y 50..53) is `CoralCrustFeature`'s templates (sand,
+  granite, diorite among the coral blocks); old growth spruce taiga (−8529, −15, −461) is stone where a BDS lava flow
+  met water (liquids); frozen ocean blue ice is the iceberg feature; far out is trial chambers. The oracle judge
+  books BDS-only feature blocks (dripstone, sculk, moss, bamboo, sulfur spikes) as Features, not Surface/Shape.
