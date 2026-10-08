@@ -52,3 +52,12 @@ Feature residue labels (2026-10-08, feat2): 141882f10 `Dimension::getDefaultBiom
 14828af70/14828b9e0 `CoralFeature::{place,buildShape}`, 148288070 `CoralCrustFeature::place`, 148294070
 `CoralHangFeature::place`, 149d60d10 `SeaAnemoneFeature::place`, 149d61020 `SeaPickleFeature::place`; block
 globals 0x14ccd5b70 tube_coral_wall_fan, 0x14ccd09a0 brain_coral_wall_fan.
+
+Coral labels (2026-10-08, coral; LeviLamina names): 14828b9e0 `CoralFeature::_placeCoral` (not buildShape),
+1482914f0 `_starFormation`, 148291d20 `_buildPlantArm`, 148290ad0 `_getColor`, 148290a30 `_canOverwrite`, 148289370
+`CoralCrustFeature::_getCropOffsetFromRot`, 1482895b0 `_placeCoralBase`, 1416027c0 `BlockSource::isUnderWater`
+(BlockSource vtable 14a753900, slot 0x50), 1415f69e0 `BlockSource::getLiquidBlock` (0x28), 144c0cc40
+`Feature::_setBlock`, 149d99a70 `VinesFeature::place`, 143b7ff60 `TreeFeature::place`, 149e97fc0 the
+`LegacyTreeFeature` tree loop; block lists 0x14ccda7e8 (10 coral blocks), 0x14ccd9410/9440/9458/3250 (live coral
+blocks, plants, fans, wall fans); 0x14cce2b78 blue ice. IBlockWorldGenAPI slots: 0x20 getBlock, 0x58 setBlock, 0x78
+mayPlace, 0x88 canSurvive, 0x98/0xa0 max/min height, 0xb0 getHeightmap, 0xb8 isLegacyLevel.

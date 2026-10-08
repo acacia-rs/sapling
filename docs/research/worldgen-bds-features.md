@@ -107,7 +107,9 @@ Tries move by `(r & m) - (r & m)` per axis, two raw MT outputs each; most draw z
   square roots are the float 0x5f3759df with one Newton step. The scan walks x from the origin up then down, per x
   y up then down, z inner; cracks are set at once, layers buffered and set after the scan, buds tried up, down,
   north, south, west, east (14a7445a0). Anchors in air, liquids, ice, packed/blue ice or bedrock count as invalid.
-  It returns early when the position is inside a structure (query at 149e845f0's start): not modelled.
+  It returns early, before any draw, when the dimension's generator reports a structure at the origin
+  (`Structures::in_structure`: a mineshaft or v2 start's piece union; the oracle's four extra geodes sat in
+  mineshafts and trial chambers, other kinds are untested).
 - `legacy:ice_feature` (149e96790): `nextInt(8) == 0` places `IcebergFeature` (149e8f460, cut-out 149e90f80) at
   `x + 12 + nextInt(8)`, sea level, `z + 12 + nextInt(8)`; then `nextInt(20)` `BlueIceFeature` (14827ec60) tries at
   `nextInt(16) + 8`, `nextInt(32) + 30`, `nextInt(16) + 8`. The iceberg is Java 1.17's with every shape draw up front
@@ -195,21 +197,24 @@ What is left, largest first:
   from one tree BDS does not grow. Forcing our first bamboo-jungle tree (mega jungle at 2739,101,5575) to fail
   after its two height draws puts the next tree on BDS's trunk (2744,103,5570) and writes 3 -> 76 matching logs,
   so BDS's tree fails; its spawn volume (1438f2ba0: may_grow_on under the origin only, radius 1 then 2) must have
-  held a non-grow-through block (BDS has a vine at 2738,101,5575 and a fern at 2740,101,5574 there). The phase-0
-  neighbour 170,348's jungle grass rule already differs at its draw ~4478 (fern against our short grass at
-  2726,104,5567) while every earlier try draws a constant 8, so a `not_on` podzol check or a world difference
-  shifts it earlier. Pale garden: the acacia-style trunk (143bd34c0) runs prepareSpawn (1438eac70) only.
+  held a non-grow-through block. Ruled out on 2026-10-08 (worldgen/coral): the phase-0 neighbours' grass rules are
+  in sync (170,348's 800 tries match BDS's fern/grass picks; the "draw 4478" mismatch was a cell another rule took)
+  and none of their writes (grass, vines, trees) reaches the volume; BDS's fern, vine and oak there come later in
+  171,348 itself (the oak is a fancy oak starting at draw 328 of the same tree loop). Neither tree is in a
+  structure. Both refused trees are 2x2 trunks over a one-deep drop (air under one or two trunk cells), but
+  requiring ground under all four cells made dark forest far worse (BDS grows most such trees). Rule order by
+  FNV-1a instead of FNV-1 (the rule store's other hash) made every world worse, so FNV-1 stands.
+  Pale garden: the acacia-style trunk (143bd34c0) runs prepareSpawn (1438eac70) only; BDS's tall grass in its
+  volume comes from no earlier-phase source either.
 - Dripstone (biomes d 565, e 2537; trees d 430, e 3105): about half within 8 cells of a lichen or sculk
   difference (column scans stop at lichen); mostly edge chunks.
 - Edge chunks generally: ring-last decoration (ring chunks after every region chunk) made every region worse
   (near origin 3379 -> 5642 wrong, negative seed 677 -> 2205), so the parity model holds for the ring too; the
   negative seed's kelp/seagrass cluster (chunks 0,3 and -1,3) is a draw desync of kelp and deep warm-ocean
   seagrass whose first divergent try is a seagrass try over a neighbour's kelp column.
-- Coral (warm ocean, ~1.8k BDS cells booked as later stages): `CoralFeature::place` 14828af70 climbs to water
-  below sea level - 4, skips a floor of coral blocks (list 0x14ccd9410), draws `nextInt(5)` (colour), builds tops
-  and sides in 14828b9e0 (three shapes by `nextInt(3)`, helpers 148290ad0, 1482914f0, 148291d20), then per top a
-  fan from list 0x14ccd9458 (`nextInt(n)`, `nextInt(2)` state) and per side `nextInt(3)` of a facing table
-  (0x14a925e68) and, on water beside coral or stone, a wall fan `nextInt(2) + 2 * nextInt(3)` from 0x14ccd3250.
-  Each rule has its own generator, so hang (148294070) and anemone (149d60d10) depend on crust and coral only
-  through the world, not through draws. Not ported.
+- Coral: ported (worldgen-bds-caves.md, "Coral"). Geodes in structures: fixed (above); far out 99.9636 →
+  99.9787%, near origin 99.9960 → 99.9971%, geode shells 100/100 in every world.
+- Other d families after that (2026-10-08): mangrove swamp trees (358) and old growth pine taiga trees (651, camp
+  terrain); a desynced coal blob in mushroom fields (chunk -44,354, next to a mineshaft); sulfur in windswept
+  gravelly hills (110); tuff in badlands and frozen peaks (~100).
 - Near origin d (229): bubble columns (111, grown by ticks), lichen spreads (69), lava/water hardening (47).

@@ -95,7 +95,7 @@ list (VanillaBlockTypeIds lists 14ccd2770: dirt, coarse dirt, stone, tuff, deeps
 | monster rooms | 2476 → 167 | 498 → 312 | 471 → 0 | 772 → 192 | 2151 → 2 |
 | magma, bubble columns | 2467 → 211 | 177 → 0 | 76 → 50 | 373 → 37 | 124 → 2 |
 | glow lichen | 1000 → 586 | 89 → 33 | 69 → 26 | 469 → 227 | 420 → 140 |
-| coral, pickles (pickles only) | 0 | 0 | 0 | 1631 → 1642 | 0 |
+| coral, pickles (pickles only; coral ported later, see Coral) | 0 | 0 | 0 | 1631 → 1642 | 0 |
 
 Identical cells: near origin 99.9788 → 99.9857%, far out 99.7574 → 99.7667%, negative seed 99.9475 → 99.9784%,
 biome regions 99.1900 → 99.7265%, tree regions 98.7500 → 99.6229% (windswept gravelly hills 91.43 → 99.97%,
@@ -104,13 +104,39 @@ Family precision / recall (stable cells): monster rooms 98.8/93.1 near origin, 1
 95.6/97.9 and bubble columns 91.4/96.7 near origin; dripstone 66-82/67-83 (badlands, windswept hills); sulfur spikes
 73.6/90.1; packed ice (ice spikes) 99.7/94.2; glow lichen 77.0/50.0 near origin.
 
+## Coral (feature/coral/, 2026-10-08)
+BDS's own features (no Java counterpart); each rule has its own generator, so hang and anemone depend on crust and
+coral only through the blocks they leave. Block lists: 0x14ccda7e8 the 10 coral blocks (tube, brain, bubble, fire,
+horn, live then dead), 0x14ccd9410 the 5 live ones, 0x14ccd9440 plants, 0x14ccd9458 fans, 0x14ccd3250 wall fans.
+"Water" is the main block's material; `BlockSource::isUnderWater` (1416027c0) for a solid coral block means the
+liquid-or-main block above is water and none of the 5 other neighbours is air (`fits`), for a fan or plant that the
+cell's liquid layer is water.
+- `CoralFeature::place` (14828af70): up to the first water below sea level - 4, solid floor that is not live coral,
+  colour `nextInt(5)`, `_placeCoral`, then each `topDec` cell (water, no water under it, a support) gets a fan
+  (`nextInt(5)`, `coral_fan_direction` `nextInt(2)`) and each `sideDec` (cell, face) draws `nextInt(3)` of a face table
+  (0x14a925e68) and, on water beside a coral or stone block, a wall fan of colour `nextInt(2) + 2*nextInt(3)` (clamped
+  to 4), `coral_direction` by face (0x14a7198f8).
+- `_placeCoral` (14828b9e0) draws `nextInt(3)` and falls through like a switch without breaks: shape 0 builds all
+  three shapes, shape 1 the last two. Every write goes through `_canOverwrite` (148290a30: not a coral block of
+  another colour; failing ends that shape). Shape 0 stacks star layers (`_starFormation` 1482914f0) but writes every
+  layer's centre at the base, then a stem with up to three `_buildPlantArm` (148291d20) arms on distinct faces;
+  shape 1 is a cornerless square on solid ground, the left-out (-x,-z) corner, a cross and a short stem; shape 2 a 3x3
+  floor and a short stem (6 in 7) or a tall stem with three runs along a face. BDS's own oddities kept: the (-j,+j)
+  diagonal tried twice, side decorations recorded at the arm's base.
+- `CoralCrustFeature::place` (148288070): templates `coralcrust/crust1..5` (by size `nextInt(5)`, turned `nextInt(4)`;
+  probe and placement offsets 0x14a925dc0..e64) in a cluster of `nextInt(5) + 4` tries on solid ground, or one
+  `outcropping1..6` (`_getCropOffsetFromRot` 148289370) 1 in 4 or when no try lands. Templates come from
+  scripts/coral_data.py (dead coral lands as dead bubble coral, oracle census). `_placeCoralBase` (1482895b0) grows
+  coral from the template's data markers in MSVC `unordered_map<BlockPos>` order (with rehash; a key goes in front of
+  its bucket's first node), then decorates like `CoralFeature`.
+- `CoralHangFeature::place` (148294070): down to a solid coral or stone block above sea level - 13, a side in water
+  (E S W N, each failed pick swapped out of a shrinking `nextInt`), a tube or brain wall fan; BDS tests the liquid beside
+  the rule's position, not beside the block it found.
+- `SeaAnemoneFeature::place` (149d60d10): from y 62 down to a solid floor above sea level - 15, in water a fan (1 in 4)
+  or a coral plant.
+Warm ocean region 99.8663 → 99.9954% identical; coral blocks 99.8/100 precision/recall, fans and plants 100/100.
+
 ## Left
-- Coral (warm ocean, rules after the pickles): `CoralCrustFeature` 148288070 places structure templates (6 names
-  at 0x14a925a30, rotations) and needs the templates work; `CoralFeature` 14828af70 builds its shape in 14828b9e0
-  (2.3k decompiled lines, coral blocks list 0x14ccda7e8); `CoralHangFeature` 148294070 (a wall fan beside a coral
-  block, sides E S W N picked by shrinking `nextInt`) and `SeaAnemoneFeature` 149d60d10 (from y 62 down to sea
-  level - 15: `nextInt(4) == 0` a fan (5 at 0x14ccd9458, `coral_fan_direction` `nextInt(2)`) else a coral plant
-  (`nextInt(5)` of 0x14ccd9440)) draw after them on the shared generator, so they wait for crust and coral.
 - Sulfur springs (`random_sulfur_spring_with_tuff_feature`: structure templates) and the spring trail.
 - Fossils (`fossil_feature`, desert/swamp 1 in 64 chunks) and the desert well: structure templates.
 - Multi-direction lichen spreads and lichen/vein faces (thread-local in BDS): the oracle no longer grades face
