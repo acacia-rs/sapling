@@ -1,18 +1,22 @@
-//! BDS's hardcoded jigsaw structures (villages, ancient cities): the pools, elements and
-//! processors its C++ registers (1480bbe90 villages, 1480fe430 ancient cities), transcribed into
-//! pools.txt, and the two assemblers that grow pieces from them. docs/research/worldgen-bds-jigsaw.md.
+//! BDS's jigsaw structures: the pools, elements and processors its C++ registers for the
+//! hardcoded ones (1480bbe90 villages, 1480fe430 ancient cities) in pools.txt, the behaviour
+//! packs' v2 ones in pools_v2.txt, and the assemblers that grow pieces from them.
+//! docs/research/worldgen-bds-jigsaw.md.
 
 mod assemble;
+mod draw;
 mod element;
 mod piece;
+mod v2;
 
 use std::collections::HashMap;
 use std::sync::OnceLock;
 
-use super::template::{Predicate, Rule, Template, named};
+use super::template::{Capped, Predicate, Rule, Template, named};
 use crate::block::Block;
 
 pub use assemble::{Assembler, Variant, middle};
+pub use v2::V2Start;
 pub use element::{Element, ElementKind, Projection};
 pub use piece::{AncientCityClass, Piece, PieceClass, VillageClass};
 
@@ -39,7 +43,7 @@ impl Data {
 /// The parsed pools.txt.
 pub fn data() -> &'static Data {
     static DATA: OnceLock<Data> = OnceLock::new();
-    DATA.get_or_init(|| parse(include_str!("pools.txt")))
+    DATA.get_or_init(|| parse(&[include_str!("pools.txt"), include_str!("pools_v2.txt")].concat()))
 }
 
 fn leak<T>(value: T) -> &'static T {
@@ -73,9 +77,23 @@ fn predicate(text: &str, lists: &HashMap<String, Vec<String>>) -> Predicate {
     }
 }
 
+/// `<rule>;...` (or `-` for none).
+fn rule_list(text: &str, lists: &HashMap<String, Vec<String>>) -> &'static [Rule] {
+    let parsed = text
+        .split(';')
+        .filter(|r| *r != "-")
+        .map(|r| {
+            let parts: Vec<&str> = r.split('|').collect();
+            Rule { input: predicate(parts[0], lists), location: predicate(parts[1], lists), output: output(parts[2]) }
+        })
+        .collect::<Vec<_>>();
+    Box::leak(parsed.into_boxed_slice())
+}
+
 fn parse(text: &str) -> Data {
     let mut lists = HashMap::new();
     let mut rules: HashMap<String, &'static [Rule]> = HashMap::new();
+    let mut capped: HashMap<String, Vec<Capped>> = HashMap::new();
     let (mut elements, mut pools, mut aliases) = (HashMap::new(), Vec::new(), HashMap::new());
     for line in text.lines().filter(|l| !l.starts_with('#')) {
         let fields: Vec<&str> = line.split(' ').collect();
@@ -84,15 +102,11 @@ fn parse(text: &str) -> Data {
                 lists.insert(fields[1].to_string(), fields[2].split(',').map(str::to_string).collect::<Vec<_>>());
             }
             "r" => {
-                let parsed = fields[2]
-                    .split(';')
-                    .filter(|r| *r != "-")
-                    .map(|r| {
-                        let parts: Vec<&str> = r.split('|').collect();
-                        Rule { input: predicate(parts[0], &lists), location: predicate(parts[1], &lists), output: output(parts[2]) }
-                    })
-                    .collect::<Vec<_>>();
-                rules.insert(fields[1].to_string(), Box::leak(parsed.into_boxed_slice()));
+                rules.insert(fields[1].to_string(), rule_list(fields[2], &lists));
+            }
+            "c" => {
+                let limit = fields[2].parse().unwrap();
+                capped.entry(fields[1].to_string()).or_default().push(Capped { limit, rules: rule_list(fields[3], &lists) });
             }
             "e" => {
                 elements.insert(fields[1].to_string(), fields[2..].iter().map(|s| s.to_string()).collect::<Vec<_>>());
@@ -118,6 +132,7 @@ fn parse(text: &str) -> Data {
                     projection: if f[3] == "1" { Projection::TerrainMatching } else { Projection::Rigid },
                     post: f[4].parse().unwrap(),
                     aliases: (f[5] != "-").then(|| leak(aliases[&f[5]].clone())),
+                    java: (f[0] == "j").then(|| capped.get(&f[2]).map_or(&[][..], |c| leak(c.clone()).as_slice())),
                 },
             };
             (name.clone(), Element { name, kind })

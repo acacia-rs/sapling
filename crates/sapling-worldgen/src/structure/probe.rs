@@ -2,6 +2,9 @@
 //! (`BiomeSource3d::containsOnly` 14805f710), the preliminary surface, and the heights of a
 //! chunk's raw terrain (`WorldGenerator::computeChunkHeightMap` 14196d010).
 
+use std::cell::RefCell;
+use std::collections::HashMap;
+
 use crate::block::Block;
 use crate::density::Density;
 use crate::terrain::MIN_Y;
@@ -41,5 +44,33 @@ impl Probe<'_> {
             }
         }
         lowest
+    }
+}
+
+/// One above each column's highest non-air block of the density stage (water counts), at least
+/// the world's bottom, per chunk as BDS caches them.
+pub struct RawHeights<'a> {
+    density: &'a Density,
+    chunks: RefCell<HashMap<(i32, i32), Box<[i32; 256]>>>,
+}
+
+impl<'a> RawHeights<'a> {
+    pub fn new(density: &'a Density) -> Self {
+        Self { density, chunks: RefCell::new(HashMap::new()) }
+    }
+
+    pub fn at(&self, x: i32, z: i32) -> i32 {
+        let key = (x >> 4, z >> 4);
+        let mut chunks = self.chunks.borrow_mut();
+        let column = chunks.entry(key).or_insert_with(|| {
+            let shape = self.density.chunk_shape(key.0, key.1);
+            let mut heights = Box::new([0; 256]);
+            for (i, h) in heights.iter_mut().enumerate() {
+                let (cx, cz) = (i & 15, i >> 4);
+                *h = (MIN_Y..256).rev().find(|&y| shape.block(cx, y, cz) != Block::Air).map_or(0, |y| y + 1);
+            }
+            heights
+        });
+        column[((z & 15) << 4 | (x & 15)) as usize].max(MIN_Y)
     }
 }

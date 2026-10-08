@@ -24,6 +24,7 @@ pub(super) struct TemplateStarts {
     outposts: Mutex<HashMap<(i32, i32), Arc<outpost::Outpost>>>,
     pub(super) ancient_cities: Mutex<HashMap<(i32, i32), Arc<super::ancient_city::AncientCity>>>,
     pub(super) villages: Mutex<HashMap<(i32, i32), Arc<super::village::Village>>>,
+    pub(super) trail_ruins: Mutex<HashMap<(i32, i32), Arc<super::trail_ruins::TrailRuins>>>,
 }
 
 impl Structures {

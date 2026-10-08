@@ -1,0 +1,99 @@
+# BDS v2 jigsaw data (behaviour pack worldgen JSON); scripts/jigsaw_extract/jjson.py
+r trail_ruins_houses_archaeology rb=gravel@0.2|*|dirt;rb=gravel@0.1|*|coarse_dirt;rb=mud_bricks@0.1|*|packed_mud
+c trail_ruins_houses_archaeology 6 b=gravel|*|suspicious_gravel[brushed_progress=0,hanging=1]
+c trail_ruins_houses_archaeology 3 b=gravel|*|suspicious_gravel[brushed_progress=0,hanging=1]
+r trail_ruins_roads_archaeology rb=gravel@0.2|*|dirt;rb=gravel@0.1|*|gravel;rb=mud_bricks@0.1|*|packed_mud
+c trail_ruins_roads_archaeology 2 b=gravel|*|suspicious_gravel[brushed_progress=0,hanging=1]
+r trail_ruins_tower_top_archaeology -
+c trail_ruins_tower_top_archaeology 2 b=gravel|*|suspicious_gravel[brushed_progress=0,hanging=1]
+e trail_ruins/buildings/group_hall_1 j trail_ruins/buildings/group_hall_1 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/buildings/group_hall_2 j trail_ruins/buildings/group_hall_2 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/buildings/group_hall_3 j trail_ruins/buildings/group_hall_3 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/buildings/group_hall_4 j trail_ruins/buildings/group_hall_4 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/buildings/group_hall_5 j trail_ruins/buildings/group_hall_5 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/buildings/large_room_1 j trail_ruins/buildings/large_room_1 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/buildings/large_room_2 j trail_ruins/buildings/large_room_2 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/buildings/large_room_3 j trail_ruins/buildings/large_room_3 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/buildings/large_room_4 j trail_ruins/buildings/large_room_4 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/buildings/large_room_5 j trail_ruins/buildings/large_room_5 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/buildings/one_room_1 j trail_ruins/buildings/one_room_1 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/buildings/one_room_2 j trail_ruins/buildings/one_room_2 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/buildings/one_room_3 j trail_ruins/buildings/one_room_3 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/buildings/one_room_4 j trail_ruins/buildings/one_room_4 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/buildings/one_room_5 j trail_ruins/buildings/one_room_5 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/decor/decor_1 j trail_ruins/decor/decor_1 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/decor/decor_2 j trail_ruins/decor/decor_2 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/decor/decor_3 j trail_ruins/decor/decor_3 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/decor/decor_4 j trail_ruins/decor/decor_4 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/decor/decor_5 j trail_ruins/decor/decor_5 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/decor/decor_6 j trail_ruins/decor/decor_6 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/decor/decor_7 j trail_ruins/decor/decor_7 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/roads/long_road_end j trail_ruins/roads/long_road_end trail_ruins_roads_archaeology 0 0 -
+e trail_ruins/roads/road_end_1 j trail_ruins/roads/road_end_1 trail_ruins_roads_archaeology 0 0 -
+e trail_ruins/roads/road_section_1 j trail_ruins/roads/road_section_1 trail_ruins_roads_archaeology 0 0 -
+e trail_ruins/roads/road_section_2 j trail_ruins/roads/road_section_2 trail_ruins_roads_archaeology 0 0 -
+e trail_ruins/roads/road_section_3 j trail_ruins/roads/road_section_3 trail_ruins_roads_archaeology 0 0 -
+e trail_ruins/roads/road_section_4 j trail_ruins/roads/road_section_4 trail_ruins_roads_archaeology 0 0 -
+e trail_ruins/roads/road_spacer_1 j trail_ruins/roads/road_spacer_1 trail_ruins_roads_archaeology 0 0 -
+e trail_ruins/tower/tower_1 j trail_ruins/tower/tower_1 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/tower/tower_2 j trail_ruins/tower/tower_2 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/tower/tower_3 j trail_ruins/tower/tower_3 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/tower/tower_4 j trail_ruins/tower/tower_4 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/tower/tower_5 j trail_ruins/tower/tower_5 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/buildings/group_full_1 j trail_ruins/buildings/group_full_1 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/buildings/group_full_2 j trail_ruins/buildings/group_full_2 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/buildings/group_full_3 j trail_ruins/buildings/group_full_3 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/buildings/group_full_4 j trail_ruins/buildings/group_full_4 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/buildings/group_full_5 j trail_ruins/buildings/group_full_5 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/buildings/group_lower_1 j trail_ruins/buildings/group_lower_1 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/buildings/group_lower_2 j trail_ruins/buildings/group_lower_2 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/buildings/group_lower_3 j trail_ruins/buildings/group_lower_3 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/buildings/group_lower_4 j trail_ruins/buildings/group_lower_4 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/buildings/group_lower_5 j trail_ruins/buildings/group_lower_5 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/buildings/group_upper_1 j trail_ruins/buildings/group_upper_1 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/buildings/group_upper_2 j trail_ruins/buildings/group_upper_2 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/buildings/group_upper_3 j trail_ruins/buildings/group_upper_3 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/buildings/group_upper_4 j trail_ruins/buildings/group_upper_4 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/buildings/group_upper_5 j trail_ruins/buildings/group_upper_5 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/buildings/group_room_1 j trail_ruins/buildings/group_room_1 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/buildings/group_room_2 j trail_ruins/buildings/group_room_2 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/buildings/group_room_3 j trail_ruins/buildings/group_room_3 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/buildings/group_room_4 j trail_ruins/buildings/group_room_4 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/buildings/group_room_5 j trail_ruins/buildings/group_room_5 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/tower/hall_1 j trail_ruins/tower/hall_1 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/tower/hall_2 j trail_ruins/tower/hall_2 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/tower/hall_3 j trail_ruins/tower/hall_3 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/tower/hall_4 j trail_ruins/tower/hall_4 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/tower/hall_5 j trail_ruins/tower/hall_5 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/tower/large_hall_1 j trail_ruins/tower/large_hall_1 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/tower/large_hall_2 j trail_ruins/tower/large_hall_2 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/tower/large_hall_3 j trail_ruins/tower/large_hall_3 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/tower/large_hall_4 j trail_ruins/tower/large_hall_4 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/tower/large_hall_5 j trail_ruins/tower/large_hall_5 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/tower/one_room_1 j trail_ruins/tower/one_room_1 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/tower/one_room_2 j trail_ruins/tower/one_room_2 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/tower/one_room_3 j trail_ruins/tower/one_room_3 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/tower/one_room_4 j trail_ruins/tower/one_room_4 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/tower/one_room_5 j trail_ruins/tower/one_room_5 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/tower/platform_1 j trail_ruins/tower/platform_1 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/tower/platform_2 j trail_ruins/tower/platform_2 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/tower/platform_3 j trail_ruins/tower/platform_3 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/tower/platform_4 j trail_ruins/tower/platform_4 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/tower/platform_5 j trail_ruins/tower/platform_5 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/tower/stable_1 j trail_ruins/tower/stable_1 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/tower/stable_2 j trail_ruins/tower/stable_2 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/tower/stable_3 j trail_ruins/tower/stable_3 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/tower/stable_4 j trail_ruins/tower/stable_4 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/tower/stable_5 j trail_ruins/tower/stable_5 trail_ruins_houses_archaeology 0 0 -
+e trail_ruins/tower/tower_top_1 j trail_ruins/tower/tower_top_1 trail_ruins_tower_top_archaeology 0 0 -
+e trail_ruins/tower/tower_top_2 j trail_ruins/tower/tower_top_2 trail_ruins_tower_top_archaeology 0 0 -
+e trail_ruins/tower/tower_top_3 j trail_ruins/tower/tower_top_3 trail_ruins_tower_top_archaeology 0 0 -
+e trail_ruins/tower/tower_top_4 j trail_ruins/tower/tower_top_4 trail_ruins_tower_top_archaeology 0 0 -
+e trail_ruins/tower/tower_top_5 j trail_ruins/tower/tower_top_5 trail_ruins_tower_top_archaeology 0 0 -
+p trail_ruins/buildings - trail_ruins/buildings/group_hall_1*1 trail_ruins/buildings/group_hall_2*1 trail_ruins/buildings/group_hall_3*1 trail_ruins/buildings/group_hall_4*1 trail_ruins/buildings/group_hall_5*1 trail_ruins/buildings/large_room_1*1 trail_ruins/buildings/large_room_2*1 trail_ruins/buildings/large_room_3*1 trail_ruins/buildings/large_room_4*1 trail_ruins/buildings/large_room_5*1 trail_ruins/buildings/one_room_1*1 trail_ruins/buildings/one_room_2*1 trail_ruins/buildings/one_room_3*1 trail_ruins/buildings/one_room_4*1 trail_ruins/buildings/one_room_5*1
+p trail_ruins/decor - trail_ruins/decor/decor_1*1 trail_ruins/decor/decor_2*1 trail_ruins/decor/decor_3*1 trail_ruins/decor/decor_4*1 trail_ruins/decor/decor_5*1 trail_ruins/decor/decor_6*1 trail_ruins/decor/decor_7*1
+p trail_ruins/roads - trail_ruins/roads/long_road_end*1 trail_ruins/roads/road_end_1*1 trail_ruins/roads/road_section_1*1 trail_ruins/roads/road_section_2*1 trail_ruins/roads/road_section_3*1 trail_ruins/roads/road_section_4*1 trail_ruins/roads/road_spacer_1*1
+p trail_ruins/tower - trail_ruins/tower/tower_1*1 trail_ruins/tower/tower_2*1 trail_ruins/tower/tower_3*1 trail_ruins/tower/tower_4*1 trail_ruins/tower/tower_5*1
+p trail_ruins/buildings/grouped - trail_ruins/buildings/group_full_1*1 trail_ruins/buildings/group_full_2*1 trail_ruins/buildings/group_full_3*1 trail_ruins/buildings/group_full_4*1 trail_ruins/buildings/group_full_5*1 trail_ruins/buildings/group_lower_1*1 trail_ruins/buildings/group_lower_2*1 trail_ruins/buildings/group_lower_3*1 trail_ruins/buildings/group_lower_4*1 trail_ruins/buildings/group_lower_5*1 trail_ruins/buildings/group_upper_1*1 trail_ruins/buildings/group_upper_2*1 trail_ruins/buildings/group_upper_3*1 trail_ruins/buildings/group_upper_4*1 trail_ruins/buildings/group_upper_5*1 trail_ruins/buildings/group_room_1*1 trail_ruins/buildings/group_room_2*1 trail_ruins/buildings/group_room_3*1 trail_ruins/buildings/group_room_4*1 trail_ruins/buildings/group_room_5*1
+p trail_ruins/tower/additions - trail_ruins/tower/hall_1*1 trail_ruins/tower/hall_2*1 trail_ruins/tower/hall_3*1 trail_ruins/tower/hall_4*1 trail_ruins/tower/hall_5*1 trail_ruins/tower/large_hall_1*1 trail_ruins/tower/large_hall_2*1 trail_ruins/tower/large_hall_3*1 trail_ruins/tower/large_hall_4*1 trail_ruins/tower/large_hall_5*1 trail_ruins/tower/one_room_1*1 trail_ruins/tower/one_room_2*1 trail_ruins/tower/one_room_3*1 trail_ruins/tower/one_room_4*1 trail_ruins/tower/one_room_5*1 trail_ruins/tower/platform_1*1 trail_ruins/tower/platform_2*1 trail_ruins/tower/platform_3*1 trail_ruins/tower/platform_4*1 trail_ruins/tower/platform_5*1 trail_ruins/tower/stable_1*1 trail_ruins/tower/stable_2*1 trail_ruins/tower/stable_3*1 trail_ruins/tower/stable_4*1 trail_ruins/tower/stable_5*1
+p trail_ruins/tower/tower_top - trail_ruins/tower/tower_top_1*1 trail_ruins/tower/tower_top_2*1 trail_ruins/tower/tower_top_3*1 trail_ruins/tower/tower_top_4*1 trail_ruins/tower/tower_top_5*1

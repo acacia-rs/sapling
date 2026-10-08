@@ -2,7 +2,7 @@
 //! jigsaw blocks as placed at an origin and rotation.
 
 use super::super::BoundingBox;
-use super::super::template::{Rotation, Rule, Template};
+use super::super::template::{Capped, Rotation, Rule, Template};
 use crate::block::Block;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -20,6 +20,8 @@ pub enum ElementKind {
         post: u8,
         /// Pool aliases applied to the template's jigsaws.
         aliases: Option<&'static Vec<(String, String)>>,
+        /// v2 elements place as Java does (`template::JavaPlacement`), with these capped processors.
+        java: Option<&'static [Capped]>,
     },
     Feature(String),
     /// A template BDS's registration misspells: valid, but with no blocks or jigsaws.
@@ -103,6 +105,7 @@ pub struct JigsawInfo {
     pub aligned: bool,
     pub final_state: Block,
     pub selection_priority: i32,
+    pub placement_priority: i32,
 }
 
 impl JigsawInfo {
@@ -158,6 +161,7 @@ impl Element {
                         aligned: j.joint == "aligned",
                         final_state: j.final_state.block(rotation),
                         selection_priority: j.selection_priority,
+                        placement_priority: j.placement_priority,
                     }
                 })
                 .collect(),
@@ -171,6 +175,7 @@ impl Element {
                 aligned: false,
                 final_state: Block::Air,
                 selection_priority: 0,
+                placement_priority: 0,
             }],
             ElementKind::Missing | ElementKind::Empty => Vec::new(),
         }

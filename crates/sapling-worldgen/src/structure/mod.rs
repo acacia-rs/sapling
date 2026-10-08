@@ -25,6 +25,7 @@ pub(crate) mod template;
 mod templated;
 #[cfg(test)]
 mod tests;
+mod trail_ruins;
 mod treasure;
 mod village;
 
@@ -102,7 +103,10 @@ impl Structures {
             StructureKind::AncientCity => probe.contains_only((chunk.0 * 16, -27, chunk.1 * 16), 0, DEEP_DARK),
             // TODO: BDS checks the biome at the jigsaw start piece's centre (14196cc20); the chunk centre approximates it.
             StructureKind::TrialChambers => !DEEP_DARK.contains(&probe.biome(chunk.0 * 16 + 8, -30, chunk.1 * 16 + 8)),
-            StructureKind::TrailRuins => TRAIL_RUINS_BIOMES.contains(&probe.biome(chunk.0 * 16 + 8, probe.surface(chunk) - 15, chunk.1 * 16 + 8)),
+            StructureKind::TrailRuins => {
+                let (x, y, z) = trail_ruins::position(density, self.seed, chunk);
+                TRAIL_RUINS_BIOMES.contains(&probe.biome(x, y, z))
+            }
         }
     }
 

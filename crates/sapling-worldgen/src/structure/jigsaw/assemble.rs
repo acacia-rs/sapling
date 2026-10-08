@@ -1,21 +1,25 @@
-//! BDS's two `JigsawPlacement`s. Legacy (villages: ctor 141ee6920, addPieces 141ee6a70, expand
+//! BDS's three `JigsawPlacement`s. Legacy (villages: ctor 141ee6920, addPieces 141ee6a70, expand
 //! 141ee7000, candidates 141ee7770) grows depth first and only keeps boxes from overlapping in x and
 //! z. Queued (ancient cities: addPieces 141edde60, expand 141ee4b20, candidates 141ee5600) grows
 //! breadth first through a (placement priority, insertion) queue and keeps pieces inside allowed
-//! boxes and off occupied ones, a fresh space per jigsaw that attaches inside its piece.
+//! boxes and off occupied ones, a fresh space per jigsaw that attaches inside its piece. V2 (the
+//! data-driven structures: `br::worldgen::JigsawAssembler::construct` 144ce64d0, expand lambda
+//! 144d11120) is Java's: Java's Random and shuffle, main and fallback pools in one list, one space
+//! per piece for what attaches inside it, and the jigsaw's placement priority on the queue.
 
 use std::collections::BinaryHeap;
 
 use super::super::BoundingBox;
 use super::super::template::Rotation;
+use super::draw::JigsawRandom;
 use super::element::{Element, JigsawInfo, Projection};
 use super::{Data, Piece, Pool};
-use crate::random::Mt19937;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Variant {
     Legacy,
     Queued,
+    V2,
 }
 
 #[derive(Default)]
@@ -24,11 +28,11 @@ struct Space {
     occupied: Vec<BoundingBox>,
 }
 
-pub struct Assembler<'a> {
+pub struct Assembler<'a, R: JigsawRandom> {
     pub variant: Variant,
     pub max_depth: i32,
     pub data: &'static Data,
-    pub random: &'a mut Mt19937,
+    pub random: &'a mut R,
     /// The piece class's height at a jigsaw (`PoolElementStructurePiece` vt+0x68).
     pub height: &'a dyn Fn(i32, i32) -> i32,
     pub pieces: Vec<Piece>,
@@ -38,18 +42,8 @@ pub struct Assembler<'a> {
     pushed: i64,
 }
 
-/// BDS's shuffle (141ee53d0, 145e23dc0): for i from 1, swap i with `u32 % (i + 1)` when they differ.
-pub fn shuffle<T>(items: &mut [T], random: &mut Mt19937) {
-    for i in 1..items.len() {
-        let j = (random.next_u32() % (i as u32 + 1)) as usize;
-        if j != i {
-            items.swap(i, j);
-        }
-    }
-}
-
-impl<'a> Assembler<'a> {
-    pub fn new(variant: Variant, max_depth: i32, random: &'a mut Mt19937, height: &'a dyn Fn(i32, i32) -> i32) -> Self {
+impl<'a, R: JigsawRandom> Assembler<'a, R> {
+    pub fn new(variant: Variant, max_depth: i32, random: &'a mut R, height: &'a dyn Fn(i32, i32) -> i32) -> Self {
         let data = super::data();
         Self { variant, max_depth, data, random, height, pieces: Vec::new(), spaces: Vec::new(), queue: BinaryHeap::new(), pushed: 0 }
     }
@@ -58,18 +52,22 @@ impl<'a> Assembler<'a> {
     /// lands on `start`'s column, `height(centre) - 1` below the anchor, within `max_distance`.
     pub fn start_queued(&mut self, element: &'static Element, start: (i32, i32, i32), rotation: Rotation, anchor: &str, max_distance: i32) {
         let mut jigsaws = element.jigsaws(start, rotation);
-        shuffle(&mut jigsaws, self.random);
+        self.random.shuffle(&mut jigsaws);
         let (dx, dy, dz) = jigsaws.iter().find(|j| j.name == anchor).map_or((0, 0, 0), |j| (start.0 - j.pos.0, j.pos.1 - start.1, start.2 - j.pos.2));
         let origin = (start.0 + dx, 0, start.2 + dz);
         let bb = element.bbox(origin, rotation);
         let h = (self.height)(middle(bb.x0, bb.x1), middle(bb.z0, bb.z1));
-        let shift = h - dy - bb.y0 - 1;
         let mut piece = Piece::new(element, origin, rotation, 0);
-        piece.shift_y(shift);
+        piece.shift_y(h - dy - bb.y0 - 1);
         let b = piece.bb;
         let (cx, cy, cz) = (middle(b.x0, b.x1), middle(b.y0, b.y1), middle(b.z0, b.z1));
         let limit = BoundingBox::new(cx - max_distance, cy - max_distance, cz - max_distance, cx + max_distance, cy + max_distance, cz + max_distance);
-        self.spaces.push(Space { allowed: vec![limit], occupied: vec![b] });
+        self.run_queue(piece, limit);
+    }
+
+    /// The v2 start: `piece` already at its height, the space `limit` less the piece.
+    pub fn run_queue(&mut self, piece: Piece, limit: BoundingBox) {
+        self.spaces.push(Space { allowed: vec![limit], occupied: vec![piece.bb] });
         self.pieces.push(piece);
         self.enqueue(0, 0, 0);
         while let Some((_, _, index, space)) = self.queue.pop() {
@@ -96,15 +94,24 @@ impl<'a> Assembler<'a> {
             return;
         }
         let mut jigsaws = piece.element.jigsaws(piece.origin, piece.rotation);
-        shuffle(&mut jigsaws, self.random);
-        if self.variant == Variant::Queued {
+        self.random.shuffle(&mut jigsaws);
+        if self.variant != Variant::Legacy {
             jigsaws.sort_by_key(|j| std::cmp::Reverse(j.selection_priority));
         }
         let mut inside = Vec::new();
+        let mut own_space = None;
         for jigsaw in &jigsaws {
             let Some(pool) = self.data.pool(jigsaw.pool).filter(|p| !p.list.is_empty()) else { continue };
             let fallback = pool.fallback.as_deref().and_then(|f| self.data.pool(f)).filter(|f| !f.list.is_empty());
-            if piece.depth == self.max_depth {
+            if self.variant == Variant::V2 {
+                let mut list = Vec::new();
+                for p in [(piece.depth != self.max_depth).then_some(pool), fallback].into_iter().flatten() {
+                    let mut shuffled = p.list.clone();
+                    self.random.shuffle(&mut shuffled);
+                    list.extend(shuffled);
+                }
+                self.try_elements(&piece, jigsaw, &list, space, &mut inside, &mut own_space);
+            } else if piece.depth == self.max_depth {
                 if let Some(fallback) = fallback {
                     self.try_pool(&piece, jigsaw, fallback, space, &mut inside);
                 }
@@ -116,36 +123,56 @@ impl<'a> Assembler<'a> {
         }
     }
 
-    /// Tries `pool`'s elements (shuffled), each in shuffled rotations, each of their shuffled
-    /// jigsaws that fits `jigsaw`; true once one is placed or an empty element ends the list.
     fn try_pool(&mut self, source: &Piece, jigsaw: &JigsawInfo, pool: &Pool, space: usize, inside: &mut Vec<BoundingBox>) -> bool {
+        let mut order = pool.list.clone();
+        self.random.shuffle(&mut order);
+        self.try_elements(source, jigsaw, &order, space, inside, &mut None)
+    }
+
+    /// Tries `elements` in order, each in shuffled rotations, each of their shuffled jigsaws that
+    /// fits `jigsaw`; true once one is placed or an empty element ends the list.
+    fn try_elements(
+        &mut self,
+        source: &Piece,
+        jigsaw: &JigsawInfo,
+        elements: &[&'static Element],
+        space: usize,
+        inside: &mut Vec<BoundingBox>,
+        own_space: &mut Option<usize>,
+    ) -> bool {
         let src_bb = source.bb;
         let (o, f) = (jigsaw.front.offset(), jigsaw.pos);
         let target = (f.0 + o.0, f.1 + o.1, f.2 + o.2);
         let is_inside = src_bb.contains(target.0, target.1, target.2);
-        let surface = (self.height)(jigsaw.pos.0, jigsaw.pos.2) - 1;
-        let mut order: Vec<usize> = (0..pool.list.len()).collect();
-        shuffle(&mut order, self.random);
         let mut space = space;
-        for index in order {
-            let element = pool.list[index];
+        if self.variant == Variant::V2 && is_inside {
+            space = *own_space.get_or_insert_with(|| {
+                self.spaces.push(Space { allowed: vec![src_bb], occupied: Vec::new() });
+                self.spaces.len() - 1
+            });
+        }
+        for &element in elements {
             if !element.is_valid() {
                 return true;
             }
-            let mut rotations = [Rotation::Clockwise90, Rotation::Clockwise180, Rotation::CounterClockwise90, Rotation::None];
-            shuffle(&mut rotations, self.random);
+            let mut rotations = match self.variant {
+                Variant::V2 => Rotation::ALL,
+                _ => [Rotation::Clockwise90, Rotation::Clockwise180, Rotation::CounterClockwise90, Rotation::None],
+            };
+            self.random.shuffle(&mut rotations);
             for rotation in rotations {
                 let mut candidates = element.jigsaws((0, 0, 0), rotation);
-                shuffle(&mut candidates, self.random);
+                self.random.shuffle(&mut candidates);
+                if self.variant == Variant::V2 {
+                    candidates.sort_by_key(|j| std::cmp::Reverse(j.selection_priority));
+                }
                 for candidate in &candidates {
                     if !jigsaw.can_attach(candidate) {
                         continue;
                     }
                     let mut origin = (target.0 - candidate.pos.0, target.1 - candidate.pos.1, target.2 - candidate.pos.2);
                     let mut bb = element.bbox(origin, rotation);
-                    let terrain = source.element.projection() == Projection::TerrainMatching || element.projection() == Projection::TerrainMatching;
-                    let base = if terrain { surface } else { src_bb.y0 };
-                    let y0 = jigsaw.pos.1 - (src_bb.y0 + candidate.pos.1) + base + jigsaw.front.offset().1;
+                    let y0 = self.child_y(source, jigsaw, element, candidate);
                     let dy = y0 - bb.y0;
                     bb.move_y(dy);
                     origin.1 += dy;
@@ -158,6 +185,7 @@ impl<'a> Assembler<'a> {
                             }
                             self.fits_queued(&bb, space)
                         }
+                        Variant::V2 => self.fits_queued(&bb, space),
                     };
                     if !fits {
                         continue;
@@ -167,12 +195,26 @@ impl<'a> Assembler<'a> {
                     match self.variant {
                         Variant::Legacy => self.expand(child, 0),
                         Variant::Queued => self.enqueue(0, child, space),
+                        Variant::V2 => self.enqueue(jigsaw.placement_priority, child, space),
                     }
                     return true;
                 }
             }
         }
         false
+    }
+
+    /// The child's bottom: rigid on rigid keeps the jigsaws face to face; otherwise the hardcoded
+    /// placers stand it on the surface under the jigsaw, v2 the candidate jigsaw on it.
+    fn child_y(&self, source: &Piece, jigsaw: &JigsawInfo, element: &Element, candidate: &JigsawInfo) -> i32 {
+        let rigid = source.element.projection() == Projection::Rigid && element.projection() == Projection::Rigid;
+        let surface = (self.height)(jigsaw.pos.0, jigsaw.pos.2);
+        let step = jigsaw.front.offset().1;
+        match (rigid, self.variant) {
+            (true, _) => jigsaw.pos.1 - candidate.pos.1 + step,
+            (false, Variant::V2) => surface - candidate.pos.1,
+            (false, _) => jigsaw.pos.1 - (source.bb.y0 + candidate.pos.1) + surface - 1 + step,
+        }
     }
 
     /// Legacy room test, x and z only: inside the source piece and clear of what attached inside

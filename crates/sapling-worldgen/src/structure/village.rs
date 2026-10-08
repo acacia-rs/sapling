@@ -3,19 +3,16 @@
 //! abandoned roll, a town centre from the type's pool, then the legacy jigsaw placer to depth 6.
 //! Pieces stand on the raw terrain heights (`WorldGenerator::computeChunkHeightMap` 14196d010).
 
-use std::cell::RefCell;
-use std::collections::HashMap;
 use std::sync::Arc;
 
 use super::canvas::Canvas;
 use super::jigsaw::{Assembler, Piece, Variant, VillageClass, data, middle};
-use super::probe::Probe;
+use super::probe::{Probe, RawHeights};
 use super::template::Rotation;
 use super::{BoundingBox, StructureKind, Structures};
 use crate::block::Block;
 use crate::density::Density;
 use crate::random::Mt19937;
-use crate::terrain::MIN_Y;
 
 /// Six pieces deep reach about 120 blocks from the town centre.
 const REACH: i32 = 8;
@@ -35,30 +32,6 @@ fn village_type(biome: u32) -> &'static str {
     }
 }
 
-/// One above each column's highest non-air block of the density stage (water counts), at least
-/// the world's bottom, per chunk as BDS caches them.
-struct RawHeights<'a> {
-    density: &'a Density,
-    chunks: RefCell<HashMap<(i32, i32), Box<[i32; 256]>>>,
-}
-
-impl RawHeights<'_> {
-    fn at(&self, x: i32, z: i32) -> i32 {
-        let key = (x >> 4, z >> 4);
-        let mut chunks = self.chunks.borrow_mut();
-        let column = chunks.entry(key).or_insert_with(|| {
-            let shape = self.density.chunk_shape(key.0, key.1);
-            let mut heights = Box::new([0; 256]);
-            for (i, h) in heights.iter_mut().enumerate() {
-                let (cx, cz) = (i & 15, i >> 4);
-                *h = (MIN_Y..256).rev().find(|&y| shape.block(cx, y, cz) != Block::Air).map_or(0, |y| y + 1);
-            }
-            heights
-        });
-        column[((z & 15) << 4 | (x & 15)) as usize].max(MIN_Y)
-    }
-}
-
 pub fn generate(density: &Density, random: &mut Mt19937, start: (i32, i32)) -> Village {
     let probe = Probe { density };
     let surface = probe.surface(start);
@@ -68,7 +41,7 @@ pub fn generate(density: &Density, random: &mut Mt19937, start: (i32, i32)) -> V
     let pool = if abandoned { format!("village/abandoned/{kind}/town_centers") } else { format!("village/{kind}/town_centers") };
     let pool = data().pool(&pool).expect("village town centres");
     let element = pool.list[random.next_int(pool.list.len() as i32) as usize];
-    let raw = RawHeights { density, chunks: RefCell::new(HashMap::new()) };
+    let raw = RawHeights::new(density);
     let height = |x: i32, z: i32| raw.at(x, z);
     let mut piece = Piece::new(element, (start.0 * 16, surface, start.1 * 16), rotation, 0);
     let bb = piece.bb;

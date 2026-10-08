@@ -4,6 +4,7 @@
 //! rotation (141f70580) make it.
 
 mod connect;
+mod java;
 mod load;
 mod markers;
 mod mirror;
@@ -15,6 +16,7 @@ use std::collections::HashMap;
 use std::sync::OnceLock;
 
 pub use connect::rejoin;
+pub use java::{Capped, JavaPlacement};
 pub use load::palette;
 #[allow(unused_imports)]
 pub use place::{Placement, Rotation};

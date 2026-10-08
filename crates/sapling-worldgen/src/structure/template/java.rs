@@ -1,0 +1,70 @@
+//! v2 template placement (`StructurePoolElement` vt+0x38 145e1c040 -> 141ee0510), Java's
+//! `processBlockInfos`: every block of the template, structure blocks dropped and jigsaws turned
+//! into their final states, through the rule processors, then each capped processor (145942bd0)
+//! applying its rules to at most `limit` blocks, picked in an order shuffled by the level seed
+//! forked at the template origin. Clipping to a chunk comes after, so pieces agree across chunks.
+
+use super::rules::{Rule, apply_first};
+use super::{Kind, Rotation, Template};
+use crate::block::Block;
+use crate::random::JavaRandom;
+
+#[derive(Debug, Clone)]
+pub struct Capped {
+    pub limit: usize,
+    pub rules: &'static [Rule],
+}
+
+pub struct JavaPlacement<'a> {
+    pub rotation: Rotation,
+    pub rules: &'a [Rule],
+    pub capped: &'a [Capped],
+    pub level_seed: i64,
+}
+
+impl JavaPlacement<'_> {
+    /// Every processed block of `template` at `origin`, in placement order; `world` is what the
+    /// world holds where a rule's location predicate looks.
+    pub fn blocks(&self, template: &Template, origin: (i32, i32, i32), world: &dyn Fn(i32, i32, i32) -> Block) -> Vec<((i32, i32, i32), Block)> {
+        let mut out = Vec::with_capacity(template.blocks.len());
+        for (index, b) in template.blocks.iter().enumerate() {
+            let mut block = match b.state.kind() {
+                Kind::StructureBlock => continue,
+                Kind::Jigsaw => match template.jigsaws.iter().find(|j| j.block == index) {
+                    Some(j) => j.final_state.block(self.rotation),
+                    None => continue,
+                },
+                Kind::Block => b.state.block(self.rotation),
+            };
+            if block.name() == "structure_void" {
+                continue;
+            }
+            let (dx, dy, dz) = self.rotation.apply(b.pos);
+            let at = (origin.0 + dx, origin.1 + dy, origin.2 + dz);
+            if let Some(output) = apply_first(self.rules, block, world(at.0, at.1, at.2), at) {
+                block = output;
+            }
+            out.push((at, block));
+        }
+        for capped in self.capped {
+            let mut random = JavaRandom::new(self.level_seed).fork_at(origin.0, origin.1, origin.2);
+            let mut order: Vec<usize> = (0..out.len()).collect();
+            random.shuffle(&mut order);
+            let limit = capped.limit.min(out.len());
+            let mut changed = 0;
+            for k in order {
+                if changed == limit {
+                    break;
+                }
+                let (at, block) = out[k];
+                if let Some(output) = apply_first(capped.rules, block, world(at.0, at.1, at.2), at)
+                    && output != block
+                {
+                    out[k].1 = output;
+                    changed += 1;
+                }
+            }
+        }
+        out
+    }
+}

@@ -5,7 +5,7 @@
 
 use super::super::BoundingBox;
 use super::super::canvas::Canvas;
-use super::super::template::{Placement, Rotation, named};
+use super::super::template::{JavaPlacement, Placement, Rotation, named};
 use super::assemble::middle;
 use super::element::{Element, ElementKind, Projection};
 use crate::block::Block;
@@ -84,6 +84,18 @@ impl Piece {
         }
         if post & 2 != 0 {
             self.plug_holes(canvas, class);
+        }
+    }
+
+    /// A v2 piece within the canvas's chunk (`template::JavaPlacement`).
+    pub fn post_process_java(&self, canvas: &mut Canvas, level_seed: i64) {
+        let ElementKind::Template { template, rules, java: Some(capped), .. } = &self.element.kind else { return };
+        let placement = JavaPlacement { rotation: self.rotation, rules, capped, level_seed };
+        let blocks = placement.blocks(template, self.origin, &|x, y, z| canvas.get(x, y, z));
+        for ((x, y, z), block) in blocks {
+            if canvas.bb.contains(x, y, z) {
+                canvas.set(x, y, z, block);
+            }
         }
     }
 
