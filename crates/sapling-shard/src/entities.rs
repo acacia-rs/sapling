@@ -136,7 +136,7 @@ pub(crate) fn step(world: &mut World, entity: Entity, layer: Entity, id: u64, ph
     let lifted = physics.liquid == InLiquid::Floats && body.liquid().is_some();
     let [x, y, z] = body.at;
     let mut told = world.get_mut::<Told>(entity)?;
-    let flags = told.flags(id, start.on_ground, lifted, physics.burns && in_lava);
+    let flags = told.flags(id, std::array::from_fn(|axis| body.at[axis] - start.at[axis]), lifted, physics.burns && in_lava);
     let packets: Vec<Bytes> = flags.into_iter().chain(told.update(id, [x, y + lift, z], body.motion, body.on_ground)).chain(splash).collect();
     // Not yet announced: this move follows the announcement, in the same batch, as on BDS.
     if world.get::<Born>(entity).is_some_and(|born| born.0 == world.resource::<Tick>().0) {

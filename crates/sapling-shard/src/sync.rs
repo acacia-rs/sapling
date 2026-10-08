@@ -13,6 +13,8 @@ const MOVED: f32 = 0.01;
 const SETTLED: f32 = 0.001;
 const STOPPING: f32 = 0.001;
 const NEW_MOTION: f32 = 0.2;
+/// A tick's move, squared, past which the next tick shows `MOVING` (docs/research/moving-flag.md).
+const MOVING: f32 = 0.001;
 
 fn length(v: [f32; 3]) -> f32 {
     v.iter().map(|axis| axis * axis).sum::<f32>().sqrt()
@@ -26,13 +28,13 @@ pub(crate) struct Told {
     flags: Option<Shown>,
 }
 
-/// The flags viewers were told the entity has, and whether the last tick started on the ground.
+/// The flags viewers were told the entity has, and whether the last tick moved far enough to show `MOVING`.
 #[derive(Clone, Copy, Debug)]
 struct Shown {
     moving: bool,
     lifted: bool,
     burning: bool,
-    started_on_ground: Option<bool>,
+    moved_far: Option<bool>,
 }
 
 impl Told {
@@ -42,20 +44,20 @@ impl Told {
     }
 
     /// Tells viewers when the entity is moving, lifted and burning, as BDS tells them of items and
-    /// falling blocks; `ticked` when its body already ran a tick, from the air, that viewers were
-    /// not told of.
+    /// falling blocks; `ticked` when its body already made a move, far enough to show, that viewers
+    /// were not told of.
     pub fn flag_moving(&mut self, ticked: bool) {
-        self.flags = Some(Shown { moving: false, lifted: false, burning: false, started_on_ground: ticked.then_some(false) });
+        self.flags = Some(Shown { moving: false, lifted: false, burning: false, moved_far: ticked.then_some(true) });
     }
 
-    /// The flags of the entity `id` when they changed, the tick starting `on_ground`, a liquid
-    /// holding it up in place of gravity (`lifted`) and lava `burning` it. On BDS `MOVING` follows
-    /// whether the tick before started in the air: an item thrown at tick s was flagged at s+1 and,
-    /// landing at L, cleared at L+2 (research/captures/bds-mechanisms.txt B:1269-1312); the rest
-    /// go with the tick's move (bds-water-flags.txt, bds-lava.txt).
-    pub fn flags(&mut self, id: u64, on_ground: bool, lifted: bool, burning: bool) -> Option<Bytes> {
+    /// The flags of the entity `id` when they changed, after a tick that moved it by `gone`, a
+    /// liquid holding it up in place of gravity (`lifted`) and lava `burning` it. On BDS `MOVING`
+    /// shows whether the tick before moved it far (docs/research/moving-flag.md); the rest go with
+    /// the tick's move (research/captures/bds-water-flags.txt, bds-lava.txt).
+    pub fn flags(&mut self, id: u64, gone: [f32; 3], lifted: bool, burning: bool) -> Option<Bytes> {
         let shown = self.flags.as_mut()?;
-        let moving = std::mem::replace(&mut shown.started_on_ground, Some(on_ground)).map_or(shown.moving, |before| !before);
+        let moved_far = gone.iter().map(|axis| axis * axis).sum::<f32>() > MOVING;
+        let moving = std::mem::replace(&mut shown.moved_far, Some(moved_far)).unwrap_or(shown.moving);
         if (moving, lifted, burning) == (shown.moving, shown.lifted, shown.burning) {
             return None;
         }
@@ -144,16 +146,17 @@ mod tests {
     }
 
     #[test]
-    fn moving_is_flagged_a_tick_after_a_tick_in_the_air_began_and_cleared_two_after_landing() {
+    fn moving_is_flagged_a_tick_after_a_move_of_more_than_0_0316_as_on_bds() {
         let mut told = Told::new([0.0; 3]);
-        assert!(told.flags(1, false, false, false).is_none(), "only for kinds that asked");
+        assert!(told.flags(1, [0.0; 3], false, false).is_none(), "only for kinds that asked");
         told.flag_moving(false);
-        // Ticks start: thrown, in the air, landed during the third, on the ground, on the ground.
-        let sent: Vec<bool> = [false, false, false, true, true].into_iter().map(|on_ground| told.flags(1, on_ground, false, false).is_some()).collect();
-        assert_eq!(sent, [false, true, false, false, true]);
+        // BDS's item 18 rising in water: 0.000991 squared stays off, 0.001001 shows the next tick.
+        let moves = [[0.0, 0.2, 0.0], [0.0107, 0.0011, 0.0], [0.00155, 0.03148, 0.0], [0.00155, 0.0316, 0.0], [0.0, 0.0316, 0.0]];
+        let sent: Vec<bool> = moves.into_iter().map(|gone| told.flags(1, gone, false, false).is_some()).collect();
+        assert_eq!(sent, [false, true, true, false, true]);
         let mut fallen = Told::new([0.0; 3]);
         fallen.flag_moving(true);
-        assert!(fallen.flags(1, false, false, false).is_some(), "a falling block is flagged as it is shown");
+        assert!(fallen.flags(1, [0.0; 3], false, false).is_some(), "a falling block is flagged as it is shown");
     }
 
     fn sent_flags(packet: &Bytes) -> i64 {
@@ -169,8 +172,8 @@ mod tests {
         let mut told = Told::new([0.0; 3]);
         told.flag_moving(true);
         // BDS's item into water, then lava: 281492156579840 and 281492156579841.
-        assert_eq!(sent_flags(&told.flags(1, false, true, false).unwrap()), 281_492_156_579_840);
-        assert_eq!(sent_flags(&told.flags(1, false, true, true).unwrap()), 281_492_156_579_841);
-        assert!(told.flags(1, false, true, true).is_none());
+        assert_eq!(sent_flags(&told.flags(1, [0.0, -0.1, 0.0], true, false).unwrap()), 281_492_156_579_840);
+        assert_eq!(sent_flags(&told.flags(1, [0.0, -0.1, 0.0], true, true).unwrap()), 281_492_156_579_841);
+        assert!(told.flags(1, [0.0, -0.1, 0.0], true, true).is_none());
     }
 }

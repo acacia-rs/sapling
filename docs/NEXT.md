@@ -26,7 +26,7 @@ Each needs its rule looked up first (`bdsre` for BDS, the Java jar for data), th
 1. **Water and lava for entities**: items float and burn, orbs bob and are thrown out of lava,
    mobs sink, as on BDS (`body/liquid.rs`, `docs/research/water-movement.md` 7 and 8); concrete
    powder sets (`bds_command_probe concrete`). Left: mobs set on fire and hurt in lava (no mob
-   health yet); an item's `MOVING` flag in water.
+   health yet).
 2. **Redstone.** Plates now match BDS when walked on (`bds_plate_probe`); what they power (the lamp
    in that drill) does nothing on sapling.
 

@@ -1,7 +1,7 @@
 //! Runs a drill of command lines as an operator bot while a second operator watches, and prints
 //! what each was answered: CommandOutput in full, Text, GameRulesChanged as `rule=value`, and the
 //! drill's own packets. The ground truth for sapling's vanilla commands (`sapling::vanilla`).
-//! `cargo run -p sapling --example bds_command_probe -- <server> [gamerule|kill|replaceitem|defaults|concrete|water|lava]` (offline mode,
+//! `cargo run -p sapling --example bds_command_probe -- <server> [gamerule|kill|replaceitem|defaults|concrete|water|lava|redstone]` (offline mode,
 //! operators by default; `gamerule` when none is named).
 #[path = "shared/dump.rs"]
 #[allow(dead_code)]
@@ -102,8 +102,8 @@ const DEFAULTS: &[&str] = &[
     "testforblock ~8 ~ ~ amethyst_cluster [\"minecraft:block_face\"=\"up\"]",
     "setblock ~9 ~ ~ brown_mushroom_block",
     "testforblock ~9 ~ ~ brown_mushroom_block [\"huge_mushroom_bits\"=14]",
-    "setblock ~10 ~ ~ pointed_dripstone",
-    "testforblock ~10 ~ ~ pointed_dripstone [\"hanging\"=true]",
+    "setblock ~12 ~ ~ pointed_dripstone",
+    "testforblock ~12 ~ ~ pointed_dripstone [\"hanging\"=true]",
     "setblock ~11 ~ ~ small_dripleaf_block",
     "testforblock ~11 ~ ~ small_dripleaf_block [\"upper_block_bit\"=true]",
     "testforblock ~11 ~ ~ small_dripleaf_block [\"minecraft:cardinal_direction\"=\"east\"]",
@@ -134,8 +134,8 @@ const CONCRETE: &[&str] = &[
 ];
 /// What water does to an item, an orb and an armour stand dropped into a pool three deep.
 const WATER: &[&str] = &[
-    "fill ~2 ~-5 ~6 ~8 ~-1 ~10 stone",
-    "fill ~2 ~ ~6 ~8 ~4 ~10 air",
+    "fill ~2 ~-5 ~6 ~8 ~-1 ~12 stone",
+    "fill ~2 ~ ~6 ~8 ~4 ~12 air",
     "fill ~3 ~-4 ~7 ~7 ~-1 ~9 water",
     "setblock ~5 ~2 ~8 dirt",
     "setblock ~5 ~2 ~8 air destroy",
@@ -145,8 +145,8 @@ const WATER: &[&str] = &[
 const WATER_SHOWN: &[&str] = &["AddItemEntity", "AddEntity", "RemoveEntity", "MoveEntityDelta", "SetEntityMotion", "MotionPredictionHints", "LevelSoundEvent", "SetEntityData"];
 /// The water drill over a pool of lava, which also burns what falls in.
 const LAVA: &[&str] = &[
-    "fill ~2 ~-5 ~6 ~8 ~-1 ~10 stone",
-    "fill ~2 ~ ~6 ~8 ~4 ~10 air",
+    "fill ~2 ~-5 ~6 ~8 ~-1 ~12 stone",
+    "fill ~2 ~ ~6 ~8 ~4 ~12 air",
     "fill ~3 ~-4 ~7 ~7 ~-1 ~9 lava",
     "setblock ~5 ~2 ~8 dirt",
     "setblock ~5 ~2 ~8 air destroy",
@@ -166,6 +166,45 @@ const LAVA_SHOWN: &[&str] = &[
     "SetEntityData",
     "LevelEvent",
 ];
+/// Redstone on a stone stage: a lamp by a power block, dust from a power block to a lamp 15 away
+/// and 16 away, a lever powering through the block it is on, a torch put out by power into its
+/// block, a door and a hopper powered, and pressed buttons left to spring back.
+const REDSTONE: &[&str] = &[
+    "fill ~2 ~-1 ~4 ~22 ~-1 ~16 stone",
+    "fill ~2 ~ ~4 ~22 ~4 ~16 air",
+    "setblock ~3 ~ ~5 redstone_lamp",
+    "setblock ~4 ~ ~5 redstone_block",
+    "setblock ~4 ~ ~5 air",
+    "fill ~3 ~ ~7 ~17 ~ ~7 redstone_wire",
+    "setblock ~18 ~ ~7 redstone_lamp",
+    "fill ~3 ~ ~9 ~18 ~ ~9 redstone_wire",
+    "setblock ~19 ~ ~9 redstone_lamp",
+    "setblock ~2 ~ ~7 redstone_block",
+    "setblock ~2 ~ ~9 redstone_block",
+    "setblock ~2 ~ ~7 air",
+    "setblock ~3 ~ ~12 stone",
+    "setblock ~4 ~ ~12 redstone_lamp",
+    "setblock ~3 ~1 ~12 lever [\"lever_direction\"=\"up_north_south\",\"open_bit\"=true]",
+    "setblock ~3 ~1 ~12 lever [\"lever_direction\"=\"up_north_south\",\"open_bit\"=false]",
+    "setblock ~7 ~ ~12 stone",
+    "setblock ~7 ~1 ~12 redstone_torch",
+    "setblock ~7 ~2 ~12 redstone_lamp",
+    "setblock ~6 ~ ~12 redstone_block",
+    "setblock ~6 ~ ~12 air",
+    "setblock ~10 ~ ~12 iron_door",
+    "setblock ~11 ~ ~12 redstone_block",
+    "setblock ~11 ~ ~12 air",
+    "setblock ~13 ~ ~12 hopper",
+    "setblock ~14 ~ ~12 redstone_block",
+    "setblock ~14 ~ ~12 air",
+    "setblock ~16 ~ ~12 stone",
+    "setblock ~17 ~ ~12 redstone_lamp",
+    "setblock ~16 ~1 ~12 stone_button [\"facing_direction\"=1,\"button_pressed_bit\"=true]",
+    "setblock ~16 ~1 ~12 wooden_button [\"facing_direction\"=1,\"button_pressed_bit\"=true]",
+    "testforblock ~16 ~1 ~12 wooden_button [\"button_pressed_bit\"=true]",
+];
+const REDSTONE_SHOWN: &[&str] = &["UpdateBlock", "UpdateBlockSynced", "UpdateSubchunkBlocks", "LevelSoundEvent", "LevelEvent", "BlockEvent"];
+
 /// Long enough to see a thing sink or rise through the pool.
 const WATER_SETTLE: Duration = Duration::from_millis(8000);
 const CONCRETE_SHOWN: &[&str] = &["UpdateBlock", "UpdateBlockSynced", "UpdateSubchunkBlocks", "AddEntity", "RemoveEntity", "AddItemEntity", "LevelEvent", "LevelSoundEvent"];
@@ -203,7 +242,7 @@ const SHOWN: usize = 4000;
 #[tokio::main(flavor = "current_thread")]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut args = std::env::args().skip(1);
-    let server = args.next().ok_or("usage: bds_command_probe <server> [gamerule|kill|replaceitem|defaults|concrete|water|lava]")?;
+    let server = args.next().ok_or("usage: bds_command_probe <server> [gamerule|kill|replaceitem|defaults|concrete|water|lava|redstone]")?;
     let (lines, shown, settle) = match args.next().as_deref() {
         None | Some("gamerule") => (GAMERULE, &[][..], SETTLE),
         Some("kill") => (KILL, KILL_SHOWN, KILL_SETTLE),
@@ -212,6 +251,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         Some("concrete") => (CONCRETE, CONCRETE_SHOWN, KILL_SETTLE),
         Some("water") => (WATER, WATER_SHOWN, WATER_SETTLE),
         Some("lava") => (LAVA, LAVA_SHOWN, WATER_SETTLE),
+        Some("redstone") => (REDSTONE, REDSTONE_SHOWN, KILL_SETTLE),
         Some(other) => return Err(format!("no drill {other}").into()),
     };
     let (mut actor, mut watcher) = (connect(&server, "CmdActor").await?, connect(&server, "CmdWatcher").await?);

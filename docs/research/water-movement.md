@@ -312,8 +312,8 @@ An item from `/setblock .. air destroy`, a `/summon`ed orb and armour stand, dro
 - Moves sent: BDS's rule of items.md 5 (distance over 0.01 in all, or 0.001 once all but stopped, every changed
   axis), which `sync.rs` now follows: the orb's sends of 0.0100 to 0.0101, the item's of 0.007 at the bottom of a bob.
 - Flags (research/captures/bds-water-flags.txt): an item's `AFFECTED_BY_GRAVITY` is cleared on each tick water lifts
-  it and set again on each tick it bobs out, sent with that tick's move. Its `MOVING` was cleared about 10 ticks after
-  it went in, while it still moved: that rule is not known.
+  it and set again on each tick it bobs out, sent with that tick's move. `MOVING` shows whether the tick before moved
+  it more than 0.0316 (`moving-flag.md`), which an item slowly rising in water does not.
 
 ## 8. Lava, checked on BDS (2026-10-08, `bds_command_probe lava`, research/captures/bds-lava.txt)
 
