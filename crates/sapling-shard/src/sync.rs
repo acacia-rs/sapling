@@ -1,7 +1,8 @@
 //! Keeping viewers' copies of an entity the server moves where it is, as BDS's generic actor sync
-//! does: a MoveEntityDelta of the axes it moved more than 0.01 along, and a SetEntityMotion when
-//! its motion changed by more than 0.2 since the last one, or stopped (docs/research/items.md 5;
-//! a falling block on BDS was sent exactly that, research/captures/bds-mechanisms-findings.md).
+//! does: a MoveEntityDelta of the axes that changed once it moved more than 0.01, or more than
+//! 0.001 when it has all but stopped, and a SetEntityMotion when its motion changed by more than
+//! 0.2 since the last one, or stopped (docs/research/items.md 5; matched to an item, an orb and an
+//! armour stand in research/captures/bds-water.txt).
 
 use acacia_proto::packets::{MoveEntityDelta, SetEntityData, SetEntityMotion};
 use acacia_proto::types::{EntityProperties, MetadataDictionaryItem, MetadataDictionaryItemKey as Key, MetadataDictionaryItemType as Type, MetadataDictionaryItemValue as Value, MetadataFlags1 as Flags, Vec3f};
@@ -9,7 +10,13 @@ use bevy_ecs::prelude::Component;
 use bytes::Bytes;
 
 const MOVED: f32 = 0.01;
+const SETTLED: f32 = 0.001;
+const STOPPING: f32 = 0.001;
 const NEW_MOTION: f32 = 0.2;
+
+fn length(v: [f32; 3]) -> f32 {
+    v.iter().map(|axis| axis * axis).sum::<f32>().sqrt()
+}
 
 /// What viewers were last told of an entity.
 #[derive(Component, Clone, Copy, Debug)]
@@ -57,10 +64,10 @@ impl Told {
     /// `motion`. BDS sends 0 in their tick fields.
     pub fn update(&mut self, id: u64, at: [f32; 3], motion: [f32; 3], on_ground: bool) -> Vec<Bytes> {
         let mut packets = Vec::new();
-        let moved: [Option<f32>; 3] = std::array::from_fn(|axis| ((at[axis] - self.at[axis]).abs() > MOVED).then_some(at[axis]));
-        if moved.iter().any(Option::is_some) {
-            moved.iter().enumerate().filter_map(|(axis, sent)| Some((axis, (*sent)?))).for_each(|(axis, sent)| self.at[axis] = sent);
-            let [x, y, z] = moved;
+        let gone = length(std::array::from_fn(|axis| at[axis] - self.at[axis]));
+        if gone > MOVED || (length(motion) < STOPPING && gone > SETTLED) {
+            let [x, y, z] = std::array::from_fn(|axis| (at[axis] != self.at[axis]).then_some(at[axis]));
+            self.at = at;
             let delta = MoveEntityDelta {
                 runtime_entity_id: id,
                 x,
@@ -77,7 +84,7 @@ impl Told {
             };
             packets.push(sapling_net::encode(&delta));
         }
-        let change = (0..3).map(|axis| (motion[axis] - self.motion[axis]).powi(2)).sum::<f32>().sqrt();
+        let change = length(std::array::from_fn(|axis| motion[axis] - self.motion[axis]));
         let stopped = motion == [0.0; 3] && self.motion != [0.0; 3];
         if change > NEW_MOTION || stopped {
             self.motion = motion;
@@ -96,6 +103,29 @@ mod tests {
 
     fn kinds(packets: &[Bytes]) -> Vec<u32> {
         packets.iter().map(|packet| RawPacket::parse(packet.clone()).unwrap().id).collect()
+    }
+
+    fn axes(packet: &Bytes) -> [bool; 3] {
+        let delta: MoveEntityDelta = RawPacket::parse(packet.clone()).unwrap().decode().unwrap();
+        [delta.x.is_some(), delta.y.is_some(), delta.z.is_some()]
+    }
+
+    #[test]
+    fn a_move_counts_all_axes_together_and_sends_each_that_changed() {
+        // BDS's orb: no axis past 0.01, together past it, all three sent.
+        let mut told = Told::new([6.0, -19.0, 8.0]);
+        let sent = told.update(1, [5.99276, -19.00726, 7.99742], [-0.007, -0.007, -0.002], false);
+        assert_eq!(axes(&sent[0]), [true, true, true]);
+        assert_eq!(axes(&told.update(1, [5.99276, -19.02, 7.99742], [0.0, -0.01, 0.0], false)[0]), [false, true, false]);
+    }
+
+    #[test]
+    fn an_all_but_stopped_body_is_sent_its_last_small_move() {
+        // An item at the bottom of its bob on BDS: 0.007 sent as it turned.
+        let mut told = Told::new([0.5, 60.0, 0.5]);
+        assert!(told.update(1, [0.5, 59.993, 0.5], [0.0, -0.002, 0.0], false).is_empty());
+        assert_eq!(kinds(&told.update(1, [0.5, 59.993, 0.5], [0.0, 0.0005, 0.0], false)), [MoveEntityDelta::ID]);
+        assert!(told.update(1, [0.5, 59.9935, 0.5], [0.0, 0.0005, 0.0], false).is_empty());
     }
 
     #[test]

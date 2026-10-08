@@ -309,5 +309,5 @@ An item from `/setblock .. air destroy`, a `/summon`ed orb and armour stand, dro
 - Item: in water its moves follow `v' = 0.9702 v + 0.00108` on both servers, so the item rule of section 1 holds.
 - Orb: in water `v' = 0.686 v + 0.0098` on both, settling about 0.31 under the surface. The paths differ only by
   `/summon`'s random starting speed.
-- Not matched: BDS sent a resting item's rises of 0.001 a tick every tick, and the orb's moves with all three axes;
-  sapling (`sync.rs`) keeps moves under 0.01 and sends only the axes that moved that much.
+- Moves sent: BDS's rule of items.md 5 (distance over 0.01 in all, or 0.001 once all but stopped, every changed
+  axis), which `sync.rs` now follows: the orb's sends of 0.0100 to 0.0101, the item's of 0.007 at the bottom of a bob.
