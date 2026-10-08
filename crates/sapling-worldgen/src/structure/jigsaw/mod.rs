@@ -22,7 +22,7 @@ const UNJOINED: &str = "minecraft:connection_east=0,minecraft:connection_north=0
 pub use assemble::{Assembler, Variant, middle};
 pub use v2::{StartHeight, V2Start};
 pub use element::{Element, ElementKind, Projection};
-pub use piece::{AncientCityClass, Piece, PieceClass, VillageClass};
+pub use piece::{AncientCityClass, Piece, VillageClass};
 
 pub struct Pool {
     pub name: String,
