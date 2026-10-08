@@ -118,7 +118,8 @@ fn sculk_use_charge(view: &mut View, cursor: &Cursor, origin: [i32; 3], random: 
     charge - penalty
 }
 
-/// Air or water above, and at most two sensors or shriekers in the 9x3x9 box from the cursor up.
+/// Air or water above, and at most two sensors or shriekers in the 9x3x9 box around the cursor
+/// (BDS centres it; Java's starts at the cursor).
 fn can_place_growth(view: &View, at: [i32; 3]) -> bool {
     let above = view.block(at[0], at[1] + 1, at[2]);
     if above != Block::Air && above != Block::Water {
@@ -126,7 +127,7 @@ fn can_place_growth(view: &View, at: [i32; 3]) -> bool {
     }
     let mut growths = 0;
     for dx in -4..=4 {
-        for dy in 0..=2 {
+        for dy in -1..=1 {
             for dz in -4..=4 {
                 if matches!(view.block(at[0] + dx, at[1] + dy, at[2] + dz), Block::SculkSensor | Block::SculkShrieker) {
                     growths += 1;
