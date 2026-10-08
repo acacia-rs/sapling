@@ -43,6 +43,16 @@ HARDCODED = {
     'minecraft:legacy:swamp_flower_feature': _LEGACY.format(f'Flower {{ kind: FlowerKind::Swamp, count: {_PATCH_COUNT} }}'),
     'minecraft:legacy:ice_feature': _LEGACY.format('Iceberg'),
     'minecraft:legacy:springs_feature': _LEGACY.format('Springs'),
+    'minecraft:ice_patch_feature': _LEGACY.format('IcePatch'),
+    'minecraft:ice_spike_feature': _LEGACY.format('IceSpike'),
+    # Speleothems: blocks, cluster heights and wetness (mean, deviation, min, max) from 1482f4580.
+    'minecraft:pointed_dripstone_feature': 'Feature::Speleothem(Speleothem::Pointed(&DRIPSTONE))',
+    'minecraft:sulfur_spike_feature': 'Feature::Speleothem(Speleothem::Pointed(&SULFUR))',
+    'minecraft:dripstone_cluster_feature':
+        'Feature::Speleothem(Speleothem::Cluster { blocks: &DRIPSTONE, height: [3, 5], wetness: [0.1, 0.3, 0.1, 1.0] })',
+    'minecraft:sulfur_spike_cluster_feature':
+        'Feature::Speleothem(Speleothem::Cluster { blocks: &SULFUR, height: [1, 4], wetness: [0.0, 0.0, 0.0, 0.0] })',
+    'minecraft:large_dripstone_feature': 'Feature::Speleothem(Speleothem::Large(&DRIPSTONE))',
 }
 EARLY_OUT = {'none': 'EarlyOut::None', 'first_failure': 'EarlyOut::FirstFailure', 'first_success': 'EarlyOut::FirstSuccess'}
 SEARCH_LOOPS = {'-x': ('x-', 'y+', 'z-'), '+x': ('x+', 'y+', 'z+'), '-y': ('y-', 'z+', 'x-'), '+y': ('y+', 'z+', 'x+'),
@@ -117,6 +127,12 @@ class Features:
         except NotPorted:
             self.emitted = saved
             return False
+
+    def unported(self):
+        """The placeholder of rules whose feature is not ported."""
+        if '(unported)' not in self.emitted:
+            self.emitted['(unported)'] = (len(self.emitted), 'Feature::Unported')
+        return self.emitted['(unported)'][0]
 
     def index(self, name):
         name = name.lower()

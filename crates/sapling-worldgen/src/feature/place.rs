@@ -40,6 +40,8 @@ impl Feature {
             Feature::VegetationPatch(patch) => patch.place(ctx, at),
             Feature::GrowingPlant(plant) => plant.place(ctx, at),
             Feature::Lush(lush) => lush.place(ctx, at),
+            Feature::Speleothem(speleothem) => speleothem.place(ctx, at),
+            Feature::Unported => None,
         }
     }
 }

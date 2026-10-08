@@ -3,13 +3,28 @@
 use super::tree::spec::Range;
 use crate::block::Block;
 
-/// `minecraft:snap_to_surface_feature` (143bb7720): from an air cell up to a ceiling or down to a
-/// floor within `range`, then `feature` at the last air cell.
+/// `minecraft:snap_to_surface_feature` (143bb7720, cave.rs): from the position through open cells
+/// of its biome to a surface within `range`, then `feature` beside or in it.
 #[derive(Debug)]
 pub struct SnapToSurface {
     pub feature: usize,
     pub range: i32,
-    pub ceiling: bool,
+    pub surface: Surface,
+    pub allow_air: bool,
+    pub allow_water: bool,
+    pub allow_solid: bool,
+    /// Place in the surface block, not beside it.
+    pub embed: bool,
+    /// When not empty, the surface must be one of these (states ignored).
+    pub allowed: &'static [Block],
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Surface {
+    Ceiling,
+    Floor,
+    RandomHorizontal,
+    RandomVertical,
 }
 
 /// `minecraft:vegetation_patch_feature` (143bc8310): a patch of `ground` on a floor or ceiling,

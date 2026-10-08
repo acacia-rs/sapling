@@ -52,6 +52,8 @@ impl Legacy {
             Legacy::Flower { kind, count } => super::flowers::flowers(ctx.view, ctx.random, at, kind, count),
             Legacy::Iceberg => super::iceberg::ice_feature(ctx.view, ctx.random, at),
             Legacy::Springs => super::springs::springs(ctx, at),
+            Legacy::IcePatch => super::ice_spike::ice_patch(ctx.view, ctx.random, at),
+            Legacy::IceSpike => super::ice_spike::ice_spike(ctx.view, ctx.random, at),
         }
     }
 }

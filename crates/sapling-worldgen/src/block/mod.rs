@@ -131,6 +131,12 @@ impl Block {
         Block::ALL[index + face]
     }
 
+    /// A speleothem (`PointedDripstone` or `SulfurSpike`) of thickness 0..5 (tip, frustum, middle,
+    /// base, merge), hanging or standing.
+    pub fn speleothem(self, thickness: usize, hanging: bool) -> Block {
+        Block::ALL[self as usize + thickness * 2 + usize::from(hanging)]
+    }
+
     /// The block for a `minecraft:` name, without states.
     pub fn from_name(name: &str) -> Option<Block> {
         let name = name.strip_prefix("minecraft:").unwrap_or(name);

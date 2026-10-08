@@ -10,6 +10,8 @@ pub struct Mt19937 {
     seed: u32,
     state: [u32; N],
     index: usize,
+    /// The second value of the last polar-method pair (`+0x9d4`, flag `+0x9e4`).
+    gaussian: Option<f32>,
 }
 
 impl Mt19937 {
@@ -19,7 +21,7 @@ impl Mt19937 {
         for i in 1..N {
             state[i] = (state[i - 1] ^ (state[i - 1] >> 30)).wrapping_mul(0x6C07_8965).wrapping_add(i as u32);
         }
-        Self { seed, state, index: N }
+        Self { seed, state, index: N, gaussian: None }
     }
 
     /// The seed this generator was last seeded with (BDS keeps it at `+8`).
@@ -52,6 +54,30 @@ impl Mt19937 {
     /// `nextFloat` (141188db0).
     pub fn next_float(&mut self) -> f32 {
         unit(self.next_u32())
+    }
+
+    /// `nextDouble` (1408741f0): the raw draw times 2^-32.
+    pub fn next_double(&mut self) -> f64 {
+        self.next_u32() as f64 * 2.328_306_436_538_696_3e-10
+    }
+
+    /// The polar method in f32 (inlined in 1436d7cd0 and 149d61dc0): a pair per two calls, the
+    /// first returned, the second kept for the next call.
+    pub fn next_gaussian(&mut self) -> f32 {
+        if let Some(cached) = self.gaussian.take() {
+            return cached;
+        }
+        loop {
+            let a = unit(self.next_u32()) * 2.0 - 1.0;
+            let b = unit(self.next_u32()) * 2.0 - 1.0;
+            let s = b * b + a * a;
+            if s >= 1.0 || s == 0.0 {
+                continue;
+            }
+            let multiplier = (s.ln() * -2.0 / s).sqrt();
+            self.gaussian = Some(b * multiplier);
+            return a * multiplier;
+        }
     }
 
     /// `nextBoolean` (141188bc0): bit 27 of the raw draw.

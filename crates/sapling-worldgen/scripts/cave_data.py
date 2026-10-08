@@ -5,6 +5,7 @@ from blocks_data import BLOCKS, NotPorted, block
 
 PORTED = {'minecraft:snap_to_surface_feature', 'minecraft:vegetation_patch_feature', 'minecraft:growing_plant_feature'}
 _BIG_DRIPLEAVES = ['south', 'west', 'north', 'east']
+SURFACES = {'ceiling': 'Ceiling', 'floor': 'Floor', 'random_horizontal': 'RandomHorizontal', 'random_vertical': 'RandomVertical'}
 LEGACY = {
     'minecraft:moss_vegetation_feature': lambda index: 'Feature::Lush(Lush::MossVegetation)',
     'minecraft:vines_single_face_feature': lambda index: 'Feature::Lush(Lush::VinesSingleFace)',
@@ -44,10 +45,13 @@ def weighted(entries):
 
 def rust(kind, body, index):
     if kind == 'minecraft:snap_to_surface_feature':
-        if body.get('allow_air_placement', True) is False or body.get('allow_underwater_placement') or body.get('allow_non_air_placement'):
-            raise NotPorted('snap_to_surface placement flags')
+        flag = lambda key, default: str(bool(body.get(key, default))).lower()  # noqa: E731
+        allowed = ', '.join(block(b) for b in body.get('allowed_surface_blocks', []))
         return (f'Feature::SnapToSurface(SnapToSurface {{ feature: {index(body["feature_to_snap"])}, '
-                f'range: {int(body["vertical_search_range"])}, ceiling: {str(body.get("surface") == "ceiling").lower()} }})')
+                f'range: {int(body["vertical_search_range"])}, surface: Surface::{SURFACES[body.get("surface", "floor")]}, '
+                f'allow_air: {flag("allow_air_placement", True)}, allow_water: {flag("allow_underwater_placement", False)}, '
+                f'allow_solid: {flag("allow_non_air_placement", False)}, embed: {flag("embed_in_surface", False)}, '
+                f'allowed: &[{allowed}] }})')
     if kind == 'minecraft:vegetation_patch_feature':
         num = lambda key: repr(float(body.get(key, 0.0)))  # noqa: E731
         return (f'Feature::VegetationPatch(VegetationPatch {{ replaceable: {every_state(body["replaceable_blocks"])}, '

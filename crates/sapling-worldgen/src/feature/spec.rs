@@ -1,7 +1,8 @@
 //! The shapes of transcribed feature rules and features (data/, scripts/features_to_rust.py).
 
-pub use super::cave_spec::{GrowingPlant, SnapToSurface, VegetationPatch};
+pub use super::cave_spec::{GrowingPlant, SnapToSurface, Surface, VegetationPatch};
 pub use super::lush::Lush;
+pub use super::speleothem::{DRIPSTONE, SULFUR, Speleothem};
 use crate::block::Block;
 
 /// The decoration passes in BDS's registry order; `pregeneration_pass` (carvers) is not one.
@@ -133,6 +134,11 @@ pub enum Feature {
     GrowingPlant(GrowingPlant),
     /// The lush caves features BDS builds in code (lush.rs).
     Lush(Lush),
+    /// Pointed dripstone and sulfur spikes (speleothem/).
+    Speleothem(Speleothem),
+    /// A feature sapling does not port: places nothing, but its rule still draws its scatter,
+    /// whose `math.random` comes from the generator all rules of the chunk share.
+    Unported,
 }
 
 /// `minecraft:search_feature` with its axis loops in order (outer, middle, inner), each an axis,
@@ -185,6 +191,9 @@ pub enum Legacy {
     Iceberg,
     /// `legacy:springs_feature`: water and lava springs in cave walls (springs.rs).
     Springs,
+    /// `ice_patch_feature`, `ice_spike_feature` (ice_spike.rs).
+    IcePatch,
+    IceSpike,
 }
 
 /// The flower table of a `LegacyFlowerFeature` (1438ef3b0's switch; the forest and flower forest

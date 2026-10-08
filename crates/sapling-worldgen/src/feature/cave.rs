@@ -1,8 +1,8 @@
-//! The lush caves' wrapper features: `SnapToSurfaceFeature` (143bb7720), `VegetationPatchFeature`
-//! (143bc8310) and `GrowingPlantFeature` (144c15200). Ported from stirante/featurelab
-//! `features/{snap_to_surface,vegetation_patch,growing_plant}.go` (MIT, (c) 2026 stirante).
+//! The cave wrapper features: `SnapToSurfaceFeature` (143bb7720, from its decompile),
+//! `VegetationPatchFeature` (143bc8310) and `GrowingPlantFeature` (144c15200), the last two ported
+//! from stirante/featurelab `features/{vegetation_patch,growing_plant}.go` (MIT, (c) 2026 stirante).
 
-use super::cave_spec::{GrowingPlant, SnapToSurface, VegetationPatch};
+use super::cave_spec::{GrowingPlant, SnapToSurface, Surface, VegetationPatch};
 use super::data::FEATURES;
 use super::lush::{sturdy, wet};
 use super::place::Ctx;
@@ -28,28 +28,69 @@ fn air(view: &View, [x, y, z]: [i32; 3]) -> bool {
     view.block(x, y, z) == Block::Air
 }
 
+/// FacingID offsets: down, up, north, south, west, east.
+const FACING: [[i32; 3]; 6] = [[0, -1, 0], [0, 1, 0], [0, 0, -1], [0, 0, 1], [-1, 0, 0], [1, 0, 0]];
+
+fn water(block: Block) -> bool {
+    block.is_fluid() && !block.is_lava()
+}
+
 impl SnapToSurface {
-    /// Only from an air cell: walk while air (at most `range - 1` steps) to a sturdy block.
+    /// Vertical surfaces search away from the origin's side of the surface (into the open from an
+    /// open cell); horizontal ones try the four sides in an order shuffled with raw draws.
     pub fn place(&self, ctx: &mut Ctx, at: [i32; 3]) -> Option<[i32; 3]> {
-        if !air(ctx.view, at) {
+        let snapped = match self.surface {
+            Surface::RandomHorizontal => {
+                let mut order = [2, 5, 3, 4];
+                for i in 1..4 {
+                    let j = (ctx.random.next_u32() % (i as u32 + 1)) as usize;
+                    order.swap(i, j);
+                }
+                order.iter().find_map(|&facing| self.find(ctx, at, facing))
+            }
+            surface => {
+                let ceiling = match surface {
+                    Surface::Ceiling => true,
+                    Surface::Floor => false,
+                    _ => ctx.random.next_boolean(),
+                };
+                let block = ctx.view.block(at[0], at[1], at[2]);
+                let open = block == Block::Air || water(block);
+                self.find(ctx, at, usize::from(ceiling == open))
+            }
+        };
+        FEATURES[self.feature].place(ctx, snapped?)
+    }
+
+    /// `_findSnapPosInDirection` (143bb7ac0): `scanColumnWithinPosBiome` through cells of the
+    /// origin's biome that are open (from an open origin) or solid (from a solid one) to a surface.
+    fn find(&self, ctx: &Ctx, at: [i32; 3], facing: usize) -> Option<[i32; 3]> {
+        let origin = ctx.view.block(at[0], at[1], at[2]);
+        let solid = origin != Block::Air && !water(origin);
+        let open = |b: Block| (self.allow_air && b == Block::Air) || (self.allow_water && water(b));
+        let filled = |b: Block| self.allow_solid && b != Block::Air && !water(b);
+        let inside = |b: Block| if solid { filled(b) } else { open(b) };
+        let edge = |b: Block| {
+            if !self.allowed.is_empty() {
+                self.allowed.iter().any(|a| a.name() == b.name())
+            } else if solid {
+                open(b)
+            } else {
+                sturdy(b)
+            }
+        };
+        let biome = (ctx.biome)(at);
+        let [dx, dy, dz] = FACING[facing];
+        let cell = |n: i32| [at[0] + dx * n, at[1] + dy * n, at[2] + dz * n];
+        let block = |p: [i32; 3]| ctx.view.block(p[0], p[1], p[2]);
+        if !inside(origin) {
             return None;
         }
-        let dy = if self.ceiling { 1 } else { -1 };
         let mut steps = 0;
-        let mut cur = [at[0], at[1] + dy, at[2]];
-        while steps < self.range - 1 && air(ctx.view, cur) {
+        while steps < self.range - 1 && (ctx.biome)(cell(steps + 1)) == biome && inside(block(cell(steps + 1))) {
             steps += 1;
-            cur[1] += dy;
         }
-        if !sturdy(ctx.view.block(cur[0], cur[1], cur[2])) {
-            return None;
-        }
-        let snapped = [at[0], at[1] + dy * steps, at[2]];
-        // Fitted to the oracle: BDS drops snaps that leave the origin's biome (lush caves ceilings).
-        if (ctx.biome)(snapped) != (ctx.biome)(at) {
-            return None;
-        }
-        FEATURES[self.feature].place(ctx, snapped)
+        edge(block(cell(steps + 1))).then(|| cell(steps + i32::from(solid != self.embed)))
     }
 }
 
