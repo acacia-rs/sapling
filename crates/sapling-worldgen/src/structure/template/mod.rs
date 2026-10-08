@@ -10,6 +10,7 @@ mod markers;
 mod mirror;
 mod place;
 mod rules;
+mod wall;
 mod wood;
 
 use std::collections::HashMap;

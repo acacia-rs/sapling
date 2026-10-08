@@ -13,6 +13,7 @@ use super::super::BoundingBox;
 use super::super::template::Rotation;
 use super::draw::JigsawRandom;
 use super::element::{Element, JigsawInfo, Projection};
+use super::junction::link;
 use super::{Data, Piece, Pool};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -114,20 +115,20 @@ impl<'a, R: JigsawRandom> Assembler<'a, R> {
                     self.random.shuffle(&mut shuffled);
                     list.extend(shuffled);
                 }
-                self.try_elements(&piece, jigsaw, &list, space, &mut inside, &mut own_space);
+                self.try_elements((index, &piece), jigsaw, &list, space, &mut inside, &mut own_space);
             } else if piece.depth == self.max_depth {
                 if let Some(fallback) = fallback {
-                    self.try_pool(&piece, jigsaw, fallback, space, &mut inside);
+                    self.try_pool((index, &piece),jigsaw, fallback, space, &mut inside);
                 }
-            } else if !self.try_pool(&piece, jigsaw, pool, space, &mut inside)
+            } else if !self.try_pool((index, &piece),jigsaw, pool, space, &mut inside)
                 && let Some(fallback) = fallback
             {
-                self.try_pool(&piece, jigsaw, fallback, space, &mut inside);
+                self.try_pool((index, &piece),jigsaw, fallback, space, &mut inside);
             }
         }
     }
 
-    fn try_pool(&mut self, source: &Piece, jigsaw: &JigsawInfo, pool: &Pool, space: usize, inside: &mut Vec<BoundingBox>) -> bool {
+    fn try_pool(&mut self, source: (usize, &Piece), jigsaw: &JigsawInfo, pool: &Pool, space: usize, inside: &mut Vec<BoundingBox>) -> bool {
         let mut order = pool.list.clone();
         self.random.shuffle(&mut order);
         self.try_elements(source, jigsaw, &order, space, inside, &mut None)
@@ -137,7 +138,7 @@ impl<'a, R: JigsawRandom> Assembler<'a, R> {
     /// fits `jigsaw`; true once one is placed or an empty element ends the list.
     fn try_elements(
         &mut self,
-        source: &Piece,
+        (index, source): (usize, &Piece),
         jigsaw: &JigsawInfo,
         elements: &[&'static Element],
         space: usize,
@@ -194,8 +195,16 @@ impl<'a, R: JigsawRandom> Assembler<'a, R> {
                     if !fits {
                         continue;
                     }
+                    let mut piece = Piece::new(element, origin, rotation, source.depth + 1);
+                    if self.variant == Variant::V2 {
+                        let surface = (self.height)(jigsaw.pos.0, jigsaw.pos.2);
+                        let junction = link(source, jigsaw, &mut piece, candidate, surface);
+                        self.pieces[index].junctions.push(junction);
+                    } else {
+                        piece.ground = candidate.pos.1;
+                    }
                     let child = self.pieces.len();
-                    self.pieces.push(Piece::new(element, origin, rotation, source.depth + 1));
+                    self.pieces.push(piece);
                     match self.variant {
                         Variant::Legacy => self.expand(child, 0),
                         Variant::Queued => self.enqueue(0, child, space),

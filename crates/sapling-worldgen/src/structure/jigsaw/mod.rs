@@ -6,6 +6,7 @@
 mod assemble;
 mod draw;
 mod element;
+mod junction;
 mod piece;
 mod v2;
 

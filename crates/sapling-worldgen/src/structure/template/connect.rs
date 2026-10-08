@@ -1,23 +1,23 @@
-//! Neighbour-shaped states of template blocks, set from their final neighbours as BDS's saved
-//! blocks show them (like the mineshaft fences of `rejoin_fences`): fence, pane and bar
-//! connections and stair corners. Template states arrive with these unset.
+//! Neighbour-shaped states of structure blocks, set from their final neighbours as BDS's saved
+//! blocks show them: fence, pane, bar and wall connections and stair corners. Placed states
+//! arrive with these unset.
 
-use super::{FULL_CUBE, flags, try_named};
+use super::{FULL_CUBE, flags, try_named, wall};
 use crate::block::Block;
 use crate::structure::canvas::Canvas;
 use crate::structure::mineshaft::full_solid;
 
-const SIDES: [(&str, i32, i32); 4] = [("east", 1, 0), ("north", 0, -1), ("south", 0, 1), ("west", -1, 0)];
+pub(super) const SIDES: [(&str, i32, i32); 4] = [("east", 1, 0), ("north", 0, -1), ("south", 0, 1), ("west", -1, 0)];
 
 #[derive(Clone, Copy, PartialEq, Eq)]
-enum Shape {
+pub(super) enum Shape {
     WoodenFence,
     NetherFence,
     Pane,
     Stairs,
 }
 
-fn shape(block: Block) -> Option<Shape> {
+pub(super) fn shape(block: Block) -> Option<Shape> {
     let (name, states) = (block.name(), block.states());
     if states.contains("minecraft:corner=") {
         Some(Shape::Stairs)
@@ -32,7 +32,7 @@ fn shape(block: Block) -> Option<Shape> {
     }
 }
 
-fn full_cube(block: Block) -> bool {
+pub(super) fn full_cube(block: Block) -> bool {
     match block {
         Block::Template(_) => flags(block) & FULL_CUBE != 0,
         _ => full_solid(block),
@@ -41,7 +41,7 @@ fn full_cube(block: Block) -> bool {
 
 /// Whether `neighbour`, lying `(dx, dz)` from the connecting block, shows it a full face: any
 /// face of a full cube, the tall back of stairs.
-fn sturdy(neighbour: Block, (dx, dz): (i32, i32)) -> bool {
+pub(super) fn sturdy(neighbour: Block, (dx, dz): (i32, i32)) -> bool {
     full_cube(neighbour) || shape(neighbour) == Some(Shape::Stairs) && facing(neighbour) == (-dx, -dz)
 }
 
@@ -66,7 +66,7 @@ fn with_states(block: Block, changes: &[(String, String)]) -> Block {
     table.or_else(|| try_named(block.name(), &states, block.is_waterlogged())).unwrap_or(block)
 }
 
-fn state(block: Block, key: &str) -> Option<&'static str> {
+pub(super) fn state(block: Block, key: &str) -> Option<&'static str> {
     block.states().split(',').filter_map(|p| p.split_once('=')).find(|(k, _)| *k == key).map(|(_, v)| v)
 }
 
@@ -110,6 +110,10 @@ pub fn rejoin(canvas: &mut Canvas, (low, high): (i32, i32)) {
         for z in b.z0..=b.z1 {
             for x in b.x0..=b.x1 {
                 let block = canvas.get(x, y, z);
+                if wall::is_wall(block) {
+                    changed.push(((x, y, z), with_states(block, &wall::changes(canvas, (x, y, z)))));
+                    continue;
+                }
                 let Some(kind) = shape(block) else { continue };
                 let changes: Vec<(String, String)> = if kind == Shape::Stairs {
                     vec![("minecraft:corner".into(), corner(canvas, block, (x, y, z)).into())]

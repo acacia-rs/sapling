@@ -33,13 +33,18 @@ impl Structures {
     /// Ancient cities with a piece meeting `chunk`.
     pub(super) fn ancient_cities_near(&self, density: &Density, chunk: (i32, i32)) -> Vec<Arc<AncientCity>> {
         let column = BoundingBox::chunk(chunk.0, chunk.1);
-        let starts = self.starts_near(density, StructureKind::AncientCity, chunk, REACH);
+        self.ancient_cities_reaching(density, chunk, &|bb| bb.intersects(&column))
+    }
+
+    /// Ancient cities around `chunk` with a piece that `near` accepts.
+    pub(super) fn ancient_cities_reaching(&self, density: &Density, chunk: (i32, i32), near: &dyn Fn(&BoundingBox) -> bool) -> Vec<Arc<AncientCity>> {
+        let starts = self.starts_near(density, StructureKind::AncientCity, chunk, REACH + 1);
         let grid = StructureKind::AncientCity.grid().unwrap();
         let mut cache = self.templates.ancient_cities.lock().unwrap();
         starts
             .into_iter()
             .map(|start| cache.entry(start).or_insert_with(|| Arc::new(generate(&mut grid.candidate_random(self.level_seed, start).1, start))).clone())
-            .filter(|c| c.pieces.iter().any(|p| p.bb.intersects(&column)))
+            .filter(|c| c.pieces.iter().any(|p| near(&p.bb)))
             .collect()
     }
 

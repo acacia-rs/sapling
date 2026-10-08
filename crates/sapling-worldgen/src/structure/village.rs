@@ -55,13 +55,18 @@ impl Structures {
     /// Villages with a piece meeting `chunk`.
     pub(super) fn villages_near(&self, density: &Density, chunk: (i32, i32)) -> Vec<Arc<Village>> {
         let column = BoundingBox::chunk(chunk.0, chunk.1);
-        let starts = self.starts_near(density, StructureKind::Village, chunk, REACH);
+        self.villages_reaching(density, chunk, &|bb| bb.intersects(&column))
+    }
+
+    /// Villages around `chunk` with a piece that `near` accepts.
+    pub(super) fn villages_reaching(&self, density: &Density, chunk: (i32, i32), near: &dyn Fn(&BoundingBox) -> bool) -> Vec<Arc<Village>> {
+        let starts = self.starts_near(density, StructureKind::Village, chunk, REACH + 1);
         let grid = StructureKind::Village.grid().unwrap();
         let mut cache = self.templates.villages.lock().unwrap();
         starts
             .into_iter()
             .map(|start| cache.entry(start).or_insert_with(|| Arc::new(generate(density, &mut grid.candidate_random(self.level_seed, start).1, start))).clone())
-            .filter(|v| v.pieces.iter().any(|p| p.bb.intersects(&column)))
+            .filter(|v| v.pieces.iter().any(|p| near(&p.bb)))
             .collect()
     }
 

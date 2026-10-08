@@ -4,6 +4,7 @@
 use crate::block::Block;
 use crate::climate::QuartClimate;
 use crate::density::{AquiferCache, Cells, Density, MIN_CELL_Y, cell_index};
+use crate::structure::Adjustments;
 
 pub const MIN_Y: i32 = -64;
 pub const HEIGHT: usize = 384;
@@ -105,9 +106,9 @@ impl Density {
         self.adjusted_chunk_shape(chunk_x, chunk_z, None)
     }
 
-    /// `chunk_shape` with structure terrain adjustments (`crate::structure::bury`) added to each
-    /// block's density before the aquifer.
-    pub fn adjusted_chunk_shape(&self, chunk_x: i32, chunk_z: i32, adjust: Option<&dyn Fn([i32; 3]) -> f64>) -> ChunkShape {
+    /// `chunk_shape` with structure terrain adjustments applied to each block's density before
+    /// the aquifer.
+    pub fn adjusted_chunk_shape(&self, chunk_x: i32, chunk_z: i32, adjust: Option<&Adjustments>) -> ChunkShape {
         let climate = |qx: i32, qz: i32| -> QuartClimate { self.climate.sample(qx, qz) };
         let cells = self.cells(chunk_x, chunk_z, &climate);
         let mut aquifer = AquiferCache::default();
@@ -127,7 +128,7 @@ impl Density {
                                 let position = [chunk_x * 16 + x as i32, y, chunk_z * 16 + z as i32];
                                 let mut value = block_density(density.at(dx, dy, dz), &noodle, [dx, dy, dz], y);
                                 if let Some(adjust) = adjust {
-                                    value = (adjust(position) + value as f64) as f32;
+                                    value = adjust.apply(position, value);
                                 }
                                 let (kind, update) = self.block_kind(&mut aquifer, position, value);
                                 let block = match kind {

@@ -52,10 +52,15 @@ impl Structures {
     /// The pieces of every trail ruin and trial chamber with a piece meeting `chunk`.
     pub(super) fn v2_near(&self, density: &Density, chunk: (i32, i32)) -> Vec<Arc<Vec<Piece>>> {
         let column = BoundingBox::chunk(chunk.0, chunk.1);
+        self.v2_reaching(density, chunk, &|bb| bb.intersects(&column)).into_iter().map(|(_, pieces)| pieces).collect()
+    }
+
+    /// The kind and pieces of every v2 structure around `chunk` with a piece that `near` accepts.
+    pub(super) fn v2_reaching(&self, density: &Density, chunk: (i32, i32), near: &dyn Fn(&BoundingBox) -> bool) -> Vec<(StructureKind, Arc<Vec<Piece>>)> {
         let mut found = Vec::new();
         for kind in [StructureKind::TrailRuins, StructureKind::TrialChambers] {
             let (v2, reach) = start(kind);
-            for at in self.starts_near(density, kind, chunk, reach) {
+            for at in self.starts_near(density, kind, chunk, reach + 1) {
                 let pieces = self.templates.v2.lock().unwrap().get(&(kind, at)).cloned();
                 let pieces = pieces.unwrap_or_else(|| {
                     let raw = RawHeights::new(density);
@@ -63,8 +68,8 @@ impl Structures {
                     self.templates.v2.lock().unwrap().insert((kind, at), built.clone());
                     built
                 });
-                if pieces.iter().any(|p| p.bb.intersects(&column)) {
-                    found.push(pieces);
+                if pieces.iter().any(|p| near(&p.bb)) {
+                    found.push((kind, pieces));
                 }
             }
         }

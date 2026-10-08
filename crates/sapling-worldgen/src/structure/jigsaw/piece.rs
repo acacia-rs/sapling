@@ -4,6 +4,7 @@
 //! seeded with the chunk's structure seed), then the element's foundation flags apply.
 
 use super::super::BoundingBox;
+use super::super::adjust::Junction;
 use super::super::canvas::Canvas;
 use super::super::template::{JavaPlacement, Placement, Rotation, named};
 use super::assemble::middle;
@@ -18,6 +19,11 @@ pub struct Piece {
     pub rotation: Rotation,
     pub bb: BoundingBox,
     pub depth: i32,
+    /// The terrain adjustment's ground above `bb.y0`: hardcoded placers pass 1 for the start and
+    /// the attaching jigsaw's template y for children; v2 pieces keep Java's ground level delta.
+    pub ground: i32,
+    /// v2 junctions (Java's `JigsawJunction`s), which beard the terrain around connections.
+    pub junctions: Vec<Junction>,
 }
 
 /// What the piece class overrides (`PoolElementStructurePiece` vt+0x70, +0x78, +0x88).
@@ -41,7 +47,11 @@ pub type Heights<'a> = &'a dyn Fn(i32, i32) -> i32;
 
 impl Piece {
     pub fn new(element: &'static Element, origin: (i32, i32, i32), rotation: Rotation, depth: i32) -> Self {
-        Self { element, origin, rotation, bb: element.bbox(origin, rotation), depth }
+        Self { element, origin, rotation, bb: element.bbox(origin, rotation), depth, ground: 1, junctions: Vec::new() }
+    }
+
+    pub fn is_rigid(&self) -> bool {
+        self.element.projection() == Projection::Rigid
     }
 
     pub fn shift_y(&mut self, dy: i32) {
@@ -147,21 +157,21 @@ impl Piece {
         }
     }
 
-    /// Flag 2: within 12 of the piece's middle, under each solid block just below the piece, the
-    /// first non-solid block, if air or water, becomes the class's plug.
+    /// Flag 2: within 12 of the piece's middle, under each falling block (sand, gravel) just below
+    /// the piece, the first block that does not fall, if air or water, becomes the class's plug.
     fn plug_holes(&self, canvas: &mut Canvas, class: &dyn PieceClass) {
         let (mx, mz, y) = (middle(self.bb.x0, self.bb.x1), middle(self.bb.z0, self.bb.z1), self.bb.y0 - 1);
         for x in mx - 12..=mx + 12 {
             for z in mz - 12..=mz + 12 {
                 let top = canvas.get(x, y, z);
-                if !top.is_solid() {
+                if !falls(top) {
                     continue;
                 }
                 let plug = class.plug(top);
                 let mut below = y - 1;
                 while below > -64 {
                     let block = canvas.get(x, below, z);
-                    if !block.is_solid() {
+                    if !falls(block) {
                         if block == Block::Air || block.name() == "water" {
                             canvas.set(x, below, z, plug);
                         }
@@ -172,6 +182,12 @@ impl Piece {
             }
         }
     }
+}
+
+/// Blocks with `BlockType::mFalling` (+0x163 bit 0x10), the ones a plug holds up.
+fn falls(block: Block) -> bool {
+    let name = block.name();
+    matches!(name, "sand" | "red_sand" | "gravel" | "suspicious_sand" | "suspicious_gravel" | "anvil" | "dragon_egg") || name.ends_with("concrete_powder")
 }
 
 /// Ancient city pieces (141edf3a0 / 3b0): no fill, deepslate plugs.

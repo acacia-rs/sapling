@@ -2,9 +2,9 @@
 //! BDS's legacy `StructureFeature` checks (`isFeatureChunk`, vtable slot 5) and the v2 jigsaw
 //! structure sets.
 
+mod adjust;
 mod ancient_city;
 mod area;
-mod bury;
 mod canvas;
 mod data_driven;
 mod igloo;
@@ -37,8 +37,8 @@ use std::collections::HashMap;
 use std::sync::{Arc, Mutex, OnceLock};
 
 use crate::density::Density;
+pub use adjust::Adjustments;
 pub use area::BoundingBox;
-pub use bury::bury;
 pub use kind::StructureKind;
 use kind::*;
 use probe::Probe;
