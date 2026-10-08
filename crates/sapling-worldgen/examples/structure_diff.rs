@@ -1,6 +1,8 @@
 //! `structure_diff <seed> <world> <x0> <y0> <z0> <x1> <y1> <z1>`: cells in a box where our
 //! structure stage or BDS put a structure block and the two disagree, as `x y z ours | BDS`,
-//! with the counts of each pair.
+//! with the counts of each pair. `PALETTE=a,b` sets the name parts that make a BDS block a
+//! structure block (default: mineshaft blocks), `ANY` lets terrain blocks count too, and
+//! `EXCLUDE=a,b` drops cells where either block's name has one of those parts.
 #![allow(dead_code)]
 
 #[path = "../tests/oracle_support/mod.rs"]
@@ -19,8 +21,11 @@ fn main() {
     let generator = OverworldGenerator::new(seed.parse().unwrap());
     let (primary, _) = open(world).expect("oracle world");
     // Blocks of the ported structures; other non-terrain blocks are later stages'.
-    let palette = ["planks", "fence", "rail", "torch", "web", "chain", "_log", "mob_spawner", "chest"];
-    let structural = |name: &str| !TERRAIN_BLOCKS.contains(&name) && palette.iter().any(|p| name.contains(p));
+    let palette = std::env::var("PALETTE").unwrap_or("planks,fence,rail,torch,web,chain,_log,mob_spawner,chest".into());
+    let palette: Vec<&str> = palette.split(',').collect();
+    let structural = |name: &str| (!TERRAIN_BLOCKS.contains(&name) || std::env::var_os("ANY").is_some()) && palette.iter().any(|p| name.contains(p));
+    let exclude = std::env::var("EXCLUDE").unwrap_or_default();
+    let excluded = |name: &str| exclude.split(',').any(|p| !p.is_empty() && name.contains(p));
     let mut pairs: BTreeMap<(String, String), u32> = BTreeMap::new();
     let mut shown = 0;
     for cx in n[0].div_euclid(16)..=n[3].div_euclid(16) {
@@ -35,7 +40,7 @@ fn main() {
                         let block = ours.block((x & 15) as usize, y, (z & 15) as usize);
                         let bds = bds_cell(&primary, &column.chunk, x, y, z);
                         let changed = before.block((x & 15) as usize, y, (z & 15) as usize) != block;
-                        if (changed || structural(&bds.block)) && !bds.is(block) {
+                        if (changed || structural(&bds.block)) && !bds.is(block) && !excluded(block.name()) && !excluded(&bds.block) {
                             let ours = format!("{}[{}]", block.name(), block.states());
                             let theirs = format!("{}[{}]", bds.block, bds.states);
                             if shown < 200 {

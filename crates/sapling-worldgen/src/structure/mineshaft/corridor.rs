@@ -46,12 +46,15 @@ impl Corridor {
         if self.spider {
             f.generate_maybe_box(canvas, random, 0.6, (0, 0, 0), (2, 1, length - 1), (Block::Web, air), false, true);
         }
+        super::probe::mark("sections", random);
         let orientation = f.orientation.unwrap_or(SOUTH) as usize;
         // BDS stops drawing spawner positions once the piece has placed its spawner.
         let mut spawner_placed = false;
         for k in 0..self.sections {
             let z = k * 5 + 2;
-            if supported(f, canvas, z) {
+            let support = supported(f, canvas, z);
+            super::probe::mark(if support { "support" } else { "bare" }, random);
+            if support {
                 for x in [0, 2] {
                     for y in 0..=1 {
                         let at = f.world(x, y, z);
@@ -116,6 +119,7 @@ impl Corridor {
             }
         }
         if self.rails {
+            super::probe::mark("rails", random);
             let rail = if matches!(f.orientation, Some(WEST) | Some(EAST)) { Block::RailEastWest } else { Block::RailNorthSouth };
             for z in 0..length.max(1) {
                 if full_solid(f.get(canvas, 1, -1, z)) {

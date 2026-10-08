@@ -4,7 +4,7 @@
 
 use std::sync::Arc;
 
-use super::canvas::Canvas;
+use super::canvas::{Canvas, Neighbours};
 use super::jigsaw::{ElementKind, Piece};
 use super::mineshaft::{self, MESA_BIOMES, Mineshaft};
 use super::monument::{self, Monument};
@@ -37,14 +37,14 @@ pub struct Placed {
 }
 
 impl Structures {
-    /// The pieces reaching the chunk, reading past it through `neighbour` (and `features` for
+    /// The pieces reaching the chunk, reading past it through `neighbours` (and `features` for
     /// the features some pieces place).
     pub fn place(
         &self,
         density: &Density,
         shape: &mut ChunkShape,
         chunk: (i32, i32),
-        neighbour: &dyn Fn(i32, i32, i32) -> Block,
+        neighbours: Neighbours,
         biomes: &ChunkBiomes,
         features: &ElementWorld,
     ) -> Option<Placed> {
@@ -96,7 +96,7 @@ impl Structures {
         if !hardcoded && !templated {
             return None;
         }
-        let mut canvas = Canvas::new(shape, chunk, neighbour).with_features(features);
+        let mut canvas = Canvas::new(shape, chunk, neighbours.carved).with_placed(neighbours.placed).with_features(features);
         let seeds = LargeFeatureSeed::new(self.level_seed);
         let seed = seeds.chunk(chunk.0, chunk.1);
         let chunk_random = |(x, z): (i32, i32)| Mt19937::new(seeds.chunk(x, z));
@@ -113,9 +113,13 @@ impl Structures {
         self.place_igloos(&mut canvas, &igloos);
         let mut random = chunk_random(chunk);
         // BDS visits a chunk's starts in hash-map order; descending x then z matches it on the oracle.
+        // Their supports read neighbours BDS post-processed earlier with those neighbours' pieces;
+        // other kinds matched worse that way (village trees, pyramid heights).
+        canvas.read_placed = true;
         for mineshaft in mineshafts.iter().rev() {
             mineshaft.post_process(&mut canvas, &mut random, biomes);
         }
+        canvas.read_placed = false;
         Self::place_mansions(&mut canvas, &mansions);
         if treasure {
             treasure::place(&mut canvas, &mut chunk_random(chunk), chunk);
@@ -154,6 +158,11 @@ impl Structures {
         let villages = self.villages_near(density, chunk);
         let pieces = villages.iter().flat_map(|v| v.pieces.iter()).filter(|p| p.bb.intersects(&column));
         pieces.map(|p| format!("{} {:?} {:?} depth {} rigid {}", p.element.name, p.origin, p.bb, p.depth, p.is_rigid())).collect()
+    }
+
+    /// A mineshaft start's pieces in generation order, described, for probes.
+    pub fn mineshaft_pieces(&self, density: &Density, start: (i32, i32)) -> Vec<(String, BoundingBox)> {
+        self.mineshaft(density, start).pieces.iter().map(|p| (format!("{:?} depth {} {:?}", p.frame.orientation, p.frame.depth, p.kind), p.frame.bb)).collect()
     }
 
     /// The feature elements' pieces in the 3x3 chunks around `chunk`: feature, origin.

@@ -50,6 +50,14 @@ impl OverworldGenerator {
         }
     }
 
+    /// The chunk's pieces placed afresh (no cache, no joins), for probes that change them.
+    #[doc(hidden)]
+    pub fn pieced_uncached(&self, chunk_x: i32, chunk_z: i32) -> ChunkShape {
+        let mut shape = (*self.carved(chunk_x, chunk_z)).clone();
+        self.place_pieces(&mut shape, (chunk_x, chunk_z));
+        shape
+    }
+
     pub(crate) fn pieced(&self, chunk: (i32, i32)) -> Arc<Pieced> {
         self.pieced.get(chunk, || {
             let mut shape = (*self.carved(chunk.0, chunk.1)).clone();
@@ -61,12 +69,17 @@ impl OverworldGenerator {
 
     /// The chunk's pieces, reading past it through the neighbours' carved terrain.
     fn place_pieces(&self, shape: &mut ChunkShape, chunk: (i32, i32)) -> Option<structure::Placed> {
-        let neighbour = |x: i32, y: i32, z: i32| self.carved(x >> 4, z >> 4).block((x & 15) as usize, y, (z & 15) as usize);
+        let carved = |x: i32, y: i32, z: i32| self.carved(x >> 4, z >> 4).block((x & 15) as usize, y, (z & 15) as usize);
+        let placed = |x: i32, y: i32, z: i32| {
+            let n = (x >> 4, z >> 4);
+            if feature::phase(n) < feature::phase(chunk) { self.pieced(n).shape.block((x & 15) as usize, y, (z & 15) as usize) } else { carved(x, y, z) }
+        };
+        let neighbours = structure::Neighbours { carved: &carved, placed: &placed };
         let biomes = self.chunk_biomes(chunk.0, chunk.1);
         let load = |x: i32, z: i32| self.carved(x, z);
         let biome = |[x, y, z]: [i32; 3]| Some(self.chunk_biomes(x >> 4, z >> 4).biome((x & 15) as usize, y, (z & 15) as usize));
         let surface = |qx: i32, qz: i32| self.density.preliminary_surface(qx, qz);
         let features = feature::ElementWorld { load: &load, biome: &biome, surface: &surface };
-        self.structures.place(&self.density, shape, chunk, &neighbour, &biomes, &features)
+        self.structures.place(&self.density, shape, chunk, neighbours, &biomes, &features)
     }
 }
