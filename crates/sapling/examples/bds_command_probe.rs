@@ -1,7 +1,7 @@
 //! Runs a drill of command lines as an operator bot while a second operator watches, and prints
 //! what each was answered: CommandOutput in full, Text, GameRulesChanged as `rule=value`, and the
 //! drill's own packets. The ground truth for sapling's vanilla commands (`sapling::vanilla`).
-//! `cargo run -p sapling --example bds_command_probe -- <server> [gamerule|kill|replaceitem]` (offline mode,
+//! `cargo run -p sapling --example bds_command_probe -- <server> [gamerule|kill|replaceitem|defaults|concrete]` (offline mode,
 //! operators by default; `gamerule` when none is named).
 #[path = "shared/dump.rs"]
 #[allow(dead_code)]
@@ -114,6 +114,26 @@ const DEFAULTS: &[&str] = &[
 ];
 const DEFAULTS_SHOWN: &[&str] = &["UpdateBlock"];
 
+/// When concrete powder sets, on a stone stage: put beside water, dropped into a pool two deep and
+/// one deep, water put beside it and on it.
+const CONCRETE: &[&str] = &[
+    "fill ~2 ~-4 ~6 ~14 ~-1 ~8 stone",
+    "fill ~2 ~ ~6 ~14 ~4 ~8 air",
+    // Water only in holes in the stone, where it stays.
+    "setblock ~3 ~-1 ~7 water",
+    "setblock ~4 ~-1 ~7 red_concrete_powder",
+    "fill ~6 ~-2 ~7 ~6 ~-1 ~7 water",
+    "setblock ~6 ~3 ~7 red_concrete_powder",
+    "setblock ~13 ~-1 ~7 water",
+    "setblock ~13 ~3 ~7 red_concrete_powder",
+    "setblock ~8 ~-1 ~7 red_concrete_powder",
+    "setblock ~9 ~-1 ~7 water",
+    // Last: this water spreads over the stage.
+    "setblock ~11 ~-1 ~7 red_concrete_powder",
+    "setblock ~11 ~ ~7 water",
+];
+const CONCRETE_SHOWN: &[&str] = &["UpdateBlock", "UpdateBlockSynced", "UpdateSubchunkBlocks", "AddEntity", "RemoveEntity", "AddItemEntity", "LevelEvent", "LevelSoundEvent"];
+
 const KILL_SHOWN: &[&str] = &["EntityEvent", "AddEntity", "AddItemEntity", "RemoveEntity", "LevelSoundEvent", "SetEntityData", "Animate", "MobEffect"];
 /// How long each line of the kill drill is watched: a dead mob goes a second after.
 const KILL_SETTLE: Duration = Duration::from_millis(2500);
@@ -142,17 +162,18 @@ fn show(start: Instant, shown: &[&str], who: &str, event: Option<BotEvent>) -> R
 }
 
 /// Characters of a drill's own packets shown.
-const SHOWN: usize = 900;
+const SHOWN: usize = 4000;
 
 #[tokio::main(flavor = "current_thread")]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut args = std::env::args().skip(1);
-    let server = args.next().ok_or("usage: bds_command_probe <server> [gamerule|kill|replaceitem]")?;
+    let server = args.next().ok_or("usage: bds_command_probe <server> [gamerule|kill|replaceitem|defaults|concrete]")?;
     let (lines, shown, settle) = match args.next().as_deref() {
         None | Some("gamerule") => (GAMERULE, &[][..], SETTLE),
         Some("kill") => (KILL, KILL_SHOWN, KILL_SETTLE),
         Some("replaceitem") => (REPLACEITEM, REPLACEITEM_SHOWN, SETTLE),
         Some("defaults") => (DEFAULTS, DEFAULTS_SHOWN, SETTLE),
+        Some("concrete") => (CONCRETE, CONCRETE_SHOWN, KILL_SETTLE),
         Some(other) => return Err(format!("no drill {other}").into()),
     };
     let (mut actor, mut watcher) = (connect(&server, "CmdActor").await?, connect(&server, "CmdWatcher").await?);

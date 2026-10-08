@@ -90,6 +90,40 @@ fn sand_falling_into_water_splashes_once_as_on_bds() {
     assert!(splash.entity_type == "minecraft:falling_block" && splash.extra_data > 0 && (splash.position.x, splash.position.z) == (6.5, 0.5), "{splash:?}");
 }
 
+#[test]
+fn concrete_powder_sets_where_water_touches_it_as_on_bds() {
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    h.enter(2, "Steve");
+    // Pools in the platform walled with stone: two deep at x -6, one deep at x -2.
+    h.remote.run(|ctx| {
+        for (x, deep) in [(-6, 2), (-2, 1)] {
+            for y in 62..=64 {
+                for [dx, dz] in [[-1, 0], [1, 0], [0, -1], [0, 1]] {
+                    assert!(ctx.set_block([x + dx, y, dz], &Block::new("stone")));
+                }
+            }
+            assert!(ctx.set_block([x, 64 - deep, 0], &Block::new("stone")));
+            for y in 65 - deep..=64 {
+                assert!(ctx.set_block([x, y, 0], &Block::new("water")));
+            }
+            assert!(ctx.update_block([x, 68, 0], &Block::new("red_concrete_powder")));
+        }
+        assert!(ctx.update_block([6, 65, 0], &Block::new("water")) && ctx.update_block([7, 65, 0], &Block::new("red_concrete_powder")));
+    });
+    let sent: Vec<RawPacket> = (0..30).flat_map(|_| h.tick_all().to(2).to_vec()).collect();
+    let (powder, concrete, water, stone, air) =
+        (hash("minecraft:red_concrete_powder"), hash("minecraft:red_concrete"), hash("minecraft:water"), hash("minecraft:stone"), hash("minecraft:air"));
+    assert_eq!(column_changes(&sent, 7), [(65, powder), (65, concrete)], "beside water it sets at once");
+    let falls = [(68, powder), (68, air)];
+    let deep = [[(62, stone), (63, water), (64, water)].as_slice(), &falls, &[(63, concrete)]].concat();
+    assert_eq!(column_changes(&sent, -6), deep, "in water touching water it sets there, falling");
+    let shallow = [[(63, stone), (64, water)].as_slice(), &falls, &[(64, powder)]].concat();
+    assert_eq!(column_changes(&sent, -2), shallow, "in a pool one deep it lands as powder");
+    let synced: Vec<_> = all::<UpdateBlockSynced>(&sent).iter().filter(|u| u.transition_type == Transition::Destroy).map(|u| u.position.x).collect();
+    assert_eq!(synced, [-2], "only a landing names the falling block");
+}
+
 /// The layer-0 changes among `packets` at `x`, as (y, block).
 fn column_changes(packets: &[RawPacket], x: i32) -> Vec<(i32, u32)> {
     block_changes(packets).into_iter().filter(|([at_x, _, z], _)| (*at_x, *z) == (x, 0)).map(|([_, y, _], block)| (y, block)).collect()

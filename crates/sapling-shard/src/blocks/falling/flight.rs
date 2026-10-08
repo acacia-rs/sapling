@@ -9,7 +9,7 @@ use sapling_api::{BlockPos, Item};
 
 use super::super::place::gives_way;
 use super::super::{level, loot, send};
-use super::{SNOW, block};
+use super::{SNOW, block, is_water, set_wet};
 use crate::body::{Body, Physics};
 use crate::components::{InLayer, NetId};
 use crate::{entities, mobs};
@@ -111,6 +111,15 @@ fn step(world: &mut World, entity: Entity, layer: Entity, id: u64) -> Option<Blo
     }
     let (body, mut packets) = entities::step(world, entity, layer, id, &Physics::FALLING_BLOCK, WIRE_OFFSET)?;
     let (at, landed) = (body.at, body.on_ground);
+    // Concrete powder whose middle is in water that touches more water sets there and is gone at
+    // once (BDS `ConcretePowderBlock::shouldStopFalling`; research/captures/bds-concrete.txt, the
+    // two-deep pool); in a pool one deep it lands as powder.
+    let middle = cell_of(wire(at));
+    if is_water(world, layer, middle) && set_wet(world, layer, middle, block_id) {
+        send::to_viewers(world, layer, middle, &packets);
+        mobs::remove(world, entity);
+        return Some(middle);
+    }
     let below_world = level(world, layer).is_some_and(|level| !level.in_height(cell_of(at)[1]) && !level.in_height(cell_of(at)[1] + 1));
     // Refused: it shatters now and goes, leaving its item, the next tick, as BDS was seen to.
     if landed && !takes(world, layer, block_id, cell_of(at)) {

@@ -2,7 +2,7 @@
 //! gravity (flight.rs) and is placed where it lands, or leaves its item where it cannot be, by
 //! BDS's `FallingBlock` (docs/research/falling-blocks.md, and research/captures/ for what BDS sent).
 // TODO: what is free to fall into and what breaks a falling block are name lists, not block
-// data; concrete powder does not harden; no fall damage or splash.
+// data; no fall damage.
 
 mod flight;
 
@@ -54,9 +54,34 @@ fn name_at(world: &World, layer: Entity, pos: BlockPos) -> Option<&'static str> 
     block(world, layer, pos).and_then(|(registry, id)| registry.get(id)).map(|state| state.name)
 }
 
-/// After `change`: a falling block at `pos` is queued to fall.
+/// The concrete the concrete powder `id` sets into.
+fn concrete(registry: &BlockRegistry, id: u32) -> Option<u32> {
+    let concrete = registry.get(id)?.name.strip_suffix("_powder").filter(|name| name.ends_with("_concrete"))?;
+    registry.states_of(concrete).next().map(|(id, _)| id)
+}
+
+fn is_water(world: &World, layer: Entity, pos: BlockPos) -> bool {
+    name_at(world, layer, pos).is_some_and(|name| matches!(name, "minecraft:water" | "minecraft:flowing_water"))
+}
+
+/// Puts the concrete of the powder `powder` at `pos` when water lies above or beside `pos`, not
+/// below (BDS `ConcretePowderBlock::_touchesWater`); whether it did.
+fn set_wet(world: &mut World, layer: Entity, pos: BlockPos, powder: u32) -> bool {
+    let Some(concrete) = level(world, layer).and_then(|level| concrete(level.registry(), powder)) else { return false };
+    let wet = [Face::Up, Face::North, Face::South, Face::West, Face::East].iter().any(|face| is_water(world, layer, face.neighbour(pos)));
+    wet && send::set(world, layer, pos, concrete)
+}
+
+/// Sets concrete powder at `pos` into concrete when wet ([`set_wet`]).
+fn set_if_wet(world: &mut World, layer: Entity, pos: BlockPos) -> bool {
+    let Some((_, powder)) = block(world, layer, pos) else { return false };
+    set_wet(world, layer, pos, powder)
+}
+
+/// After `change`: a falling block at `pos` is queued to fall; concrete powder put by water sets
+/// at once.
 pub(super) fn unsettled(world: &mut World, layer: Entity, pos: BlockPos, change: Change) {
-    if !name_at(world, layer, pos).is_some_and(falls) {
+    if !name_at(world, layer, pos).is_some_and(falls) || matches!(change, Change::Placed) && set_if_wet(world, layer, pos) {
         return;
     }
     let due = world.resource::<Tick>().0 + change.delay();
@@ -73,9 +98,12 @@ fn is_free(world: &World, layer: Entity, below: BlockPos) -> bool {
     })
 }
 
-/// Sets the lowest falling block of the stack at `pos` falling, if it can (BDS `checkSlide`).
-/// The cell it left, for its neighbours to settle.
+/// Sets the lowest falling block of the stack at `pos` falling, if it can (BDS `checkSlide`), or
+/// concrete powder there into concrete when wet. The cell that changed, for its neighbours.
 fn slide(world: &mut World, layer: Entity, pos: BlockPos) -> Option<BlockPos> {
+    if set_if_wet(world, layer, pos) {
+        return Some(pos);
+    }
     let mut lowest = pos;
     while name_at(world, layer, Face::Down.neighbour(lowest)).is_some_and(|name| falls(name) && name != SNOW) {
         lowest = Face::Down.neighbour(lowest);

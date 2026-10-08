@@ -157,7 +157,10 @@ Concrete powder:
   nothing is queued.
 - Mid-flight (148b37770): when the actor's own cell has Water material, it runs the same hardening at that cell.
   If that converts, the actor is removed at once and no landing happens. Otherwise the default
-  `shouldStopFalling` applies.
+  `shouldStopFalling` applies. Checked on BDS 2026-10-08 (`bds_command_probe concrete`,
+  research/captures/bds-concrete.txt): the cell is the one holding the box's middle, and "the same hardening"
+  needs water above or beside that cell. Into a pool two deep the powder became concrete in the bottom water cell
+  (plain UpdateBlock, RemoveEntity at once); into a pool one deep it landed as powder.
 
 Snow layer (`TopSnowBlock`):
 

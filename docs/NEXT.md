@@ -24,8 +24,8 @@ it does on BDS and the two captures can be diffed:
 Each needs its rule looked up first (`bdsre` for BDS, the Java jar for data), then a shard test.
 
 1. **Water for entities.** Bodies splash going in (`splash.rs`, `docs/research/splash-sound.md`) but
-   are neither lifted nor slowed by it; concrete powder does not harden (the drill's landing matched
-   BDS's, so it is untested).
+   are neither lifted nor slowed by it. Concrete powder sets as on BDS (`bds_command_probe
+   concrete`), except that sapling shows powder put beside water for a moment before its concrete.
 2. **Redstone.** Plates now match BDS when walked on (`bds_plate_probe`); what they power (the lamp
    in that drill) does nothing on sapling.
 
