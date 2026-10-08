@@ -90,10 +90,14 @@ impl Parameter for States {
         ParamKind::BlockStates
     }
 
+    fn begins(next: &str) -> bool {
+        next.starts_with('[')
+    }
+
     fn parse(args: &mut Args<'_>) -> Result<Self, ParseError> {
         let mark = args.mark();
-        let rest = args.rest()?;
-        let inner = rest.strip_prefix('[').and_then(|inner| inner.strip_suffix(']')).ok_or_else(|| args.error_at(mark))?;
+        let bracketed = args.bracketed()?;
+        let inner = bracketed.strip_prefix('[').and_then(|inner| inner.strip_suffix(']')).ok_or_else(|| args.error_at(mark))?;
         let mut pairs: Vec<String> = inner
             .split(',')
             .filter(|pair| !pair.trim().is_empty())
@@ -128,6 +132,12 @@ mod tests {
     fn states_and_selectors_read_as_vanilla_writes_them() {
         assert_eq!(parsed::<States>(r#"["torch_facing_direction"="top", "a"=1]"#).unwrap(), States("a=1,torch_facing_direction=top".into()));
         assert!(parsed::<States>("liquid_depth=3").is_err(), "brackets are required");
+        let sender = Sender::Console;
+        let mut args = Args::new(r#"["a"=1, "b"=2] destroy"#, 0, &sender, &[]);
+        let (states, after) = (States::parse(&mut args).unwrap(), args.word().unwrap());
+        assert_eq!((states, after), (States("a=1,b=2".into()), "destroy"), "they end at their bracket");
+        let mut args = Args::new("destroy", 0, &sender, &[]);
+        assert_eq!(Option::<States>::parse(&mut args), Ok(None), "left out when the next word is not one");
         assert_eq!(parsed::<Selector>("@e[type=chicken]").unwrap(), Selector::Entities { kind: Some("minecraft:chicken".into()) });
         assert_eq!([parsed::<Selector>("@s").unwrap(), parsed::<Selector>("Alex").unwrap()], [Selector::Sender, Selector::Named("Alex".into())]);
         assert!(parsed::<Selector>("@x").is_err());

@@ -155,6 +155,15 @@ impl Backend for Fake {
         self.set_block(pos, block)
     }
 
+    /// Nothing drops here: the block only goes.
+    fn break_block(&mut self, pos: BlockPos) -> bool {
+        let broken = self.blocks.remove(&pos).is_some_and(|block| !block.is_air());
+        if broken {
+            self.log.push(format!("break {pos:?}"));
+        }
+        broken
+    }
+
     fn set_container_item(&mut self, pos: BlockPos, slot: usize, item: Option<&Item>) -> bool {
         self.log.push(format!("container {pos:?} {slot} {:?}", item.map(|item| (&item.name, item.count))));
         true

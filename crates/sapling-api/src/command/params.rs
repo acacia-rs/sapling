@@ -8,6 +8,12 @@ pub trait Parameter: Sized {
 
     fn kind() -> ParamKind;
     fn parse(args: &mut Args<'_>) -> Result<Self, ParseError>;
+
+    /// Whether `next`, the next word, can start one: an optional argument that cannot is left out
+    /// and the word goes to the next.
+    fn begins(_next: &str) -> bool {
+        true
+    }
 }
 
 macro_rules! number {
@@ -128,6 +134,9 @@ impl<P: Parameter> Parameter for Option<P> {
     }
 
     fn parse(args: &mut Args<'_>) -> Result<Self, ParseError> {
-        if args.is_empty() { Ok(None) } else { P::parse(args).map(Some) }
+        match args.peek() {
+            Some(next) if P::begins(next) => P::parse(args).map(Some),
+            _ => Ok(None),
+        }
     }
 }

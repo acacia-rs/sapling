@@ -1,7 +1,7 @@
 //! `/setblock` and `/fill`.
 
 use sapling_api::command::{BlockCoords, States};
-use sapling_api::{Block, BlockPos, Command, Output, Sender, ShardCtx};
+use sapling_api::{Block, BlockPos, Command, CommandEnum, Output, Sender, ShardCtx};
 
 use super::origin;
 
@@ -22,18 +22,33 @@ fn block(name: &str, states: Option<&States>) -> Block {
     }
 }
 
+/// What `/setblock` does to the block that is there.
+#[derive(CommandEnum, Clone, Copy, PartialEq)]
+#[command(crate = "crate")]
+pub(crate) enum SetMode {
+    Replace,
+    /// Breaks it first, leaving what it drops.
+    Destroy,
+    /// Only sets air.
+    Keep,
+}
+
 #[derive(Command)]
 #[command(crate = "crate", name = "setblock", description = "Changes a block to another block", permission = "operator")]
 pub(crate) struct SetBlock {
     position: BlockCoords,
     block: String,
     states: Option<States>,
+    mode: Option<SetMode>,
 }
 
 impl Command for SetBlock {
     fn run(self, ctx: &mut ShardCtx<'_>, sender: &Sender, out: &mut Output) {
         let pos = self.position.from(origin(ctx, sender));
-        match changed(ctx, pos, &block(&self.block, self.states.as_ref())) {
+        let mode = self.mode.unwrap_or(SetMode::Replace);
+        let kept = mode == SetMode::Keep && ctx.block(pos).is_some_and(|there| !there.is_air());
+        let broke = mode == SetMode::Destroy && ctx.break_block(pos);
+        match !kept && (changed(ctx, pos, &block(&self.block, self.states.as_ref())) || broke) {
             true => out.translate("commands.setblock.success", Vec::new(), true),
             false => out.translate("commands.setblock.noChange", Vec::new(), false),
         }

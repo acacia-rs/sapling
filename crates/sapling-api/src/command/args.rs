@@ -78,6 +78,19 @@ impl<'a> Args<'a> {
         rest.split_whitespace().next()
     }
 
+    /// The next run from `[` to its `]`, spaces and all; to the end of the line when it has none.
+    pub fn bracketed(&mut self) -> Result<&'a str, ParseError> {
+        let start = self.pos;
+        let rest = self.line[start..].trim_end();
+        if rest.is_empty() {
+            return Err(self.error_at(start));
+        }
+        let end = rest.find(']').map_or(rest.len(), |at| at + 1);
+        self.pos = start + end;
+        self.skip_spaces();
+        Ok(&rest[..end])
+    }
+
     /// Everything left, as typed.
     pub fn rest(&mut self) -> Result<&'a str, ParseError> {
         let start = self.pos;

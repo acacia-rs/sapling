@@ -23,9 +23,10 @@ it does on BDS and the two captures can be diffed:
 
 Each needs its rule looked up first (`bdsre` for BDS, the Java jar for data), then a shard test.
 
-1. **Water for entities.** Bodies splash going in (`splash.rs`, `docs/research/splash-sound.md`) but
-   are neither lifted nor slowed by it. Concrete powder sets as on BDS (`bds_command_probe
-   concrete`), except that sapling shows powder put beside water for a moment before its concrete.
+1. **Water for entities**: items float, orbs bob, mobs sink, as on BDS (`body/water.rs`,
+   `docs/research/water-movement.md` 7); concrete powder sets (`bds_command_probe concrete`). Left:
+   lava for bodies; BDS's 1-in-33 big wave for orbs; small moves BDS sends that `sync.rs` keeps;
+   powder put beside water shows as powder for a moment before its concrete.
 2. **Redstone.** Plates now match BDS when walked on (`bds_plate_probe`); what they power (the lamp
    in that drill) does nothing on sapling.
 

@@ -123,11 +123,10 @@ pub(crate) fn listed(world: &World, layer: Entity) -> Vec<EntityInfo> {
 pub(crate) fn step(world: &mut World, entity: Entity, layer: Entity, id: u64, physics: &Physics, lift: f32) -> Option<(Body, Vec<Bytes>)> {
     let mut body = *world.get::<Body>(entity)?;
     let started_on_ground = body.on_ground;
-    let moved = [body.motion[0], body.motion[1] - physics.gravity, body.motion[2]];
-    body.step(&world.get::<Layer>(layer)?.world, physics);
+    let moved = body.step(&world.get::<Layer>(layer)?.world, physics);
     *world.get_mut::<Body>(entity)? = body;
     let kind = world.get::<Kind>(entity)?.0.clone();
-    let splash = splash::check(world, entity, layer, id, &kind, moved, &body);
+    let splash = splash::check(world, entity, id, &kind, moved, &body, physics.water);
     let [x, y, z] = body.at;
     let mut told = world.get_mut::<Told>(entity)?;
     let flags = told.moving(id, started_on_ground);

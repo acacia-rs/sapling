@@ -84,6 +84,17 @@ fn pop(world: &mut World, layer: Entity, pos: BlockPos) {
     }
 }
 
+/// Breaks the block at `pos` as one broken by hand, and lets what is around react; false for air
+/// or a place not loaded.
+pub(crate) fn break_block(world: &mut World, layer: Entity, pos: BlockPos) -> bool {
+    if block(world, layer, pos).is_none_or(|(registry, id)| id == registry.air_id()) {
+        return false;
+    }
+    pop(world, layer, pos);
+    settle(world, layer, pos);
+    true
+}
+
 /// Lets everything that the change at `pos` unsettled fall or break, and what that unsettles.
 pub(super) fn settle(world: &mut World, layer: Entity, pos: BlockPos) {
     let mut changed = VecDeque::from([pos]);

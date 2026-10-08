@@ -99,6 +99,11 @@ impl Backend for Ctx<'_> {
         blocks::update_block(self.world, layer, pos, block)
     }
 
+    fn break_block(&mut self, pos: BlockPos) -> bool {
+        let layer = worlds::current(self.world);
+        blocks::break_block(self.world, layer, pos)
+    }
+
     fn set_container_item(&mut self, pos: BlockPos, slot: usize, item: Option<&Item>) -> bool {
         let layer = worlds::current(self.world);
         let stack = match item.map(|item| inventory::stored(item, self.layer().world.registry())) {

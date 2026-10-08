@@ -1,7 +1,7 @@
 //! Runs a drill of command lines as an operator bot while a second operator watches, and prints
 //! what each was answered: CommandOutput in full, Text, GameRulesChanged as `rule=value`, and the
 //! drill's own packets. The ground truth for sapling's vanilla commands (`sapling::vanilla`).
-//! `cargo run -p sapling --example bds_command_probe -- <server> [gamerule|kill|replaceitem|defaults|concrete]` (offline mode,
+//! `cargo run -p sapling --example bds_command_probe -- <server> [gamerule|kill|replaceitem|defaults|concrete|water]` (offline mode,
 //! operators by default; `gamerule` when none is named).
 #[path = "shared/dump.rs"]
 #[allow(dead_code)]
@@ -132,6 +132,19 @@ const CONCRETE: &[&str] = &[
     "setblock ~11 ~-1 ~7 red_concrete_powder",
     "setblock ~11 ~ ~7 water",
 ];
+/// What water does to an item, an orb and an armour stand dropped into a pool three deep.
+const WATER: &[&str] = &[
+    "fill ~2 ~-5 ~6 ~8 ~-1 ~10 stone",
+    "fill ~2 ~ ~6 ~8 ~4 ~10 air",
+    "fill ~3 ~-4 ~7 ~7 ~-1 ~9 water",
+    "setblock ~5 ~2 ~8 dirt",
+    "setblock ~5 ~2 ~8 air destroy",
+    "summon xp_orb ~6.5 ~1 ~8.5",
+    "summon armor_stand ~3.5 ~1 ~8.5",
+];
+const WATER_SHOWN: &[&str] = &["AddItemEntity", "AddEntity", "RemoveEntity", "MoveEntityDelta", "SetEntityMotion", "MotionPredictionHints", "LevelSoundEvent"];
+/// Long enough to see a thing sink or rise through the pool.
+const WATER_SETTLE: Duration = Duration::from_millis(8000);
 const CONCRETE_SHOWN: &[&str] = &["UpdateBlock", "UpdateBlockSynced", "UpdateSubchunkBlocks", "AddEntity", "RemoveEntity", "AddItemEntity", "LevelEvent", "LevelSoundEvent"];
 
 const KILL_SHOWN: &[&str] = &["EntityEvent", "AddEntity", "AddItemEntity", "RemoveEntity", "LevelSoundEvent", "SetEntityData", "Animate", "MobEffect"];
@@ -167,13 +180,14 @@ const SHOWN: usize = 4000;
 #[tokio::main(flavor = "current_thread")]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut args = std::env::args().skip(1);
-    let server = args.next().ok_or("usage: bds_command_probe <server> [gamerule|kill|replaceitem|defaults|concrete]")?;
+    let server = args.next().ok_or("usage: bds_command_probe <server> [gamerule|kill|replaceitem|defaults|concrete|water]")?;
     let (lines, shown, settle) = match args.next().as_deref() {
         None | Some("gamerule") => (GAMERULE, &[][..], SETTLE),
         Some("kill") => (KILL, KILL_SHOWN, KILL_SETTLE),
         Some("replaceitem") => (REPLACEITEM, REPLACEITEM_SHOWN, SETTLE),
         Some("defaults") => (DEFAULTS, DEFAULTS_SHOWN, SETTLE),
         Some("concrete") => (CONCRETE, CONCRETE_SHOWN, KILL_SETTLE),
+        Some("water") => (WATER, WATER_SHOWN, WATER_SETTLE),
         Some(other) => return Err(format!("no drill {other}").into()),
     };
     let (mut actor, mut watcher) = (connect(&server, "CmdActor").await?, connect(&server, "CmdWatcher").await?);

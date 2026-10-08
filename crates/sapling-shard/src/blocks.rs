@@ -30,6 +30,7 @@ pub(crate) use loot::Dice;
 pub(crate) use liquid::tick as flow_liquids;
 pub(crate) use mining::Breaking;
 pub(crate) use send::{block_at, keep_entity, put_block, set, sound, to_viewers};
+pub(crate) use updates::break_block;
 
 use std::collections::HashSet;
 

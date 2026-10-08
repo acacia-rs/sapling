@@ -23,6 +23,7 @@ pub trait Backend: WorldBackend + EntityBackend {
     fn block(&self, pos: BlockPos) -> Option<Block>;
     fn set_block(&mut self, pos: BlockPos, block: &Block) -> bool;
     fn update_block(&mut self, pos: BlockPos, block: &Block) -> bool;
+    fn break_block(&mut self, pos: BlockPos) -> bool;
     fn set_container_item(&mut self, pos: BlockPos, slot: usize, item: Option<&Item>) -> bool;
     fn container_size(&mut self, pos: BlockPos) -> Option<usize>;
     fn kick(&mut self, player: PlayerId, message: &str);
@@ -130,6 +131,13 @@ impl<'a> ShardCtx<'a> {
     /// `/setblock` does. A cell that already holds `block` is left alone, and that is true too.
     pub fn update_block(&mut self, pos: BlockPos, block: &Block) -> bool {
         self.backend.update_block(pos, block)
+    }
+
+    /// Breaks the block at `pos` as a hand would: its fragments fly, it leaves what it drops, and
+    /// what is around reacts as to [`ShardCtx::update_block`]. False for air and a place that is
+    /// not loaded. What vanilla's `/setblock .. destroy` does first.
+    pub fn break_block(&mut self, pos: BlockPos) -> bool {
+        self.backend.break_block(pos)
     }
 
     /// Puts `item` (`None`: nothing) into slot `slot` of the container block at `pos` (a chest,
