@@ -44,3 +44,11 @@ slot +0x100), 1415f89a0/1415f87d0 `BlockSource::{updateNeighborsAt,updateNeighbo
 
 Residue labels (2026-10-08): 148299570 `GrassDiscFeature::place`; block ids 0x14cce09b8 mud, 0x14cce0838 dirt,
 0x14cce1af8 tuff, 0x14cce38b0 stone (unnamed in the initialiser, placed by alphabetical runs), 0x14ccf9950 air.
+
+Feature residue labels (2026-10-08, feat2): 141882f10 `Dimension::getDefaultBiomeId` (vtables 14a75bd80,
+14a75c020, slot 0xc8; nether 14880e9e0 = 8, end 148276900 = 9), 141602f90 `BlockSource::getBiome`, 1438eac70
+`TreeHelper::prepareSpawn`, 1438f2ba0 `MegaTreeTrunk::placeTrunk`, 143bd34c0 `AcaciaTreeTrunk::placeTrunk`,
+142cf3f80 `BlockDescriptor::matches` (lazy resolve 142cf62c0), 143bc8310 `VegetationPatchFeature::place`,
+14828af70/14828b9e0 `CoralFeature::{place,buildShape}`, 148288070 `CoralCrustFeature::place`, 148294070
+`CoralHangFeature::place`, 149d60d10 `SeaAnemoneFeature::place`, 149d61020 `SeaPickleFeature::place`; block
+globals 0x14ccd5b70 tube_coral_wall_fan, 0x14ccd09a0 brain_coral_wall_fan.
