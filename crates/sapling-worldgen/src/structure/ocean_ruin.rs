@@ -5,7 +5,7 @@
 
 use super::BoundingBox;
 use super::canvas::Canvas;
-use super::template::{Placement, Rotation, Template, named};
+use super::template::{Placement, Rotation, Template, named, piece_box};
 use crate::block::Block;
 use crate::random::{Mt19937, Xoroshiro, position_seed};
 
@@ -70,7 +70,7 @@ impl OceanRuin {
     fn add(&mut self, random: &mut Mt19937, origin: (i32, i32), rotation: Rotation, large: bool, integrity: f32, warm: bool) {
         let mut push = |name: &str, integrity: f32| {
             let template = Template::get(&format!("ruin/{name}"));
-            let bb = footprint(origin, rotation, (template.size.0 - 1, template.size.2 - 1));
+            let bb = piece_box(origin, rotation, template.size);
             self.pieces.push(RuinPiece { template, origin, rotation, integrity, warm, bb });
         };
         if warm {

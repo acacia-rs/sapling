@@ -4,7 +4,7 @@
 
 use super::BoundingBox;
 use super::canvas::Canvas;
-use super::template::{FULL_CUBE, Placement, Rotation, Template, flags, named};
+use super::template::{FULL_CUBE, Placement, Rotation, Template, flags, named, piece_box};
 use crate::block::Block;
 use crate::random::Mt19937;
 
@@ -38,11 +38,7 @@ pub struct Outpost {
 impl Piece {
     fn new(name: &str, origin: (i32, i32), rotation: Rotation, integrity: f32, feature: bool) -> Self {
         let template = Template::get(&format!("pillageroutpost/{name}"));
-        let (sx, _, sz) = template.size;
-        // TemplateStructurePiece's box (141f79610) spans size + 1 blocks, one more away from the origin.
-        let (dx, _, dz) = rotation.apply((sx, 0, sz));
-        let (x, z) = origin;
-        let bb = BoundingBox::new(x.min(x + dx), MIN_Y, z.min(z + dz), x.max(x + dx), 319, z.max(z + dz));
+        let bb = piece_box(origin, rotation, template.size);
         Self { template, origin, rotation, integrity, feature, bb }
     }
 
