@@ -68,6 +68,10 @@ impl Backend for Ctx<'_> {
         blocks::block_at(self.world, worlds::current(self.world), pos)
     }
 
+    fn power_at(&self, pos: BlockPos) -> u8 {
+        blocks::power_at(self.world, worlds::current(self.world), pos)
+    }
+
     fn set_block(&mut self, pos: BlockPos, block: &Block) -> bool {
         let layer = worlds::current(self.world);
         blocks::put_block(self.world, layer, pos, block).is_some()

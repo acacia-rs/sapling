@@ -51,6 +51,7 @@ pub(crate) fn dispatch(world: &mut World, plugins: &mut Plugins) {
     commands::dispatch(world, plugins);
     blocks::release_buttons(world);
     blocks::press_plates(world);
+    blocks::apply_redstone(world);
     blocks::flow_liquids(world);
     blocks::dispatch(world, plugins);
     blocks::dispatch_sign_edits(world);
@@ -90,4 +91,6 @@ pub(crate) fn dispatch(world: &mut World, plugins: &mut Plugins) {
     worlds::focus(world, None);
     plugins.each(world, |handler, ctx| handler.on_tick(ctx));
     worlds::dispatch(world, plugins);
+    // Last: BDS evaluates circuits at the end of its tick, after all that changed blocks.
+    blocks::evaluate_redstone(world);
 }

@@ -1,0 +1,207 @@
+//! Where the power of a circuit's sources reaches, by BDS's scene-graph search (docs/research/
+//! redstone.md 3 and 4): strongest first, a strength per cell and what it is for.
+// TODO: dust powers a side block by the Java game's shape rule (no connection across it), where
+// BDS follows the path the power came by (research C8).
+
+use std::collections::{BinaryHeap, HashMap};
+
+use sapling_api::{BlockPos, Face};
+
+use super::parts::{FULL, Part};
+
+const ACROSS: [Face; 4] = [Face::North, Face::South, Face::West, Face::East];
+
+/// How a cell is reached.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
+enum Via {
+    Dust,
+    /// A block a source points into: it powers dust too.
+    Strong,
+    /// A block dust points into or lies on.
+    Weak,
+    User,
+    /// The block a torch is on, or a source it stands on.
+    TorchInput,
+}
+
+/// What a search found: the strongest signal each cell gets, and what each torch's block gives it
+/// and from which source.
+#[derive(Default, Debug)]
+pub(super) struct Power {
+    pub(super) at: HashMap<BlockPos, u8>,
+    pub(super) torches: HashMap<BlockPos, (u8, BlockPos)>,
+}
+
+struct Search<'a, F: FnMut(BlockPos) -> Part> {
+    part: &'a mut F,
+    best: HashMap<(Via, BlockPos), u8>,
+    queue: BinaryHeap<(u8, Via, BlockPos, BlockPos)>,
+    power: Power,
+}
+
+impl<F: FnMut(BlockPos) -> Part> Search<'_, F> {
+    fn offer(&mut self, via: Via, pos: BlockPos, strength: u8, origin: BlockPos) {
+        let best = self.best.entry((via, pos)).or_insert(0);
+        if strength > *best {
+            *best = strength;
+            self.queue.push((strength, via, pos, origin));
+        }
+    }
+
+    /// Offers `strength` to what `pos` holds, reached from `from` on its `face` side: dust and
+    /// users always, a solid block when `strong` points into it, a torch standing on `from`.
+    fn reach(&mut self, from: BlockPos, face: Face, strength: u8, origin: BlockPos, strong: bool, to_dust: bool) {
+        let pos = face.neighbour(from);
+        match (self.part)(pos) {
+            Part::Dust { .. } if to_dust => self.offer(Via::Dust, pos, strength, origin),
+            Part::User(_) => self.offer(Via::User, pos, strength, origin),
+            Part::Conductor if strong => self.offer(Via::Strong, pos, strength, origin),
+            Part::Torch { support, .. } if support.neighbour(pos) == from => self.offer(Via::TorchInput, pos, strength, origin),
+            _ => {}
+        }
+    }
+
+    fn from_source(&mut self, pos: BlockPos, part: Part) {
+        match part {
+            Part::Producer { strength, strong } if strength > 0 => {
+                for face in Face::ALL {
+                    self.reach(pos, face, strength, pos, strong == Some(face), true);
+                }
+            }
+            Part::Torch { lit: true, support } => {
+                for face in Face::ALL.into_iter().filter(|face| *face != support) {
+                    self.reach(pos, face, FULL, pos, face == Face::Up, true);
+                }
+            }
+            _ => {}
+        }
+    }
+
+    /// Whether dust at `dust` joins what is on its `face` side: dust there, a step up or down, or a
+    /// source. A solid block over the lower dust cuts a step.
+    fn connects(&mut self, dust: BlockPos, face: Face) -> bool {
+        let beside = face.neighbour(dust);
+        let is_dust = |part: Part| matches!(part, Part::Dust { .. });
+        let beside_part = (self.part)(beside);
+        let up = (self.part)(Face::Up.neighbour(dust)) != Part::Conductor && is_dust((self.part)(Face::Up.neighbour(beside)));
+        let down = beside_part != Part::Conductor && is_dust((self.part)(Face::Down.neighbour(beside)));
+        matches!(beside_part, Part::Dust { .. } | Part::Producer { .. } | Part::Torch { .. }) || up || down
+    }
+
+    fn from_dust(&mut self, dust: BlockPos, strength: u8, origin: BlockPos) {
+        let below = Face::Down.neighbour(dust);
+        match (self.part)(below) {
+            Part::Conductor => self.offer(Via::Weak, below, strength, origin),
+            Part::User(_) => self.offer(Via::User, below, strength, origin),
+            _ => {}
+        }
+        let up_free = (self.part)(Face::Up.neighbour(dust)) != Part::Conductor;
+        let connected = ACROSS.map(|face| self.connects(dust, face));
+        for (index, face) in ACROSS.into_iter().enumerate() {
+            let beside = face.neighbour(dust);
+            let beside_part = (self.part)(beside);
+            let next = strength - 1;
+            if matches!(beside_part, Part::Dust { .. }) {
+                self.offer(Via::Dust, beside, next, origin);
+            }
+            let (above, under) = (Face::Up.neighbour(beside), Face::Down.neighbour(beside));
+            if up_free && matches!((self.part)(above), Part::Dust { .. }) {
+                self.offer(Via::Dust, above, next, origin);
+            }
+            if beside_part != Part::Conductor && matches!((self.part)(under), Part::Dust { .. }) {
+                self.offer(Via::Dust, under, next, origin);
+            }
+            // North and south are 0 and 1, west and east 2 and 3: the other pair lies across.
+            let across = if index < 2 { [2, 3] } else { [0, 1] };
+            if across.iter().all(|side| !connected[*side]) {
+                match beside_part {
+                    Part::Conductor => self.offer(Via::Weak, beside, strength, origin),
+                    Part::User(_) => self.offer(Via::User, beside, strength, origin),
+                    _ => {}
+                }
+            }
+        }
+    }
+
+    fn from_block(&mut self, block: BlockPos, strength: u8, origin: BlockPos, strong: bool) {
+        for face in Face::ALL {
+            self.reach(block, face, strength, origin, false, strong);
+        }
+    }
+
+    fn run(mut self, sources: &[(BlockPos, Part)]) -> Power {
+        for (pos, part) in sources {
+            self.from_source(*pos, *part);
+        }
+        while let Some((strength, via, pos, origin)) = self.queue.pop() {
+            if self.best.get(&(via, pos)) != Some(&strength) {
+                continue;
+            }
+            let at = self.power.at.entry(pos).or_insert(0);
+            *at = (*at).max(strength);
+            match via {
+                Via::Dust => self.from_dust(pos, strength, origin),
+                Via::Strong => self.from_block(pos, strength, origin, true),
+                Via::Weak => self.from_block(pos, strength, origin, false),
+                Via::TorchInput => {
+                    let input = self.power.torches.entry(pos).or_insert((0, origin));
+                    if strength > input.0 {
+                        *input = (strength, origin);
+                    }
+                }
+                Via::User => {}
+            }
+        }
+        self.power
+    }
+}
+
+/// Searches out from `sources` (a torch as it is about to be), reading cells by `part`.
+pub(super) fn search(sources: &[(BlockPos, Part)], part: &mut impl FnMut(BlockPos) -> Part) -> Power {
+    Search { part, best: HashMap::new(), queue: BinaryHeap::new(), power: Power::default() }.run(sources)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn world(cells: &[(BlockPos, Part)]) -> impl FnMut(BlockPos) -> Part + '_ {
+        move |pos| cells.iter().find(|(at, _)| *at == pos).map_or(Part::Other, |(_, part)| *part)
+    }
+
+    const LAMP: Part = Part::User(super::super::parts::User::Lamp { lit: false });
+    const DUST: Part = Part::Dust { signal: 0 };
+
+    #[test]
+    fn dust_fades_by_one_a_block_and_reaches_a_lamp_15_away_not_16() {
+        // As research/captures/bds-redstone.txt: a block of redstone at x 2, dust from x 3.
+        let block = ([2, 0, 0], Part::Producer { strength: FULL, strong: None });
+        for (length, lit) in [(15, true), (16, false)] {
+            let mut cells: Vec<(BlockPos, Part)> = (3..3 + length).map(|x| ([x, 0, 0], DUST)).collect();
+            cells.extend([block, ([3 + length, 0, 0], LAMP)]);
+            let power = search(&[block], &mut world(&cells));
+            assert_eq!(power.at.get(&[3, 0, 0]), Some(&15));
+            assert_eq!(power.at.get(&[3 + length, 0, 0]).is_some_and(|s| *s > 0), lit, "{length} dust");
+        }
+    }
+
+    #[test]
+    fn a_lever_powers_through_its_block_but_a_redstone_block_does_not() {
+        let lever = ([0, 1, 0], Part::Producer { strength: FULL, strong: Some(Face::Down) });
+        let cells = [lever, ([0, 0, 0], Part::Conductor), ([1, 0, 0], LAMP), ([5, 0, 0], Part::Conductor), ([6, 0, 0], LAMP)];
+        let block = ([4, 0, 0], Part::Producer { strength: FULL, strong: None });
+        let mut cells = cells.to_vec();
+        cells.push(block);
+        let power = search(&[lever, block], &mut world(&cells));
+        assert_eq!((power.at.get(&[1, 0, 0]), power.at.get(&[6, 0, 0])), (Some(&15), None));
+    }
+
+    #[test]
+    fn a_torch_reads_the_block_it_is_on_and_its_own_power_back_names_it() {
+        let torch = ([0, 1, 0], Part::Torch { lit: true, support: Face::Down });
+        let lever = ([1, 0, 0], Part::Producer { strength: FULL, strong: Some(Face::West) });
+        let cells = [torch, lever, ([0, 0, 0], Part::Conductor)];
+        let power = search(&[torch, lever], &mut world(&cells));
+        assert_eq!(power.torches.get(&[0, 1, 0]), Some(&(15, [1, 0, 0])));
+    }
+}

@@ -145,7 +145,15 @@ fn write(world: &mut World, layer: Entity, pos: BlockPos, id: u32) -> Option<u32
     if now_held != held {
         level.world.set_liquid(x, y, z, now_held);
     }
+    super::redstone::notice(world, layer, pos);
     Some(id)
+}
+
+/// Shows everyone who sees `pos` its layer-0 block again, unchanged.
+pub(crate) fn show(world: &mut World, layer: Entity, pos: BlockPos) {
+    let Some(level) = world.get::<Layer>(layer).map(|layer| &layer.world) else { return };
+    let packet = update(level.registry(), pos, level.block(pos[0], pos[1], pos[2]), 0);
+    to_viewers(world, layer, pos, &[packet]);
 }
 
 /// Shows everyone who sees `pos` its block as the entity `entity` took it (`Create`: a falling

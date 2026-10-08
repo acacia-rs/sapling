@@ -150,6 +150,10 @@ impl Backend for Fake {
     fn block(&self, pos: BlockPos) -> Option<Block> {
         (pos[1] >= 0).then(|| self.blocks.get(&pos).cloned().unwrap_or_else(Block::air))
     }
+    /// No circuits run here.
+    fn power_at(&self, _pos: BlockPos) -> u8 {
+        0
+    }
     /// Neighbours do nothing here: the same as [`Fake::set_block`].
     fn update_block(&mut self, pos: BlockPos, block: &Block) -> bool {
         self.set_block(pos, block)

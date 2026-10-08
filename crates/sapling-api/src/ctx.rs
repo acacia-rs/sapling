@@ -21,6 +21,7 @@ pub trait Backend: WorldBackend + EntityBackend {
     fn difficulty(&self) -> Difficulty;
     fn set_difficulty(&mut self, difficulty: Difficulty);
     fn block(&self, pos: BlockPos) -> Option<Block>;
+    fn power_at(&self, pos: BlockPos) -> u8;
     fn set_block(&mut self, pos: BlockPos, block: &Block) -> bool;
     fn update_block(&mut self, pos: BlockPos, block: &Block) -> bool;
     fn break_block(&mut self, pos: BlockPos) -> bool;
@@ -117,6 +118,12 @@ impl<'a> ShardCtx<'a> {
     /// The block at a position; `None` where the world is not loaded or does not reach.
     pub fn block(&self, pos: BlockPos) -> Option<Block> {
         self.backend.block(pos)
+    }
+
+    /// The redstone signal, 0 to 15, the block at a position got when circuits were last worked
+    /// out (every second tick); 0 where nothing powers it.
+    pub fn power_at(&self, pos: BlockPos) -> u8 {
+        self.backend.power_at(pos)
     }
 
     /// Puts a block into the world and onto the screen of everyone who sees the place. False,
