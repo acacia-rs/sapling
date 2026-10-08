@@ -136,6 +136,11 @@ impl Block {
         (Block::OakLeaves..=Block::AzaleaLeavesFlowered).contains(&self)
     }
 
+    /// Blocks only structure pieces place (structure_table.rs).
+    pub fn is_structure(self) -> bool {
+        (Block::OakPlanks..=Block::EndPortal).contains(&self)
+    }
+
     pub fn is_solid(self) -> bool {
         self != Block::Air && !self.is_fluid() && !self.is_plant()
     }

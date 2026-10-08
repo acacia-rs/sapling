@@ -55,6 +55,7 @@ with_multiface_blocks! {
     Vine2 => "vine" "vine_direction_bits=2",
     Vine4 => "vine" "vine_direction_bits=4",
     Vine8 => "vine" "vine_direction_bits=8",
+    VineAllSides => "vine" "vine_direction_bits=15",
     MossCarpet => "moss_carpet" "",
     LeafLitter0South => "leaf_litter" "growth=0,minecraft:cardinal_direction=south",
     LeafLitter1South => "leaf_litter" "growth=1,minecraft:cardinal_direction=south",

@@ -57,6 +57,7 @@ pub fn is_replaceable_plant(block: Block) -> bool {
             | Block::Vine2
             | Block::Vine4
             | Block::Vine8
+            | Block::VineAllSides
             | Block::ShortDryGrass
             | Block::TallDryGrass
             | Block::Bush

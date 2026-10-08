@@ -106,7 +106,7 @@ impl BdsCell {
         let tree = |b: Block| b.is_wood() || matches!(b, Block::MossyCobblestone | Block::MangroveRoots | Block::MuddyMangroveRoots | Block::BeeNest | Block::BrownMushroomBlock1 | Block::RedMushroomBlock1 | Block::MushroomStem);
         // Liquids harden to these, but monster rooms and structures place far more of them.
         let hardened = |b: Block| matches!(b, Block::Cobblestone | Block::Obsidian);
-        Block::from_name(&self.block).filter(|&b| b.is_solid() && !tree(b) && !hardened(b))
+        Block::from_name(&self.block).filter(|&b| b.is_solid() && !tree(b) && !hardened(b) && !b.is_structure())
     }
 
     /// Air, water, lava or solid; a waterlogged block counts as water.

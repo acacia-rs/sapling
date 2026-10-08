@@ -1,5 +1,6 @@
 //! The blocks of the hardcoded structure pieces, after cave_table.rs's and before the multiface
-//! blocks. Logs, cobblestone, spawners and chests live in the earlier tables. Variant order matters:
+//! blocks (`Block::is_structure`). Logs, cobblestone, spawners, chests and vines live in the other
+//! tables. Variant order matters:
 //! `structure::mineshaft::full_solid` excludes `RailNorthSouth..=DarkOakFence15` and
 //! `StoneBrickSlab..=EndPortal`; fences run by connection bits east 1, north 2, south 4, west 8.
 
@@ -88,7 +89,6 @@ macro_rules! with_structure_blocks {
             RedstoneWire => "redstone_wire" "redstone_signal=0",
             DispenserSouth => "dispenser" "facing_direction=3,triggered_bit=0",
             DispenserWest => "dispenser" "facing_direction=4,triggered_bit=0",
-            VineAllSides => "vine" "vine_direction_bits=15",
             LeverSouth => "lever" "lever_direction=south,open_bit=0",
             StickyPistonUp => "sticky_piston" "facing_direction=1",
             StickyPistonWest => "sticky_piston" "facing_direction=5",
