@@ -115,7 +115,8 @@ impl Density {
         let mut shape = ChunkShape { blocks: vec![Block::Air; 16 * 16 * HEIGHT], fluid_ticks: Vec::new() };
         for cx in 0..4 {
             for cz in 0..4 {
-                let rows = self.generated_rows(&cells, chunk_x * 4 + cx as i32, chunk_z * 4 + cz as i32, cx, cz);
+                // With terrain adjustments BDS fills every row (_prepareHeights' flag at +0x21d8).
+                let rows = if adjust.is_some() { GENERATED_CELLS } else { self.generated_rows(&cells, chunk_x * 4 + cx as i32, chunk_z * 4 + cz as i32, cx, cz) };
                 for cy in 0..rows {
                     let density = Corners::load(&cells.density[..], cx, cz, cy);
                     let noodle = cells.noodle.each_ref().map(|grid| Corners::load(&grid[..], cx, cz, cy));

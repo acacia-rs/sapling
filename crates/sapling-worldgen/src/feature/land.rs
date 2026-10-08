@@ -66,6 +66,7 @@ impl Legacy {
             Legacy::Coral => super::coral::coral(ctx.view, ctx.random, at),
             Legacy::CoralHang => super::coral::hang(ctx.view, ctx.random, at),
             Legacy::SeaAnemone => super::coral::anemone(ctx.view, ctx.random, at),
+            Legacy::Pile(block) => super::pile::pile(ctx.view, ctx.random, at, block),
         }
     }
 }

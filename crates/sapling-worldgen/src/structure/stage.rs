@@ -5,6 +5,7 @@
 use std::sync::Arc;
 
 use super::canvas::Canvas;
+use super::jigsaw::{ElementKind, Piece};
 use super::mineshaft::{self, MESA_BIOMES, Mineshaft};
 use super::monument::{self, Monument};
 use super::probe::Probe;
@@ -14,6 +15,7 @@ use super::{BoundingBox, StructureKind, Structures, template, treasure};
 use crate::biome::ChunkBiomes;
 use crate::block::Block;
 use crate::density::Density;
+use crate::feature::ElementWorld;
 use crate::random::{LargeFeatureSeed, Mt19937};
 use crate::terrain::ChunkShape;
 
@@ -26,9 +28,17 @@ const TEMPLE_REACH: i32 = 1;
 /// A monument's building spans its start chunk and two chunks either way.
 const MONUMENT_REACH: i32 = 2;
 
+/// What a chunk's structure stage did besides its own blocks.
+pub struct Placed {
+    /// The heights the pieces may have touched, for `rejoin_connections`.
+    pub touched: (i32, i32),
+    /// Pieces' features' writes into the neighbours: (position, block, block replaced).
+    pub spilled: Vec<([i32; 3], Block, Block)>,
+}
+
 impl Structures {
-    /// The pieces reaching the chunk, reading past it through `neighbour`; returns the heights
-    /// they may have touched, for `rejoin_connections`.
+    /// The pieces reaching the chunk, reading past it through `neighbour` (and `features` for
+    /// the features some pieces place).
     pub fn place(
         &self,
         density: &Density,
@@ -36,7 +46,8 @@ impl Structures {
         chunk: (i32, i32),
         neighbour: &dyn Fn(i32, i32, i32) -> Block,
         biomes: &ChunkBiomes,
-    ) -> Option<(i32, i32)> {
+        features: &ElementWorld,
+    ) -> Option<Placed> {
         let column = BoundingBox::chunk(chunk.0, chunk.1);
         let strongholds: Vec<Arc<Stronghold>> = self
             .starts_near(density, StructureKind::Stronghold, chunk, STRONGHOLD_REACH)
@@ -85,7 +96,7 @@ impl Structures {
         if !hardcoded && !templated {
             return None;
         }
-        let mut canvas = Canvas::new(shape, chunk, neighbour);
+        let mut canvas = Canvas::new(shape, chunk, neighbour).with_features(features);
         let seeds = LargeFeatureSeed::new(self.level_seed);
         let seed = seeds.chunk(chunk.0, chunk.1);
         let chunk_random = |(x, z): (i32, i32)| Mt19937::new(seeds.chunk(x, z));
@@ -120,7 +131,47 @@ impl Structures {
         self.place_portals(density, &mut canvas, &portals);
         Self::place_ancient_cities(&mut canvas, &cities, seed);
         self.place_v2(&mut canvas, &v2);
-        Some(placed.iter().fold(canvas.touched, |(lo, hi), b| (lo.min(b.y0 - 1), hi.max(b.y1 + 1))))
+        let touched = placed.iter().fold(canvas.touched, |(lo, hi), b| (lo.min(b.y0 - 1), hi.max(b.y1 + 1)));
+        Some(Placed { touched, spilled: std::mem::take(&mut canvas.spilled) })
+    }
+
+    /// The chunks around `chunk` (not itself) holding a feature element's piece, whose features
+    /// may write into it.
+    pub fn feature_sources(&self, density: &Density, chunk: (i32, i32)) -> Vec<(i32, i32)> {
+        let mut sources = Vec::new();
+        for (_, (x, _, z)) in self.feature_pieces(density, chunk) {
+            let source = (x >> 4, z >> 4);
+            if source != chunk && !sources.contains(&source) {
+                sources.push(source);
+            }
+        }
+        sources
+    }
+
+    /// The village pieces meeting `chunk` in post-process order, described, for probes.
+    pub fn village_pieces(&self, density: &Density, chunk: (i32, i32)) -> Vec<String> {
+        let column = BoundingBox::chunk(chunk.0, chunk.1);
+        let villages = self.villages_near(density, chunk);
+        let pieces = villages.iter().flat_map(|v| v.pieces.iter()).filter(|p| p.bb.intersects(&column));
+        pieces.map(|p| format!("{} {:?} {:?} depth {} rigid {}", p.element.name, p.origin, p.bb, p.depth, p.is_rigid())).collect()
+    }
+
+    /// The feature elements' pieces in the 3x3 chunks around `chunk`: feature, origin.
+    pub fn feature_pieces(&self, density: &Density, chunk: (i32, i32)) -> Vec<(String, (i32, i32, i32))> {
+        let area = BoundingBox::new(chunk.0 * 16 - 16, i32::MIN, chunk.1 * 16 - 16, chunk.0 * 16 + 31, i32::MAX, chunk.1 * 16 + 31);
+        let near = |bb: &BoundingBox| bb.intersects(&area);
+        let mut found = Vec::new();
+        let mut add = |list: &[Piece]| {
+            for p in list.iter().filter(|p| near(&p.bb)) {
+                if let ElementKind::Feature(name) = &p.element.kind {
+                    found.push((name.clone(), p.origin));
+                }
+            }
+        };
+        self.v2_reaching(density, chunk, &near).iter().for_each(|(_, p)| add(p));
+        self.villages_reaching(density, chunk, &near).iter().for_each(|v| add(&v.pieces));
+        self.ancient_cities_reaching(density, chunk, &near).iter().for_each(|c| add(&c.pieces));
+        found
     }
 
     /// The temple starting in `start`, by the point biome at its centre.

@@ -6,6 +6,8 @@ src/feature/data/{rules,features}.rs.
 Documents are read as bds_packs.documents describes. Biome filters are evaluated here against each
 overworld biome's tags, as BDS does when it attaches rules to biomes at load. A rule reaching a feature
 that is not ported (features_data.py) places nothing but keeps its scatter; such rules are listed on stderr.
+The features of the jigsaw pools' feature elements (src/structure/jigsaw/pools*.txt) follow, named in
+`ELEMENTS`.
 """
 import os
 import sys
@@ -130,10 +132,28 @@ def main():
         lines.append(f'    Rule {{ name: "{name}", pass: Pass::{pass_rust}, biomes: {biome_set(biome_filter, tags_by_id)}, '
                      f'feature: {features.index(places) if places else features.unported()}, distribution: {distribution(dist)} }},')
     write(os.path.join(sys.argv[2], 'rules.rs'), lines + ['];'])
+    elements = []
+    for name in element_features():
+        if features.ported(f'minecraft:{name}'):
+            elements.append(f'    ("{name}", {features.index(f"minecraft:{name}")}),')
+        else:
+            print(f'  element feature {name} not ported', file=sys.stderr)
     lines = header + ['use crate::feature::tree::spec::*;', 'use crate::block::Block;', '', 'pub static FEATURES: &[Feature] = &[']
     for name, (index, rust) in sorted(features.emitted.items(), key=lambda kv: kv[1][0]):
         lines.append(f'    {rust}, // {index} {name}')
-    write(os.path.join(sys.argv[2], 'features.rs'), lines + ['];'])
+    lines += ['];', '', '/// The jigsaw pools\' feature elements: feature name, index.', 'pub static ELEMENTS: &[(&str, usize)] = &[']
+    write(os.path.join(sys.argv[2], 'features.rs'), lines + elements + ['];'])
+
+
+def element_features():
+    pools = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'src', 'structure', 'jigsaw')
+    names = []
+    for file in ('pools.txt', 'pools_v2.txt'):
+        for line in open(os.path.join(pools, file), encoding='utf-8'):
+            parts = line.split()
+            if len(parts) == 4 and parts[0] == 'e' and parts[2] == 'f' and parts[3] not in names:
+                names.append(parts[3])
+    return names
 
 
 def write(path, lines):

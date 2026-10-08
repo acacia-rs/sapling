@@ -32,6 +32,14 @@ pub const FULL_CUBE: u8 = 1;
 pub const COLLIDES: u8 = 2;
 pub const WATERLOGGABLE: u8 = 4;
 
+/// A `TemplateStructurePiece`'s x/z box over all heights (141f79610): it spans size + 1 blocks,
+/// one more than the template on the side away from the origin (outposts; ocean ruins do not,
+/// docs/research/worldgen-bds-templates.md).
+pub fn piece_box((x, z): (i32, i32), rotation: Rotation, (sx, _, sz): (i32, i32, i32)) -> super::BoundingBox {
+    let (dx, _, dz) = rotation.apply((sx, 0, sz));
+    super::BoundingBox::new(x.min(x + dx), -64, z.min(z + dz), x.max(x + dx), 319, z.max(z + dz))
+}
+
 /// A block's palette flags (0 for blocks templates never place).
 pub fn flags(block: Block) -> u8 {
     static INDEX: OnceLock<HashMap<(&str, &str, bool), u8>> = OnceLock::new();

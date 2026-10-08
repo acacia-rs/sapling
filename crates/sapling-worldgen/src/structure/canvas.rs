@@ -3,9 +3,12 @@
 
 use std::cell::RefCell;
 use std::collections::HashMap;
+use std::sync::Arc;
 
 use super::BoundingBox;
 use crate::block::Block;
+use crate::feature::{ElementWorld, place_element};
+use crate::random::Mt19937;
 use crate::terrain::{ChunkShape, MIN_Y};
 
 const TOP: i32 = 319;
@@ -21,12 +24,36 @@ pub struct Canvas<'a> {
     spill: Option<(BoundingBox, HashMap<(i32, i32, i32), Block>)>,
     /// The lowest and highest y written inside the chunk.
     pub touched: (i32, i32),
+    /// What pieces' features read past the chunk; None places no features.
+    features: Option<&'a ElementWorld<'a>>,
+    /// Features' writes into the neighbours: (position, block, block replaced).
+    pub spilled: Vec<([i32; 3], Block, Block)>,
 }
 
 impl<'a> Canvas<'a> {
     pub fn new(shape: &'a mut ChunkShape, chunk: (i32, i32), neighbour: &'a dyn Fn(i32, i32, i32) -> Block) -> Self {
         let bb = BoundingBox::chunk(chunk.0, chunk.1);
-        Self { shape, chunk, bb, neighbour, heights: RefCell::new(HashMap::new()), spill: None, touched: (i32::MAX, i32::MIN) }
+        Self { shape, chunk, bb, neighbour, heights: RefCell::new(HashMap::new()), spill: None, touched: (i32::MAX, i32::MIN), features: None, spilled: Vec::new() }
+    }
+
+    pub fn with_features(mut self, world: &'a ElementWorld<'a>) -> Self {
+        self.features = Some(world);
+        self
+    }
+
+    /// A piece's feature at `at`, drawing from `random`, through the 3x3 block source: writes in
+    /// the chunk land, the others go to `spilled`.
+    pub fn place_feature(&mut self, name: &str, random: &mut Mt19937, at: [i32; 3]) {
+        let Some(world) = self.features else { return };
+        let centre = Arc::new(self.shape.clone());
+        let Some(writes) = place_element(name, self.chunk, centre, world, random, at) else { return };
+        for ([x, y, z], block, seen) in writes {
+            if self.inside(x, z) {
+                self.set(x, y, z, block);
+            } else {
+                self.spilled.push(([x, y, z], block, seen));
+            }
+        }
     }
 
     /// Until `end_spill`, writes inside `area` but outside the chunk are kept for later reads, as

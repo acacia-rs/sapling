@@ -4,7 +4,7 @@
 
 use super::BoundingBox;
 use super::canvas::Canvas;
-use super::template::{FULL_CUBE, Placement, Rotation, Template, flags, named};
+use super::template::{FULL_CUBE, Placement, Rotation, Template, flags, named, piece_box};
 use crate::block::Block;
 use crate::random::Mt19937;
 
@@ -38,27 +38,24 @@ pub struct Outpost {
 impl Piece {
     fn new(name: &str, origin: (i32, i32), rotation: Rotation, integrity: f32, feature: bool) -> Self {
         let template = Template::get(&format!("pillageroutpost/{name}"));
-        let (sx, _, sz) = template.size;
-        let (dx, _, dz) = rotation.apply((sx - 1, 0, sz - 1));
-        let (x, z) = origin;
-        let bb = BoundingBox::new(x.min(x + dx), MIN_Y, z.min(z + dz), x.max(x + dx), 319, z.max(z + dz));
+        let bb = piece_box(origin, rotation, template.size);
         Self { template, origin, rotation, integrity, feature, bb }
     }
 
     /// The piece's y from the light heightmap at its middle and four edge points; `None` where a
-    /// feature's ground is too uneven.
+    /// feature's ground is too uneven or has a liquid top (148358d80).
     pub fn height(&self, canvas: &Canvas) -> Option<i32> {
         let b = &self.bb;
         let (hx, hz) = ((b.x1 - b.x0 + 1) >> 1, (b.z1 - b.z0 + 1) >> 1);
         let (mx, mz) = (b.x0 + hx, b.z0 + hz);
         let points = [(mx, mz), (mx + hx, mz), (mx, mz + hz), (b.x0, mz), (mx, b.z0)];
-        // TODO: BDS put two of the oracle outpost's features a block lower / on uneven ground; cause unknown.
         let heights = points.map(|(x, z)| canvas.height(x, z));
         let high = *heights.iter().max().unwrap();
         let low = (*heights.iter().min().unwrap()).max(MIN_Y);
+        let wet = || points.iter().zip(heights).any(|(&(x, z), h)| canvas.get(x, h - 1, z).is_fluid());
         match (self.feature, high - low < 9) {
-            (true, true) => Some(heights[0]),
-            (true, false) => None,
+            (true, true) if !wet() => Some(heights[0]),
+            (true, _) => None,
             (false, true) => Some((low + high) / 2),
             (false, false) => Some(high - 4),
         }

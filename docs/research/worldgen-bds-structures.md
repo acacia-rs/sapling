@@ -160,6 +160,10 @@ write water below y 63 and air above (no keep); wing design `nextIntUnbounded() 
 ## Terrain adaptation (src/structure/adjust)
 `_prepareHeights` (14822eb60) adjusts each block's density after the noodle caves and before the aquifer, from two
 separate systems: `d1 = f32(density + v2)`, then `density = d1 + legacy(d1)`.
+- A chunk with any entry (legacy beards, buries or shavers, v2 rigids or junctions; flag at stack +0x21d8,
+  set after 144ccf620/710/800 and 144cd4450) generates every cell row: the skip of all-negative rows above
+  the preliminary surface and sea level is off. Skipping there left a 20-block noise-cave pit beside the
+  taiga meeting point that BDS's beard filled (village region 800 -> 30 wrong, stronghold 5298 -> 4506).
 - **Legacy store** (`FeatureTerrainAdjustments` at WorldGenerator +0x268, per chunk; an entry is filed under every
   chunk its box +-12 meets, 144ccf020). Registered by the hardcoded jigsaw placers for each **rigid** piece
   (addPieces 141ee6a70, candidates 141ee7770, queued 141edde60/141ee5600) by the piece class's
@@ -201,7 +205,11 @@ Known gaps: eroded badlands' mesa mineshafts (BDS shows none; ours sit at y 93, 
 cells; the mesa test, box and preliminary surface (80-128 there) match our reading, cause not found), remaining
 rail/web desync, cross-chunk reads use the neighbours' carved terrain. Plains villages near rivers (the six
 /locate misses): VillageFeature::isFeatureChunk (1480a80e0) is containsOnly(x*16+8, prelim surface or 1, z*16+8,
-r 2), as ours; locate (141efb740) adds a flag-gated per-chunk filter (feature +0x1d8, vt 0x28) not identified.
+r 2), as ours; locate (141efb740) adds a flag-gated per-chunk filter (feature +0x1d8, vt 0x28) not identified,
+and (flag at +0x30 of its settings, +0x5c7..+0x686) a biome test at (x*16+8, preliminary surface or 1,
+z*16+8) through the biome source (vt+0x50) and 143914da0. Testing that point's biome against the village
+list changed none of the six: our six answers are plains at the centre with surface 56, like one BDS
+answer. These filters are /locate's only; generation is unaffected.
 
 ## Prior art and licences
 Bedrock finders (scratchpad `st/prior-art.md`): bedrock-dev/MCBEStructureFinder (MIT, pre-1.18), stirante/

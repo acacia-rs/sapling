@@ -68,6 +68,12 @@ HARDCODED = {
     'minecraft:coral_feature': _LEGACY.format('Coral'),
     'minecraft:coral_hang_feature': _LEGACY.format('CoralHang'),
     'minecraft:sea_anemone_feature': _LEGACY.format('SeaAnemone'),
+    # The village piles: one class (vtable 14a9258d0) over the block 1482f4580 passes.
+    'minecraft:hay_pile_feature': _LEGACY.format('Pile(PileBlock::Hay)'),
+    'minecraft:melon_pile_feature': _LEGACY.format('Pile(PileBlock::Melon)'),
+    'minecraft:pumpkin_pile_feature': _LEGACY.format('Pile(PileBlock::Pumpkin)'),
+    'minecraft:snow_pile_feature': _LEGACY.format('Pile(PileBlock::Snow)'),
+    'minecraft:ice_pile_feature': _LEGACY.format('Pile(PileBlock::Ice)'),
 }
 EARLY_OUT = {'none': 'EarlyOut::None', 'first_failure': 'EarlyOut::FirstFailure', 'first_success': 'EarlyOut::FirstSuccess'}
 SEARCH_LOOPS = {'-x': ('x-', 'y+', 'z-'), '+x': ('x+', 'y+', 'z+'), '-y': ('y-', 'z+', 'x-'), '+y': ('y+', 'z+', 'x+'),
