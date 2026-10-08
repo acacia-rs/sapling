@@ -6,7 +6,7 @@ use sapling_api::{Block, BlockPos, Face, GameMode, PlaceEvent};
 use sapling_world::BlockRegistry;
 
 use super::facing::{self, Click};
-use super::{Request, Site, doors, entities, items, level, rails, send, signs, updates};
+use super::{Request, Site, doors, entities, falling, items, level, rails, send, signs, updates};
 use crate::components::{InLayer, Position, Stage};
 use crate::inventory::{self, Inventory, Place};
 
@@ -108,7 +108,7 @@ impl Request<'_> {
         let Some(registry) = level(self.world, site.layer).map(|level| level.registry()) else { return false };
         let Some(id) = send::resolve(registry, block).filter(|_| !block.is_air()) else { return false };
         let sound = send::place_sound(registry, pos, id);
-        let placed = send::set(self.world, site.layer, pos, id);
+        let placed = send::set(self.world, site.layer, pos, falling::as_put(self.world, site.layer, pos, id));
         if placed {
             send::to_viewers(self.world, site.layer, pos, &[sound]);
             let second = doors::place_second_cell(self.world, site.layer, pos);

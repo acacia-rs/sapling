@@ -64,12 +64,22 @@ fn is_water(world: &World, layer: Entity, pos: BlockPos) -> bool {
     name_at(world, layer, pos).is_some_and(|name| matches!(name, "minecraft:water" | "minecraft:flowing_water"))
 }
 
-/// Puts the concrete of the powder `powder` at `pos` when water lies above or beside `pos`, not
-/// below (BDS `ConcretePowderBlock::_touchesWater`); whether it did.
+/// Whether water lies above or beside `pos`, not below (BDS `ConcretePowderBlock::_touchesWater`).
+fn touches_water(world: &World, layer: Entity, pos: BlockPos) -> bool {
+    [Face::Up, Face::North, Face::South, Face::West, Face::East].iter().any(|face| is_water(world, layer, face.neighbour(pos)))
+}
+
+/// Puts the concrete of the powder `powder` at `pos` when water touches it; whether it did.
 fn set_wet(world: &mut World, layer: Entity, pos: BlockPos, powder: u32) -> bool {
     let Some(concrete) = level(world, layer).and_then(|level| concrete(level.registry(), powder)) else { return false };
-    let wet = [Face::Up, Face::North, Face::South, Face::West, Face::East].iter().any(|face| is_water(world, layer, face.neighbour(pos)));
-    wet && send::set(world, layer, pos, concrete)
+    touches_water(world, layer, pos) && send::set(world, layer, pos, concrete)
+}
+
+/// What the block `id` is put at `pos` as: concrete powder that water touches as its concrete, so
+/// that viewers are never sent the powder, as BDS sent none (research/captures/bds-concrete.txt).
+pub(super) fn as_put(world: &World, layer: Entity, pos: BlockPos, id: u32) -> u32 {
+    let concrete = level(world, layer).and_then(|level| concrete(level.registry(), id));
+    concrete.filter(|_| touches_water(world, layer, pos)).unwrap_or(id)
 }
 
 /// Sets concrete powder at `pos` into concrete when wet ([`set_wet`]).

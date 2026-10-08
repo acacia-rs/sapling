@@ -62,9 +62,12 @@ const BUOY_DEPTH: f32 = 0.9;
 const BUOY_FLOOR: f32 = 0.1;
 const BUOY_SCALE: f32 = 0.15;
 const WAVE_HEIGHT: f32 = 0.035;
-/// The wave moves on this much a tick, faster the faster the body drifts across.
+/// The wave moves on this much a tick, faster the faster the body drifts across, and by chance
+/// ten times as far (BDS's `big_wave_probability`, `big_wave_speed`).
 const WAVE_STEP: f32 = 0.05;
 const WAVE_DRIFT: f32 = 30.0;
+const BIG_WAVE_CHANCE: f32 = 0.03;
+const BIG_WAVE: f32 = 10.0;
 
 /// Every body but an item is tested on its box with this much left off: a hair across, and
 /// almost half a block at the top and at the bottom.
@@ -177,13 +180,13 @@ fn buoyed(level: &Level, body: &Body) -> Option<f32> {
 }
 
 /// Holds a buoyant body up, before its own tick: its fall slows, and it rises toward a speed set
-/// by [`buoyed`]; the wave moves on.
-// TODO: BDS makes one wave in 33 ten times as long, at random.
-pub(super) fn buoy(level: &Level, body: &mut Body) {
+/// by [`buoyed`]; the wave moves on, drawing on `random` for a big one.
+pub(super) fn buoy(level: &Level, body: &mut Body, random: &mut impl FnMut() -> f32) {
     let Some(lift) = buoyed(level, body) else { return };
     let rise = (lift - BUOY_FLOOR) * BUOY_SCALE;
     body.motion[1] = (body.motion[1] * BUOY_KEEP + BUOY_LIFT).min(rise);
-    body.wave += WAVE_STEP * (1.0 + WAVE_DRIFT * body.motion[0].hypot(body.motion[2]));
+    let big = if random() < BIG_WAVE_CHANCE { BIG_WAVE } else { 1.0 };
+    body.wave += WAVE_STEP * (1.0 + WAVE_DRIFT * body.motion[0].hypot(body.motion[2])) * big;
 }
 
 #[cfg(test)]

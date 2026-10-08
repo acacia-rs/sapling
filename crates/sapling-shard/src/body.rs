@@ -90,7 +90,8 @@ impl Body {
 
     /// One tick: gravity, the move, then drag; on the ground, friction and the bounce. In water or
     /// lava, by the body's [`InLiquid`] rule, judged where the tick starts; a mob by
-    /// [`Body::mob_step`]. `random` is drawn on for an orb thrown out of lava. The motion it moved by.
+    /// [`Body::mob_step`]. `random` is drawn on for an orb's waves and its throw out of lava. The
+    /// motion it moved by.
     pub fn step(&mut self, level: &Level, physics: &Physics, random: &mut impl FnMut() -> f32) -> [f32; 3] {
         let found = liquid::acting(level, self, physics.liquid);
         let before = std::mem::replace(&mut self.liquid, found);
@@ -99,7 +100,7 @@ impl Body {
             (InLiquid::Sinks, _) => return self.mob_step(level, physics, before),
             (InLiquid::Floats, Some(liquid)) => liquid::lift(self, liquid),
             (InLiquid::Buoyant, Some(Liquid::Water)) => {
-                liquid::buoy(level, self);
+                liquid::buoy(level, self, random);
                 self.motion[1] -= physics.gravity;
             }
             (InLiquid::Buoyant, Some(Liquid::Lava)) => liquid::throw_up(self, random),

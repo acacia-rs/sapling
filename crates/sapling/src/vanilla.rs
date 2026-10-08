@@ -9,13 +9,25 @@ mod containers;
 mod players;
 mod rules;
 
-pub(crate) use blocks::{Fill, SetBlock};
-pub(crate) use containers::ReplaceItem;
-pub(crate) use players::{Clear, GameModeCommand, Give, Kill, Summon, Teleport};
-pub(crate) use rules::GameRule;
+use blocks::{Fill, SetBlock};
+use containers::ReplaceItem;
+use players::{Clear, GameModeCommand, Give, Kill, Summon, Teleport};
+use rules::GameRule;
 
 use sapling_api::command::Selector;
 use sapling_api::{EntityInfo, Output, Player, Sender, ShardCtx};
+
+use crate::ServerBuilder;
+
+impl ServerBuilder {
+    /// Adds vanilla's commands for operators (this module): `/setblock`, `/fill`, `/tp`, `/give`,
+    /// `/clear`, `/gamemode`, `/summon`, `/kill`, `/gamerule` and `/replaceitem block`. A command
+    /// added later under the same name replaces one of these.
+    pub fn vanilla_commands(self) -> Self {
+        let blocks = self.command::<SetBlock>().command::<Fill>().command::<ReplaceItem>();
+        blocks.command::<Teleport>().command::<Give>().command::<Clear>().command::<GameModeCommand>().command::<Summon>().command::<Kill>().command::<GameRule>()
+    }
+}
 
 fn no_target(out: &mut Output) {
     out.translate("commands.generic.noTargetMatch", Vec::new(), false);

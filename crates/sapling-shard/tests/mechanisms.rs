@@ -114,7 +114,7 @@ fn concrete_powder_sets_where_water_touches_it_as_on_bds() {
     let sent: Vec<RawPacket> = (0..30).flat_map(|_| h.tick_all().to(2).to_vec()).collect();
     let (powder, concrete, water, stone, air) =
         (hash("minecraft:red_concrete_powder"), hash("minecraft:red_concrete"), hash("minecraft:water"), hash("minecraft:stone"), hash("minecraft:air"));
-    assert_eq!(column_changes(&sent, 7), [(65, powder), (65, concrete)], "beside water it sets at once");
+    assert_eq!(column_changes(&sent, 7), [(65, concrete)], "beside water it is put as concrete");
     let falls = [(68, powder), (68, air)];
     let deep = [[(62, stone), (63, water), (64, water)].as_slice(), &falls, &[(63, concrete)]].concat();
     assert_eq!(column_changes(&sent, -6), deep, "in water touching water it sets there, falling");
