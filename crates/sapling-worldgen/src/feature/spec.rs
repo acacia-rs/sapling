@@ -203,15 +203,24 @@ pub enum Legacy {
     IceSpike,
     /// `pickle_feature` (aquatic.rs).
     SeaPickle,
+    /// `bamboo_feature`, `podzol_area_feature` and `vines_feature` (jungle.rs).
+    Bamboo,
+    PodzolArea,
+    Vines,
+    /// `pale_moss_vegetation_feature` and `eyeblossom_feature` (pale.rs).
+    PaleMossVegetation,
+    Eyeblossom,
+    /// `meadow_flower_feature` (flowers.rs).
+    MeadowFlower,
 }
 
-/// The flower table of a `LegacyFlowerFeature` (1438ef3b0's switch; the forest and flower forest
-/// tables are not ported).
+/// The flower table of a `LegacyFlowerFeature` (1438ef3b0's switch; its forest case is not ported).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum FlowerKind {
     Overworld,
     Plains,
     Swamp,
+    FlowerForest,
 }
 
 /// `minecraft:scatter_feature`: the distribution drawn from the placing generator.

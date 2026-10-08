@@ -55,6 +55,12 @@ impl Legacy {
             Legacy::IcePatch => super::ice_spike::ice_patch(ctx.view, ctx.random, at),
             Legacy::IceSpike => super::ice_spike::ice_spike(ctx.view, ctx.random, at),
             Legacy::SeaPickle => super::aquatic::sea_pickle(ctx.view, ctx.random, at),
+            Legacy::Bamboo => super::jungle::bamboo(ctx.view, ctx.random, at),
+            Legacy::PodzolArea => super::jungle::podzol_area(ctx.view, ctx.random, at),
+            Legacy::Vines => super::jungle::vines(ctx.view, ctx.random, at),
+            Legacy::PaleMossVegetation => super::pale::vegetation(ctx.view, ctx.random, at),
+            Legacy::Eyeblossom => super::pale::eyeblossom(ctx.view, at),
+            Legacy::MeadowFlower => super::flowers::meadow(ctx.view, at),
         }
     }
 }

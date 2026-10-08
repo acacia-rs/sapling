@@ -18,7 +18,7 @@ def _rust_blocks():
         path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'src', 'block', table)
         text = open(path, encoding='utf-8').read()
         # The first variant of a (name, states) pair wins: the waterlogged twins come later.
-        for m in re.finditer(r'^\s*(\w+) => "([a-z_]+)" "([^"]*)",', text, re.M):
+        for m in re.finditer(r'(\w+) => "([a-z_]+)" "([^"]*)",', text):
             found.setdefault((m[2], m[3]), m[1])
     return found
 

@@ -10,16 +10,19 @@ use crate::block::Block;
 use crate::feature::view::View;
 use crate::random::Mt19937;
 
-/// Cells under a propagule that must be air before it hangs.
+/// Cells under a propagule that must be air before it hangs, and the box around a hung one where
+/// no other may hang (MangroveTreeCanopy's constructor 1438ef460: +0x1e4, +0x1e8, +0x1ec).
 const SEARCH_DEPTH: i32 = 2;
+const EXCLUDE_XZ: i32 = 1;
+const EXCLUDE_Y: i32 = 1;
 
 impl MangroveCanopy {
     pub fn place(&self, tree: &Tree, view: &mut View, random: &mut Mt19937, anchor: &Anchor) {
         if anchor.candidates.is_empty() {
             return;
         }
-        let height = self.height.draw_inclusive(random);
-        let radius = self.radius.draw_inclusive(random);
+        let height = self.height.draw_inclusive_always(random);
+        let radius = self.radius.draw_inclusive_always(random);
         let mut leaves = Vec::new();
         for &[x, y, z] in &anchor.candidates {
             for _ in 0..self.attempts {
@@ -57,9 +60,11 @@ impl MangroveCanopy {
                 continue;
             }
             view.set_block(x, y - 1, z, self.hanging);
-            for dx in -1..=1 {
-                for dz in -1..=1 {
-                    taken.insert([x + dx, y - 1, z + dz]);
+            for dx in -EXCLUDE_XZ..=EXCLUDE_XZ {
+                for dy in -EXCLUDE_Y..=EXCLUDE_Y {
+                    for dz in -EXCLUDE_XZ..=EXCLUDE_XZ {
+                        taken.insert([x + dx, y - 1 + dy, z + dz]);
+                    }
                 }
             }
         }

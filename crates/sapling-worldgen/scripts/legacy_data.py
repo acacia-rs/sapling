@@ -52,7 +52,8 @@ LEGACY.update({
         f'tree: {index("minecraft:swamp_tree_feature")}, huge_mushroom: {index("minecraft:huge_mushroom_feature")}, '
         f'grass: {index(GRASS)} }})'),
     'minecraft:legacy:forest_rock_feature': lambda index: 'Feature::LegacyTree(LegacyTree::ForestRock)',
-    'minecraft:leaf_litter_feature': lambda index: 'Feature::LegacyTree(LegacyTree::FlowerBed { petals: false })',
-    'minecraft:pink_petals_feature': lambda index: 'Feature::LegacyTree(LegacyTree::FlowerBed { petals: true })',
+    'minecraft:leaf_litter_feature': lambda index: 'Feature::LegacyTree(LegacyTree::FlowerBed { bed: Block::LeafLitter0South })',
+    'minecraft:pink_petals_feature': lambda index: 'Feature::LegacyTree(LegacyTree::FlowerBed { bed: Block::PinkPetals0South })',
+    'minecraft:wildflowers_feature': lambda index: 'Feature::LegacyTree(LegacyTree::FlowerBed { bed: Block::Wildflowers0South })',
     'minecraft:huge_mushroom_feature': lambda index: 'Feature::LegacyTree(LegacyTree::HugeMushroom)',
 })

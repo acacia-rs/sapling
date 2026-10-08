@@ -77,6 +77,8 @@ macro_rules! with_solid_blocks {
             InfestedDeepslate => "infested_deepslate" "pillar_axis=y",
             MossyCobblestone => "mossy_cobblestone" "",
             MossBlock => "moss_block" "",
+            PaleMossBlock => "pale_moss_block" "",
+            CreakingHeart => "creaking_heart" "creaking_heart_state=dormant,natural=1,pillar_axis=y",
             MangroveRoots => "mangrove_roots" "",
             MuddyMangroveRoots => "muddy_mangrove_roots" "pillar_axis=y",
             BeeNest => "bee_nest" "direction=0,honey_level=0",
@@ -159,6 +161,9 @@ macro_rules! with_solid_blocks {
             RedMushroomBlock8 => "red_mushroom_block" "huge_mushroom_bits=8",
             RedMushroomBlock9 => "red_mushroom_block" "huge_mushroom_bits=9",
             MushroomStem => "mushroom_stem" "huge_mushroom_bits=10",
+            Bamboo => "bamboo" "age_bit=0,bamboo_leaf_size=no_leaves,bamboo_stalk_thickness=thick",
+            BambooSmallLeaves => "bamboo" "age_bit=0,bamboo_leaf_size=small_leaves,bamboo_stalk_thickness=thick",
+            BambooLargeLeaves => "bamboo" "age_bit=0,bamboo_leaf_size=large_leaves,bamboo_stalk_thickness=thick",
             $($plants)*
         }
     };

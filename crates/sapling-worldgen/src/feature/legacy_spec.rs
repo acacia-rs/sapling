@@ -1,5 +1,7 @@
 //! The shapes of the hardcoded tree, foliage and rock features (legacy_tree.rs, scripts/legacy_data.py).
 
+use crate::block::Block;
+
 #[derive(Debug)]
 pub enum LegacyTree {
     /// `LegacyTreeFeature`: a count drawn from `count`, then per tree a feature `choice` picks
@@ -11,8 +13,9 @@ pub enum LegacyTree {
     SwampFoliage { seagrass: usize, tree: usize, huge_mushroom: usize, grass: usize },
     /// `LegacyForestRockFeature`: up to two mossy cobblestone blobs.
     ForestRock,
-    /// `LeafLitterFeature` (also pink petals): one flower bed of a random size and facing.
-    FlowerBed { petals: bool },
+    /// `LeafLitterFeature` (also pink petals and wildflowers): one flower bed of a random size and
+    /// facing; `bed` is its growth-0 south-facing block.
+    FlowerBed { bed: Block },
     /// `HugeMushroomFeature` of a random type (huge_mushroom.rs).
     HugeMushroom,
 }

@@ -16,6 +16,12 @@ impl Range {
     pub fn draw_inclusive(self, random: &mut Mt19937) -> i32 {
         if self.0 >= self.1 { self.0 } else { self.0 + random.next_int(self.1 - self.0 + 1) }
     }
+
+    /// The inlined form (mangrove canopy 1438ef7d0): `min + nextInt(max - min + 1)` whenever
+    /// `min <= max`, so a constant still costs a draw.
+    pub fn draw_inclusive_always(self, random: &mut Mt19937) -> i32 {
+        if self.0 > self.1 { self.0 } else { self.0 + random.next_int(self.1 - self.0 + 1) }
+    }
 }
 
 impl Odds {
@@ -33,7 +39,7 @@ impl Odds {
 
 /// An allow list; empty allows everything.
 pub fn allows(list: &[Block], block: Block) -> bool {
-    list.is_empty() || list.contains(&block)
+    list.is_empty() || list.contains(&block.dry())
 }
 
 /// Plants a tree grows through (`BlockMaterial` replaceable plants).
@@ -54,6 +60,9 @@ pub fn is_replaceable_plant(block: Block) -> bool {
             | Block::ShortDryGrass
             | Block::TallDryGrass
             | Block::Bush
+            | Block::Seagrass
+            | Block::SeagrassBottom
+            | Block::SeagrassTop
     ) || (Block::LeafLitter0South..=Block::LeafLitter3East).contains(&block)
 }
 
@@ -237,6 +246,6 @@ impl Tree {
         if self.may_grow_through.is_empty() {
             return matches!(block, Block::Air | Block::Water);
         }
-        self.may_grow_through.contains(&block) || allows(self.may_replace, block)
+        self.may_grow_through.contains(&block.dry()) || allows(self.may_replace, block)
     }
 }

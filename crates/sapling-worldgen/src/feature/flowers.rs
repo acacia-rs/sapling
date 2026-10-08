@@ -11,6 +11,21 @@ use crate::random::Mt19937;
 
 const TULIPS: [Block; 4] = [Block::RedTulip, Block::OrangeTulip, Block::WhiteTulip, Block::PinkTulip];
 const PLAINS: [Block; 4] = [Block::Poppy, Block::AzureBluet, Block::OxeyeDaisy, Block::Cornflower];
+/// `FlowerFeature::flowerForestFlower` (1438eec60) indexes this list by the noise; the list is
+/// filled at load, its order is Java's flower forest list (oracle).
+const FLOWER_FOREST: [Block; 11] = [
+    Block::Dandelion,
+    Block::Poppy,
+    Block::Allium,
+    Block::AzureBluet,
+    Block::RedTulip,
+    Block::OrangeTulip,
+    Block::WhiteTulip,
+    Block::PinkTulip,
+    Block::OxeyeDaisy,
+    Block::Cornflower,
+    Block::LilyOfTheValley,
+];
 
 /// The diamond of radius 2 the mushroom checks for shade, in BDS's order.
 const SHADE: [[i32; 2]; 13] =
@@ -20,6 +35,10 @@ const SHADE: [[i32; 2]; 13] =
 fn pick(kind: FlowerKind, [x, _, z]: [i32; 3], random: &mut Mt19937) -> Block {
     match kind {
         FlowerKind::Swamp => Block::BlueOrchid,
+        FlowerKind::FlowerForest => {
+            let value = ((noise().value(x as f32 / 48.0, z as f32 / 48.0) + 1.0) * 0.5).clamp(0.0, 0.9999);
+            FLOWER_FOREST[(value * FLOWER_FOREST.len() as f32) as usize]
+        }
         FlowerKind::Plains => {
             let value = noise().value(x as f32 / 200.0, z as f32 / 200.0);
             if (value as f64) < -0.8 {
@@ -38,6 +57,49 @@ fn pick(kind: FlowerKind, [x, _, z]: [i32; 3], random: &mut Mt19937) -> Block {
             }
         }
     }
+}
+
+/// `MeadowFlowerFeature::place` (149e9d1d0, list from its constructor 149e9d080).
+const MEADOW: [Block; 8] = [
+    Block::Allium,
+    Block::Poppy,
+    Block::Cornflower,
+    Block::OxeyeDaisy,
+    Block::AzureBluet,
+    Block::Dandelion,
+    Block::ShortGrass,
+    Block::TallGrass,
+];
+
+/// The legacy noise as a value in [0, 1] (`(n + 1) / 2`, unclamped).
+fn unit_noise(x: f32, z: f32) -> f32 {
+    (noise().value(x, z) + 1.0) * 0.5
+}
+
+/// No draws: a slow noise picks how many (1..=4) noise-chosen flowers form the column's palette,
+/// a fast one picks among them; placed on air where it survives (tall grass with its top).
+pub fn meadow(view: &mut View, [x, y, z]: [i32; 3]) -> bool {
+    let slow = unit_noise(x as f32 * 0.0005, z as f32 * 0.0005);
+    let variety = if slow < 0.0 { 1 } else if slow > 1.0 { 4 } else { (slow * 3.0 + 1.0) as i32 };
+    let palette: Vec<Block> = (0..variety)
+        .map(|i| {
+            let v = unit_noise(i.wrapping_mul(0x3_936D).wrapping_add(x) as f32 * 0.0005, z as f32 * 0.0005).clamp(0.0, 0.999_999_9);
+            MEADOW[(v * 8.0) as usize]
+        })
+        .collect();
+    let pick = if palette.len() == 1 {
+        0
+    } else {
+        (unit_noise(x as f32 * 0.1, z as f32 * 0.1).clamp(0.0, 0.999_999_9) * palette.len() as f32) as usize
+    };
+    let block = palette[pick];
+    if !can_survive(view, [x, y, z], block) || view.block(x, y, z) != Block::Air {
+        return false;
+    }
+    if block == Block::TallGrass {
+        view.set_block(x, y + 1, z, Block::TallGrassTop);
+    }
+    view.set_block(x, y, z, block)
 }
 
 /// Only when the position itself is air (then nothing is drawn).

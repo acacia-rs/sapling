@@ -41,6 +41,7 @@ HARDCODED = {
     'minecraft:legacy:overworld_flower_feature': _LEGACY.format(f'Flower {{ kind: FlowerKind::Overworld, count: {_PATCH_COUNT} }}'),
     'minecraft:legacy:plains_flower_feature': _LEGACY.format(f'Flower {{ kind: FlowerKind::Plains, count: {_PATCH_COUNT} }}'),
     'minecraft:legacy:swamp_flower_feature': _LEGACY.format(f'Flower {{ kind: FlowerKind::Swamp, count: {_PATCH_COUNT} }}'),
+    'minecraft:legacy:flower_forest_flower_feature': _LEGACY.format(f'Flower {{ kind: FlowerKind::FlowerForest, count: {_PATCH_COUNT} }}'),
     'minecraft:legacy:ice_feature': _LEGACY.format('Iceberg'),
     'minecraft:legacy:springs_feature': _LEGACY.format('Springs'),
     'minecraft:ice_patch_feature': _LEGACY.format('IcePatch'),
@@ -56,6 +57,12 @@ HARDCODED = {
     'minecraft:large_dripstone_feature': 'Feature::Speleothem(Speleothem::Large(&DRIPSTONE))',
     # LakeFeature(water, sulfur, [sulfur_spike]) in 1482f4580.
     'minecraft:sulfur_pool': 'Feature::Pool(Pool { liquid: Block::Water, border: Block::Sulfur, avoid: &[Block::SulfurSpike] })',
+    'minecraft:bamboo_feature': _LEGACY.format('Bamboo'),
+    'minecraft:podzol_area_feature': _LEGACY.format('PodzolArea'),
+    'minecraft:vines_feature': _LEGACY.format('Vines'),
+    'minecraft:pale_moss_vegetation_feature': _LEGACY.format('PaleMossVegetation'),
+    'minecraft:eyeblossom_feature': _LEGACY.format('Eyeblossom'),
+    'minecraft:meadow_flower_feature': _LEGACY.format('MeadowFlower'),
 }
 EARLY_OUT = {'none': 'EarlyOut::None', 'first_failure': 'EarlyOut::FirstFailure', 'first_success': 'EarlyOut::FirstSuccess'}
 SEARCH_LOOPS = {'-x': ('x-', 'y+', 'z-'), '+x': ('x+', 'y+', 'z+'), '-y': ('y-', 'z+', 'x-'), '+y': ('y+', 'z+', 'x+'),
