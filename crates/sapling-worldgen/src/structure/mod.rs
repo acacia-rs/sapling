@@ -40,8 +40,11 @@ use crate::density::Density;
 pub use adjust::Adjustments;
 pub use area::BoundingBox;
 pub use kind::StructureKind;
+#[doc(hidden)]
+pub use mineshaft::probe as mineshaft_probe;
 use kind::*;
 use probe::Probe;
+pub use canvas::{Neighbours, Spawners};
 pub use stage::{Placed, rejoin_connections};
 
 const SEA_LEVEL: i32 = 63;

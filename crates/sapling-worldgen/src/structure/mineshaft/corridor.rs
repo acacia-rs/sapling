@@ -38,7 +38,8 @@ impl Corridor {
         Some(Piece { frame: frame(bb, Some(direction), depth), kind: Kind::Corridor(Corridor { rails, spider, sections: span / 5 }) })
     }
 
-    pub fn post_process(&self, f: &Frame, materials: Materials, canvas: &mut Canvas, random: &mut Mt19937) {
+    /// `spawner_placed`: whether the piece placed its spawner, here or in an earlier chunk.
+    pub fn post_process(&self, f: &Frame, materials: Materials, canvas: &mut Canvas, random: &mut Mt19937, spawner_placed: &mut bool) {
         let (air, planks) = (Block::Air, materials.planks());
         let length = self.sections * 5;
         f.generate_box(canvas, (0, 0, 0), (2, 1, length - 1), air, air, false);
@@ -46,12 +47,13 @@ impl Corridor {
         if self.spider {
             f.generate_maybe_box(canvas, random, 0.6, (0, 0, 0), (2, 1, length - 1), (Block::Web, air), false, true);
         }
+        super::probe::mark("sections", random);
         let orientation = f.orientation.unwrap_or(SOUTH) as usize;
-        // BDS stops drawing spawner positions once the piece has placed its spawner.
-        let mut spawner_placed = false;
         for k in 0..self.sections {
             let z = k * 5 + 2;
-            if supported(f, canvas, z) {
+            let support = supported(f, canvas, z);
+            super::probe::mark(if support { "support" } else { "bare" }, random);
+            if support {
                 for x in [0, 2] {
                     for y in 0..=1 {
                         let at = f.world(x, y, z);
@@ -87,12 +89,12 @@ impl Corridor {
                     f.maybe_block_if_not_floating(canvas, random, chance, (x, 2, at - 1), Block::Web);
                 }
             }
-            if self.spider && !spawner_placed {
+            if self.spider && !*spawner_placed {
                 let spawner = random.next_int(3) + base + 1;
                 let (wx, wy, wz) = f.world(1, 0, spawner);
                 if canvas.bb.contains(wx, wy, wz) && canvas.interior(wx, wy, wz) {
                     canvas.set(wx, wy, wz, Block::MobSpawner);
-                    spawner_placed = true;
+                    *spawner_placed = true;
                 }
             }
         }
@@ -100,7 +102,7 @@ impl Corridor {
             for z in 0..length.max(1) {
                 let (wx, wy, wz) = f.world(x, -1, z);
                 if canvas.interior(wx, wy + 1, wz) && matches!(canvas.get(wx, wy, wz), Block::Air | Block::IronChain) {
-                    canvas.set(wx, wy, wz, planks);
+                    canvas.set_unclipped(wx, wy, wz, planks);
                 }
             }
         }
@@ -116,6 +118,7 @@ impl Corridor {
             }
         }
         if self.rails {
+            super::probe::mark("rails", random);
             let rail = if matches!(f.orientation, Some(WEST) | Some(EAST)) { Block::RailEastWest } else { Block::RailNorthSouth };
             for z in 0..length.max(1) {
                 if full_solid(f.get(canvas, 1, -1, z)) {
@@ -141,6 +144,12 @@ pub fn full_solid(block: Block) -> bool {
         && !matches!(block, Block::SnowLayer | Block::Web | Block::MobSpawner | Block::IronChain)
         && !(Block::RailNorthSouth..=Block::DarkOakFence15).contains(&block)
         && !(Block::StoneBrickSlab..=Block::EndPortal).contains(&block)
+}
+
+/// A sturdy bottom centre that is not a falling block (148320130; Java's `canHangChainBelow`):
+/// full cubes, and fences and chains, so a support's fence ends the search with nothing hung.
+fn holds_chain(block: Block) -> bool {
+    (full_solid(block) || (Block::OakFence0..=Block::DarkOakFence15).contains(&block) || block == Block::IronChain) && !block.falls()
 }
 
 /// Air, liquids and the thin plants structures may overwrite (141f5b7e0).
@@ -174,13 +183,13 @@ fn pillar_or_chain(f: &Frame, materials: Materials, canvas: &mut Canvas, (x, z):
         if up {
             let y = top - 1 + j;
             let block = canvas.get(wx, y, wz);
-            if !replaceable(block) && full_solid(block) {
+            if !replaceable(block) && holds_chain(block) {
                 let fence = fence_at(materials, canvas, (wx, top, wz));
                 canvas.set(wx, top, wz, fence);
                 (top + 1..=top + j - 2).for_each(|y| canvas.set(wx, y, wz, Block::IronChain));
                 return;
             }
-            up = y < 319 && j < 21;
+            up = replaceable(block) && y < 319 && j < 21;
         }
         j += 1;
     }

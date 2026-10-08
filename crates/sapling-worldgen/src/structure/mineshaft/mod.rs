@@ -3,10 +3,11 @@
 //! 14831bf70), new-world variant (1.18+ heights, chains, floors under air).
 
 mod corridor;
+pub mod probe;
 mod rooms;
 
 use super::BoundingBox;
-use super::canvas::Canvas;
+use super::canvas::{Canvas, Spawners};
 use super::piece::{Frame, NORTH, SOUTH, WEST};
 use super::placement::MineshaftSeed;
 use crate::biome::ChunkBiomes;
@@ -74,6 +75,7 @@ pub struct Mineshaft {
     pub pieces: Vec<Piece>,
     pub materials: Materials,
     pub bb: BoundingBox,
+    pub start: (i32, i32),
 }
 
 /// `canBeReplaced` (14831c830): pieces never overwrite their own wood, chains or bedrock.
@@ -122,7 +124,7 @@ pub fn generate(seed: &MineshaftSeed, chunk: (i32, i32), mesa: bool, surface: &d
         }
     }
     bb.move_y(offset);
-    Mineshaft { pieces: builder.pieces, materials, bb }
+    Mineshaft { pieces: builder.pieces, materials, bb, start: chunk }
 }
 
 pub(super) struct Builder {
@@ -179,15 +181,22 @@ impl Builder {
 
 impl Mineshaft {
     /// The pieces reaching the chunk, in start order, on the chunk's structure generator.
-    pub fn post_process(&self, canvas: &mut Canvas, random: &mut Mt19937, biomes: &ChunkBiomes) {
+    pub fn post_process(&self, canvas: &mut Canvas, random: &mut Mt19937, biomes: &ChunkBiomes, spawners: &mut Spawners) {
         let column = canvas.bb;
-        for piece in self.pieces.iter().filter(|p| p.frame.bb.intersects(&column)) {
+        for (index, piece) in self.pieces.iter().enumerate().filter(|(_, p)| p.frame.bb.intersects(&column)) {
+            probe::before_piece(self.start, (column.x0 >> 4, column.z0 >> 4), index, random);
             if invalid_location(&piece.frame, canvas, biomes) {
                 continue;
             }
             match &piece.kind {
                 Kind::Room(entrances) => rooms::room(&piece.frame, entrances, canvas),
-                Kind::Corridor(c) => c.post_process(&piece.frame, self.materials, canvas, random),
+                Kind::Corridor(c) => {
+                    let mut placed = spawners.contains(&(self.start, index));
+                    c.post_process(&piece.frame, self.materials, canvas, random, &mut placed);
+                    if placed {
+                        spawners.insert((self.start, index));
+                    }
+                }
                 Kind::Crossing { two_floors, .. } => rooms::crossing(&piece.frame, *two_floors, self.materials, canvas),
                 Kind::Stairs => rooms::stairs(&piece.frame, canvas),
             }

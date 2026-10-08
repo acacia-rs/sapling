@@ -185,6 +185,11 @@ impl OverworldGenerator {
         self.structures.village_pieces(&self.density, (chunk_x, chunk_z))
     }
 
+    #[doc(hidden)]
+    pub fn mineshaft_pieces(&self, chunk_x: i32, chunk_z: i32) -> Vec<(String, structure::BoundingBox)> {
+        self.structures.mineshaft_pieces(&self.density, (chunk_x, chunk_z))
+    }
+
     /// A structure feature placed alone from a chunk over its carved terrain, its structure
     /// generator `skip` draws in, for probes: (position, block, block replaced).
     #[doc(hidden)]

@@ -2,7 +2,7 @@
 //! chunks): writes land in the chunk only, reads may reach the neighbours' loaded terrain.
 
 use std::cell::RefCell;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 
 use super::BoundingBox;
@@ -13,11 +13,28 @@ use crate::terrain::{ChunkShape, MIN_Y};
 
 const TOP: i32 = 319;
 
+/// Spider corridors (start, piece index) that placed their spawner: BDS keeps the flag (+0x5a)
+/// on the piece across the chunks it post-processes in.
+pub type Spawners = HashSet<((i32, i32), usize)>;
+
+/// What a chunk's structure stage reads past it: the neighbours' carved terrain, and the
+/// neighbours BDS post-processed earlier (decoration phases) with their pieces and the
+/// spawners they placed.
+#[derive(Clone, Copy)]
+pub struct Neighbours<'a> {
+    pub carved: &'a dyn Fn(i32, i32, i32) -> Block,
+    pub placed: &'a dyn Fn(i32, i32, i32) -> Block,
+    pub spawners: &'a dyn Fn() -> Spawners,
+}
+
 pub struct Canvas<'a> {
     shape: &'a mut ChunkShape,
     chunk: (i32, i32),
     pub bb: BoundingBox,
     neighbour: &'a dyn Fn(i32, i32, i32) -> Block,
+    placed: Option<&'a dyn Fn(i32, i32, i32) -> Block>,
+    /// Reads past the chunk see `placed` (mineshafts; see stage.rs).
+    pub read_placed: bool,
     /// Light heightmap per column, as `LevelChunk` +0xb80 keeps it.
     heights: RefCell<HashMap<(i32, i32), i32>>,
     /// Writes outside the chunk kept (and read back) while a piece placed whole is being drawn.
@@ -28,12 +45,32 @@ pub struct Canvas<'a> {
     features: Option<&'a ElementWorld<'a>>,
     /// Features' writes into the neighbours: (position, block, block replaced).
     pub spilled: Vec<([i32; 3], Block, Block)>,
+    /// `setBlock` writes into the neighbours (mineshaft floors), as `spilled`.
+    pub unclipped: Vec<([i32; 3], Block, Block)>,
 }
 
 impl<'a> Canvas<'a> {
     pub fn new(shape: &'a mut ChunkShape, chunk: (i32, i32), neighbour: &'a dyn Fn(i32, i32, i32) -> Block) -> Self {
         let bb = BoundingBox::chunk(chunk.0, chunk.1);
-        Self { shape, chunk, bb, neighbour, heights: RefCell::new(HashMap::new()), spill: None, touched: (i32::MAX, i32::MIN), features: None, spilled: Vec::new() }
+        Self {
+            shape,
+            chunk,
+            bb,
+            neighbour,
+            placed: None,
+            read_placed: false,
+            heights: RefCell::new(HashMap::new()),
+            spill: None,
+            touched: (i32::MAX, i32::MIN),
+            features: None,
+            spilled: Vec::new(),
+            unclipped: Vec::new(),
+        }
+    }
+
+    pub fn with_placed(mut self, placed: &'a dyn Fn(i32, i32, i32) -> Block) -> Self {
+        self.placed = Some(placed);
+        self
     }
 
     pub fn with_features(mut self, world: &'a ElementWorld<'a>) -> Self {
@@ -78,6 +115,8 @@ impl<'a> Canvas<'a> {
             self.shape.block((x & 15) as usize, y, (z & 15) as usize)
         } else if let Some(&block) = self.spill.as_ref().and_then(|(_, cells)| cells.get(&(x, y, z))) {
             block
+        } else if let Some(placed) = self.placed.filter(|_| self.read_placed) {
+            placed(x, y, z)
         } else {
             (self.neighbour)(x, y, z)
         }
@@ -103,6 +142,17 @@ impl<'a> Canvas<'a> {
             && area.contains(x, y, z)
         {
             cells.insert((x, y, z), block);
+        }
+    }
+
+    /// `BlockSource::setBlock` past the chunk box: the chunk's own cells, or a write into a
+    /// neighbour that lands where the block read here is still there (structured.rs).
+    pub fn set_unclipped(&mut self, x: i32, y: i32, z: i32, block: Block) {
+        if self.inside(x, z) {
+            self.set(x, y, z, block);
+        } else if (MIN_Y..=TOP).contains(&y) {
+            let seen = self.get(x, y, z);
+            self.unclipped.push(([x, y, z], block, seen));
         }
     }
 

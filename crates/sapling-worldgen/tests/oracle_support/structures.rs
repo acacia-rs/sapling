@@ -100,7 +100,12 @@ pub(super) fn structure_block(bds: &BdsCell, in_area: bool) -> bool {
     if AMBIGUOUS.contains(&name) {
         return in_area;
     }
-    !DECORATION_PARTS.iter().any(|part| name.contains(part)) && !TERRAIN_BLOCKS.contains(&name) && family(name).is_none() && !DECORATION.contains(&name)
+    !decoration(name) && !TERRAIN_BLOCKS.contains(&name) && family(name).is_none()
+}
+
+/// A block only cave decoration, trees or the feature-only families place.
+fn decoration(name: &str) -> bool {
+    DECORATION_PARTS.iter().any(|part| name.contains(part)) || DECORATION.contains(&name)
 }
 
 #[derive(Default)]
@@ -110,6 +115,11 @@ struct Counts {
     /// Placed cells that are not air, and those BDS has too.
     solid_placed: u64,
     solid_hits: u64,
+    /// Non-air placed cells where either side has a decoration block (later stages, or a
+    /// piece's sculk patch) or our later stages reproduce BDS, left out of `own_*`.
+    later: u64,
+    own_placed: u64,
+    own_hits: u64,
     wanted: u64,
     /// Wanted cells where our block is BDS's.
     found: u64,
@@ -144,9 +154,11 @@ impl StructureTally {
         }
     }
 
-    /// One stable cell: our block before and after the structure stage, BDS's, the ported kind
-    /// whose area holds it (what placed it) and the kind of any structure there (what BDS wants).
-    pub fn add(&mut self, before: Block, after: Block, bds: &BdsCell, placer: Option<StructureKind>, kind: Option<StructureKind>) {
+    /// One stable cell: our block before and after the structure stage and after every stage,
+    /// BDS's, the ported kind whose area holds it (what placed it) and the kind of any structure
+    /// there (what BDS wants). A block our later stages place as BDS has it (a monster room's
+    /// cobblestone in a ruin's area) is not wanted from the structure.
+    pub fn add(&mut self, (before, after, last): (Block, Block, Block), bds: &BdsCell, placer: Option<StructureKind>, kind: Option<StructureKind>) {
         if before != after {
             let counts = self.kinds.entry(placer.map_or("unattributed", |k| k.name())).or_default();
             counts.placed += 1;
@@ -154,9 +166,15 @@ impl StructureTally {
             if after != Block::Air {
                 counts.solid_placed += 1;
                 counts.solid_hits += u64::from(bds.is(after));
+                if !bds.is(after) && (bds.is(last) || decoration(&bds.block) || decoration(after.name())) {
+                    counts.later += 1;
+                } else {
+                    counts.own_placed += 1;
+                    counts.own_hits += u64::from(bds.is(after));
+                }
             }
         }
-        if bds.is(before) || !structure_block(bds, kind.is_some()) {
+        if bds.is(before) || (bds.is(last) && !bds.is(after)) || !structure_block(bds, kind.is_some()) {
             return;
         }
         match kind {
@@ -177,17 +195,24 @@ impl StructureTally {
             v.sort_by(|a, b| b.1.cmp(a.1));
             v.iter().take(5).map(|(name, n)| format!("{name} {n}")).collect::<Vec<_>>().join(", ")
         };
-        println!("  structures: kind, precision (hits/placed; non-air only), recall (found/wanted structure blocks), BDS blocks wanted");
+        println!(
+            "  structures: kind, precision (hits/placed; non-air only; non-air without cells later stages cover, and those), \
+             recall (found/wanted structure blocks), BDS blocks wanted"
+        );
         for (kind, c) in &self.kinds {
             let starts = self.starts.get(kind).map_or(String::new(), |s| format!(" starts {s:?}"));
             println!(
-                "    {kind:>16}: precision {:7.3}% ({}/{}; {:.3}% {}/{}), recall {:7.3}% ({}/{}){starts}",
+                "    {kind:>16}: precision {:7.3}% ({}/{}; {:.3}% {}/{}; own {:.3}% {}/{}, {} later), recall {:7.3}% ({}/{}){starts}",
                 percent(c.hits, c.placed),
                 c.hits,
                 c.placed,
                 percent(c.solid_hits, c.solid_placed),
                 c.solid_hits,
                 c.solid_placed,
+                percent(c.own_hits, c.own_placed),
+                c.own_hits,
+                c.own_placed,
+                c.later,
                 percent(c.found, c.wanted),
                 c.found,
                 c.wanted

@@ -122,8 +122,8 @@ it is not a full cube).
   x (x, x + sx) unturned, (x - sz, x) cw90, (x - sx, x) 180, (x, x + sz) ccw90, z likewise; so the
   height points sit one further from the origin than the template's own box (`template::piece_box`).
   That put the oracle's 180-turned tent a block lower than ours (98.0 -> 99.4% precision). Ocean ruins keep
-  the template's own box: giving them this one moved near origin's ruins (+171 wrong cells), so their y
-  scan must read another box (not traced).
+  the template's own box: their y scan (148354700) builds it from the template size turned by the rotation
+  byte (+0x151), x..x+sx-1 unturned, and sinks when more than (x1 - x0) - 2 columns end below height - 3, as ours.
 
 ## Woodland mansions (start 1480a8c20, placer 1480abea0, start postProcess 1480ab380; `src/structure/mansion`)
 Java's 1.11 mansion on BDS's MT, with BDS's own details:

@@ -76,7 +76,7 @@ pub struct Inputs<'a> {
 
 /// When BDS decorates a chunk relative to its neighbours: x and z even first, then x odd, both odd,
 /// z odd. Chunks of one phase are never neighbours (docs/research/worldgen-bds-features.md).
-fn phase((x, z): (i32, i32)) -> u8 {
+pub(crate) fn phase((x, z): (i32, i32)) -> u8 {
     [0, 1, 3, 2][((x & 1) | (z & 1) << 1) as usize]
 }
 

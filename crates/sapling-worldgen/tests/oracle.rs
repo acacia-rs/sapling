@@ -109,7 +109,7 @@ fn compare(seed: i64, world: &str, regions: &[Region]) {
                         dump.cell(at, laked.block(x, y, z), block, (bds, &twin_cell), context, &areas, PORTED, (&primary, &a));
                         if stable {
                             tallies.features.add(laked.block(x, y, z), block, bds);
-                            tallies.structures.add(loaded.block(x, y, z), structured.block(x, y, z), bds, attribute(&ported, at), attribute(&areas, at));
+                            tallies.structures.add((loaded.block(x, y, z), structured.block(x, y, z), block), bds, attribute(&ported, at), attribute(&areas, at));
                             if Some(y) == our_top {
                                 tallies.top.add(block, bds, at, context);
                             }

@@ -50,6 +50,10 @@ Structure feature labels (2026-10-08, structfeat): 145e137d0 `FeaturePoolElement
 pile feature place/block, 141f79610 `TemplateStructurePiece` box, 148358d80 `PillagerOutpostPiece::postProcess`
 (details in worldgen-bds-jigsaw.md and worldgen-bds-templates.md).
 
+Mineshaft labels (2026-10-08, struct3): 141efb070 `StructureFeature::foreachIntersectingStructureStart`, 141ef97c0
+`StructureFeature` ctor, 1415f5900 `BlockSource::getChunk`; block globals 0x14ccdafb8 flowing_lava, 0x14ccdfc68
+iron_chain, 0x14ccd9718 bedrock (details in worldgen-bds-structures.md, Mineshafts).
+
 Feature residue labels (2026-10-08, feat2): 141882f10 `Dimension::getDefaultBiomeId` (vtables 14a75bd80,
 14a75c020, slot 0xc8; nether 14880e9e0 = 8, end 148276900 = 9), 141602f90 `BlockSource::getBiome`, 1438eac70
 `TreeHelper::prepareSpawn`, 1438f2ba0 `MegaTreeTrunk::placeTrunk`, 143bd34c0 `AcaciaTreeTrunk::placeTrunk`,
