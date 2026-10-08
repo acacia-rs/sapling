@@ -131,12 +131,26 @@ impl Element {
     pub fn bbox(&self, (x, y, z): (i32, i32, i32), rotation: Rotation) -> BoundingBox {
         let (sx, sy, sz) = match self.kind {
             ElementKind::Template { template, .. } => template.size,
+            ElementKind::Feature(_) => return feature_bbox((x, y, z), rotation),
             _ => (1, 1, 1),
         };
         let (dx, dy, dz) = rotation.apply((sx - 1, sy - 1, sz - 1));
         BoundingBox::new(x.min(x + dx), y.min(y + dy), z.min(z + dz), x.max(x + dx), y.max(y + dy), z.max(z + dz))
     }
 
+}
+
+/// A feature element's box: its size is (0, 0, 0) (140906d00), which the shared box code
+/// (145e1aa90) turns into a box inverted on every axis, one off the origin by rotation. Such a
+/// box meets one chunk, or none when the origin is on that chunk's edge, and fills no columns.
+fn feature_bbox((x, y, z): (i32, i32, i32), rotation: Rotation) -> BoundingBox {
+    let turn = rotation as usize;
+    let (x0, x1) = if matches!(turn, 1 | 2) { (x + 1, x) } else { (x, x - 1) };
+    let (z0, z1) = if matches!(turn, 2 | 3) { (z + 1, z) } else { (z, z - 1) };
+    BoundingBox::new(x0, y, z0, x1, y - 1, z1)
+}
+
+impl Element {
     /// The element's jigsaws in template order, as placed at `origin`.
     pub fn jigsaws(&self, origin: (i32, i32, i32), rotation: Rotation) -> Vec<JigsawInfo> {
         match &self.kind {

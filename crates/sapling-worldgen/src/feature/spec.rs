@@ -214,6 +214,18 @@ pub enum Legacy {
     MeadowFlower,
     /// `grass_disc_feature` (disk.rs).
     GrassDisc,
+    /// The village piles (pile.rs).
+    Pile(PileBlock),
+}
+
+/// The block of a village pile feature (`hay_pile_feature` and the others, vtable 14a9258d0).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum PileBlock {
+    Hay,
+    Melon,
+    Pumpkin,
+    Snow,
+    Ice,
 }
 
 /// The flower table of a `LegacyFlowerFeature` (1438ef3b0's switch; its forest case is not ported).

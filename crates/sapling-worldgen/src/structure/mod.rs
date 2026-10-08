@@ -42,7 +42,7 @@ pub use area::BoundingBox;
 pub use kind::StructureKind;
 use kind::*;
 use probe::Probe;
-pub use stage::rejoin_connections;
+pub use stage::{Placed, rejoin_connections};
 
 const SEA_LEVEL: i32 = 63;
 

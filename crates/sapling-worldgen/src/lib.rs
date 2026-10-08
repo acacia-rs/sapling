@@ -40,6 +40,9 @@ const LOADED_LIMIT: usize = 256;
 /// Chunk biomes (about 200 kB each), shared by the surface, decoration and the caller.
 const BIOMES_LIMIT: usize = 256;
 
+/// A chunk after its structure pieces, and their features' writes into its neighbours.
+type Pieced = (ChunkShape, Vec<([i32; 3], Block, Block)>);
+
 /// The overworld generator for one world seed.
 pub struct OverworldGenerator {
     seed: i64,
@@ -50,7 +53,7 @@ pub struct OverworldGenerator {
     features: Features,
     structures: structure::Structures,
     carved: SourceCache<(i32, i32), ChunkShape>,
-    pieced: SourceCache<(i32, i32), ChunkShape>,
+    pieced: SourceCache<(i32, i32), Pieced>,
     loaded: SourceCache<(i32, i32), ChunkShape>,
     biomes: SourceCache<(i32, i32), ChunkBiomes>,
 }
@@ -163,25 +166,41 @@ impl OverworldGenerator {
     /// The structure stage (`structurePostProcessChunk`, after carvers and before decoration):
     /// the pieces of every structure reaching the chunk, written inside it only.
     pub fn place_structures(&self, shape: &mut ChunkShape, chunk_x: i32, chunk_z: i32) {
-        if let Some(heights) = self.place_pieces(shape, chunk_x, chunk_z) {
-            let neighbour = |x: i32, y: i32, z: i32| self.pieced(x >> 4, z >> 4).block((x & 15) as usize, y, (z & 15) as usize);
+        let mut heights = self.place_pieces(shape, chunk_x, chunk_z).map(|placed| placed.touched);
+        for (sx, sz) in self.structures.feature_sources(&self.density, (chunk_x, chunk_z)) {
+            let source = self.pieced(sx, sz);
+            for &([x, y, z], block, seen) in source.1.iter().filter(|(p, ..)| (p[0] >> 4, p[2] >> 4) == (chunk_x, chunk_z)) {
+                let (lx, lz) = ((x & 15) as usize, (z & 15) as usize);
+                if shape.block(lx, y, lz) == seen {
+                    shape.set_block(lx, y, lz, block);
+                    heights = Some(heights.map_or((y, y), |(lo, hi)| (lo.min(y), hi.max(y))));
+                }
+            }
+        }
+        if let Some(heights) = heights {
+            let neighbour = |x: i32, y: i32, z: i32| self.pieced(x >> 4, z >> 4).0.block((x & 15) as usize, y, (z & 15) as usize);
             structure::rejoin_connections(shape, (chunk_x, chunk_z), heights, &neighbour);
         }
     }
 
     /// The structure pieces alone, reading past the chunk through the neighbours' carved terrain.
-    fn place_pieces(&self, shape: &mut ChunkShape, chunk_x: i32, chunk_z: i32) -> Option<(i32, i32)> {
+    fn place_pieces(&self, shape: &mut ChunkShape, chunk_x: i32, chunk_z: i32) -> Option<structure::Placed> {
         let neighbour = |x: i32, y: i32, z: i32| self.carved(x >> 4, z >> 4).block((x & 15) as usize, y, (z & 15) as usize);
         let biomes = self.chunk_biomes(chunk_x, chunk_z);
-        self.structures.place(&self.density, shape, (chunk_x, chunk_z), &neighbour, &biomes)
+        let load = |x: i32, z: i32| self.carved(x, z);
+        let biome = |[x, y, z]: [i32; 3]| Some(self.chunk_biomes(x >> 4, z >> 4).biome((x & 15) as usize, y, (z & 15) as usize));
+        let surface = |qx: i32, qz: i32| self.density.preliminary_surface(qx, qz);
+        let features = feature::ElementWorld { load: &load, biome: &biome, surface: &surface };
+        self.structures.place(&self.density, shape, (chunk_x, chunk_z), &neighbour, &biomes, &features)
     }
 
-    /// `carved` plus the structure pieces, for the neighbours' fence connections.
-    fn pieced(&self, chunk_x: i32, chunk_z: i32) -> Arc<ChunkShape> {
+    /// `carved` plus the structure pieces, for the neighbours' fence connections, with the writes
+    /// its pieces' features made past it.
+    fn pieced(&self, chunk_x: i32, chunk_z: i32) -> Arc<Pieced> {
         self.pieced.get((chunk_x, chunk_z), || {
             let mut shape = (*self.carved(chunk_x, chunk_z)).clone();
-            self.place_pieces(&mut shape, chunk_x, chunk_z);
-            shape
+            let spilled = self.place_pieces(&mut shape, chunk_x, chunk_z).map_or_else(Vec::new, |placed| placed.spilled);
+            (shape, spilled)
         })
     }
 
@@ -189,6 +208,30 @@ impl OverworldGenerator {
     /// the structure covers (its pieces where ported, a rough area otherwise).
     pub fn structure_areas(&self, chunk_x: i32, chunk_z: i32) -> Vec<(structure::StructureKind, (i32, i32), structure::BoundingBox)> {
         self.structures.areas_touching(&self.density, (chunk_x, chunk_z))
+    }
+
+    /// Structure pieces' features in the 3x3 chunks around one, for probes: feature, origin.
+    #[doc(hidden)]
+    pub fn structure_features_near(&self, chunk_x: i32, chunk_z: i32) -> Vec<(String, (i32, i32, i32))> {
+        self.structures.feature_pieces(&self.density, (chunk_x, chunk_z))
+    }
+
+    #[doc(hidden)]
+    pub fn village_pieces(&self, chunk_x: i32, chunk_z: i32) -> Vec<String> {
+        self.structures.village_pieces(&self.density, (chunk_x, chunk_z))
+    }
+
+    /// A structure feature placed alone from a chunk over its carved terrain, its structure
+    /// generator `skip` draws in, for probes: (position, block, block replaced).
+    #[doc(hidden)]
+    pub fn structure_feature_writes(&self, name: &str, chunk: (i32, i32), at: [i32; 3], skip: usize) -> Vec<([i32; 3], Block, Block)> {
+        let mut random = random::Mt19937::new(random::LargeFeatureSeed::new(self.seed as u32).chunk(chunk.0, chunk.1));
+        (0..skip).for_each(|_| _ = random.next_u32());
+        let load = |x: i32, z: i32| self.carved(x, z);
+        let biome = |[x, y, z]: [i32; 3]| Some(self.chunk_biomes(x >> 4, z >> 4).biome((x & 15) as usize, y, (z & 15) as usize));
+        let surface = |qx: i32, qz: i32| self.density.preliminary_surface(qx, qz);
+        let world = feature::ElementWorld { load: &load, biome: &biome, surface: &surface };
+        feature::place_element(name, chunk, self.carved(chunk.0, chunk.1), &world, &mut random, at).unwrap_or_default()
     }
 
     /// Whether a structure of `kind` starts in the chunk.

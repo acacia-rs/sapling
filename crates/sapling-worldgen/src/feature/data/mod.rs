@@ -3,5 +3,5 @@
 mod features;
 mod rules;
 
-pub use features::FEATURES;
+pub use features::{ELEMENTS, FEATURES};
 pub use rules::RULES;

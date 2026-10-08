@@ -292,4 +292,42 @@ pub static FEATURES: &[Feature] = &[
     Feature::Multiface(Multiface { block: Block::GlowLichen1, search_range: 20, faces: &[1, 2, 5, 3, 4], can_place_on: &[Block::Stone, Block::Granite, Block::Diorite, Block::Andesite, Block::DripstoneBlock, Block::Calcite, Block::Tuff, Block::Deepslate, Block::Sulfur, Block::Cinnabar], spread_chance: 0.5 }), // 285 minecraft:glow_lichen_feature
     Feature::Ore(Ore { count: 33, discard_on_air: 0.0, rules: &[ReplaceRule { places: Block::Deepslate, may_replace: &[Block::Stone] }] }), // 286 minecraft:deepslate_feature
     Feature::Unported, // 287 (unported)
+    Feature::Legacy(Legacy::Pile(PileBlock::Melon)), // 288 minecraft:melon_pile_feature
+    Feature::Legacy(Legacy::Pile(PileBlock::Pumpkin)), // 289 minecraft:pumpkin_pile_feature
+    Feature::Legacy(Legacy::Pile(PileBlock::Hay)), // 290 minecraft:hay_pile_feature
+    Feature::Legacy(Legacy::Pile(PileBlock::Snow)), // 291 minecraft:snow_pile_feature
+    Feature::Legacy(Legacy::Pile(PileBlock::Ice)), // 292 minecraft:ice_pile_feature
+    Feature::SculkPatch(SculkPatch { can_place_on: &[], cursors: 10, charge: 32, attempts: 64, growth_rounds: 0, spread_rounds: 1, catalyst_chance: 0.5, extra_growths: Range(1, 3) }), // 293 minecraft:sculk_patch_feature_ancient_city
+];
+
+/// The jigsaw pools' feature elements: feature name, index.
+pub static ELEMENTS: &[(&str, usize)] = &[
+    ("select_oak_tree_feature", 142),
+    ("savanna_tree_feature", 172),
+    ("select_spruce_tree_feature", 152),
+    ("pine_tree_feature", 192),
+    ("fern_feature", 73),
+    ("cactus_feature", 56),
+    ("melon_pile_feature", 288),
+    ("pumpkin_pile_feature", 289),
+    ("hay_pile_feature", 290),
+    ("snow_pile_feature", 291),
+    ("ice_pile_feature", 292),
+    ("scatter_sweet_berry_bush_feature", 50),
+    ("sculk_patch_feature_ancient_city", 293),
+    ("legacy:bamboo_jungle_tree_feature", 187),
+    ("birch_tree_feature", 134),
+    ("birch_tree_with_optional_beehive_feature", 133),
+    ("cherry_tree_feature", 38),
+    ("cherry_tree_with_beehive_feature", 39),
+    ("fancy_oak_tree_feature", 140),
+    ("fancy_oak_tree_with_optional_beehive_feature", 139),
+    ("jungle_tree_feature", 204),
+    ("mega_jungle_tree_feature", 189),
+    ("mega_pine_tree_feature", 236),
+    ("oak_tree_feature", 149),
+    ("pale_oak_tree_feature", 175),
+    ("spruce_tree_feature", 158),
+    ("super_birch_tree_feature", 226),
+    ("mega_spruce_tree_feature", 191),
 ];

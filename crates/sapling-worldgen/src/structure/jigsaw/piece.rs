@@ -10,6 +10,7 @@ use super::super::template::{JavaPlacement, Placement, Rotation, named};
 use super::assemble::middle;
 use super::element::{Element, ElementKind, Projection};
 use crate::block::Block;
+use crate::feature::element_random;
 use crate::random::Mt19937;
 
 #[derive(Clone)]
@@ -62,10 +63,11 @@ impl Piece {
     /// The piece within the canvas's chunk; `seed` is the chunk's structure seed and `random` the
     /// chunk's structure generator, which the bottom fill draws from.
     pub fn post_process(&self, canvas: &mut Canvas, seed: u32, random: &mut Mt19937, class: &dyn PieceClass, heights: Heights) {
-        let ElementKind::Template { template, rules, projection, post, .. } = &self.element.kind else {
-            // TODO: feature elements (trees, piles, sculk patches) place features.
+        if let ElementKind::Feature(name) = &self.element.kind {
+            self.place_feature(canvas, name, random, class);
             return;
-        };
+        }
+        let ElementKind::Template { template, rules, projection, post, .. } = &self.element.kind else { return };
         if *projection == Projection::TerrainMatching {
             self.place_matching(canvas, seed, heights);
             return;
@@ -97,8 +99,26 @@ impl Piece {
         }
     }
 
-    /// A v2 piece within the canvas's chunk (`template::JavaPlacement`).
+    /// A feature element (145e141d0): rigid, so the class's check first; the feature at the origin
+    /// with the chunk's generator, then both foundation flags (the element's +0x121 is 3).
+    fn place_feature(&self, canvas: &mut Canvas, name: &str, random: &mut Mt19937, class: &dyn PieceClass) {
+        if !class.can_place(canvas, &self.bb) {
+            return;
+        }
+        let (x, y, z) = self.origin;
+        canvas.place_feature(name, random, [x, y, z]);
+        self.fill_bottom(canvas, random, class);
+        self.plug_holes(canvas, class);
+    }
+
+    /// A v2 piece within the canvas's chunk (`template::JavaPlacement`); a feature element draws
+    /// from its own generator (145e144c0).
     pub fn post_process_java(&self, canvas: &mut Canvas, level_seed: i64) {
+        if let ElementKind::Feature(name) = &self.element.kind {
+            let (x, y, z) = self.origin;
+            canvas.place_feature(name, &mut element_random([x, y, z]), [x, y, z]);
+            return;
+        }
         let ElementKind::Template { template, rules, java: Some(capped), .. } = &self.element.kind else { return };
         let placement = JavaPlacement { rotation: self.rotation, rules, capped, level_seed };
         let blocks = placement.blocks(template, self.origin, &canvas.bb, &|x, y, z| canvas.get(x, y, z));

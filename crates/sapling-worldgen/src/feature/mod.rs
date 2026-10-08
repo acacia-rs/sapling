@@ -10,6 +10,7 @@ mod cave_spec;
 mod data;
 mod decorate;
 mod disk;
+mod element;
 mod flowers;
 mod freeze;
 mod geode;
@@ -27,6 +28,7 @@ mod monster_room;
 mod multiface;
 mod ore;
 mod pale;
+mod pile;
 mod place;
 mod plants;
 mod pool;
@@ -47,6 +49,7 @@ use crate::cache::SourceCache;
 use crate::random::LargeFeatureSeed;
 use crate::terrain::ChunkShape;
 
+pub(crate) use element::{ElementWorld, element_random, place_element};
 use view::{ChunkWrites, REACH, View};
 
 /// Source chunks' writes are a few hundred kB each.
