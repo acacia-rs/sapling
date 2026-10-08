@@ -54,6 +54,7 @@ impl Legacy {
             Legacy::Springs => super::springs::springs(ctx, at),
             Legacy::IcePatch => super::ice_spike::ice_patch(ctx.view, ctx.random, at),
             Legacy::IceSpike => super::ice_spike::ice_spike(ctx.view, ctx.random, at),
+            Legacy::SeaPickle => super::aquatic::sea_pickle(ctx.view, ctx.random, at),
         }
     }
 }

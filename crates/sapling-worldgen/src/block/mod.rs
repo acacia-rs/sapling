@@ -32,6 +32,8 @@ macro_rules! blocks {
 mod table;
 #[macro_use]
 mod cave_table;
+#[macro_use]
+mod multiface_table;
 mod plant_table;
 
 pub use plant_table::Block;
@@ -92,7 +94,23 @@ impl Block {
 
     /// Plants placed by features: no collision, no light blocking, never terrain.
     pub fn is_plant(self) -> bool {
-        self >= Block::ShortGrass
+        self >= Block::ShortGrass || (Block::GlowLichen1..=Block::SculkVein63).contains(&self)
+    }
+
+    /// FacingID (down, up, north, south, west, east) to `multi_face_direction_bits`.
+    pub const FACE_BITS: [u8; 6] = [1, 2, 16, 4, 8, 32];
+
+    /// A multiface block as its family's first variant and its face bits.
+    pub fn multiface(self) -> Option<(Block, u8)> {
+        [Block::GlowLichen1, Block::SculkVein1]
+            .into_iter()
+            .find(|&first| (first as usize..first as usize + 63).contains(&(self as usize)))
+            .map(|first| (first, (self as usize - first as usize + 1) as u8))
+    }
+
+    /// The variant of the family of `first` with face bits `bits` (1..=63).
+    pub fn with_faces(first: Block, bits: u8) -> Block {
+        Block::ALL[first as usize + bits as usize - 1]
     }
 
     /// Plants that stand in water: BDS saves them with water in the second layer.
@@ -137,6 +155,14 @@ impl Block {
     /// base, merge), hanging or standing.
     pub fn speleothem(self, thickness: usize, hanging: bool) -> Block {
         Block::ALL[self as usize + thickness * 2 + usize::from(hanging)]
+    }
+
+    pub fn sea_pickle(count: i32) -> Block {
+        Block::ALL[Block::SeaPickle0 as usize + count as usize]
+    }
+
+    pub fn is_sea_pickle(self) -> bool {
+        (Block::SeaPickle0..=Block::SeaPickle3).contains(&self)
     }
 
     /// The block for a `minecraft:` name, without states.

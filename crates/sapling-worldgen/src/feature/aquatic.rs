@@ -107,3 +107,27 @@ pub fn seagrass(ctx: &mut Ctx, at: [i32; 3], count: i32, tall: f32) -> bool {
     }
     true
 }
+
+/// `SeaPickleFeature::place` (149d61020): down to a solid block, then four tries at columns
+/// 0..5 off it (z drawn before x), each a random cluster count on the first water above.
+pub fn sea_pickle(view: &mut View, random: &mut Mt19937, at: [i32; 3]) -> bool {
+    let [x, mut y, z] = at;
+    while !solid(view, x, y, z) && !view.block(x, y, z).is_sea_pickle() && y > MIN_Y {
+        y -= 1;
+    }
+    if !solid(view, x, y, z) {
+        return false;
+    }
+    for _ in 0..4 {
+        let dz = random.next_int(6);
+        let dx = random.next_int(6);
+        let count = random.next_int(4);
+        let mut p = [x + dx, y, z + dz];
+        climb(view, &mut p);
+        let [px, py, pz] = p;
+        if view.block(px, py, pz) == Block::Water && solid(view, px, py - 1, pz) {
+            view.set_block(px, py, pz, Block::sea_pickle(count));
+        }
+    }
+    true
+}

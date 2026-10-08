@@ -12,7 +12,16 @@ use oracle_support::{BdsCell, bds_cell, open};
 use sapling_leveldb::ChunkKey;
 use sapling_worldgen::{Block, ChunkShape, OverworldGenerator};
 
+/// `MARK=name:c,...` prints those blocks as their own characters.
+fn mark(name: &str) -> Option<char> {
+    let marks = std::env::var("MARK").ok()?;
+    marks.split(',').find_map(|m| m.split_once(':').filter(|(n, _)| *n == name).and_then(|(_, c)| c.chars().next()))
+}
+
 fn ours_char(block: Block) -> char {
+    if let Some(c) = mark(block.name()) {
+        return c;
+    }
     match block.liquid_depth() {
         Some(0) if block.is_lava() => 'L',
         Some(_) if block.is_lava() => 'l',
@@ -25,6 +34,9 @@ fn ours_char(block: Block) -> char {
 }
 
 fn bds_char(cell: &BdsCell) -> char {
+    if let Some(c) = mark(&cell.block) {
+        return c;
+    }
     let depth: Option<u32> = cell.states.strip_prefix("liquid_depth=").and_then(|d| d.parse().ok());
     match (cell.block.as_str(), depth) {
         ("lava" | "flowing_lava", Some(0)) => 'L',

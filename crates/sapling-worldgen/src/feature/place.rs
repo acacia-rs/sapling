@@ -44,6 +44,7 @@ impl Feature {
             Feature::Lush(lush) => lush.place(ctx, at),
             Feature::Speleothem(speleothem) => speleothem.place(ctx, at),
             Feature::Multiface(multiface) => multiface.place(ctx, at),
+            Feature::SculkPatch(patch) => patch.place(ctx, at),
             Feature::SurfaceThreshold(threshold) => threshold.place(ctx, at),
             Feature::PartiallyExposedBlob(blob) => blob.place(ctx, at),
             Feature::Pool(pool) => pool.place(ctx, at),

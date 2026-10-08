@@ -45,6 +45,7 @@ HARDCODED = {
     'minecraft:legacy:springs_feature': _LEGACY.format('Springs'),
     'minecraft:ice_patch_feature': _LEGACY.format('IcePatch'),
     'minecraft:ice_spike_feature': _LEGACY.format('IceSpike'),
+    'minecraft:pickle_feature': _LEGACY.format('SeaPickle'),
     # Speleothems: blocks, cluster heights and wetness (mean, deviation, min, max) from 1482f4580.
     'minecraft:pointed_dripstone_feature': 'Feature::Speleothem(Speleothem::Pointed(&DRIPSTONE))',
     'minecraft:sulfur_spike_feature': 'Feature::Speleothem(Speleothem::Pointed(&SULFUR))',

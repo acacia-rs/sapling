@@ -11,6 +11,10 @@ macro_rules! with_cave_blocks {
             DripstoneBlock => "dripstone_block" "",
             Magma => "magma" "",
             MobSpawner => "mob_spawner" "",
+            Sculk => "sculk" "",
+            SculkCatalyst => "sculk_catalyst" "bloom=0",
+            SculkSensor => "sculk_sensor" "sculk_sensor_phase=0",
+            SculkShrieker => "sculk_shrieker" "active=0,can_summon=1",
             // By Bedrock's Direction: south, west, north, east (`Block::CHESTS`).
             ChestSouth => "chest" "minecraft:cardinal_direction=south",
             ChestWest => "chest" "minecraft:cardinal_direction=west",

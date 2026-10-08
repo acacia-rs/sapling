@@ -2,7 +2,7 @@
 //! waterlogged ones from `Seagrass` on, kelp from `Kelp0` (`is_plant`, `is_waterlogged`,
 //! `is_kelp`). The `...Wet` dripleaves are the same states with water in the second layer.
 
-with_cave_blocks! {
+with_multiface_blocks! {
     ShortGrass => "short_grass" "",
     Fern => "fern" "",
     TallGrass => "tall_grass" "upper_block_bit=0",
@@ -104,19 +104,6 @@ with_cave_blocks! {
     FloweringAzalea => "flowering_azalea" "",
     SporeBlossom => "spore_blossom" "",
     HangingRoots => "hanging_roots" "",
-    // Multiface blocks on one face, in FacingID order (`Block::faced`).
-    GlowLichenDown => "glow_lichen" "multi_face_direction_bits=1",
-    GlowLichenUp => "glow_lichen" "multi_face_direction_bits=2",
-    GlowLichenNorth => "glow_lichen" "multi_face_direction_bits=16",
-    GlowLichenSouth => "glow_lichen" "multi_face_direction_bits=4",
-    GlowLichenWest => "glow_lichen" "multi_face_direction_bits=8",
-    GlowLichenEast => "glow_lichen" "multi_face_direction_bits=32",
-    SculkVeinDown => "sculk_vein" "multi_face_direction_bits=1",
-    SculkVeinUp => "sculk_vein" "multi_face_direction_bits=2",
-    SculkVeinNorth => "sculk_vein" "multi_face_direction_bits=16",
-    SculkVeinSouth => "sculk_vein" "multi_face_direction_bits=4",
-    SculkVeinWest => "sculk_vein" "multi_face_direction_bits=8",
-    SculkVeinEast => "sculk_vein" "multi_face_direction_bits=32",
     CaveVines0 => "cave_vines" "growing_plant_age=0",
     CaveVines17 => "cave_vines" "growing_plant_age=17",
     CaveVines18 => "cave_vines" "growing_plant_age=18",
@@ -173,6 +160,11 @@ with_cave_blocks! {
     SmallDripleafTopWestWet => "small_dripleaf_block" "minecraft:cardinal_direction=west,upper_block_bit=1",
     SmallDripleafTopNorthWet => "small_dripleaf_block" "minecraft:cardinal_direction=north,upper_block_bit=1",
     SmallDripleafTopEastWet => "small_dripleaf_block" "minecraft:cardinal_direction=east,upper_block_bit=1",
+    // By `cluster_count` (`Block::sea_pickle`).
+    SeaPickle0 => "sea_pickle" "cluster_count=0,dead_bit=0",
+    SeaPickle1 => "sea_pickle" "cluster_count=1,dead_bit=0",
+    SeaPickle2 => "sea_pickle" "cluster_count=2,dead_bit=0",
+    SeaPickle3 => "sea_pickle" "cluster_count=3,dead_bit=0",
     Kelp0 => "kelp" "kelp_age=0",
     Kelp1 => "kelp" "kelp_age=1",
     Kelp2 => "kelp" "kelp_age=2",

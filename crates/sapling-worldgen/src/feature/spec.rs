@@ -1,6 +1,6 @@
 //! The shapes of transcribed feature rules and features (data/, scripts/features_to_rust.py).
 
-pub use super::cave_spec::{GrowingPlant, Multiface, PartiallyExposedBlob, SnapToSurface, Surface, SurfaceThreshold, VegetationPatch};
+pub use super::cave_spec::{GrowingPlant, Multiface, PartiallyExposedBlob, SculkPatch, SnapToSurface, Surface, SurfaceThreshold, VegetationPatch};
 pub use super::lush::Lush;
 pub use super::pool::Pool;
 pub use super::speleothem::{DRIPSTONE, SULFUR, Speleothem};
@@ -138,6 +138,7 @@ pub enum Feature {
     /// Pointed dripstone and sulfur spikes (speleothem/).
     Speleothem(Speleothem),
     Multiface(Multiface),
+    SculkPatch(SculkPatch),
     SurfaceThreshold(SurfaceThreshold),
     PartiallyExposedBlob(PartiallyExposedBlob),
     /// `LakeFeature` placed by a rule (pool.rs).
@@ -200,6 +201,8 @@ pub enum Legacy {
     /// `ice_patch_feature`, `ice_spike_feature` (ice_spike.rs).
     IcePatch,
     IceSpike,
+    /// `pickle_feature` (aquatic.rs).
+    SeaPickle,
 }
 
 /// The flower table of a `LegacyFlowerFeature` (1438ef3b0's switch; the forest and flower forest

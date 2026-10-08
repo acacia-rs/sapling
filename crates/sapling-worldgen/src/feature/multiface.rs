@@ -1,22 +1,15 @@
 //! `MultifaceFeature::place` (143b83e50, attach 143b84880) and `SurfaceRelativeThresholdFeature`
 //! (143bc69b0). BDS shuffles the faces with a thread-local generator (nondeterministic: the
 //! oracle's two runs disagree on them); this keeps their pushed order, so which face a block takes
-//! can differ but whether a cell gets one does not. Spreads use that generator too and are left
-//! out; their `nextFloat` gate on the placing generator is drawn.
+//! can differ but whether a cell gets one does not. A spread (1465e9360) tries the directions in a
+//! thread-local order too: it is only placed when exactly one direction can take it.
 
 use super::cave_spec::{Multiface, SurfaceThreshold};
 use super::data::FEATURES;
 use super::place::Ctx;
+use super::spreader::{self, Config, placement, step};
 use crate::block::Block;
 use crate::density::NO_SURFACE;
-
-/// FacingID offsets: down, up, north, south, west, east.
-const FACING: [[i32; 3]; 6] = [[0, -1, 0], [0, 1, 0], [0, 0, -1], [0, 0, 1], [-1, 0, 0], [1, 0, 0]];
-
-fn step([x, y, z]: [i32; 3], facing: usize) -> [i32; 3] {
-    let [dx, dy, dz] = FACING[facing];
-    [x + dx, y + dy, z + dz]
-}
 
 fn open(block: Block) -> bool {
     block == Block::Air || (block.is_fluid() && !block.is_lava())
@@ -45,12 +38,16 @@ impl Multiface {
         None
     }
 
-    fn is_own(&self, block: Block) -> bool {
-        (self.block as usize..self.block as usize + 6).contains(&(block as usize))
+    fn family(&self) -> Block {
+        self.block.multiface().map_or(self.block, |(family, _)| family)
     }
 
-    /// The first face whose neighbour `can_place_on` takes decides: the block on it when that face
-    /// is sturdy and the cell changes (then the spread gate is drawn), else a failure.
+    fn is_own(&self, block: Block) -> bool {
+        block.multiface().is_some_and(|(family, _)| family == self.family())
+    }
+
+    /// The first face whose neighbour `can_place_on` takes decides: the block gains it when that
+    /// face is sturdy and the cell changes (then the spread gate is drawn), else a failure.
     fn attach(&self, ctx: &mut Ctx, at: [i32; 3], faces: &[usize]) -> bool {
         let existing = ctx.view.block(at[0], at[1], at[2]);
         let Some(&face) = faces.iter().find(|&&face| {
@@ -59,14 +56,23 @@ impl Multiface {
         }) else {
             return false;
         };
-        let [sx, sy, sz] = step(at, face);
-        let placed = if super::lush::sturdy(ctx.view.block(sx, sy, sz)) && !self.is_own(existing) { self.block.faced(face) } else { existing };
+        let placed = placement(ctx.view, self.family(), at, existing, face);
         if placed == existing {
             return false;
         }
         ctx.view.set_block(at[0], at[1], at[2], placed);
-        ctx.random.next_float();
+        if ctx.random.next_float() < self.spread_chance {
+            self.spread_one_way(ctx, at, placed, face);
+        }
         true
+    }
+
+    fn spread_one_way(&self, ctx: &mut Ctx, at: [i32; 3], state: Block, from: usize) {
+        let config = if self.family() == Block::GlowLichen1 { Config::Lichen } else { Config::Vein };
+        let mut targets = (0..6).filter_map(|to| spreader::spread_target(config, ctx.view, state, at, from, to));
+        if let (Some((cell, _, block)), None) = (targets.next(), targets.next()) {
+            ctx.view.set_block(cell[0], cell[1], cell[2], block);
+        }
     }
 }
 

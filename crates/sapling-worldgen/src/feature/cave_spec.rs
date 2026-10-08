@@ -28,6 +28,21 @@ pub struct Multiface {
     /// FacingIDs in the order the flags push them: floor, ceiling, then walls north, east, south, west.
     pub faces: &'static [usize],
     pub can_place_on: &'static [Block],
+    pub spread_chance: f32,
+}
+
+/// `minecraft:sculk_patch_feature` (143ba12e0; sculk/).
+#[derive(Debug)]
+pub struct SculkPatch {
+    /// Empty: any neighbour with BDS's solid flag.
+    pub can_place_on: &'static [Block],
+    pub cursors: i32,
+    pub charge: i32,
+    pub attempts: i32,
+    pub growth_rounds: i32,
+    pub spread_rounds: i32,
+    pub catalyst_chance: f32,
+    pub extra_growths: Range,
 }
 
 /// `minecraft:surface_relative_threshold_feature` (143bc69b0): `feature` only more than

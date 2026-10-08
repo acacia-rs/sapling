@@ -4,7 +4,8 @@ src/feature/lush.rs."""
 from blocks_data import BLOCKS, NotPorted, block
 
 PORTED = {'minecraft:snap_to_surface_feature', 'minecraft:vegetation_patch_feature', 'minecraft:growing_plant_feature',
-          'minecraft:multiface_feature', 'minecraft:surface_relative_threshold_feature', 'minecraft:partially_exposed_blob_feature'}
+          'minecraft:multiface_feature', 'minecraft:surface_relative_threshold_feature', 'minecraft:partially_exposed_blob_feature',
+          'minecraft:sculk_patch_feature'}
 FACES = ['down', 'up', 'north', 'south', 'west', 'east']
 _BIG_DRIPLEAVES = ['south', 'west', 'north', 'east']
 SURFACES = {'ceiling': 'Ceiling', 'floor': 'Floor', 'random_horizontal': 'RandomHorizontal', 'random_vertical': 'RandomVertical'}
@@ -71,7 +72,15 @@ def rust(kind, body, index):
         faces = ([0] if body['can_place_on_floor'] else []) + ([1] if body['can_place_on_ceiling'] else []) \
             + ([2, 5, 3, 4] if body['can_place_on_wall'] else [])
         return (f'Feature::Multiface(Multiface {{ block: {block(body["places_block"])}, search_range: {int(body["search_range"])}, '
-                f'faces: &{faces}, can_place_on: {every_state(body.get("can_place_on", []))} }})')
+                f'faces: &{faces}, can_place_on: {every_state(body.get("can_place_on", []))}, '
+                f'spread_chance: {float(body.get("chance_of_spreading", 0.5))!r} }})')
+    if kind == 'minecraft:sculk_patch_feature':
+        extra = body.get('extra_growth_chance', {'range_min': 0, 'range_max': 0})
+        return (f'Feature::SculkPatch(SculkPatch {{ can_place_on: {every_state(body.get("can_place_sculk_patch_on", []))}, '
+                f'cursors: {int(body["cursor_count"])}, charge: {int(body["charge_amount"])}, '
+                f'attempts: {int(body["spread_attempts"])}, growth_rounds: {int(body["growth_rounds"])}, '
+                f'spread_rounds: {int(body["spread_rounds"])}, catalyst_chance: {float(body["central_block_placement_chance"])!r}, '
+                f'extra_growths: {rng(extra)} }})')
     if kind == 'minecraft:partially_exposed_blob_feature':
         return (f'Feature::PartiallyExposedBlob(PartiallyExposedBlob {{ block: {block(body["places_block"])}, '
                 f'radius: {int(body["placement_radius_around_floor"])}, '
