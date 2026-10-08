@@ -176,10 +176,15 @@ trial chamber shows as 5710 wanted cells (tuff bricks, waxed copper, chiseled tu
 Precision (non-air) / recall: desert pyramid 100/99.7%, swamp hut 100/99.2%, jungle temple 99.9/78% (misses are
 vines and features), monument 98.4/99.8% (water against kelp), stronghold 96.5/71% (the rest under trial chambers,
 a mineshaft and village blocks).
-Known gaps: eroded badlands' mesa mineshafts (BDS places nothing there; ours a room at y 93: the height getter
-(createStructureStart's param_7) gives the same value as ours elsewhere; unresolved), rails and webs desync in a
-few corridors (frozen ocean 79% non-air), cross-chunk reads use the neighbours' carved terrain; plains villages
-near rivers (the six /locate misses) not looked into.
+Mineshafts sharing a chunk run in descending start order (BDS's hash-map visit order; frozen ocean non-air
+79 -> 83%, mangrove 81 -> 87%); a spider corridor stops drawing spawner positions once it placed one (+0x5a,
+which BDS also keeps across chunks: not modelled, our chunks are re-run for neighbours). Monument double Y rooms
+open their floor on the south bit (148346980), a BDS quirk.
+Known gaps: eroded badlands' mesa mineshafts (BDS shows none; ours sit at y 93, mostly in a canyon: 81 visible
+cells; the mesa test, box and preliminary surface (80-128 there) match our reading, cause not found), remaining
+rail/web desync, cross-chunk reads use the neighbours' carved terrain. Plains villages near rivers (the six
+/locate misses): VillageFeature::isFeatureChunk (1480a80e0) is containsOnly(x*16+8, prelim surface or 1, z*16+8,
+r 2), as ours; locate (141efb740) adds a flag-gated per-chunk filter (feature +0x1d8, vt 0x28) not identified.
 
 ## Prior art and licences
 Bedrock finders (scratchpad `st/prior-art.md`): bedrock-dev/MCBEStructureFinder (MIT, pre-1.18), stirante/
