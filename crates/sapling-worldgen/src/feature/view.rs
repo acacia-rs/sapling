@@ -145,10 +145,14 @@ impl<'a> View<'a> {
         written
     }
 
-    /// False, writing nothing, outside the world's height and the writable region.
+    /// False, writing nothing, outside the world's height and the writable region, and when the
+    /// block is already there (`BlockSource::setBlock` 1415f6ae0 reports whether the block changed).
     pub fn set_block_quiet(&mut self, x: i32, y: i32, z: i32, block: Block) -> bool {
         let Some((slot, index)) = self.locate(x, y, z) else { return false };
         let seen = self.read(slot, index);
+        if seen == block {
+            return false;
+        }
         let mut shapes = self.shapes.borrow_mut();
         let shape = shapes[slot].as_mut().expect("read just above");
         Arc::make_mut(shape).set_at(index, block);

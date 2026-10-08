@@ -18,8 +18,8 @@ impl MangroveCanopy {
         if anchor.candidates.is_empty() {
             return;
         }
-        let height = self.height.draw_inclusive(random);
-        let radius = self.radius.draw_inclusive(random);
+        let height = self.height.draw_inclusive_always(random);
+        let radius = self.radius.draw_inclusive_always(random);
         let mut leaves = Vec::new();
         for &[x, y, z] in &anchor.candidates {
             for _ in 0..self.attempts {

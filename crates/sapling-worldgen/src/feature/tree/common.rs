@@ -16,6 +16,12 @@ impl Range {
     pub fn draw_inclusive(self, random: &mut Mt19937) -> i32 {
         if self.0 >= self.1 { self.0 } else { self.0 + random.next_int(self.1 - self.0 + 1) }
     }
+
+    /// The inlined form (mangrove canopy 1438ef7d0): `min + nextInt(max - min + 1)` whenever
+    /// `min <= max`, so a constant still costs a draw.
+    pub fn draw_inclusive_always(self, random: &mut Mt19937) -> i32 {
+        if self.0 > self.1 { self.0 } else { self.0 + random.next_int(self.1 - self.0 + 1) }
+    }
 }
 
 impl Odds {
