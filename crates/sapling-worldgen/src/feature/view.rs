@@ -150,6 +150,7 @@ impl<'a> View<'a> {
     pub fn set_block_quiet(&mut self, x: i32, y: i32, z: i32, block: Block) -> bool {
         let Some((slot, index)) = self.locate(x, y, z) else { return false };
         let seen = self.read(slot, index);
+        let block = if seen == Block::Water { block.into_water() } else { block };
         if seen == block {
             return false;
         }

@@ -143,6 +143,7 @@ with_solid_blocks! {
     Seagrass => "seagrass" "sea_grass_type=default",
     SeagrassBottom => "seagrass" "sea_grass_type=double_bot",
     SeagrassTop => "seagrass" "sea_grass_type=double_top",
+    MangroveRootsWet => "mangrove_roots" "",
     BigDripleafSouthWet => "big_dripleaf" "big_dripleaf_head=0,big_dripleaf_tilt=none,minecraft:cardinal_direction=south",
     BigDripleafWestWet => "big_dripleaf" "big_dripleaf_head=0,big_dripleaf_tilt=none,minecraft:cardinal_direction=west",
     BigDripleafNorthWet => "big_dripleaf" "big_dripleaf_head=0,big_dripleaf_tilt=none,minecraft:cardinal_direction=north",

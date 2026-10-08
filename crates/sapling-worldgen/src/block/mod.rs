@@ -120,7 +120,26 @@ impl Block {
 
     /// The feature blocks that are full blocks: they block motion and light.
     pub fn is_crop_block(self) -> bool {
-        matches!(self, Block::Cactus | Block::MelonBlock | Block::PumpkinSouth | Block::PumpkinWest | Block::PumpkinNorth | Block::PumpkinEast)
+        matches!(
+            self,
+            Block::Cactus | Block::MelonBlock | Block::PumpkinSouth | Block::PumpkinWest | Block::PumpkinNorth | Block::PumpkinEast | Block::MangroveRootsWet
+        )
+    }
+
+    /// A waterlogged twin as the block a descriptor names (`BlockDescriptor` ignores the liquid).
+    pub fn dry(self) -> Block {
+        match self {
+            Block::MangroveRootsWet => Block::MangroveRoots,
+            block => block,
+        }
+    }
+
+    /// The block written over water: waterloggable blocks keep it (`BlockSource::setBlock`).
+    pub fn into_water(self) -> Block {
+        match self {
+            Block::MangroveRoots => Block::MangroveRootsWet,
+            block => block,
+        }
     }
 
     /// A down-facing bud turned to `face` (FacingID 0..6).

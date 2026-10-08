@@ -39,7 +39,7 @@ impl Odds {
 
 /// An allow list; empty allows everything.
 pub fn allows(list: &[Block], block: Block) -> bool {
-    list.is_empty() || list.contains(&block)
+    list.is_empty() || list.contains(&block.dry())
 }
 
 /// Plants a tree grows through (`BlockMaterial` replaceable plants).
@@ -243,6 +243,6 @@ impl Tree {
         if self.may_grow_through.is_empty() {
             return matches!(block, Block::Air | Block::Water);
         }
-        self.may_grow_through.contains(&block) || allows(self.may_replace, block)
+        self.may_grow_through.contains(&block.dry()) || allows(self.may_replace, block)
     }
 }
