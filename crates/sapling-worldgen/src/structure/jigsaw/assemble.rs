@@ -35,6 +35,8 @@ pub struct Assembler<'a, R: JigsawRandom> {
     pub random: &'a mut R,
     /// The piece class's height at a jigsaw (`PoolElementStructurePiece` vt+0x68).
     pub height: &'a dyn Fn(i32, i32) -> i32,
+    /// The structure's pool aliases (v2; the hardcoded pools alias per element).
+    pub aliases: &'static [(String, String)],
     pub pieces: Vec<Piece>,
     spaces: Vec<Space>,
     /// (placement priority, -insertion, piece, space).
@@ -45,7 +47,7 @@ pub struct Assembler<'a, R: JigsawRandom> {
 impl<'a, R: JigsawRandom> Assembler<'a, R> {
     pub fn new(variant: Variant, max_depth: i32, random: &'a mut R, height: &'a dyn Fn(i32, i32) -> i32) -> Self {
         let data = super::data();
-        Self { variant, max_depth, data, random, height, pieces: Vec::new(), spaces: Vec::new(), queue: BinaryHeap::new(), pushed: 0 }
+        Self { variant, max_depth, data, random, height, aliases: &[], pieces: Vec::new(), spaces: Vec::new(), queue: BinaryHeap::new(), pushed: 0 }
     }
 
     /// The queued placer's start (141edde60): the start element turned so its `anchor` jigsaw
@@ -101,7 +103,9 @@ impl<'a, R: JigsawRandom> Assembler<'a, R> {
         let mut inside = Vec::new();
         let mut own_space = None;
         for jigsaw in &jigsaws {
-            let Some(pool) = self.data.pool(jigsaw.pool).filter(|p| !p.list.is_empty()) else { continue };
+            let name = jigsaw.pool.trim_start_matches("minecraft:");
+            let name = self.aliases.iter().find(|(from, _)| from == name).map_or(name, |(_, to)| to.as_str());
+            let Some(pool) = self.data.pool(name).filter(|p| !p.list.is_empty()) else { continue };
             let fallback = pool.fallback.as_deref().and_then(|f| self.data.pool(f)).filter(|f| !f.list.is_empty());
             if self.variant == Variant::V2 {
                 let mut list = Vec::new();

@@ -1,12 +1,14 @@
-"""jjson.py <bds> <out pools_v2.txt>: the v2 (data-driven) jigsaw pools and processor lists of BDS's vanilla
-behaviour packs (worldgen/template_pools*, worldgen/processors), newest pack winning, in jdata.py's format.
-Elements are named by their template and marked `j` (placed as Java does); a capped processor becomes
-`c <processors> <limit> <rule>;...`."""
+"""jjson.py <bds> <out pools_v2.txt> <trial chambers jsonl>: the v2 (data-driven) jigsaw pools and processor
+lists of BDS's vanilla behaviour packs (worldgen/template_pools*, worldgen/processors), newest pack winning, plus
+the trial chambers' (jtrial.py's output), in jdata.py's format. Elements are named by their template and marked
+`j` (placed as Java does); a capped processor becomes `c <processors> <limit> <rule>;...`."""
 import os
 import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from bds_packs import _version, brarchive, jsonc  # noqa: E402
+import jtrial_data as jtrial  # noqa: E402
 
 # Pools of the structures a world without experiments generates.
 STRUCTURES = ['trail_ruins']
@@ -60,8 +62,7 @@ def rules(proc):
             for r in proc['rules']]
 
 
-def main(bds, out_path):
-    procs, pools = {}, {}
+def pack_data(bds, procs, elements, pools):
     for doc in archives(bds, 'processors'):
         d = doc['minecraft:processor_list']
         lines = []
@@ -74,33 +75,44 @@ def main(bds, out_path):
     for doc in archives(bds, 'template_pools'):
         d = doc['minecraft:template_pool']
         name = short(d['description']['identifier'])
-        if name.split('/')[0] in STRUCTURES:
-            pools[name] = (d.get('fallback'), d['elements'])
-    elements = {}
+        if name.split('/')[0] not in STRUCTURES:
+            continue
+        for item in d['elements']:
+            e = item['element']
+            if short(e['element_type']) == 'feature_pool_element':
+                elements[element_name(e)] = f"f {short(e['feature'])}"
+                continue
+            assert short(e['element_type']) == 'single_pool_element', e
+            proc = short(e['processors']) if isinstance(e.get('processors'), str) else '-'
+            projection = 1 if e.get('projection') == 'terrain_matching' else 0
+            elements[element_name(e)] = f"j {e['location']} {proc} {projection} 0 -"
+        pools[name] = (d.get('fallback'), [(element_name(i['element']), i['weight']) for i in d['elements']])
+
+
+def write(out_path, procs, elements, pools, aliases):
     with open(out_path, 'w', newline='\n') as out:
-        out.write('# BDS v2 jigsaw data (behaviour pack worldgen JSON); scripts/jigsaw_extract/jjson.py\n')
+        out.write('# BDS v2 jigsaw data (behaviour pack worldgen JSON, trial chambers from C++); scripts/jigsaw_extract/jjson.py\n')
         for name, lines in procs.items():
             plain = [r for kind, _, rs in lines if kind == 'r' for r in rs]
             out.write(f"r {name} {';'.join(plain) or '-'}\n")
             for kind, limit, rs in lines:
                 if kind == 'c':
                     out.write(f"c {name} {limit} {';'.join(rs)}\n")
-        for _, items in pools.values():
-            for item in items:
-                e = item['element']
-                if short(e['element_type']) == 'feature_pool_element':
-                    elements[element_name(e)] = f"f {short(e['feature'])}"
-                    continue
-                assert short(e['element_type']) == 'single_pool_element', e
-                proc = short(e['processors']) if isinstance(e.get('processors'), str) else '-'
-                projection = 1 if e.get('projection') == 'terrain_matching' else 0
-                elements[element_name(e)] = f"j {e['location']} {proc} {projection} 0 -"
         for name, d in elements.items():
             out.write(f'e {name} {d}\n')
         for name, (fallback, items) in pools.items():
             fb = short(fallback) if fallback and short(fallback) != 'empty' else '-'
-            out.write(f"p {name} {fb} " + ' '.join(f"{element_name(i['element'])}*{i['weight']}" for i in items) + '\n')
-    print(len(procs), 'processor lists', len(elements), 'elements', len(pools), 'pools')
+            out.write(f"p {name} {fb} " + ' '.join(f"{e}*{w}" for e, w in items) + '\n')
+        for name, pairs in aliases.items():
+            out.write(f"a {name} " + ' '.join(f'{a}={b}' for a, b in pairs) + '\n')
+    print(len(procs), 'processor lists', len(elements), 'elements', len(pools), 'pools', len(aliases), 'alias sets')
+
+
+def main(bds, out_path, trial_jsonl):
+    procs, elements, pools, aliases = {}, {}, {}, {}
+    pack_data(bds, procs, elements, pools)
+    jtrial.load(trial_jsonl, procs, elements, pools, aliases)
+    write(out_path, procs, elements, pools, aliases)
 
 
 if __name__ == '__main__':

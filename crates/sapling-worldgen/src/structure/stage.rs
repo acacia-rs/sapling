@@ -42,9 +42,9 @@ impl Structures {
         let outposts = self.outposts_near(density, chunk);
         let cities = self.ancient_cities_near(density, chunk);
         let villages = self.villages_near(density, chunk);
-        let trail_ruins = self.trail_ruins_near(density, chunk);
+        let v2 = self.v2_near(density, chunk);
         let templated = !(igloos.is_empty()
-            && trail_ruins.is_empty()
+            && v2.is_empty()
             && ruins.is_empty()
             && shipwrecks.is_empty()
             && portals.is_empty()
@@ -70,7 +70,7 @@ impl Structures {
         self.place_shipwrecks(&mut canvas, &shipwrecks);
         self.place_portals(density, &mut canvas, &portals);
         Self::place_ancient_cities(&mut canvas, &cities, seed);
-        self.place_trail_ruins(&mut canvas, &trail_ruins);
+        self.place_v2(&mut canvas, &v2);
         let start = if templated { (-64, 319) } else { (i32::MAX, i32::MIN) };
         Some(mineshafts.iter().fold(start, |(lo, hi), m| (lo.min(m.bb.y0 - 1), hi.max(m.bb.y1 + 1))))
     }

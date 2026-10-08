@@ -16,7 +16,7 @@ use super::template::{Capped, Predicate, Rule, Template, named};
 use crate::block::Block;
 
 pub use assemble::{Assembler, Variant, middle};
-pub use v2::V2Start;
+pub use v2::{StartHeight, V2Start};
 pub use element::{Element, ElementKind, Projection};
 pub use piece::{AncientCityClass, Piece, PieceClass, VillageClass};
 

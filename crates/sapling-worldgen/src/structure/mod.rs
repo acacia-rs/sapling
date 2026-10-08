@@ -5,6 +5,7 @@
 mod ancient_city;
 mod area;
 mod canvas;
+mod data_driven;
 mod igloo;
 mod kind;
 mod jigsaw;
@@ -25,7 +26,6 @@ pub(crate) mod template;
 mod templated;
 #[cfg(test)]
 mod tests;
-mod trail_ruins;
 mod treasure;
 mod village;
 
@@ -101,10 +101,12 @@ impl Structures {
             StructureKind::Shipwreck => self.shipwreck_biomes(&probe, chunk) && !self.near_monument(&probe, chunk),
             StructureKind::RuinedPortal => true,
             StructureKind::AncientCity => probe.contains_only((chunk.0 * 16, -27, chunk.1 * 16), 0, DEEP_DARK),
-            // TODO: BDS checks the biome at the jigsaw start piece's centre (14196cc20); the chunk centre approximates it.
-            StructureKind::TrialChambers => !DEEP_DARK.contains(&probe.biome(chunk.0 * 16 + 8, -30, chunk.1 * 16 + 8)),
+            StructureKind::TrialChambers => {
+                let (x, y, z) = data_driven::position(density, self.seed, kind, chunk);
+                !DEEP_DARK.contains(&probe.biome(x, y, z))
+            }
             StructureKind::TrailRuins => {
-                let (x, y, z) = trail_ruins::position(density, self.seed, chunk);
+                let (x, y, z) = data_driven::position(density, self.seed, kind, chunk);
                 TRAIL_RUINS_BIOMES.contains(&probe.biome(x, y, z))
             }
         }
