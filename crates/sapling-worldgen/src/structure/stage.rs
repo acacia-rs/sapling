@@ -129,6 +129,19 @@ impl Structures {
         Scattered::new(start, probe.biome(start.0 * 16 + 8, probe.surface(start), start.1 * 16 + 8))
     }
 
+    /// Whether a block lies in the bounding box of a mineshaft or v2 structure start (its pieces'
+    /// union): what geodes ask the world generator's `findStructureFeatureTypeAt` before placing
+    /// (feature/geode.rs). Other kinds are not modelled (no oracle case yet).
+    pub fn in_structure(&self, density: &Density, (x, y, z): (i32, i32, i32)) -> bool {
+        let chunk = (x.div_euclid(16), z.div_euclid(16));
+        let kind = StructureKind::Mineshaft;
+        let mut mineshafts = self.starts_near(density, kind, chunk, kind.reach()).into_iter();
+        mineshafts.any(|start| self.mineshaft(density, start).bb.contains(x, y, z))
+            || self.v2_reaching(density, chunk, &|_| true).iter().any(|(_, pieces)| {
+                pieces.iter().map(|p| p.bb).reduce(|a, b| a.union(&b)).is_some_and(|bb| bb.contains(x, y, z))
+            })
+    }
+
     fn mineshaft(&self, density: &Density, start: (i32, i32)) -> Arc<Mineshaft> {
         if let Some(found) = self.mineshafts.lock().unwrap().get(&start) {
             return found.clone();

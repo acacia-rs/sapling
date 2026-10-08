@@ -158,7 +158,11 @@ impl Scan<'_> {
 }
 
 impl Geode {
+    /// Not in a structure (149e845f0 asks the dimension's generator first, before any draw).
     pub fn place(&self, ctx: &mut Ctx, origin: [i32; 3]) -> Option<[i32; 3]> {
+        if (ctx.in_structure)(origin) {
+            return None;
+        }
         let count = sample(ctx.random, self.points);
         let noise = NormalNoise::from_mt(ctx.random, -4, &[1.0]);
         let d = count as f32 / self.wall[1] as f32;

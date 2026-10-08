@@ -67,6 +67,8 @@ pub struct Inputs<'a> {
     pub surface: &'a dyn Fn(i32, i32) -> i32,
     /// A chunk's post-process generator after its lava lake (monster_room.rs).
     pub after_lake: &'a dyn Fn(i32, i32) -> crate::random::Mt19937,
+    /// Whether a structure holds the block (geode.rs).
+    pub in_structure: &'a dyn Fn([i32; 3]) -> bool,
 }
 
 /// When BDS decorates a chunk relative to its neighbours: x and z even first, then x odd, both odd,

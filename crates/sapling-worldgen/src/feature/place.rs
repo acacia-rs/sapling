@@ -17,6 +17,8 @@ pub struct Ctx<'c, 'v> {
     pub biome: &'c dyn Fn([i32; 3]) -> Option<u32>,
     /// The preliminary surface level of a quart column (`NO_SURFACE` where none).
     pub surface: &'c dyn Fn(i32, i32) -> i32,
+    /// Whether a structure holds the block.
+    pub in_structure: &'c dyn Fn([i32; 3]) -> bool,
 }
 
 impl Feature {

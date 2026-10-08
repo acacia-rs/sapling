@@ -90,7 +90,7 @@ fn run(rule: &Rule, source: &mut Source, only: Option<u32>, own: &ChunkBiomes, v
         if only.is_some_and(|wanted| biome_at(chunk, own, &biomes, at) != wanted) {
             continue;
         }
-        let ctx = &mut Ctx { view, random: &mut placing, scope, biome: &biome, surface };
+        let ctx = &mut Ctx { view, random: &mut placing, scope, biome: &biome, surface, in_structure: source.inputs.in_structure };
         FEATURES[rule.feature].place(ctx, at);
     }
 }
