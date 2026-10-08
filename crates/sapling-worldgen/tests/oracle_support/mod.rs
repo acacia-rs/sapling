@@ -6,6 +6,7 @@
 mod carver;
 mod features;
 mod judge;
+mod structures;
 mod tally;
 
 use std::path::PathBuf;
@@ -21,6 +22,8 @@ pub use carver::{CarverTally, Ours, near_feature};
 pub use features::FeatureTally;
 #[allow(unused_imports)]
 pub use judge::{Context, column_reshaped};
+#[allow(unused_imports)]
+pub use structures::{StructureTally, attribute};
 #[allow(unused_imports)]
 pub use tally::{BiomeTally, Tally, TopTally};
 

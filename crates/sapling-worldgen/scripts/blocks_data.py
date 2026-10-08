@@ -14,7 +14,7 @@ class NotPorted(Exception):
 def _rust_blocks():
     """(name, states) -> variant, from the `blocks!` table."""
     found = {}
-    for table in ('table.rs', 'cave_table.rs', 'multiface_table.rs', 'plant_table.rs'):
+    for table in ('table.rs', 'cave_table.rs', 'structure_table.rs', 'multiface_table.rs', 'plant_table.rs'):
         path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'src', 'block', table)
         text = open(path, encoding='utf-8').read()
         # The first variant of a (name, states) pair wins: the waterlogged twins come later.

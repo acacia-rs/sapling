@@ -99,6 +99,16 @@ impl ClimateNoises {
             .collect()
     }
 
+    /// The biome of one block without the lattice (`BiomeSource3d::_getBiome` 14805f850, climate
+    /// 1481df3b0): the climate of its quart column, depth at the block's own y, no warm start.
+    pub fn biome_at(&self, x: i32, y: i32, z: i32) -> u32 {
+        let climate = self.sample(x >> 2, z >> 2);
+        let depth = y as f32 * -0.007_812_5 + 1.0 + climate.offset;
+        let point = [climate.temperature, climate.humidity, climate.continentalness, climate.erosion, depth, climate.weirdness].map(quantize);
+        let tree = overworld_tree();
+        tree.biome(tree.nearest(&point, None))
+    }
+
     pub fn chunk_biomes(&self, seed: i64, chunk_x: i32, chunk_z: i32) -> ChunkBiomes {
         let origin = [chunk_x * 2 - 1, LATTICE_MIN_Y, chunk_z * 2 - 1];
         let mut lattice = Vec::with_capacity(LATTICE_COLUMNS * LATTICE_COLUMNS * LATTICE_ROWS);

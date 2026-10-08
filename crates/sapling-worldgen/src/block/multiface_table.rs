@@ -1,10 +1,10 @@
 //! The multiface blocks by `multi_face_direction_bits` 1..=63 (down 1, up 2, south 4, west 8,
-//! north 16, east 32; `Block::multiface`), after cave_table.rs's solids and before the plants.
+//! north 16, east 32; `Block::multiface`), after structure_table.rs's solids and before the plants.
 //! They are plants (`is_plant`) though they come first.
 
 macro_rules! with_multiface_blocks {
     ($($plants:tt)*) => {
-        with_cave_blocks! {
+        with_structure_blocks! {
             GlowLichen1 => "glow_lichen" "multi_face_direction_bits=1",
             GlowLichen2 => "glow_lichen" "multi_face_direction_bits=2",
             GlowLichen3 => "glow_lichen" "multi_face_direction_bits=3",

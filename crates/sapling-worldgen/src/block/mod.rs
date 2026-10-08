@@ -33,8 +33,13 @@ mod table;
 #[macro_use]
 mod cave_table;
 #[macro_use]
+mod structure_table;
+#[macro_use]
 mod multiface_table;
 mod plant_table;
+
+use std::collections::HashMap;
+use std::sync::LazyLock;
 
 pub use plant_table::Block;
 
@@ -169,5 +174,15 @@ impl Block {
     pub fn from_name(name: &str) -> Option<Block> {
         let name = name.strip_prefix("minecraft:").unwrap_or(name);
         Block::ALL.iter().copied().find(|block| block.name() == name)
+    }
+
+    /// The block with exactly this name and these states, if the table has it.
+    pub fn with_states(name: &str, states: &str) -> Option<Block> {
+        static BY_NAME: LazyLock<HashMap<&str, Vec<Block>>> = LazyLock::new(|| {
+            let mut by_name: HashMap<&str, Vec<Block>> = HashMap::new();
+            Block::ALL.iter().for_each(|&b| by_name.entry(b.name()).or_default().push(b));
+            by_name
+        });
+        BY_NAME.get(name)?.iter().copied().find(|b| b.states() == states)
     }
 }

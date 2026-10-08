@@ -9,7 +9,7 @@ use super::BdsCell;
 
 /// The family of a block a feature places: ores without their deepslate variant, stone blobs,
 /// logs and leaves per species.
-fn family(name: &str) -> Option<&'static str> {
+pub(super) fn family(name: &str) -> Option<&'static str> {
     if let Some(wood) = WOOD.iter().find(|(block, _)| *block == name) {
         return Some(wood.1);
     }

@@ -13,6 +13,7 @@ pub enum Stage {
     Veins,
     Surface,
     Carvers,
+    Structures,
     Lakes,
     Features,
     /// Decoration's liquid flow (springs, border water), and any fluid cell either side has flowing.
@@ -30,6 +31,8 @@ pub enum Verdict {
 pub struct Context {
     /// Our carvers emptied it.
     pub carved: bool,
+    /// Our structure stage rewrote it.
+    pub structured: bool,
     /// Our lava lake rewrote it.
     pub laked: bool,
     /// Our feature rules rewrote it.
@@ -83,6 +86,9 @@ fn stage_of(block: Block, y: i32, context: Context) -> Stage {
     }
     if context.laked {
         return Stage::Lakes;
+    }
+    if context.structured {
+        return Stage::Structures;
     }
     if context.carved {
         return Stage::Carvers;
@@ -138,6 +144,9 @@ fn judge_cell(ours: Block, bds: &BdsCell, y: i32, context: Context) -> Verdict {
             return Verdict::Later("features, structures over our features (non-terrain block)");
         }
         return Verdict::Error(Stage::Features);
+    }
+    if context.structured && !context.laked {
+        return Verdict::Error(Stage::Structures);
     }
     if ours.is_solid() && (bds.is_empty() || bds.is_fluid()) {
         // The iceberg feature cuts its shape out of any packed ice and snow, the surface's too.
