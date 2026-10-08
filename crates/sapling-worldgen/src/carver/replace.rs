@@ -17,7 +17,7 @@ pub fn cave_replaceable(block: Block) -> bool {
 
 /// The cave carver's 14ccd9470: sand, red sand, suspicious sand.
 pub fn is_sand(block: Block) -> bool {
-    matches!(block, Block::Sand | Block::RedSand)
+    matches!(block, Block::Sand | Block::RedSand | Block::SuspiciousSand)
 }
 
 /// 14ccdb858: what both carvers regrow grass on.
@@ -30,9 +30,10 @@ pub fn canyon_replaceable(block: Block) -> bool {
     use Block::*;
     matches!(
         block,
-        Stone | Granite | Tuff | Deepslate | Calcite | Dirt | CoarseDirt | Mud | Podzol | Mycelium | GrassBlock
-            | Terracotta | WhiteTerracotta | OrangeTerracotta | YellowTerracotta | BrownTerracotta | RedTerracotta
-            | LightGrayTerracotta | Sandstone | RedSandstone | Sand | RedSand | IronOre | DeepslateIronOre | RawIronBlock
-            | CopperOre | DeepslateCopperOre | RawCopperBlock | Snow | SnowLayer | PackedIce | Gravel
+        Stone | Granite | Diorite | Andesite | Tuff | Deepslate | Calcite | Dirt | CoarseDirt | Mud | Podzol | Mycelium
+            | GrassBlock | DirtWithRoots | Terracotta | WhiteTerracotta | OrangeTerracotta | YellowTerracotta
+            | LightGrayTerracotta | BlueTerracotta | BrownTerracotta | RedTerracotta | Sandstone | RedSandstone | Sand
+            | RedSand | SuspiciousSand | IronOre | DeepslateIronOre | RawIronBlock | CopperOre | DeepslateCopperOre
+            | RawCopperBlock | Snow | SnowLayer | PackedIce | Gravel | Sulfur | Cinnabar
     )
 }
