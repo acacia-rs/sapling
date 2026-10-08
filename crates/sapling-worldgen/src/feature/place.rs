@@ -15,6 +15,8 @@ pub struct Ctx<'c, 'v> {
     pub random: &'c mut Mt19937,
     pub scope: &'c mut Scope,
     pub biome: &'c dyn Fn([i32; 3]) -> Option<u32>,
+    /// The preliminary surface level of a quart column (`NO_SURFACE` where none).
+    pub surface: &'c dyn Fn(i32, i32) -> i32,
 }
 
 impl Feature {
@@ -41,6 +43,10 @@ impl Feature {
             Feature::GrowingPlant(plant) => plant.place(ctx, at),
             Feature::Lush(lush) => lush.place(ctx, at),
             Feature::Speleothem(speleothem) => speleothem.place(ctx, at),
+            Feature::Multiface(multiface) => multiface.place(ctx, at),
+            Feature::SurfaceThreshold(threshold) => threshold.place(ctx, at),
+            Feature::PartiallyExposedBlob(blob) => blob.place(ctx, at),
+            Feature::Pool(pool) => pool.place(ctx, at),
             Feature::Unported => None,
         }
     }

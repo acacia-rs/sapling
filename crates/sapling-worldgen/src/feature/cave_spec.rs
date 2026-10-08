@@ -19,6 +19,35 @@ pub struct SnapToSurface {
     pub allowed: &'static [Block],
 }
 
+/// `minecraft:multiface_feature` (143b83e50, multiface.rs): `block` (its down-facing variant) on a
+/// supporting face of the position or, failing that, of a neighbour.
+#[derive(Debug)]
+pub struct Multiface {
+    pub block: Block,
+    pub search_range: i32,
+    /// FacingIDs in the order the flags push them: floor, ceiling, then walls north, east, south, west.
+    pub faces: &'static [usize],
+    pub can_place_on: &'static [Block],
+}
+
+/// `minecraft:surface_relative_threshold_feature` (143bc69b0): `feature` only more than
+/// `min_depth` blocks under the preliminary surface of the quart column.
+#[derive(Debug)]
+pub struct SurfaceThreshold {
+    pub feature: usize,
+    pub min_depth: i32,
+}
+
+/// `minecraft:partially_exposed_blob_feature` (blob.rs).
+#[derive(Debug)]
+pub struct PartiallyExposedBlob {
+    pub block: Block,
+    pub radius: i32,
+    pub probability: f32,
+    /// The FacingID that may stay open.
+    pub exposed: usize,
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Surface {
     Ceiling,

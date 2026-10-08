@@ -2,7 +2,7 @@
 //! Water lakes and the legacy cave and canyon configs only run in legacy worlds. Monster rooms and
 //! the freeze pass are not ported; feature rules are `crate::feature`.
 
-mod lake;
+pub mod lake;
 
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -37,6 +37,14 @@ impl Decoration {
                 }
             }
         }
+    }
+
+    /// The chunk's post-process generator as the lava lake attempt leaves it, for the monster rooms.
+    // TODO: a placed lake then draws a nextInt(2) per border cell (lake.rs), not replayed here.
+    pub fn after_lake(seed: &LargeFeatureSeed, chunk_x: i32, chunk_z: i32) -> Mt19937 {
+        let mut random = Mt19937::new(seed.chunk(chunk_x, chunk_z));
+        lake::lava_lake(&mut random, chunk_x, chunk_z, &mut |_, _, _| CellKind::Solid);
+        random
     }
 
     fn lake(&self, chunk_x: i32, chunk_z: i32, carved: &dyn Fn(i32, i32) -> Arc<ChunkShape>) -> Arc<Option<Lake>> {

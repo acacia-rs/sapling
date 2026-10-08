@@ -65,6 +65,13 @@ fn family(name: &str) -> Option<&'static str> {
         "azalea" | "flowering_azalea" => "azaleas",
         "spore_blossom" => "spore blossoms",
         "dirt_with_roots" | "hanging_roots" => "azalea roots",
+        "pointed_dripstone" | "dripstone_block" => "dripstone",
+        "sulfur_spike" => "sulfur spikes",
+        "glow_lichen" => "glow lichen",
+        "magma" => "magma",
+        "bubble_column" => "bubble columns",
+        "packed_ice" => "packed ice",
+        "cobblestone" | "mob_spawner" | "chest" => "monster rooms",
         _ => return None,
     })
 }

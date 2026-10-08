@@ -67,6 +67,8 @@ pub const KELP: [Block; 26] = [
 ];
 
 impl Block {
+    pub const CHESTS: [Block; 4] = [Block::ChestSouth, Block::ChestWest, Block::ChestNorth, Block::ChestEast];
+
     /// Water or lava of any depth.
     pub fn is_fluid(self) -> bool {
         (Block::Water..=Block::Lava15).contains(&self)

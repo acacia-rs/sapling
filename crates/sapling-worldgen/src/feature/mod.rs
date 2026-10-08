@@ -4,6 +4,7 @@
 
 mod aquatic;
 mod attach;
+mod blob;
 mod cave;
 mod cave_spec;
 mod data;
@@ -21,9 +22,12 @@ mod legacy_tree;
 mod liquid;
 mod lush;
 mod molang;
+mod monster_room;
+mod multiface;
 mod ore;
 mod place;
 mod plants;
+mod pool;
 mod scatter;
 mod spec;
 mod speleothem;
@@ -48,6 +52,15 @@ const BEFORE_LIMIT: usize = 768;
 
 type Load<'a> = &'a dyn Fn(i32, i32) -> Arc<ChunkShape>;
 type Biomes<'a> = &'a dyn Fn(i32, i32) -> Arc<ChunkBiomes>;
+
+/// What decoration reads of the world besides the view: chunks' terrain before features, their
+/// biomes, and the preliminary surface level of a quart column.
+#[derive(Clone, Copy)]
+pub struct Inputs<'a> {
+    pub loaded: Load<'a>,
+    pub biomes: Biomes<'a>,
+    pub surface: &'a dyn Fn(i32, i32) -> i32,
+}
 
 /// When BDS decorates a chunk relative to its neighbours: x and z even first, then x odd, both odd,
 /// z odd. Chunks of one phase are never neighbours (docs/research/worldgen-bds-features.md).
@@ -77,15 +90,15 @@ impl Features {
         Self { seed: LargeFeatureSeed::new(world_seed as u32), writes: SourceCache::new(CACHE_LIMIT), before: SourceCache::new(BEFORE_LIMIT) }
     }
 
-    /// `loaded` gives a chunk's terrain before features, `biomes` its biomes. Sources apply in
-    /// decoration order; a write lands when the block it replaced in its source's view is still there.
-    pub fn place(&self, shape: &mut ChunkShape, chunk: (i32, i32), loaded: Load, biomes: Biomes) {
-        self.replay(shape, chunk, u8::MAX, loaded, biomes);
+    /// Sources apply in decoration order; a write lands when the block it replaced in its source's
+    /// view is still there.
+    pub fn place(&self, shape: &mut ChunkShape, chunk: (i32, i32), inputs: Inputs) {
+        self.replay(shape, chunk, u8::MAX, inputs);
     }
 
-    fn replay(&self, shape: &mut ChunkShape, chunk: (i32, i32), phase_limit: u8, loaded: Load, biomes: Biomes) {
+    fn replay(&self, shape: &mut ChunkShape, chunk: (i32, i32), phase_limit: u8, inputs: Inputs) {
         for source in sources_before(chunk, phase_limit) {
-            let writes = self.source_writes(source, loaded, biomes);
+            let writes = self.source_writes(source, inputs);
             for write in writes.towards(chunk.0 - source.0, chunk.1 - source.1) {
                 let index = write.index as usize;
                 if shape.block_at(index) == write.seen {
@@ -96,26 +109,27 @@ impl Features {
     }
 
     /// A chunk with the features of every source decorated before `phase_limit`.
-    fn before(&self, chunk: (i32, i32), phase_limit: u8, loaded: Load, biomes: Biomes) -> Arc<ChunkShape> {
+    fn before(&self, chunk: (i32, i32), phase_limit: u8, inputs: Inputs) -> Arc<ChunkShape> {
         if phase_limit == 0 {
-            return loaded(chunk.0, chunk.1);
+            return (inputs.loaded)(chunk.0, chunk.1);
         }
         self.before.get((chunk.0, chunk.1, phase_limit), || {
-            let mut shape = (*loaded(chunk.0, chunk.1)).clone();
-            self.replay(&mut shape, chunk, phase_limit, loaded, biomes);
+            let mut shape = (*(inputs.loaded)(chunk.0, chunk.1)).clone();
+            self.replay(&mut shape, chunk, phase_limit, inputs);
             shape
         })
     }
 
     /// One source chunk's writes over its neighbours as the earlier phases left them.
-    pub fn source_writes(&self, source: (i32, i32), loaded: Load, biomes: Biomes) -> Arc<ChunkWrites> {
+    pub fn source_writes(&self, source: (i32, i32), inputs: Inputs) -> Arc<ChunkWrites> {
         self.writes.get(source, || {
             let phase_limit = phase(source);
-            let base = |x: i32, z: i32| self.before((x, z), phase_limit, loaded, biomes);
+            let base = |x: i32, z: i32| self.before((x, z), phase_limit, inputs);
             let mut view = View::new(source, &base);
             view.on_write = liquid::write_hook();
-            decorate::decorate_chunk(&self.seed, source, biomes, &mut view);
-            freeze::freeze_chunk(source, &biomes(source.0, source.1), &mut view);
+            monster_room::monster_rooms(&self.seed, source, &mut view);
+            decorate::decorate_chunk(&self.seed, source, inputs, &mut view);
+            freeze::freeze_chunk(source, &(inputs.biomes)(source.0, source.1), &mut view);
             liquid::settle(&mut view);
             view.into_writes()
         })

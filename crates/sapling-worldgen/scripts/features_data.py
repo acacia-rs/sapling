@@ -53,6 +53,8 @@ HARDCODED = {
     'minecraft:sulfur_spike_cluster_feature':
         'Feature::Speleothem(Speleothem::Cluster { blocks: &SULFUR, height: [1, 4], wetness: [0.0, 0.0, 0.0, 0.0] })',
     'minecraft:large_dripstone_feature': 'Feature::Speleothem(Speleothem::Large(&DRIPSTONE))',
+    # LakeFeature(water, sulfur, [sulfur_spike]) in 1482f4580.
+    'minecraft:sulfur_pool': 'Feature::Pool(Pool { liquid: Block::Water, border: Block::Sulfur, avoid: &[Block::SulfurSpike] })',
 }
 EARLY_OUT = {'none': 'EarlyOut::None', 'first_failure': 'EarlyOut::FirstFailure', 'first_success': 'EarlyOut::FirstSuccess'}
 SEARCH_LOOPS = {'-x': ('x-', 'y+', 'z-'), '+x': ('x+', 'y+', 'z+'), '-y': ('y-', 'z+', 'x-'), '+y': ('y+', 'z+', 'x+'),

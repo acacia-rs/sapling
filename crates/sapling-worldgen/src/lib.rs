@@ -113,14 +113,21 @@ impl OverworldGenerator {
 
     /// The feature rules of every chunk whose features reach this one, applied after `decorate`.
     pub fn place_features(&self, shape: &mut ChunkShape, chunk_x: i32, chunk_z: i32) {
-        self.features.place(shape, (chunk_x, chunk_z), &|x, z| self.loaded(x, z), &|x, z| self.chunk_biomes(x, z));
+        self.with_inputs(|inputs| self.features.place(shape, (chunk_x, chunk_z), inputs));
     }
 
     /// One source chunk's feature writes, decorated alone: world (x, y, z), block placed, block replaced.
     #[doc(hidden)]
     pub fn source_feature_writes(&self, chunk_x: i32, chunk_z: i32) -> Vec<([i32; 3], Block, Block)> {
-        let writes = self.features.source_writes((chunk_x, chunk_z), &|x, z| self.loaded(x, z), &|x, z| self.chunk_biomes(x, z));
+        let writes = self.with_inputs(|inputs| self.features.source_writes((chunk_x, chunk_z), inputs));
         writes.world_writes((chunk_x, chunk_z))
+    }
+
+    fn with_inputs<T>(&self, run: impl FnOnce(feature::Inputs) -> T) -> T {
+        let loaded = |x, z| self.loaded(x, z);
+        let biomes = |x, z| self.chunk_biomes(x, z);
+        let surface = |qx, qz| self.density.preliminary_surface(qx, qz);
+        run(feature::Inputs { loaded: &loaded, biomes: &biomes, surface: &surface })
     }
 
     /// Cave segments near a column, for probes (`Carvers::segments_near`).

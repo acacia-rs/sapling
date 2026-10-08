@@ -1,7 +1,8 @@
 //! The shapes of transcribed feature rules and features (data/, scripts/features_to_rust.py).
 
-pub use super::cave_spec::{GrowingPlant, SnapToSurface, Surface, VegetationPatch};
+pub use super::cave_spec::{GrowingPlant, Multiface, PartiallyExposedBlob, SnapToSurface, Surface, SurfaceThreshold, VegetationPatch};
 pub use super::lush::Lush;
+pub use super::pool::Pool;
 pub use super::speleothem::{DRIPSTONE, SULFUR, Speleothem};
 use crate::block::Block;
 
@@ -136,6 +137,11 @@ pub enum Feature {
     Lush(Lush),
     /// Pointed dripstone and sulfur spikes (speleothem/).
     Speleothem(Speleothem),
+    Multiface(Multiface),
+    SurfaceThreshold(SurfaceThreshold),
+    PartiallyExposedBlob(PartiallyExposedBlob),
+    /// `LakeFeature` placed by a rule (pool.rs).
+    Pool(Pool),
     /// A feature sapling does not port: places nothing, but its rule still draws its scatter,
     /// whose `math.random` comes from the generator all rules of the chunk share.
     Unported,

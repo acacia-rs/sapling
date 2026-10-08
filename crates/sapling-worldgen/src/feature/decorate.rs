@@ -9,6 +9,7 @@ use super::molang::{Molang, Scope, World};
 use super::place::Ctx;
 use super::scatter::{self, Draws};
 use super::spec::{Pass, Rule};
+use super::Inputs;
 use super::view::View;
 use crate::biome::ChunkBiomes;
 use crate::random::{LargeFeatureSeed, Mt19937};
@@ -42,14 +43,14 @@ struct Source<'a> {
     chunk_seed: u32,
     /// The chunk's own generator, seeded with the chunk seed: rules' `math.random` draws from it.
     random: Mt19937,
-    biomes: &'a dyn Fn(i32, i32) -> Arc<ChunkBiomes>,
+    inputs: Inputs<'a>,
 }
 
-pub fn decorate_chunk(seed: &LargeFeatureSeed, chunk: (i32, i32), biomes: &dyn Fn(i32, i32) -> Arc<ChunkBiomes>, view: &mut View) {
+pub fn decorate_chunk(seed: &LargeFeatureSeed, chunk: (i32, i32), inputs: Inputs, view: &mut View) {
     let chunk_seed = seed.chunk(chunk.0, chunk.1);
-    let own = biomes(chunk.0, chunk.1);
+    let own = (inputs.biomes)(chunk.0, chunk.1);
     let order = palette_order(&own);
-    let mut source = Source { chunk, chunk_seed, random: Mt19937::new(chunk_seed), biomes };
+    let mut source = Source { chunk, chunk_seed, random: Mt19937::new(chunk_seed), inputs };
     let mut scope = Scope::new();
     for pass in Pass::ALL {
         for &biome in &order {
@@ -79,7 +80,7 @@ fn run(rule: &Rule, source: &mut Source, only: Option<u32>, own: &ChunkBiomes, v
         return;
     }
     let mut placing = Mt19937::new(seed);
-    let biomes = source.biomes;
+    let (biomes, surface) = (source.inputs.biomes, source.inputs.surface);
     let biome = |[x, y, z]: [i32; 3]| biome_at(&biomes(x.div_euclid(16), z.div_euclid(16)), [x, y, z]);
     for index in (0..count).rev() {
         let at = {
@@ -90,7 +91,7 @@ fn run(rule: &Rule, source: &mut Source, only: Option<u32>, own: &ChunkBiomes, v
         if only.is_some_and(|wanted| in_chunk(source.chunk, at).then(|| biome_at(own, at)).flatten() != Some(wanted)) {
             continue;
         }
-        let ctx = &mut Ctx { view, random: &mut placing, scope, biome: &biome };
+        let ctx = &mut Ctx { view, random: &mut placing, scope, biome: &biome, surface };
         FEATURES[rule.feature].place(ctx, at);
     }
 }

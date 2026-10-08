@@ -7,7 +7,15 @@ macro_rules! with_cave_blocks {
         with_solid_blocks! {
             Sulfur => "sulfur" "",
             Cinnabar => "cinnabar" "",
+            PotentSulfur => "potent_sulfur" "potent_sulfur_state=wet",
             DripstoneBlock => "dripstone_block" "",
+            Magma => "magma" "",
+            MobSpawner => "mob_spawner" "",
+            // By Bedrock's Direction: south, west, north, east (`Block::CHESTS`).
+            ChestSouth => "chest" "minecraft:cardinal_direction=south",
+            ChestWest => "chest" "minecraft:cardinal_direction=west",
+            ChestNorth => "chest" "minecraft:cardinal_direction=north",
+            ChestEast => "chest" "minecraft:cardinal_direction=east",
             PointedDripstone => "pointed_dripstone" "dripstone_thickness=tip,hanging=0",
             PointedDripstoneTipHanging => "pointed_dripstone" "dripstone_thickness=tip,hanging=1",
             PointedDripstoneFrustum => "pointed_dripstone" "dripstone_thickness=frustum,hanging=0",

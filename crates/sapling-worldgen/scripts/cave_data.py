@@ -3,7 +3,9 @@ documents as the Rust features of src/feature/cave_spec.rs, and the hardcoded lu
 src/feature/lush.rs."""
 from blocks_data import BLOCKS, NotPorted, block
 
-PORTED = {'minecraft:snap_to_surface_feature', 'minecraft:vegetation_patch_feature', 'minecraft:growing_plant_feature'}
+PORTED = {'minecraft:snap_to_surface_feature', 'minecraft:vegetation_patch_feature', 'minecraft:growing_plant_feature',
+          'minecraft:multiface_feature', 'minecraft:surface_relative_threshold_feature', 'minecraft:partially_exposed_blob_feature'}
+FACES = ['down', 'up', 'north', 'south', 'west', 'east']
 _BIG_DRIPLEAVES = ['south', 'west', 'north', 'east']
 SURFACES = {'ceiling': 'Ceiling', 'floor': 'Floor', 'random_horizontal': 'RandomHorizontal', 'random_vertical': 'RandomVertical'}
 LEGACY = {
@@ -65,4 +67,17 @@ def rust(kind, body, index):
         return (f'Feature::GrowingPlant(GrowingPlant {{ heights: &[{heights}], up: {str(body["growth_direction"].upper() == "UP").lower()}, '
                 f'age: {rng(body.get("age", 0))}, body: {weighted(body["body_blocks"])}, head: {weighted(body["head_blocks"])}, '
                 f'allow_water: {str(body.get("allow_water", False)).lower()} }})')
+    if kind == 'minecraft:multiface_feature':
+        faces = ([0] if body['can_place_on_floor'] else []) + ([1] if body['can_place_on_ceiling'] else []) \
+            + ([2, 5, 3, 4] if body['can_place_on_wall'] else [])
+        return (f'Feature::Multiface(Multiface {{ block: {block(body["places_block"])}, search_range: {int(body["search_range"])}, '
+                f'faces: &{faces}, can_place_on: {every_state(body.get("can_place_on", []))} }})')
+    if kind == 'minecraft:partially_exposed_blob_feature':
+        return (f'Feature::PartiallyExposedBlob(PartiallyExposedBlob {{ block: {block(body["places_block"])}, '
+                f'radius: {int(body["placement_radius_around_floor"])}, '
+                f'probability: {float(body["placement_probability_per_valid_position"])!r}, '
+                f'exposed: {FACES.index(body.get("exposed_face", "up"))} }})')
+    if kind == 'minecraft:surface_relative_threshold_feature':
+        return (f'Feature::SurfaceThreshold(SurfaceThreshold {{ feature: {index(body["feature_to_place"])}, '
+                f'min_depth: {int(body.get("minimum_distance_below_surface", 0))} }})')
     raise NotPorted(kind)

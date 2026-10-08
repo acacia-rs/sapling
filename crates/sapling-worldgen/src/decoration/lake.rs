@@ -34,13 +34,19 @@ pub fn lava_lake(random: &mut Mt19937, chunk_x: i32, chunk_z: i32, kind: &mut im
     place(random, [chunk_x * 16 + 3 + x, y, chunk_z * 16 + 3 + z], kind)
 }
 
-fn place(random: &mut Mt19937, [x, mut y, z]: [i32; 3], kind: &mut impl FnMut(i32, i32, i32) -> CellKind) -> Option<Lake> {
+fn place(random: &mut Mt19937, at: [i32; 3], kind: &mut impl FnMut(i32, i32, i32) -> CellKind) -> Option<Lake> {
+    let lake = shape(random, at, &mut |x, y, z| kind(x, y, z) == CellKind::Air)?;
+    lake.fits(kind).then_some(lake)
+}
+
+/// The lake's corner (down through air from the position, minus 8, 8 and 4) and blobs, unchecked.
+pub fn shape(random: &mut Mt19937, [x, mut y, z]: [i32; 3], air: &mut impl FnMut(i32, i32, i32) -> bool) -> Option<Lake> {
     if MIN_Y + 4 >= y {
         return None;
     }
     let (x0, z0) = (x - 8, z - 8);
     while MIN_Y < y {
-        if kind(x0, y, z0) != CellKind::Air || y < 1 {
+        if !air(x0, y, z0) || y < 1 {
             break;
         }
         y -= 1;
@@ -51,8 +57,7 @@ fn place(random: &mut Mt19937, [x, mut y, z]: [i32; 3], kind: &mut impl FnMut(i3
     for _ in 0..blobs {
         blob(random, &mut cells);
     }
-    let lake = Lake { corner, cells };
-    lake.fits(kind).then_some(lake)
+    Some(Lake { corner, cells })
 }
 
 /// One ellipsoid; the in-blob sums keep BDS's addition order.
@@ -86,8 +91,19 @@ fn blob(random: &mut Mt19937, cells: &mut [bool; 2048]) {
 }
 
 impl Lake {
-    fn filled(&self, x: i32, z: i32, y: i32) -> bool {
+    /// Whether the cell `(x, z, y)` from the corner is in the lake.
+    pub fn filled(&self, x: i32, z: i32, y: i32) -> bool {
         (0..16).contains(&x) && (0..16).contains(&z) && (0..8).contains(&y) && self.cells[index(x, z, y)]
+    }
+
+    pub fn corner(&self) -> [i32; 3] {
+        self.corner
+    }
+
+    /// An empty cell touching the lake.
+    pub fn border(&self, x: i32, z: i32, y: i32) -> bool {
+        !self.filled(x, z, y)
+            && [(1, 0, 0), (-1, 0, 0), (0, 1, 0), (0, -1, 0), (0, 0, 1), (0, 0, -1)].iter().any(|&(dx, dz, dy)| self.filled(x + dx, z + dz, y + dy))
     }
 
     /// Every empty cell touching the lake: no liquid beside the air part, and solid or lava
@@ -96,11 +112,7 @@ impl Lake {
         for x in 0..16 {
             for z in 0..16 {
                 for y in 0..8 {
-                    let border = !self.filled(x, z, y)
-                        && [(1, 0, 0), (-1, 0, 0), (0, 1, 0), (0, -1, 0), (0, 0, 1), (0, 0, -1)]
-                            .iter()
-                            .any(|&(dx, dz, dy)| self.filled(x + dx, z + dz, y + dy));
-                    if !border {
+                    if !self.border(x, z, y) {
                         continue;
                     }
                     let cell = kind(self.corner[0] + x, self.corner[1] + y, self.corner[2] + z);
