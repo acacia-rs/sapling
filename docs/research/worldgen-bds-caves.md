@@ -46,15 +46,39 @@ list (VanillaBlockTypeIds lists 14ccd2770: dirt, coarse dirt, stone, tuff, deeps
   floor, ceiling, walls N E S W) whose neighbour `can_place_on` takes decides; success only when the cell changes,
   then one `nextFloat` (spread gate). Else each face's neighbour, retried `search_range` times with the same result.
   BDS shuffles faces with a thread-local generator and spreads with it too: the two oracle runs disagree on faces;
-  sapling keeps the pushed order and leaves spreads out (lichen recall about 50% near origin, precision 77%).
+  sapling keeps the pushed order. A spread (1465e9360, after `nextFloat < chance_of_spreading`) tries the four
+  directions in thread-local order: sapling places it only when exactly one direction can take it.
+- Multiface spreading (feature/spreader.rs): `getSpreadFromFaceTowardDirection` 1465e8f20 tries same cell (face
+  `to`), same plane (cell + `to`, face `from`), around the edge (cell + `from` + `to`, face opposite `to`);
+  `getStateForPlacement` 148b68b30 adds a face only over a sturdy neighbour. Configs: lichen 14a8b32f0 (into air,
+  own block, water source), vein 14a94cdb0 (not onto sculk or a catalyst; anything replaceable; non-veins are always
+  valid sources). `spreadAll` walks faces up, down, N, S, W, E and the same order toward.
+
+## Sculk (feature/sculk/)
+- `SculkPatchFeature::place` 143ba12e0: origin sculk, vein, or air/water source beside a solid block; rounds of
+  `cursor_count` cursors (charge split by 1000, at most 32), `spread_attempts` x `updateCursors` (148b48870, veins
+  spread in the first `spread_rounds`), then catalyst (`nextFloat <= 0.5`, solid below, flags 2) and extra
+  shriekers (`min + nextInt(max - min + 1)`; without `extra_growth_chance` sapling assumes 0..0, one draw).
+- Spreader `(worldgen, 50, 1, 5, 10)`. Cursor: delay 0, decay 1, facings unset (-1); empty (-2) on sculk. Per update:
+  behaviour by the block (default 14a94bec0, sculk 14a94bf00, vein 14a94bf40), spread veins, use charge, discharge
+  or move to the last unobstructed sculk/vein of the 18 non-corner offsets (table 0x14a94bf78, forward shuffle
+  `raw % (i+1)`), first vein with a face on `sculk_replaceable_world_gen` (148b47d30) wins; beyond dist^2 224 the
+  charge is lost. Never merged in worldgen.
+- Sculk charge 148b41810: `nextInt(5)`; growth when not at the origin, air/water above and < 3 sensors/shriekers in
+  the cursor's +-4/+-1/+-4 box (`nextInt(50) < charge`, shrieker 1 in 11), else `nextInt(10)` decay by distance.
+  Vein charge 148b42070: six faces shuffled inside-out (1403747f0), the first face on a replaceable block becomes
+  sculk, veins around it lose faces on sculk (148b42aa0), veins spread from it; else `nextInt(5)` halves.
+- The patch's walk is chaotic: BDS's sculk_vein_feature faces are thread-local, so whole patches diverge even on
+  cells both BDS runs agree on.
 - `surface_relative_threshold` (143bc69b0): place only below the quart column's preliminary surface minus the depth.
 - `partially_exposed_blob` (featurelab's): magma 1 around the floor, one `nextFloat` per cell; magma under water
   starts a bubble column up through water sources (BDS grows it by ticks: near a source's edge it stops short).
 
 ## Decoration and other hardcoded features
 - Monster rooms (feature/monster_room.rs, before the feature rules on the post-lake generator): Java 1.12's dungeon,
-  flags 3, chest tries z then x, chest facing per 149e9dae0 (south, west, north, east), loot and mob draws.
-  Missing: the lava lake's border draws (`nextInt(2)` per upper border cell) before the rooms.
+  flags 3, chest tries z then x, chest facing per 149e9dae0 (south, west, north, east), loot and mob draws. They
+  continue the lava lake's generator after its border pass (stone, `nextInt(2)` per border cell at y >= 4).
+- Sea pickles (149d61020, aquatic.rs): down to a solid block, four tries 0..5 off it (z then x), `nextInt(4)` count.
 - `sulfur_pool` = `LakeFeature(water, sulfur, [sulfur_spike])` (149e91f50/149e923b0) over the view: legacy blobs,
   fits (no liquid above y 4, solid or the liquid below, no avoided block), fill, then the solid border becomes the
   border block (y >= 4 by `nextInt(2) != 0`). Potent sulfur via search_feature.
@@ -65,35 +89,35 @@ list (VanillaBlockTypeIds lists 14ccd2770: dirt, coarse dirt, stone, tuff, deeps
 | family | near origin | far out | negative seed | biomes (20) | trees (20) |
 |---|---|---|---|---|---|
 | sulfur, cinnabar | 0 | 0 | 0 | 132688 → 324 | 260052 → 7302 |
-| sculk (not ported) | 0 | 0 | 0 | 26102 → 26145 | 7677 → 7685 |
+| sculk | 0 | 0 | 0 | 26102 → 5070 | 7677 → 917 |
 | speleothems | 0 | 0 | 0 | 8957 → 2378 | 12883 → 4457 |
 | ice spikes | 0 | 0 | 0 | 8952 → 2447 | 0 |
 | monster rooms | 2476 → 167 | 498 → 312 | 471 → 0 | 772 → 192 | 2151 → 2 |
 | magma, bubble columns | 2467 → 211 | 177 → 0 | 76 → 50 | 373 → 37 | 124 → 2 |
-| glow lichen | 1000 → 586 | 89 → 33 | 69 → 26 | 469 → 267 | 420 → 150 |
-| coral, pickles (not ported) | 0 | 0 | 0 | 1631 → 1641 | 0 |
+| glow lichen | 1000 → 586 | 89 → 33 | 69 → 26 | 469 → 227 | 420 → 140 |
+| coral, pickles (pickles only) | 0 | 0 | 0 | 1631 → 1642 | 0 |
 
 Identical cells: near origin 99.9788 → 99.9857%, far out 99.7574 → 99.7667%, negative seed 99.9475 → 99.9784%,
-biome regions 99.1900 → 99.6639%, tree regions 98.7500 → 99.6023% (windswept gravelly hills 91.43 → 99.97%,
-savanna 83.30 → 99.47%, ice spikes 99.48 → 99.95%).
+biome regions 99.1900 → 99.7265%, tree regions 98.7500 → 99.6229% (windswept gravelly hills 91.43 → 99.97%,
+savanna 83.30 → 99.47%, ice spikes 99.48 → 99.95%, stony peaks 99.36 → 99.85% with sculk).
 Family precision / recall (stable cells): monster rooms 98.8/93.1 near origin, 100/100 in most regions; magma
 95.6/97.9 and bubble columns 91.4/96.7 near origin; dripstone 66-82/67-83 (badlands, windswept hills); sulfur spikes
 73.6/90.1; packed ice (ice spikes) 99.7/94.2; glow lichen 77.0/50.0 near origin.
 
 ## Left
-- Sculk (`sculk_patch_feature` 143ba12e0): Java 1.19's `SculkSpreader(true, 50, 1, 5, 10)` (ctor 148b47ba0,
-  `updateCursors` 148b48870 with ChargeCursor.update inlined; behaviours default 14a94bec0, sculk 14a94bf00, vein
-  14a94bf40), neighbour offsets shuffled forward on the placing generator. About 30% of deep-dark cells differ
-  between the two BDS runs. Needs sculk vein's 64 face states, sensors/shriekers/catalyst and the multiface spreader.
-- Coral (warm ocean): `CoralCrustFeature` 148288070, `CoralFeature` 14828af70, `CoralHangFeature` 148294070,
-  `SeaAnemoneFeature` 149d60d10, `SeaPickleFeature` 149d61020; Bedrock's own, not Java's.
+- Coral (warm ocean, rules after the pickles): `CoralCrustFeature` 148288070 places structure templates (6 names
+  at 0x14a925a30, rotations) and needs the templates work; `CoralFeature` 14828af70 builds its shape in 14828b9e0
+  (2.3k decompiled lines, coral blocks list 0x14ccda7e8); `CoralHangFeature` 148294070 (a wall fan beside a coral
+  block, sides E S W N picked by shrinking `nextInt`) and `SeaAnemoneFeature` 149d60d10 (from y 62 down to sea
+  level - 15: `nextInt(4) == 0` a fan (5 at 0x14ccd9458, `coral_fan_direction` `nextInt(2)`) else a coral plant
+  (`nextInt(5)` of 0x14ccd9440)) draw after them on the shared generator, so they wait for crust and coral.
 - Sulfur springs (`random_sulfur_spring_with_tuff_feature`: structure templates) and the spring trail.
 - Fossils (`fossil_feature`, desert/swamp 1 in 64 chunks) and the desert well: structure templates.
-- Glow lichen spreads (thread-local in BDS; the single-candidate cases are deterministic) and lichen faces.
+- Multi-direction lichen spreads and lichen/vein faces (thread-local in BDS).
 - Dripstone residue: world-state differences (lichen spreads, sculk) shift whole clusters' column draws.
 - The ~100 lava cells that spread sideways after a fall made stone below: BDS's `_tick` sets stone with flags 3 and
   returns like sapling (148b5d060); not resolved.
-- Bubble columns by ticks (edge routing) and the lava lake's border pass.
+- Bubble columns by ticks (edge routing).
 
 ## Labels (scratch bdsre `names.user.json`)
 1487e14c0/1487e0c20 `NoiseGradientSurfaceBuilder::{buildSurfaceAt,init}`, 149d62d10 `SpeleothemFeature::place`,
@@ -105,4 +129,6 @@ canPlacePool}`, 1436d7cd0 `ClampedNormalFloat::sample`, 1438eb800/1438eb960 `Col
 `MultifaceFeature::{place,placeBlockIfPossible}`, 143bc69b0 `SurfaceRelativeThresholdFeature::place`,
 149e8de60/149e8e4e0 `{IcePatch,IceSpike}Feature::place`, 143ba12e0 `SculkPatchFeature::place`, 148b47ba0/148b48870
 `SculkSpreader::{SculkSpreader,updateCursors}`, coral place functions above, 144a184d0
-`OverworldGenerator::getGenerationHeight`.
+`OverworldGenerator::getGenerationHeight`. Unlabelled: 1465e8f20/1465e9af0/1465e9360 MultifaceSpreader
+(toward direction, toward all, toward random), 148b68b30/148b68f50 `MultifaceBlock::{getStateForPlacement,hasFace}`,
+148b41810/148b42070 sculk/vein `attemptUseCharge`, 148b42aa0 vein discharge, 148b40dd0/148b41640 `attemptSpreadVein`.
