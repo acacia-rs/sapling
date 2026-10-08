@@ -79,14 +79,15 @@ fn run(rule: &Rule, source: &mut Source, only: Option<u32>, own: &ChunkBiomes, v
     }
     let mut placing = Mt19937::new(seed);
     let (biomes, surface) = (source.inputs.biomes, source.inputs.surface);
-    let biome = |[x, y, z]: [i32; 3]| biome_at(&biomes(x.div_euclid(16), z.div_euclid(16)), [x, y, z]);
+    let chunk = source.chunk;
+    let biome = |at: [i32; 3]| Some(biome_at(chunk, own, &biomes, at));
     for index in (0..count).rev() {
         let at = {
             let host = World { view, queries };
             let draws = &mut Draws { positions: &mut positions, molang: Some(&mut source.random) };
             scatter::position(&rule.distribution, index, origin, draws, &mut Molang { scope, host: &host })
         };
-        if only.is_some_and(|wanted| in_chunk(source.chunk, at).then(|| biome_at(own, at)).flatten() != Some(wanted)) {
+        if only.is_some_and(|wanted| biome_at(chunk, own, &biomes, at) != wanted) {
             continue;
         }
         let ctx = &mut Ctx { view, random: &mut placing, scope, biome: &biome, surface };
@@ -94,17 +95,19 @@ fn run(rule: &Rule, source: &mut Source, only: Option<u32>, own: &ChunkBiomes, v
     }
 }
 
-fn in_chunk(chunk: (i32, i32), [x, _, z]: [i32; 3]) -> bool {
-    x.div_euclid(16) == chunk.0 && z.div_euclid(16) == chunk.1
-}
+/// `Dimension::getDefaultBiomeId` (141882f10, vtable slot 0xc8): ocean.
+const DEFAULT_BIOME: u32 = 0;
 
-/// None outside the world's height: such positions match no biome (oracle: diamond and redstone
-/// rules scatter below -64), so they never place nor draw.
-fn biome_at(biomes: &ChunkBiomes, [x, y, z]: [i32; 3]) -> Option<u32> {
-    if !(MIN_Y..MIN_Y + HEIGHT as i32).contains(&y) {
-        return None;
+/// `BlockSource::getBiome` (141602f90): the block's biome in the source's 3x3 chunks, else the
+/// dimension's default (outside the world's height too: rules scattering below -64 place when
+/// the chunk's ocean is decorated).
+fn biome_at(source: (i32, i32), own: &ChunkBiomes, biomes: &impl Fn(i32, i32) -> std::sync::Arc<ChunkBiomes>, [x, y, z]: [i32; 3]) -> u32 {
+    let (cx, cz) = (x.div_euclid(16), z.div_euclid(16));
+    if !(MIN_Y..MIN_Y + HEIGHT as i32).contains(&y) || (cx - source.0).abs() > 1 || (cz - source.1).abs() > 1 {
+        return DEFAULT_BIOME;
     }
-    Some(biomes.biome(x.rem_euclid(16) as usize, y, z.rem_euclid(16) as usize))
+    let (lx, lz) = (x.rem_euclid(16) as usize, z.rem_euclid(16) as usize);
+    if (cx, cz) == source { own.biome(lx, y, lz) } else { biomes(cx, cz).biome(lx, y, lz) }
 }
 
 /// The chunk's biomes as BDS lists them (1438c8450): sub-chunk palettes bottom up, first seen first.
