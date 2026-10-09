@@ -6,9 +6,11 @@
 use std::sync::Arc;
 
 use super::canvas::Canvas;
-use super::jigsaw::{Piece, SetEntry, StartHeight, V2Start, data};
+use super::jigsaw::{ElementKind, Piece, SetEntry, StartHeight, V2Start, data};
 use super::probe::{Probe, RawHeights};
+use super::template::{Kind, Rotation, v2_block};
 use super::{BoundingBox, StructureKind, Structures};
+use crate::block::Block;
 use crate::density::Density;
 use crate::random::JavaRandom;
 
@@ -127,6 +129,23 @@ impl Structures {
             }
         }
         found
+    }
+
+    /// For probes: the template blocks of v2 pieces in `chunk` as (position, template name, unturned block, rotation, turned block).
+    pub fn v2_template_cells(&self, density: &Density, chunk: (i32, i32)) -> Vec<([i32; 3], String, Block, u8, Block)> {
+        let column = BoundingBox::chunk(chunk.0, chunk.1);
+        let mut cells = Vec::new();
+        for piece in self.v2_near(density, chunk).iter().flat_map(|s| s.iter()).filter(|p| p.bb.intersects(&column)) {
+            let ElementKind::Template { template, .. } = &piece.element.kind else { continue };
+            for b in template.blocks.iter().filter(|b| b.state.kind() == Kind::Block) {
+                let (dx, dy, dz) = piece.rotation.apply(b.pos);
+                let at = [piece.origin.0 + dx, piece.origin.1 + dy, piece.origin.2 + dz];
+                if column.contains(at[0], at[1], at[2]) {
+                    cells.push((at, template.name.clone(), b.state.block(Rotation::None), piece.rotation as u8, v2_block(b.state, piece.rotation)));
+                }
+            }
+        }
+        cells
     }
 
     /// Every piece meeting the canvas's chunk, in assembly order.

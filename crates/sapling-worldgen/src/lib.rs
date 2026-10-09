@@ -216,6 +216,11 @@ impl OverworldGenerator {
         feature::place_element(name, chunk, self.carved(chunk.0, chunk.1), &world, &mut random, at).unwrap_or_default()
     }
 
+    #[doc(hidden)]
+    pub fn v2_template_cells(&self, chunk_x: i32, chunk_z: i32) -> Vec<([i32; 3], String, Block, u8, Block)> {
+        self.structures.v2_template_cells(&self.density, (chunk_x, chunk_z))
+    }
+
     /// Whether a structure of `kind` starts in the chunk.
     pub fn is_structure_start(&self, kind: structure::StructureKind, chunk_x: i32, chunk_z: i32) -> bool {
         self.structures.is_start(&self.density, kind, (chunk_x, chunk_z))

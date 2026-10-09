@@ -17,6 +17,8 @@ fn main() {
     let (primary, _) = open(world).expect("oracle world");
     // BDS_STATES=1 counts each block with its states and liquid layer.
     let states = std::env::var_os("BDS_STATES").is_some();
+    // BDS_LIST=1 (with BDS_STATES) also prints every non-air cell.
+    let list = std::env::var_os("BDS_LIST").is_some();
     let mut counts: BTreeMap<String, (u32, (i32, i32, i32))> = BTreeMap::new();
     for x in n[0]..=n[3] {
         for z in n[2]..=n[5] {
@@ -24,6 +26,9 @@ fn main() {
             for y in n[1]..=n[4] {
                 let cell = bds_cell(&primary, &chunk, x, y, z);
                 let key = if states { format!("{} [{}]{}", cell.block, cell.states, cell.liquid.map_or(String::new(), |l| format!(" +{l}"))) } else { cell.block };
+                if list && key != "air []" {
+                    println!("{x} {y} {z} {key}");
+                }
                 counts.entry(key).or_insert((0, (x, y, z))).0 += 1;
             }
         }

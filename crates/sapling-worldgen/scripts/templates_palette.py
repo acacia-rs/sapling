@@ -59,6 +59,9 @@ SHAPED = {
     'wall_post_bit': [{**{k: v for k, v in zip(WALL_SIDES, sides)}, 'wall_post_bit': post}
                       for sides in itertools.product(('none', 'short', 'tall'), repeat=4) for post in '01'],
     'minecraft:corner': [{'minecraft:corner': c} for c in ('none', 'inner_left', 'inner_right', 'outer_left', 'outer_right')],
+    # v2 templates turn door halves and trapdoors their own way (src/structure/template/java_states.rs).
+    'upper_block_bit': [{'minecraft:cardinal_direction': d} for d in ('north', 'east', 'south', 'west')],
+    'upside_down_bit': [{'direction': str(d)} for d in range(4)],
 }
 
 

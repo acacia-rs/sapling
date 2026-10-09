@@ -5,6 +5,7 @@
 
 mod connect;
 mod java;
+mod java_states;
 mod load;
 mod markers;
 mod mirror;
@@ -18,6 +19,7 @@ use std::sync::OnceLock;
 
 pub use connect::rejoin;
 pub use java::{Capped, JavaPlacement};
+pub use java_states::v2_block;
 pub use load::palette;
 pub(crate) use markers::hash as marker_hash;
 #[allow(unused_imports)]

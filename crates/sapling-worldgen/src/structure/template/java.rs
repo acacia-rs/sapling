@@ -4,6 +4,7 @@
 //! applying its rules to at most `limit` blocks, picked in an order shuffled by the level seed
 //! forked at the template origin. Clipping to a chunk comes after, so pieces agree across chunks.
 
+use super::java_states::v2_block;
 use super::rules::{Rule, apply_first};
 use super::{Kind, Rotation, Template};
 use crate::block::Block;
@@ -36,7 +37,7 @@ impl JavaPlacement<'_> {
                     Some(j) => j.final_state.block(self.rotation),
                     None => continue,
                 },
-                Kind::Block => b.state.block(self.rotation),
+                Kind::Block => v2_block(b.state, self.rotation),
             };
             if block.name() == "structure_void" {
                 continue;
