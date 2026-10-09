@@ -69,6 +69,8 @@ pub struct Inputs<'a> {
     pub loaded: Load<'a>,
     /// Chunks as `loadChunk` left them, before the structure stage.
     pub carved: Load<'a>,
+    /// Chunks' pre-worldgen heightmaps (`ChunkShape::tops` before the surface and carvers).
+    pub generated_tops: &'a dyn Fn(i32, i32) -> Arc<[i16; 256]>,
     pub biomes: Biomes<'a>,
     pub surface: &'a dyn Fn(i32, i32) -> i32,
     /// A chunk's post-process generator after its lava lake (monster_room.rs).
@@ -149,7 +151,9 @@ impl Features {
                 p if p < phase_limit => self.before((x, z), p + 1, inputs),
                 _ => (inputs.carved)(x, z),
             };
-            let mut view = View::new(source, &base).with_frozen_heights(&frozen);
+            // The pre-worldgen heightmap is dropped when the chunk's decoration ends.
+            let generated = |x: i32, z: i32| (phase((x, z)) >= phase_limit).then(|| (inputs.generated_tops)(x, z));
+            let mut view = View::new(source, &base).with_frozen_heights(&frozen).with_generated_tops(&generated);
             view.on_write = liquid::write_hook();
             monster_room::monster_rooms((inputs.after_lake)(source.0, source.1), source, &mut view);
             decorate::decorate_chunk(&self.seed, source, inputs, &mut view);

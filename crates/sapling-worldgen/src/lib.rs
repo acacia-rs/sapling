@@ -58,6 +58,7 @@ pub struct OverworldGenerator {
     features: Features,
     structures: structure::Structures,
     carved: SourceCache<(i32, i32), ChunkShape>,
+    generated_tops: SourceCache<(i32, i32), [i16; 256]>,
     pieced: SourceCache<(i32, i32), structured::Pieced>,
     loaded: SourceCache<(i32, i32), ChunkShape>,
     biomes: SourceCache<(i32, i32), ChunkBiomes>,
@@ -75,6 +76,7 @@ impl OverworldGenerator {
             features: Features::new(seed),
             structures: structure::Structures::new(seed),
             carved: SourceCache::new(LOADED_LIMIT),
+            generated_tops: SourceCache::new(LOADED_LIMIT),
             pieced: SourceCache::new(LOADED_LIMIT),
             loaded: SourceCache::new(LOADED_LIMIT),
             biomes: SourceCache::new(BIOMES_LIMIT),
@@ -105,21 +107,33 @@ impl OverworldGenerator {
     /// `surfaced_blocks` then `carve`, kept for the structure stage's reads past its chunk.
     fn carved(&self, chunk_x: i32, chunk_z: i32) -> Arc<ChunkShape> {
         self.carved.get((chunk_x, chunk_z), || {
-            let mut shape = self.surfaced_blocks(chunk_x, chunk_z);
+            let (mut shape, tops) = self.surfaced(chunk_x, chunk_z);
+            self.generated_tops.get((chunk_x, chunk_z), || tops);
             self.carve(&mut shape, chunk_x, chunk_z);
             shape
         })
     }
 
+    /// The pre-worldgen heightmap (`LevelChunk` +0xf80, filled by `_prepareHeights`): `ChunkShape::tops` of the
+    /// terrain before its surface and carvers.
+    fn generated_tops(&self, chunk_x: i32, chunk_z: i32) -> Arc<[i16; 256]> {
+        self.generated_tops.get((chunk_x, chunk_z), || self.surfaced(chunk_x, chunk_z).1)
+    }
+
     /// The terrain stages in BDS's `loadChunk` order, up to (not including) carvers.
     pub fn surfaced_blocks(&self, chunk_x: i32, chunk_z: i32) -> ChunkShape {
+        self.surfaced(chunk_x, chunk_z).0
+    }
+
+    fn surfaced(&self, chunk_x: i32, chunk_z: i32) -> (ChunkShape, [i16; 256]) {
         let adjustments = self.structures.adjustments(&self.density, (chunk_x, chunk_z));
         let mut shape = self.density.adjusted_chunk_shape(chunk_x, chunk_z, (!adjustments.is_empty()).then_some(&adjustments));
+        let tops = shape.tops();
         let mut random = floor::chunk_random(chunk_x, chunk_z);
         floor::place_bedrock_floor(&mut shape, &mut random);
         let biomes = self.chunk_biomes(chunk_x, chunk_z);
         self.surface.build_chunk_surface(&mut shape, &biomes, &self.density, (chunk_x, chunk_z), &mut random);
-        shape
+        (shape, tops)
     }
 
     /// Density, aquifers, deepslate and ore veins only.
@@ -168,7 +182,9 @@ impl OverworldGenerator {
         let after_lake = |x, z| self.decoration.after_lake(x, z, &|cx, cz| self.loaded(cx, cz));
         let in_structure = |[x, y, z]: [i32; 3]| self.structures.in_structure(&self.density, (x, y, z));
         let carved = |x, z| self.carved(x, z);
-        run(feature::Inputs { loaded: &loaded, carved: &carved, biomes: &biomes, surface: &surface, after_lake: &after_lake, in_structure: &in_structure })
+        let generated_tops = |x, z| self.generated_tops(x, z);
+        let inputs = feature::Inputs { loaded: &loaded, carved: &carved, generated_tops: &generated_tops, biomes: &biomes, surface: &surface, after_lake: &after_lake, in_structure: &in_structure };
+        run(inputs)
     }
 
     /// Cave segments near a column, for probes (`Carvers::segments_near`).

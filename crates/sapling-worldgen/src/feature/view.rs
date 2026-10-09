@@ -58,6 +58,9 @@ fn blocks_light(block: Block) -> bool {
     block != Block::Air && (!thin || block.is_waterlogged())
 }
 
+/// A chunk's pre-worldgen heightmap, None once its decoration has ended.
+type Tops<'a> = &'a dyn Fn(i32, i32) -> Option<Arc<[i16; 256]>>;
+
 pub struct View<'a> {
     chunk: (i32, i32),
     load: &'a dyn Fn(i32, i32) -> Arc<ChunkShape>,
@@ -69,6 +72,7 @@ pub struct View<'a> {
     frozen: Option<&'a dyn Fn(i32, i32) -> Arc<ChunkShape>>,
     /// Per slot, the heightmap columns of `frozen` asked so far (`i16::MIN`: not yet).
     heights: RefCell<Vec<Option<Box<[i16; 256]>>>>,
+    generated: Option<Tops<'a>>,
     /// The block source's tick queue (liquid/mod.rs).
     pub ticks: TickQueue,
     /// Run after each `set_block`: `setBlock`'s neighbour updates (liquid/mod.rs).
@@ -86,6 +90,7 @@ impl<'a> View<'a> {
             tops: RefCell::new(vec![None; slots]),
             frozen: None,
             heights: RefCell::new(vec![None; slots]),
+            generated: None,
             ticks: TickQueue::default(),
             on_write: None,
         }
@@ -94,6 +99,12 @@ impl<'a> View<'a> {
     /// Heightmaps come from `frozen`'s chunks, whatever this view writes.
     pub fn with_frozen_heights(mut self, frozen: &'a dyn Fn(i32, i32) -> Arc<ChunkShape>) -> Self {
         self.frozen = Some(frozen);
+        self
+    }
+
+    /// `generated_top` reads the chunks `tops` knows (those still to finish decorating).
+    pub fn with_generated_tops(mut self, tops: Tops<'a>) -> Self {
+        self.generated = Some(tops);
         self
     }
 
@@ -219,6 +230,13 @@ impl<'a> View<'a> {
             *column = (MIN_Y..top).rev().find(|&y| blocks_light(shape.block(lx, y, lz))).map_or(MIN_Y, |y| y + 1) as i16;
         }
         *column as i32
+    }
+
+    /// The pre-worldgen heightmap (`LevelChunk` +0xf80) of a chunk whose decoration has not ended, else
+    /// `heightmap`: what `LargeSpeleothem::placeBlocks` caps a stalagmite's columns with.
+    pub fn generated_top(&self, x: i32, z: i32) -> i32 {
+        let tops = self.locate(x, MIN_Y, z).and(self.generated).and_then(|tops| tops(x.div_euclid(16), z.div_euclid(16)));
+        tops.map_or_else(|| self.heightmap(x, z), |tops| tops[(z.rem_euclid(16) * 16 + x.rem_euclid(16)) as usize] as i32)
     }
 
     /// `LevelChunk` +0xf88 plus the minimum y: the highest non-air block of the chunk holding

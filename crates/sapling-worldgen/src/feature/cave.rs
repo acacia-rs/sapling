@@ -78,7 +78,7 @@ impl SnapToSurface {
             } else if solid {
                 open(b)
             } else {
-                sturdy(b) && !(crate::xp(2) && b.dry().is_speleothem())
+                sturdy(b)
             }
         };
         let biome = (ctx.biome)(at);
@@ -98,6 +98,7 @@ impl SnapToSurface {
 
 impl VegetationPatch {
     pub fn place(&self, ctx: &mut Ctx, at: [i32; 3]) -> Option<[i32; 3]> {
+        super::trace::line(|| format!("  patch {} {} {} draw {}", at[0], at[1], at[2], ctx.random.draws()));
         let rx = self.radius.draw(ctx.random) + 1;
         let rz = self.radius.draw(ctx.random) + 1;
         let mut cells = self.ground(ctx.view, ctx.random, at, rx, rz);

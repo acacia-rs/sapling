@@ -119,7 +119,11 @@ impl Large {
                     h = ((ctx.random.next_float() * 0.199_999_99 + 0.8) * h as f32) as i32;
                 }
                 let (x, z) = (self.root[0] + dx, self.root[2] + dz);
-                let top = if self.up { ctx.view.heightmap(x, z) } else { i32::MAX };
+                let top = match self.up {
+                    true if crate::xp(3) => ctx.view.generated_top(x, z),
+                    true => ctx.view.heightmap(x, z),
+                    false => i32::MAX,
+                };
                 let mut y = self.root[1];
                 let mut placed = false;
                 for _ in 0..h {
