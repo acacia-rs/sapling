@@ -1,7 +1,79 @@
-# BDS feature residue and its floor (2026-10-09, worldgen/feat4)
+# BDS feature residue and its floor (2026-10-09, worldgen/feat4 and feat5)
 
 Companion to [worldgen-bds-features.md](worldgen-bds-features.md). What the oracle still counts wrong after the
-feat4 fixes, how much of it BDS's own nondeterminism explains, and the tools that found each cause.
+feat4 fixes, how much of it BDS's own nondeterminism explains, and the tools that found each cause. The newest
+round is first; the sections after it are feat4's and the sculk round's, with their numbers as they were.
+
+## feat5: terrain to the bit, icebergs, and what the judge hid (2026-10-09)
+Fixed, with the region each showed in (wrong + missing, 06ed458 -> feat5, the judge as it was):
+- Terrain shape (worldgen-bds.md, "Terrain port findings"): blended noise offsets, the 3D spaghetti's thickness
+  span, the pillars' cube. Every one-block column error is gone (mushroom fields 132 -> 44, near origin 2423 ->
+  2332, plains, dark forest, snowy taiga, windswept savanna 8 -> 1, and the ore blobs those columns shifted).
+- Frozen ocean icebergs (worldgen-bds-surface.md): 64-bit position hash, temperature at sea level, truncated
+  bounds, and ice counting as sea in the overworld builder (frozen ocean 300 -> 84, deep frozen ocean 186 ->
+  26, plus 2.3k cells the judge had left to "iceberg features" and its neighbours).
+- Bee nests (`single_block_feature` with placement rules, worldgen-bds-features.md): mangrove swamp 630 -> 251;
+  the edge tree at (-7979,64,8276) was the nest of the rule's first tree, placed over that tree's own root.
+- Snow over small plants (freeze pass): snowy plains 209 -> 128, snowy taiga 561 -> 511, the igloo region
+  1561 -> 1435.
+- Mushrooms on logs: the far-out oak (362 -> 287); firefly bush clusters (ported; swamp 190 -> 185).
+
+| world | wrong | missing | deterministic |
+|---|---|---|---|
+| near origin | 2081 -> 2019 | 342 -> 313 | 2115 -> 2024 |
+| far out | 329 -> 259 | 33 -> 28 | 334 -> 259 |
+| negative seed | 98 | 15 | 81 |
+| biome regions | 10895 -> 10207 | 1636 -> 1442 | 4997 -> 4115 |
+| tree regions | 9362 -> 9188 | 801 -> 783 | 6770 -> 6579 |
+| structures | 31365 -> 31206 | 6482 -> 6463 | 16800 -> 16622 |
+
+Terrain-stage errors over all worlds (`scripts/terrain_residue.py` on the dump's `.terrain` files): Shape 62 ->
+12, Carvers 28 -> 12, Surface 45 -> 41. None of the rest is terrain: Shape is an abandoned camp's podzol (2) and
+stone where lava met water (10); Surface is cinnabar where a spike cluster BDS placed made sulfur (36) and magma
+under a bubble column (5); Carvers is a village path in the stronghold region (9), a lake's obsidian neighbour
+and one diamond ore.
+
+### What the judge hid
+The oracle's "left to later stages" came from when features were not ported. Its buckets fell from 12510 to
+9495 cells with the fixes above, and reading them by reason found whole bugs:
+- "iceberg features" (1739), "freeze pass on a column top" (394), disks and blobs under icebergs (187): the
+  frozen ocean builder. The iceberg feature itself was right all along.
+- "surface under a solid-shape difference" (6442 left): the judge asked about a reshaped column before it asked
+  whether BDS's block is one only features place, so dripstone blocks and sculk under such columns never
+  counted. "ore features (or a missed vein)" (1083 left): lush-cave clay over stone (about 500), and the BDS
+  side of every ore blob that shifted.
+`judge.rs` now counts a feature-only block as a feature error under any column, and BDS's ice, snow, ores,
+disks, podzol and dirt over our terrain as missing; what stays "later" is multiface faces, terrain under a
+reshaped column, cells BDS emptied beside a feature block, waterlogged cells and geodes over carved cells.
+Judged that way (06ed458 -> feat5; later rounds compare against the right-hand numbers, "later" is 1900 cells):
+
+| world | wrong | missing | deterministic |
+|---|---|---|---|
+| near origin | 2081 -> 2019 | 370 -> 313 | 2143 -> 2024 |
+| far out | 329 -> 259 | 34 -> 29 | 335 -> 260 |
+| negative seed | 98 | 15 | 81 |
+| biome regions | 13138 -> 11269 | 2848 -> 1659 | 7729 -> 4671 |
+| tree regions | 10614 -> 10441 | 1378 -> 1342 | 8117 -> 7908 |
+| structures | 35544 -> 35322 | 6821 -> 6782 | 19737 -> 19476 |
+
+The stricter judge also showed snow layers on a pillager outpost's fences and torches (the freeze pass now
+wants a full cube under a structure block: 3209 -> 3141 there) and a fossil we do not place (60 bone blocks
+under the desert pyramid region: `minecraft:fossil_feature` is not ported).
+
+### Traced, not ours to fix here
+- Coal ore in meadow (101) and badlands (145): the first coal blob that differs (`examples/try_check`, sources
+  371,-508 and 594,-349) holds a cell that is a dripstone block in BDS, placed by an earlier-phase neighbour's
+  cluster we do not place there. The blob counts one stone cell fewer, and every later blob of the rule
+  shifts (ours-only coal counted wrong, BDS-only coal counted missing). It follows the dripstone residue.
+  Cherry grove (204) was not traced that far: its first differing blobs each have one cell BDS left stone.
+- Sulfur in windswept gravelly hills (306) and savanna (91): spike clusters, as in feat4 (scans stop at
+  lichen).
+- Old growth pine taiga, chunk -333,340 (43): BDS's abandoned camp grows a spruce at (-5315,74,5452) and one at
+  (-5308,·,5457); ours has feature elements at (-5307,74,5456) and (-5303,74,5454) instead. Jigsaw assembly.
+- One firefly bush cluster (5051..5053,63,4944) stands under oak leaves in BDS: the neighbour chunk's
+  heightmap it read had no leaves there, ours has. Not explained (edges keep parity, worldgen/drip).
+- Bamboo jungle's and the pale garden's edge chunks: a few dozen cells of podzol, grass and vines after the
+  lush caves and dripstone are set aside; not traced.
 
 ## Fixed on feat4 (cause, where it showed)
 - Ore veins (`OreFeature::place` 143b8dcb0): before the sphere test BDS keeps only cells within the widest
@@ -170,5 +242,11 @@ change this: the read is of a neighbour's planks, not of a height.
 - `examples/rule_tries` takes `RULE_ORDER=zx` for rules that draw z first and shows kelp and seagrass;
   `examples/decoration_order` takes `ANY_BLOCK=1` (it only votes on same-phase pairs now that later phases see
   earlier writes, and those rarely claim one cell).
+- feat5: `examples/try_check <seed> <world> <cx> <cz> <substring>` (per rule try and per tree of a tree loop,
+  our writes against what BDS saved in those cells: the first try that differs is where to look);
+  `SAPLING_ORACLE_DUMP` also writes `<world>.<region>.terrain` (every stable error of a stage before the
+  features) for `scripts/terrain_residue.py` (clusters with stages and pairs); `examples/column_density` (our
+  block densities around a cell), `density_dump_diff`, `octave_offsets` and `climate_dump_diff` (BDS's dumped
+  buffers against ours, worldgen-bds-debugger.md).
 - `tree_draws` finds a trunk's `z, x` pair anywhere in the stream: early matches are often chance. Trust
   `feature_trace`'s draw ranges for ours and a breakpoint log for BDS.

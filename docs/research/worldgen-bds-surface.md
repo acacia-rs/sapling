@@ -23,7 +23,8 @@ foundation (see the overworld builder), which is why copper filler vanishes unde
 - Per column, x outer, z inner. Biome: `LevelChunk::getBiome` at the heightmap (one above the highest non-air
   block, fluids included) (`findBiomesAndPrepareChunkParams` 14580c660). Lower bound: `getPreliminarySurfaceLevel`
   of the quart column (4x4 cache 144cd2f80) minus 8, clamped to [-64, 255]; builders work from the heightmap down.
-- Depth noise: `minecraft:surface` PerlinSimplex, 4 octaves (Xoroshiro, offsets `nextFloat*256` x,y,z in order),
+- Depth noise: `minecraft:surface` PerlinSimplex, 4 octaves (Xoroshiro, offsets `nextFloat*256` x,y,z in order;
+  Java's 24-bit float here, not the rounded double of the blended noise: tried, four columns broke),
   `sum simplex2(x*k/8 + xo, z*k/8 + zo) * 0.55/k`, k = 1, 1/2, 1/4, 1/8 (loadChunk 148211560). Simplex 2D/3D are
   Java's in f32 (145e27a70/145e27d50) except `floor(v) = (int)v - (v <= 0)`.
 - Material adjustments (143907ca0): noise = generator +0xd50, 3 octaves of 3D simplex from an MT on the low 32
@@ -31,7 +32,9 @@ foundation (see the overworld builder), which is why copper filler vanishes unde
   p = (x, 0, z). In range `[min, max)` replaces the listed materials; later adjustments win.
 - Overworld builder (145809ef0) = Java 1.17 `DefaultSurfaceBuilder` with: depth `(int)(mt.nextFloat()*0.25 +
   noise/3 + 3)`; sea level = 1 + top of the last water/lava run above, reset to 0x800003e8 by air (dry columns
-  never see "underwater"); replaceable = stone, granite, diorite, andesite (+ polished); first replaceable:
+  never see "underwater"); packed ice and blue ice raise it like water (14580ae5c tests the material, then the
+  two block ids 0x14cce2ba8 and 0x14cce2b78), so the bed under an iceberg is the sea floor material on the
+  foundation, not top and mid; replaceable = stone, granite, diorite, andesite (+ polished); first replaceable:
   y in [sea-4, sea+1] takes top/mid, y < sea-1 takes mid, or sea floor (then foundation) when
   `y == lower+1 || y < sea - (sea_floor_depth + depth)`; after the run every replaceable becomes the foundation;
   a run ending on sand/red sand/suspicious sand continues as sandstone for `nextInt(4) + max(0, y - sea)`;
@@ -48,6 +51,14 @@ foundation (see the overworld builder), which is why copper filler vanishes unde
   `iceberg_surface` -6 [1;3], `iceberg_pillar_roof` -3 [1] (x1.17) from `Xoroshiro(seed32 sign-extended).fork`,
   positional `at(x,0,z)` for the snow/ice draws. Only where `min(|surface*8.25|, pillar*15) > 1.8` does it call
   the overworld builder; other frozen-ocean columns keep bare stone and draw nothing from the chunk MT.
+  Three details the oracle's judge hid until 2026-10-09 (1.7k cells counted as "iceberg features"):
+  - its `at` multiplies x in 64 bits (`imul rcx, rdi, 0x2fc20f` at 1487e4536; `PositionalFactory::at_wide`),
+    unlike `_prepareHeights`' and the aquifer's, which wrap it in an int as Java does: the same up to |x| 686;
+  - the height loses 2 where `Biome::getTemperature` at (x, sea level, z) exceeds 0.1 (virtual call at
+    1487e44cb), and that temperature is 0.2 in a frozen ocean's warm patches (surface/temperature.rs);
+  - the loop's bounds are truncated (`cvttss2si` at 1487e470c and 1487e4713): air cells draw while
+    `y < (int)top`, water cells while `y > (int)floor`. A fractional top drew for one cell more, which moved
+    every later hole of the column.
 - Swamp (1487e4d10, init 1487e4870): 2 simplex octaves from MT(seed32), `sum simplex2(x/4*k, z/4*k)/k`; if > 0 and
   the top is below y 63, the topmost non-water block down to `63 - max_puddle_depth` becomes water; then overworld.
 - Biome parameters come from the vanilla behaviour packs (`behavior_packs/vanilla*/__brarchive/biomes.brarchive`,

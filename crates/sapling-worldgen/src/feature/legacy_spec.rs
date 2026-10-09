@@ -1,6 +1,71 @@
-//! The shapes of the hardcoded tree, foliage and rock features (legacy_tree.rs, scripts/legacy_data.py).
+//! The shapes of the features BDS builds in code: plants, ice, coral and piles (`Legacy`), and the
+//! tree, foliage and rock features (legacy_tree.rs, scripts/legacy_data.py).
 
 use crate::block::Block;
+
+#[derive(Debug, Clone, Copy)]
+pub enum Legacy {
+    DeadBush,
+    Reeds,
+    Cactus,
+    Melon,
+    Waterlily,
+    /// `BlockPileFeature` with a pumpkin, `count` tries.
+    Pumpkin { count: i32 },
+    /// `BlockPileFeature` with a sweet berry bush, `count` tries.
+    SweetBerries { count: i32 },
+    Mushroom { block: Block, count: i32 },
+    Flower { kind: FlowerKind, count: i32 },
+    /// `firefly_bush_cluster_feature`, and `..._water_cluster_feature` beside water (land.rs).
+    FireflyBush { water: bool },
+    /// `legacy:ice_feature`: an iceberg in 1 of 8 chunks (iceberg.rs).
+    Iceberg,
+    /// `legacy:springs_feature`: water and lava springs in cave walls (springs.rs).
+    Springs,
+    /// `ice_patch_feature`, `ice_spike_feature` (ice_spike.rs).
+    IcePatch,
+    IceSpike,
+    /// `pickle_feature` (aquatic.rs).
+    SeaPickle,
+    /// `bamboo_feature`, `podzol_area_feature` and `vines_feature` (jungle.rs).
+    Bamboo,
+    PodzolArea,
+    Vines,
+    /// `pale_moss_vegetation_feature` and `eyeblossom_feature` (pale.rs).
+    PaleMossVegetation,
+    Eyeblossom,
+    /// `meadow_flower_feature` (flowers.rs).
+    MeadowFlower,
+    /// `grass_disc_feature` (disk.rs).
+    GrassDisc,
+    /// The warm ocean's `coral_crust_feature`, `coral_feature`, `coral_hang_feature` and
+    /// `sea_anemone_feature` (coral/).
+    CoralCrust,
+    Coral,
+    CoralHang,
+    SeaAnemone,
+    /// The village piles (pile.rs).
+    Pile(PileBlock),
+}
+
+/// The block of a village pile feature (`hay_pile_feature` and the others, vtable 14a9258d0).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum PileBlock {
+    Hay,
+    Melon,
+    Pumpkin,
+    Snow,
+    Ice,
+}
+
+/// The flower table of a `LegacyFlowerFeature` (1438ef3b0's switch; its forest case is not ported).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum FlowerKind {
+    Overworld,
+    Plains,
+    Swamp,
+    FlowerForest,
+}
 
 #[derive(Debug)]
 pub enum LegacyTree {

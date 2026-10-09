@@ -125,14 +125,15 @@ fn shaded(view: &View, [x, y, z]: [i32; 3]) -> bool {
     view.heightmap(x, z) > y || (y + 1..=y + 10).any(|above| view.block(x, above, z).is_solid())
 }
 
-/// On mycelium or podzol anywhere; elsewhere only with the whole diamond around it shaded.
+/// On mycelium, podzol or a log anywhere (oracle: a fallen log's mushroom stands in the open);
+/// elsewhere only with the whole diamond around it shaded.
 pub fn mushroom(view: &mut View, random: &mut Mt19937, at: [i32; 3], block: Block, count: i32) -> bool {
     let mut p = at;
     for _ in 0..count {
         let [x, y, z] = p;
         let below = view.block(x, y - 1, z);
         if view.block(x, y, z) == Block::Air && below != Block::Air {
-            let soil = matches!(below, Block::Mycelium | Block::Podzol);
+            let soil = matches!(below, Block::Mycelium | Block::Podzol) || below.is_wood() && !below.is_leaves();
             if soil || SHADE.iter().all(|&[dx, dz]| shaded(view, [x + dx, y, z + dz])) && can_survive(view, p, block) {
                 view.set_block(x, y, z, block);
             }

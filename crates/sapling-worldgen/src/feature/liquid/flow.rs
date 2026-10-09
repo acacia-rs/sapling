@@ -43,14 +43,14 @@ fn delay(lava: bool) -> u64 {
 /// air, liquids, plants and snow layers give way.
 fn blocking(view: &View, p: [i32; 3], lava: bool) -> bool {
     let b = block(view, p);
-    if lava { b.is_solid() || lava_blocking(b) } else { b.is_solid() && b != Block::SnowLayer }
+    if lava { b.is_solid() || lava_blocking(b) } else { b.is_solid() && !b.is_snow_layer() }
 }
 
 /// Lava asks the block type instead (vtable +0xc8, base 141a28450: the material blocks motion or is
 /// solid): these non-solid types override it to hold lava.
 fn lava_blocking(b: Block) -> bool {
     let name = b.name();
-    b == Block::SnowLayer
+    b.is_snow_layer()
         || b.multiface().is_some()
         || matches!(name, "azalea" | "flowering_azalea" | "big_dripleaf" | "small_dripleaf_block" | "ladder" | "waterlily" | "scaffolding")
         || ["bamboo", "rail", "candle", "campfire"].iter().any(|part| name.contains(part))

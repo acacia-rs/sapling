@@ -40,7 +40,7 @@ fn supports(below: Block) -> bool {
         return true;
     }
     match flags(below) {
-        0 => below.is_solid() && !below.is_leaves() && below != Block::SnowLayer,
+        0 => below.is_solid() && !below.is_leaves() && !below.is_snow_layer(),
         f => f & FULL_CUBE != 0,
     }
 }

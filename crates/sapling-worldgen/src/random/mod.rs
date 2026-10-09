@@ -11,4 +11,4 @@ mod xoroshiro;
 pub use java::JavaRandom;
 pub use md5::md5;
 pub use mt::{LargeFeatureSeed, Mt19937, force_odd, unit};
-pub use xoroshiro::{PositionalFactory, Xoroshiro, position_seed};
+pub use xoroshiro::{PositionalFactory, Xoroshiro, position_seed, wide_position_seed};

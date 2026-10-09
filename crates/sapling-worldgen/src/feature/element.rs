@@ -39,7 +39,5 @@ pub fn place_element(name: &str, chunk: (i32, i32), centre: Arc<ChunkShape>, wor
 /// The v2 element's generator: an MT seeded with Java's `Mth.getSeed` of the position (x times
 /// its constant in 64 bits), shifted down 16.
 pub fn element_random([x, y, z]: [i32; 3]) -> Mt19937 {
-    let seed = (x as i64).wrapping_mul(3_129_871) ^ (z as i64).wrapping_mul(116_129_781) ^ y as i64;
-    let seed = seed.wrapping_mul(seed).wrapping_mul(42_317_861).wrapping_add(seed.wrapping_mul(11));
-    Mt19937::new((seed as u64 >> 16) as u32)
+    Mt19937::new(crate::random::wide_position_seed(x, y, z) as u32)
 }

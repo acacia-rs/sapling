@@ -8,6 +8,8 @@ use crate::shaper::DENSITY_SCALE;
 const SKIP_BELOW: f32 = -150.0;
 /// Java 1.5625 times 128: the sloped-cheese threshold between entrances and caverns.
 const CAVERN_THRESHOLD: f32 = 200.0;
+/// The 3D spaghetti's thickness range, 0.088 - 0.065 in f32: one step above 0.023 (14a922758).
+const THICKNESS_3D_SPAN: f32 = 0.088 - 0.065;
 /// `minY * 0.125`, the spaghetti-2d elevation floor.
 const MIN_CELL_Y: f32 = -8.0;
 
@@ -29,7 +31,7 @@ impl CaveNoises {
         let roughness = modulator * (0.4 - self.spaghetti_roughness.sample(x, y, z).abs());
 
         let rarity = quantize_3d(self.spaghetti_3d_rarity.sample(x + x, y, z + z));
-        let thickness = map_unit(self.spaghetti_3d_thickness.sample(x, y, z), 0.023, 0.065);
+        let thickness = map_unit(self.spaghetti_3d_thickness.sample(x, y, z), THICKNESS_3D_SPAN, 0.065);
         let inverse = 1.0 / rarity;
         let (sx, sy, sz) = (inverse * x, y * inverse, z * inverse);
         let first = (self.spaghetti_3d_1.sample(sx, sy, sz) * rarity).abs() - thickness;
@@ -81,7 +83,9 @@ impl CaveNoises {
 
         let rareness = (self.pillar_rareness.sample(x, y, z) + 1.0) * 0.5;
         let rareness = rareness + rareness + 0.0;
-        let pillar_thickness = map_unit(self.pillar_thickness.sample(x, y, z), 1.1, 0.0).powf(3.0);
+        // BDS calls the CRT's `powf(t, 3)`, rounded correctly but for 1 in 16k; libm's differs per platform.
+        let t = map_unit(self.pillar_thickness.sample(x, y, z), 1.1, 0.0) as f64;
+        let pillar_thickness = (t * t * t) as f32;
         let pillar = self.pillar.sample(x * 25.0, y * 0.3, z * 25.0);
         let pillar = ((pillar + pillar) - rareness) * pillar_thickness;
         let pillar = if 0.03 < pillar { pillar } else { -f32::MAX };

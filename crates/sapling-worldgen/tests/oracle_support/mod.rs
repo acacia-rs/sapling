@@ -93,9 +93,9 @@ pub fn bds_cell(world: &LevelDbWorld, chunk: &Chunk, x: i32, y: i32, z: i32) -> 
 }
 
 impl BdsCell {
-    /// The same block and states, with water in the second layer exactly when the block is waterlogged.
+    /// The same block and states, and the same second layer (a waterlogged block's water, a snow layer's plant).
     pub fn is(&self, block: Block) -> bool {
-        let liquid = block.is_waterlogged().then_some("water");
+        let liquid = block.second_layer().map(Block::name);
         self.block == block.name() && self.states == block.states() && self.liquid.as_deref() == liquid
     }
 

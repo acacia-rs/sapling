@@ -55,6 +55,17 @@ impl Density {
         Cells { density, noodle, veins }
     }
 
+    #[doc(hidden)]
+    pub fn blended_offsets(&self) -> [Vec<[f32; 3]>; 3] {
+        self.blended.offsets()
+    }
+
+    /// The blended noise's three octave sums over a chunk's corners (examples/density_dump_diff.rs).
+    #[doc(hidden)]
+    pub fn blended_parts(&self, chunk_x: i32, chunk_z: i32) -> [Box<CellGrid>; 3] {
+        self.blended.parts([(chunk_x * 4) as f32, MIN_CELL_Y as f32, (chunk_z * 4) as f32])
+    }
+
     fn corner_density(&self, blended: f32, column: &QuartClimate, cy: i32, position: [f32; 3]) -> f32 {
         let block_y = ((MIN_CELL_Y + cy) * 8) as f32;
         let height = (block_y * -0.007_812_5 + 1.0 + column.offset + column.jagged) * column.factor;

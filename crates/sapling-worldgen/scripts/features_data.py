@@ -42,6 +42,8 @@ HARDCODED = {
     'minecraft:legacy:plains_flower_feature': _LEGACY.format(f'Flower {{ kind: FlowerKind::Plains, count: {_PATCH_COUNT} }}'),
     'minecraft:legacy:swamp_flower_feature': _LEGACY.format(f'Flower {{ kind: FlowerKind::Swamp, count: {_PATCH_COUNT} }}'),
     'minecraft:legacy:flower_forest_flower_feature': _LEGACY.format(f'Flower {{ kind: FlowerKind::FlowerForest, count: {_PATCH_COUNT} }}'),
+    'minecraft:firefly_bush_cluster_feature': _LEGACY.format('FireflyBush { water: false }'),
+    'minecraft:firefly_bush_water_cluster_feature': _LEGACY.format('FireflyBush { water: true }'),
     'minecraft:legacy:ice_feature': _LEGACY.format('Iceberg'),
     'minecraft:legacy:springs_feature': _LEGACY.format('Springs'),
     'minecraft:ice_patch_feature': _LEGACY.format('IcePatch'),

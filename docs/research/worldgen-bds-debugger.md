@@ -20,6 +20,10 @@ One JSON object, `{"breakpoints": [...]}`; the fields are listed in the script's
   (`place(this, result, ctx)`: the position is at ctx+8, the random at ctx+0x18), `["rdx", 0, ...]` for
   `BlockSource::setBlock` (1415f6ae0: rdx position, r8 block). `{"box": [x0, z0, x1, z1]}` takes an area,
   `{"boxes": [...]}` several (one run over many single-chunk regions).
+  `BlockSource::setBlock` (1415f6ae0: rdx position, r8 block). `{"box": [x0, z0, x1, z1]}` takes an area.
+- `filter2` takes a `ChunkPos` (two ints); `filter_format: "fff"` reads the filter's three values as floats.
+- `dump`, `dump_ptr` and `dump_on_return` write memory to files: a range at a register, the range a stored
+  pointer names, and an output buffer once the call has returned.
 - `strings: [["rax", 3]]` names a `Block*` (three pointer hops reach `minecraft:<name>`); air prints unrelated
   names (a wall or pumpkin string), so read it as "air" when the same pointer shows for obviously empty cells.
 - `backtrace` is exact (dbghelp `StackWalk64` over the exe's unwind data). `stack` only scans stack words and
@@ -74,6 +78,17 @@ One JSON object, `{"breakpoints": [...]}`; the fields are listed in the script's
 - Reading the run's world: `<out dir>/world` opens like an oracle world (`examples/bds_blocks`, `BDS_LIST=<name>`
   lists cells). A run over many regions under the debugger can miss the script's load deadline ("tiles failed"):
   the hits are complete, the saved world is not.
+
+- Whether a float computation is exact: dump BDS's buffers and compare them bit for bit, largest unit first.
+  `_computeDensityCells` (14822d4b0: rdx the output grid of 5x5x41 floats, r8 the chunk, r9 the climate cache
+  {x0, z0, width, entries at +0x10, 0x28 bytes each}, rcx+0x280/+0x2a8/+0x2d0 the blended noise's octave objects)
+  with `filter2` on r8 and `dump_on_return`/`dump_ptr`; its three octave sums are on its stack once the fills
+  are done (14822d84a: rsp+0x213c main, +0x1138 lower, +0x134 upper; the grid origin at rsp+0x64 is three
+  floats, so `filter_format: "fff"`). `examples/density_dump_diff`, `octave_offsets` and `climate_dump_diff`
+  read the dumps. The corner densities differed in 632 of 1025 corners, the three sums in all of them, the
+  octave objects' offsets by a few f32 steps, and that was the bug (worldgen-bds.md, "Terrain port findings").
+- A float inside a function: `xmm: [0, 6]` logs the registers' low floats with their bits at a breakpoint
+  placed on the instruction after a call (the result) or before one (an argument).
 
 `WORLDGEN_PORT` picks the server port (default 19290) so two sessions' copies can run at once. A run holds about
 0.5 GB; on 2026-10-09 the harness killed one for low memory with the lock directory left behind.
