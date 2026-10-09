@@ -23,11 +23,7 @@ impl Click {
     /// The quarter the placer looks into: 0 south, 1 west, 2 north, 3 east.
     pub(super) fn quarter(&self) -> usize {
         // Half-way turns go up, as the game rounds them: `round()` would send -45 the other way.
-        if self.yaw.is_finite() {
-            (self.yaw / 90.0 + 0.5).floor().rem_euclid(4.0) as usize % 4
-        } else {
-            0
-        }
+        if self.yaw.is_finite() { (self.yaw / 90.0 + 0.5).floor().rem_euclid(4.0) as usize % 4 } else { 0 }
     }
 
     /// Whether the block goes into the upper half of its cell.
@@ -41,64 +37,32 @@ impl Click {
 
     /// The sixteenth of a turn a standing sign shows its face to, towards the placer.
     fn sixteenth(&self) -> &'static str {
-        const TURNS: [&str; 16] = [
-            "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15",
-        ];
+        const TURNS: [&str; 16] = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15"];
         let yaw = if self.yaw.is_finite() { self.yaw } else { 0.0 };
-        TURNS[((yaw + 180.0) * 16.0 / 360.0 + 0.5)
-            .floor()
-            .rem_euclid(16.0) as usize
-            % 16]
+        TURNS[((yaw + 180.0) * 16.0 / 360.0 + 0.5).floor().rem_euclid(16.0) as usize % 16]
     }
 
     /// A hanging sign's `facing_direction`: under a ceiling it faces its placer; on a wall its
     /// board sticks out, facing away from the way along the wall the placer looks (Java
     /// `CeilingHangingSignBlock`, `WallHangingSignBlock`).
     fn hanging_sign_facing(&self) -> &'static str {
-        let yaw = if self.yaw.is_finite() {
-            self.yaw.to_radians()
-        } else {
-            0.0
-        };
+        let yaw = if self.yaw.is_finite() { self.yaw.to_radians() } else { 0.0 };
         match self.face {
-            Face::North | Face::South => {
-                if -yaw.sin() < 0.0 {
-                    "5"
-                } else {
-                    "4"
-                }
-            }
-            Face::West | Face::East => {
-                if yaw.cos() > 0.0 {
-                    "2"
-                } else {
-                    "3"
-                }
-            }
+            Face::North | Face::South => if -yaw.sin() < 0.0 { "5" } else { "4" },
+            Face::West | Face::East => if yaw.cos() > 0.0 { "2" } else { "3" },
             Face::Down | Face::Up => ["2", "5", "3", "4"][self.quarter()],
         }
     }
 
     fn value(&self, block: &str, property: &str) -> Option<&'static str> {
         let ends = |list: &[&str]| list.iter().any(|end| block.ends_with(end));
-        let on_a_face = ends(&[
-            "ladder",
-            "button",
-            "wall_sign",
-            "wall_banner",
-            "_skull",
-            "_head",
-        ]);
+        let on_a_face = ends(&["ladder", "button", "wall_sign", "wall_banner", "_skull", "_head"]);
         let (looks_down, looks_up) = (self.pitch > 45.0, self.pitch < -45.0);
         Some(match property {
             // Dispensers and the like face their placer, up or down under a steep look.
             "facing_direction" if ends(&["dispenser", "dropper", "barrel"]) && looks_down => "1",
             "facing_direction" if ends(&["dispenser", "dropper", "barrel"]) && looks_up => "0",
-            "facing_direction"
-                if ends(&["dispenser", "dropper", "barrel", "glazed_terracotta"]) =>
-            {
-                ["2", "5", "3", "4"][self.quarter()]
-            }
+            "facing_direction" if ends(&["dispenser", "dropper", "barrel", "glazed_terracotta"]) => ["2", "5", "3", "4"][self.quarter()],
             // A piston's head faces the placer too, but its sideways values name the other end.
             "facing_direction" if block.ends_with("piston") => match (looks_down, looks_up) {
                 (true, _) => "1",
@@ -106,40 +70,24 @@ impl Click {
                 _ => ["3", "4", "2", "5"][self.quarter()],
             },
             // An observer watches the way its placer looks.
-            "minecraft:facing_direction" if block.ends_with("observer") => {
-                match (looks_down, looks_up) {
-                    (true, _) => "down",
-                    (_, true) => "up",
-                    _ => ["south", "west", "north", "east"][self.quarter()],
-                }
-            }
+            "minecraft:facing_direction" if block.ends_with("observer") => match (looks_down, looks_up) {
+                (true, _) => "down",
+                (_, true) => "up",
+                _ => ["south", "west", "north", "east"][self.quarter()],
+            },
             // A hopper's spout points into the clicked block.
-            "facing_direction" if block.ends_with("hopper") => {
-                ["0", "0", "3", "2", "5", "4"][self.face as usize]
-            }
-            "facing_direction" if ends(&["end_rod", "lightning_rod"]) => {
-                ["0", "1", "2", "3", "4", "5"][self.face as usize]
-            }
+            "facing_direction" if block.ends_with("hopper") => ["0", "0", "3", "2", "5", "4"][self.face as usize],
+            "facing_direction" if ends(&["end_rod", "lightning_rod"]) => ["0", "1", "2", "3", "4", "5"][self.face as usize],
             // A bed's head lies the way its placer looks.
             "direction" if block.ends_with(":bed") => ["0", "1", "2", "3"][self.quarter()],
-            "direction" if ends(&["loom", "beehive", "bee_nest"]) => {
-                ["2", "3", "0", "1"][self.quarter()]
-            }
+            "direction" if ends(&["loom", "beehive", "bee_nest"]) => ["2", "3", "0", "1"][self.quarter()],
             // A cocoa pod names the side its log is on: the clicked one.
-            "direction" if block.ends_with(":cocoa") => {
-                ["0", "0", "0", "2", "1", "3"][self.face as usize]
-            }
+            "direction" if block.ends_with(":cocoa") => ["0", "0", "0", "2", "1", "3"][self.face as usize],
             // A rail starts along the look; rails.rs then joins it to its neighbours.
             "rail_direction" => ["0", "1"][self.quarter() % 2],
             // A door and an anvil stand across the look; a gate swings the way its placer looks.
-            "minecraft:cardinal_direction"
-                if ends(&["_door", "anvil"]) && !block.ends_with("trapdoor") =>
-            {
-                ["west", "north", "east", "south"][self.quarter()]
-            }
-            "minecraft:cardinal_direction" if ends(&["fence_gate", "campfire"]) => {
-                ["south", "west", "north", "east"][self.quarter()]
-            }
+            "minecraft:cardinal_direction" if ends(&["_door", "anvil"]) && !block.ends_with("trapdoor") => ["west", "north", "east", "south"][self.quarter()],
+            "minecraft:cardinal_direction" if ends(&["fence_gate", "campfire"]) => ["south", "west", "north", "east"][self.quarter()],
             "facing_direction" if block.ends_with("_hanging_sign") => self.hanging_sign_facing(),
             "lever_direction" => match (self.face, self.quarter() % 2 == 1) {
                 (Face::Up, false) => "up_north_south",
@@ -153,9 +101,7 @@ impl Click {
             },
             "ground_sign_direction" => self.sixteenth(),
             // Named for the side the torch leans away from: the block it hangs on.
-            "torch_facing_direction" => {
-                ["top", "top", "south", "north", "east", "west"][self.face as usize]
-            }
+            "torch_facing_direction" => ["top", "top", "south", "north", "east", "west"][self.face as usize],
             "facing_direction" if on_a_face => ["0", "1", "2", "3", "4", "5"][self.face as usize],
             "direction" if block.ends_with("trapdoor") => ["3", "0", "2", "1"][self.quarter()],
             "pillar_axis" => match self.face {
@@ -175,20 +121,13 @@ impl Click {
 
 /// The state of `id`'s block that `click` places; `id` itself for a block that does not turn.
 pub(super) fn oriented(registry: &BlockRegistry, id: u32, click: &Click) -> u32 {
-    let Some(state) = registry
-        .get(id)
-        .filter(|state| !state.properties.is_empty())
-    else {
-        return id;
-    };
+    let Some(state) = registry.get(id).filter(|state| !state.properties.is_empty()) else { return id };
     let turned = |pair: &str| match pair.split_once('=') {
         Some((key, value)) => format!("{key}={}", click.value(state.name, key).unwrap_or(value)),
         None => pair.to_owned(),
     };
     let properties: Vec<String> = state.properties.split(',').map(turned).collect();
-    registry
-        .find(state.name, &properties.join(","))
-        .unwrap_or(id)
+    registry.find(state.name, &properties.join(",")).unwrap_or(id)
 }
 
 #[cfg(test)]
@@ -198,89 +137,25 @@ mod tests {
     fn placed(block: &str, face: Face, height: f32, yaw: f32) -> String {
         let registry = BlockRegistry::vanilla();
         let id = registry.states_of(block).next().expect("a vanilla block").0;
-        registry
-            .get(oriented(
-                &registry,
-                id,
-                &Click {
-                    face,
-                    height,
-                    yaw,
-                    pitch: 0.0,
-                },
-            ))
-            .expect("a state")
-            .properties
-            .to_owned()
+        registry.get(oriented(&registry, id, &Click { face, height, yaw, pitch: 0.0 })).expect("a state").properties.to_owned()
     }
 
     #[test]
     fn a_placed_block_turns_to_the_click_and_the_placer() {
-        assert_eq!(
-            [
-                placed("minecraft:oak_log", Face::Up, 1.0, 0.0),
-                placed("minecraft:oak_log", Face::East, 0.5, 0.0)
-            ],
-            ["pillar_axis=y", "pillar_axis=x"]
-        );
-        assert!(
-            placed("minecraft:oak_stairs", Face::Up, 1.0, -90.0)
-                .ends_with("upside_down_bit=0,weirdo_direction=0"),
-            "looking east"
-        );
-        assert!(
-            placed("minecraft:oak_stairs", Face::North, 0.8, 170.0)
-                .ends_with("upside_down_bit=1,weirdo_direction=3"),
-            "high on a side, looking north"
-        );
-        assert!(
-            placed("minecraft:furnace", Face::Up, 1.0, 0.0)
-                .contains("minecraft:cardinal_direction=north"),
-            "faces a placer who looks south"
-        );
-        assert!(
-            placed("minecraft:stone_brick_slab", Face::Down, 0.0, 0.0)
-                .contains("minecraft:vertical_half=top")
-        );
+        assert_eq!([placed("minecraft:oak_log", Face::Up, 1.0, 0.0), placed("minecraft:oak_log", Face::East, 0.5, 0.0)], ["pillar_axis=y", "pillar_axis=x"]);
+        assert!(placed("minecraft:oak_stairs", Face::Up, 1.0, -90.0).ends_with("upside_down_bit=0,weirdo_direction=0"), "looking east");
+        assert!(placed("minecraft:oak_stairs", Face::North, 0.8, 170.0).ends_with("upside_down_bit=1,weirdo_direction=3"), "high on a side, looking north");
+        assert!(placed("minecraft:furnace", Face::Up, 1.0, 0.0).contains("minecraft:cardinal_direction=north"), "faces a placer who looks south");
+        assert!(placed("minecraft:stone_brick_slab", Face::Down, 0.0, 0.0).contains("minecraft:vertical_half=top"));
         assert_eq!(placed("minecraft:stone", Face::Up, 1.0, 0.0), "");
-        assert_eq!(
-            [
-                placed("minecraft:torch", Face::Up, 1.0, 0.0),
-                placed("minecraft:torch", Face::East, 0.5, 0.0)
-            ],
-            ["torch_facing_direction=top", "torch_facing_direction=west"]
-        );
+        assert_eq!([placed("minecraft:torch", Face::Up, 1.0, 0.0), placed("minecraft:torch", Face::East, 0.5, 0.0)], ["torch_facing_direction=top", "torch_facing_direction=west"]);
         assert!(placed("minecraft:ladder", Face::North, 0.5, 0.0).contains("facing_direction=2"));
-        assert!(
-            placed("minecraft:lever", Face::Up, 1.0, 90.0).contains("lever_direction=up_east_west")
-                && placed("minecraft:lever", Face::South, 0.5, 0.0)
-                    .contains("lever_direction=south")
-        );
-        assert!(
-            placed("minecraft:dispenser", Face::Up, 1.0, 0.0).contains("facing_direction=2"),
-            "faces a placer who looks south"
-        );
-        assert!(
-            placed("minecraft:piston", Face::Up, 1.0, 0.0).contains("facing_direction=3")
-                && placed("minecraft:observer", Face::Up, 1.0, 0.0)
-                    .contains("minecraft:facing_direction=south")
-        );
-        assert!(
-            placed("minecraft:spruce_door", Face::Up, 1.0, 0.0)
-                .contains("minecraft:cardinal_direction=west"),
-            "across the look"
-        );
-        assert!(
-            placed("minecraft:oak_stairs", Face::Up, 1.0, -45.0).ends_with("weirdo_direction=2"),
-            "half-way between east and south is south"
-        );
-        assert!(
-            placed("minecraft:standing_sign", Face::Up, 1.0, 0.0)
-                .contains("ground_sign_direction=8")
-        );
-        assert!(
-            placed("minecraft:bed", Face::Up, 1.0, 90.0).contains("direction=1"),
-            "head to the west"
-        );
+        assert!(placed("minecraft:lever", Face::Up, 1.0, 90.0).contains("lever_direction=up_east_west") && placed("minecraft:lever", Face::South, 0.5, 0.0).contains("lever_direction=south"));
+        assert!(placed("minecraft:dispenser", Face::Up, 1.0, 0.0).contains("facing_direction=2"), "faces a placer who looks south");
+        assert!(placed("minecraft:piston", Face::Up, 1.0, 0.0).contains("facing_direction=3") && placed("minecraft:observer", Face::Up, 1.0, 0.0).contains("minecraft:facing_direction=south"));
+        assert!(placed("minecraft:spruce_door", Face::Up, 1.0, 0.0).contains("minecraft:cardinal_direction=west"), "across the look");
+        assert!(placed("minecraft:oak_stairs", Face::Up, 1.0, -45.0).ends_with("weirdo_direction=2"), "half-way between east and south is south");
+        assert!(placed("minecraft:standing_sign", Face::Up, 1.0, 0.0).contains("ground_sign_direction=8"));
+        assert!(placed("minecraft:bed", Face::Up, 1.0, 90.0).contains("direction=1"), "head to the west");
     }
 }

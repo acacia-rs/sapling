@@ -30,24 +30,8 @@ macro_rules! shown {
     };
 }
 shown!(
-    InventorySlot,
-    InventoryContent,
-    ItemStackResponse,
-    ContainerOpen,
-    ContainerClose,
-    BlockEvent,
-    LevelSoundEvent,
-    AddItemEntity,
-    TakeItemEntity,
-    AddEntity,
-    RemoveEntity,
-    MoveEntity,
-    MoveEntityDelta,
-    SetEntityMotion,
-    SetEntityData,
-    UpdateAttributes,
-    LevelEvent,
-    Disconnect,
+    InventorySlot, InventoryContent, ItemStackResponse, ContainerOpen, ContainerClose, BlockEvent, LevelSoundEvent, AddItemEntity, TakeItemEntity, AddEntity,
+    RemoveEntity, MoveEntity, MoveEntityDelta, SetEntityMotion, SetEntityData, UpdateAttributes, LevelEvent, Disconnect,
 );
 
 struct Probe {
@@ -88,11 +72,7 @@ impl Probe {
     }
 
     /// Runs the bot's own action, then prints what follows for a while.
-    async fn act<T: std::fmt::Debug, E: std::fmt::Debug>(
-        &mut self,
-        label: &str,
-        result: Result<T, E>,
-    ) -> Result<(), String> {
+    async fn act<T: std::fmt::Debug, E: std::fmt::Debug>(&mut self, label: &str, result: Result<T, E>) -> Result<(), String> {
         println!("## {label} -> {result:?}");
         self.settle(SETTLE).await
     }
@@ -104,59 +84,30 @@ fn place(pos: [i32; 3]) -> String {
 
 #[tokio::main(flavor = "current_thread")]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let server = std::env::args()
-        .nth(1)
-        .ok_or("usage: bds_container_probe <server>")?;
-    let config = BotConfig {
-        physics: true,
-        subscribe: PacketFilter::all(),
-        ..BotConfig::default()
-    };
+    let server = std::env::args().nth(1).ok_or("usage: bds_container_probe <server>")?;
+    let config = BotConfig { physics: true, subscribe: PacketFilter::all(), ..BotConfig::default() };
     let mut bot = Bot::connect(Client::builder(&server).offline("Prober"), config).await?;
     bot.wait_ticks(60).await?;
-    for line in [
-        "gamemode creative",
-        "clear @s",
-        "xp -100L @s",
-        "fill ~-6 ~-1 ~-6 ~6 ~-1 ~6 stone",
-        "fill ~-6 ~ ~-6 ~6 ~4 ~6 air",
-    ] {
+    for line in ["gamemode creative", "clear @s", "xp -100L @s", "fill ~-6 ~-1 ~-6 ~6 ~-1 ~6 stone", "fill ~-6 ~ ~-6 ~6 ~4 ~6 air"] {
         bot.client().command(line);
         bot.wait_ticks(20).await?;
     }
     while let Ok(Some(_)) = tokio::time::timeout(Duration::from_millis(5), bot.next()).await {}
-    let feet = bot
-        .movement()
-        .and_then(|m| m.position())
-        .ok_or("the bot has no position")?
-        .map(|c| c.floor() as i32);
+    let feet = bot.movement().and_then(|m| m.position()).ok_or("the bot has no position")?.map(|c| c.floor() as i32);
     let at = |dx: i32, dy: i32, dz: i32| [feet[0] + dx, feet[1] + dy, feet[2] + dz];
     println!("## feet {feet:?}");
-    let mut p = Probe {
-        start: Instant::now(),
-        bot,
-    };
+    let mut p = Probe { start: Instant::now(), bot };
 
     // 1. A hopper under a chest of ten diamonds, facing west into a chest the prober looks into:
     // the times of the InventorySlot changes are its rate.
     let (above, hopper, target) = (at(3, 1, 0), at(3, 0, 0), at(2, 0, 0));
-    p.command(&format!("setblock {} chest", place(target)))
-        .await?;
-    p.command(&format!("setblock {} chest", place(above)))
-        .await?;
-    p.command(&format!(
-        "replaceitem block {} slot.container 0 diamond 10",
-        place(above)
-    ))
-    .await?;
+    p.command(&format!("setblock {} chest", place(target))).await?;
+    p.command(&format!("setblock {} chest", place(above))).await?;
+    p.command(&format!("replaceitem block {} slot.container 0 diamond 10", place(above))).await?;
     let opened = p.bot.open_container_at(target).await.map(|c| c.slots.len());
     p.act("open the target chest", opened).await?;
     println!("## hopper placed now");
-    p.command(&format!(
-        "setblock {} hopper [\"facing_direction\"=4]",
-        place(hopper)
-    ))
-    .await?;
+    p.command(&format!("setblock {} hopper [\"facing_direction\"=4]", place(hopper))).await?;
     p.settle(Duration::from_secs(8)).await?;
     let closed = p.bot.close_container().await;
     p.act("close", closed).await?;
@@ -165,13 +116,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     p.command("gamemode survival").await?;
     p.command("give @s stone 4").await?;
     let furnace = at(-3, 0, 0);
-    p.command(&format!("setblock {} furnace", place(furnace)))
-        .await?;
-    let opened = p
-        .bot
-        .open_container_at(furnace)
-        .await
-        .map(|c| c.slots.len());
+    p.command(&format!("setblock {} furnace", place(furnace))).await?;
+    let opened = p.bot.open_container_at(furnace).await.map(|c| c.slots.len());
     p.act("open the furnace", opened).await?;
     let into_result = p.bot.put_in_container(0, 2).await;
     p.act("stone into the result (slot 2)", into_result).await?;
@@ -182,51 +128,31 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     p.act("close", closed).await?;
 
     // 3. Experience: three iron ingots taken from a furnace's result; the orbs as they move.
-    p.command(&format!(
-        "replaceitem block {} slot.container 2 iron_ingot 3",
-        place(furnace)
-    ))
-    .await?;
-    let opened = p
-        .bot
-        .open_container_at(furnace)
-        .await
-        .map(|c| c.slots.len());
+    p.command(&format!("replaceitem block {} slot.container 2 iron_ingot 3", place(furnace))).await?;
+    let opened = p.bot.open_container_at(furnace).await.map(|c| c.slots.len());
     p.act("open the furnace again", opened).await?;
     let taken = p.bot.move_to_inventory(2).await;
     p.act("take the ingots", taken).await?;
     let closed = p.bot.close_container().await;
     p.act("close", closed).await?;
     p.settle(Duration::from_secs(8)).await?;
-    p.command(&format!("summon xp_orb {}", place(at(0, 1, 4))))
-        .await?;
+    p.command(&format!("summon xp_orb {}", place(at(0, 1, 4)))).await?;
     p.settle(Duration::from_secs(8)).await?;
 
     // 4. Shulker boxes broken: filled and empty, in survival and in creative.
     let boxes = [at(0, 0, 2), at(1, 0, 2), at(0, 0, -2), at(1, 0, -2)];
     for pos in boxes {
-        p.command(&format!("setblock {} red_shulker_box", place(pos)))
-            .await?;
+        p.command(&format!("setblock {} red_shulker_box", place(pos))).await?;
     }
     for pos in [boxes[0], boxes[2]] {
-        p.command(&format!(
-            "replaceitem block {} slot.container 4 diamond 5",
-            place(pos)
-        ))
-        .await?;
+        p.command(&format!("replaceitem block {} slot.container 4 diamond 5", place(pos))).await?;
     }
-    for (label, pos) in [
-        ("survival, filled", boxes[0]),
-        ("survival, empty", boxes[1]),
-    ] {
+    for (label, pos) in [("survival, filled", boxes[0]), ("survival, empty", boxes[1])] {
         let broken = p.bot.break_block(pos).await;
         p.act(label, broken).await?;
     }
     p.command("gamemode creative").await?;
-    for (label, pos) in [
-        ("creative, filled", boxes[2]),
-        ("creative, empty", boxes[3]),
-    ] {
+    for (label, pos) in [("creative, filled", boxes[2]), ("creative, empty", boxes[3])] {
         let broken = p.bot.break_block(pos).await;
         p.act(label, broken).await?;
     }

@@ -4,14 +4,9 @@ use acacia_world::BlockRegistry;
 
 fn main() {
     let registry = BlockRegistry::vanilla();
-    let wanted: Vec<u32> = std::env::args()
-        .skip(1)
-        .filter_map(|arg| arg.parse().ok())
-        .collect();
+    let wanted: Vec<u32> = std::env::args().skip(1).filter_map(|arg| arg.parse().ok()).collect();
     for hash in wanted {
-        let state = (0..registry.len() as u32)
-            .find(|&id| registry.network_hash(id) == hash)
-            .and_then(|id| registry.get(id));
+        let state = (0..registry.len() as u32).find(|&id| registry.network_hash(id) == hash).and_then(|id| registry.get(id));
         match state {
             Some(state) => println!("{hash} {} [{}]", state.name, state.properties),
             None => println!("{hash} ?"),

@@ -20,18 +20,10 @@ pub(super) const REPEAT: u64 = 80;
 const BARREL: &str = "minecraft:barrel";
 
 fn event(world: &mut World, layer: Entity, halves: &[BlockPos], open: bool) {
-    let has_lid = |pos: &&BlockPos| {
-        super::block_name(world, layer, **pos)
-            .and_then(super::kind)
-            .is_some_and(|kind| kind.has_lid)
-    };
+    let has_lid = |pos: &&BlockPos| super::block_name(world, layer, **pos).and_then(super::kind).is_some_and(|kind| kind.has_lid);
     let lidded: Vec<BlockPos> = halves.iter().filter(has_lid).copied().collect();
     for [x, y, z] in lidded {
-        let lid = BlockEvent {
-            position: BlockCoordinates { x, y, z },
-            r#type: BlockEventType::ChangeState,
-            data: open.into(),
-        };
+        let lid = BlockEvent { position: BlockCoordinates { x, y, z }, r#type: BlockEventType::ChangeState, data: open.into() };
         blocks::to_viewers(world, layer, [x, y, z], &[sapling_net::encode(&lid)]);
     }
 }
@@ -47,12 +39,8 @@ fn sounds(name: &str) -> Option<([&'static str; 2], [u64; 2])> {
     match name {
         BARREL => Some((["block.barrel.open", "block.barrel.close"], [0; 2])),
         "minecraft:ender_chest" => Some((["enderchest.open", "enderchest.closed"], [0; 2])),
-        "minecraft:chest" | "minecraft:trapped_chest" => {
-            Some((["chest.open", "chest.closed"], CHEST_LATE))
-        }
-        _ if super::is_shulker_box(name) => {
-            Some((["shulkerbox.open", "shulkerbox.closed"], [0; 2]))
-        }
+        "minecraft:chest" | "minecraft:trapped_chest" => Some((["chest.open", "chest.closed"], CHEST_LATE)),
+        _ if super::is_shulker_box(name) => Some((["shulkerbox.open", "shulkerbox.closed"], [0; 2])),
         _ => None,
     }
 }
@@ -62,19 +50,12 @@ fn sounds(name: &str) -> Option<([&'static str; 2], [u64; 2])> {
 pub(super) fn set(world: &mut World, layer: Entity, halves: &[BlockPos], open: bool) {
     event(world, layer, halves, open);
     let Some(&pos) = halves.first() else { return };
-    let Some(level) = world.get::<Layer>(layer).map(|layer| &layer.world) else {
-        return;
-    };
+    let Some(level) = world.get::<Layer>(layer).map(|layer| &layer.world) else { return };
     let (registry, id) = (level.registry(), level.block(pos[0], pos[1], pos[2]));
-    let Some(name) = registry.get(id).map(|state| state.name) else {
-        return;
-    };
-    let Some(([opening, shutting], late)) = sounds(name) else {
-        return;
-    };
+    let Some(name) = registry.get(id).map(|state| state.name) else { return };
+    let Some(([opening, shutting], late)) = sounds(name) else { return };
     let heard = blocks::sound(if open { opening } else { shutting }, registry, pos, id);
-    let turned = blocks::with_property(registry, id, "open_bit", if open { "1" } else { "0" })
-        .filter(|_| name == BARREL);
+    let turned = blocks::with_property(registry, id, "open_bit", if open { "1" } else { "0" }).filter(|_| name == BARREL);
     if let Some(turned) = turned {
         blocks::set(world, layer, pos, turned);
     }

@@ -12,11 +12,8 @@ use acacia_bot::interact::Face;
 use acacia_bot::proto::Packet;
 use acacia_bot::proto::packets::{InventoryTransaction, UpdateBlock};
 use acacia_bot::proto::types::{
-    BlockCoordinates, ItemV4, ItemV4Extra, Transaction, TransactionLegacy,
-    TransactionTransactionData, TransactionTransactionType, TransactionUseItem,
-    TransactionUseItemActionType, TransactionUseItemClientCooldownState,
-    TransactionUseItemClientPrediction, TransactionUseItemHand, TransactionUseItemTriggerType,
-    Vec3f,
+    BlockCoordinates, ItemV4, ItemV4Extra, Transaction, TransactionLegacy, TransactionTransactionData, TransactionTransactionType, TransactionUseItem,
+    TransactionUseItemActionType, TransactionUseItemClientCooldownState, TransactionUseItemClientPrediction, TransactionUseItemHand, TransactionUseItemTriggerType, Vec3f,
 };
 use acacia_bot::{ActionError, Bot, BotConfig, BotEvent};
 use acacia_world::BlockAccess;
@@ -57,26 +54,15 @@ impl Handler for Plot {
 /// The block a bot's own copy of the world has at `pos`.
 fn seen(bot: &Bot, [x, y, z]: [i32; 3]) -> &'static str {
     let world = bot.world().expect("a physics bot tracks the world");
-    let (view, registry) = (
-        world.view().expect("chunks"),
-        world.registry().expect("a registry"),
-    );
-    registry
-        .get(view.block(x, y, z))
-        .expect("a known block")
-        .name
+    let (view, registry) = (world.view().expect("chunks"), world.registry().expect("a registry"));
+    registry.get(view.block(x, y, z)).expect("a known block").name
 }
 
 /// A click on the top of the block at `pos` by a client that says it holds stone.
 fn click_with_stone(bot: &Bot, [x, y, z]: [i32; 3]) -> InventoryTransaction {
     let world = bot.world().expect("a physics bot tracks the world");
-    let (view, registry) = (
-        world.view().expect("chunks"),
-        world.registry().expect("a registry"),
-    );
-    let stone = view
-        .world()
-        .wire_id(registry.states_of(STONE).next().expect("stone").0);
+    let (view, registry) = (world.view().expect("chunks"), world.registry().expect("a registry"));
+    let stone = view.world().wire_id(registry.states_of(STONE).next().expect("stone").0);
     let [ex, ey, ez] = bot.eye_position();
     let data = TransactionUseItem {
         action_type: TransactionUseItemActionType::ClickBlock,
@@ -85,41 +71,15 @@ fn click_with_stone(bot: &Bot, [x, y, z]: [i32; 3]) -> InventoryTransaction {
         face: Face::Up as u8,
         hotbar_slot: 0,
         hand: TransactionUseItemHand::MainHand,
-        held_item: ItemV4 {
-            network_id: 1,
-            count: 1,
-            metadata: 0,
-            has_stack_id: false,
-            stack_id: None,
-            block_runtime_id: stone,
-            extra: ItemV4Extra::Default(None),
-        },
-        player_pos: Vec3f {
-            x: ex,
-            y: ey,
-            z: ez,
-        },
-        click_pos: Vec3f {
-            x: 0.5,
-            y: 1.0,
-            z: 0.5,
-        },
+        held_item: ItemV4 { network_id: 1, count: 1, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: stone, extra: ItemV4Extra::Default(None) },
+        player_pos: Vec3f { x: ex, y: ey, z: ez },
+        click_pos: Vec3f { x: 0.5, y: 1.0, z: 0.5 },
         block_runtime_id: view.world().wire_id(view.block(x, y, z)),
         client_prediction: TransactionUseItemClientPrediction::Success,
         client_cooldown_state: TransactionUseItemClientCooldownState::Off,
     };
-    let legacy = TransactionLegacy {
-        legacy_request_id: 0,
-        legacy_transactions: None,
-    };
-    InventoryTransaction {
-        transaction: Transaction {
-            legacy,
-            transaction_type: TransactionTransactionType::ItemUse,
-            actions: Vec::new(),
-            transaction_data: TransactionTransactionData::ItemUse(data),
-        },
-    }
+    let legacy = TransactionLegacy { legacy_request_id: 0, legacy_transactions: None };
+    InventoryTransaction { transaction: Transaction { legacy, transaction_type: TransactionTransactionType::ItemUse, actions: Vec::new(), transaction_data: TransactionTransactionData::ItemUse(data) } }
 }
 
 async fn all(bots: &mut [&mut Bot], ticks: u32) {
@@ -135,12 +95,8 @@ async fn updates(bot: &mut Bot) -> BTreeSet<([i32; 3], u32)> {
     while let Ok(event) = tokio::time::timeout_at(end, bot.next()).await {
         match event {
             Some(BotEvent::Packet(packet)) if packet.id == UpdateBlock::ID => {
-                let update: UpdateBlock =
-                    packet.decode().expect("the bot decodes what sapling sent");
-                seen.insert((
-                    [update.position.x, update.position.y, update.position.z],
-                    update.layer,
-                ));
+                let update: UpdateBlock = packet.decode().expect("the bot decodes what sapling sent");
+                seen.insert(([update.position.x, update.position.y, update.position.z], update.layer));
             }
             Some(BotEvent::Disconnected(reason)) => panic!("disconnected: {reason:?}"),
             Some(_) => {}
@@ -156,70 +112,31 @@ async fn bots_break_and_place_blocks_and_adventure_is_refused() {
     let mut alice = common::spawn(common::client(&server, "Alice"), BotConfig::default()).await;
     let mut bob = common::spawn(common::client(&server, "Bob"), BotConfig::default()).await;
     all(&mut [&mut alice, &mut bob], 20).await;
-    assert_eq!(
-        (seen(&bob, at(1, 0)), seen(&bob, at(1, 1))),
-        (DIRT, AIR),
-        "a handler's blocks reach a player who joins later"
-    );
+    assert_eq!((seen(&bob, at(1, 0)), seen(&bob, at(1, 1))), (DIRT, AIR), "a handler's blocks reach a player who joins later");
 
     // Alice breaks the first block of the row and builds on the second; Bob sees both.
-    alice
-        .break_block(at(1, 0))
-        .await
-        .expect("the server takes the break");
-    alice
-        .look_at([
-            at(2, 1)[0] as f32 + 0.5,
-            at(2, 1)[1] as f32,
-            at(2, 1)[2] as f32 + 0.5,
-        ])
-        .await
-        .expect("connected");
+    alice.break_block(at(1, 0)).await.expect("the server takes the break");
+    alice.look_at([at(2, 1)[0] as f32 + 0.5, at(2, 1)[1] as f32, at(2, 1)[2] as f32 + 0.5]).await.expect("connected");
     alice.client().send(&click_with_stone(&alice, at(2, 0)));
     all(&mut [&mut alice, &mut bob], 20).await;
     for (who, bot) in [("Alice", &alice), ("Bob", &bob)] {
-        assert_eq!(
-            (seen(bot, at(1, 0)), seen(bot, at(2, 1))),
-            (AIR, STONE),
-            "{who}"
-        );
+        assert_eq!((seen(bot, at(1, 0)), seen(bot, at(2, 1))), (AIR, STONE), "{who}");
     }
 
     // Carol, in adventure mode, is refused both and shown the blocks as they are, on both layers.
-    let config = BotConfig {
-        subscribe: PacketFilter::none().with(UpdateBlock::ID),
-        ..BotConfig::default()
-    };
+    let config = BotConfig { subscribe: PacketFilter::none().with(UpdateBlock::ID), ..BotConfig::default() };
     let mut carol = common::spawn(common::client(&server, "Carol"), config).await;
     carol.wait_ticks(20).await.expect("connected");
-    assert_eq!(
-        (seen(&carol, at(1, 0)), seen(&carol, at(2, 1))),
-        (AIR, STONE),
-        "the column as it is now"
-    );
+    assert_eq!((seen(&carol, at(1, 0)), seen(&carol, at(2, 1))), (AIR, STONE), "the column as it is now");
     let refused = carol.break_block(at(3, 0)).await;
-    assert!(
-        matches!(refused, Err(ActionError::Rejected(_))),
-        "{refused:?}"
-    );
+    assert!(matches!(refused, Err(ActionError::Rejected(_))), "{refused:?}");
     updates(&mut carol).await;
     carol.client().send(&click_with_stone(&carol, at(4, 0)));
     let shown = updates(&mut carol).await;
-    assert_eq!(
-        shown,
-        BTreeSet::from([(at(4, 0), 0), (at(4, 0), 1), (at(4, 1), 0), (at(4, 1), 1)])
-    );
+    assert_eq!(shown, BTreeSet::from([(at(4, 0), 0), (at(4, 0), 1), (at(4, 1), 0), (at(4, 1), 1)]));
     all(&mut [&mut alice, &mut bob], 10).await;
     for (who, bot) in [("Alice", &alice), ("Bob", &bob), ("Carol", &carol)] {
-        assert_eq!(
-            (
-                seen(bot, at(3, 0)),
-                seen(bot, at(4, 0)),
-                seen(bot, at(4, 1))
-            ),
-            (DIRT, DIRT, AIR),
-            "{who}"
-        );
+        assert_eq!((seen(bot, at(3, 0)), seen(bot, at(4, 0)), seen(bot, at(4, 1))), (DIRT, DIRT, AIR), "{who}");
         assert_eq!(bot.disconnect_reason(), None, "{who}");
     }
     for bot in [&mut alice, &mut bob, &mut carol] {

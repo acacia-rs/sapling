@@ -4,9 +4,7 @@
 
 use std::collections::HashMap;
 
-use acacia_proto::packets::{
-    NetworkChunkPublisherUpdate, PlayStatus, PlayStatusStatus, Subchunk, SubchunkRequest,
-};
+use acacia_proto::packets::{NetworkChunkPublisherUpdate, PlayStatus, PlayStatusStatus, Subchunk, SubchunkRequest};
 use acacia_proto::types::{BlockCoordinates, Vec3i8};
 use bevy_ecs::prelude::*;
 use sapling_world::ChunkPos;
@@ -32,55 +30,30 @@ pub(crate) fn poll_worlds(mut layers: Query<&mut Layer>) {
     }
 }
 
-type Viewer<'a> = (
-    &'a Position,
-    &'a InLayer,
-    &'a mut Stage,
-    &'a mut View,
-    &'a mut BlobCache,
-    &'a mut Outgoing,
-);
+type Viewer<'a> = (&'a Position, &'a InLayer, &'a mut Stage, &'a mut View, &'a mut BlobCache, &'a mut Outgoing);
 
 /// Follows each player with its view and announces up to a tick's budget of the columns that
 /// entered it, nearest first, as they finish loading; a joining player then spawns.
-pub(crate) fn send_chunks(
-    settings: Res<Settings>,
-    mut layers: Query<&mut Layer>,
-    mut players: Query<Viewer>,
-) {
+pub(crate) fn send_chunks(settings: Res<Settings>, mut layers: Query<&mut Layer>, mut players: Query<Viewer>) {
     for (position, in_layer, mut stage, mut view, mut blobs, mut out) in &mut players {
         if *stage < Stage::Chunks {
             continue;
         }
-        let Ok(mut layer) = layers.get_mut(in_layer.0) else {
-            continue;
-        };
+        let Ok(mut layer) = layers.get_mut(in_layer.0) else { continue };
         let world = &mut layer.world;
         let [x, y, z] = position.feet.map(|c| c.floor() as i32);
         if view.recenter(ChunkPos::of_block(x, z)) {
             let radius = (view.radius() * 16) as u32;
-            out.push(&NetworkChunkPublisherUpdate {
-                coordinates: BlockCoordinates { x, y, z },
-                radius,
-                saved_chunks: Vec::new(),
-            });
+            out.push(&NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x, y, z }, radius, saved_chunks: Vec::new() });
         }
-        let budget = if blobs.is_backlogged() {
-            0
-        } else {
-            settings.0.columns_per_tick
-        };
+        let budget = if blobs.is_backlogged() { 0 } else { settings.0.columns_per_tick };
         for pos in view.take_ready(budget, |pos| world.request(pos)) {
-            let Some(column) = world.level_chunk(pos, blobs.is_enabled()) else {
-                continue;
-            };
+            let Some(column) = world.level_chunk(pos, blobs.is_enabled()) else { continue };
             column.blobs.iter().for_each(|blob| blobs.advertise(blob));
             out.push(&column.packet(pos.x, pos.z, world.dimension()));
         }
         if *stage == Stage::Chunks && !view.is_waiting_within(SPAWN_RADIUS.min(view.radius())) {
-            out.push(&PlayStatus {
-                status: PlayStatusStatus::PlayerSpawn,
-            });
+            out.push(&PlayStatus { status: PlayStatusStatus::PlayerSpawn });
             *stage = Stage::Loading;
         }
     }
@@ -97,23 +70,13 @@ impl SectionBacklog {
     }
 }
 
-type Requester<'a> = (
-    &'a InLayer,
-    &'a View,
-    &'a mut BlobCache,
-    &'a mut SectionBacklog,
-    &'a mut Outgoing,
-);
+type Requester<'a> = (&'a InLayer, &'a View, &'a mut BlobCache, &'a mut SectionBacklog, &'a mut Outgoing);
 
 /// Answers section requests. A vanilla client disconnects itself ("error occurred") on a
 /// ChunkNotFound entry, so sections wait in the backlog until their column was announced: one
 /// that is still loading, and after a world change one the client asked for in the old world,
 /// which is then answered from the new one. Sections outside the view are dropped.
-pub(crate) fn sub_chunk_requests(
-    mut packets: ResMut<PacketQueues>,
-    mut layers: Query<&mut Layer>,
-    mut players: Query<Requester>,
-) {
+pub(crate) fn sub_chunk_requests(mut packets: ResMut<PacketQueues>, mut layers: Query<&mut Layer>, mut players: Query<Requester>) {
     for (entity, request) in packets.take::<SubchunkRequest>() {
         if let Ok((_, _, _, mut backlog, _)) = players.get_mut(entity) {
             // A client may ask for no sections of a column that has none; that is not a request.
@@ -127,9 +90,7 @@ pub(crate) fn sub_chunk_requests(
             continue;
         }
         let requests = std::mem::take(&mut backlog.0);
-        let Ok(mut layer) = layers.get_mut(in_layer.0) else {
-            continue;
-        };
+        let Ok(mut layer) = layers.get_mut(in_layer.0) else { continue };
         let world = &mut layer.world;
         let cached = blobs.is_enabled();
         for mut request in requests {
@@ -137,40 +98,22 @@ pub(crate) fn sub_chunk_requests(
                 continue;
             }
             let origin = request.origin.clone();
-            let column =
-                |o: &Vec3i8| ChunkPos::new(origin.x + i32::from(o.x), origin.z + i32::from(o.z));
+            let column = |o: &Vec3i8| ChunkPos::new(origin.x + i32::from(o.x), origin.z + i32::from(o.z));
             request.requests.truncate(MAX_SECTIONS_PER_REQUEST);
             request.requests.retain(|o| view.covers(column(o)));
-            let (ready, waiting): (Vec<_>, Vec<_>) = request
-                .requests
-                .into_iter()
-                .partition(|o| view.has_sent(column(o)) && world.request(column(o)));
+            let (ready, waiting): (Vec<_>, Vec<_>) = request.requests.into_iter().partition(|o| view.has_sent(column(o)) && world.request(column(o)));
             let mut entry = |o: &Vec3i8| {
-                let answer = world.sub_chunk(
-                    column(o),
-                    origin.y + i32::from(o.y),
-                    [o.x, o.y, o.z],
-                    cached,
-                );
+                let answer = world.sub_chunk(column(o), origin.y + i32::from(o.y), [o.x, o.y, o.z], cached);
                 answer.blob.iter().for_each(|blob| blobs.advertise(blob));
                 answer.entry
             };
             let entries: Vec<_> = ready.iter().map(&mut entry).collect();
             if !entries.is_empty() {
-                out.push(&Subchunk {
-                    cache_enabled: cached,
-                    dimension: request.dimension,
-                    origin: origin.clone(),
-                    entries,
-                });
+                out.push(&Subchunk { cache_enabled: cached, dimension: request.dimension, origin: origin.clone(), entries });
             }
             if !waiting.is_empty() {
                 tracing::debug!(origin = ?(origin.x, origin.z), sections = waiting.len(), "sections wait for their column to load");
-                backlog.0.push(SubchunkRequest {
-                    dimension: request.dimension,
-                    requests: waiting,
-                    origin,
-                });
+                backlog.0.push(SubchunkRequest { dimension: request.dimension, requests: waiting, origin });
             }
         }
     }
@@ -178,11 +121,7 @@ pub(crate) fn sub_chunk_requests(
 
 /// Every few seconds, hands the columns written since the last sweep to storage and drops the
 /// loaded ones that are in no player's view.
-pub(crate) fn save_and_unload_columns(
-    tick: Res<Tick>,
-    mut layers: Query<(Entity, &mut Layer)>,
-    players: Query<(&InLayer, &View)>,
-) {
+pub(crate) fn save_and_unload_columns(tick: Res<Tick>, mut layers: Query<(Entity, &mut Layer)>, players: Query<(&InLayer, &View)>) {
     if tick.0 % UNLOAD_INTERVAL != 0 {
         return;
     }
@@ -193,8 +132,6 @@ pub(crate) fn save_and_unload_columns(
     for (entity, mut layer) in &mut layers {
         let seen_by = views.get(&entity).map_or(&[][..], Vec::as_slice);
         layer.world.save_modified();
-        layer
-            .world
-            .unload(|pos| seen_by.iter().any(|view| view.covers(pos)));
+        layer.world.unload(|pos| seen_by.iter().any(|view| view.covers(pos)));
     }
 }

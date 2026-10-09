@@ -56,8 +56,7 @@ pub(crate) struct Dropped {
 /// Netherite and ancient debris, which lava does not burn.
 // TODO: by name, from the Java game's list: BDS reads a flag of each item.
 fn fireproof(name: &str) -> bool {
-    name == "minecraft:ancient_debris"
-        || (name.starts_with("minecraft:netherite_") && !name.ends_with("_template"))
+    name == "minecraft:ancient_debris" || (name.starts_with("minecraft:netherite_") && !name.ends_with("_template"))
 }
 
 const KIND: &str = "minecraft:item";
@@ -71,36 +70,12 @@ fn dice(world: &mut World) -> Mut<'_, Dice> {
 }
 
 /// Lets `stack` go with the bottom of its box at `at`, moving at `motion`.
-fn lay(
-    world: &mut World,
-    layer: Entity,
-    stack: ItemStack,
-    at: [f32; 3],
-    motion: [f32; 3],
-    pickup_from: u64,
-) -> Option<Entity> {
-    let shown = entities::spawn(
-        world,
-        layer,
-        KIND,
-        Body::new(at, motion, [SIZE; 2]),
-        wire(at),
-        |id| mobs::item_announcement(id, &stack, wire(at), motion),
-    );
+fn lay(world: &mut World, layer: Entity, stack: ItemStack, at: [f32; 3], motion: [f32; 3], pickup_from: u64) -> Option<Entity> {
+    let shown = entities::spawn(world, layer, KIND, Body::new(at, motion, [SIZE; 2]), wire(at), |id| mobs::item_announcement(id, &stack, wire(at), motion));
     match shown {
         Some(item) => {
             entities::flag_moving(world, item, false);
-            Some(
-                world
-                    .entity_mut(item)
-                    .insert(Dropped {
-                        stack,
-                        pickup_from,
-                        age: 0,
-                        burnt: 0,
-                    })
-                    .id(),
-            )
+            Some(world.entity_mut(item).insert(Dropped { stack, pickup_from, age: 0, burnt: 0 }).id())
         }
         None => {
             tracing::debug!(item = %stack.name, "an item no client knows; it is gone");
@@ -111,52 +86,21 @@ fn lay(
 
 /// Makes an item a world folder kept (its actor compound `compound`) lie in `layer` again, to be
 /// picked up at once; false for one no client knows, which stays in the folder as it was.
-pub(crate) fn from_storage(
-    world: &mut World,
-    layer: Entity,
-    stack: ItemStack,
-    at: [f32; 3],
-    unique_id: i64,
-    compound: Vec<u8>,
-) -> bool {
+pub(crate) fn from_storage(world: &mut World, layer: Entity, stack: ItemStack, at: [f32; 3], unique_id: i64, compound: Vec<u8>) -> bool {
     let tick = world.resource::<Tick>().0;
-    let Some(item) = lay(world, layer, stack, at, [0.0; 3], tick) else {
-        return false;
-    };
+    let Some(item) = lay(world, layer, stack, at, [0.0; 3], tick) else { return false };
     entities::keep(world, item, layer, unique_id, compound);
     true
 }
 
 /// Throws `stack` from under the player's eye along its look (BDS `Player::drop`).
 pub(crate) fn throw(world: &mut World, player: Entity, stack: ItemStack) {
-    let (Some(position), Some(layer)) = (
-        world.get::<Position>(player).copied(),
-        world.get::<InLayer>(player).map(|layer| layer.0),
-    ) else {
-        return;
-    };
-    let ((sin_yaw, cos_yaw), (sin_pitch, cos_pitch)) = (
-        position.yaw.to_radians().sin_cos(),
-        position.pitch.to_radians().sin_cos(),
-    );
-    let (angle, spread) = {
-        let mut dice = dice(world);
-        (
-            dice.fraction() * std::f32::consts::TAU,
-            dice.fraction() * THROW_SPREAD,
-        )
-    };
-    let motion = [
-        -sin_yaw * cos_pitch * THROW_SPEED + angle.cos() * spread,
-        -sin_pitch * THROW_SPEED,
-        cos_yaw * cos_pitch * THROW_SPEED + angle.sin() * spread,
-    ];
+    let (Some(position), Some(layer)) = (world.get::<Position>(player).copied(), world.get::<InLayer>(player).map(|layer| layer.0)) else { return };
+    let ((sin_yaw, cos_yaw), (sin_pitch, cos_pitch)) = (position.yaw.to_radians().sin_cos(), position.pitch.to_radians().sin_cos());
+    let (angle, spread) = { let mut dice = dice(world); (dice.fraction() * std::f32::consts::TAU, dice.fraction() * THROW_SPREAD) };
+    let motion = [-sin_yaw * cos_pitch * THROW_SPEED + angle.cos() * spread, -sin_pitch * THROW_SPEED, cos_yaw * cos_pitch * THROW_SPEED + angle.sin() * spread];
     let feet = position.feet;
-    let at = [
-        feet[0],
-        feet[1] + sapling_data::EYE_HEIGHT - THROW_BELOW_EYE - SIZE / 2.0,
-        feet[2],
-    ];
+    let at = [feet[0], feet[1] + sapling_data::EYE_HEIGHT - THROW_BELOW_EYE - SIZE / 2.0, feet[2]];
     let from = world.resource::<Tick>().0 + PICKUP_DELAY;
     lay(world, layer, stack, at, motion, from);
 }
@@ -165,28 +109,15 @@ pub(crate) fn throw(world: &mut World, player: Entity, stack: ItemStack) {
 /// `Spawner::spawnItem` does every item it makes.
 pub(crate) fn toss(world: &mut World, layer: Entity, stack: ItemStack, centre: [f32; 3]) {
     let mut dice = dice(world);
-    let motion = [
-        dice.fraction() * 2.0 * SPILL_ACROSS - SPILL_ACROSS,
-        SPILL_UP,
-        dice.fraction() * 2.0 * SPILL_ACROSS - SPILL_ACROSS,
-    ];
+    let motion = [dice.fraction() * 2.0 * SPILL_ACROSS - SPILL_ACROSS, SPILL_UP, dice.fraction() * 2.0 * SPILL_ACROSS - SPILL_ACROSS];
     let from = world.resource::<Tick>().0 + SPILL_DELAY;
-    lay(
-        world,
-        layer,
-        stack,
-        [centre[0], centre[1] - SIZE / 2.0, centre[2]],
-        motion,
-        from,
-    );
+    lay(world, layer, stack, [centre[0], centre[1] - SIZE / 2.0, centre[2]], motion, from);
 }
 
 /// Tosses `stack` out of somewhere in the cell a broken block left.
 pub(crate) fn spill(world: &mut World, layer: Entity, stack: ItemStack, pos: BlockPos) {
     let mut dice = dice(world);
-    let centre: [f32; 3] = std::array::from_fn(|axis| {
-        pos[axis] as f32 + SPILL_INSET + dice.fraction() * (1.0 - 2.0 * SPILL_INSET)
-    });
+    let centre: [f32; 3] = std::array::from_fn(|axis| pos[axis] as f32 + SPILL_INSET + dice.fraction() * (1.0 - 2.0 * SPILL_INSET));
     toss(world, layer, stack, centre);
 }
 
@@ -197,81 +128,37 @@ pub(crate) fn let_go(world: &mut World, layer: Entity, stack: ItemStack, [x, y, 
 }
 
 /// The items lying in `layer` inside the box from `min` to `max`, oldest first.
-pub(crate) fn lying_in(
-    world: &mut World,
-    layer: Entity,
-    min: [f32; 3],
-    max: [f32; 3],
-) -> Vec<(Entity, ItemStack)> {
+pub(crate) fn lying_in(world: &mut World, layer: Entity, min: [f32; 3], max: [f32; 3]) -> Vec<(Entity, ItemStack)> {
     let inside = |at: &[f32; 3]| (0..3).all(|axis| (min[axis]..=max[axis]).contains(&at[axis]));
     let mut lying = world.query::<(Entity, &Dropped, &Body, &InLayer, &NetId)>();
-    let mut found: Vec<_> = lying
-        .iter(world)
-        .filter(|(_, _, body, in_layer, _)| in_layer.0 == layer && inside(&body.at))
-        .map(|(entity, item, _, _, id)| (id.0, entity, item.stack.clone()))
-        .collect();
+    let mut found: Vec<_> = lying.iter(world).filter(|(_, _, body, in_layer, _)| in_layer.0 == layer && inside(&body.at)).map(|(entity, item, _, _, id)| (id.0, entity, item.stack.clone())).collect();
     found.sort_unstable_by_key(|(id, ..)| *id);
-    found
-        .into_iter()
-        .map(|(_, entity, stack)| (entity, stack))
-        .collect()
+    found.into_iter().map(|(_, entity, stack)| (entity, stack)).collect()
 }
 
 /// Takes `count` of the lying item `item` away; what is left lies on as a new item.
 pub(crate) fn take(world: &mut World, item: Entity, count: u8) {
-    let Some((stack, at, layer, pickup_from)) = world
-        .query::<(&Dropped, &Body, &InLayer)>()
-        .get(world, item)
-        .ok()
-        .map(|(item, body, layer)| (item.stack.clone(), body.at, layer.0, item.pickup_from))
-    else {
-        return;
-    };
+    let Some((stack, at, layer, pickup_from)) = world.query::<(&Dropped, &Body, &InLayer)>().get(world, item).ok().map(|(item, body, layer)| (item.stack.clone(), body.at, layer.0, item.pickup_from)) else { return };
     mobs::remove(world, item);
     if stack.count > count {
-        lay(
-            world,
-            layer,
-            ItemStack {
-                count: stack.count - count,
-                ..stack
-            },
-            at,
-            [0.0; 3],
-            pickup_from,
-        );
+        lay(world, layer, ItemStack { count: stack.count - count, ..stack }, at, [0.0; 3], pickup_from);
     }
 }
 
 /// Moves every item a tick and lets go of those whose time is up, or that lava burnt.
 pub(crate) fn fly(world: &mut World) {
-    let items: Vec<(Entity, Entity, u64)> = world
-        .query::<(Entity, &Dropped, &InLayer, &NetId)>()
-        .iter(world)
-        .map(|(entity, _, layer, id)| (entity, layer.0, id.0))
-        .collect();
+    let items: Vec<(Entity, Entity, u64)> = world.query::<(Entity, &Dropped, &InLayer, &NetId)>().iter(world).map(|(entity, _, layer, id)| (entity, layer.0, id.0)).collect();
     for (entity, layer, id) in items {
-        let Some(mut item) = world.get_mut::<Dropped>(entity) else {
-            continue;
-        };
+        let Some(mut item) = world.get_mut::<Dropped>(entity) else { continue };
         item.age += 1;
         if item.age >= LIFETIME || item.burnt >= BURNT_IN {
             mobs::remove(world, entity);
             continue;
         }
-        let physics = if fireproof(&item.stack.name) {
-            Physics::FIREPROOF_ITEM
-        } else {
-            Physics::ITEM
-        };
+        let physics = if fireproof(&item.stack.name) { Physics::FIREPROOF_ITEM } else { Physics::ITEM };
         lift_out(world, entity, layer);
-        let Some((body, packets)) = entities::step(world, entity, layer, id, &physics, SIZE / 2.0)
-        else {
-            continue;
-        };
-        let Some(mut item) = world.get_mut::<Dropped>(entity) else {
-            continue;
-        };
+        let Some((body, packets)) = entities::step(world, entity, layer, id, &physics, SIZE / 2.0) else { continue };
+        let Some(mut item) = world.get_mut::<Dropped>(entity) else { continue };
         if physics.burns && body.liquid() == Some(Liquid::Lava) {
             item.burnt += 1;
             if item.burnt >= BURNT_IN {
@@ -280,23 +167,14 @@ pub(crate) fn fly(world: &mut World) {
         }
         if !packets.is_empty() {
             blocks::to_viewers(world, layer, body.at.map(|c| c.floor() as i32), &packets);
-            let shown = world.get::<Dropped>(entity).and_then(|item| {
-                mobs::item_announcement(id, &item.stack, wire(body.at), body.motion)
-            });
-            shown
-                .into_iter()
-                .for_each(|shown| mobs::reannounce(world, entity, shown));
+            let shown = world.get::<Dropped>(entity).and_then(|item| mobs::item_announcement(id, &item.stack, wire(body.at), body.motion));
+            shown.into_iter().for_each(|shown| mobs::reannounce(world, entity, shown));
         }
     }
 }
 
 fn lift_out(world: &mut World, entity: Entity, layer: Entity) {
-    let (Some(level), Some(mut body)) = (
-        world.get::<Layer>(layer),
-        world.get::<Body>(entity).copied(),
-    ) else {
-        return;
-    };
+    let (Some(level), Some(mut body)) = (world.get::<Layer>(layer), world.get::<Body>(entity).copied()) else { return };
     body.lift_out(&level.world);
     if let Some(mut stored) = world.get_mut::<Body>(entity) {
         *stored = body;
@@ -311,10 +189,7 @@ fn column(at: [f32; 3]) -> ChunkPos {
 fn reaches(feet: [f32; 3], item: [f32; 3]) -> bool {
     let across = PLAYER_HALF_WIDTH + REACH[0] + SIZE / 2.0;
     let up = item[1] - feet[1];
-    (item[0] - feet[0]).abs() <= across
-        && (item[2] - feet[2]).abs() <= across
-        && up >= -REACH[1] - SIZE
-        && up <= PLAYER_HEIGHT + REACH[1]
+    (item[0] - feet[0]).abs() <= across && (item[2] - feet[2]).abs() <= across && up >= -REACH[1] - SIZE && up <= PLAYER_HEIGHT + REACH[1]
 }
 
 /// Gives each item that can be picked up to a player standing on it who has room, whole or as
@@ -322,11 +197,7 @@ fn reaches(feet: [f32; 3], item: [f32; 3]) -> bool {
 pub(crate) fn pick_up(world: &mut World) {
     let tick = world.resource::<Tick>().0;
     let mut lying = world.query::<(Entity, &Dropped, &Body, &InLayer, &NetId)>();
-    let ready: Vec<_> = lying
-        .iter(world)
-        .filter(|(_, item, ..)| item.pickup_from <= tick)
-        .map(|(entity, item, body, layer, id)| (entity, item.stack.clone(), body.at, layer.0, id.0))
-        .collect();
+    let ready: Vec<_> = lying.iter(world).filter(|(_, item, ..)| item.pickup_from <= tick).map(|(entity, item, body, layer, id)| (entity, item.stack.clone(), body.at, layer.0, id.0)).collect();
     if ready.is_empty() {
         return;
     }
@@ -334,49 +205,22 @@ pub(crate) fn pick_up(world: &mut World) {
     let mut standing: HashMap<(Entity, ChunkPos), Vec<(Entity, [f32; 3], u64)>> = HashMap::new();
     for (player, stage, layer, position, id) in players.iter(world) {
         if *stage == Stage::InWorld {
-            standing
-                .entry((layer.0, column(position.feet)))
-                .or_default()
-                .push((player, position.feet, id.0));
+            standing.entry((layer.0, column(position.feet))).or_default().push((player, position.feet, id.0));
         }
     }
     for (item, stack, at, layer, item_id) in ready {
         let home = column(at);
-        let around =
-            (-1..=1).flat_map(|dx| (-1..=1).map(move |dz| ChunkPos::new(home.x + dx, home.z + dz)));
-        let near = around
-            .filter_map(|pos| standing.get(&(layer, pos)))
-            .flatten()
-            .filter(|(_, feet, _)| reaches(*feet, at));
-        let taker = near.copied().find(|(player, ..)| {
-            world
-                .get::<Inventory>(*player)
-                .is_some_and(|inventory| inventory.loaded && inventory.has_room_for(&stack))
-        });
-        let Some((player, _, player_id)) = taker else {
-            continue;
-        };
-        let left = inventory::change(world, player, |inventory| inventory.add(&stack))
-            .unwrap_or(stack.count);
-        let taken = sapling_net::encode(&TakeItemEntity {
-            runtime_entity_id: item_id,
-            target: player_id as u32,
-        });
+        let around = (-1..=1).flat_map(|dx| (-1..=1).map(move |dz| ChunkPos::new(home.x + dx, home.z + dz)));
+        let near = around.filter_map(|pos| standing.get(&(layer, pos))).flatten().filter(|(_, feet, _)| reaches(*feet, at));
+        let taker = near.copied().find(|(player, ..)| world.get::<Inventory>(*player).is_some_and(|inventory| inventory.loaded && inventory.has_room_for(&stack)));
+        let Some((player, _, player_id)) = taker else { continue };
+        let left = inventory::change(world, player, |inventory| inventory.add(&stack)).unwrap_or(stack.count);
+        let taken = sapling_net::encode(&TakeItemEntity { runtime_entity_id: item_id, target: player_id as u32 });
         blocks::to_viewers(world, layer, at.map(|c| c.floor() as i32), &[taken]);
         world.entity_mut(item).remove::<Dropped>();
         entities::leave(world, item);
         if left > 0 {
-            lay(
-                world,
-                layer,
-                ItemStack {
-                    count: left,
-                    ..stack
-                },
-                at,
-                [0.0; 3],
-                tick,
-            );
+            lay(world, layer, ItemStack { count: left, ..stack }, at, [0.0; 3], tick);
         }
     }
 }

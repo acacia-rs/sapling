@@ -56,15 +56,7 @@ const BY_NAME: &[(&str, f32)] = &[
 const COOKED: f32 = 0.35;
 const DYE: f32 = 0.2;
 /// Stone bricks and sandstones of every kind.
-const BUILDING: (&[&str], f32) = (
-    &[
-        "stone_bricks",
-        "sandstone",
-        "quartz_pillar",
-        "chiseled_quartz_block",
-    ],
-    0.1,
-);
+const BUILDING: (&[&str], f32) = (&["stone_bricks", "sandstone", "quartz_pillar", "chiseled_quartz_block"], 0.1);
 
 /// The experience one `name` out of a furnace is worth.
 pub(super) fn per_item(namespaced: &str) -> f32 {
@@ -84,11 +76,7 @@ pub(super) fn per_item(namespaced: &str) -> f32 {
 fn round_random(world: &mut World, points: f32) -> i32 {
     let whole = points.floor();
     let chance = ((points - whole) * 1_000_000.0) as u32;
-    let up = chance > 0
-        && world
-            .get_resource_or_insert_with(Dice::default)
-            .roll(1_000_000)
-            < chance;
+    let up = chance > 0 && world.get_resource_or_insert_with(Dice::default).roll(1_000_000) < chance;
     whole as i32 + i32::from(up)
 }
 
@@ -103,8 +91,7 @@ pub(super) fn stored(entity: &Value) -> i32 {
 
 /// The experience for `count` of `item`, and what was owed (hundredths), as whole points.
 pub(super) fn reward(world: &mut World, item: &ItemStack, count: u8, owed: i32) -> i32 {
-    round_random(world, f32::from(count) * per_item(&item.name))
-        + round_random(world, owed as f32 / 100.0)
+    round_random(world, f32::from(count) * per_item(&item.name)) + round_random(world, owed as f32 / 100.0)
 }
 
 /// What a hopper taking `item` out leaves owed, in hundredths.
@@ -114,12 +101,7 @@ pub(super) fn owed_for(item: &ItemStack) -> i32 {
 
 /// Pays `points` to the player as orbs where it stands.
 pub(super) fn pay_player(world: &mut World, player: Entity, points: i32) {
-    let (Some(position), Some(layer)) = (
-        world.get::<Position>(player).copied(),
-        world.get::<InLayer>(player).map(|layer| layer.0),
-    ) else {
-        return;
-    };
+    let (Some(position), Some(layer)) = (world.get::<Position>(player).copied(), world.get::<InLayer>(player).map(|layer| layer.0)) else { return };
     let [x, y, z] = position.feet;
     orbs::spawn(world, layer, [x, y + sapling_data::EYE_HEIGHT, z], points);
 }
@@ -136,25 +118,7 @@ mod tests {
     #[test]
     fn results_are_worth_what_bds_gives() {
         let xp = |name: &str| per_item(&format!("minecraft:{name}"));
-        assert_eq!(
-            [
-                xp("iron_ingot"),
-                xp("gold_ingot"),
-                xp("cooked_beef"),
-                xp("baked_potato"),
-                xp("glass"),
-                xp("red_dye")
-            ],
-            [0.7, 1.0, 0.35, 0.35, 0.1, 0.2]
-        );
-        assert_eq!(
-            [
-                xp("smooth_sandstone"),
-                xp("cracked_stone_bricks"),
-                xp("charcoal"),
-                xp("iron_nugget")
-            ],
-            [0.1, 0.1, 0.0, 0.1]
-        );
+        assert_eq!([xp("iron_ingot"), xp("gold_ingot"), xp("cooked_beef"), xp("baked_potato"), xp("glass"), xp("red_dye")], [0.7, 1.0, 0.35, 0.35, 0.1, 0.2]);
+        assert_eq!([xp("smooth_sandstone"), xp("cracked_stone_bricks"), xp("charcoal"), xp("iron_nugget")], [0.1, 0.1, 0.0, 0.1]);
     }
 }

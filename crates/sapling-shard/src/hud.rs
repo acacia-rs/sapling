@@ -3,10 +3,8 @@
 //! that a change sends only the difference.
 
 use acacia_proto::packets::{
-    BossEvent, BossEventColor, BossEventOverlay, BossEventType, RemoveObjective,
-    SetDisplayObjective, SetScore, SetScoreEntriesItem, SetScoreEntriesItemContent as Content,
-    SetScoreEntriesItemContentFakePlayer as FakePlayer, SetScoreEntriesItemContentRemove as Remove,
-    SetScoreEntriesItemEntryType as EntryType, SetTitle, SetTitleType, ToastRequest,
+    BossEvent, BossEventColor, BossEventOverlay, BossEventType, RemoveObjective, SetDisplayObjective, SetScore, SetScoreEntriesItem, SetScoreEntriesItemContent as Content,
+    SetScoreEntriesItemContentFakePlayer as FakePlayer, SetScoreEntriesItemContentRemove as Remove, SetScoreEntriesItemEntryType as EntryType, SetTitle, SetTitleType, ToastRequest,
 };
 use bevy_ecs::prelude::*;
 use sapling_api::{BossBar, BossBarColour, Sidebar, Title};
@@ -27,39 +25,17 @@ pub(crate) struct Hud {
 }
 
 fn show_objective(title: &str) -> SetDisplayObjective {
-    SetDisplayObjective {
-        display_slot: "sidebar".into(),
-        objective_name: OBJECTIVE.into(),
-        display_name: title.to_owned(),
-        criteria_name: "dummy".into(),
-        sort_order: ASCENDING,
-    }
+    SetDisplayObjective { display_slot: "sidebar".into(), objective_name: OBJECTIVE.into(), display_name: title.to_owned(), criteria_name: "dummy".into(), sort_order: ASCENDING }
 }
 
 fn set_line(index: usize, text: &str) -> SetScoreEntriesItem {
-    let content = Content::FakePlayer(FakePlayer {
-        objective_name: OBJECTIVE.into(),
-        score: index as i32,
-        custom_name: text.to_owned(),
-    });
-    SetScoreEntriesItem {
-        entry_type: EntryType::FakePlayer,
-        entry_type_name: "changefakeplayer".into(),
-        scoreboard_id: index as i64 + 1,
-        content,
-    }
+    let content = Content::FakePlayer(FakePlayer { objective_name: OBJECTIVE.into(), score: index as i32, custom_name: text.to_owned() });
+    SetScoreEntriesItem { entry_type: EntryType::FakePlayer, entry_type_name: "changefakeplayer".into(), scoreboard_id: index as i64 + 1, content }
 }
 
 fn remove_line(index: usize) -> SetScoreEntriesItem {
-    let content = Content::Remove(Remove {
-        objective_name: Some(OBJECTIVE.into()),
-    });
-    SetScoreEntriesItem {
-        entry_type: EntryType::Remove,
-        entry_type_name: "remove".into(),
-        scoreboard_id: index as i64 + 1,
-        content,
-    }
+    let content = Content::Remove(Remove { objective_name: Some(OBJECTIVE.into()) });
+    SetScoreEntriesItem { entry_type: EntryType::Remove, entry_type_name: "remove".into(), scoreboard_id: index as i64 + 1, content }
 }
 
 fn push_scores(out: &mut Outgoing, entries: Vec<SetScoreEntriesItem>) {
@@ -74,9 +50,7 @@ fn send_sidebar(out: &mut Outgoing, old: Option<&Sidebar>, new: Option<&Sidebar>
     let old = match (old, new) {
         (Some(old), Some(new)) if old.title == new.title => Some(old),
         (Some(_), _) => {
-            out.push(&RemoveObjective {
-                objective_name: OBJECTIVE.into(),
-            });
+            out.push(&RemoveObjective { objective_name: OBJECTIVE.into() });
             None
         }
         (None, _) => None,
@@ -87,17 +61,8 @@ fn send_sidebar(out: &mut Outgoing, old: Option<&Sidebar>, new: Option<&Sidebar>
     }
     let before = old.map_or(&[][..], |old| old.lines.as_slice());
     let changed = |index: &usize| before.get(*index) != new.lines.get(*index);
-    push_scores(
-        out,
-        (0..before.len()).filter(changed).map(remove_line).collect(),
-    );
-    push_scores(
-        out,
-        (0..new.lines.len())
-            .filter(changed)
-            .map(|index| set_line(index, &new.lines[index]))
-            .collect(),
-    );
+    push_scores(out, (0..before.len()).filter(changed).map(remove_line).collect());
+    push_scores(out, (0..new.lines.len()).filter(changed).map(|index| set_line(index, &new.lines[index])).collect());
 }
 
 fn colour(colour: BossBarColour) -> BossEventColor {
@@ -115,15 +80,7 @@ fn colour(colour: BossBarColour) -> BossEventColor {
 /// The bar hangs on the player's own entity, which is always there to carry it. Every event type
 /// has the same fields on the wire (docs/DESIGN.md "Boss bar"), so each carries the whole bar.
 fn boss_event(id: u64, r#type: BossEventType, bar: &BossBar) -> BossEvent {
-    BossEvent {
-        target_entity_id: id as i64,
-        r#type,
-        title: bar.text.clone(),
-        filtered_title: String::new(),
-        progress: bar.progress,
-        color: colour(bar.colour),
-        overlay: BossEventOverlay::Progress,
-    }
+    BossEvent { target_entity_id: id as i64, r#type, title: bar.text.clone(), filtered_title: String::new(), progress: bar.progress, color: colour(bar.colour), overlay: BossEventOverlay::Progress }
 }
 
 /// The events that turn the bar `old` into `new`: a vanilla client ignores ShowBar for a bar it shows.
@@ -131,65 +88,28 @@ fn boss_events(old: Option<&BossBar>, new: Option<&BossBar>) -> Vec<(BossEventTy
     match (old, new) {
         (None, None) => Vec::new(),
         (None, Some(new)) => vec![(BossEventType::ShowBar, new.clone())],
-        (Some(_), None) => vec![(
-            BossEventType::HideBar,
-            BossBar {
-                text: String::new(),
-                progress: 0.0,
-                colour: BossBarColour::Pink,
-            },
-        )],
+        (Some(_), None) => vec![(BossEventType::HideBar, BossBar { text: String::new(), progress: 0.0, colour: BossBarColour::Pink })],
         (Some(old), Some(new)) => {
-            let changes = [
-                (old.text != new.text, BossEventType::SetBarTitle),
-                (old.progress != new.progress, BossEventType::SetBarProgress),
-                (old.colour != new.colour, BossEventType::Texture),
-            ];
-            changes
-                .into_iter()
-                .filter(|(changed, _)| *changed)
-                .map(|(_, r#type)| (r#type, new.clone()))
-                .collect()
+            let changes = [(old.text != new.text, BossEventType::SetBarTitle), (old.progress != new.progress, BossEventType::SetBarProgress), (old.colour != new.colour, BossEventType::Texture)];
+            changes.into_iter().filter(|(changed, _)| *changed).map(|(_, r#type)| (r#type, new.clone())).collect()
         }
     }
 }
 
 fn title_packet(r#type: SetTitleType, text: &str, times: [i32; 3]) -> SetTitle {
     let [fade_in_time, stay_time, fade_out_time] = times;
-    SetTitle {
-        r#type,
-        text: text.to_owned(),
-        fade_in_time,
-        stay_time,
-        fade_out_time,
-        xuid: String::new(),
-        platform_online_id: String::new(),
-        filtered_message: String::new(),
-    }
+    SetTitle { r#type, text: text.to_owned(), fade_in_time, stay_time, fade_out_time, xuid: String::new(), platform_online_id: String::new(), filtered_message: String::new() }
 }
 
 pub(crate) fn set_sidebar(world: &mut World, entity: Entity, sidebar: Option<&Sidebar>) {
-    let shown = sidebar.map(|s| Sidebar {
-        title: s.title.clone(),
-        lines: s.lines.iter().take(Sidebar::MAX_LINES).cloned().collect(),
-    });
-    let Ok((mut hud, mut out)) = world
-        .query::<(&mut Hud, &mut Outgoing)>()
-        .get_mut(world, entity)
-    else {
-        return;
-    };
+    let shown = sidebar.map(|s| Sidebar { title: s.title.clone(), lines: s.lines.iter().take(Sidebar::MAX_LINES).cloned().collect() });
+    let Ok((mut hud, mut out)) = world.query::<(&mut Hud, &mut Outgoing)>().get_mut(world, entity) else { return };
     send_sidebar(&mut out, hud.sidebar.as_ref(), shown.as_ref());
     hud.sidebar = shown;
 }
 
 pub(crate) fn set_boss_bar(world: &mut World, entity: Entity, bar: Option<&BossBar>) {
-    let Ok((id, mut hud, mut out)) = world
-        .query::<(&NetId, &mut Hud, &mut Outgoing)>()
-        .get_mut(world, entity)
-    else {
-        return;
-    };
+    let Ok((id, mut hud, mut out)) = world.query::<(&NetId, &mut Hud, &mut Outgoing)>().get_mut(world, entity) else { return };
     for (r#type, shown) in boss_events(hud.boss_bar.as_ref(), bar) {
         out.push(&boss_event(id.0, r#type, &shown));
     }
@@ -199,40 +119,17 @@ pub(crate) fn set_boss_bar(world: &mut World, entity: Entity, bar: Option<&BossB
 /// Timing, subtitle, then the title that shows them, as `/title` needs them ordered.
 pub(crate) fn send_title(out: &mut Outgoing, title: &Title) {
     let ticks = |t: u32| i32::try_from(t).unwrap_or(i32::MAX);
-    out.push(&title_packet(
-        SetTitleType::SetDurations,
-        "",
-        [
-            ticks(title.fade_in),
-            ticks(title.stay),
-            ticks(title.fade_out),
-        ],
-    ));
+    out.push(&title_packet(SetTitleType::SetDurations, "", [ticks(title.fade_in), ticks(title.stay), ticks(title.fade_out)]));
     if let Some(subtitle) = &title.subtitle {
-        out.push(&title_packet(
-            SetTitleType::SetSubtitle,
-            subtitle,
-            [UNSET; 3],
-        ));
+        out.push(&title_packet(SetTitleType::SetSubtitle, subtitle, [UNSET; 3]));
     }
-    out.push(&title_packet(
-        SetTitleType::SetTitle,
-        &title.title,
-        [UNSET; 3],
-    ));
+    out.push(&title_packet(SetTitleType::SetTitle, &title.title, [UNSET; 3]));
 }
 
 pub(crate) fn send_actionbar(out: &mut Outgoing, text: &str) {
-    out.push(&title_packet(
-        SetTitleType::ActionBarMessage,
-        text,
-        [UNSET; 3],
-    ));
+    out.push(&title_packet(SetTitleType::ActionBarMessage, text, [UNSET; 3]));
 }
 
 pub(crate) fn send_toast(out: &mut Outgoing, title: &str, message: &str) {
-    out.push(&ToastRequest {
-        title: title.to_owned(),
-        message: message.to_owned(),
-    });
+    out.push(&ToastRequest { title: title.to_owned(), message: message.to_owned() });
 }

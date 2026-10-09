@@ -8,85 +8,32 @@ use sapling_api::BlockPos;
 use sapling_world::{BlockRegistry, World};
 
 const CROPS: &[&str] = &[
-    "minecraft:wheat",
-    "minecraft:carrots",
-    "minecraft:potatoes",
-    "minecraft:beetroot",
-    "minecraft:torchflower_crop",
-    "minecraft:pitcher_crop",
-    "minecraft:melon_stem",
+    "minecraft:wheat", "minecraft:carrots", "minecraft:potatoes", "minecraft:beetroot", "minecraft:torchflower_crop", "minecraft:pitcher_crop", "minecraft:melon_stem",
     "minecraft:pumpkin_stem",
 ];
 /// What a sweet berry bush grows in (BDS `BushBlock` list 0x14ccd3328).
 const VEGETATION: &[&str] = &[
-    "minecraft:dirt",
-    "minecraft:grass_block",
-    "minecraft:podzol",
-    "minecraft:coarse_dirt",
-    "minecraft:mycelium",
-    "minecraft:dirt_with_roots",
-    "minecraft:moss_block",
-    "minecraft:pale_moss_block",
-    "minecraft:mud",
-    "minecraft:muddy_mangrove_roots",
-    "minecraft:farmland",
+    "minecraft:dirt", "minecraft:grass_block", "minecraft:podzol", "minecraft:coarse_dirt", "minecraft:mycelium", "minecraft:dirt_with_roots", "minecraft:moss_block",
+    "minecraft:pale_moss_block", "minecraft:mud", "minecraft:muddy_mangrove_roots", "minecraft:farmland",
 ];
 /// The `dirt` and `sand` tags sugar cane asks for, less farmland: Java's lists.
 const CANE_GROUND: &[&str] = &[
-    "minecraft:dirt",
-    "minecraft:grass_block",
-    "minecraft:podzol",
-    "minecraft:coarse_dirt",
-    "minecraft:mycelium",
-    "minecraft:dirt_with_roots",
-    "minecraft:moss_block",
-    "minecraft:pale_moss_block",
-    "minecraft:mud",
-    "minecraft:muddy_mangrove_roots",
-    "minecraft:sand",
-    "minecraft:red_sand",
-    "minecraft:suspicious_sand",
+    "minecraft:dirt", "minecraft:grass_block", "minecraft:podzol", "minecraft:coarse_dirt", "minecraft:mycelium", "minecraft:dirt_with_roots", "minecraft:moss_block",
+    "minecraft:pale_moss_block", "minecraft:mud", "minecraft:muddy_mangrove_roots", "minecraft:sand", "minecraft:red_sand", "minecraft:suspicious_sand",
 ];
 const REEDS: &str = "minecraft:reeds";
 /// What lets redstone dust lie on it without a top to lie on.
-const LIT_FROM_BELOW: &[&str] = &[
-    "minecraft:glowstone",
-    "minecraft:redstone_lamp",
-    "minecraft:lit_redstone_lamp",
-];
-const DIODES: &[&str] = &[
-    "minecraft:unpowered_repeater",
-    "minecraft:powered_repeater",
-    "minecraft:unpowered_comparator",
-    "minecraft:powered_comparator",
-];
-const RAILS: &[&str] = &[
-    "minecraft:rail",
-    "minecraft:golden_rail",
-    "minecraft:detector_rail",
-    "minecraft:activator_rail",
-];
-const VINES: &[&str] = &[
-    "minecraft:cave_vines",
-    "minecraft:cave_vines_body_with_berries",
-    "minecraft:cave_vines_head_with_berries",
-];
+const LIT_FROM_BELOW: &[&str] = &["minecraft:glowstone", "minecraft:redstone_lamp", "minecraft:lit_redstone_lamp"];
+const DIODES: &[&str] = &["minecraft:unpowered_repeater", "minecraft:powered_repeater", "minecraft:unpowered_comparator", "minecraft:powered_comparator"];
+const RAILS: &[&str] = &["minecraft:rail", "minecraft:golden_rail", "minecraft:detector_rail", "minecraft:activator_rail"];
+const VINES: &[&str] = &["minecraft:cave_vines", "minecraft:cave_vines_body_with_berries", "minecraft:cave_vines_head_with_berries"];
 /// A cocoa pod's `direction` names the side its log is on: 0 south, 1 west, 2 north, 3 east.
 const COCOA_LOG: [[i32; 2]; 4] = [[0, 1], [-1, 0], [0, -1], [1, 0]];
 /// A rising rail's `rail_direction` (2 to 5) and the side it rises towards.
-const RISES_TO: [(&str, [i32; 2]); 4] =
-    [("2", [1, 0]), ("3", [-1, 0]), ("4", [0, -1]), ("5", [0, 1])];
+const RISES_TO: [(&str, [i32; 2]); 4] = [("2", [1, 0]), ("3", [-1, 0]), ("4", [0, -1]), ("5", [0, 1])];
 
 fn name(level: &World, [x, y, z]: BlockPos) -> Option<&'static str> {
-    level
-        .in_height(y)
-        .then(|| {
-            level
-                .registry()
-                .get(level.block(x, y, z))
-                .map(|state| state.name)
-        })
-        .flatten()
+    level.in_height(y).then(|| level.registry().get(level.block(x, y, z)).map(|state| state.name)).flatten()
 }
 
 fn below([x, y, z]: BlockPos) -> BlockPos {
@@ -100,45 +47,20 @@ fn property(registry: &BlockRegistry, id: u32, key: &str) -> Option<&'static str
 /// Whether the cell holds water or lava, in either layer.
 fn is_wet(level: &World, [x, y, z]: BlockPos) -> bool {
     let registry = level.registry();
-    level.in_height(y)
-        && [level.block(x, y, z), level.liquid(x, y, z)]
-            .iter()
-            .any(|id| registry.get(*id).is_some_and(|state| state.is_liquid()))
+    level.in_height(y) && [level.block(x, y, z), level.liquid(x, y, z)].iter().any(|id| registry.get(*id).is_some_and(|state| state.is_liquid()))
 }
 
 fn is_water(level: &World, [x, y, z]: BlockPos) -> bool {
     let registry = level.registry();
-    [level.block(x, y, z), level.liquid(x, y, z)]
-        .iter()
-        .any(|id| {
-            registry
-                .get(*id)
-                .is_some_and(|state| state.is_water() || state.name == "minecraft:frosted_ice")
-        })
+    [level.block(x, y, z), level.liquid(x, y, z)].iter().any(|id| registry.get(*id).is_some_and(|state| state.is_water() || state.name == "minecraft:frosted_ice"))
 }
 
 /// Whether the top of the block at `pos` holds something up: under the middle of the face
 /// (BDS support "centre"), or across all of it ("edge").
 fn has_top(level: &World, [x, y, z]: BlockPos, whole: bool) -> bool {
-    let Some(state) = level
-        .in_height(y)
-        .then(|| level.registry().get(level.block(x, y, z)))
-        .flatten()
-    else {
-        return false;
-    };
-    let covers = |min: f32, max: f32| {
-        if whole {
-            min <= 0.0 && max >= 1.0
-        } else {
-            min <= 0.5 && max >= 0.5
-        }
-    };
-    state.boxes.iter().any(|shape| {
-        shape.max[1] >= 1.0
-            && covers(shape.min[0], shape.max[0])
-            && covers(shape.min[2], shape.max[2])
-    })
+    let Some(state) = level.in_height(y).then(|| level.registry().get(level.block(x, y, z))).flatten() else { return false };
+    let covers = |min: f32, max: f32| if whole { min <= 0.0 && max >= 1.0 } else { min <= 0.5 && max >= 0.5 };
+    state.boxes.iter().any(|shape| shape.max[1] >= 1.0 && covers(shape.min[0], shape.max[0]) && covers(shape.min[2], shape.max[2]))
 }
 
 fn cane_may_stand(level: &World, pos: BlockPos) -> bool {
@@ -146,13 +68,8 @@ fn cane_may_stand(level: &World, pos: BlockPos) -> bool {
     if name(level, ground) == Some(REEDS) {
         return true;
     }
-    let watered = [[0, -1], [1, 0], [0, 1], [-1, 0]]
-        .iter()
-        .any(|[dx, dz]| is_water(level, [ground[0] + dx, ground[1], ground[2] + dz]));
-    name(level, ground).is_some_and(|ground| CANE_GROUND.contains(&ground))
-        && !is_wet(level, pos)
-        && !is_wet(level, [pos[0], pos[1] + 1, pos[2]])
-        && watered
+    let watered = [[0, -1], [1, 0], [0, 1], [-1, 0]].iter().any(|[dx, dz]| is_water(level, [ground[0] + dx, ground[1], ground[2] + dz]));
+    name(level, ground).is_some_and(|ground| CANE_GROUND.contains(&ground)) && !is_wet(level, pos) && !is_wet(level, [pos[0], pos[1] + 1, pos[2]]) && watered
 }
 
 /// Whether the block `id` may stand at `pos` by its own ground rule; true for a block without
@@ -160,42 +77,26 @@ fn cane_may_stand(level: &World, pos: BlockPos) -> bool {
 /// cane does not go into water.
 pub(super) fn may_stand(level: &World, pos: BlockPos, id: u32) -> bool {
     let registry = level.registry();
-    let Some(block) = registry.get(id).map(|state| state.name) else {
-        return true;
-    };
+    let Some(block) = registry.get(id).map(|state| state.name) else { return true };
     let under = name(level, below(pos));
     match block {
         _ if CROPS.contains(&block) => under == Some("minecraft:farmland"),
         "minecraft:nether_wart" => under == Some("minecraft:soul_sand"),
-        "minecraft:sweet_berry_bush" => {
-            under.is_some_and(|under| VEGETATION.contains(&under)) && !is_wet(level, pos)
-        }
+        "minecraft:sweet_berry_bush" => under.is_some_and(|under| VEGETATION.contains(&under)) && !is_wet(level, pos),
         REEDS => cane_may_stand(level, pos),
-        "minecraft:redstone_wire" => {
-            !is_wet(level, pos)
-                && (has_top(level, below(pos), false)
-                    || under.is_some_and(|under| LIT_FROM_BELOW.contains(&under)))
-        }
+        "minecraft:redstone_wire" => !is_wet(level, pos) && (has_top(level, below(pos), false) || under.is_some_and(|under| LIT_FROM_BELOW.contains(&under))),
         _ if DIODES.contains(&block) => has_top(level, below(pos), false),
         _ if RAILS.contains(&block) => {
-            let rises = property(registry, id, "rail_direction")
-                .and_then(|shape| RISES_TO.iter().find(|(rising, _)| *rising == shape));
-            has_top(level, below(pos), false)
-                && rises.is_none_or(|(_, [dx, dz])| {
-                    has_top(level, [pos[0] + dx, pos[1] - 1, pos[2] + dz], false)
-                })
+            let rises = property(registry, id, "rail_direction").and_then(|shape| RISES_TO.iter().find(|(rising, _)| *rising == shape));
+            has_top(level, below(pos), false) && rises.is_none_or(|(_, [dx, dz])| has_top(level, [pos[0] + dx, pos[1] - 1, pos[2] + dz], false))
         }
         "minecraft:cocoa" => {
-            let side = property(registry, id, "direction")
-                .and_then(|direction| COCOA_LOG.get(direction.parse::<usize>().ok()?));
-            side.and_then(|[dx, dz]| name(level, [pos[0] + dx, pos[1], pos[2] + dz]))
-                .is_some_and(|log| log.contains("jungle_log") || log.contains("jungle_wood"))
+            let side = property(registry, id, "direction").and_then(|direction| COCOA_LOG.get(direction.parse::<usize>().ok()?));
+            side.and_then(|[dx, dz]| name(level, [pos[0] + dx, pos[1], pos[2] + dz])).is_some_and(|log| log.contains("jungle_log") || log.contains("jungle_wood"))
         }
         _ if VINES.contains(&block) => {
             let above = [pos[0], pos[1] + 1, pos[2]];
-            !is_wet(level, pos)
-                && (name(level, above).is_some_and(|above| VINES.contains(&above))
-                    || level.in_height(above[1]) && has_bottom(level, above))
+            !is_wet(level, pos) && (name(level, above).is_some_and(|above| VINES.contains(&above)) || level.in_height(above[1]) && has_bottom(level, above))
         }
         _ => true,
     }
@@ -203,29 +104,14 @@ pub(super) fn may_stand(level: &World, pos: BlockPos, id: u32) -> bool {
 
 /// Whether [`may_stand`] has a rule for the block `name`, which then replaces updates.rs's.
 pub(super) fn has_rule(name: &str) -> bool {
-    const OTHERS: &[&str] = &[
-        "minecraft:nether_wart",
-        "minecraft:sweet_berry_bush",
-        REEDS,
-        "minecraft:redstone_wire",
-        "minecraft:cocoa",
-        "minecraft:trip_wire",
-    ];
-    [CROPS, DIODES, RAILS, VINES, OTHERS]
-        .iter()
-        .any(|list| list.contains(&name))
+    const OTHERS: &[&str] = &["minecraft:nether_wart", "minecraft:sweet_berry_bush", REEDS, "minecraft:redstone_wire", "minecraft:cocoa", "minecraft:trip_wire"];
+    [CROPS, DIODES, RAILS, VINES, OTHERS].iter().any(|list| list.contains(&name))
 }
 
 /// Whether the bottom of the block at `pos` holds something hanging under its middle.
 fn has_bottom(level: &World, [x, y, z]: BlockPos) -> bool {
-    let Some(state) = level.registry().get(level.block(x, y, z)) else {
-        return false;
-    };
-    state.boxes.iter().any(|shape| {
-        shape.min[1] <= 0.0
-            && (shape.min[0]..=shape.max[0]).contains(&0.5)
-            && (shape.min[2]..=shape.max[2]).contains(&0.5)
-    })
+    let Some(state) = level.registry().get(level.block(x, y, z)) else { return false };
+    state.boxes.iter().any(|shape| shape.min[1] <= 0.0 && (shape.min[0]..=shape.max[0]).contains(&0.5) && (shape.min[2]..=shape.max[2]).contains(&0.5))
 }
 
 #[cfg(test)]
@@ -235,21 +121,7 @@ mod tests {
     #[test]
     fn every_block_named_is_in_the_registry() {
         let registry = BlockRegistry::vanilla();
-        let lists = [
-            CROPS,
-            VEGETATION,
-            CANE_GROUND,
-            LIT_FROM_BELOW,
-            DIODES,
-            RAILS,
-            VINES,
-            &[
-                REEDS,
-                "minecraft:farmland",
-                "minecraft:soul_sand",
-                "minecraft:frosted_ice",
-            ],
-        ];
+        let lists = [CROPS, VEGETATION, CANE_GROUND, LIT_FROM_BELOW, DIODES, RAILS, VINES, &[REEDS, "minecraft:farmland", "minecraft:soul_sand", "minecraft:frosted_ice"]];
         for block in lists.concat() {
             assert!(registry.states_of(block).next().is_some(), "{block}");
         }

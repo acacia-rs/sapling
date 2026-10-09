@@ -22,50 +22,28 @@ const FIZZ_PITCH: i32 = 2600;
 const FIZZ_SPREAD: u32 = 800;
 
 fn name_at(world: &World, layer: Entity, [x, y, z]: BlockPos) -> Option<&'static str> {
-    let level = level(world, layer)
-        .filter(|level| level.in_height(y) && level.is_loaded(send::column([x, y, z])))?;
-    level
-        .registry()
-        .get(level.block(x, y, z))
-        .map(|state| state.name)
+    let level = level(world, layer).filter(|level| level.in_height(y) && level.is_loaded(send::column([x, y, z])))?;
+    level.registry().get(level.block(x, y, z)).map(|state| state.name)
 }
 
 /// The lava at `pos` hardens if water touches it: a source to obsidian, flowing lava to
 /// cobblestone; beside blue ice and over soul soil, to basalt. Whether it did.
 pub(super) fn meets_water(world: &mut World, layer: Entity, pos: BlockPos) -> bool {
-    let Some(level) = level(world, layer)
-        .filter(|level| level.in_height(pos[1]) && level.is_loaded(send::column(pos)))
-    else {
-        return false;
-    };
-    let Some(state) = level
-        .registry()
-        .get(level.block(pos[0], pos[1], pos[2]))
-        .filter(|state| Liquid::of(state.name) == Some(Liquid::Lava))
-    else {
-        return false;
-    };
+    let Some(level) = level(world, layer).filter(|level| level.in_height(pos[1]) && level.is_loaded(send::column(pos))) else { return false };
+    let Some(state) = level.registry().get(level.block(pos[0], pos[1], pos[2])).filter(|state| Liquid::of(state.name) == Some(Liquid::Lava)) else { return false };
     let is_source = state.liquid_depth == 0;
     let over_soul_soil = name_at(world, layer, Face::Down.neighbour(pos)) == Some(SOUL_SOIL);
-    let into = TOUCHING
-        .iter()
-        .map(|face| face.neighbour(pos))
-        .find_map(|near| match cell(world, layer, near) {
-            Cell::Liquid(Liquid::Water, _) => Some(if is_source { OBSIDIAN } else { COBBLESTONE }),
-            _ if over_soul_soil && name_at(world, layer, near) == Some(BLUE_ICE) => Some(BASALT),
-            _ => None,
-        });
+    let into = TOUCHING.iter().map(|face| face.neighbour(pos)).find_map(|near| match cell(world, layer, near) {
+        Cell::Liquid(Liquid::Water, _) => Some(if is_source { OBSIDIAN } else { COBBLESTONE }),
+        _ if over_soul_soil && name_at(world, layer, near) == Some(BLUE_ICE) => Some(BASALT),
+        _ => None,
+    });
     into.is_some_and(|into| turn(world, layer, pos, into))
 }
 
 /// Makes the cell the block `name` with a hiss.
 pub(super) fn turn(world: &mut World, layer: Entity, pos: BlockPos, name: &str) -> bool {
-    let Some(id) = level(world, layer)
-        .and_then(|level| level.registry().states_of(name).next())
-        .map(|(id, _)| id)
-    else {
-        return false;
-    };
+    let Some(id) = level(world, layer).and_then(|level| level.registry().states_of(name).next()).map(|(id, _)| id) else { return false };
     let turned = send::set(world, layer, pos, id);
     if turned {
         fizz(world, layer, pos);
@@ -79,10 +57,6 @@ pub(super) fn fizz(world: &mut World, layer: Entity, pos: BlockPos) {
     let [x, y, z] = pos.map(|c| c as f32 + 0.5);
     let mut dice = world.get_resource_or_insert_with(Dice::default);
     let spread = dice.roll(FIZZ_SPREAD) as i32 - dice.roll(FIZZ_SPREAD) as i32;
-    let hiss = sapling_net::encode(&LevelEvent {
-        event: LevelEventEvent::SoundFizz,
-        position: Vec3f { x, y, z },
-        data: FIZZ_PITCH + spread,
-    });
+    let hiss = sapling_net::encode(&LevelEvent { event: LevelEventEvent::SoundFizz, position: Vec3f { x, y, z }, data: FIZZ_PITCH + spread });
     send::to_viewers(world, layer, pos, &[hiss]);
 }

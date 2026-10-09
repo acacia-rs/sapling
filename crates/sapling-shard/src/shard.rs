@@ -13,26 +13,20 @@ use sapling_net::{ConnId, Inbox, NetEvent, Outbox, VerifiedLogin};
 
 use crate::blobs::BlobCache;
 use crate::commands::{Access, CommandLists};
-use crate::components::{
-    Arrivals, Conn, DefaultLayer, Identity, Layer, Mode, Net, NetId, Outgoing, PacketQueues,
-    Players, Position, Settings, Stage, Tick,
-};
+use crate::components::{Arrivals, Conn, DefaultLayer, Identity, Layer, Mode, Net, NetId, Outgoing, PacketQueues, Players, Position, Settings, Stage, Tick};
 use crate::config::{IDS_PER_SHARD, ShardConfig, TICK};
 use crate::forms::Forms;
 use crate::handoff::{Handoffs, Link, Peers, ShardMsg};
 use crate::hud::Hud;
-use crate::inventory::Inventory;
 use crate::movement::Motion;
 use crate::player::{Carried, Local};
 use crate::plugins::{PluginState, Plugins};
 use crate::roster::{Elsewhere, Profile};
 use crate::view::View;
+use crate::inventory::Inventory;
 use crate::visibility::ToViewers;
 use crate::worlds::{Atlas, Changes, Scope};
-use crate::{
-    actors, arenas, blobs, blocks, chunks, clock, commands, entities, handlers, handoff, inventory,
-    join, mobs, movement, ticking, visibility, worlds,
-};
+use crate::{actors, arenas, blobs, blocks, chunks, clock, commands, entities, handlers, handoff, inventory, join, mobs, movement, ticking, visibility, worlds};
 
 /// The disconnect screen of the players of a shard that stops.
 const CLOSED: &str = "disconnect.closed";
@@ -53,31 +47,17 @@ pub struct Shard {
 impl Shard {
     /// A server's only shard: its players arrive from `inbox` and are answered through `outbox`,
     /// and `level` is its first world.
-    pub fn new(
-        cfg: ShardConfig,
-        level: sapling_world::World,
-        inbox: Inbox,
-        outbox: Outbox,
-    ) -> Self {
+    pub fn new(cfg: ShardConfig, level: sapling_world::World, inbox: Inbox, outbox: Outbox) -> Self {
         Self::linked(cfg, level, inbox, outbox, Link::alone())
     }
 
     /// One of a server's shards (see [`Link::mesh`]): `inbox` is the one the network's router
     /// has for this shard's index, `outbox` is shared by all.
-    pub fn linked(
-        cfg: ShardConfig,
-        level: sapling_world::World,
-        inbox: Inbox,
-        outbox: Outbox,
-        link: Link,
-    ) -> Self {
+    pub fn linked(cfg: ShardConfig, level: sapling_world::World, inbox: Inbox, outbox: Outbox, link: Link) -> Self {
         let mut world = World::new();
         world.insert_resource(Peers::new(link.index, link.entry, link.peers));
         world.insert_resource(Net(outbox));
-        world.insert_resource(Players {
-            next_net_id: link.index as u64 * IDS_PER_SHARD + 1,
-            ..Players::default()
-        });
+        world.insert_resource(Players { next_net_id: link.index as u64 * IDS_PER_SHARD + 1, ..Players::default() });
         world.init_resource::<Atlas>();
         world.init_resource::<Scope>();
         world.init_resource::<Changes>();
@@ -90,20 +70,14 @@ impl Shard {
         world.init_resource::<ToViewers>();
         world.init_resource::<mobs::MobGrid>();
         world.init_resource::<blocks::BlockInputs>();
-        let layer = worlds::add(&mut world, &cfg.world_id, level, cfg.spawn)
-            .expect("a new shard has no world of that name");
+        let layer = worlds::add(&mut world, &cfg.world_id, level, cfg.spawn).expect("a new shard has no world of that name");
         world.insert_resource(DefaultLayer(layer));
         world.insert_resource(Settings(cfg));
 
         let mut schedule = Schedule::default();
         // Shards scale across threads; inside one, systems run in this order every tick.
         schedule.set_executor(SingleThreadedExecutor::new());
-        let join = (
-            join::resource_packs,
-            join::chunk_radius,
-            blobs::cache_status,
-        )
-            .chain();
+        let join = (join::resource_packs, join::chunk_radius, blobs::cache_status).chain();
         let chunks = (
             chunks::poll_worlds,
             actors::arrive,
@@ -116,46 +90,16 @@ impl Shard {
             chunks::save_and_unload_columns,
             mobs::despawn_unloaded,
         );
-        let items = (
-            inventory::load,
-            inventory::send_own,
-            inventory::select,
-            inventory::screens,
-            inventory::save_changed,
-        );
-        schedule.add_systems(
-            (
-                join,
-                clock::advance,
-                chunks.chain(),
-                items.chain(),
-                join::initialized,
-            )
-                .chain(),
-        );
+        let items = (inventory::load, inventory::send_own, inventory::select, inventory::screens, inventory::save_changed);
+        schedule.add_systems((join, clock::advance, chunks.chain(), items.chain(), join::initialized).chain());
         let mut after_handlers = Schedule::default();
         after_handlers.set_executor(SingleThreadedExecutor::new());
-        let viewers = (
-            visibility::update,
-            mobs::update,
-            entities::send_held_moves,
-            movement::announce,
-            movement::relay_swings,
-            inventory::announce,
-            visibility::fan_out,
-        );
+        let viewers = (visibility::update, mobs::update, entities::send_held_moves, movement::announce, movement::relay_swings, inventory::announce, visibility::fan_out);
         after_handlers.add_systems((viewers.chain(), commands::announce, flush).chain());
         sapling_data::set_shield_item_id();
         world.insert_resource(CommandLists::new(&Commands::default()));
         world.init_resource::<PluginState>();
-        Self {
-            world,
-            schedule,
-            after_handlers,
-            inbox,
-            mailbox: link.mailbox,
-            plugins: Plugins::default(),
-        }
+        Self { world, schedule, after_handlers, inbox, mailbox: link.mailbox, plugins: Plugins::default() }
     }
 
     /// Adds a world players can be moved to, with where they appear in it (feet). False for a
@@ -166,15 +110,8 @@ impl Shard {
 
     /// Adds a template handlers make worlds from (`ShardCtx::create_world`), with where players
     /// appear in such a world (feet).
-    pub fn add_template(
-        &mut self,
-        name: &str,
-        template: Arc<sapling_world::Template>,
-        spawn: [f32; 3],
-    ) {
-        self.world
-            .resource_mut::<arenas::Templates>()
-            .add(name, template, spawn);
+    pub fn add_template(&mut self, name: &str, template: Arc<sapling_world::Template>, spawn: [f32; 3]) {
+        self.world.resource_mut::<arenas::Templates>().add(name, template, spawn);
     }
 
     /// Adds a handler at [`Priority::Normal`].
@@ -191,8 +128,7 @@ impl Shard {
     /// they have until their permission changes.
     pub fn add_command<C: Command>(&mut self) {
         self.plugins.commands.register::<C>();
-        self.world
-            .insert_resource(CommandLists::new(&self.plugins.commands));
+        self.world.insert_resource(CommandLists::new(&self.plugins.commands));
     }
 
     /// One tick: take what the other shards and the network delivered, run the systems, then
@@ -202,9 +138,7 @@ impl Shard {
         while let Ok(event) = self.inbox.try_recv() {
             self.accept(event);
         }
-        handoff::expire(&mut self.world)
-            .into_iter()
-            .for_each(|event| self.accept(event));
+        handoff::expire(&mut self.world).into_iter().for_each(|event| self.accept(event));
         self.schedule.run(&mut self.world);
         handlers::dispatch(&mut self.world, &mut self.plugins);
         self.after_handlers.run(&mut self.world);
@@ -214,9 +148,7 @@ impl Shard {
 
     fn take_messages(&mut self) {
         while let Ok(message) = self.mailbox.try_recv() {
-            handoff::receive(&mut self.world, message)
-                .into_iter()
-                .for_each(|event| self.accept(event));
+            handoff::receive(&mut self.world, message).into_iter().for_each(|event| self.accept(event));
         }
     }
 
@@ -238,14 +170,8 @@ impl Shard {
             }
             self.close();
         };
-        let thread = std::thread::Builder::new()
-            .name(format!("sapling-shard-{index}"))
-            .spawn(run)
-            .expect("spawning the shard thread");
-        ShardHandle {
-            stop,
-            thread: Some(thread),
-        }
+        let thread = std::thread::Builder::new().name(format!("sapling-shard-{index}")).spawn(run).expect("spawning the shard thread");
+        ShardHandle { stop, thread: Some(thread) }
     }
 
     /// A stopping shard's last act: the players promised to it are taken in, the forwards it
@@ -255,9 +181,7 @@ impl Shard {
         handoff::close(&mut self.world);
         worlds::withdraw(&self.world);
         let net = self.world.resource::<Net>().0.clone();
-        handoff::owned(&mut self.world)
-            .into_iter()
-            .for_each(|conn| net.kick(conn, CLOSED));
+        handoff::owned(&mut self.world).into_iter().for_each(|conn| net.kick(conn, CLOSED));
         self.save_worlds();
     }
 
@@ -275,9 +199,7 @@ impl Shard {
     }
 
     fn accept(&mut self, event: NetEvent) {
-        let Some(event) = handoff::intercept(&mut self.world, event) else {
-            return;
-        };
+        let Some(event) = handoff::intercept(&mut self.world, event) else { return };
         match event {
             NetEvent::Joined { conn, login, .. } => self.add_player(conn, &login),
             NetEvent::Packet { conn, packet } => {
@@ -285,9 +207,7 @@ impl Shard {
                     if packet.id != PlayerAuthInput::ID {
                         tracing::debug!(conn = conn.get(), id = packet.id, len = packet.body.len(), stage = ?self.world.get::<Stage>(entity), "packet received");
                     }
-                    self.world
-                        .resource_mut::<PacketQueues>()
-                        .push(entity, packet);
+                    self.world.resource_mut::<PacketQueues>().push(entity, packet);
                 }
             }
             NetEvent::Left { conn, reason } => {
@@ -302,10 +222,7 @@ impl Shard {
 
     fn add_player(&mut self, conn: ConnId, login: &VerifiedLogin) {
         let layer = self.world.resource::<DefaultLayer>().0;
-        let mut level = self
-            .world
-            .get_mut::<Layer>(layer)
-            .expect("the default layer lives as long as the shard");
+        let mut level = self.world.get_mut::<Layer>(layer).expect("the default layer lives as long as the shard");
         level.world.request_player(&login.identity.uuid.to_string());
         let spawn = level.spawn;
         let mode = Mode(self.world.resource::<Settings>().0.game_mode);
@@ -314,25 +231,14 @@ impl Shard {
         players.next_net_id += 1;
         let identity = &login.identity;
         tracing::debug!(conn = conn.get(), name = %identity.display_name, authenticated = login.authenticated, "login verified");
-        let player = Player {
-            id: PlayerId(conn.get()),
-            name: identity.display_name.clone(),
-            uuid: identity.uuid,
-            xuid: identity.xuid.clone(),
-        };
+        let player = Player { id: PlayerId(conn.get()), name: identity.display_name.clone(), uuid: identity.uuid, xuid: identity.xuid.clone() };
         let mut out = Outgoing::default();
         out.push(&join::resource_packs_info());
         let carried = Carried {
             conn: Conn(conn),
             identity: Identity(player),
             net_id: NetId(net_id),
-            position: Position {
-                feet: spawn,
-                yaw: 0.0,
-                pitch: 0.0,
-                head_yaw: 0.0,
-                on_ground: true,
-            },
+            position: Position { feet: spawn, yaw: 0.0, pitch: 0.0, head_yaw: 0.0, on_ground: true },
             stage: Stage::PacksInfo,
             view: View::default(),
             blobs: BlobCache::default(),
@@ -346,10 +252,7 @@ impl Shard {
             inventory: Inventory::default(),
         };
         let entity = self.world.spawn((carried, Local::in_layer(layer))).id();
-        self.world
-            .resource_mut::<Players>()
-            .by_conn
-            .insert(conn, entity);
+        self.world.resource_mut::<Players>().by_conn.insert(conn, entity);
     }
 }
 

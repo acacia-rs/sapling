@@ -93,13 +93,7 @@ impl Players {
 /// The players in the world (past their loading screen), in join order.
 pub(crate) fn in_world(world: &World) -> Vec<Entity> {
     let is_in = |entity: &Entity| world.get::<Stage>(*entity) == Some(&Stage::InWorld);
-    let mut players: Vec<Entity> = world
-        .resource::<Players>()
-        .by_conn
-        .values()
-        .copied()
-        .filter(is_in)
-        .collect();
+    let mut players: Vec<Entity> = world.resource::<Players>().by_conn.values().copied().filter(is_in).collect();
     players.sort_by_key(|entity| world.get::<NetId>(*entity).map(|id| id.0));
     players
 }
@@ -107,10 +101,7 @@ pub(crate) fn in_world(world: &World) -> Vec<Entity> {
 /// Who `entity` is, if it is a player in the world.
 pub(crate) fn in_world_identity(world: &World, entity: Entity) -> Option<sapling_api::Player> {
     let in_world = world.get::<Stage>(entity) == Some(&Stage::InWorld);
-    world
-        .get::<Identity>(entity)
-        .filter(|_| in_world)
-        .map(|identity| identity.0.clone())
+    world.get::<Identity>(entity).filter(|_| in_world).map(|identity| identity.0.clone())
 }
 
 #[derive(Component)]
@@ -124,10 +115,7 @@ pub(crate) struct PerTick {
 
 impl PerTick {
     pub fn new(max: usize) -> Self {
-        Self {
-            max,
-            seen: HashMap::new(),
-        }
+        Self { max, seen: HashMap::new() }
     }
 
     pub fn allow(&mut self, from: Entity) -> bool {
@@ -156,11 +144,7 @@ impl PacketQueues {
 
     /// Removes and decodes every `T` received this tick; undecodable ones are dropped.
     pub fn take<T: Packet>(&mut self) -> Vec<(Entity, T)> {
-        let raw = self
-            .0
-            .get_mut(&T::ID)
-            .map(std::mem::take)
-            .unwrap_or_default();
+        let raw = self.0.get_mut(&T::ID).map(std::mem::take).unwrap_or_default();
         let decode = |(from, packet): (Entity, RawPacket)| match packet.decode::<T>() {
             Ok(decoded) => Some((from, decoded)),
             Err(error) => {

@@ -84,17 +84,9 @@ impl Cell {
 /// What the cell holds: the water a waterlogged block keeps in layer 1 counts as the cell's
 /// (BDS `BlockSource::getLiquidBlock`).
 pub(super) fn cell(world: &World, layer: Entity, [x, y, z]: BlockPos) -> Cell {
-    let Some(level) = level(world, layer)
-        .filter(|level| level.in_height(y) && level.is_loaded(send::column([x, y, z])))
-    else {
-        return Cell::Unknown;
-    };
+    let Some(level) = level(world, layer).filter(|level| level.in_height(y) && level.is_loaded(send::column([x, y, z]))) else { return Cell::Unknown };
     let registry = level.registry();
-    let liquid = |id: u32| {
-        registry
-            .get(id)
-            .and_then(|state| Some(Cell::Liquid(Liquid::of(state.name)?, state.liquid_depth)))
-    };
+    let liquid = |id: u32| registry.get(id).and_then(|state| Some(Cell::Liquid(Liquid::of(state.name)?, state.liquid_depth)));
     let (block, held) = (level.block(x, y, z), level.liquid(x, y, z));
     if let Some(liquid) = liquid(held).or_else(|| liquid(block)) {
         return liquid;
@@ -157,9 +149,7 @@ fn wake(world: &mut World, layer: Entity, pos: BlockPos, itself: bool) {
             }
             if harden::meets_water(world, layer, near) {
                 changed.push(near);
-            } else if let (Cell::Liquid(liquid, _), true) =
-                (cell(world, layer, near), itself || near != pos)
-            {
+            } else if let (Cell::Liquid(liquid, _), true) = (cell(world, layer, near), itself || near != pos) {
                 schedule(world, layer, near, liquid.delay(hot), true);
             }
         }
@@ -170,29 +160,15 @@ fn wake(world: &mut World, layer: Entity, pos: BlockPos, itself: bool) {
 /// or lets it in (Noreaction), else in layer 0 over what was there. Queues it and what is around
 /// it to move.
 fn set(world: &mut World, layer: Entity, pos: BlockPos, liquid: Liquid, depth: Option<u8>) -> bool {
-    let Some(level) = level(world, layer) else {
-        return false;
-    };
+    let Some(level) = level(world, layer) else { return false };
     let registry = level.registry();
     let [x, y, z] = pos;
     let (block, held) = (level.block(x, y, z), level.liquid(x, y, z));
-    let beside_block = registry
-        .get(block)
-        .is_some_and(|state| !state.is_air() && !state.is_liquid());
+    let beside_block = registry.get(block).is_some_and(|state| !state.is_air() && !state.is_liquid());
     let holds = registry.get(held).is_some_and(|state| state.is_liquid());
-    let in_layer_zero = !beside_block
-        || liquid == Liquid::Lava
-        || !holds && waterlog::reaction(registry, block) != LiquidReaction::Noreaction;
-    let Some(id) = depth.map_or(Some(registry.air_id()), |depth| {
-        registry.find(liquid.name(), &format!("liquid_depth={depth}"))
-    }) else {
-        return false;
-    };
-    let written = if in_layer_zero {
-        send::set(world, layer, pos, id)
-    } else {
-        send::set_liquid(world, layer, pos, id)
-    };
+    let in_layer_zero = !beside_block || liquid == Liquid::Lava || !holds && waterlog::reaction(registry, block) != LiquidReaction::Noreaction;
+    let Some(id) = depth.map_or(Some(registry.air_id()), |depth| registry.find(liquid.name(), &format!("liquid_depth={depth}"))) else { return false };
+    let written = if in_layer_zero { send::set(world, layer, pos, id) } else { send::set_liquid(world, layer, pos, id) };
     if written {
         disturb(world, layer, pos);
     }
@@ -201,23 +177,9 @@ fn set(world: &mut World, layer: Entity, pos: BlockPos, liquid: Liquid, depth: O
 
 /// Pours a source of `liquid` into the cell, into layer 1 beside the block there when
 /// `waterlogs`, and sets it flowing (BDS `BucketItem::_emptyBucket`).
-pub(super) fn pour(
-    world: &mut World,
-    layer: Entity,
-    pos: BlockPos,
-    liquid: Liquid,
-    waterlogs: bool,
-) -> bool {
-    let Some(id) = level(world, layer)
-        .and_then(|level| level.registry().find(liquid.name(), "liquid_depth=0"))
-    else {
-        return false;
-    };
-    let poured = if waterlogs {
-        send::set_liquid(world, layer, pos, id)
-    } else {
-        send::set(world, layer, pos, id)
-    };
+pub(super) fn pour(world: &mut World, layer: Entity, pos: BlockPos, liquid: Liquid, waterlogs: bool) -> bool {
+    let Some(id) = level(world, layer).and_then(|level| level.registry().find(liquid.name(), "liquid_depth=0")) else { return false };
+    let poured = if waterlogs { send::set_liquid(world, layer, pos, id) } else { send::set(world, layer, pos, id) };
     if poured {
         disturb(world, layer, pos);
     }
@@ -227,19 +189,10 @@ pub(super) fn pour(
 /// Takes the liquid out of the cell: the water a waterlogged block keeps, else the cell's own,
 /// with any bubble column in it.
 pub(super) fn take(world: &mut World, layer: Entity, [x, y, z]: BlockPos) {
-    let Some(level) = level(world, layer) else {
-        return;
-    };
+    let Some(level) = level(world, layer) else { return };
     let registry = level.registry();
-    let (air, holds) = (
-        registry.air_id(),
-        registry
-            .get(level.liquid(x, y, z))
-            .is_some_and(|state| state.is_liquid()),
-    );
-    let is_column = registry
-        .get(level.block(x, y, z))
-        .is_some_and(|state| state.name == BUBBLE_COLUMN);
+    let (air, holds) = (registry.air_id(), registry.get(level.liquid(x, y, z)).is_some_and(|state| state.is_liquid()));
+    let is_column = registry.get(level.block(x, y, z)).is_some_and(|state| state.name == BUBBLE_COLUMN);
     if holds {
         send::clear_liquid(world, layer, [x, y, z]);
     }
@@ -252,14 +205,10 @@ pub(super) fn take(world: &mut World, layer: Entity, [x, y, z]: BlockPos) {
 /// Moves the liquid that is due.
 pub(crate) fn tick(world: &mut World) {
     let now = world.resource::<Tick>().0;
-    let Some(mut flows) = world.get_resource_mut::<Flows>() else {
-        return;
-    };
+    let Some(mut flows) = world.get_resource_mut::<Flows>() else { return };
     let mut moving = Vec::new();
     while moving.len() < MAX_PER_TICK {
-        let Some(entry) = flows.due.first_entry().filter(|entry| entry.key().0 <= now) else {
-            break;
-        };
+        let Some(entry) = flows.due.first_entry().filter(|entry| entry.key().0 <= now) else { break };
         let due = entry.key().0;
         let (layer, pos) = entry.remove();
         flows.queued.remove(&(layer, pos, due));

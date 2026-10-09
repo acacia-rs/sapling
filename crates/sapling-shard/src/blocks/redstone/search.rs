@@ -50,23 +50,13 @@ impl<F: FnMut(BlockPos) -> Part> Search<'_, F> {
 
     /// Offers `strength` to what `pos` holds, reached from `from` on its `face` side: dust and
     /// users always, a solid block when `strong` points into it, a torch standing on `from`.
-    fn reach(
-        &mut self,
-        from: BlockPos,
-        face: Face,
-        strength: u8,
-        origin: BlockPos,
-        strong: bool,
-        to_dust: bool,
-    ) {
+    fn reach(&mut self, from: BlockPos, face: Face, strength: u8, origin: BlockPos, strong: bool, to_dust: bool) {
         let pos = face.neighbour(from);
         match (self.part)(pos) {
             Part::Dust { .. } if to_dust => self.offer(Via::Dust, pos, strength, origin),
             Part::User(_) => self.offer(Via::User, pos, strength, origin),
             Part::Conductor if strong => self.offer(Via::Strong, pos, strength, origin),
-            Part::Torch { support, .. } if support.neighbour(pos) == from => {
-                self.offer(Via::TorchInput, pos, strength, origin)
-            }
+            Part::Torch { support, .. } if support.neighbour(pos) == from => self.offer(Via::TorchInput, pos, strength, origin),
             _ => {}
         }
     }
@@ -93,16 +83,9 @@ impl<F: FnMut(BlockPos) -> Part> Search<'_, F> {
         let beside = face.neighbour(dust);
         let is_dust = |part: Part| matches!(part, Part::Dust { .. });
         let beside_part = (self.part)(beside);
-        let up = !(self.part)(Face::Up.neighbour(dust)).cuts()
-            && is_dust((self.part)(Face::Up.neighbour(beside)));
-        let down = !beside_part.cuts()
-            && (self.part)(Face::Down.neighbour(dust)) != Part::Ledge
-            && is_dust((self.part)(Face::Down.neighbour(beside)));
-        matches!(
-            beside_part,
-            Part::Dust { .. } | Part::Producer { .. } | Part::Torch { .. }
-        ) || up
-            || down
+        let up = !(self.part)(Face::Up.neighbour(dust)).cuts() && is_dust((self.part)(Face::Up.neighbour(beside)));
+        let down = !beside_part.cuts() && (self.part)(Face::Down.neighbour(dust)) != Part::Ledge && is_dust((self.part)(Face::Down.neighbour(beside)));
+        matches!(beside_part, Part::Dust { .. } | Part::Producer { .. } | Part::Torch { .. }) || up || down
     }
 
     fn from_dust(&mut self, dust: BlockPos, strength: u8, origin: BlockPos) {
@@ -126,10 +109,7 @@ impl<F: FnMut(BlockPos) -> Part> Search<'_, F> {
             if up_free && matches!((self.part)(above), Part::Dust { .. }) {
                 self.offer(Via::Dust, above, next, origin);
             }
-            if !beside_part.cuts()
-                && below_part != Part::Ledge
-                && matches!((self.part)(under), Part::Dust { .. })
-            {
+            if !beside_part.cuts() && below_part != Part::Ledge && matches!((self.part)(under), Part::Dust { .. }) {
                 self.offer(Via::Dust, under, next, origin);
             }
             // North and south are 0 and 1, west and east 2 and 3: the other pair lies across.
@@ -178,17 +158,8 @@ impl<F: FnMut(BlockPos) -> Part> Search<'_, F> {
 }
 
 /// Searches out from `sources` (a torch as it is about to be), reading cells by `part`.
-pub(super) fn search(
-    sources: &[(BlockPos, Part)],
-    part: &mut impl FnMut(BlockPos) -> Part,
-) -> Power {
-    Search {
-        part,
-        best: HashMap::new(),
-        queue: BinaryHeap::new(),
-        power: Power::default(),
-    }
-    .run(sources)
+pub(super) fn search(sources: &[(BlockPos, Part)], part: &mut impl FnMut(BlockPos) -> Part) -> Power {
+    Search { part, best: HashMap::new(), queue: BinaryHeap::new(), power: Power::default() }.run(sources)
 }
 
 #[cfg(test)]
@@ -196,12 +167,7 @@ mod tests {
     use super::*;
 
     fn world(cells: &[(BlockPos, Part)]) -> impl FnMut(BlockPos) -> Part + '_ {
-        move |pos| {
-            cells
-                .iter()
-                .find(|(at, _)| *at == pos)
-                .map_or(Part::Other, |(_, part)| *part)
-        }
+        move |pos| cells.iter().find(|(at, _)| *at == pos).map_or(Part::Other, |(_, part)| *part)
     }
 
     const LAMP: Part = Part::User(super::super::parts::User::Lamp { lit: false });
@@ -210,75 +176,31 @@ mod tests {
     #[test]
     fn dust_fades_by_one_a_block_and_reaches_a_lamp_15_away_not_16() {
         // As research/captures/bds-redstone.txt: a block of redstone at x 2, dust from x 3.
-        let block = (
-            [2, 0, 0],
-            Part::Producer {
-                strength: FULL,
-                strong: None,
-            },
-        );
+        let block = ([2, 0, 0], Part::Producer { strength: FULL, strong: None });
         for (length, lit) in [(15, true), (16, false)] {
-            let mut cells: Vec<(BlockPos, Part)> =
-                (3..3 + length).map(|x| ([x, 0, 0], DUST)).collect();
+            let mut cells: Vec<(BlockPos, Part)> = (3..3 + length).map(|x| ([x, 0, 0], DUST)).collect();
             cells.extend([block, ([3 + length, 0, 0], LAMP)]);
             let power = search(&[block], &mut world(&cells));
             assert_eq!(power.at.get(&[3, 0, 0]), Some(&15));
-            assert_eq!(
-                power.at.get(&[3 + length, 0, 0]).is_some_and(|s| *s > 0),
-                lit,
-                "{length} dust"
-            );
+            assert_eq!(power.at.get(&[3 + length, 0, 0]).is_some_and(|s| *s > 0), lit, "{length} dust");
         }
     }
 
     #[test]
     fn a_lever_powers_through_its_block_but_a_redstone_block_does_not() {
-        let lever = (
-            [0, 1, 0],
-            Part::Producer {
-                strength: FULL,
-                strong: Some(Face::Down),
-            },
-        );
-        let cells = [
-            lever,
-            ([0, 0, 0], Part::Conductor),
-            ([1, 0, 0], LAMP),
-            ([5, 0, 0], Part::Conductor),
-            ([6, 0, 0], LAMP),
-        ];
-        let block = (
-            [4, 0, 0],
-            Part::Producer {
-                strength: FULL,
-                strong: None,
-            },
-        );
+        let lever = ([0, 1, 0], Part::Producer { strength: FULL, strong: Some(Face::Down) });
+        let cells = [lever, ([0, 0, 0], Part::Conductor), ([1, 0, 0], LAMP), ([5, 0, 0], Part::Conductor), ([6, 0, 0], LAMP)];
+        let block = ([4, 0, 0], Part::Producer { strength: FULL, strong: None });
         let mut cells = cells.to_vec();
         cells.push(block);
         let power = search(&[lever, block], &mut world(&cells));
-        assert_eq!(
-            (power.at.get(&[1, 0, 0]), power.at.get(&[6, 0, 0])),
-            (Some(&15), None)
-        );
+        assert_eq!((power.at.get(&[1, 0, 0]), power.at.get(&[6, 0, 0])), (Some(&15), None));
     }
 
     #[test]
     fn a_torch_reads_the_block_it_is_on_and_its_own_power_back_names_it() {
-        let torch = (
-            [0, 1, 0],
-            Part::Torch {
-                lit: true,
-                support: Face::Down,
-            },
-        );
-        let lever = (
-            [1, 0, 0],
-            Part::Producer {
-                strength: FULL,
-                strong: Some(Face::West),
-            },
-        );
+        let torch = ([0, 1, 0], Part::Torch { lit: true, support: Face::Down });
+        let lever = ([1, 0, 0], Part::Producer { strength: FULL, strong: Some(Face::West) });
         let cells = [torch, lever, ([0, 0, 0], Part::Conductor)];
         let power = search(&[torch, lever], &mut world(&cells));
         assert_eq!(power.torches.get(&[0, 1, 0]), Some(&(15, [1, 0, 0])));
@@ -287,36 +209,16 @@ mod tests {
     #[test]
     fn dust_steps_up_past_glass_but_not_slime_and_down_stone_but_not_glowstone() {
         // As research/captures/bds-conductors.txt: `over` above the dust by the block of redstone, `under` the dust a step up.
-        let block = (
-            [0, 0, 0],
-            Part::Producer {
-                strength: FULL,
-                strong: None,
-            },
-        );
+        let block = ([0, 0, 0], Part::Producer { strength: FULL, strong: None });
         let stepped = |over: Part, under: Part, from_top: bool| {
             let (low, high) = ([1, 0, 0], [2, 1, 0]);
-            let source = if from_top {
-                ([3, 1, 0], block.1)
-            } else {
-                block
-            };
-            let cells = [
-                source,
-                (low, DUST),
-                ([1, 1, 0], over),
-                ([2, 0, 0], under),
-                (high, DUST),
-            ];
+            let source = if from_top { ([3, 1, 0], block.1) } else { block };
+            let cells = [source, (low, DUST), ([1, 1, 0], over), ([2, 0, 0], under), (high, DUST)];
             let power = search(&[source], &mut world(&cells));
             power.at.get(if from_top { &low } else { &high }).copied()
         };
         assert_eq!(stepped(Part::Other, Part::Conductor, false), Some(14));
-        assert_eq!(
-            stepped(Part::Ledge, Part::Conductor, false),
-            Some(14),
-            "glass and glowstone cut nothing"
-        );
+        assert_eq!(stepped(Part::Ledge, Part::Conductor, false), Some(14), "glass and glowstone cut nothing");
         assert_eq!(stepped(Part::Cutter, Part::Conductor, false), None);
         assert_eq!(stepped(Part::Conductor, Part::Conductor, false), None);
         assert_eq!(stepped(Part::Other, Part::Conductor, true), Some(14));

@@ -63,22 +63,11 @@ const KIND: &str = "minecraft:xp_orb";
 fn split(mut points: i32) -> Vec<i32> {
     if points > MANY {
         let each = points / MANY_ORBS;
-        return (0..MANY_ORBS)
-            .map(|orb| {
-                if orb == MANY_ORBS - 1 {
-                    points - each * (MANY_ORBS - 1)
-                } else {
-                    each
-                }
-            })
-            .collect();
+        return (0..MANY_ORBS).map(|orb| if orb == MANY_ORBS - 1 { points - each * (MANY_ORBS - 1) } else { each }).collect();
     }
     let mut orbs = Vec::new();
     while points > 0 {
-        let orb = SPLITS
-            .into_iter()
-            .find(|split| *split <= points)
-            .unwrap_or(1);
+        let orb = SPLITS.into_iter().find(|split| *split <= points).unwrap_or(1);
         orbs.push(orb);
         points -= orb;
     }
@@ -90,12 +79,7 @@ fn random(world: &mut World) -> f32 {
 }
 
 fn announce(id: u64, value: i32, body: &Body) -> Vec<bytes::Bytes> {
-    vec![sapling_net::encode(&sapling_data::add_experience_orb(
-        id,
-        body.at,
-        body.motion,
-        value,
-    ))]
+    vec![sapling_net::encode(&sapling_data::add_experience_orb(id, body.at, body.motion, value))]
 }
 
 /// Lets `points` of experience out at `at` as orbs, each thrown a little up and aside.
@@ -108,30 +92,16 @@ pub(crate) fn spawn(world: &mut World, layer: Entity, at: [f32; 3], points: i32)
 /// One orb worth `value`, thrown a little up and aside from `at`.
 pub(crate) fn throw(world: &mut World, layer: Entity, at: [f32; 3], value: i32) -> Option<Entity> {
     let mut throw = || random(world) * 0.2;
-    let body = Body::new(
-        at,
-        [(throw() - 0.1) * 2.0, throw() * 2.0, (throw() - 0.1) * 2.0],
-        [SIZE; 2],
-    );
-    let entity = entities::spawn(world, layer, KIND, body, at, |id| {
-        Some(announce(id, value, &body))
-    })?;
-    world.entity_mut(entity).insert(Orb {
-        value,
-        age: 0,
-        last_search: 0,
-        target: None,
-    });
+    let body = Body::new(at, [(throw() - 0.1) * 2.0, throw() * 2.0, (throw() - 0.1) * 2.0], [SIZE; 2]);
+    let entity = entities::spawn(world, layer, KIND, body, at, |id| Some(announce(id, value, &body)))?;
+    world.entity_mut(entity).insert(Orb { value, age: 0, last_search: 0, target: None });
     Some(entity)
 }
 
 /// Whether `player` may take an orb this tick, and if so, that it has.
 fn takes(world: &mut World, player: Entity) -> bool {
     let now = world.resource::<crate::components::Tick>().0;
-    if world
-        .get::<LastOrb>(player)
-        .is_some_and(|last| now < last.0 + TAKE_EVERY)
-    {
+    if world.get::<LastOrb>(player).is_some_and(|last| now < last.0 + TAKE_EVERY) {
         return false;
     }
     world.entity_mut(player).insert(LastOrb(now));
@@ -141,56 +111,24 @@ fn takes(world: &mut World, player: Entity) -> bool {
 /// The nearest player of `layer` in the world within [`FOLLOW`] blocks of `at`.
 fn nearest(world: &mut World, layer: Entity, at: [f32; 3]) -> Option<Entity> {
     let mut players = world.query::<(Entity, &Stage, &InLayer, &Position)>();
-    let distance = |feet: [f32; 3]| {
-        (0..3)
-            .map(|axis| {
-                (feet[axis]
-                    + if axis == 1 {
-                        sapling_data::EYE_HEIGHT
-                    } else {
-                        0.0
-                    }
-                    - at[axis])
-                    .powi(2)
-            })
-            .sum::<f32>()
-    };
-    let near = players
-        .iter(world)
-        .filter(|(_, stage, in_layer, _)| **stage == Stage::InWorld && in_layer.0 == layer)
-        .map(|(player, .., position)| (player, distance(position.feet)));
-    near.filter(|(_, distance)| *distance < FOLLOW * FOLLOW)
-        .min_by(|a, b| a.1.total_cmp(&b.1))
-        .map(|(player, _)| player)
+    let distance = |feet: [f32; 3]| (0..3).map(|axis| (feet[axis] + if axis == 1 { sapling_data::EYE_HEIGHT } else { 0.0 } - at[axis]).powi(2)).sum::<f32>();
+    let near = players.iter(world).filter(|(_, stage, in_layer, _)| **stage == Stage::InWorld && in_layer.0 == layer).map(|(player, .., position)| (player, distance(position.feet)));
+    near.filter(|(_, distance)| *distance < FOLLOW * FOLLOW).min_by(|a, b| a.1.total_cmp(&b.1)).map(|(player, _)| player)
 }
 
 /// A player of `layer` whose reach touches the orb at `at`: its box grown by one block across and
 /// half a block up and down (Java's pickup box; BDS took an orb 1.1 blocks off in 7 ticks).
 fn touching(world: &mut World, layer: Entity, at: [f32; 3]) -> Option<Entity> {
     let mut players = world.query::<(Entity, &Stage, &InLayer, &Position)>();
-    let touches = |feet: [f32; 3]| {
-        (at[0] - feet[0]).abs() <= TOUCH_ACROSS
-            && (at[2] - feet[2]).abs() <= TOUCH_ACROSS
-            && (TOUCH_BELOW..=TOUCH_ABOVE).contains(&(at[1] - feet[1]))
-    };
-    let mut near = players
-        .iter(world)
-        .filter(|(_, stage, in_layer, position)| {
-            **stage == Stage::InWorld && in_layer.0 == layer && touches(position.feet)
-        });
+    let touches = |feet: [f32; 3]| (at[0] - feet[0]).abs() <= TOUCH_ACROSS && (at[2] - feet[2]).abs() <= TOUCH_ACROSS && (TOUCH_BELOW..=TOUCH_ABOVE).contains(&(at[1] - feet[1]));
+    let mut near = players.iter(world).filter(|(_, stage, in_layer, position)| **stage == Stage::InWorld && in_layer.0 == layer && touches(position.feet));
     near.next().map(|(player, ..)| player)
 }
 
 /// One tick of the orb `entity`.
 fn step(world: &mut World, entity: Entity, orb: &mut Orb, layer: Entity, id: u64) -> Fate {
     orb.age += 1;
-    let Some(mut body) = world
-        .get::<Body>(entity)
-        .copied()
-        .filter(|_| orb.age < LIFETIME)
-    else {
-        return Fate::Gone;
-    };
+    let Some(mut body) = world.get::<Body>(entity).copied().filter(|_| orb.age < LIFETIME) else { return Fate::Gone };
     if let Some(player) = touching(world, layer, body.at).filter(|player| takes(world, *player)) {
         taken(world, layer, orb.value, body.at, player);
         return Fate::Taken;
@@ -200,30 +138,19 @@ fn step(world: &mut World, entity: Entity, orb: &mut Orb, layer: Entity, id: u64
         orb.last_search = u64::from(orb.age);
         orb.target = nearest(world, layer, body.at);
     }
-    let chest = orb
-        .target
-        .and_then(|player| world.get::<Position>(player))
-        .map(|position| [position.feet[0], position.feet[1] + BODY, position.feet[2]]);
+    let chest = orb.target.and_then(|player| world.get::<Position>(player)).map(|position| [position.feet[0], position.feet[1] + BODY, position.feet[2]]);
     if let (Some(player), Some(chest)) = (orb.target, chest) {
         let gap = [0, 1, 2].map(|axis| (chest[axis] - body.at[axis]) / FOLLOW);
         let across = gap[0].hypot(gap[2]);
         if across <= TOUCH && takes(world, player) {
-            taken(
-                world,
-                layer,
-                orb.value,
-                [0, 1, 2].map(|axis| body.at[axis] + gap[axis]),
-                player,
-            );
+            taken(world, layer, orb.value, [0, 1, 2].map(|axis| body.at[axis] + gap[axis]), player);
             return Fate::Taken;
         }
         let pull = (1.0 - across).max(0.0).powi(2) * 0.1 / across;
         (0..3).for_each(|axis| body.motion[axis] += gap[axis] * pull);
         world.entity_mut(entity).insert(body);
     }
-    let Some((body, packets)) = entities::step(world, entity, layer, id, &Physics::ORB, 0.0) else {
-        return Fate::Gone;
-    };
+    let Some((body, packets)) = entities::step(world, entity, layer, id, &Physics::ORB, 0.0) else { return Fate::Gone };
     if !packets.is_empty() {
         blocks::to_viewers(world, layer, body.at.map(|c| c.floor() as i32), &packets);
         mobs::reannounce(world, entity, announce(id, orb.value, &body));
@@ -234,31 +161,17 @@ fn step(world: &mut World, entity: Entity, orb: &mut Orb, layer: Entity, id: u64
 /// A player takes an orb worth `value` at `at`: it hears it, and gets its experience.
 fn taken(world: &mut World, layer: Entity, value: i32, at: [f32; 3], player: Entity) {
     let [x, y, z] = at;
-    let sound = LevelEvent {
-        event: LevelEventEvent::SoundOrb,
-        position: Vec3f { x, y, z },
-        data: 0,
-    };
-    blocks::to_viewers(
-        world,
-        layer,
-        at.map(|c| c.floor() as i32),
-        &[sapling_net::encode(&sound)],
-    );
+    let sound = LevelEvent { event: LevelEventEvent::SoundOrb, position: Vec3f { x, y, z }, data: 0 };
+    blocks::to_viewers(world, layer, at.map(|c| c.floor() as i32), &[sapling_net::encode(&sound)]);
     experience::give(world, player, value);
 }
 
 /// Moves every orb a tick: falling, following and being taken.
 pub(crate) fn tick(world: &mut World) {
     let mut orbs = world.query::<(Entity, &InLayer, &NetId, &Orb)>();
-    let all: Vec<(Entity, Entity, u64)> = orbs
-        .iter(world)
-        .map(|(entity, layer, id, _)| (entity, layer.0, id.0))
-        .collect();
+    let all: Vec<(Entity, Entity, u64)> = orbs.iter(world).map(|(entity, layer, id, _)| (entity, layer.0, id.0)).collect();
     for (entity, layer, id) in all {
-        let Some(mut orb) = world.entity_mut(entity).take::<Orb>() else {
-            continue;
-        };
+        let Some(mut orb) = world.entity_mut(entity).take::<Orb>() else { continue };
         match step(world, entity, &mut orb, layer, id) {
             Fate::Stays => drop(world.entity_mut(entity).insert(orb)),
             Fate::Gone => mobs::remove(world, entity),
@@ -277,9 +190,6 @@ mod tests {
         assert_eq!(split(40), [37, 3]);
         assert_eq!(split(0), Vec::<i32>::new());
         let many = split(13_001);
-        assert_eq!(
-            (many.len(), many[0], many.iter().sum::<i32>()),
-            (13, 1000, 13_001)
-        );
+        assert_eq!((many.len(), many[0], many.iter().sum::<i32>()), (13, 1000, 13_001));
     }
 }

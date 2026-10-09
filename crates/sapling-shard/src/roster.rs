@@ -4,10 +4,7 @@
 
 use acacia_proto::manual::Uuid;
 use acacia_proto::packets::{PlayerList, RemoveEntity};
-use acacia_proto::types::{
-    PlayerRecord, PlayerRecordContent, PlayerRecordContentAdd, PlayerRecordContentRemove,
-    PlayerRecordType,
-};
+use acacia_proto::types::{PlayerRecord, PlayerRecordContent, PlayerRecordContentAdd, PlayerRecordContentRemove, PlayerRecordType};
 use bevy_ecs::prelude::*;
 use std::collections::HashMap;
 
@@ -16,8 +13,8 @@ use sapling_net::{ConnId, VerifiedLogin};
 
 use crate::components::{Conn, NetId, Outgoing, in_world};
 use crate::handoff::{Peers, ShardMsg};
-use crate::visibility::Sees;
 use crate::{chat, skin};
+use crate::visibility::Sees;
 
 /// The colour BDS gave the bot of acacia-testserver's recording (locator bar dot).
 const PLAYER_COLOUR: i32 = -303_174_145;
@@ -38,23 +35,13 @@ pub(crate) struct Profile {
 
 fn list(r#type: PlayerRecordType, legacy_type: u8, content: PlayerRecordContent) -> Bytes {
     // One record per packet: the only shape seen from BDS.
-    sapling_net::encode(&PlayerList {
-        records: vec![PlayerRecord {
-            r#type,
-            legacy_type,
-            content,
-        }],
-    })
+    sapling_net::encode(&PlayerList { records: vec![PlayerRecord { r#type, legacy_type, content }] })
 }
 
 impl Profile {
     pub fn new(login: &VerifiedLogin, id: u64) -> Self {
         let identity = &login.identity;
-        let uuid: Uuid = identity
-            .uuid
-            .to_string()
-            .parse()
-            .expect("a uuid prints as a uuid");
+        let uuid: Uuid = identity.uuid.to_string().parse().expect("a uuid prints as a uuid");
         let add = PlayerRecordContentAdd {
             uuid,
             entity_unique_id: id as i64,
@@ -70,24 +57,10 @@ impl Profile {
         };
         Self {
             uuid,
-            device_id: login
-                .client_data
-                .device_id
-                .chars()
-                .filter(|c| c.is_ascii_graphic())
-                .take(64)
-                .collect(),
+            device_id: login.client_data.device_id.chars().filter(|c| c.is_ascii_graphic()).take(64).collect(),
             device_os: login.client_data.device_os,
-            list_add: list(
-                PlayerRecordType::Add,
-                LEGACY_ADD,
-                PlayerRecordContent::Add(add),
-            ),
-            list_remove: list(
-                PlayerRecordType::Remove,
-                LEGACY_REMOVE,
-                PlayerRecordContent::Remove(PlayerRecordContentRemove { uuid }),
-            ),
+            list_add: list(PlayerRecordType::Add, LEGACY_ADD, PlayerRecordContent::Add(add)),
+            list_remove: list(PlayerRecordType::Remove, LEGACY_REMOVE, PlayerRecordContent::Remove(PlayerRecordContentRemove { uuid })),
         }
     }
 }
@@ -111,34 +84,15 @@ fn send(world: &mut World, to: Entity, packets: impl IntoIterator<Item = Bytes>)
 
 pub(crate) fn list_entry(world: &World, player: Entity) -> Option<(ConnId, ListEntry)> {
     let (conn, profile) = (world.get::<Conn>(player)?, world.get::<Profile>(player)?);
-    Some((
-        conn.0,
-        ListEntry {
-            add: profile.list_add.clone(),
-            remove: profile.list_remove.clone(),
-        },
-    ))
+    Some((conn.0, ListEntry { add: profile.list_add.clone(), remove: profile.list_remove.clone() }))
 }
 
 /// Lists a player who just entered the world for everyone, and everyone for that player.
 pub(crate) fn arrive(world: &mut World, newcomer: Entity) {
     let present = in_world(world);
     let entry = |entity: &Entity| world.get::<Profile>(*entity).map(|p| p.list_add.clone());
-    let (Some(own), here) = (
-        list_entry(world, newcomer),
-        present.iter().filter_map(entry),
-    ) else {
-        return;
-    };
-    let everyone: Vec<Bytes> = here
-        .chain(
-            world
-                .resource::<Elsewhere>()
-                .0
-                .values()
-                .map(|entry| entry.add.clone()),
-        )
-        .collect();
+    let (Some(own), here) = (list_entry(world, newcomer), present.iter().filter_map(entry)) else { return };
+    let everyone: Vec<Bytes> = here.chain(world.resource::<Elsewhere>().0.values().map(|entry| entry.add.clone())).collect();
     for player in present {
         if player == newcomer {
             send(world, player, everyone.iter().cloned());
@@ -146,22 +100,14 @@ pub(crate) fn arrive(world: &mut World, newcomer: Entity) {
             send(world, player, [own.1.add.clone()]);
         }
     }
-    world.resource::<Peers>().tell_others(|| ShardMsg::Listed {
-        conn: own.0,
-        entry: own.1.clone(),
-    });
+    world.resource::<Peers>().tell_others(|| ShardMsg::Listed { conn: own.0, entry: own.1.clone() });
 }
 
 /// Removes a player's entity from those who saw it: it left their world or the shard.
 pub(crate) fn vanish(world: &mut World, leaver: Entity, id: u64) {
-    let remove = sapling_net::encode(&RemoveEntity {
-        entity_id_self: id as i64,
-    });
+    let remove = sapling_net::encode(&RemoveEntity { entity_id_self: id as i64 });
     for player in in_world(world) {
-        if world
-            .get_mut::<Sees>(player)
-            .is_some_and(|mut sees| sees.0.remove(&leaver))
-        {
+        if world.get_mut::<Sees>(player).is_some_and(|mut sees| sees.0.remove(&leaver)) {
             send(world, player, [remove.clone()]);
         }
     }
@@ -169,17 +115,10 @@ pub(crate) fn vanish(world: &mut World, leaver: Entity, id: u64) {
 
 /// Unlists a player whose connection ended and removes its entity from those who saw it.
 pub(crate) fn depart(world: &mut World, leaver: Entity) {
-    let (Some((conn, entry)), Some(id)) = (
-        list_entry(world, leaver),
-        world.get::<NetId>(leaver).map(|id| id.0),
-    ) else {
-        return;
-    };
+    let (Some((conn, entry)), Some(id)) = (list_entry(world, leaver), world.get::<NetId>(leaver).map(|id| id.0)) else { return };
     vanish(world, leaver, id);
     chat::send_to_all(world, &entry.remove);
-    world
-        .resource::<Peers>()
-        .tell_others(|| ShardMsg::Unlisted { conn });
+    world.resource::<Peers>().tell_others(|| ShardMsg::Unlisted { conn });
 }
 
 /// A player of another shard entered the game: everyone here lists it.

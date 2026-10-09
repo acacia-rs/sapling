@@ -1,9 +1,7 @@
 //! Chat: a client's line is cleaned, shown to the handlers and sent to everyone in the world
 //! under the sender's verified name, whatever name the packet claims.
 
-use acacia_proto::packets::{
-    Text, TextCategory, TextContent, TextContentChat, TextContentJson, TextContentRaw, TextType,
-};
+use acacia_proto::packets::{Text, TextCategory, TextContent, TextContentChat, TextContentJson, TextContentRaw, TextType};
 use bevy_ecs::prelude::*;
 use bytes::Bytes;
 use sapling_api::{ChatEvent, Player};
@@ -34,66 +32,32 @@ fn clean(message: &str) -> Option<String> {
 }
 
 fn text(r#type: TextType, category: TextCategory, content: TextContent, xuid: &str) -> Bytes {
-    let packet = Text {
-        needs_translation: false,
-        category,
-        r#type,
-        content,
-        xuid: xuid.to_owned(),
-        platform_chat_id: String::new(),
-        has_filtered_message: false,
-        filtered_message: None,
-    };
+    let packet = Text { needs_translation: false, category, r#type, content, xuid: xuid.to_owned(), platform_chat_id: String::new(), has_filtered_message: false, filtered_message: None };
     sapling_net::encode(&packet)
 }
 
 /// A player's line, as BDS relays one: the name ends with a format reset.
 fn chat_packet(from: &Player, message: String) -> Bytes {
-    let content = TextContentChat {
-        source_name: format!("{}{FORMAT}r", from.name),
-        message,
-    };
-    text(
-        TextType::Chat,
-        TextCategory::Authored,
-        TextContent::Chat(content),
-        &from.xuid,
-    )
+    let content = TextContentChat { source_name: format!("{}{FORMAT}r", from.name), message };
+    text(TextType::Chat, TextCategory::Authored, TextContent::Chat(content), &from.xuid)
 }
 
 /// A line without a sender.
 pub(crate) fn raw_packet(message: &str) -> Bytes {
-    text(
-        TextType::Raw,
-        TextCategory::MessageOnly,
-        TextContent::Raw(TextContentRaw {
-            message: message.to_owned(),
-        }),
-        "",
-    )
+    text(TextType::Raw, TextCategory::MessageOnly, TextContent::Raw(TextContentRaw { message: message.to_owned() }), "")
 }
 
 /// A line of the client's own text (`{"rawtext":[...]}`), in each player's language. BDS ends
 /// the JSON with a newline.
 pub(crate) fn json_packet(parts: Vec<serde_json::Value>) -> Bytes {
     let message = format!("{}\n", serde_json::json!({ "rawtext": parts }));
-    text(
-        TextType::Json,
-        TextCategory::MessageOnly,
-        TextContent::Json(TextContentJson { message }),
-        "",
-    )
+    text(TextType::Json, TextCategory::MessageOnly, TextContent::Json(TextContentJson { message }), "")
 }
 
 /// The part of a [`json_packet`] that is translation key `key` with `parameters`; BDS leaves
 /// `with` null when there are none.
 pub(crate) fn translation(key: &str, parameters: &[String]) -> serde_json::Value {
-    let with = (!parameters.is_empty()).then(|| {
-        parameters
-            .iter()
-            .map(|p| serde_json::json!({ "text": p }))
-            .collect::<Vec<_>>()
-    });
+    let with = (!parameters.is_empty()).then(|| parameters.iter().map(|p| serde_json::json!({ "text": p })).collect::<Vec<_>>());
     serde_json::json!({ "translate": key, "with": { "rawtext": with } })
 }
 
@@ -109,15 +73,8 @@ pub(crate) fn send_to_all(world: &mut World, packet: &Bytes) {
 /// To everyone in one world.
 pub(crate) fn send_to_layer(world: &mut World, layer: Entity, packet: &Bytes) {
     for player in in_world(world) {
-        if world
-            .get::<InLayer>(player)
-            .is_some_and(|in_layer| in_layer.0 == layer)
-        {
-            world
-                .get_mut::<Outgoing>(player)
-                .expect("players have an outbox")
-                .0
-                .push(packet.clone());
+        if world.get::<InLayer>(player).is_some_and(|in_layer| in_layer.0 == layer) {
+            world.get_mut::<Outgoing>(player).expect("players have an outbox").0.push(packet.clone());
         }
     }
 }
@@ -127,26 +84,16 @@ pub(crate) fn dispatch(world: &mut World, plugins: &mut Plugins) {
     let lines = world.resource_mut::<PacketQueues>().take::<Text>();
     let mut limit = PerTick::new(MAX_LINES_PER_TICK);
     for (entity, packet) in lines {
-        let TextContent::Chat(chat) = packet.content else {
-            continue;
-        };
-        let Some(from) = in_world_identity(world, entity) else {
-            continue;
-        };
-        let Some(message) = clean(&chat.message) else {
-            continue;
-        };
+        let TextContent::Chat(chat) = packet.content else { continue };
+        let Some(from) = in_world_identity(world, entity) else { continue };
+        let Some(message) = clean(&chat.message) else { continue };
         if !limit.allow(entity) {
             continue;
         }
         worlds::focus_on(world, entity);
-        let event = plugins.offer(world, ChatEvent::new(message), |handler, ctx, event| {
-            handler.on_chat(ctx, &from, event)
-        });
+        let event = plugins.offer(world, ChatEvent::new(message), |handler, ctx, event| handler.on_chat(ctx, &from, event));
         // A handler may leave anything in the message; what goes out is clean again.
-        let Some(message) = clean(&event.message).filter(|_| !event.is_cancelled()) else {
-            continue;
-        };
+        let Some(message) = clean(&event.message).filter(|_| !event.is_cancelled()) else { continue };
         // The line stays in the sender's world, wherever a handler has moved them by now.
         if let Some(layer) = world.get::<InLayer>(entity).map(|in_layer| in_layer.0) {
             send_to_layer(world, layer, &chat_packet(&from, message));

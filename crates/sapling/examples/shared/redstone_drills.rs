@@ -83,14 +83,7 @@ pub const REDSTONE_PHASE: &[&str] = &[
 /// 10.5 ticks: a lamp is out 6 after its power goes, and each toggle lands half a tick later in
 /// the 2-tick cycle than the one before.
 pub const PHASE_SETTLE: Duration = Duration::from_millis(525);
-pub const REDSTONE_SHOWN: &[&str] = &[
-    "UpdateBlock",
-    "UpdateBlockSynced",
-    "UpdateSubchunkBlocks",
-    "LevelSoundEvent",
-    "LevelEvent",
-    "BlockEvent",
-];
+pub const REDSTONE_SHOWN: &[&str] = &["UpdateBlock", "UpdateBlockSynced", "UpdateSubchunkBlocks", "LevelSoundEvent", "LevelEvent", "BlockEvent"];
 
 /// Blocks asked whether they pass power (research C5), a column each.
 const ASKED: &[&str] = &[
@@ -187,46 +180,23 @@ pub const CONDUCTORS_SETTLE: Duration = Duration::from_millis(250);
 pub fn conductors() -> Vec<String> {
     let layers = ASKED.len().div_ceil(COLUMNS);
     let mut lines = vec![format!("fill ~2 ~-1 ~4 ~22 ~{} ~16 air", layers * LAYER)];
-    lines.extend((0..layers).map(|layer| {
-        format!(
-            "fill ~2 ~{} ~4 ~22 ~{0} ~16 stone",
-            (layer * LAYER) as i32 - 1
-        )
-    }));
+    lines.extend((0..layers).map(|layer| format!("fill ~2 ~{} ~4 ~22 ~{0} ~16 stone", (layer * LAYER) as i32 - 1)));
     for (index, block) in ASKED.iter().copied().enumerate() {
         let (x, floor) = (2 + 2 * (index % COLUMNS), LAYER * (index / COLUMNS));
-        let mut put = |y: usize, z: usize, block: &str| {
-            lines.push(format!("setblock ~{x} ~{} ~{z} {block}", floor + y))
-        };
-        for (y, z, what) in [
-            (0, 5, "redstone_wire"),
-            (0, 6, block),
-            (0, 7, "redstone_lamp"),
-        ] {
+        let mut put = |y: usize, z: usize, block: &str| lines.push(format!("setblock ~{x} ~{} ~{z} {block}", floor + y));
+        for (y, z, what) in [(0, 5, "redstone_wire"), (0, 6, block), (0, 7, "redstone_lamp")] {
             put(y, z, what);
         }
-        for (y, z, what) in [
-            (0, 10, block),
-            (1, 10, "redstone_wire"),
-            (0, 11, "redstone_wire"),
-        ] {
+        for (y, z, what) in [(0, 10, block), (1, 10, "redstone_wire"), (0, 11, "redstone_wire")] {
             put(y, z, what);
         }
-        for (y, z, what) in [
-            (0, 14, "redstone_wire"),
-            (1, 14, block),
-            (0, 15, "stone"),
-            (1, 15, "redstone_wire"),
-        ] {
+        for (y, z, what) in [(0, 14, "redstone_wire"), (1, 14, block), (0, 15, "stone"), (1, 15, "redstone_wire")] {
             put(y, z, what);
         }
         for (y, z) in [(0, 4), (1, 9), (0, 13)] {
             put(y, z, "redstone_block");
         }
     }
-    lines.extend(std::iter::repeat_n(
-        "testforblock ~ ~-1 ~ stone".to_owned(),
-        4,
-    ));
+    lines.extend(std::iter::repeat_n("testforblock ~ ~-1 ~ stone".to_owned(), 4));
     lines
 }

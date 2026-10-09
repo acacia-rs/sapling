@@ -22,15 +22,7 @@ pub(crate) struct InWater;
 /// After the entity `kind` (`id`), whose body water treats by `rule`, moved by `moved` to
 /// `body`: the splash if that took it into water. BDS's volume, packed as its sounds pack one, is
 /// from the move's motion before drag.
-pub(crate) fn check(
-    world: &mut World,
-    entity: Entity,
-    id: u64,
-    kind: &str,
-    moved: [f32; 3],
-    body: &Body,
-    rule: InLiquid,
-) -> Option<Bytes> {
+pub(crate) fn check(world: &mut World, entity: Entity, id: u64, kind: &str, moved: [f32; 3], body: &Body, rule: InLiquid) -> Option<Bytes> {
     let layer = world.get::<InLayer>(entity)?.0;
     let wet = in_liquid(&world.get::<Layer>(layer)?.world, body, rule, Liquid::Water);
     let was = world.get::<InWater>(entity).is_some();
@@ -43,14 +35,9 @@ pub(crate) fn check(
         return None;
     }
     let [dx, dy, dz] = moved;
-    let volume =
-        ((ACROSS_WEIGHT * dx * dx + dy * dy + ACROSS_WEIGHT * dz * dz).sqrt() * LOUDNESS).min(1.0);
+    let volume = ((ACROSS_WEIGHT * dx * dx + dy * dy + ACROSS_WEIGHT * dz * dz).sqrt() * LOUDNESS).min(1.0);
     let [x, y, z] = body.at;
-    let position = Vec3f {
-        x,
-        y: y + body.size[1] / 2.0,
-        z,
-    };
+    let position = Vec3f { x, y: y + body.size[1] / 2.0, z };
     let sound = LevelSoundEvent {
         sound_id: "splash".into(),
         position,
@@ -73,11 +60,7 @@ pub(crate) fn fizz(world: &mut World, layer: Entity, start: &Body) {
     let [x, y, z] = start.at;
     let sound = LevelSoundEvent {
         sound_id: "fizz".into(),
-        position: Vec3f {
-            x,
-            y: y + start.size[1] / 2.0,
-            z,
-        },
+        position: Vec3f { x, y: y + start.size[1] / 2.0, z },
         extra_data: 0,
         entity_type: String::new(),
         is_baby_mob: false,
@@ -85,13 +68,7 @@ pub(crate) fn fizz(world: &mut World, layer: Entity, start: &Body) {
         entity_unique_id: -1,
         fire_at_position: None,
     };
-    late_sounds::play_later(
-        world,
-        FIZZ_LATE,
-        layer,
-        start.at.map(|c| c.floor() as i32),
-        sapling_net::encode(&sound),
-    );
+    late_sounds::play_later(world, FIZZ_LATE, layer, start.at.map(|c| c.floor() as i32), sapling_net::encode(&sound));
 }
 
 #[cfg(test)]

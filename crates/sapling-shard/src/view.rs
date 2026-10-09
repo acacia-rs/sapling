@@ -69,14 +69,9 @@ impl View {
         let radius = self.radius;
         let inside = |p: &ChunkPos| distance_sq(*p, center) <= radius * radius;
         self.sent.retain(inside);
-        let square = (-radius..=radius).flat_map(|dx| {
-            (-radius..=radius).map(move |dz| ChunkPos::new(center.x + dx, center.z + dz))
-        });
-        self.queue = square
-            .filter(|p| inside(p) && !self.sent.contains(p))
-            .collect();
-        self.queue
-            .sort_by_key(|p| (distance_sq(*p, center), p.x, p.z));
+        let square = (-radius..=radius).flat_map(|dx| (-radius..=radius).map(move |dz| ChunkPos::new(center.x + dx, center.z + dz)));
+        self.queue = square.filter(|p| inside(p) && !self.sent.contains(p)).collect();
+        self.queue.sort_by_key(|p| (distance_sq(*p, center), p.x, p.z));
         true
     }
 
@@ -85,11 +80,7 @@ impl View {
     /// around `to` will not send again, in order.
     pub fn leave(&mut self, to: ChunkPos) -> Vec<ChunkPos> {
         let radius = self.radius;
-        let mut left: Vec<ChunkPos> = self
-            .sent
-            .drain()
-            .filter(|pos| distance_sq(*pos, to) > radius * radius)
-            .collect();
+        let mut left: Vec<ChunkPos> = self.sent.drain().filter(|pos| distance_sq(*pos, to) > radius * radius).collect();
         left.sort();
         self.center = None;
         self.queue.clear();
@@ -110,27 +101,18 @@ impl View {
 
     /// Whether the column is in view, sent or not.
     pub fn covers(&self, pos: ChunkPos) -> bool {
-        self.center
-            .is_some_and(|center| distance_sq(pos, center) <= self.radius * self.radius)
+        self.center.is_some_and(|center| distance_sq(pos, center) <= self.radius * self.radius)
     }
 
     /// Whether a column within `radius` chunks of the centre is still queued.
     pub fn is_waiting_within(&self, radius: i32) -> bool {
-        let Some(center) = self.center else {
-            return true;
-        };
-        self.queue
-            .first()
-            .is_some_and(|nearest| distance_sq(*nearest, center) <= radius * radius)
+        let Some(center) = self.center else { return true };
+        self.queue.first().is_some_and(|nearest| distance_sq(*nearest, center) <= radius * radius)
     }
 
     /// Takes up to `budget` queued columns that are `ready`, nearest first, and marks them sent.
     /// Only the nearest `2 * budget` are asked about, which bounds the loads one player queues.
-    pub fn take_ready(
-        &mut self,
-        budget: usize,
-        mut ready: impl FnMut(ChunkPos) -> bool,
-    ) -> Vec<ChunkPos> {
+    pub fn take_ready(&mut self, budget: usize, mut ready: impl FnMut(ChunkPos) -> bool) -> Vec<ChunkPos> {
         let mut taken = Vec::new();
         let mut asked = 0;
         self.queue.retain(|&pos| {
@@ -163,30 +145,16 @@ mod tests {
         view.set_radius(2);
         assert!(view.recenter(ChunkPos::new(0, 0)));
         let first = view.take_ready(100, |_| true);
-        assert_eq!(
-            first.len(),
-            13,
-            "the 5x5 square without its corners and edge neighbours"
-        );
+        assert_eq!(first.len(), 13, "the 5x5 square without its corners and edge neighbours");
         assert_eq!(first[0], ChunkPos::new(0, 0));
-        assert!(
-            !first.contains(&ChunkPos::new(2, 1))
-                && view.covers(ChunkPos::new(0, 2))
-                && !view.covers(ChunkPos::new(2, 1))
-        );
+        assert!(!first.contains(&ChunkPos::new(2, 1)) && view.covers(ChunkPos::new(0, 2)) && !view.covers(ChunkPos::new(2, 1)));
         assert!(!view.recenter(ChunkPos::new(0, 0)));
 
         assert!(view.recenter(ChunkPos::new(1, 0)));
-        assert_eq!(
-            view.take_ready(100, |_| true),
-            at([(2, -1), (2, 1), (1, -2), (1, 2), (3, 0)])
-        );
+        assert_eq!(view.take_ready(100, |_| true), at([(2, -1), (2, 1), (1, -2), (1, 2), (3, 0)]));
         // Coming back re-sends what the move east dropped.
         view.recenter(ChunkPos::new(0, 0));
-        assert_eq!(
-            view.take_ready(100, |_| true),
-            at([(-1, -1), (-1, 1), (-2, 0), (0, -2), (0, 2)])
-        );
+        assert_eq!(view.take_ready(100, |_| true), at([(-1, -1), (-1, 1), (-2, 0), (0, -2), (0, 2)]));
         assert!(view.take_ready(100, |_| true).is_empty());
     }
 
@@ -203,10 +171,7 @@ mod tests {
         assert_eq!(view.take_ready(100, |_| true).len(), 8);
         view.set_radius(1);
         view.recenter(ChunkPos::new(4, 4));
-        assert!(
-            view.take_ready(100, |_| true).is_empty(),
-            "shrinking sends nothing"
-        );
+        assert!(view.take_ready(100, |_| true).is_empty(), "shrinking sends nothing");
         assert_eq!(view.sent.len(), 5);
     }
 
@@ -230,24 +195,14 @@ mod tests {
         assert_eq!(asked, at([(0, 1), (1, 0), (-1, -1)]));
         assert!(view.is_waiting_within(1));
         let mut asked = 0;
-        assert!(
-            view.take_ready(2, |_| {
-                asked += 1;
-                false
-            })
-            .is_empty()
-        );
+        assert!(view.take_ready(2, |_| { asked += 1; false }).is_empty());
         assert_eq!(asked, 4);
         assert_eq!(view.take_ready(1, |_| true), at([(0, 1)]));
 
         // Moving on drops what was queued behind and keeps what was sent and still in view.
         view.recenter(ChunkPos::new(1, 0));
         let rest = view.take_ready(100, |_| true);
-        assert!(
-            !rest.contains(&ChunkPos::new(0, 0))
-                && rest.contains(&ChunkPos::new(3, 0))
-                && !rest.contains(&ChunkPos::new(-2, 0))
-        );
+        assert!(!rest.contains(&ChunkPos::new(0, 0)) && rest.contains(&ChunkPos::new(3, 0)) && !rest.contains(&ChunkPos::new(-2, 0)));
         assert_eq!(view.sent.len(), 13);
     }
 }

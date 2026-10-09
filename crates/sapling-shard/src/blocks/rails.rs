@@ -8,12 +8,7 @@ use sapling_world::World as Level;
 
 use super::{doors, level, send};
 
-const RAILS: &[&str] = &[
-    "minecraft:rail",
-    "minecraft:golden_rail",
-    "minecraft:detector_rail",
-    "minecraft:activator_rail",
-];
+const RAILS: &[&str] = &["minecraft:rail", "minecraft:golden_rail", "minecraft:detector_rail", "minecraft:activator_rail"];
 const NS: u8 = 0;
 const EW: u8 = 1;
 const RISING_EAST: u8 = 2;
@@ -53,11 +48,7 @@ fn ends(pos: BlockPos, shape: u8) -> Vec<BlockPos> {
 }
 
 fn is_rail(level: &Level, [x, y, z]: BlockPos) -> bool {
-    level.in_height(y)
-        && level
-            .registry()
-            .get(level.block(x, y, z))
-            .is_some_and(|state| RAILS.contains(&state.name))
+    level.in_height(y) && level.registry().get(level.block(x, y, z)).is_some_and(|state| RAILS.contains(&state.name))
 }
 
 /// A rail as the algorithm sees it: where it is, whether it only runs straight, where it leads.
@@ -69,24 +60,14 @@ struct Rail {
 
 impl Rail {
     fn at(level: &Level, pos: BlockPos) -> Option<Rail> {
-        let state = level
-            .registry()
-            .get(level.block(pos[0], pos[1], pos[2]))
-            .filter(|state| RAILS.contains(&state.name))?;
+        let state = level.registry().get(level.block(pos[0], pos[1], pos[2])).filter(|state| RAILS.contains(&state.name))?;
         let shape = state.property("rail_direction")?.parse().ok()?;
-        Some(Rail {
-            pos,
-            straight: state.name != RAILS[0],
-            ends: ends(pos, shape),
-        })
+        Some(Rail { pos, straight: state.name != RAILS[0], ends: ends(pos, shape) })
     }
 
     /// The rail at `pos`, or one up or one down from it.
     fn near(level: &Level, pos: BlockPos) -> Option<Rail> {
-        [pos, step(pos, UP), step(pos, [0, -1, 0])]
-            .into_iter()
-            .filter(|pos| level.in_height(pos[1]))
-            .find_map(|pos| Rail::at(level, pos))
+        [pos, step(pos, UP), step(pos, [0, -1, 0])].into_iter().filter(|pos| level.in_height(pos[1])).find_map(|pos| Rail::at(level, pos))
     }
 
     fn leads_to(&self, [x, _, z]: BlockPos) -> bool {
@@ -96,15 +77,7 @@ impl Rail {
     /// Forgets the ends that no rail leading back meets (Java `removeSoftConnections`).
     fn forget_loose_ends(&mut self, level: &Level) {
         let pos = self.pos;
-        self.ends = self
-            .ends
-            .iter()
-            .filter_map(|end| {
-                Rail::near(level, *end)
-                    .filter(|rail| rail.leads_to(pos))
-                    .map(|rail| rail.pos)
-            })
-            .collect();
+        self.ends = self.ends.iter().filter_map(|end| Rail::near(level, *end).filter(|rail| rail.leads_to(pos)).map(|rail| rail.pos)).collect();
     }
 
     fn can_join(&self, other: &Rail) -> bool {
@@ -173,19 +146,10 @@ fn placed_shape(level: &Level, rail: &Rail, default: u8) -> u8 {
         shape = corner(n, s, w, e).or(shape);
     }
     if shape.is_none() {
-        shape = if along_z && along_x {
-            Some(default)
-        } else {
-            None
-        };
+        shape = if along_z && along_x { Some(default) } else { None };
         if !rail.straight {
             // The last that fits wins.
-            for (fits, curve) in [
-                (n && w, NORTH_WEST),
-                (n && e, NORTH_EAST),
-                (s && w, SOUTH_WEST),
-                (s && e, SOUTH_EAST),
-            ] {
+            for (fits, curve) in [(n && w, NORTH_WEST), (n && e, NORTH_EAST), (s && w, SOUTH_WEST), (s && e, SOUTH_EAST)] {
                 if fits {
                     shape = Some(curve);
                 }
@@ -196,47 +160,23 @@ fn placed_shape(level: &Level, rail: &Rail, default: u8) -> u8 {
 }
 
 fn set_shape(world: &mut World, layer: Entity, pos: BlockPos, shape: u8) {
-    let Some(level) = level(world, layer) else {
-        return;
-    };
+    let Some(level) = level(world, layer) else { return };
     let id = level.block(pos[0], pos[1], pos[2]);
-    if let Some(new) = doors::with(level.registry(), id, "rail_direction", &shape.to_string())
-        .filter(|new| *new != id)
-    {
+    if let Some(new) = doors::with(level.registry(), id, "rail_direction", &shape.to_string()).filter(|new| *new != id) {
         send::set(world, layer, pos, new);
     }
 }
 
 /// Shapes the rail just placed at `pos` to the rails around it, and turns those that can to it.
 pub(super) fn join_placed(world: &mut World, layer: Entity, pos: BlockPos) {
-    let Some(rail) = level(world, layer).and_then(|level| Rail::at(level, pos)) else {
-        return;
-    };
-    let default = level(world, layer)
-        .and_then(|level| {
-            level
-                .registry()
-                .get(level.block(pos[0], pos[1], pos[2]))?
-                .property("rail_direction")?
-                .parse()
-                .ok()
-        })
-        .unwrap_or(NS);
-    let Some(shape) = level(world, layer).map(|level| placed_shape(level, &rail, default)) else {
-        return;
-    };
+    let Some(rail) = level(world, layer).and_then(|level| Rail::at(level, pos)) else { return };
+    let default = level(world, layer).and_then(|level| level.registry().get(level.block(pos[0], pos[1], pos[2]))?.property("rail_direction")?.parse().ok()).unwrap_or(NS);
+    let Some(shape) = level(world, layer).map(|level| placed_shape(level, &rail, default)) else { return };
     set_shape(world, layer, pos, shape);
-    let rail = Rail {
-        ends: ends(pos, shape),
-        ..rail
-    };
+    let rail = Rail { ends: ends(pos, shape), ..rail };
     for end in &rail.ends {
-        let Some(level) = level(world, layer) else {
-            return;
-        };
-        let Some(mut beside) = Rail::near(level, *end) else {
-            continue;
-        };
+        let Some(level) = level(world, layer) else { return };
+        let Some(mut beside) = Rail::near(level, *end) else { continue };
         beside.forget_loose_ends(level);
         if beside.can_join(&rail) {
             let turned = beside.turned_to(level, rail.pos);

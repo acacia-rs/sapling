@@ -24,7 +24,7 @@ fn damage(tag: &Option<Value>) -> i32 {
 fn set_damage(tag: &mut Option<Value>, damage: i32) {
     if let Value::Compound(fields) = tag.get_or_insert_with(|| Value::Compound(Vec::new())) {
         fields.retain(|(key, _)| key != DAMAGE);
-        fields.push((DAMAGE.into(), Value::Int(damage)));
+        fields.push((DAMAGE.into(),Value::Int(damage)));
     }
 }
 
@@ -36,26 +36,16 @@ fn wear_chance(held: &Held) -> u32 {
         return 0;
     }
     let level = match tag.and_then(|tag| tag.get("ench")) {
-        Some(Value::List(list)) => list
-            .items
-            .iter()
-            .find(|enchantment| enchantment.get("id") == Some(&Value::Short(UNBREAKING)))
-            .and_then(|enchantment| enchantment.get("lvl")),
+        Some(Value::List(list)) => list.items.iter().find(|enchantment| enchantment.get("id") == Some(&Value::Short(UNBREAKING))).and_then(|enchantment| enchantment.get("lvl")),
         _ => None,
     };
-    if let Some(Value::Short(level)) = level {
-        100 / (u32::try_from(*level).unwrap_or(0) + 1)
-    } else {
-        100
-    }
+    if let Some(Value::Short(level)) = level { 100 / (u32::try_from(*level).unwrap_or(0) + 1) } else { 100 }
 }
 
 impl Inventory {
     /// Counts `uses` against the stack in the hand, which lasts `lasts` of them.
     fn wear_hand(&mut self, uses: i32, lasts: u16) {
-        let Some(slot) = self.slot_mut(Place::Main(usize::from(self.selected) % HOTBAR)) else {
-            return;
-        };
+        let Some(slot) = self.slot_mut(Place::Main(usize::from(self.selected) % HOTBAR)) else { return };
         let Some(held) = slot.as_mut() else { return };
         let worn = damage(&held.stack.tag) + uses;
         match worn > i32::from(lasts) {
@@ -69,20 +59,11 @@ impl Inventory {
 /// a sword wears twice as fast, and a hand without a tool is left alone. One throw decides
 /// whether the whole use counts.
 pub(crate) fn wear_tool_in_hand(world: &mut World, player: Entity) {
-    let Some(held) = world
-        .get::<Inventory>(player)
-        .and_then(|inventory| inventory.in_hand().as_ref())
-    else {
-        return;
-    };
-    let (Some(tool), chance) = (Tool::from_identifier(&held.stack.name), wear_chance(held)) else {
-        return;
-    };
+    let Some(held) = world.get::<Inventory>(player).and_then(|inventory| inventory.in_hand().as_ref()) else { return };
+    let (Some(tool), chance) = (Tool::from_identifier(&held.stack.name), wear_chance(held)) else { return };
     if chance < 100 && world.get_resource_or_insert_with(Dice::default).roll(100) >= chance {
         return;
     }
     let uses = if tool.kind == ToolKind::Sword { 2 } else { 1 };
-    change(world, player, |inventory| {
-        inventory.wear_hand(uses, tool.max_durability())
-    });
+    change(world, player, |inventory| inventory.wear_hand(uses, tool.max_durability()));
 }

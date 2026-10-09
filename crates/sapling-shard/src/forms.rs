@@ -24,9 +24,7 @@ pub(crate) struct Forms {
 
 /// Opens a form on `entity`'s screen and keeps `on_answer` for its response.
 pub(crate) fn send(world: &mut World, entity: Entity, json: String, on_answer: FormCallback) {
-    let Some(mut forms) = world.get_mut::<Forms>(entity) else {
-        return;
-    };
+    let Some(mut forms) = world.get_mut::<Forms>(entity) else { return };
     if forms.pending.len() >= MAX_PENDING {
         tracing::debug!(?entity, "too many unanswered forms; not sending another");
         return;
@@ -35,33 +33,20 @@ pub(crate) fn send(world: &mut World, entity: Entity, json: String, on_answer: F
     forms.next_id = form_id.wrapping_add(1);
     forms.pending.insert(form_id, Mutex::new(on_answer));
     if let Some(mut out) = world.get_mut::<Outgoing>(entity) {
-        out.push(&ModalFormRequest {
-            form_id,
-            data: json,
-        });
+        out.push(&ModalFormRequest { form_id, data: json });
     }
 }
 
 /// Hands this tick's form answers to their callbacks. An id that is not open (never sent, or
 /// answered before) is ignored.
 pub(crate) fn dispatch(world: &mut World) {
-    for (entity, response) in world
-        .resource_mut::<PacketQueues>()
-        .take::<ModalFormResponse>()
-    {
-        let Some(player) = in_world_identity(world, entity) else {
-            continue;
-        };
-        let Some(callback) = world
-            .get_mut::<Forms>(entity)
-            .and_then(|mut forms| forms.pending.remove(&response.form_id))
-        else {
+    for (entity, response) in world.resource_mut::<PacketQueues>().take::<ModalFormResponse>() {
+        let Some(player) = in_world_identity(world, entity) else { continue };
+        let Some(callback) = world.get_mut::<Forms>(entity).and_then(|mut forms| forms.pending.remove(&response.form_id)) else {
             tracing::debug!(player = %player.name, id = response.form_id, "answer to a form that is not open");
             continue;
         };
-        let callback = callback
-            .into_inner()
-            .unwrap_or_else(PoisonError::into_inner);
+        let callback = callback.into_inner().unwrap_or_else(PoisonError::into_inner);
         tracing::debug!(player = %player.name, id = response.form_id, data = ?response.data, "form answer");
         let data = response.data.filter(|data| data.len() <= MAX_ANSWER);
         crate::worlds::focus_on(world, entity);

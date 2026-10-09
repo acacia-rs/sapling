@@ -4,10 +4,7 @@ mod common;
 
 use std::sync::{Arc, Mutex};
 
-use acacia_proto::packets::{
-    ModalFormRequest, ModalFormResponse, ModalFormResponseContent,
-    ModalFormResponseContentCancelReason as CancelReason, Text,
-};
+use acacia_proto::packets::{ModalFormRequest, ModalFormResponse, ModalFormResponseContent, ModalFormResponseContentCancelReason as CancelReason, Text};
 use common::{Harness, all};
 use sapling_api::{Form, Menu, Modal, PlayerId};
 
@@ -34,35 +31,18 @@ where
     let answers = answers.clone();
     h.remote.run(move |ctx| {
         ctx.send_form(PlayerId(conn), form, move |ctx, player, response| {
-            answers
-                .lock()
-                .unwrap()
-                .push(format!("{}: {response:?}", player.name));
+            answers.lock().unwrap().push(format!("{}: {response:?}", player.name));
             ctx.send_message(player.id, "noted");
         });
     });
 }
 
 fn submit(form_id: u32, data: &str) -> ModalFormResponse {
-    ModalFormResponse {
-        form_id,
-        has_response_data: true,
-        data: Some(data.into()),
-        has_cancel_reason: false,
-        content: None,
-    }
+    ModalFormResponse { form_id, has_response_data: true, data: Some(data.into()), has_cancel_reason: false, content: None }
 }
 
 fn close(form_id: u32) -> ModalFormResponse {
-    ModalFormResponse {
-        form_id,
-        has_response_data: false,
-        data: None,
-        has_cancel_reason: true,
-        content: Some(ModalFormResponseContent {
-            cancel_reason: CancelReason::Closed,
-        }),
-    }
+    ModalFormResponse { form_id, has_response_data: false, data: None, has_cancel_reason: true, content: Some(ModalFormResponseContent { cancel_reason: CancelReason::Closed }) }
 }
 
 fn taken(answers: &Answers) -> Vec<String> {
@@ -75,14 +55,7 @@ fn a_form_is_sent_and_its_answer_reaches_the_callback_typed() {
     h.enter(1, "Alex");
     send(&h, 1, menu(), &answers);
     let requests = all::<ModalFormRequest>(&h.tick(1));
-    assert_eq!(
-        (
-            requests.len(),
-            requests[0].form_id,
-            requests[0].data.as_str()
-        ),
-        (1, 0, menu().to_json().as_str())
-    );
+    assert_eq!((requests.len(), requests[0].form_id, requests[0].data.as_str()), (1, 0, menu().to_json().as_str()));
     assert!(taken(&answers).is_empty());
 
     h.receive(1, &submit(0, "1\n"));
@@ -90,32 +63,15 @@ fn a_form_is_sent_and_its_answer_reaches_the_callback_typed() {
     assert_eq!(all::<Text>(&h.tick(1)).len(), 1);
     assert_eq!(taken(&answers), ["Alex: Submitted(1)"]);
 
-    send(
-        &h,
-        1,
-        Settings {
-            nickname: "Al".into(),
-            view: 8,
-        },
-        &answers,
-    );
+    send(&h, 1, Settings { nickname: "Al".into(), view: 8 }, &answers);
     send(&h, 1, Modal::new("Sure?", "Really"), &answers);
     let requests = all::<ModalFormRequest>(&h.tick(1));
-    assert_eq!(
-        requests.iter().map(|r| r.form_id).collect::<Vec<_>>(),
-        [1, 2]
-    );
+    assert_eq!(requests.iter().map(|r| r.form_id).collect::<Vec<_>>(), [1, 2]);
     assert!(requests[0].data.contains("custom_form") && requests[1].data.contains("modal"));
     h.receive(1, &submit(2, "true\n"));
     h.receive(1, &submit(1, "[\"Alexa\",12]\n"));
     h.tick(1);
-    assert_eq!(
-        taken(&answers),
-        [
-            "Alex: Submitted(true)",
-            r#"Alex: Submitted(Settings { nickname: "Alexa", view: 12 })"#
-        ]
-    );
+    assert_eq!(taken(&answers), ["Alex: Submitted(true)", r#"Alex: Submitted(Settings { nickname: "Alexa", view: 12 })"#]);
 }
 
 #[test]
@@ -151,15 +107,7 @@ fn closed_and_impossible_answers_are_closed() {
     let (mut h, answers) = (Harness::new(), Answers::default());
     h.enter(1, "Alex");
     (0..5).for_each(|_| send(&h, 1, menu(), &answers));
-    send(
-        &h,
-        1,
-        Settings {
-            nickname: String::new(),
-            view: 2,
-        },
-        &answers,
-    );
+    send(&h, 1, Settings { nickname: String::new(), view: 2 }, &answers);
     h.tick(1);
     h.receive(1, &close(0));
     h.receive(1, &submit(1, "null\n"));

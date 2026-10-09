@@ -35,10 +35,7 @@ const DYES: [(&str, i32); 16] = [
 ];
 
 fn get<'a>(fields: &'a [(Str, Value)], key: &str) -> Option<&'a Value> {
-    fields
-        .iter()
-        .find(|(name, _)| name == key)
-        .map(|(_, value)| value)
+    fields.iter().find(|(name, _)| name == key).map(|(_, value)| value)
 }
 
 fn put(fields: &mut Vec<(Str, Value)>, key: &str, value: Value) {
@@ -49,20 +46,12 @@ fn put(fields: &mut Vec<(Str, Value)>, key: &str, value: Value) {
 /// The sign entity `kept` with the item `item` applied to its side `side`, and the event that
 /// shows it with whether it is at the block's middle; `None` when the item does nothing there.
 fn applied(kept: &Value, side: &str, item: &str) -> Option<(Value, LevelEventEvent, bool)> {
-    let Value::Compound(mut fields) = kept.clone() else {
-        return None;
-    };
+    let Value::Compound(mut fields) = kept.clone() else { return None };
     if item == "minecraft:honeycomb" {
         put(&mut fields, "IsWaxed", Value::Byte(1));
-        return Some((
-            Value::Compound(fields),
-            LevelEventEvent::ParticleWaxOn,
-            true,
-        ));
+        return Some((Value::Compound(fields), LevelEventEvent::ParticleWaxOn, true));
     }
-    let Some(Value::Compound(mut text)) = get(&fields, side).cloned() else {
-        return None;
-    };
+    let Some(Value::Compound(mut text)) = get(&fields, side).cloned() else { return None };
     let has_words = matches!(get(&text, "Text"), Some(Value::String(words)) if !words.is_empty());
     let glows = matches!(get(&text, "IgnoreLighting"), Some(Value::Byte(1)));
     let event = match item {
@@ -93,11 +82,7 @@ fn applied(kept: &Value, side: &str, item: &str) -> Option<(Value, LevelEventEve
 
 fn at([x, y, z]: BlockPos, middle: bool) -> Vec3f {
     let offset = if middle { 0.5 } else { 0.0 };
-    Vec3f {
-        x: x as f32 + offset,
-        y: y as f32 + offset,
-        z: z as f32 + offset,
-    }
+    Vec3f { x: x as f32 + offset, y: y as f32 + offset, z: z as f32 + offset }
 }
 
 /// Lets those who see a waxed sign hear that it will not change.
@@ -118,43 +103,15 @@ pub(super) fn refuse_waxed(world: &mut World, layer: Entity, pos: BlockPos) {
 /// Applies what a player holds to the side `side` (`FrontText` or `BackText`) of the sign at
 /// `pos`, for everyone who sees it, and takes one of it outside creative mode; false when it does
 /// nothing there, and the editor is to open instead.
-pub(super) fn apply(
-    world: &mut World,
-    player: Entity,
-    layer: Entity,
-    pos: BlockPos,
-    side: &str,
-) -> bool {
-    let item = world
-        .get::<Inventory>(player)
-        .and_then(|inventory| inventory.in_hand().as_ref())
-        .map(|held| held.stack.name.clone());
-    let kept = world
-        .get::<Layer>(layer)
-        .and_then(|layer| layer.world.block_entity(pos))
-        .map(|kept| kept.nbt.clone());
-    let Some((entity, event, middle)) = item
-        .zip(kept)
-        .and_then(|(item, kept)| applied(&kept, side, &item))
-    else {
-        return false;
-    };
+pub(super) fn apply(world: &mut World, player: Entity, layer: Entity, pos: BlockPos, side: &str) -> bool {
+    let item = world.get::<Inventory>(player).and_then(|inventory| inventory.in_hand().as_ref()).map(|held| held.stack.name.clone());
+    let kept = world.get::<Layer>(layer).and_then(|layer| layer.world.block_entity(pos)).map(|kept| kept.nbt.clone());
+    let Some((entity, event, middle)) = item.zip(kept).and_then(|(item, kept)| applied(&kept, side, &item)) else { return false };
     send::keep_entity(world, layer, pos, &entity);
-    let shown = sapling_net::encode(&LevelEvent {
-        event,
-        position: at(pos, middle),
-        data: 0,
-    });
+    let shown = sapling_net::encode(&LevelEvent { event, position: at(pos, middle), data: 0 });
     send::to_viewers(world, layer, pos, &[shown]);
-    if world
-        .get::<Mode>(player)
-        .is_none_or(|mode| mode.0 != GameMode::Creative)
-    {
-        inventory::change(world, player, |inventory| {
-            inventory
-                .take(Place::Main(inventory.selected.into()), 1)
-                .is_ok()
-        });
+    if world.get::<Mode>(player).is_none_or(|mode| mode.0 != GameMode::Creative) {
+        inventory::change(world, player, |inventory| inventory.take(Place::Main(inventory.selected.into()), 1).is_ok());
     }
     true
 }
@@ -164,15 +121,8 @@ mod tests {
     use super::*;
 
     fn sign(words: &str) -> Value {
-        let side = Value::Compound(vec![
-            ("SignTextColor".into(), Value::Int(-16_777_216)),
-            ("IgnoreLighting".into(), Value::Byte(0)),
-            ("Text".into(), Value::String(words.into())),
-        ]);
-        Value::Compound(vec![
-            ("FrontText".into(), side),
-            ("IsWaxed".into(), Value::Byte(0)),
-        ])
+        let side = Value::Compound(vec![("SignTextColor".into(), Value::Int(-16_777_216)), ("IgnoreLighting".into(), Value::Byte(0)), ("Text".into(), Value::String(words.into()))]);
+        Value::Compound(vec![("FrontText".into(), side), ("IsWaxed".into(), Value::Byte(0))])
     }
 
     fn front(entity: &Value, key: &str) -> Option<Value> {
@@ -182,34 +132,15 @@ mod tests {
     #[test]
     fn dyes_and_ink_change_a_written_side_and_wax_the_whole_sign() {
         let (red, event, _) = applied(&sign("hi"), "FrontText", "minecraft:red_dye").expect("dyed");
-        assert_eq!(
-            (front(&red, "SignTextColor"), event),
-            (Some(Value::Int(-5_231_066)), LevelEventEvent::DyeUsed)
-        );
+        assert_eq!((front(&red, "SignTextColor"), event), (Some(Value::Int(-5_231_066)), LevelEventEvent::DyeUsed));
         let (glowing, _, _) = applied(&red, "FrontText", "minecraft:glow_ink_sac").expect("glows");
         assert_eq!(front(&glowing, "IgnoreLighting"), Some(Value::Byte(1)));
-        assert!(
-            applied(&glowing, "FrontText", "minecraft:glow_ink_sac").is_none(),
-            "already glowing"
-        );
-        assert!(
-            applied(&red, "FrontText", "minecraft:red_dye").is_none(),
-            "already red"
-        );
-        assert!(
-            applied(&sign(""), "FrontText", "minecraft:red_dye").is_none(),
-            "nothing written"
-        );
-        assert!(
-            applied(&sign("hi"), "FrontText", "minecraft:black_dye").is_none(),
-            "black is the default"
-        );
-        let (waxed, event, middle) =
-            applied(&sign(""), "FrontText", "minecraft:honeycomb").expect("waxed");
-        assert_eq!(
-            (waxed.get("IsWaxed"), event, middle),
-            (Some(&Value::Byte(1)), LevelEventEvent::ParticleWaxOn, true)
-        );
+        assert!(applied(&glowing, "FrontText", "minecraft:glow_ink_sac").is_none(), "already glowing");
+        assert!(applied(&red, "FrontText", "minecraft:red_dye").is_none(), "already red");
+        assert!(applied(&sign(""), "FrontText", "minecraft:red_dye").is_none(), "nothing written");
+        assert!(applied(&sign("hi"), "FrontText", "minecraft:black_dye").is_none(), "black is the default");
+        let (waxed, event, middle) = applied(&sign(""), "FrontText", "minecraft:honeycomb").expect("waxed");
+        assert_eq!((waxed.get("IsWaxed"), event, middle), (Some(&Value::Byte(1)), LevelEventEvent::ParticleWaxOn, true));
         assert!(applied(&sign("hi"), "FrontText", "minecraft:lapis_lazuli").is_none());
     }
 }

@@ -10,10 +10,7 @@ use sapling_api::PlayerId;
 
 use crate::components::{Arrivals, Identity, Layer, Outgoing, Players, Stage};
 use crate::plugins::Plugins;
-use crate::{
-    blocks, campfires, chat, commands, containers, creatures, drops, entities, forms, furnaces,
-    hoppers, inventory, late_sounds, orbs, roster, sleep, worlds,
-};
+use crate::{blocks, campfires, chat, commands, containers, creatures, drops, entities, forms, furnaces, hoppers, inventory, late_sounds, orbs, roster, sleep, worlds};
 
 pub(crate) struct Ctx<'w> {
     pub world: &'w mut World,
@@ -28,14 +25,11 @@ impl Ctx<'_> {
 
     /// The world in scope (`worlds::current`): the calls that name no world act on it.
     fn layer(&self) -> &Layer {
-        self.world
-            .get::<Layer>(worlds::current(self.world))
-            .expect("the world in scope exists")
+        self.world.get::<Layer>(worlds::current(self.world)).expect("the world in scope exists")
     }
 
     fn out(&mut self, player: PlayerId) -> Option<Mut<'_, Outgoing>> {
-        self.entity(player)
-            .and_then(|entity| self.world.get_mut::<Outgoing>(entity))
+        self.entity(player).and_then(|entity| self.world.get_mut::<Outgoing>(entity))
     }
 }
 
@@ -51,9 +45,7 @@ pub(crate) fn dispatch(world: &mut World, plugins: &mut Plugins) {
     // Players who came from another shard at the start of the tick, before what they then sent.
     worlds::dispatch(world, plugins);
     for entity in joined {
-        let Some(player) = world.get::<Identity>(entity).map(|i| i.0.clone()) else {
-            continue;
-        };
+        let Some(player) = world.get::<Identity>(entity).map(|i| i.0.clone()) else { continue };
         world.resource_mut::<Players>().in_world += 1;
         roster::arrive(world, entity);
         worlds::focus_on(world, entity);
@@ -88,9 +80,7 @@ pub(crate) fn dispatch(world: &mut World, plugins: &mut Plugins) {
         let had_joined = world.get::<Stage>(entity) == Some(&Stage::InWorld);
         containers::close(world, entity);
         inventory::save(world, entity);
-        let Some(player) = world.get::<Identity>(entity).map(|i| i.0.clone()) else {
-            continue;
-        };
+        let Some(player) = world.get::<Identity>(entity).map(|i| i.0.clone()) else { continue };
         if had_joined {
             roster::depart(world, entity);
         }

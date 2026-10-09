@@ -59,28 +59,17 @@ pub(crate) struct Circuits {
 
 /// Notes a cell written, for the next evaluation to look at.
 pub(super) fn notice(world: &mut World, layer: Entity, pos: BlockPos) {
-    world
-        .get_resource_or_insert_with(Circuits::default)
-        .layers
-        .entry(layer)
-        .or_default()
-        .changed
-        .insert(pos);
+    world.get_resource_or_insert_with(Circuits::default).layers.entry(layer).or_default().changed.insert(pos);
 }
 
 /// The signal the block at `pos` got at the last evaluation.
 pub(crate) fn power_at(world: &World, layer: Entity, pos: BlockPos) -> u8 {
-    world
-        .get_resource::<Circuits>()
-        .and_then(|circuits| circuits.layers.get(&layer)?.power.get(&pos).copied())
-        .unwrap_or(0)
+    world.get_resource::<Circuits>().and_then(|circuits| circuits.layers.get(&layer)?.power.get(&pos).copied()).unwrap_or(0)
 }
 
 /// Writes what the last evaluation changed, and puts out the lamps whose delay is up.
 pub(crate) fn apply(world: &mut World) {
-    let Some(mut circuits) = world.get_resource_mut::<Circuits>() else {
-        return;
-    };
+    let Some(mut circuits) = world.get_resource_mut::<Circuits>() else { return };
     let due = std::mem::take(&mut circuits.due);
     for (layer, pos, due) in due {
         apply::write(world, layer, pos, due);
@@ -93,25 +82,14 @@ pub(crate) fn evaluate(world: &mut World) {
     if world.resource::<Tick>().0 % EVERY != 0 {
         return;
     }
-    let Some(circuits) = world.get_resource_mut::<Circuits>() else {
-        return;
-    };
-    let layers: Vec<Entity> = circuits
-        .layers
-        .iter()
-        .filter(|(_, circuit)| !circuit.changed.is_empty() || circuit.unsettled)
-        .map(|(layer, _)| *layer)
-        .collect();
+    let Some(circuits) = world.get_resource_mut::<Circuits>() else { return };
+    let layers: Vec<Entity> = circuits.layers.iter().filter(|(_, circuit)| !circuit.changed.is_empty() || circuit.unsettled).map(|(layer, _)| *layer).collect();
     for layer in layers {
-        let Some(mut circuit) = world.resource_mut::<Circuits>().layers.remove(&layer) else {
-            continue;
-        };
+        let Some(mut circuit) = world.resource_mut::<Circuits>().layers.remove(&layer) else { continue };
         let due = evaluate_circuit(world, layer, &mut circuit);
         let mut circuits = world.resource_mut::<Circuits>();
         circuits.layers.insert(layer, circuit);
-        circuits
-            .due
-            .extend(due.into_iter().map(|(pos, due)| (layer, pos, due)));
+        circuits.due.extend(due.into_iter().map(|(pos, due)| (layer, pos, due)));
     }
 }
 
@@ -119,9 +97,7 @@ pub(crate) fn evaluate(world: &mut World) {
 fn reader(world: &World, layer: Entity) -> impl FnMut(BlockPos) -> Part + '_ {
     let level = level(world, layer);
     move |[x, y, z]| match level {
-        Some(level) if level.in_height(y) && level.is_loaded(super::send::column([x, y, z])) => {
-            Part::of(level.registry(), level.block(x, y, z))
-        }
+        Some(level) if level.in_height(y) && level.is_loaded(super::send::column([x, y, z])) => Part::of(level.registry(), level.block(x, y, z)),
         _ => Part::Other,
     }
 }
@@ -146,9 +122,7 @@ fn evaluate_circuit(world: &World, layer: Entity, circuit: &mut Circuit) -> Vec<
         }
     }
     circuit.sources.retain(|pos| part(*pos).is_source());
-    circuit
-        .torches
-        .retain(|pos, _| circuit.sources.contains(pos));
+    circuit.torches.retain(|pos, _| circuit.sources.contains(pos));
 
     let mut due = Vec::new();
     let mut sources = Vec::new();
@@ -157,11 +131,7 @@ fn evaluate_circuit(world: &World, layer: Entity, circuit: &mut Circuit) -> Vec<
         if let Part::Torch { lit, support } = source {
             let torch = circuit.torches.entry(*pos).or_default();
             let next = !torch.burnt && torch.input == 0;
-            torch.flips = if next != lit {
-                torch.flips.saturating_add(1)
-            } else {
-                0
-            };
+            torch.flips = if next != lit { torch.flips.saturating_add(1) } else { 0 };
             let fizz = torch.flips >= BURNOUT;
             torch.burnt |= fizz;
             let next = next && !fizz;
@@ -178,18 +148,9 @@ fn evaluate_circuit(world: &World, layer: Entity, circuit: &mut Circuit) -> Vec<
     for (pos, torch) in &mut circuit.torches {
         torch.input = power.torches.get(pos).map_or(0, |(input, _)| *input);
     }
-    let cells: HashSet<BlockPos> = power
-        .at
-        .keys()
-        .chain(circuit.power.keys())
-        .chain(&fresh)
-        .copied()
-        .collect();
+    let cells: HashSet<BlockPos> = power.at.keys().chain(circuit.power.keys()).chain(&fresh).copied().collect();
     for pos in cells {
-        let (old, new) = (
-            circuit.power.get(&pos).copied().unwrap_or(0),
-            power.at.get(&pos).copied().unwrap_or(0),
-        );
+        let (old, new) = (circuit.power.get(&pos).copied().unwrap_or(0), power.at.get(&pos).copied().unwrap_or(0));
         let is_fresh = fresh.contains(&pos);
         let write = match part(pos) {
             Part::Dust { signal } => signal != new,

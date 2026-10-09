@@ -15,21 +15,7 @@ use acacia_bot::proto::{Packet, RawPacket};
 use acacia_bot::{Bot, BotConfig, BotEvent};
 
 /// Commands printed with every overload.
-const SHOWN: &[&str] = &[
-    "gamemode",
-    "tp",
-    "title",
-    "me",
-    "say",
-    "tell",
-    "list",
-    "kick",
-    "help",
-    "give",
-    "op",
-    "scoreboard",
-    "xp",
-];
+const SHOWN: &[&str] = &["gamemode", "tp", "title", "me", "say", "tell", "list", "kick", "help", "give", "op", "scoreboard", "xp"];
 /// Run in order, each followed by that many seconds of listening. The wither is summoned high up
 /// and killed while it still charges; its bar goes when its death animation ends. Out of its
 /// range BDS sends no HideBar: the ShowBar it repeats every second just stops.
@@ -87,28 +73,14 @@ fn commands(p: &AvailableCommands) {
             command.flags,
             command.permission_level,
             command.alias,
-            alias.map(|e| (
-                &e.name,
-                e.values
-                    .iter()
-                    .map(|v| &p.enum_values[*v as usize])
-                    .collect::<Vec<_>>()
-            )),
+            alias.map(|e| (&e.name, e.values.iter().map(|v| &p.enum_values[*v as usize]).collect::<Vec<_>>())),
             command.chained_subcommand_offsets,
             command.overloads.len()
         );
         for overload in &command.overloads {
             for parameter in &overload.parameters {
-                let kind = format!(
-                    "{:?}/{:?} raw {}:{}",
-                    parameter.value_type,
-                    parameter.enum_type,
-                    parameter.value_type,
-                    parameter.enum_type.to_raw()
-                );
-                kinds
-                    .entry(kind)
-                    .or_insert_with(|| format!("/{} {}", command.name, parameter.parameter_name));
+                let kind = format!("{:?}/{:?} raw {}:{}", parameter.value_type, parameter.enum_type, parameter.value_type, parameter.enum_type.to_raw());
+                kinds.entry(kind).or_insert_with(|| format!("/{} {}", command.name, parameter.parameter_name));
             }
             if SHOWN.contains(&command.name.as_str()) {
                 println!("    overload chaining {}", overload.chaining);
@@ -119,62 +91,28 @@ fn commands(p: &AvailableCommands) {
         }
     }
     println!("  parameter kinds (first use):");
-    kinds
-        .iter()
-        .for_each(|(kind, first)| println!("    {kind}: {first}"));
-    for (i, e) in p
-        .enums
-        .iter()
-        .enumerate()
-        .filter(|(_, e)| e.values.len() <= 8)
-        .take(40)
-    {
-        println!(
-            "  enum {i} {:?} = {:?}",
-            e.name,
-            e.values
-                .iter()
-                .map(|v| &p.enum_values[*v as usize])
-                .collect::<Vec<_>>()
-        );
+    kinds.iter().for_each(|(kind, first)| println!("    {kind}: {first}"));
+    for (i, e) in p.enums.iter().enumerate().filter(|(_, e)| e.values.len() <= 8).take(40) {
+        println!("  enum {i} {:?} = {:?}", e.name, e.values.iter().map(|v| &p.enum_values[*v as usize]).collect::<Vec<_>>());
     }
     println!("  dynamic enums: {:?}", p.dynamic_enums);
-    println!(
-        "  constraints: {:?}",
-        p.enum_constraints.iter().take(5).collect::<Vec<_>>()
-    );
-    println!(
-        "  chained: {:?}",
-        p.chained_subcommands.iter().take(3).collect::<Vec<_>>()
-    );
+    println!("  constraints: {:?}", p.enum_constraints.iter().take(5).collect::<Vec<_>>());
+    println!("  chained: {:?}", p.chained_subcommands.iter().take(3).collect::<Vec<_>>());
 }
 
 fn show(packet: &RawPacket) {
-    let Some(name) = dump::name(packet) else {
-        return;
-    };
+    let Some(name) = dump::name(packet) else { return };
     if packet.id == AvailableCommands::ID {
         return match packet.decode::<AvailableCommands>() {
             Ok(decoded) => commands(&decoded),
             Err(error) => println!("AvailableCommands: <decode error: {error}>"),
         };
     }
-    let text: String = dump::dump(packet)
-        .unwrap_or_else(|| "<no decoder>".into())
-        .chars()
-        .take(1500)
-        .collect();
+    let text: String = dump::dump(packet).unwrap_or_else(|| "<no decoder>".into()).chars().take(1500).collect();
     println!("  {name} ({} bytes) {text}", packet.body.len());
     if packet.id == BossEvent::ID {
         // Its layout differs by event type: the bytes tell whether the decoder read all of them.
-        println!(
-            "    bytes {}",
-            packet
-                .body
-                .iter()
-                .map(|b| format!("{b:02x}"))
-                .collect::<String>()
-        );
+        println!("    bytes {}", packet.body.iter().map(|b| format!("{b:02x}")).collect::<String>());
     }
 }
 
@@ -183,9 +121,7 @@ async fn drain(bot: &mut Bot, wait: Duration) -> Result<(), Box<dyn std::error::
     while let Ok(event) = tokio::time::timeout_at(end, bot.next()).await {
         match event {
             Some(BotEvent::Packet(packet)) => show(&packet),
-            Some(BotEvent::Disconnected(reason)) => {
-                return Err(format!("disconnected: {reason:?}").into());
-            }
+            Some(BotEvent::Disconnected(reason)) => return Err(format!("disconnected: {reason:?}").into()),
             Some(_) => {}
             None => break,
         }
@@ -195,14 +131,8 @@ async fn drain(bot: &mut Bot, wait: Duration) -> Result<(), Box<dyn std::error::
 
 #[tokio::main(flavor = "current_thread")]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let server = std::env::args()
-        .nth(1)
-        .ok_or("usage: bds_ui_probe <server>")?;
-    let config = BotConfig {
-        physics: true,
-        subscribe: PacketFilter::all(),
-        ..BotConfig::default()
-    };
+    let server = std::env::args().nth(1).ok_or("usage: bds_ui_probe <server>")?;
+    let config = BotConfig { physics: true, subscribe: PacketFilter::all(), ..BotConfig::default() };
     let mut bot = Bot::connect(Client::builder(server.as_str()).offline("UiProbe"), config).await?;
     println!("## join");
     drain(&mut bot, Duration::from_secs(5)).await?;

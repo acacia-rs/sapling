@@ -4,10 +4,7 @@
 
 use acacia_auth::login::Skin as Claims;
 use acacia_proto::manual::Uuid;
-use acacia_proto::types::{
-    PersonaPieceType, Skin, SkinAnimationsItem, SkinArmSize, SkinImage, SkinPersonalPiecesItem,
-    SkinPieceTintColorsItem,
-};
+use acacia_proto::types::{PersonaPieceType, Skin, SkinAnimationsItem, SkinArmSize, SkinImage, SkinPersonalPiecesItem, SkinPieceTintColorsItem};
 use base64::Engine;
 use base64::engine::general_purpose::STANDARD;
 use bytes::Bytes;
@@ -63,13 +60,8 @@ pub(crate) fn wire_skin(claims: &Claims) -> Skin {
 
 fn image(width: u32, height: u32, base64: &str) -> Option<SkinImage> {
     let data = STANDARD.decode(base64).ok()?;
-    let fits =
-        width <= MAX_SIDE && height <= MAX_SIDE && data.len() == (width * height * 4) as usize;
-    fits.then(|| SkinImage {
-        width: width as i32,
-        height: height as i32,
-        data: Bytes::from(data),
-    })
+    let fits = width <= MAX_SIDE && height <= MAX_SIDE && data.len() == (width * height * 4) as usize;
+    fits.then(|| SkinImage { width: width as i32, height: height as i32, data: Bytes::from(data) })
 }
 
 fn text(base64: &str) -> Option<String> {
@@ -87,9 +79,7 @@ fn compact_json(text: &str) -> Option<String> {
     if text.trim().is_empty() {
         return Some(String::new());
     }
-    serde_json::from_str::<Value>(text)
-        .ok()
-        .map(|json| json.to_string())
+    serde_json::from_str::<Value>(text).ok().map(|json| json.to_string())
 }
 
 /// `#aarrggbb` as the wire's integer, whose bytes in order are blue, green, red, alpha.
@@ -103,17 +93,9 @@ fn piece_name(claimed: &str) -> &str {
 
 fn animation(value: &Value) -> Option<SkinAnimationsItem> {
     let number = |key: &str| value.get(key).and_then(Value::as_f64);
-    let side = |key: &str| {
-        number(key)
-            .filter(|n| (0.0..=f64::from(MAX_SIDE)).contains(n))
-            .map(|n| n as u32)
-    };
+    let side = |key: &str| number(key).filter(|n| (0.0..=f64::from(MAX_SIDE)).contains(n)).map(|n| n as u32);
     Some(SkinAnimationsItem {
-        skin_image: image(
-            side("ImageWidth")?,
-            side("ImageHeight")?,
-            value.get("Image")?.as_str()?,
-        )?,
+        skin_image: image(side("ImageWidth")?, side("ImageHeight")?, value.get("Image")?.as_str()?)?,
         animation_type: number("Type")? as u32,
         animation_frames: number("Frames")? as f32,
         expression_type: number("AnimationExpression")? as u32,
@@ -133,34 +115,14 @@ fn piece(value: &Value) -> Option<SkinPersonalPiecesItem> {
 }
 
 fn tint(value: &Value) -> Option<SkinPieceTintColorsItem> {
-    let claimed: Vec<&str> = value
-        .get("Colors")?
-        .as_array()?
-        .iter()
-        .map(Value::as_str)
-        .collect::<Option<_>>()?;
-    let colors: [i32; 4] = claimed
-        .iter()
-        .map(|c| colour(c))
-        .collect::<Vec<_>>()
-        .try_into()
-        .ok()?;
-    Some(SkinPieceTintColorsItem {
-        piece_type: id(piece_name(value.get("PieceType")?.as_str()?))?,
-        colors,
-    })
+    let claimed: Vec<&str> = value.get("Colors")?.as_array()?.iter().map(Value::as_str).collect::<Option<_>>()?;
+    let colors: [i32; 4] = claimed.iter().map(|c| colour(c)).collect::<Vec<_>>().try_into().ok()?;
+    Some(SkinPieceTintColorsItem { piece_type: id(piece_name(value.get("PieceType")?.as_str()?))?, colors })
 }
 
 fn convert(claims: &Claims) -> Option<Skin> {
-    let skin_data = image(
-        claims.skin_image_width,
-        claims.skin_image_height,
-        &claims.skin_data,
-    )
-    .filter(|i| !i.data.is_empty())?;
-    let counts_fit = claims.animated_image_data.len() <= MAX_ANIMATIONS
-        && claims.persona_pieces.len() <= MAX_PIECES
-        && claims.piece_tint_colours.len() <= MAX_PIECES;
+    let skin_data = image(claims.skin_image_width, claims.skin_image_height, &claims.skin_data).filter(|i| !i.data.is_empty())?;
+    let counts_fit = claims.animated_image_data.len() <= MAX_ANIMATIONS && claims.persona_pieces.len() <= MAX_PIECES && claims.piece_tint_colours.len() <= MAX_PIECES;
     if !counts_fit || claims.skin_id.is_empty() {
         return None;
     }
@@ -169,39 +131,18 @@ fn convert(claims: &Claims) -> Option<Skin> {
         full_skin_id: skin_id.clone(),
         skin_id,
         play_fab_id: String::new(),
-        skin_resource_pack: text(&claims.skin_resource_patch)
-            .filter(|patch| serde_json::from_str::<Value>(patch).is_ok())?,
+        skin_resource_pack: text(&claims.skin_resource_patch).filter(|patch| serde_json::from_str::<Value>(patch).is_ok())?,
         skin_data,
-        animations: claims
-            .animated_image_data
-            .iter()
-            .map(animation)
-            .collect::<Option<_>>()?,
-        cape_data: image(
-            claims.cape_image_width,
-            claims.cape_image_height,
-            &claims.cape_data,
-        )?,
+        animations: claims.animated_image_data.iter().map(animation).collect::<Option<_>>()?,
+        cape_data: image(claims.cape_image_width, claims.cape_image_height, &claims.cape_data)?,
         geometry_data: compact_json(&text(&claims.skin_geometry)?)?,
         geometry_data_version: id(&text(&claims.skin_geometry_version)?)?,
         animation_data: text(&claims.skin_animation_data)?,
         cape_id: id(&claims.cape_id)?,
-        arm_size: if claims.arm_size == "slim" {
-            SkinArmSize::Slim
-        } else {
-            SkinArmSize::Wide
-        },
+        arm_size: if claims.arm_size == "slim" { SkinArmSize::Slim } else { SkinArmSize::Wide },
         skin_color: colour(&claims.skin_colour),
-        personal_pieces: claims
-            .persona_pieces
-            .iter()
-            .map(piece)
-            .collect::<Option<_>>()?,
-        piece_tint_colors: claims
-            .piece_tint_colours
-            .iter()
-            .map(tint)
-            .collect::<Option<_>>()?,
+        personal_pieces: claims.persona_pieces.iter().map(piece).collect::<Option<_>>()?,
+        piece_tint_colors: claims.piece_tint_colours.iter().map(tint).collect::<Option<_>>()?,
         premium: claims.premium_skin,
         persona: claims.persona_skin,
         cape_on_classic: claims.cape_on_classic_skin,
@@ -220,20 +161,12 @@ fn trusted(claimed: bool) -> String {
 fn plain() -> Skin {
     const SIDE: i32 = 64;
     const GREY: [u8; 4] = [0x9a, 0x9a, 0x9a, 0xff];
-    let empty = || SkinImage {
-        width: 0,
-        height: 0,
-        data: Bytes::new(),
-    };
+    let empty = || SkinImage { width: 0, height: 0, data: Bytes::new() };
     Skin {
         skin_id: "sapling-plain".into(),
         play_fab_id: String::new(),
         skin_resource_pack: r#"{"geometry":{"default":"geometry.humanoid.custom"}}"#.into(),
-        skin_data: SkinImage {
-            width: SIDE,
-            height: SIDE,
-            data: Bytes::from(GREY.repeat((SIDE * SIDE) as usize)),
-        },
+        skin_data: SkinImage { width: SIDE, height: SIDE, data: Bytes::from(GREY.repeat((SIDE * SIDE) as usize)) },
         animations: Vec::new(),
         cape_data: empty(),
         geometry_data: String::new(),

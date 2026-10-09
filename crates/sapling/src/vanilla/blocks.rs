@@ -34,12 +34,7 @@ pub(crate) enum SetMode {
 }
 
 #[derive(Command)]
-#[command(
-    crate = "crate",
-    name = "setblock",
-    description = "Changes a block to another block",
-    permission = "operator"
-)]
+#[command(crate = "crate", name = "setblock", description = "Changes a block to another block", permission = "operator")]
 pub(crate) struct SetBlock {
     position: BlockCoords,
     block: String,
@@ -61,12 +56,7 @@ impl Command for SetBlock {
 }
 
 #[derive(Command)]
-#[command(
-    crate = "crate",
-    name = "fill",
-    description = "Fills all or parts of a region with a block",
-    permission = "operator"
-)]
+#[command(crate = "crate", name = "fill", description = "Fills all or parts of a region with a block", permission = "operator")]
 pub(crate) struct Fill {
     from: BlockCoords,
     to: BlockCoords,
@@ -78,19 +68,10 @@ impl Command for Fill {
     fn run(self, ctx: &mut ShardCtx<'_>, sender: &Sender, out: &mut Output) {
         let here = origin(ctx, sender);
         let (from, to) = (self.from.from(here), self.to.from(here));
-        let (low, high): (BlockPos, BlockPos) = (
-            std::array::from_fn(|axis| from[axis].min(to[axis])),
-            std::array::from_fn(|axis| from[axis].max(to[axis])),
-        );
-        let count: i64 = (0..3)
-            .map(|axis| i64::from(high[axis] - low[axis]) + 1)
-            .product();
+        let (low, high): (BlockPos, BlockPos) = (std::array::from_fn(|axis| from[axis].min(to[axis])), std::array::from_fn(|axis| from[axis].max(to[axis])));
+        let count: i64 = (0..3).map(|axis| i64::from(high[axis] - low[axis]) + 1).product();
         if count > MAX_FILL {
-            return out.translate(
-                "commands.fill.tooManyBlocks",
-                vec![count.to_string(), MAX_FILL.to_string()],
-                false,
-            );
+            return out.translate("commands.fill.tooManyBlocks", vec![count.to_string(), MAX_FILL.to_string()], false);
         }
         let block = block(&self.block, self.states.as_ref());
         let mut filled = 0;

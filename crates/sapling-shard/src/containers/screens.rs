@@ -8,8 +8,8 @@ use sapling_data::Station;
 
 use super::{Chest, content, hold, kind, lid, opened, slots};
 use crate::components::{Outgoing, PacketQueues, Tick};
-use crate::furnaces;
 use crate::inventory::{self, Held, Inventory};
+use crate::furnaces;
 
 const TABLE: &str = "minecraft:crafting_table";
 const STONECUTTER: &str = "minecraft:stonecutter_block";
@@ -34,75 +34,31 @@ pub(crate) struct Viewing {
 
 /// Opens the screen of the block `block` at `pos` for a player: a container's with what it
 /// holds, a crafting table's, a stonecutter's. False for a block without one.
-pub(crate) fn open(
-    world: &mut World,
-    player: Entity,
-    layer: Entity,
-    pos: BlockPos,
-    block: &str,
-) -> bool {
+pub(crate) fn open(world: &mut World, player: Entity, layer: Entity, pos: BlockPos, block: &str) -> bool {
     if super::access::is_blocked(world, layer, pos, block) {
         return true;
     }
-    let station = [(TABLE, Station::Table), (STONECUTTER, Station::Stonecutter)]
-        .into_iter()
-        .find(|(name, _)| *name == block);
+    let station = [(TABLE, Station::Table), (STONECUTTER, Station::Stonecutter)].into_iter().find(|(name, _)| *name == block);
     if let Some((_, station)) = station {
-        let window = if station == Station::Table {
-            WindowType::Workbench
-        } else {
-            WindowType::Stonecutter
-        };
-        return show_screen(
-            world,
-            player,
-            Viewing {
-                layer,
-                pos,
-                window: 0,
-                screen: Screen::Station(station),
-            },
-            window,
-            None,
-        );
+        let window = if station == Station::Table { WindowType::Workbench } else { WindowType::Stonecutter };
+        return show_screen(world, player, Viewing { layer, pos, window: 0, screen: Screen::Station(station) }, window, None);
     }
-    let Some(kind) = kind(block) else {
-        return false;
-    };
+    let Some(kind) = kind(block) else { return false };
     close(world, player);
-    let Some(lead) = hold(world, layer, pos) else {
-        return false;
-    };
+    let Some(lead) = hold(world, layer, pos) else { return false };
     let Some((halves, is_first)) = opened(world).chests.get_mut(&(layer, lead)).map(|chest| {
         chest.viewers.push(player);
         (chest.halves.clone(), chest.viewers.len() == 1)
     }) else {
         return false;
     };
-    let screen = if kind.is_per_player {
-        Screen::Own
-    } else {
-        Screen::Container
-    };
-    let viewing = Viewing {
-        layer,
-        pos: lead,
-        window: 0,
-        screen,
-    };
+    let screen = if kind.is_per_player { Screen::Own } else { Screen::Container };
+    let viewing = Viewing { layer, pos: lead, window: 0, screen };
     let shown_slots = match screen {
-        Screen::Own => world
-            .get::<Inventory>(player)
-            .map(|inventory| inventory.ender.clone()),
+        Screen::Own => world.get::<Inventory>(player).map(|inventory| inventory.ender.clone()),
         _ => slots::slots_at(world, layer, lead),
     };
-    let shown = show_screen(
-        world,
-        player,
-        viewing,
-        kind.window,
-        Some(&shown_slots.unwrap_or_default()),
-    );
+    let shown = show_screen(world, player, viewing, kind.window, Some(&shown_slots.unwrap_or_default()));
     if shown && is_first {
         lid::set(world, layer, &halves, true);
     }
@@ -114,30 +70,16 @@ pub(crate) fn open(
 
 /// Sends a player the screen of the block it now looks into, under the next window id, with
 /// the slots of a container.
-fn show_screen(
-    world: &mut World,
-    player: Entity,
-    viewing: Viewing,
-    window_type: WindowType,
-    slots: Option<&[Option<Held>]>,
-) -> bool {
+fn show_screen(world: &mut World, player: Entity, viewing: Viewing, window_type: WindowType, slots: Option<&[Option<Held>]>) -> bool {
     close(world, player);
     let mut query = world.query::<(&mut Inventory, &mut Outgoing)>();
-    let Ok((mut inventory, mut out)) = query.get_mut(world, player) else {
-        return false;
-    };
+    let Ok((mut inventory, mut out)) = query.get_mut(world, player) else { return false };
     let window = inventory.next_window();
-    out.push(&sapling_data::block_screen(
-        WindowID::from_raw(window.into()),
-        window_type,
-        viewing.pos,
-    ));
+    out.push(&sapling_data::block_screen(WindowID::from_raw(window.into()), window_type, viewing.pos));
     if let Some(slots) = slots {
         out.push(&content(window, slots));
     }
-    world
-        .entity_mut(player)
-        .insert(Viewing { window, ..viewing });
+    world.entity_mut(player).insert(Viewing { window, ..viewing });
     true
 }
 
@@ -152,13 +94,9 @@ pub(crate) fn station(world: &World, player: Entity) -> Station {
 /// Ends a player's look into a block's screen. The last one to leave a container shuts its lid,
 /// and its slots are let go unless it ticks.
 pub(crate) fn close(world: &mut World, player: Entity) {
-    let Some(viewing) = stop_viewing(world, player) else {
-        return;
-    };
+    let Some(viewing) = stop_viewing(world, player) else { return };
     let key = (viewing.layer, viewing.pos);
-    let Some(chest) = opened(world).into_inner().chests.get_mut(&key) else {
-        return;
-    };
+    let Some(chest) = opened(world).into_inner().chests.get_mut(&key) else { return };
     chest.viewers.retain(|viewer| *viewer != player);
     if !chest.viewers.is_empty() {
         return;
@@ -179,15 +117,9 @@ fn stop_viewing(world: &mut World, player: Entity) -> Option<Viewing> {
 pub(super) fn shut_out(world: &mut World, layer: Entity, lead: BlockPos) -> Option<Chest> {
     let chest = opened(world).chests.remove(&(layer, lead))?;
     for viewer in &chest.viewers {
-        let Some(viewing) = stop_viewing(world, *viewer) else {
-            continue;
-        };
+        let Some(viewing) = stop_viewing(world, *viewer) else { continue };
         if let Some(mut out) = world.get_mut::<Outgoing>(*viewer) {
-            out.push(&ContainerClose {
-                window_id: WindowID::from_raw(viewing.window.into()),
-                window_type: WindowType::Container,
-                server: true,
-            });
+            out.push(&ContainerClose { window_id: WindowID::from_raw(viewing.window.into()), window_type: WindowType::Container, server: true });
         }
     }
     Some(chest)
@@ -196,21 +128,13 @@ pub(super) fn shut_out(world: &mut World, layer: Entity, lead: BlockPos) -> Opti
 /// Confirms every screen a client closes, which it waits for, and ends its look into the
 /// block that screen showed.
 pub(crate) fn dispatch_closes(world: &mut World) {
-    let closes = world
-        .resource_mut::<PacketQueues>()
-        .take::<ContainerClose>();
+    let closes = world.resource_mut::<PacketQueues>().take::<ContainerClose>();
     for (player, closed) in closes {
         let window = closed.window_id.to_raw();
         if let Some(mut out) = world.get_mut::<Outgoing>(player) {
-            out.push(&ContainerClose {
-                server: false,
-                ..closed
-            });
+            out.push(&ContainerClose { server: false, ..closed });
         }
-        if world
-            .get::<Viewing>(player)
-            .is_some_and(|viewing| i64::from(viewing.window) == window)
-        {
+        if world.get::<Viewing>(player).is_some_and(|viewing| i64::from(viewing.window) == window) {
             close(world, player);
         }
         inventory::clear_grid(world, player);
@@ -222,15 +146,8 @@ pub(crate) fn show_lids_again(world: &mut World) {
     if world.resource::<Tick>().0 % lid::REPEAT != 0 {
         return;
     }
-    let Some(open) = world.get_resource::<super::OpenContainers>() else {
-        return;
-    };
-    let lids: Vec<(Entity, Vec<BlockPos>)> = open
-        .chests
-        .iter()
-        .filter(|(_, chest)| !chest.viewers.is_empty())
-        .map(|((layer, _), chest)| (*layer, chest.halves.clone()))
-        .collect();
+    let Some(open) = world.get_resource::<super::OpenContainers>() else { return };
+    let lids: Vec<(Entity, Vec<BlockPos>)> = open.chests.iter().filter(|(_, chest)| !chest.viewers.is_empty()).map(|((layer, _), chest)| (*layer, chest.halves.clone())).collect();
     for (layer, halves) in lids {
         lid::show_open(world, layer, &halves);
     }

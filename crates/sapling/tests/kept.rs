@@ -27,9 +27,7 @@ struct ToArena;
 
 impl Command for ToArena {
     fn run(self, ctx: &mut ShardCtx<'_>, sender: &Sender, out: &mut Output) {
-        let went = sender
-            .player()
-            .is_some_and(|player| ctx.transfer(player.id, "arena"));
+        let went = sender.player().is_some_and(|player| ctx.transfer(player.id, "arena"));
         out.print(format!("to the arena: {went}"));
     }
 }
@@ -37,22 +35,12 @@ impl Command for ToArena {
 /// How many of an item the bot's own copy of its inventory holds.
 fn held(bot: &Bot, name: &str) -> u32 {
     let state = bot.state();
-    state
-        .inventory
-        .main
-        .iter()
-        .filter(|stack| !stack.is_empty() && state.items.name(stack.network_id) == Some(name))
-        .map(|stack| u32::from(stack.count))
-        .sum()
+    state.inventory.main.iter().filter(|stack| !stack.is_empty() && state.items.name(stack.network_id) == Some(name)).map(|stack| u32::from(stack.count)).sum()
 }
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn what_a_player_gains_on_another_shard_is_there_when_it_joins_again() {
-    let builder = Server::builder()
-        .default_world_name("hub")
-        .add_platform_on(1, "arena")
-        .handler_each(|| Prize)
-        .command::<ToArena>();
+    let builder = Server::builder().default_world_name("hub").add_platform_on(1, "arena").handler_each(|| Prize).command::<ToArena>();
     let server = common::start(builder).await;
     assert_eq!(server.shard_count(), 2);
 

@@ -117,20 +117,12 @@ impl Default for Inventory {
 }
 
 pub(crate) fn stack(stored: &ItemStack) -> Stack<'_> {
-    Stack {
-        name: &stored.name,
-        count: stored.count,
-        damage: stored.damage,
-        block: stored.block,
-        tag: stored.tag.as_ref(),
-    }
+    Stack { name: &stored.name, count: stored.count, damage: stored.damage, block: stored.block, tag: stored.tag.as_ref() }
 }
 
 pub(crate) fn wire(slot: &Option<Held>, with_id: bool) -> ItemV4 {
     let shown = |held: &Held| sapling_data::item(&stack(&held.stack), with_id.then_some(held.id));
-    slot.as_ref()
-        .and_then(shown)
-        .unwrap_or_else(sapling_data::no_item)
+    slot.as_ref().and_then(shown).unwrap_or_else(sapling_data::no_item)
 }
 
 /// Whether two stacks are of one kind, so that one can go onto the other.
@@ -166,10 +158,7 @@ impl Inventory {
 
     /// Puts a stack into a slot under a new id, or empties it; false for a slot that is not there.
     pub fn put(&mut self, place: Place, stack: Option<ItemStack>) -> bool {
-        let held = stack.filter(|stack| stack.count > 0).map(|stack| Held {
-            stack,
-            id: self.new_id(),
-        });
+        let held = stack.filter(|stack| stack.count > 0).map(|stack| Held { stack, id: self.new_id() });
         self.slot_mut(place).map(|slot| *slot = held).is_some()
     }
 
@@ -181,37 +170,16 @@ impl Inventory {
     /// Moves `count` of the stack at `from` to `to`: into an empty slot, or onto a stack of the
     /// same kind. A whole stack keeps its id; a part gets a new one.
     pub fn transfer(&mut self, from: Place, to: Place, count: u8) -> Result<(), ()> {
-        let source = self
-            .slot(from)
-            .and_then(Option::as_ref)
-            .filter(|held| count > 0 && held.stack.count >= count)
-            .cloned()
-            .ok_or(())?;
+        let source = self.slot(from).and_then(Option::as_ref).filter(|held| count > 0 && held.stack.count >= count).cloned().ok_or(())?;
         if from != to && self.is_refused(to, &source.stack) {
             return Err(());
         }
         let target = self.slot(to).ok_or(())?.clone();
         let moved = match target {
             None if source.stack.count == count => source.clone(),
-            None => Held {
-                stack: ItemStack {
-                    count,
-                    ..source.stack.clone()
-                },
-                id: self.new_id(),
-            },
-            Some(held)
-                if from != to
-                    && stacks_with(&held.stack, &source.stack)
-                    && held.stack.count <= MAX_COUNT - count =>
-            {
-                Held {
-                    stack: ItemStack {
-                        count: held.stack.count + count,
-                        ..held.stack
-                    },
-                    id: held.id,
-                }
+            None => Held { stack: ItemStack { count, ..source.stack.clone() }, id: self.new_id() },
+            Some(held) if from != to && stacks_with(&held.stack, &source.stack) && held.stack.count <= MAX_COUNT - count => {
+                Held { stack: ItemStack { count: held.stack.count + count, ..held.stack }, id: held.id }
             }
             Some(_) => return Err(()),
         };
@@ -221,14 +189,8 @@ impl Inventory {
     }
 
     pub fn swap(&mut self, a: Place, b: Place) -> Result<(), ()> {
-        let (first, second) = (
-            self.slot(a).ok_or(())?.clone(),
-            self.slot(b).ok_or(())?.clone(),
-        );
-        let refused = |place, held: &Option<Held>| {
-            held.as_ref()
-                .is_some_and(|held| self.is_refused(place, &held.stack))
-        };
+        let (first, second) = (self.slot(a).ok_or(())?.clone(), self.slot(b).ok_or(())?.clone());
+        let refused = |place, held: &Option<Held>| held.as_ref().is_some_and(|held| self.is_refused(place, &held.stack));
         if refused(a, &second) || refused(b, &first) {
             return Err(());
         }
@@ -245,14 +207,8 @@ impl Inventory {
     /// Removes `count` of the stack at `place` and returns them.
     pub fn take(&mut self, place: Place, count: u8) -> Result<ItemStack, ()> {
         let slot = self.slot_mut(place).ok_or(())?;
-        let held = slot
-            .as_mut()
-            .filter(|held| count > 0 && held.stack.count >= count)
-            .ok_or(())?;
-        let taken = ItemStack {
-            count,
-            ..held.stack.clone()
-        };
+        let held = slot.as_mut().filter(|held| count > 0 && held.stack.count >= count).ok_or(())?;
+        let taken = ItemStack { count, ..held.stack.clone() };
         held.stack.count -= count;
         if held.stack.count == 0 {
             *slot = None;
@@ -265,25 +221,14 @@ impl Inventory {
     pub fn add(&mut self, stack: &ItemStack) -> u8 {
         let (limit, mut left) = (sapling_data::max_stack(&stack.name), stack.count);
         for slot in 0..MAIN {
-            let Some(held) = self.main[slot]
-                .as_mut()
-                .filter(|held| stacks_with(&held.stack, stack) && held.stack.count < limit)
-            else {
-                continue;
-            };
+            let Some(held) = self.main[slot].as_mut().filter(|held| stacks_with(&held.stack, stack) && held.stack.count < limit) else { continue };
             let fits = left.min(limit - held.stack.count);
             (held.stack.count, left) = (held.stack.count + fits, left - fits);
         }
         for slot in 0..MAIN {
             if left > 0 && self.main[slot].is_none() {
                 let fits = left.min(limit);
-                self.put(
-                    Place::Main(slot),
-                    Some(ItemStack {
-                        count: fits,
-                        ..stack.clone()
-                    }),
-                );
+                self.put(Place::Main(slot), Some(ItemStack { count: fits, ..stack.clone() }));
                 left -= fits;
             }
         }
@@ -294,23 +239,13 @@ impl Inventory {
     /// Whether [`Inventory::add`] would take any of the stack.
     pub fn has_room_for(&self, stack: &ItemStack) -> bool {
         let limit = sapling_data::max_stack(&stack.name);
-        self.main.iter().any(|slot| {
-            slot.as_ref()
-                .is_none_or(|held| stacks_with(&held.stack, stack) && held.stack.count < limit)
-        })
+        self.main.iter().any(|slot| slot.as_ref().is_none_or(|held| stacks_with(&held.stack, stack) && held.stack.count < limit))
     }
 
     /// Empties every slot; how many items went.
     pub fn clear(&mut self) -> u32 {
-        let slots = self
-            .main
-            .iter()
-            .chain(&self.armor)
-            .chain([&self.offhand, &self.cursor]);
-        let removed = slots
-            .flatten()
-            .map(|held| u32::from(held.stack.count))
-            .sum();
+        let slots = self.main.iter().chain(&self.armor).chain([&self.offhand, &self.cursor]);
+        let removed = slots.flatten().map(|held| u32::from(held.stack.count)).sum();
         (self.main, self.armor) = (vec![None; MAIN], vec![None; ARMOR]);
         (self.offhand, self.cursor, self.unsaved) = (None, None, true);
         removed
@@ -323,14 +258,7 @@ impl Inventory {
     /// The ids of what viewers see: hand, helmet, chestplate, leggings, boots, offhand.
     pub fn worn(&self) -> [i32; 6] {
         let id = |slot: &Option<Held>| slot.as_ref().map_or(0, |held| held.id);
-        [
-            id(self.in_hand()),
-            id(&self.armor[0]),
-            id(&self.armor[1]),
-            id(&self.armor[2]),
-            id(&self.armor[3]),
-            id(&self.offhand),
-        ]
+        [id(self.in_hand()), id(&self.armor[0]), id(&self.armor[1]), id(&self.armor[2]), id(&self.armor[3]), id(&self.offhand)]
     }
 
     /// One of the player's own windows as its client is sent it.
@@ -338,52 +266,25 @@ impl Inventory {
         match window {
             WindowIDVarint::Inventory => self.main.iter().map(|slot| wire(slot, true)).collect(),
             // The fifth is the body slot, which players leave empty.
-            WindowIDVarint::Armor => self
-                .armor
-                .iter()
-                .map(|slot| wire(slot, true))
-                .chain([sapling_data::no_item()])
-                .collect(),
+            WindowIDVarint::Armor => self.armor.iter().map(|slot| wire(slot, true)).chain([sapling_data::no_item()]).collect(),
             WindowIDVarint::Offhand => vec![wire(&self.offhand, true)],
             _ => {
-                let shown = |slot: usize| {
-                    if slot == 0 {
-                        Some(&self.cursor)
-                    } else {
-                        self.grid.get(slot)
-                    }
-                };
-                (0..UI)
-                    .map(|slot| {
-                        shown(slot).map_or_else(sapling_data::no_item, |held| wire(held, true))
-                    })
-                    .collect()
+                let shown = |slot: usize| if slot == 0 { Some(&self.cursor) } else { self.grid.get(slot) };
+                (0..UI).map(|slot| shown(slot).map_or_else(sapling_data::no_item, |held| wire(held, true))).collect()
             }
         }
     }
 
     /// Sends the client every window, as BDS does at join and after `/give`.
     pub fn send_all(&self, out: &mut Outgoing) {
-        for window in [
-            WindowIDVarint::Inventory,
-            WindowIDVarint::Armor,
-            WindowIDVarint::Ui,
-            WindowIDVarint::Offhand,
-        ] {
-            out.push(&sapling_data::inventory_content(
-                window,
-                self.window(window),
-            ));
+        for window in [WindowIDVarint::Inventory, WindowIDVarint::Armor, WindowIDVarint::Ui, WindowIDVarint::Offhand] {
+            out.push(&sapling_data::inventory_content(window, self.window(window)));
         }
     }
 }
 
 /// Runs `change` on a player's inventory and shows the client the result.
-pub(crate) fn change<T>(
-    world: &mut World,
-    player: Entity,
-    change: impl FnOnce(&mut Inventory) -> T,
-) -> Option<T> {
+pub(crate) fn change<T>(world: &mut World, player: Entity, change: impl FnOnce(&mut Inventory) -> T) -> Option<T> {
     let mut query = world.query::<(&mut Inventory, &mut Outgoing)>();
     let (mut inventory, mut out) = query.get_mut(world, player).ok()?;
     let result = change(&mut inventory);

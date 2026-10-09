@@ -144,16 +144,7 @@ const WATER: &[&str] = &[
     "summon xp_orb ~6.5 ~1 ~8.5",
     "summon armor_stand ~3.5 ~1 ~8.5",
 ];
-const WATER_SHOWN: &[&str] = &[
-    "AddItemEntity",
-    "AddEntity",
-    "RemoveEntity",
-    "MoveEntityDelta",
-    "SetEntityMotion",
-    "MotionPredictionHints",
-    "LevelSoundEvent",
-    "SetEntityData",
-];
+const WATER_SHOWN: &[&str] = &["AddItemEntity", "AddEntity", "RemoveEntity", "MoveEntityDelta", "SetEntityMotion", "MotionPredictionHints", "LevelSoundEvent", "SetEntityData"];
 /// The water drill over a pool of lava, which also burns what falls in.
 const LAVA: &[&str] = &[
     "fill ~2 ~-5 ~6 ~8 ~-1 ~12 stone",
@@ -179,78 +170,30 @@ const LAVA_SHOWN: &[&str] = &[
 ];
 /// Long enough to see a thing sink or rise through the pool.
 const WATER_SETTLE: Duration = Duration::from_millis(8000);
-const CONCRETE_SHOWN: &[&str] = &[
-    "UpdateBlock",
-    "UpdateBlockSynced",
-    "UpdateSubchunkBlocks",
-    "AddEntity",
-    "RemoveEntity",
-    "AddItemEntity",
-    "LevelEvent",
-    "LevelSoundEvent",
-];
+const CONCRETE_SHOWN: &[&str] = &["UpdateBlock", "UpdateBlockSynced", "UpdateSubchunkBlocks", "AddEntity", "RemoveEntity", "AddItemEntity", "LevelEvent", "LevelSoundEvent"];
 
-const KILL_SHOWN: &[&str] = &[
-    "EntityEvent",
-    "AddEntity",
-    "AddItemEntity",
-    "RemoveEntity",
-    "LevelSoundEvent",
-    "SetEntityData",
-    "Animate",
-    "MobEffect",
-];
+const KILL_SHOWN: &[&str] = &["EntityEvent", "AddEntity", "AddItemEntity", "RemoveEntity", "LevelSoundEvent", "SetEntityData", "Animate", "MobEffect"];
 /// How long each line of the kill drill is watched: a dead mob goes a second after.
 const KILL_SETTLE: Duration = Duration::from_millis(2500);
 
 fn show(start: Instant, shown: &[&str], who: &str, event: Option<BotEvent>) -> Result<(), String> {
     let packet = match event {
         Some(BotEvent::Packet(packet)) => packet,
-        Some(BotEvent::Disconnected(reason)) => {
-            return Err(format!("{who} disconnected: {reason:?}"));
-        }
+        Some(BotEvent::Disconnected(reason)) => return Err(format!("{who} disconnected: {reason:?}")),
         Some(_) => return Ok(()),
         None => return Err(format!("{who} is gone")),
     };
     let ms = start.elapsed().as_millis();
     if packet.id == packets::CommandOutput::ID {
-        let answer = packet
-            .decode::<packets::CommandOutput>()
-            .map_err(|e| e.to_string())?;
-        let lines: Vec<String> = answer
-            .output
-            .iter()
-            .map(|line| {
-                format!(
-                    "{} success={} {:?}",
-                    line.message_id, line.success, line.parameters
-                )
-            })
-            .collect();
-        println!(
-            "{ms:>7} {who:<7} CommandOutput success_count={} data={:?} {}",
-            answer.success_count,
-            answer.data,
-            lines.join(" | ")
-        );
+        let answer = packet.decode::<packets::CommandOutput>().map_err(|e| e.to_string())?;
+        let lines: Vec<String> = answer.output.iter().map(|line| format!("{} success={} {:?}", line.message_id, line.success, line.parameters)).collect();
+        println!("{ms:>7} {who:<7} CommandOutput success_count={} data={:?} {}", answer.success_count, answer.data, lines.join(" | "));
     } else if packet.id == packets::GameRulesChanged::ID {
-        let rules = packet
-            .decode::<packets::GameRulesChanged>()
-            .map_err(|e| e.to_string())?;
-        let shown: Vec<String> = rules
-            .rules
-            .iter()
-            .map(|rule| format!("{}={:?}", rule.name, rule.value))
-            .collect();
+        let rules = packet.decode::<packets::GameRulesChanged>().map_err(|e| e.to_string())?;
+        let shown: Vec<String> = rules.rules.iter().map(|rule| format!("{}={:?}", rule.name, rule.value)).collect();
         println!("{ms:>7} {who:<7} GameRulesChanged {}", shown.join(" "));
-    } else if let Some(name) = acacia_bot::proto::packet_name(packet.id).filter(|name| {
-        ["Text", "SetTime", "SyncWorldClocks"].contains(name) || shown.contains(name)
-    }) {
-        let text: String = dump::dump(&packet)
-            .unwrap_or_default()
-            .chars()
-            .take(SHOWN)
-            .collect();
+    } else if let Some(name) = acacia_bot::proto::packet_name(packet.id).filter(|name| ["Text", "SetTime", "SyncWorldClocks"].contains(name) || shown.contains(name)) {
+        let text: String = dump::dump(&packet).unwrap_or_default().chars().take(SHOWN).collect();
         println!("{ms:>7} {who:<7} {name} {text}");
     }
     Ok(())
@@ -275,27 +218,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         Some("concrete") => (owned(CONCRETE), CONCRETE_SHOWN, KILL_SETTLE),
         Some("water") => (owned(WATER), WATER_SHOWN, WATER_SETTLE),
         Some("lava") => (owned(LAVA), LAVA_SHOWN, WATER_SETTLE),
-        Some("redstone") => (
-            owned(redstone::REDSTONE),
-            redstone::REDSTONE_SHOWN,
-            KILL_SETTLE,
-        ),
-        Some("redstone-phase") => (
-            owned(redstone::REDSTONE_PHASE),
-            redstone::REDSTONE_SHOWN,
-            redstone::PHASE_SETTLE,
-        ),
-        Some("conductors") => (
-            redstone::conductors(),
-            redstone::REDSTONE_SHOWN,
-            redstone::CONDUCTORS_SETTLE,
-        ),
+        Some("redstone") => (owned(redstone::REDSTONE), redstone::REDSTONE_SHOWN, KILL_SETTLE),
+        Some("redstone-phase") => (owned(redstone::REDSTONE_PHASE), redstone::REDSTONE_SHOWN, redstone::PHASE_SETTLE),
+        Some("conductors") => (redstone::conductors(), redstone::REDSTONE_SHOWN, redstone::CONDUCTORS_SETTLE),
         Some(other) => return Err(format!("no drill {other}").into()),
     };
-    let (mut actor, mut watcher) = (
-        connect(&server, "CmdActor").await?,
-        connect(&server, "CmdWatcher").await?,
-    );
+    let (mut actor, mut watcher) = (connect(&server, "CmdActor").await?, connect(&server, "CmdWatcher").await?);
     watcher.wait_ticks(60).await?;
     actor.wait_ticks(60).await?;
     for bot in [&mut actor, &mut watcher] {

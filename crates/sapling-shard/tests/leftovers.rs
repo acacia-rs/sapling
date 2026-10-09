@@ -6,10 +6,7 @@ mod common;
 
 use std::collections::{HashMap, HashSet};
 
-use acacia_proto::packets::{
-    ClientCacheBlobStatus, ClientCacheMissResponse, ClientCacheStatus, LevelChunk, MovePlayer,
-    Subchunk, SubchunkRequest,
-};
+use acacia_proto::packets::{ClientCacheBlobStatus, ClientCacheMissResponse, ClientCacheStatus, LevelChunk, MovePlayer, Subchunk, SubchunkRequest};
 use acacia_proto::types::{InputData, Vec3i8, Vec3li};
 use acacia_proto::{Packet, RawPacket};
 use common::cluster::Cluster;
@@ -35,16 +32,8 @@ fn walk_east(c: &mut Cluster, conn: u64) -> HashSet<Column> {
         c.receive(conn, &input_at([0.5 + 9.0 * step as f32, 65.0, 0.5]));
     }
     let sent = c.ticks(6);
-    let held: HashSet<Column> = all::<LevelChunk>(sent.to(conn))
-        .iter()
-        .map(|chunk| (chunk.x, chunk.z))
-        .collect();
-    assert!(
-        held.contains(&(10, 0))
-            && held.contains(&(5, 0))
-            && held.iter().all(|column| !in_new_view(*column)),
-        "{held:?}"
-    );
+    let held: HashSet<Column> = all::<LevelChunk>(sent.to(conn)).iter().map(|chunk| (chunk.x, chunk.z)).collect();
+    assert!(held.contains(&(10, 0)) && held.contains(&(5, 0)) && held.iter().all(|column| !in_new_view(*column)), "{held:?}");
     held
 }
 
@@ -52,42 +41,18 @@ fn walk_east(c: &mut Cluster, conn: u64) -> HashSet<Column> {
 /// each is sent again, empty and ahead of the teleport if the new view does not cover it, and
 /// nothing with blocks goes out for a place outside the new view.
 fn assert_swapped(held: &HashSet<Column>, after: &[RawPacket], cached: bool) {
-    let jump = after
-        .iter()
-        .position(|packet| packet.id == MovePlayer::ID)
-        .expect("a teleport to the new spawn");
+    let jump = after.iter().position(|packet| packet.id == MovePlayer::ID).expect("a teleport to the new spawn");
     let mut last: HashMap<Column, LevelChunk> = HashMap::new();
-    for (index, packet) in after
-        .iter()
-        .enumerate()
-        .filter(|(_, packet)| packet.id == LevelChunk::ID)
-    {
+    for (index, packet) in after.iter().enumerate().filter(|(_, packet)| packet.id == LevelChunk::ID) {
         let chunk: LevelChunk = packet.decode().unwrap();
         let (column, empty) = ((chunk.x, chunk.z), chunk.highest_subchunk_count == Some(0));
-        assert_eq!(
-            in_new_view(column),
-            index > jump,
-            "{column:?}: emptied before the teleport, the new world's after"
-        );
-        assert!(
-            in_new_view(column) || empty,
-            "{column:?} is outside the new view and has sections to ask for"
-        );
-        assert_eq!(
-            (chunk.cache_enabled, chunk.blobs.len()),
-            (cached, usize::from(cached)),
-            "{column:?}"
-        );
+        assert_eq!(in_new_view(column), index > jump, "{column:?}: emptied before the teleport, the new world's after");
+        assert!(in_new_view(column) || empty, "{column:?} is outside the new view and has sections to ask for");
+        assert_eq!((chunk.cache_enabled, chunk.blobs.len()), (cached, usize::from(cached)), "{column:?}");
         last.insert(column, chunk);
     }
-    let missing: Vec<&Column> = held
-        .iter()
-        .filter(|column| !last.contains_key(*column))
-        .collect();
-    assert!(
-        missing.is_empty(),
-        "held before and never sent again: {missing:?}"
-    );
+    let missing: Vec<&Column> = held.iter().filter(|column| !last.contains_key(*column)).collect();
+    assert!(missing.is_empty(), "held before and never sent again: {missing:?}");
     let covered = last.keys().filter(|column| in_new_view(**column)).count();
     assert_eq!(covered, 49, "the whole new view");
 }
@@ -114,20 +79,12 @@ fn a_move_inside_a_shard_empties_the_columns_the_new_view_does_not_cover() {
 fn requests_for_no_sections_do_not_crowd_out_real_ones() {
     let mut c = Cluster::new(&[&["hub"]]);
     c.enter(1, "Alex");
-    let request = |sections: Vec<Vec3i8>| SubchunkRequest {
-        dimension: 0,
-        requests: sections,
-        origin: Vec3li { x: 0, y: 0, z: 0 },
-    };
+    let request = |sections: Vec<Vec3i8>| SubchunkRequest { dimension: 0, requests: sections, origin: Vec3li { x: 0, y: 0, z: 0 } };
     for _ in 0..200 {
         c.receive(1, &request(Vec::new()));
     }
     c.receive(1, &request(vec![Vec3i8 { x: 0, y: 4, z: 0 }]));
-    assert_eq!(
-        all::<Subchunk>(c.tick().to(1)).len(),
-        1,
-        "the one request with a section is answered"
-    );
+    assert_eq!(all::<Subchunk>(c.tick().to(1)).len(), 1, "the one request with a section is answered");
 }
 
 #[test]
@@ -143,26 +100,10 @@ fn a_move_across_shards_empties_them_too_also_for_a_blob_cache() {
     assert_swapped(&held, sent.to(1), true);
 
     // An empty column names the one biome blob; the client may ask for it like any other.
-    let emptied: LevelChunk = all::<LevelChunk>(sent.to(1))
-        .into_iter()
-        .find(|chunk| !in_new_view((chunk.x, chunk.z)))
-        .unwrap();
-    c.receive(
-        1,
-        &ClientCacheBlobStatus {
-            missing: emptied.blobs.clone(),
-            have: vec![],
-        },
-    );
+    let emptied: LevelChunk = all::<LevelChunk>(sent.to(1)).into_iter().find(|chunk| !in_new_view((chunk.x, chunk.z))).unwrap();
+    c.receive(1, &ClientCacheBlobStatus { missing: emptied.blobs.clone(), have: vec![] });
     let replies = all::<ClientCacheMissResponse>(c.tick().to(1));
-    assert_eq!(
-        (
-            replies.len(),
-            replies[0].blobs.len(),
-            replies[0].blobs[0].hash
-        ),
-        (1, 1, emptied.blobs[0])
-    );
+    assert_eq!((replies.len(), replies[0].blobs.len(), replies[0].blobs[0].hash), (1, 1, emptied.blobs[0]));
 
     let held = walk_east(&mut c, 1);
     c.transfer(1, 1, "hub");

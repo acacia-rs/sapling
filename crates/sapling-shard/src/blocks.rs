@@ -27,15 +27,15 @@ mod updates;
 mod waterlog;
 
 pub(crate) use doors::{bed_head, release_buttons, with as with_property};
-pub(crate) use liquid::tick as flow_liquids;
-pub(crate) use loot::Dice;
-pub(crate) use mining::Breaking;
 pub(crate) use plates::press_plates;
 pub(crate) use redstone::{apply as apply_redstone, evaluate as evaluate_redstone, power_at};
+pub(crate) use signs::dispatch_edits as dispatch_sign_edits;
+pub(crate) use loot::Dice;
+pub(crate) use liquid::tick as flow_liquids;
+pub(crate) use mining::Breaking;
 pub(crate) use request::{BlockInputs, dispatch};
 use request::{Request, Site, site};
 pub(crate) use send::{block_at, keep_entity, put_block, set, sound, to_viewers};
-pub(crate) use signs::dispatch_edits as dispatch_sign_edits;
 pub(crate) use updates::break_block;
 
 use bevy_ecs::prelude::*;
@@ -55,23 +55,10 @@ fn level(world: &World, layer: Entity) -> Option<&sapling_world::World> {
 
 /// Whether the middle of the block at `pos` is within the player's reach of its eyes.
 pub(crate) fn reaches(world: &World, player: Entity, pos: BlockPos) -> bool {
-    let (Some(position), Some(mode)) = (world.get::<Position>(player), world.get::<Mode>(player))
-    else {
-        return false;
-    };
-    let eye = [
-        position.feet[0],
-        position.feet[1] + EYE_HEIGHT,
-        position.feet[2],
-    ];
-    let distance: f32 = (0..3)
-        .map(|axis| (pos[axis] as f32 + 0.5 - eye[axis]).powi(2))
-        .sum();
-    let reach = if mode.0 == GameMode::Creative {
-        CREATIVE_REACH
-    } else {
-        REACH
-    };
+    let (Some(position), Some(mode)) = (world.get::<Position>(player), world.get::<Mode>(player)) else { return false };
+    let eye = [position.feet[0], position.feet[1] + EYE_HEIGHT, position.feet[2]];
+    let distance: f32 = (0..3).map(|axis| (pos[axis] as f32 + 0.5 - eye[axis]).powi(2)).sum();
+    let reach = if mode.0 == GameMode::Creative { CREATIVE_REACH } else { REACH };
     distance <= reach * reach
 }
 
@@ -80,9 +67,7 @@ pub(crate) fn reaches(world: &World, player: Entity, pos: BlockPos) -> bool {
 /// could not be set.
 pub(crate) fn update_block(world: &mut World, layer: Entity, pos: BlockPos, block: &Block) -> bool {
     let registry = level(world, layer).map(|level| level.registry());
-    let put_as = registry
-        .and_then(|registry| send::resolve(registry, block))
-        .map(|id| (falling::as_put(world, layer, pos, id), id));
+    let put_as = registry.and_then(|registry| send::resolve(registry, block)).map(|id| (falling::as_put(world, layer, pos, id), id));
     let swapped = match (registry, put_as) {
         (Some(registry), Some((put, id))) if put != id => Some(send::describe(registry, put)),
         _ => None,

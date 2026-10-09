@@ -15,19 +15,11 @@ struct Report(mpsc::UnboundedSender<String>);
 
 impl Handler for Report {
     fn on_join(&mut self, ctx: &mut ShardCtx<'_>, player: &Player) {
-        let _ = self.0.send(format!(
-            "join {} ({} online)",
-            player.name,
-            ctx.player_count()
-        ));
+        let _ = self.0.send(format!("join {} ({} online)", player.name, ctx.player_count()));
     }
 
     fn on_quit(&mut self, ctx: &mut ShardCtx<'_>, player: &Player) {
-        let _ = self.0.send(format!(
-            "quit {} ({} online)",
-            player.name,
-            ctx.player_count()
-        ));
+        let _ = self.0.send(format!("quit {} ({} online)", player.name, ctx.player_count()));
     }
 }
 
@@ -37,33 +29,22 @@ async fn start() -> (Server, mpsc::UnboundedReceiver<String>) {
 
 async fn start_with(builder: ServerBuilder) -> (Server, mpsc::UnboundedReceiver<String>) {
     let (reports, events) = mpsc::unbounded_channel();
-    let builder = builder
-        .bind("127.0.0.1:0".parse().unwrap())
-        .online_mode(false)
-        .handler(Report(reports));
+    let builder = builder.bind("127.0.0.1:0".parse().unwrap()).online_mode(false).handler(Report(reports));
     (builder.start().await.expect("the server starts"), events)
 }
 
 fn client(server: &Server, name: &str) -> ClientBuilder {
-    Client::builder(server.local_addr().to_string())
-        .offline(name)
-        .transport(TransportKind::RakNet)
+    Client::builder(server.local_addr().to_string()).offline(name).transport(TransportKind::RakNet)
 }
 
 async fn next(events: &mut mpsc::UnboundedReceiver<String>) -> String {
-    tokio::time::timeout(WAIT, events.recv())
-        .await
-        .expect("a handler call in time")
-        .expect("the server is running")
+    tokio::time::timeout(WAIT, events.recv()).await.expect("a handler call in time").expect("the server is running")
 }
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn a_client_spawns_stays_and_leaves() {
     let (server, mut events) = start().await;
-    let mut client = client(&server, "Tester")
-        .connect()
-        .await
-        .expect("the client spawns");
+    let mut client = client(&server, "Tester").connect().await.expect("the client spawns");
     assert_eq!(next(&mut events).await, "join Tester (1 online)");
 
     let stay = tokio::time::timeout(Duration::from_secs(5), async {
@@ -87,10 +68,7 @@ async fn a_client_spawns_stays_and_leaves() {
             }
         }
     });
-    assert_eq!(
-        closed.await.expect("the client closes"),
-        Some(DisconnectReason::LocalClose)
-    );
+    assert_eq!(closed.await.expect("the client closes"), Some(DisconnectReason::LocalClose));
     assert_eq!(next(&mut events).await, "quit Tester (0 online)");
     server.shutdown().await;
 }
@@ -98,13 +76,8 @@ async fn a_client_spawns_stays_and_leaves() {
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn a_physics_bot_stands_on_the_platform() {
     let (server, mut events) = start().await;
-    let config = BotConfig {
-        physics: true,
-        ..BotConfig::default()
-    };
-    let mut bot = Bot::connect(client(&server, "Walker"), config)
-        .await
-        .expect("the bot spawns");
+    let config = BotConfig { physics: true, ..BotConfig::default() };
+    let mut bot = Bot::connect(client(&server, "Walker"), config).await.expect("the bot spawns");
 
     // Movement starts once the bot has decoded ground under its feet (well before its 5 s fallback).
     let started = tokio::time::timeout(Duration::from_secs(3), async {
@@ -116,45 +89,19 @@ async fn a_physics_bot_stands_on_the_platform() {
     assert_eq!(next(&mut events).await, "join Walker (1 online)");
 
     let world = bot.world().expect("physics bots track terrain");
-    let (view, registry) = (
-        world.view().expect("a chunk view"),
-        world.registry().expect("a block registry"),
-    );
+    let (view, registry) = (world.view().expect("a chunk view"), world.registry().expect("a block registry"));
     let name = |x, y, z| registry.get(view.block(x, y, z)).map(|s| s.name);
-    assert_eq!(
-        (
-            name(0, 64, 0),
-            name(-8, 64, 7),
-            name(0, 65, 0),
-            name(8, 64, 0)
-        ),
-        (
-            Some("minecraft:stone"),
-            Some("minecraft:stone"),
-            Some("minecraft:air"),
-            Some("minecraft:air")
-        )
-    );
+    assert_eq!((name(0, 64, 0), name(-8, 64, 7), name(0, 65, 0), name(8, 64, 0)), (Some("minecraft:stone"), Some("minecraft:stone"), Some("minecraft:air"), Some("minecraft:air")));
 
-    bot.wait_ticks(80)
-        .await
-        .expect("connected for 4 more seconds");
+    bot.wait_ticks(80).await.expect("connected for 4 more seconds");
     let movement = bot.movement().expect("physics enabled");
     let feet = movement.position().expect("movement started");
     assert!(movement.on_ground(), "the bot is falling: {feet:?}");
-    assert!(
-        (feet[0] - 0.5).abs() < 0.01
-            && (feet[1] - 65.0).abs() < 0.01
-            && (feet[2] - 0.5).abs() < 0.01,
-        "the bot moved to {feet:?}"
-    );
+    assert!((feet[0] - 0.5).abs() < 0.01 && (feet[1] - 65.0).abs() < 0.01 && (feet[2] - 0.5).abs() < 0.01, "the bot moved to {feet:?}");
     assert_eq!((movement.corrections, bot.disconnect_reason()), (0, None));
 
     bot.disconnect().await;
-    assert!(matches!(
-        bot.disconnect_reason(),
-        Some(DisconnectReason::LocalClose)
-    ));
+    assert!(matches!(bot.disconnect_reason(), Some(DisconnectReason::LocalClose)));
     assert_eq!(next(&mut events).await, "quit Walker (0 online)");
     server.shutdown().await;
 }
@@ -162,14 +109,9 @@ async fn a_physics_bot_stands_on_the_platform() {
 /// The whole join and the chunk answers through WebRTC's message framing instead of RakNet's.
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn a_physics_bot_joins_over_nethernet() {
-    let host_key = sapling::host_key(&std::env::temp_dir().join("sapling-join-test-host.key"))
-        .expect("a host key");
-    let (server, mut events) =
-        start_with(Server::builder().nethernet(NetherNet::new(host_key))).await;
-    let config = BotConfig {
-        physics: true,
-        ..BotConfig::default()
-    };
+    let host_key = sapling::host_key(&std::env::temp_dir().join("sapling-join-test-host.key")).expect("a host key");
+    let (server, mut events) = start_with(Server::builder().nethernet(NetherNet::new(host_key))).await;
+    let config = BotConfig { physics: true, ..BotConfig::default() };
     let client = client(&server, "Webber").transport(TransportKind::NetherNet);
     let mut bot = Bot::connect(client, config).await.expect("the bot spawns");
     let started = tokio::time::timeout(Duration::from_secs(5), async {
@@ -180,15 +122,9 @@ async fn a_physics_bot_joins_over_nethernet() {
     started.await.expect("terrain under the spawn arrives");
     assert_eq!(next(&mut events).await, "join Webber (1 online)");
 
-    bot.wait_ticks(40)
-        .await
-        .expect("connected for 2 more seconds");
+    bot.wait_ticks(40).await.expect("connected for 2 more seconds");
     let movement = bot.movement().expect("physics enabled");
-    assert!(
-        movement.on_ground(),
-        "the bot is falling: {:?}",
-        movement.position()
-    );
+    assert!(movement.on_ground(), "the bot is falling: {:?}", movement.position());
     assert_eq!((movement.corrections, bot.disconnect_reason()), (0, None));
 
     bot.disconnect().await;

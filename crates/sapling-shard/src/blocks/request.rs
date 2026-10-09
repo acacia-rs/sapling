@@ -3,12 +3,8 @@
 
 use std::collections::HashSet;
 
-use acacia_proto::packets::{
-    InventoryTransaction, PlayerAuthInput, PlayerAuthInputBlockActionItem,
-};
-use acacia_proto::types::{
-    Action, TransactionTransactionData, TransactionUseItem, TransactionUseItemActionType,
-};
+use acacia_proto::packets::{InventoryTransaction, PlayerAuthInput, PlayerAuthInputBlockActionItem};
+use acacia_proto::types::{Action, TransactionTransactionData, TransactionUseItem, TransactionUseItemActionType};
 use bevy_ecs::prelude::*;
 use sapling_api::{Block, BlockPos, BreakEvent, Face, GameMode, InteractEvent, Player};
 use sapling_world::BlockRegistry;
@@ -26,34 +22,9 @@ const MAX_ACTIONS_PER_TICK: usize = 16;
 const MAX_CLICKS_PER_TICK: usize = 4;
 /// Blocks a click uses rather than builds on, by the end of their name. TODO: a per-block flag.
 const USED: &[&str] = &[
-    "door",
-    "button",
-    "lever",
-    "fence_gate",
-    "chest",
-    "barrel",
-    "shulker_box",
-    "furnace",
-    "smoker",
-    "crafting_table",
-    "anvil",
-    "enchanting_table",
-    "hopper",
-    "dropper",
-    "dispenser",
-    "_sign",
-    "noteblock",
-    "repeater",
-    "comparator",
-    "brewing_stand",
-    "beacon",
-    "loom",
-    "grindstone",
-    "stonecutter_block",
-    ":bed",
-    "cartography_table",
-    "smithing_table",
-    "flower_pot",
+    "door", "button", "lever", "fence_gate", "chest", "barrel", "shulker_box", "furnace", "smoker", "crafting_table", "anvil", "enchanting_table", "hopper",
+    "dropper", "dispenser", "_sign", "noteblock", "repeater", "comparator", "brewing_stand", "beacon", "loom", "grindstone", "stonecutter_block", ":bed",
+    "cartography_table", "smithing_table", "flower_pot",
 ];
 
 enum Input {
@@ -88,20 +59,11 @@ pub(super) struct Site {
 /// The site of a request at `pos`, unless it is outside the world's height, in a column that is
 /// not loaded or further from the player's eyes than its game mode reaches.
 pub(super) fn site(world: &World, player: Entity, pos: BlockPos) -> Option<Site> {
-    let (layer, mode) = (
-        world.get::<InLayer>(player)?.0,
-        world.get::<Mode>(player)?.0,
-    );
+    let (layer, mode) = (world.get::<InLayer>(player)?.0, world.get::<Mode>(player)?.0);
     let level = level(world, layer)?;
     let known = level.in_height(pos[1]) && level.is_loaded(send::column(pos));
-    let sneaking = world
-        .get::<Motion>(player)
-        .is_some_and(|motion| motion.pose.sneaking);
-    (known && reaches(world, player, pos)).then_some(Site {
-        layer,
-        mode,
-        sneaking,
-    })
+    let sneaking = world.get::<Motion>(player).is_some_and(|motion| motion.pose.sneaking);
+    (known && reaches(world, player, pos)).then_some(Site { layer, mode, sneaking })
 }
 
 fn is_used(name: &str) -> bool {
@@ -112,84 +74,47 @@ fn is_used(name: &str) -> bool {
 /// a bed is slept in, a sign is written on, a pot takes or gives a plant, a campfire takes food.
 /// False when it does none of these.
 fn use_block(world: &mut World, player: Entity, layer: Entity, pos: BlockPos, name: &str) -> bool {
-    let uses: [fn(&mut World, Entity, Entity, BlockPos, &str) -> bool; 5] = [
-        crate::containers::open,
-        crate::sleep::lie_down,
-        signs::edit_by_click,
-        pots::use_pot,
-        crate::campfires::cook,
-    ];
-    uses.iter()
-        .any(|used| used(world, player, layer, pos, name))
+    let uses: [fn(&mut World, Entity, Entity, BlockPos, &str) -> bool; 5] =
+        [crate::containers::open, crate::sleep::lie_down, signs::edit_by_click, pots::use_pot, crate::campfires::cook];
+    uses.iter().any(|used| used(world, player, layer, pos, name))
 }
 
 /// Runs this tick's block requests through the checks and the handlers.
 pub(crate) fn dispatch(world: &mut World, plugins: &mut Plugins) {
     let mut inputs = std::mem::take(&mut world.resource_mut::<BlockInputs>().0);
-    let transactions = world
-        .resource_mut::<PacketQueues>()
-        .take::<InventoryTransaction>();
-    inputs.extend(transactions.into_iter().filter_map(|(from, packet)| {
-        match packet.transaction.transaction_data {
-            TransactionTransactionData::ItemUse(click) => Some((from, Input::Click(click))),
-            _ => None,
-        }
+    let transactions = world.resource_mut::<PacketQueues>().take::<InventoryTransaction>();
+    inputs.extend(transactions.into_iter().filter_map(|(from, packet)| match packet.transaction.transaction_data {
+        TransactionTransactionData::ItemUse(click) => Some((from, Input::Click(click))),
+        _ => None,
     }));
-    let (mut actions, mut clicks) = (
-        PerTick::new(MAX_ACTIONS_PER_TICK),
-        PerTick::new(MAX_CLICKS_PER_TICK),
-    );
+    let (mut actions, mut clicks) = (PerTick::new(MAX_ACTIONS_PER_TICK), PerTick::new(MAX_CLICKS_PER_TICK));
     // A client names a finished break twice: as a block action and as an item use.
     let mut broken = HashSet::new();
     for (entity, input) in inputs {
-        let Some(player) = in_world_identity(world, entity) else {
-            continue;
-        };
+        let Some(player) = in_world_identity(world, entity) else { continue };
         // See `movement::player_input`: until a teleport is followed, clicks are from the old place.
-        if matches!(input, Input::Click(_))
-            && world
-                .get::<Motion>(entity)
-                .is_some_and(Motion::awaits_teleport)
-        {
+        if matches!(input, Input::Click(_)) && world.get::<Motion>(entity).is_some_and(Motion::awaits_teleport) {
             continue;
         }
         worlds::focus_on(world, entity);
-        let mut request = Request {
-            world: &mut *world,
-            plugins: &mut *plugins,
-            entity,
-            player: &player,
-        };
+        let mut request = Request { world: &mut *world, plugins: &mut *plugins, entity, player: &player };
         match input {
             Input::Actions(items) => {
                 for item in items.iter().filter(|_| actions.allow(entity)) {
                     let pos = [item.position.x, item.position.y, item.position.z];
                     match item.action {
-                        Action::StartBreak => request.punch(
-                            pos,
-                            u32::try_from(item.face).ok().and_then(Face::from_index),
-                        ),
-                        Action::PredictBreak if broken.insert((entity, pos)) => {
-                            request.break_block(pos)
-                        }
+                        Action::StartBreak => request.punch(pos, u32::try_from(item.face).ok().and_then(Face::from_index)),
+                        Action::PredictBreak if broken.insert((entity, pos)) => request.break_block(pos),
                         Action::AbortBreak => request.abort_break(),
                         _ => {}
                     }
                 }
             }
             Input::Click(click) if clicks.allow(entity) => {
-                let pos = [
-                    click.block_position.x,
-                    click.block_position.y,
-                    click.block_position.z,
-                ];
+                let pos = [click.block_position.x, click.block_position.y, click.block_position.z];
                 match click.action_type {
-                    TransactionUseItemActionType::ClickBlock => {
-                        request.click(pos, Face::from_index(u32::from(click.face)), &click)
-                    }
-                    TransactionUseItemActionType::BreakBlock if broken.insert((entity, pos)) => {
-                        request.break_block(pos)
-                    }
+                    TransactionUseItemActionType::ClickBlock => request.click(pos, Face::from_index(u32::from(click.face)), &click),
+                    TransactionUseItemActionType::BreakBlock if broken.insert((entity, pos)) => request.break_block(pos),
                     _ => {}
                 }
             }
@@ -218,17 +143,9 @@ impl Request<'_> {
 
     /// A hit that starts a break: viewers see fragments fly off the face, as from BDS.
     fn punch(&mut self, pos: BlockPos, face: Option<Face>) {
-        let (Some(site), Some(face)) = (site(self.world, self.entity, pos), face) else {
-            return;
-        };
-        let Some((registry, id)) = self.block(&site, pos) else {
-            return;
-        };
-        let Some(state) = registry.get(id).filter(|state| {
-            site.mode != GameMode::Spectator && !state.is_air() && !state.is_liquid()
-        }) else {
-            return;
-        };
+        let (Some(site), Some(face)) = (site(self.world, self.entity, pos), face) else { return };
+        let Some((registry, id)) = self.block(&site, pos) else { return };
+        let Some(state) = registry.get(id).filter(|state| site.mode != GameMode::Spectator && !state.is_air() && !state.is_liquid()) else { return };
         let (packet, hardness) = (send::punch_particles(registry, pos, face, id), state.mining);
         send::to_viewers(self.world, site.layer, pos, &[packet]);
         if site.mode == GameMode::Survival {
@@ -247,18 +164,9 @@ impl Request<'_> {
     fn break_block(&mut self, pos: BlockPos) {
         let above = Face::Up.neighbour(pos);
         let took_its_time = mining::finish(self.world, self.entity, pos);
-        let Some(site) = site(self.world, self.entity, pos) else {
-            return self.resync(&[pos, above]);
-        };
-        let Some((registry, id)) = self.block(&site, pos) else {
-            return;
-        };
-        let Some(state) = registry
-            .get(id)
-            .filter(|state| !state.is_air() && !state.is_liquid())
-        else {
-            return self.resync(&[pos, above]);
-        };
+        let Some(site) = site(self.world, self.entity, pos) else { return self.resync(&[pos, above]) };
+        let Some((registry, id)) = self.block(&site, pos) else { return };
+        let Some(state) = registry.get(id).filter(|state| !state.is_air() && !state.is_liquid()) else { return self.resync(&[pos, above]) };
         let (block, mining) = (send::describe(registry, id), state.mining);
         let by = mining::breaker(self.world, self.entity, &mining);
         let mut drops = Vec::new();
@@ -266,14 +174,9 @@ impl Request<'_> {
             drops = loot::thrown(self.world, &block.name, &block.properties, &by);
             loot::add_entity_loot(self.world, site.layer, pos, &mut drops);
         }
-        let allowed =
-            site.mode == GameMode::Creative || site.mode == GameMode::Survival && took_its_time;
+        let allowed = site.mode == GameMode::Creative || site.mode == GameMode::Survival && took_its_time;
         let (event, player) = (BreakEvent::new(pos, block, drops, allowed), self.player);
-        let event = self
-            .plugins
-            .offer(self.world, event, |handler, ctx, event| {
-                handler.on_break(ctx, player, event)
-            });
+        let event = self.plugins.offer(self.world, event, |handler, ctx, event| handler.on_break(ctx, player, event));
         match !event.is_cancelled() && self.remove(&site, pos) {
             true => {
                 loot::spill(self.world, site.layer, pos, &event.drops);
@@ -287,18 +190,11 @@ impl Request<'_> {
 
     /// Takes the block at `pos` out of the world: what is left is the water it stood in, or air.
     fn remove(&mut self, site: &Site, [x, y, z]: BlockPos) -> bool {
-        let Some(level) = level(self.world, site.layer) else {
-            return false;
-        };
+        let Some(level) = level(self.world, site.layer) else { return false };
         let (id, air) = (level.block(x, y, z), level.registry().air_id());
         let particles = send::destroy_particles(level.registry(), [x, y, z], id);
         doors::remove_other_half(self.world, site.layer, [x, y, z]);
-        crate::containers::spill(
-            self.world,
-            site.layer,
-            [x, y, z],
-            site.mode == GameMode::Creative,
-        );
+        crate::containers::spill(self.world, site.layer, [x, y, z], site.mode == GameMode::Creative);
         // BDS sends the fragments before the block; the cell is loaded and not air, so it changes.
         send::to_viewers(self.world, site.layer, [x, y, z], &[particles]);
         if !send::set(self.world, site.layer, [x, y, z], air) {
@@ -313,57 +209,21 @@ impl Request<'_> {
     /// the server's copy of the hand; in creative mode, where any block is to be had, and where
     /// the hand holds none, it is the one the client names.
     fn click(&mut self, pos: BlockPos, face: Option<Face>, click: &TransactionUseItem) {
-        let Some(face) = face else {
-            return self.resync(&[pos]);
-        };
+        let Some(face) = face else { return self.resync(&[pos]) };
         let target = face.neighbour(pos);
-        let Some(site) = site(self.world, self.entity, pos) else {
-            return self.resync(&[pos, target]);
-        };
-        let Some((registry, clicked)) = self.block(&site, pos) else {
-            return;
-        };
-        let Some(name) = registry
-            .get(clicked)
-            .filter(|state| !state.is_air())
-            .map(|state| state.name)
-        else {
-            return self.resync(&[pos, target]);
-        };
+        let Some(site) = site(self.world, self.entity, pos) else { return self.resync(&[pos, target]) };
+        let Some((registry, clicked)) = self.block(&site, pos) else { return };
+        let Some(name) = registry.get(clicked).filter(|state| !state.is_air()).map(|state| state.name) else { return self.resync(&[pos, target]) };
         // The clicked block's own use comes first, unless the player sneaks.
         let builds = site.sneaking || !is_used(name);
-        if builds
-            && self
-                .held_item(site.mode, click)
-                .is_some_and(|held| self.use_bucket(&site, pos, face, &held))
-        {
+        if builds && self.held_item(site.mode, click).is_some_and(|held| self.use_bucket(&site, pos, face, &held)) {
             return;
         }
-        let Some((registry, clicked)) = self.block(&site, pos) else {
-            return;
-        };
-        let in_hand = place::held_block(self.world, self.entity, registry, face)
-            .filter(|_| site.mode != GameMode::Creative);
-        let (yaw, pitch) = self
-            .world
-            .get::<Position>(self.entity)
-            .map_or((0.0, 0.0), |position| (position.yaw, position.pitch));
-        match in_hand
-            .or_else(|| place::claimed_block(registry, &click.held_item, face))
-            .filter(|_| builds)
-        {
-            Some(id) => self.place(
-                &site,
-                pos,
-                &Click {
-                    face,
-                    height: click.click_pos.y,
-                    yaw,
-                    pitch,
-                },
-                id,
-                in_hand.is_some(),
-            ),
+        let Some((registry, clicked)) = self.block(&site, pos) else { return };
+        let in_hand = place::held_block(self.world, self.entity, registry, face).filter(|_| site.mode != GameMode::Creative);
+        let (yaw, pitch) = self.world.get::<Position>(self.entity).map_or((0.0, 0.0), |position| (position.yaw, position.pitch));
+        match in_hand.or_else(|| place::claimed_block(registry, &click.held_item, face)).filter(|_| builds) {
+            Some(id) => self.place(&site, pos, &Click { face, height: click.click_pos.y, yaw, pitch }, id, in_hand.is_some()),
             None => self.interact(&site, pos, face, send::describe(registry, clicked)),
         }
     }
@@ -371,16 +231,8 @@ impl Request<'_> {
     /// The name of the item in the server's copy of the hand; in creative mode, where any item is
     /// to be had, the one the client names when the hand holds none.
     fn held_item(&self, mode: GameMode, click: &TransactionUseItem) -> Option<String> {
-        let held = self
-            .world
-            .get::<crate::inventory::Inventory>(self.entity)
-            .and_then(|inventory| inventory.in_hand().as_ref())
-            .map(|held| held.stack.name.clone());
-        let claimed = || {
-            sapling_data::item_name(click.held_item.network_id.into())
-                .filter(|_| mode == GameMode::Creative && click.held_item.count > 0)
-                .map(str::to_owned)
-        };
+        let held = self.world.get::<crate::inventory::Inventory>(self.entity).and_then(|inventory| inventory.in_hand().as_ref()).map(|held| held.stack.name.clone());
+        let claimed = || sapling_data::item_name(click.held_item.network_id.into()).filter(|_| mode == GameMode::Creative && click.held_item.count > 0).map(str::to_owned);
         held.or_else(claimed)
     }
 
@@ -389,23 +241,11 @@ impl Request<'_> {
     /// blocks), which undoes what it predicted.
     fn interact(&mut self, site: &Site, pos: BlockPos, face: Face, block: Block) {
         let name = block.name.clone();
-        let (event, player) = (
-            InteractEvent::new(pos, face, block, site.mode != GameMode::Spectator),
-            self.player,
-        );
-        let event = self
-            .plugins
-            .offer(self.world, event, |handler, ctx, event| {
-                handler.on_interact(ctx, player, event)
-            });
+        let (event, player) = (InteractEvent::new(pos, face, block, site.mode != GameMode::Spectator), self.player);
+        let event = self.plugins.offer(self.world, event, |handler, ctx, event| handler.on_interact(ctx, player, event));
         if !event.is_cancelled() && !use_block(self.world, self.entity, site.layer, pos, &name) {
             doors::use_by_hand(self.world, site.layer, pos, &name);
         }
-        self.resync(&[
-            pos,
-            face.neighbour(pos),
-            Face::Up.neighbour(pos),
-            Face::Down.neighbour(pos),
-        ]);
+        self.resync(&[pos, face.neighbour(pos), Face::Up.neighbour(pos), Face::Down.neighbour(pos)]);
     }
 }

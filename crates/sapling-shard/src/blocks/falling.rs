@@ -15,17 +15,7 @@ use super::{level, send};
 use crate::components::{NetId, Tick};
 
 /// Snow layers fall on Bedrock (`TopSnowBlock` ticks as a falling block), where Java breaks them.
-const FALLS: &[&str] = &[
-    ":sand",
-    "red_sand",
-    "suspicious_sand",
-    "suspicious_gravel",
-    "gravel",
-    "concrete_powder",
-    "dragon_egg",
-    "anvil",
-    "snow_layer",
-];
+const FALLS: &[&str] = &[":sand", "red_sand", "suspicious_sand", "suspicious_gravel", "gravel", "concrete_powder", "dragon_egg", "anvil", "snow_layer"];
 /// A falling block a stack's lowest is found through: all but snow (`canSlide`).
 const SNOW: &str = "minecraft:snow_layer";
 
@@ -57,44 +47,31 @@ pub(crate) struct Slides(Vec<(u64, Entity, BlockPos)>);
 
 fn block(world: &World, layer: Entity, [x, y, z]: BlockPos) -> Option<(&BlockRegistry, u32)> {
     let level = level(world, layer)?;
-    (level.in_height(y) && level.is_loaded(send::column([x, y, z])))
-        .then(|| (level.registry(), level.block(x, y, z)))
+    (level.in_height(y) && level.is_loaded(send::column([x, y, z]))).then(|| (level.registry(), level.block(x, y, z)))
 }
 
 fn name_at(world: &World, layer: Entity, pos: BlockPos) -> Option<&'static str> {
-    block(world, layer, pos)
-        .and_then(|(registry, id)| registry.get(id))
-        .map(|state| state.name)
+    block(world, layer, pos).and_then(|(registry, id)| registry.get(id)).map(|state| state.name)
 }
 
 /// The concrete the concrete powder `id` sets into.
 fn concrete(registry: &BlockRegistry, id: u32) -> Option<u32> {
-    let concrete = registry
-        .get(id)?
-        .name
-        .strip_suffix("_powder")
-        .filter(|name| name.ends_with("_concrete"))?;
+    let concrete = registry.get(id)?.name.strip_suffix("_powder").filter(|name| name.ends_with("_concrete"))?;
     registry.states_of(concrete).next().map(|(id, _)| id)
 }
 
 fn is_water(world: &World, layer: Entity, pos: BlockPos) -> bool {
-    name_at(world, layer, pos)
-        .is_some_and(|name| matches!(name, "minecraft:water" | "minecraft:flowing_water"))
+    name_at(world, layer, pos).is_some_and(|name| matches!(name, "minecraft:water" | "minecraft:flowing_water"))
 }
 
 /// Whether water lies above or beside `pos`, not below (BDS `ConcretePowderBlock::_touchesWater`).
 fn touches_water(world: &World, layer: Entity, pos: BlockPos) -> bool {
-    [Face::Up, Face::North, Face::South, Face::West, Face::East]
-        .iter()
-        .any(|face| is_water(world, layer, face.neighbour(pos)))
+    [Face::Up, Face::North, Face::South, Face::West, Face::East].iter().any(|face| is_water(world, layer, face.neighbour(pos)))
 }
 
 /// Puts the concrete of the powder `powder` at `pos` when water touches it; whether it did.
 fn set_wet(world: &mut World, layer: Entity, pos: BlockPos, powder: u32) -> bool {
-    let Some(concrete) = level(world, layer).and_then(|level| concrete(level.registry(), powder))
-    else {
-        return false;
-    };
+    let Some(concrete) = level(world, layer).and_then(|level| concrete(level.registry(), powder)) else { return false };
     touches_water(world, layer, pos) && send::set(world, layer, pos, concrete)
 }
 
@@ -102,34 +79,24 @@ fn set_wet(world: &mut World, layer: Entity, pos: BlockPos, powder: u32) -> bool
 /// that viewers are never sent the powder, as BDS sent none (research/captures/bds-concrete.txt).
 pub(super) fn as_put(world: &World, layer: Entity, pos: BlockPos, id: u32) -> u32 {
     let concrete = level(world, layer).and_then(|level| concrete(level.registry(), id));
-    concrete
-        .filter(|_| touches_water(world, layer, pos))
-        .unwrap_or(id)
+    concrete.filter(|_| touches_water(world, layer, pos)).unwrap_or(id)
 }
 
 /// Sets concrete powder at `pos` into concrete when wet ([`set_wet`]).
 fn set_if_wet(world: &mut World, layer: Entity, pos: BlockPos) -> bool {
-    let Some((_, powder)) = block(world, layer, pos) else {
-        return false;
-    };
+    let Some((_, powder)) = block(world, layer, pos) else { return false };
     set_wet(world, layer, pos, powder)
 }
 
 /// After `change`: a falling block at `pos` is queued to fall; concrete powder put by water sets
 /// at once.
 pub(super) fn unsettled(world: &mut World, layer: Entity, pos: BlockPos, change: Change) {
-    if !name_at(world, layer, pos).is_some_and(falls)
-        || matches!(change, Change::Placed) && set_if_wet(world, layer, pos)
-    {
+    if !name_at(world, layer, pos).is_some_and(falls) || matches!(change, Change::Placed) && set_if_wet(world, layer, pos) {
         return;
     }
     let due = world.resource::<Tick>().0 + change.delay();
     let mut slides = world.get_resource_or_insert_with(Slides::default);
-    if !slides
-        .0
-        .iter()
-        .any(|(_, at_layer, at)| (*at_layer, *at) == (layer, pos))
-    {
+    if !slides.0.iter().any(|(_, at_layer, at)| (*at_layer, *at) == (layer, pos)) {
         slides.0.push((due, layer, pos));
     }
 }
@@ -137,10 +104,7 @@ pub(super) fn unsettled(world: &mut World, layer: Entity, pos: BlockPos, change:
 /// Whether a falling block over `below` drops into it (BDS `isFreeToFall`).
 fn is_free(world: &World, layer: Entity, below: BlockPos) -> bool {
     block(world, layer, below).is_some_and(|(registry, id)| {
-        gives_way(registry, id)
-            || registry
-                .get(id)
-                .is_some_and(|state| state.name == SNOW || state.name.contains("coral"))
+        gives_way(registry, id) || registry.get(id).is_some_and(|state| state.name == SNOW || state.name.contains("coral"))
     })
 }
 
@@ -151,14 +115,10 @@ fn slide(world: &mut World, layer: Entity, pos: BlockPos) -> Option<BlockPos> {
         return Some(pos);
     }
     let mut lowest = pos;
-    while name_at(world, layer, Face::Down.neighbour(lowest))
-        .is_some_and(|name| falls(name) && name != SNOW)
-    {
+    while name_at(world, layer, Face::Down.neighbour(lowest)).is_some_and(|name| falls(name) && name != SNOW) {
         lowest = Face::Down.neighbour(lowest);
     }
-    if !name_at(world, layer, pos).is_some_and(falls)
-        || !is_free(world, layer, Face::Down.neighbour(lowest))
-    {
+    if !name_at(world, layer, pos).is_some_and(falls) || !is_free(world, layer, Face::Down.neighbour(lowest)) {
         return None;
     }
     let (registry, id) = block(world, layer, lowest)?;
@@ -179,14 +139,9 @@ pub(super) fn tick(world: &mut World) -> Vec<(Entity, BlockPos)> {
     let now = world.resource::<Tick>().0;
     let mut changed = Vec::new();
     if let Some(mut slides) = world.get_resource_mut::<Slides>() {
-        let (due, waiting): (Vec<_>, Vec<_>) = std::mem::take(&mut slides.0)
-            .into_iter()
-            .partition(|(when, ..)| *when <= now);
+        let (due, waiting): (Vec<_>, Vec<_>) = std::mem::take(&mut slides.0).into_iter().partition(|(when, ..)| *when <= now);
         slides.0 = waiting;
-        changed.extend(
-            due.into_iter()
-                .filter_map(|(_, layer, pos)| Some((layer, slide(world, layer, pos)?))),
-        );
+        changed.extend(due.into_iter().filter_map(|(_, layer, pos)| Some((layer, slide(world, layer, pos)?))));
     }
     changed.extend(flight::fly(world));
     changed
