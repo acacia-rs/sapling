@@ -64,7 +64,7 @@ fn water(block: Block) -> bool {
 }
 
 fn empty_or_water(block: Block) -> bool {
-    block == Block::Air || water(block) && !block.is_wet_speleothem()
+    block == Block::Air || water(block) && (crate::xp(1) || !block.is_wet_speleothem())
 }
 
 fn get(view: &View, [x, y, z]: [i32; 3]) -> Block {
@@ -111,6 +111,7 @@ impl SpeleothemBlocks {
 /// `SpeleothemFeature::place`: the tip direction from the bases above and below (both: a
 /// boolean), a patch of base blocks behind it, then one or two spikes.
 fn pointed(ctx: &mut Ctx, blocks: &SpeleothemBlocks, at: [i32; 3]) -> Option<[i32; 3]> {
+    crate::feature::trace::line(|| format!("  pointed {} {} {} draw {}", at[0], at[1], at[2], ctx.random.draws()));
     let below = blocks.is_base(get(ctx.view, step(at, 0, 1)));
     let above = blocks.is_base(get(ctx.view, step(at, 1, 1)));
     let up = match (below, above) {

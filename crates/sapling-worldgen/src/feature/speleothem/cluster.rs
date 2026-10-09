@@ -45,6 +45,7 @@ pub fn place(ctx: &mut Ctx, blocks: &SpeleothemBlocks, height: [i32; 2], wetness
     let density = ctx.random.next_float() * 0.4 + 0.3;
     let rx = ctx.random.next_int(6) + 2;
     let rz = ctx.random.next_int(6) + 2;
+    crate::feature::trace::line(|| format!("  cluster {rx} {rz} height {height} wetness {wetness} density {density}"));
     let shape = Shape { height, wetness, density };
     for dx in -rx..=rx {
         for dz in -rz..=rz {

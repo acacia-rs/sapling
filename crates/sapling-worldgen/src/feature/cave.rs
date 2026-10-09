@@ -36,11 +36,13 @@ fn water(block: Block) -> bool {
 }
 
 impl SnapToSurface {
-    /// Vertical surfaces search away from the origin's side of the surface (into the open from an
-    /// open cell); horizontal ones try the four sides in an order shuffled with raw draws.
+    /// Ceilings and floors (`random_horizontal`: one of them by a boolean) search away from the origin's
+    /// side of the surface (into the open from an open cell); walls (`random_vertical`) try the four
+    /// sides in an order shuffled with raw draws.
     pub fn place(&self, ctx: &mut Ctx, at: [i32; 3]) -> Option<[i32; 3]> {
+        super::trace::line(|| format!("  snap {} {} {} draw {}", at[0], at[1], at[2], ctx.random.draws()));
         let snapped = match self.surface {
-            Surface::RandomHorizontal => {
+            Surface::RandomVertical => {
                 let mut order = [2, 5, 3, 4];
                 for i in 1..4 {
                     let j = (ctx.random.next_u32() % (i as u32 + 1)) as usize;
@@ -76,7 +78,7 @@ impl SnapToSurface {
             } else if solid {
                 open(b)
             } else {
-                sturdy(b)
+                sturdy(b) && !(crate::xp(2) && b.dry().is_speleothem())
             }
         };
         let biome = (ctx.biome)(at);
