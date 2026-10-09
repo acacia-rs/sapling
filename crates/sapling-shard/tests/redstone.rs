@@ -175,3 +175,68 @@ fn a_circuit_a_stored_column_holds_works_once_the_column_is_loaded() {
     h.tick(1);
     assert_eq!(rx.recv().unwrap(), [(15, Some("minecraft:redstone_wire".to_owned())), (15, Some("minecraft:lit_redstone_lamp".to_owned()))]);
 }
+
+fn repeater(lit: bool, input: &str, delay: u8) -> u32 {
+    state(if lit { "minecraft:powered_repeater" } else { "minecraft:unpowered_repeater" }, &format!("minecraft:cardinal_direction={input},repeater_delay={delay}"))
+}
+
+#[test]
+fn a_repeater_passes_power_from_its_back_after_its_delay_and_its_dust_shows_it_an_evaluation_later() {
+    // As research/captures/bds-redstone-repeaters.txt, the rigs at y 0: lines eastward, the last with its back to the north.
+    let mut h = ready();
+    let mut lines = Vec::new();
+    for (z, input, delay) in [(0, "west", "0"), (2, "west", "2"), (4, "north", "0")] {
+        let properties: &str = Box::leak(format!("minecraft:cardinal_direction={input},repeater_delay={delay}").into_boxed_str());
+        lines.extend([([-2, 65, z], "redstone_wire", ""), ([-1, 65, z], "unpowered_repeater", properties), ([0, 65, z], "redstone_wire", ""), ([1, 65, z], "redstone_lamp", "")]);
+        lines.push(([-3, 65, z], "redstone_block", ""));
+    }
+    put(&mut h, &lines);
+    let on = watch(&mut h, 12);
+    let fed = when(&on, [-2, 65, 0], dust(15)).expect("the dust behind");
+    assert_eq!(when(&on, [-1, 65, 0], repeater(true, "west", 0)), Some(fed), "no delay: with its dust");
+    assert_eq!(when(&on, [1, 65, 0], hash("minecraft:lit_redstone_lamp")), Some(fed), "the lamp with the repeater");
+    assert_eq!(when(&on, [0, 65, 0], dust(15)), Some(fed + 2), "the dust past it an evaluation later");
+    assert_eq!(when(&on, [-1, 65, 2], repeater(true, "west", 2)), Some(fed + 4), "two more evaluations");
+    assert_eq!(when(&on, [1, 65, 2], hash("minecraft:lit_redstone_lamp")), Some(fed + 4));
+    assert_eq!(when(&on, [1, 65, 4], hash("minecraft:lit_redstone_lamp")), None, "power at its side");
+
+    put(&mut h, &[([-3, 65, 0], "air", "")]);
+    let off = watch(&mut h, 10);
+    let unfed = when(&off, [-2, 65, 0], dust(0)).expect("the dust behind");
+    assert_eq!(when(&off, [-1, 65, 0], repeater(false, "west", 0)), Some(unfed));
+    assert_eq!(when(&off, [1, 65, 0], hash("minecraft:redstone_lamp")), Some(unfed + 4));
+}
+
+#[test]
+fn a_lit_repeater_at_the_side_of_another_holds_it_as_it_is() {
+    let mut h = ready();
+    let (main, lamp) = ([0, 65, 2], [1, 65, 2]);
+    put(&mut h, &[
+        ([-1, 65, 2], "redstone_wire", ""),
+        (main, "unpowered_repeater", "minecraft:cardinal_direction=west,repeater_delay=0"),
+        (lamp, "redstone_lamp", ""),
+        ([0, 65, 1], "unpowered_repeater", "minecraft:cardinal_direction=north,repeater_delay=0"),
+        ([-2, 65, 2], "redstone_block", ""),
+    ]);
+    assert!(when(&watch(&mut h, 6), main, repeater(true, "west", 0)).is_some());
+    put(&mut h, &[([0, 65, 0], "redstone_block", "")]);
+    watch(&mut h, 6);
+    put(&mut h, &[([-2, 65, 2], "air", "")]);
+    assert_eq!(when(&watch(&mut h, 8), main, repeater(false, "west", 0)), None, "held lit with nothing behind it");
+    put(&mut h, &[([0, 65, 0], "air", "")]);
+    let freed = watch(&mut h, 10);
+    let unlocked = when(&freed, [0, 65, 1], repeater(false, "north", 0)).expect("the one at its side goes out");
+    assert_eq!(when(&freed, main, repeater(false, "west", 0)), Some(unlocked + 2), "an evaluation after, as on BDS");
+}
+
+#[test]
+fn a_click_gives_a_repeater_its_next_delay() {
+    let mut h = ready();
+    let pos = [2, 65, 2];
+    put(&mut h, &[(pos, "unpowered_repeater", "minecraft:cardinal_direction=west,repeater_delay=2")]);
+    watch(&mut h, 2);
+    for delay in [3, 0, 1] {
+        h.receive(1, &common::click(pos, 1, None));
+        assert!(block_changes(h.tick_all().to(2)).contains(&(pos, repeater(false, "west", delay))), "{delay}");
+    }
+}

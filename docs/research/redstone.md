@@ -289,3 +289,29 @@ immediate signal 148a82ae0): DirectionalProducer with `direction = mStronglyPowe
     ticks after does nothing (R21: the count must first pass 32, 17 evaluations on).
   - The lamp past the dust stays lit through the flips. After the first burnout it went out 18 ticks after the
     dust lost its signal, not 4 as after the later ones; sapling puts it out after 4 every time.
+
+## Repeaters (2026-10-09, `bds_command_probe repeater-facing` and `repeaters`, research/captures/bds-redstone-repeaters.txt)
+
+No decompile: all of this is from the captures. An evaluation is 2 ticks.
+
+- `minecraft:cardinal_direction` names the side a repeater takes power on; it gives 15 out of the opposite side,
+  whatever came in (1 after 15 dust). The lit block is `powered_repeater` with the same states.
+- In: dust on its input side, a power block or a block that dust or a lever powers directly behind it. Dust along
+  its side does nothing to it and gets nothing from it.
+- Out: the lamp in front, the block in front (strongly: dust on and beside that block gets 15, a lamp behind it
+  lights), dust in front.
+- Who sees a flip when. The repeater's block flips at an evaluation; lamps it powers, straight or through dust or
+  a block, change in that same evaluation; the dust it powers shows it one evaluation later; another repeater
+  held by it (below) acts on it one evaluation later. The torch drill shows the same of a torch. So dust,
+  torches and repeaters are searched from the sources as they were, lamps and the like as they are after.
+- Delay, steady input: the repeater flips `repeater_delay` evaluations after the evaluation its input dust
+  changes at: 0, 2, 4, 6 ticks after the dust. Delay 0 flips with its dust.
+- Delay, input flipping at every evaluation (the burnout torch): delay 0 follows it; delay 1, 2, 3 come out
+  on for 2, 3, 4 evaluations and off for as many, first on 1, 2, 3 evaluations after the input, and stop within
+  one such step of the input stopping. Fitted (sapling `RepeaterState::next`): a repeater flips `delay`
+  evaluations after its input first differs from it, whatever the input does meanwhile; if the input differs
+  from it again at the evaluation it flips, it flips back `delay + 1` evaluations later.
+- Lock: a lit repeater pointing into the side of another holds it as it is, lit or not, whatever is behind it.
+  When the holding one goes out, the held one takes up its input one evaluation later.
+- Not drilled: a click's sound, a comparator as the one that holds, a pulse shorter than the delay from a
+  steady state other than the 2-tick clock, a held repeater that was counting down.

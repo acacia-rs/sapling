@@ -49,8 +49,10 @@ pub(super) fn write(world: &mut World, layer: Entity, pos: BlockPos, due: Due) {
             }
         }
         (Part::User(user), Due::Signal(signal)) => use_signal(world, layer, pos, id, user, signal),
-        (Part::Torch { lit, .. }, Due::Torch { lit: now, fizz }) if lit != now => {
-            let name = if now { "minecraft:redstone_torch" } else { "minecraft:unlit_redstone_torch" };
+        (Part::Torch { lit, .. } | Part::Repeater { lit, .. }, Due::Lit { lit: now, fizz }) if lit != now => {
+            let is_torch = matches!(part, Part::Torch { .. });
+            let names = if is_torch { ["minecraft:unlit_redstone_torch", "minecraft:redstone_torch"] } else { ["minecraft:unpowered_repeater", "minecraft:powered_repeater"] };
+            let name = names[usize::from(now)];
             if fizz {
                 play(world, layer, pos, "fizz");
             }

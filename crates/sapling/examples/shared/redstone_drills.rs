@@ -275,3 +275,91 @@ pub const BURNOUT: &[&str] = &[
     "setblock ~7 ~ ~9 air",
     "testforblock ~7 ~ ~8 unlit_redstone_torch",
 ];
+
+/// Which way a repeater passes power: four lines eastward (power block, dust, repeater, dust,
+/// lamp), a repeater of each `minecraft:cardinal_direction`.
+pub fn repeater_facing() -> Vec<String> {
+    let mut lines = vec!["fill ~2 ~-1 ~4 ~22 ~-1 ~16 stone".to_owned(), "fill ~2 ~ ~4 ~22 ~4 ~16 air".to_owned()];
+    for (row, facing) in ["north", "east", "south", "west"].iter().enumerate() {
+        let z = 5 + 2 * row;
+        lines.push(format!("setblock ~5 ~ ~{z} redstone_wire"));
+        lines.push(format!("setblock ~6 ~ ~{z} unpowered_repeater [\"minecraft:cardinal_direction\"=\"{facing}\",\"repeater_delay\"=0]"));
+        lines.push(format!("setblock ~7 ~ ~{z} redstone_wire"));
+        lines.push(format!("setblock ~8 ~ ~{z} redstone_lamp"));
+        lines.push(format!("setblock ~4 ~ ~{z} redstone_block"));
+        lines.push(format!("setblock ~4 ~ ~{z} air"));
+    }
+    lines
+}
+
+fn repeater(input: &str, delay: u8) -> String {
+    format!("unpowered_repeater [\"minecraft:cardinal_direction\"=\"{input}\",\"repeater_delay\"={delay}]")
+}
+
+/// Repeaters, a rig to a floor (y 0, 5, 10, 15, 20), each taking power on its west and passing it east
+/// unless said (research/captures/bds-redstone-repeaters.txt):
+/// - 0: one of each delay between dust, a power block put and taken;
+/// - 5: one of each delay fed by a torch that puts itself out, 2 ticks on and 2 off;
+/// - 10: one into a block with dust on and beside it; one between a power block and a lamp with no dust;
+///   one behind a block that dust powers;
+/// - 15: dust along the side of one; one locked by another pointing into its side;
+/// - 20: one after 15 dust.
+pub fn repeaters() -> Vec<String> {
+    let mut lines = vec!["fill ~2 ~-1 ~4 ~22 ~24 ~16 air".to_owned()];
+    lines.extend((0..5).map(|floor| format!("fill ~2 ~{} ~4 ~22 ~{0} ~16 stone", floor * 5 - 1)));
+    let mut put = |x: i32, y: i32, z: i32, block: &str| lines.push(format!("setblock ~{x} ~{y} ~{z} {block}"));
+    let toggle = |put: &mut dyn FnMut(i32, i32, i32, &str), x: i32, y: i32, z: i32| {
+        put(x, y, z, "redstone_block");
+        put(x, y, z, "air");
+    };
+    for delay in 0..4u8 {
+        let z = 5 + 2 * i32::from(delay);
+        for (x, block) in [(5, DUST.to_owned()), (6, repeater("west", delay)), (7, DUST.to_owned()), (8, LAMP.to_owned())] {
+            put(x, 0, z, &block);
+        }
+        toggle(&mut put, 4, 0, z);
+    }
+    for delay in 0..4u8 {
+        let x = 4 + 5 * i32::from(delay);
+        for (dx, dy, block) in [(-2, 0, "stone".to_owned()), (-1, 0, "stone".to_owned()), (0, 0, "stone".to_owned()), (1, 1, "stone".to_owned())] {
+            put(x + dx, 5 + dy, 8, &block);
+        }
+        for (dx, block) in [(-2, DUST.to_owned()), (-1, repeater("east", delay)), (0, DUST.to_owned())] {
+            put(x + dx, 6, 8, &block);
+        }
+        put(x + 1, 5, 8, "redstone_torch [\"torch_facing_direction\"=\"west\"]");
+    }
+    for (x, y, z, block) in [(5, 10, 6, DUST), (7, 10, 6, "stone"), (8, 10, 6, LAMP), (7, 11, 6, DUST), (7, 10, 5, DUST)] {
+        put(x, y, z, block);
+    }
+    put(6, 10, 6, &repeater("west", 0));
+    toggle(&mut put, 4, 10, 6);
+    put(5, 10, 9, &repeater("west", 0));
+    put(6, 10, 9, LAMP);
+    toggle(&mut put, 4, 10, 9);
+    for (x, block) in [(5, DUST.to_owned()), (6, "stone".to_owned()), (7, repeater("west", 0)), (8, LAMP.to_owned())] {
+        put(x, 10, 12, &block);
+    }
+    toggle(&mut put, 4, 10, 12);
+
+    put(6, 15, 6, &repeater("west", 0));
+    put(7, 15, 6, LAMP);
+    put(6, 15, 5, DUST);
+    toggle(&mut put, 5, 15, 5);
+    for (x, z, block) in [(5, 11, DUST.to_owned()), (6, 11, repeater("west", 0)), (7, 11, LAMP.to_owned()), (6, 10, repeater("north", 0))] {
+        put(x, 15, z, &block);
+    }
+    // Fed, locked, unfed, unlocked; then locked, fed, unlocked, unfed.
+    for (x, z, block) in [(4, 11, POWER), (6, 9, POWER), (4, 11, "air"), (6, 9, "air"), (6, 9, POWER), (4, 11, POWER), (6, 9, "air"), (4, 11, "air")] {
+        put(x, 15, z, block);
+    }
+
+    for x in 3..=17 {
+        put(x, 20, 6, DUST);
+    }
+    for (x, block) in [(18, repeater("west", 0)), (19, DUST.to_owned()), (20, LAMP.to_owned())] {
+        put(x, 20, 6, &block);
+    }
+    toggle(&mut put, 2, 20, 6);
+    lines
+}

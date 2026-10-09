@@ -3,11 +3,11 @@
 // Dust powers a side block by its shape (no connection across it), not by the path the power came
 // by as BDS does: the two agree on every rig of research/captures/bds-redstone-shapes.txt (C8).
 
-use std::collections::{BinaryHeap, HashMap};
+use std::collections::{BinaryHeap, HashMap, HashSet};
 
 use sapling_api::{BlockPos, Face};
 
-use super::parts::{FULL, Part};
+use super::parts::{FULL, Part, opposite};
 
 const ACROSS: [Face; 4] = [Face::North, Face::South, Face::West, Face::East];
 
@@ -20,16 +20,19 @@ enum Via {
     /// A block dust points into or lies on.
     Weak,
     User,
-    /// The block a torch is on, or a source it stands on.
-    TorchInput,
+    /// Into a torch from the block it is on, or into the back of a repeater.
+    Input,
+    /// Into the side of a repeater from one that is lit.
+    Lock,
 }
 
-/// What a search found: the strongest signal each cell gets, and what each torch's block gives it
-/// and from which source.
+/// What a search found: the strongest signal each cell gets, what each torch and repeater is given
+/// and from which source, and the repeaters another holds as they are.
 #[derive(Default, Debug)]
 pub(super) struct Power {
     pub(super) at: HashMap<BlockPos, u8>,
-    pub(super) torches: HashMap<BlockPos, (u8, BlockPos)>,
+    pub(super) inputs: HashMap<BlockPos, (u8, BlockPos)>,
+    pub(super) locked: HashSet<BlockPos>,
 }
 
 struct Search<'a, F: FnMut(BlockPos) -> Part> {
@@ -49,14 +52,17 @@ impl<F: FnMut(BlockPos) -> Part> Search<'_, F> {
     }
 
     /// Offers `strength` to what `pos` holds, reached from `from` on its `face` side: dust and
-    /// users always, a solid block when `strong` points into it, a torch standing on `from`.
-    fn reach(&mut self, from: BlockPos, face: Face, strength: u8, origin: BlockPos, strong: bool, to_dust: bool) {
+    /// users always, a solid block when `strong` points into it, a torch standing on `from`, a
+    /// repeater whose back `from` is at, or whose side when `from` is a repeater that `locks`.
+    fn reach(&mut self, from: BlockPos, face: Face, strength: u8, origin: BlockPos, strong: bool, to_dust: bool, locks: bool) {
         let pos = face.neighbour(from);
         match (self.part)(pos) {
+            Part::Repeater { input, .. } if face == opposite(input) => self.offer(Via::Input, pos, strength, origin),
+            Part::Repeater { input, .. } if locks && ACROSS.contains(&face) && face != input => self.offer(Via::Lock, pos, strength, origin),
             Part::Dust { .. } if to_dust => self.offer(Via::Dust, pos, strength, origin),
             Part::User(_) => self.offer(Via::User, pos, strength, origin),
             Part::Conductor if strong => self.offer(Via::Strong, pos, strength, origin),
-            Part::Torch { support, .. } if support.neighbour(pos) == from => self.offer(Via::TorchInput, pos, strength, origin),
+            Part::Torch { support, .. } if support.neighbour(pos) == from => self.offer(Via::Input, pos, strength, origin),
             _ => {}
         }
     }
@@ -65,14 +71,15 @@ impl<F: FnMut(BlockPos) -> Part> Search<'_, F> {
         match part {
             Part::Producer { strength, strong } if strength > 0 => {
                 for face in Face::ALL {
-                    self.reach(pos, face, strength, pos, strong == Some(face), true);
+                    self.reach(pos, face, strength, pos, strong == Some(face), true, false);
                 }
             }
             Part::Torch { lit: true, support } => {
                 for face in Face::ALL.into_iter().filter(|face| *face != support) {
-                    self.reach(pos, face, FULL, pos, face == Face::Up, true);
+                    self.reach(pos, face, FULL, pos, face == Face::Up, true, false);
                 }
             }
+            Part::Repeater { lit: true, input, .. } => self.reach(pos, opposite(input), FULL, pos, true, true, true),
             _ => {}
         }
     }
@@ -85,7 +92,8 @@ impl<F: FnMut(BlockPos) -> Part> Search<'_, F> {
         let beside_part = (self.part)(beside);
         let up = !(self.part)(Face::Up.neighbour(dust)).cuts() && is_dust((self.part)(Face::Up.neighbour(beside)));
         let down = !beside_part.cuts() && (self.part)(Face::Down.neighbour(dust)) != Part::Ledge && is_dust((self.part)(Face::Down.neighbour(beside)));
-        matches!(beside_part, Part::Dust { .. } | Part::Producer { .. } | Part::Torch { .. }) || up || down
+        let joins_repeater = matches!(beside_part, Part::Repeater { input, .. } if input == face || input == opposite(face));
+        matches!(beside_part, Part::Dust { .. } | Part::Producer { .. } | Part::Torch { .. }) || joins_repeater || up || down
     }
 
     fn from_dust(&mut self, dust: BlockPos, strength: u8, origin: BlockPos) {
@@ -102,8 +110,10 @@ impl<F: FnMut(BlockPos) -> Part> Search<'_, F> {
             let beside = face.neighbour(dust);
             let beside_part = (self.part)(beside);
             let next = strength - 1;
-            if matches!(beside_part, Part::Dust { .. }) {
-                self.offer(Via::Dust, beside, next, origin);
+            match beside_part {
+                Part::Dust { .. } => self.offer(Via::Dust, beside, next, origin),
+                Part::Repeater { input, .. } if input == opposite(face) => self.offer(Via::Input, beside, strength, origin),
+                _ => {}
             }
             let (above, under) = (Face::Up.neighbour(beside), Face::Down.neighbour(beside));
             if up_free && matches!((self.part)(above), Part::Dust { .. }) {
@@ -126,7 +136,7 @@ impl<F: FnMut(BlockPos) -> Part> Search<'_, F> {
 
     fn from_block(&mut self, block: BlockPos, strength: u8, origin: BlockPos, strong: bool) {
         for face in Face::ALL {
-            self.reach(block, face, strength, origin, false, strong);
+            self.reach(block, face, strength, origin, false, strong, false);
         }
     }
 
@@ -144,8 +154,9 @@ impl<F: FnMut(BlockPos) -> Part> Search<'_, F> {
                 Via::Dust => self.from_dust(pos, strength, origin),
                 Via::Strong => self.from_block(pos, strength, origin, true),
                 Via::Weak => self.from_block(pos, strength, origin, false),
-                Via::TorchInput => {
-                    let input = self.power.torches.entry(pos).or_insert((0, origin));
+                Via::Lock => drop(self.power.locked.insert(pos)),
+                Via::Input => {
+                    let input = self.power.inputs.entry(pos).or_insert((0, origin));
                     if strength > input.0 {
                         *input = (strength, origin);
                     }
@@ -203,7 +214,7 @@ mod tests {
         let lever = ([1, 0, 0], Part::Producer { strength: FULL, strong: Some(Face::West) });
         let cells = [torch, lever, ([0, 0, 0], Part::Conductor)];
         let power = search(&[torch, lever], &mut world(&cells));
-        assert_eq!(power.torches.get(&[0, 1, 0]), Some(&(15, [1, 0, 0])));
+        assert_eq!(power.inputs.get(&[0, 1, 0]), Some(&(15, [1, 0, 0])));
     }
 
     #[test]

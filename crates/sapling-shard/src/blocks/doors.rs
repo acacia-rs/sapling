@@ -25,6 +25,8 @@ const STONE_PRESS_TICKS: u64 = 20;
 const WOODEN_PRESS_TICKS: u64 = 30;
 const STONE_BUTTONS: &[&str] = &[":stone_button", "polished_blackstone_button"];
 
+const DELAY: &str = "repeater_delay";
+
 fn property<'a>(registry: &'a BlockRegistry, id: u32, key: &str) -> Option<&'a str> {
     registry.get(id)?.properties.split(',').filter_map(|pair| pair.split_once('=')).find(|(name, _)| *name == key).map(|(_, value)| value)
 }
@@ -155,8 +157,19 @@ pub(crate) fn release_buttons(world: &mut World) {
     }
 }
 
+/// Sets the repeater at `pos` to its next delay, the fourth back to the first.
+// TODO: what BDS plays for it is not captured.
+fn turn_repeater(world: &mut World, layer: Entity, [x, y, z]: BlockPos) {
+    let Some(level) = level(world, layer) else { return };
+    let (registry, id) = (level.registry(), level.block(x, y, z));
+    let delay: u8 = property(registry, id, DELAY).and_then(|delay| delay.parse().ok()).unwrap_or(0);
+    if let Some(id) = with(registry, id, DELAY, &((delay + 1) % 4).to_string()) {
+        send::set(world, layer, [x, y, z], id);
+    }
+}
+
 /// What a hand does to the block `name` at `pos`: a door, trapdoor, fence gate or lever opens
-/// or shuts, a button goes in. Iron does not move by hand.
+/// or shuts, a button goes in, a repeater takes its next delay. Iron does not move by hand.
 pub(super) fn use_by_hand(world: &mut World, layer: Entity, pos: BlockPos, name: &str) {
     if name.contains("iron_") {
         return;
@@ -164,6 +177,7 @@ pub(super) fn use_by_hand(world: &mut World, layer: Entity, pos: BlockPos, name:
     // What it sounds like to open and to shut; a lever clicks like a button (BDS `LeverBlock::toggle`).
     let sounds = match name {
         _ if name.ends_with("button") => return press(world, layer, pos, name),
+        _ if name.ends_with("_repeater") => return turn_repeater(world, layer, pos),
         _ if name.ends_with("trapdoor") => ["trapdoor.open", "trapdoor.close"],
         _ if name.ends_with("door") => ["door.open", "door.close"],
         _ if name.ends_with("fence_gate") => ["fence_gate.open", "fence_gate.close"],

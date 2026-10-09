@@ -30,6 +30,8 @@ pub(super) enum Part {
     Dust { signal: u8 },
     /// Attached on `support`; powers the block above strongly.
     Torch { lit: bool, support: Face },
+    /// Takes power on its `input` side and gives it out of the other, `delay` evaluations later.
+    Repeater { lit: bool, input: Face, delay: u8 },
     User(User),
     /// A block powered by what points into it, and passing that on. Cuts a step of dust under it.
     Conductor,
@@ -60,6 +62,10 @@ impl Part {
             }
             "redstone_wire" => Part::Dust { signal: get(SIGNAL).and_then(|signal| signal.parse().ok()).unwrap_or(0) },
             "redstone_torch" | "unlit_redstone_torch" => Part::Torch { lit: name == "redstone_torch", support: torch_support(get("torch_facing_direction")) },
+            "unpowered_repeater" | "powered_repeater" => {
+                let delay = get("repeater_delay").and_then(|delay| delay.parse().ok()).unwrap_or(0);
+                Part::Repeater { lit: name == "powered_repeater", input: side(get("minecraft:cardinal_direction")), delay }
+            }
             "redstone_lamp" | "lit_redstone_lamp" => Part::User(User::Lamp { lit: name == "lit_redstone_lamp" }),
             "hopper" => Part::User(User::Hopper),
             _ if name.ends_with("trapdoor") => Part::User(User::Opens(Opens::Trapdoor)),
@@ -80,12 +86,12 @@ impl Part {
 
     /// Whether the circuit is searched from it.
     pub(super) fn is_source(self) -> bool {
-        matches!(self, Part::Producer { .. } | Part::Torch { .. })
+        matches!(self, Part::Producer { .. } | Part::Torch { .. } | Part::Repeater { .. })
     }
 
     /// Whether a change of signal is written into it.
     pub(super) fn is_written(self) -> bool {
-        matches!(self, Part::Dust { .. } | Part::User(_) | Part::Torch { .. })
+        matches!(self, Part::Dust { .. } | Part::User(_) | Part::Torch { .. } | Part::Repeater { .. })
     }
 }
 
@@ -127,7 +133,13 @@ fn lever_support(direction: &str) -> Option<Face> {
 
 /// The side a torch's block is on: `torch_facing_direction` names it, `top` and `unknown` below.
 fn torch_support(facing: Option<&str>) -> Face {
-    match facing {
+    side(facing)
+}
+
+/// The side a direction names, below for any other; a repeater's `minecraft:cardinal_direction` is
+/// the side it takes power on (research/captures/bds-redstone-repeaters.txt).
+fn side(direction: Option<&str>) -> Face {
+    match direction {
         Some("north") => Face::North,
         Some("south") => Face::South,
         Some("west") => Face::West,
