@@ -83,6 +83,12 @@ its heightmap upkeep (returns unless state +0xf0 == 11), 1409f3f50 the column up
 0x14ccdaf58 flowing_water, 0x14ccdaf88 water; BlockSource +0x60 `mPendingConnectionUpdates`, +0xd8/+0xe0 random
 and tick queues.
 
+Feat4 labels (2026-10-09): 14478e670 `ScatterParams::initMolangParams` (callers: decorateBiome 14580b462, scatter
+feature 143b9b76d, 1438edd8b), 0x14cd56144/46/48 origin x/y/z variable ids and 0x14cd5614a.. world ids,
+1411a24c0 `query.noise` lambda (call 1411a25f1), 145e276f0 `PerlinSimplexNoise` ctor, 149d9a560 mushroom shade,
+142cedc30 `Block::mayPlace(region, pos, face)`, 1438ebaf0 fallen trunk, `Block` +0xa5 `mLight`, `BlockType` +0x15c
+translucency, `LevelChunk` +0xf88 highest block.
+
 Feat3 labels (2026-10-08): 14a73fa30 the decoration's IBlockWorldGenAPI vtable (forwards to its `BlockSource` at
 +8; 0xb0 = 1411a0a60 heightmap: `LevelChunk` +0xb80 i16 per column + minimum y), 1438f0d00
 `MangroveTreeRoots::placeRoots` (vtable 14a98e1f8), 1438f16f0 its root simulation, 14a681437 its facing table,

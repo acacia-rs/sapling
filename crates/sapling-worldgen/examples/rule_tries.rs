@@ -17,6 +17,8 @@ fn glyph(name: &str) -> char {
         "water" => '~',
         "mud" => 'm',
         "vine" => 'v',
+        "kelp" => 'k',
+        "seagrass" => 's',
         "mangrove_propagule" => 'p',
         "moss_carpet" => 'c',
         n if n.ends_with("_log") => 'L',
@@ -40,13 +42,16 @@ fn main() {
     let hash = hashed_string(rule) as u32;
     let rule_seed = chunk_seed ^ hash.wrapping_add(0x9E37_79B9).wrapping_add(chunk_seed << 6).wrapping_add(chunk_seed >> 2);
     let mut mt = Mt19937::new(rule_seed);
+    let zx = std::env::var("RULE_ORDER").is_ok_and(|order| order == "zx");
     let generator = OverworldGenerator::new(seed);
     let (primary, _) = open(world).expect("oracle world");
     let shape = generator.chunk_blocks(cx, cz);
     let chunk = primary.load_column(ChunkKey::new(cx, cz, 0)).unwrap().expect("chunk").chunk;
     for i in 0..tries.parse::<u32>().unwrap() {
-        let lx = mt.next_int(16);
-        let lz = mt.next_int(16);
+        // RULE_ORDER=zx: the rule's coordinate_eval_order draws z first.
+        let first = mt.next_int(16);
+        let second = mt.next_int(16);
+        let (lx, lz) = if zx { (second, first) } else { (first, second) };
         let (x, z) = (cx * 16 + lx, cz * 16 + lz);
         let ours: String = (y0..=y1).map(|y| glyph(shape.block(lx as usize, y, lz as usize).name())).collect();
         let bds: String = (y0..=y1).map(|y| glyph(&bds_cell(&primary, &chunk, x, y, z).block)).collect();

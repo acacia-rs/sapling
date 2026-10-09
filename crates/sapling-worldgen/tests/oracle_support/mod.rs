@@ -6,6 +6,7 @@
 mod carver;
 mod dump;
 mod features;
+mod floor;
 mod judge;
 mod structures;
 mod tally;
@@ -23,6 +24,8 @@ pub use carver::{CarverTally, Ours, near_feature};
 pub use dump::Dump;
 #[allow(unused_imports)]
 pub use features::FeatureTally;
+#[allow(unused_imports)]
+pub use floor::Floor;
 #[allow(unused_imports)]
 pub use judge::{Context, column_reshaped};
 #[allow(unused_imports)]

@@ -34,7 +34,8 @@ const SMALL_DRIPLEAF_CHANCE: f32 = 0.2;
 
 /// A full face to stand on or hang from.
 pub fn sturdy(block: Block) -> bool {
-    block.blocks_motion()
+    // Bamboo stalks hold no vines (oracle, bamboo jungle).
+    block.blocks_motion() && !matches!(block, Block::Bamboo | Block::BambooSmallLeaves | Block::BambooLargeLeaves | Block::Cactus)
 }
 
 /// The waterlogged twin of a dripleaf (the same states, saved with water).

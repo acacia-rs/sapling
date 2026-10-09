@@ -110,8 +110,9 @@ sync; swamp huge mushrooms sink through one or two water blocks (143b7f230, biom
   (2740,101,5574), "BDS's first tree") were wrong; the session that chased them is in the git history.
 - Old growth pine taiga extra spruce leaves: an abandoned camp's terrain adaptation near (-5320,72,5447) (BDS
   ground 3-4 blocks higher) lifts the same mega spruces; not a tree or shape bug (worldgen-bds-carvers.md).
-- One mangrove in the region's edge chunk -499,517 at (-7979,64,8276) is a block shorter than BDS's (not looked
-  at: an edge chunk, whose ring neighbours the oracle does not pin down).
+- One mangrove in the region's edge chunk -499,517 at (-7979,64,8276) is a block shorter than BDS's: it is the
+  second try of the bee-nest rule and draws another height, so the first try's tree spent a different number of
+  draws (worldgen-bds-residue.md, with the same-phase order that makes such edge cascades).
 
 ## Refused 2x2 trees and mangrove chunk -500,515 (resolved 2026-10-09, worldgen/trees3)
 None was a tree bug. Found by breakpoints on a live BDS ([worldgen-bds-debugger.md](worldgen-bds-debugger.md)):

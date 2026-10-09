@@ -7,6 +7,7 @@
 use super::place::Ctx;
 use super::plants::can_survive;
 use super::spec::Legacy;
+use super::tree::common::is_replaceable_plant;
 use super::view::View;
 use crate::block::Block;
 use crate::random::Mt19937;
@@ -134,7 +135,9 @@ fn cactus(view: &mut View, random: &mut Mt19937, at: [i32; 3]) -> bool {
 fn melon(view: &mut View, random: &mut Mt19937, at: [i32; 3]) -> bool {
     for _ in 0..64 {
         let [px, py, pz] = zyx_offset(random, at);
-        if view.block(px, py, pz) == Block::Air && view.block(px, py - 1, pz) == Block::GrassBlock {
+        // `BlockType::mayPlace`: over anything that can be built over (oracle: ferns, grass, vines).
+        let open = view.block(px, py, pz) == Block::Air || is_replaceable_plant(view.block(px, py, pz));
+        if open && view.block(px, py - 1, pz) == Block::GrassBlock {
             view.set_block(px, py, pz, Block::MelonBlock);
         }
     }

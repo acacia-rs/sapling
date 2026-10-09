@@ -52,6 +52,8 @@ pub fn decorate_chunk(seed: &LargeFeatureSeed, chunk: (i32, i32), inputs: Inputs
     let mut scope = Scope::new();
     for pass in Pass::ALL {
         for &biome in &order {
+            // `decorateBiome` sets the origin once for the biome's rules; a scatter feature then leaves its own (place.rs).
+            scope.set_origin([chunk.0 * 16, 0, chunk.1 * 16]);
             // With one biome BDS places every position without looking up its biome.
             let only = (order.len() > 1).then_some(biome);
             for rule in RULES.iter().filter(|rule| rule.pass == pass && rule.biomes.contains(biome)) {
@@ -66,7 +68,6 @@ fn run(rule: &Rule, source: &mut Source, only: Option<u32>, own: &ChunkBiomes, v
     let seed = rule_seed(source.chunk_seed, rule.name);
     let mut positions = Mt19937::new(seed);
     let origin = [source.chunk.0 * 16, 0, source.chunk.1 * 16];
-    scope.set_origin(origin);
     scope.world_bound = false;
     let queries = scope.queries;
     let count = {
@@ -88,10 +89,13 @@ fn run(rule: &Rule, source: &mut Source, only: Option<u32>, own: &ChunkBiomes, v
             scatter::position(&rule.distribution, index, origin, draws, &mut Molang { scope, host: &host })
         };
         if only.is_some_and(|wanted| biome_at(chunk, own, &biomes, at) != wanted) {
+            super::trace::line(|| format!("{chunk:?} {} try {index} at {at:?} in another biome than {only:?}", rule.name));
             continue;
         }
+        let start = placing.draws();
         let ctx = &mut Ctx { view, random: &mut placing, scope, biome: &biome, surface, in_structure: source.inputs.in_structure };
-        FEATURES[rule.feature].place(ctx, at);
+        let placed = FEATURES[rule.feature].place(ctx, at);
+        super::trace::line(|| format!("{chunk:?} {} try {index} at {at:?} placed {} draws {start}..{}", rule.name, placed.is_some(), placing.draws()));
     }
 }
 

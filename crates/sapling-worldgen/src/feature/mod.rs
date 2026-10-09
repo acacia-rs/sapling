@@ -40,6 +40,7 @@ mod speleothem;
 mod spreader;
 mod springs;
 mod ticks;
+pub(crate) mod trace;
 mod tree;
 mod view;
 
@@ -74,6 +75,10 @@ pub struct Inputs<'a> {
     pub after_lake: &'a dyn Fn(i32, i32) -> crate::random::Mt19937,
     /// Whether a structure holds the block (geode.rs).
     pub in_structure: &'a dyn Fn([i32; 3]) -> bool,
+}
+
+pub(crate) fn query_noise(x: f32, z: f32) -> f32 {
+    molang::noise().value(x, z)
 }
 
 /// When BDS decorates a chunk relative to its neighbours: x and z even first, then x odd, both odd,

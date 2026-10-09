@@ -35,7 +35,8 @@ Companion to [worldgen-bds.md](worldgen-bds.md). Feature rules run in `decoratio
 - Scatter (`ScatterParams::initScatter` 14478ea70, `getPosConst`/`getPosMolang` 14478fbe0/14478fe20,
   `sampleDistribution` 14478f9f0): extents `roundf`; uniform `min + nextInt(max-min)`, no draw if max <= min;
   triangle `min + nextInt(R/2+1) + nextInt(R-R/2+1)`; percent gate draws only for 0 < pct < 100.
-- Molang in rules: `variable.origin*` is the chunk corner, `variable.world*` each axis as drawn, `math.random` draws
+- Molang in rules: `variable.origin*` is the chunk corner until a `scatter_feature` moves it (set once per biome
+  and pass; worldgen-bds-residue.md), `variable.world*` each axis as drawn, `math.random` draws
   `nextFloat` from the chunk's own generator (seeded with the chunk seed, shared by all rules of the chunk; 14478e670
   `ScatterParams::initMolangParams` captures it), `variable.is_legacy` is 0. `query.heightmap(x, z)` (lambda
   1411a2740) is `LevelChunk` +0xb80 (the light heightmap) plus the minimum y: one above the highest block that is not
@@ -178,9 +179,14 @@ block source and chunk state 11 and did not run once while a region generated (b
   they were at that moment;
 - structure features (village trees) see carved-terrain heightmaps everywhere.
 `View::with_frozen_heights` models this (feature/mod.rs picks the snapshot by decoration phase). The recompute
-counts a cell whose block or liquid layer absorbs light (`Block` +0xa5), or is a non-air block with
-`BlockLegacy` +0x130 bit 2; sapling keeps its fitted rule (not air, not a see-through plant, not leaves).
-Counting leaves moved under 10 cells in every world, so the oracle does not settle whether leaves absorb.
+counts a cell whose block or liquid layer absorbs light (`Block` +0xa5 = `BlockComponentDirectData::mLight`), or
+is a non-air block with `BlockLegacy` +0x130 bit 2. Settled on 2026-10-09 from the heightmaps BDS saved in the
+oracle worlds (`examples/saved_heightmaps`: per block, how often it is the cell under the saved value and how
+often it sits above it): leaves count (35k tops, never skipped), as do logs, water, ice, mushroom blocks, melons,
+pumpkins and waterlogged roots; small plants, vines, bamboo, cacti, dry mangrove roots, snow layers, pointed
+dripstone, carpets, stairs and fences never do (`blocks_light` in feature/view.rs).
+`LevelChunk` +0xf88 (the vines' and double plants' ceiling) is not that stale map's maximum: taking it from the
+frozen heightmap lost every vine on a tree (jungle 4 -> 5644 wrong); it follows the chunk's writes.
 
 Oracle, wrong + missing cells (missing: BDS feature blocks we lack, which the judge used to file under later
 stages; `tests/oracle_support/judge.rs` `Verdict::Missing`), 148084d -> trees3:
@@ -199,6 +205,8 @@ The identical % always counted missing cells as not identical; what the old numb
 jungle 10157 -> 2181, mangrove swamp 3275 -> 771, dark forest 1153 -> 241, swamp 574 -> 294.
 
 ## Feature residue (2026-10-08, worldgen/feat2)
+Later state, the floor split and the feat4 fixes (ore axis gate, shared Molang origin, wet lichen, vines on
+bamboo, melons, mushroom shade): [worldgen-bds-residue.md](worldgen-bds-residue.md).
 The tree items below (bamboo jungle, pale garden, mangrove, old growth pine taiga) were resolved on 2026-10-09:
 worldgen-bds-trees.md, "Refused 2x2 trees and mangrove chunk -500,515". The table predates that.
 

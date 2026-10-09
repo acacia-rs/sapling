@@ -1,6 +1,7 @@
 //! `decoration_order <seed> <world> <cx0> <cz0> <cx1> <cz1>`: which of two neighbouring chunks BDS
 //! decorated first, read off cells where both chunks' ore blobs claim the same stone (the first
-//! one keeps it). Prints one line per chunk pair with votes: `pair ax az bx bz a_first b_first`.
+//! one keeps it; with ANY_BLOCK set, on any cell both wrote over the same block, which also votes
+//! on two chunks of one phase). Prints one line per chunk pair with votes: `pair ax az bx bz a_first b_first`.
 #![allow(dead_code)]
 
 #[path = "../tests/oracle_support/mod.rs"]
@@ -19,13 +20,16 @@ fn main() {
     let generator = OverworldGenerator::new(seed.parse().unwrap());
     let (primary, twin) = open(world).expect("oracle world");
     // cell -> (source, final block) of every source that claimed it over stone or deepslate.
-    let mut claims: HashMap<[i32; 3], Vec<((i32, i32), Block)>> = HashMap::new();
+    let any = std::env::var_os("ANY_BLOCK").is_some();
+    let mut claims: HashMap<[i32; 3], Vec<((i32, i32), (Block, Block))>> = HashMap::new();
     for cx in n[0]..=n[2] {
         for cz in n[1]..=n[3] {
-            let mut own: HashMap<[i32; 3], Block> = HashMap::new();
+            let mut own: HashMap<[i32; 3], (Block, Block)> = HashMap::new();
             for (at, block, seen) in generator.source_feature_writes(cx, cz) {
-                if matches!(seen, Block::Stone | Block::Deepslate) && !own.contains_key(&at) {
-                    own.insert(at, block);
+                // Only claims over the block both sources saw: the first writer keeps the cell.
+                let wanted = if any { !block.is_fluid() && !seen.is_fluid() } else { matches!(seen, Block::Stone | Block::Deepslate) };
+                if wanted && !own.contains_key(&at) {
+                    own.insert(at, (block, seen));
                 }
             }
             for (at, block) in own {
@@ -36,8 +40,8 @@ fn main() {
     let mut votes: HashMap<((i32, i32), (i32, i32)), [u32; 2]> = HashMap::new();
     let mut chunks = HashMap::new();
     for (at, list) in claims.iter().filter(|(_, l)| l.len() == 2) {
-        let [(a, ab), (b, bb)] = [list[0], list[1]];
-        if ab == bb {
+        let [(a, (ab, a_seen)), (b, (bb, b_seen))] = [list[0], list[1]];
+        if ab == bb || a_seen != b_seen {
             continue;
         }
         let (a, ab, b, bb) = if a < b { (a, ab, b, bb) } else { (b, bb, a, ab) };

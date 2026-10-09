@@ -2,7 +2,7 @@
 # usage: WORLDGEN_BDS=<your BDS copy> bds_dbg_run.sh <seed> <out dir> <dbg config.json> <x0,z0,x1,z1>...
 # tools/worldgen-oracle/run.sh with BDS started under bds_dbg.py: generates the chunk regions and leaves
 # <out dir>/dbg/ (dbg.log, trace-*.txt), <out dir>/worldgen.log and, after a clean stop, <out dir>/world/.
-# One run at a time per BDS copy (a lock dir guards it); ports 19290/19291.
+# One run at a time per BDS copy (a lock dir guards it); ports $WORLDGEN_PORT and the next (default 19290).
 set -euo pipefail
 here=$(cd "$(dirname "$0")" && pwd)
 bds=${WORLDGEN_BDS:?set WORLDGEN_BDS to your own BDS copy}
@@ -10,6 +10,7 @@ pack_src=$here/../../../tools/worldgen-oracle/pack
 seed=$1 out=$(realpath -m "$2") cfg=$(realpath "$3")
 shift 3
 limit=${WORLDGEN_TIMEOUT:-1800}
+port=${WORLDGEN_PORT:-19290}
 mkdir "$bds/.dbg-lock" 2>/dev/null || { echo "another run holds $bds/.dbg-lock" >&2; exit 2; }
 trap 'rmdir "$bds/.dbg-lock"' EXIT
 regions=""
@@ -26,8 +27,8 @@ props="$bds/server.properties"
 settings="level-name=$level
 level-seed=$seed
 level-type=DEFAULT
-server-port=19290
-server-portv6=19291
+server-port=$port
+server-portv6=$((port + 1))
 online-mode=false
 content-log-console-output-enabled=true"
 keys=$(sed 's/=.*//' <<<"$settings" | paste -sd'|')

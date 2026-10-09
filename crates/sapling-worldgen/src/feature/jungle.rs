@@ -71,6 +71,7 @@ pub fn vines(view: &mut View, random: &mut Mt19937, [x, _, z]: [i32; 3]) -> bool
     if top == 0 {
         top = MIN_Y + HEIGHT as i32;
     }
+    super::trace::line(|| format!("  vines at {x} {z} up to {top}"));
     let (mut cx, mut cz) = (x, z);
     for y in 64..top {
         if view.block(cx, y, cz) == Block::Air {
@@ -78,9 +79,11 @@ pub fn vines(view: &mut View, random: &mut Mt19937, [x, _, z]: [i32; 3]) -> bool
                 view.set_block(cx, y, cz, vine_facing((-dx, -dz)));
             }
         } else {
+            super::trace::line(|| format!("    {:?} at {cx} {y} {cz} moves the column", view.block(cx, y, cz)));
             cx = x + spread(random, 3);
             cz = z + spread(random, 3);
         }
     }
+    super::trace::line(|| format!("    ends at {cx} {cz}"));
     true
 }

@@ -209,6 +209,7 @@ with_multiface_blocks! {
     SeagrassTop => "seagrass" "sea_grass_type=double_top",
     BubbleColumn => "bubble_column" "drag_down=1",
     MangroveRootsWet => "mangrove_roots" "",
+    MangroveLeavesWet => "mangrove_leaves" "persistent_bit=0,update_bit=0",
     BigDripleafSouthWet => "big_dripleaf" "big_dripleaf_head=0,big_dripleaf_tilt=none,minecraft:cardinal_direction=south",
     BigDripleafWestWet => "big_dripleaf" "big_dripleaf_head=0,big_dripleaf_tilt=none,minecraft:cardinal_direction=west",
     BigDripleafNorthWet => "big_dripleaf" "big_dripleaf_head=0,big_dripleaf_tilt=none,minecraft:cardinal_direction=north",

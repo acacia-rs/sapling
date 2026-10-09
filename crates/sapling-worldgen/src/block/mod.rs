@@ -51,6 +51,9 @@ pub use plant_table::Block;
 
 use crate::structure::template::{COLLIDES, palette};
 
+/// From a multiface block to its waterlogged twin in `Block::ALL` (multiface_table.rs).
+const WET_MULTIFACE: usize = 126;
+
 /// Kelp by `kelp_age`.
 pub const KELP: [Block; 26] = [
     Block::Kelp0,
@@ -119,7 +122,7 @@ impl Block {
 
     /// Plants placed by features: no collision, no light blocking, never terrain.
     pub fn is_plant(self) -> bool {
-        self >= Block::ShortGrass && !self.is_wet_speleothem() || (Block::GlowLichen1..=Block::SculkVein63).contains(&self)
+        self >= Block::ShortGrass && !self.is_wet_speleothem() || (Block::GlowLichen1..=Block::SculkVeinWet63).contains(&self)
     }
 
     /// Pointed dripstone with water in the second layer.
@@ -130,12 +133,14 @@ impl Block {
     /// FacingID (down, up, north, south, west, east) to `multi_face_direction_bits`.
     pub const FACE_BITS: [u8; 6] = [1, 2, 16, 4, 8, 32];
 
-    /// A multiface block as its family's first variant and its face bits.
+    /// A multiface block as its family's first (dry) variant and its face bits.
     pub fn multiface(self) -> Option<(Block, u8)> {
-        [Block::GlowLichen1, Block::SculkVein1]
-            .into_iter()
-            .find(|&first| (first..=Block::with_faces(first, 63)).contains(&self))
-            .map(|first| (first, (self.index() - first.index() + 1) as u8))
+        if !(Block::GlowLichen1..=Block::SculkVeinWet63).contains(&self) {
+            return None;
+        }
+        let offset = self.index() - Block::GlowLichen1.index();
+        let first = if (offset / 63) % 2 == 0 { Block::GlowLichen1 } else { Block::SculkVein1 };
+        Some((first, (offset % 63 + 1) as u8))
     }
 
     /// The variant of the family of `first` with face bits `bits` (1..=63).
@@ -145,7 +150,7 @@ impl Block {
 
     /// Plants that stand in water: BDS saves them with water in the second layer.
     pub fn is_waterlogged(self) -> bool {
-        self >= Block::Seagrass || matches!(self, Block::Template(i) if palette()[i as usize].2)
+        self >= Block::Seagrass || (Block::GlowLichenWet1..=Block::SculkVeinWet63).contains(&self) || matches!(self, Block::Template(i) if palette()[i as usize].2)
     }
 
     pub fn is_kelp(self) -> bool {
@@ -160,11 +165,11 @@ impl Block {
 
     /// Logs and leaves.
     pub fn is_wood(self) -> bool {
-        (Block::OakLog..=Block::AzaleaLeavesFlowered).contains(&self)
+        (Block::OakLog..=Block::AzaleaLeavesFlowered).contains(&self) || self == Block::MangroveLeavesWet
     }
 
     pub fn is_leaves(self) -> bool {
-        (Block::OakLeaves..=Block::AzaleaLeavesFlowered).contains(&self)
+        (Block::OakLeaves..=Block::AzaleaLeavesFlowered).contains(&self) || self == Block::MangroveLeavesWet
     }
 
     /// Blocks only structure pieces place (structure_table.rs).
@@ -188,7 +193,7 @@ impl Block {
     pub fn is_crop_block(self) -> bool {
         matches!(
             self,
-            Block::Cactus | Block::MelonBlock | Block::PumpkinSouth | Block::PumpkinWest | Block::PumpkinNorth | Block::PumpkinEast | Block::MangroveRootsWet
+            Block::Cactus | Block::MelonBlock | Block::PumpkinSouth | Block::PumpkinWest | Block::PumpkinNorth | Block::PumpkinEast | Block::MangroveRootsWet | Block::MangroveLeavesWet
         )
     }
 
@@ -197,6 +202,8 @@ impl Block {
         match self {
             Block::MangroveRootsWet => Block::MangroveRoots,
             block if block.is_wet_speleothem() => Block::ALL[block.index() - Block::PointedDripstoneWet.index() + Block::PointedDripstone.index()],
+            Block::MangroveLeavesWet => Block::MangroveLeaves,
+            block if (Block::GlowLichenWet1..=Block::SculkVeinWet63).contains(&block) => Block::ALL[block.index() - WET_MULTIFACE],
             block => block,
         }
     }
@@ -208,6 +215,9 @@ impl Block {
             block if (Block::PointedDripstone..=Block::PointedDripstoneMergeHanging).contains(&block) => {
                 Block::ALL[block.index() - Block::PointedDripstone.index() + Block::PointedDripstoneWet.index()]
             }
+            Block::MangroveLeaves => Block::MangroveLeavesWet,
+            // Worldgen sculk veins replace the water (oracle); the wet vein variants are unused.
+            block if (Block::GlowLichen1..=Block::GlowLichen63).contains(&block) => Block::ALL[block.index() + WET_MULTIFACE],
             block => block,
         }
     }
@@ -215,6 +225,10 @@ impl Block {
     /// A down-facing bud turned to `face` (FacingID 0..6).
     pub fn faced(self, face: usize) -> Block {
         Block::ALL[self.index() + face]
+    }
+
+    pub fn is_speleothem(self) -> bool {
+        (Block::PointedDripstone..=Block::SulfurSpikeMergeHanging).contains(&self)
     }
 
     /// A speleothem (`PointedDripstone` or `SulfurSpike`) of thickness 0..5 (tip, frustum, middle,
