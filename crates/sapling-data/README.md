@@ -86,6 +86,11 @@ adult's in its default state, and every table those name, with old item names re
 `ItemRegistry.bin` by a test). Fox and piglin name tables no pack holds; slimes and magma cubes, whose
 loot goes by size, have none here.
 
+## Fire immune
+
+`fire-immune.txt` (read by `mob_health.rs`): the entities whose own components hold
+`minecraft:fire_immune` in the vanilla behaviour packs, by `data/generate/fire-immune.py`.
+
 ## Liquid reactions
 
 `liquid-reactions.tsv` (read by `liquid_reaction.rs`): for each of 736 vanilla blocks, what water

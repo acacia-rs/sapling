@@ -8,7 +8,7 @@ use std::sync::{Arc, Mutex};
 use acacia_proto::nbt::Value;
 use acacia_proto::Packet;
 use acacia_proto::packets::{
-    AddEntity, AddItemEntity, EntityEvent, EntityEventEventId, LevelEvent, LevelEventEvent, LevelSoundEvent, MoveEntityDelta, RemoveEntity, SetEntityData, UpdateBlock,
+    AddEntity, AddItemEntity, EntityEvent, EntityEventEventId, LevelEvent, LevelEventEvent, LevelSoundEvent, MoveEntityDelta, RemoveEntity, SetEntityData, UpdateAttributes, UpdateBlock,
 };
 use acacia_proto::types::MetadataDictionaryItemValue as MetaValue;
 use common::stored::{actor, enter_stored, floor_with};
@@ -201,4 +201,36 @@ fn a_mob_is_pushed_moved_and_removed_and_presses_a_plate() {
     let gone = all::<RemoveEntity>(&h.tick(1));
     assert_eq!(gone.iter().map(|remove| remove.entity_id_self).collect::<Vec<_>>(), [pig.0 as i64]);
     assert_eq!((info(&mut h, pig), ask(&mut h, move |ctx| ctx.remove_entity(pig))), (None, false));
+}
+
+#[test]
+fn a_pig_in_lava_burns_is_hurt_and_dies_cooked_as_on_bds() {
+    const COOKED_PORKCHOP: i16 = 263;
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    h.enter(2, "Steve");
+    h.remote.run(|ctx| {
+        for y in 63..=66 {
+            for [dx, dz] in [[-1, 0], [1, 0], [0, -1], [0, 1]] {
+                assert!(ctx.set_block([6 + dx, y, dz], &Block::new("stone")));
+            }
+        }
+        assert!(ctx.set_block([6, 63, 0], &Block::new("stone")) && ctx.set_block([6, 64, 0], &Block::new("lava")));
+        assert!(ctx.spawn_entity("minecraft:pig", [6.5, 65.0, 0.5]).is_some());
+    });
+    let ticks: Vec<_> = (0..30).map(|_| h.tick_all().to(2).to_vec()).collect();
+    // Counted from the tick the pig is shown in.
+    let shown = ticks.iter().position(|sent| !all::<AddEntity>(sent).is_empty()).expect("a pig");
+    let ticks = &ticks[shown..];
+    let events: Vec<(usize, EntityEventEventId, i32)> = ticks.iter().enumerate().flat_map(|(tick, sent)| all::<EntityEvent>(sent).into_iter().map(move |event| (tick, event.event_id, event.data))).collect();
+    // research/captures/bds-burn.txt: fire's 1 (cause 6), then lava's 4 (cause 8) by what it adds, every 10
+    // ticks. A tick later than there: a plugin's spawn comes after the tick's move, a command's before.
+    let hurt = EntityEventEventId::HurtAnimation;
+    assert_eq!(events, [(2, hurt.clone(), 6), (4, hurt.clone(), 8), (14, hurt.clone(), 6), (14, hurt.clone(), 8), (24, hurt, 6), (24, EntityEventEventId::DeathAnimation, 0)]);
+    let healths: Vec<(usize, f32)> = ticks.iter().enumerate().flat_map(|(tick, sent)| all::<UpdateAttributes>(sent).into_iter().map(move |update| (tick, update.attributes[0].current))).collect();
+    assert_eq!(healths, [(2, 9.0), (5, 6.0), (14, 5.0), (15, 2.0), (24, 1.0), (25, 0.0)], "lava's harm is told a tick late");
+    let lit = ticks.iter().position(|sent| all::<SetEntityData>(sent).iter().any(|data| matches!(data.metadata[0].value, MetaValue::Flags(flags) if flags.0 & 1 == 1)));
+    assert_eq!(lit, Some(2));
+    let loot: Vec<i16> = ticks.concat().iter().filter(|packet| packet.id == AddItemEntity::ID).map(|packet| packet.decode::<AddItemEntity>().unwrap().item.network_id).collect();
+    assert_eq!(loot, [COOKED_PORKCHOP]);
 }

@@ -1,8 +1,10 @@
 //! Mobs, spawned through the plugin API or kept by a world folder: bodies (body.rs) that fall and
 //! collide and do nothing else, shown as BDS announced their kind (`sapling_data::add_entity`) or
 //! as they were stored; and the entity side of the handlers' context.
-// TODO: no AI, no damage; their physics are the Java game's (`Physics::MOB`); a spawned mob is
+// TODO: no AI; only lava and fire hurt them (harm.rs); their physics are the Java game's (`Physics::MOB`); a spawned mob is
 // saved with the least a compound needs, which BDS was not tried on.
+
+mod harm;
 
 use bevy_ecs::prelude::*;
 use bytes::Bytes;
@@ -15,6 +17,7 @@ use sapling_world::Actor;
 
 use crate::blocks::Dice;
 use crate::body::{Body, Physics};
+use harm::Health;
 use crate::components::{InLayer, Layer, NetId, Tick};
 use crate::handlers::Ctx;
 use crate::{blocks, drops, entities, inventory, mobs, orbs, worlds};
@@ -29,10 +32,13 @@ pub(crate) struct Creature {
     look: Option<Actor>,
 }
 
-fn announcement(id: u64, kind: &str, body: &Body, look: Option<&Actor>) -> Vec<Bytes> {
-    if let Some(shown) = look.and_then(|look| mobs::announcement(&Actor { position: body.at, ..look.clone() }, id)) {
+// TODO: a mob dressed as it was stored is not shown on fire to one who comes to see it burning.
+fn announcement(id: u64, kind: &str, body: &Body, look: Option<&Actor>, health: Option<&Health>) -> Vec<Bytes> {
+    let left = health.map(Health::left);
+    if let Some(shown) = look.and_then(|look| mobs::announcement(&Actor { position: body.at, health: left.or(look.health), ..look.clone() }, id)) {
         return shown;
     }
+    let on_fire = health.is_some_and(Health::is_burning);
     let options = AddEntityOptions {
         id,
         identifier: kind,
@@ -43,8 +49,8 @@ fn announcement(id: u64, kind: &str, body: &Body, look: Option<&Actor>) -> Vec<B
         mark_variant: 0,
         color: 0,
         baby: false,
-        flags: MetadataFlags1(0),
-        health: None,
+        flags: MetadataFlags1(if on_fire { MetadataFlags1::ONFIRE.0 } else { 0 }),
+        health: left,
         name: "",
     };
     vec![sapling_net::encode(&sapling_data::add_entity(&options))]
@@ -79,8 +85,9 @@ fn spawn(world: &mut World, layer: Entity, kind: &str, feet: [f32; 3]) -> Option
         return None;
     }
     let body = Body::new(feet, [0.0; 3], size);
-    let entity = entities::spawn(world, layer, kind, body, feet, |id| Some(announcement(id, kind, &body, None)))?;
+    let entity = entities::spawn(world, layer, kind, body, feet, |id| Some(announcement(id, kind, &body, None, None)))?;
     world.entity_mut(entity).insert(Creature { look: None });
+    give_health(world, entity, kind, None);
     let id = world.get::<NetId>(entity)?.0;
     entities::after_announcing(world, layer, [x, y, z], vec![spawn_sound(id, kind, &body)]);
     // Kept by the world folder as BDS numbers actors: a high word that differs, a counter below.
@@ -95,10 +102,18 @@ pub(crate) fn from_storage(world: &mut World, layer: Entity, actor: Actor, uniqu
     let Some(size) = sapling_data::mob_size(&actor.identifier) else { return false };
     let body = Body::new(actor.position, [0.0; 3], size);
     let kind = actor.identifier.clone();
-    let Some(entity) = entities::spawn(world, layer, &kind, body, actor.position, |id| Some(announcement(id, &kind, &body, Some(&actor)))) else { return false };
+    let Some(entity) = entities::spawn(world, layer, &kind, body, actor.position, |id| Some(announcement(id, &kind, &body, Some(&actor), None))) else { return false };
+    give_health(world, entity, &kind, actor.health);
     world.entity_mut(entity).insert(Creature { look: Some(actor) });
     entities::keep(world, entity, layer, unique_id, compound);
     true
+}
+
+/// Gives a mob of a kind that dies the health BDS announced its kind with, `left` of it.
+fn give_health(world: &mut World, entity: Entity, kind: &str, left: Option<f32>) {
+    if let Some(max) = sapling_data::mob_health(kind).filter(|_| !NO_DEATH.contains(&kind)) {
+        world.entity_mut(entity).insert(Health::new(max, left));
+    }
 }
 
 /// A mob that died at the tick it holds; it goes [`DYING`] ticks after.
@@ -120,20 +135,29 @@ fn kill(world: &mut World, id: EntityId) -> bool {
         mobs::remove(world, entity);
         return true;
     }
-    let now = world.resource::<Tick>().0;
-    world.entity_mut(entity).insert(Dying(now));
-    let death = EntityEvent { runtime_entity_id: id.0, event_id: EntityEventEventId::DeathAnimation, data: 0, fire_at_position: None };
-    blocks::to_viewers(world, layer, body.at.map(|c| c.floor() as i32), &[sapling_net::encode(&death)]);
-    if world.get::<Layer>(layer).is_some_and(|layer| layer.world.level().rules.on(MOB_LOOT)) {
-        leave_loot(world, layer, &kind, body.at);
-    }
+    die(world, entity, layer, id.0, &kind, &body);
     true
 }
 
-fn leave_loot(world: &mut World, layer: Entity, kind: &str, [x, y, z]: [f32; 3]) {
+/// The mob dies where it is: seen to, and leaving its loot, cooked if it was on fire.
+fn die(world: &mut World, entity: Entity, layer: Entity, id: u64, kind: &str, body: &Body) {
+    let now = world.resource::<Tick>().0;
+    world.entity_mut(entity).insert(Dying(now));
+    let on_fire = world.get_mut::<Health>(entity).is_some_and(|mut health| {
+        health.end();
+        health.is_burning()
+    });
+    let death = EntityEvent { runtime_entity_id: id, event_id: EntityEventEventId::DeathAnimation, data: 0, fire_at_position: None };
+    entities::tell_viewers(world, entity, layer, body.at.map(|c| c.floor() as i32), vec![sapling_net::encode(&death)]);
+    if world.get::<Layer>(layer).is_some_and(|layer| layer.world.level().rules.on(MOB_LOOT)) {
+        leave_loot(world, layer, kind, on_fire, body.at);
+    }
+}
+
+fn leave_loot(world: &mut World, layer: Entity, kind: &str, on_fire: bool, [x, y, z]: [f32; 3]) {
     let loot = {
         let mut dice = world.get_resource_or_insert_with(Dice::default);
-        sapling_data::mob_loot(kind, &mut || dice.fraction())
+        sapling_data::mob_loot(kind, on_fire, &mut || dice.fraction())
     };
     let Some(registry) = world.get::<Layer>(layer).map(|layer| layer.world.registry()) else { return };
     let stacks: Vec<_> = loot.into_iter().filter_map(|(name, count)| inventory::stored(&Item::new(name, count.min(64) as u8), registry)).collect();
@@ -142,7 +166,7 @@ fn leave_loot(world: &mut World, layer: Entity, kind: &str, [x, y, z]: [f32; 3])
     }
 }
 
-/// Moves every spawned mob a tick; a dead one goes once it has died.
+/// Moves every spawned mob a tick and burns it where it is in fire; a dead one goes once it has died.
 pub(crate) fn tick(world: &mut World) {
     let now = world.resource::<Tick>().0;
     let dead: Vec<Entity> = world.query::<(Entity, &Dying)>().iter(world).filter(|(_, dying)| now >= dying.0 + DYING).map(|(entity, _)| entity).collect();
@@ -152,10 +176,16 @@ pub(crate) fn tick(world: &mut World) {
     let all: Vec<(Entity, Entity, u64, String)> =
         world.query_filtered::<(Entity, &InLayer, &NetId, &entities::Kind), With<Creature>>().iter(world).map(|(entity, layer, id, kind)| (entity, layer.0, id.0, kind.0.clone())).collect();
     for (entity, layer, id, kind) in all {
+        let Some(start) = world.get::<Body>(entity).copied() else { continue };
         let Some((body, packets)) = entities::step(world, entity, layer, id, &Physics::MOB, 0.0) else { continue };
-        if !packets.is_empty() {
-            blocks::to_viewers(world, layer, body.at.map(|c| c.floor() as i32), &packets);
-            let shown = announcement(id, &kind, &body, world.get::<Creature>(entity).and_then(|creature| creature.look.as_ref()));
+        blocks::to_viewers(world, layer, body.at.map(|c| c.floor() as i32), &packets);
+        let before = world.get::<Health>(entity).map(|health| (health.left(), health.is_burning()));
+        if harm::tick(world, entity, layer, id, &kind, &start, &body, world.get::<Dying>(entity).is_some()) {
+            die(world, entity, layer, id, &kind, &body);
+        }
+        let health = world.get::<Health>(entity);
+        if !packets.is_empty() || health.map(|health| (health.left(), health.is_burning())) != before {
+            let shown = announcement(id, &kind, &body, world.get::<Creature>(entity).and_then(|creature| creature.look.as_ref()), health);
             mobs::reannounce(world, entity, shown);
         }
     }

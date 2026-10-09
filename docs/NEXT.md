@@ -25,8 +25,10 @@ Each needs its rule looked up first (`bdsre` for BDS, the Java jar for data), th
 
 1. **Water and lava for entities**: items float and burn, orbs bob and are thrown out of lava,
    mobs sink, as on BDS (`body/liquid.rs`, `docs/research/water-movement.md` 7 and 8); concrete
-   powder sets (`bds_command_probe concrete`). Left: mobs set on fire and hurt in lava (no mob
-   health yet).
+   powder sets (`bds_command_probe concrete`). Mobs have health, burn and are hurt in
+   lava and fire, and die cooked (`creatures/harm.rs`, `docs/research/mob-damage.md`,
+   `bds_command_probe burn`). Left: every other harm (falls, drowning, a block the mob is in,
+   attacks), the fizz of a fire put out by water, a stored mob's health written back.
 2. **Redstone**: plates, buttons, levers, blocks of redstone and torches power dust, lamps, doors,
    trapdoors, gates and hopper locks (`blocks/redstone.rs`, `docs/research/redstone.md`; plugins
    read `ctx.power_at`), checked against `bds_command_probe redstone`. Circuits a world folder

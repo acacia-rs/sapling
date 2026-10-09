@@ -171,4 +171,5 @@ def main():
     print(f"{len(found)} entities, {len(used)} tables -> {OUT}")
 
 
-main()
+if __name__ == "__main__":
+    main()

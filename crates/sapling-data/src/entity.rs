@@ -123,6 +123,17 @@ pub fn mob_size(identifier: &str) -> Option<[f32; 2]> {
     Some([size(Key::BoundingboxWidth)?, size(Key::BoundingboxHeight)?])
 }
 
+/// The full health of a mob of `identifier`, as BDS announced one.
+pub fn mob_health(identifier: &str) -> Option<f32> {
+    RECORDED.get(identifier)?.grown.attributes.iter().find(|attribute| attribute.name == HEALTH).map(|attribute| attribute.max)
+}
+
+/// The flags BDS announced a grown mob of `identifier` with; [`plain`]'s for a kind not recorded.
+pub(crate) fn mob_flags(identifier: &str) -> MetadataFlags1 {
+    let recorded = RECORDED.get(identifier).and_then(|kind| kind.grown.metadata.iter().find_map(|item| if let Value::Flags(flags) = &item.value { Some(flags.0) } else { None }));
+    MetadataFlags1(recorded.unwrap_or(MetadataFlags1::HAS_COLLISION.0 | MetadataFlags1::AFFECTED_BY_GRAVITY.0))
+}
+
 /// A falling block: BDS names the block by its network id in `Variant`, after `Health` 1; the
 /// hitbox is Java's.
 pub fn add_falling_block(id: u64, position: [f32; 3], velocity: [f32; 3], block_hash: u32) -> AddEntity {

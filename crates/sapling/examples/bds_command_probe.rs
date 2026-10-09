@@ -1,8 +1,10 @@
 //! Runs a drill of command lines as an operator bot while a second operator watches, and prints
 //! what each was answered: CommandOutput in full, Text, GameRulesChanged as `rule=value`, and the
 //! drill's own packets. The ground truth for sapling's vanilla commands (`sapling::vanilla`).
-//! `cargo run -p sapling --example bds_command_probe -- <server> [gamerule|kill|replaceitem|defaults|concrete|water|lava|redstone|redstone-phase|conductors|shapes|burnout|repeater-facing|repeaters|comparators|observer-facing|observers|piston-facing|pistons]` (offline mode,
+//! `cargo run -p sapling --example bds_command_probe -- <server> [gamerule|kill|replaceitem|defaults|concrete|water|lava|redstone|redstone-phase|conductors|shapes|burnout|repeater-facing|repeaters|comparators|observer-facing|observers|piston-facing|pistons|burn]` (offline mode,
 //! operators by default; `gamerule` when none is named).
+#[path = "shared/burn_drill.rs"]
+mod burn;
 #[path = "shared/dump.rs"]
 #[allow(dead_code)]
 mod dump;
@@ -209,7 +211,7 @@ fn owned(lines: &[&str]) -> Vec<String> {
 #[tokio::main(flavor = "current_thread")]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut args = std::env::args().skip(1);
-    let server = args.next().ok_or("usage: bds_command_probe <server> [gamerule|kill|replaceitem|defaults|concrete|water|lava|redstone|redstone-phase|conductors|shapes|burnout|repeater-facing|repeaters|comparators|observer-facing|observers|piston-facing|pistons]")?;
+    let server = args.next().ok_or("usage: bds_command_probe <server> [gamerule|kill|replaceitem|defaults|concrete|water|lava|redstone|redstone-phase|conductors|shapes|burnout|repeater-facing|repeaters|comparators|observer-facing|observers|piston-facing|pistons|burn]")?;
     let (lines, shown, settle) = match args.next().as_deref() {
         None | Some("gamerule") => (owned(GAMERULE), &[][..], SETTLE),
         Some("kill") => (owned(KILL), KILL_SHOWN, KILL_SETTLE),
@@ -229,6 +231,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         Some("observers") => (redstone::observers(), redstone::REDSTONE_SHOWN, KILL_SETTLE),
         Some("piston-facing") => (redstone::piston_facing(), redstone::PISTON_SHOWN, KILL_SETTLE),
         Some("pistons") => (redstone::pistons(), redstone::PISTON_SHOWN, KILL_SETTLE),
+        Some("burn") => (burn::burn(), burn::BURN_SHOWN, burn::BURN_SETTLE),
         Some("shapes") => (redstone::shapes(), redstone::REDSTONE_SHOWN, redstone::CONDUCTORS_SETTLE),
         Some(other) => return Err(format!("no drill {other}").into()),
     };
@@ -241,7 +244,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let start = Instant::now();
     for line in &lines {
         println!("## /{line}");
-        actor.client().command(line);
+        if !line.is_empty() {
+            actor.client().command(line);
+        }
         let end = tokio::time::Instant::now() + settle;
         loop {
             tokio::select! {

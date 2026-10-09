@@ -41,8 +41,7 @@ impl Physics {
     /// A mob that does not walk, as BDS moved an armour stand: its speed is worked out before the
     /// move (research/captures/bds-water.txt). The drag across, 0.91 in the air and 0.6 x 0.91 on
     /// the ground, is the Java game's (`LivingEntity.travel`).
-    // TODO: BDS sets it on fire in lava and hurts it every 10 ticks (research/captures/bds-lava.txt);
-    // mobs have no health here.
+    /// What lava and fire do to one: creatures/harm.rs.
     pub const MOB: Physics = Physics { gravity: 0.08, air_drag: 0.91, fall_drag: 0.98, ground_drag: 0.546, bounce: 0.0, liquid: InLiquid::Sinks, burns: false };
 }
 
@@ -73,7 +72,7 @@ impl Body {
         self.liquid
     }
 
-    fn bounds(&self) -> Bounds {
+    pub(crate) fn bounds(&self) -> Bounds {
         let half = self.size[0] / 2.0;
         ([self.at[0] - half, self.at[1], self.at[2] - half], [self.at[0] + half, self.at[1] + self.size[1], self.at[2] + half])
     }

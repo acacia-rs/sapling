@@ -139,11 +139,28 @@ pub(crate) fn step(world: &mut World, entity: Entity, layer: Entity, id: u64, ph
     let flags = told.flags(id, std::array::from_fn(|axis| body.at[axis] - start.at[axis]), lifted, physics.burns && in_lava);
     let packets: Vec<Bytes> = flags.into_iter().chain(told.update(id, [x, y + lift, z], body.motion, body.on_ground)).chain(splash).collect();
     // Not yet announced: this move follows the announcement, in the same batch, as on BDS.
-    if world.get::<Born>(entity).is_some_and(|born| born.0 == world.resource::<Tick>().0) {
+    if is_new(world, entity) {
         after_announcing(world, layer, body.at.map(|c| c.floor() as i32), packets);
         return Some((body, Vec::new()));
     }
     Some((body, packets))
+}
+
+fn is_new(world: &World, entity: Entity) -> bool {
+    world.get::<Born>(entity).is_some_and(|born| born.0 == world.resource::<Tick>().0)
+}
+
+/// Sends `packets` about the entity to the viewers of `cell`, after its announcement when it
+/// appeared this tick.
+pub(crate) fn tell_viewers(world: &mut World, entity: Entity, layer: Entity, cell: [i32; 3], packets: Vec<Bytes>) {
+    if packets.is_empty() {
+        return;
+    }
+    if is_new(world, entity) {
+        after_announcing(world, layer, cell, packets);
+    } else {
+        view::to_viewers(world, layer, cell, &packets);
+    }
 }
 
 /// The world, kind and body of every entity that has had a tick of its own: on BDS one appearing
