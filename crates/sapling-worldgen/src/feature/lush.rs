@@ -1,7 +1,7 @@
-//! The lush caves features BDS builds in code (registered in 1482f4580). None is decompiled yet:
-//! each follows its Java analogue (`CaveFeatures`). The draws of the moss vegetation and the
-//! dripleaf were fitted to the oracle's placing-generator values; the vines' and the root system's
-//! gates and draws are guesses.
+//! The lush caves features BDS builds in code (registered in 1482f4580): moss vegetation (149d99710),
+//! the dripleaf (148299bc0), single-face vines (149d9a0f0) and the azalea root system (149d660d0).
+//! The first two were fitted to the oracle's placing-generator values and agree with their decompiles'
+//! draws; their survival tests are still plants.rs's.
 
 use super::cave::pick_weighted;
 use super::data::FEATURES;
@@ -10,7 +10,6 @@ use super::plants::can_survive;
 use super::tree::common::vine_facing;
 use super::view::View;
 use crate::block::Block;
-use crate::terrain::MIN_Y;
 
 #[derive(Debug, Clone, Copy)]
 pub enum Lush {
@@ -111,8 +110,8 @@ fn vine(view: &mut View, [x, y, z]: [i32; 3]) -> bool {
     if view.block(x, y, z) != Block::Air {
         return false;
     }
-    // Java's side order: north, south, west, east.
-    for (dx, dz) in [(0, -1), (0, 1), (-1, 0), (1, 0)] {
+    // 149d9a0f0's side order: north, east, south, west.
+    for (dx, dz) in [(0, -1), (1, 0), (0, 1), (-1, 0)] {
         if sturdy(view.block(x + dx, y, z + dz)) {
             return view.set_block(x, y, z, vine_facing((-dx, -dz)));
         }
@@ -120,51 +119,46 @@ fn vine(view: &mut View, [x, y, z]: [i32; 3]) -> bool {
     false
 }
 
-const ROOT_COLUMN_MAX: i32 = 100;
-const TREE_SPACE: i32 = 3;
-const ROOT_RADIUS: i32 = 3;
-const ROOT_ATTEMPTS: i32 = 20;
-const HANGING_RADIUS: i32 = 3;
-const HANGING_SPAN: i32 = 2;
-const HANGING_ATTEMPTS: i32 = 20;
+/// How many cells up the column a tree position is looked for (149d660d0).
+const ROOT_COLUMN_MAX: i32 = 184;
+const ATTEMPTS: i32 = 20;
 
-/// Up from the cave ceiling to the first cell with room for the tree and azalea soil under it;
-/// the tree there, rooted dirt down the column, hanging roots around the start.
+/// `RootSystemFeature::place` (149d660d0): up the column to the light heightmap, the tree at the first
+/// cell over solid ground with three open cells (air or water, not all water) where it grows; then
+/// rooted dirt around each cell of the column and hanging roots on a walk from the start.
 fn root_system(ctx: &mut Ctx, at: [i32; 3], tree: usize) -> Option<[i32; 3]> {
     let [x, y, z] = at;
-    if ctx.view.block(x, y, z) != Block::Air {
-        return None;
-    }
-    let mut placed = None;
-    for i in 0..ROOT_COLUMN_MAX {
-        let ty = y + i + 1;
-        if !tree_position(ctx.view, [x, ty, z]) || !(1..=TREE_SPACE).all(|d| ctx.view.block(x, ty + d, z) == Block::Air) {
-            continue;
+    super::trace::line(|| format!("  roots {x} {y} {z} draw {}", ctx.random.draws()));
+    let top = ctx.view.heightmap(x, z);
+    let water = |view: &View, y: i32| view.block(x, y, z).is_fluid() && !view.block(x, y, z).is_lava();
+    let open = |view: &View, y: i32| view.block(x, y, z) == Block::Air || water(view, y);
+    let mut tree_at = None;
+    for ty in y..y + ROOT_COLUMN_MAX {
+        let roomy = (0..3).all(|d| open(ctx.view, ty + d)) && !(0..3).all(|d| water(ctx.view, ty + d));
+        if ctx.view.block(x, ty - 1, z).is_solid() && roomy && FEATURES[tree].place(ctx, [x, ty, z]).is_some() {
+            tree_at = Some(ty);
+            break;
         }
-        if !sturdy(ctx.view.block(x, ty - 1, z)) {
-            return None;
-        }
-        if FEATURES[tree].place(ctx, [x, ty, z]).is_some() {
-            placed = Some(y + i);
+        if ty >= top {
             break;
         }
     }
-    let top = placed?;
-    for cy in y..top {
-        for _ in 0..ROOT_ATTEMPTS {
-            let dx = jitter(ctx, ROOT_RADIUS);
-            let dz = jitter(ctx, ROOT_RADIUS);
+    for cy in y + 1..=tree_at? {
+        for _ in 0..ATTEMPTS {
+            let dx = jitter(ctx, 3);
+            let dz = jitter(ctx, 3);
             if root_replaceable(ctx.view.block(x + dx, cy, z + dz)) {
                 ctx.view.set_block(x + dx, cy, z + dz, Block::DirtWithRoots);
             }
         }
     }
-    for _ in 0..HANGING_ATTEMPTS {
-        let dx = jitter(ctx, HANGING_RADIUS);
-        let dy = jitter(ctx, HANGING_SPAN);
-        let dz = jitter(ctx, HANGING_RADIUS);
-        let p = [x + dx, y + dy, z + dz];
-        if p[1] > MIN_Y && ctx.view.block(p[0], p[1], p[2]) == Block::Air && sturdy(ctx.view.block(p[0], p[1] + 1, p[2])) {
+    // The offsets add up: BDS never returns to the start (x and z drawn before y).
+    let mut p = at;
+    for _ in 0..ATTEMPTS {
+        p[0] += jitter(ctx, 3);
+        p[2] += jitter(ctx, 3);
+        p[1] += jitter(ctx, 2);
+        if ctx.view.block(p[0], p[1], p[2]) == Block::Air && ctx.view.block(p[0], p[1] + 1, p[2]).is_solid() {
             ctx.view.set_block(p[0], p[1], p[2], Block::HangingRoots);
         }
     }
@@ -176,20 +170,9 @@ fn jitter(ctx: &mut Ctx, bound: i32) -> i32 {
     a - ctx.random.next_int(bound)
 }
 
-fn tree_position(view: &View, [x, y, z]: [i32; 3]) -> bool {
-    let block = view.block(x, y, z);
-    (block == Block::Air || super::tree::common::is_replaceable_plant(block)) && azalea_grows_on(view.block(x, y - 1, z))
-}
-
-fn azalea_grows_on(block: Block) -> bool {
-    super::plants::is_soil(block) || matches!(block, Block::Sand | Block::RedSand | Block::Clay | Block::Snow | Block::PowderSnow)
-}
-
-/// Java's `azalea_root_replaceable`: overworld stone, dirt, sand, clay, gravel and the lush ground.
+/// The root system's replaceable list (VanillaBlockTypeIds 14ccd2758, 17 blocks).
 fn root_replaceable(block: Block) -> bool {
-    matches!(
-        block,
-        Block::Stone | Block::Granite | Block::Diorite | Block::Andesite | Block::Tuff | Block::Deepslate | Block::Sand | Block::RedSand
-            | Block::Clay | Block::Gravel | Block::MossBlock | Block::Terracotta | Block::Snow | Block::PowderSnow
-    ) || super::plants::is_soil(block) && block != Block::Mud
+    use Block::*;
+    matches!(block, Clay | MossBlock | Sand | Gravel | Dirt | Podzol | DirtWithRoots | GrassBlock | Mycelium | Stone | Deepslate | Tuff | ShortGrass | Fern)
+        || matches!(block.name(), "cave_vines" | "cave_vines_head_with_berries") || block == MossCarpet
 }

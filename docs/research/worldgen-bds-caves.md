@@ -35,23 +35,43 @@ list (VanillaBlockTypeIds lists 14ccd2770: dirt, coarse dirt, stone, tuff, deeps
   (149e94de0) replaces open cells and spikes, stalagmites below the light heightmap.
 - MT `nextGaussian` is the polar method in f32 with the second value cached in the generator (`+0x9d4`).
 - A spike set into a water source keeps the water in the second layer (`LevelChunk::setBlock` 1409f59e0;
-  `Block::into_water`, the `PointedDripstone...Wet` blocks). It stays solid and is not "water" to a column scan,
-  but `canPlacePool` counts it: the column after a pool with a stalagmite in it may pool too (oracle, cherry grove
-  5538,4,-7219).
+  `Block::into_water`, the `PointedDripstone...Wet` blocks). Every "air or water" test of these features reads
+  the block's material and then the extra block's (world-gen API slot 0x30 = `BlockSource::getExtraBlock`
+  1415f6880), so a waterlogged spike, lichen or plant is open: scans pass it, `growPointedDripstone` overwrites
+  it, a cluster may start in it, `canPlacePool` counts it as water. (Until 2026-10-09 the port kept wet spikes
+  closed to scans; opening them took 185 cells off the tree regions.) The lava tests read both layers too.
+- No speleothem feature reads a heightmap except the large one's stalagmite cap, which is the pre-worldgen
+  heightmap (worldgen-bds-features.md, "Heightmaps").
 
 ## Wrapper features (feature/cave.rs, multiface.rs, blob.rs)
-- `snap_to_surface` (143bb7720, search 143bb7ac0): surfaces ceiling, floor, random_horizontal (sides 2, 5, 3, 4
-  shuffled forward with raw draws `% (i+1)`), random_vertical (`nextBoolean`). From an open origin the scan walks
-  allowed open cells (air if `allow_air_placement`, water if `allow_underwater_placement`) to a sturdy face (or an
+- `snap_to_surface` (143bb7720, search 143bb7ac0): surfaces ceiling, floor, `random_horizontal` (enum 3: the
+  ceiling or the floor, a horizontal surface, by one `nextBoolean`, true = ceiling) and `random_vertical` (enum 2:
+  the walls, sides 2, 5, 3, 4 shuffled forward with three raw draws `% (i+1)`). The port had the two swapped until
+  2026-10-09, so every `small_dripstone` snapped to walls and spent three draws where BDS spends one: found by
+  decoding BDS's snap origins (breakpoint log) against the rule's draw stream, 7 draws apart instead of 9. From
+  an open origin (air, or water by the block's material only) the scan walks allowed open cells (air if
+  `allow_air_placement`, water if `allow_underwater_placement`) to a supporting face (or an
   `allowed_surface_blocks` block); from a solid origin it walks solid cells (`allow_non_air_placement`) to an open
   one. Every scanned cell must keep the origin's biome (`scanColumnWithinPosBiome`). Placement is beside the
   surface, or in it with `embed_in_surface` (offset `solid ^ embed`).
+- "Supporting face" in snaps, vegetation patches, moss vegetation and multiface placement is
+  `BlockType::canProvideSupport(block, face, 2)`: stairs and slabs by their support component (148a897e0,
+  148a89b20), leaves never (140076010), everything else 141a24e20 = the solid-blocking property (`BlockType`
+  +0x130 bit 0x40000), or bit 0x20000 for the top face. `lush::sturdy` approximates it: spikes, structure fixtures
+  (rails, torches, fences, bars, doors...), chests and amethyst buds give none. A snap that reaches a spike stops
+  there and fails (live BDS, savanna plateau 9064,44,-6203).
 - `multiface_feature` (143b83e50, attach 143b84880): origin air or water; the first face (of the pushed list:
   floor, ceiling, walls N E S W) whose neighbour `can_place_on` takes decides; success only when the cell changes,
   then one `nextFloat` (spread gate). Else each face's neighbour, retried `search_range` times with the same result.
   BDS shuffles faces with a thread-local generator and spreads with it too: the two oracle runs disagree on faces;
-  sapling keeps the pushed order. A spread (1465e9360, after `nextFloat < chance_of_spreading`) tries the four
+  sapling keeps the pushed order. That order also picks the neighbour cell when the origin itself takes no face,
+  so which cell gets the lichen is thread-local too wherever two neighbour cells could (pale garden: ours under
+  the ceiling at -7516,49,-4568, BDS's one cell west in both oracle runs and elsewhere in a third run).
+  A spread (1465e9360, after `nextFloat < chance_of_spreading`) tries the six
   directions in thread-local order: sapling places it only when exactly one direction can take it.
+  Not ported: attach skips a face whose block lies in another chunk that is still generating (state <= 1), or
+  that is generated but not finished (2..5) and inside a stronghold or a second structure (two HashedStrings at
+  0x14ccbb900/930 asked of the dimension's +0x1e0 object, slot 0x150).
 - Multiface spreading (feature/spreader.rs): `getSpreadFromFaceTowardDirection` 1465e8f20 tries same cell (face
   `to`), same plane (cell + `to`, face `from`), around the edge (cell + `from` + `to`, face opposite `to`);
   `getStateForPlacement` 148b68b30 adds a face only over a sturdy neighbour. Configs: lichen 14a8b32f0 (into air,
@@ -87,6 +107,24 @@ list (VanillaBlockTypeIds lists 14ccd2770: dirt, coarse dirt, stone, tuff, deeps
   fits (no liquid above y 4, solid or the liquid below, no avoided block), fill, then the solid border becomes the
   border block (y >= 4 by `nextInt(2) != 0`). Potent sulfur via search_feature.
 - Ice patch (149e8de60) and ice spike (149e8e4e0): Java 1.12's; packed ice also takes grass blocks.
+- Lush caves' hardcoded features (feature/lush.rs; decompiled 2026-10-09, vtables 14a98adf0, 14a928e30, 14a928e60,
+  14a98ad70):
+  - `moss_vegetation_feature` (149d99710): the weighted pick first (`nextInt(sum)`), then air at the position,
+    support under it, the block's `mayPlace` (vtable 0x210); double plants get their upper half written at once.
+  - `dripleaf_feature` (148299bc0): `nextFloat < 0.2` small (then `nextInt(4)` for its direction), else
+    `nextInt(4)` picks `big_dripleaf_{south,west,north,east}_feature` (0, 1, 2, 3).
+  - `vines_single_face_feature` (149d9a0f0): air only; sides north, east, south, west; a side holds a vine when it
+    is solid-blocking, blocks motion and is not invisible bedrock.
+  - `azalea_root_system_feature` (149d660d0): up the column from the position to the light heightmap (at most 184
+    cells), the azalea tree at each cell over solid ground whose three cells are air or water (not all three
+    water) until one grows; then per cell from one above the position up to the tree, 20 tries at
+    `nextInt(3) - nextInt(3)` in x then z turn a block of list 0x14ccd2758 into rooted dirt (clay, moss block, sand,
+    gravel, dirt, podzol, rooted dirt, grass block, mycelium, stone, deepslate, tuff, cave vines and their berry
+    head, moss carpet, short grass, fern); then 20 hanging-root tries on a walk that never returns to the start
+    (x, z by `nextInt(3)` pairs, then y by a `nextInt(2)` pair), each into air under a solid block. The port had
+    guessed Java's shape: other rows, other list, draws in x, y, z from the start each time.
+- `vegetation_patch_feature` (143bc8310) and `growing_plant_feature` (144c15200) match their decompiles (checked
+  2026-10-09; a growing plant passes water of any depth where `allow_water`).
 
 ## Oracle (2026-10-08, BDS 1.26.52.3, cells left to later stages or wrong, by family)
 

@@ -18,7 +18,8 @@ rewrites `server.properties` and the pack under the first).
 One JSON object, `{"breakpoints": [...]}`; the fields are listed in the script's docstring. What each is for:
 - `filter` on a `BlockPos` argument keeps the log to one tree or one cell: `["r8", 8, [[x, z]]]` for features
   (`place(this, result, ctx)`: the position is at ctx+8, the random at ctx+0x18), `["rdx", 0, ...]` for
-  `BlockSource::setBlock` (1415f6ae0: rdx position, r8 block). `{"box": [x0, z0, x1, z1]}` takes an area.
+  `BlockSource::setBlock` (1415f6ae0: rdx position, r8 block). `{"box": [x0, z0, x1, z1]}` takes an area,
+  `{"boxes": [...]}` several (one run over many single-chunk regions).
 - `strings: [["rax", 3]]` names a `Block*` (three pointer hops reach `minecraft:<name>`); air prints unrelated
   names (a wall or pumpkin string), so read it as "air" when the same pointer shows for obviously empty cells.
 - `backtrace` is exact (dbghelp `StackWalk64` over the exe's unwind data). `stack` only scans stack words and
@@ -49,15 +50,32 @@ One JSON object, `{"breakpoints": [...]}`; the fields are listed in the script's
   face in r9) inside a box, beside the feature's own entry; the per-call end columns against
   `examples/feature_trace` name the call whose draws differ, and the raw draws name by how many.
 
+- Is a feature in sync, call for call: log its entry and the entries of what it calls with one filter box around
+  the chunk's 3x3 (`snap_to_surface` 143bb7720, pointed/cluster/large speleothems 149d62d10/149d61dc0/149e94510,
+  `growPointedDripstone` 14829e980 with r8/r9 = facing/height at rdx, vegetation patch 143bc8310 and its accepted
+  cell at 143bc8468 = `[rbp+0x68]` with the depth at `[rbp+0x84]`, growing plant 144c15200), run
+  `examples/feature_trace` on the same chunk and give both to `scripts/dbg_calls.py`. The first differing call
+  names the try; the number of raw draws between two calls (the scatter's next position decoded from the rule's
+  stream) says how many draws BDS spent in between. A phase-0 chunk run as a one-chunk region sees bare terrain, as
+  our model of it does: when every call matches there, what the oracle shows for that chunk comes from BDS's run
+  (same-phase neighbours decorated before it, thread-local draws), not from the port.
+- In which order chunks were decorated: one entry breakpoint with a box 100 blocks wider than the region, and
+  `scripts/dbg_order.py`. Cherry grove's 4x4 region decorated 241 chunks, outer ones first, and all
+  856 neighbour pairs kept the parity phases.
+- Reading the run's world: `<out dir>/world` opens like an oracle world (`examples/bds_blocks`, `BDS_LIST=<name>`
+  lists cells). A run over many regions under the debugger can miss the script's load deadline ("tiles failed"):
+  the hits are complete, the saved world is not.
+
 `WORLDGEN_PORT` picks the server port (default 19290) so two sessions' copies can run at once. A run holds about
 0.5 GB; on 2026-10-09 the harness killed one for low memory with the lock directory left behind.
 
 ## Limits
 - Breakpoints on a `push` (most function entries) are emulated and never leave memory. Others are stepped over
-  with the original byte restored for one instruction: another thread can slip through in that window.
+  with the original byte restored for one instruction while every other thread is suspended (before 2026-10-09
+  they ran on and most hits of a mid-function breakpoint were lost: 10 of about 50 patch cells showed).
 - Every hit costs a round trip through Python: a filterless breakpoint on `setBlock` is millions of hits. Filter
   by position, or break on a rarer caller.
-- In two of about a dozen runs an expected hit was absent (a tree's volume cells, a single-block try). Not
-  established whether BDS's chunk order differed in that run or the step-over window lost the hits. Repeat the
-  run before concluding anything from a missing hit.
+- In two of about a dozen early runs an expected hit was absent (a tree's volume cells, a single-block try): most
+  likely the step-over window above, since closed. A hit can still be missing because BDS's same-phase chunk order
+  differs between runs.
 - Linux BDS on testbox was not tried: its addresses differ from the Windows decompile's.
