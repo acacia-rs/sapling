@@ -66,6 +66,8 @@ type Biomes<'a> = &'a dyn Fn(i32, i32) -> Arc<ChunkBiomes>;
 #[derive(Clone, Copy)]
 pub struct Inputs<'a> {
     pub loaded: Load<'a>,
+    /// Chunks as `loadChunk` left them, before the structure stage.
+    pub carved: Load<'a>,
     pub biomes: Biomes<'a>,
     pub surface: &'a dyn Fn(i32, i32) -> i32,
     /// A chunk's post-process generator after its lava lake (monster_room.rs).
@@ -137,7 +139,12 @@ impl Features {
         self.writes.get(source, || {
             let phase_limit = phase(source);
             let base = |x: i32, z: i32| self.before((x, z), phase_limit, inputs);
-            let mut view = View::new(source, &base);
+            // A chunk's heightmap is recomputed when it loads and when its decoration ends, never in between.
+            let frozen = |x: i32, z: i32| match phase((x, z)) {
+                p if p < phase_limit => self.before((x, z), p + 1, inputs),
+                _ => (inputs.carved)(x, z),
+            };
+            let mut view = View::new(source, &base).with_frozen_heights(&frozen);
             view.on_write = liquid::write_hook();
             monster_room::monster_rooms((inputs.after_lake)(source.0, source.1), source, &mut view);
             decorate::decorate_chunk(&self.seed, source, inputs, &mut view);
