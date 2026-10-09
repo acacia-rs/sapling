@@ -84,7 +84,7 @@ impl Dump {
             unported.map(|(kind, _, _)| format!("{}*", kind.name())).collect::<Vec<_>>().join(",")
         };
         let cell = |c: &BdsCell| format!("{}[{}]{}", c.block, c.states, c.liquid.as_deref().map_or(String::new(), |l| format!("+{l}")));
-        let block = |b: Block| format!("{}[{}]{}", b.name(), b.states(), if b.is_waterlogged() { "+water" } else { "" });
+        let block = |b: Block| format!("{}[{}]{}", b.name(), b.states(), b.second_layer().map_or(String::new(), |l| format!("+{}", l.name())));
         let stable = if stable { "S" } else { "U" };
         let (before, ours, bds, twin) = (block(before), block(ours), cell(bds), cell(twin));
         let out = self.out.as_mut().unwrap();

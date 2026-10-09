@@ -36,9 +36,7 @@ impl BlendedNoise {
     /// The blended value at every cell corner, unscaled (Java's value times 128). `origin` is
     /// the grid's first corner in cell units.
     pub fn fill(&self, origin: [f32; 3]) -> Box<CellGrid> {
-        let main = fill_octaves(&self.main, origin, |f| [MAIN_XZ_SCALE * f, MAIN_Y_SCALE * f]);
-        let min = fill_octaves(&self.min_limit, origin, |f| [XZ_SCALE * f, XZ_SCALE * f]);
-        let max = fill_octaves(&self.max_limit, origin, |f| [XZ_SCALE * f, XZ_SCALE * f]);
+        let [main, min, max] = self.parts(origin);
         let mut out = Box::new([0.0f32; CELL_COUNT]);
         for i in 0..CELL_COUNT {
             let low = min[i] * 0.001_953_125;
@@ -52,6 +50,16 @@ impl BlendedNoise {
             };
         }
         out
+    }
+
+    /// The main, lower and upper octave sums (BDS's three stack buffers; examples/density_dump_diff.rs).
+    #[doc(hidden)]
+    pub fn parts(&self, origin: [f32; 3]) -> [Box<CellGrid>; 3] {
+        [
+            fill_octaves(&self.main, origin, |f| [MAIN_XZ_SCALE * f, MAIN_Y_SCALE * f]),
+            fill_octaves(&self.min_limit, origin, |f| [XZ_SCALE * f, XZ_SCALE * f]),
+            fill_octaves(&self.max_limit, origin, |f| [XZ_SCALE * f, XZ_SCALE * f]),
+        ]
     }
 }
 

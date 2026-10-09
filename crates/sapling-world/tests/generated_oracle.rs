@@ -39,7 +39,7 @@ fn generated_column_matches_bds_wherever_the_generator_does() {
             let bds_wet = bds_liquid != registry.air_id();
             biomes_agree += usize::from(theirs.biome(wx, y, wz) == Some(biomes.biome(x, y, z)));
             let same = bds_block.0.strip_prefix("minecraft:") == Some(generated.name()) && bds_block.1 == generated.states();
-            if !same || bds_wet != generated.is_waterlogged() {
+            if !same || bds_wet != generated.second_layer().is_some() {
                 continue;
             }
             matching += 1;

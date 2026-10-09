@@ -53,7 +53,7 @@ fn slot(dx: i32, dz: i32) -> Option<usize> {
 /// (`Block` +0xa5). Leaves and water do; plants, bamboo, cacti, mangrove roots, snow layers and
 /// speleothems do not (the saved heightmaps of the oracle worlds, examples/saved_heightmaps.rs).
 fn blocks_light(block: Block) -> bool {
-    let clear = matches!(block, Block::Bamboo | Block::BambooSmallLeaves | Block::BambooLargeLeaves | Block::Cactus | Block::MangroveRoots | Block::SnowLayer);
+    let clear = matches!(block, Block::Bamboo | Block::BambooSmallLeaves | Block::BambooLargeLeaves | Block::Cactus | Block::MangroveRoots) || block.is_snow_layer();
     let thin = block.is_plant() && !block.is_crop_block() || block.is_speleothem() || clear;
     block != Block::Air && (!thin || block.is_waterlogged())
 }

@@ -17,6 +17,7 @@ fn passable(view: &View, [x, y, z]: [i32; 3]) -> bool {
     let block = view.block(x, y, z);
     block == Block::Air
         || block.is_fluid()
+        || block.is_snow_layer()
         || matches!(
             block,
             Block::ShortGrass | Block::TallGrass | Block::TallGrassTop | Block::Fern | Block::LargeFern | Block::LargeFernTop | Block::Deadbush | Block::SnowLayer

@@ -9,6 +9,8 @@ config: {"breakpoints": [{"va": "0x143b7ff60", "name": "place", "regs": ["rax"],
           "strings": [["rax", 3]], "backtrace": 12, "stack": 100}]}
 filter: three ints at [reg+off] are x, y, z; the hit matches when (x, z) is in the list, or inside
   {"box": [x0, z0, x1, z1]}. No filter: every hit matches. filter2: two ints (a ChunkPos) in the list.
+dump: [[reg, off, size], ...]: on a matching hit, writes each range to mem-<name>-<pos>-<i>.bin (a later hit
+  at the same position overwrites it).
 dump_on_return: ["rdx", size]: on a matching hit, remembers the pointer in the register and writes `size`
   bytes from it to dump-<n>-<name>-<pos>.bin when the call returns (an output buffer).
 mem: struct formats read at [reg+off]. strings: printable strings within N pointer hops of a register (a Block*
@@ -228,6 +230,9 @@ class Debugger:
             for reg, depth in bp.get("strings", []):
                 parts.append(f"{reg}->{self.strings(ctx[reg], depth)}")
             self.log.write(f"hit {bp['name']} t{tid} pos={pos} match={match} {' '.join(parts)}\n")
+        for i, (reg, off, size) in enumerate(bp.get("dump", []) if match else []):
+            with open(f"{self.out}/mem-{bp['name']}-{'_'.join(map(str, pos or ()))}-{i}.bin", "wb") as f:
+                f.write(self.mem(ctx[reg] + off, size))
         if match and "dump_on_return" in bp:
             reg, size = bp["dump_on_return"]
             ret = struct.unpack("<Q", self.mem(ctx["rsp"], 8))[0]

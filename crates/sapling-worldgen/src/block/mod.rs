@@ -42,6 +42,7 @@ mod cave_table;
 mod structure_table;
 #[macro_use]
 mod multiface_table;
+mod layers;
 mod plant_table;
 
 use std::collections::HashMap;
@@ -186,7 +187,7 @@ impl Block {
 
     /// Solid for movement: everything but air, fluids, snow layers and the plants without collision.
     pub fn blocks_motion(self) -> bool {
-        self.is_solid() && self != Block::SnowLayer || self.is_crop_block()
+        self.is_solid() && !self.is_snow_layer() || self.is_crop_block()
     }
 
     /// The feature blocks that are full blocks: they block motion and light.
@@ -203,6 +204,7 @@ impl Block {
             Block::MangroveRootsWet => Block::MangroveRoots,
             block if block.is_wet_speleothem() => Block::ALL[block.index() - Block::PointedDripstoneWet.index() + Block::PointedDripstone.index()],
             Block::MangroveLeavesWet => Block::MangroveLeaves,
+            block if block.is_snow_layer() => Block::SnowLayer,
             block if (Block::GlowLichenWet1..=Block::SculkVeinWet63).contains(&block) => Block::ALL[block.index() - WET_MULTIFACE],
             block => block,
         }
