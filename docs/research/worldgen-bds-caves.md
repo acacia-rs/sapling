@@ -209,9 +209,10 @@ dripstone. What moved it, in order of size:
 What the rest is. Phase-0 roots of the split were run alone under the debugger (one-chunk regions,
 `scripts/dbg_calls.py`). Of eleven in one batch, six match BDS call for call (594,-348; 562,-388; 240,-112;
 -70,76; -58,-174; -84,-126), two diverge at a glow lichen of ours that the run did not have (at the snap origin
-9573,26,-5535; under the ceiling at 9506,98,-5587), one at a snap that fails in BDS for a reason not seen (78,6:
-the batch's world was not saved), one at stronghold terrain (BDS has air at -1439,-3,-2010, one above our
-corridor; 9 such cells in the region) and one at a rail our snap took for a floor (no draw involved; fixed).
+9573,26,-5535; under the ceiling at 9506,98,-5587), one at a snap that failed in that run and succeeds, with all
+102 calls matching, when the chunk is run again alone (78,6: two BDS runs differ), one at stronghold terrain (BDS
+has air at -1439,-3,-2010, one above our corridor; 9 such cells in the region) and one at a rail our snap took
+for a floor (no draw involved; fixed).
 Singly: -66,82 (ancient city) and the mansion's lush chunk -508,998 match in every call; meadow's 372,-510
 diverges at a lichen BDS spread to 5965,23,-8150 in that run and in the oracle's twin and to the next cell in the
 oracle's main run. So the "deterministic" column is run-dependent as far as it was sampled: a phase-0 chunk

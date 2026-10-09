@@ -60,8 +60,9 @@ One JSON object, `{"breakpoints": [...]}`; the fields are listed in the script's
   our model of it does: when every call matches there, what the oracle shows for that chunk comes from BDS's run
   (same-phase neighbours decorated before it, thread-local draws), not from the port.
 - In which order chunks were decorated: one entry breakpoint with a box 100 blocks wider than the region, and
-  `scripts/dbg_order.py`. Cherry grove's 4x4 region decorated 241 chunks, outer ones first, and all
-  856 neighbour pairs kept the parity phases.
+  `scripts/dbg_order.py`. For cherry grove's 4x4 region clusters ran in 241 chunks, the whole 17 by 15 box
+  (so BDS decorates at least six chunks beyond a region), outer ones first, and all 856 neighbour pairs kept the
+  parity phases.
 - Reading the run's world: `<out dir>/world` opens like an oracle world (`examples/bds_blocks`, `BDS_LIST=<name>`
   lists cells). A run over many regions under the debugger can miss the script's load deadline ("tiles failed"):
   the hits are complete, the saved world is not.
