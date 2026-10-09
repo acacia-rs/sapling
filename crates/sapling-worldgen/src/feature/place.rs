@@ -50,6 +50,7 @@ impl Feature {
             Feature::SurfaceThreshold(threshold) => threshold.place(ctx, at),
             Feature::PartiallyExposedBlob(blob) => blob.place(ctx, at),
             Feature::Pool(pool) => pool.place(ctx, at),
+            Feature::Fossil(fossil) => placed(fossil.place(ctx, at)),
             Feature::Unported => None,
         }
     }

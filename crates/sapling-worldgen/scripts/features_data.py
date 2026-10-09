@@ -10,7 +10,7 @@ from blocks_data import NotPorted, block, blocks
 ORDERS = {'xyz', 'xzy', 'yxz', 'yzx', 'zxy', 'zyx'}
 PORTED = {'minecraft:ore_feature', 'minecraft:scatter_feature', 'minecraft:aggregate_feature', 'minecraft:sequence_feature',
           'minecraft:weighted_random_feature', 'minecraft:single_block_feature', 'minecraft:tree_feature', 'minecraft:search_feature',
-          'minecraft:geode_feature'} | cave_data.PORTED
+          'minecraft:geode_feature', 'minecraft:fossil_feature'} | cave_data.PORTED
 _HANDWRITTEN = {**legacy_data.LEGACY, **cave_data.LEGACY}
 # Features BDS builds in code (registered in 1482f4580), with the parameters it passes them.
 _SOIL = 'needs: &[Block::Water], replaces: &[Block::Dirt, Block::CoarseDirt, Block::GrassBlock]'
@@ -205,6 +205,8 @@ class Features:
                     f'required: {int(body.get("required_successes", 1))} }})')
         if kind == 'minecraft:geode_feature':
             return self.geode(body)
+        if kind == 'minecraft:fossil_feature':
+            return f'Feature::Fossil(Fossil {{ ore: {block(body["ore_block"])}, max_empty_corners: {int(body["max_empty_corners"])} }})'
         if kind in cave_data.PORTED:
             return cave_data.rust(kind, body, self.index)
         raise NotPorted(kind)

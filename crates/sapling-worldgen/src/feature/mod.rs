@@ -13,6 +13,7 @@ mod decorate;
 mod disk;
 mod element;
 mod flowers;
+mod fossil;
 mod freeze;
 mod geode;
 mod ice_spike;

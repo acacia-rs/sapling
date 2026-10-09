@@ -1,5 +1,6 @@
 //! The shapes of transcribed feature rules and features (data/, scripts/features_to_rust.py).
 
+pub use super::fossil::Fossil;
 pub use super::cave_spec::{GrowingPlant, Multiface, PartiallyExposedBlob, SculkPatch, SnapToSurface, Surface, SurfaceThreshold, VegetationPatch};
 pub use super::lush::Lush;
 pub use super::pool::Pool;
@@ -143,6 +144,8 @@ pub enum Feature {
     PartiallyExposedBlob(PartiallyExposedBlob),
     /// `LakeFeature` placed by a rule (pool.rs).
     Pool(Pool),
+    /// `minecraft:fossil_feature` (fossil.rs).
+    Fossil(Fossil),
     /// A feature sapling does not port: places nothing, but its rule still draws its scatter,
     /// whose `math.random` comes from the generator all rules of the chunk share.
     Unported,
