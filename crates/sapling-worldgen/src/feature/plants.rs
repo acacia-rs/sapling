@@ -70,10 +70,14 @@ fn is_dry_soil(block: Block) -> bool {
         )
 }
 
-/// Whether `block` may stand at `at`; a double plant's lower half also needs air above.
+/// Whether `block` may stand at `at` (`BlockType::mayPlace`): the cell can be built over, and a
+/// double plant's lower half also needs air above.
 pub fn may_place(view: &View, [x, y, z]: [i32; 3], block: Block) -> bool {
     let double = matches!(block, Block::TallGrass | Block::LargeFern | Block::Sunflower | Block::Lilac | Block::RoseBush | Block::Peony);
-    can_survive(view, [x, y, z], block) && (!double || view.block(x, y + 1, z) == Block::Air)
+    let there = view.block(x, y, z);
+    // A bee nest searching up a mangrove meets the tree's own roots (oracle: the root stays).
+    let open = there == Block::Air || there.is_fluid() || there == Block::SnowLayer || super::tree::common::is_replaceable_plant(there);
+    open && can_survive(view, [x, y, z], block) && (!double || view.block(x, y + 1, z) == Block::Air)
 }
 
 /// Whether `block` survives at `at`: plants on soil, dry plants on sand and terracotta too, sugar

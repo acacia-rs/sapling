@@ -19,18 +19,32 @@ const NEAR: i32 = 6;
 
 pub struct Dump {
     out: Option<BufWriter<File>>,
+    terrain: Option<BufWriter<File>>,
     /// The current chunk and its BDS structure blocks, found on its first dumped cell.
     structures: Option<((i32, i32), Vec<(i32, i32, i32)>)>,
 }
 
 impl Dump {
     pub fn open(world: &str, region: &str) -> Self {
-        let Some(dir) = std::env::var_os("SAPLING_ORACLE_DUMP") else { return Self { out: None, structures: None } };
+        let Some(dir) = std::env::var_os("SAPLING_ORACLE_DUMP") else { return Self { out: None, terrain: None, structures: None } };
         let name: String = region.chars().map(|c| if c.is_ascii_alphanumeric() { c } else { '_' }).collect();
         let file = File::create(std::path::Path::new(&dir).join(format!("{world}.{name}.tsv"))).expect("dump file");
         let mut out = BufWriter::new(file);
         writeln!(out, "x\ty\tz\tstable\tbefore\tours\tbds\ttwin\tfamily\tstructure\tstage\tsdist").unwrap();
-        Self { out: Some(out), structures: None }
+        let terrain = File::create(std::path::Path::new(&dir).join(format!("{world}.{name}.terrain"))).expect("terrain dump file");
+        Self { out: Some(out), terrain: Some(BufWriter::new(terrain)), structures: None }
+    }
+
+    /// A stable error of a stage before the features (scripts/terrain_residue.py): stage, blocks, and
+    /// which of our stages touched the cell (c carved, s structured, l laked, f featured, r reshaped).
+    fn terrain_cell(&mut self, (x, y, z): (i32, i32, i32), stage: Stage, ours: Block, bds: &BdsCell, context: Context) {
+        let flags: String = [(context.carved, 'c'), (context.structured, 's'), (context.laked, 'l'), (context.featured, 'f'), (context.reshaped, 'r')]
+            .iter()
+            .filter_map(|&(on, flag)| on.then_some(flag))
+            .collect();
+        let liquid = bds.liquid.as_deref().map_or(String::new(), |l| format!("+{l}"));
+        let out = self.terrain.as_mut().expect("opened with the dump");
+        writeln!(out, "{x}\t{y}\t{z}\t{stage:?}\t{}\t{}{liquid}\t{flags}", ours.name(), bds.block).unwrap();
     }
 
     /// Writes a cell our features or BDS's disagree on: stable cells judged feature or liquid errors
@@ -45,6 +59,12 @@ impl Dump {
         }
         let stable = bds == twin;
         let verdict = judge(ours, bds, at.1, context);
+        if let Verdict::Error(stage) = verdict
+            && stable
+            && !matches!(stage, Stage::Features | Stage::Liquids)
+        {
+            self.terrain_cell(at, stage, ours, bds, context);
+        }
         let liquid = stable && matches!(verdict, Verdict::Error(Stage::Liquids));
         // Fluid against solid (a spring's rock cell, a flow over a block that differs): judged as shape or carvers.
         let walled = stable && matches!(verdict, Verdict::Error(Stage::Carvers | Stage::Shape)) && (bds.is_fluid() || ours.is_fluid());

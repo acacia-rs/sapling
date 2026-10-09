@@ -152,6 +152,24 @@ impl Density {
         shape
     }
 
+    /// A column's block densities before the aquifer, from y -64 up (examples/column_density.rs).
+    #[doc(hidden)]
+    pub fn column_density(&self, x: i32, z: i32) -> Vec<f32> {
+        let climate = |qx: i32, qz: i32| -> QuartClimate { self.climate.sample(qx, qz) };
+        let cells = self.cells(x >> 4, z >> 4, &climate);
+        let (lx, lz) = ((x & 15) as usize, (z & 15) as usize);
+        let (dx, dz) = ((lx & 3) as u8, (lz & 3) as u8);
+        let mut out = Vec::new();
+        for cy in 0..GENERATED_CELLS {
+            let density = Corners::load(&cells.density[..], lx >> 2, lz >> 2, cy);
+            let noodle = cells.noodle.each_ref().map(|grid| Corners::load(&grid[..], lx >> 2, lz >> 2, cy));
+            for dy in 0..8u8 {
+                out.push(block_density(density.at(dx, dy, dz), &noodle, [dx, dy, dz], (MIN_CELL_Y + cy as i32) * 8 + dy as i32));
+            }
+        }
+        out
+    }
+
     /// Cell rows to fill in one cell column: BDS skips rows whose four corner columns are all
     /// negative above both the preliminary surface and sea level.
     fn generated_rows(&self, cells: &Cells, qx: i32, qz: i32, cx: usize, cz: usize) -> usize {
