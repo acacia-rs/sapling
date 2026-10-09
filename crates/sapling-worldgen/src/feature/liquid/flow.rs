@@ -41,9 +41,19 @@ fn delay(lava: bool) -> u64 {
 
 /// `_isLiquidBlocking` (148b5ee50) for the blocks generation leaves: solid blocks hold liquid;
 /// air, liquids, plants and snow layers give way.
-fn blocking(view: &View, p: [i32; 3]) -> bool {
+fn blocking(view: &View, p: [i32; 3], lava: bool) -> bool {
     let b = block(view, p);
-    b.is_solid() && b != Block::SnowLayer
+    if lava { b.is_solid() || lava_blocking(b) } else { b.is_solid() && b != Block::SnowLayer }
+}
+
+/// Lava asks the block type instead (vtable +0xc8, base 141a28450: the material blocks motion or is
+/// solid): these non-solid types override it to hold lava.
+fn lava_blocking(b: Block) -> bool {
+    let name = b.name();
+    b == Block::SnowLayer
+        || b.multiface().is_some()
+        || matches!(name, "azalea" | "flowering_azalea" | "big_dripleaf" | "small_dripleaf_block" | "ladder" | "waterlily" | "scaffolding")
+        || ["bamboo", "rail", "candle", "campfire"].iter().any(|part| name.contains(part))
 }
 
 /// Runs a tick if the cell still holds the liquid it was scheduled for; a tick within a block of
@@ -93,13 +103,13 @@ fn solidify(view: &mut View, at: [i32; 3]) {
     }
 }
 
-/// `setBlock` with flags 3; a waterlogged plant keeps its block (its water layer is not modelled).
+/// `setBlock` with flags 3, which updates no neighbour while decoration ticks (worldgen-bds-liquids.md,
+/// "Neighbour updates"); a waterlogged plant keeps its block (its water layer is not modelled).
 fn set(view: &mut View, at: [i32; 3], b: Block) {
     if block(view, at).is_waterlogged() {
         return;
     }
     view.set_block_quiet(at[0], at[1], at[2], b);
-    update_neighbors(view, at);
 }
 
 fn tick(view: &mut View, p: [i32; 3], lava: bool) {
@@ -138,7 +148,7 @@ fn tick(view: &mut View, p: [i32; 3], lava: bool) {
     let below = add(p, [0, -1, 0]);
     if below[1] >= MIN_Y && view.has_block(below[0], below[1], below[2]) {
         let l = liquid(view, below);
-        if !(l.is_fluid() && (l.is_lava() == lava || l.is_lava())) && !blocking(view, below) {
+        if !(l.is_fluid() && (l.is_lava() == lava || l.is_lava())) && !blocking(view, below, lava) {
             if lava && l.is_fluid() {
                 set(view, below, Block::Stone);
             } else {
@@ -147,16 +157,16 @@ fn tick(view: &mut View, p: [i32; 3], lava: bool) {
             return;
         }
     }
-    if d != 0 && !blocking(view, below) {
+    if d != 0 && !blocking(view, below, lava) {
         return;
     }
     let mut costs = [NO_DROP; 4];
     for (i, side) in SIDES.into_iter().enumerate() {
         let n = add(p, side);
-        if blocking(view, n) || depth(view, n, lava) == Some(0) {
+        if blocking(view, n, lava) || depth(view, n, lava) == Some(0) {
             continue;
         }
-        costs[i] = if !blocking(view, add(n, [0, -1, 0])) {
+        costs[i] = if !blocking(view, add(n, [0, -1, 0]), lava) {
             0
         } else {
             let own = depth(view, p, lava).unwrap_or(-1);
@@ -184,10 +194,10 @@ fn slope(view: &View, q: [i32; 3], pass: i32, from: usize, lava: bool) -> i32 {
             continue;
         }
         let n = add(q, side);
-        if blocking(view, n) || depth(view, n, lava) == Some(0) {
+        if blocking(view, n, lava) || depth(view, n, lava) == Some(0) {
             continue;
         }
-        if !blocking(view, add(n, [0, -1, 0])) {
+        if !blocking(view, add(n, [0, -1, 0]), lava) {
             return pass;
         }
         if pass < limit {
@@ -202,7 +212,7 @@ fn spread_to(view: &mut View, n: [i32; 3], depth: i32, lava: bool) {
         return;
     }
     let l = liquid(view, n);
-    if l.is_fluid() && (l.is_lava() == lava || l.is_lava()) || blocking(view, n) {
+    if l.is_fluid() && (l.is_lava() == lava || l.is_lava()) || blocking(view, n, lava) {
         return;
     }
     set(view, n, Block::liquid(lava, depth as u8));
