@@ -29,8 +29,7 @@ Each needs its rule looked up first (`bdsre` for BDS, the Java jar for data), th
    health yet).
 2. **Redstone**: plates, buttons, levers, blocks of redstone and torches power dust, lamps, doors,
    trapdoors, gates and hopper locks (`blocks/redstone.rs`, `docs/research/redstone.md`; plugins
-   read `ctx.power_at`), checked against `bds_command_probe redstone`. Left: the research's open
-   checks (torch burnout), circuits a loaded world already holds,
+   read `ctx.power_at`), checked against `bds_command_probe redstone`. Left: circuits a loaded world already holds,
    repeaters, comparators, pistons and observers.
 
 ## 3. Things assumed, not verified

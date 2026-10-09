@@ -135,3 +135,30 @@ fn dust_powers_a_lamp_through_stone_soul_sand_and_a_double_slab_but_not_glass_le
         assert_eq!(when(&shown, lamp, hash("minecraft:lit_redstone_lamp")).is_some(), *lights, "{block}, as research/captures/bds-conductors.txt");
     }
 }
+
+#[test]
+fn a_torch_powering_itself_flips_15_times_and_stays_out_then_relights_and_fizzes() {
+    // As research/captures/bds-redstone-burnout.txt: on the side of a block, a block over it powering dust on the first.
+    let mut h = ready();
+    let torch = [1, 65, 8];
+    let lit = state("minecraft:redstone_torch", "torch_facing_direction=west");
+    put(&mut h, &[([0, 65, 8], "stone", ""), ([1, 66, 8], "stone", ""), ([0, 66, 8], "redstone_wire", ""), (torch, "redstone_torch", "torch_facing_direction=west")]);
+    let flips = |ticks: &[Vec<RawPacket>]| -> Vec<(usize, bool)> {
+        let of = |sent: &Vec<RawPacket>| block_changes(sent).into_iter().filter(|(pos, _)| *pos == torch).map(|(_, block)| block == lit).collect::<Vec<_>>();
+        ticks.iter().enumerate().flat_map(|(tick, sent)| of(sent).into_iter().map(move |lit| (tick, lit))).collect()
+    };
+    let fizzes = |ticks: &[Vec<RawPacket>]| ticks.iter().flat_map(|sent| all::<LevelSoundEvent>(sent)).filter(|sound| sound.sound_id.starts_with("fizz")).count();
+    let first = watch(&mut h, 80);
+    let flipped: Vec<(usize, bool)> = flips(&first).into_iter().skip(1).collect();
+    assert_eq!(flipped.len(), 15, "{flipped:?}");
+    assert!(flipped.windows(2).all(|pair| pair[1].0 == pair[0].0 + 2 && pair[1].1 != pair[0].1), "every 2 ticks: {flipped:?}");
+    assert_eq!((flipped[0].1, flipped[14].1, fizzes(&first)), (false, false, 0), "out without a fizz");
+    assert!(block_changes(&first[flipped[0].0]).contains(&([0, 66, 8], dust(15))), "the dust shows the torch as it was");
+
+    put(&mut h, &[([2, 65, 8], "stone", "")]);
+    let again = watch(&mut h, 50);
+    let flipped = flips(&again);
+    assert_eq!((flipped.len(), flipped.first().map(|flip| flip.1), flipped.last().map(|flip| flip.1), fizzes(&again)), (16, Some(true), Some(false), 1), "{flipped:?}");
+    put(&mut h, &[([2, 65, 8], "air", "")]);
+    assert_eq!(flips(&watch(&mut h, 10)), [], "not within 34 ticks of burning out");
+}

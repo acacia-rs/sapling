@@ -254,3 +254,24 @@ pub fn shapes() -> Vec<String> {
     lines.extend(std::iter::repeat_n("testforblock ~ ~-1 ~ stone".to_owned(), 4));
     lines
 }
+
+/// A torch that puts itself out (research C10): on the side of a block, a block over it powering
+/// dust on the first, a lamp past the dust. Left to burn out, then blocks put beside it and taken away.
+pub const BURNOUT: &[&str] = &[
+    "fill ~2 ~-1 ~4 ~12 ~-1 ~12 stone",
+    "fill ~2 ~ ~4 ~12 ~4 ~12 air",
+    "setblock ~6 ~ ~8 stone",
+    "setblock ~7 ~1 ~8 stone",
+    "setblock ~6 ~1 ~8 redstone_wire",
+    "setblock ~5 ~1 ~8 redstone_lamp",
+    "setblock ~7 ~ ~8 redstone_torch [\"torch_facing_direction\"=\"west\"]",
+    "testforblock ~7 ~ ~8 redstone_torch",
+    "testforblock ~7 ~ ~8 unlit_redstone_torch",
+    "setblock ~8 ~ ~8 stone",
+    "setblock ~8 ~ ~8 air",
+    "testforblock ~7 ~ ~8 unlit_redstone_torch",
+    "testforblock ~7 ~ ~8 unlit_redstone_torch",
+    "setblock ~7 ~ ~9 stone",
+    "setblock ~7 ~ ~9 air",
+    "testforblock ~7 ~ ~8 unlit_redstone_torch",
+];

@@ -3,9 +3,8 @@
 //! second tick, at its end, the circuits written to are searched again from their sources
 //! (search.rs); what changed is written into the blocks at the start of the next (apply.rs).
 // TODO: circuits a world folder holds are found only once one of their blocks is written; no
-// repeaters, comparators, pistons or observers; a torch burns out after 16 evaluations in a row
-// that flipped it, where BDS counts those that its own power flipped, and relights by the next
-// change beside it, where BDS first waits out 32.
+// repeaters, comparators, pistons or observers; a burnt torch whose loop was broken while it was
+// out still waits for a change beside it.
 
 mod apply;
 mod parts;
@@ -22,7 +21,10 @@ use parts::{Part, User};
 
 /// Game ticks between evaluations (`Dimension::tickRedstone`).
 const EVERY: u64 = 2;
+/// Evaluations a torch powering itself flips for before it stays out (research R20, C10).
 const BURNOUT: u8 = 16;
+/// Ticks a burnt torch stays out whatever changes beside it: BDS counts 17 more evaluations.
+const REIGNITE: u64 = 34;
 
 /// What to write into a block at the start of the next tick.
 #[derive(Clone, Copy, Debug)]
@@ -33,9 +35,11 @@ enum Due {
 
 #[derive(Default)]
 struct TorchState {
-    input: u8,
-    flips: u8,
-    burnt: bool,
+    /// Evaluations in a row that found it powering itself.
+    count: u8,
+    /// Whether its own power came back to it when it was last lit.
+    looped: bool,
+    burnt_at: u64,
 }
 
 #[derive(Default)]
@@ -86,7 +90,8 @@ pub(crate) fn evaluate(world: &mut World) {
     let layers: Vec<Entity> = circuits.layers.iter().filter(|(_, circuit)| !circuit.changed.is_empty() || circuit.unsettled).map(|(layer, _)| *layer).collect();
     for layer in layers {
         let Some(mut circuit) = world.resource_mut::<Circuits>().layers.remove(&layer) else { continue };
-        let due = evaluate_circuit(world, layer, &mut circuit);
+        let now = world.resource::<Tick>().0;
+        let due = evaluate_circuit(world, layer, &mut circuit, now);
         let mut circuits = world.resource_mut::<Circuits>();
         circuits.layers.insert(layer, circuit);
         circuits.due.extend(due.into_iter().map(|(pos, due)| (layer, pos, due)));
@@ -102,52 +107,53 @@ fn reader(world: &World, layer: Entity) -> impl FnMut(BlockPos) -> Part + '_ {
     }
 }
 
-fn evaluate_circuit(world: &World, layer: Entity, circuit: &mut Circuit) -> Vec<(BlockPos, Due)> {
+/// Searches from the sources as they are: what they power is written now, and a torch flips by
+/// what this search brought it, to be searched from as flipped at the next.
+fn evaluate_circuit(world: &World, layer: Entity, circuit: &mut Circuit, now: u64) -> Vec<(BlockPos, Due)> {
     let mut part = reader(world, layer);
     let changed = std::mem::take(&mut circuit.changed);
     let mut fresh = HashSet::new();
     for pos in &changed {
-        let now = part(*pos);
-        if now.is_source() {
+        let put = part(*pos);
+        if put.is_source() {
             circuit.sources.insert(*pos);
         }
-        if now.is_written() {
+        if put.is_written() {
             fresh.insert(*pos);
         }
-        // A burnt torch relights after a change beside it.
         for face in Face::ALL {
-            if let Some(torch) = circuit.torches.get_mut(&face.neighbour(*pos)) {
-                torch.burnt = false;
+            if let Some(torch) = circuit.torches.get_mut(&face.neighbour(*pos)).filter(|torch| torch.count >= BURNOUT && now >= torch.burnt_at + REIGNITE) {
+                torch.count = 0;
             }
         }
     }
     circuit.sources.retain(|pos| part(*pos).is_source());
     circuit.torches.retain(|pos, _| circuit.sources.contains(pos));
 
+    let sources: Vec<(BlockPos, Part)> = circuit.sources.iter().map(|pos| (*pos, part(*pos))).collect();
+    let power = search::search(&sources, &mut part);
     let mut due = Vec::new();
-    let mut sources = Vec::new();
-    for pos in &circuit.sources {
-        let mut source = part(*pos);
-        if let Part::Torch { lit, support } = source {
-            let torch = circuit.torches.entry(*pos).or_default();
-            let next = !torch.burnt && torch.input == 0;
-            torch.flips = if next != lit { torch.flips.saturating_add(1) } else { 0 };
-            let fizz = torch.flips >= BURNOUT;
-            torch.burnt |= fizz;
-            let next = next && !fizz;
-            if next != lit {
-                due.push((*pos, Due::Torch { lit: next, fizz }));
+    for (pos, source) in &sources {
+        let Part::Torch { lit, .. } = *source else { continue };
+        let torch = circuit.torches.entry(*pos).or_default();
+        let (input, origin) = power.torches.get(pos).copied().unwrap_or((0, *pos));
+        torch.looped = if lit { input > 0 && origin == *pos } else { torch.looped && input == 0 };
+        let next = if torch.looped {
+            torch.count = torch.count.saturating_add(1);
+            if torch.count == BURNOUT {
+                torch.burnt_at = now;
             }
-            source = Part::Torch { lit: next, support };
+            torch.count < BURNOUT && !lit
+        } else {
+            torch.count = 0;
+            input == 0
+        };
+        if next != lit {
+            due.push((*pos, Due::Torch { lit: next, fizz: torch.count >= BURNOUT }));
         }
-        sources.push((*pos, source));
     }
     circuit.unsettled = !due.is_empty();
 
-    let power = search::search(&sources, &mut part);
-    for (pos, torch) in &mut circuit.torches {
-        torch.input = power.torches.get(pos).map_or(0, |(input, _)| *input);
-    }
     let cells: HashSet<BlockPos> = power.at.keys().chain(circuit.power.keys()).chain(&fresh).copied().collect();
     for pos in cells {
         let (old, new) = (circuit.power.get(&pos).copied().unwrap_or(0), power.at.get(&pos).copied().unwrap_or(0));

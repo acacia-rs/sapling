@@ -238,7 +238,7 @@ immediate signal 148a82ae0): DirectionalProducer with `direction = mStronglyPowe
   (weakly or strongly?) — e.g. redstone block next to a solid block next to a lamp.
 - C8: done, see the end.
 - C9 `mPromotedToProducer` overwrite order (R11): block strongly powered by lever and also touched by dust.
-- C10 Torch burnout count and timing (R21), Fizz sound, reignite; fast torch clock seen by a lamp (half-pulse = 15).
+- C10: done, see the end. Not drilled: a torch clock seen through a lamp (half-pulse).
 - C11 `redstone_signal` of dust after placement next to a lit source (setup writes current strength, R16).
 - C12 Door: power one half only (top vs bottom), iron door; door sound position = which half.
 - C13 Wooden button with arrow (141a34cb0 not read).
@@ -279,3 +279,13 @@ immediate signal 148a82ae0): DirectionalProducer with `direction = mStronglyPowe
   one dust beside that dot, only the lamp opposite it. A step up to the side counts as a connection (the lamp
   straight on stays dark) unless stone over the dust cuts it; glass does not cut it. Sapling's rule by stored
   shape gives the same on all ten.
+- C10 (`bds_command_probe burnout`, research/captures/bds-redstone-burnout.txt; a torch on the side of a block,
+  a block over it, dust on the first):
+  - The torch flips at every evaluation, 2 ticks apart, from the first one after it is put: the dust written at
+    an evaluation shows the torch as it was before it, the torch block as it will be after.
+  - Put lit, it flips 15 times and is then out for good, with no sound: R20's count reaches 16 with the torch
+    already out. Relit, it flips 16 times counting the relight, and the last one, out, plays `fizz`.
+  - A block put beside it 120 ticks after it burnt out relights it at the next evaluation; one taken away 18
+    ticks after does nothing (R21: the count must first pass 32, 17 evaluations on).
+  - The lamp past the dust stays lit through the flips. After the first burnout it went out 18 ticks after the
+    dust lost its signal, not 4 as after the later ones; sapling puts it out after 4 every time.
