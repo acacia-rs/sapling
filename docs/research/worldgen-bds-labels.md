@@ -89,6 +89,17 @@ feature 143b9b76d, 1438edd8b), 0x14cd56144/46/48 origin x/y/z variable ids and 0
 142cedc30 `Block::mayPlace(region, pos, face)`, 1438ebaf0 fallen trunk, `Block` +0xa5 `mLight`, `BlockType` +0x15c
 translucency, `LevelChunk` +0xf88 highest block.
 
+Sculk-round labels (2026-10-09, read in a scratch bdsre): 148213acc/1482144e3 the structure and decoration
+`tryLock` call sites, 140a16cd0 structure task lambda (requeues when vt+0x50 returns false), 148b4265b the
+sculk conversion in the vein behaviour's `attemptUseCharge` (148b42070; replaceable set at spreader +0x30, a
+`std::set<const Block*>`), 1411a09d0 world-gen API slot 0x90 (`BlockType` vt+0x298, can be built over),
+143b84a00.. `MultifaceFeature` attach's test of the supporting block's chunk (in another chunk of state 2..5,
+a block inside a structure of the type at 0x14ccbb900, which `StrongholdFeature`'s constructor also uses, or
+0x14ccbb930 refuses the face; not ported, decoration's neighbours are past that state), 145e2d090/145e2d290/145e2d4d0 pool alias
+binding resolves, 141eeb8d0 `placeInWorld` (settings: +0 integrity, +4 seed, +8 terrain match, +9 mirror, +10
+rotation, +11/+12 skip structure blocks and jigsaws, +0x10 ignored block), 141f797b0
+`TemplateStructurePiece::postProcess` (seed = the chunk generator's seed field).
+
 Feat3 labels (2026-10-08): 14a73fa30 the decoration's IBlockWorldGenAPI vtable (forwards to its `BlockSource` at
 +8; 0xb0 = 1411a0a60 heightmap: `LevelChunk` +0xb80 i16 per column + minimum y), 1438f0d00
 `MangroveTreeRoots::placeRoots` (vtable 14a98e1f8), 1438f16f0 its root simulation, 14a681437 its facing table,

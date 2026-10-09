@@ -58,9 +58,9 @@ region's east column), so sculk is floor even where a run's cells look stable. T
   largest family in every world; worked on in worldgen/liq2, not here.
 - Liquids, carvers and structure-stage cells: near origin's Features stage is 767 of its 2590.
 - The structures world's 6582 missing: sculk veins (ancient city 3207, pillager outpost 445, trail ruins 273),
-  the jungle temple's trees and vines (1353) and the mansion's lush caves (929). Our sculk also overgrows the
-  ancient city's own blocks (deepslate bricks and tiles: 988 cells ours, 2 BDS's) although 148b47d30's list has
-  them; not resolved.
+  the jungle temple's trees and vines (1353) and the mansion's lush caves (929). Sculk over the ancient
+  city's own blocks is as common in BDS as in ours ("Ancient city sculk" below; the "988 ours, 2 BDS's" once
+  written here was a misreading).
 - Same-phase sources (jungle temple 4246, likely the mangrove chunk -499,517 and other edge cascades): two
   sources of one decoration phase are two chunks apart and both write the chunk between them. BDS decorates them
   one after the other (their 3x3 locks overlap), so the later one reads the earlier one's leaves: `VinesFeature`'s
@@ -68,12 +68,82 @@ region's east column), so sculk is floor even where a run's cells look stable. T
   ring chunk 78,6, which put one vine elsewhere, which let a jungle tree grow that ours refuses, which desynced
   the chunk's tree loop. sapling gives a source only the earlier phases' writes; following same-phase order
   would chain across the world, and that order comes from the load pattern, not the seed. Treat as floor.
-- Fallen logs over water (trial chambers chunk 2,20): BDS places the stump and no log where ours floats two
-  logs on the surface; the stump's vine roll then differs. `fits` reads the same as ours; not resolved.
+- Fallen logs over water (trial chambers chunk 2,20): fixed, see "Structures-world residue".
 - Mangrove chunk -499,517: one bee-nest mangrove draws another height; the tree before it in the rule's
   generator spends a different number of draws. Not traced further.
 
+## Structures-world residue (2026-10-09, worldgen/sculk)
+The items above marked "not resolved", and what a live server said about each. Wrong + missing, 3e2439e -> c3bd232:
+
+| world | wrong | missing | lichen/sculk (twin) | scans (twin) | deterministic |
+|---|---|---|---|---|---|
+| structures | 31830 -> 31365 | 6563 -> 6482 | 16165 (15386) | 4882 | 17346 -> 16800 |
+| tree regions | 9373 -> 9362 | 801 | 1233 (932) | 2160 | 6781 -> 6770 |
+| far out | 335 -> 329 | 33 | 28 (20) | 0 | 340 -> 334 |
+
+Near origin (2081 + 342), the negative seed (98 + 15) and the biome regions (10895 + 1636) did not move.
+By region: trial chambers 574 -> 268, mansion 3872 -> 3725, ocean ruins 236 -> 189, pillager outpost 2772 ->
+2747, trail ruins 1113 -> 1104, jungle temple 4242 -> 4231. Structure tallies (non-air precision / recall): trial
+chambers 99.75 / 99.78 -> 99.91 / 99.94 (own 100), trail ruins 99.73 / 99.40 -> 100 / 100, pillager outpost
+99.68 / 99.93 -> 100 / 100, mansion 99.907 / 99.907 -> 99.974 / 99.974, the mansion region's trial chamber own
+99.09 -> 100.
+
+### Ancient city sculk: no rule difference
+"988 city cells ours turns to sculk, 2 BDS does" was one line of the tally read alone. Over every cell our
+structure stage leaves a city block in (deepslate bricks and tiles, cracked, polished, cobbled;
+`examples/city_sculk`), sculk in ours / BDS / BDS's twin run:
+
+| ours, BDS, twin | all three | ours + BDS | ours + twin | ours only | BDS + twin | BDS only | twin only | none |
+|---|---|---|---|---|---|---|---|---|
+| cells | 4174 | 161 | 272 | 956 | 947 | 259 | 292 | 11794 |
+
+Ours converts 5563 city cells, BDS 5541, the twin 5685: the same amount, 4335 of them the same cells. A
+breakpoint on the conversion (`SculkVeinBehaviour` 148b4265b, old block in rax) in chunk -70,78 logged 462
+conversions, 441 of them city blocks (deepslate tiles 161, bricks 146, cracked tiles 68, cracked bricks 66),
+every one from the deep dark's `sculk_patch_feature` rule (frames 143ba1747, 14580b883), none from the
+city's own patch elements, as in ours. Nothing runs before the pieces, no other tag, nothing protected.
+What differs is which cells: ours against either BDS run 2434 and 2356 cells, the two BDS runs against each
+other 984. Ours is further from BDS than BDS is from itself, so not all of it is the thread-local floor; the
+one measured bias is veins: 10195 in ours against 8850 and 8782 (inside the chunks' interior: beside sculk
+2538 against 2072, on terrain 4148 against 3210, on city blocks 890 against 1133). The spread
+(`getSpreadFromFaceTowardDirection` 1465e8f20) was re-read and agrees with ours, including the fall-through to
+the next spread type that Java lacks. Not found.
+
+### Same-phase sources and the jungle temple: load order, measured
+Lock log of the jungle temple region (worldgen-bds-debugger.md): decoration ran in parity phases for 1030 of
+1030 neighbour pairs; of same-phase pairs two apart, the lower coordinate went first in 441 and the higher in
+507. Chunk 80,6 was decorated before 78,6. The slowed server missed the script's deadline, the tile was
+retried, and BDS decorated 78,6 a second time in the same process: 8 of the 50 `VinesFeature` calls of the two
+executions differ (the first walked higher in each: its ceiling, `LevelChunk` +0xf88 of the chunks
+within 3 columns, was higher), and both differ from ours from call 13 on, where the oracle world's execution
+differs from ours in one call. One BDS, one chunk, three outcomes: floor, as assumed.
+
+### Mineshaft drift: structure post-processing has no parity
+worldgen-bds-structures.md, "Structure post-process order": half of all neighbour pairs run against the
+phases and 17% flip between two runs, so reads past the chunk cannot be matched. The frozen heightmaps did not
+change this: the read is of a neighbour's planks, not of a height.
+
+### Fixed
+- Fallen logs (`fallen_trunk` 1438ebaf0): the descent and the fit test ask the world-gen API's slot 0x90
+  (1411a09d0 -> `BlockType` vt+0x298, "can be built over"), true for liquids. Over a pond the log sinks to the
+  bed and, as in trial chambers chunk 2,20, usually does not fit there: a stump and no log.
+- Trial chambers: spawner pool aliases are drawn and v2 templates convert four kinds of state their own way
+  (worldgen-bds-jigsaw.md, "Pool aliases", "V2 states").
+- Walls and outposts: worldgen-bds-templates.md ("Walls", "Pillager outposts").
+
+### Left in the structures world
+- The cobblestone and lava beside the trial chambers (x 32..44, y -46..-40, z 336..340; 41 cells) is lava
+  meeting water, flowing in from ring chunk 1,20, which the oracle did not save. Not a monster room: no
+  spawner.
+- Ancient city: about 30 single cells where a degradation rule fell otherwise (slabs, stairs, cracked tiles),
+  and about 30 redstone cells BDS has ticked (powered repeaters, wire signal, extended pistons).
+- Mansion: 25 wall cells on chunk corners (order of structure post-processing).
+- Mineshafts everywhere (stronghold, igloo, ocean ruins, city): draw drift from reads past the chunk.
+
 ## Tools added
+- `examples/city_sculk` (city cells by who turned them to sculk, vein counts), `examples/template_states` (v2
+  template states against BDS per rotation), `examples/pieced_column` (a column before connections are
+  joined), `bds_blocks` with `BDS_LIST=1`; `feature_trace` shows monster room tries.
 - `examples/feature_trace <seed> <cx> <cz> [substring]` (feature/trace.rs): our rule tries, tree attempts, vine
   walks and writes of a source with draw ranges. `examples/source_check`: a source's writes against BDS's cells
   per target chunk (is a ring source's work in BDS?). `examples/query_noise`, `saved_heightmaps`, `saved_chunks`.

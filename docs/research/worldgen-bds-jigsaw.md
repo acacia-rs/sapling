@@ -127,8 +127,8 @@ column, piece y = -27 - anchor dy - y0 - 1, within 128 of the centre, depth 7; d
 |---|---|---|---|
 | village | 99.98% | 99.93% | one wall join |
 | ancient city | 82.2% (own 99.5%) | 99.3% | sculk patches (thread-local in BDS, see Gaps); later stages over the city |
-| trail ruins | 99.7% | 99.4% | wall joins (the old 84.7% recall counted monster-room cobblestone) |
-| trial chambers | 99.8% | 99.6% | (other starts 97.9-99.9%; geodes overwrite one in the mansion region) |
+| trail ruins | 100% | 100% | (2026-10-09, with the walls' Java sides) |
+| trial chambers | 99.91% (own 100%) | 99.94% | (2026-10-09, with aliases and v2 states; later stages over the rest) |
 | abandoned camp | 93.9 / 96.4 / 99.2% | 42.5 / 96.1 / 99.7% | podzol under a camp tree; forest rocks count as wanted |
 All 840 ruin-material cells of the trail ruin match, suspicious gravel included.
 
