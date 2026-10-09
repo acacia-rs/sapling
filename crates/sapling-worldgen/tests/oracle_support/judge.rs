@@ -24,6 +24,9 @@ pub enum Verdict {
     Match(Stage),
     Error(Stage),
     Later(&'static str),
+    /// A BDS feature or structure block (non-terrain) we lack after every stage: wrong, though the
+    /// old metric counted it as later.
+    Missing(&'static str),
 }
 
 /// What the oracle loop knows about one of our cells besides its block.
@@ -168,7 +171,7 @@ fn judge_cell(ours: Block, bds: &BdsCell, y: i32, context: Context) -> Verdict {
             return Verdict::Later("freeze pass on a column top features sapling lacks move (trees, ice spikes, icebergs)");
         }
         if bds.terrain().is_none() && !bds.is_empty() && !bds.is_fluid() {
-            return Verdict::Later("features, structures over our features (non-terrain block)");
+            return Verdict::Missing("features, structures over our features (non-terrain block)");
         }
         return Verdict::Error(Stage::Features);
     }
@@ -186,7 +189,7 @@ fn judge_cell(ours: Block, bds: &BdsCell, y: i32, context: Context) -> Verdict {
         return Verdict::Error(Stage::Carvers);
     }
     let Some(theirs) = bds.terrain() else {
-        return Verdict::Later("features, structures (non-terrain block)");
+        return Verdict::Missing("features, structures (non-terrain block)");
     };
     if matches!(ours, Block::Water | Block::Air) && matches!(theirs, Block::Ice | Block::SnowLayer) {
         return Verdict::Later("freeze pass (ice, snow layers)");

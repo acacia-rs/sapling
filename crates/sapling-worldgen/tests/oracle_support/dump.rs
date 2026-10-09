@@ -43,7 +43,7 @@ impl Dump {
             return;
         }
         let stable = bds == twin;
-        let error = matches!(judge(ours, bds, at.1, context), Verdict::Error(Stage::Features));
+        let error = matches!(judge(ours, bds, at.1, context), Verdict::Error(Stage::Features) | Verdict::Missing(_));
         let fam = [bds.block.as_str(), ours.name(), twin.block.as_str()].into_iter().find_map(family);
         if !error && (stable || fam.is_none() && !context.featured) {
             return;

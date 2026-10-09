@@ -50,6 +50,7 @@ pub struct Tally {
     matched: BTreeMap<Stage, u64>,
     errors: BTreeMap<Stage, Pairs>,
     later: BTreeMap<&'static str, Pairs>,
+    missing: BTreeMap<&'static str, Pairs>,
 }
 
 impl Tally {
@@ -62,19 +63,32 @@ impl Tally {
             Verdict::Match(stage) => *self.matched.entry(stage).or_default() += 1,
             Verdict::Error(stage) => self.errors.entry(stage).or_default().add(label(ours, bds), at),
             Verdict::Later(why) => self.later.entry(why).or_default().add(label(ours, bds), at),
+            Verdict::Missing(why) => self.missing.entry(why).or_default().add(label(ours, bds), at),
         }
     }
 
+    /// The `exact blocks` line keeps the old metric (missing cells among the later ones); the
+    /// `missing` line adds them to the wrong ones.
     pub fn print(&self) {
         let matched: u64 = self.matched.values().sum();
         let wrong: u64 = self.errors.values().map(Pairs::count).sum();
-        let later: u64 = self.later.values().map(Pairs::count).sum();
+        let missing: u64 = self.missing.values().map(Pairs::count).sum();
+        let later: u64 = self.later.values().map(Pairs::count).sum::<u64>() + missing;
         let stable = matched + wrong + later;
         println!(
             "  exact blocks: {stable} stable cells, {:.4}% identical, {wrong} wrong, {later} left to later stages; {} unstable between BDS runs",
             percent(matched, stable),
             self.unstable
         );
+        println!(
+            "  missing: {missing} BDS feature blocks we lack; {} wrong with them, {:.4}% of stable cells",
+            wrong + missing,
+            percent(wrong + missing, stable)
+        );
+        for (why, pairs) in &self.missing {
+            println!("    missing, {why}: {}", pairs.count());
+            pairs.print("      ", 6);
+        }
         for stage in [Stage::Floor, Stage::Deepslate, Stage::Veins, Stage::Surface, Stage::Carvers, Stage::Structures, Stage::Lakes, Stage::Features, Stage::Liquids, Stage::Shape] {
             let matched = self.matched.get(&stage).copied().unwrap_or(0);
             let errors = self.errors.get(&stage);
@@ -104,7 +118,7 @@ impl TopTally {
     pub fn add(&mut self, ours: Block, bds: &BdsCell, at: At, context: Context) {
         match judge(ours, bds, at.1, context) {
             Verdict::Match(_) => self.matched += 1,
-            Verdict::Later(_) => self.later += 1,
+            Verdict::Later(_) | Verdict::Missing(_) => self.later += 1,
             Verdict::Error(_) => self.errors.add(label(ours, bds), at),
         }
     }
