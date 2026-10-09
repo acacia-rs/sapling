@@ -136,6 +136,8 @@ def main():
             region = os.path.basename(file).split('.', 1)[1].rsplit('.', 1)[0]
             local = thread_local_cells(file)
             for row in rows(file):
+                if row.get('stage') in ('L', 'W'):
+                    continue
                 kind, fam, cat = classify(row)
                 if cat == 'd' and fam in SCANNING and near_thread_local(local, row):
                     cat = 'f'

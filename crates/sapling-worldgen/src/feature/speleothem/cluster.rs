@@ -165,5 +165,5 @@ fn can_pool(view: &View, blocks: &SpeleothemBlocks, [x, y, z]: [i32; 3]) -> bool
 }
 
 fn same_type(block: Block, spike: Block) -> bool {
-    (spike..=Block::ALL[spike.index() + 9]).contains(&block)
+    (spike..=Block::ALL[spike.index() + 9]).contains(&block.dry())
 }

@@ -119,7 +119,12 @@ impl Block {
 
     /// Plants placed by features: no collision, no light blocking, never terrain.
     pub fn is_plant(self) -> bool {
-        self >= Block::ShortGrass || (Block::GlowLichen1..=Block::SculkVein63).contains(&self)
+        self >= Block::ShortGrass && !self.is_wet_speleothem() || (Block::GlowLichen1..=Block::SculkVein63).contains(&self)
+    }
+
+    /// Pointed dripstone with water in the second layer.
+    pub fn is_wet_speleothem(self) -> bool {
+        self >= Block::PointedDripstoneWet
     }
 
     /// FacingID (down, up, north, south, west, east) to `multi_face_direction_bits`.
@@ -144,7 +149,7 @@ impl Block {
     }
 
     pub fn is_kelp(self) -> bool {
-        self >= Block::Kelp0
+        (Block::Kelp0..=Block::Kelp25).contains(&self)
     }
 
     /// `BlockType::mFalling` (+0x163 bit 0x10): blocks that fall when unsupported.
@@ -191,6 +196,7 @@ impl Block {
     pub fn dry(self) -> Block {
         match self {
             Block::MangroveRootsWet => Block::MangroveRoots,
+            block if block.is_wet_speleothem() => Block::ALL[block.index() - Block::PointedDripstoneWet.index() + Block::PointedDripstone.index()],
             block => block,
         }
     }
@@ -199,6 +205,9 @@ impl Block {
     pub fn into_water(self) -> Block {
         match self {
             Block::MangroveRoots => Block::MangroveRootsWet,
+            block if (Block::PointedDripstone..=Block::PointedDripstoneMergeHanging).contains(&block) => {
+                Block::ALL[block.index() - Block::PointedDripstone.index() + Block::PointedDripstoneWet.index()]
+            }
             block => block,
         }
     }
