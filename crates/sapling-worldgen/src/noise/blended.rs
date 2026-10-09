@@ -52,6 +52,12 @@ impl BlendedNoise {
         out
     }
 
+    /// Every octave's offsets, main then lower then upper (examples/octave_offsets.rs).
+    #[doc(hidden)]
+    pub fn offsets(&self) -> [Vec<[f32; 3]>; 3] {
+        [&self.main, &self.min_limit, &self.max_limit].map(|octaves| octaves.iter().map(|o| [o.xo, o.yo, o.zo]).collect())
+    }
+
     /// The main, lower and upper octave sums (BDS's three stack buffers; examples/density_dump_diff.rs).
     #[doc(hidden)]
     pub fn parts(&self, origin: [f32; 3]) -> [Box<CellGrid>; 3] {

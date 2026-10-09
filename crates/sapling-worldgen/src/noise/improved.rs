@@ -38,11 +38,14 @@ impl ImprovedNoise {
         Self::with_offsets(random, xo, yo, zo)
     }
 
-    /// BlendedNoise's octaves take `nextFloat() * 256` instead (145e29ee0).
+    /// BlendedNoise's octaves take `nextFloat() * 256` instead (145e29ee0), and the Xoroshiro
+    /// generator's virtual `nextFloat` is its 53-bit `nextDouble` rounded to f32, not Java's 24 bits:
+    /// the octave objects of a live BDS hold these offsets to the bit (examples/octave_offsets.rs).
+    /// The 24-bit float lost up to 2^-16 per offset, which the low octaves multiply by up to 32768.
     pub fn new_blended(random: &mut impl NoiseRandom) -> Self {
-        let xo = random.next_float() * 256.0;
-        let yo = random.next_float() * 256.0;
-        let zo = random.next_float() * 256.0;
+        let xo = random.next_double() as f32 * 256.0;
+        let yo = random.next_double() as f32 * 256.0;
+        let zo = random.next_double() as f32 * 256.0;
         Self::with_offsets(random, xo, yo, zo)
     }
 

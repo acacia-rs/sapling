@@ -55,6 +55,11 @@ impl Density {
         Cells { density, noodle, veins }
     }
 
+    #[doc(hidden)]
+    pub fn blended_offsets(&self) -> [Vec<[f32; 3]>; 3] {
+        self.blended.offsets()
+    }
+
     /// The blended noise's three octave sums over a chunk's corners (examples/density_dump_diff.rs).
     #[doc(hidden)]
     pub fn blended_parts(&self, chunk_x: i32, chunk_z: i32) -> [Box<CellGrid>; 3] {

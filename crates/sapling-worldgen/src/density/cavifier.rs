@@ -81,7 +81,9 @@ impl CaveNoises {
 
         let rareness = (self.pillar_rareness.sample(x, y, z) + 1.0) * 0.5;
         let rareness = rareness + rareness + 0.0;
-        let pillar_thickness = map_unit(self.pillar_thickness.sample(x, y, z), 1.1, 0.0).powf(3.0);
+        // BDS calls the CRT's `powf(t, 3)`, rounded correctly but for 1 in 16k; libm's differs per platform.
+        let t = map_unit(self.pillar_thickness.sample(x, y, z), 1.1, 0.0) as f64;
+        let pillar_thickness = (t * t * t) as f32;
         let pillar = self.pillar.sample(x * 25.0, y * 0.3, z * 25.0);
         let pillar = ((pillar + pillar) - rareness) * pillar_thickness;
         let pillar = if 0.03 < pillar { pillar } else { -f32::MAX };
