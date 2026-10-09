@@ -12,7 +12,7 @@ use std::collections::BinaryHeap;
 use super::super::BoundingBox;
 use super::super::template::Rotation;
 use super::draw::JigsawRandom;
-use super::element::{Element, JigsawInfo, Projection};
+use super::element::{Element, ElementKind, JigsawInfo, Projection};
 use super::junction::link;
 use super::{Data, Piece, Pool};
 
@@ -171,8 +171,10 @@ impl<'a, R: JigsawRandom> Assembler<'a, R> {
                 if self.variant == Variant::V2 {
                     candidates.sort_by_key(|j| std::cmp::Reverse(j.selection_priority));
                 }
+                // The v2 placer does not compare names for a feature element (its vt+0x78 says so): a tent's `down` jigsaw takes a tree.
+                let any_name = self.variant == Variant::V2 && matches!(element.kind, ElementKind::Feature(_));
                 for candidate in &candidates {
-                    if !jigsaw.can_attach(candidate) {
+                    if !jigsaw.can_attach(candidate, any_name) {
                         continue;
                     }
                     let mut origin = (target.0 - candidate.pos.0, target.1 - candidate.pos.1, target.2 - candidate.pos.2);
@@ -262,7 +264,9 @@ impl<'a, R: JigsawRandom> Assembler<'a, R> {
         if !s.allowed.iter().any(within) || s.occupied.iter().any(touches) {
             return false;
         }
-        s.occupied.push(*bb);
+        // A feature element's inverted box is kept as the 2x2x2 box at its low corner (v2 expand, 144d13b6e).
+        let inverted = self.variant == Variant::V2 && bb.x1 + 1 == bb.x0 && bb.y1 + 1 == bb.y0 && bb.z1 + 1 == bb.z0;
+        s.occupied.push(if inverted { BoundingBox::new(bb.x0, bb.y0, bb.z0, bb.x0 + 1, bb.y0 + 1, bb.z0 + 1) } else { *bb });
         true
     }
 }

@@ -109,10 +109,10 @@ pub struct JigsawInfo {
 }
 
 impl JigsawInfo {
-    /// `JigsawBlockInfo` compatibility (142fd8d10): this one's target is the other's name, they
-    /// face each other, and aligned vertical joints share their top.
-    pub fn can_attach(&self, other: &JigsawInfo) -> bool {
-        self.target == other.name && self.front == other.front.opposite() && !(self.front.vertical() && self.aligned && self.top != other.top)
+    /// `JigsawBlockInfo` compatibility (142fd8d10, v2 145e16f50): this one's target is the other's
+    /// name (`any_name` skips that), they face each other, and aligned vertical joints share their top.
+    pub fn can_attach(&self, other: &JigsawInfo, any_name: bool) -> bool {
+        (any_name || self.target == other.name) && self.front == other.front.opposite() && !(self.front.vertical() && self.aligned && self.top != other.top)
     }
 }
 
