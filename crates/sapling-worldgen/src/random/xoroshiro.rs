@@ -92,6 +92,18 @@ impl PositionalFactory {
     pub fn at(&self, x: i32, y: i32, z: i32) -> Xoroshiro {
         Xoroshiro::new(position_seed(x, y, z) as u64 ^ self.lo, self.hi)
     }
+
+    /// `at` on `wide_position_seed` (the frozen ocean builder, 1487e4536).
+    pub fn at_wide(&self, x: i32, y: i32, z: i32) -> Xoroshiro {
+        Xoroshiro::new(wide_position_seed(x, y, z) as u64 ^ self.lo, self.hi)
+    }
+}
+
+/// `Mth.getSeed` with x multiplied in 64 bits: some of BDS's copies do not wrap it in an int, which
+/// shows beyond |x| 686.
+pub fn wide_position_seed(x: i32, y: i32, z: i32) -> i64 {
+    let seed = (x as i64).wrapping_mul(3_129_871) ^ (z as i64).wrapping_mul(116_129_781) ^ y as i64;
+    seed.wrapping_mul(seed).wrapping_mul(42_317_861).wrapping_add(seed.wrapping_mul(11)) >> 16
 }
 
 /// Java `Mth.getSeed(x, y, z)`.

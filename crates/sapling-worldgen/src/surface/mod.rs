@@ -11,9 +11,11 @@ mod noise;
 mod overworld;
 mod spec;
 mod swamp;
+mod temperature;
 
 pub(crate) use biomes::surface_spec;
 pub use noise::SurfaceNoises;
+pub(crate) use temperature::{info_noise, temperature};
 
 use crate::biome::ChunkBiomes;
 use crate::block::Block;
@@ -60,7 +62,7 @@ impl SurfaceNoises {
                 let Some(spec) = biomes::surface_spec(biome) else { continue };
                 let lower = (density.preliminary_surface(wx >> 2, wz >> 2) - 8).clamp(MIN_Y, TOP_Y);
                 let mut column = Column { shape: &mut *shape, x, z, world: (wx, wz), start: (top + 1).min(TOP_Y), lower };
-                self.build_column(&mut column, &spec, &tops, random);
+                self.build_column(&mut column, biome, &spec, &tops, random);
             }
         }
         self.gradients.build_subsurface(shape, biomes, density, chunk);
@@ -81,14 +83,17 @@ impl SurfaceNoises {
         materials
     }
 
-    fn build_column(&self, column: &mut Column, spec: &SurfaceSpec, tops: &[[i32; 16]; 16], random: &mut Mt19937) {
+    fn build_column(&self, column: &mut Column, biome: u32, spec: &SurfaceSpec, tops: &[[i32; 16]; 16], random: &mut Mt19937) {
         let materials = self.adjusted_materials(spec, column.world);
         let depth_noise = self.depth(column.world.0, column.world.1);
         if let Builder::Mesa(mesa) = spec.builder {
             return mesa::build(column, materials, mesa, &self.mesa, depth_noise, random);
         }
+        // The iceberg asks the biome's temperature at sea level (1487e44cb): 0.2 in a frozen ocean's warm patches.
+        let (wx, wz) = column.world;
+        let at_sea = || temperature(biome, [wx, frozen::SEA_LEVEL, wz]).unwrap_or(spec.temperature);
         match spec.builder {
-            Builder::FrozenOcean if !frozen::build_iceberg(column, &self.iceberg, spec.temperature) => return,
+            Builder::FrozenOcean if !frozen::build_iceberg(column, &self.iceberg, at_sea()) => return,
             Builder::Swamp { max_puddle_depth } => swamp::build_puddle(column, &self.puddle, max_puddle_depth),
             _ => {}
         }

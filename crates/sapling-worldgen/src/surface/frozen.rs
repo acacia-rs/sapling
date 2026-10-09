@@ -6,7 +6,7 @@ use crate::block::Block;
 use crate::noise::NormalNoise;
 use crate::random::{PositionalFactory, Xoroshiro};
 
-const SEA_LEVEL: i32 = 63;
+pub const SEA_LEVEL: i32 = 63;
 
 pub struct IcebergNoises {
     pillar: NormalNoise,
@@ -46,17 +46,19 @@ pub fn build_iceberg(column: &mut Column, noises: &IcebergNoises, temperature: f
     }
     let floor = if 2.0 < top { (SEA_LEVEL as f32 - top) + -7.0 } else { 0.0 };
     let top = if 2.0 < top { SEA_LEVEL as f32 + top } else { 0.0 };
-    let mut random = noises.positional.at(x, 0, z);
+    let mut random = noises.positional.at_wide(x, 0, z);
     let snow_limit = random.next_int_bounded(4) + 2;
     let snow_floor = SEA_LEVEL + 18 + random.next_int_bounded(10);
     let start = (column.start as f32).max(top + 1.0) as i32;
     let mut snow = 0;
     let mut y = start;
+    // Both bounds truncate (1487e470c, 1487e4713): a fractional top draws for one cell fewer.
+    let (top_y, floor_y) = (top as i32, floor as i32);
     while y >= column.lower {
         let block = column.get(y);
         let place = match block {
-            Block::Air => (y as f32) < top && random.next_float() > 0.01,
-            Block::Water => floor < y as f32 && y < SEA_LEVEL && floor != 0.0 && random.next_float() > 0.15,
+            Block::Air => y < top_y && random.next_float() > 0.01,
+            Block::Water => floor_y < y && y < SEA_LEVEL && floor != 0.0 && random.next_float() > 0.15,
             _ => false,
         };
         if place {

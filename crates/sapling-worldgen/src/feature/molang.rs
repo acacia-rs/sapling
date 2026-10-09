@@ -5,7 +5,6 @@
 
 use std::cell::RefCell;
 use std::collections::HashMap;
-use std::sync::OnceLock;
 
 use acacia_molang::{Compiler, Env, Host, Program, Query, Scratch, Structs, Value, Variable, Variables};
 
@@ -27,15 +26,9 @@ pub struct Queries {
     noise: Query,
 }
 
-/// `query.noise` (lambda 1411a24c0) and the legacy flower features' noise: one simplex octave from
-/// an MT seeded 2345, whatever the world.
+/// `query.noise` (lambda 1411a24c0) and the legacy flower features' noise: the biome info noise.
 pub fn noise() -> &'static SimplexNoise {
-    static NOISE: OnceLock<SimplexNoise> = OnceLock::new();
-    NOISE.get_or_init(|| {
-        let mut mt = Mt19937::new(2345);
-        let [a, b, c] = [mt.next_float(), mt.next_float(), mt.next_float()];
-        SimplexNoise::new([c, b, a], |bound| mt.next_int(bound as i32))
-    })
+    crate::surface::info_noise()
 }
 
 impl Host for World<'_, '_> {
