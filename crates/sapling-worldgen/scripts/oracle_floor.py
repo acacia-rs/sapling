@@ -3,8 +3,8 @@
 usage: py -3 -I oracle_floor.py <oracle log> [--regions] [<earlier log>]
 
 Columns: wrong + missing cells; cells holding a lichen or sculk block on either side (and those within
-15 blocks of a lichen or sculk cell BDS's two runs disagree on); dripstone and sulfur cells within 10
-blocks of such a cell (their column scans stop there); the deterministic residue (all but those two;
+15 blocks of a lichen or sculk cell BDS's two runs disagree on); dripstone, sulfur and lush-cave cells
+within 10 blocks of such a cell (their scans stop there); the deterministic residue (all but those two;
 the upper bound keeps the lichen and sculk cells the twin does not confirm). With an earlier log, the
 wrong + missing column shows `before -> after`.
 """

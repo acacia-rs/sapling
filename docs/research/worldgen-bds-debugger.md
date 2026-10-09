@@ -42,6 +42,16 @@ One JSON object, `{"breakpoints": [...]}`; the fields are listed in the script's
 - Comparing with sapling: `examples/source_writes` (a source chunk's writes), `examples/stages` (a column after
   each stage and per source), and the BDS log of the same feature's hits.
 
+- What a Molang query was asked: break on the call inside its lambda and read the argument struct
+  (`query.noise`: 1411a25f1, `"mem": [["rdx", 0, "ff"]]`); arguments that are not chunk corners showed the
+  origin was stale.
+- Where a walking feature stood: log a callee it runs per cell (`Block::mayPlace` 142cedc30, position in r8,
+  face in r9) inside a box, beside the feature's own entry; the per-call end columns against
+  `examples/feature_trace` name the call whose draws differ, and the raw draws name by how many.
+
+`WORLDGEN_PORT` picks the server port (default 19290) so two sessions' copies can run at once. A run holds about
+0.5 GB; on 2026-10-09 the harness killed one for low memory with the lock directory left behind.
+
 ## Limits
 - Breakpoints on a `push` (most function entries) are emulated and never leave memory. Others are stepped over
   with the original byte restored for one instruction: another thread can slip through in that window.
