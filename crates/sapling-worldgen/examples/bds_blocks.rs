@@ -17,18 +17,23 @@ fn main() {
     let (primary, _) = open(world).expect("oracle world");
     // BDS_STATES=1 counts each block with its states and liquid layer.
     let states = std::env::var_os("BDS_STATES").is_some();
+    // BDS_LIST=<substring> prints every cell whose block name contains it instead.
+    let list = std::env::var("BDS_LIST").ok();
     let mut counts: BTreeMap<String, (u32, (i32, i32, i32))> = BTreeMap::new();
     for x in n[0]..=n[3] {
         for z in n[2]..=n[5] {
             let chunk = primary.load_column(ChunkKey::new(x.div_euclid(16), z.div_euclid(16), 0)).unwrap().expect("chunk").chunk;
             for y in n[1]..=n[4] {
                 let cell = bds_cell(&primary, &chunk, x, y, z);
+                if list.as_deref().is_some_and(|wanted| cell.block.contains(wanted)) {
+                    println!("{x} {y} {z} {} [{}]", cell.block, cell.states);
+                }
                 let key = if states { format!("{} [{}]{}", cell.block, cell.states, cell.liquid.map_or(String::new(), |l| format!(" +{l}"))) } else { cell.block };
                 counts.entry(key).or_insert((0, (x, y, z))).0 += 1;
             }
         }
     }
-    for (block, (count, first)) in counts {
+    for (block, (count, first)) in counts.into_iter().filter(|_| list.is_none()) {
         println!("{count:>7} {block} first {first:?}");
     }
 }

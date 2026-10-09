@@ -173,6 +173,7 @@ impl VegetationPatch {
                     }
                 }
                 if !skip {
+                    super::trace::line(|| format!("  cell {} {} {} depth {depth}", ground[0], ground[1], ground[2]));
                     cells.push(ground);
                 }
             }
