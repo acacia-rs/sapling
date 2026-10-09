@@ -1,7 +1,7 @@
 //! Runs a drill of command lines as an operator bot while a second operator watches, and prints
 //! what each was answered: CommandOutput in full, Text, GameRulesChanged as `rule=value`, and the
 //! drill's own packets. The ground truth for sapling's vanilla commands (`sapling::vanilla`).
-//! `cargo run -p sapling --example bds_command_probe -- <server> [gamerule|kill|replaceitem|defaults|concrete|water|lava|redstone|redstone-phase|conductors|shapes|burnout|repeater-facing|repeaters|comparators|observer-facing|observers|piston-facing|pistons|burn]` (offline mode,
+//! `cargo run -p sapling --example bds_command_probe -- <server> [gamerule|kill|replaceitem|defaults|concrete|water|lava|redstone|redstone-phase|conductors|shapes|burnout|repeater-facing|repeaters|comparators|observer-facing|observers|piston-facing|pistons|burn|harm]` (offline mode,
 //! operators by default; `gamerule` when none is named).
 #[path = "shared/burn_drill.rs"]
 mod burn;
@@ -211,7 +211,7 @@ fn owned(lines: &[&str]) -> Vec<String> {
 #[tokio::main(flavor = "current_thread")]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut args = std::env::args().skip(1);
-    let server = args.next().ok_or("usage: bds_command_probe <server> [gamerule|kill|replaceitem|defaults|concrete|water|lava|redstone|redstone-phase|conductors|shapes|burnout|repeater-facing|repeaters|comparators|observer-facing|observers|piston-facing|pistons|burn]")?;
+    let server = args.next().ok_or("usage: bds_command_probe <server> [gamerule|kill|replaceitem|defaults|concrete|water|lava|redstone|redstone-phase|conductors|shapes|burnout|repeater-facing|repeaters|comparators|observer-facing|observers|piston-facing|pistons|burn|harm]")?;
     let (lines, shown, settle) = match args.next().as_deref() {
         None | Some("gamerule") => (owned(GAMERULE), &[][..], SETTLE),
         Some("kill") => (owned(KILL), KILL_SHOWN, KILL_SETTLE),
@@ -232,6 +232,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         Some("piston-facing") => (redstone::piston_facing(), redstone::PISTON_SHOWN, KILL_SETTLE),
         Some("pistons") => (redstone::pistons(), redstone::PISTON_SHOWN, KILL_SETTLE),
         Some("burn") => (burn::burn(), burn::BURN_SHOWN, burn::BURN_SETTLE),
+        Some("harm") => (burn::harm(), burn::BURN_SHOWN, burn::BURN_SETTLE),
         Some("shapes") => (redstone::shapes(), redstone::REDSTONE_SHOWN, redstone::CONDUCTORS_SETTLE),
         Some(other) => return Err(format!("no drill {other}").into()),
     };

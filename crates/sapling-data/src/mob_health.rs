@@ -1,17 +1,30 @@
-//! What tells viewers of a mob's health and of its being on fire, in BDS's shapes
-//! (research/captures/bds-burn.txt), and which kinds fire does nothing to (`data/fire-immune.txt`,
-//! README "Fire immune").
+//! What tells viewers of a mob's health, breath and being on fire, in BDS's shapes
+//! (research/captures/bds-burn.txt, bds-harm.txt), and what fire, falls and water do nothing to (`data/mob-traits.tsv`,
+//! README "Mob traits").
 
 use acacia_proto::packets::{SetEntityData, UpdateAttributes};
-use acacia_proto::types::{EntityProperties, MetadataDictionaryItem, MetadataDictionaryItemKey as Key, MetadataDictionaryItemType as Type, MetadataDictionaryItemValue as Value, MetadataFlags1, PlayerAttributesItem};
+use acacia_proto::types::{
+    EntityProperties, MetadataDictionaryItem, MetadataDictionaryItemKey as Key, MetadataDictionaryItemType as Type, MetadataDictionaryItemValue as Value, MetadataDictionaryItemValueDefault as Plain, MetadataFlags1,
+    PlayerAttributesItem,
+};
 
 use crate::entity::mob_flags;
 
 const HEALTH: &str = "minecraft:health";
 
-/// Whether fire and lava leave a mob of `identifier` alone.
-pub fn is_fire_immune(identifier: &str) -> bool {
-    include_str!("../data/fire-immune.txt").lines().any(|immune| immune == identifier)
+/// What does not hurt a kind of mob.
+// TODO: `no_air`, a fish out of water, is in the table and not read.
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
+pub struct MobTraits {
+    pub fire_immune: bool,
+    pub no_fall: bool,
+    pub breathes_water: bool,
+}
+
+pub fn mob_traits(identifier: &str) -> MobTraits {
+    let row = include_str!("../data/mob-traits.tsv").lines().filter_map(|row| row.split_once('\t')).find(|(name, _)| *name == identifier);
+    let has = |trait_: &str| row.is_some_and(|(_, traits)| traits.split(' ').any(|held| held == trait_));
+    MobTraits { fire_immune: has("fire_immune"), no_fall: has("no_fall"), breathes_water: has("breathes_water") }
 }
 
 /// The mob `id` has `left` of `max` health.
@@ -27,13 +40,21 @@ pub fn mob_fire_flags(id: u64, identifier: &str, on_fire: bool) -> SetEntityData
     SetEntityData { runtime_entity_id: id, metadata: vec![item], properties: EntityProperties { ints: Vec::new(), floats: Vec::new() }, tick: 0 }
 }
 
+/// The mob `id` has `air` ticks of breath left.
+pub fn mob_air(id: u64, air: i16) -> SetEntityData {
+    let item = MetadataDictionaryItem { key: Key::Air, r#type: Type::Short, legacy_type: 1, value: Value::Default(Plain::Short(air)) };
+    SetEntityData { runtime_entity_id: id, metadata: vec![item], properties: EntityProperties { ints: Vec::new(), floats: Vec::new() }, tick: 0 }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
-    fn a_strider_is_fire_immune_and_a_pig_is_not() {
-        assert!(is_fire_immune("minecraft:strider") && !is_fire_immune("minecraft:pig"));
+    fn fire_spares_a_strider_a_fall_a_chicken_and_water_a_cod() {
+        assert_eq!(mob_traits("minecraft:pig"), MobTraits::default());
+        assert!(mob_traits("minecraft:strider").fire_immune && mob_traits("minecraft:chicken").no_fall && mob_traits("minecraft:cod").breathes_water);
+        assert!(!mob_traits("minecraft:chicken").fire_immune);
     }
 
     #[test]

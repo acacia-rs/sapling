@@ -34,3 +34,17 @@ pub fn burn() -> Vec<String> {
     lines.extend([pool("stone"), "kill @e[type=iron_golem]".into(), String::new(), String::new()]);
     lines
 }
+
+/// Cows dropped from 3 to 30 blocks, one summoned under a low roof, one roofed over after two
+/// seconds, and one shut in water.
+pub fn harm() -> Vec<String> {
+    let mut lines: Vec<String> = ["kill @e[type=!player]", "", "", "fill ~2 ~-1 ~4 ~22 ~-1 ~16 stone", "fill ~2 ~ ~4 ~22 ~6 ~16 air"].map(String::from).into();
+    lines.extend(["3", "3.5", "4", "4.5", "5", "8", "14", "30"].iter().enumerate().map(|(at, height)| format!("summon cow ~{} ~{height} ~6", 3 + 2 * at)));
+    lines.extend(std::iter::repeat_n(String::new(), 4));
+    lines.extend(["kill @e[type=cow]".into(), String::new(), String::new()]);
+    cell(&mut lines, 4, 10, &["stone"], "cow", 4);
+    lines.extend(["fill ~7 ~ ~9 ~9 ~3 ~11 stone", "fill ~8 ~1 ~10 ~8 ~2 ~10 air", "summon cow ~8 ~1 ~10", "", "setblock ~8 ~2 ~10 stone", "", "", "", ""].map(String::from));
+    lines.extend(["fill ~11 ~ ~9 ~13 ~3 ~11 stone", "fill ~12 ~1 ~10 ~12 ~2 ~10 water", "summon cow ~12 ~1 ~10"].map(String::from));
+    lines.extend(std::iter::repeat_n(String::new(), 32));
+    lines
+}

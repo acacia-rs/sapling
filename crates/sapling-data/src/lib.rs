@@ -22,7 +22,7 @@ pub use block_defaults::default_properties;
 pub use block_loot::{BlockLoot, Fortune, LootRow, StateTest, Tooling, block_loot, java_block, ripe_age};
 pub use clock::{clock_state, world_clocks};
 pub use entity::{AddEntityOptions, add_entity, add_experience_orb, add_falling_block, add_painting, mob_health, mob_size};
-pub use mob_health::{is_fire_immune, mob_fire_flags, mob_health_update};
+pub use mob_health::{MobTraits, mob_air, mob_fire_flags, mob_health_update, mob_traits};
 pub use liquid_reaction::{LiquidDetection, LiquidReaction, liquid_detection};
 pub use mob_loot::mob_loot;
 pub use inventory::{block_screen,inventory_content, inventory_screen, player_hotbar};

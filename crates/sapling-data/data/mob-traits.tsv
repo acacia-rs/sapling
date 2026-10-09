@@ -1,0 +1,53 @@
+minecraft:agent	fire_immune no_fall
+minecraft:axolotl	breathes_water
+minecraft:bat	no_fall
+minecraft:bee	no_fall
+minecraft:blaze	fire_immune no_fall
+minecraft:bogged	breathes_water
+minecraft:breeze	no_fall
+minecraft:camel_husk	breathes_water
+minecraft:cat	no_fall
+minecraft:chicken	no_fall
+minecraft:cod	breathes_water no_air
+minecraft:copper_golem	no_fall
+minecraft:drowned	breathes_water
+minecraft:elder_guardian	breathes_water
+minecraft:ender_crystal	fire_immune
+minecraft:ender_dragon	fire_immune no_fall
+minecraft:frog	breathes_water
+minecraft:ghast	fire_immune no_fall
+minecraft:glow_squid	breathes_water no_air
+minecraft:guardian	breathes_water
+minecraft:happy_ghast	no_fall
+minecraft:husk	breathes_water
+minecraft:iron_golem	no_fall
+minecraft:magma_cube	fire_immune no_fall
+minecraft:nautilus	breathes_water no_air
+minecraft:npc	fire_immune no_fall
+minecraft:ocelot	no_fall
+minecraft:parched	breathes_water
+minecraft:parrot	no_fall
+minecraft:phantom	breathes_water
+minecraft:pufferfish	breathes_water no_air
+minecraft:salmon	breathes_water no_air
+minecraft:shulker	fire_immune
+minecraft:skeleton	breathes_water
+minecraft:skeleton_horse	breathes_water
+minecraft:snow_golem	no_fall
+minecraft:squid	breathes_water no_air
+minecraft:stray	breathes_water
+minecraft:strider	fire_immune
+minecraft:tadpole	breathes_water no_air
+minecraft:tropicalfish	breathes_water no_air
+minecraft:turtle	breathes_water
+minecraft:vex	fire_immune
+minecraft:warden	fire_immune
+minecraft:wither	fire_immune breathes_water
+minecraft:wither_skeleton	fire_immune breathes_water
+minecraft:zoglin	fire_immune breathes_water
+minecraft:zombie	breathes_water
+minecraft:zombie_horse	breathes_water
+minecraft:zombie_nautilus	breathes_water
+minecraft:zombie_pigman	fire_immune breathes_water
+minecraft:zombie_villager	breathes_water
+minecraft:zombie_villager_v2	breathes_water

@@ -1,10 +1,11 @@
 //! Mobs, spawned through the plugin API or kept by a world folder: bodies (body.rs) that fall and
 //! collide and do nothing else, shown as BDS announced their kind (`sapling_data::add_entity`) or
 //! as they were stored; and the entity side of the handlers' context.
-// TODO: no AI; only lava and fire hurt them (harm.rs); their physics are the Java game's (`Physics::MOB`); a spawned mob is
+// TODO: no AI; nothing attacks them (harm.rs); their physics are the Java game's (`Physics::MOB`); a spawned mob is
 // saved with the least a compound needs, which BDS was not tried on.
 
 mod harm;
+mod health;
 
 use bevy_ecs::prelude::*;
 use bytes::Bytes;
@@ -17,7 +18,7 @@ use sapling_world::Actor;
 
 use crate::blocks::Dice;
 use crate::body::{Body, Physics};
-use harm::Health;
+use health::Health;
 use crate::components::{InLayer, Layer, NetId, Tick};
 use crate::handlers::Ctx;
 use crate::{blocks, drops, entities, inventory, mobs, orbs, worlds};
@@ -66,11 +67,17 @@ const HEAD_FORWARD: f32 = 0.85;
 /// A mob's head is this much of its height up.
 const HEAD_UP: f32 = 0.85;
 
-/// The sound a mob makes as it appears, at its head as BDS places it; it faces +z (yaw 0).
-fn spawn_sound(id: u64, kind: &str, body: &Body) -> Bytes {
+/// Where a mob's head is, as BDS places it; it faces +z (yaw 0).
+fn head(kind: &str, body: &Body) -> [f32; 3] {
     let ([x, y, z], [width, height]) = (body.at, body.size);
     let forward = if ANIMALS.contains(&kind) { HEAD_FORWARD * width } else { 0.0 };
-    let position = Vec3f { x, y: y + HEAD_UP * height, z: z + forward };
+    [x, y + HEAD_UP * height, z + forward]
+}
+
+/// The sound a mob makes as it appears, at its head.
+fn spawn_sound(id: u64, kind: &str, body: &Body) -> Bytes {
+    let [x, y, z] = head(kind, body);
+    let position = Vec3f { x, y, z };
     let sound = LevelSoundEvent { sound_id: "spawn".into(), position, extra_data: -1, entity_type: kind.into(), is_baby_mob: false, is_global: false, entity_unique_id: id as i64, fire_at_position: None };
     sapling_net::encode(&sound)
 }
@@ -135,20 +142,20 @@ fn kill(world: &mut World, id: EntityId) -> bool {
         mobs::remove(world, entity);
         return true;
     }
-    die(world, entity, layer, id.0, &kind, &body);
+    let death = EntityEvent { runtime_entity_id: id.0, event_id: EntityEventEventId::DeathAnimation, data: 0, fire_at_position: None };
+    entities::tell_viewers(world, entity, layer, body.at.map(|c| c.floor() as i32), vec![sapling_net::encode(&death)]);
+    die(world, entity, layer, &kind, &body);
     true
 }
 
-/// The mob dies where it is: seen to, and leaving its loot, cooked if it was on fire.
-fn die(world: &mut World, entity: Entity, layer: Entity, id: u64, kind: &str, body: &Body) {
+/// The mob, seen to die, is dead where it is and leaves its loot, cooked if it was on fire.
+fn die(world: &mut World, entity: Entity, layer: Entity, kind: &str, body: &Body) {
     let now = world.resource::<Tick>().0;
     world.entity_mut(entity).insert(Dying(now));
     let on_fire = world.get_mut::<Health>(entity).is_some_and(|mut health| {
         health.end();
         health.is_burning()
     });
-    let death = EntityEvent { runtime_entity_id: id, event_id: EntityEventEventId::DeathAnimation, data: 0, fire_at_position: None };
-    entities::tell_viewers(world, entity, layer, body.at.map(|c| c.floor() as i32), vec![sapling_net::encode(&death)]);
     if world.get::<Layer>(layer).is_some_and(|layer| layer.world.level().rules.on(MOB_LOOT)) {
         leave_loot(world, layer, kind, on_fire, body.at);
     }
@@ -166,7 +173,7 @@ fn leave_loot(world: &mut World, layer: Entity, kind: &str, on_fire: bool, [x, y
     }
 }
 
-/// Moves every spawned mob a tick and burns it where it is in fire; a dead one goes once it has died.
+/// Moves every spawned mob a tick and hurts it by where it is; a dead one goes once it has died.
 pub(crate) fn tick(world: &mut World) {
     let now = world.resource::<Tick>().0;
     let dead: Vec<Entity> = world.query::<(Entity, &Dying)>().iter(world).filter(|(_, dying)| now >= dying.0 + DYING).map(|(entity, _)| entity).collect();
@@ -181,7 +188,7 @@ pub(crate) fn tick(world: &mut World) {
         blocks::to_viewers(world, layer, body.at.map(|c| c.floor() as i32), &packets);
         let before = world.get::<Health>(entity).map(|health| (health.left(), health.is_burning()));
         if harm::tick(world, entity, layer, id, &kind, &start, &body, world.get::<Dying>(entity).is_some()) {
-            die(world, entity, layer, id, &kind, &body);
+            die(world, entity, layer, &kind, &body);
         }
         let health = world.get::<Health>(entity);
         if !packets.is_empty() || health.map(|health| (health.left(), health.is_burning())) != before {

@@ -234,3 +234,19 @@ fn a_pig_in_lava_burns_is_hurt_and_dies_cooked_as_on_bds() {
     let loot: Vec<i16> = ticks.concat().iter().filter(|packet| packet.id == AddItemEntity::ID).map(|packet| packet.decode::<AddItemEntity>().unwrap().item.network_id).collect();
     assert_eq!(loot, [COOKED_PORKCHOP]);
 }
+
+#[test]
+fn a_cow_dropped_five_blocks_is_hurt_by_two_and_heard_landing_as_on_bds() {
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    h.enter(2, "Steve");
+    h.remote.run(|ctx| assert!(ctx.spawn_entity("minecraft:cow", [3.5, 70.0, 0.5]).is_some()));
+    let ticks: Vec<_> = (0..20).map(|_| h.tick_all().to(2).to_vec()).collect();
+    let landed = ticks.iter().position(|sent| !all::<EntityEvent>(sent).is_empty()).expect("hurt");
+    let events: Vec<_> = all::<EntityEvent>(&ticks[landed]).into_iter().map(|event| (event.event_id, event.data, event.fire_at_position.map(|at| [at.x, at.y, at.z]))).collect();
+    // research/captures/bds-harm.txt: cause 5 naming where it landed, then dust; the sounds a tick later.
+    assert_eq!(events, [(EntityEventEventId::HurtAnimation, 5, Some([3.5, 65.0, 0.5])), (EntityEventEventId::DustParticles, 0, None)]);
+    assert_eq!(all::<UpdateAttributes>(&ticks[landed]).iter().map(|update| update.attributes[0].current).collect::<Vec<_>>(), [8.0]);
+    let sounds: Vec<_> = all::<LevelSoundEvent>(&ticks[landed + 1]).into_iter().map(|sound| (sound.sound_id, sound.extra_data)).collect();
+    assert_eq!(sounds, [("fall.small".to_owned(), -1), ("fall".to_owned(), hash("minecraft:stone") as i32)]);
+}
