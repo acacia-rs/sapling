@@ -99,6 +99,22 @@ a block inside a structure of the type at 0x14ccbb900, which `StrongholdFeature`
 binding resolves, 141eeb8d0 `placeInWorld` (settings: +0 integrity, +4 seed, +8 terrain match, +9 mirror, +10
 rotation, +11/+12 skip structure blocks and jigsaws, +0x10 ignored block), 141f797b0
 `TemplateStructurePiece::postProcess` (seed = the chunk generator's seed field).
+Drip labels (2026-10-09, read in scratch bdsre-drip, not saved as labels): 149d9ab60/149d9ac10 the cluster column's
+inside/edge lambdas (`_placeColumn` lambda_12/13), 143beaf00/143beafd0/143beb050 `_findSnapPosInDirection`'s
+support/open/solid lambdas (85/86/87), 143900260 `scanColumnWithinPosBiome`'s lambda, 141a24e20
+`BlockType::canProvideSupport` (vtable 0x90; leaves 140076010), 148a897e0/148a89b20 the support component's lookup
+and its stair/slab test, 1415f65e0/1415f6880/1415f69e0 `BlockSource::{getBlock,getExtraBlock,getLiquidBlock}`
+(vtable 0x10/0x20/0x28; world-gen API 0x20/0x30), 1409f7770 `LevelChunk::setPreWorldGenHeightMap` (+0xf80; callers
+14821178e loadChunk, 148215a83 decorationPostProcessChunk), 14823028b the store into it in `_prepareHeights`,
+149d99710 moss vegetation place, 148299bc0 dripleaf place, 149d9a0f0 single-face vines place, 149d660d0 root
+system place (predicate 1438f1bb0, ctor 149d65f70), 1425e2b70 vine block by face, 1465f64a0 pale moss carpet
+placement, 144c15200 `GrowingPlantFeature::place`, 143bc8310 `VegetationPatchFeature::place` (accepted cell at
+143bc8468); block globals 0x14ccdcc50 pale_moss_carpet, 0x14ccdfb78 invisible_bedrock, 0x14cce2ec0 vine, and by
+their place in the id runs (unnamed in the initialiser) 0x14cce0778 clay, 0x14ccdb108 sand, 0x14ccda6b8 fern; lists
+0x14ccd2738 (27: leaves and replaceable plants), 0x14ccd2758 (17: root-system replaceable), 0x14ccd94d0 (spikes);
+`Material` +0 type (5 water, 6 lava), +3 blocks motion, +5 solid; `LevelChunk` +0xf0 state. The pre-worldgen
+heightmap's setter name and `LevelChunk` +0x64 (subtracted from its values: taken as the chunk's minimum height)
+are guesses.
 
 Feat3 labels (2026-10-08): 14a73fa30 the decoration's IBlockWorldGenAPI vtable (forwards to its `BlockSource` at
 +8; 0xb0 = 1411a0a60 heightmap: `LevelChunk` +0xb80 i16 per column + minimum y), 1438f0d00

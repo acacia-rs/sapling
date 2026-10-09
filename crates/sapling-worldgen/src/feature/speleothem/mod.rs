@@ -63,8 +63,9 @@ fn water(block: Block) -> bool {
     (block.is_fluid() && !block.is_lava()) || block.is_waterlogged()
 }
 
+/// Air, or water in either layer: a waterlogged spike or lichen is open to scans and to growth.
 fn empty_or_water(block: Block) -> bool {
-    block == Block::Air || water(block) && !block.is_wet_speleothem()
+    block == Block::Air || water(block)
 }
 
 fn get(view: &View, [x, y, z]: [i32; 3]) -> Block {
@@ -89,6 +90,7 @@ impl SpeleothemBlocks {
     /// tip last, each into air or water only and never lava.
     fn grow(&self, view: &mut View, at: [i32; 3], up: bool, height: i32, merge: bool) {
         let facing = usize::from(up);
+        crate::feature::trace::line(|| format!("  grow {} {} {} facing {facing} height {height}", at[0], at[1], at[2]));
         for i in 0..height.max(0) {
             let p = step(at, facing, i);
             let block = get(view, p);
@@ -111,6 +113,7 @@ impl SpeleothemBlocks {
 /// `SpeleothemFeature::place`: the tip direction from the bases above and below (both: a
 /// boolean), a patch of base blocks behind it, then one or two spikes.
 fn pointed(ctx: &mut Ctx, blocks: &SpeleothemBlocks, at: [i32; 3]) -> Option<[i32; 3]> {
+    crate::feature::trace::line(|| format!("  pointed {} {} {} draw {}", at[0], at[1], at[2], ctx.random.draws()));
     let below = blocks.is_base(get(ctx.view, step(at, 0, 1)));
     let above = blocks.is_base(get(ctx.view, step(at, 1, 1)));
     let up = match (below, above) {

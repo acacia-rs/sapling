@@ -36,11 +36,13 @@ fn water(block: Block) -> bool {
 }
 
 impl SnapToSurface {
-    /// Vertical surfaces search away from the origin's side of the surface (into the open from an
-    /// open cell); horizontal ones try the four sides in an order shuffled with raw draws.
+    /// Ceilings and floors (`random_horizontal`: one of them by a boolean) search away from the origin's
+    /// side of the surface (into the open from an open cell); walls (`random_vertical`) try the four
+    /// sides in an order shuffled with raw draws.
     pub fn place(&self, ctx: &mut Ctx, at: [i32; 3]) -> Option<[i32; 3]> {
+        super::trace::line(|| format!("  snap {} {} {} draw {}", at[0], at[1], at[2], ctx.random.draws()));
         let snapped = match self.surface {
-            Surface::RandomHorizontal => {
+            Surface::RandomVertical => {
                 let mut order = [2, 5, 3, 4];
                 for i in 1..4 {
                     let j = (ctx.random.next_u32() % (i as u32 + 1)) as usize;
@@ -96,6 +98,7 @@ impl SnapToSurface {
 
 impl VegetationPatch {
     pub fn place(&self, ctx: &mut Ctx, at: [i32; 3]) -> Option<[i32; 3]> {
+        super::trace::line(|| format!("  patch {} {} {} draw {}", at[0], at[1], at[2], ctx.random.draws()));
         let rx = self.radius.draw(ctx.random) + 1;
         let rz = self.radius.draw(ctx.random) + 1;
         let mut cells = self.ground(ctx.view, ctx.random, at, rx, rz);
@@ -170,6 +173,7 @@ impl VegetationPatch {
                     }
                 }
                 if !skip {
+                    super::trace::line(|| format!("  cell {} {} {} depth {depth}", ground[0], ground[1], ground[2]));
                     cells.push(ground);
                 }
             }
@@ -186,6 +190,7 @@ fn exposed(view: &View, [x, y, z]: [i32; 3]) -> bool {
 impl GrowingPlant {
     /// Height and age drawn first; body blocks are picked per cell, the head (with the age) last.
     pub fn place(&self, ctx: &mut Ctx, [x, y, z]: [i32; 3]) -> Option<[i32; 3]> {
+        super::trace::line(|| format!("  plant {x} {y} {z} draw {}", ctx.random.draws()));
         let range = pick_weighted(self.heights, ctx.random).unwrap_or(super::tree::spec::Range(0, 0));
         let height = range.draw(ctx.random);
         let age = self.age.draw(ctx.random);
@@ -197,7 +202,7 @@ impl GrowingPlant {
         for i in 0..height {
             let cy = y + i * step;
             let block = ctx.view.block(x, cy, z);
-            if !(block == Block::Air || self.allow_water && block == Block::Water) {
+            if !(block == Block::Air || self.allow_water && water(block)) {
                 continue;
             }
             if i == height - 1 || ctx.view.block(x, cy + step, z) != Block::Air {

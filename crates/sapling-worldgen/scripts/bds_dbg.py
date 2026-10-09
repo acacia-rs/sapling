@@ -8,7 +8,7 @@ config: {"breakpoints": [{"va": "0x143b7ff60", "name": "place", "regs": ["rax"],
           "filter": ["r8", 8, [[-5309, 5447]]], "trace": true, "log": "match"|"all"|"none",
           "strings": [["rax", 3]], "backtrace": 12, "stack": 100}]}
 filter: three ints at [reg+off] are x, y, z; the hit matches when (x, z) is in the list, or inside
-  {"box": [x0, z0, x1, z1]}. No filter: every hit matches.
+  {"box": [x0, z0, x1, z1]} or one of {"boxes": [[x0, z0, x1, z1], ...]}. No filter: every hit matches.
 mem: struct formats read at [reg+off]. strings: printable strings within N pointer hops of a register (a Block*
   shows its name; air shows unrelated names). backtrace: return addresses by StackWalk64 (exact). stack: every
   image address among the first N stack words (includes stale ones).
@@ -29,6 +29,8 @@ k32.WriteProcessMemory.argtypes = [W.HANDLE, C.c_uint64, C.c_void_p, C.c_size_t,
 k32.FlushInstructionCache.argtypes = [W.HANDLE, C.c_uint64, C.c_size_t]
 k32.GetThreadContext.argtypes = [W.HANDLE, C.c_void_p]
 k32.SetThreadContext.argtypes = [W.HANDLE, C.c_void_p]
+k32.SuspendThread.argtypes = [W.HANDLE]
+k32.ResumeThread.argtypes = [W.HANDLE]
 k32.WaitForDebugEvent.argtypes = [C.c_void_p, W.DWORD]
 k32.ContinueDebugEvent.argtypes = [W.DWORD, W.DWORD, W.DWORD]
 
@@ -191,13 +193,17 @@ class Debugger:
         bp, orig = self.bps[addr]
         ctx = Context(self.thread(tid))
         ctx["rip"] = addr
+        if self.stepping_over and not 0x50 <= orig[0] <= 0x5F and orig[0] != 0x41:
+            # Another thread is mid-step with this one asleep: run into this int3 again once it is done.
+            ctx.save()
+            return
         pos = None
         if "filter" in bp:
             reg, off, xzs = bp["filter"]
             pos = struct.unpack("<iii", self.mem(ctx[reg] + off, 12))
-            if isinstance(xzs, dict):  # {"box": [x0, z0, x1, z1]}
-                x0, z0, x1, z1 = xzs["box"]
-                match = x0 <= pos[0] <= x1 and z0 <= pos[2] <= z1
+            if isinstance(xzs, dict):  # {"box": [x0, z0, x1, z1]} or {"boxes": [[x0, z0, x1, z1], ...]}
+                boxes = xzs.get("boxes") or [xzs["box"]]
+                match = any(x0 <= pos[0] <= x1 and z0 <= pos[2] <= z1 for x0, z0, x1, z1 in boxes)
             else:
                 match = [pos[0], pos[2]] in xzs
         else:
@@ -238,15 +244,22 @@ class Debugger:
                 self.traces[tid]["file"].write(f"{self.rva(addr):x} {ctx['rax']:x}\n")
             ctx.save()
             return
+        # The other threads sleep while the original byte is back, or they would run through the breakpoint unseen.
+        others = [h for t, h in self.threads.items() if t != tid]
+        for h in others:
+            k32.SuspendThread(h)
         self.poke(addr, orig)
-        self.stepping_over[tid] = addr
+        self.stepping_over[tid] = (addr, others)
         ctx.set_trap()
         ctx.save()
 
     def on_step(self, tid):
         ctx = Context(self.thread(tid))
         if tid in self.stepping_over:
-            self.poke(self.stepping_over.pop(tid), b"\xcc")
+            addr, others = self.stepping_over.pop(tid)
+            self.poke(addr, b"\xcc")
+            for h in others:
+                k32.ResumeThread(h)
             if tid not in self.traces:
                 return
         t = self.traces[tid]

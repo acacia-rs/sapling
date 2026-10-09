@@ -53,9 +53,29 @@ Whole sculk patches come and go between BDS's runs (jagged peaks: 325 sculk cell
 region's east column), so sculk is floor even where a run's cells look stable. The saved ring chunks are all
 `FinalizedState` 2 in both runs (`examples/saved_chunks`): the ring is decorated either way.
 
+## After worldgen/drip (2026-10-09)
+The dripstone family was one bug, not floor (worldgen-bds-caves.md, "Dripstone residue": `snap_to_surface`'s
+surface names, then waterlogged spikes and supports). Oracle at the branch's end, all2 (3e2439e) -> drip:
+
+| world | identical % | wrong | missing | wrong + missing | lichen/sculk | scans (twin) | deterministic |
+|---|---|---|---|---|---|---|---|
+| near origin | 99.9975 -> 99.9975 | 2081 -> 2081 | 342 -> 342 | 2423 -> 2423 | 308 | 0 | 2115 |
+| far out | 99.9935 -> 99.9935 | 335 -> 335 | 33 -> 33 | 368 -> 368 | 28 | 0 | 340 |
+| negative seed | 99.9981 -> 99.9982 | 98 -> 98 | 15 -> 12 | 113 -> 110 | 15 | 17 | 78 |
+| biome regions | 99.9455 -> 99.9583 | 10895 -> 7499 | 1636 -> 1603 | 12531 -> 9102 | 6054 | 373 | 2675 |
+| tree regions | 99.9613 -> 99.9828 | 9373 -> 3983 | 801 -> 781 | 10174 -> 4764 | 1233 | 676 | 2855 |
+| structures | 99.9444 -> 99.9603 | 31830 -> 22114 | 6563 -> 6560 | 38393 -> 28674 | 16187 | 1575 | 10912 |
+
+The split's `scans (twin)` column fell with the errors (biome regions 1378 -> 373, tree regions 2160 -> 676,
+structures 4882 -> 1575): cells it had filed as floor because a twin disagreement lay within 10 blocks were the
+snap bug's. Treat both floor columns as "not disproved", and check a family's own precision before trusting them.
+A phase-0 chunk run alone under the debugger is the test that separates a port difference from BDS's run
+(worldgen-bds-debugger.md): the dripstone and lush roots tried after the fixes showed two port differences, a
+rail taken for a floor (fixed) and stronghold terrain one block off (structure stage).
+
 ## What the deterministic rest is
-- Dripstone clusters (stronghold, ancient city, igloo, badlands, cherry grove, meadow, savanna plateau): the
-  largest family in every world; worked on in worldgen/liq2, not here.
+- Dripstone: see above; what is left of it (biome regions 169 stable cells, tree regions 519, structures 1819)
+  follows the lichen's thread-local cell and same-phase order.
 - Liquids, carvers and structure-stage cells: near origin's Features stage is 767 of its 2590.
 - The structures world's 6582 missing: sculk veins (ancient city 3207, pillager outpost 445, trail ruins 273),
   the jungle temple's trees and vines (1353) and the mansion's lush caves (929). Sculk over the ancient

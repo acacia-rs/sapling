@@ -67,8 +67,10 @@ pub struct PartiallyExposedBlob {
 pub enum Surface {
     Ceiling,
     Floor,
-    RandomHorizontal,
+    /// A wall (a vertical surface), sides in shuffled order.
     RandomVertical,
+    /// The ceiling or the floor (a horizontal surface), by a boolean.
+    RandomHorizontal,
 }
 
 /// `minecraft:vegetation_patch_feature` (143bc8310): a patch of `ground` on a floor or ceiling,

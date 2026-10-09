@@ -59,6 +59,11 @@ impl ChunkShape {
         self.blocks[Self::index(x, y, z)] = block;
     }
 
+    /// Per column (`z * 16 + x`), one above the highest block that is not air.
+    pub(crate) fn tops(&self) -> [i16; 256] {
+        std::array::from_fn(|i| (MIN_Y..MIN_Y + HEIGHT as i32).rev().find(|&y| self.block(i % 16, y, i / 16) != Block::Air).map_or(MIN_Y, |y| y + 1) as i16)
+    }
+
     pub fn kind(&self, x: usize, y: i32, z: usize) -> CellKind {
         match self.block(x, y, z) {
             Block::Air => CellKind::Air,

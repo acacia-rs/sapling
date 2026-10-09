@@ -2,14 +2,14 @@
 
 usage: py -3 dripstone_floor.py <trace> <dump.tsv>...   (SHOW=<cx>,<cz> lists that chunk's deterministic cells)
 
-<trace> is the stderr of `examples/decorate_trace.rs` run with SAPLING_TRACE_RULES=dripstone on a tree with
-scripts/data/dripstone_trace.patch applied (FEAT, CLUSTER, POINTED and W lines); the dumps are SAPLING_ORACLE_DUMP's.
-Per (source chunk, rule) the features run in order on one generator. Each wrong cell gets an owner: the feature of
-ours that wrote it, else the smallest feature box holding it. A sequence's first owner is its first desync; it is
-floor when a trigger lies in that feature's scan box (strict) or an earlier feature's (lenient): a lichen or sculk
-difference (ours vs BDS, or BDS vs its twin), a dripstone cell the twin disagrees on, or an error owned by an
-earlier-decorated sequence already judged floor. ROOT marks deterministic desyncs with no earlier sequence's
-error in the box.
+<trace> is the output of `examples/decorate_trace <seed> dripstone <regions...>` (FEAT, CLUSTER, SNAP and W lines);
+the dumps are SAPLING_ORACLE_DUMP's. Per (source chunk, rule) the features run in order on one generator. Each
+wrong cell gets an owner: the feature of ours that wrote it, else the smallest feature box holding it. A sequence's
+first owner is its first desync; it is floor when a trigger lies in that feature's scan box (strict) or an earlier
+feature's (lenient): a lichen or sculk difference (ours vs BDS, or BDS vs its twin), a dripstone cell the twin
+disagrees on, or an error owned by an earlier-decorated sequence already judged floor. ROOT marks deterministic
+desyncs with no earlier sequence's error in the box. `deterministic` is an upper bound: a root whose chunk matches a
+fresh BDS run call for call (docs/research/worldgen-bds-debugger.md) depends on BDS's run, not on the port.
 """
 import collections
 import sys
@@ -40,9 +40,10 @@ def parse_trace(path):
         elif p[0] == 'CLUSTER' and last and 'cluster' in last[2]:
             f = seqs[last][-1]
             f['own'] = f['scan'] = cube(f['at'], int(p[1]), 12, int(p[2]))
-        elif p[0] == 'POINTED' and last and 'small' in last[2]:
+        elif p[0] == 'SNAP' and last and 'small' in last[2]:
+            # The snap walks up to 12 cells up or down; the spike and its base patch reach 3 around the end.
             at = tuple(map(int, p[1:4]))
-            seqs[last].append({'at': at, 'own': cube(at, 3, 3, 3), 'scan': cube(at, 12, 3, 12), 'kind': 'pointed'})
+            seqs[last].append({'at': at, 'own': cube(at, 3, 15, 3), 'scan': cube(at, 3, 15, 3), 'kind': 'pointed'})
         elif p[0] == 'W' and last and seqs[last]:
             WRITER[tuple(map(int, p[1:4]))] = (last, len(seqs[last]) - 1)
     return seqs

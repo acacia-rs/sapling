@@ -187,6 +187,15 @@ pumpkins and waterlogged roots; small plants, vines, bamboo, cacti, dry mangrove
 dripstone, carpets, stairs and fences never do (`blocks_light` in feature/view.rs).
 `LevelChunk` +0xf88 (the vines' and double plants' ceiling) is not that stale map's maximum: taking it from the
 frozen heightmap lost every vine on a tree (jungle 4 -> 5644 wrong); it follows the chunk's writes.
+`LevelChunk` +0xf80 is a third map, the pre-worldgen heightmap (2026-10-09, worldgen/drip): a `vector<i16>` that
+`_prepareHeights` fills while it places the density terrain (14823028b: one above the highest block that is not
+air, water and lava included, before the surface and the carvers), set by `loadChunk` (14821178e -> 1409f7770) and
+dropped at the end of `decorationPostProcessChunk` (148215a83). Readers test the pointer and fall back to +0xb80:
+the surface system (14580c660, 14580d280), `loadChunk`, a function among the pool elements (145e19960, not read)
+and, of the feature code scanned, `LargeSpeleothem::placeBlocks` alone (a
+stalagmite's columns stop under it; live: the set-pointer branch ran 1699 times in a one-chunk run).
+`View::generated_top` models it; no dripstone scan reads +0xb80 or +0xf88, and the oracle did not move (no
+stalagmite reaches a carved surface in the regions).
 
 Oracle, wrong + missing cells (missing: BDS feature blocks we lack, which the judge used to file under later
 stages; `tests/oracle_support/judge.rs` `Verdict::Missing`), 148084d -> trees3:
