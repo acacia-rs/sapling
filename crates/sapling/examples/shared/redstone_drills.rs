@@ -447,3 +447,59 @@ pub fn observers() -> Vec<String> {
     }
     lines
 }
+
+pub const PISTON_SHOWN: &[&str] =
+    &["UpdateBlock", "UpdateBlockSynced", "UpdateSubchunkBlocks", "LevelSoundEvent", "LevelEvent", "BlockEvent", "BlockEntityData", "AddEntity", "RemoveEntity", "AddItemEntity"];
+
+/// Which way a piston pushes: one of each `facing_direction` in the air, a power block put beside
+/// it (under it for those that may push sideways) and taken.
+pub fn piston_facing() -> Vec<String> {
+    let mut lines = vec!["fill ~2 ~-1 ~4 ~26 ~-1 ~16 stone".to_owned(), "fill ~2 ~ ~4 ~26 ~6 ~16 air".to_owned()];
+    for facing in 0..6 {
+        let x = 4 + 4 * facing;
+        lines.push(format!("setblock ~{x} ~3 ~8 piston [\"facing_direction\"={facing}]"));
+        let power = if facing < 2 { format!("~{} ~3 ~8", x + 1) } else { format!("~{x} ~2 ~8") };
+        lines.push(format!("setblock {power} redstone_block"));
+        lines.push(format!("setblock {power} air"));
+    }
+    lines
+}
+
+/// Pistons pushing east (`facing_direction` 4) at x 4, a power block put on each and taken:
+/// - y 0: one stone; 12 stones; 13 stones; obsidian; a sticky one and a stone; a torch;
+/// - y 5: a chest holding a stack; a stone with dust on it; one pushing up under a stone, its power
+///   beside it; one fed by dust behind it.
+pub fn pistons() -> Vec<String> {
+    let mut lines = vec!["fill ~2 ~-1 ~4 ~22 ~-1 ~16 stone".to_owned(), "fill ~2 ~4 ~4 ~22 ~4 ~16 stone".to_owned()];
+    lines.extend(["fill ~2 ~ ~4 ~22 ~3 ~16 air".to_owned(), "fill ~2 ~5 ~4 ~22 ~9 ~16 air".to_owned()]);
+    let set = |x: i32, y: i32, z: i32, block: &str| format!("setblock ~{x} ~{y} ~{z} {block}");
+    let east = "piston [\"facing_direction\"=4]";
+    let rows: [(i32, i32, &str, Vec<(i32, i32, &str)>); 8] = [
+        (0, 5, east, vec![(5, 0, "stone")]),
+        (0, 7, east, (5..=16).map(|x| (x, 0, "stone")).collect()),
+        (0, 9, east, (5..=17).map(|x| (x, 0, "stone")).collect()),
+        (0, 11, east, vec![(5, 0, "obsidian")]),
+        (0, 13, "sticky_piston [\"facing_direction\"=4]", vec![(5, 0, "stone")]),
+        (0, 15, east, vec![(5, 0, "redstone_torch")]),
+        (5, 5, east, vec![(5, 0, "chest")]),
+        (5, 7, east, vec![(5, 0, "stone"), (5, 1, DUST)]),
+    ];
+    for (y, z, piston, pushed) in rows {
+        lines.push(set(4, y, z, piston));
+        for (x, up, block) in pushed {
+            lines.push(set(x, y + up, z, block));
+        }
+        if (y, z) == (5, 5) {
+            lines.push("replaceitem block ~5 ~5 ~5 slot.container 0 stone 64".to_owned());
+        }
+        lines.push(set(4, y + 1, z, POWER));
+        lines.push(set(4, y + 1, z, "air"));
+    }
+    for (x, y, z, block) in [(6, 5, 11, "piston [\"facing_direction\"=1]"), (6, 6, 11, "stone"), (7, 5, 11, POWER), (7, 5, 11, "air")] {
+        lines.push(set(x, y, z, block));
+    }
+    for (x, y, z, block) in [(3, 5, 13, DUST), (4, 5, 13, east), (5, 5, 13, "stone"), (2, 5, 13, POWER), (2, 5, 13, "air")] {
+        lines.push(set(x, y, z, block));
+    }
+    lines
+}

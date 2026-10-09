@@ -1,10 +1,11 @@
 //! Redstone: plates, buttons, levers, blocks of redstone, torches, repeaters, comparators and
-//! observers powering dust, lamps, doors, trapdoors, fence gates and hoppers, by BDS's circuit system (docs/research/redstone.md). Every
-//! second tick, at its end, the circuits written to are searched again from their sources
-//! (search.rs); what changed is written into the blocks at the start of the next (apply.rs).
-// TODO: the circuits of an arena's template are found only once one of their blocks is written; no
-// pistons; a comparator reads only containers that hold items in slots (no cake,
-// cauldron, composter, jukebox, lectern or item frame); a burnt torch whose loop was broken while it was out still
+//! observers powering dust, lamps, pistons, doors, trapdoors, fence gates and hoppers, by BDS's
+//! circuit system (docs/research/redstone.md). Every second tick, at its start, the circuits
+//! written to are searched again from their sources (search.rs); what changed is written into
+//! the blocks at the start of the next (apply.rs).
+// TODO: the circuits of an arena's template are found only once one of their blocks is written;
+// a comparator reads only containers that hold items in slots (no cake, cauldron, composter,
+// jukebox, lectern or item frame); a burnt torch whose loop was broken while it was out still
 // waits for a change beside it.
 
 mod apply;

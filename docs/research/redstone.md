@@ -350,3 +350,32 @@ No decompile: all of this is from the captures.
   put already powered by `/setblock`) is seen by lamps before dust.
 - Not drilled: a change while it is on, a piston moving it, whether a lever, button or plate worked by hand
   shows the same dust lag (sapling gives them none).
+
+## Pistons (2026-10-09, `bds_command_probe piston-facing` and `pistons`, research/captures/bds-redstone-pistons.txt)
+
+No decompile: all of this is from the captures.
+
+- `facing_direction` 0 to 5 pushes down, up, south, north, east, west. The arm is
+  `piston_arm_collision` (`sticky_piston_arm_collision`) with the same `facing_direction`, in the cell in front.
+- Power: a power block on top of it, under it or beside it, or dust ending at its back. It answers at the
+  evaluation a lamp would.
+- Its block entity is `PistonArm`: `State` and `NewState` 0 drawn back, 1 going out, 2 out, 3 coming back;
+  `Progress` and `LastProgress` 0 for 0 and 1, 1 for 2 and 3; `Sticky`; `isMovable` 1 only in state 0;
+  `AttachedBlocks` and `BreakBlocks`, flat lists of the x, y, z of the cells it takes and breaks, farthest first
+  (an empty list has tag 0). Sent when the piston is put, and at each change of state.
+- Going out, tick by tick from the evaluation: (0) the entity in state 1 with its lists, and the burst of what
+  it breaks; (1) each block it takes, farthest first, becomes `moving_block` one cell on and air where it was,
+  then the arm is put, and what it breaks leaves its item; each moving block has a `MovingBlock` entity
+  (`expanding` 1, `movingBlock` and `movingBlockExtra` as `{name, states, version}`, the second air,
+  `pistonPosX/Y/Z`, and `movingEntity` holding the block entity of a chest); (2) `piston.out` at the piston's
+  own corner (not its centre) and the entity in state 2; (3) each moving block becomes its block again, a chest
+  with its entity.
+- Coming back: (0) state 3; (1) the arm cell becomes air; (2) `piston.in` and state 0. A sticky one names the
+  block two cells out in `AttachedBlocks`, and at (1) that block becomes a moving block (`expanding` 0) in the
+  arm's cell and air where it was, a block again at (3).
+- 12 stones go, 13 do not (nothing is sent at all), obsidian does not. A torch in front is broken. A chest goes,
+  with what it holds. Dust on a pushed stone falls as an item a tick after the stone starts to move.
+- The block changes of (1) and (3) come in `UpdateSubchunkBlocks`, those of (3) with flags 19; sapling sends
+  the same changes as `UpdateBlock`.
+- Not drilled: slime and honey, a mob or player in the way, which other blocks stay or break, a piston put
+  beside power already on, power going while it moves, the place a real client's piston faces.

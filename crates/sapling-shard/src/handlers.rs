@@ -41,6 +41,7 @@ pub(crate) fn dispatch(world: &mut World, plugins: &mut Plugins) {
     // (research/captures/bds-redstone-phase.txt), and what an evaluation finds shows a tick later.
     blocks::apply_redstone(world);
     blocks::evaluate_redstone(world);
+    blocks::move_pistons(world);
     let Arrivals { joined, left } = std::mem::take(&mut *world.resource_mut::<Arrivals>());
     // Players who came from another shard at the start of the tick, before what they then sent.
     worlds::dispatch(world, plugins);

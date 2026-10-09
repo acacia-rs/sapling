@@ -7,7 +7,7 @@ use sapling_api::BlockPos;
 
 use super::parts::{Opens, Part, SIGNAL, User};
 use super::{Circuits, Due, power_at};
-use crate::blocks::{doors, level, send, with_property};
+use crate::blocks::{doors, level, pistons, send, with_property};
 use crate::components::Tick;
 
 /// Ticks a lamp stays lit once its signal ended (`RedstoneLampBlock`, a queued tick of 4).
@@ -89,6 +89,7 @@ fn use_signal(world: &mut World, layer: Entity, pos: BlockPos, id: u32, user: Us
                 send::set(world, layer, pos, id);
             }
         }
+        User::Piston { .. } => pistons::power(world, layer, pos, signal > 0),
         User::Opens(opens) => open(world, layer, pos, opens, signal),
     }
 }

@@ -20,6 +20,8 @@ pub(super) enum User {
     Lamp { lit: bool },
     Opens(Opens),
     Hopper,
+    /// Pushes out of its `front`, where it takes no power.
+    Piston { front: Face },
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -77,6 +79,11 @@ impl Part {
             "observer" => Part::Observer { lit: get("powered_bit") == Some("1"), watch: side(get("minecraft:facing_direction")) },
             "redstone_lamp" | "lit_redstone_lamp" => Part::User(User::Lamp { lit: name == "lit_redstone_lamp" }),
             "hopper" => Part::User(User::Hopper),
+            "piston" | "sticky_piston" => match get("facing_direction").and_then(crate::blocks::pistons::pushes) {
+                Some(front) => Part::User(User::Piston { front }),
+                None => Part::Other,
+            },
+            _ if name.ends_with("piston_arm_collision") || name == "moving_block" => Part::Other,
             _ if name.ends_with("trapdoor") => Part::User(User::Opens(Opens::Trapdoor)),
             _ if name.ends_with("door") => Part::User(User::Opens(Opens::Door)),
             _ if name.ends_with("fence_gate") => Part::User(User::Opens(Opens::Gate)),
@@ -93,6 +100,11 @@ impl Part {
         matches!(self, Part::Conductor | Part::Cutter)
     }
 
+    /// Whether it takes power from the cell on its `face` side: all but a piston at its front.
+    pub(super) fn takes_from(self, face: Face) -> bool {
+        !matches!(self, Part::User(User::Piston { front }) if front == face)
+    }
+
     /// Whether the circuit is searched from it.
     pub(super) fn is_source(self) -> bool {
         matches!(self, Part::Producer { .. } | Part::Torch { .. } | Part::Repeater { .. } | Part::Comparator { .. } | Part::Observer { .. })
@@ -106,7 +118,7 @@ impl Part {
 
 /// Whether BDS passes power through a block (research/captures/bds-conductors.txt): the full cubes
 /// but for these, and two that are lower.
-// TODO: ice, TNT and pistons are taken as conductors undrilled.
+// TODO: ice and TNT are taken as conductors undrilled.
 fn conducts(name: &str, is_full_cube: bool) -> bool {
     const CLEAR: [&str; 5] = ["sea_lantern", "observer", "jukebox", "beacon", "scaffolding"];
     match name {

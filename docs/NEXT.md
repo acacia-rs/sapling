@@ -33,8 +33,10 @@ Each needs its rule looked up first (`bdsre` for BDS, the Java jar for data), th
    holds are found as their columns load. Repeaters pass, delay
    and hold (`bds_command_probe repeaters`). Comparators
    compare, subtract and read containers (`bds_command_probe comparators`). Observers
-   pulse (`bds_command_probe observers`). Left: the circuits of an arena's template, what a
-   comparator reads besides slots, pistons, and whether dust lags a lever, button or plate worked
+   pulse (`bds_command_probe observers`). Pistons push, break and
+   draw back (`blocks/pistons.rs`, `bds_command_probe pistons`). Left: the circuits of an arena's
+   template, what a comparator reads besides slots, slime and honey on pistons and what stands in
+   a piston's way, and whether dust lags a lever, button or plate worked
    by hand as it lags an observer (docs/research/redstone.md, "Observers").
 
 ## 3. Things assumed, not verified

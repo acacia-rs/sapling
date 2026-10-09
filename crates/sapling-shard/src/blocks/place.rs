@@ -124,6 +124,7 @@ impl Request<'_> {
             rails::join_placed(self.world, site.layer, pos);
             let tag = self.world.get::<Inventory>(self.entity).and_then(|inventory| inventory.in_hand().as_ref()).and_then(|held| held.stack.tag.clone());
             crate::containers::furnish(self.world, site.layer, pos, &block.name, tag.as_ref(), click.face);
+            super::pistons::furnish(self.world, site.layer, pos);
             updates::settle(self.world, site.layer, pos);
         }
         placed

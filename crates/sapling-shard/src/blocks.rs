@@ -13,6 +13,7 @@ mod items;
 mod liquid;
 mod loot;
 mod mining;
+mod pistons;
 mod place;
 mod plates;
 mod pots;
@@ -27,6 +28,7 @@ mod updates;
 mod waterlog;
 
 pub(crate) use doors::{bed_head, release_buttons, with as with_property};
+pub(crate) use pistons::tick as move_pistons;
 pub(crate) use plates::press_plates;
 pub(crate) use redstone::{apply as apply_redstone, arrived as circuits_arrived, container_changed, evaluate as evaluate_redstone, power_at};
 pub(crate) use signs::dispatch_edits as dispatch_sign_edits;

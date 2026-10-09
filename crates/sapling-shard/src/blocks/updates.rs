@@ -71,7 +71,7 @@ fn block(world: &World, layer: Entity, [x, y, z]: BlockPos) -> Option<(&BlockReg
 }
 
 /// Breaks the block at `pos` as one that lost its hold: it leaves its item.
-fn pop(world: &mut World, layer: Entity, pos: BlockPos) {
+pub(super) fn pop(world: &mut World, layer: Entity, pos: BlockPos) {
     let Some((registry, id)) = block(world, layer, pos) else { return };
     let (air, particles) = (registry.air_id(), send::destroy_particles(registry, pos, id));
     let (name, properties) = registry.get(id).map_or(("", ""), |state| (state.name, state.properties));

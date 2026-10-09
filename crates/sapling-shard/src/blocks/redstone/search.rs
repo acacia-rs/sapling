@@ -67,7 +67,7 @@ impl<F: FnMut(BlockPos) -> Part> Search<'_, F> {
             Part::Comparator { input, .. } if face == opposite(input) => self.offer(Via::Input, pos, strength, origin),
             Part::Comparator { input, .. } if ACROSS.contains(&face) && face != input => self.offer(Via::Side, pos, strength, origin),
             Part::Dust { .. } if to_dust => self.offer(Via::Dust, pos, strength, origin),
-            Part::User(_) => self.offer(Via::User, pos, strength, origin),
+            user @ Part::User(_) if user.takes_from(opposite(face)) => self.offer(Via::User, pos, strength, origin),
             Part::Conductor if strong => self.offer(Via::Strong, pos, strength, origin),
             Part::Torch { support, .. } if support.neighbour(pos) == from => self.offer(Via::Input, pos, strength, origin),
             _ => {}
@@ -111,7 +111,7 @@ impl<F: FnMut(BlockPos) -> Part> Search<'_, F> {
         let below_part = (self.part)(below);
         match below_part {
             Part::Conductor => self.offer(Via::Weak, below, strength, origin),
-            Part::User(_) => self.offer(Via::User, below, strength, origin),
+            user @ Part::User(_) if user.takes_from(Face::Up) => self.offer(Via::User, below, strength, origin),
             _ => {}
         }
         let up_free = !(self.part)(Face::Up.neighbour(dust)).cuts();
@@ -138,7 +138,7 @@ impl<F: FnMut(BlockPos) -> Part> Search<'_, F> {
             if across.iter().all(|side| !connected[*side]) {
                 match beside_part {
                     Part::Conductor => self.offer(Via::Weak, beside, strength, origin),
-                    Part::User(_) => self.offer(Via::User, beside, strength, origin),
+                    user @ Part::User(_) if user.takes_from(opposite(face)) => self.offer(Via::User, beside, strength, origin),
                     _ => {}
                 }
             }
