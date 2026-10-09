@@ -200,3 +200,57 @@ pub fn conductors() -> Vec<String> {
     lines.extend(std::iter::repeat_n("testforblock ~ ~-1 ~ stone".to_owned(), 4));
     lines
 }
+
+const LEVER_UNDER: &str = "lever [\"lever_direction\"=\"down_east_west\",\"open_bit\"=true]";
+const DUST: &str = "redstone_wire";
+const LAMP: &str = "redstone_lamp";
+const POWER: &str = "redstone_block";
+/// Rigs asking where dust powers what is beside it (research C8), as blocks at east, up, south of
+/// the dust asked about; a rig's source comes last.
+const SHAPES: &[&[(i32, i32, i32, &str)]] = &[
+    // 0: one dust by a power block.
+    &[(0, 0, 0, DUST), (1, 0, 0, LAMP), (0, 0, -1, LAMP), (0, 0, 1, LAMP), (-1, 0, 0, POWER)],
+    // 1: the end of a line.
+    &[(-1, 0, 0, DUST), (0, 0, 0, DUST), (1, 0, 0, LAMP), (0, 0, -1, LAMP), (0, 0, 1, LAMP), (-2, 0, 0, POWER)],
+    // 2: a corner, and the end past it.
+    &[(-1, 0, 0, DUST), (0, 0, 0, DUST), (0, 0, 1, DUST), (1, 0, 0, LAMP), (0, 0, -1, LAMP), (0, 0, 2, LAMP), (1, 0, 1, LAMP), (-2, 0, 0, POWER)],
+    // 3: a T.
+    &[(-1, 0, 0, DUST), (0, 0, 0, DUST), (1, 0, 0, DUST), (0, 0, 1, DUST), (0, 0, -1, LAMP), (2, 0, 0, LAMP), (0, 0, 2, LAMP), (-2, 0, 0, POWER)],
+    // 4: a line fed at its middle from the side.
+    &[(-1, 0, 0, DUST), (0, 0, 0, DUST), (1, 0, 0, DUST), (-2, 0, 0, LAMP), (2, 0, 0, LAMP), (0, 0, 1, LAMP), (0, 0, -1, POWER)],
+    // 5: a dot on a block a lever under it powers.
+    &[(0, 1, 0, "stone"), (0, 2, 0, DUST), (1, 2, 0, LAMP), (-1, 2, 0, LAMP), (0, 2, 1, LAMP), (0, 2, -1, LAMP), (0, 0, 0, LEVER_UNDER)],
+    // 6: as 5 with dust on a block to its south.
+    &[
+        (0, 1, 0, "stone"),
+        (0, 1, 1, "stone"),
+        (0, 2, 0, DUST),
+        (0, 2, 1, DUST),
+        (1, 2, 0, LAMP),
+        (-1, 2, 0, LAMP),
+        (0, 2, -1, LAMP),
+        (0, 2, 2, LAMP),
+        (1, 2, 1, LAMP),
+        (0, 0, 0, LEVER_UNDER),
+    ],
+    // 7: dust a step up to the east, and a lamp straight on.
+    &[(0, 0, 0, DUST), (1, 0, 0, "stone"), (1, 1, 0, DUST), (0, 0, 1, LAMP), (0, 0, -1, POWER)],
+    // 8: as 7 with the step cut by stone.
+    &[(0, 0, 0, DUST), (1, 0, 0, "stone"), (1, 1, 0, DUST), (0, 1, 0, "stone"), (0, 0, 1, LAMP), (0, 0, -1, POWER)],
+    // 9: as 8 with glass.
+    &[(0, 0, 0, DUST), (1, 0, 0, "stone"), (1, 1, 0, DUST), (0, 1, 0, "glass"), (0, 0, 1, LAMP), (0, 0, -1, POWER)],
+];
+const SHAPE_LAYER: i32 = 5;
+
+/// The rigs of [`SHAPES`], two to a layer, the dust asked about at x 7 and 17, z 10.
+pub fn shapes() -> Vec<String> {
+    let layers = SHAPES.len().div_ceil(2) as i32;
+    let mut lines = vec![format!("fill ~2 ~-1 ~4 ~22 ~{} ~16 air", layers * SHAPE_LAYER)];
+    lines.extend((0..layers).map(|layer| format!("fill ~2 ~{} ~4 ~22 ~{0} ~16 stone", layer * SHAPE_LAYER - 1)));
+    for (index, rig) in SHAPES.iter().enumerate() {
+        let (x, floor) = (7 + 10 * (index as i32 % 2), SHAPE_LAYER * (index as i32 / 2));
+        lines.extend(rig.iter().map(|(east, up, south, block)| format!("setblock ~{} ~{} ~{} {block}", x + east, floor + up, 10 + south)));
+    }
+    lines.extend(std::iter::repeat_n("testforblock ~ ~-1 ~ stone".to_owned(), 4));
+    lines
+}

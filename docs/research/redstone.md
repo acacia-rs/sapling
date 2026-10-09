@@ -236,8 +236,7 @@ immediate signal 148a82ae0): DirectionalProducer with `direction = mStronglyPowe
 - C6 Lamp's consumer component source (no setup callback found) and its flags (acceptHalfPulse?).
 - C7 Redstone block's producer component (none found in its vtable): confirm it powers dust, lamp, adjacent blocks
   (weakly or strongly?) — e.g. redstone block next to a solid block next to a lamp.
-- C8 Dust rules R15: step up cut by a solid block above, step down, dust pointing into block vs dot vs bent line
-  (the path-dependent rule may differ from Java on L-shapes and T-junctions).
+- C8: done, see the end.
 - C9 `mPromotedToProducer` overwrite order (R11): block strongly powered by lever and also touched by dust.
 - C10 Torch burnout count and timing (R21), Fizz sound, reignite; fast torch clock seen by a lamp (half-pulse = 15).
 - C11 `redstone_signal` of dust after placement next to a lit source (setup writes current strength, R16).
@@ -273,3 +272,9 @@ immediate signal 148a82ae0): DirectionalProducer with `direction = mStronglyPowe
   - Dust does not stay on leaves, a bottom slab, path, chests, an enchanting table, cauldron, composter,
     carpet, anvil, shulker box, walls, fences, panes; it stays on soul sand, mud, glass, a top slab and
     upside-down stairs. Sapling's support rule (updates.rs) asks the cell, not the face, and differs here.
+- C8 (`bds_command_probe shapes`, research/captures/bds-redstone-shapes.txt; ten rigs, lamps around one dust):
+  dust lights only the lamp straight on from a power block or the line it ends; neither lamp at a corner, only
+  those past the ends; at a T the lamps past the two far ends; a dot on a lever-powered block all four; with
+  one dust beside that dot, only the lamp opposite it. A step up to the side counts as a connection (the lamp
+  straight on stays dark) unless stone over the dust cuts it; glass does not cut it. Sapling's rule by stored
+  shape gives the same on all ten.

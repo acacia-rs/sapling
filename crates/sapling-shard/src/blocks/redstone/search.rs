@@ -1,7 +1,7 @@
 //! Where the power of a circuit's sources reaches, by BDS's scene-graph search (docs/research/
 //! redstone.md 3 and 4): strongest first, a strength per cell and what it is for.
-// TODO: dust powers a side block by the Java game's shape rule (no connection across it), where
-// BDS follows the path the power came by (research C8).
+// Dust powers a side block by its shape (no connection across it), not by the path the power came
+// by as BDS does: the two agree on every rig of research/captures/bds-redstone-shapes.txt (C8).
 
 use std::collections::{BinaryHeap, HashMap};
 
