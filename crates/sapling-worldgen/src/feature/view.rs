@@ -56,6 +56,10 @@ pub struct View<'a> {
     writes: Vec<Vec<Write>>,
     /// Per slot, `highest_block` once asked.
     tops: RefCell<Vec<Option<i32>>>,
+    /// The chunks as their last `recomputeHeightMap` saw them.
+    frozen: Option<&'a dyn Fn(i32, i32) -> Arc<ChunkShape>>,
+    /// Per slot, the heightmap columns of `frozen` asked so far (`i16::MIN`: not yet).
+    heights: RefCell<Vec<Option<Box<[i16; 256]>>>>,
     /// The block source's tick queue (liquid/mod.rs).
     pub ticks: TickQueue,
     /// Run after each `set_block`: `setBlock`'s neighbour updates (liquid/mod.rs).
@@ -71,9 +75,17 @@ impl<'a> View<'a> {
             shapes: RefCell::new(vec![None; slots]),
             writes: vec![Vec::new(); slots],
             tops: RefCell::new(vec![None; slots]),
+            frozen: None,
+            heights: RefCell::new(vec![None; slots]),
             ticks: TickQueue::default(),
             on_write: None,
         }
+    }
+
+    /// Heightmaps come from `frozen`'s chunks, whatever this view writes.
+    pub fn with_frozen_heights(mut self, frozen: &'a dyn Fn(i32, i32) -> Arc<ChunkShape>) -> Self {
+        self.frozen = Some(frozen);
+        self
     }
 
     pub fn chunk(&self) -> (i32, i32) {
@@ -180,13 +192,23 @@ impl<'a> View<'a> {
 
     /// `query.heightmap` (lambda 1411a2740): the chunk's light heightmap, one above the highest block
     /// that is neither air nor a see-through plant (water counts); the world's top outside the region.
+    /// Read off the `frozen` chunks when given: see worldgen-bds-features.md, "Heightmaps".
     pub fn heightmap(&self, x: i32, z: i32) -> i32 {
         let top = MIN_Y + HEIGHT as i32;
-        if self.locate(x, MIN_Y, z).is_none() {
-            return top;
-        }
+        let Some((slot, _)) = self.locate(x, MIN_Y, z) else { return top };
         let blocks_light = |block: Block| block != Block::Air && (!block.is_plant() || block.is_crop_block()) && !block.is_leaves();
-        (MIN_Y..top).rev().find(|&y| blocks_light(self.block(x, y, z))).map_or(MIN_Y, |y| y + 1)
+        let Some(frozen) = self.frozen else {
+            return (MIN_Y..top).rev().find(|&y| blocks_light(self.block(x, y, z))).map_or(MIN_Y, |y| y + 1);
+        };
+        let mut maps = self.heights.borrow_mut();
+        let (lx, lz) = (x.rem_euclid(16) as usize, z.rem_euclid(16) as usize);
+        let column = &mut maps[slot].get_or_insert_with(|| Box::new([i16::MIN; 256]))[lz * 16 + lx];
+        if *column == i16::MIN {
+            let (dx, dz) = ((slot / SIDE) as i32 - REACH, (slot % SIDE) as i32 - REACH);
+            let shape = frozen(self.chunk.0 + dx, self.chunk.1 + dz);
+            *column = (MIN_Y..top).rev().find(|&y| blocks_light(shape.block(lx, y, lz))).map_or(MIN_Y, |y| y + 1) as i16;
+        }
+        *column as i32
     }
 
     /// `LevelChunk` +0xf88 plus the minimum y: the highest non-air block of the chunk holding

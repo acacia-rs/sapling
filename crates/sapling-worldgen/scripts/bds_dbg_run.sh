@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+# usage: WORLDGEN_BDS=<your BDS copy> bds_dbg_run.sh <seed> <out dir> <dbg config.json> <x0,z0,x1,z1>...
+# tools/worldgen-oracle/run.sh with BDS started under bds_dbg.py: generates the chunk regions and leaves
+# <out dir>/dbg/ (dbg.log, trace-*.txt), <out dir>/worldgen.log and, after a clean stop, <out dir>/world/.
+# One run at a time per BDS copy (a lock dir guards it); ports 19290/19291.
+set -euo pipefail
+here=$(cd "$(dirname "$0")" && pwd)
+bds=${WORLDGEN_BDS:?set WORLDGEN_BDS to your own BDS copy}
+pack_src=$here/../../../tools/worldgen-oracle/pack
+seed=$1 out=$(realpath -m "$2") cfg=$(realpath "$3")
+shift 3
+limit=${WORLDGEN_TIMEOUT:-1800}
+mkdir "$bds/.dbg-lock" 2>/dev/null || { echo "another run holds $bds/.dbg-lock" >&2; exit 2; }
+trap 'rmdir "$bds/.dbg-lock"' EXIT
+regions=""
+for region in "$@"; do regions+="[$region],"; done
+rm -rf "$out"; mkdir -p "$out/dbg"
+
+level="wg-$seed-$(date +%s)"
+pack="$bds/development_behavior_packs/worldgen_oracle"
+rm -rf "$pack"; cp -r "$pack_src" "$pack"
+printf 'export const REGIONS = [%s];\nexport const TILE = 8;\nexport const WORKERS = 6;\nexport const SETTLE = 20;\n' "$regions" >"$pack/scripts/regions.js"
+rm -rf "$bds/worlds"; mkdir -p "$bds/worlds/$level"
+echo '[{"pack_id": "7a3d2f60-5c1e-4b8a-9d47-0e6f1b2c3a01", "version": [1, 0, 0]}]' >"$bds/worlds/$level/world_behavior_packs.json"
+props="$bds/server.properties"
+settings="level-name=$level
+level-seed=$seed
+level-type=DEFAULT
+server-port=19290
+server-portv6=19291
+online-mode=false
+content-log-console-output-enabled=true"
+keys=$(sed 's/=.*//' <<<"$settings" | paste -sd'|')
+{ grep -vE "^($keys)=" "$props" || true; echo "$settings"; } >"$props.new"
+mv "$props.new" "$props"
+
+log="$out/worldgen.log"
+: >"$log"
+deadline=$((SECONDS + limit))
+{
+  until grep -qE 'WORLDGEN done|Quit correctly' "$log" || [ $SECONDS -ge $deadline ]; do sleep 1; done
+  echo stop
+  until grep -q 'Quit correctly' "$log" || [ $SECONDS -ge $deadline ]; do sleep 1; done
+} | (cd "$bds" && timeout "$limit" py -3 -s "$here/bds_dbg.py" "$bds/bedrock_server.exe" "$cfg" "$out/dbg") >"$log" 2>&1 || true
+grep -E 'WORLDGEN (done|.*(error|retry))' "$log" | head -5 || true
+if grep -q 'Quit correctly' "$log"; then cp -r "$bds/worlds/$level" "$out/world"; fi
+echo "$(grep -c '^hit' "$out/dbg/dbg.log") hits logged in $out/dbg/dbg.log"

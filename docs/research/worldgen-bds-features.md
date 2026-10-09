@@ -138,8 +138,8 @@ See [worldgen-bds-trees.md](worldgen-bds-trees.md). `search_feature` (143ba64d0)
 axis's loop order until `required_successes`; `single_block_feature`'s `may_attach_to` (feature/attach.rs) checks
 top, bottom and diagonals hard and counts the four sides, auto-rotating toward the last match. A `sequence_feature`
 stops at its first failed step. A rule's first `scatter_feature` sees no biome (its Molang environment is copied
-before the world is bound), so its `query.has_biome_tag` chance is 0 and draws nothing. `query.above_top_solid` and
-the tree loop's heightmap skip leaves.
+before the world is bound), so its `query.has_biome_tag` chance is 0 and draws nothing. `query.above_top_solid` skips
+leaves; the heightmap is stale during decoration ("Heightmaps" below).
 
 ## Decoration order
 BDS decorates a chunk once its 3x3 neighbourhood is loaded and lets its features write into those 9 chunks; writes
@@ -166,7 +166,43 @@ replays: `SourceCache` cleared every entry when full, the aquifer maps hashed wi
 single-biome lattice cells; with those fixed (`examples/bench_columns.rs`, 16x16 near origin) `chunk_blocks` costs
 31.5 ms per column (was 47.4; terrain alone 5.1) and the suite, liquids included, runs in about 75 s.
 
+## Heightmaps (2026-10-09, worldgen/trees3)
+`LevelChunk`'s light heightmap (+0xb80; what `query.heightmap`, the tree loop and the world-gen API's
+`getHeightmap` read) is written by `recomputeHeightMap` (1409e29f0) only: at the end of `loadChunk`, after the
+carvers (1482129bd), and at the end of `decorationPostProcessChunk`, after the feature rules and the freeze pass
+(148215885). `structurePostProcessChunk` does not call it. The per-write update (1409f3d60 -> 1409f3f50) needs a
+block source and chunk state 11 and did not run once while a region generated (breakpoint count 0). So:
+- while a chunk decorates, its own heightmap is its carved terrain's: no structure block, no feature block, none
+  of its own writes;
+- a neighbour's is its carved terrain's until that neighbour's decoration ends, and from then on its blocks as
+  they were at that moment;
+- structure features (village trees) see carved-terrain heightmaps everywhere.
+`View::with_frozen_heights` models this (feature/mod.rs picks the snapshot by decoration phase). The recompute
+counts a cell whose block or liquid layer absorbs light (`Block` +0xa5), or is a non-air block with
+`BlockLegacy` +0x130 bit 2; sapling keeps its fitted rule (not air, not a see-through plant, not leaves).
+Counting leaves moved under 10 cells in every world, so the oracle does not settle whether leaves absorb.
+
+Oracle, wrong + missing cells (missing: BDS feature blocks we lack, which the judge used to file under later
+stages; `tests/oracle_support/judge.rs` `Verdict::Missing`), 148084d -> trees3:
+
+| world | identical % | wrong (old metric) | missing | wrong + missing |
+|---|---|---|---|---|
+| near origin | 99.9971 -> 99.9971 | 2225 -> 2219 | 584 -> 579 | 2809 -> 2798 |
+| far out | 99.9787 -> 99.9789 | 1013 -> 1006 | 44 -> 39 | 1057 -> 1045 |
+| negative seed | 99.9784 -> 99.9784 | 677 -> 677 | 680 -> 680 | 1357 -> 1357 |
+| biome regions | 99.9325 -> 99.9434 | 13039 -> 11340 | 3077 -> 1816 | 16116 -> 13156 |
+| tree regions | 99.8792 -> 99.9547 | 20731 -> 11212 | 14840 -> 911 | 35571 -> 12123 |
+| structures | 99.9312 -> 99.9424 | 36424 -> 32747 | 12332 -> 7158 | 48756 -> 39905 |
+
+The identical % always counted missing cells as not identical; what the old numbers hid was their share of the
+"left to later stages" count. By region (wrong + missing): jungle 7315 -> 4, pale garden 7730 -> 584, bamboo
+jungle 10157 -> 2181, mangrove swamp 3275 -> 771, dark forest 1153 -> 241, swamp 574 -> 294.
+
 ## Feature residue (2026-10-08, worldgen/feat2)
+The tree items below (bamboo jungle, pale garden, mangrove, old growth pine taiga) were resolved on 2026-10-09:
+worldgen-bds-trees.md, "Refused 2x2 trees and mangrove chunk -500,515". The table predates that.
+
+
 `SAPLING_ORACLE_DUMP=<dir>` makes the oracle write every Features-stage error (and every feature cell the `-run2`
 twin disagrees on) to a TSV per region; `scripts/feature_residue.py <dir> [world] [--by-region] [--cells <family>]`
 splits them by family, kind (ours-extra: BDS kept the block from before features; bds-only: ours did; both) and

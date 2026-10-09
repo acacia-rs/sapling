@@ -27,7 +27,8 @@ pub fn place_element(name: &str, chunk: (i32, i32), centre: Arc<ChunkShape>, wor
     let name = name.trim_start_matches("minecraft:");
     let &(_, index) = ELEMENTS.iter().find(|(n, _)| *n == name)?;
     let load = |x: i32, z: i32| if (x, z) == chunk { centre.clone() } else { (world.load)(x, z) };
-    let mut view = View::new(chunk, &load);
+    // The structure stage never recomputes heightmaps: every chunk's is its carved terrain's.
+    let mut view = View::new(chunk, &load).with_frozen_heights(world.load);
     let mut scope = Scope::new();
     scope.set_origin(at);
     let ctx = &mut Ctx { view: &mut view, random, scope: &mut scope, biome: world.biome, surface: world.surface, in_structure: &|_| false };
