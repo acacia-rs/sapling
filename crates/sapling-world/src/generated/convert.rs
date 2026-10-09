@@ -63,9 +63,18 @@ pub(crate) fn generated_chunk(chunk_x: i32, chunk_z: i32, shape: &ChunkShape, bi
 #[cfg(test)]
 mod tests {
     use acacia_world::{BlockRegistry, Dimension};
-    use sapling_worldgen::{MIN_Y, OverworldGenerator};
+    use sapling_worldgen::{Block, MIN_Y, OverworldGenerator};
 
     use super::{BlockIds, generated_chunk};
+
+    /// Every block table of the generator (`Block::ALL`) and the whole template palette.
+    #[test]
+    fn every_state_the_generator_names_is_a_vanilla_state() {
+        let registry = BlockRegistry::vanilla();
+        let known = |block: &Block| registry.find(&format!("minecraft:{}", block.name()), block.states()).is_some();
+        let missing: Vec<String> = Block::ALL.iter().copied().chain(Block::templates()).filter(|block| !known(block)).map(|block| format!("{} [{}]", block.name(), block.states())).collect();
+        assert!(missing.is_empty(), "the registry lacks {} states: {missing:?}", missing.len());
+    }
 
     #[test]
     fn every_cell_reads_back_as_the_generated_block_and_biome() {

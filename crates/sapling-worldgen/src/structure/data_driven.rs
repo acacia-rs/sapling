@@ -148,6 +148,13 @@ impl Structures {
         cells
     }
 
+    /// For probes: every piece of the v2 structures reaching `chunk`, in assembly order.
+    pub fn v2_pieces(&self, density: &Density, chunk: (i32, i32)) -> Vec<String> {
+        let pieces = self.v2_near(density, chunk);
+        let line = |p: &Piece| format!("{} at {:?} {:?} {:?} depth {}", p.element.name, p.origin, p.rotation, p.bb, p.depth);
+        pieces.iter().flat_map(|s| s.iter()).map(line).collect()
+    }
+
     /// Every piece meeting the canvas's chunk, in assembly order.
     pub(super) fn place_v2(&self, canvas: &mut Canvas, structures: &[Arc<Vec<Piece>>]) {
         let column = canvas.bb;

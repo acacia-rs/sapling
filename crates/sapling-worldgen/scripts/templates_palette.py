@@ -109,8 +109,9 @@ def expand(palette):
     for (name, states, wl, flags) in list(palette):
         pairs = dict(p.split('=', 1) for p in states.split(',') if p)
         for marker, variants in SHAPED.items():
+            # A variant only rewrites states the block has: double plants have `upper_block_bit` too, stairs `upside_down_bit`.
             if marker in pairs:
-                for variant in variants:
+                for variant in (v for v in variants if all(k in pairs for k in v)):
                     shaped = ','.join(f'{k}={v}' for k, v in sorted({**pairs, **variant}.items()))
                     palette.setdefault((name, shaped, wl, flags), len(palette))
     waterloggable = {line.strip() for line in open(os.path.join(HERE, 'data', 'waterloggable.txt'))}
