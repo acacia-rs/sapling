@@ -18,7 +18,7 @@ use sapling_world::Actor;
 
 use crate::blocks::Dice;
 use crate::body::{Body, Physics};
-use health::Health;
+pub(crate) use health::Health;
 use crate::components::{InLayer, Layer, NetId, Tick};
 use crate::handlers::Ctx;
 use crate::{blocks, drops, entities, inventory, mobs, orbs, worlds};
@@ -94,7 +94,7 @@ fn spawn(world: &mut World, layer: Entity, kind: &str, feet: [f32; 3]) -> Option
     let body = Body::new(feet, [0.0; 3], size);
     let entity = entities::spawn(world, layer, kind, body, feet, |id| Some(announcement(id, kind, &body, None, None)))?;
     world.entity_mut(entity).insert(Creature { look: None });
-    give_health(world, entity, kind, None);
+    give_health(world, entity, kind, None, 0);
     let id = world.get::<NetId>(entity)?.0;
     entities::after_announcing(world, layer, [x, y, z], vec![spawn_sound(id, kind, &body)]);
     // Kept by the world folder as BDS numbers actors: a high word that differs, a counter below.
@@ -110,16 +110,17 @@ pub(crate) fn from_storage(world: &mut World, layer: Entity, actor: Actor, uniqu
     let body = Body::new(actor.position, [0.0; 3], size);
     let kind = actor.identifier.clone();
     let Some(entity) = entities::spawn(world, layer, &kind, body, actor.position, |id| Some(announcement(id, &kind, &body, Some(&actor), None))) else { return false };
-    give_health(world, entity, &kind, actor.health);
+    give_health(world, entity, &kind, actor.health, actor.fire.max(0) as u16);
     world.entity_mut(entity).insert(Creature { look: Some(actor) });
     entities::keep(world, entity, layer, unique_id, compound);
     true
 }
 
-/// Gives a mob of a kind that dies the health BDS announced its kind with, `left` of it.
-fn give_health(world: &mut World, entity: Entity, kind: &str, left: Option<f32>) {
+/// Gives a mob of a kind that dies the health BDS announced its kind with, `left` of it, and
+/// `burning` ticks of fire.
+fn give_health(world: &mut World, entity: Entity, kind: &str, left: Option<f32>, burning: u16) {
     if let Some(max) = sapling_data::mob_health(kind).filter(|_| !NO_DEATH.contains(&kind)) {
-        world.entity_mut(entity).insert(Health::new(max, left));
+        world.entity_mut(entity).insert(Health::new(max, left, burning));
     }
 }
 
@@ -148,10 +149,11 @@ fn kill(world: &mut World, id: EntityId) -> bool {
     true
 }
 
-/// The mob, seen to die, is dead where it is and leaves its loot, cooked if it was on fire.
+/// The mob, seen to die, is dead where it is, no longer kept by the world folder, and leaves its
+/// loot, cooked if it was on fire.
 fn die(world: &mut World, entity: Entity, layer: Entity, kind: &str, body: &Body) {
     let now = world.resource::<Tick>().0;
-    world.entity_mut(entity).insert(Dying(now));
+    world.entity_mut(entity).insert(Dying(now)).remove::<entities::Stored>();
     let on_fire = world.get_mut::<Health>(entity).is_some_and(|mut health| {
         health.end();
         health.is_burning()

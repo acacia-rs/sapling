@@ -46,6 +46,8 @@ pub struct Actor {
     pub offhand: Option<ItemStack>,
     /// The `minecraft:health` it has left, when it stores any.
     pub health: Option<f32>,
+    /// Ticks it has left to burn (`Fire`).
+    pub fire: i16,
 }
 
 /// A stored byte that shows on the mob.
@@ -88,6 +90,7 @@ impl Actor {
             mainhand: slots("Mainhand").into_iter().next().flatten(),
             offhand: slots("Offhand").into_iter().next().flatten(),
             health: health.and_then(|health| if let Some(Value::Float(current)) = health.get("Current") { Some(*current) } else { None }),
+            fire: if let Some(Value::Short(fire)) = actor.get("Fire") { *fire } else { 0 },
             unique_id: *unique_id,
             identifier: identifier.to_string(),
             position: position.get(..3)?.try_into().ok()?,
@@ -124,7 +127,7 @@ fn floats(items: &[f32]) -> Value {
     Value::List(List { tag: FLOAT_TAG, items: items.iter().map(|&item| Value::Float(item)).collect() })
 }
 
-fn written(value: Value) -> Vec<u8> {
+pub(crate) fn written(value: Value) -> Vec<u8> {
     let mut out = bytes::BytesMut::new();
     nbt::write::<LittleEndian>(&mut out, &nbt::Nbt { name: String::new(), value });
     out.to_vec()
@@ -246,6 +249,7 @@ mod tests {
             mainhand: None,
             offhand: None,
             health: Some(7.5),
+            fire: 0,
         };
         assert_eq!(found, [expected]);
         assert!(actors(&cow[..cow.len() - 1]).is_err());

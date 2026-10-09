@@ -48,3 +48,15 @@ pub fn harm() -> Vec<String> {
     lines.extend(std::iter::repeat_n(String::new(), 32));
     lines
 }
+
+/// Mobs of several sizes set on fire, then given water to stand in.
+pub fn douse() -> Vec<String> {
+    let mut lines: Vec<String> = ["kill @e[type=!player]", "", "", "fill ~2 ~-1 ~4 ~22 ~-1 ~16 stone", "fill ~2 ~ ~4 ~22 ~6 ~16 air"].map(String::from).into();
+    for (at, kind) in ["pig", "chicken", "cow", "spider", "iron_golem"].iter().enumerate() {
+        let x = 4 + 4 * at as i32;
+        lines.extend([format!("fill ~{} ~ ~5 ~{} ~5 ~7 stone", x - 1, x + 1), format!("fill ~{x} ~1 ~6 ~{x} ~4 ~6 air"), format!("setblock ~{x} ~ ~6 netherrack")]);
+        lines.extend([format!("summon {kind} ~{x} ~1 ~6"), format!("setblock ~{x} ~1 ~6 fire"), String::new(), format!("setblock ~{x} ~1 ~6 water"), String::new(), String::new()]);
+    }
+    lines.extend(["kill @e[type=!player]".into(), String::new()]);
+    lines
+}

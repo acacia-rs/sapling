@@ -28,8 +28,9 @@ Each needs its rule looked up first (`bdsre` for BDS, the Java jar for data), th
    powder sets (`bds_command_probe concrete`). Mobs have health; lava, fire, falls, a
    block their head is in and water without breath hurt and kill them, cooked if on fire
    (`creatures/harm.rs`, `creatures/health.rs`, `docs/research/mob-damage.md`, `bds_command_probe
-   burn` and `harm`). Left: attacks, the fizz of a fire put out by water, a stored mob's health
-   written back, and what the doc lists as not drilled.
+   burn` and `harm`). A stored mob's health and fire are
+   saved with it. Water puts a fire out with BDS's fizz (`douse`). Left: attacks, and what the
+   doc lists as not drilled.
 2. **Redstone**: plates, buttons, levers, blocks of redstone and torches power dust, lamps, doors,
    trapdoors, gates and hopper locks (`blocks/redstone.rs`, `docs/research/redstone.md`; plugins
    read `ctx.power_at`), checked against `bds_command_probe redstone`. Circuits a world folder

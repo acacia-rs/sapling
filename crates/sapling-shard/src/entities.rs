@@ -131,7 +131,7 @@ pub(crate) fn step(world: &mut World, entity: Entity, layer: Entity, id: u64, ph
     let splash = splash::check(world, entity, id, &kind, moved, &body, physics.liquid);
     let in_lava = body.liquid() == Some(Liquid::Lava);
     if in_lava && (physics.burns || physics.liquid == InLiquid::Buoyant) {
-        splash::fizz(world, layer, &start);
+        splash::fizz(world, layer, &start, 0);
     }
     let lifted = physics.liquid == InLiquid::Floats && body.liquid().is_some();
     let [x, y, z] = body.at;

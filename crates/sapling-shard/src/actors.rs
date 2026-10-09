@@ -2,8 +2,8 @@
 //! become creatures and its items lying items (entities that move and can be taken); what the
 //! shard does not move (paintings, kinds without a recorded box) is shown as a statue. Before
 //! columns are saved, each column's actors are written anew: the compounds the shard does not
-//! move as they were, and every kept entity filed under the column with its place and motion now
-//! (`entities::Stored`), so a mob that walked into another column is saved there, and one that
+//! move as they were, and every kept entity filed under the column with its place, motion,
+//! health and fire now (`entities::Stored`), so a mob that walked into another column is saved there, and one that
 //! is gone is not.
 // TODO: items a player threw or a block left, orbs and falling blocks are not saved.
 
@@ -60,11 +60,16 @@ pub(crate) fn write_back_before_saving(world: &mut World) {
 /// Writes every loaded column's actors anew from what the shard has (see the module).
 pub(crate) fn write_back(world: &mut World) {
     let kept: Vec<(Entity, ChunkPos, Vec<u8>)> = world
-        .query::<(&InLayer, &Body, &Stored)>()
+        .query::<(&InLayer, &Body, &Stored, Option<&creatures::Health>)>()
         .iter(world)
-        .filter_map(|(layer, body, stored)| {
+        .filter_map(|(layer, body, stored, health)| {
             let home = ChunkPos::of_block(body.at[0].floor() as i32, body.at[2].floor() as i32);
-            Some((layer.0, home, sapling_world::moved_actor(&stored.compound, body.at, body.motion).ok()?))
+            let moved = sapling_world::moved_actor(&stored.compound, body.at, body.motion).ok()?;
+            let now = match health {
+                Some(health) => sapling_world::harmed_actor(&moved, health.left(), health.max(), health.burning() as i16).ok()?,
+                None => moved,
+            };
+            Some((layer.0, home, now))
         })
         .collect();
     let managed = world.get_resource::<Managed>().map(|managed| managed.0.clone()).unwrap_or_default();

@@ -24,8 +24,10 @@ with its mobs summoned into a wall). No decompile: all of this is from the captu
   10 ticks again. So a pig put over lava: 9 on its 1st tick (fire), 6 on its 3rd (lava's 4 less 1), then
   5 and 2 on the 13th, 1 and dead on the 23rd.
 - Out of fire, it burns 160 ticks more, hit for 1 (cause 7) every 20: 7 hits, then the flag clears.
-- Water puts the fire out at once, with a `ParticleFizzEffect` `LevelEvent` and a `fizz` sound (sapling
-  sends neither).
+- Water puts the fire out at once (`bds_command_probe douse`, research/captures/bds-douse.txt): a
+  `LevelEvent` `ParticleFizzEffect` from the low corner of the mob's box, its data the box's width and
+  height in blocks begun (width | height << 8: a pig 257, a cow 513, a spider 258, an iron golem 770),
+  and a tick later the sound `fizz` (-1) from the middle of the box. A mob lying dead is put out the same.
 - A mob that dies on fire leaves its meat cooked (the loot tables' `furnace_smelt` under `on_fire`).
 - The kinds fire, falls and water leave alone are those whose pack components say so
   (`sapling-data/data/mob-traits.tsv`). Not drilled: the drill world refuses `/summon zombie_pigman`.

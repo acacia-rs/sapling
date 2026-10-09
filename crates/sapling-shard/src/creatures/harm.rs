@@ -2,9 +2,7 @@
 //! cannot breathe in, found each tick and told to its viewers as BDS tells them
 //! (docs/research/mob-damage.md). The rules themselves: health.rs.
 // TODO: attacks do not hurt; any full block smothers; a fish out of water breathes;
-// breath comes back at once; water puts a fire out without BDS's fizz; a stored mob's health and
-// fire are not written back to its world folder; an armour stand has no health here, though BDS
-// burns it.
+// breath comes back at once; an armour stand has no health here, though BDS burns it.
 
 use bevy_ecs::prelude::*;
 use bytes::Bytes;
@@ -15,7 +13,7 @@ use sapling_world::World as Level;
 use super::health::{Cause, Health};
 use crate::body::{Body, Liquid};
 use crate::components::Layer;
-use crate::{entities, late_sounds};
+use crate::{entities, late_sounds, splash};
 
 const FIERY: &[&str] = &["minecraft:lava", "minecraft:flowing_lava", "minecraft:fire", "minecraft:soul_fire"];
 const WATER: &[&str] = &["minecraft:water", "minecraft:flowing_water"];
@@ -24,6 +22,7 @@ const BIG_FALL: f32 = 4.0;
 /// A fall is heard the tick after it hurts.
 const FALL_LATE: u64 = 1;
 const BUBBLES: i32 = 8;
+const DOUSED: i32 = -1;
 
 /// Whether the body's box reaches into a cell of lava or fire, however full.
 fn touches_fire(level: &Level, body: &Body) -> bool {
@@ -69,6 +68,15 @@ fn land(world: &mut World, layer: Entity, id: u64, kind: &str, from: [f32; 3], n
     sapling_net::encode(&EntityEvent { runtime_entity_id: id, event_id: EntityEventEventId::DustParticles, data: 0, fire_at_position: None })
 }
 
+/// The steam of a burning body put out by water: from the low corner of its box, its data the
+/// box's width and height in blocks begun (research/captures/bds-douse.txt).
+fn steam(body: &Body) -> Bytes {
+    let [width, height] = body.size;
+    let [x, y, z] = body.at;
+    let position = Vec3f { x: x - width / 2.0, y, z: z - width / 2.0 };
+    sapling_net::encode(&LevelEvent { event: LevelEventEvent::ParticleFizzEffect, position, data: width.ceil() as i32 | (height.ceil() as i32) << 8 })
+}
+
 /// A tick of the mob `id`'s health, its body `start` before the tick's move and `now` after;
 /// whether it died of it, which its viewers are then told here. They are told its health after a
 /// fall, fire and a block have hurt it and before lava and water do, so those two show a tick
@@ -89,7 +97,13 @@ pub(super) fn tick(world: &mut World, entity: Entity, layer: Entity, id: u64, ki
             packets.push(strike(id, &health, Cause::Fall, Some(now.at)));
             packets.push(land(world, layer, id, kind, from, now, harm));
         }
-        let fire = if burns { health.burn(touching, now.liquid() == Some(Liquid::Water)) } else { None };
+        let wet = now.liquid() == Some(Liquid::Water);
+        let lit = health.is_burning();
+        let fire = if burns { health.burn(touching, wet) } else { None };
+        if lit && !health.is_burning() && wet {
+            packets.push(steam(now));
+            splash::fizz(world, layer, now, DOUSED);
+        }
         packets.extend(fire.map(|cause| strike(id, &health, cause, None)));
         if health.smother(in_wall) {
             packets.push(strike(id, &health, Cause::Wall, None));
@@ -107,7 +121,13 @@ pub(super) fn tick(world: &mut World, entity: Entity, layer: Entity, id: u64, ki
             packets.push(sapling_net::encode(&LevelEvent { event: LevelEventEvent::ParticleBubble, position: Vec3f { x, y, z }, data: BUBBLES }));
         }
     } else {
-        tell(&mut health, id, kind, false, &mut packets);
+        // BDS puts a burning body out while it lies dead.
+        if health.is_burning() && now.liquid() == Some(Liquid::Water) {
+            health.burn(false, true);
+            packets.push(steam(now));
+            splash::fizz(world, layer, now, DOUSED);
+        }
+        tell(&mut health, id, kind, true, &mut packets);
     }
     if let Some(mut kept) = world.get_mut::<Health>(entity) {
         *kept = health;

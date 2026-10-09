@@ -170,7 +170,7 @@ fn a_world_folders_mobs_move_and_are_saved_where_they_are() {
     kept.sort_by(|a, b| a.0.cmp(&b.0));
     assert_eq!(kept, [("minecraft:cow".to_string(), [3.5, 64.0, 3.5]), ("minecraft:painting".into(), [7.0, 66.0, 0.03]), ("minecraft:pig".into(), [1.5, 64.0, 1.5])]);
     let cow = sapling_world::actors(&stored.actors).unwrap().into_iter().find(|actor| actor.identifier == "minecraft:cow").unwrap();
-    assert_eq!(cow.variant, 1, "the rest of what was stored stays");
+    assert_eq!((cow.variant, cow.health), (1, Some(7.0)), "the rest of what was stored stays; its 6 block fall cost 3");
 }
 
 #[test]
@@ -249,4 +249,21 @@ fn a_cow_dropped_five_blocks_is_hurt_by_two_and_heard_landing_as_on_bds() {
     assert_eq!(all::<UpdateAttributes>(&ticks[landed]).iter().map(|update| update.attributes[0].current).collect::<Vec<_>>(), [8.0]);
     let sounds: Vec<_> = all::<LevelSoundEvent>(&ticks[landed + 1]).into_iter().map(|sound| (sound.sound_id, sound.extra_data)).collect();
     assert_eq!(sounds, [("fall.small".to_owned(), -1), ("fall".to_owned(), hash("minecraft:stone") as i32)]);
+}
+
+#[test]
+fn water_puts_a_burning_cow_out_with_steam_and_a_fizz_as_on_bds() {
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    h.enter(2, "Steve");
+    h.remote.run(|ctx| assert!(ctx.set_block([3, 65, 0], &Block::new("fire")) && ctx.spawn_entity("minecraft:cow", [3.5, 65.0, 0.5]).is_some()));
+    (0..5).for_each(|_| drop(h.tick_all()));
+    h.remote.run(|ctx| assert!(ctx.set_block([3, 65, 0], &Block::new("water"))));
+    let ticks: Vec<_> = (0..5).map(|_| h.tick_all().to(2).to_vec()).collect();
+    let doused = ticks.iter().position(|sent| !all::<LevelEvent>(sent).is_empty()).expect("steam");
+    // research/captures/bds-douse.txt: a cow, 0.9 wide and 1.3 high.
+    let steam: Vec<_> = all::<LevelEvent>(&ticks[doused]).into_iter().map(|event| (event.event, [event.position.x, event.position.y, event.position.z], event.data)).collect();
+    assert_eq!(steam, [(LevelEventEvent::ParticleFizzEffect, [3.5 - 0.45, 65.0, 0.5 - 0.45], 513)]);
+    let fizz: Vec<_> = all::<LevelSoundEvent>(&ticks[doused + 1]).into_iter().filter(|sound| sound.sound_id == "fizz").map(|sound| (sound.position.y, sound.extra_data)).collect();
+    assert_eq!(fizz, [(65.65, -1)]);
 }

@@ -21,7 +21,7 @@ pub use folder::WorldFolder;
 pub use sapling_leveldb::LevelDat;
 pub use players::PlayerLoad;
 pub use sapling_leveldb::{
-    Actor, BlockEntity, ItemStack, Painting, PlayerData, State as ActorState, actors, block_of_hash, container_items, moved_actor, new_actor, new_block_entity, stored_actors,
+    Actor, BlockEntity, ItemStack, Painting, PlayerData, State as ActorState, actors, block_of_hash, container_items, harmed_actor, moved_actor, new_actor, new_block_entity, stored_actors,
     with_container_items,
 };
 pub use storage::{Level, LevelDbStorage, MemoryStorage, StorageError, StoredColumn, WorldStorage};

@@ -54,14 +54,15 @@ pub(crate) fn check(world: &mut World, entity: Entity, id: u64, kind: &str, move
 /// BDS's fizz reached viewers a tick after the move it went with.
 const FIZZ_LATE: u64 = 1;
 
-/// The fizz of a body in lava, from the middle of its box where the tick started, `start`
-/// (research/captures/bds-lava.txt: an item and an orb).
-pub(crate) fn fizz(world: &mut World, layer: Entity, start: &Body) {
+/// The fizz of a body in lava (`extra_data` 0; research/captures/bds-lava.txt: an item and an
+/// orb) or of a burning one put out (-1; bds-douse.txt), from the middle of its box where the tick
+/// started, `start`.
+pub(crate) fn fizz(world: &mut World, layer: Entity, start: &Body, extra_data: i32) {
     let [x, y, z] = start.at;
     let sound = LevelSoundEvent {
         sound_id: "fizz".into(),
         position: Vec3f { x, y: y + start.size[1] / 2.0, z },
-        extra_data: 0,
+        extra_data,
         entity_type: String::new(),
         is_baby_mob: false,
         is_global: false,

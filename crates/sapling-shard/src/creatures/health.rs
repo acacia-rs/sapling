@@ -54,17 +54,22 @@ pub(crate) struct Health {
 }
 
 impl Health {
-    pub(super) fn new(max: f32, left: Option<f32>) -> Self {
+    /// A mob of `max` health with `left` of it, `burning` ticks more.
+    pub(super) fn new(max: f32, left: Option<f32>, burning: u16) -> Self {
         let left = left.map_or(max, |left| left.clamp(0.0, max));
-        Self { left, max, last: 0.0, guarded: 0, burning: 0, peak: None, air: AIR, walled: 0, landed: None, told: left, lit: false }
+        Self { left, max, last: 0.0, guarded: 0, burning, peak: None, air: AIR, walled: 0, landed: None, told: left, lit: false }
     }
 
-    pub(super) fn left(&self) -> f32 {
+    pub(crate) fn left(&self) -> f32 {
         self.left
     }
 
-    pub(super) fn max(&self) -> f32 {
+    pub(crate) fn max(&self) -> f32 {
         self.max
+    }
+
+    pub(crate) fn burning(&self) -> u16 {
+        self.burning
     }
 
     pub(super) fn is_burning(&self) -> bool {
@@ -148,7 +153,7 @@ mod tests {
     #[test]
     fn a_pig_in_lava_is_hurt_as_bds_hurt_one() {
         // research/captures/bds-burn.txt: touching from its 1st tick, in the lava from its 3rd.
-        let mut pig = Health::new(10.0, None);
+        let mut pig = Health::new(10.0, None, 0);
         let mut seen = Vec::new();
         for tick in 1..=23 {
             pig.begin();
@@ -164,7 +169,7 @@ mod tests {
 
     #[test]
     fn out_of_lava_a_mob_burns_on_for_eight_seconds_hurt_each_second() {
-        let mut golem = Health::new(100.0, None);
+        let mut golem = Health::new(100.0, None, 0);
         assert_eq!(golem.burn(true, false), Some(Cause::Fire));
         let hits: Vec<u16> = (1..=200)
             .filter(|_| {
@@ -183,7 +188,7 @@ mod tests {
         // research/captures/bds-harm.txt: cows dropped 3 to 8 blocks.
         let at = |y: f32| [0.5, y, 0.5];
         let cost = |height: f32| {
-            let mut cow = Health::new(10.0, None);
+            let mut cow = Health::new(10.0, None, 0);
             let middle = 60.0 + height / 2.0;
             assert_eq!((cow.fall(at(60.0 + height), middle, false, false), cow.fall(at(middle), 60.0, true, false)), (None, None), "not in the tick it lands");
             cow.fall(at(60.0), 60.0, true, false)
@@ -191,7 +196,7 @@ mod tests {
         let from = |height: f32| at(60.0 + height / 2.0);
         assert_eq!([3.0, 3.5, 4.0, 8.0].map(cost), [None, Some((1.0, from(3.5))), Some((1.0, from(4.0))), Some((5.0, from(8.0)))]);
         assert_eq!([4.5, 5.0].map(|height| cost(height).map(|(harm, _)| harm)), [Some(2.0), Some(2.0)]);
-        let mut cow = Health::new(10.0, None);
+        let mut cow = Health::new(10.0, None, 0);
         cow.fall(at(80.0), 70.0, false, false);
         cow.fall(at(70.0), 65.0, false, true);
         assert_eq!((cow.fall(at(65.0), 64.0, true, false), cow.fall(at(64.0), 64.0, true, false)), (None, None), "water breaks a fall");
@@ -199,7 +204,7 @@ mod tests {
 
     #[test]
     fn a_block_smothers_from_the_seventh_tick_and_water_once_breath_is_out() {
-        let mut cow = Health::new(10.0, None);
+        let mut cow = Health::new(10.0, None, 0);
         let hits: Vec<i32> = (1..=27)
             .filter(|_| {
                 cow.begin();
@@ -209,7 +214,7 @@ mod tests {
         assert_eq!((hits, cow.left()), (vec![7, 17, 27], 4.0));
         assert!(!cow.smother(false) && !cow.smother(true), "counted anew");
 
-        let mut cow = Health::new(10.0, None);
+        let mut cow = Health::new(10.0, None, 0);
         let breaths: Vec<i16> = (0..AIR).filter_map(|_| cow.breathe(true)).collect();
         assert_eq!((breaths.len(), breaths.last()), (AIR as usize, Some(&0)));
         assert!(cow.breathe(true).is_none() && cow.drown(true) && !cow.drown(true), "2 a hit, guarded");
