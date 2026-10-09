@@ -293,3 +293,27 @@ fn a_click_turns_a_comparator_to_subtracting_and_back() {
         assert!(block_changes(h.tick_all().to(2)).contains(&(pos, comparator(false, subtracts))), "{subtracts}");
     }
 }
+
+#[test]
+fn an_observer_pulses_2_ticks_after_the_cell_it_watches_changes_and_another_watching_it_follows() {
+    // As research/captures/bds-redstone-observers.txt: watching west, powering east.
+    let mut h = ready();
+    let observer = |lit: bool| state("minecraft:observer", &format!("minecraft:facing_direction=west,powered_bit={}", u8::from(lit)));
+    put(&mut h, &[
+        ([0, 65, 2], "observer", "minecraft:facing_direction=west"),
+        ([1, 65, 2], "redstone_wire", ""),
+        ([2, 65, 2], "redstone_lamp", ""),
+        ([0, 65, 5], "observer", "minecraft:facing_direction=west"),
+        ([1, 65, 5], "observer", "minecraft:facing_direction=west"),
+    ]);
+    assert_eq!(when(&watch(&mut h, 8), [0, 65, 2], observer(true)), None, "nothing for being put");
+
+    put(&mut h, &[([-1, 65, 2], "stone", ""), ([-1, 65, 5], "stone", "")]);
+    let seen = watch(&mut h, 16);
+    assert_eq!((when(&seen, [0, 65, 2], observer(true)), when(&seen, [0, 65, 2], observer(false))), (Some(2), Some(4)));
+    let lit = when(&seen, [2, 65, 2], hash("minecraft:lit_redstone_lamp")).expect("the lamp past its dust");
+    assert!((3..=4).contains(&lit), "at the evaluation after: {lit}");
+    assert_eq!(when(&seen, [1, 65, 2], dust(15)), Some(lit + 2), "the dust an evaluation after the lamp");
+    assert_eq!(when(&seen, [1, 65, 2], dust(0)), Some(lit + 4));
+    assert_eq!((when(&seen, [1, 65, 5], observer(true)), when(&seen, [1, 65, 5], observer(false))), (Some(4), Some(6)), "by the first one turning on");
+}

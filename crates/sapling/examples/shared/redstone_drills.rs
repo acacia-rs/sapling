@@ -408,3 +408,42 @@ pub fn comparators() -> Vec<String> {
     lines.push("setblock ~5 ~15 ~5 air".to_owned());
     lines
 }
+
+fn observer(facing: &str) -> String {
+    format!("observer [\"minecraft:facing_direction\"=\"{facing}\"]")
+}
+
+/// Which way an observer watches: one facing west and one east, each with a block put and taken
+/// at its west, dust and a lamp at its east, then the dust's signal changed.
+pub fn observer_facing() -> Vec<String> {
+    let mut lines = vec!["fill ~2 ~-1 ~4 ~22 ~-1 ~16 stone".to_owned(), "fill ~2 ~ ~4 ~22 ~4 ~16 air".to_owned()];
+    for (z, facing) in [(5, "west"), (9, "east")] {
+        lines.push(format!("setblock ~6 ~ ~{z} {}", observer(facing)));
+        for (x, dz, block) in [(7, 0, DUST), (8, 0, LAMP), (5, 0, "stone"), (5, 0, "air"), (7, 1, POWER), (7, 1, "air")] {
+            lines.push(format!("setblock ~{x} ~ ~{} {block}", z + dz));
+        }
+    }
+    lines
+}
+
+/// Observers watching west and powering east unless said, a block put and taken at what each watches:
+/// - y 0: one into a block with dust on and beside it and a lamp behind; two in a row, then dust and
+///   a lamp; one watching a lamp that a power block lights;
+/// - y 5: one watching up on a block with dust beside it; one watching down under a lamp.
+pub fn observers() -> Vec<String> {
+    let mut lines = vec!["fill ~2 ~-1 ~4 ~22 ~-1 ~16 stone".to_owned(), "fill ~2 ~4 ~4 ~22 ~4 ~16 stone".to_owned()];
+    lines.extend(["fill ~2 ~ ~4 ~22 ~3 ~16 air".to_owned(), "fill ~2 ~5 ~4 ~22 ~9 ~16 air".to_owned()]);
+    let mut put = |x: i32, y: i32, z: i32, block: &str| lines.push(format!("setblock ~{x} ~{y} ~{z} {block}"));
+    let (west, up, down) = (observer("west"), observer("up"), observer("down"));
+    let rigs: [&[(i32, i32, i32, &str)]; 5] = [
+        &[(6, 0, 5, &west), (7, 0, 5, "stone"), (8, 0, 5, LAMP), (7, 1, 5, DUST), (7, 0, 4, DUST), (5, 0, 5, "stone"), (5, 0, 5, "air")],
+        &[(6, 0, 9, &west), (7, 0, 9, &west), (8, 0, 9, DUST), (9, 0, 9, LAMP), (5, 0, 9, "stone"), (5, 0, 9, "air")],
+        &[(5, 0, 13, LAMP), (6, 0, 13, &west), (7, 0, 13, DUST), (4, 0, 13, POWER), (4, 0, 13, "air")],
+        &[(6, 5, 6, "stone"), (6, 6, 6, &up), (7, 5, 6, DUST), (6, 7, 6, "stone"), (6, 7, 6, "air")],
+        &[(10, 6, 6, &down), (10, 7, 6, LAMP), (10, 5, 6, "stone"), (10, 5, 6, "air")],
+    ];
+    for (x, y, z, block) in rigs.iter().flat_map(|rig| rig.iter()) {
+        put(*x, *y, *z, block);
+    }
+    lines
+}

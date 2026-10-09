@@ -1,14 +1,15 @@
-//! Redstone: plates, buttons, levers, blocks of redstone, torches, repeaters and comparators powering
-//! dust, lamps, doors, trapdoors, fence gates and hoppers, by BDS's circuit system (docs/research/redstone.md). Every
+//! Redstone: plates, buttons, levers, blocks of redstone, torches, repeaters, comparators and
+//! observers powering dust, lamps, doors, trapdoors, fence gates and hoppers, by BDS's circuit system (docs/research/redstone.md). Every
 //! second tick, at its end, the circuits written to are searched again from their sources
 //! (search.rs); what changed is written into the blocks at the start of the next (apply.rs).
 // TODO: the circuits of an arena's template are found only once one of their blocks is written; no
-// pistons or observers; a comparator reads only containers that hold items in slots (no cake,
+// pistons; a comparator reads only containers that hold items in slots (no cake,
 // cauldron, composter, jukebox, lectern or item frame); a burnt torch whose loop was broken while it was out still
 // waits for a change beside it.
 
 mod apply;
 mod capacitors;
+mod observers;
 mod parts;
 mod search;
 
@@ -43,6 +44,8 @@ struct Circuit {
     repeaters: HashMap<BlockPos, RepeaterState>,
     /// What each comparator gives out: its block says only whether it is lit.
     comparators: HashMap<BlockPos, u8>,
+    /// Whether each observer was lit at the last evaluation: dust shows that, an evaluation late.
+    observers: HashMap<BlockPos, bool>,
     /// Cells written since the last evaluation.
     changed: HashSet<BlockPos>,
     /// The last evaluation flipped a torch or repeater, or one waits to flip: the next must look again.
@@ -54,11 +57,15 @@ pub(crate) struct Circuits {
     layers: HashMap<Entity, Circuit>,
     due: Vec<(Entity, BlockPos, Due)>,
     lamps_off: Vec<(u64, Entity, BlockPos)>,
+    observers: observers::Watch,
 }
 
 /// Notes a cell written, for the next evaluation to look at.
 pub(super) fn notice(world: &mut World, layer: Entity, pos: BlockPos) {
-    world.get_resource_or_insert_with(Circuits::default).layers.entry(layer).or_default().changed.insert(pos);
+    let tick = world.get_resource::<Tick>().map_or(0, |tick| tick.0);
+    let mut circuits = world.get_resource_or_insert_with(Circuits::default);
+    circuits.layers.entry(layer).or_default().changed.insert(pos);
+    circuits.observers.written.push((tick, layer, pos));
 }
 
 /// Notes the sources and dust of a column that came from storage: a circuit saved with the world
@@ -107,7 +114,8 @@ pub(crate) fn power_at(world: &World, layer: Entity, pos: BlockPos) -> u8 {
     world.get_resource::<Circuits>().and_then(|circuits| circuits.layers.get(&layer)?.power.get(&pos).copied()).unwrap_or(0)
 }
 
-/// Writes what the last evaluation changed, and puts out the lamps whose delay is up.
+/// Writes what the last evaluation changed, puts out the lamps whose delay is up, and turns the
+/// observers.
 pub(crate) fn apply(world: &mut World) {
     let Some(mut circuits) = world.get_resource_mut::<Circuits>() else { return };
     let due = std::mem::take(&mut circuits.due);
@@ -115,6 +123,7 @@ pub(crate) fn apply(world: &mut World) {
         apply::write(world, layer, pos, due);
     }
     apply::put_out_lamps(world);
+    observers::tick(world);
 }
 
 /// Searches every circuit written to since the last evaluation, on the ticks BDS evaluates.
@@ -169,9 +178,11 @@ fn evaluate_circuit(world: &World, layer: Entity, circuit: &mut Circuit, now: u6
     circuit.torches.retain(|pos, _| circuit.sources.contains(pos));
     circuit.repeaters.retain(|pos, _| circuit.sources.contains(pos));
     circuit.comparators.retain(|pos, _| circuit.sources.contains(pos));
+    circuit.observers.retain(|pos, _| circuit.sources.contains(pos));
 
     let as_kept = |pos: &BlockPos, part: Part| match part {
         Part::Comparator { lit, input, subtracts, output } => Part::Comparator { lit, input, subtracts, output: circuit.comparators.get(pos).copied().unwrap_or(output) },
+        Part::Observer { lit, watch } => Part::Observer { lit: circuit.observers.get(pos).copied().unwrap_or(lit), watch },
         other => other,
     };
     let mut sources: Vec<(BlockPos, Part)> = circuit.sources.iter().map(|pos| (*pos, as_kept(pos, part(*pos)))).collect();
@@ -187,6 +198,14 @@ fn evaluate_circuit(world: &World, layer: Entity, circuit: &mut Circuit, now: u6
             Part::Repeater { lit, delay, .. } => {
                 let fed = shown.inputs.get(pos).is_some_and(|(input, _)| *input > 0);
                 (lit, circuit.repeaters.entry(*pos).or_default().next(lit, fed, delay, shown.locked.contains(pos)), false)
+            }
+            Part::Observer { lit, watch } => {
+                // Its block is turned by observers.rs: only dust is behind.
+                let Part::Observer { lit: now_lit, .. } = part(*pos) else { continue };
+                restrengthened |= now_lit != lit;
+                circuit.observers.insert(*pos, now_lit);
+                *source = Part::Observer { lit: now_lit, watch };
+                continue;
             }
             Part::Comparator { lit, input, subtracts, output } => {
                 let behind = shown.inputs.get(pos).map_or(0, |(input, _)| *input).max(stored.get(pos).copied().unwrap_or(0));

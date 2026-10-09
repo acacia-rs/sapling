@@ -32,6 +32,8 @@ pub(super) enum Part {
     Torch { lit: bool, support: Face },
     /// Takes power on its `input` side and gives it out of the other, `delay` evaluations later.
     Repeater { lit: bool, input: Face, delay: u8 },
+    /// Watches the cell on its `watch` side and, `lit`, powers what is on the other.
+    Observer { lit: bool, watch: Face },
     /// Takes power on its `input` side and its two sides, and gives `output` out of the fourth.
     Comparator { lit: bool, input: Face, subtracts: bool, output: u8 },
     User(User),
@@ -72,6 +74,7 @@ impl Part {
                 let (lit, input) = (name == "powered_comparator", side(get("minecraft:cardinal_direction")));
                 Part::Comparator { lit, input, subtracts: get("output_subtract_bit") == Some("1"), output: if lit { FULL } else { 0 } }
             }
+            "observer" => Part::Observer { lit: get("powered_bit") == Some("1"), watch: side(get("minecraft:facing_direction")) },
             "redstone_lamp" | "lit_redstone_lamp" => Part::User(User::Lamp { lit: name == "lit_redstone_lamp" }),
             "hopper" => Part::User(User::Hopper),
             _ if name.ends_with("trapdoor") => Part::User(User::Opens(Opens::Trapdoor)),
@@ -92,7 +95,7 @@ impl Part {
 
     /// Whether the circuit is searched from it.
     pub(super) fn is_source(self) -> bool {
-        matches!(self, Part::Producer { .. } | Part::Torch { .. } | Part::Repeater { .. } | Part::Comparator { .. })
+        matches!(self, Part::Producer { .. } | Part::Torch { .. } | Part::Repeater { .. } | Part::Comparator { .. } | Part::Observer { .. })
     }
 
     /// Whether a change of signal is written into it.
@@ -143,9 +146,11 @@ fn torch_support(facing: Option<&str>) -> Face {
 }
 
 /// The side a direction names, below for any other; the `minecraft:cardinal_direction` of a repeater
-/// or comparator is the side it takes power on (research/captures/bds-redstone-repeaters.txt).
+/// or comparator is the side it takes power on (research/captures/bds-redstone-repeaters.txt), an
+/// observer's `minecraft:facing_direction` the side it watches.
 fn side(direction: Option<&str>) -> Face {
     match direction {
+        Some("up") => Face::Up,
         Some("north") => Face::North,
         Some("south") => Face::South,
         Some("west") => Face::West,

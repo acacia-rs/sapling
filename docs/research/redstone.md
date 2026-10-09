@@ -332,3 +332,21 @@ No decompile: all of this is from the capture.
   puts it out.
 - Not drilled: equal strengths behind and at a side (sapling passes it, as Java), a repeater or power block at a
   side, containers other than a chest, cake, cauldron, composter, jukebox, lectern, item frame, a click's sound.
+
+## Observers (2026-10-09, `bds_command_probe observer-facing` and `observers`, research/captures/bds-redstone-observers.txt)
+
+No decompile: all of this is from the captures.
+
+- `minecraft:facing_direction` names the side it watches (up and down too); it powers what is on the opposite
+  side, `powered_bit=1` while it does.
+- A change of the watched cell turns it on 2 ticks later and off 2 ticks after that. Seen to count as a change:
+  a block put or taken, dust put, dust changing signal, a lamp lighting or going out, another observer turning
+  on. Putting the observer itself does nothing.
+- Two in a row: the second turns on 2 ticks after the first does, once, though the first changes twice.
+- Lit, it powers a lamp behind it, the block behind it strongly (a lamp past that block lights, dust on and
+  beside it gets 15), and dust behind it.
+- Lamps answer at the evaluation after it turns on (1 or 2 ticks), dust one evaluation later than lamps, and
+  again when it turns off: the lag a torch and a repeater show. So a block that changes its own power (not one
+  put already powered by `/setblock`) is seen by lamps before dust.
+- Not drilled: a change while it is on, a piston moving it, whether a lever, button or plate worked by hand
+  shows the same dust lag (sapling gives them none).

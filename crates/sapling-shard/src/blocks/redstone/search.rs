@@ -87,6 +87,7 @@ impl<F: FnMut(BlockPos) -> Part> Search<'_, F> {
                 }
             }
             Part::Repeater { lit: true, input, .. } => self.reach(pos, opposite(input), FULL, pos, true, true, true),
+            Part::Observer { lit: true, watch } => self.reach(pos, opposite(watch), FULL, pos, true, true, false),
             Part::Comparator { input, output, .. } if output > 0 => self.reach(pos, opposite(input), output, pos, true, true, true),
             _ => {}
         }
@@ -101,7 +102,8 @@ impl<F: FnMut(BlockPos) -> Part> Search<'_, F> {
         let up = !(self.part)(Face::Up.neighbour(dust)).cuts() && is_dust((self.part)(Face::Up.neighbour(beside)));
         let down = !beside_part.cuts() && (self.part)(Face::Down.neighbour(dust)) != Part::Ledge && is_dust((self.part)(Face::Down.neighbour(beside)));
         let joins_repeater = matches!(beside_part, Part::Repeater { input, .. } | Part::Comparator { input, .. } if input == face || input == opposite(face));
-        matches!(beside_part, Part::Dust { .. } | Part::Producer { .. } | Part::Torch { .. }) || joins_repeater || up || down
+        let joins_observer = matches!(beside_part, Part::Observer { watch, .. } if watch == face);
+        matches!(beside_part, Part::Dust { .. } | Part::Producer { .. } | Part::Torch { .. }) || joins_repeater || joins_observer || up || down
     }
 
     fn from_dust(&mut self, dust: BlockPos, strength: u8, origin: BlockPos) {
