@@ -28,7 +28,13 @@ pub(crate) struct Mob {
 }
 
 fn stack(stored: &ItemStack) -> Stack<'_> {
-    Stack { name: &stored.name, count: stored.count, damage: stored.damage, block: stored.block, tag: stored.tag.as_ref() }
+    Stack {
+        name: &stored.name,
+        count: stored.count,
+        damage: stored.damage,
+        block: stored.block,
+        tag: stored.tag.as_ref(),
+    }
 }
 
 /// The mobs this player's client has as entities, with the ids it knows them by.
@@ -59,11 +65,21 @@ pub(crate) struct MobGrid {
 /// client knows.
 pub(crate) fn announcement(actor: &Actor, id: u64) -> Option<Vec<Bytes>> {
     if actor.identifier == ITEM {
-        let item = sapling_data::add_item_entity(id, &stack(actor.item.as_ref()?), actor.position, [0.0; 3])?;
+        let item = sapling_data::add_item_entity(
+            id,
+            &stack(actor.item.as_ref()?),
+            actor.position,
+            [0.0; 3],
+        )?;
         return Some(vec![sapling_net::encode(&item)]);
     }
     if let Some(painting) = &actor.painting {
-        return Some(vec![sapling_net::encode(&sapling_data::add_painting(id, actor.position, painting.direction.into(), &painting.motif))]);
+        return Some(vec![sapling_net::encode(&sapling_data::add_painting(
+            id,
+            actor.position,
+            painting.direction.into(),
+            &painting.motif,
+        ))]);
     }
     let flag = |state: &ActorState| match state {
         ActorState::Saddled => MetadataFlags1::SADDLED,
@@ -72,44 +88,76 @@ pub(crate) fn announcement(actor: &Actor, id: u64) -> Option<Vec<Bytes>> {
         ActorState::Chested => MetadataFlags1::CHESTED,
         ActorState::Sitting => MetadataFlags1::SITTING,
     };
-    let mut packets = vec![sapling_net::encode(&sapling_data::add_entity(&AddEntityOptions {
-        flags: MetadataFlags1(actor.states.iter().fold(0, |flags, state| flags | flag(state).0)),
-        health: actor.health,
-        id,
-        identifier: &actor.identifier,
-        feet: actor.position,
-        yaw: actor.yaw,
-        pitch: actor.pitch,
-        variant: actor.variant,
-        mark_variant: actor.mark_variant,
-        color: actor.color,
-        baby: actor.baby,
-        name: &actor.name,
-    }))];
+    let mut packets = vec![sapling_net::encode(&sapling_data::add_entity(
+        &AddEntityOptions {
+            flags: MetadataFlags1(
+                actor
+                    .states
+                    .iter()
+                    .fold(0, |flags, state| flags | flag(state).0),
+            ),
+            health: actor.health,
+            id,
+            identifier: &actor.identifier,
+            feet: actor.position,
+            yaw: actor.yaw,
+            pitch: actor.pitch,
+            variant: actor.variant,
+            mark_variant: actor.mark_variant,
+            color: actor.color,
+            baby: actor.baby,
+            name: &actor.name,
+        },
+    ))];
     if actor.armor.iter().any(Option::is_some) {
-        let slots: Vec<_> = actor.armor.iter().map(|slot| slot.as_ref().map(stack)).collect();
+        let slots: Vec<_> = actor
+            .armor
+            .iter()
+            .map(|slot| slot.as_ref().map(stack))
+            .collect();
         packets.push(sapling_net::encode(&sapling_data::mob_armor(id, &slots)));
     }
     for (held, offhand) in [(&actor.mainhand, false), (&actor.offhand, true)] {
-        packets.extend(held.as_ref().and_then(|held| sapling_data::mob_hand(id, &stack(held), offhand)).map(|held| sapling_net::encode(&held)));
+        packets.extend(
+            held.as_ref()
+                .and_then(|held| sapling_data::mob_hand(id, &stack(held), offhand))
+                .map(|held| sapling_net::encode(&held)),
+        );
     }
     Some(packets)
 }
 
 /// What shows a stack as an item at `position` moving at `velocity`; `None` for an item no
 /// client knows.
-pub(crate) fn item_announcement(id: u64, item: &ItemStack, position: [f32; 3], velocity: [f32; 3]) -> Option<Vec<Bytes>> {
-    Some(vec![sapling_net::encode(&sapling_data::add_item_entity(id, &stack(item), position, velocity)?)])
+pub(crate) fn item_announcement(
+    id: u64,
+    item: &ItemStack,
+    position: [f32; 3],
+    velocity: [f32; 3],
+) -> Option<Vec<Bytes>> {
+    Some(vec![sapling_net::encode(&sapling_data::add_item_entity(
+        id,
+        &stack(item),
+        position,
+        velocity,
+    )?)])
 }
 
 /// Puts an entity into the world at `feet`, shown to those who see its column by what
 /// `announce` makes of its id; `None` when that makes nothing.
-pub(crate) fn spawn_shown(world: &mut World, layer: Entity, feet: [f32; 3], announce: impl FnOnce(u64) -> Option<Vec<Bytes>>) -> Option<Entity> {
+pub(crate) fn spawn_shown(
+    world: &mut World,
+    layer: Entity,
+    feet: [f32; 3],
+    announce: impl FnOnce(u64) -> Option<Vec<Bytes>>,
+) -> Option<Entity> {
     let id = world.resource::<Players>().next_net_id;
     let announcement = announce(id)?;
     world.resource_mut::<Players>().next_net_id += 1;
     let home = ChunkPos::of_block(feet[0].floor() as i32, feet[2].floor() as i32);
-    let mob = world.spawn((Mob { announcement, home }, NetId(id), InLayer(layer))).id();
+    let mob = world
+        .spawn((Mob { announcement, home }, NetId(id), InLayer(layer)))
+        .id();
     let mut grid = world.resource_mut::<MobGrid>();
     grid.grid.insert(layer, home, (mob, id));
     grid.changes += 1;
@@ -127,7 +175,14 @@ pub(crate) fn reannounce(world: &mut World, mob: Entity, announcement: Vec<Bytes
 /// who see that one, and unloaded with it.
 pub(crate) fn follow(world: &mut World, mob: Entity, at: [f32; 3]) {
     let home = ChunkPos::of_block(at[0].floor() as i32, at[2].floor() as i32);
-    let Some((old, id, layer)) = world.query::<(&Mob, &NetId, &InLayer)>().get(world, mob).ok().map(|(mob, id, layer)| (mob.home, id.0, layer.0)) else { return };
+    let Some((old, id, layer)) = world
+        .query::<(&Mob, &NetId, &InLayer)>()
+        .get(world, mob)
+        .ok()
+        .map(|(mob, id, layer)| (mob.home, id.0, layer.0))
+    else {
+        return;
+    };
     if old == home {
         return;
     }
@@ -142,7 +197,14 @@ pub(crate) fn follow(world: &mut World, mob: Entity, at: [f32; 3]) {
 
 /// Takes a mob out of the world; those who saw it are told by [`update`].
 pub(crate) fn remove(world: &mut World, mob: Entity) {
-    let Some((home, id, layer)) = world.query::<(&Mob, &NetId, &InLayer)>().get(world, mob).ok().map(|(mob, id, layer)| (mob.home, id.0, layer.0)) else { return };
+    let Some((home, id, layer)) = world
+        .query::<(&Mob, &NetId, &InLayer)>()
+        .get(world, mob)
+        .ok()
+        .map(|(mob, id, layer)| (mob.home, id.0, layer.0))
+    else {
+        return;
+    };
     let mut grid = world.resource_mut::<MobGrid>();
     grid.grid.remove(layer, home, &(mob, id));
     grid.changes += 1;
@@ -150,13 +212,22 @@ pub(crate) fn remove(world: &mut World, mob: Entity) {
 }
 
 /// On the ticks columns are unloaded, removes the mobs of those that went.
-pub(crate) fn despawn_unloaded(mut commands: Commands, tick: Res<Tick>, mut grid: ResMut<MobGrid>, layers: Query<&Layer>, mobs: Query<(Entity, &Mob, &NetId, &InLayer)>) {
+pub(crate) fn despawn_unloaded(
+    mut commands: Commands,
+    tick: Res<Tick>,
+    mut grid: ResMut<MobGrid>,
+    layers: Query<&Layer>,
+    mobs: Query<(Entity, &Mob, &NetId, &InLayer)>,
+) {
     if tick.0 % UNLOAD_INTERVAL != 0 {
         return;
     }
     let before = grid.changes;
     for (entity, mob, id, in_layer) in &mobs {
-        if !layers.get(in_layer.0).is_ok_and(|layer| layer.world.is_loaded(mob.home)) {
+        if !layers
+            .get(in_layer.0)
+            .is_ok_and(|layer| layer.world.is_loaded(mob.home))
+        {
             commands.entity(entity).despawn();
             grid.grid.remove(in_layer.0, mob.home, &(entity, id.0));
             grid.changes = before + 1;
@@ -164,7 +235,13 @@ pub(crate) fn despawn_unloaded(mut commands: Commands, tick: Res<Tick>, mut grid
     }
 }
 
-type Viewer<'a> = (&'a Stage, &'a InLayer, &'a View, &'a mut SeesMobs, &'a mut Outgoing);
+type Viewer<'a> = (
+    &'a Stage,
+    &'a InLayer,
+    &'a View,
+    &'a mut SeesMobs,
+    &'a mut Outgoing,
+);
 
 /// Adds the mobs whose column came into each player's view and removes those that left it or
 /// are gone. A player whose view stayed where it was while no mob came or went is skipped.
@@ -174,17 +251,30 @@ pub(crate) fn update(grid: Res<MobGrid>, mut viewers: Query<Viewer>, mobs: Query
         if *stage != Stage::InWorld || sees.made_for == made_for {
             continue;
         }
-        let mut covered: Vec<(Entity, u64)> = grid.grid.covered(in_layer.0, view).copied().collect();
+        let mut covered: Vec<(Entity, u64)> =
+            grid.grid.covered(in_layer.0, view).copied().collect();
         covered.sort_unstable_by_key(|(_, id)| *id);
-        for (entity, _) in covered.iter().filter(|(entity, _)| !sees.mobs.contains_key(entity)) {
+        for (entity, _) in covered
+            .iter()
+            .filter(|(entity, _)| !sees.mobs.contains_key(entity))
+        {
             if let Ok(mob) = mobs.get(*entity) {
                 out.0.extend_from_slice(&mob.announcement);
             }
         }
         let now: HashMap<Entity, u64> = covered.into_iter().collect();
-        for (_, id) in sees.mobs.iter().filter(|(gone, _)| !now.contains_key(*gone)) {
-            out.push(&RemoveEntity { entity_id_self: *id as i64 });
+        for (_, id) in sees
+            .mobs
+            .iter()
+            .filter(|(gone, _)| !now.contains_key(*gone))
+        {
+            out.push(&RemoveEntity {
+                entity_id_self: *id as i64,
+            });
         }
-        *sees = SeesMobs { mobs: now, made_for };
+        *sees = SeesMobs {
+            mobs: now,
+            made_for,
+        };
     }
 }

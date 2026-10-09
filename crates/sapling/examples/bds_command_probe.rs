@@ -1,7 +1,7 @@
 //! Runs a drill of command lines as an operator bot while a second operator watches, and prints
 //! what each was answered: CommandOutput in full, Text, GameRulesChanged as `rule=value`, and the
 //! drill's own packets. The ground truth for sapling's vanilla commands (`sapling::vanilla`).
-//! `cargo run -p sapling --example bds_command_probe -- <server> [gamerule|kill|replaceitem|defaults|concrete|water|lava|redstone]` (offline mode,
+//! `cargo run -p sapling --example bds_command_probe -- <server> [gamerule|kill|replaceitem|defaults|concrete|water|lava|redstone|redstone-phase|conductors]` (offline mode,
 //! operators by default; `gamerule` when none is named).
 #[path = "shared/dump.rs"]
 #[allow(dead_code)]
@@ -9,6 +9,8 @@ mod dump;
 #[path = "shared/probe.rs"]
 #[allow(dead_code)]
 mod probe;
+#[path = "shared/redstone_drills.rs"]
+mod redstone;
 
 use std::time::{Duration, Instant};
 
@@ -142,7 +144,16 @@ const WATER: &[&str] = &[
     "summon xp_orb ~6.5 ~1 ~8.5",
     "summon armor_stand ~3.5 ~1 ~8.5",
 ];
-const WATER_SHOWN: &[&str] = &["AddItemEntity", "AddEntity", "RemoveEntity", "MoveEntityDelta", "SetEntityMotion", "MotionPredictionHints", "LevelSoundEvent", "SetEntityData"];
+const WATER_SHOWN: &[&str] = &[
+    "AddItemEntity",
+    "AddEntity",
+    "RemoveEntity",
+    "MoveEntityDelta",
+    "SetEntityMotion",
+    "MotionPredictionHints",
+    "LevelSoundEvent",
+    "SetEntityData",
+];
 /// The water drill over a pool of lava, which also burns what falls in.
 const LAVA: &[&str] = &[
     "fill ~2 ~-5 ~6 ~8 ~-1 ~12 stone",
@@ -166,115 +177,80 @@ const LAVA_SHOWN: &[&str] = &[
     "SetEntityData",
     "LevelEvent",
 ];
-/// Redstone on a stone stage: a lamp by a power block, dust from a power block to a lamp 15 away
-/// and 16 away, a lever powering through the block it is on, a torch put out by power into its
-/// block, a door and a hopper powered, and pressed buttons left to spring back.
-const REDSTONE: &[&str] = &[
-    "fill ~2 ~-1 ~4 ~22 ~-1 ~16 stone",
-    "fill ~2 ~ ~4 ~22 ~4 ~16 air",
-    "setblock ~3 ~ ~5 redstone_lamp",
-    "setblock ~4 ~ ~5 redstone_block",
-    "setblock ~4 ~ ~5 air",
-    "fill ~3 ~ ~7 ~17 ~ ~7 redstone_wire",
-    "setblock ~18 ~ ~7 redstone_lamp",
-    "fill ~3 ~ ~9 ~18 ~ ~9 redstone_wire",
-    "setblock ~19 ~ ~9 redstone_lamp",
-    "setblock ~2 ~ ~7 redstone_block",
-    "setblock ~2 ~ ~9 redstone_block",
-    "setblock ~2 ~ ~7 air",
-    "setblock ~3 ~ ~12 stone",
-    "setblock ~4 ~ ~12 redstone_lamp",
-    "setblock ~3 ~1 ~12 lever [\"lever_direction\"=\"up_north_south\",\"open_bit\"=true]",
-    "setblock ~3 ~1 ~12 lever [\"lever_direction\"=\"up_north_south\",\"open_bit\"=false]",
-    "setblock ~7 ~ ~12 stone",
-    "setblock ~7 ~1 ~12 redstone_torch",
-    "setblock ~7 ~2 ~12 redstone_lamp",
-    "setblock ~6 ~ ~12 redstone_block",
-    "setblock ~6 ~ ~12 air",
-    "setblock ~10 ~ ~12 iron_door",
-    "setblock ~11 ~ ~12 redstone_block",
-    "setblock ~11 ~ ~12 air",
-    "setblock ~13 ~ ~12 hopper",
-    "setblock ~14 ~ ~12 redstone_block",
-    "setblock ~14 ~ ~12 air",
-    "setblock ~16 ~ ~12 stone",
-    "setblock ~17 ~ ~12 redstone_lamp",
-    "setblock ~16 ~1 ~12 stone_button [\"facing_direction\"=1,\"button_pressed_bit\"=true]",
-    "setblock ~16 ~1 ~12 wooden_button [\"facing_direction\"=1,\"button_pressed_bit\"=true]",
-    "testforblock ~16 ~1 ~12 wooden_button [\"button_pressed_bit\"=true]",
-];
-/// A block of redstone put by a lamp, an iron door and a hopper and taken away again, 20 times,
-/// [`PHASE_SETTLE`] apart so the toggles fall on both ticks of the 2-tick evaluation (research C1).
-const REDSTONE_PHASE: &[&str] = &[
-    "fill ~2 ~-1 ~4 ~6 ~-1 ~6 stone",
-    "fill ~2 ~ ~4 ~6 ~2 ~6 air",
-    "setblock ~3 ~ ~5 redstone_lamp",
-    "setblock ~5 ~ ~5 iron_door",
-    "setblock ~4 ~ ~6 hopper",
-    "setblock ~4 ~ ~5 redstone_block",
-    "setblock ~4 ~ ~5 air",
-    "setblock ~4 ~ ~5 redstone_block",
-    "setblock ~4 ~ ~5 air",
-    "setblock ~4 ~ ~5 redstone_block",
-    "setblock ~4 ~ ~5 air",
-    "setblock ~4 ~ ~5 redstone_block",
-    "setblock ~4 ~ ~5 air",
-    "setblock ~4 ~ ~5 redstone_block",
-    "setblock ~4 ~ ~5 air",
-    "setblock ~4 ~ ~5 redstone_block",
-    "setblock ~4 ~ ~5 air",
-    "setblock ~4 ~ ~5 redstone_block",
-    "setblock ~4 ~ ~5 air",
-    "setblock ~4 ~ ~5 redstone_block",
-    "setblock ~4 ~ ~5 air",
-    "setblock ~4 ~ ~5 redstone_block",
-    "setblock ~4 ~ ~5 air",
-    "setblock ~4 ~ ~5 redstone_block",
-    "setblock ~4 ~ ~5 air",
-    "setblock ~4 ~ ~5 redstone_block",
-    "setblock ~4 ~ ~5 air",
-    "setblock ~4 ~ ~5 redstone_block",
-    "setblock ~4 ~ ~5 air",
-    "setblock ~4 ~ ~5 redstone_block",
-    "setblock ~4 ~ ~5 air",
-    "setblock ~4 ~ ~5 redstone_block",
-    "setblock ~4 ~ ~5 air",
-    "setblock ~4 ~ ~5 redstone_block",
-    "setblock ~4 ~ ~5 air",
-    "setblock ~4 ~ ~5 redstone_block",
-    "setblock ~4 ~ ~5 air",
-];
-/// 10.5 ticks: a lamp is out 6 after its power goes, and each toggle lands half a tick later in
-/// the 2-tick cycle than the one before.
-const PHASE_SETTLE: Duration = Duration::from_millis(525);
-const REDSTONE_SHOWN: &[&str] = &["UpdateBlock", "UpdateBlockSynced", "UpdateSubchunkBlocks", "LevelSoundEvent", "LevelEvent", "BlockEvent"];
-
 /// Long enough to see a thing sink or rise through the pool.
 const WATER_SETTLE: Duration = Duration::from_millis(8000);
-const CONCRETE_SHOWN: &[&str] = &["UpdateBlock", "UpdateBlockSynced", "UpdateSubchunkBlocks", "AddEntity", "RemoveEntity", "AddItemEntity", "LevelEvent", "LevelSoundEvent"];
+const CONCRETE_SHOWN: &[&str] = &[
+    "UpdateBlock",
+    "UpdateBlockSynced",
+    "UpdateSubchunkBlocks",
+    "AddEntity",
+    "RemoveEntity",
+    "AddItemEntity",
+    "LevelEvent",
+    "LevelSoundEvent",
+];
 
-const KILL_SHOWN: &[&str] = &["EntityEvent", "AddEntity", "AddItemEntity", "RemoveEntity", "LevelSoundEvent", "SetEntityData", "Animate", "MobEffect"];
+const KILL_SHOWN: &[&str] = &[
+    "EntityEvent",
+    "AddEntity",
+    "AddItemEntity",
+    "RemoveEntity",
+    "LevelSoundEvent",
+    "SetEntityData",
+    "Animate",
+    "MobEffect",
+];
 /// How long each line of the kill drill is watched: a dead mob goes a second after.
 const KILL_SETTLE: Duration = Duration::from_millis(2500);
 
 fn show(start: Instant, shown: &[&str], who: &str, event: Option<BotEvent>) -> Result<(), String> {
     let packet = match event {
         Some(BotEvent::Packet(packet)) => packet,
-        Some(BotEvent::Disconnected(reason)) => return Err(format!("{who} disconnected: {reason:?}")),
+        Some(BotEvent::Disconnected(reason)) => {
+            return Err(format!("{who} disconnected: {reason:?}"));
+        }
         Some(_) => return Ok(()),
         None => return Err(format!("{who} is gone")),
     };
     let ms = start.elapsed().as_millis();
     if packet.id == packets::CommandOutput::ID {
-        let answer = packet.decode::<packets::CommandOutput>().map_err(|e| e.to_string())?;
-        let lines: Vec<String> = answer.output.iter().map(|line| format!("{} success={} {:?}", line.message_id, line.success, line.parameters)).collect();
-        println!("{ms:>7} {who:<7} CommandOutput success_count={} data={:?} {}", answer.success_count, answer.data, lines.join(" | "));
+        let answer = packet
+            .decode::<packets::CommandOutput>()
+            .map_err(|e| e.to_string())?;
+        let lines: Vec<String> = answer
+            .output
+            .iter()
+            .map(|line| {
+                format!(
+                    "{} success={} {:?}",
+                    line.message_id, line.success, line.parameters
+                )
+            })
+            .collect();
+        println!(
+            "{ms:>7} {who:<7} CommandOutput success_count={} data={:?} {}",
+            answer.success_count,
+            answer.data,
+            lines.join(" | ")
+        );
     } else if packet.id == packets::GameRulesChanged::ID {
-        let rules = packet.decode::<packets::GameRulesChanged>().map_err(|e| e.to_string())?;
-        let shown: Vec<String> = rules.rules.iter().map(|rule| format!("{}={:?}", rule.name, rule.value)).collect();
+        let rules = packet
+            .decode::<packets::GameRulesChanged>()
+            .map_err(|e| e.to_string())?;
+        let shown: Vec<String> = rules
+            .rules
+            .iter()
+            .map(|rule| format!("{}={:?}", rule.name, rule.value))
+            .collect();
         println!("{ms:>7} {who:<7} GameRulesChanged {}", shown.join(" "));
-    } else if let Some(name) = acacia_bot::proto::packet_name(packet.id).filter(|name| ["Text", "SetTime", "SyncWorldClocks"].contains(name) || shown.contains(name)) {
-        let text: String = dump::dump(&packet).unwrap_or_default().chars().take(SHOWN).collect();
+    } else if let Some(name) = acacia_bot::proto::packet_name(packet.id).filter(|name| {
+        ["Text", "SetTime", "SyncWorldClocks"].contains(name) || shown.contains(name)
+    }) {
+        let text: String = dump::dump(&packet)
+            .unwrap_or_default()
+            .chars()
+            .take(SHOWN)
+            .collect();
         println!("{ms:>7} {who:<7} {name} {text}");
     }
     Ok(())
@@ -283,30 +259,50 @@ fn show(start: Instant, shown: &[&str], who: &str, event: Option<BotEvent>) -> R
 /// Characters of a drill's own packets shown.
 const SHOWN: usize = 4000;
 
+fn owned(lines: &[&str]) -> Vec<String> {
+    lines.iter().map(|line| line.to_string()).collect()
+}
+
 #[tokio::main(flavor = "current_thread")]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut args = std::env::args().skip(1);
-    let server = args.next().ok_or("usage: bds_command_probe <server> [gamerule|kill|replaceitem|defaults|concrete|water|lava|redstone|redstone-phase]")?;
+    let server = args.next().ok_or("usage: bds_command_probe <server> [gamerule|kill|replaceitem|defaults|concrete|water|lava|redstone|redstone-phase|conductors]")?;
     let (lines, shown, settle) = match args.next().as_deref() {
-        None | Some("gamerule") => (GAMERULE, &[][..], SETTLE),
-        Some("kill") => (KILL, KILL_SHOWN, KILL_SETTLE),
-        Some("replaceitem") => (REPLACEITEM, REPLACEITEM_SHOWN, SETTLE),
-        Some("defaults") => (DEFAULTS, DEFAULTS_SHOWN, SETTLE),
-        Some("concrete") => (CONCRETE, CONCRETE_SHOWN, KILL_SETTLE),
-        Some("water") => (WATER, WATER_SHOWN, WATER_SETTLE),
-        Some("lava") => (LAVA, LAVA_SHOWN, WATER_SETTLE),
-        Some("redstone") => (REDSTONE, REDSTONE_SHOWN, KILL_SETTLE),
-        Some("redstone-phase") => (REDSTONE_PHASE, REDSTONE_SHOWN, PHASE_SETTLE),
+        None | Some("gamerule") => (owned(GAMERULE), &[][..], SETTLE),
+        Some("kill") => (owned(KILL), KILL_SHOWN, KILL_SETTLE),
+        Some("replaceitem") => (owned(REPLACEITEM), REPLACEITEM_SHOWN, SETTLE),
+        Some("defaults") => (owned(DEFAULTS), DEFAULTS_SHOWN, SETTLE),
+        Some("concrete") => (owned(CONCRETE), CONCRETE_SHOWN, KILL_SETTLE),
+        Some("water") => (owned(WATER), WATER_SHOWN, WATER_SETTLE),
+        Some("lava") => (owned(LAVA), LAVA_SHOWN, WATER_SETTLE),
+        Some("redstone") => (
+            owned(redstone::REDSTONE),
+            redstone::REDSTONE_SHOWN,
+            KILL_SETTLE,
+        ),
+        Some("redstone-phase") => (
+            owned(redstone::REDSTONE_PHASE),
+            redstone::REDSTONE_SHOWN,
+            redstone::PHASE_SETTLE,
+        ),
+        Some("conductors") => (
+            redstone::conductors(),
+            redstone::REDSTONE_SHOWN,
+            redstone::CONDUCTORS_SETTLE,
+        ),
         Some(other) => return Err(format!("no drill {other}").into()),
     };
-    let (mut actor, mut watcher) = (connect(&server, "CmdActor").await?, connect(&server, "CmdWatcher").await?);
+    let (mut actor, mut watcher) = (
+        connect(&server, "CmdActor").await?,
+        connect(&server, "CmdWatcher").await?,
+    );
     watcher.wait_ticks(60).await?;
     actor.wait_ticks(60).await?;
     for bot in [&mut actor, &mut watcher] {
         while let Ok(Some(_)) = tokio::time::timeout(Duration::from_millis(5), bot.next()).await {}
     }
     let start = Instant::now();
-    for line in lines {
+    for line in &lines {
         println!("## /{line}");
         actor.client().command(line);
         let end = tokio::time::Instant::now() + settle;

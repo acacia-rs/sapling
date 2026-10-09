@@ -10,7 +10,9 @@ use sapling_api::BlockPos;
 use sapling_world::{ItemStack, new_block_entity, with_container_items};
 
 use super::screens::{Screen, Viewing, shut_out};
-use super::{CHEST, FIRST_ID, block_name, content, kind, kind_at, lid, opened, pairs, shulker, stored_slots};
+use super::{
+    CHEST, FIRST_ID, block_name, content, kind, kind_at, lid, opened, pairs, shulker, stored_slots,
+};
 use crate::components::{Layer, Outgoing};
 use crate::drops;
 use crate::inventory::{Held, Inventory, wire};
@@ -19,7 +21,10 @@ use crate::inventory::{Held, Inventory, wire};
 pub(crate) fn new_held(world: &mut World, stack: ItemStack) -> Held {
     let mut open = opened(world);
     open.ids += 1;
-    Held { stack, id: FIRST_ID + open.ids }
+    Held {
+        stack,
+        id: FIRST_ID + open.ids,
+    }
 }
 
 /// The slots of the container a player has open: an ender chest's are the player's own.
@@ -40,27 +45,52 @@ pub(crate) fn refusal(world: &World, player: Entity) -> Option<fn(usize, &ItemSt
 
 /// The slots of the held container whose lead half is at `pos`.
 pub(crate) fn slots_at(world: &World, layer: Entity, pos: BlockPos) -> Option<Vec<Option<Held>>> {
-    Some(world.get_resource::<super::OpenContainers>()?.chests.get(&(layer, pos))?.slots.clone())
+    Some(
+        world
+            .get_resource::<super::OpenContainers>()?
+            .chests
+            .get(&(layer, pos))?
+            .slots
+            .clone(),
+    )
 }
 
 /// The players who have the container at `pos` open, each with its window.
 pub(crate) fn viewers(world: &World, layer: Entity, pos: BlockPos) -> Vec<(Entity, u8)> {
-    let Some(chest) = world.get_resource::<super::OpenContainers>().and_then(|open| open.chests.get(&(layer, pos))) else { return Vec::new() };
-    chest.viewers.iter().filter_map(|viewer| Some((*viewer, world.get::<Viewing>(*viewer)?.window))).collect()
+    let Some(chest) = world
+        .get_resource::<super::OpenContainers>()
+        .and_then(|open| open.chests.get(&(layer, pos)))
+    else {
+        return Vec::new();
+    };
+    chest
+        .viewers
+        .iter()
+        .filter_map(|viewer| Some((*viewer, world.get::<Viewing>(*viewer)?.window)))
+        .collect()
 }
 
 /// Lets go of the slots of a container nobody has open and nothing ticks: they are in its
 /// block entities.
 pub(super) fn release(world: &mut World, layer: Entity, pos: BlockPos) {
     let mut open = opened(world);
-    if open.chests.get(&(layer, pos)).is_some_and(|chest| chest.viewers.is_empty() && !chest.pinned) {
+    if open
+        .chests
+        .get(&(layer, pos))
+        .is_some_and(|chest| chest.viewers.is_empty() && !chest.pinned)
+    {
         open.chests.remove(&(layer, pos));
     }
 }
 
 /// Shows a player the container it has open as it is.
 pub(crate) fn resend(world: &mut World, player: Entity) {
-    let (Some(viewing), Some(slots)) = (world.get::<Viewing>(player).copied(), slots_of(world, player)) else { return };
+    let (Some(viewing), Some(slots)) = (
+        world.get::<Viewing>(player).copied(),
+        slots_of(world, player),
+    ) else {
+        return;
+    };
     if let Some(mut out) = world.get_mut::<Outgoing>(player) {
         out.push(&content(viewing.window, &slots));
     }
@@ -68,17 +98,29 @@ pub(crate) fn resend(world: &mut World, player: Entity) {
 
 /// Makes `slots` what the container a player has open holds, after its request.
 pub(crate) fn store(world: &mut World, player: Entity, slots: Vec<Option<Held>>) {
-    let Some(viewing) = world.get::<Viewing>(player).copied() else { return };
+    let Some(viewing) = world.get::<Viewing>(player).copied() else {
+        return;
+    };
     match viewing.screen {
         Screen::Own => {
-            if let Some(mut inventory) = world.get_mut::<Inventory>(player).filter(|inventory| inventory.ender != slots) {
+            if let Some(mut inventory) = world
+                .get_mut::<Inventory>(player)
+                .filter(|inventory| inventory.ender != slots)
+            {
                 (inventory.ender, inventory.unsaved) = (slots, true);
             }
         }
         Screen::Container => {
             let before = slots_at(world, viewing.layer, viewing.pos).unwrap_or_default();
             set_slots(world, viewing.layer, viewing.pos, slots.clone());
-            crate::furnaces::taken_by_player(world, player, viewing.layer, viewing.pos, &before, &slots);
+            crate::furnaces::taken_by_player(
+                world,
+                player,
+                viewing.layer,
+                viewing.pos,
+                &before,
+                &slots,
+            );
         }
         Screen::Station(_) => {}
     }
@@ -88,23 +130,43 @@ pub(crate) fn store(world: &mut World, player: Entity, slots: Vec<Option<Held>>)
 /// its own, and slot by changed slot on the screens of those who have it open, the player whose
 /// request made the change too, as BDS does before answering it.
 pub(crate) fn set_slots(world: &mut World, layer: Entity, pos: BlockPos, slots: Vec<Option<Held>>) {
-    let Some((halves, per_half, changed)) = opened(world).chests.get_mut(&(layer, pos)).filter(|chest| chest.slots != slots).map(|chest| {
-        let changed: Vec<usize> = (0..slots.len().min(chest.slots.len())).filter(|slot| chest.slots[*slot] != slots[*slot]).collect();
-        chest.slots = slots.clone();
-        (chest.halves.clone(), chest.per_half, changed)
-    }) else {
+    let Some((halves, per_half, changed)) = opened(world)
+        .chests
+        .get_mut(&(layer, pos))
+        .filter(|chest| chest.slots != slots)
+        .map(|chest| {
+            let changed: Vec<usize> = (0..slots.len().min(chest.slots.len()))
+                .filter(|slot| chest.slots[*slot] != slots[*slot])
+                .collect();
+            chest.slots = slots.clone();
+            (chest.halves.clone(), chest.per_half, changed)
+        })
+    else {
         return;
     };
     for (viewer, window) in viewers(world, layer, pos) {
-        let Some(mut out) = world.get_mut::<Outgoing>(viewer) else { continue };
+        let Some(mut out) = world.get_mut::<Outgoing>(viewer) else {
+            continue;
+        };
         for slot in &changed {
             let window_id = WindowIDVarint::from_raw(window.into());
-            out.push(&InventorySlot { window_id, slot: *slot as u32, container: None, storage_item: None, item: wire(&slots[*slot], true) });
+            out.push(&InventorySlot {
+                window_id,
+                slot: *slot as u32,
+                container: None,
+                storage_item: None,
+                item: wire(&slots[*slot], true),
+            });
         }
     }
     for (half, held) in halves.iter().zip(slots.chunks(per_half)) {
-        let Some(entity) = entity_holding(world, layer, *half, held) else { return };
-        if !world.get_mut::<Layer>(layer).is_some_and(|mut level| level.world.set_block_entity(*half, &entity)) {
+        let Some(entity) = entity_holding(world, layer, *half, held) else {
+            return;
+        };
+        if !world
+            .get_mut::<Layer>(layer)
+            .is_some_and(|mut level| level.world.set_block_entity(*half, &entity))
+        {
             tracing::warn!(?half, "a container's items could not be kept");
         }
     }
@@ -113,11 +175,25 @@ pub(crate) fn set_slots(world: &mut World, layer: Entity, pos: BlockPos, slots: 
 
 /// The block entity at `pos` holding `held`; a container a handler set, or one stored without
 /// its entity, gets a new one.
-fn entity_holding(world: &World, layer: Entity, pos: BlockPos, held: &[Option<Held>]) -> Option<Value> {
-    let items: Vec<(u8, ItemStack)> = held.iter().enumerate().filter_map(|(slot, held)| Some((slot as u8, held.as_ref()?.stack.clone()))).collect();
-    let id = block_name(world, layer, pos).and_then(kind).unwrap_or(CHEST).entity;
+fn entity_holding(
+    world: &World,
+    layer: Entity,
+    pos: BlockPos,
+    held: &[Option<Held>],
+) -> Option<Value> {
+    let items: Vec<(u8, ItemStack)> = held
+        .iter()
+        .enumerate()
+        .filter_map(|(slot, held)| Some((slot as u8, held.as_ref()?.stack.clone())))
+        .collect();
+    let id = block_name(world, layer, pos)
+        .and_then(kind)
+        .unwrap_or(CHEST)
+        .entity;
     let level = &world.get::<Layer>(layer)?.world;
-    let before = level.block_entity(pos).map_or_else(|| new_block_entity(id, pos), |entity| entity.nbt.clone());
+    let before = level
+        .block_entity(pos)
+        .map_or_else(|| new_block_entity(id, pos), |entity| entity.nbt.clone());
     Some(with_container_items(&before, &items, level.registry()))
 }
 
@@ -127,13 +203,22 @@ fn entity_holding(world: &World, layer: Entity, pos: BlockPos, held: &[Option<He
 /// item holding it, broken `by_creative` only when it holds something (BDS 148b54c10). Other
 /// blocks are left alone.
 pub(crate) fn spill(world: &mut World, layer: Entity, pos: BlockPos, by_creative: bool) {
-    let Some((name, kind)) = block_name(world, layer, pos).and_then(|name| Some((name, kind(name)?))) else { return };
+    let Some((name, kind)) =
+        block_name(world, layer, pos).and_then(|name| Some((name, kind(name)?)))
+    else {
+        return;
+    };
     let halves = pairs::halves(world, layer, pos);
     let half = halves.iter().position(|half| *half == pos).unwrap_or(0);
     let slots = match shut_out(world, layer, halves[0]) {
         Some(chest) => {
             lid::set(world, layer, &halves, false);
-            chest.slots.chunks(chest.per_half).nth(half).map(<[_]>::to_vec).unwrap_or_default()
+            chest
+                .slots
+                .chunks(chest.per_half)
+                .nth(half)
+                .map(<[_]>::to_vec)
+                .unwrap_or_default()
         }
         None if kind.holds_items() => stored_slots(world, layer, pos, kind.slots),
         None => Vec::new(),

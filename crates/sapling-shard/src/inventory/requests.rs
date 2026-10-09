@@ -4,9 +4,11 @@
 
 use acacia_proto::packets::{ItemStackRequest, ItemStackResponse};
 use acacia_proto::types::{
-    ContainerSlotType, FullContainerName, ItemStackRequest as Request, ItemStackRequestActionsItemContent as Action, ItemStackResponsesItem,
-    ItemStackResponsesItemContainersItem as Container, ItemStackResponsesItemContainersItemSlotsItem as SlotInfo, ItemStackResponsesItemStatus as Status,
-    StackRequestSlotInfo,
+    ContainerSlotType, FullContainerName, ItemStackRequest as Request,
+    ItemStackRequestActionsItemContent as Action, ItemStackResponsesItem,
+    ItemStackResponsesItemContainersItem as Container,
+    ItemStackResponsesItemContainersItemSlotsItem as SlotInfo,
+    ItemStackResponsesItemStatus as Status, StackRequestSlotInfo,
 };
 use bevy_ecs::prelude::*;
 use sapling_api::{DropEvent, GameMode, Player};
@@ -16,8 +18,8 @@ use sapling_world::ItemStack;
 use super::crafting::Craft;
 use super::{ARMOR, Inventory, MAIN, MAX_COUNT, Place, described};
 use crate::components::{Mode, Outgoing, PacketQueues, PerTick, in_world_identity};
-use crate::{containers, drops};
 use crate::plugins::Plugins;
+use crate::{containers, drops};
 
 /// Requests looked at per player per tick; a client sends one per click.
 const MAX_REQUESTS_PER_TICK: usize = 32;
@@ -39,8 +41,12 @@ fn place(info: &StackRequestSlotInfo) -> Option<Place> {
     let slot = usize::from(info.slot);
     match info.slot_type.container_id {
         // Which slots there are is the open container's to say: none while nothing is open.
-        ContainerSlotType::Container | ContainerSlotType::Barrel | ContainerSlotType::Shulker => Some(Place::Container(slot)),
-        ContainerSlotType::FurnaceIngredient | ContainerSlotType::BlastFurnaceIngredient | ContainerSlotType::SmokerIngredient => Some(Place::Container(0)),
+        ContainerSlotType::Container | ContainerSlotType::Barrel | ContainerSlotType::Shulker => {
+            Some(Place::Container(slot))
+        }
+        ContainerSlotType::FurnaceIngredient
+        | ContainerSlotType::BlastFurnaceIngredient
+        | ContainerSlotType::SmokerIngredient => Some(Place::Container(0)),
         ContainerSlotType::FurnaceFuel => Some(Place::Container(1)),
         ContainerSlotType::FurnaceOutput => Some(Place::Container(2)),
         // A brewing stand: the ingredient, three bottles, the blaze powder.
@@ -49,7 +55,13 @@ fn place(info: &StackRequestSlotInfo) -> Option<Place> {
         ContainerSlotType::BrewingFuel => Some(Place::Container(4)),
         ContainerSlotType::CraftingInput if GRIDS.contains(&slot) => Some(Place::Ui(slot)),
         ContainerSlotType::StonecutterInput if slot == STONECUTTER_INPUT => Some(Place::Ui(slot)),
-        ContainerSlotType::Hotbar | ContainerSlotType::Inventory | ContainerSlotType::HotbarAndInventory if slot < MAIN => Some(Place::Main(slot)),
+        ContainerSlotType::Hotbar
+        | ContainerSlotType::Inventory
+        | ContainerSlotType::HotbarAndInventory
+            if slot < MAIN =>
+        {
+            Some(Place::Main(slot))
+        }
         ContainerSlotType::Armor if slot < ARMOR => Some(Place::Armor(slot)),
         ContainerSlotType::Offhand => Some(Place::Offhand),
         ContainerSlotType::Cursor => Some(Place::Cursor),
@@ -62,41 +74,89 @@ impl Applied {
     /// The slot a request names, if it holds the stack the client thinks it does.
     fn named(&mut self, inventory: &Inventory, info: &StackRequestSlotInfo) -> Result<Place, ()> {
         let place = place(info).ok_or(())?;
-        let id = inventory.slot(place).and_then(Option::as_ref).map_or(0, |held| held.id);
+        let id = inventory
+            .slot(place)
+            .and_then(Option::as_ref)
+            .map_or(0, |held| held.id);
         // An id below 1 names an empty slot or a stack this request made (its own request id).
         if info.stack_id > 0 && place != Place::Created && info.stack_id != id {
             return Err(());
         }
-        if place != Place::Created && !self.touched.iter().any(|(_, _, touched)| *touched == place) {
-            self.touched.push((info.slot_type.clone(), info.slot, place));
+        if place != Place::Created && !self.touched.iter().any(|(_, _, touched)| *touched == place)
+        {
+            self.touched
+                .push((info.slot_type.clone(), info.slot, place));
         }
         Ok(place)
     }
 
-    fn transfer(&mut self, inventory: &mut Inventory, count: u8, source: &StackRequestSlotInfo, destination: &StackRequestSlotInfo) -> Result<(), ()> {
-        let (from, to) = (self.named(inventory, source)?, self.named(inventory, destination)?);
+    fn transfer(
+        &mut self,
+        inventory: &mut Inventory,
+        count: u8,
+        source: &StackRequestSlotInfo,
+        destination: &StackRequestSlotInfo,
+    ) -> Result<(), ()> {
+        let (from, to) = (
+            self.named(inventory, source)?,
+            self.named(inventory, destination)?,
+        );
         inventory.transfer(from, to, count)
     }
 }
 
 /// Does every action of `request`, or fails at the first that cannot be done as asked, or at
 /// the end over a craft that did not use up what its recipe needs.
-fn apply(inventory: &mut Inventory, request: &Request, creative: bool, at: Station) -> Result<Applied, ()> {
+fn apply(
+    inventory: &mut Inventory,
+    request: &Request,
+    creative: bool,
+    at: Station,
+) -> Result<Applied, ()> {
     let mut applied = Applied::default();
     let mut craft: Option<Craft> = None;
     for action in &request.actions {
         match &action.content {
-            Action::CraftRecipe(asked) if craft.is_none() => craft = Some(Craft::start(inventory, asked.recipe_network_id, asked.times_crafted, at, true)?),
-            Action::CraftRecipeAuto(asked) if craft.is_none() => craft = Some(Craft::start(inventory, asked.recipe_network_id, asked.times_crafted, at, false)?),
-            Action::Create(asked) => craft.as_mut().ok_or(())?.create(inventory, asked.result_slot_id.into())?,
+            Action::CraftRecipe(asked) if craft.is_none() => {
+                craft = Some(Craft::start(
+                    inventory,
+                    asked.recipe_network_id,
+                    asked.times_crafted,
+                    at,
+                    true,
+                )?)
+            }
+            Action::CraftRecipeAuto(asked) if craft.is_none() => {
+                craft = Some(Craft::start(
+                    inventory,
+                    asked.recipe_network_id,
+                    asked.times_crafted,
+                    at,
+                    false,
+                )?)
+            }
+            Action::Create(asked) => craft
+                .as_mut()
+                .ok_or(())?
+                .create(inventory, asked.result_slot_id.into())?,
             Action::Consume(used) => {
                 let from = applied.named(inventory, &used.source)?;
-                craft.as_mut().ok_or(())?.use_up(from, inventory.take(from, used.count)?)?;
+                craft
+                    .as_mut()
+                    .ok_or(())?
+                    .use_up(from, inventory.take(from, used.count)?)?;
             }
-            Action::Take(take) => applied.transfer(inventory, take.count, &take.source, &take.destination)?,
-            Action::Place(place) => applied.transfer(inventory, place.count, &place.source, &place.destination)?,
+            Action::Take(take) => {
+                applied.transfer(inventory, take.count, &take.source, &take.destination)?
+            }
+            Action::Place(place) => {
+                applied.transfer(inventory, place.count, &place.source, &place.destination)?
+            }
             Action::Swap(swap) => {
-                let (a, b) = (applied.named(inventory, &swap.source)?, applied.named(inventory, &swap.destination)?);
+                let (a, b) = (
+                    applied.named(inventory, &swap.source)?,
+                    applied.named(inventory, &swap.destination)?,
+                );
                 inventory.swap(a, b)?;
             }
             Action::Drop(thrown) => {
@@ -109,7 +169,13 @@ fn apply(inventory: &mut Inventory, request: &Request, creative: bool, at: Stati
             }
             Action::CraftCreative(pick) if creative => {
                 let item = sapling_data::creative_item(pick.item_id).ok_or(())?;
-                let made = ItemStack { name: item.name.to_owned(), count: MAX_COUNT, damage: item.damage, block: item.block, tag: item.tag.clone() };
+                let made = ItemStack {
+                    name: item.name.to_owned(),
+                    count: MAX_COUNT,
+                    damage: item.damage,
+                    block: item.block,
+                    tag: item.tag.clone(),
+                };
                 inventory.put(Place::Created, Some(made));
             }
             // Follows a pick with what the client expects of it; the server's own result counts.
@@ -121,7 +187,10 @@ fn apply(inventory: &mut Inventory, request: &Request, creative: bool, at: Stati
         }
     }
     inventory.put(Place::Created, None);
-    craft.is_none_or(|craft| craft.is_paid()).then_some(applied).ok_or(())
+    craft
+        .is_none_or(|craft| craft.is_paid())
+        .then_some(applied)
+        .ok_or(())
 }
 
 /// What BDS answers a request a container refused to hold an item in (a furnace's fuel slot asked
@@ -129,7 +198,13 @@ fn apply(inventory: &mut Inventory, request: &Request, creative: bool, at: Stati
 const CANNOT_HOLD: Status = Status::Unknown(55);
 
 fn refusal(request_id: i32, status: Status) -> ItemStackResponse {
-    ItemStackResponse { responses: vec![ItemStackResponsesItem { status, request_id, containers: None }] }
+    ItemStackResponse {
+        responses: vec![ItemStackResponsesItem {
+            status,
+            request_id,
+            containers: None,
+        }],
+    }
 }
 
 fn response(inventory: &Inventory, request_id: i32, applied: &Applied) -> ItemStackResponse {
@@ -145,51 +220,108 @@ fn response(inventory: &Inventory, request_id: i32, applied: &Applied) -> ItemSt
             filtered_custom_name: String::new(),
             durability_correction: 0,
         };
-        match containers.iter_mut().find(|container| container.slot_type == *name) {
+        match containers
+            .iter_mut()
+            .find(|container| container.slot_type == *name)
+        {
             Some(container) => container.slots.push(info),
-            None => containers.push(Container { slot_type: name.clone(), slots: vec![info] }),
+            None => containers.push(Container {
+                slot_type: name.clone(),
+                slots: vec![info],
+            }),
         }
     }
-    ItemStackResponse { responses: vec![ItemStackResponsesItem { status: Status::Ok, request_id, containers: Some(containers) }] }
+    ItemStackResponse {
+        responses: vec![ItemStackResponsesItem {
+            status: Status::Ok,
+            request_id,
+            containers: Some(containers),
+        }],
+    }
 }
 
 /// Whether the handlers let every stack a request throws out go.
-fn may_drop(world: &mut World, plugins: &mut Plugins, player: &Player, dropped: &[ItemStack]) -> bool {
+fn may_drop(
+    world: &mut World,
+    plugins: &mut Plugins,
+    player: &Player,
+    dropped: &[ItemStack],
+) -> bool {
     dropped.iter().all(|stack| {
-        let event = plugins.offer(world, DropEvent::new(described(stack)), |handler, ctx, event| handler.on_drop(ctx, player, event));
+        let event = plugins.offer(
+            world,
+            DropEvent::new(described(stack)),
+            |handler, ctx, event| handler.on_drop(ctx, player, event),
+        );
         !event.is_cancelled()
     })
 }
 
-fn answer(world: &mut World, plugins: &mut Plugins, entity: Entity, player: &Player, request: &Request) {
-    let creative = world.get::<Mode>(entity).is_some_and(|mode| mode.0 == GameMode::Creative);
-    let Some(mut trial) = world.get::<Inventory>(entity).filter(|inventory| inventory.loaded).cloned() else { return };
-    let (open, at) = (containers::slots_of(world, entity), containers::station(world, entity));
+fn answer(
+    world: &mut World,
+    plugins: &mut Plugins,
+    entity: Entity,
+    player: &Player,
+    request: &Request,
+) {
+    let creative = world
+        .get::<Mode>(entity)
+        .is_some_and(|mode| mode.0 == GameMode::Creative);
+    let Some(mut trial) = world
+        .get::<Inventory>(entity)
+        .filter(|inventory| inventory.loaded)
+        .cloned()
+    else {
+        return;
+    };
+    let (open, at) = (
+        containers::slots_of(world, entity),
+        containers::station(world, entity),
+    );
     let refuses = containers::refusal(world, entity);
     (trial.container, trial.refuses) = (open.clone().unwrap_or_default(), refuses);
-    let mut unrefused = Inventory { refuses: None, ..trial.clone() };
+    let mut unrefused = Inventory {
+        refuses: None,
+        ..trial.clone()
+    };
     // Tried on a copy first: the handlers see a drop before anything has left the inventory.
     let tried = apply(&mut trial, request, creative, at);
     let failed = tried.is_err();
     let allowed = tried.is_ok_and(|applied| may_drop(world, plugins, player, &applied.dropped));
     let mut query = world.query::<(&mut Inventory, &mut Outgoing)>();
-    let Ok((mut inventory, mut out)) = query.get_mut(world, entity) else { return };
+    let Ok((mut inventory, mut out)) = query.get_mut(world, entity) else {
+        return;
+    };
     (inventory.container, inventory.refuses) = (open.unwrap_or_default(), refuses);
-    let applied = if allowed { apply(&mut inventory, request, creative, at).ok() } else { None };
+    let applied = if allowed {
+        apply(&mut inventory, request, creative, at).ok()
+    } else {
+        None
+    };
     // Made before the container's slots are taken back out (the answer names them), sent after
     // the container's slots are shown, as BDS does.
-    let answer = applied.as_ref().map(|applied| response(&inventory, request.request_id, applied));
-    let (container, _) = (std::mem::take(&mut inventory.container), inventory.refuses.take());
+    let answer = applied
+        .as_ref()
+        .map(|applied| response(&inventory, request.request_id, applied));
+    let (container, _) = (
+        std::mem::take(&mut inventory.container),
+        inventory.refuses.take(),
+    );
     match (applied, answer) {
         (Some(applied), Some(answer)) => {
             containers::store(world, entity, container);
             if let Some(mut out) = world.get_mut::<Outgoing>(entity) {
                 out.push(&answer);
             }
-            applied.dropped.into_iter().for_each(|stack| drops::throw(world, entity, stack));
+            applied
+                .dropped
+                .into_iter()
+                .for_each(|stack| drops::throw(world, entity, stack));
         }
         // Only the container's refusal stood in the way: the client undoes it by itself.
-        _ if failed && apply(&mut unrefused, request, creative, at).is_ok() => out.push(&refusal(request.request_id, CANNOT_HOLD)),
+        _ if failed && apply(&mut unrefused, request, creative, at).is_ok() => {
+            out.push(&refusal(request.request_id, CANNOT_HOLD))
+        }
         _ => {
             tracing::debug!(player = %player.name, ?request, "refusing an inventory request");
             out.push(&refusal(request.request_id, Status::Error));
@@ -201,10 +333,14 @@ fn answer(world: &mut World, plugins: &mut Plugins, entity: Entity, player: &Pla
 
 /// Answers this tick's inventory requests, in arrival order.
 pub(crate) fn dispatch(world: &mut World, plugins: &mut Plugins) {
-    let packets = world.resource_mut::<PacketQueues>().take::<ItemStackRequest>();
+    let packets = world
+        .resource_mut::<PacketQueues>()
+        .take::<ItemStackRequest>();
     let mut budget = PerTick::new(MAX_REQUESTS_PER_TICK);
     for (entity, packet) in packets {
-        let Some(player) = in_world_identity(world, entity) else { continue };
+        let Some(player) = in_world_identity(world, entity) else {
+            continue;
+        };
         for request in packet.requests.iter().filter(|_| budget.allow(entity)) {
             answer(world, plugins, entity, &player, request);
         }

@@ -11,13 +11,17 @@ use std::sync::{Arc, Mutex};
 
 use acacia_auth::login::verify::{SigningKeys, Verifier};
 use acacia_proto::packets::{
-    InventoryTransaction, PlayerAuthInput, PlayerAuthInputBlockActionItem, PlayerAuthInputInputMode, PlayerAuthInputInteractionModel, PlayerAuthInputPlayMode,
-    RequestChunkRadius, ResourcePackClientResponse, ResourcePackClientResponseResponseStatus as PackStatus, SetLocalPlayerAsInitialized,
+    InventoryTransaction, PlayerAuthInput, PlayerAuthInputBlockActionItem,
+    PlayerAuthInputInputMode, PlayerAuthInputInteractionModel, PlayerAuthInputPlayMode,
+    RequestChunkRadius, ResourcePackClientResponse,
+    ResourcePackClientResponseResponseStatus as PackStatus, SetLocalPlayerAsInitialized,
 };
 use acacia_proto::types::{
-    Action as BlockAction, BlockCoordinates, InputData, ItemV4, ItemV4Extra, Transaction, TransactionLegacy, TransactionTransactionData, TransactionTransactionType,
-    TransactionUseItem, TransactionUseItemActionType, TransactionUseItemClientCooldownState, TransactionUseItemClientPrediction, TransactionUseItemHand,
-    TransactionUseItemTriggerType, Vec2f, Vec3f, Vec3i,
+    Action as BlockAction, BlockCoordinates, InputData, ItemV4, ItemV4Extra, Transaction,
+    TransactionLegacy, TransactionTransactionData, TransactionTransactionType, TransactionUseItem,
+    TransactionUseItemActionType, TransactionUseItemClientCooldownState,
+    TransactionUseItemClientPrediction, TransactionUseItemHand, TransactionUseItemTriggerType,
+    Vec2f, Vec3f, Vec3i,
 };
 use acacia_proto::{GAME_VERSION, Packet, RawPacket};
 use p384::ecdsa::SigningKey;
@@ -30,8 +34,15 @@ fn login(name: &str) -> Box<VerifiedLogin> {
     let key = SigningKey::random(&mut rand_core::OsRng);
     let client = acacia_auth::ClientData::default_for(name, "127.0.0.1:19132", GAME_VERSION);
     let request = acacia_auth::build_offline_connection_request(name, &key, &client);
-    let now = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_secs() as i64;
-    Box::new(Verifier::new(SigningKeys::empty()).verify(&request, now).unwrap())
+    let now = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap()
+        .as_secs() as i64;
+    Box::new(
+        Verifier::new(SigningKeys::empty())
+            .verify(&request, now)
+            .unwrap(),
+    )
 }
 
 #[derive(Clone, Default)]
@@ -39,11 +50,19 @@ struct Log(Arc<Mutex<Vec<String>>>);
 
 impl Handler for Log {
     fn on_join(&mut self, ctx: &mut ShardCtx<'_>, player: &Player) {
-        self.0.lock().unwrap().push(format!("join {} ({} online)", player.name, ctx.player_count()));
+        self.0.lock().unwrap().push(format!(
+            "join {} ({} online)",
+            player.name,
+            ctx.player_count()
+        ));
     }
 
     fn on_quit(&mut self, ctx: &mut ShardCtx<'_>, player: &Player) {
-        self.0.lock().unwrap().push(format!("quit {} ({} online)", player.name, ctx.player_count()));
+        self.0.lock().unwrap().push(format!(
+            "quit {} ({} online)",
+            player.name,
+            ctx.player_count()
+        ));
     }
 }
 
@@ -82,7 +101,12 @@ pub fn platform() -> World {
 }
 
 pub fn config() -> ShardConfig {
-    ShardConfig { world_name: "test".into(), max_view_radius: 4, columns_per_tick: 16, ..ShardConfig::default() }
+    ShardConfig {
+        world_name: "test".into(),
+        max_view_radius: 4,
+        columns_per_tick: 16,
+        ..ShardConfig::default()
+    }
 }
 
 impl Harness {
@@ -97,21 +121,42 @@ impl Harness {
         shard.add_handler(Box::new(log.clone()));
         let remote = Remote::default();
         shard.add_handler(Box::new(remote.clone()));
-        Self { shard, net, remote, log }
+        Self {
+            shard,
+            net,
+            remote,
+            log,
+        }
     }
 
     pub fn join(&mut self, conn: u64, name: &str) {
-        let event = NetEvent::Joined { conn: ConnId::new(conn), addr: "127.0.0.1:5000".parse().unwrap(), login: login(name) };
+        let event = NetEvent::Joined {
+            conn: ConnId::new(conn),
+            addr: "127.0.0.1:5000".parse().unwrap(),
+            login: login(name),
+        };
         self.net.events.send(event).unwrap();
     }
 
     pub fn receive<T: Packet>(&mut self, conn: u64, packet: &T) {
         let packet = RawPacket::parse(sapling_net::encode(packet)).unwrap();
-        self.net.events.send(NetEvent::Packet { conn: ConnId::new(conn), packet }).unwrap();
+        self.net
+            .events
+            .send(NetEvent::Packet {
+                conn: ConnId::new(conn),
+                packet,
+            })
+            .unwrap();
     }
 
     pub fn leave(&mut self, conn: u64) {
-        self.net.events.send(NetEvent::Left { conn: ConnId::new(conn), reason: "test".into() }).unwrap();
+        self.net
+            .events
+            .send(NetEvent::Left {
+                conn: ConnId::new(conn),
+                reason: "test".into(),
+            })
+            .unwrap();
     }
 
     /// Ticks once and returns what the shard sent to `conn` in that tick.
@@ -120,7 +165,9 @@ impl Harness {
         let mut sent = Vec::new();
         while let Ok(command) = self.net.sent.try_recv() {
             match command {
-                Outbound::Send { conn: to, packets } if to == ConnId::new(conn) => sent.extend(packets.into_iter().map(|p| RawPacket::parse(p).unwrap())),
+                Outbound::Send { conn: to, packets } if to == ConnId::new(conn) => {
+                    sent.extend(packets.into_iter().map(|p| RawPacket::parse(p).unwrap()))
+                }
                 other => panic!("unexpected {other:?}"),
             }
         }
@@ -133,7 +180,11 @@ impl Harness {
         let mut sent = Sent::default();
         while let Ok(command) = self.net.sent.try_recv() {
             match command {
-                Outbound::Send { conn, packets } => sent.0.entry(conn.get()).or_default().extend(packets.into_iter().map(|p| RawPacket::parse(p).unwrap())),
+                Outbound::Send { conn, packets } => sent
+                    .0
+                    .entry(conn.get())
+                    .or_default()
+                    .extend(packets.into_iter().map(|p| RawPacket::parse(p).unwrap())),
                 other => panic!("unexpected {other:?}"),
             }
         }
@@ -149,10 +200,21 @@ impl Harness {
         self.tick_all();
         self.receive(conn, &pack_response(PackStatus::Completed));
         self.tick_all();
-        self.receive(conn, &RequestChunkRadius { chunk_radius: 4, max_radius: 4 });
+        self.receive(
+            conn,
+            &RequestChunkRadius {
+                chunk_radius: 4,
+                max_radius: 4,
+            },
+        );
         // 49 columns at 16 a tick.
         (0..5).for_each(|_| drop(self.tick_all()));
-        self.receive(conn, &SetLocalPlayerAsInitialized { runtime_entity_id: 0 });
+        self.receive(
+            conn,
+            &SetLocalPlayerAsInitialized {
+                runtime_entity_id: 0,
+            },
+        );
         self.tick_all()
     }
 
@@ -165,7 +227,13 @@ impl Harness {
         self.tick(conn);
         self.receive(conn, &pack_response(PackStatus::Completed));
         self.tick(conn);
-        self.receive(conn, &RequestChunkRadius { chunk_radius: radius, max_radius: radius as u8 });
+        self.receive(
+            conn,
+            &RequestChunkRadius {
+                chunk_radius: radius,
+                max_radius: radius as u8,
+            },
+        );
     }
 
     pub fn log(&self) -> Vec<String> {
@@ -189,7 +257,11 @@ pub fn ids(packets: &[RawPacket]) -> Vec<u32> {
 
 /// Every `T` among `packets`, in order.
 pub fn all<T: Packet>(packets: &[RawPacket]) -> Vec<T> {
-    packets.iter().filter(|p| p.id == T::ID).map(|p| p.decode().unwrap()).collect()
+    packets
+        .iter()
+        .filter(|p| p.id == T::ID)
+        .map(|p| p.decode().unwrap())
+        .collect()
 }
 
 /// The layer-0 block changes among `packets`, in order, as (position, block hash): UpdateBlock and
@@ -197,15 +269,30 @@ pub fn all<T: Packet>(packets: &[RawPacket]) -> Vec<T> {
 #[allow(dead_code)]
 pub fn block_changes(packets: &[RawPacket]) -> Vec<([i32; 3], u32)> {
     let change = |packet: &RawPacket| match packet.id {
-        acacia_proto::packets::UpdateBlock::ID => packet.decode::<acacia_proto::packets::UpdateBlock>().ok().map(|u| (u.layer, u.position, u.block_runtime_id)),
-        acacia_proto::packets::UpdateBlockSynced::ID => packet.decode::<acacia_proto::packets::UpdateBlockSynced>().ok().map(|u| (u.layer, u.position, u.block_runtime_id)),
+        acacia_proto::packets::UpdateBlock::ID => packet
+            .decode::<acacia_proto::packets::UpdateBlock>()
+            .ok()
+            .map(|u| (u.layer, u.position, u.block_runtime_id)),
+        acacia_proto::packets::UpdateBlockSynced::ID => packet
+            .decode::<acacia_proto::packets::UpdateBlockSynced>()
+            .ok()
+            .map(|u| (u.layer, u.position, u.block_runtime_id)),
         _ => None,
     };
-    packets.iter().filter_map(change).filter(|(layer, ..)| *layer == 0).map(|(_, p, block)| ([p.x, p.y, p.z], block)).collect()
+    packets
+        .iter()
+        .filter_map(change)
+        .filter(|(layer, ..)| *layer == 0)
+        .map(|(_, p, block)| ([p.x, p.y, p.z], block))
+        .collect()
 }
 
 pub fn pack_response(status: PackStatus) -> ResourcePackClientResponse {
-    ResourcePackClientResponse { response_status: status, response_status_name: String::new(), resourcepackids: None }
+    ResourcePackClientResponse {
+        response_status: status,
+        response_status_name: String::new(),
+        resourcepackids: None,
+    }
 }
 
 /// The id a block's first state has on the wire.
@@ -216,8 +303,16 @@ pub fn hash(name: &str) -> u32 {
 
 /// The input of a player at the platform's spawn whose client reports block actions on top faces.
 pub fn block_actions(actions: &[(BlockAction, [i32; 3])]) -> PlayerAuthInput {
-    let item = |&(action, [x, y, z]): &(BlockAction, [i32; 3])|PlayerAuthInputBlockActionItem { action, position: Vec3i { x, y, z }, face: 1 };
-    PlayerAuthInput { input_data: vec![InputData::BlockAction], block_action: Some(actions.iter().map(item).collect()), ..input_at([0.5, 65.0, 0.5]) }
+    let item = |&(action, [x, y, z]): &(BlockAction, [i32; 3])| PlayerAuthInputBlockActionItem {
+        action,
+        position: Vec3i { x, y, z },
+        face: 1,
+    };
+    PlayerAuthInput {
+        input_data: vec![InputData::BlockAction],
+        block_action: Some(actions.iter().map(item).collect()),
+        ..input_at([0.5, 65.0, 0.5])
+    }
 }
 
 /// A click on `face` of the block at `pos` by a client that says it holds the block `held`.
@@ -239,14 +334,32 @@ pub fn click([x, y, z]: [i32; 3], face: u8, held: Option<&str>) -> InventoryTran
         hotbar_slot: 0,
         hand: TransactionUseItemHand::MainHand,
         held_item,
-        player_pos: Vec3f { x: 0.5, y: 65.0 + sapling_data::EYE_HEIGHT, z: 0.5 },
-        click_pos: Vec3f { x: 0.5, y: 1.0, z: 0.5 },
+        player_pos: Vec3f {
+            x: 0.5,
+            y: 65.0 + sapling_data::EYE_HEIGHT,
+            z: 0.5,
+        },
+        click_pos: Vec3f {
+            x: 0.5,
+            y: 1.0,
+            z: 0.5,
+        },
         block_runtime_id: 0,
         client_prediction: TransactionUseItemClientPrediction::Success,
         client_cooldown_state: TransactionUseItemClientCooldownState::Off,
     };
-    let legacy = TransactionLegacy { legacy_request_id: 0, legacy_transactions: None };
-    InventoryTransaction { transaction: Transaction { legacy, transaction_type: TransactionTransactionType::ItemUse, actions: Vec::new(), transaction_data: TransactionTransactionData::ItemUse(data) } }
+    let legacy = TransactionLegacy {
+        legacy_request_id: 0,
+        legacy_transactions: None,
+    };
+    InventoryTransaction {
+        transaction: Transaction {
+            legacy,
+            transaction_type: TransactionTransactionType::ItemUse,
+            actions: Vec::new(),
+            transaction_data: TransactionTransactionData::ItemUse(data),
+        },
+    }
 }
 
 /// The input of a player standing with its feet at `feet`.
@@ -255,7 +368,11 @@ pub fn input_at(feet: [f32; 3]) -> PlayerAuthInput {
     PlayerAuthInput {
         pitch: 0.0,
         yaw: 0.0,
-        position: Vec3f { x: feet[0], y: feet[1] + sapling_data::EYE_HEIGHT, z: feet[2] },
+        position: Vec3f {
+            x: feet[0],
+            y: feet[1] + sapling_data::EYE_HEIGHT,
+            z: feet[2],
+        },
         move_vector: zero(),
         head_yaw: 0.0,
         input_data: Vec::new(),
@@ -264,14 +381,22 @@ pub fn input_at(feet: [f32; 3]) -> PlayerAuthInput {
         interaction_model: PlayerAuthInputInteractionModel::Crosshair,
         interact_rotation: zero(),
         tick: 0,
-        delta: Vec3f { x: 0.0, y: 0.0, z: 0.0 },
+        delta: Vec3f {
+            x: 0.0,
+            y: 0.0,
+            z: 0.0,
+        },
         transaction: None,
         item_stack_request: None,
         block_action: None,
         vehicle_rotation: None,
         predicted_vehicle: None,
         analogue_move_vector: zero(),
-        camera_orientation: Vec3f { x: 0.0, y: 0.0, z: 0.0 },
+        camera_orientation: Vec3f {
+            x: 0.0,
+            y: 0.0,
+            z: 0.0,
+        },
         raw_move_vector: zero(),
     }
 }

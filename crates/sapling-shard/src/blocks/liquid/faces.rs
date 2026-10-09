@@ -30,12 +30,23 @@ const STAIR_BACKS: [Face; 4] = [Face::East, Face::West, Face::South, Face::North
 
 /// Whether the block at `pos` lets water through its `face`.
 pub(super) fn open(world: &World, layer: Entity, pos: BlockPos, face: Face) -> bool {
-    let Some(level) = level(world, layer).filter(|level| level.in_height(pos[1]) && level.is_loaded(send::column(pos))) else { return true };
+    let Some(level) = level(world, layer)
+        .filter(|level| level.in_height(pos[1]) && level.is_loaded(send::column(pos)))
+    else {
+        return true;
+    };
     let (registry, id) = (level.registry(), level.block(pos[0], pos[1], pos[2]));
-    let Some(name) = registry.get(id).map(|state| state.name) else { return true };
+    let Some(name) = registry.get(id).map(|state| state.name) else {
+        return true;
+    };
     if name.ends_with("_stairs") {
         let top = property(registry, id, "upside_down_bit") == Some("1");
-        let Some(back) = property(registry, id, "weirdo_direction").and_then(|d| d.parse::<usize>().ok()).and_then(|d| STAIR_BACKS.get(d).copied()) else { return true };
+        let Some(back) = property(registry, id, "weirdo_direction")
+            .and_then(|d| d.parse::<usize>().ok())
+            .and_then(|d| STAIR_BACKS.get(d).copied())
+        else {
+            return true;
+        };
         return match face {
             Face::Down => top,
             Face::Up => !top,
@@ -44,8 +55,16 @@ pub(super) fn open(world: &World, layer: Entity, pos: BlockPos, face: Face) -> b
             // A side is closed by an inner corner: the stair in front turned with its back that way.
             side => {
                 let front = opposite(back).neighbour(pos);
-                let turned = STAIR_BACKS.iter().position(|back| *back == side).map(|d| d.to_string());
-                let corner = registry.get(level.block(front[0], front[1], front[2])).is_some_and(|state| state.name.ends_with("_stairs") && state.property("weirdo_direction") == turned.as_deref());
+                let turned = STAIR_BACKS
+                    .iter()
+                    .position(|back| *back == side)
+                    .map(|d| d.to_string());
+                let corner = registry
+                    .get(level.block(front[0], front[1], front[2]))
+                    .is_some_and(|state| {
+                        state.name.ends_with("_stairs")
+                            && state.property("weirdo_direction") == turned.as_deref()
+                    });
                 !corner
             }
         };

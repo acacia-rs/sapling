@@ -40,17 +40,29 @@ impl WorldBackend for Ctx<'_> {
     }
 
     fn world_of(&self, player: PlayerId) -> Option<String> {
-        self.layer_of(self.entity(player)?).map(|layer| name_of(self.world, layer))
+        self.layer_of(self.entity(player)?)
+            .map(|layer| name_of(self.world, layer))
     }
 
     fn players_in(&self, name: &str) -> Vec<Player> {
-        let Some(Place::Here(layer)) = self.place(name) else { return Vec::new() };
-        let here = in_world(self.world).into_iter().filter(|player| self.layer_of(*player) == Some(layer));
-        here.filter_map(|player| self.world.get::<Identity>(player).map(|identity| identity.0.clone())).collect()
+        let Some(Place::Here(layer)) = self.place(name) else {
+            return Vec::new();
+        };
+        let here = in_world(self.world)
+            .into_iter()
+            .filter(|player| self.layer_of(*player) == Some(layer));
+        here.filter_map(|player| {
+            self.world
+                .get::<Identity>(player)
+                .map(|identity| identity.0.clone())
+        })
+        .collect()
     }
 
     fn transfer(&mut self, player: PlayerId, name: &str) -> bool {
-        let (Some(entity), conn) = (self.entity(player), ConnId::new(player.0)) else { return false };
+        let (Some(entity), conn) = (self.entity(player), ConnId::new(player.0)) else {
+            return false;
+        };
         if handoff::is_moving(self.world, conn) {
             return false;
         }
@@ -68,7 +80,13 @@ impl WorldBackend for Ctx<'_> {
         let packet = chat::raw_packet(message);
         match self.place(name) {
             Some(Place::Here(layer)) => chat::send_to_layer(self.world, layer, &packet),
-            Some(Place::Shard(shard)) => drop(self.world.resource::<Peers>().tell(shard, ShardMsg::Say { world: Some(name.to_owned()), packet })),
+            Some(Place::Shard(shard)) => drop(self.world.resource::<Peers>().tell(
+                shard,
+                ShardMsg::Say {
+                    world: Some(name.to_owned()),
+                    packet,
+                },
+            )),
             None => {}
         }
     }
@@ -76,7 +94,12 @@ impl WorldBackend for Ctx<'_> {
     fn broadcast_all(&mut self, message: &str) {
         let packet = chat::raw_packet(message);
         chat::send_to_all(self.world, &packet);
-        self.world.resource::<Peers>().tell_others(|| ShardMsg::Say { world: None, packet: packet.clone() });
+        self.world
+            .resource::<Peers>()
+            .tell_others(|| ShardMsg::Say {
+                world: None,
+                packet: packet.clone(),
+            });
     }
 
     fn create_world(&mut self, name: &str, template: &str) -> bool {

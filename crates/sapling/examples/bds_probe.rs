@@ -14,13 +14,24 @@ use acacia_bot::{ActionError, Bot, BotConfig, BotEvent};
 /// Characters of a decoded packet shown from each end.
 const SHOWN: usize = 1500;
 
-async fn connect(server: &str, name: &str, subscribe: PacketFilter) -> Result<Bot, Box<dyn std::error::Error>> {
-    let config = BotConfig { physics: true, subscribe, ..BotConfig::default() };
+async fn connect(
+    server: &str,
+    name: &str,
+    subscribe: PacketFilter,
+) -> Result<Bot, Box<dyn std::error::Error>> {
+    let config = BotConfig {
+        physics: true,
+        subscribe,
+        ..BotConfig::default()
+    };
     Ok(Bot::connect(Client::builder(server).offline(name), config).await?)
 }
 
 fn mark(bot: &Bot, label: &str) {
-    println!("## actor {label}: feet {:?}", bot.movement().and_then(|m| m.position()));
+    println!(
+        "## actor {label}: feet {:?}",
+        bot.movement().and_then(|m| m.position())
+    );
 }
 
 async fn act(mut bot: Bot) -> Result<(), ActionError> {
@@ -54,19 +65,31 @@ async fn act(mut bot: Bot) -> Result<(), ActionError> {
 }
 
 fn show(start: Instant, packet: &RawPacket) {
-    let Some(name) = dump::name(packet) else { return };
+    let Some(name) = dump::name(packet) else {
+        return;
+    };
     let text = dump::dump(packet).unwrap_or_else(|| "<no decoder>".into());
     let chars: Vec<char> = text.chars().collect();
     let text = if chars.len() > 2 * SHOWN {
-        let (head, tail): (String, String) = (chars[..SHOWN].iter().collect(), chars[chars.len() - SHOWN..].iter().collect());
+        let (head, tail): (String, String) = (
+            chars[..SHOWN].iter().collect(),
+            chars[chars.len() - SHOWN..].iter().collect(),
+        );
         format!("{head} ...({} chars)... {tail}", chars.len() - 2 * SHOWN)
     } else {
         text
     };
     let edge = |bytes: &[u8]| bytes.iter().map(|b| format!("{b:02x}")).collect::<String>();
     let body = &packet.body;
-    let (first, last) = (edge(&body[..body.len().min(24)]), edge(&body[body.len().saturating_sub(24)..]));
-    println!("{:>7} {name} ({} bytes, {first}..{last}) {text}", start.elapsed().as_millis(), body.len());
+    let (first, last) = (
+        edge(&body[..body.len().min(24)]),
+        edge(&body[body.len().saturating_sub(24)..]),
+    );
+    println!(
+        "{:>7} {name} ({} bytes, {first}..{last}) {text}",
+        start.elapsed().as_millis(),
+        body.len()
+    );
 }
 
 #[tokio::main(flavor = "current_thread")]
@@ -76,7 +99,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     observer.wait_ticks(100).await?;
     // What the observer's own join queued is not about the actor.
     while let Ok(Some(_)) = tokio::time::timeout(Duration::from_millis(5), observer.next()).await {}
-    println!("## observer in: feet {:?}", observer.movement().and_then(|m| m.position()));
+    println!(
+        "## observer in: feet {:?}",
+        observer.movement().and_then(|m| m.position())
+    );
 
     let start = Instant::now();
     let actor = connect(&server, "ProbeActor", PacketFilter::none()).await?;

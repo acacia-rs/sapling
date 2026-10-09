@@ -82,13 +82,25 @@ fn depth(level: &Level, [x, y, z]: [i32; 3], liquid: Liquid) -> Option<u8> {
         return None;
     }
     let registry = level.registry();
-    [level.liquid(x, y, z), level.block(x, y, z)].into_iter().find_map(|id| registry.get(id).filter(|state| Liquid::of(state.name) == Some(liquid)).map(|state| state.liquid_depth))
+    [level.liquid(x, y, z), level.block(x, y, z)]
+        .into_iter()
+        .find_map(|id| {
+            registry
+                .get(id)
+                .filter(|state| Liquid::of(state.name) == Some(liquid))
+                .map(|state| state.liquid_depth)
+        })
 }
 
 /// The height of the surface of a liquid `depth` deep in the cell at `y`: a source, and a falling
 /// liquid, fill it.
 fn surface(y: i32, depth: u8) -> f32 {
-    y as f32 + 1.0 - if depth < 8 { f32::from(depth) / 9.0 } else { 0.0 }
+    y as f32 + 1.0
+        - if depth < 8 {
+            f32::from(depth) / 9.0
+        } else {
+            0.0
+        }
 }
 
 /// Whether any cell the body's box reaches, shrunk for all but items, holds `liquid`; no surface
@@ -111,8 +123,14 @@ pub(crate) fn in_liquid(level: &Level, body: &Body, rule: InLiquid, liquid: Liqu
 /// Whether `liquid` falls where the middle of the body is, or just under it.
 fn falls(level: &Level, body: &Body, liquid: Liquid) -> bool {
     let [x, feet, z] = body.at;
-    let middle = [x.floor() as i32, (feet + body.size[1] / 2.0).floor() as i32, z.floor() as i32];
-    [middle, [middle[0], middle[1] - 1, middle[2]]].into_iter().any(|cell| depth(level, cell, liquid).is_some_and(|depth| depth > 7))
+    let middle = [
+        x.floor() as i32,
+        (feet + body.size[1] / 2.0).floor() as i32,
+        z.floor() as i32,
+    ];
+    [middle, [middle[0], middle[1] - 1, middle[2]]]
+        .into_iter()
+        .any(|cell| depth(level, cell, liquid).is_some_and(|depth| depth > 7))
 }
 
 /// What lifts an item: water its breathing point is under, a source's surface being the top of its
@@ -121,7 +139,8 @@ fn lifting_item(level: &Level, body: &Body) -> Option<Liquid> {
     let [x, feet, z] = body.at;
     let breath = feet + ITEM_BREATH;
     let cell = [x.floor() as i32, breath.floor() as i32, z.floor() as i32];
-    let under = depth(level, cell, Liquid::Water).is_some_and(|depth| surface(cell[1], depth) > breath);
+    let under =
+        depth(level, cell, Liquid::Water).is_some_and(|depth| surface(cell[1], depth) > breath);
     let liquid = if in_liquid(level, body, InLiquid::Floats, Liquid::Water) && under {
         Liquid::Water
     } else if in_liquid(level, body, InLiquid::Floats, Liquid::Lava) {
@@ -138,7 +157,9 @@ pub(super) fn acting(level: &Level, body: &Body, rule: InLiquid) -> Option<Liqui
     match rule {
         InLiquid::Ignores => None,
         InLiquid::Floats => lifting_item(level, body),
-        InLiquid::Sinks => [Liquid::Water, Liquid::Lava].into_iter().find(|liquid| in_liquid(level, body, rule, *liquid)),
+        InLiquid::Sinks => [Liquid::Water, Liquid::Lava]
+            .into_iter()
+            .find(|liquid| in_liquid(level, body, rule, *liquid)),
         InLiquid::Buoyant if buoyed(level, body).is_some() => Some(Liquid::Water),
         InLiquid::Buoyant => depth(level, cell, Liquid::Lava).map(|_| Liquid::Lava),
     }
@@ -148,13 +169,21 @@ pub(super) fn acting(level: &Level, body: &Body, rule: InLiquid) -> Option<Liqui
 pub(super) fn lift(body: &mut Body, liquid: Liquid) {
     let nudged = body.motion[1] + RISE_NUDGE;
     body.motion[1] = nudged + (RISE - nudged) * RISE_EASE;
-    let drag = if liquid == Liquid::Water { FLOAT_DRAG_WATER } else { FLOAT_DRAG_LAVA };
+    let drag = if liquid == Liquid::Water {
+        FLOAT_DRAG_WATER
+    } else {
+        FLOAT_DRAG_LAVA
+    };
     (body.motion[0], body.motion[2]) = (body.motion[0] * drag, body.motion[2] * drag);
 }
 
 /// Slows a mob in `liquid` and pulls it down, in place of the air's drag and gravity.
 pub(super) fn sink(body: &mut Body, liquid: Liquid) {
-    let drag = if liquid == Liquid::Water { SINK_DRAG_WATER } else { SINK_DRAG_LAVA };
+    let drag = if liquid == Liquid::Water {
+        SINK_DRAG_WATER
+    } else {
+        SINK_DRAG_LAVA
+    };
     body.motion = body.motion.map(|speed| speed * drag);
     body.motion[1] -= SINK_GRAVITY;
 }
@@ -182,10 +211,16 @@ fn buoyed(level: &Level, body: &Body) -> Option<f32> {
 /// Holds a buoyant body up, before its own tick: its fall slows, and it rises toward a speed set
 /// by [`buoyed`]; the wave moves on, drawing on `random` for a big one.
 pub(super) fn buoy(level: &Level, body: &mut Body, random: &mut impl FnMut() -> f32) {
-    let Some(lift) = buoyed(level, body) else { return };
+    let Some(lift) = buoyed(level, body) else {
+        return;
+    };
     let rise = (lift - BUOY_FLOOR) * BUOY_SCALE;
     body.motion[1] = (body.motion[1] * BUOY_KEEP + BUOY_LIFT).min(rise);
-    let big = if random() < BIG_WAVE_CHANCE { BIG_WAVE } else { 1.0 };
+    let big = if random() < BIG_WAVE_CHANCE {
+        BIG_WAVE
+    } else {
+        1.0
+    };
     body.wave += WAVE_STEP * (1.0 + WAVE_DRIFT * body.motion[0].hypot(body.motion[2])) * big;
 }
 
@@ -198,7 +233,10 @@ mod tests {
     /// falling at x 3.
     fn pool(liquid: &str) -> Level {
         let mut level = Level::void();
-        let (stone, still) = (level.block_id("minecraft:stone").unwrap(), level.block_id(liquid).unwrap());
+        let (stone, still) = (
+            level.block_id("minecraft:stone").unwrap(),
+            level.block_id(liquid).unwrap(),
+        );
         level.fill([-4, 59, -4], [4, 59, 4], stone);
         level.fill([-4, 60, -4], [4, 64, 4], still);
         let falling = level.registry().find(liquid, "liquid_depth=8").unwrap();
@@ -218,19 +256,39 @@ mod tests {
 
     #[test]
     fn an_item_rises_to_float_with_its_breathing_point_at_the_surface() {
-        let item = after(Body::new([0.5, 61.0, 0.5], [0.0; 3], [0.25, 0.25]), "minecraft:water", &Physics::ITEM, 400);
+        let item = after(
+            Body::new([0.5, 61.0, 0.5], [0.0; 3], [0.25, 0.25]),
+            "minecraft:water",
+            &Physics::ITEM,
+            400,
+        );
         // A source fills its cell: the surface is at 65, which the item bobs about with its
         // breathing point, 0.375 over its feet.
         assert!((item.at[1] + ITEM_BREATH - 65.0).abs() < 0.3, "{item:?}");
-        let rising = after(Body::new([0.5, 61.0, 0.5], [0.0; 3], [0.25, 0.25]), "minecraft:water", &Physics::ITEM, 20);
+        let rising = after(
+            Body::new([0.5, 61.0, 0.5], [0.0; 3], [0.25, 0.25]),
+            "minecraft:water",
+            &Physics::ITEM,
+            20,
+        );
         assert!(rising.motion[1] > 0.0 && rising.at[1] > 61.0, "{rising:?}");
     }
 
     #[test]
     fn falling_water_lets_an_item_fall_and_water_lets_falling_blocks_fall() {
-        let item = after(Body::new([3.5, 63.0, 0.5], [0.0; 3], [0.25, 0.25]), "minecraft:water", &Physics::ITEM, 40);
+        let item = after(
+            Body::new([3.5, 63.0, 0.5], [0.0; 3], [0.25, 0.25]),
+            "minecraft:water",
+            &Physics::ITEM,
+            40,
+        );
         assert_eq!(item.at[1], 60.0, "down falling water to the floor");
-        let block = after(Body::new([0.5, 63.0, 0.5], [0.0; 3], [0.98, 0.98]), "minecraft:water", &Physics::FALLING_BLOCK, 40);
+        let block = after(
+            Body::new([0.5, 63.0, 0.5], [0.0; 3], [0.98, 0.98]),
+            "minecraft:water",
+            &Physics::FALLING_BLOCK,
+            40,
+        );
         assert_eq!(block.at[1], 60.0);
     }
 
@@ -239,7 +297,10 @@ mod tests {
         // BDS's item went into lava moving -0.43659 a tick, then -0.42249 (research/captures/bds-lava.txt).
         let mut item = Body::new([0.5, 64.8, 0.5], [0.1, -0.43659 * 0.98, 0.0], [0.25, 0.25]);
         let moved = step(&mut item, &pool("minecraft:lava"), &Physics::ITEM);
-        assert!((moved[1] + 0.42249).abs() < 1e-4 && (moved[0] - 0.095).abs() < 1e-6, "{moved:?}");
+        assert!(
+            (moved[1] + 0.42249).abs() < 1e-4 && (moved[0] - 0.095).abs() < 1e-6,
+            "{moved:?}"
+        );
         assert_eq!(item.liquid(), Some(Liquid::Lava));
     }
 
@@ -259,15 +320,28 @@ mod tests {
     fn an_orb_in_lava_is_thrown_up_and_aside_by_chance() {
         let mut orb = Body::new([0.5, 64.9, 0.5], [0.1, -0.3, 0.1], [0.25, 0.25]);
         let mut draws = [0.9, 0.1, 0.3, 0.8].into_iter();
-        let moved = orb.step(&pool("minecraft:lava"), &Physics::ORB, &mut || draws.next().unwrap());
-        assert!((moved[0] - 0.16).abs() < 1e-6 && moved[1] == THROW_UP && (moved[2] + 0.1).abs() < 1e-6, "{moved:?}");
+        let moved = orb.step(&pool("minecraft:lava"), &Physics::ORB, &mut || {
+            draws.next().unwrap()
+        });
+        assert!(
+            (moved[0] - 0.16).abs() < 1e-6 && moved[1] == THROW_UP && (moved[2] + 0.1).abs() < 1e-6,
+            "{moved:?}"
+        );
     }
 
     #[test]
     fn a_mob_sinks_slowly_and_is_slowed_across() {
-        let mob = after(Body::new([0.5, 63.0, 0.5], [0.3, 0.0, 0.0], [0.9, 0.9]), "minecraft:water", &Physics::MOB, 25);
+        let mob = after(
+            Body::new([0.5, 63.0, 0.5], [0.3, 0.0, 0.0], [0.9, 0.9]),
+            "minecraft:water",
+            &Physics::MOB,
+            25,
+        );
         // Drag 0.8 and a pull of 0.02 settle at a tenth of a block a tick.
-        assert!((mob.motion[1] + 0.1).abs() < 1e-3 && mob.motion[0].abs() < 0.01, "{mob:?}");
+        assert!(
+            (mob.motion[1] + 0.1).abs() < 1e-3 && mob.motion[0].abs() < 0.01,
+            "{mob:?}"
+        );
         assert!(mob.at[1] < 63.0 && mob.at[1] > 60.0, "{mob:?}");
     }
 
@@ -276,9 +350,19 @@ mod tests {
         // Lava halves its speed and pulls 0.02: BDS's stand went from -0.51696 a tick to -0.27848,
         // and on to -0.04.
         // The first tick goes by the air's rule, a tick late, to -0.51696.
-        let mob = after(Body::new([0.5, 64.0, 0.5], [0.0, -0.44751, 0.0], [0.5, 1.975]), "minecraft:lava", &Physics::MOB, 2);
+        let mob = after(
+            Body::new([0.5, 64.0, 0.5], [0.0, -0.44751, 0.0], [0.5, 1.975]),
+            "minecraft:lava",
+            &Physics::MOB,
+            2,
+        );
         assert!((mob.motion[1] + 0.27848).abs() < 1e-4, "{mob:?}");
-        let sunk = after(Body::new([0.5, 64.5, 0.5], [0.0; 3], [0.5, 1.975]), "minecraft:lava", &Physics::MOB, 30);
+        let sunk = after(
+            Body::new([0.5, 64.5, 0.5], [0.0; 3], [0.5, 1.975]),
+            "minecraft:lava",
+            &Physics::MOB,
+            30,
+        );
         assert!((sunk.motion[1] + 0.04).abs() < 1e-3, "{sunk:?}");
     }
 }

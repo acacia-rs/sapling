@@ -32,10 +32,25 @@ pub(super) struct Craft {
 
 /// The filled cells of the grid a player crafts in at `at`, if the recipe is laid out in it.
 fn laid_out(inventory: &Inventory, recipe: &Recipe, at: Station) -> Result<Vec<Place>, ()> {
-    let cells = if at == Station::Table { TABLE_GRID } else { HAND_GRID };
+    let cells = if at == Station::Table {
+        TABLE_GRID
+    } else {
+        HAND_GRID
+    };
     let held = |slot: usize| inventory.slot(Place::Ui(slot)).and_then(Option::as_ref);
-    let grid: Vec<Option<(&str, i16)>> = cells.clone().map(|slot| held(slot).map(|held| (held.stack.name.as_str(), held.stack.damage))).collect();
-    recipe.is_laid_out(&grid).then(|| cells.filter(|slot| held(*slot).is_some()).map(Place::Ui).collect()).ok_or(())
+    let grid: Vec<Option<(&str, i16)>> = cells
+        .clone()
+        .map(|slot| held(slot).map(|held| (held.stack.name.as_str(), held.stack.damage)))
+        .collect();
+    recipe
+        .is_laid_out(&grid)
+        .then(|| {
+            cells
+                .filter(|slot| held(*slot).is_some())
+                .map(Place::Ui)
+                .collect()
+        })
+        .ok_or(())
 }
 
 impl Craft {
@@ -43,14 +58,32 @@ impl Craft {
     /// One made by hand in a grid needs the recipe laid out there, and is then held to using up
     /// those cells. A recipe's only result lies in the created-output slot at once; of several,
     /// each waits for the request to ask for it ([`Craft::create`]).
-    pub fn start(inventory: &mut Inventory, network_id: u32, times: u8, at: Station, by_hand: bool) -> Result<Self, ()> {
+    pub fn start(
+        inventory: &mut Inventory,
+        network_id: u32,
+        times: u8,
+        at: Station,
+        by_hand: bool,
+    ) -> Result<Self, ()> {
         let fits = |recipe: &&Recipe| match recipe.station {
             Station::Hand => at != Station::Stonecutter,
             station => station == at,
         };
-        let recipe = sapling_data::recipe(network_id).filter(fits).filter(|_| times > 0).ok_or(())?;
-        let cells = (by_hand && at != Station::Stonecutter).then(|| laid_out(inventory, recipe, at)).transpose()?;
-        let mut craft = Self { recipe, times, used: Vec::new(), cells, result: 0, pending: 0 };
+        let recipe = sapling_data::recipe(network_id)
+            .filter(fits)
+            .filter(|_| times > 0)
+            .ok_or(())?;
+        let cells = (by_hand && at != Station::Stonecutter)
+            .then(|| laid_out(inventory, recipe, at))
+            .transpose()?;
+        let mut craft = Self {
+            recipe,
+            times,
+            used: Vec::new(),
+            cells,
+            result: 0,
+            pending: 0,
+        };
         if recipe.outputs.len() == 1 {
             craft.create(inventory, 0)?;
         }
@@ -77,14 +110,27 @@ impl Craft {
         let (item, _) = &self.recipe.outputs[self.result];
         let count = self.pending.min(sapling_data::max_stack(item.name).into()) as u8;
         self.pending -= u32::from(count);
-        inventory.put(Place::Created, Some(ItemStack { name: item.name.to_owned(), count, damage: item.damage, block: item.block, tag: item.tag.clone() }));
+        inventory.put(
+            Place::Created,
+            Some(ItemStack {
+                name: item.name.to_owned(),
+                count,
+                damage: item.damage,
+                block: item.block,
+                tag: item.tag.clone(),
+            }),
+        );
     }
 
     /// Counts `stack`, taken from `from`, as used up; a craft by hand takes `times` from each
     /// filled cell of its grid, once, and from nowhere else.
     pub fn use_up(&mut self, from: Place, stack: ItemStack) -> Result<(), ()> {
         if let Some(cells) = self.cells.as_mut() {
-            let cell = cells.iter().position(|cell| *cell == from).filter(|_| stack.count == self.times).ok_or(())?;
+            let cell = cells
+                .iter()
+                .position(|cell| *cell == from)
+                .filter(|_| stack.count == self.times)
+                .ok_or(())?;
             cells.swap_remove(cell);
         }
         self.used.push(stack);
@@ -96,13 +142,20 @@ impl Craft {
         if self.cells.as_ref().is_some_and(|cells| !cells.is_empty()) {
             return false;
         }
-        let mut left: Vec<(&ItemStack, u16)> = self.used.iter().map(|stack| (stack, stack.count.into())).collect();
+        let mut left: Vec<(&ItemStack, u16)> = self
+            .used
+            .iter()
+            .map(|stack| (stack, stack.count.into()))
+            .collect();
         // Named cells first, so that a tag does not take what only a name can.
         let mut cells: Vec<&(Ingredient, u8)> = self.recipe.inputs.iter().collect();
         cells.sort_by_key(|(cell, _)| !matches!(cell, Ingredient::Item { .. }));
         for (cell, count) in cells {
             let mut need = u16::from(*count) * u16::from(self.times);
-            for entry in left.iter_mut().filter(|entry| cell.accepts(&entry.0.name, entry.0.damage)) {
+            for entry in left
+                .iter_mut()
+                .filter(|entry| cell.accepts(&entry.0.name, entry.0.damage))
+            {
                 let taken = need.min(entry.1);
                 (entry.1, need) = (entry.1 - taken, need - taken);
             }
@@ -117,14 +170,23 @@ impl Craft {
 /// Puts what a player left in a screen's own slots (a crafting grid, a stonecutter) back among
 /// its items when the screen closes; what does not fit is thrown.
 pub(crate) fn clear_grid(world: &mut World, player: Entity) {
-    if !world.get::<Inventory>(player).is_some_and(|inventory| inventory.grid.iter().any(Option::is_some)) {
+    if !world
+        .get::<Inventory>(player)
+        .is_some_and(|inventory| inventory.grid.iter().any(Option::is_some))
+    {
         return;
     }
     let returned = |inventory: &mut Inventory| {
         let mut unplaced = Vec::new();
-        for held in std::mem::replace(&mut inventory.grid, vec![None; UI]).into_iter().flatten() {
+        for held in std::mem::replace(&mut inventory.grid, vec![None; UI])
+            .into_iter()
+            .flatten()
+        {
             let left = inventory.add(&held.stack);
-            unplaced.extend((left > 0).then(|| ItemStack { count: left, ..held.stack }));
+            unplaced.extend((left > 0).then(|| ItemStack {
+                count: left,
+                ..held.stack
+            }));
         }
         unplaced
     };

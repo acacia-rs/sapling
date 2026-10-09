@@ -3,8 +3,9 @@
 
 use acacia_proto::manual::Uuid;
 use acacia_proto::packets::{
-    ChunkRadiusUpdate, RequestChunkRadius, ResourcePackClientResponse, ResourcePackClientResponseResponseStatus as PackStatus, ResourcePackStack,
-    ResourcePacksInfo, ResourcePacksInfoWorldTemplate, SetDifficulty, SetLocalPlayerAsInitialized,
+    ChunkRadiusUpdate, RequestChunkRadius, ResourcePackClientResponse,
+    ResourcePackClientResponseResponseStatus as PackStatus, ResourcePackStack, ResourcePacksInfo,
+    ResourcePacksInfoWorldTemplate, SetDifficulty, SetLocalPlayerAsInitialized,
 };
 use acacia_proto::types::GameMode as WireGameMode;
 use bevy_ecs::prelude::*;
@@ -12,7 +13,10 @@ use sapling_api::GameMode;
 use sapling_data::StartGameOptions;
 
 use crate::clock;
-use crate::components::{Arrivals, Conn, Identity, InLayer, Layer, Net, NetId, Outgoing, PacketQueues, Position, Settings, Stage, Tick};
+use crate::components::{
+    Arrivals, Conn, Identity, InLayer, Layer, Net, NetId, Outgoing, PacketQueues, Position,
+    Settings, Stage, Tick,
+};
 use crate::view::View;
 
 /// Below this the client's own minimum render distance shows holes.
@@ -25,7 +29,10 @@ pub(crate) fn resource_packs_info() -> ResourcePacksInfo {
         has_addons: false,
         has_scripts: false,
         disable_vibrant_visuals: false,
-        world_template: ResourcePacksInfoWorldTemplate { uuid: Uuid::default(), version: "0.0.0".into() },
+        world_template: ResourcePacksInfoWorldTemplate {
+            uuid: Uuid::default(),
+            version: "0.0.0".into(),
+        },
         texture_packs: Vec::new(),
     }
 }
@@ -50,7 +57,15 @@ pub(crate) fn wire_game_mode(mode: GameMode) -> WireGameMode {
     }
 }
 
-type Joining<'a> = (&'a Conn, &'a Identity, &'a NetId, &'a Position, &'a InLayer, &'a mut Stage, &'a mut Outgoing);
+type Joining<'a> = (
+    &'a Conn,
+    &'a Identity,
+    &'a NetId,
+    &'a Position,
+    &'a InLayer,
+    &'a mut Stage,
+    &'a mut Outgoing,
+);
 
 /// Pack negotiation, then StartGame with the registries, the player's own state and the world's:
 /// spawn, time, difficulty and rules.
@@ -63,8 +78,14 @@ pub(crate) fn resource_packs(
     mut players: Query<Joining>,
 ) {
     for (entity, response) in packets.take::<ResourcePackClientResponse>() {
-        let Ok((conn, identity, id, position, in_layer, mut stage, mut out)) = players.get_mut(entity) else { continue };
-        let Ok(level) = layers.get(in_layer.0).map(|layer| layer.world.level()) else { continue };
+        let Ok((conn, identity, id, position, in_layer, mut stage, mut out)) =
+            players.get_mut(entity)
+        else {
+            continue;
+        };
+        let Ok(level) = layers.get(in_layer.0).map(|layer| layer.world.level()) else {
+            continue;
+        };
         match (*stage, response.response_status) {
             (Stage::PacksInfo, PackStatus::HaveAllPacks) => {
                 out.push(&resource_pack_stack());
@@ -93,26 +114,41 @@ pub(crate) fn resource_packs(
                 out.push(&sapling_data::update_attributes(id.0));
                 out.push(&sapling_data::no_player_spawn());
                 out.push(&clock::registry(level));
-                out.push(&SetDifficulty { difficulty: settings.0.difficulty as u32 });
+                out.push(&SetDifficulty {
+                    difficulty: settings.0.difficulty as u32,
+                });
                 out.push(&level.rules.packet());
                 *stage = Stage::StartGame;
             }
             (_, PackStatus::Refused) => net.0.kick(conn.0, "disconnectionScreen.resourcePack"),
-            (stage, status) => tracing::debug!(player = %identity.0.name, ?stage, ?status, "unexpected resource pack response"),
+            (stage, status) => {
+                tracing::debug!(player = %identity.0.name, ?stage, ?status, "unexpected resource pack response")
+            }
         }
     }
 }
 
 /// The client's view distance, capped; the first request also opens the chunk stage.
-pub(crate) fn chunk_radius(mut packets: ResMut<PacketQueues>, settings: Res<Settings>, mut players: Query<(&mut Stage, &mut View, &mut Outgoing)>) {
+pub(crate) fn chunk_radius(
+    mut packets: ResMut<PacketQueues>,
+    settings: Res<Settings>,
+    mut players: Query<(&mut Stage, &mut View, &mut Outgoing)>,
+) {
     for (entity, request) in packets.take::<RequestChunkRadius>() {
-        let Ok((mut stage, mut view, mut out)) = players.get_mut(entity) else { continue };
+        let Ok((mut stage, mut view, mut out)) = players.get_mut(entity) else {
+            continue;
+        };
         if *stage < Stage::StartGame {
             continue;
         }
-        let radius = request.chunk_radius.clamp(MIN_VIEW_RADIUS, settings.0.max_view_radius.max(MIN_VIEW_RADIUS));
+        let radius = request.chunk_radius.clamp(
+            MIN_VIEW_RADIUS,
+            settings.0.max_view_radius.max(MIN_VIEW_RADIUS),
+        );
         view.set_radius(radius);
-        out.push(&ChunkRadiusUpdate { chunk_radius: radius });
+        out.push(&ChunkRadiusUpdate {
+            chunk_radius: radius,
+        });
         if *stage == Stage::StartGame {
             *stage = Stage::Chunks;
         }
@@ -120,9 +156,15 @@ pub(crate) fn chunk_radius(mut packets: ResMut<PacketQueues>, settings: Res<Sett
 }
 
 /// The client left its loading screen: the player is in the world.
-pub(crate) fn initialized(mut packets: ResMut<PacketQueues>, mut arrivals: ResMut<Arrivals>, mut players: Query<&mut Stage>) {
+pub(crate) fn initialized(
+    mut packets: ResMut<PacketQueues>,
+    mut arrivals: ResMut<Arrivals>,
+    mut players: Query<&mut Stage>,
+) {
     for (entity, _) in packets.take::<SetLocalPlayerAsInitialized>() {
-        let Ok(mut stage) = players.get_mut(entity) else { continue };
+        let Ok(mut stage) = players.get_mut(entity) else {
+            continue;
+        };
         if *stage == Stage::Loading {
             *stage = Stage::InWorld;
             arrivals.joined.push(entity);

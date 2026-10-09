@@ -38,7 +38,10 @@ pub(crate) struct Atlas {
 
 impl Atlas {
     pub fn find(&self, name: &str) -> Option<Place> {
-        self.here.get(name).map(|layer| Place::Here(*layer)).or_else(|| self.elsewhere.get(name).map(|shard| Place::Shard(*shard)))
+        self.here
+            .get(name)
+            .map(|layer| Place::Here(*layer))
+            .or_else(|| self.elsewhere.get(name).map(|shard| Place::Shard(*shard)))
     }
 
     pub fn learn(&mut self, name: String, shard: usize) {
@@ -55,7 +58,12 @@ impl Atlas {
     }
 
     pub fn names(&self) -> Vec<String> {
-        let mut names: Vec<String> = self.here.keys().chain(self.elsewhere.keys()).cloned().collect();
+        let mut names: Vec<String> = self
+            .here
+            .keys()
+            .chain(self.elsewhere.keys())
+            .cloned()
+            .collect();
         names.sort();
         names.dedup();
         names
@@ -68,22 +76,48 @@ pub(crate) struct Scope(Option<Entity>);
 
 /// What happened to players' worlds this tick, for the handlers.
 pub(crate) enum Change {
-    Moved { entity: Entity, from: String, to: String },
-    Failed { entity: Entity, to: String },
+    Moved {
+        entity: Entity,
+        from: String,
+        to: String,
+    },
+    Failed {
+        entity: Entity,
+        to: String,
+    },
 }
 
 #[derive(Resource, Default)]
 pub(crate) struct Changes(pub Vec<Change>);
 
 /// Adds a world to the shard and tells the other shards; `None` for a name that is taken.
-pub(crate) fn add(world: &mut World, name: &str, level: sapling_world::World, spawn: [f32; 3]) -> Option<Entity> {
+pub(crate) fn add(
+    world: &mut World,
+    name: &str,
+    level: sapling_world::World,
+    spawn: [f32; 3],
+) -> Option<Entity> {
     if world.resource::<Atlas>().find(name).is_some() {
         return None;
     }
-    let layer = world.spawn((Layer { world: level, spawn }, Named(name.to_owned()))).id();
-    world.resource_mut::<Atlas>().here.insert(name.to_owned(), layer);
+    let layer = world
+        .spawn((
+            Layer {
+                world: level,
+                spawn,
+            },
+            Named(name.to_owned()),
+        ))
+        .id();
+    world
+        .resource_mut::<Atlas>()
+        .here
+        .insert(name.to_owned(), layer);
     let peers = world.resource::<Peers>();
-    peers.tell_others(|| ShardMsg::WorldAdded { name: name.to_owned(), shard: peers.index });
+    peers.tell_others(|| ShardMsg::WorldAdded {
+        name: name.to_owned(),
+        shard: peers.index,
+    });
     Some(layer)
 }
 
@@ -96,12 +130,18 @@ pub(crate) fn withdraw(world: &World) {
 }
 
 pub(crate) fn name_of(world: &World, layer: Entity) -> String {
-    world.get::<Named>(layer).map(|name| name.0.clone()).unwrap_or_default()
+    world
+        .get::<Named>(layer)
+        .map(|name| name.0.clone())
+        .unwrap_or_default()
 }
 
 /// The layer of the world in scope.
 pub(crate) fn current(world: &World) -> Entity {
-    let scope = world.resource::<Scope>().0.filter(|layer| world.get::<Layer>(*layer).is_some());
+    let scope = world
+        .resource::<Scope>()
+        .0
+        .filter(|layer| world.get::<Layer>(*layer).is_some());
     scope.unwrap_or_else(|| world.resource::<DefaultLayer>().0)
 }
 
@@ -119,9 +159,22 @@ pub(crate) fn focus_on(world: &mut World, player: Entity) {
 /// held from the old world, its feet on the new spawn and the new world's time. The entities of
 /// the old world leave with the next visibility diff, which no longer finds them in view.
 pub(crate) fn settle(world: &mut World, player: Entity, layer: Entity) {
-    let Some((spawn, dimension)) = world.get::<Layer>(layer).map(|layer| (layer.spawn, layer.world.dimension())) else { return };
+    let Some((spawn, dimension)) = world
+        .get::<Layer>(layer)
+        .map(|layer| (layer.spawn, layer.world.dimension()))
+    else {
+        return;
+    };
     let to = ChunkPos::of_block(spawn[0].floor() as i32, spawn[2].floor() as i32);
-    if let Ok((mut view, mut blobs, mut backlog, mut out)) = world.query::<(&mut View, &mut BlobCache, &mut SectionBacklog, &mut Outgoing)>().get_mut(world, player) {
+    if let Ok((mut view, mut blobs, mut backlog, mut out)) = world
+        .query::<(
+            &mut View,
+            &mut BlobCache,
+            &mut SectionBacklog,
+            &mut Outgoing,
+        )>()
+        .get_mut(world, player)
+    {
         blobs.release();
         backlog.clear();
         // A vanilla client keeps some of the old world's columns the new view does not cover:
@@ -140,22 +193,34 @@ pub(crate) fn settle(world: &mut World, player: Entity, layer: Entity) {
 /// Moves a player to another world of this shard.
 pub(crate) fn enter(world: &mut World, player: Entity, layer: Entity) {
     crate::containers::close(world, player);
-    let Some(mut in_layer) = world.get_mut::<InLayer>(player) else { return };
+    let Some(mut in_layer) = world.get_mut::<InLayer>(player) else {
+        return;
+    };
     let from = std::mem::replace(&mut in_layer.0, layer);
     let (from, to) = (name_of(world, from), name_of(world, layer));
     settle(world, player, layer);
-    world.resource_mut::<Changes>().0.push(Change::Moved { entity: player, from, to });
+    world.resource_mut::<Changes>().0.push(Change::Moved {
+        entity: player,
+        from,
+        to,
+    });
 }
 
 /// Tells the handlers which players changed worlds and which transfers failed.
 pub(crate) fn dispatch(world: &mut World, plugins: &mut Plugins) {
     for change in std::mem::take(&mut world.resource_mut::<Changes>().0) {
         let (Change::Moved { entity, .. } | Change::Failed { entity, .. }) = &change;
-        let Some(player) = in_world_identity(world, *entity) else { continue };
+        let Some(player) = in_world_identity(world, *entity) else {
+            continue;
+        };
         focus_on(world, *entity);
         match change {
-            Change::Moved { from, to, .. } => plugins.each(world, |handler, ctx| handler.on_world_change(ctx, &player, &from, &to)),
-            Change::Failed { to, .. } => plugins.each(world, |handler, ctx| handler.on_transfer_failed(ctx, &player, &to)),
+            Change::Moved { from, to, .. } => plugins.each(world, |handler, ctx| {
+                handler.on_world_change(ctx, &player, &from, &to)
+            }),
+            Change::Failed { to, .. } => plugins.each(world, |handler, ctx| {
+                handler.on_transfer_failed(ctx, &player, &to)
+            }),
         }
     }
     focus(world, None);

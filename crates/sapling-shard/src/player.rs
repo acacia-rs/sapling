@@ -5,12 +5,12 @@ use bevy_ecs::prelude::*;
 
 use crate::blobs::BlobCache;
 use crate::blocks::Breaking;
-use crate::inventory::Inventory;
 use crate::chunks::SectionBacklog;
 use crate::commands::Access;
 use crate::components::{Conn, Identity, InLayer, Mode, NetId, Outgoing, Position, Stage};
 use crate::forms::Forms;
 use crate::hud::Hud;
+use crate::inventory::Inventory;
 use crate::mobs::SeesMobs;
 use crate::movement::Motion;
 use crate::roster::Profile;
@@ -52,6 +52,12 @@ pub(crate) struct Local {
 
 impl Local {
     pub fn in_layer(layer: Entity) -> Self {
-        Self { in_layer: InLayer(layer), backlog: SectionBacklog::default(), sees: Sees::default(), sees_mobs: SeesMobs::default(), breaking: Breaking::default() }
+        Self {
+            in_layer: InLayer(layer),
+            backlog: SectionBacklog::default(),
+            sees: Sees::default(),
+            sees_mobs: SeesMobs::default(),
+            breaking: Breaking::default(),
+        }
     }
 }

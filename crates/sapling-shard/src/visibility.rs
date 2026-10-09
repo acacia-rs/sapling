@@ -32,11 +32,35 @@ impl ToViewers {
     }
 }
 
-type Viewer<'a> = (Entity, &'a Stage, &'a InLayer, &'a View, &'a mut Sees, &'a mut Outgoing);
-type Seen<'a> = (Entity, &'a Stage, &'a InLayer, &'a NetId, &'a Identity, &'a Position, &'a Motion, &'a Profile, &'a Inventory);
+type Viewer<'a> = (
+    Entity,
+    &'a Stage,
+    &'a InLayer,
+    &'a View,
+    &'a mut Sees,
+    &'a mut Outgoing,
+);
+type Seen<'a> = (
+    Entity,
+    &'a Stage,
+    &'a InLayer,
+    &'a NetId,
+    &'a Identity,
+    &'a Position,
+    &'a Motion,
+    &'a Profile,
+    &'a Inventory,
+);
 
 /// The player as a new viewer needs it: with what it holds, then what it wears.
-fn spawn_packets(id: &NetId, identity: &Identity, position: &Position, motion: &Motion, profile: &Profile, inventory: &Inventory) -> Vec<Bytes> {
+fn spawn_packets(
+    id: &NetId,
+    identity: &Identity,
+    position: &Position,
+    motion: &Motion,
+    profile: &Profile,
+    inventory: &Inventory,
+) -> Vec<Bytes> {
     let player = sapling_net::encode(&sapling_data::add_player(&AddPlayerOptions {
         held: inventory::in_hand(inventory),
         uuid: profile.uuid,
@@ -50,7 +74,9 @@ fn spawn_packets(id: &NetId, identity: &Identity, position: &Position, motion: &
         device_id: &profile.device_id,
         device_os: profile.device_os,
     }));
-    std::iter::once(player).chain(inventory::spawn_packets(id.0, inventory)).collect()
+    std::iter::once(player)
+        .chain(inventory::spawn_packets(id.0, inventory))
+        .collect()
 }
 
 /// Adds the players that came into each player's view and removes those that left it.
@@ -67,17 +93,28 @@ pub(crate) fn update(mut viewers: Query<Viewer>, seen: Query<Seen>) {
         if *stage != Stage::InWorld {
             continue;
         }
-        let mut covered: Vec<(u64, Entity)> = grid.covered(in_layer.0, view).copied().filter(|(_, other)| *other != viewer).collect();
+        let mut covered: Vec<(u64, Entity)> = grid
+            .covered(in_layer.0, view)
+            .copied()
+            .filter(|(_, other)| *other != viewer)
+            .collect();
         covered.sort_unstable();
         for (_, other) in covered.iter().filter(|(_, other)| !sees.0.contains(other)) {
-            if let Ok((_, _, _, id, identity, position, motion, profile, inventory)) = seen.get(*other) {
-                out.0.extend_from_slice(spawns.entry(*other).or_insert_with(|| spawn_packets(id, identity, position, motion, profile, inventory)));
+            if let Ok((_, _, _, id, identity, position, motion, profile, inventory)) =
+                seen.get(*other)
+            {
+                out.0
+                    .extend_from_slice(spawns.entry(*other).or_insert_with(|| {
+                        spawn_packets(id, identity, position, motion, profile, inventory)
+                    }));
             }
         }
         let now: HashSet<Entity> = covered.into_iter().map(|(_, other)| other).collect();
         for gone in sees.0.difference(&now) {
             if let Ok((_, _, _, id, ..)) = seen.get(*gone) {
-                out.push(&RemoveEntity { entity_id_self: id.0 as i64 });
+                out.push(&RemoveEntity {
+                    entity_id_self: id.0 as i64,
+                });
             }
         }
         sees.0 = now;
@@ -85,11 +122,18 @@ pub(crate) fn update(mut viewers: Query<Viewer>, seen: Query<Seen>) {
 }
 
 /// Hands this tick's packets about each player to the players who see it.
-pub(crate) fn fan_out(mut to_viewers: ResMut<ToViewers>, mut viewers: Query<(Entity, &Sees, &mut Outgoing)>) {
+pub(crate) fn fan_out(
+    mut to_viewers: ResMut<ToViewers>,
+    mut viewers: Query<(Entity, &Sees, &mut Outgoing)>,
+) {
     if to_viewers.0.is_empty() {
         return;
     }
-    let mut watchers: HashMap<Entity, Vec<Entity>> = to_viewers.0.iter().map(|(about, _)| (*about, Vec::new())).collect();
+    let mut watchers: HashMap<Entity, Vec<Entity>> = to_viewers
+        .0
+        .iter()
+        .map(|(about, _)| (*about, Vec::new()))
+        .collect();
     for (viewer, sees, _) in &viewers {
         for about in &sees.0 {
             if let Some(watching) = watchers.get_mut(about) {

@@ -5,7 +5,9 @@ mod common;
 use std::sync::{Arc, Mutex};
 
 use acacia_proto::nbt::Value;
-use acacia_proto::packets::{Animate, AnimateActionId, LevelEventGeneric, SetEntityData, SetSpawnPosition, Text, TextContent};
+use acacia_proto::packets::{
+    Animate, AnimateActionId, LevelEventGeneric, SetEntityData, SetSpawnPosition, Text, TextContent,
+};
 use acacia_proto::types::MetadataDictionaryItemKey as Key;
 use common::{Harness, all, click};
 use sapling_api::{Item, PlayerId, Slot};
@@ -18,7 +20,9 @@ const HEAD: [i32; 3] = [1, 65, 1];
 fn with_a_bed() -> Harness {
     let mut h = Harness::new();
     h.enter(1, "Alex");
-    h.remote.run(|ctx| assert!(ctx.set_item(ALEX, Slot::Main(0), Some(&Item::new("minecraft:bed", 1)))));
+    h.remote.run(|ctx| {
+        assert!(ctx.set_item(ALEX, Slot::Main(0), Some(&Item::new("minecraft:bed", 1))))
+    });
     h.tick(1);
     h.receive(1, &click([1, 64, 0], 1, None));
     h.tick(1);
@@ -26,11 +30,24 @@ fn with_a_bed() -> Harness {
 }
 
 fn said(packets: &[acacia_proto::RawPacket]) -> Vec<String> {
-    all::<Text>(packets).into_iter().filter_map(|text| if let TextContent::Json(json) = text.content { Some(json.message) } else { None }).collect()
+    all::<Text>(packets)
+        .into_iter()
+        .filter_map(|text| {
+            if let TextContent::Json(json) = text.content {
+                Some(json.message)
+            } else {
+                None
+            }
+        })
+        .collect()
 }
 
 fn lies_down(packets: &[acacia_proto::RawPacket]) -> bool {
-    all::<SetEntityData>(packets).iter().any(|data| data.metadata.iter().any(|item| item.key == Key::PlayerBedPosition))
+    all::<SetEntityData>(packets).iter().any(|data| {
+        data.metadata
+            .iter()
+            .any(|item| item.key == Key::PlayerBedPosition)
+    })
 }
 
 fn time(h: &mut Harness) -> i64 {
@@ -49,9 +66,25 @@ fn a_bed_by_day_only_moves_the_spawn() {
     h.receive(1, &click(FOOT, 1, None));
     let sent = h.tick(1);
     let spawn = all::<SetSpawnPosition>(&sent);
-    assert_eq!(spawn.iter().map(|spawn| [spawn.world_position.x, spawn.world_position.y, spawn.world_position.z]).collect::<Vec<_>>(), [HEAD]);
+    assert_eq!(
+        spawn
+            .iter()
+            .map(|spawn| [
+                spawn.world_position.x,
+                spawn.world_position.y,
+                spawn.world_position.z
+            ])
+            .collect::<Vec<_>>(),
+        [HEAD]
+    );
     let lines = said(&sent);
-    assert!(lines.iter().any(|line| line.contains("tile.bed.respawnSet")) && lines.iter().any(|line| line.contains("tile.bed.noSleep")), "{lines:?}");
+    assert!(
+        lines
+            .iter()
+            .any(|line| line.contains("tile.bed.respawnSet"))
+            && lines.iter().any(|line| line.contains("tile.bed.noSleep")),
+        "{lines:?}"
+    );
     assert!(!lies_down(&sent));
 }
 
@@ -64,11 +97,32 @@ fn a_night_slept_through_is_skipped() {
     let sent = h.tick(1);
     assert!(lies_down(&sent));
     let counts = all::<LevelEventGeneric>(&sent);
-    assert_eq!(counts.iter().map(|event| (event.event_id, event.nbt.iter().map(|tag| (tag.name.clone(), tag.value.clone())).collect::<Vec<_>>())).collect::<Vec<_>>(), [(
-        9801,
-        vec![("ableToSleep".into(), Value::Int(1)), ("overworldPlayerCount".into(), Value::Int(1)), ("sleepingPlayerCount".into(), Value::Int(1))]
-    )]);
-    let woke = (0..110).any(|_| all::<Animate>(&h.tick(1)).iter().any(|animate| animate.action_id == AnimateActionId::WakeUp));
+    assert_eq!(
+        counts
+            .iter()
+            .map(|event| (
+                event.event_id,
+                event
+                    .nbt
+                    .iter()
+                    .map(|tag| (tag.name.clone(), tag.value.clone()))
+                    .collect::<Vec<_>>()
+            ))
+            .collect::<Vec<_>>(),
+        [(
+            9801,
+            vec![
+                ("ableToSleep".into(), Value::Int(1)),
+                ("overworldPlayerCount".into(), Value::Int(1)),
+                ("sleepingPlayerCount".into(), Value::Int(1))
+            ]
+        )]
+    );
+    let woke = (0..110).any(|_| {
+        all::<Animate>(&h.tick(1))
+            .iter()
+            .any(|animate| animate.action_id == AnimateActionId::WakeUp)
+    });
     assert!(woke, "woken after 100 ticks");
     assert!(time(&mut h).rem_euclid(24_000) < 200, "it is morning");
 }

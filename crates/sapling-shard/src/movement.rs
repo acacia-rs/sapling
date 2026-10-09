@@ -4,10 +4,15 @@
 
 use std::collections::HashSet;
 
-use acacia_proto::packets::{Animate, AnimateActionId, MovePlayer, MovePlayerMode, MovePlayerTeleport, MovePlayerTeleportCause, PlayerAuthInput, SetEntityData};
+use acacia_proto::packets::{
+    Animate, AnimateActionId, MovePlayer, MovePlayerMode, MovePlayerTeleport,
+    MovePlayerTeleportCause, PlayerAuthInput, SetEntityData,
+};
 use acacia_proto::types::{
-    EntityProperties, InputData, LegacyEntityType, MetadataDictionaryItem, MetadataDictionaryItemKey as Key, MetadataDictionaryItemType,
-    MetadataDictionaryItemValue as Value, MetadataDictionaryItemValueDefault, MetadataFlags1, Vec3f,
+    EntityProperties, InputData, LegacyEntityType, MetadataDictionaryItem,
+    MetadataDictionaryItemKey as Key, MetadataDictionaryItemType,
+    MetadataDictionaryItemValue as Value, MetadataDictionaryItemValueDefault, MetadataFlags1,
+    Vec3f,
 };
 use bevy_ecs::prelude::*;
 use sapling_data::EYE_HEIGHT;
@@ -42,7 +47,11 @@ impl Pose {
     /// The entity flags viewers get on top of the recorded ones.
     pub fn flags(self) -> MetadataFlags1 {
         let mut flags = MetadataFlags1::BREATHING;
-        for (on, flag) in [(self.sneaking, MetadataFlags1::SNEAKING), (self.sprinting, MetadataFlags1::SPRINTING), (self.swimming, MetadataFlags1::SWIMMING)] {
+        for (on, flag) in [
+            (self.sneaking, MetadataFlags1::SNEAKING),
+            (self.sprinting, MetadataFlags1::SPRINTING),
+            (self.swimming, MetadataFlags1::SWIMMING),
+        ] {
             if on {
                 flags.insert(flag);
             }
@@ -89,21 +98,37 @@ impl Motion {
 
 fn eyes(position: &Position) -> Vec3f {
     let [x, y, z] = position.feet;
-    Vec3f { x, y: y + EYE_HEIGHT, z }
+    Vec3f {
+        x,
+        y: y + EYE_HEIGHT,
+        z,
+    }
 }
 
 /// A walk, or with `teleport` a jump the client must follow.
-fn move_player(id: u64, position: &Position, teleport: Option<MovePlayerTeleportCause>, tick: u64) -> MovePlayer {
+fn move_player(
+    id: u64,
+    position: &Position,
+    teleport: Option<MovePlayerTeleportCause>,
+    tick: u64,
+) -> MovePlayer {
     MovePlayer {
         runtime_id: id as u32,
         position: eyes(position),
         pitch: position.pitch,
         yaw: position.yaw,
         head_yaw: position.head_yaw,
-        mode: if teleport.is_some() { MovePlayerMode::Teleport } else { MovePlayerMode::Normal },
+        mode: if teleport.is_some() {
+            MovePlayerMode::Teleport
+        } else {
+            MovePlayerMode::Normal
+        },
         on_ground: position.on_ground,
         ridden_runtime_id: 0,
-        teleport: teleport.map(|cause| MovePlayerTeleport { cause, source_entity_type: LegacyEntityType::from_raw(TELEPORT_SOURCE) }),
+        teleport: teleport.map(|cause| MovePlayerTeleport {
+            cause,
+            source_entity_type: LegacyEntityType::from_raw(TELEPORT_SOURCE),
+        }),
         tick,
     }
 }
@@ -112,10 +137,20 @@ fn move_player(id: u64, position: &Position, teleport: Option<MovePlayerTeleport
 /// from [`announce`].
 pub(crate) fn teleport(world: &mut World, entity: Entity, feet: [f32; 3]) {
     let tick = world.resource::<Tick>().0;
-    let Ok((id, mut position, mut motion, mut out)) = world.query::<(&NetId, &mut Position, &mut Motion, &mut Outgoing)>().get_mut(world, entity) else { return };
+    let Ok((id, mut position, mut motion, mut out)) = world
+        .query::<(&NetId, &mut Position, &mut Motion, &mut Outgoing)>()
+        .get_mut(world, entity)
+    else {
+        return;
+    };
     (position.feet, position.on_ground) = (feet, true);
     motion.unconfirmed_teleport = Some(tick + SETBACK_TICKS);
-    out.push(&move_player(id.0, &position, Some(MovePlayerTeleportCause::Command), motion.input_tick));
+    out.push(&move_player(
+        id.0,
+        &position,
+        Some(MovePlayerTeleportCause::Command),
+        motion.input_tick,
+    ));
 }
 
 /// [`teleport`] onto ground the client may not have yet (another world's spawn): until it
@@ -132,8 +167,11 @@ pub(crate) fn teleport_onto_ground(world: &mut World, entity: Entity, feet: [f32
 /// Whether a player still landing has fallen below where it was put; the landing is over once
 /// it stands there, walks off or its time is up.
 fn fell_while_landing(motion: &mut Motion, feet: [f32; 3], on_ground: bool, tick: u64) -> bool {
-    let Some((target, until)) = motion.landing else { return false };
-    let is_near = (feet[0] - target[0]).abs() < LANDING_REACH && (feet[2] - target[2]).abs() < LANDING_REACH;
+    let Some((target, until)) = motion.landing else {
+        return false;
+    };
+    let is_near =
+        (feet[0] - target[0]).abs() < LANDING_REACH && (feet[2] - target[2]).abs() < LANDING_REACH;
     let is_below = feet[1] < target[1] - LANDING_SLACK;
     if tick >= until || !is_near || on_ground && !is_below {
         motion.landing = None;
@@ -146,27 +184,66 @@ fn pose_packet(id: u64, pose: Pose, tick: u64) -> SetEntityData {
         key: Key::BoundingboxHeight,
         r#type: MetadataDictionaryItemType::Float,
         legacy_type: 3,
-        value: Value::Default(MetadataDictionaryItemValueDefault::Float(if pose.sneaking { SNEAKING_HEIGHT } else { STANDING_HEIGHT })),
+        value: Value::Default(MetadataDictionaryItemValueDefault::Float(
+            if pose.sneaking {
+                SNEAKING_HEIGHT
+            } else {
+                STANDING_HEIGHT
+            },
+        )),
     };
-    let flags = sapling_data::player_metadata("", pose.flags()).into_iter().filter(|item| item.key == Key::Flags);
-    SetEntityData { runtime_entity_id: id, metadata: flags.chain([height]).collect(), properties: EntityProperties { ints: Vec::new(), floats: Vec::new() }, tick }
+    let flags = sapling_data::player_metadata("", pose.flags())
+        .into_iter()
+        .filter(|item| item.key == Key::Flags);
+    SetEntityData {
+        runtime_entity_id: id,
+        metadata: flags.chain([height]).collect(),
+        properties: EntityProperties {
+            ints: Vec::new(),
+            floats: Vec::new(),
+        },
+        tick,
+    }
 }
 
-type Mover<'a> = (&'a NetId, &'a Stage, &'a mut Position, &'a mut Motion, &'a mut Outgoing);
+type Mover<'a> = (
+    &'a NetId,
+    &'a Stage,
+    &'a mut Position,
+    &'a mut Motion,
+    &'a mut Outgoing,
+);
 
 /// Where each client says its player is. Trusted, except that non-finite values are dropped and
 /// a step no player makes in a tick is answered with a teleport back.
-pub(crate) fn player_input(mut packets: ResMut<PacketQueues>, tick: Res<Tick>, mut blocks: ResMut<BlockInputs>, mut players: Query<Mover>) {
+pub(crate) fn player_input(
+    mut packets: ResMut<PacketQueues>,
+    tick: Res<Tick>,
+    mut blocks: ResMut<BlockInputs>,
+    mut players: Query<Mover>,
+) {
     for (entity, mut input) in packets.take::<PlayerAuthInput>() {
-        let Ok((id, stage, mut position, mut motion, mut out)) = players.get_mut(entity) else { continue };
-        if input.block_action.is_some() || input.transaction.is_some() || input.item_stack_request.is_some() {
+        let Ok((id, stage, mut position, mut motion, mut out)) = players.get_mut(entity) else {
+            continue;
+        };
+        if input.block_action.is_some()
+            || input.transaction.is_some()
+            || input.item_stack_request.is_some()
+        {
             tracing::debug!(tick = input.tick, actions = ?input.block_action, transaction = ?input.transaction, request = ?input.item_stack_request, "input with an action");
         }
         // A teleport may have crossed worlds: the blocks an older input names are not these.
         if !motion.awaits_teleport() || input.input_data.contains(&InputData::HandledTeleport) {
             blocks.take_from(entity, &mut input);
         }
-        let reported = [input.position.x, input.position.y, input.position.z, input.yaw, input.pitch, input.head_yaw];
+        let reported = [
+            input.position.x,
+            input.position.y,
+            input.position.z,
+            input.yaw,
+            input.pitch,
+            input.head_yaw,
+        ];
         if *stage < Stage::Loading || reported.iter().any(|c| !c.is_finite()) {
             continue;
         }
@@ -175,44 +252,75 @@ pub(crate) fn player_input(mut packets: ResMut<PacketQueues>, tick: Res<Tick>, m
                 motion.unconfirmed_teleport = None;
             } else {
                 if tick.0 >= resend_at {
-                    out.push(&move_player(id.0, &position, Some(MovePlayerTeleportCause::Command), motion.input_tick));
+                    out.push(&move_player(
+                        id.0,
+                        &position,
+                        Some(MovePlayerTeleportCause::Command),
+                        motion.input_tick,
+                    ));
                     motion.unconfirmed_teleport = Some(tick.0 + SETBACK_TICKS);
                 }
                 continue;
             }
         }
         let feet = [reported[0], reported[1] - EYE_HEIGHT, reported[2]];
-        let step: f32 = feet.iter().zip(position.feet).map(|(to, from)| (to - from).powi(2)).sum();
+        let step: f32 = feet
+            .iter()
+            .zip(position.feet)
+            .map(|(to, from)| (to - from).powi(2))
+            .sum();
         if step > MAX_STEP * MAX_STEP {
             if tick.0 >= motion.setback_until {
                 tracing::debug!(player = id.0, from = ?position.feet, to = ?feet, "refusing a teleport-sized step");
-                out.push(&move_player(id.0, &position, Some(MovePlayerTeleportCause::UnknownValue), 0));
+                out.push(&move_player(
+                    id.0,
+                    &position,
+                    Some(MovePlayerTeleportCause::UnknownValue),
+                    0,
+                ));
                 motion.setback_until = tick.0 + SETBACK_TICKS;
             }
             continue;
         }
         // The client reports no on-ground flag; BDS derives one. Close enough for viewers' animation.
-        let on_ground = input.input_data.contains(&InputData::VerticalCollision) && input.delta.y <= 0.0;
+        let on_ground =
+            input.input_data.contains(&InputData::VerticalCollision) && input.delta.y <= 0.0;
         if fell_while_landing(&mut motion, feet, on_ground, tick.0) {
-            out.push(&move_player(id.0, &position, Some(MovePlayerTeleportCause::Command), motion.input_tick));
+            out.push(&move_player(
+                id.0,
+                &position,
+                Some(MovePlayerTeleportCause::Command),
+                motion.input_tick,
+            ));
             motion.unconfirmed_teleport = Some(tick.0 + SETBACK_TICKS);
             continue;
         }
         motion.pose.apply(&input.input_data);
         motion.input_tick = input.tick;
-        *position = Position { feet, yaw: input.yaw, pitch: input.pitch, head_yaw: input.head_yaw, on_ground };
+        *position = Position {
+            feet,
+            yaw: input.yaw,
+            pitch: input.pitch,
+            head_yaw: input.head_yaw,
+            on_ground,
+        };
     }
 }
 
 /// Queues, once per player that moved or changed pose, what its viewers need to know.
-pub(crate) fn announce(mut to_viewers: ResMut<ToViewers>, mut players: Query<(Entity, &NetId, &Stage, &Position, &mut Motion)>) {
+pub(crate) fn announce(
+    mut to_viewers: ResMut<ToViewers>,
+    mut players: Query<(Entity, &NetId, &Stage, &Position, &mut Motion)>,
+) {
     for (entity, id, stage, position, mut motion) in &mut players {
         if *stage != Stage::InWorld {
             continue;
         }
         let (now, tick) = ((*position, motion.pose), motion.input_tick);
         // A new viewer learns the current state from AddPlayer; only changes are announced.
-        let Some(told) = motion.told.replace(now) else { continue };
+        let Some(told) = motion.told.replace(now) else {
+            continue;
+        };
         if told.0 != now.0 {
             to_viewers.push(entity, &move_player(id.0, position, None, tick));
         }
@@ -223,13 +331,31 @@ pub(crate) fn announce(mut to_viewers: ResMut<ToViewers>, mut players: Query<(En
 }
 
 /// Shows an arm swing to the swinger's viewers, at most one a tick each.
-pub(crate) fn relay_swings(mut packets: ResMut<PacketQueues>, mut to_viewers: ResMut<ToViewers>, players: Query<(&NetId, &Stage)>) {
+pub(crate) fn relay_swings(
+    mut packets: ResMut<PacketQueues>,
+    mut to_viewers: ResMut<ToViewers>,
+    players: Query<(&NetId, &Stage)>,
+) {
     let mut swung = HashSet::new();
     for (entity, animate) in packets.take::<Animate>() {
-        let Ok((id, stage)) = players.get(entity) else { continue };
-        if animate.action_id == AnimateActionId::SwingArm && *stage == Stage::InWorld && swung.insert(entity) {
+        let Ok((id, stage)) = players.get(entity) else {
+            continue;
+        };
+        if animate.action_id == AnimateActionId::SwingArm
+            && *stage == Stage::InWorld
+            && swung.insert(entity)
+        {
             // The id is the sender's whatever the packet says; BDS forwards no swing source.
-            to_viewers.push(entity, &Animate { action_id: AnimateActionId::SwingArm, runtime_entity_id: id.0, data: 0.0, has_swing_source: false, swing_source: None });
+            to_viewers.push(
+                entity,
+                &Animate {
+                    action_id: AnimateActionId::SwingArm,
+                    runtime_entity_id: id.0,
+                    data: 0.0,
+                    has_swing_source: false,
+                    swing_source: None,
+                },
+            );
         }
     }
 }

@@ -30,7 +30,11 @@ fn show(start: Instant, shown: &[&str], who: &str, event: Option<BotEvent>) -> R
         Some(BotEvent::Packet(packet)) => {
             let name = acacia_bot::proto::packet_name(packet.id).unwrap_or("?");
             if shown.contains(&name) {
-                let text: String = dump::dump(&packet).unwrap_or_default().chars().take(SHOWN).collect();
+                let text: String = dump::dump(&packet)
+                    .unwrap_or_default()
+                    .chars()
+                    .take(SHOWN)
+                    .collect();
                 println!("{:>7} {who:<7} {name} {text}", start.elapsed().as_millis());
             }
             Ok(())
@@ -42,14 +46,25 @@ fn show(start: Instant, shown: &[&str], who: &str, event: Option<BotEvent>) -> R
 }
 
 pub async fn connect(server: &str, name: &str) -> Result<Bot, Box<dyn std::error::Error>> {
-    let config = BotConfig { physics: true, subscribe: PacketFilter::all(), ..BotConfig::default() };
+    let config = BotConfig {
+        physics: true,
+        subscribe: PacketFilter::all(),
+        ..BotConfig::default()
+    };
     // Wide enough that both bots see every drill, which spread over a hundred blocks.
-    Ok(Bot::connect(Client::builder(server).offline(name).chunk_radius(8), config).await?)
+    Ok(Bot::connect(
+        Client::builder(server).offline(name).chunk_radius(8),
+        config,
+    )
+    .await?)
 }
 
 impl Probe {
     /// Runs one of the actor's actions while the watcher keeps printing.
-    pub async fn during<T>(&mut self, action: impl FnOnce(&mut Bot) -> std::pin::Pin<Box<dyn Future<Output = T> + '_>>) -> Result<T, String> {
+    pub async fn during<T>(
+        &mut self,
+        action: impl FnOnce(&mut Bot) -> std::pin::Pin<Box<dyn Future<Output = T> + '_>>,
+    ) -> Result<T, String> {
         let (start, shown) = (self.start, self.shown);
         let action = action(&mut self.actor);
         tokio::pin!(action);
@@ -75,7 +90,9 @@ impl Probe {
     /// Drops what both bots were sent so far without printing it: setup noise.
     pub async fn quiet(&mut self) {
         for bot in [&mut self.actor, &mut self.watcher] {
-            while let Ok(Some(_)) = tokio::time::timeout(Duration::from_millis(5), bot.next()).await {}
+            while let Ok(Some(_)) = tokio::time::timeout(Duration::from_millis(5), bot.next()).await
+            {
+            }
         }
     }
 
@@ -87,12 +104,29 @@ impl Probe {
             self.actor.wait_ticks(4).await.map_err(|e| e.to_string())?;
         }
         self.actor.wait_ticks(10).await.map_err(|e| e.to_string())?;
-        while let Ok(Some(event)) = tokio::time::timeout(Duration::from_millis(5), self.actor.next()).await {
-            let BotEvent::Packet(packet) = event else { continue };
-            let failed = packet.decode::<packets::CommandOutput>().ok().filter(|answer| packet.id == packets::CommandOutput::ID && answer.success_count == 0);
+        while let Ok(Some(event)) =
+            tokio::time::timeout(Duration::from_millis(5), self.actor.next()).await
+        {
+            let BotEvent::Packet(packet) = event else {
+                continue;
+            };
+            let failed = packet
+                .decode::<packets::CommandOutput>()
+                .ok()
+                .filter(|answer| {
+                    packet.id == packets::CommandOutput::ID && answer.success_count == 0
+                });
             if let Some(answer) = failed {
-                let said: Vec<String> = answer.output.iter().map(|line| format!("{} {:?}", line.message_id, line.parameters)).collect();
-                println!("## setup failed ({}): {}", lines.join(" | ").chars().take(200).collect::<String>(), said.join("; "));
+                let said: Vec<String> = answer
+                    .output
+                    .iter()
+                    .map(|line| format!("{} {:?}", line.message_id, line.parameters))
+                    .collect();
+                println!(
+                    "## setup failed ({}): {}",
+                    lines.join(" | ").chars().take(200).collect::<String>(),
+                    said.join("; ")
+                );
             }
         }
         self.quiet().await;
@@ -108,11 +142,22 @@ impl Probe {
 
     pub fn name(&self, [x, y, z]: [i32; 3]) -> String {
         let world = self.actor.world().expect("a world tracker");
-        let (Some(view), Some(registry)) = (world.view(), world.registry()) else { return "?".into() };
-        registry.get(view.block(x, y, z)).map_or("?".into(), |state| format!("{} [{}]", state.name, state.properties))
+        let (Some(view), Some(registry)) = (world.view(), world.registry()) else {
+            return "?".into();
+        };
+        registry
+            .get(view.block(x, y, z))
+            .map_or("?".into(), |state| {
+                format!("{} [{}]", state.name, state.properties)
+            })
     }
 
-    pub async fn break_block(&mut self, label: &str, pos: [i32; 3], wait: Duration) -> Result<(), String> {
+    pub async fn break_block(
+        &mut self,
+        label: &str,
+        pos: [i32; 3],
+        wait: Duration,
+    ) -> Result<(), String> {
         println!("## {label}: break {pos:?} ({})", self.name(pos));
         let result = self.during(|bot| Box::pin(bot.break_block(pos))).await?;
         self.settle(wait).await?;
@@ -120,20 +165,47 @@ impl Probe {
         Ok(())
     }
 
-    pub async fn place_block(&mut self, label: &str, against: [i32; 3], face: Face, wait: Duration) -> Result<(), String> {
+    pub async fn place_block(
+        &mut self,
+        label: &str,
+        against: [i32; 3],
+        face: Face,
+        wait: Duration,
+    ) -> Result<(), String> {
         let target = face.adjacent(against);
-        println!("## {label}: place against {against:?} ({}) face {face:?}", self.name(against));
-        let result = self.during(|bot| Box::pin(bot.place_block(against, face))).await?;
+        println!(
+            "## {label}: place against {against:?} ({}) face {face:?}",
+            self.name(against)
+        );
+        let result = self
+            .during(|bot| Box::pin(bot.place_block(against, face)))
+            .await?;
         self.settle(wait).await?;
         println!("## -> {result:?}, {target:?} is now {}", self.name(target));
         Ok(())
     }
 
-    pub async fn click(&mut self, label: &str, pos: [i32; 3], face: Face, wait: Duration) -> Result<(), String> {
-        println!("## {label}: click {pos:?} ({}) face {face:?}", self.name(pos));
-        let result = self.during(|bot| Box::pin(bot.use_item_on_block(pos, face))).await?;
+    pub async fn click(
+        &mut self,
+        label: &str,
+        pos: [i32; 3],
+        face: Face,
+        wait: Duration,
+    ) -> Result<(), String> {
+        println!(
+            "## {label}: click {pos:?} ({}) face {face:?}",
+            self.name(pos)
+        );
+        let result = self
+            .during(|bot| Box::pin(bot.use_item_on_block(pos, face)))
+            .await?;
         self.settle(wait).await?;
-        println!("## -> {result:?}, {pos:?} is now {}, {:?} is now {}", self.name(pos), face.adjacent(pos), self.name(face.adjacent(pos)));
+        println!(
+            "## -> {result:?}, {pos:?} is now {}, {:?} is now {}",
+            self.name(pos),
+            face.adjacent(pos),
+            self.name(face.adjacent(pos))
+        );
         Ok(())
     }
 }

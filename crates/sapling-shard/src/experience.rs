@@ -33,7 +33,11 @@ fn needed(level: i32) -> f32 {
 
 impl Experience {
     pub fn new(level: i32, progress: f32) -> Self {
-        Self { level: level.max(0), progress: progress.clamp(0.0, 1.0), sounded: None }
+        Self {
+            level: level.max(0),
+            progress: progress.clamp(0.0, 1.0),
+            sounded: None,
+        }
     }
 
     /// Adds `points`; true when it reached a fifth level.
@@ -51,8 +55,18 @@ impl Experience {
 }
 
 /// What the client is told of a player's experience at `tick`: the level too when `with_level`.
-pub(crate) fn attributes(id: &NetId, experience: &Experience, with_level: bool, tick: u64) -> acacia_proto::packets::UpdateAttributes {
-    sapling_data::experience_attributes(id.0, Some(experience.level).filter(|_| with_level), experience.progress, tick)
+pub(crate) fn attributes(
+    id: &NetId,
+    experience: &Experience,
+    with_level: bool,
+    tick: u64,
+) -> acacia_proto::packets::UpdateAttributes {
+    sapling_data::experience_attributes(
+        id.0,
+        Some(experience.level).filter(|_| with_level),
+        experience.progress,
+        tick,
+    )
 }
 
 /// Gives a player `points` of experience, which it is shown; a fifth level sounds, once in
@@ -60,10 +74,15 @@ pub(crate) fn attributes(id: &NetId, experience: &Experience, with_level: bool, 
 pub(crate) fn give(world: &mut World, player: Entity, points: i32) {
     let tick = world.resource::<Tick>().0;
     let mut query = world.query::<(&NetId, &Position, &mut Inventory, &mut Outgoing)>();
-    let Ok((id, position, mut inventory, mut out)) = query.get_mut(world, player) else { return };
+    let Ok((id, position, mut inventory, mut out)) = query.get_mut(world, player) else {
+        return;
+    };
     let experience = &mut inventory.experience;
     let level = experience.level;
-    let sounds = experience.add(points) && experience.sounded.is_none_or(|last| tick >= last + SOUND_EVERY);
+    let sounds = experience.add(points)
+        && experience
+            .sounded
+            .is_none_or(|last| tick >= last + SOUND_EVERY);
     out.push(&attributes(id, experience, experience.level != level, tick));
     if sounds {
         experience.sounded = Some(tick);
@@ -71,7 +90,16 @@ pub(crate) fn give(world: &mut World, player: Entity, points: i32) {
         let volume = (experience.level as f32 / 30.0).min(1.0) * 0.75 * 0xFF_FFFF as f32;
         let [x, y, z] = position.feet;
         let at = Vec3f { x, y: y + 0.9, z };
-        let sound = LevelSoundEvent { sound_id: SOUND.into(), position: at, extra_data: volume as i32, entity_type: String::new(), is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None };
+        let sound = LevelSoundEvent {
+            sound_id: SOUND.into(),
+            position: at,
+            extra_data: volume as i32,
+            entity_type: String::new(),
+            is_baby_mob: false,
+            is_global: false,
+            entity_unique_id: -1,
+            fire_at_position: None,
+        };
         out.push(&sound);
     }
     inventory.unsaved = true;
@@ -83,12 +111,23 @@ mod tests {
 
     #[test]
     fn levels_take_what_the_game_says() {
-        assert_eq!([needed(0), needed(14), needed(15), needed(29), needed(30)], [7.0, 35.0, 37.0, 107.0, 112.0]);
+        assert_eq!(
+            [needed(0), needed(14), needed(15), needed(29), needed(30)],
+            [7.0, 35.0, 37.0, 107.0, 112.0]
+        );
         let mut experience = Experience::default();
         assert!(!experience.add(10));
-        assert_eq!((experience.level, (experience.progress * 9.0).round()), (1, 3.0), "7 to level 1, 3 of the next 9");
+        assert_eq!(
+            (experience.level, (experience.progress * 9.0).round()),
+            (1, 3.0),
+            "7 to level 1, 3 of the next 9"
+        );
         let mut experience = Experience::default();
         assert!(experience.add(7 + 9 + 11 + 13 + 15 + 5), "level 5");
-        assert_eq!((experience.level, (experience.progress * 17.0).round()), (5, 5.0), "and 5 of the next 17");
+        assert_eq!(
+            (experience.level, (experience.progress * 17.0).round()),
+            (5, 5.0),
+            "and 5 of the next 17"
+        );
     }
 }

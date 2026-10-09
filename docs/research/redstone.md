@@ -232,8 +232,7 @@ immediate signal 148a82ae0): DirectionalProducer with `direction = mStronglyPowe
 - C1, C2: done, see the end: 2–3 ticks on, 6–7 off for `/setblock` changes.
 - C3 Evaluation phase: two levers flipped in consecutive ticks should update lamps in the same tick sometimes.
 - C4 Chunk ticking before lambda_76 (R4): if lamps never update, the order is reversed; capture says they do.
-- C5 Conductors: which blocks have `redstone_conductivity` / `Block+0x90` (glass, slabs, leaves, glowstone, ice,
-  hopper, TNT). Test: lever on block X, lamp on X's far side; dust over X.
+- C5: done, see the end. Not drilled: ice, TNT and pistons (the TNT went off and took the pistons).
 - C6 Lamp's consumer component source (no setup callback found) and its flags (acceptHalfPulse?).
 - C7 Redstone block's producer component (none found in its vtable): confirm it powers dust, lamp, adjacent blocks
   (weakly or strongly?) — e.g. redstone block next to a solid block next to a lamp.
@@ -261,4 +260,16 @@ immediate signal 148a82ae0): DirectionalProducer with `direction = mStronglyPowe
   ticks after the block, alternating with the phase (one stray 1); the lamp goes out 4 after. So a change is
   first evaluated in the tick after it (not R4's 1–2), and doors and hoppers lag lamps by nothing — the
   2-against-3 above was phase.
-
+- C5 (`bds_command_probe conductors`, research/captures/bds-conductors.txt; 80 blocks, three rigs each:
+  dust pointing into the block with a lamp behind, dust on the block with dust at its foot, dust under the
+  block with dust a step up beside it):
+  - Power passes through the full cubes, soul sand and mud, but not through glass (plain, stained, tinted),
+    glowstone, sea lantern, leaves, observer, jukebox, beacon, scaffolding, copper grate, slime or a spawner,
+    nor through anything lower or thinner (slabs, stairs, path, chests, tables, cauldron, walls, fences, panes).
+    A double slab and a shulker box do pass it.
+  - A block over dust cuts its step up exactly when it passes power, and also slime, honey, a spawner and a
+    lectern, which pass none. So R9's reading is the wrong way round for those: glass cuts nothing.
+  - Dust on a block steps down its side for every block that holds dust, but for glowstone and a top slab.
+  - Dust does not stay on leaves, a bottom slab, path, chests, an enchanting table, cauldron, composter,
+    carpet, anvil, shulker box, walls, fences, panes; it stays on soul sand, mud, glass, a top slab and
+    upside-down stairs. Sapling's support rule (updates.rs) asks the cell, not the face, and differs here.

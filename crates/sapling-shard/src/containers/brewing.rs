@@ -11,18 +11,37 @@ use crate::components::Layer;
 use crate::inventory::Held;
 
 const STAND: &str = "minecraft:brewing_stand";
-const BOTTLES: [&str; 3] = ["brewing_stand_slot_a_bit", "brewing_stand_slot_b_bit", "brewing_stand_slot_c_bit"];
+const BOTTLES: [&str; 3] = [
+    "brewing_stand_slot_a_bit",
+    "brewing_stand_slot_b_bit",
+    "brewing_stand_slot_c_bit",
+];
 
 /// Shows the bottles of the brewing stand at `pos` as `slots` hold them; other blocks are left
 /// alone.
-pub(super) fn show_bottles(world: &mut World, layer: Entity, pos: BlockPos, slots: &[Option<Held>]) {
+pub(super) fn show_bottles(
+    world: &mut World,
+    layer: Entity,
+    pos: BlockPos,
+    slots: &[Option<Held>],
+) {
     if block_name(world, layer, pos) != Some(STAND) {
         return;
     }
-    let Some(level) = world.get::<Layer>(layer).map(|layer| &layer.world) else { return };
+    let Some(level) = world.get::<Layer>(layer).map(|layer| &layer.world) else {
+        return;
+    };
     let before = level.block(pos[0], pos[1], pos[2]);
-    let holds = |place: usize| if slots.get(place + 1).is_some_and(Option::is_some) { "1" } else { "0" };
-    let now = BOTTLES.iter().enumerate().fold(before, |id, (place, bit)| with_property(level.registry(), id, bit, holds(place)).unwrap_or(id));
+    let holds = |place: usize| {
+        if slots.get(place + 1).is_some_and(Option::is_some) {
+            "1"
+        } else {
+            "0"
+        }
+    };
+    let now = BOTTLES.iter().enumerate().fold(before, |id, (place, bit)| {
+        with_property(level.registry(), id, bit, holds(place)).unwrap_or(id)
+    });
     if now != before {
         set(world, layer, pos, now);
     }

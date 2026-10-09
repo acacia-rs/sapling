@@ -20,29 +20,76 @@ const ITEM: &str = "minecraft:item";
 
 /// Brings in the actors of the columns that came from storage this tick.
 pub(crate) fn arrive(world: &mut World) {
-    let layers: Vec<Entity> = world.query_filtered::<Entity, With<Layer>>().iter(world).collect();
+    let layers: Vec<Entity> = world
+        .query_filtered::<Entity, With<Layer>>()
+        .iter(world)
+        .collect();
     for layer in layers {
-        let Some(arrived) = world.get_mut::<Layer>(layer).map(|mut level| level.world.take_arrived()) else { continue };
+        let Some(arrived) = world
+            .get_mut::<Layer>(layer)
+            .map(|mut level| level.world.take_arrived())
+        else {
+            continue;
+        };
         for home in arrived {
-            let Some(record) = world.get::<Layer>(layer).map(|level| level.world.actors(home).to_vec()) else { continue };
+            let Some(record) = world
+                .get::<Layer>(layer)
+                .map(|level| level.world.actors(home).to_vec())
+            else {
+                continue;
+            };
             match sapling_world::stored_actors(&record) {
-                Ok(stored) => stored.into_iter().for_each(|(actor, unique_id, compound)| bring_in(world, layer, home, actor, unique_id, compound)),
-                Err(error) => tracing::warn!(x = home.x, z = home.z, %error, "a column's actors are unreadable; showing none of them"),
+                Ok(stored) => stored.into_iter().for_each(|(actor, unique_id, compound)| {
+                    bring_in(world, layer, home, actor, unique_id, compound)
+                }),
+                Err(error) => {
+                    tracing::warn!(x = home.x, z = home.z, %error, "a column's actors are unreadable; showing none of them")
+                }
             }
         }
     }
 }
 
-fn bring_in(world: &mut World, layer: Entity, home: ChunkPos, actor: Option<sapling_world::Actor>, unique_id: Option<i64>, compound: Vec<u8>) {
-    let (Some(actor), Some(unique_id)) = (actor, unique_id) else { return };
+fn bring_in(
+    world: &mut World,
+    layer: Entity,
+    home: ChunkPos,
+    actor: Option<sapling_world::Actor>,
+    unique_id: Option<i64>,
+    compound: Vec<u8>,
+) {
+    let (Some(actor), Some(unique_id)) = (actor, unique_id) else {
+        return;
+    };
     let moved = match (&actor.item, actor.identifier == ITEM) {
-        (Some(stack), true) => drops::from_storage(world, layer, stack.clone(), actor.position, unique_id, compound),
-        (_, false) if actor.painting.is_none() => creatures::from_storage(world, layer, actor.clone(), unique_id, compound),
+        (Some(stack), true) => drops::from_storage(
+            world,
+            layer,
+            stack.clone(),
+            actor.position,
+            unique_id,
+            compound,
+        ),
+        (_, false) if actor.painting.is_none() => {
+            creatures::from_storage(world, layer, actor.clone(), unique_id, compound)
+        }
         _ => false,
     };
     if !moved {
-        let feet = [home.x as f32 * 16.0, actor.position[1], home.z as f32 * 16.0];
-        let filed = if ChunkPos::of_block(actor.position[0].floor() as i32, actor.position[2].floor() as i32) == home { actor.position } else { feet };
+        let feet = [
+            home.x as f32 * 16.0,
+            actor.position[1],
+            home.z as f32 * 16.0,
+        ];
+        let filed = if ChunkPos::of_block(
+            actor.position[0].floor() as i32,
+            actor.position[2].floor() as i32,
+        ) == home
+        {
+            actor.position
+        } else {
+            feet
+        };
         if mobs::spawn_shown(world, layer, filed, |id| mobs::announcement(&actor, id)).is_none() {
             tracing::debug!(x = home.x, z = home.z, item = ?actor.item, "a dropped item no client knows; not shown");
         }
@@ -63,28 +110,51 @@ pub(crate) fn write_back(world: &mut World) {
         .iter(world)
         .filter_map(|(layer, body, stored)| {
             let home = ChunkPos::of_block(body.at[0].floor() as i32, body.at[2].floor() as i32);
-            Some((layer.0, home, sapling_world::moved_actor(&stored.compound, body.at, body.motion).ok()?))
+            Some((
+                layer.0,
+                home,
+                sapling_world::moved_actor(&stored.compound, body.at, body.motion).ok()?,
+            ))
         })
         .collect();
-    let managed = world.get_resource::<Managed>().map(|managed| managed.0.clone()).unwrap_or_default();
-    let layers: Vec<Entity> = world.query_filtered::<Entity, With<Layer>>().iter(world).collect();
+    let managed = world
+        .get_resource::<Managed>()
+        .map(|managed| managed.0.clone())
+        .unwrap_or_default();
+    let layers: Vec<Entity> = world
+        .query_filtered::<Entity, With<Layer>>()
+        .iter(world)
+        .collect();
     for layer in layers {
-        let Some(level) = world.get::<Layer>(layer).map(|level| &level.world) else { continue };
+        let Some(level) = world.get::<Layer>(layer).map(|level| &level.world) else {
+            continue;
+        };
         let mut columns = level.columns_with_actors();
-        columns.extend(kept.iter().filter(|(in_layer, ..)| *in_layer == layer).map(|(_, home, _)| *home));
+        columns.extend(
+            kept.iter()
+                .filter(|(in_layer, ..)| *in_layer == layer)
+                .map(|(_, home, _)| *home),
+        );
         columns.sort_unstable_by_key(|pos| (pos.x, pos.z));
         columns.dedup();
         let records: Vec<(ChunkPos, Vec<u8>)> = columns
             .into_iter()
             .filter(|pos| level.is_loaded(*pos))
             .filter_map(|pos| {
-                let unmoved = sapling_world::stored_actors(level.actors(pos)).ok()?.into_iter().filter(|(_, id, _)| id.is_none_or(|id| !managed.contains(&(layer, id))));
+                let unmoved = sapling_world::stored_actors(level.actors(pos))
+                    .ok()?
+                    .into_iter()
+                    .filter(|(_, id, _)| id.is_none_or(|id| !managed.contains(&(layer, id))));
                 let mut record: Vec<u8> = unmoved.flat_map(|(.., compound)| compound).collect();
-                kept.iter().filter(|(in_layer, home, _)| *in_layer == layer && *home == pos).for_each(|(.., compound)| record.extend(compound));
+                kept.iter()
+                    .filter(|(in_layer, home, _)| *in_layer == layer && *home == pos)
+                    .for_each(|(.., compound)| record.extend(compound));
                 Some((pos, record))
             })
             .collect();
-        let Some(mut level) = world.get_mut::<Layer>(layer) else { continue };
+        let Some(mut level) = world.get_mut::<Layer>(layer) else {
+            continue;
+        };
         for (pos, record) in records {
             level.world.set_actors(pos, record);
         }

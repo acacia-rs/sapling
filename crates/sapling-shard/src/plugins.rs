@@ -26,7 +26,11 @@ impl Plugins {
     }
 
     /// Calls every handler for an event that cannot be stopped.
-    pub fn each(&mut self, world: &mut World, mut call: impl FnMut(&mut dyn Handler, &mut ShardCtx<'_>)) {
+    pub fn each(
+        &mut self,
+        world: &mut World,
+        mut call: impl FnMut(&mut dyn Handler, &mut ShardCtx<'_>),
+    ) {
         for (_, handler) in &mut self.handlers {
             let mut backend = Ctx { world };
             call(handler.as_mut(), &mut ShardCtx::new(&mut backend));
@@ -35,7 +39,12 @@ impl Plugins {
 
     /// Runs `event` through the handlers until one cancels it and returns how it ended. `Monitor`
     /// handlers get a copy of that end state, cancelled or not (see [`Priority`]).
-    pub fn offer<E: Cancellable>(&mut self, world: &mut World, mut event: E, mut call: impl FnMut(&mut dyn Handler, &mut ShardCtx<'_>, &mut E)) -> E {
+    pub fn offer<E: Cancellable>(
+        &mut self,
+        world: &mut World,
+        mut event: E,
+        mut call: impl FnMut(&mut dyn Handler, &mut ShardCtx<'_>, &mut E),
+    ) -> E {
         for (priority, handler) in &mut self.handlers {
             let mut backend = Ctx { world };
             let ctx = &mut ShardCtx::new(&mut backend);

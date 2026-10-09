@@ -23,17 +23,33 @@ fn from_api(value: RuleValue) -> sapling_data::RuleValue {
 }
 
 pub(crate) fn all(world: &World, layer: Entity) -> Vec<(String, RuleValue)> {
-    let Some(layer) = world.get::<Layer>(layer) else { return Vec::new() };
-    layer.world.level().rules.iter().map(|(name, value)| (name.to_owned(), to_api(value))).collect()
+    let Some(layer) = world.get::<Layer>(layer) else {
+        return Vec::new();
+    };
+    layer
+        .world
+        .level()
+        .rules
+        .iter()
+        .map(|(name, value)| (name.to_owned(), to_api(value)))
+        .collect()
 }
 
 /// Sets the rule `name` of the world `layer`; false for no such rule or a value of the other kind.
 pub(crate) fn set(world: &mut World, layer: Entity, name: &str, value: RuleValue) -> bool {
-    let Some(mut level) = world.get_mut::<Layer>(layer) else { return false };
+    let Some(mut level) = world.get_mut::<Layer>(layer) else {
+        return false;
+    };
     let rules = &mut level.world.level_mut().rules;
-    let Some(changed) = rules.set(name, from_api(value)) else { return false };
-    let Some(told) = rules.changed(name).filter(|_| changed) else { return true };
-    let starts_or_stops = rules.get(name).is_some_and(|(own, _)| own == DAYLIGHT_CYCLE);
+    let Some(changed) = rules.set(name, from_api(value)) else {
+        return false;
+    };
+    let Some(told) = rules.changed(name).filter(|_| changed) else {
+        return true;
+    };
+    let starts_or_stops = rules
+        .get(name)
+        .is_some_and(|(own, _)| own == DAYLIGHT_CYCLE);
     chat::send_to_layer(world, layer, &sapling_net::encode(&told));
     if starts_or_stops {
         clock::tell_layer(world, layer);
