@@ -118,6 +118,9 @@ middle's height when the spread is under 9 and no point's top is a liquid, else 
 (the next chunk tries again); the tower takes (low + high) / 2, or high - 4. The start's postProcess
 fills under each piece's bottom layer down through air and fluids with that block (cobblestone where
 it is not a full cube).
+- Outpost pieces ignore no block (settings +0x10 is null on a live server, flags skip structure blocks and
+  jigsaws only): the templates' air is placed, and in the overgrowth every air block takes an integrity draw
+  too. With air skipped the 5% picks were all other blocks than BDS's.
 - `TemplateStructurePiece`'s box (141f79610, also ocean ruins and mansion pieces) spans size + 1 blocks:
   x (x, x + sx) unturned, (x - sz, x) cw90, (x - sx, x) 180, (x, x + sz) ccw90, z likewise; so the
   height points sit one further from the origin than the template's own box (`template::piece_box`).
@@ -153,9 +156,22 @@ Java's 1.11 mansion on BDS's MT, with BDS's own details:
 | pillager outpost | 99.4% | 93.4% (overgrowth vines) |
 | woodland mansion | 99.9% | 90.3% (the rest is trees and moss carpets around it) |
 Jigsaw structures: [worldgen-bds-jigsaw.md](worldgen-bds-jigsaw.md).
-Joins (`template/connect.rs`, `wall.rs`): walls are set top down, so a side is tall under the final wall
-above; chests and stairs' fronts are not sturdy (palette flags decide for every block the palette has),
-composter sides are. Remaining: water a basement cut open (liquid stage).
+Joins (`template/connect.rs`, `wall.rs`): chests and stairs' fronts are not sturdy (palette flags decide for
+every block the palette has), composter sides are. Remaining: water a basement cut open (liquid stage).
+
+Walls (2026-10-09): a side is tall under a full block, or under a wall that had that side **as its template
+placed it**, not as it ends up: the shape pass reaches a wall before the wall above it. The mansion's wall
+columns are short all the way up (their 1.11 templates save the sides false) and tall only under the
+cobblestone on top; a village post under a wall saved `south=true` is tall; a trail ruin's buried wall is tall
+on the two sides the wall above was built with and short on the two the terrain added. So walls are joined
+bottom up, and templates.bin keeps each wall's Java sides (`low`/`true` short, `tall` tall, `up` the post;
+`placed_wall` in scripts/templates_to_rust.py, turned per rotation, swapped by `mirror`) instead of the
+isolated wall the probe saw. A crossing (all four sides joined) keeps its post, unlike Java's.
+Floor: the shape pass runs once per chunk's placement and again for the walls a later chunk's blocks touch.
+The mansion's column on a chunk corner (-8224, 120..133, 15952) is `east=tall, north=short`: its own chunk
+joined it east first (short), the chunk to the north then joined it north and re-read the wall above, by then
+joined east. The other order gives short and short, and the order of structure post-processing is not the
+seed's (worldgen-bds-structures.md). sapling joins once from the final neighbours: 25 mansion wall cells left.
 
 ## Labels
 ```

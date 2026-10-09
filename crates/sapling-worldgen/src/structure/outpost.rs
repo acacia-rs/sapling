@@ -62,11 +62,11 @@ impl Piece {
     }
 
     /// Places the piece at `y` within the canvas's chunk; `seed` is the chunk's structure seed.
+    /// No block is ignored (settings +0x10 is null): air is placed and takes an integrity draw.
     pub fn post_process(&self, canvas: &mut Canvas, y: i32, seed: u32) {
         let mut placement = Placement::new(self.rotation, canvas.bb);
         placement.integrity = self.integrity;
         placement.seed = seed;
-        placement.ignore = Some("air");
         let blocks: Vec<_> = placement.blocks(self.template, (self.origin.0, y, self.origin.1)).collect();
         for ((x, y, z), block, _) in blocks {
             canvas.set(x, y, z, block);

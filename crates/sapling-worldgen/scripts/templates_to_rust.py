@@ -130,6 +130,17 @@ def brewing_stand(key, nbt):
     return f'{key}#slots={sorted(slots)}', ('brewing_stand', states, False, 2)
 
 
+def placed_wall(key, rot, probed):
+    """A wall as the loader places it, before the shape pass the probe saw it after: its Java sides turned `rot`
+    quarters clockwise (pre-1.16 boolean sides load as short), which the wall below reads (template/connect.rs)."""
+    props = dict(p.split('=', 1) for p in key.partition('[')[2].rstrip(']').split(',') if p)
+    turned = ['north', 'east', 'south', 'west']
+    loaded = {'low': 'short', 'true': 'short', 'tall': 'tall'}
+    sides = {turned[(i + rot) % 4]: loaded.get(props.get(side), 'none') for i, side in enumerate(turned)}
+    states = ','.join(f'wall_connection_type_{side}={sides[side]}' for side in sorted(sides))
+    return (probed[0], f"{states},wall_post_bit={int(props.get('up', 'true') == 'true')}", probed[2], probed[3])
+
+
 def main():
     bds = sys.argv[1]
     table = {}
@@ -174,6 +185,9 @@ def main():
                 out += bytes([len(s.encode())]) + s.encode()
             if final is not None:
                 out += struct.pack('<Hii', final[0], *final[1])
+    for key in keys:
+        if (key, 0) in table and 'wall_post_bit' in table[(key, 0)][1]:
+            table.update({(key, rot): placed_wall(key, rot, table[(key, 0)]) for rot in range(4)})
     states, palette = state_table(keys, table)
     out = b'SPT1' + palette_bytes(palette) + out[4:] + states
     open(os.path.join(OUT, 'templates.bin'), 'wb').write(out)

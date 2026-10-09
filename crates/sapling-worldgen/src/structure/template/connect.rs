@@ -108,8 +108,8 @@ fn corner(canvas: &Canvas, stairs: Block, (x, y, z): (i32, i32, i32)) -> &'stati
 pub fn rejoin(canvas: &mut Canvas, (low, high): (i32, i32)) {
     let b = canvas.bb;
     let (low, high) = (low.max(b.y0), high.min(b.y1));
-    // Top down, so each wall sees the final sides of the wall above it.
-    for y in (low..=high).rev() {
+    // Bottom up: each wall sees the wall above as its template placed it.
+    for y in low..=high {
         for z in b.z0..=b.z1 {
             for x in b.x0..=b.x1 {
                 let block = canvas.get(x, y, z);

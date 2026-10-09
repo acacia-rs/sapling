@@ -21,10 +21,16 @@ pub fn mirror(block: Block, rotation: Rotation) -> Block {
     if states.is_empty() {
         return block;
     }
+    // A wall's sides trade places (the wall below reads them, connect.rs).
+    let (a, b) = if along_z { ("wall_connection_type_north", "wall_connection_type_south") } else { ("wall_connection_type_east", "wall_connection_type_west") };
+    let side = |key: &str| states.split(',').filter_map(|p| p.split_once('=')).find(|(k, _)| *k == key).map(|(_, v)| v);
     let flipped: Vec<String> = states
         .split(',')
         .map(|pair| {
             let Some((key, value)) = pair.split_once('=') else { return pair.to_string() };
+            if let Some(other) = if key == a { side(b) } else if key == b { side(a) } else { None } {
+                return format!("{key}={other}");
+            }
             let swaps = SWAPS.iter().find(|(k, _, _)| *k == key).map(|(_, z, x)| if along_z { z } else { x });
             let value = swaps.and_then(|s| s.iter().find(|(from, _)| *from == value)).map_or(value, |(_, to)| to);
             format!("{key}={value}")

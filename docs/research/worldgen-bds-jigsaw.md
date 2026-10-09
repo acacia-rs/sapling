@@ -18,11 +18,12 @@ Companion to [worldgen-bds-templates.md](worldgen-bds-templates.md) (template lo
   list, 145e1abc0 = location + template id and no processors, pool 145e231e0(name r8, fallback r9, list of
   0x48-byte entries), registered by 141f89b50). `jtrial_data.py` adds the copper bulb rules (1480ba050:
   waxed copper bulb 0.1 / 0.33333334 / 0.5 -> waxed oxidized / weathered / exposed, lit) and the pool alias
-  targets (141fa20f0; every target is one trial spawner, so the first is taken). The entrance cap pool falls
-  back to itself.
+  bindings (141fa20f0, Java's: a random group giving ranged and slow ranged the same mob of skeleton, stray,
+  poison skeleton; then melee of zombie, husk, spider; then small melee of slime, cave spider, silverfish, baby
+  zombie). The entrance cap pool falls back to itself.
 - Line format: `l` block lists, `r` rule lists (`in|location|output`), `c` capped rule lists (limit), `e`
   elements (`t` hardcoded template, `j` v2 template, `f` feature), `p` pools (name, fallback, `elem*weight`),
-  `a` alias sets. Templates misspelled by the C++ (`plains_acessory_1`, `taiga_lamp_post_01`) load as
+  `a` alias sets, `b` a v2 alias binding (its choices, `|` apart, each `alias=pool,...`). Templates misspelled by the C++ (`plains_acessory_1`, `taiga_lamp_post_01`) load as
   `Missing` (valid, no blocks, no jigsaws).
 
 ## Elements and processors
@@ -106,6 +107,18 @@ column, piece y = -27 - anchor dy - y0 - 1, within 128 of the centre, depth 7; d
   `nextInt(total)`, a variant whose start-piece biome fails its `has_biome_tag` filters is dropped and the pick
   repeats); start pool `abandoned_camp/tent/<biome>`, depth 3, 116 around, start 0 projected, padding 10,
   beard_thin. Tents attach a campsite, both attach tree feature elements.
+- Pool aliases (`JigsawStructure::generate` 144ce7f40, Java's `PoolAliasLookup.create`): a `java.util.Random`
+  of the level seed, `forkPositional().at(chunk x * 16, start height, chunk z * 16)`; each binding in order draws
+  `nextInt(choices)` (resolve 145e2d4d0 for a group, 145e2d290 for a single alias). The spawner templates differ
+  around the spawner (webs, bone blocks, podzol and mushrooms), so the picks show in blocks.
+- V2 states (`template/java_states.rs`): v2 templates do not go through the legacy loader the state table was
+  probed with, and four kinds of block come out differently (read off the oracle's trial chambers per unturned
+  state and rotation, `examples/template_states`). A decorated pot's and a trapdoor's `direction` is the Java
+  facing's 2D index (south 0, west 1, north 2, east 3) written as it is, the trapdoor's then turned as Bedrock
+  reads it (0 east, 1 west, 2 south, 3 north), so a pot faces the other way and a trapdoor depends on its
+  facing; a door's lower half is the Java facing turned (a quarter short of the legacy loader's), its upper half
+  `south` turned with the piece (the legacy loader leaves it south); a trial spawner keeps
+  `trial_spawner_state=1` (Java's `waiting_for_players`), which the legacy loader drops to 0.
 - Pieces keep Java's ground level delta (start 1; rigid child: source delta - k, k = jigsaw y above the source
   bottom - candidate jigsaw y + front step y) and junctions (`tryPlacingChildren`), for the terrain stage.
 
@@ -125,8 +138,8 @@ All 840 ruin-material cells of the trail ruin match, suspicious gravel included.
   city feature at (-1059,-50,1235) has a catalyst in the -run2 twin and none in the main run; 20 of 69
   catalyst cells and 10286 of 36985 sculk-family cells in the region differ between the two BDS runs.
   The tally's "own" precision (cells where neither side has a decoration-family block) separates it: the
-  city's own blocks are 99.5% (2026-10-08); the rest of the precision gap is sculk over city blocks.
-- Pool alias random picks (trial chamber spawner kinds) are not drawn; blocks agree either way.
+  city's own blocks are 99.5% (2026-10-08); the rest of the precision gap is sculk over city blocks, which
+  BDS grows as much as sapling does, in other cells (worldgen-bds-residue.md, "Ancient city sculk").
 
 ## Labels
 ```
@@ -138,6 +151,7 @@ All 840 ruin-material cells of the trail ruin match, suspicious gravel included.
 145942bd0 v2 capped processor   1459409e0 JavaRandom::nextInt   14196c5f0 WorldGenerator::postProcessStructures
 1481318c0 trial chamber pools   1480ba050 copper bulb list   141f82140 trial chambers structure
 141fa20f0 trial chamber pool aliases   1480bbe90 village pools   1480fe430 ancient city pools
+145e2d090/145e2d290/145e2d4d0 alias binding resolve (direct, random, random group; vtables 14a89b340/380/3c0)
 141f7a9c0/ab60/abb0 village piece class   141edf3a0 ancient city piece class
 145e137d0 FeaturePoolElement ctor   145e141d0/145e144c0 FeaturePoolElement place (legacy/v2)
 145e1aa90 StructurePoolElement::getBoundingBox   140906d00 zero getSize   14a89acf0 FeaturePoolElement vtable

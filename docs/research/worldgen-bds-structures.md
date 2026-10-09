@@ -225,12 +225,23 @@ shift search; `chunk_float_find` locates BDS's rail runs in the chunk stream). D
 (-90,-123) draws one more than BDS before piece 55's rails (348 vs 347) because piece 24's support at z -1978
 reads planks a crossing's floor left in phase-0 chunk (-90,-124); BDS read air there. Neither "carved" nor
 "after its pieces" neighbours fit every case; phase order fits better overall. Plains villages near rivers (the six
-/locate misses): VillageFeature::isFeatureChunk (1480a80e0) is containsOnly(x*16+8, prelim surface or 1, z*16+8,
+/locate misses; see "Structure post-process order" below for why the drift stays): VillageFeature::isFeatureChunk (1480a80e0) is containsOnly(x*16+8, prelim surface or 1, z*16+8,
 r 2), as ours; locate (141efb740) adds a flag-gated per-chunk filter (feature +0x1d8, vt 0x28) not identified,
 and (flag at +0x30 of its settings, +0x5c7..+0x686) a biome test at (x*16+8, preliminary surface or 1,
 z*16+8) through the biome source (vt+0x50) and 143914da0. Testing that point's biome against the village
 list changed none of the six: our six answers are plains at the centre with surface 56, like one BDS
 answer. These filters are /locate's only; generation is unaffected.
+
+## Structure post-process order (2026-10-09, live)
+`structurePostProcessChunk` takes the same `PostprocessingManager::tryLock` on its 3x3 as decoration does
+(148213acc) and goes back to the queue when it fails, but neighbours do **not** run in decoration's parity
+phases. Logged on a live server (`scripts/bds_dbg.py`, breakpoint on `postProcessStructureFeatures`): in the
+stronghold region 1085 of 2158 neighbour pairs ran in phase order and 1073 against it; in the jungle temple
+region 760 against 718; decoration in the same run, 1030 against 0. Two runs of the same region agree on 1790
+of 2158 pairs. So which neighbour's pieces a piece reads past its chunk (a mineshaft support's test, a floor's
+planks, the spawner flag) follows the load pattern and thread timing, not the seed. The discriminator chunk
+(-90,-123) was processed before (-90,-124) in both logged runs, which is why BDS read air there; sapling's
+phase order is one arbitrary choice among these and the mineshaft drift it leaves is floor.
 
 ## Prior art and licences
 Bedrock finders (scratchpad `st/prior-art.md`): bedrock-dev/MCBEStructureFinder (MIT, pre-1.18), stirante/

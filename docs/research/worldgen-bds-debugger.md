@@ -49,6 +49,15 @@ One JSON object, `{"breakpoints": [...]}`; the fields are listed in the script's
   face in r9) inside a box, beside the feature's own entry; the per-call end columns against
   `examples/feature_trace` name the call whose draws differ, and the raw draws name by how many.
 
+- In what order chunks are processed: `PostprocessingManager::tryLock` (1438df8f0, chunk at `["r8", 0, "ii"]`,
+  `backtrace` 3: caller 148213acc is the structure stage, 1482144e3 decoration), `postProcessStructureFeatures`
+  (14196b2c0, chunk at `["rsp", 40, "i"], ["rsp", 48, "i"]`) and `decorateWorldGenPostProcess` (14821f400; its
+  chunk is the thread's last decoration `tryLock`), all `"log": "all"`. A 5x5 region is about 75k lock tries.
+- What a conversion replaces: a breakpoint inside the function, after the test, with the cell on the stack
+  (`SculkVeinBehaviour` 148b4265b: old block in rax, position `["rbp", 44, "iii"]`, also usable as the filter).
+- What a template placement is given: `placeInWorld` (141eeb8d0) with `["r9", 0, "fI"]` (integrity, seed) and the
+  origin at `["r8", 0, "iii"]`.
+
 `WORLDGEN_PORT` picks the server port (default 19290) so two sessions' copies can run at once. A run holds about
 0.5 GB; on 2026-10-09 the harness killed one for low memory with the lock directory left behind.
 
@@ -60,4 +69,11 @@ One JSON object, `{"breakpoints": [...]}`; the fields are listed in the script's
 - In two of about a dozen runs an expected hit was absent (a tree's volume cells, a single-block try). Not
   established whether BDS's chunk order differed in that run or the step-over window lost the hits. Repeat the
   run before concluding anything from a missing hit.
+- A breakpoint on the world-gen API's `setBlock` (1411a01f0) is as hot as `BlockSource::setBlock`: a 3x3 region
+  had not reached decoration after ten minutes. Break on the feature's own call site instead.
+- The slowed server can miss the oracle script's load deadline; the script retries the tile and BDS generates
+  the chunks again in the same process. The log then holds two executions of a chunk (two thread ids running the
+  same calls): compare them, they need not agree (worldgen-bds-residue.md, "Same-phase sources").
+- Killing the server leaves the run script waiting for its deadline with the lock held: append a line with
+  `Quit correctly` to the run's `worldgen.log` to let it finish.
 - Linux BDS on testbox was not tried: its addresses differ from the Windows decompile's.

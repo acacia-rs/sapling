@@ -28,6 +28,10 @@ pub fn v2_block(state: State, rotation: Rotation) -> Block {
     let block = state.block(rotation);
     let (name, states) = (block.name(), block.states());
     let turns = rotation as usize;
+    // Every template's spawner is Java's `waiting_for_players`, which the legacy loader drops.
+    if name == "trial_spawner" {
+        return with(block, "trial_spawner_state", "1");
+    }
     if name == "decorated_pot" {
         let Some(d) = value(states, "direction").and_then(|d| d.parse::<usize>().ok()) else { return block };
         return with(block, "direction", &((d + 2) % 4).to_string());

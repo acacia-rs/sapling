@@ -14,17 +14,12 @@ const GENERATION_HEIGHT: i32 = 320;
 pub fn monster_rooms(mut random: Mt19937, chunk: (i32, i32), view: &mut View) {
     let (x0, z0) = (chunk.0 * 16 | 8, chunk.1 * 16 | 8);
     let deep = (MIN_Y + 6).abs();
-    for _ in 0..4 {
+    for try_index in 0..14 {
         let x = random.next_int(16) + x0;
-        let y = random.next_int(deep) + MIN_Y + 6;
+        let y = if try_index < 4 { random.next_int(deep) + MIN_Y + 6 } else { random.next_int(GENERATION_HEIGHT) };
         let z = random.next_int(16) + z0;
-        room(view, &mut random, [x, y, z]);
-    }
-    for _ in 0..10 {
-        let x = random.next_int(16) + x0;
-        let y = random.next_int(GENERATION_HEIGHT);
-        let z = random.next_int(16) + z0;
-        room(view, &mut random, [x, y, z]);
+        let placed = room(view, &mut random, [x, y, z]);
+        super::trace::line(|| format!("{chunk:?} monster room try {try_index} at [{x}, {y}, {z}] placed {placed}"));
     }
 }
 
@@ -45,6 +40,7 @@ fn room(view: &mut View, random: &mut Mt19937, [x, y, z]: [i32; 3]) -> bool {
             for pz in z0..=z1 {
                 let p = [px, py, pz];
                 if (py == y - 1 || py == y + 4) && !solid(view, p) {
+                    super::trace::line(|| format!("  room at {x} {y} {z}: {:?} at {p:?} is not solid", view.block(px, py, pz)));
                     return false;
                 }
                 let wall = px == x0 || px == x1 || pz == z0 || pz == z1;
@@ -54,6 +50,7 @@ fn room(view: &mut View, random: &mut Mt19937, [x, y, z]: [i32; 3]) -> bool {
             }
         }
     }
+    super::trace::line(|| format!("  room at {x} {y} {z} radii {rx} {rz}: {openings} openings"));
     if !(1..=5).contains(&openings) {
         return false;
     }

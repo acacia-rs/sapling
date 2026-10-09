@@ -55,6 +55,9 @@ pub fn changes(canvas: &Canvas, (x, y, z): (i32, i32, i32)) -> Vec<(String, Stri
         true
     } else if sides.iter().all(|s| none(s)) || none(north) != none(south) || none(east) != none(west) {
         true
+    } else if sides.iter().all(|s| !none(s)) {
+        // Unlike Java, a crossing keeps its post (trail ruins' buried brick walls).
+        true
     } else if north == "tall" && south == "tall" || east == "tall" && west == "tall" {
         false
     } else {
