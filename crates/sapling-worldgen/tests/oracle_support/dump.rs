@@ -29,27 +29,34 @@ impl Dump {
         let name: String = region.chars().map(|c| if c.is_ascii_alphanumeric() { c } else { '_' }).collect();
         let file = File::create(std::path::Path::new(&dir).join(format!("{world}.{name}.tsv"))).expect("dump file");
         let mut out = BufWriter::new(file);
-        writeln!(out, "x\ty\tz\tstable\tbefore\tours\tbds\ttwin\tfamily\tstructure").unwrap();
+        writeln!(out, "x\ty\tz\tstable\tbefore\tours\tbds\ttwin\tfamily\tstructure\tstage\tsdist").unwrap();
         Self { out: Some(out), structures: None }
     }
 
-    /// Writes a cell our features or BDS's disagree on: stable cells judged feature errors, and
-    /// unstable ones where either side's block is a feature family's. `structure` is `near` when a
-    /// BDS structure block is close or our structure stage wrote the cell, else the unported kinds
-    /// (`*`) whose area holds it.
+    /// Writes a cell our features or BDS's disagree on: stable cells judged feature or liquid errors
+    /// (stage F or L) or fluid against solid (W), and unstable ones where either side's block is a feature family's. `structure`
+    /// is `near` when a BDS structure block is close or our structure stage wrote the cell, else the
+    /// unported kinds (`*`) whose area holds it; `sdist` is the Chebyshev distance to the nearest
+    /// BDS structure block of the cell's chunk.
     #[allow(clippy::too_many_arguments)]
     pub fn cell(&mut self, at: (i32, i32, i32), before: Block, ours: Block, (bds, twin): (&BdsCell, &BdsCell), context: Context, areas: &[(StructureKind, (i32, i32), BoundingBox)], ported: &[StructureKind], (world, chunk): (&LevelDbWorld, &Chunk)) {
         if self.out.is_none() || bds.is(ours) {
             return;
         }
         let stable = bds == twin;
-        let error = matches!(judge(ours, bds, at.1, context), Verdict::Error(Stage::Features));
+        let verdict = judge(ours, bds, at.1, context);
+        let liquid = stable && matches!(verdict, Verdict::Error(Stage::Liquids));
+        // Fluid against solid (a spring's rock cell, a flow over a block that differs): judged as shape or carvers.
+        let walled = stable && matches!(verdict, Verdict::Error(Stage::Carvers | Stage::Shape)) && (bds.is_fluid() || ours.is_fluid());
+        let error = liquid || walled || matches!(verdict, Verdict::Error(Stage::Features));
         let fam = [bds.block.as_str(), ours.name(), twin.block.as_str()].into_iter().find_map(family);
         if !error && (stable || fam.is_none() && !context.featured) {
             return;
         }
         let (x, y, z) = at;
-        let near = context.structured || self.structure_blocks(world, chunk, (x.div_euclid(16), z.div_euclid(16))).iter().any(|&(sx, sy, sz)| (sx - x).abs().max((sy - y).abs()).max((sz - z).abs()) <= NEAR);
+        let blocks = self.structure_blocks(world, chunk, (x.div_euclid(16), z.div_euclid(16)));
+        let sdist = blocks.iter().map(|&(sx, sy, sz)| (sx - x).abs().max((sy - y).abs()).max((sz - z).abs())).min();
+        let near = context.structured || sdist.is_some_and(|d| d <= NEAR);
         let structure = if near {
             "near".to_string()
         } else {
@@ -61,7 +68,9 @@ impl Dump {
         let stable = if stable { "S" } else { "U" };
         let (before, ours, bds, twin) = (block(before), block(ours), cell(bds), cell(twin));
         let out = self.out.as_mut().unwrap();
-        writeln!(out, "{x}\t{y}\t{z}\t{stable}\t{before}\t{ours}\t{bds}\t{twin}\t{}\t{structure}", fam.unwrap_or("-")).unwrap();
+        let stage = if liquid { "L" } else if walled { "W" } else { "F" };
+        let sdist = sdist.map_or("-".to_string(), |d| d.to_string());
+        writeln!(out, "{x}\t{y}\t{z}\t{stable}\t{before}\t{ours}\t{bds}\t{twin}\t{}\t{structure}\t{stage}\t{sdist}", fam.unwrap_or("-")).unwrap();
     }
 
     fn structure_blocks(&mut self, world: &LevelDbWorld, chunk: &Chunk, at: (i32, i32)) -> &[(i32, i32, i32)] {
