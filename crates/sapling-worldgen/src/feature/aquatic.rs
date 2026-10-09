@@ -21,7 +21,9 @@ fn is_cold(biome: u32) -> bool {
 /// mangrove canopies).
 pub(super) fn solid(view: &View, x: i32, y: i32, z: i32) -> bool {
     let block = view.block(x, y, z);
-    block.blocks_motion() && !block.is_leaves()
+    // A structure's fences and stairs are not (oracle: kelp under a shipwreck's deck).
+    let full = !matches!(block, Block::Template(_)) || crate::structure::template::flags(block) & crate::structure::template::FULL_CUBE != 0;
+    block.blocks_motion() && !block.is_leaves() && full
 }
 
 /// Up from `p` to the first water or air block (seagrass and kelp are not water: oracle).
