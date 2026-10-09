@@ -162,3 +162,16 @@ fn a_torch_powering_itself_flips_15_times_and_stays_out_then_relights_and_fizzes
     put(&mut h, &[([2, 65, 8], "air", "")]);
     assert_eq!(flips(&watch(&mut h, 10)), [], "not within 34 ticks of burning out");
 }
+
+#[test]
+fn a_circuit_a_stored_column_holds_works_once_the_column_is_loaded() {
+    let dust_line = [([2, 64, 3], "minecraft:redstone_block"), ([3, 64, 3], "minecraft:redstone_wire"), ([4, 64, 3], "minecraft:redstone_lamp")];
+    let storage = common::stored::floor_holding(Vec::new(), &dust_line);
+    let mut h = Harness::with(common::config(), sapling_world::World::with_storage(storage));
+    common::stored::enter_stored(&mut h, 1);
+    (0..6).for_each(|_| drop(h.tick(1)));
+    let (tx, rx) = mpsc::channel();
+    h.remote.run(move |ctx| tx.send([[3, 64, 3], [4, 64, 3]].map(|pos| (ctx.power_at(pos), ctx.block(pos).map(|block| block.name)))).unwrap());
+    h.tick(1);
+    assert_eq!(rx.recv().unwrap(), [(15, Some("minecraft:redstone_wire".to_owned())), (15, Some("minecraft:lit_redstone_lamp".to_owned()))]);
+}

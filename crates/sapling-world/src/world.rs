@@ -221,6 +221,12 @@ impl World {
         self.column(ChunkPos::of_block(x, z)).map_or(self.dim.air, |column| column.block(x, y, z))
     }
 
+    /// Where the loaded column at `pos` holds a layer-0 block `wanted` accepts.
+    pub fn find_blocks(&self, pos: ChunkPos, wanted: impl Fn(u32) -> bool) -> Vec<[i32; 3]> {
+        let found = self.column(pos).map(|column| column.find(wanted)).unwrap_or_default();
+        found.into_iter().map(|[x, y, z]| [pos.x * 16 + x, y, pos.z * 16 + z]).collect()
+    }
+
     /// The y of the highest block in block column `(x, z)` that a player can stand on or in
     /// (anything with collision, or a liquid). `None` when there is none or the column is not loaded.
     pub fn surface(&self, x: i32, z: i32) -> Option<i32> {

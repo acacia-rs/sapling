@@ -28,7 +28,7 @@ mod waterlog;
 
 pub(crate) use doors::{bed_head, release_buttons, with as with_property};
 pub(crate) use plates::press_plates;
-pub(crate) use redstone::{apply as apply_redstone, evaluate as evaluate_redstone, power_at};
+pub(crate) use redstone::{apply as apply_redstone, arrived as circuits_arrived, evaluate as evaluate_redstone, power_at};
 pub(crate) use signs::dispatch_edits as dispatch_sign_edits;
 pub(crate) use loot::Dice;
 pub(crate) use liquid::tick as flow_liquids;

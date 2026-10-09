@@ -14,16 +14,17 @@ use crate::body::Body;
 use crate::chunks::UNLOAD_INTERVAL;
 use crate::components::{InLayer, Layer, Tick};
 use crate::entities::{Managed, Stored};
-use crate::{creatures, drops, mobs};
+use crate::{blocks, creatures, drops, mobs};
 
 const ITEM: &str = "minecraft:item";
 
-/// Brings in the actors of the columns that came from storage this tick.
+/// Brings in the actors of the columns that came from storage this tick, and notes their circuits.
 pub(crate) fn arrive(world: &mut World) {
     let layers: Vec<Entity> = world.query_filtered::<Entity, With<Layer>>().iter(world).collect();
     for layer in layers {
         let Some(arrived) = world.get_mut::<Layer>(layer).map(|mut level| level.world.take_arrived()) else { continue };
         for home in arrived {
+            blocks::circuits_arrived(world, layer, home);
             let Some(record) = world.get::<Layer>(layer).map(|level| level.world.actors(home).to_vec()) else { continue };
             match sapling_world::stored_actors(&record) {
                 Ok(stored) => stored.into_iter().for_each(|(actor, unique_id, compound)| bring_in(world, layer, home, actor, unique_id, compound)),

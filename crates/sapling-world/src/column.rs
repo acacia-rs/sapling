@@ -7,7 +7,7 @@ use std::sync::OnceLock;
 use acacia_proto::nbt::Value;
 use acacia_proto::types::{Blob, SubChunkEntryItem};
 use acacia_proto::xxh64;
-use acacia_world::{BlockRegistry, Chunk, ColumnHeights, Dimension, LevelChunkData, SubChunkData};
+use acacia_world::{BlockRegistry, Chunk, ColumnHeights, Dimension, LevelChunkData, SECTION_VOLUME, SubChunkData};
 use bytes::Bytes;
 use sapling_leveldb::{BlockEntity, block_entities, with_block_entity, without_block_entity};
 
@@ -171,6 +171,22 @@ impl Column {
         if let Some(section) = self.slot(y >> 4).and_then(|slot| self.sections.get_mut(slot)) {
             section.take();
         }
+    }
+
+    /// Where the column holds a layer-0 block `wanted` accepts: x and z within it, y in the world.
+    pub fn find(&self, wanted: impl Fn(u32) -> bool) -> Vec<[i32; 3]> {
+        let mut ids: Vec<u32> = self.chunk.palette_ids().filter(|id| wanted(*id)).collect();
+        ids.dedup();
+        let (mut found, mut blocks, mut liquid) = (Vec::new(), [0; SECTION_VOLUME], [0; SECTION_VOLUME]);
+        for section in (0..self.chunk.section_count()).filter(|_| !ids.is_empty()) {
+            if self.chunk.section_uniform(section).is_some_and(|id| !ids.contains(&id)) || !self.chunk.copy_section(section, &mut blocks, &mut liquid) {
+                continue;
+            }
+            let floor = self.chunk.dimension().min_y + 16 * section as i32;
+            // XZY order: see `Chunk::copy_section`.
+            found.extend(blocks.iter().enumerate().filter(|(_, id)| ids.contains(id)).map(|(at, _)| [(at >> 8) as i32, floor + (at & 15) as i32, (at >> 4 & 15) as i32]));
+        }
+        found
     }
 
     /// The y of the highest block `counts` accepts in block column `(x, z)`.

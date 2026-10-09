@@ -2,7 +2,7 @@
 //! trapdoors, fence gates and hoppers, by BDS's circuit system (docs/research/redstone.md). Every
 //! second tick, at its end, the circuits written to are searched again from their sources
 //! (search.rs); what changed is written into the blocks at the start of the next (apply.rs).
-// TODO: circuits a world folder holds are found only once one of their blocks is written; no
+// TODO: the circuits of an arena's template are found only once one of their blocks is written; no
 // repeaters, comparators, pistons or observers; a burnt torch whose loop was broken while it was
 // out still waits for a change beside it.
 
@@ -14,6 +14,7 @@ use std::collections::{HashMap, HashSet};
 
 use bevy_ecs::prelude::*;
 use sapling_api::{BlockPos, Face};
+use sapling_world::ChunkPos;
 
 use super::level;
 use crate::components::Tick;
@@ -64,6 +65,17 @@ pub(crate) struct Circuits {
 /// Notes a cell written, for the next evaluation to look at.
 pub(super) fn notice(world: &mut World, layer: Entity, pos: BlockPos) {
     world.get_resource_or_insert_with(Circuits::default).layers.entry(layer).or_default().changed.insert(pos);
+}
+
+/// Notes the sources and dust of a column that came from storage: a circuit saved with the world
+/// is searched at the next evaluation and works on from there.
+pub(crate) fn arrived(world: &mut World, layer: Entity, column: ChunkPos) {
+    let Some(level) = level(world, layer) else { return };
+    let registry = level.registry();
+    let found = level.find_blocks(column, |id| matches!(Part::of(registry, id), Part::Producer { .. } | Part::Torch { .. } | Part::Dust { .. }));
+    if !found.is_empty() {
+        world.get_resource_or_insert_with(Circuits::default).layers.entry(layer).or_default().changed.extend(found);
+    }
 }
 
 /// The signal the block at `pos` got at the last evaluation.

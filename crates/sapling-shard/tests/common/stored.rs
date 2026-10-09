@@ -26,10 +26,16 @@ pub fn actor(id: i64, identifier: &str, feet: [f32; 3], own: (&str, Value)) -> V
 
 /// Storage holding column (0, 0) with stone at y 63 and `actors`.
 pub fn floor_with(actors: Vec<u8>) -> Arc<MemoryStorage> {
+    floor_holding(actors, &[])
+}
+
+/// As [`floor_with`], with `blocks` in their default states over the floor.
+pub fn floor_holding(actors: Vec<u8>, blocks: &[([i32; 3], &str)]) -> Arc<MemoryStorage> {
     let registry = BlockRegistry::vanilla();
     let mut chunk = Chunk::empty(0, 0, Dimension::overworld(registry.air_id()));
     let stone = registry.states_of("minecraft:stone").next().unwrap().0;
     (0..16).for_each(|x| (0..16).for_each(|z| chunk.set(x, 63, z, 0, stone)));
+    blocks.iter().for_each(|([x, y, z], name)| chunk.set(*x, *y, *z, 0, registry.states_of(name).next().unwrap().0));
     let storage = Arc::new(MemoryStorage::default());
     storage.store_column(ChunkPos::new(0, 0), 0, &StoredColumn { actors, ..StoredColumn::of(chunk) }).unwrap();
     storage
