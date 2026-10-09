@@ -8,10 +8,14 @@ mod dump;
 mod features;
 mod floor;
 mod judge;
+mod stages;
 mod structures;
 mod tally;
 
+use std::cell::RefCell;
+use std::collections::HashMap;
 use std::path::PathBuf;
+use std::sync::Arc;
 
 use acacia_world::Chunk;
 use sapling_leveldb::LevelDbWorld;
@@ -28,6 +32,8 @@ pub use features::FeatureTally;
 pub use floor::Floor;
 #[allow(unused_imports)]
 pub use judge::{Context, column_reshaped};
+#[allow(unused_imports)]
+pub use stages::Stages;
 #[allow(unused_imports)]
 pub use structures::{StructureTally, attribute};
 #[allow(unused_imports)]
@@ -84,8 +90,13 @@ pub struct BdsCell {
 }
 
 pub fn bds_cell(world: &LevelDbWorld, chunk: &Chunk, x: i32, y: i32, z: i32) -> BdsCell {
+    thread_local! {
+        /// Name and states by registry and id: formatting them for every cell was a third of a run.
+        static STATES: RefCell<HashMap<(usize, u32), (String, String)>> = RefCell::default();
+    }
     let registry = world.registry();
-    let state = |id| registry.get(id).map_or(("?".to_string(), String::new()), |s| (s.name.trim_start_matches("minecraft:").to_string(), s.properties.to_string()));
+    let format = |id| registry.get(id).map_or(("?".to_string(), String::new()), |s| (s.name.trim_start_matches("minecraft:").to_string(), s.properties.to_string()));
+    let state = |id: u32| STATES.with_borrow_mut(|states| states.entry((Arc::as_ptr(registry) as usize, id)).or_insert_with(|| format(id)).clone());
     let (block, states) = state(chunk.block(x, y, z));
     let liquid = chunk.liquid(x, y, z);
     let liquid = (liquid != registry.air_id()).then(|| state(liquid).0);

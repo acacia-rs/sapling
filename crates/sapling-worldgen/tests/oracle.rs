@@ -9,8 +9,8 @@ mod oracle_support;
 use std::collections::BTreeMap;
 
 use oracle_support::{
-    BdsCell, BiomeTally, CarverTally, Context, Dump, FeatureTally, Floor, Ours, Region, StructureTally, Tally, TopTally, attribute, bds_cell, column_reshaped,
-    near_feature, open,
+    BdsCell, BiomeTally, CarverTally, Context, Dump, FeatureTally, Floor, Ours, Region, Stages, StructureTally, Tally, TopTally, attribute, bds_cell,
+    column_reshaped, near_feature, open,
 };
 use sapling_leveldb::ChunkKey;
 
@@ -60,24 +60,14 @@ fn compare(seed: i64, world: &str, regions: &[Region]) {
     for region in regions.iter().filter(|r| only.as_deref().is_none_or(|only| r.name.contains(only))) {
         let mut tallies = Tallies::default();
         let mut dump = Dump::open(world, region.name);
-        for (cx, cz) in region.chunks() {
+        let chunks: Vec<_> = region.chunks().collect();
+        Stages::in_order(&generator, &chunks, |(cx, cz), Stages { surfaced, loaded, structured, laked, ours, areas, biomes }| {
             let key = ChunkKey::new(cx, cz, 0);
             let a = primary.load_column(key).unwrap().expect("chunk saved").chunk;
             let b = twin.load_column(key).unwrap().expect("twin chunk saved").chunk;
-            let surfaced = generator.surfaced_blocks(cx, cz);
-            let mut loaded = surfaced.clone();
-            generator.carve(&mut loaded, cx, cz);
-            let mut structured = loaded.clone();
-            generator.place_structures(&mut structured, cx, cz);
-            let areas = generator.structure_areas(cx, cz);
             tallies.structures.note_areas(&areas);
             // Our structure stage writes only the ported kinds' blocks.
             let ported: Vec<_> = areas.iter().filter(|(kind, _, _)| PORTED.contains(kind)).copied().collect();
-            let mut laked = structured.clone();
-            generator.decorate(&mut laked, cx, cz);
-            let mut ours = laked.clone();
-            generator.place_features(&mut ours, cx, cz);
-            let biomes = generator.chunk_biomes(cx, cz);
             let biome_top = highest_section_top(&primary, &a, cx, cz);
             for z in 0..16 {
                 for x in 0..16 {
@@ -133,7 +123,7 @@ fn compare(seed: i64, world: &str, regions: &[Region]) {
                     tallies.top_offsets.entry(offset).or_insert((0, (wx, wz))).0 += 1;
                 }
             }
-        }
+        });
         // Tests run in parallel: a region's lines stay together.
         let _whole = std::io::stdout().lock();
         println!("seed {seed} {}:", region.name);
