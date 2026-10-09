@@ -14,8 +14,8 @@ features, foliage, rocks, flower beds and huge mushrooms come from bdsre.
   `nextFloat < count`. Per tree: picker, then z and x `nextInt(14) + 1` from the chunk corner, y =
   `IBlockWorldGenAPI::getHeightmap` (vtable 0xb0), the feature, then `scatter_tall_grass_around_tree_feature`
   (iterations 0) unless `isLegacyLevel` (0xb8).
-- The tree loop's heightmap ignores leaves: a tree grows through another tree's lower leaves (oracle). sapling's
-  `View::heightmap` (also `query.heightmap`) treats leaves as see-through.
+- The tree loop's heightmap is the chunk's from before its decoration (worldgen-bds-features.md, "Heightmaps"):
+  a tree starts on the ground under another tree's leaves or trunk, and then passes or fails its spawn check.
 - `LegacyForestFoliageFeature` (149e95c70, first pass): `nextInt(5) - 1` (flower forest) or `- 3` patches; per patch
   `nextInt(3)` picks lilac, rose bush, peony, then five tries x, z `nextInt(16)` and y `nextInt(heightmap + 32)`
   (absolute y: heights start at 0). `DoublePlantFeature` (148299900) draws nothing when every chunk within 7 blocks
@@ -105,49 +105,30 @@ sync; swamp huge mushrooms sink through one or two water blocks (143b7f230, biom
 - Mangrove mud turned to dirt (~600 cells) was the grass disc, which takes mud too (worldgen-bds-features.md,
   disks); ported, mangrove swamp 98.92 -> 99.79%. Some hanging propagules BDS removes after placement; no
   discriminator found.
-- Pale garden: BDS's 4th tree of chunk (-469,-285) at (-7489,132,-4558) fails. The next try then matches from
-  draw 593 or 616 (`draw_search`), and BDS has tall grass in its trunk volume that no earlier-phase source writes
-  here. Not resolved.
-- Both items below: newer evidence in worldgen-bds-features.md, "Feature residue" (BDS's first tree fails; the
-  forced-failure test; the neighbour grass rule's draw shift).
-- Both refused trees: still open (now three, "Refused 2x2 trees" below); what was ruled out (neighbour grass/vine sync, structures, ground under every
-  trunk cell, FNV-1a rule order) is in worldgen-bds-features.md, "Feature residue". The fern/vine theory below is
-  wrong: those blocks come after the failed tree, from 171,348's own after-surface rules.
-- Bamboo jungle (2740,100,5576): not a terrain hole. Both have grass at 99. Our first mega jungle tree of chunk
-  171,348 overhangs a one-block drop and writes its base dirt into air (trunks place base blocks unconditionally,
-  1438eaf00). BDS doesn't grow that tree, probably because of a fern that a phase-0 neighbour's after-surface
-  grass leaves at (2740,101,5574) in its spawn volume, and which sapling's neighbour doesn't place.
+- The refused trees of bamboo jungle 171,348, pale garden -469,-285 and old growth pine taiga -332,340, and
+  mangrove chunk -500,515: resolved, next section. Earlier guesses here (terrain hole, one-block drop, a fern at
+  (2740,101,5574), "BDS's first tree") were wrong; the session that chased them is in the git history.
 - Old growth pine taiga extra spruce leaves: an abandoned camp's terrain adaptation near (-5320,72,5447) (BDS
   ground 3-4 blocks higher) lifts the same mega spruces; not a tree or shape bug (worldgen-bds-carvers.md).
-  The larger part (the 651 d cells, worldgen/feat3) is a third refused 2x2 tree: chunk -332,340's first tree, a
-  mega pine at (-5309,74,5447) of height 22, which BDS drops right after its two height draws (`tree_draws`
-  with the rule `minecraft:mega_taiga_surface_trees_feature`: BDS's next trunk is at draw 10). That chunk is
-  phase 0 and the tree is its first, the ground is flat podzol, nothing is carved under it and BDS's final
-  blocks leave the spawn volume clear; the camp starts in the chunk to the south. See "Refused 2x2 trees".
+- One mangrove in the region's edge chunk -499,517 at (-7979,64,8276) is a block shorter than BDS's (not looked
+  at: an edge chunk, whose ring neighbours the oracle does not pin down).
 
-## Refused 2x2 trees (open)
-Bamboo jungle (2739,101,5575), pale garden (-7489,132,-4558) and old growth pine taiga (-5309,74,5447): BDS
-spends exactly the trunk's height draws and grows nothing; we grow the tree. Ruled out so far: the neighbour
-grass rule's sync, structures (no structure near the first two), ground under all four trunk cells, FNV-1a rule
-order, a stale pre-carver heightmap (tops before and after carvers are equal at all 12 trunk columns), the drop
-(the pine stands on flat ground) and neighbour writes (the pine's chunk is phase 0). Read again on 2026-10-08
-and identical to ours: `MegaTreeTrunk::placeTrunk` (1438f2ba0: may_grow_on under the origin only, then radius
-max(|w-1|,1) at the base and w above, up to height+1, against the +0x68 list), its height (1438f4080),
-`TreeHelper::prepareSpawn` (1438eac70), `TreeFeature::place` (143b7ff60), the tree loop (149e97fc0) and the
-world-gen API's heightmap (vtable 14a73fa30, slot 0xb0 = 1411a0a60: `LevelChunk` +0xb80 plus the minimum y of
-the position's chunk; getBlock and min/max height forward to the `BlockSource`).
+## Refused 2x2 trees and mangrove chunk -500,515 (resolved 2026-10-09, worldgen/trees3)
+None was a tree bug. Found by breakpoints on a live BDS ([worldgen-bds-debugger.md](worldgen-bds-debugger.md)):
+- Old growth pine taiga (-5309,74,5447): the mega pine's volume check (1438f2ba0) fails at its 19th cell,
+  (-5310,75,5449), a spruce log. The abandoned camp's v2 feature elements (145e144c0, `spruce_tree_feature` at
+  (-5303,74,5454), (-5310,74,5449), (-5315,74,5452)) grow in the structure stage, before any tree loop. sapling's
+  structure stage already placed them when trees3 started (all 8 trunks of chunk -332,340 matched).
+- Bamboo jungle (2739,101,5575): fails at its 10th cell, (2737,102,5573), a fern. The phase-0 neighbour 170,348
+  wrote it: its `jungle_after_surface_tall_grass_feature_rules` scatter (143b9b5d0 -> weighted 143bcfb10 ->
+  single block 143badfc0). All 25 scatter origins had our x and z, but 7 had BDS's y on the ground where ours
+  stood on top of the trunks that chunk had just grown: `query.heightmap` reads a stale heightmap.
+- Pale garden (-7489,132,-4558) and mangrove chunk -500,515: the same cause (not traced one by one; every
+  trunk of both regions' 16 chunks matches after the fix, but for one mangrove in edge chunk -499,517).
 
-The oracle's judge (tests/oracle_support/judge.rs) counts a BDS feature block over a cell our features left
-alone as `Later` (non-terrain block), not wrong: tree residue therefore shows only as ours-extra, and a tree
-BDS grows that we do not (mangrove chunk -500,515's (-7997,62,8247)) is invisible in the exact %.
+The cause, in worldgen-bds-features.md ("Heightmaps"): a chunk's heightmap is recomputed in `loadChunk` and at
+the end of its own decoration, and nothing updates it in between. "The tree loop's heightmap ignores leaves"
+above was that staleness seen through one case.
 
-## Mangrove chunk -500,515 (open)
-Phase 3. BDS's try #15 of `mangrove_swamp_mangrove_tree_feature` at (-7988,61,8243) grows nothing (forcing
-it to fail takes the chunk from 644 to 190 wrong cells) and BDS has a regular mangrove (height 4, root offset 1)
-at (-7997,61,8247), tries #9 and #2. No start draw for #2 among every one matching its pick, height and offset
-reproduces BDS's roots and canopy (best 136 wrong; scoring only a box around it, 258 and up), and one extra
-draw anywhere in #15 or #2 does not either. BDS's root code (1438f0d00, simulation 1438f16f0, facing table
-14a681437 = north, east, south, west), mangrove height (1438f24d0) and canopy propagule logic (1438ef7d0) read
-as ours. The world #2 grows into, or a draw count before it, differs; not found.
 - The forest case of the flower table is unused (its rule `forest_surface_flowers_feature` is filtered by the
   `deprecated` tag). Jungle edges come from ring-chunk decoration.
