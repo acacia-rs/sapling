@@ -122,6 +122,9 @@ impl Scatter {
             placed = FEATURES[self.feature].place(ctx, position).or(placed);
         }
         ctx.scope.restore(saved);
+        // The variables are shared with the caller's environment (14478e670 writes through its pointer):
+        // the origin stays at this feature's position for whatever evaluates next.
+        ctx.scope.set_origin(at);
         ctx.scope.biome = saved_biome;
         placed
     }

@@ -142,6 +142,12 @@ impl OverworldGenerator {
         writes.world_writes((chunk_x, chunk_z))
     }
 
+    /// Molang's `query.noise(x, z)` (examples/query_noise.rs).
+    #[doc(hidden)]
+    pub fn query_noise(x: f32, z: f32) -> f32 {
+        feature::query_noise(x, z)
+    }
+
     /// `source_feature_writes` with the decoration trace (feature/trace.rs) of every source it ran.
     #[doc(hidden)]
     pub fn source_feature_trace(&self, chunk_x: i32, chunk_z: i32) -> Vec<String> {

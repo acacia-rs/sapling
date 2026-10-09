@@ -77,6 +77,10 @@ pub struct Inputs<'a> {
     pub in_structure: &'a dyn Fn([i32; 3]) -> bool,
 }
 
+pub(crate) fn query_noise(x: f32, z: f32) -> f32 {
+    molang::noise().value(x, z)
+}
+
 /// When BDS decorates a chunk relative to its neighbours: x and z even first, then x odd, both odd,
 /// z odd. Chunks of one phase are never neighbours (docs/research/worldgen-bds-features.md).
 pub(crate) fn phase((x, z): (i32, i32)) -> u8 {

@@ -52,6 +52,8 @@ pub fn decorate_chunk(seed: &LargeFeatureSeed, chunk: (i32, i32), inputs: Inputs
     let mut scope = Scope::new();
     for pass in Pass::ALL {
         for &biome in &order {
+            // `decorateBiome` sets the origin once for the biome's rules; a scatter feature then leaves its own (place.rs).
+            scope.set_origin([chunk.0 * 16, 0, chunk.1 * 16]);
             // With one biome BDS places every position without looking up its biome.
             let only = (order.len() > 1).then_some(biome);
             for rule in RULES.iter().filter(|rule| rule.pass == pass && rule.biomes.contains(biome)) {
@@ -66,7 +68,6 @@ fn run(rule: &Rule, source: &mut Source, only: Option<u32>, own: &ChunkBiomes, v
     let seed = rule_seed(source.chunk_seed, rule.name);
     let mut positions = Mt19937::new(seed);
     let origin = [source.chunk.0 * 16, 0, source.chunk.1 * 16];
-    scope.set_origin(origin);
     scope.world_bound = false;
     let queries = scope.queries;
     let count = {
