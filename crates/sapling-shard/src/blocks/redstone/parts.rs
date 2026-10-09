@@ -32,6 +32,8 @@ pub(super) enum Part {
     Torch { lit: bool, support: Face },
     /// Takes power on its `input` side and gives it out of the other, `delay` evaluations later.
     Repeater { lit: bool, input: Face, delay: u8 },
+    /// Takes power on its `input` side and its two sides, and gives `output` out of the fourth.
+    Comparator { lit: bool, input: Face, subtracts: bool, output: u8 },
     User(User),
     /// A block powered by what points into it, and passing that on. Cuts a step of dust under it.
     Conductor,
@@ -66,6 +68,10 @@ impl Part {
                 let delay = get("repeater_delay").and_then(|delay| delay.parse().ok()).unwrap_or(0);
                 Part::Repeater { lit: name == "powered_repeater", input: side(get("minecraft:cardinal_direction")), delay }
             }
+            "unpowered_comparator" | "powered_comparator" => {
+                let (lit, input) = (name == "powered_comparator", side(get("minecraft:cardinal_direction")));
+                Part::Comparator { lit, input, subtracts: get("output_subtract_bit") == Some("1"), output: if lit { FULL } else { 0 } }
+            }
             "redstone_lamp" | "lit_redstone_lamp" => Part::User(User::Lamp { lit: name == "lit_redstone_lamp" }),
             "hopper" => Part::User(User::Hopper),
             _ if name.ends_with("trapdoor") => Part::User(User::Opens(Opens::Trapdoor)),
@@ -86,12 +92,12 @@ impl Part {
 
     /// Whether the circuit is searched from it.
     pub(super) fn is_source(self) -> bool {
-        matches!(self, Part::Producer { .. } | Part::Torch { .. } | Part::Repeater { .. })
+        matches!(self, Part::Producer { .. } | Part::Torch { .. } | Part::Repeater { .. } | Part::Comparator { .. })
     }
 
     /// Whether a change of signal is written into it.
     pub(super) fn is_written(self) -> bool {
-        matches!(self, Part::Dust { .. } | Part::User(_) | Part::Torch { .. } | Part::Repeater { .. })
+        matches!(self, Part::Dust { .. } | Part::User(_) | Part::Torch { .. } | Part::Repeater { .. } | Part::Comparator { .. })
     }
 }
 
@@ -136,8 +142,8 @@ fn torch_support(facing: Option<&str>) -> Face {
     side(facing)
 }
 
-/// The side a direction names, below for any other; a repeater's `minecraft:cardinal_direction` is
-/// the side it takes power on (research/captures/bds-redstone-repeaters.txt).
+/// The side a direction names, below for any other; the `minecraft:cardinal_direction` of a repeater
+/// or comparator is the side it takes power on (research/captures/bds-redstone-repeaters.txt).
 fn side(direction: Option<&str>) -> Face {
     match direction {
         Some("north") => Face::North,

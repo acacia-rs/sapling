@@ -31,8 +31,9 @@ Each needs its rule looked up first (`bdsre` for BDS, the Java jar for data), th
    trapdoors, gates and hopper locks (`blocks/redstone.rs`, `docs/research/redstone.md`; plugins
    read `ctx.power_at`), checked against `bds_command_probe redstone`. Circuits a world folder
    holds are found as their columns load. Repeaters pass, delay
-   and hold (`bds_command_probe repeaters`). Left: the circuits of an arena's template, comparators,
-   pistons and observers.
+   and hold (`bds_command_probe repeaters`). Comparators
+   compare, subtract and read containers (`bds_command_probe comparators`). Left: the circuits of an
+   arena's template, what a comparator reads besides slots, pistons and observers.
 
 ## 3. Things assumed, not verified
 

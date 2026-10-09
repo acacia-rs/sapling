@@ -24,15 +24,19 @@ enum Via {
     Input,
     /// Into the side of a repeater from one that is lit.
     Lock,
+    /// Into the side of a comparator.
+    Side,
 }
 
-/// What a search found: the strongest signal each cell gets, what each torch and repeater is given
-/// and from which source, and the repeaters another holds as they are.
+/// What a search found: the strongest signal each cell gets, what each torch, repeater and
+/// comparator is given and from which source, the repeaters another holds as they are, and the
+/// strongest signal at a comparator's sides.
 #[derive(Default, Debug)]
 pub(super) struct Power {
     pub(super) at: HashMap<BlockPos, u8>,
     pub(super) inputs: HashMap<BlockPos, (u8, BlockPos)>,
     pub(super) locked: HashSet<BlockPos>,
+    pub(super) sides: HashMap<BlockPos, u8>,
 }
 
 struct Search<'a, F: FnMut(BlockPos) -> Part> {
@@ -53,12 +57,15 @@ impl<F: FnMut(BlockPos) -> Part> Search<'_, F> {
 
     /// Offers `strength` to what `pos` holds, reached from `from` on its `face` side: dust and
     /// users always, a solid block when `strong` points into it, a torch standing on `from`, a
-    /// repeater whose back `from` is at, or whose side when `from` is a repeater that `locks`.
+    /// repeater whose back `from` is at, or whose side when `from` is a repeater or comparator
+    /// that `locks`, a comparator's back or side.
     fn reach(&mut self, from: BlockPos, face: Face, strength: u8, origin: BlockPos, strong: bool, to_dust: bool, locks: bool) {
         let pos = face.neighbour(from);
         match (self.part)(pos) {
             Part::Repeater { input, .. } if face == opposite(input) => self.offer(Via::Input, pos, strength, origin),
             Part::Repeater { input, .. } if locks && ACROSS.contains(&face) && face != input => self.offer(Via::Lock, pos, strength, origin),
+            Part::Comparator { input, .. } if face == opposite(input) => self.offer(Via::Input, pos, strength, origin),
+            Part::Comparator { input, .. } if ACROSS.contains(&face) && face != input => self.offer(Via::Side, pos, strength, origin),
             Part::Dust { .. } if to_dust => self.offer(Via::Dust, pos, strength, origin),
             Part::User(_) => self.offer(Via::User, pos, strength, origin),
             Part::Conductor if strong => self.offer(Via::Strong, pos, strength, origin),
@@ -80,6 +87,7 @@ impl<F: FnMut(BlockPos) -> Part> Search<'_, F> {
                 }
             }
             Part::Repeater { lit: true, input, .. } => self.reach(pos, opposite(input), FULL, pos, true, true, true),
+            Part::Comparator { input, output, .. } if output > 0 => self.reach(pos, opposite(input), output, pos, true, true, true),
             _ => {}
         }
     }
@@ -92,7 +100,7 @@ impl<F: FnMut(BlockPos) -> Part> Search<'_, F> {
         let beside_part = (self.part)(beside);
         let up = !(self.part)(Face::Up.neighbour(dust)).cuts() && is_dust((self.part)(Face::Up.neighbour(beside)));
         let down = !beside_part.cuts() && (self.part)(Face::Down.neighbour(dust)) != Part::Ledge && is_dust((self.part)(Face::Down.neighbour(beside)));
-        let joins_repeater = matches!(beside_part, Part::Repeater { input, .. } if input == face || input == opposite(face));
+        let joins_repeater = matches!(beside_part, Part::Repeater { input, .. } | Part::Comparator { input, .. } if input == face || input == opposite(face));
         matches!(beside_part, Part::Dust { .. } | Part::Producer { .. } | Part::Torch { .. }) || joins_repeater || up || down
     }
 
@@ -112,7 +120,8 @@ impl<F: FnMut(BlockPos) -> Part> Search<'_, F> {
             let next = strength - 1;
             match beside_part {
                 Part::Dust { .. } => self.offer(Via::Dust, beside, next, origin),
-                Part::Repeater { input, .. } if input == opposite(face) => self.offer(Via::Input, beside, strength, origin),
+                Part::Repeater { input, .. } | Part::Comparator { input, .. } if input == opposite(face) => self.offer(Via::Input, beside, strength, origin),
+                Part::Comparator { input, .. } if input != face => self.offer(Via::Side, beside, strength, origin),
                 _ => {}
             }
             let (above, under) = (Face::Up.neighbour(beside), Face::Down.neighbour(beside));
@@ -155,6 +164,10 @@ impl<F: FnMut(BlockPos) -> Part> Search<'_, F> {
                 Via::Strong => self.from_block(pos, strength, origin, true),
                 Via::Weak => self.from_block(pos, strength, origin, false),
                 Via::Lock => drop(self.power.locked.insert(pos)),
+                Via::Side => {
+                    let side = self.power.sides.entry(pos).or_insert(0);
+                    *side = (*side).max(strength);
+                }
                 Via::Input => {
                     let input = self.power.inputs.entry(pos).or_insert((0, origin));
                     if strength > input.0 {

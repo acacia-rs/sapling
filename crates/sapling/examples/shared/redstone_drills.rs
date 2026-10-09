@@ -363,3 +363,48 @@ pub fn repeaters() -> Vec<String> {
     toggle(&mut put, 2, 20, 6);
     lines
 }
+
+fn comparator(input: &str, subtracts: bool) -> String {
+    format!("unpowered_comparator [\"minecraft:cardinal_direction\"=\"{input}\",\"output_subtract_bit\"={subtracts}]")
+}
+
+/// Comparators, a rig to a floor, each with its back to the west:
+/// - 0: between dust, a power block put and taken; after 8 dust; a power block straight behind;
+/// - 5: 11 behind it, then 13 at its north side put and taken, then 9 at its south side;
+/// - 10: the same, subtracting;
+/// - 15: a chest behind it filled a slot at a time; a chest behind a block behind it.
+pub fn comparators() -> Vec<String> {
+    let mut lines = vec!["fill ~2 ~-1 ~4 ~22 ~24 ~16 air".to_owned()];
+    lines.extend((0..4).map(|floor| format!("fill ~2 ~{} ~4 ~22 ~{0} ~16 stone", floor * 5 - 1)));
+    let mut put = |x: i32, y: i32, z: i32, block: &str| lines.push(format!("setblock ~{x} ~{y} ~{z} {block}"));
+    let compares = comparator("west", false);
+    for (x, z, block) in [(5, 5, DUST), (6, 5, &compares), (7, 5, DUST), (8, 5, DUST), (9, 5, LAMP), (4, 5, POWER), (4, 5, "air")] {
+        put(x, 0, z, block);
+    }
+    for x in 3..=10 {
+        put(x, 0, 8, DUST);
+    }
+    for (x, z, block) in [(11, 8, compares.as_str()), (12, 8, DUST), (13, 8, DUST), (2, 8, POWER), (2, 8, "air"), (6, 11, &compares), (7, 11, DUST), (5, 11, POWER), (5, 11, "air")] {
+        put(x, 0, z, block);
+    }
+    for (y, subtracts) in [(5, false), (10, true)] {
+        for x in 3..=7 {
+            put(x, y, 8, DUST);
+        }
+        put(8, y, 8, &comparator("west", subtracts));
+        put(9, y, 8, DUST);
+        for z in (5..=7).chain(9..=15) {
+            put(8, y, z, DUST);
+        }
+        for (x, z, block) in [(2, 8, POWER), (8, 4, POWER), (8, 4, "air"), (8, 16, POWER), (8, 16, "air"), (2, 8, "air")] {
+            put(x, y, z, block);
+        }
+    }
+    for (x, z, block) in [(5, 5, "chest"), (6, 5, compares.as_str()), (7, 5, DUST), (5, 9, "chest"), (6, 9, "stone"), (7, 9, &compares), (8, 9, DUST)] {
+        put(x, 15, z, block);
+    }
+    lines.extend((0..27).map(|slot| format!("replaceitem block ~5 ~15 ~5 slot.container {slot} stone 64")));
+    lines.push("replaceitem block ~5 ~15 ~9 slot.container 0 stone 64".to_owned());
+    lines.push("setblock ~5 ~15 ~5 air".to_owned());
+    lines
+}

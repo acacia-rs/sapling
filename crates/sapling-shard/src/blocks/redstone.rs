@@ -1,9 +1,10 @@
-//! Redstone: plates, buttons, levers, blocks of redstone, torches and repeaters powering dust, lamps,
-//! doors, trapdoors, fence gates and hoppers, by BDS's circuit system (docs/research/redstone.md). Every
+//! Redstone: plates, buttons, levers, blocks of redstone, torches, repeaters and comparators powering
+//! dust, lamps, doors, trapdoors, fence gates and hoppers, by BDS's circuit system (docs/research/redstone.md). Every
 //! second tick, at its end, the circuits written to are searched again from their sources
 //! (search.rs); what changed is written into the blocks at the start of the next (apply.rs).
 // TODO: the circuits of an arena's template are found only once one of their blocks is written; no
-// comparators, pistons or observers; a burnt torch whose loop was broken while it was out still
+// pistons or observers; a comparator reads only containers that hold items in slots (no cake,
+// cauldron, composter, jukebox, lectern or item frame); a burnt torch whose loop was broken while it was out still
 // waits for a change beside it.
 
 mod apply;
@@ -19,7 +20,8 @@ use sapling_world::ChunkPos;
 
 use super::level;
 use crate::components::Tick;
-use capacitors::{RepeaterState, TorchState};
+use crate::containers;
+use capacitors::{RepeaterState, TorchState, compared, fullness};
 use parts::{Part, User};
 
 /// Game ticks between evaluations (`Dimension::tickRedstone`).
@@ -39,6 +41,8 @@ struct Circuit {
     power: HashMap<BlockPos, u8>,
     torches: HashMap<BlockPos, TorchState>,
     repeaters: HashMap<BlockPos, RepeaterState>,
+    /// What each comparator gives out: its block says only whether it is lit.
+    comparators: HashMap<BlockPos, u8>,
     /// Cells written since the last evaluation.
     changed: HashSet<BlockPos>,
     /// The last evaluation flipped a torch or repeater, or one waits to flip: the next must look again.
@@ -68,6 +72,36 @@ pub(crate) fn arrived(world: &mut World, layer: Entity, column: ChunkPos) {
     }
 }
 
+/// Notes a container whose slots changed, where a comparator may read it.
+pub(crate) fn container_changed(world: &mut World, layer: Entity, pos: BlockPos) {
+    let Some(mut circuits) = world.get_resource_mut::<Circuits>() else { return };
+    if let Some(circuit) = circuits.layers.get_mut(&layer).filter(|circuit| !circuit.comparators.is_empty()) {
+        circuit.changed.insert(pos);
+    }
+}
+
+/// What each comparator of `circuit` reads off a container behind it, or behind the block behind it.
+fn read_containers(world: &mut World, layer: Entity, circuit: &Circuit) -> HashMap<BlockPos, u8> {
+    let mut part = reader(world, layer);
+    let behind: Vec<(BlockPos, BlockPos, Option<BlockPos>)> = (circuit.sources.iter().chain(&circuit.changed))
+        .filter_map(|pos| match part(*pos) {
+            Part::Comparator { input, .. } => {
+                let near = input.neighbour(*pos);
+                Some((*pos, near, (part(near) == Part::Conductor).then(|| input.neighbour(near))))
+            }
+            _ => None,
+        })
+        .collect();
+    drop(part);
+    let read = |world: &mut World, at: BlockPos| {
+        containers::with_slots(world, layer, at, |_, slots| {
+            let filled = slots.iter().flatten().map(|held| (held.stack.count, sapling_data::max_stack(&held.stack.name)));
+            fullness(filled, slots.len())
+        })
+    };
+    behind.into_iter().filter_map(|(pos, near, far)| Some((pos, read(world, near).or_else(|| read(world, far?))?))).collect()
+}
+
 /// The signal the block at `pos` got at the last evaluation.
 pub(crate) fn power_at(world: &World, layer: Entity, pos: BlockPos) -> u8 {
     world.get_resource::<Circuits>().and_then(|circuits| circuits.layers.get(&layer)?.power.get(&pos).copied()).unwrap_or(0)
@@ -93,7 +127,8 @@ pub(crate) fn evaluate(world: &mut World) {
     for layer in layers {
         let Some(mut circuit) = world.resource_mut::<Circuits>().layers.remove(&layer) else { continue };
         let now = world.resource::<Tick>().0;
-        let due = evaluate_circuit(world, layer, &mut circuit, now);
+        let stored = read_containers(world, layer, &circuit);
+        let due = evaluate_circuit(world, layer, &mut circuit, now, &stored);
         let mut circuits = world.resource_mut::<Circuits>();
         circuits.layers.insert(layer, circuit);
         circuits.due.extend(due.into_iter().map(|(pos, due)| (layer, pos, due)));
@@ -112,7 +147,7 @@ fn reader(world: &World, layer: Entity) -> impl FnMut(BlockPos) -> Part + '_ {
 /// Searches from the sources as they are, which is what dust shows and what torches and repeaters
 /// flip by; what they give once flipped reaches lamps, doors and hoppers in the same evaluation,
 /// by a second search (research/captures/bds-redstone-repeaters.txt).
-fn evaluate_circuit(world: &World, layer: Entity, circuit: &mut Circuit, now: u64) -> Vec<(BlockPos, Due)> {
+fn evaluate_circuit(world: &World, layer: Entity, circuit: &mut Circuit, now: u64, stored: &HashMap<BlockPos, u8>) -> Vec<(BlockPos, Due)> {
     let mut part = reader(world, layer);
     let changed = std::mem::take(&mut circuit.changed);
     let mut fresh = HashSet::new();
@@ -133,8 +168,14 @@ fn evaluate_circuit(world: &World, layer: Entity, circuit: &mut Circuit, now: u6
     circuit.sources.retain(|pos| part(*pos).is_source());
     circuit.torches.retain(|pos, _| circuit.sources.contains(pos));
     circuit.repeaters.retain(|pos, _| circuit.sources.contains(pos));
+    circuit.comparators.retain(|pos, _| circuit.sources.contains(pos));
 
-    let mut sources: Vec<(BlockPos, Part)> = circuit.sources.iter().map(|pos| (*pos, part(*pos))).collect();
+    let as_kept = |pos: &BlockPos, part: Part| match part {
+        Part::Comparator { lit, input, subtracts, output } => Part::Comparator { lit, input, subtracts, output: circuit.comparators.get(pos).copied().unwrap_or(output) },
+        other => other,
+    };
+    let mut sources: Vec<(BlockPos, Part)> = circuit.sources.iter().map(|pos| (*pos, as_kept(pos, part(*pos)))).collect();
+    let mut restrengthened = false;
     let shown = search::search(&sources, &mut part);
     let mut due = Vec::new();
     for (pos, source) in &mut sources {
@@ -147,6 +188,14 @@ fn evaluate_circuit(world: &World, layer: Entity, circuit: &mut Circuit, now: u6
                 let fed = shown.inputs.get(pos).is_some_and(|(input, _)| *input > 0);
                 (lit, circuit.repeaters.entry(*pos).or_default().next(lit, fed, delay, shown.locked.contains(pos)), false)
             }
+            Part::Comparator { lit, input, subtracts, output } => {
+                let behind = shown.inputs.get(pos).map_or(0, |(input, _)| *input).max(stored.get(pos).copied().unwrap_or(0));
+                let next = compared(behind, shown.sides.get(pos).copied().unwrap_or(0), subtracts);
+                circuit.comparators.insert(*pos, next);
+                restrengthened |= next != output;
+                *source = Part::Comparator { lit, input, subtracts, output: next };
+                (lit, next > 0, false)
+            }
             _ => continue,
         };
         if next != lit {
@@ -154,12 +203,13 @@ fn evaluate_circuit(world: &World, layer: Entity, circuit: &mut Circuit, now: u6
             *source = match *source {
                 Part::Torch { support, .. } => Part::Torch { lit: next, support },
                 Part::Repeater { input, delay, .. } => Part::Repeater { lit: next, input, delay },
+                Part::Comparator { input, subtracts, output, .. } => Part::Comparator { lit: next, input, subtracts, output },
                 other => other,
             };
         }
     }
-    circuit.unsettled = !due.is_empty() || circuit.repeaters.values().any(RepeaterState::is_waiting);
-    let flipped = (!due.is_empty()).then(|| search::search(&sources, &mut part));
+    circuit.unsettled = !due.is_empty() || restrengthened || circuit.repeaters.values().any(RepeaterState::is_waiting);
+    let flipped = (!due.is_empty() || restrengthened).then(|| search::search(&sources, &mut part));
     let used = flipped.as_ref().unwrap_or(&shown);
 
     let cells: HashSet<BlockPos> = shown.at.keys().chain(used.at.keys()).chain(circuit.power.keys()).chain(&fresh).copied().collect();

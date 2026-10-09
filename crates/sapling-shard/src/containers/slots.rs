@@ -102,6 +102,7 @@ pub(crate) fn set_slots(world: &mut World, layer: Entity, pos: BlockPos, slots: 
             out.push(&InventorySlot { window_id, slot: *slot as u32, container: None, storage_item: None, item: wire(&slots[*slot], true) });
         }
     }
+    halves.iter().for_each(|half| crate::blocks::container_changed(world, layer, *half));
     for (half, held) in halves.iter().zip(slots.chunks(per_half)) {
         let Some(entity) = entity_holding(world, layer, *half, held) else { return };
         if !world.get_mut::<Layer>(layer).is_some_and(|mut level| level.world.set_block_entity(*half, &entity)) {

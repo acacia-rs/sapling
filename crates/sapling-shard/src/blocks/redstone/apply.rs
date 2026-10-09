@@ -49,14 +49,18 @@ pub(super) fn write(world: &mut World, layer: Entity, pos: BlockPos, due: Due) {
             }
         }
         (Part::User(user), Due::Signal(signal)) => use_signal(world, layer, pos, id, user, signal),
-        (Part::Torch { lit, .. } | Part::Repeater { lit, .. }, Due::Lit { lit: now, fizz }) if lit != now => {
-            let is_torch = matches!(part, Part::Torch { .. });
-            let names = if is_torch { ["minecraft:unlit_redstone_torch", "minecraft:redstone_torch"] } else { ["minecraft:unpowered_repeater", "minecraft:powered_repeater"] };
-            let name = names[usize::from(now)];
+        (Part::Torch { lit, .. } | Part::Repeater { lit, .. } | Part::Comparator { lit, .. }, Due::Lit { lit: now, fizz }) if lit != now => {
+            let names = match part {
+                Part::Torch { .. } => ["minecraft:unlit_redstone_torch", "minecraft:redstone_torch"],
+                Part::Repeater { .. } => ["minecraft:unpowered_repeater", "minecraft:powered_repeater"],
+                _ => ["minecraft:unpowered_comparator", "minecraft:powered_comparator"],
+            };
             if fizz {
                 play(world, layer, pos, "fizz");
             }
-            if let Some(id) = renamed(world, layer, id, name) {
+            // A comparator's lit state is its name and a bit.
+            let id = with(world, layer, pos, "output_lit_bit", if now { "1" } else { "0" }).unwrap_or(id);
+            if let Some(id) = renamed(world, layer, id, names[usize::from(now)]) {
                 send::set(world, layer, pos, id);
             }
         }

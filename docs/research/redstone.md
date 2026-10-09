@@ -315,3 +315,20 @@ No decompile: all of this is from the captures. An evaluation is 2 ticks.
   When the holding one goes out, the held one takes up its input one evaluation later.
 - Not drilled: a click's sound, a comparator as the one that holds, a pulse shorter than the delay from a
   steady state other than the 2-tick clock, a held repeater that was counting down.
+
+## Comparators (2026-10-09, `bds_command_probe comparators`, research/captures/bds-redstone-comparators.txt)
+
+No decompile: all of this is from the capture.
+
+- `minecraft:cardinal_direction` names the side it takes power on, as a repeater's. Lit it is
+  `powered_comparator` with `output_lit_bit=1`; `output_subtract_bit` is its mode.
+- It gives out the strength behind it: 8 after 8 dust, and the dust in front shows 8, then 7. It changes at
+  the evaluation its input dust changes at (no delay), and the dust in front an evaluation later, as a
+  repeater's.
+- Comparing, with 11 behind: 13 at a side puts it out, 9 at a side leaves 11. Subtracting: 13 gives 0, 9 gives 2.
+  A side is dust ending at it. It answers a side in the evaluation the side's dust changes at.
+- A chest behind it: 1 for the first full stack, then `floor(1 + 14 * stacks / 27)` (2 at 2, 3 at 4, ... 14 at
+  26, 15 at 27), Java's formula. A chest behind a block of stone behind it reads the same. Taking the chest away
+  puts it out.
+- Not drilled: equal strengths behind and at a side (sapling passes it, as Java), a repeater or power block at a
+  side, containers other than a chest, cake, cauldron, composter, jukebox, lectern, item frame, a click's sound.

@@ -1,5 +1,6 @@
-//! Torches and repeaters: what an evaluation flips by the power the search brought it, for dust and
-//! one another to see at the next (docs/research/redstone.md, C10 and "Repeaters").
+//! Torches, repeaters and comparators: what an evaluation flips by the power the search brought it,
+//! for dust and one another to see at the next (docs/research/redstone.md, C10, "Repeaters" and
+//! "Comparators").
 
 use sapling_api::BlockPos;
 
@@ -80,9 +81,37 @@ impl RepeaterState {
     }
 }
 
+/// What a comparator gives out: what is behind it unless a side is stronger, or, subtracting,
+/// what is behind it less its stronger side.
+pub(super) fn compared(behind: u8, side: u8, subtracts: bool) -> u8 {
+    match subtracts {
+        true => behind.saturating_sub(side),
+        false if side > behind => 0,
+        false => behind,
+    }
+}
+
+/// The signal a comparator reads off a container whose slots hold `filled` (a count and the most
+/// the slot takes of it, for each stack): 0 when empty, else 1 and 14 by how full it is.
+pub(super) fn fullness(filled: impl Iterator<Item = (u8, u8)>, slots: usize) -> u8 {
+    let parts: Vec<f32> = filled.map(|(count, most)| f32::from(count) / f32::from(most.max(1))).collect();
+    if parts.is_empty() || slots == 0 {
+        return 0;
+    }
+    (1.0 + parts.iter().sum::<f32>() / slots as f32 * 14.0).floor() as u8
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn a_comparator_reads_a_chest_and_compares_or_subtracts_as_on_bds() {
+        // research/captures/bds-redstone-comparators.txt: a chest filled a stack at a time; 11 behind, 13 or 9 at a side.
+        let read: Vec<u8> = (0..=27).map(|stacks| fullness((0..stacks).map(|_| (64, 64)), 27)).collect();
+        assert_eq!(read, [0, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11, 12, 12, 13, 13, 14, 15]);
+        assert_eq!([compared(11, 13, false), compared(11, 9, false), compared(11, 13, true), compared(11, 9, true)], [0, 11, 0, 2]);
+    }
 
     /// The evaluations at which a repeater flips, fed a clock that is on at every even one.
     fn flips(delay: u8, evaluations: usize) -> Vec<usize> {

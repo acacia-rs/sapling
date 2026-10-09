@@ -240,3 +240,56 @@ fn a_click_gives_a_repeater_its_next_delay() {
         assert!(block_changes(h.tick_all().to(2)).contains(&(pos, repeater(false, "west", delay))), "{delay}");
     }
 }
+
+fn comparator(lit: bool, subtracts: bool) -> u32 {
+    let properties = format!("minecraft:cardinal_direction=west,output_lit_bit={},output_subtract_bit={}", u8::from(lit), u8::from(subtracts));
+    state(if lit { "minecraft:powered_comparator" } else { "minecraft:unpowered_comparator" }, &properties)
+}
+
+#[test]
+fn a_comparator_passes_what_is_behind_it_unless_a_side_is_stronger_or_less_its_side() {
+    // As research/captures/bds-redstone-comparators.txt, the rigs at y 5 and 10.
+    let mut h = ready();
+    let mut rigs: Vec<([i32; 3], &str, &str)> = (-5..=-1).map(|x| ([x, 65, 2], "redstone_wire", "")).collect();
+    rigs.extend([([0, 65, 2], "unpowered_comparator", "minecraft:cardinal_direction=west"), ([1, 65, 2], "redstone_wire", ""), ([-6, 65, 2], "redstone_block", "")]);
+    rigs.extend([([4, 65, 2], "unpowered_comparator", "minecraft:cardinal_direction=west,output_subtract_bit=1"), ([5, 65, 2], "redstone_wire", ""), ([3, 65, 2], "redstone_block", "")]);
+    rigs.extend((3..=5).map(|z| ([4, 65, z], "redstone_wire", "")));
+    put(&mut h, &rigs);
+    let on = watch(&mut h, 8);
+    let lit = when(&on, [0, 65, 2], comparator(true, false)).expect("lit");
+    assert_eq!(when(&on, [-1, 65, 2], dust(11)), Some(lit), "with the dust behind it");
+    assert_eq!(when(&on, [1, 65, 2], dust(11)), Some(lit + 2), "the dust past it an evaluation later, as strong");
+    assert_eq!(when(&on, [5, 65, 2], dust(15)), Some(lit + 2), "nothing at the side yet");
+
+    put(&mut h, &[([0, 65, 1], "redstone_block", ""), ([4, 65, 6], "redstone_block", "")]);
+    let sided = watch(&mut h, 8);
+    let out = when(&sided, [0, 65, 2], comparator(false, false)).expect("a stronger side puts it out");
+    assert_eq!(when(&sided, [1, 65, 2], dust(0)), Some(out + 2));
+    assert!(when(&sided, [4, 65, 3], dust(13)).is_some());
+    assert_eq!(when(&sided, [5, 65, 2], dust(2)), Some(out + 2), "15 less 13");
+}
+
+#[test]
+fn a_comparator_reads_how_full_the_chest_behind_it_is() {
+    let mut h = ready();
+    put(&mut h, &[([-4, 65, 6], "chest", ""), ([-3, 65, 6], "unpowered_comparator", "minecraft:cardinal_direction=west"), ([-2, 65, 6], "redstone_wire", "")]);
+    watch(&mut h, 4);
+    h.remote.run(|ctx| (0..14).for_each(|slot| assert!(ctx.set_container_item([-4, 65, 6], slot, Some(&sapling_api::Item::new("minecraft:stone", 64))))));
+    let filled = watch(&mut h, 8);
+    assert!(when(&filled, [-3, 65, 6], comparator(true, false)).is_some());
+    assert!(when(&filled, [-2, 65, 6], dust(8)).is_some(), "14 of 27 stacks, as on BDS");
+    h.remote.run(|ctx| (0..14).for_each(|slot| assert!(ctx.set_container_item([-4, 65, 6], slot, None))));
+    assert!(when(&watch(&mut h, 8), [-2, 65, 6], dust(0)).is_some());
+}
+
+#[test]
+fn a_click_turns_a_comparator_to_subtracting_and_back() {
+    let mut h = ready();
+    let pos = [2, 65, 2];
+    put(&mut h, &[(pos, "unpowered_comparator", "minecraft:cardinal_direction=west")]);
+    watch(&mut h, 2);
+    for subtracts in [true, false] {
+        h.receive(1, &common::click(pos, 1, None));
+        assert!(block_changes(h.tick_all().to(2)).contains(&(pos, comparator(false, subtracts))), "{subtracts}");
+    }
+}
