@@ -95,6 +95,8 @@ pub fn build(column: &mut Column, materials: Materials, steep: Option<Block>, se
                 }
                 sea = sea.max(y + 1);
             }
+            // An iceberg is sea too (14580ae5c: packed ice and blue ice by id): gravel under it, not dirt.
+            Block::PackedIce | Block::BlueIce => sea = sea.max(y + 1),
             _ => {}
         }
         y -= 1;
