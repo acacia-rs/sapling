@@ -60,3 +60,21 @@ pub fn douse() -> Vec<String> {
     lines.extend(["kill @e[type=!player]".into(), String::new()]);
     lines
 }
+
+pub const HIT_SHOWN: &[&str] = &[
+    "AddEntity", "AddItemEntity", "RemoveEntity", "EntityEvent", "SetEntityData", "LevelSoundEvent", "UpdateAttributes", "SetEntityMotion", "MoveEntityDelta", "LevelEvent", "Animate", "MobEquipment",
+];
+
+/// The actor hits cows kept in a pit with its fist and with swords, twice at once, and to
+/// death; then a cow and a pig standing free, to see them thrown. `!hit` and `!hit2` are the
+/// probe's own lines: one hit, or two in a row, on the newest mob of the kind.
+pub fn hit() -> Vec<String> {
+    let hand = |item: &str| format!("replaceitem entity @s slot.weapon.mainhand 0 {item}");
+    let mut lines: Vec<String> = ["kill @e[type=!player]", "", "", "fill ~-3 ~-4 ~-3 ~8 ~-1 ~8 stone", "fill ~-3 ~ ~-3 ~8 ~6 ~8 air", "fill ~1 ~-2 ~ ~1 ~-1 ~ air"].map(String::from).into();
+    lines.extend([hand("air"), "summon cow ~1 ~-2 ~".into(), String::new(), "!hit cow".into(), "!hit cow".into(), String::new()]);
+    lines.extend([hand("wooden_sword"), "!hit cow".into(), String::new(), hand("diamond_sword"), "!hit cow".into(), String::new(), String::new(), String::new()]);
+    lines.extend([hand("air"), "summon cow ~1 ~-2 ~".into(), String::new(), "!hit2 cow".into(), String::new(), hand("wooden_sword"), "!hit2 cow".into(), String::new()]);
+    lines.extend(["kill @e[type=cow]".into(), String::new(), String::new(), "fill ~1 ~-2 ~ ~1 ~-1 ~ stone".into(), hand("air")]);
+    lines.extend(["summon cow ~2 ~ ~", "!hit cow", "", "", "kill @e[type=cow]", "", "summon pig ~ ~ ~2", "!hit pig", "", "", "kill @e[type=!player]", "", ""].map(String::from));
+    lines
+}

@@ -1,9 +1,10 @@
 //! Mobs, spawned through the plugin API or kept by a world folder: bodies (body.rs) that fall and
 //! collide and do nothing else, shown as BDS announced their kind (`sapling_data::add_entity`) or
 //! as they were stored; and the entity side of the handlers' context.
-// TODO: no AI; nothing attacks them (harm.rs); their physics are the Java game's (`Physics::MOB`); a spawned mob is
+// TODO: no AI; their physics are the Java game's (`Physics::MOB`); a spawned mob is
 // saved with the least a compound needs, which BDS was not tried on.
 
+mod attacks;
 mod harm;
 mod health;
 
@@ -18,6 +19,7 @@ use sapling_world::Actor;
 
 use crate::blocks::Dice;
 use crate::body::{Body, Physics};
+pub(crate) use attacks::attacked;
 pub(crate) use health::Health;
 use crate::components::{InLayer, Layer, NetId, Tick};
 use crate::handlers::Ctx;
@@ -31,6 +33,12 @@ const ORB: &str = "minecraft:xp_orb";
 #[derive(Component)]
 pub(crate) struct Creature {
     look: Option<Actor>,
+}
+
+impl Creature {
+    fn is_baby(&self) -> bool {
+        self.look.as_ref().is_some_and(|look| look.baby)
+    }
 }
 
 // TODO: a mob dressed as it was stored is not shown on fire to one who comes to see it burning.
@@ -158,9 +166,13 @@ fn die(world: &mut World, entity: Entity, layer: Entity, kind: &str, body: &Body
         health.end();
         health.is_burning()
     });
-    if world.get::<Layer>(layer).is_some_and(|layer| layer.world.level().rules.on(MOB_LOOT)) {
+    if leaves_loot(world, layer) {
         leave_loot(world, layer, kind, on_fire, body.at);
     }
+}
+
+fn leaves_loot(world: &World, layer: Entity) -> bool {
+    world.get::<Layer>(layer).is_some_and(|layer| layer.world.level().rules.on(MOB_LOOT))
 }
 
 fn leave_loot(world: &mut World, layer: Entity, kind: &str, on_fire: bool, [x, y, z]: [f32; 3]) {
@@ -180,6 +192,7 @@ pub(crate) fn tick(world: &mut World) {
     let now = world.resource::<Tick>().0;
     let dead: Vec<Entity> = world.query::<(Entity, &Dying)>().iter(world).filter(|(_, dying)| now >= dying.0 + DYING).map(|(entity, _)| entity).collect();
     for entity in dead {
+        attacks::leave_experience(world, entity);
         mobs::remove(world, entity);
     }
     let all: Vec<(Entity, Entity, u64, String)> =

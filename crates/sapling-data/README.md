@@ -90,7 +90,8 @@ loot goes by size, have none here.
 
 `mob-traits.tsv` (read by `mob_health.rs`): for each entity of the vanilla behaviour packs, which of
 these its own components (not its component groups) say, by `data/generate/mob-traits.py`:
-`fire_immune` (`minecraft:fire_immune`), `no_fall` (a `minecraft:damage_sensor` trigger that takes
+`xp=least-most` (`minecraft:experience_reward` of the entity or of a group not named for a baby, the
+part after `last_hit_by_player ?`, without equipment), `fire_immune` (`minecraft:fire_immune`), `no_fall` (a `minecraft:damage_sensor` trigger that takes
 no damage from `fall` or from all), `breathes_water` and `no_air` (`minecraft:breathable`).
 
 ## Liquid reactions

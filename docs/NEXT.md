@@ -29,8 +29,9 @@ Each needs its rule looked up first (`bdsre` for BDS, the Java jar for data), th
    block their head is in and water without breath hurt and kill them, cooked if on fire
    (`creatures/harm.rs`, `creatures/health.rs`, `docs/research/mob-damage.md`, `bds_command_probe
    burn` and `harm`). A stored mob's health and fire are
-   saved with it. Water puts a fire out with BDS's fizz (`douse`). Left: attacks, and what the
-   doc lists as not drilled.
+   saved with it. Water puts a fire out with BDS's fizz (`douse`). A player's hit
+   hurts and throws a mob, and its kill leaves experience (`creatures/attacks.rs`, `hit`). Left:
+   what the doc lists as not drilled, mobs that hit back, and players being hurt at all.
 2. **Redstone**: plates, buttons, levers, blocks of redstone and torches power dust, lamps, doors,
    trapdoors, gates and hopper locks (`blocks/redstone.rs`, `docs/research/redstone.md`; plugins
    read `ctx.power_at`), checked against `bds_command_probe redstone`. Circuits a world folder
@@ -45,6 +46,8 @@ Each needs its rule looked up first (`bdsre` for BDS, the Java jar for data), th
 
 ## 3. Things assumed, not verified
 
+- What each tool costs a mob it hits is Bedrock's table from memory; only the hand and two swords
+  were drilled (`sapling-data/src/attack.rs`).
 - Mirrored shaped recipes are accepted (`Recipe::is_laid_out`) from memory of the game; decompile
   `ShapedRecipe::matches` to confirm.
 - A door's hinge follows the Java game's rule without its tie-break by where the click fell.

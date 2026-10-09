@@ -57,6 +57,8 @@ pub(crate) struct Body {
     liquid: Option<Liquid>,
     /// Where the wave a buoyant body bobs on has got to.
     wave: f32,
+    /// The speed a hit throws a mob at; its next tick is that move alone.
+    thrown: Option<[f32; 3]>,
 }
 
 /// A block's collision box in world coordinates.
@@ -64,7 +66,13 @@ type Bounds = ([f32; 3], [f32; 3]);
 
 impl Body {
     pub fn new(at: [f32; 3], motion: [f32; 3], size: [f32; 2]) -> Self {
-        Self { at, motion, size, on_ground: false, liquid: None, wave: 0.0 }
+        Self { at, motion, size, on_ground: false, liquid: None, wave: 0.0, thrown: None }
+    }
+
+    /// Throws a mob at `speed`: its next tick moves it by that, and the tick after slows it as
+    /// one that left the ground it is on now (research/captures/bds-hit.txt).
+    pub fn throw(&mut self, speed: [f32; 3]) {
+        self.thrown = Some(speed);
     }
 
     /// The liquid found to act on it where the last tick started; a mob went by the one before.
@@ -121,6 +129,11 @@ impl Body {
     /// A mob's tick: its speed first, by drag and gravity in the air or in `liquid`, then the move;
     /// the motion it moved by.
     fn mob_step(&mut self, level: &Level, physics: &Physics, liquid: Option<Liquid>) -> [f32; 3] {
+        if let Some(speed) = self.thrown.take() {
+            self.motion = speed;
+            self.slide(level, speed);
+            return speed;
+        }
         if let Some(liquid) = liquid {
             liquid::sink(self, liquid);
         } else {

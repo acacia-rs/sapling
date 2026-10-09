@@ -22,6 +22,8 @@ const DROWN_HARM: f32 = 2.0;
 /// What hurt, as `EntityEvent` names it (BDS's `ActorDamageCause`).
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub(super) enum Cause {
+    /// A player's hit.
+    Attack = 2,
     /// A block its head is in.
     Wall = 4,
     Fall = 5,
@@ -81,7 +83,7 @@ impl Health {
     }
 
     /// Whether a hit of `amount` landed.
-    fn hurt(&mut self, amount: f32) -> bool {
+    pub(super) fn hurt(&mut self, amount: f32) -> bool {
         let taken = if self.guarded > 0 { amount - self.last } else { amount };
         if taken <= 0.0 || self.left <= 0.0 {
             return false;

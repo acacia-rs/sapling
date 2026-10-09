@@ -1,7 +1,7 @@
 //! What hurts a mob where it is: a fall, fire and lava, a block its head is in, and water it
 //! cannot breathe in, found each tick and told to its viewers as BDS tells them
 //! (docs/research/mob-damage.md). The rules themselves: health.rs.
-// TODO: attacks do not hurt; any full block smothers; a fish out of water breathes;
+// TODO: any full block smothers; a fish out of water breathes;
 // breath comes back at once; an armour stand has no health here, though BDS burns it.
 
 use bevy_ecs::prelude::*;
@@ -47,7 +47,7 @@ fn is_full_block(level: &Level, [x, y, z]: [i32; 3]) -> bool {
 }
 
 /// The hit's flash, or the death it was; a fall's names where it landed.
-fn strike(id: u64, health: &Health, cause: Cause, landed: Option<[f32; 3]>) -> Bytes {
+pub(super) fn strike(id: u64, health: &Health, cause: Cause, landed: Option<[f32; 3]>) -> Bytes {
     let (event_id, data) = if health.left() > 0.0 { (EntityEventEventId::HurtAnimation, cause as i32) } else { (EntityEventEventId::DeathAnimation, 0) };
     let fire_at_position = landed.filter(|_| health.left() > 0.0).map(|[x, y, z]| Vec3f { x, y, z });
     sapling_net::encode(&EntityEvent { runtime_entity_id: id, event_id, data, fire_at_position })

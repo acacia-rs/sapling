@@ -48,6 +48,27 @@ with its mobs summoned into a wall). No decompile: all of this is from the captu
 - At `Air` 0 under water it is hit for 2 (cause 9) every 10 ticks, the health told a tick after each.
 - Under water a `LevelEvent` `ParticleBubble` (data 8) comes from its drawn head every tick.
 
+## Hits (2026-10-09, `bds_command_probe hit`, research/captures/bds-hit.txt)
+
+Built in `sapling-shard/src/creatures/attacks.rs`. The actor's attack is an `InventoryTransaction`
+`ItemUseOnEntity` `Attack`.
+
+- A bare hand costs a cow 1, a wooden sword 5; a diamond sword killed one with 3 left. The rest of
+  `sapling-data/src/attack.rs` is Bedrock's table as players know it, not drilled.
+- The hit is told at once as `HurtAnimation` with cause 2 (`DeathAnimation` when it kills). With the next
+  tick come the sound `attack.strong` from the middle of the hitter's box, naming `minecraft:player`, and
+  the mob's health.
+- Two hits sent together: one lands (the 10 tick guard), both are heard.
+- The mob is thrown at 0.4 away from the hitter across and 0.4 up: a still cow 2 blocks east moved 0.4
+  east and 0.4 up in the tick and was told a motion of 0.2184, 0.3136 (ground drag 0.546, then gravity).
+  A walking pig kept some of its own speed; sapling keeps half of what the mob moved at, as the Java game.
+  The motion BDS tells of a mob is what it will move by next tick; sapling tells what it last moved by.
+- A mob a player killed leaves experience orbs when its body goes, 21 ticks after: a cow two orbs of 1.
+  The amounts are the packs' `minecraft:experience_reward` (`mob-traits.tsv`, `xp=`); `Math.Random(1,3)`
+  is taken as 1 or 2, by that one cow.
+- With the death BDS also sends two empty `MobEquipment` for the mob, a `mob.warning` sound from a cow
+  and `SetEntityData` `TargetEid` 0; sapling sends none of them.
+
 ## Where sapling differs
 
 - A chicken falls slowly on BDS and reaches the lava on its 8th tick; sapling's falls as any mob, on its 3rd.
@@ -61,4 +82,6 @@ with its mobs summoned into a wall). No decompile: all of this is from the captu
 
 How breath comes back out of water (sapling gives all of it at once), a fall into water or onto slime, hay
 or a bed, which blocks do not smother (glass, leaves), fish out of water, soul fire, magma, campfires, a fire block's burn time against lava's, rain, fire resistance, armour, a baby,
-the armour stand's own burning (bds-lava.txt: hurt animations with data -1), players.
+the armour stand's own burning (bds-lava.txt: hurt animations with data -1), players. Of hits: the reach
+BDS allows (sapling: 6 blocks from the eyes), critical hits, enchantments, an item's wear, the hitter's
+hunger, a baby's experience, what a mob does once hit.

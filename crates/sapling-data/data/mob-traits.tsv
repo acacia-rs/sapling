@@ -1,53 +1,87 @@
 minecraft:agent	fire_immune no_fall
-minecraft:axolotl	breathes_water
+minecraft:armadillo	xp=1-3
+minecraft:axolotl	breathes_water xp=1-3
 minecraft:bat	no_fall
-minecraft:bee	no_fall
-minecraft:blaze	fire_immune no_fall
-minecraft:bogged	breathes_water
-minecraft:breeze	no_fall
-minecraft:camel_husk	breathes_water
-minecraft:cat	no_fall
-minecraft:chicken	no_fall
-minecraft:cod	breathes_water no_air
+minecraft:bee	no_fall xp=1-3
+minecraft:blaze	fire_immune no_fall xp=10-10
+minecraft:bogged	breathes_water xp=5-5
+minecraft:breeze	no_fall xp=10-10
+minecraft:camel	xp=1-3
+minecraft:camel_husk	breathes_water xp=1-3
+minecraft:cat	no_fall xp=1-3
+minecraft:cave_spider	xp=5-5
+minecraft:chicken	no_fall xp=1-3
+minecraft:cod	breathes_water no_air xp=1-3
 minecraft:copper_golem	no_fall
-minecraft:drowned	breathes_water
-minecraft:elder_guardian	breathes_water
+minecraft:cow	xp=1-3
+minecraft:creeper	xp=5-5
+minecraft:dolphin	xp=1-3
+minecraft:donkey	xp=1-3
+minecraft:drowned	breathes_water xp=5-5
+minecraft:elder_guardian	breathes_water xp=10-10
 minecraft:ender_crystal	fire_immune
 minecraft:ender_dragon	fire_immune no_fall
-minecraft:frog	breathes_water
-minecraft:ghast	fire_immune no_fall
-minecraft:glow_squid	breathes_water no_air
-minecraft:guardian	breathes_water
-minecraft:happy_ghast	no_fall
-minecraft:husk	breathes_water
+minecraft:enderman	xp=5-5
+minecraft:endermite	xp=3-3
+minecraft:evocation_illager	xp=10-10
+minecraft:fox	xp=1-3
+minecraft:frog	breathes_water xp=1-3
+minecraft:ghast	fire_immune no_fall xp=5-5
+minecraft:glow_squid	breathes_water no_air xp=1-3
+minecraft:goat	xp=1-3
+minecraft:guardian	breathes_water xp=10-10
+minecraft:happy_ghast	no_fall xp=1-3
+minecraft:hoglin	xp=5-5
+minecraft:horse	xp=1-3
+minecraft:husk	breathes_water xp=5-5
 minecraft:iron_golem	no_fall
+minecraft:llama	xp=1-3
 minecraft:magma_cube	fire_immune no_fall
-minecraft:nautilus	breathes_water no_air
+minecraft:mooshroom	xp=1-3
+minecraft:mule	xp=1-3
+minecraft:nautilus	breathes_water no_air xp=1-3
 minecraft:npc	fire_immune no_fall
-minecraft:ocelot	no_fall
-minecraft:parched	breathes_water
-minecraft:parrot	no_fall
-minecraft:phantom	breathes_water
-minecraft:pufferfish	breathes_water no_air
-minecraft:salmon	breathes_water no_air
-minecraft:shulker	fire_immune
-minecraft:skeleton	breathes_water
-minecraft:skeleton_horse	breathes_water
+minecraft:ocelot	no_fall xp=1-3
+minecraft:panda	xp=1-3
+minecraft:parched	breathes_water xp=5-5
+minecraft:parrot	no_fall xp=1-3
+minecraft:phantom	breathes_water xp=5-5
+minecraft:pig	xp=1-3
+minecraft:piglin	xp=5-5
+minecraft:piglin_brute	xp=20-20
+minecraft:pillager	xp=5-5
+minecraft:polar_bear	xp=1-3
+minecraft:pufferfish	breathes_water no_air xp=1-3
+minecraft:rabbit	xp=1-3
+minecraft:ravager	xp=20-20
+minecraft:salmon	breathes_water no_air xp=1-3
+minecraft:sheep	xp=1-3
+minecraft:shulker	fire_immune xp=5-5
+minecraft:silverfish	xp=5-5
+minecraft:skeleton	breathes_water xp=5-5
+minecraft:skeleton_horse	breathes_water xp=1-3
+minecraft:sniffer	xp=1-3
 minecraft:snow_golem	no_fall
-minecraft:squid	breathes_water no_air
-minecraft:stray	breathes_water
-minecraft:strider	fire_immune
+minecraft:spider	xp=5-5
+minecraft:squid	breathes_water no_air xp=1-3
+minecraft:stray	breathes_water xp=5-5
+minecraft:strider	fire_immune xp=1-3
+minecraft:sulfur_cube	xp=1-2
 minecraft:tadpole	breathes_water no_air
-minecraft:tropicalfish	breathes_water no_air
-minecraft:turtle	breathes_water
-minecraft:vex	fire_immune
-minecraft:warden	fire_immune
-minecraft:wither	fire_immune breathes_water
-minecraft:wither_skeleton	fire_immune breathes_water
-minecraft:zoglin	fire_immune breathes_water
-minecraft:zombie	breathes_water
-minecraft:zombie_horse	breathes_water
-minecraft:zombie_nautilus	breathes_water
-minecraft:zombie_pigman	fire_immune breathes_water
-minecraft:zombie_villager	breathes_water
-minecraft:zombie_villager_v2	breathes_water
+minecraft:trader_llama	xp=1-3
+minecraft:tropicalfish	breathes_water no_air xp=1-3
+minecraft:turtle	breathes_water xp=1-3
+minecraft:vex	fire_immune xp=5-5
+minecraft:vindicator	xp=5-5
+minecraft:warden	fire_immune xp=5-5
+minecraft:witch	xp=5-5
+minecraft:wither	fire_immune breathes_water xp=50-50
+minecraft:wither_skeleton	fire_immune breathes_water xp=5-5
+minecraft:wolf	xp=1-3
+minecraft:zoglin	fire_immune breathes_water xp=5-5
+minecraft:zombie	breathes_water xp=5-5
+minecraft:zombie_horse	breathes_water xp=1-3
+minecraft:zombie_nautilus	breathes_water xp=1-3
+minecraft:zombie_pigman	fire_immune breathes_water xp=5-5
+minecraft:zombie_villager	breathes_water xp=5-5
+minecraft:zombie_villager_v2	breathes_water xp=5-5

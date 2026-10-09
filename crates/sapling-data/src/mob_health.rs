@@ -19,12 +19,16 @@ pub struct MobTraits {
     pub fire_immune: bool,
     pub no_fall: bool,
     pub breathes_water: bool,
+    /// The least and most experience a grown one killed by a player leaves.
+    pub experience: Option<(i32, i32)>,
 }
 
 pub fn mob_traits(identifier: &str) -> MobTraits {
     let row = include_str!("../data/mob-traits.tsv").lines().filter_map(|row| row.split_once('\t')).find(|(name, _)| *name == identifier);
     let has = |trait_: &str| row.is_some_and(|(_, traits)| traits.split(' ').any(|held| held == trait_));
-    MobTraits { fire_immune: has("fire_immune"), no_fall: has("no_fall"), breathes_water: has("breathes_water") }
+    let range = |range: &str| range.split_once('-').and_then(|(least, most)| Some((least.parse().ok()?, most.parse().ok()?)));
+    let experience = row.and_then(|(_, traits)| traits.split(' ').find_map(|held| held.strip_prefix("xp="))).and_then(range);
+    MobTraits { fire_immune: has("fire_immune"), no_fall: has("no_fall"), breathes_water: has("breathes_water"), experience }
 }
 
 /// The mob `id` has `left` of `max` health.
@@ -52,7 +56,8 @@ mod tests {
 
     #[test]
     fn fire_spares_a_strider_a_fall_a_chicken_and_water_a_cod() {
-        assert_eq!(mob_traits("minecraft:pig"), MobTraits::default());
+        assert_eq!(mob_traits("minecraft:pig"), MobTraits { experience: Some((1, 3)), ..MobTraits::default() });
+        assert_eq!((mob_traits("minecraft:creeper").experience, mob_traits("minecraft:armor_stand").experience), (Some((5, 5)), None));
         assert!(mob_traits("minecraft:strider").fire_immune && mob_traits("minecraft:chicken").no_fall && mob_traits("minecraft:cod").breathes_water);
         assert!(!mob_traits("minecraft:chicken").fire_immune);
     }

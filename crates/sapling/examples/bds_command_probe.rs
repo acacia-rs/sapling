@@ -1,7 +1,7 @@
 //! Runs a drill of command lines as an operator bot while a second operator watches, and prints
 //! what each was answered: CommandOutput in full, Text, GameRulesChanged as `rule=value`, and the
 //! drill's own packets. The ground truth for sapling's vanilla commands (`sapling::vanilla`).
-//! `cargo run -p sapling --example bds_command_probe -- <server> [gamerule|kill|replaceitem|defaults|concrete|water|lava|redstone|redstone-phase|conductors|shapes|burnout|repeater-facing|repeaters|comparators|observer-facing|observers|piston-facing|pistons|burn|harm|douse]` (offline mode,
+//! `cargo run -p sapling --example bds_command_probe -- <server> [gamerule|kill|replaceitem|defaults|concrete|water|lava|redstone|redstone-phase|conductors|shapes|burnout|repeater-facing|repeaters|comparators|observer-facing|observers|piston-facing|pistons|burn|harm|douse|hit]` (offline mode,
 //! operators by default; `gamerule` when none is named).
 #[path = "shared/burn_drill.rs"]
 mod burn;
@@ -16,7 +16,7 @@ mod redstone;
 
 use std::time::{Duration, Instant};
 
-use acacia_bot::BotEvent;
+use acacia_bot::{Bot, BotEvent};
 use acacia_bot::proto::{Packet, packets};
 use probe::{SETTLE, connect};
 
@@ -208,10 +208,29 @@ fn owned(lines: &[&str]) -> Vec<String> {
     lines.iter().map(|line| line.to_string()).collect()
 }
 
+/// The actor hits the newest mob it knows of the kind `hit` names, twice in a row for `2 kind`,
+/// while the watcher's packets are shown.
+async fn strike(actor: &mut Bot, watcher: &mut Bot, start: Instant, shown: &[&str], hit: &str) -> Result<(), String> {
+    let (times, kind) = hit.strip_prefix('2').map_or((1, hit), |kind| (2, kind));
+    let kind = format!("minecraft:{}", kind.trim());
+    let id = actor.state().entities.iter().filter(|entity| entity.kind == kind).map(|entity| entity.runtime_id).max().ok_or(format!("no {kind} to hit"))?;
+    for _ in 0..times {
+        let action = actor.attack(id);
+        tokio::pin!(action);
+        loop {
+            tokio::select! {
+                result = &mut action => break println!("## hit {id}: {result:?} at {}", start.elapsed().as_millis()),
+                event = watcher.next() => show(start, shown, "watcher", event)?,
+            }
+        }
+    }
+    Ok(())
+}
+
 #[tokio::main(flavor = "current_thread")]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut args = std::env::args().skip(1);
-    let server = args.next().ok_or("usage: bds_command_probe <server> [gamerule|kill|replaceitem|defaults|concrete|water|lava|redstone|redstone-phase|conductors|shapes|burnout|repeater-facing|repeaters|comparators|observer-facing|observers|piston-facing|pistons|burn|harm|douse]")?;
+    let server = args.next().ok_or("usage: bds_command_probe <server> [gamerule|kill|replaceitem|defaults|concrete|water|lava|redstone|redstone-phase|conductors|shapes|burnout|repeater-facing|repeaters|comparators|observer-facing|observers|piston-facing|pistons|burn|harm|douse|hit]")?;
     let (lines, shown, settle) = match args.next().as_deref() {
         None | Some("gamerule") => (owned(GAMERULE), &[][..], SETTLE),
         Some("kill") => (owned(KILL), KILL_SHOWN, KILL_SETTLE),
@@ -234,6 +253,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         Some("burn") => (burn::burn(), burn::BURN_SHOWN, burn::BURN_SETTLE),
         Some("harm") => (burn::harm(), burn::BURN_SHOWN, burn::BURN_SETTLE),
         Some("douse") => (burn::douse(), burn::BURN_SHOWN, burn::BURN_SETTLE),
+        Some("hit") => (burn::hit(), burn::HIT_SHOWN, burn::BURN_SETTLE),
         Some("shapes") => (redstone::shapes(), redstone::REDSTONE_SHOWN, redstone::CONDUCTORS_SETTLE),
         Some(other) => return Err(format!("no drill {other}").into()),
     };
@@ -246,8 +266,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let start = Instant::now();
     for line in &lines {
         println!("## /{line}");
-        if !line.is_empty() {
-            actor.client().command(line);
+        match line.strip_prefix("!hit") {
+            Some(hit) => strike(&mut actor, &mut watcher, start, shown, hit).await?,
+            None if !line.is_empty() => drop(actor.client().command(line)),
+            None => {}
         }
         let end = tokio::time::Instant::now() + settle;
         loop {
