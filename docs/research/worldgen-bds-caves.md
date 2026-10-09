@@ -32,7 +32,7 @@ list (VanillaBlockTypeIds lists 14ccd2770: dirt, coarse dirt, stone, tuff, deeps
   spike, layers of `nextInt(2)+2` base blocks, Java 1.18's height law and meeting draw, `nextBoolean` for merging.
 - `LargeSpeleothemFeature` (149e94510): radius `[3, 18]` capped by 0.33 of the room, bluntness 0.3..0.9 /
   0.4..1.0, scale 0.4..2.0, wind 0..0.3 with Mth's sine table, `moveBackUntilBaseOrLava` (149e94ab0), placeBlocks
-  (149e94de0) replaces open cells and spikes, stalagmites below the light heightmap.
+  (149e94de0) replaces open cells and spikes, stalagmites below the pre-worldgen heightmap.
 - MT `nextGaussian` is the polar method in f32 with the second value cached in the generator (`+0x9d4`).
 - A spike set into a water source keeps the water in the second layer (`LevelChunk::setBlock` 1409f59e0;
   `Block::into_water`, the `PointedDripstone...Wet` blocks). Every "air or water" test of these features reads
@@ -54,8 +54,9 @@ list (VanillaBlockTypeIds lists 14ccd2770: dirt, coarse dirt, stone, tuff, deeps
   `allowed_surface_blocks` block); from a solid origin it walks solid cells (`allow_non_air_placement`) to an open
   one. Every scanned cell must keep the origin's biome (`scanColumnWithinPosBiome`). Placement is beside the
   surface, or in it with `embed_in_surface` (offset `solid ^ embed`).
-- "Supporting face" in snaps, vegetation patches, moss vegetation and multiface placement is
-  `BlockType::canProvideSupport(block, face, 2)`: stairs and slabs by their support component (148a897e0,
+- "Supporting face" in snaps, vegetation patches and moss vegetation is
+  `BlockType::canProvideSupport(block, face, 2)` (multiface faces share `lush::sturdy` in the port; 148b68b30 asks
+  the next vtable slot, 0x98, after the same support component, not followed): stairs and slabs by their support component (148a897e0,
   148a89b20), leaves never (140076010), everything else 141a24e20 = the solid-blocking property (`BlockType`
   +0x130 bit 0x40000), or bit 0x20000 for the top face. `lush::sturdy` approximates it: spikes, structure fixtures
   (rails, torches, fences, bars, doors...), chests and amethyst buds give none. A snap that reaches a spike stops
@@ -178,42 +179,64 @@ cell's liquid layer is water.
   or a coral plant.
 Warm ocean region 99.8663 → 99.9954% identical; coral blocks 99.8/100 precision/recall, fans and plants 100/100.
 
-## Dripstone residue: floor and deterministic (2026-10-09, worldgen/liq2)
-`scripts/dripstone_floor.py` (with `examples/decorate_trace.rs` and scripts/data/dripstone_trace.patch) gives every
-stable dripstone error an owner feature and judges each (source chunk, rule) sequence at its first desynced
-feature: floor when a glow lichen or sculk difference (ours against BDS, or BDS against its `-run2` twin), a
-dripstone cell the twin disagrees on, or an error left by an earlier-decorated floor sequence lies in that
-feature's scan box (cluster: its columns, 12 up and down; pointed: 12 around at its height; large: 18).
+## Dripstone residue (2026-10-09, worldgen/liq2 then worldgen/drip)
+`scripts/dripstone_floor.py` (trace from `examples/decorate_trace <seed> dripstone <regions>`) gives every stable
+dripstone error an owner feature and judges each (source chunk, rule) sequence at its first desynced feature:
+floor when a glow lichen or sculk difference (ours against BDS, or BDS against its `-run2` twin), a dripstone cell
+the twin disagrees on, or an error left by an earlier-decorated floor sequence lies in that feature's scan box
+(cluster: its columns, 12 up and down; snap: 3 around its column, 15 up and down; large: 18).
 
-| world | stable dripstone errors | floor | deterministic | (twin-unstable, not counted) |
-|---|---|---|---|---|
-| biome regions | 3266 | 2850 | 416 | 68 |
-| tree regions | 5391 | 4006 | 1385 | 350 |
-| structures | 11255 | 9105 | 2149 | 1081 |
-| of which stronghold | 2793 | 2391 | 401 | |
+| world | stable dripstone errors liq2 -> drip | floor | deterministic (upper bound) |
+|---|---|---|---|
+| biome regions | 3266 -> 169 | 138 | 31 |
+| tree regions | 5391 -> 519 | 465 | 54 |
+| structures | 11255 -> 1819 | 1448 | 371 |
+| of which stronghold | 2793 -> 868 | 815 | 53 |
 
-Near origin, far out and the negative seed have no dripstone. The feat3 reading holds: about four fifths is the
-floor, and it is one mechanism, column scans and snaps stopping at lichen that BDS spreads with a thread-local
-generator (ours places fewer lichen, so ours scans on: ours-only base blocks outnumber BDS-only ones about 7 to 4).
-The deterministic part is 30 to 83 desynced sequences per world, many of them first desyncs of `small_dripstone`
-(snap to a wall, then a pointed spike).
-- Fixed: waterlogged spikes (above); about 180 cells over all worlds, of which ancient city 110.
-- Not it: the base list does not take stone's variants. BDS dripstone with tips under it inside our diorite or
-  andesite blobs (cherry grove 5572,26,-7261) reads that way, but with granite, diorite and andesite replaceable
-  every dripstone region got worse (structures about +6200, trees +3000, biomes +1800): those blobs come from
-  later-phase neighbour chunks and land around BDS's dripstone.
-- Open, first candidates from the split's ROOT list: tree regions' chunk 566,-388 (`small_dripstone` #1 at
-  9054,44,-6193) and cherry grove's 346,-454 (cluster #2 at 5545,17,-7264), both phase 0 with no lichen
-  difference in range. In cherry grove 346,-452 the first placing cluster matches BDS column for column inside
-  the chunk; its mismatches are the columns in 346,-451, which that chunk's own clusters redo later.
+Dripstone over all regions: precision 73.2 -> 96.4%, recall 69.9 -> 96.7% (badlands 98.0/99.3, cherry grove
+99.6/99.9, ancient city 96.5/96.4, stronghold 90.4/90.3). Near origin, far out and the negative seed have no
+dripstone. What moved it, in order of size:
+- `random_horizontal` snaps (Wrapper features): biome regions 12531 -> 9286 wrong + missing, tree regions 10174 ->
+  5022, structures 38393 -> 28703. liq2's split had put four fifths of these errors on the floor: a lichen
+  difference lies in almost every cave feature's box, so the box test says nothing while the feature is wrong.
+- Waterlogged spikes open to scans (Speleothems): tree regions -185; cherry grove 346,-452's clusters then match a
+  live run in all 476 cluster, large and grow calls.
+- Supports (spikes, then structure fixtures): about -30 and -200 (the second with growing plants passing water).
+- Not it: the base list does not take stone's variants (granite, diorite, andesite replaceable made every region
+  worse: those blobs come from later-phase neighbours and land around BDS's dripstone), and the pre-worldgen
+  heightmap changed no cell.
+
+What the rest is. Phase-0 roots of the split were run alone under the debugger (one-chunk regions,
+`scripts/dbg_calls.py`). Of eleven in one batch, six match BDS call for call (594,-348; 562,-388; 240,-112;
+-70,76; -58,-174; -84,-126), two diverge at a glow lichen of ours that the run did not have (at the snap origin
+9573,26,-5535; under the ceiling at 9506,98,-5587), one at a snap that fails in BDS for a reason not seen (78,6:
+the batch's world was not saved), one at stronghold terrain (BDS has air at -1439,-3,-2010, one above our
+corridor; 9 such cells in the region) and one at a rail our snap took for a floor (no draw involved; fixed).
+Singly: -66,82 (ancient city) and the mansion's lush chunk -508,998 match in every call; meadow's 372,-510
+diverges at a lichen BDS spread to 5965,23,-8150 in that run and in the oracle's twin and to the next cell in the
+oracle's main run. So the "deterministic" column is run-dependent as far as it was sampled: a phase-0 chunk
+decorated alone sees bare terrain, as in our model, but in the oracle's run the same-phase chunks two away were
+decorated first (BDS works from the outside of the loaded area inwards, worldgen-bds-debugger.md) and had written
+into the chunks between; the rest is where the thread-local generator put lichen.
+
+Lush caves (same method, snap, patch, accepted cell and growing plant logged): the pale garden's phase-0 chunk
+-470,-286 matches a live run for 1158 calls, then a moss ceiling patch (at -7515,47,-4564) takes one cell fewer
+than BDS because our lichen hangs under the ceiling at -7516,49,-4568 (ours tried the cell above the rule's
+position first; BDS's neighbour order is thread-local and both oracle runs took the cell to the west). The
+mansion's -508,998 matches in all 997 calls although the oracle has 420 lush cells wrong in that chunk: run
+order again.
 
 ## Left
 - Sulfur springs (`random_sulfur_spring_with_tuff_feature`: structure templates) and the spring trail.
 - Fossils (`fossil_feature`, desert/swamp 1 in 64 chunks) and the desert well: structure templates.
 - Multi-direction lichen spreads and lichen/vein faces (thread-local in BDS): the oracle no longer grades face
   states of either (worldgen-bds-features.md, "Feature residue").
-- Dripstone residue: world-state differences (lichen spreads, sculk) shift whole clusters' column draws (split
-  above).
+- Dripstone and lush residue: no port difference is known; what is left follows the lichen's thread-local cell
+  and BDS's same-phase decoration order (above). The order could be read off a run (`scripts/dbg_order.py`) and
+  given to the oracle test to shrink that floor; the generator cannot follow it.
+- `canProvideSupport` for leaves (never) and stairs/slabs (by state) is not in `lush::sturdy`; the survival tests
+  of moss vegetation and the small dripleaf are plants.rs's, not the blocks' `mayPlace`.
+- Multiface faces across a chunk border inside a stronghold (Wrapper features).
 - Bubble columns by ticks (edge routing).
 
 ## Labels (scratch bdsre `names.user.json`)

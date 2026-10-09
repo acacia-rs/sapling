@@ -135,9 +135,12 @@ fn root_system(ctx: &mut Ctx, at: [i32; 3], tree: usize) -> Option<[i32; 3]> {
     let mut tree_at = None;
     for ty in y..y + ROOT_COLUMN_MAX {
         let roomy = (0..3).all(|d| open(ctx.view, ty + d)) && !(0..3).all(|d| water(ctx.view, ty + d));
-        if ctx.view.block(x, ty - 1, z).is_solid() && roomy && FEATURES[tree].place(ctx, [x, ty, z]).is_some() {
-            tree_at = Some(ty);
-            break;
+        if ctx.view.block(x, ty - 1, z).is_solid() && roomy {
+            super::trace::line(|| format!("  tree {x} {ty} {z} draw {}", ctx.random.draws()));
+            if FEATURES[tree].place(ctx, [x, ty, z]).is_some() {
+                tree_at = Some(ty);
+                break;
+            }
         }
         if ty >= top {
             break;

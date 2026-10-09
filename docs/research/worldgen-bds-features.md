@@ -191,7 +191,8 @@ frozen heightmap lost every vine on a tree (jungle 4 -> 5644 wrong); it follows 
 `_prepareHeights` fills while it places the density terrain (14823028b: one above the highest block that is not
 air, water and lava included, before the surface and the carvers), set by `loadChunk` (14821178e -> 1409f7770) and
 dropped at the end of `decorationPostProcessChunk` (148215a83). Readers test the pointer and fall back to +0xb80:
-the surface system, structure pool elements and, of the features, `LargeSpeleothem::placeBlocks` alone (a
+the surface system (14580c660, 14580d280), `loadChunk`, a function among the pool elements (145e19960, not read)
+and, of the feature code scanned, `LargeSpeleothem::placeBlocks` alone (a
 stalagmite's columns stop under it; live: the set-pointer branch ran 1699 times in a one-chunk run).
 `View::generated_top` models it; no dripstone scan reads +0xb80 or +0xf88, and the oracle did not move (no
 stalagmite reaches a carved surface in the regions).
