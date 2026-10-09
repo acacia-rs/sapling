@@ -68,3 +68,14 @@ fn redstone_lies_on_a_top_and_not_on_a_low_slab() {
     assert_eq!(placed_on(&mut h, [2, 65, 0]), None);
     assert_eq!(placed_on(&mut h, [1, 64, 0]), Some("minecraft:redstone_wire"));
 }
+
+#[test]
+fn redstone_lies_on_soul_sand_and_glass_and_not_on_leaves_a_fence_or_a_shulker_box() {
+    // As research/captures/bds-conductors.txt.
+    const UNDER: &[([i32; 3], &str)] =
+        &[([-3, 65, 2], "soul_sand"), ([-2, 65, 2], "mud"), ([-1, 65, 2], "glass"), ([0, 65, 2], "oak_leaves"), ([1, 65, 2], "oak_fence"), ([2, 65, 2], "undyed_shulker_box"), ([3, 65, 2], "anvil")];
+    for (index, (pos, block)) in UNDER.iter().enumerate() {
+        let mut h = with("minecraft:redstone", UNDER);
+        assert_eq!(placed_on(&mut h, *pos).is_some(), index < 3, "{block}");
+    }
+}

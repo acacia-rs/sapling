@@ -271,7 +271,8 @@ immediate signal 148a82ae0): DirectionalProducer with `direction = mStronglyPowe
   - Dust on a block steps down its side for every block that holds dust, but for glowstone and a top slab.
   - Dust does not stay on leaves, a bottom slab, path, chests, an enchanting table, cauldron, composter,
     carpet, anvil, shulker box, walls, fences, panes; it stays on soul sand, mud, glass, a top slab and
-    upside-down stairs. Sapling's support rule (updates.rs) asks the cell, not the face, and differs here.
+    upside-down stairs. Sapling follows this by name (ground.rs `NO_CENTRE`, `LOW_CENTRE`); plain stairs,
+    ice, TNT and pistons were not judged.
 - C8 (`bds_command_probe shapes`, research/captures/bds-redstone-shapes.txt; ten rigs, lamps around one dust):
   dust lights only the lamp straight on from a power block or the line it ends; neither lamp at a corner, only
   those past the ends; at a T the lamps past the two far ends; a dot on a lever-powered block all four; with

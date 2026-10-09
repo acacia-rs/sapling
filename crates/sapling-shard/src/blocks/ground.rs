@@ -55,10 +55,19 @@ fn is_water(level: &World, [x, y, z]: BlockPos) -> bool {
     [level.block(x, y, z), level.liquid(x, y, z)].iter().any(|id| registry.get(*id).is_some_and(|state| state.is_water() || state.name == "minecraft:frosted_ice"))
 }
 
+/// Blocks whose box covers the middle of their top but which hold no dust on BDS
+/// (research/captures/bds-conductors.txt), by name ending.
+const NO_CENTRE: &[&str] = &["leaves", "shulker_box", "anvil", "_wall", "_fence", "glass_pane", "iron_bars", "grindstone"];
+/// Lower blocks that hold dust on BDS.
+const LOW_CENTRE: &[&str] = &["minecraft:soul_sand", "minecraft:mud"];
+
 /// Whether the top of the block at `pos` holds something up: under the middle of the face
 /// (BDS support "centre"), or across all of it ("edge").
 fn has_top(level: &World, [x, y, z]: BlockPos, whole: bool) -> bool {
     let Some(state) = level.in_height(y).then(|| level.registry().get(level.block(x, y, z))).flatten() else { return false };
+    if !whole && (LOW_CENTRE.contains(&state.name) || NO_CENTRE.iter().any(|end| state.name.ends_with(end))) {
+        return LOW_CENTRE.contains(&state.name);
+    }
     let covers = |min: f32, max: f32| if whole { min <= 0.0 && max >= 1.0 } else { min <= 0.5 && max >= 0.5 };
     state.boxes.iter().any(|shape| shape.max[1] >= 1.0 && covers(shape.min[0], shape.max[0]) && covers(shape.min[2], shape.max[2]))
 }
