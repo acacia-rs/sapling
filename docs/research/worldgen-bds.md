@@ -235,7 +235,8 @@ nextFloat,consumeCount}`.
 
 ## Unknowns / next
 
-1. Float-vs-double drift: settled, the f32 port matches BDS 1.6M blocks out (see Terrain port findings).
+1. Float-vs-double drift: settled, the f32 port matches BDS 1.6M blocks out, corner densities to the bit (see
+   Terrain port findings).
 2. Cavifier/Aquifer/OreVeinifier internals not decompiled constant-by-constant (only spot checks); `_prepareHeights`
    14822eb60 and 14822d4b0 are the functions to transcribe.
 3. Biome placement: when JSON `multinoise_generation_rules` override the hardcoded builder (never, for vanilla).
@@ -254,6 +255,24 @@ nextFloat,consumeCount}`.
 - f32 op order that matters: smoothstep = `((t*6-15)*t+10) * (t*t*t)`; NormalNoise second half scales the input
   by 1.0181268 before the octave factor; blended octaves take `nextFloat()*256` offsets, NormalNoise octaves
   `(float)(nextDouble()*256)`. Biome climate is quantized as `(long)((double)f * 10000)`.
+- Exact to the bit since 2026-10-09 (worldgen/feat5): the cell-corner densities `_computeDensityCells` returns
+  equal ours in every corner of every chunk dumped from a live BDS ("Exactness" below). Three things were off:
+  - the blended octaves' `nextFloat` is the generator's virtual one (vt+0x28), which for Xoroshiro is
+    `(float)nextDouble()`, 53 bits rounded, not Java's 24 bits. The 24-bit float lost up to 2^-16 per offset,
+    the low octaves multiply that by up to 32768, and the three octave sums differed in every corner by about
+    2e-5 of their value: one block column in 10^4 came out a block lower or higher (62 Shape and 28 Carvers
+    cells over the oracle worlds, and the ore blobs they shifted). The inlined `nextFloat`s (positional randoms,
+    the surface noise's offsets) stay 24-bit;
+  - the 3D spaghetti's thickness maps to `[0.065, 0.088]` with the span computed in f32, 0x3cbc6a80, one step
+    above 0.023f (the disassembly's `f32=0.023` hides it; scan constants with a 7-digit round trip test);
+  - the pillars' `powf(t, 3)` is the CRT's, the correctly rounded cube but for 1 call in 16k; glibc's `powf`
+    is not, so the port cubes in f64 and rounds once (the same on every platform).
+- Exactness, measured: a debugger run over five regions (jagged peaks, deep frozen ocean, the origin, badlands
+  and chunk 100003,100003 at 1.6M blocks) dumped 3855 calls of `_computeDensityCells` in 1309 chunks
+  (`examples/density_dump_diff <seed> dir <dumps>`). All 837,760 climate cache values equal ours. Of the 3851
+  usable grids (four were read before BDS had filled them) all corners equal ours but one, shared by chunks
+  594,-346 and 595,-346, off by two f32 steps: a pillar whose thickness 0x3f805d23 the CRT's `powf` cubes to
+  0x3f811834 where the rounded cube is 0x3f811835. That is the CRT's own inexactness and is left.
 - BlendedNoise fills the 5x41x5 cell grid per octave (`LegacyBlendedNoise::fillOctave` 145e23fc0) and reuses the
   previous sample's gradients while the y lattice index is unchanged, across columns too (port it as is).
 - Far from origin (chunks 100000..100007) the shape matches but for 2.4k cells, all within a block of trial-chamber

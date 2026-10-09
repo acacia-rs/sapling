@@ -133,9 +133,10 @@ pub fn judge(ours: Block, bds: &BdsCell, y: i32, context: Context) -> Verdict {
     if !bds.is(ours) && bds.block == ours.name() && THREAD_LOCAL_FACES.contains(&bds.block.as_str()) {
         return Verdict::Later("multiface faces (thread-local random in BDS)");
     }
+    // A feature-only block is a feature error wherever it sits, also under a reshaped column.
     match judge_cell(ours, bds, y, context) {
-        Verdict::Error(Stage::Surface) if context.reshaped => Verdict::Later("surface under a solid-shape difference (carver miss, feature, shape)"),
         Verdict::Error(Stage::Surface | Stage::Shape | Stage::Carvers) if FEATURE_ONLY.contains(&bds.block.as_str()) => Verdict::Error(Stage::Features),
+        Verdict::Error(Stage::Surface) if context.reshaped => Verdict::Later("surface under a solid-shape difference (carver miss, feature, shape)"),
         verdict => verdict,
     }
 }
@@ -165,11 +166,6 @@ fn judge_cell(ours: Block, bds: &BdsCell, y: i32, context: Context) -> Verdict {
         return Verdict::Error(Stage::Liquids);
     }
     if context.featured {
-        // The freeze pass snows on the rain top, which unported trees, ice spikes and icebergs move in BDS.
-        let moved_top = context.bds_feature_above || context.reshaped || bds.block == "packed_ice";
-        if ours == Block::SnowLayer && (moved_top || bds.terrain().is_none() && !bds.is_empty()) {
-            return Verdict::Later("freeze pass on a column top features sapling lacks move (trees, ice spikes, icebergs)");
-        }
         if bds.terrain().is_none() && !bds.is_empty() && !bds.is_fluid() {
             return Verdict::Missing("features, structures over our features (non-terrain block)");
         }
@@ -179,10 +175,6 @@ fn judge_cell(ours: Block, bds: &BdsCell, y: i32, context: Context) -> Verdict {
         return Verdict::Error(Stage::Structures);
     }
     if ours.is_solid() && (bds.is_empty() || bds.is_fluid()) {
-        // The iceberg feature cuts its shape out of any packed ice and snow, the surface's too.
-        if matches!(ours, Block::PackedIce | Block::Snow) {
-            return Verdict::Later("iceberg features");
-        }
         if context.feature_emptied {
             return Verdict::Later("features (BDS emptied it next to a feature block)");
         }
@@ -191,11 +183,9 @@ fn judge_cell(ours: Block, bds: &BdsCell, y: i32, context: Context) -> Verdict {
     let Some(theirs) = bds.terrain() else {
         return Verdict::Missing("features, structures (non-terrain block)");
     };
-    if matches!(ours, Block::Water | Block::Air) && matches!(theirs, Block::Ice | Block::SnowLayer) {
-        return Verdict::Later("freeze pass (ice, snow layers)");
-    }
-    if matches!(ours, Block::Water | Block::Air | Block::PackedIce | Block::Snow) && matches!(theirs, Block::PackedIce | Block::Snow) {
-        return Verdict::Later("iceberg features");
+    // Every feature that places these is ported: BDS's ice or snow over our water or air is a miss.
+    if matches!(ours, Block::Water | Block::Air) && matches!(theirs, Block::Ice | Block::SnowLayer | Block::PackedIce | Block::Snow) {
+        return Verdict::Missing("ice and snow (freeze pass, icebergs, ice spikes)");
     }
     if bds.liquid.is_some() {
         return Verdict::Later("features, structures (waterlogged)");
@@ -210,8 +200,8 @@ fn judge_cell(ours: Block, bds: &BdsCell, y: i32, context: Context) -> Verdict {
     if ours == Block::Bedrock || theirs == Block::Bedrock {
         return Verdict::Error(Stage::Floor);
     }
-    if let Some(later) = later_feature(ours, theirs, bds) {
-        return Verdict::Later(later);
+    if let Some(feature) = feature_over_terrain(ours, theirs, bds) {
+        return Verdict::Missing(feature);
     }
     if VEIN_BLOCKS.contains(&ours) || VEIN_BLOCKS.contains(&theirs) {
         return Verdict::Error(Stage::Veins);
@@ -223,8 +213,9 @@ fn judge_cell(ours: Block, bds: &BdsCell, y: i32, context: Context) -> Verdict {
     Verdict::Error(Stage::Surface)
 }
 
-/// Solid terrain against solid terrain that a feature sapling does not run explains.
-fn later_feature(ours: Block, theirs: Block, bds: &BdsCell) -> Option<&'static str> {
+/// BDS's solid terrain block over ours that only a feature explains: counted as missing, every
+/// such feature being ported (the judge once left these to later stages, which hid 1.7k iceberg cells).
+fn feature_over_terrain(ours: Block, theirs: Block, bds: &BdsCell) -> Option<&'static str> {
     let base = |b: Block| matches!(b, Block::Stone | Block::Deepslate);
     let ore_feature = ORE_FEATURE_BLOCKS.contains(&theirs);
     if base(ours) && (ore_feature || VEIN_BLOCKS.contains(&theirs) && !matches!(theirs, Block::RawCopperBlock | Block::RawIronBlock)) {

@@ -8,8 +8,8 @@ config: {"breakpoints": [{"va": "0x143b7ff60", "name": "place", "regs": ["rax"],
           "filter": ["r8", 8, [[-5309, 5447]]], "trace": true, "log": "match"|"all"|"none",
           "strings": [["rax", 3]], "backtrace": 12, "stack": 100}]}
 filter: three ints at [reg+off] are x, y, z; the hit matches when (x, z) is in the list, or inside
-  {"box": [x0, z0, x1, z1]}. No filter: every hit matches. filter2: two ints (a ChunkPos) in the list.
-  filter_format "fff" reads the three as floats.
+  {"box": [x0, z0, x1, z1]}. No filter: every hit matches. filter2: two ints (a ChunkPos) in the list, or any
+  with null for the list (the position still names the dumps). filter_format "fff" reads the three as floats.
 dump: [[reg, off, size], ...]: on a matching hit, writes each range to mem-<name>-<pos>-<i>.bin (a later hit
   at the same position overwrites it).
 dump_ptr: the same from the pointer stored at [reg+off], to ptr-<name>-<pos>-<i>.bin.
@@ -28,6 +28,8 @@ import struct
 import subprocess
 import sys
 from ctypes import wintypes as W
+
+from bds_dbg_dumps import Dumps
 
 k32 = C.WinDLL("kernel32", use_last_error=True)
 k32.OpenThread.restype = W.HANDLE
@@ -100,8 +102,7 @@ class Debugger:
         self.traces = {}  # thread id -> trace state
         self.stepping_over = {}  # thread id -> breakpoint address to re-arm
         self.n_trace = 0
-        self.pending = {}  # thread id -> calls whose buffer is dumped when they return
-        self.n_dump = 0
+        self.dumps = Dumps(self)
 
     def mem(self, addr, size):
         buf = C.create_string_buffer(size)
@@ -205,14 +206,14 @@ class Debugger:
         ctx = Context(self.thread(tid))
         ctx["rip"] = addr
         if bp.get("returns"):
-            self.dump_pending(tid, ctx)
+            self.dumps.on_return(tid, ctx)
             self.execute_original(tid, ctx, addr, orig)
             return
         pos = None
         if "filter2" in bp:  # two ints (a ChunkPos)
             reg, off, xzs = bp["filter2"]
             pos = struct.unpack("<ii", self.mem(ctx[reg] + off, 8))
-            match = list(pos) in xzs
+            match = xzs is None or list(pos) in xzs
         elif "filter" in bp:
             reg, off, xzs = bp["filter"]
             pos = struct.unpack("<" + bp.get("filter_format", "iii"), self.mem(ctx[reg] + off, 12))
@@ -238,20 +239,8 @@ class Debugger:
             for reg, depth in bp.get("strings", []):
                 parts.append(f"{reg}->{self.strings(ctx[reg], depth)}")
             self.log.write(f"hit {bp['name']} t{tid} pos={pos} match={match} {' '.join(parts)}\n")
-        for i, (reg, off, size) in enumerate(bp.get("dump", []) if match else []):
-            with open(f"{self.out}/mem-{bp['name']}-{'_'.join(map(str, pos or ()))}-{i}.bin", "wb") as f:
-                f.write(self.mem(ctx[reg] + off, size))
-        for i, (reg, off, size) in enumerate(bp.get("dump_ptr", []) if match else []):
-            pointer = struct.unpack("<Q", self.mem(ctx[reg] + off, 8))[0]
-            with open(f"{self.out}/ptr-{bp['name']}-{'_'.join(map(str, pos or ()))}-{i}.bin", "wb") as f:
-                f.write(self.mem(pointer, size))
-        if match and "dump_on_return" in bp:
-            reg, size = bp["dump_on_return"]
-            ret = struct.unpack("<Q", self.mem(ctx["rsp"], 8))[0]
-            self.pending.setdefault(tid, []).append((ctx["rsp"], ctx[reg], size, f"{bp['name']}-{'_'.join(map(str, pos or ()))}"))
-            if ret not in self.bps:
-                self.bps[ret] = ({"returns": True}, self.mem(ret, 1))
-                self.poke(ret, b"\xcc")
+        if match:
+            self.dumps.on_match(tid, bp, ctx, pos)
         if match and bp.get("trace") and tid not in self.traces:
             self.n_trace += 1
             ret = struct.unpack("<Q", self.mem(ctx["rsp"], 8))[0]
@@ -259,16 +248,6 @@ class Debugger:
             f.write(f"# {bp['name']} pos={pos} t{tid}\n")
             self.traces[tid] = {"ret": ret, "rsp": ctx["rsp"], "file": f}
         self.execute_original(tid, ctx, addr, orig)
-
-    def dump_pending(self, tid, ctx):
-        """Writes the buffers of this thread's calls that have returned (`dump_on_return`) to dump-<n>-<name>.bin."""
-        calls = self.pending.get(tid, [])
-        while calls and ctx["rsp"] > calls[-1][0]:
-            _, pointer, size, name = calls.pop()
-            self.n_dump += 1
-            with open(f"{self.out}/dump-{self.n_dump}-{name}.bin", "wb") as f:
-                f.write(self.mem(pointer, size))
-            self.log.write(f"dump {self.n_dump} {name} t{tid}\n")
 
     def execute_original(self, tid, ctx, addr, orig):
         op, size = orig[0], 1

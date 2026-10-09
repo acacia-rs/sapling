@@ -6,6 +6,7 @@
 use super::view::View;
 use crate::biome::ChunkBiomes;
 use crate::block::Block;
+use crate::structure::template::{FULL_CUBE, flags};
 use crate::surface::temperature;
 use crate::terrain::{HEIGHT, MIN_Y};
 
@@ -26,9 +27,14 @@ fn stops_rain(block: Block) -> bool {
     block != Block::Air && (!block.is_plant() || block.is_crop_block())
 }
 
-/// `TopSnowBlock` survives on blocks that block motion, except ice (oracle: packed ice holds it).
+/// `TopSnowBlock` survives on blocks that block motion, except ice (oracle: packed ice holds it); of
+/// a structure's blocks only on full cubes (oracle: none on an outpost's fences and torches).
 fn holds_snow(block: Block) -> bool {
-    block.blocks_motion() && !matches!(block, Block::Ice | Block::PowderSnow)
+    let full = match flags(block) {
+        0 => block.blocks_motion(),
+        palette => palette & FULL_CUBE != 0,
+    };
+    full && !matches!(block, Block::Ice | Block::PowderSnow)
 }
 
 pub fn freeze_chunk(chunk: (i32, i32), biomes: &ChunkBiomes, view: &mut View) {

@@ -100,6 +100,18 @@ binding resolves, 141eeb8d0 `placeInWorld` (settings: +0 integrity, +4 seed, +8 
 rotation, +11/+12 skip structure blocks and jigsaws, +0x10 ignored block), 141f797b0
 `TemplateStructurePiece::postProcess` (seed = the chunk generator's seed field).
 
+Feat5 labels (2026-10-09, read in a scratch bdsre): 149e821d0 `FireflyBushClusterFeature::place` (vtable
+14a98e600, +0x20 the water variant; registered at 14830431e and 14830447c), `BlockType` vt+0x210 `mayPlace(region,
+pos)`, 14822d4b0 `_computeDensityCells`' arguments (rdx the 5x5x41 output, r8 the chunk, r9 the climate cache
+{x0, z0, width, +0x10 entries of 0x28 bytes}; octave objects at this+0x280, +0x2a8, +0x2d0, 0x818 bytes each with
+the offsets first) and stack buffers (14822d84a: rsp+0x213c, +0x1138, +0x134), 145e29ee0
+`LegacyBlendedNoise::addOctave` (offsets from the random's vt+0x28 `nextFloat`, for Xoroshiro the rounded
+`nextDouble`), 1481e10d0 `Cavifier::carve` (`imp:powf` at 1481e171e; 14a922758 the 3D spaghetti's thickness
+span 0x3cbc6a80), 1487e4350 the frozen ocean builder (1487e44cb `Biome::getTemperature` call, 1487e4536 the
+64-bit position hash, 1487e470c/1487e4713 the truncated bounds), 14580ae5c the overworld builder's sea-level
+test (material 5, or block id 0x14cce2ba8 packed ice or 0x14cce2b78 blue ice), 141f69b60 and 144c50eb0 the
+other two 64-bit `Mth.getSeed` copies (a structure processor's Java LCG and the block render offset).
+
 Feat3 labels (2026-10-08): 14a73fa30 the decoration's IBlockWorldGenAPI vtable (forwards to its `BlockSource` at
 +8; 0xb0 = 1411a0a60 heightmap: `LevelChunk` +0xb80 i16 per column + minimum y), 1438f0d00
 `MangroveTreeRoots::placeRoots` (vtable 14a98e1f8), 1438f16f0 its root simulation, 14a681437 its facing table,

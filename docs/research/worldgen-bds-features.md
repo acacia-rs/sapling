@@ -67,7 +67,10 @@ generator, so a rule's whole feature tree draws from its second MT in call order
   first child whose running `(float)r - w` goes negative.
 - `single_block_feature` (143badfc0): `may_not_attach_to` fails first (no draw); then one `nextInt(total weight)`
   even for a single block; placement rules (world-gen API slot 0x78 `mayPlace`), survival rules (0x88
-  `canSurvive`), `may_replace`, `setBlock`. Survival as ported (plants.rs): grass, ferns, flowers, double plants on
+  `canSurvive`), `may_replace`, `setBlock`. `mayPlace` needs a cell that can be built over (air, a liquid,
+  a replaceable plant, a snow layer): the bee nest feature has placement rules and no `may_replace`, and its
+  search climbs past the mangrove's own roots instead of replacing one (the draws it spends on the way are
+  what the rule's next tree starts from). Survival as ported (plants.rs): grass, ferns, flowers, double plants on
   dirt-like blocks, a double plant's lower half also needs air above, dry plants and dead bushes on sand and
   terracotta too.
 - `search_feature` 143ba64d0, `vegetation_patch_feature` 143bc8310, `growing_plant_feature` 144c15200: see Trees and
@@ -93,6 +96,13 @@ Tries move by `(r & m) - (r & m)` per axis, two raw MT outputs each; most draw z
   (`nextInt(8)` growth) on grass blocks; offsets x, z, y.
 - Mushrooms (149d57200): on mycelium, nylium, podzol or logs anywhere, else only with 13 points of a radius-2
   diamond in shade (149d9a560: under the light heightmap, or a not fully translucent block within 10 above).
+  The logs matter: a fallen tree's `optional_log_mushrooms_feature` puts one on the lying log in the open, and
+  the next tree of the loop is refused by it.
+- Firefly bushes (`FireflyBushClusterFeature::place` 149e821d0, no JSON; `+0x20` set for the water cluster):
+  up to 20 tries at x and z `nextInt(9) - 4` from the rule position, y the light heightmap of that column,
+  where the bush may be placed (`BlockType` vt+0x210) and, for the water cluster, one of the four blocks
+  beside the block below is water; then `nextInt(3) + 1` more bushes around the first, the same way, in at
+  most 20 tries.
 - Flowers (`LegacyFlowerFeature` 149e95670, table 1438ef3b0): nothing unless the position is air; one flower per
   call: swamp blue orchid; overworld `nextInt(3) == 0` dandelion else poppy; plains noise(x/200, z/200) < -0.8 gives
   a tulip `nextInt(4)` (red, orange, white, pink), else `nextInt(4) > 0` picks poppy, azure bluet, oxeye daisy,
@@ -123,7 +133,11 @@ Tries move by `(r & m) - (r & m)` per axis, two raw MT outputs each; most draw z
   `(i8)(noise(seed 1234, x/8, z/8) * 64)` (1411a3e60). 14119c8c0 picks sea + 17 and x8 against sea + 1 and x4 on
   version flags; the oracle fits +17/x8 (the other branch snows 1.1k cells too low in windswept gravelly hills).
   Water under the top freezes at <= 0.15 (`shouldFreeze` 14119e860); the top snows (`shouldSnow` 14119e740) over a
-  motion-blocking block other than ice and powder snow (packed ice holds snow).
+  motion-blocking block other than ice and powder snow (packed ice holds snow; of a structure's blocks only a
+  full cube does, not an outpost's fences and torches). Rain passes plants, so the
+  top can be a plant's cell: over short grass, a fern or a small flower BDS saves `snow_layer` with the plant
+  in the cell's second layer (the one liquids use; `Block::second_layer`, block/layers.rs). Double plants,
+  mushrooms and berry bushes get no snow (oracle: 246 such cells, none of the other kind).
 
 ## Oracle (2026-10-07, 20261003 near origin unless named)
 Precision/recall near origin: stone blobs 99.93/99.98, coal 99.79/99.90, seagrass 99.95/99.93, kelp 99.89/99.88,
