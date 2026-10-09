@@ -15,6 +15,7 @@ dump: [[reg, off, size], ...]: on a matching hit, writes each range to mem-<name
 dump_ptr: the same from the pointer stored at [reg+off], to ptr-<name>-<pos>-<i>.bin.
 dump_on_return: ["rdx", size]: on a matching hit, remembers the pointer in the register and writes `size`
   bytes from it to dump-<n>-<name>-<pos>.bin when the call returns (an output buffer).
+xmm: indices of xmm registers whose low float is logged (a float result or argument at that instruction).
 mem: struct formats read at [reg+off]. strings: printable strings within N pointer hops of a register (a Block*
   shows its name; air shows unrelated names). backtrace: return addresses by StackWalk64 (exact). stack: every
   image address among the first N stack words (includes stale ones).
@@ -61,7 +62,7 @@ class Context:
         self.thread = thread
         self.raw = C.create_string_buffer(1232 + 16)
         self.addr = (C.addressof(self.raw) + 15) & ~15
-        C.memmove(self.addr + 0x30, struct.pack("<I", 0x100003), 4)
+        C.memmove(self.addr + 0x30, struct.pack("<I", 0x10000B), 4)
         if not k32.GetThreadContext(thread, self.addr):
             raise OSError(C.get_last_error())
 
@@ -70,6 +71,10 @@ class Context:
 
     def __setitem__(self, reg, value):
         C.memmove(self.addr + REG_OFF[reg], struct.pack("<Q", value & (2**64 - 1)), 8)
+
+    def xmm(self, index):
+        """The low float of an xmm register (FltSave.XmmRegisters at 0x1a0)."""
+        return struct.unpack("<f", C.string_at(self.addr + 0x1A0 + 16 * index, 4))[0]
 
     def set_trap(self):
         flags = struct.unpack("<I", C.string_at(self.addr + 0x44, 4))[0] | 0x100
@@ -221,6 +226,7 @@ class Debugger:
         mode = bp.get("log", "match")
         if mode == "all" or mode == "match" and match:
             parts = [f"{r}={ctx[r]:x}" for r in bp.get("regs", [])]
+            parts += [f"xmm{i}={ctx.xmm(i)!r}/{struct.unpack('<I', struct.pack('<f', ctx.xmm(i)))[0]:08x}" for i in bp.get("xmm", [])]
             for reg, off, fmt in bp.get("mem", []):
                 parts.append(f"[{reg}+{off:x}]={struct.unpack('<' + fmt, self.mem(ctx[reg] + off, struct.calcsize(fmt)))}")
             if bp.get("backtrace"):
