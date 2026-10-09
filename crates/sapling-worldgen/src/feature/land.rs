@@ -5,7 +5,7 @@
 //! feature position by `(r & m) - (r & m)` per axis, two raw draws each.
 
 use super::place::Ctx;
-use super::plants::can_survive;
+use super::plants::{can_survive, may_place};
 use super::spec::Legacy;
 use super::tree::common::is_replaceable_plant;
 use super::view::View;
@@ -51,6 +51,7 @@ impl Legacy {
             Legacy::SweetBerries { count } => pile(ctx.view, ctx.random, at, count, |random| SWEET_BERRIES[random.next_int(8) as usize]),
             Legacy::Mushroom { block, count } => super::flowers::mushroom(ctx.view, ctx.random, at, block, count),
             Legacy::Flower { kind, count } => super::flowers::flowers(ctx.view, ctx.random, at, kind, count),
+            Legacy::FireflyBush { water } => firefly_bush(ctx.view, ctx.random, at, water),
             Legacy::Iceberg => super::iceberg::ice_feature(ctx.view, ctx.random, at),
             Legacy::Springs => super::springs::springs(ctx, at),
             Legacy::IcePatch => super::ice_spike::ice_patch(ctx.view, ctx.random, at),
@@ -142,6 +143,38 @@ fn melon(view: &mut View, random: &mut Mt19937, at: [i32; 3]) -> bool {
         }
     }
     true
+}
+
+/// `FireflyBushClusterFeature::place` (149e821d0): up to 20 tries at x and z `nextInt(9) - 4` on the
+/// light heightmap for a cell the bush may stand in (the water cluster: with water beside the
+/// block below), then `nextInt(3) + 1` more around that bush, in at most 20 tries.
+fn firefly_bush(view: &mut View, random: &mut Mt19937, [x, _, z]: [i32; 3], water: bool) -> bool {
+    let near = |view: &View, random: &mut Mt19937, x: i32, z: i32| {
+        let px = x + random.next_int(9) - 4;
+        let pz = z + random.next_int(9) - 4;
+        let p = [px, view.heightmap(px, pz), pz];
+        may_place(view, p, Block::FireflyBush).then_some(p)
+    };
+    let wet = |block: Block| block.is_fluid() && !block.is_lava();
+    for _ in 0..20 {
+        let Some([px, py, pz]) = near(view, random, x, z) else { continue };
+        if water && ![(0, -1), (0, 1), (1, 0), (-1, 0)].iter().any(|&(dx, dz)| wet(view.block(px + dx, py - 1, pz + dz))) {
+            continue;
+        }
+        view.set_block(px, py, pz, Block::FireflyBush);
+        let mut left = random.next_int(3) + 1;
+        for _ in 0..20 {
+            if let Some([bx, by, bz]) = near(view, random, px, pz) {
+                view.set_block(bx, by, bz, Block::FireflyBush);
+                left -= 1;
+            }
+            if left == 0 {
+                break;
+            }
+        }
+        return true;
+    }
+    false
 }
 
 /// No draws: on water, with nothing above it in the light heightmap.
