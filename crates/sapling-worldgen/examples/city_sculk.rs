@@ -58,6 +58,29 @@ fn main() {
                                 *counts.entry(format!("total {name} in {who}")).or_default() += 1;
                             }
                         }
+                        if (1..15).contains(&x) && (1..15).contains(&z) && y > -64 {
+                            let around = [(1i32, 0i32, 0i32), (-1, 0, 0), (0, 1, 0), (0, -1, 0), (0, 0, 1), (0, 0, -1)];
+                            let beside = |name: &dyn Fn(i32, i32, i32) -> String| {
+                                let names: Vec<String> = around.iter().map(|&(dx, dy, dz)| name(dx, dy, dz)).collect();
+                                if names.iter().any(|n| n == "sculk") {
+                                    "beside sculk"
+                                } else if names.iter().any(|n| CITY.contains(&n.as_str())) {
+                                    "on city blocks"
+                                } else {
+                                    "on terrain"
+                                }
+                            };
+                            if o.name() == "sculk_vein" {
+                                let at = |dx: i32, dy: i32, dz: i32| ours.block((x as i32 + dx) as usize, y + dy, (z as i32 + dz) as usize).name().to_string();
+                                *counts.entry(format!("vein {} in ours", beside(&at))).or_default() += 1;
+                            }
+                            for (who, world, chunk, cell) in [("bds", &primary, &a, &bds), ("twin", &twin, &b, &run2)] {
+                                if cell.block == "sculk_vein" {
+                                    let at = |dx: i32, dy: i32, dz: i32| bds_cell(world, chunk, wx + dx, y + dy, wz + dz).block;
+                                    *counts.entry(format!("vein {} in {who}", beside(&at))).or_default() += 1;
+                                }
+                            }
+                        }
                         if cs == "city" {
                             let twin_class = class(&run2.block);
                             let mark = |c: &str| if c == "sculk" { 'S' } else { '-' };

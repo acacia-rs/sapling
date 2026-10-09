@@ -567,8 +567,17 @@ e trial_chambers/dispensers/wall_dispenser j trial_chambers/dispensers/wall_disp
 e trial_chambers/dispensers/floor_dispenser j trial_chambers/dispensers/floor_dispenser - 0 0 -
 e trial_chambers/spawner/ranged/skeleton j trial_chambers/spawner/ranged/skeleton - 0 0 -
 e trial_chambers/spawner/slow_ranged/skeleton j trial_chambers/spawner/slow_ranged/skeleton - 0 0 -
+e trial_chambers/spawner/ranged/stray j trial_chambers/spawner/ranged/stray - 0 0 -
+e trial_chambers/spawner/slow_ranged/stray j trial_chambers/spawner/slow_ranged/stray - 0 0 -
+e trial_chambers/spawner/ranged/poison_skeleton j trial_chambers/spawner/ranged/poison_skeleton - 0 0 -
+e trial_chambers/spawner/slow_ranged/poison_skeleton j trial_chambers/spawner/slow_ranged/poison_skeleton - 0 0 -
 e trial_chambers/spawner/melee/zombie j trial_chambers/spawner/melee/zombie - 0 0 -
+e trial_chambers/spawner/melee/husk j trial_chambers/spawner/melee/husk - 0 0 -
+e trial_chambers/spawner/melee/spider j trial_chambers/spawner/melee/spider - 0 0 -
 e trial_chambers/spawner/small_melee/slime j trial_chambers/spawner/small_melee/slime - 0 0 -
+e trial_chambers/spawner/small_melee/cave_spider j trial_chambers/spawner/small_melee/cave_spider - 0 0 -
+e trial_chambers/spawner/small_melee/silverfish j trial_chambers/spawner/small_melee/silverfish - 0 0 -
+e trial_chambers/spawner/small_melee/baby_zombie j trial_chambers/spawner/small_melee/baby_zombie - 0 0 -
 p trail_ruins/buildings - trail_ruins/buildings/group_hall_1*1 trail_ruins/buildings/group_hall_2*1 trail_ruins/buildings/group_hall_3*1 trail_ruins/buildings/group_hall_4*1 trail_ruins/buildings/group_hall_5*1 trail_ruins/buildings/large_room_1*1 trail_ruins/buildings/large_room_2*1 trail_ruins/buildings/large_room_3*1 trail_ruins/buildings/large_room_4*1 trail_ruins/buildings/large_room_5*1 trail_ruins/buildings/one_room_1*1 trail_ruins/buildings/one_room_2*1 trail_ruins/buildings/one_room_3*1 trail_ruins/buildings/one_room_4*1 trail_ruins/buildings/one_room_5*1
 p trail_ruins/decor - trail_ruins/decor/decor_1*1 trail_ruins/decor/decor_2*1 trail_ruins/decor/decor_3*1 trail_ruins/decor/decor_4*1 trail_ruins/decor/decor_5*1 trail_ruins/decor/decor_6*1 trail_ruins/decor/decor_7*1
 p trail_ruins/roads - trail_ruins/roads/long_road_end*1 trail_ruins/roads/road_end_1*1 trail_ruins/roads/road_section_1*1 trail_ruins/roads/road_section_2*1 trail_ruins/roads/road_section_3*1 trail_ruins/roads/road_section_4*1 trail_ruins/roads/road_spacer_1*1
@@ -667,9 +676,20 @@ p trial_chambers/spawner/contents/breeze - trial_chambers/spawner/breeze/breeze*
 p trial_chambers/dispensers/chamber - empty*1 trial_chambers/dispensers/chamber*1 trial_chambers/dispensers/wall_dispenser*1 trial_chambers/dispensers/floor_dispenser*1
 p trial_chambers/spawner/ranged/skeleton - trial_chambers/spawner/ranged/skeleton*1
 p trial_chambers/spawner/slow_ranged/skeleton - trial_chambers/spawner/slow_ranged/skeleton*1
+p trial_chambers/spawner/ranged/stray - trial_chambers/spawner/ranged/stray*1
+p trial_chambers/spawner/slow_ranged/stray - trial_chambers/spawner/slow_ranged/stray*1
+p trial_chambers/spawner/ranged/poison_skeleton - trial_chambers/spawner/ranged/poison_skeleton*1
+p trial_chambers/spawner/slow_ranged/poison_skeleton - trial_chambers/spawner/slow_ranged/poison_skeleton*1
 p trial_chambers/spawner/melee/zombie - trial_chambers/spawner/melee/zombie*1
+p trial_chambers/spawner/melee/husk - trial_chambers/spawner/melee/husk*1
+p trial_chambers/spawner/melee/spider - trial_chambers/spawner/melee/spider*1
 p trial_chambers/spawner/small_melee/slime - trial_chambers/spawner/small_melee/slime*1
-a trial_chambers trial_chambers/spawner/contents/ranged=trial_chambers/spawner/ranged/skeleton trial_chambers/spawner/contents/slow_ranged=trial_chambers/spawner/slow_ranged/skeleton trial_chambers/spawner/contents/melee=trial_chambers/spawner/melee/zombie trial_chambers/spawner/contents/small_melee=trial_chambers/spawner/small_melee/slime
+p trial_chambers/spawner/small_melee/cave_spider - trial_chambers/spawner/small_melee/cave_spider*1
+p trial_chambers/spawner/small_melee/silverfish - trial_chambers/spawner/small_melee/silverfish*1
+p trial_chambers/spawner/small_melee/baby_zombie - trial_chambers/spawner/small_melee/baby_zombie*1
+b trial_chambers trial_chambers/spawner/contents/ranged=trial_chambers/spawner/ranged/skeleton,trial_chambers/spawner/contents/slow_ranged=trial_chambers/spawner/slow_ranged/skeleton|trial_chambers/spawner/contents/ranged=trial_chambers/spawner/ranged/stray,trial_chambers/spawner/contents/slow_ranged=trial_chambers/spawner/slow_ranged/stray|trial_chambers/spawner/contents/ranged=trial_chambers/spawner/ranged/poison_skeleton,trial_chambers/spawner/contents/slow_ranged=trial_chambers/spawner/slow_ranged/poison_skeleton
+b trial_chambers trial_chambers/spawner/contents/melee=trial_chambers/spawner/melee/zombie|trial_chambers/spawner/contents/melee=trial_chambers/spawner/melee/husk|trial_chambers/spawner/contents/melee=trial_chambers/spawner/melee/spider
+b trial_chambers trial_chambers/spawner/contents/small_melee=trial_chambers/spawner/small_melee/slime|trial_chambers/spawner/contents/small_melee=trial_chambers/spawner/small_melee/cave_spider|trial_chambers/spawner/contents/small_melee=trial_chambers/spawner/small_melee/silverfish|trial_chambers/spawner/contents/small_melee=trial_chambers/spawner/small_melee/baby_zombie
 s abandoned_camp abandoned_camp_bamboo_jungle 1 abandoned_camp/tent/bamboo_jungle 3 116 10 48
 s abandoned_camp abandoned_camp_birch_forest 1 abandoned_camp/tent/birch_forest 3 116 10 27,155
 s abandoned_camp abandoned_camp_cherry_grove 1 abandoned_camp/tent/cherry_grove 3 116 10 192

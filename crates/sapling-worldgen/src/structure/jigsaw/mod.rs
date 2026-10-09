@@ -36,6 +36,8 @@ pub struct Data {
     pub pools: HashMap<String, Pool>,
     /// Alias set name -> (pool, replacement) pairs.
     pub aliases: HashMap<String, Vec<(String, String)>>,
+    /// Alias set name -> its bindings in order, each a list of choices of (pool, replacement) pairs.
+    pub bindings: HashMap<String, Vec<Vec<Vec<(String, String)>>>>,
     /// Structure sets of several v2 structures, each in the set's order.
     pub sets: HashMap<String, Vec<SetEntry>>,
 }
@@ -113,6 +115,7 @@ fn parse(text: &str) -> Data {
     let mut rules: HashMap<String, &'static [Rule]> = HashMap::new();
     let mut capped: HashMap<String, Vec<Capped>> = HashMap::new();
     let (mut elements, mut pools, mut aliases, mut sets) = (HashMap::new(), Vec::new(), HashMap::new(), HashMap::new());
+    let mut bindings: HashMap<String, Vec<Vec<Vec<(String, String)>>>> = HashMap::new();
     for line in text.lines().filter(|l| !l.starts_with('#')) {
         let fields: Vec<&str> = line.split(' ').collect();
         match fields[0] {
@@ -133,6 +136,10 @@ fn parse(text: &str) -> Data {
             "a" => {
                 let pairs = fields[2..].iter().map(|p| p.split_once('=').unwrap()).map(|(a, b)| (a.to_string(), b.to_string())).collect();
                 aliases.insert(fields[1].to_string(), pairs);
+            }
+            "b" => {
+                let pairs = |choice: &str| choice.split(',').map(|p| p.split_once('=').unwrap()).map(|(a, b)| (a.to_string(), b.to_string())).collect();
+                bindings.entry(fields[1].to_string()).or_insert_with(Vec::new).push(fields[2].split('|').map(pairs).collect());
             }
             "s" => {
                 let int = |i: usize| fields[i].parse().unwrap();
@@ -179,5 +186,5 @@ fn parse(text: &str) -> Data {
             (f[0].clone(), Pool { name: f[0].clone(), fallback, list })
         })
         .collect();
-    Data { elements: elements_ref, pools, aliases, sets }
+    Data { elements: elements_ref, pools, aliases, bindings, sets }
 }

@@ -51,13 +51,28 @@ impl V2Start {
         (piece, (x, y, z))
     }
 
-    pub fn assemble(&self, random: &mut JavaRandom, chunk: (i32, i32), height: &dyn Fn(i32, i32) -> i32) -> Vec<Piece> {
+    pub fn assemble(&self, random: &mut JavaRandom, level_seed: i64, chunk: (i32, i32), height: &dyn Fn(i32, i32) -> i32) -> Vec<Piece> {
         let (piece, (x, y, z)) = self.start_piece(random, chunk, height);
         let (h, v, pad) = (self.horizontal, self.vertical, self.padding);
         let limit = BoundingBox::new(x - h, (y - v).max(MIN_Y + pad), z - h, x + h, (y + v).min(MAX_Y - pad), z + h);
+        let start_y = if self.project { y - height(x, z) } else { y };
+        let aliases = self.resolve_aliases(level_seed, (chunk.0 * 16, start_y, chunk.1 * 16));
         let mut assembler = Assembler::new(Variant::V2, self.max_depth, random, height);
-        assembler.aliases = self.aliases.map(|set| data().aliases[set].as_slice()).unwrap_or_default();
+        assembler.aliases = aliases;
         assembler.run_queue(piece, limit);
         assembler.pieces
+    }
+
+    /// Java's `PoolAliasLookup.create` (in 144ce7f40): one choice per binding, drawn from the
+    /// level seed forked at the start chunk's corner and start height.
+    fn resolve_aliases(&self, level_seed: i64, (x, y, z): (i32, i32, i32)) -> Vec<(&'static str, &'static str)> {
+        let Some(bindings) = self.aliases.and_then(|set| data().bindings.get(set)) else { return Vec::new() };
+        let mut random = JavaRandom::new(level_seed).fork_at(x, y, z);
+        let mut resolved = Vec::new();
+        for choices in bindings {
+            let pick = if choices.len() > 1 { random.next_int(choices.len() as i32) as usize } else { 0 };
+            resolved.extend(choices[pick].iter().map(|(from, to)| (from.as_str(), to.as_str())));
+        }
+        resolved
     }
 }

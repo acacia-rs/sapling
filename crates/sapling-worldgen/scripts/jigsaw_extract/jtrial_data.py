@@ -9,15 +9,13 @@ COPPER_RULES = [f'rb=waxed_copper_bulb@{p}|*|waxed_{age}_copper_bulb[lit=1,power
                 for p, age in (('0.1', 'oxidized'), ('0.33333334', 'weathered'), ('0.5', 'exposed'))]
 # The empty element's global (EmptyPoolElement).
 EMPTY = "('va', 5545505424)"
-# 141fa20f0: the structure's pool aliases, each alias's first target (a random pick in BDS: every target is one
-# trial spawner, so the blocks agree whichever it draws).
-ALIASES = {
-    'trial_chambers/spawner/contents/ranged': ['ranged/skeleton', 'ranged/stray', 'ranged/poison_skeleton'],
-    'trial_chambers/spawner/contents/slow_ranged': ['slow_ranged/skeleton', 'slow_ranged/stray', 'slow_ranged/poison_skeleton'],
-    'trial_chambers/spawner/contents/melee': ['melee/zombie', 'melee/husk', 'melee/spider'],
-    'trial_chambers/spawner/contents/small_melee': ['small_melee/slime', 'small_melee/cave_spider', 'small_melee/silverfish',
-                                                    'small_melee/baby_zombie'],
-}
+# 141fa20f0: the structure's pool alias bindings in order (Java's): a random group (ranged and slow ranged take
+# the same mob), then two random picks. The targets' templates differ (webs, bones, podzol around the spawner).
+BINDINGS = [
+    [[('ranged', f'ranged/{mob}'), ('slow_ranged', f'slow_ranged/{mob}')] for mob in ('skeleton', 'stray', 'poison_skeleton')],
+    [[('melee', f'melee/{mob}')] for mob in ('zombie', 'husk', 'spider')],
+    [[('small_melee', f'small_melee/{mob}')] for mob in ('slime', 'cave_spider', 'silverfish', 'baby_zombie')],
+]
 
 
 def short(name):
@@ -40,10 +38,9 @@ def load(path, procs, elements, pools, aliases):
             elements[name] = f'j {location} {proc} 0 0 -'
             items.append((name, weight))
         pools[short(d['pool'])] = (d['fallback'], items)
-    pairs = []
-    for alias, targets in ALIASES.items():
-        target = 'trial_chambers/spawner/' + targets[0]
-        elements.setdefault(target, f'j {target} - 0 0 -')
-        pools[target] = ('empty', [(target, 1)])
-        pairs.append((alias, target))
-    aliases['trial_chambers'] = pairs
+    spawner = 'trial_chambers/spawner/'
+    for choices in BINDINGS:
+        for _, target in (pair for pairs in choices for pair in pairs):
+            elements.setdefault(spawner + target, f'j {spawner}{target} - 0 0 -')
+            pools[spawner + target] = ('empty', [(spawner + target, 1)])
+    aliases['trial_chambers'] = [[[(f'{spawner}contents/{a}', spawner + t) for a, t in pairs] for pairs in choices] for choices in BINDINGS]

@@ -133,8 +133,10 @@ def write(out_path, procs, elements, pools, aliases, structures=()):
         for name, (fallback, items) in pools.items():
             fb = short(fallback) if fallback and short(fallback) != 'empty' else '-'
             out.write(f"p {name} {fb} " + ' '.join(f"{e}*{w}" for e, w in items) + '\n')
-        for name, pairs in aliases.items():
-            out.write(f"a {name} " + ' '.join(f'{a}={b}' for a, b in pairs) + '\n')
+        # One `b` line per alias binding, in order: its choices (one is drawn), each a list of alias=target.
+        for name, bindings in aliases.items():
+            for choices in bindings:
+                out.write(f"b {name} " + '|'.join(','.join(f'{a}={b}' for a, b in pairs) for pairs in choices) + '\n')
         for line in structures:
             out.write(line + '\n')
     print(len(procs), 'processor lists', len(elements), 'elements', len(pools), 'pools', len(aliases), 'alias sets')
