@@ -49,6 +49,15 @@ fn slot(dx: i32, dz: i32) -> Option<usize> {
     (dx.abs() <= REACH && dz.abs() <= REACH).then(|| ((dx + REACH) as usize) * SIDE + (dz + REACH) as usize)
 }
 
+/// What `recomputeHeightMap` (1409e29f0) counts: a block or liquid layer that absorbs light
+/// (`Block` +0xa5). Leaves and water do; plants, bamboo, cacti, mangrove roots, snow layers and
+/// speleothems do not (the saved heightmaps of the oracle worlds, examples/saved_heightmaps.rs).
+fn blocks_light(block: Block) -> bool {
+    let clear = matches!(block, Block::Bamboo | Block::BambooSmallLeaves | Block::BambooLargeLeaves | Block::Cactus | Block::MangroveRoots | Block::SnowLayer);
+    let thin = block.is_plant() && !block.is_crop_block() || block.is_speleothem() || clear;
+    block != Block::Air && (!thin || block.is_waterlogged())
+}
+
 pub struct View<'a> {
     chunk: (i32, i32),
     load: &'a dyn Fn(i32, i32) -> Arc<ChunkShape>,
@@ -162,7 +171,8 @@ impl<'a> View<'a> {
     pub fn set_block_quiet(&mut self, x: i32, y: i32, z: i32, block: Block) -> bool {
         let Some((slot, index)) = self.locate(x, y, z) else { return false };
         let seen = self.read(slot, index);
-        let block = if seen == Block::Water { block.into_water() } else { block };
+        // The liquid layer of a waterlogged plant stays under a waterloggable block.
+        let block = if seen == Block::Water || seen.is_waterlogged() { block.into_water() } else { block };
         if seen == block {
             return false;
         }
@@ -191,12 +201,11 @@ impl<'a> View<'a> {
     }
 
     /// `query.heightmap` (lambda 1411a2740): the chunk's light heightmap, one above the highest block
-    /// that is neither air nor a see-through plant (water counts); the world's top outside the region.
+    /// that `blocks_light`; the world's top outside the region.
     /// Read off the `frozen` chunks when given: see worldgen-bds-features.md, "Heightmaps".
     pub fn heightmap(&self, x: i32, z: i32) -> i32 {
         let top = MIN_Y + HEIGHT as i32;
         let Some((slot, _)) = self.locate(x, MIN_Y, z) else { return top };
-        let blocks_light = |block: Block| block != Block::Air && (!block.is_plant() || block.is_crop_block()) && !block.is_leaves();
         let Some(frozen) = self.frozen else {
             return (MIN_Y..top).rev().find(|&y| blocks_light(self.block(x, y, z))).map_or(MIN_Y, |y| y + 1);
         };

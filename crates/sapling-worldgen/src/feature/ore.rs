@@ -18,6 +18,45 @@ struct Sphere {
     radius: f32,
 }
 
+/// The vein's line from its first end. BDS keeps only cells within the widest sphere's radius of
+/// it before testing the spheres (143b8dcb0); far from the origin the sphere centres round off the
+/// line, so the gate drops cells the spheres hold.
+struct Axis {
+    start: [f32; 3],
+    unit: [f32; 3],
+    /// The unit vector's x and z over its horizontal length.
+    flat: [f32; 2],
+}
+
+impl Axis {
+    fn new(start: [f32; 3], [dx, dy, dz]: [f32; 3]) -> Self {
+        let length = (dz * dz + dy * dy + dx * dx).sqrt();
+        let unit = if length < 0.0001 { [0.0; 3] } else { [dx / length, dy / length, dz / length] };
+        let flat_length = (unit[2] * unit[2] + unit[0] * unit[0]).sqrt();
+        let flat = if flat_length < 0.0001 { [0.0; 2] } else { [unit[0] / flat_length, unit[2] / flat_length] };
+        Self { start, unit, flat }
+    }
+
+    fn column_near(&self, cx: f32, cz: f32, widest: f32) -> bool {
+        let [x1, _, z1] = self.start;
+        let [hx, hz] = self.flat;
+        let along = hz * (cz - z1) + hx * (cx - x1);
+        let px = cx - (hx * along + x1);
+        let pz = cz - (along * hz + z1);
+        pz * pz + px * px <= widest
+    }
+
+    fn cell_near(&self, [cx, cy, cz]: [f32; 3], widest: f32) -> bool {
+        let [x1, y1, z1] = self.start;
+        let [ux, uy, uz] = self.unit;
+        let along = (cy - y1) * uy + (cx - x1) * ux + (cz - z1) * uz;
+        let qx = cx - (ux * along + x1);
+        let qy = cy - (uy * along + y1);
+        let qz = cz - (along * uz + z1);
+        qz * qz + qy * qy + qx * qx <= widest
+    }
+}
+
 impl Ore {
     /// Whether any block was placed.
     pub fn place(&self, view: &mut View, origin: [i32; 3], random: &mut Mt19937) -> bool {
@@ -38,6 +77,7 @@ impl Ore {
             return false;
         }
         let (dx, dy, dz) = (x2 - x1, y2 - y1, z2 - z1);
+        let axis = Axis::new([x1, y1, z1], [dx, dy, dz]);
         let step = PI * inverse;
         let spheres: Vec<Sphere> = (0..self.count)
             .map(|i| {
@@ -50,10 +90,10 @@ impl Ore {
             })
             .collect();
         let kept = prune(spheres);
-        self.fill(view, &kept, random)
+        self.fill(view, &kept, &axis, random)
     }
 
-    fn fill(&self, view: &mut View, kept: &[Sphere], random: &mut Mt19937) -> bool {
+    fn fill(&self, view: &mut View, kept: &[Sphere], axis: &Axis, random: &mut Mt19937) -> bool {
         let floor = |v: f32| v.floor() as i32;
         let (mut lo, mut hi) = ([i32::MAX; 3], [i32::MIN; 3]);
         for sphere in kept {
@@ -62,12 +102,17 @@ impl Ore {
                 hi[axis] = hi[axis].max(floor(sphere.centre[axis] + sphere.radius));
             }
         }
+        let widest = kept.iter().fold(0.0f32, |widest, s| if s.radius_sq <= widest { widest } else { s.radius_sq });
         let mut placed = false;
         for x in lo[0]..=hi[0] {
             for z in lo[2]..=hi[2] {
+                let (cx, cz) = (x as f32 + 0.5, z as f32 + 0.5);
+                if !axis.column_near(cx, cz, widest) {
+                    continue;
+                }
                 for y in lo[1]..=hi[1] {
-                    let cell = [x as f32 + 0.5, y as f32 + 0.5, z as f32 + 0.5];
-                    if !kept.iter().any(|s| distance_sq(cell, s.centre) < s.radius_sq) {
+                    let cell = [cx, y as f32 + 0.5, cz];
+                    if !axis.cell_near(cell, widest) || !kept.iter().any(|s| distance_sq(cell, s.centre) < s.radius_sq) {
                         continue;
                     }
                     placed |= self.replace(view, [x, y, z], random);

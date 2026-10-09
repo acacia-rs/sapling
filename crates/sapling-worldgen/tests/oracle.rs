@@ -9,7 +9,7 @@ mod oracle_support;
 use std::collections::BTreeMap;
 
 use oracle_support::{
-    BdsCell, BiomeTally, CarverTally, Context, Dump, FeatureTally, Ours, Region, StructureTally, Tally, TopTally, attribute, bds_cell, column_reshaped,
+    BdsCell, BiomeTally, CarverTally, Context, Dump, FeatureTally, Floor, Ours, Region, StructureTally, Tally, TopTally, attribute, bds_cell, column_reshaped,
     near_feature, open,
 };
 use sapling_leveldb::ChunkKey;
@@ -45,6 +45,7 @@ struct Tallies {
     carvers: CarverTally,
     features: FeatureTally,
     structures: StructureTally,
+    floor: Floor,
     /// Our highest non-air cell minus BDS's highest terrain cell, per column.
     top_offsets: BTreeMap<i32, (u64, (i32, i32))>,
 }
@@ -106,6 +107,7 @@ fn compare(seed: i64, world: &str, regions: &[Region]) {
                             bds_feature_above: bds_feature_top.is_some_and(|top| top > y),
                         };
                         tallies.blocks.add(block, bds, stable, at, context);
+                        tallies.floor.add(block, bds, &twin_cell, at, context);
                         dump.cell(at, laked.block(x, y, z), block, (bds, &twin_cell), context, &areas, PORTED, (&primary, &a));
                         if stable {
                             tallies.features.add(laked.block(x, y, z), block, bds);
@@ -132,8 +134,11 @@ fn compare(seed: i64, world: &str, regions: &[Region]) {
                 }
             }
         }
+        // Tests run in parallel: a region's lines stay together.
+        let _whole = std::io::stdout().lock();
         println!("seed {seed} {}:", region.name);
         tallies.blocks.print();
+        tallies.floor.print(world, region.name);
         tallies.top.print();
         tallies.features.print();
         tallies.structures.print();
