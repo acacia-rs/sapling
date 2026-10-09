@@ -9,8 +9,10 @@ config: {"breakpoints": [{"va": "0x143b7ff60", "name": "place", "regs": ["rax"],
           "strings": [["rax", 3]], "backtrace": 12, "stack": 100}]}
 filter: three ints at [reg+off] are x, y, z; the hit matches when (x, z) is in the list, or inside
   {"box": [x0, z0, x1, z1]}. No filter: every hit matches. filter2: two ints (a ChunkPos) in the list.
+  filter_format "fff" reads the three as floats.
 dump: [[reg, off, size], ...]: on a matching hit, writes each range to mem-<name>-<pos>-<i>.bin (a later hit
   at the same position overwrites it).
+dump_ptr: the same from the pointer stored at [reg+off], to ptr-<name>-<pos>-<i>.bin.
 dump_on_return: ["rdx", size]: on a matching hit, remembers the pointer in the register and writes `size`
   bytes from it to dump-<n>-<name>-<pos>.bin when the call returns (an output buffer).
 mem: struct formats read at [reg+off]. strings: printable strings within N pointer hops of a register (a Block*
@@ -208,7 +210,7 @@ class Debugger:
             match = list(pos) in xzs
         elif "filter" in bp:
             reg, off, xzs = bp["filter"]
-            pos = struct.unpack("<iii", self.mem(ctx[reg] + off, 12))
+            pos = struct.unpack("<" + bp.get("filter_format", "iii"), self.mem(ctx[reg] + off, 12))
             if isinstance(xzs, dict):  # {"box": [x0, z0, x1, z1]}
                 x0, z0, x1, z1 = xzs["box"]
                 match = x0 <= pos[0] <= x1 and z0 <= pos[2] <= z1
@@ -233,6 +235,10 @@ class Debugger:
         for i, (reg, off, size) in enumerate(bp.get("dump", []) if match else []):
             with open(f"{self.out}/mem-{bp['name']}-{'_'.join(map(str, pos or ()))}-{i}.bin", "wb") as f:
                 f.write(self.mem(ctx[reg] + off, size))
+        for i, (reg, off, size) in enumerate(bp.get("dump_ptr", []) if match else []):
+            pointer = struct.unpack("<Q", self.mem(ctx[reg] + off, 8))[0]
+            with open(f"{self.out}/ptr-{bp['name']}-{'_'.join(map(str, pos or ()))}-{i}.bin", "wb") as f:
+                f.write(self.mem(pointer, size))
         if match and "dump_on_return" in bp:
             reg, size = bp["dump_on_return"]
             ret = struct.unpack("<Q", self.mem(ctx["rsp"], 8))[0]
