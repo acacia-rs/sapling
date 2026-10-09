@@ -1,0 +1,82 @@
+diff --git a/crates/sapling-worldgen/src/feature/decorate.rs b/crates/sapling-worldgen/src/feature/decorate.rs
+index cf4aa15..07545a5 100644
+--- a/crates/sapling-worldgen/src/feature/decorate.rs
++++ b/crates/sapling-worldgen/src/feature/decorate.rs
+@@ -90,6 +90,9 @@ fn run(rule: &Rule, source: &mut Source, only: Option<u32>, own: &ChunkBiomes, v
+         if only.is_some_and(|wanted| biome_at(chunk, own, &biomes, at) != wanted) {
+             continue;
+         }
++        if crate::feature::trace_on(rule.name) {
++            eprintln!("FEAT\t{}\t{}\t{}\t{}\t{}\t{}\t{}", chunk.0, chunk.1, rule.name, index, at[0], at[1], at[2]);
++        }
+         let ctx = &mut Ctx { view, random: &mut placing, scope, biome: &biome, surface, in_structure: source.inputs.in_structure };
+         FEATURES[rule.feature].place(ctx, at);
+     }
+diff --git a/crates/sapling-worldgen/src/feature/mod.rs b/crates/sapling-worldgen/src/feature/mod.rs
+index 1f9ad7a..35b8482 100644
+--- a/crates/sapling-worldgen/src/feature/mod.rs
++++ b/crates/sapling-worldgen/src/feature/mod.rs
+@@ -76,6 +76,21 @@ pub struct Inputs<'a> {
+     pub in_structure: &'a dyn Fn([i32; 3]) -> bool,
+ }
+ 
++/// TRACE: `SAPLING_TRACE_RULES=<substring>` prints matching rules' feature positions and writes.
++pub(crate) fn trace_on(rule: &str) -> bool {
++    static PAT: std::sync::OnceLock<Option<String>> = std::sync::OnceLock::new();
++    if rule.is_empty() {
++        return TRACING.with(|t| t.get());
++    }
++    let on = PAT.get_or_init(|| std::env::var("SAPLING_TRACE_RULES").ok()).as_deref().is_some_and(|p| rule.contains(p));
++    TRACING.with(|t| t.set(on));
++    on
++}
++
++thread_local! {
++    static TRACING: std::cell::Cell<bool> = const { std::cell::Cell::new(false) };
++}
++
+ /// When BDS decorates a chunk relative to its neighbours: x and z even first, then x odd, both odd,
+ /// z odd. Chunks of one phase are never neighbours (docs/research/worldgen-bds-features.md).
+ pub(crate) fn phase((x, z): (i32, i32)) -> u8 {
+diff --git a/crates/sapling-worldgen/src/feature/speleothem/cluster.rs b/crates/sapling-worldgen/src/feature/speleothem/cluster.rs
+index 8c82298..323ea07 100644
+--- a/crates/sapling-worldgen/src/feature/speleothem/cluster.rs
++++ b/crates/sapling-worldgen/src/feature/speleothem/cluster.rs
+@@ -45,6 +45,9 @@ pub fn place(ctx: &mut Ctx, blocks: &SpeleothemBlocks, height: [i32; 2], wetness
+     let density = ctx.random.next_float() * 0.4 + 0.3;
+     let rx = ctx.random.next_int(6) + 2;
+     let rz = ctx.random.next_int(6) + 2;
++    if crate::feature::trace_on("") {
++        eprintln!("CLUSTER\t{rx}\t{rz}");
++    }
+     let shape = Shape { height, wetness, density };
+     for dx in -rx..=rx {
+         for dz in -rz..=rz {
+diff --git a/crates/sapling-worldgen/src/feature/speleothem/mod.rs b/crates/sapling-worldgen/src/feature/speleothem/mod.rs
+index 1b8356e..f406833 100644
+--- a/crates/sapling-worldgen/src/feature/speleothem/mod.rs
++++ b/crates/sapling-worldgen/src/feature/speleothem/mod.rs
+@@ -111,6 +111,9 @@ impl SpeleothemBlocks {
+ /// `SpeleothemFeature::place`: the tip direction from the bases above and below (both: a
+ /// boolean), a patch of base blocks behind it, then one or two spikes.
+ fn pointed(ctx: &mut Ctx, blocks: &SpeleothemBlocks, at: [i32; 3]) -> Option<[i32; 3]> {
++    if crate::feature::trace_on("") {
++        eprintln!("POINTED\t{}\t{}\t{}", at[0], at[1], at[2]);
++    }
+     let below = blocks.is_base(get(ctx.view, step(at, 0, 1)));
+     let above = blocks.is_base(get(ctx.view, step(at, 1, 1)));
+     let up = match (below, above) {
+diff --git a/crates/sapling-worldgen/src/feature/view.rs b/crates/sapling-worldgen/src/feature/view.rs
+index 56ab4cf..739d0c0 100644
+--- a/crates/sapling-worldgen/src/feature/view.rs
++++ b/crates/sapling-worldgen/src/feature/view.rs
+@@ -142,6 +142,9 @@ impl<'a> View<'a> {
+     /// A feature's write (`setBlock` with flags 3): `set_block_quiet`, then `on_write`.
+     pub fn set_block(&mut self, x: i32, y: i32, z: i32, block: Block) -> bool {
+         let written = self.set_block_quiet(x, y, z, block);
++        if written && crate::feature::trace_on("") {
++            eprintln!("W\t{x}\t{y}\t{z}");
++        }
+         if let Some(hook) = self.on_write.filter(|_| written) {
+             hook(self, [x, y, z]);
+         }

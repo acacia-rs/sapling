@@ -233,3 +233,6 @@ What is left, largest first:
 - Template data markers (structure/template/markers.rs) insert a new key in front of its bucket's first element,
   as MSVC's `_Find_last` scans a bucket back to its low end; the structures oracle did not change.
 - Near origin d (229): bubble columns (111, grown by ticks), lichen spreads (69), lava/water hardening (47).
+- 2026-10-09 (worldgen/liq2): dripstone split per feature instead of by distance (worldgen-bds-caves.md,
+  "Dripstone residue: floor and deterministic"); the lava/water hardening cells went with the liquid ticks'
+  neighbour-update rule (worldgen-bds-liquids.md). The table above is from before the frozen heightmaps.

@@ -71,6 +71,18 @@ Coral labels (2026-10-08, coral; LeviLamina names): 14828b9e0 `CoralFeature::_pl
 blocks, plants, fans, wall fans); 0x14cce2b78 blue ice. IBlockWorldGenAPI slots: 0x20 getBlock, 0x58 setBlock, 0x78
 mayPlace, 0x88 canSurvive, 0x98/0xa0 max/min height, 0xb0 getHeightmap, 0xb8 isLegacyLevel.
 
+Liq2 labels (2026-10-09, read in a scratch bdsre, not saved as labels): 1409f59e0 `LevelChunk::setBlock`, 1409f3d60
+its heightmap upkeep (returns unless state +0xf0 == 11), 1409f3f50 the column update, 1409e29f0 heightmap rebuild
+(+0xb80 light, +0xd80, +0xf88 highest block), 140a16f40 decoration task lambda (`tryLock`, vtable +0x58, rebuild),
+140a16cd0 structure task lambda (vtable +0x50), 1415f5aa0 `BlockSource::shouldFireEvents` (vtable +0x98), 141a28450
+`BlockType::isLavaBlocking` (vtable +0xc8; `mThickness` +0x158, material +3 blocks motion, +5 solid), 148b5ee50
+`LiquidBlock::_isLiquidBlocking`, 148b5eab0 lava fizz, 141f59f90 `StructurePiece::placeBlock` (liquid tick behind
+`mAllowTickingChanges`, BlockSource +0x58), 14160c130 template placement, 142cedf20/142ce9ca0
+`Block::neighborChanged` and its cannot-survive test, 1415483f0/141548760 a write list's commit (`onPlace`, ticks,
+`updateNeighborsAt`), 144c0cc40 `Feature::_setBlock` (transaction at +0x18, else `setBlock` flags 3); block globals
+0x14ccdaf58 flowing_water, 0x14ccdaf88 water; BlockSource +0x60 `mPendingConnectionUpdates`, +0xd8/+0xe0 random
+and tick queues.
+
 Feat3 labels (2026-10-08): 14a73fa30 the decoration's IBlockWorldGenAPI vtable (forwards to its `BlockSource` at
 +8; 0xb0 = 1411a0a60 heightmap: `LevelChunk` +0xb80 i16 per column + minimum y), 1438f0d00
 `MangroveTreeRoots::placeRoots` (vtable 14a98e1f8), 1438f16f0 its root simulation, 14a681437 its facing table,

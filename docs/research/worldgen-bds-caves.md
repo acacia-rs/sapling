@@ -34,6 +34,10 @@ list (VanillaBlockTypeIds lists 14ccd2770: dirt, coarse dirt, stone, tuff, deeps
   0.4..1.0, scale 0.4..2.0, wind 0..0.3 with Mth's sine table, `moveBackUntilBaseOrLava` (149e94ab0), placeBlocks
   (149e94de0) replaces open cells and spikes, stalagmites below the light heightmap.
 - MT `nextGaussian` is the polar method in f32 with the second value cached in the generator (`+0x9d4`).
+- A spike set into a water source keeps the water in the second layer (`LevelChunk::setBlock` 1409f59e0;
+  `Block::into_water`, the `PointedDripstone...Wet` blocks). It stays solid and is not "water" to a column scan,
+  but `canPlacePool` counts it: the column after a pool with a stalagmite in it may pool too (oracle, cherry grove
+  5538,4,-7219).
 
 ## Wrapper features (feature/cave.rs, multiface.rs, blob.rs)
 - `snap_to_surface` (143bb7720, search 143bb7ac0): surfaces ceiling, floor, random_horizontal (sides 2, 5, 3, 4
@@ -136,14 +140,42 @@ cell's liquid layer is water.
   or a coral plant.
 Warm ocean region 99.8663 → 99.9954% identical; coral blocks 99.8/100 precision/recall, fans and plants 100/100.
 
+## Dripstone residue: floor and deterministic (2026-10-09, worldgen/liq2)
+`scripts/dripstone_floor.py` (with `examples/decorate_trace.rs` and scripts/data/dripstone_trace.patch) gives every
+stable dripstone error an owner feature and judges each (source chunk, rule) sequence at its first desynced
+feature: floor when a glow lichen or sculk difference (ours against BDS, or BDS against its `-run2` twin), a
+dripstone cell the twin disagrees on, or an error left by an earlier-decorated floor sequence lies in that
+feature's scan box (cluster: its columns, 12 up and down; pointed: 12 around at its height; large: 18).
+
+| world | stable dripstone errors | floor | deterministic | (twin-unstable, not counted) |
+|---|---|---|---|---|
+| biome regions | 3266 | 2850 | 416 | 68 |
+| tree regions | 5391 | 4006 | 1385 | 350 |
+| structures | 11255 | 9105 | 2149 | 1081 |
+| of which stronghold | 2793 | 2391 | 401 | |
+
+Near origin, far out and the negative seed have no dripstone. The feat3 reading holds: about four fifths is the
+floor, and it is one mechanism, column scans and snaps stopping at lichen that BDS spreads with a thread-local
+generator (ours places fewer lichen, so ours scans on: ours-only base blocks outnumber BDS-only ones about 7 to 4).
+The deterministic part is 30 to 83 desynced sequences per world, many of them first desyncs of `small_dripstone`
+(snap to a wall, then a pointed spike).
+- Fixed: waterlogged spikes (above); about 180 cells over all worlds, of which ancient city 110.
+- Not it: the base list does not take stone's variants. BDS dripstone with tips under it inside our diorite or
+  andesite blobs (cherry grove 5572,26,-7261) reads that way, but with granite, diorite and andesite replaceable
+  every dripstone region got worse (structures about +6200, trees +3000, biomes +1800): those blobs come from
+  later-phase neighbour chunks and land around BDS's dripstone.
+- Open, first candidates from the split's ROOT list: tree regions' chunk 566,-388 (`small_dripstone` #1 at
+  9054,44,-6193) and cherry grove's 346,-454 (cluster #2 at 5545,17,-7264), both phase 0 with no lichen
+  difference in range. In cherry grove 346,-452 the first placing cluster matches BDS column for column inside
+  the chunk; its mismatches are the columns in 346,-451, which that chunk's own clusters redo later.
+
 ## Left
 - Sulfur springs (`random_sulfur_spring_with_tuff_feature`: structure templates) and the spring trail.
 - Fossils (`fossil_feature`, desert/swamp 1 in 64 chunks) and the desert well: structure templates.
 - Multi-direction lichen spreads and lichen/vein faces (thread-local in BDS): the oracle no longer grades face
   states of either (worldgen-bds-features.md, "Feature residue").
-- Dripstone residue: world-state differences (lichen spreads, sculk) shift whole clusters' column draws.
-- The ~100 lava cells that spread sideways after a fall made stone below: BDS's `_tick` sets stone with flags 3 and
-  returns like sapling (148b5d060); not resolved.
+- Dripstone residue: world-state differences (lichen spreads, sculk) shift whole clusters' column draws (split
+  above).
 - Bubble columns by ticks (edge routing).
 
 ## Labels (scratch bdsre `names.user.json`)
