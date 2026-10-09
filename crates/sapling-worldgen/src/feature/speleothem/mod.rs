@@ -64,7 +64,7 @@ fn water(block: Block) -> bool {
 }
 
 fn empty_or_water(block: Block) -> bool {
-    block == Block::Air || water(block)
+    block == Block::Air || water(block) && !block.is_wet_speleothem()
 }
 
 fn get(view: &View, [x, y, z]: [i32; 3]) -> Block {

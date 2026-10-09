@@ -273,4 +273,15 @@ with_multiface_blocks! {
     Kelp23 => "kelp" "kelp_age=23",
     Kelp24 => "kelp" "kelp_age=24",
     Kelp25 => "kelp" "kelp_age=25",
+    // Pointed dripstone set into a water source, in cave_table.rs's order (`into_water`, `is_wet_speleothem`): solid.
+    PointedDripstoneWet => "pointed_dripstone" "dripstone_thickness=tip,hanging=0",
+    PointedDripstoneTipHangingWet => "pointed_dripstone" "dripstone_thickness=tip,hanging=1",
+    PointedDripstoneFrustumWet => "pointed_dripstone" "dripstone_thickness=frustum,hanging=0",
+    PointedDripstoneFrustumHangingWet => "pointed_dripstone" "dripstone_thickness=frustum,hanging=1",
+    PointedDripstoneMiddleWet => "pointed_dripstone" "dripstone_thickness=middle,hanging=0",
+    PointedDripstoneMiddleHangingWet => "pointed_dripstone" "dripstone_thickness=middle,hanging=1",
+    PointedDripstoneBaseWet => "pointed_dripstone" "dripstone_thickness=base,hanging=0",
+    PointedDripstoneBaseHangingWet => "pointed_dripstone" "dripstone_thickness=base,hanging=1",
+    PointedDripstoneMergeWet => "pointed_dripstone" "dripstone_thickness=merge,hanging=0",
+    PointedDripstoneMergeHangingWet => "pointed_dripstone" "dripstone_thickness=merge,hanging=1",
 }

@@ -142,7 +142,7 @@ impl Large {
 }
 
 fn is_spike(block: Block) -> bool {
-    let within = |first: Block| (first..=Block::ALL[first.index() + 9]).contains(&block);
+    let within = |first: Block| (first..=Block::ALL[first.index() + 9]).contains(&block.dry());
     within(Block::PointedDripstone) || within(Block::SulfurSpike)
 }
 
