@@ -142,6 +142,12 @@ impl OverworldGenerator {
         writes.world_writes((chunk_x, chunk_z))
     }
 
+    /// `source_feature_writes` with the decoration trace (feature/trace.rs) of every source it ran.
+    #[doc(hidden)]
+    pub fn source_feature_trace(&self, chunk_x: i32, chunk_z: i32) -> Vec<String> {
+        feature::trace::capture(|| self.source_feature_writes(chunk_x, chunk_z)).1
+    }
+
     fn with_inputs<T>(&self, run: impl FnOnce(feature::Inputs) -> T) -> T {
         let loaded = |x, z| self.loaded(x, z);
         let biomes = |x, z| self.chunk_biomes(x, z);

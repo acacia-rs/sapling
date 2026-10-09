@@ -88,10 +88,13 @@ fn run(rule: &Rule, source: &mut Source, only: Option<u32>, own: &ChunkBiomes, v
             scatter::position(&rule.distribution, index, origin, draws, &mut Molang { scope, host: &host })
         };
         if only.is_some_and(|wanted| biome_at(chunk, own, &biomes, at) != wanted) {
+            super::trace::line(|| format!("{chunk:?} {} try {index} at {at:?} in another biome than {only:?}", rule.name));
             continue;
         }
+        let start = placing.draws();
         let ctx = &mut Ctx { view, random: &mut placing, scope, biome: &biome, surface, in_structure: source.inputs.in_structure };
-        FEATURES[rule.feature].place(ctx, at);
+        let placed = FEATURES[rule.feature].place(ctx, at);
+        super::trace::line(|| format!("{chunk:?} {} try {index} at {at:?} placed {} draws {start}..{}", rule.name, placed.is_some(), placing.draws()));
     }
 }
 

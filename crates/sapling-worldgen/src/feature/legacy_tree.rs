@@ -87,7 +87,9 @@ fn trees(ctx: &mut Ctx, at: [i32; 3], count: i32, grass: usize, mut pick: impl F
         let z = at[2] + ctx.random.next_int(14) + 1;
         let x = at[0] + ctx.random.next_int(14) + 1;
         let p = [x, ctx.view.heightmap(x, z), z];
-        FEATURES[feature].place(ctx, p);
+        let start = ctx.random.draws();
+        let placed = FEATURES[feature].place(ctx, p);
+        super::trace::line(|| format!("  tree feature {feature} at {p:?} placed {} draws {start}..{}", placed.is_some(), ctx.random.draws()));
         FEATURES[grass].place(ctx, p);
     }
 }

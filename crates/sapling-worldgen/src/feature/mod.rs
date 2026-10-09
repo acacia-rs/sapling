@@ -40,6 +40,7 @@ mod speleothem;
 mod spreader;
 mod springs;
 mod ticks;
+pub(crate) mod trace;
 mod tree;
 mod view;
 

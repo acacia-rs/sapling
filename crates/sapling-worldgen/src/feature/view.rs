@@ -180,6 +180,7 @@ impl<'a> View<'a> {
         let shape = shapes[slot].as_mut().expect("read just above");
         Arc::make_mut(shape).set_at(index, block);
         self.writes[slot].push(Write { index: index as u32, block, seen });
+        super::trace::line(|| format!("    write {x} {y} {z} {block:?} over {seen:?}"));
         if let Some(top) = &mut self.tops.get_mut()[slot]
             && block != Block::Air
         {
