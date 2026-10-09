@@ -12,10 +12,11 @@ use crate::terrain::MIN_Y;
 /// North, south, west, east (`nextInt(4) + 2` as a facing).
 const FACINGS: [(i32, i32); 4] = [(0, -1), (0, 1), (-1, 0), (1, 0)];
 
-/// Empty, or a block the log may be built over.
+/// Empty, or a block that can be built over (world-gen API slot 0x90): liquids too, so the log sinks to a pond's bed.
 fn passable(view: &View, [x, y, z]: [i32; 3]) -> bool {
     let block = view.block(x, y, z);
     block == Block::Air
+        || block.is_fluid()
         || matches!(
             block,
             Block::ShortGrass | Block::TallGrass | Block::TallGrassTop | Block::Fern | Block::LargeFern | Block::LargeFernTop | Block::Deadbush | Block::SnowLayer
