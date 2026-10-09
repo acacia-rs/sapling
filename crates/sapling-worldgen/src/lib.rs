@@ -36,13 +36,6 @@ use density::Density;
 use feature::Features;
 use random::Xoroshiro;
 
-/// TODO remove: experiment switches, `SAPLING_XP=1,3`.
-pub(crate) fn xp(n: u32) -> bool {
-    static ON: std::sync::OnceLock<u64> = std::sync::OnceLock::new();
-    let on = ON.get_or_init(|| std::env::var("SAPLING_XP").map_or(0, |v| v.split(',').filter_map(|n| n.parse::<u32>().ok()).fold(0, |m, n| m | 1 << n)));
-    on >> n & 1 == 1
-}
-
 /// Loaded columns (about 100 kB each) kept for neighbours' lakes and features.
 const LOADED_LIMIT: usize = 256;
 /// Chunk biomes (about 200 kB each), shared by the surface, decoration and the caller.
