@@ -36,6 +36,7 @@ pub fn scan(view: &View, at: [i32; 3], range: i32, inside: impl Fn(Block) -> boo
 }
 
 pub fn place(ctx: &mut Ctx, blocks: &SpeleothemBlocks, height: [i32; 2], wetness: [f32; 4], at: [i32; 3]) -> Option<[i32; 3]> {
+    crate::feature::trace::line(|| format!("  cluster {} {} {} draw {}", at[0], at[1], at[2], ctx.random.draws()));
     if !empty_or_water(get(ctx.view, at)) {
         return None;
     }
@@ -45,7 +46,7 @@ pub fn place(ctx: &mut Ctx, blocks: &SpeleothemBlocks, height: [i32; 2], wetness
     let density = ctx.random.next_float() * 0.4 + 0.3;
     let rx = ctx.random.next_int(6) + 2;
     let rz = ctx.random.next_int(6) + 2;
-    crate::feature::trace::line(|| format!("  cluster {rx} {rz} height {height} wetness {wetness} density {density}"));
+    crate::feature::trace::line(|| format!("  radii {rx} {rz} height {height} wetness {wetness} density {density}"));
     let shape = Shape { height, wetness, density };
     for dx in -rx..=rx {
         for dz in -rz..=rz {

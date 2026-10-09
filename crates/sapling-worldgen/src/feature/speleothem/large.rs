@@ -102,7 +102,7 @@ impl Large {
     }
 
     /// `placeBlocks` (149e94de0): per column of the disc, base blocks into open cells until the first
-    /// closed one past them; spikes are replaced, stalagmites stop at the heightmap.
+    /// closed one past them; spikes are replaced, stalagmites stop at the pre-worldgen heightmap.
     fn place(&self, ctx: &mut Ctx, blocks: &SpeleothemBlocks, wind: Wind) {
         let r = self.radius;
         for dx in -r..=r {
@@ -119,11 +119,7 @@ impl Large {
                     h = ((ctx.random.next_float() * 0.199_999_99 + 0.8) * h as f32) as i32;
                 }
                 let (x, z) = (self.root[0] + dx, self.root[2] + dz);
-                let top = match self.up {
-                    true if crate::xp(3) => ctx.view.generated_top(x, z),
-                    true => ctx.view.heightmap(x, z),
-                    false => i32::MAX,
-                };
+                let top = if self.up { ctx.view.generated_top(x, z) } else { i32::MAX };
                 let mut y = self.root[1];
                 let mut placed = false;
                 for _ in 0..h {
@@ -151,6 +147,7 @@ fn is_spike(block: Block) -> bool {
 }
 
 pub fn place(ctx: &mut Ctx, blocks: &SpeleothemBlocks, at: [i32; 3]) -> Option<[i32; 3]> {
+    crate::feature::trace::line(|| format!("  large {} {} {} draw {}", at[0], at[1], at[2], ctx.random.draws()));
     if !empty_or_water(get(ctx.view, at)) {
         return None;
     }

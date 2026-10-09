@@ -1,7 +1,7 @@
 //! `decorate_trace <seed> <rule substring> <x0> <z0> <x1> <z1>...`: decorates every source chunk of the regions
 //! and their ring (a thread per region) and prints the matching rules' features as TSV for
 //! scripts/dripstone_floor.py: `FEAT` (chunk, rule, try, position), then that feature's `CLUSTER` radii,
-//! `POINTED` positions and `W` writes.
+//! `SNAP` origins and `W` writes.
 use std::fmt::Write;
 
 use sapling_worldgen::OverworldGenerator;
@@ -26,10 +26,10 @@ fn emit(out: &mut String, inner: &[String], line: &str, wanted: &str) {
     writeln!(out, "FEAT\t{}\t{rule}\t{index}\t{}", tab(&chunk), tab(&at)).unwrap();
     for inner in inner {
         let inner = inner.trim_start();
-        if let Some(radii) = inner.strip_prefix("cluster ") {
+        if let Some(radii) = inner.strip_prefix("radii ") {
             writeln!(out, "CLUSTER\t{}", tab(&numbers(radii)[..2])).unwrap();
-        } else if let Some(at) = inner.strip_prefix("pointed ") {
-            writeln!(out, "POINTED\t{}", tab(&numbers(at)[..3])).unwrap();
+        } else if let Some(at) = inner.strip_prefix("snap ") {
+            writeln!(out, "SNAP\t{}", tab(&numbers(at)[..3])).unwrap();
         } else if let Some(write) = inner.strip_prefix("write ") {
             writeln!(out, "W\t{}", tab(&numbers(write)[..3])).unwrap();
         }

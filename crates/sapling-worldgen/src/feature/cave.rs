@@ -189,6 +189,7 @@ fn exposed(view: &View, [x, y, z]: [i32; 3]) -> bool {
 impl GrowingPlant {
     /// Height and age drawn first; body blocks are picked per cell, the head (with the age) last.
     pub fn place(&self, ctx: &mut Ctx, [x, y, z]: [i32; 3]) -> Option<[i32; 3]> {
+        super::trace::line(|| format!("  plant {x} {y} {z} draw {}", ctx.random.draws()));
         let range = pick_weighted(self.heights, ctx.random).unwrap_or(super::tree::spec::Range(0, 0));
         let height = range.draw(ctx.random);
         let age = self.age.draw(ctx.random);
@@ -200,7 +201,7 @@ impl GrowingPlant {
         for i in 0..height {
             let cy = y + i * step;
             let block = ctx.view.block(x, cy, z);
-            if !(block == Block::Air || self.allow_water && block == Block::Water) {
+            if !(block == Block::Air || self.allow_water && water(block)) {
                 continue;
             }
             if i == height - 1 || ctx.view.block(x, cy + step, z) != Block::Air {

@@ -40,9 +40,10 @@ def parse_trace(path):
         elif p[0] == 'CLUSTER' and last and 'cluster' in last[2]:
             f = seqs[last][-1]
             f['own'] = f['scan'] = cube(f['at'], int(p[1]), 12, int(p[2]))
-        elif p[0] == 'POINTED' and last and 'small' in last[2]:
+        elif p[0] == 'SNAP' and last and 'small' in last[2]:
+            # The snap walks up to 12 cells up or down; the spike and its base patch reach 3 around the end.
             at = tuple(map(int, p[1:4]))
-            seqs[last].append({'at': at, 'own': cube(at, 3, 3, 3), 'scan': cube(at, 12, 3, 12), 'kind': 'pointed'})
+            seqs[last].append({'at': at, 'own': cube(at, 3, 15, 3), 'scan': cube(at, 3, 15, 3), 'kind': 'pointed'})
         elif p[0] == 'W' and last and seqs[last]:
             WRITER[tuple(map(int, p[1:4]))] = (last, len(seqs[last]) - 1)
     return seqs
