@@ -190,7 +190,7 @@ impl Command for Kill {
 }
 
 /// `/damage <target> <amount> [cause]`, for players (research/captures/bds-hurt.txt).
-// TODO: BDS's refusals (an unknown cause, a target it cannot hurt) were not recorded; entities
+// TODO: what BDS answers an unknown cause was not recorded; entities
 // other than players are not hurt.
 #[derive(Command)]
 #[command(crate = "crate", name = "damage", description = "Apply damage to the specified entities", permission = "operator")]
@@ -202,20 +202,15 @@ pub(crate) struct Damage {
 
 impl Command for Damage {
     fn run(self, ctx: &mut ShardCtx<'_>, sender: &Sender, out: &mut Output) {
-        let cause = match self.cause.as_deref() {
-            None | Some("override" | "none") => DamageCause::Generic,
-            Some("entity_attack") => DamageCause::Attack,
-            Some("suffocation") => DamageCause::Suffocation,
-            Some("fall") => DamageCause::Fall,
-            Some("fire") => DamageCause::Fire,
-            Some("fire_tick") => DamageCause::FireTick,
-            Some("lava") => DamageCause::Lava,
-            Some("drowning") => DamageCause::Drowning,
-            Some(_) => return out.translate("commands.damage.failed", Vec::new(), false),
+        let found = players(ctx, sender, &self.target);
+        let names = || found.iter().map(|player| player.name.clone()).collect::<Vec<_>>().join(", ");
+        // BDS fails `suffocation` for anyone (research/captures/bds-worn.txt).
+        let Some(cause) = DamageCause::named(self.cause.as_deref().unwrap_or("none")).filter(|cause| *cause != DamageCause::Suffocation) else {
+            return out.translate("commands.damage.failed", vec![names()], false);
         };
-        let hurt: Vec<String> = players(ctx, sender, &self.target).into_iter().filter(|player| ctx.hurt_player(player.id, self.amount as f32, cause)).map(|player| player.name).collect();
+        let hurt: Vec<String> = found.iter().filter(|player| ctx.hurt_player(player.id, self.amount as f32, cause)).map(|player| player.name.clone()).collect();
         match hurt.is_empty() {
-            true => out.translate("commands.damage.failed", Vec::new(), false),
+            true => out.translate("commands.damage.failed", vec![names()], false),
             false => out.translate("commands.damage.success", vec![hurt.join(", ")], true),
         }
     }

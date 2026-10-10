@@ -64,9 +64,21 @@ by `/replaceitem entity @s slot.armor.<head|chest|legs|feet>`:
   all of iron, 1.25 in all of diamond and 1.2 in all of netherite; 2 in the netherite took 0.432.
 - That is the Java game's rule with its points and toughness: the hit is cut by
   `clamp(points - hit / (2 + toughness / 4), points / 5, 20) / 25`.
-- Stopped the same way: `/damage` with no cause, `fire`, `lava`. Not stopped: `fall`, `drowning`.
-- `/damage @s 2 suffocation` did nothing at all to the dressed player.
-- No hit by `/damage` changed an armour slot: nothing wore.
+- Stopped the same way (`armour`, and `worn`, research/captures/bds-worn.txt, all of iron
+  against 2): `/damage` with no cause, `fire`, `lava`, `contact`, `projectile`,
+  `entity_explosion`, `block_explosion`, `lightning`, `thorns`, `magma`, `campfire`,
+  `soul_campfire`.
+- Not stopped: `fall`, `drowning`, `fire_tick`, `magic`, `wither`, `starve`, `void`, `freezing`,
+  `stalagmite`, `sonic_boom`, `fly_into_wall`.
+- `anvil`, `falling_block` and `stalactite` took 0.645 where the others took 0.88: a quarter
+  goes to the helmet first (1.5 behind 15 points), and the helmet's slot is sent again.
+- `/damage @s 2 suffocation` answers `commands.damage.failed` with the player, dressed or bare.
+- No other hit by `/damage` changed an armour slot, and neither did six hits of a zombie (2.5
+  each, 1.125 through the iron): no wear was seen on the wire.
+- Each cause flashes with its number: contact 1, projectile 3, block explosion 10, entity
+  explosion 11, void 12, magic 14, wither 15, starve 16, anvil 17, thorns 18, falling block 19,
+  fly into wall 21, magma 22, lightning 24, freezing 27, stalactite 28, stalagmite 29, sonic
+  boom 31, campfire 32, soul campfire 33.
 
 ## Starving
 
@@ -105,7 +117,7 @@ From `bds_command_probe eat` (research/captures/bds-eat.txt), the bot holding us
 
 ## Not drilled
 
-Armour's wear, enchantments and what it does against burning on, hunger from swimming, from a hit inside a mob's guard or from a block that breaks at once, each food's values (what else it does: food-effects.md), starving on normal and hard, the void, whether a player out of breath in a
+Armour's wear (none was seen), enchantments, the words of most deaths, hunger from swimming, from a hit inside a mob's guard or from a block that breaks at once, each food's values (what else it does: food-effects.md), starving on normal and hard, the void, whether a player out of breath in a
 block is hurt as one under water, another
 player's hit (a zombie's: mob-attacks.md), `keepInventory`, a bed's or anchor's spawn, creative and spectator.
 
@@ -124,8 +136,8 @@ player's hit (a zombie's: mob-attacks.md), `keepInventory`, a bed's or anchor's 
   a sprint cost (`vitals.rs`), a block broken with what harvests it and a hit that takes health
   from a mob (an armour stand has none here). Swimming costs nothing yet.
 - Armour stops what it stopped on BDS, by the same rule (`creatures/health.rs` `shielded`,
-  `sapling-data/src/armour.rs`); it does not wear, and burning on goes through it as in the Java
-  game, which was not drilled.
+  `sapling-data/src/armour.rs`, `sapling_api::DamageCause::is_stopped_by_armour`); a helmet takes
+  its quarter but does not wear, and nothing else does.
 - Eating is built (`vitals/eating.rs`, `sapling-data/src/food.rs`): the bot ate an apple and a steak on
   sapling in the same 32 ticks and packets (research/captures/sapling-eat.txt). Only the apple's values are
   drilled; the others are the Java game's. A stew leaves no bowl, and no food does more than feed.

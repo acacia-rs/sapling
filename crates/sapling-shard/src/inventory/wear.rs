@@ -15,6 +15,10 @@ const DAMAGE: &str = "Damage";
 const UNBREAKING: i16 = 17;
 
 impl Inventory {
+    pub(crate) fn has_helmet(&self) -> bool {
+        self.armor[0].is_some()
+    }
+
     /// The points and toughness of the armour worn.
     pub(crate) fn armour(&self) -> [f32; 2] {
         let worn = self.armor.iter().flatten().filter_map(|held| sapling_data::armour(&held.stack.name));

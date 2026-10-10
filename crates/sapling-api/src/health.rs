@@ -1,19 +1,97 @@
 use crate::{PlayerId, ShardCtx};
 
-/// What hurt a player: it picks the flash its client shows and the words of its death.
+/// What hurt a player: it picks the flash its client shows, the words of its death and whether
+/// armour stops part of it. Numbered as the wire numbers them (BDS's `ActorDamageCause`).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum DamageCause {
     /// `/damage` without a cause, `/kill`.
-    Generic,
-    Attack,
-    Suffocation,
-    Fall,
+    Generic = -1,
+    /// A cactus or a bush.
+    Contact = 1,
+    Attack = 2,
+    Projectile = 3,
+    /// A block its head is in.
+    Suffocation = 4,
+    Fall = 5,
     /// Touching fire.
-    Fire,
+    Fire = 6,
     /// Burning on.
-    FireTick,
-    Lava,
-    Drowning,
+    FireTick = 7,
+    Lava = 8,
+    Drowning = 9,
+    BlockExplosion = 10,
+    EntityExplosion = 11,
+    Void = 12,
+    /// Instant damage and poison.
+    Magic = 14,
+    Wither = 15,
+    Starving = 16,
+    Anvil = 17,
+    Thorns = 18,
+    FallingBlock = 19,
+    FlyIntoWall = 21,
+    Magma = 22,
+    Lightning = 24,
+    Freezing = 27,
+    Stalactite = 28,
+    Stalagmite = 29,
+    SonicBoom = 31,
+    Campfire = 32,
+    SoulCampfire = 33,
+}
+
+impl DamageCause {
+    /// Each cause under the name `/damage` knows it by.
+    const NAMED: [(&'static str, DamageCause); 28] = [
+        ("none", Self::Generic),
+        ("contact", Self::Contact),
+        ("entity_attack", Self::Attack),
+        ("projectile", Self::Projectile),
+        ("suffocation", Self::Suffocation),
+        ("fall", Self::Fall),
+        ("fire", Self::Fire),
+        ("fire_tick", Self::FireTick),
+        ("lava", Self::Lava),
+        ("drowning", Self::Drowning),
+        ("block_explosion", Self::BlockExplosion),
+        ("entity_explosion", Self::EntityExplosion),
+        ("void", Self::Void),
+        ("magic", Self::Magic),
+        ("wither", Self::Wither),
+        ("starve", Self::Starving),
+        ("anvil", Self::Anvil),
+        ("thorns", Self::Thorns),
+        ("falling_block", Self::FallingBlock),
+        ("fly_into_wall", Self::FlyIntoWall),
+        ("magma", Self::Magma),
+        ("lightning", Self::Lightning),
+        ("freezing", Self::Freezing),
+        ("stalactite", Self::Stalactite),
+        ("stalagmite", Self::Stalagmite),
+        ("sonic_boom", Self::SonicBoom),
+        ("campfire", Self::Campfire),
+        ("soul_campfire", Self::SoulCampfire),
+    ];
+
+    pub fn id(self) -> i32 {
+        self as i32
+    }
+
+    /// The cause `/damage` calls `name`; `override` is `none`.
+    pub fn named(name: &str) -> Option<Self> {
+        let name = if name == "override" { "none" } else { name };
+        Self::NAMED.iter().find(|(known, _)| *known == name).map(|(_, cause)| *cause)
+    }
+
+    /// Whether armour stops part of it, as BDS's did (docs/research/player-damage.md, "Armour").
+    pub fn is_stopped_by_armour(self) -> bool {
+        matches!(self, Self::Generic | Self::Contact | Self::Attack | Self::Projectile | Self::Fire | Self::Lava | Self::BlockExplosion | Self::EntityExplosion | Self::Anvil | Self::Thorns | Self::FallingBlock | Self::Magma | Self::Lightning | Self::Stalactite | Self::Campfire | Self::SoulCampfire)
+    }
+
+    /// Falls on the head: a helmet takes a quarter of it first.
+    pub fn is_on_the_head(self) -> bool {
+        matches!(self, Self::Anvil | Self::FallingBlock | Self::Stalactite)
+    }
 }
 
 /// Players in survival and adventure have 20 health; the shard takes from it for falls, fire and

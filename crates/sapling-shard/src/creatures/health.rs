@@ -20,27 +20,8 @@ pub(super) const WALLED: u8 = 6;
 const SMOTHER_HARM: f32 = 2.0;
 const DROWN_HARM: f32 = 2.0;
 
-/// What hurt, as `EntityEvent` names it (BDS's `ActorDamageCause`).
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub(crate) enum Cause {
-    /// `/damage` without one, `/kill`.
-    Generic = -1,
-    /// A player's hit.
-    Attack = 2,
-    /// A block its head is in.
-    Wall = 4,
-    Fall = 5,
-    /// Touching fire or lava.
-    Fire = 6,
-    /// Burning on.
-    Burning = 7,
-    Lava = 8,
-    Drowning = 9,
-    /// Instant damage and poison.
-    Magic = 14,
-    Wither = 15,
-    Starving = 16,
-}
+/// What hurt: `EntityEvent` names it by its number.
+pub(crate) use sapling_api::DamageCause as Cause;
 
 #[derive(Component, Clone, Copy, Debug)]
 pub(crate) struct Health {
@@ -159,7 +140,7 @@ impl Health {
             return None;
         }
         self.burning -= 1;
-        (self.burning > 0 && self.burning % BURN_EVERY == 0 && self.hurt(FIRE_HARM)).then_some(Cause::Burning)
+        (self.burning > 0 && self.burning % BURN_EVERY == 0 && self.hurt(FIRE_HARM)).then_some(Cause::FireTick)
     }
 
     /// A tick with its head in a block or not: whether the block, borne `spared` ticks, hurt it.
@@ -225,7 +206,7 @@ mod tests {
         let hits: Vec<u16> = (1..=200)
             .filter(|_| {
                 golem.begin();
-                golem.burn(false, false) == Some(Cause::Burning)
+                golem.burn(false, false) == Some(Cause::FireTick)
             })
             .collect();
         assert_eq!(hits, [20, 40, 60, 80, 100, 120, 140]);

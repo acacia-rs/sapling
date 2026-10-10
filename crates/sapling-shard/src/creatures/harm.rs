@@ -49,7 +49,7 @@ pub(crate) fn is_full_block(level: &Level, [x, y, z]: [i32; 3]) -> bool {
 
 /// The hit's flash, or the death it was; a fall's names where it landed.
 pub(super) fn strike(id: u64, health: &Health, cause: Cause, landed: Option<[f32; 3]>) -> Bytes {
-    let (event_id, data) = if health.left() > 0.0 { (EntityEventEventId::HurtAnimation, cause as i32) } else { (EntityEventEventId::DeathAnimation, 0) };
+    let (event_id, data) = if health.left() > 0.0 { (EntityEventEventId::HurtAnimation, cause.id()) } else { (EntityEventEventId::DeathAnimation, 0) };
     let fire_at_position = landed.filter(|_| health.left() > 0.0).map(|[x, y, z]| Vec3f { x, y, z });
     sapling_net::encode(&EntityEvent { runtime_entity_id: id, event_id, data, fire_at_position })
 }
@@ -107,7 +107,7 @@ pub(super) fn tick(world: &mut World, entity: Entity, layer: Entity, id: u64, ki
         }
         packets.extend(fire.map(|cause| strike(id, &health, cause, None)));
         if health.smother(in_wall, WALLED) {
-            packets.push(strike(id, &health, Cause::Wall, None));
+            packets.push(strike(id, &health, Cause::Suffocation, None));
         }
         tell(&mut health, id, kind, burns, &mut packets);
         if burns && now.liquid() == Some(Liquid::Lava) && health.scald() {

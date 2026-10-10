@@ -1,4 +1,4 @@
-//! The bite, slain, chase and sick drills of bds_command_probe: a zombie hunting the actor
+//! The bite, slain, chase, sick and worn drills of bds_command_probe: a zombie hunting the actor
 //! (docs/research/mob-attacks.md), and what food does besides feeding (food-effects.md).
 
 pub const BITE_SHOWN: &[&str] = &[
@@ -69,5 +69,29 @@ pub fn sick() -> Vec<String> {
     lines.extend(["effect @s clear", "effect @s poison 30 0", "effect @s speed 30 0", ""].map(String::from));
     eat(&mut lines, "milk_bucket", 4);
     lines.extend(["gamemode creative @s", "clear @s", ""].map(String::from));
+    lines
+}
+
+/// The actor, in survival: hit bare by `/damage` as suffocation, then in all of iron for 2 by
+/// each cause the command knows besides those `armour` tried, and last hit by a zombie four times.
+pub fn worn() -> Vec<String> {
+    let mut lines: Vec<String> = FLOOR.map(String::from).into();
+    let heal = ["effect @s instant_health 1 4", ""].map(String::from);
+    lines.extend(["damage @s 2 suffocation", ""].map(String::from));
+    lines.extend(heal.clone());
+    for (part, piece) in [("head", "helmet"), ("chest", "chestplate"), ("legs", "leggings"), ("feet", "boots")] {
+        lines.push(format!("replaceitem entity @s slot.armor.{part} 0 iron_{piece}"));
+    }
+    let causes = [
+        "suffocation", "fire_tick", "magic", "wither", "starve", "void", "contact", "projectile", "entity_explosion", "block_explosion", "lightning", "anvil", "falling_block", "thorns",
+        "freezing", "stalactite", "stalagmite", "sonic_boom", "fly_into_wall", "magma", "campfire", "soul_campfire",
+    ];
+    for cause in causes {
+        lines.extend([format!("damage @s 2 {cause}"), String::new()]);
+        lines.extend(heal.clone());
+    }
+    lines.push("summon zombie ~ ~ ~-3".into());
+    lines.extend(std::iter::repeat_n(String::new(), 6));
+    lines.extend(["gamemode creative @s", "kill @e[type=!player]", "clear @s", ""].map(String::from));
     lines
 }

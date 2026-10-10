@@ -253,3 +253,23 @@ fn a_spider_eye_poisons_a_golden_apple_cushions_and_milk_ends_both() {
     h.remote.run(|ctx| assert_eq!(ctx.item(ALEX, Slot::Main(0)).map(|item| item.name), Some("minecraft:bucket".to_owned())));
     assert!(all::<CompletedUsingItem>(h.tick_all().to(1)).is_empty());
 }
+
+#[test]
+fn magic_goes_through_armour_and_a_helmet_takes_a_quarter_of_an_anvil() {
+    // research/captures/bds-worn.txt: all of iron against 2.
+    let mut h = ready();
+    h.remote.run(|ctx| {
+        for (slot, piece) in ["helmet", "chestplate", "leggings", "boots"].into_iter().enumerate() {
+            assert!(ctx.set_item(ALEX, Slot::Armor(slot as u8), Some(&Item::new(&format!("minecraft:iron_{piece}"), 1))));
+        }
+    });
+    let mut left = Vec::new();
+    for cause in [DamageCause::Magic, DamageCause::Contact, DamageCause::Anvil] {
+        h.remote.run(move |ctx| assert!(ctx.hurt_player(ALEX, 2.0, cause)));
+        left.extend(health(h.tick_all().to(2)));
+        (0..12).for_each(|_| drop(h.tick_all()));
+    }
+    let taken: Vec<f32> = [20.0].iter().chain(&left).zip(&left).map(|(before, after)| ((before - after) * 1000.0).round() / 1000.0).collect();
+    assert_eq!(taken, [2.0, 0.88, 0.645]);
+    assert_eq!((DamageCause::named("override"), DamageCause::named("sonic_boom").map(DamageCause::id), DamageCause::named("nosuch")), (Some(DamageCause::Generic), Some(31), None));
+}

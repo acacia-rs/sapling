@@ -1,6 +1,7 @@
 //! A player's death and its rising, in the packets BDS sends for them
 //! (docs/research/player-damage.md, "Death").
-// TODO: the body's box is not shrunk and `PlayerLastDeathPosition` is not told; every death
+// TODO: only the words of fall, fire, lava, `/kill` and a zombie were seen on BDS, the rest are
+// the game's keys from memory; the body's box is not shrunk and `PlayerLastDeathPosition` is not told; every death
 // rises at the world's spawn (no bed, no anchor); `doImmediateRespawn` is not read.
 
 use acacia_proto::packets::{DeathInfo, EntityEvent, EntityEventEventId, LevelSoundEvent, Respawn, SetHealth};
@@ -31,14 +32,27 @@ fn words(cause: Cause) -> &'static str {
     match cause {
         Cause::Fall => "death.fell.accident.generic",
         Cause::Fire => "death.attack.inFire",
-        Cause::Burning => "death.attack.onFire",
+        Cause::FireTick => "death.attack.onFire",
         Cause::Lava => "death.attack.lava",
         Cause::Drowning => "death.attack.drown",
-        Cause::Wall => "death.attack.inWall",
+        Cause::Suffocation => "death.attack.inWall",
         Cause::Starving => "death.attack.starve",
         Cause::Magic => "death.attack.magic",
         Cause::Wither => "death.attack.wither",
-        Cause::Generic | Cause::Attack => "death.attack.generic",
+        Cause::Contact => "death.attack.cactus",
+        Cause::BlockExplosion | Cause::EntityExplosion => "death.attack.explosion",
+        Cause::Void => "death.attack.outOfWorld",
+        Cause::Anvil => "death.attack.anvil",
+        Cause::FallingBlock => "death.attack.fallingBlock",
+        Cause::FlyIntoWall => "death.attack.flyIntoWall",
+        Cause::Magma => "death.attack.magma",
+        Cause::Lightning => "death.attack.lightningBolt",
+        Cause::Freezing => "death.attack.freeze",
+        Cause::Stalactite => "death.attack.stalactite",
+        Cause::Stalagmite => "death.attack.stalagmite",
+        Cause::SonicBoom => "death.attack.sonicBoom",
+        Cause::Thorns => "death.attack.thorns",
+        Cause::Projectile | Cause::Campfire | Cause::SoulCampfire | Cause::Generic | Cause::Attack => "death.attack.generic",
     }
 }
 

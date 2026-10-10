@@ -2,7 +2,7 @@
 //! from it each tick, by the rules mobs are hurt by (creatures/health.rs), told as BDS tells a
 //! player's (docs/research/player-damage.md). Dying and rising: death.rs; mending and
 //! starving: hunger.rs; effects: effects.rs.
-// TODO: armour does not wear and burning on is not stopped by it (not drilled); no effects; a block over the head alone does not
+// TODO: armour does not wear; a block over the head alone does not
 // make a player crawl; the breathing flag is not told; a fall is measured from the highest feet to the landing, where BDS with the
 // bot took 8 for 12 blocks; plugins are not asked.
 
@@ -51,6 +51,8 @@ pub(crate) const BREAK_TIRES: f32 = 0.005;
 pub(crate) const HIT_TIRES: f32 = 0.1;
 /// No tick's run is longer: more is a teleport or a throw.
 const LONGEST_STEP: f32 = 1.0;
+/// What a helmet lets through of a hit on the head (research/captures/bds-worn.txt).
+const HELMETED: f32 = 0.75;
 /// Health an empty hunger leaves a player (hunger.rs).
 const STARVED: f32 = 10.0;
 
@@ -99,7 +101,7 @@ fn flash(world: &mut World, player: Entity, cause: Cause) {
     let (Some(id), Some(position)) = (world.get::<NetId>(player).map(|id| id.0), world.get::<Position>(player).copied()) else { return };
     let [x, y, z] = position.feet;
     let fire_at_position = (cause == Cause::Fall).then_some(Vec3f { x, y: y + EYE_HEIGHT, z });
-    tell(world, player, &EntityEvent { runtime_entity_id: id, event_id: EntityEventEventId::HurtAnimation, data: cause as i32, fire_at_position });
+    tell(world, player, &EntityEvent { runtime_entity_id: id, event_id: EntityEventEventId::HurtAnimation, data: cause.id(), fire_at_position });
 }
 
 /// Tells the health and the burning where they changed, and lets a player with no health die of `cause`.
@@ -140,9 +142,10 @@ fn dress(world: &mut World, player: Entity) {
 /// cause it stops; false where it took nothing.
 fn hurt(world: &mut World, player: Entity, amount: f32, cause: Cause) -> bool {
     dress(world, player);
-    let stopped = matches!(cause, Cause::Generic | Cause::Attack | Cause::Fire | Cause::Lava);
+    let helmeted = cause.is_on_the_head() && world.get::<crate::inventory::Inventory>(player).is_some_and(|inventory| inventory.has_helmet());
+    let amount = if helmeted { amount * HELMETED } else { amount };
     let lands = |mut vitals: Mut<Vitals>| {
-        let amount = if stopped { vitals.health.shielded(amount) } else { amount };
+        let amount = if cause.is_stopped_by_armour() { vitals.health.shielded(amount) } else { amount };
         vitals.health.hurt(amount)
     };
     if !is_mortal(world, player) || !world.get_mut::<Vitals>(player).is_some_and(lands) {
@@ -209,9 +212,9 @@ fn stand(world: &mut World, player: Entity, layer: Entity) {
     health.begin();
     hits.extend(health.fall(from, position.feet[1], position.on_ground, water || lava || carried).map(|_| Cause::Fall));
     let lit = health.is_burning();
-    hits.extend(health.burn(fire, water).map(|cause| if lit { Cause::Burning } else { cause }));
+    hits.extend(health.burn(fire, water).map(|cause| if lit { Cause::FireTick } else { cause }));
     hits.extend((lava && health.scald()).then_some(Cause::Lava));
-    hits.extend(health.smother(in_wall, WALLED).then_some(Cause::Wall));
+    hits.extend(health.smother(in_wall, WALLED).then_some(Cause::Suffocation));
     vitals.air = if under_water || in_wall { breath - 1 } else { (breath + BREATH).min(AIR) };
     if vitals.air <= -GASP {
         vitals.air = 0;
@@ -256,26 +259,13 @@ pub(crate) fn tick(world: &mut World) {
     }
 }
 
-fn named(cause: DamageCause) -> Cause {
-    match cause {
-        DamageCause::Generic => Cause::Generic,
-        DamageCause::Attack => Cause::Attack,
-        DamageCause::Suffocation => Cause::Wall,
-        DamageCause::Fall => Cause::Fall,
-        DamageCause::Fire => Cause::Fire,
-        DamageCause::FireTick => Cause::Burning,
-        DamageCause::Lava => Cause::Lava,
-        DamageCause::Drowning => Cause::Drowning,
-    }
-}
-
 impl HealthBackend for Ctx<'_> {
     fn health(&self, player: PlayerId) -> Option<f32> {
         self.world.get::<Vitals>(self.entity(player)?).map(|vitals| vitals.health.left())
     }
 
     fn hurt_player(&mut self, player: PlayerId, amount: f32, cause: DamageCause) -> bool {
-        self.entity(player).is_some_and(|entity| hurt(self.world, entity, amount, named(cause)))
+        self.entity(player).is_some_and(|entity| hurt(self.world, entity, amount, cause))
     }
 
     fn kill_player(&mut self, player: PlayerId) -> bool {
