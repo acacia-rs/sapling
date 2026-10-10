@@ -221,8 +221,7 @@ impl Block {
                 Block::ALL[block.index() - Block::PointedDripstone.index() + Block::PointedDripstoneWet.index()]
             }
             Block::MangroveLeaves => Block::MangroveLeavesWet,
-            // Worldgen sculk veins replace the water (oracle); the wet vein variants are unused.
-            block if (Block::GlowLichen1..=Block::GlowLichen63).contains(&block) => Block::ALL[block.index() + WET_MULTIFACE],
+            block if (Block::GlowLichen1..=Block::SculkVein63).contains(&block) => Block::ALL[block.index() + WET_MULTIFACE],
             block => block,
         }
     }

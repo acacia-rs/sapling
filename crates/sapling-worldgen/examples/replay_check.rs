@@ -25,14 +25,14 @@ fn main() {
     let (primary, _) = open(world).expect("oracle world");
     let saved = |x: i32, z: i32| (x0..=x1).contains(&(x >> 4)) && (z0..=z1).contains(&(z >> 4));
     // cell -> (rank, block name) of the last source to write it
-    let mut last: HashMap<[i32; 3], (usize, String)> = HashMap::new();
+    let mut last = HashMap::new();
     for (rank, &(cx, cz)) in order.iter().enumerate() {
         if cx < x0 - 1 || cx > x1 + 1 || cz < z0 - 1 || cz > z1 + 1 {
             continue;
         }
         for (at, block, _) in generator.source_feature_writes(cx, cz) {
             if saved(at[0], at[2]) {
-                last.insert(at, (rank, format!("{block:?}")));
+                last.insert(at, (rank, block));
             }
         }
     }
@@ -44,8 +44,8 @@ fn main() {
         let bds = bds_cell(&primary, chunk, at[0], at[1], at[2]).block;
         let entry = per_source.entry(rank).or_default();
         entry.0 += 1;
-        if !ours.to_lowercase().starts_with(&bds.replace('_', "")) {
-            entry.1.push(format!("{} {} {} {ours}>{bds}", at[0], at[1], at[2]));
+        if ours.name() != bds {
+            entry.1.push(format!("{} {} {} {ours:?}>{bds}", at[0], at[1], at[2]));
         }
     }
     let mut ranks: Vec<_> = per_source.into_iter().collect();

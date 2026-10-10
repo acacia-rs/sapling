@@ -147,7 +147,8 @@ impl Features {
     }
 
     fn thread_after(&self, rank: Rank, state: Option<Mt19937>) {
-        if let (Some((_, states)), Some(state)) = (&self.thread, state) {
+        if let (Some((order, states)), Some(state)) = (&self.thread, state) {
+            trace::line(|| format!("thread after rank {rank} {:?}: {} draws", order[rank as usize], state.draws()));
             let mut states = states.lock().unwrap();
             if states.len() == rank as usize + 1 {
                 states.push(state);

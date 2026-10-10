@@ -48,8 +48,19 @@ impl Multiface {
 
 /// The spread toward the first shuffled direction that can hold one.
 pub fn spread(config: Config, ctx: &mut Ctx, at: [i32; 3], state: Block, from: usize) {
-    let mut toward = [0, 1, 2, 3, 4, 5];
+    // 1403747f0 starts from up, down, north, south, west, east.
+    let mut toward = spreader::SPREAD_ORDER;
     shuffle(&mut toward, thread(ctx));
+    super::trace::line(|| {
+        let found = toward.iter().map(|&to| match spreader::spread_target(config, ctx.view, state, at, from, to) {
+            Some((c, face, _)) => {
+                let on = step(c, face);
+                format!("{to}:{},{},{},{face} on {:?} in {:?}", c[0], c[1], c[2], ctx.view.block(on[0], on[1], on[2]), ctx.view.block(c[0], c[1], c[2]))
+            }
+            None => format!("{to}:-"),
+        });
+        format!("    spread {} {} {} from {from} toward {}", at[0], at[1], at[2], found.collect::<Vec<_>>().join(" "))
+    });
     if let Some((cell, _, block)) = toward.iter().find_map(|&to| spreader::spread_target(config, ctx.view, state, at, from, to)) {
         ctx.view.set_block(cell[0], cell[1], cell[2], block);
     }

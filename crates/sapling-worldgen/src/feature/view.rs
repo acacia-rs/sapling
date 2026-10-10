@@ -215,6 +215,8 @@ impl<'a> View<'a> {
         let seen = self.read(slot, index);
         // The liquid layer of a waterlogged plant stays under a waterloggable block.
         let block = if seen == Block::Water || seen.is_waterlogged() { block.into_water() } else { block };
+        // A vein or lichen taken out of a water source leaves the water (one-worker run: worldgen-bds-order.md).
+        let block = if block == Block::Air && seen.multiface().is_some() && seen.is_waterlogged() { Block::Water } else { block };
         if seen == block {
             return false;
         }

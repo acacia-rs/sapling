@@ -31,6 +31,9 @@ fn main() {
             trees.push(line);
             continue;
         }
+        if line.starts_with("thread after") {
+            println!("{line}");
+        }
         if line.starts_with(&own) && rest.first().is_none_or(|want| line.contains(want.as_str())) {
             println!("{line}");
             trees.iter().for_each(|tree| println!("{tree}"));
