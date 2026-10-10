@@ -33,6 +33,8 @@ const BREATH: i16 = 4;
 /// Out of breath a player holds on this many ticks, is hurt, and holds on again.
 const GASP: i16 = 20;
 const DROWN_HARM: f32 = 2.0;
+/// Ticks a player is in a block before the block hurts it: one more than a mob.
+const WALLED: u8 = 7;
 
 #[derive(Component, Clone, Copy)]
 pub(crate) struct Vitals {
@@ -127,7 +129,7 @@ fn stand(world: &mut World, player: Entity, layer: Entity) {
     let lit = health.is_burning();
     hits.extend(health.burn(fire, water).map(|cause| if lit { Cause::Burning } else { cause }));
     hits.extend((lava && health.scald()).then_some(Cause::Lava));
-    hits.extend(health.smother(in_wall).then_some(Cause::Wall));
+    hits.extend(health.smother(in_wall, WALLED).then_some(Cause::Wall));
     vitals.air = if under_water || in_wall { breath - 1 } else { (breath + BREATH).min(AIR) };
     if vitals.air <= -GASP {
         vitals.air = 0;

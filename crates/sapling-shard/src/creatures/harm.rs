@@ -1,7 +1,7 @@
 //! What hurts a mob where it is: a fall, fire and lava, a block its head is in, and water it
 //! cannot breathe in, found each tick and told to its viewers as BDS tells them
 //! (docs/research/mob-damage.md). The rules themselves: health.rs.
-// TODO: any full block smothers; a fish out of water breathes;
+// TODO: any full block but glass and leaves smothers (glass drilled, bds-smother.txt); a fish out of water breathes;
 // breath comes back at once; an armour stand has no health here, though BDS burns it.
 
 use bevy_ecs::prelude::*;
@@ -10,7 +10,7 @@ use acacia_proto::packets::{EntityEvent, EntityEventEventId, LevelEvent, LevelEv
 use acacia_proto::types::Vec3f;
 use sapling_world::World as Level;
 
-use super::health::{Cause, Health};
+use super::health::{Cause, Health, WALLED};
 use crate::body::{Body, Liquid};
 use crate::components::Layer;
 use crate::{entities, late_sounds, splash};
@@ -43,7 +43,8 @@ fn is_within(level: &Level, [x, y, z]: [i32; 3]) -> bool {
 }
 
 pub(crate) fn is_full_block(level: &Level, [x, y, z]: [i32; 3]) -> bool {
-    is_within(level, [x, y, z]) && level.registry().get(level.block(x, y, z)).is_some_and(|state| state.is_full_cube())
+    let smothers = |name: &str| !name.ends_with("glass") && !name.ends_with("leaves");
+    is_within(level, [x, y, z]) && level.registry().get(level.block(x, y, z)).is_some_and(|state| state.is_full_cube() && smothers(state.name))
 }
 
 /// The hit's flash, or the death it was; a fall's names where it landed.
@@ -105,7 +106,7 @@ pub(super) fn tick(world: &mut World, entity: Entity, layer: Entity, id: u64, ki
             splash::fizz(world, layer, now, DOUSED);
         }
         packets.extend(fire.map(|cause| strike(id, &health, cause, None)));
-        if health.smother(in_wall) {
+        if health.smother(in_wall, WALLED) {
             packets.push(strike(id, &health, Cause::Wall, None));
         }
         tell(&mut health, id, kind, burns, &mut packets);

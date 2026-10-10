@@ -115,6 +115,6 @@ fn water_over_its_head_drowns_a_player_out_of_breath_and_a_block_around_it_smoth
     });
     // The last of the water guards against the first of the stone.
     assert_eq!(told(&mut h, 33), [14.0, 12.0, 10.0], "2 each half second");
-    h.remote.run(|ctx| assert!(ctx.set_block([3, 65, 3], &Block::new("air"))));
-    assert!(told(&mut h, 30).is_empty(), "a block over its head alone does not");
+    h.remote.run(|ctx| assert!(ctx.set_block([3, 65, 3], &Block::new("glass"))));
+    assert!(told(&mut h, 30).is_empty(), "a block over its head alone does not, nor glass");
 }

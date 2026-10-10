@@ -13,9 +13,10 @@ const FIRE_HARM: f32 = 1.0;
 const LAVA_HARM: f32 = 4.0;
 /// A fall this far does not hurt; each block more, begun, costs 1.
 const SAFE_FALL: f32 = 3.0;
-/// Ticks of breath; out of it under water, and this many ticks into a block, each tick hurts.
+/// Ticks of breath; out of it under water, each tick hurts.
 pub(super) const AIR: i16 = 300;
-const WALLED: u8 = 6;
+/// Ticks a mob's head is in a block before the block hurts it.
+pub(super) const WALLED: u8 = 6;
 const SMOTHER_HARM: f32 = 2.0;
 const DROWN_HARM: f32 = 2.0;
 
@@ -128,10 +129,10 @@ impl Health {
         (self.burning > 0 && self.burning % BURN_EVERY == 0 && self.hurt(FIRE_HARM)).then_some(Cause::Burning)
     }
 
-    /// A tick with its head in a block or not: whether the block hurt it.
-    pub(crate) fn smother(&mut self, in_wall: bool) -> bool {
+    /// A tick with its head in a block or not: whether the block, borne `spared` ticks, hurt it.
+    pub(crate) fn smother(&mut self, in_wall: bool, spared: u8) -> bool {
         self.walled = if in_wall { self.walled.saturating_add(1) } else { 0 };
-        self.walled > WALLED && self.hurt(SMOTHER_HARM)
+        self.walled > spared && self.hurt(SMOTHER_HARM)
     }
 
     pub(crate) fn scald(&mut self) -> bool {
@@ -212,11 +213,11 @@ mod tests {
         let hits: Vec<i32> = (1..=27)
             .filter(|_| {
                 cow.begin();
-                cow.smother(true)
+                cow.smother(true, WALLED)
             })
             .collect();
         assert_eq!((hits, cow.left()), (vec![7, 17, 27], 4.0));
-        assert!(!cow.smother(false) && !cow.smother(true), "counted anew");
+        assert!(!cow.smother(false, WALLED) && !cow.smother(true, WALLED), "counted anew");
 
         let mut cow = Health::new(10.0, None, 0);
         let breaths: Vec<i16> = (0..AIR).filter_map(|_| cow.breathe(true)).collect();

@@ -62,5 +62,8 @@ player's hit, `keepInventory`, a bed's or anchor's spawn, creative and spectator
   experience dropped (not under `keepInventory`), the death screen, rising at the world's spawn.
 - A fall costs each block begun past three, as a mob's (12 blocks: 9, where BDS took 8 from the bot).
 - Fire and lava in one tick are told as one health (16), where BDS told 19 and then 16.
+- Run against sapling (research/captures/sapling-hurt.txt, sapling-smother.txt) the drills show the same
+  flashes, causes and rhythm; the health differs where BDS mends or `/effect` heals, which sapling lacks.
+- Glass and leaves smother nothing (glass drilled; leaves taken as glass).
 - Not built: mending and hunger, the shrunken box and `PlayerLastDeathPosition`, lying down under a
   block, a bed's spawn, `doImmediateRespawn`, health kept across a rejoin.
