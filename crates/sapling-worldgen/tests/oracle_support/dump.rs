@@ -28,6 +28,7 @@ impl Dump {
     pub fn open(world: &str, region: &str) -> Self {
         let Some(dir) = std::env::var_os("SAPLING_ORACLE_DUMP") else { return Self { out: None, terrain: None, structures: None } };
         let name: String = region.chars().map(|c| if c.is_ascii_alphanumeric() { c } else { '_' }).collect();
+        std::fs::create_dir_all(&dir).expect("dump folder");
         let file = File::create(std::path::Path::new(&dir).join(format!("{world}.{name}.tsv"))).expect("dump file");
         let mut out = BufWriter::new(file);
         writeln!(out, "x\ty\tz\tstable\tbefore\tours\tbds\ttwin\tfamily\tstructure\tstage\tsdist").unwrap();

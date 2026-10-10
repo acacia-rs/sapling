@@ -249,8 +249,12 @@ impl Block {
 
     /// The block for a `minecraft:` name, without states.
     pub fn from_name(name: &str) -> Option<Block> {
-        let name = name.strip_prefix("minecraft:").unwrap_or(name);
-        Block::ALL.iter().copied().find(|block| block.name() == name)
+        static FIRST: LazyLock<HashMap<&str, Block>> = LazyLock::new(|| {
+            let mut first = HashMap::new();
+            Block::ALL.iter().for_each(|&b| _ = first.entry(b.name()).or_insert(b));
+            first
+        });
+        FIRST.get(name.strip_prefix("minecraft:").unwrap_or(name)).copied()
     }
 
     /// The block with exactly this name and these states, if the table has it.
