@@ -160,12 +160,14 @@ impl RuinPiece {
         placement.ignore = Some("air");
         let floor = if self.warm { Block::Sand } else { Block::Gravel };
         let mut buried = Vec::new();
-        for ((x, y, z), block, _) in placement.blocks(self.template, origin) {
+        for ((x, y, z), block, index) in placement.blocks(self.template, origin) {
+            placement.label(self.template, index);
             canvas.set(x, y, z, block);
             if block == floor {
                 buried.push((x, y, z));
             }
         }
+        super::trace::label(|| format!("{} loot and markers", self.template.name));
         bury_loot(canvas, origin, buried);
         for (index, _) in self.template.markers.iter().filter(|(_, m)| m == "chest") {
             let (dx, dy, dz) = self.rotation.apply(self.template.blocks[*index].pos);

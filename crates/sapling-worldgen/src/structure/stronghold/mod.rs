@@ -61,7 +61,8 @@ impl Stronghold {
     /// The pieces reaching the chunk, in start order, on the chunk's structure generator.
     pub fn post_process(&self, canvas: &mut Canvas, random: &mut Mt19937) {
         let column = canvas.bb;
-        for p in self.pieces.iter().filter(|p| p.frame.bb.intersects(&column)) {
+        for (index, p) in self.pieces.iter().enumerate().filter(|(_, p)| p.frame.bb.intersects(&column)) {
+            super::trace::label(|| format!("stronghold piece {index} {:?} {:?}", p.kind, p.frame.bb));
             match p.kind {
                 Kind::PortalRoom => portal::portal_room(&p.frame, canvas, random),
                 Kind::RoomCrossing | Kind::FiveCrossing | Kind::Library => rooms::post_process(p, canvas, random),

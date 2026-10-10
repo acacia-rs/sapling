@@ -111,6 +111,7 @@ impl Structures {
             stronghold.post_process(&mut canvas, &mut random);
         }
         let mut random = chunk_random(chunk);
+        super::trace::label(|| "temple".into());
         for temple in &temples {
             placed.extend(temple.post_process(&mut canvas, &mut random, &chunk_random));
         }
@@ -126,17 +127,20 @@ impl Structures {
         }
         canvas.read_placed = false;
         Self::place_mansions(&mut canvas, &mansions);
+        super::trace::label(|| "treasure".into());
         if treasure {
             treasure::place(&mut canvas, &mut chunk_random(chunk), chunk);
         }
         Self::place_outposts(&mut canvas, &outposts, seed);
         let mut random = chunk_random(chunk);
+        super::trace::label(|| "monument".into());
         for monument in &monuments {
             monument.post_process(&mut canvas, &mut random);
             placed.push(monument.building.bb);
         }
         Self::place_ocean_ruins(&mut canvas, &ruins, seed);
         self.place_shipwrecks(&mut canvas, &shipwrecks);
+        super::trace::label(|| "ruined portal".into());
         self.place_portals(density, &mut canvas, &portals);
         Self::place_ancient_cities(&mut canvas, &cities, seed);
         self.place_v2(&mut canvas, &v2);

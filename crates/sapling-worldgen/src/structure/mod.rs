@@ -30,6 +30,8 @@ pub(crate) mod template;
 mod templated;
 #[cfg(test)]
 mod tests;
+#[doc(hidden)]
+pub mod trace;
 mod treasure;
 mod village;
 

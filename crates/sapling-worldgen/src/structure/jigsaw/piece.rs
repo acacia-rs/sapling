@@ -6,6 +6,7 @@
 use super::super::BoundingBox;
 use super::super::adjust::Junction;
 use super::super::canvas::Canvas;
+use super::super::trace;
 use super::super::template::{JavaPlacement, Placement, Rotation, named};
 use super::assemble::middle;
 use super::element::{Element, ElementKind, Projection};
@@ -75,6 +76,7 @@ impl Piece {
         if !class.can_place(canvas, &self.bb) {
             return;
         }
+        trace::label(|| format!("{} jigsaw", template.name));
         for jigsaw in self.element.jigsaws(self.origin, self.rotation) {
             let (x, y, z) = jigsaw.pos;
             if canvas.bb.contains(x, y, z) {
@@ -88,9 +90,11 @@ impl Piece {
             let world = |x: i32, y: i32, z: i32| canvas.get(x, y, z);
             placement.blocks_in(template, self.origin, &world).collect()
         };
-        for ((x, y, z), block, _) in blocks {
+        for ((x, y, z), block, index) in blocks {
+            placement.label(template, index);
             canvas.set(x, y, z, block);
         }
+        trace::label(|| format!("{} foundation", template.name));
         if post & 1 != 0 {
             self.fill_bottom(canvas, random, class);
         }
@@ -106,6 +110,7 @@ impl Piece {
             return;
         }
         let (x, y, z) = self.origin;
+        trace::label(|| format!("feature {name} {:?}", self.origin));
         canvas.place_feature(name, random, [x, y, z]);
         self.fill_bottom(canvas, random, class);
         self.plug_holes(canvas, class);
@@ -116,10 +121,12 @@ impl Piece {
     pub fn post_process_java(&self, canvas: &mut Canvas, level_seed: i64) {
         if let ElementKind::Feature(name) = &self.element.kind {
             let (x, y, z) = self.origin;
+            trace::label(|| format!("feature {name} {:?}", self.origin));
             canvas.place_feature(name, &mut element_random([x, y, z]), [x, y, z]);
             return;
         }
         let ElementKind::Template { template, rules, java: Some(capped), .. } = &self.element.kind else { return };
+        trace::label(|| format!("{} {:?} at {:?}", template.name, self.rotation, self.origin));
         let placement = JavaPlacement { rotation: self.rotation, rules, capped, level_seed };
         let blocks = placement.blocks(template, self.origin, &canvas.bb, &|x, y, z| canvas.get(x, y, z));
         for ((x, y, z), block) in blocks {
@@ -147,7 +154,8 @@ impl Piece {
             let world = |x: i32, y: i32, z: i32| canvas.get(x, heights(x, z) + y - base - 1, z);
             placement.blocks_in(template, self.origin, &world).collect()
         };
-        for ((x, y, z), block, _) in blocks {
+        for ((x, y, z), block, index) in blocks {
+            placement.label(template, index);
             canvas.set(x, heights(x, z) + y - base - 1, z, block);
         }
     }

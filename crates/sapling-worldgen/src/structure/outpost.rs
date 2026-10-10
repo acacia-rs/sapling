@@ -68,7 +68,8 @@ impl Piece {
         placement.integrity = self.integrity;
         placement.seed = seed;
         let blocks: Vec<_> = placement.blocks(self.template, (self.origin.0, y, self.origin.1)).collect();
-        for ((x, y, z), block, _) in blocks {
+        for ((x, y, z), block, index) in blocks {
+            placement.label(self.template, index);
             canvas.set(x, y, z, block);
         }
     }
@@ -79,6 +80,7 @@ impl Piece {
     /// through air and fluids, the block itself if a full cube, else cobblestone.
     pub fn fill_below(&self, canvas: &mut Canvas, y: i32) {
         let (a, c) = (self.bb, canvas.bb);
+        super::trace::label(|| format!("{} foundation", self.template.name));
         for x in a.x0.max(c.x0)..=a.x1.min(c.x1) {
             for z in a.z0.max(c.z0)..=a.z1.min(c.z1) {
                 let top = canvas.get(x, y, z);

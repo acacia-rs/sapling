@@ -46,6 +46,7 @@ pub struct Placement {
     pub integrity: f32,
     /// Seeds the integrity draws.
     pub seed: u32,
+    /// Off for pool elements: a jigsaw is placed as its final state, through the rules like any block.
     pub ignore_jigsaws: bool,
     /// Air placed below sea level becomes water (ocean ruins, shipwrecks).
     pub flood: bool,
@@ -84,11 +85,12 @@ impl Placement {
             if self.ignore.is_some_and(|name| b.state.block(Rotation::None).name() == name) {
                 return None;
             }
-            match b.state.kind() {
+            let state = match b.state.kind() {
                 Kind::StructureBlock => return None,
                 Kind::Jigsaw if self.ignore_jigsaws => return None,
-                _ => {}
-            }
+                Kind::Jigsaw => template.jigsaws.iter().find(|j| j.block == index)?.final_state,
+                Kind::Block => b.state,
+            };
             if let Some(random) = random.as_mut()
                 && self.integrity < 1.0
                 && self.integrity < random.next_float()
@@ -101,7 +103,7 @@ impl Placement {
             if !self.bb.contains(at.0, at.1, at.2) {
                 return None;
             }
-            let mut block = b.state.block(self.rotation);
+            let mut block = state.block(self.rotation);
             if self.mirror {
                 block = mirror(block, self.rotation);
             }
@@ -124,10 +126,20 @@ impl Placement {
         })
     }
 
+    /// Names the template block for the structure trace.
+    pub fn label(&self, template: &Template, index: usize) {
+        crate::structure::trace::label(|| {
+            let b = &template.blocks[index];
+            let raw = b.state.block(Rotation::None);
+            format!("{} {:?} t{:?} {}[{}]", template.name, self.rotation, b.pos, raw.name(), raw.states())
+        });
+    }
+
     /// Writes the template; returns how many loot chests it placed (each drew a loot seed).
     pub fn place(&self, canvas: &mut Canvas, template: &Template, origin: (i32, i32, i32)) -> usize {
         let mut chests = 0;
         for ((x, y, z), block, index) in self.blocks(template, origin) {
+            self.label(template, index);
             canvas.set(x, y, z, block);
             chests += usize::from(template.loot_chests.contains(&index));
         }

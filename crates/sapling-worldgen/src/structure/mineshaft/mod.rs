@@ -188,6 +188,7 @@ impl Mineshaft {
             if invalid_location(&piece.frame, canvas, biomes) {
                 continue;
             }
+            super::trace::label(|| format!("mineshaft {:?} piece {index} {:?} {:?}", self.start, piece.kind, piece.frame.bb));
             match &piece.kind {
                 Kind::Room(entrances) => rooms::room(&piece.frame, entrances, canvas),
                 Kind::Corridor(c) => {

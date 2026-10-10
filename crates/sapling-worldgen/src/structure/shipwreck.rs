@@ -65,6 +65,7 @@ pub fn place(canvas: &mut Canvas, random: &mut Mt19937, start: (i32, i32), beach
     placement.wood = Some([Some(oak), None, None, None, None, Some(dark_oak)]);
     let chests = placement.place(canvas, template, origin);
     random.consume_count(chests as u32);
+    super::trace::label(|| format!("{} markers", template.name));
     let water_or_air = |y: i32| if y < SEA_LEVEL { Block::Water } else { Block::Air };
     for ((x, y, z), marker) in template.markers_at(origin, rotation) {
         canvas.set(x, y, z, water_or_air(y));

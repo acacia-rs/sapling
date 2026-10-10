@@ -9,6 +9,7 @@ use std::sync::Arc;
 
 use crate::block::Block;
 use crate::feature;
+use crate::structure::trace;
 use crate::terrain::ChunkShape;
 use crate::{OverworldGenerator, structure};
 
@@ -43,20 +44,39 @@ impl OverworldGenerator {
                 let (lx, lz) = ((x & 15) as usize, (z & 15) as usize);
                 if shape.block(lx, y, lz) == seen {
                     shape.set_block(lx, y, lz, block);
+                    trace::write([x, y, z], block);
                     heights = widen(heights, y);
                 }
             }
         };
         for source in self.structures.feature_sources(&self.density, chunk) {
-            land(&self.pieced(source).spilled);
+            let spilled = &self.pieced(source).spilled;
+            trace::label(|| format!("feature spill from {source:?}"));
+            land(spilled);
         }
         for source in self.structures.later_mineshaft_writers(&self.density, chunk) {
-            land(&self.pieced(source).unclipped);
+            let unclipped = &self.pieced(source).unclipped;
+            trace::label(|| format!("mineshaft floor from {source:?}"));
+            land(unclipped);
         }
         if let Some(heights) = heights {
             let neighbour = |x: i32, y: i32, z: i32| self.pieced((x >> 4, z >> 4)).shape.block((x & 15) as usize, y, (z & 15) as usize);
+            trace::label(|| "rejoin".into());
             structure::rejoin_connections(shape, chunk, heights, &neighbour);
         }
+    }
+
+    /// The chunk's structure-stage writes in order with what wrote each (structure/trace.rs), for probes.
+    #[doc(hidden)]
+    pub fn structure_trace(&self, chunk_x: i32, chunk_z: i32) -> Vec<(([i32; 3], Block), String)> {
+        let inside = |p: &[i32; 3]| (p[0] >> 4, p[2] >> 4) == (chunk_x, chunk_z);
+        // Warm the caches so that neighbours' pieces stay out of the trace where they can.
+        self.loaded(chunk_x, chunk_z);
+        let (_, writes) = trace::capture(|| {
+            let mut shape = self.pieced_uncached(chunk_x, chunk_z);
+            self.place_structures(&mut shape, chunk_x, chunk_z);
+        });
+        writes.into_iter().filter(|(p, ..)| inside(p)).map(|(p, block, label)| ((p, block), label.to_string())).collect()
     }
 
     /// The chunk's pieces placed afresh (no cache, no joins), for probes that change them.

@@ -131,6 +131,7 @@ impl<'a> Canvas<'a> {
     pub fn set(&mut self, x: i32, y: i32, z: i32, block: Block) {
         if self.bb.contains(x, y, z) {
             self.shape.set_block((x & 15) as usize, y, (z & 15) as usize, block);
+            super::trace::write([x, y, z], block);
             self.touched = (self.touched.0.min(y), self.touched.1.max(y));
             let mut heights = self.heights.borrow_mut();
             if let Some(h) = heights.get_mut(&(x, z))

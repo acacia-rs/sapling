@@ -35,7 +35,7 @@ pub use judge::{Context, column_reshaped};
 #[allow(unused_imports)]
 pub use stages::Stages;
 #[allow(unused_imports)]
-pub use structures::{StructureTally, attribute};
+pub use structures::{StageDiff, StructureTally, attribute, stage_diff};
 #[allow(unused_imports)]
 pub use tally::{BiomeTally, Tally, TopTally};
 

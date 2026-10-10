@@ -108,8 +108,37 @@ fn decoration(name: &str) -> bool {
     DECORATION_PARTS.iter().any(|part| name.contains(part)) || DECORATION.contains(&name)
 }
 
+/// How our structure stage and BDS disagree on a structure block.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum StageDiff {
+    /// Ours wrote the cell; BDS has what was there or a block no structure places.
+    OursOnly,
+    /// BDS has a structure block where ours wrote nothing.
+    BdsOnly,
+    /// Both hold a structure's write, of another block or state.
+    Both,
+}
+
+/// The structure-stage disagreement of one cell, given our block before and after the structure
+/// stage and after every stage. Cells a later stage of ours brings to BDS's block, and cells
+/// where either side holds a decoration block (sculk over a city), are not the structure's.
+pub fn stage_diff((before, after, last): (Block, Block, Block), bds: &BdsCell, in_area: bool) -> Option<StageDiff> {
+    let placed = before != after;
+    let wanted = !bds.is(before) && structure_block(bds, in_area);
+    if bds.is(after) || bds.is(last) || !(placed || wanted) || decoration(&bds.block) || decoration(after.name()) {
+        return None;
+    }
+    Some(match (placed, wanted) {
+        (true, true) => StageDiff::Both,
+        (true, false) => StageDiff::OursOnly,
+        _ => StageDiff::BdsOnly,
+    })
+}
+
 #[derive(Default)]
 struct Counts {
+    /// Structure-stage disagreements: ours only, BDS only, both.
+    differs: [u64; 3],
     placed: u64,
     hits: u64,
     /// Placed cells that are not air, and those BDS has too.
@@ -159,6 +188,10 @@ impl StructureTally {
     /// there (what BDS wants). A block our later stages place as BDS has it (a monster room's
     /// cobblestone in a ruin's area) is not wanted from the structure.
     pub fn add(&mut self, (before, after, last): (Block, Block, Block), bds: &BdsCell, placer: Option<StructureKind>, kind: Option<StructureKind>) {
+        if let Some(diff) = stage_diff((before, after, last), bds, kind.is_some()) {
+            let owner = if diff == StageDiff::BdsOnly { kind.or(placer) } else { placer.or(kind) };
+            self.kinds.entry(owner.map_or("unattributed", |k| k.name())).or_default().differs[diff as usize] += 1;
+        }
         if before != after {
             let counts = self.kinds.entry(placer.map_or("unattributed", |k| k.name())).or_default();
             counts.placed += 1;
@@ -221,6 +254,10 @@ impl StructureTally {
                 println!("      {}", top(&c.blocks));
             }
         }
+        // tools/oracle-totals.sh reads this line.
+        let differs = |c: &Counts| c.differs.iter().sum::<u64>();
+        let kinds: Vec<String> = self.kinds.iter().filter(|(_, c)| differs(c) > 0).map(|(kind, c)| format!("{kind} {} ({}/{}/{})", differs(c), c.differs[0], c.differs[1], c.differs[2])).collect();
+        println!("  structure stage: {} cells differ (ours only/BDS only/both): {}", self.kinds.values().map(differs).sum::<u64>(), kinds.join(", "));
         let unattributed: u64 = self.unattributed.values().sum();
         println!("    unattributed structure-looking cells: {unattributed}: {}", top(&self.unattributed));
     }

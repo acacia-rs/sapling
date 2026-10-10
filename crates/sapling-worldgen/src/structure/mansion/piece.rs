@@ -8,6 +8,7 @@ use crate::block::Block;
 use crate::structure::BoundingBox;
 use crate::structure::canvas::Canvas;
 use crate::structure::template::{Placement, Rotation, named};
+use crate::structure::trace;
 
 /// A template offset as the piece's mirror and rotation place it (FRONT_BACK is LEFT_RIGHT
 /// half a turn further).
@@ -43,6 +44,7 @@ impl Piece {
         let mut placement = Placement::new(rotation, canvas.bb);
         placement.mirror = flip;
         placement.place(canvas, self.template, self.origin);
+        trace::label(|| format!("{} markers", self.template.name));
         for (index, name) in &self.template.markers {
             let (dx, dy, dz) = transform(self.template.blocks[*index].pos, self.rotation, self.mirror);
             let (x, y, z) = (self.origin.0 + dx, self.origin.1 + dy, self.origin.2 + dz);
@@ -71,6 +73,7 @@ impl Mansion {
         for piece in self.pieces.iter().filter(|p| p.bb.intersects(&column)) {
             piece.place(canvas);
         }
+        trace::label(|| "mansion foundation and stairs".into());
         let y0 = self.bb.y0;
         for x in column.x0..=column.x1 {
             for z in column.z0..=column.z1 {
