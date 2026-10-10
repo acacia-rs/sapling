@@ -77,6 +77,8 @@ pub struct Inputs<'a> {
     pub after_lake: &'a dyn Fn(i32, i32) -> crate::random::Mt19937,
     /// Whether a structure holds the block (geode.rs).
     pub in_structure: &'a dyn Fn([i32; 3]) -> bool,
+    /// Whether a mineshaft's or a stronghold's box holds the block (multiface.rs).
+    pub in_tunnels: &'a dyn Fn([i32; 3]) -> bool,
 }
 
 pub(crate) fn query_noise(x: f32, z: f32) -> f32 {

@@ -93,7 +93,7 @@ fn run(rule: &Rule, source: &mut Source, only: Option<u32>, own: &ChunkBiomes, v
             continue;
         }
         let start = placing.draws();
-        let ctx = &mut Ctx { view, random: &mut placing, scope, biome: &biome, surface, in_structure: source.inputs.in_structure };
+        let ctx = &mut Ctx { view, random: &mut placing, scope, biome: &biome, surface, in_structure: source.inputs.in_structure, in_tunnels: source.inputs.in_tunnels };
         let placed = FEATURES[rule.feature].place(ctx, at);
         super::trace::line(|| format!("{chunk:?} {} try {index} at {at:?} placed {} draws {start}..{}", rule.name, placed.is_some(), placing.draws()));
     }

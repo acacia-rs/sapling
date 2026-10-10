@@ -9,7 +9,7 @@ use super::place::Ctx;
 use super::plants::can_survive;
 use super::tree::common::vine_facing;
 use super::view::View;
-use crate::block::Block;
+use crate::block::{Block, Support};
 
 #[derive(Debug, Clone, Copy)]
 pub enum Lush {
@@ -47,7 +47,10 @@ impl Lush {
         match *self {
             Lush::MossVegetation => {
                 let block = pick_weighted(&MOSS_VEGETATION, ctx.random)?;
-                double_or_single(ctx.view, at, block).then_some(at)
+                // 149d99710: air over a top face that holds, before the block's own `mayPlace`.
+                let open = ctx.view.block(at[0], at[1], at[2]) == Block::Air;
+                let held = ctx.view.block(at[0], at[1] - 1, at[2]).supports(1, Support::Any);
+                (open && held && double_or_single(ctx.view, at, block)).then_some(at)
             }
             Lush::Dripleaf { big } => {
                 let small = ctx.random.next_float() < SMALL_DRIPLEAF_CHANCE;

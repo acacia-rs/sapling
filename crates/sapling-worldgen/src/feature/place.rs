@@ -19,6 +19,7 @@ pub struct Ctx<'c, 'v> {
     pub surface: &'c dyn Fn(i32, i32) -> i32,
     /// Whether a structure holds the block.
     pub in_structure: &'c dyn Fn([i32; 3]) -> bool,
+    pub in_tunnels: &'c dyn Fn([i32; 3]) -> bool,
 }
 
 impl Feature {
