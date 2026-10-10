@@ -28,6 +28,7 @@ mod lush;
 mod molang;
 mod monster_room;
 mod multiface;
+mod order;
 mod ore;
 mod pale;
 mod pile;
@@ -124,12 +125,12 @@ impl Features {
 
     /// The sources whose features reach `target`, in decoration order, those ranked `limit` and later left out.
     fn sources_before(&self, target: (i32, i32), limit: Rank) -> Vec<(i32, i32)> {
-        let mut sources: Vec<(Rank, (i32, i32))> = (target.0 - REACH..=target.0 + REACH)
+        let mut sources: Vec<(Rank, usize, (i32, i32))> = (target.0 - REACH..=target.0 + REACH)
             .flat_map(|x| (target.1 - REACH..=target.1 + REACH).map(move |z| (x, z)))
-            .filter_map(|source| self.rank(source).filter(|&rank| rank < limit).map(|rank| (rank, source)))
+            .filter_map(|source| self.rank(source).filter(|&rank| rank < limit).map(|rank| (rank, order::rank(source), source)))
             .collect();
         sources.sort();
-        sources.into_iter().map(|(_, source)| source).collect()
+        sources.into_iter().map(|(.., source)| source).collect()
     }
 
     /// The cells of `chunk` that sources decorated before `limit` left in doubt.
@@ -157,12 +158,16 @@ impl Features {
 
     fn replay(&self, shape: &mut ChunkShape, chunk: (i32, i32), limit: Rank, inputs: Inputs) {
         for source in self.sources_before(chunk, limit) {
-            let writes = self.source_writes(source, inputs);
-            for write in writes.towards(chunk.0 - source.0, chunk.1 - source.1) {
-                let index = write.index as usize;
-                if shape.block_at(index) == write.seen {
-                    shape.set_at(index, write.block);
-                }
+            self.apply(shape, chunk, source, inputs);
+        }
+    }
+
+    fn apply(&self, shape: &mut ChunkShape, chunk: (i32, i32), source: (i32, i32), inputs: Inputs) {
+        let writes = self.source_writes(source, inputs);
+        for write in writes.towards(chunk.0 - source.0, chunk.1 - source.1) {
+            let index = write.index as usize;
+            if shape.block_at(index) == write.seen {
+                shape.set_at(index, write.block);
             }
         }
     }
@@ -183,7 +188,20 @@ impl Features {
     pub fn source_writes(&self, source: (i32, i32), inputs: Inputs) -> Arc<ChunkWrites> {
         self.writes.get(source, || {
             let limit = self.rank(source).expect("a source the order holds");
-            let base = |x: i32, z: i32| self.before((x, z), limit, inputs);
+            // The same-phase diagnostic (order.rs) is for the phase model only.
+            let earlier = if self.order.is_none() { order::earlier(source) } else { Vec::new() };
+            let base = |x: i32, z: i32| {
+                let shape = self.before((x, z), limit, inputs);
+                let reach = |e: &&(i32, i32)| (e.0 - x).abs() <= REACH && (e.1 - z).abs() <= REACH;
+                if !earlier.iter().any(|e| reach(&e)) {
+                    return shape;
+                }
+                let mut shape = (*shape).clone();
+                for &from in earlier.iter().filter(reach) {
+                    self.apply(&mut shape, (x, z), from, inputs);
+                }
+                Arc::new(shape)
+            };
             // No chunk's heightmap changes while the world generates: see docs/research/worldgen-bds-features.md, "Heightmaps".
             let frozen = inputs.carved;
             // The pre-worldgen heightmap is dropped when the chunk's decoration ends.

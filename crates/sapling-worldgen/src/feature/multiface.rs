@@ -2,8 +2,9 @@
 //! (143bc69b0). BDS shuffles the faces with a thread-local generator (nondeterministic: the
 //! oracle's two runs disagree on them); this keeps their pushed order, so which face or neighbour
 //! cell a block takes can differ but whether one is placed does not. A spread (1465e9360) takes the
-//! first of six directions, shuffled thread-locally too, that can hold it: here the first unshuffled.
-//! See docs/research/worldgen-bds-caves.md, "Thread-local draws".
+//! first of six directions, shuffled thread-locally too, that can hold it: lichen takes the first
+//! unshuffled, a vein spreads only when one direction can. See docs/research/worldgen-bds-caves.md,
+//! "Thread-local draws", and worldgen-bds-residue-lush.md.
 
 use super::cave_spec::{Multiface, SurfaceThreshold};
 use super::data::FEATURES;
@@ -108,8 +109,15 @@ impl Multiface {
     }
 
     fn spread_one_way(&self, ctx: &mut Ctx, at: [i32; 3], state: Block, from: usize) {
-        let first = (0..6).find_map(|to| spreader::spread_target(self.config(), ctx.view, state, at, from, to));
-        if let Some((cell, _, block)) = first {
+        let config = self.config();
+        super::trace::line(|| {
+            let found = (0..6).filter_map(|to| spreader::spread_target(config, ctx.view, state, at, from, to).map(|(c, face, _)| format!("{to}:{},{},{},{face}", c[0], c[1], c[2])));
+            format!("    spread {} {} {} from {from} to {}", at[0], at[1], at[2], found.collect::<Vec<_>>().join(" "))
+        });
+        let mut targets = (0..6).filter_map(|to| spreader::spread_target(config, ctx.view, state, at, from, to));
+        let (first, second) = (targets.next(), targets.next());
+        // BDS always spreads; a guessed vein scored worse on the oracle than none, a guessed lichen better.
+        if let (Some((cell, _, block)), true) = (first, second.is_none() || config == Config::Lichen) {
             ctx.view.set_block(cell[0], cell[1], cell[2], block);
         }
     }

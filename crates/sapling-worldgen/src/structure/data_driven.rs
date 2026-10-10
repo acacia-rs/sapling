@@ -148,11 +148,15 @@ impl Structures {
         cells
     }
 
-    /// For probes: every piece of the v2 structures reaching `chunk`, in assembly order.
+    /// For probes: every piece of the v2 structures reaching `chunk`, in assembly order, then the
+    /// pieces of ancient cities that meet the chunk.
     pub fn v2_pieces(&self, density: &Density, chunk: (i32, i32)) -> Vec<String> {
         let pieces = self.v2_near(density, chunk);
         let line = |p: &Piece| format!("{} at {:?} {:?} {:?} depth {}", p.element.name, p.origin, p.rotation, p.bb, p.depth);
-        pieces.iter().flat_map(|s| s.iter()).map(line).collect()
+        let column = BoundingBox::chunk(chunk.0, chunk.1);
+        let cities = self.ancient_cities_near(density, chunk);
+        let city = cities.iter().flat_map(|c| c.pieces.iter()).filter(|p| p.bb.intersects(&column));
+        pieces.iter().flat_map(|s| s.iter()).chain(city).map(line).collect()
     }
 
     /// Every piece meeting the canvas's chunk, in assembly order.
