@@ -84,10 +84,10 @@ a plain run.
 - The spread (1465e9360) shuffles six directions the same way, starting from up, down, north, south, west, east
   (1403747f0), and takes the first that `getSpreadFromFaceTowardDirection` accepts.
 - Nothing else draws from it while a chunk decorates (17 forest and cave chunks, every draw index contiguous).
-  Between chunks something does: a worker that had spent 32216 draws on 8054 recipe UUIDs at startup stood at
-  32266 at badlands' first decoration and 53 draws further than our count 29 chunks later; in forest runs the
-  gaps exceed a whole state (624). The consumer is not `Random`'s UUID helper (141189020: no call after
-  startup) and was not identified.
+  Between chunks something does: a worker that had spent about 32.2k draws at startup (8054 recipe UUIDs,
+  141189020, four draws each) stood at 32266 at badlands' first decoration, at 32213 at the birch run's, and
+  53 draws further than our count 29 chunks into badlands; in forest runs the gaps exceed a whole state
+  (624). The consumer is not that UUID helper (no call after startup) and was not identified.
 - So the replay takes the generator's position per chunk from the log: `dbg_canon.json` logs the value of each
   face-shuffle draw (143b84073, eax), `dbg_loads.py` finds each chunk's first one in MT19937(0)'s stream.
   `feature/thread.rs` then draws exactly as BDS does inside the chunk.
@@ -100,7 +100,30 @@ generator. The run's world goes to testbox as `<dir>/<test world>` with a `-run2
 the run's order, the cells it wrote last and how many the run has as another block: the first source listed is
 where to look, with `feature_trace` beside a `dbg_sculk.py`/`dbg_calls.py` log of that chunk in the same run.
 
-Wrong + missing against one-worker worlds of single regions (REPLAY_TABLE)
+Wrong + missing of 4x4 regions against their own one-worker worlds (16 chunks, 1.57M cells; the temple and
+mansion regions are larger), with the phase model, with the run's order alone, and with the thread generator:
+
+| region | phase model | run's order | order + thread draws | glow lichen on BDS's cell |
+|---|---|---|---|---|
+| pale garden | 1216 | 1216 | 0 | 37 of 37 |
+| bamboo jungle | 1044 | 1039 | 25 | 24 of 24 |
+| old growth pine taiga | 684 | 680 | 37 | 21 of 21 |
+| badlands | 607 | 1080 | 157 | 58 of 58 |
+| old growth birch forest | 893 | 893 | 827 | 70 of 71 |
+| jungle temple (5x5) | 3010 | 3010 | 2764 | 58 of 58 |
+
+(Mansion was not run: its 9x9 region is four tiles and the logged run did not finish in the session.)
+
+The jungle temple does not come down, and that is a finding: in this run source 78,6 was decorated at rank 23
+and 78,8 at rank 138, so 78,6 saw no leaves of 78,8, and BDS still has the jungle tree's log at 1271,72,107
+where our 78,6 hangs a vine. That one cell is `replay_check`'s first line; 79,6's 1295 cells follow it.
+residue-lush.md's fix for the stock oracle ("78,8 before 78,6", 3104 -> 389) made our walker avoid the cell by
+another route; the difference is in `VinesFeature` or what it reads for source 78,6 over bare terrain, and a
+one-worker run with a breakpoint on 149d99a70 in that chunk is the next step.
+
+The order alone changes little outside sculk and makes sculk worse (a faithful order with guessed veins); the
+thread draws are what moves lush caves, through one lichen cell that a patch or pool then meets. The regions'
+"lush cave residue" of the stock oracle was this, not the lush code.
 
 ## What the replay found
 - **Veins in water.** A sculk vein set into a water source keeps the water in the liquid layer; removed, it
@@ -111,7 +134,22 @@ Wrong + missing against one-worker worlds of single regions (REPLAY_TABLE)
   liquid pass washed it away (`liquid/flow.rs`, `blocking`). `_isLiquidBlocking` (148b5ee50) asks the block's
   byte +0xba (2: blocking) before the shape test; the table behind it was not read out, so only the two
   multiface blocks are covered.
-- On the ticked and still oracle sets these two took 32218 -> 31126 and 32349 -> 31603 (below).
+- On the stock oracle sets (all2 817f552 -> edge3, wrong / missing; `tools/oracle.sh`, logs `base` and
+  `final`, with `ENVS=SAPLING_ORACLE_STILL=1` for the still twins) these two changes are the whole difference:
+
+| world | ticked: wrong | missing | still: wrong | missing |
+|---|---|---|---|---|
+| near origin | 1486 -> 1342 | 230 -> 220 | 874 -> 716 | 185 -> 176 |
+| far out | 260 | 28 | 150 | 20 |
+| negative seed | 78 -> 76 | 10 | 80 -> 78 | 46 |
+| biome regions | 5396 -> 5256 | 1100 -> 1094 | 5370 -> 5356 | 1173 -> 1145 |
+| tree regions | 2651 -> 2643 | 814 -> 812 | 2021 -> 2014 | 571 -> 568 |
+| structures | 15480 -> 14816 | 4685 -> 4569 | 16753 -> 16321 | 5106 -> 5013 |
+| all 59 regions, wrong + missing | 32218 -> 31126 | | 32349 -> 31603 | |
+
+  By region: pillager outpost -494 / -224, near origin -154 / -167, frozen peaks -163 / -151, trail ruins
+  -99 / -100, ancient city -95 / -178, mansion -80 / -11; up: stony peaks +4 / +107, cherry grove +19 / +19,
+  badlands +16 / +20 (sculk regions swing by that much on one cell: see residue.md, "sculk2").
 - **Left, each the first difference of its run** (badlands, `replay_check`): sculk sensors BDS grows on a floor
   that water has reached (9515,-45,-5567, 9516,-45,-5568, 9520,-45,-5566 with its water kept: sources
   593,-348 and 595,-348 after 594,-348's fall), one vein of source 593,-349 (9507,-34,-5572), then a fall
@@ -127,10 +165,19 @@ source. The stock oracle worlds stay useful for breadth; their run-order and thr
 an argument for or against a change.
 
 ## The four unexplained chunks
-All four are lush-cave chunks next to chunks the oracle did not save, and all four differ in other cells in a
-one-worker run of their region, so none is a fixed error of the port at that chunk:
-- Bamboo jungle 175,349: its bamboo rule first differs at try 113 (2801,74,5598), where BDS has a fern and no
-  stalk. The neighbours 174,348 and 175,348 match BDS write for write; 175,350, on the saved box's edge,
-  already has 137 stalk cells BDS lacks. The cause lies beyond the saved chunks, as res6 found.
-- Old growth birch -309,285, pale garden -469,-286, pine taiga -334,339: the clay pools and moss patches
-  differ from the first lush source of their runs on (REPLAY_LUSH).
+Each was traced in a one-worker run of its region with the replay, not in the stock oracle's cells:
+- Pale garden -469,-286: nothing left. The region is block-exact (0 of 1.57M cells).
+- Pine taiga -334,339 (clay): order and thread draws. The region falls from 684 to 37; what is left starts at
+  source -335,340 (two moss cells of BDS's under our tuff at -5338,-15,5463) and source -334,341 (22 cells).
+- Bamboo jungle (source 175,349 in the racy run; there its first differing try was 113 at 2801,74,5598, a
+  fern of BDS's in the stalk's cell, with neighbours 174,348 and 175,348 exact and 175,350 already off): the
+  region falls from 1044 to 25, and 14 of those are one thing, a port difference in ring source 174,349.
+  Its bamboo tries 6 (2784,75,5585) and 3 (2785,75,5587) lay podzol at x 2782..2783 where BDS has dirt and
+  grass: the rule's generator is off by then, in cells the 4x4 region does not save. A one-worker run of
+  172..175 x 348..350 would show the first try.
+- Old growth birch -309,285 (clay pool): a port difference, not mineshaft drift. 827 of 893 cells stay under
+  the replay with every lichen placed. BDS has a clay pool around -4930,8,4558 that no source of ours places;
+  it first shows under source -308,284's moss patch (try 91 at -4927,11,4557 writes moss where BDS kept clay
+  and water), then granite of -310,284 and -309,284 replaces stone that is clay in BDS, and -309,285's own
+  pool (351 cells) follows. `replay_check` lists only cells we write, so the source that should have placed
+  that pool is not named yet: next step, list BDS's clay in the saved chunks no source of ours wrote.
