@@ -31,7 +31,8 @@ Each needs its rule looked up first (`bdsre` for BDS, the Java jar for data), th
    burn` and `harm`). A stored mob's health and fire are
    saved with it. Water puts a fire out with BDS's fizz (`douse`). A player's hit
    hurts and throws a mob, and its kill leaves experience (`creatures/attacks.rs`, `hit`). Left:
-   what the doc lists as not drilled, mobs that hit back, and players being hurt at all.
+   what the doc lists as not drilled, mobs that hit back, and players being hurt at all
+   (what BDS sends is in `docs/research/player-damage.md`, `bds_command_probe hurt`; nothing built).
 2. **Redstone**: plates, buttons, levers, blocks of redstone and torches power dust, lamps, doors,
    trapdoors, gates and hopper locks (`blocks/redstone.rs`, `docs/research/redstone.md`; plugins
    read `ctx.power_at`), checked against `bds_command_probe redstone`. Circuits a world folder
