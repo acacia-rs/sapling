@@ -34,6 +34,20 @@ survival player (the bot, runtime id 1) and a watcher; breath and blocks from `s
   `minecraft:player.exhaustion`; every 4 of exhaustion takes 1 from `player.saturation` (5 at first), and
   with saturation at 0 from `player.hunger`. All four are told by `UpdateAttributes`.
 
+From `bds_command_probe hunger` (research/captures/bds-hunger.txt):
+
+- The mending runs while hunger is 18 or more: hurt 14, a player mended six times and stopped at hunger 16.
+- Exhaustion is spent 4 a tick, in the tick it is there: a mending's 6 leave 2, the next leaves 4 and the
+  tick after 0. `/damage` adds no exhaustion.
+- The hunger effect at amplifier 255 adds 1.28 of exhaustion a tick.
+
+## Starving
+
+- With hunger at 0 a player is hurt 1 (cause 16) every 80 ticks, first 80 ticks after the hunger ran out,
+  down to 10 health on the drilled server (easy), and no further.
+- Between 1 and 17 of hunger nothing mends and nothing hurts.
+- The saturation effect at amplifier 9 for a tick gave 10 hunger.
+
 ## Death
 
 - To the player, in one tick: `InventoryContent` for the inventory, armour, cursor and off hand (several
@@ -51,7 +65,7 @@ survival player (the bot, runtime id 1) and a watcher; breath and blocks from `s
 
 ## Not drilled
 
-Armour, effects, hunger from running or mining, starving, the void, whether a player out of breath in a
+Armour, effects, hunger from running, jumping, mining or hitting, eating, starving on normal and hard, the void, whether a player out of breath in a
 block is hurt as one under water, a mob's or another
 player's hit, `keepInventory`, a bed's or anchor's spawn, creative and spectator.
 
@@ -63,7 +77,10 @@ player's hit, `keepInventory`, a bed's or anchor's spawn, creative and spectator
 - A fall costs each block begun past three, as a mob's (12 blocks: 9, where BDS took 8 from the bot).
 - Fire and lava in one tick are told as one health (16), where BDS told 19 and then 16.
 - Run against sapling (research/captures/sapling-hurt.txt, sapling-smother.txt) the drills show the same
-  flashes, causes and rhythm; the health differs where BDS mends or `/effect` heals, which sapling lacks.
+  flashes, causes and rhythm; the health differs where BDS mends (those runs were before sapling mended)
+  or `/effect` heals, which sapling lacks.
 - Glass and leaves smother nothing (glass drilled; leaves taken as glass).
-- Not built: mending and hunger, the shrunken box and `PlayerLastDeathPosition`, lying down under a
+- Mending and starving are built to the numbers above (`vitals/hunger.rs`). Nothing but mending tires a
+  player and nothing feeds one, so a hunger under 18 stays there until the player dies and rises.
+- Not built: eating, effects, the shrunken box and `PlayerLastDeathPosition`, lying down under a
   block, a bed's spawn, `doImmediateRespawn`, health kept across a rejoin.

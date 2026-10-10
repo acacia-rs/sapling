@@ -1,4 +1,4 @@
-//! The hurt and smother drills of bds_command_probe: a player harmed, killed and risen again
+//! The hurt, smother and hunger drills of bds_command_probe: a player harmed, killed and risen again
 //! (docs/research/player-damage.md).
 
 pub const HURT_SHOWN: &[&str] = &[
@@ -54,5 +54,22 @@ pub fn smother() -> Vec<String> {
     lines.extend(["effect @s instant_health 1 4", "", "fill ~ ~ ~ ~ ~1 ~ stone"].map(String::from));
     wait(&mut lines, 3);
     lines.extend(["gamemode creative @s", "fill ~-1 ~ ~-1 ~1 ~2 ~1 air", ""].map(String::from));
+    lines
+}
+
+/// The actor, in survival: hurt 14 and left to mend until its hunger stops that, its hunger
+/// drained by the effect and left to starve, fed by the saturation effect, and hurt again.
+pub fn hunger() -> Vec<String> {
+    let mut lines: Vec<String> = ["kill @e[type=!player]", "", "fill ~-3 ~-4 ~-3 ~8 ~-1 ~8 stone", "fill ~-3 ~ ~-3 ~8 ~14 ~8 air", "gamemode survival @s", ""].map(String::from).into();
+    let wait = |lines: &mut Vec<String>, seconds: usize| lines.extend(std::iter::repeat_n(String::new(), seconds));
+    lines.push("damage @s 14".into());
+    wait(&mut lines, 45);
+    lines.push("effect @s hunger 12 255 true".into());
+    wait(&mut lines, 40);
+    lines.push("effect @s saturation 1 9 true".into());
+    wait(&mut lines, 12);
+    lines.extend(["damage @s 4", "", "damage @s 1 fall"].map(String::from));
+    wait(&mut lines, 10);
+    lines.extend(["gamemode creative @s", ""].map(String::from));
     lines
 }

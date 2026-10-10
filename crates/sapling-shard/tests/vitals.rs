@@ -116,5 +116,15 @@ fn water_over_its_head_drowns_a_player_out_of_breath_and_a_block_around_it_smoth
     // The last of the water guards against the first of the stone.
     assert_eq!(told(&mut h, 33), [14.0, 12.0, 10.0], "2 each half second");
     h.remote.run(|ctx| assert!(ctx.set_block([3, 65, 3], &Block::new("glass"))));
-    assert!(told(&mut h, 30).is_empty(), "a block over its head alone does not, nor glass");
+    assert!(told(&mut h, 20).is_empty(), "a block over its head alone does not, nor glass");
+}
+
+#[test]
+fn a_wounded_player_mends_one_each_four_seconds_and_pays_with_its_hunger() {
+    let mut h = ready();
+    h.remote.run(|ctx| assert!(ctx.hurt_player(ALEX, 14.0, DamageCause::Generic)));
+    let sent: Vec<RawPacket> = (0..82).flat_map(|_| h.tick_all().to(2).to_vec()).collect();
+    assert_eq!(health(&sent), [6.0, 7.0]);
+    let fed = |name: &str| all::<UpdateAttributes>(&sent).iter().flat_map(|update| &update.attributes).filter(|attribute| attribute.name == name).map(|attribute| attribute.current).collect::<Vec<_>>();
+    assert_eq!((fed("minecraft:player.hunger"), fed("minecraft:player.saturation"), fed("minecraft:player.exhaustion")), (vec![20.0], vec![4.0], vec![2.0]));
 }

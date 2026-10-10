@@ -1,11 +1,13 @@
 //! A player's health: what a fall, fire, lava, water over its head and a block around it take
 //! from it each tick, by the rules mobs are hurt by (creatures/health.rs), told as BDS tells a
-//! player's (docs/research/player-damage.md). Dying and rising: death.rs.
-// TODO: no hunger, so nothing mends; no armour or effects; a block over the head alone does not
+//! player's (docs/research/player-damage.md). Dying and rising: death.rs; mending and
+//! starving: hunger.rs.
+// TODO: no armour or effects; a block over the head alone does not
 // make a player crawl; the breathing flag is not told; a fall is measured from the highest feet to the landing, where BDS with the
 // bot took 8 for 12 blocks; health is not kept with the player's items; plugins are not asked.
 
 mod death;
+mod hunger;
 
 use acacia_proto::Packet;
 use acacia_proto::packets::{EntityEvent, EntityEventEventId};
@@ -35,11 +37,14 @@ const GASP: i16 = 20;
 const DROWN_HARM: f32 = 2.0;
 /// Ticks a player is in a block before the block hurts it: one more than a mob.
 const WALLED: u8 = 7;
+/// Health an empty hunger leaves a player (hunger.rs).
+const STARVED: f32 = 10.0;
 
 #[derive(Component, Clone, Copy)]
 pub(crate) struct Vitals {
     health: Health,
     air: i16,
+    hunger: hunger::Hunger,
     /// What the client and the viewers know of its health.
     told: f32,
     /// Where its feet were a tick ago.
@@ -52,7 +57,7 @@ pub(crate) struct Vitals {
 
 impl Default for Vitals {
     fn default() -> Self {
-        Self { health: Health::new(MAX, None, 0), air: AIR, told: MAX, was: None, died: None, leaves: None }
+        Self { health: Health::new(MAX, None, 0), air: AIR, hunger: hunger::Hunger::default(), told: MAX, was: None, died: None, leaves: None }
     }
 }
 
@@ -135,11 +140,20 @@ fn stand(world: &mut World, player: Entity, layer: Entity) {
         vitals.air = 0;
         hits.extend((under_water && vitals.health.hurt(DROWN_HARM)).then_some(Cause::Drowning));
     }
-    let health = &vitals.health;
-    let is_alive = health.left() > 0.0;
+    let (left, fed) = (vitals.health.left(), vitals.hunger);
+    match vitals.hunger.tick(left > 0.0 && left < MAX) {
+        Some(hunger::Turn::Mend) => vitals.health.mend(1.0),
+        Some(hunger::Turn::Starve) => hits.extend((left > STARVED && vitals.health.hurt(1.0)).then_some(Cause::Starving)),
+        None => {}
+    }
+    let is_alive = vitals.health.left() > 0.0;
     *world.get_mut::<Vitals>(player).expect("read above") = vitals;
     if let Some(id) = world.get::<NetId>(player).map(|id| id.0).filter(|_| vitals.air != breath) {
         tell(world, player, &sapling_data::mob_air(id, vitals.air));
+    }
+    if let Some(id) = world.get::<NetId>(player).map(|id| id.0).filter(|_| vitals.hunger.shown() != fed.shown()) {
+        let tick = world.resource::<Tick>().0;
+        tell(world, player, &vitals.hunger.told(id, tick));
     }
     for cause in hits.iter().filter(|_| is_alive) {
         flash(world, player, *cause);

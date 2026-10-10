@@ -31,6 +31,7 @@ fn words(cause: Cause) -> &'static str {
         Cause::Lava => "death.attack.lava",
         Cause::Drowning => "death.attack.drown",
         Cause::Wall => "death.attack.inWall",
+        Cause::Starving => "death.attack.starve",
         Cause::Generic | Cause::Attack => "death.attack.generic",
     }
 }
@@ -105,6 +106,7 @@ pub(super) fn rise(world: &mut World) {
         tell(world, player, &sapling_data::mob_health_update(id.0, MAX, MAX));
         let tick = world.resource::<Tick>().0;
         let shown = world.get::<inventory::Inventory>(player).map(|inventory| experience::attributes(&id, &inventory.experience, true, tick));
+        tell(world, player, &Vitals::default().hunger.told(id.0, tick));
         let mut out = world.get_mut::<Outgoing>(player).expect("players have an outbox");
         out.push(&SetHealth { health: MAX as i32 });
         shown.iter().for_each(|shown| out.push(shown));

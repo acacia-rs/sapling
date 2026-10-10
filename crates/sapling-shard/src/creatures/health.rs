@@ -36,6 +36,7 @@ pub(crate) enum Cause {
     Burning = 7,
     Lava = 8,
     Drowning = 9,
+    Starving = 16,
 }
 
 #[derive(Component, Clone, Copy, Debug)]
@@ -79,6 +80,10 @@ impl Health {
 
     pub(crate) fn is_burning(&self) -> bool {
         self.burning > 0
+    }
+
+    pub(crate) fn mend(&mut self, by: f32) {
+        self.left = (self.left + by).min(self.max);
     }
 
     pub(crate) fn end(&mut self) {
