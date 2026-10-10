@@ -8,6 +8,8 @@ use acacia_bot::Bot;
 
 #[path = "hunt_drill.rs"]
 mod hunt;
+#[path = "shove_drill.rs"]
+mod shove;
 
 /// Does what a drill's `!` line asks of the actor: `!eat` holds use on what it holds, `!jump`,
 /// `!walk` and `!sprint` hold those keys until `!stop`, `!break x y z` breaks the block that far
@@ -64,6 +66,7 @@ pub fn drill(name: &str) -> Option<(Vec<String>, &'static [&'static str])> {
         "around" => (hunt::around(), hunt::BITE_SHOWN),
         "drink" => (hunt::drink(), HURT_SHOWN),
         "more" => (hunt::more(), HURT_SHOWN),
+        "shove" => (shove::shove(), shove::SHOVE_SHOWN),
         "toil" => (toil(), HURT_SHOWN),
         "armour" => (armour(), HURT_SHOWN),
         "effects" => (effects(), HURT_SHOWN),

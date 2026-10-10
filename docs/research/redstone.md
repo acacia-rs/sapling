@@ -403,3 +403,22 @@ Built in `sapling-shard/src/blocks/pistons/plan.rs`.
   they were found: the block, what is before it, then what it holds up, down and south of it.
 - Not drilled: the order north, west and east of a sticky block, what has no body beside slime (sapling
   leaves it), a sticky piston whose slime is held back (sapling brings nothing).
+
+## Pistons and entities
+
+From `bds_command_probe shove` (research/captures/bds-shove.txt): armour stands and pistons
+pushing east, powered by a block of redstone above.
+
+- A stand in the cell the arm goes into (its middle half a block from the piston's face) moved
+  0.25 three ticks after the power and 0.5 a tick later: each tick it is put before the arm's
+  front, which goes half a block a tick.
+- A stand behind a stone the arm pushes ended with its box against the stone's new face, 0.75
+  from where it stood.
+- A sticky piston pushes it the same and leaves it there as it draws back.
+- A stand on a piston that pushes up rose half a block a tick with the arm and fell back when
+  the arm went.
+- A stand with obsidian behind it moved 0.25, to the obsidian, and stayed in the arm's cell.
+- The item of the drill fell beside the arm's way and shows nothing.
+
+Sapling (`blocks/pistons/shove.rs`): every body in the way of the arm or of a pushed block is put
+before it in the same two ticks, stopped by the blocks behind it. Players are not pushed.

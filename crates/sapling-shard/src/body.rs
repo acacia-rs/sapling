@@ -10,6 +10,7 @@ use bevy_ecs::prelude::Component;
 pub(crate) use liquid::{InLiquid, Liquid, in_liquid};
 use sapling_world::World as Level;
 
+const ARM: &str = "piston_arm_collision";
 /// The speed a mob's jump starts up at.
 const JUMP: f32 = 0.42;
 /// Room left between boxes that touch, against float error.
@@ -86,6 +87,13 @@ impl Body {
     /// up at a jump's speed (research/captures/bds-bite.txt, bds-chase.txt).
     pub fn walk(&mut self, speed: [f32; 2], leap: bool) {
         (self.walking, self.leaping) = (speed, leap);
+    }
+
+    /// Moves it by `by` as far as the blocks let it, its own motion kept: a piston's push.
+    pub fn shove(&mut self, level: &Level, by: [f32; 3]) {
+        let motion = self.motion;
+        self.slide(level, by);
+        self.motion = motion;
     }
 
     /// The liquid found to act on it where the last tick started; a mob went by the one before.
@@ -218,6 +226,10 @@ fn boxes_in(level: &Level, (min, max): Bounds) -> Vec<Bounds> {
                 let Some(state) = level.registry().get(level.block(x, y, z)) else { continue };
                 let cell = [x as f32, y as f32, z as f32];
                 boxes.extend(state.boxes.iter().map(|b| (std::array::from_fn(|i| cell[i] + b.min[i]), std::array::from_fn(|i| cell[i] + b.max[i]))));
+                // The block table gives a piston's arm no box; BDS's stand stood on one (bds-shove.txt).
+                if state.boxes.is_empty() && state.name.ends_with(ARM) {
+                    boxes.push((cell, cell.map(|c| c + 1.0)));
+                }
             }
         }
     }

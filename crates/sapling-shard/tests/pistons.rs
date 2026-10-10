@@ -165,3 +165,32 @@ fn slime_counts_what_it_holds_to_the_12_and_a_sticky_piston_draws_it_back_with_t
     assert!(came([1, 68, 6], "slime") && came([2, 68, 6], "stone") && came([1, 69, 6], "stone"), "slime comes back with what it holds");
     assert!(came([1, 68, 9], "stone") && !back.iter().any(|(pos, _)| pos[0] == 3 && pos[2] == 9), "a stone does not bring the slime behind it");
 }
+
+#[test]
+fn a_piston_pushes_what_stands_before_its_arm_and_its_blocks_as_on_bds() {
+    // research/captures/bds-shove.txt: a stand in the arm's way went 0.25, then 0.5; one behind a
+    // pushed stone ended before the stone; one against obsidian stopped at it.
+    let mut h = ready();
+    put(&mut h, &[([0, 65, 2], "piston", EAST), ([0, 65, 4], "piston", EAST), ([1, 65, 4], "stone", ""), ([0, 65, 6], "piston", EAST), ([2, 65, 6], "obsidian", ""), ([-4, 65, 2], "piston", "facing_direction=1")]);
+    h.remote.run(|ctx| {
+        for at in [[1.5, 65.0, 2.5], [2.5, 65.0, 4.5], [1.5, 65.0, 6.5], [-3.5, 66.0, 2.5]] {
+            assert!(ctx.spawn_entity("minecraft:armor_stand", at).is_some());
+        }
+    });
+    watch(&mut h, 4);
+    put(&mut h, &[([0, 66, 2], "redstone_block", ""), ([0, 66, 4], "redstone_block", ""), ([0, 66, 6], "redstone_block", ""), ([-5, 65, 2], "redstone_block", "")]);
+    let seen = std::sync::Arc::new(std::sync::Mutex::new(Vec::new()));
+    for _ in 0..10 {
+        let seen = seen.clone();
+        h.remote.run(move |ctx| seen.lock().unwrap().push(ctx.entities().iter().map(|stand| if stand.feet[0] < 0.0 { stand.feet[1] } else { stand.feet[0] }).collect::<Vec<f32>>()));
+        h.tick_all();
+    }
+    let seen = seen.lock().unwrap().clone();
+    let steps = |stand: usize| {
+        let mut places: Vec<f32> = seen.iter().map(|feet| feet[stand]).collect();
+        places.dedup();
+        places
+    };
+    assert_eq!([steps(0), steps(1), steps(2)], [vec![1.5, 1.75, 2.25], vec![2.5, 2.75, 3.25], vec![1.5, 1.75]]);
+    assert_eq!(steps(3).last(), Some(&67.0), "the one on a piston that pushes up stands on its arm: {:?}", steps(3));
+}

@@ -1,7 +1,7 @@
 //! Pistons, by what BDS shows of them (docs/research/redstone.md, "Pistons"): a powered one
 //! pushes up to 12 blocks over four ticks, breaking what has no body, and an unpowered one draws
 //! back, a sticky one bringing the block before it. Its block entity tells clients where it is.
-// TODO: nothing standing in the way is moved; a piston that could not push does not try again
+// TODO: a piston that could not push does not try again
 // until its power changes; a container open on a screen is moved unseen;
 // what breaks bursts a tick later than on BDS, and what stood on a pushed block falls a tick later.
 
@@ -14,6 +14,7 @@ use sapling_world::{block_of_hash, new_block_entity};
 use super::{level, send, updates};
 
 mod plan;
+mod shove;
 use crate::components::Tick;
 
 /// The side a piston with this `facing_direction` pushes to.
@@ -163,6 +164,14 @@ fn at_place(entity: Value, pos: BlockPos) -> Value {
     Value::Compound(fields.into_iter().map(placed).collect())
 }
 
+/// How far its blocks are in the tick a piston starts out; they are there a tick later.
+const HALFWAY: f32 = 0.5;
+
+/// The cells whose blocks a piston going out pushes, its own for its arm first, then the nearest.
+fn pushed(going: &Move) -> Vec<BlockPos> {
+    std::iter::once(going.pos).chain(going.taken.iter().rev().copied()).collect()
+}
+
 /// One tick of a piston's going: the blocks go, then it is heard and is where it was going, then
 /// the blocks are blocks again.
 fn stage(world: &mut World, going: &mut Move) -> Option<()> {
@@ -182,12 +191,16 @@ fn stage(world: &mut World, going: &mut Move) -> Option<()> {
                 let name = if piston.is_sticky { "minecraft:sticky_piston_arm_collision" } else { "minecraft:piston_arm_collision" };
                 let head = level(world, layer)?.registry().find(name, &format!("facing_direction={}", piston.facing))?;
                 send::set(world, layer, front, head);
+                shove::shove(world, layer, &pushed(going), piston.front, HALFWAY);
             }
         }
         2 => {
             let [x, y, z] = pos.map(|c| c as f32);
             send::to_viewers(world, layer, pos, &[send::noise(if going.extends { "piston.out" } else { "piston.in" }, Vec3f { x, y, z }, -1)]);
             send::keep_entity(world, layer, pos, &arm(pos, if going.extends { EXPANDED } else { RETRACTED }, piston.is_sticky, &[], &[]));
+            if going.extends {
+                shove::shove(world, layer, &pushed(going), piston.front, 1.0);
+            }
         }
         _ => {
             for (at, id, entity) in std::mem::take(&mut going.carried) {
