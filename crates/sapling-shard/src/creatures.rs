@@ -133,7 +133,7 @@ pub(crate) fn from_storage(world: &mut World, layer: Entity, actor: Actor, uniqu
 /// Gives a mob of a kind that strolls or hunts what it does so with.
 fn give_legs(world: &mut World, entity: Entity, kind: &str) {
     let traits = sapling_data::mob_traits(kind);
-    if traits.strolls.is_some() || traits.hunts.is_some() {
+    if traits.strolls.is_some() || traits.panics.is_some() || traits.hunts.is_some() {
         world.entity_mut(entity).insert((legs::Legs::default(), strolling::Stroll::default()));
     }
     hunting::arm(world, entity, kind);
@@ -218,8 +218,8 @@ pub(crate) fn tick(world: &mut World) {
         if is_alive && !hunting::steer(world, entity, layer, id, &kind) {
             let traits = sapling_data::mob_traits(&kind);
             let strolls = world.resource::<crate::components::Settings>().0.mobs_stroll;
-            if let Some(speed) = traits.strolls.or(traits.hunts.map(|hunts| hunts.speed)).filter(|_| strolls) {
-                strolling::steer(world, entity, layer, speed);
+            if strolls {
+                strolling::steer(world, entity, layer, traits.strolls.or(traits.hunts.map(|hunts| hunts.speed)), traits.panics);
             }
         }
         let Some((body, packets)) = entities::step(world, entity, layer, id, &Physics::MOB, 0.0) else { continue };

@@ -152,3 +152,26 @@ fn a_cow_left_alone_strolls_at_its_pace_and_stays_on_the_floor() {
     assert!((fastest - 0.086_344).abs() < 1e-4 && furthest > 2.0, "{fastest} {furthest}");
     assert!(seen.iter().all(|(feet, _)| feet[1] == 65.0), "it never left the floor");
 }
+
+#[test]
+fn a_cow_a_player_hit_runs_off_faster_than_it_strolls() {
+    use acacia_proto::packets::InventoryTransaction;
+    use acacia_proto::types::{ItemV4, ItemV4Extra, Transaction, TransactionLegacy, TransactionTransactionData, TransactionTransactionDataItemUseOnEntity, TransactionTransactionDataItemUseOnEntityActionType as Action, TransactionTransactionType, Vec3f};
+    // research/captures/bds-flee.txt: a cow went up to 0.2108 a tick for some three seconds.
+    let mut h = Harness::with(sapling_shard::ShardConfig { mobs_stroll: true, ..common::config() }, common::platform());
+    h.enter(1, "Alex");
+    h.remote.run(|ctx| assert!(ctx.spawn_entity("minecraft:cow", [0.5, 65.0, 2.0]).is_some()));
+    let cow = (0..3).flat_map(|_| all::<AddEntity>(h.tick_all().to(1))).collect::<Vec<_>>().remove(0).runtime_id;
+    let held_item = ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: ItemV4Extra::Default(None) };
+    let on = TransactionTransactionDataItemUseOnEntity { entity_runtime_id: cow, action_type: Action::Attack, hotbar_slot: 0, held_item, player_pos: Vec3f { x: 0.5, y: 66.62, z: 0.5 }, click_pos: Vec3f { x: 0.0, y: 0.0, z: 0.0 } };
+    let transaction = Transaction { legacy: TransactionLegacy { legacy_request_id: 0, legacy_transactions: None }, transaction_type: TransactionTransactionType::ItemUseOnEntity, actions: Vec::new(), transaction_data: TransactionTransactionData::ItemUseOnEntity(on) };
+    h.receive(1, &InventoryTransaction { transaction });
+    let seen = std::sync::Arc::new(std::sync::Mutex::new(Vec::new()));
+    for _ in 0..70 {
+        let seen = seen.clone();
+        h.remote.run(move |ctx| seen.lock().unwrap().extend(ctx.entities().first().filter(|cow| cow.on_ground).map(|cow| cow.velocity[0].hypot(cow.velocity[2]))));
+        h.tick_all();
+    }
+    let fastest = seen.lock().unwrap().iter().skip(15).copied().fold(0.0, f32::max);
+    assert!((0.15..0.2109).contains(&fastest), "it ran: {fastest}");
+}

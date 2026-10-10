@@ -1,8 +1,8 @@
-//! Mobs with nothing to do stroll: now and then one walks to a place nearby
-//! (docs/research/mob-attacks.md, "Strolling").
-// TODO: how often and how far are fitted by eye to one zombie and one cow; a mob goes straight
-// there and gives up at an edge or when it is too long on the way; none looks around, flees when
-// hit, or follows food.
+//! Mobs with nothing to do stroll: now and then one walks to a place nearby; one a player hit
+//! runs from place to place for a while (docs/research/mob-attacks.md, "Strolling", "Fleeing").
+// TODO: how often, how far and how long are fitted by eye to a zombie, a cow and a pig; a mob goes
+// straight there and gives up at an edge or when it is too long on the way; none looks around or
+// follows food.
 
 use bevy_ecs::prelude::*;
 
@@ -18,12 +18,25 @@ const EVERY: f32 = 120.0;
 const FAR: f32 = 10.0;
 const ARRIVED: f32 = 0.5;
 const PATIENCE: u64 = 200;
+/// A hit mob flees this many ticks, to places up to this far along each axis.
+const FLEES: u64 = 70;
+const FLEES_FAR: f32 = 5.0;
 /// It looks for floor this far ahead of the middle of its box.
 const AHEAD: f32 = 0.8;
 
-/// Where a mob strolls to, and the tick it gives up in.
+/// Where a mob strolls to and the tick it gives up in, and the tick it flees until.
 #[derive(Component, Default)]
-pub(super) struct Stroll(Option<([f32; 2], u64)>);
+pub(super) struct Stroll(Option<([f32; 2], u64)>, u64);
+
+/// A hit mob drops what it was going to and flees.
+pub(super) fn startle(world: &mut World, entity: Entity) {
+    let until = world.resource::<Tick>().0 + FLEES;
+    if let Some(mut stroll) = world.get_mut::<Stroll>(entity) {
+        (stroll.0, stroll.1) = (None, until);
+    }
+    // BDS's cow came up to its run from nothing after the throw.
+    legs::rest(world, entity);
+}
 
 /// Whether a mob could stand in the cell of `[x, z]` at its feet's height: floor under it, nothing in it.
 fn is_floor(world: &World, layer: Entity, body: &Body, [x, z]: [f32; 2]) -> bool {
@@ -34,16 +47,18 @@ fn is_floor(world: &World, layer: Entity, body: &Body, [x, z]: [f32; 2]) -> bool
 }
 
 /// Before the move of a mob with nothing else to do: it starts a stroll now and then and walks
-/// on one it has, at `speed`.
-pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity, speed: f32) {
+/// on one it has, at the speed it `strolls` at; one that `panics` and was hit runs at that.
+pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity, strolls: Option<f32>, panics: Option<f32>) {
     let now = world.resource::<Tick>().0;
-    let (Some(body), Some(goal)) = (world.get::<Body>(entity).copied(), world.get::<Stroll>(entity).map(|stroll| stroll.0)) else { return };
+    let (Some(body), Some((goal, until))) = (world.get::<Body>(entity).copied(), world.get::<Stroll>(entity).map(|stroll| (stroll.0, stroll.1))) else { return };
+    let flees = panics.filter(|_| now < until);
+    let (Some(speed), far) = (flees.or(strolls), if flees.is_some() { FLEES_FAR } else { FAR }) else { return };
     let goal = goal.or_else(|| {
         let mut dice = world.get_resource_or_insert_with(Dice::default);
-        if !body.on_ground || dice.fraction() * EVERY >= 1.0 {
+        if !body.on_ground || (flees.is_none() && dice.fraction() * EVERY >= 1.0) {
             return None;
         }
-        let to = [body.at[0] + (dice.fraction() * 2.0 - 1.0) * FAR, body.at[2] + (dice.fraction() * 2.0 - 1.0) * FAR];
+        let to = [body.at[0] + (dice.fraction() * 2.0 - 1.0) * far, body.at[2] + (dice.fraction() * 2.0 - 1.0) * far];
         is_floor(world, layer, &body, to).then_some((to, now + PATIENCE))
     });
     let ahead = goal.map(|(to, _)| {

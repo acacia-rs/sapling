@@ -1,6 +1,6 @@
 //! A player's hit on a mob, as BDS answered one (docs/research/mob-damage.md, "Hits").
-// TODO: no critical hit, enchantment or wear of the item; a hit mob neither flees nor
-// fights back; a hit on an armour stand, which has no health here, tires nobody; plugins are not asked; `REACH` is the nearest whole number to what BDS allowed.
+// TODO: no critical hit, enchantment or wear of the item; a hit mob does not
+// fight back; a hit on an armour stand, which has no health here, tires nobody; plugins are not asked; `REACH` is the nearest whole number to what BDS allowed.
 
 use acacia_proto::packets::LevelSoundEvent;
 use acacia_proto::types::Vec3f;
@@ -73,6 +73,7 @@ fn hit(world: &mut World, player: Entity, id: u64) -> Option<()> {
         thrown.throw(speed);
         *world.get_mut::<Health>(entity)? = health;
         crate::vitals::tire(world, player, crate::vitals::HIT_TIRES);
+        super::strolling::startle(world, entity);
     }
     entities::tell_viewers(world, entity, layer, cell, packets);
     if health.left() <= 0.0 {

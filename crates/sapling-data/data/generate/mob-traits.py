@@ -1,6 +1,6 @@
 """BDS's vanilla behaviour packs -> mob-traits.tsv: what each entity's own components (not its
 component groups) say of fire, falls and breath, the experience a grown one leaves, how fast one
-that walks strolls, and what was drilled of the kinds that hunt. See ../../README.md "Mob traits".
+that walks strolls and flees, and what was drilled of the kinds that hunt. See ../../README.md "Mob traits".
 
 usage: py -3 mob-traits.py
 """
@@ -34,14 +34,14 @@ def experience(entity):
     return f"{rolled[1]}-{rolled[2]}" if rolled else f"{fixed[1]}-{fixed[1]}" if fixed else None
 
 
-def strolls(entity):
-    """The speed a grown one that walks strolls at, or None for a kind that does not."""
+def pace(entity, behaviour):
+    """The speed a grown one that walks goes at under `behaviour`, or None for a kind without it."""
     holders = [("", entity.get("components", {}))] + list(entity.get("component_groups", {}).items())
     find = lambda key: next((held[key] for group, held in holders if key in held and "baby" not in group), None)
-    stroll, walks, movement = find("minecraft:behavior.random_stroll"), find("minecraft:navigation.walk"), find("minecraft:movement")
-    if stroll is None or walks is None or not isinstance(movement, dict) or not isinstance(movement.get("value"), (int, float)):
+    goal, walks, movement = find("minecraft:behavior." + behaviour), find("minecraft:navigation.walk"), find("minecraft:movement")
+    if goal is None or walks is None or not isinstance(movement, dict) or not isinstance(movement.get("value"), (int, float)):
         return None
-    return round(movement["value"] * stroll.get("speed_multiplier", 1), 4)
+    return round(movement["value"] * goal.get("speed_multiplier", 1), 4)
 
 
 # Drilled on BDS, not read from the packs (docs/research/mob-attacks.md, "Other kinds").
@@ -73,8 +73,9 @@ for document in packs.entities().values():
     held = [name for name, holds in traits if holds]
     if entity["description"]["identifier"] != "minecraft:player" and experience(entity):
         held.append("xp=" + experience(entity))
-    if entity["description"]["identifier"] != "minecraft:player" and strolls(entity) is not None:
-        held.append(f"strolls={strolls(entity):g}")
+    for trait, behaviour in [("strolls", "random_stroll"), ("panics", "panic")]:
+        if entity["description"]["identifier"] != "minecraft:player" and pace(entity, behaviour) is not None:
+            held.append(f"{trait}={pace(entity, behaviour):g}")
     held.extend(filter(None, [HUNTS.get(entity["description"]["identifier"])]))
     if held:
         rows.append((entity["description"]["identifier"], " ".join(held)))
