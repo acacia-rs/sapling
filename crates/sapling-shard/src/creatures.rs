@@ -20,7 +20,7 @@ use sapling_world::Actor;
 use crate::blocks::Dice;
 use crate::body::{Body, Physics};
 pub(crate) use attacks::attacked;
-pub(crate) use harm::touches;
+pub(crate) use harm::{holds, is_full_block, touches};
 pub(crate) use health::{Cause, Health};
 use crate::components::{InLayer, Layer, NetId, Tick};
 use crate::handlers::Ctx;

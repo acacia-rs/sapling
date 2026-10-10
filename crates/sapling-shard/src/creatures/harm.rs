@@ -33,7 +33,7 @@ pub(crate) fn touches(level: &Level, body: &Body, names: &[&str]) -> bool {
 }
 
 /// Whether the cell holds one of `names`, as a block or as the liquid in one.
-fn holds(level: &Level, [x, y, z]: [i32; 3], names: &[&str]) -> bool {
+pub(crate) fn holds(level: &Level, [x, y, z]: [i32; 3], names: &[&str]) -> bool {
     let registry = level.registry();
     is_within(level, [x, y, z]) && [level.block(x, y, z), level.liquid(x, y, z)].into_iter().any(|id| registry.get(id).is_some_and(|state| names.contains(&state.name)))
 }
@@ -42,7 +42,7 @@ fn is_within(level: &Level, [x, y, z]: [i32; 3]) -> bool {
     level.in_height(y) && level.is_loaded(sapling_world::ChunkPos::of_block(x, z))
 }
 
-fn is_full_block(level: &Level, [x, y, z]: [i32; 3]) -> bool {
+pub(crate) fn is_full_block(level: &Level, [x, y, z]: [i32; 3]) -> bool {
     is_within(level, [x, y, z]) && level.registry().get(level.block(x, y, z)).is_some_and(|state| state.is_full_cube())
 }
 

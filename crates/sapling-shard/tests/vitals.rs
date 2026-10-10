@@ -99,3 +99,22 @@ fn lava_kills_a_player_who_leaves_what_it_held_and_rises_whole_at_the_spawn() {
     });
     assert_eq!(all::<DeathInfo>(h.tick_all().to(1)).pop().map(|info| info.cause), Some("death.attack.generic".to_owned()));
 }
+
+#[test]
+fn water_over_its_head_drowns_a_player_out_of_breath_and_a_block_around_it_smothers() {
+    let mut h = ready();
+    h.remote.run(|ctx| {
+        assert!(ctx.set_block([3, 65, 3], &Block::new("water")) && ctx.set_block([3, 66, 3], &Block::new("water")));
+        ctx.teleport(ALEX, [3.5, 65.0, 3.5]);
+    });
+    let mut told = |h: &mut Harness, ticks: usize| (0..ticks).flat_map(|_| health(h.tick_all().to(2))).collect::<Vec<_>>();
+    assert!(told(&mut h, 319).is_empty(), "300 ticks of breath and 20 more");
+    assert_eq!(told(&mut h, 22), [18.0, 16.0], "2 each second");
+    h.remote.run(|ctx| {
+        assert!(ctx.set_block([3, 65, 3], &Block::new("stone")) && ctx.set_block([3, 66, 3], &Block::new("stone")));
+    });
+    // The last of the water guards against the first of the stone.
+    assert_eq!(told(&mut h, 33), [14.0, 12.0, 10.0], "2 each half second");
+    h.remote.run(|ctx| assert!(ctx.set_block([3, 65, 3], &Block::new("air"))));
+    assert!(told(&mut h, 30).is_empty(), "a block over its head alone does not");
+}

@@ -1,8 +1,8 @@
-//! A player's health: what a fall, fire and lava take from it each tick, by the rules mobs are
-//! hurt by (creatures/health.rs), told as BDS tells a player's (docs/research/player-damage.md).
-//! Dying and rising: death.rs.
-// TODO: no hunger, so nothing mends; no armour or effects; a player neither drowns nor smothers
-// (not drilled); a fall is measured from the highest feet to the landing, where BDS with the
+//! A player's health: what a fall, fire, lava, water over its head and a block around it take
+//! from it each tick, by the rules mobs are hurt by (creatures/health.rs), told as BDS tells a
+//! player's (docs/research/player-damage.md). Dying and rising: death.rs.
+// TODO: no hunger, so nothing mends; no armour or effects; a block over the head alone does not
+// make a player crawl; the breathing flag is not told; a fall is measured from the highest feet to the landing, where BDS with the
 // bot took 8 for 12 blocks; health is not kept with the player's items; plugins are not asked.
 
 mod death;
@@ -16,7 +16,7 @@ use sapling_data::EYE_HEIGHT;
 
 use crate::body::Body;
 use crate::components::{InLayer, Layer, Mode, NetId, Outgoing, Position, Tick, in_world};
-use crate::creatures::{Cause, Health, touches};
+use crate::creatures::{Cause, Health, holds, is_full_block, touches};
 use crate::handlers::Ctx;
 use crate::movement::{self, Motion};
 use crate::visibility::ToViewers;
@@ -27,10 +27,17 @@ const SIZE: [f32; 2] = [0.6, 1.8];
 const FIERY: &[&str] = &["minecraft:lava", "minecraft:flowing_lava", "minecraft:fire", "minecraft:soul_fire"];
 const LAVA: &[&str] = &["minecraft:lava", "minecraft:flowing_lava"];
 const WATER: &[&str] = &["minecraft:water", "minecraft:flowing_water"];
+/// Ticks of breath, and what a tick in the open gives back.
+const AIR: i16 = 300;
+const BREATH: i16 = 4;
+/// Out of breath a player holds on this many ticks, is hurt, and holds on again.
+const GASP: i16 = 20;
+const DROWN_HARM: f32 = 2.0;
 
 #[derive(Component, Clone, Copy)]
 pub(crate) struct Vitals {
     health: Health,
+    air: i16,
     /// What the client and the viewers know of its health.
     told: f32,
     /// Where its feet were a tick ago.
@@ -43,7 +50,7 @@ pub(crate) struct Vitals {
 
 impl Default for Vitals {
     fn default() -> Self {
-        Self { health: Health::new(MAX, None, 0), told: MAX, was: None, died: None, leaves: None }
+        Self { health: Health::new(MAX, None, 0), air: AIR, told: MAX, was: None, died: None, leaves: None }
     }
 }
 
@@ -107,18 +114,31 @@ fn stand(world: &mut World, player: Entity, layer: Entity) {
     let Some(level) = world.get::<Layer>(layer).map(|layer| &layer.world) else { return };
     let body = Body::new(position.feet, [0.0; 3], SIZE);
     let (fire, lava, water) = (touches(level, &body, FIERY), touches(level, &body, LAVA), touches(level, &body, WATER));
+    let [low, eyes] = [0.0, EYE_HEIGHT].map(|up| [position.feet[0], position.feet[1] + up, position.feet[2]].map(|c| c.floor() as i32));
+    // BDS lays a player with only its head in a block down, unhurt.
+    let (under_water, in_wall) = (holds(level, eyes, WATER), is_full_block(level, eyes) && is_full_block(level, low));
     // A teleport is no fall: until the client follows it, the height starts anew.
     let carried = world.get::<Motion>(player).is_some_and(Motion::awaits_teleport);
     let from = vitals.was.replace(position.feet).unwrap_or(position.feet);
-    let health = &mut vitals.health;
+    let (health, breath) = (&mut vitals.health, vitals.air);
     let mut hits = Vec::new();
     health.begin();
     hits.extend(health.fall(from, position.feet[1], position.on_ground, water || lava || carried).map(|_| Cause::Fall));
     let lit = health.is_burning();
     hits.extend(health.burn(fire, water).map(|cause| if lit { Cause::Burning } else { cause }));
     hits.extend((lava && health.scald()).then_some(Cause::Lava));
+    hits.extend(health.smother(in_wall).then_some(Cause::Wall));
+    vitals.air = if under_water || in_wall { breath - 1 } else { (breath + BREATH).min(AIR) };
+    if vitals.air <= -GASP {
+        vitals.air = 0;
+        hits.extend((under_water && vitals.health.hurt(DROWN_HARM)).then_some(Cause::Drowning));
+    }
+    let health = &vitals.health;
     let is_alive = health.left() > 0.0;
     *world.get_mut::<Vitals>(player).expect("read above") = vitals;
+    if let Some(id) = world.get::<NetId>(player).map(|id| id.0).filter(|_| vitals.air != breath) {
+        tell(world, player, &sapling_data::mob_air(id, vitals.air));
+    }
     for cause in hits.iter().filter(|_| is_alive) {
         flash(world, player, *cause);
     }
