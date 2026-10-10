@@ -183,13 +183,12 @@ fn discharge_vein(view: &mut View, at: [i32; 3]) {
     let state = view.block(at[0], at[1], at[2]);
     let Some((_, bits)) = state.multiface().filter(|_| is_vein(state)) else { return };
     let mut kept = bits;
+    // One write per face, as BDS's `removeFace` (148b6adf0).
     for face in SPREAD_ORDER {
         let [x, y, z] = step(at, face);
         if has_face(state, face) && view.block(x, y, z) == Block::Sculk {
             kept &= !Block::FACE_BITS[face];
+            set(view, at, if kept == 0 { Block::Air } else { Block::with_faces(Block::SculkVein1, kept) });
         }
-    }
-    if kept != bits {
-        set(view, at, if kept == 0 { Block::Air } else { Block::with_faces(Block::SculkVein1, kept) });
     }
 }

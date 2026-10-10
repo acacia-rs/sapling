@@ -31,26 +31,9 @@ const SMALL_DRIPLEAF: [Block; 4] = [Block::SmallDripleafSouth, Block::SmallDripl
 /// Fitted to the oracle: a first draw under 0.2 picks the small dripleaf.
 const SMALL_DRIPLEAF_CHANCE: f32 = 0.2;
 
-/// A full face to stand on or hang from: `BlockType::canProvideSupport` (141a24e20: the solid-blocking
-/// property, `BlockType` +0x130 bit 0x40000), as far as the blocks the stages place go.
-pub fn sturdy(block: Block) -> bool {
-    // Bamboo stalks hold no vines (oracle, bamboo jungle); a snap stops at a spike without taking it (live BDS).
-    let thin = matches!(block, Block::Bamboo | Block::BambooSmallLeaves | Block::BambooLargeLeaves | Block::Cactus) || block.dry().is_speleothem();
-    block.blocks_motion() && !thin && !fixture(block)
-}
-
-/// Structure fixtures, chests and amethyst buds: with collision or without, never a full face.
-fn fixture(block: Block) -> bool {
-    const FIXTURES: [&str; 20] = [
-        "rail", "torch", "web", "iron_chain", "flower_pot", "lever", "stone_button", "stone_pressure_plate", "tripwire_hook", "trip_wire",
-        "redstone_wire", "ladder", "wooden_door", "iron_door", "iron_bars", "oak_fence", "dark_oak_fence", "unpowered_repeater", "end_portal", "chest",
-    ];
-    // Terrain blocks come first in the table.
-    if block < Block::AmethystBlock && !matches!(block, Block::Template(_)) {
-        return false;
-    }
-    let name = block.name();
-    FIXTURES.contains(&name) || name.ends_with("amethyst_bud") || name == "amethyst_cluster"
+/// What a vine hangs on (149d9a0f0): a solid-blocking block that blocks motion.
+pub fn holds_vine(block: Block) -> bool {
+    block.is_solid_blocking() && block.blocks_motion()
 }
 
 /// The waterlogged twin of a dripleaf (the same states, saved with water).
@@ -112,7 +95,7 @@ fn vine(view: &mut View, [x, y, z]: [i32; 3]) -> bool {
     }
     // 149d9a0f0's side order: north, east, south, west.
     for (dx, dz) in [(0, -1), (1, 0), (0, 1), (-1, 0)] {
-        if sturdy(view.block(x + dx, y, z + dz)) {
+        if holds_vine(view.block(x + dx, y, z + dz)) {
             return view.set_block(x, y, z, vine_facing((-dx, -dz)));
         }
     }

@@ -4,10 +4,10 @@
 
 use super::cave_spec::{GrowingPlant, SnapToSurface, Surface, VegetationPatch};
 use super::data::FEATURES;
-use super::lush::{sturdy, wet};
+use super::lush::wet;
 use super::place::Ctx;
 use super::view::View;
-use crate::block::Block;
+use crate::block::{Block, Support};
 use crate::random::Mt19937;
 
 /// `nextInt` of the summed weights (truncated after each float add), then the first entry the
@@ -78,7 +78,7 @@ impl SnapToSurface {
             } else if solid {
                 open(b)
             } else {
-                sturdy(b)
+                b.supports(facing ^ 1, Support::Any)
             }
         };
         let biome = (ctx.biome)(at);
@@ -152,7 +152,8 @@ impl VegetationPatch {
                     }
                 }
                 let ground = [p[0], p[1] + scan, p[2]];
-                if !air(view, p) || !sturdy(view.block(ground[0], ground[1], ground[2])) {
+                let toward = usize::from(scan < 0);
+                if !air(view, p) || !view.block(ground[0], ground[1], ground[2]).supports(toward, Support::Any) {
                     continue;
                 }
                 let deep = i32::from(self.extra_deep_chance > 0.0 && random.next_float() < self.extra_deep_chance);
@@ -182,9 +183,11 @@ impl VegetationPatch {
     }
 }
 
-/// A pool cell any of whose four sides or bottom is not sturdy.
+/// A pool cell any of whose four sides or bottom does not hold its face toward the cell.
 fn exposed(view: &View, [x, y, z]: [i32; 3]) -> bool {
-    [(0, 0, -1), (1, 0, 0), (0, 0, 1), (-1, 0, 0), (0, -1, 0)].iter().any(|&(dx, dy, dz)| !sturdy(view.block(x + dx, y + dy, z + dz)))
+    [(0, 0, -1, 3), (1, 0, 0, 4), (0, 0, 1, 2), (-1, 0, 0, 5), (0, -1, 0, 1)]
+        .iter()
+        .any(|&(dx, dy, dz, face)| !view.block(x + dx, y + dy, z + dz).supports(face, Support::Any))
 }
 
 impl GrowingPlant {

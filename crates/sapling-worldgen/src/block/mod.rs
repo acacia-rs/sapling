@@ -43,11 +43,14 @@ mod structure_table;
 #[macro_use]
 mod multiface_table;
 mod plant_table;
+mod support;
+mod support_table;
 
 use std::collections::HashMap;
 use std::sync::LazyLock;
 
 pub use plant_table::Block;
+pub use support::Kind as Support;
 
 use crate::structure::template::{COLLIDES, palette};
 

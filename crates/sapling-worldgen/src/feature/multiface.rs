@@ -52,7 +52,8 @@ impl Multiface {
         let existing = ctx.view.block(at[0], at[1], at[2]);
         let Some(&face) = faces.iter().find(|&&face| {
             let [x, y, z] = step(at, face);
-            self.can_place_on.is_empty() || self.can_place_on.contains(&ctx.view.block(x, y, z))
+            let on = ctx.view.block(x, y, z);
+            self.can_place_on.is_empty() || self.can_place_on.contains(&on) || matches!(on, Block::Template(_)) && self.on_names.contains(&on.name())
         }) else {
             return false;
         };

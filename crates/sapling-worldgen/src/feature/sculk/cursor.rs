@@ -2,7 +2,6 @@
 //! never merged and one that strays more than sqrt(224) from the patch's origin loses its charge.
 
 use super::behaviour::{Behaviour, is_vein};
-use crate::feature::spreader::face_sturdy;
 use crate::feature::view::View;
 use crate::random::Mt19937;
 use crate::block::Block;
@@ -106,17 +105,19 @@ fn unobstructed(view: &View, pos: [i32; 3], [dx, dy, dz]: [i32; 3]) -> bool {
     if dx.abs() + dy.abs() + dz.abs() == 1 {
         return true;
     }
-    let along = |axis: usize, sign: i32| {
+    // The cell one step along an axis holds its face toward the cursor (FacingIDs: y 0/1, z 2/3, x 4/5).
+    let walled = |axis: usize, sign: i32| {
         let mut p = pos;
         p[axis] += sign;
-        p
+        let toward = [4, 0, 2][axis] + usize::from(sign < 0);
+        block_at(view, p).supports_multiface_plain(toward)
     };
     let (a, b) = if dx == 0 {
-        (along(1, dy), along(2, dz))
+        (walled(1, dy), walled(2, dz))
     } else if dy == 0 {
-        (along(0, dx), along(2, dz))
+        (walled(0, dx), walled(2, dz))
     } else {
-        (along(0, dx), along(1, dy))
+        (walled(0, dx), walled(1, dy))
     };
-    !(face_sturdy(block_at(view, a)) && face_sturdy(block_at(view, b)))
+    !(a && b)
 }
