@@ -194,6 +194,9 @@ impl Request<'_> {
                 if site.mode == GameMode::Survival && mining.hardness > 0.0 {
                     crate::inventory::wear_tool_in_hand(self.world, self.entity);
                 }
+                if by.harvests {
+                    crate::vitals::tire(self.world, self.entity, crate::vitals::BREAK_TIRES);
+                }
             }
             false => self.resync(&[pos, above]),
         }

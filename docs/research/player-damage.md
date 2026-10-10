@@ -48,6 +48,13 @@ From `bds_command_probe tire` (research/captures/bds-tire.txt), the bot holding 
   jumps only the landing's step is added.
 - Walking adds none.
 
+From `bds_command_probe toil` (research/captures/bds-toil.txt) and `bite`:
+
+- A block of dirt broken by hand adds 0.005. A block of stone broken by hand, which leaves
+  nothing, adds none.
+- A hit that lands on a cow adds 0.1, and so does one on an armour stand.
+- Being hurt adds none: not by `/damage`, not by a zombie.
+
 ## Starving
 
 - With hunger at 0 a player is hurt 1 (cause 16) every 80 ticks, first 80 ticks after the hunger ran out,
@@ -85,9 +92,9 @@ From `bds_command_probe eat` (research/captures/bds-eat.txt), the bot holding us
 
 ## Not drilled
 
-Armour, effects, hunger from mining, hitting, swimming or being hurt, each food's values and side effects, starving on normal and hard, the void, whether a player out of breath in a
-block is hurt as one under water, a mob's or another
-player's hit, `keepInventory`, a bed's or anchor's spawn, creative and spectator.
+Armour, effects, hunger from swimming, from a hit inside a mob's guard or from a block that breaks at once, each food's values and side effects, starving on normal and hard, the void, whether a player out of breath in a
+block is hurt as one under water, another
+player's hit (a zombie's: mob-attacks.md), `keepInventory`, a bed's or anchor's spawn, creative and spectator.
 
 ## Sapling
 
@@ -101,7 +108,8 @@ player's hit, `keepInventory`, a bed's or anchor's spawn, creative and spectator
   or `/effect` heals, which sapling lacks.
 - Glass and leaves smother nothing (glass drilled; leaves taken as glass).
 - Mending and starving are built to the numbers above (`vitals/hunger.rs`), and so is what a jump and
-  a sprint cost (`vitals.rs`). Mining, hitting, swimming and being hurt cost nothing yet.
+  a sprint cost (`vitals.rs`), a block broken with what harvests it and a hit that takes health
+  from a mob (an armour stand has none here). Swimming costs nothing yet.
 - Eating is built (`vitals/eating.rs`, `sapling-data/src/food.rs`): the bot ate an apple and a steak on
   sapling in the same 32 ticks and packets (research/captures/sapling-eat.txt). Only the apple's values are
   drilled; the others are the Java game's. A stew leaves no bowl, and no food does more than feed.

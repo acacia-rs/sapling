@@ -43,6 +43,10 @@ const WALLED: u8 = 7;
 const JUMP_TIRES: f32 = 0.05;
 const LEAP_TIRES: f32 = 0.2;
 const SPRINT_TIRES: f32 = 0.1;
+/// Exhaustion of a block broken with what harvests it, and of a hit that lands
+/// (research/captures/bds-toil.txt).
+pub(crate) const BREAK_TIRES: f32 = 0.005;
+pub(crate) const HIT_TIRES: f32 = 0.1;
 /// No tick's run is longer: more is a teleport or a throw.
 const LONGEST_STEP: f32 = 1.0;
 /// Health an empty hunger leaves a player (hunger.rs).
@@ -122,6 +126,15 @@ fn hurt(world: &mut World, player: Entity, amount: f32, cause: Cause) -> bool {
     }
     settle(world, player, cause);
     true
+}
+
+/// Work tires a survival player by `by`, told at once.
+pub(crate) fn tire(world: &mut World, player: Entity, by: f32) {
+    let (Some(id), true) = (world.get::<NetId>(player).map(|id| id.0), is_mortal(world, player)) else { return };
+    let Some(mut vitals) = world.get_mut::<Vitals>(player) else { return };
+    vitals.hunger.tire(by);
+    let (hunger, tick) = (vitals.hunger, world.resource::<Tick>().0);
+    tell(world, player, &hunger.told(id, tick));
 }
 
 /// A mob of `kind` hits a player for `amount` and throws it at `speed`; one it kills is not

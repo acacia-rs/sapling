@@ -6,7 +6,7 @@ mod common;
 use std::sync::{Arc, Mutex};
 
 use acacia_proto::RawPacket;
-use acacia_proto::packets::{AddItemEntity, InventoryContent, LevelEvent, LevelEventEvent};
+use acacia_proto::packets::{AddItemEntity, InventoryContent, LevelEvent, LevelEventEvent, UpdateAttributes};
 use acacia_proto::nbt::Value;
 use acacia_proto::types::{Action, ItemV4Extra};
 use common::{Harness, all, block_actions, click, hash};
@@ -64,6 +64,8 @@ fn a_break_takes_the_time_the_block_and_the_tool_need() {
     h.receive(1, &block_actions(&[(Action::ContinueBreak, NEAR), (Action::PredictBreak, NEAR)]));
     let sent = h.tick_all();
     assert_eq!(blocks(sent.to(2)), [(NEAR, hash(AIR))]);
+    let tired: Vec<f32> = all::<UpdateAttributes>(sent.to(2)).iter().flat_map(|update| &update.attributes).filter(|attribute| attribute.name == "minecraft:player.exhaustion").map(|attribute| attribute.current).collect();
+    assert_eq!(tired, [0.005], "a block harvested tires its breaker");
     let left = all::<AddItemEntity>(sent.to(2));
     let cobblestone = sapling_data::item(&Stack { name: "minecraft:cobblestone", count: 1, damage: 0, block: None, tag: None }, None).unwrap();
     assert_eq!((left.len(), left[0].item.network_id, left[0].item.count), (1, cobblestone.network_id, 1), "a pickaxe makes stone leave cobblestone");
