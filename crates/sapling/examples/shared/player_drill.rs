@@ -1,4 +1,4 @@
-//! The hurt, smother, hunger, eat, tire, bite, slain, chase, toil and armour drills of bds_command_probe: a player harmed,
+//! The hurt, smother, hunger, eat, tire, bite, slain, chase, toil, armour and effects drills of bds_command_probe: a player harmed,
 //! killed and risen again (docs/research/player-damage.md, mob-attacks.md).
 
 use std::time::Duration;
@@ -59,6 +59,7 @@ pub fn drill(name: &str) -> Option<(Vec<String>, &'static [&'static str])> {
         "chase" => (chase(), BITE_SHOWN),
         "toil" => (toil(), HURT_SHOWN),
         "armour" => (armour(), HURT_SHOWN),
+        "effects" => (effects(), HURT_SHOWN),
         _ => return None,
     })
 }
@@ -249,5 +250,27 @@ pub fn armour() -> Vec<String> {
         hit(&mut lines, &format!("2{cause}"));
     }
     lines.extend(["gamemode creative @s", "clear @s", ""].map(String::from));
+    lines
+}
+
+/// The actor, in survival, under `/effect`: healed and harmed at once by two strengths, mended by
+/// regeneration at two, poisoned to its last health, withered, made quick, and cleared.
+pub fn effects() -> Vec<String> {
+    let mut lines: Vec<String> = ["kill @e[type=!player]", "", "fill ~-3 ~-1 ~-3 ~8 ~-1 ~8 stone", "fill ~-3 ~ ~-3 ~8 ~6 ~8 air", "gamemode survival @s", ""].map(String::from).into();
+    let wait = |lines: &mut Vec<String>, seconds: usize| lines.extend(std::iter::repeat_n(String::new(), seconds));
+    lines.extend(["damage @s 18", "", "effect @s instant_health 1 0", "", "effect @s instant_health 1 1", "", "effect @s instant_health 1 4", ""].map(String::from));
+    lines.extend(["effect @s instant_damage 1 0", "", "effect @s instant_health 1 4", "", "effect @s instant_damage 1 1", "", "damage @s 4", ""].map(String::from));
+    lines.push("effect @s regeneration 6 0".into());
+    wait(&mut lines, 8);
+    lines.push("effect @s regeneration 3 2 true".into());
+    wait(&mut lines, 5);
+    lines.extend(["effect @s instant_health 1 4", "", "effect @s poison 30 0"].map(String::from));
+    wait(&mut lines, 28);
+    lines.extend(["effect @s clear", "", "effect @s instant_health 1 4", "", "effect @s poison 3 1"].map(String::from));
+    wait(&mut lines, 5);
+    lines.extend(["effect @s instant_health 1 4", "", "effect @s wither 5 0"].map(String::from));
+    wait(&mut lines, 7);
+    lines.extend(["effect @s instant_health 1 4", "", "effect @s speed 3 1", "", "effect @s speed 3 0", "", "effect @s speed 0", "", "effect @s nosuch 3 1", "effect @s regeneration", "effect @s regeneration 5 300", "effect @s clear", "effect @s clear", ""].map(String::from));
+    lines.extend(["gamemode creative @s", "effect @s poison 3 1", "", "", "", "", ""].map(String::from));
     lines
 }

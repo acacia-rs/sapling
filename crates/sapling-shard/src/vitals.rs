@@ -1,13 +1,14 @@
 //! A player's health: what a fall, fire, lava, water over its head and a block around it take
 //! from it each tick, by the rules mobs are hurt by (creatures/health.rs), told as BDS tells a
 //! player's (docs/research/player-damage.md). Dying and rising: death.rs; mending and
-//! starving: hunger.rs.
+//! starving: hunger.rs; effects: effects.rs.
 // TODO: armour does not wear and burning on is not stopped by it (not drilled); no effects; a block over the head alone does not
 // make a player crawl; the breathing flag is not told; a fall is measured from the highest feet to the landing, where BDS with the
 // bot took 8 for 12 blocks; health is not kept with the player's items; plugins are not asked.
 
 mod death;
 pub(crate) mod eating;
+mod effects;
 mod hunger;
 
 use acacia_proto::Packet;
@@ -143,13 +144,21 @@ fn hurt(world: &mut World, player: Entity, amount: f32, cause: Cause) -> bool {
     true
 }
 
-/// Work tires a survival player by `by`, told at once.
-pub(crate) fn tire(world: &mut World, player: Entity, by: f32) {
+/// Changes a survival player's hunger, told at once where what is shown of it changed.
+fn feed(world: &mut World, player: Entity, change: impl FnOnce(&mut hunger::Hunger)) {
     let (Some(id), true) = (world.get::<NetId>(player).map(|id| id.0), is_mortal(world, player)) else { return };
     let Some(mut vitals) = world.get_mut::<Vitals>(player) else { return };
-    vitals.hunger.tire(by);
+    let before = vitals.hunger.shown();
+    change(&mut vitals.hunger);
     let (hunger, tick) = (vitals.hunger, world.resource::<Tick>().0);
-    tell(world, player, &hunger.told(id, tick));
+    if hunger.shown() != before {
+        tell(world, player, &hunger.told(id, tick));
+    }
+}
+
+/// Work tires a survival player by `by`.
+pub(crate) fn tire(world: &mut World, player: Entity, by: f32) {
+    feed(world, player, |hunger| hunger.tire(by));
 }
 
 /// A mob of `kind` hits a player for `amount` and throws it at `speed`; one it kills is not
@@ -222,6 +231,7 @@ fn stand(world: &mut World, player: Entity, layer: Entity) {
 pub(crate) fn tick(world: &mut World) {
     death::rise(world);
     eating::tick(world);
+    effects::tick(world);
     let players: Vec<(Entity, Entity)> = in_world(world).into_iter().filter_map(|player| Some((player, world.get::<InLayer>(player)?.0))).collect();
     for (player, layer) in players {
         if is_mortal(world, player) {

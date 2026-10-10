@@ -105,7 +105,7 @@ From `bds_command_probe eat` (research/captures/bds-eat.txt), the bot holding us
 
 ## Not drilled
 
-Armour's wear, enchantments and what it does against burning on, effects, hunger from swimming, from a hit inside a mob's guard or from a block that breaks at once, each food's values and side effects, starving on normal and hard, the void, whether a player out of breath in a
+Armour's wear, enchantments and what it does against burning on, hunger from swimming, from a hit inside a mob's guard or from a block that breaks at once, each food's values and side effects, starving on normal and hard, the void, whether a player out of breath in a
 block is hurt as one under water, another
 player's hit (a zombie's: mob-attacks.md), `keepInventory`, a bed's or anchor's spawn, creative and spectator.
 

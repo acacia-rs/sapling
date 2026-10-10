@@ -128,6 +128,18 @@ impl crate::HealthBackend for Fake {
     }
 }
 
+impl crate::EffectBackend for Fake {
+    fn give_effect(&mut self, _: PlayerId, _: crate::Effect, _: u32, _: u8, _: bool) -> bool {
+        false
+    }
+    fn remove_effect(&mut self, _: PlayerId, _: crate::Effect) -> bool {
+        false
+    }
+    fn clear_effects(&mut self, _: PlayerId) -> bool {
+        false
+    }
+}
+
 impl Backend for Fake {
     fn tick(&self) -> u64 {
         40

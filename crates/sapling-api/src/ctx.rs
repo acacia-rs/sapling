@@ -1,6 +1,7 @@
 use std::any::{Any, TypeId};
 
 use crate::form::{Form, FormResponse};
+use crate::effect::EffectBackend;
 use crate::entity::EntityBackend;
 use crate::health::HealthBackend;
 use crate::world::WorldBackend;
@@ -10,7 +11,7 @@ use crate::{Block, BlockPos, BossBar, Difficulty, GameMode, Item, Permission, Pl
 pub type FormCallback = Box<dyn FnOnce(&mut ShardCtx<'_>, &Player, Option<&str>) + Send>;
 
 /// What a shard offers its handlers. Implemented by sapling-shard; plugins use [`ShardCtx`].
-pub trait Backend: WorldBackend + EntityBackend + HealthBackend {
+pub trait Backend: WorldBackend + EntityBackend + HealthBackend + EffectBackend {
     fn tick(&self) -> u64;
     fn player_count(&self) -> usize;
     fn players(&self) -> Vec<Player>;

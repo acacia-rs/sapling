@@ -36,6 +36,9 @@ pub(crate) enum Cause {
     Burning = 7,
     Lava = 8,
     Drowning = 9,
+    /// Instant damage and poison.
+    Magic = 14,
+    Wither = 15,
     Starving = 16,
 }
 

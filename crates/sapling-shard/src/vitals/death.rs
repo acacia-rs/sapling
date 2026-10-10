@@ -36,6 +36,8 @@ fn words(cause: Cause) -> &'static str {
         Cause::Drowning => "death.attack.drown",
         Cause::Wall => "death.attack.inWall",
         Cause::Starving => "death.attack.starve",
+        Cause::Magic => "death.attack.magic",
+        Cause::Wither => "death.attack.wither",
         Cause::Generic | Cause::Attack => "death.attack.generic",
     }
 }
@@ -106,6 +108,7 @@ pub(super) fn rise(world: &mut World) {
         let (Some(id), Some(layer)) = (world.get::<NetId>(player).copied(), world.get::<InLayer>(player).map(|layer| layer.0)) else { continue };
         let Some(spawn) = world.get::<Layer>(layer).map(|layer| layer.spawn) else { continue };
         leave_now(world, player, layer);
+        world.entity_mut(player).remove::<super::effects::Effects>();
         *world.get_mut::<Vitals>(player).expect("read above") = Vitals::default();
         world.get_mut::<Outgoing>(player).expect("players have an outbox").push(&Respawn { position: eyes(spawn), state: READY, runtime_entity_id: 0 });
         movement::teleport_onto_ground(world, player, spawn);

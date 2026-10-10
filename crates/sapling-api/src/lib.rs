@@ -5,6 +5,7 @@
 mod block;
 pub mod command;
 mod ctx;
+mod effect;
 mod entity;
 mod event;
 pub mod form;
@@ -21,6 +22,7 @@ mod world;
 pub use block::{Block, BlockPos, BreakEvent, Face, InteractEvent, PlaceEvent};
 pub use command::{Command, Commands, Output, Sender};
 pub use ctx::{Backend, FormCallback, ShardCtx, State};
+pub use effect::{Effect, EffectBackend};
 pub use entity::{EntityBackend, EntityId, EntityInfo};
 pub use world::{RuleValue, WorldBackend};
 pub use event::{Cancellable, ChatEvent, CommandEvent, Priority};

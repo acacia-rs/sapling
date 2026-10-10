@@ -184,3 +184,35 @@ fn armour_stops_part_of_a_hit_and_none_of_a_fall() {
     h.remote.run(|ctx| assert!(ctx.hurt_player(ALEX, 2.0, DamageCause::Fall)));
     assert_eq!(health(h.tick_all().to(2)), [13.7]);
 }
+
+#[test]
+fn effects_heal_poison_and_wear_off_as_on_bds() {
+    use acacia_proto::packets::{MobEffect, MobEffectEventId};
+    use sapling_api::Effect;
+    let mut h = ready();
+    h.remote.run(|ctx| {
+        assert!(ctx.hurt_player(ALEX, 18.0, DamageCause::Generic));
+        assert!(ctx.give_effect(ALEX, Effect::InstantHealth, 20, 1, true));
+    });
+    let sent: Vec<RawPacket> = (0..3).flat_map(|_| h.tick_all().to(2).to_vec()).collect();
+    let shown = |sent: &[RawPacket]| all::<MobEffect>(sent).into_iter().map(|effect| (effect.event_id, effect.effect_id, effect.duration)).collect::<Vec<_>>();
+    assert_eq!((health(&sent), shown(&sent)), (vec![2.0, 10.0], vec![(MobEffectEventId::Add, 6, 1), (MobEffectEventId::Remove, 6, 0)]), "8 at the second level");
+
+    // Poison at the second level turns every 12 ticks from its first, 60 ticks: five times.
+    (0..12).for_each(|_| drop(h.tick_all()));
+    h.remote.run(|ctx| assert!(ctx.give_effect(ALEX, Effect::Poison, 60, 1, true)));
+    let sent: Vec<RawPacket> = (0..62).flat_map(|_| h.tick_all().to(2).to_vec()).collect();
+    assert_eq!((health(&sent), shown(&sent)), (vec![9.0, 8.0, 7.0, 6.0, 5.0], vec![(MobEffectEventId::Add, 19, 60), (MobEffectEventId::Remove, 19, 0)]));
+    assert_eq!(events(&sent), vec![(EntityEventEventId::HurtAnimation, 14); 5]);
+
+    // Regeneration for 120 ticks turns at 100 and 50 left; a weaker one changes nothing; cleared with 45 left.
+    h.remote.run(|ctx| {
+        assert!(ctx.give_effect(ALEX, Effect::Regeneration, 120, 0, false));
+        assert!(ctx.give_effect(ALEX, Effect::Regeneration, 20, 0, false));
+    });
+    let sent: Vec<RawPacket> = (0..75).flat_map(|_| h.tick_all().to(2).to_vec()).collect();
+    // Its hunger mends it once more in that time.
+    assert_eq!((health(&sent), shown(&sent)), (vec![6.0, 7.0, 8.0], vec![(MobEffectEventId::Add, 10, 120), (MobEffectEventId::Update, 10, 120)]));
+    h.remote.run(|ctx| assert!(ctx.clear_effects(ALEX) && !ctx.clear_effects(ALEX)));
+    assert_eq!(shown(h.tick_all().to(2)), [(MobEffectEventId::Remove, 10, 45)]);
+}

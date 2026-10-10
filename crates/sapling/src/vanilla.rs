@@ -1,11 +1,12 @@
 //! Vanilla's commands, for operators, built on the plugin API alone: `/setblock`, `/fill`, `/tp`,
-//! `/give`, `/clear`, `/gamemode`, `/summon`, `/kill`, `/damage`, `/difficulty`, `/gamerule`, `/replaceitem`. Opt in with
+//! `/give`, `/clear`, `/gamemode`, `/summon`, `/kill`, `/damage`, `/difficulty`, `/effect`, `/gamerule`, `/replaceitem`. Opt in with
 //! [`crate::ServerBuilder::vanilla_commands`]. Positions take `~`; targets take `@s`, `@p`, `@a`,
 //! `@e[type=...]` and names. Blocks are written as `/setblock` writes them: their neighbours react.
 // TODO: the other vanilla commands; `@r` and selector arguments besides `type`.
 
 mod blocks;
 mod containers;
+mod effects;
 mod players;
 mod rules;
 
@@ -25,7 +26,7 @@ impl ServerBuilder {
     /// added later under the same name replaces one of these.
     pub fn vanilla_commands(self) -> Self {
         let blocks = self.command::<SetBlock>().command::<Fill>().command::<ReplaceItem>();
-        blocks.command::<Teleport>().command::<Give>().command::<Clear>().command::<GameModeCommand>().command::<Summon>().command::<Kill>().command::<Damage>().command::<DifficultyCommand>().command::<GameRule>()
+        blocks.command::<Teleport>().command::<Give>().command::<Clear>().command::<GameModeCommand>().command::<Summon>().command::<Kill>().command::<Damage>().command::<DifficultyCommand>().command::<effects::EffectCommand>().command::<GameRule>()
     }
 }
 
