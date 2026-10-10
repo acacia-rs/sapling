@@ -16,6 +16,7 @@ const SLOT_TYPE: &str = "slot.container";
 /// A player's slot types, and the inventory slot the first of each is; the hand is the held one.
 const HAND: &str = "slot.weapon.mainhand";
 const PLAYER_SLOTS: &[(&str, u8, u8)] = &[("slot.hotbar", 0, 9), ("slot.inventory", 9, 27)];
+const ARMOUR_SLOTS: [&str; 4] = ["slot.armor.head", "slot.armor.chest", "slot.armor.legs", "slot.armor.feet"];
 const MOST: i32 = 64;
 
 enum Target {
@@ -71,7 +72,7 @@ impl CommandSyntax for ReplaceItem {
                 let selector = Selector::parse(args)?;
                 let mark = args.mark();
                 let kind = args.word()?.to_ascii_lowercase();
-                if kind != HAND && !PLAYER_SLOTS.iter().any(|(known, ..)| *known == kind) {
+                if kind != HAND && !ARMOUR_SLOTS.contains(&kind.as_str()) && !PLAYER_SLOTS.iter().any(|(known, ..)| *known == kind) {
                     return Err(args.error_at(mark));
                 }
                 Target::Entity(selector, kind)
@@ -120,7 +121,8 @@ impl Command for ReplaceItem {
                 let Some(slot) = u8::try_from(self.slot).ok().filter(|slot| *slot < size) else { return bad_slot(out, size.into()) };
                 for player in found {
                     let held = if kind == HAND { ctx.held_slot(player.id).unwrap_or(0) } else { first + slot };
-                    if !ctx.set_item(player.id, Slot::Main(held), item.as_ref()) {
+                    let place = ARMOUR_SLOTS.iter().position(|known| known == kind).map_or(Slot::Main(held), |piece| Slot::Armor(piece as u8));
+                    if !ctx.set_item(player.id, place, item.as_ref()) {
                         return out.refuse(self.item_wrong);
                     }
                     out.translate("commands.replaceitem.success.entity", vec![kind.clone(), slot.to_string(), player.name.clone(), count.to_string(), display_name(&name)], true);

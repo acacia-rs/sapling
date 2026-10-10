@@ -1,7 +1,7 @@
 //! Tools wear: a use is counted where the game keeps it, in the stack's `Damage` tag, and a tool
 //! used once more than it lasts is gone. The rules are BDS's `ItemStackBase::hurtAndBreak`
 //! (docs/research/block-rules.md, section 5).
-// TODO: no break sound, and nothing but breaking blocks wears anything.
+// TODO: no break sound, and nothing but breaking blocks wears anything: armour does not wear.
 
 use acacia_proto::nbt::Value;
 use bevy_ecs::prelude::*;
@@ -13,6 +13,14 @@ use crate::blocks::Dice;
 const DAMAGE: &str = "Damage";
 /// The `ench` id of Unbreaking.
 const UNBREAKING: i16 = 17;
+
+impl Inventory {
+    /// The points and toughness of the armour worn.
+    pub(crate) fn armour(&self) -> [f32; 2] {
+        let worn = self.armor.iter().flatten().filter_map(|held| sapling_data::armour(&held.stack.name));
+        worn.fold([0.0; 2], |sum, piece| [sum[0] + piece[0], sum[1] + piece[1]])
+    }
+}
 
 fn damage(tag: &Option<Value>) -> i32 {
     match tag.as_ref().and_then(|tag| tag.get(DAMAGE)) {

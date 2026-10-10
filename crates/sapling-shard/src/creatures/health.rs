@@ -54,6 +54,8 @@ pub(crate) struct Health {
     walled: u8,
     /// A landing that hurts in the tick after it: what it costs, and where that tick began.
     landed: Option<(f32, [f32; 3])>,
+    /// The points and toughness of what it wears.
+    armour: [f32; 2],
     /// What viewers know: its health, and whether it is on fire.
     pub(super) told: f32,
     pub(super) lit: bool,
@@ -63,7 +65,7 @@ impl Health {
     /// A mob of `max` health with `left` of it, `burning` ticks more.
     pub(crate) fn new(max: f32, left: Option<f32>, burning: u16) -> Self {
         let left = left.map_or(max, |left| left.clamp(0.0, max));
-        Self { left, max, last: 0.0, guarded: 0, burning, peak: None, air: AIR, walled: 0, landed: None, told: left, lit: false }
+        Self { left, max, last: 0.0, guarded: 0, burning, peak: None, air: AIR, walled: 0, landed: None, armour: [0.0; 2], told: left, lit: false }
     }
 
     pub(crate) fn left(&self) -> f32 {
@@ -88,6 +90,17 @@ impl Health {
 
     pub(crate) fn end(&mut self) {
         self.left = 0.0;
+    }
+
+    pub(crate) fn wear(&mut self, armour: [f32; 2]) {
+        self.armour = armour;
+    }
+
+    /// What is left of a hit of `amount` behind its armour: the Java game's rule, which BDS
+    /// follows (docs/research/player-damage.md, "Armour").
+    pub(crate) fn shielded(&self, amount: f32) -> f32 {
+        let [points, toughness] = self.armour;
+        amount * (1.0 - (points - amount / (2.0 + toughness / 4.0)).clamp(points * 0.2, 20.0) / 25.0)
     }
 
     /// Whether a hit of `amount` landed.
@@ -124,7 +137,7 @@ impl Health {
     pub(crate) fn burn(&mut self, touching: bool, wet: bool) -> Option<Cause> {
         if touching {
             self.burning = BURNS;
-            return self.hurt(FIRE_HARM).then_some(Cause::Fire);
+            return self.hurt(self.shielded(FIRE_HARM)).then_some(Cause::Fire);
         }
         if wet || self.burning == 0 {
             self.burning = 0;
@@ -141,7 +154,7 @@ impl Health {
     }
 
     pub(crate) fn scald(&mut self) -> bool {
-        self.hurt(LAVA_HARM)
+        self.hurt(self.shielded(LAVA_HARM))
     }
 
     /// A tick of breath, held where it has none to draw: its breath when that changed.
@@ -159,6 +172,19 @@ impl Health {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn armour_takes_off_a_hit_what_it_took_off_on_bds() {
+        // research/captures/bds-armour.txt: a leather and an iron chestplate, all of iron, of
+        // diamond and of netherite against 5, and the netherite against 2.
+        let behind = |armour: [f32; 2], amount: f32| {
+            let mut health = Health::new(20.0, None, 0);
+            health.wear(armour);
+            (health.shielded(amount) * 1000.0).round() / 1000.0
+        };
+        let taken = [behind([0.0, 0.0], 5.0), behind([3.0, 0.0], 5.0), behind([6.0, 0.0], 5.0), behind([15.0, 0.0], 5.0), behind([20.0, 8.0], 5.0), behind([20.0, 12.0], 5.0), behind([20.0, 12.0], 2.0)];
+        assert_eq!(taken, [5.0, 4.88, 4.3, 2.5, 1.25, 1.2, 0.432]);
+    }
 
     #[test]
     fn a_pig_in_lava_is_hurt_as_bds_hurt_one() {

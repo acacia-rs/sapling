@@ -2,7 +2,7 @@
 //! from it each tick, by the rules mobs are hurt by (creatures/health.rs), told as BDS tells a
 //! player's (docs/research/player-damage.md). Dying and rising: death.rs; mending and
 //! starving: hunger.rs.
-// TODO: no armour or effects; a block over the head alone does not
+// TODO: armour does not wear and burning on is not stopped by it (not drilled); no effects; a block over the head alone does not
 // make a player crawl; the breathing flag is not told; a fall is measured from the highest feet to the landing, where BDS with the
 // bot took 8 for 12 blocks; health is not kept with the player's items; plugins are not asked.
 
@@ -116,9 +116,24 @@ fn settle(world: &mut World, player: Entity, cause: Cause) {
     }
 }
 
-/// Takes `amount` from a player's health as a hit of `cause`; false where it took nothing.
+/// Has the player's health know the armour it wears now.
+fn dress(world: &mut World, player: Entity) {
+    let armour = world.get::<crate::inventory::Inventory>(player).map_or([0.0; 2], |inventory| inventory.armour());
+    if let Some(mut vitals) = world.get_mut::<Vitals>(player) {
+        vitals.health.wear(armour);
+    }
+}
+
+/// Takes `amount` from a player's health as a hit of `cause`, less what its armour stops of a
+/// cause it stops; false where it took nothing.
 fn hurt(world: &mut World, player: Entity, amount: f32, cause: Cause) -> bool {
-    if !is_mortal(world, player) || !world.get_mut::<Vitals>(player).is_some_and(|mut vitals| vitals.health.hurt(amount)) {
+    dress(world, player);
+    let stopped = matches!(cause, Cause::Generic | Cause::Attack | Cause::Fire | Cause::Lava);
+    let lands = |mut vitals: Mut<Vitals>| {
+        let amount = if stopped { vitals.health.shielded(amount) } else { amount };
+        vitals.health.hurt(amount)
+    };
+    if !is_mortal(world, player) || !world.get_mut::<Vitals>(player).is_some_and(lands) {
         return false;
     }
     if world.get::<Vitals>(player).is_some_and(|vitals| vitals.health.left() > 0.0) {
@@ -154,6 +169,7 @@ pub(crate) fn bitten(world: &mut World, player: Entity, amount: f32, kind: &str,
 
 /// A tick of what the place a living player stands in does to it.
 fn stand(world: &mut World, player: Entity, layer: Entity) {
+    dress(world, player);
     let (Some(position), Some(mut vitals)) = (world.get::<Position>(player).copied(), world.get::<Vitals>(player).copied()) else { return };
     let Some(level) = world.get::<Layer>(layer).map(|layer| &layer.world) else { return };
     let body = Body::new(position.feet, [0.0; 3], SIZE);

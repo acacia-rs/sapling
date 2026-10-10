@@ -55,6 +55,19 @@ From `bds_command_probe toil` (research/captures/bds-toil.txt) and `bite`:
 - A hit that lands on a cow adds 0.1, and so does one on an armour stand.
 - Being hurt adds none: not by `/damage`, not by a zombie.
 
+## Armour
+
+From `bds_command_probe armour` (research/captures/bds-armour.txt), `/damage` on a player dressed
+by `/replaceitem entity @s slot.armor.<head|chest|legs|feet>`:
+
+- 5 as an entity's attack took 5 bare, 4.88 in a leather chestplate, 4.3 in an iron one, 2.5 in
+  all of iron, 1.25 in all of diamond and 1.2 in all of netherite; 2 in the netherite took 0.432.
+- That is the Java game's rule with its points and toughness: the hit is cut by
+  `clamp(points - hit / (2 + toughness / 4), points / 5, 20) / 25`.
+- Stopped the same way: `/damage` with no cause, `fire`, `lava`. Not stopped: `fall`, `drowning`.
+- `/damage @s 2 suffocation` did nothing at all to the dressed player.
+- No hit by `/damage` changed an armour slot: nothing wore.
+
 ## Starving
 
 - With hunger at 0 a player is hurt 1 (cause 16) every 80 ticks, first 80 ticks after the hunger ran out,
@@ -92,7 +105,7 @@ From `bds_command_probe eat` (research/captures/bds-eat.txt), the bot holding us
 
 ## Not drilled
 
-Armour, effects, hunger from swimming, from a hit inside a mob's guard or from a block that breaks at once, each food's values and side effects, starving on normal and hard, the void, whether a player out of breath in a
+Armour's wear, enchantments and what it does against burning on, effects, hunger from swimming, from a hit inside a mob's guard or from a block that breaks at once, each food's values and side effects, starving on normal and hard, the void, whether a player out of breath in a
 block is hurt as one under water, another
 player's hit (a zombie's: mob-attacks.md), `keepInventory`, a bed's or anchor's spawn, creative and spectator.
 
@@ -110,6 +123,9 @@ player's hit (a zombie's: mob-attacks.md), `keepInventory`, a bed's or anchor's 
 - Mending and starving are built to the numbers above (`vitals/hunger.rs`), and so is what a jump and
   a sprint cost (`vitals.rs`), a block broken with what harvests it and a hit that takes health
   from a mob (an armour stand has none here). Swimming costs nothing yet.
+- Armour stops what it stopped on BDS, by the same rule (`creatures/health.rs` `shielded`,
+  `sapling-data/src/armour.rs`); it does not wear, and burning on goes through it as in the Java
+  game, which was not drilled.
 - Eating is built (`vitals/eating.rs`, `sapling-data/src/food.rs`): the bot ate an apple and a steak on
   sapling in the same 32 ticks and packets (research/captures/sapling-eat.txt). Only the apple's values are
   drilled; the others are the Java game's. A stew leaves no bowl, and no food does more than feed.

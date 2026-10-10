@@ -171,3 +171,16 @@ fn a_jump_tires_a_player_a_little_and_a_sprint_by_the_block() {
     assert_eq!(step(&mut h, 1.0, vec![InputData::VerticalCollision, InputData::StartSprinting]), [75.0], "a quarter block");
     assert_eq!(step(&mut h, 1.0, vec![InputData::VerticalCollision, InputData::StartJumping]), [275.0]);
 }
+
+#[test]
+fn armour_stops_part_of_a_hit_and_none_of_a_fall() {
+    let mut h = ready();
+    h.remote.run(|ctx| {
+        assert!(ctx.set_item(ALEX, Slot::Armor(1), Some(&Item::new("minecraft:iron_chestplate", 1))));
+        assert!(ctx.hurt_player(ALEX, 5.0, DamageCause::Attack));
+    });
+    assert_eq!(health(h.tick_all().to(2)), [15.7], "6 points against 5 stop 14 in 100");
+    (0..12).for_each(|_| drop(h.tick_all()));
+    h.remote.run(|ctx| assert!(ctx.hurt_player(ALEX, 2.0, DamageCause::Fall)));
+    assert_eq!(health(h.tick_all().to(2)), [13.7]);
+}
