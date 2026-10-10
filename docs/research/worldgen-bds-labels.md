@@ -154,6 +154,13 @@ over; `setBlock` call sites of the sculk code: 143b84ccc multiface attach, 1465e
 148b6b1f7 remove face, 143ba17e8 catalyst, 143ba1853 shrieker; 0x14ccd3328 the dirt list, 0x14ce19564 the support
 component's id.
 
+Sculk2 labels (2026-10-10, read in scratch bdsre-sculk2, not saved as labels): 1411889d0 the thread-local MT's
+constructor (seed: four bytes from 141cbf950/141ccbe30, the system entropy source), 1465e98c0 the in-game random
+multiface spread (the other caller of 1465e9360 and of the shuffle 1403747f0), 142fce030 grindstone / 146602890
+skull / 148a32230 end rod / 148b5bff0 lightning rod / 148b51e20 shelf `canProvideSupport` (this, block, face,
+type); block state ids 0x14cd254f0, 0x14cd26368 and 0x14cd25130, taken as `attachment`, `facing_direction` and
+`minecraft:cardinal_direction` from which blocks read them (names not read out of the binary).
+
 Feat3 labels (2026-10-08): 14a73fa30 the decoration's IBlockWorldGenAPI vtable (forwards to its `BlockSource` at
 +8; 0xb0 = 1411a0a60 heightmap: `LevelChunk` +0xb80 i16 per column + minimum y), 1438f0d00
 `MangroveTreeRoots::placeRoots` (vtable 14a98e1f8), 1438f16f0 its root simulation, 14a681437 its facing table,

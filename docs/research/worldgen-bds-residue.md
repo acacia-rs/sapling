@@ -4,6 +4,80 @@ Companion to [worldgen-bds-features.md](worldgen-bds-features.md). What the orac
 feat4 fixes, how much of it BDS's own nondeterminism explains, and the tools that found each cause. The newest
 round is first; the sections after it are feat4's and the sculk round's, with their numbers as they were.
 
+## sculk2: what the sculk residue is (2026-10-10, worldgen/sculk2)
+No port difference was found in the sculk patch, the spreader or the vein feature; what the oracle counts there
+is BDS's own run-to-run spread, most of it not thread-local. The evidence, strongest first:
+- Phase-0 chunks run alone under the debugger agree with ours write for write (worldgen-bds-caves.md,
+  "Thread-local draws"): stony peaks -228,260 and badlands 594,-348, 151 patch tries with every position, 146
+  identical in all writes (about 11k), five differing by 0 to 29 cells around a vein BDS's feature spread;
+  catalysts (3 of 3) and the one growth alike. Yet the oracle has 118 and 360 stable errors in those two chunks.
+- The same chunk, three BDS runs: badlands 594,-348 saved by the one-chunk run differs from the oracle's copy in
+  610 cells (sculk 183, veins 189, water 149). The whole badlands region saved by a third run of its 4x4 tile
+  (under the debugger, one entry breakpoint) differs from the oracle in 2701 cells (sculk 881, veins 822, and
+  coal ore 502 after the dripstone), where the oracle's twins differ in 329 and ours in 1833 stable cells. So
+  the twins are two samples of one load, not of BDS: twin agreement does not make a cell deterministic, and
+  ours is nearer the oracle than another BDS run is.
+- Sculk cells over the dump (stable errors, then with the unstable cells, against each twin):
+
+| region | stable wrong | ours-BDS | ours-twin | BDS-twin |
+|---|---|---|---|---|
+| ancient city | 6573 | 10995 | 7098 | 4422 |
+| stony peaks | 1996 | 3792 | 2298 | 1796 |
+| badlands | 1533 | 1659 | 1556 | 126 |
+| pillager outpost | 1800 | 4762 | 2066 | 2962 |
+| trail ruins | 443 | 483 | 448 | 40 |
+| jagged peaks | 505 | 1761 | 624 | 1256 |
+| frozen peaks | 326 | 843 | 442 | 517 |
+
+  In four regions ours is nearer the twin than BDS's first run is. By family and side at the branch's end
+  (ours only / BDS only): ancient city veins 2162 / 1452, sculk 1866 / 1132, sensors and shriekers 88 / 60;
+  stony peaks veins 765 / 379, sculk 739 / 574, growths 16 / 8; badlands veins 434 / 330, sculk 257 / 509,
+  growths 10 / 4. The ours-only surplus is the stable filter: a BDS-only cell must be in both runs.
+
+### Run order
+What differs between loads is not known in full. Replaying the third run's decoration order (first hit of each
+of its 240 chunks, all 848 neighbour pairs in parity; `SAPLING_ORACLE_ORDER`, worldgen-bds-debugger.md) so that
+same-phase sources see each other moved ours from 2598 to 2400 cells off that run's world: same-phase order is
+a small part. That run retried its tile (chunks not loaded in time), and a retried tile decorates chunks a
+second time ("Same-phase sources" below); not followed further.
+
+### Floor, redone
+`floor:` lines changed (`scripts/oracle_floor.py` reads both formats). The generator follows what a thread-local
+draw could reach (`feature/reach.rs`, on with `OverworldGenerator::track_reach`): a multiface call whose face
+order could change the cell, the block's faces or the spread leaves those cells in doubt; a multiface try, a
+sculk patch or a liquid tick that reads a cell in doubt is tainted, and so are the later tries of its rule
+(their draws may have shifted); a tainted try leaves its writes and the ball it could reach (patch 18, multiface
+2, tick 1) in doubt, for itself and every later source. A cell is `floor` when it holds a lichen or sculk block,
+lies in that reach and a lichen or sculk cell the twins disagree on is within 4 blocks (what one differing vein
+did to a live patch); `other_floor` is the same for any other block (water over a vein). `deterministic` is
+everything but those and the twin-confirmed scans. Reach alone says nothing in the deep dark (it holds 99.9% of
+the lichen and sculk errors: tries tainted / followed are on each line), and the old 15-block rule called 96% of
+them confirmed; the 4-block rule keeps 58%. `no-tl` in the script's table is the old deterministic column.
+The new column is honest about what it is: cells the thread-local generator is not shown to explain. In
+sculk regions most of it is the run-to-run spread above (badlands: 1452 of 1833, where a third BDS run is 2701
+off), so it is an upper bound on port errors, not a count of them; a port error in sculk is found by the
+one-chunk write comparison, not by this number.
+
+### Changes and totals
+- Multiface spreads always land (worldgen-bds-caves.md, "Thread-local draws"): BDS's count, at a guessed cell.
+- Support by state for grindstones, skulls, rods and shelves (worldgen-bds-caves.md, "Support"): no cell moved.
+all2 (395e611) -> sculk2:
+
+| world | identical % | wrong | missing | no-tl | deterministic (new) |
+|---|---|---|---|---|---|
+| near origin | 99.9980 -> 99.9977 | 2018 -> 2347 | 313 -> 301 | 2024 -> 2039 | 2281 |
+| far out | 99.9959 -> 99.9955 | 259 -> 281 | 30 -> 28 | 260 -> 260 | 286 |
+| negative seed | 99.9984 -> 99.9980 | 98 -> 126 | 12 -> 10 | 78 -> 78 | 87 |
+| biome regions | 99.9821 -> 99.9811 | 5620 -> 5940 | 1134 -> 1120 | 1817 -> 1661 | 3605 |
+| tree regions | 99.9892 -> 99.9894 | 3385 -> 3343 | 928 -> 848 | 3018 -> 2577 | 2817 |
+| structures | 99.9775 -> 99.9785 | 17873 -> 17081 | 5236 -> 4968 | 10793 -> 10057 | 14469 |
+
+Wrong + missing over all 59 regions 36906 -> 36393. The spread moves regions by hundreds either way, through
+one lichen cell that stops or frees a dripstone or lush scan: mansion 4373 -> 2907, old growth spruce taiga
+571 -> 69, meadow 413 -> 13, trail ruins 682 -> 410, badlands 1964 -> 1833, jagged peaks 533 -> 406; stony
+peaks 2095 -> 2588, cherry grove 277 -> 677, near origin 2331 -> 2648, bamboo jungle 319 -> 577, igloo (snowy
+slopes) 67 -> 221, ancient city 9098 -> 9294. Neither direction is evidence about the port.
+
 ## misc: fossils, camp trees, poplars (2026-10-10, worldgen/misc)
 - Fossils ported (worldgen-bds-features.md, "Fossils"): desert pyramid region 108 -> 41.
 - The old growth pine taiga camp (43 cells): the v2 placer attaches a feature element whatever the jigsaw's
@@ -137,6 +211,7 @@ under the desert pyramid region: `minecraft:fossil_feature` is not ported).
 - Heightmap contents: see worldgen-bds-features.md, "Heightmaps" (leaves count; settled).
 
 ## Floor: what BDS itself does not repeat
+(As it was on feat4; the rule and the line's fields changed on sculk2, see the top section.)
 `tests/oracle_support/floor.rs` prints one `floor:` line per region and `scripts/oracle_floor.py <log> [<earlier
 log>] [--regions]` sums them per world. A stable wrong or missing cell is attributed to the thread-local
 generator (`gs:[0x58]` +0xe60: multiface faces and spreads) when
