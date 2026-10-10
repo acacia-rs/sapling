@@ -16,16 +16,27 @@ round is first; the sections after it are feat4's and the sculk round's, with th
   firefly bushes and a lily pad under a neighbour's oak (swamp 79 -> 72, mangrove swamp, pale garden, mansion).
 - Mushrooms do not stand on leaves (the camp's last cell and eight more in five regions).
 
-All2 (02df143) -> misc, wrong / missing / deterministic per world; nothing else moved:
+Left, traced part of the way:
+- Bamboo jungle's east edge (chunk 173,349: podzol where BDS has dirt and grass, oak leaves and ferns BDS
+  has): the writes of ring source 174,349. A live run of 172..175 x 348..350 saved that chunk
+  (`examples/try_check 20261003 <that world> 174 349 "(174, 349)"`): its bamboo rule's draws are in sync
+  (most of about 60 stalks match), but eight of ours stand 3-4 blocks taller than BDS's with air above
+  them, three more run into oak leaves BDS has and we do not, and one podzol disk is half BDS's size. So
+  BDS grew trees there that ours did not, and the bamboo feature has a height test we lack; the chunk has
+  lush caves under it (two biomes). Not the region edge as such.
+- Pale garden: three eyeblossoms in chunk -467,-285 and lush-cave cells; not looked at.
+
+All2 (02df143) -> misc, wrong / missing / deterministic per world; near origin, far out and the negative seed
+did not move:
 
 | world | wrong | missing | deterministic |
 |---|---|---|---|
 | near origin | 2019 | 313 | 2024 |
 | far out | 259 | 29 | 260 |
 | negative seed | 98 | 12 | 78 |
-| biome regions | 7405 -> 7401 | 1512 -> 1468 | 1909 -> 1861 |
-| tree regions | 3955 | 1073 | 3026 |
-| structures | 22882 -> 22881 | 6692 -> 6626 | 11049 -> 10982 |
+| biome regions | 7405 -> 7400 | 1512 -> 1459 | 1909 -> 1851 |
+| tree regions | 3955 -> 3950 | 1073 -> 1070 | 3026 -> 3018 |
+| structures | 22882 -> 22877 | 6692 -> 6626 | 11049 -> 10978 |
 
 (The feat5 table below is from before the drip and struct merges; these are the integrated tree's numbers.
 `tools/oracle.sh <name>` and `tools/oracle-totals.sh <before> <after>` reproduce them.)
@@ -96,6 +107,7 @@ under the desert pyramid region: `minecraft:fossil_feature` is not ported).
   lichen).
 - Old growth pine taiga, chunk -333,340 (43): BDS's abandoned camp grows a spruce at (-5315,74,5452) and one at
   (-5308,·,5457); ours has feature elements at (-5307,74,5456) and (-5303,74,5454) instead. Jigsaw assembly.
+  (Fixed on worldgen/misc, see the top section: this reading was wrong in three ways.)
 - One firefly bush cluster (5051..5053,63,4944) stands under oak leaves in BDS: the neighbour chunk's
   heightmap it read had no leaves there, ours has. Resolved on 2026-10-10 (worldgen/misc): a decorated
   neighbour's heightmap is not recomputed (worldgen-bds-features.md, "Heightmaps").

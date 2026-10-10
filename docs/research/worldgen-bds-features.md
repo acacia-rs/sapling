@@ -214,8 +214,8 @@ block source and chunk state 11 and did not run once while a region generated (b
   of its own writes;
 - a neighbour's is its carved terrain's too, also after that neighbour has been decorated (corrected
   2026-10-10, worldgen/misc: the recompute at 148215885 is behind `140a0b4e0(chunk)`, a test of the dimension's
-  +0x100 flag and of a list at `LevelChunk` +0xf98, not read further; it was false for every generating chunk
-  the oracle shows. Until then sapling gave a later phase the neighbour's blocks as of its decoration's end:
+  +0x100 flag and of a list at `LevelChunk` +0xf98, not read further. Live, a 2x2 region: breakpoints at
+  14821586c and 148215885 counted 183 decoration ends and no recompute. Until then sapling gave a later phase the neighbour's blocks as of its decoration's end:
   a swamp's firefly bushes and lily pads then stood on a decorated neighbour's oak leaves instead of under
   them. A live run logged the oak at line 95, the neighbour's own decoration at 141 and the bush cluster at
   243, in the parity order, so order was not the cause; with every heightmap left carved swamp 79 -> 72,
