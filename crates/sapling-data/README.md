@@ -93,8 +93,9 @@ these its own components (not its component groups) say, by `data/generate/mob-t
 `xp=least-most` (`minecraft:experience_reward` of the entity or of a group not named for a baby, the
 part after `last_hit_by_player ?`, without equipment), `fire_immune` (`minecraft:fire_immune`), `no_fall` (a `minecraft:damage_sensor` trigger that takes
 no damage from `fall` or from all), `breathes_water` and `no_air` (`minecraft:breathable`).
-`attack=`, `speed=`, `sees=` and `hits=effect:ticks` are added by hand for the kinds whose hunting
-was drilled (`docs/research/mob-attacks.md`); the script does not write them. `attack` is
+`strolls=` is `minecraft:movement` times the `speed_multiplier` of `random_stroll`, for an entity
+with `navigation.walk`. `attack=`, `speed=`, `sees=` and `hits=effect:ticks` are the script's own
+table of the kinds whose hunting was drilled (`docs/research/mob-attacks.md`): `attack` is
 `minecraft:attack` plus what the kind holds (a vindicator's axe 5, a wither skeleton's sword 5),
 `speed` is `minecraft:movement` times its attack's `speed_multiplier`, `sees` the `max_dist` of its
 `nearest_attackable_target` for players (16 where it names none).

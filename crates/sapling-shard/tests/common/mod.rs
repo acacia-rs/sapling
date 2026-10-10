@@ -82,7 +82,7 @@ pub fn platform() -> World {
 }
 
 pub fn config() -> ShardConfig {
-    ShardConfig { world_name: "test".into(), max_view_radius: 4, columns_per_tick: 16, ..ShardConfig::default() }
+    ShardConfig { world_name: "test".into(), max_view_radius: 4, columns_per_tick: 16, mobs_stroll: false, ..ShardConfig::default() }
 }
 
 impl Harness {

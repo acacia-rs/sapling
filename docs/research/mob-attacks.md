@@ -80,6 +80,19 @@ walk and hit as the zombie does, with their own numbers:
 - `/summon zombie_villager_v2` is a syntax error; `zombie_villager` summons one.
 - The sounds come from the same shares of each kind's height.
 
+## Strolling (`stroll`)
+
+A zombie and a cow left alone for a minute on a floor 40 blocks square, the actor in creative
+(`research/captures/bds-stroll.txt`):
+
+- Each walked in straight lines, 1 to 10 blocks at a time, six or seven times in the minute, and
+  stood between for 1 to 15 seconds.
+- The zombie strolled at 0.11419 a tick, the speed it hunts at. The cow went 0.08634: its
+  movement 0.25 times its `random_stroll`'s `speed_multiplier` 0.8, by the same rule.
+- Each walk ends with one more move of about 0.006.
+- The cow, hit, moved off at once and faster for a while (the hit's throw is in the numbers; its
+  panic was not measured apart from it).
+
 ## Not drilled
 
 Normal and hard (taken as 3 and 4.5), a way around a wall, a hole in the way, what hides a
@@ -90,6 +103,11 @@ open grass 30 off took and dropped its target every 10 ticks, one on the stone f
 
 ## Sapling
 
+Every kind that walks strolls (`creatures/strolling.rs`, `strolls=` in `mob-traits.tsv`, the
+shard's `mobs_stroll`): a tick in 120 it picks a place up to 10 blocks off along each axis and
+walks straight there at its stroll speed, giving up at an edge, at a block in its way or after ten
+seconds. How often and how far are fitted by eye to the two mobs above. A hit mob does not flee.
+
 `creatures/hunting.rs`, for kinds with `attack=`, `speed=` and `sees=` in `mob-traits.tsv`: the
 zombie and the seven kinds above, each with its numbers and what its hit gives (not the cave
 spider's poison, which lasts no time on easy).
@@ -97,7 +115,7 @@ The first two hits of `bite` and both of `slain` land where BDS's did, to the la
 Its jump over the step of `chase` is BDS's to the sixth decimal.
 Different: it walks straight at the player (no path around anything), keeps prey it has seen
 whatever comes between, sends a mob's speed as it is before the drag, turns 60
-degrees a tick with its head, stands still with no target, stops when its box touches the
+degrees a tick with its head, stops when its box touches the
 player's since nothing pushes anything, does not let go as it is killed, shows no mob holding
 its weapon, lets a spider hunt by day, hunts nobody on peaceful
 (where BDS has no monsters), and tells every viewer every move.

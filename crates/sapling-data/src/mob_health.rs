@@ -22,6 +22,9 @@ pub struct MobTraits {
     /// The least and most experience a grown one killed by a player leaves.
     pub experience: Option<(i32, i32)>,
     pub hunts: Option<Hunts>,
+    /// The speed a kind that walks strolls at: its `minecraft:movement` times its
+    /// `random_stroll`'s `speed_multiplier`.
+    pub strolls: Option<f32>,
 }
 
 /// A kind that hunts players (README "Mob traits").
@@ -46,7 +49,7 @@ pub fn mob_traits(identifier: &str) -> MobTraits {
     let number = |name: &str| value(name).and_then(|value| value.parse::<f32>().ok());
     let gives = value("hits=").and_then(|given| given.split_once(':')).and_then(|(effect, ticks)| Some((effect, ticks.parse().ok()?)));
     let hunts = number("attack=").zip(number("speed=")).zip(number("sees=")).map(|((attack, speed), sees)| Hunts { attack, speed, sees, gives });
-    MobTraits { fire_immune: has("fire_immune"), no_fall: has("no_fall"), breathes_water: has("breathes_water"), experience, hunts }
+    MobTraits { fire_immune: has("fire_immune"), no_fall: has("no_fall"), breathes_water: has("breathes_water"), experience, hunts, strolls: number("strolls=") }
 }
 
 /// The mob `id` has `left` of `max` health.
@@ -74,7 +77,7 @@ mod tests {
 
     #[test]
     fn fire_spares_a_strider_a_fall_a_chicken_and_water_a_cod() {
-        assert_eq!(mob_traits("minecraft:pig"), MobTraits { experience: Some((1, 3)), ..MobTraits::default() });
+        assert_eq!(mob_traits("minecraft:pig"), MobTraits { experience: Some((1, 3)), strolls: Some(0.25), ..MobTraits::default() });
         assert_eq!((mob_traits("minecraft:creeper").experience, mob_traits("minecraft:armor_stand").experience), (Some((5, 5)), None));
         assert!(mob_traits("minecraft:strider").fire_immune && mob_traits("minecraft:chicken").no_fall && mob_traits("minecraft:cod").breathes_water);
         assert!(!mob_traits("minecraft:chicken").fire_immune);

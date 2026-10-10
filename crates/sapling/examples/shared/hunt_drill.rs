@@ -1,4 +1,4 @@
-//! The bite, slain, chase, sick, worn and kinds drills of bds_command_probe: a zombie hunting the actor
+//! The bite, slain, chase, sick, worn, kinds and stroll drills of bds_command_probe: a zombie hunting the actor
 //! (docs/research/mob-attacks.md), and what food does besides feeding (food-effects.md).
 
 pub const BITE_SHOWN: &[&str] = &[
@@ -112,5 +112,18 @@ pub fn kinds() -> Vec<String> {
         lines.extend(["kill @e[type=!player]", "effect @s clear", "effect @s instant_health 1 4", "", ""].map(String::from));
     }
     lines.extend(["gamemode creative @s", "kill @e[type=!player]", ""].map(String::from));
+    lines
+}
+
+/// The actor in creative on a floor 40 blocks square, a zombie and a cow left to themselves for a
+/// minute, then the cow hit and watched a while longer.
+pub fn stroll() -> Vec<String> {
+    let mut lines: Vec<String> =
+        ["kill @e[type=!player]", "gamerule domobspawning false", "difficulty easy", "time set midnight", "fill ~-20 ~-1 ~-20 ~20 ~-1 ~20 stone", "fill ~-20 ~ ~-20 ~20 ~4 ~20 air", ""].map(String::from).into();
+    lines.extend(["summon zombie ~8 ~ ~", "summon cow ~-8 ~ ~"].map(String::from));
+    lines.extend(std::iter::repeat_n(String::new(), 60));
+    lines.extend(["tp @s @e[type=cow,c=1]", "", "!hit cow"].map(String::from));
+    lines.extend(std::iter::repeat_n(String::new(), 10));
+    lines.extend(["kill @e[type=!player]", ""].map(String::from));
     lines
 }

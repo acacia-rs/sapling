@@ -1,5 +1,6 @@
 """BDS's vanilla behaviour packs -> mob-traits.tsv: what each entity's own components (not its
-component groups) say of fire, falls and breath, and the experience a grown one leaves. See ../../README.md "Mob traits".
+component groups) say of fire, falls and breath, the experience a grown one leaves, how fast one
+that walks strolls, and what was drilled of the kinds that hunt. See ../../README.md "Mob traits".
 
 usage: py -3 mob-traits.py
 """
@@ -33,6 +34,29 @@ def experience(entity):
     return f"{rolled[1]}-{rolled[2]}" if rolled else f"{fixed[1]}-{fixed[1]}" if fixed else None
 
 
+def strolls(entity):
+    """The speed a grown one that walks strolls at, or None for a kind that does not."""
+    holders = [("", entity.get("components", {}))] + list(entity.get("component_groups", {}).items())
+    find = lambda key: next((held[key] for group, held in holders if key in held and "baby" not in group), None)
+    stroll, walks, movement = find("minecraft:behavior.random_stroll"), find("minecraft:navigation.walk"), find("minecraft:movement")
+    if stroll is None or walks is None or not isinstance(movement, dict) or not isinstance(movement.get("value"), (int, float)):
+        return None
+    return round(movement["value"] * stroll.get("speed_multiplier", 1), 4)
+
+
+# Drilled on BDS, not read from the packs (docs/research/mob-attacks.md, "Other kinds").
+HUNTS = {
+    "minecraft:cave_spider": "attack=2 speed=0.3 sees=16",
+    "minecraft:husk": "attack=3 speed=0.23 sees=35 hits=hunger:600",
+    "minecraft:silverfish": "attack=1 speed=0.25 sees=8",
+    "minecraft:spider": "attack=2 speed=0.3 sees=16",
+    "minecraft:vindicator": "attack=13 speed=0.35 sees=12",
+    "minecraft:wither_skeleton": "attack=9 speed=0.3125 sees=16 hits=wither:200",
+    "minecraft:zombie": "attack=3 speed=0.23 sees=35",
+    "minecraft:zombie_villager": "attack=3 speed=0.23 sees=35",
+    "minecraft:zombie_villager_v2": "attack=3 speed=0.23 sees=35",
+}
+
 rows = []
 for document in packs.entities().values():
     entity = document.get("minecraft:entity")
@@ -49,6 +73,9 @@ for document in packs.entities().values():
     held = [name for name, holds in traits if holds]
     if entity["description"]["identifier"] != "minecraft:player" and experience(entity):
         held.append("xp=" + experience(entity))
+    if entity["description"]["identifier"] != "minecraft:player" and strolls(entity) is not None:
+        held.append(f"strolls={strolls(entity):g}")
+    held.extend(filter(None, [HUNTS.get(entity["description"]["identifier"])]))
     if held:
         rows.append((entity["description"]["identifier"], " ".join(held)))
 open(os.path.join(HERE, "..", "mob-traits.tsv"), "w", newline="\n").write("".join(f"{name}\t{traits}\n" for name, traits in sorted(rows)))

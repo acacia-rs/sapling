@@ -1,6 +1,6 @@
 //! Mobs that hunt players, as BDS's were seen to (docs/research/mob-attacks.md): one picks
 //! the nearest player it could kill, walks straight at it and hits it when it is within reach.
-// TODO: no path around a block, no strolling or looking about; prey once seen is kept behind a
+// TODO: no path around a block; prey once seen is kept behind a
 // wall; nothing pushes another aside; a spider hunts by day too and none holds what it hits with; peaceful worlds keep their
 // monsters, idle; viewers far off are told every move, where BDS told one of every other.
 
@@ -9,9 +9,9 @@ use acacia_proto::types::{EntityProperties, MetadataDictionaryItem, MetadataDict
 use bevy_ecs::prelude::*;
 use sapling_api::Difficulty;
 
+use super::legs;
 use crate::body::Body;
 use crate::components::{InLayer, Layer, NetId, Position, Settings, Tick, in_world};
-use crate::sync::Told;
 use crate::{entities, late_sounds, vitals};
 
 /// Ticks between two looks for a player.
@@ -19,22 +19,11 @@ const LOOKS: u64 = 10;
 /// A hunter's box reaches this much further across for its hit, and it hits once in this many ticks.
 const REACH: f32 = 0.8;
 const COOLDOWN: u64 = 20;
-/// Its legs come up to speed by this much of it a tick; the push of a tick is 0.98 of its speed squared.
-const PACE: f32 = 0.1;
-const STRIDE: f32 = 0.98;
-/// Degrees its body turns in a tick.
-const TURN: f32 = 60.0;
 /// The speed its hit throws a player at, away from it and up.
 const THROW: f32 = 0.4;
 /// Nearer than this to its prey it stands: their boxes touch.
 const TOUCHING: f32 = 0.6;
 const PLAYER: [f32; 2] = [0.6, 1.8];
-/// In the air its legs push 0.02 of what they do on the ground at speed 1.
-const AIRBORNE: f32 = 0.02;
-/// It jumps at a block whose face is this near the middle of its box, if the block is over half
-/// a block high with two free above.
-const STEP_NEAR: f32 = 0.5;
-const STEP: f32 = 0.5;
 /// How far apart a line of sight is looked at.
 const GLANCE: f32 = 0.25;
 /// Its sounds come from this much of its height up: its growl, and its hit.
@@ -44,8 +33,6 @@ const MIDDLE: f32 = 0.5;
 #[derive(Component, Default)]
 pub(super) struct Hunter {
     prey: Option<Entity>,
-    pub yaw: f32,
-    pace: f32,
     ready: u64,
 }
 
@@ -79,14 +66,6 @@ fn in_sight(world: &World, layer: Entity, body: &Body, feet: [f32; 3]) -> bool {
     (0..=glances as usize).all(|glance| !super::is_full_block(level, std::array::from_fn(|axis| (from[axis] + (to[axis] - from[axis]) * glance as f32 / glances).floor() as i32)))
 }
 
-/// Whether a step is before a hunter going `facing`: see [`STEP_NEAR`].
-fn at_step(world: &World, layer: Entity, body: &Body, facing: f32) -> bool {
-    let Some(level) = world.get::<Layer>(layer).map(|layer| &layer.world) else { return false };
-    let [x, y, z] = [body.at[0] - facing.sin() * STEP_NEAR, body.at[1], body.at[2] + facing.cos() * STEP_NEAR].map(|c| c.floor() as i32);
-    let top = |up: i32| level.registry().get(level.block(x, y + up, z)).and_then(|state| state.boxes.iter().map(|b| b.max[1]).reduce(f32::max));
-    level.in_height(y + 2) && top(0).is_some_and(|top| top > STEP) && top(1).is_none() && top(2).is_none()
-}
-
 /// Keeps or picks the hunter's prey and tells its viewers of a change; where the prey is.
 fn pick(world: &mut World, entity: Entity, layer: Entity, id: u64, kind: &str, body: &Body) -> Option<[f32; 3]> {
     let now = world.resource::<Tick>().0;
@@ -113,26 +92,12 @@ fn pick(world: &mut World, entity: Entity, layer: Entity, id: u64, kind: &str, b
     found.map(|(_, feet)| feet)
 }
 
-/// Before the hunter's move: it turns to its prey and its legs push it there.
-pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity, id: u64, kind: &str) {
-    let (Some(body), Some(speed)) = (world.get::<Body>(entity).copied(), sapling_data::mob_traits(kind).hunts.map(|hunts| hunts.speed)) else { return };
-    let prey = pick(world, entity, layer, id, kind, &body);
-    let Some(mut hunter) = world.get_mut::<Hunter>(entity) else { return };
-    let Some(feet) = prey else { return hunter.pace = 0.0 };
-    let (dx, dz) = (feet[0] - body.at[0], feet[2] - body.at[2]);
-    let turn = ((-dx).atan2(dz).to_degrees() - hunter.yaw + 180.0).rem_euclid(360.0) - 180.0;
-    hunter.yaw += turn.clamp(-TURN, TURN);
-    hunter.pace = (hunter.pace + PACE).min(1.0);
-    let stride = if body.on_ground { STRIDE * (speed * hunter.pace).powi(2) } else { AIRBORNE * STRIDE * speed * hunter.pace };
-    let (yaw, push) = (hunter.yaw, if dx.hypot(dz) < TOUCHING { 0.0 } else { stride });
-    let facing = yaw.to_radians();
-    let leap = body.on_ground && push > 0.0 && at_step(world, layer, &body, facing);
-    if let Some(mut body) = world.get_mut::<Body>(entity) {
-        body.walk([-facing.sin() * push, facing.cos() * push], leap);
-    }
-    if let Some(mut told) = world.get_mut::<Told>(entity) {
-        told.face(yaw, yaw);
-    }
+/// Before the hunter's move: it walks at its prey, if it has any.
+pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity, id: u64, kind: &str) -> bool {
+    let (Some(body), Some(speed)) = (world.get::<Body>(entity).copied(), sapling_data::mob_traits(kind).hunts.map(|hunts| hunts.speed)) else { return false };
+    let Some(feet) = pick(world, entity, layer, id, kind, &body) else { return false };
+    legs::walk(world, entity, layer, &body, [feet[0], feet[2]], speed, TOUCHING);
+    true
 }
 
 /// After its move: a hunter whose reach its prey is in swings and hits it, heard a tick later.

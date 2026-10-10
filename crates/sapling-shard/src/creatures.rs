@@ -1,13 +1,15 @@
 //! Mobs, spawned through the plugin API or kept by a world folder: bodies (body.rs) that fall and
-//! collide, and hunt if their kind does (hunting.rs), shown as BDS announced their kind (`sapling_data::add_entity`) or
+//! collide, stroll (strolling.rs) and hunt if their kind does (hunting.rs), shown as BDS announced their kind (`sapling_data::add_entity`) or
 //! as they were stored; and the entity side of the handlers' context.
-// TODO: no AI but hunting; their physics are the Java game's (`Physics::MOB`); a spawned mob is
+// TODO: no AI but strolling and hunting; their physics are the Java game's (`Physics::MOB`); a spawned mob is
 // saved with the least a compound needs, which BDS was not tried on.
 
 mod attacks;
 mod harm;
 mod health;
 mod hunting;
+mod legs;
+mod strolling;
 
 use bevy_ecs::prelude::*;
 use bytes::Bytes;
@@ -104,7 +106,7 @@ fn spawn(world: &mut World, layer: Entity, kind: &str, feet: [f32; 3]) -> Option
     let body = Body::new(feet, [0.0; 3], size);
     let entity = entities::spawn(world, layer, kind, body, feet, |id| Some(announcement(id, kind, &body, None, None, 0.0)))?;
     world.entity_mut(entity).insert(Creature { look: None });
-    hunting::arm(world, entity, kind);
+    give_legs(world, entity, kind);
     give_health(world, entity, kind, None, 0);
     let id = world.get::<NetId>(entity)?.0;
     entities::after_announcing(world, layer, [x, y, z], vec![spawn_sound(id, kind, &body)]);
@@ -121,11 +123,20 @@ pub(crate) fn from_storage(world: &mut World, layer: Entity, actor: Actor, uniqu
     let body = Body::new(actor.position, [0.0; 3], size);
     let kind = actor.identifier.clone();
     let Some(entity) = entities::spawn(world, layer, &kind, body, actor.position, |id| Some(announcement(id, &kind, &body, Some(&actor), None, 0.0))) else { return false };
-    hunting::arm(world, entity, &kind);
+    give_legs(world, entity, &kind);
     give_health(world, entity, &kind, actor.health, actor.fire.max(0) as u16);
     world.entity_mut(entity).insert(Creature { look: Some(actor) });
     entities::keep(world, entity, layer, unique_id, compound);
     true
+}
+
+/// Gives a mob of a kind that strolls or hunts what it does so with.
+fn give_legs(world: &mut World, entity: Entity, kind: &str) {
+    let traits = sapling_data::mob_traits(kind);
+    if traits.strolls.is_some() || traits.hunts.is_some() {
+        world.entity_mut(entity).insert((legs::Legs::default(), strolling::Stroll::default()));
+    }
+    hunting::arm(world, entity, kind);
 }
 
 /// Gives a mob of a kind that dies the health BDS announced its kind with, `left` of it, and
@@ -204,8 +215,12 @@ pub(crate) fn tick(world: &mut World) {
     for (entity, layer, id, kind) in all {
         let Some(start) = world.get::<Body>(entity).copied() else { continue };
         let is_alive = world.get::<Dying>(entity).is_none();
-        if is_alive {
-            hunting::steer(world, entity, layer, id, &kind);
+        if is_alive && !hunting::steer(world, entity, layer, id, &kind) {
+            let traits = sapling_data::mob_traits(&kind);
+            let strolls = world.resource::<crate::components::Settings>().0.mobs_stroll;
+            if let Some(speed) = traits.strolls.or(traits.hunts.map(|hunts| hunts.speed)).filter(|_| strolls) {
+                strolling::steer(world, entity, layer, speed);
+            }
         }
         let Some((body, packets)) = entities::step(world, entity, layer, id, &Physics::MOB, 0.0) else { continue };
         blocks::to_viewers(world, layer, body.at.map(|c| c.floor() as i32), &packets);
@@ -218,7 +233,7 @@ pub(crate) fn tick(world: &mut World) {
         }
         let health = world.get::<Health>(entity);
         if !packets.is_empty() || health.map(|health| (health.left(), health.is_burning())) != before {
-            let shown = announcement(id, &kind, &body, world.get::<Creature>(entity).and_then(|creature| creature.look.as_ref()), health, world.get::<hunting::Hunter>(entity).map_or(0.0, |hunter| hunter.yaw));
+            let shown = announcement(id, &kind, &body, world.get::<Creature>(entity).and_then(|creature| creature.look.as_ref()), health, world.get::<legs::Legs>(entity).map_or(0.0, |legs| legs.yaw));
             mobs::reannounce(world, entity, shown);
         }
     }

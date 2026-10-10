@@ -32,8 +32,8 @@ Each needs its rule looked up first (`bdsre` for BDS, the Java jar for data), th
    saved with it. Water puts a fire out with BDS's fizz (`douse`). A player's hit
    hurts and throws a mob, and its kill leaves experience (`creatures/attacks.rs`, `hit`). Left:
    what the doc lists as not drilled. A zombie and seven kinds like it take the nearest survival player, walk at it
-   and hit it (`creatures/hunting.rs`, `docs/research/mob-attacks.md`, `bite`, `slain`, `kinds`); left
-   there: paths around walls, strolling, the kinds that shoot or explode, a hit mob that flees or turns on its hitter. Survival players have health: falls,
+   and hit it (`creatures/hunting.rs`, `docs/research/mob-attacks.md`, `bite`, `slain`, `kinds`); and every kind that walks strolls when it has nothing to do (`creatures/strolling.rs`, `stroll`); left
+   there: paths around walls, fleeing, the kinds that shoot or explode, a hit mob that flees or turns on its hitter. Survival players have health: falls,
    fire, lava, water over the head and a block around them hurt, `/damage` and `/kill` too; they die
    leaving items and experience and rise at the world's spawn (`vitals.rs`,
    `docs/research/player-damage.md`, `bds_command_probe hurt` and `smother`). A wounded player mends by its

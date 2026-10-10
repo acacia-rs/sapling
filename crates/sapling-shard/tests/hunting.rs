@@ -133,3 +133,22 @@ fn each_kind_hunts_at_its_speed_with_its_hit_and_what_the_hit_gives() {
         h.tick_all();
     }
 }
+
+#[test]
+fn a_cow_left_alone_strolls_at_its_pace_and_stays_on_the_floor() {
+    // research/captures/bds-stroll.txt: a cow went 0.08634 a tick, up to ten blocks at a time.
+    let mut h = Harness::with(sapling_shard::ShardConfig { mobs_stroll: true, ..common::config() }, common::platform());
+    h.enter(1, "Alex");
+    h.remote.run(|ctx| assert!(ctx.spawn_entity("minecraft:cow", [0.5, 65.0, 0.5]).is_some()));
+    let seen = std::sync::Arc::new(std::sync::Mutex::new(Vec::new()));
+    for _ in 0..1200 {
+        let seen = seen.clone();
+        h.remote.run(move |ctx| seen.lock().unwrap().extend(ctx.entities().first().map(|cow| (cow.feet, cow.velocity))));
+        h.tick_all();
+    }
+    let seen = seen.lock().unwrap().clone();
+    let fastest = seen.iter().map(|(_, velocity)| velocity[0].hypot(velocity[2])).fold(0.0, f32::max);
+    let furthest = seen.iter().map(|(feet, _)| (feet[0] - 0.5).hypot(feet[2] - 0.5)).fold(0.0, f32::max);
+    assert!((fastest - 0.086_344).abs() < 1e-4 && furthest > 2.0, "{fastest} {furthest}");
+    assert!(seen.iter().all(|(feet, _)| feet[1] == 65.0), "it never left the floor");
+}
