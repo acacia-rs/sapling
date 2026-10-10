@@ -15,15 +15,33 @@ hunger effect, eating one of each from its hand.
 - A stronger hunger given over the rotten flesh's replaced it (`Update`), and nothing was left
   when that ran out.
 
+## Potions (`drink`)
+
+A potion put in the hand by `/replaceitem ... potion 1 <data>` and drunk
+(`research/captures/bds-drink.txt`): held 32 ticks like food, then the effect's `Add` beside
+`CompletedUsingItem` with use method `Consume`.
+
+| data | effect | level | ticks |
+| --- | --- | --- | --- |
+| 0, 4 | none (water, awkward) | | |
+| 14, 15, 16 | speed | I, I, II | 3600, 9600, 1800 |
+| 21, 22 | instant health | I, II | |
+| 23, 24 | instant damage | I, II | |
+| 25, 26, 27 | poison | I, I, II | 900, 2400, 450 |
+| 28, 29, 30 | regeneration | I, I, II | 900, 2400, 450 |
+| 36 | wither | II | 800 |
+
 ## Not drilled
 
 How often raw chicken does give hunger and for how long, the chances themselves (taken as the
 Java game's 8, 3 and 6 in 10), what a hit does to absorption, a pufferfish, an enchanted golden
-apple, suspicious stew, chorus fruit, honey, potions, a stew's bowl.
+apple, suspicious stew, chorus fruit, honey, the other potions, splash and lingering ones, what
+a potion leaves in the hand (taken as a glass bottle), a stew's bowl.
 
 ## Sapling
 
 `sapling-data/src/food.rs` holds each food's effects, leftover and whether it cures;
 `vitals/eating.rs` applies them, and absorption is a ninth effect: 4 health a level on top of
 the player's own, which hits take first (`creatures/health.rs` `cushion`). Stews leave a bowl as
-in the Java game.
+in the Java game. The potions of the table are drunk to the same effect (`consumable`); any
+other is water.

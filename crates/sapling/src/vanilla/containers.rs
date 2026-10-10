@@ -3,7 +3,7 @@
 //! [data]` into a player's, answering as BDS does (research/captures/bds-replaceitem.txt,
 //! bds-hit.txt).
 // TODO: of entities only players, and of their slots the hand, the hotbar and the inventory; BDS's
-// refusals of the entity form were not recorded; the data value is read and not used; BDS's bound
+// refusals of the entity form were not recorded; the data value is the item's, unchecked; BDS's bound
 // on the amount may be the item's own stack size (only stone's 64 was recorded), and an amount
 // below 1 was not tried.
 
@@ -31,6 +31,7 @@ pub(crate) struct ReplaceItem {
     /// How BDS reports the item when the game does not have it.
     item_wrong: ParseError,
     amount: Option<i32>,
+    data: Option<i32>,
 }
 
 /// The next word, which must be `word` (in any case).
@@ -84,9 +85,9 @@ impl CommandSyntax for ReplaceItem {
         let item = args.word()?.to_owned();
         let item_wrong = args.error_at(mark);
         let amount = Option::<i32>::parse(args)?;
-        let _data = Option::<i32>::parse(args)?;
+        let data = Option::<i32>::parse(args)?;
         args.finish()?;
-        Ok(Self { target, slot, item, item_wrong, amount })
+        Ok(Self { target, slot, item, item_wrong, amount, data })
     }
 }
 
@@ -97,7 +98,7 @@ impl Command for ReplaceItem {
             return out.translate("commands.generic.num.tooBig", vec![count.to_string(), MOST.to_string()], false);
         }
         let name = if self.item.contains(':') { self.item.clone() } else { format!("minecraft:{}", self.item) };
-        let item = (name != "minecraft:air").then(|| Item::new(&name, count.clamp(1, MOST) as u8));
+        let item = (name != "minecraft:air").then(|| Item { damage: self.data.unwrap_or(0) as i16, ..Item::new(&name, count.clamp(1, MOST) as u8) });
         let bad_slot = |out: &mut Output, size: usize| out.translate("commands.replaceitem.badSlotNumber", vec![self.slot.to_string(), "0".into(), (size - 1).to_string()], false);
         match &self.target {
             Target::Block(position) => {

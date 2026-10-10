@@ -27,7 +27,8 @@ pub(super) struct Meal {
 
 fn held(world: &World, player: Entity) -> Option<(i16, sapling_data::Food)> {
     let hand = world.get::<Inventory>(player)?.in_hand();
-    Some((inventory::wire(hand, false).network_id, sapling_data::food(&hand.as_ref()?.stack.name)?))
+    let stack = &hand.as_ref()?.stack;
+    Some((inventory::wire(hand, false).network_id, sapling_data::consumable(&stack.name, stack.damage)?))
 }
 
 /// Shows the player and, through `movement::announce`, its viewers whether it is using an item.
@@ -58,8 +59,8 @@ pub(crate) fn stop(world: &mut World, player: Entity) {
 }
 
 /// What a food does besides feeding: the effects it gives, each as often as it does; milk ends
-/// them all; and what held it is left.
-fn follow(world: &mut World, player: Entity, food: &sapling_data::Food) {
+/// them all.
+fn afflict(world: &mut World, player: Entity, food: &sapling_data::Food) {
     if food.cures {
         effects::clear(world, player);
     }
@@ -69,6 +70,10 @@ fn follow(world: &mut World, player: Entity, food: &sapling_data::Food) {
             effects::give(world, player, effect, gives.ticks, gives.amplifier, true);
         }
     }
+}
+
+/// What held a food is left in its place.
+fn leave(world: &mut World, player: Entity, food: &sapling_data::Food) {
     let registry = world.get::<InLayer>(player).and_then(|layer| world.get::<Layer>(layer.0)).map(|layer| layer.world.registry());
     if let Some(left) = food.leaves.zip(registry).and_then(|(name, registry)| inventory::stored(&sapling_api::Item::new(name, 1), registry)) {
         inventory::give_and_pop(world, player, &left);
@@ -78,18 +83,24 @@ fn follow(world: &mut World, player: Entity, food: &sapling_data::Food) {
 /// The food is eaten: one less in the hand, the hunger fed, and a burp; a drink is not heard.
 fn finish(world: &mut World, player: Entity, meal: Meal) {
     let now = world.resource::<Tick>().0;
-    let use_method = if meal.food.cures { CompletedUsingItemUseMethod::Unknown(-1) } else { CompletedUsingItemUseMethod::Eat };
+    let use_method = match (meal.food.drunk, meal.food.cures) {
+        (true, true) => CompletedUsingItemUseMethod::Unknown(-1),
+        (true, false) => CompletedUsingItemUseMethod::Consume,
+        (false, _) => CompletedUsingItemUseMethod::Eat,
+    };
     let used = CompletedUsingItem { used_item_id: meal.id, use_method };
+    // BDS tells the effects first.
+    afflict(world, player, &meal.food);
     world.get_mut::<Outgoing>(player).expect("players have an outbox").push(&used);
     inventory::change(world, player, Inventory::take_one_in_hand);
-    follow(world, player, &meal.food);
+    leave(world, player, &meal.food);
     let Some(mut vitals) = world.get_mut::<Vitals>(player) else { return };
     vitals.hunger.feed(meal.food.hunger, meal.food.saturation);
     let hunger = vitals.hunger;
     let (Some(id), Some([x, y, z])) = (world.get::<NetId>(player).map(|id| id.0), world.get::<Position>(player).map(|position| position.feet)) else { return };
     tell(world, player, &hunger.told(id, now));
     show(world, player, false);
-    if meal.food.cures {
+    if meal.food.drunk {
         return;
     }
     let position = Vec3f { x, y: y + EYE_HEIGHT - MOUTH, z };

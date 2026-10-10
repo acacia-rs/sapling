@@ -51,7 +51,7 @@ third level with 60, 48, 36, 24 and 12.
 
 ## Not drilled
 
-Every other effect, potions (food and milk: food-effects.md), what armour does against instant damage,
+Every other effect (food, milk and potions: food-effects.md), what armour does against instant damage,
 effects on mobs, a death under an effect, what a late viewer is told.
 
 ## Sapling

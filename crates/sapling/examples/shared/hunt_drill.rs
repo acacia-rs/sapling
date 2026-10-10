@@ -1,4 +1,4 @@
-//! The bite, slain, chase, sick, worn, kinds, stroll, flee and around drills of bds_command_probe: a zombie hunting the actor
+//! The bite, slain, chase, sick, worn, kinds, stroll, flee, around and drink drills of bds_command_probe: a zombie hunting the actor
 //! (docs/research/mob-attacks.md), and what food does besides feeding (food-effects.md).
 
 pub const BITE_SHOWN: &[&str] = &[
@@ -158,5 +158,16 @@ pub fn around() -> Vec<String> {
         lines.extend(["kill @e[type=zombie]", "fill ~-9 ~ ~-14 ~9 ~1 ~-1 air", "effect @s instant_health 1 4", "", ""].map(String::from));
     }
     lines.extend(["gamemode creative @s", "kill @e[type=!player]", ""].map(String::from));
+    lines
+}
+
+/// The actor, in survival, drinks potions put in its hand by their data value: water and the
+/// plain ones, then those of the effects sapling has in each strength and length.
+pub fn drink() -> Vec<String> {
+    let mut lines: Vec<String> = ["kill @e[type=!player]", "", "fill ~-3 ~-1 ~-3 ~8 ~-1 ~8 stone", "fill ~-3 ~ ~-3 ~8 ~6 ~8 air", "gamemode survival @s", "damage @s 10", ""].map(String::from).into();
+    for data in [0, 4, 14, 15, 16, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 36] {
+        lines.extend([format!("replaceitem entity @s slot.weapon.mainhand 0 potion 1 {data}"), "!eat".into(), String::new(), String::new(), String::new(), "effect @s clear".into(), String::new()]);
+    }
+    lines.extend(["gamemode creative @s", "clear @s", ""].map(String::from));
     lines
 }

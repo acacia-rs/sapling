@@ -227,13 +227,13 @@ fn a_spider_eye_poisons_a_golden_apple_cushions_and_milk_ends_both() {
     if let TransactionTransactionData::ItemUse(used) = &mut click.transaction.transaction_data {
         used.action_type = TransactionUseItemActionType::ClickAir;
     }
-    let swallow = |h: &mut Harness, food: &str| {
-        let item = Item::new(food, 1);
+    let swallow_this = |h: &mut Harness, item: Item| {
         h.remote.run(move |ctx| assert!(ctx.set_item(ALEX, Slot::Main(0), Some(&item))));
         h.tick_all();
         h.receive(1, &click);
         (0..34).flat_map(|_| h.tick_all().to(2).to_vec()).collect::<Vec<RawPacket>>()
     };
+    let swallow = |h: &mut Harness, food: &str| swallow_this(h, Item::new(food, 1));
     let shown = |sent: &[RawPacket]| all::<MobEffect>(sent).into_iter().map(|effect| (effect.event_id, effect.effect_id, effect.duration)).collect::<Vec<_>>();
     let cushion = |sent: &[RawPacket]| all::<UpdateAttributes>(sent).iter().flat_map(|update| &update.attributes).filter(|attribute| attribute.name == "minecraft:absorption").map(|attribute| attribute.current).collect::<Vec<_>>();
     // A second of the strongest hunger empties six of it.
@@ -252,6 +252,11 @@ fn a_spider_eye_poisons_a_golden_apple_cushions_and_milk_ends_both() {
     assert!(gone.contains(&10) && gone.contains(&22) && cushion(&sent) == [0.0], "{gone:?}");
     h.remote.run(|ctx| assert_eq!(ctx.item(ALEX, Slot::Main(0)).map(|item| item.name), Some("minecraft:bucket".to_owned())));
     assert!(all::<CompletedUsingItem>(h.tick_all().to(1)).is_empty());
+    // A potion of strong regeneration (data 30), research/captures/bds-drink.txt.
+    let sent = swallow_this(&mut h, Item { damage: 30, ..Item::new("minecraft:potion", 1) });
+    assert_eq!(shown(&sent), [(MobEffectEventId::Add, 10, 450)]);
+    h.remote.run(|ctx| assert_eq!(ctx.item(ALEX, Slot::Main(0)).map(|item| item.name), Some("minecraft:glass_bottle".to_owned())));
+    h.tick_all();
 }
 
 #[test]
