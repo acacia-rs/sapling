@@ -21,6 +21,14 @@ fn thread<'c>(ctx: &'c mut Ctx) -> &'c mut Mt19937 {
 
 impl Multiface {
     pub(super) fn place_shuffled(&self, ctx: &mut Ctx, at: [i32; 3]) -> Option<[i32; 3]> {
+        let before = thread(ctx).draws();
+        let placed = self.place_drawn(ctx, at);
+        let after = thread(ctx).draws();
+        super::trace::line(|| format!("    thread {} {} {} draws {before}..{after} placed {placed:?}", at[0], at[1], at[2]));
+        placed
+    }
+
+    fn place_drawn(&self, ctx: &mut Ctx, at: [i32; 3]) -> Option<[i32; 3]> {
         let mut faces = self.faces.to_vec();
         shuffle(&mut faces, thread(ctx));
         if self.attach(ctx, at, &faces).is_some() {

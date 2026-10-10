@@ -57,6 +57,14 @@ impl Region {
     }
 }
 
+/// `SAPLING_ORACLE_THREAD_SEED=<seed>:<draws>`: the one worker of the run behind `SAPLING_ORACLE_ORDER`
+/// seeded its thread generator so and had drawn that often before the first chunk.
+pub fn thread_seed() -> Option<(u32, u32)> {
+    let text = std::env::var("SAPLING_ORACLE_THREAD_SEED").ok()?;
+    let (seed, spent) = text.split_once(':').expect("<seed>:<draws>");
+    Some((seed.parse().expect("a u32 seed"), spent.parse().expect("a draw count")))
+}
+
 /// The world and its `-run2` twin, or None when the oracle worlds are absent.
 pub fn open(world: &str) -> Option<(LevelDbWorld, LevelDbWorld)> {
     let root = std::env::var_os("SAPLING_ORACLE_WORLDS")

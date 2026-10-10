@@ -121,9 +121,14 @@ impl Features {
 
     /// Decorates in `order`, every source over all earlier ones; `thread_seed`: the seed of the one
     /// worker's generator in the BDS run the order comes from.
-    pub fn set_order(&mut self, order: &[(i32, i32)], thread_seed: Option<u32>) {
+    /// and the draws it had spent before the first chunk (recipe UUIDs at startup).
+    pub fn set_order(&mut self, order: &[(i32, i32)], thread_seed: Option<(u32, u32)>) {
         self.order = Some(order.iter().enumerate().map(|(rank, &chunk)| (chunk, rank as Rank)).collect());
-        self.thread = thread_seed.map(|seed| (order.to_vec(), Mutex::new(vec![Mt19937::new(seed)])));
+        self.thread = thread_seed.map(|(seed, spent)| {
+            let mut random = Mt19937::new(seed);
+            random.consume_count(spent);
+            (order.to_vec(), Mutex::new(vec![random]))
+        });
     }
 
     /// The thread generator before the source ranked `rank`, decorating the sources before it as needed.
