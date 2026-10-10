@@ -1,5 +1,6 @@
 //! The monument's wing rooms (`OceanMonumentWingRoom::postProcess` 14834e440): Java's two
-//! designs; BDS's design 0 lacks Java's east doorway pillar.
+//! designs. Design 0's two doorway pillars stand one past the piece's box (z 21): a chunk the box
+//! does not meet never gets its part of them.
 
 use super::{BRICKS, DARK, LAMP};
 use crate::block::Block;
@@ -49,6 +50,7 @@ pub fn wing(f: &Frame, design: i32, canvas: &mut Canvas) {
         f.place(canvas, BRICKS, 9, 7, 20);
         f.place(canvas, BRICKS, 13, 7, 20);
         fill(f, canvas, (6, 0, 21), (7, 4, 21), BRICKS);
+        fill(f, canvas, (15, 0, 21), (16, 4, 21), BRICKS);
     } else if design == 1 {
         fill(f, canvas, (9, 3, 18), (13, 3, 20), BRICKS);
         fill(f, canvas, (9, 0, 18), (9, 2, 18), BRICKS);

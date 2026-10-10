@@ -117,7 +117,9 @@ def expand(palette):
     waterloggable = {line.strip() for line in open(os.path.join(HERE, 'data', 'waterloggable.txt'))}
     flagged = {}
     for (name, states, wl, flags), i in palette.items():
-        flagged[(name, states, wl, flags | (WATERLOGGABLE if name in waterloggable else 0))] = i
+        # The probe's templates held wooden stairs only; ocean ruins flood their stone brick stairs too.
+        floods = name in waterloggable or name.endswith('_stairs')
+        flagged[(name, states, wl, flags | (WATERLOGGABLE if floods else 0))] = i
     for (name, states, wl, flags) in list(flagged):
         if flags & WATERLOGGABLE:
             flagged.setdefault((name, states, True, flags), len(flagged))

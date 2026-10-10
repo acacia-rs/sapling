@@ -167,6 +167,7 @@ impl Monument {
         let chunk = canvas.bb;
         for piece in self.pieces.iter().filter(|p| p.frame.bb.intersects(&chunk)) {
             let f = &piece.frame;
+            super::trace::label(|| format!("monument {:?} {:?} facing {:?} open {:?}", piece.room, f.bb, f.orientation, piece.rooms.iter().map(|r| r.open).collect::<Vec<_>>()));
             match piece.room {
                 Room::Entry => rooms::entry(f, piece, canvas),
                 Room::Simple(design) => rooms::simple(f, piece, design, canvas, random),

@@ -71,14 +71,11 @@ impl Structures {
     }
 
     /// Every village piece meeting the canvas's chunk, in assembly order; `seed` is the chunk's
-    /// structure seed.
-    pub(super) fn place_villages(density: &Density, canvas: &mut Canvas, villages: &[Arc<Village>], seed: u32) {
+    /// structure seed, `tops` its pre-worldgen heightmap: what terrain matching reads while the
+    /// chunk generates (placeInWorld 141eeb8d0, `LevelChunk` +0xf80), so a path bridges a carved cave.
+    pub(super) fn place_villages(density: &Density, canvas: &mut Canvas, villages: &[Arc<Village>], seed: u32, tops: &[i16; 256]) {
         let b = canvas.bb;
-        let mut heights = [0; 256];
-        for (i, h) in heights.iter_mut().enumerate() {
-            *h = canvas.height(b.x0 + (i & 15) as i32, b.z0 + (i >> 4) as i32);
-        }
-        let heights = |x: i32, z: i32| heights[((z & 15) << 4 | (x & 15)) as usize];
+        let heights = |x: i32, z: i32| tops[((z & 15) << 4 | (x & 15)) as usize] as i32;
         let top_material = |x: i32, y: i32, z: i32| {
             let biome = density.climate.biome_at(x, y, z);
             crate::surface::surface_spec(biome).map_or(Block::GrassBlock, |s| s.materials.top)

@@ -2,7 +2,8 @@
 //! structure stage and BDS disagree on a structure block (the oracle's `structure stage` tally),
 //! with what wrote ours (structure/trace.rs: piece, template cell and its block before the rules),
 //! then the counts by writer and block pair. `SHOW=<n>` caps the cell lines (default 300);
-//! `ONLY=<substring>` keeps the cells whose line has it.
+//! `ONLY=<substring>` keeps the cells whose line has it; `NEAR=x,y,z` also prints every traced
+//! write within three blocks of that cell, in order.
 #![allow(dead_code)]
 
 #[path = "../tests/oracle_support/mod.rs"]
@@ -29,6 +30,7 @@ fn main() {
     let (primary, twin) = open(world).expect("oracle world");
     let show: usize = std::env::var("SHOW").ok().and_then(|v| v.parse().ok()).unwrap_or(300);
     let only = std::env::var("ONLY").ok();
+    let near: Option<Vec<i32>> = std::env::var("NEAR").ok().map(|v| v.split(',').map(|n| n.parse().unwrap()).collect());
     let chunks: Vec<(i32, i32)> = (n[0]..=n[2]).flat_map(|x| (n[1]..=n[3]).map(move |z| (x, z))).collect();
     let mut groups: BTreeMap<(String, String, String, String), u32> = BTreeMap::new();
     let mut kinds: BTreeMap<String, u32> = BTreeMap::new();
@@ -39,7 +41,10 @@ fn main() {
         let Some(a) = primary.load_column(key).unwrap() else { return };
         let b = twin.load_column(key).unwrap().expect("twin chunk saved");
         let mut labels: HashMap<[i32; 3], Vec<String>> = HashMap::new();
-        for ((at, _), label) in generator.structure_trace(cx, cz) {
+        for ((at, block), label) in generator.structure_trace(cx, cz) {
+            if near.as_ref().is_some_and(|n| (0..3).all(|i| (n[i] - at[i]).abs() <= 3)) {
+                println!("near: {at:?} {}[{}] by {label}", block.name(), block.states());
+            }
             let list = labels.entry(at).or_default();
             if list.last() != Some(&label) {
                 list.push(label);

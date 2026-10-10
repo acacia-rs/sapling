@@ -37,13 +37,30 @@ Companion to [worldgen-bds-structures.md](worldgen-bds-structures.md) (starts, p
   `scripts/data/waterloggable.txt` (stairs, slabs, fences, walls, panes, bars, doors, trapdoors, chests, ...;
   never double slabs).
 
+## Saved states (2026-10-10, worldgen/city3)
+The probe reads a block after BDS has let it settle alone, so three kinds of state in the table were the
+lone block's, not the placed one's (`as_saved` in scripts/templates_to_rust.py puts the template's back):
+- Circuits. A lone wire had lost its `power`, a repeater its `powered`, a lamp its `lit`, and a `piston_head`
+  read as air. The ancient city's centre keeps all of them: wire `redstone_signal` = Java `power`,
+  `powered_repeater`, `lit_redstone_lamp`, and the head as `sticky_piston_arm_collision` (`piston_arm_collision`
+  unsticky) with its piston's `facing_direction`. 45 cells of city_center_1, alike in the ticked and the
+  tick-free world. Torches and comparators were left as probed (no oracle cell disagrees).
+- Corner stairs: worldgen-bds-jigsaw.md, "Elements and processors".
+- Walls: "Walls" below.
+The flooded probe's list of what takes water (`waterloggable.txt`) has the probe's wooden stairs only; ocean
+ruins flood their stone brick stairs too (near origin, 26 cells), so every `*_stairs` counts
+(templates_palette.py).
+
 ## Placement (`placeInWorld` 141eeb8d0, settings ctor 141ef1240)
 Settings: integrity 1, seed, flags (+8 terrain match, +9 mirror, +10 rotation, +0xb skip structure blocks,
 +0xc skip jigsaws, +0xd flood), +0x10 ignored block, +0x18 chunk (INVALID = unbounded box), +0x48 wood remap,
 +0x88 processors. Per block in file order:
 1. skip the ignored block type (template pieces: air), structure blocks, jigsaws - before any draw;
 2. integrity: `integrity < nextFloat()` on an MT seeded with the settings seed skips;
-3. position: mirror flips template z, then the rotation turns about the origin (no pivot); box test;
+3. position: mirror flips template z, then the rotation turns about the origin (no pivot); with terrain
+   matching (+8) y = the column's height + template y - 1, the height from the chunk's pre-worldgen heightmap
+   (`LevelChunk` +0xf80, else +0xb80; worldgen-bds-features.md, "Heightmaps"): the terrain before its carvers,
+   so a village path bridges a cave mouth instead of following it down (stronghold region, 2026-10-10); box test;
 4. block: rotation (141f70580; from the table), mirror (`template/mirror.rs`: flip the turned state across the
    world axis template z lands on), wood remap (doors, trapdoors, stairs, stripped logs special-cased; logs,
    slabs, double slabs, bark, fences, planks by list - `template/wood.rs`), processors;

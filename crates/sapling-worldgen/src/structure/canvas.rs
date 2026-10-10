@@ -25,6 +25,8 @@ pub struct Neighbours<'a> {
     pub carved: &'a dyn Fn(i32, i32, i32) -> Block,
     pub placed: &'a dyn Fn(i32, i32, i32) -> Block,
     pub spawners: &'a dyn Fn() -> Spawners,
+    /// The chunk's own pre-worldgen heightmap (`LevelChunk` +0xf80: the terrain before its surface and carvers).
+    pub generated_tops: &'a dyn Fn() -> Arc<[i16; 256]>,
 }
 
 pub struct Canvas<'a> {

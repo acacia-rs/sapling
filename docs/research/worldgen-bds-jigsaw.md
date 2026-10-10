@@ -32,10 +32,25 @@ Companion to [worldgen-bds-templates.md](worldgen-bds-templates.md) (template lo
 - Hardcoded processors (`StructurePoolBlockRule`, applied in placeInWorld after the wood remap): every
   passing rule applies, later rules see the replacement; predicates draw from the settings MT (seed = the
   chunk's structure seed): random_block_match `f < p` only for 0 < p < 1, list random `f <= p`.
-  The list predicate holds blocks, not types: only a listed block in its default state matches and draws
-  (fitted on the oracle's city, 2026-10-10, not read from the binary: BDS removes no turned or corner stair
-  and no top slab, and matching any state drew for them, removed 5% and shifted the rest of the piece's
-  draws in that chunk; `default_state` in template/rules.rs).
+  A rule is {input predicate, location predicate, position predicate, output block} (the loop in placeInWorld
+  141eec974: input on the template block after rotation and wood remap, location on the world's block).
+- What each predicate compares (read 2026-10-10, vtables in the labels): `block_match` (145e15b00) the type's
+  name; `random_block_match` (145e15c70) `Block` +0x68, the **type**, of the block against its stored block's,
+  then the draw; `list_random` (145e14ff0) and `not_in_list` (145e15470) look the `const Block*` itself up in
+  a `std::set<const Block*>` (lower bound on the pointer, node key +0x20): a **state**. The lists are
+  registered with each type's default block, so only a listed block in its default state matches and draws:
+  BDS removes no turned or corner stair and no top slab (`default_state` in template/rules.rs; first fitted on
+  the oracle's city, where matching any state drew for them and shifted the rest of the piece's draws).
+  The tile-slab and soul-lantern rules are `random_block_match`: any state, as ported.
+- A stair's corner is part of that state, and the loader keeps it: a template's `shape=inner_right` stair is
+  placed as a corner stair and the list passes it over (city centre wall, oracle 2026-10-10: ours drew for it
+  and removed it, BDS removed the straight stair after it). templates.bin keeps the Java shape as placed
+  (`as_saved` in scripts/templates_to_rust.py); template/connect.rs names the final corner afterwards.
+- Jigsaws: before the template the element takes each jigsaw (vt+0x58, 145e1e030): inside the settings' box, a
+  **new generator seeded with the settings' seed**, the jigsaw's final block through the processors
+  (141eeda70), then `setBlock`. Every jigsaw of a chunk therefore draws the same floats: a city's connected
+  jigsaw pairs crack together (`jigsaw_block` in jigsaw/piece.rs; oracle: six pairs in five chunks, all the
+  chunk's jigsaws or none). The template loop then skips jigsaw blocks (settings +0xc).
 - v2 processors are Java's (template placement 145e1c040 -> 141ee0510, every template block processed, then
   clipped): rule processor 145944ea0 draws from a `java.util.Random` per block seeded by `Mth.getSeed` of the
   world position **with x multiplied in 64 bits**, first passing rule wins; capped 145942bd0 shuffles all
@@ -167,4 +182,8 @@ All 840 ruin-material cells of the trail ruin match, suspicious gravel included.
 145e137d0 FeaturePoolElement ctor   145e141d0/145e144c0 FeaturePoolElement place (legacy/v2)
 145e1aa90 StructurePoolElement::getBoundingBox   140906d00 zero getSize   14a89acf0 FeaturePoolElement vtable
 14827e1e0/14827ea50 pile feature place/block   0x14ccd3208 pile path list (grass_path)
+145e1b280 StructurePoolElement::place (legacy, vt+0x40)   145e1e030 its jigsaw handler (vt+0x58)
+141eeda70 processors over one block   141eec974 the rule loop in placeInWorld
+rule predicate vtables (test at slot 2): 14a89ae60 block_match (145e15b00), 14a89aea0 random_block_match
+(145e15c70), 14a89ade0 list_random (145e14ff0), 14a89ae20 not_in_list (145e15470), 14a89ada0 always_true
 ```

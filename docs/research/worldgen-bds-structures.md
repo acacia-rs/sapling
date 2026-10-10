@@ -115,6 +115,13 @@ Piece writes go through `placeBlock` (141f59f90: clipped to the chunk, `canBeRep
   behaviour in four places: the room's dirt floor (14831d010), `canBeReplaced` ignoring its kept list (planks,
   log and fence of the piece's wood, chains, bedrock; 14831c830), the old start height (14831b270) and plain
   cobweb floats (14831d770). Our worlds take the new branch everywhere: no dirt floor.
+- The kept list (2026-10-10, worldgen/city3): `canBeReplaced` compares `Block` +0x108 of the world's block, a
+  per-state value, with the piece's three material blocks (+0x38, +0x40 planks, +0x48 fence), the chain and
+  bedrock, so only the exact state is kept. A fence that has joined a neighbour is no longer the piece's fence
+  block: the stronghold libraries' railings are cut wherever a corridor's air box crosses them (oracle,
+  stronghold region: about 45 cells of two libraries). When a fence takes its connections was not
+  established; sapling keeps no fence (stronghold 1974 -> 1930 wrong + missing, every other mineshaft region
+  within a cell), planks, logs and chains by type.
 - Reads past the chunk (support tests at y0+3, floors, interior heightmaps) see the neighbours BDS
   post-processed earlier in the decoration phases with their pieces (`Neighbours::placed`, mineshafts only:
   village trees and pyramid heights matched worse with it).
@@ -152,6 +159,10 @@ MT(levelSeed): a, b = two `nextFloat()`; start seed `(a*cx) as i64 as u32 ^ (b*c
 shuffle uses a fresh MT on the start seed (`nextInt(i)`, i from n-1 down); no 58x58 water clearing box; water boxes
 write water below y 63 and air above (no keep); wing design `nextIntUnbounded() & 1`, and design 0 lacks Java's
 (15,0,21)-(16,4,21) box; chunk tests for the lower back (0,51)-(57,57) and middle left (7,21)-(13,54).
+
+Wing design 0 has both of Java's doorway pillars (boxes (6,0,21)-(7,4,21) and (15,0,21)-(16,4,21)): they stand
+one past the wing's box, so a chunk the box does not meet leaves its part of them out, which an earlier
+reading took for BDS lacking the second (oracle 2026-10-10: nine cells at -367,40..44,-324).
 
 ## Strongholds (src/structure/stronghold, 148375450)
 - Start on the blueprint generator (`a*x + b*z ^ levelSeed`, a/b the mineshaft's two `nextInt()`, one draw skipped):

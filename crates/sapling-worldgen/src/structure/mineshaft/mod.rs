@@ -78,10 +78,10 @@ pub struct Mineshaft {
     pub start: (i32, i32),
 }
 
-/// `canBeReplaced` (14831c830): pieces never overwrite their own wood, chains or bedrock.
+/// `canBeReplaced` (14831c830): pieces never overwrite planks, logs, chains or bedrock. Fences are
+/// replaced: see docs/research/worldgen-bds-structures.md, "Mineshafts" (the kept list).
 fn kept(block: Block) -> bool {
     matches!(block, Block::OakPlanks | Block::DarkOakPlanks | Block::OakLog | Block::DarkOakLog | Block::IronChain | Block::Bedrock)
-        || (Block::OakFence0..=Block::DarkOakFence15).contains(&block)
 }
 
 pub(super) fn frame(bb: BoundingBox, orientation: Option<u8>, depth: i32) -> Frame {

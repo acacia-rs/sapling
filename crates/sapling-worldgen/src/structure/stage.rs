@@ -105,7 +105,9 @@ impl Structures {
         let seed = seeds.chunk(chunk.0, chunk.1);
         let chunk_random = |(x, z): (i32, i32)| Mt19937::new(seeds.chunk(x, z));
         let mut placed: Vec<BoundingBox> = mineshafts.iter().map(|m| m.bb).chain(strongholds.iter().map(|s| s.bb)).collect();
-        Self::place_villages(density, &mut canvas, &villages, seed);
+        if !villages.is_empty() {
+            Self::place_villages(density, &mut canvas, &villages, seed, &(neighbours.generated_tops)());
+        }
         let mut random = chunk_random(chunk);
         for stronghold in &strongholds {
             stronghold.post_process(&mut canvas, &mut random);

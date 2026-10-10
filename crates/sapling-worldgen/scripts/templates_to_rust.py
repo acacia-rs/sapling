@@ -141,6 +141,28 @@ def placed_wall(key, rot, probed):
     return (probed[0], f"{states},wall_post_bit={int(props.get('up', 'true') == 'true')}", probed[2], probed[3])
 
 
+def as_saved(key, rot, probed, table):
+    """A circuit block or corner stair as its template saved it, where the probe's lone block had settled before
+    it was read: a city's circuit holds its power (docs/research/worldgen-bds-templates.md, "Saved states")."""
+    name, _, rest = key.partition('[')
+    props = dict(p.split('=', 1) for p in rest.rstrip(']').split(',') if p)
+    # A corner stair is placed as one (the probe's stood alone and were straight again when read): a rule
+    # that wants the default state passes it over; template/connect.rs names the corner afterwards.
+    if name.endswith('_stairs') and props.get('shape', 'straight') != 'straight':
+        return (probed[0], probed[1].replace('minecraft:corner=none', f"minecraft:corner={props['shape']}"), probed[2], probed[3])
+    if name == 'minecraft:redstone_wire':
+        return (probed[0], f"redstone_signal={props['power']}", probed[2], probed[3])
+    if name == 'minecraft:repeater' and props.get('powered') == 'true':
+        return ('powered_repeater',) + probed[1:]
+    if name == 'minecraft:redstone_lamp' and props.get('lit') == 'true':
+        return ('lit_redstone_lamp',) + probed[1:]
+    if name == 'minecraft:piston_head':
+        base = 'sticky_piston' if props.get('type') == 'sticky' else 'piston'
+        piston = table.get((f"minecraft:{base}[extended=true,facing={props['facing']}]", rot))
+        return (base + '_arm_collision', piston[1], False, 0) if piston else probed
+    return probed
+
+
 def main():
     bds = sys.argv[1]
     table = {}
@@ -188,6 +210,7 @@ def main():
     for key in keys:
         if (key, 0) in table and 'wall_post_bit' in table[(key, 0)][1]:
             table.update({(key, rot): placed_wall(key, rot, table[(key, 0)]) for rot in range(4)})
+        table.update({(key, rot): as_saved(key, rot, table[(key, rot)], table) for rot in range(4) if (key, rot) in table})
     states, palette = state_table(keys, table)
     out = b'SPT1' + palette_bytes(palette) + out[4:] + states
     open(os.path.join(OUT, 'templates.bin'), 'wb').write(out)
