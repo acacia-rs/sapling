@@ -7,7 +7,7 @@ use super::super::BoundingBox;
 use super::super::adjust::Junction;
 use super::super::canvas::Canvas;
 use super::super::trace;
-use super::super::template::{JavaPlacement, Placement, Rotation, named};
+use super::super::template::{JavaPlacement, Placement, Rotation, Rule, apply, named};
 use super::assemble::middle;
 use super::element::{Element, ElementKind, Projection};
 use crate::block::Block;
@@ -80,7 +80,7 @@ impl Piece {
         for jigsaw in self.element.jigsaws(self.origin, self.rotation) {
             let (x, y, z) = jigsaw.pos;
             if canvas.bb.contains(x, y, z) {
-                canvas.set(x, y, z, jigsaw.final_state);
+                canvas.set(x, y, z, jigsaw_block(rules, jigsaw.final_state, canvas.get(x, y, z), seed));
             }
         }
         let mut placement = Placement::new(self.rotation, canvas.bb);
@@ -147,7 +147,8 @@ impl Piece {
         for jigsaw in self.element.jigsaws(self.origin, self.rotation) {
             let (x, y, z) = jigsaw.pos;
             if canvas.bb.contains(x, 0, z) {
-                canvas.set(x, heights(x, z) + y - base - 1, z, jigsaw.final_state);
+                let at = heights(x, z) + y - base - 1;
+                canvas.set(x, at, z, jigsaw_block(rules, jigsaw.final_state, canvas.get(x, at, z), seed));
             }
         }
         let blocks: Vec<_> = {
@@ -210,6 +211,13 @@ impl Piece {
             }
         }
     }
+}
+
+/// A jigsaw's final state through the element's rules, each jigsaw on a generator of its own
+/// seeded like the template's: the jigsaws of one chunk all draw the same floats
+/// (docs/research/worldgen-bds-jigsaw.md, "Elements and processors").
+fn jigsaw_block(rules: &[Rule], final_state: Block, world: Block, seed: u32) -> Block {
+    apply(rules, final_state, world, &mut Mt19937::new(seed))
 }
 
 /// Ancient city pieces (141edf3a0 / 3b0): no fill, deepslate plugs.

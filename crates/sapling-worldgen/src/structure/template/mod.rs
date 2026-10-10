@@ -24,7 +24,7 @@ pub use load::palette;
 pub(crate) use markers::hash as marker_hash;
 #[allow(unused_imports)]
 pub use place::{Placement, Rotation};
-pub use rules::{Predicate, Rule};
+pub use rules::{Predicate, Rule, apply};
 
 use crate::block::Block;
 use load::{data, palette_block};

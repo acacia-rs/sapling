@@ -10,34 +10,14 @@ mod oracle_support;
 use std::collections::BTreeMap;
 
 use oracle_support::{
-    BdsCell, BiomeTally, CarverTally, Context, Dump, FeatureTally, Floor, Ours, Region, Stages, StructureTally, Tally, TopTally, attribute, bds_cell,
+    BdsCell, BiomeTally, CarverTally, Context, Dump, FeatureTally, Floor, Ours, PORTED, Region, Stages, StructureTally, Tally, TopTally, attribute, bds_cell,
     column_reshaped, near_feature, open,
 };
 use sapling_leveldb::ChunkKey;
 
-use sapling_worldgen::structure::StructureKind;
 use sapling_worldgen::{Block, CellKind, MIN_Y, OverworldGenerator};
 
 const LAST_Y: i32 = 319;
-/// The kinds whose blocks the structure stage places.
-const PORTED: &[StructureKind] = &[
-    StructureKind::Stronghold,
-    StructureKind::Temple,
-    StructureKind::Mineshaft,
-    StructureKind::BuriedTreasure,
-    StructureKind::Monument,
-    StructureKind::OceanRuins,
-    StructureKind::Shipwreck,
-    StructureKind::RuinedPortal,
-    StructureKind::Outpost,
-    StructureKind::AncientCity,
-    StructureKind::Village,
-    StructureKind::TrailRuins,
-    StructureKind::TrialChambers,
-    StructureKind::Mansion,
-    StructureKind::AbandonedCamp,
-];
-
 #[derive(Default)]
 struct Tallies {
     blocks: Tally,

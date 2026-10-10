@@ -10,7 +10,7 @@ mod oracle_support;
 
 use std::collections::{BTreeMap, HashMap};
 
-use oracle_support::{Stages, attribute, bds_cell, open, stage_diff};
+use oracle_support::{PORTED, Stages, attribute, bds_cell, open, stage_diff};
 use sapling_leveldb::ChunkKey;
 use sapling_worldgen::{MIN_Y, OverworldGenerator};
 
@@ -52,7 +52,8 @@ fn main() {
                     let blocks = (loaded.block(lx, y, lz), structured.block(lx, y, lz), ours.block(lx, y, lz));
                     let bds = bds_cell(&primary, &a.chunk, x, y, z);
                     let kind = attribute(&areas, (x, y, z));
-                    let Some(diff) = stage_diff(blocks, &bds, kind.is_some()) else { continue };
+                    let ported = areas.iter().any(|(kind, _, area)| PORTED.contains(kind) && area.contains(x, y, z));
+                    let Some(diff) = stage_diff(blocks, &bds, kind.is_some(), ported) else { continue };
                     if bds != bds_cell(&twin, &b.chunk, x, y, z) {
                         unstable += 1;
                         continue;

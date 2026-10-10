@@ -108,6 +108,25 @@ fn decoration(name: &str) -> bool {
     DECORATION_PARTS.iter().any(|part| name.contains(part)) || DECORATION.contains(&name)
 }
 
+/// The kinds whose blocks the structure stage places.
+pub const PORTED: &[StructureKind] = &[
+    StructureKind::Stronghold,
+    StructureKind::Temple,
+    StructureKind::Mineshaft,
+    StructureKind::BuriedTreasure,
+    StructureKind::Monument,
+    StructureKind::OceanRuins,
+    StructureKind::Shipwreck,
+    StructureKind::RuinedPortal,
+    StructureKind::Outpost,
+    StructureKind::AncientCity,
+    StructureKind::Village,
+    StructureKind::TrailRuins,
+    StructureKind::TrialChambers,
+    StructureKind::Mansion,
+    StructureKind::AbandonedCamp,
+];
+
 /// How our structure stage and BDS disagree on a structure block.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum StageDiff {
@@ -117,14 +136,21 @@ pub enum StageDiff {
     BdsOnly,
     /// Both hold a structure's write, of another block or state.
     Both,
+    /// BDS has air inside a ported structure's box where ours leaves solid terrain to the end
+    /// (a piece's air ours did not carve; the carvers are exact, so little else empties a cell).
+    BdsAir,
 }
 
 /// The structure-stage disagreement of one cell, given our block before and after the structure
 /// stage and after every stage. Cells a later stage of ours brings to BDS's block, and cells
 /// where either side holds a decoration block (sculk over a city), are not the structure's.
-pub fn stage_diff((before, after, last): (Block, Block, Block), bds: &BdsCell, in_area: bool) -> Option<StageDiff> {
+/// `in_area`: inside any structure's area; `in_ported`: inside a ported structure's box.
+pub fn stage_diff((before, after, last): (Block, Block, Block), bds: &BdsCell, in_area: bool, in_ported: bool) -> Option<StageDiff> {
     let placed = before != after;
     let wanted = !bds.is(before) && structure_block(bds, in_area);
+    if in_ported && !placed && bds.is_empty() && before.is_solid() && last.is_solid() {
+        return Some(StageDiff::BdsAir);
+    }
     if bds.is(after) || bds.is(last) || !(placed || wanted) || decoration(&bds.block) || decoration(after.name()) {
         return None;
     }
@@ -137,8 +163,8 @@ pub fn stage_diff((before, after, last): (Block, Block, Block), bds: &BdsCell, i
 
 #[derive(Default)]
 struct Counts {
-    /// Structure-stage disagreements: ours only, BDS only, both.
-    differs: [u64; 3],
+    /// Structure-stage disagreements by `StageDiff`.
+    differs: [u64; 4],
     placed: u64,
     hits: u64,
     /// Placed cells that are not air, and those BDS has too.
@@ -188,7 +214,7 @@ impl StructureTally {
     /// there (what BDS wants). A block our later stages place as BDS has it (a monster room's
     /// cobblestone in a ruin's area) is not wanted from the structure.
     pub fn add(&mut self, (before, after, last): (Block, Block, Block), bds: &BdsCell, placer: Option<StructureKind>, kind: Option<StructureKind>) {
-        if let Some(diff) = stage_diff((before, after, last), bds, kind.is_some()) {
+        if let Some(diff) = stage_diff((before, after, last), bds, kind.is_some(), placer.is_some()) {
             let owner = if diff == StageDiff::BdsOnly { kind.or(placer) } else { placer.or(kind) };
             self.kinds.entry(owner.map_or("unattributed", |k| k.name())).or_default().differs[diff as usize] += 1;
         }
@@ -256,8 +282,8 @@ impl StructureTally {
         }
         // tools/oracle-totals.sh reads this line.
         let differs = |c: &Counts| c.differs.iter().sum::<u64>();
-        let kinds: Vec<String> = self.kinds.iter().filter(|(_, c)| differs(c) > 0).map(|(kind, c)| format!("{kind} {} ({}/{}/{})", differs(c), c.differs[0], c.differs[1], c.differs[2])).collect();
-        println!("  structure stage: {} cells differ (ours only/BDS only/both): {}", self.kinds.values().map(differs).sum::<u64>(), kinds.join(", "));
+        let kinds: Vec<String> = self.kinds.iter().filter(|(_, c)| differs(c) > 0).map(|(kind, c)| format!("{kind} {} ({}/{}/{}/{})", differs(c), c.differs[0], c.differs[1], c.differs[2], c.differs[3])).collect();
+        println!("  structure stage: {} cells differ (ours only/BDS only/both/BDS air): {}", self.kinds.values().map(differs).sum::<u64>(), kinds.join(", "));
         let unattributed: u64 = self.unattributed.values().sum();
         println!("    unattributed structure-looking cells: {unattributed}: {}", top(&self.unattributed));
     }
