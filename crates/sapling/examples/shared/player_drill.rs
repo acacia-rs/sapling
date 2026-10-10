@@ -1,10 +1,10 @@
-//! The hurt, smother and hunger drills of bds_command_probe: a player harmed, killed and risen again
+//! The hurt, smother, hunger and eat drills of bds_command_probe: a player harmed, killed and risen again
 //! (docs/research/player-damage.md).
 
 pub const HURT_SHOWN: &[&str] = &[
     "UpdateAttributes", "EntityEvent", "SetEntityData", "SetHealth", "Respawn", "LevelSoundEvent", "LevelEvent", "MovePlayer", "SetEntityMotion", "Text", "DeathInfo", "PlayerAction", "Animate",
     "MobEffect", "SetPlayerGameType", "UpdatePlayerGameType", "RemoveEntity", "AddPlayer", "AddItemEntity", "AddEntity", "InventoryContent", "InventorySlot", "MobEquipment", "MobArmorEquipment",
-    "SetSpawnPosition", "CorrectPlayerMovePrediction", "PlayStatus", "ChangeDimension", "SpawnExperienceOrb",
+    "SetSpawnPosition", "CorrectPlayerMovePrediction", "PlayStatus", "ChangeDimension", "SpawnExperienceOrb", "CompletedUsingItem", "ItemStackResponse",
 ];
 
 /// The actor, in survival on a stone floor: harmed by `/damage` with and without a cause, twice at
@@ -70,6 +70,28 @@ pub fn hunger() -> Vec<String> {
     wait(&mut lines, 12);
     lines.extend(["damage @s 4", "", "damage @s 1 fall"].map(String::from));
     wait(&mut lines, 10);
+    lines.extend(["gamemode creative @s", ""].map(String::from));
+    lines
+}
+
+/// The actor, in survival, hurt and made hungry: eats two apples, a steak put in its hand, and tries
+/// one more with its hunger full. `!eat` holds use on what it holds.
+pub fn eat() -> Vec<String> {
+    let mut lines: Vec<String> = ["kill @e[type=!player]", "", "fill ~-3 ~-4 ~-3 ~8 ~-1 ~8 stone", "fill ~-3 ~ ~-3 ~8 ~14 ~8 air", "gamemode survival @s", ""].map(String::from).into();
+    let wait = |lines: &mut Vec<String>, seconds: usize| lines.extend(std::iter::repeat_n(String::new(), seconds));
+    // Mending takes a hunger point in 17 seconds, where there is no hunger effect to.
+    lines.push("damage @s 14".into());
+    wait(&mut lines, 18);
+    lines.extend(["give @s apple 3", "effect @s hunger 2 255 true"].map(String::from));
+    wait(&mut lines, 4);
+    for _ in 0..2 {
+        lines.push("!eat".into());
+        wait(&mut lines, 4);
+    }
+    lines.extend(["replaceitem entity @s slot.weapon.mainhand 0 cooked_beef 2", "", "!eat"].map(String::from));
+    wait(&mut lines, 4);
+    lines.extend(["effect @s saturation 1 19 true", "", "!eat"].map(String::from));
+    wait(&mut lines, 4);
     lines.extend(["gamemode creative @s", ""].map(String::from));
     lines
 }

@@ -128,3 +128,29 @@ fn a_wounded_player_mends_one_each_four_seconds_and_pays_with_its_hunger() {
     let fed = |name: &str| all::<UpdateAttributes>(&sent).iter().flat_map(|update| &update.attributes).filter(|attribute| attribute.name == name).map(|attribute| attribute.current).collect::<Vec<_>>();
     assert_eq!((fed("minecraft:player.hunger"), fed("minecraft:player.saturation"), fed("minecraft:player.exhaustion")), (vec![20.0], vec![4.0], vec![2.0]));
 }
+
+#[test]
+fn a_hungry_player_eats_the_apple_in_its_hand_in_32_ticks() {
+    use acacia_proto::packets::{CompletedUsingItem, LevelSoundEvent};
+    use acacia_proto::types::{TransactionTransactionData, TransactionUseItemActionType};
+    let mut h = ready();
+    h.remote.run(|ctx| {
+        assert!(ctx.set_item(ALEX, Slot::Main(0), Some(&Item::new("minecraft:apple", 2))));
+        assert!(ctx.hurt_player(ALEX, 14.0, DamageCause::Generic));
+    });
+    let mut click = common::click([0, 0, 0], 255, None);
+    if let TransactionTransactionData::ItemUse(used) = &mut click.transaction.transaction_data {
+        used.action_type = TransactionUseItemActionType::ClickAir;
+    }
+    h.receive(1, &click);
+    assert!(all::<CompletedUsingItem>(h.tick_all().to(1)).is_empty(), "a full hunger eats nothing");
+    (0..330).for_each(|_| drop(h.tick_all()));
+    h.receive(1, &click);
+    let sent: Vec<RawPacket> = (0..33).flat_map(|_| h.tick_all().to(1).to_vec()).collect();
+    assert!(all::<CompletedUsingItem>(&sent).iter().all(|used| used.used_item_id > 100), "the item, not its stack");
+    assert_eq!((all::<CompletedUsingItem>(&sent).len(), all::<LevelSoundEvent>(&sent).iter().filter(|sound| sound.sound_id == "burp").count()), (1, 1));
+    let fed = |name: &str| all::<UpdateAttributes>(&sent).iter().flat_map(|update| &update.attributes).filter(|attribute| attribute.name == name).map(|attribute| attribute.current).next_back();
+    assert_eq!((fed("minecraft:player.hunger"), fed("minecraft:player.saturation")), (Some(20.0), Some(2.4)));
+    h.remote.run(|ctx| assert_eq!(ctx.item(ALEX, Slot::Main(0)).map(|item| item.count), Some(1)));
+    h.tick_all();
+}

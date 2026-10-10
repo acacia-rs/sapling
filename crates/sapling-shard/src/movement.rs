@@ -38,13 +38,15 @@ pub(crate) struct Pose {
     pub swimming: bool,
     /// On fire (vitals.rs).
     pub burning: bool,
+    /// Using the item in its hand (vitals/eating.rs).
+    pub using: bool,
 }
 
 impl Pose {
     /// The entity flags viewers get on top of the recorded ones.
     pub fn flags(self) -> MetadataFlags1 {
         let mut flags = MetadataFlags1::BREATHING;
-        for (on, flag) in [(self.sneaking, MetadataFlags1::SNEAKING), (self.sprinting, MetadataFlags1::SPRINTING), (self.swimming, MetadataFlags1::SWIMMING), (self.burning, MetadataFlags1::ONFIRE)] {
+        for (on, flag) in [(self.sneaking, MetadataFlags1::SNEAKING), (self.sprinting, MetadataFlags1::SPRINTING), (self.swimming, MetadataFlags1::SWIMMING), (self.burning, MetadataFlags1::ONFIRE), (self.using, MetadataFlags1::ACTION)] {
             if on {
                 flags.insert(flag);
             }

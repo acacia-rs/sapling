@@ -86,6 +86,10 @@ pub(crate) fn dispatch(world: &mut World, plugins: &mut Plugins) {
     let mut hits = Vec::new();
     inputs.extend(transactions.into_iter().filter_map(|(from, packet)| match packet.transaction.transaction_data {
         TransactionTransactionData::ItemUse(click) => Some((from, Input::Click(click))),
+        TransactionTransactionData::ItemRelease(_) => {
+            crate::vitals::eating::stop(world, from);
+            None
+        }
         TransactionTransactionData::ItemUseOnEntity(on) if on.action_type == OnEntity::Attack => {
             hits.push((from, on.entity_runtime_id));
             None
@@ -121,6 +125,7 @@ pub(crate) fn dispatch(world: &mut World, plugins: &mut Plugins) {
                 match click.action_type {
                     TransactionUseItemActionType::ClickBlock => request.click(pos, Face::from_index(u32::from(click.face)), &click),
                     TransactionUseItemActionType::BreakBlock if broken.insert((entity, pos)) => request.break_block(pos),
+                    TransactionUseItemActionType::ClickAir => crate::vitals::eating::start(request.world, entity),
                     _ => {}
                 }
             }

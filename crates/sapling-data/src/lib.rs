@@ -5,6 +5,7 @@ mod block_defaults;
 mod block_loot;
 mod clock;
 mod entity;
+mod food;
 mod game_rules;
 mod inventory;
 mod item_entity;
@@ -24,6 +25,7 @@ pub use block_loot::{BlockLoot, Fortune, LootRow, StateTest, Tooling, block_loot
 pub use clock::{clock_state, world_clocks};
 pub use entity::{AddEntityOptions, add_entity, add_experience_orb, add_falling_block, add_painting, mob_health, mob_size};
 pub use attack::item_attack;
+pub use food::{Food, food};
 pub use mob_health::{MobTraits, mob_air, mob_fire_flags, mob_health_update, mob_traits};
 pub use liquid_reaction::{LiquidDetection, LiquidReaction, liquid_detection};
 pub use mob_loot::mob_loot;

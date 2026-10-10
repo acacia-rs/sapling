@@ -48,6 +48,19 @@ From `bds_command_probe hunger` (research/captures/bds-hunger.txt):
 - Between 1 and 17 of hunger nothing mends and nothing hurts.
 - The saturation effect at amplifier 9 for a tick gave 10 hunger.
 
+## Eating
+
+From `bds_command_probe eat` (research/captures/bds-eat.txt), the bot holding use on an apple:
+
+- The click in the air sets the using flag (`Flags` bit 4) for the player and its viewers, and sends the
+  player every attribute.
+- The client's `EntityEvent` `EatingItem` comes back to it and goes to its viewers.
+- 32 server ticks after the click BDS ends the use itself: `CompletedUsingItem` with the item's network id
+  and `Eat`, the inventory, hunger and saturation, the flag cleared, and the sound `burp` 0.1 under the
+  eyes.
+- An apple gave 4 hunger and 2.4 saturation; the saturation is kept up to the hunger.
+- With a full hunger the bot does not try, so what BDS answers then is not seen.
+
 ## Death
 
 - To the player, in one tick: `InventoryContent` for the inventory, armour, cursor and off hand (several
@@ -65,7 +78,7 @@ From `bds_command_probe hunger` (research/captures/bds-hunger.txt):
 
 ## Not drilled
 
-Armour, effects, hunger from running, jumping, mining or hitting, eating, starving on normal and hard, the void, whether a player out of breath in a
+Armour, effects, hunger from running, jumping, mining or hitting, each food's values and side effects, starving on normal and hard, the void, whether a player out of breath in a
 block is hurt as one under water, a mob's or another
 player's hit, `keepInventory`, a bed's or anchor's spawn, creative and spectator.
 
@@ -81,6 +94,9 @@ player's hit, `keepInventory`, a bed's or anchor's spawn, creative and spectator
   or `/effect` heals, which sapling lacks.
 - Glass and leaves smother nothing (glass drilled; leaves taken as glass).
 - Mending and starving are built to the numbers above (`vitals/hunger.rs`). Nothing but mending tires a
-  player and nothing feeds one, so a hunger under 18 stays there until the player dies and rises.
-- Not built: eating, effects, the shrunken box and `PlayerLastDeathPosition`, lying down under a
+  player.
+- Eating is built (`vitals/eating.rs`, `sapling-data/src/food.rs`): the bot ate an apple and a steak on
+  sapling in the same 32 ticks and packets (research/captures/sapling-eat.txt). Only the apple's values are
+  drilled; the others are the Java game's. A stew leaves no bowl, and no food does more than feed.
+- Not built: drinks, effects, the shrunken box and `PlayerLastDeathPosition`, lying down under a
   block, a bed's spawn, `doImmediateRespawn`, health kept across a rejoin.

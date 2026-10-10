@@ -1,7 +1,7 @@
 //! A player's hunger: what mending costs it and what an empty one costs the player, as BDS was
 //! seen to (docs/research/player-damage.md, "Mending" and "Starving").
 // TODO: nothing but mending tires a player (running, jumping, mining and hits are not drilled),
-// and nothing feeds one: there is no eating. Starving stops at half health, as on the drilled
+// Starving stops at half health, as on the drilled
 // server (easy); the world's difficulty is not read.
 
 use acacia_proto::packets::UpdateAttributes;
@@ -63,6 +63,16 @@ impl Hunger {
             *from = (*from - 1.0).max(0.0);
         }
         due
+    }
+
+    pub(super) fn is_full(&self) -> bool {
+        self.food >= FULL
+    }
+
+    /// A food eaten: the saturation it gives is kept up to the hunger.
+    pub(super) fn feed(&mut self, hunger: f32, saturation: f32) {
+        self.food = (self.food + hunger).min(FULL);
+        self.saturation = (self.saturation + saturation).min(self.food);
     }
 
     /// Its hunger, saturation and exhaustion: what is told of it.

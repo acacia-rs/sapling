@@ -7,6 +7,7 @@
 // bot took 8 for 12 blocks; health is not kept with the player's items; plugins are not asked.
 
 mod death;
+pub(crate) mod eating;
 mod hunger;
 
 use acacia_proto::Packet;
@@ -45,6 +46,7 @@ pub(crate) struct Vitals {
     health: Health,
     air: i16,
     hunger: hunger::Hunger,
+    meal: Option<eating::Meal>,
     /// What the client and the viewers know of its health.
     told: f32,
     /// Where its feet were a tick ago.
@@ -57,7 +59,7 @@ pub(crate) struct Vitals {
 
 impl Default for Vitals {
     fn default() -> Self {
-        Self { health: Health::new(MAX, None, 0), air: AIR, hunger: hunger::Hunger::default(), told: MAX, was: None, died: None, leaves: None }
+        Self { health: Health::new(MAX, None, 0), air: AIR, hunger: hunger::Hunger::default(), meal: None, told: MAX, was: None, died: None, leaves: None }
     }
 }
 
@@ -164,6 +166,7 @@ fn stand(world: &mut World, player: Entity, layer: Entity) {
 /// Lets the dead rise who asked to, hurts the living by where they stand, and lets the bodies go.
 pub(crate) fn tick(world: &mut World) {
     death::rise(world);
+    eating::tick(world);
     let players: Vec<(Entity, Entity)> = in_world(world).into_iter().filter_map(|player| Some((player, world.get::<InLayer>(player)?.0))).collect();
     for (player, layer) in players {
         if is_mortal(world, player) {

@@ -43,6 +43,16 @@ fn wear_chance(held: &Held) -> u32 {
 }
 
 impl Inventory {
+    /// One of the stack in the hand is gone: eaten (vitals/eating.rs).
+    pub fn take_one_in_hand(&mut self) {
+        let Some(slot) = self.slot_mut(Place::Main(usize::from(self.selected) % HOTBAR)) else { return };
+        match slot.as_mut() {
+            Some(held) if held.stack.count > 1 => held.stack.count -= 1,
+            _ => *slot = None,
+        }
+        self.unsaved = true;
+    }
+
     /// Counts `uses` against the stack in the hand, which lasts `lasts` of them.
     fn wear_hand(&mut self, uses: i32, lasts: u16) {
         let Some(slot) = self.slot_mut(Place::Main(usize::from(self.selected) % HOTBAR)) else { return };
