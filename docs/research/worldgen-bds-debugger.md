@@ -90,6 +90,11 @@ One JSON object, `{"breakpoints": [...]}`; the fields are listed in the script's
 - A float inside a function: `xmm: [0, 6]` logs the registers' low floats with their bits at a breakpoint
   placed on the instruction after a call (the result) or before one (an argument).
 
+- What a feature does that no oracle world places: `EXTRA_PACK=<folder>` lays pack files over the oracle pack; a
+  feature file there may redefine a vanilla identifier (worldgen-bds-trees.md, "Checking a feature no world
+  places"). Which trees a structure places: `FeaturePoolElement`'s v2 place (145e144c0) and `TreeFeature::place`
+  with backtraces; frame 145e146c9 marks an element's tree, 14580b883 a rule's. Beside `examples/v2_pieces`.
+
 `WORLDGEN_PORT` picks the server port (default 19290) so two sessions' copies can run at once. A run holds about
 0.5 GB; on 2026-10-09 the harness killed one for low memory with the lock directory left behind.
 

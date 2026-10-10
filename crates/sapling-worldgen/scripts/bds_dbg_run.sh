@@ -20,6 +20,8 @@ rm -rf "$out"; mkdir -p "$out/dbg"
 level="wg-$seed-$(date +%s)"
 pack="$bds/development_behavior_packs/worldgen_oracle"
 rm -rf "$pack"; cp -r "$pack_src" "$pack"
+# EXTRA_PACK: a folder of pack files laid over the oracle pack (scripts/feature_override_pack.py).
+if [ -n "${EXTRA_PACK:-}" ]; then cp -r "$EXTRA_PACK"/. "$pack"/; fi
 printf 'export const REGIONS = [%s];\nexport const TILE = 8;\nexport const WORKERS = 6;\nexport const SETTLE = 20;\n' "$regions" >"$pack/scripts/regions.js"
 rm -rf "$bds/worlds"; mkdir -p "$bds/worlds/$level"
 echo '[{"pack_id": "7a3d2f60-5c1e-4b8a-9d47-0e6f1b2c3a01", "version": [1, 0, 0]}]' >"$bds/worlds/$level/world_behavior_packs.json"

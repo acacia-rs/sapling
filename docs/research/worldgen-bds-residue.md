@@ -4,6 +4,29 @@ Companion to [worldgen-bds-features.md](worldgen-bds-features.md). What the orac
 feat4 fixes, how much of it BDS's own nondeterminism explains, and the tools that found each cause. The newest
 round is first; the sections after it are feat4's and the sculk round's, with their numbers as they were.
 
+## misc: fossils, camp trees, poplars (2026-10-10, worldgen/misc)
+- Fossils ported (worldgen-bds-features.md, "Fossils"): desert pyramid region 108 -> 41.
+- The old growth pine taiga camp (43 cells): the v2 placer attaches a feature element whatever the jigsaw's
+  target name, so the tent's `down` jigsaw grows a tree (worldgen-bds-jigsaw.md, "Feature elements"). The
+  "other positions" this file listed were that tree, a decoration spruce, and a piece on a chunk edge neither
+  side places. Region 668 -> 620; one mushroom is left beside the camp.
+- Poplars and shelf mushrooms ported and checked through a pack override (worldgen-bds-trees.md, "Poplars").
+- The template palette no longer names states no registry has (worldgen-bds-templates.md).
+
+All2 (02df143) -> misc, wrong / missing / deterministic per world; nothing else moved:
+
+| world | wrong | missing | deterministic |
+|---|---|---|---|
+| near origin | 2019 | 313 | 2024 |
+| far out | 259 | 29 | 260 |
+| negative seed | 98 | 12 | 78 |
+| biome regions | 7405 -> 7401 | 1512 -> 1468 | 1909 -> 1861 |
+| tree regions | 3955 | 1073 | 3026 |
+| structures | 22882 -> 22881 | 6692 -> 6626 | 11049 -> 10982 |
+
+(The feat5 table below is from before the drip and struct merges; these are the integrated tree's numbers.
+`tools/oracle.sh <name>` and `tools/oracle-totals.sh <before> <after>` reproduce them.)
+
 ## feat5: terrain to the bit, icebergs, and what the judge hid (2026-10-09)
 Fixed, with the region each showed in (wrong + missing, 06ed458 -> feat5, the judge as it was):
 - Terrain shape (worldgen-bds.md, "Terrain port findings"): blended noise offsets, the 3D spaghetti's thickness

@@ -157,7 +157,10 @@ and `deepslate_diamond_fossil_feature` (deepslate diamond ore, y -64..-8).
   block rule (bone block, chance 1, no draw) writing the ore. The same seed gives both passes the same floats:
   a block is ore under 0.1, bone to 0.9, absent above.
 Oracle: the structures world's desert pyramid region holds one (deepslate rule, skull 2 unturned, y -54): all
-60 bone blocks and the diamond ore match (region 108 -> 41). The quarter turns are read off the code only.
+60 bone blocks and the diamond ore match (region 108 -> 41).
+A rule-placed fossil is never turned: the rule's chance (1 in 64) passes when the first raw draw of its
+position generator is a multiple of 64, and the placing generator, seeded alike, gives `nextInt(4)` that same
+draw. The turned cases are read off the code and cannot occur in vanilla worlds.
 
 ## Oracle (2026-10-07, 20261003 near origin unless named)
 Precision/recall near origin: stone blobs 99.93/99.98, coal 99.79/99.90, seagrass 99.95/99.93, kelp 99.89/99.88,

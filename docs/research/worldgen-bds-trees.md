@@ -135,10 +135,11 @@ above was that staleness seen through one case.
 - The forest case of the flower table is unused (its rule `forest_surface_flowers_feature` is filtered by the
   `deprecated` tag). Jungle edges come from ring-chunk decoration.
 
-## Poplars (2026-10-10, worldgen/misc; tree/poplar.rs, tree/decoration.rs) - UNVERIFIED
+## Poplars (2026-10-10, worldgen/misc; tree/poplar.rs, tree/decoration.rs)
 The 1.26.50 `orange/red/yellow_poplar_tree_feature`s (camp tree pools; their biome, the dappled forest, is not
-generated). Ported from the decompile alone: no oracle camp grows one, so the draws are right by construction
-at best. A lib test only checks that a tree of the documented shape grows.
+generated, so no oracle world holds one). Ported from the decompile and then checked against a BDS made to
+grow them ("Checking a feature no world places" below): the orange tree matches cell for cell. Red and yellow
+differ in the leaf block only and were not run.
 - Height (`getTreeHeight` 1438ec2c0, shared with the fallen trunk): `trunk_height` as an exclusive range
   (7 + `nextInt(4)`).
 - `PoplarTreeTrunk::placeTrunk` (1438f4e80): `prepareSpawn`; the base block; `remaining_trunk_height_above_
@@ -162,5 +163,16 @@ at best. A lib test only checks that a tree of the documented shape grows.
   (north, south, west, east); placed when that cell is air, the log's axis does not point at it
   (`bark_side_only`) and, without `allow_adjacent`, none of the log's four sides and the cell's six neighbours
   holds the block; only then `nextInt(2)` for `growth`. The mushroom's `cardinal_direction` is its side's name.
-To verify: generate a camp with a poplar pool under the debugger (a pack that puts `abandoned_camp/trees/
-orange_poplar` into a taiga campsite's pool would do) and compare the blocks.
+
+### Checking a feature no world places
+A world's behaviour pack may redefine a vanilla feature: a `features/<name>.json` whose identifier is a
+feature the world does place, with the body of the one to test. `scripts/feature_override_pack.py` writes it
+(here `minecraft:spruce_tree_feature` with the orange poplar's body); `bds_dbg_run.sh` with `EXTRA_PACK` set
+to that folder generated the old growth pine taiga camp chunk (-333,340), whose three spruce elements (and the
+taiga's own spruces) then grew as poplars. `examples/swap_check 20261003 <world> spruce_tree_feature
+orange_poplar_tree_feature -333 340 poplar,shelf` makes the same swap here (`OverworldGenerator::
+swap_feature`, element features only) and compares every poplar-family cell of the saved chunks: 1514 leaves,
+107 logs and 4 shelf mushrooms (states included) equal, 2 leaves of ours that BDS's tent overwrote with its
+air on a chunk border (the neighbour chunk's pieces came after the tree's spill: structure post-process order,
+worldgen-bds-structures.md). A jigsaw feature element seeds its generator from its position, so this is a
+draw-for-draw check. The saved world needs a `-run2` twin beside it for the oracle helpers (a copy).

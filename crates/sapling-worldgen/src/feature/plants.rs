@@ -100,7 +100,8 @@ pub fn can_survive(view: &View, [x, y, z]: [i32; 3], block: Block) -> bool {
             matches!(below, Block::Cactus | Block::Sand | Block::RedSand)
                 && sides.iter().all(|&(dx, dz)| !view.block(x + dx, y, z + dz).blocks_motion())
         }
-        Block::BrownMushroom | Block::RedMushroom => below.blocks_motion(),
+        // Leaves give no support (their `canProvideSupport` 140076010; oracle: none on a camp tree's crown).
+        Block::BrownMushroom | Block::RedMushroom => below.blocks_motion() && !below.is_leaves(),
         Block::SporeBlossom | Block::HangingRoots => view.block(x, y + 1, z).blocks_motion(),
         Block::MossCarpet => below != Block::Air,
         Block::Azalea | Block::FloweringAzalea => is_soil(below) || below == Block::Clay,
