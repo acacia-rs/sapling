@@ -3,8 +3,7 @@
 //! player's (docs/research/player-damage.md). Dying and rising: death.rs; mending and
 //! starving: hunger.rs; effects: effects.rs.
 // TODO: armour does not wear; a block over the head alone does not
-// make a player crawl; the breathing flag is not told; a fall is measured from the highest feet to the landing, where BDS with the
-// bot took 8 for 12 blocks; plugins are not asked.
+// make a player crawl; the breathing flag is not told; plugins are not asked.
 
 mod death;
 pub(crate) mod eating;
@@ -220,7 +219,9 @@ fn stand(world: &mut World, player: Entity, layer: Entity) {
     let (health, breath) = (&mut vitals.health, vitals.air);
     let mut hits = Vec::new();
     health.begin();
-    hits.extend(health.fall(from, position.feet[1], position.on_ground, water || lava || carried).map(|_| Cause::Fall));
+    // BDS does not count the move a player lands in: 12 blocks cost it 8 (bds-hurt.txt).
+    let fallen_to = if position.on_ground { position.feet[1].max(from[1]) } else { position.feet[1] };
+    hits.extend(health.fall(from, fallen_to, position.on_ground, water || lava || carried).map(|_| Cause::Fall));
     let lit = health.is_burning();
     hits.extend(health.burn(fire, water).map(|cause| if lit { Cause::FireTick } else { cause }));
     hits.extend((lava && health.scald()).then_some(Cause::Lava));

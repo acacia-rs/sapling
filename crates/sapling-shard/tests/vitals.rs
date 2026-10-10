@@ -52,7 +52,8 @@ fn a_hit_is_flashed_and_told_to_the_player_and_its_viewers_and_guards_for_half_a
 #[test]
 fn a_fall_costs_a_player_each_block_past_three_a_tick_after_it_lands() {
     let mut h = ready();
-    for height in [73.0, 69.0] {
+    // The move it lands in is not counted: 12 blocks, 8 of them before the last tick.
+    for height in [73.0, 77.0, 73.0, 69.0] {
         h.receive(1, &input_at([0.5, height, 0.5]));
         h.tick_all();
     }
@@ -63,7 +64,7 @@ fn a_fall_costs_a_player_each_block_past_three_a_tick_after_it_lands() {
     let sent = h.tick_all();
     let flash = all::<EntityEvent>(sent.to(2)).pop().expect("a flash");
     assert_eq!((flash.event_id, flash.data, flash.fire_at_position.map(|at| at.y)), (EntityEventEventId::HurtAnimation, 5, Some(65.0 + sapling_data::EYE_HEIGHT)));
-    assert_eq!(health(sent.to(1)), [15.0], "8 blocks");
+    assert_eq!(health(sent.to(1)), [15.0], "8 blocks counted");
 }
 
 #[test]

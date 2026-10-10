@@ -126,7 +126,8 @@ player's hit (a zombie's: mob-attacks.md), `keepInventory`, a bed's or anchor's 
 - Built: health for survival and adventure players; falls, fire, lava, drowning and smothering; `/damage`,
   `/kill` and the plugin calls `health`, `hurt_player`, `kill_player`; death with what was held and
   experience dropped (not under `keepInventory`), the death screen, rising at the world's spawn.
-- A fall costs each block begun past three, as a mob's (12 blocks: 9, where BDS took 8 from the bot).
+- A fall costs each block begun past three, less the move the player lands in, which BDS does not
+  count: 12 blocks cost the bot 8, its last tick's 1.19 left out; 6 cost 3.
 - Fire and lava in one tick are told as one health (16), where BDS told 19 and then 16.
 - Run against sapling (research/captures/sapling-hurt.txt, sapling-smother.txt) the drills show the same
   flashes, causes and rhythm; the health differs where BDS mends (those runs were before sapling mended)
