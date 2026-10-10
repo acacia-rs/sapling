@@ -76,8 +76,13 @@ impl Multiface {
 
     fn spread_one_way(&self, ctx: &mut Ctx, at: [i32; 3], state: Block, from: usize) {
         let config = if self.family() == Block::GlowLichen1 { Config::Lichen } else { Config::Vein };
+        super::trace::line(|| {
+            let found = (0..6).filter_map(|to| spreader::spread_target(config, ctx.view, state, at, from, to).map(|(c, face, _)| format!("{to}:{},{},{},{face}", c[0], c[1], c[2])));
+            format!("    spread {} {} {} from {from} to {}", at[0], at[1], at[2], found.collect::<Vec<_>>().join(" "))
+        });
         let mut targets = (0..6).filter_map(|to| spreader::spread_target(config, ctx.view, state, at, from, to));
-        if let (Some((cell, _, block)), None) = (targets.next(), targets.next()) {
+        let (first, second) = (targets.next(), targets.next());
+        if let (Some((cell, _, block)), true) = (first, second.is_none() || config == Config::Lichen) {
             ctx.view.set_block(cell[0], cell[1], cell[2], block);
         }
     }
