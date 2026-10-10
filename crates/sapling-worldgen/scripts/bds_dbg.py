@@ -13,6 +13,12 @@ mem: struct formats read at [reg+off]. strings: printable strings within N point
   shows its name; air shows unrelated names). backtrace: return addresses by StackWalk64 (exact). stack: every
   image address among the first N stack words (includes stale ones).
 trace: single-steps the hitting thread until the call returns; writes trace-<n>.txt lines "va rax".
+names: like strings, cached per pointer value (for immutable objects such as a Block*).
+probe: a Python file whose `probe(dbg, ctx)` runs once, at the first matching hit, with the process stopped
+  (dbg.mem, dbg.base, dbg.out; scripts/dbg_blocks.py walks the block registry with it).
+group / arms: a breakpoint with "group": "g" is planted only while a matching hit of a breakpoint with "arms": "g"
+  (a function entry) is running, and logs that thread alone; it is removed when that call returns. Use it for hot
+  code (a setBlock, a per-cell callee) that is wanted inside one feature call only.
 Addresses in the log are static VAs. dbg.log holds one line per logged hit, in order.
 """
 import ctypes as C
@@ -71,6 +77,11 @@ class Context:
         flags = struct.unpack("<I", C.string_at(self.addr + 0x44, 4))[0] | 0x100
         C.memmove(self.addr + 0x44, struct.pack("<I", flags), 4)
 
+    def set_resume(self):
+        """RF: the next instruction runs without its hardware breakpoint firing."""
+        flags = struct.unpack("<I", C.string_at(self.addr + 0x44, 4))[0] | 0x10000
+        C.memmove(self.addr + 0x44, struct.pack("<I", flags), 4)
+
     def save(self):
         if not k32.SetThreadContext(self.thread, self.addr):
             raise OSError(C.get_last_error())
@@ -91,6 +102,9 @@ class Debugger:
         self.traces = {}  # thread id -> trace state
         self.stepping_over = {}  # thread id -> breakpoint address to re-arm
         self.n_trace = 0
+        self.groups = {}  # group -> addresses
+        self.armed = {}  # group -> (thread id, rsp at the arming entry, return address)
+        self.names = {}  # (pointer, depth) -> strings
 
     def mem(self, addr, size):
         buf = C.create_string_buffer(size)
@@ -149,8 +163,48 @@ class Debugger:
         for bp in self.cfg["breakpoints"]:
             addr = int(bp["va"], 16) - STATIC_BASE + self.base
             self.bps[addr] = (bp, self.mem(addr, 1))
-            self.poke(addr, b"\xcc")
+            if "group" in bp:
+                self.groups.setdefault(bp["group"], []).append(addr)
+            else:
+                self.poke(addr, b"\xcc")
         self.log.write(f"base {self.base:x}, {len(self.bps)} breakpoints\n")
+
+    def live(self, bp):
+        """Whether the breakpoint's int3 is in memory now."""
+        return "group" not in bp or bp["group"] in self.armed
+
+    def set_hw(self, tid, addr):
+        """An execute breakpoint for one thread alone (DR0); 0 clears it."""
+        raw = C.create_string_buffer(1232 + 16)
+        at = (C.addressof(raw) + 15) & ~15
+        C.memmove(at + 0x30, struct.pack("<I", 0x100010), 4)
+        k32.GetThreadContext(self.thread(tid), at)
+        dr7 = struct.unpack("<Q", C.string_at(at + 0x70, 8))[0] & ~0xF0003
+        C.memmove(at + 0x48, struct.pack("<Q", addr), 8)
+        C.memmove(at + 0x70, struct.pack("<Q", dr7 | bool(addr)), 8)
+        k32.SetThreadContext(self.thread(tid), at)
+
+    def arm_group(self, group, tid, rsp):
+        ret = struct.unpack("<Q", self.mem(rsp, 8))[0]
+        self.armed[group] = (tid, rsp, ret)
+        self.set_hw(tid, ret)
+        for addr in self.groups.get(group, []):
+            self.poke(addr, b"\xcc")
+
+    def on_return(self, tid, addr):
+        """Disarms the groups whose arming call this thread has just returned from."""
+        for group, (owner, rsp, ret) in list(self.armed.items()):
+            if owner != tid or ret != addr:
+                continue
+            ctx = Context(self.thread(tid))
+            if ctx["rsp"] <= rsp:  # a nested call's return to the same address
+                ctx.set_resume()
+                ctx.save()
+                continue
+            del self.armed[group]
+            self.set_hw(tid, 0)
+            for site in self.groups.get(group, []):
+                self.poke(site, self.bps[site][1])
 
     def thread(self, tid):
         if tid not in self.threads:
@@ -184,6 +238,9 @@ class Debugger:
                     self.on_breakpoint(tid, addr)
                 elif exc == SINGLE_STEP and (tid in self.traces or tid in self.stepping_over):
                     self.on_step(tid)
+                    self.on_return(tid, addr)
+                elif exc == SINGLE_STEP and any(owner == tid for owner, _, _ in self.armed.values()):
+                    self.on_return(tid, addr)
                 elif exc != BREAKPOINT:
                     status = DBG_NOT_HANDLED
             k32.ContinueDebugEvent(pid, tid, status)
@@ -193,9 +250,17 @@ class Debugger:
         bp, orig = self.bps[addr]
         ctx = Context(self.thread(tid))
         ctx["rip"] = addr
-        if self.stepping_over and not 0x50 <= orig[0] <= 0x5F and orig[0] != 0x41:
+        if not self.live(bp):
+            # Its group was disarmed after this thread ran into the int3: the original byte is back.
+            ctx.save()
+            return
+        if self.stepping_over and not self.push_reg(addr, orig):
             # Another thread is mid-step with this one asleep: run into this int3 again once it is done.
             ctx.save()
+            return
+        owner = self.armed.get(bp.get("group"))
+        if owner and owner[0] != tid:
+            self.execute_original(tid, ctx, addr, orig)
             return
         pos = None
         if "filter" in bp:
@@ -221,7 +286,18 @@ class Debugger:
                 parts.append("stack=" + ",".join(code))
             for reg, depth in bp.get("strings", []):
                 parts.append(f"{reg}->{self.strings(ctx[reg], depth)}")
+            for reg, depth in bp.get("names", []):
+                key = (ctx[reg], depth)
+                if key not in self.names:
+                    self.names[key] = self.strings(*key)
+                parts.append(f"{reg}->{self.names[key]}")
             self.log.write(f"hit {bp['name']} t{tid} pos={pos} match={match} {' '.join(parts)}\n")
+        if match and "probe" in bp:
+            scope = {}
+            exec(open(bp.pop("probe")).read(), scope)
+            scope["probe"](self, ctx)
+        if match and "arms" in bp and bp["arms"] not in self.armed:
+            self.arm_group(bp["arms"], tid, ctx["rsp"])
         if match and bp.get("trace") and tid not in self.traces:
             self.n_trace += 1
             ret = struct.unpack("<Q", self.mem(ctx["rsp"], 8))[0]
@@ -230,12 +306,20 @@ class Debugger:
             self.traces[tid] = {"ret": ret, "rsp": ctx["rsp"], "file": f}
         self.execute_original(tid, ctx, addr, orig)
 
+    def push_reg(self, addr, orig):
+        """The register a `push r64` at addr pushes and the instruction's size, or None for anything else."""
+        op = orig[0]
+        if 0x50 <= op <= 0x57:
+            return REGS[op - 0x50], 1
+        if op == 0x41 and 0x50 <= self.mem(addr + 1, 1)[0] <= 0x57:  # REX.B: r8..r15
+            return REGS[self.mem(addr + 1, 1)[0] - 0x48], 2
+        return None
+
     def execute_original(self, tid, ctx, addr, orig):
-        op, size = orig[0], 1
-        if op == 0x41:  # REX.B push r8..r15
-            op, size = self.mem(addr + 1, 1)[0] + 8, 2
-        if 0x50 <= op <= 0x5F:  # push r64: emulate so the int3 never leaves memory
-            value = ctx[REGS[op - 0x50]]
+        push = self.push_reg(addr, orig)
+        if push:  # emulate so the int3 never leaves memory
+            reg, size = push
+            value = ctx[reg]
             ctx["rsp"] = ctx["rsp"] - 8
             self.poke(ctx["rsp"], struct.pack("<Q", value))
             ctx["rip"] = addr + size
@@ -257,7 +341,8 @@ class Debugger:
         ctx = Context(self.thread(tid))
         if tid in self.stepping_over:
             addr, others = self.stepping_over.pop(tid)
-            self.poke(addr, b"\xcc")
+            if self.live(self.bps[addr][0]):
+                self.poke(addr, b"\xcc")
             for h in others:
                 k32.ResumeThread(h)
             if tid not in self.traces:
