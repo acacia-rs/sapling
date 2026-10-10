@@ -53,6 +53,7 @@ use crate::random::LargeFeatureSeed;
 use crate::terrain::ChunkShape;
 
 pub(crate) use element::{ElementWorld, element_random, place_element};
+pub(crate) use place::swap_feature;
 use view::{ChunkWrites, REACH, View};
 
 /// Source chunks' writes are a few hundred kB each.

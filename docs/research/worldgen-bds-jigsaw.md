@@ -59,8 +59,14 @@ Companion to [worldgen-bds-templates.md](worldgen-bds-templates.md) (template lo
   `BlockPileFeature` (`nextInt(2)` x and z radius, x, y (two layers), z; `10 f - 6 f` ellipse else 3.1%)
   on a full block top or a path (list 0x14ccd3208 = grass_path), no `nextBoolean` for paths; hay on
   axis y/x by `nextInt(2)`, packed ice 1 in 7 blue (`nextInt(7)`), pumpkins carved when a float >= 0.95.
-  Poplar trees (camps) are not ported: 1.26.50 `poplar_trunk`/`poplar_canopy` (shelf-mushroom decoration,
-  poplar logs and leaves) need their own RE, and no oracle camp uses them to check a port against.
+  Poplar trees (camps): worldgen-bds-trees.md, "Poplars".
+- In the v2 placer a feature element attaches to any jigsaw that faces it: the expand lambda asks the candidate
+  element's vt+0x78 (1 for `FeaturePoolElement`, 1400a2880) and then calls the attach test 145e16f50 with its
+  name comparison off. A tent's tree jigsaw is named and targets `minecraft:down` while the element's own
+  jigsaw is `minecraft:bottom` (name and target, 145e13b90), and BDS grows that tree (oracle: the old growth
+  pine taiga camp's spruce at -5315,74,5452). Java compares the names and would not.
+- Its inverted box passes the room test as it is; what the space then keeps for it is the 2x2x2 box at the
+  inverted box's low corner (144d13b6e: `x1 + 1 == x0` on all three axes).
 
 ## Placers (`jigsaw/assemble.rs`)
 | | Legacy (villages) | Queued (ancient cities) | V2 (trail ruins, trial chambers) |
@@ -153,6 +159,7 @@ All 840 ruin-material cells of the trail ruin match, suspicious gravel included.
 141fa20f0 trial chamber pool aliases   1480bbe90 village pools   1480fe430 ancient city pools
 145e2d090/145e2d290/145e2d4d0 alias binding resolve (direct, random, random group; vtables 14a89b340/380/3c0)
 141f7a9c0/ab60/abb0 village piece class   141edf3a0 ancient city piece class
+145e16f50 v2 jigsaw attach test (last argument: skip the names)   145e13b90 FeaturePoolElement jigsaw info
 145e137d0 FeaturePoolElement ctor   145e141d0/145e144c0 FeaturePoolElement place (legacy/v2)
 145e1aa90 StructurePoolElement::getBoundingBox   140906d00 zero getSize   14a89acf0 FeaturePoolElement vtable
 14827e1e0/14827ea50 pile feature place/block   0x14ccd3208 pile path list (grass_path)

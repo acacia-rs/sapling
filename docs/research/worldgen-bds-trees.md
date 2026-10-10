@@ -134,3 +134,33 @@ above was that staleness seen through one case.
 
 - The forest case of the flower table is unused (its rule `forest_surface_flowers_feature` is filtered by the
   `deprecated` tag). Jungle edges come from ring-chunk decoration.
+
+## Poplars (2026-10-10, worldgen/misc; tree/poplar.rs, tree/decoration.rs) - UNVERIFIED
+The 1.26.50 `orange/red/yellow_poplar_tree_feature`s (camp tree pools; their biome, the dappled forest, is not
+generated). Ported from the decompile alone: no oracle camp grows one, so the draws are right by construction
+at best. A lib test only checks that a tree of the documented shape grows.
+- Height (`getTreeHeight` 1438ec2c0, shared with the fallen trunk): `trunk_height` as an exclusive range
+  (7 + `nextInt(4)`).
+- `PoplarTreeTrunk::placeTrunk` (1438f4e80): `prepareSpawn`; the base block; `remaining_trunk_height_above_
+  branches` and later `amount_of_foliage_support_branches` are inclusive ranges that draw only when min < max;
+  each log goes down through the `may_replace` gate and `log_decoration_feature` is placed at every log's
+  position, written or not; then the sides [north, east, south, west] are shuffled the MT way (i from 1: raw
+  `% (i + 1)`, swap unless i) and the first `branches` of them get a lying log one below the crown (crown =
+  base + height - remaining; axis z for north/south); the canopy is anchored at the crown. The trunk's
+  attachable decoration (+0xd0) is asked per log and draws nothing without a `trunk_decoration`.
+- `PoplarTreeCanopy::placeCanopy` (1438f43a0): radius = weighted value - 1 (`nextInt` of the weight sum on the
+  inner generator), height inclusive, `nextBoolean` for the flip; null leaf or branch block fails after those
+  draws. Layers (1438f4c10) in this order: radius - 2 at height - 1, radius - 1 at height - 2 and height - 3,
+  the full radius from height - 4 down to 1, the branch logs, radius - 1 at 0, and at -1 a skirt of 2 (radius
+  - 2 under 5, 1 under 3). A layer walks its square x outer, z inner: the two top layers skip the square's edge
+  without drawing; every other cell draws one `nextFloat` and is a leaf when |dx| + |dz| <= radius - 1 + bonus
+  + (side_hole_chance < float), bonus 1 in two opposite quadrants (dx, dz of unlike sign, or of like sign when
+  flipped), else -1 on the top layers and 0 below. Branch logs: at height - 4, on both axes within radius - 4
+  of the trunk, axis x where dz is 0. Leaves and logs go through `may_replace`.
+- Shelf mushrooms: `optional_shelf_mushroom_feature` is a 1 in 4 scatter of `shelf_mushroom_feature`, a
+  `minecraft:horizontal_tree_decoration_feature` (place 149e8ca80, vtable 14a9283c0 slot 1): side `nextInt(4)`
+  (north, south, west, east); placed when that cell is air, the log's axis does not point at it
+  (`bark_side_only`) and, without `allow_adjacent`, none of the log's four sides and the cell's six neighbours
+  holds the block; only then `nextInt(2)` for `growth`. The mushroom's `cardinal_direction` is its side's name.
+To verify: generate a camp with a poplar pool under the debugger (a pack that puts `abandoned_camp/trees/
+orange_poplar` into a taiga campsite's pool would do) and compare the blocks.

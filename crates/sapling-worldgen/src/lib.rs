@@ -237,6 +237,12 @@ impl OverworldGenerator {
         self.structures.v2_template_cells(&self.density, (chunk_x, chunk_z))
     }
 
+    /// For probes, process-wide and once: the element feature `from` places `to` from here on.
+    #[doc(hidden)]
+    pub fn swap_feature(from: &str, to: &str) -> bool {
+        feature::swap_feature(from, to)
+    }
+
     #[doc(hidden)]
     pub fn v2_pieces(&self, chunk_x: i32, chunk_z: i32) -> Vec<String> {
         self.structures.v2_pieces(&self.density, (chunk_x, chunk_z))

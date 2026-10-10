@@ -28,6 +28,11 @@ Companion to [worldgen-bds-structures.md](worldgen-bds-structures.md) (starts, p
   The pack's `scripts/data.js` is written per run: `CELLS` from mkprobe's states.tsv, `CANDIDATES` igloo starts
   in block coordinates (temple starts whose point biome is 12, 30 or 184); 30 igloos cover all four rotations.
   The abandoned camps' 262 states took one run (podzol and full water cauldrons mapped by hand).
+- The palette also holds what code makes of placed blocks (`templates_palette.py` `SHAPED`: connections, stair
+  corners, v2 door and trapdoor turns). A variant is added only to a block that has every state it rewrites:
+  the marker alone is not enough (`upper_block_bit` is on double plants, `upside_down_bit` on stairs; until
+  2026-10-10 the palette held 924 states no registry has, such as tall grass with a cardinal direction).
+  sapling-world's `every_state_the_generator_names_is_a_vanilla_state` checks all tables and the palette.
 - A second probe swaps all shipwreck templates (flooded placement) to list what BDS waterlogs:
   `scripts/data/waterloggable.txt` (stairs, slabs, fences, walls, panes, bars, doors, trapdoors, chests, ...;
   never double slabs).

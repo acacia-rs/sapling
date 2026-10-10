@@ -92,6 +92,34 @@ impl PoplarCanopy {
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use crate::OverworldGenerator;
+    use crate::block::Block;
+
+    /// No BDS world to compare with: only that a camp's poplar element grows a tree of the documented shape.
+    #[test]
+    fn a_poplar_element_grows_a_trunk_branches_and_a_canopy() {
+        let generator = OverworldGenerator::new(20261003);
+        let grown = (-64..-56).flat_map(|cx| (4..12).map(move |cz| (cx, cz))).find_map(|(cx, cz)| {
+            let shape = generator.carved(cx, cz);
+            let y = (60..200).rev().find(|&y| shape.block(8, y, 8) != Block::Air)?;
+            let at = [cx * 16 + 8, y + 1, cz * 16 + 8];
+            let writes = generator.structure_feature_writes("orange_poplar_tree_feature", (cx, cz), at, 0);
+            (shape.block(8, y, 8) == Block::GrassBlock && !writes.is_empty()).then_some((at, writes))
+        });
+        let ([x, y, z], writes) = grown.expect("a grass column where the tree fits");
+        let count = |wanted: &dyn Fn([i32; 3], Block) -> bool| writes.iter().filter(|&&(at, block, _)| wanted(at, block)).count();
+        let trunk = count(&|at, block| block == Block::PoplarLog && at[0] == x && at[2] == z);
+        let lying = count(&|_, block| matches!(block, Block::PoplarLogX | Block::PoplarLogZ));
+        let leaves = count(&|_, block| block == Block::OrangePoplarLeaves);
+        let reach = writes.iter().map(|&(at, _, _)| (at[0] - x).abs().max((at[2] - z).abs())).max().unwrap();
+        assert!((7..=10).contains(&trunk), "{trunk} trunk logs");
+        assert!(lying >= 1 && leaves > 60 && reach <= 7, "{lying} lying logs, {leaves} leaves, reach {reach}");
+        assert!(writes.iter().all(|&(at, _, _)| at[1] >= y - 1 && at[1] <= y + 12));
+    }
+}
+
 struct Shape<'a> {
     canopy: &'a PoplarCanopy,
     tree: &'a Tree,

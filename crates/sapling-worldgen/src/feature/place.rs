@@ -1,7 +1,9 @@
 //! Placing one feature (`IFeature::place` with a placement context): the wrapper features that
 //! place others, each child at its parent's position and with its parent's generator.
 
-use super::data::FEATURES;
+use std::sync::OnceLock;
+
+use super::data::{ELEMENTS, FEATURES};
 use super::molang::{Molang, Scope, World};
 use super::scatter::{self, Draws};
 use super::spec::{Axis, EarlyOut, Feature, Scatter, Search};
@@ -21,9 +23,26 @@ pub struct Ctx<'c, 'v> {
     pub in_structure: &'c dyn Fn([i32; 3]) -> bool,
 }
 
+/// For probes: (from, to) indices into `FEATURES`, set once (`swap_feature`).
+static SWAP: OnceLock<(usize, usize)> = OnceLock::new();
+
+/// Every later placement of the element feature `from` places `to` instead, as BDS does when a pack redefines
+/// `from`'s identifier with `to`'s body; false for names `ELEMENTS` lacks or a second call.
+pub fn swap_feature(from: &str, to: &str) -> bool {
+    let index = |name: &str| ELEMENTS.iter().find(|(n, _)| *n == name).map(|&(_, index)| index);
+    index(from).zip(index(to)).is_some_and(|swap| SWAP.set(swap).is_ok())
+}
+
 impl Feature {
     /// Where the feature placed, if it did.
     pub fn place(&self, ctx: &mut Ctx, at: [i32; 3]) -> Option<[i32; 3]> {
+        match SWAP.get() {
+            Some(&(from, to)) if std::ptr::eq(self, &FEATURES[from]) => FEATURES[to].place_own(ctx, at),
+            _ => self.place_own(ctx, at),
+        }
+    }
+
+    fn place_own(&self, ctx: &mut Ctx, at: [i32; 3]) -> Option<[i32; 3]> {
         let placed = |done: bool| done.then_some(at);
         match self {
             Feature::Ore(ore) => placed(ore.place(ctx.view, at, ctx.random)),

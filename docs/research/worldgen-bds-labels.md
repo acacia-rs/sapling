@@ -128,6 +128,20 @@ span 0x3cbc6a80), 1487e4350 the frozen ocean builder (1487e44cb `Biome::getTempe
 test (material 5, or block id 0x14cce2ba8 packed ice or 0x14cce2b78 blue ice), 141f69b60 and 144c50eb0 the
 other two 64-bit `Mth.getSeed` copies (a structure processor's Java LCG and the block render offset).
 
+Misc labels (2026-10-10, read in a scratch bdsre): 149e82e00 `FossilFeature::place` (vtable 14a928230, slot 4;
+ore descriptor +0x20, max empty corners +0xd0), 149ea0080 the fossil template names' initialiser (table
+0x14ce6cc10, 0x20 apart), 0x14a98ef20 its rotation switch, 1438f4e80 `PoplarTreeTrunk::placeTrunk` (vtable slot
+at 14a98e028; height 1438ec2c0, fields +0x10/+0x14 remaining height, +0x18/+0x1c branches, +0x20 trunk block,
++0xd0 decoration, +0x1b0.. log feature), 1438f43a0 `PoplarTreeCanopy::placeCanopy` (slot at 14a98b910; +8 leaf,
++0xb8 branch block, +0x168 radius pairs, +0x180/+0x184 height, +0x188 side hole chance), 1438f4c10 its layer,
+1438f0700 the trunks' attachable decoration, 149e8ca80 `HorizontalTreeDecorationFeature::place` (vtable
+14a9283c0; block +0x10, bark_side_only +0xc0, allow_adjacent +0xc1), 0x14a6821c8 facing -> cardinal direction
+value (north 2, south 0, west 1, east 3), 0x14a712760 facing offsets, 145e16f50 the v2 jigsaw attach test,
+145e13b90 `FeaturePoolElement`'s jigsaw info, `StructurePoolElement` vt+0x68 (+0x138, ends a pool's list when
+0) and vt+0x78 (1 for a feature element), 144d13b6e the 2x2x2 box a feature element leaves in its space.
+The tree classes' vtables sit between std::function vtables in 14a98b000..14a98f000, three slots each
+(destructor, place, height); the functions follow the classes' alphabetical order from 1438ea120 on.
+
 Feat3 labels (2026-10-08): 14a73fa30 the decoration's IBlockWorldGenAPI vtable (forwards to its `BlockSource` at
 +8; 0xb0 = 1411a0a60 heightmap: `LevelChunk` +0xb80 i16 per column + minimum y), 1438f0d00
 `MangroveTreeRoots::placeRoots` (vtable 14a98e1f8), 1438f16f0 its root simulation, 14a681437 its facing table,

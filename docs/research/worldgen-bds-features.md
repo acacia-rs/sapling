@@ -139,6 +139,26 @@ Tries move by `(r & m) - (r & m)` per axis, two raw MT outputs each; most draw z
   in the cell's second layer (the one liquids use; `Block::second_layer`, block/layers.rs). Double plants,
   mushrooms and berry bushes get no snow (oracle: 246 such cells, none of the other kind).
 
+## Fossils (2026-10-10, worldgen/misc; feature/fossil.rs)
+`minecraft:fossil_feature` (`FossilFeature::place` 149e82e00, vtable 14a928230 slot 4; `ore_block`, `max_empty_corners`).
+Two rules place it at the chunk corner in 1 of 64 desert and swamp chunks: `fossil_feature` (coal ore, y 0..320)
+and `deepslate_diamond_fossil_feature` (deepslate diamond ore, y -64..-8).
+- Nothing, before any draw, when the generator reports a structure at the position (the geode's test).
+- Draws from the placing generator: rotation `nextInt(4)`, template `nextInt(8)` (table 149ea0080: spine 1-4,
+  then skull 1-4), x offset `nextInt(16 - width)`, z offset `nextInt(16 - depth)` of the turned footprint, then
+  `nextInt(10)`. y = min(the rule's y, `getAboveTopSolidBlock` without water over the footprint's columns)
+  - 15 - that draw, at least 10 above the world's bottom.
+- The template then turns about its corner as every legacy template does (no pivot), so a quarter turn puts it
+  west or north of the footprint the offsets were drawn for. Its eight box corners are counted empty when air,
+  water or lava; more than `max_empty_corners` fails.
+- Two `placeInWorld` calls, both unbounded (the settings' chunk stays `INVALID`, so the chunk box the
+  constructor was given is replaced; blocks land below y 0), both seeded with the generator's seed field
+  (`random +0x9f8 -> +8`, as `TemplateStructurePiece`): integrity 0.9 with the bone blocks, then 0.1 with a
+  block rule (bone block, chance 1, no draw) writing the ore. The same seed gives both passes the same floats:
+  a block is ore under 0.1, bone to 0.9, absent above.
+Oracle: the structures world's desert pyramid region holds one (deepslate rule, skull 2 unturned, y -54): all
+60 bone blocks and the diamond ore match (region 108 -> 41). The quarter turns are read off the code only.
+
 ## Oracle (2026-10-07, 20261003 near origin unless named)
 Precision/recall near origin: stone blobs 99.93/99.98, coal 99.79/99.90, seagrass 99.95/99.93, kelp 99.89/99.88,
 diamond 97.0/97.2, redstone 98.6/98.5, geode shells 98.0/100 and buds 99.0/100 (BDS skips geodes inside
