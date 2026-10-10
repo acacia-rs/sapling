@@ -1,0 +1,91 @@
+"""What a BDS load did per chunk, from a debugger log of the three stage entries, and how two loads differ.
+
+usage: py -3 -I dbg_loads.py <dbg.log> [<other dbg.log>] [--order <file>]
+
+The log is a run of `bds_dbg_run.sh` with scripts/data/dbg_loads.json: `load` (OverworldGenerator::loadChunk),
+`structfeat` (postProcessStructureFeatures) and `deco` (decorationPostProcessChunk), each logged with its chunk
+and thread. Prints per stage the chunks, the ones run more than once, the threads, and the neighbour pairs that
+break the parity phases; with a second log, the pairs of chunks whose 3x3 overlap (two apart or nearer) that
+ran in the other order there. `--order` writes the first log's decoration order for `SAPLING_ORACLE_ORDER`.
+Why: docs/research/worldgen-bds-order.md.
+"""
+import re
+import sys
+from collections import Counter
+
+PHASE = [0, 1, 3, 2]
+STAGES = ("load", "structfeat", "deco")
+HIT = re.compile(r"hit (\w+) t(\d+) .*?=\((-?\d+),(?: (-?\d+)\))?(?:\) \[[^\]]+\]=\((-?\d+),\))?")
+
+
+def phase(c):
+    return PHASE[(c[0] & 1) | (c[1] & 1) << 1]
+
+
+def read(path):
+    """stage -> [(chunk, thread)] in log order."""
+    runs = {stage: [] for stage in STAGES}
+    for line in open(path):
+        m = HIT.match(line)
+        if m and m.group(1) in runs:
+            z = m.group(4) if m.group(4) is not None else m.group(5)
+            runs[m.group(1)].append(((int(m.group(3)), int(z)), int(m.group(2))))
+    return runs
+
+
+def first(events):
+    place = {}
+    for i, (chunk, _) in enumerate(events):
+        place.setdefault(chunk, i)
+    return place
+
+
+def pairs(place, reach):
+    for a in place:
+        for dx in range(-reach, reach + 1):
+            for dz in range(-reach, reach + 1):
+                b = (a[0] + dx, a[1] + dz)
+                if a < b and b in place:
+                    yield a, b
+
+
+def describe(name, runs):
+    for stage in STAGES:
+        events = runs[stage]
+        place = first(events)
+        again = {c: n for c, n in Counter(c for c, _ in events).items() if n > 1}
+        threads = Counter(t for _, t in events)
+        against = sum((place[a] < place[b]) != (phase(a) < phase(b)) for a, b in pairs(place, 1))
+        total = sum(1 for _ in pairs(place, 1))
+        print(f"{name} {stage}: {len(place)} chunks, {len(again)} more than once {sorted(again.items())[:6]}, "
+              f"threads {sorted(threads.values(), reverse=True)}, neighbour pairs against parity {against} of {total}")
+
+
+def compare(a, b):
+    for stage in STAGES:
+        pa, pb = first(a[stage]), first(b[stage])
+        common = {c: pa[c] for c in pa if c in pb}
+        for reach, label in ((1, "neighbours"), (2, "3x3 overlaps")):
+            flipped = [(x, y) for x, y in pairs(common, reach) if (pa[x] < pa[y]) != (pb[x] < pb[y])]
+            total = sum(1 for _ in pairs(common, reach))
+            print(f"{stage}: {len(flipped)} of {total} {label} in the other order {flipped[:4]}")
+        same = [c for c, _ in a[stage]] == [c for c, _ in b[stage]]
+        print(f"{stage}: {len(pa)} and {len(pb)} chunks, {len(common)} in both, same sequence: {same}")
+
+
+def main():
+    args = sys.argv[1:]
+    order = args.pop(args.index("--order") + 1) if "--order" in args else None
+    logs = [a for a in args if a != "--order"]
+    runs = [read(path) for path in logs]
+    for path, run in zip(logs, runs):
+        describe(path.replace("\\", "/").split("/")[-3] if path.count("/") + path.count("\\") > 1 else path, run)
+    if len(runs) > 1:
+        compare(runs[0], runs[1])
+    if order:
+        place = first(runs[0]["deco"])
+        with open(order, "w", newline="\n") as out:
+            out.writelines(f"{c[0]} {c[1]}\n" for c in sorted(place, key=place.get))
+
+
+main()

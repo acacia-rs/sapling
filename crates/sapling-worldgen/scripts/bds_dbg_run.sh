@@ -32,7 +32,8 @@ level-type=DEFAULT
 server-port=$port
 server-portv6=$((port + 1))
 online-mode=false
-content-log-console-output-enabled=true"
+content-log-console-output-enabled=true
+max-threads=${WORLDGEN_THREADS:-8}"
 keys=$(sed 's/=.*//' <<<"$settings" | paste -sd'|')
 { grep -vE "^($keys)=" "$props" || true; echo "$settings"; } >"$props.new"
 mv "$props.new" "$props"
