@@ -41,6 +41,13 @@ From `bds_command_probe hunger` (research/captures/bds-hunger.txt):
   tick after 0. `/damage` adds no exhaustion.
 - The hunger effect at amplifier 255 adds 1.28 of exhaustion a tick.
 
+From `bds_command_probe tire` (research/captures/bds-tire.txt), the bot holding keys:
+
+- A jump adds 0.05 of exhaustion, a jump while sprinting 0.2.
+- Sprinting adds 0.1 a block run, counted only in ticks that end on the ground: between two sprinting
+  jumps only the landing's step is added.
+- Walking adds none.
+
 ## Starving
 
 - With hunger at 0 a player is hurt 1 (cause 16) every 80 ticks, first 80 ticks after the hunger ran out,
@@ -78,7 +85,7 @@ From `bds_command_probe eat` (research/captures/bds-eat.txt), the bot holding us
 
 ## Not drilled
 
-Armour, effects, hunger from running, jumping, mining or hitting, each food's values and side effects, starving on normal and hard, the void, whether a player out of breath in a
+Armour, effects, hunger from mining, hitting, swimming or being hurt, each food's values and side effects, starving on normal and hard, the void, whether a player out of breath in a
 block is hurt as one under water, a mob's or another
 player's hit, `keepInventory`, a bed's or anchor's spawn, creative and spectator.
 
@@ -93,8 +100,8 @@ player's hit, `keepInventory`, a bed's or anchor's spawn, creative and spectator
   flashes, causes and rhythm; the health differs where BDS mends (those runs were before sapling mended)
   or `/effect` heals, which sapling lacks.
 - Glass and leaves smother nothing (glass drilled; leaves taken as glass).
-- Mending and starving are built to the numbers above (`vitals/hunger.rs`). Nothing but mending tires a
-  player.
+- Mending and starving are built to the numbers above (`vitals/hunger.rs`), and so is what a jump and
+  a sprint cost (`vitals.rs`). Mining, hitting, swimming and being hurt cost nothing yet.
 - Eating is built (`vitals/eating.rs`, `sapling-data/src/food.rs`): the bot ate an apple and a steak on
   sapling in the same 32 ticks and packets (research/captures/sapling-eat.txt). Only the apple's values are
   drilled; the others are the Java game's. A stew leaves no bowl, and no food does more than feed.

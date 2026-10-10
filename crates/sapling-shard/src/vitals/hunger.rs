@@ -1,6 +1,6 @@
 //! A player's hunger: what mending costs it and what an empty one costs the player, as BDS was
 //! seen to (docs/research/player-damage.md, "Mending" and "Starving").
-// TODO: nothing but mending tires a player (running, jumping, mining and hits are not drilled),
+// TODO: mining, hits, swimming and being hurt tire nobody (not drilled).
 // Starving stops at half health, as on the drilled
 // server (easy); the world's difficulty is not read.
 
@@ -63,6 +63,11 @@ impl Hunger {
             *from = (*from - 1.0).max(0.0);
         }
         due
+    }
+
+    /// Adds to the exhaustion: a jump, a run (vitals.rs).
+    pub(super) fn tire(&mut self, by: f32) {
+        self.exhaustion += by;
     }
 
     pub(super) fn is_full(&self) -> bool {

@@ -1,5 +1,30 @@
-//! The hurt, smother, hunger and eat drills of bds_command_probe: a player harmed, killed and risen again
+//! The hurt, smother, hunger, eat and tire drills of bds_command_probe: a player harmed, killed and risen again
 //! (docs/research/player-damage.md).
+
+use std::time::Duration;
+
+use acacia_bot::Bot;
+
+/// Does what a drill's `!` line asks of the actor: `!eat` holds use on what it holds, `!jump`,
+/// `!walk` and `!sprint` hold those keys until `!stop`. False for any other line.
+pub async fn act(actor: &mut Bot, line: &str) -> bool {
+    let keys = |actor: &mut Bot, forward: f32, sprint: bool, jump: bool| {
+        if let Some(controls) = actor.controls() {
+            (controls.forward, controls.sprint, controls.jump) = (forward, sprint, jump);
+        }
+    };
+    match line {
+        // The use goes on as the bot is polled after (`Bot::consume`).
+        "!eat" => drop(tokio::time::timeout(Duration::from_millis(1), actor.consume()).await),
+        "!jump" => keys(actor, 0.0, false, true),
+        "!walk" => keys(actor, 1.0, false, false),
+        "!sprint" => keys(actor, 1.0, true, false),
+        "!leap" => keys(actor, 1.0, true, true),
+        "!stop" => keys(actor, 0.0, false, false),
+        _ => return false,
+    }
+    true
+}
 
 pub const HURT_SHOWN: &[&str] = &[
     "UpdateAttributes", "EntityEvent", "SetEntityData", "SetHealth", "Respawn", "LevelSoundEvent", "LevelEvent", "MovePlayer", "SetEntityMotion", "Text", "DeathInfo", "PlayerAction", "Animate",
@@ -92,6 +117,22 @@ pub fn eat() -> Vec<String> {
     wait(&mut lines, 4);
     lines.extend(["effect @s saturation 1 19 true", "", "!eat"].map(String::from));
     wait(&mut lines, 4);
+    lines.extend(["gamemode creative @s", ""].map(String::from));
+    lines
+}
+
+/// The actor, in survival at the end of a 60 block floor: jumps in place, walks, sprints and
+/// sprints jumping, five seconds each, back at the start between.
+pub fn tire() -> Vec<String> {
+    let mut lines: Vec<String> = ["kill @e[type=!player]", "", "fill ~-3 ~-1 ~-3 ~3 ~-1 ~60 stone", "fill ~-3 ~ ~-3 ~3 ~6 ~60 air", "gamemode survival @s", ""].map(String::from).into();
+    let wait = |lines: &mut Vec<String>, seconds: usize| lines.extend(std::iter::repeat_n(String::new(), seconds));
+    for key in ["!jump", "!walk", "!sprint", "!leap"] {
+        lines.push(key.into());
+        wait(&mut lines, 5);
+        lines.extend(["!stop", ""].map(String::from));
+        lines.push(if key == "!jump" { String::new() } else { "tp @s ~ ~ ~-30".into() });
+        wait(&mut lines, 2);
+    }
     lines.extend(["gamemode creative @s", ""].map(String::from));
     lines
 }

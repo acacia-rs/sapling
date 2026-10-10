@@ -154,3 +154,20 @@ fn a_hungry_player_eats_the_apple_in_its_hand_in_32_ticks() {
     h.remote.run(|ctx| assert_eq!(ctx.item(ALEX, Slot::Main(0)).map(|item| item.count), Some(1)));
     h.tick_all();
 }
+
+#[test]
+fn a_jump_tires_a_player_a_little_and_a_sprint_by_the_block() {
+    let mut h = ready();
+    let exhaustion = |sent: &[RawPacket]| all::<UpdateAttributes>(sent).iter().flat_map(|update| &update.attributes).filter(|attribute| attribute.name == "minecraft:player.exhaustion").map(|attribute| (attribute.current * 1000.0).round()).collect::<Vec<_>>();
+    let mut step = |h: &mut Harness, z: f32, flags: Vec<InputData>| {
+        let mut input = input_at([0.5, 65.0, z]);
+        input.input_data = flags;
+        h.receive(1, &input);
+        // Counted in the tick the input is read or the one after.
+        [h.tick_all(), h.tick_all()].iter().flat_map(|sent| exhaustion(sent.to(1))).collect::<Vec<_>>()
+    };
+    assert_eq!(step(&mut h, 0.5, vec![InputData::VerticalCollision, InputData::StartJumping]), [50.0]);
+    assert!(step(&mut h, 0.75, vec![InputData::VerticalCollision]).is_empty(), "walking costs nothing");
+    assert_eq!(step(&mut h, 1.0, vec![InputData::VerticalCollision, InputData::StartSprinting]), [75.0], "a quarter block");
+    assert_eq!(step(&mut h, 1.0, vec![InputData::VerticalCollision, InputData::StartJumping]), [275.0]);
+}

@@ -82,6 +82,8 @@ pub(crate) struct Motion {
     /// Where a teleport onto ground put the feet, and the tick the landing is given up.
     landing: Option<([f32; 3], u64)>,
     told: Option<(Position, Pose)>,
+    /// Jumps its inputs began since vitals.rs last counted them.
+    pub jumps: u8,
 }
 
 impl Motion {
@@ -203,6 +205,7 @@ pub(crate) fn player_input(mut packets: ResMut<PacketQueues>, tick: Res<Tick>, m
             continue;
         }
         motion.pose.apply(&input.input_data);
+        motion.jumps = motion.jumps.saturating_add(input.input_data.iter().filter(|flag| **flag == InputData::StartJumping).count() as u8);
         motion.input_tick = input.tick;
         *position = Position { feet, yaw: input.yaw, pitch: input.pitch, head_yaw: input.head_yaw, on_ground };
     }

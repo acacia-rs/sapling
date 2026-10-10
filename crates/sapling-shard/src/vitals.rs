@@ -38,6 +38,13 @@ const GASP: i16 = 20;
 const DROWN_HARM: f32 = 2.0;
 /// Ticks a player is in a block before the block hurts it: one more than a mob.
 const WALLED: u8 = 7;
+/// Exhaustion of a jump, of a jump in a sprint, and of a block sprinted on the ground
+/// (research/captures/bds-tire.txt); walking costs none.
+const JUMP_TIRES: f32 = 0.05;
+const LEAP_TIRES: f32 = 0.2;
+const SPRINT_TIRES: f32 = 0.1;
+/// No tick's run is longer: more is a teleport or a throw.
+const LONGEST_STEP: f32 = 1.0;
 /// Health an empty hunger leaves a player (hunger.rs).
 const STARVED: f32 = 10.0;
 
@@ -127,8 +134,12 @@ fn stand(world: &mut World, player: Entity, layer: Entity) {
     // BDS lays a player with only its head in a block down, unhurt.
     let (under_water, in_wall) = (holds(level, eyes, WATER), is_full_block(level, eyes) && is_full_block(level, low));
     // A teleport is no fall: until the client follows it, the height starts anew.
-    let carried = world.get::<Motion>(player).is_some_and(Motion::awaits_teleport);
+    let (carried, sprinting, jumps) = world.get_mut::<Motion>(player).map_or((false, false, 0), |mut motion| (motion.awaits_teleport(), motion.pose.sprinting, std::mem::take(&mut motion.jumps)));
     let from = vitals.was.replace(position.feet).unwrap_or(position.feet);
+    let run = (position.feet[0] - from[0]).hypot(position.feet[2] - from[2]);
+    let ran = if sprinting && position.on_ground && !carried && run <= LONGEST_STEP { run } else { 0.0 };
+    let fed = vitals.hunger;
+    vitals.hunger.tire(f32::from(jumps) * if sprinting { LEAP_TIRES } else { JUMP_TIRES } + ran * SPRINT_TIRES);
     let (health, breath) = (&mut vitals.health, vitals.air);
     let mut hits = Vec::new();
     health.begin();
@@ -142,7 +153,7 @@ fn stand(world: &mut World, player: Entity, layer: Entity) {
         vitals.air = 0;
         hits.extend((under_water && vitals.health.hurt(DROWN_HARM)).then_some(Cause::Drowning));
     }
-    let (left, fed) = (vitals.health.left(), vitals.hunger);
+    let left = vitals.health.left();
     match vitals.hunger.tick(left > 0.0 && left < MAX) {
         Some(hunger::Turn::Mend) => vitals.health.mend(1.0),
         Some(hunger::Turn::Starve) => hits.extend((left > STARVED && vitals.health.hurt(1.0)).then_some(Cause::Starving)),
