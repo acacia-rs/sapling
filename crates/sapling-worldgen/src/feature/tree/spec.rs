@@ -38,6 +38,40 @@ pub enum Trunk {
     Mangrove(MangroveTrunk),
     Cherry(CherryTrunk),
     Fallen(FallenTrunk),
+    Poplar(PoplarTrunk),
+}
+
+/// `poplar_trunk` (poplar.rs); both ranges are inclusive.
+#[derive(Debug)]
+pub struct PoplarTrunk {
+    pub block: Block,
+    pub block_x: Block,
+    pub block_z: Block,
+    pub height: Range,
+    pub above_branches: Range,
+    pub branches: Range,
+    /// Index into `FEATURES`, placed at every log of the trunk.
+    pub log_decoration: Option<usize>,
+}
+
+/// `poplar_canopy`: `radius` is (value, weight) pairs.
+#[derive(Debug)]
+pub struct PoplarCanopy {
+    pub leaf: Block,
+    pub branch_x: Block,
+    pub branch_z: Block,
+    pub radius: &'static [(i32, i32)],
+    pub height: Range,
+    pub side_hole_chance: f32,
+}
+
+/// `minecraft:horizontal_tree_decoration_feature` (shelf mushrooms): the block by facing (north,
+/// south, west, east) and growth.
+#[derive(Debug)]
+pub struct HorizontalDecoration {
+    pub blocks: [[Block; 2]; 4],
+    pub bark_side_only: bool,
+    pub allow_adjacent: bool,
 }
 
 /// The bare `trunk` key.
@@ -164,6 +198,7 @@ pub enum Canopy {
     Mangrove(MangroveCanopy),
     Cherry(CherryCanopy),
     RandomSpread { leaves: &'static [(Block, i32)], height: i32, radius: i32, attempts: i32 },
+    Poplar(PoplarCanopy),
 }
 
 /// The bare `canopy` key: stacked squares with corners cut by `variation_chance`.

@@ -144,6 +144,8 @@ pub enum Feature {
     PartiallyExposedBlob(PartiallyExposedBlob),
     /// `LakeFeature` placed by a rule (pool.rs).
     Pool(Pool),
+    /// `minecraft:horizontal_tree_decoration_feature` (tree/decoration.rs).
+    TreeDecoration(super::tree::spec::HorizontalDecoration),
     /// `minecraft:fossil_feature` (fossil.rs).
     Fossil(Fossil),
     /// A feature sapling does not port: places nothing, but its rule still draws its scatter,

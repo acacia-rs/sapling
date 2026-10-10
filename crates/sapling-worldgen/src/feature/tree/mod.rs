@@ -6,6 +6,7 @@ mod acacia;
 mod canopy;
 mod cherry;
 pub mod common;
+mod decoration;
 mod fallen;
 mod fancy;
 mod mangrove;
@@ -13,6 +14,7 @@ mod mangrove_canopy;
 mod mangrove_roots;
 mod mega;
 mod mega_canopy;
+mod poplar;
 mod roofed;
 mod simple;
 pub mod spec;
@@ -45,6 +47,7 @@ impl Tree {
             Trunk::Mangrove(trunk) => trunk.place(self, ctx, at),
             Trunk::Cherry(trunk) => trunk.place(self, ctx, at),
             Trunk::Fallen(trunk) => trunk.place(self, ctx, at),
+            Trunk::Poplar(trunk) => trunk.place(self, ctx, at),
         }
     }
 
@@ -73,6 +76,7 @@ impl Canopy {
             Canopy::Roofed { .. } => roofed::canopy(self, tree, view, random, anchor),
             Canopy::Mangrove(canopy) => canopy.place(tree, view, random, anchor),
             Canopy::Cherry(canopy) => canopy.place(tree, view, random, anchor),
+            Canopy::Poplar(canopy) => canopy.place(tree, view, random, anchor.at),
             Canopy::RandomSpread { leaves, height, radius, attempts } => {
                 canopy::random_spread(view, random, anchor.at, leaves, [*height, *radius], *attempts)
             }

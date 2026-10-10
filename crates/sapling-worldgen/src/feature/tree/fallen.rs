@@ -10,7 +10,7 @@ use crate::feature::view::View;
 use crate::terrain::MIN_Y;
 
 /// North, south, west, east (`nextInt(4) + 2` as a facing).
-const FACINGS: [(i32, i32); 4] = [(0, -1), (0, 1), (-1, 0), (1, 0)];
+pub(super) const FACINGS: [(i32, i32); 4] = [(0, -1), (0, 1), (-1, 0), (1, 0)];
 
 /// Empty, or a block that can be built over (world-gen API slot 0x90): liquids too, so the log sinks to a pond's bed.
 fn passable(view: &View, [x, y, z]: [i32; 3]) -> bool {

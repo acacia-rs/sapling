@@ -130,6 +130,10 @@ def canopy(body):
     elif key == 'random_spread_canopy':
         rust = (f'RandomSpread {{ leaves: {weighted_blocks(c["leaf_blocks"])}, height: {int(c["canopy_height"])}, '
                 f'radius: {int(c["canopy_radius"])}, attempts: {int(c["leaf_placement_attempts"])} }}')
+    elif key == 'poplar_canopy':
+        radius = ', '.join(f'({int(r["value"])}, {int(r["weight"])})' for r in c['radius'])
+        rust = (f'Poplar(PoplarCanopy {{ leaf: {leaf()}, branch_x: {axis(c["branch_block"], "x")}, branch_z: {axis(c["branch_block"], "z")}, '
+                f'radius: &[{radius}], height: {rng(c["height"])}, side_hole_chance: {float(c["side_hole_chance"])!r} }})')
     else:
         raise NotPorted(key)
     return f'Some(&Canopy::{rust})'
@@ -197,6 +201,14 @@ def trunk(body, index):
                 f'block_z: {axis(t["trunk_block"], "z")}, log_length: {rng(t["log_length"])}, '
                 f'height_modifier: {rng(t.get("height_modifier"), 0)}, stump_height: {rng(t.get("stump_height"), 1)}, '
                 f'log_decoration: {feature}, decoration: {decoration(t.get("trunk_decoration"))} }})')
+    if 'poplar_trunk' in body:
+        t = body['poplar_trunk']
+        feature = t.get('log_decoration_feature')
+        feature = 'None' if feature is None else f'Some({index(feature)})'
+        return (f'Poplar(PoplarTrunk {{ block: {block(t["trunk_block"])}, block_x: {axis(t["trunk_block"], "x")}, '
+                f'block_z: {axis(t["trunk_block"], "z")}, height: {rng(t["trunk_height"])}, '
+                f'above_branches: {rng(t["remaining_trunk_height_above_branches"])}, '
+                f'branches: {rng(t["amount_of_foliage_support_branches"])}, log_decoration: {feature} }})')
     raise NotPorted('tree trunk ' + ', '.join(body))
 
 
