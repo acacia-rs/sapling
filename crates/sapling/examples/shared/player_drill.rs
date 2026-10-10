@@ -1,4 +1,4 @@
-//! The hurt, smother, hunger, eat, tire, bite, slain, chase and toil drills of bds_command_probe: a player harmed,
+//! The hurt, smother, hunger, eat, tire, bite, slain, chase, toil and armour drills of bds_command_probe: a player harmed,
 //! killed and risen again (docs/research/player-damage.md, mob-attacks.md).
 
 use std::time::Duration;
@@ -58,6 +58,7 @@ pub fn drill(name: &str) -> Option<(Vec<String>, &'static [&'static str])> {
         "slain" => (slain(), BITE_SHOWN),
         "chase" => (chase(), BITE_SHOWN),
         "toil" => (toil(), HURT_SHOWN),
+        "armour" => (armour(), HURT_SHOWN),
         _ => return None,
     })
 }
@@ -223,5 +224,30 @@ pub fn toil() -> Vec<String> {
         lines.extend(["!hit cow", "", ""].map(String::from));
     }
     lines.extend(["kill @e[type=cow]", "summon armor_stand ~2 ~ ~", "", "!hit armor_stand", "", "damage @s 2", "", "", "gamemode creative @s", "kill @e[type=!player]", ""].map(String::from));
+    lines
+}
+
+/// The actor, in survival, hit for 5 by `/damage` as an entity's attack: bare, in a leather and an
+/// iron chestplate, in all of iron, of diamond and of netherite; then for 2 in the netherite by
+/// each other cause.
+pub fn armour() -> Vec<String> {
+    let mut lines: Vec<String> = ["kill @e[type=!player]", "", "fill ~-3 ~-1 ~-3 ~8 ~-1 ~8 stone", "fill ~-3 ~ ~-3 ~8 ~6 ~8 air", "gamemode survival @s", ""].map(String::from).into();
+    let wear = |lines: &mut Vec<String>, part: &str, item: &str| lines.push(format!("replaceitem entity @s slot.armor.{part} 0 {item}"));
+    let hit = |lines: &mut Vec<String>, harm: &str| lines.extend([format!("damage @s {harm}"), String::new(), "effect @s instant_health 1 4".into(), String::new()]);
+    hit(&mut lines, "5 entity_attack");
+    for chestplate in ["leather_chestplate", "iron_chestplate"] {
+        wear(&mut lines, "chest", chestplate);
+        hit(&mut lines, "5 entity_attack");
+    }
+    for metal in ["iron", "diamond", "netherite"] {
+        for (part, piece) in [("head", "helmet"), ("chest", "chestplate"), ("legs", "leggings"), ("feet", "boots")] {
+            wear(&mut lines, part, &format!("{metal}_{piece}"));
+        }
+        hit(&mut lines, "5 entity_attack");
+    }
+    for cause in ["", " fall", " fire", " drowning", " suffocation", " lava"] {
+        hit(&mut lines, &format!("2{cause}"));
+    }
+    lines.extend(["gamemode creative @s", "clear @s", ""].map(String::from));
     lines
 }
