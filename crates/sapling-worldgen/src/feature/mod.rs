@@ -148,14 +148,11 @@ impl Features {
         self.writes.get(source, || {
             let phase_limit = phase(source);
             let base = |x: i32, z: i32| self.before((x, z), phase_limit, inputs);
-            // A chunk's heightmap is recomputed when it loads and when its decoration ends, never in between.
-            let frozen = |x: i32, z: i32| match phase((x, z)) {
-                p if p < phase_limit => self.before((x, z), p + 1, inputs),
-                _ => (inputs.carved)(x, z),
-            };
+            // No chunk's heightmap changes while the world generates: see docs/research/worldgen-bds-features.md, "Heightmaps".
+            let frozen = inputs.carved;
             // The pre-worldgen heightmap is dropped when the chunk's decoration ends.
             let generated = |x: i32, z: i32| (phase((x, z)) >= phase_limit).then(|| (inputs.generated_tops)(x, z));
-            let mut view = View::new(source, &base).with_frozen_heights(&frozen).with_generated_tops(&generated);
+            let mut view = View::new(source, &base).with_frozen_heights(frozen).with_generated_tops(&generated);
             view.on_write = liquid::write_hook();
             monster_room::monster_rooms((inputs.after_lake)(source.0, source.1), source, &mut view);
             decorate::decorate_chunk(&self.seed, source, inputs, &mut view);

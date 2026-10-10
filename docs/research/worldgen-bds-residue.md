@@ -9,9 +9,12 @@ round is first; the sections after it are feat4's and the sculk round's, with th
 - The old growth pine taiga camp (43 cells): the v2 placer attaches a feature element whatever the jigsaw's
   target name, so the tent's `down` jigsaw grows a tree (worldgen-bds-jigsaw.md, "Feature elements"). The
   "other positions" this file listed were that tree, a decoration spruce, and a piece on a chunk edge neither
-  side places. Region 668 -> 620; one mushroom is left beside the camp.
+  side places. Region 668 -> 620; nothing of the camp is left.
 - Poplars and shelf mushrooms ported and checked through a pack override (worldgen-bds-trees.md, "Poplars").
 - The template palette no longer names states no registry has (worldgen-bds-templates.md).
+- Heightmaps stay carved for decorated neighbours too (worldgen-bds-features.md, "Heightmaps"): the swamp's
+  firefly bushes and a lily pad under a neighbour's oak (swamp 79 -> 72, mangrove swamp, pale garden, mansion).
+- Mushrooms do not stand on leaves (the camp's last cell and eight more in five regions).
 
 All2 (02df143) -> misc, wrong / missing / deterministic per world; nothing else moved:
 
@@ -94,7 +97,8 @@ under the desert pyramid region: `minecraft:fossil_feature` is not ported).
 - Old growth pine taiga, chunk -333,340 (43): BDS's abandoned camp grows a spruce at (-5315,74,5452) and one at
   (-5308,·,5457); ours has feature elements at (-5307,74,5456) and (-5303,74,5454) instead. Jigsaw assembly.
 - One firefly bush cluster (5051..5053,63,4944) stands under oak leaves in BDS: the neighbour chunk's
-  heightmap it read had no leaves there, ours has. Not explained (edges keep parity, worldgen/drip).
+  heightmap it read had no leaves there, ours has. Resolved on 2026-10-10 (worldgen/misc): a decorated
+  neighbour's heightmap is not recomputed (worldgen-bds-features.md, "Heightmaps").
 - Bamboo jungle's and the pale garden's edge chunks: a few dozen cells of podzol, grass and vines after the
   lush caves and dripstone are set aside; not traced.
 

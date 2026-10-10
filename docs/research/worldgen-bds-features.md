@@ -212,10 +212,17 @@ carvers (1482129bd), and at the end of `decorationPostProcessChunk`, after the f
 block source and chunk state 11 and did not run once while a region generated (breakpoint count 0). So:
 - while a chunk decorates, its own heightmap is its carved terrain's: no structure block, no feature block, none
   of its own writes;
-- a neighbour's is its carved terrain's until that neighbour's decoration ends, and from then on its blocks as
-  they were at that moment;
+- a neighbour's is its carved terrain's too, also after that neighbour has been decorated (corrected
+  2026-10-10, worldgen/misc: the recompute at 148215885 is behind `140a0b4e0(chunk)`, a test of the dimension's
+  +0x100 flag and of a list at `LevelChunk` +0xf98, not read further; it was false for every generating chunk
+  the oracle shows. Until then sapling gave a later phase the neighbour's blocks as of its decoration's end:
+  a swamp's firefly bushes and lily pads then stood on a decorated neighbour's oak leaves instead of under
+  them. A live run logged the oak at line 95, the neighbour's own decoration at 141 and the bush cluster at
+  243, in the parity order, so order was not the cause; with every heightmap left carved swamp 79 -> 72,
+  mangrove swamp -2, pale garden -3, mansion -1, nothing worse.) A server whose chunks pass that test would
+  recompute: not modelled;
 - structure features (village trees) see carved-terrain heightmaps everywhere.
-`View::with_frozen_heights` models this (feature/mod.rs picks the snapshot by decoration phase). The recompute
+`View::with_frozen_heights` models this (every chunk's carved terrain). The recompute
 counts a cell whose block or liquid layer absorbs light (`Block` +0xa5 = `BlockComponentDirectData::mLight`), or
 is a non-air block with `BlockLegacy` +0x130 bit 2. Settled on 2026-10-09 from the heightmaps BDS saved in the
 oracle worlds (`examples/saved_heightmaps`: per block, how often it is the cell under the saved value and how
