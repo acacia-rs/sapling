@@ -11,7 +11,7 @@ pub(crate) mod eating;
 mod hunger;
 
 use acacia_proto::Packet;
-use acacia_proto::packets::{EntityEvent, EntityEventEventId};
+use acacia_proto::packets::{EntityEvent, EntityEventEventId, SetEntityMotion};
 use acacia_proto::types::Vec3f;
 use bevy_ecs::prelude::*;
 use sapling_api::{DamageCause, GameMode, HealthBackend, PlayerId};
@@ -70,7 +70,7 @@ impl Default for Vitals {
     }
 }
 
-fn is_mortal(world: &World, player: Entity) -> bool {
+pub(crate) fn is_mortal(world: &World, player: Entity) -> bool {
     let is_alive = world.get::<Vitals>(player).is_some_and(|vitals| vitals.died.is_none());
     is_alive && world.get::<Mode>(player).is_some_and(|mode| matches!(mode.0, GameMode::Survival | GameMode::Adventure))
 }
@@ -122,6 +122,21 @@ fn hurt(world: &mut World, player: Entity, amount: f32, cause: Cause) -> bool {
     }
     settle(world, player, cause);
     true
+}
+
+/// A mob of `kind` hits a player for `amount` and throws it at `speed`; one it kills is not
+/// thrown (research/captures/bds-slain.txt). False where it took nothing.
+pub(crate) fn bitten(world: &mut World, player: Entity, amount: f32, kind: &str, speed: [f32; 3]) -> bool {
+    let (Some(id), true) = (world.get::<NetId>(player).map(|id| id.0), is_mortal(world, player)) else { return false };
+    world.entity_mut(player).insert(death::Slayer(kind.to_owned()));
+    if world.get::<Vitals>(player).is_some_and(|vitals| vitals.health.left() > amount) {
+        let [x, y, z] = speed;
+        let tick = world.resource::<Tick>().0;
+        tell(world, player, &SetEntityMotion { runtime_entity_id: id, velocity: Vec3f { x, y, z }, tick });
+    }
+    let took = hurt(world, player, amount, Cause::Attack);
+    world.entity_mut(player).remove::<death::Slayer>();
+    took
 }
 
 /// A tick of what the place a living player stands in does to it.

@@ -2,7 +2,7 @@
 //! `/kill` and `/damage`.
 
 use sapling_api::command::{Args, CommandSpec, CommandSyntax, Coords, Overload, Parameter, ParameterSpec, ParseError, Selector};
-use sapling_api::{Command, DamageCause, GameMode, Item, Output, Permission, Sender, ShardCtx};
+use sapling_api::{Command, DamageCause, Difficulty, GameMode, Item, Output, Permission, Sender, ShardCtx};
 
 use super::{display_name, entities, no_target, origin, players};
 
@@ -136,6 +136,20 @@ impl Command for GameModeCommand {
                 false => out.translate("commands.gamemode.success.other", vec![mode.clone(), player.name.clone()], true),
             }
         }
+    }
+}
+
+// TODO: the game also takes `p`, `e`, `n`, `h` and 0 to 3; not tried on BDS.
+#[derive(Command)]
+#[command(crate = "crate", name = "difficulty", description = "Sets the difficulty level", permission = "operator")]
+pub(crate) struct DifficultyCommand {
+    difficulty: Difficulty,
+}
+
+impl Command for DifficultyCommand {
+    fn run(self, ctx: &mut ShardCtx<'_>, _: &Sender, out: &mut Output) {
+        ctx.set_difficulty(self.difficulty);
+        out.translate("commands.difficulty.success", vec![format!("{:?}", self.difficulty).to_uppercase()], true);
     }
 }
 

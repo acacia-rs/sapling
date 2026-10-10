@@ -1,12 +1,13 @@
 //! Mobs, spawned through the plugin API or kept by a world folder: bodies (body.rs) that fall and
-//! collide and do nothing else, shown as BDS announced their kind (`sapling_data::add_entity`) or
+//! collide, and hunt if their kind does (hunting.rs), shown as BDS announced their kind (`sapling_data::add_entity`) or
 //! as they were stored; and the entity side of the handlers' context.
-// TODO: no AI; their physics are the Java game's (`Physics::MOB`); a spawned mob is
+// TODO: no AI but hunting; their physics are the Java game's (`Physics::MOB`); a spawned mob is
 // saved with the least a compound needs, which BDS was not tried on.
 
 mod attacks;
 mod harm;
 mod health;
+mod hunting;
 
 use bevy_ecs::prelude::*;
 use bytes::Bytes;
@@ -43,7 +44,7 @@ impl Creature {
 }
 
 // TODO: a mob dressed as it was stored is not shown on fire to one who comes to see it burning.
-fn announcement(id: u64, kind: &str, body: &Body, look: Option<&Actor>, health: Option<&Health>) -> Vec<Bytes> {
+fn announcement(id: u64, kind: &str, body: &Body, look: Option<&Actor>, health: Option<&Health>, yaw: f32) -> Vec<Bytes> {
     let left = health.map(Health::left);
     if let Some(shown) = look.and_then(|look| mobs::announcement(&Actor { position: body.at, health: left.or(look.health), ..look.clone() }, id)) {
         return shown;
@@ -53,7 +54,7 @@ fn announcement(id: u64, kind: &str, body: &Body, look: Option<&Actor>, health: 
         id,
         identifier: kind,
         feet: body.at,
-        yaw: 0.0,
+        yaw,
         pitch: 0.0,
         variant: 0,
         mark_variant: 0,
@@ -101,8 +102,9 @@ fn spawn(world: &mut World, layer: Entity, kind: &str, feet: [f32; 3]) -> Option
         return None;
     }
     let body = Body::new(feet, [0.0; 3], size);
-    let entity = entities::spawn(world, layer, kind, body, feet, |id| Some(announcement(id, kind, &body, None, None)))?;
+    let entity = entities::spawn(world, layer, kind, body, feet, |id| Some(announcement(id, kind, &body, None, None, 0.0)))?;
     world.entity_mut(entity).insert(Creature { look: None });
+    hunting::arm(world, entity, kind);
     give_health(world, entity, kind, None, 0);
     let id = world.get::<NetId>(entity)?.0;
     entities::after_announcing(world, layer, [x, y, z], vec![spawn_sound(id, kind, &body)]);
@@ -118,7 +120,8 @@ pub(crate) fn from_storage(world: &mut World, layer: Entity, actor: Actor, uniqu
     let Some(size) = sapling_data::mob_size(&actor.identifier) else { return false };
     let body = Body::new(actor.position, [0.0; 3], size);
     let kind = actor.identifier.clone();
-    let Some(entity) = entities::spawn(world, layer, &kind, body, actor.position, |id| Some(announcement(id, &kind, &body, Some(&actor), None))) else { return false };
+    let Some(entity) = entities::spawn(world, layer, &kind, body, actor.position, |id| Some(announcement(id, &kind, &body, Some(&actor), None, 0.0))) else { return false };
+    hunting::arm(world, entity, &kind);
     give_health(world, entity, &kind, actor.health, actor.fire.max(0) as u16);
     world.entity_mut(entity).insert(Creature { look: Some(actor) });
     entities::keep(world, entity, layer, unique_id, compound);
@@ -200,15 +203,22 @@ pub(crate) fn tick(world: &mut World) {
         world.query_filtered::<(Entity, &InLayer, &NetId, &entities::Kind), With<Creature>>().iter(world).map(|(entity, layer, id, kind)| (entity, layer.0, id.0, kind.0.clone())).collect();
     for (entity, layer, id, kind) in all {
         let Some(start) = world.get::<Body>(entity).copied() else { continue };
+        let is_alive = world.get::<Dying>(entity).is_none();
+        if is_alive {
+            hunting::steer(world, entity, layer, id, &kind);
+        }
         let Some((body, packets)) = entities::step(world, entity, layer, id, &Physics::MOB, 0.0) else { continue };
         blocks::to_viewers(world, layer, body.at.map(|c| c.floor() as i32), &packets);
+        if is_alive {
+            hunting::strike(world, entity, layer, id, &kind, &body);
+        }
         let before = world.get::<Health>(entity).map(|health| (health.left(), health.is_burning()));
         if harm::tick(world, entity, layer, id, &kind, &start, &body, world.get::<Dying>(entity).is_some()) {
             die(world, entity, layer, &kind, &body);
         }
         let health = world.get::<Health>(entity);
         if !packets.is_empty() || health.map(|health| (health.left(), health.is_burning())) != before {
-            let shown = announcement(id, &kind, &body, world.get::<Creature>(entity).and_then(|creature| creature.look.as_ref()), health);
+            let shown = announcement(id, &kind, &body, world.get::<Creature>(entity).and_then(|creature| creature.look.as_ref()), health, world.get::<hunting::Hunter>(entity).map_or(0.0, |hunter| hunter.yaw));
             mobs::reannounce(world, entity, shown);
         }
     }

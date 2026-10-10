@@ -59,6 +59,8 @@ pub(crate) struct Body {
     wave: f32,
     /// The speed a hit throws a mob at; its next tick is that move alone.
     thrown: Option<[f32; 3]>,
+    /// The speed across its own legs add in its next tick.
+    walking: [f32; 2],
 }
 
 /// A block's collision box in world coordinates.
@@ -66,13 +68,19 @@ type Bounds = ([f32; 3], [f32; 3]);
 
 impl Body {
     pub fn new(at: [f32; 3], motion: [f32; 3], size: [f32; 2]) -> Self {
-        Self { at, motion, size, on_ground: false, liquid: None, wave: 0.0, thrown: None }
+        Self { at, motion, size, on_ground: false, liquid: None, wave: 0.0, thrown: None, walking: [0.0; 2] }
     }
 
     /// Throws a mob at `speed`: its next tick moves it by that, and the tick after slows it as
     /// one that left the ground it is on now (research/captures/bds-hit.txt).
     pub fn throw(&mut self, speed: [f32; 3]) {
         self.thrown = Some(speed);
+    }
+
+    /// Has a mob walk: its next tick adds `speed` across, after the drag
+    /// (research/captures/bds-bite.txt).
+    pub fn walk(&mut self, speed: [f32; 2]) {
+        self.walking = speed;
     }
 
     /// The liquid found to act on it where the last tick started; a mob went by the one before.
@@ -129,6 +137,7 @@ impl Body {
     /// A mob's tick: its speed first, by drag and gravity in the air or in `liquid`, then the move;
     /// the motion it moved by.
     fn mob_step(&mut self, level: &Level, physics: &Physics, liquid: Option<Liquid>) -> [f32; 3] {
+        let walking = std::mem::take(&mut self.walking);
         if let Some(speed) = self.thrown.take() {
             self.motion = speed;
             self.slide(level, speed);
@@ -141,6 +150,7 @@ impl Body {
             (self.motion[0], self.motion[2]) = (self.motion[0] * across, self.motion[2] * across);
             self.motion[1] = (self.motion[1] - physics.gravity) * physics.fall_drag;
         }
+        (self.motion[0], self.motion[2]) = (self.motion[0] + walking[0], self.motion[2] + walking[1]);
         let wanted = self.motion;
         self.on_ground = self.slide(level, wanted);
         if self.on_ground {

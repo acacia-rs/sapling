@@ -23,6 +23,10 @@ const LIES: u64 = 20;
 /// The middle of a dead player's box over its feet, where its two sounds come from.
 const BODY_MIDDLE: f32 = 0.1;
 
+/// The kind of the mob that last hit a player: named if that hit is what it dies of.
+#[derive(Component)]
+pub(super) struct Slayer(pub String);
+
 fn words(cause: Cause) -> &'static str {
     match cause {
         Cause::Fall => "death.fell.accident.generic",
@@ -67,10 +71,13 @@ pub(super) fn die(world: &mut World, player: Entity, cause: Cause) {
         (vitals.died, vitals.leaves) = (Some(now), Some(points));
     }
     tell(world, player, &EntityEvent { runtime_entity_id: id, event_id: EntityEventEventId::DeathAnimation, data: 0, fire_at_position: None });
-    let said = chat::json_packet(vec![chat::translation(words(cause), std::slice::from_ref(&name))]);
+    let slayer = world.get::<Slayer>(player).filter(|_| cause == Cause::Attack).map(|slayer| format!("%entity.{}.name", slayer.0.trim_start_matches("minecraft:")));
+    let key = if slayer.is_some() { "death.attack.mob" } else { words(cause) };
+    let messages: Vec<String> = std::iter::once(name).chain(slayer).collect();
+    let said = chat::json_packet(vec![chat::translation(key, &messages)]);
     chat::send_to_layer(world, layer, &said);
     let mut out = world.get_mut::<Outgoing>(player).expect("players have an outbox");
-    out.push(&DeathInfo { cause: words(cause).into(), messages: vec![name] });
+    out.push(&DeathInfo { cause: key.into(), messages });
     out.push(&Respawn { position: eyes(feet), state: SEARCHING, runtime_entity_id: 0 });
 }
 

@@ -93,6 +93,9 @@ these its own components (not its component groups) say, by `data/generate/mob-t
 `xp=least-most` (`minecraft:experience_reward` of the entity or of a group not named for a baby, the
 part after `last_hit_by_player ?`, without equipment), `fire_immune` (`minecraft:fire_immune`), `no_fall` (a `minecraft:damage_sensor` trigger that takes
 no damage from `fall` or from all), `breathes_water` and `no_air` (`minecraft:breathable`).
+The zombie's `attack=` and `speed=` (`minecraft:attack`, `minecraft:movement`) are added by hand,
+for the one kind whose hunting was drilled (`docs/research/mob-attacks.md`); the script does not
+write them.
 
 ## Liquid reactions
 

@@ -26,6 +26,9 @@ pub(crate) struct Told {
     at: [f32; 3],
     motion: [f32; 3],
     flags: Option<Shown>,
+    /// Its body's and its head's turn as viewers know them, and as they are now.
+    turned: [u8; 2],
+    turn: [u8; 2],
 }
 
 /// The flags viewers were told the entity has, and whether the last tick moved far enough to show `MOVING`.
@@ -40,7 +43,7 @@ struct Shown {
 impl Told {
     /// An entity just announced at `at`; its announced motion does not count.
     pub fn new(at: [f32; 3]) -> Self {
-        Self { at, motion: [0.0; 3], flags: None }
+        Self { at, motion: [0.0; 3], flags: None, turned: [0; 2], turn: [0; 2] }
     }
 
     /// Tells viewers when the entity is moving, lifted and burning, as BDS tells them of items and
@@ -68,22 +71,33 @@ impl Told {
         Some(sapling_net::encode(&SetEntityData { runtime_entity_id: id, metadata: vec![item], properties: EntityProperties { ints: Vec::new(), floats: Vec::new() }, tick: 0 }))
     }
 
+    /// The entity's body and head now face `yaw` and `head`, in degrees; viewers are told with
+    /// its next [`Told::update`].
+    pub fn face(&mut self, yaw: f32, head: f32) {
+        self.turn = [yaw, head].map(|degrees| (degrees.rem_euclid(360.0) * 256.0 / 360.0) as u8);
+    }
+
     /// The packets that bring viewers of the entity `id` to `at` (where the wire puts it) and
     /// `motion`. BDS sends 0 in their tick fields.
     pub fn update(&mut self, id: u64, at: [f32; 3], motion: [f32; 3], on_ground: bool) -> Vec<Bytes> {
         let mut packets = Vec::new();
         let gone = length(std::array::from_fn(|axis| at[axis] - self.at[axis]));
-        if gone > MOVED || (length(motion) < STOPPING && gone > SETTLED) {
-            let [x, y, z] = std::array::from_fn(|axis| (at[axis] != self.at[axis]).then_some(at[axis]));
-            self.at = at;
+        let moved = gone > MOVED || (length(motion) < STOPPING && gone > SETTLED);
+        if moved || self.turn != self.turned {
+            let [x, y, z] = std::array::from_fn(|axis| (moved && at[axis] != self.at[axis]).then_some(at[axis]));
+            let [rot_y, rot_z] = std::array::from_fn(|side| (self.turn[side] != self.turned[side]).then_some(self.turn[side]));
+            self.turned = self.turn;
+            if moved {
+                self.at = at;
+            }
             let delta = MoveEntityDelta {
                 runtime_entity_id: id,
                 x,
                 y,
                 z,
                 rot_x: None,
-                rot_y: None,
-                rot_z: None,
+                rot_y,
+                rot_z,
                 on_ground,
                 force_move: false,
                 force_move_local_entity: false,

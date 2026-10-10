@@ -1,7 +1,7 @@
 //! Runs a drill of command lines as an operator bot while a second operator watches, and prints
 //! what each was answered: CommandOutput in full, Text, GameRulesChanged as `rule=value`, and the
 //! drill's own packets. The ground truth for sapling's vanilla commands (`sapling::vanilla`).
-//! `cargo run -p sapling --example bds_command_probe -- <server> [gamerule|kill|replaceitem|defaults|concrete|water|lava|redstone|redstone-phase|conductors|shapes|burnout|repeater-facing|repeaters|comparators|reads|observer-facing|observers|piston-facing|pistons|slime|burn|harm|douse|hit|tools|reach|hurt|smother|hunger|eat|tire]` (offline mode,
+//! `cargo run -p sapling --example bds_command_probe -- <server> [gamerule|kill|replaceitem|defaults|concrete|water|lava|redstone|redstone-phase|conductors|shapes|burnout|repeater-facing|repeaters|comparators|reads|observer-facing|observers|piston-facing|pistons|slime|burn|harm|douse|hit|tools|reach|hurt|smother|hunger|eat|tire|bite|slain]` (offline mode,
 //! operators by default; `gamerule` when none is named).
 #[path = "shared/burn_drill.rs"]
 mod burn;
@@ -236,7 +236,7 @@ async fn strike(actor: &mut Bot, watcher: &mut Bot, start: Instant, shown: &[&st
 #[tokio::main(flavor = "current_thread")]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut args = std::env::args().skip(1);
-    let server = args.next().ok_or("usage: bds_command_probe <server> [gamerule|kill|replaceitem|defaults|concrete|water|lava|redstone|redstone-phase|conductors|shapes|burnout|repeater-facing|repeaters|comparators|reads|observer-facing|observers|piston-facing|pistons|slime|burn|harm|douse|hit|tools|reach|hurt|smother|hunger|eat|tire]")?;
+    let server = args.next().ok_or("usage: bds_command_probe <server> [gamerule|kill|replaceitem|defaults|concrete|water|lava|redstone|redstone-phase|conductors|shapes|burnout|repeater-facing|repeaters|comparators|reads|observer-facing|observers|piston-facing|pistons|slime|burn|harm|douse|hit|tools|reach|hurt|smother|hunger|eat|tire|bite|slain]")?;
     let (lines, shown, settle) = match args.next().as_deref() {
         None | Some("gamerule") => (owned(GAMERULE), &[][..], SETTLE),
         Some("kill") => (owned(KILL), KILL_SHOWN, KILL_SETTLE),
@@ -263,14 +263,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         Some("douse") => (burn::douse(), burn::BURN_SHOWN, burn::BURN_SETTLE),
         Some("hit") => (burn::hit(), burn::HIT_SHOWN, burn::BURN_SETTLE),
         Some("tools") => (burn::tools(), burn::HIT_SHOWN, burn::BURN_SETTLE),
-        Some("hurt") => (player::hurt(), player::HURT_SHOWN, burn::BURN_SETTLE),
-        Some("smother") => (player::smother(), player::HURT_SHOWN, burn::BURN_SETTLE),
-        Some("hunger") => (player::hunger(), player::HURT_SHOWN, burn::BURN_SETTLE),
-        Some("eat") => (player::eat(), player::HURT_SHOWN, burn::BURN_SETTLE),
-        Some("tire") => (player::tire(), player::HURT_SHOWN, burn::BURN_SETTLE),
         Some("reach") => (burn::reach(), burn::HIT_SHOWN, burn::BURN_SETTLE),
         Some("shapes") => (redstone::shapes(), redstone::REDSTONE_SHOWN, redstone::CONDUCTORS_SETTLE),
-        Some(other) => return Err(format!("no drill {other}").into()),
+        Some(other) => match player::drill(other) {
+            Some((lines, shown)) => (lines, shown, burn::BURN_SETTLE),
+            None => return Err(format!("no drill {other}").into()),
+        },
     };
     let (mut actor, mut watcher) = (connect(&server, "CmdActor").await?, connect(&server, "CmdWatcher").await?);
     watcher.wait_ticks(60).await?;

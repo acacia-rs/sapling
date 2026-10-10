@@ -21,6 +21,9 @@ pub struct MobTraits {
     pub breathes_water: bool,
     /// The least and most experience a grown one killed by a player leaves.
     pub experience: Option<(i32, i32)>,
+    /// What its hit costs on normal difficulty and its `minecraft:movement`, for a kind that
+    /// hunts players.
+    pub hunts: Option<(f32, f32)>,
 }
 
 pub fn mob_traits(identifier: &str) -> MobTraits {
@@ -28,7 +31,8 @@ pub fn mob_traits(identifier: &str) -> MobTraits {
     let has = |trait_: &str| row.is_some_and(|(_, traits)| traits.split(' ').any(|held| held == trait_));
     let range = |range: &str| range.split_once('-').and_then(|(least, most)| Some((least.parse().ok()?, most.parse().ok()?)));
     let experience = row.and_then(|(_, traits)| traits.split(' ').find_map(|held| held.strip_prefix("xp="))).and_then(range);
-    MobTraits { fire_immune: has("fire_immune"), no_fall: has("no_fall"), breathes_water: has("breathes_water"), experience }
+    let number = |name: &str| row.and_then(|(_, traits)| traits.split(' ').find_map(|held| held.strip_prefix(name))).and_then(|value| value.parse::<f32>().ok());
+    MobTraits { fire_immune: has("fire_immune"), no_fall: has("no_fall"), breathes_water: has("breathes_water"), experience, hunts: number("attack=").zip(number("speed=")) }
 }
 
 /// The mob `id` has `left` of `max` health.

@@ -1,5 +1,5 @@
 use super::{Args, ParamKind, ParseError};
-use crate::{GameMode, Player};
+use crate::{Difficulty, GameMode, Player};
 
 /// A type a command field can have. `#[derive(CommandEnum)]` writes it for an enum of words.
 pub trait Parameter: Sized {
@@ -77,6 +77,16 @@ impl Parameter for GameMode {
     fn parse(args: &mut Args<'_>) -> Result<Self, ParseError> {
         let modes = [("survival", Self::Survival), ("creative", Self::Creative), ("adventure", Self::Adventure), ("spectator", Self::Spectator)];
         parse_choice(args, &modes)
+    }
+}
+
+impl Parameter for Difficulty {
+    fn kind() -> ParamKind {
+        enum_kind("Difficulty", &["peaceful", "easy", "normal", "hard"])
+    }
+
+    fn parse(args: &mut Args<'_>) -> Result<Self, ParseError> {
+        parse_choice(args, &[("peaceful", Self::Peaceful), ("easy", Self::Easy), ("normal", Self::Normal), ("hard", Self::Hard)])
     }
 }
 

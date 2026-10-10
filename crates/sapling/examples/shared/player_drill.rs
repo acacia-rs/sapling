@@ -1,5 +1,5 @@
-//! The hurt, smother, hunger, eat and tire drills of bds_command_probe: a player harmed, killed and risen again
-//! (docs/research/player-damage.md).
+//! The hurt, smother, hunger, eat, tire, bite and slain drills of bds_command_probe: a player harmed,
+//! killed and risen again (docs/research/player-damage.md, mob-attacks.md).
 
 use std::time::Duration;
 
@@ -31,6 +31,25 @@ pub const HURT_SHOWN: &[&str] = &[
     "MobEffect", "SetPlayerGameType", "UpdatePlayerGameType", "RemoveEntity", "AddPlayer", "AddItemEntity", "AddEntity", "InventoryContent", "InventorySlot", "MobEquipment", "MobArmorEquipment",
     "SetSpawnPosition", "CorrectPlayerMovePrediction", "PlayStatus", "ChangeDimension", "SpawnExperienceOrb", "CompletedUsingItem", "ItemStackResponse",
 ];
+
+pub const BITE_SHOWN: &[&str] = &[
+    "UpdateAttributes", "EntityEvent", "SetEntityData", "SetHealth", "Respawn", "LevelSoundEvent", "MovePlayer", "SetEntityMotion", "DeathInfo", "Animate", "RemoveEntity", "AddEntity",
+    "MoveEntityDelta", "MoveEntityAbsolute", "MotionPredictionHints", "CorrectPlayerMovePrediction", "MobEquipment",
+];
+
+/// The lines and shown packets of the drill `name`, if it is one of these.
+pub fn drill(name: &str) -> Option<(Vec<String>, &'static [&'static str])> {
+    Some(match name {
+        "hurt" => (hurt(), HURT_SHOWN),
+        "smother" => (smother(), HURT_SHOWN),
+        "hunger" => (hunger(), HURT_SHOWN),
+        "eat" => (eat(), HURT_SHOWN),
+        "tire" => (tire(), HURT_SHOWN),
+        "bite" => (bite(), BITE_SHOWN),
+        "slain" => (slain(), BITE_SHOWN),
+        _ => return None,
+    })
+}
 
 /// The actor, in survival on a stone floor: harmed by `/damage` with and without a cause, twice at
 /// once, dropped 6 and 12 blocks, stood in fire and in lava and put out by water, left to mend,
@@ -134,5 +153,36 @@ pub fn tire() -> Vec<String> {
         wait(&mut lines, 2);
     }
     lines.extend(["gamemode creative @s", ""].map(String::from));
+    lines
+}
+
+const FLOOR: [&str; 8] = ["kill @e[type=!player]", "gamerule domobspawning false", "difficulty easy", "fill ~-3 ~-1 ~-25 ~12 ~-1 ~70 stone", "fill ~-3 ~ ~-25 ~12 ~6 ~70 air", "gamemode survival @s", "tp @s ~6 ~ ~20", ""];
+
+/// The actor, with 4 health left, and a zombie 3 blocks off that kills it.
+pub fn slain() -> Vec<String> {
+    let mut lines: Vec<String> = FLOOR.map(String::from).into();
+    lines.extend(["damage @s 16", "summon zombie ~ ~ ~-3"].map(String::from));
+    lines.extend(std::iter::repeat_n(String::new(), 8));
+    lines.extend(["gamemode creative @s", "kill @e[type=!player]", ""].map(String::from));
+    lines
+}
+
+/// The actor, in survival on a wide floor and away from the watcher: a zombie 8 blocks off comes
+/// and hits it, each hit throwing it further; zombies 30 and 40 off; one beside it while it is in
+/// creative, then in survival.
+pub fn bite() -> Vec<String> {
+    let mut lines: Vec<String> = FLOOR.map(String::from).into();
+    let wait = |lines: &mut Vec<String>, seconds: usize| lines.extend(std::iter::repeat_n(String::new(), seconds));
+    lines.push("summon zombie ~ ~ ~-8".into());
+    wait(&mut lines, 5);
+    for far in [30, 40] {
+        lines.extend(["kill @e[type=zombie]".into(), "effect @s instant_health 1 4".into(), String::new(), String::new(), format!("summon zombie ~ ~ ~-{far}")]);
+        wait(&mut lines, 6);
+    }
+    lines.extend(["kill @e[type=zombie]", "effect @s instant_health 1 4", "gamemode creative @s", "", "", "summon zombie ~ ~ ~-4"].map(String::from));
+    wait(&mut lines, 5);
+    lines.push("gamemode survival @s".into());
+    wait(&mut lines, 4);
+    lines.extend(["gamemode creative @s", "kill @e[type=!player]", ""].map(String::from));
     lines
 }
