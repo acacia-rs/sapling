@@ -59,8 +59,9 @@ pub(crate) struct Vitals {
     air: i16,
     hunger: hunger::Hunger,
     meal: Option<eating::Meal>,
-    /// What the client and the viewers know of its health.
+    /// What the client and the viewers know of its health, and of the cushion on it.
     told: f32,
+    padded: f32,
     /// Where its feet were a tick ago.
     was: Option<[f32; 3]>,
     /// The tick it died in, until it rises.
@@ -71,7 +72,7 @@ pub(crate) struct Vitals {
 
 impl Default for Vitals {
     fn default() -> Self {
-        Self { health: Health::new(MAX, None, 0), air: AIR, hunger: hunger::Hunger::default(), meal: None, told: MAX, was: None, died: None, leaves: None }
+        Self { health: Health::new(MAX, None, 0), air: AIR, hunger: hunger::Hunger::default(), meal: None, told: MAX, padded: 0.0, was: None, died: None, leaves: None }
     }
 }
 
@@ -101,11 +102,16 @@ fn settle(world: &mut World, player: Entity, cause: Cause) {
     let Some(mut vitals) = world.get_mut::<Vitals>(player) else { return };
     let (left, burning) = (vitals.health.left(), vitals.health.is_burning());
     let changed = std::mem::replace(&mut vitals.told, left) != left;
+    let cushion = vitals.health.cushion();
+    let padded = std::mem::replace(&mut vitals.padded, cushion) != cushion;
     let Some(id) = world.get::<NetId>(player).map(|id| id.0) else { return };
+    let tick = world.resource::<Tick>().0;
+    if padded {
+        tell(world, player, &effects::cushion(id, cushion, tick));
+    }
     if changed {
         tell(world, player, &sapling_data::mob_health_update(id, left, MAX));
     }
-    let tick = world.resource::<Tick>().0;
     if let Some(mut motion) = world.get_mut::<Motion>(player).filter(|motion| motion.pose.burning != burning) {
         motion.pose.burning = burning;
         let shown = movement::pose_packet(id, motion.pose, tick);

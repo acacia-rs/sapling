@@ -1,5 +1,5 @@
-//! Eating: use held on a food until the shard takes it, as BDS does
-//! (docs/research/player-damage.md, "Eating").
+//! Eating and drinking: use held on a food until the shard takes it, as BDS does
+//! (docs/research/player-damage.md, "Eating"; food-effects.md).
 // TODO: BDS also sends every attribute as the use starts; only survival and adventure players
 // eat here.
 
@@ -8,8 +8,9 @@ use acacia_proto::types::Vec3f;
 use bevy_ecs::prelude::*;
 use sapling_data::EYE_HEIGHT;
 
-use super::{Vitals, is_mortal, tell};
-use crate::components::{NetId, Outgoing, PacketQueues, Position, Tick};
+use super::{Vitals, effects, is_mortal, tell};
+use crate::blocks::Dice;
+use crate::components::{InLayer, Layer, NetId, Outgoing, PacketQueues, Position, Tick};
 use crate::inventory::{self, Inventory};
 use crate::movement::{self, Motion};
 
@@ -56,18 +57,41 @@ pub(crate) fn stop(world: &mut World, player: Entity) {
     }
 }
 
-/// The food is eaten: one less in the hand, the hunger fed, and a burp.
+/// What a food does besides feeding: the effects it gives, each as often as it does; milk ends
+/// them all; and what held it is left.
+fn follow(world: &mut World, player: Entity, food: &sapling_data::Food) {
+    if food.cures {
+        effects::clear(world, player);
+    }
+    for gives in food.gives {
+        let lucky = gives.chance >= 1.0 || world.get_resource_or_insert_with(Dice::default).fraction() < gives.chance;
+        if let Some(effect) = sapling_api::Effect::ALL.into_iter().find(|effect| effect.name() == gives.effect).filter(|_| lucky) {
+            effects::give(world, player, effect, gives.ticks, gives.amplifier, true);
+        }
+    }
+    let registry = world.get::<InLayer>(player).and_then(|layer| world.get::<Layer>(layer.0)).map(|layer| layer.world.registry());
+    if let Some(left) = food.leaves.zip(registry).and_then(|(name, registry)| inventory::stored(&sapling_api::Item::new(name, 1), registry)) {
+        inventory::give_and_pop(world, player, &left);
+    }
+}
+
+/// The food is eaten: one less in the hand, the hunger fed, and a burp; a drink is not heard.
 fn finish(world: &mut World, player: Entity, meal: Meal) {
     let now = world.resource::<Tick>().0;
-    let used = CompletedUsingItem { used_item_id: meal.id, use_method: CompletedUsingItemUseMethod::Eat };
+    let use_method = if meal.food.cures { CompletedUsingItemUseMethod::Unknown(-1) } else { CompletedUsingItemUseMethod::Eat };
+    let used = CompletedUsingItem { used_item_id: meal.id, use_method };
     world.get_mut::<Outgoing>(player).expect("players have an outbox").push(&used);
     inventory::change(world, player, Inventory::take_one_in_hand);
+    follow(world, player, &meal.food);
     let Some(mut vitals) = world.get_mut::<Vitals>(player) else { return };
     vitals.hunger.feed(meal.food.hunger, meal.food.saturation);
     let hunger = vitals.hunger;
     let (Some(id), Some([x, y, z])) = (world.get::<NetId>(player).map(|id| id.0), world.get::<Position>(player).map(|position| position.feet)) else { return };
     tell(world, player, &hunger.told(id, now));
     show(world, player, false);
+    if meal.food.cures {
+        return;
+    }
     let position = Vec3f { x, y: y + EYE_HEIGHT - MOUTH, z };
     tell(world, player, &LevelSoundEvent { sound_id: "burp".into(), position, extra_data: -1, entity_type: "minecraft:player".into(), is_baby_mob: false, is_global: false, entity_unique_id: id as i64, fire_at_position: None });
 }

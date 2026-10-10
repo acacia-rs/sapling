@@ -216,3 +216,40 @@ fn effects_heal_poison_and_wear_off_as_on_bds() {
     h.remote.run(|ctx| assert!(ctx.clear_effects(ALEX) && !ctx.clear_effects(ALEX)));
     assert_eq!(shown(h.tick_all().to(2)), [(MobEffectEventId::Remove, 10, 45)]);
 }
+
+#[test]
+fn a_spider_eye_poisons_a_golden_apple_cushions_and_milk_ends_both() {
+    use acacia_proto::packets::{CompletedUsingItem, MobEffect, MobEffectEventId};
+    use acacia_proto::types::{TransactionTransactionData, TransactionUseItemActionType};
+    use sapling_api::Effect;
+    let mut h = ready();
+    let mut click = common::click([0, 0, 0], 255, None);
+    if let TransactionTransactionData::ItemUse(used) = &mut click.transaction.transaction_data {
+        used.action_type = TransactionUseItemActionType::ClickAir;
+    }
+    let mut swallow = |h: &mut Harness, food: &str| {
+        let item = Item::new(food, 1);
+        h.remote.run(move |ctx| assert!(ctx.set_item(ALEX, Slot::Main(0), Some(&item))));
+        h.tick_all();
+        h.receive(1, &click);
+        (0..34).flat_map(|_| h.tick_all().to(2).to_vec()).collect::<Vec<RawPacket>>()
+    };
+    let shown = |sent: &[RawPacket]| all::<MobEffect>(sent).into_iter().map(|effect| (effect.event_id, effect.effect_id, effect.duration)).collect::<Vec<_>>();
+    let cushion = |sent: &[RawPacket]| all::<UpdateAttributes>(sent).iter().flat_map(|update| &update.attributes).filter(|attribute| attribute.name == "minecraft:absorption").map(|attribute| attribute.current).collect::<Vec<_>>();
+    // A second of the strongest hunger empties six of it.
+    h.remote.run(|ctx| assert!(ctx.give_effect(ALEX, Effect::Hunger, 20, 255, false)));
+    (0..22).for_each(|_| drop(h.tick_all()));
+    assert_eq!(shown(&swallow(&mut h, "minecraft:spider_eye")), [(MobEffectEventId::Add, 19, 100)]);
+    let sent = swallow(&mut h, "minecraft:golden_apple");
+    assert_eq!((shown(&sent), cushion(&sent)), (vec![(MobEffectEventId::Add, 10, 100), (MobEffectEventId::Add, 22, 2400)], vec![4.0]));
+    // Out of the poison's guard, so that the whole hit counts.
+    h.remote.run(|ctx| assert!(ctx.remove_effect(ALEX, Effect::Poison)));
+    (0..12).for_each(|_| drop(h.tick_all()));
+    h.remote.run(|ctx| assert!(ctx.hurt_player(ALEX, 3.0, DamageCause::Generic)));
+    assert_eq!(cushion(h.tick_all().to(2)), [1.0], "the cushion takes the hit");
+    let sent = swallow(&mut h, "minecraft:milk_bucket");
+    let gone: Vec<i32> = all::<MobEffect>(&sent).into_iter().filter(|effect| effect.event_id == MobEffectEventId::Remove).map(|effect| effect.effect_id).collect();
+    assert!(gone.contains(&10) && gone.contains(&22) && cushion(&sent) == [0.0], "{gone:?}");
+    h.remote.run(|ctx| assert_eq!(ctx.item(ALEX, Slot::Main(0)).map(|item| item.name), Some("minecraft:bucket".to_owned())));
+    assert!(all::<CompletedUsingItem>(h.tick_all().to(1)).is_empty());
+}

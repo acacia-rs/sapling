@@ -1,9 +1,13 @@
-//! The hurt, smother, hunger, eat, tire, bite, slain, chase, toil, armour and effects drills of bds_command_probe: a player harmed,
-//! killed and risen again (docs/research/player-damage.md, mob-attacks.md).
+//! The hurt, smother, hunger, eat, tire, toil, armour and effects drills of bds_command_probe: a
+//! player harmed, killed and risen again (docs/research/player-damage.md, effects.md). A zombie's
+//! and what food does besides feeding: hunt_drill.rs.
 
 use std::time::Duration;
 
 use acacia_bot::Bot;
+
+#[path = "hunt_drill.rs"]
+mod hunt;
 
 /// Does what a drill's `!` line asks of the actor: `!eat` holds use on what it holds, `!jump`,
 /// `!walk` and `!sprint` hold those keys until `!stop`, `!break x y z` breaks the block that far
@@ -41,11 +45,6 @@ pub const HURT_SHOWN: &[&str] = &[
     "SetSpawnPosition", "CorrectPlayerMovePrediction", "PlayStatus", "ChangeDimension", "SpawnExperienceOrb", "CompletedUsingItem", "ItemStackResponse",
 ];
 
-pub const BITE_SHOWN: &[&str] = &[
-    "UpdateAttributes", "EntityEvent", "SetEntityData", "SetHealth", "Respawn", "LevelSoundEvent", "MovePlayer", "SetEntityMotion", "DeathInfo", "Animate", "RemoveEntity", "AddEntity",
-    "MoveEntityDelta", "MoveEntityAbsolute", "MotionPredictionHints", "CorrectPlayerMovePrediction", "MobEquipment",
-];
-
 /// The lines and shown packets of the drill `name`, if it is one of these.
 pub fn drill(name: &str) -> Option<(Vec<String>, &'static [&'static str])> {
     Some(match name {
@@ -54,9 +53,10 @@ pub fn drill(name: &str) -> Option<(Vec<String>, &'static [&'static str])> {
         "hunger" => (hunger(), HURT_SHOWN),
         "eat" => (eat(), HURT_SHOWN),
         "tire" => (tire(), HURT_SHOWN),
-        "bite" => (bite(), BITE_SHOWN),
-        "slain" => (slain(), BITE_SHOWN),
-        "chase" => (chase(), BITE_SHOWN),
+        "bite" => (hunt::bite(), hunt::BITE_SHOWN),
+        "slain" => (hunt::slain(), hunt::BITE_SHOWN),
+        "chase" => (hunt::chase(), hunt::BITE_SHOWN),
+        "sick" => (hunt::sick(), HURT_SHOWN),
         "toil" => (toil(), HURT_SHOWN),
         "armour" => (armour(), HURT_SHOWN),
         "effects" => (effects(), HURT_SHOWN),
@@ -169,49 +169,6 @@ pub fn tire() -> Vec<String> {
     lines
 }
 
-const FLOOR: [&str; 8] = ["kill @e[type=!player]", "gamerule domobspawning false", "difficulty easy", "fill ~-3 ~-1 ~-25 ~12 ~-1 ~70 stone", "fill ~-3 ~ ~-25 ~12 ~6 ~70 air", "gamemode survival @s", "tp @s ~6 ~ ~20", ""];
-
-/// The actor, with 4 health left, and a zombie 3 blocks off that kills it.
-pub fn slain() -> Vec<String> {
-    let mut lines: Vec<String> = FLOOR.map(String::from).into();
-    lines.extend(["damage @s 16", "summon zombie ~ ~ ~-3"].map(String::from));
-    lines.extend(std::iter::repeat_n(String::new(), 8));
-    lines.extend(["gamemode creative @s", "kill @e[type=!player]", ""].map(String::from));
-    lines
-}
-
-/// The actor, in survival on a wide floor and away from the watcher: a zombie 8 blocks off comes
-/// and hits it, each hit throwing it further; zombies 30 and 40 off; one beside it while it is in
-/// creative, then in survival.
-pub fn bite() -> Vec<String> {
-    let mut lines: Vec<String> = FLOOR.map(String::from).into();
-    let wait = |lines: &mut Vec<String>, seconds: usize| lines.extend(std::iter::repeat_n(String::new(), seconds));
-    lines.push("summon zombie ~ ~ ~-8".into());
-    wait(&mut lines, 5);
-    for far in [30, 40] {
-        lines.extend(["kill @e[type=zombie]".into(), "effect @s instant_health 1 4".into(), String::new(), String::new(), format!("summon zombie ~ ~ ~-{far}")]);
-        wait(&mut lines, 6);
-    }
-    lines.extend(["kill @e[type=zombie]", "effect @s instant_health 1 4", "gamemode creative @s", "", "", "summon zombie ~ ~ ~-4"].map(String::from));
-    wait(&mut lines, 5);
-    lines.push("gamemode survival @s".into());
-    wait(&mut lines, 4);
-    lines.extend(["gamemode creative @s", "kill @e[type=!player]", ""].map(String::from));
-    lines
-}
-
-/// The actor and a zombie 8 blocks off with something between them: a step one block high
-/// across the floor, then one two high, then a wall five wide and two high.
-pub fn chase() -> Vec<String> {
-    let mut lines: Vec<String> = FLOOR.map(String::from).into();
-    for between in ["fill ~-3 ~ ~-4 ~12 ~ ~-4 stone", "fill ~-3 ~ ~-4 ~12 ~1 ~-4 stone", "fill ~-2 ~ ~-4 ~2 ~1 ~-4 stone"] {
-        lines.extend([between, "summon zombie ~ ~ ~-8"].map(String::from));
-        lines.extend(std::iter::repeat_n(String::new(), 7));
-        lines.extend(["kill @e[type=zombie]", "fill ~-9 ~ ~-12 ~9 ~1 ~-1 air", "effect @s instant_health 1 4", "", ""].map(String::from));
-    }
-    lines.extend(["gamemode creative @s", "kill @e[type=!player]", ""].map(String::from));
-    lines
-}
 
 /// The actor, in survival: breaks four blocks of dirt and one of stone by hand, hits a cow three
 /// times and an armour stand once, and swings at nothing.

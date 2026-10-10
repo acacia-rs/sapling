@@ -59,6 +59,8 @@ pub(crate) struct Health {
     landed: Option<(f32, [f32; 3])>,
     /// The points and toughness of what it wears.
     armour: [f32; 2],
+    /// Health on top of its own that hits take first (the absorption effect).
+    cushion: f32,
     /// What viewers know: its health, and whether it is on fire.
     pub(super) told: f32,
     pub(super) lit: bool,
@@ -68,7 +70,7 @@ impl Health {
     /// A mob of `max` health with `left` of it, `burning` ticks more.
     pub(crate) fn new(max: f32, left: Option<f32>, burning: u16) -> Self {
         let left = left.map_or(max, |left| left.clamp(0.0, max));
-        Self { left, max, last: 0.0, guarded: 0, burning, peak: None, air: AIR, walled: 0, landed: None, armour: [0.0; 2], told: left, lit: false }
+        Self { left, max, last: 0.0, guarded: 0, burning, peak: None, air: AIR, walled: 0, landed: None, armour: [0.0; 2], cushion: 0.0, told: left, lit: false }
     }
 
     pub(crate) fn left(&self) -> f32 {
@@ -95,6 +97,14 @@ impl Health {
         self.left = 0.0;
     }
 
+    pub(crate) fn cushion(&self) -> f32 {
+        self.cushion
+    }
+
+    pub(crate) fn pad(&mut self, cushion: f32) {
+        self.cushion = cushion;
+    }
+
     pub(crate) fn wear(&mut self, armour: [f32; 2]) {
         self.armour = armour;
     }
@@ -113,7 +123,9 @@ impl Health {
             return false;
         }
         (self.last, self.guarded) = (amount, GUARD);
-        self.left = (self.left - taken).max(0.0);
+        let soaked = taken.min(self.cushion);
+        self.cushion -= soaked;
+        self.left = (self.left - (taken - soaked)).max(0.0);
         true
     }
 

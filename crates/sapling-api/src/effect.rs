@@ -11,11 +11,12 @@ pub enum Effect {
     Hunger,
     Poison,
     Wither,
+    Absorption,
     Saturation,
 }
 
 impl Effect {
-    pub const ALL: [Effect; 8] = [Self::Speed, Self::InstantHealth, Self::InstantDamage, Self::Regeneration, Self::Hunger, Self::Poison, Self::Wither, Self::Saturation];
+    pub const ALL: [Effect; 9] = [Self::Speed, Self::InstantHealth, Self::InstantDamage, Self::Regeneration, Self::Hunger, Self::Poison, Self::Wither, Self::Absorption, Self::Saturation];
 
     /// The name commands know it by.
     pub fn name(self) -> &'static str {
@@ -27,6 +28,7 @@ impl Effect {
             Self::Hunger => "hunger",
             Self::Poison => "poison",
             Self::Wither => "wither",
+            Self::Absorption => "absorption",
             Self::Saturation => "saturation",
         }
     }
@@ -41,6 +43,7 @@ impl Effect {
             Self::Hunger => "potion.hunger",
             Self::Poison => "potion.poison",
             Self::Wither => "potion.wither",
+            Self::Absorption => "potion.absorption",
             Self::Saturation => "potion.saturation",
         }
     }
@@ -55,6 +58,7 @@ impl Effect {
             Self::Hunger => 17,
             Self::Poison => 19,
             Self::Wither => 20,
+            Self::Absorption => 22,
             Self::Saturation => 23,
         }
     }

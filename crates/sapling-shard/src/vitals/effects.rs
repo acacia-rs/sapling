@@ -1,6 +1,6 @@
 //! Effects on a player, counted down a tick at a time and told as BDS tells them
 //! (docs/research/effects.md).
-// TODO: the eight effects drilled and no others; none comes from a drink or food; one who comes
+// TODO: the nine effects drilled and no others; one who comes
 // to see a player is not told its effects, nor are `VisibleMobEffects`; they end unsaid as the
 // player rises.
 
@@ -9,7 +9,7 @@ use acacia_proto::types::{PlayerAttributesItem, PlayerAttributesItemModifiersIte
 use bevy_ecs::prelude::*;
 use sapling_api::{Effect, EffectBackend, PlayerId};
 
-use super::{Vitals, feed, hurt, tell};
+use super::{Vitals, feed, hurt, settle, tell};
 use crate::components::{NetId, Tick, in_world};
 use crate::creatures::Cause;
 use crate::handlers::Ctx;
@@ -30,6 +30,9 @@ const HUNGERS: f32 = 0.005;
 const WALKS: f32 = 0.1;
 const QUICKENS: f32 = 0.2;
 const QUICKENS_AS: &str = "91aeaa56-376b-4498-935b-2f7f68070635";
+/// Health a level of absorption puts on top, and the most the client shows.
+const CUSHIONS: f32 = 4.0;
+const MOST_CUSHION: f32 = 16.0;
 
 #[derive(Clone, Copy)]
 struct Active {
@@ -63,6 +66,20 @@ fn pace(id: u64, levels: Option<u8>, tick: u64) -> UpdateAttributes {
     UpdateAttributes { runtime_entity_id: id, attributes: vec![movement], tick }
 }
 
+/// The health on top of a player's own, as BDS writes it.
+pub(super) fn cushion(id: u64, amount: f32, tick: u64) -> UpdateAttributes {
+    let absorption = PlayerAttributesItem { min: 0.0, max: MOST_CUSHION, current: amount, default_min: 0.0, default_max: MOST_CUSHION, default: 0.0, name: "minecraft:absorption".into(), modifiers: Vec::new() };
+    UpdateAttributes { runtime_entity_id: id, attributes: vec![absorption], tick }
+}
+
+/// Puts `amount` of health on top of a player's own, told at once.
+fn pad(world: &mut World, player: Entity, amount: f32) {
+    if let Some(mut vitals) = world.get_mut::<Vitals>(player) {
+        vitals.health.pad(amount);
+    }
+    settle(world, player, Cause::Generic);
+}
+
 fn tell_pace(world: &mut World, player: Entity, id: u64, levels: Option<u8>) {
     let tick = world.resource::<Tick>().0;
     tell(world, player, &pace(id, levels, tick));
@@ -75,15 +92,22 @@ fn take(world: &mut World, player: Entity, gone: impl Fn(&Active) -> bool) -> bo
     effects.0.retain(|active| !gone(active));
     for active in &taken {
         tell(world, player, &told(id, MobEffectEventId::Remove, active, active.left));
-        if active.effect == Effect::Speed {
-            tell_pace(world, player, id, None);
+        match active.effect {
+            Effect::Speed => tell_pace(world, player, id, None),
+            Effect::Absorption => pad(world, player, 0.0),
+            _ => {}
         }
     }
     !taken.is_empty()
 }
 
+/// Takes every effect off a player; false where it had none.
+pub(super) fn clear(world: &mut World, player: Entity) -> bool {
+    take(world, player, |_| true)
+}
+
 /// See `ShardCtx::give_effect`.
-fn give(world: &mut World, player: Entity, effect: Effect, ticks: u32, amplifier: u8, particles: bool) -> bool {
+pub(super) fn give(world: &mut World, player: Entity, effect: Effect, ticks: u32, amplifier: u8, particles: bool) -> bool {
     let Some(id) = world.get::<NetId>(player).map(|id| id.0) else { return false };
     let new = Active { effect, amplifier, left: if effect.is_instant() { 1 } else { ticks }, particles };
     if world.get::<Effects>(player).is_none() {
@@ -103,8 +127,10 @@ fn give(world: &mut World, player: Entity, effect: Effect, ticks: u32, amplifier
         }
     };
     tell(world, player, &told(id, event_id, &now, now.left));
-    if effect == Effect::Speed {
-        tell_pace(world, player, id, Some(now.amplifier));
+    match effect {
+        Effect::Speed => tell_pace(world, player, id, Some(now.amplifier)),
+        Effect::Absorption => pad(world, player, CUSHIONS * (f32::from(now.amplifier) + 1.0)),
+        _ => {}
     }
     true
 }
@@ -126,7 +152,7 @@ fn act(world: &mut World, player: Entity, active: &Active) {
         Effect::Wither if turn(WITHERS) => drop(hurt(world, player, 1.0, Cause::Wither)),
         Effect::Hunger => feed(world, player, |hunger| hunger.tire(HUNGERS * levels)),
         Effect::Saturation => feed(world, player, |hunger| hunger.feed(levels, levels * 2.0)),
-        Effect::Poison | Effect::Wither | Effect::Speed => {}
+        Effect::Poison | Effect::Wither | Effect::Speed | Effect::Absorption => {}
     }
 }
 
@@ -154,6 +180,6 @@ impl EffectBackend for Ctx<'_> {
     }
 
     fn clear_effects(&mut self, player: PlayerId) -> bool {
-        self.entity(player).is_some_and(|entity| take(self.world, entity, |_| true))
+        self.entity(player).is_some_and(|entity| clear(self.world, entity))
     }
 }

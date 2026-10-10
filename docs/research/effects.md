@@ -51,13 +51,13 @@ third level with 60, 48, 36, 24 and 12.
 
 ## Not drilled
 
-Every other effect, drinks and food that give one, what armour does against instant damage,
+Every other effect, potions (food and milk: food-effects.md), what armour does against instant damage,
 effects on mobs, a death under an effect, what a late viewer is told.
 
 ## Sapling
 
 `vitals/effects.rs`, `sapling::vanilla` `/effect`, plugins by `give_effect`, `remove_effect` and
-`clear_effects`. The eight effects above, by these numbers. Different: `Remove` always holds the
+`clear_effects`. The eight effects above, by these numbers, and absorption (food-effects.md). Different: `Remove` always holds the
 ticks left; no `VisibleMobEffects`; saturation gives twice its hunger in saturation, the Java
 game's rule; effects end unsaid when the player rises. Run against sapling
 (`research/captures/sapling-effects.txt`) the drill gives the same packets, turns and answers.
