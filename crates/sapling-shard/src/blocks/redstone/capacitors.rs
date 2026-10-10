@@ -101,6 +101,20 @@ pub(super) fn fullness(filled: impl Iterator<Item = (u8, u8)>, slots: usize) -> 
     (1.0 + parts.iter().sum::<f32>() / slots as f32 * 14.0).floor() as u8
 }
 
+/// The signal a comparator reads off a block by its state alone (research/captures/bds-redstone-reads.txt).
+pub(super) fn state_signal(name: &str, properties: &str) -> Option<u8> {
+    let value = |key: &str| properties.split(',').find_map(|pair| pair.strip_prefix(key)?.strip_prefix('=')?.parse::<u8>().ok());
+    match name.strip_prefix("minecraft:").unwrap_or(name) {
+        "cake" => Some(14 - 2 * value("bite_counter")?.min(7)),
+        "cauldron" => Some(value("fill_level")?.div_ceil(2)),
+        "composter" => value("composter_fill_level"),
+        "respawn_anchor" => Some((4 * value("respawn_anchor_charge")?).saturating_sub(1)),
+        "beehive" | "bee_nest" => value("honey_level"),
+        "end_portal_frame" => Some(15 * value("end_portal_eye_bit")?.min(1)),
+        _ => None,
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -111,6 +125,17 @@ mod tests {
         let read: Vec<u8> = (0..=27).map(|stacks| fullness((0..stacks).map(|_| (64, 64)), 27)).collect();
         assert_eq!(read, [0, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11, 12, 12, 13, 13, 14, 15]);
         assert_eq!([compared(11, 13, false), compared(11, 9, false), compared(11, 13, true), compared(11, 9, true)], [0, 11, 0, 2]);
+    }
+
+    #[test]
+    fn a_comparator_reads_cake_cauldron_composter_anchor_hive_and_portal_frame_as_on_bds() {
+        let read = |name: &str, key: &str, values: std::ops::RangeInclusive<u8>| values.map(|value| state_signal(name, &format!("other=3,{key}={value}")).unwrap()).collect::<Vec<_>>();
+        assert_eq!(read("minecraft:cake", "bite_counter", 0..=6), [14, 12, 10, 8, 6, 4, 2]);
+        assert_eq!(read("cauldron", "fill_level", 0..=6), [0, 1, 1, 2, 2, 3, 3]);
+        assert_eq!(read("composter", "composter_fill_level", 0..=8), (0..=8).collect::<Vec<_>>());
+        assert_eq!(read("respawn_anchor", "respawn_anchor_charge", 0..=4), [0, 3, 7, 11, 15]);
+        assert_eq!(read("beehive", "honey_level", 0..=5), (0..=5).collect::<Vec<_>>());
+        assert_eq!((read("end_portal_frame", "end_portal_eye_bit", 0..=1), state_signal("stone", "")), (vec![0, 15], None));
     }
 
     /// The evaluations at which a repeater flips, fed a clock that is on at every even one.

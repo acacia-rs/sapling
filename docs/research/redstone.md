@@ -330,8 +330,13 @@ No decompile: all of this is from the capture.
 - A chest behind it: 1 for the first full stack, then `floor(1 + 14 * stacks / 27)` (2 at 2, 3 at 4, ... 14 at
   26, 15 at 27), Java's formula. A chest behind a block of stone behind it reads the same. Taking the chest away
   puts it out.
+- Other blocks (`bds_command_probe reads`, research/captures/bds-redstone-reads.txt): a hopper, furnace,
+  dispenser, barrel, brewing stand, shulker box and trapped chest read by the same formula over their own
+  slots (5, 3, 9, 27, 5, 27, 27); half a stack counts half, a sword as a full slot. A cake reads 14 less 2 a
+  bite; a cauldron of water half its `fill_level`, rounded up; a composter its level, 0 to 8; a respawn anchor
+  3, 7, 11, 15 by its charges; a beehive its `honey_level`; an end portal frame 15 with its eye.
 - Not drilled: equal strengths behind and at a side (sapling passes it, as Java), a repeater or power block at a
-  side, containers other than a chest, cake, cauldron, composter, jukebox, lectern, item frame, a click's sound.
+  side, jukebox, lectern, item frame, a cauldron of lava or powder snow, a chiseled bookshelf, a click's sound.
 
 ## Observers (2026-10-09, `bds_command_probe observer-facing` and `observers`, research/captures/bds-redstone-observers.txt)
 

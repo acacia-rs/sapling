@@ -23,7 +23,7 @@ use sapling_world::ChunkPos;
 use super::level;
 use crate::components::Tick;
 use crate::containers;
-use capacitors::{RepeaterState, TorchState, compared, fullness};
+use capacitors::{RepeaterState, TorchState, compared, fullness, state_signal};
 use parts::{Part, User};
 
 /// Game ticks between evaluations (`Dimension::tickRedstone`).
@@ -88,7 +88,8 @@ pub(crate) fn container_changed(world: &mut World, layer: Entity, pos: BlockPos)
     }
 }
 
-/// What each comparator of `circuit` reads off a container behind it, or behind the block behind it.
+/// What each comparator of `circuit` reads off a container, or a block it reads by its state,
+/// behind it or behind the block behind it.
 fn read_containers(world: &mut World, layer: Entity, circuit: &Circuit) -> HashMap<BlockPos, u8> {
     let mut part = reader(world, layer);
     let behind: Vec<(BlockPos, BlockPos, Option<BlockPos>)> = (circuit.sources.iter().chain(&circuit.changed))
@@ -101,10 +102,17 @@ fn read_containers(world: &mut World, layer: Entity, circuit: &Circuit) -> HashM
         })
         .collect();
     drop(part);
+    let by_state = |world: &World, at: BlockPos| {
+        let level = level(world, layer).filter(|level| level.in_height(at[1]))?;
+        let state = level.registry().get(level.block(at[0], at[1], at[2]))?;
+        state_signal(state.name, state.properties)
+    };
     let read = |world: &mut World, at: BlockPos| {
-        containers::with_slots(world, layer, at, |_, slots| {
-            let filled = slots.iter().flatten().map(|held| (held.stack.count, sapling_data::max_stack(&held.stack.name)));
-            fullness(filled, slots.len())
+        by_state(world, at).or_else(|| {
+            containers::with_slots(world, layer, at, |_, slots| {
+                let filled = slots.iter().flatten().map(|held| (held.stack.count, sapling_data::max_stack(&held.stack.name)));
+                fullness(filled, slots.len())
+            })
         })
     };
     behind.into_iter().filter_map(|(pos, near, far)| Some((pos, read(world, near).or_else(|| read(world, far?))?))).collect()

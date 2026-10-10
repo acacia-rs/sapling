@@ -283,6 +283,22 @@ fn a_comparator_reads_how_full_the_chest_behind_it_is() {
 }
 
 #[test]
+fn a_comparator_reads_a_cake_and_a_composter_by_their_state() {
+    // As research/captures/bds-redstone-reads.txt.
+    let mut h = ready();
+    let west = "minecraft:cardinal_direction=west";
+    put(&mut h, &[([-4, 65, 6], "cake", ""), ([-3, 65, 6], "unpowered_comparator", west), ([-2, 65, 6], "redstone_wire", "")]);
+    put(&mut h, &[([-4, 65, 2], "composter", ""), ([-3, 65, 2], "unpowered_comparator", west), ([-2, 65, 2], "redstone_wire", "")]);
+    assert!(when(&watch(&mut h, 8), [-2, 65, 6], dust(14)).is_some(), "a whole cake");
+    put(&mut h, &[([-4, 65, 6], "cake", "bite_counter=3"), ([-4, 65, 2], "composter", "composter_fill_level=5")]);
+    let changed = watch(&mut h, 8);
+    assert!(when(&changed, [-2, 65, 6], dust(8)).is_some(), "three bites");
+    assert!(when(&changed, [-2, 65, 2], dust(5)).is_some(), "a composter filled to 5");
+    put(&mut h, &[([-4, 65, 6], "air", "")]);
+    assert!(when(&watch(&mut h, 8), [-2, 65, 6], dust(0)).is_some(), "the cake gone");
+}
+
+#[test]
 fn a_click_turns_a_comparator_to_subtracting_and_back() {
     let mut h = ready();
     let pos = [2, 65, 2];
