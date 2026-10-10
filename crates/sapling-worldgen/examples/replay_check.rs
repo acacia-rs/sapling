@@ -8,11 +8,11 @@
 #[path = "../tests/oracle_support/mod.rs"]
 mod oracle_support;
 
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 
 use oracle_support::{bds_cell, open, replay};
-use sapling_leveldb::ChunkKey;
-use sapling_worldgen::OverworldGenerator;
+use sapling_leveldb::{ChunkKey, LevelDbWorld};
+use sapling_worldgen::{HEIGHT, MIN_Y, OverworldGenerator};
 
 fn main() {
     let args: Vec<String> = std::env::args().skip(1).collect();
@@ -34,6 +34,7 @@ fn main() {
             }
         }
     }
+    unwritten(&generator, &primary, [x0, z0, x1, z1], &last);
     let mut chunks = HashMap::new();
     let mut per_source: HashMap<usize, (u32, Vec<String>)> = HashMap::new();
     for (at, (rank, ours)) in last {
@@ -52,5 +53,33 @@ fn main() {
         wrong.sort();
         let (cx, cz) = order[rank];
         println!("rank {rank} source {cx},{cz}: {cells} cells, {} differ {}", wrong.len(), wrong.iter().take(4).cloned().collect::<Vec<_>>().join("; "));
+    }
+}
+
+/// The cells no source of ours wrote that the run has as another block, per chunk and block pair
+/// with the first cell: what a feature of BDS's placed that we lack.
+fn unwritten<B>(generator: &OverworldGenerator, world: &LevelDbWorld, [x0, z0, x1, z1]: [i32; 4], last: &HashMap<[i32; 3], (usize, B)>) {
+    for cx in x0..=x1 {
+        for cz in z0..=z1 {
+            let mut ours = generator.loaded_blocks(cx, cz);
+            generator.decorate(&mut ours, cx, cz);
+            let chunk = world.load_column(ChunkKey::new(cx, cz, 0)).unwrap().expect("a saved chunk").chunk;
+            let mut pairs: BTreeMap<(String, String), (u32, [i32; 3])> = BTreeMap::new();
+            for y in MIN_Y..MIN_Y + HEIGHT as i32 {
+                for lx in 0..16 {
+                    for lz in 0..16 {
+                        let at = [cx * 16 + lx, y, cz * 16 + lz];
+                        let block = ours.block(lx as usize, y, lz as usize);
+                        let bds = bds_cell(world, &chunk, at[0], at[1], at[2]).block;
+                        if block.name() != bds && !last.contains_key(&at) {
+                            pairs.entry((format!("{block:?}"), bds)).or_insert((0, at)).0 += 1;
+                        }
+                    }
+                }
+            }
+            for ((block, bds), (count, [x, y, z])) in pairs {
+                println!("unwritten chunk {cx},{cz}: {count} {block}>{bds} first {x} {y} {z}");
+            }
+        }
     }
 }
