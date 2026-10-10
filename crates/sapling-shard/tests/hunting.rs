@@ -108,10 +108,12 @@ fn a_zombie_jumps_a_block_in_its_way_and_does_not_see_through_a_wall() {
     // A jump of 0.42 a tick less gravity rises 1.25.
     assert!((top - 66.2522).abs() < 1e-3 && heights.contains(&66.0), "over the block: {top}");
 
-    let (mut h, _) = hunted(Difficulty::Easy);
-    h.remote.run(|ctx| (-8..8).for_each(|x| assert!(ctx.set_block([x, 65, 2], &Block::new("stone")) && ctx.set_block([x, 66, 2], &Block::new("stone")))));
-    let sent: Vec<RawPacket> = (0..40).flat_map(|_| h.tick_all().to(2).to_vec()).collect();
-    assert!(targets(&sent).is_empty());
+    for wall in ["stone", "glass"] {
+        let (mut h, _) = hunted(Difficulty::Easy);
+        h.remote.run(move |ctx| (-8..8).for_each(|x| assert!(ctx.set_block([x, 65, 2], &Block::new(wall)) && ctx.set_block([x, 66, 2], &Block::new(wall)))));
+        let sent: Vec<RawPacket> = (0..40).flat_map(|_| h.tick_all().to(2).to_vec()).collect();
+        assert!(targets(&sent).is_empty(), "{wall} hides a player");
+    }
 }
 
 #[test]

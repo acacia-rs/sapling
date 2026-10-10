@@ -61,6 +61,7 @@ pub fn drill(name: &str) -> Option<(Vec<String>, &'static [&'static str])> {
         "kinds" => (hunt::kinds(), hunt::KINDS_SHOWN),
         "stroll" => (hunt::stroll(), hunt::KINDS_SHOWN),
         "flee" => (hunt::flee(), hunt::KINDS_SHOWN),
+        "around" => (hunt::around(), hunt::BITE_SHOWN),
         "toil" => (toil(), HURT_SHOWN),
         "armour" => (armour(), HURT_SHOWN),
         "effects" => (effects(), HURT_SHOWN),

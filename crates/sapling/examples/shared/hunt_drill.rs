@@ -1,4 +1,4 @@
-//! The bite, slain, chase, sick, worn, kinds, stroll and flee drills of bds_command_probe: a zombie hunting the actor
+//! The bite, slain, chase, sick, worn, kinds, stroll, flee and around drills of bds_command_probe: a zombie hunting the actor
 //! (docs/research/mob-attacks.md), and what food does besides feeding (food-effects.md).
 
 pub const BITE_SHOWN: &[&str] = &[
@@ -138,5 +138,25 @@ pub fn flee() -> Vec<String> {
         lines.extend(std::iter::repeat_n(String::new(), 8));
         lines.extend(["kill @e[type=!player]", "", ""].map(String::from));
     }
+    lines
+}
+
+/// The actor in survival and a zombie 8 blocks off with glass, which it sees through, in its
+/// way: a wall five wide and two high, the same with a gap in its middle, and a pen around the
+/// zombie open at the back.
+pub fn around() -> Vec<String> {
+    let mut lines: Vec<String> = FLOOR.map(String::from).into();
+    let walls = [
+        vec!["fill ~-2 ~ ~-4 ~2 ~1 ~-4 glass"],
+        vec!["fill ~-3 ~ ~-4 ~3 ~1 ~-4 glass", "fill ~ ~ ~-4 ~ ~1 ~-4 air"],
+        vec!["fill ~-2 ~ ~-6 ~2 ~1 ~-6 glass", "fill ~-2 ~ ~-9 ~-2 ~1 ~-6 glass", "fill ~2 ~ ~-9 ~2 ~1 ~-6 glass"],
+    ];
+    for wall in walls {
+        lines.extend(wall.into_iter().map(String::from));
+        lines.push("summon zombie ~ ~ ~-8".into());
+        lines.extend(std::iter::repeat_n(String::new(), 9));
+        lines.extend(["kill @e[type=zombie]", "fill ~-9 ~ ~-14 ~9 ~1 ~-1 air", "effect @s instant_health 1 4", "", ""].map(String::from));
+    }
+    lines.extend(["gamemode creative @s", "kill @e[type=!player]", ""].map(String::from));
     lines
 }

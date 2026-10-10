@@ -17,6 +17,9 @@ zombie's definition in the vanilla pack (`entities.brarchive`, `zombie.json`). E
   creative, or dead, it is let go a tick later.
 - A wall two high between them, across the whole floor or five wide, and it took no target; a
   step one high did not hide the player.
+- Glass hides a player as stone does (`around`, research/captures/bds-around.txt): behind a
+  glass wall five wide the zombie strolled until it was past the wall's end, then took its target
+  and walked straight at it; in a glass pen it took none.
 - With no target the zombie looks around and strolls, at the same speed.
 
 ## Walking
@@ -105,8 +108,8 @@ chicken and the zombie had strolled out of reach):
 
 ## Not drilled
 
-Normal and hard (taken as 3 and 4.5), a way around a wall, a hole in the way, what hides a
-player besides a full block, whether prey that goes behind a wall is kept, a zombie hit
+Normal and hard (taken as 3 and 4.5), a way around a wall (a mob that cannot see takes no
+target, so the drill showed none), a hole in the way, what hides a player besides a full block, whether prey that goes behind a wall is kept, a zombie hit
 back, daylight (a spider hunts only in the dark), baby zombies, a cave spider's poison on
 normal and hard (7 and 15 seconds in its definition), the kinds not named here, and what `within_radius` 25 does: a zombie on
 open grass 30 off took and dropped its target every 10 ticks, one on the stone floor kept it.

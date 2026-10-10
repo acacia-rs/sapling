@@ -58,12 +58,14 @@ fn seen(world: &World, player: Entity, layer: Entity, from: [f32; 3], sight: f32
     (world.get::<InLayer>(player)?.0 == layer && vitals::is_mortal(world, player) && distance(from, feet) <= sight).then_some(feet)
 }
 
-/// Whether no full block is between a hunter's eyes and the player's.
+/// Whether no full block, glass too, is between a hunter's eyes and the player's
+/// (research/captures/bds-around.txt).
 fn in_sight(world: &World, layer: Entity, body: &Body, feet: [f32; 3]) -> bool {
     let Some(level) = world.get::<Layer>(layer).map(|layer| &layer.world) else { return false };
     let (from, to) = ([body.at[0], body.at[1] + HEAD * body.size[1], body.at[2]], [feet[0], feet[1] + sapling_data::EYE_HEIGHT, feet[2]]);
     let glances = (distance(from, to) / GLANCE).ceil().max(1.0);
-    (0..=glances as usize).all(|glance| !super::is_full_block(level, std::array::from_fn(|axis| (from[axis] + (to[axis] - from[axis]) * glance as f32 / glances).floor() as i32)))
+    let hides = |[x, y, z]: [i32; 3]| level.in_height(y) && level.registry().get(level.block(x, y, z)).is_some_and(|state| state.is_full_cube());
+    (0..=glances as usize).all(|glance| !hides(std::array::from_fn(|axis| (from[axis] + (to[axis] - from[axis]) * glance as f32 / glances).floor() as i32)))
 }
 
 /// Keeps or picks the hunter's prey and tells its viewers of a change; where the prey is.
