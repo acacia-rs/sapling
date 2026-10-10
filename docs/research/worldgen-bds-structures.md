@@ -115,8 +115,8 @@ Piece writes go through `placeBlock` (141f59f90: clipped to the chunk, `canBeRep
   behaviour in four places: the room's dirt floor (14831d010), `canBeReplaced` ignoring its kept list (planks,
   log and fence of the piece's wood, chains, bedrock; 14831c830), the old start height (14831b270) and plain
   cobweb floats (14831d770). Our worlds take the new branch everywhere: no dirt floor.
-- The kept list (2026-10-10, worldgen/city3): `canBeReplaced` compares `Block` +0x108 of the world's block, a
-  per-state value, with the piece's three material blocks (+0x38, +0x40 planks, +0x48 fence), the chain and
+- The kept list (2026-10-10, worldgen/city3): `canBeReplaced` compares `Block` +0x108 of the world's block (not
+  the type at +0x68; taken as a per-state value) with the piece's three material blocks (+0x38, +0x40 planks, +0x48 fence), the chain and
   bedrock, so only the exact state is kept. A fence that has joined a neighbour is no longer the piece's fence
   block: the stronghold libraries' railings are cut wherever a corridor's air box crosses them (oracle,
   stronghold region: about 45 cells of two libraries). When a fence takes its connections was not
@@ -157,8 +157,10 @@ neighbours (`rejoin_connections`).
 MT(levelSeed): a, b = two `nextFloat()`; start seed `(a*cx) as i64 as u32 ^ (b*cz) ^ levelSeed`; facing
 `nextInt(4)+2` (Bedrock facing 2 N, 3 S, 4 W, 5 E). Java 1.18's room graph, fitters and pieces, except: the room
 shuffle uses a fresh MT on the start seed (`nextInt(i)`, i from n-1 down); no 58x58 water clearing box; water boxes
-write water below y 63 and air above (no keep); wing design `nextIntUnbounded() & 1`, and design 0 lacks Java's
-(15,0,21)-(16,4,21) box; chunk tests for the lower back (0,51)-(57,57) and middle left (7,21)-(13,54).
+write water below y 63 and air above (no keep); wing design `nextIntUnbounded() & 1` (design 0's second pillar: see below); chunk tests for the lower back (0,51)-(57,57) and middle left (7,21)-(13,54).
+
+Swamp hut: after the flower pot BDS places one more plank at (4, 4, 2), the lintel its taller wall needs over the
+door (14836de70; one cell in the oracle).
 
 Wing design 0 has both of Java's doorway pillars (boxes (6,0,21)-(7,4,21) and (15,0,21)-(16,4,21)): they stand
 one past the wing's box, so a chunk the box does not meet leaves its part of them out, which an earlier

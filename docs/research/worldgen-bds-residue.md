@@ -7,6 +7,72 @@ Later: [worldgen-bds-residue-lush.md](worldgen-bds-residue-lush.md) (lush2: glow
 same-phase pair found by experiment, the thread-local generator's seed; the snow layers under "Left" were
 already fixed).
 
+## city3: the structure stage by writer (2026-10-10, worldgen/city3)
+Every region now prints `structure stage:`, the stable cells where our structure stage and BDS disagree on a
+structure block (tools/worldgen-oracle/README.md), and `examples/structure_cells` lists them with what wrote
+ours: piece, template cell, the block before the rules. Read that way the ancient city's "about 1400 structure
+cells" were 51 of the city's own; the rest are a mineshaft's under the city, or sculk.
+
+Causes found, each checked on the ticked and the tick-free worlds (no region rose by more than a cell):
+- City jigsaws take their final block through the rules, each on a generator of its own with the template's
+  seed, so a chunk's jigsaws all crack or none (worldgen-bds-jigsaw.md, "Elements and processors"; read in the
+  binary after the oracle showed connected pairs differing together). Placing them in the template loop in
+  file order instead was tried first and was worse (231 -> 239).
+- The city centre's redstone is the template's saved state, not game ticks: the state table's probe had let lone
+  blocks settle (worldgen-bds-templates.md, "Saved states"). 45 cells, the same in the tick-free world.
+- Corner stairs are placed as corners, so the degradation list passes them over (same sections). The list
+  predicate itself is confirmed in the binary: a set of `Block*`, default states only; the single-block
+  random predicate compares types.
+- Ocean ruins flood stone brick stairs (near origin, 26 cells). Village terrain matching reads the pre-worldgen
+  heightmap (a path over a cave mouth, stronghold region, 22). The monument wing's second pillar (9) and the
+  swamp hut's lintel (1): worldgen-bds-structures.md. Mineshafts replace fences (the libraries' railings,
+  stronghold region 44; same file, "the kept list").
+
+Wrong / missing / structure stage per world, 817f552 -> city3 (the old source under the new tally):
+
+| world | ticked | still |
+|---|---|---|
+| near origin | 1486 / 230 / 78 -> 1460 / 230 / 52 | 874 / 185 / 80 -> 848 / 185 / 54 |
+| far out | 260 / 28 / 152 | 150 / 20 / 137 |
+| negative seed | 78 / 10 / 0 | 80 / 46 / 0 |
+| biome regions | 5396 / 1100 / 366 | 5370 / 1173 / 487 |
+| tree regions | 2651 / 814 / 93 -> 2652 / 814 / 94 | 2021 / 571 / 93 -> 2022 / 571 / 94 |
+| structures | 15480 / 4685 / 1448 -> 15356 / 4685 / 1323 | 16753 / 5106 / 1510 -> 16624 / 5093 / 1385 |
+
+Wrong + missing over all regions 32218 -> 32069 ticked, 32349 -> 32182 still; by region ancient city 8633 ->
+8585 (still 8102 -> 8037), stronghold 1996 -> 1930 (1837 -> 1770), near origin -26, monument -9, swamp hut -1.
+
+Structure-stage cells by kind, all regions (ticked; still):
+
+| kind | before | after |
+|---|---|---|
+| ancient city | 51; 55 | 1; 5 (tuff a feature put over the city's deepslate) |
+| ocean ruins | 26; 26 | 0 |
+| monument | 9; 9 | 0 |
+| stronghold | 40; 52 | 28; 40 (library cells a mineshaft crosses, village foundation columns) |
+| temple | 3; 3 | 2 (cactus flowers, a waterlogged bar: not structure) |
+| mansion | 26 | 26 (walls on chunk corners) |
+| trial chambers | 20; 7 | 20; 7 (gravel that fell in game, lava against water) |
+| village, ruined portal | 2, 2 | 2, 2 (a wall on a chunk border and one air cell; two bar joins) |
+| trail ruins, outpost, shipwreck, igloo | 0 | 0 |
+| mineshaft | 1958; 2125 | 1906; 2073 |
+
+Kinds are by area except the mineshaft's (its blocks, or air against terrain, inside a mineshaft's box), so
+the area kinds' rests are what the parentheses say, read off `structure_cells`.
+
+### Left
+- Mineshafts, everywhere they are: scattered ceiling cells (the 0.8 float per cell), webs, rails and planks a
+  few draws off, the drift of "Mineshaft drift" below. badlands (13), frozen ocean (54) and the city (469)
+  look the same: no piece is missing or shifted, single cells differ. `BDS air` counts the ceiling cells BDS
+  left open where ours kept rock. Not separated further into order and anything else.
+- Village foundation columns (stronghold region, 8 cells): the fill draws one `nextInt(3)` per column of the
+  whole piece, and columns past the chunk are read from the neighbour as it is then: post-process order.
+- Mansion walls on chunk corners (26), a village wall on a chunk border (1): post-process order
+  (worldgen-bds-templates.md, "Walls").
+- Two iron bar joins (a ruined portal's bars beside stairs; an igloo's waterlogged bars).
+- Which fences a mineshaft keeps: the binary keeps an exact block state; no oracle cell tells "never a fence"
+  from "only an unjoined one".
+
 ## res6: tick-free oracle worlds, inherited liquid ticks (2026-10-10, worldgen/res6)
 - Every oracle world has a `-still` twin pair from a BDS that runs no chunk tick queue
   (worldgen-bds-liquids.md, "Game time"); `SAPLING_ORACLE_STILL=1 tools/oracle.sh <name>` compares against them.
@@ -397,7 +463,8 @@ change this: the read is of a neighbour's planks, not of a height.
   meeting water, flowing in from ring chunk 1,20, which the oracle did not save. Not a monster room: no
   spawner.
 - Ancient city: about 30 single cells where a degradation rule fell otherwise (slabs, stairs, cracked tiles),
-  and about 30 redstone cells BDS has ticked (powered repeaters, wire signal, extended pistons).
+  and about 30 redstone cells BDS has ticked (powered repeaters, wire signal, extended pistons). (Both resolved
+  on worldgen/city3, top section: jigsaw draws, and the template's saved circuit, not ticks.)
 - Mansion: 25 wall cells on chunk corners (order of structure post-processing).
 - Mineshafts everywhere (stronghold, igloo, ocean ruins, city): draw drift from reads past the chunk.
 

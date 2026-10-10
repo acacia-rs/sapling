@@ -185,3 +185,10 @@ initialiser of the thread-local generator (`gs:[0x58]` +0x460 the `Random`, +0xe
 +0x1860), 143bc8468 the vegetation patch's accepted cell, 143bc8be0 its vegetation loop, 143bc871f the depth-0
 shortcut; `VegetationPatchFeature` fields +0xf4/+0xf8 depth, +0xfc extra deep chance, +0x100 vertical range,
 +0x104 vegetation chance, +0x108/+0x10c radius, +0x110 extra edge chance, +0x114 waterlogged.
+
+City3 labels (2026-10-10, read in scratch bdsre-city3, not saved): the rule predicates and the pool element's jigsaw
+handler are in worldgen-bds-jigsaw.md's labels; `MineshaftPiece::canBeReplaced` 14831c830 compares `Block` +0x108 (not
+the type at +0x68; taken as per state, which the oracle's cut library railings fit) with the piece's blocks at
++0x38, +0x40 (planks) and +0x48 (fence); `SwamplandHut::postProcess` 14836de70 places a plank at (4, 4, 2) after
+the flower pot; `placeInWorld` (141eeb8d0), under its terrain-matching flag, reads `LevelChunk` +0xf80 and falls
+back to +0xb80.

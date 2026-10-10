@@ -81,6 +81,12 @@ tools/remote-example.sh <name> <example> [args...]   # a release example's outpu
 tools/testbox.sh <name> <cargo args...>              # anything else, e.g. `lib test -p sapling-worldgen --lib`
 ```
 
+Each region's `structure stage:` line counts the stable cells where our structure stage and BDS disagree on a
+structure block, per kind, as ours only / BDS only / both / BDS air (`stage_diff` in
+`tests/oracle_support/structures.rs`); `oracle-totals.sh` shows it per region and summed.
+`tools/remote-example.sh <name> structure_cells <seed> <world> <cx0> <cz0> <cx1> <cz1>` lists those cells with the
+piece, template cell and pre-rule block that wrote ours.
+
 A worktree syncs to its own remote folder, and runs on it queue up. The test generates a region's chunks
 on every core (`SAPLING_ORACLE_THREADS`) and compares them in order on one, which is what bounds a run:
 all six `blocks_match_bds_*` tests took 193 s against 444 s before (2026-10-09, testbox shared with other work).
