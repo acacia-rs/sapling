@@ -75,7 +75,7 @@ chunk's leftover decoration ticks are flushed over its first ticks in a ticking 
 
 `scripts/bds_still.py <exe>` patches a BDS copy so those four calls do nothing (decoration's own calls stay);
 `tools/worldgen-oracle/run.sh` with `WORLDGEN_BDS` on that copy saves worlds that hold worldgen only:
-`20261003-still` and `-still-run2` (the near-origin and far-out regions; test `blocks_match_bds_still`).
+every oracle world has a `-still` and `-still-run2` twin (`SAPLING_ORACLE_STILL=1` points the oracle tests at them).
 What the still world showed:
 - **Inherited ticks.** Most of the "game time" water was decoration's. A tick `addToTickingQueue` routes to its
   cell's chunk queue stays there, and `acquireAllTicks` at that chunk's own decoration takes the whole queue, so
@@ -95,8 +95,8 @@ the two changes:
 | near origin (still) | 1019 -> 292 | 2829 -> 572 | 233 -> 206 | 2788 -> 504 |
 | far out (still) | 15 -> 1 | 260 -> 129 | 20 -> 20 | 251 -> 120 |
 
-256 of the 292 lie within 4 blocks of a lichen or sculk difference. The other four worlds have no still twin
-yet: their liquid residue still holds the flush.
+256 of the 292 lie within 4 blocks of a lichen or sculk difference. The other worlds' still numbers are in
+worldgen-bds-residue.md (top section).
 
 ## Oracle (2026-10-07)
 Fluid cells differing near origin went 12.0k -> 1.7k. The 8-block routing removed most of our over-flow (infinite

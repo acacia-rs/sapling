@@ -52,7 +52,7 @@ each `oracle.txt` and the server log, not in `release-notes.txt`):
 | Folder | Seed | Regions |
 |---|---|---|
 | `20261003`, `20261003-run2` | `20261003` | `-16,-16,15,15` and, for float drift, `100000,100000,100007,100007` |
-| `20261003-still`, `20261003-still-run2` (2026-10-10) | `20261003` | the same two regions, no game-time ticks (below) |
+| `<each of the above>-still`, `-still-run2` (2026-10-10) | as above | the same regions, no game-time ticks (below); `SAPLING_ORACLE_STILL=1` makes the oracle test read them |
 | `-4172144997902289642`, `-4172144997902289642-run2` | `-4172144997902289642` | `-4,-4,3,3` |
 | `20261003-biomes`, `20261003-biomes-run2` (2026-10-07) | `20261003` | 20 regions of 4x4 chunks, one per surface builder or material case, listed in `crates/sapling-worldgen/tests/oracle.rs` (`blocks_match_bds_biomes`); picked with `examples/find_biomes.rs` |
 | `20261003-trees`, `20261003-trees-run2` (2026-10-07) | `20261003` | 20 regions of 4x4 chunks in the tree biomes, listed in `blocks_match_bds_trees` |

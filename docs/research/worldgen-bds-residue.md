@@ -4,6 +4,48 @@ Companion to [worldgen-bds-features.md](worldgen-bds-features.md). What the orac
 feat4 fixes, how much of it BDS's own nondeterminism explains, and the tools that found each cause. The newest
 round is first; the sections after it are feat4's and the sculk round's, with their numbers as they were.
 
+## res6: tick-free oracle worlds, inherited liquid ticks (2026-10-10, worldgen/res6)
+- Every oracle world has a `-still` twin pair from a BDS that runs no chunk tick queue
+  (worldgen-bds-liquids.md, "Game time"); `SAPLING_ORACLE_STILL=1 tools/oracle.sh <name>` compares against them.
+- Liquid ticks an earlier source leaves on a chunk's queue run at that chunk's decoration; bubble columns are
+  one cell at generation (same section). Every region improved or stayed; the largest: near origin -937,
+  stronghold -559, pillager outpost -390, old growth birch forest -257, trial chambers -185.
+- The heightmap guard is `checkSeasonsPostProcessDirty` and never passes for a new overworld chunk
+  (worldgen-bds-features.md, "The seasons guard").
+
+All2 + misc (6466281) -> res6 on the ticked worlds, then res6 on the still worlds:
+
+| world | wrong + missing | deterministic | still: wrong + missing | still: deterministic |
+|---|---|---|---|---|
+| near origin | 2332 -> 1395 | 2024 -> 1087 | 778 | 504 |
+| far out | 288 -> 267 | 260 -> 239 | 149 | 120 |
+| negative seed | 110 -> 62 | 78 -> 30 | 229 | 86 |
+| biome regions | 8859 -> 8667 | 1851 -> 1659 | 8698 | 1818 |
+| tree regions | 5020 -> 4694 | 3018 -> 2696 | 3206 | 1293 |
+| structures | 29503 -> 28114 | 10978 -> 9870 | 27815 | 9379 |
+
+The still worlds are other runs of BDS, so their thread-local and same-phase cells fall elsewhere: a region's
+still count is not its ticked count minus the game-time cells (the negative seed is worse there, the tree
+regions far better). Compare a change on both.
+
+Traced live this round, none a port difference:
+- Sulfur spike clusters (windswept gravelly hills, savanna): the phase-0 chunk -124,-348 run alone matches ours
+  for 99 speleothem calls; then BDS skips the cluster column (-1979,-5557) because a glow lichen sits in its
+  start cell (-1979,8,-5557), where ours has air, and the rule's later draws shift. The lichen floor.
+- Bamboo jungle's east edge (ring source 174,349): BDS runs the same 82 bamboo tries at the same positions and
+  then the trees, and no stalk meets an obstacle (569 stalk cells read, all air), so the earlier reading below
+  ("a height test we lack", "trees BDS grew") was wrong. The first difference is try 68 at (2799,74,5588): BDS
+  grows a stalk, ours refuses because source 175,349 put short grass there, and the placing generator is two
+  draws apart from then on. BDS decorated 175,349 before 174,349 in that run (bamboo entries logged over
+  173..176: phase order kept), so its 175,349 placed its grass elsewhere: the difference starts in a chunk
+  two out of the oracle's region or beyond. Not followed further.
+- Pale garden's eyeblossoms and cherry grove's coal are no longer in the dump.
+
+What the tree and biome regions' deterministic rest is by family (`scripts/feature_residue.py`): lush caves
+on region edges (old growth birch forest chunk -309,285, pale garden -469,-286, old growth spruce taiga
+-533,-30), sculk and veins the twin does not confirm, dripstone and sulfur spikes behind lichen, tuff under
+sculk. No family with a precision problem of its own was found.
+
 ## misc: fossils, camp trees, poplars (2026-10-10, worldgen/misc)
 - Fossils ported (worldgen-bds-features.md, "Fossils"): desert pyramid region 108 -> 41.
 - The old growth pine taiga camp (43 cells): the v2 placer attaches a feature element whatever the jigsaw's
