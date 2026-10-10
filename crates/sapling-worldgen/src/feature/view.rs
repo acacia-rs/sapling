@@ -21,10 +21,18 @@ pub struct Write {
     pub seen: Block,
 }
 
-/// One source chunk's writes, per target chunk around it.
-pub struct ChunkWrites(Vec<Vec<Write>>);
+/// A liquid tick left on its cell's chunk queue: cell, lava, delay.
+pub type Routed = ([i32; 3], bool, u64);
+
+/// One source chunk's writes, per target chunk around it, and the ticks it left on chunk queues.
+pub struct ChunkWrites(Vec<Vec<Write>>, Vec<Routed>);
 
 impl ChunkWrites {
+    /// The ticks this source left on `chunk`'s queue, in the order they came.
+    pub fn routed_to(&self, chunk: (i32, i32)) -> impl Iterator<Item = Routed> + '_ {
+        self.1.iter().copied().filter(move |(at, _, _)| (at[0].div_euclid(16), at[2].div_euclid(16)) == chunk)
+    }
+
     /// The writes into the chunk `(dx, dz)` away from the source.
     pub fn towards(&self, dx: i32, dz: i32) -> &[Write] {
         slot(dx, dz).map_or(&[], |slot| &self.0[slot])
@@ -75,6 +83,8 @@ pub struct View<'a> {
     generated: Option<Tops<'a>>,
     /// The block source's tick queue (liquid/mod.rs).
     pub ticks: TickQueue,
+    /// The ticks decoration left on chunk queues (liquid/mod.rs).
+    pub routed: Vec<Routed>,
     /// Run after each `set_block`: `setBlock`'s neighbour updates (liquid/mod.rs).
     pub on_write: Option<fn(&mut View, [i32; 3])>,
 }
@@ -92,6 +102,7 @@ impl<'a> View<'a> {
             heights: RefCell::new(vec![None; slots]),
             generated: None,
             ticks: TickQueue::default(),
+            routed: Vec::new(),
             on_write: None,
         }
     }
@@ -256,6 +267,6 @@ impl<'a> View<'a> {
     }
 
     pub fn into_writes(self) -> ChunkWrites {
-        ChunkWrites(self.writes)
+        ChunkWrites(self.writes, self.routed)
     }
 }

@@ -35,8 +35,8 @@ props="$bds/server.properties"
 settings="level-name=$level
 level-seed=$seed
 level-type=DEFAULT
-server-port=19190
-server-portv6=19191
+server-port=${WORLDGEN_PORT:-19190}
+server-portv6=$((${WORLDGEN_PORT:-19190} + 1))
 online-mode=false
 content-log-console-output-enabled=true"
 keys=$(sed 's/=.*//' <<<"$settings" | paste -sd'|')

@@ -1,7 +1,7 @@
 //! `minecraft:partially_exposed_blob_feature` after stirante/featurelab
 //! `features/partially_exposed_blob.go` (MIT, (c) 2026 stirante): around the block under the
 //! position, ring by ring, one `nextFloat` per cell, the block where it is enclosed but for one
-//! face. Magma under water starts a bubble column (Bedrock's `MagmaBlock::onPlace`).
+//! face. Magma under water starts a bubble column.
 
 use super::cave_spec::PartiallyExposedBlob;
 use super::place::Ctx;
@@ -58,11 +58,15 @@ impl PartiallyExposedBlob {
     }
 }
 
-/// Bubble columns up through the water sources above.
+/// One bubble column cell in the water source above; the column's ticks wait for the game
+/// (docs/research/worldgen-bds-liquids.md, "Game time"), so it grows only under a game-tick replay.
 fn bubble_column(view: &mut View, [x, mut y, z]: [i32; 3]) {
-    y += 1;
-    while view.block(x, y, z) == Block::Water {
-        view.set_block(x, y, z, Block::BubbleColumn);
+    let cells = if super::liquid::game_ticks() > 0 { usize::MAX } else { 1 };
+    for _ in 0..cells {
         y += 1;
+        if view.block(x, y, z) != Block::Water {
+            break;
+        }
+        view.set_block(x, y, z, Block::BubbleColumn);
     }
 }

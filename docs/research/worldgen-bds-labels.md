@@ -154,6 +154,17 @@ over; `setBlock` call sites of the sculk code: 143b84ccc multiface attach, 1465e
 148b6b1f7 remove face, 143ba17e8 catalyst, 143ba1853 shrieker; 0x14ccd3328 the dirt list, 0x14ce19564 the support
 component's id.
 
+Res6 labels (2026-10-10, read in scratch bdsre-res6; names from the LeviLamina headers): 1409f98a0
+`LevelChunk::tick` (its four `tickPendingTicks` calls at 1409facfb/1409fad28, the first-ticks flush behind
+`LevelChunk` +0x10dc == 0 with its counter +0x10d8, and 1409fc307/1409fc3c8, the regular tick; +0x130 block and
++0x138 random tick queues), 140a0b4e0 `LevelChunk::checkSeasonsPostProcessDirty`, 140a0b330
+`LevelChunk::applySeasonsPostProcess`, 144791aa0 `Seasons::postProcess` (the `Seasons` object at `Dimension`
++0x1f0), 1409ffd20 `LevelChunk::validateAndFixBiomeStates`, 140a09540 `LevelChunk::setBiome` (one cell),
+140a06370 and 1409f2440 the biome states' deserialisers (`_loadChunkFromDB` lambda), `LevelChunk` +0xf90
+`mBiomeStates` (MSVC `unordered_map<BiomeIdType, BiomeChunkState>`: list head +0xf98, size +0xfa0; node key
++0x10, `snowLevel` +0x12), `Biome` +0x8 `mTemperature`, +0x20 `mSnowAccumulation`, +0x2c `mMaxSnowLevel`,
++0x168 `mId`, `Dimension` +0x100 (tested == 1 by the seasons check), 14827b960 `BambooFeature::place`.
+
 Feat3 labels (2026-10-08): 14a73fa30 the decoration's IBlockWorldGenAPI vtable (forwards to its `BlockSource` at
 +8; 0xb0 = 1411a0a60 heightmap: `LevelChunk` +0xb80 i16 per column + minimum y), 1438f0d00
 `MangroveTreeRoots::placeRoots` (vtable 14a98e1f8), 1438f16f0 its root simulation, 14a681437 its facing table,

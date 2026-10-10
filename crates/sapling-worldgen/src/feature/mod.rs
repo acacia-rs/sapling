@@ -176,7 +176,9 @@ impl Features {
             monster_room::monster_rooms((inputs.after_lake)(source.0, source.1), source, &mut view);
             decorate::decorate_chunk(&self.seed, source, inputs, &mut view);
             freeze::freeze_chunk(source, &(inputs.biomes)(source.0, source.1), &mut view);
-            liquid::settle(&mut view);
+            let earlier = sources_before(source, phase_limit);
+            let inherited: Vec<_> = earlier.into_iter().flat_map(|n| self.source_writes(n, inputs).routed_to(source).collect::<Vec<_>>()).collect();
+            liquid::settle(&mut view, &inherited);
             view.into_writes()
         })
     }

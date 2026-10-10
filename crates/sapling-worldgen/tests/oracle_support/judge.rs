@@ -133,6 +133,10 @@ pub fn judge(ours: Block, bds: &BdsCell, y: i32, context: Context) -> Verdict {
     if !bds.is(ours) && bds.block == ours.name() && THREAD_LOCAL_FACES.contains(&bds.block.as_str()) {
         return Verdict::Later("multiface faces (thread-local random in BDS)");
     }
+    // Decoration places one bubble column cell over magma; the column grows by game ticks (worldgen-bds-liquids.md, "Game time").
+    if ours == Block::Water && bds.block == "bubble_column" {
+        return Verdict::Later("game time (bubble columns grow by ticks)");
+    }
     // A feature-only block is a feature error wherever it sits, also under a reshaped column.
     match judge_cell(ours, bds, y, context) {
         Verdict::Error(Stage::Surface | Stage::Shape | Stage::Carvers) if FEATURE_ONLY.contains(&bds.block.as_str()) => Verdict::Error(Stage::Features),

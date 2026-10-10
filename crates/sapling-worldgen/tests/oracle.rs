@@ -51,6 +51,9 @@ struct Tallies {
 }
 
 fn compare(seed: i64, world: &str, regions: &[Region]) {
+    // The world's twin pair saved by a BDS that ran no scheduled tick in game time (scripts/bds_still.py).
+    let still = std::env::var_os("SAPLING_ORACLE_STILL").is_some();
+    let world = &if still { format!("{world}-still") } else { world.to_string() };
     let Some((primary, twin)) = open(world) else {
         eprintln!("oracle world {world} missing; skipped");
         return;
@@ -59,7 +62,8 @@ fn compare(seed: i64, world: &str, regions: &[Region]) {
     let only = std::env::var("SAPLING_ORACLE_REGION").ok();
     for region in regions.iter().filter(|r| only.as_deref().is_none_or(|only| r.name.contains(only))) {
         let mut tallies = Tallies::default();
-        let mut dump = Dump::open(world, region.name);
+        let name = &if still { format!("{} (still)", region.name) } else { region.name.to_string() };
+        let mut dump = Dump::open(world, name);
         let chunks: Vec<_> = region.chunks().collect();
         Stages::in_order(&generator, &chunks, |(cx, cz), Stages { surfaced, loaded, structured, laked, ours, areas, biomes }| {
             let key = ChunkKey::new(cx, cz, 0);
@@ -126,9 +130,9 @@ fn compare(seed: i64, world: &str, regions: &[Region]) {
         });
         // Tests run in parallel: a region's lines stay together.
         let _whole = std::io::stdout().lock();
-        println!("seed {seed} {}:", region.name);
+        println!("seed {seed} {name}:");
         tallies.blocks.print();
-        tallies.floor.print(world, region.name);
+        tallies.floor.print(world, name);
         tallies.top.print();
         tallies.features.print();
         tallies.structures.print();

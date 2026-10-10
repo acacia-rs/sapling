@@ -213,14 +213,13 @@ block source and chunk state 11 and did not run once while a region generated (b
 - while a chunk decorates, its own heightmap is its carved terrain's: no structure block, no feature block, none
   of its own writes;
 - a neighbour's is its carved terrain's too, also after that neighbour has been decorated (corrected
-  2026-10-10, worldgen/misc: the recompute at 148215885 is behind `140a0b4e0(chunk)`, a test of the dimension's
-  +0x100 flag and of a list at `LevelChunk` +0xf98, not read further. Live, a 2x2 region: breakpoints at
+  2026-10-10, worldgen/misc: the recompute at 148215885 is behind `140a0b4e0(chunk)`, read to the end under
+  "The seasons guard" below. Live, a 2x2 region: breakpoints at
   14821586c and 148215885 counted 183 decoration ends and no recompute. Until then sapling gave a later phase the neighbour's blocks as of its decoration's end:
   a swamp's firefly bushes and lily pads then stood on a decorated neighbour's oak leaves instead of under
   them. A live run logged the oak at line 95, the neighbour's own decoration at 141 and the bush cluster at
   243, in the parity order, so order was not the cause; with every heightmap left carved swamp 79 -> 72,
-  mangrove swamp -2, pale garden -3, mansion -1, nothing worse.) A server whose chunks pass that test would
-  recompute: not modelled;
+  mangrove swamp -2, pale garden -3, mansion -1, nothing worse.);
 - structure features (village trees) see carved-terrain heightmaps everywhere.
 `View::with_frozen_heights` models this (every chunk's carved terrain). The recompute
 counts a cell whose block or liquid layer absorbs light (`Block` +0xa5 = `BlockComponentDirectData::mLight`), or
@@ -240,6 +239,23 @@ and, of the feature code scanned, `LargeSpeleothem::placeBlocks` alone (a
 stalagmite's columns stop under it; live: the set-pointer branch ran 1699 times in a one-chunk run).
 `View::generated_top` models it; no dripstone scan reads +0xb80 or +0xf88, and the oracle did not move (no
 stalagmite reaches a carved surface in the regions).
+
+### The seasons guard (2026-10-10, worldgen/res6)
+`140a0b4e0` is `LevelChunk::checkSeasonsPostProcessDirty`. It returns true when `Dimension` +0x100 is 1 and some
+entry of the chunk's `mBiomeStates` (+0xf90, `unordered_map<BiomeIdType, BiomeChunkState>`) has a `snowLevel`
+other than `(int)(biome.mSnowAccumulation * 8)`; with no entries it is false. Decoration then calls
+`recomputeHeightMap(false)` and `applySeasonsPostProcess` (140a0b330: `Seasons::postProcess` 144791aa0 builds snow
+by a noise on columns whose biome has `mMaxSnowLevel` > 0 and a temperature under 0.15, then sets every entry to
+the biome's value).
+An entry is made, with level 0, for a biome with `mMaxSnowLevel` > 0 and `mTemperature` < 0.47, by three writers
+only: `LevelChunk::setBiome` for one cell (140a09540), `validateAndFixBiomeStates` (1409ffd20, called from the
+single-biome fills of the fixed-biome generators, not from the overworld's) and the loader of saved states
+(140a06370). The overworld generator fills its 3D biomes without any of them, so a chunk it generates reaches
+decoration with an empty map and the guard is false whatever the weather or the biome. Live, a one-chunk region
+in snowy plains (570,402; ice plains has snow accumulation 0.25 to 1): 157 decoration ends, the dimension flag
+set in all of them, map size 0 in all, no recompute. The guard can pass only for a chunk loaded from disk before
+its decoration with saved states that differ from the biome's current value; a new overworld chunk never
+recomputes, on the oracle or on a real server, so the frozen-heightmap model stands.
 
 Oracle, wrong + missing cells (missing: BDS feature blocks we lack, which the judge used to file under later
 stages; `tests/oracle_support/judge.rs` `Verdict::Missing`), 148084d -> trees3:
