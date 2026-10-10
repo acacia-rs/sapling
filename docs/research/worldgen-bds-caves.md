@@ -65,9 +65,9 @@ list (VanillaBlockTypeIds lists 14ccd2770: dirt, coarse dirt, stone, tuff, deeps
   so which cell gets the lichen is thread-local too wherever two neighbour cells could (pale garden: ours under
   the ceiling at -7516,49,-4568, BDS's one cell west in both oracle runs and elsewhere in a third run).
   A spread (1465e9360, after `nextFloat < chance_of_spreading`) tries the six
-  directions in thread-local order: glow lichen takes the first that can (2026-10-10: BDS always spreads, and
-  a lichen fewer shifts every lush patch around it, worldgen-bds-residue-lush.md); veins still spread only
-  when exactly one direction can.
+  directions in thread-local order: glow lichen takes the first that can hold it (2026-10-10: BDS always
+  spreads, and a lichen fewer shifts every lush patch around it, worldgen-bds-residue-lush.md); a vein spreads
+  only when exactly one direction can ("Thread-local draws").
   Attach skips a face whose block lies in another chunk than the cell when that chunk is not decorated yet
   (`LevelChunk` +0xf0 in 2..5; live: 4 before decoration, 6 after) and the block is inside a stronghold's or a
   mineshaft's start box (HashedStrings 0x14ccbb900/930 = `minecraft:stronghold`, `minecraft:mineshaft`, asked of
@@ -98,8 +98,12 @@ the supporting block's (the one toward the asker; table 0x14a682118 turns a dire
   path, campfires: bottom; 1425764f0 trapdoors: closed the face they lie in, open the side they stand on
   (table 0x14a7a2f68 by `direction`: 4, 5, 2, 3); 148b220d0 chains: ends of a vertical one; 141a45250
   cauldron: top, not for centre; 148b33d80 composter: all but top centre; 142fd2950 hopper: top; 140076010
-  leaves, shulker boxes, buds, powder snow: never; 1400a2880 pistons: always. Grindstones, skulls, shelves, end
-  rods, lightning rods and snow layers go by states sapling never meets and are left without support.
+  leaves, shulker boxes, buds, powder snow: never; 1400a2880 pistons: always; 142fce030 grindstone: the top of
+  a standing one, the bottom of a hanging one (`attachment`), not for edge; 146602890 skulls: the bottom when
+  `facing_direction` is 1, centre only; 148a32230 end rod and 148b5bff0 lightning rods: top and bottom of an
+  upright one (`facing_direction` 0 or 1), not for edge; 148b51e20 shelves: the back face (table 0x4030502 by
+  the cardinal direction's value), any type, so a vein hangs there. Piston arms and snow layers go by states
+  sapling never meets and are left without support.
 `canProvideMultifaceSupport` (vtable 0x98, default 141a24f10): a fence never, a stair by its shape, else centre
 and edge support both. Overrides: leaves always (1400a2880: lichen and veins hang on leaves although nothing
 stands on them), azaleas the top (142fd2950). Sculk's diagonal-move test and its shriekers call the default
@@ -132,9 +136,47 @@ all of these, so every template block with collision held veins: see "Sculk", th
   a vein face toward a hanging soul lantern in the first write; with the support classes above 452 writes
   agree, up to a vein BDS's vein feature had spread there with its thread-local generator. The feature itself
   placed nothing in ours on that chunk (BDS: 6 veins, 6 spreads) until `can_place_on` kept its template names.
-- Spreads of the vein feature: BDS always spreads when a direction can take it; placing one at a
-  position-hashed direction instead of only when one direction is possible made the city region worse (9002 ->
-  9476), so the rule stays.
+- Spreads of the vein feature: see "Thread-local draws" (still only a lone direction).
+
+## Thread-local draws (2026-10-10, worldgen/sculk2)
+The generator at `gs:[0x58]` +0xe60 wraps an MT at +0x460 that 1411889d0 seeds with four bytes from the system's
+entropy source, per thread: no function of the seed. In decoration only `MultifaceFeature` draws from it
+(callers of the spread 1465e9360: the attach 143b84880 and 1465e98c0, the in-game random spread; the six-face
+shuffle 1403747f0 is also called by the vein behaviour 148b42070, with the rule's generator). It decides:
+- the order of the feature's faces (one forward shuffle per call, and one more per searched neighbour that is
+  thrown away): which face the block takes where several neighbours are `can_place_on`, and, when the origin
+  takes none, which neighbour cell gets it;
+- the direction of the spread (a six-way shuffle; the first direction that can hold one wins).
+It does not decide whether a block is placed (only a cell that already holds the block with the chosen face can
+fail), nor the spread gate (`nextFloat` of the rule's generator: 1.0 for veins, 0.5 for lichen), nor anything
+in `SculkPatchFeature`, the spreader, the catalyst and shrieker rolls. So the count is fixed: every vein of the
+feature comes with a second vein or face wherever a direction can hold one. Sapling keeps the pushed order
+for faces and neighbour cells; for the spread see the end of this section.
+Measured on phase-0 chunks run alone (`scripts/dbg_sculk.py`, `dbg_vein_cmp.py`, `dbg_sculk_cmp.py`): stony
+peaks -228,260 (10 veins: 8 in our cell, 2 in another neighbour; BDS spread all 10) and badlands 594,-348
+(4 veins: 3 and 1; 4 spreads). All 74 and 77 patch tries stand at our positions; 72 and 74 agree in every
+write, and the five others agree for the first 130 to 982 writes, up to a vein the feature spread, and then
+end with 0, 0, 0, 1 and 29 cells different, within 4 blocks of that vein, with the same number of conversions
+(1003 and 1003, 1075 and 1075) and the later tries back in step. A differing vein moves a patch only around
+itself while the patch's draw count holds; when it shifts (a vein's `nextInt(5)` is drawn only if no face
+finds a block to convert), every later patch of the chunk walks differently, which is what the twin worlds
+show as whole patches coming and going.
+The spread's direction cannot be known, so the rule is the oracle's choice per family. Per decision with k
+directions, none placed is one wrong cell and a guess 2(k-1)/k, before what the block does to later features.
+Lichen takes the first unshuffled direction (worldgen/lush2: a missing lichen shifts lush patches and scans;
+its own stable errors about double, the regions' totals fall). Veins spread only when one direction can: on
+the merged tree the full oracle counts 35665 wrong + missing that way against 36393 with veins always
+spreading (stony peaks +479, cherry grove +396, igloo +141, ancient city +92; trail ruins -329, jagged
+peaks -139). Both are a guess: such totals swing by hundreds either way through single cells, and without
+the spread sapling's deep dark holds one vein where every BDS run has two.
+
+A later-phase chunk and a city chunk, the same way: stony peaks -229,259 (phase 2) has all 86 patch tries at
+our positions and all five veins in our cell (three of BDS's five spreads in the cell our first direction
+names); its patches agree until the third placed one meets (-3658,6,4144), sculk in that run before the patch
+got there and granite in ours: an earlier source's cell, inherited. Ancient city -70,76 has 36 tries at our
+positions and the first placed patch alike in every write; the second went wrong after 18 writes at a stair
+our structure stage had removed (worldgen-bds-jigsaw.md, "Elements and processors": the list predicate), and
+the two after it from their first write, their draws shifted.
 - `surface_relative_threshold` (143bc69b0): place only below the quart column's preliminary surface minus the depth.
 - `partially_exposed_blob` (featurelab's): magma 1 around the floor, one `nextFloat` per cell; magma under water
   starts a bubble column up through water sources (BDS grows it by ticks: near a source's edge it stops short).

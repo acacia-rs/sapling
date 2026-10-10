@@ -164,6 +164,12 @@ Res6 labels (2026-10-10, read in scratch bdsre-res6; names from the LeviLamina h
 `mBiomeStates` (MSVC `unordered_map<BiomeIdType, BiomeChunkState>`: list head +0xf98, size +0xfa0; node key
 +0x10, `snowLevel` +0x12), `Biome` +0x8 `mTemperature`, +0x20 `mSnowAccumulation`, +0x2c `mMaxSnowLevel`,
 +0x168 `mId`, `Dimension` +0x100 (tested == 1 by the seasons check), 14827b960 `BambooFeature::place`.
+Sculk2 labels (2026-10-10, read in scratch bdsre-sculk2, not saved as labels): 1411889d0 the thread-local MT's
+constructor (seed: four bytes from 141cbf950/141ccbe30, the system entropy source), 1465e98c0 the in-game random
+multiface spread (the other caller of 1465e9360 and of the shuffle 1403747f0), 142fce030 grindstone / 146602890
+skull / 148a32230 end rod / 148b5bff0 lightning rod / 148b51e20 shelf `canProvideSupport` (this, block, face,
+type); block state ids 0x14cd254f0, 0x14cd26368 and 0x14cd25130, taken as `attachment`, `facing_direction` and
+`minecraft:cardinal_direction` from which blocks read them (names not read out of the binary).
 
 Feat3 labels (2026-10-08): 14a73fa30 the decoration's IBlockWorldGenAPI vtable (forwards to its `BlockSource` at
 +8; 0xb0 = 1411a0a60 heightmap: `LevelChunk` +0xb80 i16 per column + minimum y), 1438f0d00

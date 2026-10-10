@@ -28,6 +28,14 @@ pub enum Class {
     Cauldron,
     Composter,
     Up,
+    /// By `attachment`: the top of a standing one, the bottom of a hanging one.
+    Grindstone,
+    /// The bottom of one on a floor (`facing_direction` up).
+    Skull,
+    /// End rods and lightning rods: both ends of an upright one.
+    Rod,
+    /// The back face.
+    Shelf,
     /// The support component's shapes.
     Stair,
     Fence,
@@ -88,6 +96,14 @@ fn provides(class: Class, states: &str, face: usize, kind: Kind) -> bool {
         Class::Chain => face < 2 && centred && matches!(state(states, "pillar_axis"), "" | "y"),
         Class::Cauldron => face == 1 && kind != Kind::Centre,
         Class::Composter => !(face == 1 && kind == Kind::Centre),
+        // 142fce030
+        Class::Grindstone => centred && face < 2 && state(states, "attachment") == ["hanging", "standing"][face],
+        // 146602890
+        Class::Skull => centred && face == 0 && state(states, "facing_direction") == "1",
+        // 148a32230, 148b5bff0
+        Class::Rod => centred && face < 2 && matches!(state(states, "facing_direction"), "0" | "1"),
+        // 148b51e20: table 0x4030502 by the cardinal direction's value.
+        Class::Shelf => Some(face) == ["south", "west", "north", "east"].iter().position(|&d| d == state(states, "cardinal_direction")).map(|i| [2, 5, 3, 4][i]),
         Class::Stair => stair(states, face),
     }
 }
@@ -173,6 +189,10 @@ mod tests {
         assert!(provides(Class::Slab, "minecraft:vertical_half=top", 1, Kind::Any) && provides(Class::Slab, "", 0, Kind::Any));
         assert!(!provides(Class::Slab, "minecraft:vertical_half=top", 0, Kind::Any) && !provides(Class::Slab, "", 4, Kind::Any));
         assert!(provides(Class::Trapdoor, "direction=1,open_bit=1", 5, Kind::Any) && provides(Class::Trapdoor, "", 0, Kind::Any));
+        assert!(provides(Class::Grindstone, "attachment=standing,direction=0", 1, Kind::Any) && !provides(Class::Grindstone, "attachment=standing,direction=0", 0, Kind::Any));
+        assert!(provides(Class::Skull, "facing_direction=1", 0, Kind::Centre) && !provides(Class::Skull, "facing_direction=1", 0, Kind::Edge));
+        assert!(provides(Class::Rod, "facing_direction=0", 1, Kind::Any) && !provides(Class::Rod, "facing_direction=3", 1, Kind::Any));
+        assert!(provides(Class::Shelf, "minecraft:cardinal_direction=west", 5, Kind::Edge) && !provides_multiface(Class::Rod, "facing_direction=1", 1, false));
     }
 
     /// A block the registry table lacks would pass as solid.

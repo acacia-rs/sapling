@@ -37,6 +37,9 @@ A run takes 20-90 s for 64 chunks and 80-105 s for 1088; BDS startup is 15-55 s 
   20261003) to 0.03% (lush caves) of block cells, in features that cross chunk borders and land in an
   order-dependent way: glow lichen, lush-cave clay/moss/dripleaf/vines, moss carpet, grass. Each oracle
   world has a `-run2` twin: a cell where the two disagree is not ground truth (`diff` lists them).
+  The converse does not hold: the twins are two runs of one load, and a third run of a region loaded
+  another way (alone, or slowed by a debugger) differed from both in eight times as many cells as they
+  differ from each other (badlands, 2026-10-10: docs/research/worldgen-bds-residue.md, "sculk2").
 - Loaded chunks tick while a tile is processed. The pack sets `randomtickspeed 0`, `domobspawning`,
   `doweathercycle`, `dofiretick`, `dodaylightcycle` false and clears the weather, but scheduled ticks still
   run: generated water and lava may have flowed (the twins also differ in water/lava/obsidian/stone cells).

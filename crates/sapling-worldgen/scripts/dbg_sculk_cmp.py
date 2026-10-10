@@ -70,6 +70,13 @@ for i, (pos, writes, label) in enumerate(ours):
     n = 0
     while n < len(ow) and n < len(bw) and (ow[n][0], ow[n][2]) == (bw[n][0], bw[n][2]):
         n += 1
+    if not same:
+        # What the two walks leave behind: cells whose last write differs, and how far from the first difference.
+        last_o, last_b = {p: (k, bits) for k, bits, p in ow}, {p: (k, bits) for k, bits, p in bw}
+        cells = [p for p in last_o.keys() | last_b.keys() if last_o.get(p) != last_b.get(p)]
+        at = (ow[n] if n < len(ow) else bw[n])[2]
+        far = max((max(abs(a - b) for a, b in zip(p, at)) for p in cells), default=0)
+        print(f'{i}: {pos}: {len(cells)} cells end differently, up to {far} from the first difference at {at}')
     if (not same and shown < 12 and only is None) or only == i:
         shown += 1
         print(f'{i}: {pos} {label}: ours {dict(co)} bds {dict(cb)}; first {n} of {len(ow)}/{len(bw)} writes agree')

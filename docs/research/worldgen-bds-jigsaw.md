@@ -32,6 +32,10 @@ Companion to [worldgen-bds-templates.md](worldgen-bds-templates.md) (template lo
 - Hardcoded processors (`StructurePoolBlockRule`, applied in placeInWorld after the wood remap): every
   passing rule applies, later rules see the replacement; predicates draw from the settings MT (seed = the
   chunk's structure seed): random_block_match `f < p` only for 0 < p < 1, list random `f <= p`.
+  The list predicate holds blocks, not types: only a listed block in its default state matches and draws
+  (fitted on the oracle's city, 2026-10-10, not read from the binary: BDS removes no turned or corner stair
+  and no top slab, and matching any state drew for them, removed 5% and shifted the rest of the piece's
+  draws in that chunk; `default_state` in template/rules.rs).
 - v2 processors are Java's (template placement 145e1c040 -> 141ee0510, every template block processed, then
   clipped): rule processor 145944ea0 draws from a `java.util.Random` per block seeded by `Mth.getSeed` of the
   world position **with x multiplied in 64 bits**, first passing rule wins; capped 145942bd0 shuffles all

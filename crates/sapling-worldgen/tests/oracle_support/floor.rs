@@ -1,9 +1,11 @@
-//! How much of a region's wrong and missing cells BDS's thread-local generator explains, judged by
-//! the `-run2` twin (docs/research/worldgen-bds-features.md, "Floor").
+//! How much of a region's wrong and missing cells BDS's thread-local generator explains
+//! (docs/research/worldgen-bds-residue.md, "Floor: what BDS itself does not repeat" and "Reach").
+//! A cell is floor when a thread-local draw could have reached it in our own decoration
+//! (`OverworldGenerator::thread_local_reach`) and BDS's two runs disagree close by.
 
 use std::collections::HashMap;
 
-use sapling_worldgen::Block;
+use sapling_worldgen::{Block, ReachCells, ReachTries};
 
 use super::BdsCell;
 use super::judge::{Context, Verdict, judge};
@@ -37,6 +39,9 @@ const SCANNING: &[&str] = &[
 ];
 /// A sculk cursor is lost beyond distance squared 224 from its patch's origin.
 const PATCH_REACH: i32 = 15;
+/// How far one differing vein moves a patch's cells while the patch's draws stay in step (a live
+/// patch pair: 29 cells within 4). A patch whose draws shift differs all over, twin included.
+const DIRECT_REACH: i32 = 4;
 /// `ColumnUtils::scan` reaches 12 cells; a cluster's columns lie within 7 of its origin.
 const SCAN_REACH: i32 = 10;
 const BUCKET: i32 = 16;
@@ -52,8 +57,9 @@ enum Class {
 pub struct Floor {
     /// Cells the twin disagrees on with a thread-local block in either run, by bucket.
     twin_seeds: HashMap<At, Vec<At>>,
-    /// Stable wrong or missing cells.
-    wrong: Vec<(At, Class)>,
+    /// Stable wrong or missing cells, and whether our decoration's thread-local reach holds them.
+    wrong: Vec<(At, Class, bool)>,
+    tries: ReachTries,
 }
 
 fn any(names: &[&str], blocks: [&str; 2]) -> bool {
@@ -65,7 +71,13 @@ fn bucket((x, y, z): At) -> At {
 }
 
 impl Floor {
-    pub fn add(&mut self, ours: Block, bds: &BdsCell, twin: &BdsCell, at: At, context: Context) {
+    /// The tries a chunk followed as a source (multiface features, sculk patches, liquid ticks).
+    pub fn note_tries(&mut self, tries: ReachTries) {
+        self.tries.followed += tries.followed;
+        self.tries.tainted += tries.tainted;
+    }
+
+    pub fn add(&mut self, ours: Block, bds: &BdsCell, twin: &BdsCell, at: At, context: Context, reach: Option<&ReachCells>) {
         if bds != twin {
             if any(THREAD_LOCAL, [&bds.block, &twin.block]) {
                 self.twin_seeds.entry(bucket(at)).or_default().push(at);
@@ -83,7 +95,8 @@ impl Floor {
         } else {
             Class::Other
         };
-        self.wrong.push((at, class));
+        let reached = reach.is_some_and(|cells| cells.contains(at.0.rem_euclid(16) as usize, at.1, at.2.rem_euclid(16) as usize));
+        self.wrong.push((at, class, reached));
     }
 
     fn near_seed(&self, at: At, reach: i32) -> bool {
@@ -92,16 +105,24 @@ impl Floor {
         (-span..=span).any(|dx| (-span..=span).any(|dy| (-span..=span).any(|dz| self.twin_seeds.get(&(b.0 + dx, b.1 + dy, b.2 + dz)).is_some_and(|cells| cells.iter().any(close)))))
     }
 
-    /// One line: the split of wrong + missing, and what is left as deterministic.
+    /// One line: the thread-local blocks by what supports calling them floor, the scans, and the
+    /// deterministic rest (everything but `floor` and the twin-confirmed scans).
     pub fn print(&self, world: &str, region: &str) {
-        let count = |class: Class, reach: Option<i32>| self.wrong.iter().filter(|(at, c)| *c == class && reach.is_none_or(|r| self.near_seed(*at, r))).count();
+        let count = |keep: &dyn Fn(At, Class, bool) -> bool| self.wrong.iter().filter(|&&(at, class, reached)| keep(at, class, reached)).count();
         let total = self.wrong.len();
-        let (local, local_near) = (count(Class::ThreadLocal, None), count(Class::ThreadLocal, Some(PATCH_REACH)));
-        let (scan, scan_near) = (count(Class::Scan, None), count(Class::Scan, Some(SCAN_REACH)));
+        let local = count(&|_, class, _| class == Class::ThreadLocal);
+        let local_reached = count(&|_, class, reached| class == Class::ThreadLocal && reached);
+        let local_near = count(&|at, class, _| class == Class::ThreadLocal && self.near_seed(at, PATCH_REACH));
+        let floor = count(&|at, class, reached| class == Class::ThreadLocal && reached && self.near_seed(at, DIRECT_REACH));
+        // Liquids and anything else a followed try wrote beside a differing vein.
+        let other = count(&|at, class, reached| class == Class::Other && reached && self.near_seed(at, DIRECT_REACH));
+        let scan = count(&|_, class, _| class == Class::Scan);
+        let scan_near = count(&|at, class, _| class == Class::Scan && self.near_seed(at, SCAN_REACH));
         println!(
-            "  floor: world={world} region=\"{region}\" wrong+missing={total} thread_local_blocks={local} (twin-confirmed {local_near}) scans={scan} (twin-confirmed {scan_near}) deterministic={} (upper bound {})",
-            total - local - scan_near,
-            total - local_near - scan_near
+            "  floor: world={world} region=\"{region}\" wrong+missing={total} thread_local_blocks={local} (reached {local_reached}, twin within {PATCH_REACH} {local_near}, floor {floor}) other_floor={other} scans={scan} (twin-confirmed {scan_near}) deterministic={} tries={}/{}",
+            total - floor - other - scan_near,
+            self.tries.tainted,
+            self.tries.followed
         );
     }
 }

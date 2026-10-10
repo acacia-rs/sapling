@@ -106,6 +106,22 @@ One JSON object, `{"breakpoints": [...]}`; the fields are listed in the script's
   dirt list (a vector of `HashedString*` at 0x14ccd3328).
 - Which function a virtual call reaches: break on the `call cfg_dispatch` and log rax.
 
+- What the thread-local face order changed, call by call (2026-10-10): the same `dbg_sculk.py` run and
+  `scripts/dbg_vein_cmp.py <feature_trace> <dbg.log>`: per vein try, our cell and spread against BDS's `mfset` and
+  `spset`. `dbg_sculk_cmp.py` also prints, per differing patch, how many cells end differently and how far from
+  the first differing write.
+- Is the port right beyond a phase-0 chunk: replay the run's own decoration order. One entry breakpoint
+  (`MultifaceFeature::place` 143b83e50, glow lichen runs in every chunk) with a box eight chunks wider than the
+  region, no groups; `scripts/dbg_order.py <dbg.log> <region> <order file>` writes the chunks in the order BDS
+  started them; the oracle test with `SAPLING_ORACLE_ORDER=<order file>` and `SAPLING_ORACLE_WORLDS` pointing at
+  the run's saved world (as `<name>` and `<name>-run2`) then decorates in that order, each source seeing every
+  earlier one's writes (`Features::order`). What is left is the thread-local draws and the chunks at the log's
+  edge (worldgen-bds-residue.md, "Run order").
+
+The debugger is four modules: `bds_dbg.py` (the event loop and breakpoints), `bds_dbg_win.py` (Win32 bindings,
+thread contexts, hardware breakpoints), `bds_dbg_hits.py` (filters and what a hit logs), `bds_dbg_groups.py`
+(`group`/`arms`), `bds_dbg_dumps.py` (`dump*`).
+
 `WORLDGEN_PORT` picks the server port (default 19290) so two sessions' copies can run at once. A run holds about
 0.5 GB; on 2026-10-09 the harness killed one for low memory with the lock directory left behind.
 

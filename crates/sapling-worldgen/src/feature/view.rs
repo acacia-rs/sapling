@@ -5,6 +5,7 @@
 use std::cell::RefCell;
 use std::sync::Arc;
 
+use super::reach::{Cells, Reach, Tries};
 use super::ticks::TickQueue;
 use crate::block::Block;
 use crate::terrain::{ChunkShape, HEIGHT, MIN_Y};
@@ -24,13 +25,23 @@ pub struct Write {
 /// A liquid tick left on its cell's chunk queue: cell, lava, delay.
 pub type Routed = ([i32; 3], bool, u64);
 
-/// One source chunk's writes, per target chunk around it, and the ticks it left on chunk queues.
-pub struct ChunkWrites(Vec<Vec<Write>>, Vec<Routed>);
+/// One source chunk's writes, per target chunk around it, the ticks it left on chunk queues, and
+/// what `reach` followed.
+pub struct ChunkWrites(Vec<Vec<Write>>, Vec<Routed>, Option<(Vec<Option<Cells>>, Tries)>);
 
 impl ChunkWrites {
     /// The ticks this source left on `chunk`'s queue, in the order they came.
     pub fn routed_to(&self, chunk: (i32, i32)) -> impl Iterator<Item = Routed> + '_ {
         self.1.iter().copied().filter(move |(at, _, _)| (at[0].div_euclid(16), at[2].div_euclid(16)) == chunk)
+    }
+
+    /// The cells of the chunk `(dx, dz)` away that this source left in doubt (reach.rs).
+    pub fn doubt_towards(&self, dx: i32, dz: i32) -> Option<&Cells> {
+        self.2.as_ref().zip(slot(dx, dz)).and_then(|((cells, _), slot)| cells[slot].as_ref())
+    }
+
+    pub fn tries(&self) -> Tries {
+        self.2.as_ref().map_or_else(Tries::default, |&(_, tries)| tries)
     }
 
     /// The writes into the chunk `(dx, dz)` away from the source.
@@ -87,6 +98,8 @@ pub struct View<'a> {
     pub routed: Vec<Routed>,
     /// Run after each `set_block`: `setBlock`'s neighbour updates (liquid/mod.rs).
     pub on_write: Option<fn(&mut View, [i32; 3])>,
+    /// The oracle's taint analysis, when the generator tracks it.
+    pub reach: Option<Reach<'a>>,
 }
 
 impl<'a> View<'a> {
@@ -104,6 +117,7 @@ impl<'a> View<'a> {
             ticks: TickQueue::default(),
             routed: Vec::new(),
             on_write: None,
+            reach: None,
         }
     }
 
@@ -157,7 +171,7 @@ impl<'a> View<'a> {
     }
 
     /// The slot and column index of a block, if it lies in the writable region.
-    fn locate(&self, x: i32, y: i32, z: i32) -> Option<(usize, usize)> {
+    pub(super) fn locate(&self, x: i32, y: i32, z: i32) -> Option<(usize, usize)> {
         if !(MIN_Y..MIN_Y + HEIGHT as i32).contains(&y) {
             return None;
         }
@@ -166,11 +180,13 @@ impl<'a> View<'a> {
     }
 
     fn read(&self, slot: usize, index: usize) -> Block {
+        let (dx, dz) = ((slot / SIDE) as i32 - REACH, (slot % SIDE) as i32 - REACH);
+        let chunk = (self.chunk.0 + dx, self.chunk.1 + dz);
+        if let Some(reach) = &self.reach {
+            reach.read(slot, index, chunk);
+        }
         let mut shapes = self.shapes.borrow_mut();
-        let shape = shapes[slot].get_or_insert_with(|| {
-            let (dx, dz) = ((slot / SIDE) as i32 - REACH, (slot % SIDE) as i32 - REACH);
-            (self.load)(self.chunk.0 + dx, self.chunk.1 + dz)
-        });
+        let shape = shapes[slot].get_or_insert_with(|| (self.load)(chunk.0, chunk.1));
         shape.block_at(index)
     }
 
@@ -202,6 +218,9 @@ impl<'a> View<'a> {
         let shape = shapes[slot].as_mut().expect("read just above");
         Arc::make_mut(shape).set_at(index, block);
         self.writes[slot].push(Write { index: index as u32, block, seen });
+        if let Some(reach) = &mut self.reach {
+            reach.wrote(slot, index);
+        }
         super::trace::line(|| format!("    write {x} {y} {z} {block:?} over {seen:?}"));
         if let Some(top) = &mut self.tops.get_mut()[slot]
             && block != Block::Air
@@ -267,6 +286,6 @@ impl<'a> View<'a> {
     }
 
     pub fn into_writes(self) -> ChunkWrites {
-        ChunkWrites(self.writes, self.routed)
+        ChunkWrites(self.writes, self.routed, self.reach.map(Reach::into_parts))
     }
 }

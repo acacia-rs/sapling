@@ -15,7 +15,7 @@ pub enum Predicate {
     Block(String),
     /// The block's type, then `next_float() < chance`.
     RandomBlock(String, f32),
-    /// Any of the types, then `next_float() <= chance`.
+    /// Any of the types in its default state, then `next_float() <= chance`.
     RandomInList(Vec<String>, f32),
     /// None of the types (then a chance of 1, which never draws).
     NotInList(Vec<String>),
@@ -35,10 +35,16 @@ impl Predicate {
             Predicate::Always => true,
             Predicate::Block(name) => block.name() == name,
             Predicate::RandomBlock(name, chance) => block.name() == name && chance_of(*chance, || float() < *chance),
-            Predicate::RandomInList(names, chance) => names.iter().any(|n| n == block.name()) && chance_of(*chance, || float() <= *chance),
+            Predicate::RandomInList(names, chance) => names.iter().any(|n| n == block.name()) && default_state(block) && chance_of(*chance, || float() <= *chance),
             Predicate::NotInList(names) => !names.iter().any(|n| n == block.name()),
         }
     }
+}
+
+/// Whether the block is its type's default state: the list holds blocks, not types (the oracle's
+/// city keeps every turned stair and top slab; docs/research/worldgen-bds-jigsaw.md).
+fn default_state(block: Block) -> bool {
+    block.states().split(',').filter_map(|pair| pair.split_once('=')).all(|(_, value)| matches!(value, "0" | "false" | "bottom" | "none" | "y"))
 }
 
 fn chance_of(chance: f32, draw: impl FnOnce() -> bool) -> bool {
