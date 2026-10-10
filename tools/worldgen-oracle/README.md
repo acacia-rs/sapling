@@ -52,10 +52,16 @@ each `oracle.txt` and the server log, not in `release-notes.txt`):
 | Folder | Seed | Regions |
 |---|---|---|
 | `20261003`, `20261003-run2` | `20261003` | `-16,-16,15,15` and, for float drift, `100000,100000,100007,100007` |
+| `20261003-still`, `20261003-still-run2` (2026-10-10) | `20261003` | the same two regions, no game-time ticks (below) |
 | `-4172144997902289642`, `-4172144997902289642-run2` | `-4172144997902289642` | `-4,-4,3,3` |
 | `20261003-biomes`, `20261003-biomes-run2` (2026-10-07) | `20261003` | 20 regions of 4x4 chunks, one per surface builder or material case, listed in `crates/sapling-worldgen/tests/oracle.rs` (`blocks_match_bds_biomes`); picked with `examples/find_biomes.rs` |
 | `20261003-trees`, `20261003-trees-run2` (2026-10-07) | `20261003` | 20 regions of 4x4 chunks in the tree biomes, listed in `blocks_match_bds_trees` |
 | `20261003-structures`, `20261003-structures-run2` (2026-10-07) | `20261003` | 16 regions (807 chunks) around one start of each structure kind, BDS `/locate` answers; listed in `blocks_match_bds_structures` |
+
+The `-still` worlds come from a BDS copy patched by `crates/sapling-worldgen/scripts/bds_still.py`: its loaded
+chunks never run their tick queues, so the saved blocks are worldgen's alone (no liquid flushed in game, one
+bubble column cell per magma block). Make more with `WORLDGEN_BDS=<patched copy> run.sh <seed> <out>
+$(regions.sh <test fn>)`; `WORLDGEN_PORT` moves the server off 19190.
 
 Rebuild one with the `run.sh` line above and the seed and regions from this table. The `sapling-worldgen` oracle
 test and examples read them from `$SAPLING_ORACLE_WORLDS` (default: `worlds/oracle` of the checkout), so a worktree
