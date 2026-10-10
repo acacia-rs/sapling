@@ -26,8 +26,12 @@ FUNCTIONS = {
     '141a45250': 'Cauldron',
     '148b33d80': 'Composter',
     '142fd2950': 'Up',
-    # By states sapling never meets: grindstone, skulls, shelves, end rod, lightning rods, piston arms, snow layers.
-    '142fce030': 'Open', '146602890': 'Open', '148b51e20': 'Open', '148a32230': 'Open', '148b5bff0': 'Open',
+    '142fce030': 'Grindstone',
+    '146602890': 'Skull',
+    '148b51e20': 'Shelf',
+    '148a32230': 'Rod',  # end rod
+    '148b5bff0': 'Rod',  # lightning rods
+    # By states sapling never meets: piston arms, snow layers.
     '1465f9f90': 'Open', '1471fd8f0': 'Open',
 }
 MULTIFACE = {'1400a2880': 'Leaves', '142fd2950': 'Azalea'}

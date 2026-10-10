@@ -49,75 +49,80 @@ pub(super) const CLASSES: &[(Class, &str)] = &[
     (Class::Fence,
      "acacia_fence bamboo_fence birch_fence cherry_fence crimson_fence dark_oak_fence jungle_fence \
          mangrove_fence nether_brick_fence oak_fence pale_oak_fence poplar_fence spruce_fence warped_fence"),
+    (Class::Grindstone,
+     "grindstone"),
     (Class::Leaves,
      "acacia_leaves azalea_leaves azalea_leaves_flowered birch_leaves cherry_leaves dark_oak_leaves \
          jungle_leaves mangrove_leaves oak_leaves orange_poplar_leaves pale_oak_leaves red_poplar_leaves \
          spruce_leaves yellow_poplar_leaves"),
     (Class::Open,
-     "acacia_button acacia_door acacia_fence_gate acacia_pressure_plate acacia_sapling acacia_shelf \
-         acacia_standing_sign acacia_wall_sign activator_rail air allium amethyst_cluster azure_bluet bamboo \
-         bamboo_button bamboo_door bamboo_fence_gate bamboo_pressure_plate bamboo_sapling bamboo_shelf \
-         bamboo_standing_sign bamboo_wall_sign bed beetroot bell big_dripleaf birch_button birch_door \
-         birch_fence_gate birch_pressure_plate birch_sapling birch_shelf birch_standing_sign birch_wall_sign \
-         black_candle_cake black_carpet black_shulker_box blue_candle_cake blue_carpet blue_orchid \
-         blue_shulker_box brain_coral brain_coral_fan brain_coral_wall_fan brown_candle_cake brown_carpet \
-         brown_mushroom brown_shulker_box bubble_column bubble_coral bubble_coral_fan bubble_coral_wall_fan bush \
-         cactus cactus_flower cake camera candle_cake carrots cave_vines cave_vines_body_with_berries \
-         cave_vines_head_with_berries chalkboard cherry_button cherry_door cherry_fence_gate \
-         cherry_pressure_plate cherry_sapling cherry_shelf cherry_standing_sign cherry_wall_sign chorus_plant \
-         closed_eyeblossom cocoa colored_torch_blue colored_torch_green colored_torch_purple colored_torch_red \
-         conduit copper_door copper_golem_statue copper_lantern copper_torch cornflower creeper_head \
+     "acacia_button acacia_door acacia_fence_gate acacia_pressure_plate acacia_sapling acacia_standing_sign \
+         acacia_wall_sign activator_rail air allium amethyst_cluster azure_bluet bamboo bamboo_button bamboo_door \
+         bamboo_fence_gate bamboo_pressure_plate bamboo_sapling bamboo_standing_sign bamboo_wall_sign bed \
+         beetroot bell big_dripleaf birch_button birch_door birch_fence_gate birch_pressure_plate birch_sapling \
+         birch_standing_sign birch_wall_sign black_candle_cake black_carpet black_shulker_box blue_candle_cake \
+         blue_carpet blue_orchid blue_shulker_box brain_coral brain_coral_fan brain_coral_wall_fan \
+         brown_candle_cake brown_carpet brown_mushroom brown_shulker_box bubble_column bubble_coral \
+         bubble_coral_fan bubble_coral_wall_fan bush cactus cactus_flower cake camera candle_cake carrots \
+         cave_vines cave_vines_body_with_berries cave_vines_head_with_berries chalkboard cherry_button \
+         cherry_door cherry_fence_gate cherry_pressure_plate cherry_sapling cherry_standing_sign cherry_wall_sign \
+         chorus_plant closed_eyeblossom cocoa colored_torch_blue colored_torch_green colored_torch_purple \
+         colored_torch_red conduit copper_door copper_golem_statue copper_lantern copper_torch cornflower \
          crimson_button crimson_door crimson_fence_gate crimson_fungus crimson_pressure_plate crimson_roots \
-         crimson_shelf crimson_standing_sign crimson_wall_sign cyan_candle_cake cyan_carpet cyan_shulker_box \
-         dandelion dark_oak_button dark_oak_door dark_oak_fence_gate dark_oak_pressure_plate dark_oak_sapling \
-         dark_oak_shelf darkoak_standing_sign darkoak_wall_sign dead_brain_coral dead_brain_coral_fan \
-         dead_brain_coral_wall_fan dead_bubble_coral dead_bubble_coral_fan dead_bubble_coral_wall_fan \
-         dead_fire_coral dead_fire_coral_fan dead_fire_coral_wall_fan dead_horn_coral dead_horn_coral_fan \
-         dead_horn_coral_wall_fan dead_tube_coral dead_tube_coral_fan dead_tube_coral_wall_fan deadbush \
-         detector_rail dragon_egg dragon_head dried_ghast end_gateway end_portal end_rod exposed_copper_door \
-         exposed_copper_golem_statue exposed_copper_lantern exposed_lightning_rod fence_gate fern fire fire_coral \
-         fire_coral_fan fire_coral_wall_fan firefly_bush flower_pot flowing_lava flowing_water frame frog_spawn \
-         glow_frame glow_lichen golden_dandelion golden_rail gray_candle_cake gray_carpet gray_shulker_box \
-         green_candle_cake green_carpet green_shulker_box grindstone hanging_roots heavy_weighted_pressure_plate \
-         horn_coral horn_coral_fan horn_coral_wall_fan iron_door jigsaw jungle_button jungle_door \
-         jungle_fence_gate jungle_pressure_plate jungle_sapling jungle_shelf jungle_standing_sign \
+         crimson_standing_sign crimson_wall_sign cyan_candle_cake cyan_carpet cyan_shulker_box dandelion \
+         dark_oak_button dark_oak_door dark_oak_fence_gate dark_oak_pressure_plate dark_oak_sapling \
+         darkoak_standing_sign darkoak_wall_sign dead_brain_coral dead_brain_coral_fan dead_brain_coral_wall_fan \
+         dead_bubble_coral dead_bubble_coral_fan dead_bubble_coral_wall_fan dead_fire_coral dead_fire_coral_fan \
+         dead_fire_coral_wall_fan dead_horn_coral dead_horn_coral_fan dead_horn_coral_wall_fan dead_tube_coral \
+         dead_tube_coral_fan dead_tube_coral_wall_fan deadbush detector_rail dragon_egg dried_ghast end_gateway \
+         end_portal exposed_copper_door exposed_copper_golem_statue exposed_copper_lantern fence_gate fern fire \
+         fire_coral fire_coral_fan fire_coral_wall_fan firefly_bush flower_pot flowing_lava flowing_water frame \
+         frog_spawn glow_frame glow_lichen golden_dandelion golden_rail gray_candle_cake gray_carpet \
+         gray_shulker_box green_candle_cake green_carpet green_shulker_box hanging_roots \
+         heavy_weighted_pressure_plate horn_coral horn_coral_fan horn_coral_wall_fan iron_door jigsaw \
+         jungle_button jungle_door jungle_fence_gate jungle_pressure_plate jungle_sapling jungle_standing_sign \
          jungle_wall_sign kelp ladder lantern large_amethyst_bud large_fern lava leaf_litter lever light_block_0 \
          light_block_1 light_block_10 light_block_11 light_block_12 light_block_13 light_block_14 light_block_15 \
          light_block_2 light_block_3 light_block_4 light_block_5 light_block_6 light_block_7 light_block_8 \
          light_block_9 light_blue_candle_cake light_blue_carpet light_blue_shulker_box light_gray_candle_cake \
-         light_gray_carpet light_gray_shulker_box light_weighted_pressure_plate lightning_rod lilac \
-         lily_of_the_valley lime_candle_cake lime_carpet lime_shulker_box magenta_candle_cake magenta_carpet \
-         magenta_shulker_box mangrove_button mangrove_door mangrove_fence_gate mangrove_pressure_plate \
-         mangrove_propagule mangrove_shelf mangrove_standing_sign mangrove_wall_sign medium_amethyst_bud \
-         melon_stem moss_carpet moving_block nether_sprouts nether_wart oak_sapling oak_shelf open_eyeblossom \
-         orange_candle_cake orange_carpet orange_shulker_box orange_tulip oxeye_daisy oxidized_copper_door \
-         oxidized_copper_golem_statue oxidized_copper_lantern oxidized_lightning_rod pale_hanging_moss \
-         pale_moss_carpet pale_oak_button pale_oak_door pale_oak_fence_gate pale_oak_pressure_plate \
-         pale_oak_sapling pale_oak_shelf pale_oak_standing_sign pale_oak_wall_sign peony piglin_head \
-         pink_candle_cake pink_carpet pink_petals pink_shulker_box pink_tulip piston_arm_collision pitcher_crop \
-         pitcher_plant player_head pointed_dripstone polished_blackstone_button \
+         light_gray_carpet light_gray_shulker_box light_weighted_pressure_plate lilac lily_of_the_valley \
+         lime_candle_cake lime_carpet lime_shulker_box magenta_candle_cake magenta_carpet magenta_shulker_box \
+         mangrove_button mangrove_door mangrove_fence_gate mangrove_pressure_plate mangrove_propagule \
+         mangrove_standing_sign mangrove_wall_sign medium_amethyst_bud melon_stem moss_carpet moving_block \
+         nether_sprouts nether_wart oak_sapling open_eyeblossom orange_candle_cake orange_carpet \
+         orange_shulker_box orange_tulip oxeye_daisy oxidized_copper_door oxidized_copper_golem_statue \
+         oxidized_copper_lantern pale_hanging_moss pale_moss_carpet pale_oak_button pale_oak_door \
+         pale_oak_fence_gate pale_oak_pressure_plate pale_oak_sapling pale_oak_standing_sign pale_oak_wall_sign \
+         peony pink_candle_cake pink_carpet pink_petals pink_shulker_box pink_tulip piston_arm_collision \
+         pitcher_crop pitcher_plant pointed_dripstone polished_blackstone_button \
          polished_blackstone_pressure_plate poplar_button poplar_door poplar_fence_gate poplar_pressure_plate \
-         poplar_sapling poplar_shelf poplar_standing_sign poplar_wall_sign poppy portal potatoes powder_snow \
+         poplar_sapling poplar_standing_sign poplar_wall_sign poppy portal potatoes powder_snow \
          powered_comparator powered_repeater pumpkin_stem purple_candle_cake purple_carpet purple_shulker_box \
          rail red_candle_cake red_carpet red_mushroom red_shrub red_shulker_box red_tulip redstone_torch \
          redstone_wire reeds resin_clump rose_bush sculk_vein sea_pickle seagrass shelf_mushroom short_dry_grass \
-         short_grass skeleton_skull small_amethyst_bud small_dripleaf_block snow_layer soul_fire soul_lantern \
-         soul_torch spore_blossom spruce_button spruce_door spruce_fence_gate spruce_pressure_plate \
-         spruce_sapling spruce_shelf spruce_standing_sign spruce_wall_sign standing_banner standing_sign \
-         sticky_piston_arm_collision stone_button stone_pressure_plate straw_bed sulfur_spike sunflower \
-         sweet_berry_bush tall_dry_grass tall_grass torch torchflower torchflower_crop trip_wire tripwire_hook \
-         tube_coral tube_coral_fan tube_coral_wall_fan twisting_vines underwater_torch undyed_shulker_box \
-         unlit_redstone_torch unpowered_comparator unpowered_repeater vine wall_banner wall_sign warped_button \
-         warped_door warped_fence_gate warped_fungus warped_pressure_plate warped_roots warped_shelf \
-         warped_standing_sign warped_wall_sign water waterlily waxed_copper_door waxed_copper_golem_statue \
-         waxed_copper_lantern waxed_exposed_copper_door waxed_exposed_copper_golem_statue \
-         waxed_exposed_copper_lantern waxed_exposed_lightning_rod waxed_lightning_rod waxed_oxidized_copper_door \
-         waxed_oxidized_copper_golem_statue waxed_oxidized_copper_lantern waxed_oxidized_lightning_rod \
+         short_grass small_amethyst_bud small_dripleaf_block snow_layer soul_fire soul_lantern soul_torch \
+         spore_blossom spruce_button spruce_door spruce_fence_gate spruce_pressure_plate spruce_sapling \
+         spruce_standing_sign spruce_wall_sign standing_banner standing_sign sticky_piston_arm_collision \
+         stone_button stone_pressure_plate straw_bed sulfur_spike sunflower sweet_berry_bush tall_dry_grass \
+         tall_grass torch torchflower torchflower_crop trip_wire tripwire_hook tube_coral tube_coral_fan \
+         tube_coral_wall_fan twisting_vines underwater_torch undyed_shulker_box unlit_redstone_torch \
+         unpowered_comparator unpowered_repeater vine wall_banner wall_sign warped_button warped_door \
+         warped_fence_gate warped_fungus warped_pressure_plate warped_roots warped_standing_sign warped_wall_sign \
+         water waterlily waxed_copper_door waxed_copper_golem_statue waxed_copper_lantern \
+         waxed_exposed_copper_door waxed_exposed_copper_golem_statue waxed_exposed_copper_lantern \
+         waxed_oxidized_copper_door waxed_oxidized_copper_golem_statue waxed_oxidized_copper_lantern \
          waxed_weathered_copper_door waxed_weathered_copper_golem_statue waxed_weathered_copper_lantern \
-         waxed_weathered_lightning_rod weathered_copper_door weathered_copper_golem_statue \
-         weathered_copper_lantern weathered_lightning_rod web weeping_vines wheat white_candle_cake white_carpet \
-         white_shulker_box white_tulip wildflowers wither_rose wither_skeleton_skull wooden_button wooden_door \
-         wooden_pressure_plate yellow_candle_cake yellow_carpet yellow_shulker_box zombie_head"),
+         weathered_copper_door weathered_copper_golem_statue weathered_copper_lantern web weeping_vines wheat \
+         white_candle_cake white_carpet white_shulker_box white_tulip wildflowers wither_rose wooden_button \
+         wooden_door wooden_pressure_plate yellow_candle_cake yellow_carpet yellow_shulker_box"),
+    (Class::Rod,
+     "end_rod exposed_lightning_rod lightning_rod oxidized_lightning_rod waxed_exposed_lightning_rod \
+         waxed_lightning_rod waxed_oxidized_lightning_rod waxed_weathered_lightning_rod weathered_lightning_rod"),
+    (Class::Shelf,
+     "acacia_shelf bamboo_shelf birch_shelf cherry_shelf crimson_shelf dark_oak_shelf jungle_shelf \
+         mangrove_shelf oak_shelf pale_oak_shelf poplar_shelf spruce_shelf warped_shelf"),
+    (Class::Skull,
+     "creeper_head dragon_head piglin_head player_head skeleton_skull wither_skeleton_skull zombie_head"),
     (Class::Slab,
      "acacia_slab andesite_slab bamboo_mosaic_slab bamboo_slab birch_slab black_concrete_slab black_wool_slab \
          blackstone_slab blue_concrete_slab blue_wool_slab brick_slab brown_concrete_slab brown_wool_slab \
