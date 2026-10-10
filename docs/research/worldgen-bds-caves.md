@@ -65,7 +65,9 @@ list (VanillaBlockTypeIds lists 14ccd2770: dirt, coarse dirt, stone, tuff, deeps
   so which cell gets the lichen is thread-local too wherever two neighbour cells could (pale garden: ours under
   the ceiling at -7516,49,-4568, BDS's one cell west in both oracle runs and elsewhere in a third run).
   A spread (1465e9360, after `nextFloat < chance_of_spreading`) tries the six
-  directions in thread-local order: sapling places it only when exactly one direction can take it.
+  directions in thread-local order: glow lichen takes the first that can (2026-10-10: BDS always spreads, and
+  a lichen fewer shifts every lush patch around it, worldgen-bds-residue-lush.md); veins still spread only
+  when exactly one direction can.
   Attach skips a face whose block lies in another chunk than the cell when that chunk is not decorated yet
   (`LevelChunk` +0xf0 in 2..5; live: 4 before decoration, 6 after) and the block is inside a stronghold's or a
   mineshaft's start box (HashedStrings 0x14ccbb900/930 = `minecraft:stronghold`, `minecraft:mineshaft`, asked of

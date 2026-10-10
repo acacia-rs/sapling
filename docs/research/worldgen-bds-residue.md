@@ -3,6 +3,9 @@
 Companion to [worldgen-bds-features.md](worldgen-bds-features.md). What the oracle still counts wrong after the
 feat4 fixes, how much of it BDS's own nondeterminism explains, and the tools that found each cause. The newest
 round is first; the sections after it are feat4's and the sculk round's, with their numbers as they were.
+Later: [worldgen-bds-residue-lush.md](worldgen-bds-residue-lush.md) (lush2: glow lichen spreads, the temple's
+same-phase pair found by experiment, the thread-local generator's seed; the snow layers under "Left" were
+already fixed).
 
 ## misc: fossils, camp trees, poplars (2026-10-10, worldgen/misc)
 - Fossils ported (worldgen-bds-features.md, "Fossils"): desert pyramid region 108 -> 41.

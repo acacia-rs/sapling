@@ -161,3 +161,10 @@ Feat3 labels (2026-10-08): 14a73fa30 the decoration's IBlockWorldGenAPI vtable (
 normaliser before `BlockDescriptor::matches`, 143bcfb10 `WeightedRandomFeature::place`, 1438ef7d0
 `MangroveTreeCanopy::placeCanopy`; IRandom vtable 14a7125a0 slots 0x8 nextInt(n), 0x10 nextIntUnbounded, 0x18
 two raw draws as a 64-bit value, 0x20 nextBoolean (bit 27), 0x28 nextFloat.
+
+Lush2 labels (2026-10-10, read in scratch bdsre-lush2, not saved): 1411889d0 `Random::Random()` (seed from four
+platform random bytes via 141ccbe30; 141188a43 stores it, ecx), 143b845e6 the multiface feature's first-use
+initialiser of the thread-local generator (`gs:[0x58]` +0x460 the `Random`, +0xe60 its wrapper, guards +0xe48 and
++0x1860), 143bc8468 the vegetation patch's accepted cell, 143bc8be0 its vegetation loop, 143bc871f the depth-0
+shortcut; `VegetationPatchFeature` fields +0xf4/+0xf8 depth, +0xfc extra deep chance, +0x100 vertical range,
++0x104 vegetation chance, +0x108/+0x10c radius, +0x110 extra edge chance, +0x114 waterlogged.

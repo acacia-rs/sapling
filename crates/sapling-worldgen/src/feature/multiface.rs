@@ -2,7 +2,8 @@
 //! (143bc69b0). BDS shuffles the faces with a thread-local generator (nondeterministic: the
 //! oracle's two runs disagree on them); this keeps their pushed order, so which face a block takes
 //! can differ but whether a cell gets one does not. A spread (1465e9360) tries the directions in a
-//! thread-local order too: it is only placed when exactly one direction can take it.
+//! thread-local order too: lichen takes the first that can, a vein only a lone one
+//! (docs/research/worldgen-bds-residue-lush.md).
 
 use super::cave_spec::{Multiface, SurfaceThreshold};
 use super::data::FEATURES;
