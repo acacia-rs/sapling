@@ -278,3 +278,22 @@ fn magic_goes_through_armour_and_a_helmet_takes_a_quarter_of_an_anvil() {
     assert_eq!(taken, [2.0, 0.88, 0.645]);
     assert_eq!((DamageCause::named("override"), DamageCause::named("sonic_boom").map(DamageCause::id), DamageCause::named("nosuch")), (Some(DamageCause::Generic), Some(31), None));
 }
+
+#[test]
+fn resistance_takes_a_fifth_a_level_off_any_hit_and_fire_resistance_all_of_a_fire() {
+    use sapling_api::Effect;
+    // research/captures/bds-more.txt: 10 took 8 at the first level and 2 at the fourth, whatever hit.
+    let mut h = ready();
+    h.remote.run(|ctx| {
+        assert!(ctx.give_effect(ALEX, Effect::Resistance, 400, 3, true));
+        assert!(ctx.hurt_player(ALEX, 10.0, DamageCause::Fall));
+        assert!(ctx.give_effect(ALEX, Effect::FireResistance, 400, 0, true));
+        assert!(!ctx.hurt_player(ALEX, 4.0, DamageCause::Lava) && !ctx.hurt_player(ALEX, 4.0, DamageCause::FireTick));
+        assert_eq!(ctx.health(ALEX), Some(18.0));
+        // Away from Steve, who has no such effect.
+        ctx.teleport(ALEX, [5.5, 65.0, 5.5]);
+        assert!(ctx.set_block([5, 65, 5], &Block::new("lava")));
+    });
+    let sent: Vec<RawPacket> = (0..30).flat_map(|_| h.tick_all().to(2).to_vec()).collect();
+    assert_eq!(health(&sent), [18.0], "standing in lava costs it nothing");
+}

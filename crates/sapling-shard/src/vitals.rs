@@ -52,6 +52,7 @@ pub(crate) const BREAK_TIRES: f32 = 0.005;
 pub(crate) const HIT_TIRES: f32 = 0.1;
 /// No tick's run is longer: more is a teleport or a throw.
 const LONGEST_STEP: f32 = 1.0;
+const RESISTS: f32 = 0.2;
 /// What a helmet lets through of a hit on the head (research/captures/bds-worn.txt).
 const HELMETED: f32 = 0.75;
 /// Health an empty hunger leaves a player (hunger.rs).
@@ -131,11 +132,15 @@ fn settle(world: &mut World, player: Entity, cause: Cause) {
     }
 }
 
-/// Has the player's health know the armour it wears now.
+/// Has the player's health know the armour it wears now and what its effects ward off: a
+/// level of resistance takes a fifth off every hit (research/captures/bds-more.txt).
 fn dress(world: &mut World, player: Entity) {
     let armour = world.get::<crate::inventory::Inventory>(player).map_or([0.0; 2], |inventory| inventory.armour());
+    let resisted = effects::level(world, player, sapling_api::Effect::Resistance).map_or(0.0, |level| RESISTS * (f32::from(level) + 1.0));
+    let fireproof = effects::level(world, player, sapling_api::Effect::FireResistance).is_some();
     if let Some(mut vitals) = world.get_mut::<Vitals>(player) {
         vitals.health.wear(armour);
+        vitals.health.ward((1.0 - resisted).max(0.0), fireproof);
     }
 }
 
@@ -143,6 +148,10 @@ fn dress(world: &mut World, player: Entity) {
 /// cause it stops; false where it took nothing.
 fn hurt(world: &mut World, player: Entity, amount: f32, cause: Cause) -> bool {
     dress(world, player);
+    let fiery = matches!(cause, Cause::Fire | Cause::FireTick | Cause::Lava | Cause::Magma);
+    if fiery && world.get::<Vitals>(player).is_some_and(|vitals| vitals.health.is_fireproof()) {
+        return false;
+    }
     let helmeted = cause.is_on_the_head() && world.get::<crate::inventory::Inventory>(player).is_some_and(|inventory| inventory.has_helmet());
     let amount = if helmeted { amount * HELMETED } else { amount };
     let lands = |mut vitals: Mut<Vitals>| {

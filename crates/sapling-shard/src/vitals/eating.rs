@@ -64,6 +64,9 @@ fn afflict(world: &mut World, player: Entity, food: &sapling_data::Food) {
     if food.cures {
         effects::clear(world, player);
     }
+    if food.ends_poison {
+        effects::end(world, player, sapling_api::Effect::Poison);
+    }
     for gives in food.gives {
         let lucky = gives.chance >= 1.0 || world.get_resource_or_insert_with(Dice::default).fraction() < gives.chance;
         if let Some(effect) = sapling_api::Effect::ALL.into_iter().find(|effect| effect.name() == gives.effect).filter(|_| lucky) {

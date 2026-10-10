@@ -35,6 +35,11 @@ third level with 60, 48, 36, 24 and 12.
   that amount; plain 0.1 again when it is over.
 - The hunger's mending goes on under poison.
 - A player in creative is given poison, told of it, and not hurt.
+- Resistance (`more`, research/captures/bds-more.txt): a hit of 10 took 8 at the first level and
+  2 at the fourth, as an entity's attack, magic, a fall or no cause alike: a fifth off a level.
+- Fire resistance: `/damage` as `fire`, `lava`, `fire_tick` or `magma` answers
+  `commands.damage.failed`; an entity's attack takes its whole.
+- Names and ids: `%potion.resistance` 11, `%potion.fireResistance` 12; nausea is 9.
 
 ## The command
 
@@ -57,7 +62,7 @@ effects on mobs, a death under an effect, what a late viewer is told.
 ## Sapling
 
 `vitals/effects.rs`, `sapling::vanilla` `/effect`, plugins by `give_effect`, `remove_effect` and
-`clear_effects`. The eight effects above, by these numbers, and absorption (food-effects.md). Different: `Remove` always holds the
+`clear_effects`. The eight effects above, by these numbers, absorption and nausea (food-effects.md; nausea is only told), resistance and fire resistance. Different: `Remove` always holds the
 ticks left; no `VisibleMobEffects`; saturation gives twice its hunger in saturation, the Java
 game's rule; effects end unsaid when the player rises. Run against sapling
 (`research/captures/sapling-effects.txt`) the drill gives the same packets, turns and answers.

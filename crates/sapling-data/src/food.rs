@@ -1,8 +1,7 @@
 //! What eating or drinking an item gives: hunger and saturation as the Java game and Dragonfly
 //! have them (BDS's apple drilled the same, research/captures/bds-eat.txt), and the effects BDS
 //! gave (docs/research/food-effects.md).
-// TODO: a pufferfish, an enchanted golden apple, a suspicious stew, chorus fruit and honey do
-// nothing but feed; a potion of an effect the shard lacks is water; a stew's bowl and a potion's
+// TODO: a suspicious stew and chorus fruit do nothing but feed; a potion of an effect the shard lacks is water; a stew's bowl and a potion's
 // bottle are the Java game's, not drilled.
 
 /// Ticks use is held on a food before it is eaten.
@@ -20,6 +19,8 @@ pub struct Food {
     pub leaves: Option<&'static str>,
     /// Milk: it ends every effect.
     pub cures: bool,
+    /// Honey: it ends poison.
+    pub ends_poison: bool,
     /// Drunk, not eaten.
     pub drunk: bool,
 }
@@ -35,7 +36,7 @@ pub struct Gives {
 }
 
 const fn plain(hunger: f32, saturation: f32) -> Food {
-    Food { hunger, saturation, always: false, ticks: USE_TICKS, gives: &[], leaves: None, cures: false, drunk: false }
+    Food { hunger, saturation, always: false, ticks: USE_TICKS, gives: &[], leaves: None, cures: false, ends_poison: false, drunk: false }
 }
 
 /// What the item `name` (`minecraft:bread`) feeds; `None` for what is not eaten.
@@ -52,17 +53,31 @@ pub fn food(name: &str) -> Option<Food> {
         "cod" | "salmon" | "cookie" | "sweet_berries" | "glow_berries" => plain(2.0, 0.4),
         "cooked_mutton" | "cooked_salmon" => plain(6.0, 9.6),
         "dried_kelp" => Food { ticks: USE_TICKS / 2, ..plain(1.0, 0.2) },
-        "tropical_fish" | "pufferfish" => plain(1.0, 0.2),
+        "tropical_fish" => plain(1.0, 0.2),
+        "pufferfish" => Food {
+            gives: &[Gives { effect: "poison", ticks: 1200, amplifier: 1, chance: 1.0 }, Gives { effect: "nausea", ticks: 300, amplifier: 0, chance: 1.0 }, Gives { effect: "hunger", ticks: 300, amplifier: 2, chance: 1.0 }],
+            ..plain(1.0, 0.2)
+        },
+        "honey_bottle" => Food { always: true, ticks: 40, leaves: Some("minecraft:glass_bottle"), ends_poison: true, ..plain(6.0, 1.2) },
         "golden_carrot" => plain(6.0, 14.4),
         "melon_slice" | "mutton" => plain(2.0, 1.2),
-        // Its hunger was not seen in three eaten: the Java game's 600 ticks, 3 times in 10.
+        // 4 times of 10 on BDS.
         "chicken" => Food { gives: &[Gives { effect: "hunger", ticks: 600, amplifier: 0, chance: 0.3 }], ..plain(2.0, 1.2) },
         "poisonous_potato" => Food { gives: &[Gives { effect: "poison", ticks: 100, amplifier: 0, chance: 0.6 }], ..plain(2.0, 1.2) },
         "potato" => plain(1.0, 0.6),
         "pumpkin_pie" => plain(8.0, 4.8),
         "rabbit_stew" => Food { leaves: Some("minecraft:bowl"), ..plain(10.0, 12.0) },
         "golden_apple" => Food { always: true, gives: &[Gives { effect: "regeneration", ticks: 100, amplifier: 1, chance: 1.0 }, Gives { effect: "absorption", ticks: 2400, amplifier: 0, chance: 1.0 }], ..plain(4.0, 9.6) },
-        "enchanted_golden_apple" => Food { always: true, ..plain(4.0, 9.6) },
+        "enchanted_golden_apple" => Food {
+            always: true,
+            gives: &[
+                Gives { effect: "regeneration", ticks: 600, amplifier: 1, chance: 1.0 },
+                Gives { effect: "absorption", ticks: 2400, amplifier: 3, chance: 1.0 },
+                Gives { effect: "resistance", ticks: 6000, amplifier: 0, chance: 1.0 },
+                Gives { effect: "fire_resistance", ticks: 6000, amplifier: 0, chance: 1.0 },
+            ],
+            ..plain(4.0, 9.6)
+        },
         "rotten_flesh" => Food { gives: &[Gives { effect: "hunger", ticks: 600, amplifier: 0, chance: 0.8 }], ..plain(4.0, 0.8) },
         "spider_eye" => Food { gives: &[Gives { effect: "poison", ticks: 100, amplifier: 0, chance: 1.0 }], ..plain(2.0, 3.2) },
         "milk_bucket" => Food { always: true, leaves: Some("minecraft:bucket"), cures: true, drunk: true, ..plain(0.0, 0.0) },

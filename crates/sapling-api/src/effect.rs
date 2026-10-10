@@ -13,10 +13,14 @@ pub enum Effect {
     Wither,
     Absorption,
     Saturation,
+    /// Told to the client, which sways; the shard does nothing more with it.
+    Nausea,
+    Resistance,
+    FireResistance,
 }
 
 impl Effect {
-    pub const ALL: [Effect; 9] = [Self::Speed, Self::InstantHealth, Self::InstantDamage, Self::Regeneration, Self::Hunger, Self::Poison, Self::Wither, Self::Absorption, Self::Saturation];
+    pub const ALL: [Effect; 12] = [Self::Speed, Self::InstantHealth, Self::InstantDamage, Self::Regeneration, Self::Hunger, Self::Poison, Self::Wither, Self::Absorption, Self::Saturation, Self::Nausea, Self::Resistance, Self::FireResistance];
 
     /// The name commands know it by.
     pub fn name(self) -> &'static str {
@@ -30,6 +34,9 @@ impl Effect {
             Self::Wither => "wither",
             Self::Absorption => "absorption",
             Self::Saturation => "saturation",
+            Self::Nausea => "nausea",
+            Self::Resistance => "resistance",
+            Self::FireResistance => "fire_resistance",
         }
     }
 
@@ -45,6 +52,9 @@ impl Effect {
             Self::Wither => "potion.wither",
             Self::Absorption => "potion.absorption",
             Self::Saturation => "potion.saturation",
+            Self::Nausea => "potion.confusion",
+            Self::Resistance => "potion.resistance",
+            Self::FireResistance => "potion.fireResistance",
         }
     }
 
@@ -60,6 +70,9 @@ impl Effect {
             Self::Wither => 20,
             Self::Absorption => 22,
             Self::Saturation => 23,
+            Self::Nausea => 9,
+            Self::Resistance => 11,
+            Self::FireResistance => 12,
         }
     }
 

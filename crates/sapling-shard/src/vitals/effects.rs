@@ -1,6 +1,6 @@
 //! Effects on a player, counted down a tick at a time and told as BDS tells them
 //! (docs/research/effects.md).
-// TODO: the nine effects drilled and no others; one who comes
+// TODO: the twelve effects drilled and no others; one who comes
 // to see a player is not told its effects, nor are `VisibleMobEffects`; they end unsaid as the
 // player rises.
 
@@ -101,6 +101,16 @@ fn take(world: &mut World, player: Entity, gone: impl Fn(&Active) -> bool) -> bo
     !taken.is_empty()
 }
 
+/// The level, from 0, of an effect on a player.
+pub(super) fn level(world: &World, player: Entity, effect: Effect) -> Option<u8> {
+    world.get::<Effects>(player)?.0.iter().find(|active| active.effect == effect).map(|active| active.amplifier)
+}
+
+/// Takes one effect off a player; false where it was not on it.
+pub(super) fn end(world: &mut World, player: Entity, effect: Effect) -> bool {
+    take(world, player, |active| active.effect == effect)
+}
+
 /// Takes every effect off a player; false where it had none.
 pub(super) fn clear(world: &mut World, player: Entity) -> bool {
     take(world, player, |_| true)
@@ -159,7 +169,8 @@ fn act(world: &mut World, player: Entity, active: &Active) {
         Effect::Wither if turn(WITHERS) => drop(hurt(world, player, 1.0, Cause::Wither)),
         Effect::Hunger => feed(world, player, |hunger| hunger.tire(HUNGERS * levels)),
         Effect::Saturation => feed(world, player, |hunger| hunger.feed(levels, levels * 2.0)),
-        Effect::Poison | Effect::Wither | Effect::Speed | Effect::Absorption => {}
+        // Resistance and fire resistance: `vitals::dress`.
+        Effect::Poison | Effect::Wither | Effect::Speed | Effect::Absorption | Effect::Nausea | Effect::Resistance | Effect::FireResistance => {}
     }
 }
 
@@ -183,7 +194,7 @@ impl EffectBackend for Ctx<'_> {
     }
 
     fn remove_effect(&mut self, player: PlayerId, effect: Effect) -> bool {
-        self.entity(player).is_some_and(|entity| take(self.world, entity, |active| active.effect == effect))
+        self.entity(player).is_some_and(|entity| end(self.world, entity, effect))
     }
 
     fn clear_effects(&mut self, player: PlayerId) -> bool {

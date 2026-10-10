@@ -1,4 +1,4 @@
-//! The bite, slain, chase, sick, worn, kinds, stroll, flee, around and drink drills of bds_command_probe: a zombie hunting the actor
+//! The bite, slain, chase, sick, worn, kinds, stroll, flee, around, drink and more drills of bds_command_probe: a zombie hunting the actor
 //! (docs/research/mob-attacks.md), and what food does besides feeding (food-effects.md).
 
 pub const BITE_SHOWN: &[&str] = &[
@@ -169,5 +169,38 @@ pub fn drink() -> Vec<String> {
         lines.extend([format!("replaceitem entity @s slot.weapon.mainhand 0 potion 1 {data}"), "!eat".into(), String::new(), String::new(), String::new(), "effect @s clear".into(), String::new()]);
     }
     lines.extend(["gamemode creative @s", "clear @s", ""].map(String::from));
+    lines
+}
+
+/// The actor, in survival and kept hungry: eats ten raw chickens, a pufferfish, an enchanted
+/// golden apple and, poisoned, a bottle of honey; then is hurt under resistance at two levels and
+/// by fire under fire resistance.
+pub fn more() -> Vec<String> {
+    let mut lines: Vec<String> = ["kill @e[type=!player]", "", "fill ~-3 ~-1 ~-3 ~8 ~-1 ~8 stone", "fill ~-3 ~ ~-3 ~8 ~6 ~8 air", "gamemode survival @s", ""].map(String::from).into();
+    let eat = |lines: &mut Vec<String>, food: &str, after: usize| {
+        lines.extend(["effect @s hunger 1 255 true".into(), String::new(), format!("replaceitem entity @s slot.weapon.mainhand 0 {food} 1"), "!eat".into()]);
+        lines.extend(std::iter::repeat_n(String::new(), after));
+    };
+    (0..10).for_each(|_| eat(&mut lines, "chicken", 2));
+    lines.extend(["effect @s clear", "effect @s instant_health 1 4"].map(String::from));
+    for food in ["pufferfish", "enchanted_golden_apple"] {
+        eat(&mut lines, food, 4);
+        lines.extend(["effect @s clear", "effect @s instant_health 1 4"].map(String::from));
+    }
+    lines.push("effect @s poison 30 0".into());
+    eat(&mut lines, "honey_bottle", 4);
+    lines.extend(["effect @s clear", "effect @s instant_health 1 4", ""].map(String::from));
+    for level in [0, 3] {
+        lines.push(format!("effect @s resistance 20 {level}"));
+        for harm in ["10 entity_attack", "10 magic", "10 fall", "10"] {
+            lines.extend([format!("damage @s {harm}"), String::new(), "effect @s instant_health 1 4".into(), String::new()]);
+        }
+        lines.push("effect @s clear".into());
+    }
+    lines.push("effect @s fire_resistance 20 0".into());
+    for harm in ["4 fire", "4 lava", "4 fire_tick", "4 magma", "4 entity_attack"] {
+        lines.extend([format!("damage @s {harm}"), String::new(), "effect @s instant_health 1 4".into(), String::new()]);
+    }
+    lines.extend(["effect @s clear", "gamemode creative @s", "clear @s", ""].map(String::from));
     lines
 }
