@@ -355,8 +355,12 @@ No decompile: all of this is from the captures.
 - Lamps answer at the evaluation after it turns on (1 or 2 ticks), dust one evaluation later than lamps, and
   again when it turns off: the lag a torch and a repeater show. So a block that changes its own power (not one
   put already powered by `/setblock`) is seen by lamps before dust.
-- Not drilled: a change while it is on, a piston moving it, whether a lever, button or plate worked by hand
-  shows the same dust lag (sapling gives them none).
+- A lever and a stone button worked by hand show no such lag (`bds_command_probe byhand`,
+  research/captures/bds-byhand.txt): the lamp beside the switch, both dust and the lamp past the dust
+  change in one evaluation, a tick or two after the click. Off, the dust goes out at the next
+  evaluation and both lamps four ticks after it, as lamps do; the button lets go 22 ticks after the click.
+  Sapling gives them no lag either.
+- Not drilled: a change while it is on, a piston moving it, a plate stepped on.
 
 ## Pistons (2026-10-09, `bds_command_probe piston-facing` and `pistons`, research/captures/bds-redstone-pistons.txt)
 
