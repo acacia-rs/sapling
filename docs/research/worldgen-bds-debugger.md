@@ -75,6 +75,18 @@ One JSON object, `{"breakpoints": [...]}`; the fields are listed in the script's
   lists cells). A run over many regions under the debugger can miss the script's load deadline ("tiles failed"):
   the hits are complete, the saved world is not.
 
+- Hot code inside one call (2026-10-10): give the hot breakpoints `"group": "g"` and the feature's entry
+  `"arms": "g"`. They are planted while a matching entry's call runs (its return is caught by a hardware
+  breakpoint on that thread alone) and log that thread only. Unarmed, a config with 20 `setBlock` call sites of
+  the sculk spreader never reached decoration in eleven minutes; armed, the chunk took two.
+  `scripts/dbg_sculk.py <cx> <cz>` writes such a config and `scripts/dbg_sculk_cmp.py` compares the writes per
+  patch try with `examples/feature_trace` (the block's state bits are the u16 at `Block` +0x120).
+- Reading tables out of the process: `"probe": "<file.py>"` runs `probe(dbg, ctx)` once at a hit with the process
+  stopped. `scripts/dbg_blocks.py` walks the block registry (0x14ccb1608: an MSVC map of name -> `BlockType*`)
+  and writes each type's vtable slots, properties, material and support component; a ten-line probe printed the
+  dirt list (a vector of `HashedString*` at 0x14ccd3328).
+- Which function a virtual call reaches: break on the `call cfg_dispatch` and log rax.
+
 `WORLDGEN_PORT` picks the server port (default 19290) so two sessions' copies can run at once. A run holds about
 0.5 GB; on 2026-10-09 the harness killed one for low memory with the lock directory left behind.
 
@@ -82,6 +94,9 @@ One JSON object, `{"breakpoints": [...]}`; the fields are listed in the script's
 - Breakpoints on a `push` (most function entries) are emulated and never leave memory. Others are stepped over
   with the original byte restored for one instruction while every other thread is suspended (before 2026-10-09
   they ran on and most hits of a mid-function breakpoint were lost: 10 of about 50 patch cells showed).
+- Until 2026-10-10 an instruction starting with a REX.B prefix (0x41, e.g. `call r10`) was taken for a push and
+  let two threads step at once: each suspended the other for good and the server froze (its working set falls
+  to a few kB). A frozen run is a debugger bug, not a slow server.
 - Every hit costs a round trip through Python: a filterless breakpoint on `setBlock` is millions of hits. Filter
   by position, or break on a rarer caller.
 - In two of about a dozen runs an expected hit was absent (a tree's volume cells, a single-block try). Not

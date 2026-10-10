@@ -54,12 +54,8 @@ list (VanillaBlockTypeIds lists 14ccd2770: dirt, coarse dirt, stone, tuff, deeps
   `allowed_surface_blocks` block); from a solid origin it walks solid cells (`allow_non_air_placement`) to an open
   one. Every scanned cell must keep the origin's biome (`scanColumnWithinPosBiome`). Placement is beside the
   surface, or in it with `embed_in_surface` (offset `solid ^ embed`).
-- "Supporting face" in snaps, vegetation patches and moss vegetation is
-  `BlockType::canProvideSupport(block, face, 2)` (multiface faces share `lush::sturdy` in the port; 148b68b30 asks
-  the next vtable slot, 0x98, after the same support component, not followed): stairs and slabs by their support component (148a897e0,
-  148a89b20), leaves never (140076010), everything else 141a24e20 = the solid-blocking property (`BlockType`
-  +0x130 bit 0x40000), or bit 0x20000 for the top face. `lush::sturdy` approximates it: spikes, structure fixtures
-  (rails, torches, fences, bars, doors...), chests and amethyst buds give none. A snap that reaches a spike stops
+- "Supporting face" in snaps, vegetation patches and moss vegetation is `Block::canProvideSupport(face, 2)`,
+  for multiface blocks `canProvideMultifaceSupport(face)`: see "Support" below. A snap that reaches a spike stops
   there and fails (live BDS, savanna plateau 9064,44,-6203).
 - `multiface_feature` (143b83e50, attach 143b84880): origin air or water; the first face (of the pushed list:
   floor, ceiling, walls N E S W) whose neighbour `can_place_on` takes decides; success only when the cell changes,
@@ -70,14 +66,45 @@ list (VanillaBlockTypeIds lists 14ccd2770: dirt, coarse dirt, stone, tuff, deeps
   the ceiling at -7516,49,-4568, BDS's one cell west in both oracle runs and elsewhere in a third run).
   A spread (1465e9360, after `nextFloat < chance_of_spreading`) tries the six
   directions in thread-local order: sapling places it only when exactly one direction can take it.
-  Not ported: attach skips a face whose block lies in another chunk that is still generating (state <= 1), or
-  that is generated but not finished (2..5) and inside a stronghold or a second structure (two HashedStrings at
-  0x14ccbb900/930 asked of the dimension's +0x1e0 object, slot 0x150).
+  Attach skips a face whose block lies in another chunk than the cell when that chunk is not decorated yet
+  (`LevelChunk` +0xf0 in 2..5; live: 4 before decoration, 6 after) and the block is inside a stronghold's or a
+  mineshaft's start box (HashedStrings 0x14ccbb900/930 = `minecraft:stronghold`, `minecraft:mineshaft`, asked of
+  the world generator's `isStructureFeatureTypeAt` 14196ac20 -> 141efd3b0, which tests the starts' whole boxes).
+  The next face is tried. Ported with the parity phases as "not decorated yet"; it moved two oracle cells.
+  `can_place_on` holds plain names: the vein feature's list has the city's deepslate bricks and tiles, cobbled
+  deepslate and `planks` (the six legacy woods), which the converter used to drop because only templates place
+  them. Without them no vein feature landed on a city block (`Multiface::on_names`).
 - Multiface spreading (feature/spreader.rs): `getSpreadFromFaceTowardDirection` 1465e8f20 tries same cell (face
   `to`), same plane (cell + `to`, face `from`), around the edge (cell + `from` + `to`, face opposite `to`);
   `getStateForPlacement` 148b68b30 adds a face only over a sturdy neighbour. Configs: lichen 14a8b32f0 (into air,
   own block, water source), vein 14a94cdb0 (not onto sculk or a catalyst; anything replaceable; non-veins are always
   valid sources). `spreadAll` walks faces up, down, N, S, W, E and the same order toward.
+
+## Support (block/support.rs, generated block/support_table.rs)
+`Block::canProvideSupport(face, type)` is inlined at every call site: the block's `minecraft:support` component
+first (148a897e0; id 24 at run time, on the block, else on its type), else `BlockType` vtable 0x90. Faces are
+the supporting block's (the one toward the asker; table 0x14a682118 turns a direction round); types are 0 centre,
+1 edge, 2 any. The classes were read off a live server's registry (`scripts/dbg_blocks.py` ->
+`scripts/data/block_types.tsv`, `scripts/support_data.py`), one per implementation:
+- default 141a24e20: the solid-blocking property (`BlockType` +0x130 bit 0x40000), or bit 0x20000 for the top
+  face. Lanterns, rails, torches, webs, doors, signs, carpets, bamboo, cactus, spikes, lichen: none.
+- component shape 1 (stairs, 148a89b20): bottom or, upside down, top, and the back (`face == 5 - weirdo_direction`).
+  Shape 0 (fences): top and bottom for centre and any.
+- 146603600 slabs: top face of a top slab, bottom face of a bottom one (double slabs all); 1425e5d10 walls,
+  panes, bars and 146608870 decorated pots: top and bottom, not for edge; 141a2cfe0/142fcec40 candles, chests,
+  anvils, hanging signs: bottom, not for edge; 141a3b1c0 sculk sensors and shriekers, lecterns, farmland, grass
+  path, campfires: bottom; 1425764f0 trapdoors: closed the face they lie in, open the side they stand on
+  (table 0x14a7a2f68 by `direction`: 4, 5, 2, 3); 148b220d0 chains: ends of a vertical one; 141a45250
+  cauldron: top, not for centre; 148b33d80 composter: all but top centre; 142fd2950 hopper: top; 140076010
+  leaves, shulker boxes, buds, powder snow: never; 1400a2880 pistons: always. Grindstones, skulls, shelves, end
+  rods, lightning rods and snow layers go by states sapling never meets and are left without support.
+`canProvideMultifaceSupport` (vtable 0x98, default 141a24f10): a fence never, a stair by its shape, else centre
+and edge support both. Overrides: leaves always (1400a2880: lichen and veins hang on leaves although nothing
+stands on them), azaleas the top (142fd2950). Sculk's diagonal-move test and its shriekers call the default
+141a24e50 past the vtable (`supports_multiface_plain`).
+Vines (single-face 149d9a0f0, and the jungle's as far as fitted) take a solid-blocking block that blocks motion,
+which leaves are. Before 2026-10-10 one predicate (`lush::sturdy`: collides and is not a listed fixture) served
+all of these, so every template block with collision held veins: see "Sculk", the bias.
 
 ## Sculk (feature/sculk/)
 - `SculkPatchFeature::place` 143ba12e0: origin sculk, vein, or air/water source beside a solid block; rounds of
@@ -90,11 +117,22 @@ list (VanillaBlockTypeIds lists 14ccd2770: dirt, coarse dirt, stone, tuff, deeps
   `raw % (i+1)`), first vein with a face on `sculk_replaceable_world_gen` (148b47d30) wins; beyond dist^2 224 the
   charge is lost. Never merged in worldgen.
 - Sculk charge 148b41810: `nextInt(5)`; growth when not at the origin, air/water above and < 3 sensors/shriekers in
-  the cursor's +-4/+-1/+-4 box (`nextInt(50) < charge`, shrieker 1 in 11), else `nextInt(10)` decay by distance.
+  the +-4/+-1/+-4 box around the cell above the cursor (148b4194f; Java's box, the port had it one lower)
+  (`nextInt(50) < charge`, shrieker 1 in 11), else `nextInt(10)` decay by distance.
   Vein charge 148b42070: six faces shuffled inside-out (1403747f0), the first face on a replaceable block becomes
   sculk, veins around it lose faces on sculk (148b42aa0), veins spread from it; else `nextInt(5)` halves.
 - The patch's walk is chaotic: BDS's sculk_vein_feature faces are thread-local, so whole patches diverge even on
   cells both BDS runs agree on.
+- The bias (2026-10-10; ours had 18% more veins and 17% fewer sensors than either BDS run in the city region):
+  not the spreader. A patch's positions come from the rule's own generator, so a phase-0 chunk run alone gives
+  the same tries on both sides, and the first patch of city chunk -70,78 can be compared write for write
+  (`scripts/dbg_sculk.py`: every `setBlock` call site of the patch, armed for the patch call only). Ours added
+  a vein face toward a hanging soul lantern in the first write; with the support classes above 452 writes
+  agree, up to a vein BDS's vein feature had spread there with its thread-local generator. The feature itself
+  placed nothing in ours on that chunk (BDS: 6 veins, 6 spreads) until `can_place_on` kept its template names.
+- Spreads of the vein feature: BDS always spreads when a direction can take it; placing one at a
+  position-hashed direction instead of only when one direction is possible made the city region worse (9002 ->
+  9476), so the rule stays.
 - `surface_relative_threshold` (143bc69b0): place only below the quart column's preliminary surface minus the depth.
 - `partially_exposed_blob` (featurelab's): magma 1 around the floor, one `nextFloat` per cell; magma under water
   starts a bubble column up through water sources (BDS grows it by ticks: near a source's edge it stops short).
@@ -235,9 +273,12 @@ order again.
 - Dripstone and lush residue: no port difference is known; what is left follows the lichen's thread-local cell
   and BDS's same-phase decoration order (above). The order could be read off a run (`scripts/dbg_order.py`) and
   given to the oracle test to shrink that floor; the generator cannot follow it.
-- `canProvideSupport` for leaves (never) and stairs/slabs (by state) is not in `lush::sturdy`; the survival tests
-  of moss vegetation and the small dripleaf are plants.rs's, not the blocks' `mayPlace`.
-- Multiface faces across a chunk border inside a stronghold (Wrapper features).
+- Moss vegetation and the small dripleaf: their blocks' `mayPlace` (vtable 0x210: in the world's height, the cell
+  buildable over, then `mayPlaceOn` 0x220 of the block below) was read and agrees with plants.rs: azalea on clay
+  or the dirt list (145810140), grasses on the dirt list with no liquid in the cell (1465ec830/14715cec0), moss
+  carpet over anything but air (141a3eeb0), small dripleaf on clay or moss, or in water on the dirt list
+  (1466059d0). The dirt list 0x14ccd3328, read live: dirt, grass block, podzol, coarse dirt, mycelium, rooted
+  dirt, moss, pale moss, mud, muddy mangrove roots, farmland.
 - Bubble columns by ticks (edge routing).
 
 ## Labels (scratch bdsre `names.user.json`)
