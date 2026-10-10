@@ -56,20 +56,48 @@ zombie's definition in the vanilla pack (`entities.brarchive`, `zombie.json`). E
   the player's name and `%entity.zombie.name`, in `DeathInfo` and to the world.
 - `/difficulty easy` answers `commands.difficulty.success` with `EASY`.
 
+## Other kinds (`kinds`)
+
+Seven more on the same floor at midnight (`research/captures/bds-kinds.txt`). All take a target,
+walk and hit as the zombie does, with their own numbers:
+
+| kind | movement | blocks a tick | hit on easy | on a hit |
+| --- | --- | --- | --- | --- |
+| husk | 0.23 | 0.11419 | 2.5 | hunger, 600 ticks (`Update` on each later hit) |
+| zombie villager | 0.23 | 0.11419 | 2.5 | |
+| spider | 0.3 | 0.19427 | 2 | |
+| cave spider | 0.3 | 0.19422 | 2 | poison for 0 ticks, added and removed |
+| silverfish | 0.25 | 0.13491 | 1 | |
+| vindicator | 0.35 | 0.26443 | 7.5 | |
+| wither skeleton | 0.25 x 1.25 | 0.21080 | 5.5 | wither, 200 ticks |
+
+- The speed is `0.98 x (movement x speed_multiplier)^2 / 0.454` for each: the push is the square
+  of the speed, and the attack's `speed_multiplier` is inside it.
+- The reach is the box rule with the kind's own width: a spider (1.4 wide) first hit from 1.8.
+- The hit on easy is `min(attack, attack / 2 + 1)`, where `attack` adds what the mob holds: a
+  vindicator's 8 and its iron axe's 5, a wither skeleton's 4 and its stone sword's 5.
+- A silverfish 8 blocks off (its `max_dist`) took no target; 4 off it did.
+- `/summon zombie_villager_v2` is a syntax error; `zombie_villager` summons one.
+- The sounds come from the same shares of each kind's height.
+
 ## Not drilled
 
 Normal and hard (taken as 3 and 4.5), a way around a wall, a hole in the way, what hides a
 player besides a full block, whether prey that goes behind a wall is kept, a zombie hit
-back, armour, daylight, baby zombies, any other kind, and what `within_radius` 25 does: a zombie on
+back, daylight (a spider hunts only in the dark), baby zombies, a cave spider's poison on
+normal and hard (7 and 15 seconds in its definition), the kinds not named here, and what `within_radius` 25 does: a zombie on
 open grass 30 off took and dropped its target every 10 ticks, one on the stone floor kept it.
 
 ## Sapling
 
-`creatures/hunting.rs`, for kinds with `attack=` and `speed=` in `mob-traits.tsv` (the zombie).
+`creatures/hunting.rs`, for kinds with `attack=`, `speed=` and `sees=` in `mob-traits.tsv`: the
+zombie and the seven kinds above, each with its numbers and what its hit gives (not the cave
+spider's poison, which lasts no time on easy).
 The first two hits of `bite` and both of `slain` land where BDS's did, to the last digit.
 Its jump over the step of `chase` is BDS's to the sixth decimal.
 Different: it walks straight at the player (no path around anything), keeps prey it has seen
 whatever comes between, sends a mob's speed as it is before the drag, turns 60
 degrees a tick with its head, stands still with no target, stops when its box touches the
-player's since nothing pushes anything, does not let go as it is killed, hunts nobody on peaceful
+player's since nothing pushes anything, does not let go as it is killed, shows no mob holding
+its weapon, lets a spider hunt by day, hunts nobody on peaceful
 (where BDS has no monsters), and tells every viewer every move.

@@ -1,7 +1,7 @@
 //! Vanilla's commands, for operators, built on the plugin API alone: `/setblock`, `/fill`, `/tp`,
 //! `/give`, `/clear`, `/gamemode`, `/summon`, `/kill`, `/damage`, `/difficulty`, `/effect`, `/gamerule`, `/replaceitem`. Opt in with
 //! [`crate::ServerBuilder::vanilla_commands`]. Positions take `~`; targets take `@s`, `@p`, `@a`,
-//! `@e[type=...]` and names. Blocks are written as `/setblock` writes them: their neighbours react.
+//! `@e[type=...]`, `@e[type=!...]` and names. Blocks are written as `/setblock` writes them: their neighbours react.
 // TODO: the other vanilla commands; `@r` and selector arguments besides `type`.
 
 mod blocks;
@@ -59,14 +59,14 @@ fn players(ctx: &ShardCtx<'_>, sender: &Sender, selector: &Selector) -> Vec<Play
         Selector::Nearest => ctx.players().min_by(|a, b| distance(a).total_cmp(&distance(b))).into_iter().collect(),
         Selector::Players => ctx.players().collect(),
         Selector::Named(name) => ctx.players().filter(|player| player.name.eq_ignore_ascii_case(name)).collect(),
-        Selector::Entities { kind } => ctx.players().filter(|_| kind.as_deref().is_none_or(|kind| kind == "minecraft:player")).collect(),
+        Selector::Entities { kind } => ctx.players().filter(|_| Selector::takes(kind.as_deref(), "minecraft:player")).collect(),
     }
 }
 
 /// The entities other than players that `selector` names, in the world calls act on.
 fn entities(ctx: &ShardCtx<'_>, selector: &Selector) -> Vec<EntityInfo> {
     match selector {
-        Selector::Entities { kind } => ctx.entities().into_iter().filter(|entity| kind.as_ref().is_none_or(|kind| *kind == entity.kind)).collect(),
+        Selector::Entities { kind } => ctx.entities().into_iter().filter(|entity| Selector::takes(kind.as_deref(), &entity.kind)).collect(),
         _ => Vec::new(),
     }
 }

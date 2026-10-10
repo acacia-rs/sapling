@@ -9,6 +9,7 @@
 mod death;
 pub(crate) mod eating;
 mod effects;
+pub(crate) use effects::afflict;
 mod hunger;
 mod kept;
 

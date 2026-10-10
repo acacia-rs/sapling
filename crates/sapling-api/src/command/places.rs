@@ -150,6 +150,9 @@ mod tests {
         let mut args = Args::new("destroy", 0, &sender, &[]);
         assert_eq!(Option::<States>::parse(&mut args), Ok(None), "left out when the next word is not one");
         assert_eq!(parsed::<Selector>("@e[type=chicken]").unwrap(), Selector::Entities { kind: Some("minecraft:chicken".into()) });
+        assert_eq!(parsed::<Selector>("@e[type=!player]").unwrap(), Selector::Entities { kind: Some("!minecraft:player".into()) });
+        let takes = |wanted: Option<&str>| [Selector::takes(wanted, "minecraft:player"), Selector::takes(wanted, "minecraft:pig")];
+        assert_eq!([takes(None), takes(Some("minecraft:pig")), takes(Some("!minecraft:player"))], [[true, true], [false, true], [false, true]]);
         assert_eq!([parsed::<Selector>("@s").unwrap(), parsed::<Selector>("Alex").unwrap()], [Selector::Sender, Selector::Named("Alex".into())]);
         assert!(parsed::<Selector>("@x").is_err());
     }
@@ -164,10 +167,21 @@ pub enum Selector {
     Nearest,
     /// `@a`: every player.
     Players,
-    /// `@e`, optionally of one kind (`type=`, namespaced or not).
+    /// `@e`, optionally of one kind (`type=`, namespaced or not) or of every kind but one
+    /// (`type=!`, kept with its `!`); see [`Selector::takes`].
     Entities { kind: Option<String> },
     /// A player by name.
     Named(String),
+}
+
+impl Selector {
+    /// Whether an entity of `kind` is one `@e` with this `type=` names.
+    pub fn takes(wanted: Option<&str>, kind: &str) -> bool {
+        match wanted.map(|wanted| wanted.strip_prefix('!').map_or((wanted, true), |other| (other, false))) {
+            Some((wanted, is_wanted)) => (wanted == kind) == is_wanted,
+            None => true,
+        }
+    }
 }
 
 impl Parameter for Selector {
@@ -181,7 +195,10 @@ impl Parameter for Selector {
         let Some(selector) = word.strip_prefix('@') else { return Ok(Self::Named(word.to_owned())) };
         let (base, filters) = selector.split_once('[').map_or((selector, ""), |(base, filters)| (base, filters.trim_end_matches(']')));
         let filter = |key: &str| filters.split(',').filter_map(|pair| pair.split_once('=')).find(|(name, _)| name.trim() == key).map(|(_, value)| value.trim().trim_matches('"').to_owned());
-        let namespaced = |kind: String| if kind.contains(':') { kind } else { format!("minecraft:{kind}") };
+        let namespaced = |kind: String| {
+            let (not, kind) = kind.strip_prefix('!').map_or(("", kind.as_str()), |kind| ("!", kind));
+            if kind.contains(':') { format!("{not}{kind}") } else { format!("{not}minecraft:{kind}") }
+        };
         Ok(match base {
             "s" => Self::Sender,
             "p" => Self::Nearest,

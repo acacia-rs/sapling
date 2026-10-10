@@ -1,7 +1,7 @@
-//! Mobs that hunt players, as BDS's zombie was seen to (docs/research/mob-attacks.md): one picks
+//! Mobs that hunt players, as BDS's were seen to (docs/research/mob-attacks.md): one picks
 //! the nearest player it could kill, walks straight at it and hits it when it is within reach.
 // TODO: no path around a block, no strolling or looking about; prey once seen is kept behind a
-// wall; nothing pushes another aside; a zombie is the one kind drilled; peaceful worlds keep their
+// wall; nothing pushes another aside; a spider hunts by day too and none holds what it hits with; peaceful worlds keep their
 // monsters, idle; viewers far off are told every move, where BDS told one of every other.
 
 use acacia_proto::packets::{EntityEvent, EntityEventEventId, LevelSoundEvent, SetEntityData};
@@ -14,8 +14,6 @@ use crate::components::{InLayer, Layer, NetId, Position, Settings, Tick, in_worl
 use crate::sync::Told;
 use crate::{entities, late_sounds, vitals};
 
-/// A player this near is seen, and kept while it is.
-const SIGHT: f32 = 35.0;
 /// Ticks between two looks for a player.
 const LOOKS: u64 = 10;
 /// A hunter's box reaches this much further across for its hit, and it hits once in this many ticks.
@@ -67,10 +65,10 @@ fn distance(a: [f32; 3], b: [f32; 3]) -> f32 {
     (0..3).map(|axis| (a[axis] - b[axis]).powi(2)).sum::<f32>().sqrt()
 }
 
-/// The feet of the player if a hunter in `layer` at `from` may hunt it.
-fn seen(world: &World, player: Entity, layer: Entity, from: [f32; 3]) -> Option<[f32; 3]> {
+/// The feet of the player if a hunter in `layer` at `from` that sees `sight` far may hunt it.
+fn seen(world: &World, player: Entity, layer: Entity, from: [f32; 3], sight: f32) -> Option<[f32; 3]> {
     let feet = world.get::<Position>(player)?.feet;
-    (world.get::<InLayer>(player)?.0 == layer && vitals::is_mortal(world, player) && distance(from, feet) <= SIGHT).then_some(feet)
+    (world.get::<InLayer>(player)?.0 == layer && vitals::is_mortal(world, player) && distance(from, feet) <= sight).then_some(feet)
 }
 
 /// Whether no full block is between a hunter's eyes and the player's.
@@ -93,11 +91,12 @@ fn at_step(world: &World, layer: Entity, body: &Body, facing: f32) -> bool {
 fn pick(world: &mut World, entity: Entity, layer: Entity, id: u64, kind: &str, body: &Body) -> Option<[f32; 3]> {
     let now = world.resource::<Tick>().0;
     let had = world.get::<Hunter>(entity)?.prey;
+    let sight = sapling_data::mob_traits(kind).hunts?.sees;
     let hunts = world.resource::<Settings>().0.difficulty != Difficulty::Peaceful;
-    let mut found = had.filter(|_| hunts).and_then(|prey| Some((prey, seen(world, prey, layer, body.at)?)));
+    let mut found = had.filter(|_| hunts).and_then(|prey| Some((prey, seen(world, prey, layer, body.at, sight)?)));
     if found.is_none() && hunts && (now + id).is_multiple_of(LOOKS) {
         let near = |(_, feet): &(Entity, [f32; 3])| distance(body.at, *feet);
-        found = in_world(world).into_iter().filter_map(|player| Some((player, seen(world, player, layer, body.at)?))).filter(|(_, feet)| in_sight(world, layer, body, *feet)).min_by(|a, b| near(a).total_cmp(&near(b)));
+        found = in_world(world).into_iter().filter_map(|player| Some((player, seen(world, player, layer, body.at, sight)?))).filter(|(_, feet)| in_sight(world, layer, body, *feet)).min_by(|a, b| near(a).total_cmp(&near(b)));
     }
     let prey = found.map(|(prey, _)| prey);
     if prey != had {
@@ -116,7 +115,7 @@ fn pick(world: &mut World, entity: Entity, layer: Entity, id: u64, kind: &str, b
 
 /// Before the hunter's move: it turns to its prey and its legs push it there.
 pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity, id: u64, kind: &str) {
-    let (Some(body), Some((_, speed))) = (world.get::<Body>(entity).copied(), sapling_data::mob_traits(kind).hunts) else { return };
+    let (Some(body), Some(speed)) = (world.get::<Body>(entity).copied(), sapling_data::mob_traits(kind).hunts.map(|hunts| hunts.speed)) else { return };
     let prey = pick(world, entity, layer, id, kind, &body);
     let Some(mut hunter) = world.get_mut::<Hunter>(entity) else { return };
     let Some(feet) = prey else { return hunter.pace = 0.0 };
@@ -139,7 +138,8 @@ pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity, id: u64, k
 /// After its move: a hunter whose reach its prey is in swings and hits it, heard a tick later.
 pub(super) fn strike(world: &mut World, entity: Entity, layer: Entity, id: u64, kind: &str, body: &Body) -> Option<()> {
     let now = world.resource::<Tick>().0;
-    let (harm, _) = sapling_data::mob_traits(kind).hunts?;
+    let hunts = sapling_data::mob_traits(kind).hunts?;
+    let harm = hunts.attack;
     let hunter = world.get::<Hunter>(entity)?;
     let prey = hunter.prey.filter(|_| now >= hunter.ready)?;
     let feet = world.get::<Position>(prey)?.feet;
@@ -151,7 +151,7 @@ pub(super) fn strike(world: &mut World, entity: Entity, layer: Entity, id: u64, 
     world.get_mut::<Hunter>(entity)?.ready = now + COOLDOWN;
     let harm = match world.resource::<Settings>().0.difficulty {
         Difficulty::Peaceful => return None,
-        Difficulty::Easy => harm / 2.0 + 1.0,
+        Difficulty::Easy => harm.min(harm / 2.0 + 1.0),
         Difficulty::Normal => harm,
         Difficulty::Hard => harm * 1.5,
     };
@@ -160,7 +160,10 @@ pub(super) fn strike(world: &mut World, entity: Entity, layer: Entity, id: u64, 
     entities::tell_viewers(world, entity, layer, cell, vec![sapling_net::encode(&swing)]);
     let far = dx.hypot(dz);
     let away = if far > 1e-4 { [dx / far, dz / far] } else { [0.0; 2] };
-    vitals::bitten(world, prey, harm, kind, [away[0] * THROW, THROW, away[1] * THROW]);
+    let bitten = vitals::bitten(world, prey, harm, kind, [away[0] * THROW, THROW, away[1] * THROW]);
+    if let Some((effect, ticks)) = hunts.gives.filter(|_| bitten) {
+        vitals::afflict(world, prey, effect, ticks);
+    }
     late_sounds::play_later(world, 1, layer, cell, sound("attack", id, kind, body, MIDDLE));
     Some(())
 }

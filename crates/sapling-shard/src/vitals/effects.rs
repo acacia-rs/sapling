@@ -135,6 +135,13 @@ pub(super) fn give(world: &mut World, player: Entity, effect: Effect, ticks: u32
     true
 }
 
+/// Gives a living player the effect named `effect` at its first level for `ticks`.
+pub(crate) fn afflict(world: &mut World, player: Entity, effect: &str, ticks: u32) {
+    if let Some(effect) = Effect::ALL.into_iter().find(|known| known.name() == effect) {
+        give(world, player, effect, ticks, 0, true);
+    }
+}
+
 /// A tick of one effect on a player, `left` ticks of it to go.
 fn act(world: &mut World, player: Entity, active: &Active) {
     let levels = f32::from(active.amplifier) + 1.0;

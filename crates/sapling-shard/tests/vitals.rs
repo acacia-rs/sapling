@@ -107,7 +107,7 @@ fn water_over_its_head_drowns_a_player_out_of_breath_and_a_block_around_it_smoth
         assert!(ctx.set_block([3, 65, 3], &Block::new("water")) && ctx.set_block([3, 66, 3], &Block::new("water")));
         ctx.teleport(ALEX, [3.5, 65.0, 3.5]);
     });
-    let mut told = |h: &mut Harness, ticks: usize| (0..ticks).flat_map(|_| health(h.tick_all().to(2))).collect::<Vec<_>>();
+    let told = |h: &mut Harness, ticks: usize| (0..ticks).flat_map(|_| health(h.tick_all().to(2))).collect::<Vec<_>>();
     assert!(told(&mut h, 319).is_empty(), "300 ticks of breath and 20 more");
     assert_eq!(told(&mut h, 22), [18.0, 16.0], "2 each second");
     h.remote.run(|ctx| {
@@ -159,7 +159,7 @@ fn a_hungry_player_eats_the_apple_in_its_hand_in_32_ticks() {
 fn a_jump_tires_a_player_a_little_and_a_sprint_by_the_block() {
     let mut h = ready();
     let exhaustion = |sent: &[RawPacket]| all::<UpdateAttributes>(sent).iter().flat_map(|update| &update.attributes).filter(|attribute| attribute.name == "minecraft:player.exhaustion").map(|attribute| (attribute.current * 1000.0).round()).collect::<Vec<_>>();
-    let mut step = |h: &mut Harness, z: f32, flags: Vec<InputData>| {
+    let step = |h: &mut Harness, z: f32, flags: Vec<InputData>| {
         let mut input = input_at([0.5, 65.0, z]);
         input.input_data = flags;
         h.receive(1, &input);
@@ -227,7 +227,7 @@ fn a_spider_eye_poisons_a_golden_apple_cushions_and_milk_ends_both() {
     if let TransactionTransactionData::ItemUse(used) = &mut click.transaction.transaction_data {
         used.action_type = TransactionUseItemActionType::ClickAir;
     }
-    let mut swallow = |h: &mut Harness, food: &str| {
+    let swallow = |h: &mut Harness, food: &str| {
         let item = Item::new(food, 1);
         h.remote.run(move |ctx| assert!(ctx.set_item(ALEX, Slot::Main(0), Some(&item))));
         h.tick_all();

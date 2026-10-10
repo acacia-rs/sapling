@@ -13,13 +13,17 @@ const ALEX: PlayerId = PlayerId(1);
 /// Alex in survival at (0.5, 65, 0.5), Steve watching in creative, and a zombie 4 blocks north of
 /// Alex on `difficulty`; the zombie's id.
 fn hunted(difficulty: Difficulty) -> (Harness, u64) {
+    hunted_by("minecraft:zombie", difficulty)
+}
+
+fn hunted_by(kind: &'static str, difficulty: Difficulty) -> (Harness, u64) {
     let mut h = Harness::new();
     h.enter(1, "Alex");
     h.enter(2, "Steve");
     h.remote.run(move |ctx| {
         ctx.set_difficulty(difficulty);
         ctx.set_game_mode(PlayerId(2), GameMode::Creative);
-        assert!(ctx.spawn_entity("minecraft:zombie", [0.5, 65.0, 4.5]).is_some());
+        assert!(ctx.spawn_entity(kind, [0.5, 65.0, 4.5]).is_some());
     });
     let zombie = (0..2).flat_map(|_| all::<AddEntity>(h.tick_all().to(2))).collect::<Vec<_>>().remove(0).runtime_id;
     (h, zombie)
@@ -108,4 +112,24 @@ fn a_zombie_jumps_a_block_in_its_way_and_does_not_see_through_a_wall() {
     h.remote.run(|ctx| (-8..8).for_each(|x| assert!(ctx.set_block([x, 65, 2], &Block::new("stone")) && ctx.set_block([x, 66, 2], &Block::new("stone")))));
     let sent: Vec<RawPacket> = (0..40).flat_map(|_| h.tick_all().to(2).to_vec()).collect();
     assert!(targets(&sent).is_empty());
+}
+
+#[test]
+fn each_kind_hunts_at_its_speed_with_its_hit_and_what_the_hit_gives() {
+    use acacia_proto::packets::MobEffect;
+    // research/captures/bds-kinds.txt, on easy: a husk's 3 and its hunger, a spider's 2 from
+    // further off, a vindicator's 8 and its axe, a wither skeleton's 4, its sword and its wither, a silverfish's whole 1.
+    let cases = [("minecraft:husk", 17.5, 0.114_189, vec![(17, 600)]), ("minecraft:spider", 18.0, 0.194_273, vec![]), ("minecraft:vindicator", 12.5, 0.264_427, vec![]), ("minecraft:wither_skeleton", 14.5, 0.210_799, vec![(20, 200)]), ("minecraft:silverfish", 19.0, 0.134_912, vec![])];
+    for (kind, left, speed, given) in cases {
+        let (mut h, mob) = hunted_by(kind, Difficulty::Easy);
+        let (_, sent) = until_hit(&mut h, 60);
+        let effects: Vec<(i32, i32)> = all::<MobEffect>(&sent).into_iter().map(|effect| (effect.effect_id, effect.duration)).collect();
+        assert_eq!((health(&sent), effects), (vec![left], given), "{kind}");
+        h.remote.run(move |ctx| {
+            let found = ctx.entity(EntityId(mob)).expect("still there");
+            // The quick ones are on Alex before they are quite at speed.
+            assert!((found.velocity[2] + speed).abs() < 1e-3, "{kind}: {found:?}");
+        });
+        h.tick_all();
+    }
 }

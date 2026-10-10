@@ -1,4 +1,4 @@
-//! The bite, slain, chase, sick and worn drills of bds_command_probe: a zombie hunting the actor
+//! The bite, slain, chase, sick, worn and kinds drills of bds_command_probe: a zombie hunting the actor
 //! (docs/research/mob-attacks.md), and what food does besides feeding (food-effects.md).
 
 pub const BITE_SHOWN: &[&str] = &[
@@ -6,6 +6,10 @@ pub const BITE_SHOWN: &[&str] = &[
     "MoveEntityDelta", "MoveEntityAbsolute", "MotionPredictionHints", "CorrectPlayerMovePrediction", "MobEquipment",
 ];
 
+
+pub const KINDS_SHOWN: &[&str] = &[
+    "UpdateAttributes", "EntityEvent", "SetEntityData", "LevelSoundEvent", "SetEntityMotion", "DeathInfo", "RemoveEntity", "AddEntity", "MoveEntityDelta", "MoveEntityAbsolute", "MobEffect", "MobEquipment",
+];
 
 const FLOOR: [&str; 8] = ["kill @e[type=!player]", "gamerule domobspawning false", "difficulty easy", "fill ~-3 ~-1 ~-25 ~12 ~-1 ~70 stone", "fill ~-3 ~ ~-25 ~12 ~6 ~70 air", "gamemode survival @s", "tp @s ~6 ~ ~20", ""];
 
@@ -93,5 +97,20 @@ pub fn worn() -> Vec<String> {
     lines.push("summon zombie ~ ~ ~-3".into());
     lines.extend(std::iter::repeat_n(String::new(), 6));
     lines.extend(["gamemode creative @s", "kill @e[type=!player]", "clear @s", ""].map(String::from));
+    lines
+}
+
+/// The actor at midnight and, one after another, a husk, a spider, a vindicator, a wither
+/// skeleton and a zombie villager 8 blocks off and a cave spider and a silverfish 4 off, each left
+/// to hit it a few times.
+pub fn kinds() -> Vec<String> {
+    let mut lines: Vec<String> = FLOOR.map(String::from).into();
+    lines.push("time set midnight".into());
+    for (kind, far, seconds) in [("husk", 8, 6), ("spider", 8, 5), ("vindicator", 8, 3), ("wither_skeleton", 8, 4), ("zombie_villager", 8, 6), ("cave_spider", 4, 4), ("silverfish", 4, 4)] {
+        lines.push(format!("summon {kind} ~ ~ ~-{far}"));
+        lines.extend(std::iter::repeat_n(String::new(), seconds));
+        lines.extend(["kill @e[type=!player]", "effect @s clear", "effect @s instant_health 1 4", "", ""].map(String::from));
+    }
+    lines.extend(["gamemode creative @s", "kill @e[type=!player]", ""].map(String::from));
     lines
 }
