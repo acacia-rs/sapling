@@ -1,7 +1,7 @@
 //! Mobs that hunt players, as BDS's zombie was seen to (docs/research/mob-attacks.md): one picks
 //! the nearest player it could kill, walks straight at it and hits it when it is within reach.
-// TODO: no path around a block or up a step, no line of sight, no strolling or looking about,
-// nothing pushes another aside; a zombie is the one kind drilled; peaceful worlds keep their
+// TODO: no path around a block, no strolling or looking about; prey once seen is kept behind a
+// wall; nothing pushes another aside; a zombie is the one kind drilled; peaceful worlds keep their
 // monsters, idle; viewers far off are told every move, where BDS told one of every other.
 
 use acacia_proto::packets::{EntityEvent, EntityEventEventId, LevelSoundEvent, SetEntityData};
@@ -10,7 +10,7 @@ use bevy_ecs::prelude::*;
 use sapling_api::Difficulty;
 
 use crate::body::Body;
-use crate::components::{InLayer, NetId, Position, Settings, Tick, in_world};
+use crate::components::{InLayer, Layer, NetId, Position, Settings, Tick, in_world};
 use crate::sync::Told;
 use crate::{entities, late_sounds, vitals};
 
@@ -31,6 +31,14 @@ const THROW: f32 = 0.4;
 /// Nearer than this to its prey it stands: their boxes touch.
 const TOUCHING: f32 = 0.6;
 const PLAYER: [f32; 2] = [0.6, 1.8];
+/// In the air its legs push 0.02 of what they do on the ground at speed 1.
+const AIRBORNE: f32 = 0.02;
+/// It jumps at a block whose face is this near the middle of its box, if the block is over half
+/// a block high with two free above.
+const STEP_NEAR: f32 = 0.5;
+const STEP: f32 = 0.5;
+/// How far apart a line of sight is looked at.
+const GLANCE: f32 = 0.25;
 /// Its sounds come from this much of its height up: its growl, and its hit.
 const HEAD: f32 = 0.85;
 const MIDDLE: f32 = 0.5;
@@ -65,6 +73,22 @@ fn seen(world: &World, player: Entity, layer: Entity, from: [f32; 3]) -> Option<
     (world.get::<InLayer>(player)?.0 == layer && vitals::is_mortal(world, player) && distance(from, feet) <= SIGHT).then_some(feet)
 }
 
+/// Whether no full block is between a hunter's eyes and the player's.
+fn in_sight(world: &World, layer: Entity, body: &Body, feet: [f32; 3]) -> bool {
+    let Some(level) = world.get::<Layer>(layer).map(|layer| &layer.world) else { return false };
+    let (from, to) = ([body.at[0], body.at[1] + HEAD * body.size[1], body.at[2]], [feet[0], feet[1] + sapling_data::EYE_HEIGHT, feet[2]]);
+    let glances = (distance(from, to) / GLANCE).ceil().max(1.0);
+    (0..=glances as usize).all(|glance| !super::is_full_block(level, std::array::from_fn(|axis| (from[axis] + (to[axis] - from[axis]) * glance as f32 / glances).floor() as i32)))
+}
+
+/// Whether a step is before a hunter going `facing`: see [`STEP_NEAR`].
+fn at_step(world: &World, layer: Entity, body: &Body, facing: f32) -> bool {
+    let Some(level) = world.get::<Layer>(layer).map(|layer| &layer.world) else { return false };
+    let [x, y, z] = [body.at[0] - facing.sin() * STEP_NEAR, body.at[1], body.at[2] + facing.cos() * STEP_NEAR].map(|c| c.floor() as i32);
+    let top = |up: i32| level.registry().get(level.block(x, y + up, z)).and_then(|state| state.boxes.iter().map(|b| b.max[1]).reduce(f32::max));
+    level.in_height(y + 2) && top(0).is_some_and(|top| top > STEP) && top(1).is_none() && top(2).is_none()
+}
+
 /// Keeps or picks the hunter's prey and tells its viewers of a change; where the prey is.
 fn pick(world: &mut World, entity: Entity, layer: Entity, id: u64, kind: &str, body: &Body) -> Option<[f32; 3]> {
     let now = world.resource::<Tick>().0;
@@ -73,7 +97,7 @@ fn pick(world: &mut World, entity: Entity, layer: Entity, id: u64, kind: &str, b
     let mut found = had.filter(|_| hunts).and_then(|prey| Some((prey, seen(world, prey, layer, body.at)?)));
     if found.is_none() && hunts && (now + id).is_multiple_of(LOOKS) {
         let near = |(_, feet): &(Entity, [f32; 3])| distance(body.at, *feet);
-        found = in_world(world).into_iter().filter_map(|player| Some((player, seen(world, player, layer, body.at)?))).min_by(|a, b| near(a).total_cmp(&near(b)));
+        found = in_world(world).into_iter().filter_map(|player| Some((player, seen(world, player, layer, body.at)?))).filter(|(_, feet)| in_sight(world, layer, body, *feet)).min_by(|a, b| near(a).total_cmp(&near(b)));
     }
     let prey = found.map(|(prey, _)| prey);
     if prey != had {
@@ -100,10 +124,12 @@ pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity, id: u64, k
     let turn = ((-dx).atan2(dz).to_degrees() - hunter.yaw + 180.0).rem_euclid(360.0) - 180.0;
     hunter.yaw += turn.clamp(-TURN, TURN);
     hunter.pace = (hunter.pace + PACE).min(1.0);
-    let (yaw, push) = (hunter.yaw, if dx.hypot(dz) < TOUCHING { 0.0 } else { STRIDE * (speed * hunter.pace).powi(2) });
+    let stride = if body.on_ground { STRIDE * (speed * hunter.pace).powi(2) } else { AIRBORNE * STRIDE * speed * hunter.pace };
+    let (yaw, push) = (hunter.yaw, if dx.hypot(dz) < TOUCHING { 0.0 } else { stride });
     let facing = yaw.to_radians();
+    let leap = body.on_ground && push > 0.0 && at_step(world, layer, &body, facing);
     if let Some(mut body) = world.get_mut::<Body>(entity) {
-        body.walk([-facing.sin() * push, facing.cos() * push]);
+        body.walk([-facing.sin() * push, facing.cos() * push], leap);
     }
     if let Some(mut told) = world.get_mut::<Told>(entity) {
         told.face(yaw, yaw);

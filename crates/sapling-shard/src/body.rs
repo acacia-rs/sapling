@@ -10,6 +10,8 @@ use bevy_ecs::prelude::Component;
 pub(crate) use liquid::{InLiquid, Liquid, in_liquid};
 use sapling_world::World as Level;
 
+/// The speed a mob's jump starts up at.
+const JUMP: f32 = 0.42;
 /// Room left between boxes that touch, against float error.
 const EPS: f32 = 1e-5;
 
@@ -61,6 +63,9 @@ pub(crate) struct Body {
     thrown: Option<[f32; 3]>,
     /// The speed across its own legs add in its next tick.
     walking: [f32; 2],
+    leaping: bool,
+    /// Whether a mob was on the ground before its last move: that move's drag goes by it.
+    stood: bool,
 }
 
 /// A block's collision box in world coordinates.
@@ -68,7 +73,7 @@ type Bounds = ([f32; 3], [f32; 3]);
 
 impl Body {
     pub fn new(at: [f32; 3], motion: [f32; 3], size: [f32; 2]) -> Self {
-        Self { at, motion, size, on_ground: false, liquid: None, wave: 0.0, thrown: None, walking: [0.0; 2] }
+        Self { at, motion, size, on_ground: false, liquid: None, wave: 0.0, thrown: None, walking: [0.0; 2], leaping: false, stood: false }
     }
 
     /// Throws a mob at `speed`: its next tick moves it by that, and the tick after slows it as
@@ -77,10 +82,10 @@ impl Body {
         self.thrown = Some(speed);
     }
 
-    /// Has a mob walk: its next tick adds `speed` across, after the drag
-    /// (research/captures/bds-bite.txt).
-    pub fn walk(&mut self, speed: [f32; 2]) {
-        self.walking = speed;
+    /// Has a mob walk: its next tick adds `speed` across, after the drag, and with `leap` goes
+    /// up at a jump's speed (research/captures/bds-bite.txt, bds-chase.txt).
+    pub fn walk(&mut self, speed: [f32; 2], leap: bool) {
+        (self.walking, self.leaping) = (speed, leap);
     }
 
     /// The liquid found to act on it where the last tick started; a mob went by the one before.
@@ -137,20 +142,25 @@ impl Body {
     /// A mob's tick: its speed first, by drag and gravity in the air or in `liquid`, then the move;
     /// the motion it moved by.
     fn mob_step(&mut self, level: &Level, physics: &Physics, liquid: Option<Liquid>) -> [f32; 3] {
-        let walking = std::mem::take(&mut self.walking);
+        let (walking, leaping) = (std::mem::take(&mut self.walking), std::mem::take(&mut self.leaping));
+        let stood = std::mem::replace(&mut self.stood, self.on_ground);
         if let Some(speed) = self.thrown.take() {
             self.motion = speed;
-            self.slide(level, speed);
+            self.on_ground = self.slide(level, speed);
             return speed;
         }
         if let Some(liquid) = liquid {
             liquid::sink(self, liquid);
         } else {
-            let across = if self.on_ground { physics.ground_drag } else { physics.air_drag };
+            // BDS slows a mob after its move by where it stood before it (research/captures/bds-chase.txt).
+            let across = if stood { physics.ground_drag } else { physics.air_drag };
             (self.motion[0], self.motion[2]) = (self.motion[0] * across, self.motion[2] * across);
             self.motion[1] = (self.motion[1] - physics.gravity) * physics.fall_drag;
         }
         (self.motion[0], self.motion[2]) = (self.motion[0] + walking[0], self.motion[2] + walking[1]);
+        if leaping {
+            self.motion[1] = JUMP;
+        }
         let wanted = self.motion;
         self.on_ground = self.slide(level, wanted);
         if self.on_ground {

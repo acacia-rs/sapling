@@ -1,7 +1,8 @@
 # Mobs that hit back
 
-What BDS does when a zombie and a survival player share a floor, from `bds_command_probe bite` and
-`slain` (`research/captures/bds-bite.txt`, `bds-slain.txt`; sapling's are beside them), and the
+What BDS does when a zombie and a survival player share a floor, from `bds_command_probe bite`,
+`slain` and `chase` (`research/captures/bds-bite.txt`, `bds-slain.txt`, `bds-chase.txt`; sapling's
+are beside them), and the
 zombie's definition in the vanilla pack (`entities.brarchive`, `zombie.json`). Easy difficulty.
 
 ## Picking a player
@@ -14,7 +15,9 @@ zombie's definition in the vanilla pack (`entities.brarchive`, `zombie.json`). E
   and, a tick later, the sound `mob.warning` at 0.85 of its height.
 - A player in creative is not taken; turned to survival it is, within the 10 ticks. Turned to
   creative, or dead, it is let go a tick later.
-- With no target the zombie strolls and looks around.
+- A wall two high between them, across the whole floor or five wide, and it took no target; a
+  step one high did not hide the player.
+- With no target the zombie looks around and strolls, at the same speed.
 
 ## Walking
 
@@ -26,6 +29,16 @@ zombie's definition in the vanilla pack (`entities.brarchive`, `zombie.json`). E
 - It walks on at full speed through its own hits.
 - Another player in its way stops it: the watcher's box held it 0.55 off for seven seconds.
 - The actor was sent every move; the watcher, 20 blocks further, every other one.
+
+## A block in the way (`chase`)
+
+- With the face of a block one high 0.46 from its middle (0.57 the tick before) it jumps: up 0.42
+  in that tick, then `(v - 0.08) x 0.98` as anything falls, 1.25 at its highest.
+- In the air its push is `0.02 x 0.98 x 0.23 = 0.0045` a tick and the drag across is 0.91.
+- The drag of a tick goes by whether it stood on the ground before that tick's move: the tick
+  after it lands is still slowed by 0.91, the tick after it walks off an edge by 0.546.
+- `SetEntityMotion` goes out as its speed changes by a lot, holding the speed after the tick's
+  drag.
 
 ## Hitting
 
@@ -45,7 +58,8 @@ zombie's definition in the vanilla pack (`entities.brarchive`, `zombie.json`). E
 
 ## Not drilled
 
-Normal and hard (taken as 3 and 4.5), a block or a step in the way, line of sight, a zombie hit
+Normal and hard (taken as 3 and 4.5), a way around a wall, a hole in the way, what hides a
+player besides a full block, whether prey that goes behind a wall is kept, a zombie hit
 back, armour, daylight, baby zombies, any other kind, and what `within_radius` 25 does: a zombie on
 open grass 30 off took and dropped its target every 10 ticks, one on the stone floor kept it.
 
@@ -53,7 +67,9 @@ open grass 30 off took and dropped its target every 10 ticks, one on the stone f
 
 `creatures/hunting.rs`, for kinds with `attack=` and `speed=` in `mob-traits.tsv` (the zombie).
 The first two hits of `bite` and both of `slain` land where BDS's did, to the last digit.
-Different: it walks straight at the player (no path, no step up, no line of sight), turns 60
+Its jump over the step of `chase` is BDS's to the sixth decimal.
+Different: it walks straight at the player (no path around anything), keeps prey it has seen
+whatever comes between, sends a mob's speed as it is before the drag, turns 60
 degrees a tick with its head, stands still with no target, stops when its box touches the
 player's since nothing pushes anything, does not let go as it is killed, hunts nobody on peaceful
 (where BDS has no monsters), and tells every viewer every move.

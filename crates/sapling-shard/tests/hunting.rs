@@ -6,7 +6,7 @@ use acacia_proto::RawPacket;
 use acacia_proto::packets::{AddEntity, DeathInfo, EntityEvent, EntityEventEventId, LevelSoundEvent, MoveEntityDelta, SetEntityData, SetEntityMotion, UpdateAttributes};
 use acacia_proto::types::{MetadataDictionaryItemKey as Key, MetadataDictionaryItemValue as Value, MetadataDictionaryItemValueDefault as Plain};
 use common::{Harness, all};
-use sapling_api::{DamageCause, Difficulty, EntityId, GameMode, PlayerId};
+use sapling_api::{Block, DamageCause, Difficulty, EntityId, GameMode, PlayerId};
 
 const ALEX: PlayerId = PlayerId(1);
 
@@ -87,4 +87,25 @@ fn a_zombies_last_hit_names_it_and_a_peaceful_world_is_not_hunted() {
     let (mut h, _) = hunted(Difficulty::Peaceful);
     let sent: Vec<RawPacket> = (0..60).flat_map(|_| h.tick_all().to(2).to_vec()).collect();
     assert!(targets(&sent).is_empty() && all::<MoveEntityDelta>(&sent).is_empty());
+}
+
+#[test]
+fn a_zombie_jumps_a_block_in_its_way_and_does_not_see_through_a_wall() {
+    let (mut h, zombie) = hunted(Difficulty::Easy);
+    h.remote.run(|ctx| (-8..8).for_each(|x| assert!(ctx.set_block([x, 65, 2], &Block::new("stone")))));
+    let seen = std::sync::Arc::new(std::sync::Mutex::new(Vec::new()));
+    for _ in 0..80 {
+        let seen = seen.clone();
+        h.remote.run(move |ctx| seen.lock().unwrap().extend(ctx.entity(EntityId(zombie)).map(|found| found.feet[1])));
+        h.tick_all();
+    }
+    let heights = seen.lock().unwrap().clone();
+    let top = heights.iter().copied().fold(0.0, f32::max);
+    // A jump of 0.42 a tick less gravity rises 1.25.
+    assert!((top - 66.2522).abs() < 1e-3 && heights.contains(&66.0), "over the block: {top}");
+
+    let (mut h, _) = hunted(Difficulty::Easy);
+    h.remote.run(|ctx| (-8..8).for_each(|x| assert!(ctx.set_block([x, 65, 2], &Block::new("stone")) && ctx.set_block([x, 66, 2], &Block::new("stone")))));
+    let sent: Vec<RawPacket> = (0..40).flat_map(|_| h.tick_all().to(2).to_vec()).collect();
+    assert!(targets(&sent).is_empty());
 }

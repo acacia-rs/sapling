@@ -33,7 +33,7 @@ Each needs its rule looked up first (`bdsre` for BDS, the Java jar for data), th
    hurts and throws a mob, and its kill leaves experience (`creatures/attacks.rs`, `hit`). Left:
    what the doc lists as not drilled. A zombie takes the nearest survival player, walks at it
    and hits it (`creatures/hunting.rs`, `docs/research/mob-attacks.md`, `bite` and `slain`); left
-   there: paths and steps, every other kind, a hit mob that flees or turns on its hitter. Survival players have health: falls,
+   there: paths around walls, strolling, every other kind, a hit mob that flees or turns on its hitter. Survival players have health: falls,
    fire, lava, water over the head and a block around them hurt, `/damage` and `/kill` too; they die
    leaving items and experience and rise at the world's spawn (`vitals.rs`,
    `docs/research/player-damage.md`, `bds_command_probe hurt` and `smother`). A wounded player mends by its

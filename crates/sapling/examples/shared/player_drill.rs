@@ -1,4 +1,4 @@
-//! The hurt, smother, hunger, eat, tire, bite and slain drills of bds_command_probe: a player harmed,
+//! The hurt, smother, hunger, eat, tire, bite, slain and chase drills of bds_command_probe: a player harmed,
 //! killed and risen again (docs/research/player-damage.md, mob-attacks.md).
 
 use std::time::Duration;
@@ -47,6 +47,7 @@ pub fn drill(name: &str) -> Option<(Vec<String>, &'static [&'static str])> {
         "tire" => (tire(), HURT_SHOWN),
         "bite" => (bite(), BITE_SHOWN),
         "slain" => (slain(), BITE_SHOWN),
+        "chase" => (chase(), BITE_SHOWN),
         _ => return None,
     })
 }
@@ -183,6 +184,19 @@ pub fn bite() -> Vec<String> {
     wait(&mut lines, 5);
     lines.push("gamemode survival @s".into());
     wait(&mut lines, 4);
+    lines.extend(["gamemode creative @s", "kill @e[type=!player]", ""].map(String::from));
+    lines
+}
+
+/// The actor and a zombie 8 blocks off with something between them: a step one block high
+/// across the floor, then one two high, then a wall five wide and two high.
+pub fn chase() -> Vec<String> {
+    let mut lines: Vec<String> = FLOOR.map(String::from).into();
+    for between in ["fill ~-3 ~ ~-4 ~12 ~ ~-4 stone", "fill ~-3 ~ ~-4 ~12 ~1 ~-4 stone", "fill ~-2 ~ ~-4 ~2 ~1 ~-4 stone"] {
+        lines.extend([between, "summon zombie ~ ~ ~-8"].map(String::from));
+        lines.extend(std::iter::repeat_n(String::new(), 7));
+        lines.extend(["kill @e[type=zombie]", "fill ~-9 ~ ~-12 ~9 ~1 ~-1 air", "effect @s instant_health 1 4", "", ""].map(String::from));
+    }
     lines.extend(["gamemode creative @s", "kill @e[type=!player]", ""].map(String::from));
     lines
 }
