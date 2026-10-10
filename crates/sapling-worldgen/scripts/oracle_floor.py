@@ -25,7 +25,7 @@ def read(path, by_region):
         for match in LINE.finditer(f.read()):
             world, region, *numbers = match.groups()
             still = ' (still)' if region.endswith(' (still)') else ''
-            key = f'{world} {region}' if by_region else SPLIT.get(region.removesuffix(still), world) + still
+            key = f'{world} {region}' if by_region else SPLIT.get(region.removesuffix(still), world.removesuffix('-still')) + still
             row = rows.setdefault(key, [0] * 7)
             for i, n in enumerate(numbers):
                 row[i] += int(n)
