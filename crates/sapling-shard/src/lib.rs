@@ -45,6 +45,7 @@ mod sync;
 mod ticking;
 mod view;
 mod visibility;
+mod vitals;
 mod worlds;
 
 pub use config::{ShardConfig, TICK};

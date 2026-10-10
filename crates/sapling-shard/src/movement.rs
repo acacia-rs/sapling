@@ -36,13 +36,15 @@ pub(crate) struct Pose {
     pub sneaking: bool,
     pub sprinting: bool,
     pub swimming: bool,
+    /// On fire (vitals.rs).
+    pub burning: bool,
 }
 
 impl Pose {
     /// The entity flags viewers get on top of the recorded ones.
     pub fn flags(self) -> MetadataFlags1 {
         let mut flags = MetadataFlags1::BREATHING;
-        for (on, flag) in [(self.sneaking, MetadataFlags1::SNEAKING), (self.sprinting, MetadataFlags1::SPRINTING), (self.swimming, MetadataFlags1::SWIMMING)] {
+        for (on, flag) in [(self.sneaking, MetadataFlags1::SNEAKING), (self.sprinting, MetadataFlags1::SPRINTING), (self.swimming, MetadataFlags1::SWIMMING), (self.burning, MetadataFlags1::ONFIRE)] {
             if on {
                 flags.insert(flag);
             }
@@ -141,7 +143,7 @@ fn fell_while_landing(motion: &mut Motion, feet: [f32; 3], on_ground: bool, tick
     motion.landing.is_some() && is_below
 }
 
-fn pose_packet(id: u64, pose: Pose, tick: u64) -> SetEntityData {
+pub(crate) fn pose_packet(id: u64, pose: Pose, tick: u64) -> SetEntityData {
     let height = MetadataDictionaryItem {
         key: Key::BoundingboxHeight,
         r#type: MetadataDictionaryItemType::Float,

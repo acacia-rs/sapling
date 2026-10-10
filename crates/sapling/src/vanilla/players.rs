@@ -1,8 +1,8 @@
 //! The commands aimed at players and entities: `/tp`, `/give`, `/clear`, `/gamemode`, `/summon`
-//! and `/kill`.
+//! `/kill` and `/damage`.
 
 use sapling_api::command::{Args, CommandSpec, CommandSyntax, Coords, Overload, Parameter, ParameterSpec, ParseError, Selector};
-use sapling_api::{Command, GameMode, Item, Output, Permission, Sender, ShardCtx};
+use sapling_api::{Command, DamageCause, GameMode, Item, Output, Permission, Sender, ShardCtx};
 
 use super::{display_name, entities, no_target, origin, players};
 
@@ -162,13 +162,47 @@ pub(crate) struct Kill {
 }
 
 impl Command for Kill {
-    /// Players are not hurt: sapling has no damage. Every other entity named dies (`kill_entity`).
-    fn run(self, ctx: &mut ShardCtx<'_>, _: &Sender, out: &mut Output) {
+    /// The players named die (`kill_player`: not those in creative), the sender where none is
+    /// named, and so does every other entity named (`kill_entity`).
+    fn run(self, ctx: &mut ShardCtx<'_>, sender: &Sender, out: &mut Output) {
         let named = self.target.as_ref().map_or_else(Vec::new, |target| entities(ctx, target));
-        let killed: Vec<String> = named.iter().filter(|entity| ctx.kill_entity(entity.id)).map(|entity| display_name(&entity.kind)).collect();
+        let mut killed: Vec<String> = or_sender(ctx, sender, self.target.as_ref()).into_iter().filter(|player| ctx.kill_player(player.id)).map(|player| player.name).collect();
+        killed.extend(named.iter().filter(|entity| ctx.kill_entity(entity.id)).map(|entity| display_name(&entity.kind)));
         match killed.is_empty() {
             true => no_target(out),
             false => out.translate("commands.kill.successful", vec![killed.join(", ")], true),
+        }
+    }
+}
+
+/// `/damage <target> <amount> [cause]`, for players (research/captures/bds-hurt.txt).
+// TODO: BDS's refusals (an unknown cause, a target it cannot hurt) were not recorded; entities
+// other than players are not hurt.
+#[derive(Command)]
+#[command(crate = "crate", name = "damage", description = "Apply damage to the specified entities", permission = "operator")]
+pub(crate) struct Damage {
+    target: Selector,
+    amount: i32,
+    cause: Option<String>,
+}
+
+impl Command for Damage {
+    fn run(self, ctx: &mut ShardCtx<'_>, sender: &Sender, out: &mut Output) {
+        let cause = match self.cause.as_deref() {
+            None | Some("override" | "none") => DamageCause::Generic,
+            Some("entity_attack") => DamageCause::Attack,
+            Some("suffocation") => DamageCause::Suffocation,
+            Some("fall") => DamageCause::Fall,
+            Some("fire") => DamageCause::Fire,
+            Some("fire_tick") => DamageCause::FireTick,
+            Some("lava") => DamageCause::Lava,
+            Some("drowning") => DamageCause::Drowning,
+            Some(_) => return out.translate("commands.damage.failed", Vec::new(), false),
+        };
+        let hurt: Vec<String> = players(ctx, sender, &self.target).into_iter().filter(|player| ctx.hurt_player(player.id, self.amount as f32, cause)).map(|player| player.name).collect();
+        match hurt.is_empty() {
+            true => out.translate("commands.damage.failed", Vec::new(), false),
+            false => out.translate("commands.damage.success", vec![hurt.join(", ")], true),
         }
     }
 }

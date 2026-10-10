@@ -23,6 +23,7 @@ use crate::player::{Carried, Local};
 use crate::plugins::{PluginState, Plugins};
 use crate::roster::{Elsewhere, Profile};
 use crate::view::View;
+use crate::vitals::Vitals;
 use crate::inventory::Inventory;
 use crate::visibility::ToViewers;
 use crate::worlds::{Atlas, Changes, Scope};
@@ -250,6 +251,7 @@ impl Shard {
             forms: Forms::default(),
             hud: Hud::default(),
             inventory: Inventory::default(),
+            vitals: Vitals::default(),
         };
         let entity = self.world.spawn((carried, Local::in_layer(layer))).id();
         self.world.resource_mut::<Players>().by_conn.insert(conn, entity);

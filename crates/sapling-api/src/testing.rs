@@ -116,6 +116,18 @@ impl crate::EntityBackend for Fake {
     }
 }
 
+impl crate::HealthBackend for Fake {
+    fn health(&self, _: PlayerId) -> Option<f32> {
+        None
+    }
+    fn hurt_player(&mut self, _: PlayerId, _: f32, _: crate::DamageCause) -> bool {
+        false
+    }
+    fn kill_player(&mut self, _: PlayerId) -> bool {
+        false
+    }
+}
+
 impl Backend for Fake {
     fn tick(&self) -> u64 {
         40

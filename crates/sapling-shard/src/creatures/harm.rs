@@ -24,12 +24,12 @@ const FALL_LATE: u64 = 1;
 const BUBBLES: i32 = 8;
 const DOUSED: i32 = -1;
 
-/// Whether the body's box reaches into a cell of lava or fire, however full.
-fn touches_fire(level: &Level, body: &Body) -> bool {
+/// Whether the body's box reaches into a cell holding one of `names`, however full.
+pub(crate) fn touches(level: &Level, body: &Body, names: &[&str]) -> bool {
     const EDGE: f32 = 1e-4;
     let (low, high) = body.bounds();
     let cells = |axis: usize| low[axis].floor() as i32..=(high[axis] - EDGE).floor() as i32;
-    cells(0).any(|x| cells(1).any(|y| cells(2).any(|z| holds(level, [x, y, z], FIERY))))
+    cells(0).any(|x| cells(1).any(|y| cells(2).any(|z| holds(level, [x, y, z], names))))
 }
 
 /// Whether the cell holds one of `names`, as a block or as the liquid in one.
@@ -91,7 +91,7 @@ pub(super) fn tick(world: &mut World, entity: Entity, layer: Entity, id: u64, ki
         // Straight above its feet, not forward as the head is drawn.
         let head = [start.at[0], y, start.at[2]].map(|c| c.floor() as i32);
         let level = world.get::<Layer>(layer).map(|layer| &layer.world);
-        let (touching, in_wall, under_water) = level.map_or((false, false, false), |level| (burns && touches_fire(level, start), is_full_block(level, head), !traits.breathes_water && holds(level, head, WATER)));
+        let (touching, in_wall, under_water) = level.map_or((false, false, false), |level| (burns && touches(level, start, FIERY), is_full_block(level, head), !traits.breathes_water && holds(level, head, WATER)));
         health.begin();
         if let Some((harm, from)) = health.fall(start.at, now.at[1], now.on_ground, now.liquid().is_some() || traits.no_fall) {
             packets.push(strike(id, &health, Cause::Fall, Some(now.at)));

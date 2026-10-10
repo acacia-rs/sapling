@@ -1,0 +1,174 @@
+//! A player's health: what a fall, fire and lava take from it each tick, by the rules mobs are
+//! hurt by (creatures/health.rs), told as BDS tells a player's (docs/research/player-damage.md).
+//! Dying and rising: death.rs.
+// TODO: no hunger, so nothing mends; no armour or effects; a player neither drowns nor smothers
+// (not drilled); a fall is measured from the highest feet to the landing, where BDS with the
+// bot took 8 for 12 blocks; health is not kept with the player's items; plugins are not asked.
+
+mod death;
+
+use acacia_proto::Packet;
+use acacia_proto::packets::{EntityEvent, EntityEventEventId};
+use acacia_proto::types::Vec3f;
+use bevy_ecs::prelude::*;
+use sapling_api::{DamageCause, GameMode, HealthBackend, PlayerId};
+use sapling_data::EYE_HEIGHT;
+
+use crate::body::Body;
+use crate::components::{InLayer, Layer, Mode, NetId, Outgoing, Position, Tick, in_world};
+use crate::creatures::{Cause, Health, touches};
+use crate::handlers::Ctx;
+use crate::movement::{self, Motion};
+use crate::visibility::ToViewers;
+
+const MAX: f32 = 20.0;
+/// A player's box: across, and up.
+const SIZE: [f32; 2] = [0.6, 1.8];
+const FIERY: &[&str] = &["minecraft:lava", "minecraft:flowing_lava", "minecraft:fire", "minecraft:soul_fire"];
+const LAVA: &[&str] = &["minecraft:lava", "minecraft:flowing_lava"];
+const WATER: &[&str] = &["minecraft:water", "minecraft:flowing_water"];
+
+#[derive(Component, Clone, Copy)]
+pub(crate) struct Vitals {
+    health: Health,
+    /// What the client and the viewers know of its health.
+    told: f32,
+    /// Where its feet were a tick ago.
+    was: Option<[f32; 3]>,
+    /// The tick it died in, until it rises.
+    died: Option<u64>,
+    /// Experience its body leaves as it goes.
+    leaves: Option<i32>,
+}
+
+impl Default for Vitals {
+    fn default() -> Self {
+        Self { health: Health::new(MAX, None, 0), told: MAX, was: None, died: None, leaves: None }
+    }
+}
+
+fn is_mortal(world: &World, player: Entity) -> bool {
+    let is_alive = world.get::<Vitals>(player).is_some_and(|vitals| vitals.died.is_none());
+    is_alive && world.get::<Mode>(player).is_some_and(|mode| matches!(mode.0, GameMode::Survival | GameMode::Adventure))
+}
+
+/// To the player and to those who see it.
+fn tell<T: Packet>(world: &mut World, player: Entity, packet: &T) {
+    if let Some(mut out) = world.get_mut::<Outgoing>(player) {
+        out.push(packet);
+    }
+    world.resource_mut::<ToViewers>().push(player, packet);
+}
+
+/// The flash of a hit of `cause` that landed; a fall's names the player's eyes.
+fn flash(world: &mut World, player: Entity, cause: Cause) {
+    let (Some(id), Some(position)) = (world.get::<NetId>(player).map(|id| id.0), world.get::<Position>(player).copied()) else { return };
+    let [x, y, z] = position.feet;
+    let fire_at_position = (cause == Cause::Fall).then_some(Vec3f { x, y: y + EYE_HEIGHT, z });
+    tell(world, player, &EntityEvent { runtime_entity_id: id, event_id: EntityEventEventId::HurtAnimation, data: cause as i32, fire_at_position });
+}
+
+/// Tells the health and the burning where they changed, and lets a player with no health die of `cause`.
+fn settle(world: &mut World, player: Entity, cause: Cause) {
+    let Some(mut vitals) = world.get_mut::<Vitals>(player) else { return };
+    let (left, burning) = (vitals.health.left(), vitals.health.is_burning());
+    let changed = std::mem::replace(&mut vitals.told, left) != left;
+    let Some(id) = world.get::<NetId>(player).map(|id| id.0) else { return };
+    if changed {
+        tell(world, player, &sapling_data::mob_health_update(id, left, MAX));
+    }
+    let tick = world.resource::<Tick>().0;
+    if let Some(mut motion) = world.get_mut::<Motion>(player).filter(|motion| motion.pose.burning != burning) {
+        motion.pose.burning = burning;
+        let shown = movement::pose_packet(id, motion.pose, tick);
+        // Viewers are told by `movement::announce`.
+        world.get_mut::<Outgoing>(player).expect("players have an outbox").push(&shown);
+    }
+    if left <= 0.0 {
+        death::die(world, player, cause);
+    }
+}
+
+/// Takes `amount` from a player's health as a hit of `cause`; false where it took nothing.
+fn hurt(world: &mut World, player: Entity, amount: f32, cause: Cause) -> bool {
+    if !is_mortal(world, player) || !world.get_mut::<Vitals>(player).is_some_and(|mut vitals| vitals.health.hurt(amount)) {
+        return false;
+    }
+    if world.get::<Vitals>(player).is_some_and(|vitals| vitals.health.left() > 0.0) {
+        flash(world, player, cause);
+    }
+    settle(world, player, cause);
+    true
+}
+
+/// A tick of what the place a living player stands in does to it.
+fn stand(world: &mut World, player: Entity, layer: Entity) {
+    let (Some(position), Some(mut vitals)) = (world.get::<Position>(player).copied(), world.get::<Vitals>(player).copied()) else { return };
+    let Some(level) = world.get::<Layer>(layer).map(|layer| &layer.world) else { return };
+    let body = Body::new(position.feet, [0.0; 3], SIZE);
+    let (fire, lava, water) = (touches(level, &body, FIERY), touches(level, &body, LAVA), touches(level, &body, WATER));
+    // A teleport is no fall: until the client follows it, the height starts anew.
+    let carried = world.get::<Motion>(player).is_some_and(Motion::awaits_teleport);
+    let from = vitals.was.replace(position.feet).unwrap_or(position.feet);
+    let health = &mut vitals.health;
+    let mut hits = Vec::new();
+    health.begin();
+    hits.extend(health.fall(from, position.feet[1], position.on_ground, water || lava || carried).map(|_| Cause::Fall));
+    let lit = health.is_burning();
+    hits.extend(health.burn(fire, water).map(|cause| if lit { Cause::Burning } else { cause }));
+    hits.extend((lava && health.scald()).then_some(Cause::Lava));
+    let is_alive = health.left() > 0.0;
+    *world.get_mut::<Vitals>(player).expect("read above") = vitals;
+    for cause in hits.iter().filter(|_| is_alive) {
+        flash(world, player, *cause);
+    }
+    settle(world, player, hits.last().copied().unwrap_or(Cause::Fire));
+}
+
+/// Lets the dead rise who asked to, hurts the living by where they stand, and lets the bodies go.
+pub(crate) fn tick(world: &mut World) {
+    death::rise(world);
+    let players: Vec<(Entity, Entity)> = in_world(world).into_iter().filter_map(|player| Some((player, world.get::<InLayer>(player)?.0))).collect();
+    for (player, layer) in players {
+        if is_mortal(world, player) {
+            stand(world, player, layer);
+        } else {
+            if let Some(mut vitals) = world.get_mut::<Vitals>(player) {
+                vitals.was = None;
+            }
+            death::leave(world, player, layer);
+        }
+    }
+}
+
+fn named(cause: DamageCause) -> Cause {
+    match cause {
+        DamageCause::Generic => Cause::Generic,
+        DamageCause::Attack => Cause::Attack,
+        DamageCause::Suffocation => Cause::Wall,
+        DamageCause::Fall => Cause::Fall,
+        DamageCause::Fire => Cause::Fire,
+        DamageCause::FireTick => Cause::Burning,
+        DamageCause::Lava => Cause::Lava,
+        DamageCause::Drowning => Cause::Drowning,
+    }
+}
+
+impl HealthBackend for Ctx<'_> {
+    fn health(&self, player: PlayerId) -> Option<f32> {
+        self.world.get::<Vitals>(self.entity(player)?).map(|vitals| vitals.health.left())
+    }
+
+    fn hurt_player(&mut self, player: PlayerId, amount: f32, cause: DamageCause) -> bool {
+        self.entity(player).is_some_and(|entity| hurt(self.world, entity, amount, named(cause)))
+    }
+
+    fn kill_player(&mut self, player: PlayerId) -> bool {
+        let Some(entity) = self.entity(player).filter(|entity| is_mortal(self.world, *entity)) else { return false };
+        if let Some(mut vitals) = self.world.get_mut::<Vitals>(entity) {
+            vitals.health.end();
+        }
+        settle(self.world, entity, Cause::Generic);
+        true
+    }
+}

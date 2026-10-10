@@ -2,6 +2,7 @@
 //! (docs/DESIGN.md "Inventories"). Stacks carry the ids clients name them by.
 
 mod crafting;
+mod death;
 mod equipment;
 mod give;
 mod plugin;

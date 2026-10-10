@@ -11,7 +11,7 @@ mod rules;
 
 use blocks::{Fill, SetBlock};
 use containers::ReplaceItem;
-use players::{Clear, GameModeCommand, Give, Kill, Summon, Teleport};
+use players::{Clear, Damage, GameModeCommand, Give, Kill, Summon, Teleport};
 use rules::GameRule;
 
 use sapling_api::command::Selector;
@@ -25,7 +25,7 @@ impl ServerBuilder {
     /// added later under the same name replaces one of these.
     pub fn vanilla_commands(self) -> Self {
         let blocks = self.command::<SetBlock>().command::<Fill>().command::<ReplaceItem>();
-        blocks.command::<Teleport>().command::<Give>().command::<Clear>().command::<GameModeCommand>().command::<Summon>().command::<Kill>().command::<GameRule>()
+        blocks.command::<Teleport>().command::<Give>().command::<Clear>().command::<GameModeCommand>().command::<Summon>().command::<Kill>().command::<Damage>().command::<GameRule>()
     }
 }
 

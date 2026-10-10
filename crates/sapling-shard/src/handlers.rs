@@ -10,7 +10,7 @@ use sapling_api::PlayerId;
 
 use crate::components::{Arrivals, Identity, Layer, Outgoing, Players, Stage};
 use crate::plugins::Plugins;
-use crate::{blocks, campfires, chat, commands, containers, creatures, drops, entities, forms, furnaces, hoppers, inventory, late_sounds, orbs, roster, sleep, worlds};
+use crate::{blocks, campfires, chat, commands, containers, creatures, drops, entities, forms, furnaces, hoppers, inventory, late_sounds, orbs, roster, sleep, vitals, worlds};
 
 pub(crate) struct Ctx<'w> {
     pub world: &'w mut World,
@@ -75,6 +75,7 @@ pub(crate) fn dispatch(world: &mut World, plugins: &mut Plugins) {
     drops::pick_up(world);
     orbs::tick(world);
     creatures::tick(world);
+    vitals::tick(world);
     entities::follow(world);
     forms::dispatch(world);
     for entity in left {

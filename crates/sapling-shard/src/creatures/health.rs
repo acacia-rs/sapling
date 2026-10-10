@@ -21,7 +21,9 @@ const DROWN_HARM: f32 = 2.0;
 
 /// What hurt, as `EntityEvent` names it (BDS's `ActorDamageCause`).
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub(super) enum Cause {
+pub(crate) enum Cause {
+    /// `/damage` without one, `/kill`.
+    Generic = -1,
     /// A player's hit.
     Attack = 2,
     /// A block its head is in.
@@ -57,7 +59,7 @@ pub(crate) struct Health {
 
 impl Health {
     /// A mob of `max` health with `left` of it, `burning` ticks more.
-    pub(super) fn new(max: f32, left: Option<f32>, burning: u16) -> Self {
+    pub(crate) fn new(max: f32, left: Option<f32>, burning: u16) -> Self {
         let left = left.map_or(max, |left| left.clamp(0.0, max));
         Self { left, max, last: 0.0, guarded: 0, burning, peak: None, air: AIR, walled: 0, landed: None, told: left, lit: false }
     }
@@ -74,16 +76,16 @@ impl Health {
         self.burning
     }
 
-    pub(super) fn is_burning(&self) -> bool {
+    pub(crate) fn is_burning(&self) -> bool {
         self.burning > 0
     }
 
-    pub(super) fn end(&mut self) {
+    pub(crate) fn end(&mut self) {
         self.left = 0.0;
     }
 
     /// Whether a hit of `amount` landed.
-    pub(super) fn hurt(&mut self, amount: f32) -> bool {
+    pub(crate) fn hurt(&mut self, amount: f32) -> bool {
         let taken = if self.guarded > 0 { amount - self.last } else { amount };
         if taken <= 0.0 || self.left <= 0.0 {
             return false;
@@ -94,14 +96,14 @@ impl Health {
     }
 
     /// Starts a tick: a tick of the last hit's guard is over.
-    pub(super) fn begin(&mut self) {
+    pub(crate) fn begin(&mut self) {
         self.guarded = self.guarded.saturating_sub(1);
     }
 
     /// A tick's move from `from` to the height `to`, landing `on_ground` or `in_liquid`: the
     /// last tick's landing if it hurt, as what it cost and where that tick began. BDS hurts a
     /// tick after the move that lands.
-    pub(super) fn fall(&mut self, from: [f32; 3], to: f32, on_ground: bool, in_liquid: bool) -> Option<(f32, [f32; 3])> {
+    pub(crate) fn fall(&mut self, from: [f32; 3], to: f32, on_ground: bool, in_liquid: bool) -> Option<(f32, [f32; 3])> {
         let due = self.landed.take().filter(|(harm, _)| self.hurt(*harm));
         let peak = self.peak.map_or(from[1], |peak| peak.max(from[1])).max(to);
         self.peak = (!on_ground && !in_liquid).then_some(peak);
@@ -113,7 +115,7 @@ impl Health {
     }
 
     /// A tick of fire, `touching` fire or lava, or in water: what hurt it, if anything.
-    pub(super) fn burn(&mut self, touching: bool, wet: bool) -> Option<Cause> {
+    pub(crate) fn burn(&mut self, touching: bool, wet: bool) -> Option<Cause> {
         if touching {
             self.burning = BURNS;
             return self.hurt(FIRE_HARM).then_some(Cause::Fire);
@@ -127,23 +129,23 @@ impl Health {
     }
 
     /// A tick with its head in a block or not: whether the block hurt it.
-    pub(super) fn smother(&mut self, in_wall: bool) -> bool {
+    pub(crate) fn smother(&mut self, in_wall: bool) -> bool {
         self.walled = if in_wall { self.walled.saturating_add(1) } else { 0 };
         self.walled > WALLED && self.hurt(SMOTHER_HARM)
     }
 
-    pub(super) fn scald(&mut self) -> bool {
+    pub(crate) fn scald(&mut self) -> bool {
         self.hurt(LAVA_HARM)
     }
 
     /// A tick of breath, held where it has none to draw: its breath when that changed.
-    pub(super) fn breathe(&mut self, held: bool) -> Option<i16> {
+    pub(crate) fn breathe(&mut self, held: bool) -> Option<i16> {
         let air = if held { (self.air - 1).max(0) } else { AIR };
         (std::mem::replace(&mut self.air, air) != air).then_some(air)
     }
 
     /// Whether, out of breath under water, it was hurt.
-    pub(super) fn drown(&mut self, under_water: bool) -> bool {
+    pub(crate) fn drown(&mut self, under_water: bool) -> bool {
         under_water && self.air == 0 && self.hurt(DROWN_HARM)
     }
 }
