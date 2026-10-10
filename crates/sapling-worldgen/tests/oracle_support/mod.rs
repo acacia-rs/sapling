@@ -59,10 +59,18 @@ impl Region {
 
 /// `SAPLING_ORACLE_ORDER=<file>`: decorate in a one-worker BDS run's order (`x z [draws]` per line,
 /// scripts/dbg_loads.py); `SAPLING_ORACLE_THREAD_SEED=<seed>`: also model that run's thread generator
-/// from the lines' draw counts.
+/// from the lines' draw counts. `SAPLING_ORACLE_STRUCTURE_ORDER=<file>`: run the structure stage in that
+/// run's order (`x z` per line, `dbg_loads.py --structure-order`).
 pub fn replay(generator: &mut sapling_worldgen::OverworldGenerator) -> Option<Vec<(i32, i32)>> {
-    let text = std::fs::read_to_string(std::env::var("SAPLING_ORACLE_ORDER").ok()?).expect("order file");
-    let rows: Vec<Vec<i64>> = text.lines().map(|line| line.split(' ').map(|v| v.parse().expect("an integer")).collect()).collect();
+    let read = |path: String| -> Vec<Vec<i64>> {
+        let text = std::fs::read_to_string(path).expect("order file");
+        text.lines().map(|line| line.split(' ').map(|v| v.parse().expect("an integer")).collect()).collect()
+    };
+    if let Ok(path) = std::env::var("SAPLING_ORACLE_STRUCTURE_ORDER") {
+        let order: Vec<(i32, i32)> = read(path).iter().map(|row| (row[0] as i32, row[1] as i32)).collect();
+        generator.set_structure_order(&order);
+    }
+    let rows = read(std::env::var("SAPLING_ORACLE_ORDER").ok()?);
     let order: Vec<(i32, i32)> = rows.iter().map(|row| (row[0] as i32, row[1] as i32)).collect();
     let spent: Vec<Option<u32>> = rows.iter().map(|row| row.get(2).map(|&draws| draws as u32)).collect();
     let seed = std::env::var("SAPLING_ORACLE_THREAD_SEED").ok().map(|seed| seed.parse::<u32>().expect("a u32 seed"));

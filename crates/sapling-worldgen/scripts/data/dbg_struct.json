@@ -1,0 +1,4 @@
+{"breakpoints": [
+ {"va": "0x148211300", "name": "load", "mem": [["rdx", 120, "ii"]], "log": "all"},
+ {"va": "0x14196b2c0", "name": "structfeat", "mem": [["rsp", 40, "i"], ["rsp", 48, "i"]], "log": "all"}
+]}

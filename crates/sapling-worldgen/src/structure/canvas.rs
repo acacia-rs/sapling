@@ -49,6 +49,8 @@ pub struct Canvas<'a> {
     pub spilled: Vec<([i32; 3], Block, Block)>,
     /// `setBlock` writes into the neighbours (mineshaft floors), as `spilled`.
     pub unclipped: Vec<([i32; 3], Block, Block)>,
+    /// `unclipped` as this post-process reads it back.
+    written: HashMap<(i32, i32, i32), Block>,
 }
 
 impl<'a> Canvas<'a> {
@@ -67,6 +69,7 @@ impl<'a> Canvas<'a> {
             features: None,
             spilled: Vec::new(),
             unclipped: Vec::new(),
+            written: HashMap::new(),
         }
     }
 
@@ -91,6 +94,7 @@ impl<'a> Canvas<'a> {
                 self.set(x, y, z, block);
             } else {
                 self.spilled.push(([x, y, z], block, seen));
+                super::trace::write([x, y, z], block);
             }
         }
     }
@@ -116,6 +120,8 @@ impl<'a> Canvas<'a> {
         } else if self.inside(x, z) {
             self.shape.block((x & 15) as usize, y, (z & 15) as usize)
         } else if let Some(&block) = self.spill.as_ref().and_then(|(_, cells)| cells.get(&(x, y, z))) {
+            block
+        } else if let Some(&block) = self.written.get(&(x, y, z)) {
             block
         } else if let Some(placed) = self.placed.filter(|_| self.read_placed) {
             placed(x, y, z)
@@ -156,6 +162,8 @@ impl<'a> Canvas<'a> {
         } else if (MIN_Y..=TOP).contains(&y) {
             let seen = self.get(x, y, z);
             self.unclipped.push(([x, y, z], block, seen));
+            self.written.insert((x, y, z), block);
+            super::trace::write([x, y, z], block);
         }
     }
 

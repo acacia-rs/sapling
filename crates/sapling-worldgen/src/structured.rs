@@ -5,6 +5,8 @@
 //! they saw is still there. (Ordering neighbours by the decoration phases, features seeing
 //! earlier neighbours with their pieces, matched the oracle worse: ancient city +204 cells.)
 
+pub(crate) mod replay;
+
 use std::sync::Arc;
 
 use crate::block::Block;
@@ -26,6 +28,18 @@ pub struct Pieced {
     spawners: structure::Spawners,
     /// The heights it changed, for `rejoin_connections`.
     touched: Option<(i32, i32)>,
+}
+
+impl Pieced {
+    /// A chunk no piece wrote.
+    fn bare(shape: Arc<ChunkShape>) -> Self {
+        Self { shape, spilled: Vec::new(), unclipped: Vec::new(), spawners: Default::default(), touched: None }
+    }
+
+    /// A chunk as a replayed run left it: its neighbours' mineshaft floors have landed.
+    fn replayed(shape: ChunkShape, touched: Option<(i32, i32)>, spilled: Vec<Spill>) -> Self {
+        Self { touched, spilled, ..Self::bare(Arc::new(shape)) }
+    }
 }
 
 fn widen(heights: Option<(i32, i32)>, y: i32) -> Option<(i32, i32)> {
@@ -88,6 +102,9 @@ impl OverworldGenerator {
     }
 
     pub(crate) fn pieced(&self, chunk: (i32, i32)) -> Arc<Pieced> {
+        if let Some(replay) = &self.structure_replay {
+            return self.replayed(replay, chunk);
+        }
         self.pieced.get(chunk, || {
             let mut shape = (*self.carved(chunk.0, chunk.1)).clone();
             let placed = self.place_pieces(&mut shape, chunk);

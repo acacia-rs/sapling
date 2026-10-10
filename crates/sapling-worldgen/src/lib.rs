@@ -29,6 +29,8 @@ pub use biome::ChunkBiomes;
 pub use block::Block;
 #[doc(hidden)]
 pub use feature::reach::{Cells as ReachCells, Tries as ReachTries};
+#[doc(hidden)]
+pub use structured::replay::ReplayWrite;
 pub use terrain::{CellKind, ChunkShape, HEIGHT, MIN_Y};
 
 use cache::SourceCache;
@@ -55,6 +57,7 @@ pub struct OverworldGenerator {
     carved: SourceCache<(i32, i32), ChunkShape>,
     generated_tops: SourceCache<(i32, i32), [i16; 256]>,
     pieced: SourceCache<(i32, i32), structured::Pieced>,
+    structure_replay: Option<structured::replay::Replay>,
     loaded: SourceCache<(i32, i32), ChunkShape>,
     biomes: SourceCache<(i32, i32), ChunkBiomes>,
 }
@@ -73,6 +76,7 @@ impl OverworldGenerator {
             carved: SourceCache::new(LOADED_LIMIT),
             generated_tops: SourceCache::new(LOADED_LIMIT),
             pieced: SourceCache::new(LOADED_LIMIT),
+            structure_replay: None,
             loaded: SourceCache::new(LOADED_LIMIT),
             biomes: SourceCache::new(BIOMES_LIMIT),
         }

@@ -6,7 +6,8 @@ The log is a run of `bds_dbg_run.sh` with scripts/data/dbg_loads.json: `load` (O
 `structfeat` (postProcessStructureFeatures) and `deco` (decorationPostProcessChunk), each logged with its chunk
 and thread. Prints per stage the chunks, the ones run more than once, the threads, and the neighbour pairs that
 break the parity phases; with a second log, the pairs of chunks whose 3x3 overlap (two apart or nearer) that
-ran in the other order there. `--order` writes the first log's decoration order for `SAPLING_ORACLE_ORDER`;
+ran in the other order there. `--structure-order <file>` writes the first log's structure post-process order
+(`x z` per line, for `SAPLING_ORACLE_STRUCTURE_ORDER`); `--order` writes the first log's decoration order for `SAPLING_ORACLE_ORDER`;
 with scripts/data/dbg_canon.json's log each line also holds where the thread generator stood at the chunk's
 first MultifaceFeature draw (`x z draws`).
 Why: docs/research/worldgen-bds-order.md.
@@ -143,6 +144,7 @@ def main():
     args = sys.argv[1:]
     order = args.pop(args.index("--order") + 1) if "--order" in args else None
     show = args.pop(args.index("--grid") + 1) if "--grid" in args else None
+    structure_order = args.pop(args.index("--structure-order") + 1) if "--structure-order" in args else None
     logs = [a for a in args if not a.startswith("--")]
     runs = [read(path) for path in logs]
     if show:
@@ -151,6 +153,9 @@ def main():
         describe(path.replace("\\", "/").split("/")[-3] if path.count("/") + path.count("\\") > 1 else path, run)
     if len(runs) > 1:
         compare(runs[0], runs[1])
+    if structure_order:
+        with open(structure_order, "w", newline="\n") as out:
+            out.writelines(f"{c[0]} {c[1]}\n" for c, _ in runs[0]["structfeat"])
     if order:
         place = first(runs[0]["deco"])
         starts = runs[0]["starts"]
