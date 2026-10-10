@@ -66,6 +66,38 @@ Companion to [worldgen-bds.md](worldgen-bds.md). The flow rule itself (`LiquidBl
   coral plants and fans override it too but the oracle read better without them, and which blocks have a
   thickness is not read.
 
+## Game time (2026-10-10, worldgen/res6)
+What the earlier sections call "flows BDS ran in game" is `LevelChunk::tick` (1409f98a0). While `LevelChunk`
++0x10dc is 0 and the chunks around are loaded, each game tick calls `tickPendingTicks(until = current tick, max
+100, instatick = 1)` on the chunk's block queue (+0x130) and random queue (+0x138); the flag is set once both
+return false or after 200 such ticks (counter +0x10d8). After that the same two calls run with instatick 0. So a
+chunk's leftover decoration ticks are flushed over its first ticks in a ticking area, at game speed.
+
+`scripts/bds_still.py <exe>` patches a BDS copy so those four calls do nothing (decoration's own calls stay);
+`tools/worldgen-oracle/run.sh` with `WORLDGEN_BDS` on that copy saves worlds that hold worldgen only:
+`20261003-still` and `-still-run2` (the near-origin and far-out regions; test `blocks_match_bds_still`).
+What the still world showed:
+- **Inherited ticks.** Most of the "game time" water was decoration's. A tick `addToTickingQueue` routes to its
+  cell's chunk queue stays there, and `acquireAllTicks` at that chunk's own decoration takes the whole queue, so
+  a flow an earlier source could not finish continues when the cell's chunk is decorated later. sapling dropped
+  those ticks; `ChunkWrites::routed_to` now hands them on (`liquid::settle`'s `inherited`, after the chunk's
+  aquifer ticks, earlier sources in decoration order). Ticks routed to a chunk decorated earlier wait for the game.
+- **Bubble columns.** Decoration leaves one bubble column cell over a magma block (250 cells, one per column);
+  the column above grows by game ticks (1709 cells in the ticked world). `blob.rs` places the one cell, the
+  whole column only under a `SAPLING_LIQUID_GAME_TICKS` replay; the judge files BDS bubble columns over our
+  water as "game time" in the ticked worlds.
+
+Liquid errors (`scripts/liquid_residue.py`) and deterministic cells against the still world, before and after
+the two changes:
+
+| region | liquid errors | wrong | missing | deterministic |
+|---|---|---|---|---|
+| near origin (still) | 1019 -> 292 | 2829 -> 572 | 233 -> 206 | 2788 -> 504 |
+| far out (still) | 15 -> 1 | 260 -> 129 | 20 -> 20 | 251 -> 120 |
+
+256 of the 292 lie within 4 blocks of a lichen or sculk difference. The other four worlds have no still twin
+yet: their liquid residue still holds the flush.
+
 ## Oracle (2026-10-07)
 Fluid cells differing near origin went 12.0k -> 1.7k. The 8-block routing removed most of our over-flow (infinite
 sources BDS's water never formed, lava floods into obsidian: water-over-air cells 383 -> 71, far out 218 -> 108
