@@ -53,8 +53,10 @@ with its mobs summoned into a wall). No decompile: all of this is from the captu
 Built in `sapling-shard/src/creatures/attacks.rs`. The actor's attack is an `InventoryTransaction`
 `ItemUseOnEntity` `Attack`.
 
-- A bare hand costs a cow 1, a wooden sword 5; a diamond sword killed one with 3 left. The rest of
-  `sapling-data/src/attack.rs` is Bedrock's table as players know it, not drilled.
+- A bare hand costs a cow 1, a wooden sword 5; a diamond sword killed one with 3 left. Every tool
+  was then drilled (`tools`, bds-tools.txt): a sword costs 5 of wood or gold, 6 of stone or copper, 7 of iron,
+  8 of diamond, 9 of netherite; an axe 1 less, a pickaxe or hoe 2 less, a shovel 3 less; a trident 9, a
+  mace 6, a stick 1.
 - The hit is told at once as `HurtAnimation` with cause 2 (`DeathAnimation` when it kills). With the next
   tick come the sound `attack.strong` from the middle of the hitter's box, naming `minecraft:player`, and
   the mob's health.

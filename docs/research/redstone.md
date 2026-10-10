@@ -377,5 +377,22 @@ No decompile: all of this is from the captures.
   with what it holds. Dust on a pushed stone falls as an item a tick after the stone starts to move.
 - The block changes of (1) and (3) come in `UpdateSubchunkBlocks`, those of (3) with flags 19; sapling sends
   the same changes as `UpdateBlock`.
-- Not drilled: slime and honey, a mob or player in the way, which other blocks stay or break, a piston put
+- Not drilled: a mob or player in the way, which other blocks stay or break, a piston put
   beside power already on, power going while it moves, the place a real client's piston faces.
+
+## Slime and honey (2026-10-10, `bds_command_probe slime`, research/captures/bds-slime.txt)
+
+Built in `sapling-shard/src/blocks/pistons/plan.rs`.
+
+- A slime or honey block that moves takes the blocks touching it, and those take what is before them: a
+  stone on, under and beside slime all went with it. Slime takes slime, and what that holds.
+- Slime does not take honey nor honey slime; neither takes glazed terracotta or obsidian, which stay where
+  they are and do not stop the move. A chest is taken.
+- All that goes counts to the 12: slime, a stone on it and 10 before it went, with 11 before it nothing did.
+  Obsidian before a block slime holds stops the whole move.
+- A sticky piston drawing back brings slime with what it holds (the stone on it and the one beyond it); a
+  stone it brings does not bring slime that is beyond the stone.
+- `AttachedBlocks` lists the cells farthest first in the way they go; cells equally far come in the order
+  they were found: the block, what is before it, then what it holds up, down and south of it.
+- Not drilled: the order north, west and east of a sticky block, what has no body beside slime (sapling
+  leaves it), a sticky piston whose slime is held back (sapling brings nothing).

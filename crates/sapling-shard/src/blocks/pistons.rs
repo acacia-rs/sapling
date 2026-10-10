@@ -1,9 +1,8 @@
 //! Pistons, by what BDS shows of them (docs/research/redstone.md, "Pistons"): a powered one
 //! pushes up to 12 blocks over four ticks, breaking what has no body, and an unpowered one draws
 //! back, a sticky one bringing the block before it. Its block entity tells clients where it is.
-// TODO: no slime or honey carrying their neighbours; nothing standing in the way is moved; a
-// piston that could not push does not try again until its power changes; the blocks that stay
-// are a list, of which BDS showed only obsidian; a container open on a screen is moved unseen;
+// TODO: nothing standing in the way is moved; a piston that could not push does not try again
+// until its power changes; a container open on a screen is moved unseen;
 // what breaks bursts a tick later than on BDS, and what stood on a pushed block falls a tick later.
 
 use acacia_proto::nbt::{List, Str, Value};
@@ -13,6 +12,8 @@ use sapling_api::{BlockPos, Face};
 use sapling_world::{block_of_hash, new_block_entity};
 
 use super::{level, send, updates};
+
+mod plan;
 use crate::components::Tick;
 
 /// The side a piston with this `facing_direction` pushes to.
@@ -20,12 +21,6 @@ pub(super) fn pushes(facing: &str) -> Option<Face> {
     PUSHES.get(facing.parse::<usize>().ok()?).copied()
 }
 
-/// The most blocks a piston pushes.
-const LIMIT: usize = 12;
-const STAYS: &[&str] = &[
-    "obsidian", "bedrock", "barrier", "end_portal_frame", "end_portal", "portal", "end_gateway", "enchanting_table", "beacon", "mob_spawner", "respawn_anchor",
-    "reinforced_deepslate", "moving_block", "piston_arm_collision", "command_block", "structure_block", "jigsaw",
-];
 const MOVING: &str = "minecraft:moving_block";
 /// A piston's `facing_direction` and the side it pushes to (research/captures/bds-redstone-piston-facing.txt).
 const PUSHES: [Face; 6] = [Face::Down, Face::Up, Face::South, Face::North, Face::East, Face::West];
@@ -34,14 +29,6 @@ const RETRACTED: i8 = 0;
 const EXPANDING: i8 = 1;
 const EXPANDED: i8 = 2;
 const RETRACTING: i8 = 3;
-
-#[derive(PartialEq)]
-enum Cell {
-    Empty,
-    Breaks,
-    Moves,
-    Stays,
-}
 
 struct Piston {
     front: Face,
@@ -90,18 +77,8 @@ fn is_extended(world: &World, layer: Entity, pos: BlockPos, piston: &Piston) -> 
     block_name(world, layer, piston.front.neighbour(pos)).is_some_and(|(_, name, properties)| name.ends_with("piston_arm_collision") && properties == format!("facing_direction={}", piston.facing))
 }
 
-fn cell(world: &World, layer: Entity, pos: BlockPos) -> Cell {
-    let Some(level) = level(world, layer).filter(|level| level.in_height(pos[1]) && level.is_loaded(send::column(pos))) else { return Cell::Stays };
-    let Some(state) = level.registry().get(level.block(pos[0], pos[1], pos[2])) else { return Cell::Stays };
-    let name = state.name.strip_prefix("minecraft:").unwrap_or(state.name);
-    let is_out = || piston_at(world, layer, pos).is_some_and(|piston| is_extended(world, layer, pos, &piston));
-    let is_busy = || world.get_resource::<Pistons>().is_some_and(|pistons| pistons.0.iter().any(|going| (going.layer, going.pos) == (layer, pos)));
-    match () {
-        _ if state.is_air() || state.is_liquid() => Cell::Empty,
-        _ if STAYS.iter().any(|stays| name.ends_with(stays)) || is_out() || is_busy() => Cell::Stays,
-        _ if !state.is_solid() => Cell::Breaks,
-        _ => Cell::Moves,
-    }
+fn back(front: Face) -> Face {
+    PUSHES[PUSHES.iter().position(|face| *face == front).unwrap_or(0) ^ 1]
 }
 
 /// The piston's block entity in `state`, naming the cells of the blocks it takes and breaks.
@@ -130,21 +107,6 @@ pub(crate) fn furnish(world: &mut World, layer: Entity, pos: BlockPos) {
     }
 }
 
-/// The cells whose blocks the piston at `pos` would take along going out, farthest first, and
-/// those it would break; `None` when something stays in its way or they are too many.
-fn plan(world: &World, layer: Entity, pos: BlockPos, front: Face) -> Option<(Vec<BlockPos>, Vec<BlockPos>)> {
-    let (mut taken, mut at) = (Vec::new(), front.neighbour(pos));
-    loop {
-        match cell(world, layer, at) {
-            Cell::Empty => break Some((taken.into_iter().rev().collect(), Vec::new())),
-            Cell::Breaks => break Some((taken.into_iter().rev().collect(), vec![at])),
-            Cell::Moves if taken.len() < LIMIT => taken.push(at),
-            _ => break None,
-        }
-        at = front.neighbour(at);
-    }
-}
-
 /// Sets the piston at `pos` going out or back as its power says, or notes the power for when it
 /// is done going.
 pub(crate) fn power(world: &mut World, layer: Entity, pos: BlockPos, is_powered: bool) {
@@ -156,13 +118,12 @@ pub(crate) fn power(world: &mut World, layer: Entity, pos: BlockPos, is_powered:
     if is_extended(world, layer, pos, &piston) == is_powered {
         return;
     }
-    let ahead = piston.front.neighbour(piston.front.neighbour(pos));
     let (taken, broken) = match is_powered {
-        true => match plan(world, layer, pos, piston.front) {
-            Some(plan) => plan,
+        true => match plan::pushed(world, layer, pos, piston.front) {
+            Some(lists) => lists,
             None => return,
         },
-        false if piston.is_sticky && cell(world, layer, ahead) == Cell::Moves => (vec![ahead], Vec::new()),
+        false if piston.is_sticky => plan::drawn(world, layer, pos, back(piston.front)),
         false => Default::default(),
     };
     send::keep_entity(world, layer, pos, &arm(pos, if is_powered { EXPANDING } else { RETRACTING }, piston.is_sticky, &taken, &broken));
@@ -215,7 +176,7 @@ fn stage(world: &mut World, going: &mut Move) -> Option<()> {
                 let air = level(world, layer)?.registry().air_id();
                 send::set(world, layer, front, air);
             }
-            let step = if going.extends { piston.front } else { PUSHES[PUSHES.iter().position(|face| *face == piston.front)? ^ 1] };
+            let step = if going.extends { piston.front } else { back(piston.front) };
             going.carried = going.taken.clone().into_iter().filter_map(|from| carry(world, layer, from, step.neighbour(from), pos, going.extends)).collect();
             if going.extends {
                 let name = if piston.is_sticky { "minecraft:sticky_piston_arm_collision" } else { "minecraft:piston_arm_collision" };

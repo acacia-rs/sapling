@@ -78,3 +78,33 @@ pub fn hit() -> Vec<String> {
     lines.extend(["summon cow ~2 ~ ~", "!hit cow", "", "", "kill @e[type=cow]", "", "summon pig ~ ~ ~2", "!hit pig", "", "", "kill @e[type=!player]", "", ""].map(String::from));
     lines
 }
+
+/// A fresh cow in the pit hit once with each tool and weapon, then cows 3 to 8 blocks off hit
+/// with a bare hand, to see how far a hit reaches.
+pub fn tools() -> Vec<String> {
+    let hand = |item: &str| format!("replaceitem entity @s slot.weapon.mainhand 0 {item}");
+    let mut lines: Vec<String> = ["kill @e[type=!player]", "", "", "fill ~-3 ~-4 ~-3 ~10 ~-1 ~8 stone", "fill ~-3 ~ ~-3 ~10 ~6 ~8 air", "fill ~1 ~-2 ~ ~1 ~-1 ~ air"].map(String::from).into();
+    let made = ["wooden", "stone", "copper", "golden", "iron", "diamond", "netherite"].into_iter().flat_map(|material| ["sword", "axe", "pickaxe", "shovel", "hoe"].map(|tool| format!("{material}_{tool}")));
+    for item in made.chain(["trident", "mace", "stick"].map(String::from)) {
+        lines.extend(["summon cow ~1 ~-2 ~".into(), hand(&item), "!hit cow".into(), String::new(), "kill @e[type=cow]".into(), String::new()]);
+    }
+    lines.extend(["fill ~1 ~-2 ~ ~1 ~-1 ~ stone".into(), hand("air")]);
+    for away in 3..=8 {
+        lines.extend([format!("summon cow ~{away} ~ ~"), "!hit cow".into(), String::new(), "kill @e[type=cow]".into(), String::new()]);
+    }
+    lines
+}
+
+/// Cows at tenths of a block from 2.6 to 4.4 off hit with a bare hand, in survival and in creative,
+/// then at halves up to 7 in creative.
+pub fn reach() -> Vec<String> {
+    let mut lines: Vec<String> = ["kill @e[type=!player]", "", "", "fill ~-3 ~-4 ~-3 ~10 ~-1 ~8 stone", "fill ~-3 ~ ~-3 ~10 ~6 ~8 air"].map(String::from).into();
+    let tenths = (26..=44).step_by(2);
+    for (mode, steps) in [("survival", tenths.clone().collect::<Vec<_>>()), ("creative", tenths.chain((45..=70).step_by(5)).collect())] {
+        lines.push(format!("gamemode {mode} @s"));
+        for away in steps {
+            lines.extend([format!("summon cow ~{}.{} ~ ~", away / 10, away % 10), "!hit cow".into(), "kill @e[type=cow]".into(), String::new()]);
+        }
+    }
+    lines
+}

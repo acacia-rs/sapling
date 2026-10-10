@@ -1,4 +1,4 @@
-//! Pistons against research/captures/bds-redstone-pistons.txt (harness: common/mod.rs).
+//! Pistons against research/captures/bds-redstone-pistons.txt and bds-slime.txt (harness: common/mod.rs).
 
 mod common;
 
@@ -113,4 +113,55 @@ fn a_sticky_piston_brings_its_block_back_and_a_chest_goes_with_what_it_holds() {
     let back = watch(&mut h, 10);
     let pulled = when(&back, [1, 65, 2], hash("minecraft:moving_block")).expect("the stone comes back as a moving block");
     assert_eq!((when(&back, [2, 65, 2], hash("minecraft:air")), when(&back, [1, 65, 2], hash("minecraft:stone"))), (Some(pulled), Some(pulled + 2)));
+}
+
+/// Puts `piston` at x 0 of the row `z`, 3 above the ground, with `blocks` by their place from it.
+fn hung(z: i32, piston: &'static str, blocks: &[([i32; 2], &'static str)]) -> Vec<([i32; 3], &'static str, &'static str)> {
+    [([0, 68, z], piston, EAST)].into_iter().chain(blocks.iter().map(|([x, up], name)| ([*x, 68 + up, z], *name, ""))).collect()
+}
+
+#[test]
+fn slime_and_honey_take_what_they_touch_but_not_each_other_obsidian_or_glazed_terracotta() {
+    let mut h = ready();
+    let rigs = [
+        hung(0, "piston", &[([1, 0], "slime"), ([2, 0], "stone"), ([1, 1], "stone"), ([1, -1], "stone")]),
+        hung(3, "piston", &[([1, 0], "slime"), ([1, 1], "obsidian"), ([1, -1], "white_glazed_terracotta")]),
+        hung(6, "piston", &[([1, 0], "slime"), ([1, 1], "honey_block"), ([1, 2], "stone")]),
+        hung(9, "piston", &[([1, 0], "honey_block"), ([1, 1], "stone")]),
+        hung(12, "piston", &[([1, 0], "slime"), ([1, 1], "stone"), ([2, 1], "obsidian")]),
+        hung(15, "piston", &[([1, 0], "slime"), ([1, 1], "slime"), ([1, 2], "stone"), ([2, 1], "stone")]),
+    ];
+    put(&mut h, &rigs.concat());
+    watch(&mut h, 4);
+    put(&mut h, &[0, 3, 6, 9, 12, 15].map(|z| ([0, 67, z], "redstone_block", "")));
+    let changed = block_changes(&watch(&mut h, 10).concat());
+    let went = |x: i32, up: i32, z: i32, name: &str| changed.contains(&([x, 68 + up, z], hash(&format!("minecraft:{name}"))));
+    let stayed = |up: i32, z: i32| !changed.iter().any(|(pos, _)| pos[0] >= 1 && pos[1] == 68 + up && pos[2] == z);
+    assert!(went(2, 0, 0, "slime") && went(3, 0, 0, "stone") && went(2, 1, 0, "stone") && went(2, -1, 0, "stone"), "slime takes what is before, on and under it");
+    assert!(went(2, 0, 3, "slime") && stayed(1, 3) && stayed(-1, 3), "and leaves obsidian and glazed terracotta");
+    assert!(went(2, 0, 6, "slime") && stayed(1, 6) && stayed(2, 6), "and honey");
+    assert!(went(2, 0, 9, "honey_block") && went(2, 1, 9, "stone"), "honey takes too");
+    assert!(stayed(0, 12) && stayed(1, 12), "what it holds is held back by obsidian, and so is it");
+    assert!(went(2, 0, 15, "slime") && went(2, 1, 15, "slime") && went(2, 2, 15, "stone") && went(3, 1, 15, "stone"), "slime takes slime and what that holds");
+}
+
+#[test]
+fn slime_counts_what_it_holds_to_the_12_and_a_sticky_piston_draws_it_back_with_that() {
+    let mut h = ready();
+    let row = |z: i32, last: i32| hung(z, "piston", &[([1, 0], "slime"), ([1, 1], "stone")]).into_iter().chain((2..=last).map(move |x| ([x, 68, z], "stone", "")));
+    let mut rigs: Vec<_> = row(0, 11).chain(row(3, 12)).collect();
+    rigs.extend(hung(6, "sticky_piston", &[([1, 0], "slime"), ([2, 0], "stone"), ([1, 1], "stone")]));
+    rigs.extend(hung(9, "sticky_piston", &[([1, 0], "stone"), ([2, 0], "slime"), ([2, 1], "stone")]));
+    put(&mut h, &rigs);
+    watch(&mut h, 4);
+    put(&mut h, &[0, 3, 6, 9].map(|z| ([0, 67, z], "redstone_block", "")));
+    let changed = block_changes(&watch(&mut h, 10).concat());
+    assert!(changed.contains(&([12, 68, 0], hash("minecraft:stone"))) && changed.contains(&([2, 69, 0], hash("minecraft:stone"))), "12 go");
+    assert!(!changed.iter().any(|(pos, _)| pos[2] == 3 && pos[1] >= 68), "13 stay");
+
+    put(&mut h, &[6, 9].map(|z| ([0, 67, z], "air", "")));
+    let back = block_changes(&watch(&mut h, 10).concat());
+    let came = |pos: [i32; 3], name: &str| back.contains(&(pos, hash(&format!("minecraft:{name}"))));
+    assert!(came([1, 68, 6], "slime") && came([2, 68, 6], "stone") && came([1, 69, 6], "stone"), "slime comes back with what it holds");
+    assert!(came([1, 68, 9], "stone") && !back.iter().any(|(pos, _)| pos[0] == 3 && pos[2] == 9), "a stone does not bring the slime behind it");
 }
