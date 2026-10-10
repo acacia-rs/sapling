@@ -68,6 +68,10 @@ Built in `sapling-shard/src/creatures/attacks.rs`. The actor's attack is an `Inv
 - A mob a player killed leaves experience orbs when its body goes, 21 ticks after: a cow two orbs of 1.
   The amounts are the packs' `minecraft:experience_reward` (`mob-traits.tsv`, `xp=`); `Math.Random(1,3)`
   is taken as 1 or 2, by that one cow.
+- Reach (`reach`, bds-reach.txt): a cow whose middle was 3.2 blocks from the hitter's was hurt, one 3.4
+  off was not, in survival and in creative alike; from the eyes to the cow's box that is 2.77 and 2.97.
+  A hit too far is answered with nothing, not even the sound. sapling allows 3 from the eyes to the box;
+  what BDS measures was not told apart (one size of mob only).
 - With the death BDS also sends two empty `MobEquipment` for the mob, a `mob.warning` sound from a cow
   and `SetEntityData` `TargetEid` 0; sapling sends none of them.
 
@@ -84,6 +88,5 @@ Built in `sapling-shard/src/creatures/attacks.rs`. The actor's attack is an `Inv
 
 How breath comes back out of water (sapling gives all of it at once), a fall into water or onto slime, hay
 or a bed, which blocks do not smother (glass, leaves), fish out of water, soul fire, magma, campfires, a fire block's burn time against lava's, rain, fire resistance, armour, a baby,
-the armour stand's own burning (bds-lava.txt: hurt animations with data -1), players. Of hits: the reach
-BDS allows (sapling: 6 blocks from the eyes), critical hits, enchantments, an item's wear, the hitter's
+the armour stand's own burning (bds-lava.txt: hurt animations with data -1), players. Of hits: critical hits, enchantments, an item's wear, the hitter's
 hunger, a baby's experience, what a mob does once hit.

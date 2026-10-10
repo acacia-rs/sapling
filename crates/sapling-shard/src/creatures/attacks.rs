@@ -1,6 +1,6 @@
 //! A player's hit on a mob, as BDS answered one (docs/research/mob-damage.md, "Hits").
 // TODO: no critical hit, enchantment, wear of the item or hunger; a hit mob neither flees nor
-// fights back; plugins are not asked; BDS's own reach was not drilled (`REACH`).
+// fights back; plugins are not asked; `REACH` is the nearest whole number to what BDS allowed.
 
 use acacia_proto::packets::LevelSoundEvent;
 use acacia_proto::types::Vec3f;
@@ -19,7 +19,7 @@ use crate::entities;
 /// Hits looked at per player per tick.
 const MAX_HITS_PER_TICK: usize = 4;
 /// How far from a player's eyes the nearest point of a mob it hits may be.
-const REACH: f32 = 6.0;
+const REACH: f32 = 3.0;
 /// The speed a hit throws a mob at, away from the hitter and up; what it moved at across counts half.
 const THROW: f32 = 0.4;
 const KEPT: f32 = 0.5;

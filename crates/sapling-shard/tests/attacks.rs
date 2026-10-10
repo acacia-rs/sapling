@@ -28,6 +28,18 @@ fn health(sent: &[acacia_proto::RawPacket]) -> Vec<f32> {
 }
 
 #[test]
+fn a_hit_from_too_far_is_not_answered() {
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    h.enter(2, "Steve");
+    h.remote.run(|ctx| assert!(ctx.spawn_entity("minecraft:cow", [4.5, 65.0, 0.5]).is_some()));
+    let cow = (0..5).flat_map(|_| all::<AddEntity>(h.tick_all().to(2))).collect::<Vec<_>>().remove(0).runtime_id;
+    h.receive(1, &attack(cow));
+    let sent = h.tick_all().to(2).to_vec();
+    assert!(all::<EntityEvent>(&sent).is_empty() && all::<LevelSoundEvent>(&sent).is_empty() && health(&sent).is_empty());
+}
+
+#[test]
 fn a_fist_costs_a_cow_one_throws_it_and_ten_kill_it_for_experience_as_on_bds() {
     let mut h = Harness::new();
     h.enter(1, "Alex");
