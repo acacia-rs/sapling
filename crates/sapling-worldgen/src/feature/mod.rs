@@ -28,6 +28,7 @@ mod lush;
 mod molang;
 mod monster_room;
 mod multiface;
+mod order;
 mod ore;
 mod pale;
 mod pile;
@@ -99,7 +100,7 @@ fn sources_before(target: (i32, i32), phase_limit: u8) -> Vec<(i32, i32)> {
         .flat_map(|x| (target.1 - REACH..=target.1 + REACH).map(move |z| (x, z)))
         .filter(|&source| phase(source) < phase_limit)
         .collect();
-    sources.sort_by_key(|&source| (phase(source), source));
+    sources.sort_by_key(|&source| (phase(source), order::rank(source), source));
     sources
 }
 
@@ -123,12 +124,16 @@ impl Features {
 
     fn replay(&self, shape: &mut ChunkShape, chunk: (i32, i32), phase_limit: u8, inputs: Inputs) {
         for source in sources_before(chunk, phase_limit) {
-            let writes = self.source_writes(source, inputs);
-            for write in writes.towards(chunk.0 - source.0, chunk.1 - source.1) {
-                let index = write.index as usize;
-                if shape.block_at(index) == write.seen {
-                    shape.set_at(index, write.block);
-                }
+            self.apply(shape, chunk, source, inputs);
+        }
+    }
+
+    fn apply(&self, shape: &mut ChunkShape, chunk: (i32, i32), source: (i32, i32), inputs: Inputs) {
+        let writes = self.source_writes(source, inputs);
+        for write in writes.towards(chunk.0 - source.0, chunk.1 - source.1) {
+            let index = write.index as usize;
+            if shape.block_at(index) == write.seen {
+                shape.set_at(index, write.block);
             }
         }
     }
@@ -149,7 +154,19 @@ impl Features {
     pub fn source_writes(&self, source: (i32, i32), inputs: Inputs) -> Arc<ChunkWrites> {
         self.writes.get(source, || {
             let phase_limit = phase(source);
-            let base = |x: i32, z: i32| self.before((x, z), phase_limit, inputs);
+            let earlier = order::earlier(source);
+            let base = |x: i32, z: i32| {
+                let shape = self.before((x, z), phase_limit, inputs);
+                let reach = |e: &&(i32, i32)| (e.0 - x).abs() <= REACH && (e.1 - z).abs() <= REACH;
+                if !earlier.iter().any(|e| reach(&e)) {
+                    return shape;
+                }
+                let mut shape = (*shape).clone();
+                for &from in earlier.iter().filter(reach) {
+                    self.apply(&mut shape, (x, z), from, inputs);
+                }
+                Arc::new(shape)
+            };
             // No chunk's heightmap changes while the world generates: see docs/research/worldgen-bds-features.md, "Heightmaps".
             let frozen = inputs.carved;
             // The pre-worldgen heightmap is dropped when the chunk's decoration ends.
