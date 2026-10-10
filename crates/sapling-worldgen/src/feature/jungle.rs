@@ -2,7 +2,7 @@
 //! (14827b960), `PodzolAreaFeature::place` (149d5fdf0) and `VinesFeature::place` (149d99a70).
 
 use super::land::spread;
-use super::lush::sturdy;
+use super::lush::holds_vine;
 use super::tree::common::vine_facing;
 use super::view::View;
 use crate::block::Block;
@@ -75,7 +75,7 @@ pub fn vines(view: &mut View, random: &mut Mt19937, [x, _, z]: [i32; 3]) -> bool
     let (mut cx, mut cz) = (x, z);
     for y in 64..top {
         if view.block(cx, y, cz) == Block::Air {
-            if let Some(&(dx, dz)) = SUPPORTS.iter().find(|&&(dx, dz)| sturdy(view.block(cx + dx, y, cz + dz))) {
+            if let Some(&(dx, dz)) = SUPPORTS.iter().find(|&&(dx, dz)| holds_vine(view.block(cx + dx, y, cz + dz))) {
                 view.set_block(cx, y, cz, vine_facing((-dx, -dz)));
             }
         } else {

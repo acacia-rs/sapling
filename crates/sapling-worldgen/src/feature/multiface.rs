@@ -50,9 +50,16 @@ impl Multiface {
     /// face is sturdy and the cell changes (then the spread gate is drawn), else a failure.
     fn attach(&self, ctx: &mut Ctx, at: [i32; 3], faces: &[usize]) -> bool {
         let existing = ctx.view.block(at[0], at[1], at[2]);
+        let source = super::phase(ctx.view.chunk());
         let Some(&face) = faces.iter().find(|&&face| {
             let [x, y, z] = step(at, face);
-            self.can_place_on.is_empty() || self.can_place_on.contains(&ctx.view.block(x, y, z))
+            let on = ctx.view.block(x, y, z);
+            if !(self.can_place_on.is_empty() || self.can_place_on.contains(&on) || matches!(on, Block::Template(_)) && self.on_names.contains(&on.name())) {
+                return false;
+            }
+            // 143b84a00: no face on a tunnel structure's block in another chunk not decorated yet.
+            let other = (x >> 4, z >> 4);
+            other == (at[0] >> 4, at[2] >> 4) || super::phase(other) < source && other != ctx.view.chunk() || !(ctx.in_tunnels)([x, y, z])
         }) else {
             return false;
         };

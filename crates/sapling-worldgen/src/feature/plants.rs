@@ -38,11 +38,12 @@ impl SingleBlock {
     }
 }
 
-/// Soil a bush-like plant stands on (Java's `BlockTags.DIRT` among the blocks sapling places).
+/// Soil a bush-like plant stands on: BDS's list 0x14ccd3328 (read off a live server; it has farmland too).
 pub fn is_soil(block: Block) -> bool {
     matches!(
         block,
         Block::GrassBlock
+            | Block::MuddyMangroveRoots
             | Block::Dirt
             | Block::CoarseDirt
             | Block::Podzol

@@ -28,6 +28,8 @@ pub struct Multiface {
     /// FacingIDs in the order the flags push them: floor, ceiling, then walls north, east, south, west.
     pub faces: &'static [usize],
     pub can_place_on: &'static [Block],
+    /// The same list by name, for the blocks only templates place.
+    pub on_names: &'static [&'static str],
     pub spread_chance: f32,
 }
 

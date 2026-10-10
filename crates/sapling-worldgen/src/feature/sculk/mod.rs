@@ -7,7 +7,7 @@ mod cursor;
 
 use super::cave_spec::SculkPatch;
 use super::place::Ctx;
-use super::spreader::{face_sturdy, step};
+use super::spreader::step;
 use super::tree::spec::Range;
 use crate::block::Block;
 use cursor::Cursor;
@@ -48,7 +48,7 @@ impl SculkPatch {
             let dx = ctx.random.next_int(5) - 2;
             let dz = ctx.random.next_int(5) - 2;
             let p = [x + dx, y, z + dz];
-            if ctx.view.block(p[0], p[1], p[2]) == Block::Air && face_sturdy(ctx.view.block(p[0], p[1] - 1, p[2])) {
+            if ctx.view.block(p[0], p[1], p[2]) == Block::Air && ctx.view.block(p[0], p[1] - 1, p[2]).supports_multiface_plain(1) {
                 ctx.view.set_block(p[0], p[1], p[2], Block::SculkShrieker);
             }
         }

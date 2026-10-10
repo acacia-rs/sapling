@@ -19,11 +19,6 @@ pub fn opposite(face: usize) -> usize {
     face ^ 1
 }
 
-/// A full face a multiface block can hang on.
-pub fn face_sturdy(block: Block) -> bool {
-    super::lush::sturdy(block) && !matches!(block, Block::SculkSensor | Block::SculkShrieker)
-}
-
 pub fn has_face(block: Block, face: usize) -> bool {
     block.multiface().is_some_and(|(_, bits)| bits & Block::FACE_BITS[face] != 0)
 }
@@ -33,7 +28,7 @@ pub fn has_face(block: Block, face: usize) -> bool {
 pub fn placement(view: &View, first: Block, at: [i32; 3], existing: Block, face: usize) -> Block {
     let own = existing.multiface().filter(|&(family, _)| family == first).map_or(0, |(_, bits)| bits);
     let [x, y, z] = step(at, face);
-    if own & Block::FACE_BITS[face] != 0 || !face_sturdy(view.block(x, y, z)) {
+    if own & Block::FACE_BITS[face] != 0 || !view.block(x, y, z).supports_multiface(opposite(face)) {
         return existing;
     }
     Block::with_faces(first, own | Block::FACE_BITS[face])

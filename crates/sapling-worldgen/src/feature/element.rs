@@ -31,7 +31,7 @@ pub fn place_element(name: &str, chunk: (i32, i32), centre: Arc<ChunkShape>, wor
     let mut view = View::new(chunk, &load).with_frozen_heights(world.load);
     let mut scope = Scope::new();
     scope.set_origin(at);
-    let ctx = &mut Ctx { view: &mut view, random, scope: &mut scope, biome: world.biome, surface: world.surface, in_structure: &|_| false };
+    let ctx = &mut Ctx { view: &mut view, random, scope: &mut scope, biome: world.biome, surface: world.surface, in_structure: &|_| false, in_tunnels: &|_| false };
     FEATURES[index].place(ctx, at);
     Some(view.into_writes().world_writes(chunk))
 }

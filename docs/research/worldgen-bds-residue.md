@@ -271,6 +271,40 @@ change this: the read is of a neighbour's planks, not of a height.
 - Mansion: 25 wall cells on chunk corners (order of structure post-processing).
 - Mineshafts everywhere (stronghold, igloo, ocean ruins, city): draw drift from reads past the chunk.
 
+## After worldgen/struct4 (2026-10-10)
+Support classes from the block registry, the vein feature's full `can_place_on` and the sculk growth box
+(worldgen-bds-caves.md, "Support" and "Sculk"). all2 (038b471) -> struct4:
+
+| world | identical % | wrong | missing | wrong + missing | lichen/sculk | scans (twin) | deterministic |
+|---|---|---|---|---|---|---|---|
+| near origin | 99.9975 -> 99.9975 | 2081 -> 2080 | 342 -> 342 | 2423 -> 2422 | 307 | 0 | 2115 -> 2115 |
+| far out | 99.9935 -> 99.9935 | 329 -> 329 | 33 -> 34 | 362 -> 363 | 29 | 0 | 334 -> 334 |
+| negative seed | 99.9982 -> 99.9982 | 98 -> 98 | 12 -> 12 | 110 -> 110 | 15 | 17 | 78 -> 78 |
+| biome regions | 99.9583 -> 99.9652 | 7499 -> 6082 | 1603 -> 1278 | 9102 -> 7360 | 4346 | 373 | 2675 -> 2641 |
+| tree regions | 99.9828 -> 99.9852 | 3972 -> 3448 | 781 -> 639 | 4753 -> 4087 | 567 | 676 | 2855 -> 2844 |
+| structures | 99.9610 -> 99.9695 | 21649 -> 16806 | 6479 -> 5089 | 28128 -> 21895 | 10122 | 1575 | 10366 -> 10198 |
+
+By region: ancient city 13911 -> 9000, frozen peaks 1826 -> 396, pillager outpost 2709 -> 1903, trail ruins
+1101 -> 642, savanna plateau 750 -> 431, cherry grove 498 -> 269, stony peaks 2292 -> 2092, meadow 478 -> 372;
+no region rose by more than a cell or two. The whole gain sits in the `lichen/sculk` column: that column was
+called floor, and a third of it was one support predicate and one truncated block list. It is "cells holding a
+thread-local block", not a measure of what the port cannot reach.
+
+What was looked at and is not a port difference:
+- Stronghold corridor with BDS air one above ours (-1439,-3,-2010): a mineshaft corridor's ceiling row
+  (`generateMaybeBox` 0.8, one float per cell). `examples/mineshaft_draws` on chunk -90,-126 has the first
+  three pieces in sync and later ones best at -8 and +8 draws, the eight cobweb floats of a section whose
+  support test reads past the chunk: the mineshaft drift of "Structure post-process order", not terrain.
+- Stronghold liquids (659 cells): a waterfall from an aquifer pond at (-1473,47,-1893) that BDS ran 27 levels
+  down in game ticks; decoration's instaticks stop where ours does (worldgen-bds-liquids.md, game time).
+- Outpost and trail ruins water against air (about 160 cells): water flowing over a vein of ours that BDS's
+  thread-local feature put elsewhere.
+- Vein spreads at a hashed direction: worse (worldgen-bds-caves.md, "Sculk").
+
+Left, deterministic and unported: the desert fossil (60 bone blocks at -6088,-51,-3515; `fossil_feature`
+places structure templates), 117 snow layers over short grass beside the snowy-plains igloo (snow keeps the
+plant in the second layer), grindstone, skull, shelf and end rod support by state.
+
 ## Tools added
 - `examples/city_sculk` (city cells by who turned them to sculk, vein counts), `examples/template_states` (v2
   template states against BDS per rotation), `examples/pieced_column` (a column before connections are

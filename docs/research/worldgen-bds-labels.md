@@ -141,6 +141,18 @@ value (north 2, south 0, west 1, east 3), 0x14a712760 facing offsets, 145e16f50 
 0) and vt+0x78 (1 for a feature element), 144d13b6e the 2x2x2 box a feature element leaves in its space.
 The tree classes' vtables sit between std::function vtables in 14a98b000..14a98f000, three slots each
 (destructor, place, height); the functions follow the classes' alphabetical order from 1438ea120 on.
+Struct4 labels (2026-10-10, read in scratch bdsre-struct4, not saved as labels): 141a24f10/141a24e50
+`BlockType::canProvideMultifaceSupport` and its non-virtual body, 146603600 slab / 1425764f0 trapdoor / 148b220d0
+chain `canProvideSupport` (the rest in worldgen-bds-caves.md, "Support"), 148b6adf0 `MultifaceBlock` remove face,
+148b41420 sculk vein replaceable (water source, or buildable over and not lava), 148b4a9d0 vein config
+`canSpreadInto`, 1465e9f50 the lichen config's, 14196ac20/141efd3b0 `WorldGenerator::isStructureFeatureTypeAt` and
+the registry's test (world generator vtable +0x150; +0x148 = 14196ac00 `findStructureFeatureTypeAt`), 141f085e0 the
+structure type names' initialiser (0x14ccbb900 stronghold, 0x14ccbb930 mineshaft), 1419be4c0/1419beaf0 block
+registry lookups (registry 0x14ccb1608), `BlockType` vtable 0x210 `mayPlace`, 0x220 `mayPlaceOn`, 0x298 buildable
+over; `setBlock` call sites of the sculk code: 143b84ccc multiface attach, 1465e946d.. (6) spread toward random,
+1465e9bc7.. (6) spread toward all, 148b41132 vein regrow, 148b42676 conversion, 148b41ae2/148b41cee growth,
+148b6b1f7 remove face, 143ba17e8 catalyst, 143ba1853 shrieker; 0x14ccd3328 the dirt list, 0x14ce19564 the support
+component's id.
 
 Feat3 labels (2026-10-08): 14a73fa30 the decoration's IBlockWorldGenAPI vtable (forwards to its `BlockSource` at
 +8; 0xb0 = 1411a0a60 heightmap: `LevelChunk` +0xb80 i16 per column + minimum y), 1438f0d00

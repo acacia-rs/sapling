@@ -30,7 +30,14 @@ def rng(value):
 # Plain-string names BDS matches as the blocks they were before renames and stone flattening (oracle:
 # lush-cave clay pools replace andesite, diorite and granite; ores' {"name": "minecraft:stone"} does not).
 LEGACY_NAMES = {'minecraft:stone': ['minecraft:stone', 'minecraft:granite', 'minecraft:diorite', 'minecraft:andesite'],
-                'minecraft:grass': ['minecraft:grass_block']}
+                'minecraft:grass': ['minecraft:grass_block'],
+                'minecraft:planks': [f'minecraft:{wood}_planks' for wood in ('oak', 'spruce', 'birch', 'jungle', 'acacia', 'dark_oak')]}
+
+
+def every_name(values):
+    """A plain-string block list as bare names, legacy names expanded (for blocks only templates place)."""
+    names = [n.removeprefix('minecraft:') for v in values if isinstance(v, str) for n in LEGACY_NAMES.get(v, [v])]
+    return '&[' + ', '.join(f'"{n}"' for n in dict.fromkeys(names)) + ']'
 
 
 def every_state(values):
@@ -79,6 +86,7 @@ def rust(kind, body, index):
             + ([2, 5, 3, 4] if body['can_place_on_wall'] else [])
         return (f'Feature::Multiface(Multiface {{ block: {block(body["places_block"])}, search_range: {int(body["search_range"])}, '
                 f'faces: &{faces}, can_place_on: {every_state(body.get("can_place_on", []))}, '
+                f'on_names: {every_name(body.get("can_place_on", []))}, '
                 f'spread_chance: {float(body.get("chance_of_spreading", 0.5))!r} }})')
     if kind == 'minecraft:sculk_patch_feature':
         extra = body.get('extra_growth_chance', {'range_min': 0, 'range_max': 0})

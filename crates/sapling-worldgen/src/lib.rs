@@ -173,10 +173,11 @@ impl OverworldGenerator {
         let biomes = |x, z| self.chunk_biomes(x, z);
         let surface = |qx, qz| self.density.preliminary_surface(qx, qz);
         let after_lake = |x, z| self.decoration.after_lake(x, z, &|cx, cz| self.loaded(cx, cz));
-        let in_structure = |[x, y, z]: [i32; 3]| self.structures.in_structure(&self.density, (x, y, z));
+        let in_structure = |[x, y, z]: [i32; 3]| self.structures.in_structure(&self.density, (x, y, z), true);
+        let in_tunnels = |[x, y, z]: [i32; 3]| self.structures.in_structure(&self.density, (x, y, z), false);
         let carved = |x, z| self.carved(x, z);
         let generated_tops = |x, z| self.generated_tops(x, z);
-        let inputs = feature::Inputs { loaded: &loaded, carved: &carved, generated_tops: &generated_tops, biomes: &biomes, surface: &surface, after_lake: &after_lake, in_structure: &in_structure };
+        let inputs = feature::Inputs { loaded: &loaded, carved: &carved, generated_tops: &generated_tops, biomes: &biomes, surface: &surface, after_lake: &after_lake, in_structure: &in_structure, in_tunnels: &in_tunnels };
         run(inputs)
     }
 
