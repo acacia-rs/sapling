@@ -1,7 +1,7 @@
 //! What sapling keeps of a player between visits, under its own key. The fields are named and
 //! shaped as in the game's player record (`Inventory` with a `Slot` in each stack, `Armor`,
 //! `Offhand`, `SelectedInventorySlot`, `EnderChestInventory`, `PlayerLevel`,
-//! `PlayerLevelProgress`), but the record is not the game's `player_server_<id>`: one of those
+//! `PlayerLevelProgress`, `Attributes` with a `Name` and a `Current` each), but the record is not the game's `player_server_<id>`: one of those
 //! holding only items is not a player the game can load (docs/DESIGN.md "Inventories").
 
 use acacia_proto::nbt::{self, List, LittleEndian, Nbt, Value};
@@ -28,7 +28,12 @@ pub struct PlayerData {
     pub level: i32,
     /// How far into the next level, 0 to 1.
     pub progress: f32,
+    /// Health, hunger, saturation and exhaustion; `None` in a record older than they are kept.
+    pub vitals: Option<[f32; 4]>,
 }
+
+/// The attributes `PlayerData::vitals` are kept as, in its order.
+const VITALS: [&str; 4] = ["minecraft:health", "minecraft:player.hunger", "minecraft:player.saturation", "minecraft:player.exhaustion"];
 
 /// The database key of the player with this id (its UUID as text).
 pub(crate) fn key(id: &str) -> Vec<u8> {
@@ -68,6 +73,9 @@ impl PlayerData {
         let selected = if let Some(Value::Int(selected)) = player.get("SelectedInventorySlot") { *selected as u8 } else { 0 };
         let level = if let Some(Value::Int(level)) = player.get("PlayerLevel") { *level } else { 0 };
         let progress = if let Some(Value::Float(progress)) = player.get("PlayerLevelProgress") { *progress } else { 0.0 };
+        let attribute = |name: &str| list("Attributes").iter().find(|kept| kept.get("Name") == Some(&Value::String(name.into()))).and_then(|kept| kept.get("Current"));
+        let current = |name: &str| if let Some(Value::Float(current)) = attribute(name) { Some(*current) } else { None };
+        let vitals = if let [Some(health), Some(hunger), Some(saturation), Some(exhaustion)] = VITALS.map(current) { Some([health, hunger, saturation, exhaustion]) } else { None };
         Ok(Self {
             main: read_slotted(list("Inventory"))?,
             armor: list("Armor").iter().map(ItemStack::parse).collect(),
@@ -76,12 +84,16 @@ impl PlayerData {
             ender: read_slotted(list("EnderChestInventory"))?,
             level,
             progress,
+            vitals,
         })
     }
 
     /// The record; `registry` names the blocks that block items place.
     pub fn encode(&self, registry: &BlockRegistry) -> Vec<u8> {
+        let attribute = |(name, current): (&str, f32)| Value::Compound(vec![("Name".into(), Value::String(name.into())), ("Current".into(), Value::Float(current))]);
+        let attributes = self.vitals.iter().flat_map(|vitals| VITALS.into_iter().zip(*vitals)).map(attribute).collect();
         let fields = vec![
+            ("Attributes".into(), Value::List(List { tag: COMPOUND, items: attributes })),
             ("Inventory".into(), slotted(&self.main, registry)),
             ("Armor".into(), stacks(&self.armor, registry)),
             ("Offhand".into(), stacks(std::slice::from_ref(&self.offhand), registry)),
@@ -110,11 +122,11 @@ mod tests {
         (main[0], main[8], main[35]) = (stack("minecraft:stone", 64, Some(stone)), Some(sword), stack("minecraft:diamond", 5, None));
         let ender = vec![None, None, stack("minecraft:emerald", 12, None)];
         let armor = vec![stack("minecraft:iron_helmet", 1, None), None, None, None];
-        let player = PlayerData { main, armor, offhand: stack("minecraft:shield", 1, None), selected: 8, ender, level: 17, progress: 0.25 };
+        let player = PlayerData { main, armor, offhand: stack("minecraft:shield", 1, None), selected: 8, ender, level: 17, progress: 0.25, vitals: Some([7.5, 18.0, 0.0, 2.25]) };
         assert_eq!(PlayerData::decode(&player.encode(&registry)).unwrap(), player);
 
         let empty = PlayerData::decode(&PlayerData::default().encode(&registry)).unwrap();
-        assert_eq!((empty.main.len(), empty.ender.len(), empty.offhand, empty.selected, empty.level), (0, 0, None, 0, 0));
+        assert_eq!((empty.main.len(), empty.ender.len(), empty.offhand, empty.selected, empty.level, empty.vitals), (0, 0, None, 0, 0, None));
         assert!(PlayerData::decode(&[1, 2, 3]).is_err());
     }
 }

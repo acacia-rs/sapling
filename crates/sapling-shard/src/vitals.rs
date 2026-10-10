@@ -4,12 +4,13 @@
 //! starving: hunger.rs; effects: effects.rs.
 // TODO: armour does not wear and burning on is not stopped by it (not drilled); no effects; a block over the head alone does not
 // make a player crawl; the breathing flag is not told; a fall is measured from the highest feet to the landing, where BDS with the
-// bot took 8 for 12 blocks; health is not kept with the player's items; plugins are not asked.
+// bot took 8 for 12 blocks; plugins are not asked.
 
 mod death;
 pub(crate) mod eating;
 mod effects;
 mod hunger;
+mod kept;
 
 use acacia_proto::Packet;
 use acacia_proto::packets::{EntityEvent, EntityEventEventId, SetEntityMotion};
@@ -68,11 +69,15 @@ pub(crate) struct Vitals {
     died: Option<u64>,
     /// Experience its body leaves as it goes.
     leaves: Option<i32>,
+    /// What storage last kept of it (kept.rs).
+    saved: [f32; 4],
 }
 
 impl Default for Vitals {
     fn default() -> Self {
-        Self { health: Health::new(MAX, None, 0), air: AIR, hunger: hunger::Hunger::default(), meal: None, told: MAX, padded: 0.0, was: None, died: None, leaves: None }
+        let hunger = hunger::Hunger::default();
+        let [fed, saturation, exhaustion] = hunger.kept();
+        Self { health: Health::new(MAX, None, 0), air: AIR, hunger, meal: None, told: MAX, padded: 0.0, was: None, died: None, leaves: None, saved: [MAX, fed, saturation, exhaustion] }
     }
 }
 

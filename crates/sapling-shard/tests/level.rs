@@ -168,6 +168,7 @@ fn a_players_items_wait_in_storage_for_the_next_visit() {
     h.remote.run(move |ctx| {
         ctx.set_item(PlayerId(1), Slot::Main(7), Some(&Item::new("minecraft:diamond", 5)));
         ctx.set_item(PlayerId(1), Slot::Offhand, Some(&Item::new("minecraft:shield", 1)));
+        assert!(ctx.hurt_player(PlayerId(1), 6.0, sapling_api::DamageCause::Generic));
         *steve.lock().unwrap() = ctx.players().next().unwrap().uuid.to_string();
     });
     h.tick(1);
@@ -179,6 +180,7 @@ fn a_players_items_wait_in_storage_for_the_next_visit() {
     let found = Arc::new(Mutex::new(Vec::new()));
     let items = found.clone();
     h.remote.run(move |ctx| {
+        assert_eq!(ctx.health(PlayerId(2)), Some(14.0), "its health waited too");
         items.lock().unwrap().extend([Slot::Main(7), Slot::Offhand, Slot::Main(0)].map(|slot| ctx.item(PlayerId(2), slot)));
         ctx.give(PlayerId(2), &Item::new("minecraft:diamond", 1));
     });
@@ -189,6 +191,7 @@ fn a_players_items_wait_in_storage_for_the_next_visit() {
     h.shard.tick();
     h.shard.save_worlds();
     let kept = storage.load_player(&uuid.lock().unwrap()).unwrap().unwrap();
+    assert_eq!(kept.vitals.map(|vitals| vitals[0]), Some(14.0));
     assert_eq!((kept.main[7].as_ref().map(|stack| (stack.name.as_str(), stack.count)), kept.offhand.map(|stack| stack.name)), (Some(("minecraft:diamond", 6)), Some("minecraft:shield".into())));
 }
 

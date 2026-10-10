@@ -81,6 +81,15 @@ impl Hunger {
     }
 
     /// Its hunger, saturation and exhaustion: what is told of it.
+    /// Hunger, saturation and exhaustion, as storage keeps them.
+    pub(super) fn kept(&self) -> [f32; 3] {
+        [self.food, self.saturation, self.exhaustion]
+    }
+
+    pub(super) fn restored([food, saturation, exhaustion]: [f32; 3]) -> Self {
+        Self { food, saturation, exhaustion, ..Self::default() }
+    }
+
     pub(super) fn shown(&self) -> (f32, f32, f32) {
         (self.food, self.saturation, self.exhaustion)
     }

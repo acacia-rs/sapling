@@ -130,4 +130,4 @@ player's hit (a zombie's: mob-attacks.md), `keepInventory`, a bed's or anchor's 
   sapling in the same 32 ticks and packets (research/captures/sapling-eat.txt). Only the apple's values are
   drilled; the others are the Java game's. A stew leaves no bowl, and no food does more than feed.
 - Not built: drinks, effects, the shrunken box and `PlayerLastDeathPosition`, lying down under a
-  block, a bed's spawn, `doImmediateRespawn`, health kept across a rejoin.
+  block, a bed's spawn, `doImmediateRespawn`. Health and hunger wait in storage with a player's items (`vitals/kept.rs`); effects, breath and fire do not, and one who left dead comes back whole.
