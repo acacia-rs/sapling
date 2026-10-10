@@ -10,7 +10,7 @@ only = int(sys.argv[sys.argv.index('-t') + 1]) if '-t' in sys.argv else None
 
 def kind(block):
     if block.startswith('SculkVein'):
-        return ('vein', int(block[9:]))
+        return ('vein', int(block[9:].removeprefix('Wet')))
     return (block, 0)
 
 
