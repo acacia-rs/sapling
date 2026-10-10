@@ -7,7 +7,7 @@
 mod flow;
 
 use super::ticks::TickQueue;
-use super::view::View;
+use super::view::{Routed, View};
 use crate::block::Block;
 
 const GENERATIONS: usize = 128;
@@ -19,11 +19,15 @@ pub fn write_hook() -> Option<fn(&mut View, [i32; 3])> {
     on.then_some(flow::update_neighbors as fn(&mut View, [i32; 3]))
 }
 
-pub fn settle(view: &mut View) {
+/// `inherited`: the ticks earlier sources left on this chunk's queue (docs/research/worldgen-bds-liquids.md, "How they run").
+pub fn settle(view: &mut View, inherited: &[Routed]) {
     reset_border_water(view);
     let mut generated = TickQueue::default();
     for (at, lava) in view.own_fluid_ticks() {
         generated.add(at, lava, 1);
+    }
+    for &(at, lava, delay) in inherited {
+        generated.add(at, lava, delay);
     }
     view.ticks.acquire(generated);
     for _ in 0..GENERATIONS {
@@ -37,6 +41,7 @@ pub fn settle(view: &mut View) {
         }
         view.ticks.instaticking = false;
     }
+    view.routed = view.ticks.in_game.clone();
     play(view);
 }
 
@@ -69,7 +74,7 @@ fn play(view: &mut View) {
 }
 
 /// Game ticks the oracle's chunks ticked after decoration; `SAPLING_LIQUID_GAME_TICKS` overrides.
-fn game_ticks() -> u64 {
+pub(super) fn game_ticks() -> u64 {
     static TICKS: std::sync::OnceLock<u64> = std::sync::OnceLock::new();
     *TICKS.get_or_init(|| std::env::var("SAPLING_LIQUID_GAME_TICKS").ok().and_then(|v| v.parse().ok()).unwrap_or(0))
 }

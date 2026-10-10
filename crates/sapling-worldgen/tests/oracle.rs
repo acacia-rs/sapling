@@ -166,6 +166,14 @@ fn blocks_match_bds_far_out() {
     compare(20261003, "20261003", &[Region::new("chunks 100000..100007", 100000, 100000, 100007, 100007)]);
 }
 
+/// The same regions from a BDS that ran no scheduled tick in game time (scripts/bds_still.py).
+#[test]
+#[ignore = "needs worlds/oracle; slow"]
+fn blocks_match_bds_still() {
+    let regions = [Region::new("chunks -16..15 (still)", -16, -16, 15, 15), Region::new("chunks 100000..100007 (still)", 100000, 100000, 100007, 100007)];
+    compare(20261003, "20261003-still", &regions);
+}
+
 #[test]
 #[ignore = "needs worlds/oracle; slow"]
 fn blocks_match_bds_negative_seed() {
