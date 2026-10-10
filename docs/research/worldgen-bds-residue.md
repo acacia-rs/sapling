@@ -8,12 +8,16 @@ same-phase pair found by experiment, the thread-local generator's seed; the snow
 already fixed).
 
 ## sculk2: what the sculk residue is (2026-10-10, worldgen/sculk2)
-No port difference was found in the sculk patch, the spreader or the vein feature; what the oracle counts there
-is BDS's own run-to-run spread, most of it not thread-local. The evidence, strongest first:
+No port difference was found in the sculk patch, the spreader or the vein feature; most of what the oracle
+counts there is BDS's own run-to-run spread, and most of that is not thread-local. One difference upstream of
+them was found by the same comparison (the city's degradation list, "Changes and totals"). The evidence,
+strongest first:
 - Phase-0 chunks run alone under the debugger agree with ours write for write (worldgen-bds-caves.md,
   "Thread-local draws"): stony peaks -228,260 and badlands 594,-348, 151 patch tries with every position, 146
   identical in all writes (about 11k), five differing by 0 to 29 cells around a vein BDS's feature spread;
   catalysts (3 of 3) and the one growth alike. Yet the oracle has 118 and 360 stable errors in those two chunks.
+  A phase-2 chunk (stony peaks -229,259) and a city chunk (-70,76) hold their positions too and agree until a
+  cell that differed before the patch reached it: an earlier source's sculk, and a stair of the city.
 - The same chunk, three BDS runs: badlands 594,-348 saved by the one-chunk run differs from the oracle's copy in
   610 cells (sculk 183, veins 189, water 149). The whole badlands region saved by a third run of its 4x4 tile
   (under the debugger, one entry breakpoint) differs from the oracle in 2701 cells (sculk 881, veins 822, and
@@ -32,8 +36,8 @@ is BDS's own run-to-run spread, most of it not thread-local. The evidence, stron
 | jagged peaks | 505 | 1761 | 624 | 1256 |
 | frozen peaks | 326 | 843 | 442 | 517 |
 
-  In four regions ours is nearer the twin than BDS's first run is. By family and side at the branch's end
-  (ours only / BDS only): ancient city veins 2162 / 1452, sculk 1866 / 1132, sensors and shriekers 88 / 60;
+  (Table on 395e611.) In four regions ours is nearer the twin than BDS's first run is. By family and side on
+  a3c3f95, veins spreading (ours only / BDS only): ancient city veins 2162 / 1452, sculk 1866 / 1132, sensors and shriekers 88 / 60;
   stony peaks veins 765 / 379, sculk 739 / 574, growths 16 / 8; badlands veins 434 / 330, sculk 257 / 509,
   growths 10 / 4. The ours-only surplus is the stable filter: a BDS-only cell must be in both runs.
 
@@ -55,31 +59,38 @@ lies in that reach and a lichen or sculk cell the twins disagree on is within 4 
 did to a live patch); `other_floor` is the same for any other block (water over a vein). `deterministic` is
 everything but those and the twin-confirmed scans. Reach alone says nothing in the deep dark (it holds 99.9% of
 the lichen and sculk errors: tries tainted / followed are on each line), and the old 15-block rule called 96% of
-them confirmed; the 4-block rule keeps 58%. `no-tl` in the script's table is the old deterministic column.
+them confirmed; the 4-block rule keeps 57%. `no-tl` in the script's table is the old deterministic column.
 The new column is honest about what it is: cells the thread-local generator is not shown to explain. In
-sculk regions most of it is the run-to-run spread above (badlands: 1452 of 1833, where a third BDS run is 2701
+sculk regions most of it is the run-to-run spread above (badlands: 1451 of 1822, where a third BDS run is 2701
 off), so it is an upper bound on port errors, not a count of them; a port error in sculk is found by the
 one-chunk write comparison, not by this number.
 
 ### Changes and totals
-- Multiface spreads always land (worldgen-bds-caves.md, "Thread-local draws"): BDS's count, at a guessed cell.
+- The city's degradation list (worldgen-bds-jigsaw.md, "Elements and processors"): only default-state blocks
+  match, so turned stairs and top slabs are never removed and draw nothing. Found from city chunk -70,76,
+  whose second patch hung a vein where BDS has a stair at (-1119,-50,1233). The city's differing structure
+  cells 1489 -> 1422, city-block recall 99.332 -> 99.413%, region 9294 -> 8916 at that commit's vein rule.
+  Fitted, not decompiled; the single-block random predicate (tile slabs, lanterns) still matches by type.
+- Spreads, merged with worldgen/lush2: lichen takes the first direction, veins only a lone one
+  (worldgen-bds-caves.md, "Thread-local draws": 35665 against 36393 with veins always spreading).
 - Support by state for grindstones, skulls, rods and shelves (worldgen-bds-caves.md, "Support"): no cell moved.
-all2 (395e611) -> sculk2:
+all2 before lush2 (395e611) -> sculk2 with all2 at c713776 merged:
 
 | world | identical % | wrong | missing | no-tl | deterministic (new) |
 |---|---|---|---|---|---|
 | near origin | 99.9980 -> 99.9977 | 2018 -> 2347 | 313 -> 301 | 2024 -> 2039 | 2281 |
 | far out | 99.9959 -> 99.9955 | 259 -> 281 | 30 -> 28 | 260 -> 260 | 286 |
 | negative seed | 99.9984 -> 99.9980 | 98 -> 126 | 12 -> 10 | 78 -> 78 | 87 |
-| biome regions | 99.9821 -> 99.9811 | 5620 -> 5940 | 1134 -> 1120 | 1817 -> 1661 | 3605 |
-| tree regions | 99.9892 -> 99.9894 | 3385 -> 3343 | 928 -> 848 | 3018 -> 2577 | 2817 |
-| structures | 99.9775 -> 99.9785 | 17873 -> 17081 | 5236 -> 4968 | 10793 -> 10057 | 14469 |
+| biome regions | 99.9821 -> 99.9822 | 5620 -> 5588 | 1134 -> 1100 | 1817 -> 1660 | 3603 |
+| tree regions | 99.9892 -> 99.9905 | 3385 -> 2978 | 928 -> 813 | 3018 -> 2577 | 2816 |
+| structures | 99.9775 -> 99.9789 | 17873 -> 16770 | 5236 -> 4782 | 10793 -> 10041 | 14200 |
 
-Wrong + missing over all 59 regions 36906 -> 36393. The spread moves regions by hundreds either way, through
-one lichen cell that stops or frees a dripstone or lush scan: mansion 4373 -> 2907, old growth spruce taiga
-571 -> 69, meadow 413 -> 13, trail ruins 682 -> 410, badlands 1964 -> 1833, jagged peaks 533 -> 406; stony
-peaks 2095 -> 2588, cherry grove 277 -> 677, near origin 2331 -> 2648, bamboo jungle 319 -> 577, igloo (snowy
-slopes) 67 -> 221, ancient city 9098 -> 9294. Neither direction is evidence about the port.
+Wrong + missing over all 59 regions 36906 -> 35124. Of that, the lichen spread (lush2's and this branch's,
+the same rule) moves regions by hundreds either way through one lichen cell that stops or frees a dripstone or
+lush scan: mansion 4373 -> 2907, old growth spruce taiga 571 -> 69, meadow 413 -> 13, badlands 1964 -> 1822;
+near origin 2331 -> 2648, bamboo jungle 319 -> 577, pale garden 671 -> 744. This branch's own: ancient city
+9098 -> 8661. Sculk regions otherwise stay within tens (stony peaks 2095 -> 2109, jagged peaks 533 -> 545,
+trail ruins 682 -> 739, pillager outpost 2156 -> 2189).
 
 ## misc: fossils, camp trees, poplars (2026-10-10, worldgen/misc)
 - Fossils ported (worldgen-bds-features.md, "Fossils"): desert pyramid region 108 -> 41.
