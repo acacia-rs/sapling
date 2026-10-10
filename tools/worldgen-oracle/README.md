@@ -60,3 +60,18 @@ each `oracle.txt` and the server log, not in `release-notes.txt`):
 Rebuild one with the `run.sh` line above and the seed and regions from this table. The `sapling-worldgen` oracle
 test and examples read them from `$SAPLING_ORACLE_WORLDS` (default: `worlds/oracle` of the checkout), so a worktree
 can point at the main checkout's copy.
+
+## Running the oracle test
+
+On testbox, which holds the worlds in `~/oracle-worlds`; each script's header lists its env:
+
+```
+tools/oracle.sh <name> [test filter]                 # every region's wrong and missing cells; log in target/testbox/<name>.log
+tools/oracle-totals.sh <before log> <after log>      # the regions that moved between two runs
+tools/remote-example.sh <name> <example> [args...]   # a release example's output
+tools/testbox.sh <name> <cargo args...>              # anything else, e.g. `lib test -p sapling-worldgen --lib`
+```
+
+A worktree syncs to its own remote folder, and runs on it queue up. The test generates a region's chunks
+on every core (`SAPLING_ORACLE_THREADS`) and compares them in order on one, which is what bounds a run:
+all six `blocks_match_bds_*` tests took 193 s against 444 s before (2026-10-09, testbox shared with other work).
