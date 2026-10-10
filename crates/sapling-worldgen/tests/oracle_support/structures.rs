@@ -136,8 +136,7 @@ pub enum StageDiff {
     BdsOnly,
     /// Both hold a structure's write, of another block or state.
     Both,
-    /// BDS has air inside a ported structure's box where ours leaves solid terrain to the end
-    /// (a piece's air ours did not carve; the carvers are exact, so little else empties a cell).
+    /// BDS has air inside a ported structure's box where ours leaves solid terrain to the end.
     BdsAir,
 }
 
@@ -159,6 +158,15 @@ pub fn stage_diff((before, after, last): (Block, Block, Block), bds: &BdsCell, i
         (true, false) => StageDiff::OursOnly,
         _ => StageDiff::BdsOnly,
     })
+}
+
+/// Whether a differing cell inside a mineshaft's box is the mineshaft's: one of its blocks on
+/// either side, or air against terrain (a corridor's box or its ceiling). Areas alone credit
+/// such cells to whatever structure stands nearest.
+pub fn mineshaft_cell(after: Block, bds: &BdsCell) -> bool {
+    let shaft = |name: &str| ["planks", "fence", "rail", "web", "torch", "chain", "_log", "mob_spawner"].iter().any(|part| name.contains(part));
+    let terrain = |name: &str| TERRAIN_BLOCKS.contains(&name);
+    shaft(after.name()) || shaft(&bds.block) || after == Block::Air && terrain(&bds.block) || bds.is_empty() && terrain(after.name())
 }
 
 #[derive(Default)]
@@ -213,9 +221,11 @@ impl StructureTally {
     /// BDS's, the ported kind whose area holds it (what placed it) and the kind of any structure
     /// there (what BDS wants). A block our later stages place as BDS has it (a monster room's
     /// cobblestone in a ruin's area) is not wanted from the structure.
-    pub fn add(&mut self, (before, after, last): (Block, Block, Block), bds: &BdsCell, placer: Option<StructureKind>, kind: Option<StructureKind>) {
+    /// `in_mineshaft`: a mineshaft's box holds the cell.
+    pub fn add(&mut self, (before, after, last): (Block, Block, Block), bds: &BdsCell, placer: Option<StructureKind>, kind: Option<StructureKind>, in_mineshaft: bool) {
         if let Some(diff) = stage_diff((before, after, last), bds, kind.is_some(), placer.is_some()) {
-            let owner = if diff == StageDiff::BdsOnly { kind.or(placer) } else { placer.or(kind) };
+            let by_area = if diff == StageDiff::BdsOnly { kind.or(placer) } else { placer.or(kind) };
+            let owner = if in_mineshaft && mineshaft_cell(after, bds) { Some(StructureKind::Mineshaft) } else { by_area };
             self.kinds.entry(owner.map_or("unattributed", |k| k.name())).or_default().differs[diff as usize] += 1;
         }
         if before != after {

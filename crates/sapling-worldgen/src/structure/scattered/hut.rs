@@ -33,6 +33,8 @@ pub fn post_process(f: &Frame, canvas: &mut Canvas, random: &mut Mt19937) {
     f.place(canvas, air, 5, 3, 4);
     f.place(canvas, air, 5, 3, 5);
     f.place(canvas, Block::FlowerPot, 1, 3, 5);
+    // The taller wall's lintel over the door.
+    f.place(canvas, planks, 4, 4, 2);
     f.place(canvas, Block::CraftingTable, 3, 2, 6);
     // The cauldron is set directly, its level and potion drawn only when it is.
     let (x, y, z) = f.world(4, 2, 6);

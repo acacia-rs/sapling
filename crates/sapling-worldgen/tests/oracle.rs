@@ -15,6 +15,7 @@ use oracle_support::{
 };
 use sapling_leveldb::ChunkKey;
 
+use sapling_worldgen::structure::StructureKind;
 use sapling_worldgen::{Block, CellKind, MIN_Y, OverworldGenerator};
 
 const LAST_Y: i32 = 319;
@@ -96,7 +97,8 @@ fn compare(seed: i64, world: &str, regions: &[Region]) {
                         dump.cell(at, laked.block(x, y, z), block, (bds, &twin_cell), context, &areas, PORTED, (&primary, &a));
                         if stable {
                             tallies.features.add(laked.block(x, y, z), block, bds);
-                            tallies.structures.add((loaded.block(x, y, z), structured.block(x, y, z), block), bds, attribute(&ported, at), attribute(&areas, at));
+                            let in_mineshaft = areas.iter().any(|(kind, _, area)| *kind == StructureKind::Mineshaft && area.contains(wx, y, wz));
+                            tallies.structures.add((loaded.block(x, y, z), structured.block(x, y, z), block), bds, attribute(&ported, at), attribute(&areas, at), in_mineshaft);
                             if Some(y) == our_top {
                                 tallies.top.add(block, bds, at, context);
                             }
