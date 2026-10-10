@@ -79,6 +79,8 @@ fn run(rule: &Rule, source: &mut Source, only: Option<u32>, own: &ChunkBiomes, v
         return;
     }
     let mut placing = Mt19937::new(seed);
+    let followed = super::reach::radius(&FEATURES[rule.feature]);
+    let mut fresh = true;
     let (biomes, surface) = (source.inputs.biomes, source.inputs.surface);
     let chunk = source.chunk;
     let biome = |at: [i32; 3]| Some(biome_at(chunk, own, &biomes, at));
@@ -93,8 +95,14 @@ fn run(rule: &Rule, source: &mut Source, only: Option<u32>, own: &ChunkBiomes, v
             continue;
         }
         let start = placing.draws();
+        if followed.is_some() {
+            view.reach_begin(std::mem::take(&mut fresh));
+        }
         let ctx = &mut Ctx { view, random: &mut placing, scope, biome: &biome, surface, in_structure: source.inputs.in_structure, in_tunnels: source.inputs.in_tunnels };
         let placed = FEATURES[rule.feature].place(ctx, at);
+        if let Some(radius) = followed {
+            view.reach_end(at, radius);
+        }
         super::trace::line(|| format!("{chunk:?} {} try {index} at {at:?} placed {} draws {start}..{}", rule.name, placed.is_some(), placing.draws()));
     }
 }

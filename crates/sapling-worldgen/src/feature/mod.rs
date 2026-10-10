@@ -34,6 +34,7 @@ mod pile;
 mod place;
 mod plants;
 mod pool;
+pub(crate) mod reach;
 mod scatter;
 mod sculk;
 mod spec;
@@ -45,6 +46,7 @@ pub(crate) mod trace;
 mod tree;
 mod view;
 
+use std::collections::HashMap;
 use std::sync::Arc;
 
 use crate::biome::ChunkBiomes;
@@ -93,36 +95,68 @@ pub(crate) fn phase((x, z): (i32, i32)) -> u8 {
     [0, 1, 3, 2][((x & 1) | (z & 1) << 1) as usize]
 }
 
-/// The sources whose features reach `target`, in decoration order, those of `phase` and later left out.
-fn sources_before(target: (i32, i32), phase_limit: u8) -> Vec<(i32, i32)> {
-    let mut sources: Vec<(i32, i32)> = (target.0 - REACH..=target.0 + REACH)
-        .flat_map(|x| (target.1 - REACH..=target.1 + REACH).map(move |z| (x, z)))
-        .filter(|&source| phase(source) < phase_limit)
-        .collect();
-    sources.sort_by_key(|&source| (phase(source), source));
-    sources
-}
+/// A source's place in the decoration order: its phase, or its index in a run's logged order.
+type Rank = u32;
 
 pub struct Features {
     seed: LargeFeatureSeed,
     writes: SourceCache<(i32, i32), ChunkWrites>,
-    before: SourceCache<(i32, i32, u8), ChunkShape>,
+    before: SourceCache<(i32, i32, Rank), ChunkShape>,
+    /// Sources follow what BDS's thread-local generator could reach (reach.rs).
+    pub track_reach: bool,
+    /// The order one BDS run decorated its chunks in, replacing the phases: every source then sees
+    /// the writes of all before it, and chunks the run did not decorate are no sources.
+    pub order: Option<HashMap<(i32, i32), Rank>>,
 }
 
 impl Features {
     /// Seeded like the carvers: `(x*a + z*b) ^ seed` on the low 32 bits of the world seed.
     pub fn new(world_seed: i64) -> Self {
-        Self { seed: LargeFeatureSeed::new(world_seed as u32), writes: SourceCache::new(CACHE_LIMIT), before: SourceCache::new(BEFORE_LIMIT) }
+        Self { seed: LargeFeatureSeed::new(world_seed as u32), writes: SourceCache::new(CACHE_LIMIT), before: SourceCache::new(BEFORE_LIMIT), track_reach: false, order: None }
+    }
+
+    fn rank(&self, source: (i32, i32)) -> Option<Rank> {
+        match &self.order {
+            Some(order) => order.get(&source).copied(),
+            None => Some(phase(source) as Rank),
+        }
+    }
+
+    /// The sources whose features reach `target`, in decoration order, those ranked `limit` and later left out.
+    fn sources_before(&self, target: (i32, i32), limit: Rank) -> Vec<(i32, i32)> {
+        let mut sources: Vec<(Rank, (i32, i32))> = (target.0 - REACH..=target.0 + REACH)
+            .flat_map(|x| (target.1 - REACH..=target.1 + REACH).map(move |z| (x, z)))
+            .filter_map(|source| self.rank(source).filter(|&rank| rank < limit).map(|rank| (rank, source)))
+            .collect();
+        sources.sort();
+        sources.into_iter().map(|(_, source)| source).collect()
+    }
+
+    /// The cells of `chunk` that sources decorated before `limit` left in doubt.
+    fn doubt_before(&self, chunk: (i32, i32), limit: Rank, inputs: Inputs) -> Option<reach::Cells> {
+        let mut cells: Option<reach::Cells> = None;
+        for source in self.sources_before(chunk, limit) {
+            if let Some(doubt) = self.source_writes(source, inputs).doubt_towards(chunk.0 - source.0, chunk.1 - source.1) {
+                cells.get_or_insert_with(Default::default).merge(doubt);
+            }
+        }
+        cells
+    }
+
+    /// What every source left in doubt in `chunk`, and the tries `chunk` followed as a source.
+    pub fn reach(&self, chunk: (i32, i32), inputs: Inputs) -> (Option<reach::Cells>, reach::Tries) {
+        let tries = self.rank(chunk).map_or_else(Default::default, |_| self.source_writes(chunk, inputs).tries());
+        (self.doubt_before(chunk, Rank::MAX, inputs), tries)
     }
 
     /// Sources apply in decoration order; a write lands when the block it replaced in its source's
     /// view is still there.
     pub fn place(&self, shape: &mut ChunkShape, chunk: (i32, i32), inputs: Inputs) {
-        self.replay(shape, chunk, u8::MAX, inputs);
+        self.replay(shape, chunk, Rank::MAX, inputs);
     }
 
-    fn replay(&self, shape: &mut ChunkShape, chunk: (i32, i32), phase_limit: u8, inputs: Inputs) {
-        for source in sources_before(chunk, phase_limit) {
+    fn replay(&self, shape: &mut ChunkShape, chunk: (i32, i32), limit: Rank, inputs: Inputs) {
+        for source in self.sources_before(chunk, limit) {
             let writes = self.source_writes(source, inputs);
             for write in writes.towards(chunk.0 - source.0, chunk.1 - source.1) {
                 let index = write.index as usize;
@@ -133,28 +167,30 @@ impl Features {
         }
     }
 
-    /// A chunk with the features of every source decorated before `phase_limit`.
-    fn before(&self, chunk: (i32, i32), phase_limit: u8, inputs: Inputs) -> Arc<ChunkShape> {
-        if phase_limit == 0 {
+    /// A chunk with the features of every source decorated before `limit`.
+    fn before(&self, chunk: (i32, i32), limit: Rank, inputs: Inputs) -> Arc<ChunkShape> {
+        if limit == 0 {
             return (inputs.loaded)(chunk.0, chunk.1);
         }
-        self.before.get((chunk.0, chunk.1, phase_limit), || {
+        self.before.get((chunk.0, chunk.1, limit), || {
             let mut shape = (*(inputs.loaded)(chunk.0, chunk.1)).clone();
-            self.replay(&mut shape, chunk, phase_limit, inputs);
+            self.replay(&mut shape, chunk, limit, inputs);
             shape
         })
     }
 
-    /// One source chunk's writes over its neighbours as the earlier phases left them.
+    /// One source chunk's writes over its neighbours as the sources before it left them.
     pub fn source_writes(&self, source: (i32, i32), inputs: Inputs) -> Arc<ChunkWrites> {
         self.writes.get(source, || {
-            let phase_limit = phase(source);
-            let base = |x: i32, z: i32| self.before((x, z), phase_limit, inputs);
+            let limit = self.rank(source).expect("a source the order holds");
+            let base = |x: i32, z: i32| self.before((x, z), limit, inputs);
             // No chunk's heightmap changes while the world generates: see docs/research/worldgen-bds-features.md, "Heightmaps".
             let frozen = inputs.carved;
             // The pre-worldgen heightmap is dropped when the chunk's decoration ends.
-            let generated = |x: i32, z: i32| (phase((x, z)) >= phase_limit).then(|| (inputs.generated_tops)(x, z));
+            let generated = |x: i32, z: i32| self.rank((x, z)).is_none_or(|rank| rank >= limit).then(|| (inputs.generated_tops)(x, z));
             let mut view = View::new(source, &base).with_frozen_heights(frozen).with_generated_tops(&generated);
+            let doubt = |x: i32, z: i32| self.doubt_before((x, z), limit, inputs);
+            view.reach = self.track_reach.then(|| reach::Reach::new(&doubt));
             view.on_write = liquid::write_hook();
             monster_room::monster_rooms((inputs.after_lake)(source.0, source.1), source, &mut view);
             decorate::decorate_chunk(&self.seed, source, inputs, &mut view);

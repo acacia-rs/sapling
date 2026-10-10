@@ -1,8 +1,9 @@
 //! `MultifaceFeature::place` (143b83e50, attach 143b84880) and `SurfaceRelativeThresholdFeature`
 //! (143bc69b0). BDS shuffles the faces with a thread-local generator (nondeterministic: the
-//! oracle's two runs disagree on them); this keeps their pushed order, so which face a block takes
-//! can differ but whether a cell gets one does not. A spread (1465e9360) tries the directions in a
-//! thread-local order too: it is only placed when exactly one direction can take it.
+//! oracle's two runs disagree on them); this keeps their pushed order, so which face or neighbour
+//! cell a block takes can differ but whether one is placed does not. A spread (1465e9360) takes the
+//! first of six directions, shuffled thread-locally too, that can hold it: here the first unshuffled.
+//! See docs/research/worldgen-bds-caves.md, "Thread-local draws".
 
 use super::cave_spec::{Multiface, SurfaceThreshold};
 use super::data::FEATURES;
@@ -15,27 +16,54 @@ fn open(block: Block) -> bool {
     block == Block::Air || (block.is_fluid() && !block.is_lava())
 }
 
+/// What any face order could make of a call, for reach.rs: the (cell, face) placements, whether
+/// some order places nothing, and the cells a spread from a placement could take.
+struct Orders {
+    placements: Vec<([i32; 3], usize)>,
+    may_fail: bool,
+    spreads: Vec<[i32; 3]>,
+}
+
 impl Multiface {
     pub fn place(&self, ctx: &mut Ctx, at: [i32; 3]) -> Option<[i32; 3]> {
         if !open(ctx.view.block(at[0], at[1], at[2])) {
             return None;
         }
-        if self.attach(ctx, at, self.faces) {
-            return Some(at);
+        let orders = ctx.view.reach_on().then(|| self.orders(ctx, at));
+        let placed = self.place_in_order(ctx, at);
+        if let Some(orders) = orders {
+            orders.note(ctx, placed.is_some_and(|(_, spreads)| spreads));
+        }
+        placed.map(|(cell, _)| cell)
+    }
+
+    /// The cell placed in and whether the spread gate passed.
+    fn place_in_order(&self, ctx: &mut Ctx, at: [i32; 3]) -> Option<([i32; 3], bool)> {
+        if let Some(spreads) = self.attach(ctx, at, self.faces) {
+            return Some((at, spreads));
         }
         for &facing in self.faces {
             let next = step(at, facing);
-            let block = ctx.view.block(next[0], next[1], next[2]);
-            if !open(block) && !self.is_own(block) {
+            if !self.searches(ctx, next) {
                 continue;
             }
-            let faces: Vec<usize> = self.faces.iter().copied().filter(|&f| f != facing ^ 1).collect();
             // BDS retries `search_range` times at the same cell; the outcome cannot change.
-            if self.search_range > 0 && self.attach(ctx, next, &faces) {
-                return Some(next);
+            if let Some(spreads) = self.attach(ctx, next, &self.faces_from(facing)) {
+                return Some((next, spreads));
             }
         }
         None
+    }
+
+    /// Whether the search tries the neighbour cell: open or holding the feature's block.
+    fn searches(&self, ctx: &Ctx, next: [i32; 3]) -> bool {
+        let block = ctx.view.block(next[0], next[1], next[2]);
+        self.search_range > 0 && (open(block) || self.is_own(block))
+    }
+
+    /// The faces tried in the neighbour toward `facing`: all but the one back to the origin.
+    fn faces_from(&self, facing: usize) -> Vec<usize> {
+        self.faces.iter().copied().filter(|&f| f != facing ^ 1).collect()
     }
 
     fn family(&self) -> Block {
@@ -46,39 +74,93 @@ impl Multiface {
         block.multiface().is_some_and(|(family, _)| family == self.family())
     }
 
-    /// The first face whose neighbour `can_place_on` takes decides: the block gains it when that
-    /// face is sturdy and the cell changes (then the spread gate is drawn), else a failure.
-    fn attach(&self, ctx: &mut Ctx, at: [i32; 3], faces: &[usize]) -> bool {
-        let existing = ctx.view.block(at[0], at[1], at[2]);
-        let source = super::phase(ctx.view.chunk());
-        let Some(&face) = faces.iter().find(|&&face| {
-            let [x, y, z] = step(at, face);
-            let on = ctx.view.block(x, y, z);
-            if !(self.can_place_on.is_empty() || self.can_place_on.contains(&on) || matches!(on, Block::Template(_)) && self.on_names.contains(&on.name())) {
-                return false;
-            }
-            // 143b84a00: no face on a tunnel structure's block in another chunk not decorated yet.
-            let other = (x >> 4, z >> 4);
-            other == (at[0] >> 4, at[2] >> 4) || super::phase(other) < source && other != ctx.view.chunk() || !(ctx.in_tunnels)([x, y, z])
-        }) else {
+    /// Whether the block behind `face` of the cell `at` is one the feature places on.
+    fn takes(&self, ctx: &Ctx, at: [i32; 3], face: usize) -> bool {
+        let [x, y, z] = step(at, face);
+        let on = ctx.view.block(x, y, z);
+        if !(self.can_place_on.is_empty() || self.can_place_on.contains(&on) || matches!(on, Block::Template(_)) && self.on_names.contains(&on.name())) {
             return false;
-        };
+        }
+        // 143b84a00: no face on a tunnel structure's block in another chunk not decorated yet.
+        let (source, other) = (ctx.view.chunk(), (x >> 4, z >> 4));
+        other == (at[0] >> 4, at[2] >> 4) || super::phase(other) < super::phase(source) && other != source || !(ctx.in_tunnels)([x, y, z])
+    }
+
+    /// The first face whose neighbour `can_place_on` takes decides: the block gains it when that
+    /// face is sturdy and the cell changes (then the spread gate is drawn and returned), else a failure.
+    fn attach(&self, ctx: &mut Ctx, at: [i32; 3], faces: &[usize]) -> Option<bool> {
+        let existing = ctx.view.block(at[0], at[1], at[2]);
+        let &face = faces.iter().find(|&&face| self.takes(ctx, at, face))?;
         let placed = placement(ctx.view, self.family(), at, existing, face);
         if placed == existing {
-            return false;
+            return None;
         }
         ctx.view.set_block(at[0], at[1], at[2], placed);
-        if ctx.random.next_float() < self.spread_chance {
+        let spreads = ctx.random.next_float() < self.spread_chance;
+        if spreads {
             self.spread_one_way(ctx, at, placed, face);
         }
-        true
+        Some(spreads)
+    }
+
+    fn config(&self) -> Config {
+        if self.family() == Block::GlowLichen1 { Config::Lichen } else { Config::Vein }
     }
 
     fn spread_one_way(&self, ctx: &mut Ctx, at: [i32; 3], state: Block, from: usize) {
-        let config = if self.family() == Block::GlowLichen1 { Config::Lichen } else { Config::Vein };
-        let mut targets = (0..6).filter_map(|to| spreader::spread_target(config, ctx.view, state, at, from, to));
-        if let (Some((cell, _, block)), None) = (targets.next(), targets.next()) {
+        let first = (0..6).find_map(|to| spreader::spread_target(self.config(), ctx.view, state, at, from, to));
+        if let Some((cell, _, block)) = first {
             ctx.view.set_block(cell[0], cell[1], cell[2], block);
+        }
+    }
+
+    /// Each face a cell's `attach` could take first, and whether it would place.
+    fn firsts(&self, ctx: &Ctx, at: [i32; 3], faces: &[usize]) -> Vec<(usize, bool)> {
+        let existing = ctx.view.block(at[0], at[1], at[2]);
+        let places = |face| placement(ctx.view, self.family(), at, existing, face) != existing;
+        faces.iter().filter(|&&face| self.takes(ctx, at, face)).map(|&face| (face, places(face))).collect()
+    }
+
+    fn orders(&self, ctx: &Ctx, at: [i32; 3]) -> Orders {
+        let origin = self.firsts(ctx, at, self.faces);
+        let mut placements: Vec<_> = origin.iter().filter(|&&(_, places)| places).map(|&(face, _)| (at, face)).collect();
+        let mut may_fail = false;
+        if origin.iter().any(|&(_, places)| !places) || origin.is_empty() {
+            // A facing surely places when every face its cell could take first does.
+            let mut sure = false;
+            for &facing in self.faces {
+                let next = step(at, facing);
+                if !self.searches(ctx, next) {
+                    continue;
+                }
+                let firsts = self.firsts(ctx, next, &self.faces_from(facing));
+                sure |= !firsts.is_empty() && firsts.iter().all(|&(_, places)| places);
+                placements.extend(firsts.iter().filter(|&&(_, places)| places).map(|&(face, _)| (next, face)));
+            }
+            may_fail = !sure;
+        }
+        let mut spreads = Vec::new();
+        for &(cell, face) in &placements {
+            let state = placement(ctx.view, self.family(), cell, ctx.view.block(cell[0], cell[1], cell[2]), face);
+            spreads.extend((0..6).filter_map(|to| spreader::spread_target(self.config(), ctx.view, state, cell, face, to)).map(|(target, ..)| target));
+        }
+        Orders { placements, may_fail, spreads }
+    }
+}
+
+impl Orders {
+    /// Leaves in doubt what the face order decides; `spread`: our call placed and passed the gate.
+    fn note(self, ctx: &mut Ctx, spread: bool) {
+        if self.may_fail && !self.placements.is_empty() {
+            ctx.view.reach_taint();
+            return;
+        }
+        let several = self.placements.len() > 1;
+        if several {
+            self.placements.iter().for_each(|&(cell, _)| ctx.view.reach_doubt(cell));
+        }
+        if spread && (several || self.spreads.len() > 1) {
+            self.spreads.into_iter().for_each(|cell| ctx.view.reach_doubt(cell));
         }
     }
 }

@@ -27,6 +27,8 @@ use std::sync::Arc;
 
 pub use biome::ChunkBiomes;
 pub use block::Block;
+#[doc(hidden)]
+pub use feature::reach::{Cells as ReachCells, Tries as ReachTries};
 pub use terrain::{CellKind, ChunkShape, HEIGHT, MIN_Y};
 
 use cache::SourceCache;
@@ -154,6 +156,26 @@ impl OverworldGenerator {
     pub fn source_feature_writes(&self, chunk_x: i32, chunk_z: i32) -> Vec<([i32; 3], Block, Block)> {
         let writes = self.with_inputs(|inputs| self.features.source_writes((chunk_x, chunk_z), inputs));
         writes.world_writes((chunk_x, chunk_z))
+    }
+
+    /// From now on sources follow what BDS's thread-local generator could reach (feature/reach.rs).
+    #[doc(hidden)]
+    pub fn track_reach(&mut self) {
+        self.features.track_reach = true;
+    }
+
+    /// Decorates in the order one BDS run did (chunks as it started them) instead of by phase; chunks
+    /// the order lacks decorate nothing. For checking a live run (scripts/dbg_order.py).
+    #[doc(hidden)]
+    pub fn set_decoration_order(&mut self, order: &[(i32, i32)]) {
+        self.features.order = Some(order.iter().enumerate().map(|(rank, &chunk)| (chunk, rank as u32)).collect());
+    }
+
+    /// The chunk's cells a thread-local draw of BDS could have left different from ours, and the
+    /// tries the chunk followed as a source; needs `track_reach` before anything is generated.
+    #[doc(hidden)]
+    pub fn thread_local_reach(&self, chunk_x: i32, chunk_z: i32) -> (Option<ReachCells>, ReachTries) {
+        self.with_inputs(|inputs| self.features.reach((chunk_x, chunk_z), inputs))
     }
 
     /// Molang's `query.noise(x, z)` (examples/query_noise.rs).

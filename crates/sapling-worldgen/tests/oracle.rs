@@ -2,7 +2,8 @@
 //! Needs the git-ignored oracle worlds (`$SAPLING_ORACLE_WORLDS`); run with `--ignored --nocapture`.
 //! Cells where the world and its `-run2` twin disagree are counted apart, and cells that stages
 //! sapling does not run yet may change are reported per stage, not as mismatches.
-//! `SAPLING_ORACLE_REGION=<substring>` keeps only the regions whose name contains it.
+//! `SAPLING_ORACLE_REGION=<substring>` keeps only the regions whose name contains it;
+//! `SAPLING_ORACLE_ORDER=<file>` decorates in a live run's order (docs/research/worldgen-bds-debugger.md).
 
 mod oracle_support;
 
@@ -55,8 +56,16 @@ fn compare(seed: i64, world: &str, regions: &[Region]) {
         eprintln!("oracle world {world} missing; skipped");
         return;
     };
-    let generator = OverworldGenerator::new(seed);
-    let only = std::env::var("SAPLING_ORACLE_REGION").ok();
+    let mut generator = OverworldGenerator::new(seed);
+    generator.track_reach();
+    // The decoration order of the live run that saved the world (scripts/dbg_order.py), `x z` per line.
+    if let Ok(path) = std::env::var("SAPLING_ORACLE_ORDER") {
+        let text = std::fs::read_to_string(path).expect("order file");
+        let order: Vec<(i32, i32)> = text.lines().filter_map(|line| line.split_once(' ')).map(|(x, z)| (x.parse().unwrap(), z.parse().unwrap())).collect();
+        generator.set_decoration_order(&order);
+    }
+    let generator = generator;
+    let only =std::env::var("SAPLING_ORACLE_REGION").ok();
     for region in regions.iter().filter(|r| only.as_deref().is_none_or(|only| r.name.contains(only))) {
         let mut tallies = Tallies::default();
         let mut dump = Dump::open(world, region.name);
@@ -69,6 +78,8 @@ fn compare(seed: i64, world: &str, regions: &[Region]) {
             // Our structure stage writes only the ported kinds' blocks.
             let ported: Vec<_> = areas.iter().filter(|(kind, _, _)| PORTED.contains(kind)).copied().collect();
             let biome_top = highest_section_top(&primary, &a, cx, cz);
+            let (reach, tries) = generator.thread_local_reach(cx, cz);
+            tallies.floor.note_tries(tries);
             for z in 0..16 {
                 for x in 0..16 {
                     let (wx, wz) = (cx * 16 + x as i32, cz * 16 + z as i32);
@@ -97,7 +108,7 @@ fn compare(seed: i64, world: &str, regions: &[Region]) {
                             bds_feature_above: bds_feature_top.is_some_and(|top| top > y),
                         };
                         tallies.blocks.add(block, bds, stable, at, context);
-                        tallies.floor.add(block, bds, &twin_cell, at, context);
+                        tallies.floor.add(block, bds, &twin_cell, at, context, reach.as_ref());
                         dump.cell(at, laked.block(x, y, z), block, (bds, &twin_cell), context, &areas, PORTED, (&primary, &a));
                         if stable {
                             tallies.features.add(laked.block(x, y, z), block, bds);

@@ -1,11 +1,12 @@
 """The order in which BDS decorated chunks in a debugger run.
 
-usage: py -3 -I dbg_order.py <dbg.log> <x0> <z0> <x1> <z1>
+usage: py -3 -I dbg_order.py <dbg.log> <x0> <z0> <x1> <z1> [<order file>]
 
 A chunk's place is its first logged hit whose position lies in it, so log a feature that rules place at their own
 positions (`dripstone_cluster_feature` 149d61dc0, a tree) with a filter box around the whole region. Prints the
 neighbour pairs that break the parity phases, each chunk's place relative to the region (in, ring, out), then the
-order as `x,z:<phase><i|r|o>`.
+order as `x,z:<phase><i|r|o>`. The order file (`x z` per line) is what the oracle test's `SAPLING_ORACLE_ORDER`
+reads to decorate as that run did.
 """
 import re
 import sys
@@ -44,6 +45,9 @@ def main():
                 print(f'  {hi} phase {phase(hi)} ({where(hi)}) before {lo} phase {phase(lo)} ({where(lo)})')
     print(f'neighbour pairs in parity order {good}, against {bad}')
     print('order:', ' '.join(f'{c[0]},{c[1]}:{phase(c)}{where(c)[0]}' for c in sorted(first, key=first.get)))
+    if len(sys.argv) > 6:
+        with open(sys.argv[6], 'w', newline='\n') as out:
+            out.writelines(f'{c[0]} {c[1]}\n' for c in sorted(first, key=first.get))
 
 
 main()

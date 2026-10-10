@@ -59,6 +59,13 @@ fn lava_blocking(b: Block) -> bool {
 /// Runs a tick if the cell still holds the liquid it was scheduled for; a tick within a block of
 /// the 3x3's edge waits for the next generation (its neighbours' chunks are not in the source).
 pub fn run(view: &mut View, tick: Tick) {
+    // A tick that read a cell in doubt may flow to any side (reach.rs).
+    view.reach_begin(true);
+    run_tick(view, tick);
+    view.reach_end(tick.at, 1);
+}
+
+fn run_tick(view: &mut View, tick: Tick) {
     if !view.can_tick(tick.at[0], tick.at[2]) {
         if !view.ticks.game && view.has_block(tick.at[0], MIN_Y, tick.at[2]) {
             view.ticks.add(tick.at, tick.lava, 0);
