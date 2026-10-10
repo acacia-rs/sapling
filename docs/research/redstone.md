@@ -335,6 +335,8 @@ No decompile: all of this is from the capture.
   slots (5, 3, 9, 27, 5, 27, 27); half a stack counts half, a sword as a full slot. A cake reads 14 less 2 a
   bite; a cauldron of water half its `fill_level`, rounded up; a composter its level, 0 to 8; a respawn anchor
   3, 7, 11, 15 by its charges; a beehive its `honey_level`; an end portal frame 15 with its eye.
+  sapling's run of the drill reads the same of every one (research/captures/sapling-redstone-reads.txt was
+  taken before it knew a dispenser as a container).
 - Not drilled: equal strengths behind and at a side (sapling passes it, as Java), a repeater or power block at a
   side, jukebox, lectern, item frame, a cauldron of lava or powder snow, a chiseled bookshelf, a click's sound.
 

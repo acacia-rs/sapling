@@ -294,8 +294,10 @@ fn a_comparator_reads_a_cake_and_a_composter_by_their_state() {
     let changed = watch(&mut h, 8);
     assert!(when(&changed, [-2, 65, 6], dust(8)).is_some(), "three bites");
     assert!(when(&changed, [-2, 65, 2], dust(5)).is_some(), "a composter filled to 5");
-    put(&mut h, &[([-4, 65, 6], "air", "")]);
+    put(&mut h, &[([-4, 65, 6], "dispenser", "")]);
     assert!(when(&watch(&mut h, 8), [-2, 65, 6], dust(0)).is_some(), "the cake gone");
+    h.remote.run(|ctx| assert!(ctx.set_container_item([-4, 65, 6], 0, Some(&sapling_api::Item::new("minecraft:stone", 64)))));
+    assert!(when(&watch(&mut h, 8), [-2, 65, 6], dust(2)).is_some(), "a stack in a dispenser's 9 slots");
 }
 
 #[test]
