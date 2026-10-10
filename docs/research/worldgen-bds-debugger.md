@@ -118,6 +118,18 @@ One JSON object, `{"breakpoints": [...]}`; the fields are listed in the script's
   earlier one's writes (`Features::order`). What is left is the thread-local draws and the chunks at the log's
   edge (worldgen-bds-residue.md, "Run order").
 
+- What a load did, stage by stage (2026-10-10, worldgen/edge3): `scripts/data/dbg_loads.json` (entries of
+  `loadChunk` 148211300 with the chunk at `[rdx+0x78]`, `postProcessStructureFeatures`, and
+  `decorationPostProcessChunk` 1482143a0, whose `rdx` is the 3x3 view with its corner at +0x140/+0x148; an
+  entry counts as a decoration once `decorateWorldGenPostProcess` follows on its thread, the others failed the
+  lock) and `scripts/dbg_loads.py <log> [<log>]`. `dbg_canon.json` adds each face-shuffle draw's value
+  (143b84073, eax) so `--order` can place every chunk in the thread generator's stream
+  (worldgen-bds-order.md, "A repeatable BDS").
+- What the scheduler was asked: 1409dea92 (after the priority call; eax, key at `[r14]` as `iiB`). One priority
+  hit per pending entry per pass is 24k hits a tile and reorders the end of the load.
+- Which list a feature holds: `dump_ptr` on the feature at a `place` entry (`[rcx+0xe8]` for
+  `MultifaceFeature`'s faces); what a shuffle produced: 1403748de with `[rsi]` as six bytes.
+
 The debugger is four modules: `bds_dbg.py` (the event loop and breakpoints), `bds_dbg_win.py` (Win32 bindings,
 thread contexts, hardware breakpoints), `bds_dbg_hits.py` (filters and what a hit logs), `bds_dbg_groups.py`
 (`group`/`arms`), `bds_dbg_dumps.py` (`dump*`).

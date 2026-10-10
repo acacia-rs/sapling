@@ -16,11 +16,41 @@ import sys
 from collections import Counter
 
 PHASE = [0, 1, 3, 2]
-# Draws the one worker's generator has spent when generation starts (8054 recipe UUIDs of four draws);
-# the next ones are located from here by their index in the 624-word state.
-SPENT = 32216
 STAGES = ("load", "structfeat", "deco")
 HIT = re.compile(r"hit (\w+) t(\d+) .*?=\((-?\d+),(?: (-?\d+)\))?(?:\) \[[^\]]+\]=\((-?\d+),\))?")
+DRAW = re.compile(r"hit draw t(\d+) .*rax=([0-9a-f]+)")
+
+
+class Stream:
+    """The outputs of BDS's `Random` seeded with 0 (MT19937), to place a logged draw in the stream."""
+
+    def __init__(self):
+        self.state, self.out = [0], []
+        for i in range(1, 624):
+            self.state.append((0x6C078965 * (self.state[-1] ^ (self.state[-1] >> 30)) + i) & 0xFFFFFFFF)
+
+    def more(self):
+        s = self.state
+        for k in range(624):
+            y = (s[k] & 0x80000000) | (s[(k + 1) % 624] & 0x7FFFFFFF)
+            s[k] = s[(k + 397) % 624] ^ (y >> 1) ^ (0x9908B0DF if y & 1 else 0)
+        for y in s:
+            y ^= y >> 11
+            y ^= (y << 7) & 0x9D2C5680
+            y ^= (y << 15) & 0xEFC60000
+            self.out.append(y ^ (y >> 18))
+
+    def find(self, value, start):
+        """The first position at or after `start` whose draw is `value`."""
+        at = start
+        while at < start + 4_000_000:
+            if at >= len(self.out):
+                self.more()
+            elif self.out[at] == value:
+                return at
+            else:
+                at += 1
+        raise SystemExit(f"draw {value:x} is not within 4M draws of {start}: another seed, or a second worker?")
 
 
 def phase(c):
@@ -31,14 +61,17 @@ def read(path):
     """stage -> [(chunk, thread)] in log order."""
     runs = {stage: [] for stage in STAGES}
     entered, tries = {}, 0
-    # dbg_canon.json: the thread generator's index before each MultifaceFeature draw, as a stream position
-    decorating, drawn, starts = {}, SPENT, {}
+    # dbg_canon.json: the value of each chunk's first MultifaceFeature draw places it in the generator's stream
+    decorating, drawn, starts, stream = {}, 0, {}, Stream()
     for line in open(path):
+        draw = DRAW.match(line)
+        if draw:
+            chunk = decorating.get(int(draw.group(1)))
+            if chunk not in starts:
+                drawn = starts[chunk] = stream.find(int(draw.group(2), 16) & 0xFFFFFFFF, drawn)
+            continue
         m = HIT.match(line)
-        if m and m.group(1).startswith("draw"):
-            drawn += (int(m.group(3)) - drawn) % 624
-            starts.setdefault(decorating.get(int(m.group(2))), drawn)
-        elif m and m.group(1) in runs:
+        if m and m.group(1) in runs:
             z = m.group(4) if m.group(4) is not None else m.group(5)
             # decoration is handed its 3x3 view: the logged corner is the chunk's minus one
             corner = m.group(1) == "deco"

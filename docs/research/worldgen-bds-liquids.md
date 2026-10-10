@@ -98,6 +98,11 @@ the two changes:
 256 of the 292 lie within 4 blocks of a lichen or sculk difference. The other worlds' still numbers are in
 worldgen-bds-residue.md (top section).
 
+2026-10-10 (worldgen/edge3), from a one-worker run replayed source by source (worldgen-bds-order.md): sculk
+veins and glow lichen stop water (`blocking` in liquid/flow.rs; `_isLiquidBlocking` 148b5ee50 returns true when
+the block's byte +0xba is 2, a per-block table not read out yet), and a vein in a water source is waterlogged,
+so its removal leaves the source to flow.
+
 ## Oracle (2026-10-07)
 Fluid cells differing near origin went 12.0k -> 1.7k. The 8-block routing removed most of our over-flow (infinite
 sources BDS's water never formed, lava floods into obsidian: water-over-air cells 383 -> 71, far out 218 -> 108

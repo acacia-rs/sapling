@@ -5,7 +5,9 @@ feat4 fixes, how much of it BDS's own nondeterminism explains, and the tools tha
 round is first; the sections after it are feat4's and the sculk round's, with their numbers as they were.
 Later: [worldgen-bds-residue-lush.md](worldgen-bds-residue-lush.md) (lush2: glow lichen spreads, the temple's
 same-phase pair found by experiment, the thread-local generator's seed; the snow layers under "Left" were
-already fixed).
+already fixed). Then [worldgen-bds-order.md](worldgen-bds-order.md) (edge3: what the run-to-run spread is a
+function of, a BDS that repeats itself, and the replay that turns "run order" and "thread-local floor" residue
+into differences with a first source; the "Run order" paragraph below is superseded by it).
 
 ## res6: tick-free oracle worlds, inherited liquid ticks (2026-10-10, worldgen/res6)
 - Every oracle world has a `-still` twin pair from a BDS that runs no chunk tick queue

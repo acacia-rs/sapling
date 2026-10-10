@@ -191,6 +191,9 @@ all four worlds (`examples/decoration_order.rs`: votes from cells two chunks' st
 neighbours decorate in parity phases, x even z even first, then x odd z even, both odd, x even z odd. Chunks of a
 phase are never neighbours; their mutual order (same phase, two apart) is not measured. The oracle's ring of
 chunks around each region is decorated too (leaving its features out makes every region worse).
+The scheduler was logged live on 2026-10-10 (worldgen-bds-order.md): every priority is 0 without a player, the
+same-phase order is the pending set's iteration order and a race between workers, and the parity itself is in
+none of the code named here.
 
 sapling models that order and it is what a server-side generator should use (it depends on the seed only): each
 source chunk is decorated over its 3x3 as the earlier phases left it (the chunk's terrain before features plus the

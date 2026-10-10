@@ -40,6 +40,9 @@ A run takes 20-90 s for 64 chunks and 80-105 s for 1088; BDS startup is 15-55 s 
   The converse does not hold: the twins are two runs of one load, and a third run of a region loaded
   another way (alone, or slowed by a debugger) differed from both in eight times as many cells as they
   differ from each other (badlands, 2026-10-10: docs/research/worldgen-bds-residue.md, "sculk2").
+  Two stock runs of one tile alone differ by a thousand cells in a sculk region; what varies is the worker
+  threads' race for chunk locks, each worker's entropy-seeded generator, and any retried tile
+  (docs/research/worldgen-bds-order.md).
 - Loaded chunks tick while a tile is processed. The pack sets `randomtickspeed 0`, `domobspawning`,
   `doweathercycle`, `dofiretick`, `dodaylightcycle` false and clears the weather, but scheduled ticks still
   run: generated water and lava may have flowed (the twins also differ in water/lava/obsidian/stone cells).
@@ -65,6 +68,14 @@ The `-still` worlds come from a BDS copy patched by `crates/sapling-worldgen/scr
 chunks never run their tick queues, so the saved blocks are worldgen's alone (no liquid flushed in game, one
 bubble column cell per magma block). Make more with `WORLDGEN_BDS=<patched copy> run.sh <seed> <out>
 $(regions.sh <test fn>)`; `WORLDGEN_PORT` moves the server off 19190.
+
+### A repeatable BDS
+`WORLDGEN_THREADS=1` (`max-threads`) on a copy also patched by `scripts/bds_seed0.py` (every default `Random`
+seeded 0) saves the same world on every run. With `scripts/bds_dbg_run.sh` and `scripts/data/dbg_canon.json`
+the run also logs its decoration order and thread draws, which `SAPLING_ORACLE_ORDER` and
+`SAPLING_ORACLE_THREAD_SEED=0` replay in the oracle test: recipe and limits in
+docs/research/worldgen-bds-order.md. `WORLDGEN_LOAD_TICKS` is how long a tile may load before the pack removes
+its area and adds it again; a retried tile generates its chunks twice and is no oracle.
 
 Rebuild one with the `run.sh` line above and the seed and regions from this table. The `sapling-worldgen` oracle
 test and examples read them from `$SAPLING_ORACLE_WORLDS` (default: `worlds/oracle` of the checkout), so a worktree
