@@ -17,11 +17,7 @@ fn main() {
     let (cx, cz): (i32, i32) = (cx.parse().unwrap(), cz.parse().unwrap());
     let mut generator = OverworldGenerator::new(seed.parse().unwrap());
     // As the oracle test: a BDS run's decoration order and its one worker's thread generator seed.
-    if let Ok(path) = std::env::var("SAPLING_ORACLE_ORDER") {
-        let text = std::fs::read_to_string(path).expect("order file");
-        let order: Vec<(i32, i32)> = text.lines().filter_map(|line| line.split_once(' ')).map(|(x, z)| (x.parse().unwrap(), z.parse().unwrap())).collect();
-        generator.set_decoration_order(&order, oracle_support::thread_seed());
-    }
+    oracle_support::replay(&mut generator);
     // The trace holds the earlier phases' sources too.
     let own = format!("({cx}, {cz}) ");
     let mut trees = Vec::new();
@@ -30,9 +26,6 @@ fn main() {
         if line.starts_with(' ') {
             trees.push(line);
             continue;
-        }
-        if line.starts_with("thread after") {
-            println!("{line}");
         }
         if line.starts_with(&own) && rest.first().is_none_or(|want| line.contains(want.as_str())) {
             println!("{line}");

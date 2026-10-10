@@ -10,7 +10,7 @@ mod oracle_support;
 
 use std::collections::HashMap;
 
-use oracle_support::{bds_cell, open, thread_seed};
+use oracle_support::{bds_cell, open, replay};
 use sapling_leveldb::ChunkKey;
 use sapling_worldgen::OverworldGenerator;
 
@@ -18,10 +18,8 @@ fn main() {
     let args: Vec<String> = std::env::args().skip(1).collect();
     let [seed, world, x0, z0, x1, z1] = &args[..] else { panic!("usage: replay_check <seed> <world> <x0> <z0> <x1> <z1>") };
     let [x0, z0, x1, z1] = [x0, z0, x1, z1].map(|v| v.parse::<i32>().unwrap());
-    let text = std::fs::read_to_string(std::env::var("SAPLING_ORACLE_ORDER").expect("SAPLING_ORACLE_ORDER")).expect("order file");
-    let order: Vec<(i32, i32)> = text.lines().filter_map(|line| line.split_once(' ')).map(|(x, z)| (x.parse().unwrap(), z.parse().unwrap())).collect();
     let mut generator = OverworldGenerator::new(seed.parse().unwrap());
-    generator.set_decoration_order(&order, thread_seed());
+    let order = replay(&mut generator).expect("SAPLING_ORACLE_ORDER");
     let (primary, _) = open(world).expect("oracle world");
     let saved = |x: i32, z: i32| (x0..=x1).contains(&(x >> 4)) && (z0..=z1).contains(&(z >> 4));
     // cell -> (rank, block name) of the last source to write it

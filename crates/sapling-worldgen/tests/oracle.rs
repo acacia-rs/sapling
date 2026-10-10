@@ -62,11 +62,7 @@ fn compare(seed: i64, world: &str, regions: &[Region]) {
     let mut generator = OverworldGenerator::new(seed);
     generator.track_reach();
     // The decoration order of the live run that saved the world (scripts/dbg_order.py), `x z` per line.
-    if let Ok(path) = std::env::var("SAPLING_ORACLE_ORDER") {
-        let text = std::fs::read_to_string(path).expect("order file");
-        let order: Vec<(i32, i32)> = text.lines().filter_map(|line| line.split_once(' ')).map(|(x, z)| (x.parse().unwrap(), z.parse().unwrap())).collect();
-        generator.set_decoration_order(&order, oracle_support::thread_seed());
-    }
+    oracle_support::replay(&mut generator);
     let generator = generator;
     let only =std::env::var("SAPLING_ORACLE_REGION").ok();
     for region in regions.iter().filter(|r| only.as_deref().is_none_or(|only| r.name.contains(only))) {

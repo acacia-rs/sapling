@@ -47,11 +47,7 @@ fn main() {
     let (cx, cz): (i32, i32) = (cx.parse().unwrap(), cz.parse().unwrap());
     let mut generator = OverworldGenerator::new(seed.parse().unwrap());
     // As the oracle test: a BDS run's decoration order and its one worker's thread generator.
-    if let Ok(path) = std::env::var("SAPLING_ORACLE_ORDER") {
-        let text = std::fs::read_to_string(path).expect("order file");
-        let order: Vec<(i32, i32)> = text.lines().filter_map(|line| line.split_once(' ')).map(|(x, z)| (x.parse().unwrap(), z.parse().unwrap())).collect();
-        generator.set_decoration_order(&order, oracle_support::thread_seed());
-    }
+    oracle_support::replay(&mut generator);
     let (primary, _) = open(world).expect("oracle world");
     let mut saved = Saved { world: &primary, chunks: HashMap::new() };
     let own = format!("({cx}, {cz}) ");

@@ -6,7 +6,9 @@ The log is a run of `bds_dbg_run.sh` with scripts/data/dbg_loads.json: `load` (O
 `structfeat` (postProcessStructureFeatures) and `deco` (decorationPostProcessChunk), each logged with its chunk
 and thread. Prints per stage the chunks, the ones run more than once, the threads, and the neighbour pairs that
 break the parity phases; with a second log, the pairs of chunks whose 3x3 overlap (two apart or nearer) that
-ran in the other order there. `--order` writes the first log's decoration order for `SAPLING_ORACLE_ORDER`.
+ran in the other order there. `--order` writes the first log's decoration order for `SAPLING_ORACLE_ORDER`;
+with scripts/data/dbg_canon.json's log each line also holds where the thread generator stood at the chunk's
+first MultifaceFeature draw (`x z draws`).
 Why: docs/research/worldgen-bds-order.md.
 """
 import re
@@ -14,6 +16,9 @@ import sys
 from collections import Counter
 
 PHASE = [0, 1, 3, 2]
+# Draws the one worker's generator has spent when generation starts (8054 recipe UUIDs of four draws);
+# the next ones are located from here by their index in the 624-word state.
+SPENT = 32216
 STAGES = ("load", "structfeat", "deco")
 HIT = re.compile(r"hit (\w+) t(\d+) .*?=\((-?\d+),(?: (-?\d+)\))?(?:\) \[[^\]]+\]=\((-?\d+),\))?")
 
@@ -26,9 +31,14 @@ def read(path):
     """stage -> [(chunk, thread)] in log order."""
     runs = {stage: [] for stage in STAGES}
     entered, tries = {}, 0
+    # dbg_canon.json: the thread generator's index before each MultifaceFeature draw, as a stream position
+    decorating, drawn, starts = {}, SPENT, {}
     for line in open(path):
         m = HIT.match(line)
-        if m and m.group(1) in runs:
+        if m and m.group(1).startswith("draw"):
+            drawn += (int(m.group(3)) - drawn) % 624
+            starts.setdefault(decorating.get(int(m.group(2))), drawn)
+        elif m and m.group(1) in runs:
             z = m.group(4) if m.group(4) is not None else m.group(5)
             # decoration is handed its 3x3 view: the logged corner is the chunk's minus one
             corner = m.group(1) == "deco"
@@ -39,8 +49,10 @@ def read(path):
             else:
                 runs[m.group(1)].append(event)
         elif line.startswith("hit decorate t"):
-            runs["deco"].append(entered.pop(int(line.split()[2][1:])))
-    runs["tries"] = tries
+            thread = int(line.split()[2][1:])
+            runs["deco"].append(entered.pop(thread))
+            decorating[thread] = runs["deco"][-1][0]
+    runs["tries"], runs["starts"] = tries, starts
     return runs
 
 
@@ -108,8 +120,9 @@ def main():
         compare(runs[0], runs[1])
     if order:
         place = first(runs[0]["deco"])
+        starts = runs[0]["starts"]
         with open(order, "w", newline="\n") as out:
-            out.writelines(f"{c[0]} {c[1]}\n" for c in sorted(place, key=place.get))
+            out.writelines(f"{c[0]} {c[1]}" + (f" {starts[c]}\n" if c in starts else "\n") for c in sorted(place, key=place.get))
 
 
 main()

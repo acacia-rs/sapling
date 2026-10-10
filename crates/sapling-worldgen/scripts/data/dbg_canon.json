@@ -1,0 +1,8 @@
+{"breakpoints": [
+ {"va": "0x148211300", "name": "load", "mem": [["rdx", 120, "ii"]], "log": "all"},
+ {"va": "0x14196b2c0", "name": "structfeat", "mem": [["rsp", 40, "i"], ["rsp", 48, "i"]], "log": "all"},
+ {"va": "0x1482143a0", "name": "deco", "mem": [["rdx", 320, "i"], ["rdx", 328, "i"]], "log": "all"},
+ {"va": "0x14821f400", "name": "decorate", "log": "all"},
+ {"va": "0x143b8406e", "name": "draw1", "mem": [["rcx", 2508, "I"]], "log": "all"},
+ {"va": "0x143b843d2", "name": "draw2", "mem": [["rcx", 2508, "I"]], "log": "all"}
+]}

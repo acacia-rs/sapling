@@ -167,10 +167,10 @@ impl OverworldGenerator {
     /// Decorates in the order one BDS run did (chunks as it started them) instead of by phase; chunks
     /// the order lacks decorate nothing. For checking a live run (scripts/dbg_order.py).
     #[doc(hidden)]
-    /// `thread_seed`: the run had one worker whose generator was seeded so (scripts/bds_seed0.py)
-    /// and had drawn that often before the first chunk.
-    pub fn set_decoration_order(&mut self, order: &[(i32, i32)], thread_seed: Option<(u32, u32)>) {
-        self.features.set_order(order, thread_seed);
+    /// `thread`: the run had one worker whose generator was seeded so (scripts/bds_seed0.py) and had
+    /// drawn that often at each chunk's first `MultifaceFeature` draw (scripts/dbg_loads.py).
+    pub fn set_decoration_order(&mut self, order: &[(i32, i32)], thread: Option<(u32, &[Option<u32>])>) {
+        self.features.set_order(order, thread);
     }
 
     /// The chunk's cells a thread-local draw of BDS could have left different from ours, and the
