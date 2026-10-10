@@ -1,9 +1,8 @@
 // Loads every chunk of REGIONS tile by tile and touches its bedrock floor so BDS saves it; see ../../README.md.
 import { world, system } from "@minecraft/server";
-import { REGIONS, TILE, WORKERS, SETTLE } from "./regions.js";
+import { REGIONS, TILE, WORKERS, SETTLE, LOAD_TIMEOUT } from "./regions.js";
 
 const FLOOR = -64;
-const LOAD_TIMEOUT = 600;
 const LOAD_ATTEMPTS = 4;
 const log = (text) => console.warn("WORLDGEN " + text);
 const ticks = (n) => new Promise((resolve) => system.runTimeout(resolve, n));

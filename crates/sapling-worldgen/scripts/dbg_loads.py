@@ -25,11 +25,22 @@ def phase(c):
 def read(path):
     """stage -> [(chunk, thread)] in log order."""
     runs = {stage: [] for stage in STAGES}
+    entered, tries = {}, 0
     for line in open(path):
         m = HIT.match(line)
         if m and m.group(1) in runs:
             z = m.group(4) if m.group(4) is not None else m.group(5)
-            runs[m.group(1)].append(((int(m.group(3)), int(z)), int(m.group(2))))
+            # decoration is handed its 3x3 view: the logged corner is the chunk's minus one
+            corner = m.group(1) == "deco"
+            event = ((int(m.group(3)) + corner, int(z) + corner), int(m.group(2)))
+            if corner:
+                # an entry whose 3x3 lock fails returns to the queue: it counts once `decorate` follows
+                entered[event[1]], tries = event, tries + 1
+            else:
+                runs[m.group(1)].append(event)
+        elif line.startswith("hit decorate t"):
+            runs["deco"].append(entered.pop(int(line.split()[2][1:])))
+    runs["tries"] = tries
     return runs
 
 
@@ -59,6 +70,7 @@ def describe(name, runs):
         total = sum(1 for _ in pairs(place, 1))
         print(f"{name} {stage}: {len(place)} chunks, {len(again)} more than once {sorted(again.items())[:6]}, "
               f"threads {sorted(threads.values(), reverse=True)}, neighbour pairs against parity {against} of {total}")
+    print(f"{name} deco: {runs['tries']} entries for {len(runs['deco'])} decorations (the rest failed the 3x3 lock)")
 
 
 def compare(a, b):
@@ -73,11 +85,23 @@ def compare(a, b):
         print(f"{stage}: {len(pa)} and {len(pb)} chunks, {len(common)} in both, same sequence: {same}")
 
 
+def grid(events):
+    """Each chunk's place in a stage's order, as a map (x across, z down)."""
+    place = first(events)
+    xs, zs = [c[0] for c in place], [c[1] for c in place]
+    print("      " + "".join(f"{x:5d}" for x in range(min(xs), max(xs) + 1)))
+    for z in range(min(zs), max(zs) + 1):
+        print(f"{z:6d}" + "".join(f"{place.get((x, z), -1):5d}" for x in range(min(xs), max(xs) + 1)))
+
+
 def main():
     args = sys.argv[1:]
     order = args.pop(args.index("--order") + 1) if "--order" in args else None
-    logs = [a for a in args if a != "--order"]
+    show = args.pop(args.index("--grid") + 1) if "--grid" in args else None
+    logs = [a for a in args if not a.startswith("--")]
     runs = [read(path) for path in logs]
+    if show:
+        grid(runs[0][show])
     for path, run in zip(logs, runs):
         describe(path.replace("\\", "/").split("/")[-3] if path.count("/") + path.count("\\") > 1 else path, run)
     if len(runs) > 1:

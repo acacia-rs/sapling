@@ -65,7 +65,9 @@ fn compare(seed: i64, world: &str, regions: &[Region]) {
     if let Ok(path) = std::env::var("SAPLING_ORACLE_ORDER") {
         let text = std::fs::read_to_string(path).expect("order file");
         let order: Vec<(i32, i32)> = text.lines().filter_map(|line| line.split_once(' ')).map(|(x, z)| (x.parse().unwrap(), z.parse().unwrap())).collect();
-        generator.set_decoration_order(&order);
+        // `SAPLING_ORACLE_THREAD_SEED`: that run's one worker drew its thread generator from this seed.
+        let thread_seed = std::env::var("SAPLING_ORACLE_THREAD_SEED").ok().map(|seed| seed.parse().expect("a u32 seed"));
+        generator.set_decoration_order(&order, thread_seed);
     }
     let generator = generator;
     let only =std::env::var("SAPLING_ORACLE_REGION").ok();

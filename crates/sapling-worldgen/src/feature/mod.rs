@@ -42,17 +42,18 @@ mod spec;
 mod speleothem;
 mod spreader;
 mod springs;
+mod thread;
 mod ticks;
 pub(crate) mod trace;
 mod tree;
 mod view;
 
 use std::collections::HashMap;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
 use crate::biome::ChunkBiomes;
 use crate::cache::SourceCache;
-use crate::random::LargeFeatureSeed;
+use crate::random::{LargeFeatureSeed, Mt19937};
 use crate::terrain::ChunkShape;
 
 pub(crate) use element::{ElementWorld, element_random, place_element};
@@ -108,12 +109,45 @@ pub struct Features {
     /// The order one BDS run decorated its chunks in, replacing the phases: every source then sees
     /// the writes of all before it, and chunks the run did not decorate are no sources.
     pub order: Option<HashMap<(i32, i32), Rank>>,
+    /// With `order`: BDS's per-thread generator as it stood before each rank, for a one-worker run (thread.rs).
+    thread: Option<(Vec<(i32, i32)>, Mutex<Vec<Mt19937>>)>,
 }
 
 impl Features {
     /// Seeded like the carvers: `(x*a + z*b) ^ seed` on the low 32 bits of the world seed.
     pub fn new(world_seed: i64) -> Self {
-        Self { seed: LargeFeatureSeed::new(world_seed as u32), writes: SourceCache::new(CACHE_LIMIT), before: SourceCache::new(BEFORE_LIMIT), track_reach: false, order: None }
+        Self { seed: LargeFeatureSeed::new(world_seed as u32), writes: SourceCache::new(CACHE_LIMIT), before: SourceCache::new(BEFORE_LIMIT), track_reach: false, order: None, thread: None }
+    }
+
+    /// Decorates in `order`, every source over all earlier ones; `thread_seed`: the seed of the one
+    /// worker's generator in the BDS run the order comes from.
+    pub fn set_order(&mut self, order: &[(i32, i32)], thread_seed: Option<u32>) {
+        self.order = Some(order.iter().enumerate().map(|(rank, &chunk)| (chunk, rank as Rank)).collect());
+        self.thread = thread_seed.map(|seed| (order.to_vec(), Mutex::new(vec![Mt19937::new(seed)])));
+    }
+
+    /// The thread generator before the source ranked `rank`, decorating the sources before it as needed.
+    fn thread_before(&self, rank: Rank, inputs: Inputs) -> Option<Mt19937> {
+        let (order, states) = self.thread.as_ref()?;
+        loop {
+            let known = {
+                let states = states.lock().unwrap();
+                match states.get(rank as usize) {
+                    Some(state) => return Some(state.clone()),
+                    None => states.len(),
+                }
+            };
+            self.source_writes(order[known - 1], inputs);
+        }
+    }
+
+    fn thread_after(&self, rank: Rank, state: Option<Mt19937>) {
+        if let (Some((_, states)), Some(state)) = (&self.thread, state) {
+            let mut states = states.lock().unwrap();
+            if states.len() == rank as usize + 1 {
+                states.push(state);
+            }
+        }
     }
 
     fn rank(&self, source: (i32, i32)) -> Option<Rank> {
@@ -210,11 +244,13 @@ impl Features {
             let doubt = |x: i32, z: i32| self.doubt_before((x, z), limit, inputs);
             view.reach = self.track_reach.then(|| reach::Reach::new(&doubt));
             view.on_write = liquid::write_hook();
+            view.thread_random = self.thread_before(limit, inputs);
             monster_room::monster_rooms((inputs.after_lake)(source.0, source.1), source, &mut view);
             decorate::decorate_chunk(&self.seed, source, inputs, &mut view);
             freeze::freeze_chunk(source, &(inputs.biomes)(source.0, source.1), &mut view);
             let inherited: Vec<_> = self.sources_before(source, limit).into_iter().flat_map(|n| self.source_writes(n, inputs).routed_to(source).collect::<Vec<_>>()).collect();
             liquid::settle(&mut view, &inherited);
+            self.thread_after(limit, view.thread_random.take());
             view.into_writes()
         })
     }

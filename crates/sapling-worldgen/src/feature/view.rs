@@ -8,6 +8,7 @@ use std::sync::Arc;
 use super::reach::{Cells, Reach, Tries};
 use super::ticks::TickQueue;
 use crate::block::Block;
+use crate::random::Mt19937;
 use crate::terrain::{ChunkShape, HEIGHT, MIN_Y};
 
 /// How many chunks around the decorated one its features may write.
@@ -100,6 +101,8 @@ pub struct View<'a> {
     pub on_write: Option<fn(&mut View, [i32; 3])>,
     /// The oracle's taint analysis, when the generator tracks it.
     pub reach: Option<Reach<'a>>,
+    /// BDS's per-thread generator, when the run it models is known (thread.rs).
+    pub thread_random: Option<Mt19937>,
 }
 
 impl<'a> View<'a> {
@@ -118,6 +121,7 @@ impl<'a> View<'a> {
             routed: Vec::new(),
             on_write: None,
             reach: None,
+            thread_random: None,
         }
     }
 
