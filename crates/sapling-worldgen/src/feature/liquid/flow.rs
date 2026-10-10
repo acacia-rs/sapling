@@ -43,7 +43,8 @@ fn delay(lava: bool) -> u64 {
 /// air, liquids, plants and snow layers give way.
 fn blocking(view: &View, p: [i32; 3], lava: bool) -> bool {
     let b = block(view, p);
-    if lava { b.is_solid() || lava_blocking(b) } else { b.is_solid() && !b.is_snow_layer() }
+    // A vein or lichen stops water as it stops lava (one-worker run: a fall ends on a dry vein).
+    if lava { b.is_solid() || lava_blocking(b) } else { b.is_solid() && !b.is_snow_layer() || b.multiface().is_some() }
 }
 
 /// Lava asks the block type instead (vtable +0xc8, base 141a28450: the material blocks motion or is

@@ -26,8 +26,10 @@ level="wg-$seed-$(date +%s)"
 pack="$bds/development_behavior_packs/worldgen_oracle"
 rm -rf "$pack"
 cp -r "$here/pack" "$pack"
-printf 'export const REGIONS = [%s];\nexport const TILE = %d;\nexport const WORKERS = %d;\nexport const SETTLE = %d;\n' \
-  "$regions" "$tile" "$workers" "$settle" >"$pack/scripts/regions.js"
+# WORLDGEN_LOAD_TICKS: how long a tile's area may take before it is removed and added again (a retry
+# generates its chunks a second time: README, "A repeatable BDS").
+printf 'export const REGIONS = [%s];\nexport const TILE = %d;\nexport const WORKERS = %d;\nexport const SETTLE = %d;\nexport const LOAD_TIMEOUT = %d;\n' \
+  "$regions" "$tile" "$workers" "$settle" "${WORLDGEN_LOAD_TICKS:-600}" >"$pack/scripts/regions.js"
 mkdir -p "$bds/worlds/$level"
 echo '[{"pack_id": "7a3d2f60-5c1e-4b8a-9d47-0e6f1b2c3a01", "version": [1, 0, 0]}]' >"$bds/worlds/$level/world_behavior_packs.json"
 
@@ -38,7 +40,8 @@ level-type=DEFAULT
 server-port=${WORLDGEN_PORT:-19190}
 server-portv6=$((${WORLDGEN_PORT:-19190} + 1))
 online-mode=false
-content-log-console-output-enabled=true"
+content-log-console-output-enabled=true
+max-threads=${WORLDGEN_THREADS:-8}"
 keys=$(sed 's/=.*//' <<<"$settings" | paste -sd'|')
 { grep -vE "^($keys)=" "$props" || true; echo "$settings"; } >"$props.new"
 mv "$props.new" "$props"

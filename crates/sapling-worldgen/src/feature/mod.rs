@@ -42,6 +42,7 @@ mod spec;
 mod speleothem;
 mod spreader;
 mod springs;
+mod thread;
 mod ticks;
 pub(crate) mod trace;
 mod tree;
@@ -52,7 +53,7 @@ use std::sync::Arc;
 
 use crate::biome::ChunkBiomes;
 use crate::cache::SourceCache;
-use crate::random::LargeFeatureSeed;
+use crate::random::{LargeFeatureSeed, Mt19937};
 use crate::terrain::ChunkShape;
 
 pub(crate) use element::{ElementWorld, element_random, place_element};
@@ -108,12 +109,30 @@ pub struct Features {
     /// The order one BDS run decorated its chunks in, replacing the phases: every source then sees
     /// the writes of all before it, and chunks the run did not decorate are no sources.
     pub order: Option<HashMap<(i32, i32), Rank>>,
+    /// With `order`, for a one-worker run: its thread generator's seed and, per rank, the draws the
+    /// generator had spent at that chunk's first `MultifaceFeature` draw (thread.rs).
+    thread: Option<(u32, Vec<Option<u32>>)>,
 }
 
 impl Features {
     /// Seeded like the carvers: `(x*a + z*b) ^ seed` on the low 32 bits of the world seed.
     pub fn new(world_seed: i64) -> Self {
-        Self { seed: LargeFeatureSeed::new(world_seed as u32), writes: SourceCache::new(CACHE_LIMIT), before: SourceCache::new(BEFORE_LIMIT), track_reach: false, order: None }
+        Self { seed: LargeFeatureSeed::new(world_seed as u32), writes: SourceCache::new(CACHE_LIMIT), before: SourceCache::new(BEFORE_LIMIT), track_reach: false, order: None, thread: None }
+    }
+
+    /// Decorates in `order`, every source over all earlier ones; `thread`: the seed of the one worker's
+    /// generator in the BDS run the order comes from and its draws spent per rank (see the field).
+    pub fn set_order(&mut self, order: &[(i32, i32)], thread: Option<(u32, &[Option<u32>])>) {
+        self.order = Some(order.iter().enumerate().map(|(rank, &chunk)| (chunk, rank as Rank)).collect());
+        self.thread = thread.map(|(seed, spent)| (seed, spent.to_vec()));
+    }
+
+    /// The thread generator as the run had it when the source ranked `rank` first drew from it.
+    fn thread_before(&self, rank: Rank) -> Option<Mt19937> {
+        let (seed, spent) = self.thread.as_ref()?;
+        let mut random = Mt19937::new(*seed);
+        random.consume_count(spent[rank as usize].unwrap_or(0));
+        Some(random)
     }
 
     fn rank(&self, source: (i32, i32)) -> Option<Rank> {
@@ -210,6 +229,7 @@ impl Features {
             let doubt = |x: i32, z: i32| self.doubt_before((x, z), limit, inputs);
             view.reach = self.track_reach.then(|| reach::Reach::new(&doubt));
             view.on_write = liquid::write_hook();
+            view.thread_random = self.thread_before(limit);
             monster_room::monster_rooms((inputs.after_lake)(source.0, source.1), source, &mut view);
             decorate::decorate_chunk(&self.seed, source, inputs, &mut view);
             freeze::freeze_chunk(source, &(inputs.biomes)(source.0, source.1), &mut view);

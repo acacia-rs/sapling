@@ -169,6 +169,10 @@ the merged tree the full oracle counts 35665 wrong + missing that way against 36
 spreading (stony peaks +479, cherry grove +396, igloo +141, ancient city +92; trail ruins -329, jagged
 peaks -139). Both are a guess: such totals swing by hundreds either way through single cells, and without
 the spread sapling's deep dark holds one vein where every BDS run has two.
+2026-10-10 (worldgen/edge3): the shuffles themselves are known and replayable against a one-worker run with
+the generator seeded 0 (worldgen-bds-order.md, "The thread generator": every lichen of badlands on its cell);
+"only `MultifaceFeature` draws from it" holds inside a chunk's decoration, not between chunks. A vein set into
+a water source keeps the water and leaves it when removed (same file, "What the replay found").
 
 A later-phase chunk and a city chunk, the same way: stony peaks -229,259 (phase 2) has all 86 patch tries at
 our positions and all five veins in our cell (three of BDS's five spreads in the cell our first direction

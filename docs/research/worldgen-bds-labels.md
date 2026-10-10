@@ -192,3 +192,12 @@ the type at +0x68; taken as per state, which the oracle's cut library railings f
 +0x38, +0x40 (planks) and +0x48 (fence); `SwamplandHut::postProcess` 14836de70 places a plank at (4, 4, 2) after
 the flower pot; `placeInWorld` (141eeb8d0), under its terrain-matching flag, reads `LevelChunk` +0xf80 and falls
 back to +0xb80.
+Edge3 labels (2026-10-10, read in scratch bdsre-edge3, not saved): 148211300 `OverworldGenerator::loadChunk` (chunk `rdx`, position +0x78),
+1482143a0 `decorationPostProcessChunk` (`rdx` the 3x3 view, corner +0x140/+0x148), 141877550 the chunk priority
+(`Dimension` +0x3b0 vt+8; 0 for every entry without a player), 1409dea8c/1409dea92 its call in
+`_spawnChunkGenerationTasks`, 1409ddb10 the launcher (in flight < 2N, up to 6N), 1409e1fa0 the chunk state
+compare-and-swap (0/1 load, 2, 4/5 structures, 6/7 decoration, 8/9), 141188a3a the entropy call in
+`Random::Random()` (`bds_seed0.py`), 141189020 the thread-local UUID draw (8054 recipe calls at startup),
+143be5950/143be59e0/143be5a70 `MultifaceFeature`'s floor/ceiling/wall setters (faces 0; 1; 2, 5, 3, 4 at +0xe8),
+143b8406e/143b843d2 its two shuffle draws, 1403747f0 the six-direction shuffle (starts 1, 0, 2, 3, 4, 5; result
+at `rsi` on 1403748de), 148b5ee50 `LiquidBlock::_isLiquidBlocking` (`Block` +0xba == 2 blocks, +0xb9 a face mask).

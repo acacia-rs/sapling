@@ -30,6 +30,9 @@ impl Multiface {
         if !open(ctx.view.block(at[0], at[1], at[2])) {
             return None;
         }
+        if ctx.view.thread_random.is_some() {
+            return self.place_shuffled(ctx, at);
+        }
         let orders = ctx.view.reach_on().then(|| self.orders(ctx, at));
         let placed = self.place_in_order(ctx, at);
         if let Some(orders) = orders {
@@ -57,13 +60,13 @@ impl Multiface {
     }
 
     /// Whether the search tries the neighbour cell: open or holding the feature's block.
-    fn searches(&self, ctx: &Ctx, next: [i32; 3]) -> bool {
+    pub(super) fn searches(&self, ctx: &Ctx, next: [i32; 3]) -> bool {
         let block = ctx.view.block(next[0], next[1], next[2]);
         self.search_range > 0 && (open(block) || self.is_own(block))
     }
 
     /// The faces tried in the neighbour toward `facing`: all but the one back to the origin.
-    fn faces_from(&self, facing: usize) -> Vec<usize> {
+    pub(super) fn faces_from(&self, facing: usize) -> Vec<usize> {
         self.faces.iter().copied().filter(|&f| f != facing ^ 1).collect()
     }
 
@@ -89,7 +92,7 @@ impl Multiface {
 
     /// The first face whose neighbour `can_place_on` takes decides: the block gains it when that
     /// face is sturdy and the cell changes (then the spread gate is drawn and returned), else a failure.
-    fn attach(&self, ctx: &mut Ctx, at: [i32; 3], faces: &[usize]) -> Option<bool> {
+    pub(super) fn attach(&self, ctx: &mut Ctx, at: [i32; 3], faces: &[usize]) -> Option<bool> {
         let existing = ctx.view.block(at[0], at[1], at[2]);
         let &face = faces.iter().find(|&&face| self.takes(ctx, at, face))?;
         let placed = placement(ctx.view, self.family(), at, existing, face);
@@ -110,6 +113,9 @@ impl Multiface {
 
     fn spread_one_way(&self, ctx: &mut Ctx, at: [i32; 3], state: Block, from: usize) {
         let config = self.config();
+        if ctx.view.thread_random.is_some() {
+            return super::thread::spread(config, ctx, at, state, from);
+        }
         super::trace::line(|| {
             let found = (0..6).filter_map(|to| spreader::spread_target(config, ctx.view, state, at, from, to).map(|(c, face, _)| format!("{to}:{},{},{},{face}", c[0], c[1], c[2])));
             format!("    spread {} {} {} from {from} to {}", at[0], at[1], at[2], found.collect::<Vec<_>>().join(" "))
