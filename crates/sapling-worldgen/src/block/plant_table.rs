@@ -21,7 +21,7 @@ with_multiface_blocks! {
     FireflyBush => "firefly_bush" "",
     ShortDryGrass => "short_dry_grass" "",
     TallDryGrass => "tall_dry_grass" "",
-    Deadbush => "deadbush" "",
+    Deadbush => "deadbush" "", CactusFlower => "cactus_flower" "",
     Reeds => "reeds" "age=0",
     Cactus => "cactus" "age=0",
     BrownMushroom => "brown_mushroom" "",
