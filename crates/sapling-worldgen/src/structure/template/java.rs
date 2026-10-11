@@ -6,7 +6,7 @@
 
 use super::java_states::v2_block;
 use super::rules::{Rule, apply_first};
-use super::{Kind, Rotation, Template};
+use super::{Kind, Rotation, Template, named};
 use crate::block::Block;
 use crate::random::JavaRandom;
 use crate::structure::BoundingBox;
@@ -37,6 +37,7 @@ impl JavaPlacement<'_> {
                     Some(j) => j.final_state.block(self.rotation),
                     None => continue,
                 },
+                Kind::Block if template.ceiling_vines.contains(&index) => named("vine", "vine_direction_bits=15", false),
                 Kind::Block => v2_block(b.state, self.rotation),
             };
             if block.name() == "structure_void" {

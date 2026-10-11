@@ -7,7 +7,7 @@ use super::super::BoundingBox;
 use super::super::adjust::Junction;
 use super::super::canvas::Canvas;
 use super::super::trace;
-use super::super::template::{JavaPlacement, Placement, Rotation, Rule, apply, named};
+use super::super::template::{JavaPlacement, Placement, Rotation, Rule, apply, named, pass_cells};
 use super::assemble::middle;
 use super::element::{Element, ElementKind, Projection};
 use crate::block::Block;
@@ -77,6 +77,7 @@ impl Piece {
             return;
         }
         trace::label(|| format!("{} jigsaw", template.name));
+        canvas.begin_template();
         for jigsaw in self.element.jigsaws(self.origin, self.rotation) {
             let (x, y, z) = jigsaw.pos;
             if canvas.bb.contains(x, y, z) {
@@ -94,6 +95,7 @@ impl Piece {
             placement.label(template, index);
             canvas.set(x, y, z, block);
         }
+        placement.update_pass(canvas, template, self.origin);
         trace::label(|| format!("{} foundation", template.name));
         if post & 1 != 0 {
             self.fill_bottom(canvas, random, class);
@@ -129,11 +131,14 @@ impl Piece {
         trace::label(|| format!("{} {:?} at {:?}", template.name, self.rotation, self.origin));
         let placement = JavaPlacement { rotation: self.rotation, rules, capped, level_seed };
         let blocks = placement.blocks(template, self.origin, &canvas.bb, &|x, y, z| canvas.get(x, y, z));
+        canvas.begin_template();
         for ((x, y, z), block) in blocks {
             if canvas.bb.contains(x, y, z) {
                 canvas.set(x, y, z, block);
             }
         }
+        trace::label(|| format!("{} update pass", template.name));
+        canvas.update_pass(pass_cells(self.rotation, false, template.size, self.origin), false);
     }
 
     /// Terrain matching (placeInWorld's +8 setting): every block at its column's height plus its

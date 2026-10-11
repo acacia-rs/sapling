@@ -67,11 +67,14 @@ impl Piece {
         let mut placement = Placement::new(self.rotation, canvas.bb);
         placement.integrity = self.integrity;
         placement.seed = seed;
-        let blocks: Vec<_> = placement.blocks(self.template, (self.origin.0, y, self.origin.1)).collect();
+        let origin = (self.origin.0, y, self.origin.1);
+        let blocks: Vec<_> = placement.blocks(self.template, origin).collect();
+        canvas.begin_template();
         for ((x, y, z), block, index) in blocks {
             placement.label(self.template, index);
             canvas.set(x, y, z, block);
         }
+        placement.update_pass(canvas, self.template, origin);
     }
 }
 

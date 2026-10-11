@@ -6,6 +6,7 @@ use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 
 use super::BoundingBox;
+use super::template::Record;
 use crate::block::Block;
 use crate::feature::{ElementWorld, place_element};
 use crate::random::Mt19937;
@@ -16,6 +17,9 @@ const TOP: i32 = 319;
 /// Spider corridors (start, piece index) that placed their spawner: BDS keeps the flag (+0x5a)
 /// on the piece across the chunks it post-processes in.
 pub type Spawners = HashSet<((i32, i32), usize)>;
+
+/// Cells whose neighbour-shaped states a replayed run's template passes decided (template/update.rs).
+pub type Settled = HashSet<(i32, i32, i32)>;
 
 /// What a chunk's structure stage reads past it: the neighbours' carved terrain, and the
 /// neighbours BDS post-processed earlier (decoration phases) with their pieces and the
@@ -32,6 +36,8 @@ pub struct Neighbours<'a> {
     pub shaft_order: Option<&'a [(i32, i32)]>,
     /// `placed` is a replayed run's state at this moment, not our phase model's.
     pub live: bool,
+    /// The cells the run's template passes have decided so far; None without a replay.
+    pub settled: Option<&'a RefCell<Settled>>,
 }
 
 pub struct Canvas<'a> {
@@ -45,6 +51,10 @@ pub struct Canvas<'a> {
     /// The pieces being placed are post-processed in this chunk (not placed whole from their start's,
     /// as shipwreck.rs does): what lies past the 3x3 chunks around it is absent.
     pub limit_view: bool,
+    /// A replayed run: a piece its start chunk places whole writes into the 3x3 chunks at once.
+    pub whole: bool,
+    /// What template placements file for their update pass.
+    pub record: Record<'a>,
     /// Light heightmap per column, as `LevelChunk` +0xb80 keeps it.
     heights: RefCell<HashMap<(i32, i32), i32>>,
     /// Writes outside the chunk kept (and read back) while a piece placed whole is being drawn.
@@ -75,6 +85,8 @@ impl<'a> Canvas<'a> {
             placed: None,
             read_placed: false,
             limit_view: false,
+            whole: false,
+            record: Record::default(),
             heights: RefCell::new(HashMap::new()),
             spill: None,
             touched: (i32::MAX, i32::MIN),
@@ -129,7 +141,11 @@ impl<'a> Canvas<'a> {
     /// Whether the post-process's `BlockSource` holds the column's chunk: its view is the 3x3
     /// chunks around the one processed, and a piece reaches further.
     fn in_view(&self, x: i32, z: i32) -> bool {
-        !self.limit_view || ((x >> 4) - self.chunk.0).abs() <= 1 && ((z >> 4) - self.chunk.1).abs() <= 1
+        !self.limit_view || self.around(x, z)
+    }
+
+    fn around(&self, x: i32, z: i32) -> bool {
+        ((x >> 4) - self.chunk.0).abs() <= 1 && ((z >> 4) - self.chunk.1).abs() <= 1
     }
 
     /// Any block: the chunk's own, a neighbour's, air outside the world's heights and the view.
@@ -157,6 +173,10 @@ impl<'a> Canvas<'a> {
     /// Writes inside the chunk only.
     pub fn set(&mut self, x: i32, y: i32, z: i32, block: Block) {
         if self.bb.contains(x, y, z) {
+            let before = self.shape.block((x & 15) as usize, y, (z & 15) as usize);
+            // A block that can hold water keeps the water it is set into (an igloo cellar's bars in a flooded cave).
+            let block = if before == Block::Water { super::template::soaked(block) } else { block };
+            self.record.note((x, y, z), before, block);
             self.shape.set_block((x & 15) as usize, y, (z & 15) as usize, block);
             super::trace::write([x, y, z], block);
             self.touched = (self.touched.0.min(y), self.touched.1.max(y));
@@ -166,11 +186,38 @@ impl<'a> Canvas<'a> {
             {
                 *h = (*h).max(y + 1);
             }
+        } else if self.whole {
+            if (MIN_Y..=TOP).contains(&y) && self.around(x, z) {
+                self.record.note((x, y, z), self.get(x, y, z), block);
+                self.write_past(x, y, z, block);
+            }
         } else if let Some((area, cells)) = &mut self.spill
             && area.contains(x, y, z)
         {
             cells.insert((x, y, z), block);
         }
+    }
+
+    /// A replayed post-process's write into a neighbour, there at once.
+    fn write_past(&mut self, x: i32, y: i32, z: i32, block: Block) {
+        self.unclipped.push(([x, y, z], block, Block::Air));
+        self.written.insert((x, y, z), block);
+        super::trace::write([x, y, z], block);
+    }
+
+    /// An update pass's write (template/update.rs): in the chunk, or under a replay anywhere in the 3x3.
+    pub fn set_in_view(&mut self, x: i32, y: i32, z: i32, block: Block) {
+        let Some(settled) = self.record.settled else { return };
+        if self.bb.contains(x, y, z) {
+            self.shape.set_block((x & 15) as usize, y, (z & 15) as usize, block);
+            super::trace::write([x, y, z], block);
+            self.touched = (self.touched.0.min(y), self.touched.1.max(y));
+        } else if (MIN_Y..=TOP).contains(&y) && self.around(x, z) {
+            self.write_past(x, y, z, block);
+        } else {
+            return;
+        }
+        settled.borrow_mut().insert((x, y, z));
     }
 
     /// `BlockSource::setBlock` past the chunk box: the chunk's own cells, or a write into a

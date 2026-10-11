@@ -5,11 +5,11 @@
 use super::mirror::mirror;
 use super::rules::{Rule, apply};
 use super::wood::rewood;
-use super::{Kind, Template, WATERLOGGABLE, flags, named};
+use super::{Kind, Template, soaked};
 use crate::block::Block;
 use crate::random::Mt19937;
-use crate::structure::BoundingBox;
 use crate::structure::canvas::Canvas;
+use crate::structure::{BoundingBox, trace};
 
 const SEA_LEVEL: i32 = 63;
 
@@ -116,11 +116,7 @@ impl Placement {
                 block = apply(self.rules, block, world(at.0, at.1, at.2), random);
             }
             if self.flood && at.1 < SEA_LEVEL {
-                if block == Block::Air {
-                    block = Block::Water;
-                } else if !block.is_waterlogged() && flags(block) & WATERLOGGABLE != 0 {
-                    block = named(block.name(), block.states(), true);
-                }
+                block = if block == Block::Air { Block::Water } else { soaked(block) };
             }
             Some((at, block, index))
         })
@@ -128,7 +124,7 @@ impl Placement {
 
     /// Names the template block for the structure trace.
     pub fn label(&self, template: &Template, index: usize) {
-        crate::structure::trace::label(|| {
+        trace::label(|| {
             let b = &template.blocks[index];
             let raw = b.state.block(Rotation::None);
             format!("{} {:?} t{:?} {}[{}]", template.name, self.rotation, b.pos, raw.name(), raw.states())
@@ -138,11 +134,28 @@ impl Placement {
     /// Writes the template; returns how many loot chests it placed (each drew a loot seed).
     pub fn place(&self, canvas: &mut Canvas, template: &Template, origin: (i32, i32, i32)) -> usize {
         let mut chests = 0;
+        canvas.begin_template();
         for ((x, y, z), block, index) in self.blocks(template, origin) {
             self.label(template, index);
             canvas.set(x, y, z, block);
             chests += usize::from(template.loot_chests.contains(&index));
         }
+        self.update_pass(canvas, template, origin);
         chests
     }
+
+    /// Ends the placement `Canvas::begin_template` started: the template's box grown by one, in its own x, y, z order.
+    pub fn update_pass(&self, canvas: &mut Canvas, template: &Template, origin: (i32, i32, i32)) {
+        trace::label(|| format!("{} update pass", template.name));
+        canvas.update_pass(pass_cells(self.rotation, self.mirror, template.size, origin), template.legacy);
+    }
+}
+
+/// A template's cells and those around it as world positions, in the order of its own axes.
+pub fn pass_cells(rotation: Rotation, mirror: bool, (sx, sy, sz): (i32, i32, i32), origin: (i32, i32, i32)) -> impl Iterator<Item = (i32, i32, i32)> {
+    let local = (-1..=sx).flat_map(move |x| (-1..=sy).flat_map(move |y| (-1..=sz).map(move |z| (x, y, if mirror { -z } else { z }))));
+    local.map(move |pos| {
+        let (dx, dy, dz) = rotation.apply(pos);
+        (origin.0 + dx, origin.1 + dy, origin.2 + dz)
+    })
 }

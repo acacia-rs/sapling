@@ -65,7 +65,10 @@ pub fn kelp(ctx: &mut Ctx, at: [i32; 3], count: i32) -> bool {
         }
         let length = if depth > 3 { ctx.random.next_int(depth - 3) + 3 } else { 3 };
         let below = view.block(px, py - 1, pz);
-        if !below.is_kelp() && below.blocks_motion() {
+        // `KelpBlock::canSurvive` (142fdc7b0): a solid-blocking block below, or a slab or stair turned over
+        // (a shipwreck's upright stairs hold none).
+        let turned = |b: Block| b.states().contains("upside_down_bit=1") || b.states().contains("vertical_half=top");
+        if !below.is_kelp() && (below.is_solid_blocking() || turned(below)) {
             let age = KELP_AGES - length - 1;
             view.set_block(px, py, pz, KELP[age as usize]);
             for i in 1..length {

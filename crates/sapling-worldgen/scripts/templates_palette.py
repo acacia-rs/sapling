@@ -49,6 +49,8 @@ EXTRA = [
     ('red_sandstone', '', False, 3),
     # v2 templates keep a trial spawner's Java state (src/structure/template/java_states.rs).
     ('trial_spawner', 'ominous=0,trial_spawner_state=1', False, 3),
+    # v2 templates hang a vine with Java's `up` on all four sides (java.rs).
+    ('vine', 'vine_direction_bits=15', False, 0),
 ] + [(crop, 'growth=7', False, 0) for crop in ('wheat', 'potatoes', 'carrots', 'beetroot')] + [
     (f'waxed_{age}_copper_bulb', 'lit=1,powered_bit=0', False, 3) for age in ('oxidized', 'weathered', 'exposed')] + [
     # Mansion chest markers and entrance stairs (src/structure/mansion/piece.rs).

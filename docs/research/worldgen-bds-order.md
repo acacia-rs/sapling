@@ -216,9 +216,8 @@ mineshaft starts visited in the start map's order (below). `tools/replay-world.s
 sends a run to testbox, `tools/replay-oracle.sh <name> <test fn> <region> <box>` prints the oracle totals with
 the phase model and with the replay and then `examples/structure_replay_check`: the differing cells grouped by
 the chunk and piece that wrote ours last, in the run's order (`NEAR=x,y,z` lists the writes around a cell).
-Other kinds still place per chunk from carved terrain under the replay (shipwrecks and portals re-run their
-start's placement per chunk, which a moving state breaks); `SAPLING_REPLAY_LIVE_KINDS=1` lets villages,
-strongholds, mansions and cities read the state too.
+(At shaft4 the other kinds still placed per chunk from carved terrain under the replay; since struct5 every kind
+reads the run's state, see "The full replay of the structures world".)
 
 Call for call: `scripts/data/dbg_shaft.json` adds every mineshaft piece's `postProcess` (piece box, chunk box,
 the chunk generator's index: the `Random` handed to pieces holds its generator at +8, so the index is at
@@ -294,6 +293,75 @@ it: their pieces' air over a support's span, their floors' planks under its corr
 corridor's spawner is already placed; nothing beyond the 3x3. A default for (2) was tried: neighbours never
 seen as placed is worse than our phase order on the stock oracle (865 -> 1005), so the phase model stays; any
 fixed rule is right for about half of BDS's neighbour pairs.
+
+## The full replay of the structures world (2026-10-11, worldgen/struct5)
+One run now carries both orders: `scripts/data/dbg_canon.json` logs loads, structure post-processes, decorations
+and the thread draws (and each start's connection-upgrade flag), `tools/replay-world.sh` sends world,
+`structure-order.txt` and `order.txt` to `~/replay-worlds/<name>`, and `tools/replay-regions.sh` (list:
+`tools/replay-worlds.txt`) measures each region against its own run with `SAPLING_ORACLE_STRUCTURE_ORDER`,
+`SAPLING_ORACLE_ORDER` and `SAPLING_ORACLE_THREAD_SEED=0` together; `check` and `rc` name the first differing
+piece and source. A canon needs no new BDS run when an older `dbg_canon.json` log exists (c-jt, c-ob, c-bl were
+rebuilt from replay4's).
+
+Under the replay every kind now does what its BDS post-process does (`structured/replay.rs`, live reading is the
+default): pieces read the run's state within the 3x3 of the chunk processed; igloos, shipwrecks and ruined
+portals are placed whole by their start chunk, into the neighbours at once; pieces' features read the state and
+land at once; neighbour-shaped states are written by the events that write them in BDS
+(worldgen-bds-templates.md, "The update pass").
+
+Wrong + missing (structure stage in brackets) against each region's own one-worker world:
+
+| region | before | after | what is left |
+|---|---|---|---|
+| ruined portal | 32 [1] (structure order only) | 0 [0] | |
+| ocean ruins | 1 [0] | 0 [0] | |
+| shipwreck | 19 [0] | 0 [0] | |
+| jungle temple | 18 (replay4, decoration order only) | 0 [0] | |
+| old growth birch | 20 | 0 [0] | |
+| badlands | 7 | 0 [0] | |
+| stronghold | 221 [46] | 132 [36] | below |
+| mansion (structure order only) | [36] | [5] | 5 cobblestone cells of a lava and water meeting, none the mansion's |
+| village (structure order only) | [2] | [1] | one dirt cell BDS has as air (-1009,84,163), not traced |
+| igloo, snowy plains (structure order only) | [1] | [0] | |
+| ancient city (structure order only) | [6] | [7] | 6 tuff cells over city deepslate, 1 lava: needs its decoration order |
+
+What the first differing pieces and sources were:
+- **Connections** (mansion's 31 corner walls, the portal's bar, the igloo's bars, four mineshaft posts): the
+  update pass, the legacy templates and `upgradeStructureConnectionBlocks`, worldgen-bds-templates.md.
+- **A wall beside a pumpkin** stays apart (village -977,82,191).
+- **A v2 vine with Java's `up`** is placed on four sides (trial chambers' `display_2`, ocean ruins region
+  304,8,-614; one cell, so a fit).
+- **Kelp** (`KelpBlock::canSurvive` 142fdc7b0) stands on a solid-blocking block or a turned slab or stair, not on
+  a shipwreck's upright stairs (19 cells).
+- **A waterloggable block keeps the water it is set into** (the igloo cellar's bar at -892,52,-2832, whose cell
+  is water in the carved terrain).
+- **Stronghold "piece 118"** was no `isInInvalidLocation`: BDS has the corridor, and a monster room of source
+  -93,-125 (spawner -1480,-2,-1982) over it. Ours placed the same room and then let the lava beside it run in.
+  The room writes with no feature transaction (149e9dae0, plain `setBlock` 3) and wakes no liquid.
+- **Leaf litter** needs a top face that holds an edge: about 70 cells on a village tree's leaves, a fence and
+  a path (trees a village places stand before decoration; a fit of three block classes, not read out).
+
+Stronghold, left (132): water that runs through corridors under -88,-123 the other way (first source -87,-122,
+rank 96: ours has water at -1387,-4,-1948 where BDS has none; about 45 cells with the structure-stage ones),
+lava at the monster room's east wall (source -93,-124), sulfur spikes of source -93,-120 (15, a ring source),
+and two village items: the foundation columns of `plains_weaponsmith_1` in chunk -90,-124 differ by one
+`nextInt(3)` (3 cells of ours, 4 of BDS: the chunk generator is a draw off before the house's fill, so the
+cause is an earlier piece or feature of that chunk; next step: log `PoolElementStructurePiece::postProcess`
+141ef21e0 with the generator's index at `[r8+0x9d4]` per piece in a one-worker run and compare with ours),
+and one pen fence joined south in BDS (-1426,69,-1919).
+
+Which starts run the upgrade (vtable slot 0x20, logged at 141f07ae3 over single-chunk regions of 15 kinds, kinds
+told apart by where each start vtable's hits fall): mineshafts (14a9263e0) and strongholds (14a927e70) do, the
+scattered start (14a927910) does for a swamp hut and a jungle temple and not for a desert pyramid or an igloo
+(one hit each), and villages, mansions, monuments, portals, shipwrecks, ocean ruins, cities, outposts and v2
+starts do not. `dbg_canon.json`'s `upgrades` line (rax, the start's vtable) repeats the answer in every canon.
+The igloo's cell bars then need another reason to stay apart from the two cell markers north of them (the
+cellar is dug into stone): sapling clears the markers before the template's pass, which fits the igloo run
+(structure stage 1 -> 0); what BDS holds in those cells during its pass was not read.
+
+Stock oracle, all 59 regions (logs `base`, `s2`, `-still`): ticked 25104 -> 24881, still 25552 -> 25329;
+structure stage 780 -> 767 and 903 -> 890; no region rose. By region: stronghold -89, mansion -76, shipwreck -19, swamp hut -11, far out -11, near
+origin -8 (which change moved which region was not split out).
 
 ## What a server can make canonical
 Not BDS's order: it is not a function of the seed and the position, and following it would make a chunk depend

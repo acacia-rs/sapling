@@ -4,7 +4,7 @@
 
 use std::sync::Arc;
 
-use super::canvas::{Canvas, Neighbours, Spawners};
+use super::canvas::{Canvas, Neighbours, Settled, Spawners};
 use super::jigsaw::{ElementKind, Piece};
 use super::mineshaft::{self, MESA_BIOMES, Mineshaft};
 use super::monument::{self, Monument};
@@ -84,10 +84,14 @@ impl Structures {
             .map(|start| self.monument(start))
             .filter(|m| m.building.bb.intersects(&column))
             .collect();
-        let igloos = self.igloos_near(density, chunk);
+        let (mut igloos, mut shipwrecks, mut portals) = (self.igloos_near(density, chunk), self.shipwrecks_near(density, chunk), self.portals_near(density, chunk));
+        // A replayed start chunk writes these whole into its 3x3 (canvas.whole); without one each chunk draws its part.
+        if neighbours.live {
+            igloos.retain(|start| *start == chunk);
+            shipwrecks.retain(|(start, _)| *start == chunk);
+            portals.retain(|start| *start == chunk);
+        }
         let ruins = self.ocean_ruins_near(density, chunk);
-        let shipwrecks = self.shipwrecks_near(density, chunk);
-        let portals = self.portals_near(density, chunk);
         let outposts = self.outposts_near(density, chunk);
         let cities = self.ancient_cities_near(density, chunk);
         let villages = self.villages_near(density, chunk);
@@ -107,38 +111,50 @@ impl Structures {
             return None;
         }
         let mut canvas = Canvas::new(shape, chunk, neighbours.carved).with_placed(neighbours.placed).with_features(features);
+        canvas.record.settled = neighbours.settled;
         let seeds = LargeFeatureSeed::new(self.level_seed);
         let seed = seeds.chunk(chunk.0, chunk.1);
         let chunk_random = |(x, z): (i32, i32)| Mt19937::new(seeds.chunk(x, z));
         let mut placed: Vec<BoundingBox> = mineshafts.iter().map(|m| m.bb).chain(strongholds.iter().map(|s| s.bb)).collect();
-        // A replayed run's state is what the kinds post-processed chunk by chunk read past the chunk.
-        (canvas.read_placed, canvas.limit_view) = (neighbours.live, neighbours.live);
+        // A replayed run's state is what every kind reads past the chunk, within the 3x3 its post-process
+        // holds. Without one (`placed` is the phase model's): mineshaft supports read earlier-phase
+        // neighbours with their pieces and the hardcoded kinds keep to the 3x3; the others matched worse
+        // that way (village trees, pyramid heights).
+        let live = neighbours.live;
+        let view = |canvas: &mut Canvas, read_placed: bool, limit_view: bool| (canvas.read_placed, canvas.limit_view) = (live || read_placed, live || limit_view);
+        view(&mut canvas, false, false);
         if !villages.is_empty() {
             Self::place_villages(density, &mut canvas, &villages, seed, &(neighbours.generated_tops)());
         }
         let mut random = chunk_random(chunk);
-        canvas.limit_view = true;
+        view(&mut canvas, false, true);
         for stronghold in &strongholds {
             stronghold.post_process(&mut canvas, &mut random);
+            canvas.upgrade(&stronghold.bb);
         }
-        (canvas.read_placed, canvas.limit_view) = (false, false);
+        view(&mut canvas, false, false);
         let mut random = chunk_random(chunk);
         super::trace::label(|| "temple".into());
         for temple in &temples {
             placed.extend(temple.post_process(&mut canvas, &mut random, &chunk_random));
+            // Logged per start (dbg_canon.json `upgrades`): huts and jungle temples, mineshafts and
+            // strongholds upgrade; desert pyramids, igloos and every other kind do not.
+            if temple.temple != super::scattered::Temple::DesertPyramid {
+                canvas.upgrade(&temple.bb);
+            }
         }
+        canvas.whole = live;
         self.place_igloos(&mut canvas, &igloos);
+        canvas.whole = false;
         let mut random = chunk_random(chunk);
-        // Their supports read neighbours BDS post-processed earlier with those neighbours' pieces;
-        // other kinds matched worse that way (village trees, pyramid heights).
-        (canvas.read_placed, canvas.limit_view) = (true, true);
+        view(&mut canvas, true, true);
         let mut spawners = if mineshafts.is_empty() { Spawners::new() } else { (neighbours.spawners)() };
         for mineshaft in &mineshafts {
             mineshaft.post_process(&mut canvas, &mut random, biomes, &mut spawners);
+            canvas.upgrade(&mineshaft.bb);
         }
-        (canvas.read_placed, canvas.limit_view) = (neighbours.live, neighbours.live);
+        view(&mut canvas, false, false);
         Self::place_mansions(&mut canvas, &mansions);
-        (canvas.read_placed, canvas.limit_view) = (false, false);
         super::trace::label(|| "treasure".into());
         if treasure {
             treasure::place(&mut canvas, &mut chunk_random(chunk), chunk);
@@ -146,19 +162,19 @@ impl Structures {
         Self::place_outposts(&mut canvas, &outposts, seed);
         let mut random = chunk_random(chunk);
         super::trace::label(|| "monument".into());
-        canvas.limit_view = true;
+        view(&mut canvas, false, true);
         for monument in &monuments {
             monument.post_process(&mut canvas, &mut random);
             placed.push(monument.building.bb);
         }
-        canvas.limit_view = false;
+        view(&mut canvas, false, false);
         Self::place_ocean_ruins(&mut canvas, &ruins, seed);
+        canvas.whole = live;
         self.place_shipwrecks(&mut canvas, &shipwrecks);
         super::trace::label(|| "ruined portal".into());
         self.place_portals(density, &mut canvas, &portals);
-        (canvas.read_placed, canvas.limit_view) = (neighbours.live, neighbours.live);
+        canvas.whole = false;
         Self::place_ancient_cities(&mut canvas, &cities, seed);
-        (canvas.read_placed, canvas.limit_view) = (false, false);
         self.place_v2(&mut canvas, &v2);
         let touched = placed.iter().fold(canvas.touched, |(lo, hi), b| (lo.min(b.y0 - 1), hi.max(b.y1 + 1)));
         Some(Placed { touched, spilled: std::mem::take(&mut canvas.spilled), unclipped: std::mem::take(&mut canvas.unclipped), spawners })
@@ -268,6 +284,6 @@ impl Structures {
 /// Fence, pane and bar connections and stair corners as the chunk and its neighbours end up
 /// (`neighbour` reads them after their pieces): BDS's follow the changes beside them, across
 /// chunk borders too.
-pub fn rejoin_connections(shape: &mut ChunkShape, chunk: (i32, i32), heights: (i32, i32), neighbour: &dyn Fn(i32, i32, i32) -> Block) {
-    template::rejoin(&mut Canvas::new(shape, chunk, neighbour), heights);
+pub fn rejoin_connections(shape: &mut ChunkShape, chunk: (i32, i32), heights: (i32, i32), neighbour: &dyn Fn(i32, i32, i32) -> Block, settled: &Settled) {
+    template::rejoin(&mut Canvas::new(shape, chunk, neighbour), heights, settled);
 }

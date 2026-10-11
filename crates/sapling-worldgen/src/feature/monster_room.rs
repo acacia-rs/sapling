@@ -31,6 +31,8 @@ fn air(view: &View, [x, y, z]: [i32; 3]) -> bool {
     view.block(x, y, z) == Block::Air
 }
 
+/// Its writes go straight to the block source (no feature transaction): no liquid beside them wakes
+/// (a stronghold run's room cleared a lava-run corridor and stayed dry).
 fn room(view: &mut View, random: &mut Mt19937, [x, y, z]: [i32; 3]) -> bool {
     let (rx, rz) = (random.next_int(2), random.next_int(2));
     let (x0, x1, z0, z1) = (x - rx - 3, x + rx + 3, z - rz - 3, z + rz + 3);
@@ -60,16 +62,16 @@ fn room(view: &mut View, random: &mut Mt19937, [x, y, z]: [i32; 3]) -> bool {
                 let p = [px, py, pz];
                 let shell = px == x0 || px == x1 || pz == z0 || pz == z1 || py == y - 1;
                 if !shell || (py >= MIN_Y && !solid(view, [px, py - 1, pz])) {
-                    view.set_block(px, py, pz, Block::Air);
+                    view.set_block_quiet(px, py, pz, Block::Air);
                 } else if solid(view, p) {
                     let mossy = py == y - 1 && random.next_int(4) != 0;
-                    view.set_block(px, py, pz, if mossy { Block::MossyCobblestone } else { Block::Cobblestone });
+                    view.set_block_quiet(px, py, pz, if mossy { Block::MossyCobblestone } else { Block::Cobblestone });
                 }
             }
         }
     }
     chests(view, random, [x, y, z], rx + 2, rz + 2);
-    view.set_block(x, y, z, Block::MobSpawner);
+    view.set_block_quiet(x, y, z, Block::MobSpawner);
     random.next_int(4);
     true
 }
@@ -87,7 +89,7 @@ fn chests(view: &mut View, random: &mut Mt19937, [x, y, z]: [i32; 3], rx: i32, r
             let sides = [[-1, 0], [1, 0], [0, -1], [0, 1]].iter().filter(|[ox, oz]| solid(view, [p[0] + ox, y, p[2] + oz])).count();
             if sides == 1 {
                 let facing = chest_facing(view, p, dx, dz);
-                view.set_block(p[0], y, p[2], Block::CHESTS[facing]);
+                view.set_block_quiet(p[0], y, p[2], Block::CHESTS[facing]);
                 random.next_u32();
                 break;
             }
