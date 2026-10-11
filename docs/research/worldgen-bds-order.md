@@ -417,11 +417,16 @@ pyramid 2438 with 1675 structure-stage cells (a mineshaft and the temple: not lo
 Open under replay, each with its first source:
 - **Mansion, 85** (two full canons, `mansion2` and `mansion3`): ring source -510,1001's lush cave growth on the
   region's south edge (moss, cave vines and azalea leaves; 51 cells of ours, 22 moss blocks of BDS's nothing of
-  ours writes). The chunks south of z 1000 are not saved: next step, a canon of -516,992,-508,1002 and
-  `try_check` on that source's vegetation patches. (The region's lava, 18 cells of source -509,998, was the
+  ours writes). On a canon two chunks further south (`mansion4`, 68 in the region) that source is still the
+  first with its own cells wrong (246 of 3998): `try_check` shows its azalea root system (try 0 at
+  -8151,12,16018: the tree's leaves), three moss ceiling tries (82, 43, 41) and vegetation try 122 off, in one
+  pass. Next step: the call log of that chunk (`dbg_calls.py` recipe: vegetation patch 143bc8310 and its cells,
+  the root system and tree entries) against `feature_trace`. (The region's lava, 18 cells of source -509,998, was the
   receding lava's thread draw: worldgen-bds-liquids.md, "The first generation".)
-- **Far out, 5**: two glow lichens on other cells (sources 100004,100002 and 100007,100006), one dirt cell of
-  an ore blob BDS writes and ours does not (1600014,53,1600103), one water cell. Not traced.
+- **Far out, 5**: two glow lichens a block or two from BDS's cells (sources 100004,100002 and 100007,100006;
+  the first chunk's eight thread draws are contiguous in the stream, so it is the rule's position, not the
+  thread generator: float precision at 1.6M is the likely cause), one dirt cell of an ore blob BDS writes and
+  ours does not (1600014,53,1600103), one water cell. Not traced further.
 - **Near origin** has no canon: the 32x32 region's run was cut by the pack's script watchdog after four of
   sixteen tiles (`WORLDGEN done error InternalError: interrupted`). Next step: one canon per 8x8 tile with its
   own test region, or a pack that yields between tiles.
