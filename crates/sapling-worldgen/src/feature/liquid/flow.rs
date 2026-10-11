@@ -166,12 +166,18 @@ fn tick(view: &mut View, p: [i32; 3], lava: bool) {
             new = 0;
         }
         if new != d {
+            // Receding lava waits four times as long three times in four, by the thread's generator: both
+            // waits end in the next generation, but the longer one sorts later in it.
+            let mut wait = delay(lava);
+            if lava && d < 8 && d < new && new < 8 && view.thread_random.as_mut().is_some_and(|random| random.next_int(4) != 0) {
+                wait *= 4;
+            }
             if new < 0 {
                 set(view, p, Block::Air);
             } else {
                 set(view, p, Block::liquid(lava, new as u8));
                 update_neighbors(view, p);
-                view.schedule(p, lava, delay(lava));
+                view.schedule(p, lava, wait);
             }
             d = new;
         }
