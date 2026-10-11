@@ -24,7 +24,7 @@ const MAX_CLICKS_PER_TICK: usize = 4;
 const USED: &[&str] = &["daylight_detector", "daylight_detector_inverted", 
     "door", "button", "lever", "fence_gate", "chest", "barrel", "shulker_box", "furnace", "smoker", "crafting_table", "anvil", "enchanting_table", "hopper",
     "dropper", "dispenser", "_sign", "noteblock", "repeater", "comparator", "brewing_stand", "beacon", "loom", "grindstone", "stonecutter_block", ":bed",
-    "cartography_table", "smithing_table", "flower_pot", "jukebox",
+    "cartography_table", "smithing_table", "flower_pot", "jukebox", ":frame", "glow_frame", "decorated_pot",
 ];
 
 enum Input {
@@ -74,8 +74,16 @@ fn is_used(name: &str) -> bool {
 /// a bed is slept in, a sign is written on, a pot takes or gives a plant, a campfire takes food.
 /// False when it does none of these.
 fn use_block(world: &mut World, player: Entity, layer: Entity, pos: BlockPos, name: &str) -> bool {
-    let uses: [fn(&mut World, Entity, Entity, BlockPos, &str) -> bool; 7] =
-        [crate::containers::open, crate::sleep::lie_down, signs::edit_by_click, pots::use_pot, crate::campfires::cook, super::handled::use_by_hand, super::jukebox::use_jukebox];
+    let uses: [fn(&mut World, Entity, Entity, BlockPos, &str) -> bool; 8] = [
+        crate::containers::open,
+        crate::sleep::lie_down,
+        signs::edit_by_click,
+        pots::use_pot,
+        crate::campfires::cook,
+        super::handled::use_by_hand,
+        super::jukebox::use_jukebox,
+        super::holders::use_holder,
+    ];
     uses.iter().any(|used| used(world, player, layer, pos, name))
 }
 

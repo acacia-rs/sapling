@@ -17,6 +17,7 @@ mod falling;
 mod ground;
 mod growth;
 mod handled;
+mod holders;
 mod items;
 mod jukebox;
 mod leaves;

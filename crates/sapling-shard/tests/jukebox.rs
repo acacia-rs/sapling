@@ -3,7 +3,7 @@
 
 mod common;
 
-use acacia_proto::packets::{AddItemEntity, Text, TextType};
+use acacia_proto::packets::{AddItemEntity, LevelEvent, LevelSoundEvent, Text, TextType};
 use common::{Harness, all, click};
 use sapling_api::{Block, GameMode, Item, PlayerId, Slot};
 
@@ -64,5 +64,31 @@ fn lit_redstone_ore_goes_out_by_itself() {
     let (soon, late) = (lit(&mut h, 1200), lit(&mut h, 8000));
     assert!((1..8).contains(&soon) && late == 0, "{soon} lit after a minute, {late} after eight");
     h.remote.run(|ctx| assert_eq!(ctx.block([2, 65, 3]).map(|ore| ore.name).as_deref(), Some("minecraft:redstone_ore")));
+    h.tick_all();
+}
+
+#[test]
+fn an_item_frame_takes_an_item_and_turns_it_and_a_decorated_pot_takes_a_stack() {
+    // research/captures/bds-clicks2.txt.
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    h.remote.run(|ctx| {
+        assert!(ctx.set_item(ALEX, Slot::Main(0), Some(&Item::new("minecraft:stone", 5))));
+        assert!(ctx.set_block([2, 65, 0], &Block { name: "minecraft:frame".into(), properties: "facing_direction=1".into() }));
+        assert!(ctx.set_block([2, 65, 2], &Block::new("minecraft:decorated_pot")));
+    });
+    h.tick_all();
+    let mut heard = Vec::new();
+    for at in [[2, 65, 0], [2, 65, 0], [2, 65, 2], [2, 65, 2]] {
+        h.receive(1, &click(at, 1, None));
+        let sent = h.tick_all().to(1).to_vec();
+        heard.extend(all::<LevelEvent>(&sent).into_iter().filter(|event| event.position.x == 2.0).map(|event| format!("{:?}", event.event)));
+        heard.extend(all::<LevelSoundEvent>(&sent).into_iter().filter(|sound| sound.sound_id.contains("pot")).map(|sound| format!("{} {}", sound.sound_id, sound.extra_data)));
+    }
+    assert_eq!(heard, ["SoundItemframeAddItem", "SoundItemframeRotateItem", "block.decorated_pot.insert 707", "block.decorated_pot.insert 715"]);
+    h.remote.run(|ctx| {
+        assert_eq!(ctx.item(ALEX, Slot::Main(0)).map(|held| held.count), Some(2), "one in the frame, two in the pot");
+        assert!(ctx.block([2, 66, 0]).is_some_and(|over| over.name == "minecraft:air"), "no stone was put against the frame");
+    });
     h.tick_all();
 }

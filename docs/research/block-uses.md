@@ -117,11 +117,15 @@ Sapling does the rows down to the dragon egg the same, state for state and sound
 for the powder snow, which it leaves alone. An egg jumps up to 15 across and 7 up or down to a
 free cell, the Java game's reach. A charged respawn anchor clicked outside the nether is gone
 in a blast of power 5 at its middle, which breaks blocks and leaves their items as TNT's does.
+An item frame keeps the item in its entity as `Item` and turns it by `ItemRotation`, 45 a
+click; a decorated pot keeps its stack as `item`, one more a click of the same thing, the
+sound's pitch 700 and 500 for a full stack (`blocks/holders.rs`). Both leave what they hold when
+broken.
 
 ## Left
 
-- From the second round: the decorated pot and the item frame taking things, the lodestone
-  compass, powder snow in a cauldron. A respawn anchor clicked with a block in the hand has the
+- From the second round: the lodestone compass, powder snow in a cauldron. A hit takes no
+  item out of a frame, and a pot gives its stack back only when broken. A respawn anchor clicked with a block in the hand has the
   block put against it; in the nether it sets no spawn.
 
 - Bone meal has its own drill and notes: `bone-meal.md`.
