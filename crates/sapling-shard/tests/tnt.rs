@@ -5,7 +5,7 @@ mod common;
 use acacia_proto::RawPacket;
 use acacia_proto::packets::{AddEntity, AddItemEntity, LevelEvent, LevelEventEvent, RemoveEntity, SetEntityData, SetEntityMotion};
 use acacia_proto::types::{MetadataDictionaryItemKey as Key, MetadataDictionaryItemValue as Value, MetadataDictionaryItemValueDefault as Plain};
-use common::{Harness, all};
+use common::{Harness, all, click};
 use sapling_api::{Block, Difficulty, GameMode, PlayerId};
 
 fn fuses(sent: &[RawPacket]) -> Vec<i32> {
@@ -70,4 +70,22 @@ fn a_blast_lights_the_tnt_it_reaches_and_a_summoned_one_is_primed() {
     let primed = all::<AddEntity>(&sent).into_iter().filter(|added| added.entity_type == "minecraft:tnt").count();
     let bursts = all::<LevelEvent>(&sent).into_iter().filter(|event| event.event == LevelEventEvent::ParticleExplosion).count();
     assert_eq!((primed, bursts), (2, 2));
+}
+
+#[test]
+fn a_charged_respawn_anchor_bursts_when_clicked_in_the_overworld() {
+    // research/captures/bds-clicks2.txt: a blast of power 5 at its middle.
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    h.remote.run(|ctx| {
+        ctx.set_game_mode(PlayerId(1), GameMode::Creative);
+        assert!(ctx.set_block([3, 65, 0], &Block { name: "minecraft:respawn_anchor".into(), properties: "respawn_anchor_charge=1".into() }));
+    });
+    h.tick_all();
+    h.receive(1, &click([3, 65, 0], 1, None));
+    let sent = h.tick_all().to(1).to_vec();
+    let flash = all::<LevelEvent>(&sent).into_iter().find(|event| event.event == LevelEventEvent::ParticleExplosion).expect("a blast");
+    assert_eq!((flash.data, flash.position.x, flash.position.y, flash.position.z), (5, 3.5, 65.5, 0.5));
+    h.remote.run(|ctx| assert!(ctx.block([3, 65, 0]).is_some_and(|block| block.name == "minecraft:air") && ctx.block([3, 64, 0]).is_some_and(|block| block.name == "minecraft:air")));
+    h.tick_all();
 }

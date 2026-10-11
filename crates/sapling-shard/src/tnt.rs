@@ -96,7 +96,7 @@ pub(crate) fn burn(world: &mut World) {
         let Some((body, mut packets)) = entities::step(world, entity, layer, id, &Physics::TNT, WIRE_OFFSET) else { continue };
         if left < 0 {
             let [x, y, z] = body.at;
-            creatures::explode(world, entity, layer, [x, y + HEART, z], POWER, Wreck::Leaves);
+            creatures::explode(world, Some(entity), layer, [x, y + HEART, z], POWER, Wreck::Leaves);
             continue;
         }
         world.entity_mut(entity).insert(Primed(left));

@@ -1,6 +1,7 @@
 //! What a click does to a block that needs nothing in the hand: a cake is bitten, redstone ore
 //! lights, a berry bush and cave vines are picked, a note block plays, a full composter empties,
-//! a dragon egg is gone elsewhere (docs/research/block-uses.md).
+//! a dragon egg is gone elsewhere, a charged respawn anchor bursts outside the nether
+//! (docs/research/block-uses.md).
 // TODO: where a dragon egg goes is the Java game's reach; BDS's one jump was 15 east and 9 north.
 
 use acacia_proto::types::Vec3f;
@@ -24,6 +25,9 @@ const MOUTH: f32 = sapling_data::EYE_HEIGHT - 0.1;
 /// A dragon egg jumps up to this far across and up or down, and tries this often for a free cell.
 const EGG_REACH: [i32; 2] = [15, 7];
 const EGG_TRIES: usize = 64;
+/// A charged respawn anchor clicked outside the nether bursts with this power.
+const ANCHOR_POWER: f32 = 5.0;
+const NETHER: i32 = 1;
 
 /// What tells of an egg's jump by `by`: each length in a byte, and a bit for each that is negative.
 fn egg_jump([dx, dy, dz]: [i32; 3]) -> i32 {
@@ -82,6 +86,15 @@ pub(super) fn use_by_hand(world: &mut World, player: Entity, layer: Entity, pos:
             send::set(world, layer, pos, picked);
             drops::spill(world, layer, berries, pos);
             send::to_viewers(world, layer, pos, &[send::noise("pick_berries.cave_vines", Vec3f { x: x as f32, y: y as f32, z: z as f32 }, -1)]);
+            true
+        }
+        "minecraft:respawn_anchor" => {
+            if !property(properties, "respawn_anchor_charge").is_some_and(|charge| charge > 0) || level.dimension() == NETHER {
+                return false;
+            }
+            let air = registry.air_id();
+            send::set(world, layer, pos, air);
+            crate::creatures::explode(world, None, layer, pos.map(|c| c as f32 + 0.5), ANCHOR_POWER, crate::creatures::Wreck::Leaves);
             true
         }
         "minecraft:dragon_egg" => {

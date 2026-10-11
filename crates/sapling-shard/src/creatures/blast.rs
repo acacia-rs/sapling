@@ -124,15 +124,20 @@ pub(crate) enum Wreck {
     Leaves,
 }
 
-/// A blast of `power` at `at`: of `source`, which is gone with it.
-pub(crate) fn explode(world: &mut World, source: Entity, layer: Entity, at: [f32; 3], power: f32, wreck: Wreck) {
+/// A blast of `power` at `at`: of `source`, if an entity made it, which is gone with it.
+pub(crate) fn explode(world: &mut World, source: Option<Entity>, layer: Entity, at: [f32; 3], power: f32, wreck: Wreck) {
     let [x, y, z] = at;
     let cell = at.map(|c| c.floor() as i32);
     let flash = LevelEvent { event: LevelEventEvent::ParticleExplosion, position: Vec3f { x, y, z }, data: power as i32 };
-    entities::tell_viewers(world, source, layer, cell, vec![sapling_net::encode(&flash)]);
+    match source {
+        Some(source) => entities::tell_viewers(world, source, layer, cell, vec![sapling_net::encode(&flash)]),
+        None => blocks::to_viewers(world, layer, cell, &[sapling_net::encode(&flash)]),
+    }
     let bang = LevelSoundEvent { sound_id: "explode".into(), position: Vec3f { x, y, z }, extra_data: -1, entity_type: String::new(), is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None };
     late_sounds::play_later(world, 1, layer, cell, sapling_net::encode(&bang));
-    mobs::remove(world, source);
+    if let Some(source) = source {
+        mobs::remove(world, source);
+    }
 
     let players: Vec<(Entity, [f32; 3])> = crate::components::in_world(world).into_iter().filter_map(|player| Some((player, world.get::<Position>(player)?.feet))).filter(|(player, _)| world.get::<InLayer>(*player).map(|layer| layer.0) == Some(layer)).collect();
     for (player, feet) in players {
@@ -180,6 +185,6 @@ pub(super) fn tick(world: &mut World, entity: Entity, layer: Entity, id: u64, ki
         return false;
     };
     let griefs = world.get::<Layer>(layer).is_some_and(|layer| layer.world.level().rules.on(GRIEFING));
-    explode(world, entity, layer, body.at, power, if griefs { Wreck::Breaks } else { Wreck::Nothing });
+    explode(world, Some(entity), layer, body.at, power, if griefs { Wreck::Breaks } else { Wreck::Nothing });
     true
 }

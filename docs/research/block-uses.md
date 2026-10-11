@@ -115,12 +115,14 @@ A chiseled bookshelf clicked on its top took no book, and a hoe on rooted dirt s
 
 Sapling does the rows down to the dragon egg the same, state for state and sound for sound, but
 for the powder snow, which it leaves alone. An egg jumps up to 15 across and 7 up or down to a
-free cell, the Java game's reach.
+free cell, the Java game's reach. A charged respawn anchor clicked outside the nether is gone
+in a blast of power 5 at its middle, which breaks blocks and leaves their items as TNT's does.
 
 ## Left
 
 - From the second round: the decorated pot and the item frame taking things, the lodestone
-  compass, the respawn anchor's blast, powder snow in a cauldron.
+  compass, powder snow in a cauldron. A respawn anchor clicked with a block in the hand has the
+  block put against it; in the nether it sets no spawn.
 
 - Bone meal has its own drill and notes: `bone-meal.md`.
 - Fire has its own drill and notes: `fire.md`. The obsidian row above was taken with
