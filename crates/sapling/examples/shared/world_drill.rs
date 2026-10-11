@@ -276,3 +276,19 @@ pub fn item_names() -> Vec<String> {
     }
     lines
 }
+
+/// A daylight detector, an inverted one and one under a roof, read at each thousandth of a day
+/// with the day stopped, then in rain at noon.
+pub fn daylight() -> Vec<String> {
+    let mut lines: Vec<String> = [
+        "gamerule dodaylightcycle false", "weather clear", "fill ~2 ~ ~-1 ~8 ~6 ~1 air", "fill ~2 ~-1 ~-1 ~8 ~-1 ~1 stone", "setblock ~3 ~ ~ daylight_detector", "setblock ~5 ~ ~ daylight_detector_inverted",
+        "setblock ~7 ~ ~ daylight_detector", "setblock ~7 ~3 ~ stone", "",
+    ]
+    .map(String::from)
+    .into();
+    for time in (0..24).map(|hour| hour * 1000).chain([12500, 13500, 22500, 23500]) {
+        lines.extend([format!("time set {time}"), String::new(), String::new()]);
+    }
+    lines.extend(["time set 6000", "weather rain", "", "", "", "weather thunder", "", "", "", "weather clear", "gamerule dodaylightcycle true", ""].map(String::from));
+    lines
+}

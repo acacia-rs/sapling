@@ -408,6 +408,20 @@ Built in `sapling-shard/src/blocks/pistons/plan.rs`.
 - Not drilled: the order north, west and east of a sticky block, what has no body beside slime (sapling
   leaves it), a sticky piston whose slime is held back (sapling brings nothing).
 
+## Daylight detectors (2026-10-11, `bds_command_probe daylight`, research/captures/bds-daylight.txt)
+
+Dust beside two detectors that BDS's drill world holds, read as the time was set with the day
+stopped: 7 at 0, 10 at 1000, 12, 13, 14, then 15 from 5000 to 7000, back down to 7 at 12000, 4
+at 12500, 2 at 13000, 1 at 13500, 0 from 14000 to 22000, 1 at 22500 and 4 at 23500. At noon rain
+brought it to 13 within three seconds and thunder to 10. The Java game's reckoning (the sky's
+light less up to 11 by night, times the cosine of the sun's angle drawn a fifth towards noon)
+gives every one of these but 23000, where it gives 2 and no change from 0 was seen. Detectors
+set by `/setblock` in the drill gave 0 and did not change in it; one put down by hand read at
+once (`placing`).
+
+Sapling reads each detector written while it runs every 20 ticks by that reckoning, 0 under a
+roof, and a click turns one inside out (`blocks/daylight.rs`).
+
 ## Pistons and entities
 
 From `bds_command_probe shove` (research/captures/bds-shove.txt): armour stands and pistons

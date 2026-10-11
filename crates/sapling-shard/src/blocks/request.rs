@@ -21,7 +21,7 @@ const MAX_ACTIONS_PER_TICK: usize = 16;
 /// Block clicks looked at per player per tick; more are dropped without an answer.
 const MAX_CLICKS_PER_TICK: usize = 4;
 /// Blocks a click uses rather than builds on, by the end of their name. TODO: a per-block flag.
-const USED: &[&str] = &[
+const USED: &[&str] = &["daylight_detector", "daylight_detector_inverted", 
     "door", "button", "lever", "fence_gate", "chest", "barrel", "shulker_box", "furnace", "smoker", "crafting_table", "anvil", "enchanting_table", "hopper",
     "dropper", "dispenser", "_sign", "noteblock", "repeater", "comparator", "brewing_stand", "beacon", "loom", "grindstone", "stonecutter_block", ":bed",
     "cartography_table", "smithing_table", "flower_pot",

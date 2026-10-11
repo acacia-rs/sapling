@@ -205,6 +205,7 @@ pub(super) fn use_by_hand(world: &mut World, layer: Entity, pos: BlockPos, name:
         _ if name.ends_with("button") => return press(world, layer, pos, name),
         _ if name.ends_with("_repeater") => return turn_repeater(world, layer, pos),
         _ if name.ends_with("_comparator") => return turn_comparator(world, layer, pos),
+        _ if name.contains("daylight_detector") => return super::daylight::turn(world, layer, pos),
         _ if name.ends_with("trapdoor") => ["trapdoor.open", "trapdoor.close"],
         _ if name.ends_with("door") => ["door.open", "door.close"],
         _ if name.ends_with("fence_gate") => ["fence_gate.open", "fence_gate.close"],

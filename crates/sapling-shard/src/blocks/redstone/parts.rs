@@ -66,6 +66,8 @@ impl Part {
                 let strength = if name.contains("weighted") { stored } else if stored > 0 { FULL } else { 0 };
                 Part::Producer { strength, strong: Some(Face::Down) }
             }
+            // What it reads of the sky (daylight.rs) is in its state.
+            "daylight_detector" | "daylight_detector_inverted" => Part::Producer { strength: get(SIGNAL).and_then(|signal| signal.parse().ok()).unwrap_or(0), strong: None },
             "redstone_wire" => Part::Dust { signal: get(SIGNAL).and_then(|signal| signal.parse().ok()).unwrap_or(0) },
             "redstone_torch" | "unlit_redstone_torch" => Part::Torch { lit: name == "redstone_torch", support: torch_support(get("torch_facing_direction")) },
             "unpowered_repeater" | "powered_repeater" => {

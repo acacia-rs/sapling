@@ -39,6 +39,7 @@ impl Ctx<'_> {
 pub(crate) fn dispatch(world: &mut World, plugins: &mut Plugins) {
     // First: a block changed in a tick reaches its circuit in the next, as on BDS
     // (research/captures/bds-redstone-phase.txt), and what an evaluation finds shows a tick later.
+    blocks::read_daylight(world);
     blocks::apply_redstone(world);
     blocks::evaluate_redstone(world);
     blocks::move_pistons(world);

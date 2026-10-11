@@ -146,6 +146,7 @@ fn write(world: &mut World, layer: Entity, pos: BlockPos, id: u32) -> Option<u32
         level.world.set_liquid(x, y, z, now_held);
     }
     super::redstone::notice(world, layer, pos);
+    super::daylight::written(world, layer, pos);
     Some(id)
 }
 
