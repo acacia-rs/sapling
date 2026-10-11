@@ -330,6 +330,7 @@ Wrong + missing against each region's one-worker world (stock oracle beside it f
 | warm ocean | 26 | | 295 | 292 are the canon's, 3 a coral: below |
 | plains | 32 | | 1 | a bubble column cell: below |
 | jungle, sparse jungle, flower forest, meadow | 5, 21, 25, 13 | | 0 each | |
+| old growth spruce taiga, windswept forest, snowy plains, sunflower plains | 42, 1, 26, 0 | | 0 each | |
 | badlands | 1813 | 0 | 0 | |
 | old growth pine taiga | 573 | 0 | 0 | |
 | pale garden | 744 | 0 | 0 | |
@@ -390,10 +391,27 @@ What the replay found:
   ice). `vein_replaceable` (148b41420: a water source or a replaceable non-fluid) lacked the layer. City 405 ->
   172; source -70,78's 26 patch entries then agree in every write.
 
+- **Sculk veins take a piston's arm.** Source -70,79's patch at -1106,-48,1264 has 781 writes in BDS and had
+  581 in ours; the first that differs (52nd) is a vein set into `sticky_piston_arm_collision` at
+  -1108,-48,1262, the arm of the city's redstone door, and later writes add faces to that vein, so the cell
+  holds it while the chunk decorates. The saved chunk has the arm again (the piston's block actor, presumably;
+  not traced). `vein_replaceable` takes the arm and `Features::place` puts every arm of the structure stage
+  back when the chunk is assembled. Ancient city 172 -> 0: exact on its canon (`city6`; 8201 cells on the
+  stock world).
+
+Structure-region canons under the full replay after this branch (struct5's list, `tools/replay-regions.sh`):
+jungle temple, swamp hut, shipwreck, ruined portal, ocean ruins, old growth birch, badlands 0; ancient city 0;
+stronghold 1 (132 at the merge: struct5's three liquid items went with the liquid rules and the web rule, its
+village foundation with the container draw; one fence join is left); igloo, snowy plains 1 (a bubble column);
+village 2 (two mushrooms of ours, one dirt cell); mansion 103 on a full canon (`mansion2`), below; desert
+pyramid 2438 with 1675 structure-stage cells (a mineshaft and the temple: not looked at, structure stage).
+
 Open under replay, each with its first source:
-- **Ancient city, 172**: source -70,79 (114 cells), and 68 sculk cells in chunks -70,78 and -70,79 no source
-  of ours writes (city blocks turned to sculk around -1110,-45,1262). Next step: the run `sculk-ac6` (source
-  -70,79 armed) through `dbg_sculk_cmp.py`.
+- **Mansion, 103**: ring source -510,1001 (lush cave moss, vines and azalea on the region's south edge, 51
+  cells of ours: needs chunk 1001 saved) and source -509,998, where lava that falls to -8139,5,15972 spreads
+  west and on down to y 4 in BDS (12 cells) and only south in ours, where the next cell hardens and cuts it.
+  `_getSlopeDistance` (148b5f020) reads the same as ours, so the world differed when that cell ticked. Next
+  step: `scratchpad liq-mansion.json` (tick and spread entries armed for that decoration) beside `feature_trace`.
 - **Bubble columns, 3 cells**: plains -945,50,-692 (ours has one over a magma block of source -59,-44, BDS
   water) and -961,-43,-716 (BDS has one, ours water); the igloo canon's -913,-25,-2848. How a magma block gets
   its one column cell while a chunk decorates was never read: next step, a write breakpoint on the bubble
