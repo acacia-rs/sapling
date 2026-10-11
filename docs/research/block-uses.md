@@ -84,6 +84,14 @@ of 10 to 30 ticks, which was not measured.
   `dofiretick` off.
 - A jukebox's music: BDS sent no sound packet for it, and sapling keeps the disc in memory
   (`blocks/jukebox.rs`).
+
+## A comparator behind a jukebox
+
+Measured with `bds_command_probe discs` (`bds-discs.txt`, `sapling-discs.txt`): a comparator
+behind a jukebox gives a signal by the disc in it, and none once the disc is out. 13 gave 1, cat
+2, blocks 3, wait 12, pigstep 13, otherside 14, 5 gave 15, relic 14, creator 12, its music box
+11, precipice 13, tears 10 and lava chicken 9: the Java game's numbers, which sapling uses for
+the eight discs not drilled too. Sapling's capture agrees with BDS's for all thirteen.
 - A primed note block's instruments past the first four, and a note kept across a restart.
 - An empty bucket on a full cauldron, a hoe on rooted dirt, an axe or a shovel on anything not
   listed above, a lit redstone ore going out: not measured.

@@ -147,3 +147,17 @@ pub fn quench() -> Vec<String> {
     lines.extend(["weather clear", "kill @e[type=!player]", "gamemode creative @s", "clear @s", ""].map(String::from));
     lines
 }
+
+/// The actor in creative puts one disc after another into a jukebox a block east of it and takes
+/// it out again, a comparator and dust behind the jukebox showing what it reads.
+pub fn discs() -> Vec<String> {
+    let mut lines: Vec<String> = [
+        "kill @e[type=!player]", "gamemode creative @s", "clear @s", "fill ~-1 ~-1 ~7 ~4 ~-1 ~9 stone", "tp @s ~ ~ ~8 -90 0", "fill ~1 ~ ~-1 ~4 ~2 ~1 air", "setblock ~1 ~ ~ jukebox",
+        "setblock ~2 ~ ~ unpowered_comparator [\"minecraft:cardinal_direction\"=\"west\",\"output_subtract_bit\"=false]", "setblock ~3 ~ ~ redstone_wire", "",
+    ].map(String::from).into();
+    for disc in ["13", "cat", "blocks", "wait", "pigstep", "otherside", "5", "relic", "creator", "creator_music_box", "precipice", "tears", "lava_chicken"] {
+        lines.extend([format!("replaceitem entity @s slot.weapon.mainhand 0 music_disc_{disc}"), "!click 1 0 0".into(), String::new(), "!click 1 0 0".into(), "kill @e[type=item]".into()]);
+    }
+    lines.extend(["setblock ~1 ~ ~ air", "kill @e[type=!player]", "clear @s", ""].map(String::from));
+    lines
+}
