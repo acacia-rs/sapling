@@ -190,6 +190,13 @@ impl OverworldGenerator {
         feature::query_noise(x, z)
     }
 
+    /// The feature trace of the replayed structure stage (pieces' features: `element` lines and their writes);
+    /// empty once the stage has run.
+    #[doc(hidden)]
+    pub fn structure_replay_trace(&self) -> Vec<String> {
+        feature::trace::capture(|| self.structure_replay_writes().len()).1
+    }
+
     /// `source_feature_writes` with the decoration trace (feature/trace.rs) of every source it ran.
     #[doc(hidden)]
     pub fn source_feature_trace(&self, chunk_x: i32, chunk_z: i32) -> Vec<String> {

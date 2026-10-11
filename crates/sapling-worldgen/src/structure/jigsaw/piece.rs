@@ -94,6 +94,11 @@ impl Piece {
         for ((x, y, z), block, index) in blocks {
             placement.label(template, index);
             canvas.set(x, y, z, block);
+            // A container in the chunk takes one draw of the chunk's generator (its loot seed; ancient city
+            // one-worker run, generator index per piece: worldgen-bds-order.md, "replay5").
+            if matches!(block.name(), "chest" | "trapped_chest" | "barrel") {
+                random.next_u32();
+            }
         }
         placement.update_pass(canvas, template, self.origin);
         trace::label(|| format!("{} foundation", template.name));

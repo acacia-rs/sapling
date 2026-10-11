@@ -32,6 +32,7 @@ pub fn place_element(name: &str, chunk: (i32, i32), centre: Arc<ChunkShape>, wor
     let mut scope = Scope::new();
     scope.set_origin(at);
     let ctx = &mut Ctx { view: &mut view, random, scope: &mut scope, biome: world.biome, surface: world.surface, in_structure: &|_| false, in_tunnels: &|_| false };
+    super::trace::line(|| format!("element {name} at {at:?} from {chunk:?}"));
     FEATURES[index].place(ctx, at);
     Some(view.into_writes().world_writes(chunk))
 }
