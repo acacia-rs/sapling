@@ -313,10 +313,13 @@ Wrong + missing (structure stage in brackets) against each region's own one-work
 | old growth birch | 20 | 0 [0] | |
 | badlands | 7 | 0 [0] | |
 | stronghold | 221 [46] | 132 [36] | below |
-| mansion (structure order only) | [36] | [5] | 5 cobblestone cells of a lava and water meeting, none the mansion's |
-| village (structure order only) | [2] | [1] | one dirt cell BDS has as air (-1009,84,163), not traced |
-| igloo, snowy plains (structure order only) | [1] | [0] | |
-| ancient city (structure order only) | [6] | [7] | 6 tuff cells over city deepslate, 1 lava: needs its decoration order |
+| mansion | [36] (structure order only) | 256 [5] | 5 cobblestone cells BDS has at -8139,5,15974 (no piece of ours), lush cave growth no source of ours wrote (`rc`: moss, grass, azalea in chunks -512,996..998) |
+| village | [2] (structure order only) | 2 [1] | one dirt cell BDS has as air (-1009,84,163); copper ore of ring source -67,7 and two mushrooms of source -62,8 |
+| igloo, snowy plains | [1] (structure order only) | 3 [0] | a bubble column of source -58,-179 (-913,-25,-2848) |
+| ancient city | [6] (structure order only) | 7756 [4] | sculk: BDS's veins, sculk and growths in cells no source of ours wrote, from chunk -73,75 on; 2 tuff cells over city deepslate, 2 rails under lava |
+
+(The "before" column of the last four and of the portal is a run without its decoration order, so only the
+structure-stage figures compare.)
 
 What the first differing pieces and sources were:
 - **Connections** (mansion's 31 corner walls, the portal's bar, the igloo's bars, four mineshaft posts): the
