@@ -28,17 +28,19 @@ pub struct Pieced {
     spawners: structure::Spawners,
     /// The heights it changed, for `rejoin_connections`.
     touched: Option<(i32, i32)>,
+    /// Its cells a replayed run's template passes decided: `rejoin_connections` leaves them.
+    settled: structure::Settled,
 }
 
 impl Pieced {
     /// A chunk no piece wrote.
     fn bare(shape: Arc<ChunkShape>) -> Self {
-        Self { shape, spilled: Vec::new(), unclipped: Vec::new(), spawners: Default::default(), touched: None }
+        Self { shape, spilled: Vec::new(), unclipped: Vec::new(), spawners: Default::default(), touched: None, settled: Default::default() }
     }
 
     /// A chunk as a replayed run left it: its neighbours' writes into it have landed.
-    fn replayed(shape: Arc<ChunkShape>, touched: Option<(i32, i32)>) -> Self {
-        Self { touched, ..Self::bare(shape) }
+    fn replayed(shape: Arc<ChunkShape>, touched: Option<(i32, i32)>, settled: structure::Settled) -> Self {
+        Self { touched, settled, ..Self::bare(shape) }
     }
 }
 
@@ -76,7 +78,7 @@ impl OverworldGenerator {
         if let Some(heights) = heights {
             let neighbour = |x: i32, y: i32, z: i32| self.pieced((x >> 4, z >> 4)).shape.block((x & 15) as usize, y, (z & 15) as usize);
             trace::label(|| "rejoin".into());
-            structure::rejoin_connections(shape, chunk, heights, &neighbour);
+            structure::rejoin_connections(shape, chunk, heights, &neighbour, &pieced.settled);
         }
     }
 
@@ -110,7 +112,7 @@ impl OverworldGenerator {
             let placed = self.place_pieces(&mut shape, chunk);
             let touched = placed.as_ref().map(|p| p.touched);
             let (spilled, unclipped, spawners) = placed.map_or_else(Default::default, |p| (p.spilled, p.unclipped, p.spawners));
-            Pieced { shape: Arc::new(shape), spilled, unclipped, spawners, touched }
+            Pieced { shape: Arc::new(shape), spilled, unclipped, spawners, touched, settled: Default::default() }
         })
     }
 
@@ -127,7 +129,7 @@ impl OverworldGenerator {
             around.filter(|&n| earlier(n)).flat_map(|n| self.pieced(n).spawners.clone()).collect()
         };
         let generated_tops = || self.generated_tops(chunk.0, chunk.1);
-        let neighbours = structure::Neighbours { carved: &carved, placed: &placed, spawners: &spawners, generated_tops: &generated_tops, shaft_order: None, live: false };
+        let neighbours = structure::Neighbours { carved: &carved, placed: &placed, spawners: &spawners, generated_tops: &generated_tops, shaft_order: None, live: false, settled: None };
         let biomes = self.chunk_biomes(chunk.0, chunk.1);
         let load = |x: i32, z: i32| self.carved(x, z);
         let biome = |[x, y, z]: [i32; 3]| Some(self.chunk_biomes(x >> 4, z >> 4).biome((x & 15) as usize, y, (z & 15) as usize));

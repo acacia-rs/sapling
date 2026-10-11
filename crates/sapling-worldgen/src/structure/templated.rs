@@ -46,6 +46,9 @@ impl Structures {
         let seeds = LargeFeatureSeed::new(self.level_seed);
         for &start in igloos {
             igloo::place(canvas, &mut Mt19937::new(seeds.chunk(start.0, start.1)), start);
+            // The scattered piece's box: 7 by 5 by 8 at y 64, whatever the template's turn.
+            let (x, z) = (start.0 * 16, start.1 * 16);
+            canvas.upgrade(&BoundingBox::new(x, 64, z, x + 6, 68, z + 7));
         }
     }
 

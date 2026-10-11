@@ -94,13 +94,14 @@ fn parse() -> Data {
     for _ in 0..count {
         let name = r.string();
         let size = (r.u16() as i32, r.u16() as i32, r.u16() as i32);
+        let legacy = r.u8() != 0;
         let blocks = (0..r.u32())
             .map(|_| {
                 let (x, y, z) = (r.u8() as i32, r.u16() as i32, r.u8() as i32);
                 TemplateBlock { pos: (x, y, z), state: State(r.u16()) }
             })
             .collect();
-        let (mut jigsaws, mut markers, mut loot_chests) = (Vec::new(), Vec::new(), Vec::new());
+        let (mut jigsaws, mut markers, mut loot_chests, mut ceiling_vines) = (Vec::new(), Vec::new(), Vec::new(), Vec::new());
         for _ in 0..r.u16() {
             let block = r.u32() as usize;
             match r.u8() {
@@ -111,10 +112,11 @@ fn parse() -> Data {
                     jigsaws.push(Jigsaw { block, name, target, pool, joint, orientation, final_state, selection_priority, placement_priority });
                 }
                 1 => markers.push((block, r.string())),
-                _ => loot_chests.push(block),
+                2 => loot_chests.push(block),
+                _ => ceiling_vines.push(block),
             }
         }
-        templates.insert(name.clone(), Template { name, size, blocks, jigsaws, markers, loot_chests });
+        templates.insert(name.clone(), Template { name, size, legacy, blocks, jigsaws, markers, loot_chests, ceiling_vines });
     }
     let mut blocks: HashMap<u16, Block> = HashMap::new();
     let states = (0..r.u16())

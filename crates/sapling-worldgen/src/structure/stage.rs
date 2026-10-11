@@ -4,7 +4,7 @@
 
 use std::sync::Arc;
 
-use super::canvas::{Canvas, Neighbours, Spawners};
+use super::canvas::{Canvas, Neighbours, Settled, Spawners};
 use super::jigsaw::{ElementKind, Piece};
 use super::mineshaft::{self, MESA_BIOMES, Mineshaft};
 use super::monument::{self, Monument};
@@ -111,6 +111,7 @@ impl Structures {
             return None;
         }
         let mut canvas = Canvas::new(shape, chunk, neighbours.carved).with_placed(neighbours.placed).with_features(features);
+        canvas.record.settled = neighbours.settled;
         let seeds = LargeFeatureSeed::new(self.level_seed);
         let seed = seeds.chunk(chunk.0, chunk.1);
         let chunk_random = |(x, z): (i32, i32)| Mt19937::new(seeds.chunk(x, z));
@@ -129,12 +130,14 @@ impl Structures {
         view(&mut canvas, false, true);
         for stronghold in &strongholds {
             stronghold.post_process(&mut canvas, &mut random);
+            canvas.upgrade(&stronghold.bb);
         }
         view(&mut canvas, false, false);
         let mut random = chunk_random(chunk);
         super::trace::label(|| "temple".into());
         for temple in &temples {
             placed.extend(temple.post_process(&mut canvas, &mut random, &chunk_random));
+            canvas.upgrade(&temple.bb);
         }
         canvas.whole = live;
         self.place_igloos(&mut canvas, &igloos);
@@ -144,6 +147,7 @@ impl Structures {
         let mut spawners = if mineshafts.is_empty() { Spawners::new() } else { (neighbours.spawners)() };
         for mineshaft in &mineshafts {
             mineshaft.post_process(&mut canvas, &mut random, biomes, &mut spawners);
+            canvas.upgrade(&mineshaft.bb);
         }
         view(&mut canvas, false, false);
         Self::place_mansions(&mut canvas, &mansions);
@@ -157,6 +161,7 @@ impl Structures {
         view(&mut canvas, false, true);
         for monument in &monuments {
             monument.post_process(&mut canvas, &mut random);
+            canvas.upgrade(&monument.building.bb);
             placed.push(monument.building.bb);
         }
         view(&mut canvas, false, false);
@@ -276,6 +281,6 @@ impl Structures {
 /// Fence, pane and bar connections and stair corners as the chunk and its neighbours end up
 /// (`neighbour` reads them after their pieces): BDS's follow the changes beside them, across
 /// chunk borders too.
-pub fn rejoin_connections(shape: &mut ChunkShape, chunk: (i32, i32), heights: (i32, i32), neighbour: &dyn Fn(i32, i32, i32) -> Block) {
-    template::rejoin(&mut Canvas::new(shape, chunk, neighbour), heights);
+pub fn rejoin_connections(shape: &mut ChunkShape, chunk: (i32, i32), heights: (i32, i32), neighbour: &dyn Fn(i32, i32, i32) -> Block, settled: &Settled) {
+    template::rejoin(&mut Canvas::new(shape, chunk, neighbour), heights, settled);
 }

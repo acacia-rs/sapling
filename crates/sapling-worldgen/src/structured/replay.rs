@@ -96,6 +96,7 @@ impl OverworldGenerator {
         let mut touched: HashMap<(i32, i32), (i32, i32)> = HashMap::new();
         let mut writes = Vec::new();
         let mut starts = StartMap::default();
+        let settled = RefCell::new(structure::Settled::new());
         let logged_loads = steps.iter().any(|step| matches!(step, StructureStep::Load(_)));
         let mut rank = 0;
         for step in steps {
@@ -114,7 +115,7 @@ impl OverworldGenerator {
                 let tops = || self.generated_tops(chunk.0, chunk.1);
                 let carved = |x: i32, y: i32, z: i32| self.carved(x >> 4, z >> 4).block((x & 15) as usize, y, (z & 15) as usize);
                 let neighbours =
-                    structure::Neighbours { carved: &carved, placed: &block, spawners: &placed_spawners, generated_tops: &tops, shaft_order: shaft_order.as_deref(), live: true };
+                    structure::Neighbours { carved: &carved, placed: &block, spawners: &placed_spawners, generated_tops: &tops, shaft_order: shaft_order.as_deref(), live: true, settled: Some(&settled) };
                 // Pieces' features read the run's state too.
                 let load = |x: i32, z: i32| state.borrow().get(&(x, z)).cloned().unwrap_or_else(|| self.carved(x, z));
                 let biome = |[x, y, z]: [i32; 3]| Some(self.chunk_biomes(x >> 4, z >> 4).biome((x & 15) as usize, y, (z & 15) as usize));
@@ -148,7 +149,11 @@ impl OverworldGenerator {
                 }
             }
         }
-        let pieced = |(chunk, shape)| (chunk, Arc::new(Pieced::replayed(shape, touched.get(&chunk).copied())));
+        let mut settled_in: HashMap<(i32, i32), structure::Settled> = HashMap::new();
+        for at in settled.into_inner() {
+            settled_in.entry((at.0 >> 4, at.2 >> 4)).or_default().insert(at);
+        }
+        let mut pieced = |(chunk, shape)| (chunk, Arc::new(Pieced::replayed(shape, touched.get(&chunk).copied(), settled_in.remove(&chunk).unwrap_or_default())));
         let chunks = state.into_inner().into_iter().map(pieced).collect();
         Done { chunks, writes }
     }

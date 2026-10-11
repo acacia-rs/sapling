@@ -47,7 +47,7 @@ pub use kind::StructureKind;
 pub use mineshaft::probe as mineshaft_probe;
 use kind::*;
 use probe::Probe;
-pub use canvas::{Neighbours, Spawners};
+pub use canvas::{Neighbours, Settled, Spawners};
 pub use stage::{Placed, rejoin_connections};
 pub use start_map::StartMap;
 
