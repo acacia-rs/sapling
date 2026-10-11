@@ -14,7 +14,7 @@ it does on BDS and the two captures can be diffed:
    simulated on the server with BDS's gravity and drag and collide with blocks; no AI. One model for
    spawned mobs, the mobs a world folder stores (today statues, `mobs.rs`), lying items and falling
    blocks: built (`body.rs`, `sync.rs`, `entities.rs`, `creatures.rs`, `actors.rs`), stored mobs
-   saved back where they are. Items let go are saved with their column (`drops.rs`). Left: saving orbs and falling blocks.
+   saved back where they are. Items let go and orbs are saved with their column (`drops.rs`, `orbs.rs`). Left: saving falling blocks.
 2. **Vanilla commands**: built (`sapling::vanilla`); the drill probe runs on sapling
    (`tools/sapling-drill.sh`, on testbox `tools/remote-drill.sh`). Left: what the BDS-against-sapling
    diff of the drill captures still shows (`research/captures/sapling-vs-bds-findings.md`).

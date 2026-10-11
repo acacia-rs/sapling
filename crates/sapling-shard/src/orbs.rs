@@ -4,7 +4,7 @@
 //! ticks after it appears looks for the nearest player within eight blocks every twenty and flies
 //! to it; a player it touches on the way, or before, takes it, worth its experience.
 // TODO: orbs do not merge (BDS merges those whose ids agree mod 13, and spreads new experience
-// over 13 orbs already in a cell), and are not saved.
+// over 13 orbs already in a cell). Kept with their column (actors.rs), they come back new.
 
 use acacia_proto::packets::{LevelEvent, LevelEventEvent};
 use acacia_proto::types::Vec3f;
@@ -12,7 +12,7 @@ use bevy_ecs::prelude::*;
 
 use crate::blocks::{self, Dice};
 use crate::body::{Body, Physics};
-use crate::components::{InLayer, NetId, Position, Stage};
+use crate::components::{InLayer, NetId, Position, Stage, Tick};
 use crate::{entities, experience, mobs};
 
 /// How experience is split into orbs, largest first; above [`MANY`], into [`MANY_ORBS`] equal ones.
@@ -95,7 +95,21 @@ pub(crate) fn throw(world: &mut World, layer: Entity, at: [f32; 3], value: i32) 
     let body = Body::new(at, [(throw() - 0.1) * 2.0, throw() * 2.0, (throw() - 0.1) * 2.0], [SIZE; 2]);
     let entity = entities::spawn(world, layer, KIND, body, at, |id| Some(announce(id, value, &body)))?;
     world.entity_mut(entity).insert(Orb { value, age: 0, last_search: 0, target: None });
+    // Numbered as a spawned mob is (creatures.rs).
+    let unique_id = ((world.resource::<Tick>().0 as i64) << 32) | (world.get::<NetId>(entity)?.0 as i64 & 0xffff_ffff);
+    entities::keep(world, entity, layer, unique_id, sapling_world::new_orb_actor(unique_id, value, at, body.motion));
     Some(entity)
+}
+
+/// Makes an orb a world folder kept (its actor compound `compound`) lie in `layer` again; false
+/// for one that does not say what it is worth.
+pub(crate) fn from_storage(world: &mut World, layer: Entity, at: [f32; 3], unique_id: i64, compound: Vec<u8>) -> bool {
+    let Some(value) = sapling_world::orb_value(&compound) else { return false };
+    let body = Body::new(at, [0.0; 3], [SIZE; 2]);
+    let Some(entity) = entities::spawn(world, layer, KIND, body, at, |id| Some(announce(id, value, &body))) else { return false };
+    world.entity_mut(entity).insert(Orb { value, age: 0, last_search: 0, target: None });
+    entities::keep(world, entity, layer, unique_id, compound);
+    true
 }
 
 /// Whether `player` may take an orb this tick, and if so, that it has.

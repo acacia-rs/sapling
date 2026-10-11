@@ -5,7 +5,7 @@
 //! move as they were, and every kept entity filed under the column with its place, motion,
 //! health and fire now (`entities::Stored`), so a mob that walked into another column is saved there, and one that
 //! is gone is not.
-// TODO: orbs and falling blocks are not saved.
+// TODO: falling blocks are not saved.
 
 use bevy_ecs::prelude::*;
 use sapling_world::ChunkPos;
@@ -14,9 +14,10 @@ use crate::body::Body;
 use crate::chunks::UNLOAD_INTERVAL;
 use crate::components::{InLayer, Layer, Tick};
 use crate::entities::{Managed, Stored};
-use crate::{blocks, creatures, drops, mobs};
+use crate::{blocks, creatures, drops, mobs, orbs};
 
 const ITEM: &str = "minecraft:item";
+const ORB: &str = "minecraft:xp_orb";
 
 /// Brings in the actors of the columns that came from storage this tick, and notes their circuits.
 pub(crate) fn arrive(world: &mut World) {
@@ -38,6 +39,7 @@ fn bring_in(world: &mut World, layer: Entity, home: ChunkPos, actor: Option<sapl
     let (Some(actor), Some(unique_id)) = (actor, unique_id) else { return };
     let moved = match (&actor.item, actor.identifier == ITEM) {
         (Some(stack), true) => drops::from_storage(world, layer, stack.clone(), actor.position, unique_id, compound),
+        (_, false) if actor.identifier == ORB => orbs::from_storage(world, layer, actor.position, unique_id, compound),
         (_, false) if actor.painting.is_none() => creatures::from_storage(world, layer, actor.clone(), unique_id, compound),
         _ => false,
     };

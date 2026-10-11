@@ -7,7 +7,7 @@ mod lying;
 
 use std::collections::HashSet;
 
-pub use lying::new_item_actor;
+pub use lying::{new_item_actor, new_orb_actor, orb_value};
 
 use acacia_proto::nbt::{self, LittleEndian, List, Value};
 
