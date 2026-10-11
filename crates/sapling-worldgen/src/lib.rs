@@ -30,7 +30,7 @@ pub use block::Block;
 #[doc(hidden)]
 pub use feature::reach::{Cells as ReachCells, Tries as ReachTries};
 #[doc(hidden)]
-pub use structured::replay::ReplayWrite;
+pub use structured::replay::{ReplayWrite, StructureStep};
 pub use terrain::{CellKind, ChunkShape, HEIGHT, MIN_Y};
 
 use cache::SourceCache;

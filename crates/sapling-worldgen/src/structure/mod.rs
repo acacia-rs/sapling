@@ -25,6 +25,7 @@ mod ruined_portal_age;
 mod scattered;
 mod shipwreck;
 mod stage;
+mod start_map;
 mod stronghold;
 pub(crate) mod template;
 mod templated;
@@ -48,6 +49,7 @@ use kind::*;
 use probe::Probe;
 pub use canvas::{Neighbours, Spawners};
 pub use stage::{Placed, rejoin_connections};
+pub use start_map::StartMap;
 
 const SEA_LEVEL: i32 = 63;
 

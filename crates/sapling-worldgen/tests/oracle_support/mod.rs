@@ -19,7 +19,7 @@ use std::sync::Arc;
 
 use acacia_world::Chunk;
 use sapling_leveldb::LevelDbWorld;
-use sapling_worldgen::{Block, CellKind};
+use sapling_worldgen::{Block, CellKind, StructureStep};
 
 // Shared by the oracle test and the examples; each uses a different part.
 #[allow(unused_imports)]
@@ -60,15 +60,17 @@ impl Region {
 /// `SAPLING_ORACLE_ORDER=<file>`: decorate in a one-worker BDS run's order (`x z [draws]` per line,
 /// scripts/dbg_loads.py); `SAPLING_ORACLE_THREAD_SEED=<seed>`: also model that run's thread generator
 /// from the lines' draw counts. `SAPLING_ORACLE_STRUCTURE_ORDER=<file>`: run the structure stage in that
-/// run's order (`x z` per line, `dbg_loads.py --structure-order`).
+/// run's order (`x z` per post-processed chunk and `load x z` per loaded one, `dbg_loads.py --structure-order`).
 pub fn replay(generator: &mut sapling_worldgen::OverworldGenerator) -> Option<Vec<(i32, i32)>> {
-    let read = |path: String| -> Vec<Vec<i64>> {
-        let text = std::fs::read_to_string(path).expect("order file");
-        text.lines().map(|line| line.split(' ').map(|v| v.parse().expect("an integer")).collect()).collect()
-    };
+    let numbers = |line: &str| -> Vec<i64> { line.split(' ').map(|v| v.parse().expect("an integer")).collect() };
+    let read = |path: String| -> Vec<Vec<i64>> { std::fs::read_to_string(path).expect("order file").lines().map(numbers).collect() };
     if let Ok(path) = std::env::var("SAPLING_ORACLE_STRUCTURE_ORDER") {
-        let order: Vec<(i32, i32)> = read(path).iter().map(|row| (row[0] as i32, row[1] as i32)).collect();
-        generator.set_structure_order(&order);
+        let step = |line: &str| match line.strip_prefix("load ") {
+            Some(chunk) => StructureStep::Load((numbers(chunk)[0] as i32, numbers(chunk)[1] as i32)),
+            None => StructureStep::Post((numbers(line)[0] as i32, numbers(line)[1] as i32)),
+        };
+        let steps: Vec<StructureStep> = std::fs::read_to_string(path).expect("structure order file").lines().map(step).collect();
+        generator.set_structure_order(&steps);
     }
     let rows = read(std::env::var("SAPLING_ORACLE_ORDER").ok()?);
     let order: Vec<(i32, i32)> = rows.iter().map(|row| (row[0] as i32, row[1] as i32)).collect();

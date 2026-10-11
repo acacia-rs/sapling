@@ -1,8 +1,10 @@
 {"breakpoints": [
  {"va": "0x148211300", "name": "load", "mem": [["rdx", 120, "ii"]], "log": "all"},
  {"va": "0x14196b2c0", "name": "structfeat", "mem": [["rsp", 40, "i"], ["rsp", 48, "i"]], "log": "all"},
- {"va": "0x14831d010", "name": "room", "mem": [["rcx", 8, "iiiiii"], ["r9", 0, "iiiiii"], ["r8", 2508, "I"]], "log": "all"},
- {"va": "0x14831de50", "name": "corridor", "mem": [["rcx", 8, "iiiiii"], ["r9", 0, "iiiiii"], ["r8", 2508, "I"]], "dump": [["r8", 0, 2600]], "log": "all"},
- {"va": "0x148320950", "name": "crossing", "mem": [["rcx", 8, "iiiiii"], ["r9", 0, "iiiiii"], ["r8", 2508, "I"]], "log": "all"},
- {"va": "0x148321870", "name": "stairs", "mem": [["rcx", 8, "iiiiii"], ["r9", 0, "iiiiii"], ["r8", 2508, "I"]], "log": "all"}
+ {"va": "0x14831d010", "name": "room", "mem": [["rcx", 8, "iiiiii"], ["r9", 0, "iiiiii"], ["r8", 2516, "I"]], "log": "all"},
+ {"va": "0x14831de50", "name": "corridor", "mem": [["rcx", 8, "iiiiii"], ["r9", 0, "iiiiii"], ["r8", 2516, "I"]], "log": "all"},
+ {"va": "0x148320950", "name": "crossing", "mem": [["rcx", 8, "iiiiii"], ["r9", 0, "iiiiii"], ["r8", 2516, "I"]], "log": "all"},
+ {"va": "0x148321870", "name": "stairs", "mem": [["rcx", 8, "iiiiii"], ["r9", 0, "iiiiii"], ["r8", 2516, "I"]], "log": "all"},
+ {"va": "0x14831e1b7", "name": "support", "mem": [["rbp", 288, "iii"]], "names": [["rax", 3]], "log": "all"},
+ {"va": "0x14831d770", "name": "web", "mem": [["rcx", 8, "iiiiii"], ["r8", 0, "iiiiii"], ["r9", 2516, "I"], ["rsp", 48, "i"], ["rsp", 56, "i"]], "log": "all"}
 ]}

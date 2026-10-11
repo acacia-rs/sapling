@@ -6,8 +6,8 @@ The log is a run of `bds_dbg_run.sh` with scripts/data/dbg_loads.json: `load` (O
 `structfeat` (postProcessStructureFeatures) and `deco` (decorationPostProcessChunk), each logged with its chunk
 and thread. Prints per stage the chunks, the ones run more than once, the threads, and the neighbour pairs that
 break the parity phases; with a second log, the pairs of chunks whose 3x3 overlap (two apart or nearer) that
-ran in the other order there. `--structure-order <file>` writes the first log's structure post-process order
-(`x z` per line, for `SAPLING_ORACLE_STRUCTURE_ORDER`); `--order` writes the first log's decoration order for `SAPLING_ORACLE_ORDER`;
+ran in the other order there. `--structure-order <file>` writes the first log's loads and structure
+post-processes in order (`load x z` and `x z` lines, for `SAPLING_ORACLE_STRUCTURE_ORDER`); `--order` writes the first log's decoration order for `SAPLING_ORACLE_ORDER`;
 with scripts/data/dbg_canon.json's log each line also holds where the thread generator stood at the chunk's
 first MultifaceFeature draw (`x z draws`).
 Why: docs/research/worldgen-bds-order.md.
@@ -61,7 +61,7 @@ def phase(c):
 def read(path):
     """stage -> [(chunk, thread)] in log order."""
     runs = {stage: [] for stage in STAGES}
-    entered, tries = {}, 0
+    entered, tries, steps = {}, 0, []
     # dbg_canon.json: the value of each chunk's first MultifaceFeature draw places it in the generator's stream
     decorating, drawn, starts, stream = {}, 0, {}, Stream()
     for line in open(path):
@@ -82,11 +82,12 @@ def read(path):
                 entered[event[1]], tries = event, tries + 1
             else:
                 runs[m.group(1)].append(event)
+                steps.append((m.group(1), event[0]))
         elif line.startswith("hit decorate t"):
             thread = int(line.split()[2][1:])
             runs["deco"].append(entered.pop(thread))
             decorating[thread] = runs["deco"][-1][0]
-    runs["tries"], runs["starts"] = tries, starts
+    runs["tries"], runs["starts"], runs["steps"] = tries, starts, steps
     return runs
 
 
@@ -155,7 +156,7 @@ def main():
         compare(runs[0], runs[1])
     if structure_order:
         with open(structure_order, "w", newline="\n") as out:
-            out.writelines(f"{c[0]} {c[1]}\n" for c, _ in runs[0]["structfeat"])
+            out.writelines(f"{'load ' if stage == 'load' else ''}{c[0]} {c[1]}\n" for stage, c in runs[0]["steps"])
     if order:
         place = first(runs[0]["deco"])
         starts = runs[0]["starts"]

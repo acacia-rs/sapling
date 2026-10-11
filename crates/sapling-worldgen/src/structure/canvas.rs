@@ -27,6 +27,9 @@ pub struct Neighbours<'a> {
     pub spawners: &'a dyn Fn() -> Spawners,
     /// The chunk's own pre-worldgen heightmap (`LevelChunk` +0xf80: the terrain before its surface and carvers).
     pub generated_tops: &'a dyn Fn() -> Arc<[i16; 256]>,
+    /// Mineshaft starts in the order BDS's start map lists them (structure/start_map.rs); None
+    /// without a replayed load order.
+    pub shaft_order: Option<&'a [(i32, i32)]>,
 }
 
 pub struct Canvas<'a> {
@@ -37,6 +40,9 @@ pub struct Canvas<'a> {
     placed: Option<&'a dyn Fn(i32, i32, i32) -> Block>,
     /// Reads past the chunk see `placed` (mineshafts; see stage.rs).
     pub read_placed: bool,
+    /// The pieces being placed are post-processed in this chunk (not placed whole from their start's,
+    /// as shipwreck.rs does): what lies past the 3x3 chunks around it is absent.
+    pub limit_view: bool,
     /// Light heightmap per column, as `LevelChunk` +0xb80 keeps it.
     heights: RefCell<HashMap<(i32, i32), i32>>,
     /// Writes outside the chunk kept (and read back) while a piece placed whole is being drawn.
@@ -63,6 +69,7 @@ impl<'a> Canvas<'a> {
             neighbour,
             placed: None,
             read_placed: false,
+            limit_view: false,
             heights: RefCell::new(HashMap::new()),
             spill: None,
             touched: (i32::MAX, i32::MIN),
@@ -113,9 +120,15 @@ impl<'a> Canvas<'a> {
         x >> 4 == self.chunk.0 && z >> 4 == self.chunk.1
     }
 
-    /// Any block: the chunk's own, a neighbour's, air outside the world's heights.
+    /// Whether the post-process's `BlockSource` holds the column's chunk: its view is the 3x3
+    /// chunks around the one processed, and a piece reaches further.
+    fn in_view(&self, x: i32, z: i32) -> bool {
+        !self.limit_view || ((x >> 4) - self.chunk.0).abs() <= 1 && ((z >> 4) - self.chunk.1).abs() <= 1
+    }
+
+    /// Any block: the chunk's own, a neighbour's, air outside the world's heights and the view.
     pub fn get(&self, x: i32, y: i32, z: i32) -> Block {
-        if !(MIN_Y..=TOP).contains(&y) {
+        if !(MIN_Y..=TOP).contains(&y) || !self.in_view(x, z) {
             Block::Air
         } else if self.inside(x, z) {
             self.shape.block((x & 15) as usize, y, (z & 15) as usize)
@@ -159,7 +172,7 @@ impl<'a> Canvas<'a> {
     pub fn set_unclipped(&mut self, x: i32, y: i32, z: i32, block: Block) {
         if self.inside(x, z) {
             self.set(x, y, z, block);
-        } else if (MIN_Y..=TOP).contains(&y) {
+        } else if (MIN_Y..=TOP).contains(&y) && self.in_view(x, z) {
             let seen = self.get(x, y, z);
             self.unclipped.push(([x, y, z], block, seen));
             self.written.insert((x, y, z), block);
@@ -187,9 +200,10 @@ impl<'a> Canvas<'a> {
         (MIN_Y..=TOP).rev().find(|&y| self.get(x, y, z).is_solid() || fluids && self.get(x, y, z).is_fluid()).map_or(MIN_Y, |y| y + 1)
     }
 
-    /// Below the light heightmap (BDS's structure "interior" test); never at the world's top.
+    /// Below the light heightmap (BDS's structure "interior" test); never at the world's top, nor
+    /// in a column whose chunk the view lacks (`getChunk` null).
     pub fn interior(&self, x: i32, y: i32, z: i32) -> bool {
-        y < TOP + 1 && (y < MIN_Y || self.height(x, z) > y)
+        y < TOP + 1 && (y < MIN_Y || self.in_view(x, z) && self.height(x, z) > y)
     }
 }
 

@@ -74,6 +74,7 @@ impl Corridor {
                 }
             }
             let base = k * 5;
+            super::probe::mark("webs", random);
             for (chance, x, at) in [
                 (0.1, 0, z),
                 (0.1, 2, base + 1),

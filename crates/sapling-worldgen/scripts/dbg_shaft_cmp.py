@@ -3,8 +3,8 @@
 usage: py -3 -I dbg_shaft_cmp.py <dbg.log> <structure_replay_draws output> [--all]
 
 The log is a `bds_dbg_run.sh` run with scripts/data/dbg_shaft.json: every room, corridor, crossing and stairs
-`postProcess` with the piece's box, the chunk's box and the chunk generator's position (`Random` +0x9cc, the
-index into its 624 words). The other file is `examples/structure_replay_draws` under that run's
+`postProcess` with the piece's box, the chunk's box and the chunk generator's position (the index into its 624
+words: the `Random` handed to pieces holds its generator at +8, so +0x9d4). The other file is `examples/structure_replay_draws` under that run's
 `SAPLING_ORACLE_STRUCTURE_ORDER`. Prints the chunks whose piece sequences or draw positions differ, each with
 its first differing piece, in the run's order; `--all` prints every piece of those chunks.
 Why: docs/research/worldgen-bds-order.md, "Replaying a run".
@@ -12,7 +12,7 @@ Why: docs/research/worldgen-bds-order.md, "Replaying a run".
 import re
 import sys
 
-PIECE = re.compile(r"hit (room|corridor|crossing|stairs) t\d+ .*?\]=\(([^)]*)\) \[[^\]]+\]=\(([^)]*)\) \[[^\]]+\]=\((\d+),\)")
+PIECE = re.compile(r"hit (room|corridor|crossing|stairs) t\d+ .*?\]=\(([^)]*)\) \[[^\]]+\]=\(([^)]*)\) \[[^\]]+\]=\((?:\d+, \d+, )?(\d+),?\)")
 
 
 def position(draws):

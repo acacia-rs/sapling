@@ -65,12 +65,18 @@ impl Structures {
             .filter_map(|start| self.scattered(density, start))
             .filter(|t| t.bb.intersects(&column))
             .collect();
-        let mineshafts: Vec<Arc<Mineshaft>> = self
+        let mut mineshafts: Vec<Arc<Mineshaft>> = self
             .starts_near(density, StructureKind::Mineshaft, chunk, MINESHAFT_REACH)
             .into_iter()
             .map(|start| self.mineshaft(density, start))
             .filter(|m| m.bb.intersects(&column))
             .collect();
+        // BDS visits a chunk's starts in its start map's order, which follows the load order; without
+        // one, descending x then z matched the oracle best.
+        match neighbours.shaft_order {
+            Some(order) => mineshafts.sort_by_key(|m| order.iter().position(|start| *start == m.start)),
+            None => mineshafts.reverse(),
+        }
         let treasure = self.is_start(density, StructureKind::BuriedTreasure, chunk);
         let monuments: Vec<Arc<Monument>> = self
             .starts_near(density, StructureKind::Monument, chunk, MONUMENT_REACH)
@@ -109,9 +115,11 @@ impl Structures {
             Self::place_villages(density, &mut canvas, &villages, seed, &(neighbours.generated_tops)());
         }
         let mut random = chunk_random(chunk);
+        canvas.limit_view = true;
         for stronghold in &strongholds {
             stronghold.post_process(&mut canvas, &mut random);
         }
+        canvas.limit_view = false;
         let mut random = chunk_random(chunk);
         super::trace::label(|| "temple".into());
         for temple in &temples {
@@ -119,15 +127,14 @@ impl Structures {
         }
         self.place_igloos(&mut canvas, &igloos);
         let mut random = chunk_random(chunk);
-        // BDS visits a chunk's starts in hash-map order; descending x then z matches it on the oracle.
         // Their supports read neighbours BDS post-processed earlier with those neighbours' pieces;
         // other kinds matched worse that way (village trees, pyramid heights).
-        canvas.read_placed = true;
+        (canvas.read_placed, canvas.limit_view) = (true, true);
         let mut spawners = if mineshafts.is_empty() { Spawners::new() } else { (neighbours.spawners)() };
-        for mineshaft in mineshafts.iter().rev() {
+        for mineshaft in &mineshafts {
             mineshaft.post_process(&mut canvas, &mut random, biomes, &mut spawners);
         }
-        canvas.read_placed = false;
+        (canvas.read_placed, canvas.limit_view) = (false, false);
         Self::place_mansions(&mut canvas, &mansions);
         super::trace::label(|| "treasure".into());
         if treasure {
@@ -136,10 +143,12 @@ impl Structures {
         Self::place_outposts(&mut canvas, &outposts, seed);
         let mut random = chunk_random(chunk);
         super::trace::label(|| "monument".into());
+        canvas.limit_view = true;
         for monument in &monuments {
             monument.post_process(&mut canvas, &mut random);
             placed.push(monument.building.bb);
         }
+        canvas.limit_view = false;
         Self::place_ocean_ruins(&mut canvas, &ruins, seed);
         self.place_shipwrecks(&mut canvas, &shipwrecks);
         super::trace::label(|| "ruined portal".into());
