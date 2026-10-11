@@ -163,6 +163,9 @@ impl Request<'_> {
     /// A hit that starts a break: viewers see fragments fly off the face, as from BDS.
     fn punch(&mut self, pos: BlockPos, face: Option<Face>) {
         let (Some(site), Some(face)) = (site(self.world, self.entity, pos), face) else { return };
+        if site.mode != GameMode::Spectator && super::holders::hit(self.world, site.layer, pos) {
+            return;
+        }
         let Some((registry, id)) = self.block(&site, pos) else { return };
         let Some(state) = registry.get(id).filter(|state| site.mode != GameMode::Spectator && !state.is_air() && !state.is_liquid()) else { return };
         let (packet, hardness) = (send::punch_particles(registry, pos, face, id), state.mining);

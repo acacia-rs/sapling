@@ -260,6 +260,7 @@ pub fn named(name: &str) -> Option<(Vec<String>, &'static [&'static str])> {
         "grows2" => (more::grows2(), BONEMEAL_SHOWN),
         "copper" => (more::copper(), BONEMEAL_SHOWN),
         "oresteps" => (more::oresteps(), BONEMEAL_SHOWN),
+        "bonemeal2" => (more::bonemeal2(), BONEMEAL_SHOWN),
         "tnt" => (tnt(), TNT_SHOWN),
         "bonemeal" => (bonemeal(), BONEMEAL_SHOWN),
         "fire" => (fire(), BONEMEAL_SHOWN),

@@ -89,3 +89,17 @@ fn wheat_on_wet_farmland_ripens_by_itself() {
     let (soon, late) = (ripe(&mut h, 100), ripe(&mut h, 1500));
     assert!(soon < 5 && late >= 20, "{soon} of 25 ripe after five seconds, {late} after eighty");
 }
+
+#[test]
+fn in_survival_a_crop_grows_some_stages_a_click_and_a_ripe_one_takes_none() {
+    // research/captures/bds-bonemeal2.txt: wheat went 2, 4, 6, 7 and then took no more.
+    let mut h = fed(false, &[([2, 64, 0], "minecraft:farmland"), ([2, 65, 0], "minecraft:wheat")]);
+    let shown: Vec<usize> = (0..8).map(|_| meal(&mut h, [2, 65, 0])).collect();
+    let taken = shown.iter().sum::<usize>();
+    assert!((2..=4).contains(&taken) && shown[4..].iter().all(|shown| *shown == 0), "two to five stages a click to seven: {shown:?}");
+    h.remote.run(move |ctx| {
+        assert!(ctx.block([2, 65, 0]).is_some_and(|wheat| wheat.properties.contains("growth=7")));
+        assert_eq!(ctx.item(ALEX, Slot::Main(0)).map(|held| usize::from(held.count)), Some(8 - taken), "a ripe crop spends none");
+    });
+    h.tick_all();
+}

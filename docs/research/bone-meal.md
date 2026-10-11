@@ -30,12 +30,24 @@ The same, for all but the tree: a sapling takes the bone meal and stays a saplin
 and flowers come up around a grass block or a flower, and which, is sapling's own scatter: tries
 at random cells within two (one for a flower), a sprout in eight a flower.
 
-Outside creative a click spends one bone meal and a crop grows 2 to 5 stages, a bush one: the
-Java game's steps, since the drill ran in creative.
+## In survival
+
+Measured with `bds_command_probe bonemeal2` (`bds-bonemeal2.txt`), eight clicks a plant:
+
+| Plant | What BDS did |
+| --- | --- |
+| wheat at growth 0 | growth 2, 4, 6, 7; the four clicks after that sent nothing |
+| carrots, beetroot | ripe at the second click, then nothing |
+| melon stem | growth 3, then two more steps to 7, then nothing |
+| sweet berry bush | a stage a click to 3; the click after picked it |
+| oak sapling | `age_bit` set at the first click, the particles alone for five more, a tree at the seventh |
+
+Sapling grows a crop 2 to 5 stages a click, the Java game's step, which these fit, and a bush
+one; a ripe crop takes none and spends none, where in creative it still took it. A sapling
+ages with the Java game's 45 in 100 a click and then stays a sapling.
 
 ## Left
 
 - Trees from saplings.
-- Bone meal outside creative, measured.
 - Kelp, sea grass, vines, mushrooms, cocoa, moss, rooted dirt and the other plants that take it.
 - A click on sugar cane or bamboo that is fully grown.

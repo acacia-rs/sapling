@@ -151,8 +151,10 @@ that a block about to break is not shown at 7 first.
 
 - From the second round: a compass linked on a lodestone is a lodestone compass by name and
   points nowhere; powder snow on an empty cauldron tells BDS's event and leaves it empty, and
-  that the bucket is emptied is a guess. A hit takes no item out of a frame, and a pot gives
-  its stack back only when broken. A respawn anchor clicked with a block in the hand has the
+  that the bucket is emptied is a guess. A pot gives its stack back only when broken.
+- A frame's item comes out at the first blow, with `SoundItemframeRemoveItem` at the corner,
+  and the frame stands (`bds-bonemeal2.txt`, its last steps); sapling does the same, and in
+  creative breaks the frame with the same blow, which was not tried on BDS. A respawn anchor clicked with a block in the hand has the
   block put against it; in the nether it sets no spawn.
 
 - Bone meal has its own drill and notes: `bone-meal.md`.

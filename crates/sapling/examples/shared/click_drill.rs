@@ -96,3 +96,19 @@ pub fn oresteps() -> Vec<String> {
     ];
     lines.map(String::from).into()
 }
+
+/// Bone meal in survival, as `bonemeal` gives it in creative: the actor on stone feeds one plant
+/// after another a block east of it, eight times each, and a frame with an item in it is hit.
+pub fn bonemeal2() -> Vec<String> {
+    let moist = "farmland [\"moisturized_amount\"=7]";
+    let cases = [(moist, "wheat"), (moist, "carrots"), (moist, "beetroot"), (moist, "melon_stem"), ("grass_block", "sweet_berry_bush"), ("grass_block", "oak_sapling")];
+    let mut lines: Vec<String> = ["kill @e[type=!player]", "gamemode survival @s", "clear @s", "replaceitem entity @s slot.weapon.mainhand 0 bone_meal 64", ""].map(String::from).into();
+    for (floor, plant) in cases {
+        lines.extend(["fill ~-1 ~-1 ~7 ~1 ~-1 ~9 stone".into(), "tp @s ~ ~ ~8 -90 0".into(), "fill ~1 ~ ~-3 ~7 ~8 ~3 air".into(), format!("fill ~1 ~-1 ~-3 ~7 ~-1 ~3 {floor}"), format!("setblock ~1 ~ ~ {plant}")]);
+        lines.extend(std::iter::repeat_n("!click 1 0 0".to_owned(), 8));
+        lines.push(String::new());
+    }
+    lines.extend(["fill ~-1 ~-1 ~7 ~1 ~-1 ~9 stone", "tp @s ~ ~ ~8 -90 0", "fill ~1 ~ ~-3 ~7 ~8 ~3 air", "setblock ~1 ~ ~ frame [\"facing_direction\"=1]", "replaceitem entity @s slot.weapon.mainhand 0 diamond 3", "!click 1 0 0", "!break 1 0 0", "", "!break 1 0 0", ""].map(String::from));
+    lines.extend(["kill @e[type=!player]", "clear @s", "gamemode creative @s", ""].map(String::from));
+    lines
+}

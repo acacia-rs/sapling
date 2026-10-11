@@ -1,6 +1,6 @@
 //! Bone meal on a plant, as BDS grew them for a creative player (docs/research/bone-meal.md).
-// TODO: a sapling takes it and grows no tree; outside creative the steps are the Java game's,
-// not measured; where grass and flowers come up, and which, is a guess at BDS's scatter; kelp,
+// TODO: a sapling takes it, ages, and grows no tree; outside creative a crop's step is the Java
+// game's 2 to 5, which BDS's steps of 2 to 4 fit; where grass and flowers come up, and which, is a guess at BDS's scatter; kelp,
 // vines, mushrooms, cocoa, moss, sea grass and the rest take none.
 
 use acacia_proto::packets::{LevelEvent, LevelEventEvent};
@@ -15,6 +15,8 @@ const RIPE_BUSH: u8 = 3;
 /// What a stem grows by a click: BDS's went 0, 3, 6, 7.
 const STEM_STEP: u8 = 3;
 const CANE_HEIGHT: i32 = 3;
+/// The chance a click ages a sapling outside creative: the Java game's.
+const SAPLING_AGES: f32 = 0.45;
 const BAMBOO_HEIGHT: i32 = 12;
 const CROPS: [&str; 4] = ["wheat", "carrots", "potatoes", "beetroot"];
 const STEMS: [&str; 2] = ["melon_stem", "pumpkin_stem"];
@@ -75,7 +77,8 @@ fn grown(level: &Level, pos: BlockPos, creative: bool, roll: &mut dyn FnMut() ->
     match name {
         // A ripe crop still takes it; a ripe stem and a ripe bush, which is picked, do not.
         _ if CROPS.contains(&name) => match growth? {
-            RIPE.. => Some(Vec::new()),
+            // A ripe crop took it in creative and not in survival.
+            RIPE.. => creative.then(Vec::new),
             now => grow_to(if creative { RIPE } else { (now + 2 + (roll() * 4.0) as u8).min(RIPE) }),
         },
         _ if STEMS.contains(&name) => growth.filter(|now| *now < RIPE).and_then(|now| grow_to((now + STEM_STEP).min(RIPE))),
@@ -102,7 +105,11 @@ fn grown(level: &Level, pos: BlockPos, creative: bool, roll: &mut dyn FnMut() ->
             let over = [x, top + 1, z];
             Some(if tall < BAMBOO_HEIGHT && is_air(level, over) { vec![(over, state(level, "bamboo", "bamboo_leaf_size=small_leaves")?)] } else { Vec::new() })
         }
-        _ if name.ends_with("_sapling") => Some(Vec::new()),
+        // Outside creative BDS's sapling aged at its first click and stood six more before it grew.
+        _ if name.ends_with("_sapling") => {
+            let aged = with_property(level.registry(), id, "age_bit", "1").filter(|aged| !creative && *aged != id && roll() < SAPLING_AGES);
+            Some(aged.map(|aged| (pos, aged)).into_iter().collect())
+        }
         _ => None,
     }
 }

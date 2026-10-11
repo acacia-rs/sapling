@@ -1,8 +1,8 @@
 //! Blocks that hold one thing put into them by hand: an item frame takes an item and later
 //! clicks turn it, a decorated pot takes a stack one at a time (docs/research/block-uses.md, "A
 //! second round"). Each keeps it as BDS does, in its entity.
-// TODO: a hit takes a frame's item out; a comparator reads neither; a frame shows no map; a pot
-// gives nothing back but by being broken.
+// TODO: a comparator reads neither; a frame shows no map; a pot gives nothing back but by being
+// broken.
 
 use acacia_proto::nbt::Value;
 use acacia_proto::packets::{LevelEvent, LevelEventEvent};
@@ -49,6 +49,23 @@ fn spend(world: &mut World, player: Entity) {
 /// The item `stack` as a block's entity keeps it.
 fn kept(world: &World, layer: Entity, stack: ItemStack) -> Option<Value> {
     world.get::<Layer>(layer).map(|layer| Value::Compound(stack.fields(layer.world.registry())))
+}
+
+/// A hit on the block at `pos`: a frame that holds an item lets it go and stands, as BDS's did
+/// at the first blow. False for anything else.
+pub(super) fn hit(world: &mut World, layer: Entity, pos: BlockPos) -> bool {
+    let Some(level) = world.get::<Layer>(layer).map(|layer| &layer.world) else { return false };
+    let name = level.registry().get(level.block(pos[0], pos[1], pos[2])).map(|state| state.name);
+    let Some(mut fields) = level.block_entity(pos).map(|entity| entity.nbt.clone()).filter(|_| FRAMES.iter().any(|(frame, _)| Some(*frame) == name)) else { return false };
+    let Some(item) = fields.get(FRAMED).and_then(ItemStack::parse) else { return false };
+    if let Value::Compound(fields) = &mut fields {
+        fields.retain(|(key, _)| key != FRAMED && key != TURN);
+    }
+    send::keep_entity(world, layer, pos, &fields);
+    crate::drops::spill(world, layer, item, pos);
+    let corner = Vec3f { x: pos[0] as f32, y: pos[1] as f32, z: pos[2] as f32 };
+    send::to_viewers(world, layer, pos, &[sapling_net::encode(&LevelEvent { event: LevelEventEvent::SoundItemframeRemoveItem, position: corner, data: 0 })]);
+    true
 }
 
 /// A click on the block `name` at `pos`: false when it is neither a frame nor a decorated pot.
