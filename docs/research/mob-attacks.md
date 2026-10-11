@@ -43,6 +43,17 @@ zombie's definition in the vanilla pack (`entities.brarchive`, `zombie.json`). E
 - `SetEntityMotion` goes out as its speed changes by a lot, holding the speed after the tick's
   drag.
 
+## Around a fence (`around`)
+
+A fence does not hide the player and is not jumped (`research/captures/bds-around.txt`, its
+last two zombies):
+
+- With a fence five wide 4 blocks before the player, the zombie took its target at once, walked
+  to the middle of the cell past the fence's end, then cornerwise at the player, and hit it
+  4.4 s after it was summoned.
+- In a pen of fences open at the back it walked out of the back, round the end of the side
+  fence, down the outside along the middles of the cells, and hit 6.8 s after.
+
 ## Hitting
 
 - It hits in the first tick in which its box, 0.8 wider on each side, overlaps the player's,
@@ -146,8 +157,7 @@ chicken and the zombie had strolled out of reach):
 
 ## Not drilled
 
-Normal and hard (taken as 3 and 4.5), a way around a wall (a mob that cannot see takes no
-target, so the drill showed none), a hole in the way, what hides a player besides a full block, whether prey that goes behind a wall is kept, a zombie hit
+Normal and hard (taken as 3 and 4.5), a way with drops, water or doors in it, a hole in the way, what hides a player besides a full block, whether prey that goes behind a wall is kept, a zombie hit
 back, daylight (a spider hunts only in the dark), baby zombies, a cave spider's poison on
 normal and hard (7 and 15 seconds in its definition), the kinds not named here, a creeper whose prey walks off, a blast behind a wall, what a blast
 leaves of the blocks it breaks and of softer ground, and what `within_radius` 25 does: a zombie on
@@ -178,7 +188,12 @@ zombie and the seven kinds above, each with its numbers and what its hit gives (
 spider's poison, which lasts no time on easy).
 The first two hits of `bite` and both of `slain` land where BDS's did, to the last digit.
 Its jump over the step of `chase` is BDS's to the sixth decimal.
-Different: it walks straight at the player (no path around anything), keeps prey it has seen
+Where the floor between is not free it goes by the shortest way over whole cells
+(`creatures/paths.rs`), looked for again every 10 ticks; run against sapling the two fences were
+passed by the same cells and the first hits came 4.1 s and 6.5 s after. Strolling and fleeing
+mobs do not look for a way.
+
+Different: it keeps prey it has seen
 whatever comes between, sends a mob's speed as it is before the drag, turns 60
 degrees a tick with its head, stops when its box touches the
 player's since nothing pushes anything, shows no mob holding

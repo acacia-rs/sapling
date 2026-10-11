@@ -1,6 +1,6 @@
 //! Mobs that hunt players, as BDS's were seen to (docs/research/mob-attacks.md): one picks
 //! the nearest player it could kill, walks straight at it and hits it when it is within reach.
-// TODO: no path around a block; prey once seen is kept behind a
+// TODO: prey once seen is kept behind a
 // wall; nothing pushes another aside; a spider hunts by day too and none holds what it hits with; peaceful worlds keep their
 // monsters, idle; viewers far off are told every move, where BDS told one of every other.
 
@@ -9,13 +9,17 @@ use acacia_proto::types::{EntityProperties, MetadataDictionaryItem, MetadataDict
 use bevy_ecs::prelude::*;
 use sapling_api::Difficulty;
 
-use super::{arrows, blast, legs};
+use super::{arrows, blast, legs, paths};
 use crate::body::Body;
 use crate::components::{InLayer, Layer, NetId, Position, Settings, Tick, in_world};
 use crate::{entities, late_sounds, vitals};
 
 /// Ticks between two looks for a player.
 const LOOKS: u64 = 10;
+/// A way round is looked for again after this many ticks, and a cell of it is reached this near
+/// its middle.
+const REPLANS: u64 = 10;
+const ARRIVED: f32 = 0.35;
 /// An archer walks at its prey for this many ticks after taking it (BDS's went 1.7 blocks, from
 /// 10 off and from 4), then stands while it is this near.
 const NEARS: u64 = 19;
@@ -43,6 +47,9 @@ pub(super) struct Hunter {
     /// The tick it took its prey in.
     since: u64,
     ready: u64,
+    /// The cells of its way round what stands before its prey, and the tick it found them in.
+    way: Vec<[i32; 3]>,
+    planned: u64,
 }
 
 /// Makes the mob a hunter if its kind is one.
@@ -115,6 +122,28 @@ fn pick(world: &mut World, entity: Entity, layer: Entity, id: u64, kind: &str, b
     found.map(|(_, feet)| feet)
 }
 
+/// Where a hunter walks to this tick, and how near it stops: straight at its prey where the
+/// floor lets it, else to the next cell of a way round, looked for anew every [`REPLANS`] ticks.
+fn heads(world: &mut World, entity: Entity, layer: Entity, body: &Body, feet: [f32; 3]) -> ([f32; 2], f32) {
+    let now = world.resource::<Tick>().0;
+    let straight = ([feet[0], feet[2]], TOUCHING);
+    let Some(level) = world.get::<Layer>(layer).map(|layer| &layer.world) else { return straight };
+    if paths::is_clear(level, body.at, feet) {
+        return straight;
+    }
+    let stale = world.get::<Hunter>(entity).is_none_or(|hunter| hunter.way.is_empty() || now >= hunter.planned + REPLANS);
+    let found = stale.then(|| paths::route(level, body.at.map(|c| c.floor() as i32), feet.map(|c| c.floor() as i32)).unwrap_or_default());
+    let Some(mut hunter) = world.get_mut::<Hunter>(entity) else { return straight };
+    if let Some(way) = found {
+        (hunter.way, hunter.planned) = (way, now);
+    }
+    let middle = |cell: &[i32; 3]| [cell[0] as f32 + 0.5, cell[2] as f32 + 0.5];
+    while hunter.way.first().is_some_and(|cell| (middle(cell)[0] - body.at[0]).hypot(middle(cell)[1] - body.at[2]) < ARRIVED) {
+        hunter.way.remove(0);
+    }
+    hunter.way.first().map_or(straight, |cell| (middle(cell), 0.0))
+}
+
 /// Before the hunter's move: it walks at its prey, if it has any.
 pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity, id: u64, kind: &str) -> bool {
     let (Some(body), Some(speed)) = (world.get::<Body>(entity).copied(), sapling_data::mob_traits(kind).hunts.map(|hunts| hunts.speed)) else { return false };
@@ -125,7 +154,10 @@ pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity, id: u64, k
     let stands = blast::is_lit(world, entity) || (aims && distance(feet, body.at) < SHOOTS_FROM);
     match stands {
         true => legs::rest(world, entity),
-        false => legs::walk(world, entity, layer, &body, [feet[0], feet[2]], speed, TOUCHING),
+        false => {
+            let (to, near) = heads(world, entity, layer, &body, feet);
+            legs::walk(world, entity, layer, &body, to, speed, near);
+        }
     }
     true
 }

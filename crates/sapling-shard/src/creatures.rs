@@ -11,6 +11,7 @@ mod harm;
 mod health;
 mod hunting;
 mod legs;
+mod paths;
 mod strolling;
 
 use bevy_ecs::prelude::*;

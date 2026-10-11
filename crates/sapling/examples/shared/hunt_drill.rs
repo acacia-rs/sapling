@@ -141,15 +141,18 @@ pub fn flee() -> Vec<String> {
     lines
 }
 
-/// The actor in survival and a zombie 8 blocks off with glass, which it sees through, in its
-/// way: a wall five wide and two high, the same with a gap in its middle, and a pen around the
-/// zombie open at the back.
+/// The actor in survival and a zombie 8 blocks off with something in its way: a glass wall five
+/// wide and two high, the same with a gap in its middle, a glass pen around the zombie open at
+/// the back, then a fence five wide and a fence pen.
 pub fn around() -> Vec<String> {
     let mut lines: Vec<String> = FLOOR.map(String::from).into();
+    // Glass hid the player (the first three); a fence does not, and is not jumped.
     let walls = [
         vec!["fill ~-2 ~ ~-4 ~2 ~1 ~-4 glass"],
         vec!["fill ~-3 ~ ~-4 ~3 ~1 ~-4 glass", "fill ~ ~ ~-4 ~ ~1 ~-4 air"],
         vec!["fill ~-2 ~ ~-6 ~2 ~1 ~-6 glass", "fill ~-2 ~ ~-9 ~-2 ~1 ~-6 glass", "fill ~2 ~ ~-9 ~2 ~1 ~-6 glass"],
+        vec!["fill ~-2 ~ ~-4 ~2 ~ ~-4 oak_fence"],
+        vec!["fill ~-2 ~ ~-6 ~2 ~ ~-6 oak_fence", "fill ~-2 ~ ~-9 ~-2 ~ ~-6 oak_fence", "fill ~2 ~ ~-9 ~2 ~ ~-6 oak_fence"],
     ];
     for wall in walls {
         lines.extend(wall.into_iter().map(String::from));

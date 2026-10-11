@@ -225,3 +225,21 @@ fn an_arrow_hurts_a_mob_that_stands_in_its_way() {
     let cows: Vec<f32> = all::<UpdateAttributes>(&sent).iter().filter(|update| update.runtime_entity_id > 3).flat_map(|update| &update.attributes).filter(|attribute| attribute.name == "minecraft:health").map(|attribute| attribute.current).collect();
     assert!(health(&sent).is_empty() && cows.last().is_some_and(|left| *left < 10.0), "the cow took it: {cows:?}");
 }
+
+#[test]
+fn a_zombie_goes_round_a_fence_it_cannot_jump() {
+    // research/captures/bds-around.txt: BDS's went to the cell past the fence's end and on.
+    let (mut h, zombie) = hunted(Difficulty::Easy);
+    h.remote.run(|ctx| (-2..=2).for_each(|x| assert!(ctx.set_block([x, 65, 2], &Block::new("oak_fence")))));
+    let seen = std::sync::Arc::new(std::sync::Mutex::new(Vec::new()));
+    let mut hit = None;
+    for tick in 0..160 {
+        let seen = seen.clone();
+        h.remote.run(move |ctx| seen.lock().unwrap().extend(ctx.entity(EntityId(zombie)).map(|found| found.feet)));
+        if !health(h.tick_all().to(2)).is_empty() && hit.is_none() {
+            hit = Some(tick);
+        }
+    }
+    let widest = seen.lock().unwrap().iter().map(|feet| feet[0].abs()).fold(0.0, f32::max);
+    assert!(hit.is_some() && (2.8..4.5).contains(&widest), "round the end, three cells out: {hit:?} {widest}");
+}
