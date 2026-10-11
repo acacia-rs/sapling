@@ -89,6 +89,25 @@ Companion to [worldgen-bds.md](worldgen-bds.md). The flow rule itself (`LiquidBl
   "holds lava"; in the dark forest one-worker run lava runs through two flowering azaleas
   (-9386,8,6608). Which blocks have a thickness is not read.
 
+## The first generation (2026-10-11, worldgen/replay5)
+A probe at the first `tickPendingTicks` of one decoration (desert source -446,557) dumped the block source's
+pending heap: 538 entries of 0x28 bytes (flag, position at +8, priority +0x14, block +0x18, time +0x20), every
+priority 0. 469 are due at 1 and 69 at 2:
+- the 69 are the border scan's (backtrace 148215864), queued "in 1" on the block source's queue, whose clock
+  stands at 1;
+- 466 are the chunk's aquifer ticks, queued "in 1" by `loadChunk`'s lambda (148263880) on the chunk's own queue,
+  whose clock stands at 0 while the world generates, and moved over by `acquireAllTicks` after the scan. sapling
+  had given them the block source's clock, so they sorted with the border ticks instead of before them;
+- 3 are **magma blocks'** (-7133,45,8923 and two more): a magma blob queues the block's own tick in 1 on its
+  chunk's queue. When that tick runs it sets the one bubble column cell in a water source above. sapling set
+  the column as it set the magma, so it had columns where BDS's tick never ran (the magma's chunk had finished
+  decorating, and nothing ticks it until the game does) and lacked them where water arrived after the blob.
+  A magma tick now waits on its chunk's queue as a water tick on a magma cell (`flow.rs`, `magma_tick`).
+Rebuilt offline from the run's own log (border ticks pushed in scan order, then the chunk queue popped into
+it: aquifer ticks in the lambda's order, then the three), the heap equals the dump in 536 of 538 slots, and our
+`push`/`pop` over the dumped array run generation 1 in BDS's logged order (294 of 294 ticks in the logged
+box). The border scan's order and the aquifer ticks' order were already BDS's (69 and 466, compared in order).
+
 ## Game time (2026-10-10, worldgen/res6)
 What the earlier sections call "flows BDS ran in game" is `LevelChunk::tick` (1409f98a0). While `LevelChunk`
 +0x10dc is 0 and the chunks around are loaded, each game tick calls `tickPendingTicks(until = current tick, max

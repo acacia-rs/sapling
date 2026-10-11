@@ -294,7 +294,7 @@ corridor's spawner is already placed; nothing beyond the 3x3. A default for (2) 
 seen as placed is worse than our phase order on the stock oracle (865 -> 1005), so the phase model stays; any
 fixed rule is right for about half of BDS's neighbour pairs.
 
-## replay5: feature and liquid stage, region by region (2026-10-11, worldgen/replay5, interim)
+## replay5: feature and liquid stage, region by region (2026-10-11, worldgen/replay5)
 A canon now carries its structure order too and may hold several regions: one debugger run over four far-apart
 4x4 regions takes about 15 minutes, a third of that BDS's start (`canon-upload.sh <run> <dir> <world>
 [<world>...]`, the `dir` field of `tools/replay-canons.txt`; `SAPLING_ORACLE_REGION==<name>` keeps exactly one
@@ -325,10 +325,13 @@ Wrong + missing against each region's one-worker world (stock oracle beside it f
 | mushroom fields | 16 | | 0 | |
 | windswept savanna | 2 | | 0 | |
 | forest, taiga, birch forest, snowy taiga | 37, 22, 0, 13 | | 0 each | |
-| desert (two runs: `desert`, `desert2`) | 20 | | 7 (10 at first) | 4 sand cells of the surface stage, 3 water depths: below |
+| desert (three runs: `desert`, `desert2`, `desert3`) | 20 | | 4 (10 at first) | 4 sand cells of the surface stage: below |
 | frozen ocean (two runs) | 38 | | 5 | an iceberg of ring source 473,572: below |
 | warm ocean | 26 | | 295 | 292 are the canon's, 3 a coral: below |
-| plains | 32 | | 1 | a bubble column cell: below |
+| plains | 32 | | 0 (1 at first) | |
+| far out (8x8) | 290 | | 5 (7 at first) | below |
+| negative seed (8x8) | 82 | | 0 | |
+| near origin (32x32) | 1448 | | no canon | below |
 | jungle, sparse jungle, flower forest, meadow | 5, 21, 25, 13 | | 0 each | |
 | old growth spruce taiga, windswept forest, snowy plains, sunflower plains | 42, 1, 26, 0 | | 0 each | |
 | badlands | 1813 | 0 | 0 | |
@@ -399,6 +402,11 @@ What the replay found:
   back when the chunk is assembled. Ancient city 172 -> 0: exact on its canon (`city6`; 8201 cells on the
   stock world).
 
+- **The liquid pass ran the right ticks in another order**, and that was two things (desert, 3 water depths
+  at the 8-block edge of source -446,557, where a cell keeps the depth of whichever neighbour reached it
+  first): the chunk queue's clock, and magma ticks nobody knew were on it. worldgen-bds-liquids.md, "The
+  first generation". The same magma ticks are the bubble columns: plains' two cells and the igloo canon's one.
+
 Structure-region canons under the full replay after this branch (struct5's list, `tools/replay-regions.sh`):
 jungle temple, swamp hut, shipwreck, ruined portal, ocean ruins, old growth birch, badlands 0; ancient city 0;
 stronghold 1 (132 at the merge: struct5's three liquid items went with the liquid rules and the web rule, its
@@ -412,17 +420,13 @@ Open under replay, each with its first source:
   west and on down to y 4 in BDS (12 cells) and only south in ours, where the next cell hardens and cuts it.
   `_getSlopeDistance` (148b5f020) reads the same as ours, so the world differed when that cell ticked. Next
   step: `scratchpad liq-mansion.json` (tick and spread entries armed for that decoration) beside `feature_trace`.
-- **Bubble columns, 3 cells**: plains -945,50,-692 (ours has one over a magma block of source -59,-44, BDS
-  water) and -961,-43,-716 (BDS has one, ours water); the igloo canon's -913,-25,-2848. How a magma block gets
-  its one column cell while a chunk decorates was never read: next step, a write breakpoint on the bubble
-  column (find the setter from `BubbleColumnBlock`'s vtable) in a run of the plains region.
-- **Desert, 3 water depths** (source -446,557; -7112,21,8910..8913): the liquid pass runs the same ticks in every
-  generation as BDS (294, 14, 20, 14, 15, ... in both, compared over 66 generations of an armed run) but in
-  another order within a generation, from the first one on; a cell at the 8-block edge then keeps the depth of
-  whichever neighbour reached it first. The first generation is the border scan's ticks plus the chunk's own
-  queue (466 aquifer ticks): its order is the heaps' insertion history. Next step: `scratchpad queue-desert.json`
-  (the pending heap dumped at the first `tickPendingTicks` of that decoration, `loadChunk`'s tick lambda
-  148263880 in order) against our `own tick` and `queue` trace lines.
+  A second run with those entries armed exists (`liq-mansion`), not compared yet; it predates the queue fix
+  below, so rerun `tools/replay.sh x mansion2 test` first.
+- **Far out, 5**: two glow lichens on other cells (sources 100004,100002 and 100007,100006), one dirt cell of
+  an ore blob BDS writes and ours does not (1600014,53,1600103), one water cell. Not traced.
+- **Near origin** has no canon: the 32x32 region's run was cut by the pack's script watchdog after four of
+  sixteen tiles (`WORLDGEN done error InternalError: interrupted`). Next step: one canon per 8x8 tile with its
+  own test region, or a pack that yields between tiles.
 - **Desert, 4 sand cells** (-7120,19..21,8914 and -7119,21,8916): the floor of a canyon open to the sky is
   sand three deep in BDS and stone in ours before any feature (our dirt blob then covers it, BDS's does not
   replace sand). Surface stage, not features; the stock oracle has the same cells.
