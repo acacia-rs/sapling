@@ -167,6 +167,51 @@ Java's 1.11 mansion on BDS's MT, with BDS's own details:
   two pairs of stone stair runs out of the entrance (1480abb80), all stepping down through air and fluids no
   lower than y 2.
 
+## The update pass: where neighbour-shaped states come from (2026-10-11, worldgen/struct5)
+Fence, pane, bar and wall connections and stair corners are not a function of a block's final neighbours. Three
+things write them while a world generates, each at its own moment (`src/structure/template/update.rs`;
+`scripts/dbg_connect.py` reads the per-type table below out of a live server):
+
+| type | what updates it | how |
+|---|---|---|
+| fences, panes, bars, tripwire (58 types) | component 26, one updater 1439cdbd0, mask N S W E, `setBlock` flag 3 | each side in the mask is set from that neighbour (143993ee0) |
+| stairs (97 types, tag 0x14cd250d0) | component 26, updater 1439cfbf0, same mask and flag | the whole shape (Java's `getStairsShape`), whatever the mask |
+| walls (33 types) | no component; `onStructureBlockPlace` 1425e4e50 (vtable slot 0x1b8, slot 0xe0 true) | all four sides and the post from the world, `setBlock` flag 2 |
+
+1. **A template placement's pass** (141f5c5d0, last call of `placeInWorld` and of the two v2 placers 141ee0510 and
+   141f64f10). Blocks go down with flag 2; each one whose `setBlock` changed the cell is filed with a kind
+   (141f5be10). The pass then walks the template's box grown by one, in the template's own x, y, z order turned
+   into the world. A filed block: kind 0 (stairs' tag) updates every side; kind 3 (the component) updates the
+   sides whose neighbour the template did **not** file, starting from the state it was filed with; kind 2 (walls)
+   calls `onStructureBlockPlace` when any of its 14 neighbours (six faces, eight vertical diagonals) was not
+   filed. A cell the template did not file, with a filed neighbour, has its world block updated on the sides
+   toward the filed ones (walls: all of it). So a modern template's fence keeps the Java sides it was saved with
+   toward the template's own blocks: a ruined portal's bar stays joined to the stone brick that the portal's
+   ageing (flag 4, no update) then turns into a stair. A wall is read bottom-up, each seeing the wall above as
+   it is at that moment; walls that two chunks' passes share (a mansion's corner walls) end `tall` or `short`
+   by which chunk ran first.
+2. **Templates saved before Java's flattening** (`DataVersion` < 1451 or absent: igloos, shipwrecks, mansions)
+   come through the loader's old converter, which files fences, panes and stairs as kind 2 -> "every side" and
+   walls as kind 1 -> "always" (logged per block at 141f5be10: r9 is 0 for every block of a village, city or
+   portal template, 2 and 1 for those classes in a mansion).
+3. **A neighbour-updating `setBlock`** (flag 1 or 0x20 on layer 0; 1415f6fd0). With no chunk events (worldgen) it
+   queues the cell and has each horizontal neighbour that carries the component redo its side toward it; a
+   neighbour that changes is set with flag 3 and queued in turn. The updaters above set with 3, features place
+   with 3 (`KelpFeature`), `StructurePiece::placeBlock` with 4 and templates with 2: pieces trigger nothing.
+4. **`upgradeStructureConnectionBlocks`** (inlined in the lambda of `StructureFeature::postProcess`, 141f07a80):
+   after a start's pieces in a chunk (its `postProcess` returned true and its vtable slot 0x20 says yes), every
+   block of those types in the start's box, within the chunk and the columns around it, from the chunk's floor
+   up to the box's top, in x, z, y order, updates every side (flag 3, so it cascades). This is what joins a
+   mineshaft's support posts to the tunnel wall, and to the stone of the next chunk that a later post-process
+   then clears with flag 4: the stale connection stays.
+
+Walls and fences do not join gourds (a taiga farm's wall beside its pumpkin). The legacy loader keeps a Java
+fence's `east`/`north`/`south`/`west`; the probe table could not show it (a lone block has every side redone),
+so `templates_to_rust.py` puts them back, turned and, for mirrored placements, flipped.
+
+sapling runs all of this under a structure replay only, where the order of chunks is the run's. Without one the
+chunk's connections are still set once from the final neighbours (`template::rejoin`).
+
 ## Oracle (world 20261003-structures + run2, `blocks_match_bds_structures`)
 | kind | precision (non-air) | recall |
 |---|---|---|

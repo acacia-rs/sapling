@@ -58,8 +58,8 @@ impl LegacyTree {
                 let below = ctx.view.block(x, y - 1, z);
                 // The bed's variants run growth-inner, facing-outer (south, west, north, east).
                 let block = Block::ALL[bed.index() + facing * 4 + growth];
-                // Litter lies on what supports it from above: not on leaves (dark forest one-worker run; the kind asked is a guess).
-                let supported = if bed == Block::LeafLitter0South { below.supports(1, crate::block::Support::Any) } else { super::plants::is_soil(below) };
+                // Litter lies on a top face that holds an edge: not on leaves, a fence or a path (fitted on the stronghold and dark forest one-worker runs).
+                let supported = if bed == Block::LeafLitter0South { below.supports(1, crate::block::Support::Edge) } else { super::plants::is_soil(below) };
                 let placed = ctx.view.block(x, y, z) == Block::Air && supported;
                 return (placed && ctx.view.set_block(x, y, z, block)).then_some(at);
             }

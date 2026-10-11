@@ -11,6 +11,7 @@ mod markers;
 mod mirror;
 mod place;
 mod rules;
+mod update;
 mod wall;
 mod wood;
 
@@ -23,8 +24,9 @@ pub use java_states::v2_block;
 pub use load::palette;
 pub(crate) use markers::hash as marker_hash;
 #[allow(unused_imports)]
-pub use place::{Placement, Rotation};
+pub use place::{Placement, Rotation, pass_cells};
 pub use rules::{Predicate, Rule, apply};
+pub use update::Record;
 
 use crate::block::Block;
 use load::{data, palette_block};
@@ -47,6 +49,14 @@ pub fn flags(block: Block) -> u8 {
     static INDEX: OnceLock<HashMap<(&str, &str, bool), u8>> = OnceLock::new();
     let index = INDEX.get_or_init(|| palette().iter().map(|&(n, s, w, f)| ((n, s, w), f)).collect());
     index.get(&(block.name(), block.states(), block.is_waterlogged())).copied().unwrap_or(0)
+}
+
+/// `block` holding water, where it can and the palette has it so.
+pub fn soaked(block: Block) -> Block {
+    if block.is_waterlogged() || flags(block) & WATERLOGGABLE == 0 {
+        return block;
+    }
+    try_named(block.name(), block.states(), true).unwrap_or(block)
 }
 
 /// A block structure code places itself, by its saved name and states; panics on one the palette
@@ -107,6 +117,8 @@ pub struct Jigsaw {
 pub struct Template {
     pub name: String,
     pub size: (i32, i32, i32),
+    /// Saved before Java's flattening: the update pass redoes every side of its fences, panes and walls (update.rs).
+    pub legacy: bool,
     /// In file order, which is the order BDS places them in.
     pub blocks: Vec<TemplateBlock>,
     pub jigsaws: Vec<Jigsaw>,
@@ -115,6 +127,8 @@ pub struct Template {
     /// Chests with block entity data: placing one draws a loot table seed from the piece's
     /// generator (placeInWorld, block actor type 2 without `LootTableSeed`).
     pub loot_chests: Vec<usize>,
+    /// Vines with Java's `up`: a v2 placement hangs them on all four sides (trial chambers' display, oracle).
+    pub ceiling_vines: Vec<usize>,
 }
 
 impl Template {

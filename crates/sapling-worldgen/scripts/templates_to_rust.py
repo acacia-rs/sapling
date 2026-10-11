@@ -8,10 +8,10 @@ for it, read off probe worlds (scripts/template_probe). Fluids are converted as 
 (`level` to `liquid_depth`); jigsaws and structure blocks keep their own kinds for the placement code.
 
 templates.bin, little-endian: b'SPT1', the palette (templates_palette.py), u32 count; per template: u8 name length, name, u16 x3 size,
-u32 block count, then per block u8 x, u16 y, u8 z, u16 state (an index into the state table); then u16
+u8 legacy (saved before Java's flattening), u32 block count, then per block u8 x, u16 y, u8 z, u16 state (an index into the state table); then u16
 special count, per special: u32 block index, u8 kind (0 jigsaw: name, target, pool, joint, orientation
 strings, u16 final state, i32 selection and placement priorities; 1 data marker: metadata string; 2 chest
-whose block entity draws a loot seed), strings as u8 length + bytes; then the state table
+whose block entity draws a loot seed; 3 vine with Java's `up`), strings as u8 length + bytes; then the state table
 (templates_palette.py).
 """
 import gzip
@@ -141,6 +141,19 @@ def placed_wall(key, rot, probed):
     return (probed[0], f"{states},wall_post_bit={int(props.get('up', 'true') == 'true')}", probed[2], probed[3])
 
 
+def placed_sides(key, rot, probed):
+    """A fence, pane or bars as the loader places it: its Java sides turned `rot` quarters clockwise. The probe's
+    lone block had every side recomputed by the update pass (docs/research/worldgen-bds-templates.md); in a
+    template the sides toward blocks it places keep these."""
+    props = dict(p.split('=', 1) for p in key.partition('[')[2].rstrip(']').split(',') if p)
+    turned = ['north', 'east', 'south', 'west']
+    states = probed[1]
+    for i, side in enumerate(turned):
+        to = turned[(i + rot) % 4]
+        states = states.replace(f'minecraft:connection_{to}=0', f"minecraft:connection_{to}={int(props.get(side) == 'true')}")
+    return (probed[0], states, probed[2], probed[3])
+
+
 def as_saved(key, rot, probed, table):
     """A circuit block or corner stair as its template saved it, where the probe's lone block had settled before
     it was read: a city's circuit holds its power (docs/research/worldgen-bds-templates.md, "Saved states")."""
@@ -181,7 +194,9 @@ def main():
         palette = [key_of(s['Name'], s.get('Properties', {})) for s in t.get('palette') or t['palettes'][0]]
         sx, sy, sz = t['size']
         assert max(sx, sz) < 256 and sy < 65536, name
-        out += bytes([len(name)]) + name.encode() + struct.pack('<HHHI', sx, sy, sz, len(t['blocks']))
+        # Saved before Java's flattening (DataVersion 1451; mansions carry none): the loader's old converter.
+        legacy = t.get('DataVersion', 0) < 1451
+        out += bytes([len(name)]) + name.encode() + struct.pack('<HHHBI', sx, sy, sz, legacy, len(t['blocks']))
         specials = []
         for i, b in enumerate(t['blocks']):
             x, y, z = b['pos']
@@ -200,6 +215,8 @@ def main():
                 specials.append((i, 1, [nbt.get('metadata', '')], None))
             elif nbt.get('id') in ('minecraft:chest', 'minecraft:trapped_chest') and 'LootTableSeed' not in nbt:
                 specials.append((i, 2, [], None))
+            elif key.startswith('minecraft:vine[') and 'up=true' in key:
+                specials.append((i, 3, [], None))
         out += struct.pack('<H', len(specials))
         for i, kind, strings, final in specials:
             out += struct.pack('<IB', i, kind)
@@ -210,6 +227,8 @@ def main():
     for key in keys:
         if (key, 0) in table and 'wall_post_bit' in table[(key, 0)][1]:
             table.update({(key, rot): placed_wall(key, rot, table[(key, 0)]) for rot in range(4)})
+        if (key, 0) in table and 'minecraft:connection_' in table[(key, 0)][1]:
+            table.update({(key, rot): placed_sides(key, rot, table[(key, rot)]) for rot in range(4) if (key, rot) in table})
         table.update({(key, rot): as_saved(key, rot, table[(key, rot)], table) for rot in range(4) if (key, rot) in table})
     states, palette = state_table(keys, table)
     out = b'SPT1' + palette_bytes(palette) + out[4:] + states

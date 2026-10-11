@@ -36,10 +36,12 @@ pub fn place(canvas: &mut Canvas, random: &mut Mt19937, start: (i32, i32)) {
     }
     let bottom = Template::get("igloo/igloo_bottom");
     let at = connected((3, -1 - depth * 3, 5), (3, 5, 7));
-    placement.place(canvas, bottom, at);
     // "chest", "Villager" and "Zombie Villager" markers all leave air (the chest sits below its marker).
+    // Cleared first: the cell bars' update pass finds nothing to join there (BDS's bars beside the
+    // two cell markers stay apart from them, though the cellar is dug into stone).
     for (index, _) in &bottom.markers {
         let (dx, dy, dz) = rotation.apply(bottom.blocks[*index].pos);
         canvas.set(at.0 + dx, at.1 + dy, at.2 + dz, Block::Air);
     }
+    placement.place(canvas, bottom, at);
 }

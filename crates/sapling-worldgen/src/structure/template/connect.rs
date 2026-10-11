@@ -2,6 +2,8 @@
 //! blocks show them: fence, pane, bar and wall connections and stair corners. Placed states
 //! arrive with these unset.
 
+use std::collections::HashSet;
+
 use super::{FULL_CUBE, flags, try_named, wall};
 use crate::block::Block;
 use crate::structure::canvas::Canvas;
@@ -42,12 +44,14 @@ pub(super) fn full_cube(block: Block) -> bool {
 }
 
 /// Whether `neighbour`, lying `(dx, dz)` from the connecting block, shows it a full face: any
-/// face of a full cube, the tall back of stairs, a composter's sides.
+/// face of a full cube but a gourd's (a taiga farm's wall beside its pumpkin stays apart), the tall
+/// back of stairs, a composter's sides.
 pub(super) fn sturdy(neighbour: Block, (dx, dz): (i32, i32)) -> bool {
-    full_cube(neighbour) || shape(neighbour) == Some(Shape::Stairs) && facing(neighbour) == (-dx, -dz) || neighbour.name() == "composter"
+    let gourd = matches!(neighbour.name(), "pumpkin" | "carved_pumpkin" | "lit_pumpkin" | "melon_block");
+    full_cube(neighbour) && !gourd || shape(neighbour) == Some(Shape::Stairs) && facing(neighbour) == (-dx, -dz) || neighbour.name() == "composter"
 }
 
-fn joins(kind: Shape, neighbour: Block, side: (i32, i32)) -> bool {
+pub(super) fn joins(kind: Shape, neighbour: Block, side: (i32, i32)) -> bool {
     let other = shape(neighbour);
     sturdy(neighbour, side)
         || match kind {
@@ -56,7 +60,7 @@ fn joins(kind: Shape, neighbour: Block, side: (i32, i32)) -> bool {
         }
 }
 
-fn with_states(block: Block, changes: &[(String, String)]) -> Block {
+pub(super) fn with_states(block: Block, changes: &[(String, String)]) -> Block {
     let mut pairs: Vec<(&str, &str)> = block.states().split(',').filter_map(|p| p.split_once('=')).collect();
     for (key, value) in changes {
         if let Some(pair) = pairs.iter_mut().find(|(k, _)| k == key) {
@@ -83,7 +87,7 @@ fn facing(stairs: Block) -> (i32, i32) {
 }
 
 /// Java's `StairBlock.getStairsShape`, corners named as Bedrock saves them.
-fn corner(canvas: &Canvas, stairs: Block, (x, y, z): (i32, i32, i32)) -> &'static str {
+pub(super) fn corner(canvas: &Canvas, stairs: Block, (x, y, z): (i32, i32, i32)) -> &'static str {
     let (fx, fz) = facing(stairs);
     let half = state(stairs, "upside_down_bit");
     let stair_at = |dx: i32, dz: i32| Some(canvas.get(x + dx, y, z + dz)).filter(|&b| shape(b) == Some(Shape::Stairs) && state(b, "upside_down_bit") == half);
@@ -104,8 +108,9 @@ fn corner(canvas: &Canvas, stairs: Block, (x, y, z): (i32, i32, i32)) -> &'stati
     "none"
 }
 
-/// Every neighbour-shaped template block of `canvas`'s chunk between heights `low` and `high`.
-pub fn rejoin(canvas: &mut Canvas, (low, high): (i32, i32)) {
+/// Every neighbour-shaped template block of `canvas`'s chunk between heights `low` and `high`, but
+/// those in `settled` (a replayed run's template passes decided them, update.rs).
+pub fn rejoin(canvas: &mut Canvas, (low, high): (i32, i32), settled: &HashSet<(i32, i32, i32)>) {
     let b = canvas.bb;
     let (low, high) = (low.max(b.y0), high.min(b.y1));
     // Bottom up: each wall sees the wall above as its template placed it.
@@ -113,7 +118,7 @@ pub fn rejoin(canvas: &mut Canvas, (low, high): (i32, i32)) {
         for z in b.z0..=b.z1 {
             for x in b.x0..=b.x1 {
                 let block = canvas.get(x, y, z);
-                if wall::is_wall(block) {
+                if wall::is_wall(block) && !settled.contains(&(x, y, z)) {
                     let joined = with_states(block, &wall::changes(canvas, (x, y, z)));
                     canvas.set(x, y, z, joined);
                 }
@@ -125,7 +130,7 @@ pub fn rejoin(canvas: &mut Canvas, (low, high): (i32, i32)) {
         for z in b.z0..=b.z1 {
             for x in b.x0..=b.x1 {
                 let block = canvas.get(x, y, z);
-                let Some(kind) = shape(block).filter(|_| !wall::is_wall(block)) else { continue };
+                let Some(kind) = shape(block).filter(|_| !wall::is_wall(block) && !settled.contains(&(x, y, z))) else { continue };
                 let changes: Vec<(String, String)> = if kind == Shape::Stairs {
                     vec![("minecraft:corner".into(), corner(canvas, block, (x, y, z)).into())]
                 } else {
