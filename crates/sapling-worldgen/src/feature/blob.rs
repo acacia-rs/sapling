@@ -12,7 +12,8 @@ const FACING: [[i32; 3]; 6] = [[0, -1, 0], [0, 1, 0], [0, 0, -1], [0, 0, 1], [-1
 
 fn open(block: Block) -> bool {
     // The bubble column an earlier cell of the blob started is still water to the test (temple replay).
-    block == Block::Air || (block.is_fluid() && !block.is_lava()) || block == Block::BubbleColumn
+    // So is the water a lichen or a plant stands in (frozen ocean one-worker run: no magma beside a wet lichen).
+    block == Block::Air || (block.is_fluid() && !block.is_lava()) || block == Block::BubbleColumn || block.is_waterlogged()
 }
 
 /// Offsets by ring (|x| + |y| + |z|), x then y ascending, +z before -z.
