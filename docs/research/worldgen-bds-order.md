@@ -328,7 +328,8 @@ Wrong + missing against each region's one-worker world (stock oracle beside it f
 | desert (two runs: `desert`, `desert2`) | 20 | | 7 (10 at first) | 4 sand cells of the surface stage, 3 water depths: below |
 | frozen ocean (two runs) | 38 | | 5 | an iceberg of ring source 473,572: below |
 | warm ocean | 26 | | 295 | 292 are the canon's, 3 a coral: below |
-| plains | 32 | | 1 | a bubble column cell at -945,50,-692, not traced |
+| plains | 32 | | 1 | a bubble column cell: below |
+| jungle, sparse jungle, flower forest, meadow | 5, 21, 25, 13 | | 0 each | |
 | badlands | 1813 | 0 | 0 | |
 | old growth pine taiga | 573 | 0 | 0 | |
 | pale garden | 744 | 0 | 0 | |
@@ -383,10 +384,20 @@ What the replay found:
   `jigsaw/piece.rs` now draws once per chest, trapped chest or barrel it sets. Over the run's 161 chunks with
   city pieces all 402 piece entries agree in box and draws; city 6254 -> 405, and the stronghold canon's
   village (struct5's "one `nextInt(3)` off before the house's fill") 8 -> 1. Barrels are a guess: no run had one.
+- **Sculk veins replace snow layers.** Source -67,76's patches compared write for write
+  (`scripts/dbg_sculk.py`, `dbg_sculk_cmp.py`): the first eleven agree, the twelfth has one write more in BDS
+  at its 195th, a vein set into a snow layer on the floor of the city's ice box (-1063,-50,1220, on packed
+  ice). `vein_replaceable` (148b41420: a water source or a replaceable non-fluid) lacked the layer. City 405 ->
+  172; source -70,78's 26 patch entries then agree in every write.
 
 Open under replay, each with its first source:
-- **Ancient city, 405**: sources -67,76 (117 cells) and -70,79 (114), and 175 sculk cells in chunks -70,78,
-  -70,79 and -69,78 no source of ours writes (city blocks turned to sculk).
+- **Ancient city, 172**: source -70,79 (114 cells), and 68 sculk cells in chunks -70,78 and -70,79 no source
+  of ours writes (city blocks turned to sculk around -1110,-45,1262). Next step: the run `sculk-ac6` (source
+  -70,79 armed) through `dbg_sculk_cmp.py`.
+- **Bubble columns, 3 cells**: plains -945,50,-692 (ours has one over a magma block of source -59,-44, BDS
+  water) and -961,-43,-716 (BDS has one, ours water); the igloo canon's -913,-25,-2848. How a magma block gets
+  its one column cell while a chunk decorates was never read: next step, a write breakpoint on the bubble
+  column (find the setter from `BubbleColumnBlock`'s vtable) in a run of the plains region.
 - **Desert, 3 water depths** (source -446,557; -7112,21,8910..8913): the liquid pass runs the same ticks in every
   generation as BDS (294, 14, 20, 14, 15, ... in both, compared over 66 generations of an armed run) but in
   another order within a generation, from the first one on; a cell at the 8-block edge then keeps the depth of
