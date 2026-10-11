@@ -424,6 +424,23 @@ pillager outpost 4 (snow layers on a column BDS leaves bare); monument 10 (seagr
 draws are off by one column); desert pyramid 2438 with 1675 structure-stage cells (the temple itself and a
 mineshaft sit elsewhere than in the run: structure stage, not looked at).
 
+Stock oracle, wrong + missing, the branch point (worldgen/all2 before struct5) -> this branch with all2 and
+struct5 merged (logs `base`, `fin`, `-still`); no region rose in either set:
+
+| world | ticked | still |
+|---|---|---|
+| near origin | 1448 -> 1299 | 770 -> 611 |
+| far out | 290 -> 278 | 172 -> 159 |
+| negative seed | 82 -> 82 | 120 -> 120 |
+| biome regions | 6106 -> 5915 | 6270 -> 6091 |
+| tree regions | 2605 -> 2193 | 1741 -> 1463 |
+| structures | 14573 -> 12273 | 16479 -> 14477 |
+| all 59 regions | 25104 -> 22040 | 25552 -> 22921 |
+
+The stock numbers move little because they are mostly the stock worlds' own run order and thread draws: the
+same 40 biome and tree regions that stand at 8700 there stand at 304 against their one-worker runs, 292 of
+them the warm ocean canon's own coral blocks.
+
 Open under replay, each with its first source:
 - **Mansion, 85** (two full canons, `mansion2` and `mansion3`): ring source -510,1001's lush cave growth on the
   region's south edge (moss, cave vines and azalea leaves; 51 cells of ours, 22 moss blocks of BDS's nothing of
