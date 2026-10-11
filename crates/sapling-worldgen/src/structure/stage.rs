@@ -136,7 +136,7 @@ impl Structures {
         let mut random = chunk_random(chunk);
         super::trace::label(|| "temple".into());
         for temple in &temples {
-            placed.extend(temple.post_process(&mut canvas, &mut random, &chunk_random));
+            placed.extend(temple.post_process(&mut canvas, &mut random, &chunk_random, neighbours.temple_heights));
             // Logged per start (dbg_canon.json `upgrades`): huts and jungle temples, mineshafts and
             // strongholds upgrade; desert pyramids, igloos and every other kind do not.
             if temple.temple != super::scattered::Temple::DesertPyramid {
