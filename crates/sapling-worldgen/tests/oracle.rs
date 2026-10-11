@@ -2,7 +2,7 @@
 //! Needs the git-ignored oracle worlds (`$SAPLING_ORACLE_WORLDS`); run with `--ignored --nocapture`.
 //! Cells where the world and its `-run2` twin disagree are counted apart, and cells that stages
 //! sapling does not run yet may change are reported per stage, not as mismatches.
-//! `SAPLING_ORACLE_REGION=<substring>` keeps only the regions whose name contains it;
+//! `SAPLING_ORACLE_REGION=<substring>` keeps only the regions whose name contains it (`=<name>`: that region alone);
 //! `SAPLING_ORACLE_ORDER=<file>` decorates in a live run's order (docs/research/worldgen-bds-debugger.md).
 
 mod oracle_support;
@@ -45,8 +45,9 @@ fn compare(seed: i64, world: &str, regions: &[Region]) {
     // The decoration order of the live run that saved the world (scripts/dbg_order.py), `x z` per line.
     oracle_support::replay(&mut generator);
     let generator = generator;
-    let only =std::env::var("SAPLING_ORACLE_REGION").ok();
-    for region in regions.iter().filter(|r| only.as_deref().is_none_or(|only| r.name.contains(only))) {
+    let only = std::env::var("SAPLING_ORACLE_REGION").ok();
+    let kept = |name: &str| only.as_deref().is_none_or(|only| only.strip_prefix('=').map_or(name.contains(only), |exact| name == exact));
+    for region in regions.iter().filter(|r| kept(r.name)) {
         let mut tallies = Tallies::default();
         let name = &if still { format!("{} (still)", region.name) } else { region.name.to_string() };
         let mut dump = Dump::open(world, name);
