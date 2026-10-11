@@ -46,6 +46,7 @@ mod ticking;
 mod view;
 mod visibility;
 mod vitals;
+mod weather;
 mod worlds;
 
 pub use config::{ShardConfig, TICK};

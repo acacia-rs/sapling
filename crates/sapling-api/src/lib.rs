@@ -16,6 +16,7 @@ mod item;
 mod player;
 #[cfg(test)]
 mod testing;
+mod weather;
 #[cfg(test)]
 mod tests;
 mod world;
@@ -25,6 +26,7 @@ pub use command::{Command, Commands, Output, Sender};
 pub use ctx::{Backend, FormCallback, ShardCtx, State};
 pub use effect::{Effect, EffectBackend};
 pub use experience::ExperienceBackend;
+pub use weather::{Weather, WeatherBackend};
 pub use entity::{EntityBackend, EntityId, EntityInfo};
 pub use world::{RuleValue, WorldBackend};
 pub use event::{Cancellable, ChatEvent, CommandEvent, Priority};

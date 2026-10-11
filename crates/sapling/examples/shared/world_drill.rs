@@ -117,3 +117,12 @@ pub fn sun() -> Vec<String> {
     lines.extend(["weather clear", "gamerule dodaylightcycle true", ""].map(String::from));
     lines
 }
+
+pub const WEATHER_SHOWN: &[&str] = &["LevelEvent", "GameRulesChanged", "LevelSoundEvent"];
+
+/// `/weather` in each form, and what the players are told of the sky.
+pub fn weather() -> Vec<String> {
+    ["weather query", "weather rain", "", "", "weather query", "weather rain", "weather thunder", "", "", "weather query", "weather clear", "", "", "weather query", "weather rain 100", "", "", "", "", "", "", "weather query", "weather clear 50", "weather banana", "weather", "toggledownfall", "", "weather query", "toggledownfall", "", "weather clear", ""]
+        .map(String::from)
+        .into()
+}

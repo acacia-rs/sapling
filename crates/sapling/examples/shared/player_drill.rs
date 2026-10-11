@@ -99,6 +99,7 @@ pub fn drill(name: &str) -> Option<(Vec<String>, &'static [&'static str])> {
         "loot2" => (world::loot2(), world::LOOT2_SHOWN),
         "names" => (world::names(), &[]),
         "sun" => (world::sun(), hunt::KINDS_SHOWN),
+        "weather" => (world::weather(), world::WEATHER_SHOWN),
         "toil" => (toil(), HURT_SHOWN),
         "armour" => (armour(), HURT_SHOWN),
         "effects" => (effects(), HURT_SHOWN),

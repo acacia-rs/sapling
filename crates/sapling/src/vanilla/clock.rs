@@ -1,9 +1,10 @@
-//! `/time` and `/xp`, answering as BDS does (research/captures/bds-clock.txt).
+//! `/time`, `/xp`, `/weather` and `/toggledownfall`, answering as BDS does
+//! (research/captures/bds-clock.txt, bds-weather.txt).
 // TODO: a named time is set on the day it is, as BDS did on day 0 and day 15; whether a time
 // already past moves to the next day was not drilled.
 
 use sapling_api::command::{Args, CommandSpec, CommandSyntax, Overload, ParamKind, Parameter, ParameterSpec, ParseError, Selector};
-use sapling_api::{Command, Output, Permission, Sender, ShardCtx};
+use sapling_api::{Command, Output, Permission, Sender, ShardCtx, Weather};
 
 use super::{no_target, players};
 
@@ -115,6 +116,70 @@ impl Command for Xp {
             };
             out.translate(key, vec![self.amount.unsigned_abs().to_string(), player.name], true);
         }
+    }
+}
+
+/// `/weather <clear|rain|thunder|query> [duration]`; the duration is in ticks.
+// TODO: BDS's `query` named the weather before the last change, a lag not kept here; without a
+// duration BDS's weather lasts a while of its own choosing, here until it is set anew.
+pub(crate) struct WeatherCommand {
+    to: Option<Weather>,
+    ticks: Option<u32>,
+}
+
+impl CommandSyntax for WeatherCommand {
+    fn spec() -> CommandSpec {
+        let kind = ParameterSpec { name: "type".into(), kind: ParamKind::String, optional: false };
+        let duration = ParameterSpec { name: "duration".into(), kind: ParamKind::String, optional: true };
+        CommandSpec { name: "weather".into(), aliases: Vec::new(), description: "Sets the weather".into(), permission: Permission::Operator, overloads: vec![Overload { parameters: vec![kind, duration] }] }
+    }
+
+    fn parse(args: &mut Args<'_>) -> Result<Self, ParseError> {
+        let mark = args.mark();
+        let word = if args.is_empty() { return Err(args.error_at(mark)) } else { args.word()? };
+        let to = match word {
+            "query" => None,
+            "clear" => Some(Weather::Clear),
+            "rain" => Some(Weather::Rain),
+            "thunder" => Some(Weather::Thunder),
+            _ => return Err(args.error_at(mark)),
+        };
+        let mark = args.mark();
+        let ticks = if args.is_empty() { None } else { Some(args.word()?.parse::<u32>().map_err(|_| args.error_at(mark))?) };
+        args.finish()?;
+        Ok(Self { to, ticks })
+    }
+}
+
+fn weather_word(weather: Weather) -> &'static str {
+    match weather {
+        Weather::Clear => "clear",
+        Weather::Rain => "rain",
+        Weather::Thunder => "thunder",
+    }
+}
+
+impl Command for WeatherCommand {
+    fn run(self, ctx: &mut ShardCtx<'_>, _: &Sender, out: &mut Output) {
+        match self.to {
+            None => out.translate("commands.weather.query", vec![format!("%commands.weather.query.{}", weather_word(ctx.weather()))], true),
+            Some(weather) => {
+                ctx.set_weather(weather, self.ticks);
+                out.translate(&format!("commands.weather.{}", weather_word(weather)), Vec::new(), true);
+            }
+        }
+    }
+}
+
+#[derive(Command)]
+#[command(crate = "crate", name = "toggledownfall", description = "Toggles the weather", permission = "operator")]
+pub(crate) struct ToggleDownfall;
+
+impl Command for ToggleDownfall {
+    fn run(self, ctx: &mut ShardCtx<'_>, _: &Sender, out: &mut Output) {
+        let to = if ctx.weather() == Weather::Clear { Weather::Rain } else { Weather::Clear };
+        ctx.set_weather(to, None);
+        out.translate("commands.downfall.success", Vec::new(), true);
     }
 }
 

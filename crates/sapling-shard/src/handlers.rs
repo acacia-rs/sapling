@@ -76,6 +76,7 @@ pub(crate) fn dispatch(world: &mut World, plugins: &mut Plugins) {
     orbs::tick(world);
     creatures::tick(world);
     vitals::tick(world);
+    crate::weather::tick(world);
     entities::follow(world);
     forms::dispatch(world);
     for entity in left {

@@ -128,6 +128,13 @@ impl crate::HealthBackend for Fake {
     }
 }
 
+impl crate::WeatherBackend for Fake {
+    fn weather(&self) -> crate::Weather {
+        crate::Weather::Clear
+    }
+    fn set_weather(&mut self, _: crate::Weather, _: Option<u32>) {}
+}
+
 impl crate::ExperienceBackend for Fake {
     fn experience(&self, _: PlayerId) -> Option<(i32, f32)> {
         None

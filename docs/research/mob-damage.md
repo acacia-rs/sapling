@@ -88,7 +88,7 @@ Mobs summoned 4 blocks from the actor under an open sky:
 
 Sapling burns the kinds whose pack entry has `minecraft:burns_in_daylight` (`mob-traits.tsv`
 `burns_in_sun`) so, between the Java game's bounds of the day (`creatures/harm.rs` `is_sunlit`);
-it has no rain, and a helmet does not shade.
+rain keeps them from it as there (`weather.rs`), and a helmet does not shade.
 
 ## Where sapling differs
 

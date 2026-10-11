@@ -18,6 +18,9 @@ it does on BDS and the two captures can be diffed:
 2. **Vanilla commands**: built (`sapling::vanilla`); the drill probe runs on sapling
    (`tools/sapling-drill.sh`, on testbox `tools/remote-drill.sh`). Left: what the BDS-against-sapling
    diff of the drill captures still shows (`research/captures/sapling-vs-bds-findings.md`).
+   `/weather` and `/toggledownfall` set a world's weather, told as BDS told it (`weather.rs`,
+   `bds_command_probe weather`); it never changes of itself, and BDS's `query`, which lags a change
+   behind, is not copied.
    `/time`, `/xp` and `/tp` to a target answer as BDS did (`vanilla/clock.rs`, `bds_command_probe
    clock`: the answers agree line for line; BDS writes its experience attributes in another
    order). A sapling capture that answers `commands.generic.unknown` or `.syntax` where BDS's

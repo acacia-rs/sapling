@@ -51,7 +51,6 @@ const SUNLIT: [i64; 2] = [23460, 12541];
 
 /// Whether the sun reaches the cell `at`: it is day, and nothing above holds the light back.
 /// A stone roof and leaves did on BDS, glass did not (research/captures/bds-sun.txt).
-// TODO: rain, which put BDS's zombie out of the sun's reach, is not in the shard yet.
 pub(super) fn is_sunlit(level: &Level, [x, y, z]: [i32; 3]) -> bool {
     let time = level.level().time.rem_euclid(DAY);
     let shades = |y: i32| level.registry().get(level.block(x, y, z)).is_some_and(|state| state.is_solid() && !state.name.contains("glass"));
@@ -109,7 +108,8 @@ pub(super) fn tick(world: &mut World, entity: Entity, layer: Entity, id: u64, ki
         let head = [start.at[0], y, start.at[2]].map(|c| c.floor() as i32);
         let level = world.get::<Layer>(layer).map(|layer| &layer.world);
         let (touching, in_wall, under_water) = level.map_or((false, false, false), |level| (burns && touches(level, start, FIERY), is_full_block(level, head), !traits.breathes_water && holds(level, head, WATER)));
-        let sunlit = traits.burns_in_sun && level.is_some_and(|level| is_sunlit(level, head));
+        // Rain kept BDS's zombie from burning at noon (research/captures/bds-sun.txt).
+        let sunlit = traits.burns_in_sun && level.is_some_and(|level| is_sunlit(level, head)) && crate::weather::of(world, layer) == sapling_api::Weather::Clear;
         health.begin();
         if let Some((harm, from)) = health.fall(start.at, now.at[1], now.on_ground, now.liquid().is_some() || traits.no_fall) {
             packets.push(strike(id, &health, Cause::Fall, Some(now.at)));
