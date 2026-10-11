@@ -168,7 +168,7 @@ pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity, id: u64, k
     let Some(feet) = pick(world, entity, layer, id, kind, &body) else { return blast::is_lit(world, entity) };
     // A lit creeper stands where it is, and an archer within its range.
     let now = world.resource::<Tick>().0;
-    let aims = sapling_data::mob_traits(kind).hunts.is_some_and(|hunts| hunts.shoots.is_some()) && world.get::<Hunter>(entity).is_some_and(|hunter| now >= hunter.since + NEARS);
+    let aims = sapling_data::mob_traits(kind).hunts.is_some_and(|hunts| hunts.shoots.is_some() && !hunts.closes) && world.get::<Hunter>(entity).is_some_and(|hunter| now >= hunter.since + NEARS);
     let stands = blast::is_lit(world, entity) || (aims && distance(feet, body.at) < SHOOTS_FROM);
     match stands {
         true => legs::rest(world, entity),
@@ -193,7 +193,7 @@ pub(super) fn strike(world: &mut World, entity: Entity, layer: Entity, id: u64, 
         // The first arrow waits as long as the next.
         let feet = world.get::<Position>(prey?)?.feet;
         if ready != 0 && now >= ready {
-            arrows::loose(world, layer, kind, body, feet);
+            arrows::loose(world, layer, kind, body, feet, hunts.gives);
         }
         if ready == 0 || now >= ready {
             world.get_mut::<Hunter>(entity)?.ready = now + u64::from(every);

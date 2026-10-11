@@ -1,6 +1,6 @@
 //! Arrows, as BDS's skeleton shot them (docs/research/mob-attacks.md, "Skeletons"): loosed at
 //! its prey, one flies by its own drag and weight, sticks in the block it meets and hurts the
-//! player it meets.
+//! player it meets, with its archer's effect if it has one.
 // TODO: an arrow is not picked up, burns nothing and goes after a minute; a mob it hits is not
 // thrown; its
 // aim and its spread are the Java game's, fitted to no more than the speeds BDS showed.
@@ -43,6 +43,8 @@ const SHAKES: i32 = 7;
 pub(super) struct Arrow {
     /// The kind that shot it, named if it kills.
     archer: String,
+    /// The effect it gives the player it hits, and for how many ticks (a stray's, a bogged's).
+    gives: Option<(&'static str, u32)>,
     stuck: Option<u64>,
 }
 
@@ -51,7 +53,7 @@ fn sound(name: &str, [x, y, z]: [f32; 3], of: &str) -> bytes::Bytes {
 }
 
 /// A mob of `kind` with the body `archer` looses an arrow at the player whose feet are `prey`.
-pub(super) fn loose(world: &mut World, layer: Entity, kind: &str, archer: &Body, prey: [f32; 3]) {
+pub(super) fn loose(world: &mut World, layer: Entity, kind: &str, archer: &Body, prey: [f32; 3], gives: Option<(&'static str, u32)>) {
     let (dx, dz) = (prey[0] - archer.at[0], prey[2] - archer.at[2]);
     let far = dx.hypot(dz).max(1e-4);
     let from = [archer.at[0] + dx / far * AHEAD, archer.at[1] + HELD, archer.at[2] + dz / far * AHEAD];
@@ -68,7 +70,7 @@ pub(super) fn loose(world: &mut World, layer: Entity, kind: &str, archer: &Body,
         Some(vec![sapling_net::encode(&shown)])
     };
     let Some(arrow) = entities::spawn(world, layer, KIND, body, from, announce) else { return };
-    world.entity_mut(arrow).insert(Arrow { archer: kind.to_owned(), stuck: None });
+    world.entity_mut(arrow).insert(Arrow { archer: kind.to_owned(), gives, stuck: None });
     let middle = [archer.at[0], archer.at[1] + archer.size[1] / 2.0, archer.at[2]];
     late_sounds::play_later(world, 0, layer, archer.at.map(|c| c.floor() as i32), sound("bow", middle, kind));
 }
@@ -119,8 +121,10 @@ fn fly(world: &mut World, arrow: Entity, layer: Entity, id: u64, now: u64) -> Op
     if let Some((_, struck, is_player)) = met {
         match is_player {
             true => {
-                let archer = world.get::<Arrow>(arrow)?.archer.clone();
-                vitals::shot(world, struck, (speed * HARM).ceil(), &archer, body.at);
+                let (archer, gives) = world.get::<Arrow>(arrow).map(|arrow| (arrow.archer.clone(), arrow.gives))?;
+                if let Some((effect, ticks)) = gives.filter(|_| vitals::shot(world, struck, (speed * HARM).ceil(), &archer, body.at)) {
+                    vitals::afflict(world, struck, effect, ticks);
+                }
             }
             false => drop(pierce(world, struck, layer, (speed * HARM).ceil())),
         }

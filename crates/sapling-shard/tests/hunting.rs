@@ -243,3 +243,24 @@ fn a_zombie_goes_round_a_fence_it_cannot_jump() {
     let widest = seen.lock().unwrap().iter().map(|feet| feet[0].abs()).fold(0.0, f32::max);
     assert!(hit.is_some() && (2.8..4.5).contains(&widest), "round the end, three cells out: {hit:?} {widest}");
 }
+
+#[test]
+fn a_strays_arrow_slows_a_boggeds_poisons_and_a_pillager_shoots_on_the_walk() {
+    // research/captures/bds-shoot2.txt: slowness for 600 ticks, poison for 112; a shot each 46 ticks.
+    for (kind, effect) in [("minecraft:stray", (2, 600)), ("minecraft:bogged", (19, 112))] {
+        let (mut h, _) = hunted_by(kind, Difficulty::Easy);
+        let sent: Vec<RawPacket> = (0..110).flat_map(|_| h.tick_all().to(2).to_vec()).collect();
+        let given: Vec<(i32, i32)> = all::<acacia_proto::packets::MobEffect>(&sent).iter().map(|told| (told.effect_id, told.duration)).collect();
+        assert!(given.contains(&effect), "{kind}: {given:?}");
+    }
+    let (mut h, pillager) = hunted_by("minecraft:pillager", Difficulty::Easy);
+    let seen = std::sync::Arc::new(std::sync::Mutex::new(Vec::new()));
+    let mut arrows = 0;
+    for _ in 0..100 {
+        let seen = seen.clone();
+        h.remote.run(move |ctx| seen.lock().unwrap().extend(ctx.entity(EntityId(pillager)).map(|found| found.feet[2])));
+        arrows += all::<AddEntity>(h.tick_all().to(2)).iter().filter(|added| added.entity_type == "minecraft:arrow").count();
+    }
+    let nearest = seen.lock().unwrap().iter().copied().fold(f32::MAX, f32::min);
+    assert!(arrows == 2 && nearest < 2.0, "two shots, and it came near: {arrows} {nearest}");
+}

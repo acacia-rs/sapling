@@ -132,6 +132,19 @@ A skeleton 10 and then 4 blocks from the actor (`research/captures/bds-shoot.txt
 - From 4 blocks it hit: `HurtAnimation` with 3 (projectile), the hit's throw of 0.4 away and up,
   4 of health (its speed of 1.72 twice, rounded up), `bow.hit`, and the arrow removed.
 
+## Other archers (`shoot2`)
+
+A stray, a bogged and a pillager 5 blocks from the actor (`research/captures/bds-shoot2.txt`):
+
+- The stray did as the skeleton: 1.7 blocks nearer, an arrow 61 ticks after its target and each
+  61 after. A hit cost 3 or 4 and gave slowness (2) at its first level for 600 ticks.
+- The bogged shot 72 ticks after its target and 71 after that; a hit cost 3 and gave poison (19)
+  for 112 ticks.
+- The pillager walked on at the actor, to 1.7 blocks from it at its first shot 47 ticks after its
+  target, and shot each 46 ticks; a hit cost 3 or 4. Before a shot the sounds
+  `crossbow.loading.start`, `.middle` and `.end`, 10 ticks apart, the first 3 ticks after the
+  shot before; it held `MobEquipment` anew at each.
+
 ## Hit back (`provoke`)
 
 A wolf, a zombified piglin and an iron golem 1.5 blocks from the actor in survival, left alone
@@ -200,6 +213,9 @@ sticking in blocks and hurting players whose box its own meets. It walks at its 
 first 19 ticks, which takes it BDS's 1.7 blocks; an arrow hurts a mob in its way too (not drilled) and cannot be
 picked up. Run against sapling the drill's far skeleton still hits more often than BDS's, whose
 arrows passed a hand over the player's head.
+
+A stray and a bogged shoot as the skeleton with their effect on the arrow, and a pillager while
+it walks on; its crossbow is not heard loading and is not shown anew.
 
 A wolf and a zombified piglin hunt none but a survival player that hit them, from that tick
 (`hunting::provoke`); the golem, whose hit varies, does not yet, and a piglin's fellows do not
