@@ -41,6 +41,9 @@ pub(crate) fn attacked(world: &mut World, hits: Vec<(Entity, u64)>) {
 }
 
 fn hit(world: &mut World, player: Entity, id: u64) -> Option<()> {
+    if super::duels::hit(world, player, id).is_some() {
+        return Some(());
+    }
     let (layer, from) = (world.get::<InLayer>(player)?.0, world.get::<Position>(player)?.feet);
     let entity = entities::find(world, EntityId(id)).filter(|entity| world.get::<Creature>(*entity).is_some() && world.get::<super::Dying>(*entity).is_none())?;
     let (body, kind) = (*world.get::<Body>(entity)?, world.get::<entities::Kind>(entity)?.0.clone());

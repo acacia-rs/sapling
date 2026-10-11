@@ -22,12 +22,23 @@ fn throw(world: &mut World, player: Entity, id: u64, [x, y, z]: [f32; 3]) {
 pub(crate) fn bitten(world: &mut World, player: Entity, amount: f32, kind: &str, speed: [f32; 3]) -> bool {
     let (Some(id), true) = (world.get::<NetId>(player).map(|id| id.0), is_mortal(world, player)) else { return false };
     world.entity_mut(player).insert(death::Slayer(kind.to_owned()));
-    if world.get::<Vitals>(player).is_some_and(|vitals| vitals.health.left() > amount) {
+    // Not one a guard turns away: of two hits at once BDS threw for one (bds-pvp.txt).
+    let lands = |vitals: &Vitals| {
+        let mut tried = vitals.health;
+        tried.hurt(amount) && vitals.health.left() > amount
+    };
+    if world.get::<Vitals>(player).is_some_and(lands) {
         throw(world, player, id, speed);
     }
     let took = hurt(world, player, amount, Cause::Attack);
     world.entity_mut(player).remove::<death::Slayer>();
     took
+}
+
+/// The player named `by` hits a player for `amount` and throws it at `speed`; one it kills is
+/// not thrown. False where it took nothing.
+pub(crate) fn punched(world: &mut World, player: Entity, amount: f32, by: &str, speed: [f32; 3]) -> bool {
+    bitten(world, player, amount, &format!("{}{by}", death::BY_PLAYER), speed)
 }
 
 /// A blast at `from` hurts a player for `amount` and throws it: as a hit does, and by `push`

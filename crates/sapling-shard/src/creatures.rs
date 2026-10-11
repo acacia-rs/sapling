@@ -7,6 +7,7 @@
 mod arrows;
 mod attacks;
 mod blast;
+mod duels;
 mod harm;
 mod health;
 mod hunting;

@@ -28,6 +28,9 @@ const BODY_MIDDLE: f32 = 0.1;
 #[derive(Component)]
 pub(super) struct Slayer(pub String);
 
+/// Before the name of a player in [`Slayer`], which else holds a mob's kind.
+pub(super) const BY_PLAYER: &str = "player:";
+
 fn words(cause: Cause) -> &'static str {
     match cause {
         Cause::Fall => "death.fell.accident.generic",
@@ -87,12 +90,15 @@ pub(super) fn die(world: &mut World, player: Entity, cause: Cause) {
         (vitals.died, vitals.leaves) = (Some(now), Some(points));
     }
     tell(world, player, &EntityEvent { runtime_entity_id: id, event_id: EntityEventEventId::DeathAnimation, data: 0, fire_at_position: None });
-    let slayer = world.get::<Slayer>(player).filter(|_| matches!(cause, Cause::Attack | Cause::Projectile)).map(|slayer| format!("%entity.{}.name", slayer.0.trim_start_matches("minecraft:")));
-    let key = match (slayer.is_some(), cause) {
-        (true, Cause::Projectile) => "death.attack.arrow",
-        (true, _) => "death.attack.mob",
-        (false, _) => words(cause),
+    let slayer = world.get::<Slayer>(player).filter(|_| matches!(cause, Cause::Attack | Cause::Projectile)).map(|slayer| slayer.0.clone());
+    let by_player = slayer.as_deref().and_then(|slayer| slayer.strip_prefix(BY_PLAYER)).map(str::to_owned);
+    let key = match (slayer.is_some(), by_player.is_some(), cause) {
+        (true, true, _) => "death.attack.player",
+        (true, _, Cause::Projectile) => "death.attack.arrow",
+        (true, ..) => "death.attack.mob",
+        (false, ..) => words(cause),
     };
+    let slayer = by_player.or(slayer.map(|kind| format!("%entity.{}.name", kind.trim_start_matches("minecraft:"))));
     let messages: Vec<String> = std::iter::once(name).chain(slayer).collect();
     let said = chat::json_packet(vec![chat::translation(key, &messages)]);
     chat::send_to_layer(world, layer, &said);

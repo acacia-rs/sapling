@@ -138,3 +138,34 @@ fn strength_adds_to_a_fists_hit_and_weakness_takes_most_of_it() {
         assert!(now.len() == 1 && (now[0] - left).abs() < 1e-3, "{effect:?} {level}: {now:?}");
     }
 }
+
+#[test]
+fn a_player_hits_another_for_what_it_holds_and_not_with_pvp_off_or_one_in_creative() {
+    // research/captures/bds-pvp.txt: a fist's 1 on easy, a guard for the second at once, thrown
+    // 0.4 up; nothing at all with the rule off; a creative player hears it and loses nothing.
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    h.enter(2, "Steve");
+    h.remote.run(|ctx| ctx.set_difficulty(sapling_api::Difficulty::Easy));
+    h.tick_all();
+    let steve = 2;
+    h.receive(1, &attack(steve));
+    h.receive(1, &attack(steve));
+    let sent = h.tick_all().to(2).to_vec();
+    let thrown: Vec<f32> = all::<acacia_proto::packets::SetEntityMotion>(&sent).iter().map(|thrown| thrown.velocity.y).collect();
+    assert_eq!((health(&sent), thrown), (vec![19.0], vec![0.4]));
+    (0..12).for_each(|_| drop(h.tick_all()));
+    h.remote.run(|ctx| assert!(ctx.set_game_rule("pvp", sapling_api::RuleValue::Bool(false))));
+    h.tick_all();
+    h.receive(1, &attack(steve));
+    let sent = h.tick_all().to(2).to_vec();
+    assert!(health(&sent).is_empty() && all::<LevelSoundEvent>(&sent).is_empty(), "with pvp off nothing lands or sounds");
+    h.remote.run(|ctx| {
+        ctx.set_game_rule("pvp", sapling_api::RuleValue::Bool(true));
+        ctx.set_game_mode(sapling_api::PlayerId(2), sapling_api::GameMode::Creative);
+    });
+    h.tick_all();
+    h.receive(1, &attack(steve));
+    let sent = h.tick_all().to(2).to_vec();
+    assert!(health(&sent).is_empty() && all::<LevelSoundEvent>(&sent).len() == 1, "a creative player hears the swing");
+}

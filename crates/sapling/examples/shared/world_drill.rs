@@ -177,3 +177,25 @@ pub fn pushed() -> Vec<String> {
     lines.extend(["gamemode creative @s", ""].map(String::from));
     lines
 }
+
+/// The actor hits the watcher, both in survival where they came in: with the fist four times a
+/// second apart and twice at once, with a wooden and a diamond sword, then with `pvp` off, on
+/// peaceful, and with the watcher in creative.
+pub fn pvp() -> Vec<String> {
+    let mut lines: Vec<String> = ["kill @e[type=!player]", "gamerule pvp true", "difficulty easy", "gamemode survival @a", "clear @a", "effect @a instant_health 1 4", ""].map(String::from).into();
+    let hit = ["!hit player", "", ""].map(String::from);
+    (0..4).for_each(|_| lines.extend(hit.clone()));
+    lines.extend(["effect @a instant_health 1 4", "", "!hit2 player", "", ""].map(String::from));
+    for sword in ["wooden_sword", "diamond_sword"] {
+        lines.extend(["effect @a instant_health 1 4".into(), format!("replaceitem entity @s slot.weapon.mainhand 0 {sword}"), String::new()]);
+        lines.extend(hit.clone());
+    }
+    lines.extend(["clear @a", "effect @a instant_health 1 4", "gamerule pvp false", ""].map(String::from));
+    lines.extend(hit.clone());
+    lines.extend(["gamerule pvp true", "difficulty peaceful", ""].map(String::from));
+    lines.extend(hit.clone());
+    lines.extend(["difficulty easy", "gamemode creative @a", "gamemode survival @s", ""].map(String::from));
+    lines.extend(hit.clone());
+    lines.extend(["gamemode creative @a", ""].map(String::from));
+    lines
+}
