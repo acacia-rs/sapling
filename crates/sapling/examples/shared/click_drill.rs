@@ -139,3 +139,14 @@ pub fn stacks() -> Vec<String> {
     lines.extend(["kill @e[type=!player]", "clear @s", ""].map(String::from));
     lines
 }
+
+/// The actor in creative puts a snow layer on grass a block east of it and nine more onto it.
+pub fn snowpile() -> Vec<String> {
+    let mut lines: Vec<String> =
+        ["kill @e[type=!player]", "gamemode creative @s", "clear @s", "fill ~-1 ~-1 ~3 ~3 ~-1 ~5 grass_block", "tp @s ~ ~ ~4 -90 0", "fill ~1 ~ ~-1 ~2 ~3 ~1 air", "replaceitem entity @s slot.weapon.mainhand 0 snow_layer 16", "!place 1 -1 0"]
+            .map(String::from)
+            .into();
+    lines.extend(std::iter::repeat_n("!place 1 0 0".to_owned(), 9));
+    lines.extend(["", "fill ~1 ~ ~-1 ~2 ~3 ~1 air", "clear @s", ""].map(String::from));
+    lines
+}

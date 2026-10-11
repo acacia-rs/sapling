@@ -1,7 +1,7 @@
 //! Things that go into one cell several at a time: put onto its like, a candle, sea pickle, snow
 //! layer, petal, wildflower, leaf litter or turtle egg makes the block there one more, and a
 //! slab a double slab (docs/research/block-uses.md, "Stacking").
-// TODO: an eighth snow layer makes no snow block; a top slab takes none from below.
+// TODO: a top slab takes none from below.
 
 use acacia_proto::types::Vec3f;
 use sapling_api::{BlockPos, Face, GameMode};
