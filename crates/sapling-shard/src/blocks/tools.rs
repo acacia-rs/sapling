@@ -134,6 +134,8 @@ fn telling(registry: &BlockRegistry, pos: BlockPos, change: &Change) -> Bytes {
     }
 }
 
+const FLINT_AND_STEEL: &str = "minecraft:flint_and_steel";
+
 impl Request<'_> {
     /// A click with `held` in the hand on the block at `pos`: false when it does nothing to it.
     /// A hoe and a shovel want air over the ground they work.
@@ -144,7 +146,7 @@ impl Request<'_> {
             }
             return true;
         }
-        if held == "minecraft:flint_and_steel" && crate::tnt::light(self.world, site.layer, pos) {
+        if held == FLINT_AND_STEEL && crate::tnt::light(self.world, site.layer, pos) {
             if site.mode != GameMode::Creative {
                 inventory::wear_tool_in_hand(self.world, self.entity);
             }
@@ -153,7 +155,7 @@ impl Request<'_> {
         let Some(level) = level(self.world, site.layer) else { return false };
         let (registry, [x, y, z]) = (level.registry(), pos);
         let covered = (held.ends_with("_hoe") || held.ends_with("_shovel")) && !registry.get(level.block(x, y + 1, z)).is_some_and(|above| above.is_air());
-        let Some(change) = change(registry, held, level.block(x, y, z), face).filter(|_| !covered) else { return false };
+        let Some(change) = change(registry, held, level.block(x, y, z), face).filter(|_| !covered) else { return held == FLINT_AND_STEEL && self.strike(site, face.neighbour(pos)) };
         let (told, is_event) = (telling(registry, pos, &change), matches!(change.told, Told::Event(..)));
         let left = inventory::stored(&Item::new(change.leaves.0.to_owned(), 1), registry);
         // BDS tells an event before the block and a sound after it.
@@ -176,6 +178,21 @@ impl Request<'_> {
                 Cost::Spend => drop(inventory::change(self.world, self.entity, |inventory| inventory.take(inventory::Place::Main(inventory.selected.into()), 1).is_ok())),
                 Cost::Becomes(into) => self.swap_held(into),
             }
+        }
+        true
+    }
+
+    /// Flint and steel struck into the cell `into`: heard where the cell is free, as BDS's was
+    /// over obsidian, whose fire did not stay.
+    // TODO: no fire is lit.
+    fn strike(&mut self, site: &Site, into: BlockPos) -> bool {
+        let [x, y, z] = into;
+        if !level(self.world, site.layer).is_some_and(|level| level.registry().get(level.block(x, y, z)).is_some_and(|there| there.is_air())) {
+            return false;
+        }
+        self.hear_at(site, into, "ignite");
+        if site.mode != GameMode::Creative {
+            inventory::wear_tool_in_hand(self.world, self.entity);
         }
         true
     }

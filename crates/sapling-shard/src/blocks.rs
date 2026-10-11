@@ -15,6 +15,7 @@ mod falling;
 mod ground;
 mod handled;
 mod items;
+mod jukebox;
 mod liquid;
 mod loot;
 mod mining;

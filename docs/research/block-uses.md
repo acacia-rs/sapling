@@ -29,12 +29,14 @@ hand empty or holding what the block takes. Captures: `research/captures/bds-cli
 | redstone ore | nothing | lit redstone ore |
 | ripe berry bush | nothing | growth 1, two berries one by one, `block.sweet_berry_bush.pick` |
 | farmland | wheat seeds | wheat on it, `place` |
+| jukebox | music disc | `Text` of type `JukeboxPopup`, `record.nowPlaying` with `%C418 - 13`, to the clicker; the next click threw the disc out 1.71 over the jukebox's floor |
+| obsidian | flint and steel | `ignite` at the middle of the cell over it; no fire stayed |
 
 A cauldron's surface is 0.375 over its floor plus an eighth a level; both of its events carry
 -1087090343. The carved pumpkin faced south with the carver looking south and looking east, so
 the face clicked decides, not the look.
 
-Sapling does all of these the same; 19 of the drill's 30 cases agree packet for packet once
+Sapling does all of these the same; 22 of the drill's 30 cases agree packet for packet once
 repeats are set aside. Outside creative a tool wears, honeycomb and glowstone are spent, a bottle
 becomes a honey bottle or a water bottle and a bucket an empty one: the Java game's rule, since
 the drill ran in creative.
@@ -79,8 +81,10 @@ of 10 to 30 ticks, which was not measured.
 
 - Bone meal: `ParticleCropGrowth`; on grass a flower or grass came up beside, a sapling grew on
   the second click.
-- Flint and steel on obsidian (fire over it, `ignite`).
-- A jukebox told `record.nowPlaying` and gave its disc back on the second click.
+- Fire: flint and steel lights none, on obsidian as on BDS, nor on what burns, which was not
+  measured.
+- A jukebox's music: BDS sent no sound packet for it, and sapling keeps the disc in memory
+  (`blocks/jukebox.rs`).
 - A primed note block's instruments past the first four, and a note kept across a restart.
 - An empty bucket on a full cauldron, a hoe on rooted dirt, an axe or a shovel on anything not
   listed above, a lit redstone ore going out: not measured.
