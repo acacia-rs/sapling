@@ -2,7 +2,7 @@
 //! (docs/research/player-damage.md, "Death").
 // TODO: only the words of fall, fire, lava, `/kill` and a zombie were seen on BDS, the rest are
 // the game's keys from memory; the body's box is not shrunk and `PlayerLastDeathPosition` is not told; every death
-// rises at the world's spawn (no bed, no anchor); `doImmediateRespawn` is not read.
+// rises by its bed or at the world's spawn (no anchor); `doImmediateRespawn` is not read.
 
 use acacia_proto::packets::{DeathInfo, EntityEvent, EntityEventEventId, LevelSoundEvent, Respawn, SetHealth};
 use acacia_proto::types::Vec3f;
@@ -112,7 +112,8 @@ pub(super) fn leave(world: &mut World, player: Entity, layer: Entity) {
     sound(world, player, id, "disappeared", feet);
 }
 
-/// The dead whose clients are ready rise at their world's spawn, whole.
+/// The dead whose clients are ready rise by the bed they last clicked, or at their world's
+/// spawn, whole.
 pub(super) fn rise(world: &mut World) {
     let ready: Vec<Entity> = world.resource_mut::<PacketQueues>().take::<Respawn>().into_iter().filter(|(_, asked)| asked.state == CLIENT_READY).map(|(player, _)| player).collect();
     for player in ready {
@@ -121,6 +122,13 @@ pub(super) fn rise(world: &mut World) {
         }
         let (Some(id), Some(layer)) = (world.get::<NetId>(player).copied(), world.get::<InLayer>(player).map(|layer| layer.0)) else { continue };
         let Some(spawn) = world.get::<Layer>(layer).map(|layer| layer.spawn) else { continue };
+        let by_bed = crate::sleep::spawn_of(world, player, layer).flatten();
+        if let Some([x, y, z]) = by_bed {
+            // BDS names the cell first, then the place in it.
+            let cell = Vec3f { x: x.floor(), y, z: z.floor() };
+            world.get_mut::<Outgoing>(player).expect("players have an outbox").push(&Respawn { position: cell, state: SEARCHING, runtime_entity_id: 0 });
+        }
+        let spawn = by_bed.unwrap_or(spawn);
         leave_now(world, player, layer);
         world.entity_mut(player).remove::<super::effects::Effects>();
         *world.get_mut::<Vitals>(player).expect("read above") = Vitals::default();

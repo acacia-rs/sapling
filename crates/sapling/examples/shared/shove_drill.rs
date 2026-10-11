@@ -1,4 +1,4 @@
-//! The shove and byhand drills of bds_command_probe: what a piston does to what stands in its way
+//! The shove, byhand and bedspawn drills of bds_command_probe: what a piston does to what stands in its way
 //! (docs/research/redstone.md, "Pistons and entities"), and a lever and a button worked by hand.
 
 pub const SHOVE_SHOWN: &[&str] = &["AddEntity", "AddItemEntity", "RemoveEntity", "MoveEntityDelta", "MoveEntityAbsolute", "SetEntityMotion", "UpdateBlock", "BlockEntityData", "EntityEvent", "UpdateAttributes"];
@@ -41,5 +41,21 @@ pub fn byhand() -> Vec<String> {
             lines.extend([format!("!click 1 0 {z}"), String::new(), String::new()]);
         }
     }
+    lines
+}
+
+pub const BED_SHOWN: &[&str] = &[
+    "UpdateBlock", "SetSpawnPosition", "Text", "Respawn", "MovePlayer", "DeathInfo", "PlayerAction", "Animate", "SetHealth", "LevelSoundEvent", "BlockEntityData", "InventorySlot", "PlayStatus",
+];
+
+/// The actor, in survival by day: puts a bed down beside it and clicks it, is killed and rises;
+/// then the bed is taken away and it is killed again.
+pub fn bedspawn() -> Vec<String> {
+    let mut lines: Vec<String> = ["time set noon", "fill ~-2 ~-1 ~-2 ~6 ~-1 ~6 stone", "fill ~-2 ~ ~-2 ~6 ~3 ~6 air", "gamemode survival @s", "tp @s ~3 ~ ~3", ""].map(String::from).into();
+    lines.extend(["give @s bed 1", "", "!place 1 -1 0", "", "!click 1 0 0", "", "", "kill @s"].map(String::from));
+    lines.extend(std::iter::repeat_n(String::new(), 6));
+    lines.extend(["fill ~-3 ~ ~-3 ~3 ~1 ~3 air", "", "kill @s"].map(String::from));
+    lines.extend(std::iter::repeat_n(String::new(), 6));
+    lines.extend(["gamemode creative @s", ""].map(String::from));
     lines
 }

@@ -115,11 +115,23 @@ From `bds_command_probe eat` (research/captures/bds-eat.txt), the bot holding us
   hunger 20, exhaustion 0, saturation 5, level 0, experience 0. A watcher gets the event, an empty
   `MobEquipment`, the attributes and the box again.
 
+## A bed's spawn
+
+From `bds_command_probe bedspawn` (research/captures/bds-bedspawn.txt): the bot puts a bed down by
+day and clicks it.
+
+- The click sends `SetSpawnPosition` of type `Player` with the cell the player stands in and the
+  bed's head as the world position, and the grey lines `tile.bed.respawnSet` and `tile.bed.noSleep`.
+- Killed, it rises there: `Respawn` state 0 naming that cell (whole numbers), then state 1 at the
+  middle of the cell, eyes high. The line with y 32767 of a rise at the world's spawn is not sent.
+- With the bed gone it is sent the cell once more, then rises at the world's spawn as before, and
+  is told `tile.bed.notValid` (not grey).
+
 ## Not drilled
 
 Armour's wear (none was seen), enchantments, the words of most deaths, hunger from swimming, from a hit inside a mob's guard or from a block that breaks at once, each food's values (what else it does: food-effects.md), starving on normal and hard, the void, whether a player out of breath in a
 block is hurt as one under water, another
-player's hit (a zombie's: mob-attacks.md), `keepInventory`, a bed's or anchor's spawn, creative and spectator.
+player's hit (a zombie's: mob-attacks.md), `keepInventory`, an anchor's spawn, a bed in another world, creative and spectator.
 
 ## Sapling
 
@@ -143,4 +155,4 @@ player's hit (a zombie's: mob-attacks.md), `keepInventory`, a bed's or anchor's 
   sapling in the same 32 ticks and packets (research/captures/sapling-eat.txt). Only the apple's values are
   drilled; the others are the Java game's. A stew leaves no bowl, and no food does more than feed.
 - Not built: drinks, effects, the shrunken box and `PlayerLastDeathPosition`, lying down under a
-  block, a bed's spawn, `doImmediateRespawn`. Health and hunger wait in storage with a player's items (`vitals/kept.rs`); effects, breath and fire do not, and one who left dead comes back whole.
+  block, `doImmediateRespawn`. A player rises by the bed it last clicked while the bed stands (`sleep.rs` `spawn_of`); the bed is forgotten when the player leaves. Health and hunger wait in storage with a player's items (`vitals/kept.rs`); effects, breath and fire do not, and one who left dead comes back whole.

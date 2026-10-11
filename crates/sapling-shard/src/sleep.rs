@@ -2,7 +2,7 @@
 //! a click on a bed at night lies the player down in it and makes it its spawn; once everyone
 //! in the world has slept for 100 ticks the night is skipped and they all wake.
 // TODO: no monsters keep anyone awake (mobs are statues), no weather, no stand-up search
-// (a sleeper wakes where it lay down), and the spawn is not used: nobody dies or respawns.
+// (a sleeper wakes where it lay down); a bed's spawn is forgotten when its player leaves.
 // A sleeper who leaves the game leaves its bed's `occupied_bit`, which the next click clears.
 
 use std::collections::HashMap;
@@ -50,9 +50,31 @@ pub(crate) struct Sleeping {
     ticks: u64,
 }
 
-/// The bed a player last slept in, its spawn while it stays.
+/// The bed a player last clicked, its spawn while it stays: the bed's head, the cell the player
+/// stood in, where it rises, and their world.
 #[derive(Component, PartialEq)]
-pub(crate) struct BedSpawn(BlockPos);
+pub(crate) struct BedSpawn {
+    head: BlockPos,
+    spot: BlockPos,
+    layer: Entity,
+}
+
+/// Where a dead player rises by its bed (the feet, mid-cell): `None` with no bed of its own in
+/// its world, `Some(None)` when that bed is gone, which it is told and which is then forgotten
+/// (research/captures/bds-bedspawn.txt).
+pub(crate) fn spawn_of(world: &mut World, player: Entity, layer: Entity) -> Option<Option<[f32; 3]>> {
+    let (head, spot) = world.get::<BedSpawn>(player).filter(|bed| bed.layer == layer).map(|bed| (bed.head, bed.spot))?;
+    let is_there = world.get::<Layer>(layer).is_some_and(|layer| layer.world.registry().get(layer.world.block(head[0], head[1], head[2])).is_some_and(|state| state.name == BED));
+    if !is_there {
+        world.entity_mut(player).remove::<BedSpawn>();
+        let packet = crate::chat::json_packet(vec![serde_json::json!({ "translate": "tile.bed.notValid" })]);
+        if let Some(mut out) = world.get_mut::<Outgoing>(player) {
+            out.0.push(packet);
+        }
+        return Some(None);
+    }
+    Some(Some([spot[0] as f32 + 0.5, spot[1] as f32, spot[2] as f32 + 0.5]))
+}
 
 fn coordinates([x, y, z]: BlockPos) -> BlockCoordinates {
     BlockCoordinates { x, y, z }
@@ -117,12 +139,13 @@ fn is_night(world: &World, layer: Entity) -> bool {
 /// Makes the bed at `head` a player's spawn, telling it when that is news.
 fn set_spawn(world: &mut World, player: Entity, head: BlockPos) {
     let Some(feet) = world.get::<Position>(player).map(|position| position.feet.map(|c| c.floor() as i32)) else { return };
-    let is_new = world.get::<BedSpawn>(player) != Some(&BedSpawn(head));
+    let Some(layer) = world.get::<crate::components::InLayer>(player).map(|layer| layer.0) else { return };
+    let is_new = world.get::<BedSpawn>(player).is_none_or(|bed| (bed.head, bed.layer) != (head, layer));
     let packet = SetSpawnPosition { spawn_type: SetSpawnPositionSpawnType::Player, player_position: coordinates(feet), dimension: 0, world_position: coordinates(head) };
     if let Some(mut out) = world.get_mut::<Outgoing>(player) {
         out.push(&packet);
     }
-    world.entity_mut(player).insert(BedSpawn(head));
+    world.entity_mut(player).insert(BedSpawn { head, spot: feet, layer });
     if is_new {
         tell(world, player, "respawnSet");
     }

@@ -72,3 +72,29 @@ fn a_night_slept_through_is_skipped() {
     assert!(woke, "woken after 100 ticks");
     assert!(time(&mut h).rem_euclid(24_000) < 200, "it is morning");
 }
+
+#[test]
+fn a_player_rises_by_the_bed_it_clicked_while_the_bed_stands() {
+    use acacia_proto::packets::Respawn;
+    use acacia_proto::types::Vec3f;
+    use sapling_api::Block;
+    // research/captures/bds-bedspawn.txt: the cell it stood in, then the place in it.
+    let mut h = with_a_bed();
+    h.remote.run(|ctx| ctx.set_time(1000));
+    h.tick(1);
+    h.receive(1, &click(FOOT, 1, None));
+    h.tick(1);
+    let rise = |h: &mut Harness| {
+        h.remote.run(|ctx| assert!(ctx.kill_player(ALEX)));
+        h.tick(1);
+        h.receive(1, &Respawn { position: Vec3f { x: 0.0, y: 0.0, z: 0.0 }, state: 2, runtime_entity_id: 0 });
+        let sent = h.tick(1);
+        (all::<Respawn>(&sent).into_iter().map(|respawn| (respawn.state, respawn.position.x, respawn.position.z)).collect::<Vec<_>>(), said(&sent))
+    };
+    assert_eq!(rise(&mut h).0, [(0, 0.0, 0.0), (1, 0.5, 0.5)], "by the bed: named twice");
+    h.remote.run(|ctx| assert!(ctx.set_block(FOOT, &Block::new("air")) && ctx.set_block(HEAD, &Block::new("air"))));
+    h.tick(1);
+    let (risen, told) = rise(&mut h);
+    assert_eq!(risen, [(1, 0.5, 0.5)], "at the world's spawn once the bed is gone");
+    assert!(told.iter().any(|line| line.contains("tile.bed.notValid")), "{told:?}");
+}

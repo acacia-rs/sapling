@@ -12,19 +12,23 @@ mod hunt;
 mod shove;
 
 /// Does what a drill's `!` line asks of the actor: `!eat` holds use on what it holds, `!jump`,
-/// `!walk` and `!sprint` hold those keys until `!stop`, `!break x y z` breaks and `!click x y z` clicks the
-/// block that far from its feet. False for any other line.
+/// `!walk` and `!sprint` hold those keys until `!stop`, `!break x y z` breaks, `!click x y z` clicks and
+/// `!place x y z` puts what it holds on the block that far from its feet. False for any other line.
 pub async fn act(actor: &mut Bot, line: &str) -> bool {
     let keys = |actor: &mut Bot, forward: f32, sprint: bool, jump: bool| {
         if let Some(controls) = actor.controls() {
             (controls.forward, controls.sprint, controls.jump) = (forward, sprint, jump);
         }
     };
-    if let Some(offset) = line.strip_prefix("!click ") {
+    if let Some((places, offset)) = line.strip_prefix("!click ").map(|offset| (false, offset)).or(line.strip_prefix("!place ").map(|offset| (true, offset))) {
         let offset: Vec<i32> = offset.split(' ').filter_map(|part| part.parse().ok()).collect();
         let feet = actor.movement().and_then(|movement| movement.position()).map(|at| at.map(|c| c.floor() as i32));
         if let (Some(feet), &[x, y, z]) = (feet, &offset[..]) {
-            println!("## clicked: {:?}", actor.use_item_on_block([feet[0] + x, feet[1] + y, feet[2] + z], acacia_bot::interact::Face::Up).await);
+            let (at, up) = ([feet[0] + x, feet[1] + y, feet[2] + z], acacia_bot::interact::Face::Up);
+            match places {
+                true => println!("## placed: {:?}", actor.place_block(at, up).await),
+                false => println!("## clicked: {:?}", actor.use_item_on_block(at, up).await),
+            }
         }
         return true;
     }
@@ -76,6 +80,7 @@ pub fn drill(name: &str) -> Option<(Vec<String>, &'static [&'static str])> {
         "more" => (hunt::more(), HURT_SHOWN),
         "shove" => (shove::shove(), shove::SHOVE_SHOWN),
         "byhand" => (shove::byhand(), shove::BYHAND_SHOWN),
+        "bedspawn" => (shove::bedspawn(), shove::BED_SHOWN),
         "toil" => (toil(), HURT_SHOWN),
         "armour" => (armour(), HURT_SHOWN),
         "effects" => (effects(), HURT_SHOWN),
