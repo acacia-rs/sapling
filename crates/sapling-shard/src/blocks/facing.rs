@@ -87,7 +87,12 @@ impl Click {
             "facing_direction" if ends(&["end_rod", "lightning_rod"]) => ["0", "1", "2", "3", "4", "5"][self.face as usize],
             // A bed's head lies the way its placer looks.
             "direction" if block.ends_with(":bed") => ["0", "1", "2", "3"][self.quarter()],
-            "direction" if ends(&["loom", "beehive", "bee_nest", ":bell", "grindstone"]) => ["2", "3", "0", "1"][self.quarter()],
+            "direction" if ends(&["loom", "beehive", "bee_nest", ":bell", "grindstone", "decorated_pot", "chiseled_bookshelf"]) => ["2", "3", "0", "1"][self.quarter()],
+            // A crafter's front faces its placer, its top up (bds-placing2.txt; one that looks up
+            // or down was not tried).
+            "orientation" if block.ends_with(":crafter") => ["north_up", "east_up", "south_up", "west_up"][self.quarter()],
+            // What clings names the side it clings to: the block clicked.
+            "multi_face_direction_bits" => ["2", "1", "4", "16", "32", "8"][self.face as usize],
             // A cocoa pod names the side its log is on: the clicked one.
             "direction" if block.ends_with(":cocoa") => ["0", "0", "0", "2", "1", "3"][self.face as usize],
             // A rail starts north and south whatever the look; rails.rs then joins it to its neighbours.
@@ -96,7 +101,7 @@ impl Click {
             // furnace, faces its placer (bds-placing.txt).
             "minecraft:cardinal_direction" if block.ends_with("_door") && !block.ends_with("trapdoor") => ["west", "north", "east", "south"][self.quarter()],
             "minecraft:cardinal_direction" if block.ends_with("anvil") => ["east", "south", "west", "north"][self.quarter()],
-            "minecraft:cardinal_direction" if block.ends_with("campfire") => ["south", "west", "north", "east"][self.quarter()],
+            "minecraft:cardinal_direction" if ends(&["campfire", "calibrated_sculk_sensor"]) => ["south", "west", "north", "east"][self.quarter()],
             // An amethyst cluster and an item frame name the face they were put on.
             "minecraft:block_face" => ["down", "up", "north", "south", "west", "east"][self.face as usize],
             "facing_direction" if ends(&[":frame", ":glow_frame"]) => ["0", "1", "2", "3", "4", "5"][self.face as usize],
@@ -174,6 +179,10 @@ mod tests {
         assert!(placed("minecraft:bell", Face::Up, 1.0, -90.0).contains("direction=1") && placed("minecraft:grindstone", Face::Up, 1.0, -90.0).contains("direction=1"));
         assert!(placed("minecraft:amethyst_cluster", Face::Up, 1.0, -90.0).contains("block_face=up") && placed("minecraft:frame", Face::Up, 1.0, -90.0).contains("facing_direction=1"));
         assert_eq!(placed("minecraft:rail", Face::Up, 1.0, -90.0), "rail_direction=0");
+        // research/captures/bds-placing2.txt, the same placer.
+        assert!(placed("minecraft:crafter", Face::Up, 1.0, -90.0).contains("orientation=west_up") && placed("minecraft:decorated_pot", Face::Up, 1.0, -90.0).contains("direction=1"));
+        assert!(placed("minecraft:chiseled_bookshelf", Face::Up, 1.0, -90.0).contains("direction=1") && placed("minecraft:calibrated_sculk_sensor", Face::Up, 1.0, -90.0).contains("cardinal_direction=east"));
+        assert_eq!([placed("minecraft:glow_lichen", Face::Up, 1.0, -90.0), placed("minecraft:sculk_vein", Face::North, 0.5, 0.0)], ["multi_face_direction_bits=1", "multi_face_direction_bits=4"]);
         let registry = BlockRegistry::vanilla();
         let piston = registry.states_of("minecraft:piston").next().unwrap().0;
         let facing = |eyes_over| registry.get(oriented(&registry, piston, &Click { face: Face::Up, height: 1.0, yaw: -90.0, eyes_over })).unwrap().properties.to_owned();

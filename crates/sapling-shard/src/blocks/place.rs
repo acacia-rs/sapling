@@ -88,9 +88,13 @@ impl Request<'_> {
         // A second cell beside the first is a bed's: both halves lie on something.
         let has_headroom = doors::second_cell(registry, id, pos).is_none_or(|(cell, _)| gives(cell) && (cell[1] != pos[1] || stands(cell) && stands(pos)));
         let (block, is_solid) = (send::describe(registry, id), registry.get(id).is_some_and(|state| state.is_solid()));
-        // A ladder and a tripwire hook hang on a side: BDS put neither on a floor (bds-placing.txt).
-        let hangs = registry.get(id).is_some_and(|state| state.name.ends_with(":ladder") || state.name.ends_with("tripwire_hook"));
-        let is_held_up = !updates::lacks_support(self.world, site.layer, pos, id) && !(hangs && matches!(click.face, Face::Up | Face::Down));
+        // What hangs on a side or under a ceiling BDS put on no floor (bds-placing.txt,
+        // bds-placing2.txt): a ladder, a tripwire hook and a vine on a side alone; hanging moss
+        // and roots, a spore blossom and a hanging sign not on a floor.
+        let named = |ends: &[&str]| registry.get(id).is_some_and(|state| ends.iter().any(|end| state.name.ends_with(end)));
+        let on_side = named(&[":ladder", "tripwire_hook", ":vine"]) && matches!(click.face, Face::Up | Face::Down);
+        let off_floor = named(&["pale_hanging_moss", "hanging_roots", "spore_blossom", "_hanging_sign"]) && click.face == Face::Up;
+        let is_held_up = !updates::lacks_support(self.world, site.layer, pos, id) && !on_side && !off_floor;
         if !is_free || !has_headroom || !is_held_up || is_solid && is_occupied(self.world, site.layer, pos) {
             self.resync(&[against, pos]);
             return false;

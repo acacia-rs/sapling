@@ -106,6 +106,8 @@ pub(super) fn may_stand(level: &World, pos: BlockPos, id: u32) -> bool {
         // No bamboo on stone (research/captures/bds-placing.txt); what it does stand on is the
         // Java game's list.
         "minecraft:bamboo" | "minecraft:bamboo_sapling" => under.is_some_and(|under| BAMBOO_GROUND.contains(&under)),
+        // Nor these on stone (bds-placing2.txt); the ground they take is the bush's here.
+        "minecraft:pink_petals" | "minecraft:big_dripleaf" | "minecraft:mangrove_propagule" => under.is_some_and(|under| VEGETATION.contains(&under)),
         _ if VINES.contains(&block) => {
             let above = [pos[0], pos[1] + 1, pos[2]];
             !is_wet(level, pos) && (name(level, above).is_some_and(|above| VINES.contains(&above)) || level.in_height(above[1]) && has_bottom(level, above))
@@ -121,7 +123,7 @@ const BAMBOO_GROUND: &[&str] = &[
 
 /// Whether [`may_stand`] has a rule for the block `name`, which then replaces updates.rs's.
 pub(super) fn has_rule(name: &str) -> bool {
-    const OTHERS: &[&str] = &["minecraft:bamboo", "minecraft:bamboo_sapling", "minecraft:nether_wart", "minecraft:sweet_berry_bush", REEDS, "minecraft:redstone_wire", "minecraft:cocoa", "minecraft:trip_wire"];
+    const OTHERS: &[&str] = &["minecraft:bamboo", "minecraft:bamboo_sapling", "minecraft:pink_petals", "minecraft:big_dripleaf", "minecraft:mangrove_propagule", "minecraft:nether_wart", "minecraft:sweet_berry_bush", REEDS, "minecraft:redstone_wire", "minecraft:cocoa", "minecraft:trip_wire"];
     [CROPS, DIODES, RAILS, VINES, OTHERS].iter().any(|list| list.contains(&name))
 }
 

@@ -234,12 +234,27 @@ pub fn placing() -> Vec<String> {
         "brewing_stand", "cauldron", "composter", "smoker", "blast_furnace", "respawn_anchor", "lodestone", "target", "daylight_detector", "tripwire_hook", "redstone_torch", "sea_pickle", "turtle_egg", "scaffolding",
         "oak_fence", "cobblestone_wall", "glass_pane", "iron_bars", "snow_layer", "white_carpet", "white_bed", "flower_pot", "enchanting_table", "end_portal_frame", "frame", "white_banner", "conduit",
     ];
+    placed_in_turn(&items)
+}
+
+fn placed_in_turn(items: &[&str]) -> Vec<String> {
     let mut lines: Vec<String> = ["kill @e[type=!player]", "fill ~-2 ~-1 ~-2 ~4 ~-1 ~170 stone", "fill ~-2 ~ ~-2 ~4 ~3 ~170 air", "gamemode creative @s", "clear @s", ""].map(String::from).into();
     for item in items {
-        lines.extend(["tp @s ~ ~ ~2".into(), format!("replaceitem entity @s slot.weapon.mainhand 0 {item}"), "!place 1 -1 0".into()]);
+        // The cell is emptied first: BDS's drill world keeps what an earlier run put there.
+        lines.extend(["tp @s ~ ~ ~2".into(), "fill ~1 ~ ~ ~1 ~1 ~ air".into(), format!("replaceitem entity @s slot.weapon.mainhand 0 {item}"), "!place 1 -1 0".into()]);
     }
     lines.extend(["clear @s", ""].map(String::from));
     lines
+}
+
+/// As `placing`: the blocks its run spoilt or named wrongly, and more that turn.
+pub fn placing2() -> Vec<String> {
+    placed_in_turn(&[
+        "stone", "oak_trapdoor", "bed", "banner", "iron_chain", "crafter", "decorated_pot", "chiseled_bookshelf", "calibrated_sculk_sensor", "wooden_door", "iron_door", "soul_lantern", "soul_campfire", "soul_torch",
+        "big_dripleaf", "lit_pumpkin", "glow_frame", "moss_carpet", "pink_petals", "sculk_shrieker", "trapped_chest", "mangrove_propagule", "small_amethyst_bud", "polished_basalt", "purpur_pillar", "deepslate",
+        "ochre_froglight", "bamboo_block", "stripped_oak_log", "iron_trapdoor", "oak_button", "wooden_pressure_plate", "golden_rail", "detector_rail", "activator_rail", "heavy_core", "copper_bulb", "vault", "trial_spawner",
+        "creaking_heart", "pale_hanging_moss", "resin_clump", "sniffer_egg", "torchflower", "pitcher_plant", "spore_blossom", "hanging_roots", "glow_lichen", "sculk_vein", "vine", "cocoa_beans", "oak_hanging_sign",
+    ])
 }
 
 pub const ITEM_NAMES_SHOWN: &[&str] = &["InventorySlot", "InventoryContent"];

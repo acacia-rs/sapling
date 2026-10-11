@@ -108,6 +108,7 @@ pub fn drill(name: &str) -> Option<(Vec<String>, &'static [&'static str])> {
         "duel" => (world::duel(), HURT_SHOWN),
         "placing" => (world::placing(), world::PLACING_SHOWN),
         "item-names" => (world::item_names(), world::ITEM_NAMES_SHOWN),
+        "placing2" => (world::placing2(), world::PLACING_SHOWN),
         "toil" => (toil(), HURT_SHOWN),
         "armour" => (armour(), HURT_SHOWN),
         "effects" => (effects(), HURT_SHOWN),
