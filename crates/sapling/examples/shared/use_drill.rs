@@ -1,6 +1,9 @@
 //! The clicks drill of bds_command_probe: what a click does to blocks that take one, with the
 //! hand empty or holding the thing they take.
 
+#[path = "click_drill.rs"]
+mod more;
+
 pub const CLICKS_SHOWN: &[&str] = &["UpdateBlock", "LevelSoundEvent", "LevelEvent", "BlockEvent", "AddItemEntity", "InventorySlot", "MovePlayer"];
 
 /// The actor in creative, looking east, clicks one block after another a block east of it: the block as set,
@@ -252,6 +255,7 @@ pub fn trample() -> Vec<String> {
 pub fn named(name: &str) -> Option<(Vec<String>, &'static [&'static str])> {
     Some(match name {
         "clicks" => (clicks(), CLICKS_SHOWN),
+        "clicks2" => (more::clicks2(), CLICKS_SHOWN),
         "tnt" => (tnt(), TNT_SHOWN),
         "bonemeal" => (bonemeal(), BONEMEAL_SHOWN),
         "fire" => (fire(), BONEMEAL_SHOWN),

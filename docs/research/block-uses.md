@@ -84,7 +84,43 @@ had gone out, to plain redstone ore, after 90 seconds, the first after 0.9 secon
 spread evenly: each has the same chance every tick, which fits an average life of some 88
 seconds. Sapling gives each lit ore a life drawn that way (`blocks/ores.rs`).
 
+## A second round
+
+Measured with `bds_command_probe clicks2` (`crates/sapling/examples/shared/click_drill.rs`;
+`bds-clicks2.txt`, `sapling-clicks2.txt`), the same way as the first:
+
+| Block | In the hand | What BDS did |
+| --- | --- | --- |
+| full composter | nothing | level 0, a bone meal, `block.composter.empty` at the middle |
+| cauldron of water, full | bucket | empty, `CauldronTakeWater` at the old surface |
+| cauldron of lava, full | bucket | empty, level event 3513 at the old surface |
+| cauldron | lava bucket | lava at level 6, level event 3512 at the new surface |
+| cauldron | water bottle | two levels more a click, `CauldronFillWater` at the new surface, `bottle.empty` at the middle |
+| cauldron | powder snow bucket | `CauldronExplode` low in the cauldron, which stayed empty |
+| dirt | water bottle | mud, `bottle.empty` at the cell's corner |
+| grass block | hoe | farmland, as dirt |
+| campfire | shovel | `extinguished` set, `extinguish.fire` at the corner |
+| campfire, out | flint and steel | lit again, `ignite` at the corner |
+| cake | candle | candle cake, `cake.add_candle` at the corner |
+| end portal frame | eye of ender | its eye set, `block.end_portal_frame.fill` at the middle of its top |
+| crimson stem, bamboo block | axe | stripped, `item.use.on` |
+| cave vines with berries | nothing | a glow berry, `pick_berries.cave_vines` at the corner |
+| dragon egg | nothing | gone, `ParticleDragonEggTeleport` at the corner with the jump in its data: a byte for each length and a bit for each that is negative (15 east and 9 north was 68091913) |
+| decorated pot | stone | `block.decorated_pot.insert` at the corner, a click a stone |
+| item frame | diamond | `SoundItemframeAddItem`, then `SoundItemframeRotateItem` a click |
+| lodestone | compass | `lodestone_compass.link_compass_to_lodestone` |
+| charged respawn anchor | nothing | a blast of power 5 where it stood |
+
+A chiseled bookshelf clicked on its top took no book, and a hoe on rooted dirt showed nothing.
+
+Sapling does the rows down to the dragon egg the same, state for state and sound for sound, but
+for the powder snow, which it leaves alone. An egg jumps up to 15 across and 7 up or down to a
+free cell, the Java game's reach.
+
 ## Left
+
+- From the second round: the decorated pot and the item frame taking things, the lodestone
+  compass, the respawn anchor's blast, powder snow in a cauldron.
 
 - Bone meal has its own drill and notes: `bone-meal.md`.
 - Fire has its own drill and notes: `fire.md`. The obsidian row above was taken with

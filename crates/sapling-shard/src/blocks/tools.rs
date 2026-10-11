@@ -18,6 +18,9 @@ use crate::{drops, inventory};
 const WATER: i32 = -1_087_090_343;
 const CAULDRON_FULL: u8 = 6;
 const BOTTLEFUL: u8 = 2;
+/// A cauldron's lava filled and taken: events the protocol crate has no names for.
+const FILL_LAVA: LevelEventEvent = LevelEventEvent::Unknown(3512);
+const TAKE_LAVA: LevelEventEvent = LevelEventEvent::Unknown(3513);
 const HONEY_FULL: &str = "5";
 const ANCHOR_FULL: u8 = 4;
 
@@ -78,6 +81,7 @@ fn change(registry: &BlockRegistry, held: &str, id: u32, face: Face) -> Option<C
             };
             done(tilled?, Told::Sound("item.use.on", MIDDLE, true), Cost::Wear)
         }
+        shovel if shovel.ends_with("_shovel") && bare.ends_with("campfire") && get("extinguished") == Some("0") => done(set("extinguished", "1")?, Told::Sound("extinguish.fire", CORNER, false), Cost::Wear),
         shovel if shovel.ends_with("_shovel") && matches!(bare, "grass_block" | "dirt" | "coarse_dirt" | "podzol" | "mycelium" | "dirt_with_roots") => {
             done(registry.find("minecraft:grass_path", "")?, Told::Sound("item.use.on", MIDDLE, true), Cost::Wear)
         }
@@ -117,6 +121,25 @@ fn change(registry: &BlockRegistry, held: &str, id: u32, face: Face) -> Option<C
             let full = registry.find("minecraft:cauldron", &format!("cauldron_liquid=water,fill_level={CAULDRON_FULL}"))?;
             done(full, Told::Event(LevelEventEvent::CauldronFillWater, surface(CAULDRON_FULL), WATER), Cost::Becomes("minecraft:bucket"))
         }
+        "bucket" if bare == "cauldron" && level == CAULDRON_FULL => {
+            let (event, filled) = if get("cauldron_liquid") == Some("lava") { (TAKE_LAVA, "minecraft:lava_bucket") } else { (LevelEventEvent::CauldronTakeWater, "minecraft:water_bucket") };
+            let empty = registry.find("minecraft:cauldron", "cauldron_liquid=water,fill_level=0")?;
+            done(empty, Told::Event(event, surface(CAULDRON_FULL), WATER), Cost::Becomes(filled))
+        }
+        "lava_bucket" if bare == "cauldron" && level == 0 => {
+            let full = registry.find("minecraft:cauldron", &format!("cauldron_liquid=lava,fill_level={CAULDRON_FULL}"))?;
+            done(full, Told::Event(FILL_LAVA, surface(CAULDRON_FULL), WATER), Cost::Becomes("minecraft:bucket"))
+        }
+        "potion" if bare == "cauldron" && get("cauldron_liquid") == Some("water") && level < CAULDRON_FULL => {
+            let fuller = (level + BOTTLEFUL).min(CAULDRON_FULL);
+            done(set("fill_level", &fuller.to_string())?, Told::Event(LevelEventEvent::CauldronFillWater, surface(fuller), WATER), Cost::Becomes("minecraft:glass_bottle"))
+        }
+        "potion" if matches!(bare, "dirt" | "coarse_dirt" | "dirt_with_roots") => done(registry.find("minecraft:mud", "")?, Told::Sound("bottle.empty", CORNER, false), Cost::Becomes("minecraft:glass_bottle")),
+        candle if candle.ends_with("candle") && bare == "cake" && get("bite_counter") == Some("0") => {
+            done(registry.find(&format!("minecraft:{candle}_cake"), "lit=0")?, Told::Sound("cake.add_candle", CORNER, false), Cost::Spend)
+        }
+        "ender_eye" if bare == "end_portal_frame" && get("end_portal_eye_bit") == Some("0") => done(set("end_portal_eye_bit", "1")?, Told::Sound("block.end_portal_frame.fill", [0.5, 1.0, 0.5], false), Cost::Spend),
+        "flint_and_steel" if bare.ends_with("campfire") && get("extinguished") == Some("1") => done(set("extinguished", "0")?, Told::Sound("ignite", CORNER, false), Cost::Wear),
         "glowstone" if bare == "respawn_anchor" => {
             let charge: u8 = get("respawn_anchor_charge")?.parse().ok()?;
             done(set("respawn_anchor_charge", &(charge + 1).to_string()).filter(|_| charge < ANCHOR_FULL)?, sound("respawn_anchor.charge"), Cost::Spend)
@@ -178,8 +201,11 @@ impl Request<'_> {
         if !is_event {
             send::to_viewers(self.world, site.layer, pos, &[told]);
         }
-        if change.cost == Cost::Becomes("minecraft:potion") {
-            self.hear_at(site, pos, "bottle.fill");
+        // A bottle is heard besides the cauldron's own event.
+        match change.cost {
+            Cost::Becomes("minecraft:potion") => self.hear_at(site, pos, "bottle.fill"),
+            Cost::Becomes("minecraft:glass_bottle") if is_event => self.hear_at(site, pos, "bottle.empty"),
+            _ => {}
         }
         if site.mode != GameMode::Creative {
             match change.cost {
@@ -255,5 +281,18 @@ mod tests {
         assert_eq!([name("shears", "beehive", "direction=0,honey_level=4"), name("glowstone", "respawn_anchor", "respawn_anchor_charge=4")], [None, None]);
         assert_eq!(made("glowstone", "respawn_anchor", "respawn_anchor_charge=0"), Some(("respawn_anchor".into(), "respawn_anchor_charge=1".into())));
         assert_eq!(made("flint_and_steel", "candle", "candles=0,lit=0"), Some(("candle".into(), "candles=0,lit=1".into())));
+    }
+
+    // research/captures/bds-clicks2.txt
+    #[test]
+    fn buckets_bottles_and_what_else_bds_took_change_their_block() {
+        let empty = Some(("cauldron".to_owned(), "cauldron_liquid=water,fill_level=0".to_owned()));
+        assert_eq!([made("bucket", "cauldron", "cauldron_liquid=water,fill_level=6"), made("bucket", "cauldron", "cauldron_liquid=lava,fill_level=6")], [empty.clone(), empty]);
+        assert_eq!(made("lava_bucket", "cauldron", "cauldron_liquid=water,fill_level=0"), Some(("cauldron".into(), "cauldron_liquid=lava,fill_level=6".into())));
+        assert_eq!(made("potion", "cauldron", "cauldron_liquid=water,fill_level=2"), Some(("cauldron".into(), "cauldron_liquid=water,fill_level=4".into())));
+        assert_eq!([name("potion", "dirt", ""), name("candle", "cake", "bite_counter=0"), name("candle", "cake", "bite_counter=1"), name("bucket", "cauldron", "cauldron_liquid=water,fill_level=4")], [Some("mud".into()), Some("candle_cake".into()), None, None]);
+        assert_eq!(made("iron_shovel", "campfire", "extinguished=0,minecraft:cardinal_direction=south"), Some(("campfire".into(), "extinguished=1,minecraft:cardinal_direction=south".into())));
+        assert_eq!(made("flint_and_steel", "campfire", "extinguished=1,minecraft:cardinal_direction=south"), Some(("campfire".into(), "extinguished=0,minecraft:cardinal_direction=south".into())));
+        assert_eq!(made("ender_eye", "end_portal_frame", "end_portal_eye_bit=0,minecraft:cardinal_direction=south"), Some(("end_portal_frame".into(), "end_portal_eye_bit=1,minecraft:cardinal_direction=south".into())));
     }
 }

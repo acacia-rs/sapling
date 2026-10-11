@@ -1,12 +1,15 @@
 //! What a click does to a block that needs nothing in the hand: a cake is bitten, redstone ore
-//! lights, a berry bush is picked, a note block plays, a full composter empties
-//! (docs/research/block-uses.md).
+//! lights, a berry bush and cave vines are picked, a note block plays, a full composter empties,
+//! a dragon egg is gone elsewhere (docs/research/block-uses.md).
+// TODO: where a dragon egg goes is the Java game's reach; BDS's one jump was 15 east and 9 north.
 
 use acacia_proto::types::Vec3f;
 use bevy_ecs::prelude::*;
 use sapling_api::{BlockPos, Item};
 
-use super::{level, send, with_property};
+use acacia_proto::packets::{LevelEvent, LevelEventEvent};
+
+use super::{Dice, level, send, with_property};
 use crate::components::Position;
 use crate::{drops, inventory, vitals};
 
@@ -18,6 +21,15 @@ const RIPE: u8 = 2;
 const PICKED: &str = "1";
 /// Below the eyes, where BDS put the burp.
 const MOUTH: f32 = sapling_data::EYE_HEIGHT - 0.1;
+/// A dragon egg jumps up to this far across and up or down, and tries this often for a free cell.
+const EGG_REACH: [i32; 2] = [15, 7];
+const EGG_TRIES: usize = 64;
+
+/// What tells of an egg's jump by `by`: each length in a byte, and a bit for each that is negative.
+fn egg_jump([dx, dy, dz]: [i32; 3]) -> i32 {
+    let sign = |by: i32, bit: i32| i32::from(by < 0) << bit;
+    dx.abs() << 16 | dy.abs() << 8 | dz.abs() | sign(dx, 24) | sign(dy, 25) | sign(dz, 26)
+}
 
 fn property(properties: &str, key: &str) -> Option<u8> {
     properties.split(',').filter_map(|pair| pair.split_once('=')).find(|(name, _)| *name == key).and_then(|(_, value)| value.parse().ok())
@@ -65,6 +77,39 @@ pub(super) fn use_by_hand(world: &mut World, player: Entity, layer: Entity, pos:
             send::to_viewers(world, layer, pos, &[send::noise("block.sweet_berry_bush.pick", at, -1)]);
             true
         }
+        "minecraft:cave_vines_head_with_berries" | "minecraft:cave_vines_body_with_berries" => {
+            let (Some(picked), Some(berries)) = (registry.find("minecraft:cave_vines", properties), inventory::stored(&Item::new("minecraft:glow_berries".to_owned(), 1), registry)) else { return false };
+            send::set(world, layer, pos, picked);
+            drops::spill(world, layer, berries, pos);
+            send::to_viewers(world, layer, pos, &[send::noise("pick_berries.cave_vines", Vec3f { x: x as f32, y: y as f32, z: z as f32 }, -1)]);
+            true
+        }
+        "minecraft:dragon_egg" => {
+            let air = registry.air_id();
+            let rolls: Vec<[i32; 3]> = {
+                let mut dice = world.get_resource_or_insert_with(Dice::default);
+                let [across, up] = EGG_REACH.map(|reach| reach as u32);
+                (0..EGG_TRIES).map(|_| [dice.roll(2 * across + 1) as i32 - across as i32, dice.roll(2 * up + 1) as i32 - up as i32, dice.roll(2 * across + 1) as i32 - across as i32]).collect()
+            };
+            let Some(level) = super::level(world, layer) else { return false };
+            let is_free = |[dx, dy, dz]: &[i32; 3]| level.in_height(y + dy) && level.is_loaded(send::column([x + dx, y + dy, z + dz])) && level.block(x + dx, y + dy, z + dz) == air;
+            let Some(by) = rolls.into_iter().find(|by| *by != [0; 3] && is_free(by)) else { return true };
+            let jump = LevelEvent { event: LevelEventEvent::ParticleDragonEggTeleport, position: Vec3f { x: x as f32, y: y as f32, z: z as f32 }, data: egg_jump(by) };
+            send::to_viewers(world, layer, pos, &[sapling_net::encode(&jump)]);
+            send::set(world, layer, pos, air);
+            send::set(world, layer, [x + by[0], y + by[1], z + by[2]], id);
+            true
+        }
         _ => false,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn an_eggs_jump_is_told_as_bds_told_fifteen_east_and_nine_north() {
+        assert_eq!(egg_jump([15, 0, -9]), 68_091_913);
     }
 }
