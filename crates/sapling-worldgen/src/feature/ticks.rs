@@ -137,6 +137,13 @@ impl TickQueue {
         self.pending.push(Tick { at, lava, time });
     }
 
+    /// A chunk's own queue while the world generates: its clock stands at 0, so an aquifer tick queued "in 1"
+    /// is due at 1, before the border scan's (the block source's queue starts at 1: due at 2). Dumped at the
+    /// first `tickPendingTicks` of a decoration: 469 entries at time 1, the 69 border ticks at 2.
+    pub fn chunk() -> Self {
+        Self { now: 0, ..Self::default() }
+    }
+
     /// An in-game queue whose clock starts at 0.
     pub fn game() -> Self {
         Self { now: 0, game: true, ..Self::default() }

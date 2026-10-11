@@ -21,7 +21,7 @@ with_multiface_blocks! {
     FireflyBush => "firefly_bush" "",
     ShortDryGrass => "short_dry_grass" "",
     TallDryGrass => "tall_dry_grass" "",
-    Deadbush => "deadbush" "",
+    Deadbush => "deadbush" "", CactusFlower => "cactus_flower" "",
     Reeds => "reeds" "age=0",
     Cactus => "cactus" "age=0",
     BrownMushroom => "brown_mushroom" "",
@@ -279,7 +279,7 @@ with_multiface_blocks! {
     Kelp23 => "kelp" "kelp_age=23",
     Kelp24 => "kelp" "kelp_age=24",
     Kelp25 => "kelp" "kelp_age=25",
-    // Pointed dripstone set into a water source, in cave_table.rs's order (`into_water`, `is_wet_speleothem`): solid.
+    // Speleothems set into a water source, in cave_table.rs's order (`into_water`, `is_wet_speleothem`): solid.
     PointedDripstoneWet => "pointed_dripstone" "dripstone_thickness=tip,hanging=0",
     PointedDripstoneTipHangingWet => "pointed_dripstone" "dripstone_thickness=tip,hanging=1",
     PointedDripstoneFrustumWet => "pointed_dripstone" "dripstone_thickness=frustum,hanging=0",
@@ -290,6 +290,10 @@ with_multiface_blocks! {
     PointedDripstoneBaseHangingWet => "pointed_dripstone" "dripstone_thickness=base,hanging=1",
     PointedDripstoneMergeWet => "pointed_dripstone" "dripstone_thickness=merge,hanging=0",
     PointedDripstoneMergeHangingWet => "pointed_dripstone" "dripstone_thickness=merge,hanging=1",
+    SulfurSpikeWet => "sulfur_spike" "dripstone_thickness=tip,hanging=0", SulfurSpikeTipHangingWet => "sulfur_spike" "dripstone_thickness=tip,hanging=1",
+    SulfurSpikeFrustumWet => "sulfur_spike" "dripstone_thickness=frustum,hanging=0", SulfurSpikeFrustumHangingWet => "sulfur_spike" "dripstone_thickness=frustum,hanging=1",
+    SulfurSpikeMiddleWet => "sulfur_spike" "dripstone_thickness=middle,hanging=0", SulfurSpikeMiddleHangingWet => "sulfur_spike" "dripstone_thickness=middle,hanging=1",
+    SulfurSpikeBaseWet => "sulfur_spike" "dripstone_thickness=base,hanging=0", SulfurSpikeBaseHangingWet => "sulfur_spike" "dripstone_thickness=base,hanging=1", SulfurSpikeMergeWet => "sulfur_spike" "dripstone_thickness=merge,hanging=0", SulfurSpikeMergeHangingWet => "sulfur_spike" "dripstone_thickness=merge,hanging=1",
     // Sculk growths set into a water source (`into_water`): solid, after the wet speleothems.
     SculkSensorWet => "sculk_sensor" "sculk_sensor_phase=0",
     SculkShriekerWet => "sculk_shrieker" "active=0,can_summon=1",

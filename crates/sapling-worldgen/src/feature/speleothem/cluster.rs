@@ -109,7 +109,7 @@ fn column(ctx: &mut Ctx, blocks: &SpeleothemBlocks, shape: &Shape, at: [i32; 3],
         && let Some(f) = floor
         && can_pool(ctx.view, blocks, [x, f, z])
     {
-        ctx.view.set_block_quiet(x, f, z, Block::Water);
+        ctx.view.set_block(x, f, z, Block::Water);
         floor = Some(f - 1);
     }
     let mut stalactite = 0;

@@ -123,11 +123,14 @@ fn cactus(view: &mut View, random: &mut Mt19937, at: [i32; 3]) -> bool {
         }
         let bound = random.next_int(3) + 1;
         let height = random.next_int(bound) + 1;
-        for i in 0..height {
-            if !can_survive(view, [px, py + i, pz], Block::Cactus) {
-                break;
-            }
-            view.set_block(px, py + i, pz, Block::Cactus);
+        let mut placed = 0;
+        while placed < height && can_survive(view, [px, py + placed, pz], Block::Cactus) {
+            view.set_block(px, py + placed, pz, Block::Cactus);
+            placed += 1;
+        }
+        // The flower's draw is taken whenever a cactus stands (the feature's flag +0x20; 14827f6f8).
+        if placed > 0 && random.next_int(3) == 0 && view.block(px, py + placed, pz) == Block::Air {
+            view.set_block(px, py + placed, pz, Block::CactusFlower);
         }
     }
     true

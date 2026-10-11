@@ -43,17 +43,26 @@ fn delay(lava: bool) -> u64 {
 /// `_isLiquidBlocking` (148b5ee50): water asks the block's liquid detection (detect.rs), lava the type.
 fn blocking(view: &View, p: [i32; 3], lava: bool) -> bool {
     let b = block(view, p);
-    if lava { b.is_solid() || lava_blocking(b) } else { holds_water(b) }
+    if lava { lava_blocking(b) } else { holds_water(b) }
 }
 
-/// Lava asks the block type instead (vtable +0xc8, base 141a28450: the material blocks motion or is
-/// solid): these non-solid types override it to hold lava.
+/// Lava asks the block type instead (vtable +0xc8; read per type from the vtables, worldgen-bds-liquids.md,
+/// "Lava"): the base (141a28450) says whether the material blocks motion or is solid, 46 types answer
+/// yes whatever their material and 48 answer no.
 fn lava_blocking(b: Block) -> bool {
     let name = b.name();
-    b.is_snow_layer()
-        || b.multiface().is_some()
-        || matches!(name, "azalea" | "flowering_azalea" | "big_dripleaf" | "small_dripleaf_block" | "ladder" | "waterlily" | "scaffolding")
-        || ["bamboo", "rail", "candle", "campfire"].iter().any(|part| name.contains(part))
+    let coral = name.contains("coral") && !name.ends_with("coral_block");
+    let yields = b.is_snow_layer()
+        || coral
+        || name.ends_with("rail")
+        || name.starts_with("chorus")
+        || matches!(name, "azalea" | "flowering_azalea" | "big_dripleaf" | "small_dripleaf_block" | "waterlily" | "powder_snow" | "shelf_mushroom");
+    // Material 24 (neither solid nor blocking motion) on the base rule: lava takes a mineshaft's webs and torches.
+    let yields = yields || name.ends_with("torch") || matches!(name, "web" | "lever" | "tripwire_hook" | "trip_wire" | "redstone_wire");
+    let holds = b.multiface().is_some()
+        || name.contains("candle")
+        || matches!(name, "bamboo" | "campfire" | "soul_campfire" | "ladder" | "scaffolding" | "frame" | "glow_frame" | "portal" | "end_portal" | "resin_clump");
+    !yields && (holds || b.is_solid())
 }
 
 /// Runs a tick if the cell still holds the liquid it was scheduled for; a tick within a block of
@@ -72,8 +81,26 @@ fn run_tick(view: &mut View, tick: Tick) {
         }
         return;
     }
-    if depth(view, tick.at, tick.lava).is_some() {
+    if block(view, tick.at) == Block::Magma {
+        crate::feature::trace::line(|| format!("  tick {} {} {} magma", tick.at[0], tick.at[1], tick.at[2]));
+        magma_tick(view, tick.at);
+    } else if let Some(d) = depth(view, tick.at, tick.lava) {
+        crate::feature::trace::line(|| format!("  tick {} {} {} {} depth {d}", tick.at[0], tick.at[1], tick.at[2], if tick.lava { "lava" } else { "water" }));
         self::tick(view, tick.at, tick.lava);
+    }
+}
+
+/// A magma block's tick (a blob queues it in 1; it rides the liquid queue as a water tick on a magma cell):
+/// one bubble column cell in the water source above. The column's own ticks wait for the game
+/// (docs/research/worldgen-bds-liquids.md, "Game time"), so it grows only under a game-tick replay.
+fn magma_tick(view: &mut View, [x, mut y, z]: [i32; 3]) {
+    let cells = if super::game_ticks() > 0 { usize::MAX } else { 1 };
+    for _ in 0..cells {
+        y += 1;
+        if view.block(x, y, z) != Block::Water {
+            break;
+        }
+        view.set_block(x, y, z, Block::BubbleColumn);
     }
 }
 
@@ -116,7 +143,7 @@ fn set(view: &mut View, at: [i32; 3], b: Block) {
     if block(view, at).is_waterlogged() {
         return;
     }
-    view.set_block_quiet(at[0], at[1], at[2], b);
+    view.set_block(at[0], at[1], at[2], b);
 }
 
 fn tick(view: &mut View, p: [i32; 3], lava: bool) {
@@ -139,19 +166,23 @@ fn tick(view: &mut View, p: [i32; 3], lava: bool) {
             new = 0;
         }
         if new != d {
+            // Receding lava waits four times as long three times in four, by the thread's generator: both
+            // waits end in the next generation, but the longer one sorts later in it.
+            let mut wait = delay(lava);
+            if lava && d < 8 && d < new && new < 8 && view.thread_random.as_mut().is_some_and(|random| random.next_int(4) != 0) {
+                wait *= 4;
+            }
             if new < 0 {
                 set(view, p, Block::Air);
             } else {
                 set(view, p, Block::liquid(lava, new as u8));
                 update_neighbors(view, p);
-                view.schedule(p, lava, delay(lava));
+                view.schedule(p, lava, wait);
             }
             d = new;
         }
     }
-    if d < 0 {
-        return;
-    }
+    // A cell that just dried (d = -1) still flows down, as depth 7: BDS tests for it only before the sides.
     let below = add(p, [0, -1, 0]);
     if below[1] >= MIN_Y && view.has_block(below[0], below[1], below[2]) {
         let l = liquid(view, below);
@@ -164,7 +195,7 @@ fn tick(view: &mut View, p: [i32; 3], lava: bool) {
             return;
         }
     }
-    if d != 0 && !blocking(view, below, lava) {
+    if d < 0 || d != 0 && !blocking(view, below, lava) {
         return;
     }
     let mut costs = [NO_DROP; 4];
@@ -223,9 +254,7 @@ fn spread_to(view: &mut View, n: [i32; 3], depth: i32, lava: bool) {
         return;
     }
     set(view, n, Block::liquid(lava, depth as u8));
-    if lava {
-        solidify(view, n);
-    }
+    // Lava set beside water stays lava until a neighbour's update reaches it (`update_neighbors`).
     update_neighbors(view, n);
     view.schedule(n, lava, delay(lava));
 }

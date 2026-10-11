@@ -82,10 +82,9 @@ impl OverworldGenerator {
         }
     }
 
-    /// Every ported stage: `loaded_blocks`, `decorate`, then `place_features`.
+    /// Every ported stage: `loaded_blocks`, then `place_features` (lava lakes included).
     pub fn chunk_blocks(&self, chunk_x: i32, chunk_z: i32) -> ChunkShape {
         let mut shape = (*self.loaded(chunk_x, chunk_z)).clone();
-        self.decorate(&mut shape, chunk_x, chunk_z);
         self.place_features(&mut shape, chunk_x, chunk_z);
         shape
     }
@@ -145,12 +144,13 @@ impl OverworldGenerator {
         self.carvers.carve(&self.density, shape, chunk_x, chunk_z);
     }
 
-    /// The hardcoded post-process decoration (lava lakes), applied after `carve`.
+    /// The lava lakes alone, each over its chunks as loaded: a stage for the oracle's judge and probes.
+    /// The generated chunk gets its lakes from `place_features` (feature/lake.rs).
     pub fn decorate(&self, shape: &mut ChunkShape, chunk_x: i32, chunk_z: i32) {
         self.decoration.decorate(shape, chunk_x, chunk_z, &|x, z| self.loaded(x, z));
     }
 
-    /// The feature rules of every chunk whose features reach this one, applied after `decorate`.
+    /// The decoration of every chunk that reaches this one: its lava lake, monster rooms, feature rules and liquid.
     pub fn place_features(&self, shape: &mut ChunkShape, chunk_x: i32, chunk_z: i32) {
         self.with_inputs(|inputs| self.features.place(shape, (chunk_x, chunk_z), inputs));
     }
@@ -190,6 +190,13 @@ impl OverworldGenerator {
         feature::query_noise(x, z)
     }
 
+    /// The feature trace of the replayed structure stage (pieces' features: `element` lines and their writes);
+    /// empty once the stage has run.
+    #[doc(hidden)]
+    pub fn structure_replay_trace(&self) -> Vec<String> {
+        feature::trace::capture(|| self.structure_replay_writes().len()).1
+    }
+
     /// `source_feature_writes` with the decoration trace (feature/trace.rs) of every source it ran.
     #[doc(hidden)]
     pub fn source_feature_trace(&self, chunk_x: i32, chunk_z: i32) -> Vec<String> {
@@ -200,12 +207,11 @@ impl OverworldGenerator {
         let loaded = |x, z| self.loaded(x, z);
         let biomes = |x, z| self.chunk_biomes(x, z);
         let surface = |qx, qz| self.density.preliminary_surface(qx, qz);
-        let after_lake = |x, z| self.decoration.after_lake(x, z, &|cx, cz| self.loaded(cx, cz));
         let in_structure = |[x, y, z]: [i32; 3]| self.structures.in_structure(&self.density, (x, y, z), true);
         let in_tunnels = |[x, y, z]: [i32; 3]| self.structures.in_structure(&self.density, (x, y, z), false);
         let carved = |x, z| self.carved(x, z);
         let generated_tops = |x, z| self.generated_tops(x, z);
-        let inputs = feature::Inputs { loaded: &loaded, carved: &carved, generated_tops: &generated_tops, biomes: &biomes, surface: &surface, after_lake: &after_lake, in_structure: &in_structure, in_tunnels: &in_tunnels };
+        let inputs = feature::Inputs { loaded: &loaded, carved: &carved, generated_tops: &generated_tops, biomes: &biomes, surface: &surface,in_structure: &in_structure, in_tunnels: &in_tunnels };
         run(inputs)
     }
 

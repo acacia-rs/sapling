@@ -39,8 +39,8 @@ impl SculkPatch {
             cursors.clear();
         }
         let [x, y, z] = at;
-        if ctx.random.next_float() <= self.catalyst_chance && ctx.view.block(x, y - 1, z).is_solid() {
-            ctx.view.set_block_quiet(x, y, z, Block::SculkCatalyst);
+        if ctx.random.next_float() <= self.catalyst_chance && ctx.view.block(x, y - 1, z).is_opaque_solid() {
+            ctx.view.set_block(x, y, z, Block::SculkCatalyst);
         }
         let Range(lo, hi) = self.extra_growths;
         let count = if lo <= hi { lo + ctx.random.next_int(hi - lo + 1) } else { lo };
@@ -67,7 +67,7 @@ impl SculkPatch {
         [1, 0, 2, 3, 4, 5].into_iter().any(|face| {
             let [x, y, z] = step(at, face);
             let next = ctx.view.block(x, y, z);
-            if self.can_place_on.is_empty() { next.is_solid() } else { self.can_place_on.contains(&next) }
+            if self.can_place_on.is_empty() { next.is_opaque_solid() } else { self.can_place_on.contains(&next) }
         })
     }
 }

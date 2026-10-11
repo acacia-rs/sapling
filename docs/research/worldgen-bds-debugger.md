@@ -144,6 +144,22 @@ One JSON object, `{"breakpoints": [...]}`; the fields are listed in the script's
   structure stage"). A run whose machine swaps can take an hour: raise `WORLDGEN_TIMEOUT`, or the script stops
   the server before it saves; a run that stalls with a working set of a few MB for 20 minutes is dead.
 
+- What the liquid pass did in one decoration (2026-10-11, worldgen/replay5): arm on `decorationPostProcessChunk`
+  with `"filter": ["rdx", 320, [[cx - 1, cz - 1]]], "arms": "g"` (the 3x3's corner is at +0x140/+0x148, read as
+  the x and z of three ints) and give group `g` the entries of `tickPendingTicks` (1416042f0, one hit per
+  generation), `LiquidBlock::_tick` (148b5d060, position at r8), `_trySpreadTo` (148b5e580, r8 and the depth in
+  r9), `solidify` (148b60f90) and `addToTickingQueue` (1415f50f0, r8, with a backtrace: 148215864 is the border
+  scan, 149d65e07 a spring), each filtered on a box. `examples/feature_trace` prints the same events of ours
+  (`queue`/`route`, `tick`, a line per generation). That filter turns the `deco` log line into `pos=(...)`,
+  which `dbg_loads.py` does not read: keep the canon's lines with `pos=None` in a copy before uploading.
+- Where a generator stands at a piece (2026-10-11): `PoolElementStructurePiece::postProcess` (141ef21e0) with
+  `"mem": [["rcx", 8, "iiiiii"], ["r9", 0, "iiiiii"], ["r8", 2516, "I"]]` (piece box, chunk box, MT index: 624 is
+  a fresh generator, n is n draws on) beside `examples/structure_replay_features <seed> x "in ("`.
+- A pending tick queue as it lies: a `probe` at `tickPendingTicks`' entry reading `[rcx+8]` (now) and the
+  vector at `[rcx+0x10]` of 0x28-byte entries (flag, position at +8, priority +0x14, block +0x18, time +0x20).
+- Which types override a virtual: read slot n of every type's vtable (column 2 of
+  `scripts/data/block_types.tsv`) out of the exe with pefile and group by target; `isLavaBlocking` is slot 0xc8.
+
 The debugger is four modules: `bds_dbg.py` (the event loop and breakpoints), `bds_dbg_win.py` (Win32 bindings,
 thread contexts, hardware breakpoints), `bds_dbg_hits.py` (filters and what a hit logs), `bds_dbg_groups.py`
 (`group`/`arms`), `bds_dbg_dumps.py` (`dump*`).

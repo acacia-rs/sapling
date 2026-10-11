@@ -43,7 +43,7 @@ pub fn freeze_chunk(chunk: (i32, i32), biomes: &ChunkBiomes, view: &mut View) {
             let top = rain_top(view, x, z);
             let below = top - 1;
             if view.block(x, below, z) == Block::Water && cold(biomes, [x, below, z]) {
-                view.set_block_quiet(x, below, z, Block::Ice);
+                view.set_block(x, below, z, Block::Ice);
             }
             // Rain passes plants: the snow lands in a small plant's cell and keeps the plant (block/layers.rs).
             let here = view.block(x, top, z);
@@ -52,7 +52,7 @@ pub fn freeze_chunk(chunk: (i32, i32), biomes: &ChunkBiomes, view: &mut View) {
                 && holds_snow(view.block(x, below, z))
                 && cold(biomes, [x, top, z])
             {
-                view.set_block_quiet(x, top, z, snow);
+                view.set_block(x, top, z, snow);
             }
         }
     }

@@ -1,4 +1,4 @@
-//! `slice <seed> <world> <x0> <y0> <z0> <x1> <y1> <z1>`: per y, ours and BDS side by side, x across,
+//! `slice <seed> <world> <x0> <y0> <z0> <x1> <y1> <z1> [six more...]`: per y, ours and BDS side by side, x across,
 //! z down: `#` solid, `.` air, `W`/`L` water/lava sources, a hex digit a flowing depth (lava in
 //! lower case: `a`-`p` for 0-15 is not used; lava depths print as `l`).
 #![allow(dead_code)]
@@ -52,13 +52,14 @@ fn bds_char(cell: &BdsCell) -> char {
 fn main() {
     let args: Vec<String> = std::env::args().skip(1).collect();
     let [seed, world, rest @ ..] = &args[..] else { panic!("usage: slice <seed> <world> x0 y0 z0 x1 y1 z1") };
-    let n: Vec<i32> = rest.iter().map(|v| v.parse().unwrap()).collect();
-    let generator = OverworldGenerator::new(seed.parse().unwrap());
+    let all: Vec<i32> = rest.iter().map(|v| v.parse().unwrap()).collect();
+    let mut generator = OverworldGenerator::new(seed.parse().unwrap());
+    oracle_support::replay(&mut generator);
     let (primary, _) = open(world).expect("oracle world");
     let mut ours: HashMap<(i32, i32), ChunkShape> = HashMap::new();
     let mut theirs = HashMap::new();
-    for y in (n[1]..=n[4]).rev() {
-        println!("y {y}");
+    for (n, y) in all.chunks_exact(6).flat_map(|n| (n[1]..=n[4]).rev().map(move |y| (n, y))) {
+        println!("y {y} x {}..{}", n[0], n[3]);
         for z in n[2]..=n[5] {
             let (mut a, mut b) = (String::new(), String::new());
             for x in n[0]..=n[3] {

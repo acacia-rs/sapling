@@ -20,9 +20,10 @@ pub fn on() -> bool {
 }
 
 pub fn line(text: impl FnOnce() -> String) {
-    LINES.with(|lines| {
-        if let Some(lines) = lines.borrow_mut().as_mut() {
-            lines.push(text());
-        }
-    });
+    if !on() {
+        return;
+    }
+    // `text` may itself run traced code.
+    let text = text();
+    LINES.with(|lines| lines.borrow_mut().as_mut().expect("on").push(text));
 }

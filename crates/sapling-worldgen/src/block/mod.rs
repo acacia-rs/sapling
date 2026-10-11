@@ -129,9 +129,9 @@ impl Block {
         (Block::ShortGrass..Block::PointedDripstoneWet).contains(&self) || (Block::GlowLichen1..=Block::SculkVeinWet63).contains(&self)
     }
 
-    /// Pointed dripstone with water in the second layer.
+    /// Pointed dripstone or a sulfur spike with water in the second layer.
     pub fn is_wet_speleothem(self) -> bool {
-        (Block::PointedDripstoneWet..=Block::PointedDripstoneMergeHangingWet).contains(&self)
+        (Block::PointedDripstoneWet..=Block::SulfurSpikeMergeHangingWet).contains(&self)
     }
 
     /// A sculk sensor or shrieker, dry or with water in the second layer.
@@ -224,7 +224,7 @@ impl Block {
     pub fn into_water(self) -> Block {
         match self {
             Block::MangroveRoots => Block::MangroveRootsWet,
-            block if (Block::PointedDripstone..=Block::PointedDripstoneMergeHanging).contains(&block) => {
+            block if block.is_speleothem() => {
                 Block::ALL[block.index() - Block::PointedDripstone.index() + Block::PointedDripstoneWet.index()]
             }
             Block::MangroveLeaves => Block::MangroveLeavesWet,

@@ -294,6 +294,184 @@ corridor's spawner is already placed; nothing beyond the 3x3. A default for (2) 
 seen as placed is worse than our phase order on the stock oracle (865 -> 1005), so the phase model stays; any
 fixed rule is right for about half of BDS's neighbour pairs.
 
+## replay5: feature and liquid stage, region by region (2026-10-11, worldgen/replay5)
+A canon now carries its structure order too and may hold several regions: one debugger run over four far-apart
+4x4 regions takes about 15 minutes, a third of that BDS's start (`canon-upload.sh <run> <dir> <world>
+[<world>...]`, the `dir` field of `tools/replay-canons.txt`; `SAPLING_ORACLE_REGION==<name>` keeps exactly one
+region). `examples/slice` replays and takes several boxes; `examples/feature_trace` prints the liquid stage
+(`queue`/`route` per scheduled tick, `tick` per run tick, a line per generation).
+
+Wrong + missing against each region's one-worker world (stock oracle beside it for scale):
+
+| region | stock, ticked | replay, branch point | replay, now | what is left |
+|---|---|---|---|---|
+| stony peaks (two runs: `stony`, `stony2`) | 2113 | 60 | 0 | |
+| jagged peaks | 542 | 3 | 0 | |
+| savanna plateau | 474 | 221 | 0 | |
+| windswept gravelly hills | 328 | 3 | 0 | |
+| frozen peaks | 299 | | 0 | |
+| cherry grove | 282 | | 0 | |
+| savanna | 132 | | 0 | |
+| dark forest | 164 | | 0 (6 with the canon's first run) | |
+| mangrove swamp | 28 | (47, shaft4's run) | 0 (2 at first) | |
+| eroded badlands | 57 | | 0 | |
+| wooded badlands | 56 | | 0 (45 at first) | |
+| windswept hills | 62 | | 0 | |
+| snowy slopes | 29 | | 0 | |
+| grove | 19 | | 0 | |
+| swamp | 21 | | 0 | |
+| deep frozen ocean | 29 | | 0 | |
+| ice spikes | 35 | | 0 | |
+| mushroom fields | 16 | | 0 | |
+| windswept savanna | 2 | | 0 | |
+| forest, taiga, birch forest, snowy taiga | 37, 22, 0, 13 | | 0 each | |
+| desert (three runs: `desert`, `desert2`, `desert3`) | 20 | | 4 (10 at first) | 4 sand cells of the surface stage: below |
+| frozen ocean (two runs) | 38 | | 5 | an iceberg of ring source 473,572: below |
+| warm ocean | 26 | | 295 | 292 are the canon's, 3 a coral: below |
+| plains | 32 | | 0 (1 at first) | |
+| far out (8x8) | 290 | | 5 (7 at first) | below |
+| negative seed (8x8) | 82 | | 0 | |
+| near origin (32x32) | 1448 | | no canon | below |
+| jungle, sparse jungle, flower forest, meadow | 5, 21, 25, 13 | | 0 each | |
+| old growth spruce taiga, windswept forest, snowy plains, sunflower plains | 42, 1, 26, 0 | | 0 each | |
+| badlands | 1813 | 0 | 0 | |
+| old growth pine taiga | 573 | 0 | 0 | |
+| pale garden | 744 | 0 | 0 | |
+| bamboo jungle | 552 | 0 | 0 | |
+| old growth birch forest | 20 | 53 (`r-ob`: no structure order) | 0 (`birch2`) | |
+
+(Badlands' 7 and pine taiga's 37 of replay4 were gone at the branch point: all2's merge of shaft4's 3x3 view.)
+
+What the replay found:
+- **Feature writes wake no liquid**: worldgen-bds-liquids.md, "Where ticks come from".
+- **Lava hardens by a neighbour's update only, and a dried cell flows down once** (stony peaks 31 -> 0):
+  worldgen-bds-liquids.md, "How they run".
+- **A catalyst needs an opaque solid block below.** `SculkPatchFeature::place` reads the block's byte +0x71
+  where we asked `is_solid`; a sculk sensor under the patch origin got a catalyst from us and none from BDS
+  (stony peaks -3631,-29,4131, jagged peaks -6448,-12,-6074). A probe read +0x71 for the default block of all
+  1477 types: it is the solid-blocking property (`BlockType` +0x130 bit 0x40000) without leaves, glass, ice,
+  mangrove roots, farmland, paths, copper grates, pistons, chorus and light blocks, plus honey, jigsaw and
+  structure blocks (`Block::is_opaque_solid`). The patch's start test reads the same byte.
+- **Lava runs through azaleas, dripleaf, rails, snow layers and coral**: the `isLavaBlocking` overrides read
+  per type (worldgen-bds-liquids.md, "Lava"); dark forest, 3 cells.
+- **Leaf litter does not lie on leaves.** Three litter cells of ours sat on a leaves block over grass
+  (dark forest -9427,87,6563). struct5 met the same on a fence and a path: one rule, a top face that holds an
+  edge (`supports(up, Edge)`), fits both runs; it is a fit of four block classes, not read out of the binary.
+- **The lava lake belongs to its chunk's decoration.** `decorationPostProcessChunk` places the lake, then the
+  monster rooms, then the feature rules, all in the 3x3 as it is. sapling laid every lake over the finished
+  terrain apart from the sources, so no feature ever saw one: in wooded badlands BDS's source 299,-556 sets a
+  water spring (4784,62,-8887) in the wall of the cavity that chunk 298's lake had opened, and its water turns
+  twenty lava cells to obsidian (45 cells). `feature/lake.rs` now runs it as the source's first step on the
+  post-process generator the rooms continue; `OverworldGenerator::decorate` is left as the judge's lake-only
+  stage.
+- **Monster rooms test the material.** A room keeps non-solid blocks in its walls; a mineshaft's rails
+  (material 24, not solid) became cobblestone in ours (mangrove swamp, two cells). Webs, torches and ladders
+  share the material.
+- **A cactus draws for its flower.** `CactusFeature::place` (14827f3f0) ends each try that set a cactus with
+  `nextInt(3)`, and on 0 sets `cactus_flower` on top if that cell is air (14827f6f8; the feature's flag +0x20).
+  We lacked the draw, so every try after the first cactus of a rule was off (desert, 3 cells; the stock
+  oracle's desert has the same three).
+- **Lava takes webs and torches** (material 24, neither solid nor blocking motion, on the base rule): the
+  stronghold canon's corridor (9 cells).
+- Mangrove swamp's 47 liquid cells of shaft4 (water into mineshaft corridors) are gone with the liquid rules.
+- Savanna plateau's 221 cells (sculk patch try 130 of ring source 563,-391 onwards) went with the two changes
+  above; which of them it was is not separated.
+- **Sulfur spikes are waterloggable** like pointed dripstone (gravelly hills -2001,-5,-5561, three cells).
+
+- **A template's container draws its loot seed from the chunk's structure generator.** The ancient city under
+  the full replay stood at 6254 cells, nearly all sculk. Its eleven structure-stage sculk patches
+  (`sculk_patch_feature_ancient_city`, a feature element of the centre pieces) had the right origins and order
+  and the wrong walk from the second cursor move on. Logged per piece in a one-worker run
+  (`PoolElementStructurePiece::postProcess` 141ef21e0, generator index at `[r8+0x9d4]`): every structure kind
+  starts a chunk on a fresh generator (index 624, also after mineshaft pieces), and a city piece leaves it one
+  draw on whenever a chest of its template lies in the chunk; the patch element then starts at index 1 or 2.
+  `jigsaw/piece.rs` now draws once per chest, trapped chest or barrel it sets. Over the run's 161 chunks with
+  city pieces all 402 piece entries agree in box and draws; city 6254 -> 405, and the stronghold canon's
+  village (struct5's "one `nextInt(3)` off before the house's fill") 8 -> 1. Barrels are a guess: no run had one.
+- **Sculk veins replace snow layers.** Source -67,76's patches compared write for write
+  (`scripts/dbg_sculk.py`, `dbg_sculk_cmp.py`): the first eleven agree, the twelfth has one write more in BDS
+  at its 195th, a vein set into a snow layer on the floor of the city's ice box (-1063,-50,1220, on packed
+  ice). `vein_replaceable` (148b41420: a water source or a replaceable non-fluid) lacked the layer. City 405 ->
+  172; source -70,78's 26 patch entries then agree in every write.
+
+- **Sculk veins take a piston's arm.** Source -70,79's patch at -1106,-48,1264 has 781 writes in BDS and had
+  581 in ours; the first that differs (52nd) is a vein set into `sticky_piston_arm_collision` at
+  -1108,-48,1262, the arm of the city's redstone door, and later writes add faces to that vein, so the cell
+  holds it while the chunk decorates. The saved chunk has the arm again (the piston's block actor, presumably;
+  not traced). `vein_replaceable` takes the arm and `Features::place` puts every arm of the structure stage
+  back when the chunk is assembled. Ancient city 172 -> 0: exact on its canon (`city6`; 8201 cells on the
+  stock world).
+
+- **The liquid pass ran the right ticks in another order**, and that was two things (desert, 3 water depths
+  at the 8-block edge of source -446,557, where a cell keeps the depth of whichever neighbour reached it
+  first): the chunk queue's clock, and magma ticks nobody knew were on it. worldgen-bds-liquids.md, "The
+  first generation". The same magma ticks are the bubble columns: plains' two cells and the igloo canon's one.
+
+- **Mushrooms need an opaque solid block** (the same byte +0x71; a fit): two of ours stood on a village's
+  path and stairs (village canon 2 -> 0).
+- **A magma blob's "enclosed" test takes a waterlogged cell for water**: no magma beside a wet glow lichen
+  (frozen ocean's ring source, 7579,2,9163; a fit of one cell).
+
+Structure-region canons under the full replay after this branch (struct5's list, `tools/replay-regions.sh`;
+before -> after this branch where struct5 gave a number): jungle temple, swamp hut, shipwreck, ruined portal,
+ocean ruins, trail ruins, trial chambers (5 before the magma tick), old growth birch, badlands 0; ancient city 7756 -> 0 on `city6` (1 on struct5's
+`c-ac`: a sculk sensor BDS saved in phase 1, a state of that run); stronghold 132 -> 1 (struct5's three
+liquid items went with the liquid rules and the web rule, its village foundation with the container draw; one
+fence join is left); igloo, snowy plains 3 -> 0 (the magma tick); village 2 -> 0 wrong or missing (one dirt
+cell is left to "later stages"); mansion 256 -> 85, below; igloo, snowy slopes 1 (a dandelion for a poppy);
+pillager outpost 4 (snow layers on a column BDS leaves bare); monument 10 (seagrass of source
+-27,-18: a double one of ours where BDS has water and one of BDS's where ours is single, so the rule's float
+draws are off by one column); desert pyramid 2438 with 1675 structure-stage cells (the temple itself and a
+mineshaft sit elsewhere than in the run: structure stage, not looked at).
+
+Stock oracle, wrong + missing, the branch point (worldgen/all2 before struct5) -> this branch with all2 and
+struct5 merged (logs `base`, `fin`, `-still`); no region rose in either set:
+
+| world | ticked | still |
+|---|---|---|
+| near origin | 1448 -> 1299 | 770 -> 611 |
+| far out | 290 -> 278 | 172 -> 159 |
+| negative seed | 82 -> 82 | 120 -> 120 |
+| biome regions | 6106 -> 5915 | 6270 -> 6091 |
+| tree regions | 2605 -> 2193 | 1741 -> 1463 |
+| structures | 14573 -> 12273 | 16479 -> 14477 |
+| all 59 regions | 25104 -> 22040 | 25552 -> 22921 |
+
+The stock numbers move little because they are mostly the stock worlds' own run order and thread draws: the
+same 40 biome and tree regions that stand at 8108 there stand at 304 against their one-worker runs, 292 of
+them the warm ocean canon's own coral blocks.
+
+Open under replay, each with its first source:
+- **Mansion, 85** (two full canons, `mansion2` and `mansion3`): ring source -510,1001's lush cave growth on the
+  region's south edge (moss, cave vines and azalea leaves; 51 cells of ours, 22 moss blocks of BDS's nothing of
+  ours writes). On a canon two chunks further south (`mansion4`, 68 in the region) that source is still the
+  first with its own cells wrong (246 of 3998): `try_check` shows its azalea root system (try 0 at
+  -8151,12,16018: the tree's leaves), three moss ceiling tries (82, 43, 41) and vegetation try 122 off, in one
+  pass. Next step: the call log of that chunk (`dbg_calls.py` recipe: vegetation patch 143bc8310 and its cells,
+  the root system and tree entries) against `feature_trace`. (The region's lava, 18 cells of source -509,998, was the
+  receding lava's thread draw: worldgen-bds-liquids.md, "The first generation".)
+- **Far out, 5**: two glow lichens a block or two from BDS's cells (sources 100004,100002 and 100007,100006;
+  the first chunk's eight thread draws are contiguous in the stream, so it is the rule's position, not the
+  thread generator: float precision at 1.6M is the likely cause), one dirt cell of an ore blob BDS writes and
+  ours does not (1600014,53,1600103), one water cell. Not traced further.
+- **Near origin** has no canon: the 32x32 region's run was cut by the pack's script watchdog after four of
+  sixteen tiles (`WORLDGEN done error InternalError: interrupted`). Next step: one canon per 8x8 tile with its
+  own test region, or a pack that yields between tiles.
+- **Desert, 4 sand cells** (-7120,19..21,8914 and -7119,21,8916): the floor of a canyon open to the sky is
+  sand three deep in BDS and stone in ours before any feature (our dirt blob then covers it, BDS's does not
+  replace sand). Surface stage, not features; the stock oracle has the same cells.
+- **Frozen ocean, 5 packed ice cells** on x 7584: the iceberg of ring source 473,572 (ice feature try 0 at
+  7568,63,9152). With chunk 473 saved (canon `ds2`), `try_check` has 538 packed ice cells right, 104 where BDS
+  has water or air, and 158 snow cells where BDS has air: the berg's upper shape. The same source's magma blob
+  (try 21 at 7578,6,9164) sets one block BDS leaves as deepslate (7579,2,9163). Next step: the iceberg's draws
+  against `IcebergFeature::place` in an armed run of that chunk.
+- **Warm ocean, 3 tube coral blocks** (source 245,-493, coral try 1 at 3924,52,-7885): ours grows a coral beside
+  a crust's dead coral where BDS places nothing; the stock oracle has the same three. Next step: a trace of
+  `CoralFeature::place` (14828af70) at that position.
+- **Warm ocean, 292 dead coral blocks are the canon's**: the one-worker world has `dead_brain_coral_block`
+  in exactly the cells where the stock world (and the crust templates) have `dead_bubble_coral_block`. Which
+  of the canon's differences from a stock BDS does it (thread seed 0, one worker, no ticks) is not known.
+
 ## The full replay of the structures world (2026-10-11, worldgen/struct5)
 One run now carries both orders: `scripts/data/dbg_canon.json` logs loads, structure post-processes, decorations
 and the thread draws (and each start's connection-upgrade flag), `tools/replay-world.sh` sends world,

@@ -84,7 +84,14 @@ pub fn is_vein(block: Block) -> bool {
 
 /// 148b41420: a water source, or a replaceable non-fluid.
 pub fn vein_replaceable(block: Block) -> bool {
-    block == Block::Water || block == Block::Air || super::tree::common::is_replaceable_plant(block) || block.multiface().is_some()
+    // Snow layers are replaceable too (the city's ice box floor), and so is a piston's arm: see `is_piston_arm`.
+    block == Block::Water || block == Block::Air || super::tree::common::is_replaceable_plant(block) || block.multiface().is_some() || block.name() == "snow_layer" || is_piston_arm(block)
+}
+
+/// An extended piston's arm. Veins take its cell while the world generates (ancient city one-worker run: the
+/// vein's later writes build on it) and the saved chunk has the arm again: `Features::place` puts it back.
+pub fn is_piston_arm(block: Block) -> bool {
+    matches!(block, Block::Template(_)) && block.name().ends_with("piston_arm_collision")
 }
 
 /// `getSpreadFromFaceTowardDirection`: where a `state` at `at` on face `from` spreads toward

@@ -53,6 +53,7 @@ impl Structures {
         let column = canvas.bb;
         let mut random = crate::random::Mt19937::new(seed);
         for piece in cities.iter().flat_map(|c| c.pieces.iter()).filter(|p| p.bb.intersects(&column)) {
+            crate::feature::trace::line(|| format!("piece {:?} in {:?} draws {}", piece.bb, (column.x0 >> 4, column.z0 >> 4), random.draws()));
             piece.post_process(canvas, seed, &mut random, &AncientCityClass, &|_, _| 0);
         }
     }

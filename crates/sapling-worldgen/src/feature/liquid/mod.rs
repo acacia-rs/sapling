@@ -14,34 +14,39 @@ use crate::block::Block;
 
 const GENERATIONS: usize = 128;
 
-/// The `View::on_write` hook for decoration: features write with flags 3, so liquids beside a
-/// write get a tick. `SAPLING_LIQUID_FEATURE_NOTIFY=0` turns it off.
-pub fn write_hook() -> Option<fn(&mut View, [i32; 3])> {
-    let on = std::env::var("SAPLING_LIQUID_FEATURE_NOTIFY").map_or(true, |v| v != "0");
-    on.then_some(flow::update_neighbors as fn(&mut View, [i32; 3]))
-}
-
 /// `inherited`: the ticks earlier sources left on this chunk's queue (docs/research/worldgen-bds-liquids.md, "How they run").
 pub fn settle(view: &mut View, inherited: &[Routed]) {
+    // Trace lines follow what they sum up (examples/feature_trace.rs prints a try's lines before it).
+    super::trace::line(|| format!("{:?} liquid: features done, {} inherited ticks", view.chunk(), inherited.len()));
     reset_border_water(view);
-    let mut generated = TickQueue::default();
+    super::trace::line(|| format!("{:?} liquid border reset", view.chunk()));
+    let mut generated = TickQueue::chunk();
     for (at, lava) in view.own_fluid_ticks() {
+        super::trace::line(|| format!("  own tick {} {} {}", at[0], at[1], at[2]));
         generated.add(at, lava, 1);
     }
-    for &(at, lava, delay) in inherited {
+    // What this decoration left on its own chunk's queue (magma ticks) is taken with the rest.
+    let chunk = view.chunk();
+    let (own, others): (Vec<Routed>, Vec<Routed>) = std::mem::take(&mut view.ticks.in_game).into_iter().partition(|(at, ..)| (at[0] >> 4, at[2] >> 4) == chunk);
+    view.ticks.in_game = others;
+    for &(at, lava, delay) in inherited.iter().chain(&own) {
+        super::trace::line(|| format!("  inherited tick {} {} {} delay {delay}", at[0], at[1], at[2]));
         generated.add(at, lava, delay);
     }
+    super::trace::line(|| format!("{:?} liquid queue", view.chunk()));
     view.ticks.acquire(generated);
-    for _ in 0..GENERATIONS {
+    for generation in 0..GENERATIONS {
         if view.ticks.is_empty() {
             break;
         }
         let ticks = view.ticks.take_generation();
+        let count = ticks.len();
         view.ticks.instaticking = true;
         for tick in ticks {
             flow::run(view, tick);
         }
         view.ticks.instaticking = false;
+        super::trace::line(|| format!("{:?} liquid generation {generation}: {count} ticks", view.chunk()));
     }
     view.routed = view.ticks.in_game.clone();
     play(view);
@@ -98,7 +103,7 @@ fn reset_border_water(view: &mut View) {
             let water = view.block(x, y, z).is_fluid() && !view.block(x, y, z).is_lava();
             if water && below_dry {
                 if view.block(x, y, z) != Block::Water {
-                    view.set_block_quiet(x, y, z, Block::Water);
+                    view.set_block(x, y, z, Block::Water);
                 }
                 view.schedule([x, y, z], false, 1);
             }

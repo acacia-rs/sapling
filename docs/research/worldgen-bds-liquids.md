@@ -15,12 +15,17 @@ Companion to [worldgen-bds.md](worldgen-bds.md). The flow rule itself (`LiquidBl
   exactly three sides (with below: 4) and air on the fourth; rock (149d65e10) = stone, deepslate, tuff, calcite,
   snow, powder snow, packed ice, dirt, coarse dirt (no granite, diorite, andesite). Sets the source with flags 3,
   ticks it in 1. 213 of 215 springs near origin match.
-- **Feature writes**: `updateNeighborsAt` (1415f89a0: x-1, x+1, z+1, z-1, y+1, y-1) calls `neighborChanged` on
-  liquids beside, which queues a tick unless one is due at the same time (148b5cd30 scans the pending heap).
-  `setBlock` does not call it in worldgen (Neighbour updates, below); `Feature::_setBlock` (144c0cc40) records the
-  write in the feature's transaction when it has one, and the commit (1415483f0/141548760: `onPlace`, ticks,
-  `updateNeighborsAt` per block) does. sapling updates at each feature write, which the oracle preferred to no
-  updates; which hardcoded features run without a transaction is not read. The freeze pass writes with flags 2.
+- **Feature writes wake nothing** (2026-10-11, worldgen/replay5). `updateNeighborsAt` (1415f89a0: x-1, x+1, z+1,
+  z-1, y+1, y-1) calls `neighborChanged` on liquids beside, which queues a tick unless one is due at the same
+  time (148b5cd30 scans the pending heap), but no feature reaches it: its callers are the liquid code, the
+  transaction commit (1415483f0/141548760) and `_blockChanged`, which is shut while a chunk generates (Neighbour
+  updates, below). The world-gen API's `setBlock` (1411a01f0) is `BlockSource::setBlock(pos, block, 3)` and
+  nothing else; `Feature::_setBlock` (144c0cc40: lakes, monster rooms and four legacy features) writes the same
+  way when the feature holds no transaction (+0x18), and the commit's callers are not worldgen. Until replay5
+  sapling ticked the liquids beside every feature write, which the stock oracle had preferred; a one-worker run
+  settled it: a sculk vein set into falling water at -3657,1,4142 (stony peaks, source -229,258) left the water
+  beside it unticked in BDS and made ours spread (60 -> 32 cells; stock oracle 25104 -> 24563 ticked, 25552 ->
+  24910 still, 21 regions down and desert up 2). The freeze pass writes with flags 2.
 - **Border water**: after the freeze pass, in the chunk's 60 border columns (table 14a923c90) from y -64 up to the
   light heightmap, the lowest cell of each run of layer-0 water is set to a source (flags 0) and ticked in 1.
   The heightmap is frozen while a chunk is post-processed (`LevelChunk::setBlock`'s upkeep 1409f3d60 returns
@@ -59,12 +64,57 @@ Companion to [worldgen-bds.md](worldgen-bds.md). The flow rule itself (`LiquidBl
   code calls `updateNeighborsAt` where it wants it: `_tick` after a depth change (148b5d8b4) and `_trySpreadTo`
   when instaticking (148b5e805). A cell drying to air, lava hardening and the stone under falling lava do not:
   lava that lands on water makes one stone and stops, a cut-off stream keeps its last cells.
+- **Lava hardens only when a neighbour's update reaches it** (2026-10-11, worldgen/replay5; stony peaks, one-worker
+  run logged with `_tick`, `_trySpreadTo`, `solidify` and `addToTickingQueue` breakpoints armed per decoration).
+  `_trySpreadTo` (148b5e580) sets the liquid, updates the six neighbours and queues the cell: it never calls
+  `solidify` (148b60f90) for the cell it set, and no `onPlace` does while the chunk generates. `solidify` runs
+  from `neighborChanged` of a lava cell (148b5cf60: five calls, one per side and above), so lava set beside
+  water stays lava for a generation, flows on, and turns to cobblestone when its own spread updates it from
+  below. Nothing is told of the hardening.
+- **A cell that dries still flows down once.** `_tick` sets a cell with no feed to air and carries on with depth
+  -1: the test `depth < 0` sits only before the sideways spread (148b5dc03), so the downward branch calls
+  `_trySpreadTo(below, -1 + 8)`. A cut-off column so drains one cell per tick as depth 7 until something blocks
+  it, and dried lava over water still leaves its stone. Logged at -3664,75..71,4189: lava falls into y 74 beside
+  water (generation 32), spreads to y 73 and is turned to cobblestone by that spread's update (33); y 73, fed by
+  nothing, dries and sets depth-7 lava at y 72 (34), which dries and makes stone of the water at y 71 (35). The
+  column above ticked while y 74 was still lava and is never woken again: it stands on the cobblestone without
+  spreading. sapling hardened lava as it was set and stopped a dried cell, which sent this lava down a
+  staircase (31 cells).
 - **Lava** asks the block's `isLavaBlocking` (vtable +0xc8) where water tests faces. The base (141a28450) is false
-  for `mThickness > 0`, else the material blocks motion or is solid; azalea, bamboo, rails, dripleaf, ladders,
-  multiface blocks (glow lichen, sculk vein), snow layers, lily pads, candles, campfires and scaffolding override it
-  (LeviLamina headers). sapling treats those as holding lava (badlands: lava beside a sculk vein, vein intact);
-  coral plants and fans override it too but the oracle read better without them, and which blocks have a
-  thickness is not read.
+  for `mThickness > 0`, else the material blocks motion or is solid. The overrides were read off every type's
+  vtable slot (2026-10-11, worldgen/replay5): 46 types return true (bamboo, candles and candle cakes,
+  campfires, ladder, scaffolding, glow lichen, sculk vein, frames, portals, resin clump) and 48 return false
+  (the four rails, azalea and flowering azalea, big and small dripleaf, coral plants and fans alive and dead,
+  chorus, powder snow, snow layers, lily pads, shelf mushrooms). Until then sapling took every override for
+  "holds lava"; in the dark forest one-worker run lava runs through two flowering azaleas
+  (-9386,8,6608). Which blocks have a thickness is not read.
+
+## The first generation (2026-10-11, worldgen/replay5)
+A probe at the first `tickPendingTicks` of one decoration (desert source -446,557) dumped the block source's
+pending heap: 538 entries of 0x28 bytes (flag, position at +8, priority +0x14, block +0x18, time +0x20), every
+priority 0. 469 are due at 1 and 69 at 2:
+- the 69 are the border scan's (backtrace 148215864), queued "in 1" on the block source's queue, whose clock
+  stands at 1;
+- 466 are the chunk's aquifer ticks, queued "in 1" by `loadChunk`'s lambda (148263880) on the chunk's own queue,
+  whose clock stands at 0 while the world generates, and moved over by `acquireAllTicks` after the scan. sapling
+  had given them the block source's clock, so they sorted with the border ticks instead of before them;
+- 3 are **magma blocks'** (-7133,45,8923 and two more): a magma blob queues the block's own tick in 1 on its
+  chunk's queue. When that tick runs it sets the one bubble column cell in a water source above. sapling set
+  the column as it set the magma, so it had columns where BDS's tick never ran (the magma's chunk had finished
+  decorating, and nothing ticks it until the game does) and lacked them where water arrived after the blob.
+  A magma tick now waits on its chunk's queue as a water tick on a magma cell (`flow.rs`, `magma_tick`).
+Rebuilt offline from the run's own log (border ticks pushed in scan order, then the chunk queue popped into
+it: aquifer ticks in the lambda's order, then the three), the heap equals the dump in 536 of 538 slots, and our
+`push`/`pop` over the dumped array run generation 1 in BDS's logged order (294 of 294 ticks in the logged
+box). The border scan's order and the aquifer ticks' order were already BDS's (69 and 466, compared in order).
+
+**Receding lava and the thread generator.** `_tick` (148b5d060) draws `nextInt(4)` from the thread's generator
+when a lava cell's depth rises (old and new both under 8) and waits four times as long unless it drew 0. While
+instaticking both waits end in the next generation, but the tick's time (29 or 119 after the wrap) is its place
+in that generation's heap. Under a replay the generator is the one the chunk's lichen and veins drew from
+(`View::thread_random`), and the draw is taken; without one the wait stays 30. With it, the 1385 liquid ticks
+logged in the box around the mansion region's source -509,998 (run `liq-mansion`, canon `mansion3`) come in
+the same order in ours through every generation, and the lava that fell short there is BDS's (103 -> 85).
 
 ## Game time (2026-10-10, worldgen/res6)
 What the earlier sections call "flows BDS ran in game" is `LevelChunk::tick` (1409f98a0). While `LevelChunk`

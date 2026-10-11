@@ -19,6 +19,7 @@ mod geode;
 mod ice_spike;
 mod iceberg;
 mod jungle;
+mod lake;
 mod land;
 mod huge_mushroom;
 mod legacy_spec;
@@ -79,8 +80,6 @@ pub struct Inputs<'a> {
     pub generated_tops: &'a dyn Fn(i32, i32) -> Arc<[i16; 256]>,
     pub biomes: Biomes<'a>,
     pub surface: &'a dyn Fn(i32, i32) -> i32,
-    /// A chunk's post-process generator after its lava lake (monster_room.rs).
-    pub after_lake: &'a dyn Fn(i32, i32) -> crate::random::Mt19937,
     /// Whether a structure holds the block (geode.rs).
     pub in_structure: &'a dyn Fn([i32; 3]) -> bool,
     /// Whether a mineshaft's or a stronghold's box holds the block (multiface.rs).
@@ -172,7 +171,9 @@ impl Features {
     /// Sources apply in decoration order; a write lands when the block it replaced in its source's
     /// view is still there.
     pub fn place(&self, shape: &mut ChunkShape, chunk: (i32, i32), inputs: Inputs) {
+        let arms: Vec<(usize, crate::block::Block)> = (0..16 * 16 * crate::terrain::HEIGHT).map(|index| (index, shape.block_at(index))).filter(|&(_, block)| spreader::is_piston_arm(block)).collect();
         self.replay(shape, chunk, Rank::MAX, inputs);
+        arms.into_iter().for_each(|(index, arm)| shape.set_at(index, arm));
     }
 
     fn replay(&self, shape: &mut ChunkShape, chunk: (i32, i32), limit: Rank, inputs: Inputs) {
@@ -228,9 +229,10 @@ impl Features {
             let mut view = View::new(source, &base).with_frozen_heights(frozen).with_generated_tops(&generated);
             let doubt = |x: i32, z: i32| self.doubt_before((x, z), limit, inputs);
             view.reach = self.track_reach.then(|| reach::Reach::new(&doubt));
-            view.on_write = liquid::write_hook();
             view.thread_random = self.thread_before(limit);
-            monster_room::monster_rooms((inputs.after_lake)(source.0, source.1), source, &mut view);
+            let mut post_process = Mt19937::new(self.seed.chunk(source.0, source.1));
+            lake::lava_lake(&mut post_process, source, &mut view);
+            monster_room::monster_rooms(post_process, source, &mut view);
             decorate::decorate_chunk(&self.seed, source, inputs, &mut view);
             freeze::freeze_chunk(source, &(inputs.biomes)(source.0, source.1), &mut view);
             let inherited: Vec<_> = self.sources_before(source, limit).into_iter().flat_map(|n| self.source_writes(n, inputs).routed_to(source).collect::<Vec<_>>()).collect();
