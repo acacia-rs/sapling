@@ -21,7 +21,7 @@ const NBT_VERSION: u8 = 1;
 // TODO: per-item data; the registry a client is sent does not carry stack sizes.
 const SINGLE: &[&str] = &[
     "_sword", "_pickaxe", "_axe", "_shovel", "_hoe", "_helmet", "_chestplate", "_leggings", "_boots", "_bucket", "potion", ":bow", "crossbow", "shield", "elytra",
-    "_boat", "minecart", "music_disc", "enchanted_book", "totem_of_undying", ":bed", "saddle", "shears", "flint_and_steel", "fishing_rod", "trident", ":mace",
+    "_boat", "minecart", "enchanted_book", "totem_of_undying", ":bed", "saddle", "shears", "flint_and_steel", "fishing_rod", "trident", ":mace",
     "_horse_armor", "writable_book", "written_book", "spyglass", "shulker_box", "_stew", "_soup", "cake", "_on_a_stick", ":brush", "bundle",
 ];
 const SIXTEEN: &[&str] = &["ender_pearl", "snowball", ":egg", "_sign", ":bucket", "banner", "honey_bottle", "armor_stand", "ender_eye"];
@@ -94,7 +94,8 @@ pub fn creative_item(entry_id: u32) -> Option<&'static CreativeItem> {
 /// How many of an item one slot holds.
 pub fn max_stack(name: &str) -> u8 {
     let ends = |list: &[&str]| list.iter().any(|end| name.ends_with(end));
-    match (ends(SIXTEEN), ends(SINGLE)) {
+    // A disc's name ends with which one it is; BDS gave two as two (bds-item-names.txt).
+    match (ends(SIXTEEN), ends(SINGLE) || name.contains(":music_disc_")) {
         (true, _) => 16,
         (false, true) => 1,
         (false, false) => 64,

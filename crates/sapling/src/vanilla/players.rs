@@ -103,7 +103,7 @@ pub(crate) struct Give {
 
 impl Command for Give {
     fn run(self, ctx: &mut ShardCtx<'_>, sender: &Sender, out: &mut Output) {
-        let item = Item::new(namespaced(&self.item), self.amount.unwrap_or(1).max(1));
+        let item = Item::new(super::item_named(&self.item), self.amount.unwrap_or(1).max(1));
         let (shown, count) = (display_name(&item.name), item.count.to_string());
         let given = players(ctx, sender, &self.player);
         for player in &given {

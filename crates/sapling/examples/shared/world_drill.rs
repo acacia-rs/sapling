@@ -241,3 +241,23 @@ pub fn placing() -> Vec<String> {
     lines.extend(["clear @s", ""].map(String::from));
     lines
 }
+
+pub const ITEM_NAMES_SHOWN: &[&str] = &["InventorySlot", "InventoryContent"];
+
+/// Old item names given, each beside the name it is thought to have now: one stack of two
+/// where they are one item.
+pub fn item_names() -> Vec<String> {
+    let pairs = [
+        ("chain", "iron_chain"), ("sign", "oak_sign"), ("boat", "oak_boat"), ("skull", "skeleton_skull"), ("record_13", "music_disc_13"), ("fish", "cod"), ("cooked_fish", "cooked_cod"), ("clownfish", "tropical_fish"),
+        ("muttonraw", "mutton"), ("muttoncooked", "cooked_mutton"), ("appleenchanted", "enchanted_golden_apple"), ("reeds", "sugar_cane"), ("melon", "melon_slice"), ("speckled_melon", "glistering_melon_slice"),
+        ("netherstar", "nether_star"), ("fireball", "fire_charge"), ("fireworks", "firework_rocket"), ("fireworkscharge", "firework_star"), ("horsearmorleather", "leather_horse_armor"),
+        ("horsearmoriron", "iron_horse_armor"), ("carrotonastick", "carrot_on_a_stick"), ("emptymap", "empty_map"), ("totem", "totem_of_undying"), ("turtle_shell_piece", "turtle_scute"),
+        ("chorus_fruit_popped", "popped_chorus_fruit"), ("netherbrick", "nether_brick"), ("gold_ingot", "gold_ingot"), ("stone_slab", "smooth_stone_slab"), ("planks", "oak_planks"), ("log", "oak_log"),
+        ("wool", "white_wool"), ("stonebrick", "stone_bricks"), ("bed", "white_bed"), ("banner", "white_banner"), ("dye", "ink_sac"), ("coal", "coal"), ("door", "wooden_door"), ("nosuchitem", "stone"),
+    ];
+    let mut lines: Vec<String> = ["gamemode creative @s", "clear @s", ""].map(String::from).into();
+    for (old, new) in pairs {
+        lines.extend([format!("give @s {old} 1"), format!("give @s {new} 1"), "clear @s".into()]);
+    }
+    lines
+}

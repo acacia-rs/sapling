@@ -193,6 +193,7 @@ mod tests {
         let time = |line: &str| Time::parse(&mut Args::new(line, 0, &sender, &[])).ok();
         assert!(matches!(time("set midnight"), Some(Time::SetNamed(18000))) && matches!(time("set -5"), Some(Time::Set(-5))) && matches!(time("add 500"), Some(Time::Add(500))));
         assert!(matches!(time("query day"), Some(Time::Query("day"))) && time("set banana").is_none() && time("").is_none() && time("query").is_none());
+        assert_eq!([super::super::item_named("chain"), super::super::item_named("minecraft:fish"), super::super::item_named("stone"), super::super::item_named("my:thing")], ["minecraft:iron_chain", "minecraft:cod", "minecraft:stone", "my:thing"]);
         let xp = |line: &str| Xp::parse(&mut Args::new(line, 0, &sender, &[])).ok().map(|xp| (xp.amount, xp.levels, xp.target.is_some()));
         assert_eq!([xp("7 @s"), xp("-1L @s"), xp("2l"), xp("banana @s")], [Some((7, false, true)), Some((-1, true, true)), Some((2, true, false)), None]);
     }

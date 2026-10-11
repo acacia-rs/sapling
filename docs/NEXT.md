@@ -77,7 +77,8 @@ Each needs its rule looked up first (`bdsre` for BDS, the Java jar for data), th
   observers, gates, anvils, bells, grindstones, amethyst, frames and rails were set right. Left: a
   sea pickle out of water (dead on BDS), scaffolding's `stability_check`, a daylight detector's
   reading, and a trapdoor, whose row was spoilt. BDS's commands take old item names too (`chain`
-  for `iron_chain`), which sapling's do not, so its hand was empty for that one. Which way a dispenser or a
+  for `iron_chain`): sapling's `/give` and `/replaceitem` take the 31 that were tried and found
+  (`vanilla.rs` `OLD_ITEM_NAMES`, `bds_command_probe item-names`). Which way a dispenser or a
   piston turns up or down is the old game's rule, of which BDS showed one case.
 - BDS's `/setblock` and `/testforblock` take old block names; sapling takes the 34 that were
   tried and found (`vanilla/blocks.rs` `OLD_NAMES`, `loot2`, `names`) and no others. A name BDS

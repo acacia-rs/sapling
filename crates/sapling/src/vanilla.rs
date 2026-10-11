@@ -31,6 +31,53 @@ impl ServerBuilder {
     }
 }
 
+/// Old names of items that BDS's `/give` still takes, and what they name now: each gave the
+/// item its new name gives (research/captures/bds-item-names.txt).
+// TODO: those that were tried; BDS knows more.
+const OLD_ITEM_NAMES: [(&str, &str); 31] = [
+    ("chain", "iron_chain"),
+    ("sign", "oak_sign"),
+    ("boat", "oak_boat"),
+    ("skull", "skeleton_skull"),
+    ("record_13", "music_disc_13"),
+    ("fish", "cod"),
+    ("cooked_fish", "cooked_cod"),
+    ("clownfish", "tropical_fish"),
+    ("muttonraw", "mutton"),
+    ("muttoncooked", "cooked_mutton"),
+    ("appleenchanted", "enchanted_golden_apple"),
+    ("reeds", "sugar_cane"),
+    ("melon", "melon_slice"),
+    ("speckled_melon", "glistering_melon_slice"),
+    ("netherstar", "nether_star"),
+    ("fireball", "fire_charge"),
+    ("fireworks", "firework_rocket"),
+    ("fireworkscharge", "firework_star"),
+    ("horsearmorleather", "leather_horse_armor"),
+    ("horsearmoriron", "iron_horse_armor"),
+    ("carrotonastick", "carrot_on_a_stick"),
+    ("emptymap", "empty_map"),
+    ("totem", "totem_of_undying"),
+    ("turtle_shell_piece", "turtle_scute"),
+    ("chorus_fruit_popped", "popped_chorus_fruit"),
+    ("stone_slab", "smooth_stone_slab"),
+    ("planks", "oak_planks"),
+    ("log", "oak_log"),
+    ("wool", "white_wool"),
+    ("stonebrick", "stone_bricks"),
+    ("dye", "ink_sac"),
+];
+
+/// The namespaced name of the item a command calls `name`, an old name too.
+fn item_named(name: &str) -> String {
+    let plain = name.strip_prefix("minecraft:").unwrap_or(name);
+    match OLD_ITEM_NAMES.iter().find(|(old, _)| *old == plain) {
+        Some((_, new)) => format!("minecraft:{new}"),
+        None if name.contains(':') => name.to_owned(),
+        None => format!("minecraft:{name}"),
+    }
+}
+
 fn no_target(out: &mut Output) {
     out.translate("commands.generic.noTargetMatch", Vec::new(), false);
 }

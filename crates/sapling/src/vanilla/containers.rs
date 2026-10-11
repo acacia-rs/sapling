@@ -97,7 +97,7 @@ impl Command for ReplaceItem {
         if count > MOST {
             return out.translate("commands.generic.num.tooBig", vec![count.to_string(), MOST.to_string()], false);
         }
-        let name = if self.item.contains(':') { self.item.clone() } else { format!("minecraft:{}", self.item) };
+        let name = super::item_named(&self.item);
         let item = (name != "minecraft:air").then(|| Item { damage: self.data.unwrap_or(0) as i16, ..Item::new(&name, count.clamp(1, MOST) as u8) });
         let bad_slot = |out: &mut Output, size: usize| out.translate("commands.replaceitem.badSlotNumber", vec![self.slot.to_string(), "0".into(), (size - 1).to_string()], false);
         match &self.target {
