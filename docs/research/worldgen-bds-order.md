@@ -315,7 +315,7 @@ Wrong + missing (structure stage in brackets) against each region's own one-work
 | stronghold | 221 [46] | 132 [36] | below |
 | mansion (structure order only) | [36] | [5] | 5 cobblestone cells of a lava and water meeting, none the mansion's |
 | village (structure order only) | [2] | [1] | one dirt cell BDS has as air (-1009,84,163), not traced |
-| igloo, snowy plains (structure order only) | [1] | not re-measured | the bar's water (fixed in `Canvas::set`) |
+| igloo, snowy plains (structure order only) | [1] | [0] | |
 | ancient city (structure order only) | [6] | [7] | 6 tuff cells over city deepslate, 1 lava: needs its decoration order |
 
 What the first differing pieces and sources were:
@@ -343,9 +343,14 @@ cause is an earlier piece or feature of that chunk; next step: log `PoolElementS
 141ef21e0 with the generator's index at `[r8+0x9d4]` per piece in a one-worker run and compare with ours),
 and one pen fence joined south in BDS (-1426,69,-1919).
 
-Not established: which starts run the upgrade (vtable slot 0x20). Mineshafts do (logged); sapling also runs it
-for strongholds, temples, igloos and monuments. `dbg_canon.json`'s `upgrades` line (rax, the start's vtable)
-answers it per run.
+Which starts run the upgrade (vtable slot 0x20, logged at 141f07ae3 over single-chunk regions of 15 kinds, kinds
+told apart by where each start vtable's hits fall): mineshafts (14a9263e0) and strongholds (14a927e70) do, the
+scattered start (14a927910) does for a swamp hut and a jungle temple and not for a desert pyramid or an igloo
+(one hit each), and villages, mansions, monuments, portals, shipwrecks, ocean ruins, cities, outposts and v2
+starts do not. `dbg_canon.json`'s `upgrades` line (rax, the start's vtable) repeats the answer in every canon.
+The igloo's cell bars then need another reason to stay apart from the two cell markers north of them (the
+cellar is dug into stone): sapling clears the markers before the template's pass, which fits the igloo run
+(structure stage 1 -> 0); what BDS holds in those cells during its pass was not read.
 
 Stock oracle, all 59 regions (logs `base`, `s2`, `-still`): ticked 25104 -> 24881, still 25552 -> 25329;
 structure stage 780 -> 767 and 903 -> 890; no region rose. By region: stronghold -89, mansion -76, shipwreck -19, swamp hut -11, far out -11, near
