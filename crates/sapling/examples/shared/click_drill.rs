@@ -72,3 +72,17 @@ pub fn grows2() -> Vec<String> {
     lines.extend(["gamerule randomtickspeed 1", "setblock ~4 ~ ~8 stone", "", "fill ~1 ~ ~-9 ~10 ~8 ~9 air", "kill @e[type=item]"].map(String::from));
     lines
 }
+
+/// Twenty-five blocks of copper and a torchflower crop east of the actor, watched for a minute
+/// at the rule's 1 and half a minute more at 20.
+pub fn copper() -> Vec<String> {
+    let mut lines: Vec<String> = [
+        "fill ~-1 ~-1 ~7 ~10 ~-1 ~13 stone", "tp @s ~ ~ ~10 -90 0", "fill ~1 ~ ~-3 ~10 ~3 ~3 air", "time set noon", "gamerule randomtickspeed 1", "fill ~2 ~ ~-2 ~6 ~ ~2 copper_block",
+        "setblock ~8 ~-1 ~ farmland [\"moisturized_amount\"=7]", "setblock ~8 ~ ~ torchflower_crop", "",
+    ].map(String::from).into();
+    lines.extend(std::iter::repeat_n(String::new(), 60));
+    lines.push("gamerule randomtickspeed 20".into());
+    lines.extend(std::iter::repeat_n(String::new(), 30));
+    lines.extend(["gamerule randomtickspeed 1", "fill ~1 ~ ~-3 ~10 ~3 ~3 air", "setblock ~8 ~-1 ~ stone", "kill @e[type=item]"].map(String::from));
+    lines
+}

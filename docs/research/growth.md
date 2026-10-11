@@ -57,8 +57,16 @@ torchflower crop say nothing.
 Sapling grows cocoa one random tick in five and wart one in ten, the Java game's odds, which
 these fit, and a pitcher crop by a crop's odds, two high from its third stage. Ice is left: it
 melts by light, which sapling does not reckon. Copper is left too: a stage every random tick or
-two would weather a block in minutes at the rule's 1, which is not what the game is known for,
-so the rule may not scale as the rest does.
+two would weather a block in minutes at the rule's 1, which is not what the game is known for.
+
+`bds_command_probe copper` (`bds-copper.txt`) bore that out: of 25 blocks of copper none
+changed in a minute at the rule's 1, nor in half a minute more at 20, where the pace seen at 200
+would have turned each several times. So copper does not weather in step with the rule, and
+what it did at 200 is no guide. The same run's wet farmland, a torchflower crop on it and no
+water near, dried a step after 40 seconds at 1 and a step every 5 seconds or so at 20: slower
+at 20 than a tenth of its pace at 200 would be, so farmland is not in step with the rule either,
+and sapling's three random ticks to a crop's one is right only near 200 and near 1. The
+torchflower crop did not grow in the minute and a half.
 
 ## Leaves
 
