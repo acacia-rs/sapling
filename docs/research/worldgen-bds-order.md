@@ -320,6 +320,15 @@ Wrong + missing against each region's one-worker world (stock oracle beside it f
 | snowy slopes | 29 | | 0 | |
 | grove | 19 | | 0 | |
 | swamp | 21 | | 0 | |
+| deep frozen ocean | 29 | | 0 | |
+| ice spikes | 35 | | 0 | |
+| mushroom fields | 16 | | 0 | |
+| windswept savanna | 2 | | 0 | |
+| forest, taiga, birch forest, snowy taiga | 37, 22, 0, 13 | | 0 each | |
+| desert (two runs: `desert`, `desert2`) | 20 | | 7 (10 at first) | 4 sand cells of the surface stage, 3 water depths: below |
+| frozen ocean (two runs) | 38 | | 5 | an iceberg of ring source 473,572: below |
+| warm ocean | 26 | | 295 | 292 are the canon's, 3 a coral: below |
+| plains | 32 | | 1 | a bubble column cell at -945,50,-692, not traced |
 | badlands | 1813 | 0 | 0 | |
 | old growth pine taiga | 573 | 0 | 0 | |
 | pale garden | 744 | 0 | 0 | |
@@ -353,10 +362,36 @@ What the replay found:
 - **Monster rooms test the material.** A room keeps non-solid blocks in its walls; a mineshaft's rails
   (material 24, not solid) became cobblestone in ours (mangrove swamp, two cells). Webs, torches and ladders
   share the material.
+- **A cactus draws for its flower.** `CactusFeature::place` (14827f3f0) ends each try that set a cactus with
+  `nextInt(3)`, and on 0 sets `cactus_flower` on top if that cell is air (14827f6f8; the feature's flag +0x20).
+  We lacked the draw, so every try after the first cactus of a rule was off (desert, 3 cells; the stock
+  oracle's desert has the same three).
+- **Lava takes webs and torches** (material 24, neither solid nor blocking motion, on the base rule): the
+  stronghold canon's corridor (9 cells).
 - Mangrove swamp's 47 liquid cells of shaft4 (water into mineshaft corridors) are gone with the liquid rules.
 - Savanna plateau's 221 cells (sculk patch try 130 of ring source 563,-391 onwards) went with the two changes
   above; which of them it was is not separated.
 - **Sulfur spikes are waterloggable** like pointed dripstone (gravelly hills -2001,-5,-5561, three cells).
+
+Open under replay, each with its first source:
+- **Desert, 3 water depths** (source -446,557; -7112,21,8910..8913): the liquid pass runs the same ticks in every
+  generation as BDS (294, 14, 20, 14, 15, ... in both, compared over 66 generations of an armed run) but in
+  another order within a generation, from the first one on; a cell at the 8-block edge then keeps the depth of
+  whichever neighbour reached it first. The first generation is the border scan's ticks plus the chunk's own
+  queue (466 aquifer ticks): its order is the heaps' insertion history. Next step: `scratchpad queue-desert.json`
+  (the pending heap dumped at the first `tickPendingTicks` of that decoration, `loadChunk`'s tick lambda
+  148263880 in order) against our `own tick` and `queue` trace lines.
+- **Desert, 4 sand cells** (-7120,19..21,8914 and -7119,21,8916): the floor of a canyon open to the sky is
+  sand three deep in BDS and stone in ours before any feature (our dirt blob then covers it, BDS's does not
+  replace sand). Surface stage, not features; the stock oracle has the same cells.
+- **Frozen ocean, 5 packed ice cells** on x 7584: an iceberg of source 473,572 differs in 28 cells once chunk
+  473 is saved (canon `ds2`); not traced further.
+- **Warm ocean, 3 tube coral blocks** (source 245,-493, coral try 1 at 3924,52,-7885): ours grows a coral beside
+  a crust's dead coral where BDS places nothing; the stock oracle has the same three. Next step: a trace of
+  `CoralFeature::place` (14828af70) at that position.
+- **Warm ocean, 292 dead coral blocks are the canon's**: the one-worker world has `dead_brain_coral_block`
+  in exactly the cells where the stock world (and the crust templates) have `dead_bubble_coral_block`. Which
+  of the canon's differences from a stock BDS does it (thread seed 0, one worker, no ticks) is not known.
 
 ## The full replay of the structures world (2026-10-11, worldgen/struct5)
 One run now carries both orders: `scripts/data/dbg_canon.json` logs loads, structure post-processes, decorations
