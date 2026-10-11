@@ -3,7 +3,7 @@ minecraft:armadillo	xp=1-3 strolls=0.14 panics=0.28
 minecraft:axolotl	breathes_water xp=1-3
 minecraft:bat	no_fall
 minecraft:bee	no_fall xp=1-3
-minecraft:blaze	fire_immune no_fall xp=10-10 strolls=0.23
+minecraft:blaze	fire_immune no_fall xp=10-10 strolls=0.23 attack=0 speed=0.23 sees=48 shoots=173 aims=83 volley=3x6 fires
 minecraft:bogged	breathes_water burns_in_sun xp=5-5 strolls=0.25 attack=0 speed=0.25 sees=16 shoots=71 hits=poison:112
 minecraft:breeze	no_fall xp=10-10 strolls=0.4
 minecraft:camel	xp=1-3 strolls=0.18 panics=0.36

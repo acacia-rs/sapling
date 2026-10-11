@@ -152,6 +152,11 @@ impl Health {
         due
     }
 
+    /// Sets it on fire for `ticks` more, if it would not burn that long anyway.
+    pub(crate) fn ignite(&mut self, ticks: u16) {
+        self.burning = self.burning.max(ticks);
+    }
+
     /// Sets it on fire for `ticks` if it is not: the first hurts at once, as the sun's did on
     /// BDS (research/captures/bds-sun.txt).
     pub(crate) fn kindle(&mut self, ticks: u16) {

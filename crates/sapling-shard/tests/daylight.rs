@@ -64,3 +64,24 @@ fn a_drowned_an_endermite_a_piglin_brute_and_a_ravager_hit_for_what_bds_s_did() 
         assert_eq!(health.first(), Some(&left), "{kind}: {health:?}");
     }
 }
+
+#[test]
+fn a_blaze_shoots_three_small_fireballs_six_ticks_apart_that_burn_whom_they_hit() {
+    // research/captures/bds-blaze.txt: the first 83 ticks after it took its prey; bds-kinds2.txt: 5 and fire.
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    h.remote.run(|ctx| {
+        ctx.set_difficulty(Difficulty::Easy);
+        ctx.set_time(18000);
+        assert!(ctx.spawn_entity("minecraft:blaze", [0.5, 65.0, 6.5]).is_some());
+    });
+    let mut shots = Vec::new();
+    let mut hurt = Vec::new();
+    for tick in 0..160 {
+        let sent = h.tick_all().to(1).to_vec();
+        shots.extend(all::<acacia_proto::packets::AddEntity>(&sent).iter().filter(|added| added.entity_type == "minecraft:small_fireball").map(|_| tick));
+        hurt.extend(all::<EntityEvent>(&sent).iter().filter(|event| event.runtime_entity_id == 1 && event.event_id == EntityEventEventId::HurtAnimation).map(|event| event.data));
+    }
+    assert!(shots.len() == 3 && shots[1] - shots[0] == 6 && shots[2] - shots[1] == 6 && (80..100).contains(&shots[0]), "{shots:?}");
+    assert!(hurt.first() == Some(&3) && hurt.contains(&7), "a fireball's hit, then fire's own: {hurt:?}");
+}

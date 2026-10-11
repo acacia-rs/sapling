@@ -41,6 +41,17 @@ pub(crate) fn punched(world: &mut World, player: Entity, amount: f32, by: &str, 
     bitten(world, player, amount, &format!("{}{by}", death::BY_PLAYER), speed)
 }
 
+pub(crate) fn is_fireproof(world: &World, player: Entity) -> bool {
+    world.get::<Vitals>(player).is_some_and(|vitals| vitals.health.is_fireproof())
+}
+
+/// Sets a player that fire can hurt on fire for `ticks`.
+pub(crate) fn set_alight(world: &mut World, player: Entity, ticks: u16) {
+    if let Some(mut vitals) = world.get_mut::<Vitals>(player).filter(|vitals| !vitals.health.is_fireproof()) {
+        vitals.health.ignite(ticks);
+    }
+}
+
 /// A blast at `from` hurts a player for `amount` and throws it: as a hit does, and by `push`
 /// besides. False where it took nothing.
 pub(crate) fn blasted(world: &mut World, player: Entity, amount: f32, from: [f32; 3], push: [f32; 3]) -> bool {

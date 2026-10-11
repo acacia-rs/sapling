@@ -199,3 +199,17 @@ pub fn pvp() -> Vec<String> {
     lines.extend(["gamemode creative @a", ""].map(String::from));
     lines
 }
+
+/// The actor in survival, proof against fire and healed each second, with a blaze 8 blocks off
+/// for twenty-five seconds, then one 20 blocks off for ten.
+pub fn blaze() -> Vec<String> {
+    let mut lines: Vec<String> =
+        ["kill @e[type=!player]", "gamerule domobspawning false", "difficulty easy", "time set midnight", "fill ~-3 ~-1 ~-30 ~12 ~-1 ~60 stone", "fill ~-3 ~ ~-30 ~12 ~8 ~60 air", "gamemode survival @s", "tp @s ~6 ~ ~20", ""].map(String::from).into();
+    for (far, seconds) in [(8, 25), (20, 10)] {
+        lines.extend(["effect @s fire_resistance 60 0".into(), format!("summon blaze ~ ~ ~-{far}")]);
+        lines.extend(std::iter::repeat_n("effect @s instant_health 1 4".to_owned(), seconds));
+        lines.extend(["kill @e[type=!player]", "effect @s clear", "", ""].map(String::from));
+    }
+    lines.extend(["gamemode creative @s", ""].map(String::from));
+    lines
+}

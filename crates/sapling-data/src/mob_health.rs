@@ -57,6 +57,12 @@ pub struct Hunts {
     pub every: Option<u32>,
     /// It takes no prey while the sun shines on it (the spiders).
     pub by_dark: bool,
+    /// The ticks from its taking its prey to its first shot, where they are not `shoots`.
+    pub aims: Option<u32>,
+    /// It shoots this many times, this many ticks apart, each time it shoots.
+    pub volley: Option<(u32, u32)>,
+    /// What it shoots is a small fireball, not an arrow.
+    pub fires: bool,
 }
 
 pub fn mob_traits(identifier: &str) -> MobTraits {
@@ -67,7 +73,7 @@ pub fn mob_traits(identifier: &str) -> MobTraits {
     let value = |name: &str| row.and_then(|(_, traits)| traits.split(' ').find_map(|held| held.strip_prefix(name)));
     let number = |name: &str| value(name).and_then(|value| value.parse::<f32>().ok());
     let gives = value("hits=").and_then(|given| given.split_once(':')).and_then(|(effect, ticks)| Some((effect, ticks.parse().ok()?)));
-    let hunts = number("attack=").zip(number("speed=")).zip(number("sees=")).map(|((attack, speed), sees)| Hunts { attack, speed, sees, gives, explodes: number("explodes="), shoots: number("shoots=").map(|ticks| ticks as u32), provoked: has("provoked"), closes: has("closes"), upto: number("upto="), every: number("every=").map(|ticks| ticks as u32), by_dark: has("by_dark") });
+    let hunts = number("attack=").zip(number("speed=")).zip(number("sees=")).map(|((attack, speed), sees)| Hunts { attack, speed, sees, gives, explodes: number("explodes="), shoots: number("shoots=").map(|ticks| ticks as u32), provoked: has("provoked"), closes: has("closes"), upto: number("upto="), every: number("every=").map(|ticks| ticks as u32), by_dark: has("by_dark"), aims: number("aims=").map(|ticks| ticks as u32), volley: value("volley=").and_then(|volley| volley.split_once('x')).and_then(|(shots, gap)| Some((shots.parse().ok()?, gap.parse().ok()?))), fires: has("fires") });
     MobTraits { fire_immune: has("fire_immune"), burns_in_sun: has("burns_in_sun"), no_fall: has("no_fall"), breathes_water: has("breathes_water"), experience, hunts, strolls: number("strolls="), panics: number("panics=") }
 }
 

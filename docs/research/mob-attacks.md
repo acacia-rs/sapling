@@ -170,6 +170,23 @@ A slime and a magma cube hop and split, a polar bear hit without a target being 
 threw potions, a blaze shot three small fireballs a second apart and an enderman was gone; none
 of these six, nor the hoglin and the zoglin, is built. The first four are (`mob-traits.py`).
 
+## The blaze (`blaze`)
+
+A blaze 8 and then 20 blocks from an actor proof against fire
+(`research/captures/bds-blaze.txt`), and one in `kinds2`:
+
+- It took the actor from 20 blocks, went 2.5 blocks nearer and stayed; later it rose 3 blocks.
+- 83 ticks after its target it shot three `minecraft:small_fireball`, 6 ticks apart, with the
+  sound `shoot`; the next three came 173 ticks after the first of the last.
+- A fireball is added where the blaze is, 1.4 above its feet, at 1.15 to 1.42 a tick towards
+  the actor, and keeps that speed; it was gone within a second and a half.
+- In `kinds2` one hit: `HurtAnimation` 3, 5 of health, the hit's throw, and the actor burning
+  (`ONFIRE`) for five seconds, losing 1 four times. Proof against fire, the actor lost nothing
+  to any of nine.
+
+Sapling's blaze does so (`creatures/arrows.rs` `FIREBALL`); it walks and does not fly, and its
+fireball lights no block.
+
 ## Spiders by day (`spiders`)
 
 A spider and a cave spider 5 blocks from the actor in survival

@@ -52,6 +52,8 @@ pub(super) struct Hunter {
     /// The tick it took its prey in.
     since: u64,
     ready: u64,
+    /// The shots left of a volley, and the tick the next goes in.
+    volley: Option<(u32, u64)>,
     /// The cells of its way round what stands before its prey, and the tick it found them in.
     way: Vec<[i32; 3]>,
     planned: u64,
@@ -205,13 +207,23 @@ pub(super) fn strike(world: &mut World, entity: Entity, layer: Entity, id: u64, 
         blast::put_out(world, entity, layer, id, kind, body);
     }
     if let Some(every) = hunts.shoots.filter(|_| prey.is_some()) {
-        // The first arrow waits as long as the next.
         let feet = world.get::<Position>(prey?)?.feet;
+        let shot = if hunts.fires { arrows::FIREBALL } else { arrows::ARROW };
+        let volley = world.get::<Hunter>(entity)?.volley;
+        if let Some((left, _)) = volley.filter(|(_, due)| now >= *due) {
+            arrows::loose(world, layer, entity, kind, body, feet, hunts.gives, shot);
+            let gap = hunts.volley.map_or(0, |(_, gap)| u64::from(gap));
+            world.get_mut::<Hunter>(entity)?.volley = (left > 1).then_some((left - 1, now + gap));
+        }
         if ready != 0 && now >= ready {
-            arrows::loose(world, layer, kind, body, feet, hunts.gives);
+            arrows::loose(world, layer, entity, kind, body, feet, hunts.gives, shot);
+            let more = hunts.volley.filter(|(shots, _)| *shots > 1).map(|(shots, gap)| (shots - 1, now + u64::from(gap)));
+            world.get_mut::<Hunter>(entity)?.volley = more;
         }
         if ready == 0 || now >= ready {
-            world.get_mut::<Hunter>(entity)?.ready = now + u64::from(every);
+            // The first shot waits as long as the next, or as long as the kind aims.
+            let wait = if ready == 0 { hunts.aims.unwrap_or(every) } else { every };
+            world.get_mut::<Hunter>(entity)?.ready = now + u64::from(wait);
             // A crossbow is heard being loaded for the next (bds-shoot2.txt).
             let middle = [body.at[0], body.at[1] + MIDDLE * body.size[1], body.at[2]];
             for (after, stage) in LOADS.into_iter().filter(|_| hunts.closes) {

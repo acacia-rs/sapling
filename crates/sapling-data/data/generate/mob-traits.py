@@ -46,6 +46,7 @@ def pace(entity, behaviour):
 
 # Drilled on BDS, not read from the packs (docs/research/mob-attacks.md, "Other kinds").
 HUNTS = {
+    "minecraft:blaze": "attack=0 speed=0.23 sees=48 shoots=173 aims=83 volley=3x6 fires",
     "minecraft:bogged": "attack=0 speed=0.25 sees=16 shoots=71 hits=poison:112",
     "minecraft:cave_spider": "attack=2 speed=0.3 sees=16 by_dark",
     "minecraft:creeper": "attack=0 speed=0.25 sees=16 explodes=3",
