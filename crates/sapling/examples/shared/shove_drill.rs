@@ -161,3 +161,13 @@ pub fn fx() -> Vec<String> {
     lines.extend(["gamemode creative @s", ""].map(String::from));
     lines
 }
+
+/// The actor, in survival, drinks the potions the `drink` drill left out, by their data value.
+pub fn drink2() -> Vec<String> {
+    let mut lines: Vec<String> = ["kill @e[type=!player]", "", "fill ~-3 ~-1 ~-3 ~8 ~-1 ~8 stone", "fill ~-3 ~ ~-3 ~8 ~6 ~8 air", "gamemode survival @s", ""].map(String::from).into();
+    for data in (5..=13).chain(17..=20).chain(31..=35).chain(37..=46) {
+        lines.extend([format!("replaceitem entity @s slot.weapon.mainhand 0 potion 1 {data}"), "!eat".into(), String::new(), String::new(), String::new(), "effect @s clear".into(), String::new()]);
+    }
+    lines.extend(["gamemode creative @s", "clear @s", ""].map(String::from));
+    lines
+}

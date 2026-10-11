@@ -1,7 +1,7 @@
 //! What eating or drinking an item gives: hunger and saturation as the Java game and Dragonfly
 //! have them (BDS's apple drilled the same, research/captures/bds-eat.txt), and the effects BDS
 //! gave (docs/research/food-effects.md).
-// TODO: a suspicious stew and chorus fruit do nothing but feed; a potion of an effect the shard lacks is water; a stew's bowl and a potion's
+// TODO: a suspicious stew and chorus fruit do nothing but feed; the potions of wind charging, weaving, oozing and infestation are water; a stew's bowl and a potion's
 // bottle are the Java game's, not drilled.
 
 /// Ticks use is held on a food before it is eaten.
@@ -85,24 +85,53 @@ pub fn food(name: &str) -> Option<Food> {
     })
 }
 
-/// What a potion of the data value `data` gives (research/captures/bds-drink.txt): nothing for
-/// water, the plain ones and those of effects the shard lacks.
+macro_rules! gives {
+    ($($effect:literal $ticks:literal $amplifier:literal),+) => { &[$(Gives { effect: $effect, ticks: $ticks, amplifier: $amplifier, chance: 1.0 }),+] };
+}
+
+/// What a potion of the data value `data` gives (research/captures/bds-drink.txt and
+/// bds-drink2.txt): nothing for water, the plain ones and the four of effects the shard lacks
+/// (43 to 46).
 fn potion(data: i16) -> Food {
     let gives: &'static [Gives] = match data {
-        14 => &[Gives { effect: "speed", ticks: 3600, amplifier: 0, chance: 1.0 }],
-        15 => &[Gives { effect: "speed", ticks: 9600, amplifier: 0, chance: 1.0 }],
-        16 => &[Gives { effect: "speed", ticks: 1800, amplifier: 1, chance: 1.0 }],
-        21 => &[Gives { effect: "instant_health", ticks: 1, amplifier: 0, chance: 1.0 }],
-        22 => &[Gives { effect: "instant_health", ticks: 1, amplifier: 1, chance: 1.0 }],
-        23 => &[Gives { effect: "instant_damage", ticks: 1, amplifier: 0, chance: 1.0 }],
-        24 => &[Gives { effect: "instant_damage", ticks: 1, amplifier: 1, chance: 1.0 }],
-        25 => &[Gives { effect: "poison", ticks: 900, amplifier: 0, chance: 1.0 }],
-        26 => &[Gives { effect: "poison", ticks: 2400, amplifier: 0, chance: 1.0 }],
-        27 => &[Gives { effect: "poison", ticks: 450, amplifier: 1, chance: 1.0 }],
-        28 => &[Gives { effect: "regeneration", ticks: 900, amplifier: 0, chance: 1.0 }],
-        29 => &[Gives { effect: "regeneration", ticks: 2400, amplifier: 0, chance: 1.0 }],
-        30 => &[Gives { effect: "regeneration", ticks: 450, amplifier: 1, chance: 1.0 }],
-        36 => &[Gives { effect: "wither", ticks: 800, amplifier: 1, chance: 1.0 }],
+        5 => gives!["night_vision" 3600 0],
+        6 => gives!["night_vision" 9600 0],
+        7 => gives!["invisibility" 3600 0],
+        8 => gives!["invisibility" 9600 0],
+        9 => gives!["jump_boost" 3600 0],
+        10 => gives!["jump_boost" 9600 0],
+        11 => gives!["jump_boost" 1800 1],
+        12 => gives!["fire_resistance" 3600 0],
+        13 => gives!["fire_resistance" 9600 0],
+        14 => gives!["speed" 3600 0],
+        15 => gives!["speed" 9600 0],
+        16 => gives!["speed" 1800 1],
+        17 => gives!["slowness" 1800 0],
+        18 => gives!["slowness" 4800 0],
+        19 => gives!["water_breathing" 3600 0],
+        20 => gives!["water_breathing" 9600 0],
+        21 => gives!["instant_health" 1 0],
+        22 => gives!["instant_health" 1 1],
+        23 => gives!["instant_damage" 1 0],
+        24 => gives!["instant_damage" 1 1],
+        25 => gives!["poison" 900 0],
+        26 => gives!["poison" 2400 0],
+        27 => gives!["poison" 450 1],
+        28 => gives!["regeneration" 900 0],
+        29 => gives!["regeneration" 2400 0],
+        30 => gives!["regeneration" 450 1],
+        31 => gives!["strength" 3600 0],
+        32 => gives!["strength" 9600 0],
+        33 => gives!["strength" 1800 1],
+        34 => gives!["weakness" 1800 0],
+        35 => gives!["weakness" 4800 0],
+        36 => gives!["wither" 800 1],
+        37 => gives!["slowness" 400 3, "resistance" 400 2],
+        38 => gives!["slowness" 800 3, "resistance" 800 2],
+        39 => gives!["slowness" 400 5, "resistance" 400 3],
+        40 => gives!["slow_falling" 1800 0],
+        41 => gives!["slow_falling" 4800 0],
+        42 => gives!["slowness" 400 3],
         _ => &[],
     };
     Food { always: true, gives, leaves: Some("minecraft:glass_bottle"), drunk: true, ..plain(0.0, 0.0) }
@@ -127,6 +156,9 @@ mod tests {
         assert!(food("milk_bucket").is_some_and(|milk| milk.cures && milk.leaves == Some("minecraft:bucket")));
         let strong_poison = consumable("minecraft:potion", 27).unwrap();
         assert_eq!((strong_poison.gives, strong_poison.drunk, strong_poison.leaves), (&[Gives { effect: "poison", ticks: 450, amplifier: 1, chance: 1.0 }][..], true, Some("minecraft:glass_bottle")));
+        let turtle = consumable("minecraft:potion", 39).unwrap().gives;
+        assert_eq!((turtle.len(), turtle[0].effect, turtle[0].amplifier, turtle[1].effect, turtle[1].amplifier), (2, "slowness", 5, "resistance", 3));
+        assert!((5..=42).all(|data| !consumable("minecraft:potion", data).unwrap().gives.is_empty()) && consumable("minecraft:potion", 43).unwrap().gives.is_empty());
         assert!(consumable("minecraft:potion", 0).unwrap().gives.is_empty() && consumable("minecraft:stone", 0).is_none());
         assert_eq!((food("minecraft:stone"), food("dried_kelp").map(|food| food.ticks)), (None, Some(16)));
         assert!(food("minecraft:golden_apple").is_some_and(|food| food.always));

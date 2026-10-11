@@ -38,11 +38,27 @@ A potion put in the hand by `/replaceitem ... potion 1 <data>` and drunk
 | 28, 29, 30 | regeneration | I, I, II | 900, 2400, 450 |
 | 36 | wither | II | 800 |
 
+The rest (`drink2`, `research/captures/bds-drink2.txt`):
+
+| data | effect | level | ticks |
+| --- | --- | --- | --- |
+| 5, 6 | night vision | I | 3600, 9600 |
+| 7, 8 | invisibility | I | 3600, 9600 |
+| 9, 10, 11 | jump boost | I, I, II | 3600, 9600, 1800 |
+| 12, 13 | fire resistance | I | 3600, 9600 |
+| 17, 18, 42 | slowness | I, I, IV | 1800, 4800, 400 |
+| 19, 20 | water breathing | I | 3600, 9600 |
+| 31, 32, 33 | strength | I, I, II | 3600, 9600, 1800 |
+| 34, 35 | weakness | I | 1800, 4800 |
+| 37, 38, 39 | slowness IV, IV, VI with resistance III, III, IV | | 400, 800, 400 |
+| 40, 41 | slow falling | I | 1800, 4800 |
+| 43, 44, 45, 46 | effects 32, 33, 34, 35 | I | 3600 |
+
 ## Not drilled
 
 The chances themselves (taken as the Java game's 8, 3 and 6 in 10), what a hit does to
 absorption, suspicious stew, chorus fruit, what honey leaves in the hand (taken as a glass
-bottle), the other potions, splash and lingering ones, what
+bottle), splash and lingering potions, what
 a potion leaves in the hand (taken as a glass bottle), a stew's bowl.
 
 ## Sapling
@@ -50,5 +66,5 @@ a potion leaves in the hand (taken as a glass bottle), a stew's bowl.
 `sapling-data/src/food.rs` holds each food's effects, leftover and whether it cures;
 `vitals/eating.rs` applies them, and absorption is a ninth effect: 4 health a level on top of
 the player's own, which hits take first (`creatures/health.rs` `cushion`). Stews leave a bowl as
-in the Java game. The potions of the table are drunk to the same effect (`consumable`); any
-other is water.
+in the Java game. The potions of the tables are drunk to the same effect (`consumable`) but the last four,
+whose effects the shard lacks and which are water.
