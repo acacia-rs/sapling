@@ -5,6 +5,7 @@
 // TODO: the other vanilla commands; `@r` and selector arguments besides `type`.
 
 mod blocks;
+mod clock;
 mod containers;
 mod effects;
 mod players;
@@ -22,11 +23,11 @@ use crate::ServerBuilder;
 
 impl ServerBuilder {
     /// Adds vanilla's commands for operators (this module): `/setblock`, `/fill`, `/tp`, `/give`,
-    /// `/clear`, `/gamemode`, `/summon`, `/kill`, `/gamerule` and `/replaceitem block`. A command
+    /// `/clear`, `/gamemode`, `/summon`, `/kill`, `/gamerule`, `/time`, `/xp` and `/replaceitem block`. A command
     /// added later under the same name replaces one of these.
     pub fn vanilla_commands(self) -> Self {
         let blocks = self.command::<SetBlock>().command::<Fill>().command::<ReplaceItem>();
-        blocks.command::<Teleport>().command::<Give>().command::<Clear>().command::<GameModeCommand>().command::<Summon>().command::<Kill>().command::<Damage>().command::<DifficultyCommand>().command::<effects::EffectCommand>().command::<GameRule>()
+        blocks.command::<Teleport>().command::<Give>().command::<Clear>().command::<GameModeCommand>().command::<Summon>().command::<Kill>().command::<Damage>().command::<DifficultyCommand>().command::<effects::EffectCommand>().command::<GameRule>().command::<clock::Time>().command::<clock::Xp>()
     }
 }
 

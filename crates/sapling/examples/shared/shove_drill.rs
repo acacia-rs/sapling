@@ -195,3 +195,14 @@ pub fn golem() -> Vec<String> {
     lines.extend(["gamemode creative @s", "kill @e[type=!player]", "effect @s clear", ""].map(String::from));
     lines
 }
+
+/// `/time` and `/xp` in every form, with a query between.
+pub fn clock() -> Vec<String> {
+    let mut lines: Vec<String> = ["gamerule dodaylightcycle false", "time set 0", "time query daytime", "time query gametime", "time query day"].map(String::from).into();
+    for to in ["day", "noon", "sunset", "night", "midnight", "sunrise", "1000", "30000", "-5"] {
+        lines.extend([format!("time set {to}"), "time query daytime".into(), "time query day".into()]);
+    }
+    lines.extend(["time add 500", "time query daytime", "time add -100", "time query daytime", "time set banana", "time", "gamerule dodaylightcycle true"].map(String::from));
+    lines.extend(["xp 7 @s", "xp 30 @s", "xp 3L @s", "xp -1L @s", "xp -5 @s", "xp 5", "xp -100L @s", "xp 2l @s", "xp banana @s", "xp 1 @e[type=cow]", ""].map(String::from));
+    lines
+}

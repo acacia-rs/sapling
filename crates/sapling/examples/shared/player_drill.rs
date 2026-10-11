@@ -53,6 +53,7 @@ pub async fn act(actor: &mut Bot, line: &str) -> bool {
     true
 }
 
+pub const CLOCK_SHOWN: &[&str] = &["UpdateAttributes", "SyncWorldClocks", "SetTime", "Text", "LevelSoundEvent", "LevelEvent"];
 pub const SHOOT_SHOWN: &[&str] = &["UpdateAttributes", "EntityEvent", "SetEntityData", "LevelSoundEvent", "SetEntityMotion", "RemoveEntity", "AddEntity", "MoveEntityDelta", "MobEffect", "MobEquipment"];
 pub const HURT_SHOWN: &[&str] = &[
     "UpdateAttributes", "EntityEvent", "SetEntityData", "SetHealth", "Respawn", "LevelSoundEvent", "LevelEvent", "MovePlayer", "SetEntityMotion", "Text", "DeathInfo", "PlayerAction", "Animate",
@@ -90,6 +91,7 @@ pub fn drill(name: &str) -> Option<(Vec<String>, &'static [&'static str])> {
         "drink2" => (shove::drink2(), HURT_SHOWN),
         "shoot2" => (shove::shoot2(), SHOOT_SHOWN),
         "golem" => (shove::golem(), SHOOT_SHOWN),
+        "clock" => (shove::clock(), CLOCK_SHOWN),
         "toil" => (toil(), HURT_SHOWN),
         "armour" => (armour(), HURT_SHOWN),
         "effects" => (effects(), HURT_SHOWN),

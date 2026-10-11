@@ -77,6 +77,38 @@ pub(crate) fn give(world: &mut World, player: Entity, points: i32) {
     inventory.unsaved = true;
 }
 
+/// Adds `levels` to a player's level, which it is shown; one brought under 0 is at 0 with
+/// nothing of the next (research/captures/bds-clock.txt).
+fn add_levels(world: &mut World, player: Entity, levels: i32) -> bool {
+    let tick = world.resource::<Tick>().0;
+    let mut query = world.query::<(&NetId, &mut Inventory, &mut Outgoing)>();
+    let Ok((id, mut inventory, mut out)) = query.get_mut(world, player) else { return false };
+    let experience = &mut inventory.experience;
+    let to = experience.level.saturating_add(levels);
+    (experience.level, experience.progress) = (to.max(0), if to < 0 { 0.0 } else { experience.progress });
+    out.push(&attributes(id, experience, true, tick));
+    inventory.unsaved = true;
+    true
+}
+
+impl sapling_api::ExperienceBackend for crate::handlers::Ctx<'_> {
+    fn experience(&self, player: sapling_api::PlayerId) -> Option<(i32, f32)> {
+        let experience = self.world.get::<Inventory>(self.entity(player)?)?.experience;
+        Some((experience.level, experience.progress))
+    }
+
+    fn give_experience(&mut self, player: sapling_api::PlayerId, points: u32) -> bool {
+        self.entity(player).is_some_and(|entity| {
+            give(self.world, entity, points.min(i32::MAX as u32) as i32);
+            true
+        })
+    }
+
+    fn add_levels(&mut self, player: sapling_api::PlayerId, levels: i32) -> bool {
+        self.entity(player).is_some_and(|entity| add_levels(self.world, entity, levels))
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

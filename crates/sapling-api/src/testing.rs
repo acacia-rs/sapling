@@ -128,6 +128,18 @@ impl crate::HealthBackend for Fake {
     }
 }
 
+impl crate::ExperienceBackend for Fake {
+    fn experience(&self, _: PlayerId) -> Option<(i32, f32)> {
+        None
+    }
+    fn give_experience(&mut self, _: PlayerId, _: u32) -> bool {
+        false
+    }
+    fn add_levels(&mut self, _: PlayerId, _: i32) -> bool {
+        false
+    }
+}
+
 impl crate::EffectBackend for Fake {
     fn give_effect(&mut self, _: PlayerId, _: crate::Effect, _: u32, _: u8, _: bool) -> bool {
         false
