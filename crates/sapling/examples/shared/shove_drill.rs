@@ -117,16 +117,17 @@ pub fn wear() -> Vec<String> {
     lines
 }
 
-/// The actor in survival and, one after another, a wolf, a zombified piglin, an iron golem, a
-/// bee, an enderman and a zombie 1.5 blocks off, each left alone for four seconds, hit once
-/// with the fist and left for six more; then a wolf hit by the actor in creative.
+/// The actor in survival and, one after another, a wolf, a bee, an enderman, a zombie, a
+/// zombified piglin and an iron golem 1.5 blocks off, each left alone for four seconds, gone
+/// to, hit once with the fist and left for six more; then a wolf hit by the actor in creative.
 pub fn provoke() -> Vec<String> {
     let mut lines: Vec<String> =
         ["kill @e[type=!player]", "gamerule domobspawning false", "difficulty easy", "time set noon", "fill ~-3 ~-1 ~-12 ~12 ~-1 ~40 stone", "fill ~-3 ~ ~-12 ~12 ~6 ~40 air", "gamemode survival @s", "tp @s ~6 ~ ~20", ""].map(String::from).into();
-    for kind in ["wolf", "zombie_pigman", "iron_golem", "bee", "enderman", "zombie"] {
+    // Those that kill come last: one who dies rises far from the next.
+    for kind in ["wolf", "bee", "enderman", "zombie", "zombie_pigman", "iron_golem"] {
         lines.extend(["effect @s instant_health 1 4".into(), format!("summon {kind} ~ ~ ~1.5")]);
         lines.extend(std::iter::repeat_n(String::new(), 4));
-        lines.push(format!("!hit {kind}"));
+        lines.extend([format!("tp @s @e[type={kind},c=1]"), String::new(), format!("!hit {kind}")]);
         lines.extend(std::iter::repeat_n(String::new(), 6));
         lines.extend(["kill @e[type=!player]", "", ""].map(String::from));
     }

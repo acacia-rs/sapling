@@ -142,8 +142,13 @@ four seconds and then hit with the fist (`research/captures/bds-provoke.txt`):
 - The wolf bit for 2.5 on easy (3), the piglin hit for 5.5 (9: its 5 and its golden sword) once
   a second at a zombie's speed (0.114 a tick), and the golem for 10.5 and threw the actor up at
   0.43; its steps were 0.048 a tick.
-- The actor died of the piglin and of the golem, so the bee and the enderman after them were
-  summoned far from it and showed nothing.
+- A second run, the actor gone to each mob before its hit: a bee hit by day took no target and
+  flew on at 0.155 a tick; an enderman hit took none and was 9 blocks off the next tick. The
+  piglin, hit 40 blocks under the floor where the enderman had led the actor, took none either,
+  which the first run contradicts and no third settled.
+- Run against sapling the piglin did as in the first run (5.5 a second apart, 0.114 a tick); its
+  wolf had strolled out of reach before the hit, where BDS's stood still, so only the test
+  shows a wolf's bite.
 
 ## Strolling (`stroll`)
 
