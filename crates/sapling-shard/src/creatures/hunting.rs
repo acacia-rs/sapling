@@ -16,7 +16,9 @@ use crate::{entities, late_sounds, vitals};
 
 /// Ticks between two looks for a player.
 const LOOKS: u64 = 10;
-/// An archer comes this near its prey and no nearer.
+/// An archer walks at its prey for this many ticks after taking it (BDS's went 1.7 blocks, from
+/// 10 off and from 4), then stands while it is this near.
+const NEARS: u64 = 19;
 const SHOOTS_FROM: f32 = 10.0;
 /// One that blows up lights its fuse this near its prey, and puts it out this far from it.
 const IGNITES: f32 = 2.5;
@@ -38,6 +40,8 @@ const MIDDLE: f32 = 0.5;
 #[derive(Component, Default)]
 pub(super) struct Hunter {
     prey: Option<Entity>,
+    /// The tick it took its prey in.
+    since: u64,
     ready: u64,
 }
 
@@ -99,7 +103,8 @@ fn pick(world: &mut World, entity: Entity, layer: Entity, id: u64, kind: &str, b
     }
     let prey = found.map(|(prey, _)| prey);
     if prey != had {
-        world.get_mut::<Hunter>(entity)?.prey = prey;
+        let mut hunter = world.get_mut::<Hunter>(entity)?;
+        (hunter.prey, hunter.since) = (prey, now);
         let target = prey.and_then(|prey| world.get::<NetId>(prey)).map_or(0, |id| id.0 as i64);
         let cell = body.at.map(|c| c.floor() as i32);
         entities::tell_viewers(world, entity, layer, cell, vec![targets(id, target)]);
@@ -115,7 +120,9 @@ pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity, id: u64, k
     let (Some(body), Some(speed)) = (world.get::<Body>(entity).copied(), sapling_data::mob_traits(kind).hunts.map(|hunts| hunts.speed)) else { return false };
     let Some(feet) = pick(world, entity, layer, id, kind, &body) else { return blast::is_lit(world, entity) };
     // A lit creeper stands where it is, and an archer within its range.
-    let stands = blast::is_lit(world, entity) || (sapling_data::mob_traits(kind).hunts.is_some_and(|hunts| hunts.shoots.is_some()) && distance(feet, body.at) < SHOOTS_FROM);
+    let now = world.resource::<Tick>().0;
+    let aims = sapling_data::mob_traits(kind).hunts.is_some_and(|hunts| hunts.shoots.is_some()) && world.get::<Hunter>(entity).is_some_and(|hunter| now >= hunter.since + NEARS);
+    let stands = blast::is_lit(world, entity) || (aims && distance(feet, body.at) < SHOOTS_FROM);
     match stands {
         true => legs::rest(world, entity),
         false => legs::walk(world, entity, layer, &body, [feet[0], feet[2]], speed, TOUCHING),

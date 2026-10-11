@@ -29,9 +29,8 @@ const SPREAD: f32 = 0.075;
 /// A tick keeps this much of its speed and adds this much fall.
 const DRAG: f32 = 0.99;
 const WEIGHT: f32 = 0.05;
-/// It costs its speed times this, rounded up, and reaches this far around itself.
+/// It costs its speed times this, rounded up.
 const HARM: f32 = 2.0;
-const REACH: f32 = 0.3;
 const PLAYER: [f32; 2] = [0.6, 1.8];
 /// Ticks one lies stuck before it goes.
 const LIES: u64 = 1200;
@@ -71,12 +70,13 @@ pub(super) fn loose(world: &mut World, layer: Entity, kind: &str, archer: &Body,
     late_sounds::play_later(world, 0, layer, archer.at.map(|c| c.floor() as i32), sound("bow", middle, kind));
 }
 
-/// The player in `layer` whose box, a little wider, the point `at` is in.
+/// The player in `layer` whose box the arrow's, its bottom middle at `at`, reaches into: BDS's
+/// flew over a player 8 blocks off, a hand above its head.
 fn met(world: &World, layer: Entity, at: [f32; 3]) -> Option<Entity> {
     in_world(world).into_iter().find(|player| {
         let Some(feet) = world.get::<Position>(*player).map(|position| position.feet) else { return false };
-        let across = PLAYER[0] / 2.0 + REACH;
-        world.get::<InLayer>(*player).map(|layer| layer.0) == Some(layer) && vitals::is_mortal(world, *player) && (at[0] - feet[0]).abs() < across && (at[2] - feet[2]).abs() < across && at[1] > feet[1] - REACH && at[1] < feet[1] + PLAYER[1] + REACH
+        let across = (PLAYER[0] + SIZE[0]) / 2.0;
+        world.get::<InLayer>(*player).map(|layer| layer.0) == Some(layer) && vitals::is_mortal(world, *player) && (at[0] - feet[0]).abs() < across && (at[2] - feet[2]).abs() < across && at[1] + SIZE[1] > feet[1] && at[1] < feet[1] + PLAYER[1]
     })
 }
 
