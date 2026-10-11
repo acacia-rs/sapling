@@ -299,9 +299,9 @@ Wrong + missing against each region's one-worker world (stock oracle beside it f
 
 | region | stock, ticked | replay, branch point | replay, now | what is left |
 |---|---|---|---|---|
-| stony peaks | 2113 | 60 | 31 | one lava fall, below |
+| stony peaks (two runs: `stony`, `stony2`) | 2113 | 60 | 0 | |
 | jagged peaks | 542 | 3 | 0 | |
-| savanna plateau | 474 | 221 | 221 | sculk patch try 130 of ring source 563,-391 (first `Sculk>deepslate`) |
+| savanna plateau | 474 | 221 | 0 | |
 | windswept gravelly hills | 328 | 3 | 0 | |
 | badlands | 1813 | 0 | 0 | |
 | old growth pine taiga | 573 | 0 | 0 | |
@@ -313,10 +313,16 @@ Wrong + missing against each region's one-worker world (stock oracle beside it f
 
 What the replay found:
 - **Feature writes wake no liquid**: worldgen-bds-liquids.md, "Where ticks come from".
-- **A catalyst needs a solid-blocking block below.** `SculkPatchFeature::place` reads the block's byte +0x71
-  where we asked `is_solid`; a sculk sensor (properties 0, no 0x40000) under the patch origin got a catalyst
-  from us and none from BDS (stony peaks -3631,-29,4131, jagged peaks -6448,-12,-6074). Not read out of the
-  registry yet: the two cells are the evidence.
+- **Lava hardens by a neighbour's update only, and a dried cell flows down once** (stony peaks 31 -> 0):
+  worldgen-bds-liquids.md, "How they run".
+- **A catalyst needs an opaque solid block below.** `SculkPatchFeature::place` reads the block's byte +0x71
+  where we asked `is_solid`; a sculk sensor under the patch origin got a catalyst from us and none from BDS
+  (stony peaks -3631,-29,4131, jagged peaks -6448,-12,-6074). A probe read +0x71 for the default block of all
+  1477 types: it is the solid-blocking property (`BlockType` +0x130 bit 0x40000) without leaves, glass, ice,
+  mangrove roots, farmland, paths, copper grates, pistons, chorus and light blocks, plus honey, jigsaw and
+  structure blocks (`Block::is_opaque_solid`). The patch's start test reads the same byte.
+- Savanna plateau's 221 cells (sculk patch try 130 of ring source 563,-391 onwards) went with the two changes
+  above; which of them it was is not separated.
 - **Sulfur spikes are waterloggable** like pointed dripstone (gravelly hills -2001,-5,-5561, three cells).
 
 ## What a server can make canonical
