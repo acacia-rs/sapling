@@ -132,6 +132,13 @@ A skeleton 10 and then 4 blocks from the actor (`research/captures/bds-shoot.txt
 - From 4 blocks it hit: `HurtAnimation` with 3 (projectile), the hit's throw of 0.4 away and up,
   4 of health (its speed of 1.72 twice, rounded up), `bow.hit`, and the arrow removed.
 
+## The iron golem (`golem`)
+
+The actor, floating down from each throw and healed between, hit a golem and took twenty of its
+hits (`research/captures/bds-golem.txt`): on easy 4.5 to 11.5 in halves, which are whole hits
+of 7 to 21; thrown away at 0.52 and up at 0.4288 (less where it was still in the air), 1.3 to
+2.3 seconds apart as it walked after the actor at 0.049 a tick.
+
 ## Other archers (`shoot2`)
 
 A stray, a bogged and a pillager 5 blocks from the actor (`research/captures/bds-shoot2.txt`):
@@ -218,8 +225,8 @@ A stray and a bogged shoot as the skeleton with their effect on the arrow, and a
 it walks on, its crossbow heard loading where it stood at the shot before; it is not shown anew.
 
 A wolf and a zombified piglin hunt none but a survival player that hit them, from that tick
-(`hunting::provoke`); the golem, whose hit varies, does not yet, and a piglin's fellows do not
-join in.
+(`hunting::provoke`), and so does an iron golem, with a hit of 7 to 21 and its throw; a piglin's
+fellows do not join in, and a golem guards no villager.
 
 `creatures/hunting.rs`, for kinds with `attack=`, `speed=` and `sees=` in `mob-traits.tsv`: the
 zombie and the seven kinds above, each with its numbers and what its hit gives (not the cave

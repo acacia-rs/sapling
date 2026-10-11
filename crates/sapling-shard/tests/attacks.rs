@@ -101,6 +101,24 @@ fn a_wolf_leaves_a_player_be_until_it_is_hit_and_then_bites_it() {
 }
 
 #[test]
+fn an_iron_golem_hit_hits_back_for_7_to_21_and_throws_its_hitter_up() {
+    // research/captures/bds-golem.txt: on easy half and one more, 4.5 to 11.5; thrown up at 0.4288.
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    h.remote.run(|ctx| {
+        ctx.set_difficulty(sapling_api::Difficulty::Easy);
+        assert!(ctx.spawn_entity("minecraft:iron_golem", [0.5, 65.0, 2.5]).is_some());
+    });
+    let before: Vec<acacia_proto::RawPacket> = (0..40).flat_map(|_| h.tick_all().to(1).to_vec()).collect();
+    let golem = all::<AddEntity>(&before)[0].runtime_id;
+    h.receive(1, &attack(golem));
+    let after: Vec<acacia_proto::RawPacket> = (0..60).flat_map(|_| h.tick_all().to(1).to_vec()).collect();
+    let left: Vec<f32> = health(&after).into_iter().filter(|left| *left < 20.0).collect();
+    let thrown: Vec<f32> = all::<acacia_proto::packets::SetEntityMotion>(&after).iter().filter(|thrown| thrown.runtime_entity_id == 1).map(|thrown| thrown.velocity.y).collect();
+    assert!(left.first().is_some_and(|left| (8.5..=15.5).contains(left) && (left * 2.0).fract() == 0.0) && thrown.first() == Some(&0.4288), "{left:?} {thrown:?}");
+}
+
+#[test]
 fn strength_adds_to_a_fists_hit_and_weakness_takes_most_of_it() {
     // research/captures/bds-fx.txt: of a cow's 10 a fist left 6.01 at strength's second level, 9.7 weak.
     for (effect, level, left) in [(sapling_api::Effect::Strength, 1, 6.01), (sapling_api::Effect::Strength, 0, 7.7), (sapling_api::Effect::Weakness, 0, 9.7)] {

@@ -35,7 +35,7 @@ minecraft:happy_ghast	no_fall xp=1-3
 minecraft:hoglin	xp=5-5 strolls=0.12
 minecraft:horse	xp=1-3
 minecraft:husk	breathes_water xp=5-5 strolls=0.23 attack=3 speed=0.23 sees=35 hits=hunger:600
-minecraft:iron_golem	no_fall strolls=0.15
+minecraft:iron_golem	no_fall strolls=0.15 attack=7 upto=21 speed=0.15 sees=16 provoked
 minecraft:llama	xp=1-3 strolls=0.175 panics=0.3
 minecraft:magma_cube	fire_immune no_fall
 minecraft:mooshroom	xp=1-3 strolls=0.2 panics=0.3125

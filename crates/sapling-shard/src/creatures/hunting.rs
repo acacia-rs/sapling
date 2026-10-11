@@ -20,6 +20,8 @@ const LOOKS: u64 = 10;
 /// its middle.
 const REPLANS: u64 = 10;
 const ARRIVED: f32 = 0.35;
+/// An iron golem's hit throws this fast away and up (research/captures/bds-golem.txt).
+const FLINGS: [f32; 2] = [0.52, 0.4288];
 /// The ticks after a shot at which a crossbow's loading is heard, and what of it.
 // TODO: heard where the archer stood at the shot, not where it has walked to since.
 const LOADS: [(u64, &str); 3] = [(3, "start"), (13, "middle"), (23, "end")];
@@ -187,7 +189,10 @@ pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity, id: u64, k
 pub(super) fn strike(world: &mut World, entity: Entity, layer: Entity, id: u64, kind: &str, body: &Body) -> Option<()> {
     let now = world.resource::<Tick>().0;
     let hunts = sapling_data::mob_traits(kind).hunts?;
-    let harm = hunts.attack;
+    let harm = match hunts.upto {
+        Some(most) => hunts.attack + world.get_resource_or_insert_with(crate::blocks::Dice::default).roll((most - hunts.attack) as u32 + 1) as f32,
+        None => hunts.attack,
+    };
     let (prey, ready) = world.get::<Hunter>(entity).map(|hunter| (hunter.prey, hunter.ready))?;
     if prey.is_none() && hunts.explodes.is_some() {
         blast::put_out(world, entity, layer, id, kind, body);
@@ -236,7 +241,8 @@ pub(super) fn strike(world: &mut World, entity: Entity, layer: Entity, id: u64, 
     entities::tell_viewers(world, entity, layer, cell, vec![sapling_net::encode(&swing)]);
     let far = dx.hypot(dz);
     let away = if far > 1e-4 { [dx / far, dz / far] } else { [0.0; 2] };
-    let bitten = vitals::bitten(world, prey, harm, kind, [away[0] * THROW, THROW, away[1] * THROW]);
+    let [along, up] = if hunts.upto.is_some() { FLINGS } else { [THROW; 2] };
+    let bitten = vitals::bitten(world, prey, harm, kind, [away[0] * along, up, away[1] * along]);
     if let Some((effect, ticks)) = hunts.gives.filter(|_| bitten) {
         vitals::afflict(world, prey, effect, ticks);
     }

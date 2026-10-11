@@ -184,3 +184,14 @@ pub fn shoot2() -> Vec<String> {
     lines.extend(["gamemode creative @s", ""].map(String::from));
     lines
 }
+
+/// The actor in survival, floating down from every throw, hits an iron golem and is healed
+/// each second for forty while the golem hits back.
+pub fn golem() -> Vec<String> {
+    let mut lines: Vec<String> =
+        ["kill @e[type=!player]", "gamerule domobspawning false", "difficulty easy", "fill ~-3 ~-1 ~-12 ~12 ~-1 ~40 stone", "fill ~-3 ~ ~-12 ~12 ~12 ~40 air", "gamemode survival @s", "tp @s ~6 ~ ~20", "effect @s slow_falling 600 0", ""].map(String::from).into();
+    lines.extend(["summon iron_golem ~ ~ ~2", "", "tp @s @e[type=iron_golem,c=1]", "!hit iron_golem"].map(String::from));
+    lines.extend(std::iter::repeat_n("effect @s instant_health 1 4".to_owned(), 40));
+    lines.extend(["gamemode creative @s", "kill @e[type=!player]", "effect @s clear", ""].map(String::from));
+    lines
+}

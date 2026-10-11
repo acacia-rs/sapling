@@ -50,6 +50,7 @@ HUNTS = {
     "minecraft:cave_spider": "attack=2 speed=0.3 sees=16",
     "minecraft:creeper": "attack=0 speed=0.25 sees=16 explodes=3",
     "minecraft:husk": "attack=3 speed=0.23 sees=35 hits=hunger:600",
+    "minecraft:iron_golem": "attack=7 upto=21 speed=0.15 sees=16 provoked",
     "minecraft:pillager": "attack=0 speed=0.35 sees=16 shoots=46 closes",
     "minecraft:silverfish": "attack=1 speed=0.25 sees=8",
     "minecraft:skeleton": "attack=0 speed=0.25 sees=16 shoots=61",
