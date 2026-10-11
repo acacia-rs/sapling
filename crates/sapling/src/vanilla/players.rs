@@ -15,10 +15,16 @@ fn or_sender(ctx: &ShardCtx<'_>, sender: &Sender, target: Option<&Selector>) -> 
     players(ctx, sender, target.unwrap_or(&Selector::Sender))
 }
 
-/// `/tp [victim] <destination>`: the first word is a target unless it is a coordinate.
+/// `/tp [victim] <destination>`: the first word is a target unless it is a coordinate, and the
+/// destination a place or whoever a target names (research/captures/bds-golem.txt).
 pub(crate) struct Teleport {
     target: Option<Selector>,
-    to: Coords,
+    to: Destination,
+}
+
+enum Destination {
+    Place(Coords),
+    At(Selector),
 }
 
 impl CommandSyntax for Teleport {
@@ -29,37 +35,60 @@ impl CommandSyntax for Teleport {
             aliases: vec!["teleport".into()],
             description: "Teleports entities".into(),
             permission: Permission::Operator,
-            overloads: vec![Overload { parameters: vec![destination.clone()] }, Overload { parameters: vec![ParameterSpec::of::<Selector>("victim"), destination] }],
+            overloads: vec![
+                Overload { parameters: vec![destination.clone()] },
+                Overload { parameters: vec![ParameterSpec::of::<Selector>("victim"), destination] },
+                Overload { parameters: vec![ParameterSpec::of::<Selector>("destination")] },
+                Overload { parameters: vec![ParameterSpec::of::<Selector>("victim"), ParameterSpec::of::<Selector>("destination")] },
+            ],
         }
     }
 
     fn parse(args: &mut Args<'_>) -> Result<Self, ParseError> {
         let is_coordinate = |word: &str| word.starts_with('~') || word.parse::<f32>().is_ok();
-        let target = match args.peek() {
+        let first = match args.peek() {
             Some(word) if !is_coordinate(word) => Some(Selector::parse(args)?),
             _ => None,
         };
-        Ok(Self { target, to: Coords::parse(args)? })
+        Ok(match (first, args.peek().map(is_coordinate)) {
+            (Some(to), None) => Self { target: None, to: Destination::At(to) },
+            (target, Some(false)) => Self { target, to: Destination::At(Selector::parse(args)?) },
+            (target, _) => Self { target, to: Destination::Place(Coords::parse(args)?) },
+        })
     }
 }
 
 impl Command for Teleport {
     /// Each player moved is told where to, as BDS tells them.
     fn run(self, ctx: &mut ShardCtx<'_>, sender: &Sender, out: &mut Output) {
-        let to = self.to.from(origin(ctx, sender));
+        let here = origin(ctx, sender);
+        let (to, at) = match &self.to {
+            Destination::Place(coords) => (coords.from(here), None),
+            // The nearest of those it names.
+            Destination::At(selector) => {
+                let named = players(ctx, sender, selector).into_iter().filter_map(|player| Some((ctx.position(player.id)?.feet, player.name)));
+                let all = named.chain(entities(ctx, selector).into_iter().map(|entity| (entity.feet, display_name(&entity.kind))));
+                let far = |feet: &[f32; 3]| (0..3).map(|axis| (feet[axis] - here[axis]).powi(2)).sum::<f32>();
+                match all.min_by(|a, b| far(&a.0).total_cmp(&far(&b.0))) {
+                    Some((feet, name)) => (feet, Some(name)),
+                    None => return no_target(out),
+                }
+            }
+        };
         let (moved_players, moved) = (or_sender(ctx, sender, self.target.as_ref()), self.target.as_ref().map_or_else(Vec::new, |target| entities(ctx, target)));
         let [x, y, z] = to.map(|c| format!("{c:.2}"));
         for player in &moved_players {
             ctx.teleport(player.id, to);
-            ctx.send_translation(player.id, "commands.tp.successVictim", &[format!("{x}, {y}, {z}")]);
+            ctx.send_translation(player.id, "commands.tp.successVictim", &[at.clone().unwrap_or_else(|| format!("{x}, {y}, {z}"))]);
         }
         for entity in &moved {
             ctx.move_entity(entity.id, to);
         }
         let names: Vec<String> = moved_players.iter().map(|player| player.name.clone()).chain(moved.iter().map(|entity| display_name(&entity.kind))).collect();
-        match names.is_empty() {
-            true => no_target(out),
-            false => out.translate("commands.tp.success.coordinates", vec![names.join(", "), x, y, z], true),
+        match (names.is_empty(), at) {
+            (true, _) => no_target(out),
+            (false, Some(at)) => out.translate("commands.tp.success", vec![names.join(", "), at], true),
+            (false, None) => out.translate("commands.tp.success.coordinates", vec![names.join(", "), x, y, z], true),
         }
     }
 }
@@ -215,5 +244,22 @@ impl Command for Damage {
             true => out.translate("commands.damage.failed", vec![names()], false),
             false => out.translate("commands.damage.success", vec![hurt.join(", ")], true),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn tp_takes_a_place_or_a_target_to_go_to_with_or_without_a_victim() {
+        let sender = Sender::Console;
+        let parsed = |line: &str| Teleport::parse(&mut Args::new(line, 0, &sender, &[])).map(|tp| (tp.target, matches!(tp.to, Destination::At(Selector::Entities { .. }))));
+        let golem = Some(Selector::Entities { kind: Some("minecraft:iron_golem".into()) });
+        assert_eq!(parsed("~ ~8 ~").ok(), Some((None, false)));
+        assert_eq!(parsed("@s 1 2 3").ok(), Some((Some(Selector::Sender), false)));
+        assert_eq!(parsed("@s @e[type=iron_golem,c=1]").ok(), Some((Some(Selector::Sender), true)));
+        assert_eq!(parsed("@e[type=iron_golem]").ok(), Some((None, true)));
+        assert_eq!(golem.is_some() && parsed("@s").is_ok(), true, "alone, a target is where to");
     }
 }
