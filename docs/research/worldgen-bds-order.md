@@ -420,8 +420,10 @@ Open under replay, each with its first source:
   west and on down to y 4 in BDS (12 cells) and only south in ours, where the next cell hardens and cuts it.
   `_getSlopeDistance` (148b5f020) reads the same as ours, so the world differed when that cell ticked. Next
   step: `scratchpad liq-mansion.json` (tick and spread entries armed for that decoration) beside `feature_trace`.
-  A second run with those entries armed exists (`liq-mansion`), not compared yet; it predates the queue fix
-  below, so rerun `tools/replay.sh x mansion2 test` first.
+  A run with those entries armed (canon `mansion3`) agrees with ours in the first generation's 673 logged
+  ticks, in order, and parts in the second: BDS ticks -8137,7,15971 and -8136,9,15969 where ours ticks
+  -8137,8,15970 and a cell at y -45. Next step: the `queue` lines (with backtraces) of generation 1 around
+  -8137,7..9,15969..15971 in `scratchpad liq-mansion/dbg/dbg.log` against our `queue` trace lines there.
 - **Far out, 5**: two glow lichens on other cells (sources 100004,100002 and 100007,100006), one dirt cell of
   an ore blob BDS writes and ours does not (1600014,53,1600103), one water cell. Not traced.
 - **Near origin** has no canon: the 32x32 region's run was cut by the pack's script watchdog after four of
