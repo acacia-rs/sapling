@@ -307,11 +307,18 @@ Wrong + missing against each region's one-worker world (stock oracle beside it f
 | cherry grove | 282 | | 0 | |
 | savanna | 132 | | 0 | |
 | dark forest | 164 | | 0 (6 with the canon's first run) | |
+| mangrove swamp | 28 | (47, shaft4's run) | 0 (2 at first) | |
+| eroded badlands | 57 | | 0 | |
+| wooded badlands | 56 | | 0 (45 at first) | |
+| windswept hills | 62 | | 0 | |
+| snowy slopes | 29 | | 0 | |
+| grove | 19 | | 0 | |
+| swamp | 21 | | 0 | |
 | badlands | 1813 | 0 | 0 | |
 | old growth pine taiga | 573 | 0 | 0 | |
 | pale garden | 744 | 0 | 0 | |
 | bamboo jungle | 552 | 0 | 0 | |
-| old growth birch forest | 20 | 53 | 53 | canon `r-ob` has no structure order: 18 mineshaft cells and what they move |
+| old growth birch forest | 20 | 53 (`r-ob`: no structure order) | 0 (`birch2`) | |
 
 (Badlands' 7 and pine taiga's 37 of replay4 were gone at the branch point: all2's merge of shaft4's 3x3 view.)
 
@@ -330,6 +337,17 @@ What the replay found:
 - **Leaf litter does not lie on leaves.** Three litter cells of ours sat on a leaves block over grass
   (dark forest -9427,87,6563); the bed now asks the block below for support from above
   (`supports(up, Any)`; the kind BDS asks is a guess, leaves refuse every kind).
+- **The lava lake belongs to its chunk's decoration.** `decorationPostProcessChunk` places the lake, then the
+  monster rooms, then the feature rules, all in the 3x3 as it is. sapling laid every lake over the finished
+  terrain apart from the sources, so no feature ever saw one: in wooded badlands BDS's source 299,-556 sets a
+  water spring (4784,62,-8887) in the wall of the cavity that chunk 298's lake had opened, and its water turns
+  twenty lava cells to obsidian (45 cells). `feature/lake.rs` now runs it as the source's first step on the
+  post-process generator the rooms continue; `OverworldGenerator::decorate` is left as the judge's lake-only
+  stage.
+- **Monster rooms test the material.** A room keeps non-solid blocks in its walls; a mineshaft's rails
+  (material 24, not solid) became cobblestone in ours (mangrove swamp, two cells). Webs, torches and ladders
+  share the material.
+- Mangrove swamp's 47 liquid cells of shaft4 (water into mineshaft corridors) are gone with the liquid rules.
 - Savanna plateau's 221 cells (sculk patch try 130 of ring source 563,-391 onwards) went with the two changes
   above; which of them it was is not separated.
 - **Sulfur spikes are waterloggable** like pointed dripstone (gravelly hills -2001,-5,-5561, three cells).
