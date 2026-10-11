@@ -99,3 +99,21 @@ fn a_wolf_leaves_a_player_be_until_it_is_hit_and_then_bites_it() {
     let after: Vec<acacia_proto::RawPacket> = (0..80).flat_map(|_| h.tick_all().to(1).to_vec()).collect();
     assert!(health(&after).contains(&17.5), "hit, it turns on its hitter: {:?}", health(&after));
 }
+
+#[test]
+fn strength_adds_to_a_fists_hit_and_weakness_takes_most_of_it() {
+    // research/captures/bds-fx.txt: of a cow's 10 a fist left 6.01 at strength's second level, 9.7 weak.
+    for (effect, level, left) in [(sapling_api::Effect::Strength, 1, 6.01), (sapling_api::Effect::Strength, 0, 7.7), (sapling_api::Effect::Weakness, 0, 9.7)] {
+        let mut h = Harness::new();
+        h.enter(1, "Alex");
+        h.enter(2, "Steve");
+        h.remote.run(move |ctx| {
+            assert!(ctx.spawn_entity("minecraft:cow", [2.5, 65.0, 0.5]).is_some());
+            assert!(ctx.give_effect(sapling_api::PlayerId(1), effect, 400, level, true));
+        });
+        let cow = (0..3).flat_map(|_| all::<AddEntity>(h.tick_all().to(2))).collect::<Vec<_>>().remove(0).runtime_id;
+        h.receive(1, &attack(cow));
+        let now = health(h.tick_all().to(2));
+        assert!(now.len() == 1 && (now[0] - left).abs() < 1e-3, "{effect:?} {level}: {now:?}");
+    }
+}

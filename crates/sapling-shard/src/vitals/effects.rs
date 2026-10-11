@@ -37,7 +37,7 @@ const SLOWS_AS: &str = "7107de5e-7ce8-4030-940e-514c1f160890";
 /// A level of strength multiplies a hit by the first and adds the second; of weakness likewise
 /// (research/captures/bds-fx.txt: a fist's 1 was 3.99 at strength's second level, 0.3 weak).
 const STRENGTHENS: [f32; 2] = [1.3, 0.3];
-const WEAKENS: [f32; 2] = [0.8, -0.4];
+const WEAKENS: [f32; 2] = [0.8, 0.4];
 /// Health a level of absorption puts on top, and the most the client shows.
 const CUSHIONS: f32 = 4.0;
 const MOST_CUSHION: f32 = 16.0;
