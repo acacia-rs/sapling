@@ -82,3 +82,20 @@ fn a_fist_costs_a_cow_one_throws_it_and_ten_kill_it_for_experience_as_on_bds() {
     let orbs = (0..25).flat_map(|_| all::<AddEntity>(h.tick_all().to(2))).filter(|added| added.entity_type == "minecraft:xp_orb").count();
     assert!((1..=3).contains(&orbs), "{orbs} orbs");
 }
+
+#[test]
+fn a_wolf_leaves_a_player_be_until_it_is_hit_and_then_bites_it() {
+    // research/captures/bds-provoke.txt: its target the tick it is hit, 2.5 a bite on easy.
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    h.remote.run(|ctx| {
+        ctx.set_difficulty(sapling_api::Difficulty::Easy);
+        assert!(ctx.spawn_entity("minecraft:wolf", [0.5, 65.0, 2.5]).is_some());
+    });
+    let before: Vec<acacia_proto::RawPacket> = (0..60).flat_map(|_| h.tick_all().to(1).to_vec()).collect();
+    let wolf = all::<AddEntity>(&before)[0].runtime_id;
+    assert!(!health(&before).contains(&17.5), "left alone it bites nobody");
+    h.receive(1, &attack(wolf));
+    let after: Vec<acacia_proto::RawPacket> = (0..80).flat_map(|_| h.tick_all().to(1).to_vec()).collect();
+    assert!(health(&after).contains(&17.5), "hit, it turns on its hitter: {:?}", health(&after));
+}

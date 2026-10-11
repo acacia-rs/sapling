@@ -33,12 +33,12 @@ Each needs its rule looked up first (`bdsre` for BDS, the Java jar for data), th
    hurts and throws a mob, and its kill leaves experience (`creatures/attacks.rs`, `hit`). Left:
    what the doc lists as not drilled. A zombie and seven kinds like it take the nearest survival player, walk at it
    and hit it, a creeper blows up by it (`creatures/blast.rs`, `boom`) and a skeleton shoots at it (`creatures/arrows.rs`, `shoot`) (`creatures/hunting.rs`, `docs/research/mob-attacks.md`, `bite`, `slain`, `kinds`); and every kind that walks strolls when it has nothing to do and flees a hit (`creatures/strolling.rs`, `stroll`, `flee`); left
-   there: the other kinds that shoot, a hit mob that turns on its hitter. Survival players have health: falls,
+   there: the other kinds that shoot, the other kinds that turn on their hitter (`provoke` drilled a wolf and a zombified piglin). Survival players have health: falls,
    fire, lava, water over the head and a block around them hurt, `/damage` and `/kill` too; they die
    leaving items and experience and rise by their bed or at the world's spawn (`vitals.rs`,
    `docs/research/player-damage.md`, `bds_command_probe hurt` and `smother`). A wounded player mends by its
    hunger and an empty hunger starves it (`vitals/hunger.rs`, `hunger`). Food in the hand is eaten
-   (`vitals/eating.rs`, `eat`). Jumps, sprints, harvested blocks and hits tire a player (`tire`, `toil`). Armour stops part of a hit of the causes it stopped on BDS (`armour`, `worn`). Twelve effects by `/effect` (`vitals/effects.rs`, `docs/research/effects.md`, `effects`); food and potions give theirs and milk ends them (`docs/research/food-effects.md`, `sick`, `drink`). Left there: the other effects and their potions, armour's wear, and the doc's "Sapling" list.
+   (`vitals/eating.rs`, `eat`). Jumps, sprints, harvested blocks and hits tire a player (`tire`, `toil`). Armour stops part of a hit of the causes it stopped on BDS (`armour`, `worn`). Twelve effects by `/effect` (`vitals/effects.rs`, `docs/research/effects.md`, `effects`); food and potions give theirs and milk ends them (`docs/research/food-effects.md`, `sick`, `drink`). Left there: the other effects and their potions, and the doc's "Sapling" list.
 2. **Redstone**: plates, buttons, levers, blocks of redstone and torches power dust, lamps, doors,
    trapdoors, gates and hopper locks (`blocks/redstone.rs`, `docs/research/redstone.md`; plugins
    read `ctx.power_at`), checked against `bds_command_probe redstone`. Circuits a world folder

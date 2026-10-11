@@ -54,7 +54,9 @@ HUNTS = {
     "minecraft:spider": "attack=2 speed=0.3 sees=16",
     "minecraft:vindicator": "attack=13 speed=0.35 sees=12",
     "minecraft:wither_skeleton": "attack=9 speed=0.3125 sees=16 hits=wither:200",
+    "minecraft:wolf": "attack=3 speed=0.3 sees=16 provoked",
     "minecraft:zombie": "attack=3 speed=0.23 sees=35",
+    "minecraft:zombie_pigman": "attack=9 speed=0.23 sees=35 provoked",
     "minecraft:zombie_villager": "attack=3 speed=0.23 sees=35",
     "minecraft:zombie_villager_v2": "attack=3 speed=0.23 sees=35",
 }

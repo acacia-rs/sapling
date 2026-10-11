@@ -104,22 +104,40 @@ fn pick(world: &mut World, entity: Entity, layer: Entity, id: u64, kind: &str, b
     let sight = sapling_data::mob_traits(kind).hunts?.sees;
     let hunts = world.resource::<Settings>().0.difficulty != Difficulty::Peaceful;
     let mut found = had.filter(|_| hunts).and_then(|prey| Some((prey, seen(world, prey, layer, body.at, sight)?)));
-    if found.is_none() && hunts && (now + id).is_multiple_of(LOOKS) {
+    let looks = !sapling_data::mob_traits(kind).hunts?.provoked;
+    if found.is_none() && hunts && looks && (now + id).is_multiple_of(LOOKS) {
         let near = |(_, feet): &(Entity, [f32; 3])| distance(body.at, *feet);
         found = in_world(world).into_iter().filter_map(|player| Some((player, seen(world, player, layer, body.at, sight)?))).filter(|(_, feet)| in_sight(world, layer, body, *feet)).min_by(|a, b| near(a).total_cmp(&near(b)));
     }
     let prey = found.map(|(prey, _)| prey);
     if prey != had {
-        let mut hunter = world.get_mut::<Hunter>(entity)?;
-        (hunter.prey, hunter.since) = (prey, now);
-        let target = prey.and_then(|prey| world.get::<NetId>(prey)).map_or(0, |id| id.0 as i64);
-        let cell = body.at.map(|c| c.floor() as i32);
-        entities::tell_viewers(world, entity, layer, cell, vec![targets(id, target)]);
-        if prey.is_some() {
-            late_sounds::play_later(world, 1, layer, cell, sound("mob.warning", id, kind, body, HEAD));
-        }
+        take(world, entity, layer, id, kind, body, prey);
     }
     found.map(|(_, feet)| feet)
+}
+
+/// Gives the hunter `prey` and tells its viewers, with a growl if it is some.
+fn take(world: &mut World, entity: Entity, layer: Entity, id: u64, kind: &str, body: &Body, prey: Option<Entity>) -> Option<()> {
+    let now = world.resource::<Tick>().0;
+    let mut hunter = world.get_mut::<Hunter>(entity)?;
+    (hunter.prey, hunter.since) = (prey, now);
+    let target = prey.and_then(|prey| world.get::<NetId>(prey)).map_or(0, |id| id.0 as i64);
+    let cell = body.at.map(|c| c.floor() as i32);
+    entities::tell_viewers(world, entity, layer, cell, vec![targets(id, target)]);
+    if prey.is_some() {
+        late_sounds::play_later(world, 1, layer, cell, sound("mob.warning", id, kind, body, HEAD));
+    }
+    Some(())
+}
+
+/// A player hit the mob: one that hunts none but its hitter (research/captures/bds-provoke.txt)
+/// takes it for its prey at once, if it may be hunted.
+pub(super) fn provoke(world: &mut World, entity: Entity, layer: Entity, id: u64, kind: &str, body: &Body, player: Entity) {
+    let Some(hunts) = sapling_data::mob_traits(kind).hunts.filter(|hunts| hunts.provoked) else { return };
+    let hunted = world.resource::<Settings>().0.difficulty != Difficulty::Peaceful && seen(world, player, layer, body.at, hunts.sees).is_some();
+    if hunted && world.get::<Hunter>(entity).is_some_and(|hunter| hunter.prey != Some(player)) {
+        take(world, entity, layer, id, kind, body, Some(player));
+    }
 }
 
 /// Where a hunter walks to this tick, and how near it stops: straight at its prey where the

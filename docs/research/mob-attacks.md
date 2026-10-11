@@ -132,6 +132,19 @@ A skeleton 10 and then 4 blocks from the actor (`research/captures/bds-shoot.txt
 - From 4 blocks it hit: `HurtAnimation` with 3 (projectile), the hit's throw of 0.4 away and up,
   4 of health (its speed of 1.72 twice, rounded up), `bow.hit`, and the arrow removed.
 
+## Hit back (`provoke`)
+
+A wolf, a zombified piglin and an iron golem 1.5 blocks from the actor in survival, left alone
+four seconds and then hit with the fist (`research/captures/bds-provoke.txt`):
+
+- None took a target before the hit. Each took the actor the tick it was hit (`TargetEid`), with
+  the `mob.warning` sound a tick later as a zombie's.
+- The wolf bit for 2.5 on easy (3), the piglin hit for 5.5 (9: its 5 and its golden sword) once
+  a second at a zombie's speed (0.114 a tick), and the golem for 10.5 and threw the actor up at
+  0.43; its steps were 0.048 a tick.
+- The actor died of the piglin and of the golem, so the bee and the enderman after them were
+  summoned far from it and showed nothing.
+
 ## Strolling (`stroll`)
 
 A zombie and a cow left alone for a minute on a floor 40 blocks square, the actor in creative
@@ -182,6 +195,10 @@ sticking in blocks and hurting players whose box its own meets. It walks at its 
 first 19 ticks, which takes it BDS's 1.7 blocks; an arrow hurts a mob in its way too (not drilled) and cannot be
 picked up. Run against sapling the drill's far skeleton still hits more often than BDS's, whose
 arrows passed a hand over the player's head.
+
+A wolf and a zombified piglin hunt none but a survival player that hit them, from that tick
+(`hunting::provoke`); the golem, whose hit varies, does not yet, and a piglin's fellows do not
+join in.
 
 `creatures/hunting.rs`, for kinds with `attack=`, `speed=` and `sees=` in `mob-traits.tsv`: the
 zombie and the seven kinds above, each with its numbers and what its hit gives (not the cave
