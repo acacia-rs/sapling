@@ -112,3 +112,16 @@ pub fn bonemeal2() -> Vec<String> {
     lines.extend(["kill @e[type=!player]", "clear @s", "gamemode creative @s", ""].map(String::from));
     lines
 }
+
+/// A log east of the actor with a row of leaves ten long run out from it, a block off the
+/// floor: with the random ticks sped up, a leaf at the row's far end is set and taken away, and
+/// the row is watched to see how near the log the decay comes.
+pub fn leafreach() -> Vec<String> {
+    let mut lines: Vec<String> = ["fill ~-1 ~-1 ~7 ~14 ~-1 ~11 stone", "tp @s ~ ~ ~9 -90 0", "fill ~1 ~ ~-1 ~14 ~4 ~1 air", "setblock ~2 ~1 ~ oak_log", "fill ~3 ~1 ~ ~12 ~1 ~ oak_leaves [\"persistent_bit\"=false]", "gamerule randomtickspeed 200", "", ""]
+        .map(String::from)
+        .into();
+    lines.extend(["setblock ~13 ~1 ~ oak_leaves [\"persistent_bit\"=false]", "setblock ~13 ~1 ~ air"].map(String::from));
+    lines.extend(std::iter::repeat_n(String::new(), 25));
+    lines.extend(["gamerule randomtickspeed 1", "fill ~1 ~ ~-1 ~14 ~4 ~1 air", "kill @e[type=item]"].map(String::from));
+    lines
+}

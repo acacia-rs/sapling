@@ -164,3 +164,20 @@ fn cocoa_wart_and_a_pitcher_crop_grow_by_themselves() {
     assert!(grown[0].contains("age=2") && grown[1].contains("age=3"), "{grown:?}");
     assert!(grown[2].contains("growth=4") && grown[2].contains("upper_block_bit=0") && grown[3].contains("growth=4") && grown[3].contains("upper_block_bit=1"), "{grown:?}");
 }
+
+#[test]
+fn leaves_hold_four_out_from_a_log_and_no_further() {
+    // research/captures/bds-leafreach.txt: of a row run out from a log the fifth on decayed.
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    h.remote.run(|ctx| {
+        assert!(ctx.set_game_rule("randomTickSpeed", sapling_api::RuleValue::Int(200)));
+        assert!(ctx.set_block([-6, 66, 5], &block("oak_log", "")));
+        for x in -5..=3 {
+            assert!(ctx.set_block([x, 66, 5], &block("oak_leaves", "persistent_bit=0")));
+        }
+    });
+    h.tick_all();
+    h.remote.run(|ctx| assert!(ctx.update_block([3, 66, 5], &Block::air())));
+    assert_eq!(names(&mut h, 600, &[[-5, 66, 5], [-2, 66, 5], [-1, 66, 5], [2, 66, 5]]), ["oak_leaves", "oak_leaves", "air", "air"]);
+}

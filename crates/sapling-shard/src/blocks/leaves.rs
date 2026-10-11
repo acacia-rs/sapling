@@ -1,7 +1,7 @@
 //! Leaves decay once the wood that held them is gone (docs/research/growth.md, "Leaves"): the
 //! leaves around a log or a leaf that went are marked, and a marked leaf's random tick drops it
 //! if no wood is near (growth/rules.rs).
-// TODO: how far wood may be, through leaves, is the Java game's 6; BDS's was not measured.
+// TODO: a leaf that holds is shown with its mark cleared, where BDS's stayed marked.
 
 use std::collections::HashSet;
 
@@ -12,7 +12,9 @@ use super::{level, send, with_property};
 
 const MARK: &str = "update_bit";
 const KEPT: &str = "persistent_bit";
-const REACH: usize = 6;
+/// How far wood may be, through leaves: of BDS's row run out from a log, the four nearest held
+/// and the fifth on went (research/captures/bds-leafreach.txt).
+const REACH: usize = 4;
 const AROUND: [[i32; 3]; 6] = [[1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1]];
 
 type Level = sapling_world::World;

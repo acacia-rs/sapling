@@ -79,11 +79,17 @@ Measured with `bds_command_probe leaves` (`bds-leaves.txt`, `sapling-leaves.txt`
   the last 2.1 seconds on. Four oak saplings were left.
 - The same cube with `persistent_bit` set, as a player's leaves have it: nothing changed.
 
+`bds_command_probe leafreach` (`bds-leafreach.txt`): a log with a row of ten leaves run out from
+it, and a leaf set and taken away at the far end. The decay came down the row a leaf every
+quarter second or so and stopped at the fourth leaf from the log, which was sent marked and
+stood for the twenty seconds left: wood holds leaves four away through leaves, not the Java
+game's six.
+
 Sapling marks the leaves in the 26 cells around a log or a leaf that goes, and a marked leaf's
-random tick drops it, with what a leaf leaves, unless wood is within six of it through leaves,
+random tick drops it, with what a leaf leaves, unless wood is within four of it through leaves,
 which clears the mark (`blocks/leaves.rs`). Its capture has the same 26 marked in the tick and
-all of them gone 1.2 seconds on. Six is the Java game's reach, and BDS's four saplings of 26
-are more than sapling's table gives on average; neither was looked into.
+all of them gone 1.2 seconds on. BDS's four saplings of 26 are more than sapling's table gives
+on average, which was not looked into, and BDS's held leaf stayed marked where sapling clears it.
 
 ## Farmland trodden down
 
