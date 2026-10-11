@@ -116,6 +116,7 @@ pub fn drill(name: &str) -> Option<(Vec<String>, &'static [&'static str])> {
         "tnt" => (uses::tnt(), uses::TNT_SHOWN),
         "bonemeal" => (uses::bonemeal(), uses::BONEMEAL_SHOWN),
         "fire" => (uses::fire(), uses::BONEMEAL_SHOWN),
+        "quench" => (uses::quench(), uses::BONEMEAL_SHOWN),
         "toil" => (toil(), HURT_SHOWN),
         "armour" => (armour(), HURT_SHOWN),
         "effects" => (effects(), HURT_SHOWN),

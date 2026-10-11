@@ -127,3 +127,23 @@ pub fn fire() -> Vec<String> {
     lines.extend(["kill @e[type=!player]", "clear @s", ""].map(String::from));
     lines
 }
+
+/// The actor in survival, looking east on stone, puts fire two blocks east out: by hand, with a
+/// bucket of water, by taking the block under it away, and by rain (over stone, then netherrack).
+pub fn quench() -> Vec<String> {
+    let cases: [(&str, &[&str], usize); 5] = [
+        ("netherrack", &["!break 2 0 0"], 2),
+        ("netherrack", &["replaceitem entity @s slot.weapon.mainhand 0 water_bucket", "!click 2 -1 0"], 3),
+        ("netherrack", &["setblock ~2 ~-1 ~ air"], 3),
+        ("stone", &["weather rain"], 12),
+        ("netherrack", &[], 12),
+    ];
+    let mut lines: Vec<String> = ["kill @e[type=!player]", "gamemode survival @s", "clear @s", "gamerule dofiretick true", "weather clear", ""].map(String::from).into();
+    for (floor, steps, waits) in cases {
+        lines.extend(["fill ~-1 ~-1 ~7 ~1 ~-1 ~9 stone".into(), "tp @s ~ ~ ~8 -90 0".into(), "fill ~1 ~-1 ~-3 ~7 ~8 ~3 air".into(), format!("fill ~1 ~-1 ~-1 ~3 ~-1 ~1 {floor}"), "setblock ~2 ~ ~ fire".into()]);
+        lines.extend(steps.iter().map(|step| (*step).to_owned()));
+        lines.extend(std::iter::repeat_n(String::new(), waits));
+    }
+    lines.extend(["weather clear", "kill @e[type=!player]", "gamemode creative @s", "clear @s", ""].map(String::from));
+    lines
+}

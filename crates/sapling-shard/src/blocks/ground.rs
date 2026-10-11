@@ -100,6 +100,7 @@ pub(super) fn may_stand(level: &World, pos: BlockPos, id: u32) -> bool {
     match block {
         _ if CROPS.contains(&block) => under == Some("minecraft:farmland"),
         "minecraft:nether_wart" => under == Some("minecraft:soul_sand"),
+        "minecraft:fire" | "minecraft:soul_fire" => super::fire::stands(level, pos),
         "minecraft:sweet_berry_bush" => under.is_some_and(|under| VEGETATION.contains(&under)) && !is_wet(level, pos),
         REEDS => cane_may_stand(level, pos),
         "minecraft:redstone_wire" => !is_wet(level, pos) && (has_top(level, below(pos), false) || under.is_some_and(|under| LIT_FROM_BELOW.contains(&under))),

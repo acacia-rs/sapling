@@ -33,10 +33,29 @@ went between 7 and 21.
 
 What burns is told by tag and name with the Java game's numbers (`burns` in `blocks/fire.rs`).
 
+## Putting it out
+
+Measured with `bds_command_probe quench` (`bds-quench.txt`, `sapling-quench.txt`), the actor in
+survival and the fire set by `/setblock`:
+
+| What was done | What BDS did |
+| --- | --- |
+| the fire broken by hand | `BlockStartBreak`, `ParticleDestroy` of the fire at its middle, air; no sound of its own |
+| a bucket of water emptied on the block under it | water where the fire was |
+| the block under it set to air | the fire gone in the same tick |
+| rain, the fire over stone | gone within two seconds |
+| rain, the fire over netherrack | burnt on for the twelve seconds watched |
+
+Sapling does the same: fire is a block that needs a solid block under it or one that burns
+beside it (`ground.rs`), any fire written ticks, and a tick under rain and an open sky puts out a
+fire that does not burn on. It also sends the fire's `ParticleDestroy` when its hold goes, which
+BDS did not.
+
 ## Left
 
 - BDS's own rule and odds: the capture fits the Java game's only loosely, and its wool went in
   the tick it was lit.
-- Rain, and fire going out with `dofiretick` off as BDS's did.
-- Fire that a world folder holds, and fire from lava, lightning and burning arrows, does not tick.
+- Fire going out with `dofiretick` off as BDS's did.
+- Fire that a world folder holds does not tick until it is written again; lava, lightning and
+  burning arrows light none.
 - What burns away leaves floating what stood on it.

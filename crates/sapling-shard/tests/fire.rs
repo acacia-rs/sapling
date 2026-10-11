@@ -4,7 +4,7 @@ mod common;
 
 use acacia_proto::packets::LevelSoundEvent;
 use common::{Harness, all, click};
-use sapling_api::{Block, Item, PlayerId, Slot};
+use sapling_api::{Block, Item, PlayerId, Slot, Weather};
 
 const ALEX: PlayerId = PlayerId(1);
 
@@ -65,4 +65,34 @@ fn fire_on_planks_spreads_and_burns_them_away() {
     h.tick_all();
     let left = got.recv().expect("ran");
     assert!(left <= 4, "{left} of nine planks left after a minute");
+}
+
+#[test]
+fn fire_goes_out_with_the_block_under_it_and_in_rain_but_not_over_netherrack() {
+    // research/captures/bds-quench.txt.
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    let named = |h: &Harness| {
+        let (sent, got) = std::sync::mpsc::channel();
+        h.remote.run(move |ctx| sent.send([0, 3, 6].map(|z| ctx.block([3, 65, z]).map(|block| block.name).unwrap_or_default())).expect("the test waits"));
+        got
+    };
+    h.remote.run(|ctx| {
+        assert!(ctx.set_block([3, 64, 6], &Block::new("minecraft:netherrack")));
+        for z in [0, 3, 6] {
+            assert!(ctx.set_block([3, 65, z], &Block::new("minecraft:fire")));
+        }
+        assert!(ctx.update_block([3, 64, 0], &Block::air()));
+    });
+    h.tick_all();
+    let unheld = named(&h);
+    h.tick_all();
+    assert_eq!(unheld.recv().expect("ran"), ["minecraft:air", "minecraft:fire", "minecraft:fire"]);
+    h.remote.run(|ctx| ctx.set_weather(Weather::Rain, None));
+    for _ in 0..45 {
+        h.tick_all();
+    }
+    let rained = named(&h);
+    h.tick_all();
+    assert_eq!(rained.recv().expect("ran"), ["minecraft:air", "minecraft:air", "minecraft:fire"]);
 }

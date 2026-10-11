@@ -6,7 +6,7 @@
 // is not ticked.
 
 use bevy_ecs::prelude::*;
-use sapling_api::{Block, BlockPos, Difficulty, Face};
+use sapling_api::{Block, BlockPos, Difficulty, Face, Weather};
 
 use super::{Dice, level, send, with_property};
 use crate::components::{Settings, Tick};
@@ -78,16 +78,43 @@ fn fire_of(level: &Level, age: u32) -> Option<u32> {
     with_property(level.registry(), young, AGE, &age.to_string())
 }
 
+/// Has the fire at `pos` tick in `after` ticks, or sooner if it was to.
 fn schedule(world: &mut World, layer: Entity, pos: BlockPos, after: u64) {
     let when = world.resource::<Tick>().0 + after;
-    world.get_resource_or_insert_with(Fires::default).0.push((when, layer, pos));
+    let mut fires = world.get_resource_or_insert_with(Fires::default);
+    match fires.0.iter_mut().find(|(_, in_layer, at)| (*in_layer, *at) == (layer, pos)) {
+        Some(due) => due.0 = due.0.min(when),
+        None => fires.0.push((when, layer, pos)),
+    }
+}
+
+fn wait(world: &mut World) -> u64 {
+    let [least, more] = EVERY;
+    u64::from(least + world.get_resource_or_insert_with(Dice::default).roll(more))
+}
+
+/// A block was written at `pos`: fire, however it came there, ticks.
+pub(super) fn written(world: &mut World, layer: Entity, pos: BlockPos) {
+    if level(world, layer).and_then(|level| name_at(level, pos)) == Some(FIRE) {
+        let wait = wait(world);
+        schedule(world, layer, pos, wait);
+    }
+}
+
+/// Whether fire may be at `pos`: over a solid block, or by one that burns.
+pub(super) fn stands(level: &Level, [x, y, z]: BlockPos) -> bool {
+    is_solid(level, [x, y - 1, z]) || catches_by(level, [x, y, z]) > 0
+}
+
+fn is_rained_on(level: &Level, [x, y, z]: BlockPos) -> bool {
+    !(y + 1..).take_while(|y| level.in_height(*y)).any(|y| is_solid(level, [x, y, z]))
 }
 
 /// Lights the free cell `into`, over a solid block or by one that burns; false where no fire can be.
 pub(super) fn light(world: &mut World, layer: Entity, into: BlockPos) -> bool {
     let [x, y, z] = into;
     let Some(level) = level(world, layer) else { return false };
-    if !is_air(level, into) || !(is_solid(level, [x, y - 1, z]) || catches_by(level, into) > 0) {
+    if !is_air(level, into) || !stands(level, into) {
         return false;
     }
     let is_soul = name_at(level, [x, y - 1, z]).is_some_and(|under| under.contains("soul_"));
@@ -106,13 +133,12 @@ struct Burnt {
     burns_on: bool,
     /// The fire itself, older: no one is told, as BDS told no one of its fires' ages.
     aged: Option<u32>,
-    /// Blocks set, and whether each is a new fire.
-    set: Vec<(BlockPos, u32, bool)>,
+    set: Vec<(BlockPos, u32)>,
     primed: Vec<BlockPos>,
 }
 
 /// A tick of the fire at `pos`: the Java game's `FireBlock.tick`.
-fn burnt(level: &Level, pos: BlockPos, hardship: u32, roll: &mut dyn FnMut(u32) -> u32) -> Burnt {
+fn burnt(level: &Level, pos: BlockPos, hardship: u32, rains: bool, roll: &mut dyn FnMut(u32) -> u32) -> Burnt {
     let [x, y, z] = pos;
     let (mut done, air) = (Burnt::default(), level.registry().air_id());
     let Some(state) = level.registry().get(level.block(x, y, z)).filter(|state| state.name == FIRE) else { return done };
@@ -121,9 +147,10 @@ fn burnt(level: &Level, pos: BlockPos, hardship: u32, roll: &mut dyn FnMut(u32) 
     let (stands, is_fed) = (is_solid(level, under), catches_by(level, pos) > 0);
     let older = (age + roll(3) / 2).min(OLDEST);
     let burns_on = name_at(level, under).is_some_and(|under| ETERNAL.contains(&under));
-    let goes_out = !(stands || is_fed) || !burns_on && if is_fed { older == OLDEST && roll(4) == 0 && name_at(level, under).and_then(burns).is_none() } else { !stands || older > 3 };
+    // Rain put BDS's fire over stone out within two seconds, and not its fire over netherrack.
+    let goes_out = !(stands || is_fed) || !burns_on && rains && is_rained_on(level, pos) || !burns_on && if is_fed { older == OLDEST && roll(4) == 0 && name_at(level, under).and_then(burns).is_none() } else { !stands || older > 3 };
     if goes_out {
-        done.set.push((pos, air, false));
+        done.set.push((pos, air));
         return done;
     }
     done.burns_on = true;
@@ -138,8 +165,8 @@ fn burnt(level: &Level, pos: BlockPos, hardship: u32, roll: &mut dyn FnMut(u32) 
         }
         match fire_of(level, spread_age(&mut *roll)).filter(|_| roll(older + 10) < 5) {
             _ if name == TNT => done.primed.push(cell),
-            Some(fire) => done.set.push((cell, fire, true)),
-            None => done.set.push((cell, air, false)),
+            Some(fire) => done.set.push((cell, fire)),
+            None => done.set.push((cell, air)),
         }
     }
     for [dx, dy, dz] in (-1..=1).flat_map(|dx| (-1..=4).flat_map(move |dy| (-1..=1).map(move |dz| [dx, dy, dz]))).filter(|by| *by != [0; 3]) {
@@ -147,10 +174,10 @@ fn burnt(level: &Level, pos: BlockPos, hardship: u32, roll: &mut dyn FnMut(u32) 
         let catches = if is_air(level, cell) { catches_by(level, cell) } else { 0 };
         let sides = 100 + 100 * (dy - 1).max(0) as u32;
         let odds = (catches + 40 + hardship * 7) / (older + 30);
-        if catches > 0 && odds > 0 && roll(sides) <= odds && !done.set.iter().any(|(at, ..)| *at == cell)
+        if catches > 0 && odds > 0 && roll(sides) <= odds && !done.set.iter().any(|(at, _)| *at == cell)
             && let Some(fire) = fire_of(level, spread_age(&mut *roll))
         {
-            done.set.push((cell, fire, true));
+            done.set.push((cell, fire));
         }
     }
     done
@@ -174,18 +201,15 @@ pub(crate) fn tick(world: &mut World) {
             (0..ROLLS).map(|_| dice.roll(1 << 20)).collect()
         };
         let mut rolls = rolls.into_iter();
+        let rains = crate::weather::of(world, layer) != Weather::Clear;
         let Some(level) = level(world, layer).filter(|level| level.level().rules.on(RULE)) else { continue };
-        let burnt = burnt(level, pos, hardship, &mut |sides| rolls.next().unwrap_or(0) % sides.max(1));
-        let [least, more] = EVERY;
-        let wait = u64::from(least + world.get_resource_or_insert_with(Dice::default).roll(more));
+        let burnt = burnt(level, pos, hardship, rains, &mut |sides| rolls.next().unwrap_or(0) % sides.max(1));
+        let wait = wait(world);
         if let Some(aged) = burnt.aged {
             send::set_quietly(world, layer, pos, aged);
         }
-        for (cell, id, is_new) in burnt.set {
+        for (cell, id) in burnt.set {
             send::set(world, layer, cell, id);
-            if is_new {
-                schedule(world, layer, cell, wait);
-            }
         }
         for cell in burnt.primed {
             crate::tnt::light(world, layer, cell);
