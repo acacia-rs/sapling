@@ -113,3 +113,30 @@ fn a_player_who_drops_onto_farmland_treads_it_to_dirt_and_one_who_steps_on_does_
     land(&mut h, &[72.0, 70.0]);
     assert_eq!(names(&mut h, 3, &[[0, 64, 0], [0, 65, 0]]), ["dirt", "air"], "and the wheat on it goes");
 }
+
+#[test]
+fn scaffolding_holds_six_out_from_its_column_and_comes_down_with_its_foot() {
+    // research/captures/bds-scaffold.txt: put one at a time, as the drill put them.
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    for at in [[-4, 65, 3], [-4, 66, 3]].into_iter().chain((-3..=3).map(|x| [x, 66, 3])) {
+        h.remote.run(move |ctx| assert!(ctx.set_block(at, &block("scaffolding", ""))));
+        for _ in 0..6 {
+            h.tick_all();
+        }
+    }
+    for _ in 0..40 {
+        h.tick_all();
+    }
+    let (sent, got) = std::sync::mpsc::channel();
+    h.remote.run(move |ctx| {
+        let far: Vec<String> = (-4..=3).map(|x| ctx.block([x, 66, 3]).map(|block| format!("{} {}", block.name.replace("minecraft:", ""), block.properties)).unwrap_or_default()).collect();
+        sent.send((far, ctx.block([3, 65, 3]).map(|fallen| fallen.name))).expect("the test waits");
+    });
+    h.tick_all();
+    let (far, fallen) = got.recv().expect("ran");
+    let held: Vec<String> = (0..=6).map(|far| format!("scaffolding stability={far},stability_check=1")).chain(["air ".to_owned()]).collect();
+    assert_eq!((far, fallen.as_deref()), (held, Some("minecraft:scaffolding")), "the seventh out fell to the floor");
+    h.remote.run(|ctx| assert!(ctx.update_block([-4, 65, 3], &Block::air())));
+    assert_eq!(names(&mut h, 40, &[[-4, 66, 3], [-1, 66, 3], [2, 66, 3], [3, 65, 3]]), ["air", "air", "air", "scaffolding"]);
+}

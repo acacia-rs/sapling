@@ -121,15 +121,19 @@ fn slide(world: &mut World, layer: Entity, pos: BlockPos) -> Option<BlockPos> {
     if !name_at(world, layer, pos).is_some_and(falls) || !is_free(world, layer, Face::Down.neighbour(lowest)) {
         return None;
     }
-    let (registry, id) = block(world, layer, lowest)?;
+    let_fall(world, layer, lowest).then_some(lowest)
+}
+
+/// Sets the block at `pos` falling, whatever it is; false where it could not.
+pub(super) fn let_fall(world: &mut World, layer: Entity, pos: BlockPos) -> bool {
+    let Some((registry, id)) = block(world, layer, pos) else { return false };
     let air = registry.air_id();
-    if !send::set_quietly(world, layer, lowest, air) {
-        return None;
+    if !send::set_quietly(world, layer, pos, air) {
+        return false;
     }
-    let falling = flight::start(world, layer, id, lowest)?;
-    let falling = world.get::<NetId>(falling)?.0;
-    send::tell_synced(world, layer, lowest, falling, send::Transition::Create);
-    Some(lowest)
+    let Some(falling) = flight::start(world, layer, id, pos).and_then(|falling| world.get::<NetId>(falling).map(|id| id.0)) else { return false };
+    send::tell_synced(world, layer, pos, falling, send::Transition::Create);
+    true
 }
 
 /// Moves the falling blocks and starts the falls that are due; the cells that changed, for their

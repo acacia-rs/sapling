@@ -37,3 +37,12 @@ pub fn clicks2() -> Vec<String> {
     lines.extend(["kill @e[type=!player]", "clear @s", ""].map(String::from));
     lines
 }
+
+/// Scaffolding east of the actor: a column two high, a row run out from its top eight long,
+/// then the column's foot taken away.
+pub fn scaffold() -> Vec<String> {
+    let mut lines: Vec<String> = ["fill ~-1 ~-1 ~7 ~12 ~-1 ~11 stone", "tp @s ~ ~ ~9 -90 0", "fill ~1 ~ ~-1 ~12 ~6 ~1 air", "setblock ~2 ~ ~ scaffolding", "setblock ~2 ~1 ~ scaffolding"].map(String::from).into();
+    lines.extend((3..=10).map(|x| format!("setblock ~{x} ~1 ~ scaffolding")));
+    lines.extend(["", "setblock ~2 ~ ~ air", "", "", "fill ~1 ~ ~-1 ~12 ~6 ~1 air", "kill @e[type=!player]"].map(String::from));
+    lines
+}

@@ -122,6 +122,26 @@ click; a decorated pot keeps its stack as `item`, one more a click of the same t
 sound's pitch 700 and 500 for a full stack (`blocks/holders.rs`). Both leave what they hold when
 broken.
 
+## Scaffolding
+
+Measured with `bds_command_probe scaffold` (`bds-scaffold.txt`, `sapling-scaffold.txt`): a column
+two high on stone, a row set out from its top a block a second, then the column's foot set to
+air.
+
+- A block is set with `stability` already told, the column's 0 and the row's 1 to 6, and
+  `stability_check` 0; two ticks on it is sent again with `stability_check` 1.
+- The seventh and eighth of the row were set with `stability` 7 and two ticks on were falling
+  blocks, which landed on the floor as scaffolding of `stability` 0.
+- With the foot gone the column's top took 2, one more than the block beside it, and tick by
+  tick each block took one more than its nearest neighbour, until each in turn reached 7, was
+  sent so with `stability_check` 1, and was air, leaving its item: seven items.
+
+Sapling keeps the same reckoning (`blocks/scaffolds.rs`): none over a solid block, the same as
+the scaffolding under it, one more than the nearest beside it; at 7 a block that has not looked
+yet falls and one that has breaks. Its capture has the same states in the same order, but that
+a block is first shown as set (the default state, `stability` 7) and not with its distance, and
+that a block about to break is not shown at 7 first.
+
 ## Left
 
 - From the second round: the lodestone compass, powder snow in a cauldron. A hit takes no

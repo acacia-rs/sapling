@@ -151,6 +151,7 @@ fn write(world: &mut World, layer: Entity, pos: BlockPos, id: u32) -> Option<u32
     super::ores::written(world, layer, pos);
     super::growth::written(world, layer, pos);
     super::leaves::written(world, layer, pos, old);
+    super::scaffolds::written(world, layer, pos);
     Some(id)
 }
 
