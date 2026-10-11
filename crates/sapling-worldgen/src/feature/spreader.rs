@@ -84,7 +84,8 @@ pub fn is_vein(block: Block) -> bool {
 
 /// 148b41420: a water source, or a replaceable non-fluid.
 pub fn vein_replaceable(block: Block) -> bool {
-    block == Block::Water || block == Block::Air || super::tree::common::is_replaceable_plant(block) || block.multiface().is_some()
+    // Snow layers are replaceable too: the city's ice box floor (one-worker run, veins set into them).
+    block == Block::Water || block == Block::Air || super::tree::common::is_replaceable_plant(block) || block.multiface().is_some() || block.name() == "snow_layer"
 }
 
 /// `getSpreadFromFaceTowardDirection`: where a `state` at `at` on face `from` spreads toward
