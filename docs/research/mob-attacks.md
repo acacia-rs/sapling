@@ -152,6 +152,13 @@ A stray, a bogged and a pillager 5 blocks from the actor (`research/captures/bds
   `crossbow.loading.start`, `.middle` and `.end`, 10 ticks apart, the first 3 ticks after the
   shot before; it held `MobEquipment` anew at each.
 
+## Spiders by day (`spiders`)
+
+A spider and a cave spider 5 blocks from the actor in survival
+(`research/captures/bds-spiders.txt`): at noon under the sky neither took a target in six
+seconds; at noon under a stone roof and at midnight both did. Sapling's take none while the sun
+is on them (`hunting::pick`, `harm::is_sunlit`); one that has its prey keeps it into the day.
+
 ## Hit back (`provoke`)
 
 A wolf, a zombified piglin and an iron golem 1.5 blocks from the actor in survival, left alone

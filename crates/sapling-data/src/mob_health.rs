@@ -55,6 +55,8 @@ pub struct Hunts {
     pub upto: Option<f32>,
     /// The ticks between two of its hits, where they are not the 20 of most.
     pub every: Option<u32>,
+    /// It takes no prey while the sun shines on it (the spiders).
+    pub by_dark: bool,
 }
 
 pub fn mob_traits(identifier: &str) -> MobTraits {
@@ -65,7 +67,7 @@ pub fn mob_traits(identifier: &str) -> MobTraits {
     let value = |name: &str| row.and_then(|(_, traits)| traits.split(' ').find_map(|held| held.strip_prefix(name)));
     let number = |name: &str| value(name).and_then(|value| value.parse::<f32>().ok());
     let gives = value("hits=").and_then(|given| given.split_once(':')).and_then(|(effect, ticks)| Some((effect, ticks.parse().ok()?)));
-    let hunts = number("attack=").zip(number("speed=")).zip(number("sees=")).map(|((attack, speed), sees)| Hunts { attack, speed, sees, gives, explodes: number("explodes="), shoots: number("shoots=").map(|ticks| ticks as u32), provoked: has("provoked"), closes: has("closes"), upto: number("upto="), every: number("every=").map(|ticks| ticks as u32) });
+    let hunts = number("attack=").zip(number("speed=")).zip(number("sees=")).map(|((attack, speed), sees)| Hunts { attack, speed, sees, gives, explodes: number("explodes="), shoots: number("shoots=").map(|ticks| ticks as u32), provoked: has("provoked"), closes: has("closes"), upto: number("upto="), every: number("every=").map(|ticks| ticks as u32), by_dark: has("by_dark") });
     MobTraits { fire_immune: has("fire_immune"), burns_in_sun: has("burns_in_sun"), no_fall: has("no_fall"), breathes_water: has("breathes_water"), experience, hunts, strolls: number("strolls="), panics: number("panics=") }
 }
 

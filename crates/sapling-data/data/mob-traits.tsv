@@ -9,7 +9,7 @@ minecraft:breeze	no_fall xp=10-10 strolls=0.4
 minecraft:camel	xp=1-3 strolls=0.18 panics=0.36
 minecraft:camel_husk	breathes_water xp=1-3 strolls=0.18
 minecraft:cat	no_fall xp=1-3 strolls=0.24 panics=0.375
-minecraft:cave_spider	xp=5-5 attack=2 speed=0.3 sees=16
+minecraft:cave_spider	xp=5-5 attack=2 speed=0.3 sees=16 by_dark
 minecraft:chicken	no_fall xp=1-3 strolls=0.25 panics=0.375
 minecraft:cod	breathes_water no_air xp=1-3
 minecraft:copper_golem	no_fall strolls=0.2 panics=0.3
@@ -63,7 +63,7 @@ minecraft:skeleton	breathes_water burns_in_sun xp=5-5 strolls=0.25 attack=0 spee
 minecraft:skeleton_horse	breathes_water xp=1-3 strolls=0.14
 minecraft:sniffer	xp=1-3 strolls=0.09 panics=0.18
 minecraft:snow_golem	no_fall strolls=0.2
-minecraft:spider	xp=5-5 attack=2 speed=0.3 sees=16
+minecraft:spider	xp=5-5 attack=2 speed=0.3 sees=16 by_dark
 minecraft:squid	breathes_water no_air xp=1-3
 minecraft:stray	breathes_water burns_in_sun xp=5-5 strolls=0.25 attack=0 speed=0.25 sees=16 shoots=61 hits=slowness:600
 minecraft:strider	fire_immune xp=1-3 strolls=0.128 panics=0.176

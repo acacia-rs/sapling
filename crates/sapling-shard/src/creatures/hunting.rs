@@ -1,6 +1,6 @@
 //! Mobs that hunt players, as BDS's were seen to (docs/research/mob-attacks.md): one picks
 //! the nearest player it could kill, walks straight at it and hits it when it is within reach.
-// TODO: prey once seen is kept behind a
+// TODO: a spider keeps the prey it took in the dark when day comes; prey once seen is kept behind a
 // wall; nothing pushes another aside; a spider hunts by day too and none holds what it hits with; peaceful worlds keep their
 // monsters, idle; viewers far off are told every move, where BDS told one of every other.
 
@@ -109,7 +109,11 @@ fn pick(world: &mut World, entity: Entity, layer: Entity, id: u64, kind: &str, b
     let sight = sapling_data::mob_traits(kind).hunts?.sees;
     let hunts = world.resource::<Settings>().0.difficulty != Difficulty::Peaceful;
     let mut found = had.filter(|_| hunts).and_then(|prey| Some((prey, seen(world, prey, layer, body.at, sight)?)));
-    let looks = !sapling_data::mob_traits(kind).hunts?.provoked;
+    // A spider under the sun by day took none on BDS; under a roof or by night it did
+    // (research/captures/bds-spiders.txt).
+    let head = [body.at[0], body.at[1] + body.size[1], body.at[2]].map(|c| c.floor() as i32);
+    let dazzled = sapling_data::mob_traits(kind).hunts?.by_dark && world.get::<Layer>(layer).is_some_and(|layer| super::harm::is_sunlit(&layer.world, head));
+    let looks = !sapling_data::mob_traits(kind).hunts?.provoked && !dazzled;
     if found.is_none() && hunts && looks && (now + id).is_multiple_of(LOOKS) {
         let near = |(_, feet): &(Entity, [f32; 3])| distance(body.at, *feet);
         found = in_world(world).into_iter().filter_map(|player| Some((player, seen(world, player, layer, body.at, sight)?))).filter(|(_, feet)| in_sight(world, layer, body, *feet)).min_by(|a, b| near(a).total_cmp(&near(b)));

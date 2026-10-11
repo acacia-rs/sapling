@@ -126,3 +126,20 @@ pub fn weather() -> Vec<String> {
         .map(String::from)
         .into()
 }
+
+/// The actor in survival and a spider, then a cave spider, 5 blocks off for six seconds at noon
+/// under the sky, at noon under a roof, and at midnight.
+pub fn spiders() -> Vec<String> {
+    let mut lines: Vec<String> =
+        ["kill @e[type=!player]", "gamerule domobspawning false", "gamerule dodaylightcycle false", "difficulty easy", "fill ~-3 ~-1 ~-12 ~12 ~-1 ~12 stone", "fill ~-3 ~ ~-12 ~12 ~12 ~12 air", "gamemode survival @s", ""].map(String::from).into();
+    for kind in ["spider", "cave_spider"] {
+        for setup in [&["time set noon"][..], &["time set noon", "fill ~-3 ~4 ~-12 ~12 ~4 ~12 stone"], &["time set midnight", "fill ~-3 ~4 ~-12 ~12 ~4 ~12 air"]] {
+            lines.extend(setup.iter().map(|line| (*line).to_owned()));
+            lines.extend(["effect @s instant_health 1 4".into(), format!("summon {kind} ~ ~ ~-5")]);
+            lines.extend(std::iter::repeat_n(String::new(), 6));
+            lines.extend(["kill @e[type=!player]", "effect @s clear", ""].map(String::from));
+        }
+    }
+    lines.extend(["gamemode creative @s", "gamerule dodaylightcycle true", "time set noon", ""].map(String::from));
+    lines
+}
