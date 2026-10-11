@@ -199,3 +199,18 @@ fn a_creeper_lights_its_fuse_three_blocks_off_and_bursts_as_on_bds() {
     });
     h.tick_all();
 }
+
+#[test]
+fn a_skeleton_stands_off_and_looses_an_arrow_every_three_seconds() {
+    // research/captures/bds-shoot.txt: an arrow a block before it and 1.61 up, at about 1.6 a tick.
+    let (mut h, _) = hunted_by("minecraft:skeleton", Difficulty::Easy);
+    let sent: Vec<RawPacket> = (0..140).flat_map(|_| h.tick_all().to(2).to_vec()).collect();
+    let arrows: Vec<AddEntity> = all::<AddEntity>(&sent).into_iter().filter(|added| added.entity_type == "minecraft:arrow").collect();
+    assert_eq!(arrows.len(), 2, "one after 61 ticks, one 61 later");
+    let (at, speed) = (&arrows[0].position, &arrows[0].velocity);
+    let fast = (speed.x * speed.x + speed.y * speed.y + speed.z * speed.z).sqrt();
+    assert!((at.z - 3.5).abs() < 1e-3 && (at.y - 66.61).abs() < 1e-3 && (1.45..1.75).contains(&fast) && speed.z < -1.3, "{at:?} {speed:?}");
+    assert_eq!(all::<LevelSoundEvent>(&sent).iter().filter(|sound| sound.sound_id == "bow").count(), 2);
+    let hurt: Vec<f32> = health(&sent).windows(2).map(|pair| pair[0] - pair[1]).collect();
+    assert!(health(&sent).len() <= 2 && hurt.iter().all(|by| (3.0..=4.0).contains(by)), "an arrow costs its speed twice over, rounded up: {:?}", health(&sent));
+}

@@ -1,4 +1,4 @@
-//! The shove, byhand, bedspawn and boom drills of bds_command_probe: what a piston does to what stands in its way
+//! The shove, byhand, bedspawn, boom and shoot drills of bds_command_probe: what a piston does to what stands in its way
 //! (docs/research/redstone.md, "Pistons and entities"), and a lever and a button worked by hand.
 
 pub const SHOVE_SHOWN: &[&str] = &["AddEntity", "AddItemEntity", "RemoveEntity", "MoveEntityDelta", "MoveEntityAbsolute", "SetEntityMotion", "UpdateBlock", "BlockEntityData", "EntityEvent", "UpdateAttributes"];
@@ -75,5 +75,19 @@ pub fn boom() -> Vec<String> {
         lines.extend(std::iter::repeat_n(String::new(), 9));
     }
     lines.extend(["gamerule mobgriefing true", "gamemode creative @s", "kill @e[type=!player]", ""].map(String::from));
+    lines
+}
+
+/// The actor in survival on the boom drill's floor and a skeleton 10 blocks off, left to shoot at
+/// it for ten seconds; then one 4 blocks off.
+pub fn shoot() -> Vec<String> {
+    let mut lines: Vec<String> =
+        ["kill @e[type=!player]", "gamerule domobspawning false", "difficulty easy", "time set midnight", "fill ~-3 ~-1 ~-12 ~12 ~-1 ~40 stone", "fill ~-3 ~ ~-12 ~12 ~6 ~40 air", "gamemode survival @s", "tp @s ~6 ~ ~20", ""].map(String::from).into();
+    for far in [10, 4] {
+        lines.extend(["effect @s instant_health 1 4".into(), format!("summon skeleton ~ ~ ~-{far}")]);
+        lines.extend(std::iter::repeat_n(String::new(), 10));
+        lines.extend(["kill @e[type=!player]", "", ""].map(String::from));
+    }
+    lines.extend(["gamemode creative @s", ""].map(String::from));
     lines
 }

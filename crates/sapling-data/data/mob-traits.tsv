@@ -59,7 +59,7 @@ minecraft:salmon	breathes_water no_air xp=1-3
 minecraft:sheep	xp=1-3 strolls=0.2 panics=0.3125
 minecraft:shulker	fire_immune xp=5-5
 minecraft:silverfish	xp=5-5 attack=1 speed=0.25 sees=8
-minecraft:skeleton	breathes_water xp=5-5 strolls=0.25
+minecraft:skeleton	breathes_water xp=5-5 strolls=0.25 attack=0 speed=0.25 sees=16 shoots=61
 minecraft:skeleton_horse	breathes_water xp=1-3 strolls=0.14
 minecraft:sniffer	xp=1-3 strolls=0.09 panics=0.18
 minecraft:snow_golem	no_fall strolls=0.2

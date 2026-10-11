@@ -9,7 +9,7 @@ mod death;
 pub(crate) mod eating;
 mod effects;
 pub(crate) use effects::afflict;
-pub(crate) use struck::{bitten, blasted};
+pub(crate) use struck::{bitten, blasted, shot};
 mod hunger;
 mod kept;
 mod struck;

@@ -4,6 +4,7 @@
 // TODO: no AI but strolling and hunting; their physics are the Java game's (`Physics::MOB`); a spawned mob is
 // saved with the least a compound needs, which BDS was not tried on.
 
+mod arrows;
 mod attacks;
 mod blast;
 mod harm;
@@ -208,6 +209,7 @@ fn leave_loot(world: &mut World, layer: Entity, kind: &str, on_fire: bool, [x, y
 
 /// Moves every spawned mob a tick and hurts it by where it is; a dead one goes once it has died.
 pub(crate) fn tick(world: &mut World) {
+    arrows::tick(world);
     let now = world.resource::<Tick>().0;
     let dead: Vec<Entity> = world.query::<(Entity, &Dying)>().iter(world).filter(|(_, dying)| now >= dying.0 + DYING).map(|(entity, _)| entity).collect();
     for entity in dead {

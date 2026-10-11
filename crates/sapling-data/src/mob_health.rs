@@ -42,6 +42,8 @@ pub struct Hunts {
     pub gives: Option<(&'static str, u32)>,
     /// The power it blows up with near its prey, where it hits nobody.
     pub explodes: Option<f32>,
+    /// The ticks between two arrows it looses at its prey, where it hits nobody.
+    pub shoots: Option<u32>,
 }
 
 pub fn mob_traits(identifier: &str) -> MobTraits {
@@ -52,7 +54,7 @@ pub fn mob_traits(identifier: &str) -> MobTraits {
     let value = |name: &str| row.and_then(|(_, traits)| traits.split(' ').find_map(|held| held.strip_prefix(name)));
     let number = |name: &str| value(name).and_then(|value| value.parse::<f32>().ok());
     let gives = value("hits=").and_then(|given| given.split_once(':')).and_then(|(effect, ticks)| Some((effect, ticks.parse().ok()?)));
-    let hunts = number("attack=").zip(number("speed=")).zip(number("sees=")).map(|((attack, speed), sees)| Hunts { attack, speed, sees, gives, explodes: number("explodes=") });
+    let hunts = number("attack=").zip(number("speed=")).zip(number("sees=")).map(|((attack, speed), sees)| Hunts { attack, speed, sees, gives, explodes: number("explodes="), shoots: number("shoots=").map(|ticks| ticks as u32) });
     MobTraits { fire_immune: has("fire_immune"), no_fall: has("no_fall"), breathes_water: has("breathes_water"), experience, hunts, strolls: number("strolls="), panics: number("panics=") }
 }
 

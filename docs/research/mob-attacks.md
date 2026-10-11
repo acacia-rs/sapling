@@ -105,6 +105,22 @@ A creeper 6 blocks from the actor on stone over dirt (`research/captures/bds-boo
 - One block broke, the stone under the creeper; nothing lay there after. With `mobgriefing` off
   none broke and the player lost the same.
 
+## Skeletons (`shoot`)
+
+A skeleton 10 and then 4 blocks from the actor (`research/captures/bds-shoot.txt`):
+
+- It takes its target, walks 1.7 blocks nearer in either case, and stands.
+- Its first arrow comes 61 ticks after the target, the next every 61 (easy).
+- The arrow is an entity `minecraft:arrow` added a block before the skeleton and 1.61 above its
+  feet, with a speed of 1.4 to 1.7 a tick, mostly towards the player and a little off; the sound
+  `bow` at the skeleton's middle.
+- It keeps 0.99 of its speed a tick and falls 0.05 faster: `SetEntityMotion` (0.0178, 0.1118,
+  1.6879) the tick after (0.0179, 0.1635, 1.7049).
+- From 10 blocks all three flew over the player and stuck in the floor 13 blocks on: speed 0,
+  `EntityEvent` `ArrowShake` with 7 and the sound `bow.hit` where it stuck. They stay.
+- From 4 blocks it hit: `HurtAnimation` with 3 (projectile), the hit's throw of 0.4 away and up,
+  4 of health (its speed of 1.72 twice, rounded up), `bow.hit`, and the arrow removed.
+
 ## Strolling (`stroll`)
 
 A zombie and a cow left alone for a minute on a floor 40 blocks square, the actor in creative
@@ -149,6 +165,11 @@ A creeper is lit, burns and bursts so (`creatures/blast.rs`): its blast hurts an
 by the rule above, hurts mobs, and breaks blocks along the Java game's rays, which break that one
 stone. What a block withstands is guessed from its hardness; the fuse goes out when its prey
 is 6 off or gone, as the pack says, which was not drilled.
+
+A skeleton stands within 10 blocks of its prey and looses an arrow every 61 ticks
+(`creatures/arrows.rs`): aimed and spread as the Java game's, flying by the two numbers above,
+sticking in blocks and hurting players. It does not walk nearer first, an arrow passes through
+mobs and cannot be picked up.
 
 `creatures/hunting.rs`, for kinds with `attack=`, `speed=` and `sees=` in `mob-traits.tsv`: the
 zombie and the seven kinds above, each with its numbers and what its hit gives (not the cave

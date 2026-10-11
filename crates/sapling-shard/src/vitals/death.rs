@@ -87,8 +87,12 @@ pub(super) fn die(world: &mut World, player: Entity, cause: Cause) {
         (vitals.died, vitals.leaves) = (Some(now), Some(points));
     }
     tell(world, player, &EntityEvent { runtime_entity_id: id, event_id: EntityEventEventId::DeathAnimation, data: 0, fire_at_position: None });
-    let slayer = world.get::<Slayer>(player).filter(|_| cause == Cause::Attack).map(|slayer| format!("%entity.{}.name", slayer.0.trim_start_matches("minecraft:")));
-    let key = if slayer.is_some() { "death.attack.mob" } else { words(cause) };
+    let slayer = world.get::<Slayer>(player).filter(|_| matches!(cause, Cause::Attack | Cause::Projectile)).map(|slayer| format!("%entity.{}.name", slayer.0.trim_start_matches("minecraft:")));
+    let key = match (slayer.is_some(), cause) {
+        (true, Cause::Projectile) => "death.attack.arrow",
+        (true, _) => "death.attack.mob",
+        (false, _) => words(cause),
+    };
     let messages: Vec<String> = std::iter::once(name).chain(slayer).collect();
     let said = chat::json_packet(vec![chat::translation(key, &messages)]);
     chat::send_to_layer(world, layer, &said);

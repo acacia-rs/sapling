@@ -9,13 +9,15 @@ use acacia_proto::types::{EntityProperties, MetadataDictionaryItem, MetadataDict
 use bevy_ecs::prelude::*;
 use sapling_api::Difficulty;
 
-use super::{blast, legs};
+use super::{arrows, blast, legs};
 use crate::body::Body;
 use crate::components::{InLayer, Layer, NetId, Position, Settings, Tick, in_world};
 use crate::{entities, late_sounds, vitals};
 
 /// Ticks between two looks for a player.
 const LOOKS: u64 = 10;
+/// An archer comes this near its prey and no nearer.
+const SHOOTS_FROM: f32 = 10.0;
 /// One that blows up lights its fuse this near its prey, and puts it out this far from it.
 const IGNITES: f32 = 2.5;
 const GOES_OUT: f32 = 6.0;
@@ -112,8 +114,9 @@ fn pick(world: &mut World, entity: Entity, layer: Entity, id: u64, kind: &str, b
 pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity, id: u64, kind: &str) -> bool {
     let (Some(body), Some(speed)) = (world.get::<Body>(entity).copied(), sapling_data::mob_traits(kind).hunts.map(|hunts| hunts.speed)) else { return false };
     let Some(feet) = pick(world, entity, layer, id, kind, &body) else { return blast::is_lit(world, entity) };
-    // A lit creeper stands where it is.
-    match blast::is_lit(world, entity) {
+    // A lit creeper stands where it is, and an archer within its range.
+    let stands = blast::is_lit(world, entity) || (sapling_data::mob_traits(kind).hunts.is_some_and(|hunts| hunts.shoots.is_some()) && distance(feet, body.at) < SHOOTS_FROM);
+    match stands {
         true => legs::rest(world, entity),
         false => legs::walk(world, entity, layer, &body, [feet[0], feet[2]], speed, TOUCHING),
     }
@@ -128,6 +131,17 @@ pub(super) fn strike(world: &mut World, entity: Entity, layer: Entity, id: u64, 
     let (prey, ready) = world.get::<Hunter>(entity).map(|hunter| (hunter.prey, hunter.ready))?;
     if prey.is_none() && hunts.explodes.is_some() {
         blast::put_out(world, entity, layer, id, kind, body);
+    }
+    if let Some(every) = hunts.shoots.filter(|_| prey.is_some()) {
+        // The first arrow waits as long as the next.
+        let feet = world.get::<Position>(prey?)?.feet;
+        if ready != 0 && now >= ready {
+            arrows::loose(world, layer, kind, body, feet);
+        }
+        if ready == 0 || now >= ready {
+            world.get_mut::<Hunter>(entity)?.ready = now + u64::from(every);
+        }
+        return None;
     }
     let prey = prey.filter(|_| now >= ready)?;
     let feet = world.get::<Position>(prey)?.feet;
