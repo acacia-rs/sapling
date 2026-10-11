@@ -9,7 +9,7 @@ use super::connect::{SIDES, Shape, corner, joins, shape, with_states};
 use super::wall;
 use crate::block::Block;
 use crate::structure::BoundingBox;
-use crate::structure::canvas::{Canvas, Settled};
+use crate::structure::canvas::Canvas;
 
 type Pos = (i32, i32, i32);
 
@@ -19,26 +19,32 @@ const AROUND: [Pos; 14] =
 
 /// What a canvas keeps for the pass.
 #[derive(Default)]
-pub struct Record<'a> {
+pub struct Record {
     /// The blocks the template placement under way changed (BDS files a block only when its `setBlock`
     /// changed the cell); None outside a placement.
     placing: Option<HashMap<Pos, Block>>,
-    /// Cells whose states a pass decided, across a replayed run's chunks; None runs no pass.
-    pub settled: Option<&'a RefCell<Settled>>,
+    /// In order: a cell whose state a pass decided (true), or that a piece wrote afterwards (false).
+    settled: RefCell<Vec<(Pos, bool)>>,
 }
 
-impl Record<'_> {
+impl Record {
     /// A piece's write of `block` over `before`.
     pub fn note(&mut self, at: Pos, before: Block, block: Block) {
         match &mut self.placing {
             Some(placing) if before != block => drop(placing.insert(at, block)),
             Some(_) => {}
-            None => {
-                if let Some(settled) = self.settled {
-                    settled.borrow_mut().remove(&at);
-                }
-            }
+            None => self.settled.get_mut().push((at, false)),
         }
+    }
+
+    /// A placed block keeps the state the pass leaves it with.
+    pub fn settle(&self, at: Pos) {
+        self.settled.borrow_mut().push((at, true));
+    }
+
+    /// The `settle` and `note` events so far, in order.
+    pub fn take_settled(&mut self) -> Vec<(Pos, bool)> {
+        std::mem::take(self.settled.get_mut())
     }
 }
 
@@ -66,9 +72,7 @@ fn offset((x, y, z): Pos, (dx, dy, dz): Pos) -> Pos {
 impl Canvas<'_> {
     /// Starts a template placement: its writes are filed for `update_pass`.
     pub fn begin_template(&mut self) {
-        if self.record.settled.is_some() {
-            self.record.placing = Some(HashMap::new());
-        }
+        self.record.placing = Some(HashMap::new());
     }
 
     /// Ends a template placement with the pass over `cells`, the template's box grown by one in its own
@@ -86,7 +90,7 @@ impl Canvas<'_> {
             let is_placed = |p: Pos| placed.contains_key(&p);
             let not_placed = |p: Pos| !placed.contains_key(&p);
             match placed.get(&at) {
-                Some(&recorded) => match class(recorded).inspect(|_| self.settle(at)) {
+                Some(&recorded) => match class(recorded).inspect(|_| self.record.settle(at)) {
                     Some(Class::Stairs) => self.update(at, recorded, &[0, 1, 2, 3]),
                     Some(Class::Joiner(_)) if legacy => self.update(at, recorded, &[0, 1, 2, 3]),
                     Some(Class::Joiner(_)) => self.update(at, recorded, &sides(&not_placed)),
@@ -115,7 +119,7 @@ impl Canvas<'_> {
         // Nothing runs unless the chunk itself holds such a block: a post stays joined to the stone
         // beyond the border that a neighbour without one clears afterwards.
         let any = || (chunk.x0..=chunk.x1).any(|x| (chunk.z0..=chunk.z1).any(|z| (chunk.y0..=chunk.y1).any(|y| connecting(self, x, y, z))));
-        if self.record.settled.is_none() || !any() {
+        if !any() {
             return;
         }
         for x in start.x0.max(chunk.x0 - 1)..=start.x1.min(chunk.x1 + 1) {
@@ -123,7 +127,7 @@ impl Canvas<'_> {
                 for y in chunk.y0..=top {
                     if connecting(self, x, y, z) {
                         self.update((x, y, z), self.get(x, y, z), &[0, 1, 2, 3]);
-                        self.settle((x, y, z));
+                        self.record.settle((x, y, z));
                     }
                 }
             }
@@ -131,13 +135,6 @@ impl Canvas<'_> {
         // A fence that joined something is no longer the block a mineshaft piece keeps (canvas.rs).
         let joined: Vec<Pos> = self.shaft_fences.iter().copied().filter(|&(x, y, z)| self.get(x, y, z).states().contains("=1")).collect();
         joined.iter().for_each(|at| drop(self.shaft_fences.remove(at)));
-    }
-
-    /// A placed block keeps the state the pass leaves it with.
-    fn settle(&self, at: Pos) {
-        if let Some(settled) = self.record.settled {
-            settled.borrow_mut().insert(at);
-        }
     }
 
     /// `from` at `at` with its `sides` (indices into `SIDES`) recomputed, written if that changes it; a

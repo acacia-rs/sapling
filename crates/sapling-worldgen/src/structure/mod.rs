@@ -20,6 +20,7 @@ mod outpost;
 mod piece;
 mod placement;
 mod probe;
+mod reaching;
 mod ruined_portal;
 mod ruined_portal_age;
 mod scattered;
@@ -47,7 +48,8 @@ pub use kind::StructureKind;
 pub use mineshaft::probe as mineshaft_probe;
 use kind::*;
 use probe::Probe;
-pub use canvas::{Neighbours, Settled, Spawners};
+pub use canvas::{Neighbours, Past, Settled, Spawners};
+pub use reaching::Reaching;
 pub use stage::{Placed, rejoin_connections};
 pub use start_map::StartMap;
 
@@ -66,6 +68,8 @@ pub struct Structures {
     mineshafts: Mutex<HashMap<(i32, i32), Arc<mineshaft::Mineshaft>>>,
     monuments: Mutex<HashMap<(i32, i32), Arc<monument::Monument>>>,
     stronghold_pieces: Mutex<HashMap<(i32, i32), Arc<stronghold::Stronghold>>>,
+    /// The canonical start map's list per block of chunks (start_map.rs).
+    shaft_orders: Mutex<HashMap<(i32, i32), Arc<[(i32, i32)]>>>,
     templates: templated::TemplateStarts,
 }
 
@@ -83,6 +87,7 @@ impl Structures {
             mineshafts: Mutex::new(HashMap::new()),
             monuments: Mutex::new(HashMap::new()),
             stronghold_pieces: Mutex::new(HashMap::new()),
+            shaft_orders: Mutex::new(HashMap::new()),
             templates: Default::default(),
         }
     }
