@@ -266,3 +266,14 @@ mod tests {
         assert!(float(&foal, Key::Scale).is_some_and(|scale| scale < 1.0), "a foal is recorded as one");
     }
 }
+
+#[cfg(test)]
+mod size_tests {
+    use super::*;
+
+    #[test]
+    fn the_zombie_villager_is_known_under_the_name_bds_announces_it_by() {
+        let known: Vec<&String> = RECORDED.keys().filter(|kind| kind.contains("villager")).collect();
+        assert!(mob_size("minecraft:zombie_villager_v2").is_some() && mob_size("minecraft:villager_v2").is_some(), "recorded: {known:?}");
+    }
+}

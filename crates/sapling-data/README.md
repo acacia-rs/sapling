@@ -40,7 +40,7 @@ cargo run -p sapling --example bds_mob_recorder -- <BDS folder> <its address> cr
 
 | File | Sent as | Patched per mob |
 |---|---|---|
-| `Mobs.bin` (110 kinds, 40 of them also as a baby) | `add_entity(&AddEntityOptions)` | ids, position, rotation, velocity (none), `Variant`, `MarkVariant`, `Color`, name tag, the baby flag, extra flags, health |
+| `Mobs.bin` (112 kinds, 40 of them also as a baby; the villager and the zombie villager, which BDS announces as `villager_v2` and `zombie_villager_v2`, were added by `bds_kind_recorder`) | `add_entity(&AddEntityOptions)` | ids, position, rotation, velocity (none), `Variant`, `MarkVariant`, `Color`, name tag, the baby flag, extra flags, health |
 | `ItemEntity.bin` | `add_item_entity(id, &Stack, position, velocity)` | ids, position, velocity, the stack (network id from `ItemRegistry.bin`) |
 
 A kind's hitbox, attributes and flags are whatever BDS gave the summoned one. `minecraft:villager` and

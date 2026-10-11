@@ -74,7 +74,9 @@ async fn packets(bot: &mut Bot, id: u32, wait: Duration) -> Vec<acacia_bot::prot
     found
 }
 
-/// Summons `kind` beside the bot and returns the AddEntity it is announced with.
+/// Summons `kind` beside the bot and returns the AddEntity it is announced with: under its
+/// own name or, a villager and a zombie villager, that with `_v2` (bds_kind_recorder.rs added
+/// the two this once left out).
 async fn summon(console: &mut ChildStdin, bot: &mut Bot, kind: &str, event: &str) -> Result<Option<(AddEntity, Bytes)>, Failure> {
     let event = if event.is_empty() { String::new() } else { format!(" 0 0 {event}") };
     writeln!(console, "execute at @a run summon {kind} ~3 ~ ~{event}")?;
@@ -84,7 +86,7 @@ async fn summon(console: &mut ChildStdin, bot: &mut Bot, kind: &str, event: &str
         let Ok(Some(event)) = tokio::time::timeout_at(end, bot.next()).await else { break };
         let BotEvent::Packet(packet) = event else { continue };
         if packet.id == AddEntity::ID {
-            shown = packet.decode::<AddEntity>().ok().filter(|add| add.entity_type == kind).map(|add| (add, packet.body.clone()));
+            shown = packet.decode::<AddEntity>().ok().filter(|add| add.entity_type == kind || add.entity_type == format!("{kind}_v2")).map(|add| (add, packet.body.clone()));
         }
     }
     writeln!(console, "kill @e[type=!player]")?;
