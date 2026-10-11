@@ -25,7 +25,11 @@ pub fn settle(view: &mut View, inherited: &[Routed]) {
         super::trace::line(|| format!("  own tick {} {} {}", at[0], at[1], at[2]));
         generated.add(at, lava, 1);
     }
-    for &(at, lava, delay) in inherited {
+    // What this decoration left on its own chunk's queue (magma ticks) is taken with the rest.
+    let chunk = view.chunk();
+    let (own, others): (Vec<Routed>, Vec<Routed>) = std::mem::take(&mut view.ticks.in_game).into_iter().partition(|(at, ..)| (at[0] >> 4, at[2] >> 4) == chunk);
+    view.ticks.in_game = others;
+    for &(at, lava, delay) in inherited.iter().chain(&own) {
         super::trace::line(|| format!("  inherited tick {} {} {} delay {delay}", at[0], at[1], at[2]));
         generated.add(at, lava, delay);
     }

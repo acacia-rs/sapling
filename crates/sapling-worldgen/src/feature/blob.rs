@@ -45,8 +45,9 @@ impl PartiallyExposedBlob {
             if ctx.random.next_float() <= self.probability && self.enclosed(ctx.view, p) {
                 ctx.view.set_block(p[0], p[1], p[2], self.block);
                 if self.block == Block::Magma {
-                    // The magma block's own tick, in 1, starts the bubble column (liquid/flow.rs, `magma_tick`).
-                    ctx.view.schedule(p, false, 1);
+                    // The magma block's own tick, in 1, starts the bubble column (liquid/flow.rs, `magma_tick`). It
+                    // waits on its chunk's queue: for that chunk's decoration, or for the game if that is over.
+                    ctx.view.ticks.in_game.push((p, false, 1));
                 }
                 placed = true;
             }
