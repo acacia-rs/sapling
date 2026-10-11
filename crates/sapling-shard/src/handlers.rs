@@ -65,6 +65,7 @@ pub(crate) fn dispatch(world: &mut World, plugins: &mut Plugins) {
     // After the requests: a block placed over a gap falls in the tick it was placed, as on BDS.
     blocks::fall_blocks(world);
     tnt::burn(world);
+    blocks::burn_fires(world);
     inventory::dispatch(world, plugins);
     containers::dispatch_closes(world);
     containers::show_lids_again(world);

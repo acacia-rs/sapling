@@ -12,6 +12,7 @@ mod daylight;
 mod doors;
 mod entities;
 mod facing;
+mod fire;
 mod falling;
 mod ground;
 mod handled;
@@ -38,6 +39,7 @@ mod waterlog;
 
 pub(crate) use blown::blow_out;
 pub(crate) use daylight::tick as read_daylight;
+pub(crate) use fire::tick as burn_fires;
 pub(crate) use doors::{bed_head, release_buttons, with as with_property};
 pub(crate) use pistons::tick as move_pistons;
 pub(crate) use plates::press_plates;

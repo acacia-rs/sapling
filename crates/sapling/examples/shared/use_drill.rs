@@ -105,3 +105,25 @@ pub fn bonemeal() -> Vec<String> {
     lines.extend(["kill @e[type=!player]", "clear @s", ""].map(String::from));
     lines
 }
+
+/// The actor in creative, looking east on stone, strikes flint and steel (a fire charge, last) on
+/// the top of one block after another a block east of it, and waits to see what the fire does.
+pub fn fire() -> Vec<String> {
+    let cases: [(&str, &str, usize); 7] = [
+        ("stone", "flint_and_steel", 6),
+        ("netherrack", "flint_and_steel", 6),
+        ("soul_sand", "flint_and_steel", 6),
+        ("obsidian", "flint_and_steel", 6),
+        ("oak_planks", "flint_and_steel", 20),
+        ("white_wool", "flint_and_steel", 12),
+        ("stone", "fire_charge", 6),
+    ];
+    let mut lines: Vec<String> = ["kill @e[type=!player]", "gamemode creative @s", "clear @s", "gamerule dofiretick true", ""].map(String::from).into();
+    for (floor, held, waits) in cases {
+        lines.extend(["fill ~-1 ~-1 ~7 ~1 ~-1 ~9 stone".into(), "tp @s ~ ~ ~8 -90 0".into(), "fill ~1 ~-1 ~-3 ~7 ~8 ~3 air".into(), format!("fill ~1 ~-1 ~-1 ~3 ~-1 ~1 {floor}")]);
+        lines.extend([format!("replaceitem entity @s slot.weapon.mainhand 0 {held}"), "!click 2 -1 0".into()]);
+        lines.extend(std::iter::repeat_n(String::new(), waits));
+    }
+    lines.extend(["kill @e[type=!player]", "clear @s", ""].map(String::from));
+    lines
+}

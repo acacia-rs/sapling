@@ -80,8 +80,8 @@ of 10 to 30 ticks, which was not measured.
 ## Left
 
 - Bone meal has its own drill and notes: `bone-meal.md`.
-- Fire: flint and steel lights none, on obsidian as on BDS, nor on what burns, which was not
-  measured.
+- Fire has its own drill and notes: `fire.md`. The obsidian row above was taken with
+  `dofiretick` off.
 - A jukebox's music: BDS sent no sound packet for it, and sapling keeps the disc in memory
   (`blocks/jukebox.rs`).
 - A primed note block's instruments past the first four, and a note kept across a restart.

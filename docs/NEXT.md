@@ -26,6 +26,10 @@ it does on BDS and the two captures can be diffed:
    order). A sapling capture that answers `commands.generic.unknown` or `.syntax` where BDS's
    does not names a command or a form still missing.
 
+   What a click does to a block (`docs/research/block-uses.md`, `clicks`), primed TNT (`tnt`) and
+   bone meal (`docs/research/bone-meal.md`, `bonemeal`) are drilled and built; left there: trees
+   from saplings, which need a tree generator the shard does not have, and fire.
+
 ## 2. Survival gaps still open
 
 Each needs its rule looked up first (`bdsre` for BDS, the Java jar for data), then a shard test.

@@ -135,6 +135,9 @@ fn telling(registry: &BlockRegistry, pos: BlockPos, change: &Change) -> Bytes {
 }
 
 const FLINT_AND_STEEL: &str = "minecraft:flint_and_steel";
+const FIRE_CHARGE: &str = "minecraft:fire_charge";
+/// What BDS sent with a fire charge's sound.
+const CHARGE_SOUND: i32 = 78642;
 
 impl Request<'_> {
     /// A click with `held` in the hand on the block at `pos`: false when it does nothing to it.
@@ -161,7 +164,7 @@ impl Request<'_> {
         let Some(level) = level(self.world, site.layer) else { return false };
         let (registry, [x, y, z]) = (level.registry(), pos);
         let covered = (held.ends_with("_hoe") || held.ends_with("_shovel")) && !registry.get(level.block(x, y + 1, z)).is_some_and(|above| above.is_air());
-        let Some(change) = change(registry, held, level.block(x, y, z), face).filter(|_| !covered) else { return held == FLINT_AND_STEEL && self.strike(site, face.neighbour(pos)) };
+        let Some(change) = change(registry, held, level.block(x, y, z), face).filter(|_| !covered) else { return (held == FLINT_AND_STEEL || held == FIRE_CHARGE) && self.strike(site, face.neighbour(pos), held) };
         let (told, is_event) = (telling(registry, pos, &change), matches!(change.told, Told::Event(..)));
         let left = inventory::stored(&Item::new(change.leaves.0.to_owned(), 1), registry);
         // BDS tells an event before the block and a sound after it.
@@ -188,17 +191,23 @@ impl Request<'_> {
         true
     }
 
-    /// Flint and steel struck into the cell `into`: heard where the cell is free, as BDS's was
-    /// over obsidian, whose fire did not stay.
-    // TODO: no fire is lit.
-    fn strike(&mut self, site: &Site, into: BlockPos) -> bool {
-        let [x, y, z] = into;
-        if !level(self.world, site.layer).is_some_and(|level| level.registry().get(level.block(x, y, z)).is_some_and(|there| there.is_air())) {
+    /// Flint and steel, or a fire charge, lights the cell `into` (fire.rs), with BDS's sound of each.
+    fn strike(&mut self, site: &Site, into: BlockPos, held: &str) -> bool {
+        if !super::fire::light(self.world, site.layer, into) {
             return false;
         }
-        self.hear_at(site, into, "ignite");
+        if held == FIRE_CHARGE {
+            let [x, y, z] = into.map(|c| c as f32);
+            let shot = LevelEvent { event: LevelEventEvent::SoundGhastShoot, position: Vec3f { x, y, z }, data: CHARGE_SOUND };
+            send::to_viewers(self.world, site.layer, into, &[sapling_net::encode(&shot)]);
+        } else {
+            self.hear_at(site, into, "ignite");
+        }
         if site.mode != GameMode::Creative {
-            inventory::wear_tool_in_hand(self.world, self.entity);
+            match held {
+                FIRE_CHARGE => drop(inventory::change(self.world, self.entity, |inventory| inventory.take(inventory::Place::Main(inventory.selected.into()), 1).is_ok())),
+                _ => inventory::wear_tool_in_hand(self.world, self.entity),
+            }
         }
         true
     }
