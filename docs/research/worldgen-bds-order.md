@@ -288,6 +288,37 @@ corridor's spawner is already placed; nothing beyond the 3x3. A default for (2) 
 seen as placed is worse than our phase order on the stock oracle (865 -> 1005), so the phase model stays; any
 fixed rule is right for about half of BDS's neighbour pairs.
 
+## replay5: feature and liquid stage, region by region (2026-10-11, worldgen/replay5, interim)
+A canon now carries its structure order too and may hold several regions: one debugger run over four far-apart
+4x4 regions takes about 15 minutes, a third of that BDS's start (`canon-upload.sh <run> <dir> <world>
+[<world>...]`, the `dir` field of `tools/replay-canons.txt`; `SAPLING_ORACLE_REGION==<name>` keeps exactly one
+region). `examples/slice` replays and takes several boxes; `examples/feature_trace` prints the liquid stage
+(`queue`/`route` per scheduled tick, `tick` per run tick, a line per generation).
+
+Wrong + missing against each region's one-worker world (stock oracle beside it for scale):
+
+| region | stock, ticked | replay, branch point | replay, now | what is left |
+|---|---|---|---|---|
+| stony peaks | 2113 | 60 | 31 | one lava fall, below |
+| jagged peaks | 542 | 3 | 0 | |
+| savanna plateau | 474 | 221 | 221 | sculk patch try 130 of ring source 563,-391 (first `Sculk>deepslate`) |
+| windswept gravelly hills | 328 | 3 | 0 | |
+| badlands | 1813 | 0 | 0 | |
+| old growth pine taiga | 573 | 0 | 0 | |
+| pale garden | 744 | 0 | 0 | |
+| bamboo jungle | 552 | 0 | 0 | |
+| old growth birch forest | 20 | 53 | 53 | canon `r-ob` has no structure order: 18 mineshaft cells and what they move |
+
+(Badlands' 7 and pine taiga's 37 of replay4 were gone at the branch point: all2's merge of shaft4's 3x3 view.)
+
+What the replay found:
+- **Feature writes wake no liquid**: worldgen-bds-liquids.md, "Where ticks come from".
+- **A catalyst needs a solid-blocking block below.** `SculkPatchFeature::place` reads the block's byte +0x71
+  where we asked `is_solid`; a sculk sensor (properties 0, no 0x40000) under the patch origin got a catalyst
+  from us and none from BDS (stony peaks -3631,-29,4131, jagged peaks -6448,-12,-6074). Not read out of the
+  registry yet: the two cells are the evidence.
+- **Sulfur spikes are waterloggable** like pointed dripstone (gravelly hills -2001,-5,-5561, three cells).
+
 ## What a server can make canonical
 Not BDS's order: it is not a function of the seed and the position, and following it would make a chunk depend
 on a chain of same-phase chunks without end. sapling keeps its own canonical order (parity phases, same-phase

@@ -15,12 +15,17 @@ Companion to [worldgen-bds.md](worldgen-bds.md). The flow rule itself (`LiquidBl
   exactly three sides (with below: 4) and air on the fourth; rock (149d65e10) = stone, deepslate, tuff, calcite,
   snow, powder snow, packed ice, dirt, coarse dirt (no granite, diorite, andesite). Sets the source with flags 3,
   ticks it in 1. 213 of 215 springs near origin match.
-- **Feature writes**: `updateNeighborsAt` (1415f89a0: x-1, x+1, z+1, z-1, y+1, y-1) calls `neighborChanged` on
-  liquids beside, which queues a tick unless one is due at the same time (148b5cd30 scans the pending heap).
-  `setBlock` does not call it in worldgen (Neighbour updates, below); `Feature::_setBlock` (144c0cc40) records the
-  write in the feature's transaction when it has one, and the commit (1415483f0/141548760: `onPlace`, ticks,
-  `updateNeighborsAt` per block) does. sapling updates at each feature write, which the oracle preferred to no
-  updates; which hardcoded features run without a transaction is not read. The freeze pass writes with flags 2.
+- **Feature writes wake nothing** (2026-10-11, worldgen/replay5). `updateNeighborsAt` (1415f89a0: x-1, x+1, z+1,
+  z-1, y+1, y-1) calls `neighborChanged` on liquids beside, which queues a tick unless one is due at the same
+  time (148b5cd30 scans the pending heap), but no feature reaches it: its callers are the liquid code, the
+  transaction commit (1415483f0/141548760) and `_blockChanged`, which is shut while a chunk generates (Neighbour
+  updates, below). The world-gen API's `setBlock` (1411a01f0) is `BlockSource::setBlock(pos, block, 3)` and
+  nothing else; `Feature::_setBlock` (144c0cc40: lakes, monster rooms and four legacy features) writes the same
+  way when the feature holds no transaction (+0x18), and the commit's callers are not worldgen. Until replay5
+  sapling ticked the liquids beside every feature write, which the stock oracle had preferred; a one-worker run
+  settled it: a sculk vein set into falling water at -3657,1,4142 (stony peaks, source -229,258) left the water
+  beside it unticked in BDS and made ours spread (60 -> 32 cells; stock oracle 25104 -> 24563 ticked, 25552 ->
+  24910 still, 21 regions down and desert up 2). The freeze pass writes with flags 2.
 - **Border water**: after the freeze pass, in the chunk's 60 border columns (table 14a923c90) from y -64 up to the
   light heightmap, the lowest cell of each run of layer-0 water is set to a source (flags 0) and ticked in 1.
   The heightmap is frozen while a chunk is post-processed (`LevelChunk::setBlock`'s upkeep 1409f3d60 returns
