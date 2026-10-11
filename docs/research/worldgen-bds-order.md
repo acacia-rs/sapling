@@ -155,6 +155,57 @@ thread draws are what moves lush caves, through one lichen cell that a patch or 
   593,-348 and 595,-348 after 594,-348's fall), one vein of source 593,-349 (9507,-34,-5572), then a fall
   our source 595,-349 continues down column 9515,-5568 where BDS leaves it at y -23.
 
+## replay4: the first sources, fixed (2026-10-11, worldgen/replay4)
+Each region's first differing source was compared with a one-worker run of its own (new canons `r-*`, logged
+with the breakpoints named below). `tools/replay.sh <name> <canon> test|rc|ex` runs the oracle test,
+`replay_check` or any example against a canon; `tools/replay-all.sh` every canon of `tools/replay-canons.txt`;
+`tools/worldgen-oracle/canon-upload.sh` turns a run into a canon on testbox. `replay_check` also lists
+`unwritten` cells: what the run has that no source of ours wrote (a BDS feature we lack, or a structure cell).
+
+Wrong + missing against the one-worker worlds (the `q-*` canons of edge3; the `r-*` reruns agree):
+
+| region | edge3 | replay4 | what is left |
+|---|---|---|---|
+| pale garden | 0 | 0 | |
+| bamboo jungle | 25 | 0 | |
+| badlands | 157 | 7 | 13 surface cells of a mineshaft (structure stage) |
+| jungle temple | 2764 | 18 | a mineshaft's cells under chunk 81,4 (structure stage) |
+| old growth pine taiga | 37 | 37 | one ceiling patch at the region's west edge, below |
+| old growth birch forest | 827 | 818 | a mineshaft corridor under the clay pool, below |
+
+- **The chunk top is one above the terrain.** `VinesFeature` walks y 64 up to `LevelChunk` +0xf88, which is the
+  heightmap's maximum (one above the top block) until something is set higher, then that block's y. Ours used
+  the top block's y for both, so over chunks with nothing above the terrain BDS's walk had one more cell:
+  logged per call (149d99d3d, bp = the bound; 149d99d60 a column move, 149d99fe0 a vine with the cell at
+  rsp+0x4c), source 78,6's 50 calls differ first at the walk from 1268,118, 72 against our 71, where BDS moves the column
+  once more (four draws) and never hangs the vine at 1271,72,107 that kept 79,6's tree from growing. The temple
+  falls from 2764 to 22, bamboo jungle from 25 to 0 (its ring source's podzol), the stock temple 3103 -> 357.
+  lush2's "78,8 before 78,6" was a coincidence, as edge3 suspected.
+- **Sculk growth looks at the type above.** `SculkBlockBehavior` (148b41810) lets a sensor or shrieker grow under
+  air or under any block of type water; ours asked for a water source, so floors a fall had reached grew
+  nothing. A growth set into a source keeps it (`SculkSensorWet`), into flowing water it does not (saved
+  column 9515,-5567: sensor at -45 with no liquid, depth-1 water over it at -44).
+- **Sculk wakes no water** and **water blocking is a per-block byte**: worldgen-bds-liquids.md, "Blocking".
+  Badlands 157 -> 54 with the growth test, -> 7 with quiet sculk writes.
+- **A blob's bubble column is still water.** `partially_exposed_blob` cells beside the one bubble column cell an
+  earlier magma block of the same blob started were taken for enclosed (temple source 80,8, try 12: 12 of 14
+  writes on BDS's cells, the two extra beside a column). Read off the saved cells, not traced live.
+- **Old growth birch is the mineshaft.** The first pool (source -309,285, try 17 at -4944,0,4568) logged cell
+  by cell (patch 143bc8310, accepted cell 143bc8468): 71 of 73 columns agree; BDS takes -4944,4574 and
+  -4943,4574 with their ground at y 4, where our mineshaft has rails at y 5 and BDS air (`unwritten`:
+  `RailEastWest>air` from -4944,5,4574, `Air>rail` at y 6), and skips -4944,4575. One column more or less
+  shifts every later draw of the source. So lush2 was right and edge3's "port difference in the pool" wrong;
+  the next step is the mineshaft's (worldgen/shaft4), then `tools/replay.sh x r-ob test`.
+- **Pine taiga** is unchanged in both of its runs: source -334,341's ceiling patch at -5342,-13,5459 has 50
+  cells against BDS's 51; the two that differ (-5346,-12,5459 for our -11, and -5345,-11,5459 missing) lie in
+  chunk -335,341, which neither run saved.
+
+Stock oracle, wrong + missing over all 59 regions (all2 0b54505 -> replay4; logs `base`, `m1` and `-still`):
+ticked 30977 -> 27006, still 31436 -> 27534. Jungle temple 3103 -> 357 (still 3075 -> 329), stronghold 1919 ->
+1047 (1759 -> 887), pillager outpost 1305 -> 1170 (2560 -> 2567), ancient city 8490 -> 8432 (7859 -> 7736),
+near origin 1536 -> 1481 (866 -> 805), mangrove swamp -47, bamboo jungle -25; up: badlands 1780 -> 1820
+(1873 -> 1910), whose stock worlds are run-order sculk.
+
 ## What a server can make canonical
 Not BDS's order: it is not a function of the seed and the position, and following it would make a chunk depend
 on a chain of same-phase chunks without end. sapling keeps its own canonical order (parity phases, same-phase
@@ -165,7 +216,7 @@ source. The stock oracle worlds stay useful for breadth; their run-order and thr
 an argument for or against a change.
 
 ## The four unexplained chunks
-Each was traced in a one-worker run of its region with the replay, not in the stock oracle's cells:
+(As edge3 left them; bamboo jungle and the birch pool are settled in "replay4" above.) Each was traced in a one-worker run of its region with the replay, not in the stock oracle's cells:
 - Pale garden -469,-286: nothing left. The region is block-exact (0 of 1.57M cells).
 - Pine taiga -334,339 (clay): order and thread draws. The region falls from 684 to 37; what is left starts at
   source -335,340 (two moss cells of BDS's under our tuff at -5338,-15,5463) and source -334,341 (22 cells).

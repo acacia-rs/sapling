@@ -73,9 +73,14 @@ features, foliage, rocks, flower beds and huge mushrooms come from bdsre.
 - `BambooFeature::place` (14827b960): on air over grass, podzol, dirt or rooted dirt; height `nextInt(((h >> 24) %
   5) | 8) + 5`, h = `(x*0x2fc20f ^ z*0x6ebfff5)` then `h*(h*0x285b825 + 0xb)` in u32; three or more stalks get
   large, large, small leaves on top. `PodzolAreaFeature::place` (149d5fdf0): disc of radius `nextInt(4)+1` turns dirt
-  and grass one below into podzol. `VinesFeature::place` (149d99a70): y 64 up to the highest block of the chunks
-  within 3 columns, a vine on the first supported side (support south, north, east, west), else the column moves
-  ±3 (two raw draws per axis) around the start.
+  and grass one below into podzol. `VinesFeature::place` (149d99a70): y 64 up to (not including) the largest
+  `LevelChunk` +0xf88 of the chunks within 3 columns, a vine on the first supported side (support south, north,
+  east, west), else the column moves ±3 (two raw draws per axis) around the start. +0xf88 is the heightmap's
+  maximum when the heightmap is built (1409e29f0: one above the highest block) and after that the y itself of
+  any block set higher (1409f59e0), so over terrain nothing was written above the walk reaches one cell higher
+  than over a chunk with a tree: logged per call at 149d99d3d (bp) in a one-worker run, 72 where ours had 71
+  (2026-10-11; `View::highest_block`, also `DoublePlantFeature`'s height gate). Whether the rebuild after a
+  chunk's own decoration (140a16f40) raises the value by one again was not measured.
 - Pale garden: the pale oak is the roofed tree; `pale_moss_vegetation_feature` (149d99710, weights in 149e815b0:
   carpet 25, short grass 25, tall grass 10) and `PaleMossCarpetBlock::placeAt` (1465f64a0: per side a wall check,
   with air above a float > 0.5 makes it tall and adds the upper half); `snap_to_surface` with
