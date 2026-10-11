@@ -149,7 +149,7 @@ impl Request<'_> {
 
     /// One of the held stack becomes `into`: in its slot when it was the last, else added to the
     /// inventory or, without room, thrown.
-    fn swap_held(&mut self, into: &str) {
+    pub(super) fn swap_held(&mut self, into: &str) {
         let new = ItemStack { name: into.to_owned(), count: 1, damage: 0, block: None, tag: None };
         let spilled = inventory::change(self.world, self.entity, |inventory: &mut Inventory| {
             let slot = Place::Main(inventory.selected.into());

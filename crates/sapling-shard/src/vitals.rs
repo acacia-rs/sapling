@@ -8,6 +8,7 @@
 mod death;
 pub(crate) mod eating;
 mod effects;
+pub(crate) use eating::bite;
 pub(crate) use effects::{afflict, hits_for, kept as kept_effects, restored as restored_effects};
 pub(crate) use struck::{bitten, blasted, is_fireproof, punched, set_alight, shot};
 mod hunger;

@@ -58,22 +58,22 @@ pub(super) fn turn(world: &mut World, layer: Entity, [x, y, z]: BlockPos) {
     let registry = level.registry();
     let Some(state) = registry.get(level.block(x, y, z)) else { return };
     let other = if state.name == DETECTOR { INVERTED } else { DETECTOR };
-    if let Some(turned) = registry.find(other, state.properties) {
-        send::set(world, layer, [x, y, z], turned);
-        read(world, layer, [x, y, z]);
-    }
+    let Some(turned) = registry.find(other, state.properties) else { return };
+    read(world, layer, [x, y, z], Some(turned));
 }
 
-/// Reads one detector: false where there is none any more.
-fn read(world: &mut World, layer: Entity, [x, y, z]: BlockPos) -> bool {
+/// Reads one detector, as the state `turned` if it is being turned: false where there is none
+/// any more.
+fn read(world: &mut World, layer: Entity, [x, y, z]: BlockPos, turned: Option<u32>) -> bool {
     let weather = crate::weather::of(world, layer);
     let Some(level) = level(world, layer) else { return false };
     let registry = level.registry();
-    let Some(state) = registry.get(level.block(x, y, z)).filter(|state| is_detector(state.name)) else { return false };
+    let id = turned.unwrap_or_else(|| level.block(x, y, z));
+    let Some(state) = registry.get(id).filter(|state| is_detector(state.name)) else { return false };
     let shut = (y + 1..).take_while(|y| level.in_height(*y)).any(|y| registry.get(level.block(x, y, z)).is_some_and(|above| above.is_solid() && !above.name.contains("glass")));
     let sky = if shut { 0 } else { signal(level.level().time, weather) };
     let shown = if state.name == INVERTED { FULL as u8 - sky } else { sky };
-    if let Some(now) = super::with_property(registry, level.block(x, y, z), SIGNAL, &shown.to_string()) {
+    if let Some(now) = super::with_property(registry, id, SIGNAL, &shown.to_string()) {
         send::set(world, layer, [x, y, z], now);
     }
     true
@@ -86,7 +86,7 @@ pub(crate) fn tick(world: &mut World) {
     }
     let detectors: Vec<(Entity, BlockPos)> = world.get_resource::<Detectors>().map(|detectors| detectors.0.iter().copied().collect()).unwrap_or_default();
     for (layer, pos) in detectors {
-        if !read(world, layer, pos) {
+        if !read(world, layer, pos, None) {
             world.resource_mut::<Detectors>().0.remove(&(layer, pos));
         }
     }

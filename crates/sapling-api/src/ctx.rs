@@ -34,6 +34,8 @@ pub trait Backend: WorldBackend + EntityBackend + HealthBackend + EffectBackend 
     fn send_message(&mut self, player: PlayerId, message: &str);
     fn send_translation(&mut self, player: PlayerId, key: &str, parameters: &[String]);
     fn teleport(&mut self, player: PlayerId, feet: [f32; 3]);
+    /// Told to the player with its next teleport.
+    fn look(&mut self, _player: PlayerId, _yaw: f32, _pitch: f32) {}
     fn permission(&self, player: PlayerId) -> Option<Permission>;
     fn set_permission(&mut self, player: PlayerId, permission: Permission);
     fn game_mode(&self, player: PlayerId) -> Option<GameMode>;
@@ -187,6 +189,12 @@ impl<'a> ShardCtx<'a> {
 
     /// Moves a player so that their feet are at `feet`, keeping where they look.
     pub fn teleport(&mut self, player: PlayerId, feet: [f32; 3]) {
+        self.backend.teleport(player, feet);
+    }
+
+    /// [`Self::teleport`], turning the player to look along `yaw` and `pitch`.
+    pub fn teleport_facing(&mut self, player: PlayerId, feet: [f32; 3], [yaw, pitch]: [f32; 2]) {
+        self.backend.look(player, yaw, pitch);
         self.backend.teleport(player, feet);
     }
 

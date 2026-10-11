@@ -16,10 +16,12 @@ fn or_sender(ctx: &ShardCtx<'_>, sender: &Sender, target: Option<&Selector>) -> 
 }
 
 /// `/tp [victim] <destination>`: the first word is a target unless it is a coordinate, and the
-/// destination a place or whoever a target names (research/captures/bds-golem.txt).
+/// destination a place or whoever a target names (research/captures/bds-golem.txt). A place may
+/// be followed by where to look: yaw, then pitch.
 pub(crate) struct Teleport {
     target: Option<Selector>,
     to: Destination,
+    looks: Option<[f32; 2]>,
 }
 
 enum Destination {
@@ -51,9 +53,20 @@ impl CommandSyntax for Teleport {
             _ => None,
         };
         Ok(match (first, args.peek().map(is_coordinate)) {
-            (Some(to), None) => Self { target: None, to: Destination::At(to) },
-            (target, Some(false)) => Self { target, to: Destination::At(Selector::parse(args)?) },
-            (target, _) => Self { target, to: Destination::Place(Coords::parse(args)?) },
+            (Some(to), None) => Self { target: None, to: Destination::At(to), looks: None },
+            (target, Some(false)) => Self { target, to: Destination::At(Selector::parse(args)?), looks: None },
+            (target, _) => {
+                let to = Destination::Place(Coords::parse(args)?);
+                let angle = |args: &mut Args<'_>| -> Result<Option<f32>, ParseError> {
+                    let mark = args.mark();
+                    if args.is_empty() { Ok(None) } else { args.word()?.parse().map(Some).map_err(|_| args.error_at(mark)) }
+                };
+                let looks = match (angle(args)?, angle(args)?) {
+                    (Some(yaw), pitch) => Some([yaw, pitch.unwrap_or(0.0)]),
+                    _ => None,
+                };
+                Self { target, to, looks }
+            }
         })
     }
 }
@@ -78,7 +91,10 @@ impl Command for Teleport {
         let (moved_players, moved) = (or_sender(ctx, sender, self.target.as_ref()), self.target.as_ref().map_or_else(Vec::new, |target| entities(ctx, target)));
         let [x, y, z] = to.map(|c| format!("{c:.2}"));
         for player in &moved_players {
-            ctx.teleport(player.id, to);
+            match self.looks {
+                Some(looks) => ctx.teleport_facing(player.id, to, looks),
+                None => ctx.teleport(player.id, to),
+            }
             ctx.send_translation(player.id, "commands.tp.successVictim", &[at.clone().unwrap_or_else(|| format!("{x}, {y}, {z}"))]);
         }
         for entity in &moved {
@@ -261,5 +277,7 @@ mod tests {
         assert_eq!(parsed("@s @e[type=iron_golem,c=1]").ok(), Some((Some(Selector::Sender), true)));
         assert_eq!(parsed("@e[type=iron_golem]").ok(), Some((None, true)));
         assert_eq!(golem.is_some() && parsed("@s").is_ok(), true, "alone, a target is where to");
+        let looks = |line: &str| Teleport::parse(&mut Args::new(line, 0, &sender, &[])).ok().and_then(|tp| tp.looks);
+        assert_eq!([looks("~ ~ ~4 -90 10"), looks("@s ~ ~ ~4 45"), looks("~ ~ ~4")], [Some([-90.0, 10.0]), Some([45.0, 0.0]), None]);
     }
 }

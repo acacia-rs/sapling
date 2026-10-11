@@ -11,6 +11,7 @@ mod entities;
 mod facing;
 mod falling;
 mod ground;
+mod handled;
 mod items;
 mod liquid;
 mod loot;
@@ -26,6 +27,7 @@ mod send;
 mod shapes;
 mod sign_ink;
 mod signs;
+mod tools;
 mod updates;
 mod waterlog;
 

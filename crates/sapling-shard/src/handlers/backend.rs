@@ -134,6 +134,12 @@ impl Backend for Ctx<'_> {
         }
     }
 
+    fn look(&mut self, player: PlayerId, yaw: f32, pitch: f32) {
+        if let Some(mut position) = self.entity(player).filter(|_| yaw.is_finite() && pitch.is_finite()).and_then(|entity| self.world.get_mut::<Position>(entity)) {
+            (position.yaw, position.head_yaw, position.pitch) = (yaw, yaw, pitch);
+        }
+    }
+
     fn permission(&self, player: PlayerId) -> Option<Permission> {
         self.world.get::<Access>(self.entity(player)?).map(|access| access.permission)
     }

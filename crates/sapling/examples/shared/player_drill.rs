@@ -12,6 +12,8 @@ mod hunt;
 mod shove;
 #[path = "world_drill.rs"]
 mod world;
+#[path = "use_drill.rs"]
+mod uses;
 
 /// Does what a drill's `!` line asks of the actor: `!eat` holds use on what it holds, `!jump`,
 /// `!walk` and `!sprint` hold those keys until `!stop`, `!break x y z` breaks, `!click x y z` clicks and
@@ -110,6 +112,7 @@ pub fn drill(name: &str) -> Option<(Vec<String>, &'static [&'static str])> {
         "item-names" => (world::item_names(), world::ITEM_NAMES_SHOWN),
         "placing2" => (world::placing2(), world::PLACING_SHOWN),
         "daylight" => (world::daylight(), world::PLACING_SHOWN),
+        "clicks" => (uses::clicks(), uses::CLICKS_SHOWN),
         "toil" => (toil(), HURT_SHOWN),
         "armour" => (armour(), HURT_SHOWN),
         "effects" => (effects(), HURT_SHOWN),

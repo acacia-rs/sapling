@@ -74,8 +74,8 @@ fn is_used(name: &str) -> bool {
 /// a bed is slept in, a sign is written on, a pot takes or gives a plant, a campfire takes food.
 /// False when it does none of these.
 fn use_block(world: &mut World, player: Entity, layer: Entity, pos: BlockPos, name: &str) -> bool {
-    let uses: [fn(&mut World, Entity, Entity, BlockPos, &str) -> bool; 5] =
-        [crate::containers::open, crate::sleep::lie_down, signs::edit_by_click, pots::use_pot, crate::campfires::cook];
+    let uses: [fn(&mut World, Entity, Entity, BlockPos, &str) -> bool; 6] =
+        [crate::containers::open, crate::sleep::lie_down, signs::edit_by_click, pots::use_pot, crate::campfires::cook, super::handled::use_by_hand];
     uses.iter().any(|used| used(world, player, layer, pos, name))
 }
 
@@ -234,7 +234,11 @@ impl Request<'_> {
         let Some(name) = registry.get(clicked).filter(|state| !state.is_air()).map(|state| state.name) else { return self.resync(&[pos, target]) };
         // The clicked block's own use comes first, unless the player sneaks.
         let builds = site.sneaking || !is_used(name);
-        if builds && self.held_item(site.mode, click).is_some_and(|held| self.use_bucket(&site, pos, face, &held)) {
+        let held = self.held_item(site.mode, click).filter(|_| builds);
+        if held.as_ref().is_some_and(|held| self.use_tool(&site, pos, face, held)) {
+            return self.resync(&[pos, target]);
+        }
+        if held.is_some_and(|held| self.use_bucket(&site, pos, face, &held)) {
             return;
         }
         let Some((registry, clicked)) = self.block(&site, pos) else { return };

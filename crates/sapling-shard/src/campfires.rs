@@ -7,6 +7,8 @@
 use std::collections::HashSet;
 
 use acacia_proto::nbt::{Str, Value};
+use acacia_proto::packets::{LevelEvent, LevelEventEvent};
+use acacia_proto::types::Vec3f;
 use bevy_ecs::prelude::*;
 use sapling_api::{BlockPos, GameMode};
 use sapling_data::Station;
@@ -87,6 +89,10 @@ pub(crate) fn cook(world: &mut World, player: Entity, layer: Entity, pos: BlockP
     set_field(&mut fields, time, Some(Value::Int(0)));
     keep_entity(world, layer, pos, &Value::Compound(fields));
     watch(world, layer, pos);
+    // At the cell's corner, as BDS sent it (research/captures/bds-clicks.txt).
+    let position = Vec3f { x: pos[0] as f32, y: pos[1] as f32, z: pos[2] as f32 };
+    let put = sapling_net::encode(&LevelEvent { event: LevelEventEvent::SoundItemframeAddItem, position, data: 0 });
+    crate::blocks::to_viewers(world, layer, pos, &[put]);
     if world.get::<Mode>(player).is_none_or(|mode| mode.0 != GameMode::Creative) {
         inventory::change(world, player, |inventory| inventory.take(Place::Main(inventory.selected.into()), 1).is_ok());
     }

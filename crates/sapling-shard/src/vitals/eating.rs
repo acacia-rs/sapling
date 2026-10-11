@@ -52,6 +52,16 @@ pub(crate) fn start(world: &mut World, player: Entity) {
 }
 
 /// Use let go before the food was eaten.
+/// A bite of what is not held, worth `[hunger, saturation]`: false for a survival player who is
+/// full.
+pub(crate) fn bite(world: &mut World, player: Entity, [hunger, saturation]: [f32; 2]) -> bool {
+    let is_full = super::is_mortal(world, player) && world.get::<super::Vitals>(player).is_some_and(|vitals| vitals.hunger.is_full());
+    if !is_full {
+        super::feed(world, player, |eater| eater.feed(hunger, saturation));
+    }
+    !is_full
+}
+
 pub(crate) fn stop(world: &mut World, player: Entity) {
     if world.get_mut::<Vitals>(player).is_some_and(|mut vitals| vitals.meal.take().is_some()) {
         show(world, player, false);
