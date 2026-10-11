@@ -1,6 +1,7 @@
 //! What a click does to a block that needs nothing in the hand: a cake is bitten, redstone ore
-//! lights, a berry bush is picked (docs/research/block-uses.md).
-// TODO: lit redstone ore never goes out, and a note block keeps no note.
+//! lights, a berry bush is picked, a note block plays, a full composter empties
+//! (docs/research/block-uses.md).
+// TODO: lit redstone ore never goes out.
 
 use acacia_proto::types::Vec3f;
 use bevy_ecs::prelude::*;
@@ -30,6 +31,11 @@ pub(super) fn use_by_hand(world: &mut World, player: Entity, layer: Entity, pos:
     let (registry, id) = (level.registry(), level.block(x, y, z));
     let Some(properties) = registry.get(id).map(|state| state.properties) else { return false };
     match name {
+        "minecraft:noteblock" => {
+            super::notes::play(world, layer, pos);
+            true
+        }
+        super::composter::COMPOSTER => super::composter::empty(world, layer, pos),
         "minecraft:cake" => {
             let Some(bitten) = property(properties, "bite_counter") else { return false };
             let left = if bitten >= CAKE_BITES { Some(registry.air_id()) } else { with_property(registry, id, "bite_counter", &(bitten + 1).to_string()) };

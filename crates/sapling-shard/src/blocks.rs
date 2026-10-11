@@ -5,6 +5,7 @@
 
 mod after_break;
 mod buckets;
+mod composter;
 mod daylight;
 mod doors;
 mod entities;
@@ -16,6 +17,7 @@ mod items;
 mod liquid;
 mod loot;
 mod mining;
+mod notes;
 mod pistons;
 mod place;
 mod plates;

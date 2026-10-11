@@ -138,6 +138,12 @@ impl Request<'_> {
     /// A click with `held` in the hand on the block at `pos`: false when it does nothing to it.
     /// A hoe and a shovel want air over the ground they work.
     pub(super) fn use_tool(&mut self, site: &Site, pos: BlockPos, face: Face, held: &str) -> bool {
+        if let Some(spent) = super::composter::fill(self.world, site.layer, pos, held) {
+            if spent && site.mode != GameMode::Creative {
+                inventory::change(self.world, self.entity, |inventory| inventory.take(inventory::Place::Main(inventory.selected.into()), 1).is_ok());
+            }
+            return true;
+        }
         let Some(level) = level(self.world, site.layer) else { return false };
         let (registry, [x, y, z]) = (level.registry(), pos);
         let covered = (held.ends_with("_hoe") || held.ends_with("_shovel")) && !registry.get(level.block(x, y + 1, z)).is_some_and(|above| above.is_air());

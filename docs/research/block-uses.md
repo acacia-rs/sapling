@@ -39,13 +39,26 @@ repeats are set aside. Outside creative a tool wears, honeycomb and glowstone ar
 becomes a honey bottle or a water bottle and a bucket an empty one: the Java game's rule, since
 the drill ran in creative.
 
+## Note block, composter, flower pot
+
+A note block over stone sent `BlockEvent ChangeState` with the note, one higher a click from 1,
+and `note` from the cell's corner carrying instrument * 256 + note (257, 258, 259). Sapling
+does the same, the note kept in memory; the instrument is told from the name of the block under
+it (`blocks/notes.rs`).
+
+A composter clicked with wheat seeds sent `ParticleCropGrowth` three quarters up from the cell's
+corner each click, then rose a level with `block.composter.fill_success` (two clicks of six) or
+stayed with `block.composter.fill`. Sapling rolls the Java game's chances by item
+(`blocks/composter.rs`); a full one gives a bone meal to an empty hand, which was not measured.
+
+A flower pot given a plant had `update_bit=1`; sapling sets it.
+
 ## Left
 
-- A note block: BDS sent `BlockEvent ChangeState` with the note, one higher a click, and `note`.
-- A composter: `ParticleCropGrowth` a click, the level up by chance (`fill` or `fill_success`).
 - Bone meal: `ParticleCropGrowth`; on grass a flower or grass came up beside, a sapling grew on
   the second click.
 - Flint and steel on TNT (`SoundIgnite`, the block gone) and on obsidian (fire over it, `ignite`).
-- A jukebox gave its disc back on the second click; a flower pot set `update_bit`.
+- A jukebox told `record.nowPlaying` and gave its disc back on the second click.
+- A primed note block's instruments past the first four, and a note kept across a restart.
 - An empty bucket on a full cauldron, a hoe on rooted dirt, an axe or a shovel on anything not
   listed above, a lit redstone ore going out: not measured.
