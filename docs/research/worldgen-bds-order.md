@@ -407,12 +407,22 @@ What the replay found:
   first): the chunk queue's clock, and magma ticks nobody knew were on it. worldgen-bds-liquids.md, "The
   first generation". The same magma ticks are the bubble columns: plains' two cells and the igloo canon's one.
 
-Structure-region canons under the full replay after this branch (struct5's list, `tools/replay-regions.sh`):
-jungle temple, swamp hut, shipwreck, ruined portal, ocean ruins, old growth birch, badlands 0; ancient city 0;
-stronghold 1 (132 at the merge: struct5's three liquid items went with the liquid rules and the web rule, its
-village foundation with the container draw; one fence join is left); igloo, snowy plains 1 (a bubble column);
-village 2 (two mushrooms of ours, one dirt cell); mansion 103 on a full canon (`mansion2`), below; desert
-pyramid 2438 with 1675 structure-stage cells (a mineshaft and the temple: not looked at, structure stage).
+- **Mushrooms need an opaque solid block** (the same byte +0x71; a fit): two of ours stood on a village's
+  path and stairs (village canon 2 -> 0).
+- **A magma blob's "enclosed" test takes a waterlogged cell for water**: no magma beside a wet glow lichen
+  (frozen ocean's ring source, 7579,2,9163; a fit of one cell).
+
+Structure-region canons under the full replay after this branch (struct5's list, `tools/replay-regions.sh`;
+before -> after this branch where struct5 gave a number): jungle temple, swamp hut, shipwreck, ruined portal,
+ocean ruins, trail ruins, old growth birch, badlands 0; ancient city 7756 -> 0 on `city6` (1 on struct5's
+`c-ac`: a sculk sensor BDS saved in phase 1, a state of that run); stronghold 132 -> 1 (struct5's three
+liquid items went with the liquid rules and the web rule, its village foundation with the container draw; one
+fence join is left); igloo, snowy plains 3 -> 0 (the magma tick); village 2 -> 0 wrong or missing (one dirt
+cell is left to "later stages"); mansion 256 -> 85, below; igloo, snowy slopes 1 (a dandelion for a poppy);
+pillager outpost 4 (snow layers on a column BDS leaves bare); trial chambers 5; monument 10 (seagrass of source
+-27,-18: a double one of ours where BDS has water and one of BDS's where ours is single, so the rule's float
+draws are off by one column); desert pyramid 2438 with 1675 structure-stage cells (the temple itself and a
+mineshaft sit elsewhere than in the run: structure stage, not looked at).
 
 Open under replay, each with its first source:
 - **Mansion, 85** (two full canons, `mansion2` and `mansion3`): ring source -510,1001's lush cave growth on the
