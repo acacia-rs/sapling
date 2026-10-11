@@ -2,8 +2,7 @@
 //! (docs/research/items.md): each falls and slides as a body (body.rs) and is picked up by a player
 //! with room for it who walks over it, once its delay is over; it is gone after 6000 ticks, or
 //! burnt in lava.
-// TODO: items do not merge and are not saved: they go with their column, the one they were let go
-// in. Whether a throw starts at the eye is unsettled.
+// TODO: items do not merge. Whether a throw starts at the eye is unsettled.
 
 use std::collections::HashMap;
 
@@ -69,8 +68,18 @@ fn dice(world: &mut World) -> Mut<'_, Dice> {
     world.get_resource_or_insert_with(Dice::default)
 }
 
-/// Lets `stack` go with the bottom of its box at `at`, moving at `motion`.
+/// Lets `stack` go with the bottom of its box at `at`, moving at `motion`, for the world folder
+/// to keep with the column it lies in (actors.rs).
 fn lay(world: &mut World, layer: Entity, stack: ItemStack, at: [f32; 3], motion: [f32; 3], pickup_from: u64) -> Option<Entity> {
+    let item = lay_unkept(world, layer, stack.clone(), at, motion, pickup_from)?;
+    // Numbered as a spawned mob is (creatures.rs).
+    let unique_id = ((world.resource::<Tick>().0 as i64) << 32) | (world.get::<NetId>(item)?.0 as i64 & 0xffff_ffff);
+    let compound = sapling_world::new_item_actor(unique_id, &stack, world.get::<Layer>(layer)?.world.registry(), at, motion);
+    entities::keep(world, item, layer, unique_id, compound);
+    Some(item)
+}
+
+fn lay_unkept(world: &mut World, layer: Entity, stack: ItemStack, at: [f32; 3], motion: [f32; 3], pickup_from: u64) -> Option<Entity> {
     let shown = entities::spawn(world, layer, KIND, Body::new(at, motion, [SIZE; 2]), wire(at), |id| mobs::item_announcement(id, &stack, wire(at), motion));
     match shown {
         Some(item) => {
@@ -88,7 +97,7 @@ fn lay(world: &mut World, layer: Entity, stack: ItemStack, at: [f32; 3], motion:
 /// picked up at once; false for one no client knows, which stays in the folder as it was.
 pub(crate) fn from_storage(world: &mut World, layer: Entity, stack: ItemStack, at: [f32; 3], unique_id: i64, compound: Vec<u8>) -> bool {
     let tick = world.resource::<Tick>().0;
-    let Some(item) = lay(world, layer, stack, at, [0.0; 3], tick) else { return false };
+    let Some(item) = lay_unkept(world, layer, stack, at, [0.0; 3], tick) else { return false };
     entities::keep(world, item, layer, unique_id, compound);
     true
 }

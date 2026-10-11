@@ -5,7 +5,7 @@
 //! move as they were, and every kept entity filed under the column with its place, motion,
 //! health and fire now (`entities::Stored`), so a mob that walked into another column is saved there, and one that
 //! is gone is not.
-// TODO: items a player threw or a block left, orbs and falling blocks are not saved.
+// TODO: orbs and falling blocks are not saved.
 
 use bevy_ecs::prelude::*;
 use sapling_world::ChunkPos;

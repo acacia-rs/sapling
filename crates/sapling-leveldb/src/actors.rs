@@ -3,7 +3,11 @@
 //! compounds under the chunk's `Entity` tag. Either way this crate hands them out as one record
 //! (records.rs). Sources: research/worlds-and-ecs.md "Actors".
 
+mod lying;
+
 use std::collections::HashSet;
+
+pub use lying::new_item_actor;
 
 use acacia_proto::nbt::{self, LittleEndian, List, Value};
 
