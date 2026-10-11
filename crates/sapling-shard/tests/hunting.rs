@@ -255,12 +255,15 @@ fn a_strays_arrow_slows_a_boggeds_poisons_and_a_pillager_shoots_on_the_walk() {
     }
     let (mut h, pillager) = hunted_by("minecraft:pillager", Difficulty::Easy);
     let seen = std::sync::Arc::new(std::sync::Mutex::new(Vec::new()));
-    let mut arrows = 0;
+    let (mut arrows, mut heard) = (0, Vec::new());
     for _ in 0..100 {
         let seen = seen.clone();
         h.remote.run(move |ctx| seen.lock().unwrap().extend(ctx.entity(EntityId(pillager)).map(|found| found.feet[2])));
-        arrows += all::<AddEntity>(h.tick_all().to(2)).iter().filter(|added| added.entity_type == "minecraft:arrow").count();
+        let sent = h.tick_all().to(2).to_vec();
+        arrows += all::<AddEntity>(&sent).iter().filter(|added| added.entity_type == "minecraft:arrow").count();
+        heard.extend(all::<LevelSoundEvent>(&sent).into_iter().filter_map(|sound| sound.sound_id.strip_prefix("crossbow.loading.").map(str::to_owned)));
     }
+    assert_eq!(heard[..3], ["start", "middle", "end"], "its crossbow is heard loading");
     let nearest = seen.lock().unwrap().iter().copied().fold(f32::MAX, f32::min);
     assert!(arrows == 2 && nearest < 2.0, "two shots, and it came near: {arrows} {nearest}");
 }

@@ -215,7 +215,7 @@ picked up. Run against sapling the drill's far skeleton still hits more often th
 arrows passed a hand over the player's head.
 
 A stray and a bogged shoot as the skeleton with their effect on the arrow, and a pillager while
-it walks on; its crossbow is not heard loading and is not shown anew.
+it walks on, its crossbow heard loading where it stood at the shot before; it is not shown anew.
 
 A wolf and a zombified piglin hunt none but a survival player that hit them, from that tick
 (`hunting::provoke`); the golem, whose hit varies, does not yet, and a piglin's fellows do not

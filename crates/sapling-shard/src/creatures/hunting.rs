@@ -20,6 +20,9 @@ const LOOKS: u64 = 10;
 /// its middle.
 const REPLANS: u64 = 10;
 const ARRIVED: f32 = 0.35;
+/// The ticks after a shot at which a crossbow's loading is heard, and what of it.
+// TODO: heard where the archer stood at the shot, not where it has walked to since.
+const LOADS: [(u64, &str); 3] = [(3, "start"), (13, "middle"), (23, "end")];
 /// An archer walks at its prey for this many ticks after taking it (BDS's went 1.7 blocks, from
 /// 10 off and from 4), then stands while it is this near.
 const NEARS: u64 = 19;
@@ -197,6 +200,11 @@ pub(super) fn strike(world: &mut World, entity: Entity, layer: Entity, id: u64, 
         }
         if ready == 0 || now >= ready {
             world.get_mut::<Hunter>(entity)?.ready = now + u64::from(every);
+            // A crossbow is heard being loaded for the next (bds-shoot2.txt).
+            let middle = [body.at[0], body.at[1] + MIDDLE * body.size[1], body.at[2]];
+            for (after, stage) in LOADS.into_iter().filter(|_| hunts.closes) {
+                late_sounds::play_later(world, after, layer, body.at.map(|c| c.floor() as i32), arrows::sound(&format!("crossbow.loading.{stage}"), middle, ""));
+            }
         }
         return None;
     }

@@ -48,7 +48,7 @@ pub(super) struct Arrow {
     stuck: Option<u64>,
 }
 
-fn sound(name: &str, [x, y, z]: [f32; 3], of: &str) -> bytes::Bytes {
+pub(super) fn sound(name: &str, [x, y, z]: [f32; 3], of: &str) -> bytes::Bytes {
     sapling_net::encode(&LevelSoundEvent { sound_id: name.into(), position: Vec3f { x, y, z }, extra_data: -1, entity_type: of.into(), is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None })
 }
 
