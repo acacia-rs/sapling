@@ -30,6 +30,8 @@ frozenocean|20261003-biomes|blocks_match_bds_biomes|frozen ocean|474 570 477 573
 deepfrozen|20261003-biomes|blocks_match_bds_biomes|deep frozen ocean|450 458 453 461|g5
 desert|20261003-biomes|blocks_match_bds_biomes|desert|-446 554 -443 557|g5
 icespikes|20261003-biomes|blocks_match_bds_biomes|ice spikes|-22 -198 -19 -195|g5
+desert2|20261003-biomes|blocks_match_bds_biomes|desert|-446 554 -443 557|ds2
+frozenocean2|20261003-biomes|blocks_match_bds_biomes|frozen ocean|474 570 477 573|ds2
 mushroom|20261003-biomes|blocks_match_bds_biomes|mushroom fields|-46 354 -43 357|g6
 warmocean|20261003-biomes|blocks_match_bds_biomes|warm ocean|242 -494 245 -491|g6
 wsavanna|20261003-biomes|blocks_match_bds_biomes|windswept savanna|-590 -214 -587 -211|g6
