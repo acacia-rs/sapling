@@ -64,7 +64,12 @@ Each needs its rule looked up first (`bdsre` for BDS, the Java jar for data), th
 - The sounds of a door, trapdoor, gate, chest, barrel and ender chest opening were heard on BDS and
   agree (`sounds`); those of a chest, barrel and ender chest shutting were not heard there.
 - Piston orientation comes from other servers' code only.
-- Block loot is the Java game's tables under Bedrock names (`sapling-data/data/block-loot.tsv`).
+- Block loot is the Java game's tables under Bedrock names (`sapling-data/data/block-loot.tsv`);
+  26 blocks broken with a diamond pickaxe left the same items in the same numbers on BDS
+  (`bds_command_probe loot`, research/captures/bds-loot.txt), but copper ore, which left 3 each of
+  three times there and 2 to 5 here. Ores leave experience and ice water as there
+  (`blocks/after_break.rs`); how much experience is the Java game's range.
+- BDS's `/setblock` takes old block names (`stonebrick`); sapling knows a block by its one name.
 - Whether a vanilla client names a hopper's slots `Container` is the bot's assumption.
 - A placed shulker box's `facing` is the face clicked (`shulker-ender.md`).
 - An orb is taken within Java's pickup box once 7 ticks old (`orbs.rs`): one recorded pickup; BDS's

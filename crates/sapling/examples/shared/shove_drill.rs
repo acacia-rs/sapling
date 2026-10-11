@@ -227,3 +227,24 @@ pub fn sounds() -> Vec<String> {
     lines.extend(["clear @s", ""].map(String::from));
     lines
 }
+
+pub const LOOT_SHOWN: &[&str] = &["AddItemEntity", "AddEntity", "LevelEvent"];
+
+/// The actor in survival breaks blocks with a diamond pickaxe, those whose loot varies several
+/// times over, to see what each leaves.
+pub fn loot() -> Vec<String> {
+    let mut lines: Vec<String> = ["kill @e[type=!player]", "fill ~-2 ~-1 ~-2 ~4 ~-1 ~4 bedrock", "fill ~-2 ~ ~-2 ~4 ~4 ~4 air", "gamemode survival @s", "clear @s", "replaceitem entity @s slot.weapon.mainhand 0 diamond_pickaxe", ""].map(String::from).into();
+    let blocks = [
+        ("stone", 1), ("cobblestone", 1), ("grass_block", 1), ("coal_ore", 4), ("iron_ore", 1), ("diamond_ore", 4), ("redstone_ore", 4), ("lapis_ore", 4), ("emerald_ore", 1), ("quartz_ore", 2),
+        ("glowstone", 4), ("sea_lantern", 4), ("clay", 2), ("gravel", 6), ("glass", 1), ("bookshelf", 2), ("melon_block", 4), ("oak_leaves", 6), ("snow", 1), ("stonebrick", 1),
+        ("crafting_table", 1), ("deepslate_diamond_ore", 1), ("nether_gold_ore", 3), ("amethyst_cluster", 2), ("copper_ore", 3), ("ender_chest", 1), ("ice", 1),
+    ];
+    for (block, times) in blocks {
+        for _ in 0..times {
+            lines.extend([format!("setblock ~1 ~ ~ {block}"), "!break 1 0 0".into(), String::new()]);
+        }
+        lines.push("kill @e[type=!player]".into());
+    }
+    lines.extend(["gamemode creative @s", "clear @s", ""].map(String::from));
+    lines
+}

@@ -10,7 +10,7 @@ use sapling_api::{Block, BlockPos, BreakEvent, Face, GameMode, InteractEvent, Pl
 use sapling_world::BlockRegistry;
 
 use super::facing::Click;
-use super::{doors, level, loot, mining, place, pots, reaches, send, signs, updates};
+use super::{after_break, doors, level, loot, mining, place, pots, reaches, send, signs, updates};
 use crate::components::{InLayer, Mode, PacketQueues, PerTick, Position, in_world_identity};
 use crate::movement::Motion;
 use crate::plugins::Plugins;
@@ -179,6 +179,7 @@ impl Request<'_> {
         let Some((registry, id)) = self.block(&site, pos) else { return };
         let Some(state) = registry.get(id).filter(|state| !state.is_air() && !state.is_liquid()) else { return self.resync(&[pos, above]) };
         let (block, mining) = (send::describe(registry, id), state.mining);
+        let name = block.name.clone();
         let by = mining::breaker(self.world, self.entity, &mining);
         let mut drops = Vec::new();
         if site.mode == GameMode::Survival {
@@ -191,6 +192,9 @@ impl Request<'_> {
         match !event.is_cancelled() && self.remove(&site, pos) {
             true => {
                 loot::spill(self.world, site.layer, pos, &event.drops);
+                if site.mode == GameMode::Survival {
+                    after_break::leave(self.world, site.layer, pos, &name, &by);
+                }
                 if site.mode == GameMode::Survival && mining.hardness > 0.0 {
                     crate::inventory::wear_tool_in_hand(self.world, self.entity);
                 }

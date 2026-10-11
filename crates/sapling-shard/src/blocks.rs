@@ -3,6 +3,7 @@
 //! predicted it (docs/DESIGN.md "Step 6 as built"; request.rs). Blocks that change on their own:
 //! falling, liquids, plates, updates.
 
+mod after_break;
 mod buckets;
 mod doors;
 mod entities;
