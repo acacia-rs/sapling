@@ -171,7 +171,9 @@ impl Features {
     /// Sources apply in decoration order; a write lands when the block it replaced in its source's
     /// view is still there.
     pub fn place(&self, shape: &mut ChunkShape, chunk: (i32, i32), inputs: Inputs) {
+        let arms: Vec<(usize, crate::block::Block)> = (0..16 * 16 * crate::terrain::HEIGHT).map(|index| (index, shape.block_at(index))).filter(|&(_, block)| spreader::is_piston_arm(block)).collect();
         self.replay(shape, chunk, Rank::MAX, inputs);
+        arms.into_iter().for_each(|(index, arm)| shape.set_at(index, arm));
     }
 
     fn replay(&self, shape: &mut ChunkShape, chunk: (i32, i32), limit: Rank, inputs: Inputs) {
