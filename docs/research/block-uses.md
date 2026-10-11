@@ -53,11 +53,33 @@ stayed with `block.composter.fill`. Sapling rolls the Java game's chances by ite
 
 A flower pot given a plant had `update_bit=1`; sapling sets it.
 
+## TNT
+
+Measured with `bds_command_probe tnt` (`bds-tnt.txt`, `sapling-tnt.txt`): TNT three blocks east
+of the actor on a stone floor, lit by flint and steel, by a block of redstone beside it, and
+summoned.
+
+- Lighting sends `LevelEvent SoundIgnite` at the bottom middle of the cell; the block becomes air
+  and a `minecraft:tnt` entity appears at the cell's middle, 0.49 up (its box is 0.98), moving up
+  at 0.2 and across at 0.02 in a random direction. A summoned one starts the same way.
+- It falls by 0.04 a tick, keeps 0.98 of its speed, and on the ground 0.686 across; it does not
+  bounce.
+- `FuseLength` is told every tick from 79 down to 0, and it bursts the tick after: 80 ticks.
+- The blast is `ParticleExplosion` with data 4, a sixteenth of the box above its bottom, then
+  `explode`. On stone it broke ten or eleven floor blocks, which left their cobblestone as one
+  stack; the block of redstone left itself. Items lying in the blast were removed.
+- Both creative players, 2.9 blocks off, were sent `SetEntityMotion` (-0.56, 0.22, 0.01).
+
+Sapling does the same (`tnt.rs`, `creatures/blast.rs`, `blocks/blown.rs`). Not matched: the
+throw's exact size (sapling's, by the Java game's rule, is about (-0.53, 0.29) there), and the
+`MOVING` flag BDS turned on and off. TNT a blast reaches is primed on the Java game's short fuse
+of 10 to 30 ticks, which was not measured.
+
 ## Left
 
 - Bone meal: `ParticleCropGrowth`; on grass a flower or grass came up beside, a sapling grew on
   the second click.
-- Flint and steel on TNT (`SoundIgnite`, the block gone) and on obsidian (fire over it, `ignite`).
+- Flint and steel on obsidian (fire over it, `ignite`).
 - A jukebox told `record.nowPlaying` and gave its disc back on the second click.
 - A primed note block's instruments past the first four, and a note kept across a restart.
 - An empty bucket on a full cauldron, a hoe on rooted dirt, an axe or a shovel on anything not

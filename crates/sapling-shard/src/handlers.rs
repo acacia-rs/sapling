@@ -10,7 +10,7 @@ use sapling_api::PlayerId;
 
 use crate::components::{Arrivals, Identity, Layer, Outgoing, Players, Stage};
 use crate::plugins::Plugins;
-use crate::{blocks, campfires, chat, commands, containers, creatures, drops, entities, forms, furnaces, hoppers, inventory, late_sounds, orbs, roster, sleep, vitals, worlds};
+use crate::{blocks, campfires, chat, commands, containers, creatures, drops, entities, forms, furnaces, hoppers, inventory, late_sounds, orbs, roster, sleep, tnt, vitals, worlds};
 
 pub(crate) struct Ctx<'w> {
     pub world: &'w mut World,
@@ -64,6 +64,7 @@ pub(crate) fn dispatch(world: &mut World, plugins: &mut Plugins) {
     campfires::tick(world);
     // After the requests: a block placed over a gap falls in the tick it was placed, as on BDS.
     blocks::fall_blocks(world);
+    tnt::burn(world);
     inventory::dispatch(world, plugins);
     containers::dispatch_closes(world);
     containers::show_lids_again(world);

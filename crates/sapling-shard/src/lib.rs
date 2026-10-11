@@ -43,6 +43,7 @@ mod sleep;
 mod splash;
 mod sync;
 mod ticking;
+mod tnt;
 mod view;
 mod visibility;
 mod vitals;

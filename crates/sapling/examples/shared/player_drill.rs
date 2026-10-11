@@ -113,6 +113,7 @@ pub fn drill(name: &str) -> Option<(Vec<String>, &'static [&'static str])> {
         "placing2" => (world::placing2(), world::PLACING_SHOWN),
         "daylight" => (world::daylight(), world::PLACING_SHOWN),
         "clicks" => (uses::clicks(), uses::CLICKS_SHOWN),
+        "tnt" => (uses::tnt(), uses::TNT_SHOWN),
         "toil" => (toil(), HURT_SHOWN),
         "armour" => (armour(), HURT_SHOWN),
         "effects" => (effects(), HURT_SHOWN),

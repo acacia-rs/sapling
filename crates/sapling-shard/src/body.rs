@@ -41,6 +41,8 @@ impl Physics {
     pub const FIREPROOF_ITEM: Physics = Physics { burns: false, ..Physics::ITEM };
     /// A falling block, which stops where it lands (BDS `FallingBlockActor::normalTick`).
     pub const FALLING_BLOCK: Physics = Physics { gravity: 0.04, air_drag: 0.98, fall_drag: 0.98, ground_drag: 0.0, bounce: 0.0, liquid: InLiquid::Ignores, burns: false };
+    /// Primed TNT, which slides on where it lands (research/captures/bds-tnt.txt).
+    pub const TNT: Physics = Physics { ground_drag: 0.686, ..Physics::FALLING_BLOCK };
     /// A mob that does not walk, as BDS moved an armour stand: its speed is worked out before the
     /// move (research/captures/bds-water.txt). The drag across, 0.91 in the air and 0.6 x 0.91 on
     /// the ground, is the Java game's (`LivingEntity.travel`).

@@ -27,11 +27,12 @@ use sapling_world::Actor;
 use crate::blocks::Dice;
 use crate::body::{Body, Physics};
 pub(crate) use attacks::attacked;
+pub(crate) use blast::{Wreck, explode};
 pub(crate) use harm::{holds, is_full_block, touches};
 pub(crate) use health::{Cause, Health};
 use crate::components::{InLayer, Layer, NetId, Tick};
 use crate::handlers::Ctx;
-use crate::{blocks, drops, entities, inventory, mobs, orbs, worlds};
+use crate::{blocks, drops, entities, inventory, mobs, orbs, tnt, worlds};
 
 const MOB_LOOT: &str = "doMobLoot";
 const ORB: &str = "minecraft:xp_orb";
@@ -257,6 +258,10 @@ impl EntityBackend for Ctx<'_> {
         if kind == ORB {
             let orb = orbs::throw(self.world, layer, feet, 1)?;
             return Some(EntityId(self.world.get::<NetId>(orb)?.0));
+        }
+        if kind == tnt::KIND {
+            let primed = tnt::prime(self.world, layer, feet, tnt::FUSE)?;
+            return Some(EntityId(self.world.get::<NetId>(primed)?.0));
         }
         spawn(self.world, layer, kind, feet)
     }

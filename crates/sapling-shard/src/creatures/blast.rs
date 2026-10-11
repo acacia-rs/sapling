@@ -1,20 +1,20 @@
 //! Mobs that blow up, as BDS's creeper did (docs/research/mob-attacks.md, "Creepers"): lit near
 //! its prey, it burns a fuse down and bursts, hurting and throwing who is near and breaking blocks.
 // TODO: a fuse does not go out for a prey out of sight; nothing between a blast and a body shields it; mobs are hurt
-// and not thrown; broken blocks leave nothing; what a block withstands is guessed from how hard
+// and not thrown; the blocks a creeper breaks leave nothing; what a block withstands is guessed from how hard
 // it is (`withstands`), for want of the game's table.
 
 use acacia_proto::packets::{LevelEvent, LevelEventEvent, LevelSoundEvent};
 use acacia_proto::types::Vec3f;
 use bevy_ecs::prelude::*;
-use sapling_api::{Block, Difficulty};
+use sapling_api::Difficulty;
 
 use super::harm;
 use super::health::{Cause, Health};
 use crate::blocks::{self, Dice};
 use crate::body::Body;
 use crate::components::{InLayer, Layer, NetId, Position, Settings};
-use crate::{entities, late_sounds, mobs, vitals};
+use crate::{drops, entities, late_sounds, mobs, vitals};
 
 /// A fuse is this many ticks long, and hisses this many ticks after it is lit.
 const FUSE: i32 = 30;
@@ -100,14 +100,14 @@ fn broken(world: &mut World, layer: Entity, at: [f32; 3], power: f32) -> Vec<[i3
 }
 
 /// What a blast of `power` at `at` does to a body whose eyes are at `eyes`: what it costs on
-/// this difficulty, and the speed it throws at.
+/// this difficulty, nothing on peaceful, and the speed it throws at.
 fn reaches(world: &World, at: [f32; 3], eyes: [f32; 3], power: f32) -> Option<(f32, [f32; 3])> {
     let away: [f32; 3] = std::array::from_fn(|axis| eyes[axis] - at[axis]);
     let far = away.iter().map(|c| c * c).sum::<f32>().sqrt();
     let impact = 1.0 - far / (2.0 * power);
     let harm = (impact * impact + impact) / 2.0 * HARM * 2.0 * power + 1.0;
     let harm = match world.resource::<Settings>().0.difficulty {
-        Difficulty::Peaceful => return None,
+        Difficulty::Peaceful => 0.0,
         Difficulty::Easy => harm.min(harm / 2.0 + 1.0),
         Difficulty::Normal => harm,
         Difficulty::Hard => harm * 1.5,
@@ -115,38 +115,54 @@ fn reaches(world: &World, at: [f32; 3], eyes: [f32; 3], power: f32) -> Option<(f
     (impact > 0.0 && far > 1e-4).then(|| (harm, away.map(|c| c / far * impact)))
 }
 
-/// The mob bursts where it stands and is gone.
-fn burst(world: &mut World, entity: Entity, layer: Entity, body: &Body, power: f32) {
-    let [x, y, z] = body.at;
-    let cell = body.at.map(|c| c.floor() as i32);
+/// What a blast does to the blocks it reaches: nothing, or it breaks them, and they may leave
+/// their items.
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub(crate) enum Wreck {
+    Nothing,
+    Breaks,
+    Leaves,
+}
+
+/// A blast of `power` at `at`: of `source`, which is gone with it.
+pub(crate) fn explode(world: &mut World, source: Entity, layer: Entity, at: [f32; 3], power: f32, wreck: Wreck) {
+    let [x, y, z] = at;
+    let cell = at.map(|c| c.floor() as i32);
     let flash = LevelEvent { event: LevelEventEvent::ParticleExplosion, position: Vec3f { x, y, z }, data: power as i32 };
-    entities::tell_viewers(world, entity, layer, cell, vec![sapling_net::encode(&flash)]);
+    entities::tell_viewers(world, source, layer, cell, vec![sapling_net::encode(&flash)]);
     let bang = LevelSoundEvent { sound_id: "explode".into(), position: Vec3f { x, y, z }, extra_data: -1, entity_type: String::new(), is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None };
     late_sounds::play_later(world, 1, layer, cell, sapling_net::encode(&bang));
-    mobs::remove(world, entity);
+    mobs::remove(world, source);
 
     let players: Vec<(Entity, [f32; 3])> = crate::components::in_world(world).into_iter().filter_map(|player| Some((player, world.get::<Position>(player)?.feet))).filter(|(player, _)| world.get::<InLayer>(*player).map(|layer| layer.0) == Some(layer)).collect();
     for (player, feet) in players {
         let eyes = [feet[0], feet[1] + sapling_data::EYE_HEIGHT, feet[2]];
-        if let Some((harm, thrown)) = reaches(world, body.at, eyes, power) {
-            vitals::blasted(world, player, harm, body.at, thrown);
+        if let Some((harm, thrown)) = reaches(world, at, eyes, power) {
+            vitals::blasted(world, player, harm, at, thrown);
+        }
+    }
+    // Items lying in it are gone, as the stacks BDS's first TNT left were with its second.
+    let reach = 2.0 * power;
+    for (item, _) in drops::lying_in(world, layer, at.map(|c| c - reach), at.map(|c| c + reach)) {
+        let far = world.get::<Body>(item).map_or(f32::MAX, |its| (0..3).map(|axis| (its.at[axis] - at[axis]).powi(2)).sum::<f32>().sqrt());
+        if far < reach {
+            mobs::remove(world, item);
         }
     }
     let mut mobs = world.query::<(Entity, &InLayer, &Body, &Health, &NetId)>();
     let near: Vec<(Entity, u64, Body)> = mobs.iter(world).filter(|(_, in_layer, ..)| in_layer.0 == layer).map(|(mob, _, body, _, id)| (mob, id.0, *body)).collect();
     for (mob, id, its) in near {
         let middle = [its.at[0], its.at[1] + its.size[1] / 2.0, its.at[2]];
-        let Some((harm, _)) = reaches(world, body.at, middle, power) else { continue };
+        let Some((harm, _)) = reaches(world, at, middle, power).filter(|(harm, _)| *harm > 0.0) else { continue };
         let Some(mut health) = world.get::<Health>(mob).copied() else { continue };
         if health.hurt(harm) {
             *world.get_mut::<Health>(mob).expect("read above") = health;
             entities::tell_viewers(world, mob, layer, its.at.map(|c| c.floor() as i32), vec![harm::strike(id, &health, Cause::EntityExplosion, None)]);
         }
     }
-    if world.get::<Layer>(layer).is_some_and(|layer| layer.world.level().rules.on(GRIEFING)) {
-        for cell in broken(world, layer, body.at, power) {
-            blocks::update_block(world, layer, cell, &Block::new("minecraft:air"));
-        }
+    if wreck != Wreck::Nothing {
+        let cells = broken(world, layer, at, power);
+        blocks::blow_out(world, layer, &cells, wreck == Wreck::Leaves);
     }
 }
 
@@ -163,6 +179,7 @@ pub(super) fn tick(world: &mut World, entity: Entity, layer: Entity, id: u64, ki
         }
         return false;
     };
-    burst(world, entity, layer, body, power);
+    let griefs = world.get::<Layer>(layer).is_some_and(|layer| layer.world.level().rules.on(GRIEFING));
+    explode(world, entity, layer, body.at, power, if griefs { Wreck::Breaks } else { Wreck::Nothing });
     true
 }

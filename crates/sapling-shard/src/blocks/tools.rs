@@ -144,6 +144,12 @@ impl Request<'_> {
             }
             return true;
         }
+        if held == "minecraft:flint_and_steel" && crate::tnt::light(self.world, site.layer, pos) {
+            if site.mode != GameMode::Creative {
+                inventory::wear_tool_in_hand(self.world, self.entity);
+            }
+            return true;
+        }
         let Some(level) = level(self.world, site.layer) else { return false };
         let (registry, [x, y, z]) = (level.registry(), pos);
         let covered = (held.ends_with("_hoe") || held.ends_with("_shovel")) && !registry.get(level.block(x, y + 1, z)).is_some_and(|above| above.is_air());

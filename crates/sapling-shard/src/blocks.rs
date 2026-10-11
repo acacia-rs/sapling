@@ -4,6 +4,7 @@
 //! falling, liquids, plates, updates.
 
 mod after_break;
+mod blown;
 mod buckets;
 mod composter;
 mod daylight;
@@ -33,6 +34,7 @@ mod tools;
 mod updates;
 mod waterlog;
 
+pub(crate) use blown::blow_out;
 pub(crate) use daylight::tick as read_daylight;
 pub(crate) use doors::{bed_head, release_buttons, with as with_property};
 pub(crate) use pistons::tick as move_pistons;

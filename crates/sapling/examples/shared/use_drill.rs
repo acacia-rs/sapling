@@ -48,3 +48,25 @@ pub fn clicks() -> Vec<String> {
     lines.extend(["kill @e[type=!player]", "clear @s", ""].map(String::from));
     lines
 }
+
+pub const TNT_SHOWN: &[&str] = &[
+    "SetEntityData", "LevelSoundEvent", "LevelEvent", "SetEntityMotion", "RemoveEntity", "AddEntity", "AddItemEntity", "MoveEntityDelta", "UpdateBlock", "UpdateSubchunkBlocks", "MovePlayer",
+];
+
+/// The actor in creative on stone over dirt: TNT 3 blocks east lit with flint and steel and left
+/// to burst, then one lit by a block of redstone, then one summoned.
+pub fn tnt() -> Vec<String> {
+    let mut lines: Vec<String> =
+        ["kill @e[type=!player]", "fill ~-6 ~-4 ~-6 ~10 ~-2 ~6 dirt", "fill ~-6 ~-1 ~-6 ~10 ~-1 ~6 stone", "fill ~-6 ~ ~-6 ~10 ~6 ~6 air", "gamemode creative @s", "tp @s ~ ~ ~ -90 0", ""].map(String::from).into();
+    let lit = [
+        vec!["setblock ~3 ~ ~ tnt", "replaceitem entity @s slot.weapon.mainhand 0 flint_and_steel", "!click 3 0 0"],
+        vec!["fill ~-6 ~-1 ~-6 ~10 ~-1 ~6 stone", "fill ~-6 ~ ~-6 ~10 ~6 ~6 air", "setblock ~3 ~ ~ tnt", "setblock ~3 ~ ~1 redstone_block"],
+        vec!["fill ~-6 ~-1 ~-6 ~10 ~-1 ~6 stone", "fill ~-6 ~ ~-6 ~10 ~6 ~6 air", "summon tnt ~3 ~ ~"],
+    ];
+    for steps in lit {
+        lines.extend(steps.into_iter().map(String::from));
+        lines.extend(std::iter::repeat_n(String::new(), 7));
+    }
+    lines.extend(["kill @e[type=!player]", "clear @s", ""].map(String::from));
+    lines
+}

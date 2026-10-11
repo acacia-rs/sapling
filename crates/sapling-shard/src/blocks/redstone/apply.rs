@@ -89,6 +89,11 @@ fn use_signal(world: &mut World, layer: Entity, pos: BlockPos, id: u32, user: Us
                 send::set(world, layer, pos, id);
             }
         }
+        User::Tnt => {
+            if signal > 0 {
+                crate::tnt::light(world, layer, pos);
+            }
+        }
         User::Piston { .. } => pistons::power(world, layer, pos, signal > 0),
         User::Opens(opens) => open(world, layer, pos, opens, signal),
     }

@@ -20,6 +20,7 @@ pub(super) enum User {
     Lamp { lit: bool },
     Opens(Opens),
     Hopper,
+    Tnt,
     /// Pushes out of its `front`, where it takes no power.
     Piston { front: Face },
 }
@@ -81,6 +82,7 @@ impl Part {
             "observer" => Part::Observer { lit: get("powered_bit") == Some("1"), watch: side(get("minecraft:facing_direction")) },
             "redstone_lamp" | "lit_redstone_lamp" => Part::User(User::Lamp { lit: name == "lit_redstone_lamp" }),
             "hopper" => Part::User(User::Hopper),
+            "tnt" => Part::User(User::Tnt),
             "piston" | "sticky_piston" => match get("facing_direction").and_then(crate::blocks::pistons::pushes) {
                 Some(front) => Part::User(User::Piston { front }),
                 None => Part::Other,
