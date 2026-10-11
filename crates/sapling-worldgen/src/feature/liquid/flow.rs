@@ -81,9 +81,26 @@ fn run_tick(view: &mut View, tick: Tick) {
         }
         return;
     }
-    if let Some(d) = depth(view, tick.at, tick.lava) {
+    if block(view, tick.at) == Block::Magma {
+        crate::feature::trace::line(|| format!("  tick {} {} {} magma", tick.at[0], tick.at[1], tick.at[2]));
+        magma_tick(view, tick.at);
+    } else if let Some(d) = depth(view, tick.at, tick.lava) {
         crate::feature::trace::line(|| format!("  tick {} {} {} {} depth {d}", tick.at[0], tick.at[1], tick.at[2], if tick.lava { "lava" } else { "water" }));
         self::tick(view, tick.at, tick.lava);
+    }
+}
+
+/// A magma block's tick (a blob queues it in 1; it rides the liquid queue as a water tick on a magma cell):
+/// one bubble column cell in the water source above. The column's own ticks wait for the game
+/// (docs/research/worldgen-bds-liquids.md, "Game time"), so it grows only under a game-tick replay.
+fn magma_tick(view: &mut View, [x, mut y, z]: [i32; 3]) {
+    let cells = if super::game_ticks() > 0 { usize::MAX } else { 1 };
+    for _ in 0..cells {
+        y += 1;
+        if view.block(x, y, z) != Block::Water {
+            break;
+        }
+        view.set_block(x, y, z, Block::BubbleColumn);
     }
 }
 

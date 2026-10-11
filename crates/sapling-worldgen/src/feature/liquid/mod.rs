@@ -20,7 +20,7 @@ pub fn settle(view: &mut View, inherited: &[Routed]) {
     super::trace::line(|| format!("{:?} liquid: features done, {} inherited ticks", view.chunk(), inherited.len()));
     reset_border_water(view);
     super::trace::line(|| format!("{:?} liquid border reset", view.chunk()));
-    let mut generated = TickQueue::default();
+    let mut generated = TickQueue::chunk();
     for (at, lava) in view.own_fluid_ticks() {
         super::trace::line(|| format!("  own tick {} {} {}", at[0], at[1], at[2]));
         generated.add(at, lava, 1);

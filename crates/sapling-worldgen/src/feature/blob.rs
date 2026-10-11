@@ -45,7 +45,8 @@ impl PartiallyExposedBlob {
             if ctx.random.next_float() <= self.probability && self.enclosed(ctx.view, p) {
                 ctx.view.set_block(p[0], p[1], p[2], self.block);
                 if self.block == Block::Magma {
-                    bubble_column(ctx.view, p);
+                    // The magma block's own tick, in 1, starts the bubble column (liquid/flow.rs, `magma_tick`).
+                    ctx.view.schedule(p, false, 1);
                 }
                 placed = true;
             }
@@ -56,18 +57,5 @@ impl PartiallyExposedBlob {
     fn enclosed(&self, view: &View, [x, y, z]: [i32; 3]) -> bool {
         !open(view.block(x, y, z))
             && FACING.iter().enumerate().all(|(face, [dx, dy, dz])| face == self.exposed || !open(view.block(x + dx, y + dy, z + dz)))
-    }
-}
-
-/// One bubble column cell in the water source above; the column's ticks wait for the game
-/// (docs/research/worldgen-bds-liquids.md, "Game time"), so it grows only under a game-tick replay.
-fn bubble_column(view: &mut View, [x, mut y, z]: [i32; 3]) {
-    let cells = if super::liquid::game_ticks() > 0 { usize::MAX } else { 1 };
-    for _ in 0..cells {
-        y += 1;
-        if view.block(x, y, z) != Block::Water {
-            break;
-        }
-        view.set_block(x, y, z, Block::BubbleColumn);
     }
 }

@@ -31,6 +31,7 @@ deepfrozen|20261003-biomes|blocks_match_bds_biomes|deep frozen ocean|450 458 453
 desert|20261003-biomes|blocks_match_bds_biomes|desert|-446 554 -443 557|g5
 icespikes|20261003-biomes|blocks_match_bds_biomes|ice spikes|-22 -198 -19 -195|g5
 desert2|20261003-biomes|blocks_match_bds_biomes|desert|-446 554 -443 557|ds2
+desert3|20261003-biomes|blocks_match_bds_biomes|desert|-446 554 -443 557|qd
 frozenocean2|20261003-biomes|blocks_match_bds_biomes|frozen ocean|474 570 477 573|ds2
 city2|20261003-structures|blocks_match_bds_structures|ancient city|-74 75 -66 83|ac2
 city3|20261003-structures|blocks_match_bds_structures|ancient city|-74 75 -66 83|ac3
