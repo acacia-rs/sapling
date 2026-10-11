@@ -96,6 +96,10 @@ tools/testbox.sh <name> <cargo args...>              # anything else, e.g. `lib 
 tools/replay.sh <name> <canon> test|rc|ex ...        # the same against a one-worker run (tools/replay-canons.txt)
 tools/replay-all.sh <prefix> [canon...]              # every canon's region totals
 tools/worldgen-oracle/canon-upload.sh <run dir> <canon> <world>   # a debugger run's world and order to testbox
+tools/replay-world.sh <run dir> <name> <world>       # a dbg_canon.json run with both its orders, as ~/replay-worlds/<name>
+tools/replay-regions.sh <prefix> [name...]           # tools/replay-worlds.txt: each region against its own run, full replay
+tools/replay-regions.sh <prefix> check|rc <name>     # structure_replay_check / replay_check over that region
+tools/replay-ex.sh <log> <name> <example> [args...]  # any example under that run's replay
 ```
 
 Each region's `structure stage:` line counts the stable cells where our structure stage and BDS disagree on a
