@@ -14,8 +14,23 @@ fn changed(ctx: &mut ShardCtx<'_>, pos: BlockPos, block: &Block) -> bool {
     ctx.update_block(pos, block) && ctx.block(pos) != before
 }
 
+/// Old names of blocks that BDS's commands still take, and what they name now
+/// (research/captures/bds-loot2.txt).
+// TODO: the eight that were tried; BDS knows many more.
+const OLD_NAMES: [(&str, &str); 8] = [
+    ("stonebrick", "stone_bricks"),
+    ("grass", "grass_block"),
+    ("planks", "oak_planks"),
+    ("log", "oak_log"),
+    ("wool", "white_wool"),
+    ("stone_slab", "smooth_stone_slab"),
+    ("concrete", "white_concrete"),
+    ("leaves", "oak_leaves"),
+];
+
 fn block(name: &str, states: Option<&States>) -> Block {
-    let block = Block::new(name);
+    let plain = name.strip_prefix("minecraft:").unwrap_or(name);
+    let block = Block::new(OLD_NAMES.iter().find(|(old, _)| *old == plain).map_or(name, |(_, new)| new));
     match states {
         Some(states) => block.with(states.0.clone()),
         None => block,

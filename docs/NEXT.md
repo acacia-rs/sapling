@@ -67,9 +67,11 @@ Each needs its rule looked up first (`bdsre` for BDS, the Java jar for data), th
 - Block loot is the Java game's tables under Bedrock names (`sapling-data/data/block-loot.tsv`);
   26 blocks broken with a diamond pickaxe left the same items in the same numbers on BDS
   (`bds_command_probe loot`, research/captures/bds-loot.txt), but copper ore, which left 3 each of
-  three times there and 2 to 5 here. Ores leave experience and ice water as there
-  (`blocks/after_break.rs`); how much experience is the Java game's range.
-- BDS's `/setblock` takes old block names (`stonebrick`); sapling knows a block by its one name.
+  three times there and 2 to 5 here, and 2 to 5 there too in twelve more (`loot2`). Ores leave experience and ice water as there
+  (`blocks/after_break.rs`); the experience of 20 broken ores there was within the Java game's range
+  for each (coal 0 to 2, diamond 3 to 7, redstone 1 to 4, lapis 2 to 5, quartz 3 and 4, nether gold 0 and 1).
+- BDS's `/setblock` and `/testforblock` take old block names; sapling takes the eight that were
+  tried (`vanilla/blocks.rs` `OLD_NAMES`, `loot2`) and no others.
 - Whether a vanilla client names a hopper's slots `Container` is the bot's assumption.
 - A placed shulker box's `facing` is the face clicked (`shulker-ender.md`).
 - An orb is taken within Java's pickup box once 7 ticks old (`orbs.rs`): one recorded pickup; BDS's

@@ -248,3 +248,20 @@ pub fn loot() -> Vec<String> {
     lines.extend(["gamemode creative @s", "clear @s", ""].map(String::from));
     lines
 }
+
+pub const LOOT2_SHOWN: &[&str] = &["AddItemEntity", "AddEntity", "UpdateBlock"];
+
+/// What `loot` left open: copper ore twelve times over, blocks set by old names and asked
+/// for by their new ones, and ice broken last, with the blocks that change shown.
+pub fn loot2() -> Vec<String> {
+    let mut lines: Vec<String> = ["kill @e[type=!player]", "fill ~-2 ~-1 ~-2 ~4 ~-1 ~4 bedrock", "fill ~-2 ~ ~-2 ~4 ~4 ~4 air", "gamemode survival @s", "clear @s", "replaceitem entity @s slot.weapon.mainhand 0 diamond_pickaxe", ""].map(String::from).into();
+    for _ in 0..12 {
+        lines.extend(["setblock ~1 ~ ~ copper_ore", "!break 1 0 0", ""].map(String::from));
+    }
+    lines.push("kill @e[type=!player]".into());
+    for (old, new) in [("stonebrick", "stone_bricks"), ("grass", "grass_block"), ("planks", "oak_planks"), ("log", "oak_log"), ("wool", "white_wool"), ("stone_slab", "smooth_stone_slab"), ("concrete", "white_concrete"), ("leaves", "oak_leaves")] {
+        lines.extend([format!("setblock ~3 ~ ~ {old}"), format!("testforblock ~3 ~ ~ {new}"), format!("testforblock ~3 ~ ~ {old}"), "setblock ~3 ~ ~ air".into()]);
+    }
+    lines.extend(["setblock ~1 ~ ~ ice", "!break 1 0 0", "", "", "gamemode creative @s", "clear @s", ""].map(String::from));
+    lines
+}

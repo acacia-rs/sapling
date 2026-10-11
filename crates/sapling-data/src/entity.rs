@@ -167,8 +167,12 @@ pub fn add_falling_block(id: u64, position: [f32; 3], velocity: [f32; 3], block_
 pub fn add_experience_orb(id: u64, at: [f32; 3], velocity: [f32; 3], value: i32) -> AddEntity {
     const ORB: &str = "minecraft:xp_orb";
     let mut orb = RECORDED.get(ORB).map_or_else(|| plain(ORB), |kind| kind.grown.clone());
-    orb.metadata.retain(|item| item.key != Key::ExperienceValue);
-    orb.metadata.push(item(Key::ExperienceValue, Plain::Int(value)));
+    // Where BDS has it among the rest, if the record does.
+    let worth = item(Key::ExperienceValue, Plain::Int(value));
+    match orb.metadata.iter_mut().find(|item| item.key == Key::ExperienceValue) {
+        Some(recorded) => *recorded = worth,
+        None => orb.metadata.push(worth),
+    }
     let ([x, y, z], [dx, dy, dz]) = (at, velocity);
     AddEntity { unique_id: id as i64, runtime_id: id, position: Vec3f { x, y, z }, velocity: Vec3f { x: dx, y: dy, z: dz }, ..orb }
 }

@@ -1,7 +1,7 @@
 //! What a block a survival player broke leaves besides its items: an ore its experience, ice
 //! its water (research/captures/bds-loot.txt).
-// TODO: how much each ore leaves is the Java game's range; BDS showed orbs in numbers those
-// ranges give, not their worth. A spawner and sculk leave none yet.
+// TODO: how much each ore leaves is the Java game's range, which what 20 ores left on BDS was
+// within. A spawner and sculk leave none yet.
 
 use bevy_ecs::prelude::*;
 use sapling_api::BlockPos;
