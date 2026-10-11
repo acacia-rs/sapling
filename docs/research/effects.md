@@ -82,7 +82,7 @@ The effects of `fx` are built, health boost with the attribute BDS wrote (its de
 default most stay 20). Those BDS only told of are only told of here,
 so levitation lifts as far as the client does it and invisibility hides nobody from a mob.
 Run against sapling the drill gave BDS's speeds, falls and strong hits (7.7 and 6.01 left of a
-cow's 10); its bare and its weak hit missed a cow that had strolled off.
+cow's 10); its bare and its weak hit missed a cow that had strolled off, and a test holds them.
 
 Effects wait in storage with a player's items (`ActiveEffects`, `sapling-leveldb/src/player.rs`)
 and are told to it as added when it is back; neither the record's names nor what BDS tells at a

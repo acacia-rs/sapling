@@ -127,7 +127,7 @@ pub fn provoke() -> Vec<String> {
     for kind in ["wolf", "bee", "enderman", "zombie", "zombie_pigman", "iron_golem"] {
         lines.extend(["effect @s instant_health 1 4".into(), format!("summon {kind} ~ ~ ~1.5")]);
         lines.extend(std::iter::repeat_n(String::new(), 4));
-        lines.extend([format!("tp @s @e[type={kind},c=1]"), String::new(), format!("!hit {kind}")]);
+        lines.extend([format!("tp @s @e[type={kind},c=1]"), format!("!hit {kind}")]);
         lines.extend(std::iter::repeat_n(String::new(), 6));
         lines.extend(["kill @e[type=!player]", "", ""].map(String::from));
     }
@@ -147,7 +147,7 @@ pub fn fx() -> Vec<String> {
         lines.extend([format!("effect @s slowness 20 {level}"), String::new(), "effect @s clear".into(), String::new()]);
     }
     for effect in ["", "effect @s strength 20 0", "effect @s strength 20 1", "effect @s weakness 20 0"] {
-        lines.extend([effect.to_owned(), "summon cow ~ ~ ~1.5".into(), String::new(), "tp @s @e[type=cow,c=1]".into(), String::new(), "!hit cow".into(), String::new(), "kill @e[type=!player]".into(), "effect @s clear".into(), String::new()]);
+        lines.extend([effect.to_owned(), "summon cow ~ ~ ~1.5".into(), String::new(), "tp @s @e[type=cow,c=1]".into(), "!hit cow".into(), String::new(), "kill @e[type=!player]".into(), "effect @s clear".into(), String::new()]);
     }
     for effect in ["", "effect @s slow_falling 20 0", "effect @s jump_boost 20 0", "effect @s jump_boost 20 3"] {
         lines.extend([effect.to_owned(), "tp @s ~ ~8 ~".into(), String::new(), String::new(), String::new(), String::new(), "effect @s clear".into(), "effect @s instant_health 1 4".into(), String::new()]);

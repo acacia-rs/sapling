@@ -166,9 +166,10 @@ four seconds and then hit with the fist (`research/captures/bds-provoke.txt`):
   flew on at 0.155 a tick; an enderman hit took none and was 9 blocks off the next tick. The
   piglin, hit 40 blocks under the floor where the enderman had led the actor, took none either,
   which the first run contradicts and no third settled.
-- Run against sapling the piglin did as in the first run (5.5 a second apart, 0.114 a tick); its
-  wolf had strolled out of reach before the hit, where BDS's stood still, so only the test
-  shows a wolf's bite.
+- Run against sapling, once its `/tp` went to a mob as BDS's does, the wolf took its hitter and
+  bit for 2.5, a second apart where BDS's bit 1.5 seconds apart; the piglin did as in the first
+  run (5.5 a second apart, 0.114 a tick). BDS's first hit back came 1 to 1.5 seconds after the
+  hit, and sapling's waits a second.
 
 ## Strolling (`stroll`)
 

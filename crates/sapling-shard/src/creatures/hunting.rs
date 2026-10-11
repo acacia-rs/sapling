@@ -142,6 +142,9 @@ pub(super) fn provoke(world: &mut World, entity: Entity, layer: Entity, id: u64,
     let hunted = world.resource::<Settings>().0.difficulty != Difficulty::Peaceful && seen(world, player, layer, body.at, hunts.sees).is_some();
     if hunted && world.get::<Hunter>(entity).is_some_and(|hunter| hunter.prey != Some(player)) {
         take(world, entity, layer, id, kind, body, Some(player));
+        // BDS's first hit back came a second or more after.
+        let now = world.resource::<Tick>().0;
+        world.get_mut::<Hunter>(entity).expect("a hunter, above").ready = now + COOLDOWN;
     }
 }
 
