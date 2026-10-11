@@ -232,7 +232,7 @@ pub(super) fn strike(world: &mut World, entity: Entity, layer: Entity, id: u64, 
     if dx.abs() >= across || dz.abs() >= across || feet[1] >= body.at[1] + body.size[1] || body.at[1] >= feet[1] + PLAYER[1] {
         return None;
     }
-    world.get_mut::<Hunter>(entity)?.ready = now + COOLDOWN;
+    world.get_mut::<Hunter>(entity)?.ready = now + hunts.every.map_or(COOLDOWN, u64::from);
     let harm = match world.resource::<Settings>().0.difficulty {
         Difficulty::Peaceful => return None,
         Difficulty::Easy => harm.min(harm / 2.0 + 1.0),

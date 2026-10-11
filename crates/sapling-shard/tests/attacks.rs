@@ -98,6 +98,9 @@ fn a_wolf_leaves_a_player_be_until_it_is_hit_and_then_bites_it() {
     h.receive(1, &attack(wolf));
     let after: Vec<acacia_proto::RawPacket> = (0..80).flat_map(|_| h.tick_all().to(1).to_vec()).collect();
     assert!(health(&after).contains(&17.5), "hit, it turns on its hitter: {:?}", health(&after));
+    let later: Vec<f32> = (0..80).flat_map(|_| health(h.tick_all().to(1))).filter(|left| *left <= 17.5).collect();
+    let bites = later.windows(2).filter(|pair| pair[0] - pair[1] > 2.0).count();
+    assert!((2..=3).contains(&bites), "a bite each 31 ticks, not each 20: {later:?}");
 }
 
 #[test]

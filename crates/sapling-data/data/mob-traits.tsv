@@ -81,7 +81,7 @@ minecraft:warden	fire_immune xp=5-5 strolls=0.15
 minecraft:witch	xp=5-5 strolls=0.25
 minecraft:wither	fire_immune breathes_water xp=50-50 strolls=0.25
 minecraft:wither_skeleton	fire_immune breathes_water xp=5-5 strolls=0.25 attack=9 speed=0.3125 sees=16 hits=wither:200
-minecraft:wolf	xp=1-3 strolls=0.3 panics=0.375 attack=3 speed=0.3 sees=16 provoked
+minecraft:wolf	xp=1-3 strolls=0.3 panics=0.375 attack=3 speed=0.3 sees=16 provoked every=31
 minecraft:zoglin	fire_immune breathes_water xp=5-5 strolls=0.25
 minecraft:zombie	breathes_water xp=5-5 strolls=0.23 attack=3 speed=0.23 sees=35
 minecraft:zombie_horse	breathes_water xp=1-3

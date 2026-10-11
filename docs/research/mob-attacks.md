@@ -157,6 +157,8 @@ A stray, a bogged and a pillager 5 blocks from the actor (`research/captures/bds
 A wolf, a zombified piglin and an iron golem 1.5 blocks from the actor in survival, left alone
 four seconds and then hit with the fist (`research/captures/bds-provoke.txt`):
 
+- The wolf's bites came 1.55 seconds apart in both runs (31 ticks), where every other kind's
+  hits came a second apart; sapling keeps that for the wolf (`every=31`).
 - None took a target before the hit. Each took the actor the tick it was hit (`TargetEid`), with
   the `mob.warning` sound a tick later as a zombie's.
 - The wolf bit for 2.5 on easy (3), the piglin hit for 5.5 (9: its 5 and its golden sword) once
@@ -167,7 +169,7 @@ four seconds and then hit with the fist (`research/captures/bds-provoke.txt`):
   piglin, hit 40 blocks under the floor where the enderman had led the actor, took none either,
   which the first run contradicts and no third settled.
 - Run against sapling, once its `/tp` went to a mob as BDS's does, the wolf took its hitter and
-  bit for 2.5, a second apart where BDS's bit 1.5 seconds apart; the piglin did as in the first
+  bit for 2.5; the piglin did as in the first
   run (5.5 a second apart, 0.114 a tick). BDS's first hit back came 1 to 1.5 seconds after the
   hit, and sapling's waits a second.
 

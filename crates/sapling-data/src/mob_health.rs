@@ -51,6 +51,8 @@ pub struct Hunts {
     /// Its hit costs a whole number from `attack` up to this, where it varies, and it throws
     /// harder than others (the iron golem).
     pub upto: Option<f32>,
+    /// The ticks between two of its hits, where they are not the 20 of most.
+    pub every: Option<u32>,
 }
 
 pub fn mob_traits(identifier: &str) -> MobTraits {
@@ -61,7 +63,7 @@ pub fn mob_traits(identifier: &str) -> MobTraits {
     let value = |name: &str| row.and_then(|(_, traits)| traits.split(' ').find_map(|held| held.strip_prefix(name)));
     let number = |name: &str| value(name).and_then(|value| value.parse::<f32>().ok());
     let gives = value("hits=").and_then(|given| given.split_once(':')).and_then(|(effect, ticks)| Some((effect, ticks.parse().ok()?)));
-    let hunts = number("attack=").zip(number("speed=")).zip(number("sees=")).map(|((attack, speed), sees)| Hunts { attack, speed, sees, gives, explodes: number("explodes="), shoots: number("shoots=").map(|ticks| ticks as u32), provoked: has("provoked"), closes: has("closes"), upto: number("upto=") });
+    let hunts = number("attack=").zip(number("speed=")).zip(number("sees=")).map(|((attack, speed), sees)| Hunts { attack, speed, sees, gives, explodes: number("explodes="), shoots: number("shoots=").map(|ticks| ticks as u32), provoked: has("provoked"), closes: has("closes"), upto: number("upto="), every: number("every=").map(|ticks| ticks as u32) });
     MobTraits { fire_immune: has("fire_immune"), no_fall: has("no_fall"), breathes_water: has("breathes_water"), experience, hunts, strolls: number("strolls="), panics: number("panics=") }
 }
 
