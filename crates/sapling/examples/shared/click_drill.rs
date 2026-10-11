@@ -86,3 +86,13 @@ pub fn copper() -> Vec<String> {
     lines.extend(["gamerule randomtickspeed 1", "fill ~1 ~ ~-3 ~10 ~3 ~3 air", "setblock ~8 ~-1 ~ stone", "kill @e[type=item]"].map(String::from));
     lines
 }
+
+/// Redstone ore under the actor, in survival: set under its feet as it stands, then it drops
+/// onto the ore from a block up, then an ore beside it is broken by hand.
+pub fn oresteps() -> Vec<String> {
+    let lines = [
+        "fill ~-1 ~-1 ~7 ~3 ~-1 ~11 stone", "tp @s ~ ~ ~9 -90 0", "fill ~-1 ~ ~-1 ~3 ~4 ~1 air", "gamemode survival @s", "setblock ~ ~-1 ~ redstone_ore", "", "", "tp @s ~ ~1 ~", "", "",
+        "setblock ~ ~-1 ~ redstone_ore", "setblock ~1 ~ ~ redstone_ore", "!break 1 0 0", "", "setblock ~ ~-1 ~ stone", "setblock ~1 ~ ~ air", "gamemode creative @s",
+    ];
+    lines.map(String::from).into()
+}

@@ -46,7 +46,7 @@ pub(crate) use blown::blow_out;
 pub(crate) use daylight::tick as read_daylight;
 pub(crate) use fire::tick as burn_fires;
 pub(crate) use growth::{arrived as plants_arrived, tick as random_ticks, trample};
-pub(crate) use ores::tick as dim_ores;
+pub(crate) use ores::{light as light_ore, tick as dim_ores, tread as tread_ore};
 pub(crate) use scaffolds::tick as settle_scaffolds;
 pub(crate) use doors::{bed_head, release_buttons, with as with_property};
 pub(crate) use pistons::tick as move_pistons;

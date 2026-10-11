@@ -84,6 +84,11 @@ had gone out, to plain redstone ore, after 90 seconds, the first after 0.9 secon
 spread evenly: each has the same chance every tick, which fits an average life of some 88
 seconds. Sapling gives each lit ore a life drawn that way (`blocks/ores.rs`).
 
+`bds_command_probe oresteps` (`bds-oresteps.txt`): ore set under a standing survival player
+was lit a tick later, both times, and an ore the player started to break by hand was lit with
+the first `BlockStartBreak`. Sapling lights the ore a survival player stands on and the ore a
+break starts on; mobs and creative players light none by standing.
+
 ## A second round
 
 Measured with `bds_command_probe clicks2` (`crates/sapling/examples/shared/click_drill.rs`;

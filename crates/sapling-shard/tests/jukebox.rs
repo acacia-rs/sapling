@@ -92,3 +92,19 @@ fn an_item_frame_takes_an_item_and_turns_it_and_a_decorated_pot_takes_a_stack() 
     });
     h.tick_all();
 }
+
+#[test]
+fn redstone_ore_lights_under_a_standing_survival_player() {
+    // research/captures/bds-oresteps.txt: lit a tick after it was set under the actor.
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    h.remote.run(|ctx| assert!(ctx.set_block([0, 64, 0], &Block::new("minecraft:redstone_ore")) && ctx.set_block([4, 64, 0], &Block::new("minecraft:redstone_ore"))));
+    for _ in 0..3 {
+        h.tick_all();
+    }
+    h.remote.run(|ctx| {
+        let named = |at: [i32; 3]| ctx.block(at).map(|ore| ore.name).unwrap_or_default();
+        assert_eq!([named([0, 64, 0]), named([4, 64, 0])], ["minecraft:lit_redstone_ore", "minecraft:redstone_ore"]);
+    });
+    h.tick_all();
+}

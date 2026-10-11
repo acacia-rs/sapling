@@ -1,6 +1,6 @@
 //! Lit redstone ore goes out by itself (docs/research/block-uses.md, "Redstone ore").
-// TODO: ore a world folder holds lit stays lit until it is written again; walking on ore
-// lights none.
+// TODO: ore a world folder holds lit stays lit until it is written again; only a survival
+// player lights ore by standing on it, no mob and no creative player.
 
 use bevy_ecs::prelude::*;
 use sapling_api::BlockPos;
@@ -14,6 +14,8 @@ const ORE: &str = "redstone_ore";
 const MEAN: f32 = 1760.0;
 /// No ore lasts more than this many times the average.
 const LONGEST: f32 = 4.0;
+/// The feet are less than this over the cell they stand on.
+const UNDERFOOT: f32 = 0.2;
 
 /// Lit ores: when each goes out, and where.
 #[derive(Resource, Default)]
@@ -23,6 +25,24 @@ fn lit_at(world: &World, layer: Entity, [x, y, z]: BlockPos) -> Option<(u32, &st
     let level = level(world, layer).filter(|level| level.in_height(y))?;
     let id = level.block(x, y, z);
     level.registry().get(id).map(|state| state.name).filter(|name| name.starts_with(LIT) && name.ends_with(ORE)).map(|name| (id, name))
+}
+
+/// Lights the redstone ore at `pos`, if that is what is there.
+pub(crate) fn light(world: &mut World, layer: Entity, [x, y, z]: BlockPos) {
+    let lit = level(world, layer).filter(|level| level.in_height(y)).and_then(|level| {
+        let (registry, id) = (level.registry(), level.block(x, y, z));
+        let state = registry.get(id).filter(|state| state.name.ends_with(ORE) && !state.name.starts_with(LIT))?;
+        registry.find(&state.name.replacen("minecraft:", LIT, 1), state.properties)
+    });
+    if let Some(lit) = lit {
+        send::set(world, layer, [x, y, z], lit);
+    }
+}
+
+/// A body stands at `feet`: redstone ore under it lights, as BDS's did a tick after it was set
+/// under a standing player.
+pub(crate) fn tread(world: &mut World, layer: Entity, feet: [f32; 3]) {
+    light(world, layer, [feet[0].floor() as i32, (feet[1] - UNDERFOOT).floor() as i32, feet[2].floor() as i32]);
 }
 
 /// A block was written at `pos`: a lit ore, however it came there, will go out.

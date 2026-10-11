@@ -250,6 +250,9 @@ fn stand(world: &mut World, player: Entity, layer: Entity) {
     }
     settle(world, player, hits.last().copied().unwrap_or(Cause::Fire));
     crate::blocks::trample(world, layer, position.feet, dropped);
+    if position.on_ground {
+        crate::blocks::tread_ore(world, layer, position.feet);
+    }
 }
 
 /// Lets the dead rise who asked to, hurts the living by where they stand, and lets the bodies go.
