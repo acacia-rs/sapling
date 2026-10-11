@@ -5,6 +5,7 @@
 // saved with the least a compound needs, which BDS was not tried on.
 
 mod attacks;
+mod blast;
 mod harm;
 mod health;
 mod hunting;
@@ -229,6 +230,9 @@ pub(crate) fn tick(world: &mut World) {
         blocks::to_viewers(world, layer, body.at.map(|c| c.floor() as i32), &packets);
         if is_alive {
             hunting::strike(world, entity, layer, id, &kind, &body);
+            if blast::tick(world, entity, layer, id, &kind, &body) {
+                continue;
+            }
         }
         let before = world.get::<Health>(entity).map(|health| (health.left(), health.is_burning()));
         if harm::tick(world, entity, layer, id, &kind, &start, &body, world.get::<Dying>(entity).is_some()) {

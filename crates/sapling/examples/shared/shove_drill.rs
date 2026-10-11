@@ -1,4 +1,4 @@
-//! The shove, byhand and bedspawn drills of bds_command_probe: what a piston does to what stands in its way
+//! The shove, byhand, bedspawn and boom drills of bds_command_probe: what a piston does to what stands in its way
 //! (docs/research/redstone.md, "Pistons and entities"), and a lever and a button worked by hand.
 
 pub const SHOVE_SHOWN: &[&str] = &["AddEntity", "AddItemEntity", "RemoveEntity", "MoveEntityDelta", "MoveEntityAbsolute", "SetEntityMotion", "UpdateBlock", "BlockEntityData", "EntityEvent", "UpdateAttributes"];
@@ -57,5 +57,23 @@ pub fn bedspawn() -> Vec<String> {
     lines.extend(["fill ~-3 ~ ~-3 ~3 ~1 ~3 air", "", "kill @s"].map(String::from));
     lines.extend(std::iter::repeat_n(String::new(), 6));
     lines.extend(["gamemode creative @s", ""].map(String::from));
+    lines
+}
+
+pub const BOOM_SHOWN: &[&str] = &[
+    "UpdateAttributes", "EntityEvent", "SetEntityData", "LevelSoundEvent", "LevelEvent", "SetEntityMotion", "RemoveEntity", "AddEntity", "AddItemEntity", "MoveEntityDelta", "UpdateBlock", "UpdateSubchunkBlocks",
+    "DeathInfo",
+];
+
+/// The actor in survival on a floor of stone over dirt, a creeper 6 blocks off left to come and
+/// blow up; then the same with `mobgriefing` off.
+pub fn boom() -> Vec<String> {
+    let mut lines: Vec<String> =
+        ["kill @e[type=!player]", "gamerule domobspawning false", "difficulty easy", "fill ~-3 ~-4 ~-12 ~12 ~-2 ~40 dirt", "fill ~-3 ~-1 ~-12 ~12 ~-1 ~40 stone", "fill ~-3 ~ ~-12 ~12 ~6 ~40 air", "gamemode survival @s", "tp @s ~6 ~ ~20", ""].map(String::from).into();
+    for rule in ["true", "false"] {
+        lines.extend([format!("gamerule mobgriefing {rule}"), "effect @s instant_health 1 4".into(), "summon creeper ~ ~ ~-6".into()]);
+        lines.extend(std::iter::repeat_n(String::new(), 9));
+    }
+    lines.extend(["gamerule mobgriefing true", "gamemode creative @s", "kill @e[type=!player]", ""].map(String::from));
     lines
 }

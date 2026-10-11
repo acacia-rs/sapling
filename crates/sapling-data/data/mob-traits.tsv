@@ -15,7 +15,7 @@ minecraft:cod	breathes_water no_air xp=1-3
 minecraft:copper_golem	no_fall strolls=0.2 panics=0.3
 minecraft:cow	xp=1-3 strolls=0.2 panics=0.3125
 minecraft:creaking	strolls=0.12
-minecraft:creeper	xp=5-5 strolls=0.2
+minecraft:creeper	xp=5-5 strolls=0.2 attack=0 speed=0.25 sees=16 explodes=3
 minecraft:dolphin	xp=1-3
 minecraft:donkey	xp=1-3 strolls=0.1225 panics=0.21
 minecraft:drowned	breathes_water xp=5-5

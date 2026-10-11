@@ -83,6 +83,28 @@ walk and hit as the zombie does, with their own numbers:
 - `/summon zombie_villager_v2` is a syntax error; `zombie_villager` summons one.
 - The sounds come from the same shares of each kind's height.
 
+## Creepers (`boom`)
+
+A creeper 6 blocks from the actor on stone over dirt (`research/captures/bds-boom.txt`), with
+`mobgriefing` on and then off:
+
+- It takes its target and walks as the others do, at 0.1349 a tick (movement 0.2, its attack's
+  `speed_multiplier` 1.25).
+- 3.08 blocks off (2.48 between their boxes; its `target_nearby_sensor` has `inside_range` 2.5
+  and `outside_range` 6, where it stops) it is lit: its flags gain `IGNITED` (1024) and `FuseLength` is sent as 29, then
+  one less each tick down to 0; two ticks in, the sound `fuse` at its head. It walks on a few
+  ticks more slowly and stands, 2.92 off.
+- The tick after `FuseLength` 0: `LevelEvent` `ParticleExplosion` at its feet with data 3 (its
+  power), the player's `HurtAnimation` with 11 and `SetEntityMotion`, `RemoveEntity` of the
+  creeper, and a tick later the sound `explode` there, of no entity.
+- The player lost 8.229 on easy: the Java game's `(i^2 + i) / 2 x 7 x 2 x power + 1` with
+  `i = 1 - distance / (2 x power)` and the distance from the creeper's feet to the player's eyes
+  (3.34), halved and one added for easy.
+- It was thrown at (0, 0.615, 0.788): a hit's 0.4 away and 0.4 up, plus the way from the blast to
+  its eyes times `i` (0.443).
+- One block broke, the stone under the creeper; nothing lay there after. With `mobgriefing` off
+  none broke and the player lost the same.
+
 ## Strolling (`stroll`)
 
 A zombie and a cow left alone for a minute on a floor 40 blocks square, the actor in creative
@@ -111,7 +133,8 @@ chicken and the zombie had strolled out of reach):
 Normal and hard (taken as 3 and 4.5), a way around a wall (a mob that cannot see takes no
 target, so the drill showed none), a hole in the way, what hides a player besides a full block, whether prey that goes behind a wall is kept, a zombie hit
 back, daylight (a spider hunts only in the dark), baby zombies, a cave spider's poison on
-normal and hard (7 and 15 seconds in its definition), the kinds not named here, and what `within_radius` 25 does: a zombie on
+normal and hard (7 and 15 seconds in its definition), the kinds not named here, a creeper whose prey walks off, a blast behind a wall, what a blast
+leaves of the blocks it breaks and of softer ground, and what `within_radius` 25 does: a zombie on
 open grass 30 off took and dropped its target every 10 ticks, one on the stone floor kept it.
 
 ## Sapling
@@ -121,6 +144,11 @@ shard's `mobs_stroll`): a tick in 120 it picks a place up to 10 blocks off along
 walks straight there at its stroll speed, giving up at an edge, at a block in its way or after ten
 seconds. How often and how far are fitted by eye to the two mobs above. A mob a player hit, of a
 kind with `panics=`, runs for 70 ticks from place to place within 5 blocks at that speed.
+
+A creeper is lit, burns and bursts so (`creatures/blast.rs`): its blast hurts and throws players
+by the rule above, hurts mobs, and breaks blocks along the Java game's rays, which break that one
+stone. What a block withstands is guessed from its hardness; the fuse goes out when its prey
+is 6 off or gone, as the pack says, which was not drilled.
 
 `creatures/hunting.rs`, for kinds with `attack=`, `speed=` and `sees=` in `mob-traits.tsv`: the
 zombie and the seven kinds above, each with its numbers and what its hit gives (not the cave

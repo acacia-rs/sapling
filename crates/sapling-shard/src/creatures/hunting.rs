@@ -9,13 +9,16 @@ use acacia_proto::types::{EntityProperties, MetadataDictionaryItem, MetadataDict
 use bevy_ecs::prelude::*;
 use sapling_api::Difficulty;
 
-use super::legs;
+use super::{blast, legs};
 use crate::body::Body;
 use crate::components::{InLayer, Layer, NetId, Position, Settings, Tick, in_world};
 use crate::{entities, late_sounds, vitals};
 
 /// Ticks between two looks for a player.
 const LOOKS: u64 = 10;
+/// One that blows up lights its fuse this near its prey, and puts it out this far from it.
+const IGNITES: f32 = 2.5;
+const GOES_OUT: f32 = 6.0;
 /// A hunter's box reaches this much further across for its hit, and it hits once in this many ticks.
 const REACH: f32 = 0.8;
 const COOLDOWN: u64 = 20;
@@ -108,8 +111,12 @@ fn pick(world: &mut World, entity: Entity, layer: Entity, id: u64, kind: &str, b
 /// Before the hunter's move: it walks at its prey, if it has any.
 pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity, id: u64, kind: &str) -> bool {
     let (Some(body), Some(speed)) = (world.get::<Body>(entity).copied(), sapling_data::mob_traits(kind).hunts.map(|hunts| hunts.speed)) else { return false };
-    let Some(feet) = pick(world, entity, layer, id, kind, &body) else { return false };
-    legs::walk(world, entity, layer, &body, [feet[0], feet[2]], speed, TOUCHING);
+    let Some(feet) = pick(world, entity, layer, id, kind, &body) else { return blast::is_lit(world, entity) };
+    // A lit creeper stands where it is.
+    match blast::is_lit(world, entity) {
+        true => legs::rest(world, entity),
+        false => legs::walk(world, entity, layer, &body, [feet[0], feet[2]], speed, TOUCHING),
+    }
     true
 }
 
@@ -118,10 +125,22 @@ pub(super) fn strike(world: &mut World, entity: Entity, layer: Entity, id: u64, 
     let now = world.resource::<Tick>().0;
     let hunts = sapling_data::mob_traits(kind).hunts?;
     let harm = hunts.attack;
-    let hunter = world.get::<Hunter>(entity)?;
-    let prey = hunter.prey.filter(|_| now >= hunter.ready)?;
+    let (prey, ready) = world.get::<Hunter>(entity).map(|hunter| (hunter.prey, hunter.ready))?;
+    if prey.is_none() && hunts.explodes.is_some() {
+        blast::put_out(world, entity, layer, id, kind, body);
+    }
+    let prey = prey.filter(|_| now >= ready)?;
     let feet = world.get::<Position>(prey)?.feet;
     let (dx, dz) = (feet[0] - body.at[0], feet[2] - body.at[2]);
+    if hunts.explodes.is_some() {
+        // Between their boxes, as the pack's `target_nearby_sensor` counts.
+        match distance(feet, body.at) - (body.size[0] + PLAYER[0]) / 2.0 {
+            gap if gap < IGNITES => blast::light(world, entity, layer, id, kind, body),
+            gap if gap > GOES_OUT => blast::put_out(world, entity, layer, id, kind, body),
+            _ => {}
+        }
+        return None;
+    }
     let across = (body.size[0] + PLAYER[0]) / 2.0 + REACH;
     if dx.abs() >= across || dz.abs() >= across || feet[1] >= body.at[1] + body.size[1] || body.at[1] >= feet[1] + PLAYER[1] {
         return None;

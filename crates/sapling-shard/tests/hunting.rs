@@ -177,3 +177,25 @@ fn a_cow_a_player_hit_runs_off_faster_than_it_strolls() {
     let fastest = seen.lock().unwrap().iter().skip(15).copied().fold(0.0, f32::max);
     assert!((0.15..0.2109).contains(&fastest), "it ran: {fastest}");
 }
+
+#[test]
+fn a_creeper_lights_its_fuse_three_blocks_off_and_bursts_as_on_bds() {
+    use acacia_proto::packets::{LevelEvent, LevelEventEvent, RemoveEntity};
+    // research/captures/bds-boom.txt: lit 3.08 off, it burst 2.92 off for 8.229 on easy and broke
+    // the stone under it.
+    let (mut h, creeper) = hunted_by("minecraft:creeper", Difficulty::Easy);
+    let (ticks, sent) = until_hit(&mut h, 80);
+    let fuses: Vec<i32> = all::<SetEntityData>(&sent).iter().flat_map(|data| &data.metadata).filter(|item| item.key == Key::FuseLength).map(|item| if let Value::Default(Plain::Int(left)) = item.value { left } else { -1 }).collect();
+    assert_eq!((fuses.len(), fuses.first(), fuses.last()), (30, Some(&29), Some(&0)), "lit at tick {}", ticks - 31);
+    assert!(all::<LevelEvent>(&sent).iter().any(|event| event.event == LevelEventEvent::ParticleExplosion && event.data == 3) && all::<RemoveEntity>(&sent).len() == 1);
+    let hurt = 20.0 - health(&sent)[0];
+    assert!((7.9..8.6).contains(&hurt), "{hurt}");
+    let thrown: Vec<_> = all::<SetEntityMotion>(&sent).into_iter().filter(|motion| motion.runtime_entity_id == 1).map(|motion| motion.velocity).collect();
+    assert!(thrown.len() == 1 && thrown[0].y > 0.55 && thrown[0].z < -0.7, "the hit's throw and the blast's: {thrown:?}");
+    h.remote.run(move |ctx| {
+        assert!(ctx.entity(EntityId(creeper)).is_none());
+        let broken: Vec<[i32; 3]> = (-3..=3).flat_map(|x| (-1..=6).map(move |z| [x, 64, z])).filter(|at| ctx.block(*at).is_some_and(|block| block.name == "minecraft:air")).collect();
+        assert_eq!(broken.len(), 1, "the one stone under it: {broken:?}");
+    });
+    h.tick_all();
+}

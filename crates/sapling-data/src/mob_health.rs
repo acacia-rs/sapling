@@ -40,6 +40,8 @@ pub struct Hunts {
     pub sees: f32,
     /// The effect its hit gives (`sapling_api::Effect::name`) and for how many ticks.
     pub gives: Option<(&'static str, u32)>,
+    /// The power it blows up with near its prey, where it hits nobody.
+    pub explodes: Option<f32>,
 }
 
 pub fn mob_traits(identifier: &str) -> MobTraits {
@@ -50,7 +52,7 @@ pub fn mob_traits(identifier: &str) -> MobTraits {
     let value = |name: &str| row.and_then(|(_, traits)| traits.split(' ').find_map(|held| held.strip_prefix(name)));
     let number = |name: &str| value(name).and_then(|value| value.parse::<f32>().ok());
     let gives = value("hits=").and_then(|given| given.split_once(':')).and_then(|(effect, ticks)| Some((effect, ticks.parse().ok()?)));
-    let hunts = number("attack=").zip(number("speed=")).zip(number("sees=")).map(|((attack, speed), sees)| Hunts { attack, speed, sees, gives });
+    let hunts = number("attack=").zip(number("speed=")).zip(number("sees=")).map(|((attack, speed), sees)| Hunts { attack, speed, sees, gives, explodes: number("explodes=") });
     MobTraits { fire_immune: has("fire_immune"), no_fall: has("no_fall"), breathes_water: has("breathes_water"), experience, hunts, strolls: number("strolls="), panics: number("panics=") }
 }
 
@@ -65,6 +67,16 @@ pub fn mob_fire_flags(id: u64, identifier: &str, on_fire: bool) -> SetEntityData
     let flags = MetadataFlags1(mob_flags(identifier).0 | if on_fire { MetadataFlags1::ONFIRE.0 } else { 0 });
     let item = MetadataDictionaryItem { key: Key::Flags, r#type: Type::Long, legacy_type: 7, value: Value::Flags(flags) };
     SetEntityData { runtime_entity_id: id, metadata: vec![item], properties: EntityProperties { ints: Vec::new(), floats: Vec::new() }, tick: 0 }
+}
+
+/// The mob `id`, a grown one of `identifier`, has a lit fuse with `left` ticks to go.
+pub fn mob_fuse(id: u64, identifier: &str, left: i32) -> SetEntityData {
+    let flags = MetadataFlags1(mob_flags(identifier).0 | MetadataFlags1::IGNITED.0);
+    let metadata = vec![
+        MetadataDictionaryItem { key: Key::Flags, r#type: Type::Long, legacy_type: 7, value: Value::Flags(flags) },
+        MetadataDictionaryItem { key: Key::FuseLength, r#type: Type::Int, legacy_type: 2, value: Value::Default(Plain::Int(left)) },
+    ];
+    SetEntityData { runtime_entity_id: id, metadata, properties: EntityProperties { ints: Vec::new(), floats: Vec::new() }, tick: 0 }
 }
 
 /// The mob `id` has `air` ticks of breath left.

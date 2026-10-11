@@ -28,7 +28,7 @@ pub use entity::{AddEntityOptions, add_entity, add_experience_orb, add_falling_b
 pub use attack::item_attack;
 pub use armour::armour;
 pub use food::{Food, Gives, consumable, food};
-pub use mob_health::{MobTraits, mob_air, mob_fire_flags, mob_health_update, mob_traits, Hunts};
+pub use mob_health::{MobTraits, mob_air, mob_fire_flags, mob_health_update, mob_traits, Hunts, mob_fuse};
 pub use liquid_reaction::{LiquidDetection, LiquidReaction, liquid_detection};
 pub use mob_loot::mob_loot;
 pub use inventory::{block_screen,inventory_content, inventory_screen, player_hotbar};
