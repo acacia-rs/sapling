@@ -7,6 +7,9 @@
 use sapling_api::Face;
 use sapling_world::BlockRegistry;
 
+/// How far over a placer's feet the game takes its eyes to be when it turns a piston by them.
+pub(super) const EYES: f32 = 1.82;
+
 /// How a block was placed.
 #[derive(Debug, Clone, Copy)]
 pub(super) struct Click {
@@ -15,8 +18,9 @@ pub(super) struct Click {
     pub height: f32,
     /// The placer's yaw: 0 looks south (+z), 90 west.
     pub yaw: f32,
-    /// The placer's pitch: 90 looks straight down.
-    pub pitch: f32,
+    /// How far over the bottom of the cell the placer's eyes are, where it stands within two
+    /// blocks of it across; the game takes the eyes as 1.82 over the feet here.
+    pub eyes_over: Option<f32>,
 }
 
 impl Click {
@@ -57,7 +61,10 @@ impl Click {
     fn value(&self, block: &str, property: &str) -> Option<&'static str> {
         let ends = |list: &[&str]| list.iter().any(|end| block.ends_with(end));
         let on_a_face = ends(&["ladder", "button", "wall_sign", "wall_banner", "_skull", "_head"]);
-        let (looks_down, looks_up) = (self.pitch > 45.0, self.pitch < -45.0);
+        // A dispenser, a piston and an observer turn up or down by where their placer stands, not
+        // by its look: one put a block east of the placer's feet under a look 58 degrees down
+        // faced it level (research/captures/bds-placing.txt). The bounds are the old game's.
+        let (looks_down, looks_up) = (self.eyes_over.is_some_and(|over| over > 2.0), self.eyes_over.is_some_and(|over| over < 0.0));
         Some(match property {
             // Dispensers and the like face their placer, up or down under a steep look.
             "facing_direction" if ends(&["dispenser", "dropper", "barrel"]) && looks_down => "1",
@@ -80,14 +87,19 @@ impl Click {
             "facing_direction" if ends(&["end_rod", "lightning_rod"]) => ["0", "1", "2", "3", "4", "5"][self.face as usize],
             // A bed's head lies the way its placer looks.
             "direction" if block.ends_with(":bed") => ["0", "1", "2", "3"][self.quarter()],
-            "direction" if ends(&["loom", "beehive", "bee_nest"]) => ["2", "3", "0", "1"][self.quarter()],
+            "direction" if ends(&["loom", "beehive", "bee_nest", ":bell", "grindstone"]) => ["2", "3", "0", "1"][self.quarter()],
             // A cocoa pod names the side its log is on: the clicked one.
             "direction" if block.ends_with(":cocoa") => ["0", "0", "0", "2", "1", "3"][self.face as usize],
-            // A rail starts along the look; rails.rs then joins it to its neighbours.
-            "rail_direction" => ["0", "1"][self.quarter() % 2],
-            // A door and an anvil stand across the look; a gate swings the way its placer looks.
-            "minecraft:cardinal_direction" if ends(&["_door", "anvil"]) && !block.ends_with("trapdoor") => ["west", "north", "east", "south"][self.quarter()],
-            "minecraft:cardinal_direction" if ends(&["fence_gate", "campfire"]) => ["south", "west", "north", "east"][self.quarter()],
+            // A rail starts north and south whatever the look; rails.rs then joins it to its neighbours.
+            "rail_direction" => "0",
+            // A door stands across the look and an anvil the other way across; a gate, as a
+            // furnace, faces its placer (bds-placing.txt).
+            "minecraft:cardinal_direction" if block.ends_with("_door") && !block.ends_with("trapdoor") => ["west", "north", "east", "south"][self.quarter()],
+            "minecraft:cardinal_direction" if block.ends_with("anvil") => ["east", "south", "west", "north"][self.quarter()],
+            "minecraft:cardinal_direction" if block.ends_with("campfire") => ["south", "west", "north", "east"][self.quarter()],
+            // An amethyst cluster and an item frame name the face they were put on.
+            "minecraft:block_face" => ["down", "up", "north", "south", "west", "east"][self.face as usize],
+            "facing_direction" if ends(&[":frame", ":glow_frame"]) => ["0", "1", "2", "3", "4", "5"][self.face as usize],
             "facing_direction" if block.ends_with("_hanging_sign") => self.hanging_sign_facing(),
             "lever_direction" => match (self.face, self.quarter() % 2 == 1) {
                 (Face::Up, false) => "up_north_south",
@@ -137,7 +149,7 @@ mod tests {
     fn placed(block: &str, face: Face, height: f32, yaw: f32) -> String {
         let registry = BlockRegistry::vanilla();
         let id = registry.states_of(block).next().expect("a vanilla block").0;
-        registry.get(oriented(&registry, id, &Click { face, height, yaw, pitch: 0.0 })).expect("a state").properties.to_owned()
+        registry.get(oriented(&registry, id, &Click { face, height, yaw, eyes_over: None })).expect("a state").properties.to_owned()
     }
 
     #[test]
@@ -157,5 +169,14 @@ mod tests {
         assert!(placed("minecraft:oak_stairs", Face::Up, 1.0, -45.0).ends_with("weirdo_direction=2"), "half-way between east and south is south");
         assert!(placed("minecraft:standing_sign", Face::Up, 1.0, 0.0).contains("ground_sign_direction=8"));
         assert!(placed("minecraft:bed", Face::Up, 1.0, 90.0).contains("direction=1"), "head to the west");
+        // research/captures/bds-placing.txt, a placer looking east.
+        assert!(placed("minecraft:fence_gate", Face::Up, 1.0, -90.0).contains("minecraft:cardinal_direction=west") && placed("minecraft:anvil", Face::Up, 1.0, -90.0).contains("minecraft:cardinal_direction=north"));
+        assert!(placed("minecraft:bell", Face::Up, 1.0, -90.0).contains("direction=1") && placed("minecraft:grindstone", Face::Up, 1.0, -90.0).contains("direction=1"));
+        assert!(placed("minecraft:amethyst_cluster", Face::Up, 1.0, -90.0).contains("block_face=up") && placed("minecraft:frame", Face::Up, 1.0, -90.0).contains("facing_direction=1"));
+        assert_eq!(placed("minecraft:rail", Face::Up, 1.0, -90.0), "rail_direction=0");
+        let registry = BlockRegistry::vanilla();
+        let piston = registry.states_of("minecraft:piston").next().unwrap().0;
+        let facing = |eyes_over| registry.get(oriented(&registry, piston, &Click { face: Face::Up, height: 1.0, yaw: -90.0, eyes_over })).unwrap().properties.to_owned();
+        assert_eq!([facing(Some(1.82)), facing(Some(2.82)), facing(Some(-0.2)), facing(None)], ["facing_direction=5", "facing_direction=1", "facing_direction=0", "facing_direction=5"]);
     }
 }

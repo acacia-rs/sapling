@@ -9,7 +9,7 @@ use bevy_ecs::prelude::*;
 use sapling_api::{Block, BlockPos, BreakEvent, Face, GameMode, InteractEvent, Player};
 use sapling_world::BlockRegistry;
 
-use super::facing::Click;
+use super::facing::{self, Click};
 use super::{after_break, doors, level, loot, mining, place, pots, reaches, send, signs, updates};
 use crate::components::{InLayer, Mode, PacketQueues, PerTick, Position, in_world_identity};
 use crate::movement::Motion;
@@ -239,9 +239,11 @@ impl Request<'_> {
         }
         let Some((registry, clicked)) = self.block(&site, pos) else { return };
         let in_hand = place::held_block(self.world, self.entity, registry, face).filter(|_| site.mode != GameMode::Creative);
-        let (yaw, pitch) = self.world.get::<Position>(self.entity).map_or((0.0, 0.0), |position| (position.yaw, position.pitch));
+        let (yaw, feet) = self.world.get::<Position>(self.entity).map_or((0.0, [0.0; 3]), |position| (position.yaw, position.feet));
+        let is_near = (feet[0] - target[0] as f32 - 0.5).abs() < 2.0 && (feet[2] - target[2] as f32 - 0.5).abs() < 2.0;
+        let eyes_over = is_near.then(|| feet[1] + facing::EYES - target[1] as f32);
         match in_hand.or_else(|| place::claimed_block(registry, &click.held_item, face)).filter(|_| builds) {
-            Some(id) => self.place(&site, pos, &Click { face, height: click.click_pos.y, yaw, pitch }, id, in_hand.is_some()),
+            Some(id) => self.place(&site, pos, &Click { face, height: click.click_pos.y, yaw, eyes_over }, id, in_hand.is_some()),
             None => self.interact(&site, pos, face, send::describe(registry, clicked)),
         }
     }

@@ -221,3 +221,23 @@ pub fn duel() -> Vec<String> {
     lines.extend(["", "", "gamemode creative @a", "clear @a", ""].map(String::from));
     lines
 }
+
+pub const PLACING_SHOWN: &[&str] = &["UpdateBlock", "MovePlayer"];
+
+/// The actor in creative, looking south, puts each of many blocks that turn or attach on the
+/// floor a block east of it, to see the state each takes.
+pub fn placing() -> Vec<String> {
+    let items = [
+        "oak_stairs", "oak_slab", "oak_log", "torch", "oak_sign", "oak_trapdoor", "fence_gate", "stone_button", "lever", "rail", "repeater", "comparator", "anvil", "white_glazed_terracotta", "carved_pumpkin",
+        "end_rod", "lantern", "bell", "grindstone", "lectern", "loom", "stonecutter_block", "campfire", "barrel", "hopper", "dropper", "dispenser", "observer", "piston", "sticky_piston", "furnace", "chest", "ender_chest",
+        "undyed_shulker_box", "skeleton_skull", "bamboo", "candle", "ladder", "chain", "lightning_rod", "pointed_dripstone", "amethyst_cluster", "hay_block", "bone_block", "quartz_pillar", "beehive", "jukebox", "cake",
+        "brewing_stand", "cauldron", "composter", "smoker", "blast_furnace", "respawn_anchor", "lodestone", "target", "daylight_detector", "tripwire_hook", "redstone_torch", "sea_pickle", "turtle_egg", "scaffolding",
+        "oak_fence", "cobblestone_wall", "glass_pane", "iron_bars", "snow_layer", "white_carpet", "white_bed", "flower_pot", "enchanting_table", "end_portal_frame", "frame", "white_banner", "conduit",
+    ];
+    let mut lines: Vec<String> = ["kill @e[type=!player]", "fill ~-2 ~-1 ~-2 ~4 ~-1 ~170 stone", "fill ~-2 ~ ~-2 ~4 ~3 ~170 air", "gamemode creative @s", "clear @s", ""].map(String::from).into();
+    for item in items {
+        lines.extend(["tp @s ~ ~ ~2".into(), format!("replaceitem entity @s slot.weapon.mainhand 0 {item}"), "!place 1 -1 0".into()]);
+    }
+    lines.extend(["clear @s", ""].map(String::from));
+    lines
+}
