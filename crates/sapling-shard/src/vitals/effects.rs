@@ -1,6 +1,6 @@
 //! Effects on a player, counted down a tick at a time and told as BDS tells them
 //! (docs/research/effects.md).
-// TODO: the effects drilled and no others (health boost is not one); one who comes
+// TODO: the effects drilled and no others; one who comes
 // to see a player is not told its effects, nor are `VisibleMobEffects`; they end unsaid as the
 // player rises. Kept between visits (inventory/store.rs) are the effects and not what is left
 // of absorption's cushion, and what BDS tells of them at a join was not drilled.
@@ -31,6 +31,9 @@ const HUNGERS: f32 = 0.005;
 const WALKS: f32 = 0.1;
 const QUICKENS: f32 = 0.2;
 const QUICKENS_AS: &str = "91aeaa56-376b-4498-935b-2f7f68070635";
+/// Health a level of health boost adds to the most a player has.
+const BOOSTS: f32 = 4.0;
+const BOOSTS_AS: &str = "5d6f0ba2-1186-46ac-b896-c61c5cee99cc";
 /// What a level of slowness takes of it.
 const SLOWS: f32 = 0.15;
 const SLOWS_AS: &str = "7107de5e-7ce8-4030-940e-514c1f160890";
@@ -76,8 +79,10 @@ fn greet(world: &mut World, player: Entity) {
     effects.2 = false;
     for active in effects.0.clone() {
         tell(world, player, &told(id, MobEffectEventId::Add, &active, active.left));
-        if matches!(active.effect, Effect::Speed | Effect::Slowness) {
-            tell_pace(world, player, id);
+        match active.effect {
+            Effect::Speed | Effect::Slowness => tell_pace(world, player, id),
+            Effect::HealthBoost => boost(world, player, id),
+            _ => {}
         }
     }
 }
@@ -120,6 +125,17 @@ fn pad(world: &mut World, player: Entity, amount: f32) {
     settle(world, player, Cause::Generic);
 }
 
+/// Sets the most health a player has under the health boost on it now, and tells it.
+fn boost(world: &mut World, player: Entity, id: u64) {
+    let more = level(world, player, Effect::HealthBoost).map(|level| BOOSTS * (f32::from(level) + 1.0));
+    let Some(mut vitals) = world.get_mut::<Vitals>(player) else { return };
+    vitals.health.grow(super::MAX + more.unwrap_or(0.0));
+    let mut told = sapling_data::mob_health_update(id, vitals.health.left(), vitals.health.max());
+    (told.attributes[0].default, told.attributes[0].default_max) = (super::MAX, super::MAX);
+    told.attributes[0].modifiers = more.map(|amount| PlayerAttributesItemModifiersItem { id: BOOSTS_AS.into(), name: "HealthBoost".into(), amount, operation: 0, operand: 1, serializable: false }).into_iter().collect();
+    tell(world, player, &told);
+}
+
 /// Tells a player its walking speed under the effects on it now.
 fn tell_pace(world: &mut World, player: Entity, id: u64) {
     let tick = world.resource::<Tick>().0;
@@ -150,6 +166,7 @@ fn take(world: &mut World, player: Entity, gone: impl Fn(&Active) -> bool) -> bo
         match active.effect {
             Effect::Speed | Effect::Slowness => tell_pace(world, player, id),
             Effect::Absorption => pad(world, player, 0.0),
+            Effect::HealthBoost => boost(world, player, id),
             _ => {}
         }
     }
@@ -196,6 +213,7 @@ pub(super) fn give(world: &mut World, player: Entity, effect: Effect, ticks: u32
     match effect {
         Effect::Speed | Effect::Slowness => tell_pace(world, player, id),
         Effect::Absorption => pad(world, player, CUSHIONS * (f32::from(now.amplifier) + 1.0)),
+        Effect::HealthBoost => boost(world, player, id),
         _ => {}
     }
     true

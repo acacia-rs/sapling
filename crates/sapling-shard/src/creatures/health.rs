@@ -95,6 +95,11 @@ impl Health {
         (self.takes, self.fireproof) = (takes, fireproof);
     }
 
+    /// Sets the most it can have; what it has over that goes.
+    pub(crate) fn grow(&mut self, max: f32) {
+        (self.max, self.left) = (max, self.left.min(max));
+    }
+
     pub(crate) fn spring(&mut self, blocks: f32) {
         self.springs = blocks;
     }

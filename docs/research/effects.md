@@ -78,7 +78,8 @@ effects on mobs, a death under an effect, what a late viewer is told.
 
 ## Sapling
 
-The effects of `fx` are built but health boost; those BDS only told of are only told of here,
+The effects of `fx` are built, health boost with the attribute BDS wrote (its default and
+default most stay 20). Those BDS only told of are only told of here,
 so levitation lifts as far as the client does it and invisibility hides nobody from a mob.
 Run against sapling the drill gave BDS's speeds, falls and strong hits (7.7 and 6.01 left of a
 cow's 10); its bare and its weak hit missed a cow that had strolled off.

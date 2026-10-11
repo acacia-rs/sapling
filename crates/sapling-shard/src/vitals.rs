@@ -110,7 +110,7 @@ fn flash(world: &mut World, player: Entity, cause: Cause) {
 /// Tells the health and the burning where they changed, and lets a player with no health die of `cause`.
 fn settle(world: &mut World, player: Entity, cause: Cause) {
     let Some(mut vitals) = world.get_mut::<Vitals>(player) else { return };
-    let (left, burning) = (vitals.health.left(), vitals.health.is_burning());
+    let (left, burning, most) = (vitals.health.left(), vitals.health.is_burning(), vitals.health.max());
     let changed = std::mem::replace(&mut vitals.told, left) != left;
     let cushion = vitals.health.cushion();
     let padded = std::mem::replace(&mut vitals.padded, cushion) != cushion;
@@ -120,7 +120,7 @@ fn settle(world: &mut World, player: Entity, cause: Cause) {
         tell(world, player, &effects::cushion(id, cushion, tick));
     }
     if changed {
-        tell(world, player, &sapling_data::mob_health_update(id, left, MAX));
+        tell(world, player, &sapling_data::mob_health_update(id, left, most));
     }
     if let Some(mut motion) = world.get_mut::<Motion>(player).filter(|motion| motion.pose.burning != burning) {
         motion.pose.burning = burning;
@@ -229,7 +229,7 @@ fn stand(world: &mut World, player: Entity, layer: Entity) {
         hits.extend((under_water && vitals.health.hurt(DROWN_HARM)).then_some(Cause::Drowning));
     }
     let left = vitals.health.left();
-    match vitals.hunger.tick(left > 0.0 && left < MAX) {
+    match vitals.hunger.tick(left > 0.0 && left < vitals.health.max()) {
         Some(hunger::Turn::Mend) => vitals.health.mend(1.0),
         Some(hunger::Turn::Starve) => hits.extend((left > STARVED && vitals.health.hurt(1.0)).then_some(Cause::Starving)),
         None => {}

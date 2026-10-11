@@ -38,7 +38,7 @@ Each needs its rule looked up first (`bdsre` for BDS, the Java jar for data), th
    leaving items and experience and rise by their bed or at the world's spawn (`vitals.rs`,
    `docs/research/player-damage.md`, `bds_command_probe hurt` and `smother`). A wounded player mends by its
    hunger and an empty hunger starves it (`vitals/hunger.rs`, `hunger`). Food in the hand is eaten
-   (`vitals/eating.rs`, `eat`). Jumps, sprints, harvested blocks and hits tire a player (`tire`, `toil`). Armour stops part of a hit of the causes it stopped on BDS (`armour`, `worn`). Twenty-four effects by `/effect` (`vitals/effects.rs`, `docs/research/effects.md`, `effects`); food and potions give theirs and milk ends them (`docs/research/food-effects.md`, `sick`, `drink`). Left there: the other effects and their potions, and the doc's "Sapling" list.
+   (`vitals/eating.rs`, `eat`). Jumps, sprints, harvested blocks and hits tire a player (`tire`, `toil`). Armour stops part of a hit of the causes it stopped on BDS (`armour`, `worn`). Twenty-five effects by `/effect` (`vitals/effects.rs`, `docs/research/effects.md`, `effects`); food and potions give theirs and milk ends them (`docs/research/food-effects.md`, `sick`, `drink`). Left there: the other effects and their potions, and the doc's "Sapling" list.
 2. **Redstone**: plates, buttons, levers, blocks of redstone and torches power dust, lamps, doors,
    trapdoors, gates and hopper locks (`blocks/redstone.rs`, `docs/research/redstone.md`; plugins
    read `ctx.power_at`), checked against `bds_command_probe redstone`. Circuits a world folder

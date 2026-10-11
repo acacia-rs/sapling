@@ -28,6 +28,7 @@ pub enum Effect {
     Weakness,
     Poison,
     Wither,
+    HealthBoost,
     Absorption,
     Saturation,
     Levitation,
@@ -36,7 +37,7 @@ pub enum Effect {
 
 /// Each effect with the name commands know it by, the translation key of its name, and the id
 /// the wire knows it by.
-const KNOWN: [(Effect, &str, &str, i32); 24] = [
+const KNOWN: [(Effect, &str, &str, i32); 25] = [
     (Effect::Speed, "speed", "potion.moveSpeed", 1),
     (Effect::Slowness, "slowness", "potion.moveSlowdown", 2),
     (Effect::Haste, "haste", "potion.digSpeed", 3),
@@ -57,6 +58,7 @@ const KNOWN: [(Effect, &str, &str, i32); 24] = [
     (Effect::Weakness, "weakness", "potion.weakness", 18),
     (Effect::Poison, "poison", "potion.poison", 19),
     (Effect::Wither, "wither", "potion.wither", 20),
+    (Effect::HealthBoost, "health_boost", "potion.healthBoost", 21),
     (Effect::Absorption, "absorption", "potion.absorption", 22),
     (Effect::Saturation, "saturation", "potion.saturation", 23),
     (Effect::Levitation, "levitation", "potion.levitation", 24),
@@ -64,8 +66,8 @@ const KNOWN: [(Effect, &str, &str, i32); 24] = [
 ];
 
 impl Effect {
-    pub const ALL: [Effect; 24] = {
-        let mut all = [Effect::Speed; 24];
+    pub const ALL: [Effect; 25] = {
+        let mut all = [Effect::Speed; 25];
         let mut at = 0;
         while at < all.len() {
             all[at] = KNOWN[at].0;
