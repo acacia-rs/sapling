@@ -8,6 +8,7 @@ prefix=$1
 shift
 canons=${*:-$(awk -F'|' '$4 != "-" { print $1 }' "$here/replay-canons.txt")}
 for canon in $canons; do
-  line=$(bash "$here/replay.sh" "$prefix-$canon" "$canon" test 2>&1 | grep -E '^seed |^error' | head -n 1)
+  # A region name that is part of another's (badlands) fails on that one's unsaved chunks after its own line.
+  line=$(bash "$here/replay.sh" "$prefix-$canon" "$canon" test 2>&1 | grep -E '^seed |^error' | sort -r | head -n 1)
   echo "$canon ${line:-no result}"
 done

@@ -11,7 +11,8 @@ use crate::block::Block;
 const FACING: [[i32; 3]; 6] = [[0, -1, 0], [0, 1, 0], [0, 0, -1], [0, 0, 1], [-1, 0, 0], [1, 0, 0]];
 
 fn open(block: Block) -> bool {
-    block == Block::Air || (block.is_fluid() && !block.is_lava())
+    // The bubble column an earlier cell of the blob started is still water to the test (temple replay).
+    block == Block::Air || (block.is_fluid() && !block.is_lava()) || block == Block::BubbleColumn
 }
 
 /// Offsets by ring (|x| + |y| + |z|), x then y ascending, +z before -z.
