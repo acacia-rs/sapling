@@ -127,7 +127,7 @@ impl OverworldGenerator {
             around.filter(|&n| earlier(n)).flat_map(|n| self.pieced(n).spawners.clone()).collect()
         };
         let generated_tops = || self.generated_tops(chunk.0, chunk.1);
-        let neighbours = structure::Neighbours { carved: &carved, placed: &placed, spawners: &spawners, generated_tops: &generated_tops, shaft_order: None };
+        let neighbours = structure::Neighbours { carved: &carved, placed: &placed, spawners: &spawners, generated_tops: &generated_tops, shaft_order: None, live: false };
         let biomes = self.chunk_biomes(chunk.0, chunk.1);
         let load = |x: i32, z: i32| self.carved(x, z);
         let biome = |[x, y, z]: [i32; 3]| Some(self.chunk_biomes(x >> 4, z >> 4).biome((x & 15) as usize, y, (z & 15) as usize));

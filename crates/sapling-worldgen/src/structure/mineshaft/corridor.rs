@@ -58,6 +58,9 @@ impl Corridor {
                     for y in 0..=1 {
                         let at = f.world(x, y, z);
                         f.place(canvas, fence_at(materials, canvas, at), x, y, z);
+                        if canvas.bb.contains(at.0, at.1, at.2) && materials.is_fence(canvas.get(at.0, at.1, at.2)) {
+                            canvas.shaft_fences.insert(at);
+                        }
                     }
                 }
                 if random.next_int(4) == 0 {
@@ -187,6 +190,7 @@ fn pillar_or_chain(f: &Frame, materials: Materials, canvas: &mut Canvas, (x, z):
             if !replaceable(block) && holds_chain(block) {
                 let fence = fence_at(materials, canvas, (wx, top, wz));
                 canvas.set(wx, top, wz, fence);
+                canvas.shaft_fences.insert((wx, top, wz));
                 (top + 1..=top + j - 2).for_each(|y| canvas.set(wx, y, wz, Block::IronChain));
                 return;
             }

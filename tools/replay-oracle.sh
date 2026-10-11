@@ -4,7 +4,7 @@
 # chunks and pieces under the replay (examples/structure_replay_check).
 # usage: tools/replay-oracle.sh <name> <test fn> <region name> <x0> <z0> <x1> <z1>
 #   e.g. tools/replay-oracle.sh fo blocks_match_bds_biomes "frozen ocean" 474 570 477 573
-# env: SEED (default 20261003), SKIP_PHASE=1 leaves the phase-model run out, CHECK_ENVS for the check
+# env: SEED (default 20261003), SKIP_PHASE=1 leaves the phase-model run out, REPLAY_ENVS for both replay runs, CHECK_ENVS for the check
 #      (SHOW, CELLS, NEAR); the rest as tools/testbox.sh. Logs: target/testbox/<name>-{phase,replay,check}.log
 set -uo pipefail
 here=$(cd "$(dirname "$0")" && pwd)
@@ -21,6 +21,6 @@ if [ -z "${SKIP_PHASE:-}" ]; then
   REGION=$region ENVS="$worlds" bash "$here/oracle.sh" "$name-phase" "$test" >/dev/null 2>&1
   echo "phase model:"; totals "$name-phase"
 fi
-REGION=$region ENVS="$worlds $order" bash "$here/oracle.sh" "$name-replay" "$test" >/dev/null 2>&1
+REGION=$region ENVS="$worlds $order ${REPLAY_ENVS:-}" bash "$here/oracle.sh" "$name-replay" "$test" >/dev/null 2>&1
 echo "replay:"; totals "$name-replay"
-ENVS="$worlds $order ${CHECK_ENVS:-}" bash "$here/remote-example.sh" "$name-check" structure_replay_check "${SEED:-20261003}" "$world" "$@" | cut -c1-"${WIDTH:-700}"
+ENVS="$worlds $order ${REPLAY_ENVS:-} ${CHECK_ENVS:-}" bash "$here/remote-example.sh" "$name-check" structure_replay_check "${SEED:-20261003}" "$world" "$@" | cut -c1-"${WIDTH:-700}"

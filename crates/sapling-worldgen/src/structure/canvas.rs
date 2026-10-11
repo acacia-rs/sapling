@@ -30,6 +30,8 @@ pub struct Neighbours<'a> {
     /// Mineshaft starts in the order BDS's start map lists them (structure/start_map.rs); None
     /// without a replayed load order.
     pub shaft_order: Option<&'a [(i32, i32)]>,
+    /// `placed` is a replayed run's state at this moment, not our phase model's.
+    pub live: bool,
 }
 
 pub struct Canvas<'a> {
@@ -57,6 +59,9 @@ pub struct Canvas<'a> {
     pub unclipped: Vec<([i32; 3], Block, Block)>,
     /// `unclipped` as this post-process reads it back.
     written: HashMap<(i32, i32, i32), Block>,
+    /// Fences this post-process's mineshaft pieces placed: still the piece's unjoined fence block
+    /// to BDS, which `canBeReplaced` keeps (a stronghold library's railing is not).
+    pub shaft_fences: HashSet<(i32, i32, i32)>,
 }
 
 impl<'a> Canvas<'a> {
@@ -77,6 +82,7 @@ impl<'a> Canvas<'a> {
             spilled: Vec::new(),
             unclipped: Vec::new(),
             written: HashMap::new(),
+            shaft_fences: HashSet::new(),
         }
     }
 

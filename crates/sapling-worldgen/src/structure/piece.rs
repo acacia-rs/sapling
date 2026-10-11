@@ -65,7 +65,7 @@ impl Frame {
     /// `placeBlock`: inside the chunk and over a replaceable block only.
     pub fn place(&self, canvas: &mut Canvas, block: Block, x: i32, y: i32, z: i32) {
         let (wx, wy, wz) = self.world(x, y, z);
-        if canvas.bb.contains(wx, wy, wz) && !(self.keep)(canvas.get(wx, wy, wz)) {
+        if canvas.bb.contains(wx, wy, wz) && !(self.keep)(canvas.get(wx, wy, wz)) && !canvas.shaft_fences.contains(&(wx, wy, wz)) {
             canvas.set(wx, wy, wz, block);
         }
     }

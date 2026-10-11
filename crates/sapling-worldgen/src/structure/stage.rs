@@ -111,6 +111,8 @@ impl Structures {
         let seed = seeds.chunk(chunk.0, chunk.1);
         let chunk_random = |(x, z): (i32, i32)| Mt19937::new(seeds.chunk(x, z));
         let mut placed: Vec<BoundingBox> = mineshafts.iter().map(|m| m.bb).chain(strongholds.iter().map(|s| s.bb)).collect();
+        // A replayed run's state is what the kinds post-processed chunk by chunk read past the chunk.
+        (canvas.read_placed, canvas.limit_view) = (neighbours.live, neighbours.live);
         if !villages.is_empty() {
             Self::place_villages(density, &mut canvas, &villages, seed, &(neighbours.generated_tops)());
         }
@@ -119,7 +121,7 @@ impl Structures {
         for stronghold in &strongholds {
             stronghold.post_process(&mut canvas, &mut random);
         }
-        canvas.limit_view = false;
+        (canvas.read_placed, canvas.limit_view) = (false, false);
         let mut random = chunk_random(chunk);
         super::trace::label(|| "temple".into());
         for temple in &temples {
@@ -134,8 +136,9 @@ impl Structures {
         for mineshaft in &mineshafts {
             mineshaft.post_process(&mut canvas, &mut random, biomes, &mut spawners);
         }
-        (canvas.read_placed, canvas.limit_view) = (false, false);
+        (canvas.read_placed, canvas.limit_view) = (neighbours.live, neighbours.live);
         Self::place_mansions(&mut canvas, &mansions);
+        (canvas.read_placed, canvas.limit_view) = (false, false);
         super::trace::label(|| "treasure".into());
         if treasure {
             treasure::place(&mut canvas, &mut chunk_random(chunk), chunk);
@@ -153,7 +156,9 @@ impl Structures {
         self.place_shipwrecks(&mut canvas, &shipwrecks);
         super::trace::label(|| "ruined portal".into());
         self.place_portals(density, &mut canvas, &portals);
+        (canvas.read_placed, canvas.limit_view) = (neighbours.live, neighbours.live);
         Self::place_ancient_cities(&mut canvas, &cities, seed);
+        (canvas.read_placed, canvas.limit_view) = (false, false);
         self.place_v2(&mut canvas, &v2);
         let touched = placed.iter().fold(canvas.touched, |(lo, hi), b| (lo.min(b.y0 - 1), hi.max(b.y1 + 1)));
         Some(Placed { touched, spilled: std::mem::take(&mut canvas.spilled), unclipped: std::mem::take(&mut canvas.unclipped), spawners })

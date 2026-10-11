@@ -99,6 +99,8 @@ impl OverworldGenerator {
         let mut spilled = HashMap::new();
         let mut starts = StartMap::default();
         let logged_loads = steps.iter().any(|step| matches!(step, StructureStep::Load(_)));
+        // TODO: an experiment's switch; settle and drop (villages, strongholds, mansions, cities read the state).
+        let live_kinds = std::env::var_os("SAPLING_REPLAY_LIVE_KINDS").is_some();
         let mut rank = 0;
         for step in steps {
             let chunk = match *step {
@@ -118,7 +120,7 @@ impl OverworldGenerator {
                 // start's generator over carved terrain (structure/shipwreck.rs), which a moving state breaks.
                 let carved = |x: i32, y: i32, z: i32| self.carved(x >> 4, z >> 4).block((x & 15) as usize, y, (z & 15) as usize);
                 let neighbours =
-                    structure::Neighbours { carved: &carved, placed: &block, spawners: &placed_spawners, generated_tops: &tops, shaft_order: shaft_order.as_deref() };
+                    structure::Neighbours { carved: &carved, placed: &block, spawners: &placed_spawners, generated_tops: &tops, shaft_order: shaft_order.as_deref(), live: live_kinds };
                 let load = |x: i32, z: i32| self.carved(x, z);
                 let biome = |[x, y, z]: [i32; 3]| Some(self.chunk_biomes(x >> 4, z >> 4).biome((x & 15) as usize, y, (z & 15) as usize));
                 let surface = |qx: i32, qz: i32| self.density.preliminary_surface(qx, qz);
