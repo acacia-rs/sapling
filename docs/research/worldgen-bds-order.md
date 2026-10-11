@@ -438,7 +438,7 @@ struct5 merged (logs `base`, `fin`, `-still`); no region rose in either set:
 | all 59 regions | 25104 -> 22040 | 25552 -> 22921 |
 
 The stock numbers move little because they are mostly the stock worlds' own run order and thread draws: the
-same 40 biome and tree regions that stand at 8700 there stand at 304 against their one-worker runs, 292 of
+same 40 biome and tree regions that stand at 8108 there stand at 304 against their one-worker runs, 292 of
 them the warm ocean canon's own coral blocks.
 
 Open under replay, each with its first source:
