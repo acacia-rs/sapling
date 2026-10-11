@@ -29,7 +29,9 @@ it does on BDS and the two captures can be diffed:
    What a click does to a block (`docs/research/block-uses.md`, `clicks`), primed TNT (`tnt`) and
    bone meal (`docs/research/bone-meal.md`, `bonemeal`) are drilled and built; left there: trees
    from saplings, which need a tree generator the shard does not have. Fire is lit, spreads,
-   burns and is put out (`docs/research/fire.md`, `fire`, `quench`), its spread by the Java game's odds.
+   burns and is put out (`docs/research/fire.md`, `fire`, `quench`), its spread by the Java game's odds. Crops, stems and berry bushes
+   grow by themselves at BDS's pace (`docs/research/growth.md`, `crops`); the rest of what random
+   ticks do is left.
 
 ## 2. Survival gaps still open
 

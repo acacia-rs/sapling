@@ -112,17 +112,10 @@ pub fn drill(name: &str) -> Option<(Vec<String>, &'static [&'static str])> {
         "item-names" => (world::item_names(), world::ITEM_NAMES_SHOWN),
         "placing2" => (world::placing2(), world::PLACING_SHOWN),
         "daylight" => (world::daylight(), world::PLACING_SHOWN),
-        "clicks" => (uses::clicks(), uses::CLICKS_SHOWN),
-        "tnt" => (uses::tnt(), uses::TNT_SHOWN),
-        "bonemeal" => (uses::bonemeal(), uses::BONEMEAL_SHOWN),
-        "fire" => (uses::fire(), uses::BONEMEAL_SHOWN),
-        "quench" => (uses::quench(), uses::BONEMEAL_SHOWN),
-        "discs" => (uses::discs(), uses::BONEMEAL_SHOWN),
-        "ores" => (uses::ores(), uses::BONEMEAL_SHOWN),
         "toil" => (toil(), HURT_SHOWN),
         "armour" => (armour(), HURT_SHOWN),
         "effects" => (effects(), HURT_SHOWN),
-        _ => return None,
+        _ => return uses::named(name),
     })
 }
 

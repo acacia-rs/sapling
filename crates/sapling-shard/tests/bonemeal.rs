@@ -1,4 +1,5 @@
-//! Bone meal, against research/captures/bds-bonemeal.txt.
+//! Bone meal, against research/captures/bds-bonemeal.txt, and crops growing by themselves,
+//! against bds-crops.txt.
 
 mod common;
 
@@ -59,4 +60,32 @@ fn grass_grows_tall_grass_sprouts_and_stone_takes_none() {
         assert_eq!(ctx.item(ALEX, Slot::Main(0)).map(|held| held.count), Some(6), "two taken, two refused");
     });
     h.tick_all();
+}
+
+#[test]
+fn wheat_on_wet_farmland_ripens_by_itself() {
+    // BDS's field, with the random ticks two hundred times as fast, was ripe in 20 seconds or so.
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    h.remote.run(|ctx| {
+        assert!(ctx.set_game_rule("randomTickSpeed", sapling_api::RuleValue::Int(200)));
+        for at in (3..=7).flat_map(|x| (-2..=2).map(move |z| [x, 64, z])) {
+            assert!(ctx.set_block(at, &Block { name: "minecraft:farmland".into(), properties: "moisturized_amount=7".into() }));
+            assert!(ctx.set_block([at[0], 65, at[2]], &Block::new("minecraft:wheat")));
+        }
+    });
+    let ripe = |h: &mut Harness, ticks: usize| {
+        for _ in 0..ticks {
+            h.tick_all();
+        }
+        let (sent, got) = std::sync::mpsc::channel();
+        h.remote.run(move |ctx| {
+            let ripe = (3..=7).flat_map(|x| (-2..=2).map(move |z| [x, 65, z])).filter(|at| ctx.block(*at).is_some_and(|wheat| wheat.properties.contains("growth=7"))).count();
+            sent.send(ripe).expect("the test waits");
+        });
+        h.tick_all();
+        got.recv().expect("ran")
+    };
+    let (soon, late) = (ripe(&mut h, 100), ripe(&mut h, 1500));
+    assert!(soon < 5 && late >= 20, "{soon} of 25 ripe after five seconds, {late} after eighty");
 }

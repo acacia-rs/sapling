@@ -149,6 +149,7 @@ fn write(world: &mut World, layer: Entity, pos: BlockPos, id: u32) -> Option<u32
     super::daylight::written(world, layer, pos);
     super::fire::written(world, layer, pos);
     super::ores::written(world, layer, pos);
+    super::growth::written(world, layer, pos);
     Some(id)
 }
 

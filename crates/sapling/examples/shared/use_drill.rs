@@ -171,3 +171,30 @@ pub fn ores() -> Vec<String> {
     lines.push("fill ~2 ~ ~-2 ~6 ~ ~2 air".into());
     lines
 }
+
+/// Twenty-four wheat on wet farmland around a water block at noon, east of the actor, with the
+/// random ticks sped up two hundred times and watched for a minute.
+pub fn crops() -> Vec<String> {
+    let mut lines: Vec<String> = [
+        "fill ~-1 ~-1 ~7 ~8 ~-1 ~13 stone", "tp @s ~ ~ ~10 -90 0", "fill ~1 ~ ~-3 ~8 ~3 ~3 air", "time set noon", "fill ~2 ~-1 ~-2 ~6 ~-1 ~2 farmland [\"moisturized_amount\"=7]",
+        "setblock ~4 ~-1 ~ water", "fill ~2 ~ ~-2 ~6 ~ ~2 wheat", "gamerule randomtickspeed 200",
+    ].map(String::from).into();
+    lines.extend(std::iter::repeat_n(String::new(), 60));
+    lines.extend(["gamerule randomtickspeed 1", "fill ~2 ~ ~-2 ~6 ~ ~2 air", "fill ~2 ~-1 ~-2 ~6 ~-1 ~2 stone"].map(String::from));
+    lines
+}
+
+/// The drill called `name` of this file, and the packets shown of it.
+pub fn named(name: &str) -> Option<(Vec<String>, &'static [&'static str])> {
+    Some(match name {
+        "clicks" => (clicks(), CLICKS_SHOWN),
+        "tnt" => (tnt(), TNT_SHOWN),
+        "bonemeal" => (bonemeal(), BONEMEAL_SHOWN),
+        "fire" => (fire(), BONEMEAL_SHOWN),
+        "quench" => (quench(), BONEMEAL_SHOWN),
+        "discs" => (discs(), BONEMEAL_SHOWN),
+        "ores" => (ores(), BONEMEAL_SHOWN),
+        "crops" => (crops(), BONEMEAL_SHOWN),
+        _ => return None,
+    })
+}
