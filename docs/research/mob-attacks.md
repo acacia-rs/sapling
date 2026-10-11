@@ -169,7 +169,7 @@ is 6 off or gone, as the pack says, which was not drilled.
 A skeleton stands within 10 blocks of its prey and looses an arrow every 61 ticks
 (`creatures/arrows.rs`): aimed and spread as the Java game's, flying by the two numbers above,
 sticking in blocks and hurting players whose box its own meets. It walks at its prey for its
-first 19 ticks, which takes it BDS's 1.7 blocks; an arrow passes through mobs and cannot be
+first 19 ticks, which takes it BDS's 1.7 blocks; an arrow hurts a mob in its way too (not drilled) and cannot be
 picked up. Run against sapling the drill's far skeleton still hits more often than BDS's, whose
 arrows passed a hand over the player's head.
 

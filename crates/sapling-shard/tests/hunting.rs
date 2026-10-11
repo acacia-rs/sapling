@@ -215,3 +215,13 @@ fn a_skeleton_stands_off_and_looses_an_arrow_every_three_seconds() {
     let hurt: Vec<f32> = health(&sent).windows(2).map(|pair| pair[0] - pair[1]).collect();
     assert!(health(&sent).len() <= 2 && hurt.iter().all(|by| (3.0..=4.0).contains(by)), "an arrow costs its speed twice over, rounded up: {:?}", health(&sent));
 }
+
+#[test]
+fn an_arrow_hurts_a_mob_that_stands_in_its_way() {
+    // The skeleton shoots at Alex over a cow two blocks before it.
+    let (mut h, _) = hunted_by("minecraft:skeleton", Difficulty::Easy);
+    h.remote.run(|ctx| assert!(ctx.spawn_entity("minecraft:cow", [0.5, 65.0, 1.3]).is_some()));
+    let sent: Vec<RawPacket> = (0..75).flat_map(|_| h.tick_all().to(2).to_vec()).collect();
+    let cows: Vec<f32> = all::<UpdateAttributes>(&sent).iter().filter(|update| update.runtime_entity_id > 3).flat_map(|update| &update.attributes).filter(|attribute| attribute.name == "minecraft:health").map(|attribute| attribute.current).collect();
+    assert!(health(&sent).is_empty() && cows.last().is_some_and(|left| *left < 10.0), "the cow took it: {cows:?}");
+}
