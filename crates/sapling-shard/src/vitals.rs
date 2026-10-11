@@ -2,7 +2,7 @@
 //! from it each tick, by the rules mobs are hurt by (creatures/health.rs), told as BDS tells a
 //! player's (docs/research/player-damage.md). Dying and rising: death.rs; mending and
 //! starving: hunger.rs; effects: effects.rs.
-// TODO: armour does not wear; a block over the head alone does not
+// TODO: a block over the head alone does not
 // make a player crawl; the breathing flag is not told; plugins are not asked.
 
 mod death;
@@ -154,6 +154,7 @@ fn hurt(world: &mut World, player: Entity, amount: f32, cause: Cause) -> bool {
         return false;
     }
     let helmeted = cause.is_on_the_head() && world.get::<crate::inventory::Inventory>(player).is_some_and(|inventory| inventory.has_helmet());
+    let whole = amount;
     let amount = if helmeted { amount * HELMETED } else { amount };
     let lands = |mut vitals: Mut<Vitals>| {
         let amount = if cause.is_stopped_by_armour() { vitals.health.shielded(amount) } else { amount };
@@ -161,6 +162,9 @@ fn hurt(world: &mut World, player: Entity, amount: f32, cause: Cause) -> bool {
     };
     if !is_mortal(world, player) || !world.get_mut::<Vitals>(player).is_some_and(lands) {
         return false;
+    }
+    if cause.is_stopped_by_armour() {
+        crate::inventory::wear_armour(world, player, whole, cause.is_on_the_head());
     }
     if world.get::<Vitals>(player).is_some_and(|vitals| vitals.health.left() > 0.0) {
         flash(world, player, cause);

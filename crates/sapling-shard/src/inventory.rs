@@ -1,6 +1,7 @@
 //! A player's items: the server's own copy, which every client request is checked against
 //! (docs/DESIGN.md "Inventories"). Stacks carry the ids clients name them by.
 
+mod armour_wear;
 mod crafting;
 mod death;
 mod equipment;
@@ -18,6 +19,7 @@ use sapling_world::ItemStack;
 use crate::components::Outgoing;
 use crate::experience::Experience;
 
+pub(crate) use armour_wear::wear_armour;
 pub(crate) use crafting::clear_grid;
 pub(crate) use equipment::{announce, in_hand, screens, select, spawn_packets};
 pub(crate) use give::give_and_pop;

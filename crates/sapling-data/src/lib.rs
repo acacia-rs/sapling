@@ -26,7 +26,7 @@ pub use block_loot::{BlockLoot, Fortune, LootRow, StateTest, Tooling, block_loot
 pub use clock::{clock_state, world_clocks};
 pub use entity::{AddEntityOptions, add_entity, add_experience_orb, add_falling_block, add_painting, mob_health, mob_size};
 pub use attack::item_attack;
-pub use armour::armour;
+pub use armour::{armour, armour_lasts};
 pub use food::{Food, Gives, consumable, food};
 pub use mob_health::{MobTraits, mob_air, mob_fire_flags, mob_health_update, mob_traits, Hunts, mob_fuse};
 pub use liquid_reaction::{LiquidDetection, LiquidReaction, liquid_detection};

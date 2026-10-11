@@ -91,3 +91,28 @@ pub fn shoot() -> Vec<String> {
     lines.extend(["gamemode creative @s", ""].map(String::from));
     lines
 }
+
+pub const WEAR_SHOWN: &[&str] = &["UpdateAttributes", "EntityEvent", "LevelSoundEvent", "InventorySlot", "InventoryContent", "MobArmorEquipment", "PlayerArmorDamage", "RemoveEntity", "AddEntity"];
+
+/// The actor in survival in all of iron, hit by a zombie for six seconds, then for 8 and 20 by
+/// a cactus, 2 by fire and 2 by magic. A hit by an anvil, which sends the helmet anew, comes
+/// before and after each, to read what the helmet lost.
+pub fn wear() -> Vec<String> {
+    let mut lines: Vec<String> =
+        ["kill @e[type=!player]", "gamerule domobspawning false", "difficulty easy", "time set midnight", "fill ~-3 ~-1 ~-12 ~12 ~-1 ~40 stone", "fill ~-3 ~ ~-12 ~12 ~6 ~40 air", "gamemode survival @s", "tp @s ~6 ~ ~20", ""].map(String::from).into();
+    for (part, piece) in [("head", "helmet"), ("chest", "chestplate"), ("legs", "leggings"), ("feet", "boots")] {
+        lines.push(format!("replaceitem entity @s slot.armor.{part} 0 iron_{piece}"));
+    }
+    let read = ["effect @s instant_health 1 4", "", "damage @s 2 anvil", ""].map(String::from);
+    lines.extend(read.clone());
+    lines.push("summon zombie ~ ~ ~-3".into());
+    lines.extend(std::iter::repeat_n(String::new(), 6));
+    lines.extend(["kill @e[type=!player]", ""].map(String::from));
+    lines.extend(read.clone());
+    for hit in ["damage @s 8 contact", "damage @s 20 contact", "damage @s 2 fire", "damage @s 2 magic"] {
+        lines.extend([hit.to_owned(), String::new()]);
+        lines.extend(read.clone());
+    }
+    lines.extend(["gamemode creative @s", "clear @s", ""].map(String::from));
+    lines
+}

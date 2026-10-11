@@ -74,7 +74,7 @@ by `/replaceitem entity @s slot.armor.<head|chest|legs|feet>`:
   goes to the helmet first (1.5 behind 15 points), and the helmet's slot is sent again.
 - `/damage @s 2 suffocation` answers `commands.damage.failed` with the player, dressed or bare.
 - No other hit by `/damage` changed an armour slot, and neither did six hits of a zombie (2.5
-  each, 1.125 through the iron): no wear was seen on the wire.
+  each, 1.125 through the iron): wear goes in another packet ("Armour wear").
 - Each cause flashes with its number: contact 1, projectile 3, block explosion 10, entity
   explosion 11, void 12, magic 14, wither 15, starve 16, anvil 17, thorns 18, falling block 19,
   fly into wall 21, magma 22, lightning 24, freezing 27, stalactite 28, stalagmite 29, sonic
@@ -129,9 +129,22 @@ day and clicks it.
 
 ## Not drilled
 
-Armour's wear (none was seen), enchantments, the words of most deaths, hunger from swimming, from a hit inside a mob's guard or from a block that breaks at once, each food's values (what else it does: food-effects.md), starving on normal and hard, the void, whether a player out of breath in a
+A piece of armour worn out, enchantments, the words of most deaths, hunger from swimming, from a hit inside a mob's guard or from a block that breaks at once, each food's values (what else it does: food-effects.md), starving on normal and hard, the void, whether a player out of breath in a
 block is hurt as one under water, another
 player's hit (a zombie's: mob-attacks.md), `keepInventory`, an anchor's spawn, a bed in another world, creative and spectator.
+
+## Armour wear (`wear`)
+
+The actor in all of iron (`research/captures/bds-wear.txt`). After a hit the client gets
+`PlayerArmorDamage` with what each piece worn has lost in all, and no slot:
+
+- A zombie's hit, 2 by a cactus and 2 by fire wore each piece by 1; 8 by a cactus by 2 and 20
+  by 5: a quarter of the hit before the armour, rounded down, and 1 at least. Magic, which armour
+  does not stop, wore nothing and sent nothing.
+- 2 by an anvil wore each piece by 1, and then the helmet by 8, 8, 8, 10, 11 and 11 more, which
+  the packet does not hold: the helmet is sent anew as `InventorySlot` with its `Damage` and a
+  new stack id. The Java game's `hit x 4 + random x hit x 2`.
+- The packet's slots read 0, 2, 4 and 6 for the four pieces.
 
 ## Sapling
 
@@ -150,7 +163,8 @@ player's hit (a zombie's: mob-attacks.md), `keepInventory`, an anchor's spawn, a
   from a mob (an armour stand has none here). Swimming costs nothing yet.
 - Armour stops what it stopped on BDS, by the same rule (`creatures/health.rs` `shielded`,
   `sapling-data/src/armour.rs`, `sapling_api::DamageCause::is_stopped_by_armour`); a helmet takes
-  its quarter but does not wear, and nothing else does.
+  its quarter. What it stops wears it as measured (`inventory/armour_wear.rs`); how long a piece
+  lasts is the Java game's number, and one that breaks goes silently.
 - Eating is built (`vitals/eating.rs`, `sapling-data/src/food.rs`): the bot ate an apple and a steak on
   sapling in the same 32 ticks and packets (research/captures/sapling-eat.txt). Only the apple's values are
   drilled; the others are the Java game's. A stew leaves no bowl, and no food does more than feed.
