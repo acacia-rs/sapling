@@ -29,7 +29,7 @@ pub fn substrate_access(view: &View, vein: Block, at: [i32; 3]) -> bool {
 }
 
 fn set(view: &mut View, [x, y, z]: [i32; 3], block: Block) {
-    view.set_block(x, y, z, block);
+    view.set_block_quiet(x, y, z, block);
 }
 
 impl Behaviour {
@@ -122,14 +122,15 @@ fn sculk_use_charge(view: &mut View, cursor: &Cursor, origin: [i32; 3], random: 
 /// above the cursor (148b4194f: its centre +-4, +-1, +-4), which is Java's box.
 fn can_place_growth(view: &View, at: [i32; 3]) -> bool {
     let above = view.block(at[0], at[1] + 1, at[2]);
-    if above != Block::Air && above != Block::Water {
+    // 148b41810 compares block types: water of any depth passes.
+    if above != Block::Air && !(above.is_fluid() && !above.is_lava()) {
         return false;
     }
     let mut growths = 0;
     for dx in -4..=4 {
         for dy in 0..=2 {
             for dz in -4..=4 {
-                if matches!(view.block(at[0] + dx, at[1] + dy, at[2] + dz), Block::SculkSensor | Block::SculkShrieker) {
+                if view.block(at[0] + dx, at[1] + dy, at[2] + dz).is_sculk_growth() {
                     growths += 1;
                 }
             }

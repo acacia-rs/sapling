@@ -126,12 +126,17 @@ impl Block {
 
     /// Plants placed by features: no collision, no light blocking, never terrain.
     pub fn is_plant(self) -> bool {
-        self >= Block::ShortGrass && !self.is_wet_speleothem() || (Block::GlowLichen1..=Block::SculkVeinWet63).contains(&self)
+        (Block::ShortGrass..Block::PointedDripstoneWet).contains(&self) || (Block::GlowLichen1..=Block::SculkVeinWet63).contains(&self)
     }
 
     /// Pointed dripstone with water in the second layer.
     pub fn is_wet_speleothem(self) -> bool {
-        self >= Block::PointedDripstoneWet
+        (Block::PointedDripstoneWet..=Block::PointedDripstoneMergeHangingWet).contains(&self)
+    }
+
+    /// A sculk sensor or shrieker, dry or with water in the second layer.
+    pub fn is_sculk_growth(self) -> bool {
+        matches!(self, Block::SculkSensor | Block::SculkShrieker | Block::SculkSensorWet | Block::SculkShriekerWet)
     }
 
     /// FacingID (down, up, north, south, west, east) to `multi_face_direction_bits`.
@@ -207,6 +212,8 @@ impl Block {
             Block::MangroveRootsWet => Block::MangroveRoots,
             block if block.is_wet_speleothem() => Block::ALL[block.index() - Block::PointedDripstoneWet.index() + Block::PointedDripstone.index()],
             Block::MangroveLeavesWet => Block::MangroveLeaves,
+            Block::SculkSensorWet => Block::SculkSensor,
+            Block::SculkShriekerWet => Block::SculkShrieker,
             block if block.is_snow_layer() => Block::SnowLayer,
             block if (Block::GlowLichenWet1..=Block::SculkVeinWet63).contains(&block) => Block::ALL[block.index() - WET_MULTIFACE],
             block => block,
@@ -221,6 +228,8 @@ impl Block {
                 Block::ALL[block.index() - Block::PointedDripstone.index() + Block::PointedDripstoneWet.index()]
             }
             Block::MangroveLeaves => Block::MangroveLeavesWet,
+            Block::SculkSensor => Block::SculkSensorWet,
+            Block::SculkShrieker => Block::SculkShriekerWet,
             block if (Block::GlowLichen1..=Block::SculkVein63).contains(&block) => Block::ALL[block.index() + WET_MULTIFACE],
             block => block,
         }

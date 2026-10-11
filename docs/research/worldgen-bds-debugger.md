@@ -130,6 +130,15 @@ One JSON object, `{"breakpoints": [...]}`; the fields are listed in the script's
 - Which list a feature holds: `dump_ptr` on the feature at a `place` entry (`[rcx+0xe8]` for
   `MultifaceFeature`'s faces); what a shuffle produced: 1403748de with `[rsi]` as six bytes.
 
+- What bound a loop ran to (2026-10-11, worldgen/replay4): a breakpoint after the bound is computed
+  (`VinesFeature::place` 149d99d3d, bp; its column moves 149d99d60 and vine writes 149d99fe0 with the cell at
+  `["rsp", 76, "iii"]`, all filtered on the source's box) against the `vines at`/`moves the column`/`write`
+  lines of `examples/feature_trace`: a plain `diff` of the two lists named the call.
+- A per-block table for every type: `scripts/dbg_liquid.py` as a `probe` (bytes +0xb8..0xba of every
+  permutation, `Block*` vector at `BlockType` +0x228); it runs at the first hit, so any run can carry it.
+- A patch column by column: `patch` 143bc8310 (`"arms"`) and `cell` 143bc8468 (`"group"`, filter
+  `["rbp", 104, box]`) against our `cell` lines; `[rbp+0x84]` is not our depth (it read 1 or 2 where ours drew 4).
+
 The debugger is four modules: `bds_dbg.py` (the event loop and breakpoints), `bds_dbg_win.py` (Win32 bindings,
 thread contexts, hardware breakpoints), `bds_dbg_hits.py` (filters and what a hit logs), `bds_dbg_groups.py`
 (`group`/`arms`), `bds_dbg_dumps.py` (`dump*`).

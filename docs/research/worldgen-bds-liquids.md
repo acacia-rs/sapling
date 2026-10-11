@@ -103,6 +103,24 @@ veins and glow lichen stop water (`blocking` in liquid/flow.rs; `_isLiquidBlocki
 the block's byte +0xba is 2, a per-block table not read out yet), and a vein in a water source is waterlogged,
 so its removal leaves the source to flow.
 
+## Blocking (2026-10-11, worldgen/replay4)
+`_isLiquidBlocking` (148b5ee50) for water reads three bytes of the `Block`, its liquid detection: +0xb8 can
+contain liquid, +0xb9 the sides it stops flow from, +0xba what a touch does. 2 holds water out; otherwise the
+side mask decides, and no vanilla block sets one (after the mask the type's own test, vtable +0x88, is asked:
+not read, taken as letting water in). `scripts/dbg_liquid.py` (a debugger probe) read them for
+every permutation of the 1477 registered types: no type differs between its states; 1280 hold water out,
+197 give way (0: snow layer, powder snow, chorus flower; 1: saplings, flowers, grasses, torches, carpets,
+rails, coral plants, kelp, vines, webs, azaleas, heads, redstone wire; 3: air, liquids, dripleaf, cave vines,
+cocoa, levers, repeaters, tripwire, light blocks). Non-solid blocks that hold water out: ladders, glow lichen,
+sculk veins, buttons, doors, signs, buds. `scripts/data/block_liquid.tsv` keeps the walk,
+`scripts/liquid_data.py` writes `liquid/detect_table.rs`, `liquid/detect.rs` answers `blocking` for water.
+Lava still asks the type (above).
+
+Sculk does not wake liquid: the spreader writes through the world-gen API (`setBlock` vt+0x58 in 148b41810
+and its siblings) with no feature transaction behind it, so nothing calls `updateNeighborsAt`. In the
+badlands one-worker run a patch of source 595,-349 took the vein under falling water at 9515,-24,-5568 and
+the water stayed at y -23; ours fell 21 cells further until `sculk/behaviour.rs` wrote quietly.
+
 ## Oracle (2026-10-07)
 Fluid cells differing near origin went 12.0k -> 1.7k. The 8-block routing removed most of our over-flow (infinite
 sources BDS's water never formed, lava floods into obsidian: water-over-air cells 383 -> 71, far out 218 -> 108

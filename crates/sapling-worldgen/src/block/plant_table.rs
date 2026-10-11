@@ -290,4 +290,7 @@ with_multiface_blocks! {
     PointedDripstoneBaseHangingWet => "pointed_dripstone" "dripstone_thickness=base,hanging=1",
     PointedDripstoneMergeWet => "pointed_dripstone" "dripstone_thickness=merge,hanging=0",
     PointedDripstoneMergeHangingWet => "pointed_dripstone" "dripstone_thickness=merge,hanging=1",
+    // Sculk growths set into a water source (`into_water`): solid, after the wet speleothems.
+    SculkSensorWet => "sculk_sensor" "sculk_sensor_phase=0",
+    SculkShriekerWet => "sculk_shrieker" "active=0,can_summon=1",
 }

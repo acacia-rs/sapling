@@ -3,6 +3,7 @@
 //! as docs/research/water.md transcribes them. Instaticking replaces whatever the liquid flows
 //! into, without drops or waterlogging.
 
+use super::detect::holds_water;
 use crate::feature::ticks::Tick;
 use crate::block::Block;
 use crate::feature::view::View;
@@ -39,12 +40,10 @@ fn delay(lava: bool) -> u64 {
     if lava { 30 } else { 5 }
 }
 
-/// `_isLiquidBlocking` (148b5ee50) for the blocks generation leaves: solid blocks hold liquid;
-/// air, liquids, plants and snow layers give way.
+/// `_isLiquidBlocking` (148b5ee50): water asks the block's liquid detection (detect.rs), lava the type.
 fn blocking(view: &View, p: [i32; 3], lava: bool) -> bool {
     let b = block(view, p);
-    // A vein or lichen stops water as it stops lava (one-worker run: a fall ends on a dry vein).
-    if lava { b.is_solid() || lava_blocking(b) } else { b.is_solid() && !b.is_snow_layer() || b.multiface().is_some() }
+    if lava { b.is_solid() || lava_blocking(b) } else { holds_water(b) }
 }
 
 /// Lava asks the block type instead (vtable +0xc8, base 141a28450: the material blocks motion or is

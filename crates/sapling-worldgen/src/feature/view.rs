@@ -275,18 +275,21 @@ impl<'a> View<'a> {
         tops.map_or_else(|| self.heightmap(x, z), |tops| tops[(z.rem_euclid(16) * 16 + x.rem_euclid(16)) as usize] as i32)
     }
 
-    /// `LevelChunk` +0xf88 plus the minimum y: the highest non-air block of the chunk holding
-    /// `(x, z)`, raised by this view's writes; None outside the region.
+    /// `LevelChunk` +0xf88 plus the minimum y, for the chunk holding `(x, z)`: the highest value of its
+    /// heightmap when that was built (one above a block), raised to the y of every block set since
+    /// (`LevelChunk::setBlock` 1409f59e0), this view's writes included; None outside the region.
     pub fn highest_block(&self, x: i32, z: i32) -> Option<i32> {
         let (slot, _) = self.locate(x, MIN_Y, z)?;
         if let Some(top) = self.tops.borrow()[slot] {
             return Some(top);
         }
         let (cx, cz) = (x.div_euclid(16) * 16, z.div_euclid(16) * 16);
-        let top = (MIN_Y..MIN_Y + HEIGHT as i32)
+        let set = (MIN_Y..MIN_Y + HEIGHT as i32)
             .rev()
             .find(|&y| (0..16).any(|dx| (0..16).any(|dz| self.block(cx + dx, y, cz + dz) != Block::Air)))
             .unwrap_or(MIN_Y);
+        let built = (0..16).flat_map(|dx| (0..16).map(move |dz| (dx, dz))).map(|(dx, dz)| self.heightmap(cx + dx, cz + dz)).max().unwrap_or(MIN_Y);
+        let top = set.max(built);
         self.tops.borrow_mut()[slot] = Some(top);
         Some(top)
     }

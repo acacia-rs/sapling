@@ -4,6 +4,8 @@
 //! `tickPendingTicks` call per generation, at most 128, over the chunk's 3x3 neighbourhood.
 //! The flow rule is docs/research/water.md's (`LiquidBlock::_tick` 148b5d060).
 
+mod detect;
+mod detect_table;
 mod flow;
 
 use super::ticks::TickQueue;
