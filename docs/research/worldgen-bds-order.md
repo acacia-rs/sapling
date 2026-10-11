@@ -414,12 +414,12 @@ What the replay found:
 
 Structure-region canons under the full replay after this branch (struct5's list, `tools/replay-regions.sh`;
 before -> after this branch where struct5 gave a number): jungle temple, swamp hut, shipwreck, ruined portal,
-ocean ruins, trail ruins, old growth birch, badlands 0; ancient city 7756 -> 0 on `city6` (1 on struct5's
+ocean ruins, trail ruins, trial chambers (5 before the magma tick), old growth birch, badlands 0; ancient city 7756 -> 0 on `city6` (1 on struct5's
 `c-ac`: a sculk sensor BDS saved in phase 1, a state of that run); stronghold 132 -> 1 (struct5's three
 liquid items went with the liquid rules and the web rule, its village foundation with the container draw; one
 fence join is left); igloo, snowy plains 3 -> 0 (the magma tick); village 2 -> 0 wrong or missing (one dirt
 cell is left to "later stages"); mansion 256 -> 85, below; igloo, snowy slopes 1 (a dandelion for a poppy);
-pillager outpost 4 (snow layers on a column BDS leaves bare); trial chambers 5; monument 10 (seagrass of source
+pillager outpost 4 (snow layers on a column BDS leaves bare); monument 10 (seagrass of source
 -27,-18: a double one of ours where BDS has water and one of BDS's where ours is single, so the rule's float
 draws are off by one column); desert pyramid 2438 with 1675 structure-stage cells (the temple itself and a
 mineshaft sit elsewhere than in the run: structure stage, not looked at).
