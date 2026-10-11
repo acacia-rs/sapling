@@ -19,6 +19,7 @@ mod geode;
 mod ice_spike;
 mod iceberg;
 mod jungle;
+mod lake;
 mod land;
 mod huge_mushroom;
 mod legacy_spec;
@@ -79,8 +80,6 @@ pub struct Inputs<'a> {
     pub generated_tops: &'a dyn Fn(i32, i32) -> Arc<[i16; 256]>,
     pub biomes: Biomes<'a>,
     pub surface: &'a dyn Fn(i32, i32) -> i32,
-    /// A chunk's post-process generator after its lava lake (monster_room.rs).
-    pub after_lake: &'a dyn Fn(i32, i32) -> crate::random::Mt19937,
     /// Whether a structure holds the block (geode.rs).
     pub in_structure: &'a dyn Fn([i32; 3]) -> bool,
     /// Whether a mineshaft's or a stronghold's box holds the block (multiface.rs).
@@ -229,7 +228,9 @@ impl Features {
             let doubt = |x: i32, z: i32| self.doubt_before((x, z), limit, inputs);
             view.reach = self.track_reach.then(|| reach::Reach::new(&doubt));
             view.thread_random = self.thread_before(limit);
-            monster_room::monster_rooms((inputs.after_lake)(source.0, source.1), source, &mut view);
+            let mut post_process = Mt19937::new(self.seed.chunk(source.0, source.1));
+            lake::lava_lake(&mut post_process, source, &mut view);
+            monster_room::monster_rooms(post_process, source, &mut view);
             decorate::decorate_chunk(&self.seed, source, inputs, &mut view);
             freeze::freeze_chunk(source, &(inputs.biomes)(source.0, source.1), &mut view);
             let inherited: Vec<_> = self.sources_before(source, limit).into_iter().flat_map(|n| self.source_writes(n, inputs).routed_to(source).collect::<Vec<_>>()).collect();

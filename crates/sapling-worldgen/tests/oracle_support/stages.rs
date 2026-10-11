@@ -34,7 +34,8 @@ impl Stages {
         generator.place_structures(&mut structured, cx, cz);
         let mut laked = structured.clone();
         generator.decorate(&mut laked, cx, cz);
-        let mut ours = laked.clone();
+        // Each source places its own lake first (feature/lake.rs); `laked` is the lake alone, for the judge.
+        let mut ours = structured.clone();
         generator.place_features(&mut ours, cx, cz);
         Self { surfaced, loaded, structured, laked, ours, areas: generator.structure_areas(cx, cz), biomes: generator.chunk_biomes(cx, cz) }
     }

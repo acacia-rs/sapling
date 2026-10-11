@@ -40,14 +40,6 @@ impl Decoration {
         }
     }
 
-    /// The chunk's post-process generator as the lava lake (with its border pass) leaves it, for
-    /// the monster rooms.
-    pub fn after_lake(&self, chunk_x: i32, chunk_z: i32, carved: &dyn Fn(i32, i32) -> Arc<ChunkShape>) -> Mt19937 {
-        let mut random = Mt19937::new(self.seed.chunk(chunk_x, chunk_z));
-        random.consume_count(self.lake(chunk_x, chunk_z, carved).1);
-        random
-    }
-
     fn lake(&self, chunk_x: i32, chunk_z: i32, carved: &dyn Fn(i32, i32) -> Arc<ChunkShape>) -> Arc<(Option<Lake>, u32)> {
         self.lakes.get((chunk_x, chunk_z), || {
             let mut shapes: HashMap<(i32, i32), Arc<ChunkShape>> = HashMap::new();
