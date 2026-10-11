@@ -219,6 +219,7 @@ fn stand(world: &mut World, player: Entity, layer: Entity) {
     health.begin();
     // BDS does not count the move a player lands in: 12 blocks cost it 8 (bds-hurt.txt).
     let fallen_to = if position.on_ground { position.feet[1].max(from[1]) } else { position.feet[1] };
+    let dropped = if position.on_ground && !(water || lava || carried) { health.dropped(from[1], fallen_to) } else { 0.0 };
     hits.extend(health.fall(from, fallen_to, position.on_ground, water || lava || carried).map(|_| Cause::Fall));
     let lit = health.is_burning();
     hits.extend(health.burn(fire, water).map(|cause| if lit { Cause::FireTick } else { cause }));
@@ -248,6 +249,7 @@ fn stand(world: &mut World, player: Entity, layer: Entity) {
         flash(world, player, *cause);
     }
     settle(world, player, hits.last().copied().unwrap_or(Cause::Fire));
+    crate::blocks::trample(world, layer, position.feet, dropped);
 }
 
 /// Lets the dead rise who asked to, hurts the living by where they stand, and lets the bodies go.

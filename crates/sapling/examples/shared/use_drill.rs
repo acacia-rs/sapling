@@ -232,6 +232,22 @@ pub fn leaves() -> Vec<String> {
     lines
 }
 
+/// The actor in survival drops onto farmland from four heights, three times each, the farmland
+/// laid anew before every drop, then twice onto farmland with wheat on it.
+pub fn trample() -> Vec<String> {
+    let mut lines: Vec<String> = ["fill ~-1 ~-1 ~7 ~3 ~-1 ~11 stone", "tp @s ~ ~ ~9 -90 0", "fill ~-1 ~ ~-1 ~3 ~8 ~1 air", "gamemode survival @s", "effect @s resistance 300 4 true"].map(String::from).into();
+    for height in ["0.4", "0.8", "1.5", "3"] {
+        for _ in 0..3 {
+            lines.extend(["setblock ~ ~-1 ~ farmland [\"moisturized_amount\"=7]".to_owned(), format!("tp @s ~ ~{height} ~"), String::new()]);
+        }
+    }
+    for _ in 0..2 {
+        lines.extend(["setblock ~ ~-1 ~ farmland [\"moisturized_amount\"=7]", "setblock ~ ~ ~ wheat", "tp @s ~ ~1.5 ~", ""].map(String::from));
+    }
+    lines.extend(["setblock ~ ~-1 ~ stone", "effect @s clear", "gamemode creative @s", "kill @e[type=item]"].map(String::from));
+    lines
+}
+
 /// The drill called `name` of this file, and the packets shown of it.
 pub fn named(name: &str) -> Option<(Vec<String>, &'static [&'static str])> {
     Some(match name {
@@ -245,6 +261,7 @@ pub fn named(name: &str) -> Option<(Vec<String>, &'static [&'static str])> {
         "crops" => (crops(), BONEMEAL_SHOWN),
         "grows" => (grows(), BONEMEAL_SHOWN),
         "leaves" => (leaves(), BONEMEAL_SHOWN),
+        "trample" => (trample(), BONEMEAL_SHOWN),
         _ => return None,
     })
 }

@@ -152,6 +152,11 @@ impl Health {
         due
     }
 
+    /// How far it has fallen when it comes from `from` to `to`.
+    pub(crate) fn dropped(&self, from: f32, to: f32) -> f32 {
+        self.peak.map_or(from, |peak| peak.max(from)).max(to) - to
+    }
+
     /// Sets it on fire for `ticks` more, if it would not burn that long anyway.
     pub(crate) fn ignite(&mut self, ticks: u16) {
         self.burning = self.burning.max(ticks);

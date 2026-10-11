@@ -2,7 +2,8 @@
 
 mod common;
 
-use common::Harness;
+use acacia_proto::types::InputData;
+use common::{Harness, input_at};
 use sapling_api::Block;
 
 fn block(name: &str, properties: &str) -> Block {
@@ -90,4 +91,25 @@ fn leaves_decay_when_their_log_is_taken_and_a_players_do_not() {
     h.remote.run(|ctx| assert!(ctx.update_block([4, 67, -4], &Block::air()) && ctx.update_block([4, 67, 4], &Block::air())));
     let after = names(&mut h, 400, &[[3, 66, -5], [5, 68, -3], [4, 68, -4], [3, 66, 3], [5, 68, 5]]);
     assert_eq!(after, ["air", "air", "air", "oak_leaves", "oak_leaves"]);
+}
+
+#[test]
+fn a_player_who_drops_onto_farmland_treads_it_to_dirt_and_one_who_steps_on_does_not() {
+    // research/captures/bds-trample.txt: a drop of 0.8 left it, drops of 1.5 and 3 did not.
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    h.remote.run(|ctx| assert!(ctx.set_block([0, 64, 0], &block("farmland", "")) && ctx.set_block([0, 65, 0], &block("wheat", ""))));
+    let land = |h: &mut Harness, from: &[f32]| {
+        for height in from {
+            h.receive(1, &input_at([0.5, *height, 0.5]));
+            h.tick_all();
+        }
+        let mut landing = input_at([0.5, 64.9375, 0.5]);
+        (landing.input_data, landing.delta.y) = (vec![InputData::VerticalCollision], -1.0);
+        h.receive(1, &landing);
+    };
+    land(&mut h, &[65.3]);
+    assert_eq!(names(&mut h, 3, &[[0, 64, 0], [0, 65, 0]]), ["farmland", "wheat"]);
+    land(&mut h, &[72.0, 70.0]);
+    assert_eq!(names(&mut h, 3, &[[0, 64, 0], [0, 65, 0]]), ["dirt", "air"], "and the wheat on it goes");
 }

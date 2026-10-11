@@ -2,14 +2,15 @@
 //! bamboo, farmland, open dirt and marked leaf has the chance a tick that a cell picked at random around a player has on BDS
 //! (docs/research/growth.md); what a tick then does is in rules.rs.
 // TODO: no light is asked for, where the game wants 9; saplings grow no tree; grass under a
-// block does not die; ice and the rest take no random tick.
+// block does not die; ice and the rest take no random tick; only a survival player treads
+// farmland down, no mob and no creative player.
 
 mod rules;
 
 use std::collections::HashSet;
 
 use bevy_ecs::prelude::*;
-use sapling_api::BlockPos;
+use sapling_api::{Block, BlockPos};
 use sapling_data::RuleValue;
 use sapling_world::ChunkPos;
 
@@ -21,6 +22,10 @@ const RULE: &str = "randomTickSpeed";
 const EVERY: f32 = 1800.0;
 const CHANCES: u32 = 1 << 20;
 const DIRT: &str = "minecraft:dirt";
+const FARMLAND: &str = "minecraft:farmland";
+/// A drop of this much treads no farmland, and the feet are less than this over the cell trodden.
+const SAFE_DROP: f32 = 0.5;
+const TROD_UNDER: f32 = 0.2;
 
 /// The cells that hold something a random tick changes, by world: sampling every cell around
 /// the players as BDS does cost more than a tick has when the rule is set high.
@@ -75,6 +80,23 @@ pub(crate) fn arrived(world: &mut World, layer: Entity, column: ChunkPos) {
     found.retain(|pos| kept(level, *pos).is_some());
     if !found.is_empty() {
         world.get_resource_or_insert_with(Growing::default).0.extend(found.into_iter().map(|pos| (layer, pos)));
+    }
+}
+
+/// A body came down at `feet` after falling `dropped` blocks: farmland under it is trodden to
+/// dirt, likelier the further it fell (the Java game's chance; BDS's stood a drop of 0.8 three
+/// times and went under 1.5 and 3).
+pub(crate) fn trample(world: &mut World, layer: Entity, feet: [f32; 3], dropped: f32) {
+    // Farmland is lower than a block: the cell under the feet, not the one they are in.
+    let pos = [feet[0].floor() as i32, (feet[1] - TROD_UNDER).floor() as i32, feet[2].floor() as i32];
+    if dropped <= SAFE_DROP || kept(match level(world, layer) { Some(level) => level, None => return }, pos) != Some(FARMLAND) {
+        return;
+    }
+    let mut picks = world.remove_resource::<Picks>().unwrap_or_default();
+    let treads = (picks.below(CHANCES) as f32) < (dropped - SAFE_DROP) * CHANCES as f32;
+    world.insert_resource(picks);
+    if treads {
+        super::update_block(world, layer, pos, &Block::new(DIRT));
     }
 }
 
