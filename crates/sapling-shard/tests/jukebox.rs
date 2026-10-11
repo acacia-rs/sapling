@@ -1,4 +1,5 @@
-//! A jukebox and the comparator behind it, against research/captures/bds-discs.txt.
+//! A jukebox and the comparator behind it, against research/captures/bds-discs.txt, and lit
+//! redstone ore going out, against bds-ores.txt.
 
 mod common;
 
@@ -39,4 +40,29 @@ fn a_disc_goes_in_with_its_title_powers_the_comparator_and_comes_out() {
     let out = all::<AddItemEntity>(h.tick_all().to(1));
     assert_eq!(out.len(), 1, "the disc back");
     assert_eq!(dust(&mut h), "redstone_signal=0");
+}
+
+#[test]
+fn lit_redstone_ore_goes_out_by_itself() {
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    h.remote.run(|ctx| {
+        for x in 2..=9 {
+            assert!(ctx.set_block([x, 65, 3], &Block::new("minecraft:lit_redstone_ore")));
+        }
+    });
+    let lit = |h: &mut Harness, ticks: usize| {
+        for _ in 0..ticks {
+            h.tick_all();
+        }
+        let (sent, got) = std::sync::mpsc::channel();
+        h.remote.run(move |ctx| sent.send((2..=9).filter(|x| ctx.block([*x, 65, 3]).is_some_and(|ore| ore.name == "minecraft:lit_redstone_ore")).count()).expect("the test waits"));
+        h.tick_all();
+        got.recv().expect("ran")
+    };
+    // BDS's lasted 88 seconds on average: some of eight are out after a minute, all after eight.
+    let (soon, late) = (lit(&mut h, 1200), lit(&mut h, 8000));
+    assert!((1..8).contains(&soon) && late == 0, "{soon} lit after a minute, {late} after eight");
+    h.remote.run(|ctx| assert_eq!(ctx.block([2, 65, 3]).map(|ore| ore.name).as_deref(), Some("minecraft:redstone_ore")));
+    h.tick_all();
 }

@@ -161,3 +161,13 @@ pub fn discs() -> Vec<String> {
     lines.extend(["setblock ~1 ~ ~ air", "kill @e[type=!player]", "clear @s", ""].map(String::from));
     lines
 }
+
+/// Twenty-five lit redstone ores east of the actor, watched for a minute and a half to see when
+/// each goes out.
+pub fn ores() -> Vec<String> {
+    let mut lines: Vec<String> =
+        ["fill ~-1 ~-1 ~7 ~8 ~-1 ~13 stone", "tp @s ~ ~ ~10 -90 0", "fill ~1 ~ ~-3 ~8 ~3 ~3 air", "fill ~2 ~ ~-2 ~6 ~ ~2 lit_redstone_ore"].map(String::from).into();
+    lines.extend(std::iter::repeat_n(String::new(), 90));
+    lines.push("fill ~2 ~ ~-2 ~6 ~ ~2 air".into());
+    lines
+}

@@ -1,7 +1,6 @@
 //! What a click does to a block that needs nothing in the hand: a cake is bitten, redstone ore
 //! lights, a berry bush is picked, a note block plays, a full composter empties
 //! (docs/research/block-uses.md).
-// TODO: lit redstone ore never goes out.
 
 use acacia_proto::types::Vec3f;
 use bevy_ecs::prelude::*;

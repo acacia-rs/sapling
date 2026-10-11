@@ -77,6 +77,13 @@ throw's exact size (sapling's, by the Java game's rule, is about (-0.53, 0.29) t
 `MOVING` flag BDS turned on and off. TNT a blast reaches is primed on the Java game's short fuse
 of 10 to 30 ticks, which was not measured.
 
+## Redstone ore
+
+Measured with `bds_command_probe ores` (`bds-ores.txt`): of 25 lit redstone ores set at once, 16
+had gone out, to plain redstone ore, after 90 seconds, the first after 0.9 seconds and the rest
+spread evenly: each has the same chance every tick, which fits an average life of some 88
+seconds. Sapling gives each lit ore a life drawn that way (`blocks/ores.rs`).
+
 ## Left
 
 - Bone meal has its own drill and notes: `bone-meal.md`.
@@ -94,4 +101,4 @@ behind a jukebox gives a signal by the disc in it, and none once the disc is out
 the eight discs not drilled too. Sapling's capture agrees with BDS's for all thirteen.
 - A primed note block's instruments past the first four, and a note kept across a restart.
 - An empty bucket on a full cauldron, a hoe on rooted dirt, an axe or a shovel on anything not
-  listed above, a lit redstone ore going out: not measured.
+  listed above: not measured.

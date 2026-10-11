@@ -148,6 +148,7 @@ fn write(world: &mut World, layer: Entity, pos: BlockPos, id: u32) -> Option<u32
     super::redstone::notice(world, layer, pos);
     super::daylight::written(world, layer, pos);
     super::fire::written(world, layer, pos);
+    super::ores::written(world, layer, pos);
     Some(id)
 }
 

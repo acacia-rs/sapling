@@ -66,6 +66,7 @@ pub(crate) fn dispatch(world: &mut World, plugins: &mut Plugins) {
     blocks::fall_blocks(world);
     tnt::burn(world);
     blocks::burn_fires(world);
+    blocks::dim_ores(world);
     inventory::dispatch(world, plugins);
     containers::dispatch_closes(world);
     containers::show_lids_again(world);
