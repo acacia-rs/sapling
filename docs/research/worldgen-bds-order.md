@@ -266,6 +266,21 @@ What the replay found:
   that region and whether piece 118 has cobweb calls in that chunk (none: `isInInvalidLocation` saw a liquid
   we do not have at structure time).
 
+Stock oracle, worldgen/all2 (with replay4 merged) -> shaft4 merged with it, wrong + missing and structure
+stage over all 59 regions (logs `all2`, `fin`, `all2-still`, `fin-still`):
+
+| set | wrong + missing | structure stage | of it mineshaft |
+|---|---|---|---|
+| ticked | 27006 -> 25104 | 1904 -> 780 | 1831 -> 701 |
+| still | 27534 -> 25552 | 2075 -> 903 | 2000 -> 834 |
+
+By region (ticked; still): old growth birch 804 -> 20; 805 -> 21 (its clay pool was read through a mineshaft
+that the view fix moved), stronghold -261; -415, igloo snowy plains -243; -253, ancient city -175; -119,
+ocean ruins -146; -142, mangrove swamp -118; -101, swamp -52; -53, frozen ocean -38, near origin -33; -35.
+One region rose: far out +5 (two mineshafts whose neighbour pairs the phase order gets wrong). Mansion 26,
+village 2, ruined portal 2 and temple 2 are unchanged: not measured under replay (their one-worker runs did
+not finish in the session).
+
 What a mineshaft chunk's blocks depend on besides the seed: (1) which chunks loaded first, through the start
 map's order when two starts meet in a chunk; (2) which of its eight neighbours were post-processed before
 it: their pieces' air over a support's span, their floors' planks under its corridors, and whether a spider
