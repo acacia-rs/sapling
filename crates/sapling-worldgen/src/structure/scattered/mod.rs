@@ -61,14 +61,19 @@ impl Scattered {
     }
 
     /// The piece's blocks in the canvas's chunk, and its box there. `taken` gives the height a
-    /// desert pyramid took in a chunk post-processed before this one.
-    pub fn post_process(&self, canvas: &mut Canvas, random: &mut Mt19937, taken: &dyn Fn((i32, i32)) -> Option<i32>) -> Option<BoundingBox> {
+    /// desert pyramid took in a chunk post-processed before this one; otherwise it takes it here, or
+    /// with `start_random` (the start chunk's structure generator) as the start chunk would.
+    pub fn post_process(&self, canvas: &mut Canvas, random: &mut Mt19937, taken: &dyn Fn((i32, i32)) -> Option<i32>, start_random: Option<Mt19937>) -> Option<BoundingBox> {
         let mut frame = Frame { bb: self.bb, orientation: Some(SOUTH), depth: 0, keep: |_| false };
         let here = (canvas.bb.x0 >> 4, canvas.bb.z0 >> 4);
         match self.temple {
             Temple::DesertPyramid => {
                 let drawn = random.next_int(3);
-                let y = taken(self.start()).or_else(|| self.columns(here).map(|(x, z)| canvas.floor_height(x, z)).min().map(|lowest| lowest - drawn))?;
+                let (first, lowered) = match start_random {
+                    Some(mut start) if self.start() != here => (self.start(), start.next_int(3)),
+                    _ => (here, drawn),
+                };
+                let y = taken(self.start()).or_else(|| self.columns(first).map(|(x, z)| canvas.floor_height(x, z)).min().map(|lowest| lowest - lowered))?;
                 frame.bb.move_y(y - frame.bb.y0);
                 desert::post_process(&frame, canvas, random);
             }

@@ -34,6 +34,12 @@ pub enum Order {
     Logged(Logged),
 }
 
+impl Order {
+    pub fn is_canonical(&self) -> bool {
+        matches!(self, Order::Canonical)
+    }
+}
+
 impl Logged {
     /// A chunk's second `Post` is dropped.
     pub fn new(steps: &[StructureStep]) -> Self {

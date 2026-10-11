@@ -39,6 +39,9 @@ pub struct Neighbours<'a> {
     pub shaft_order: &'a dyn Fn() -> Arc<[(i32, i32)]>,
     /// The height the desert pyramid of a start chunk took in an earlier chunk.
     pub temple_height: &'a dyn Fn((i32, i32)) -> Option<i32>,
+    /// The canonical order's exception: a pyramid no chunk has placed yet takes its height from its
+    /// start chunk's columns, as if that chunk ran first of its four.
+    pub pyramid_from_start: bool,
 }
 
 pub struct Canvas<'a> {

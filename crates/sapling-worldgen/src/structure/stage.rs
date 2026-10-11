@@ -62,7 +62,8 @@ impl Structures {
         super::trace::label(|| "temple".into());
         let mut temple_heights = Vec::new();
         for temple in temples {
-            let Some(bb) = temple.post_process(&mut canvas, &mut random, neighbours.temple_height) else { continue };
+            let start_random = neighbours.pyramid_from_start.then(|| Mt19937::new(seeds.chunk(temple.start().0, temple.start().1)));
+            let Some(bb) = temple.post_process(&mut canvas, &mut random, neighbours.temple_height, start_random) else { continue };
             placed.push(bb);
             // Logged per start (dbg_canon.json `upgrades`): huts and jungle temples, mineshafts and
             // strongholds upgrade; desert pyramids, igloos and every other kind do not.

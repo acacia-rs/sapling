@@ -149,7 +149,7 @@ impl OverworldGenerator {
         let shaft_order = || self.shaft_order(chunk);
         let taken = |source: Arc<Option<Source>>, start: (i32, i32)| (*source).as_ref()?.temple_heights.iter().find(|(s, _)| *s == start).map(|&(_, y)| y);
         let temple_height = |start: (i32, i32)| self.earlier_sources(chunk, rank, 1).find_map(|source| taken(source, start));
-        let neighbours = structure::Neighbours { placed: &block, spawners: &spawners, generated_tops: &tops, shaft_order: &shaft_order, temple_height: &temple_height };
+        let neighbours = structure::Neighbours { placed: &block, spawners: &spawners, generated_tops: &tops, shaft_order: &shaft_order, temple_height: &temple_height, pyramid_from_start: self.structure_order.is_canonical() };
         // Pieces' features read the same state; a feature's region is the 3x3.
         let load = |x: i32, z: i32| if around.holds((x, z)) { around.get((x, z)).shape.clone() } else { self.carved(x, z) };
         let biome = |[x, y, z]: [i32; 3]| Some(self.chunk_biomes(x >> 4, z >> 4).biome((x & 15) as usize, y, (z & 15) as usize));
