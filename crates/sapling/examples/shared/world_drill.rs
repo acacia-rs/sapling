@@ -143,3 +143,16 @@ pub fn spiders() -> Vec<String> {
     lines.extend(["gamemode creative @s", "gamerule dodaylightcycle true", "time set noon", ""].map(String::from));
     lines
 }
+
+/// As `kinds`, more kinds that hit: each 8 blocks from the actor at midnight for seven seconds.
+pub fn kinds2() -> Vec<String> {
+    let mut lines: Vec<String> =
+        ["kill @e[type=!player]", "gamerule domobspawning false", "difficulty easy", "time set midnight", "fill ~-3 ~-1 ~-12 ~12 ~-1 ~60 stone", "fill ~-3 ~ ~-12 ~12 ~6 ~60 air", "gamemode survival @s", "tp @s ~6 ~ ~20", ""].map(String::from).into();
+    for kind in ["drowned", "endermite", "piglin_brute", "hoglin", "zoglin", "ravager", "slime", "magma_cube", "polar_bear", "witch", "blaze", "enderman"] {
+        lines.extend(["effect @s instant_health 1 4".into(), format!("summon {kind} ~ ~ ~-8")]);
+        lines.extend(std::iter::repeat_n(String::new(), 7));
+        lines.extend(["kill @e[type=!player]", "effect @s clear", "effect @s instant_health 1 4", "", ""].map(String::from));
+    }
+    lines.extend(["gamemode creative @s", "kill @e[type=!player]", ""].map(String::from));
+    lines
+}

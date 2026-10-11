@@ -152,6 +152,24 @@ A stray, a bogged and a pillager 5 blocks from the actor (`research/captures/bds
   `crossbow.loading.start`, `.middle` and `.end`, 10 ticks apart, the first 3 ticks after the
   shot before; it held `MobEquipment` anew at each.
 
+## More kinds (`kinds2`)
+
+Twelve more kinds 8 blocks from the actor at midnight on easy
+(`research/captures/bds-kinds2.txt`):
+
+| kind | a tick's step | movement x multiplier | each hit took | so its attack | between hits |
+| --- | --- | --- | --- | --- | --- |
+| drowned | 0.114 | 0.23 | 2.5 | 3 | 1 s |
+| endermite | 0.135 | 0.25 | 2 | 2 | 1 s |
+| piglin brute | 0.264 | 0.35 | 6 | 10 | 1 s |
+| ravager | 0.345 | 0.4 | 7 | 12 | 1.55 s |
+| hoglin | 0.280 | 0.36 | 1 | ? | 0.76 s |
+| zoglin | 0.178 | 0.29 | 2.6 to 4.5 | varies | 1 s |
+
+A slime and a magma cube hop and split, a polar bear hit without a target being told, a witch
+threw potions, a blaze shot three small fireballs a second apart and an enderman was gone; none
+of these six, nor the hoglin and the zoglin, is built. The first four are (`mob-traits.py`).
+
 ## Spiders by day (`spiders`)
 
 A spider and a cave spider 5 blocks from the actor in survival

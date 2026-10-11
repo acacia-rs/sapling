@@ -47,3 +47,20 @@ fn a_spider_in_the_sun_leaves_a_player_be_and_one_under_a_roof_does_not() {
     };
     assert_eq!([bitten(false), bitten(true)], [false, true]);
 }
+
+#[test]
+fn a_drowned_an_endermite_a_piglin_brute_and_a_ravager_hit_for_what_bds_s_did() {
+    // research/captures/bds-kinds2.txt, on easy: 2.5, 2, 6 and 7 of a player's 20.
+    for (kind, left) in [("minecraft:drowned", 17.5), ("minecraft:endermite", 18.0), ("minecraft:piglin_brute", 14.0), ("minecraft:ravager", 13.0)] {
+        let mut h = Harness::new();
+        h.enter(1, "Alex");
+        h.remote.run(move |ctx| {
+            ctx.set_difficulty(Difficulty::Easy);
+            ctx.set_time(18000);
+            assert!(ctx.spawn_entity(kind, [0.5, 65.0, 4.5]).is_some(), "{kind}");
+        });
+        let sent: Vec<RawPacket> = (0..80).flat_map(|_| h.tick_all().to(1).to_vec()).collect();
+        let health: Vec<f32> = all::<acacia_proto::packets::UpdateAttributes>(&sent).iter().filter(|update| update.runtime_entity_id == 1).flat_map(|update| &update.attributes).filter(|attribute| attribute.name == "minecraft:health").map(|attribute| attribute.current).collect();
+        assert_eq!(health.first(), Some(&left), "{kind}: {health:?}");
+    }
+}
