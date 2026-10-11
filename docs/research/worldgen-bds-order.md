@@ -261,10 +261,17 @@ What the replay found:
 - **Village foundation columns are order**: with the state read live, 6 of the 9 cells of the stronghold
   run's village go; 3 of one house stay (not traced).
 - Stronghold run, left: 31 cells of water or lava that flowed at decoration, 4 fence joins, 9 village cells,
-  and one chunk (-93,-124) where BDS left out a spider corridor (piece 118 of start -89,-124: its webs and
-  fence are ours only, in an open cave with a lava spring beside it). Next step: a `dbg_shaft.json` run of
-  that region and whether piece 118 has cobweb calls in that chunk (none: `isInInvalidLocation` saw a liquid
-  we do not have at structure time).
+  and one chunk (-93,-124) where a spider corridor's webs and one fence are ours only (piece 118 of start
+  -89,-124, in an open cave with a lava spring beside it). A second run of the region with `dbg_shaft.json`
+  settled it: all 193 chunks agree piece for piece and draw for draw, and BDS made that piece's 32 cobweb
+  calls in that chunk. BDS placed them and lost them after the structure stage (lava flowing at decoration):
+  liquid stage, not mineshaft.
+- Ocean ruins run: 0 cells under replay. Ruined portal run: its one bar join (183,66,291, bars beside stairs)
+  stays under replay, so it is not post-process order; the portal is placed whole from its start chunk and the
+  join is the state table's or `rejoin_connections`'. Village run: its 2 cells (a wall on a chunk border at
+  -977,82,191 and an air cell at -1009,84,163) stay under the plain replay; the run with
+  `SAPLING_REPLAY_LIVE_KINDS` was cut off, so walls on chunk borders are not settled. Mansion: its run did not
+  finish (the session's background jobs were stopped for memory), so the 26 corner walls are not measured.
 
 Stock oracle, worldgen/all2 (with replay4 merged) -> shaft4 merged with it, wrong + missing and structure
 stage over all 59 regions (logs `all2`, `fin`, `all2-still`, `fin-still`):
