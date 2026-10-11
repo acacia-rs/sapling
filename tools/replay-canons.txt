@@ -14,3 +14,35 @@ jagged|20261003-biomes|blocks_match_bds_biomes|jagged peaks|-406 -382 -403 -379|
 plateau|20261003-trees|blocks_match_bds_trees|savanna plateau|562 -390 565 -387|g1
 gravelly|20261003-biomes|blocks_match_bds_biomes|windswept gravelly hills|-126 -350 -123 -347|g1
 stony2|20261003-biomes|blocks_match_bds_biomes|stony peaks|-230 258 -227 261
+frozenpeaks|20261003-biomes|blocks_match_bds_biomes|frozen peaks|442 306 445 309|g2
+cherry|20261003-trees|blocks_match_bds_trees|cherry grove|346 -454 349 -451|g2
+darkforest|20261003-trees|blocks_match_bds_trees|dark forest|-590 410 -587 413|g2
+savanna|20261003-trees|blocks_match_bds_trees|savanna|90 -502 93 -499|g2
+mangrove|20261003-biomes|blocks_match_bds_biomes|mangrove swamp|-502 514 -499 517|g3
+eroded|20261003-biomes|blocks_match_bds_biomes|eroded badlands|170 -598 173 -595|g3
+wooded|20261003-biomes|blocks_match_bds_biomes|wooded badlands|298 -558 301 -555|g3
+birch2|20261003-trees|blocks_match_bds_trees|old growth birch forest|-310 282 -307 285|g3
+hills|20261003-biomes|blocks_match_bds_biomes|windswept hills|226 -102 229 -99|g4
+slopes|20261003-biomes|blocks_match_bds_biomes|snowy slopes|282 66 285 69|g4
+grove|20261003-biomes|blocks_match_bds_biomes|grove|-446 66 -443 69|g4
+swamp|20261003-biomes|blocks_match_bds_biomes|swamp|314 306 317 309|g4
+frozenocean|20261003-biomes|blocks_match_bds_biomes|frozen ocean|474 570 477 573|g5
+deepfrozen|20261003-biomes|blocks_match_bds_biomes|deep frozen ocean|450 458 453 461|g5
+desert|20261003-biomes|blocks_match_bds_biomes|desert|-446 554 -443 557|g5
+icespikes|20261003-biomes|blocks_match_bds_biomes|ice spikes|-22 -198 -19 -195|g5
+mushroom|20261003-biomes|blocks_match_bds_biomes|mushroom fields|-46 354 -43 357|g6
+warmocean|20261003-biomes|blocks_match_bds_biomes|warm ocean|242 -494 245 -491|g6
+wsavanna|20261003-biomes|blocks_match_bds_biomes|windswept savanna|-590 -214 -587 -211|g6
+plains|20261003-trees|blocks_match_bds_trees|plains|-62 -46 -59 -43|g6
+forest|20261003-trees|blocks_match_bds_trees|forest|186 506 189 509|g7
+taiga|20261003-trees|blocks_match_bds_trees|taiga|-382 130 -379 133|g7
+birchforest|20261003-trees|blocks_match_bds_trees|birch forest|-126 42 -123 45|g7
+snowytaiga|20261003-trees|blocks_match_bds_trees|snowy taiga|322 402 325 405|g7
+jungle|20261003-trees|blocks_match_bds_trees|jungle|498 -30 501 -27|g8
+sparse|20261003-trees|blocks_match_bds_trees|sparse jungle|82 -630 85 -627|g8
+flower|20261003-trees|blocks_match_bds_trees|flower forest|-190 626 -187 629|g8
+meadow|20261003-trees|blocks_match_bds_trees|meadow|370 -510 373 -507|g8
+spruce|20261003-trees|blocks_match_bds_trees|old growth spruce taiga|-534 -30 -531 -27|g9
+wforest|20261003-trees|blocks_match_bds_trees|windswept forest|-230 -190 -227 -187|g9
+snowyplains|20261003-trees|blocks_match_bds_trees|snowy plains|570 402 573 405|g9
+sunflower|20261003-trees|blocks_match_bds_trees|sunflower plains|-310 162 -307 165|g9

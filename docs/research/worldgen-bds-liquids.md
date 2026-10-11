@@ -81,11 +81,13 @@ Companion to [worldgen-bds.md](worldgen-bds.md). The flow rule itself (`LiquidBl
   spreading. sapling hardened lava as it was set and stopped a dried cell, which sent this lava down a
   staircase (31 cells).
 - **Lava** asks the block's `isLavaBlocking` (vtable +0xc8) where water tests faces. The base (141a28450) is false
-  for `mThickness > 0`, else the material blocks motion or is solid; azalea, bamboo, rails, dripleaf, ladders,
-  multiface blocks (glow lichen, sculk vein), snow layers, lily pads, candles, campfires and scaffolding override it
-  (LeviLamina headers). sapling treats those as holding lava (badlands: lava beside a sculk vein, vein intact);
-  coral plants and fans override it too but the oracle read better without them, and which blocks have a
-  thickness is not read.
+  for `mThickness > 0`, else the material blocks motion or is solid. The overrides were read off every type's
+  vtable slot (2026-10-11, worldgen/replay5): 46 types return true (bamboo, candles and candle cakes,
+  campfires, ladder, scaffolding, glow lichen, sculk vein, frames, portals, resin clump) and 48 return false
+  (the four rails, azalea and flowering azalea, big and small dripleaf, coral plants and fans alive and dead,
+  chorus, powder snow, snow layers, lily pads, shelf mushrooms). Until then sapling took every override for
+  "holds lava"; in the dark forest one-worker run lava runs through two flowering azaleas
+  (-9386,8,6608). Which blocks have a thickness is not read.
 
 ## Game time (2026-10-10, worldgen/res6)
 What the earlier sections call "flows BDS ran in game" is `LevelChunk::tick` (1409f98a0). While `LevelChunk`

@@ -43,17 +43,24 @@ fn delay(lava: bool) -> u64 {
 /// `_isLiquidBlocking` (148b5ee50): water asks the block's liquid detection (detect.rs), lava the type.
 fn blocking(view: &View, p: [i32; 3], lava: bool) -> bool {
     let b = block(view, p);
-    if lava { b.is_solid() || lava_blocking(b) } else { holds_water(b) }
+    if lava { lava_blocking(b) } else { holds_water(b) }
 }
 
-/// Lava asks the block type instead (vtable +0xc8, base 141a28450: the material blocks motion or is
-/// solid): these non-solid types override it to hold lava.
+/// Lava asks the block type instead (vtable +0xc8; read per type from the vtables, worldgen-bds-liquids.md,
+/// "Lava"): the base (141a28450) says whether the material blocks motion or is solid, 46 types answer
+/// yes whatever their material and 48 answer no.
 fn lava_blocking(b: Block) -> bool {
     let name = b.name();
-    b.is_snow_layer()
-        || b.multiface().is_some()
-        || matches!(name, "azalea" | "flowering_azalea" | "big_dripleaf" | "small_dripleaf_block" | "ladder" | "waterlily" | "scaffolding")
-        || ["bamboo", "rail", "candle", "campfire"].iter().any(|part| name.contains(part))
+    let coral = name.contains("coral") && !name.ends_with("coral_block");
+    let yields = b.is_snow_layer()
+        || coral
+        || name.ends_with("rail")
+        || name.starts_with("chorus")
+        || matches!(name, "azalea" | "flowering_azalea" | "big_dripleaf" | "small_dripleaf_block" | "waterlily" | "powder_snow" | "shelf_mushroom");
+    let holds = b.multiface().is_some()
+        || name.contains("candle")
+        || matches!(name, "bamboo" | "campfire" | "soul_campfire" | "ladder" | "scaffolding" | "frame" | "glow_frame" | "portal" | "end_portal" | "resin_clump");
+    !yields && (holds || b.is_solid())
 }
 
 /// Runs a tick if the cell still holds the liquid it was scheduled for; a tick within a block of

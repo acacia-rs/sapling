@@ -303,6 +303,10 @@ Wrong + missing against each region's one-worker world (stock oracle beside it f
 | jagged peaks | 542 | 3 | 0 | |
 | savanna plateau | 474 | 221 | 0 | |
 | windswept gravelly hills | 328 | 3 | 0 | |
+| frozen peaks | 299 | | 0 | |
+| cherry grove | 282 | | 0 | |
+| savanna | 132 | | 0 | |
+| dark forest | 164 | | 0 (6 with the canon's first run) | |
 | badlands | 1813 | 0 | 0 | |
 | old growth pine taiga | 573 | 0 | 0 | |
 | pale garden | 744 | 0 | 0 | |
@@ -321,6 +325,11 @@ What the replay found:
   1477 types: it is the solid-blocking property (`BlockType` +0x130 bit 0x40000) without leaves, glass, ice,
   mangrove roots, farmland, paths, copper grates, pistons, chorus and light blocks, plus honey, jigsaw and
   structure blocks (`Block::is_opaque_solid`). The patch's start test reads the same byte.
+- **Lava runs through azaleas, dripleaf, rails, snow layers and coral**: the `isLavaBlocking` overrides read
+  per type (worldgen-bds-liquids.md, "Lava"); dark forest, 3 cells.
+- **Leaf litter does not lie on leaves.** Three litter cells of ours sat on a leaves block over grass
+  (dark forest -9427,87,6563); the bed now asks the block below for support from above
+  (`supports(up, Any)`; the kind BDS asks is a guess, leaves refuse every kind).
 - Savanna plateau's 221 cells (sculk patch try 130 of ring source 563,-391 onwards) went with the two changes
   above; which of them it was is not separated.
 - **Sulfur spikes are waterloggable** like pointed dripstone (gravelly hills -2001,-5,-5561, three cells).
