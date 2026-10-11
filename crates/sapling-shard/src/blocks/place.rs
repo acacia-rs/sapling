@@ -88,7 +88,9 @@ impl Request<'_> {
         // A second cell beside the first is a bed's: both halves lie on something.
         let has_headroom = doors::second_cell(registry, id, pos).is_none_or(|(cell, _)| gives(cell) && (cell[1] != pos[1] || stands(cell) && stands(pos)));
         let (block, is_solid) = (send::describe(registry, id), registry.get(id).is_some_and(|state| state.is_solid()));
-        let is_held_up = !updates::lacks_support(self.world, site.layer, pos, id);
+        // A ladder and a tripwire hook hang on a side: BDS put neither on a floor (bds-placing.txt).
+        let hangs = registry.get(id).is_some_and(|state| state.name.ends_with(":ladder") || state.name.ends_with("tripwire_hook"));
+        let is_held_up = !updates::lacks_support(self.world, site.layer, pos, id) && !(hangs && matches!(click.face, Face::Up | Face::Down));
         if !is_free || !has_headroom || !is_held_up || is_solid && is_occupied(self.world, site.layer, pos) {
             self.resync(&[against, pos]);
             return false;

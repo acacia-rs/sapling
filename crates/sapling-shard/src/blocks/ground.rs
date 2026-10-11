@@ -103,6 +103,9 @@ pub(super) fn may_stand(level: &World, pos: BlockPos, id: u32) -> bool {
             let side = property(registry, id, "direction").and_then(|direction| COCOA_LOG.get(direction.parse::<usize>().ok()?));
             side.and_then(|[dx, dz]| name(level, [pos[0] + dx, pos[1], pos[2] + dz])).is_some_and(|log| log.contains("jungle_log") || log.contains("jungle_wood"))
         }
+        // No bamboo on stone (research/captures/bds-placing.txt); what it does stand on is the
+        // Java game's list.
+        "minecraft:bamboo" | "minecraft:bamboo_sapling" => under.is_some_and(|under| BAMBOO_GROUND.contains(&under)),
         _ if VINES.contains(&block) => {
             let above = [pos[0], pos[1] + 1, pos[2]];
             !is_wet(level, pos) && (name(level, above).is_some_and(|above| VINES.contains(&above)) || level.in_height(above[1]) && has_bottom(level, above))
@@ -111,9 +114,14 @@ pub(super) fn may_stand(level: &World, pos: BlockPos, id: u32) -> bool {
     }
 }
 
+const BAMBOO_GROUND: &[&str] = &[
+    "minecraft:grass_block", "minecraft:dirt", "minecraft:coarse_dirt", "minecraft:podzol", "minecraft:mycelium", "minecraft:dirt_with_roots", "minecraft:moss_block", "minecraft:mud",
+    "minecraft:sand", "minecraft:red_sand", "minecraft:gravel", "minecraft:bamboo", "minecraft:bamboo_sapling",
+];
+
 /// Whether [`may_stand`] has a rule for the block `name`, which then replaces updates.rs's.
 pub(super) fn has_rule(name: &str) -> bool {
-    const OTHERS: &[&str] = &["minecraft:nether_wart", "minecraft:sweet_berry_bush", REEDS, "minecraft:redstone_wire", "minecraft:cocoa", "minecraft:trip_wire"];
+    const OTHERS: &[&str] = &["minecraft:bamboo", "minecraft:bamboo_sapling", "minecraft:nether_wart", "minecraft:sweet_berry_bush", REEDS, "minecraft:redstone_wire", "minecraft:cocoa", "minecraft:trip_wire"];
     [CROPS, DIODES, RAILS, VINES, OTHERS].iter().any(|list| list.contains(&name))
 }
 
@@ -130,7 +138,7 @@ mod tests {
     #[test]
     fn every_block_named_is_in_the_registry() {
         let registry = BlockRegistry::vanilla();
-        let lists = [CROPS, VEGETATION, CANE_GROUND, LIT_FROM_BELOW, DIODES, RAILS, VINES, &[REEDS, "minecraft:farmland", "minecraft:soul_sand", "minecraft:frosted_ice"]];
+        let lists = [CROPS, VEGETATION, CANE_GROUND, LIT_FROM_BELOW, DIODES, RAILS, VINES, BAMBOO_GROUND, &[REEDS, "minecraft:farmland", "minecraft:soul_sand", "minecraft:frosted_ice"]];
         for block in lists.concat() {
             assert!(registry.states_of(block).next().is_some(), "{block}");
         }

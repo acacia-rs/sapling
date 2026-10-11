@@ -66,13 +66,19 @@ Each needs its rule looked up first (`bdsre` for BDS, the Java jar for data), th
   sounds`); the Java game's tie-break by where the click fell is still left out.
 - The sounds of a door, trapdoor, gate, chest, barrel and ender chest opening were heard on BDS and
   agree (`sounds`); those of a chest, barrel and ender chest shutting were not heard there.
-- Piston orientation comes from other servers' code only.
 - Block loot is the Java game's tables under Bedrock names (`sapling-data/data/block-loot.tsv`);
   26 blocks broken with a diamond pickaxe left the same items in the same numbers on BDS
   (`bds_command_probe loot`, research/captures/bds-loot.txt), but copper ore, which left 3 each of
   three times there and 2 to 5 here, and 2 to 5 there too in twelve more (`loot2`). Ores leave experience and ice water as there
   (`blocks/after_break.rs`); the experience of 20 broken ores there was within the Java game's range
   for each (coal 0 to 2, diamond 3 to 7, redstone 1 to 4, lapis 2 to 5, quartz 3 and 4, nether gold 0 and 1).
+- 75 blocks put down by hand from one stance took the same state on BDS and here in 65
+  (`bds_command_probe placing`, research/captures/bds-placing.txt), after dispensers, pistons,
+  observers, gates, anvils, bells, grindstones, amethyst, frames and rails were set right. Left: a
+  sea pickle out of water (dead on BDS), scaffolding's `stability_check`, a daylight detector's
+  reading, and a trapdoor, whose row was spoilt. BDS's commands take old item names too (`chain`
+  for `iron_chain`), which sapling's do not, so its hand was empty for that one. Which way a dispenser or a
+  piston turns up or down is the old game's rule, of which BDS showed one case.
 - BDS's `/setblock` and `/testforblock` take old block names; sapling takes the 34 that were
   tried and found (`vanilla/blocks.rs` `OLD_NAMES`, `loot2`, `names`) and no others. A name BDS
   does not know is a syntax error there and `commands.setblock.noChange` here.
