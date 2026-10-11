@@ -433,8 +433,11 @@ Open under replay, each with its first source:
 - **Desert, 4 sand cells** (-7120,19..21,8914 and -7119,21,8916): the floor of a canyon open to the sky is
   sand three deep in BDS and stone in ours before any feature (our dirt blob then covers it, BDS's does not
   replace sand). Surface stage, not features; the stock oracle has the same cells.
-- **Frozen ocean, 5 packed ice cells** on x 7584: an iceberg of source 473,572 differs in 28 cells once chunk
-  473 is saved (canon `ds2`); not traced further.
+- **Frozen ocean, 5 packed ice cells** on x 7584: the iceberg of ring source 473,572 (ice feature try 0 at
+  7568,63,9152). With chunk 473 saved (canon `ds2`), `try_check` has 538 packed ice cells right, 104 where BDS
+  has water or air, and 158 snow cells where BDS has air: the berg's upper shape. The same source's magma blob
+  (try 21 at 7578,6,9164) sets one block BDS leaves as deepslate (7579,2,9163). Next step: the iceberg's draws
+  against `IcebergFeature::place` in an armed run of that chunk.
 - **Warm ocean, 3 tube coral blocks** (source 245,-493, coral try 1 at 3924,52,-7885): ours grows a coral beside
   a crust's dead coral where BDS places nothing; the stock oracle has the same three. Next step: a trace of
   `CoralFeature::place` (14828af70) at that position.
