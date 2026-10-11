@@ -75,6 +75,21 @@ Built in `sapling-shard/src/creatures/attacks.rs`. The actor's attack is an `Inv
 - With the death BDS also sends two empty `MobEquipment` for the mob, a `mob.warning` sound from a cow
   and `SetEntityData` `TargetEid` 0; sapling sends none of them.
 
+## The sun (2026-10-11, `bds_command_probe sun`, research/captures/bds-sun.txt)
+
+Mobs summoned 4 blocks from the actor under an open sky:
+
+- A zombie, a skeleton, a stray, a drowned, a zombie villager and a phantom were on fire the tick
+  they came and lost 1 each second from that tick, as fire's own tick (`HurtAnimation` 7); the
+  fire went out and was lit again 8 seconds in. A creeper, a husk and a spider were not.
+- Under a roof of stone or of leaves 3 blocks up a zombie did not burn; under glass it did.
+- It burnt at the times 0, 6000, 12000 and 23500 and not at 12600, 13000 or 23000, nor at noon
+  in rain.
+
+Sapling burns the kinds whose pack entry has `minecraft:burns_in_daylight` (`mob-traits.tsv`
+`burns_in_sun`) so, between the Java game's bounds of the day (`creatures/harm.rs` `is_sunlit`);
+it has no rain, and a helmet does not shade.
+
 ## Where sapling differs
 
 - A chicken falls slowly on BDS and reaches the lava on its 8th tick; sapling's falls as any mob, on its 3rd.

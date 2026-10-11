@@ -10,6 +10,8 @@ use acacia_bot::Bot;
 mod hunt;
 #[path = "shove_drill.rs"]
 mod shove;
+#[path = "world_drill.rs"]
+mod world;
 
 /// Does what a drill's `!` line asks of the actor: `!eat` holds use on what it holds, `!jump`,
 /// `!walk` and `!sprint` hold those keys until `!stop`, `!break x y z` breaks, `!click x y z` clicks and
@@ -91,11 +93,12 @@ pub fn drill(name: &str) -> Option<(Vec<String>, &'static [&'static str])> {
         "drink2" => (shove::drink2(), HURT_SHOWN),
         "shoot2" => (shove::shoot2(), SHOOT_SHOWN),
         "golem" => (shove::golem(), SHOOT_SHOWN),
-        "clock" => (shove::clock(), CLOCK_SHOWN),
-        "sounds" => (shove::sounds(), shove::SOUNDS_SHOWN),
-        "loot" => (shove::loot(), shove::LOOT_SHOWN),
-        "loot2" => (shove::loot2(), shove::LOOT2_SHOWN),
-        "names" => (shove::names(), &[]),
+        "clock" => (world::clock(), CLOCK_SHOWN),
+        "sounds" => (world::sounds(), world::SOUNDS_SHOWN),
+        "loot" => (world::loot(), world::LOOT_SHOWN),
+        "loot2" => (world::loot2(), world::LOOT2_SHOWN),
+        "names" => (world::names(), &[]),
+        "sun" => (world::sun(), hunt::KINDS_SHOWN),
         "toil" => (toil(), HURT_SHOWN),
         "armour" => (armour(), HURT_SHOWN),
         "effects" => (effects(), HURT_SHOWN),

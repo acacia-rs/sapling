@@ -22,6 +22,8 @@ fn hunted_by(kind: &'static str, difficulty: Difficulty) -> (Harness, u64) {
     h.enter(2, "Steve");
     h.remote.run(move |ctx| {
         ctx.set_difficulty(difficulty);
+        // By night: the sun would burn most of them.
+        ctx.set_time(18000);
         ctx.set_game_mode(PlayerId(2), GameMode::Creative);
         assert!(ctx.spawn_entity(kind, [0.5, 65.0, 4.5]).is_some());
     });
@@ -266,4 +268,24 @@ fn a_strays_arrow_slows_a_boggeds_poisons_and_a_pillager_shoots_on_the_walk() {
     assert_eq!(heard[..3], ["start", "middle", "end"], "its crossbow is heard loading");
     let nearest = seen.lock().unwrap().iter().copied().fold(f32::MAX, f32::min);
     assert!(arrows == 2 && nearest < 2.0, "two shots, and it came near: {arrows} {nearest}");
+}
+
+#[test]
+fn the_sun_burns_a_zombie_under_the_sky_and_not_a_creeper_or_one_under_a_roof() {
+    // research/captures/bds-sun.txt: 1 a second from the tick it stands in the sun.
+    let burnt = |kind: &'static str, time: i64, roofed: bool| {
+        let mut h = Harness::new();
+        h.enter(1, "Alex");
+        h.remote.run(move |ctx| {
+            ctx.set_game_mode(PlayerId(1), GameMode::Creative);
+            ctx.set_time(time);
+            if roofed {
+                assert!(ctx.set_block([4, 68, 0], &Block::new("stone")));
+            }
+            assert!(ctx.spawn_entity(kind, [4.5, 65.0, 0.5]).is_some());
+        });
+        let sent: Vec<RawPacket> = (0..65).flat_map(|_| h.tick_all().to(1).to_vec()).collect();
+        all::<EntityEvent>(&sent).iter().filter(|event| event.event_id == EntityEventEventId::HurtAnimation && event.data == 7).count()
+    };
+    assert_eq!([burnt("minecraft:zombie", 6000, false), burnt("minecraft:zombie", 6000, true), burnt("minecraft:zombie", 13000, false), burnt("minecraft:creeper", 6000, false)], [4, 0, 0, 0]);
 }

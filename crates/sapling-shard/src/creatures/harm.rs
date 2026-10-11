@@ -42,6 +42,22 @@ fn is_within(level: &Level, [x, y, z]: [i32; 3]) -> bool {
     level.in_height(y) && level.is_loaded(sapling_world::ChunkPos::of_block(x, z))
 }
 
+/// The sun burns a mob for this many ticks at a time.
+const SUN_BURNS: u16 = 160;
+const DAY: i64 = 24000;
+/// The first and the last tick of a day the sun burns in: BDS's zombie burnt at 0, 12000 and
+/// 23500 and not at 12600 or 23000; the bounds between are the Java game's.
+const SUNLIT: [i64; 2] = [23460, 12541];
+
+/// Whether the sun reaches the cell `at`: it is day, and nothing above holds the light back.
+/// A stone roof and leaves did on BDS, glass did not (research/captures/bds-sun.txt).
+// TODO: rain, which put BDS's zombie out of the sun's reach, is not in the shard yet.
+fn is_sunlit(level: &Level, [x, y, z]: [i32; 3]) -> bool {
+    let time = level.level().time.rem_euclid(DAY);
+    let shades = |y: i32| level.registry().get(level.block(x, y, z)).is_some_and(|state| state.is_solid() && !state.name.contains("glass"));
+    (time >= SUNLIT[0] || time <= SUNLIT[1]) && (y + 1..).take_while(|y| level.in_height(*y)).all(|y| !shades(y))
+}
+
 pub(crate) fn is_full_block(level: &Level, [x, y, z]: [i32; 3]) -> bool {
     let smothers = |name: &str| !name.ends_with("glass") && !name.ends_with("leaves");
     is_within(level, [x, y, z]) && level.registry().get(level.block(x, y, z)).is_some_and(|state| state.is_full_cube() && smothers(state.name))
@@ -93,12 +109,16 @@ pub(super) fn tick(world: &mut World, entity: Entity, layer: Entity, id: u64, ki
         let head = [start.at[0], y, start.at[2]].map(|c| c.floor() as i32);
         let level = world.get::<Layer>(layer).map(|layer| &layer.world);
         let (touching, in_wall, under_water) = level.map_or((false, false, false), |level| (burns && touches(level, start, FIERY), is_full_block(level, head), !traits.breathes_water && holds(level, head, WATER)));
+        let sunlit = traits.burns_in_sun && level.is_some_and(|level| is_sunlit(level, head));
         health.begin();
         if let Some((harm, from)) = health.fall(start.at, now.at[1], now.on_ground, now.liquid().is_some() || traits.no_fall) {
             packets.push(strike(id, &health, Cause::Fall, Some(now.at)));
             packets.push(land(world, layer, id, kind, from, now, harm));
         }
         let wet = now.liquid() == Some(Liquid::Water);
+        if burns && !wet && sunlit {
+            health.kindle(SUN_BURNS);
+        }
         let lit = health.is_burning();
         let fire = if burns { health.burn(touching, wet) } else { None };
         if lit && !health.is_burning() && wet {

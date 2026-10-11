@@ -77,6 +77,7 @@ for document in packs.entities().values():
         ("no_fall", unhurt_by(components, "fall")),
         ("breathes_water", breath.get("breathes_water", False)),
         ("no_air", breath.get("breathes_air", True) is False),
+        ("burns_in_sun", any("minecraft:burns_in_daylight" in group for group in [components, *entity.get("component_groups", {}).values()])),
     ]
     held = [name for name, holds in traits if holds]
     if entity["description"]["identifier"] != "minecraft:player" and experience(entity):

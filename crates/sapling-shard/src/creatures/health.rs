@@ -152,6 +152,14 @@ impl Health {
         due
     }
 
+    /// Sets it on fire for `ticks` if it is not: the first hurts at once, as the sun's did on
+    /// BDS (research/captures/bds-sun.txt).
+    pub(crate) fn kindle(&mut self, ticks: u16) {
+        if self.burning == 0 {
+            self.burning = ticks + 1;
+        }
+    }
+
     /// A tick of fire, `touching` fire or lava, or in water: what hurt it, if anything.
     pub(crate) fn burn(&mut self, touching: bool, wet: bool) -> Option<Cause> {
         if touching {
