@@ -257,6 +257,7 @@ pub fn named(name: &str) -> Option<(Vec<String>, &'static [&'static str])> {
         "clicks" => (clicks(), CLICKS_SHOWN),
         "clicks2" => (more::clicks2(), CLICKS_SHOWN),
         "scaffold" => (more::scaffold(), TNT_SHOWN),
+        "grows2" => (more::grows2(), BONEMEAL_SHOWN),
         "tnt" => (tnt(), TNT_SHOWN),
         "bonemeal" => (bonemeal(), BONEMEAL_SHOWN),
         "fire" => (fire(), BONEMEAL_SHOWN),

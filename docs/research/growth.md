@@ -38,6 +38,58 @@ Measured with `bds_command_probe grows` (`bds-grows.txt`, `sapling-grows.txt`), 
 Cane and cactus fit the Java game's sixteen random ticks a segment at the pace above; neither
 sent its age. Farmland dried three times as fast as that pace allows, so it is ticked more often.
 
+## A second row
+
+Measured with `bds_command_probe grows2` (`bds-grows2.txt`), as `grows`. The ice by the torch
+was water half a second in and ran over the floor, so the snow layer, the kelp and the
+torchflower crop say nothing.
+
+| What | On BDS |
+| --- | --- |
+| cocoa on a jungle log | age 1 after 2.3 seconds, 2, its last, after 4.7 |
+| nether wart on soul sand | ages 1 and 2 after 5 seconds, 3, its last, after 15 |
+| pitcher crop on wet farmland | growth 1 after 1.5 seconds, 2 after 8, 3 after 10 with an upper half over it, 4 for both a moment on |
+| vine on a stone wall | more vines on the wall's other faces |
+| ice by a torch | water at its first random tick |
+| block of copper | exposed after 0.9 seconds, weathered after 1.5, oxidized after 2 |
+| cactus | grew as before; stone set beside it did not break it within a second |
+
+Sapling grows cocoa one random tick in five and wart one in ten, the Java game's odds, which
+these fit, and a pitcher crop by a crop's odds, two high from its third stage. Ice is left: it
+melts by light, which sapling does not reckon. Copper is left too: a stage every random tick or
+two would weather a block in minutes at the rule's 1, which is not what the game is known for,
+so the rule may not scale as the rest does.
+
+## Leaves
+
+Measured with `bds_command_probe leaves` (`bds-leaves.txt`, `sapling-leaves.txt`), at
+`randomtickspeed` 200:
+
+- A cube of oak leaves by no log, which nothing touched, did not decay in a minute.
+- A cube of 26 around a log: nothing for five seconds. When the log was set to air all 26 were
+  sent again in that tick with `update_bit` set, and each was air after its next random tick,
+  the last 2.1 seconds on. Four oak saplings were left.
+- The same cube with `persistent_bit` set, as a player's leaves have it: nothing changed.
+
+Sapling marks the leaves in the 26 cells around a log or a leaf that goes, and a marked leaf's
+random tick drops it, with what a leaf leaves, unless wood is within six of it through leaves,
+which clears the mark (`blocks/leaves.rs`). Its capture has the same 26 marked in the tick and
+all of them gone 1.2 seconds on. Six is the Java game's reach, and BDS's four saplings of 26
+are more than sapling's table gives on average; neither was looked into.
+
+## Farmland trodden down
+
+Measured with `bds_command_probe trample` (`bds-trample.txt`): the actor, in survival, was put
+over wet farmland and left to drop. Three drops of 0.4 and three of 0.8 left the farmland; a
+drop of 1.5 and three of 3 made it dirt in the tick of landing. The drill is rough: standing on
+farmland, which is lower than a block, `~-1` named the cell under it, so the later 1.5 drops and
+the two onto wheat laid their farmland a level down and say nothing.
+
+Sapling treads farmland to dirt under a survival player that lands on it, with the Java game's
+chance, the drop less a half (`trample` in `blocks/growth.rs`); what grew on it breaks. Mobs and
+creative players tread none, and the chance between 0.8 and 1.5 was not measured.
+
+## Sapling
 
 Sapling keeps track of the crops, stems, berry bushes, cane, cactus, bamboo and farmland that
 are written or come in with a column, and gives each the random tick's chance every tick,
@@ -62,6 +114,6 @@ seconds in, half of them by 19: BDS's pace.
 - Trees from saplings: measured above, not built. Grass under a block does not die.
 - Farmland getting wet was not measured; a pumpkin's facing, and what ground a fruit takes, are
   the Java game's.
-- Everything else a random tick does: mycelium, leaves, ice and snow, copper, vines, kelp; fire
+- Everything else a random tick does: mycelium, ice and snow, copper, vines, kelp; fire
   and lit ore sapling times by themselves (`blocks/fire.rs`, `blocks/ores.rs`).
 - Beetroot's and the other crops' own odds, which were not measured.

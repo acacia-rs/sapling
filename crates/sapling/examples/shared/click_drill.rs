@@ -46,3 +46,29 @@ pub fn scaffold() -> Vec<String> {
     lines.extend(["", "setblock ~2 ~ ~ air", "", "", "fill ~1 ~ ~-1 ~12 ~6 ~1 air", "kill @e[type=!player]"].map(String::from));
     lines
 }
+
+/// A second row of what random ticks change, set out as `grows` sets its own: cocoa on a jungle
+/// log, nether wart, kelp in water, a vine on a wall, ice and a snow layer by a torch, a block
+/// of copper, a torchflower crop and a pitcher crop; then stone is set beside a cactus.
+pub fn grows2() -> Vec<String> {
+    let mut lines: Vec<String> = ["fill ~-1 ~-1 ~7 ~10 ~-1 ~25 stone", "tp @s ~ ~ ~16 -90 0", "fill ~1 ~ ~-9 ~10 ~8 ~9 air", "time set noon"].map(String::from).into();
+    let moist = "farmland [\"moisturized_amount\"=7]";
+    let row: [(i32, Vec<(i32, i32, i32, String)>); 9] = [
+        (-8, vec![(3, 0, 0, "jungle_log".into()), (4, 0, 0, "cocoa [\"direction\"=1,\"age\"=0]".into())]),
+        (-6, vec![(3, -1, 0, "soul_sand".into()), (3, 0, 0, "nether_wart".into())]),
+        (-4, vec![(2, 0, 0, "glass".into()), (4, 0, 0, "glass".into()), (3, 0, -1, "glass".into()), (3, 0, 1, "glass".into()), (3, 0, 0, "water".into()), (3, 0, 0, "kelp".into())]),
+        (-2, vec![(3, 0, 0, "stone".into()), (3, 1, 0, "stone".into()), (3, 2, 0, "stone".into()), (4, 2, 0, "vine [\"vine_direction_bits\"=2]".into())]),
+        (0, vec![(3, 0, 0, "ice".into()), (4, 0, 0, "torch".into()), (5, 0, 0, "snow_layer".into())]),
+        (2, vec![(3, 0, 0, "copper_block".into())]),
+        (4, vec![(3, -1, 0, moist.into()), (3, 0, 0, "torchflower_crop".into())]),
+        (6, vec![(3, -1, 0, moist.into()), (3, 0, 0, "pitcher_crop".into())]),
+        (8, vec![(3, -1, 0, "sand".into()), (3, 0, 0, "cactus".into())]),
+    ];
+    for (z, blocks) in row {
+        lines.extend(blocks.into_iter().map(|(x, y, dz, block)| format!("setblock ~{x} ~{y} ~{} {block}", z + dz)));
+    }
+    lines.push("gamerule randomtickspeed 200".into());
+    lines.extend(std::iter::repeat_n(String::new(), 60));
+    lines.extend(["gamerule randomtickspeed 1", "setblock ~4 ~ ~8 stone", "", "fill ~1 ~ ~-9 ~10 ~8 ~9 air", "kill @e[type=item]"].map(String::from));
+    lines
+}

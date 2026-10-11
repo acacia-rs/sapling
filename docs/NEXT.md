@@ -32,7 +32,9 @@ it does on BDS and the two captures can be diffed:
    from saplings, which need a tree generator the shard does not have. Fire is lit, spreads,
    burns and is put out (`docs/research/fire.md`, `fire`, `quench`), its spread by the Java game's odds. Crops, stems and berry bushes
    grow by themselves at BDS's pace, a ripe stem bears, cane, cactus and bamboo grow and
-   farmland dries, and grass spreads to open dirt (`docs/research/growth.md`, `crops`, `grows`);
+   farmland dries and is trodden down, grass spreads to open dirt, leaves decay when their log
+   goes, and cocoa, nether wart and pitcher crops grow (`docs/research/growth.md`, `crops`,
+   `grows`, `grows2`, `leaves`, `trample`);
    left: trees from saplings and the rest of what random ticks do.
 
 ## 2. Survival gaps still open

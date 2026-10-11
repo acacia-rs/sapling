@@ -15,6 +15,14 @@ const WATER_REACH: i32 = 4;
 const CROPS: [&str; 4] = ["minecraft:wheat", "minecraft:carrots", "minecraft:potatoes", "minecraft:beetroot"];
 const STEMS: [(&str, &str); 2] = [("minecraft:melon_stem", "minecraft:melon_block"), ("minecraft:pumpkin_stem", "minecraft:pumpkin")];
 const BUSH: &str = "minecraft:sweet_berry_bush";
+/// What grows by its `age` to a last one, one random tick in so many: the Java game's odds, which
+/// BDS's cocoa and wart kept.
+const AGED: [(&str, u8, u32); 2] = [("minecraft:cocoa", 2, 5), ("minecraft:nether_wart", 3, 10)];
+const PITCHER: &str = "minecraft:pitcher_crop";
+const RIPE_PITCHER: u8 = 4;
+/// From this growth a pitcher crop is two blocks high.
+const TALL_PITCHER: u8 = 3;
+const UPPER: &str = "upper_block_bit";
 const COLUMNS: [&str; 2] = ["minecraft:reeds", "minecraft:cactus"];
 const COLUMN_HEIGHT: i32 = 3;
 const COLUMN_AGE: u8 = 15;
@@ -72,6 +80,8 @@ pub(super) fn is_ticked(name: &str, properties: &str) -> bool {
     match name {
         FARMLAND | BAMBOO | DIRT => true,
         BUSH => growth().is_some_and(|growth| growth < RIPE_BUSH),
+        PITCHER => number(properties, UPPER) == Some(0) && growth().is_some_and(|growth| growth < RIPE_PITCHER),
+        _ if AGED.iter().any(|(aged, ..)| *aged == name) => number(properties, "age").zip(AGED.iter().find(|(aged, ..)| *aged == name)).is_some_and(|(age, (_, last, _))| age < *last),
         _ if CROPS.contains(&name) => growth().is_some_and(|growth| growth < RIPE),
         // A stem that bore its fruit points at it and is done.
         _ if STEMS.iter().any(|(stem, _)| *stem == name) => number(properties, "facing_direction") == Some(0),
@@ -154,6 +164,16 @@ pub(super) fn ticked(level: &Level, pos: BlockPos, picks: &mut Picks) -> Vec<Cha
     let growth = number(properties, "growth").unwrap_or(0);
     match name {
         BUSH if growth < RIPE_BUSH && picks.below(5) == 0 => with("growth", growth + 1).map(|id| shown(pos, id)).into_iter().collect(),
+        _ if AGED.iter().any(|(aged, ..)| *aged == name) => {
+            let (age, odds) = (number(properties, "age").unwrap_or(0), AGED.iter().find(|(aged, ..)| *aged == name).map_or(1, |(.., odds)| *odds));
+            with("age", age + 1).filter(|_| picks.below(odds) == 0).map(|id| shown(pos, id)).into_iter().collect()
+        }
+        // The upper half comes with the third stage, as BDS's did, and grows with the lower.
+        PITCHER if growth < RIPE_PITCHER && crop_grows(level, pos, name, picks) => {
+            let lower = with("growth", growth + 1);
+            let upper = lower.filter(|_| growth + 1 >= TALL_PITCHER && (is_air(level, above) || name_at(level, above) == Some(PITCHER))).and_then(|lower| with_property(registry, lower, UPPER, "1"));
+            lower.map(|id| shown(pos, id)).into_iter().chain(upper.map(|id| shown(above, id))).collect()
+        }
         _ if CROPS.contains(&name) && growth < RIPE && crop_grows(level, pos, name, picks) => with("growth", growth + 1).map(|id| shown(pos, id)).into_iter().collect(),
         _ if STEMS.iter().any(|(stem, _)| *stem == name) && crop_grows(level, pos, name, picks) => {
             if growth < RIPE {
@@ -188,7 +208,7 @@ pub(super) fn ticked(level: &Level, pos: BlockPos, picks: &mut Picks) -> Vec<Cha
         },
         FARMLAND => {
             let wet = number(properties, WET).unwrap_or(0);
-            let is_sown = name_at(level, above).is_some_and(|over| CROPS.contains(&over) || STEMS.iter().any(|(stem, _)| *stem == over));
+            let is_sown = name_at(level, above).is_some_and(|over| CROPS.contains(&over) || over.ends_with("_crop") || STEMS.iter().any(|(stem, _)| *stem == over));
             let now = match (is_watered(level, pos), wet) {
                 (true, WETTEST) => None,
                 (true, _) => with(WET, WETTEST),

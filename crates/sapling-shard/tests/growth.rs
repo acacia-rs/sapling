@@ -140,3 +140,27 @@ fn scaffolding_holds_six_out_from_its_column_and_comes_down_with_its_foot() {
     h.remote.run(|ctx| assert!(ctx.update_block([-4, 65, 3], &Block::air())));
     assert_eq!(names(&mut h, 40, &[[-4, 66, 3], [-1, 66, 3], [2, 66, 3], [3, 65, 3]]), ["air", "air", "air", "scaffolding"]);
 }
+
+#[test]
+fn cocoa_wart_and_a_pitcher_crop_grow_by_themselves() {
+    // research/captures/bds-grows2.txt: cocoa to its last age in 5 seconds, wart in 15, and a
+    // pitcher crop two high from its third stage.
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    h.remote.run(|ctx| {
+        assert!(ctx.set_game_rule("randomTickSpeed", sapling_api::RuleValue::Int(200)));
+        let set = [([3, 65, 0], block("jungle_log", "")), ([4, 65, 0], block("cocoa", "direction=1,age=0")), ([3, 64, 2], block("soul_sand", "")), ([3, 65, 2], block("nether_wart", "")), ([3, 64, 4], block("farmland", "moisturized_amount=7")), ([3, 65, 4], block("pitcher_crop", ""))];
+        for (at, block) in set {
+            assert!(ctx.set_block(at, &block), "{block:?}");
+        }
+    });
+    for _ in 0..1500 {
+        h.tick_all();
+    }
+    let (sent, got) = std::sync::mpsc::channel();
+    h.remote.run(move |ctx| sent.send([[4, 65, 0], [3, 65, 2], [3, 65, 4], [3, 66, 4]].map(|at| ctx.block(at).map(|block| block.properties).unwrap_or_default())).expect("the test waits"));
+    h.tick_all();
+    let grown = got.recv().expect("ran");
+    assert!(grown[0].contains("age=2") && grown[1].contains("age=3"), "{grown:?}");
+    assert!(grown[2].contains("growth=4") && grown[2].contains("upper_block_bit=0") && grown[3].contains("growth=4") && grown[3].contains("upper_block_bit=1"), "{grown:?}");
+}
