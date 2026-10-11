@@ -147,6 +147,25 @@ yet falls and one that has breaks. Its capture has the same states in the same o
 a block is first shown as set (the default state, `stability` 7) and not with its distance, and
 that a block about to break is not shown at 7 first.
 
+## Stacking
+
+Measured with `bds_command_probe stacks` (`bds-stacks.txt`, `sapling-stacks.txt`): the actor, in
+creative on grass, puts a thing on the ground a block east of it and three more of the same
+onto it.
+
+| Thing | What BDS did with each one more |
+| --- | --- |
+| candle | `candles` one more, to 3; `item.use.on` from the middle of the cell over it, naming the new block |
+| sea pickle | `cluster_count` one more, to 3; the same sound |
+| snow layer | `height` one more; `place` from its middle |
+| pink petals, wildflowers, leaf litter | `growth` one more, to 3; `place` from the cell's floor |
+| turtle egg | `turtle_egg_count` one more, to four eggs; `place` |
+| oak slab | a double slab at the second, `item.use.on` from its middle; the third went on top as a slab |
+
+Sapling's capture has the same states step for step (`blocks/stacking.rs`). Its sounds differ in
+two ways: the first candle, pickle and snow layer are told by `place` where BDS told them by
+`item.use.on`, and petals, wildflowers and litter are heard from the cell's middle, not its floor.
+
 ## Left
 
 - From the second round: a compass linked on a lodestone is a lodestone compass by name and

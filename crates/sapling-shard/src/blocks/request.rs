@@ -246,7 +246,7 @@ impl Request<'_> {
         // The clicked block's own use comes first, unless the player sneaks.
         let builds = site.sneaking || !is_used(name);
         let held = self.held_item(site.mode, click).filter(|_| builds);
-        if held.as_ref().is_some_and(|held| self.use_tool(&site, pos, face, held)) {
+        if held.as_ref().is_some_and(|held| self.use_tool(&site, pos, face, held) || self.stack(&site, pos, face, held)) {
             return self.resync(&[pos, target]);
         }
         if held.is_some_and(|held| self.use_bucket(&site, pos, face, &held)) {

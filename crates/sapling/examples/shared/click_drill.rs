@@ -125,3 +125,17 @@ pub fn leafreach() -> Vec<String> {
     lines.extend(["gamerule randomtickspeed 1", "fill ~1 ~ ~-1 ~14 ~4 ~1 air", "kill @e[type=item]"].map(String::from));
     lines
 }
+
+/// The actor in creative, looking east on grass, puts one thing down on the ground a block east
+/// of it and then three more of the same onto it: the things that go into one cell several at
+/// a time.
+pub fn stacks() -> Vec<String> {
+    let mut lines: Vec<String> = ["kill @e[type=!player]", "gamemode creative @s", "clear @s", ""].map(String::from).into();
+    for item in ["candle", "sea_pickle", "snow_layer", "pink_petals", "wildflowers", "leaf_litter", "turtle_egg", "oak_slab"] {
+        lines.extend(["fill ~-1 ~-1 ~3 ~3 ~-1 ~5 grass_block".into(), "tp @s ~ ~ ~4 -90 0".into(), "fill ~1 ~ ~-1 ~2 ~2 ~1 air".into(), format!("replaceitem entity @s slot.weapon.mainhand 0 {item} 8"), "!place 1 -1 0".into()]);
+        lines.extend(std::iter::repeat_n("!place 1 0 0".to_owned(), 3));
+        lines.push(String::new());
+    }
+    lines.extend(["kill @e[type=!player]", "clear @s", ""].map(String::from));
+    lines
+}

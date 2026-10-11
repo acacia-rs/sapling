@@ -38,6 +38,7 @@ mod send;
 mod shapes;
 mod sign_ink;
 mod signs;
+mod stacking;
 mod tools;
 mod updates;
 mod waterlog;
