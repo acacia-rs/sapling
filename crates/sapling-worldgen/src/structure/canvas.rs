@@ -21,6 +21,8 @@ pub type Spawners = HashSet<((i32, i32), usize)>;
 /// Cells whose neighbour-shaped states a replayed run's template passes decided (template/update.rs).
 pub type Settled = HashSet<(i32, i32, i32)>;
 
+pub type TempleHeights = RefCell<HashMap<(i32, i32), i32>>;
+
 /// What a chunk's structure stage reads past it: the neighbours' carved terrain, and the
 /// neighbours BDS post-processed earlier (decoration phases) with their pieces and the
 /// spawners they placed.
@@ -38,6 +40,8 @@ pub struct Neighbours<'a> {
     pub live: bool,
     /// The cells the run's template passes have decided so far; None without a replay.
     pub settled: Option<&'a RefCell<Settled>>,
+    /// The heights a replayed run's desert pyramids took in their first chunk, by start.
+    pub temple_heights: Option<&'a TempleHeights>,
 }
 
 pub struct Canvas<'a> {

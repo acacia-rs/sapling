@@ -325,8 +325,21 @@ Wrong + missing (structure stage in brackets) against each region's own one-work
 | igloo, snowy plains | [1] (structure order only) | 3 [0] | a bubble column of source -58,-179 (-913,-25,-2848) |
 | ancient city | [6] (structure order only) | 7756 [4] | sculk: BDS's veins, sculk and growths in cells no source of ours wrote, from chunk -73,75 on; 2 tuff cells over city deepslate, 2 rails under lava |
 
-(The "before" column of the last four and of the portal is a run without its decoration order, so only the
-structure-stage figures compare.)
+| swamp hut | first measured | 0 [0] | |
+| igloo, snowy slopes | first measured | 1 [0] | a dandelion where BDS has a poppy (655,86,-385) |
+| monument | first measured | 11 [0] | seagrass of ring chunk -27,-18, one water cell |
+| trial chambers | first measured | 17 [1] | four bubble column cells, a lava and water meeting at 124,-44,391 |
+| trail ruins | first measured | 41 [0] | flowing water of sources -54,25 and -56,25 |
+| pillager outpost | first measured | 46 [0] | water and lava under source 117,-67, four snow layers |
+| desert pyramid | 2459 [1678] | 23 [5] | one suspicious sand a cell off in the cellar (-6114,66,-3509 for our -3508), cactus of four sources, three cactus flowers |
+
+(The "before" column of the portal, mansion, village, igloo and ancient city is a run without its decoration
+order, so only the structure-stage figures compare.) Every region of `blocks_match_bds_structures` now has a
+canon; none of what is left in the last seven was traced.
+
+- **A desert pyramid takes its height in the first chunk the run post-processes it in** (`Neighbours::
+  temple_heights`): the start chunk had been assumed, and under the replay its columns were read with the
+  pyramid already standing (2459 -> 23).
 
 What the first differing pieces and sources were:
 - **Connections** (mansion's 31 corner walls, the portal's bar, the igloo's bars, four mineshaft posts): the

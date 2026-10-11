@@ -9,7 +9,7 @@ mod hut;
 mod jungle;
 
 use super::BoundingBox;
-use super::canvas::Canvas;
+use super::canvas::{Canvas, TempleHeights};
 use super::piece::{EAST, Frame, SOUTH, WEST};
 use crate::block::Block;
 use crate::random::Mt19937;
@@ -58,17 +58,29 @@ impl Scattered {
 
     /// The piece's blocks in the canvas's chunk; `chunk_random` gives another chunk's structure
     /// generator, for a height taken there.
-    pub fn post_process(&self, canvas: &mut Canvas, random: &mut Mt19937, chunk_random: &dyn Fn((i32, i32)) -> Mt19937) -> Option<BoundingBox> {
+    /// `fixed` keeps a replayed run's pyramid heights by start chunk.
+    pub fn post_process(&self, canvas: &mut Canvas, random: &mut Mt19937, chunk_random: &dyn Fn((i32, i32)) -> Mt19937, fixed: Option<&TempleHeights>) -> Option<BoundingBox> {
         let mut frame = Frame { bb: self.bb, orientation: Some(SOUTH), depth: 0, keep: |_| false };
         let here = (canvas.bb.x0 >> 4, canvas.bb.z0 >> 4);
         match self.temple {
             Temple::DesertPyramid => {
                 let drawn = random.next_int(3);
-                // TODO: BDS takes the height in whichever chunk it post-processes first; the start chunk is assumed.
+                // BDS takes the height in whichever chunk it post-processes first and keeps it; without
+                // a replayed order the start chunk is assumed.
                 let first = (self.bb.x0 >> 4, self.bb.z0 >> 4);
-                let lowered = if first == here { drawn } else { chunk_random(first).next_int(3) };
-                let lowest = self.columns(first).map(|(x, z)| canvas.floor_height(x, z)).min()?;
-                frame.bb.move_y(lowest - lowered - frame.bb.y0);
+                let y = match fixed {
+                    Some(fixed) => {
+                        let known = fixed.borrow().get(&first).copied();
+                        let y = known.or_else(|| self.columns(here).map(|(x, z)| canvas.floor_height(x, z)).min().map(|lowest| lowest - drawn))?;
+                        fixed.borrow_mut().insert(first, y);
+                        y
+                    }
+                    None => {
+                        let lowered = if first == here { drawn } else { chunk_random(first).next_int(3) };
+                        self.columns(first).map(|(x, z)| canvas.floor_height(x, z)).min()? - lowered
+                    }
+                };
+                frame.bb.move_y(y - frame.bb.y0);
                 desert::post_process(&frame, canvas, random);
             }
             Temple::SwampHut => {

@@ -97,6 +97,7 @@ impl OverworldGenerator {
         let mut writes = Vec::new();
         let mut starts = StartMap::default();
         let settled = RefCell::new(structure::Settled::new());
+        let temple_heights = RefCell::new(HashMap::new());
         let logged_loads = steps.iter().any(|step| matches!(step, StructureStep::Load(_)));
         let mut rank = 0;
         for step in steps {
@@ -115,7 +116,7 @@ impl OverworldGenerator {
                 let tops = || self.generated_tops(chunk.0, chunk.1);
                 let carved = |x: i32, y: i32, z: i32| self.carved(x >> 4, z >> 4).block((x & 15) as usize, y, (z & 15) as usize);
                 let neighbours =
-                    structure::Neighbours { carved: &carved, placed: &block, spawners: &placed_spawners, generated_tops: &tops, shaft_order: shaft_order.as_deref(), live: true, settled: Some(&settled) };
+                    structure::Neighbours { carved: &carved, placed: &block, spawners: &placed_spawners, generated_tops: &tops, shaft_order: shaft_order.as_deref(), live: true, settled: Some(&settled), temple_heights: Some(&temple_heights) };
                 // Pieces' features read the run's state too.
                 let load = |x: i32, z: i32| state.borrow().get(&(x, z)).cloned().unwrap_or_else(|| self.carved(x, z));
                 let biome = |[x, y, z]: [i32; 3]| Some(self.chunk_biomes(x >> 4, z >> 4).biome((x & 15) as usize, y, (z & 15) as usize));
