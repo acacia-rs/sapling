@@ -14,10 +14,12 @@ fn changed(ctx: &mut ShardCtx<'_>, pos: BlockPos, block: &Block) -> bool {
     ctx.update_block(pos, block) && ctx.block(pos) != before
 }
 
-/// Old names of blocks that BDS's commands still take, and what they name now
-/// (research/captures/bds-loot2.txt).
-// TODO: the eight that were tried; BDS knows many more.
-const OLD_NAMES: [(&str, &str); 8] = [
+/// Old names of blocks that BDS's commands still take, and what they name now: each was set by
+/// its old name on BDS and found under its new one (research/captures/bds-loot2.txt,
+/// bds-names.txt).
+// TODO: those that were tried; `double_plant`, `coral_fan_dead`, `skull` and `wood` were taken
+// too, but what they set was gone or wet before it was asked for.
+const OLD_NAMES: [(&str, &str); 34] = [
     ("stonebrick", "stone_bricks"),
     ("grass", "grass_block"),
     ("planks", "oak_planks"),
@@ -26,6 +28,32 @@ const OLD_NAMES: [(&str, &str); 8] = [
     ("stone_slab", "smooth_stone_slab"),
     ("concrete", "white_concrete"),
     ("leaves", "oak_leaves"),
+    ("sapling", "oak_sapling"),
+    ("fence", "oak_fence"),
+    ("carpet", "white_carpet"),
+    ("stained_glass", "white_stained_glass"),
+    ("stained_glass_pane", "white_stained_glass_pane"),
+    ("stained_hardened_clay", "white_terracotta"),
+    ("concrete_powder", "white_concrete_powder"),
+    ("concretepowder", "white_concrete_powder"),
+    ("log2", "acacia_log"),
+    ("leaves2", "acacia_leaves"),
+    ("wooden_slab", "oak_slab"),
+    ("stone_slab2", "red_sandstone_slab"),
+    ("stone_slab3", "end_stone_brick_slab"),
+    ("stone_slab4", "mossy_stone_brick_slab"),
+    ("double_stone_slab", "smooth_stone_double_slab"),
+    ("double_wooden_slab", "oak_double_slab"),
+    ("red_flower", "poppy"),
+    ("yellow_flower", "dandelion"),
+    ("tallgrass", "short_grass"),
+    ("coral", "tube_coral"),
+    ("coral_block", "tube_coral_block"),
+    ("coral_fan", "tube_coral_fan"),
+    ("monster_egg", "infested_stone"),
+    ("shulker_box", "white_shulker_box"),
+    ("sealantern", "sea_lantern"),
+    ("light_block", "light_block_0"),
 ];
 
 fn block(name: &str, states: Option<&States>) -> Block {

@@ -265,3 +265,23 @@ pub fn loot2() -> Vec<String> {
     lines.extend(["setblock ~1 ~ ~ ice", "!break 1 0 0", "", "", "gamemode creative @s", "clear @s", ""].map(String::from));
     lines
 }
+
+/// Old block names set and then asked for by the name each is thought to have now.
+pub fn names() -> Vec<String> {
+    let pairs = [
+        ("sapling", "oak_sapling"), ("fence", "oak_fence"), ("carpet", "white_carpet"), ("stained_glass", "white_stained_glass"), ("stained_glass_pane", "white_stained_glass_pane"),
+        ("stained_hardened_clay", "white_terracotta"), ("concrete_powder", "white_concrete_powder"), ("concretepowder", "white_concrete_powder"), ("log2", "acacia_log"), ("leaves2", "acacia_leaves"),
+        ("wooden_slab", "oak_slab"), ("stone_slab2", "red_sandstone_slab"), ("stone_slab3", "end_stone_brick_slab"), ("stone_slab4", "mossy_stone_brick_slab"), ("double_stone_slab", "smooth_stone_double_slab"),
+        ("double_wooden_slab", "oak_double_slab"), ("red_flower", "poppy"), ("yellow_flower", "dandelion"), ("tallgrass", "short_grass"), ("double_plant", "sunflower"), ("coral", "tube_coral"),
+        ("coral_block", "tube_coral_block"), ("coral_fan", "tube_coral_fan"), ("coral_fan_dead", "dead_tube_coral_fan"), ("skull", "skeleton_skull"), ("monster_egg", "infested_stone"), ("wood", "oak_wood"),
+        ("shulker_box", "white_shulker_box"), ("sealantern", "sea_lantern"), ("light_block", "light_block_0"), ("sand", "sand"), ("dirt", "dirt"), ("stone", "stone"), ("prismarine", "prismarine"),
+        ("quartz_block", "quartz_block"), ("sandstone", "sandstone"), ("red_sandstone", "red_sandstone"), ("purpur_block", "purpur_block"), ("sponge", "sponge"), ("cobblestone_wall", "cobblestone_wall"),
+        ("anvil", "anvil"), ("tnt", "tnt"), ("torch", "torch"), ("hardened_clay", "hardened_clay"), ("chemistry_table", "compound_creator"), ("colored_torch_rg", "colored_torch_red"), ("colored_torch_bp", "colored_torch_blue"),
+        ("yellow_flower", "yellow_flower"), ("nosuchblock", "stone"),
+    ];
+    let mut lines: Vec<String> = ["fill ~2 ~ ~-1 ~4 ~2 ~1 air", "fill ~2 ~-1 ~-1 ~4 ~-1 ~1 dirt", "gamemode creative @s", ""].map(String::from).into();
+    for (old, new) in pairs {
+        lines.extend([format!("setblock ~3 ~ ~ {old}"), format!("testforblock ~3 ~ ~ {new}"), "setblock ~3 ~ ~ air".into()]);
+    }
+    lines
+}
