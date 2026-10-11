@@ -23,8 +23,12 @@ pub fn monster_rooms(mut random: Mt19937, chunk: (i32, i32), view: &mut View) {
     }
 }
 
+/// The material is solid: a mineshaft's webs, rails, torches and ladders (material 24) are not, and a room
+/// leaves them in its walls (mangrove swamp one-worker run, two rails).
 fn solid(view: &View, [x, y, z]: [i32; 3]) -> bool {
-    view.block(x, y, z).is_solid()
+    let block = view.block(x, y, z);
+    let decoration = (Block::Web..=Block::TorchSouth).contains(&block) || (Block::LadderNorth..=Block::TorchUnknown).contains(&block);
+    block.is_solid() && !decoration
 }
 
 fn air(view: &View, [x, y, z]: [i32; 3]) -> bool {
