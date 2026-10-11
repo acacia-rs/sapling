@@ -228,7 +228,6 @@ impl Features {
             let mut view = View::new(source, &base).with_frozen_heights(frozen).with_generated_tops(&generated);
             let doubt = |x: i32, z: i32| self.doubt_before((x, z), limit, inputs);
             view.reach = self.track_reach.then(|| reach::Reach::new(&doubt));
-            view.on_write = liquid::write_hook();
             view.thread_random = self.thread_before(limit);
             monster_room::monster_rooms((inputs.after_lake)(source.0, source.1), source, &mut view);
             decorate::decorate_chunk(&self.seed, source, inputs, &mut view);

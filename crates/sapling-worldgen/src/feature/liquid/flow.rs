@@ -72,7 +72,8 @@ fn run_tick(view: &mut View, tick: Tick) {
         }
         return;
     }
-    if depth(view, tick.at, tick.lava).is_some() {
+    if let Some(d) = depth(view, tick.at, tick.lava) {
+        crate::feature::trace::line(|| format!("  tick {} {} {} {} depth {d}", tick.at[0], tick.at[1], tick.at[2], if tick.lava { "lava" } else { "water" }));
         self::tick(view, tick.at, tick.lava);
     }
 }
@@ -116,7 +117,7 @@ fn set(view: &mut View, at: [i32; 3], b: Block) {
     if block(view, at).is_waterlogged() {
         return;
     }
-    view.set_block_quiet(at[0], at[1], at[2], b);
+    view.set_block(at[0], at[1], at[2], b);
 }
 
 fn tick(view: &mut View, p: [i32; 3], lava: bool) {

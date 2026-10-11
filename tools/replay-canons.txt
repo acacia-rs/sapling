@@ -9,3 +9,7 @@ r-ob|20261003-trees|blocks_match_bds_trees|old growth birch forest|-310 282 -307
 r-bl|20261003-biomes|blocks_match_bds_biomes|badlands|594 -350 597 -347
 r-pt|20261003-biomes|blocks_match_bds_biomes|old growth pine taiga|-334 338 -331 341
 r-bj|20261003-trees|blocks_match_bds_trees|-|172 347 175 350
+stony|20261003-biomes|blocks_match_bds_biomes|stony peaks|-230 258 -227 261|g1
+jagged|20261003-biomes|blocks_match_bds_biomes|jagged peaks|-406 -382 -403 -379|g1
+plateau|20261003-trees|blocks_match_bds_trees|savanna plateau|562 -390 565 -387|g1
+gravelly|20261003-biomes|blocks_match_bds_biomes|windswept gravelly hills|-126 -350 -123 -347|g1

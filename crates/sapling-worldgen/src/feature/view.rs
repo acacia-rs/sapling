@@ -97,8 +97,6 @@ pub struct View<'a> {
     pub ticks: TickQueue,
     /// The ticks decoration left on chunk queues (liquid/mod.rs).
     pub routed: Vec<Routed>,
-    /// Run after each `set_block`: `setBlock`'s neighbour updates (liquid/mod.rs).
-    pub on_write: Option<fn(&mut View, [i32; 3])>,
     /// The oracle's taint analysis, when the generator tracks it.
     pub reach: Option<Reach<'a>>,
     /// BDS's per-thread generator, when the run it models is known (thread.rs).
@@ -119,7 +117,6 @@ impl<'a> View<'a> {
             generated: None,
             ticks: TickQueue::default(),
             routed: Vec::new(),
-            on_write: None,
             reach: None,
             thread_random: None,
         }
@@ -162,7 +159,9 @@ impl<'a> View<'a> {
     /// which runs in game, after decoration (`TickQueue::in_game`).
     pub fn schedule(&mut self, at: [i32; 3], lava: bool, delay: u64) {
         let near = |x: i32, z: i32| [x - 8, x + 8].iter().all(|&x| [z - 8, z + 8].iter().all(|&z| self.has_block(x, MIN_Y, z)));
-        if self.ticks.game || near(at[0], at[2]) {
+        let queued = self.ticks.game || near(at[0], at[2]);
+        super::trace::line(|| format!("    {} {} {} {} in {delay}", if queued { "queue" } else { "route" }, at[0], at[1], at[2]));
+        if queued {
             self.ticks.add(at, lava, delay);
         } else {
             self.ticks.in_game.push((at, lava, delay));
@@ -199,18 +198,10 @@ impl<'a> View<'a> {
         self.locate(x, y, z).map_or(Block::Air, |(slot, index)| self.read(slot, index))
     }
 
-    /// A feature's write (`setBlock` with flags 3): `set_block_quiet`, then `on_write`.
-    pub fn set_block(&mut self, x: i32, y: i32, z: i32, block: Block) -> bool {
-        let written = self.set_block_quiet(x, y, z, block);
-        if let Some(hook) = self.on_write.filter(|_| written) {
-            hook(self, [x, y, z]);
-        }
-        written
-    }
-
     /// False, writing nothing, outside the world's height and the writable region, and when the
     /// block is already there (`BlockSource::setBlock` 1415f6ae0 reports whether the block changed).
-    pub fn set_block_quiet(&mut self, x: i32, y: i32, z: i32, block: Block) -> bool {
+    /// No neighbour hears of it: docs/research/worldgen-bds-liquids.md, "Feature writes wake nothing".
+    pub fn set_block(&mut self, x: i32, y: i32, z: i32, block: Block) -> bool {
         let Some((slot, index)) = self.locate(x, y, z) else { return false };
         let seen = self.read(slot, index);
         // The liquid layer of a waterlogged plant stays under a waterloggable block.
@@ -228,9 +219,7 @@ impl<'a> View<'a> {
             reach.wrote(slot, index);
         }
         super::trace::line(|| format!("    write {x} {y} {z} {block:?} over {seen:?}"));
-        if let Some(top) = &mut self.tops.get_mut()[slot]
-            && block != Block::Air
-        {
+        if let (Some(top), true) = (&mut self.tops.get_mut()[slot], block != Block::Air) {
             *top = (*top).max(y);
         }
         true

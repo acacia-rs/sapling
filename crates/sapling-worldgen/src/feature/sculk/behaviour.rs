@@ -29,7 +29,7 @@ pub fn substrate_access(view: &View, vein: Block, at: [i32; 3]) -> bool {
 }
 
 fn set(view: &mut View, [x, y, z]: [i32; 3], block: Block) {
-    view.set_block_quiet(x, y, z, block);
+    view.set_block(x, y, z, block);
 }
 
 impl Behaviour {
