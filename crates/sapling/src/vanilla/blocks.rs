@@ -1,4 +1,4 @@
-//! `/setblock` and `/fill`.
+//! `/setblock`, `/fill` and `/testforblock`.
 
 use sapling_api::command::{BlockCoords, States};
 use sapling_api::{Block, BlockPos, Command, CommandEnum, Output, Sender, ShardCtx};
@@ -86,6 +86,36 @@ impl Command for Fill {
             // BDS's line for this has no key in its own strings.
             0 => out.error("No blocks filled"),
             _ => out.translate("commands.fill.success", vec![filled.to_string()], true),
+        }
+    }
+}
+
+#[derive(Command)]
+#[command(crate = "crate", name = "testforblock", description = "Tests whether a certain block is in a specific location", permission = "operator")]
+pub(crate) struct TestForBlock {
+    position: BlockCoords,
+    block: String,
+    states: Option<States>,
+}
+
+impl Command for TestForBlock {
+    /// BDS names the place in each answer, and both blocks where the kind is another
+    /// (research/captures/bds-defaults.txt).
+    // TODO: BDS names a block by its `tile.` key, which for some is not its name (stone is
+    // `tile.stone.stone.name`); here the key is made of the name.
+    fn run(self, ctx: &mut ShardCtx<'_>, sender: &Sender, out: &mut Output) {
+        let pos = self.position.from(origin(ctx, sender));
+        let place = || pos.map(|c| c.to_string()).to_vec();
+        let wanted = block(&self.block, self.states.as_ref());
+        let there = ctx.block(pos).unwrap_or_else(|| Block::new(Block::AIR));
+        let key = |name: &str| format!("%tile.{}.name", name.rsplit(':').next().unwrap_or(name));
+        let has = |state: &str| there.properties.split(',').any(|held| held == state);
+        if there.name != wanted.name {
+            return out.translate("commands.testforblock.failed.tile", [place(), vec![key(&there.name), key(&wanted.name)]].concat(), false);
+        }
+        match self.states.as_ref().is_none_or(|states| states.0.split(',').filter(|state| !state.is_empty()).all(has)) {
+            true => out.translate("commands.testforblock.success", place(), true),
+            false => out.translate("commands.testforblock.failed.data", place(), false),
         }
     }
 }

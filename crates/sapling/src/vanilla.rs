@@ -11,7 +11,7 @@ mod effects;
 mod players;
 mod rules;
 
-use blocks::{Fill, SetBlock};
+use blocks::{Fill, SetBlock, TestForBlock};
 use containers::ReplaceItem;
 use players::{Clear, Damage, DifficultyCommand, GameModeCommand, Give, Kill, Summon, Teleport};
 use rules::GameRule;
@@ -26,7 +26,7 @@ impl ServerBuilder {
     /// `/clear`, `/gamemode`, `/summon`, `/kill`, `/gamerule`, `/time`, `/xp` and `/replaceitem block`. A command
     /// added later under the same name replaces one of these.
     pub fn vanilla_commands(self) -> Self {
-        let blocks = self.command::<SetBlock>().command::<Fill>().command::<ReplaceItem>();
+        let blocks = self.command::<SetBlock>().command::<Fill>().command::<TestForBlock>().command::<ReplaceItem>();
         blocks.command::<Teleport>().command::<Give>().command::<Clear>().command::<GameModeCommand>().command::<Summon>().command::<Kill>().command::<Damage>().command::<DifficultyCommand>().command::<effects::EffectCommand>().command::<GameRule>().command::<clock::Time>().command::<clock::Xp>()
     }
 }

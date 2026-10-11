@@ -21,7 +21,7 @@ it does on BDS and the two captures can be diffed:
    `/time`, `/xp` and `/tp` to a target answer as BDS did (`vanilla/clock.rs`, `bds_command_probe
    clock`: the answers agree line for line; BDS writes its experience attributes in another
    order). A sapling capture that answers `commands.generic.unknown` or `.syntax` where BDS's
-   does not names a command or a form still missing: `testforblock` is one.
+   does not names a command or a form still missing.
 
 ## 2. Survival gaps still open
 
