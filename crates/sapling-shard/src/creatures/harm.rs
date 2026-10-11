@@ -52,7 +52,7 @@ const SUNLIT: [i64; 2] = [23460, 12541];
 /// Whether the sun reaches the cell `at`: it is day, and nothing above holds the light back.
 /// A stone roof and leaves did on BDS, glass did not (research/captures/bds-sun.txt).
 // TODO: rain, which put BDS's zombie out of the sun's reach, is not in the shard yet.
-fn is_sunlit(level: &Level, [x, y, z]: [i32; 3]) -> bool {
+pub(super) fn is_sunlit(level: &Level, [x, y, z]: [i32; 3]) -> bool {
     let time = level.level().time.rem_euclid(DAY);
     let shades = |y: i32| level.registry().get(level.block(x, y, z)).is_some_and(|state| state.is_solid() && !state.name.contains("glass"));
     (time >= SUNLIT[0] || time <= SUNLIT[1]) && (y + 1..).take_while(|y| level.in_height(*y)).all(|y| !shades(y))

@@ -2,7 +2,8 @@
 //! runs from place to place for a while (docs/research/mob-attacks.md, "Strolling", "Fleeing").
 // TODO: how often, how far and how long are fitted by eye to a zombie, a cow and a pig; a mob goes
 // straight there and gives up at an edge or when it is too long on the way; none looks around or
-// follows food.
+// follows food. One the sun burns does not stroll out of the shade it stands in, as BDS's zombie
+// under a roof did not (research/captures/bds-sun.txt), but one in the sun looks for no shade.
 
 use bevy_ecs::prelude::*;
 
@@ -48,7 +49,7 @@ fn is_floor(world: &World, layer: Entity, body: &Body, [x, z]: [f32; 2]) -> bool
 
 /// Before the move of a mob with nothing else to do: it starts a stroll now and then and walks
 /// on one it has, at the speed it `strolls` at; one that `panics` and was hit runs at that.
-pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity, strolls: Option<f32>, panics: Option<f32>) {
+pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity, strolls: Option<f32>, panics: Option<f32>, shuns_sun: bool) {
     let now = world.resource::<Tick>().0;
     let (Some(body), Some((goal, until))) = (world.get::<Body>(entity).copied(), world.get::<Stroll>(entity).map(|stroll| (stroll.0, stroll.1))) else { return };
     let flees = panics.filter(|_| now < until);
@@ -59,7 +60,10 @@ pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity, strolls: O
             return None;
         }
         let to = [body.at[0] + (dice.fraction() * 2.0 - 1.0) * far, body.at[2] + (dice.fraction() * 2.0 - 1.0) * far];
-        is_floor(world, layer, &body, to).then_some((to, now + PATIENCE))
+        let head = |[x, z]: [f32; 2]| [x, body.at[1] + body.size[1], z].map(|c| c.floor() as i32);
+        let into_sun = shuns_sun
+            && world.get::<Layer>(layer).is_some_and(|layer| !super::harm::is_sunlit(&layer.world, head([body.at[0], body.at[2]])) && super::harm::is_sunlit(&layer.world, head(to)));
+        (!into_sun && is_floor(world, layer, &body, to)).then_some((to, now + PATIENCE))
     });
     let ahead = goal.map(|(to, _)| {
         let (dx, dz) = (to[0] - body.at[0], to[1] - body.at[2]);
