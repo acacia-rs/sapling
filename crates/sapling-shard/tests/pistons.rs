@@ -194,3 +194,21 @@ fn a_piston_pushes_what_stands_before_its_arm_and_its_blocks_as_on_bds() {
     assert_eq!([steps(0), steps(1), steps(2)], [vec![1.5, 1.75, 2.25], vec![2.5, 2.75, 3.25], vec![1.5, 1.75]]);
     assert_eq!(steps(3).last(), Some(&67.0), "the one on a piston that pushes up stands on its arm: {:?}", steps(3));
 }
+
+#[test]
+fn a_piston_pushes_a_player_out_of_its_arm_s_way_and_corrects_its_client() {
+    // research/captures/bds-pushed.txt: the player's box ends against the arm's face, and its
+    // client is told by a correction.
+    let mut h = ready();
+    put(&mut h, &[([-1, 65, 0], "piston", EAST)]);
+    watch(&mut h, 2);
+    put(&mut h, &[([-1, 66, 0], "redstone_block", "")]);
+    let sent: Vec<RawPacket> = (0..10).flat_map(|_| h.tick_all().to(1).to_vec()).collect();
+    let told: Vec<f32> = all::<acacia_proto::packets::CorrectPlayerMovePrediction>(&sent).iter().map(|told| told.position.x).collect();
+    let at = std::sync::Arc::new(std::sync::Mutex::new(None));
+    let seen = at.clone();
+    h.remote.run(move |ctx| *seen.lock().unwrap() = ctx.position(sapling_api::PlayerId(1)).map(|position| position.feet));
+    h.tick_all();
+    let feet = at.lock().unwrap().expect("Alex");
+    assert!((feet[0] - 1.3).abs() < 1e-4 && feet[1] == 65.0 && told.last().is_some_and(|x| (x - 1.3).abs() < 1e-4), "{feet:?} {told:?}");
+}

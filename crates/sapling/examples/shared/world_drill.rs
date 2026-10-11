@@ -156,3 +156,24 @@ pub fn kinds2() -> Vec<String> {
     lines.extend(["gamemode creative @s", "kill @e[type=!player]", ""].map(String::from));
     lines
 }
+
+pub const PUSHED_SHOWN: &[&str] = &["MovePlayer", "SetEntityMotion", "CorrectPlayerMovePrediction", "MoveEntityDelta", "MoveEntityAbsolute", "UpdateBlock", "BlockEvent"];
+
+/// The actor in survival pushed by pistons: one beside it that pushes east into it, one under
+/// it that lifts it, one that pushes it against a wall, and a sticky one drawn back from it.
+pub fn pushed() -> Vec<String> {
+    let mut lines: Vec<String> = ["kill @e[type=!player]", "fill ~-4 ~-1 ~-4 ~8 ~-1 ~30 stone", "fill ~-4 ~ ~-4 ~8 ~6 ~30 air", "gamemode survival @s", "tp @s ~ ~ ~4", ""].map(String::from).into();
+    let east = "piston [\"facing_direction\"=4]";
+    let rows: [&[&str]; 4] = [
+        &["setblock ~-1 ~ ~ {east}", "", "setblock ~-2 ~ ~ redstone_block", "", "", "setblock ~-2 ~ ~ air", "", ""],
+        &["setblock ~ ~-1 ~ piston [\"facing_direction\"=1]", "", "setblock ~ ~-2 ~ redstone_block", "", "", "setblock ~ ~-2 ~ air", "", ""],
+        &["setblock ~1 ~ ~ obsidian", "setblock ~1 ~1 ~ obsidian", "setblock ~-1 ~ ~ {east}", "", "setblock ~-2 ~ ~ redstone_block", "", "", "setblock ~-2 ~ ~ air", "", ""],
+        &["setblock ~-1 ~ ~ sticky_{east}", "", "setblock ~-2 ~ ~ redstone_block", "", "", "setblock ~-2 ~ ~ air", "", ""],
+    ];
+    for row in rows {
+        lines.push("tp @s ~ ~ ~5".into());
+        lines.extend(row.iter().map(|line| line.replace("{east}", east)));
+    }
+    lines.extend(["gamemode creative @s", ""].map(String::from));
+    lines
+}

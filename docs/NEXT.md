@@ -54,7 +54,7 @@ Each needs its rule looked up first (`bdsre` for BDS, the Java jar for data), th
    compare, subtract and read containers (`bds_command_probe comparators`). Observers
    pulse (`bds_command_probe observers`). Pistons push, break and
    draw back (`blocks/pistons.rs`, `bds_command_probe pistons`). Slime and honey take what they touch
-   (`blocks/pistons/plan.rs`, `bds_command_probe slime`). What stands in a piston's way is pushed before it (`blocks/pistons/shove.rs`, `shove`). Left: the circuits of an arena's
+   (`blocks/pistons/plan.rs`, `bds_command_probe slime`). What stands in a piston's way is pushed before it, a player too (`blocks/pistons/shove.rs`, `shove`, `pushed`). Left: the circuits of an arena's
    template, and what a comparator reads of a jukebox, lectern or item frame. Dust does not lag a lever or
    button worked by hand (`byhand`; docs/research/redstone.md, "Observers").
 

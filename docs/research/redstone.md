@@ -426,3 +426,11 @@ pushing east, powered by a block of redstone above.
 
 Sapling (`blocks/pistons/shove.rs`): every body in the way of the arm or of a pushed block is put
 before it in the same two ticks, stopped by the blocks behind it. Players are not pushed.
+
+A player is pushed as an armour stand is (`bds_command_probe pushed`,
+research/captures/bds-pushed.txt): an arm going east into its cell left its box against the
+arm's face (feet 0.3 past it), an arm under it lifted it a block, and its client was told each
+time by `CorrectPlayerMovePrediction` (its eyes' place, a delta of -0.0784 down, on the ground).
+When the arm under it drew back the player stood a block lower than it began, in the piston's
+row, so the two cases after that (against a wall, a sticky piston) showed nothing. Sapling
+pushes players so (`pistons/shove.rs`, `movement::push`).

@@ -124,6 +124,19 @@ pub(crate) fn teleport(world: &mut World, entity: Entity, feet: [f32; 3]) {
     out.push(&move_player(id.0, &position, Some(MovePlayerTeleportCause::Command), motion.input_tick));
 }
 
+/// Puts a player's feet at `feet` where something pushed it, telling its client as BDS told one
+/// a piston pushed (research/captures/bds-pushed.txt): its prediction is corrected.
+pub(crate) fn push(world: &mut World, entity: Entity, feet: [f32; 3]) {
+    use acacia_proto::packets::{CorrectPlayerMovePrediction, CorrectPlayerMovePredictionPredictionType as Kind};
+    let tick = world.resource::<Tick>().0;
+    let Ok((mut position, mut motion, mut out)) = world.query::<(&mut Position, &mut Motion, &mut Outgoing)>().get_mut(world, entity) else { return };
+    position.feet = feet;
+    motion.unconfirmed_teleport = Some(tick + SETBACK_TICKS);
+    // The fall a body standing still has in a tick, as BDS sent it.
+    let delta = acacia_proto::types::Vec3f { x: 0.0, y: -0.0784, z: 0.0 };
+    out.push(&CorrectPlayerMovePrediction { prediction_type: Kind::Player, position: eyes(&position), delta, rotation: acacia_proto::types::Vec2f { x: 0.0, z: 0.0 }, angular_velocity: None, on_ground: true, tick: motion.input_tick });
+}
+
 /// [`teleport`] onto ground the client may not have yet (another world's spawn): until it
 /// stands there, a client that fell meanwhile is put back, as BDS's own simulation would
 /// correct it.
