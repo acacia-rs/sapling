@@ -150,9 +150,7 @@ fn tick(view: &mut View, p: [i32; 3], lava: bool) {
             d = new;
         }
     }
-    if d < 0 {
-        return;
-    }
+    // A cell that just dried (d = -1) still flows down, as depth 7: BDS tests for it only before the sides.
     let below = add(p, [0, -1, 0]);
     if below[1] >= MIN_Y && view.has_block(below[0], below[1], below[2]) {
         let l = liquid(view, below);
@@ -165,7 +163,7 @@ fn tick(view: &mut View, p: [i32; 3], lava: bool) {
             return;
         }
     }
-    if d != 0 && !blocking(view, below, lava) {
+    if d < 0 || d != 0 && !blocking(view, below, lava) {
         return;
     }
     let mut costs = [NO_DROP; 4];
@@ -224,9 +222,7 @@ fn spread_to(view: &mut View, n: [i32; 3], depth: i32, lava: bool) {
         return;
     }
     set(view, n, Block::liquid(lava, depth as u8));
-    if lava {
-        solidify(view, n);
-    }
+    // Lava set beside water stays lava until a neighbour's update reaches it (`update_neighbors`).
     update_neighbors(view, n);
     view.schedule(n, lava, delay(lava));
 }

@@ -13,3 +13,4 @@ stony|20261003-biomes|blocks_match_bds_biomes|stony peaks|-230 258 -227 261|g1
 jagged|20261003-biomes|blocks_match_bds_biomes|jagged peaks|-406 -382 -403 -379|g1
 plateau|20261003-trees|blocks_match_bds_trees|savanna plateau|562 -390 565 -387|g1
 gravelly|20261003-biomes|blocks_match_bds_biomes|windswept gravelly hills|-126 -350 -123 -347|g1
+stony2|20261003-biomes|blocks_match_bds_biomes|stony peaks|-230 258 -227 261

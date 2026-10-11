@@ -167,6 +167,18 @@ impl Block {
     pub fn is_solid_blocking(self) -> bool {
         self.support_masks()[BLOCKING] != 0
     }
+
+    /// `Block` +0x71: solid-blocking and opaque. Read for all types on 2026-10-11 (worldgen-bds-order.md, "replay5"):
+    /// the solid-blocking ones without it are these; honey, jigsaw and structure blocks have it alone.
+    pub fn is_opaque_solid(self) -> bool {
+        let name = self.name();
+        let clear = self.is_leaves()
+            || name.ends_with("glass")
+            || name.contains("copper_grate")
+            || name.starts_with("light_block")
+            || matches!(name, "ice" | "frosted_ice" | "mangrove_roots" | "farmland" | "grass_path" | "decorated_pot" | "chorus_flower" | "chorus_plant" | "piston" | "sticky_piston" | "structure_void" | "invisible_bedrock");
+        self.is_solid_blocking() && !clear || matches!(name, "honey_block" | "jigsaw" | "structure_block")
+    }
 }
 
 #[cfg(test)]

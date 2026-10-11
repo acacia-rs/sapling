@@ -64,6 +64,22 @@ Companion to [worldgen-bds.md](worldgen-bds.md). The flow rule itself (`LiquidBl
   code calls `updateNeighborsAt` where it wants it: `_tick` after a depth change (148b5d8b4) and `_trySpreadTo`
   when instaticking (148b5e805). A cell drying to air, lava hardening and the stone under falling lava do not:
   lava that lands on water makes one stone and stops, a cut-off stream keeps its last cells.
+- **Lava hardens only when a neighbour's update reaches it** (2026-10-11, worldgen/replay5; stony peaks, one-worker
+  run logged with `_tick`, `_trySpreadTo`, `solidify` and `addToTickingQueue` breakpoints armed per decoration).
+  `_trySpreadTo` (148b5e580) sets the liquid, updates the six neighbours and queues the cell: it never calls
+  `solidify` (148b60f90) for the cell it set, and no `onPlace` does while the chunk generates. `solidify` runs
+  from `neighborChanged` of a lava cell (148b5cf60: five calls, one per side and above), so lava set beside
+  water stays lava for a generation, flows on, and turns to cobblestone when its own spread updates it from
+  below. Nothing is told of the hardening.
+- **A cell that dries still flows down once.** `_tick` sets a cell with no feed to air and carries on with depth
+  -1: the test `depth < 0` sits only before the sideways spread (148b5dc03), so the downward branch calls
+  `_trySpreadTo(below, -1 + 8)`. A cut-off column so drains one cell per tick as depth 7 until something blocks
+  it, and dried lava over water still leaves its stone. Logged at -3664,75..71,4189: lava falls into y 74 beside
+  water (generation 32), spreads to y 73 and is turned to cobblestone by that spread's update (33); y 73, fed by
+  nothing, dries and sets depth-7 lava at y 72 (34), which dries and makes stone of the water at y 71 (35). The
+  column above ticked while y 74 was still lava and is never woken again: it stands on the cobblestone without
+  spreading. sapling hardened lava as it was set and stopped a dried cell, which sent this lava down a
+  staircase (31 cells).
 - **Lava** asks the block's `isLavaBlocking` (vtable +0xc8) where water tests faces. The base (141a28450) is false
   for `mThickness > 0`, else the material blocks motion or is solid; azalea, bamboo, rails, dripleaf, ladders,
   multiface blocks (glow lichen, sculk vein), snow layers, lily pads, candles, campfires and scaffolding override it
