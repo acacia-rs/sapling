@@ -74,8 +74,7 @@ Each needs its rule looked up first (`bdsre` for BDS, the Java jar for data), th
   for each (coal 0 to 2, diamond 3 to 7, redstone 1 to 4, lapis 2 to 5, quartz 3 and 4, nether gold 0 and 1).
 - 75 blocks put down by hand from one stance took the same state on BDS and here in 65
   (`bds_command_probe placing`, research/captures/bds-placing.txt), after dispensers, pistons,
-  observers, gates, anvils, bells, grindstones, amethyst, frames and rails were set right. Left: a
-  sea pickle out of water (dead on BDS), scaffolding's `stability_check`, and a trapdoor, whose row was spoilt. A second run of 51 more (`placing2`) agreed in 31
+  observers, gates, anvils, bells, grindstones, amethyst, frames and rails were set right. Left: scaffolding's `stability_check`, and a trapdoor, whose row was spoilt. A second run of 51 more (`placing2`) agreed in 31
   and set right a crafter, a decorated pot, a chiseled bookshelf, a calibrated sculk sensor, what
   clings (lichen, sculk vein, resin) and what hangs (moss, roots, a spore blossom, a vine, a
   hanging sign); a pitcher plant, which BDS stood two high on stone, is not placed here, and a

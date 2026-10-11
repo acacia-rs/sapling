@@ -50,6 +50,15 @@ fn is_wet(level: &World, [x, y, z]: BlockPos) -> bool {
     level.in_height(y) && [level.block(x, y, z), level.liquid(x, y, z)].iter().any(|id| registry.get(*id).is_some_and(|state| state.is_liquid()))
 }
 
+/// The state a block put at `pos` takes from what is there: a sea pickle out of water is dead
+/// (research/captures/bds-placing.txt).
+pub(super) fn settled(level: &World, pos: BlockPos, id: u32) -> u32 {
+    let registry = level.registry();
+    let is_pickle = registry.get(id).is_some_and(|state| state.name == "minecraft:sea_pickle");
+    let dead = if is_water(level, pos) { "0" } else { "1" };
+    Some(id).filter(|_| is_pickle).and_then(|id| super::with_property(registry, id, "dead_bit", dead)).unwrap_or(id)
+}
+
 fn is_water(level: &World, [x, y, z]: BlockPos) -> bool {
     let registry = level.registry();
     [level.block(x, y, z), level.liquid(x, y, z)].iter().any(|id| registry.get(*id).is_some_and(|state| state.is_water() || state.name == "minecraft:frosted_ice"))
