@@ -2,7 +2,8 @@
 //! a click on a bed at night lies the player down in it and makes it its spawn; once everyone
 //! in the world has slept for 100 ticks the night is skipped and they all wake.
 // TODO: no monsters keep anyone awake (mobs are statues), no weather, no stand-up search
-// (a sleeper wakes where it lay down); a bed's spawn is forgotten when its player leaves.
+// (a sleeper wakes where it lay down); only a bed in the shard's first world is kept with its
+// player (inventory/store.rs).
 // A sleeper who leaves the game leaves its bed's `occupied_bit`, which the next click clears.
 
 use std::collections::HashMap;
@@ -57,6 +58,17 @@ pub(crate) struct BedSpawn {
     head: BlockPos,
     spot: BlockPos,
     layer: Entity,
+}
+
+impl BedSpawn {
+    /// The bed's head and the cell beside it, if they are in `layer`: what storage keeps.
+    pub(crate) fn kept(&self, layer: Entity) -> Option<[BlockPos; 2]> {
+        (self.layer == layer).then_some([self.head, self.spot])
+    }
+
+    pub(crate) fn restored([head, spot]: [BlockPos; 2], layer: Entity) -> Self {
+        Self { head, spot, layer }
+    }
 }
 
 /// Where a dead player rises by its bed (the feet, mid-cell): `None` with no bed of its own in
@@ -146,6 +158,9 @@ fn set_spawn(world: &mut World, player: Entity, head: BlockPos) {
         out.push(&packet);
     }
     world.entity_mut(player).insert(BedSpawn { head, spot: feet, layer });
+    if let Some(mut inventory) = world.get_mut::<crate::inventory::Inventory>(player) {
+        inventory.unsaved = true;
+    }
     if is_new {
         tell(world, player, "respawnSet");
     }

@@ -130,6 +130,6 @@ Its jump over the step of `chase` is BDS's to the sixth decimal.
 Different: it walks straight at the player (no path around anything), keeps prey it has seen
 whatever comes between, sends a mob's speed as it is before the drag, turns 60
 degrees a tick with its head, stops when its box touches the
-player's since nothing pushes anything, does not let go as it is killed, shows no mob holding
+player's since nothing pushes anything, shows no mob holding
 its weapon, lets a spider hunt by day, hunts nobody on peaceful
 (where BDS has no monsters), and tells every viewer every move.

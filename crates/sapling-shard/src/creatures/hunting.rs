@@ -68,6 +68,19 @@ fn in_sight(world: &World, layer: Entity, body: &Body, feet: [f32; 3]) -> bool {
     (0..=glances as usize).all(|glance| !hides(std::array::from_fn(|axis| (from[axis] + (to[axis] - from[axis]) * glance as f32 / glances).floor() as i32)))
 }
 
+/// The hunter `id` has the entity `target` as its prey, or none for 0.
+fn targets(id: u64, target: i64) -> bytes::Bytes {
+    let item = MetadataDictionaryItem { key: Key::TargetEid, r#type: Type::Long, legacy_type: 7, value: Value::Default(Plain::Long(target)) };
+    sapling_net::encode(&SetEntityData { runtime_entity_id: id, metadata: vec![item], properties: EntityProperties { ints: Vec::new(), floats: Vec::new() }, tick: 0 })
+}
+
+/// A hunter that died lets its prey go, which its viewers are told (bds-bite.txt).
+pub(super) fn let_go(world: &mut World, entity: Entity, layer: Entity, id: u64, body: &Body) {
+    if world.get_mut::<Hunter>(entity).is_some_and(|mut hunter| hunter.prey.take().is_some()) {
+        entities::tell_viewers(world, entity, layer, body.at.map(|c| c.floor() as i32), vec![targets(id, 0)]);
+    }
+}
+
 /// Keeps or picks the hunter's prey and tells its viewers of a change; where the prey is.
 fn pick(world: &mut World, entity: Entity, layer: Entity, id: u64, kind: &str, body: &Body) -> Option<[f32; 3]> {
     let now = world.resource::<Tick>().0;
@@ -83,10 +96,8 @@ fn pick(world: &mut World, entity: Entity, layer: Entity, id: u64, kind: &str, b
     if prey != had {
         world.get_mut::<Hunter>(entity)?.prey = prey;
         let target = prey.and_then(|prey| world.get::<NetId>(prey)).map_or(0, |id| id.0 as i64);
-        let item = MetadataDictionaryItem { key: Key::TargetEid, r#type: Type::Long, legacy_type: 7, value: Value::Default(Plain::Long(target)) };
-        let told = SetEntityData { runtime_entity_id: id, metadata: vec![item], properties: EntityProperties { ints: Vec::new(), floats: Vec::new() }, tick: 0 };
         let cell = body.at.map(|c| c.floor() as i32);
-        entities::tell_viewers(world, entity, layer, cell, vec![sapling_net::encode(&told)]);
+        entities::tell_viewers(world, entity, layer, cell, vec![targets(id, target)]);
         if prey.is_some() {
             late_sounds::play_later(world, 1, layer, cell, sound("mob.warning", id, kind, body, HEAD));
         }

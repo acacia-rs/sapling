@@ -191,7 +191,7 @@ fn a_players_items_wait_in_storage_for_the_next_visit() {
     h.shard.tick();
     h.shard.save_worlds();
     let kept = storage.load_player(&uuid.lock().unwrap()).unwrap().unwrap();
-    assert_eq!(kept.vitals.map(|vitals| vitals[0]), Some(14.0));
+    assert_eq!((kept.vitals.map(|vitals| vitals[0]), kept.bed), (Some(14.0), None));
     assert_eq!((kept.main[7].as_ref().map(|stack| (stack.name.as_str(), stack.count)), kept.offhand.map(|stack| stack.name)), (Some(("minecraft:diamond", 6)), Some("minecraft:shield".into())));
 }
 

@@ -1,7 +1,8 @@
 //! What sapling keeps of a player between visits, under its own key. The fields are named and
 //! shaped as in the game's player record (`Inventory` with a `Slot` in each stack, `Armor`,
 //! `Offhand`, `SelectedInventorySlot`, `EnderChestInventory`, `PlayerLevel`,
-//! `PlayerLevelProgress`, `Attributes` with a `Name` and a `Current` each), but the record is not the game's `player_server_<id>`: one of those
+//! `PlayerLevelProgress`, `Attributes` with a `Name` and a `Current` each, `SpawnBlockPositionX` to `Z`
+//! and `SpawnX` to `Z`), but the record is not the game's `player_server_<id>`: one of those
 //! holding only items is not a player the game can load (docs/DESIGN.md "Inventories").
 
 use acacia_proto::nbt::{self, List, LittleEndian, Nbt, Value};
@@ -30,7 +31,12 @@ pub struct PlayerData {
     pub progress: f32,
     /// Health, hunger, saturation and exhaustion; `None` in a record older than they are kept.
     pub vitals: Option<[f32; 4]>,
+    /// The head of the bed it rises by and the cell it rises in, in the first world.
+    pub bed: Option<[[i32; 3]; 2]>,
 }
+
+const BED: [&str; 3] = ["SpawnBlockPositionX", "SpawnBlockPositionY", "SpawnBlockPositionZ"];
+const BEDSIDE: [&str; 3] = ["SpawnX", "SpawnY", "SpawnZ"];
 
 /// The attributes `PlayerData::vitals` are kept as, in its order.
 const VITALS: [&str; 4] = ["minecraft:health", "minecraft:player.hunger", "minecraft:player.saturation", "minecraft:player.exhaustion"];
@@ -76,7 +82,10 @@ impl PlayerData {
         let attribute = |name: &str| list("Attributes").iter().find(|kept| kept.get("Name") == Some(&Value::String(name.into()))).and_then(|kept| kept.get("Current"));
         let current = |name: &str| if let Some(Value::Float(current)) = attribute(name) { Some(*current) } else { None };
         let vitals = if let [Some(health), Some(hunger), Some(saturation), Some(exhaustion)] = VITALS.map(current) { Some([health, hunger, saturation, exhaustion]) } else { None };
+        let int = |key: &str| if let Some(Value::Int(value)) = player.get(key) { Some(*value) } else { None };
+        let cell = |keys: [&str; 3]| if let [Some(x), Some(y), Some(z)] = keys.map(int) { Some([x, y, z]) } else { None };
         Ok(Self {
+            bed: cell(BED).zip(cell(BEDSIDE)).map(|(head, spot)| [head, spot]),
             main: read_slotted(list("Inventory"))?,
             armor: list("Armor").iter().map(ItemStack::parse).collect(),
             offhand: list("Offhand").first().and_then(ItemStack::parse),
@@ -92,7 +101,8 @@ impl PlayerData {
     pub fn encode(&self, registry: &BlockRegistry) -> Vec<u8> {
         let attribute = |(name, current): (&str, f32)| Value::Compound(vec![("Name".into(), Value::String(name.into())), ("Current".into(), Value::Float(current))]);
         let attributes = self.vitals.iter().flat_map(|vitals| VITALS.into_iter().zip(*vitals)).map(attribute).collect();
-        let fields = vec![
+        let bed = self.bed.iter().flat_map(|[head, spot]| BED.into_iter().zip(*head).chain(BEDSIDE.into_iter().zip(*spot))).map(|(key, value)| (key.into(), Value::Int(value)));
+        let mut fields = vec![
             ("Attributes".into(), Value::List(List { tag: COMPOUND, items: attributes })),
             ("Inventory".into(), slotted(&self.main, registry)),
             ("Armor".into(), stacks(&self.armor, registry)),
@@ -102,6 +112,7 @@ impl PlayerData {
             ("PlayerLevel".into(), Value::Int(self.level)),
             ("PlayerLevelProgress".into(), Value::Float(self.progress)),
         ];
+        fields.extend(bed);
         let mut out = BytesMut::new();
         nbt::write::<LittleEndian>(&mut out, &Nbt { name: String::new(), value: Value::Compound(fields) });
         out.to_vec()
@@ -122,11 +133,11 @@ mod tests {
         (main[0], main[8], main[35]) = (stack("minecraft:stone", 64, Some(stone)), Some(sword), stack("minecraft:diamond", 5, None));
         let ender = vec![None, None, stack("minecraft:emerald", 12, None)];
         let armor = vec![stack("minecraft:iron_helmet", 1, None), None, None, None];
-        let player = PlayerData { main, armor, offhand: stack("minecraft:shield", 1, None), selected: 8, ender, level: 17, progress: 0.25, vitals: Some([7.5, 18.0, 0.0, 2.25]) };
+        let player = PlayerData { main, armor, offhand: stack("minecraft:shield", 1, None), selected: 8, ender, level: 17, progress: 0.25, vitals: Some([7.5, 18.0, 0.0, 2.25]), bed: Some([[5, 64, -3], [4, 64, -3]]) };
         assert_eq!(PlayerData::decode(&player.encode(&registry)).unwrap(), player);
 
         let empty = PlayerData::decode(&PlayerData::default().encode(&registry)).unwrap();
-        assert_eq!((empty.main.len(), empty.ender.len(), empty.offhand, empty.selected, empty.level, empty.vitals), (0, 0, None, 0, 0, None));
+        assert_eq!((empty.main.len(), empty.ender.len(), empty.offhand, empty.selected, empty.level, empty.vitals, empty.bed), (0, 0, None, 0, 0, None, None));
         assert!(PlayerData::decode(&[1, 2, 3]).is_err());
     }
 }

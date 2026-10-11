@@ -176,6 +176,9 @@ fn kill(world: &mut World, id: EntityId) -> bool {
 /// loot, cooked if it was on fire.
 fn die(world: &mut World, entity: Entity, layer: Entity, kind: &str, body: &Body) {
     let now = world.resource::<Tick>().0;
+    if let Some(id) = world.get::<NetId>(entity).map(|id| id.0) {
+        hunting::let_go(world, entity, layer, id, body);
+    }
     world.entity_mut(entity).insert(Dying(now)).remove::<entities::Stored>();
     let on_fire = world.get_mut::<Health>(entity).is_some_and(|mut health| {
         health.end();

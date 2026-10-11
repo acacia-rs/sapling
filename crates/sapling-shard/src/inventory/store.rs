@@ -1,4 +1,4 @@
-//! A player's items, health and hunger between visits: asked of the first world's storage at login, handed back
+//! A player's items, health, hunger and bed between visits: asked of the first world's storage at login, handed back
 //! when the player leaves, every few seconds while they changed, and when the shard stops.
 
 use bevy_ecs::prelude::*;
@@ -9,6 +9,7 @@ use crate::chunks::UNLOAD_INTERVAL;
 use crate::components::{DefaultLayer, Identity, Layer, NetId, Outgoing, Stage, Tick};
 use crate::experience::{self, Experience};
 use crate::handoff::{Peers, ShardMsg};
+use crate::sleep::BedSpawn;
 use crate::vitals::Vitals;
 
 fn fill(inventory: &mut Inventory, data: PlayerData) {
@@ -35,18 +36,21 @@ fn kept(inventory: &Inventory) -> PlayerData {
     let stacks = |slots: Vec<Option<Held>>| slots.into_iter().map(|slot| slot.map(|held| held.stack)).collect();
     let (level, progress) = (inventory.experience.level, inventory.experience.progress);
     let (main, armor, ender, offhand) = (stacks(inventory.main), stacks(inventory.armor), stacks(inventory.ender), inventory.offhand.map(|held| held.stack));
-    PlayerData { main, armor, offhand, selected: inventory.selected, ender, level, progress, vitals: None }
+    PlayerData { main, armor, offhand, selected: inventory.selected, ender, level, progress, vitals: None, bed: None }
 }
 
 /// Gives the players storage answered for their items.
-pub(crate) fn load(mut layers: Query<&mut Layer>, mut players: Query<(&Identity, &mut Inventory, Option<&mut Vitals>)>) {
-    for mut layer in &mut layers {
+pub(crate) fn load(mut commands: Commands, mut layers: Query<(Entity, &mut Layer)>, mut players: Query<(Entity, &Identity, &mut Inventory, Option<&mut Vitals>)>) {
+    for (here, mut layer) in &mut layers {
         for (id, answer) in layer.world.take_players() {
-            let Some((_, mut inventory, vitals)) = players.iter_mut().find(|(identity, inventory, _)| !inventory.loaded && identity.0.uuid.to_string() == id) else { continue };
+            let Some((player, _, mut inventory, vitals)) = players.iter_mut().find(|(_, identity, inventory, _)| !inventory.loaded && identity.0.uuid.to_string() == id) else { continue };
             (inventory.loaded, inventory.keep) = (true, answer != PlayerLoad::Unreadable);
             if let PlayerLoad::Stored(data) = answer {
                 if let Some((mut vitals, kept)) = vitals.zip(data.vitals) {
                     vitals.restore(kept);
+                }
+                if let Some(bed) = data.bed {
+                    commands.entity(player).insert(BedSpawn::restored(bed, here));
                 }
                 fill(&mut inventory, data);
             }
@@ -81,6 +85,8 @@ pub(crate) fn save(world: &mut World, player: Entity) {
     let Some(mut inventory) = world.get_mut::<Inventory>(player).filter(|inventory| inventory.keep && (inventory.unsaved || stale)) else { return };
     inventory.unsaved = false;
     let data = PlayerData { vitals: vitals.map(|vitals| vitals.kept()), ..kept(&inventory) };
+    let first = world.resource::<DefaultLayer>().0;
+    let data = PlayerData { bed: world.get::<BedSpawn>(player).and_then(|bed| bed.kept(first)), ..data };
     if let Some(mut vitals) = world.get_mut::<Vitals>(player) {
         vitals.mark_saved();
     }
