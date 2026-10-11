@@ -45,6 +45,8 @@ pub struct Canvas<'a> {
     /// The pieces being placed are post-processed in this chunk (not placed whole from their start's,
     /// as shipwreck.rs does): what lies past the 3x3 chunks around it is absent.
     pub limit_view: bool,
+    /// A replayed run: a piece its start chunk places whole writes into the 3x3 chunks at once.
+    pub whole: bool,
     /// Light heightmap per column, as `LevelChunk` +0xb80 keeps it.
     heights: RefCell<HashMap<(i32, i32), i32>>,
     /// Writes outside the chunk kept (and read back) while a piece placed whole is being drawn.
@@ -75,6 +77,7 @@ impl<'a> Canvas<'a> {
             placed: None,
             read_placed: false,
             limit_view: false,
+            whole: false,
             heights: RefCell::new(HashMap::new()),
             spill: None,
             touched: (i32::MAX, i32::MIN),
@@ -129,7 +132,11 @@ impl<'a> Canvas<'a> {
     /// Whether the post-process's `BlockSource` holds the column's chunk: its view is the 3x3
     /// chunks around the one processed, and a piece reaches further.
     fn in_view(&self, x: i32, z: i32) -> bool {
-        !self.limit_view || ((x >> 4) - self.chunk.0).abs() <= 1 && ((z >> 4) - self.chunk.1).abs() <= 1
+        !self.limit_view || self.around(x, z)
+    }
+
+    fn around(&self, x: i32, z: i32) -> bool {
+        ((x >> 4) - self.chunk.0).abs() <= 1 && ((z >> 4) - self.chunk.1).abs() <= 1
     }
 
     /// Any block: the chunk's own, a neighbour's, air outside the world's heights and the view.
@@ -165,6 +172,12 @@ impl<'a> Canvas<'a> {
                 && counts_for_height(block)
             {
                 *h = (*h).max(y + 1);
+            }
+        } else if self.whole {
+            if (MIN_Y..=TOP).contains(&y) && self.around(x, z) {
+                self.unclipped.push(([x, y, z], block, Block::Air));
+                self.written.insert((x, y, z), block);
+                super::trace::write([x, y, z], block);
             }
         } else if let Some((area, cells)) = &mut self.spill
             && area.contains(x, y, z)

@@ -36,9 +36,9 @@ impl Pieced {
         Self { shape, spilled: Vec::new(), unclipped: Vec::new(), spawners: Default::default(), touched: None }
     }
 
-    /// A chunk as a replayed run left it: its neighbours' mineshaft floors have landed.
-    fn replayed(shape: ChunkShape, touched: Option<(i32, i32)>, spilled: Vec<Spill>) -> Self {
-        Self { touched, spilled, ..Self::bare(Arc::new(shape)) }
+    /// A chunk as a replayed run left it: its neighbours' writes into it have landed.
+    fn replayed(shape: Arc<ChunkShape>, touched: Option<(i32, i32)>) -> Self {
+        Self { touched, ..Self::bare(shape) }
     }
 }
 

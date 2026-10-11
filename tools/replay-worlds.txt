@@ -1,0 +1,16 @@
+c-vi|20261003-structures|blocks_match_bds_structures|village|-66 4 -59 11
+c-is|20261003-structures|blocks_match_bds_structures|igloo, snowy slopes|40 -29 44 -25
+c-ig|20261003-structures|blocks_match_bds_structures|igloo, snowy plains|-58 -179 -54 -175
+c-jt|20261003-structures|blocks_match_bds_structures|jungle temple|79 4 83 8
+c-dp|20261003-structures|blocks_match_bds_structures|desert pyramid|-385 -222 -381 -218
+c-hu|20261003-structures|blocks_match_bds_structures|swamp hut|238 -116 242 -112
+c-sh|20261003-structures|blocks_match_bds_structures|shipwreck|-9 -26 -5 -22
+c-mo|20261003-structures|blocks_match_bds_structures|monument|-27 -26 -19 -18
+c-rp|20261003-structures|blocks_match_bds_structures|ruined portal|9 16 13 20
+c-tc|20261003-structures|blocks_match_bds_structures|trial chambers|2 14 12 24
+c-tr|20261003-structures|blocks_match_bds_structures|trail ruins|-58 20 -52 26
+c-ac|20261003-structures|blocks_match_bds_structures|ancient city|-74 75 -66 83
+c-po|20261003-structures|blocks_match_bds_structures|pillager outpost|115 -73 121 -67
+c-st|20261003-structures|blocks_match_bds_structures|stronghold|-93 -126 -85 -118
+c-ma|20261003-structures|blocks_match_bds_structures|mansion|-516 992 -508 1000
+c-or|20261003-structures|blocks_match_bds_structures|ocean ruins|18 -40 22 -36

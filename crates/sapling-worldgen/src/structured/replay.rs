@@ -45,7 +45,7 @@ pub struct Replay {
     done: OnceLock<Done>,
 }
 
-type Shapes = HashMap<(i32, i32), ChunkShape>;
+type Shapes = HashMap<(i32, i32), Arc<ChunkShape>>;
 
 impl OverworldGenerator {
     /// Runs the structure stage as one BDS run did; a chunk's second `Post` is dropped. Without
@@ -76,7 +76,7 @@ impl OverworldGenerator {
             for _ in 0..threads {
                 scope.spawn(|| {
                     while let Some(&(x, z)) = chunks.get(next.fetch_add(1, Ordering::Relaxed)) {
-                        let shape = (*self.carved(x, z)).clone();
+                        let shape = Arc::new((*self.carved(x, z)).clone());
                         found.lock().unwrap().insert((x, z), shape);
                     }
                 });
@@ -95,12 +95,8 @@ impl OverworldGenerator {
         let mut spawners = Spawners::new();
         let mut touched: HashMap<(i32, i32), (i32, i32)> = HashMap::new();
         let mut writes = Vec::new();
-        // Pieces' features land after every chunk's pieces, as without a replay (structured.rs).
-        let mut spilled = HashMap::new();
         let mut starts = StartMap::default();
         let logged_loads = steps.iter().any(|step| matches!(step, StructureStep::Load(_)));
-        // TODO: an experiment's switch; settle and drop (villages, strongholds, mansions, cities read the state).
-        let live_kinds = std::env::var_os("SAPLING_REPLAY_LIVE_KINDS").is_some();
         let mut rank = 0;
         for step in steps {
             let chunk = match *step {
@@ -110,25 +106,24 @@ impl OverworldGenerator {
                 }
                 StructureStep::Post(chunk) => chunk,
             };
-            let mut shape = state.borrow_mut().remove(&chunk).expect("a chunk posted once");
+            let mut shape = Arc::unwrap_or_clone(state.borrow_mut().remove(&chunk).expect("a chunk posted once"));
             let shaft_order = logged_loads.then(|| starts.order());
             let (placed, traced) = {
                 let block = |x: i32, y: i32, z: i32| state.borrow().get(&(x >> 4, z >> 4)).map_or(Block::Air, |s| s.block((x & 15) as usize, y, (z & 15) as usize));
                 let placed_spawners = || spawners.clone();
                 let tops = || self.generated_tops(chunk.0, chunk.1);
-                // Only mineshafts read the run's state: the other kinds' pieces are placed per chunk from the
-                // start's generator over carved terrain (structure/shipwreck.rs), which a moving state breaks.
                 let carved = |x: i32, y: i32, z: i32| self.carved(x >> 4, z >> 4).block((x & 15) as usize, y, (z & 15) as usize);
                 let neighbours =
-                    structure::Neighbours { carved: &carved, placed: &block, spawners: &placed_spawners, generated_tops: &tops, shaft_order: shaft_order.as_deref(), live: live_kinds };
-                let load = |x: i32, z: i32| self.carved(x, z);
+                    structure::Neighbours { carved: &carved, placed: &block, spawners: &placed_spawners, generated_tops: &tops, shaft_order: shaft_order.as_deref(), live: true };
+                // Pieces' features read the run's state too.
+                let load = |x: i32, z: i32| state.borrow().get(&(x, z)).cloned().unwrap_or_else(|| self.carved(x, z));
                 let biome = |[x, y, z]: [i32; 3]| Some(self.chunk_biomes(x >> 4, z >> 4).biome((x & 15) as usize, y, (z & 15) as usize));
                 let surface = |qx: i32, qz: i32| self.density.preliminary_surface(qx, qz);
                 let features = feature::ElementWorld { load: &load, biome: &biome, surface: &surface };
                 let biomes = self.chunk_biomes(chunk.0, chunk.1);
                 trace::capture(|| self.structures.place(&self.density, &mut shape, chunk, neighbours, &biomes, &features))
             };
-            state.borrow_mut().insert(chunk, shape);
+            state.borrow_mut().insert(chunk, Arc::new(shape));
             let mut label: Option<(std::rc::Rc<str>, Arc<str>)> = None;
             for (at, block, by) in traced {
                 if label.as_ref().is_none_or(|(rc, _)| !std::rc::Rc::ptr_eq(rc, &by)) {
@@ -144,16 +139,16 @@ impl OverworldGenerator {
             };
             widen(chunk, placed.touched);
             spawners.extend(placed.spawners);
-            spilled.insert(chunk, placed.spilled);
-            for ([x, y, z], block, _) in placed.unclipped {
+            // Whatever a post-process writes past its chunk (floors, whole pieces, features) is there at once.
+            for ([x, y, z], block, _) in placed.unclipped.into_iter().chain(placed.spilled) {
                 let target = (x >> 4, z >> 4);
                 if let Some(shape) = state.borrow_mut().get_mut(&target) {
-                    shape.set_block((x & 15) as usize, y, (z & 15) as usize, block);
+                    Arc::make_mut(shape).set_block((x & 15) as usize, y, (z & 15) as usize, block);
                     widen(target, (y, y));
                 }
             }
         }
-        let pieced = |(chunk, shape)| (chunk, Arc::new(Pieced::replayed(shape, touched.get(&chunk).copied(), spilled.remove(&chunk).unwrap_or_default())));
+        let pieced = |(chunk, shape)| (chunk, Arc::new(Pieced::replayed(shape, touched.get(&chunk).copied())));
         let chunks = state.into_inner().into_iter().map(pieced).collect();
         Done { chunks, writes }
     }

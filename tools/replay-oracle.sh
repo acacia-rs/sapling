@@ -10,9 +10,8 @@ set -uo pipefail
 here=$(cd "$(dirname "$0")" && pwd)
 name=$1 test=$2 region=$3
 shift 3
-dir="\$HOME/replay-worlds/$name"
-worlds="SAPLING_ORACLE_WORLDS=$dir"
-order="SAPLING_ORACLE_STRUCTURE_ORDER=$dir/structure-order.txt"
+worlds="SAPLING_ORACLE_WORLDS=\$HOME/replay-worlds/$name"
+replayed=$(bash "$here/replay-env.sh" "$name")
 out=${OUT:-$here/../target/testbox}
 world=$(ssh -o ConnectTimeout=20 testbox "ls replay-worlds/$name | grep -v -e -run2 -e order")
 # The first region the filter kept (a longer name holding it would panic after it: its chunks are not saved).
@@ -21,6 +20,7 @@ if [ -z "${SKIP_PHASE:-}" ]; then
   REGION=$region ENVS="$worlds" bash "$here/oracle.sh" "$name-phase" "$test" >/dev/null 2>&1
   echo "phase model:"; totals "$name-phase"
 fi
-REGION=$region ENVS="$worlds $order ${REPLAY_ENVS:-}" bash "$here/oracle.sh" "$name-replay" "$test" >/dev/null 2>&1
+REGION=$region ENVS="$replayed ${REPLAY_ENVS:-}" bash "$here/oracle.sh" "$name-replay" "$test" >/dev/null 2>&1
 echo "replay:"; totals "$name-replay"
-ENVS="$worlds $order ${REPLAY_ENVS:-} ${CHECK_ENVS:-}" bash "$here/remote-example.sh" "$name-check" structure_replay_check "${SEED:-20261003}" "$world" "$@" | cut -c1-"${WIDTH:-700}"
+[ -n "${SKIP_CHECK:-}" ] && exit 0
+ENVS="$replayed ${REPLAY_ENVS:-} ${CHECK_ENVS:-}" bash "$here/remote-example.sh" "$name-check" structure_replay_check "${SEED:-20261003}" "$world" "$@" | cut -c1-"${WIDTH:-700}"
