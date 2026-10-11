@@ -2,7 +2,8 @@
 //! (docs/research/effects.md).
 // TODO: the twelve effects drilled and no others; one who comes
 // to see a player is not told its effects, nor are `VisibleMobEffects`; they end unsaid as the
-// player rises.
+// player rises. Kept between visits (inventory/store.rs) are the effects and not what is left
+// of absorption's cushion, and what BDS tells of them at a join was not drilled.
 
 use acacia_proto::packets::{MobEffect, MobEffectEventId, UpdateAttributes};
 use acacia_proto::types::{PlayerAttributesItem, PlayerAttributesItemModifiersItem};
@@ -42,8 +43,37 @@ struct Active {
     particles: bool,
 }
 
+/// The effects on a player, whether storage has yet to hear of them, and whether the player,
+/// back with them, has yet to.
 #[derive(Component, Default)]
-pub(crate) struct Effects(Vec<Active>);
+pub(crate) struct Effects(Vec<Active>, bool, bool);
+
+/// What storage keeps of a player's effects (`sapling_leveldb::PlayerData::effects`), if they
+/// changed since it last asked.
+pub(crate) fn kept(world: &mut World, player: Entity) -> Option<Vec<[i32; 4]>> {
+    let mut effects = world.get_mut::<Effects>(player).filter(|effects| effects.1)?;
+    effects.1 = false;
+    Some(effects.0.iter().map(|active| [active.effect.id(), i32::from(active.amplifier), active.left as i32, i32::from(active.particles)]).collect())
+}
+
+/// The effects storage kept, for a player coming back.
+pub(crate) fn restored(kept: &[[i32; 4]]) -> Option<Effects> {
+    let active = |[id, amplifier, left, shown]: &[i32; 4]| Some(Active { effect: Effect::ALL.into_iter().find(|known| known.id() == *id)?, amplifier: *amplifier as u8, left: u32::try_from(*left).ok()?, particles: *shown != 0 });
+    let active: Vec<Active> = kept.iter().filter_map(active).collect();
+    (!active.is_empty()).then(|| Effects(active, false, true))
+}
+
+/// Tells a player in the world the effects it came back with, once.
+fn greet(world: &mut World, player: Entity) {
+    let (Some(id), Some(mut effects)) = (world.get::<NetId>(player).map(|id| id.0), world.get_mut::<Effects>(player).filter(|effects| effects.2)) else { return };
+    effects.2 = false;
+    for active in effects.0.clone() {
+        tell(world, player, &told(id, MobEffectEventId::Add, &active, active.left));
+        if active.effect == Effect::Speed {
+            tell_pace(world, player, id, Some(active.amplifier));
+        }
+    }
+}
 
 fn told(id: u64, event_id: MobEffectEventId, active: &Active, duration: u32) -> MobEffect {
     MobEffect { runtime_entity_id: id, event_id, effect_id: active.effect.id(), amplifier: i32::from(active.amplifier), particles: active.particles, duration: duration as i32, tick: 0, ambient: false }
@@ -90,6 +120,7 @@ fn take(world: &mut World, player: Entity, gone: impl Fn(&Active) -> bool) -> bo
     let (Some(id), Some(mut effects)) = (world.get::<NetId>(player).map(|id| id.0), world.get_mut::<Effects>(player)) else { return false };
     let taken: Vec<Active> = effects.0.iter().copied().filter(|active| gone(active)).collect();
     effects.0.retain(|active| !gone(active));
+    effects.1 |= !taken.is_empty();
     for active in &taken {
         tell(world, player, &told(id, MobEffectEventId::Remove, active, active.left));
         match active.effect {
@@ -136,6 +167,7 @@ pub(super) fn give(world: &mut World, player: Entity, effect: Effect, ticks: u32
             (MobEffectEventId::Add, new)
         }
     };
+    effects.1 = true;
     tell(world, player, &told(id, event_id, &now, now.left));
     match effect {
         Effect::Speed => tell_pace(world, player, id, Some(now.amplifier)),
@@ -177,12 +209,14 @@ fn act(world: &mut World, player: Entity, active: &Active) {
 /// A tick of every player's effects; those whose time is up are told gone.
 pub(super) fn tick(world: &mut World) {
     for player in in_world(world) {
+        greet(world, player);
         let Some(active) = world.get::<Effects>(player).map(|effects| effects.0.clone()).filter(|active| !active.is_empty()) else { continue };
         for active in &active {
             act(world, player, active);
         }
         if let Some(mut effects) = world.get_mut::<Effects>(player) {
             effects.0.iter_mut().for_each(|active| active.left = active.left.saturating_sub(1));
+            effects.1 = true;
         }
         take(world, player, |active| active.left == 0);
     }

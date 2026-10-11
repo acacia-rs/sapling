@@ -90,14 +90,14 @@ mod tests {
         let block = |level: &Level, name: &str| level.block_id(name).unwrap();
         let (stone, fence) = (block(&level, "minecraft:stone"), block(&level, "minecraft:oak_fence"));
         level.fill([-8, 64, -8], [8, 64, 8], stone);
-        (-2..=2).for_each(|x| drop(level.set_block(x, 65, 2, fence)));
+        (-2..=2).for_each(|x| _ = level.set_block(x, 65, 2, fence));
         let way = route(&level, [0, 65, 4], [0, 65, 0]).expect("round the fence");
         assert!(way.contains(&[3, 65, 2]) || way.contains(&[-3, 65, 2]), "past its end: {way:?}");
         assert!(!is_clear(&level, [0.5, 65.0, 4.5], [0.5, 65.0, 0.5]) && is_clear(&level, [0.5, 65.0, 4.5], [5.5, 65.0, 4.5]));
 
-        (-8..=8).for_each(|x| drop(level.set_block(x, 65, 2, stone)));
+        (-8..=8).for_each(|x| _ = level.set_block(x, 65, 2, stone));
         assert!(route(&level, [0, 65, 4], [0, 65, 0]).is_some_and(|way| way.contains(&[0, 66, 2])), "over a step");
-        (-8..=8).for_each(|x| drop(level.set_block(x, 66, 2, stone)));
+        (-8..=8).for_each(|x| _ = level.set_block(x, 66, 2, stone));
         assert_eq!(route(&level, [0, 65, 4], [0, 65, 0]), None, "a wall two high across the floor");
     }
 }

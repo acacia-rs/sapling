@@ -8,7 +8,7 @@
 mod death;
 pub(crate) mod eating;
 mod effects;
-pub(crate) use effects::afflict;
+pub(crate) use effects::{afflict, kept as kept_effects, restored as restored_effects};
 pub(crate) use struck::{bitten, blasted, shot};
 mod hunger;
 mod kept;

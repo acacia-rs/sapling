@@ -1,5 +1,5 @@
 //! A player's health and hunger between visits: kept with its items (inventory/store.rs).
-// TODO: effects, breath and fire are not kept; one who left dead comes back whole.
+// TODO: breath and fire are not kept; one who left dead comes back whole. Effects: effects.rs.
 
 use acacia_proto::packets::UpdateAttributes;
 

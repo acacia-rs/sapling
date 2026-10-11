@@ -61,6 +61,11 @@ effects on mobs, a death under an effect, what a late viewer is told.
 
 ## Sapling
 
+Effects wait in storage with a player's items (`ActiveEffects`, `sapling-leveldb/src/player.rs`)
+and are told to it as added when it is back; neither the record's names nor what BDS tells at a
+join was measured, and absorption's cushion comes back empty.
+
+
 `vitals/effects.rs`, `sapling::vanilla` `/effect`, plugins by `give_effect`, `remove_effect` and
 `clear_effects`. The eight effects above, by these numbers, absorption and nausea (food-effects.md; nausea is only told), resistance and fire resistance. Different: `Remove` always holds the
 ticks left; no `VisibleMobEffects`; saturation gives twice its hunger in saturation, the Java

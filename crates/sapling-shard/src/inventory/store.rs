@@ -36,7 +36,7 @@ fn kept(inventory: &Inventory) -> PlayerData {
     let stacks = |slots: Vec<Option<Held>>| slots.into_iter().map(|slot| slot.map(|held| held.stack)).collect();
     let (level, progress) = (inventory.experience.level, inventory.experience.progress);
     let (main, armor, ender, offhand) = (stacks(inventory.main), stacks(inventory.armor), stacks(inventory.ender), inventory.offhand.map(|held| held.stack));
-    PlayerData { main, armor, offhand, selected: inventory.selected, ender, level, progress, vitals: None, bed: None }
+    PlayerData { main, armor, offhand, selected: inventory.selected, ender, level, progress, vitals: None, bed: None, effects: Vec::new() }
 }
 
 /// Gives the players storage answered for their items.
@@ -48,6 +48,9 @@ pub(crate) fn load(mut commands: Commands, mut layers: Query<(Entity, &mut Layer
             if let PlayerLoad::Stored(data) = answer {
                 if let Some((mut vitals, kept)) = vitals.zip(data.vitals) {
                     vitals.restore(kept);
+                }
+                if let Some(effects) = crate::vitals::restored_effects(&data.effects) {
+                    commands.entity(player).insert(effects);
                 }
                 if let Some(bed) = data.bed {
                     commands.entity(player).insert(BedSpawn::restored(bed, here));
@@ -81,10 +84,11 @@ pub(crate) fn send_own(tick: Res<Tick>, mut players: Query<(&NetId, &Stage, &mut
 pub(crate) fn save(world: &mut World, player: Entity) {
     let Some(id) = world.get::<Identity>(player).map(|identity| identity.0.uuid.to_string()) else { return };
     let vitals = world.get::<Vitals>(player).copied();
-    let stale = vitals.is_some_and(|vitals| vitals.is_unsaved());
+    let effects = crate::vitals::kept_effects(world, player);
+    let stale = vitals.is_some_and(|vitals| vitals.is_unsaved()) || effects.is_some();
     let Some(mut inventory) = world.get_mut::<Inventory>(player).filter(|inventory| inventory.keep && (inventory.unsaved || stale)) else { return };
     inventory.unsaved = false;
-    let data = PlayerData { vitals: vitals.map(|vitals| vitals.kept()), ..kept(&inventory) };
+    let data = PlayerData { vitals: vitals.map(|vitals| vitals.kept()), effects: effects.unwrap_or_default(), ..kept(&inventory) };
     let first = world.resource::<DefaultLayer>().0;
     let data = PlayerData { bed: world.get::<BedSpawn>(player).and_then(|bed| bed.kept(first)), ..data };
     if let Some(mut vitals) = world.get_mut::<Vitals>(player) {

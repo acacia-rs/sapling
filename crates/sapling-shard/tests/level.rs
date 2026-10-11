@@ -169,6 +169,7 @@ fn a_players_items_wait_in_storage_for_the_next_visit() {
         ctx.set_item(PlayerId(1), Slot::Main(7), Some(&Item::new("minecraft:diamond", 5)));
         ctx.set_item(PlayerId(1), Slot::Offhand, Some(&Item::new("minecraft:shield", 1)));
         assert!(ctx.hurt_player(PlayerId(1), 6.0, sapling_api::DamageCause::Generic));
+        assert!(ctx.give_effect(PlayerId(1), sapling_api::Effect::Speed, 6000, 1, true));
         *steve.lock().unwrap() = ctx.players().next().unwrap().uuid.to_string();
     });
     h.tick(1);
@@ -176,7 +177,10 @@ fn a_players_items_wait_in_storage_for_the_next_visit() {
     h.shard.tick();
 
     // Back at once: the save may still be on its way, and the items are there all the same.
-    enter_stored(&mut h, 2);
+    let mut back = enter_stored(&mut h, 2);
+    (0..3).for_each(|_| back.extend(h.tick(2)));
+    let effects: Vec<(i32, i32, i32)> =all::<acacia_proto::packets::MobEffect>(&back).iter().map(|told| (told.effect_id, told.amplifier, told.duration)).collect();
+    assert!(matches!(effects[..], [(1, 1, 5800..=6000)]), "its speed waited, with the ticks it had left: {effects:?}");
     let found = Arc::new(Mutex::new(Vec::new()));
     let items = found.clone();
     h.remote.run(move |ctx| {
@@ -192,6 +196,7 @@ fn a_players_items_wait_in_storage_for_the_next_visit() {
     h.shard.save_worlds();
     let kept = storage.load_player(&uuid.lock().unwrap()).unwrap().unwrap();
     assert_eq!((kept.vitals.map(|vitals| vitals[0]), kept.bed), (Some(14.0), None));
+    assert_eq!(kept.effects.iter().map(|effect| (effect[0], effect[1], effect[3])).collect::<Vec<_>>(), [(1, 1, 1)]);
     assert_eq!((kept.main[7].as_ref().map(|stack| (stack.name.as_str(), stack.count)), kept.offhand.map(|stack| stack.name)), (Some(("minecraft:diamond", 6)), Some("minecraft:shield".into())));
 }
 
