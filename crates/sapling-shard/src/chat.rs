@@ -1,7 +1,7 @@
 //! Chat: a client's line is cleaned, shown to the handlers and sent to everyone in the world
 //! under the sender's verified name, whatever name the packet claims.
 
-use acacia_proto::packets::{Text, TextCategory, TextContent, TextContentChat, TextContentJson, TextContentRaw, TextType};
+use acacia_proto::packets::{Text, TextCategory, TextContent, TextContentChat, TextContentJson, TextContentRaw, TextContentTranslation, TextType};
 use bevy_ecs::prelude::*;
 use bytes::Bytes;
 use sapling_api::{ChatEvent, Player};
@@ -52,6 +52,14 @@ pub(crate) fn raw_packet(message: &str) -> Bytes {
 pub(crate) fn json_packet(parts: Vec<serde_json::Value>) -> Bytes {
     let message = format!("{}\n", serde_json::json!({ "rawtext": parts }));
     text(TextType::Json, TextCategory::MessageOnly, TextContent::Json(TextContentJson { message }), "")
+}
+
+/// The line of translation key `key` with `parameters`, for the client to put into its own
+/// language: how BDS says who died of what (research/captures/bds-duel.txt).
+pub(crate) fn translated_packet(key: &str, parameters: &[String]) -> Bytes {
+    let content = TextContent::Translation(TextContentTranslation { message: key.to_owned(), parameters: parameters.to_vec() });
+    let packet = Text { needs_translation: true, category: TextCategory::Parameters, r#type: TextType::Translation, content, xuid: String::new(), platform_chat_id: String::new(), has_filtered_message: false, filtered_message: None };
+    sapling_net::encode(&packet)
 }
 
 /// The part of a [`json_packet`] that is translation key `key` with `parameters`; BDS leaves

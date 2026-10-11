@@ -130,8 +130,7 @@ day and clicks it.
 ## Not drilled
 
 A piece of armour worn out, enchantments, the words of most deaths, hunger from swimming, from a hit inside a mob's guard or from a block that breaks at once, each food's values (what else it does: food-effects.md), starving on normal and hard, the void, whether a player out of breath in a
-block is hurt as one under water, a hit on a player that kills (its words are taken as
-`death.attack.player`), `keepInventory`, an anchor's spawn, a bed in another world, creative and spectator.
+block is hurt as one under water, `keepInventory`, an anchor's spawn, a bed in another world, creative and spectator.
 
 ## Another player's hit (`pvp`)
 
@@ -141,6 +140,9 @@ The actor hit the watcher, both in survival and on one spot (`research/captures/
   costs a mob, with nothing taken off for the difficulty.
 - Each hit that landed sent `HurtAnimation` 2 and `SetEntityMotion` (0, 0.4, 0) for the one hit,
   to both, and the sound `attack.strong` from the hitter; two hits at once landed once.
+- A player killed by another (`duel`, research/captures/bds-duel.txt) is said to all as `Text` of
+  the type `Translation`, `death.attack.player` with its name and its killer's, and told so in
+  `DeathInfo`; sapling says every death that way now.
 - With `pvp` off nothing was sent, not the sound. On peaceful a hit landed as before. A player in
   creative lost nothing; the sound alone was sent.
 

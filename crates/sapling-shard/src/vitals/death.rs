@@ -100,7 +100,7 @@ pub(super) fn die(world: &mut World, player: Entity, cause: Cause) {
     };
     let slayer = by_player.or(slayer.map(|kind| format!("%entity.{}.name", kind.trim_start_matches("minecraft:"))));
     let messages: Vec<String> = std::iter::once(name).chain(slayer).collect();
-    let said = chat::json_packet(vec![chat::translation(key, &messages)]);
+    let said = chat::translated_packet(key, &messages);
     chat::send_to_layer(world, layer, &said);
     let mut out = world.get_mut::<Outgoing>(player).expect("players have an outbox");
     out.push(&DeathInfo { cause: key.into(), messages });

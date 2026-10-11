@@ -213,3 +213,11 @@ pub fn blaze() -> Vec<String> {
     lines.extend(["gamemode creative @s", ""].map(String::from));
     lines
 }
+
+/// The actor kills the watcher with a diamond sword, both in survival, to hear what is said.
+pub fn duel() -> Vec<String> {
+    let mut lines: Vec<String> = ["kill @e[type=!player]", "gamerule pvp true", "difficulty easy", "gamemode survival @a", "clear @a", "effect @a instant_health 1 4", "replaceitem entity @s slot.weapon.mainhand 0 diamond_sword", ""].map(String::from).into();
+    (0..3).for_each(|_| lines.extend(["!hit player", "", ""].map(String::from)));
+    lines.extend(["", "", "gamemode creative @a", "clear @a", ""].map(String::from));
+    lines
+}
