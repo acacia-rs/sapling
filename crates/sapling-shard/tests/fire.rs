@@ -33,10 +33,36 @@ fn flint_and_steel_lights_fire_over_a_block_and_soul_fire_over_soul_sand() {
     // A second strike into the fire does nothing.
     h.receive(1, &click([2, 64, 0], 1, None));
     assert!(all::<LevelSoundEvent>(h.tick_all().to(1)).iter().all(|sound| sound.sound_id != "ignite"));
-    for _ in 0..610 {
+    for _ in 0..2000 {
         h.tick_all();
     }
     let later = lit(&h);
     h.tick_all();
     assert_eq!(later.recv().expect("ran"), ["minecraft:air", "minecraft:fire", "minecraft:soul_fire"], "fire over stone goes out");
+}
+
+#[test]
+fn fire_on_planks_spreads_and_burns_them_away() {
+    // BDS's three by three of planks was gone in twenty seconds.
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    h.remote.run(|ctx| {
+        assert!(ctx.set_item(ALEX, Slot::Main(0), Some(&Item::new("minecraft:flint_and_steel", 1))));
+        for at in (4..=6).flat_map(|x| (-1..=1).map(move |z| [x, 65, z])) {
+            assert!(ctx.set_block(at, &Block::new("minecraft:oak_planks")));
+        }
+    });
+    h.tick_all();
+    h.receive(1, &click([5, 65, 0], 1, None));
+    for _ in 0..1200 {
+        h.tick_all();
+    }
+    let (sent, got) = std::sync::mpsc::channel();
+    h.remote.run(move |ctx| {
+        let left = (4..=6).flat_map(|x| (-1..=1).map(move |z| [x, 65, z])).filter(|at| ctx.block(*at).is_some_and(|block| block.name == "minecraft:oak_planks")).count();
+        sent.send(left).expect("the test waits");
+    });
+    h.tick_all();
+    let left = got.recv().expect("ran");
+    assert!(left <= 4, "{left} of nine planks left after a minute");
 }

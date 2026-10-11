@@ -23,13 +23,20 @@ Flint and steel and a fire charge light the free cell on the clicked side when a
 under it, with BDS's sound of each; soul fire over soul sand and soul soil. Flint and steel wears
 and a fire charge is spent outside creative.
 
-Fire over netherrack, magma, soul sand and soul soil burns on; any other goes out after 10 to 30
-seconds, which is a guess.
+Fire then ticks every 30 to 40 ticks by the Java game's rule and odds (`FireBlock.tick`): it
+ages, goes out once old with nothing to feed it (never over netherrack, magma, soul sand or soul
+soil), burns the blocks around it away or into fire, lights TNT, and spreads to free cells by
+what burns. Its age is not sent, as BDS sent none for a fire that stayed; new fires show theirs,
+as BDS's did. `doFireTick` off stops the ticks. In sapling's drill the planks were alight within
+two seconds and burning away by eight; BDS's first spread came at 3.7 seconds and the planks
+went between 7 and 21.
+
+What burns is told by tag and name with the Java game's numbers (`burns` in `blocks/fire.rs`).
 
 ## Left
 
-- Fire spreading, and burning blocks away.
-- When fire over a block that does not burn goes out, and rain.
-- `dofiretick`.
-- Fire lit against the side of a block that burns, with no block under it.
-- Lava, lightning and burning arrows lighting fire.
+- BDS's own rule and odds: the capture fits the Java game's only loosely, and its wool went in
+  the tick it was lit.
+- Rain, and fire going out with `dofiretick` off as BDS's did.
+- Fire that a world folder holds, and fire from lava, lightning and burning arrows, does not tick.
+- What burns away leaves floating what stood on it.
