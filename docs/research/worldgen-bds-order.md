@@ -415,15 +415,11 @@ village 2 (two mushrooms of ours, one dirt cell); mansion 103 on a full canon (`
 pyramid 2438 with 1675 structure-stage cells (a mineshaft and the temple: not looked at, structure stage).
 
 Open under replay, each with its first source:
-- **Mansion, 103**: ring source -510,1001 (lush cave moss, vines and azalea on the region's south edge, 51
-  cells of ours: needs chunk 1001 saved) and source -509,998, where lava that falls to -8139,5,15972 spreads
-  west and on down to y 4 in BDS (12 cells) and only south in ours, where the next cell hardens and cuts it.
-  `_getSlopeDistance` (148b5f020) reads the same as ours, so the world differed when that cell ticked. Next
-  step: `scratchpad liq-mansion.json` (tick and spread entries armed for that decoration) beside `feature_trace`.
-  A run with those entries armed (canon `mansion3`) agrees with ours in the first generation's 673 logged
-  ticks, in order, and parts in the second: BDS ticks -8137,7,15971 and -8136,9,15969 where ours ticks
-  -8137,8,15970 and a cell at y -45. Next step: the `queue` lines (with backtraces) of generation 1 around
-  -8137,7..9,15969..15971 in `scratchpad liq-mansion/dbg/dbg.log` against our `queue` trace lines there.
+- **Mansion, 85** (two full canons, `mansion2` and `mansion3`): ring source -510,1001's lush cave growth on the
+  region's south edge (moss, cave vines and azalea leaves; 51 cells of ours, 22 moss blocks of BDS's nothing of
+  ours writes). The chunks south of z 1000 are not saved: next step, a canon of -516,992,-508,1002 and
+  `try_check` on that source's vegetation patches. (The region's lava, 18 cells of source -509,998, was the
+  receding lava's thread draw: worldgen-bds-liquids.md, "The first generation".)
 - **Far out, 5**: two glow lichens on other cells (sources 100004,100002 and 100007,100006), one dirt cell of
   an ore blob BDS writes and ours does not (1600014,53,1600103), one water cell. Not traced.
 - **Near origin** has no canon: the 32x32 region's run was cut by the pack's script watchdog after four of

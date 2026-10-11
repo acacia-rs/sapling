@@ -108,6 +108,14 @@ it: aquifer ticks in the lambda's order, then the three), the heap equals the du
 `push`/`pop` over the dumped array run generation 1 in BDS's logged order (294 of 294 ticks in the logged
 box). The border scan's order and the aquifer ticks' order were already BDS's (69 and 466, compared in order).
 
+**Receding lava and the thread generator.** `_tick` (148b5d060) draws `nextInt(4)` from the thread's generator
+when a lava cell's depth rises (old and new both under 8) and waits four times as long unless it drew 0. While
+instaticking both waits end in the next generation, but the tick's time (29 or 119 after the wrap) is its place
+in that generation's heap. Under a replay the generator is the one the chunk's lichen and veins drew from
+(`View::thread_random`), and the draw is taken; without one the wait stays 30. With it, the 1385 liquid ticks
+logged in the box around the mansion region's source -509,998 (run `liq-mansion`, canon `mansion3`) come in
+the same order in ours through every generation, and the lava that fell short there is BDS's (103 -> 85).
+
 ## Game time (2026-10-10, worldgen/res6)
 What the earlier sections call "flows BDS ran in game" is `LevelChunk::tick` (1409f98a0). While `LevelChunk`
 +0x10dc is 0 and the chunks around are loaded, each game tick calls `tickPendingTicks(until = current tick, max
