@@ -373,7 +373,20 @@ What the replay found:
   above; which of them it was is not separated.
 - **Sulfur spikes are waterloggable** like pointed dripstone (gravelly hills -2001,-5,-5561, three cells).
 
+- **A template's container draws its loot seed from the chunk's structure generator.** The ancient city under
+  the full replay stood at 6254 cells, nearly all sculk. Its eleven structure-stage sculk patches
+  (`sculk_patch_feature_ancient_city`, a feature element of the centre pieces) had the right origins and order
+  and the wrong walk from the second cursor move on. Logged per piece in a one-worker run
+  (`PoolElementStructurePiece::postProcess` 141ef21e0, generator index at `[r8+0x9d4]`): every structure kind
+  starts a chunk on a fresh generator (index 624, also after mineshaft pieces), and a city piece leaves it one
+  draw on whenever a chest of its template lies in the chunk; the patch element then starts at index 1 or 2.
+  `jigsaw/piece.rs` now draws once per chest, trapped chest or barrel it sets. Over the run's 161 chunks with
+  city pieces all 402 piece entries agree in box and draws; city 6254 -> 405, and the stronghold canon's
+  village (struct5's "one `nextInt(3)` off before the house's fill") 8 -> 1. Barrels are a guess: no run had one.
+
 Open under replay, each with its first source:
+- **Ancient city, 405**: sources -67,76 (117 cells) and -70,79 (114), and 175 sculk cells in chunks -70,78,
+  -70,79 and -69,78 no source of ours writes (city blocks turned to sculk).
 - **Desert, 3 water depths** (source -446,557; -7112,21,8910..8913): the liquid pass runs the same ticks in every
   generation as BDS (294, 14, 20, 14, 15, ... in both, compared over 66 generations of an armed run) but in
   another order within a generation, from the first one on; a cell at the 8-block edge then keeps the depth of
