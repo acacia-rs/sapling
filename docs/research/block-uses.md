@@ -36,7 +36,7 @@ A cauldron's surface is 0.375 over its floor plus an eighth a level; both of its
 -1087090343. The carved pumpkin faced south with the carver looking south and looking east, so
 the face clicked decides, not the look.
 
-Sapling does all of these the same; 22 of the drill's 30 cases agree packet for packet once
+Sapling does all of these the same; 23 of the drill's 30 cases agree packet for packet once
 repeats are set aside. Outside creative a tool wears, honeycomb and glowstone are spent, a bottle
 becomes a honey bottle or a water bottle and a bucket an empty one: the Java game's rule, since
 the drill ran in creative.
@@ -79,8 +79,7 @@ of 10 to 30 ticks, which was not measured.
 
 ## Left
 
-- Bone meal: `ParticleCropGrowth`; on grass a flower or grass came up beside, a sapling grew on
-  the second click.
+- Bone meal has its own drill and notes: `bone-meal.md`.
 - Fire: flint and steel lights none, on obsidian as on BDS, nor on what burns, which was not
   measured.
 - A jukebox's music: BDS sent no sound packet for it, and sapling keeps the disc in memory

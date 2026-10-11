@@ -4,6 +4,7 @@
 //! falling, liquids, plates, updates.
 
 mod after_break;
+mod bonemeal;
 mod blown;
 mod buckets;
 mod composter;

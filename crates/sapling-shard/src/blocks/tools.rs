@@ -146,6 +146,12 @@ impl Request<'_> {
             }
             return true;
         }
+        if held == "minecraft:bone_meal" && super::bonemeal::feed(self.world, site.layer, pos, site.mode == GameMode::Creative) {
+            if site.mode != GameMode::Creative {
+                inventory::change(self.world, self.entity, |inventory| inventory.take(inventory::Place::Main(inventory.selected.into()), 1).is_ok());
+            }
+            return true;
+        }
         if held == FLINT_AND_STEEL && crate::tnt::light(self.world, site.layer, pos) {
             if site.mode != GameMode::Creative {
                 inventory::wear_tool_in_hand(self.world, self.entity);

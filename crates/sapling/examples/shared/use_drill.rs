@@ -70,3 +70,38 @@ pub fn tnt() -> Vec<String> {
     lines.extend(["kill @e[type=!player]", "clear @s", ""].map(String::from));
     lines
 }
+
+pub const BONEMEAL_SHOWN: &[&str] = &["UpdateBlock", "UpdateSubchunkBlocks", "LevelSoundEvent", "LevelEvent", "AddItemEntity", "MovePlayer"];
+
+/// The actor in creative, looking east on stone, bone-meals one plant after another a block east
+/// of it, each on a field of its own floor; a case without a plant is the floor itself. The actor
+/// keeps to stone: on farmland, which is lower, `~` named the cell under its feet.
+pub fn bonemeal() -> Vec<String> {
+    let moist = "farmland [\"moisturized_amount\"=7]";
+    let cases: [(&str, &str, usize); 12] = [
+        (moist, "wheat", 5),
+        (moist, "carrots", 4),
+        (moist, "beetroot", 5),
+        (moist, "melon_stem", 4),
+        ("grass_block", "oak_sapling", 8),
+        ("grass_block", "sweet_berry_bush", 3),
+        ("grass_block", "short_grass", 1),
+        ("grass_block", "poppy", 1),
+        ("grass_block", "", 2),
+        ("sand", "reeds", 2),
+        ("dirt", "bamboo_sapling", 2),
+        ("stone", "", 1),
+    ];
+    let mut lines: Vec<String> = ["kill @e[type=!player]", "gamemode creative @s", "clear @s", "replaceitem entity @s slot.weapon.mainhand 0 bone_meal", ""].map(String::from).into();
+    for (floor, plant, times) in cases {
+        lines.extend(["fill ~-1 ~-1 ~7 ~1 ~-1 ~9 stone".into(), "tp @s ~ ~ ~8 -90 0".into(), "fill ~1 ~ ~-3 ~7 ~8 ~3 air".into(), format!("fill ~1 ~-1 ~-3 ~7 ~-1 ~3 {floor}")]);
+        if !plant.is_empty() {
+            lines.push(format!("setblock ~1 ~ ~ {plant}"));
+        }
+        let click = if plant.is_empty() { "!click 1 -1 0" } else { "!click 1 0 0" };
+        lines.extend(std::iter::repeat_n(click.to_owned(), times));
+        lines.push(String::new());
+    }
+    lines.extend(["kill @e[type=!player]", "clear @s", ""].map(String::from));
+    lines
+}
