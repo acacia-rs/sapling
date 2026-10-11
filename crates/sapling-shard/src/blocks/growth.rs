@@ -1,8 +1,8 @@
-//! Random ticks for what grows and dries: each crop, stem, berry bush, cane, cactus, bamboo and
-//! farmland has the chance a tick that a cell picked at random around a player has on BDS
+//! Random ticks for what grows, dries and decays: each crop, stem, berry bush, cane, cactus,
+//! bamboo, farmland, open dirt and marked leaf has the chance a tick that a cell picked at random around a player has on BDS
 //! (docs/research/growth.md); what a tick then does is in rules.rs.
 // TODO: no light is asked for, where the game wants 9; saplings grow no tree; grass under a
-// block does not die; leaves, ice and the rest take no random tick.
+// block does not die; ice and the rest take no random tick.
 
 mod rules;
 
@@ -100,8 +100,10 @@ pub(crate) fn tick(world: &mut World) {
     for cell in done {
         growing.0.remove(&cell);
     }
-    for (layer, rules::Change { pos, id, quiet }) in changed {
-        if quiet {
+    for (layer, rules::Change { pos, id, quiet, breaks }) in changed {
+        if breaks {
+            super::updates::pop(world, layer, pos);
+        } else if quiet {
             send::set_quietly(world, layer, pos, id);
         } else {
             send::set(world, layer, pos, id);

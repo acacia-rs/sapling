@@ -2,7 +2,7 @@
 
 use sapling_api::{Block, BlockPos, Face};
 
-use super::super::{send, with_property};
+use super::super::{leaves, send, with_property};
 use super::Picks;
 
 const RIPE: u8 = 7;
@@ -35,11 +35,13 @@ const SIDES: [Face; 4] = [Face::North, Face::South, Face::West, Face::East];
 
 type Level = sapling_world::World;
 
-/// A block a random tick sets, told to no one where BDS told no one.
+/// A block a random tick sets: told to no one where BDS told no one, or broken to leave what
+/// it leaves, whatever `id` says.
 pub(super) struct Change {
     pub pos: BlockPos,
     pub id: u32,
     pub quiet: bool,
+    pub breaks: bool,
 }
 
 fn state_at(level: &Level, [x, y, z]: BlockPos) -> Option<(u32, &str, &str)> {
@@ -60,7 +62,7 @@ fn number(properties: &str, key: &str) -> Option<u8> {
 }
 
 fn shown(pos: BlockPos, id: u32) -> Change {
-    Change { pos, id, quiet: false }
+    Change { pos, id, quiet: false, breaks: false }
 }
 
 /// Whether the block is one random ticks change, and so kept track of: dirt only where it is
@@ -73,7 +75,7 @@ pub(super) fn is_ticked(name: &str, properties: &str) -> bool {
         _ if CROPS.contains(&name) => growth().is_some_and(|growth| growth < RIPE),
         // A stem that bore its fruit points at it and is done.
         _ if STEMS.iter().any(|(stem, _)| *stem == name) => number(properties, "facing_direction") == Some(0),
-        _ => COLUMNS.contains(&name),
+        _ => COLUMNS.contains(&name) || leaves::is_marked(name, properties),
     }
 }
 
@@ -168,8 +170,8 @@ pub(super) fn ticked(level: &Level, pos: BlockPos, picks: &mut Picks) -> Vec<Cha
             let age = number(properties, "age").unwrap_or(0);
             let (older, young) = (with("age", age + 1), with("age", 0));
             match (age < COLUMN_AGE, older, young) {
-                (true, Some(older), _) => vec![Change { pos, id: older, quiet: true }],
-                (false, _, Some(young)) => vec![shown(above, young), Change { pos, id: young, quiet: true }],
+                (true, Some(older), _) => vec![Change { pos, id: older, quiet: true, breaks: false }],
+                (false, _, Some(young)) => vec![shown(above, young), Change { pos, id: young, quiet: true, breaks: false }],
                 _ => Vec::new(),
             }
         }
@@ -179,6 +181,11 @@ pub(super) fn ticked(level: &Level, pos: BlockPos, picks: &mut Picks) -> Vec<Cha
         }
         // Seen from the dirt: each grass block near has its tries at it.
         DIRT if is_open(level, pos) && picks.below(GRASS_CELLS) < GRASS_TRIES * grass_near(level, pos) => send::resolve(registry, &Block::new(GRASS)).map(|id| shown(pos, id)).into_iter().collect(),
+        // Marked leaves drop on their first tick with no wood near, as BDS's did; held, they rest.
+        _ if leaves::is_marked(name, properties) => match leaves::hangs(level, pos) {
+            true => with_property(registry, id, "update_bit", "0").map(|id| shown(pos, id)).into_iter().collect(),
+            false => vec![Change { pos, id, quiet: false, breaks: true }],
+        },
         FARMLAND => {
             let wet = number(properties, WET).unwrap_or(0);
             let is_sown = name_at(level, above).is_some_and(|over| CROPS.contains(&over) || STEMS.iter().any(|(stem, _)| *stem == over));

@@ -70,3 +70,24 @@ fn grass_spreads_to_open_dirt_beside_it_and_not_under_a_block() {
     let spread = names(&mut h, 1200, &[[4, 64, 0], [5, 64, 0], [3, 64, 1]]);
     assert_eq!(spread, ["grass_block", "grass_block", "dirt"]);
 }
+
+#[test]
+fn leaves_decay_when_their_log_is_taken_and_a_players_do_not() {
+    // research/captures/bds-leaves.txt: all 26 around the log were gone two seconds after it.
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    h.remote.run(|ctx| {
+        assert!(ctx.set_game_rule("randomTickSpeed", sapling_api::RuleValue::Int(200)));
+        for (z, kept) in [(-4, "persistent_bit=0"), (4, "persistent_bit=1")] {
+            for at in (3..=5).flat_map(|x| (66..=68).flat_map(move |y| (z - 1..=z + 1).map(move |z| [x, y, z]))) {
+                assert!(ctx.set_block(at, &block("oak_leaves", kept)));
+            }
+            assert!(ctx.set_block([4, 67, z], &block("oak_log", "")));
+        }
+    });
+    let held = names(&mut h, 200, &[[3, 66, -5], [5, 68, -3], [3, 66, 3]]);
+    assert_eq!(held, ["oak_leaves", "oak_leaves", "oak_leaves"], "nothing decays while the log stands");
+    h.remote.run(|ctx| assert!(ctx.update_block([4, 67, -4], &Block::air()) && ctx.update_block([4, 67, 4], &Block::air())));
+    let after = names(&mut h, 400, &[[3, 66, -5], [5, 68, -3], [4, 68, -4], [3, 66, 3], [5, 68, 5]]);
+    assert_eq!(after, ["air", "air", "air", "oak_leaves", "oak_leaves"]);
+}

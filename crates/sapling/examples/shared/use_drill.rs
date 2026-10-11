@@ -208,6 +208,30 @@ pub fn grows() -> Vec<String> {
     lines
 }
 
+/// Two cubes of oak leaves east of the actor, each around a log, the second set down as a
+/// player's are: with the random ticks sped up two hundred times, nothing is touched for five
+/// seconds, then both logs are taken out and the leaves watched for a minute. (Leaves by no log
+/// that nothing touched did not decay on BDS.)
+pub fn leaves() -> Vec<String> {
+    let mut lines: Vec<String> = [
+        "fill ~-1 ~-1 ~7 ~10 ~-1 ~23 stone",
+        "tp @s ~ ~ ~15 -90 0",
+        "fill ~1 ~ ~-8 ~10 ~16 ~8 air",
+        "fill ~3 ~1 ~-5 ~5 ~3 ~-3 oak_leaves [\"persistent_bit\"=false]",
+        "setblock ~4 ~2 ~-4 oak_log",
+        "fill ~3 ~1 ~3 ~5 ~3 ~5 oak_leaves [\"persistent_bit\"=true]",
+        "setblock ~4 ~2 ~4 oak_log",
+        "gamerule randomtickspeed 200",
+    ]
+    .map(String::from)
+    .into();
+    lines.extend(std::iter::repeat_n(String::new(), 5));
+    lines.extend(["setblock ~4 ~2 ~-4 air", "setblock ~4 ~2 ~4 air"].map(String::from));
+    lines.extend(std::iter::repeat_n(String::new(), 60));
+    lines.extend(["gamerule randomtickspeed 1", "fill ~1 ~ ~-8 ~10 ~16 ~8 air", "kill @e[type=item]"].map(String::from));
+    lines
+}
+
 /// The drill called `name` of this file, and the packets shown of it.
 pub fn named(name: &str) -> Option<(Vec<String>, &'static [&'static str])> {
     Some(match name {
@@ -220,6 +244,7 @@ pub fn named(name: &str) -> Option<(Vec<String>, &'static [&'static str])> {
         "ores" => (ores(), BONEMEAL_SHOWN),
         "crops" => (crops(), BONEMEAL_SHOWN),
         "grows" => (grows(), BONEMEAL_SHOWN),
+        "leaves" => (leaves(), BONEMEAL_SHOWN),
         _ => return None,
     })
 }

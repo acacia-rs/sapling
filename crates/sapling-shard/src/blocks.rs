@@ -19,6 +19,7 @@ mod growth;
 mod handled;
 mod items;
 mod jukebox;
+mod leaves;
 mod liquid;
 mod loot;
 mod mining;
