@@ -40,11 +40,12 @@ fn main() {
     for (at, (rank, ours)) in last {
         let target = (at[0] >> 4, at[2] >> 4);
         let chunk = chunks.entry(target).or_insert_with(|| primary.load_column(ChunkKey::new(target.0, target.1, 0)).unwrap().expect("a saved chunk").chunk);
-        let bds = bds_cell(&primary, chunk, at[0], at[1], at[2]).block;
+        let bds = bds_cell(&primary, chunk, at[0], at[1], at[2]);
         let entry = per_source.entry(rank).or_default();
         entry.0 += 1;
-        if ours.name() != bds {
-            entry.1.push(format!("{} {} {} {ours:?}>{bds}", at[0], at[1], at[2]));
+        // States too: a liquid's depth is the only sign of a flow that ran otherwise.
+        if !bds.is(ours) {
+            entry.1.push(format!("{} {} {} {ours:?}>{}[{}]", at[0], at[1], at[2], bds.block, bds.states));
         }
     }
     let mut ranks: Vec<_> = per_source.into_iter().collect();

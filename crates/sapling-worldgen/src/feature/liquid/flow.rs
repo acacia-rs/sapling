@@ -57,6 +57,8 @@ fn lava_blocking(b: Block) -> bool {
         || name.ends_with("rail")
         || name.starts_with("chorus")
         || matches!(name, "azalea" | "flowering_azalea" | "big_dripleaf" | "small_dripleaf_block" | "waterlily" | "powder_snow" | "shelf_mushroom");
+    // Material 24 (neither solid nor blocking motion) on the base rule: lava takes a mineshaft's webs and torches.
+    let yields = yields || name.ends_with("torch") || matches!(name, "web" | "lever" | "tripwire_hook" | "trip_wire" | "redstone_wire");
     let holds = b.multiface().is_some()
         || name.contains("candle")
         || matches!(name, "bamboo" | "campfire" | "soul_campfire" | "ladder" | "scaffolding" | "frame" | "glow_frame" | "portal" | "end_portal" | "resin_clump");
