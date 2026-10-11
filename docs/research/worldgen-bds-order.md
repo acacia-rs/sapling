@@ -206,6 +206,73 @@ ticked 30977 -> 27006, still 31436 -> 27534. Jungle temple 3103 -> 357 (still 30
 near origin 1536 -> 1481 (866 -> 805), mangrove swamp -47, bamboo jungle -25; up: badlands 1780 -> 1820
 (1873 -> 1910), whose stock worlds are run-order sculk.
 
+## Replaying the structure stage (2026-10-11, worldgen/shaft4)
+`scripts/data/dbg_struct.json` logs a run's `loadChunk` and `postProcessStructureFeatures` entries;
+`dbg_loads.py <dbg.log> --structure-order <file>` writes them in order (`load x z` and `x z` lines) and
+`SAPLING_ORACLE_STRUCTURE_ORDER=<file>` makes the generator run the structure stage that way
+(`structured/replay.rs`): chunks post-processed in the run's order, a mineshaft piece reading its neighbours
+as they are at that moment, floors past the chunk landing at once, spawner flags kept per piece, and
+mineshaft starts visited in the start map's order (below). `tools/replay-world.sh <run dir> <name> <world>`
+sends a run to testbox, `tools/replay-oracle.sh <name> <test fn> <region> <box>` prints the oracle totals with
+the phase model and with the replay and then `examples/structure_replay_check`: the differing cells grouped by
+the chunk and piece that wrote ours last, in the run's order (`NEAR=x,y,z` lists the writes around a cell).
+Other kinds still place per chunk from carved terrain under the replay (shipwrecks and portals re-run their
+start's placement per chunk, which a moving state breaks); `SAPLING_REPLAY_LIVE_KINDS=1` lets villages,
+strongholds, mansions and cities read the state too.
+
+Call for call: `scripts/data/dbg_shaft.json` adds every mineshaft piece's `postProcess` (piece box, chunk box,
+the chunk generator's index: the `Random` handed to pieces holds its generator at +8, so the index is at
++0x9d4), each cobweb call and each support read; `examples/structure_replay_draws` prints ours and
+`scripts/dbg_shaft_cmp.py <dbg.log> <ours>` names the first piece whose box or draw position differs per chunk.
+On the mangrove swamp run all 155 chunks with mineshaft pieces agree piece for piece and draw for draw.
+
+Structure-stage cells against each run's own world (`structure stage:` of the oracle test):
+
+| region | phase model, before | replay, before | phase model, after | replay, after | what is left under replay |
+|---|---|---|---|---|---|
+| frozen ocean | 206 | 202 | | 0 | |
+| swamp | 121 | 72 | | 0 | |
+| mangrove swamp | 334 | 245 | | 47 | water that flowed into corridors at decoration (rails washed off): liquid stage |
+| badlands (dark oak) | | | 0 | 0 | |
+| igloo, snowy plains | | | 57 | 1 | the igloo's waterlogged bars |
+| ancient city | | | 312 | 6 | 2 tuff a feature laid over city deepslate, 4 liquid cells |
+| stronghold | | | 278 | 67 (61 with live kinds) | below |
+
+"Before" is the branch point; the three small worlds were measured there, the others only after the fix.
+What the replay found:
+- **A post-process sees 3x3 chunks.** Its `BlockSource` is the view of the chunk and its eight neighbours; a
+  corridor is up to 20 long, so a piece met in one chunk has cells two chunks out. There `getBlock` is air (a
+  support's test fails, no `nextInt(4)` and torch floats) and `getChunk` is null (the cobweb's interior test
+  fails before its float is drawn; floors and rails likewise). We read any chunk. Found from per-piece draw
+  positions: BDS drew 4 to 8 fewer per corridor exactly where a section lay two chunks away. This was most of
+  the "mineshaft drift": it does not depend on order (stock oracle structure stage 1983 -> 865).
+- **Start order.** `foreachIntersectingStructureStart` walks the list of the feature's
+  `std::unordered_map<ChunkPos, start>` (MSVC: a new key goes in front of its bucket's entries, or at the list's
+  end when the bucket is empty; 8 buckets, times 8 on growth, entries re-placed by the same rule).
+  `createBlueprints` fills it as chunks load: every chunk within 8 not scanned before, x outer, tested and
+  filed. The hash is FNV-1a over each int's bytes, combined as boost's `hash_combine`
+  (`structure/start_map.rs`). So two mineshafts in one chunk run in load order, not in any order of their
+  positions: in the mangrove run chunk -504,513 ran start -504,510 before -501,513 and chunk -501,514 ran
+  -500,514 before -501,513. Only a replay has the load order; without one we keep descending x, z.
+- **Fences.** A mineshaft piece keeps the fences its own post-process placed (they are still the piece's
+  unjoined fence block, which `canBeReplaced` compares by state) and replaces a library's railing. Keeping
+  every lone fence by state made the stronghold run worse (67 -> 111); keeping none left a cobweb over a
+  support's fence in the city run.
+- **Village foundation columns are order**: with the state read live, 6 of the 9 cells of the stronghold
+  run's village go; 3 of one house stay (not traced).
+- Stronghold run, left: 31 cells of water or lava that flowed at decoration, 4 fence joins, 9 village cells,
+  and one chunk (-93,-124) where BDS left out a spider corridor (piece 118 of start -89,-124: its webs and
+  fence are ours only, in an open cave with a lava spring beside it). Next step: a `dbg_shaft.json` run of
+  that region and whether piece 118 has cobweb calls in that chunk (none: `isInInvalidLocation` saw a liquid
+  we do not have at structure time).
+
+What a mineshaft chunk's blocks depend on besides the seed: (1) which chunks loaded first, through the start
+map's order when two starts meet in a chunk; (2) which of its eight neighbours were post-processed before
+it: their pieces' air over a support's span, their floors' planks under its corridors, and whether a spider
+corridor's spawner is already placed; nothing beyond the 3x3. A default for (2) was tried: neighbours never
+seen as placed is worse than our phase order on the stock oracle (865 -> 1005), so the phase model stays; any
+fixed rule is right for about half of BDS's neighbour pairs.
+
 ## What a server can make canonical
 Not BDS's order: it is not a function of the seed and the position, and following it would make a chunk depend
 on a chain of same-phase chunks without end. sapling keeps its own canonical order (parity phases, same-phase

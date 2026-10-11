@@ -76,6 +76,9 @@ the run also logs its decoration order and thread draws, which `SAPLING_ORACLE_O
 `SAPLING_ORACLE_THREAD_SEED=0` replay in the oracle test: recipe and limits in
 docs/research/worldgen-bds-order.md. `WORLDGEN_LOAD_TICKS` is how long a tile may load before the pack removes
 its area and adds it again; a retried tile generates its chunks twice and is no oracle.
+The structure stage replays from the same kind of run (`scripts/data/dbg_struct.json`,
+`SAPLING_ORACLE_STRUCTURE_ORDER`): `tools/replay-world.sh` sends the run to testbox and
+`tools/replay-oracle.sh` measures a region against it.
 
 Rebuild one with the `run.sh` line above and the seed and regions from this table. The `sapling-worldgen` oracle
 test and examples read them from `$SAPLING_ORACLE_WORLDS` (default: `worlds/oracle` of the checkout), so a worktree

@@ -139,6 +139,11 @@ One JSON object, `{"breakpoints": [...]}`; the fields are listed in the script's
 - A patch column by column: `patch` 143bc8310 (`"arms"`) and `cell` 143bc8468 (`"group"`, filter
   `["rbp", 104, box]`) against our `cell` lines; `[rbp+0x84]` is not our depth (it read 1 or 2 where ours drew 4).
 
+- Is the structure stage in sync, piece by piece (2026-10-11): `scripts/data/dbg_shaft.json` beside
+  `examples/structure_replay_draws` and `scripts/dbg_shaft_cmp.py` (worldgen-bds-order.md, "Replaying the
+  structure stage"). A run whose machine swaps can take an hour: raise `WORLDGEN_TIMEOUT`, or the script stops
+  the server before it saves; a run that stalls with a working set of a few MB for 20 minutes is dead.
+
 The debugger is four modules: `bds_dbg.py` (the event loop and breakpoints), `bds_dbg_win.py` (Win32 bindings,
 thread contexts, hardware breakpoints), `bds_dbg_hits.py` (filters and what a hit logs), `bds_dbg_groups.py`
 (`group`/`arms`), `bds_dbg_dumps.py` (`dump*`).

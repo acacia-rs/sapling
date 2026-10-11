@@ -125,6 +125,13 @@ Piece writes go through `placeBlock` (141f59f90: clipped to the chunk, `canBeRep
 - Reads past the chunk (support tests at y0+3, floors, interior heightmaps) see the neighbours BDS
   post-processed earlier in the decoration phases with their pieces (`Neighbours::placed`, mineshafts only:
   village trees and pyramid heights matched worse with it).
+- 2026-10-11 (worldgen/shaft4, worldgen-bds-order.md "Replaying the structure stage"): a post-process sees
+  only the 3x3 chunks around its chunk; past them blocks are air and columns are not interior
+  (`Canvas::limit_view`, on for strongholds, mineshafts and monuments). Pieces keep the fences mineshaft
+  pieces placed in the same post-process (`Canvas::shaft_fences`). Starts sharing a chunk run in the start
+  map's order (`structure/start_map.rs`), which only a replayed load order gives. With these, mineshafts are
+  exact against one-worker BDS worlds under the replay in six regions; "draw drift" was the 3x3 view, and
+  what is order is the neighbour pairs and the start map.
 - Bedrock 1.26 fences save `connection_*` states that follow their final neighbours, across chunk borders:
   sapling sets them after the chunk's pieces from its neighbours' pieces (`rejoin_connections`).
 
@@ -254,7 +261,8 @@ region 760 against 718; decoration in the same run, 1030 against 0. Two runs of 
 of 2158 pairs. So which neighbour's pieces a piece reads past its chunk (a mineshaft support's test, a floor's
 planks, the spawner flag) follows the load pattern and thread timing, not the seed. The discriminator chunk
 (-90,-123) was processed before (-90,-124) in both logged runs, which is why BDS read air there; sapling's
-phase order is one arbitrary choice among these and the mineshaft drift it leaves is floor.
+phase order is one arbitrary choice among these. (2026-10-11: most of the drift then filed as floor was not
+order at all but the 3x3 view, see "Mineshafts"; the replay separates the two.)
 
 ## Prior art and licences
 Bedrock finders (scratchpad `st/prior-art.md`): bedrock-dev/MCBEStructureFinder (MIT, pre-1.18), stirante/
