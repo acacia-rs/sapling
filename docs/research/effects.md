@@ -54,12 +54,34 @@ third level with 60, 48, 36, 24 and 12.
 - An amplifier over 255: `commands.generic.num.tooBig` with it and 255. An unknown effect is a
   syntax error at its word.
 
+## More effects (`fx`)
+
+`research/captures/bds-fx.txt`, the actor in survival:
+
+- Slowness (2) writes `minecraft:movement` as speed does, with the modifier `MovementSlowdown`
+  (`7107de5e-7ce8-4030-940e-514c1f160890`) of -0.15 a level: 0.085 at the first, 0.04 at the fourth.
+- A fist's hit on a cow cost it 3.99 under strength's second level (5) and 0.3 under weakness
+  (18): the hit times 1.3 a level plus (1.3^levels - 1) / 0.3, and times 0.8 a level plus
+  (0.8^levels - 1) / 0.4.
+- A fall of 8 blocks cost 5 bare, 4 under jump boost (8), 1 under its fourth level and nothing
+  under slow falling (27).
+- Under water breathing (13) twenty seconds under water cost nothing.
+- Haste (3), mining fatigue (4), invisibility (14), blindness (15), night vision (16) and
+  levitation (24) sent `MobEffect` and nothing else; the actor fell from where levitation left it.
+- Health boost (21) writes `minecraft:health` with a higher most: 28 at its second level, the
+  modifier `HealthBoost` (`5d6f0ba2-1186-46ac-b896-c61c5cee99cc`) of 8, operation 0, operand 1.
+
 ## Not drilled
 
 Every other effect (food, milk and potions: food-effects.md), what armour does against instant damage,
 effects on mobs, a death under an effect, what a late viewer is told.
 
 ## Sapling
+
+The effects of `fx` are built but health boost; those BDS only told of are only told of here,
+so levitation lifts as far as the client does it and invisibility hides nobody from a mob.
+Run against sapling the drill gave BDS's speeds, falls and strong hits (7.7 and 6.01 left of a
+cow's 10); its bare and its weak hit missed a cow that had strolled off.
 
 Effects wait in storage with a player's items (`ActiveEffects`, `sapling-leveldb/src/player.rs`)
 and are told to it as added when it is back; neither the record's names nor what BDS tells at a

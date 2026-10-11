@@ -134,3 +134,30 @@ pub fn provoke() -> Vec<String> {
     lines.extend(["gamemode creative @s", "summon wolf ~ ~ ~1.5", "", "!hit wolf", "", "", "", "", "kill @e[type=!player]", ""].map(String::from));
     lines
 }
+
+/// The actor in survival under effects not yet built: slowness at two levels; strength and
+/// weakness with a hit on a cow each (and one bare); slow falling and jump boost with a fall of
+/// eight blocks each (and one bare); water breathing under water for twenty seconds; then
+/// haste, mining fatigue, night vision, invisibility, blindness, levitation and health boost
+/// given and cleared.
+pub fn fx() -> Vec<String> {
+    let mut lines: Vec<String> =
+        ["kill @e[type=!player]", "gamerule domobspawning false", "difficulty easy", "fill ~-3 ~-1 ~-12 ~12 ~-1 ~40 stone", "fill ~-3 ~ ~-12 ~12 ~12 ~40 air", "gamemode survival @s", "tp @s ~6 ~ ~20", ""].map(String::from).into();
+    for level in [0, 3] {
+        lines.extend([format!("effect @s slowness 20 {level}"), String::new(), "effect @s clear".into(), String::new()]);
+    }
+    for effect in ["", "effect @s strength 20 0", "effect @s strength 20 1", "effect @s weakness 20 0"] {
+        lines.extend([effect.to_owned(), "summon cow ~ ~ ~1.5".into(), String::new(), "tp @s @e[type=cow,c=1]".into(), String::new(), "!hit cow".into(), String::new(), "kill @e[type=!player]".into(), "effect @s clear".into(), String::new()]);
+    }
+    for effect in ["", "effect @s slow_falling 20 0", "effect @s jump_boost 20 0", "effect @s jump_boost 20 3"] {
+        lines.extend([effect.to_owned(), "tp @s ~ ~8 ~".into(), String::new(), String::new(), String::new(), String::new(), "effect @s clear".into(), "effect @s instant_health 1 4".into(), String::new()]);
+    }
+    lines.extend(["fill ~-1 ~ ~-1 ~1 ~2 ~1 water", "effect @s water_breathing 30 0"].map(String::from));
+    lines.extend(std::iter::repeat_n(String::new(), 20));
+    lines.extend(["fill ~-1 ~ ~-1 ~1 ~2 ~1 air", "effect @s clear", "effect @s instant_health 1 4", ""].map(String::from));
+    for effect in ["haste", "mining_fatigue", "night_vision", "invisibility", "blindness", "levitation", "health_boost"] {
+        lines.extend([format!("effect @s {effect} 20 1"), String::new(), String::new(), "effect @s clear".into(), String::new()]);
+    }
+    lines.extend(["gamemode creative @s", ""].map(String::from));
+    lines
+}

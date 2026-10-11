@@ -1,6 +1,6 @@
 //! Effects on a player, counted down a tick at a time and told as BDS tells them
 //! (docs/research/effects.md).
-// TODO: the twelve effects drilled and no others; one who comes
+// TODO: the effects drilled and no others (health boost is not one); one who comes
 // to see a player is not told its effects, nor are `VisibleMobEffects`; they end unsaid as the
 // player rises. Kept between visits (inventory/store.rs) are the effects and not what is left
 // of absorption's cushion, and what BDS tells of them at a join was not drilled.
@@ -31,6 +31,13 @@ const HUNGERS: f32 = 0.005;
 const WALKS: f32 = 0.1;
 const QUICKENS: f32 = 0.2;
 const QUICKENS_AS: &str = "91aeaa56-376b-4498-935b-2f7f68070635";
+/// What a level of slowness takes of it.
+const SLOWS: f32 = 0.15;
+const SLOWS_AS: &str = "7107de5e-7ce8-4030-940e-514c1f160890";
+/// A level of strength multiplies a hit by the first and adds the second; of weakness likewise
+/// (research/captures/bds-fx.txt: a fist's 1 was 3.99 at strength's second level, 0.3 weak).
+const STRENGTHENS: [f32; 2] = [1.3, 0.3];
+const WEAKENS: [f32; 2] = [0.8, -0.4];
 /// Health a level of absorption puts on top, and the most the client shows.
 const CUSHIONS: f32 = 4.0;
 const MOST_CUSHION: f32 = 16.0;
@@ -69,8 +76,8 @@ fn greet(world: &mut World, player: Entity) {
     effects.2 = false;
     for active in effects.0.clone() {
         tell(world, player, &told(id, MobEffectEventId::Add, &active, active.left));
-        if active.effect == Effect::Speed {
-            tell_pace(world, player, id, Some(active.amplifier));
+        if matches!(active.effect, Effect::Speed | Effect::Slowness) {
+            tell_pace(world, player, id);
         }
     }
 }
@@ -79,19 +86,22 @@ fn told(id: u64, event_id: MobEffectEventId, active: &Active, duration: u32) -> 
     MobEffect { runtime_entity_id: id, event_id, effect_id: active.effect.id(), amplifier: i32::from(active.amplifier), particles: active.particles, duration: duration as i32, tick: 0, ambient: false }
 }
 
-/// The player's walking speed under `levels` of speed, as BDS writes it.
-fn pace(id: u64, levels: Option<u8>, tick: u64) -> UpdateAttributes {
-    let amount = levels.map_or(0.0, |levels| QUICKENS * (f32::from(levels) + 1.0));
-    let modifier = PlayerAttributesItemModifiersItem { id: QUICKENS_AS.into(), name: "MovementSpeed".into(), amount, operation: 2, operand: 2, serializable: false };
+/// The player's walking speed under levels of speed and of slowness, as BDS writes it.
+// TODO: both at once were not drilled: each is taken to multiply the other's.
+fn pace(id: u64, quick: Option<u8>, slow: Option<u8>, tick: u64) -> UpdateAttributes {
+    let modifier = |levels: Option<u8>, id: &str, name: &str, each: f32| {
+        levels.map(|levels| PlayerAttributesItemModifiersItem { id: id.into(), name: name.into(), amount: each * (f32::from(levels) + 1.0), operation: 2, operand: 2, serializable: false })
+    };
+    let modifiers: Vec<_> = [modifier(quick, QUICKENS_AS, "MovementSpeed", QUICKENS), modifier(slow, SLOWS_AS, "MovementSlowdown", -SLOWS)].into_iter().flatten().collect();
     let movement = PlayerAttributesItem {
         min: 0.0,
         max: f32::MAX,
-        current: WALKS * (1.0 + amount),
+        current: modifiers.iter().fold(WALKS, |pace, modifier| pace * (1.0 + modifier.amount)).max(0.0),
         default_min: 0.0,
         default_max: f32::MAX,
         default: WALKS,
         name: "minecraft:movement".into(),
-        modifiers: levels.map(|_| modifier).into_iter().collect(),
+        modifiers,
     };
     UpdateAttributes { runtime_entity_id: id, attributes: vec![movement], tick }
 }
@@ -110,9 +120,23 @@ fn pad(world: &mut World, player: Entity, amount: f32) {
     settle(world, player, Cause::Generic);
 }
 
-fn tell_pace(world: &mut World, player: Entity, id: u64, levels: Option<u8>) {
+/// Tells a player its walking speed under the effects on it now.
+fn tell_pace(world: &mut World, player: Entity, id: u64) {
     let tick = world.resource::<Tick>().0;
-    tell(world, player, &pace(id, levels, tick));
+    let (quick, slow) = (level(world, player, Effect::Speed), level(world, player, Effect::Slowness));
+    tell(world, player, &pace(id, quick, slow, tick));
+}
+
+/// What a hit of `amount` by a player costs under its strength and its weakness.
+pub(crate) fn hits_for(world: &World, player: Entity, amount: f32) -> f32 {
+    let under = |amount: f32, effect: Effect, [times, plus]: [f32; 2]| match level(world, player, effect) {
+        Some(level) => {
+            let by = times.powi(i32::from(level) + 1);
+            amount * by + (by - 1.0) / plus
+        }
+        None => amount,
+    };
+    under(under(amount, Effect::Strength, STRENGTHENS), Effect::Weakness, WEAKENS).max(0.0)
 }
 
 /// Takes the effects `gone` picks off a player, telling each with what was left of it.
@@ -124,7 +148,7 @@ fn take(world: &mut World, player: Entity, gone: impl Fn(&Active) -> bool) -> bo
     for active in &taken {
         tell(world, player, &told(id, MobEffectEventId::Remove, active, active.left));
         match active.effect {
-            Effect::Speed => tell_pace(world, player, id, None),
+            Effect::Speed | Effect::Slowness => tell_pace(world, player, id),
             Effect::Absorption => pad(world, player, 0.0),
             _ => {}
         }
@@ -170,7 +194,7 @@ pub(super) fn give(world: &mut World, player: Entity, effect: Effect, ticks: u32
     effects.1 = true;
     tell(world, player, &told(id, event_id, &now, now.left));
     match effect {
-        Effect::Speed => tell_pace(world, player, id, Some(now.amplifier)),
+        Effect::Speed | Effect::Slowness => tell_pace(world, player, id),
         Effect::Absorption => pad(world, player, CUSHIONS * (f32::from(now.amplifier) + 1.0)),
         _ => {}
     }
@@ -201,8 +225,9 @@ fn act(world: &mut World, player: Entity, active: &Active) {
         Effect::Wither if turn(WITHERS) => drop(hurt(world, player, 1.0, Cause::Wither)),
         Effect::Hunger => feed(world, player, |hunger| hunger.tire(HUNGERS * levels)),
         Effect::Saturation => feed(world, player, |hunger| hunger.feed(levels, levels * 2.0)),
-        // Resistance and fire resistance: `vitals::dress`.
-        Effect::Poison | Effect::Wither | Effect::Speed | Effect::Absorption | Effect::Nausea | Effect::Resistance | Effect::FireResistance => {}
+        // Resistance, fire resistance, jump boost and slow falling: `vitals::dress`. Water
+        // breathing: `vitals::tick`. Strength and weakness: `hits_for`.
+        _ => {}
     }
 }
 

@@ -8,7 +8,7 @@
 mod death;
 pub(crate) mod eating;
 mod effects;
-pub(crate) use effects::{afflict, kept as kept_effects, restored as restored_effects};
+pub(crate) use effects::{afflict, hits_for, kept as kept_effects, restored as restored_effects};
 pub(crate) use struck::{bitten, blasted, shot};
 mod hunger;
 mod kept;
@@ -139,9 +139,13 @@ fn dress(world: &mut World, player: Entity) {
     let armour = world.get::<crate::inventory::Inventory>(player).map_or([0.0; 2], |inventory| inventory.armour());
     let resisted = effects::level(world, player, sapling_api::Effect::Resistance).map_or(0.0, |level| RESISTS * (f32::from(level) + 1.0));
     let fireproof = effects::level(world, player, sapling_api::Effect::FireResistance).is_some();
+    // A level of jump boost forgives a block of a fall, slow falling all of it (bds-fx.txt).
+    let floats = effects::level(world, player, sapling_api::Effect::SlowFalling).is_some();
+    let springs = if floats { f32::INFINITY } else { effects::level(world, player, sapling_api::Effect::JumpBoost).map_or(0.0, |level| f32::from(level) + 1.0) };
     if let Some(mut vitals) = world.get_mut::<Vitals>(player) {
         vitals.health.wear(armour);
         vitals.health.ward((1.0 - resisted).max(0.0), fireproof);
+        vitals.health.spring(springs);
     }
 }
 
@@ -193,13 +197,15 @@ pub(crate) fn tire(world: &mut World, player: Entity, by: f32) {
 /// A tick of what the place a living player stands in does to it.
 fn stand(world: &mut World, player: Entity, layer: Entity) {
     dress(world, player);
+    dress(world, player);
+    let gilled = effects::level(world, player, sapling_api::Effect::WaterBreathing).is_some();
     let (Some(position), Some(mut vitals)) = (world.get::<Position>(player).copied(), world.get::<Vitals>(player).copied()) else { return };
     let Some(level) = world.get::<Layer>(layer).map(|layer| &layer.world) else { return };
     let body = Body::new(position.feet, [0.0; 3], SIZE);
     let (fire, lava, water) = (touches(level, &body, FIERY), touches(level, &body, LAVA), touches(level, &body, WATER));
     let [low, eyes] = [0.0, EYE_HEIGHT].map(|up| [position.feet[0], position.feet[1] + up, position.feet[2]].map(|c| c.floor() as i32));
     // BDS lays a player with only its head in a block down, unhurt.
-    let (under_water, in_wall) = (holds(level, eyes, WATER), is_full_block(level, eyes) && is_full_block(level, low));
+    let (under_water, in_wall) = (holds(level, eyes, WATER) && !gilled, is_full_block(level, eyes) && is_full_block(level, low));
     // A teleport is no fall: until the client follows it, the height starts anew.
     let (carried, sprinting, jumps) = world.get_mut::<Motion>(player).map_or((false, false, 0), |mut motion| (motion.awaits_teleport(), motion.pose.sprinting, std::mem::take(&mut motion.jumps)));
     let from = vitals.was.replace(position.feet).unwrap_or(position.feet);

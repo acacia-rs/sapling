@@ -5,75 +5,92 @@ use crate::{PlayerId, ShardCtx};
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Effect {
     Speed,
+    Slowness,
+    /// Told to the client, which digs faster; the shard does nothing more with it.
+    Haste,
+    /// Told to the client alone, as haste.
+    MiningFatigue,
+    Strength,
     InstantHealth,
     InstantDamage,
+    JumpBoost,
+    /// Told to the client, which sways; the shard does nothing more with it.
+    Nausea,
     Regeneration,
+    Resistance,
+    FireResistance,
+    WaterBreathing,
+    /// Told to the client alone, as are blindness, night vision and levitation.
+    Invisibility,
+    Blindness,
+    NightVision,
     Hunger,
+    Weakness,
     Poison,
     Wither,
     Absorption,
     Saturation,
-    /// Told to the client, which sways; the shard does nothing more with it.
-    Nausea,
-    Resistance,
-    FireResistance,
+    Levitation,
+    SlowFalling,
 }
 
+/// Each effect with the name commands know it by, the translation key of its name, and the id
+/// the wire knows it by.
+const KNOWN: [(Effect, &str, &str, i32); 24] = [
+    (Effect::Speed, "speed", "potion.moveSpeed", 1),
+    (Effect::Slowness, "slowness", "potion.moveSlowdown", 2),
+    (Effect::Haste, "haste", "potion.digSpeed", 3),
+    (Effect::MiningFatigue, "mining_fatigue", "potion.digSlowDown", 4),
+    (Effect::Strength, "strength", "potion.damageBoost", 5),
+    (Effect::InstantHealth, "instant_health", "potion.heal", 6),
+    (Effect::InstantDamage, "instant_damage", "potion.harm", 7),
+    (Effect::JumpBoost, "jump_boost", "potion.jump", 8),
+    (Effect::Nausea, "nausea", "potion.confusion", 9),
+    (Effect::Regeneration, "regeneration", "potion.regeneration", 10),
+    (Effect::Resistance, "resistance", "potion.resistance", 11),
+    (Effect::FireResistance, "fire_resistance", "potion.fireResistance", 12),
+    (Effect::WaterBreathing, "water_breathing", "potion.waterBreathing", 13),
+    (Effect::Invisibility, "invisibility", "potion.invisibility", 14),
+    (Effect::Blindness, "blindness", "potion.blindness", 15),
+    (Effect::NightVision, "night_vision", "potion.nightVision", 16),
+    (Effect::Hunger, "hunger", "potion.hunger", 17),
+    (Effect::Weakness, "weakness", "potion.weakness", 18),
+    (Effect::Poison, "poison", "potion.poison", 19),
+    (Effect::Wither, "wither", "potion.wither", 20),
+    (Effect::Absorption, "absorption", "potion.absorption", 22),
+    (Effect::Saturation, "saturation", "potion.saturation", 23),
+    (Effect::Levitation, "levitation", "potion.levitation", 24),
+    (Effect::SlowFalling, "slow_falling", "potion.slowFalling", 27),
+];
+
 impl Effect {
-    pub const ALL: [Effect; 12] = [Self::Speed, Self::InstantHealth, Self::InstantDamage, Self::Regeneration, Self::Hunger, Self::Poison, Self::Wither, Self::Absorption, Self::Saturation, Self::Nausea, Self::Resistance, Self::FireResistance];
+    pub const ALL: [Effect; 24] = {
+        let mut all = [Effect::Speed; 24];
+        let mut at = 0;
+        while at < all.len() {
+            all[at] = KNOWN[at].0;
+            at += 1;
+        }
+        all
+    };
+
+    fn known(self) -> &'static (Effect, &'static str, &'static str, i32) {
+        KNOWN.iter().find(|known| known.0 == self).expect("every effect is in the table")
+    }
 
     /// The name commands know it by.
     pub fn name(self) -> &'static str {
-        match self {
-            Self::Speed => "speed",
-            Self::InstantHealth => "instant_health",
-            Self::InstantDamage => "instant_damage",
-            Self::Regeneration => "regeneration",
-            Self::Hunger => "hunger",
-            Self::Poison => "poison",
-            Self::Wither => "wither",
-            Self::Absorption => "absorption",
-            Self::Saturation => "saturation",
-            Self::Nausea => "nausea",
-            Self::Resistance => "resistance",
-            Self::FireResistance => "fire_resistance",
-        }
+        self.known().1
     }
 
     /// The translation key of its name.
     pub fn key(self) -> &'static str {
-        match self {
-            Self::Speed => "potion.moveSpeed",
-            Self::InstantHealth => "potion.heal",
-            Self::InstantDamage => "potion.harm",
-            Self::Regeneration => "potion.regeneration",
-            Self::Hunger => "potion.hunger",
-            Self::Poison => "potion.poison",
-            Self::Wither => "potion.wither",
-            Self::Absorption => "potion.absorption",
-            Self::Saturation => "potion.saturation",
-            Self::Nausea => "potion.confusion",
-            Self::Resistance => "potion.resistance",
-            Self::FireResistance => "potion.fireResistance",
-        }
+        self.known().2
     }
 
     /// The id the wire knows it by.
     pub fn id(self) -> i32 {
-        match self {
-            Self::Speed => 1,
-            Self::InstantHealth => 6,
-            Self::InstantDamage => 7,
-            Self::Regeneration => 10,
-            Self::Hunger => 17,
-            Self::Poison => 19,
-            Self::Wither => 20,
-            Self::Absorption => 22,
-            Self::Saturation => 23,
-            Self::Nausea => 9,
-            Self::Resistance => 11,
-            Self::FireResistance => 12,
-        }
+        self.known().3
     }
 
     /// Done in a tick, however long it was given for.
@@ -106,4 +123,17 @@ pub trait EffectBackend {
     fn give_effect(&mut self, player: PlayerId, effect: Effect, ticks: u32, amplifier: u8, particles: bool) -> bool;
     fn remove_effect(&mut self, player: PlayerId, effect: Effect) -> bool;
     fn clear_effects(&mut self, player: PlayerId) -> bool;
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn every_effect_has_a_name_and_an_id_of_its_own() {
+        for (at, effect) in Effect::ALL.into_iter().enumerate() {
+            assert!(Effect::ALL[..at].iter().all(|other| other.id() != effect.id() && other.name() != effect.name()), "{effect:?}");
+        }
+        assert_eq!((Effect::SlowFalling.id(), Effect::Weakness.name(), Effect::Strength.key()), (27, "weakness", "potion.damageBoost"));
+    }
 }

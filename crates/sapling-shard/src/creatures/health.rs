@@ -45,6 +45,8 @@ pub(crate) struct Health {
     /// What it takes of a hit (the resistance effect), and whether fire does nothing to it.
     takes: f32,
     fireproof: bool,
+    /// Blocks of a fall forgiven on top of the three anyone is (jump boost, slow falling).
+    springs: f32,
     /// What viewers know: its health, and whether it is on fire.
     pub(super) told: f32,
     pub(super) lit: bool,
@@ -54,7 +56,7 @@ impl Health {
     /// A mob of `max` health with `left` of it, `burning` ticks more.
     pub(crate) fn new(max: f32, left: Option<f32>, burning: u16) -> Self {
         let left = left.map_or(max, |left| left.clamp(0.0, max));
-        Self { left, max, last: 0.0, guarded: 0, burning, peak: None, air: AIR, walled: 0, landed: None, armour: [0.0; 2], cushion: 0.0, takes: 1.0, fireproof: false, told: left, lit: false }
+        Self { left, max, last: 0.0, guarded: 0, burning, peak: None, air: AIR, walled: 0, landed: None, armour: [0.0; 2], cushion: 0.0, takes: 1.0, fireproof: false, springs: 0.0, told: left, lit: false }
     }
 
     pub(crate) fn left(&self) -> f32 {
@@ -91,6 +93,10 @@ impl Health {
 
     pub(crate) fn ward(&mut self, takes: f32, fireproof: bool) {
         (self.takes, self.fireproof) = (takes, fireproof);
+    }
+
+    pub(crate) fn spring(&mut self, blocks: f32) {
+        self.springs = blocks;
     }
 
     pub(crate) fn is_fireproof(&self) -> bool {
@@ -134,7 +140,7 @@ impl Health {
         let due = self.landed.take().filter(|(harm, _)| self.hurt(*harm));
         let peak = self.peak.map_or(from[1], |peak| peak.max(from[1])).max(to);
         self.peak = (!on_ground && !in_liquid).then_some(peak);
-        let harm = (peak - to - SAFE_FALL).ceil();
+        let harm = (peak - to - SAFE_FALL - self.springs).ceil();
         if on_ground && !in_liquid && harm > 0.0 {
             self.landed = Some((harm, from));
         }

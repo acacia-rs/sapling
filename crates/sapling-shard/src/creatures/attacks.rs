@@ -63,7 +63,7 @@ fn hit(world: &mut World, player: Entity, id: u64) -> Option<()> {
     };
     let mut packets = vec![sapling_net::encode(&swing)];
     let held = world.get::<Inventory>(player).and_then(|inventory| inventory.in_hand().as_ref().map(|held| held.stack.name.clone()));
-    if health.hurt(sapling_data::item_attack(held.as_deref())) {
+    if health.hurt(crate::vitals::hits_for(world, player, sapling_data::item_attack(held.as_deref()))) {
         packets.insert(0, harm::strike(id, &health, Cause::Attack, None));
         let (dx, dz) = (body.at[0] - from[0], body.at[2] - from[2]);
         let far = (dx * dx + dz * dz).sqrt();

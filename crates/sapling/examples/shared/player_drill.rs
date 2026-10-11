@@ -85,6 +85,7 @@ pub fn drill(name: &str) -> Option<(Vec<String>, &'static [&'static str])> {
         "shoot" => (shove::shoot(), shove::BOOM_SHOWN),
         "wear" => (shove::wear(), shove::WEAR_SHOWN),
         "provoke" => (shove::provoke(), hunt::KINDS_SHOWN),
+        "fx" => (shove::fx(), HURT_SHOWN),
         "toil" => (toil(), HURT_SHOWN),
         "armour" => (armour(), HURT_SHOWN),
         "effects" => (effects(), HURT_SHOWN),

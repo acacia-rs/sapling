@@ -37,3 +37,19 @@ fn armour_wears_by_a_quarter_of_a_hit_it_stops_and_a_helmet_by_what_falls_on_it(
     let (told, slots) = hit(&mut h, 2.0, DamageCause::Fire);
     assert!(slots == 0 && told.len() == 1 && told[0][1..] == [5; 3] && (13..=16).contains(&told[0][0]), "{told:?}");
 }
+
+#[test]
+fn slowness_slows_a_player_by_the_modifier_bds_wrote() {
+    // research/captures/bds-fx.txt.
+    use acacia_proto::packets::UpdateAttributes;
+    use sapling_api::Effect;
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    h.enter(2, "Steve");
+    h.remote.run(|ctx| assert!(ctx.give_effect(ALEX, Effect::Slowness, 400, 3, true)));
+    let sent = h.tick_all();
+    let own: Vec<RawPacket> = [1, 2].iter().flat_map(|conn| sent.to(*conn).to_vec()).collect();
+    let paces: Vec<(f32, String, f32)> = all::<UpdateAttributes>(&own).iter().flat_map(|told| told.attributes.clone()).filter(|told| told.name == "minecraft:movement").map(|told| (told.current, told.modifiers[0].name.clone(), told.modifiers[0].amount)).collect();
+    assert!(paces.iter().all(|(pace, name, amount)| (pace - 0.04).abs() < 1e-6 && name == "MovementSlowdown" && (amount + 0.6).abs() < 1e-6) && !paces.is_empty(), "{paces:?}");
+    assert_eq!((Effect::ALL.len(), Effect::ALL.iter().filter(|effect| effect.name() == "levitation").count()), (24, 1));
+}
