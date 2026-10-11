@@ -9,4 +9,5 @@ retry() { for i in 1 2 3 4 5; do "$@" && return 0; echo "retry $i: $1" >&2; slee
 
 # Clear old sources (keep the build cache) so files deleted locally don't linger remotely.
 retry ssh $opts testbox "mkdir -p $remote && find $remote -mindepth 1 -maxdepth 1 ! -name target -exec rm -rf {} +"
-tar czf - -C "$root" --exclude=target --exclude=.git . | retry ssh $opts testbox "tar xzf - -C $remote" || exit 1
+# Captures and notes stay behind: nothing built or run there reads them, and they are most of the tree.
+tar czf - -C "$root" --exclude=target --exclude=.git --exclude=./research --exclude=./docs . | retry ssh $opts testbox "tar xzf - -C $remote" || exit 1

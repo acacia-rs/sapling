@@ -30,8 +30,9 @@ it does on BDS and the two captures can be diffed:
    bone meal (`docs/research/bone-meal.md`, `bonemeal`) are drilled and built; left there: trees
    from saplings, which need a tree generator the shard does not have. Fire is lit, spreads,
    burns and is put out (`docs/research/fire.md`, `fire`, `quench`), its spread by the Java game's odds. Crops, stems and berry bushes
-   grow by themselves at BDS's pace (`docs/research/growth.md`, `crops`); the rest of what random
-   ticks do is left.
+   grow by themselves at BDS's pace, a ripe stem bears, cane, cactus and bamboo grow and
+   farmland dries (`docs/research/growth.md`, `crops`, `grows`); left: trees from saplings, grass
+   spreading, and the rest of what random ticks do.
 
 ## 2. Survival gaps still open
 

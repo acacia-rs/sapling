@@ -184,6 +184,30 @@ pub fn crops() -> Vec<String> {
     lines
 }
 
+/// A row of what else random ticks change, east of the actor at noon, with the random ticks sped
+/// up two hundred times and watched for a minute: cane by water, a cactus, a ripe melon stem by
+/// dirt, bamboo, an oak sapling, dirt by grass, and farmland dry and wet with no water near.
+pub fn grows() -> Vec<String> {
+    let mut lines: Vec<String> = ["fill ~-1 ~-1 ~7 ~10 ~-1 ~23 stone", "tp @s ~ ~ ~15 -90 0", "fill ~1 ~ ~-8 ~10 ~16 ~8 air", "time set noon"].map(String::from).into();
+    let row: [(i32, &[(i32, i32, &str)]); 8] = [
+        (-7, &[(3, -1, "sand"), (4, -1, "water"), (3, 0, "reeds")]),
+        (-5, &[(3, -1, "sand"), (3, 0, "cactus")]),
+        (-3, &[(3, -1, "farmland [\"moisturized_amount\"=7]"), (4, -1, "dirt"), (3, 0, "melon_stem [\"growth\"=7]")]),
+        (-1, &[(3, -1, "dirt"), (3, 0, "bamboo")]),
+        (1, &[(3, -1, "dirt"), (3, 0, "oak_sapling")]),
+        (3, &[(3, -1, "grass_block"), (4, -1, "dirt"), (5, -1, "dirt")]),
+        (5, &[(3, -1, "farmland [\"moisturized_amount\"=0]")]),
+        (7, &[(3, -1, "farmland [\"moisturized_amount\"=7]")]),
+    ];
+    for (z, blocks) in row {
+        lines.extend(blocks.iter().map(|(x, y, block)| format!("setblock ~{x} ~{y} ~{z} {block}")));
+    }
+    lines.push("gamerule randomtickspeed 200".into());
+    lines.extend(std::iter::repeat_n(String::new(), 60));
+    lines.extend(["gamerule randomtickspeed 1", "fill ~1 ~ ~-8 ~10 ~16 ~8 air", "fill ~1 ~-1 ~-8 ~10 ~-1 ~8 stone", "kill @e[type=item]"].map(String::from));
+    lines
+}
+
 /// The drill called `name` of this file, and the packets shown of it.
 pub fn named(name: &str) -> Option<(Vec<String>, &'static [&'static str])> {
     Some(match name {
@@ -195,6 +219,7 @@ pub fn named(name: &str) -> Option<(Vec<String>, &'static [&'static str])> {
         "discs" => (discs(), BONEMEAL_SHOWN),
         "ores" => (ores(), BONEMEAL_SHOWN),
         "crops" => (crops(), BONEMEAL_SHOWN),
+        "grows" => (grows(), BONEMEAL_SHOWN),
         _ => return None,
     })
 }
