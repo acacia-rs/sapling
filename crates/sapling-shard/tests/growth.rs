@@ -54,3 +54,19 @@ fn cane_cactus_and_bamboo_grow_a_stem_bears_and_farmland_dries() {
     let fruit = names(&mut h, 0, &[[4, 65, -2], [2, 65, -2], [3, 65, -3], [3, 65, -1]]);
     assert_eq!(fruit.iter().filter(|name| *name == "melon_block").count(), 1, "one melon beside the stem: {fruit:?}");
 }
+
+#[test]
+fn grass_spreads_to_open_dirt_beside_it_and_not_under_a_block() {
+    // BDS's dirt beside grass was grass in 2 seconds, the dirt beyond it in 8.
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    h.remote.run(|ctx| {
+        assert!(ctx.set_game_rule("randomTickSpeed", sapling_api::RuleValue::Int(200)));
+        let set = [([3, 64, 0], "grass_block"), ([4, 64, 0], "dirt"), ([5, 64, 0], "dirt"), ([3, 64, 1], "dirt"), ([3, 65, 1], "stone")];
+        for (at, name) in set {
+            assert!(ctx.set_block(at, &block(name, "")));
+        }
+    });
+    let spread = names(&mut h, 1200, &[[4, 64, 0], [5, 64, 0], [3, 64, 1]]);
+    assert_eq!(spread, ["grass_block", "grass_block", "dirt"]);
+}

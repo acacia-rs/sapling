@@ -48,6 +48,10 @@ sweet berry bush one time in five. A ripe stem puts its fruit on free dirt, gras
 beside it and turns to it. Cane and cactus age sixteen ticks a segment up to three high, bamboo
 grows one tick in five up to fourteen high with BDS's leaves, and farmland, ticked three times
 as often, is wet by water within four, else dries a step and, bare and dry, turns to dirt.
+Dirt open to the air becomes grass with the chance the grass blocks near it have of picking it
+(four tries in 45 cells each, the Java game's, which BDS's two and six seconds fit); the dirt is
+what sapling keeps track of, not the grass. Bamboo's odds were changed from one tick in three
+after sapling's capture, which shows it three times too fast.
 
 In sapling's run of the drill (`sapling-crops.txt`) all 24 wheat were ripe between 7 and 35
 seconds in, half of them by 19: BDS's pace.
@@ -55,7 +59,7 @@ seconds in, half of them by 19: BDS's pace.
 ## Left
 
 - Light: the game grows nothing below light 9; sapling asks for none.
-- Trees from saplings, and grass spreading to dirt: measured above, not built.
+- Trees from saplings: measured above, not built. Grass under a block does not die.
 - Farmland getting wet was not measured; a pumpkin's facing, and what ground a fruit takes, are
   the Java game's.
 - Everything else a random tick does: mycelium, leaves, ice and snow, copper, vines, kelp; fire

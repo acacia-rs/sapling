@@ -1,8 +1,8 @@
 //! Random ticks for what grows and dries: each crop, stem, berry bush, cane, cactus, bamboo and
 //! farmland has the chance a tick that a cell picked at random around a player has on BDS
 //! (docs/research/growth.md); what a tick then does is in rules.rs.
-// TODO: no light is asked for, where the game wants 9; saplings grow no tree; grass, leaves, ice
-// and the rest take no random tick.
+// TODO: no light is asked for, where the game wants 9; saplings grow no tree; grass under a
+// block does not die; leaves, ice and the rest take no random tick.
 
 mod rules;
 
@@ -20,6 +20,7 @@ const RULE: &str = "randomTickSpeed";
 /// average and its wheat grew at the pace 1900 gives.
 const EVERY: f32 = 1800.0;
 const CHANCES: u32 = 1 << 20;
+const DIRT: &str = "minecraft:dirt";
 
 /// The cells that hold something a random tick changes, by world: sampling every cell around
 /// the players as BDS does cost more than a tick has when the rule is set high.
@@ -46,15 +47,23 @@ impl Picks {
     }
 }
 
-fn ticked_at(world: &World, layer: Entity, [x, y, z]: BlockPos) -> Option<&str> {
-    let level = level(world, layer).filter(|level| level.in_height(y))?;
-    level.registry().get(level.block(x, y, z)).filter(|state| rules::is_ticked(state.name, state.properties)).map(|state| state.name)
+/// The name of the block at `pos`, if it is one kept track of.
+fn kept(level: &sapling_world::World, [x, y, z]: BlockPos) -> Option<&str> {
+    let name = level.in_height(y).then(|| level.registry().get(level.block(x, y, z))).flatten().filter(|state| rules::is_ticked(state.name, state.properties)).map(|state| state.name)?;
+    (name != DIRT || rules::is_open(level, [x, y, z])).then_some(name)
+}
+
+fn ticked_at(world: &World, layer: Entity, pos: BlockPos) -> Option<&str> {
+    kept(level(world, layer)?, pos)
 }
 
 /// A block was written at `pos`: one a random tick changes is kept track of.
 pub(super) fn written(world: &mut World, layer: Entity, pos: BlockPos) {
-    if ticked_at(world, layer, pos).is_some() {
-        world.get_resource_or_insert_with(Growing::default).0.insert((layer, pos));
+    // And the cell under it: dirt a block was taken off is open now.
+    for cell in [pos, [pos[0], pos[1] - 1, pos[2]]] {
+        if ticked_at(world, layer, cell).is_some() {
+            world.get_resource_or_insert_with(Growing::default).0.insert((layer, cell));
+        }
     }
 }
 
@@ -62,7 +71,8 @@ pub(super) fn written(world: &mut World, layer: Entity, pos: BlockPos) {
 pub(crate) fn arrived(world: &mut World, layer: Entity, column: ChunkPos) {
     let Some(level) = level(world, layer) else { return };
     let registry = level.registry();
-    let found = level.find_blocks(column, |id| registry.get(id).is_some_and(|state| rules::is_ticked(state.name, state.properties)));
+    let mut found = level.find_blocks(column, |id| registry.get(id).is_some_and(|state| rules::is_ticked(state.name, state.properties)));
+    found.retain(|pos| kept(level, *pos).is_some());
     if !found.is_empty() {
         world.get_resource_or_insert_with(Growing::default).0.extend(found.into_iter().map(|pos| (layer, pos)));
     }

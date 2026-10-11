@@ -26,6 +26,11 @@ const BAMBOO_HEIGHT: i32 = 14;
 const BAMBOO_ODDS: u32 = 5;
 /// A fruit grows over these.
 const FRUIT_GROUND: [&str; 5] = [FARMLAND, "minecraft:dirt", "minecraft:grass_block", "minecraft:coarse_dirt", "minecraft:podzol"];
+const DIRT: &str = "minecraft:dirt";
+const GRASS: &str = "minecraft:grass_block";
+/// Of the 45 cells a grass block's random tick may pick, it tries this many.
+const GRASS_CELLS: u32 = 45;
+const GRASS_TRIES: u32 = 4;
 const SIDES: [Face; 4] = [Face::North, Face::South, Face::West, Face::East];
 
 type Level = sapling_world::World;
@@ -58,17 +63,30 @@ fn shown(pos: BlockPos, id: u32) -> Change {
     Change { pos, id, quiet: false }
 }
 
-/// Whether the block is one random ticks change, and so kept track of.
+/// Whether the block is one random ticks change, and so kept track of: dirt only where it is
+/// open to the air ([`is_open`]).
 pub(super) fn is_ticked(name: &str, properties: &str) -> bool {
     let growth = || number(properties, "growth");
     match name {
-        FARMLAND | BAMBOO => true,
+        FARMLAND | BAMBOO | DIRT => true,
         BUSH => growth().is_some_and(|growth| growth < RIPE_BUSH),
         _ if CROPS.contains(&name) => growth().is_some_and(|growth| growth < RIPE),
         // A stem that bore its fruit points at it and is done.
         _ if STEMS.iter().any(|(stem, _)| *stem == name) => number(properties, "facing_direction") == Some(0),
         _ => COLUMNS.contains(&name),
     }
+}
+
+/// Whether the cell over `pos` is free: grass comes to no dirt under a block.
+pub(super) fn is_open(level: &Level, [x, y, z]: BlockPos) -> bool {
+    is_air(level, [x, y + 1, z])
+}
+
+/// The grass blocks whose random tick may pick the dirt at `pos`: the Java game's reach, one
+/// across and from one under to three over.
+fn grass_near(level: &Level, [x, y, z]: BlockPos) -> u32 {
+    let cells = (-1..=1).flat_map(|dx| (-1..=3).flat_map(move |dy| (-1..=1).map(move |dz| [x + dx, y + dy, z + dz])));
+    cells.filter(|cell| name_at(level, *cell) == Some(GRASS)).count() as u32
 }
 
 /// How many random ticks the block takes for each one a crop takes: BDS's farmland dried a step
@@ -159,6 +177,8 @@ pub(super) fn ticked(level: &Level, pos: BlockPos, picks: &mut Picks) -> Vec<Cha
             let tall = height(level, pos, name) + 1;
             if tall > BAMBOO_HEIGHT { Vec::new() } else { bamboo(level, above, tall) }
         }
+        // Seen from the dirt: each grass block near has its tries at it.
+        DIRT if is_open(level, pos) && picks.below(GRASS_CELLS) < GRASS_TRIES * grass_near(level, pos) => send::resolve(registry, &Block::new(GRASS)).map(|id| shown(pos, id)).into_iter().collect(),
         FARMLAND => {
             let wet = number(properties, WET).unwrap_or(0);
             let is_sown = name_at(level, above).is_some_and(|over| CROPS.contains(&over) || STEMS.iter().any(|(stem, _)| *stem == over));
