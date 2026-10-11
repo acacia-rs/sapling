@@ -108,6 +108,11 @@ impl Block {
         (Block::Water..=Block::Lava15).contains(&self)
     }
 
+    /// The `water` type, at any depth: what BDS's compares of a block's type or material with water accept.
+    pub fn is_water(self) -> bool {
+        (Block::Water..Block::Lava).contains(&self)
+    }
+
     pub fn is_lava(self) -> bool {
         (Block::Lava..=Block::Lava15).contains(&self)
     }

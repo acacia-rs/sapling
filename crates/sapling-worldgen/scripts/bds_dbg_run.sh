@@ -23,7 +23,8 @@ rm -rf "$pack"; cp -r "$pack_src" "$pack"
 # EXTRA_PACK: a folder of pack files laid over the oracle pack (scripts/feature_override_pack.py).
 if [ -n "${EXTRA_PACK:-}" ]; then cp -r "$EXTRA_PACK"/. "$pack"/; fi
 # The slowed server must not miss the load deadline: a retried tile generates its chunks twice.
-printf 'export const REGIONS = [%s];\nexport const TILE = 8;\nexport const WORKERS = 6;\nexport const SETTLE = 20;\nexport const LOAD_TIMEOUT = %d;\n' "$regions" "${WORLDGEN_LOAD_TICKS:-12000}" >"$pack/scripts/regions.js"
+# WORLDGEN_WORKERS: tiles loaded at once. With 6, the near origin tile 8,8,15,15 stalls and is retried; with 1 it loads.
+printf 'export const REGIONS = [%s];\nexport const TILE = 8;\nexport const WORKERS = %d;\nexport const SETTLE = 20;\nexport const LOAD_TIMEOUT = %d;\n' "$regions" "${WORLDGEN_WORKERS:-6}" "${WORLDGEN_LOAD_TICKS:-12000}" >"$pack/scripts/regions.js"
 rm -rf "$bds/worlds"; mkdir -p "$bds/worlds/$level"
 echo '[{"pack_id": "7a3d2f60-5c1e-4b8a-9d47-0e6f1b2c3a01", "version": [1, 0, 0]}]' >"$bds/worlds/$level/world_behavior_packs.json"
 props="$bds/server.properties"
@@ -34,6 +35,7 @@ server-port=$port
 server-portv6=$((port + 1))
 online-mode=false
 content-log-console-output-enabled=true
+script-watchdog-enable=false
 max-threads=${WORLDGEN_THREADS:-8}"
 keys=$(sed 's/=.*//' <<<"$settings" | paste -sd'|')
 { grep -vE "^($keys)=" "$props" || true; echo "$settings"; } >"$props.new"
