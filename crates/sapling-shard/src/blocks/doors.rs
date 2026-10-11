@@ -1,7 +1,7 @@
 //! Blocks a hand moves (doors, trapdoors, fence gates and levers open and shut, buttons go in
 //! for a second) and the second cell of doors and beds, which is placed, opened and broken with
 //! the first.
-// TODO: a gate does not swing away from its user, and `door.open`/`door.close` are named by the pattern of the other
+// TODO: a gate does not swing away from its user, and `door.open`/`door.close` were heard on BDS (`sounds` drill), as were the other
 // sounds: the server's binary holds those as plain strings, but not these two.
 
 use bevy_ecs::prelude::*;
@@ -77,11 +77,16 @@ pub(super) fn second_cell(registry: &BlockRegistry, id: u32, pos: BlockPos) -> O
     Some((ahead(registry, id, pos, 1)?, with(registry, id, HEAD, "1")?))
 }
 
-/// Fills the second cell of a two-cell block just placed at `pos`; where that cell is.
-pub(super) fn place_second_cell(world: &mut World, layer: Entity, pos: BlockPos) -> Option<BlockPos> {
-    let level = level(world, layer)?;
-    let (cell, state) = second_cell(level.registry(), level.block(pos[0], pos[1], pos[2]), pos)?;
+/// Fills the second cell of the two-cell block `id` just placed at `pos`; where that cell is.
+pub(super) fn place_second_cell(world: &mut World, layer: Entity, pos: BlockPos, id: u32) -> Option<BlockPos> {
+    let (cell, state) = second_cell(level(world, layer)?.registry(), id, pos)?;
     send::set(world, layer, cell, state).then_some(cell)
+}
+
+/// The lower half of the door `id` as it stands in the world: BDS keeps a door's hinge in its
+/// upper half alone (research/captures/bds-sounds.txt). Any other block is left as it is.
+pub(super) fn lower_half(registry: &BlockRegistry, id: u32) -> u32 {
+    with(registry, id, HINGE, "0").filter(|_| property(registry, id, UPPER) == Some("0")).unwrap_or(id)
 }
 
 /// Stands the upper half of a door whose lower half was just put at `pos`, shut, when the cell
@@ -97,14 +102,16 @@ pub(super) fn put_upper_half(world: &mut World, layer: Entity, [x, y, z]: BlockP
 }
 
 /// The door `id` about to stand at `pos`, placed by a look into `quarter`, hinged on the right
-/// where the same door stands to its left or only its right has a solid block to hang on: the
-/// Java game's `DoorBlock.getHinge` without its tie-break by where the click fell
-/// (docs/research/block-rules.md). Any other block is left as it is.
+/// where the same door stands to its left or only its right has a solid block to hang on, a
+/// door not being one: what BDS did with a block and with a door on each side
+/// (research/captures/bds-sounds.txt), without the Java game's tie-break by where the click
+/// fell (docs/research/block-rules.md). Any other block is left as it is.
 pub(super) fn hinged(level: &sapling_world::World, id: u32, pos: BlockPos, quarter: usize) -> u32 {
     let (registry, [x, z]) = (level.registry(), LEFT[quarter % 4]);
     let beside = |side: i32| registry.get(level.block(pos[0] + side * x, pos[1], pos[2] + side * z));
-    let is_pair = beside(1).map(|state| state.name) == registry.get(id).map(|state| state.name);
-    let hangs_right = beside(-1).is_some_and(|state| state.is_solid()) && !beside(1).is_some_and(|state| state.is_solid());
+    let door = registry.get(id).map(|state| state.name);
+    let is_pair = beside(1).map(|state| state.name) == door;
+    let hangs_right = beside(-1).is_some_and(|state| state.is_solid() && Some(state.name) != door) && !beside(1).is_some_and(|state| state.is_solid());
     Some(id).filter(|_| is_pair || hangs_right).and_then(|id| with(registry, id, HINGE, "1")).unwrap_or(id)
 }
 
@@ -120,8 +127,14 @@ pub(crate) struct Pressed(Vec<(u64, Entity, BlockPos)>);
 
 /// Lets those who see the block at `pos` hear it make the sound `name`.
 fn play(world: &mut World, layer: Entity, pos: BlockPos, name: &str) {
+    let Some(id) = level(world, layer).map(|level| level.block(pos[0], pos[1], pos[2])) else { return };
+    play_as(world, layer, pos, name, id);
+}
+
+/// As [`play`], the sound naming the block state `id`.
+fn play_as(world: &mut World, layer: Entity, pos: BlockPos, name: &str, id: u32) {
     let Some(level) = level(world, layer) else { return };
-    let heard = send::sound(name, level.registry(), pos, level.block(pos[0], pos[1], pos[2]));
+    let heard = send::sound(name, level.registry(), pos, id);
     send::to_viewers(world, layer, pos, &[heard]);
 }
 
@@ -198,8 +211,14 @@ pub(super) fn use_by_hand(world: &mut World, layer: Entity, pos: BlockPos, name:
         _ if name.ends_with("lever") => ["button.click_on", "button.click_off"],
         _ => return,
     };
+    // A door's sound names the state it had, a trapdoor's and a gate's the one they have now
+    // (research/captures/bds-sounds.txt).
+    let before = level(world, layer).map(|level| level.block(pos[0], pos[1], pos[2])).filter(|_| sounds[0] == "door.open");
     if let Some(now_open) = toggle(world, layer, pos) {
-        play(world, layer, pos, sounds[usize::from(!now_open)]);
+        match before {
+            Some(id) => play_as(world, layer, pos, sounds[usize::from(!now_open)], id),
+            None => play(world, layer, pos, sounds[usize::from(!now_open)]),
+        }
     }
 }
 

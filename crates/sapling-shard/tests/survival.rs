@@ -158,7 +158,8 @@ fn a_second_door_hinges_on_the_other_side_and_a_bed_lies_ahead_of_its_placer() {
     h.receive(1, &click(NEAR, 1, None));
     let second = blocks(h.tick_all().to(2));
     assert_eq!([first.len(), second.len()], [2, 2], "{first:?} {second:?}");
-    assert!(first.iter().all(|cell| !is_hinged_right(cell.1)) && second.iter().all(|cell| is_hinged_right(cell.1)));
+    // The hinge is the upper half's alone (research/captures/bds-sounds.txt).
+    assert!(first.iter().all(|cell| !is_hinged_right(cell.1)) && second.iter().map(|cell| is_hinged_right(cell.1)).collect::<Vec<_>>() == [false, true], "{second:?}");
 
     let mut h = with_in_hand(Some(Item::new("minecraft:bed", 1)));
     let head = [1, 65, 1];

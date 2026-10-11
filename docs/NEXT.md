@@ -59,9 +59,10 @@ Each needs its rule looked up first (`bdsre` for BDS, the Java jar for data), th
 
 - Mirrored shaped recipes are accepted (`Recipe::is_laid_out`) from memory of the game; decompile
   `ShapedRecipe::matches` to confirm.
-- A door's hinge follows the Java game's rule without its tie-break by where the click fell.
-- `door.open` / `door.close` sound names are by the pattern of the others; a chest's own sounds were
-  not found and are not sent.
+- A door's hinge was checked against BDS with a block and with a door on either side (`bds_command_probe
+  sounds`); the Java game's tie-break by where the click fell is still left out.
+- The sounds of a door, trapdoor, gate, chest, barrel and ender chest opening were heard on BDS and
+  agree (`sounds`); those of a chest, barrel and ender chest shutting were not heard there.
 - Piston orientation comes from other servers' code only.
 - Block loot is the Java game's tables under Bedrock names (`sapling-data/data/block-loot.tsv`).
 - Whether a vanilla client names a hopper's slots `Container` is the bot's assumption.

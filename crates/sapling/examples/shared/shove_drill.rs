@@ -206,3 +206,24 @@ pub fn clock() -> Vec<String> {
     lines.extend(["xp 7 @s", "xp 30 @s", "xp 3L @s", "xp -1L @s", "xp -5 @s", "xp 5", "xp -100L @s", "xp 2l @s", "xp banana @s", "xp 1 @e[type=cow]", ""].map(String::from));
     lines
 }
+
+pub const SOUNDS_SHOWN: &[&str] = &["LevelSoundEvent", "LevelEvent", "BlockEvent", "UpdateBlock", "UpdateSubchunkBlocks", "ContainerOpen"];
+
+/// The actor clicks a door, a trapdoor and a fence gate open and shut, and a chest, a barrel
+/// and an ender chest open; then puts down doors by hand: one alone, one with a block on each
+/// side in turn, and one beside a door.
+pub fn sounds() -> Vec<String> {
+    let mut lines: Vec<String> = ["kill @e[type=!player]", "fill ~-2 ~-1 ~-2 ~6 ~-1 ~40 stone", "fill ~-2 ~ ~-2 ~6 ~4 ~40 air", "gamemode creative @s", ""].map(String::from).into();
+    for block in ["wooden_door", "trapdoor", "fence_gate", "chest", "barrel", "ender_chest"] {
+        lines.extend(["tp @s ~ ~ ~3".into(), format!("setblock ~1 ~ ~ {block}"), String::new(), "!click 1 0 0".into(), String::new(), String::new(), "!click 1 0 0".into(), String::new(), String::new()]);
+    }
+    lines.extend(["clear @s", "give @s wooden_door 8", ""].map(String::from));
+    // Alone; a block on one side, then the other; a door on one side, then the other.
+    for setup in [&[][..], &["setblock ~1 ~ ~1 stone"], &["setblock ~1 ~ ~-1 stone"], &["!place 1 -1 1", ""], &["!place 1 -1 -1", ""]] {
+        lines.push("tp @s ~ ~ ~4".into());
+        lines.extend(setup.iter().map(|line| (*line).to_owned()));
+        lines.extend(["!place 1 -1 0", ""].map(String::from));
+    }
+    lines.extend(["clear @s", ""].map(String::from));
+    lines
+}

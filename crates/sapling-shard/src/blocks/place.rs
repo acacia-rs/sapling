@@ -106,12 +106,13 @@ impl Request<'_> {
     /// Puts what a place event ended with into the world; false for a block the game lacks.
     fn put(&mut self, site: &Site, pos: BlockPos, click: &Click, block: &Block) -> bool {
         let Some(registry) = level(self.world, site.layer).map(|level| level.registry()) else { return false };
-        let Some(id) = send::resolve(registry, block).filter(|_| !block.is_air()) else { return false };
+        let Some(whole) = send::resolve(registry, block).filter(|_| !block.is_air()) else { return false };
+        let id = doors::lower_half(registry, whole);
         let sound = send::place_sound(registry, pos, id);
         let placed = send::set(self.world, site.layer, pos, falling::as_put(self.world, site.layer, pos, id));
         if placed {
             send::to_viewers(self.world, site.layer, pos, &[sound]);
-            let second = doors::place_second_cell(self.world, site.layer, pos);
+            let second = doors::place_second_cell(self.world, site.layer, pos, whole);
             // A bed's colour and a banner's are the item's, which the block cannot say.
             let damage = self.world.get::<Inventory>(self.entity).and_then(|inventory| inventory.in_hand().as_ref()).map_or(0, |held| held.stack.damage);
             let placing = entities::Placing { damage, yaw: click.yaw, properties: &block.properties };

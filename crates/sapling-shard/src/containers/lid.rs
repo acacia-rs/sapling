@@ -54,8 +54,10 @@ pub(super) fn set(world: &mut World, layer: Entity, halves: &[BlockPos], open: b
     let (registry, id) = (level.registry(), level.block(pos[0], pos[1], pos[2]));
     let Some(name) = registry.get(id).map(|state| state.name) else { return };
     let Some(([opening, shutting], late)) = sounds(name) else { return };
-    let heard = blocks::sound(if open { opening } else { shutting }, registry, pos, id);
     let turned = blocks::with_property(registry, id, "open_bit", if open { "1" } else { "0" }).filter(|_| name == BARREL);
+    // A barrel's sound names the state it turns to (research/captures/bds-sounds.txt, opening;
+    // shutting was not heard there).
+    let heard = blocks::sound(if open { opening } else { shutting }, registry, pos, turned.unwrap_or(id));
     if let Some(turned) = turned {
         blocks::set(world, layer, pos, turned);
     }
