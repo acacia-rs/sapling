@@ -1,6 +1,7 @@
 //! Java's `SimplexNoise` as BDS computes it in f32 (2D 145e27a70, 3D 145e27d50, built by 145e2a730).
 
-const F2: f32 = 0.366_025_42;
+/// Set at startup by 145e2d940 (0x3ebb67ae): one ulp under the f32 nearest (sqrt(3) - 1) / 2.
+const F2: f32 = f32::from_bits(0x3ebb_67ae);
 const G2: f32 = 0.211_324_87;
 
 const GRADIENTS: [[f32; 3]; 12] = [

@@ -71,3 +71,25 @@ impl SurfaceNoises {
         total
     }
 }
+
+#[cfg(test)]
+mod tests {
+    /// `SAPLING_DEPTH_AT=x,z cargo test --lib depth_octaves -- --ignored --nocapture`: each octave's input and
+    /// value at a column of seed 20261003, to set beside a debugger log of 148211af0.
+    #[test]
+    #[ignore]
+    fn depth_octaves() {
+        let at = std::env::var("SAPLING_DEPTH_AT").unwrap_or_else(|_| "1600014,1600103".into());
+        let [x, z]: [i32; 2] = at.split(',').map(|v| v.parse().unwrap()).collect::<Vec<_>>().try_into().unwrap();
+        let noises = super::SurfaceNoises::new(&crate::random::Xoroshiro::from_seed(20261003).fork_positional(), 20261003);
+        let mut scale = 1.0f32;
+        for octave in &noises.depth {
+            let [xo, zo] = octave.origin;
+            let (px, pz) = (x as f32 * scale * 0.125 + xo, z as f32 * scale * 0.125 + zo);
+            let value = octave.value(px, pz);
+            println!("octave input ({px}, {pz}) value {value} {:08x}", value.to_bits());
+            scale *= 0.5;
+        }
+        println!("depth noise {}", noises.depth(x, z));
+    }
+}
