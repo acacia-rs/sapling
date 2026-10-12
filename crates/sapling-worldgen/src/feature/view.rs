@@ -200,8 +200,9 @@ impl<'a> View<'a> {
 
     /// False, writing nothing, outside the world's height and the writable region, and when the
     /// block is already there (`BlockSource::setBlock` 1415f6ae0 reports whether the block changed).
-    /// No neighbour hears of it: docs/research/worldgen-bds-liquids.md, "Feature writes wake nothing".
-    pub fn set_block(&mut self, x: i32, y: i32, z: i32, block: Block) -> bool {
+    /// No liquid hears of it (docs/research/worldgen-bds-liquids.md, "Feature writes wake nothing"); for the
+    /// fences beside it see view_connect.rs.
+    pub(super) fn set_block_alone(&mut self, x: i32, y: i32, z: i32, block: Block) -> bool {
         let Some((slot, index)) = self.locate(x, y, z) else { return false };
         let seen = self.read(slot, index);
         // The liquid layer of a waterlogged plant stays under a waterloggable block.

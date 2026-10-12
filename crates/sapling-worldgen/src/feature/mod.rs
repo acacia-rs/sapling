@@ -48,6 +48,7 @@ mod ticks;
 pub(crate) mod trace;
 mod tree;
 mod view;
+mod view_connect;
 
 use std::collections::HashMap;
 use std::sync::Arc;
