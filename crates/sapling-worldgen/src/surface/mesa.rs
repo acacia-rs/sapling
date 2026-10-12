@@ -110,7 +110,8 @@ pub fn build(column: &mut Column, materials: Materials, mesa: Mesa, noises: &Mes
     let (x, z) = (column.world.0 as f32, column.world.1 as f32);
     let pillar_top = if mesa.bryce_pillars { noises.pillar_top(x, z).floor() as i32 } else { 0 };
     let noise = depth_noise / 3.0;
-    let depth = (random.next_float() * 0.25 + noise + 3.0) as i32;
+    // 1487dcfe5: summed as in overworld.rs `surface_depth`.
+    let depth = (random.next_float() * 0.25 + (noise + 3.0)) as i32;
     let cos = (noise * std::f32::consts::PI).cos();
     let top = (column.lower..=TOP_Y).rev().find(|&y| column.get(y) != Block::Air);
     if top.is_some_and(|y| column.get(y).is_fluid()) {

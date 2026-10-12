@@ -7,7 +7,7 @@ mod arm;
 mod crust;
 mod shape;
 
-pub use crust::crust;
+pub use crust::{crust, set_dead_coral};
 
 use super::aquatic;
 use super::view::View;

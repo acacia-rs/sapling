@@ -472,6 +472,110 @@ Open under replay, each with its first source:
   in exactly the cells where the stock world (and the crust templates) have `dead_bubble_coral_block`. Which
   of the canon's differences from a stock BDS does it (thread seed 0, one worker, no ticks) is not known.
 
+## replay6: the last replay residue (2026-10-12, worldgen/replay6)
+Every region of the oracle tests now has one current canon (`tools/replay-canons.txt`, structure regions in
+`tools/replay-worlds.txt`, superseded runs in comment blocks); `tools/replay-all.sh <prefix>` prints one line per
+region. On the final commit:
+
+Commit 89346a6, wrong + missing per region against its canon (structure stage in brackets where non-zero); the
+branch point (replay5's final table) beside it where it was not 0:
+
+| region | canon | replay6 | replay5 |
+|---|---|---|---|
+| near origin (32x32) | origin3 | 25 | no canon |
+| far out (8x8) | far | 5 | 5 |
+| negative seed (8x8) | neg | 0 | 0 |
+| warm ocean | warmocean (g6) | 0 | 295 |
+| desert | desert3 | 0 | 4 |
+| frozen ocean | frozenocean (g5; ds2 also 0) | 0 | 5 |
+| mansion | mansion4 | 68 | 68 (85 on mansion3) |
+| monument | c-mo | 10 | 10 |
+| desert pyramid | c-dp | 2 [2] | 2 |
+| pillager outpost | c-po | 0 | 4 |
+| igloo, snowy slopes | c-is | 0 | 1 |
+| stronghold | c-st | 0 | 1 |
+| village | c-vi | 0 [1] | 0 [1] |
+| the other 19 biome regions, 19 tree regions, ancient city (city6) and 10 structure regions | | 0 each | 0 each |
+| all 59 regions | | 110 | 395 |
+
+What was found (each proven on a one-worker run of its region, cell for cell or draw for draw):
+- **Near origin has a canon** (`origin3`, the whole 32x32 region): 25 cells wrong or missing of 100.7M and 3
+  bubble column cells, against 1448 on the stock world. The 32x32 run failed for two reasons. The script watchdog
+  cut the pack under the debugger (`script-watchdog-enable=false` in `bds_dbg_run.sh`). And tile 8,8,15,15 stalls
+  with chunks 12,14..16 never loaded whenever six tiles load at once (also without a debugger, also on the stock
+  oracle); the pack's retry removed the area, so 282 chunks were decorated twice. One tile at a time does not
+  stall but drops each tile's margin before the next asks for it (1040 chunks decorated twice). `WORLDGEN_KICK=true`
+  adds a second area over the missing chunks and keeps the first: they load within seconds and no chunk is
+  generated twice (`dbg_loads.py`: 1893 decorations, 0 repeated).
+- **Desert 4 -> 0: disks start in water of any depth.** The four sand cells were not the surface stage: source
+  -445,557's sand disk at -7116,21,8914 stands in falling water (depth 13) and turns the dirt of an earlier ore
+  blob within its radius to sand. `SandFeature::place` (149d60440) and `ClayFeature::place` (148287a70) test the
+  material; ours asked for a source. `IcebergFeature` and `BlueIceFeature` compare the type the same way.
+- **Warm ocean's dead coral is drawn from the clock.** The crust templates hold `coral_block[variant=dead_coral]`,
+  which the legacy converter (141f71f20, case at 141f73173) turns into one of the five dead coral blocks by
+  `Random(steady_clock ns / 10^6).nextInt(5)` when the template is loaded: neither the world seed nor the thread
+  seed, so no patch of ours pins it and each BDS start may pick another block (seven loads logged in one run, each
+  pick the block that run saved). The port keeps bubble (the stock worlds' draw) and a replay takes the run's colour
+  from `env.txt` beside the canon (`SAPLING_ORACLE_DEAD_CORAL`): warm ocean 292 -> 0 on `g6` (brain) and `wo` (fire).
+- **Warm ocean's last 3 cells: `query.above_top_solid` reads the material.** `CoralFeature::place` was logged at
+  its four tries: BDS's try 1 starts at y 56, ours at 52. `getAboveTopSolidBlock` (140a08bb0) stops at a block
+  whose material blocks motion (byte +3); a coral wall fan's does, so the try started over the fan and placed
+  nothing. Table of the 189 types whose material does not: `block/material_table.rs`.
+- **Frozen ocean 5 -> 0: the iceberg's ellipse distance is squared and summed in doubles** (149e906b9). The
+  underwater loop logged per iteration (rule generator index at the steep-radius draw, 3332 iterations) parted
+  from ours at p -4, q 0, y -8, where BDS's distance is -8.35e-9 (inside: two more draws) and floats gave 0. The
+  reach of each layer is computed in doubles too (149e905df).
+- **Pillager outpost 4 -> 0: snow layers by `TopSnowBlock::mayPlace`** (1471fc4a0): on leaves (material 7); not on
+  ice, frosted ice, barriers (materials 13, 19) or fences, walls, gates, cauldrons, composters (property bits
+  0x10000050); else by the full support of the top face below. The fit "blocks motion, full cube for structures"
+  put layers on the outpost's torches.
+- **Igloo, snowy slopes 1 -> 0: the flower forest list**, read off the live server (0x14ccdae18 by a debugger
+  probe): poppy, blue orchid, allium, azure bluet, four tulips, oxeye daisy, cornflower, lily of the valley; the
+  function turns the blue orchid into a poppy. Ours had Java's (dandelion first).
+- **Seagrass by `SeagrassBlock::mayPlace`** (148b4dac0): a water source over a top face with centre support that is
+  not magma, soul sand or a fence (the list 0x14ccd9428, read live). Replaces a full-cube fit; no canon moved.
+- **Fences beside a feature's write.** A feature writes with `setBlock` flag 3, which has a fence, pane or bar beside
+  the cell redo its side toward it and cascades (worldgen-bds-templates.md, "The update pass", 3); it wakes no liquid.
+  `feature/view_connect.rs`. The stronghold canon's pen fence beside a tree's log (-1426,69,-1919) now joins it (1 -> 0). The side
+  is decided by the registry's support classes (a full face toward the fence): with the structure stage's full-cube
+  test, mineshaft fences beside a feature's pointed dripstone joined it, which BDS's do not (32 cells).
+
+Stock oracle, wrong + missing over all 59 regions, branch point (02ee652) -> 89346a6: ticked 22040 -> 22022, still
+22921 -> 22903. Only frozen ocean (-5), desert (-4), warm ocean (-3), pillager outpost (-4), igloo on snowy slopes
+(-1) and stronghold (-1) moved, in both sets; none rose. The stock worlds' remaining cells are their own run order,
+thread draws and dead coral colour.
+- **Fits checked against the binary.** Leaf litter: `LeafLitterBlock::canSurvive` 142fdeb80 asks 141a24e50 of the
+  block below (centre and edge support of the top face; stairs through their component), now ported as such.
+  Mushrooms: `mayPlaceOn` 1465eabf0 returns the block below's byte +0x71, as fitted. Magma blob
+  (`PartiallyExposedBlobFeature::place` 149d5cf50): a cell is open when its material is water, its type air or its
+  liquid layer's material water, as fitted. Containers: `placeInWorld` draws the loot seed (141eed154) for block
+  actors of type 2 (chests) whose tag lacks `LootTableSeed`: barrels do not draw, removed.
+- **Surface depth** is `draw * 0.25 + (noise / 3 + 3)` in that float order (14580a95d, mesa 1487dcfe5); ours summed
+  left to right. No canon moved; far out's dirt cell (1600014,53,1600103, a third layer of sea floor dirt, not an
+  ore) is not that.
+
+Left, each with its first source and next step:
+- **Near origin** (25): seagrass and kelp of ocean sources 15,5, -13,12, -12,12, -12,13 and 13,3, and 3 bubble column
+  cells BDS grew in game time. A run logging `SeagrassFeature::place` entries (backtrace) shows BDS reaching it
+  through the scatter (143b9b888) at y 126 (twice the heightmap) with the scatter's draws between calls, where our
+  scatter evaluates `query.heightmap` to 63. Over open water the floor search ends on the same floor, so the
+  differing cells need the column log of one call (149d61678, `scratchpad` config aquatic.json had the right
+  shape but its group breakpoint logged one hit only). Next step: log the scatter's y expression result and
+  each column of source 15,5.
+- **Far out** (5): two lichens of source 100004,100002 (its eight thread draws are BDS's, so the rule position or
+  a face test differs at |x| 1.6M), one dirt cell (a third sea-floor dirt layer at 1600014,53,1600103: the surface
+  depth at this x; the float order fix did not move it) and one water cell. Next step: the surface depth noise at
+  that column logged live (`buildChunkSurface` callee, xmm values).
+- **Mansion** (68 on `mansion4`): source -510,1000's clay pool (try 10 at -8149,9,16013) has three clay cells
+  where BDS has water, then ring source -510,1001's lush growth (246 cells: azalea tree, moss ceiling, vines) runs
+  on that. A liquid difference in the lush cave before the pool, not the lush features; next step: the armed
+  liquid log (worldgen-bds-liquids.md recipe) of decoration -510,1000.
+- **Monument** (10): seagrass of ring source -27,-18, a double where BDS has water and BDS's double where ours is
+  single: the column order is right, a float draw is one column off. The run meant to log it did not hit the
+  source (the ring chunk was not decorated within that run's box); next step: a run with the box one chunk wider.
+- Desert pyramid 2 (one suspicious sand a cell off in the cellar: structure stage), ancient city on `c-ac` 1 (a
+  state of that older run; `city6` is exact), stronghold 1 (see the fence above), village 1 structure-stage air.
+
 ## The full replay of the structures world (2026-10-11, worldgen/struct5)
 One run now carries both orders: `scripts/data/dbg_canon.json` logs loads, structure post-processes, decorations
 and the thread draws (and each start's connection-upgrade flag), `tools/replay-world.sh` sends world,

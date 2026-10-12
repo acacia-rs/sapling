@@ -3,6 +3,7 @@
 //! loader (`LegacyStructureTemplate` load 141eedcf0, converters 141f75940 and 141f71f20) and
 //! rotation (141f70580) make it.
 
+mod beside;
 mod connect;
 mod java;
 mod java_states;
@@ -18,6 +19,7 @@ mod wood;
 use std::collections::HashMap;
 use std::sync::OnceLock;
 
+pub(crate) use beside::side_toward;
 pub use connect::rejoin;
 pub use java::{Capped, JavaPlacement};
 pub use java_states::v2_block;

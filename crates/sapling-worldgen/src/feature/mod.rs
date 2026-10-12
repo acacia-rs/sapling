@@ -48,6 +48,7 @@ mod ticks;
 pub(crate) mod trace;
 mod tree;
 mod view;
+mod view_connect;
 
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -58,6 +59,7 @@ use crate::random::{LargeFeatureSeed, Mt19937};
 use crate::terrain::ChunkShape;
 
 pub(crate) use element::{ElementWorld, element_random, place_element};
+pub(crate) use coral::set_dead_coral;
 pub(crate) use place::swap_feature;
 use view::{ChunkWrites, REACH, View};
 

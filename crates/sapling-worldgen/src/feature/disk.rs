@@ -9,7 +9,9 @@ use crate::random::Mt19937;
 
 impl Disk {
     pub fn place(&self, view: &mut View, [px, py, pz]: [i32; 3], random: &mut Mt19937) -> bool {
-        if !self.needs.contains(&view.block(px, py, pz)) {
+        // `needs` water means its material (`ClayFeature::place` 148287a70, `SandFeature::place` 149d60440): any depth.
+        let here = view.block(px, py, pz);
+        if !self.needs.iter().any(|&need| need == here || need == Block::Water && here.is_water()) {
             return false;
         }
         let radius = random.next_int(self.radius - 2) + 2;

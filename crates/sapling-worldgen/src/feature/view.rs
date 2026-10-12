@@ -200,8 +200,9 @@ impl<'a> View<'a> {
 
     /// False, writing nothing, outside the world's height and the writable region, and when the
     /// block is already there (`BlockSource::setBlock` 1415f6ae0 reports whether the block changed).
-    /// No neighbour hears of it: docs/research/worldgen-bds-liquids.md, "Feature writes wake nothing".
-    pub fn set_block(&mut self, x: i32, y: i32, z: i32, block: Block) -> bool {
+    /// No liquid hears of it (docs/research/worldgen-bds-liquids.md, "Feature writes wake nothing"); for the
+    /// fences beside it see view_connect.rs.
+    pub(super) fn set_block_alone(&mut self, x: i32, y: i32, z: i32, block: Block) -> bool {
         let Some((slot, index)) = self.locate(x, y, z) else { return false };
         let seen = self.read(slot, index);
         // The liquid layer of a waterlogged plant stays under a waterloggable block.
@@ -226,14 +227,14 @@ impl<'a> View<'a> {
     }
 
     /// `query.above_top_solid` (`LevelChunk::getAboveTopSolidBlock` 140a08bb0): one above the highest block
-    /// that blocks motion (not fluids, snow layers or leaves: oracle, grove pines stand under spruce
-    /// canopies); the world's top outside the region, its bottom if none.
+    /// whose material blocks motion (its byte +3: a coral fan counts, a snow layer does not), leaves left out
+    /// (oracle: grove pines stand under spruce canopies); the world's top outside the region, its bottom if none.
     pub fn above_top_solid(&self, x: i32, z: i32) -> i32 {
         let top = MIN_Y + HEIGHT as i32;
         if self.locate(x, MIN_Y, z).is_none() {
             return top;
         }
-        let solid = |block: Block| block.blocks_motion() && !block.is_leaves();
+        let solid = |block: Block| block.material_blocks_motion() && !block.is_leaves();
         (MIN_Y..top).rev().find(|&y| solid(self.block(x, y, z))).map_or(MIN_Y, |y| y + 1)
     }
 

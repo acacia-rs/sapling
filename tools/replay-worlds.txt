@@ -9,10 +9,7 @@ c-mo|20261003-structures|blocks_match_bds_structures|monument|-27 -26 -19 -18
 c-rp|20261003-structures|blocks_match_bds_structures|ruined portal|9 16 13 20
 c-tc|20261003-structures|blocks_match_bds_structures|trial chambers|2 14 12 24
 c-tr|20261003-structures|blocks_match_bds_structures|trail ruins|-58 20 -52 26
-c-ac|20261003-structures|blocks_match_bds_structures|ancient city|-74 75 -66 83
 c-po|20261003-structures|blocks_match_bds_structures|pillager outpost|115 -73 121 -67
 c-st|20261003-structures|blocks_match_bds_structures|stronghold|-93 -126 -85 -118
-c-ma|20261003-structures|blocks_match_bds_structures|mansion|-516 992 -508 1000
 c-or|20261003-structures|blocks_match_bds_structures|ocean ruins|18 -40 22 -36
-c-ob|20261003-trees|blocks_match_bds_trees|old growth birch|-310 282 -307 285
-c-bl|20261003-biomes|blocks_match_bds_biomes|badlands|594 -350 597 -347
+#superseded (replay-canons.txt has the region's current canon): c-ac ancient city, c-ma mansion, c-ob old growth birch, c-bl badlands

@@ -1,6 +1,6 @@
 // Loads every chunk of REGIONS tile by tile and touches its bedrock floor so BDS saves it; see ../../README.md.
 import { world, system } from "@minecraft/server";
-import { REGIONS, TILE, WORKERS, SETTLE, LOAD_TIMEOUT } from "./regions.js";
+import { REGIONS, TILE, WORKERS, SETTLE, LOAD_TIMEOUT, KICK } from "./regions.js";
 
 const FLOOR = -64;
 const LOAD_ATTEMPTS = 4;
@@ -37,18 +37,26 @@ function unloaded(dimension, [x0, z0, x1, z1]) {
   return chunks;
 }
 
-// Some areas stall with a few chunks never loaded (seed 20261003, chunks 12,14..16); adding the area afresh loads them.
-async function loadArea(dimension, area, name) {
+// Some areas stall with a few chunks never loaded (seed 20261003, chunks 12,14..16). With KICK, a second area over
+// the missing chunks asks for them again and the first stays (nothing unloads, so nothing is generated twice);
+// otherwise the area is removed and added afresh, which loads them but generates the tile's chunks again.
+async function loadArea(dimension, area, name, extra) {
   for (let attempt = 1; ; attempt++) {
-    command(dimension, `tickingarea add ${blocks(area)} ${name}`);
+    if (attempt === 1 || !KICK) command(dimension, `tickingarea add ${blocks(area)} ${name}`);
     for (let waited = 0; waited <= LOAD_TIMEOUT; waited += 5) {
       if (unloaded(dimension, area).length === 0) return;
       await ticks(5);
     }
     const missing = unloaded(dimension, area);
-    dimension.runCommand(`tickingarea remove ${name}`);
+    if (!KICK) dimension.runCommand(`tickingarea remove ${name}`);
     if (attempt === LOAD_ATTEMPTS) throw new Error(`chunks ${missing.slice(0, 8).join(" ")} not loaded after ${attempt} tries`);
-    log(`${name} retry: chunks ${missing.slice(0, 8).join(" ")} not loaded`);
+    log(`${name} ${KICK ? "kick" : "retry"}: chunks ${missing.slice(0, 8).join(" ")} not loaded`);
+    if (KICK) {
+      const at = missing.map((chunk) => chunk.split(",").map(Number));
+      const box = [0, 1].flatMap((i) => [Math.min(...at.map((c) => c[i]))]).concat([0, 1].map((i) => Math.max(...at.map((c) => c[i]))));
+      extra.push(`${name}k${attempt}`);
+      command(dimension, `tickingarea add ${blocks(box)} ${name}k${attempt}`);
+    }
     await ticks(20);
   }
 }
@@ -56,8 +64,9 @@ async function loadArea(dimension, area, name) {
 // The ticking area reaches one chunk past the tile, so every touched chunk's neighbours have decorated it.
 async function runTile(dimension, tile, name) {
   const [x0, z0, x1, z1] = tile;
-  await loadArea(dimension, [x0 - 1, z0 - 1, x1 + 1, z1 + 1], name);
+  const extra = [];
   try {
+    await loadArea(dimension, [x0 - 1, z0 - 1, x1 + 1, z1 + 1], name, extra);
     await ticks(SETTLE);
     // fill reports no block count, so read the floor: all bedrock, then all stone, then all bedrock again.
     const cells = (x1 - x0 + 1) * (z1 - z0 + 1) * 256;
@@ -75,7 +84,7 @@ async function runTile(dimension, tile, name) {
     if (counts.some((count) => count !== cells)) throw new Error(`floor bedrock/stone/bedrock ${counts.join("/")} of ${cells}`);
     return cells / 256;
   } finally {
-    dimension.runCommand(`tickingarea remove ${name}`);
+    for (const area of [name, ...extra]) dimension.runCommand(`tickingarea remove ${area}`);
   }
 }
 

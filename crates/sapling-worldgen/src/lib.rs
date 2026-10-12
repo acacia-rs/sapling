@@ -195,6 +195,12 @@ impl OverworldGenerator {
         self.with_inputs(|inputs| self.features.reach((chunk_x, chunk_z), inputs))
     }
 
+    /// Process-wide: the dead coral (a `CoralColor`, 0..5) the coral crust templates place; see feature/coral/crust.rs.
+    #[doc(hidden)]
+    pub fn set_dead_coral(color: usize) {
+        feature::set_dead_coral(color);
+    }
+
     /// Molang's `query.noise(x, z)` (examples/query_noise.rs).
     #[doc(hidden)]
     pub fn query_noise(x: f32, z: f32) -> f32 {

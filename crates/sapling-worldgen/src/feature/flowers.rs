@@ -11,10 +11,10 @@ use crate::random::Mt19937;
 
 const TULIPS: [Block; 4] = [Block::RedTulip, Block::OrangeTulip, Block::WhiteTulip, Block::PinkTulip];
 const PLAINS: [Block; 4] = [Block::Poppy, Block::AzureBluet, Block::OxeyeDaisy, Block::Cornflower];
-/// `FlowerFeature::flowerForestFlower` (1438eec60) indexes this list by the noise; the list is
-/// filled at load, its order is Java's flower forest list (oracle).
+/// `FlowerFeature::flowerForestFlower` (1438eec60) indexes this list by the noise. Read off a live server
+/// (0x14ccdae18): poppy, blue orchid, allium, ...; the function turns the blue orchid into a poppy.
 const FLOWER_FOREST: [Block; 11] = [
-    Block::Dandelion,
+    Block::Poppy,
     Block::Poppy,
     Block::Allium,
     Block::AzureBluet,

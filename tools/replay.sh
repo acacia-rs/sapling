@@ -16,7 +16,8 @@ IFS='|' read -r _ world test region box dir seed <<<"$line"
 at="\$HOME/oracle-canon/${dir:-$canon}"
 structure="\$(test -f $at/structure-order.txt && echo SAPLING_ORACLE_STRUCTURE_ORDER=$at/structure-order.txt)"
 [ -n "${NO_STRUCTURE:-}" ] && structure=""
-export ENVS="${ENVS:-} SAPLING_ORACLE_WORLDS=$at SAPLING_ORACLE_ORDER=$at/order.txt SAPLING_ORACLE_THREAD_SEED=0 $structure"
+# <dir>/env.txt: further variables of that run (SAPLING_ORACLE_DEAD_CORAL=<CoralColor>: BDS draws it from the clock).
+export ENVS="${ENVS:-} SAPLING_ORACLE_WORLDS=$at SAPLING_ORACLE_ORDER=$at/order.txt SAPLING_ORACLE_THREAD_SEED=0 $structure \$(cat $at/env.txt 2>/dev/null)"
 case $mode in
   test) REGION="=$region" bash "$here/oracle.sh" "$name" "$test" ;;
   rc) bash "$here/remote-example.sh" "$name" replay_check "${seed:-20261003}" "$world" $box ;;
