@@ -110,6 +110,7 @@ pub fn seagrass(ctx: &mut Ctx, at: [i32; 3], count: i32, tall: f32) -> bool {
                 view.set_block(px, py, pz, Block::Seagrass);
             }
         }
+        super::trace::line(|| format!("  column {px} {py} {pz} draws {}", ctx.random.draws()));
         p = next_column(ctx.random, base);
     }
     true
