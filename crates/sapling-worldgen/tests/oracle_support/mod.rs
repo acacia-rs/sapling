@@ -72,6 +72,10 @@ pub fn replay(generator: &mut sapling_worldgen::OverworldGenerator) -> Option<Ve
         let steps: Vec<StructureStep> = std::fs::read_to_string(path).expect("structure order file").lines().map(step).collect();
         generator.set_structure_order(&steps);
     }
+    // The run's dead coral (its `CoralColor`): clock-drawn in BDS, so read off the run's world.
+    if let Ok(color) = std::env::var("SAPLING_ORACLE_DEAD_CORAL") {
+        sapling_worldgen::OverworldGenerator::set_dead_coral(color.parse().expect("a coral colour 0..5"));
+    }
     let rows = read(std::env::var("SAPLING_ORACLE_ORDER").ok()?);
     let order: Vec<(i32, i32)> = rows.iter().map(|row| (row[0] as i32, row[1] as i32)).collect();
     let spent: Vec<Option<u32>> = rows.iter().map(|row| row.get(2).map(|&draws| draws as u32)).collect();

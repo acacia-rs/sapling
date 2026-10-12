@@ -46,6 +46,7 @@ mansion3|20261003-structures|blocks_match_bds_structures|mansion|-516 992 -508 1
 mansion4|20261003-structures|blocks_match_bds_structures|mansion|-516 992 -508 1002|ma4
 mushroom|20261003-biomes|blocks_match_bds_biomes|mushroom fields|-46 354 -43 357|g6
 warmocean|20261003-biomes|blocks_match_bds_biomes|warm ocean|242 -494 245 -491|g6
+warmocean2|20261003-biomes|blocks_match_bds_biomes|warm ocean|242 -494 245 -491|wo
 wsavanna|20261003-biomes|blocks_match_bds_biomes|windswept savanna|-590 -214 -587 -211|g6
 plains|20261003-trees|blocks_match_bds_trees|plains|-62 -46 -59 -43|g6
 forest|20261003-trees|blocks_match_bds_trees|forest|186 506 189 509|g7

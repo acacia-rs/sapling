@@ -2,7 +2,19 @@
 //! cluster of 4 to 8 tries, or one `outcropping1..6`) placed as `LegacyStructureTemplate::placeInWorld`
 //! does, then `_placeCoralBase` (1482895b0) grows coral from each template's data markers.
 
+use std::sync::atomic::{AtomicUsize, Ordering};
+
 use super::{CORAL_BLOCKS, OPPOSITE, Reef, block, coral_index, fits, is_water, solid, step, up};
+
+/// The templates' `coral_block[variant=dead_coral]` as a `CoralColor`. BDS's legacy converter (141f71f20) picks it
+/// per template when the template loads, `Random(steady clock in ms).nextInt(5)` at 141f73173: no seed decides it.
+/// Bubble is what the stock oracle worlds happened to get.
+static DEAD_CORAL: AtomicUsize = AtomicUsize::new(2);
+
+/// Process-wide, for replaying a BDS run whose crusts took another dead coral.
+pub fn set_dead_coral(color: usize) {
+    DEAD_CORAL.store(color.min(4), Ordering::Relaxed);
+}
 use crate::density::SEA_LEVEL;
 use crate::feature::data::coral_crust::{CRUSTS, Crust, KINDS};
 use crate::feature::view::View;
@@ -88,7 +100,8 @@ impl Reef<'_, '_> {
             [origin[0] + dx, origin[1] + dy, origin[2] + dz]
         };
         for &(x, y, z, kind) in crust.blocks {
-            self.set(turn((x, y, z)), KINDS[kind as usize]);
+            let block = if kind == 0 { CORAL_BLOCKS[5 + DEAD_CORAL.load(Ordering::Relaxed)] } else { KINDS[kind as usize] };
+            self.set(turn((x, y, z)), block);
         }
         let markers: Vec<[i32; 3]> = crust.markers.iter().map(|&m| turn(m)).collect();
         self.coral_base(&msvc_order(&markers));
