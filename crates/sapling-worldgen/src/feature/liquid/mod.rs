@@ -14,8 +14,16 @@ use crate::block::Block;
 
 const GENERATIONS: usize = 128;
 
-/// `inherited`: the ticks earlier sources left on this chunk's queue (docs/research/worldgen-bds-liquids.md, "How they run").
-pub fn settle(view: &mut View, inherited: &[Routed]) {
+/// The magma the structure stage set in the chunk: placing it queued the block's tick in 1 on the chunk's
+/// queue, after generation's aquifer ticks (one-worker run: a ruined portal's magma ticked in its chunk's decoration).
+pub fn structure_magma(shape: &crate::terrain::ChunkShape, chunk: (i32, i32)) -> Vec<[i32; 3]> {
+    let at = |i: usize| [chunk.0 * 16 + (i & 15) as i32, (i / 256) as i32 + crate::terrain::MIN_Y, chunk.1 * 16 + ((i >> 4) & 15) as i32];
+    (0..16 * 16 * crate::terrain::HEIGHT).filter(|&i| shape.block_at(i) == Block::Magma).map(at).collect()
+}
+
+/// `structure`: the chunk's structure-stage magma (`structure_magma`); `inherited`: the ticks earlier sources
+/// left on this chunk's queue (docs/research/worldgen-bds-liquids.md, "How they run").
+pub fn settle(view: &mut View, structure: &[[i32; 3]], inherited: &[Routed]) {
     // Trace lines follow what they sum up (examples/feature_trace.rs prints a try's lines before it).
     super::trace::line(|| format!("{:?} liquid: features done, {} inherited ticks", view.chunk(), inherited.len()));
     reset_border_water(view);
@@ -24,6 +32,10 @@ pub fn settle(view: &mut View, inherited: &[Routed]) {
     for (at, lava) in view.own_fluid_ticks() {
         super::trace::line(|| format!("  own tick {} {} {}", at[0], at[1], at[2]));
         generated.add(at, lava, 1);
+    }
+    for &at in structure {
+        super::trace::line(|| format!("  structure magma tick {} {} {}", at[0], at[1], at[2]));
+        generated.add(at, false, 1);
     }
     // What this decoration left on its own chunk's queue (magma ticks) is taken with the rest.
     let chunk = view.chunk();

@@ -238,7 +238,8 @@ impl Features {
             decorate::decorate_chunk(&self.seed, source, inputs, &mut view);
             freeze::freeze_chunk(source, &(inputs.biomes)(source.0, source.1), &mut view);
             let inherited: Vec<_> = self.sources_before(source, limit).into_iter().flat_map(|n| self.source_writes(n, inputs).routed_to(source).collect::<Vec<_>>()).collect();
-            liquid::settle(&mut view, &inherited);
+            let structure = liquid::structure_magma(&(inputs.loaded)(source.0, source.1), source);
+            liquid::settle(&mut view, &structure, &inherited);
             view.into_writes()
         })
     }
