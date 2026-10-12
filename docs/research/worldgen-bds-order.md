@@ -477,7 +477,26 @@ Every region of the oracle tests now has one current canon (`tools/replay-canons
 `tools/replay-worlds.txt`, superseded runs in comment blocks); `tools/replay-all.sh <prefix>` prints one line per
 region. On the final commit:
 
-REPLAY_TABLE
+Commit 89346a6, wrong + missing per region against its canon (structure stage in brackets where non-zero); the
+branch point (replay5's final table) beside it where it was not 0:
+
+| region | canon | replay6 | replay5 |
+|---|---|---|---|
+| near origin (32x32) | origin3 | 25 | no canon |
+| far out (8x8) | far | 5 | 5 |
+| negative seed (8x8) | neg | 0 | 0 |
+| warm ocean | warmocean (g6) | 0 | 295 |
+| desert | desert3 | 0 | 4 |
+| frozen ocean | frozenocean (g5; ds2 also 0) | 0 | 5 |
+| mansion | mansion4 | 68 | 68 (85 on mansion3) |
+| monument | c-mo | 10 | 10 |
+| desert pyramid | c-dp | 2 [2] | 2 |
+| pillager outpost | c-po | 0 | 4 |
+| igloo, snowy slopes | c-is | 0 | 1 |
+| stronghold | c-st | 0 | 1 |
+| village | c-vi | 0 [1] | 0 [1] |
+| the other 19 biome regions, 19 tree regions, ancient city (city6) and 10 structure regions | | 0 each | 0 each |
+| all 59 regions | | 110 | 395 |
 
 What was found (each proven on a one-worker run of its region, cell for cell or draw for draw):
 - **Near origin has a canon** (`origin3`, the whole 32x32 region): 25 cells wrong or missing of 100.7M and 3
@@ -517,7 +536,14 @@ What was found (each proven on a one-worker run of its region, cell for cell or 
   not magma, soul sand or a fence (the list 0x14ccd9428, read live). Replaces a full-cube fit; no canon moved.
 - **Fences beside a feature's write.** A feature writes with `setBlock` flag 3, which has a fence, pane or bar beside
   the cell redo its side toward it and cascades (worldgen-bds-templates.md, "The update pass", 3); it wakes no liquid.
-  `feature/view_connect.rs`. The stronghold canon's pen fence beside a tree's log (-1426,69,-1919): FENCE_RESULT.
+  `feature/view_connect.rs`. The stronghold canon's pen fence beside a tree's log (-1426,69,-1919) now joins it (1 -> 0). The side
+  is decided by the registry's support classes (a full face toward the fence): with the structure stage's full-cube
+  test, mineshaft fences beside a feature's pointed dripstone joined it, which BDS's do not (32 cells).
+
+Stock oracle, wrong + missing over all 59 regions, branch point (02ee652) -> 89346a6: ticked 22040 -> 22022, still
+22921 -> 22903. Only frozen ocean (-5), desert (-4), warm ocean (-3), pillager outpost (-4), igloo on snowy slopes
+(-1) and stronghold (-1) moved, in both sets; none rose. The stock worlds' remaining cells are their own run order,
+thread draws and dead coral colour.
 - **Fits checked against the binary.** Leaf litter: `LeafLitterBlock::canSurvive` 142fdeb80 asks 141a24e50 of the
   block below (centre and edge support of the top face; stairs through their component), now ported as such.
   Mushrooms: `mayPlaceOn` 1465eabf0 returns the block below's byte +0x71, as fitted. Magma blob
