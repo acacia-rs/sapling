@@ -472,6 +472,39 @@ Open under replay, each with its first source:
   in exactly the cells where the stock world (and the crust templates) have `dead_bubble_coral_block`. Which
   of the canon's differences from a stock BDS does it (thread seed 0, one worker, no ticks) is not known.
 
+## replay6: interim results (2026-10-12, worldgen/replay6)
+To be replaced by the final section; what is proven so far:
+- **Near origin has a canon** (`origin3`, the whole 32x32 region): 25 cells wrong or missing of 100.7M and 3
+  bubble column cells, against 1448 on the stock world. The 32x32 run failed for two reasons. The script watchdog
+  cut the pack under the debugger (`script-watchdog-enable=false` in `bds_dbg_run.sh`). And tile 8,8,15,15 stalls
+  with chunks 12,14..16 never loaded whenever six tiles load at once (also without a debugger, also on the stock
+  oracle); the pack's retry removed the area, so 282 chunks were decorated twice. One tile at a time does not
+  stall but drops each tile's margin before the next asks for it (1040 chunks decorated twice). `WORLDGEN_KICK=true`
+  adds a second area over the missing chunks and keeps the first: they load within seconds and no chunk is
+  generated twice (`dbg_loads.py`: 1893 decorations, 0 repeated).
+- **Desert 4 -> 0: disks start in water of any depth.** The four sand cells were not the surface stage: source
+  -445,557's sand disk at -7116,21,8914 stands in falling water (depth 13) and turns the dirt of an earlier ore
+  blob within its radius to sand. `SandFeature::place` (149d60440) and `ClayFeature::place` (148287a70) test the
+  material; ours asked for a source. `IcebergFeature` and `BlueIceFeature` compare the type the same way.
+- **Warm ocean's dead coral is drawn from the clock.** The crust templates hold `coral_block[variant=dead_coral]`,
+  which the legacy converter (141f71f20, case at 141f73173) turns into one of the five dead coral blocks by
+  `Random(steady_clock ns / 10^6).nextInt(5)` when the template is loaded: neither the world seed nor the thread
+  seed, so no patch of ours pins it and each BDS start may pick another block.
+- **Fits checked against the binary.** Leaf litter: `LeafLitterBlock::canSurvive` 142fdeb80 asks 141a24e50 of the
+  block below (centre and edge support of the top face; stairs through their component), now ported as such.
+  Mushrooms: `mayPlaceOn` 1465eabf0 returns the block below's byte +0x71, as fitted. Magma blob
+  (`PartiallyExposedBlobFeature::place` 149d5cf50): a cell is open when its material is water, its type air or its
+  liquid layer's material water, as fitted. Containers: `placeInWorld` draws the loot seed (141eed154) for block
+  actors of type 2 (chests) whose tag lacks `LootTableSeed`: barrels do not draw, removed.
+- **Surface depth** is `draw * 0.25 + (noise / 3 + 3)` in that float order (14580a95d, mesa 1487dcfe5); ours summed
+  left to right. No canon moved; far out's dirt cell (1600014,53,1600103, a third layer of sea floor dirt, not an
+  ore) is not that.
+- **Iceberg**: the underwater ellipse's reach is computed in doubles (149e905df). The frozen ocean's 5 cells stay:
+  the upper part is exact and the underwater edge cells differ from the first layers on (not traced yet;
+  `try_check`'s 262 "wrong" writes were cells the same try clears again).
+- **Seagrass** stands by `SeagrassBlock::mayPlace` (148b4dac0): a source over a top face with centre support that is
+  not magma (14ccdd1c0) or soul sand; being measured.
+
 ## The full replay of the structures world (2026-10-11, worldgen/struct5)
 One run now carries both orders: `scripts/data/dbg_canon.json` logs loads, structure post-processes, decorations
 and the thread draws (and each start's connection-upgrade flag), `tools/replay-world.sh` sends world,
