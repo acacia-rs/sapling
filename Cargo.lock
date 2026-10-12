@@ -34,7 +34,7 @@ version = "0.1.0"
 source = "git+https://github.com/acacia-rs/acacia?rev=799a693ca0ae88b0ecb5cbe3d5ec009850ead849#799a693ca0ae88b0ecb5cbe3d5ec009850ead849"
 dependencies = [
  "acacia-client",
- "acacia-molang",
+ "acacia-molang 0.1.0 (git+https://github.com/acacia-rs/acacia?rev=799a693ca0ae88b0ecb5cbe3d5ec009850ead849)",
  "acacia-physics",
  "acacia-world",
  "async-trait",
@@ -76,6 +76,11 @@ dependencies = [
 name = "acacia-molang"
 version = "0.1.0"
 source = "git+https://github.com/acacia-rs/acacia?rev=799a693ca0ae88b0ecb5cbe3d5ec009850ead849#799a693ca0ae88b0ecb5cbe3d5ec009850ead849"
+
+[[package]]
+name = "acacia-molang"
+version = "0.1.0"
+source = "git+https://github.com/acacia-rs/acacia?rev=d8b6919a7630a953b21846b1fc5ed6cab18d2058#d8b6919a7630a953b21846b1fc5ed6cab18d2058"
 
 [[package]]
 name = "acacia-nethernet"
@@ -2541,7 +2546,7 @@ dependencies = [
 name = "sapling-data"
 version = "0.1.0"
 dependencies = [
- "acacia-molang",
+ "acacia-molang 0.1.0 (git+https://github.com/acacia-rs/acacia?rev=d8b6919a7630a953b21846b1fc5ed6cab18d2058)",
  "acacia-proto",
  "bytes",
 ]
@@ -2625,7 +2630,7 @@ dependencies = [
 name = "sapling-worldgen"
 version = "0.1.0"
 dependencies = [
- "acacia-molang",
+ "acacia-molang 0.1.0 (git+https://github.com/acacia-rs/acacia?rev=d8b6919a7630a953b21846b1fc5ed6cab18d2058)",
  "acacia-world",
  "sapling-leveldb",
 ]

@@ -20,7 +20,8 @@ sapling-worldgen = { path = "crates/sapling-worldgen" }
 # acacia at one commit of its `master`: bump every `rev` together. To build against a checkout
 # beside this one instead, see docs/DESIGN.md "Building against a local acacia".
 acacia-auth = { git = "https://github.com/acacia-rs/acacia", rev = "799a693ca0ae88b0ecb5cbe3d5ec009850ead849", default-features = false }
-acacia-molang = { git = "https://github.com/acacia-rs/acacia", rev = "799a693ca0ae88b0ecb5cbe3d5ec009850ead849" }
+# Ahead of the others (no acacia dependencies): BDS's arithmetic folding (2403e76), which feature rules' Molang needs.
+acacia-molang = { git = "https://github.com/acacia-rs/acacia", rev = "d8b6919a7630a953b21846b1fc5ed6cab18d2058" }
 acacia-nethernet = { git = "https://github.com/acacia-rs/acacia", rev = "799a693ca0ae88b0ecb5cbe3d5ec009850ead849" }
 acacia-proto = { git = "https://github.com/acacia-rs/acacia", rev = "799a693ca0ae88b0ecb5cbe3d5ec009850ead849" }
 acacia-raknet = { git = "https://github.com/acacia-rs/acacia", rev = "799a693ca0ae88b0ecb5cbe3d5ec009850ead849" }

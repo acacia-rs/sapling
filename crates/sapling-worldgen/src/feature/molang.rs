@@ -84,11 +84,16 @@ pub struct Scope {
 impl Scope {
     pub fn new() -> Self {
         let mut compiler = Compiler::new();
+        // The world-generation queries are not among the documented ones.
+        compiler.documented_queries_only = false;
         let origin = ["originx", "originy", "originz"].map(|name| compiler.variable(name));
         let world = ["worldx", "worldy", "worldz"].map(|name| compiler.variable(name));
         let queries =
             Queries { above_top_solid: compiler.query("above_top_solid"), heightmap: compiler.query("heightmap"), noise: compiler.query("noise") };
-        Self { queries, compiler, programs: HashMap::new(), variables: Variables::new(), scratch: Scratch::new(), origin, world, biome: None, world_bound: false }
+        // An unset variable ends a program at 0, so the engine's `is_legacy` (0: not a legacy world) must be set.
+        let mut variables = Variables::new();
+        variables.set(compiler.variable("is_legacy"), 0.0);
+        Self { queries, compiler, programs: HashMap::new(), variables, scratch: Scratch::new(), origin, world, biome: None, world_bound: false }
     }
 
     pub fn set_origin(&mut self, origin: [i32; 3]) {
