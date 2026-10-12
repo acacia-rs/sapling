@@ -173,10 +173,10 @@ impl OverworldGenerator {
         self.features.track_reach = true;
     }
 
-    /// `Features::fixed_faces`, for the oracle test's `SAPLING_ORACLE_FIXED_FACES`.
+    /// `Features::canonical_shuffles`, for the oracle test's `SAPLING_ORACLE_CANONICAL_SHUFFLES`.
     #[doc(hidden)]
-    pub fn fix_face_choices(&mut self) {
-        self.features.fixed_faces = true;
+    pub fn shuffle_canonically(&mut self) {
+        self.features.canonical_shuffles = true;
     }
 
     /// Decorates in the order one BDS run did (chunks as it started them) instead of by phase; chunks

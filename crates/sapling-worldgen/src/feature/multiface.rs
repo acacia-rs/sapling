@@ -1,9 +1,8 @@
 //! `MultifaceFeature::place` (143b83e50, attach 143b84880) and `SurfaceRelativeThresholdFeature`
 //! (143bc69b0). BDS shuffles the faces and a spread's six directions (1465e9360) with its worker's
-//! thread-local generator (thread.rs), which a decoration always has here: seeded per chunk, or a
-//! logged run's (docs/research/worldgen-bds-order.md, "One engine"). A structure piece's feature has
-//! none and keeps the pushed order: lichen then spreads the first way that can hold it, a vein only
-//! when one way can.
+//! thread-local generator (thread.rs), modelled when a logged run's draws are replayed. Otherwise
+//! the pushed order is kept, which agrees best with BDS's racy loads (docs/research/worldgen-bds-order.md,
+//! "One engine"): lichen then spreads the first way that can hold it, a vein only when one way can.
 
 use super::cave_spec::{Multiface, SurfaceThreshold};
 use super::data::FEATURES;

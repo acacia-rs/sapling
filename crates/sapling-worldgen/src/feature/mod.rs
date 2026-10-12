@@ -113,15 +113,16 @@ pub struct Features {
     /// With `order`, for a one-worker run: its thread generator's seed and, per rank, the draws the
     /// generator had spent at that chunk's first `MultifaceFeature` draw (thread.rs).
     thread: Option<(u32, Vec<Option<u32>>)>,
-    /// A diagnostic: no thread generator under the canonical order, so multiface features keep their
-    /// pushed face order (multiface.rs). Tells the thread draws' share of an oracle difference.
-    pub fixed_faces: bool,
+    /// A diagnostic: under the canonical order, BDS's shuffles from a thread generator seeded per chunk.
+    /// Off, multiface features keep their pushed face order, which agrees better with BDS's racy loads
+    /// (docs/research/worldgen-bds-order.md, "One engine").
+    pub canonical_shuffles: bool,
 }
 
 impl Features {
     /// Seeded like the carvers: `(x*a + z*b) ^ seed` on the low 32 bits of the world seed.
     pub fn new(world_seed: i64) -> Self {
-        Self { seed: LargeFeatureSeed::new(world_seed as u32), writes: SourceCache::new(CACHE_LIMIT), before: SourceCache::new(BEFORE_LIMIT), track_reach: false, order: None, thread: None, fixed_faces: false }
+        Self { seed: LargeFeatureSeed::new(world_seed as u32), writes: SourceCache::new(CACHE_LIMIT), before: SourceCache::new(BEFORE_LIMIT), track_reach: false, order: None, thread: None, canonical_shuffles: false }
     }
 
     /// Decorates in `order`, every source over all earlier ones; `thread`: the seed of the one worker's
@@ -135,7 +136,7 @@ impl Features {
     /// the chunk, or a logged run's at that moment; None for a logged order without its thread seed.
     fn thread_before(&self, source: (i32, i32), rank: Rank) -> Option<Mt19937> {
         if self.order.is_none() {
-            return (!self.fixed_faces).then(|| Mt19937::new(self.seed.chunk(source.0, source.1) ^ THREAD_SALT));
+            return self.canonical_shuffles.then(|| Mt19937::new(self.seed.chunk(source.0, source.1) ^ THREAD_SALT));
         }
         let (seed, spent) = self.thread.as_ref()?;
         let mut random = Mt19937::new(*seed);
