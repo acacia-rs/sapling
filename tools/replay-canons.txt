@@ -40,7 +40,7 @@ city5|20261003-structures|blocks_match_bds_structures|ancient city|-74 75 -66 83
 city6|20261003-structures|blocks_match_bds_structures|ancient city|-74 75 -66 83|ac6
 far|20261003|blocks_match_bds_far_out|chunks 100000..100007|100000 100000 100007 100007|far
 neg|-4172144997902289642|blocks_match_bds_negative_seed|chunks -4..3|-4 -4 3 3|neg|-4172144997902289642
-origin|20261003|blocks_match_bds_near_origin|chunks -16..15|-16 -16 15 15|origin
+origin|20261003|blocks_match_bds_near_origin|chunks -16..15|-16 -16 15 15|origin3
 mansion2|20261003-structures|blocks_match_bds_structures|mansion|-516 992 -508 1000|mansion
 mansion3|20261003-structures|blocks_match_bds_structures|mansion|-516 992 -508 1000|ma3
 mansion4|20261003-structures|blocks_match_bds_structures|mansion|-516 992 -508 1002|ma4
