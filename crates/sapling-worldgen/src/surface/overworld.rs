@@ -27,7 +27,8 @@ fn prop_up_floating_sand(column: &mut Column, y: i32, foundation: Block) {
 
 /// The surface depth BDS draws once per column, before anything else of the builder.
 pub fn surface_depth(random: &mut Mt19937, noise: f32) -> i32 {
-    (random.next_float() * 0.25 + noise / 3.0 + 3.0) as i32
+    // 14580a95d: the noise third and the 3 are summed first; the other order rounds another way once in 10^5 columns.
+    (random.next_float() * 0.25 + (noise / 3.0 + 3.0)) as i32
 }
 
 /// `materials` are already adjusted; a steep slope's material replaces top and mid at every block.
