@@ -255,10 +255,17 @@ impl Structures {
         let mut strongholds = self.starts_near(density, StructureKind::Stronghold, chunk, STRONGHOLD_REACH).into_iter();
         mineshafts.any(|start| self.mineshaft(density, start).bb.contains(x, y, z))
             || strongholds.any(|start| self.stronghold(start).bb.contains(x, y, z))
-            || with_v2
-                && self.v2_reaching(density, chunk, &|_| true).iter().any(|(_, pieces)| {
-                    pieces.iter().map(|p| p.bb).reduce(|a, b| a.union(&b)).is_some_and(|bb| bb.contains(x, y, z))
-                })
+            || with_v2 && self.in_v2(density, (x, y, z))
+    }
+
+    /// Whether a block lies in a v2 structure's box (its pieces' union). `findStructureFeatureTypeAt`
+    /// (141efd3b0) asks these first and then answers with that structure's kind alone, so a mineshaft
+    /// inside a trial chamber's box is no tunnel to a multiface feature (far out, logged live).
+    pub fn in_v2(&self, density: &Density, (x, y, z): (i32, i32, i32)) -> bool {
+        let chunk = (x.div_euclid(16), z.div_euclid(16));
+        self.v2_reaching(density, chunk, &|_| true)
+            .iter()
+            .any(|(_, pieces)| pieces.iter().map(|p| p.bb).reduce(|a, b| a.union(&b)).is_some_and(|bb| bb.contains(x, y, z)))
     }
 
     fn mineshaft(&self, density: &Density, start: (i32, i32)) -> Arc<Mineshaft> {
