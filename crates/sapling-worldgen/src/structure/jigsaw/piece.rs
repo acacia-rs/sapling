@@ -87,6 +87,7 @@ impl Piece {
         let mut placement = Placement::new(self.rotation, canvas.bb);
         placement.seed = seed;
         placement.rules = rules;
+        placement.marker_air = true;
         let blocks: Vec<_> = {
             let world = |x: i32, y: i32, z: i32| canvas.get(x, y, z);
             placement.blocks_in(template, self.origin, &world).collect()

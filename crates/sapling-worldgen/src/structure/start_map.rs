@@ -1,15 +1,10 @@
 //! The order a `StructureFeature` visits its starts in (`foreachIntersectingStructureStart`
 //! 141efb070): the list of its start map, an MSVC `std::unordered_map<ChunkPos, start>` that
-//! `createBlueprints` (141ef9dc0) fills as chunks load. It follows the load order: a replayed
-//! run's, or our canonical one (docs/research/worldgen-bds-order.md, "Start order", "One engine").
+//! `createBlueprints` (141ef9dc0) fills as chunks load. It follows the load order, so only a logged
+//! run has it; the canonical order's stand-in is in structured/order.rs
+//! (docs/research/worldgen-bds-order.md, "Start order", "One engine").
 
 use std::collections::HashSet;
-use std::sync::Arc;
-
-use super::Structures;
-
-/// The canonical load order covers blocks of this many chunks a side.
-const BLOCK: i32 = 16;
 
 /// `createBlueprints` scans this many chunks either way (feature +0xc0).
 const RADIUS: i32 = 8;
@@ -72,25 +67,5 @@ impl StartMap {
     /// The starts in the order the feature visits them.
     pub fn order(&self) -> Vec<(i32, i32)> {
         self.list.iter().map(|entry| entry.0).collect()
-    }
-}
-
-impl Structures {
-    /// The start map's list on a server whose loads so far are the 16x16 chunks of the aligned block
-    /// holding `chunk`, x outer and ascending: every start that reaches the chunk is in it.
-    pub fn block_shaft_order(&self, chunk: (i32, i32), is_start: &dyn Fn((i32, i32)) -> bool) -> Arc<[(i32, i32)]> {
-        let block = (chunk.0.div_euclid(BLOCK), chunk.1.div_euclid(BLOCK));
-        if let Some(order) = self.shaft_orders.lock().unwrap().get(&block) {
-            return order.clone();
-        }
-        let mut starts = StartMap::default();
-        for x in block.0 * BLOCK..(block.0 + 1) * BLOCK {
-            for z in block.1 * BLOCK..(block.1 + 1) * BLOCK {
-                starts.load((x, z), is_start);
-            }
-        }
-        let order: Arc<[(i32, i32)]> = starts.order().into();
-        self.shaft_orders.lock().unwrap().insert(block, order.clone());
-        order
     }
 }

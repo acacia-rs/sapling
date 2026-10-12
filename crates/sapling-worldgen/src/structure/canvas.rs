@@ -35,8 +35,8 @@ pub struct Neighbours<'a> {
     pub spawners: &'a dyn Fn() -> Spawners,
     /// The chunk's own pre-worldgen heightmap (`LevelChunk` +0xf80: the terrain before its surface and carvers).
     pub generated_tops: &'a dyn Fn() -> Arc<[i16; 256]>,
-    /// Mineshaft starts in the order BDS's start map lists them (structure/start_map.rs).
-    pub shaft_order: &'a dyn Fn() -> Arc<[(i32, i32)]>,
+    /// Puts the chunk's mineshaft starts in the order BDS's start map lists them (structure/start_map.rs).
+    pub shaft_order: &'a dyn Fn(&mut [(i32, i32)]),
     /// The height the desert pyramid of a start chunk took in an earlier chunk.
     pub temple_height: &'a dyn Fn((i32, i32)) -> Option<i32>,
     /// The canonical order's exception: a pyramid no chunk has placed yet takes its height from its

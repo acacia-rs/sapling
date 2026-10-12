@@ -88,15 +88,16 @@ impl OverworldGenerator {
         }
     }
 
-    /// The mineshaft starts in the order the start map lists them while `chunk` is post-processed.
-    pub(super) fn shaft_order(&self, chunk: (i32, i32)) -> Starts {
+    /// `starts`, the mineshafts reaching `chunk`, in the order the start map lists them while the chunk
+    /// is post-processed: the logged run's, else descending x then z.
+    pub(super) fn shaft_order(&self, chunk: (i32, i32), starts: &mut [(i32, i32)]) {
         let is_start = |start| self.structures.is_start(&self.density, StructureKind::Mineshaft, start);
         if let Order::Logged(logged) = &self.structure_order {
             let orders = logged.shaft_orders.get_or_init(|| logged.shaft_orders(&is_start));
             if let Some(order) = logged.ranks.get(&chunk).and_then(|&rank| orders.get(rank as usize)) {
-                return order.clone();
+                return starts.sort_by_key(|start| order.iter().position(|listed| listed == start));
             }
         }
-        self.structures.block_shaft_order(chunk, &is_start)
+        starts.sort_unstable_by(|a, b| b.cmp(a));
     }
 }

@@ -42,7 +42,8 @@ impl Structures {
         let mut mineshafts: Vec<&Arc<Mineshaft>> = mineshafts.iter().collect();
         if mineshafts.len() > 1 {
             // `foreachIntersectingStructureStart` walks the start map's list.
-            let order = (neighbours.shaft_order)();
+            let mut order: Vec<(i32, i32)> = mineshafts.iter().map(|m| m.start).collect();
+            (neighbours.shaft_order)(&mut order);
             mineshafts.sort_by_key(|m| order.iter().position(|start| *start == m.start));
         }
         let mut canvas = Canvas::new(shape, chunk, neighbours.placed).with_features(features);

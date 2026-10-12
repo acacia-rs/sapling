@@ -146,7 +146,7 @@ impl OverworldGenerator {
         // A corridor is at most three chunks long.
         let spawners = || self.earlier_sources(chunk, rank, 2).flat_map(|source| (*source).as_ref().map_or_else(Spawners::new, |s| s.spawners.clone())).collect();
         let tops = || self.generated_tops(chunk.0, chunk.1);
-        let shaft_order = || self.shaft_order(chunk);
+        let shaft_order = |starts: &mut [(i32, i32)]| self.shaft_order(chunk, starts);
         let taken = |source: Arc<Option<Source>>, start: (i32, i32)| (*source).as_ref()?.temple_heights.iter().find(|(s, _)| *s == start).map(|&(_, y)| y);
         let temple_height = |start: (i32, i32)| self.earlier_sources(chunk, rank, 1).find_map(|source| taken(source, start));
         let neighbours = structure::Neighbours { placed: &block, spawners: &spawners, generated_tops: &tops, shaft_order: &shaft_order, temple_height: &temple_height, pyramid_from_start: self.structure_order.is_canonical() };
