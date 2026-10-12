@@ -43,6 +43,7 @@ mod structure_table;
 #[macro_use]
 mod multiface_table;
 mod layers;
+mod material_table;
 mod plant_table;
 mod support;
 mod support_table;

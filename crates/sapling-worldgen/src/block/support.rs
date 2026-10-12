@@ -118,7 +118,7 @@ fn provides_multiface(class: Class, states: &str, face: usize, plain: bool) -> b
     }
 }
 
-fn masks(name: &str, states: &str, classes: &HashMap<&str, Class>, blocking: &[&str]) -> Masks {
+fn masks(name: &str, states: &str, classes: &HashMap<&str, Class>, (blocking, open): (&[&str], &[&str])) -> Masks {
     let class = classes.get(name).copied().unwrap_or(Class::Solid);
     let mask = |test: &dyn Fn(usize) -> bool| (0..6).fold(0u8, |bits, face| bits | u8::from(test(face)) << face);
     let mut out = [0; 6];
@@ -127,7 +127,8 @@ fn masks(name: &str, states: &str, classes: &HashMap<&str, Class>, blocking: &[&
     }
     out[MULTIFACE] = mask(&|face| provides_multiface(class, states, face, false));
     out[PLAIN_MULTIFACE] = mask(&|face| provides_multiface(class, states, face, true));
-    out[BLOCKING] = u8::from(class == Class::Solid || blocking.contains(&name));
+    // Bit 1: the material blocks motion (material_table.rs).
+    out[BLOCKING] = u8::from(class == Class::Solid || blocking.contains(&name)) | u8::from(!open.contains(&name)) << 1;
     out
 }
 
@@ -135,8 +136,9 @@ fn masks(name: &str, states: &str, classes: &HashMap<&str, Class>, blocking: &[&
 static TABLE: LazyLock<(Vec<Masks>, Vec<Masks>)> = LazyLock::new(|| {
     let classes: HashMap<&str, Class> = CLASSES.iter().flat_map(|&(class, names)| names.split_whitespace().map(move |name| (name, class))).collect();
     let blocking: Vec<&str> = SOLID_BLOCKING.split_whitespace().collect();
-    let own = Block::ALL.iter().map(|block| masks(block.name(), block.states(), &classes, &blocking)).collect();
-    let templates = palette().iter().map(|&(name, states, ..)| masks(name, states, &classes, &blocking)).collect();
+    let open: Vec<&str> = super::material_table::OPEN_MATERIAL.split_whitespace().collect();
+    let own = Block::ALL.iter().map(|block| masks(block.name(), block.states(), &classes, (&blocking, &open))).collect();
+    let templates = palette().iter().map(|&(name, states, ..)| masks(name, states, &classes, (&blocking, &open))).collect();
     (own, templates)
 });
 
@@ -165,7 +167,12 @@ impl Block {
 
     /// The solid-blocking property (`BlockType` +0x130 bit 0x40000).
     pub fn is_solid_blocking(self) -> bool {
-        self.support_masks()[BLOCKING] != 0
+        self.support_masks()[BLOCKING] & 1 != 0
+    }
+
+    /// `Material::isBlockingMotion` (the material's byte +3): coral fans, bamboo and azaleas do, torches and carpets not.
+    pub fn material_blocks_motion(self) -> bool {
+        self.support_masks()[BLOCKING] & 2 != 0
     }
 
     /// `Block` +0x71: solid-blocking and opaque. Read for all types on 2026-10-11 (worldgen-bds-order.md, "replay5"):
