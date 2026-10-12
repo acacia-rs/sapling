@@ -139,7 +139,8 @@ impl Iceberg {
         let (cos, sin) = (mth::cos(angle), mth::sin(angle));
         let u = (cos * dx - sin * dz) / a;
         let v = (cos * dz + sin * dx) / c;
-        v * v + u * u + -1.0
+        // Squared and summed in doubles (149e906b9): -8e-9 is inside, where floats give 0.
+        ((v as f64) * (v as f64) + (u as f64) * (u as f64) + -1.0) as f32
     }
 
     /// `generateIcebergBlock` and `setIcebergBlock` at `origin + [p, y, q]`.
