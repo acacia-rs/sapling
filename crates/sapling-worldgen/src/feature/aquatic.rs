@@ -99,10 +99,11 @@ pub fn seagrass(ctx: &mut Ctx, at: [i32; 3], count: i32, tall: f32) -> bool {
         climb(view, &mut p);
         let [px, py, pz] = p;
         let water: [bool; 3] = std::array::from_fn(|dy| view.block(px, py + dy as i32, pz) == Block::Water);
-        // The float is drawn only once the seagrass may stand here. `SeagrassBlock::mayPlace` (148b4dac0) refuses magma
-        // and soul sand; its support test read as "centre support of the top face" puts seagrass on a shipwreck's
-        // fences and stairs, which BDS does not (69 cells), so the full-cube fit stays.
-        if water[0] && solid(view, px, py - 1, pz) && view.block(px, py - 1, pz) != Block::Magma {
+        // The float is drawn only once the seagrass may stand here: `SeagrassBlock::mayPlace` (148b4dac0), a source over
+        // a top face with centre support that is not magma, soul sand or a fence (list 0x14ccd9428, read live).
+        let below = view.block(px, py - 1, pz);
+        let refused = below == Block::Magma || below.name().ends_with("_fence");
+        if water[0] && below.supports(1, crate::block::Support::Centre) && !refused {
             if tall > ctx.random.next_float() {
                 if water[1] && (!cold || water[2]) {
                     view.set_block(px, py, pz, Block::SeagrassBottom);
