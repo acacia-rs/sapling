@@ -78,7 +78,7 @@ impl Canopy {
             Canopy::Cherry(canopy) => canopy.place(tree, view, random, anchor),
             Canopy::Poplar(canopy) => canopy.place(tree, view, random, anchor.at),
             Canopy::RandomSpread { leaves, height, radius, attempts } => {
-                canopy::random_spread(view, random, anchor.at, leaves, [*height, *radius], *attempts)
+                canopy::random_spread(view, random, &anchor.candidates, leaves, [*height, *radius], *attempts, tree.may_replace)
             }
             _ => canopy::place(self, tree, view, random, anchor),
         }

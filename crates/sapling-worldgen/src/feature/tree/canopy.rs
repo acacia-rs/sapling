@@ -27,19 +27,23 @@ pub fn place(canopy: &Canopy, tree: &Tree, view: &mut View, random: &mut Mt19937
     }
 }
 
-/// `random_spread_canopy` (azalea trees), not decompiled: Java's `RandomSpreadFoliagePlacer`, a
-/// leaf per attempt at `nextInt(r) - nextInt(r)` on each axis, the leaf picked first as mangroves do.
-pub fn random_spread(view: &mut View, random: &mut Mt19937, [x, y, z]: [i32; 3], leaves: &[(Block, i32)], [height, radius]: [i32; 2], attempts: i32) {
-    for _ in 0..attempts {
-        let leaf = super::common::pick_weighted(leaves, random);
-        let mut jitter = |bound: i32| {
-            let a = random.next_int(bound);
-            a - random.next_int(bound)
-        };
-        let (dx, dy, dz) = (jitter(radius), jitter(height), jitter(radius));
-        let existing = view.block(x + dx, y + dy, z + dz);
-        if leaf_replaceable(existing) {
-            view.set_block(x + dx, y + dy, z + dz, leaf);
+/// `random_spread_canopy` (azalea trees, 1438f57d0): height then radius drawn as ranges (a draw even
+/// when constant), then `attempts` leaves around every log the trunk offered, each the weighted leaf
+/// then per axis `nextInt(r) - r + nextInt(r) + 1` (x, y, z).
+pub fn random_spread(view: &mut View, random: &mut Mt19937, logs: &[[i32; 3]], leaves: &[(Block, i32)], [height, radius]: [i32; 2], attempts: i32, may_replace: &[Block]) {
+    let height = super::spec::Range(height, height).draw_inclusive_always(random);
+    let radius = super::spec::Range(radius, radius).draw_inclusive_always(random);
+    for &[x, y, z] in logs {
+        for _ in 0..attempts {
+            let leaf = super::common::pick_weighted(leaves, random);
+            let mut jitter = |bound: i32| {
+                let a = random.next_int(bound) - bound;
+                a + random.next_int(bound) + 1
+            };
+            let (dx, dy, dz) = (jitter(radius), jitter(height), jitter(radius));
+            if super::common::valid_tree_position(view, [x + dx, y + dy, z + dz], may_replace) {
+                view.set_block(x + dx, y + dy, z + dz, leaf);
+            }
         }
     }
 }
