@@ -10,6 +10,7 @@ use super::BoundingBox;
 use super::template::Record;
 use crate::block::Block;
 use crate::feature::{ElementWorld, place_element};
+use crate::fxhash::FxBuild;
 use crate::random::Mt19937;
 use crate::terrain::{ChunkShape, MIN_Y};
 
@@ -55,7 +56,7 @@ pub struct Canvas<'a> {
     /// What template placements file for their update pass.
     pub record: Record,
     /// Light heightmap per column, as `LevelChunk` +0xb80 keeps it.
-    heights: RefCell<HashMap<(i32, i32), i32>>,
+    heights: RefCell<HashMap<(i32, i32), i32, FxBuild>>,
     /// The lowest and highest y written inside the chunk.
     pub touched: (i32, i32),
     /// What pieces' features read past the chunk; None places no features.
@@ -65,7 +66,7 @@ pub struct Canvas<'a> {
     /// `setBlock` writes into the neighbours: mineshaft floors, whole pieces, update passes.
     pub unclipped: Vec<Past>,
     /// `unclipped` as this post-process reads it back.
-    written: HashMap<(i32, i32, i32), Block>,
+    written: HashMap<(i32, i32, i32), Block, FxBuild>,
     /// Fences this post-process's mineshaft pieces placed: still the piece's unjoined fence block
     /// to BDS, which `canBeReplaced` keeps (a stronghold library's railing is not).
     pub shaft_fences: HashSet<(i32, i32, i32)>,
@@ -81,12 +82,12 @@ impl<'a> Canvas<'a> {
             neighbour,
             whole: false,
             record: Record::default(),
-            heights: RefCell::new(HashMap::new()),
+            heights: RefCell::new(HashMap::default()),
             touched: (i32::MAX, i32::MIN),
             features: None,
             spilled: Vec::new(),
             unclipped: Vec::new(),
-            written: HashMap::new(),
+            written: HashMap::default(),
             shaft_fences: HashSet::new(),
         }
     }
@@ -127,7 +128,9 @@ impl<'a> Canvas<'a> {
             Block::Air
         } else if self.inside(x, z) {
             self.shape.block((x & 15) as usize, y, (z & 15) as usize)
-        } else if let Some(&block) = self.written.get(&(x, y, z)) {
+        } else if !self.written.is_empty()
+            && let Some(&block) = self.written.get(&(x, y, z))
+        {
             block
         } else {
             (self.neighbour)(x, y, z)
