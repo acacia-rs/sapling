@@ -69,56 +69,139 @@ impl BlendedNoise {
     }
 }
 
+const COLUMNS: usize = CELL_COLUMNS * CELL_COLUMNS;
+
+/// The grid by row, a row's columns side by side (column `gx * 5 + gz`) so an octave runs them in lanes.
+type Rows = [[f32; COLUMNS]; CELL_ROWS];
+
 fn fill_octaves(octaves: &[ImprovedNoise], origin: [f32; 3], scales: impl Fn(f32) -> [f32; 2]) -> Box<CellGrid> {
-    let mut out = Box::new([0.0f32; CELL_COUNT]);
+    let mut rows: Box<Rows> = Box::new([[0.0; COLUMNS]; CELL_ROWS]);
     let mut factor = 1.0f32;
     for octave in octaves {
         let [xz, y] = scales(factor);
-        fill_octave(octave, &mut out, origin, [xz, y, xz], factor);
+        fill_octave(&Octave::new(octave, origin, [xz, y, xz], factor), &mut rows);
         factor *= 0.5;
+    }
+    let mut out = Box::new([0.0f32; CELL_COUNT]);
+    for (gy, row) in rows.iter().enumerate() {
+        for (column, &value) in row.iter().enumerate() {
+            out[column * CELL_ROWS + gy] = value;
+        }
     }
     out
 }
 
-/// One octave added into the grid (145e23fc0, general branch). Gradient sums are reused while
-/// the y lattice index matches the last computed sample, even across columns, as BDS does.
-fn fill_octave(noise: &ImprovedNoise, out: &mut CellGrid, origin: [f32; 3], scale: [f32; 3], factor: f32) {
-    let inverse_factor = 1.0 / factor;
-    let fudge_y = scale[1] * 0.0 + noise.yo;
-    let fudge_index = fudge_y as i32;
-    let fudge_frac = fudge_y - fudge_index as f32;
+/// One octave over the grid (145e23fc0, general branch): each row's y lattice index and fraction,
+/// each column's x and z.
+struct Octave<'a> {
+    noise: &'a ImprovedNoise,
+    y_scale: f32,
+    inverse_factor: f32,
+    fudge_index: i32,
+    fudge_frac: f32,
+    y: [f32; CELL_ROWS],
+    ix: [i32; COLUMNS],
+    iz: [i32; COLUMNS],
+    fx: [f32; COLUMNS],
+    fz: [f32; COLUMNS],
+    sx: [f32; COLUMNS],
+    sz: [f32; COLUMNS],
+}
 
+impl<'a> Octave<'a> {
+    fn new(noise: &'a ImprovedNoise, origin: [f32; 3], scale: [f32; 3], factor: f32) -> Self {
+        let fudge_y = scale[1] * 0.0 + noise.yo;
+        let fudge_index = fudge_y as i32;
+        let mut octave = Octave {
+            noise,
+            y_scale: scale[1],
+            inverse_factor: 1.0 / factor,
+            fudge_index,
+            fudge_frac: fudge_y - fudge_index as f32,
+            y: std::array::from_fn(|gy| ((gy as f32) + origin[1]) * scale[1] + noise.yo),
+            ix: [0; COLUMNS],
+            iz: [0; COLUMNS],
+            fx: [0.0; COLUMNS],
+            fz: [0.0; COLUMNS],
+            sx: [0.0; COLUMNS],
+            sz: [0.0; COLUMNS],
+        };
+        for c in 0..COLUMNS {
+            let (gx, gz) = (c / CELL_COLUMNS, c % CELL_COLUMNS);
+            (octave.ix[c], octave.fx[c]) = split(((gx as f32) + origin[0]) * scale[0] + noise.xo);
+            (octave.iz[c], octave.fz[c]) = split(((gz as f32) + origin[2]) * scale[2] + noise.zo);
+            octave.sx[c] = smoothstep(octave.fx[c]);
+            octave.sz[c] = smoothstep(octave.fz[c]);
+        }
+        octave
+    }
+
+    /// Row `gy`'s lattice index and fraction, and the y fraction its gradients take when the last
+    /// computed row had lattice index `last_iy` (None: they are reused).
+    fn row(&self, gy: usize, last_iy: i32) -> (i32, f32, Option<f32>) {
+        let y = self.y[gy];
+        let floor = super::floor(y);
+        let iy = floor as i32 & 0xFF;
+        let fy = y - floor;
+        let gradient_y = if y as i32 == self.fudge_index {
+            Some(self.fudge_frac)
+        } else if iy == last_iy {
+            None
+        } else {
+            Some(fy - super::floor(fy / self.y_scale) * self.y_scale)
+        };
+        (iy, fy, gradient_y)
+    }
+
+    fn corners(&self, c: usize, iy: i32, gy_frac: f32) -> [f32; 4] {
+        x_lerped_corners(self.noise, [self.ix[c], iy, self.iz[c]], [self.fx[c], gy_frac, self.fz[c]], self.sx[c])
+    }
+
+    fn sample(&self, c: usize, corners: [f32; 4], sy: f32) -> f32 {
+        let near = (corners[1] - corners[0]) * sy + corners[0];
+        let far = (corners[3] - corners[2]) * sy + corners[2];
+        ((far - near) * self.sz[c] + near) * self.inverse_factor
+    }
+}
+
+/// Gradient sums are reused while the y lattice index matches the last computed sample, even across
+/// columns, as BDS does. Rows decide reuse alike in every column (the last row of one column leaves
+/// its index for the next), so the columns run together row by row, unless a column's first row
+/// would reuse the previous column's last gradients: then they run in BDS's order, one by one.
+fn fill_octave(octave: &Octave, rows: &mut Rows) {
+    let last = octave.row(CELL_ROWS - 1, -1).0;
+    if octave.row(0, last).2.is_none() {
+        return fill_octave_serial(octave, rows);
+    }
+    let mut corners = [[0.0f32; COLUMNS]; 4];
+    let mut last_iy = -1;
+    for (gy, row) in rows.iter_mut().enumerate() {
+        let (iy, fy, gradient_y) = octave.row(gy, last_iy);
+        if let Some(gy_frac) = gradient_y {
+            for c in 0..COLUMNS {
+                let computed = octave.corners(c, iy, gy_frac);
+                (0..4).for_each(|i| corners[i][c] = computed[i]);
+            }
+            last_iy = iy;
+        }
+        let sy = smoothstep(fy);
+        for (c, out) in row.iter_mut().enumerate() {
+            *out += octave.sample(c, [corners[0][c], corners[1][c], corners[2][c], corners[3][c]], sy);
+        }
+    }
+}
+
+fn fill_octave_serial(octave: &Octave, rows: &mut Rows) {
     let mut last_iy = -1i32;
     let mut corners = [0.0f32; 4];
-    let mut index = 0;
-    for gx in 0..CELL_COLUMNS {
-        let (ix, fx) = split(((gx as f32) + origin[0]) * scale[0] + noise.xo);
-        let sx = smoothstep(fx);
-        for gz in 0..CELL_COLUMNS {
-            let (iz, fz) = split(((gz as f32) + origin[2]) * scale[2] + noise.zo);
-            let sz = smoothstep(fz);
-            for gy in 0..CELL_ROWS {
-                let y = ((gy as f32) + origin[1]) * scale[1] + noise.yo;
-                let floor = super::floor(y);
-                let iy = floor as i32 & 0xFF;
-                let fy = y - floor;
-                let gradient_y = if y as i32 == fudge_index {
-                    Some(fudge_frac)
-                } else if iy == last_iy {
-                    None
-                } else {
-                    Some(fy - super::floor(fy / scale[1]) * scale[1])
-                };
-                if let Some(gy_frac) = gradient_y {
-                    corners = x_lerped_corners(noise, [ix, iy, iz], [fx, gy_frac, fz], sx);
-                    last_iy = iy;
-                }
-                let sy = smoothstep(fy);
-                let near = (corners[1] - corners[0]) * sy + corners[0];
-                let far = (corners[3] - corners[2]) * sy + corners[2];
-                out[index] += ((far - near) * sz + near) * inverse_factor;
-                index += 1;
+    for c in 0..COLUMNS {
+        for (gy, row) in rows.iter_mut().enumerate() {
+            let (iy, fy, gradient_y) = octave.row(gy, last_iy);
+            if let Some(gy_frac) = gradient_y {
+                corners = octave.corners(c, iy, gy_frac);
+                last_iy = iy;
             }
+            row[c] += octave.sample(c, corners, smoothstep(fy));
         }
     }
 }
