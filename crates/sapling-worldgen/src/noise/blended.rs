@@ -178,9 +178,12 @@ fn fill_octave(octave: &Octave, rows: &mut Rows) {
     for (gy, row) in rows.iter_mut().enumerate() {
         let (iy, fy, gradient_y) = octave.row(gy, last_iy);
         if let Some(gy_frac) = gradient_y {
-            for c in 0..COLUMNS {
-                let computed = octave.corners(c, iy, gy_frac);
-                (0..4).for_each(|i| corners[i][c] = computed[i]);
+            for gx in 0..CELL_COLUMNS {
+                let hashes = xy_hashes(octave.noise, octave.ix[gx * CELL_COLUMNS], iy);
+                for c in gx * CELL_COLUMNS..(gx + 1) * CELL_COLUMNS {
+                    let computed = lerped_from(octave.noise, hashes, octave.iz[c], [octave.fx[c], gy_frac, octave.fz[c]], octave.sx[c]);
+                    (0..4).for_each(|i| corners[i][c] = computed[i]);
+                }
             }
             last_iy = iy;
         }
@@ -214,11 +217,17 @@ fn split(value: f32) -> (i32, f32) {
 /// The four x-interpolated gradient sums: (y0,z0), (y1,z0), (y0,z1), (y1,z1).
 fn x_lerped_corners(noise: &ImprovedNoise, lattice: [i32; 3], frac: [f32; 3], sx: f32) -> [f32; 4] {
     let [ix, iy, iz] = lattice;
-    let [fx, fy, fz] = frac;
+    lerped_from(noise, xy_hashes(noise, ix, iy), iz, frac, sx)
+}
+
+/// The permutation chain's x and y steps (aa, ab, ba, bb), shared by the columns of one x.
+fn xy_hashes(noise: &ImprovedNoise, ix: i32, iy: i32) -> [i32; 4] {
     let a = noise.hash_at(ix) + iy;
     let b = noise.hash_at(ix + 1) + iy;
-    let (aa, ab) = (noise.hash_at(a), noise.hash_at(a + 1));
-    let (ba, bb) = (noise.hash_at(b), noise.hash_at(b + 1));
+    [noise.hash_at(a), noise.hash_at(a + 1), noise.hash_at(b), noise.hash_at(b + 1)]
+}
+
+fn lerped_from(noise: &ImprovedNoise, [aa, ab, ba, bb]: [i32; 4], iz: i32, [fx, fy, fz]: [f32; 3], sx: f32) -> [f32; 4] {
     let lerp_x = |h0: i32, h1: i32, y: f32, z: f32| {
         let d0 = super::improved::grad_dot(noise.hash_at(h0), fx, y, z);
         let d1 = super::improved::grad_dot(noise.hash_at(h1), fx - 1.0, y, z);
