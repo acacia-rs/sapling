@@ -3,7 +3,7 @@
 
 use std::collections::HashMap;
 use std::hash::Hash;
-use std::sync::{Arc, Mutex, OnceLock};
+use std::sync::{Arc, Mutex, OnceLock, Weak};
 
 use crate::fxhash::FxBuild;
 
@@ -15,6 +15,9 @@ type Slot<V> = Arc<OnceLock<Arc<V>>>;
 struct Generations<K, V> {
     current: HashMap<K, Slot<V>, FxBuild>,
     old: HashMap<K, Slot<V>, FxBuild>,
+    /// Entries dropped from `old`: one another cache still holds (a staged chunk holds its carved
+    /// terrain) is taken back instead of made again, at no memory cost.
+    dropped: HashMap<K, Weak<V>, FxBuild>,
 }
 
 pub struct SourceCache<K, V> {
@@ -26,7 +29,8 @@ pub struct SourceCache<K, V> {
 impl<K: Hash + Eq + Copy, V> SourceCache<K, V> {
     /// Holds between `limit / 2` and `limit` entries.
     pub fn new(limit: usize) -> Self {
-        Self { entries: Mutex::new(Generations { current: HashMap::default(), old: HashMap::default() }), limit: (limit / 2).max(1) }
+        let entries = Generations { current: HashMap::default(), old: HashMap::default(), dropped: HashMap::default() };
+        Self { entries: Mutex::new(entries), limit: (limit / 2).max(1) }
     }
 
     /// `make` runs outside the lock and once per kept entry: threads generating neighbouring chunks ask
@@ -37,9 +41,15 @@ impl<K: Hash + Eq + Copy, V> SourceCache<K, V> {
             match entries.current.get(&key) {
                 Some(slot) => slot.clone(),
                 None => {
-                    let slot = entries.old.remove(&key).unwrap_or_default();
+                    let slot = match entries.old.remove(&key) {
+                        Some(slot) => slot,
+                        None => entries.dropped.remove(&key).and_then(|held| held.upgrade()).map_or_else(Slot::default, |value| Arc::new(OnceLock::from(value))),
+                    };
                     if entries.current.len() >= self.limit {
-                        entries.old = std::mem::take(&mut entries.current);
+                        let current = std::mem::take(&mut entries.current);
+                        let old = std::mem::replace(&mut entries.old, current);
+                        entries.dropped.retain(|_, held| held.strong_count() > 0);
+                        entries.dropped.extend(old.into_iter().filter_map(|(key, slot)| slot.get().map(|value| (key, Arc::downgrade(value)))));
                     }
                     entries.current.insert(key, slot.clone());
                     slot
