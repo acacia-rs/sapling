@@ -139,16 +139,15 @@ impl ClimateNoises {
                     let base = (cell_x * LATTICE_COLUMNS + cell_z) * LATTICE_ROWS + cell_y + (MIN_Y / 8 - LATTICE_MIN_Y) as usize;
                     let first = lattice[base].biome;
                     let uniform = CORNERS.iter().all(|&corner| lattice[point(base, corner)].biome == first);
+                    let picker = (!uniform).then(|| Picker::new(CORNERS.map(|corner| lattice[point(base, corner)].jitter)));
                     for y in MIN_Y + cell_y as i32 * 8..MIN_Y + cell_y as i32 * 8 + 8 {
                         for z in cell_z * 8..cell_z * 8 + 8 {
                             for x in cell_x * 8..cell_x * 8 + 8 {
-                                if uniform {
+                                let Some(picker) = &picker else {
                                     ids[block_index(x, y, z)] = first as u8;
                                     continue;
-                                }
-                                let block = [chunk_x * 16 + x as i32, y, chunk_z * 16 + z as i32];
-                                let frac = block.map(|v| (v & 7) as f32 * 0.125);
-                                let corner = pick(&lattice, base, frac);
+                                };
+                                let corner = picker.pick([x & 7, (y & 7) as usize, z & 7]);
                                 ids[block_index(x, y, z)] = lattice[point(base, CORNERS[corner])].biome as u8;
                                 if let Some(corners) = &mut corners {
                                     corners[block_index(x, y, z)] = corner as u8;
@@ -167,19 +166,32 @@ impl ClimateNoises {
 /// corner gives it, so none was picked.
 const UNIFORM: u8 = u8::MAX;
 
-/// The index into `CORNERS` of the lattice corner nearest the block after jitter; ties keep the
-/// earlier corner.
-fn pick(lattice: &[LatticePoint], base: usize, frac: [f32; 3]) -> usize {
-    let mut best = (0, f32::MAX);
-    for (index, corner) in CORNERS.iter().enumerate() {
-        let point = base + corner[0] as usize * LATTICE_ROWS * LATTICE_COLUMNS + corner[2] as usize * LATTICE_ROWS + corner[1] as usize;
-        let [jx, jy, jz] = lattice[point].jitter;
-        let [dx, dy, dz] = std::array::from_fn(|axis| frac[axis] - corner[axis] as f32);
-        let (ex, ey, ez) = (jx + dx, jy + dy, jz + dz);
-        let distance = ez * ez + ey * ey + ex * ex;
-        if distance < best.1 {
-            best = (index, distance);
-        }
+/// A lattice cell's corners as its blocks measure them: per corner and axis, the square of
+/// `jitter + (k / 8 - corner)` for each block position k in the cell (142f67a10's terms).
+struct Picker([[[f32; 8]; 3]; 8]);
+
+impl Picker {
+    fn new(jitters: [[f32; 3]; 8]) -> Self {
+        Self(std::array::from_fn(|c| {
+            std::array::from_fn(|axis| {
+                std::array::from_fn(|k| {
+                    let e = jitters[c][axis] + (k as f32 * 0.125 - CORNERS[c][axis] as f32);
+                    e * e
+                })
+            })
+        }))
     }
-    best.0
+
+    /// The index into `CORNERS` of the corner nearest the block after jitter, the squares summed z, y,
+    /// x as BDS does; ties keep the earlier corner.
+    fn pick(&self, [x, y, z]: [usize; 3]) -> usize {
+        let mut best = (0, f32::MAX);
+        for (index, [sx, sy, sz]) in self.0.iter().enumerate() {
+            let distance = sz[z] + sy[y] + sx[x];
+            if distance < best.1 {
+                best = (index, distance);
+            }
+        }
+        best.0
+    }
 }
