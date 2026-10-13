@@ -13,7 +13,7 @@ mod tests;
 
 pub use rtree::{ClimatePoint, Leaf, RTree};
 
-use std::sync::OnceLock;
+use std::sync::{Arc, OnceLock};
 
 use crate::climate::ClimateNoises;
 use crate::terrain::{HEIGHT, MIN_Y};
@@ -82,8 +82,12 @@ pub fn overworld_tree() -> &'static RTree {
 }
 
 impl ClimateNoises {
+    fn lattice_column(&self, lx: i32, lz: i32) -> Arc<[u32]> {
+        self.lattice.get(lx, lz, || self.compute_lattice_column(lx, lz).into())
+    }
+
     /// One lattice column, bottom up, each search warm-started from the one below.
-    fn lattice_column(&self, lx: i32, lz: i32) -> Vec<u32> {
+    fn compute_lattice_column(&self, lx: i32, lz: i32) -> Vec<u32> {
         let climate = self.sample(lx * 2, lz * 2);
         let tree = overworld_tree();
         let mut warm = None;
@@ -124,7 +128,7 @@ impl ClimateNoises {
         for gx in 0..LATTICE_COLUMNS as i32 {
             for gz in 0..LATTICE_COLUMNS as i32 {
                 let column = self.lattice_column(origin[0] + gx, origin[2] + gz);
-                for (row, biome) in column.into_iter().enumerate() {
+                for (row, &biome) in column.iter().enumerate() {
                     let at = [origin[0] + gx, origin[1] + row as i32, origin[2] + gz];
                     lattice.push(LatticePoint { biome, jitter: jitter(seed, at) });
                 }

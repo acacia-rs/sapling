@@ -2,6 +2,9 @@
 //! per quart column: shifted coordinates, climate, and the terrain shaper's outputs
 //! (1481df0e0 + 1481def00, cached per chunk by 14822cb50).
 
+use std::sync::Arc;
+
+use crate::cache::ColumnCache;
 use crate::noise::NormalNoise;
 use crate::random::PositionalFactory;
 use crate::shaper::{ShaperPoint, TerrainShaper};
@@ -16,6 +19,8 @@ pub struct ClimateNoises {
     pub offset: NormalNoise,
     pub jagged: NormalNoise,
     pub shaper: TerrainShaper,
+    /// Biome lattice columns, shared by the up to four chunks whose blocks read each.
+    pub(crate) lattice: ColumnCache<Arc<[u32]>>,
 }
 
 /// One quart column's sample, BDS's `ChunkLocalNoiseCache::CacheEntry`.
@@ -48,6 +53,7 @@ impl ClimateNoises {
             offset: noise("offset", -3, &[1.0, 1.0, 1.0, 0.0]),
             jagged: noise("jagged", -16, &[1.0; 16]),
             shaper: TerrainShaper::overworld(),
+            lattice: ColumnCache::new(12),
         }
     }
 

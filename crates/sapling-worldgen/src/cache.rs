@@ -59,3 +59,42 @@ impl<K: Hash + Eq + Copy, V> SourceCache<K, V> {
         slot.get_or_init(|| Arc::new(make())).clone()
     }
 }
+
+/// A pure function of a column's coordinates, direct-mapped: a slot lost to a collision is recomputed.
+/// A clone starts empty.
+pub struct ColumnCache<V> {
+    bits: u32,
+    slots: Mutex<Vec<Option<((i32, i32), V)>>>,
+}
+
+impl<V: Clone> ColumnCache<V> {
+    /// `1 << bits` slots.
+    pub fn new(bits: u32) -> Self {
+        Self { bits, slots: Mutex::new(vec![None; 1 << bits]) }
+    }
+
+    pub fn get(&self, x: i32, z: i32, compute: impl FnOnce() -> V) -> V {
+        let mix = (x as u32).wrapping_mul(0x9E37_79B1).wrapping_add(z as u32).wrapping_mul(0x85EB_CA6B);
+        let slot = (mix >> (32 - self.bits)) as usize;
+        if let Some((key, value)) = &self.slots.lock().unwrap()[slot]
+            && *key == (x, z)
+        {
+            return value.clone();
+        }
+        let value = compute();
+        self.slots.lock().unwrap()[slot] = Some(((x, z), value.clone()));
+        value
+    }
+}
+
+impl<V: Clone> Clone for ColumnCache<V> {
+    fn clone(&self) -> Self {
+        Self::new(self.bits)
+    }
+}
+
+impl<V> std::fmt::Debug for ColumnCache<V> {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        f.write_str("ColumnCache")
+    }
+}
