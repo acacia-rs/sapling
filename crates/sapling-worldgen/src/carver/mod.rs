@@ -36,8 +36,8 @@ impl Carvers {
     }
 
     pub fn carve(&self, density: &Density, shape: &mut ChunkShape, chunk_x: i32, chunk_z: i32) {
-        let mut aquifer = AquiferCache::default();
         let chunk = (chunk_x, chunk_z);
+        let mut aquifer = AquiferCache::new(chunk);
         let sources = || (chunk_x - RANGE..=chunk_x + RANGE).flat_map(move |x| (chunk_z - RANGE..=chunk_z + RANGE).map(move |z| (x, z)));
         for (carver, settings) in CAVE_CARVERS.iter().enumerate() {
             for (x, z) in sources() {

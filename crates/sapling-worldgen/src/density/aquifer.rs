@@ -1,11 +1,8 @@
 //! Java 1.18.1 `NoiseBasedAquifer` as BDS has it (`Aquifer::Aquifer` 1481df940, substance
 //! 1481dfe30, fluid status 1481e0af0). Fluid centers and statuses are pure functions of their
-//! grid cell, so this keeps them in maps instead of BDS's per-chunk arrays.
-
-use std::collections::HashMap;
+//! grid cell, cached per chunk as BDS's arrays are.
 
 use super::Density;
-use crate::fxhash::FxBuild;
 
 pub const SEA_LEVEL: i32 = 63;
 /// Below this BDS answers lava without sampling anything.
@@ -32,10 +29,27 @@ pub struct AquiferAnswer {
     pub update: bool,
 }
 
-#[derive(Default)]
+/// The grid cells a chunk's blocks reach: x and z from the chunk's minus one, y over the world's height.
+const SPAN_XZ: i32 = 3;
+const MIN_GY: i32 = -6;
+const SPAN_Y: i32 = 34;
+
+/// Each grid cell's centre and its fluid status once computed, densely over one chunk's cells (as
+/// BDS's per-chunk arrays); cells beyond them are computed uncached.
 pub struct AquiferCache {
-    centers: HashMap<(i32, i32, i32), (i32, i32, i32), FxBuild>,
-    statuses: HashMap<(i32, i32, i32), FluidStatus, FxBuild>,
+    origin: (i32, i32, i32),
+    cells: Vec<(Option<(i32, i32, i32)>, Option<FluidStatus>)>,
+}
+
+impl AquiferCache {
+    pub fn new((chunk_x, chunk_z): (i32, i32)) -> Self {
+        Self { origin: (chunk_x - 1, MIN_GY, chunk_z - 1), cells: vec![(None, None); (SPAN_XZ * SPAN_Y * SPAN_XZ) as usize] }
+    }
+
+    fn slot(&self, (gx, gy, gz): (i32, i32, i32)) -> Option<usize> {
+        let (x, y, z) = (gx - self.origin.0, gy - self.origin.1, gz - self.origin.2);
+        ((0..SPAN_XZ).contains(&x) && (0..SPAN_Y).contains(&y) && (0..SPAN_XZ).contains(&z)).then(|| ((x * SPAN_Y + y) * SPAN_XZ + z) as usize)
+    }
 }
 
 impl Density {
@@ -104,22 +118,25 @@ impl Density {
     }
 
     fn aquifer_center(&self, cache: &mut AquiferCache, cell: (i32, i32, i32)) -> (i32, i32, i32) {
-        *cache.centers.entry(cell).or_insert_with(|| {
+        let compute = || {
             let mut random = self.aquifer_noises.positional.at(cell.0, cell.1, cell.2);
             let dx = random.next_int_bounded(10);
             let dy = random.next_int_bounded(9);
             let dz = random.next_int_bounded(10);
             (cell.0 * 16 + dx, cell.1 * 12 + dy, cell.2 * 16 + dz)
-        })
+        };
+        match cache.slot(cell) {
+            Some(slot) => *cache.cells[slot].0.get_or_insert_with(compute),
+            None => compute(),
+        }
     }
 
+    /// A centre lies in its own grid cell, so the cell's slot holds its status.
     fn fluid_status(&self, cache: &mut AquiferCache, center: (i32, i32, i32)) -> FluidStatus {
-        if let Some(status) = cache.statuses.get(&center) {
-            return *status;
+        match cache.slot((center.0.div_euclid(16), center.1.div_euclid(12), center.2.div_euclid(16))) {
+            Some(slot) => *cache.cells[slot].1.get_or_insert_with(|| self.compute_fluid(center)),
+            None => self.compute_fluid(center),
         }
-        let status = self.compute_fluid(center);
-        cache.statuses.insert(center, status);
-        status
     }
 
     fn compute_fluid(&self, (x, y, z): (i32, i32, i32)) -> FluidStatus {

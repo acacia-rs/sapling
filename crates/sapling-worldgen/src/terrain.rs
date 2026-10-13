@@ -116,7 +116,7 @@ impl Density {
     pub fn adjusted_chunk_shape(&self, chunk_x: i32, chunk_z: i32, adjust: Option<&Adjustments>) -> ChunkShape {
         let climate = |qx: i32, qz: i32| -> QuartClimate { self.climate.sample(qx, qz) };
         let cells = self.cells(chunk_x, chunk_z, &climate);
-        let mut aquifer = AquiferCache::default();
+        let mut aquifer = AquiferCache::new((chunk_x, chunk_z));
         let mut shape = ChunkShape { blocks: vec![Block::Air; 16 * 16 * HEIGHT], fluid_ticks: Vec::new() };
         for cx in 0..4 {
             for cz in 0..4 {
