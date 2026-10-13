@@ -21,8 +21,8 @@ use crate::terrain::{HEIGHT, MIN_Y};
 /// Lattice rows: one below the world and one above it (y -72..=320, step 8).
 const LATTICE_ROWS: usize = HEIGHT / 8 + 2;
 const LATTICE_MIN_Y: i32 = MIN_Y / 8 - 1;
-/// A chunk needs lattice columns 2c-1 ..= 2c+2.
-const LATTICE_COLUMNS: usize = 4;
+/// A chunk's blocks read lattice columns 2c ..= 2c+2.
+const LATTICE_COLUMNS: usize = 3;
 
 /// Java's `Climate.quantizeCoord`, but in f64 as BDS has it (14805fad0).
 fn quantize(value: f32) -> i64 {
@@ -110,7 +110,7 @@ impl ClimateNoises {
     }
 
     pub fn chunk_biomes(&self, seed: i64, chunk_x: i32, chunk_z: i32) -> ChunkBiomes {
-        let origin = [chunk_x * 2 - 1, LATTICE_MIN_Y, chunk_z * 2 - 1];
+        let origin = [chunk_x * 2, LATTICE_MIN_Y, chunk_z * 2];
         let mut lattice = Vec::with_capacity(LATTICE_COLUMNS * LATTICE_COLUMNS * LATTICE_ROWS);
         for gx in 0..LATTICE_COLUMNS as i32 {
             for gz in 0..LATTICE_COLUMNS as i32 {
@@ -124,22 +124,27 @@ impl ClimateNoises {
         let mut ids = vec![0; 16 * 16 * HEIGHT];
         let mut corners = vec![UNIFORM; 16 * 16 * HEIGHT];
         let point = |base: usize, [cx, cy, cz]: [i32; 3]| base + cx as usize * LATTICE_ROWS * LATTICE_COLUMNS + cz as usize * LATTICE_ROWS + cy as usize;
-        for y in MIN_Y..MIN_Y + HEIGHT as i32 {
-            for z in 0..16 {
-                for x in 0..16 {
-                    let block = [chunk_x * 16 + x as i32, y, chunk_z * 16 + z as i32];
-                    let cell = [block[0] >> 3, block[1] >> 3, block[2] >> 3];
-                    let base = (((cell[0] - origin[0]) as usize * LATTICE_COLUMNS) + (cell[2] - origin[2]) as usize) * LATTICE_ROWS
-                        + (cell[1] - origin[1]) as usize;
+        for cell_y in 0..HEIGHT / 8 {
+            for cell_z in 0..2 {
+                for cell_x in 0..2 {
+                    let base = (cell_x * LATTICE_COLUMNS + cell_z) * LATTICE_ROWS + cell_y + (MIN_Y / 8 - LATTICE_MIN_Y) as usize;
                     let first = lattice[base].biome;
-                    if CORNERS.iter().all(|&corner| lattice[point(base, corner)].biome == first) {
-                        ids[block_index(x, y, z)] = first as u8;
-                        continue;
+                    let uniform = CORNERS.iter().all(|&corner| lattice[point(base, corner)].biome == first);
+                    for y in MIN_Y + cell_y as i32 * 8..MIN_Y + cell_y as i32 * 8 + 8 {
+                        for z in cell_z * 8..cell_z * 8 + 8 {
+                            for x in cell_x * 8..cell_x * 8 + 8 {
+                                if uniform {
+                                    ids[block_index(x, y, z)] = first as u8;
+                                    continue;
+                                }
+                                let block = [chunk_x * 16 + x as i32, y, chunk_z * 16 + z as i32];
+                                let frac = block.map(|v| (v & 7) as f32 * 0.125);
+                                let corner = pick(&lattice, base, frac);
+                                ids[block_index(x, y, z)] = lattice[point(base, CORNERS[corner])].biome as u8;
+                                corners[block_index(x, y, z)] = corner as u8;
+                            }
+                        }
                     }
-                    let frac = block.map(|v| (v & 7) as f32 * 0.125);
-                    let corner = pick(&lattice, base, frac);
-                    ids[block_index(x, y, z)] = lattice[point(base, CORNERS[corner])].biome as u8;
-                    corners[block_index(x, y, z)] = corner as u8;
                 }
             }
         }
