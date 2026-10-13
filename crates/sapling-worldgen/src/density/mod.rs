@@ -5,6 +5,7 @@ mod aquifer;
 mod cavifier;
 mod cells;
 mod noises;
+mod surfaces;
 mod veins;
 
 pub use aquifer::{AquiferAnswer, AquiferCache, FluidStatus, SEA_LEVEL};
@@ -14,6 +15,7 @@ pub use noises::{AquiferNoises, CaveNoises, NoodleNoises, VeinNoises};
 use crate::climate::ClimateNoises;
 use crate::noise::BlendedNoise;
 use crate::random::PositionalFactory;
+use surfaces::SurfaceCache;
 
 /// Returned when no cell of the column reaches the preliminary-surface threshold.
 pub const NO_SURFACE: i32 = 0x7fff;
@@ -25,6 +27,7 @@ pub struct Density {
     noodles: NoodleNoises,
     aquifer_noises: AquiferNoises,
     veins: VeinNoises,
+    surfaces: SurfaceCache,
 }
 
 impl Density {
@@ -36,12 +39,17 @@ impl Density {
             noodles: NoodleNoises::new(factory),
             aquifer_noises: AquiferNoises::new(factory),
             veins: VeinNoises::new(factory),
+            surfaces: SurfaceCache::new(),
         }
     }
 
     /// The highest cell corner whose cave-free, jag-free density clears the threshold
     /// (BDS 14822e160, Java `getPreliminarySurfaceLevel`), at a quart column.
     pub fn preliminary_surface(&self, qx: i32, qz: i32) -> i32 {
+        self.surfaces.get(qx, qz, || self.compute_preliminary_surface(qx, qz))
+    }
+
+    fn compute_preliminary_surface(&self, qx: i32, qz: i32) -> i32 {
         let (shifted_x, shifted_z) = self.climate.shift(qx, qz);
         let point = self.climate.shaper_point(shifted_x, shifted_z);
         let offset = self.climate.shaper.offset(&point);
