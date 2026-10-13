@@ -66,7 +66,9 @@ pub fn decorate_chunk(seed: &LargeFeatureSeed, chunk: (i32, i32), inputs: Inputs
 /// The positions come from one generator, the features draw from a second seeded alike.
 fn run(rule: &Rule, source: &mut Source, only: Option<u32>, own: &ChunkBiomes, view: &mut View, scope: &mut Scope) {
     let seed = rule_seed(source.chunk_seed, rule.name);
-    let mut positions = Mt19937::new(seed);
+    // Seeding is a 623-step serial chain; the placing generator starts from a copy.
+    let seeded = Mt19937::new(seed);
+    let mut positions = seeded.clone();
     let origin = [source.chunk.0 * 16, 0, source.chunk.1 * 16];
     scope.world_bound = false;
     let queries = scope.queries;
@@ -78,7 +80,7 @@ fn run(rule: &Rule, source: &mut Source, only: Option<u32>, own: &ChunkBiomes, v
     if count == 0 {
         return;
     }
-    let mut placing = Mt19937::new(seed);
+    let mut placing = seeded;
     let followed = super::reach::radius(&FEATURES[rule.feature]);
     let mut fresh = true;
     let (biomes, surface) = (source.inputs.biomes, source.inputs.surface);
@@ -126,12 +128,13 @@ fn biome_at(source: (i32, i32), own: &ChunkBiomes, biomes: &impl Fn(i32, i32) ->
 /// Inside a sub-chunk the palette fills in storage order, x then z then y (1438cb860).
 fn palette_order(biomes: &ChunkBiomes) -> Vec<u32> {
     let mut order = Vec::new();
+    let mut seen = [false; 256];
     for base in (MIN_Y..MIN_Y + HEIGHT as i32).step_by(16) {
         for x in 0..16 {
             for z in 0..16 {
                 for y in base..base + 16 {
                     let biome = biomes.biome(x, y, z);
-                    if !order.contains(&biome) {
+                    if !std::mem::replace(&mut seen[biome as usize], true) {
                         order.push(biome);
                     }
                 }
