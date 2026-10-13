@@ -735,9 +735,8 @@ Measured on worldgen/unify6 with all2 65cacd1 (replay6) merged, against that all
   chunks out where every chunk has a structure (the parity model reached three), so a cold request carves a
   wider ring. A server generating a connected area pays it once at the edge.
 
-Left: the stronghold canon's pen fence (-1426,69,-1919) joins south in BDS toward an oak log at -1426,69,-1918
-that decoration grows later, so a feature's write updates the fence: feature-stage behaviour (replay6's
-`template/beside.rs` cascade is where it would go), not checked on this branch. Mansion's 5 cobblestone cells
+The stronghold canon's pen fence (-1426,69,-1919, joined south toward an oak log decoration grows later) is
+exact on the merged tree: replay6's feature-write cascade (`template/beside.rs`). Mansion's 5 cobblestone cells
 and the city's 2 tuff cells were not looked at.
 
 ## The four unexplained chunks
