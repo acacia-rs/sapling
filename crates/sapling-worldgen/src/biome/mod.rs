@@ -38,8 +38,8 @@ struct LatticePoint {
 pub struct ChunkBiomes {
     chunk: (i32, i32),
     ids: Vec<u8>,
-    /// Which corner of its lattice cell each block took (`CORNERS`), for diagnosing.
-    corners: Vec<u8>,
+    /// Which corner of its lattice cell each block took (`CORNERS`), for diagnosing (`chunk_biomes_traced`).
+    corners: Option<Vec<u8>>,
 }
 
 /// Lattice cell corners in BDS's tie order z, y, zy, x, xz, xy, xyz (142f67a10), as [x, y, z].
@@ -55,9 +55,9 @@ impl ChunkBiomes {
     }
 
     /// The lattice point (x, y, z in lattice units) the block took its biome from; None inside a
-    /// lattice cell of one biome, where no corner was picked.
+    /// lattice cell of one biome, where no corner was picked, and for biomes not traced.
     pub fn lattice_point(&self, x: usize, y: i32, z: usize) -> Option<[i32; 3]> {
-        let corner = CORNERS.get(self.corners[block_index(x, y, z)] as usize)?;
+        let corner = CORNERS.get(self.corners.as_ref()?[block_index(x, y, z)] as usize)?;
         let block = [self.chunk.0 * 16 + x as i32, y, self.chunk.1 * 16 + z as i32];
         Some(std::array::from_fn(|axis| (block[axis] >> 3) + corner[axis]))
     }
@@ -110,6 +110,15 @@ impl ClimateNoises {
     }
 
     pub fn chunk_biomes(&self, seed: i64, chunk_x: i32, chunk_z: i32) -> ChunkBiomes {
+        self.fill_biomes(seed, chunk_x, chunk_z, false)
+    }
+
+    /// `chunk_biomes` with each block's lattice corner kept for `ChunkBiomes::lattice_point`.
+    pub fn chunk_biomes_traced(&self, seed: i64, chunk_x: i32, chunk_z: i32) -> ChunkBiomes {
+        self.fill_biomes(seed, chunk_x, chunk_z, true)
+    }
+
+    fn fill_biomes(&self, seed: i64, chunk_x: i32, chunk_z: i32, traced: bool) -> ChunkBiomes {
         let origin = [chunk_x * 2, LATTICE_MIN_Y, chunk_z * 2];
         let mut lattice = Vec::with_capacity(LATTICE_COLUMNS * LATTICE_COLUMNS * LATTICE_ROWS);
         for gx in 0..LATTICE_COLUMNS as i32 {
@@ -122,7 +131,7 @@ impl ClimateNoises {
             }
         }
         let mut ids = vec![0; 16 * 16 * HEIGHT];
-        let mut corners = vec![UNIFORM; 16 * 16 * HEIGHT];
+        let mut corners = traced.then(|| vec![UNIFORM; 16 * 16 * HEIGHT]);
         let point = |base: usize, [cx, cy, cz]: [i32; 3]| base + cx as usize * LATTICE_ROWS * LATTICE_COLUMNS + cz as usize * LATTICE_ROWS + cy as usize;
         for cell_y in 0..HEIGHT / 8 {
             for cell_z in 0..2 {
@@ -141,7 +150,9 @@ impl ClimateNoises {
                                 let frac = block.map(|v| (v & 7) as f32 * 0.125);
                                 let corner = pick(&lattice, base, frac);
                                 ids[block_index(x, y, z)] = lattice[point(base, CORNERS[corner])].biome as u8;
-                                corners[block_index(x, y, z)] = corner as u8;
+                                if let Some(corners) = &mut corners {
+                                    corners[block_index(x, y, z)] = corner as u8;
+                                }
                             }
                         }
                     }

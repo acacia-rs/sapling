@@ -24,7 +24,7 @@ fn main() {
     for cx in x0..=x1 {
         for cz in z0..=z1 {
             let chunk = primary.load_column(ChunkKey::new(cx, cz, 0)).unwrap().expect("chunk saved").chunk;
-            let biomes = generator.chunk_biomes(cx, cz);
+            let biomes = generator.density().climate.chunk_biomes_traced(seed, cx, cz);
             for y in MIN_Y..64 {
                 for z in 0..16 {
                     for x in 0..16 {
