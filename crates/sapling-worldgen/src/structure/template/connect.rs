@@ -3,6 +3,7 @@
 //! arrive with these unset.
 
 use std::collections::HashSet;
+use std::sync::OnceLock;
 
 use super::{FULL_CUBE, flags, try_named, wall};
 use crate::block::Block;
@@ -19,7 +20,34 @@ pub(super) enum Shape {
     Stairs,
 }
 
+/// `shape` and whether it is a wall, of every named block by `ALL` index and every template block
+/// by palette index: the passes ask them of every cell they scan.
+struct Kinds {
+    named: Vec<(Option<Shape>, bool)>,
+    templates: Vec<(Option<Shape>, bool)>,
+}
+
+fn kinds(block: Block) -> (Option<Shape>, bool) {
+    static KINDS: OnceLock<Kinds> = OnceLock::new();
+    let kinds = KINDS.get_or_init(|| {
+        let of = |block: Block| (shape_by_states(block), block.states().contains("wall_post_bit"));
+        Kinds { named: Block::ALL.iter().map(|&b| of(b)).collect(), templates: Block::templates().map(of).collect() }
+    });
+    match block {
+        Block::Template(index) => kinds.templates[index as usize],
+        named => kinds.named[named.index()],
+    }
+}
+
 pub(super) fn shape(block: Block) -> Option<Shape> {
+    kinds(block).0
+}
+
+pub fn is_wall(block: Block) -> bool {
+    kinds(block).1
+}
+
+fn shape_by_states(block: Block) -> Option<Shape> {
     let (name, states) = (block.name(), block.states());
     if states.contains("minecraft:corner=") {
         Some(Shape::Stairs)

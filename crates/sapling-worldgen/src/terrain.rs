@@ -25,8 +25,7 @@ pub enum CellKind {
 fn pack(block: Block) -> u16 {
     match block {
         Block::Template(index) => index,
-        // A `repr(u16)` enum starts with its tag.
-        other => 0x8000 | unsafe { *(&raw const other).cast::<u16>() },
+        other => 0x8000 | (other.index() + 1) as u16,
     }
 }
 

@@ -1,13 +1,10 @@
 //! Wall connections and posts from the final neighbours (Java's `WallBlock.updateShape`, sides
 //! `short`/`tall` as Bedrock saves them).
 
+pub use super::connect::is_wall;
 use super::connect::{SIDES, Shape, full_cube, shape, state, sturdy};
 use crate::block::Block;
 use crate::structure::canvas::Canvas;
-
-pub fn is_wall(block: Block) -> bool {
-    block.states().contains("wall_post_bit")
-}
 
 fn side_key(side: &str) -> String {
     format!("wall_connection_type_{side}")
