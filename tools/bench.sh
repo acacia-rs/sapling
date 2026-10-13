@@ -22,10 +22,13 @@ declare -A load=(
   [village8]="20261003 -66 4 -59 11"
   [mt1]="20261003 -8 -8 7 7 1"
   [mt6]="20261003 -8 -8 7 7 6"
+  [mt1s]="20261003 -8 -8 7 7 1 6 64"
+  [mt6s]="20261003 -8 -8 7 7 6 6 64"
 )
 # mt1/mt6: origin16 on 1 and 6 threads sharing one generator, on six cores (cache contention); their hash
-# is order-independent, so it differs from origin16's.
-declare -A cores=([mt1]="0-4,6" [mt6]="0-4,6")
+# is order-independent, so it differs from origin16's. mt1s/mt6s: six such areas 64 chunks apart in x,
+# each thread sweeping whole areas (a scheduler that keeps workers apart).
+declare -A cores=([mt1]="0-4,6" [mt6]="0-4,6" [mt1s]="0-4,6" [mt6s]="0-4,6")
 workloads=${*:-origin16 strong16 strong8 village8}
 target=target
 envs=""
