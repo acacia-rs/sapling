@@ -66,8 +66,9 @@ use view::{ChunkWrites, Frozen, REACH, View};
 
 /// Source chunks' writes are a few hundred kB each.
 const CACHE_LIMIT: usize = 1024;
-/// Chunks as earlier phases left them, about 200 kB each.
-const BEFORE_LIMIT: usize = 768;
+/// Chunks as earlier phases left them, about 200 kB each; a sweep's working set is a few rows of
+/// chunks, and one dropped is a copy and a replay of its sources' cached writes.
+const BEFORE_LIMIT: usize = 192;
 /// Sets a chunk's canonical thread generator apart from its post-process generator ("thrd").
 const THREAD_SALT: u32 = 0x7468_7264;
 
