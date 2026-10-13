@@ -21,10 +21,26 @@ pub enum CellKind {
     Solid,
 }
 
+/// A block in two bytes: a template palette index below 0x8000, else 0x8000 plus the variant's tag.
+fn pack(block: Block) -> u16 {
+    match block {
+        Block::Template(index) => index,
+        // A `repr(u16)` enum starts with its tag.
+        other => 0x8000 | unsafe { *(&raw const other).cast::<u16>() },
+    }
+}
+
+fn unpack(code: u16) -> Block {
+    let raw = if code < 0x8000 { u32::from(code) << 16 } else { u32::from(code & 0x7FFF) };
+    // Tag in the low half, `Template`'s index in the high half; a fieldless variant's high half is padding.
+    unsafe { std::mem::transmute::<u32, Block>(raw) }
+}
+
 /// One chunk column: `block(x, y, z)` with y from -64 to 319.
 #[derive(Clone)]
 pub struct ChunkShape {
-    blocks: Vec<Block>,
+    /// `pack`ed: half the memory of `Block`s, which every cached chunk and copy pays.
+    blocks: Vec<u16>,
     /// Fluid cells the aquifer asked to tick (index, lava), in the order generation placed them:
     /// the chunk's tick queue when its decoration starts.
     fluid_ticks: Vec<(u32, bool)>,
@@ -44,19 +60,19 @@ impl ChunkShape {
     }
 
     pub(crate) fn block_at(&self, index: usize) -> Block {
-        self.blocks[index]
+        unpack(self.blocks[index])
     }
 
     pub(crate) fn set_at(&mut self, index: usize, block: Block) {
-        self.blocks[index] = block;
+        self.blocks[index] = pack(block);
     }
 
     pub fn block(&self, x: usize, y: i32, z: usize) -> Block {
-        self.blocks[Self::index(x, y, z)]
+        self.block_at(Self::index(x, y, z))
     }
 
     pub fn set_block(&mut self, x: usize, y: i32, z: usize, block: Block) {
-        self.blocks[Self::index(x, y, z)] = block;
+        self.set_at(Self::index(x, y, z), block);
     }
 
     /// Per column (`z * 16 + x`), one above the highest block that is not air.
@@ -117,7 +133,7 @@ impl Density {
         let climate = |qx: i32, qz: i32| -> QuartClimate { self.climate.sample(qx, qz) };
         let cells = self.cells(chunk_x, chunk_z, &climate);
         let mut aquifer = AquiferCache::new((chunk_x, chunk_z));
-        let mut shape = ChunkShape { blocks: vec![Block::Air; 16 * 16 * HEIGHT], fluid_ticks: Vec::new() };
+        let mut shape = ChunkShape { blocks: vec![pack(Block::Air); 16 * 16 * HEIGHT], fluid_ticks: Vec::new() };
         for cx in 0..4 {
             for cz in 0..4 {
                 // With terrain adjustments BDS fills every row (_prepareHeights' flag at +0x21d8).
@@ -144,7 +160,7 @@ impl Density {
                                     CellKind::Solid => self.solid_block(position, veins.each_ref().map(|v| v.at(dx, dy, dz))),
                                 };
                                 let index = ChunkShape::index(x, y, z);
-                                shape.blocks[index] = block;
+                                shape.set_at(index, block);
                                 if update {
                                     shape.schedule_fluid(index, kind == CellKind::Lava);
                                 }
@@ -236,4 +252,19 @@ fn block_density(interpolated: f32, noodle: &[Corners; 4], [dx, dy, dz]: [u8; 3]
     let ridge_a = (noodle[2].at(dx, dy, dz) * 1.5).abs() - thickness;
     let ridge_b = (noodle[3].at(dx, dy, dz) * 1.5).abs() - thickness;
     ridge_b.max(ridge_a).min(noise)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{pack, unpack};
+    use crate::block::Block;
+
+    #[test]
+    fn packed_blocks_round_trip() {
+        let palette = crate::structure::template::palette().len();
+        assert!(palette <= 0x8000 && Block::ALL.len() < 0x8000);
+        for &block in Block::ALL.iter().chain(&[Block::Template(0), Block::Template(palette as u16 - 1)]) {
+            assert_eq!(unpack(pack(block)), block);
+        }
+    }
 }
