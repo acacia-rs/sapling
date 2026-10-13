@@ -3,7 +3,8 @@
 # and instructions, peak RSS, heap allocations and a hash of every block (must not move under a speed change).
 # usage: tools/bench.sh <name> [workload...]   workloads below (default: all); summary in $OUT/<name>.bench
 # env: PROFILE=<workload>: perf record that one instead (line tables, own target dir), report in $OUT/<name>.perf.txt
-#      REF: a git ref to time instead of the working tree; CORE (default 3).
+#      REF: a git ref to time instead of the working tree; CORE (default 3); KEEP=1 keeps the binary
+#      as $name.bin on testbox for tools/bench-ab.sh.
 # Sync, build and runs are one job under the worktree's testbox lock, so a queued build cannot swap the binary.
 set -uo pipefail
 here=$(cd "$(dirname "$0")" && pwd)
@@ -61,8 +62,9 @@ echo \"== $w\" >> $name.out
 taskset -c ${cores[$w]:-${CORE:-3}} /usr/bin/time -f 'maxrss_kb %M' perf stat -x, -e cycles,instructions $bin $args >> $name.out 2>&1"
   fi
 done
+[ -n "${KEEP:-}" ] || job="$job
+rm -f $bin"
 job="$job
-rm -f $bin
 echo 0 > $name.bdone"
 upload() { pack | ssh $opts testbox "mkdir -p $run && cat > $run/$name.tgz"; }
 write_job() { printf '%s\n' "$job" | ssh $opts testbox "rm -f $run/$name.bdone && cat > $run/$name.bench.sh"; }
