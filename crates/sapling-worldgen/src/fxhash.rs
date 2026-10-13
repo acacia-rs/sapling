@@ -1,5 +1,5 @@
-//! rustc's FxHash for small integer keys: the aquifer's per-chunk maps hash grid cells millions
-//! of times, where std's SipHash cost more than the lookups they guard.
+//! rustc's FxHash for small integer keys: the source caches are asked for chunks millions of
+//! times, where std's SipHash cost more than the lookups it guards.
 
 use std::hash::{BuildHasherDefault, Hasher};
 
@@ -19,6 +19,14 @@ impl Hasher for FxHasher {
         for &byte in bytes {
             self.add(u64::from(byte));
         }
+    }
+
+    fn write_u8(&mut self, value: u8) {
+        self.add(u64::from(value));
+    }
+
+    fn write_u32(&mut self, value: u32) {
+        self.add(u64::from(value));
     }
 
     fn write_i32(&mut self, value: i32) {

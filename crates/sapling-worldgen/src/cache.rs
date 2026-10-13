@@ -5,14 +5,16 @@ use std::collections::HashMap;
 use std::hash::Hash;
 use std::sync::{Arc, Mutex, OnceLock};
 
+use crate::fxhash::FxBuild;
+
 /// Filled by the first thread to ask; the others wait for it.
 type Slot<V> = Arc<OnceLock<Arc<V>>>;
 
 /// Two generations: a full current one becomes the old one, and an old entry used again moves
 /// back, so a sweep keeps the neighbours it is still reading (clearing everything did not).
 struct Generations<K, V> {
-    current: HashMap<K, Slot<V>>,
-    old: HashMap<K, Slot<V>>,
+    current: HashMap<K, Slot<V>, FxBuild>,
+    old: HashMap<K, Slot<V>, FxBuild>,
 }
 
 pub struct SourceCache<K, V> {
@@ -24,7 +26,7 @@ pub struct SourceCache<K, V> {
 impl<K: Hash + Eq + Copy, V> SourceCache<K, V> {
     /// Holds between `limit / 2` and `limit` entries.
     pub fn new(limit: usize) -> Self {
-        Self { entries: Mutex::new(Generations { current: HashMap::new(), old: HashMap::new() }), limit: (limit / 2).max(1) }
+        Self { entries: Mutex::new(Generations { current: HashMap::default(), old: HashMap::default() }), limit: (limit / 2).max(1) }
     }
 
     /// `make` runs outside the lock and once per kept entry: threads generating neighbouring chunks ask
