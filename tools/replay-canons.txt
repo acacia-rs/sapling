@@ -2,7 +2,7 @@
 # The structure regions' canons are in replay-worlds.txt (ancient city and mansion here: wider or later runs).
 # tools/replay-all.sh runs both lists. A dir's env.txt holds what else the run decided (the dead coral's colour).
 origin|20261003|blocks_match_bds_near_origin|chunks -16..15|-16 -16 15 15|origin3
-far|20261003|blocks_match_bds_far_out|chunks 100000..100007|100000 100000 100007 100007|far
+far7|20261003|blocks_match_bds_far_out|chunks 100000..100007|100000 100000 100007 100007|c7
 neg|-4172144997902289642|blocks_match_bds_negative_seed|chunks -4..3|-4 -4 3 3|neg|-4172144997902289642
 r-bl|20261003-biomes|blocks_match_bds_biomes|badlands|594 -350 597 -347
 eroded|20261003-biomes|blocks_match_bds_biomes|eroded badlands|170 -598 173 -595|g3
@@ -49,7 +49,7 @@ mansion4|20261003-structures|blocks_match_bds_structures|mansion|-516 992 -508 1
 # Superseded or second runs of a region, still on testbox (tools/replay.sh <name> <canon> ... takes them):
 # replay7's probe runs (c7: mansion tree, far lichens and depth; c8: monument seagrass, origin's bubble chunks, far's tunnel query):
 #mansion7|20261003-structures|blocks_match_bds_structures|mansion|-516 992 -508 1002|c7
-#far7|20261003|blocks_match_bds_far_out|chunks 100000..100007|100000 100000 100007 100007|c7
+#far|20261003|blocks_match_bds_far_out|chunks 100000..100007|100000 100000 100007 100007|far   (replay5's run: 1 lichen of source 100004,100002 left, exact on c7)
 #mon8|20261003-structures|blocks_match_bds_structures|monument|-27 -26 -19 -18|c8
 #far8|20261003|blocks_match_bds_far_out|chunks 100000..100007|100000 100000 100007 100007|c8
 #bub8|20261003|-|origin's bubble chunks (replay_check only)|-17 -12 -15 -9|c8
