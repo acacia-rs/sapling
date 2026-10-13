@@ -21,7 +21,8 @@ pub struct FluidStatus {
 
 /// What the aquifer decided for one block: the barrier to add to the density, the fluid to
 /// place if the block stays empty, and whether that fluid gets a tick (BDS +0x25, Java's
-/// `shouldScheduleFluidUpdate`): its two nearest centres are close to equidistant.
+/// `shouldScheduleFluidUpdate`): its two nearest centres are close to equidistant. The flag is
+/// meaningful only below the fluid's level.
 #[derive(Debug, Clone, Copy)]
 pub struct AquiferAnswer {
     pub barrier: f32,
@@ -42,13 +43,15 @@ pub struct AquiferCache {
     /// The last block's grid cell and its twelve candidate centres with their slots: the blocks of a
     /// column ask the same cell up to twelve times running.
     last: Option<((i32, i32, i32), Candidates)>,
+    /// For `last`, once asked: the status all twelve candidates share, if they do.
+    shared: Option<Option<FluidStatus>>,
 }
 
 type Candidates = [((i32, i32, i32), Option<usize>); 12];
 
 impl AquiferCache {
     pub fn new((chunk_x, chunk_z): (i32, i32)) -> Self {
-        Self { origin: (chunk_x - 1, MIN_GY, chunk_z - 1), cells: vec![(None, None); (SPAN_XZ * SPAN_Y * SPAN_XZ) as usize], last: None }
+        Self { origin: (chunk_x - 1, MIN_GY, chunk_z - 1), cells: vec![(None, None); (SPAN_XZ * SPAN_Y * SPAN_XZ) as usize], last: None, shared: None }
     }
 
     fn slot(&self, (gx, gy, gz): (i32, i32, i32)) -> Option<usize> {
@@ -68,9 +71,25 @@ impl Density {
             _ => {
                 let candidates = self.candidates(cache, cell);
                 cache.last = Some((cell, candidates));
+                cache.shared = None;
                 candidates
             }
         };
+        // With one status all around, every pressure is 0 and so is the barrier, whichever centres are
+        // nearest; at or above its level the block is air, which needs no update flag.
+        if y >= SEA_LEVEL {
+            let shared = match cache.shared {
+                Some(shared) => shared,
+                None => {
+                    let first = self.fluid_status(cache, candidates[0]);
+                    let shared = candidates.iter().all(|&c| self.fluid_status(cache, c) == first).then_some(first);
+                    *cache.shared.insert(shared)
+                }
+            };
+            if let Some(fluid) = shared.filter(|fluid| y >= fluid.level) {
+                return AquiferAnswer { barrier: 0.0, fluid, update: false };
+            }
+        }
         let mut nearest = [(u32::MAX, ((0, 0, 0), None)); 3];
         for candidate @ (center, _) in candidates {
             let (ex, ey, ez) = (center.0 - x, center.1 - y, center.2 - z);
