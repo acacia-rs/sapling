@@ -20,26 +20,29 @@ fn thread<'c>(ctx: &'c mut Ctx) -> &'c mut Mt19937 {
 }
 
 impl Multiface {
-    pub(super) fn place_shuffled(&self, ctx: &mut Ctx, at: [i32; 3]) -> Option<[i32; 3]> {
+    /// The cell placed in and whether the spread gate passed.
+    pub(super) fn place_shuffled(&self, ctx: &mut Ctx, at: [i32; 3]) -> Option<([i32; 3], bool)> {
         let before = thread(ctx).draws();
         let placed = self.place_drawn(ctx, at);
         let after = thread(ctx).draws();
-        super::trace::line(|| format!("    thread {} {} {} draws {before}..{after} placed {placed:?}", at[0], at[1], at[2]));
+        super::trace::line(|| format!("    thread {} {} {} draws {before}..{after} placed {:?}", at[0], at[1], at[2], placed.map(|(cell, _)| cell)));
         placed
     }
 
-    fn place_drawn(&self, ctx: &mut Ctx, at: [i32; 3]) -> Option<[i32; 3]> {
+    fn place_drawn(&self, ctx: &mut Ctx, at: [i32; 3]) -> Option<([i32; 3], bool)> {
         let mut faces = self.faces.to_vec();
         shuffle(&mut faces, thread(ctx));
-        if self.attach(ctx, at, &faces).is_some() {
-            return Some(at);
+        if let Some(spreads) = self.attach(ctx, at, &faces) {
+            return Some((at, spreads));
         }
         for &facing in &faces {
             // BDS shuffles the neighbour's own list and then passes the first one.
             shuffle(&mut self.faces_from(facing), thread(ctx));
             let next = step(at, facing);
-            if self.searches(ctx, next) && self.attach(ctx, next, &faces).is_some() {
-                return Some(next);
+            if self.searches(ctx, next)
+                && let Some(spreads) = self.attach(ctx, next, &faces)
+            {
+                return Some((next, spreads));
             }
         }
         None

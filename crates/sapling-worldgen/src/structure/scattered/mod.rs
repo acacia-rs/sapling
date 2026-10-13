@@ -9,7 +9,7 @@ mod hut;
 mod jungle;
 
 use super::BoundingBox;
-use super::canvas::{Canvas, TempleHeights};
+use super::canvas::Canvas;
 use super::piece::{EAST, Frame, SOUTH, WEST};
 use crate::block::Block;
 use crate::random::Mt19937;
@@ -56,30 +56,24 @@ impl Scattered {
         Some(Self { temple, bb: BoundingBox::new(x, 64, z, x + w - 1, 64 + h - 1, z + d - 1) })
     }
 
-    /// The piece's blocks in the canvas's chunk; `chunk_random` gives another chunk's structure
-    /// generator, for a height taken there.
-    /// `fixed` keeps a replayed run's pyramid heights by start chunk.
-    pub fn post_process(&self, canvas: &mut Canvas, random: &mut Mt19937, chunk_random: &dyn Fn((i32, i32)) -> Mt19937, fixed: Option<&TempleHeights>) -> Option<BoundingBox> {
+    pub fn start(&self) -> (i32, i32) {
+        (self.bb.x0 >> 4, self.bb.z0 >> 4)
+    }
+
+    /// The piece's blocks in the canvas's chunk, and its box there. `taken` gives the height a
+    /// desert pyramid took in a chunk post-processed before this one; otherwise it takes it here, or
+    /// with `start_random` (the start chunk's structure generator) as the start chunk would.
+    pub fn post_process(&self, canvas: &mut Canvas, random: &mut Mt19937, taken: &dyn Fn((i32, i32)) -> Option<i32>, start_random: Option<Mt19937>) -> Option<BoundingBox> {
         let mut frame = Frame { bb: self.bb, orientation: Some(SOUTH), depth: 0, keep: |_| false };
         let here = (canvas.bb.x0 >> 4, canvas.bb.z0 >> 4);
         match self.temple {
             Temple::DesertPyramid => {
                 let drawn = random.next_int(3);
-                // BDS takes the height in whichever chunk it post-processes first and keeps it; without
-                // a replayed order the start chunk is assumed.
-                let first = (self.bb.x0 >> 4, self.bb.z0 >> 4);
-                let y = match fixed {
-                    Some(fixed) => {
-                        let known = fixed.borrow().get(&first).copied();
-                        let y = known.or_else(|| self.columns(here).map(|(x, z)| canvas.floor_height(x, z)).min().map(|lowest| lowest - drawn))?;
-                        fixed.borrow_mut().insert(first, y);
-                        y
-                    }
-                    None => {
-                        let lowered = if first == here { drawn } else { chunk_random(first).next_int(3) };
-                        self.columns(first).map(|(x, z)| canvas.floor_height(x, z)).min()? - lowered
-                    }
+                let (first, lowered) = match start_random {
+                    Some(mut start) if self.start() != here => (self.start(), start.next_int(3)),
+                    _ => (here, drawn),
                 };
+                let y = taken(self.start()).or_else(|| self.columns(first).map(|(x, z)| canvas.floor_height(x, z)).min().map(|lowest| lowest - lowered))?;
                 frame.bb.move_y(y - frame.bb.y0);
                 desert::post_process(&frame, canvas, random);
             }

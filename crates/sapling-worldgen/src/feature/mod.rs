@@ -67,6 +67,8 @@ use view::{ChunkWrites, REACH, View};
 const CACHE_LIMIT: usize = 1024;
 /// Chunks as earlier phases left them, about 200 kB each.
 const BEFORE_LIMIT: usize = 768;
+/// Sets a chunk's canonical thread generator apart from its post-process generator ("thrd").
+const THREAD_SALT: u32 = 0x7468_7264;
 
 type Load<'a> = &'a dyn Fn(i32, i32) -> Arc<ChunkShape>;
 type Biomes<'a> = &'a dyn Fn(i32, i32) -> Arc<ChunkBiomes>;
@@ -113,12 +115,16 @@ pub struct Features {
     /// With `order`, for a one-worker run: its thread generator's seed and, per rank, the draws the
     /// generator had spent at that chunk's first `MultifaceFeature` draw (thread.rs).
     thread: Option<(u32, Vec<Option<u32>>)>,
+    /// A diagnostic: under the canonical order, BDS's shuffles from a thread generator seeded per chunk.
+    /// Off, multiface features keep their pushed face order, which agrees better with BDS's racy loads
+    /// (docs/research/worldgen-bds-order.md, "One engine").
+    pub canonical_shuffles: bool,
 }
 
 impl Features {
     /// Seeded like the carvers: `(x*a + z*b) ^ seed` on the low 32 bits of the world seed.
     pub fn new(world_seed: i64) -> Self {
-        Self { seed: LargeFeatureSeed::new(world_seed as u32), writes: SourceCache::new(CACHE_LIMIT), before: SourceCache::new(BEFORE_LIMIT), track_reach: false, order: None, thread: None }
+        Self { seed: LargeFeatureSeed::new(world_seed as u32), writes: SourceCache::new(CACHE_LIMIT), before: SourceCache::new(BEFORE_LIMIT), track_reach: false, order: None, thread: None, canonical_shuffles: false }
     }
 
     /// Decorates in `order`, every source over all earlier ones; `thread`: the seed of the one worker's
@@ -128,8 +134,12 @@ impl Features {
         self.thread = thread.map(|(seed, spent)| (seed, spent.to_vec()));
     }
 
-    /// The thread generator as the run had it when the source ranked `rank` first drew from it.
-    fn thread_before(&self, rank: Rank) -> Option<Mt19937> {
+    /// The worker's thread-local generator as `source`, ranked `rank`, first draws from it: seeded for
+    /// the chunk, or a logged run's at that moment; None for a logged order without its thread seed.
+    fn thread_before(&self, source: (i32, i32), rank: Rank) -> Option<Mt19937> {
+        if self.order.is_none() {
+            return self.canonical_shuffles.then(|| Mt19937::new(self.seed.chunk(source.0, source.1) ^ THREAD_SALT));
+        }
         let (seed, spent) = self.thread.as_ref()?;
         let mut random = Mt19937::new(*seed);
         random.consume_count(spent[rank as usize].unwrap_or(0));
@@ -231,7 +241,7 @@ impl Features {
             let mut view = View::new(source, &base).with_frozen_heights(frozen).with_generated_tops(&generated);
             let doubt = |x: i32, z: i32| self.doubt_before((x, z), limit, inputs);
             view.reach = self.track_reach.then(|| reach::Reach::new(&doubt));
-            view.thread_random = self.thread_before(limit);
+            view.thread_random = self.thread_before(source, limit);
             let mut post_process = Mt19937::new(self.seed.chunk(source.0, source.1));
             lake::lava_lake(&mut post_process, source, &mut view);
             monster_room::monster_rooms(post_process, source, &mut view);

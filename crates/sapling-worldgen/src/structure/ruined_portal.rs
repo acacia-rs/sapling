@@ -26,8 +26,6 @@ const SPREAD: [f32; 14] = [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.9, 0.9, 0.8, 0.7
 /// chunk centre) and `biome_at` any block's.
 pub fn place(canvas: &mut Canvas, random: &mut Mt19937, start: (i32, i32), biome: u32, biome_at: &dyn Fn(i32, i32, i32) -> u32) {
     let cold = ICE.contains(&biome);
-    let (cx, cz) = (start.0 * 16, start.1 * 16);
-    canvas.begin_spill(BoundingBox::new(cx - 16, MIN_Y, cz - 16, cx + 31, 319, cz + 31));
     let surface = random.next_float() >= 0.5;
     let desert = DESERT.contains(&biome);
     let sea_floor = OCEAN.contains(&biome) || SWAMP.contains(&biome);
@@ -92,7 +90,6 @@ pub fn place(canvas: &mut Canvas, random: &mut Mt19937, start: (i32, i32), biome
         _ => 0.2,
     };
     super::ruined_portal_age::age(canvas, random, &b, mossiness, cold, sea_floor);
-    canvas.end_spill();
 }
 
 /// `BlockSource::getAboveTopSolidBlock` as vt+0x178 asks it: one above the highest solid block,

@@ -42,6 +42,9 @@ use random::Xoroshiro;
 
 /// Loaded columns (about 100 kB each) kept for neighbours' lakes and features.
 const LOADED_LIMIT: usize = 256;
+/// Post-processes kept (most are None: no start reaches the chunk), and ten times as many chunk states,
+/// which share their blocks until a post-process writes them.
+const PIECED_LIMIT: usize = 1024;
 /// Chunk biomes (about 200 kB each), shared by the surface, decoration and the caller.
 const BIOMES_LIMIT: usize = 256;
 
@@ -56,8 +59,9 @@ pub struct OverworldGenerator {
     structures: structure::Structures,
     carved: SourceCache<(i32, i32), ChunkShape>,
     generated_tops: SourceCache<(i32, i32), [i16; 256]>,
-    pieced: SourceCache<(i32, i32), structured::Pieced>,
-    structure_replay: Option<structured::replay::Replay>,
+    pieced: SourceCache<(i32, i32), Option<structured::Source>>,
+    staged: SourceCache<(i32, i32, u8), structured::Pieced>,
+    structure_order: structured::order::Order,
     loaded: SourceCache<(i32, i32), ChunkShape>,
     biomes: SourceCache<(i32, i32), ChunkBiomes>,
 }
@@ -75,8 +79,9 @@ impl OverworldGenerator {
             structures: structure::Structures::new(seed),
             carved: SourceCache::new(LOADED_LIMIT),
             generated_tops: SourceCache::new(LOADED_LIMIT),
-            pieced: SourceCache::new(LOADED_LIMIT),
-            structure_replay: None,
+            pieced: SourceCache::new(PIECED_LIMIT),
+            staged: SourceCache::new(10 * PIECED_LIMIT),
+            structure_order: Default::default(),
             loaded: SourceCache::new(LOADED_LIMIT),
             biomes: SourceCache::new(BIOMES_LIMIT),
         }
@@ -168,6 +173,12 @@ impl OverworldGenerator {
         self.features.track_reach = true;
     }
 
+    /// `Features::canonical_shuffles`, for the oracle test's `SAPLING_ORACLE_CANONICAL_SHUFFLES`.
+    #[doc(hidden)]
+    pub fn shuffle_canonically(&mut self) {
+        self.features.canonical_shuffles = true;
+    }
+
     /// Decorates in the order one BDS run did (chunks as it started them) instead of by phase; chunks
     /// the order lacks decorate nothing. For checking a live run (scripts/dbg_order.py).
     #[doc(hidden)]
@@ -194,13 +205,6 @@ impl OverworldGenerator {
     #[doc(hidden)]
     pub fn query_noise(x: f32, z: f32) -> f32 {
         feature::query_noise(x, z)
-    }
-
-    /// The feature trace of the replayed structure stage (pieces' features: `element` lines and their writes);
-    /// empty once the stage has run.
-    #[doc(hidden)]
-    pub fn structure_replay_trace(&self) -> Vec<String> {
-        feature::trace::capture(|| self.structure_replay_writes().len()).1
     }
 
     /// `source_feature_writes` with the decoration trace (feature/trace.rs) of every source it ran.
@@ -258,19 +262,6 @@ impl OverworldGenerator {
     #[doc(hidden)]
     pub fn mineshaft_pieces(&self, chunk_x: i32, chunk_z: i32) -> Vec<(String, structure::BoundingBox)> {
         self.structures.mineshaft_pieces(&self.density, (chunk_x, chunk_z))
-    }
-
-    /// A structure feature placed alone from a chunk over its carved terrain, its structure
-    /// generator `skip` draws in, for probes: (position, block, block replaced).
-    #[doc(hidden)]
-    pub fn structure_feature_writes(&self, name: &str, chunk: (i32, i32), at: [i32; 3], skip: usize) -> Vec<([i32; 3], Block, Block)> {
-        let mut random = random::Mt19937::new(random::LargeFeatureSeed::new(self.seed as u32).chunk(chunk.0, chunk.1));
-        (0..skip).for_each(|_| _ = random.next_u32());
-        let load = |x: i32, z: i32| self.carved(x, z);
-        let biome = |[x, y, z]: [i32; 3]| Some(self.chunk_biomes(x >> 4, z >> 4).biome((x & 15) as usize, y, (z & 15) as usize));
-        let surface = |qx: i32, qz: i32| self.density.preliminary_surface(qx, qz);
-        let world = feature::ElementWorld { load: &load, biome: &biome, surface: &surface };
-        feature::place_element(name, chunk, self.carved(chunk.0, chunk.1), &world, &mut random, at).unwrap_or_default()
     }
 
     #[doc(hidden)]

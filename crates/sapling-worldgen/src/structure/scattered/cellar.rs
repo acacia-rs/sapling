@@ -79,11 +79,9 @@ pub fn place(f: &Frame, canvas: &mut Canvas, random: &mut Mt19937) {
 /// 1483669e0: suspicious sand, and a loot seed drawn whenever the cell holds its block entity:
 /// placed here, or by a chunk post-processed before this one.
 fn suspicious_sand(f: &Frame, canvas: &mut Canvas, xoroshiro: &mut Xoroshiro, (x, y, z): (i32, i32, i32)) {
-    let (wx, _, wz) = f.world(x, y, z);
+    let (wx, wy, wz) = f.world(x, y, z);
     f.place(canvas, Block::SuspiciousSand, x, y, z);
-    let (here, cell) = ((canvas.bb.x0 >> 4, canvas.bb.z0 >> 4), (wx >> 4, wz >> 4));
-    // TODO: BDS's post-process order is assumed z-major (the pyramid's start chunk first).
-    if (cell.1, cell.0) <= (here.1, here.0) {
+    if canvas.get(wx, wy, wz) == Block::SuspiciousSand {
         xoroshiro.next_long();
     }
 }

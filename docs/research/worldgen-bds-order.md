@@ -670,6 +670,75 @@ its logged order is exact ground truth, so a remaining difference there is a por
 source. The stock oracle worlds stay useful for breadth; their run-order and thread-local cells are no longer
 an argument for or against a change.
 
+## One engine (2026-10-12, worldgen/unify6)
+Until this branch the replay ran mechanics the default path did not. Now there is one structure stage
+(`structured.rs`) and one decoration; the order and the thread draws are its only inputs, canonical or logged.
+
+What branched on replay, and what it became:
+
+| replay-only mechanic (where it lived) | now |
+|---|---|
+| pieces read the 3x3 as earlier post-processes left it (`Neighbours::live`, `structured/replay.rs` state map) | always: `Pieced` per (chunk, writers so far), `staged_before` |
+| writes past the chunk (floors, features, whole pieces, update passes) land at once (replay `state` map) | always: a source's `past` lands in each neighbour as that neighbour's writer |
+| igloos, shipwrecks, ruined portals placed whole by their start chunk (`canvas.whole = live`) | always (`Reaching` keeps only starts in the chunk); `begin_spill`/`end_spill` gone |
+| template update pass, per-start upgrade, neighbour cascade (`Record::settled` was None by default) | always; `rejoin_connections` only touches cells no pass decided |
+| desert pyramid height from the first chunk post-processed (`temple_heights`) | always via `Source::temple_heights`; canonical order: a pyramid takes it from its start chunk's columns (below) |
+| mineshaft start order from the start map (`shaft_order` Some only with logged loads) | logged: the start map per rank (`order.rs`); canonical: descending x, z (below) |
+| multiface face/spread shuffles from the thread generator (`thread_random` only with a logged seed) | unchanged by choice: a replay with thread draws shuffles; the canonical default keeps the pushed order (below); `SAPLING_ORACLE_CANONICAL_SHUFFLES` draws them from a per-chunk generator |
+| receding lava's `nextInt(4)` wait (thread generator) | follows the row above |
+| a cellar's suspicious sand drew its loot seed by an assumed z-major order | draws when the cell holds the block (read, not assumed); this was c-dp's 2 cells |
+| pool elements' data structure blocks (villager markers) were skipped | they place air (village canon -1009,84,163: 1 -> 0) |
+
+Lake, monster rooms, chunk tick queues and the liquid rules of replay5 were never gated: grep found no branch.
+
+The canonical order (`structured/order.rs`, `feature/mod.rs`):
+- **Structure post-process**: nine phases by `(x mod 3, z mod 3)`, phase index `3*(x mod 3) + (z mod 3)`. A post-process
+  reads and writes only its 3x3, and same-phase chunks are three apart, so no two of one phase share a chunk:
+  the result does not depend on any order inside a phase. A chunk's state after its stage depends on the nine
+  post-processes around it, each on the states of its 3x3 before it, through phases strictly lower: the
+  dependency chain is at most nine phases long, so at most 9 chunks away (bounded; in practice two rings).
+  Spawner flags read sources within 2 chunks of earlier phases (a corridor spans at most three chunks).
+- **Mineshaft starts sharing a chunk**: descending x then z. Two stand-ins were tried: the start map
+  filled by loading the chunk's aligned 16x16 block in order (a position-only load order) and descending x, z;
+  the first moved mangrove swamp 26 -> 704 and frozen ocean 38 -> 164 on the stock set, the second 26 -> 106,
+  38 -> 41. Neither is BDS's (its order is load order), and the second is the old default.
+- **Desert pyramid height**: from the start chunk's columns with the start chunk's `nextInt(3)`, whichever chunk
+  of its four runs first (as if the start chunk ran first). Taking it in phase order's first chunk put the
+  pyramid 2267 cells off on the stock set: BDS's loads post-process the start chunk first often enough.
+- **Decoration**: the parity phases as before (same-phase sources blind to each other).
+- **Multiface faces**: the pushed order, no thread generator. With no BDS load to equal, the default should
+  agree with a random BDS load as often as it can, and the stock worlds (samples of that racy distribution)
+  say the fitted fixed order does: 22664 against 27297 with BDS's shuffles from a per-chunk seed
+  (`MT19937(chunkSeed ^ 0x74687264)`, `SAPLING_ORACLE_CANONICAL_SHUFFLES`), whose extra rises (trail ruins
+  +1670, negative seed +1170, cherry grove +461, ...) all lie in regions exact under their canons.
+
+Replay is the same engine: `set_structure_order` swaps the rank function and the start map
+(`order::Logged`), `set_decoration_order` the decoration ranks and the logged thread positions, which turn the
+shuffles on.
+
+Measured on worldgen/unify6 with all2 65cacd1 (replay6) merged, against that all2:
+- `replay-all` + `replay-regions`: 110 -> 108 cells over the 59 regions; desert pyramid 2 -> 0 (the cellar's
+  loot-seed draw; replay6's "one suspicious sand a cell off" was it), village 1 -> 0 (marker air), every other
+  canon equal (an earlier run on all2 02ee652 also had q-ob and r-ob 53 -> 11).
+- lib tests: sapling-worldgen 22 passed, sapling-world 20 passed.
+- Stock oracle, wrong + missing over 59 regions: ticked 22022 -> 22646, still 22903 -> 23501. Rises: ancient
+  city +456 / +385 (sculk of the city's structure-stage patches, in the stock load's order), village +95 / 0 (one
+  village spruce tree element and a wall's state), mangrove swamp +80 / +3 and frozen ocean +3 / +3 (mineshaft
+  starts meeting in a chunk), stronghold -18 / +228 (mineshaft structure stage), pillager outpost +8 / +8, far
+  out +4 / +4, mansion +2 / +2. Every one of these regions is exact or at its listed leftovers under its canon
+  (c-ac 1, c-vi 0, mangrove 0, frozenocean 5, c-st 1, c-po 4, far 5, mansion 68): the stock load's order
+  against ours, not a mechanic either order lacks.
+- Timing (`examples/timing`, one thread, cold caches, testbox), ms per column, all2 -> unify6: 16x16 around the
+  origin 65.8 -> 61.3; stronghold area 16x16 143.6 -> 138.7, 24x24 117.3 -> 112.7; but an isolated 8x8
+  stronghold region 137 -> 329. perf: the extra time is terrain (aquifer, noise, terrain adjustment), not the
+  structure code: a chunk's state needs the post-processes of lower phases around it, nine phases reach eight
+  chunks out where every chunk has a structure (the parity model reached three), so a cold request carves a
+  wider ring. A server generating a connected area pays it once at the edge.
+
+The stronghold canon's pen fence (-1426,69,-1919, joined south toward an oak log decoration grows later) is
+exact on the merged tree: replay6's feature-write cascade (`template/beside.rs`). Mansion's 5 cobblestone cells
+and the city's 2 tuff cells were not looked at.
+
 ## The four unexplained chunks
 (As edge3 left them; bamboo jungle and the birch pool are settled in "replay4" above.) Each was traced in a one-worker run of its region with the replay, not in the stock oracle's cells:
 - Pale garden -469,-286: nothing left. The region is block-exact (0 of 1.57M cells).

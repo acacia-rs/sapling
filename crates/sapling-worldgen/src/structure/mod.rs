@@ -20,6 +20,7 @@ mod outpost;
 mod piece;
 mod placement;
 mod probe;
+mod reaching;
 mod ruined_portal;
 mod ruined_portal_age;
 mod scattered;
@@ -47,7 +48,8 @@ pub use kind::StructureKind;
 pub use mineshaft::probe as mineshaft_probe;
 use kind::*;
 use probe::Probe;
-pub use canvas::{Neighbours, Settled, Spawners};
+pub use canvas::{Neighbours, Past, Settled, Spawners};
+pub use reaching::Reaching;
 pub use stage::{Placed, rejoin_connections};
 pub use start_map::StartMap;
 

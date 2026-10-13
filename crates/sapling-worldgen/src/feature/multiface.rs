@@ -1,10 +1,8 @@
 //! `MultifaceFeature::place` (143b83e50, attach 143b84880) and `SurfaceRelativeThresholdFeature`
-//! (143bc69b0). BDS shuffles the faces with a thread-local generator (nondeterministic: the
-//! oracle's two runs disagree on them); this keeps their pushed order, so which face or neighbour
-//! cell a block takes can differ but whether one is placed does not. A spread (1465e9360) takes the
-//! first of six directions, shuffled thread-locally too, that can hold it: lichen takes the first
-//! unshuffled, a vein spreads only when one direction can. See docs/research/worldgen-bds-caves.md,
-//! "Thread-local draws", and worldgen-bds-residue-lush.md.
+//! (143bc69b0). BDS shuffles the faces and a spread's six directions (1465e9360) with its worker's
+//! thread-local generator (thread.rs), modelled when a logged run's draws are replayed. Otherwise
+//! the pushed order is kept, which agrees best with BDS's racy loads (docs/research/worldgen-bds-order.md,
+//! "One engine"): lichen then spreads the first way that can hold it, a vein only when one way can.
 
 use super::cave_spec::{Multiface, SurfaceThreshold};
 use super::data::FEATURES;
@@ -30,11 +28,8 @@ impl Multiface {
         if !open(ctx.view.block(at[0], at[1], at[2])) {
             return None;
         }
-        if ctx.view.thread_random.is_some() {
-            return self.place_shuffled(ctx, at);
-        }
         let orders = ctx.view.reach_on().then(|| self.orders(ctx, at));
-        let placed = self.place_in_order(ctx, at);
+        let placed = if ctx.view.thread_random.is_some() { self.place_shuffled(ctx, at) } else { self.place_in_order(ctx, at) };
         if let Some(orders) = orders {
             orders.note(ctx, placed.is_some_and(|(_, spreads)| spreads));
         }

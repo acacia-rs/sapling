@@ -61,7 +61,11 @@ impl Region {
 /// scripts/dbg_loads.py); `SAPLING_ORACLE_THREAD_SEED=<seed>`: also model that run's thread generator
 /// from the lines' draw counts. `SAPLING_ORACLE_STRUCTURE_ORDER=<file>`: run the structure stage in that
 /// run's order (`x z` per post-processed chunk and `load x z` per loaded one, `dbg_loads.py --structure-order`).
+/// `SAPLING_ORACLE_CANONICAL_SHUFFLES`: the canonical order with a thread generator seeded per chunk, a diagnostic.
 pub fn replay(generator: &mut sapling_worldgen::OverworldGenerator) -> Option<Vec<(i32, i32)>> {
+    if std::env::var_os("SAPLING_ORACLE_CANONICAL_SHUFFLES").is_some() {
+        generator.shuffle_canonically();
+    }
     let numbers = |line: &str| -> Vec<i64> { line.split(' ').map(|v| v.parse().expect("an integer")).collect() };
     let read = |path: String| -> Vec<Vec<i64>> { std::fs::read_to_string(path).expect("order file").lines().map(numbers).collect() };
     if let Ok(path) = std::env::var("SAPLING_ORACLE_STRUCTURE_ORDER") {

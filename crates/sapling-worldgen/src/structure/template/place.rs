@@ -48,6 +48,9 @@ pub struct Placement {
     pub seed: u32,
     /// Off for pool elements: a jigsaw is placed as its final state, through the rules like any block.
     pub ignore_jigsaws: bool,
+    /// A data structure block leaves air (pool elements: a villager's marker dug into a hill, village
+    /// canon -1009,84,163); other pieces handle their markers themselves.
+    pub marker_air: bool,
     /// Air placed below sea level becomes water (ocean ruins, shipwrecks).
     pub flood: bool,
     /// Blocks of this name are left out, before their integrity draw (template pieces skip air).
@@ -64,7 +67,7 @@ pub struct Placement {
 
 impl Placement {
     pub fn new(rotation: Rotation, bb: BoundingBox) -> Self {
-        Self { rotation, integrity: 1.0, seed: 0, ignore_jigsaws: true, flood: false, ignore: None, wood: None, mirror: false, bb, rules: &[] }
+        Self { rotation, integrity: 1.0, seed: 0, ignore_jigsaws: true, marker_air: false, flood: false, ignore: None, wood: None, mirror: false, bb, rules: &[] }
     }
 
     /// The template positions BDS writes at `origin`, each with its block and template block
@@ -86,10 +89,10 @@ impl Placement {
                 return None;
             }
             let state = match b.state.kind() {
-                Kind::StructureBlock => return None,
+                Kind::StructureBlock if !self.marker_air => return None,
                 Kind::Jigsaw if self.ignore_jigsaws => return None,
                 Kind::Jigsaw => template.jigsaws.iter().find(|j| j.block == index)?.final_state,
-                Kind::Block => b.state,
+                Kind::Block | Kind::StructureBlock => b.state,
             };
             if let Some(random) = random.as_mut()
                 && self.integrity < 1.0

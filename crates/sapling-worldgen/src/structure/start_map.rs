@@ -1,7 +1,8 @@
 //! The order a `StructureFeature` visits its starts in (`foreachIntersectingStructureStart`
 //! 141efb070): the list of its start map, an MSVC `std::unordered_map<ChunkPos, start>` that
-//! `createBlueprints` (141ef9dc0) fills as chunks load. It follows the load order, so only a
-//! replayed run has it: docs/research/worldgen-bds-order.md, "Start order".
+//! `createBlueprints` (141ef9dc0) fills as chunks load. It follows the load order, so only a logged
+//! run has it; the canonical order's stand-in is in structured/order.rs
+//! (docs/research/worldgen-bds-order.md, "Start order", "One engine").
 
 use std::collections::HashSet;
 
