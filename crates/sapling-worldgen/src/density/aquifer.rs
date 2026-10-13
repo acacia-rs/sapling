@@ -39,11 +39,16 @@ const SPAN_Y: i32 = 34;
 pub struct AquiferCache {
     origin: (i32, i32, i32),
     cells: Vec<(Option<(i32, i32, i32)>, Option<FluidStatus>)>,
+    /// The last block's grid cell and its twelve candidate centres with their slots: the blocks of a
+    /// column ask the same cell up to twelve times running.
+    last: Option<((i32, i32, i32), Candidates)>,
 }
+
+type Candidates = [((i32, i32, i32), Option<usize>); 12];
 
 impl AquiferCache {
     pub fn new((chunk_x, chunk_z): (i32, i32)) -> Self {
-        Self { origin: (chunk_x - 1, MIN_GY, chunk_z - 1), cells: vec![(None, None); (SPAN_XZ * SPAN_Y * SPAN_XZ) as usize] }
+        Self { origin: (chunk_x - 1, MIN_GY, chunk_z - 1), cells: vec![(None, None); (SPAN_XZ * SPAN_Y * SPAN_XZ) as usize], last: None }
     }
 
     fn slot(&self, (gx, gy, gz): (i32, i32, i32)) -> Option<usize> {
@@ -57,22 +62,25 @@ impl Density {
         if y < LAVA_LEVEL {
             return AquiferAnswer { barrier: 0.0, fluid: FluidStatus { level: LAVA_LEVEL, lava: true }, update: y == LAVA_LEVEL - 1 };
         }
-        let (gx, gy, gz) = ((x - 5).div_euclid(16), (y + 1).div_euclid(12), (z - 5).div_euclid(16));
-        let mut nearest = [(u32::MAX, (0, 0, 0)); 3];
-        for dx in 0..=1 {
-            for dy in -1..=1 {
-                for dz in 0..=1 {
-                    let center = self.aquifer_center(cache, (gx + dx, gy + dy, gz + dz));
-                    let (ex, ey, ez) = (center.0 - x, center.1 - y, center.2 - z);
-                    let distance = (ex * ex + ey * ey + ez * ez) as u32;
-                    if nearest[0].0 >= distance {
-                        nearest = [(distance, center), nearest[0], nearest[1]];
-                    } else if nearest[1].0 >= distance {
-                        nearest = [nearest[0], (distance, center), nearest[1]];
-                    } else if nearest[2].0 >= distance {
-                        nearest[2] = (distance, center);
-                    }
-                }
+        let cell = ((x - 5).div_euclid(16), (y + 1).div_euclid(12), (z - 5).div_euclid(16));
+        let candidates = match cache.last {
+            Some((last, candidates)) if last == cell => candidates,
+            _ => {
+                let candidates = self.candidates(cache, cell);
+                cache.last = Some((cell, candidates));
+                candidates
+            }
+        };
+        let mut nearest = [(u32::MAX, ((0, 0, 0), None)); 3];
+        for candidate @ (center, _) in candidates {
+            let (ex, ey, ez) = (center.0 - x, center.1 - y, center.2 - z);
+            let distance = (ex * ex + ey * ey + ez * ez) as u32;
+            if nearest[0].0 >= distance {
+                nearest = [(distance, candidate), nearest[0], nearest[1]];
+            } else if nearest[1].0 >= distance {
+                nearest = [nearest[0], (distance, candidate), nearest[1]];
+            } else if nearest[2].0 >= distance {
+                nearest[2] = (distance, candidate);
             }
         }
         let first = self.fluid_status(cache, nearest[0].1);
@@ -117,7 +125,24 @@ impl Density {
         AquiferAnswer { barrier, fluid: first, update }
     }
 
-    fn aquifer_center(&self, cache: &mut AquiferCache, cell: (i32, i32, i32)) -> (i32, i32, i32) {
+    /// The centres of the twelve grid cells around a block's, in the order they are compared.
+    fn candidates(&self, cache: &mut AquiferCache, (gx, gy, gz): (i32, i32, i32)) -> Candidates {
+        let mut candidates = [((0, 0, 0), None); 12];
+        let mut i = 0;
+        for dx in 0..=1 {
+            for dy in -1..=1 {
+                for dz in 0..=1 {
+                    let cell = (gx + dx, gy + dy, gz + dz);
+                    let slot = cache.slot(cell);
+                    candidates[i] = (self.aquifer_center(cache, cell, slot), slot);
+                    i += 1;
+                }
+            }
+        }
+        candidates
+    }
+
+    fn aquifer_center(&self, cache: &mut AquiferCache, cell: (i32, i32, i32), slot: Option<usize>) -> (i32, i32, i32) {
         let compute = || {
             let mut random = self.aquifer_noises.positional.at(cell.0, cell.1, cell.2);
             let dx = random.next_int_bounded(10);
@@ -125,15 +150,15 @@ impl Density {
             let dz = random.next_int_bounded(10);
             (cell.0 * 16 + dx, cell.1 * 12 + dy, cell.2 * 16 + dz)
         };
-        match cache.slot(cell) {
+        match slot {
             Some(slot) => *cache.cells[slot].0.get_or_insert_with(compute),
             None => compute(),
         }
     }
 
-    /// A centre lies in its own grid cell, so the cell's slot holds its status.
-    fn fluid_status(&self, cache: &mut AquiferCache, center: (i32, i32, i32)) -> FluidStatus {
-        match cache.slot((center.0.div_euclid(16), center.1.div_euclid(12), center.2.div_euclid(16))) {
+    /// A centre and the slot of its grid cell, which holds its status.
+    fn fluid_status(&self, cache: &mut AquiferCache, (center, slot): ((i32, i32, i32), Option<usize>)) -> FluidStatus {
+        match slot {
             Some(slot) => *cache.cells[slot].1.get_or_insert_with(|| self.compute_fluid(center)),
             None => self.compute_fluid(center),
         }
