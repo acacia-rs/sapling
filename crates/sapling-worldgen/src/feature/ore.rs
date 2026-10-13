@@ -104,15 +104,24 @@ impl Ore {
         }
         let widest = kept.iter().fold(0.0f32, |widest, s| if s.radius_sq <= widest { widest } else { s.radius_sq });
         let mut placed = false;
+        let mut near: Vec<&Sphere> = Vec::with_capacity(kept.len());
         for x in lo[0]..=hi[0] {
             for z in lo[2]..=hi[2] {
                 let (cx, cz) = (x as f32 + 0.5, z as f32 + 0.5);
                 if !axis.column_near(cx, cz, widest) {
                     continue;
                 }
+                // A rounded sum of squares is no less than any of its terms, so a sphere whose x or z
+                // square alone reaches its radius holds no cell of the column.
+                let square = |a: f32, b: f32| (a - b) * (a - b);
+                near.clear();
+                near.extend(kept.iter().filter(|s| square(cx, s.centre[0]) < s.radius_sq && square(cz, s.centre[2]) < s.radius_sq));
+                if near.is_empty() {
+                    continue;
+                }
                 for y in lo[1]..=hi[1] {
                     let cell = [cx, y as f32 + 0.5, cz];
-                    if !axis.cell_near(cell, widest) || !kept.iter().any(|s| distance_sq(cell, s.centre) < s.radius_sq) {
+                    if !axis.cell_near(cell, widest) || !near.iter().any(|s| distance_sq(cell, s.centre) < s.radius_sq) {
                         continue;
                     }
                     placed |= self.replace(view, [x, y, z], random);
