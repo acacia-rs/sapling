@@ -576,6 +576,59 @@ Left, each with its first source and next step:
 - Desert pyramid 2 (one suspicious sand a cell off in the cellar: structure stage), ancient city on `c-ac` 1 (a
   state of that older run; `city6` is exact), stronghold 1 (see the fence above), village 1 structure-stage air.
 
+## replay7: the last five regions (2026-10-13, worldgen/replay7)
+Two probe runs, each also a canon (`c7`: mansion and far out; `c8`: monument one chunk wider, near origin's bubble
+chunks, far out; listed as second runs in `tools/replay-canons.txt`). Wrong + missing per region against its
+canon, on this branch merged with worldgen/all2 (ac5b385):
+
+| region | canon | replay6 | replay7 |
+|---|---|---|---|
+| near origin | origin3 | 25 (+3 bubble column cells "later") | 0 (0 later) |
+| far out | far7 (`c7`; replay5's `far`: 1) | 5 | 0 |
+| mansion | mansion4 (`mansion7` on `c7`: 0 too) | 68 | 0 |
+| monument | c-mo (`mon8` on `c8`: 0 too) | 10 | 0 |
+| desert pyramid | c-dp | 2 | 0 (unify6's cellar fix, through all2) |
+| all 59 regions | | 110 | 0 |
+
+`far`, replay5's run, keeps one lichen of source 100004,100002 (1600063,-32,1600041; a face the thread shuffle
+picks) that is exact on `c7`; that run's thread position for the chunk was not checked, so `far7` is the canon.
+
+Stock oracle, wrong + missing over all 59 regions, all2 (ac5b385) -> this branch: ticked 22646 -> 22540, still
+23501 -> 23411. Before the merge (against replay6's 22022) only near origin (-25), far out (-3), monument (-10)
+and mansion (-68) moved, all down.
+
+What was found (each on a one-worker run, logged live where named):
+- **Seagrass asks the temperature at the call's position** (1411a3550, height-cooled): a scatter calls it at twice
+  the heightmap (y 126), where a stony shore (0.2) is below 0.15, so no seagrass in the water's top layer
+  there (near origin, source 15,5: 4 cells). The cold-biome list it replaced ignored height.
+- **Molang divides by a constant as a multiplication by its reciprocal.** The kelp rules' iterations,
+  `math.ceil(query.noise(originx / 80, originz / 80) * 120)`, were exactly 0 on chunk diagonals (the simplex
+  cancels: `examples/query_noise`), where BDS's optimiser leaves a tiny positive value and one kelp try (near
+  origin -13,12, -12,13, 13,3: 17 cells). sapling-worldgen now takes acacia-molang at master's rev d8b6919 (its
+  other acacia crates stay); that version ends a program at an unset variable, so `variable.is_legacy` is set
+  to 0, and the world-generation queries pass `documented_queries_only = false`. The monument (c-mo, 10 ->
+  0) went with the same commit (bisected with `REF=`); which expression moved its seagrass was not traced.
+- **`random_spread_canopy` (1438f57d0, found by the backtrace of the tree's leaf writes):** height and radius
+  drawn as ranges (a draw even when constant), `leaf_placement_attempts` around every log the trunk offered
+  (three for the azalea tree), offsets `nextInt(r) - r + nextInt(r) + 1`, leaves where a tree may grow. The
+  mansion's 68 cells were the azalea tree of ring source -510,1001 and the lush growth over it; replay6's "clay
+  cells where BDS has water" had already gone.
+- **Simplex F2 is 0x3ebb67ae** (stored at startup by 145e2d940), one ulp under the literal. Far out's dirt cell
+  went with it or the Molang commit (not bisected): its depth noise was BDS's bit for bit (148211af0 against
+  `cargo test --lib depth_octaves`), so it was the column's draw.
+- **Tunnel test of a multiface face** (143b84a00 -> 141efd3b0): `findStructureFeatureTypeAt` first looks the
+  position up in the v2 structures' boxes (14593dc90) and, on a hit, answers with that structure alone. Far
+  out's lichen wall (1600123,33,1600095) lies in a trial chamber's box ((1600117,-29,1599993)..(1600208,38,
+  1600112), logged), so its mineshaft is no tunnel there (far out: 2 lichen cells).
+- **Structure-stage magma ticks in its chunk's decoration** (an ocean ruin's magma, three ticks from the
+  queue `acquireAllTicks` moved in): the bubble column cell over it, as over a blob's (near origin's 3).
+  BubbleColumn's onPlace is an event and events do not fire while a chunk generates, so columns stay one cell.
+  Magma and bubble columns do hear liquid updates (BlockLegacy +0x163 bit 3; magma's `neighborChanged`
+  148b64bf0 queues a tick in 2 for water above, 160 + level random otherwise): not modelled, no case seen.
+- **Desert pyramid:** worldgen/unify6's c83800d (cellar sand's loot seed read from the world), merged here
+  through all2.
+- On `c8`, far out keeps the same kind of lichen cell of source 100004,100002 as on `far`.
+
 ## The full replay of the structures world (2026-10-11, worldgen/struct5)
 One run now carries both orders: `scripts/data/dbg_canon.json` logs loads, structure post-processes, decorations
 and the thread draws (and each start's connection-upgrade flag), `tools/replay-world.sh` sends world,
