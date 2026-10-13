@@ -67,7 +67,22 @@ pub struct Adjustments {
     buries: Vec<BoundingBox>,
     rigids: Vec<Rigid>,
     junctions: Vec<Junction>,
-    columns: Vec<[Vec<u32>; 5]>,
+    columns: Vec<[Vec<Entry>; 5]>,
+}
+
+/// An entry reaching a column, with the heights outside which it adds exactly zero (skipped; the sums
+/// start at +0.0 and never hold -0.0, so adding +0.0 or -0.0 changes nothing).
+#[derive(Clone, Copy)]
+struct Entry {
+    low: i32,
+    high: i32,
+    index: u32,
+}
+
+impl Entry {
+    fn at(entries: &[Entry], y: i32) -> impl Iterator<Item = usize> + '_ {
+        entries.iter().filter(move |e| e.low <= y && y <= e.high).map(|e| e.index as usize)
+    }
 }
 
 /// How far outside a box (0 inside) in x and z, and the raw signed distances.
@@ -85,31 +100,52 @@ impl Adjustments {
     pub fn apply(&self, [x, y, z]: [i32; 3], density: f32) -> f32 {
         let [shavers, beards, buries, rigids, junctions] = &self.columns[((z & 15) << 4 | (x & 15)) as usize];
         let mut v2 = 0.0f64;
-        for &i in rigids {
-            v2 += self.rigid(&self.rigids[i as usize], [x, y, z]);
+        for i in Entry::at(rigids, y) {
+            v2 += self.rigid(&self.rigids[i], [x, y, z]);
         }
         let mut joined = 0.0f64;
-        for &i in junctions {
-            let j = self.junctions[i as usize];
+        for i in Entry::at(junctions, y) {
+            let j = self.junctions[i];
             let dy = y - j.ground;
             joined += kernel::v2_beard(x - j.x, dy, z - j.z, dy) as f64 * 0.4;
         }
         let d1 = (v2 + joined + density as f64) as f32;
         let mut legacy = 0.0f32;
-        for &i in shavers {
-            legacy += Self::shaver(&self.shavers[i as usize], [x, y, z]);
+        for i in Entry::at(shavers, y) {
+            legacy += Self::shaver(&self.shavers[i], [x, y, z]);
         }
-        for &i in beards {
-            let b = &self.beards[i as usize];
+        for i in Entry::at(beards, y) {
+            let b = &self.beards[i];
             let (dx, dz, _, _) = outside(&b.bb, x, z);
             legacy += kernel::legacy_beard(dx, y - b.ground, dz) * 0.8;
         }
         if d1 + legacy <= 0.0 {
-            for &i in buries {
-                legacy += Self::bury(&self.buries[i as usize], [x, y, z]);
+            for i in Entry::at(buries, y) {
+                legacy += Self::bury(&self.buries[i], [x, y, z]);
             }
         }
         legacy + d1
+    }
+
+    /// The heights where each kind of entry can add anything (the kernels are zero 12 blocks out, the
+    /// legacy bury 14 half-steps out): shavers, beards, buries, rigids, junctions.
+    fn heights(&self) -> [Vec<(i32, i32)>; 5] {
+        let beard = |b: &Beard| (b.ground.min(b.bb.y1) - 12, b.ground.max(b.bb.y1) + 11);
+        let rigid = |r: &Rigid| {
+            let ground = r.bb.y0 + r.ground_delta;
+            match r.adaptation {
+                Adaptation::Bury | Adaptation::BeardThin => (ground - 12, ground + 11),
+                Adaptation::BeardBox => (ground - 11, r.bb.y1 + 11),
+                Adaptation::Encapsulate => (r.bb.y0 - 11, r.bb.y1 + 11),
+            }
+        };
+        [
+            self.shavers.iter().map(beard).collect(),
+            self.beards.iter().map(|b| (b.ground - 12, b.ground + 11)).collect(),
+            self.buries.iter().map(|bb| (bb.y0 - 13, bb.y1.max(bb.y0) + 13)).collect(),
+            self.rigids.iter().map(rigid).collect(),
+            self.junctions.iter().map(|j| (j.ground - 12, j.ground + 11)).collect(),
+        ]
     }
 
     fn shaver(b: &Beard, [x, y, z]: [i32; 3]) -> f32 {
@@ -163,16 +199,20 @@ impl Adjustments {
             let (dx, dz, _, _) = outside(bb, x, z);
             dx <= reach && dz <= reach
         };
+        let heights = self.heights();
         self.columns = (0..256)
             .map(|i| {
                 let (x, z) = (cx * 16 + (i & 15), cz * 16 + (i >> 4));
-                let pick = |hits: &mut dyn Iterator<Item = bool>| hits.enumerate().filter(|(_, hit)| *hit).map(|(i, _)| i as u32).collect();
+                let pick = |kind: usize, hits: &mut dyn Iterator<Item = bool>| {
+                    let entry = |(i, _): (usize, bool)| Entry { low: heights[kind][i].0, high: heights[kind][i].1, index: i as u32 };
+                    hits.enumerate().filter(|(_, hit)| *hit).map(entry).collect()
+                };
                 [
-                    pick(&mut self.shavers.iter().map(|b| near(&b.bb, 11, x, z))),
-                    pick(&mut self.beards.iter().map(|b| near(&b.bb, 11, x, z))),
-                    pick(&mut self.buries.iter().map(|b| near(b, 6, x, z))),
-                    pick(&mut self.rigids.iter().map(|r| near(&r.bb, 11, x, z))),
-                    pick(&mut self.junctions.iter().map(|j| (-11..=12).contains(&(j.x - x)) && (-11..=12).contains(&(j.z - z)))),
+                    pick(0, &mut self.shavers.iter().map(|b| near(&b.bb, 11, x, z))),
+                    pick(1, &mut self.beards.iter().map(|b| near(&b.bb, 11, x, z))),
+                    pick(2, &mut self.buries.iter().map(|b| near(b, 6, x, z))),
+                    pick(3, &mut self.rigids.iter().map(|r| near(&r.bb, 11, x, z))),
+                    pick(4, &mut self.junctions.iter().map(|j| (-11..=12).contains(&(j.x - x)) && (-11..=12).contains(&(j.z - z)))),
                 ]
             })
             .collect();
