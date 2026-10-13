@@ -2,7 +2,7 @@
 //! changed by its own writes only, each write logged per target chunk for replay (see
 //! docs/research/worldgen-bds.md, Feature placement).
 
-use std::cell::RefCell;
+use std::cell::{OnceCell, RefCell};
 use std::sync::Arc;
 
 use super::light;
@@ -83,7 +83,7 @@ pub enum Frozen<'a> {
 pub struct View<'a> {
     chunk: (i32, i32),
     load: &'a dyn Fn(i32, i32) -> Arc<ChunkShape>,
-    shapes: RefCell<Vec<Option<Arc<ChunkShape>>>>,
+    shapes: [OnceCell<Arc<ChunkShape>>; SIDE * SIDE],
     writes: Vec<Vec<Write>>,
     /// Per slot, `highest_block` once asked.
     tops: RefCell<Vec<Option<i32>>>,
@@ -108,7 +108,7 @@ impl<'a> View<'a> {
         Self {
             chunk,
             load,
-            shapes: RefCell::new(vec![None; slots]),
+            shapes: Default::default(),
             writes: vec![Vec::new(); slots],
             tops: RefCell::new(vec![None; slots]),
             frozen: None,
@@ -147,8 +147,7 @@ impl<'a> View<'a> {
         let slot = slot(0, 0).expect("centre");
         let (x0, z0) = (self.chunk.0 * 16, self.chunk.1 * 16);
         self.read(slot, 0);
-        let shapes = self.shapes.borrow();
-        let shape = shapes[slot].as_ref().expect("read just above");
+        let shape = self.shapes[slot].get().expect("read just above");
         let at = |i: i32| [x0 + (i & 15), i / 256 + MIN_Y, z0 + ((i >> 4) & 15)];
         shape.fluid_ticks().iter().map(|&(index, lava)| (at(index as i32), lava)).collect()
     }
@@ -177,8 +176,8 @@ impl<'a> View<'a> {
         if !(MIN_Y..MIN_Y + HEIGHT as i32).contains(&y) {
             return None;
         }
-        let slot = slot(x.div_euclid(16) - self.chunk.0, z.div_euclid(16) - self.chunk.1)?;
-        Some((slot, ChunkShape::index(x.rem_euclid(16) as usize, y, z.rem_euclid(16) as usize)))
+        let slot = slot((x >> 4) - self.chunk.0, (z >> 4) - self.chunk.1)?;
+        Some((slot, ChunkShape::index((x & 15) as usize, y, (z & 15) as usize)))
     }
 
     fn read(&self, slot: usize, index: usize) -> Block {
@@ -187,9 +186,7 @@ impl<'a> View<'a> {
         if let Some(reach) = &self.reach {
             reach.read(slot, index, chunk);
         }
-        let mut shapes = self.shapes.borrow_mut();
-        let shape = shapes[slot].get_or_insert_with(|| (self.load)(chunk.0, chunk.1));
-        shape.block_at(index)
+        self.shapes[slot].get_or_init(|| (self.load)(chunk.0, chunk.1)).block_at(index)
     }
 
     /// Air outside the world's height and the writable region.
@@ -211,8 +208,7 @@ impl<'a> View<'a> {
         if seen == block {
             return false;
         }
-        let mut shapes = self.shapes.borrow_mut();
-        let shape = shapes[slot].as_mut().expect("read just above");
+        let shape = self.shapes[slot].get_mut().expect("read just above");
         Arc::make_mut(shape).set_at(index, block);
         self.writes[slot].push(Write { index: index as u32, block, seen });
         if let Some(reach) = &mut self.reach {
