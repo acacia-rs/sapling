@@ -37,7 +37,10 @@ static GLOBAL: Counting = Counting;
 
 fn main() {
     let args: Vec<i64> = std::env::args().skip(1).map(|a| a.parse().unwrap()).collect();
-    let [seed, x0, z0, x1, z1] = args[..] else { panic!("usage: timing <seed> x0 z0 x1 z1") };
+    if let [seed, x0, z0, x1, z1, threads] = args[..] {
+        return threaded(seed, [x0, z0, x1, z1].map(|v| v as i32), threads as usize);
+    }
+    let [seed, x0, z0, x1, z1] = args[..] else { panic!("usage: timing <seed> x0 z0 x1 z1 [threads]") };
     let generator = OverworldGenerator::new(seed);
     let start = Instant::now();
     let mut columns = 0;
@@ -58,4 +61,36 @@ fn main() {
     let ms = start.elapsed().as_secs_f64() * 1000.0 / columns as f64;
     println!("{columns} columns, {ms:.2} ms per column");
     println!("allocations {} MB {} hash {:016x}",ALLOCS.load(Relaxed), BYTES.load(Relaxed) >> 20, hasher.finish());
+}
+
+/// The same columns on `threads` threads sharing one generator, each taking the next column of the
+/// sweep; the hash sums each column's own hash, so it does not depend on which thread finishes first.
+fn threaded(seed: i64, [x0, z0, x1, z1]: [i32; 4], threads: usize) {
+    let generator = OverworldGenerator::new(seed);
+    let columns: Vec<(i32, i32)> = (x0..=x1).flat_map(|x| (z0..=z1).map(move |z| (x, z))).collect();
+    let next = std::sync::atomic::AtomicUsize::new(0);
+    let sum = AtomicU64::new(0);
+    let start = Instant::now();
+    std::thread::scope(|scope| {
+        for _ in 0..threads {
+            scope.spawn(|| {
+                while let Some(&(x, z)) = columns.get(next.fetch_add(1, Relaxed)) {
+                    let shape = generator.chunk_blocks(x, z);
+                    let mut hasher = DefaultHasher::new();
+                    (x, z).hash(&mut hasher);
+                    for y in sapling_worldgen::MIN_Y..sapling_worldgen::MIN_Y + sapling_worldgen::HEIGHT as i32 {
+                        for z in 0..16 {
+                            for x in 0..16 {
+                                shape.block(x, y, z).hash(&mut hasher);
+                            }
+                        }
+                    }
+                    sum.fetch_add(hasher.finish(), Relaxed);
+                }
+            });
+        }
+    });
+    let ms = start.elapsed().as_secs_f64() * 1000.0 / columns.len() as f64;
+    println!("{} columns on {threads} threads, {ms:.2} ms per column", columns.len());
+    println!("allocations {} MB {} hash {:016x}", ALLOCS.load(Relaxed), BYTES.load(Relaxed) >> 20, sum.load(Relaxed));
 }

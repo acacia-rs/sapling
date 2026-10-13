@@ -20,7 +20,12 @@ declare -A load=(
   [strong16]="20261003 -97 -130 -82 -115"
   [strong8]="20261003 -93 -126 -86 -119"
   [village8]="20261003 -66 4 -59 11"
+  [mt1]="20261003 -8 -8 7 7 1"
+  [mt6]="20261003 -8 -8 7 7 6"
 )
+# mt1/mt6: origin16 on 1 and 6 threads sharing one generator, on six cores (cache contention); their hash
+# is order-independent, so it differs from origin16's.
+declare -A cores=([mt1]="0-4,6" [mt6]="0-4,6")
 workloads=${*:-origin16 strong16 strong8 village8}
 target=target
 envs=""
@@ -50,7 +55,7 @@ rm -f $name.data"
   else
     job="$job
 echo \"== $w\" >> $name.out
-taskset -c ${CORE:-3} /usr/bin/time -f 'maxrss_kb %M' perf stat -x, -e cycles,instructions $bin $args >> $name.out 2>&1"
+taskset -c ${cores[$w]:-${CORE:-3}} /usr/bin/time -f 'maxrss_kb %M' perf stat -x, -e cycles,instructions $bin $args >> $name.out 2>&1"
   fi
 done
 job="$job
@@ -79,7 +84,7 @@ if [ -n "${PROFILE:-}" ]; then
 fi
 awk -F, '
   /^== / { w = $0; sub(/^== /, "", w) }
-  /ms per column/ { split($0, a, " "); ms = a[3] }
+  /ms per column/ { n = split($0, a, " "); ms = a[n - 3] }
   /^allocations/ { split($0, a, " "); allocs = a[2]; amb = a[4]; hash = a[6] }
   $3 == "cycles" { cyc = $1 / 1e9 }
   $3 == "instructions" { ins = $1 / 1e9 }
