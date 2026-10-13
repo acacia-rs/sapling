@@ -88,7 +88,7 @@ impl ImprovedNoise {
 
     /// Noise at a position the caller already shifted by `xo/yo/zo`.
     pub fn sample_offset(&self, x: f32, y: f32, z: f32) -> f32 {
-        let (ix, iy, iz) = (x.floor() as i32, y.floor() as i32, z.floor() as i32);
+        let (ix, iy, iz) = (super::floor(x) as i32, super::floor(y) as i32, super::floor(z) as i32);
         self.sample_split([ix, iy, iz], [x - ix as f32, y - iy as f32, z - iz as f32])
     }
 

@@ -17,6 +17,18 @@ pub use simplex::SimplexNoise;
 
 use crate::random::{Mt19937, Xoroshiro};
 
+/// `v.floor()` bit for bit (signed zero and NaN included) without the libm call the baseline x86-64
+/// target makes for it; past 2^23 every f32 is an integer already.
+#[inline]
+pub(crate) fn floor(v: f32) -> f32 {
+    if v.abs() < 8_388_608.0 {
+        let t = (v as i32 as f32).copysign(v);
+        if t > v { t - 1.0 } else { t }
+    } else {
+        v.floor()
+    }
+}
+
 /// `IRandom` over BDS's MT (vtable 14a7125a0): `nextDouble` is one raw draw times 2^-32 (1408741f0).
 impl NoiseRandom for Mt19937 {
     fn next_double(&mut self) -> f64 {

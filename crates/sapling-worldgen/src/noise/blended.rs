@@ -99,7 +99,7 @@ fn fill_octave(noise: &ImprovedNoise, out: &mut CellGrid, origin: [f32; 3], scal
             let sz = smoothstep(fz);
             for gy in 0..CELL_ROWS {
                 let y = ((gy as f32) + origin[1]) * scale[1] + noise.yo;
-                let floor = y.floor();
+                let floor = super::floor(y);
                 let iy = floor as i32 & 0xFF;
                 let fy = y - floor;
                 let gradient_y = if y as i32 == fudge_index {
@@ -107,7 +107,7 @@ fn fill_octave(noise: &ImprovedNoise, out: &mut CellGrid, origin: [f32; 3], scal
                 } else if iy == last_iy {
                     None
                 } else {
-                    Some(fy - (fy / scale[1]).floor() * scale[1])
+                    Some(fy - super::floor(fy / scale[1]) * scale[1])
                 };
                 if let Some(gy_frac) = gradient_y {
                     corners = x_lerped_corners(noise, [ix, iy, iz], [fx, gy_frac, fz], sx);
@@ -124,7 +124,7 @@ fn fill_octave(noise: &ImprovedNoise, out: &mut CellGrid, origin: [f32; 3], scal
 }
 
 fn split(value: f32) -> (i32, f32) {
-    let floor = value.floor();
+    let floor = super::floor(value);
     (floor as i32 & 0xFF, value - floor)
 }
 
