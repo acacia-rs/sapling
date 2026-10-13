@@ -51,3 +51,18 @@ fn improved_noise_matches_java() {
     assert!((at(0.5, 4.0, -2.0) - -0.11885865).abs() < 1e-4);
     assert!((at(-204.0, 28.0, 12.0) - -0.58968128).abs() < 1e-3);
 }
+
+#[test]
+fn lane_samples_are_bit_identical() {
+    let mut random = JavaRandom::new(20261003);
+    let noise = NormalNoise::from_mt(&mut crate::random::Mt19937::new(7), -7, &[1.0, 0.0, 2.0]);
+    const SPECIAL: [f32; 8] = [0.0, -0.0, -0.5, 8_388_607.5, -8_388_609.0, 1.0e9, -1.9e9, 3.0e9];
+    for round in 0..400 {
+        let mut next = || if round % 4 == 0 { SPECIAL[random.next(3) as usize] } else { (random.next_float() - 0.5) * 2.0e5 };
+        let (x, y, z): (Lanes, Lanes, Lanes) = (std::array::from_fn(|_| next()), std::array::from_fn(|_| next()), std::array::from_fn(|_| next()));
+        let lanes = noise.sample_lanes(&x, &y, &z);
+        for l in 0..LANES {
+            assert_eq!(lanes[l].to_bits(), noise.sample(x[l], y[l], z[l]).to_bits());
+        }
+    }
+}

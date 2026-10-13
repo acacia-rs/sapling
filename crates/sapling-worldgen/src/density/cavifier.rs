@@ -1,7 +1,10 @@
 //! Noise caves on a density cell corner (BDS Cavifier 1481e10d0): Java 1.18.1's spaghetti,
-//! cheese, entrances and pillars, with BDS's operation order and its x128 density scale.
+//! cheese, entrances and pillars, with BDS's operation order and its x128 density scale. A cell
+//! column's corners sample each noise in lanes (`NormalNoise::sample_lanes`, bit-identical); the
+//! arithmetic on the samples is per corner as before.
 
 use super::noises::CaveNoises;
+use crate::noise::{CELL_ROWS, LANES, Lanes};
 use crate::shaper::DENSITY_SCALE;
 
 /// Below this the corner is left alone (Java's -64 bail-out, scaled differently).
@@ -22,74 +25,99 @@ fn clamp_unit(value: f32) -> f32 {
     if 1.0 < value { 1.0 } else { value.max(-1.0) }
 }
 
+/// The rows of `rows` in groups of `LANES`, a short last group repeating its last row, with their y.
+fn groups<'a>(rows: &'a [usize], ys: &'a [f32]) -> impl Iterator<Item = (&'a [usize], Lanes)> + 'a {
+    rows.chunks(LANES).map(move |group| (group, std::array::from_fn(|l| ys[group[l.min(group.len() - 1)]])))
+}
+
 impl CaveNoises {
-    pub fn carve(&self, [x, y, z]: [f32; 3], density: f32) -> f32 {
-        if density < SKIP_BELOW {
-            return density;
+    /// Carves a cell column at (x, z): `densities` (before carving, by row) become the carved ones.
+    pub fn carve_column(&self, x: f32, z: f32, ys: &[f32; CELL_ROWS], densities: &mut [f32; CELL_ROWS]) {
+        let kept: Vec<usize> = (0..CELL_ROWS).filter(|&row| !(densities[row] < SKIP_BELOW)).collect();
+        let (mut spaghetti, mut roughness) = ([0.0f32; CELL_ROWS], [0.0f32; CELL_ROWS]);
+        for (group, y) in groups(&kept, ys) {
+            let (xs, zs) = ([x; LANES], [z; LANES]);
+            let modulator = self.spaghetti_roughness_modulator.sample_lanes(&xs, &y, &zs);
+            let rough = self.spaghetti_roughness.sample_lanes(&xs, &y, &zs);
+            let rarity = self.spaghetti_3d_rarity.sample_lanes(&[x + x; LANES], &y, &[z + z; LANES]).map(quantize_3d);
+            let thickness = self.spaghetti_3d_thickness.sample_lanes(&xs, &y, &zs);
+            let inverse = rarity.map(|r| 1.0 / r);
+            let (sx, sy, sz): (Lanes, Lanes, Lanes) = (inverse.map(|i| i * x), std::array::from_fn(|l| y[l] * inverse[l]), inverse.map(|i| z * i));
+            let first = self.spaghetti_3d_1.sample_lanes(&sx, &sy, &sz);
+            let second = self.spaghetti_3d_2.sample_lanes(&sx, &sy, &sz);
+            let entrance = self.cave_entrance.sample_lanes(&[0.75 * x; LANES], &y.map(|y| y * 0.5), &[z * 0.75; LANES]);
+            for (l, &row) in group.iter().enumerate() {
+                let r = map_unit(modulator[l], 0.1, 0.0) * (0.4 - rough[l].abs());
+                let t = map_unit(thickness[l], THICKNESS_3D_SPAN, 0.065);
+                let spaghetti_3d = clamp_unit(((second[l] * rarity[l]).abs() - t).max((first[l] * rarity[l]).abs() - t));
+                spaghetti[row] = (spaghetti_3d + r).min(entrance[l] + 0.37 + entrance_slope(y[l]));
+                roughness[row] = r;
+            }
         }
-        let modulator = map_unit(self.spaghetti_roughness_modulator.sample(x, y, z), 0.1, 0.0);
-        let roughness = modulator * (0.4 - self.spaghetti_roughness.sample(x, y, z).abs());
-
-        let rarity = quantize_3d(self.spaghetti_3d_rarity.sample(x + x, y, z + z));
-        let thickness = map_unit(self.spaghetti_3d_thickness.sample(x, y, z), THICKNESS_3D_SPAN, 0.065);
-        let inverse = 1.0 / rarity;
-        let (sx, sy, sz) = (inverse * x, y * inverse, z * inverse);
-        let first = (self.spaghetti_3d_1.sample(sx, sy, sz) * rarity).abs() - thickness;
-        let second = (self.spaghetti_3d_2.sample(sx, sy, sz) * rarity).abs() - thickness;
-        let spaghetti_3d = clamp_unit(second.max(first));
-
-        let entrance_t = (y + 10.0) / 40.0;
-        let entrance_slope = if 0.0 > entrance_t {
-            0.3
-        } else if entrance_t > 1.0 {
-            0.0
-        } else {
-            0.3 - entrance_t * 0.3
-        };
-        let entrance = self.cave_entrance.sample(0.75 * x, y * 0.5, z * 0.75) + 0.37 + entrance_slope;
-        let spaghetti = (spaghetti_3d + roughness).min(entrance);
-
-        if CAVERN_THRESHOLD > density {
-            return (spaghetti * DENSITY_SCALE * 5.0).min(density);
+        let deep: Vec<usize> = kept.iter().copied().filter(|&row| !(CAVERN_THRESHOLD > densities[row])).collect();
+        for &row in &kept {
+            if CAVERN_THRESHOLD > densities[row] {
+                densities[row] = (spaghetti[row] * DENSITY_SCALE * 5.0).min(densities[row]);
+            }
         }
+        let elevation_noise = if deep.is_empty() { 0.0 } else { self.spaghetti_2d_elevation.sample(x, 0.0, z) };
+        for (group, y) in groups(&deep, ys) {
+            let (xs, zs, x2, z2) = ([x; LANES], [z; LANES], [x + x; LANES], [z + z; LANES]);
+            let cheese = self.cave_cheese.sample_lanes(&xs, &y.map(|y| y * 0.666_666_7), &zs);
+            let layer = self.cave_layer.sample_lanes(&xs, &y.map(|y| y * 8.0), &zs);
+            let rarity_2d = self.spaghetti_2d_modulator.sample_lanes(&x2, &y, &z2).map(quantize_2d);
+            let thickness_2d = self.spaghetti_2d_thickness.sample_lanes(&x2, &y, &z2);
+            let inverse = rarity_2d.map(|r| 1.0 / r);
+            let (sx, sy, sz): (Lanes, Lanes, Lanes) = (inverse.map(|i| i * x), std::array::from_fn(|l| y[l] * inverse[l]), inverse.map(|i| z * i));
+            let noise_2d = self.spaghetti_2d.sample_lanes(&sx, &sy, &sz);
+            let rareness = self.pillar_rareness.sample_lanes(&xs, &y, &zs);
+            let pillar_thickness = self.pillar_thickness.sample_lanes(&xs, &y, &zs);
+            let pillar = self.pillar.sample_lanes(&[x * 25.0; LANES], &y.map(|y| y * 0.3), &[z * 25.0; LANES]);
+            for (l, &row) in group.iter().enumerate() {
+                let density = densities[row];
+                let cheese = clamp_unit(cheese[l] + 0.27);
+                let sloped = (density - 200.0) * 1.28;
+                let cheese_slope = if 0.0 > sloped {
+                    0.5
+                } else if sloped > 1.0 {
+                    0.0
+                } else {
+                    0.5 - sloped * 0.5
+                };
+                let caverns = cheese + cheese_slope + layer[l] * layer[l] * 4.0;
 
-        let cheese = clamp_unit(self.cave_cheese.sample(x, y * 0.666_666_7, z) + 0.27);
-        let sloped = (density - 200.0) * 1.28;
-        let cheese_slope = if 0.0 > sloped {
-            0.5
-        } else if sloped > 1.0 {
-            0.0
-        } else {
-            0.5 - sloped * 0.5
-        };
-        let layer = self.cave_layer.sample(x, y * 8.0, z);
-        let caverns = cheese + cheese_slope + layer * layer * 4.0;
+                let mut elevation = MIN_CELL_Y;
+                if (elevation + -8.0).abs() > 1.192_092_9e-7 {
+                    elevation += (8.0 - elevation) * ((elevation_noise + 1.0) * 0.5);
+                }
+                let thickness_2d = map_unit(thickness_2d[l], 0.699_999_9, 0.6);
+                let ridge = -0.083 * thickness_2d + (rarity_2d[l] * noise_2d[l]).abs();
+                let height = (y[l] * -0.125 + elevation).abs() - thickness_2d;
+                let spaghetti_2d = clamp_unit((height * height * height).max(ridge));
 
-        let rarity_2d = quantize_2d(self.spaghetti_2d_modulator.sample(x + x, y, z + z));
-        let thickness_2d = self.spaghetti_2d_thickness.sample(x + x, y, z + z);
-        let inverse_2d = 1.0 / rarity_2d;
-        let noise_2d = self.spaghetti_2d.sample(inverse_2d * x, y * inverse_2d, z * inverse_2d);
-        let elevation_noise = self.spaghetti_2d_elevation.sample(x, 0.0, z);
-        let mut elevation = MIN_CELL_Y;
-        if (elevation + -8.0).abs() > 1.192_092_9e-7 {
-            elevation += (8.0 - elevation) * ((elevation_noise + 1.0) * 0.5);
+                let carved = caverns.min(spaghetti[row].min(roughness[row] + spaghetti_2d));
+
+                let rareness = (rareness[l] + 1.0) * 0.5;
+                let rareness = rareness + rareness + 0.0;
+                // BDS calls the CRT's `powf(t, 3)`, rounded correctly but for 1 in 16k; libm's differs per platform.
+                let t = map_unit(pillar_thickness[l], 1.1, 0.0) as f64;
+                let pillar_thickness = (t * t * t) as f32;
+                let pillar = ((pillar[l] + pillar[l]) - rareness) * pillar_thickness;
+                let pillar = if 0.03 < pillar { pillar } else { -f32::MAX };
+                densities[row] = carved.max(pillar) * DENSITY_SCALE;
+            }
         }
-        let thickness_2d = map_unit(thickness_2d, 0.699_999_9, 0.6);
-        let ridge = -0.083 * thickness_2d + (rarity_2d * noise_2d).abs();
-        let height = (y * -0.125 + elevation).abs() - thickness_2d;
-        let spaghetti_2d = clamp_unit((height * height * height).max(ridge));
+    }
+}
 
-        let carved = caverns.min(spaghetti.min(roughness + spaghetti_2d));
-
-        let rareness = (self.pillar_rareness.sample(x, y, z) + 1.0) * 0.5;
-        let rareness = rareness + rareness + 0.0;
-        // BDS calls the CRT's `powf(t, 3)`, rounded correctly but for 1 in 16k; libm's differs per platform.
-        let t = map_unit(self.pillar_thickness.sample(x, y, z), 1.1, 0.0) as f64;
-        let pillar_thickness = (t * t * t) as f32;
-        let pillar = self.pillar.sample(x * 25.0, y * 0.3, z * 25.0);
-        let pillar = ((pillar + pillar) - rareness) * pillar_thickness;
-        let pillar = if 0.03 < pillar { pillar } else { -f32::MAX };
-        carved.max(pillar) * DENSITY_SCALE
+fn entrance_slope(y: f32) -> f32 {
+    let entrance_t = (y + 10.0) / 40.0;
+    if 0.0 > entrance_t {
+        0.3
+    } else if entrance_t > 1.0 {
+        0.0
+    } else {
+        0.3 - entrance_t * 0.3
     }
 }
 

@@ -1,6 +1,7 @@
 //! Java `NormalNoise` as BDS computes it (`NormalNoise::getValue` 145e26660).
 
 use super::PerlinNoise;
+use super::improved::Lanes;
 use crate::random::{Mt19937, PositionalFactory};
 
 const INPUT_FACTOR: f32 = 1.018_126_8;
@@ -34,6 +35,14 @@ impl NormalNoise {
         let a = self.first.sample(x, y, z);
         let b = self.second.sample(x * INPUT_FACTOR, y * INPUT_FACTOR, z * INPUT_FACTOR);
         (a + b) * self.value_factor
+    }
+
+    /// `sample` at `LANES` positions, each lane bit-identical to it.
+    pub fn sample_lanes(&self, x: &Lanes, y: &Lanes, z: &Lanes) -> Lanes {
+        let a = self.first.sample_lanes(x, y, z);
+        let scaled = |v: &Lanes| -> Lanes { v.map(|v| v * INPUT_FACTOR) };
+        let b = self.second.sample_lanes(&scaled(x), &scaled(y), &scaled(z));
+        std::array::from_fn(|l| (a[l] + b[l]) * self.value_factor)
     }
 }
 

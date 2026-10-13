@@ -3,7 +3,7 @@
 
 use super::Density;
 use crate::climate::QuartClimate;
-use crate::noise::{CELL_COLUMNS, CELL_COUNT, CELL_ROWS, CellGrid};
+use crate::noise::{CELL_COLUMNS, CELL_COUNT, CELL_ROWS, CellGrid, LANES, Lanes};
 
 pub const MIN_CELL_Y: i32 = -8;
 /// `maxY - minY` in cells, for the top slide (the dimension is 384 tall).
@@ -29,25 +29,45 @@ impl Density {
         let mut density = Box::new([0.0f32; CELL_COUNT]);
         let mut noodle = std::array::from_fn(|_| Box::new([1.0f32; CELL_COUNT]));
         let mut veins = std::array::from_fn(|_| Box::new([1.0f32; CELL_COUNT]));
+        let ys: [f32; CELL_ROWS] = std::array::from_fn(|cy| (origin[1] + cy as f32) * 8.0);
         for cx in 0..CELL_COLUMNS {
             let x = ((cx as f32) + origin[0]) * 4.0;
             for cz in 0..CELL_COLUMNS {
                 let z = ((cz as f32) + origin[2]) * 4.0;
                 let column = climate(chunk_x * 4 + cx as i32, chunk_z * 4 + cz as i32);
+                let mut carved: [f32; CELL_ROWS] = std::array::from_fn(|cy| self.uncarved_density(blended[cell_index(cx, cz, cy)], &column, cy as i32));
+                self.caves.carve_column(x, z, &ys, &mut carved);
+                let mut kept = [0usize; CELL_ROWS];
+                let mut count = 0;
                 for cy in 0..CELL_ROWS {
                     let i = cell_index(cx, cz, cy);
-                    let y = (origin[1] + cy as f32) * 8.0;
-                    let value = self.corner_density(blended[i], &column, cy as i32, [x, y, z]);
+                    let value = bottom_slide(top_slide(carved[cy], CELL_COUNT_Y - 8 - cy as i32), cy as i32);
                     density[i] = value;
                     if -150.0 <= value {
-                        veins[0][i] = clamp_unit(self.veins.veininess.sample(x * 1.5, y * 1.5, z * 1.5));
-                        veins[1][i] = clamp_unit(self.veins.vein_a.sample(x * 4.0, y * 4.0, z * 4.0));
-                        veins[2][i] = clamp_unit(self.veins.vein_b.sample(x * 4.0, y * 4.0, z * 4.0));
-                        let (scaled, ridge) = (y, y * 2.666_666_7);
-                        noodle[0][i] = clamp_unit(self.noodles.toggle.sample(x, scaled, z));
-                        noodle[1][i] = clamp_unit(self.noodles.thickness.sample(x, scaled, z));
-                        noodle[2][i] = clamp_unit(self.noodles.ridge_a.sample(x * 2.666_666_7, ridge, z * 2.666_666_7));
-                        noodle[3][i] = clamp_unit(self.noodles.ridge_b.sample(x * 2.666_666_7, ridge, z * 2.666_666_7));
+                        kept[count] = cy;
+                        count += 1;
+                    }
+                }
+                // The column's kept corners in lanes; a short last group repeats its last corner.
+                for group in kept[..count].chunks(LANES) {
+                    let ys: Lanes = std::array::from_fn(|l| ys[group[l.min(group.len() - 1)]]);
+                    let lanes = |v: f32| [v; LANES];
+                    let times = |v: &Lanes, k: f32| -> Lanes { v.map(|v| v * k) };
+                    let (x15, x4, x83) = (lanes(x * 1.5), lanes(x * 4.0), lanes(x * 2.666_666_7));
+                    let (z15, z4, z83) = (lanes(z * 1.5), lanes(z * 4.0), lanes(z * 2.666_666_7));
+                    let samples = [
+                        self.veins.veininess.sample_lanes(&x15, &times(&ys, 1.5), &z15),
+                        self.veins.vein_a.sample_lanes(&x4, &times(&ys, 4.0), &z4),
+                        self.veins.vein_b.sample_lanes(&x4, &times(&ys, 4.0), &z4),
+                        self.noodles.toggle.sample_lanes(&lanes(x), &ys, &lanes(z)),
+                        self.noodles.thickness.sample_lanes(&lanes(x), &ys, &lanes(z)),
+                        self.noodles.ridge_a.sample_lanes(&x83, &times(&ys, 2.666_666_7), &z83),
+                        self.noodles.ridge_b.sample_lanes(&x83, &times(&ys, 2.666_666_7), &z83),
+                    ];
+                    for (l, &cy) in group.iter().enumerate() {
+                        let i = cell_index(cx, cz, cy);
+                        (0..3).for_each(|k| veins[k][i] = clamp_unit(samples[k][l]));
+                        (0..4).for_each(|k| noodle[k][i] = clamp_unit(samples[3 + k][l]));
                     }
                 }
             }
@@ -66,13 +86,12 @@ impl Density {
         self.blended.parts([(chunk_x * 4) as f32, MIN_CELL_Y as f32, (chunk_z * 4) as f32])
     }
 
-    fn corner_density(&self, blended: f32, column: &QuartClimate, cy: i32, position: [f32; 3]) -> f32 {
+    /// A corner's density before the noise caves and the slides.
+    fn uncarved_density(&self, blended: f32, column: &QuartClimate, cy: i32) -> f32 {
         let block_y = ((MIN_CELL_Y + cy) * 8) as f32;
         let height = (block_y * -0.007_812_5 + 1.0 + column.offset + column.jagged) * column.factor;
         let height = height * if height > 0.0 { 4.0 } else { 1.0 };
-        let density = self.caves.carve(position, height + blended);
-        let density = top_slide(density, CELL_COUNT_Y - 8 - cy);
-        bottom_slide(density, cy)
+        height + blended
     }
 }
 

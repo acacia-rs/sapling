@@ -2,7 +2,7 @@
 
 use super::NoiseRandom;
 
-const GRADIENT: [[f32; 3]; 16] = [
+pub(super) const GRADIENT: [[f32; 3]; 16] = [
     [1.0, 1.0, 0.0],
     [-1.0, 1.0, 0.0],
     [1.0, -1.0, 0.0],
@@ -27,6 +27,8 @@ pub struct ImprovedNoise {
     pub yo: f32,
     pub zo: f32,
     p: [u8; 256],
+    /// `p` widened, for the AVX2 lanes' gathers (avx2.rs).
+    pub(super) p32: [i32; 256],
 }
 
 impl ImprovedNoise {
@@ -55,7 +57,7 @@ impl ImprovedNoise {
             let j = random.next_int_bounded(256 - i as u32) as usize;
             p.swap(i, i + j);
         }
-        Self { xo, yo, zo, p }
+        Self { xo, yo, zo, p, p32: p.map(i32::from) }
     }
 
     fn hash(&self, i: i32) -> i32 {
@@ -95,7 +97,46 @@ impl ImprovedNoise {
     pub fn hash_at(&self, i: i32) -> i32 {
         self.hash(i)
     }
+
+    /// `sample_offset` at `LANES` positions: the table lookups lane by lane, the arithmetic in phases
+    /// over the lanes with the scalar path's operations, so each lane is bit-identical to it.
+    pub fn sample_offset_lanes(&self, x: &Lanes, y: &Lanes, z: &Lanes) -> Lanes {
+        #[cfg(target_arch = "x86_64")]
+        if let Some(lanes) = super::avx2::sample_offset(self, x, y, z) {
+            return lanes;
+        }
+        self.sample_offset_each(x, y, z)
+    }
+
+    pub(super) fn sample_offset_each(&self, x: &Lanes, y: &Lanes, z: &Lanes) -> Lanes {
+        let floor = |v: &Lanes| -> [i32; LANES] { std::array::from_fn(|l| super::floor(v[l]) as i32) };
+        let (ix, iy, iz) = (floor(x), floor(y), floor(z));
+        let dx: Lanes = std::array::from_fn(|l| x[l] - ix[l] as f32);
+        let dy: Lanes = std::array::from_fn(|l| y[l] - iy[l] as f32);
+        let dz: Lanes = std::array::from_fn(|l| z[l] - iz[l] as f32);
+        // Per lane, the gradients of the corners 000, 100, 010, 110, 001, 101, 011, 111.
+        let mut gradients = [[[0.0f32; LANES]; 3]; 8];
+        for l in 0..LANES {
+            let (a, b) = (self.hash(ix[l]), self.hash(ix[l] + 1));
+            let (aa, ab, ba, bb) = (self.hash(a + iy[l]), self.hash(a + iy[l] + 1), self.hash(b + iy[l]), self.hash(b + iy[l] + 1));
+            let corners = [aa, ba, ab, bb].map(|h| h + iz[l]);
+            for (k, &h) in corners.iter().chain(&corners.map(|h| h + 1)).enumerate() {
+                let g = GRADIENT[(self.hash(h) & 15) as usize];
+                (0..3).for_each(|axis| gradients[k][axis][l] = g[axis]);
+            }
+        }
+        let dot = |k: usize, ox: f32, oy: f32, oz: f32| -> Lanes {
+            let g = &gradients[k];
+            std::array::from_fn(|l| g[0][l] * (dx[l] - ox) + g[1][l] * (dy[l] - oy) + g[2][l] * (dz[l] - oz))
+        };
+        let d = [dot(0, 0.0, 0.0, 0.0), dot(1, 1.0, 0.0, 0.0), dot(2, 0.0, 1.0, 0.0), dot(3, 1.0, 1.0, 0.0), dot(4, 0.0, 0.0, 1.0), dot(5, 1.0, 0.0, 1.0), dot(6, 0.0, 1.0, 1.0), dot(7, 1.0, 1.0, 1.0)];
+        std::array::from_fn(|l| lerp3(smoothstep(dx[l]), smoothstep(dy[l]), smoothstep(dz[l]), d.map(|d| d[l])))
+    }
 }
+
+/// Positions a lane sampler takes at once.
+pub const LANES: usize = 8;
+pub type Lanes = [f32; LANES];
 
 pub(super) fn grad_dot(hash: i32, x: f32, y: f32, z: f32) -> f32 {
     let g = GRADIENT[(hash & 15) as usize];

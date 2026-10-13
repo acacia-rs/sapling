@@ -1,6 +1,8 @@
 //! BDS's noise primitives. All arithmetic is f32 in BDS's operation order; Java's `wrap()` is
 //! absent, as in BDS.
 
+#[cfg(target_arch = "x86_64")]
+mod avx2;
 mod blended;
 mod improved;
 mod normal;
@@ -10,7 +12,7 @@ mod simplex;
 mod tests;
 
 pub use blended::{BlendedNoise, CELL_COLUMNS, CELL_COUNT, CELL_ROWS, CellGrid};
-pub use improved::ImprovedNoise;
+pub use improved::{ImprovedNoise, LANES, Lanes};
 pub use normal::NormalNoise;
 pub use perlin::PerlinNoise;
 pub use simplex::SimplexNoise;

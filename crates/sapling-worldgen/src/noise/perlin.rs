@@ -1,6 +1,7 @@
 //! Multi-octave Perlin noise (BDS `MultiOctaveNoiseImpl`, ctor 145e24e60, positional mode).
 
 use super::ImprovedNoise;
+use super::improved::{LANES, Lanes};
 use crate::random::{Mt19937, PositionalFactory};
 
 #[derive(Debug, Clone)]
@@ -75,6 +76,18 @@ impl PerlinNoise {
             let f = octave.input_factor;
             let n = &octave.noise;
             sum += n.sample_offset(x * f + n.xo, y * f + n.yo, z * f + n.zo) * octave.weight;
+        }
+        sum
+    }
+
+    /// `sample` at `LANES` positions, each lane bit-identical to it.
+    pub fn sample_lanes(&self, x: &Lanes, y: &Lanes, z: &Lanes) -> Lanes {
+        let mut sum = [0.0f32; LANES];
+        for octave in &self.octaves {
+            let (f, n) = (octave.input_factor, &octave.noise);
+            let at = |v: &Lanes, offset: f32| -> Lanes { std::array::from_fn(|l| v[l] * f + offset) };
+            let value = n.sample_offset_lanes(&at(x, n.xo), &at(y, n.yo), &at(z, n.zo));
+            (0..LANES).for_each(|l| sum[l] += value[l] * octave.weight);
         }
         sum
     }
