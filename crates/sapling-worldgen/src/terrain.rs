@@ -107,8 +107,9 @@ impl Corners {
         ])
     }
 
-    /// z first, then x, then y, each `(b - a) * t + a`, with t = 0.25*k and 0.125*k.
-    fn at(&self, x: u8, y: u8, z: u8) -> f32 {
+    /// z first, then x, each `(b - a) * t + a` with t = 0.25*k: the two ends `Column::at` lerps
+    /// between, shared by the block column's eight y.
+    fn column(&self, x: u8, z: u8) -> Column {
         let [x0z0y0, x1z0y0, x0z1y0, x1z1y0, x0z0y1, x1z0y1, x0z1y1, x1z1y1] = self.0;
         let tz = 0.25 * z as f32;
         let x0y0 = (x0z1y0 - x0z0y0) * tz + x0z0y0;
@@ -116,9 +117,17 @@ impl Corners {
         let x0y1 = (x0z1y1 - x0z0y1) * tz + x0z0y1;
         let x1y1 = (x1z1y1 - x1z0y1) * tz + x1z0y1;
         let tx = 0.25 * x as f32;
-        let y0 = (x1y0 - x0y0) * tx + x0y0;
-        let y1 = (x1y1 - x0y1) * tx + x0y1;
-        (y1 - y0) * (0.125 * y as f32) + y0
+        Column((x1y0 - x0y0) * tx + x0y0, (x1y1 - x0y1) * tx + x0y1)
+    }
+}
+
+/// One block column of a cell: its bottom and top values.
+struct Column(f32, f32);
+
+impl Column {
+    /// Then y, with t = 0.125*k.
+    fn at(&self, y: u8) -> f32 {
+        (self.1 - self.0) * (0.125 * y as f32) + self.0
     }
 }
 
@@ -144,11 +153,14 @@ impl Density {
                     let veins = cells.veins.each_ref().map(|grid| Corners::load(&grid[..], cx, cz, cy));
                     for dz in 0..4u8 {
                         for dx in 0..4u8 {
+                            let density = density.column(dx, dz);
+                            let noodle = noodle.each_ref().map(|c| c.column(dx, dz));
+                            let veins = veins.each_ref().map(|c| c.column(dx, dz));
                             for dy in 0..8u8 {
                                 let (x, z) = (cx * 4 + dx as usize, cz * 4 + dz as usize);
                                 let y = (MIN_CELL_Y + cy as i32) * 8 + dy as i32;
                                 let position = [chunk_x * 16 + x as i32, y, chunk_z * 16 + z as i32];
-                                let mut value = block_density(density.at(dx, dy, dz), &noodle, [dx, dy, dz], y);
+                                let mut value = block_density(density.at(dy), &noodle, dy, y);
                                 if let Some(adjust) = adjust {
                                     value = adjust.apply(position, value);
                                 }
@@ -157,7 +169,7 @@ impl Density {
                                     CellKind::Air => Block::Air,
                                     CellKind::Water => Block::Water,
                                     CellKind::Lava => Block::Lava,
-                                    CellKind::Solid => self.solid_block(position, veins.each_ref().map(|v| v.at(dx, dy, dz))),
+                                    CellKind::Solid => self.solid_block(position, veins.each_ref().map(|v| v.at(dy))),
                                 };
                                 let index = ChunkShape::index(x, y, z);
                                 shape.set_at(index, block);
@@ -182,10 +194,10 @@ impl Density {
         let (dx, dz) = ((lx & 3) as u8, (lz & 3) as u8);
         let mut out = Vec::new();
         for cy in 0..GENERATED_CELLS {
-            let density = Corners::load(&cells.density[..], lx >> 2, lz >> 2, cy);
-            let noodle = cells.noodle.each_ref().map(|grid| Corners::load(&grid[..], lx >> 2, lz >> 2, cy));
+            let density = Corners::load(&cells.density[..], lx >> 2, lz >> 2, cy).column(dx, dz);
+            let noodle = cells.noodle.each_ref().map(|grid| Corners::load(&grid[..], lx >> 2, lz >> 2, cy).column(dx, dz));
             for dy in 0..8u8 {
-                out.push(block_density(density.at(dx, dy, dz), &noodle, [dx, dy, dz], (MIN_CELL_Y + cy as i32) * 8 + dy as i32));
+                out.push(block_density(density.at(dy), &noodle, dy, (MIN_CELL_Y + cy as i32) * 8 + dy as i32));
             }
         }
         out
@@ -234,14 +246,14 @@ impl Density {
 }
 
 /// Java's `noise/2 - noise^3/24` on the clamped, rescaled density, then noodle caves.
-fn block_density(interpolated: f32, noodle: &[Corners; 4], [dx, dy, dz]: [u8; 3], y: i32) -> f32 {
+fn block_density(interpolated: f32, noodle: &[Column; 4], dy: u8, y: i32) -> f32 {
     let v = interpolated * 0.005;
     let v = if 1.0 < v { 1.0 } else { v.max(-1.0) };
     let noise = v * v * v / -24.0 + v * 0.5;
-    if y < NOODLE_MIN_Y || !(noise > 0.0) || 0.0 > noodle[0].at(dx, dy, dz) {
+    if y < NOODLE_MIN_Y || !(noise > 0.0) || 0.0 > noodle[0].at(dy) {
         return noise;
     }
-    let t = (noodle[1].at(dx, dy, dz) + 1.0) * 0.5;
+    let t = (noodle[1].at(dy) + 1.0) * 0.5;
     let thickness = if 0.0 > t {
         0.05
     } else if t > 1.0 {
@@ -249,8 +261,8 @@ fn block_density(interpolated: f32, noodle: &[Corners; 4], [dx, dy, dz]: [u8; 3]
     } else {
         t * 0.05 + 0.05
     };
-    let ridge_a = (noodle[2].at(dx, dy, dz) * 1.5).abs() - thickness;
-    let ridge_b = (noodle[3].at(dx, dy, dz) * 1.5).abs() - thickness;
+    let ridge_a = (noodle[2].at(dy) * 1.5).abs() - thickness;
+    let ridge_b = (noodle[3].at(dy) * 1.5).abs() - thickness;
     ridge_b.max(ridge_a).min(noise)
 }
 
