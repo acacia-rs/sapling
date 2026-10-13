@@ -24,6 +24,7 @@ mod land;
 mod huge_mushroom;
 mod legacy_spec;
 mod legacy_tree;
+mod light;
 mod liquid;
 mod lush;
 mod molang;
@@ -61,7 +62,7 @@ use crate::terrain::ChunkShape;
 pub(crate) use element::{ElementWorld, element_random, place_element};
 pub(crate) use coral::set_dead_coral;
 pub(crate) use place::swap_feature;
-use view::{ChunkWrites, REACH, View};
+use view::{ChunkWrites, Frozen, REACH, View};
 
 /// Source chunks' writes are a few hundred kB each.
 const CACHE_LIMIT: usize = 1024;
@@ -107,6 +108,8 @@ pub struct Features {
     seed: LargeFeatureSeed,
     writes: SourceCache<(i32, i32), ChunkWrites>,
     before: SourceCache<(i32, i32, Rank), ChunkShape>,
+    /// Carved chunks' light heightmaps, which every source around them reads.
+    light: SourceCache<(i32, i32), [i16; 256]>,
     /// Sources follow what BDS's thread-local generator could reach (reach.rs).
     pub track_reach: bool,
     /// The order one BDS run decorated its chunks in, replacing the phases: every source then sees
@@ -124,7 +127,7 @@ pub struct Features {
 impl Features {
     /// Seeded like the carvers: `(x*a + z*b) ^ seed` on the low 32 bits of the world seed.
     pub fn new(world_seed: i64) -> Self {
-        Self { seed: LargeFeatureSeed::new(world_seed as u32), writes: SourceCache::new(CACHE_LIMIT), before: SourceCache::new(BEFORE_LIMIT), track_reach: false, order: None, thread: None, canonical_shuffles: false }
+        Self { seed: LargeFeatureSeed::new(world_seed as u32), writes: SourceCache::new(CACHE_LIMIT), before: SourceCache::new(BEFORE_LIMIT), light: SourceCache::new(CACHE_LIMIT), track_reach: false, order: None, thread: None, canonical_shuffles: false }
     }
 
     /// Decorates in `order`, every source over all earlier ones; `thread`: the seed of the one worker's
@@ -235,10 +238,10 @@ impl Features {
                 Arc::new(shape)
             };
             // No chunk's heightmap changes while the world generates: see docs/research/worldgen-bds-features.md, "Heightmaps".
-            let frozen = inputs.carved;
+            let frozen = |x: i32, z: i32| self.light.get((x, z), || light::chunk(&(inputs.carved)(x, z)));
             // The pre-worldgen heightmap is dropped when the chunk's decoration ends.
             let generated = |x: i32, z: i32| self.rank((x, z)).is_none_or(|rank| rank >= limit).then(|| (inputs.generated_tops)(x, z));
-            let mut view = View::new(source, &base).with_frozen_heights(frozen).with_generated_tops(&generated);
+            let mut view = View::new(source, &base).with_frozen_heights(Frozen::Maps(&frozen)).with_generated_tops(&generated);
             let doubt = |x: i32, z: i32| self.doubt_before((x, z), limit, inputs);
             view.reach = self.track_reach.then(|| reach::Reach::new(&doubt));
             view.thread_random = self.thread_before(source, limit);

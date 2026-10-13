@@ -8,7 +8,7 @@ use super::Load;
 use super::data::{ELEMENTS, FEATURES};
 use super::molang::Scope;
 use super::place::Ctx;
-use super::view::View;
+use super::view::{Frozen, View};
 use crate::block::Block;
 use crate::random::Mt19937;
 use crate::terrain::ChunkShape;
@@ -28,7 +28,7 @@ pub fn place_element(name: &str, chunk: (i32, i32), centre: Arc<ChunkShape>, wor
     let &(_, index) = ELEMENTS.iter().find(|(n, _)| *n == name)?;
     let load = |x: i32, z: i32| if (x, z) == chunk { centre.clone() } else { (world.load)(x, z) };
     // The structure stage never recomputes heightmaps: every chunk's is its carved terrain's.
-    let mut view = View::new(chunk, &load).with_frozen_heights(world.load);
+    let mut view = View::new(chunk, &load).with_frozen_heights(Frozen::Chunks(world.load));
     let mut scope = Scope::new();
     scope.set_origin(at);
     let ctx = &mut Ctx { view: &mut view, random, scope: &mut scope, biome: world.biome, surface: world.surface, in_structure: &|_| false, in_tunnels: &|_| false };

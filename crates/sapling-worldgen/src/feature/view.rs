@@ -5,6 +5,7 @@
 use std::cell::RefCell;
 use std::sync::Arc;
 
+use super::light;
 use super::reach::{Cells, Reach, Tries};
 use super::ticks::TickQueue;
 use crate::block::Block;
@@ -69,17 +70,15 @@ fn slot(dx: i32, dz: i32) -> Option<usize> {
     (dx.abs() <= REACH && dz.abs() <= REACH).then(|| ((dx + REACH) as usize) * SIDE + (dz + REACH) as usize)
 }
 
-/// What `recomputeHeightMap` (1409e29f0) counts: a block or liquid layer that absorbs light
-/// (`Block` +0xa5). Leaves and water do; plants, bamboo, cacti, mangrove roots, snow layers and
-/// speleothems do not (the saved heightmaps of the oracle worlds, examples/saved_heightmaps.rs).
-fn blocks_light(block: Block) -> bool {
-    let clear = matches!(block, Block::Bamboo | Block::BambooSmallLeaves | Block::BambooLargeLeaves | Block::Cactus | Block::MangroveRoots) || block.is_snow_layer();
-    let thin = block.is_plant() && !block.is_crop_block() || block.is_speleothem() || clear;
-    block != Block::Air && (!thin || block.is_waterlogged())
-}
-
 /// A chunk's pre-worldgen heightmap, None once its decoration has ended.
 type Tops<'a> = &'a dyn Fn(i32, i32) -> Option<Arc<[i16; 256]>>;
+
+/// Where heightmaps come from: chunks to scan per column, or their whole light heightmaps.
+#[derive(Clone, Copy)]
+pub enum Frozen<'a> {
+    Chunks(&'a dyn Fn(i32, i32) -> Arc<ChunkShape>),
+    Maps(&'a dyn Fn(i32, i32) -> Arc<[i16; 256]>),
+}
 
 pub struct View<'a> {
     chunk: (i32, i32),
@@ -89,7 +88,7 @@ pub struct View<'a> {
     /// Per slot, `highest_block` once asked.
     tops: RefCell<Vec<Option<i32>>>,
     /// The chunks as their last `recomputeHeightMap` saw them.
-    frozen: Option<&'a dyn Fn(i32, i32) -> Arc<ChunkShape>>,
+    frozen: Option<Frozen<'a>>,
     /// Per slot, the heightmap columns of `frozen` asked so far (`i16::MIN`: not yet).
     heights: RefCell<Vec<Option<Box<[i16; 256]>>>>,
     generated: Option<Tops<'a>>,
@@ -123,7 +122,7 @@ impl<'a> View<'a> {
     }
 
     /// Heightmaps come from `frozen`'s chunks, whatever this view writes.
-    pub fn with_frozen_heights(mut self, frozen: &'a dyn Fn(i32, i32) -> Arc<ChunkShape>) -> Self {
+    pub fn with_frozen_heights(mut self, frozen: Frozen<'a>) -> Self {
         self.frozen = Some(frozen);
         self
     }
@@ -245,15 +244,19 @@ impl<'a> View<'a> {
         let top = MIN_Y + HEIGHT as i32;
         let Some((slot, _)) = self.locate(x, MIN_Y, z) else { return top };
         let Some(frozen) = self.frozen else {
-            return (MIN_Y..top).rev().find(|&y| blocks_light(self.block(x, y, z))).map_or(MIN_Y, |y| y + 1);
+            return (MIN_Y..top).rev().find(|&y| light::blocks_light(self.block(x, y, z))).map_or(MIN_Y, |y| y + 1);
         };
         let mut maps = self.heights.borrow_mut();
         let (lx, lz) = (x.rem_euclid(16) as usize, z.rem_euclid(16) as usize);
-        let column = &mut maps[slot].get_or_insert_with(|| Box::new([i16::MIN; 256]))[lz * 16 + lx];
-        if *column == i16::MIN {
-            let (dx, dz) = ((slot / SIDE) as i32 - REACH, (slot % SIDE) as i32 - REACH);
-            let shape = frozen(self.chunk.0 + dx, self.chunk.1 + dz);
-            *column = (MIN_Y..top).rev().find(|&y| blocks_light(shape.block(lx, y, lz))).map_or(MIN_Y, |y| y + 1) as i16;
+        let (dx, dz) = ((slot / SIDE) as i32 - REACH, (slot % SIDE) as i32 - REACH);
+        let chunk = (self.chunk.0 + dx, self.chunk.1 + dz);
+        let map = maps[slot].get_or_insert_with(|| match frozen {
+            Frozen::Maps(maps) => Box::new(*maps(chunk.0, chunk.1)),
+            Frozen::Chunks(_) => Box::new([i16::MIN; 256]),
+        });
+        let column = &mut map[lz * 16 + lx];
+        if let (i16::MIN, Frozen::Chunks(chunks)) = (*column, frozen) {
+            *column = light::column(&chunks(chunk.0, chunk.1), lx, lz);
         }
         *column as i32
     }
