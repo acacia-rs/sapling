@@ -38,11 +38,14 @@ static GLOBAL: Counting = Counting;
 fn main() {
     let args: Vec<i64> = std::env::args().skip(1).map(|a| a.parse().unwrap()).collect();
     match args[..] {
-        [seed, x0, z0, x1, z1, threads] => return threaded(seed, [x0, z0, x1, z1].map(|v| v as i32), threads as usize, 1, 0),
-        [seed, x0, z0, x1, z1, threads, areas, spread] => return threaded(seed, [x0, z0, x1, z1].map(|v| v as i32), threads as usize, areas as i32, spread as i32),
+        [seed, x0, z0, x1, z1, threads] => return threaded(OverworldGenerator::new(seed), [x0, z0, x1, z1].map(|v| v as i32), threads as usize, 1, 0),
+        [seed, x0, z0, x1, z1, threads, areas, spread, cached] => {
+            let generator = OverworldGenerator::with_areas(seed, cached as usize);
+            return threaded(generator, [x0, z0, x1, z1].map(|v| v as i32), threads as usize, areas as i32, spread as i32);
+        }
         _ => {}
     }
-    let [seed, x0, z0, x1, z1] = args[..] else { panic!("usage: timing <seed> x0 z0 x1 z1 [threads [areas spread]]") };
+    let [seed, x0, z0, x1, z1] = args[..] else { panic!("usage: timing <seed> x0 z0 x1 z1 [threads [areas spread cached-areas]]") };
     let generator = OverworldGenerator::new(seed);
     let start = Instant::now();
     let mut columns = 0;
@@ -68,8 +71,7 @@ fn main() {
 /// The columns on `threads` threads sharing one generator; the hash sums each column's own hash, so
 /// it does not depend on which thread finishes first. One area: each thread takes the next column of
 /// the sweep. Several: the area repeated `spread` chunks apart in x, each thread sweeping whole areas.
-fn threaded(seed: i64, [x0, z0, x1, z1]: [i32; 4], threads: usize, areas: i32, spread: i32) {
-    let generator = OverworldGenerator::new(seed);
+fn threaded(generator: OverworldGenerator, [x0, z0, x1, z1]: [i32; 4], threads: usize, areas: i32, spread: i32) {
     let area = |offset: i32| -> Vec<(i32, i32)> { (x0 + offset..=x1 + offset).flat_map(|x| (z0..=z1).map(move |z| (x, z))).collect() };
     let units: Vec<Vec<(i32, i32)>> = if areas == 1 { area(0).into_iter().map(|c| vec![c]).collect() } else { (0..areas).map(|a| area(a * spread)).collect() };
     let columns: usize = units.iter().map(Vec::len).sum();

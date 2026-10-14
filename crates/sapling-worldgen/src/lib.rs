@@ -20,6 +20,7 @@ pub mod noise;
 pub mod random;
 pub mod shaper;
 pub mod structure;
+mod structure_queries;
 mod structured;
 mod surface;
 mod terrain;
@@ -69,22 +70,29 @@ pub struct OverworldGenerator {
 
 impl OverworldGenerator {
     pub fn new(seed: i64) -> Self {
+        Self::with_areas(seed, 1)
+    }
+
+    /// A generator whose caches hold `areas` separate areas generated at once (a server's workers
+    /// each sweeping their own): sized for one, areas apart evict each other's terrain.
+    pub fn with_areas(seed: i64, areas: usize) -> Self {
         let factory = Xoroshiro::from_seed(seed).fork_positional();
+        let areas = areas.max(1);
         Self {
             seed,
             density: Density::new(&factory),
             surface: surface::SurfaceNoises::new(&factory, seed),
             carvers: Carvers::new(seed),
             decoration: Decoration::new(seed),
-            features: Features::new(seed),
+            features: Features::new(seed, areas),
             structures: structure::Structures::new(seed),
-            carved: SourceCache::new(LOADED_LIMIT),
-            generated_tops: SourceCache::new(LOADED_LIMIT),
-            pieced: SourceCache::new(PIECED_LIMIT),
-            staged: SourceCache::new(10 * PIECED_LIMIT),
+            carved: SourceCache::new(areas * LOADED_LIMIT),
+            generated_tops: SourceCache::new(areas * LOADED_LIMIT),
+            pieced: SourceCache::new(areas * PIECED_LIMIT),
+            staged: SourceCache::new(areas * 10 * PIECED_LIMIT),
             structure_order: Default::default(),
-            loaded: SourceCache::new(LOADED_LIMIT),
-            biomes: SourceCache::new(BIOMES_LIMIT),
+            loaded: SourceCache::new(areas * LOADED_LIMIT),
+            biomes: SourceCache::new(areas * BIOMES_LIMIT),
         }
     }
 
@@ -237,60 +245,6 @@ impl OverworldGenerator {
     /// Bedrock biome ids per block, cached for the stages and neighbours that read them again.
     pub fn chunk_biomes(&self, chunk_x: i32, chunk_z: i32) -> Arc<ChunkBiomes> {
         self.biomes.get((chunk_x, chunk_z), || self.density.climate.chunk_biomes(self.seed, chunk_x, chunk_z))
-    }
-
-    /// Structures that may place blocks in the chunk: kind, start chunk, and a box around what
-    /// the structure covers (its pieces where ported, a rough area otherwise).
-    pub fn structure_areas(&self, chunk_x: i32, chunk_z: i32) -> Vec<(structure::StructureKind, (i32, i32), structure::BoundingBox)> {
-        self.structures.areas_touching(&self.density, (chunk_x, chunk_z))
-    }
-
-    /// Structure pieces' features in the 3x3 chunks around one, for probes: feature, origin.
-    #[doc(hidden)]
-    pub fn structure_features_near(&self, chunk_x: i32, chunk_z: i32) -> Vec<(String, (i32, i32, i32))> {
-        self.structures.feature_pieces(&self.density, (chunk_x, chunk_z))
-    }
-
-    /// Whether structure terrain adjustments reach the chunk, for probes.
-    #[doc(hidden)]
-    pub fn has_terrain_adjustments(&self, chunk_x: i32, chunk_z: i32) -> bool {
-        !self.structures.adjustments(&self.density, (chunk_x, chunk_z)).is_empty()
-    }
-
-    #[doc(hidden)]
-    pub fn village_pieces(&self, chunk_x: i32, chunk_z: i32) -> Vec<String> {
-        self.structures.village_pieces(&self.density, (chunk_x, chunk_z))
-    }
-
-    #[doc(hidden)]
-    pub fn mineshaft_pieces(&self, chunk_x: i32, chunk_z: i32) -> Vec<(String, structure::BoundingBox)> {
-        self.structures.mineshaft_pieces(&self.density, (chunk_x, chunk_z))
-    }
-
-    #[doc(hidden)]
-    pub fn v2_template_cells(&self, chunk_x: i32, chunk_z: i32) -> Vec<([i32; 3], String, Block, u8, Block)> {
-        self.structures.v2_template_cells(&self.density, (chunk_x, chunk_z))
-    }
-
-    /// For probes, process-wide and once: the element feature `from` places `to` from here on.
-    #[doc(hidden)]
-    pub fn swap_feature(from: &str, to: &str) -> bool {
-        feature::swap_feature(from, to)
-    }
-
-    #[doc(hidden)]
-    pub fn v2_pieces(&self, chunk_x: i32, chunk_z: i32) -> Vec<String> {
-        self.structures.v2_pieces(&self.density, (chunk_x, chunk_z))
-    }
-
-    /// Whether a structure of `kind` starts in the chunk.
-    pub fn is_structure_start(&self, kind: structure::StructureKind, chunk_x: i32, chunk_z: i32) -> bool {
-        self.structures.is_start(&self.density, kind, (chunk_x, chunk_z))
-    }
-
-    /// The start chunk `/locate structure` answers from a block position (grid-placed kinds).
-    pub fn locate_structure(&self, kind: structure::StructureKind, x: i32, z: i32) -> Option<(i32, i32)> {
-        self.structures.locate(&self.density, kind, (x, z))
     }
 
     pub fn density(&self) -> &Density {

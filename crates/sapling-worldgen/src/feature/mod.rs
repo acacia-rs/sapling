@@ -127,8 +127,10 @@ pub struct Features {
 
 impl Features {
     /// Seeded like the carvers: `(x*a + z*b) ^ seed` on the low 32 bits of the world seed.
-    pub fn new(world_seed: i64) -> Self {
-        Self { seed: LargeFeatureSeed::new(world_seed as u32), writes: SourceCache::new(CACHE_LIMIT), before: SourceCache::new(BEFORE_LIMIT), light: SourceCache::new(CACHE_LIMIT), track_reach: false, order: None, thread: None, canonical_shuffles: false }
+    /// Caches sized for `areas` areas generated at once (`OverworldGenerator::with_areas`).
+    pub fn new(world_seed: i64, areas: usize) -> Self {
+        let (writes, before, light) = (SourceCache::new(areas * CACHE_LIMIT), SourceCache::new(areas * BEFORE_LIMIT), SourceCache::new(areas * CACHE_LIMIT));
+        Self { seed: LargeFeatureSeed::new(world_seed as u32), writes, before, light, track_reach: false, order: None, thread: None, canonical_shuffles: false }
     }
 
     /// Decorates in `order`, every source over all earlier ones; `thread`: the seed of the one worker's
