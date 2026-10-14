@@ -45,13 +45,15 @@ pub struct AquiferCache {
     last: Option<((i32, i32, i32), Candidates)>,
     /// For `last`, once asked: the status all twelve candidates share, if they do.
     shared: Option<Option<FluidStatus>>,
+    /// For `last` and the block column last asked: each candidate's x and z terms of the distance.
+    column: Option<((i32, i32), [i32; 12])>,
 }
 
 type Candidates = [((i32, i32, i32), Option<usize>); 12];
 
 impl AquiferCache {
     pub fn new((chunk_x, chunk_z): (i32, i32)) -> Self {
-        Self { origin: (chunk_x - 1, MIN_GY, chunk_z - 1), cells: vec![(None, None); (SPAN_XZ * SPAN_Y * SPAN_XZ) as usize], last: None, shared: None }
+        Self { origin: (chunk_x - 1, MIN_GY, chunk_z - 1), cells: vec![(None, None); (SPAN_XZ * SPAN_Y * SPAN_XZ) as usize], last: None, shared: None, column: None }
     }
 
     fn slot(&self, (gx, gy, gz): (i32, i32, i32)) -> Option<usize> {
@@ -72,6 +74,7 @@ impl Density {
                 let candidates = self.candidates(cache, cell);
                 cache.last = Some((cell, candidates));
                 cache.shared = None;
+                cache.column = None;
                 candidates
             }
         };
@@ -90,18 +93,26 @@ impl Density {
                 return AquiferAnswer { barrier: 0.0, fluid, update: false };
             }
         }
-        let mut nearest = [(u32::MAX, ((0, 0, 0), None)); 3];
-        for candidate @ (center, _) in candidates {
-            let (ex, ey, ez) = (center.0 - x, center.1 - y, center.2 - z);
-            let distance = (ex * ex + ey * ey + ez * ez) as u32;
+        let flat = match cache.column {
+            Some((at, flat)) if at == (x, z) => flat,
+            _ => {
+                let flat = candidates.map(|((cx, _, cz), _)| (cx - x) * (cx - x) + (cz - z) * (cz - z));
+                cache.column = Some(((x, z), flat));
+                flat
+            }
+        };
+        let mut nearest = [(u32::MAX, 0); 3];
+        for (i, ((_, cy, _), _)) in candidates.iter().enumerate() {
+            let distance = (flat[i] + (cy - y) * (cy - y)) as u32;
             if nearest[0].0 >= distance {
-                nearest = [(distance, candidate), nearest[0], nearest[1]];
+                nearest = [(distance, i), nearest[0], nearest[1]];
             } else if nearest[1].0 >= distance {
-                nearest = [nearest[0], (distance, candidate), nearest[1]];
+                nearest = [nearest[0], (distance, i), nearest[1]];
             } else if nearest[2].0 >= distance {
-                nearest[2] = (distance, candidate);
+                nearest[2] = (distance, i);
             }
         }
+        let nearest = nearest.map(|(distance, i)| (distance, candidates[i]));
         let first = self.fluid_status(cache, nearest[0].1);
         let similarity_12 = similarity(nearest[0].0, nearest[1].0);
         let update = -0.4 < similarity_12;
