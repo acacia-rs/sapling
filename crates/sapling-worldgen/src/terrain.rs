@@ -152,14 +152,14 @@ impl Density {
                     let veins = cells.veins.each_ref().map(|grid| Corners::load(&grid[..], cx, cz, cy));
                     for dz in 0..4u8 {
                         for dx in 0..4u8 {
-                            let density = density.column(dx, dz);
+                            let noises = squashed(&density.column(dx, dz));
                             let noodle = noodle.each_ref().map(|c| c.column(dx, dz));
                             let veins = veins.each_ref().map(|c| c.column(dx, dz));
                             for dy in 0..8u8 {
                                 let (x, z) = (cx * 4 + dx as usize, cz * 4 + dz as usize);
                                 let y = (MIN_CELL_Y + cy as i32) * 8 + dy as i32;
                                 let position = [chunk_x * 16 + x as i32, y, chunk_z * 16 + z as i32];
-                                let mut value = block_density(density.at(dy), &noodle, dy, y);
+                                let mut value = block_density(noises[dy as usize], &noodle, dy, y);
                                 if let Some(adjust) = adjust {
                                     value = adjust.apply(position, value);
                                 }
@@ -193,10 +193,10 @@ impl Density {
         let (dx, dz) = ((lx & 3) as u8, (lz & 3) as u8);
         let mut out = Vec::new();
         for cy in 0..GENERATED_CELLS {
-            let density = Corners::load(&cells.density[..], lx >> 2, lz >> 2, cy).column(dx, dz);
+            let noises = squashed(&Corners::load(&cells.density[..], lx >> 2, lz >> 2, cy).column(dx, dz));
             let noodle = cells.noodle.each_ref().map(|grid| Corners::load(&grid[..], lx >> 2, lz >> 2, cy).column(dx, dz));
             for dy in 0..8u8 {
-                out.push(block_density(density.at(dy), &noodle, dy, (MIN_CELL_Y + cy as i32) * 8 + dy as i32));
+                out.push(block_density(noises[dy as usize], &noodle, dy, (MIN_CELL_Y + cy as i32) * 8 + dy as i32));
             }
         }
         out
@@ -244,11 +244,18 @@ impl Density {
     }
 }
 
-/// Java's `noise/2 - noise^3/24` on the clamped, rescaled density, then noodle caves.
-fn block_density(interpolated: f32, noodle: &[Column; 4], dy: u8, y: i32) -> f32 {
-    let v = interpolated * 0.005;
-    let v = if 1.0 < v { 1.0 } else { v.max(-1.0) };
-    let noise = v * v * v / -24.0 + v * 0.5;
+/// Java's `noise/2 - noise^3/24` on the clamped, rescaled density, for a block column's eight rows
+/// at once (the division runs in lanes).
+fn squashed(column: &Column) -> [f32; 8] {
+    std::array::from_fn(|dy| {
+        let v = column.at(dy as u8) * 0.005;
+        let v = if 1.0 < v { 1.0 } else { v.max(-1.0) };
+        v * v * v / -24.0 + v * 0.5
+    })
+}
+
+/// `squashed`, then noodle caves.
+fn block_density(noise: f32, noodle: &[Column; 4], dy: u8, y: i32) -> f32 {
     if y < NOODLE_MIN_Y || !(noise > 0.0) || 0.0 > noodle[0].at(dy) {
         return noise;
     }
