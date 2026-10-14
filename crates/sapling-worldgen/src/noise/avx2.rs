@@ -41,11 +41,16 @@ fn lanes(noise: &ImprovedNoise, x: &Lanes, y: &Lanes, z: &Lanes) -> Lanes {
     let (ix, iy, iz) = (floor(x), floor(y), floor(z));
     let (dx, dy, dz) = (_mm256_sub_ps(x, _mm256_cvtepi32_ps(ix)), _mm256_sub_ps(y, _mm256_cvtepi32_ps(iy)), _mm256_sub_ps(z, _mm256_cvtepi32_ps(iz)));
     let one_i = _mm256_set1_epi32(1);
-    // SAFETY: indices are masked to 0..256 for `p32` and to 0..16 for the gradient tables.
-    let hash = |i: __m256i| unsafe { _mm256_i32gather_epi32::<4>(noise.p32.as_ptr(), _mm256_and_si256(i, _mm256_set1_epi32(0xFF))) };
-    let (a, b) = (_mm256_add_epi32(hash(ix), iy), _mm256_add_epi32(hash(_mm256_add_epi32(ix, one_i)), iy));
-    let (aa, ab) = (hash(a), hash(_mm256_add_epi32(a, one_i)));
-    let (ba, bb) = (hash(b), hash(_mm256_add_epi32(b, one_i)));
+    // One gather gives hash(i) and hash(i + 1) (`pairs`). SAFETY: indices are masked to 0..256.
+    let byte = _mm256_set1_epi32(0xFF);
+    let pair = |i: __m256i| {
+        let q = unsafe { _mm256_i32gather_epi32::<4>(noise.pairs.as_ptr(), _mm256_and_si256(i, byte)) };
+        (_mm256_and_si256(q, byte), _mm256_and_si256(_mm256_srli_epi32::<8>(q), byte))
+    };
+    let (ha, hb) = pair(ix);
+    let (a, b) = (_mm256_add_epi32(ha, iy), _mm256_add_epi32(hb, iy));
+    let (aa, ab) = pair(a);
+    let (ba, bb) = pair(b);
     let one = _mm256_set1_ps(1.0);
     let (dx1, dy1, dz1) = (_mm256_sub_ps(dx, one), _mm256_sub_ps(dy, one), _mm256_sub_ps(dz, one));
     // A gradient component times a finite p, bit for bit: p, -p (sign flipped), or 0 * p (p's sign alone).
@@ -56,19 +61,22 @@ fn lanes(noise: &ImprovedNoise, x: &Lanes, y: &Lanes, z: &Lanes) -> Lanes {
         let signed = _mm256_xor_si256(p, _mm256_and_si256(flag(NEGATIVE[axis]), sign));
         _mm256_castsi256_ps(_mm256_blendv_epi8(signed, _mm256_and_si256(p, sign), flag(ZERO[axis])))
     };
-    let dot = |h: __m256i, px: __m256, py: __m256, pz: __m256| {
-        let g = _mm256_and_si256(hash(h), _mm256_set1_epi32(15));
+    let dot = |hash: __m256i, px: __m256, py: __m256, pz: __m256| {
+        let g = _mm256_and_si256(hash, _mm256_set1_epi32(15));
         _mm256_add_ps(_mm256_add_ps(times(g, 0, px), times(g, 1, py)), times(g, 2, pz))
     };
-    let (aa1, ab1, ba1, bb1) = (_mm256_add_epi32(aa, iz), _mm256_add_epi32(ab, iz), _mm256_add_epi32(ba, iz), _mm256_add_epi32(bb, iz));
-    let d000 = dot(aa1, dx, dy, dz);
-    let d100 = dot(ba1, dx1, dy, dz);
-    let d010 = dot(ab1, dx, dy1, dz);
-    let d110 = dot(bb1, dx1, dy1, dz);
-    let d001 = dot(_mm256_add_epi32(aa1, one_i), dx, dy, dz1);
-    let d101 = dot(_mm256_add_epi32(ba1, one_i), dx1, dy, dz1);
-    let d011 = dot(_mm256_add_epi32(ab1, one_i), dx, dy1, dz1);
-    let d111 = dot(_mm256_add_epi32(bb1, one_i), dx1, dy1, dz1);
+    let (h000, h001) = pair(_mm256_add_epi32(aa, iz));
+    let (h100, h101) = pair(_mm256_add_epi32(ba, iz));
+    let (h010, h011) = pair(_mm256_add_epi32(ab, iz));
+    let (h110, h111) = pair(_mm256_add_epi32(bb, iz));
+    let d000 = dot(h000, dx, dy, dz);
+    let d100 = dot(h100, dx1, dy, dz);
+    let d010 = dot(h010, dx, dy1, dz);
+    let d110 = dot(h110, dx1, dy1, dz);
+    let d001 = dot(h001, dx, dy, dz1);
+    let d101 = dot(h101, dx1, dy, dz1);
+    let d011 = dot(h011, dx, dy1, dz1);
+    let d111 = dot(h111, dx1, dy1, dz1);
     let smoothstep = |t: __m256| {
         let cube = _mm256_mul_ps(_mm256_mul_ps(t, t), t);
         let inner = _mm256_add_ps(_mm256_mul_ps(_mm256_sub_ps(_mm256_mul_ps(t, _mm256_set1_ps(6.0)), _mm256_set1_ps(15.0)), t), _mm256_set1_ps(10.0));

@@ -27,8 +27,8 @@ pub struct ImprovedNoise {
     pub yo: f32,
     pub zo: f32,
     p: [u8; 256],
-    /// `p` widened, for the AVX2 lanes' gathers (avx2.rs).
-    pub(super) p32: [i32; 256],
+    /// `p[i] | p[i + 1] << 8` (i + 1 wrapping), for the AVX2 lanes' gathers (avx2.rs).
+    pub(super) pairs: [i32; 256],
 }
 
 impl ImprovedNoise {
@@ -57,7 +57,8 @@ impl ImprovedNoise {
             let j = random.next_int_bounded(256 - i as u32) as usize;
             p.swap(i, i + j);
         }
-        Self { xo, yo, zo, p, p32: p.map(i32::from) }
+        let pairs = std::array::from_fn(|i| i32::from(p[i]) | i32::from(p[(i + 1) & 0xFF]) << 8);
+        Self { xo, yo, zo, p, pairs }
     }
 
     fn hash(&self, i: i32) -> i32 {
