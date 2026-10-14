@@ -47,7 +47,8 @@ job="cd \$HOME/$remote && RUN=\$PWD/target/testbox && cd \$RUN && rm -f $name.ou
 rm -rf $name.src && mkdir $name.src && tar xzf $name.tgz -C $name.src && rm $name.tgz &&
   rsync -rlpc --delete --exclude=/target --exclude=/target-prof $name.src/ \$HOME/$remote/ && rm -rf $name.src || { echo 97 > $name.bdone; exit; }
 (cd \$HOME/$remote && env $envs \$HOME/.cargo/bin/cargo +stable build --release -p sapling-worldgen --example timing) > $name-build.log 2>&1 || { echo 98 > $name.bdone; exit; }
-cp \$HOME/$remote/$target/release/examples/timing $bin"
+cp \$HOME/$remote/$target/release/examples/timing $bin
+quiet() { while :; do set -- \$(head -1 /proc/stat); u=\$((\$2 + \$3 + \$4)); i=\$5; sleep 1; set -- \$(head -1 /proc/stat); b=\$((\$2 + \$3 + \$4 - u)); [ \$((b * 100 / (b + \$5 - i))) -lt 20 ] && return; sleep 20; done; }"
 for w in $workloads; do
   args=${load[$w]:?unknown workload $w}
   if [ -n "${PROFILE:-}" ]; then
@@ -58,6 +59,7 @@ perf report -i $name.data --children --no-inline --stdio --percent-limit 1 -g no
 rm -f $name.data"
   else
     job="$job
+quiet
 echo \"== $w\" >> $name.out
 taskset -c ${cores[$w]:-${CORE:-3}} /usr/bin/time -f 'maxrss_kb %M' perf stat -x, -e cycles,instructions $bin $args >> $name.out 2>&1"
   fi
