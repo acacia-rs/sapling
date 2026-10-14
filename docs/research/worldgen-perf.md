@@ -31,6 +31,11 @@ Baseline (1333c09) against the branch's last commit, cycles and peak RSS from `p
 | strong8 | 225.6 -> 70.6 | 60.4 -> 19.0 | 152.0 -> 48.8 | 953 -> 148 | 2549 -> 839 |
 | village8 | 107.8 -> 43.7 | 28.9 -> 11.7 | 70.6 -> 28.9 | 656 -> 126 | 1821 -> 604 |
 
+Those are round four's quiet measurements (835f265). Round five ran while testbox stayed saturated
+by other users' jobs for hours, so it is measured in instructions, which the load does not move
+(cycles moved by up to 50% between runs). Instructions at the last commit: origin16 44.3 G,
+strong16 72.4, strong8 45.3, village8 28.0 (round four: 45.3, 77.0, 48.8, 28.9). Peak RSS unchanged.
+
 testbox is shared: other users' batch jobs fill most of its twelve threads for hours, and a busy SMT
 sibling inflated cycles by up to 80% in round four. `bench.sh` and `tools/bench-ab.sh` (two binaries
 kept by `KEEP=1 bench.sh`, timed in turn, best of three) wait for a quiet second before each run.
@@ -113,9 +118,39 @@ Measured with `tools/bench-ab.sh` in quiet turns:
   - Scale the generator's cache limits with the number of areas in flight. That needs a constructor
     parameter in sapling-worldgen, which is not built yet.
 
+## Fifth round
+
+Measured in instructions with `tools/bench-ab.sh QUIET=0`, best of five; testbox stayed busy.
+
+- `OverworldGenerator::with_areas(seed, areas)` sizes every cache for that many areas generated at
+  once; `new(seed)` is one area, unchanged. On six origin16 areas 64 chunks apart (`mt1s`, `mt6s`,
+  `mt6sc`):
+
+  | run | Ginstructions | Gcycles | ms per column | peak RSS |
+  |---|---|---|---|---|
+  | one thread | 347.4 | 253 | 43.5 | 304 MB |
+  | six threads, caches for one area | 713.3 | 494 | 47.5 | 610 MB |
+  | six threads, `with_areas(.., 6)` | 352.8 | 249 | 23.5 | 1193 MB |
+
+  With caches for six, the work per column is back to one thread's. The wall time halves although
+  the box gave the six threads about two cores.
+- The connection upgrade's "does this chunk hold a fence, pane, bar or stair" walked all 98304 cells
+  through `Canvas::get` once per start. It now scans the chunk's sections directly (a shared all-air
+  section once): instructions -1.7 / -5.1 / -5.9 / -2.3% (origin16 / strong16 / strong8 / village8).
+- The aquifer reads its twelve-candidate memo in place instead of copying it out per open block:
+  -0.7 / -1.4 / -1.8 / -1.2%.
+- Measured and dropped: terrain adjustments indexed by 16-row band per column (-0.1 to -0.3%).
+- What the cache initialisation closures held: decoration's view reads inlined into each source's
+  decoration, and the biome palette order (about 0.6% on origin16).
+- Stopped here: the next items are each estimated under 1% on every workload.
+  - Terrain block loop: lerping the vein columns in lanes, about 0.5%.
+  - Aquifer: what is left is the candidate search itself.
+  - Palette order: an early exit once every biome is seen, about 0.6% on origin16.
+  - Blended recomputes: about 1% of the fill.
+
 ## Where the time goes now
 
-`PROFILE`, last commit, self time (strong16 / origin16):
+`PROFILE`, round four's last commit, self time (strong16 / origin16):
 
 - the terrain block loop 8.7% / 6.7%;
 - the aquifer 8.1 / 6.8;
@@ -127,13 +162,16 @@ Measured with `tools/bench-ab.sh` in quiet turns:
 - cache initialisation closures 3.6 / 5.7;
 - decoration's view reads - / 3.7.
 
-## Verification (last commit, 835f265)
+## Verification (last commit's code, 30a7356)
 
-- `tools/replay-all.sh fin4` (the canons of replay-canons.txt and the structure regions of
+Run in a second testbox folder (`REMOTE_DIR=work/sapling-worldgen-perf8-verify`) while the bench
+folder's lock waited for quiet:
+
+- `tools/replay-all.sh fin5` (the canons of replay-canons.txt and the structure regions of
   replay-worlds.txt through replay-regions.sh): all 59 regions 0 wrong, 0 missing, structure stage 0.
-- Stock oracle `tools/oracle.sh v11` and `ENVS=SAPLING_ORACLE_STILL=1 tools/oracle.sh v11-still`: wrong +
+- Stock oracle `tools/oracle.sh v12` and `ENVS=SAPLING_ORACLE_STILL=1 tools/oracle.sh v12-still`: wrong +
   missing 22540 and 23411, as on all2.
-- `tools/testbox.sh lib-fin4 test -p sapling-worldgen -p sapling-world -p sapling-data --lib`: all pass.
+- `tools/testbox.sh lib-fin5 test -p sapling-worldgen -p sapling-world -p sapling-data --lib`: all pass.
 
 ## Tried, no gain
 
@@ -160,8 +198,8 @@ Measured with `tools/bench-ab.sh` in quiet turns:
 
 By expected gain:
 
-1. A generator constructor parameter that scales its cache limits with the areas a server generates at
-   once.
-2. The terrain block loop and the aquifer, each still about 7-9%.
-3. The blended fill's gradient recomputes.
-4. The structure stage's neighbour reads.
+Every item left is under about 1% (fifth round). Larger gains would need structural change, not
+tuning:
+
+1. The server scheduling workers over distant areas with `with_areas`.
+2. Re-measuring the fifth round's cycles once testbox is quiet.
