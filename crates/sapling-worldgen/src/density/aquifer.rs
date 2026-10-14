@@ -68,22 +68,19 @@ impl Density {
             return AquiferAnswer { barrier: 0.0, fluid: FluidStatus { level: LAVA_LEVEL, lava: true }, update: y == LAVA_LEVEL - 1 };
         }
         let cell = ((x - 5).div_euclid(16), (y + 1).div_euclid(12), (z - 5).div_euclid(16));
-        let candidates = match cache.last {
-            Some((last, candidates)) if last == cell => candidates,
-            _ => {
-                let candidates = self.candidates(cache, cell);
-                cache.last = Some((cell, candidates));
-                cache.shared = None;
-                cache.column = None;
-                candidates
-            }
-        };
+        if !matches!(cache.last, Some((last, _)) if last == cell) {
+            let candidates = self.candidates(cache, cell);
+            cache.last = Some((cell, candidates));
+            cache.shared = None;
+            cache.column = None;
+        }
         // With one status all around, every pressure is 0 and so is the barrier, whichever centres are
         // nearest; at or above its level the block is air, which needs no update flag.
         if y >= SEA_LEVEL {
             let shared = match cache.shared {
                 Some(shared) => shared,
                 None => {
+                    let candidates = cache.last.expect("set above").1;
                     let first = self.fluid_status(cache, candidates[0]);
                     let shared = candidates.iter().all(|&c| self.fluid_status(cache, c) == first).then_some(first);
                     *cache.shared.insert(shared)
@@ -93,11 +90,14 @@ impl Density {
                 return AquiferAnswer { barrier: 0.0, fluid, update: false };
             }
         }
-        let flat = match cache.column {
+        // Borrowed, not copied: this runs for every open block.
+        let AquiferCache { last, column, .. } = &mut *cache;
+        let candidates = &last.as_ref().expect("set above").1;
+        let flat = match *column {
             Some((at, flat)) if at == (x, z) => flat,
             _ => {
                 let flat = candidates.map(|((cx, _, cz), _)| (cx - x) * (cx - x) + (cz - z) * (cz - z));
-                cache.column = Some(((x, z), flat));
+                *column = Some(((x, z), flat));
                 flat
             }
         };
