@@ -26,10 +26,14 @@ Baseline (1333c09) against the branch's last commit, cycles and peak RSS from `p
 
 | workload | ms/column | Gcycles | Ginstructions | peak RSS MB | MB allocated |
 |---|---|---|---|---|---|
-| origin16 | 43.0 -> 18.2 | 46.2 -> 19.5 | 110.0 -> 44.5 | 899 -> 376 | 4343 -> 2555 |
-| strong16 | 96.6 -> 29.6 | 103.6 -> 31.6 | 258.0 -> 76.5 | 1248 -> 596 | 5270 -> 2887 |
-| strong8 | 225.6 -> 74.9 | 60.4 -> 20.1 | 152.0 -> 49.0 | 953 -> 418 | 2549 -> 1447 |
-| village8 | 107.8 -> 46.3 | 28.9 -> 12.4 | 70.6 -> 28.7 | 656 -> 270 | 1821 -> 1065 |
+| origin16 | 43.0 -> 17.2 | 46.2 -> 18.6 | 110.0 -> 45.3 | 899 -> 190 | 4343 -> 1383 |
+| strong16 | 96.6 -> 28.0 | 103.6 -> 30.1 | 258.0 -> 77.0 | 1248 -> 215 | 5270 -> 1511 |
+| strong8 | 225.6 -> 70.6 | 60.4 -> 19.0 | 152.0 -> 48.8 | 953 -> 148 | 2549 -> 839 |
+| village8 | 107.8 -> 43.7 | 28.9 -> 11.7 | 70.6 -> 28.9 | 656 -> 126 | 1821 -> 604 |
+
+testbox is shared: other users' batch jobs fill most of its twelve threads for hours, and a busy SMT
+sibling inflated cycles by up to 80% in round four. `bench.sh` and `tools/bench-ab.sh` (two binaries
+kept by `KEEP=1 bench.sh`, timed in turn, best of three) wait for a quiet second before each run.
 
 The largest wins, in order: the preliminary surface computed once per quart column instead of hundreds
 of times per chunk (density/surfaces.rs); evicted cache entries taken back while another cache still
@@ -73,25 +77,63 @@ blocks read.
   switches: the threads wait on each other's OnceLock'd sources in the shared sweep, not on cache
   mutexes. Spreading threads over distant areas would scale; the mutexes need no change.
 
+## Fourth round
+
+Measured with `tools/bench-ab.sh` in quiet turns:
+
+- The aquifer keeps each candidate's x and z distance terms for the block column it is asked in:
+  1-1.5% fewer cycles, 2.4-3.3% fewer instructions.
+- Terrain squashes a block column's eight densities together, so the `/ -24` division runs in lanes:
+  2.4-3.2%.
+- Chunk columns are 24 copy-on-write sections (chunk.rs):
+  - A section is shared (Arc) until written, then owned (Box) and written in place.
+  - `share` turns a finished chunk's owned sections into shared ones, and all-air ones into the one
+    air section.
+  - Reads go through a cached pointer per section.
+  - Every copy (carved, staged, post-processed, loaded, earlier-phase states, views) shares what it
+    does not write.
+
+  Peak RSS halves (origin16 376 -> 190 MB, strong16 596 -> 215) with cycles flat (+0.3 to +0.8%;
+  instructions +4 to +7%). `Arc::make_mut` per write cost 80% (an atomic per write), and matching on
+  the variant per read 3-7%; the pointer cache and the owned fast path made it flat.
+- The AVX2 lanes gather a permutation entry and its successor at once (7 gathers instead of 14):
+  1.5-2.7%.
+- Scheduling workers over distant areas (`mt1s`/`mt6s`: six origin16-sized areas 64 chunks apart,
+  each thread sweeping whole areas):
+  - Six threads spent 92 ms of CPU per column against 43 on one thread. The caches are sized for one
+    area, so six live areas evict each other's terrain and regenerate it.
+  - With every cache limit ×6 (experiment 48bef2a, not on the branch), six threads spent 45 ms per
+    column, the single-thread cost.
+  - Wall-time scaling could not be measured: other users' jobs held most of testbox's cores, so the
+    six threads got 1.5-2.8 cores.
+
+  Recommendation for the server's chunk scheduler:
+  - Give each worker its own area, far enough apart that their nine-phase rings do not meet (about 10
+    chunks); workers in one sweep wait on each other's sources (round three).
+  - Scale the generator's cache limits with the number of areas in flight. That needs a constructor
+    parameter in sapling-worldgen, which is not built yet.
+
 ## Where the time goes now
 
 `PROFILE`, last commit, self time (strong16 / origin16):
 
-- the AVX2 noise lanes 9.7% / 9.9% (plus scalar Perlin for climate and surface, about 2%);
-- the terrain block loop 9.8 / 7.7;
-- the aquifer 9.4 / 9.2;
-- the feature dispatch with ore veins inlined 6.1 / 9.7;
-- the blended fill 5.6 / 7.1;
-- the structure stage's reads 3.4 / -;
-- decoration's view reads - / 3.6.
+- the terrain block loop 8.7% / 6.7%;
+- the aquifer 8.1 / 6.8;
+- the blended fill 6.8 / 7.8;
+- the AVX2 noise lanes 5.7 / 5.8;
+- the feature dispatch with ore veins inlined 4.9 / 7.7;
+- the structure stage's reads 4.8 / -;
+- terrain adjustments 4.0 / -;
+- cache initialisation closures 3.6 / 5.7;
+- decoration's view reads - / 3.7.
 
-## Verification (last commit, eb1acb4)
+## Verification (last commit, 835f265)
 
-- `tools/replay-all.sh fin3` (the canons of replay-canons.txt and the structure regions of
+- `tools/replay-all.sh fin4` (the canons of replay-canons.txt and the structure regions of
   replay-worlds.txt through replay-regions.sh): all 59 regions 0 wrong, 0 missing, structure stage 0.
-- Stock oracle `tools/oracle.sh v10` and `ENVS=SAPLING_ORACLE_STILL=1 tools/oracle.sh v10-still`: wrong +
+- Stock oracle `tools/oracle.sh v11` and `ENVS=SAPLING_ORACLE_STILL=1 tools/oracle.sh v11-still`: wrong +
   missing 22540 and 23411, as on all2.
-- `tools/testbox.sh lib-fin3 test -p sapling-worldgen -p sapling-world -p sapling-data --lib`: all pass.
+- `tools/testbox.sh lib-fin4 test -p sapling-worldgen -p sapling-world -p sapling-data --lib`: all pass.
 
 ## Tried, no gain
 
@@ -109,18 +151,17 @@ blocks read.
   cell costs statuses the full search never computes.
 - The loaded chunk sharing the staged one's Arc when no post-process wrote it: peak RSS -4 to -9%, but
   cycles +1.5 to 2% in two runs.
-- Write overlays for decoration's earlier-phase states and the post-process results were not built.
-  heaptrack (strong16) puts the peak in carved terrain the staged chunks hold (about 230 MB), the
-  post-process results (about 140 MB) and copies made by writes into staged chunks (about 60 MB). An
-  overlay needs a layered read path in the view, the canvas and the structure features, each of which
-  now reads plain chunks. The cheaper sharing above already cost cycles.
+- Per-chunk write overlays were not built: the copy-on-write sections of round four give the memory
+  without a layered read path in the view, the canvas and the structure features.
+- `chunk.rs` sections with `Arc::make_mut` on every write: +80% cycles, from an atomic per write
+  (owned sections are now written in place).
 
 ## Left
 
 By expected gain:
 
-1. The noise lanes' permutation gathers.
-2. The terrain block loop.
-3. The aquifer's candidate search.
-4. A layered chunk representation for the staged and post-process states (memory).
-5. Thread scheduling that spreads a server's workers over distant areas.
+1. A generator constructor parameter that scales its cache limits with the areas a server generates at
+   once.
+2. The terrain block loop and the aquifer, each still about 7-9%.
+3. The blended fill's gradient recomputes.
+4. The structure stage's neighbour reads.

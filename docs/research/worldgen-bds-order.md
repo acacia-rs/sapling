@@ -811,7 +811,7 @@ and the city's 2 tuff cells were not looked at.
   that pool is not named yet: next step, list BDS's clay in the saved chunks no source of ours wrote.
 
 ## Performance
-worldgen/perf8 halved generation time with the output unchanged: the stronghold area 16x16 96.6 -> 29.6 ms
-per column, the cold 8x8 one 225.6 -> 74.9, origin 43.0 -> 18.2; peak RSS 52-59% lower. The cold 8x8
+worldgen/perf8 cut generation time 60-70% with the output unchanged: the stronghold area 16x16 96.6 -> 28.0
+ms per column, the cold 8x8 one 225.6 -> 70.6, origin 43.0 -> 17.2; peak RSS 79-84% lower. The cold 8x8
 area still costs about 2.6 times a connected one per column (the nine-phase ring's terrain). Replay-all stays at 0 in all 59 regions and the stock oracle at 22540 / 23411. Workloads, commits, profile
 and what is left: worldgen-perf.md.
