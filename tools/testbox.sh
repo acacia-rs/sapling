@@ -29,7 +29,7 @@ upload() { pack | ssh $opts testbox "mkdir -p $run && cat > $run/$name.tgz"; }
 job="cd \$HOME/$remote && [ -f target/testbox/$name.tgz ] || exit 0
 RUN=\$PWD/target/testbox
 rm -rf \$RUN/$name.src \$RUN/$name.log ${FETCH:+\$RUN/$FETCH} && mkdir \$RUN/$name.src && tar xzf \$RUN/$name.tgz -C \$RUN/$name.src &&
-  rsync -rlpc --delete --exclude=/target \$RUN/$name.src/ . || { echo 'sync failed' > \$RUN/$name.log; echo 97 > \$RUN/$name.done; exit; }
+  rsync -rlpc --delete --exclude=/target --exclude=/target-prof \$RUN/$name.src/ . || { echo 'sync failed' > \$RUN/$name.log; echo 97 > \$RUN/$name.done; exit; }
 rm -rf \$RUN/$name.src \$RUN/$name.tgz
 env SAPLING_ORACLE_WORLDS=\$HOME/oracle-worlds ${ENVS:-} \$HOME/.cargo/bin/cargo +stable $(printf '%q ' "$@") > \$RUN/$name.log 2>&1
 echo \$? > \$RUN/$name.done"

@@ -23,14 +23,18 @@ declare -A load=(
   [village8]="20261003 -66 4 -59 11"
   [mt1]="20261003 -8 -8 7 7 1"
   [mt6]="20261003 -8 -8 7 7 6"
-  [mt1s]="20261003 -8 -8 7 7 1 6 64"
-  [mt6s]="20261003 -8 -8 7 7 6 6 64"
+  [mt1s]="20261003 -8 -8 7 7 1 6 64 1"
+  [mt6s]="20261003 -8 -8 7 7 6 6 64 1"
+  [mt6sc]="20261003 -8 -8 7 7 6 6 64 6"
 )
 # mt1/mt6: origin16 on 1 and 6 threads sharing one generator, on six cores (cache contention); their hash
 # is order-independent, so it differs from origin16's. mt1s/mt6s: six such areas 64 chunks apart in x,
-# each thread sweeping whole areas (a scheduler that keeps workers apart).
-declare -A cores=([mt1]="0-4,6" [mt6]="0-4,6" [mt1s]="0-4,6" [mt6s]="0-4,6")
+# each thread sweeping whole areas (a scheduler that keeps workers apart); mt6sc the same with caches
+# for six areas (`OverworldGenerator::with_areas`).
+declare -A cores=([mt1]="0-4,6" [mt6]="0-4,6" [mt1s]="0-4,6" [mt6s]="0-4,6" [mt6sc]="0-4,6")
 workloads=${*:-origin16 strong16 strong8 village8}
+# `none`: build only (with KEEP=1, a binary for tools/bench-ab.sh).
+[ "$workloads" = none ] && workloads=""
 target=target
 envs=""
 if [ -n "${PROFILE:-}" ]; then
@@ -48,7 +52,7 @@ rm -rf $name.src && mkdir $name.src && tar xzf $name.tgz -C $name.src && rm $nam
   rsync -rlpc --delete --exclude=/target --exclude=/target-prof $name.src/ \$HOME/$remote/ && rm -rf $name.src || { echo 97 > $name.bdone; exit; }
 (cd \$HOME/$remote && env $envs \$HOME/.cargo/bin/cargo +stable build --release -p sapling-worldgen --example timing) > $name-build.log 2>&1 || { echo 98 > $name.bdone; exit; }
 cp \$HOME/$remote/$target/release/examples/timing $bin
-quiet() { while :; do set -- \$(head -1 /proc/stat); u=\$((\$2 + \$3 + \$4)); i=\$5; sleep 1; set -- \$(head -1 /proc/stat); b=\$((\$2 + \$3 + \$4 - u)); [ \$((b * 100 / (b + \$5 - i))) -lt 20 ] && return; sleep 20; done; }"
+quiet() { [ ${QUIET:-1} = 1 ] || return 0; while :; do set -- \$(head -1 /proc/stat); u=\$((\$2 + \$3 + \$4)); i=\$5; sleep 1; set -- \$(head -1 /proc/stat); b=\$((\$2 + \$3 + \$4 - u)); [ \$((b * 100 / (b + \$5 - i))) -lt 20 ] && return; sleep 20; done; }"
 for w in $workloads; do
   args=${load[$w]:?unknown workload $w}
   if [ -n "${PROFILE:-}" ]; then

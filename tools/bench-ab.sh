@@ -19,12 +19,13 @@ declare -A load=(
   [strong8]="20261003 -93 -126 -86 -119"
   [village8]="20261003 -66 4 -59 11"
 )
-# Each A B turn waits for a second in which the box is under a fifth busy (other users' batch jobs).
+# Each A B turn waits for a second in which the box is under a fifth busy (other users' batch jobs);
+# QUIET=0 skips the wait when the box stays busy for hours (then trust instructions over cycles).
 job="cd \$HOME/$run && rm -f $name.out
 quiet() { while :; do set -- \$(head -1 /proc/stat); u=\$((\$2 + \$3 + \$4)); i=\$5; sleep 1; set -- \$(head -1 /proc/stat); b=\$((\$2 + \$3 + \$4 - u)); [ \$((b * 100 / (b + \$5 - i))) -lt 20 ] && return; sleep 20; done; }"
 for w in ${*:-origin16 strong16 strong8 village8}; do
   for _ in $(seq "${REPS:-3}"); do
-    job="$job
+    [ "${QUIET:-1}" = 1 ] && job="$job
 quiet"
     for n in $a $b; do
       job="$job
