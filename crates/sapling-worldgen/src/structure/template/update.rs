@@ -118,8 +118,7 @@ impl Canvas<'_> {
         let connecting = |canvas: &Self, x: i32, y: i32, z: i32| matches!(class(canvas.get(x, y, z)), Some(Class::Stairs | Class::Joiner(_)));
         // Nothing runs unless the chunk itself holds such a block: a post stays joined to the stone
         // beyond the border that a neighbour without one clears afterwards.
-        let any = || (chunk.x0..=chunk.x1).any(|x| (chunk.z0..=chunk.z1).any(|z| (chunk.y0..=chunk.y1).any(|y| connecting(self, x, y, z))));
-        if !any() {
+        if !self.chunk_has(|block| matches!(class(block), Some(Class::Stairs | Class::Joiner(_)))) {
             return;
         }
         for x in start.x0.max(chunk.x0 - 1)..=start.x1.min(chunk.x1 + 1) {

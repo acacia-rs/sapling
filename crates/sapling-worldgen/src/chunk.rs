@@ -129,6 +129,15 @@ impl ChunkShape {
         unsafe { *self.data[index / SECTION].add(index % SECTION) }
     }
 
+    /// Whether any block of the column satisfies `test`; a shared all-air section is tested once.
+    pub(crate) fn any_block(&self, test: impl Fn(Block) -> bool) -> bool {
+        let air = air_section();
+        self.sections.iter().any(|section| match (section, &air) {
+            (Section::Shared(blocks), Section::Shared(air)) if Arc::ptr_eq(blocks, air) => test(Block::Air),
+            _ => section.blocks().iter().any(|&code| test(unpack(code))),
+        })
+    }
+
     pub(crate) fn block_at(&self, index: usize) -> Block {
         unpack(self.code_at(index))
     }

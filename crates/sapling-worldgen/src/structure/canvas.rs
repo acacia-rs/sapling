@@ -137,6 +137,11 @@ impl<'a> Canvas<'a> {
         }
     }
 
+    /// Whether any block of the chunk itself satisfies `test`.
+    pub fn chunk_has(&self, test: impl Fn(Block) -> bool) -> bool {
+        self.shape.any_block(test)
+    }
+
     /// A block inside the chunk; air elsewhere (BDS's pieces read through the chunk box).
     pub fn get_clipped(&self, x: i32, y: i32, z: i32) -> Block {
         if self.bb.contains(x, y, z) { self.get(x, y, z) } else { Block::Air }
