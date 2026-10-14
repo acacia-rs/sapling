@@ -216,6 +216,7 @@ impl Features {
         self.before.get((chunk.0, chunk.1, limit), || {
             let mut shape = (*(inputs.loaded)(chunk.0, chunk.1)).clone();
             self.replay(&mut shape, chunk, limit, inputs);
+            shape.share();
             shape
         })
     }

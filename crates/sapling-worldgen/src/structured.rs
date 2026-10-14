@@ -71,6 +71,9 @@ impl Source {
         for &(at, decided) in self.settled_past.iter().filter(|(p, _)| (p.0 >> 4, p.2 >> 4) == chunk) {
             settle(&mut after.settled, at, decided);
         }
+        if !Arc::ptr_eq(&after.shape, &before.shape) {
+            Arc::make_mut(&mut after.shape).share();
+        }
         after
     }
 }
@@ -165,6 +168,7 @@ impl OverworldGenerator {
                 settled_past.push((at, decided));
             }
         }
+        shape.share();
         let own = Pieced { shape: Arc::new(shape), settled, touched: widen(touched, placed.touched) };
         Some(Source { own, past: placed.past, settled_past, spawners: placed.spawners, temple_heights: placed.temple_heights })
     }

@@ -6,88 +6,12 @@ use crate::climate::QuartClimate;
 use crate::density::{AquiferCache, Cells, Density, MIN_CELL_Y, cell_index};
 use crate::structure::Adjustments;
 
-pub const MIN_Y: i32 = -64;
-pub const HEIGHT: usize = 384;
+pub use crate::chunk::{CellKind, ChunkShape, HEIGHT, MIN_Y};
+
 /// Generation stops at y 255 (BDS passes 0x140 as the height); above is air.
 const GENERATED_CELLS: usize = 40;
 const SEA_LEVEL_CELL: usize = ((crate::density::SEA_LEVEL - MIN_Y) >> 3) as usize;
 const NOODLE_MIN_Y: i32 = MIN_Y + 4;
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum CellKind {
-    Air,
-    Water,
-    Lava,
-    Solid,
-}
-
-/// A block in two bytes: a template palette index below 0x8000, else 0x8000 plus the variant's tag.
-fn pack(block: Block) -> u16 {
-    match block {
-        Block::Template(index) => index,
-        other => 0x8000 | (other.index() + 1) as u16,
-    }
-}
-
-fn unpack(code: u16) -> Block {
-    let raw = if code < 0x8000 { u32::from(code) << 16 } else { u32::from(code & 0x7FFF) };
-    // Tag in the low half, `Template`'s index in the high half; a fieldless variant's high half is padding.
-    unsafe { std::mem::transmute::<u32, Block>(raw) }
-}
-
-/// One chunk column: `block(x, y, z)` with y from -64 to 319.
-#[derive(Clone)]
-pub struct ChunkShape {
-    /// `pack`ed: half the memory of `Block`s, which every cached chunk and copy pays.
-    blocks: Vec<u16>,
-    /// Fluid cells the aquifer asked to tick (index, lava), in the order generation placed them:
-    /// the chunk's tick queue when its decoration starts.
-    fluid_ticks: Vec<(u32, bool)>,
-}
-
-impl ChunkShape {
-    pub(crate) fn schedule_fluid(&mut self, index: usize, lava: bool) {
-        self.fluid_ticks.push((index as u32, lava));
-    }
-
-    pub(crate) fn fluid_ticks(&self) -> &[(u32, bool)] {
-        &self.fluid_ticks
-    }
-
-    pub(crate) fn index(x: usize, y: i32, z: usize) -> usize {
-        ((y - MIN_Y) as usize * 16 + z) * 16 + x
-    }
-
-    pub(crate) fn block_at(&self, index: usize) -> Block {
-        unpack(self.blocks[index])
-    }
-
-    pub(crate) fn set_at(&mut self, index: usize, block: Block) {
-        self.blocks[index] = pack(block);
-    }
-
-    pub fn block(&self, x: usize, y: i32, z: usize) -> Block {
-        self.block_at(Self::index(x, y, z))
-    }
-
-    pub fn set_block(&mut self, x: usize, y: i32, z: usize, block: Block) {
-        self.set_at(Self::index(x, y, z), block);
-    }
-
-    /// Per column (`z * 16 + x`), one above the highest block that is not air.
-    pub(crate) fn tops(&self) -> [i16; 256] {
-        std::array::from_fn(|i| (MIN_Y..MIN_Y + HEIGHT as i32).rev().find(|&y| self.block(i % 16, y, i / 16) != Block::Air).map_or(MIN_Y, |y| y + 1) as i16)
-    }
-
-    pub fn kind(&self, x: usize, y: i32, z: usize) -> CellKind {
-        match self.block(x, y, z) {
-            Block::Air => CellKind::Air,
-            block if block.is_lava() => CellKind::Lava,
-            block if block.is_fluid() => CellKind::Water,
-            _ => CellKind::Solid,
-        }
-    }
-}
 
 /// The trilinear corner set of one cell, BDS's interpolator struct.
 struct Corners([f32; 8]);
@@ -141,7 +65,7 @@ impl Density {
         let climate = |qx: i32, qz: i32| -> QuartClimate { self.climate.sample(qx, qz) };
         let cells = self.cells(chunk_x, chunk_z, &climate);
         let mut aquifer = AquiferCache::new((chunk_x, chunk_z));
-        let mut shape = ChunkShape { blocks: vec![pack(Block::Air); 16 * 16 * HEIGHT], fluid_ticks: Vec::new() };
+        let mut shape = ChunkShape::empty();
         for cx in 0..4 {
             for cz in 0..4 {
                 // With terrain adjustments BDS fills every row (_prepareHeights' flag at +0x21d8).
@@ -270,19 +194,4 @@ fn block_density(noise: f32, noodle: &[Column; 4], dy: u8, y: i32) -> f32 {
     let ridge_a = (noodle[2].at(dy) * 1.5).abs() - thickness;
     let ridge_b = (noodle[3].at(dy) * 1.5).abs() - thickness;
     ridge_b.max(ridge_a).min(noise)
-}
-
-#[cfg(test)]
-mod tests {
-    use super::{pack, unpack};
-    use crate::block::Block;
-
-    #[test]
-    fn packed_blocks_round_trip() {
-        let palette = crate::structure::template::palette().len();
-        assert!(palette <= 0x8000 && Block::ALL.len() < 0x8000);
-        for &block in Block::ALL.iter().chain(&[Block::Template(0), Block::Template(palette as u16 - 1)]) {
-            assert_eq!(unpack(pack(block)), block);
-        }
-    }
 }

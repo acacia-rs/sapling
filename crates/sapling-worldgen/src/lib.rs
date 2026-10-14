@@ -8,6 +8,7 @@ pub mod biome;
 mod block;
 mod cache;
 mod carver;
+mod chunk;
 pub mod climate;
 mod decoration;
 pub mod density;
@@ -104,6 +105,7 @@ impl OverworldGenerator {
     pub fn loaded_blocks(&self, chunk_x: i32, chunk_z: i32) -> ChunkShape {
         let mut shape = (*self.carved(chunk_x, chunk_z)).clone();
         self.place_structures(&mut shape, chunk_x, chunk_z);
+        shape.share();
         shape
     }
 
@@ -113,6 +115,7 @@ impl OverworldGenerator {
             let (mut shape, tops) = self.surfaced(chunk_x, chunk_z);
             self.generated_tops.get((chunk_x, chunk_z), || tops);
             self.carve(&mut shape, chunk_x, chunk_z);
+            shape.share();
             shape
         })
     }
