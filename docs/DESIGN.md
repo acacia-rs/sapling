@@ -130,7 +130,8 @@ One listener task, one shard thread, one world. The pieces and why they are shap
   registry keeps text: the typing whose `{name, states}` NBT reproduces the state's network hash is used
   (`states.rs`), and a test writes and reads back every vanilla state.
 - **Storage.** `WorldStorage::load_column` (blocking) with `LevelDbStorage` and `MemoryStorage` (empty =
-  void). A storage-backed `World` owns two I/O threads: `request(pos)` queues a load, the thread reads,
+  void). A storage-backed `World` owns `WorldStorage::load_threads` I/O threads (two unless the storage
+  says otherwise): `request(pos)` queues a load, the thread reads,
   builds the column and encodes all of it (`Column::warm`), `poll()` takes finished columns once a tick.
   The shard only does `try_recv`. Columns storage lacks are void. A sweep every 100 ticks hands the
   columns written since the last one to the same threads (`WorldStorage::store_column`, a copy of the
@@ -148,6 +149,12 @@ One listener task, one shard thread, one world. The pieces and why they are shap
   chunks. `World::with_storage(Arc::new(Generated::new(MemoryStorage::default(), seed)))` is a pure
   generated world; `World::open_folder(path)?.generate_missing()` fills a folder's holes from its
   `level.dat` seed. `World::load_spawn` puts a world without a spawn on the surface above (0, 0).
+  `Generated::with_areas(inner, seed, n)` generates on n I/O threads with caches for n areas (`new`: half
+  the hardware threads, at most 4). The I/O threads take saves and player jobs first, then loads by area
+  (`load_queue.rs`): a worker keeps to the area of its last load (waiting two ticks for its next columns
+  before leaving it), then claims an area no other worker holds, else helps in one. So no more areas
+  are generated at once than the caches hold, and a player's loads stay nearest first; players beyond n
+  wait for a worker (docs/research/worldgen-perf.md, "Server scheduling").
   Generation stops at lava lakes: no features or structures (`docs/NEXT.md`).
 - **Block entities.** A column keeps its record as stored and saves it back. `set_block` drops the
   compounds at a position when the block there becomes another kind (a different name). Clients get

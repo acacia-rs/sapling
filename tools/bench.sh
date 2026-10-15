@@ -69,7 +69,7 @@ for w in $workloads; do
   fi
   if [ -n "${PROFILE:-}" ]; then
     job="$job
-taskset -c ${CORE:-3} perf record -q -g --call-graph dwarf,16384 -F 499 -o $name.data $bin $args >> $name.out 2>&1
+taskset -c ${CORE:-3} perf record -q -g --call-graph dwarf,16384 -F 499 -o $name.data $wbin $args >> $name.out 2>&1
 perf report -i $name.data --no-children --stdio --percent-limit 0.5 -g none 2>/dev/null | grep -v '^#' | grep -v '^$' | head -n 80 > $name.perf.txt
 perf report -i $name.data --children --no-inline --stdio --percent-limit 1 -g none 2>/dev/null | grep -v '^#' | grep -v '^$' | head -n 80 >> $name.perf.txt
 rm -f $name.data"
