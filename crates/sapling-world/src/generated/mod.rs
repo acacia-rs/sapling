@@ -38,7 +38,7 @@ impl<S: WorldStorage> Generated<S> {
 
     /// Generates on `areas` I/O threads, each keeping to its own part of the world (load_queue.rs),
     /// with caches for that many areas at once. Peak memory grows with `areas`, about 250 MB each
-    /// (docs/research/worldgen-perf.md, "Server scheduling").
+    /// (docs/research/worldgen-server-load.md).
     /// Builds the generator's noises: tens of milliseconds, once per world.
     pub fn with_areas(inner: S, seed: i64, areas: usize) -> Self {
         let registry = BlockRegistry::vanilla();

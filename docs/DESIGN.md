@@ -154,7 +154,10 @@ One listener task, one shard thread, one world. The pieces and why they are shap
   (`load_queue.rs`): a worker keeps to the area of its last load (waiting two ticks for its next columns
   before leaving it), then claims an area no other worker holds, else helps in one. So no more areas
   are generated at once than the caches hold, and a player's loads stay nearest first; players beyond n
-  wait for a worker (docs/research/worldgen-perf.md, "Server scheduling").
+  wait for a worker, except for their spawn columns: a shard asks for those with
+  `World::request_urgent`, and urgent loads go first, area by area
+  (docs/research/worldgen-server-load.md). The generator's caches, structure starts included, are
+  bounded per area, so memory does not grow with the ground explored.
   Generation stops at lava lakes: no features or structures (`docs/NEXT.md`).
 - **Block entities.** A column keeps its record as stored and saves it back. `set_block` drops the
   compounds at a position when the block there becomes another kind (a different name). Clients get

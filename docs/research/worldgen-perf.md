@@ -150,60 +150,44 @@ Measured in instructions with `tools/bench-ab.sh QUIET=0`, best of five; testbox
 
 ## Server scheduling
 
-How a server reached the generator (c37749d): `Generated::new` built one `OverworldGenerator` with caches
-for one area; `World::with_storage` started two I/O threads on one FIFO channel. Each tick a shard's
-`send_chunks` runs `View::take_ready` per player: the nearest 2 x `columns_per_tick` (16) unsent
-columns of its view circle are asked about, and those not loaded are queued once. So every player
-keeps up to 16 loads queued, players interleave in the FIFO, and both threads cycle through every
-player's area: N players' areas live at once in caches sized for one.
+How a server's loads reach the generator, workers by area with `with_areas`, and spawn priority:
+worldgen-server-load.md.
 
-What changed:
-- `WorldStorage::load_threads` (default 2) sets a world's I/O threads. `Generated::with_areas(inner,
-  seed, n)` answers n and builds `OverworldGenerator::with_areas(seed, n)`. `Generated::new` picks
-  half the hardware threads, at most 4.
-- The I/O threads take saves and player jobs first, then loads by area (sapling-world load_queue.rs).
-  A worker takes the oldest load within 20 chunks of its last one. With none for two ticks, it takes
-  the oldest load near no other worker, else the oldest load anywhere (it helps).
-  - So at most n areas are generated at once, and a player's loads keep the shard's nearest-first
-    order.
-  - Without the two-tick wait, a worker whose area ran dry between ticks left it half done. Its cache
-    was evicted and later regenerated: views16 cost 1615 G instead of 1236 G, and one player filled
-    last.
+## Structure starts
 
-`tools/bench.sh views<p>[a<n>]` (sapling-world examples/fill_views) has p players 64 chunks apart in
-x. Each fills a radius-8 circle (197 columns) as a shard asks, in 50 ms ticks, through a `World`. The
-run is unpinned on testbox's 12 threads. Baseline (a696f63) and the branch were run back to back under
-the same load (other users' jobs held most cores; QUIET=0):
+The structure stage kept every start check and start it built in HashMaps for good:
+- mineshaft chances (a column asks the 15x15 chunks around it);
+- grid candidates' checks;
+- mineshafts, monuments, strongholds, ocean ruins, outposts, cities, villages, mansions and v2
+  jigsaw starts.
 
-| run | fill s | spawn s (last) | Ginstr | CPU s | peak RSS MB |
-|---|---|---|---|---|---|
-| views1, base | 5.4 | 2.2 | 59.2 | 7.8 | 197 |
-| views1, 4 areas | 4.4 | 1.9 | 58.0 | 7.7 | 277 |
-| views4, base | 158 | 13.7 | 1603 | 272 | 365 |
-| views4, 4 areas | 17.4 | 12.1 | 282 | 38.9 | 709 |
-| views8, base | 385 | 47.0 | 3838 | 647 | 458 |
-| views8, 4 areas | 45.1 | 35.6 | 616 | 89.4 | 1120 |
-| views16, 4 areas | 82.7 | 78.3 | 1236 | 179 | 1316 |
+They are now `SourceCache`s sized per area (structure/mod.rs): 4096 checks and 256 starts of each kind
+per area. Several maps also held their lock while building a village or a city; a `SourceCache`
+builds outside it.
 
-- The hash of every block is the same for each workload on every schedule and thread count (2, 4, 8
-  and 16 threads, FIFO or by area).
-- Reference with one worker and one area's caches, filling the same areas in turn (`views4a1`,
-  `views8a1`): 280 and 601 G. The four workers by area cost no more. The areas differ in cost, so
-  p x views1 is the wrong reference.
-- Steps, in Ginstr for views4 / views8:
-  - baseline: 1603 / 3838;
-  - areas passed through with the FIFO kept: 285 / 886;
-  - by area without the wait: 282 / 707;
-  - with the wait: 277-282 / 616.
-- Spawns: in the baseline every player crept in together. Now the first n players spawn in seconds
-  and later ones wait for a free worker (views8 mean spawn 19.2 s against 36.4). The last spawn comes
-  sooner than the baseline's here. In earlier, less loaded runs the FIFO with 4 areas spawned its
-  last player at 14 s, against 17 s by area.
-- Memory trade-off: the caches are bounded by n areas, not by players. Peak RSS is about 250 MB per
-  area above one (views8: 404 MB on one area, 1120 on four; views16 1316, near its plateau). The
-  world's own loaded columns, about 50 MB per player view, come on top. Caches for 8 areas
-  (`views8a8`, 8 workers) filled views8 in 14 s against 24 s in the same run, with 613 G and 1478 MB.
-  More areas buy wall time with memory, not CPU.
+Why dropping a start is exact:
+- Each builder is a function of the seed, the start chunk and `Density`, which is noise only.
+- The pieces are immutable once built.
+- Nothing per start outlives a post-process: the connection upgrade runs on the chunk's canvas, and
+  the dead coral is process-wide.
+- In the canonical order, mineshaft starts are sorted and the pyramid height comes from the start.
+  Only a logged replay's start-map order (start_map.rs) depends on history, and it is rebuilt from
+  the log, not from these caches.
+
+`examples/walk <seed> <length> <width> out|in|outback` generates a band of chunks along x on one
+thread. Every 1000 columns it prints live heap, RSS and each map's entries. Band 5 wide, seed 20261003:
+- Unbounded after 50000 columns:
+  - mineshaft checks 458k, grid checks 4876;
+  - mineshafts 1868, v2 starts 612, ocean ruins 281.
+- Heap against bounded at the same column (single thread, so the terrain caches evolve alike):
+  +0.5, 2.7, 4.0, 7.0 and 8.6 MB at 4k to 20k columns, +35 MB at 50k. RSS 357 MB against 320.
+- Bounded: RSS stays at 310 to 320 MB over the 50000 columns. Mineshaft checks stay at 2k to 3.5k,
+  mineshafts at 130 to 250. Grid checks, ocean ruins and v2 starts are evicted and built again.
+- Hashes:
+  - 20000 columns, `5a703ca8c1150290`: out and out-and-back (both passes), bounded or not; in (the
+    far end first), bounded.
+  - 50000 columns, out: `10b4025b32fd009f`, bounded or not.
+- The four workloads keep their hashes, and instructions are equal or down to 0.2%.
 
 ## Where the time goes now
 
@@ -258,8 +242,5 @@ By expected gain:
 Every item left is under about 1% (fifth round). Larger gains would need structural change, not
 tuning:
 
-1. Re-measuring the fifth round's cycles, and the server scheduling's wall times, once testbox is quiet.
-2. The structure start maps (structure/mod.rs, templated.rs: mineshafts, villages, v2 pieces...) are
-   unbounded HashMaps: a long-running server's memory grows with the ground explored.
-3. Spawn priority across players: players beyond n wait for a whole area. A shard could pass a
-   priority (a load inside a joining player's spawn radius first) without growing the live areas.
+1. Re-measuring the fifth round's cycles once testbox is quiet.
+2. Server scheduling's own items: worldgen-server-load.md, "Left".
