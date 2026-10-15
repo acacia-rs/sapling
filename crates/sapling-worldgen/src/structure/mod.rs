@@ -37,9 +37,9 @@ pub mod trace;
 mod treasure;
 mod village;
 
-use std::collections::HashMap;
-use std::sync::{Arc, Mutex, OnceLock};
+use std::sync::OnceLock;
 
+use crate::cache::SourceCache;
 use crate::density::Density;
 pub use adjust::Adjustments;
 pub use area::BoundingBox;
@@ -54,38 +54,44 @@ pub use stage::{Placed, rejoin_connections};
 pub use start_map::StartMap;
 
 const SEA_LEVEL: i32 = 63;
+/// Per area generated at once: start checks kept (a column asks the 15x15 chunks around it about
+/// mineshafts), and generated starts of each kind. A start is a pure function of the seed and its
+/// chunk, so one dropped is only built again (docs/research/worldgen-perf.md, "Structure starts").
+const CHECKS_LIMIT: usize = 4096;
+const STARTS_LIMIT: usize = 256;
 
-/// Structure starts for one world seed, and the pieces of those already generated.
+/// Structure starts for one world seed, and the pieces of those generated lately.
 pub struct Structures {
     seed: i64,
     level_seed: u32,
     mineshaft_seed: placement::MineshaftSeed,
-    /// Mineshaft chances already drawn: every column asks for the 15x15 chunks around it.
-    mineshaft_chunks: Mutex<HashMap<(i32, i32), bool>>,
+    mineshaft_chunks: SourceCache<(i32, i32), bool>,
     /// Grid candidates' start checks, which every chunk around them repeats.
-    grid_starts: Mutex<HashMap<(StructureKind, (i32, i32)), bool>>,
+    grid_starts: SourceCache<(StructureKind, (i32, i32)), bool>,
     strongholds: OnceLock<Vec<(i32, i32)>>,
-    mineshafts: Mutex<HashMap<(i32, i32), Arc<mineshaft::Mineshaft>>>,
-    monuments: Mutex<HashMap<(i32, i32), Arc<monument::Monument>>>,
-    stronghold_pieces: Mutex<HashMap<(i32, i32), Arc<stronghold::Stronghold>>>,
+    mineshafts: SourceCache<(i32, i32), mineshaft::Mineshaft>,
+    monuments: SourceCache<(i32, i32), monument::Monument>,
+    stronghold_pieces: SourceCache<(i32, i32), stronghold::Stronghold>,
     templates: templated::TemplateStarts,
 }
 
 impl Structures {
-    pub fn new(seed: i64) -> Self {
+    /// Caches sized for `areas` areas generated at once (`OverworldGenerator::with_areas`).
+    pub fn new(seed: i64, areas: usize) -> Self {
         let level_seed = seed as u32;
         let mineshaft_seed = placement::MineshaftSeed::new(level_seed);
+        let starts = areas * STARTS_LIMIT;
         Self {
             seed,
             level_seed,
             mineshaft_seed,
-            mineshaft_chunks: Mutex::new(HashMap::new()),
-            grid_starts: Mutex::new(HashMap::new()),
+            mineshaft_chunks: SourceCache::new(areas * CHECKS_LIMIT),
+            grid_starts: SourceCache::new(areas * CHECKS_LIMIT),
             strongholds: OnceLock::new(),
-            mineshafts: Mutex::new(HashMap::new()),
-            monuments: Mutex::new(HashMap::new()),
-            stronghold_pieces: Mutex::new(HashMap::new()),
-            templates: Default::default(),
+            mineshafts: SourceCache::new(starts),
+            monuments: SourceCache::new(starts),
+            stronghold_pieces: SourceCache::new(starts),
+            templates: templated::TemplateStarts::new(starts),
         }
     }
 
@@ -111,7 +117,7 @@ impl Structures {
                 let (x, y, z) = centre(probe.surface(chunk));
                 TEMPLE_BIOMES.contains(&probe.biome(x, y, z)) && probe.min_height(chunk) >= SEA_LEVEL
             }
-            StructureKind::Mineshaft => *self.mineshaft_chunks.lock().unwrap().entry(chunk).or_insert_with(|| self.mineshaft_seed.is_start(chunk)),
+            StructureKind::Mineshaft => *self.mineshaft_chunks.get(chunk, || self.mineshaft_seed.is_start(chunk)),
             StructureKind::Mansion => probe.contains_only(centre(probe.surface(chunk)), 32, MANSION_BIOMES),
             StructureKind::BuriedTreasure => probe.contains_only(centre(probe.surface(chunk)), 3, BURIED_TREASURE_BIOMES),
             StructureKind::Outpost => probe.contains_only(centre(probe.surface(chunk)), 0, OUTPOST_BIOMES),
@@ -152,17 +158,17 @@ impl Structures {
     pub fn cache_counts(&self) -> Vec<(&'static str, usize)> {
         let t = &self.templates;
         vec![
-            ("mineshaft_chunks", self.mineshaft_chunks.lock().unwrap().len()),
-            ("grid_starts", self.grid_starts.lock().unwrap().len()),
-            ("mineshafts", self.mineshafts.lock().unwrap().len()),
-            ("monuments", self.monuments.lock().unwrap().len()),
-            ("strongholds", self.stronghold_pieces.lock().unwrap().len()),
-            ("ocean_ruins", t.ocean_ruins.lock().unwrap().len()),
-            ("outposts", t.outposts.lock().unwrap().len()),
-            ("cities", t.ancient_cities.lock().unwrap().len()),
-            ("villages", t.villages.lock().unwrap().len()),
-            ("mansions", t.mansions.lock().unwrap().len()),
-            ("v2", t.v2.lock().unwrap().len()),
+            ("mineshaft_chunks", self.mineshaft_chunks.len()),
+            ("grid_starts", self.grid_starts.len()),
+            ("mineshafts", self.mineshafts.len()),
+            ("monuments", self.monuments.len()),
+            ("strongholds", self.stronghold_pieces.len()),
+            ("ocean_ruins", t.ocean_ruins.len()),
+            ("outposts", t.outposts.len()),
+            ("cities", t.ancient_cities.len()),
+            ("villages", t.villages.len()),
+            ("mansions", t.mansions.len()),
+            ("v2", t.v2.len()),
         ]
     }
 

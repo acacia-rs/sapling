@@ -86,10 +86,9 @@ impl Structures {
         let column = BoundingBox::chunk(chunk.0, chunk.1);
         let starts = self.starts_near(density, StructureKind::Mansion, chunk, REACH);
         let grid = StructureKind::Mansion.grid().unwrap();
-        let mut cache = self.templates.mansions.lock().unwrap();
         starts
             .into_iter()
-            .map(|start| cache.entry(start).or_insert_with(|| Arc::new(generate(density, &mut grid.candidate_random(self.level_seed, start).1, start))).clone())
+            .map(|start| self.templates.mansions.get(start, || generate(density, &mut grid.candidate_random(self.level_seed, start).1, start)))
             .filter(|m| m.bb.intersects(&column))
             .collect()
     }

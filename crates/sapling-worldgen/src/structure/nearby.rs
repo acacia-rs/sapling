@@ -34,12 +34,7 @@ impl Structures {
     /// `is_start` for a grid candidate, remembered: every chunk around a candidate asks again, and
     /// the biome tests (a mansion's 32-block box, a projected jigsaw start) are costly.
     fn grid_start(&self, density: &Density, kind: StructureKind, chunk: (i32, i32)) -> bool {
-        if let Some(&known) = self.grid_starts.lock().unwrap().get(&(kind, chunk)) {
-            return known;
-        }
-        let start = self.is_start(density, kind, chunk);
-        self.grid_starts.lock().unwrap().insert((kind, chunk), start);
-        start
+        *self.grid_starts.get((kind, chunk), || self.is_start(density, kind, chunk))
     }
 
     /// Every structure whose rough area reaches the chunk, with its start chunk.

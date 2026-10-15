@@ -170,22 +170,18 @@ impl Structures {
     }
 
     pub(super) fn mineshaft(&self, density: &Density, start: (i32, i32)) -> Arc<Mineshaft> {
-        if let Some(found) = self.mineshafts.lock().unwrap().get(&start) {
-            return found.clone();
-        }
-        let mesa = MESA_BIOMES.contains(&density.climate.biome_at(start.0 * 16, 0, start.1 * 16));
-        let built = Arc::new(mineshaft::generate(&self.mineshaft_seed, start, mesa, &|qx, qz| density.preliminary_surface(qx, qz)));
-        self.mineshafts.lock().unwrap().insert(start, built.clone());
-        built
+        self.mineshafts.get(start, || {
+            let mesa = MESA_BIOMES.contains(&density.climate.biome_at(start.0 * 16, 0, start.1 * 16));
+            mineshaft::generate(&self.mineshaft_seed, start, mesa, &|qx, qz| density.preliminary_surface(qx, qz))
+        })
     }
 
     pub(super) fn stronghold(&self, start: (i32, i32)) -> Arc<Stronghold> {
-        let build = || Arc::new(stronghold::generate(&mut self.mineshaft_seed.blueprint(start), start));
-        self.stronghold_pieces.lock().unwrap().entry(start).or_insert_with(build).clone()
+        self.stronghold_pieces.get(start, || stronghold::generate(&mut self.mineshaft_seed.blueprint(start), start))
     }
 
     pub(super) fn monument(&self, start: (i32, i32)) -> Arc<Monument> {
-        self.monuments.lock().unwrap().entry(start).or_insert_with(|| Arc::new(monument::generate(self.level_seed, start))).clone()
+        self.monuments.get(start, || monument::generate(self.level_seed, start))
     }
 }
 

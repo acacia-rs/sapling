@@ -40,10 +40,9 @@ impl Structures {
     pub(super) fn ancient_cities_reaching(&self, density: &Density, chunk: (i32, i32), near: &dyn Fn(&BoundingBox) -> bool) -> Vec<Arc<AncientCity>> {
         let starts = self.starts_near(density, StructureKind::AncientCity, chunk, REACH + 1);
         let grid = StructureKind::AncientCity.grid().unwrap();
-        let mut cache = self.templates.ancient_cities.lock().unwrap();
         starts
             .into_iter()
-            .map(|start| cache.entry(start).or_insert_with(|| Arc::new(generate(&mut grid.candidate_random(self.level_seed, start).1, start))).clone())
+            .map(|start| self.templates.ancient_cities.get(start, || generate(&mut grid.candidate_random(self.level_seed, start).1, start)))
             .filter(|c| c.pieces.iter().any(|p| near(&p.bb)))
             .collect()
     }

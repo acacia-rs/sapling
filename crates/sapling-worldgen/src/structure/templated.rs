@@ -3,13 +3,13 @@
 //! of every igloo within a chunk of it, each drawn with its own start chunk's generator. Template
 //! pieces (ocean ruins) post-process in every chunk their box meets, clipped to that chunk.
 
-use std::collections::HashMap;
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 
 use super::canvas::Canvas;
 use super::kind::MONUMENT;
 use super::probe::Probe;
 use super::{BoundingBox, StructureKind, Structures, igloo, ocean_ruin, outpost, ruined_portal, shipwreck};
+use crate::cache::SourceCache;
 use crate::density::Density;
 use crate::random::{LargeFeatureSeed, Mt19937};
 
@@ -18,15 +18,28 @@ const OCEAN_RUIN_REACH: i32 = 3;
 /// Outpost features sit up to 28 blocks from the tower's middle.
 const OUTPOST_REACH: i32 = 3;
 
-#[derive(Default)]
 pub(super) struct TemplateStarts {
-    pub(super) ocean_ruins: Mutex<HashMap<(i32, i32), Arc<ocean_ruin::OceanRuin>>>,
-    pub(super) outposts: Mutex<HashMap<(i32, i32), Arc<outpost::Outpost>>>,
-    pub(super) ancient_cities: Mutex<HashMap<(i32, i32), Arc<super::ancient_city::AncientCity>>>,
-    pub(super) villages: Mutex<HashMap<(i32, i32), Arc<super::village::Village>>>,
-    pub(super) mansions: Mutex<HashMap<(i32, i32), Arc<super::mansion::Mansion>>>,
+    pub(super) ocean_ruins: SourceCache<(i32, i32), ocean_ruin::OceanRuin>,
+    pub(super) outposts: SourceCache<(i32, i32), outpost::Outpost>,
+    pub(super) ancient_cities: SourceCache<(i32, i32), super::ancient_city::AncientCity>,
+    pub(super) villages: SourceCache<(i32, i32), super::village::Village>,
+    pub(super) mansions: SourceCache<(i32, i32), super::mansion::Mansion>,
     /// v2 jigsaw structures' pieces by kind and start.
-    pub(super) v2: Mutex<HashMap<(super::StructureKind, (i32, i32)), Arc<Vec<super::jigsaw::Piece>>>>,
+    pub(super) v2: SourceCache<(super::StructureKind, (i32, i32)), Vec<super::jigsaw::Piece>>,
+}
+
+impl TemplateStarts {
+    /// `limit` starts of each kind.
+    pub(super) fn new(limit: usize) -> Self {
+        Self {
+            ocean_ruins: SourceCache::new(limit),
+            outposts: SourceCache::new(limit),
+            ancient_cities: SourceCache::new(limit),
+            villages: SourceCache::new(limit),
+            mansions: SourceCache::new(limit),
+            v2: SourceCache::new(limit),
+        }
+    }
 }
 
 impl Structures {
@@ -88,13 +101,10 @@ impl Structures {
     pub(super) fn outposts_near(&self, density: &Density, chunk: (i32, i32)) -> Vec<Arc<outpost::Outpost>> {
         let column = BoundingBox::chunk(chunk.0, chunk.1);
         let starts = self.starts_near(density, StructureKind::Outpost, chunk, OUTPOST_REACH);
-        let mut cache = self.templates.outposts.lock().unwrap();
+        let grid = StructureKind::Outpost.grid().unwrap();
         starts
             .into_iter()
-            .map(|start| {
-                let grid = StructureKind::Outpost.grid().unwrap();
-                cache.entry(start).or_insert_with(|| Arc::new(outpost::generate(&mut grid.candidate_random(self.level_seed, start).1, start))).clone()
-            })
+            .map(|start| self.templates.outposts.get(start, || outpost::generate(&mut grid.candidate_random(self.level_seed, start).1, start)))
             .filter(|o| o.pieces.iter().any(|p| p.bb.intersects(&column)))
             .collect()
     }
@@ -128,14 +138,10 @@ impl Structures {
     }
 
     fn ocean_ruin(&self, density: &Density, start: (i32, i32)) -> Arc<ocean_ruin::OceanRuin> {
-        let mut cache = self.templates.ocean_ruins.lock().unwrap();
-        cache
-            .entry(start)
-            .or_insert_with(|| {
-                let warm = ocean_ruin::WARM_OCEANS.contains(&Self::centre_biome(density, start));
-                Arc::new(ocean_ruin::generate(self.monument_checked_random(start), start, warm))
-            })
-            .clone()
+        self.templates.ocean_ruins.get(start, || {
+            let warm = ocean_ruin::WARM_OCEANS.contains(&Self::centre_biome(density, start));
+            ocean_ruin::generate(self.monument_checked_random(start), start, warm)
+        })
     }
 
     /// The blueprint generator of a start whose check ends with the monument test over chunks

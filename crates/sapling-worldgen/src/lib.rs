@@ -85,7 +85,7 @@ impl OverworldGenerator {
             carvers: Carvers::new(seed),
             decoration: Decoration::new(seed),
             features: Features::new(seed, areas),
-            structures: structure::Structures::new(seed),
+            structures: structure::Structures::new(seed, areas),
             carved: SourceCache::new(areas * LOADED_LIMIT),
             generated_tops: SourceCache::new(areas * LOADED_LIMIT),
             pieced: SourceCache::new(areas * PIECED_LIMIT),

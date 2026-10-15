@@ -115,13 +115,10 @@ impl Structures {
         let mut found = Vec::new();
         for kind in V2_KINDS {
             for at in self.starts_near(density, kind, chunk, reach(kind) + 1) {
-                let pieces = self.templates.v2.lock().unwrap().get(&(kind, at)).cloned();
-                let pieces = pieces.unwrap_or_else(|| {
+                let pieces = self.templates.v2.get((kind, at), || {
                     let raw = RawHeights::new(density);
                     let start = self.v2_start(density, kind, at).expect("a v2 start");
-                    let built = Arc::new(start.assemble(&mut JavaRandom::large_feature(self.seed, at.0, at.1), self.seed, at, &|x, z| raw.at(x, z)));
-                    self.templates.v2.lock().unwrap().insert((kind, at), built.clone());
-                    built
+                    start.assemble(&mut JavaRandom::large_feature(self.seed, at.0, at.1), self.seed, at, &|x, z| raw.at(x, z))
                 });
                 if pieces.iter().any(|p| near(&p.bb)) {
                     found.push((kind, pieces));

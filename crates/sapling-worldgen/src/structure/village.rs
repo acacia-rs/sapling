@@ -62,10 +62,9 @@ impl Structures {
     pub(super) fn villages_reaching(&self, density: &Density, chunk: (i32, i32), near: &dyn Fn(&BoundingBox) -> bool) -> Vec<Arc<Village>> {
         let starts = self.starts_near(density, StructureKind::Village, chunk, REACH + 1);
         let grid = StructureKind::Village.grid().unwrap();
-        let mut cache = self.templates.villages.lock().unwrap();
         starts
             .into_iter()
-            .map(|start| cache.entry(start).or_insert_with(|| Arc::new(generate(density, &mut grid.candidate_random(self.level_seed, start).1, start))).clone())
+            .map(|start| self.templates.villages.get(start, || generate(density, &mut grid.candidate_random(self.level_seed, start).1, start)))
             .filter(|v| v.pieces.iter().any(|p| near(&p.bb)))
             .collect()
     }

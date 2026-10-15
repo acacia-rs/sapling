@@ -58,6 +58,12 @@ impl<K: Hash + Eq + Copy, V> SourceCache<K, V> {
         };
         slot.get_or_init(|| Arc::new(make())).clone()
     }
+
+    /// Entries kept, not counting dropped ones another cache still holds.
+    pub fn len(&self) -> usize {
+        let entries = self.entries.lock().unwrap();
+        entries.current.len() + entries.old.len()
+    }
 }
 
 /// A pure function of a column's coordinates, direct-mapped: a slot lost to a collision is recomputed.
