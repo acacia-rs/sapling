@@ -4,7 +4,7 @@
 
 use std::collections::HashSet;
 use std::panic::{AssertUnwindSafe, catch_unwind};
-use std::sync::mpsc::{Receiver, Sender, channel};
+use std::sync::mpsc::{Receiver, channel};
 use std::sync::{Arc, Mutex};
 
 use acacia_world::{BlockRegistry, Dimension};
@@ -12,6 +12,7 @@ use sapling_leveldb::PlayerData;
 
 use crate::ChunkPos;
 use crate::column::Column;
+use crate::load_queue::{JobQueue, Next};
 use crate::players::PlayerLoad;
 use crate::storage::{StoredColumn, WorldStorage};
 
@@ -73,8 +74,8 @@ impl Source {
     }
 }
 
+/// What the I/O threads do besides loads, which load_queue.rs keeps apart.
 enum Job {
-    Load(ChunkPos),
     Save(ChunkPos, StoredColumn),
     LoadPlayer(String),
     SavePlayer(String, PlayerData),
@@ -90,7 +91,7 @@ pub(crate) enum Finished {
 
 pub(crate) struct Loader {
     source: Source,
-    jobs: Sender<Job>,
+    jobs: Arc<JobQueue<Job>>,
     /// Locked by its one reader only: the lock makes the world `Sync`, as an ECS component must be.
     finished: Mutex<Receiver<Finished>>,
     loading: HashSet<ChunkPos>,
@@ -102,27 +103,24 @@ pub(crate) struct Loader {
 impl Loader {
     /// Starts `threads` workers; they end when the loader is dropped and its queue is empty.
     pub fn spawn(source: Source, threads: usize) -> Self {
-        let (jobs, queue) = channel::<Job>();
+        let threads = threads.max(1);
+        let jobs = Arc::new(JobQueue::new(threads));
         let (deliver, finished) = channel();
-        let queue = Arc::new(Mutex::new(queue));
-        for index in 0..threads.max(1) {
-            let (source, queue, deliver) = (source.clone(), queue.clone(), deliver.clone());
+        for index in 0..threads {
+            let (source, queue, deliver) = (source.clone(), jobs.clone(), deliver.clone());
             let work = move || {
-                loop {
-                    // The lock covers only the wait for a job, not the job.
-                    let next = queue.lock().expect("loader queue lock").recv();
+                while let Some(next) = queue.next(index) {
                     let done = match next {
-                        Ok(Job::Load(pos)) => Finished::Loaded(pos, source.load(pos)),
-                        Ok(Job::Save(pos, chunk)) => Finished::Saved { pos, ok: source.save(pos, &chunk) },
-                        Ok(Job::LoadPlayer(id)) => {
+                        Next::Load(pos) => Finished::Loaded(pos, source.load(pos)),
+                        Next::Other(Job::Save(pos, chunk)) => Finished::Saved { pos, ok: source.save(pos, &chunk) },
+                        Next::Other(Job::LoadPlayer(id)) => {
                             let load = source.load_player(&id);
                             Finished::PlayerLoaded(id, load)
                         }
-                        Ok(Job::SavePlayer(id, data)) => {
+                        Next::Other(Job::SavePlayer(id, data)) => {
                             source.save_player(&id, &data);
                             Finished::PlayerSaved(id, data)
                         }
-                        Err(_) => return,
                     };
                     // Nobody listens once the world is gone, but the saves still queued must happen.
                     let _ = deliver.send(done);
@@ -140,7 +138,7 @@ impl Loader {
     /// Queues a load unless one is already on its way.
     pub fn request(&mut self, pos: ChunkPos) {
         if self.loading.insert(pos) {
-            let _ = self.jobs.send(Job::Load(pos));
+            self.jobs.push_load(pos);
         }
     }
 
@@ -157,18 +155,18 @@ impl Loader {
     /// Queues a save; the caller checks [`Loader::is_saving`] first.
     pub fn save(&mut self, pos: ChunkPos, column: StoredColumn) {
         self.saving.insert(pos);
-        let _ = self.jobs.send(Job::Save(pos, column));
+        self.jobs.push_other(Job::Save(pos, column));
     }
 
     pub fn load_player(&mut self, id: String) {
         self.player_jobs += 1;
-        let _ = self.jobs.send(Job::LoadPlayer(id));
+        self.jobs.push_other(Job::LoadPlayer(id));
     }
 
     /// Queues a save; players.rs keeps two of one player from being on their way at once.
     pub fn save_player(&mut self, id: String, data: PlayerData) {
         self.player_jobs += 1;
-        let _ = self.jobs.send(Job::SavePlayer(id, data));
+        self.jobs.push_other(Job::SavePlayer(id, data));
     }
 
     /// The jobs finished since the last call, without waiting.
@@ -194,5 +192,11 @@ impl Loader {
             Finished::Saved { pos, .. } => drop(self.saving.remove(pos)),
             Finished::PlayerLoaded(..) | Finished::PlayerSaved(..) => self.player_jobs -= 1,
         }
+    }
+}
+
+impl Drop for Loader {
+    fn drop(&mut self) {
+        self.jobs.close();
     }
 }

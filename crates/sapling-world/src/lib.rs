@@ -6,6 +6,7 @@
 mod column;
 mod folder;
 mod generated;
+mod load_queue;
 mod loader;
 mod players;
 mod storage;
