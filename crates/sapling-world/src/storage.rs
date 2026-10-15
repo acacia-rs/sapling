@@ -49,6 +49,10 @@ impl Default for Level {
 /// A world's persistent side. Calls block on disk, so they are made from the world's I/O
 /// threads (loader.rs) and from startup code, never from a shard's tick.
 pub trait WorldStorage: Send + Sync + 'static {
+    /// How many I/O threads a world gives this storage: the loads worth running at once.
+    fn load_threads(&self) -> usize {
+        2
+    }
     /// The column at `pos`; `None` when storage has none there, which the world shows as void.
     fn load_column(&self, pos: ChunkPos, dimension: i32) -> Result<Option<StoredColumn>, StorageError>;
     /// Saves the column at `pos`; what else storage holds there is kept.
@@ -73,6 +77,9 @@ pub trait WorldStorage: Send + Sync + 'static {
 
 /// Shared storage, e.g. a folder's database wrapped in [`crate::Generated`] while still held.
 impl<S: WorldStorage + ?Sized> WorldStorage for std::sync::Arc<S> {
+    fn load_threads(&self) -> usize {
+        (**self).load_threads()
+    }
     fn load_column(&self, pos: ChunkPos, dimension: i32) -> Result<Option<StoredColumn>, StorageError> {
         (**self).load_column(pos, dimension)
     }

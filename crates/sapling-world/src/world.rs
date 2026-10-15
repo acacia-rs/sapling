@@ -12,9 +12,6 @@ use crate::players::Players;
 use crate::storage::{Level, WorldStorage};
 use crate::template::Template;
 
-/// Loads in flight at once per world; each is a few milliseconds of disk and encoding.
-const IO_THREADS: usize = 2;
-
 /// One dimension's blocks.
 ///
 /// Without storage every column exists: those nobody wrote to are void and encode as all air.
@@ -48,11 +45,13 @@ impl World {
         Self { dimension: 0, dim, registry, columns, void, loader: None, level: Level::default(), arrived: Vec::new(), base: None, base_actors_taken: false, players }
     }
 
-    /// The overworld of `storage`. Columns it does not hold are void.
+    /// The overworld of `storage`, loaded on [`WorldStorage::load_threads`] threads. Columns it
+    /// does not hold are void.
     pub fn with_storage(storage: Arc<dyn WorldStorage>) -> Self {
         let mut world = Self::void();
+        let threads = storage.load_threads();
         let source = Source { storage, registry: world.registry.clone(), dimension: world.dimension, dim: world.dim };
-        world.loader = Some(Loader::spawn(source, IO_THREADS));
+        world.loader = Some(Loader::spawn(source, threads));
         world
     }
 

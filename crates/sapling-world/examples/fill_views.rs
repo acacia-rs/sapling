@@ -1,4 +1,5 @@
-//! `fill_views <players> [radius] [spread] [seed]`: a generated world served to `players` players
+//! `fill_views <players> [radius] [spread] [seed] [areas]`: a generated world (`Generated::with_areas`,
+//! or `Generated::new` when `areas` is 0 or left out) served to `players` players
 //! standing `spread` chunks apart in x, each asking for its view circle as a shard does
 //! (sapling-shard's `View::take_ready`: nearest first, `BUDGET` columns a tick, twice that asked
 //! about), in 50 ms ticks. Prints when each player could spawn and when its view was full, the wall
@@ -89,8 +90,12 @@ impl Player {
 fn main() {
     let args: Vec<i64> = std::env::args().skip(1).map(|a| a.parse().expect("a number")).collect();
     let arg = |i: usize, default: i64| args.get(i).copied().unwrap_or(default);
-    let (players, radius, spread, seed) = (arg(0, 1) as i32, arg(1, 8) as i32, arg(2, 64) as i32, arg(3, 20261003));
-    let mut world = World::with_storage(Arc::new(Generated::new(MemoryStorage::default(), seed)));
+    let (players, radius, spread, seed, areas) = (arg(0, 1) as i32, arg(1, 8) as i32, arg(2, 64) as i32, arg(3, 20261003), arg(4, 0) as usize);
+    let storage = match areas {
+        0 => Generated::new(MemoryStorage::default(), seed),
+        areas => Generated::with_areas(MemoryStorage::default(), seed, areas),
+    };
+    let mut world = World::with_storage(Arc::new(storage));
     let mut players: Vec<Player> = (0..players).map(|i| Player::new(ChunkPos::new(i * spread, 0), radius)).collect();
     let columns: usize = players.iter().map(|p| p.queue.len()).sum();
 

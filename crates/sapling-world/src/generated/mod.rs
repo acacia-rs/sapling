@@ -20,15 +20,29 @@ const OVERWORLD: i32 = 0;
 pub struct Generated<S> {
     inner: S,
     generator: OverworldGenerator,
+    areas: usize,
     ids: BlockIds,
     dim: Dimension,
 }
 
+/// Half the hardware threads, at most four: the rest are for the server's ticks.
+fn default_areas() -> usize {
+    std::thread::available_parallelism().map_or(1, |n| n.get() / 2).clamp(1, 4)
+}
+
 impl<S: WorldStorage> Generated<S> {
-    /// Builds the generator's noises: tens of milliseconds, once per world.
+    /// [`Generated::with_areas`] with [`default_areas`].
     pub fn new(inner: S, seed: i64) -> Self {
+        Self::with_areas(inner, seed, default_areas())
+    }
+
+    /// Generates on `areas` I/O threads, each keeping to its own part of the world (load_queue.rs),
+    /// with caches for that many areas at once. Peak memory grows with `areas`, about 100 MB each.
+    /// Builds the generator's noises: tens of milliseconds, once per world.
+    pub fn with_areas(inner: S, seed: i64, areas: usize) -> Self {
         let registry = BlockRegistry::vanilla();
-        Self { inner, generator: OverworldGenerator::new(seed), ids: BlockIds::of(registry), dim: Dimension::overworld(registry.air_id()) }
+        let (generator, areas) = (OverworldGenerator::with_areas(seed, areas), areas.max(1));
+        Self { inner, generator, areas, ids: BlockIds::of(registry), dim: Dimension::overworld(registry.air_id()) }
     }
 
     pub fn inner(&self) -> &S {
@@ -44,6 +58,10 @@ impl<S: WorldStorage> Generated<S> {
 }
 
 impl<S: WorldStorage> WorldStorage for Generated<S> {
+    fn load_threads(&self) -> usize {
+        self.areas
+    }
+
     fn load_column(&self, pos: ChunkPos, dimension: i32) -> Result<Option<StoredColumn>, StorageError> {
         match self.inner.load_column(pos, dimension)? {
             None if dimension == OVERWORLD => Ok(Some(self.generate_column(pos))),

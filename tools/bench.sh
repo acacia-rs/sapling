@@ -26,17 +26,15 @@ declare -A load=(
   [mt1s]="20261003 -8 -8 7 7 1 6 64 1"
   [mt6s]="20261003 -8 -8 7 7 6 6 64 1"
   [mt6sc]="20261003 -8 -8 7 7 6 6 64 6"
-  [views1]="1 8 64"
-  [views4]="4 8 64"
-  [views8]="8 8 64"
 )
-# views<n>: sapling-world's fill_views, n players 64 chunks apart filling radius-8 views through a World on
-# every core (the server's loader threads); ms/col is wall time, cpu the process's CPU time before the hash.
+# views<p>[a<n>]: sapling-world's fill_views, p players 64 chunks apart filling radius-8 views through a World
+# on every core (the server's loader threads; with a<n>, `Generated::with_areas(.., n)`); ms/col is wall
+# time, cpu the process's CPU time before the hash.
 # mt1/mt6: origin16 on 1 and 6 threads sharing one generator, on six cores (cache contention); their hash
 # is order-independent, so it differs from origin16's. mt1s/mt6s: six such areas 64 chunks apart in x,
 # each thread sweeping whole areas (a scheduler that keeps workers apart); mt6sc the same with caches
 # for six areas (`OverworldGenerator::with_areas`).
-declare -A cores=([mt1]="0-4,6" [mt6]="0-4,6" [mt1s]="0-4,6" [mt6s]="0-4,6" [mt6sc]="0-4,6" [views1]="0-11" [views4]="0-11" [views8]="0-11")
+declare -A cores=([mt1]="0-4,6" [mt6]="0-4,6" [mt1s]="0-4,6" [mt6s]="0-4,6" [mt6sc]="0-4,6")
 workloads=${*:-origin16 strong16 strong8 village8}
 # `none`: build only (with KEEP=1, a binary for tools/bench-ab.sh).
 [ "$workloads" = none ] && workloads=""
@@ -61,9 +59,14 @@ cp \$HOME/$remote/$target/release/examples/timing $bin
 cp \$HOME/$remote/$target/release/examples/fill_views $bin.views
 quiet() { [ ${QUIET:-1} = 1 ] || return 0; while :; do set -- \$(head -1 /proc/stat); u=\$((\$2 + \$3 + \$4)); i=\$5; sleep 1; set -- \$(head -1 /proc/stat); b=\$((\$2 + \$3 + \$4 - u)); [ \$((b * 100 / (b + \$5 - i))) -lt 20 ] && return; sleep 20; done; }"
 for w in $workloads; do
-  args=${load[$w]:?unknown workload $w}
   wbin=$bin
-  [ "${w#views}" != "$w" ] && wbin=$bin.views
+  if [[ $w =~ ^views([0-9]+)(a([0-9]+))?$ ]]; then
+    args="${BASH_REMATCH[1]} 8 64 20261003 ${BASH_REMATCH[3]:-0}"
+    wbin=$bin.views
+    cores[$w]=0-11
+  else
+    args=${load[$w]:?unknown workload $w}
+  fi
   if [ -n "${PROFILE:-}" ]; then
     job="$job
 taskset -c ${CORE:-3} perf record -q -g --call-graph dwarf,16384 -F 499 -o $name.data $bin $args >> $name.out 2>&1
