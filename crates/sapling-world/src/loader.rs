@@ -135,10 +135,12 @@ impl Loader {
         &self.source
     }
 
-    /// Queues a load unless one is already on its way.
-    pub fn request(&mut self, pos: ChunkPos) {
+    /// Queues a load unless one is already on its way; an urgent one goes first (load_queue.rs).
+    pub fn request(&mut self, pos: ChunkPos, urgent: bool) {
         if self.loading.insert(pos) {
-            self.jobs.push_load(pos);
+            self.jobs.push_load(pos, urgent);
+        } else if urgent {
+            self.jobs.promote(pos);
         }
     }
 

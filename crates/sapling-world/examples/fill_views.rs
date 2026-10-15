@@ -73,7 +73,9 @@ impl Player {
                 return true;
             }
             asked += 1;
-            let ready = world.request(pos);
+            // As sapling-shard's `send_chunks`: a joining player's spawn columns are urgent.
+            let spawning = self.spawned.is_none() && distance_sq(pos, self.center) <= SPAWN_RADIUS * SPAWN_RADIUS;
+            let ready = if spawning { world.request_urgent(pos) } else { world.request(pos) };
             taken += usize::from(ready);
             !ready
         });

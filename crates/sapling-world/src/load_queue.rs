@@ -7,6 +7,10 @@
 //! Workers far apart do not wait on each other's shared neighbours, and no more areas are generated
 //! at once than there are workers, which is what `Generated` sizes its caches for. Loads in one area
 //! keep the order they were asked in: a player's are nearest first.
+//!
+//! Urgent loads (a joining player's spawn columns) go before any area's, by area too: the oldest near
+//! the worker's home, else the oldest. Taken in plain order, eight joining players' spawns were
+//! generated interleaved over eight areas and every one of them spawned later.
 
 use std::collections::VecDeque;
 use std::sync::{Condvar, Mutex};
@@ -37,6 +41,7 @@ pub(crate) struct JobQueue<J> {
 
 struct State<J> {
     other: VecDeque<J>,
+    urgent: VecDeque<ChunkPos>,
     loads: VecDeque<ChunkPos>,
     homes: Vec<Option<ChunkPos>>,
     closed: bool,
@@ -45,6 +50,15 @@ struct State<J> {
 impl<J> State<J> {
     fn take_at(&mut self, worker: usize, index: Option<usize>) -> Option<ChunkPos> {
         let pos = self.loads.remove(index?)?;
+        self.homes[worker] = Some(pos);
+        Some(pos)
+    }
+
+    /// The oldest urgent load near the worker's home, else the oldest; either becomes its home.
+    fn take_urgent(&mut self, worker: usize) -> Option<ChunkPos> {
+        let home = self.homes[worker];
+        let index = self.urgent.iter().position(|pos| home.is_some_and(|home| near(*pos, home))).or((!self.urgent.is_empty()).then_some(0))?;
+        let pos = self.urgent.remove(index)?;
         self.homes[worker] = Some(pos);
         Some(pos)
     }
@@ -65,13 +79,26 @@ impl<J> State<J> {
 
 impl<J> JobQueue<J> {
     pub fn new(workers: usize) -> Self {
-        let state = State { other: VecDeque::new(), loads: VecDeque::new(), homes: vec![None; workers], closed: false };
+        let state = State { other: VecDeque::new(), urgent: VecDeque::new(), loads: VecDeque::new(), homes: vec![None; workers], closed: false };
         Self { state: Mutex::new(state), queued: Condvar::new() }
     }
 
-    pub fn push_load(&self, pos: ChunkPos) {
-        self.state.lock().expect("loader queue lock").loads.push_back(pos);
+    pub fn push_load(&self, pos: ChunkPos, urgent: bool) {
+        let mut state = self.state.lock().expect("loader queue lock");
+        if urgent { state.urgent.push_back(pos) } else { state.loads.push_back(pos) }
+        drop(state);
         self.queued.notify_all();
+    }
+
+    /// Makes a queued load urgent; one already taken or urgent stays as it is.
+    pub fn promote(&self, pos: ChunkPos) {
+        let mut state = self.state.lock().expect("loader queue lock");
+        if let Some(index) = state.loads.iter().position(|&queued| queued == pos) {
+            state.loads.remove(index);
+            state.urgent.push_back(pos);
+            drop(state);
+            self.queued.notify_all();
+        }
     }
 
     pub fn push_other(&self, job: J) {
@@ -93,6 +120,9 @@ impl<J> JobQueue<J> {
             if let Some(job) = state.other.pop_front() {
                 return Some(Next::Other(job));
             }
+            if let Some(pos) = state.take_urgent(worker) {
+                return Some(Next::Load(pos));
+            }
             if let Some(pos) = state.take_home(worker) {
                 return Some(Next::Load(pos));
             }
@@ -100,7 +130,7 @@ impl<J> JobQueue<J> {
             if let Some(pos) = (!patient).then(|| state.take_elsewhere(worker)).flatten() {
                 return Some(Next::Load(pos));
             }
-            if state.closed && state.loads.is_empty() {
+            if state.closed && state.loads.is_empty() && state.urgent.is_empty() {
                 return None;
             }
             state = match (patient, state.loads.is_empty()) {
@@ -115,6 +145,21 @@ impl<J> JobQueue<J> {
 mod tests {
     use super::*;
 
+    #[test]
+    fn urgent_loads_go_first_area_by_area() {
+        let queue = JobQueue::new(1);
+        queue.push_load(ChunkPos::new(0, 0), false);
+        assert_eq!(load(&queue, 0), ChunkPos::new(0, 0));
+        queue.push_load(ChunkPos::new(1, 0), false);
+        queue.push_load(ChunkPos::new(100, 0), false);
+        queue.promote(ChunkPos::new(100, 0));
+        queue.push_load(ChunkPos::new(200, 0), true);
+        queue.push_load(ChunkPos::new(101, 0), true);
+        let urgent = [load(&queue, 0), load(&queue, 0), load(&queue, 0)];
+        assert_eq!(urgent, [ChunkPos::new(100, 0), ChunkPos::new(101, 0), ChunkPos::new(200, 0)]);
+        assert_eq!(load(&queue, 0), ChunkPos::new(1, 0), "then the plain load, after the grace");
+    }
+
     fn load(queue: &JobQueue<()>, worker: usize) -> ChunkPos {
         match queue.next(worker) {
             Some(Next::Load(pos)) => pos,
@@ -127,8 +172,8 @@ mod tests {
         let queue = JobQueue::new(2);
         let (a, b) = (ChunkPos::new(0, 0), ChunkPos::new(100, 0));
         for i in 0..3 {
-            queue.push_load(ChunkPos::new(a.x + i, 0));
-            queue.push_load(ChunkPos::new(b.x + i, 0));
+            queue.push_load(ChunkPos::new(a.x + i, 0), false);
+            queue.push_load(ChunkPos::new(b.x + i, 0), false);
         }
         assert_eq!(load(&queue, 0), a);
         assert_eq!(load(&queue, 1), b, "the oldest load outside worker 0's area");
@@ -143,13 +188,13 @@ mod tests {
     #[test]
     fn a_worker_waits_for_its_own_area_before_leaving_it() {
         let queue = JobQueue::new(1);
-        queue.push_load(ChunkPos::new(0, 0));
+        queue.push_load(ChunkPos::new(0, 0), false);
         assert_eq!(load(&queue, 0), ChunkPos::new(0, 0));
-        queue.push_load(ChunkPos::new(100, 0));
+        queue.push_load(ChunkPos::new(100, 0), false);
         std::thread::scope(|scope| {
             scope.spawn(|| {
                 std::thread::sleep(GRACE / 4);
-                queue.push_load(ChunkPos::new(1, 0));
+                queue.push_load(ChunkPos::new(1, 0), false);
             });
             assert_eq!(load(&queue, 0), ChunkPos::new(1, 0), "the next tick's column, not the far one");
         });
@@ -159,7 +204,7 @@ mod tests {
     #[test]
     fn other_jobs_go_first_and_closing_drains_the_queue() {
         let queue = JobQueue::new(1);
-        queue.push_load(ChunkPos::new(0, 0));
+        queue.push_load(ChunkPos::new(0, 0), true);
         queue.push_other(());
         queue.close();
         assert!(matches!(queue.next(0), Some(Next::Other(()))));

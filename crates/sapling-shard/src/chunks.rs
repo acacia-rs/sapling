@@ -47,7 +47,11 @@ pub(crate) fn send_chunks(settings: Res<Settings>, mut layers: Query<&mut Layer>
             out.push(&NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x, y, z }, radius, saved_chunks: Vec::new() });
         }
         let budget = if blobs.is_backlogged() { 0 } else { settings.0.columns_per_tick };
-        for pos in view.take_ready(budget, |pos| world.request(pos)) {
+        // A joining player waits on its spawn columns: those go ahead of other players' loads.
+        let spawn = (*stage == Stage::Chunks).then(|| view.center()).flatten();
+        let spawn_radius = SPAWN_RADIUS.min(view.radius());
+        let urgent = |pos: ChunkPos| spawn.is_some_and(|c| (pos.x - c.x).pow(2) + (pos.z - c.z).pow(2) <= spawn_radius * spawn_radius);
+        for pos in view.take_ready(budget, |pos| if urgent(pos) { world.request_urgent(pos) } else { world.request(pos) }) {
             let Some(column) = world.level_chunk(pos, blobs.is_enabled()) else { continue };
             column.blobs.iter().for_each(|blob| blobs.advertise(blob));
             out.push(&column.packet(pos.x, pos.z, world.dimension()));

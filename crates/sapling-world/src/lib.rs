@@ -15,6 +15,7 @@ mod template;
 mod tests;
 mod tiles;
 mod world;
+mod world_io;
 
 pub use acacia_proto::types::Blob;
 pub use acacia_world::{BlockRegistry, Chunk, Dimension, LevelChunkData, Material, Mining, Tool, ToolKind, ToolTier};
