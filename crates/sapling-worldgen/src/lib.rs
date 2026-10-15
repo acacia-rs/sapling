@@ -247,6 +247,11 @@ impl OverworldGenerator {
         self.biomes.get((chunk_x, chunk_z), || self.density.climate.chunk_biomes(self.seed, chunk_x, chunk_z))
     }
 
+    #[doc(hidden)]
+    pub fn structure_cache_counts(&self) -> Vec<(&'static str, usize)> {
+        self.structures.cache_counts()
+    }
+
     pub fn density(&self) -> &Density {
         &self.density
     }

@@ -148,6 +148,24 @@ impl Structures {
         probe.contains_only(centre, 0, SHIPWRECK_BIOMES) && probe.contains_only(centre, radius, &[biome])
     }
 
+    /// Entries each start map holds, for memory probes (examples/walk.rs).
+    pub fn cache_counts(&self) -> Vec<(&'static str, usize)> {
+        let t = &self.templates;
+        vec![
+            ("mineshaft_chunks", self.mineshaft_chunks.lock().unwrap().len()),
+            ("grid_starts", self.grid_starts.lock().unwrap().len()),
+            ("mineshafts", self.mineshafts.lock().unwrap().len()),
+            ("monuments", self.monuments.lock().unwrap().len()),
+            ("strongholds", self.stronghold_pieces.lock().unwrap().len()),
+            ("ocean_ruins", t.ocean_ruins.lock().unwrap().len()),
+            ("outposts", t.outposts.lock().unwrap().len()),
+            ("cities", t.ancient_cities.lock().unwrap().len()),
+            ("villages", t.villages.lock().unwrap().len()),
+            ("mansions", t.mansions.lock().unwrap().len()),
+            ("v2", t.v2.lock().unwrap().len()),
+        ]
+    }
+
     fn strongholds(&self, density: &Density) -> &[(i32, i32)] {
         self.strongholds.get_or_init(|| stronghold::spiral(self.level_seed, &|chunk| self.is_start(density, StructureKind::Village, chunk)))
     }
