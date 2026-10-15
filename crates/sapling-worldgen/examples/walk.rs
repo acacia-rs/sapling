@@ -1,14 +1,41 @@
 //! `walk <seed> <length> <width> <path> [areas]`: a long walk on one thread, a band of `width` chunks
 //! (z from 0) generated column by column along x, as a player walking east loads it. `path`: `out`
 //! (x 0..length), `in` (the same band from the far end back), `outback` (out, then in again, every
-//! column generated twice). Every 1000 columns: peak and current RSS and the structure start maps'
+//! column generated twice). Every 1000 columns: live heap, peak and current RSS and the structure start maps'
 //! entries. Ends with ms per column and a hash of every block, summed per column so that it does not
 //! depend on the order (tools/bench.sh `walk*`).
 
+use std::alloc::{GlobalAlloc, Layout, System};
 use std::hash::{DefaultHasher, Hash, Hasher};
+use std::sync::atomic::{AtomicIsize, Ordering::Relaxed};
 use std::time::Instant;
 
 use sapling_worldgen::OverworldGenerator;
+
+/// Live heap bytes: steadier than RSS, which the allocator keeps after frees.
+struct Live;
+
+static LIVE: AtomicIsize = AtomicIsize::new(0);
+
+unsafe impl GlobalAlloc for Live {
+    unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
+        LIVE.fetch_add(layout.size() as isize, Relaxed);
+        unsafe { System.alloc(layout) }
+    }
+
+    unsafe fn dealloc(&self, ptr: *mut u8, layout: Layout) {
+        LIVE.fetch_sub(layout.size() as isize, Relaxed);
+        unsafe { System.dealloc(ptr, layout) }
+    }
+
+    unsafe fn realloc(&self, ptr: *mut u8, layout: Layout, new_size: usize) -> *mut u8 {
+        LIVE.fetch_add(new_size as isize - layout.size() as isize, Relaxed);
+        unsafe { System.realloc(ptr, layout, new_size) }
+    }
+}
+
+#[global_allocator]
+static GLOBAL: Live = Live;
 
 fn column_hash(generator: &OverworldGenerator, x: i32, z: i32) -> u64 {
     let shape = generator.chunk_blocks(x, z);
@@ -56,7 +83,8 @@ fn main() {
                 if columns % 1000 == 0 {
                     let (peak, now) = rss_mb();
                     let counts: Vec<String> = generator.structure_cache_counts().iter().map(|(name, n)| format!("{name} {n}")).collect();
-                    println!("columns {columns} rss {now} MB peak {peak} MB | {}", counts.join(", "));
+                    let live = LIVE.load(Relaxed) as f64 / (1 << 20) as f64;
+                    println!("columns {columns} heap {live:.1} MB rss {now} MB peak {peak} MB | {}", counts.join(", "));
                 }
             }
         }
