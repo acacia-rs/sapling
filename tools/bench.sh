@@ -26,12 +26,17 @@ declare -A load=(
   [mt1s]="20261003 -8 -8 7 7 1 6 64 1"
   [mt6s]="20261003 -8 -8 7 7 6 6 64 1"
   [mt6sc]="20261003 -8 -8 7 7 6 6 64 6"
+  [views1]="1 8 64"
+  [views4]="4 8 64"
+  [views8]="8 8 64"
 )
+# views<n>: sapling-world's fill_views, n players 64 chunks apart filling radius-8 views through a World on
+# every core (the server's loader threads); ms/col is wall time, cpu the process's CPU time before the hash.
 # mt1/mt6: origin16 on 1 and 6 threads sharing one generator, on six cores (cache contention); their hash
 # is order-independent, so it differs from origin16's. mt1s/mt6s: six such areas 64 chunks apart in x,
 # each thread sweeping whole areas (a scheduler that keeps workers apart); mt6sc the same with caches
 # for six areas (`OverworldGenerator::with_areas`).
-declare -A cores=([mt1]="0-4,6" [mt6]="0-4,6" [mt1s]="0-4,6" [mt6s]="0-4,6" [mt6sc]="0-4,6")
+declare -A cores=([mt1]="0-4,6" [mt6]="0-4,6" [mt1s]="0-4,6" [mt6s]="0-4,6" [mt6sc]="0-4,6" [views1]="0-11" [views4]="0-11" [views8]="0-11")
 workloads=${*:-origin16 strong16 strong8 village8}
 # `none`: build only (with KEEP=1, a binary for tools/bench-ab.sh).
 [ "$workloads" = none ] && workloads=""
@@ -50,11 +55,15 @@ bin=\$RUN/$name.bin
 job="cd \$HOME/$remote && RUN=\$PWD/target/testbox && cd \$RUN && rm -f $name.out $name.perf.txt
 rm -rf $name.src && mkdir $name.src && tar xzf $name.tgz -C $name.src && rm $name.tgz &&
   rsync -rlpc --delete --exclude=/target --exclude=/target-prof $name.src/ \$HOME/$remote/ && rm -rf $name.src || { echo 97 > $name.bdone; exit; }
-(cd \$HOME/$remote && env $envs \$HOME/.cargo/bin/cargo +stable build --release -p sapling-worldgen --example timing) > $name-build.log 2>&1 || { echo 98 > $name.bdone; exit; }
+(cd \$HOME/$remote && env $envs \$HOME/.cargo/bin/cargo +stable build --release -p sapling-worldgen --example timing &&
+  env $envs \$HOME/.cargo/bin/cargo +stable build --release -p sapling-world --example fill_views) > $name-build.log 2>&1 || { echo 98 > $name.bdone; exit; }
 cp \$HOME/$remote/$target/release/examples/timing $bin
+cp \$HOME/$remote/$target/release/examples/fill_views $bin.views
 quiet() { [ ${QUIET:-1} = 1 ] || return 0; while :; do set -- \$(head -1 /proc/stat); u=\$((\$2 + \$3 + \$4)); i=\$5; sleep 1; set -- \$(head -1 /proc/stat); b=\$((\$2 + \$3 + \$4 - u)); [ \$((b * 100 / (b + \$5 - i))) -lt 20 ] && return; sleep 20; done; }"
 for w in $workloads; do
   args=${load[$w]:?unknown workload $w}
+  wbin=$bin
+  [ "${w#views}" != "$w" ] && wbin=$bin.views
   if [ -n "${PROFILE:-}" ]; then
     job="$job
 taskset -c ${CORE:-3} perf record -q -g --call-graph dwarf,16384 -F 499 -o $name.data $bin $args >> $name.out 2>&1
@@ -65,11 +74,11 @@ rm -f $name.data"
     job="$job
 quiet
 echo \"== $w\" >> $name.out
-taskset -c ${cores[$w]:-${CORE:-3}} /usr/bin/time -f 'maxrss_kb %M' perf stat -x, -e cycles,instructions $bin $args >> $name.out 2>&1"
+taskset -c ${cores[$w]:-${CORE:-3}} /usr/bin/time -f 'maxrss_kb %M' perf stat -x, -e cycles,instructions $wbin $args >> $name.out 2>&1"
   fi
 done
 [ -n "${KEEP:-}" ] || job="$job
-rm -f $bin"
+rm -f $bin $bin.views"
 job="$job
 echo 0 > $name.bdone"
 upload() { pack | ssh $opts testbox "mkdir -p $run && cat > $run/$name.tgz"; }
@@ -94,10 +103,11 @@ if [ -n "${PROFILE:-}" ]; then
   exit 0
 fi
 awk -F, '
-  /^== / { w = $0; sub(/^== /, "", w) }
+  /^== / { w = $0; sub(/^== /, "", w); cpu = "" }
   /ms per column/ { n = split($0, a, " "); ms = a[n - 3] }
+  /^fill cpu/ { split($0, a, " "); cpu = "  cpu " a[3] " s" }
   /^allocations/ { split($0, a, " "); allocs = a[2]; amb = a[4]; hash = a[6] }
   $3 == "cycles" { cyc = $1 / 1e9 }
   $3 == "instructions" { ins = $1 / 1e9 }
-  /^maxrss_kb/ { split($0, a, " "); printf "%-9s %8s ms/col  %7.2f Gcyc  %7.2f Ginstr  %6.0f MB rss  %10s allocs %s MB  hash %s\n", w, ms, cyc, ins, a[2] / 1024, allocs, amb, hash }
+  /^maxrss_kb/ { split($0, a, " "); printf "%-9s %8s ms/col  %7.2f Gcyc  %7.2f Ginstr  %6.0f MB rss  %10s allocs %s MB  hash %s%s\n", w, ms, cyc, ins, a[2] / 1024, allocs, amb, hash, cpu }
 ' "$out/$name.out" | tee "$out/$name.bench"
