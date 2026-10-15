@@ -22,7 +22,7 @@ retry() { for i in 1 2 3 4 5; do "$@" && return 0; echo "retry $i: $1" >&2; slee
 
 pack() {
   if [ -n "${REF:-}" ]; then git -C "$root" archive --format=tar.gz "$REF"
-  else tar czf - -C "$root" --exclude=target --exclude=.git --exclude=worlds --exclude=.testserver .; fi
+  else tar czf - -C "$root" --exclude=target --exclude=.git --exclude=./worlds --exclude=.testserver .; fi
 }
 upload() { pack | ssh $opts testbox "mkdir -p $run && cat > $run/$name.tgz"; }
 # A relaunch after a dropped connection finds the archive gone and leaves the first job alone.

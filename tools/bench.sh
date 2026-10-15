@@ -47,7 +47,7 @@ if [ -n "${PROFILE:-}" ]; then
 fi
 pack() {
   if [ -n "${REF:-}" ]; then git -C "$root" archive --format=tar.gz "$REF"
-  else tar czf - -C "$root" --exclude=target --exclude=.git --exclude=worlds --exclude=.testserver .; fi
+  else tar czf - -C "$root" --exclude=target --exclude=.git --exclude=./worlds --exclude=.testserver .; fi
 }
 bin=\$RUN/$name.bin
 job="cd \$HOME/$remote && RUN=\$PWD/target/testbox && cd \$RUN && rm -f $name.out $name.perf.txt
