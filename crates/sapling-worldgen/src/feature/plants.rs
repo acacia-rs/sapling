@@ -55,6 +55,11 @@ pub fn is_soil(block: Block) -> bool {
     )
 }
 
+/// What the Nether's plants and huge fungi stand on (1465ec270, 14715cd80): nylium, soul soil or soil.
+pub fn is_nether_soil(block: Block) -> bool {
+    matches!(block, Block::CrimsonNylium | Block::WarpedNylium | Block::SoulSoil) || is_soil(block) || block.name() == "farmland"
+}
+
 fn is_dry_soil(block: Block) -> bool {
     is_soil(block)
         || matches!(
@@ -106,10 +111,7 @@ pub fn can_survive(view: &View, [x, y, z]: [i32; 3], block: Block) -> bool {
         Block::BrownMushroom | Block::RedMushroom => below.is_opaque_solid(),
         Block::SporeBlossom | Block::HangingRoots => view.block(x, y + 1, z).blocks_motion(),
         Block::MossCarpet => below != Block::Air,
-        // TODO: read the Nether plants' mayPlace off BDS; this is Java's nylium-or-soil rule.
-        Block::CrimsonRoots | Block::WarpedRoots | Block::NetherSprouts | Block::CrimsonFungus | Block::WarpedFungus => {
-            matches!(below, Block::CrimsonNylium | Block::WarpedNylium | Block::SoulSoil) || is_soil(below)
-        }
+        Block::CrimsonRoots | Block::WarpedRoots | Block::NetherSprouts | Block::CrimsonFungus | Block::WarpedFungus => is_nether_soil(below),
         Block::Azalea | Block::FloweringAzalea => is_soil(below) || below == Block::Clay,
         _ if (Block::SmallDripleafSouth..=Block::SmallDripleafEast).contains(&block) => {
             matches!(below, Block::Clay | Block::MossBlock) || view.block(x, y, z) == Block::Water && is_soil(below)

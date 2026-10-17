@@ -76,6 +76,14 @@ HARDCODED = {
     'minecraft:pumpkin_pile_feature': _LEGACY.format('Pile(PileBlock::Pumpkin)'),
     'minecraft:snow_pile_feature': _LEGACY.format('Pile(PileBlock::Snow)'),
     'minecraft:ice_pile_feature': _LEGACY.format('Pile(PileBlock::Ice)'),
+    'minecraft:basalt_columns_feature': _LEGACY.format('BasaltColumns'),
+    'minecraft:_basalt_pillar_feature': _LEGACY.format('BasaltPillar'),
+    'minecraft:delta_feature': _LEGACY.format('Delta'),
+    'minecraft:_huge_crimson_fungus_feature': _LEGACY.format('HugeFungus { crimson: true }'),
+    'minecraft:_huge_warped_fungus_feature': _LEGACY.format('HugeFungus { crimson: false }'),
+    'minecraft:_weeping_vines_cluster_feature': _LEGACY.format('WeepingVines'),
+    'minecraft:_twisting_vines_cluster_feature': _LEGACY.format('TwistingVines'),
+    'minecraft:nether_fossil_feature': _LEGACY.format('NetherFossil'),
 }
 EARLY_OUT = {'none': 'EarlyOut::None', 'first_failure': 'EarlyOut::FirstFailure', 'first_success': 'EarlyOut::FirstSuccess'}
 SEARCH_LOOPS = {'-x': ('x-', 'y+', 'z-'), '+x': ('x+', 'y+', 'z+'), '-y': ('y-', 'z+', 'x-'), '+y': ('y+', 'z+', 'x+'),
