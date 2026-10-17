@@ -26,6 +26,7 @@ mod ruined_portal_age;
 mod scattered;
 mod shipwreck;
 mod stage;
+mod start_cache;
 mod start_map;
 mod stronghold;
 pub(crate) mod template;
@@ -39,7 +40,7 @@ mod village;
 
 use std::sync::OnceLock;
 
-use crate::cache::SourceCache;
+use start_cache::StartCache;
 use crate::density::Density;
 pub use adjust::Adjustments;
 pub use area::BoundingBox;
@@ -65,32 +66,36 @@ pub struct Structures {
     seed: i64,
     level_seed: u32,
     mineshaft_seed: placement::MineshaftSeed,
-    mineshaft_chunks: SourceCache<(i32, i32), bool>,
+    mineshaft_chunks: StartCache<(i32, i32), bool>,
     /// Grid candidates' start checks, which every chunk around them repeats.
-    grid_starts: SourceCache<(StructureKind, (i32, i32)), bool>,
+    grid_starts: StartCache<(StructureKind, (i32, i32)), bool>,
     strongholds: OnceLock<Vec<(i32, i32)>>,
-    mineshafts: SourceCache<(i32, i32), mineshaft::Mineshaft>,
-    monuments: SourceCache<(i32, i32), monument::Monument>,
-    stronghold_pieces: SourceCache<(i32, i32), stronghold::Stronghold>,
+    mineshafts: StartCache<(i32, i32), mineshaft::Mineshaft>,
+    monuments: StartCache<(i32, i32), monument::Monument>,
+    stronghold_pieces: StartCache<(i32, i32), stronghold::Stronghold>,
     templates: templated::TemplateStarts,
 }
 
 impl Structures {
     /// Caches sized for `areas` areas generated at once (`OverworldGenerator::with_areas`).
     pub fn new(seed: i64, areas: usize) -> Self {
+        Self::with_start_limit(seed, areas, areas * STARTS_LIMIT)
+    }
+
+    /// `starts` starts of each kind kept, whatever `areas` (eviction probes: examples/walk.rs).
+    pub fn with_start_limit(seed: i64, areas: usize, starts: usize) -> Self {
         let level_seed = seed as u32;
         let mineshaft_seed = placement::MineshaftSeed::new(level_seed);
-        let starts = areas * STARTS_LIMIT;
         Self {
             seed,
             level_seed,
             mineshaft_seed,
-            mineshaft_chunks: SourceCache::new(areas * CHECKS_LIMIT),
-            grid_starts: SourceCache::new(areas * CHECKS_LIMIT),
+            mineshaft_chunks: StartCache::new(areas * CHECKS_LIMIT),
+            grid_starts: StartCache::new(areas * CHECKS_LIMIT),
             strongholds: OnceLock::new(),
-            mineshafts: SourceCache::new(starts),
-            monuments: SourceCache::new(starts),
-            stronghold_pieces: SourceCache::new(starts),
+            mineshafts: StartCache::new(starts),
+            monuments: StartCache::new(starts),
+            stronghold_pieces: StartCache::new(starts),
             templates: templated::TemplateStarts::new(starts),
         }
     }
@@ -155,20 +160,25 @@ impl Structures {
     }
 
     /// Entries each start map holds, for memory probes (examples/walk.rs).
-    pub fn cache_counts(&self) -> Vec<(&'static str, usize)> {
+    /// Entries each start map holds and has made, for memory and eviction probes (examples/walk.rs).
+    pub fn cache_counts(&self) -> Vec<(&'static str, usize, usize)> {
+        fn count<K: std::hash::Hash + Eq + Copy, V>(name: &'static str, cache: &StartCache<K, V>) -> (&'static str, usize, usize) {
+            let (kept, made) = cache.counts();
+            (name, kept, made)
+        }
         let t = &self.templates;
         vec![
-            ("mineshaft_chunks", self.mineshaft_chunks.len()),
-            ("grid_starts", self.grid_starts.len()),
-            ("mineshafts", self.mineshafts.len()),
-            ("monuments", self.monuments.len()),
-            ("strongholds", self.stronghold_pieces.len()),
-            ("ocean_ruins", t.ocean_ruins.len()),
-            ("outposts", t.outposts.len()),
-            ("cities", t.ancient_cities.len()),
-            ("villages", t.villages.len()),
-            ("mansions", t.mansions.len()),
-            ("v2", t.v2.len()),
+            count("mineshaft_chunks", &self.mineshaft_chunks),
+            count("grid_starts", &self.grid_starts),
+            count("mineshafts", &self.mineshafts),
+            count("monuments", &self.monuments),
+            count("strongholds", &self.stronghold_pieces),
+            count("ocean_ruins", &t.ocean_ruins),
+            count("outposts", &t.outposts),
+            count("cities", &t.ancient_cities),
+            count("villages", &t.villages),
+            count("mansions", &t.mansions),
+            count("v2", &t.v2),
         ]
     }
 

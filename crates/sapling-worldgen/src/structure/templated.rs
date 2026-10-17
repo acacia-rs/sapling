@@ -9,7 +9,7 @@ use super::canvas::Canvas;
 use super::kind::MONUMENT;
 use super::probe::Probe;
 use super::{BoundingBox, StructureKind, Structures, igloo, ocean_ruin, outpost, ruined_portal, shipwreck};
-use crate::cache::SourceCache;
+use super::start_cache::StartCache;
 use crate::density::Density;
 use crate::random::{LargeFeatureSeed, Mt19937};
 
@@ -19,25 +19,25 @@ const OCEAN_RUIN_REACH: i32 = 3;
 const OUTPOST_REACH: i32 = 3;
 
 pub(super) struct TemplateStarts {
-    pub(super) ocean_ruins: SourceCache<(i32, i32), ocean_ruin::OceanRuin>,
-    pub(super) outposts: SourceCache<(i32, i32), outpost::Outpost>,
-    pub(super) ancient_cities: SourceCache<(i32, i32), super::ancient_city::AncientCity>,
-    pub(super) villages: SourceCache<(i32, i32), super::village::Village>,
-    pub(super) mansions: SourceCache<(i32, i32), super::mansion::Mansion>,
+    pub(super) ocean_ruins: StartCache<(i32, i32), ocean_ruin::OceanRuin>,
+    pub(super) outposts: StartCache<(i32, i32), outpost::Outpost>,
+    pub(super) ancient_cities: StartCache<(i32, i32), super::ancient_city::AncientCity>,
+    pub(super) villages: StartCache<(i32, i32), super::village::Village>,
+    pub(super) mansions: StartCache<(i32, i32), super::mansion::Mansion>,
     /// v2 jigsaw structures' pieces by kind and start.
-    pub(super) v2: SourceCache<(super::StructureKind, (i32, i32)), Vec<super::jigsaw::Piece>>,
+    pub(super) v2: StartCache<(super::StructureKind, (i32, i32)), Vec<super::jigsaw::Piece>>,
 }
 
 impl TemplateStarts {
     /// `limit` starts of each kind.
     pub(super) fn new(limit: usize) -> Self {
         Self {
-            ocean_ruins: SourceCache::new(limit),
-            outposts: SourceCache::new(limit),
-            ancient_cities: SourceCache::new(limit),
-            villages: SourceCache::new(limit),
-            mansions: SourceCache::new(limit),
-            v2: SourceCache::new(limit),
+            ocean_ruins: StartCache::new(limit),
+            outposts: StartCache::new(limit),
+            ancient_cities: StartCache::new(limit),
+            villages: StartCache::new(limit),
+            mansions: StartCache::new(limit),
+            v2: StartCache::new(limit),
         }
     }
 }

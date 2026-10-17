@@ -1,9 +1,10 @@
-//! `walk <seed> <length> <width> <path> [areas]`: a long walk on one thread, a band of `width` chunks
-//! (z from 0) generated column by column along x, as a player walking east loads it. `path`: `out`
-//! (x 0..length), `in` (the same band from the far end back), `outback` (out, then in again, every
-//! column generated twice). Every 1000 columns: live heap, peak and current RSS and the structure start maps'
-//! entries. Ends with ms per column and a hash of every block, summed per column so that it does not
-//! depend on the order (tools/bench.sh `walk*`).
+//! `walk <seed> <length> <width> <path> [areas] [x0] [z0] [starts]`: a long walk on one thread, a band of
+//! `width` chunks (z from `z0`) generated column by column along x from `x0`, as a player walking east loads
+//! it. `path`: `out` (x0..x0+length), `in` (the same band from the far end back), `outback` (out, then in
+//! again, every column generated twice). `starts`: structure starts kept of each kind, to force their
+//! eviction (default: the generator's own). Every 1000 columns and after each pass: live heap, peak and
+//! current RSS and the structure start maps' entries kept/made. Ends with ms per column and a hash of every
+//! block, summed per column so that it does not depend on the order (tools/bench.sh `walk*`).
 
 use std::alloc::{GlobalAlloc, Layout, System};
 use std::hash::{DefaultHasher, Hash, Hasher};
@@ -58,14 +59,26 @@ fn rss_mb() -> (u64, u64) {
     (field("VmHWM:").unwrap_or(0) / 1024, field("VmRSS:").unwrap_or(0) / 1024)
 }
 
+fn report(generator: &OverworldGenerator, columns: u64) {
+    let (peak, now) = rss_mb();
+    let counts: Vec<String> = generator.structure_cache_counts().iter().map(|(name, kept, made)| format!("{name} {kept}/{made}")).collect();
+    let live = LIVE.load(Relaxed) as f64 / (1 << 20) as f64;
+    println!("columns {columns} heap {live:.1} MB rss {now} MB peak {peak} MB | {}", counts.join(", "));
+}
+
 fn main() {
     let args: Vec<String> = std::env::args().skip(1).collect();
-    let [seed, length, width, path] = &args[..4] else { panic!("usage: walk <seed> <length> <width> out|in|outback [areas]") };
+    let [seed, length, width, path] = &args[..4] else { panic!("usage: walk <seed> <length> <width> out|in|outback [areas] [x0] [z0] [starts]") };
     let (seed, length, width): (i64, i32, i32) = (seed.parse().unwrap(), length.parse().unwrap(), width.parse().unwrap());
-    let areas = args.get(4).map_or(1, |a| a.parse().unwrap());
-    let generator = OverworldGenerator::with_areas(seed, areas);
-    let out: Vec<i32> = (0..length).collect();
-    let back: Vec<i32> = (0..length).rev().collect();
+    let arg = |i: usize| args.get(i).map(|a| a.parse::<i64>().unwrap());
+    let areas = arg(4).unwrap_or(1) as usize;
+    let (x0, z0) = (arg(5).unwrap_or(0) as i32, arg(6).unwrap_or(0) as i32);
+    let mut generator = OverworldGenerator::with_areas(seed, areas);
+    if let Some(starts) = arg(7) {
+        generator = generator.with_structure_start_limit(areas, starts as usize);
+    }
+    let out: Vec<i32> = (x0..x0 + length).collect();
+    let back: Vec<i32> = out.iter().rev().copied().collect();
     let passes: Vec<&[i32]> = match path.as_str() {
         "out" => vec![&out],
         "in" => vec![&back],
@@ -77,17 +90,15 @@ fn main() {
     for (pass, xs) in passes.iter().enumerate() {
         let mut sum = 0u64;
         for &x in xs.iter() {
-            for z in 0..width {
+            for z in z0..z0 + width {
                 sum = sum.wrapping_add(column_hash(&generator, x, z));
                 columns += 1;
                 if columns % 1000 == 0 {
-                    let (peak, now) = rss_mb();
-                    let counts: Vec<String> = generator.structure_cache_counts().iter().map(|(name, n)| format!("{name} {n}")).collect();
-                    let live = LIVE.load(Relaxed) as f64 / (1 << 20) as f64;
-                    println!("columns {columns} heap {live:.1} MB rss {now} MB peak {peak} MB | {}", counts.join(", "));
+                    report(&generator, columns);
                 }
             }
         }
+        report(&generator, columns);
         println!("pass {pass} hash {sum:016x}");
     }
     let ms = start.elapsed().as_secs_f64() * 1000.0 / columns as f64;

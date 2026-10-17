@@ -189,6 +189,16 @@ thread. Every 1000 columns it prints live heap, RSS and each map's entries. Band
   - 50000 columns, out: `10b4025b32fd009f`, bounded or not.
 - The four workloads keep their hashes, and instructions are equal or down to 0.2%.
 
+Villages and cities never reached the cap on that walk. `walk ... [areas] [x0] [z0] [starts]` keeps only
+`starts` of each kind (`OverworldGenerator::with_structure_start_limit`); the probe prints kept/made per map
+(structure/start_cache.rs; a counter in `SourceCache` itself cost 0.3% of origin16's instructions).
+Seed 20261003, x 240..320, z 0..64 (8 villages, 4 ancient cities under mountains), out and back:
+- every pass `7610c4967d52d2ae`, with the default cap, cap 4, cap 1, and cap 1 in (far end first, cold);
+- made, default / cap 4 / cap 1: cities 4 / 14 / 88, villages 8 / 13 / 27, mineshafts 41 / 1868 / 3106,
+  v2 18 / 200 / 348.
+Fewer villages are rebuilt than cities: a dropped start that a kept post-process (`Reaching`) still holds
+comes back from the cache's weak list instead of being built again.
+
 ## Where the time goes now
 
 `PROFILE`, round four's last commit, self time (strong16 / origin16):

@@ -247,9 +247,18 @@ impl OverworldGenerator {
         self.biomes.get((chunk_x, chunk_z), || self.density.climate.chunk_biomes(self.seed, chunk_x, chunk_z))
     }
 
+    /// Each structure start map's entries kept and made.
     #[doc(hidden)]
-    pub fn structure_cache_counts(&self) -> Vec<(&'static str, usize)> {
+    pub fn structure_cache_counts(&self) -> Vec<(&'static str, usize, usize)> {
         self.structures.cache_counts()
+    }
+
+    /// Keeps only `starts` structure starts of each kind, so that they are dropped and built again
+    /// (examples/walk.rs).
+    #[doc(hidden)]
+    pub fn with_structure_start_limit(mut self, areas: usize, starts: usize) -> Self {
+        self.structures = structure::Structures::with_start_limit(self.seed, areas.max(1), starts);
+        self
     }
 
     pub fn density(&self) -> &Density {
