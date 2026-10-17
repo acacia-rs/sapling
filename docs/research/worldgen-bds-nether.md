@@ -124,6 +124,19 @@ Every loaded buffer of the run (2450 chunks) equals ours; the "later" cells are 
 - Structures (1481ecce0): fortress (legacy pieces) and bastion (jigsaw), ruined portals; grid salts and
   spacing ([worldgen-prior-art.md](worldgen-prior-art.md): 480-block regions, 1/3 fortress odds, unverified).
 
+## The code-registered feature rules
+Ported in `feature/basalt.rs` (basalt columns 14827c230, pillar 14827ca10, delta 148294fc0), `fungus.rs`
+(huge fungus 143b7ded0), `nether_vines.rs` (weeping 14829d8a0, twisting 149d66ee0, vine column 1425e9460) and
+`nether_fossil.rs` (149d5bcb0). With them the four non-structure regions are exact (features and liquids 0).
+- Read as the binary says, then judged: the delta's cells sit at the search's air y (it looked like it would
+  only fill pockets; it matches). Twisting tries centre 5 blocks to −x/−z of the origin.
+- The fungus's `canBeBuiltOver` is false for vines: a hat skips another cluster's vine cell and draws nothing for
+  it (one wrong cell there desyncs the rest of the hat).
+- Every vine cell is the vine block with its own drawn age; BDS has no `_plant` block in these.
+- The Nether plants' rule (1465ec270, 14715cd80): nylium, soul soil or the soil list 0x14ccd3328.
+- Unjudged: the canon's soul sand valley region holds no fossil, so the fossil (and its dried ghast, whose
+  version gate 149d5c3bb was not decoded and is taken as passing) has no oracle yet.
+
 Seed widths, checked on seed -4172144997902289642 (two 4x4 regions, 974 chunk buffers and 4096 biome columns, all
 equal): every MT (density, noise layers, capped noises, carver, bedrock) takes the low 32 bits; the layers' LCG
 world seed takes all 64.
