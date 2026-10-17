@@ -100,6 +100,8 @@ pub struct View<'a> {
     pub reach: Option<Reach<'a>>,
     /// BDS's per-thread generator, when the run it models is known (thread.rs).
     pub thread_random: Option<Mt19937>,
+    /// The Nether's: lava spreads as far as water and three times as often (liquid/flow.rs).
+    pub ultrawarm: bool,
 }
 
 impl<'a> View<'a> {
@@ -118,6 +120,7 @@ impl<'a> View<'a> {
             routed: Vec::new(),
             reach: None,
             thread_random: None,
+            ultrawarm: false,
         }
     }
 

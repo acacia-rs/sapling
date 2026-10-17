@@ -44,10 +44,12 @@ struct Source<'a> {
     inputs: Inputs<'a>,
 }
 
-pub fn decorate_chunk(seed: &LargeFeatureSeed, chunk: (i32, i32), inputs: Inputs, view: &mut View) {
+/// `corner`: the Nether's one biome for the whole chunk (`NetherGenerator`'s pass asks only the chunk's
+/// max corner). Returns the chunk's generator where the rules' `math.random` left it.
+pub fn decorate_chunk(seed: &LargeFeatureSeed, chunk: (i32, i32), inputs: Inputs, view: &mut View, corner: bool) -> Mt19937 {
     let chunk_seed = seed.chunk(chunk.0, chunk.1);
     let own = (inputs.biomes)(chunk.0, chunk.1);
-    let order = palette_order(&own);
+    let order = if corner { vec![own.biome(15, 127, 15)] } else { palette_order(&own) };
     let mut source = Source { chunk, chunk_seed, random: Mt19937::new(chunk_seed), inputs };
     let mut scope = Scope::new();
     for pass in Pass::ALL {
@@ -61,6 +63,7 @@ pub fn decorate_chunk(seed: &LargeFeatureSeed, chunk: (i32, i32), inputs: Inputs
             }
         }
     }
+    source.random
 }
 
 /// The positions come from one generator, the features draw from a second seeded alike.

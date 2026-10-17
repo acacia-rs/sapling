@@ -39,6 +39,7 @@ struct Tally {
     missing: u64,
     wrong: BTreeMap<&'static str, u64>,
     pairs: BTreeMap<(&'static str, String, String), u64>,
+    chunks: BTreeMap<(i32, i32), u64>,
 }
 
 impl Tally {
@@ -59,6 +60,10 @@ impl Tally {
         for ((stage, ours, bds), count) in pairs.iter().take(16) {
             println!("    {count:>8} {stage}: {ours} / {bds}");
         }
+        let mut chunks: Vec<_> = self.chunks.iter().collect();
+        chunks.sort_by(|a, b| b.1.cmp(a.1));
+        let top: Vec<String> = chunks.iter().take(12).map(|((x, z), n)| format!("{x},{z} {n}")).collect();
+        println!("    by chunk: {}", top.join(", "));
     }
 }
 
@@ -135,6 +140,7 @@ fn compare(seed: i64, world: &str) {
                             tally.missing += u64::from(ours.name() == carved && ours.name() != bds);
                             let (ours_full, bds_full) = (format!("{}[{}]", ours.name(), ours.states()), format!("{bds}[{bds_states}]"));
                             tally.wrong(later_stage(ours.name(), bds), &ours_full, &bds_full);
+                            *tally.chunks.entry((cx, cz)).or_default() += 1;
                         }
                     }
                 }

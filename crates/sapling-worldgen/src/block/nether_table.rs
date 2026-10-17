@@ -14,11 +14,17 @@ macro_rules! with_nether_blocks {
             CrimsonNylium => "crimson_nylium" "",
             WarpedNylium => "warped_nylium" "",
             NetherWartBlock => "nether_wart_block" "",
+            QuartzOre => "quartz_ore" "",
+            NetherGoldOre => "nether_gold_ore" "",
+            AncientDebris => "ancient_debris" "",
+            Glowstone => "glowstone" "",
             CrimsonRoots => "crimson_roots" "",
             WarpedRoots => "warped_roots" "",
             NetherSprouts => "nether_sprouts" "",
             CrimsonFungus => "crimson_fungus" "",
             WarpedFungus => "warped_fungus" "",
+            Fire => "fire" "age=0",
+            SoulFire => "soul_fire" "age=0",
         }
     };
 }

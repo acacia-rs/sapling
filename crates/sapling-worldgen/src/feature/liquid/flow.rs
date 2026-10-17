@@ -36,8 +36,13 @@ fn depth(view: &View, p: [i32; 3], lava: bool) -> Option<i32> {
     (b.is_fluid() && b.is_lava() == lava).then(|| b.liquid_depth().unwrap_or(0) as i32)
 }
 
-fn delay(lava: bool) -> u64 {
-    if lava { 30 } else { 5 }
+// TODO: Java's ultrawarm numbers, unconfirmed on BDS.
+fn delay(view: &View, lava: bool) -> u64 {
+    match (lava, view.ultrawarm) {
+        (false, _) => 5,
+        (true, false) => 30,
+        (true, true) => 10,
+    }
 }
 
 /// `_isLiquidBlocking` (148b5ee50): water asks the block's liquid detection (detect.rs), lava the type.
@@ -118,8 +123,8 @@ pub fn update_neighbors(view: &mut View, at: [i32; 3]) {
         if lava {
             solidify(view, n);
         }
-        if depth(view, n, lava).is_some() && !view.ticks.has(n, lava, delay(lava)) {
-            view.schedule(n, lava, delay(lava));
+        if depth(view, n, lava).is_some() && !view.ticks.has(n, lava, delay(view, lava)) {
+            view.schedule(n, lava, delay(view, lava));
         }
     }
 }
@@ -148,7 +153,7 @@ fn set(view: &mut View, at: [i32; 3], b: Block) {
 
 fn tick(view: &mut View, p: [i32; 3], lava: bool) {
     let Some(mut d) = depth(view, p, lava) else { return };
-    let drop = if lava { 2 } else { 1 };
+    let drop = if lava && !view.ultrawarm { 2 } else { 1 };
     if d >= 1 {
         let (mut nearest, mut sources) = (None::<i32>, 0);
         for side in SIDES {
@@ -168,7 +173,7 @@ fn tick(view: &mut View, p: [i32; 3], lava: bool) {
         if new != d {
             // Receding lava waits four times as long three times in four, by the thread's generator: both
             // waits end in the next generation, but the longer one sorts later in it.
-            let mut wait = delay(lava);
+            let mut wait = delay(view, lava);
             if lava && d < 8 && d < new && new < 8 && view.thread_random.as_mut().is_some_and(|random| random.next_int(4) != 0) {
                 wait *= 4;
             }
@@ -256,5 +261,5 @@ fn spread_to(view: &mut View, n: [i32; 3], depth: i32, lava: bool) {
     set(view, n, Block::liquid(lava, depth as u8));
     // Lava set beside water stays lava until a neighbour's update reaches it (`update_neighbors`).
     update_neighbors(view, n);
-    view.schedule(n, lava, delay(lava));
+    view.schedule(n, lava, delay(view, lava));
 }

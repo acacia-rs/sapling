@@ -257,22 +257,26 @@ impl Features {
             let doubt = |x: i32, z: i32| self.doubt_before((x, z), limit, inputs);
             view.reach = self.track_reach.then(|| reach::Reach::new(&doubt));
             view.thread_random = self.thread_before(source, limit);
+            view.ultrawarm = self.dimension == Dimension::Nether;
             let mut post_process = Mt19937::new(self.seed.chunk(source.0, source.1));
             match self.dimension {
                 Dimension::Overworld => {
                     lake::lava_lake(&mut post_process, source, &mut view);
                     monster_room::monster_rooms(post_process, source, &mut view);
-                    decorate::decorate_chunk(&self.seed, source, inputs, &mut view);
+                    decorate::decorate_chunk(&self.seed, source, inputs, &mut view, false);
                     freeze::freeze_chunk(source, &(inputs.biomes)(source.0, source.1), &mut view);
+                    let inherited: Vec<_> = self.sources_before(source, limit).into_iter().flat_map(|n| self.source_writes(n, inputs).routed_to(source).collect::<Vec<_>>()).collect();
+                    let structure = liquid::structure_magma(&(inputs.loaded)(source.0, source.1), source);
+                    liquid::settle(&mut view, &structure, &inherited);
                 }
                 Dimension::Nether => {
-                    nether::decorate(&mut post_process, source, inputs, &mut view);
-                    decorate::decorate_chunk(&self.seed, source, inputs, &mut view);
+                    view.ticks = ticks::TickQueue::chunk();
+                    nether::before_rules(&mut post_process, source, &mut view);
+                    let mut rest = decorate::decorate_chunk(&self.seed, source, inputs, &mut view, true);
+                    nether::after_rules(&mut rest, source, &mut view);
+                    liquid::instatick(&mut view);
                 }
             }
-            let inherited: Vec<_> = self.sources_before(source, limit).into_iter().flat_map(|n| self.source_writes(n, inputs).routed_to(source).collect::<Vec<_>>()).collect();
-            let structure = liquid::structure_magma(&(inputs.loaded)(source.0, source.1), source);
-            liquid::settle(&mut view, &structure, &inherited);
             view.into_writes()
         })
     }
