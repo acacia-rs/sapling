@@ -30,6 +30,12 @@ pub(crate) struct Stored {
 #[derive(Resource, Default)]
 pub(crate) struct Managed(pub std::collections::HashSet<(Entity, i64)>);
 
+/// The `UniqueID` a world folder keeps a new entity under, numbered as BDS numbers actors: a high
+/// word that differs, a counter below.
+pub(crate) fn new_unique_id(world: &World, entity: Entity) -> Option<i64> {
+    Some(((world.resource::<Tick>().0 as i64) << 32) | (world.get::<NetId>(entity)?.0 as i64 & 0xffff_ffff))
+}
+
 /// Makes the entity one a world folder keeps.
 pub(crate) fn keep(world: &mut World, entity: Entity, layer: Entity, unique_id: i64, compound: Vec<u8>) {
     world.get_resource_or_insert_with(Managed::default).0.insert((layer, unique_id));

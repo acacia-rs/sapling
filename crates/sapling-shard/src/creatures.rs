@@ -115,8 +115,7 @@ fn spawn(world: &mut World, layer: Entity, kind: &str, feet: [f32; 3]) -> Option
     give_health(world, entity, kind, None, 0);
     let id = world.get::<NetId>(entity)?.0;
     entities::after_announcing(world, layer, [x, y, z], vec![spawn_sound(id, kind, &body)]);
-    // Kept by the world folder as BDS numbers actors: a high word that differs, a counter below.
-    let unique_id = ((world.resource::<Tick>().0 as i64) << 32) | (id as i64 & 0xffff_ffff);
+    let unique_id = entities::new_unique_id(world, entity)?;
     entities::keep(world, entity, layer, unique_id, sapling_world::new_actor(unique_id, kind, feet, [0.0; 3]));
     Some(EntityId(id))
 }

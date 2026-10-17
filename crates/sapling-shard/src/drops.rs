@@ -72,8 +72,7 @@ fn dice(world: &mut World) -> Mut<'_, Dice> {
 /// to keep with the column it lies in (actors.rs).
 fn lay(world: &mut World, layer: Entity, stack: ItemStack, at: [f32; 3], motion: [f32; 3], pickup_from: u64) -> Option<Entity> {
     let item = lay_unkept(world, layer, stack.clone(), at, motion, pickup_from)?;
-    // Numbered as a spawned mob is (creatures.rs).
-    let unique_id = ((world.resource::<Tick>().0 as i64) << 32) | (world.get::<NetId>(item)?.0 as i64 & 0xffff_ffff);
+    let unique_id = entities::new_unique_id(world, item)?;
     let compound = sapling_world::new_item_actor(unique_id, &stack, world.get::<Layer>(layer)?.world.registry(), at, motion);
     entities::keep(world, item, layer, unique_id, compound);
     Some(item)

@@ -44,6 +44,7 @@ mod updates;
 mod waterlog;
 
 pub(crate) use blown::blow_out;
+pub(crate) use falling::from_storage as falling_from_storage;
 pub(crate) use daylight::tick as read_daylight;
 pub(crate) use fire::tick as burn_fires;
 pub(crate) use growth::{arrived as plants_arrived, tick as random_ticks, trample};

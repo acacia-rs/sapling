@@ -42,17 +42,40 @@ fn announcement(id: u64, body: &Body, hash: u32) -> Vec<Bytes> {
     vec![sapling_net::encode(&sapling_data::add_falling_block(id, wire(body.at), body.motion, hash))]
 }
 
-/// Sets the block `block` falling out of `cell`, shown a tick into its fall as BDS first shows one.
+/// Sets the block `block` falling out of `cell`, shown a tick into its fall as BDS first shows one,
+/// for the world folder to keep with the column it is over (actors.rs).
 pub(super) fn start(world: &mut World, layer: Entity, block: u32, [x, y, z]: BlockPos) -> Option<Entity> {
-    let level = level(world, layer)?;
-    let mut body = Body::new([x as f32 + 0.5, y as f32 + SPAWN_LIFT, z as f32 + 0.5], [0.0; 3], [SIZE, SIZE]);
-    // A falling block draws on no chance.
-    body.step(level, &Physics::FALLING_BLOCK, &mut || 0.5);
-    let hash = level.registry().network_hash(block);
+    let (body, hash) = {
+        let level = level(world, layer)?;
+        let mut body = Body::new([x as f32 + 0.5, y as f32 + SPAWN_LIFT, z as f32 + 0.5], [0.0; 3], [SIZE, SIZE]);
+        // A falling block draws on no chance.
+        body.step(level, &Physics::FALLING_BLOCK, &mut || 0.5);
+        (body, level.registry().network_hash(block))
+    };
+    let entity = spawn(world, layer, block, hash, body, 1)?;
+    let unique_id = entities::new_unique_id(world, entity)?;
+    if let Some(compound) = sapling_world::new_falling_block_actor(unique_id, hash, level(world, layer)?.registry(), body.at, body.motion, 1) {
+        entities::keep(world, entity, layer, unique_id, compound);
+    }
+    Some(entity)
+}
+
+fn spawn(world: &mut World, layer: Entity, block: u32, hash: u32, body: Body, airborne: u32) -> Option<Entity> {
     let entity = entities::spawn(world, layer, KIND, body, wire(body.at), |id| Some(announcement(id, &body, hash)))?;
     entities::flag_moving(world, entity, true);
-    world.entity_mut(entity).insert(FallingBlock { block, airborne: 1, landed_for: None, refused: false });
+    world.entity_mut(entity).insert(FallingBlock { block, airborne, landed_for: None, refused: false });
     Some(entity)
+}
+
+/// Makes a falling block a world folder kept (its actor compound `compound`) fall in `layer`
+/// again; false for one whose block the registry does not know.
+// TODO: its fall time is kept as it began, not as it is when the column is saved.
+pub(crate) fn from_storage(world: &mut World, layer: Entity, at: [f32; 3], unique_id: i64, compound: Vec<u8>) -> bool {
+    let Some((hash, time)) = sapling_world::falling_block(&compound) else { return false };
+    let Some(block) = level(world, layer).and_then(|level| level.registry().runtime_id_from_hash(hash)) else { return false };
+    let Some(entity) = spawn(world, layer, block, hash, Body::new(at, [0.0; 3], [SIZE, SIZE]), u32::from(time)) else { return false };
+    entities::keep(world, entity, layer, unique_id, compound);
+    true
 }
 
 fn wire([x, y, z]: [f32; 3]) -> [f32; 3] {
@@ -107,6 +130,7 @@ fn step(world: &mut World, entity: Entity, layer: Entity, id: u64) -> Option<Blo
         if waited != PLACE_AFTER || !send::set_quietly(world, layer, cell, block_id) {
             return None;
         }
+        world.entity_mut(entity).remove::<entities::Stored>();
         send::tell_synced(world, layer, cell, id, send::Transition::Destroy);
         return Some(cell);
     }
