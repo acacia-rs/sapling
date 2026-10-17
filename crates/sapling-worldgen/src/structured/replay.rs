@@ -7,7 +7,7 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 use super::order::{Logged, Order};
-use super::square;
+use super::{Stage, square};
 use crate::block::Block;
 use crate::cache::SourceCache;
 use crate::structure::trace;
@@ -51,7 +51,7 @@ impl OverworldGenerator {
 
     /// Under a logged order, runs every post-process in that order once, so that none recurses
     /// through all those before it.
-    pub(super) fn warm_structures(&self) {
+    pub(super) fn warm_logged(&self) {
         let Order::Logged(logged) = &self.structure_order else { return };
         logged.warm.call_once(|| {
             let order = logged.order();

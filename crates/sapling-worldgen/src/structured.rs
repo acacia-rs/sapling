@@ -2,20 +2,20 @@
 //! decoration): every chunk a start reaches is post-processed once, reading the 3x3 chunks around
 //! it as the post-processes before it left them and writing into them at once. The order is the
 //! canonical one or a logged run's (order.rs); the mechanics are the same for both
-//! (docs/research/worldgen-bds-order.md, "One engine").
+//! (docs/research/worldgen-bds-order.md, "One engine"), and for every dimension (`Stage`).
 
 mod around;
 pub(crate) mod order;
+mod overworld;
 mod probe;
 pub(crate) mod replay;
 
 use std::sync::Arc;
 
-use crate::feature;
+use crate::cache::SourceCache;
 use crate::structure::{self, Past, Settled, Spawners, trace};
 use crate::terrain::ChunkShape;
-use crate::OverworldGenerator;
-use around::Around;
+pub(crate) use around::Around;
 use order::Rank;
 
 type Pos = (i32, i32, i32);
@@ -56,7 +56,7 @@ fn settle(settled: &mut Arc<Settled>, at: Pos, decided: bool) {
     }
 }
 
-fn square((x, z): (i32, i32), reach: i32) -> impl Iterator<Item = (i32, i32)> {
+pub(crate) fn square((x, z): (i32, i32), reach: i32) -> impl Iterator<Item = (i32, i32)> {
     (x - reach..=x + reach).flat_map(move |nx| (z - reach..=z + reach).map(move |nz| (nx, nz)))
 }
 
@@ -76,11 +76,52 @@ impl Source {
         }
         after
     }
+
+    /// A post-process over `before`, its chunk as the earlier ones left it, that wrote `shape` and `placed`.
+    pub(crate) fn new(chunk: (i32, i32), before: &Pieced, mut shape: ChunkShape, placed: structure::Placed) -> Self {
+        let mut settled = before.settled.clone();
+        let mut settled_past = Vec::new();
+        for (at, decided) in placed.settled {
+            if (at.0 >> 4, at.2 >> 4) == chunk {
+                settle(&mut settled, at, decided);
+            } else {
+                settled_past.push((at, decided));
+            }
+        }
+        shape.share();
+        let own = Pieced { shape: Arc::new(shape), settled, touched: widen(before.touched, placed.touched) };
+        Source { own, past: placed.past, settled_past, spawners: placed.spawners, temple_heights: placed.temple_heights }
+    }
+
+    pub(crate) fn spawners(&self) -> &Spawners {
+        &self.spawners
+    }
+
+    pub(crate) fn temple_height(&self, start: (i32, i32)) -> Option<i32> {
+        self.temple_heights.iter().find(|(s, _)| *s == start).map(|&(_, y)| y)
+    }
 }
 
-impl OverworldGenerator {
+impl Pieced {
+    pub(crate) fn shape(&self) -> &Arc<ChunkShape> {
+        &self.shape
+    }
+}
+
+/// A generator's structure stage: its carved chunks, its post-process order and one chunk's post-process.
+pub(crate) trait Stage {
+    fn stage_carved(&self, chunk: (i32, i32)) -> Arc<ChunkShape>;
+    /// None: no post-process runs in the chunk (a logged run did not post-process it).
+    fn structure_rank(&self, chunk: (i32, i32)) -> Option<Rank>;
+    fn pieced_cache(&self) -> &SourceCache<(i32, i32), Option<Source>>;
+    fn staged_cache(&self) -> &SourceCache<(i32, i32, u8), Pieced>;
+    /// Under a logged order, every post-process run once in that order.
+    fn warm_structures(&self);
+    /// The chunk's post-process, reading `around` as the earlier ones left it; None without starts.
+    fn post_process(&self, chunk: (i32, i32)) -> Option<Source>;
+
     /// `shape`, the chunk after its carvers, becomes the chunk after the structure stage.
-    pub fn place_structures(&self, shape: &mut ChunkShape, chunk_x: i32, chunk_z: i32) {
+    fn place_structures(&self, shape: &mut ChunkShape, chunk_x: i32, chunk_z: i32) {
         self.warm_structures();
         let chunk = (chunk_x, chunk_z);
         let staged = self.staged_after(chunk);
@@ -115,9 +156,9 @@ impl OverworldGenerator {
 
     /// `chunk` after `writers`, the first of those that write it.
     fn staged(&self, chunk: (i32, i32), writers: &[(Rank, (i32, i32))]) -> Arc<Pieced> {
-        self.staged.get((chunk.0, chunk.1, writers.len() as u8), || {
+        self.staged_cache().get((chunk.0, chunk.1, writers.len() as u8), || {
             let Some((&(_, writer), earlier)) = writers.split_last() else {
-                return Pieced { shape: self.carved(chunk.0, chunk.1), settled: Default::default(), touched: None };
+                return Pieced { shape: self.stage_carved(chunk), settled: Default::default(), touched: None };
             };
             let before = self.staged(chunk, earlier);
             match &*self.source(writer) {
@@ -130,46 +171,11 @@ impl OverworldGenerator {
 
     /// None: no start reaches the chunk, or a logged run did not post-process it.
     fn source(&self, chunk: (i32, i32)) -> Arc<Option<Source>> {
-        self.pieced.get(chunk, || self.post_process(chunk))
+        self.pieced_cache().get(chunk, || self.post_process(chunk))
     }
 
     /// The post-processes within `reach` chunks of `chunk` that ran before the one ranked `rank`.
-    fn earlier_sources(&self, chunk: (i32, i32), rank: Rank, reach: i32) -> impl Iterator<Item = Arc<Option<Source>>> + '_ {
-        square(chunk, reach).filter(move |&n| self.structure_rank(n).is_some_and(|r| r < rank)).map(|n| self.source(n))
-    }
-
-    fn post_process(&self, chunk: (i32, i32)) -> Option<Source> {
-        let rank = self.structure_rank(chunk)?;
-        let reaching = self.structures.reaching(&self.density, chunk)?;
-        let before = |n: (i32, i32)| self.staged_before(n, rank);
-        let around = Around::new(chunk, &before);
-        let Pieced { shape, mut settled, touched } = (**around.get(chunk)).clone();
-        let mut shape = Arc::unwrap_or_clone(shape);
-        let block = |x: i32, y: i32, z: i32| around.get((x >> 4, z >> 4)).shape.block((x & 15) as usize, y, (z & 15) as usize);
-        // A corridor is at most three chunks long.
-        let spawners = || self.earlier_sources(chunk, rank, 2).flat_map(|source| (*source).as_ref().map_or_else(Spawners::new, |s| s.spawners.clone())).collect();
-        let tops = || self.generated_tops(chunk.0, chunk.1);
-        let shaft_order = |starts: &mut [(i32, i32)]| self.shaft_order(chunk, starts);
-        let taken = |source: Arc<Option<Source>>, start: (i32, i32)| (*source).as_ref()?.temple_heights.iter().find(|(s, _)| *s == start).map(|&(_, y)| y);
-        let temple_height = |start: (i32, i32)| self.earlier_sources(chunk, rank, 1).find_map(|source| taken(source, start));
-        let neighbours = structure::Neighbours { placed: &block, spawners: &spawners, generated_tops: &tops, shaft_order: &shaft_order, temple_height: &temple_height, pyramid_from_start: self.structure_order.is_canonical() };
-        // Pieces' features read the same state; a feature's region is the 3x3.
-        let load = |x: i32, z: i32| if around.holds((x, z)) { around.get((x, z)).shape.clone() } else { self.carved(x, z) };
-        let biome = |[x, y, z]: [i32; 3]| Some(self.chunk_biomes(x >> 4, z >> 4).biome((x & 15) as usize, y, (z & 15) as usize));
-        let surface = |qx: i32, qz: i32| self.density.preliminary_surface(qx, qz);
-        let features = feature::ElementWorld { load: &load, biome: &biome, surface: &surface };
-        let biomes = self.chunk_biomes(chunk.0, chunk.1);
-        let placed = self.structures.place(&self.density, &reaching, &mut shape, chunk, neighbours, &biomes, &features);
-        let mut settled_past = Vec::new();
-        for (at, decided) in placed.settled {
-            if (at.0 >> 4, at.2 >> 4) == chunk {
-                settle(&mut settled, at, decided);
-            } else {
-                settled_past.push((at, decided));
-            }
-        }
-        shape.share();
-        let own = Pieced { shape: Arc::new(shape), settled, touched: widen(touched, placed.touched) };
-        Some(Source { own, past: placed.past, settled_past, spawners: placed.spawners, temple_heights: placed.temple_heights })
+    fn earlier_sources(&self, chunk: (i32, i32), rank: Rank, reach: i32) -> Vec<Arc<Option<Source>>> {
+        square(chunk, reach).filter(|&n| self.structure_rank(n).is_some_and(|r| r < rank)).map(|n| self.source(n)).collect()
     }
 }
