@@ -134,8 +134,12 @@ were recorded on a testbox BDS by `cargo run -p sapling --example bds_container_
 
 ## 6. World generation, the rest
 
-`Generated` serves terrain through lava lakes only: features (trees, ores, disks, icebergs,
-geodes), structures, the freeze pass and liquid flow are missing (sapling-worldgen tests/oracle.rs
-counts each). A column costs ~40 ms in release against ~1.7 ms from LevelDB
-(`cargo run --release -p sapling-world --example generation_time`): ~25 ms terrain shape and
-surface, ~7 ms biomes, ~8 ms conversion to a `Chunk` (not profiled).
+The overworld generates block-exact against a one-worker, seed-0 BDS (`tools/replay-all.sh`, every
+region 0); the stock oracle (`tools/oracle.sh`) is a regression signal only, since stock BDS does not
+repeat itself (`docs/research/worldgen-bds-order.md`). Left:
+
+- The Nether and the End: not generated at all.
+- Wall times on a quiet testbox: every speed result so far compares instructions
+  (`tools/bench.sh`, `docs/research/worldgen-perf.md`).
+- Cache room for spawn areas beyond the generator's areas, if mass joins matter: spawn priority
+  costs +13–30% instructions when 8–16 players join at once (`docs/research/worldgen-server-load.md`).
