@@ -1,9 +1,13 @@
 //! The Nether as BDS's `NetherGenerator` (constructor 1481e6d60, vtable 14a923740, `loadChunk` 1481ec000)
-//! makes it: Java 1.12's hell terrain and a legacy layer biome stack, both on MT19937, then the bedrock
-//! and the biomes' surface builders (docs/research/worldgen-bds-nether.md).
+//! makes it: Java 1.12's hell terrain and a legacy layer biome stack, both on MT19937, then the bedrock,
+//! the biomes' surface builders and the cave carver (docs/research/worldgen-bds-nether.md).
 
 mod biome;
+mod capped;
+mod carver;
 mod floor;
+mod surface;
+mod surface_spec;
 mod terrain;
 
 use std::sync::Arc;
@@ -14,23 +18,31 @@ use crate::chunk::ChunkShape;
 use crate::random::Mt19937;
 
 pub use biome::{BASALT_DELTAS, CRIMSON_FOREST, HELL, SOULSAND_VALLEY, WARPED_FOREST};
-pub use terrain::{HEIGHT, LAVA_LEVEL};
+pub use terrain::{HEIGHT, SEA_LEVEL};
 
 const BIOMES_LIMIT: usize = 256;
 
 pub struct NetherGenerator {
     noises: terrain::NetherNoises,
     biomes: biome::NetherBiomes,
+    surface: surface::NetherSurface,
+    carver: carver::NetherCarver,
     chunk_biomes: SourceCache<(i32, i32), ChunkBiomes>,
 }
 
 impl NetherGenerator {
     /// The terrain's MT takes the seed's low 32 bits.
     pub fn new(seed: i64) -> Self {
-        Self { noises: terrain::NetherNoises::new(seed as u32), biomes: biome::NetherBiomes::new(seed), chunk_biomes: SourceCache::new(BIOMES_LIMIT) }
+        Self {
+            noises: terrain::NetherNoises::new(seed as u32),
+            biomes: biome::NetherBiomes::new(seed),
+            surface: surface::NetherSurface::new(seed),
+            carver: carver::NetherCarver::new(seed),
+            chunk_biomes: SourceCache::new(BIOMES_LIMIT),
+        }
     }
 
-    /// Netherrack, lava and air from the density alone.
+    /// Stone, water and air from the density alone.
     pub fn chunk_shape(&self, chunk_x: i32, chunk_z: i32) -> ChunkShape {
         self.noises.chunk_shape(chunk_x, chunk_z)
     }
@@ -50,12 +62,17 @@ impl NetherGenerator {
 
     /// `bedrock_blocks`, then the biomes' surface builders.
     pub fn surfaced_blocks(&self, chunk_x: i32, chunk_z: i32) -> ChunkShape {
-        self.bedrocked(chunk_x, chunk_z).0
+        let (mut shape, mut random) = self.bedrocked(chunk_x, chunk_z);
+        let biomes = self.chunk_biomes(chunk_x, chunk_z);
+        self.surface.build(&mut shape, &biomes, &self.noises, (chunk_x, chunk_z), &mut random);
+        shape
     }
 
     /// `surfaced_blocks`, then the pregeneration pass's carvers: the buffer `loadChunk` commits (1481eca38).
     pub fn carved_blocks(&self, chunk_x: i32, chunk_z: i32) -> ChunkShape {
-        self.surfaced_blocks(chunk_x, chunk_z)
+        let mut shape = self.surfaced_blocks(chunk_x, chunk_z);
+        self.carver.carve(&mut shape, chunk_x, chunk_z);
+        shape
     }
 
     /// Bedrock biome ids, one per column at every y.

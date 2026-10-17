@@ -195,9 +195,8 @@ Cave features, the sulfur caves' subsurface builder and monster rooms: [worldgen
 
 ## Nether / End (brief)
 
-- Nether (ctor 1481e6d60): `PerlinNoise(IRandom&)` / `PerlinSimplexNoise` built from an **MT** `Random(seed)`
-  (145e29d90/145e2a5e0), BlendedNoise with Java nether scales (684.412, y 2053.236, factors 80/60). Shape parity with
-  Java's legacy-random nether is plausible, seed parity is not (Java uses its LCG there).
+- Nether (ctor 1481e6d60): Java 1.12's hell density and BDS's legacy layer biomes on MT19937, ported:
+  [worldgen-bds-nether.md](worldgen-bds-nether.md).
 - End (14a924380): BlendedNoise ×2 xz (1368.824), constants −3000, 0.72, −843.0, 1/64, −8, 7, −30 in 1482432f0;
   `TheEndSurfaceSettings` surface builder. Not further mapped.
 

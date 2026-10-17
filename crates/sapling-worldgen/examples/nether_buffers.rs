@@ -17,7 +17,11 @@ fn main() {
     let generator = NetherGenerator::new(seed.parse().unwrap());
     let buffers = Buffers::open(Path::new(dir)).expect("block_ptrs.tsv");
     let (mut pairs, mut chunks, mut first) = (BTreeMap::<(String, String), usize>::new(), Vec::new(), Vec::new());
-    let all = buffers.chunks();
+    let pair = std::env::var("NETHER_PAIR").ok();
+    // NETHER_BOX=x0,z0,x1,z1: those chunks only.
+    let bounds: Option<Vec<i32>> = std::env::var("NETHER_BOX").ok().map(|b| b.split(',').map(|v| v.parse().unwrap()).collect());
+    let inside = |&(x, z): &(i32, i32)| bounds.as_ref().is_none_or(|b| b[0] <= x && x <= b[2] && b[1] <= z && z <= b[3]);
+    let all: Vec<(i32, i32)> = buffers.chunks().into_iter().filter(inside).collect();
     for &(cx, cz) in &all {
         let bds = buffers.chunk(cx, cz).unwrap();
         let shape = match stage {
@@ -32,7 +36,8 @@ fn main() {
             if ours != theirs {
                 differing += 1;
                 *pairs.entry((ours.to_string(), theirs.to_string())).or_default() += 1;
-                if first.len() < 30 {
+                // NETHER_PAIR=<ours>/<bds>: list that pair's cells only.
+                if first.len() < 30 && pair.as_deref().is_none_or(|pair| pair == format!("{ours}/{theirs}")) {
                     first.push(format!("{} {y} {}: {ours}/{theirs}", cx * 16 + x as i32, cz * 16 + z as i32));
                 }
             }

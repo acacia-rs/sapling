@@ -1,6 +1,7 @@
 //! The Nether's terrain as `NetherGenerator::prepareHeights` (1481e9e90) fills a chunk: Java 1.12's hell
 //! density (`ChunkGeneratorHell`) in f32 on a 5x17x5 cell grid, from octaves the constructor (1481e6d60)
-//! draws off one MT seeded with the 32-bit seed; netherrack where positive, lava below y 32, air above.
+//! draws off one MT seeded with the 32-bit seed. Stone where positive, water below the sea level 32, air above, as
+//! BDS writes them: the surface builders turn the stone into netherrack and the water into lava.
 
 use crate::block::Block;
 use crate::chunk::ChunkShape;
@@ -10,7 +11,7 @@ use crate::random::Mt19937;
 /// Cell corners per column: 16 cells of 8 blocks, 0..=128.
 pub const CELL_ROWS: usize = 17;
 pub const HEIGHT: i32 = 128;
-pub const LAVA_LEVEL: i32 = 32;
+pub const SEA_LEVEL: i32 = 32;
 /// Draws one octave's constructor takes: three offsets and the permutation's 256.
 const OCTAVE_DRAWS: u32 = 3 + 256;
 
@@ -64,7 +65,7 @@ impl NetherNoises {
             .collect()
     }
 
-    /// The chunk's netherrack, lava and air, interpolated z, x, then y per cell as BDS does.
+    /// The chunk's stone, water and air, interpolated z, x, then y per cell as BDS does.
     pub fn chunk_shape(&self, chunk_x: i32, chunk_z: i32) -> ChunkShape {
         let cells = self.cells(chunk_x, chunk_z);
         let at = |x: usize, z: usize, y: usize| cells[(x * 5 + z) * CELL_ROWS + y];
@@ -85,9 +86,9 @@ impl NetherNoises {
                             for dy in 0..8 {
                                 let y = (cy * 8 + dy) as i32;
                                 let block = if step * (dy as f32 * 0.125) + lower > 0.0 {
-                                    Block::Netherrack
-                                } else if y < LAVA_LEVEL {
-                                    Block::Lava
+                                    Block::Stone
+                                } else if y < SEA_LEVEL {
+                                    Block::Water
                                 } else {
                                     Block::Air
                                 };

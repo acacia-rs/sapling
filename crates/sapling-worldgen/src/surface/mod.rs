@@ -3,17 +3,18 @@
 //! surface minus 8, drawing from the chunk MT the bedrock floor left off.
 
 mod biomes;
-mod column;
+pub(crate) mod column;
 mod frozen;
 mod gradient;
 mod mesa;
 mod noise;
-mod overworld;
-mod spec;
+pub(crate) mod overworld;
+pub(crate) mod spec;
 mod swamp;
 mod temperature;
 
 pub(crate) use biomes::surface_spec;
+pub(crate) use noise::{adjustment as adjustment_noise, depth as depth_noise};
 pub use noise::SurfaceNoises;
 pub(crate) use temperature::{info_noise, temperature};
 
@@ -99,6 +100,6 @@ impl SurfaceNoises {
         }
         let depth = overworld::surface_depth(random, depth_noise);
         let steep = spec.steep.filter(|s| is_steep(s, tops, column.x, column.z)).map(|s| s.material);
-        overworld::build(column, materials, steep, spec.sea_floor_depth, spec.temperature, depth, random)
+        overworld::build(column, |_| materials, steep, spec.sea_floor_depth, spec.temperature, depth, overworld::Sea::Tracked, random)
     }
 }

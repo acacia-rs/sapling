@@ -79,17 +79,20 @@ impl Stages {
         }
     }
 
-    /// The last of our stages that changed the cell.
-    pub fn writer(&self, x: usize, y: i32, z: usize) -> &'static str {
+    /// The stage a cell where ours differs from BDS's `loaded` block belongs to: ours carved it, or BDS emptied a
+    /// cell our density filled (a carver miss: the density alone is checked by `shape`), or ours is open where BDS
+    /// is solid (the density), or both are solid (the bedrock or a surface builder).
+    pub fn stage_of(&self, x: usize, y: i32, z: usize, loaded: &str) -> &'static str {
         let at = |shape: &sapling_worldgen::ChunkShape| shape.block(x, y, z);
-        if at(&self.carved) != at(&self.surfaced) {
+        let open = |name: &str| matches!(name, "air" | "lava" | "water");
+        if at(&self.carved) != at(&self.surfaced) || (open(loaded) && at(&self.shape) == Block::Stone) {
             "carvers"
-        } else if at(&self.surfaced) != at(&self.bedrock) {
-            "surface"
-        } else if at(&self.bedrock) != at(&self.shape) {
+        } else if open(at(&self.carved).name()) != open(loaded) {
+            "shape"
+        } else if at(&self.carved) == Block::Bedrock || loaded == "bedrock" {
             "bedrock"
         } else {
-            "shape"
+            "surface"
         }
     }
 

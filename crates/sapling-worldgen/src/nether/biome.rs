@@ -3,7 +3,7 @@
 //! layer (14824b460) picks the biome whose `minecraft:multinoise_generation_rules` lies nearest, and Java 1.14's
 //! voronoi zoom (14824b970, 14824ff80) takes it to blocks. One biome per column (`fillBiomes` 148251120).
 
-use crate::noise::{ImprovedNoise, legacy_octaves};
+use crate::noise::LegacyPerlin;
 use crate::random::Mt19937;
 
 pub const HELL: u8 = 8;
@@ -27,31 +27,9 @@ const ZOOM_SALT: i64 = -0x7945_4928_9d90_b428;
 
 /// One noise layer: Java 1.16's two-octave nether `NormalNoise`, BDS's float `PerlinNoise` pair on an MT.
 struct NoiseLayer {
-    first: Vec<ImprovedNoise>,
-    second: Vec<ImprovedNoise>,
+    first: LegacyPerlin,
+    second: LegacyPerlin,
     value_factor: f32,
-}
-
-/// `PerlinNoise` (145e27060): its octaves' sum normalised by the inverse of the summed inverse factors.
-fn normalisation(octaves: usize) -> f32 {
-    let mut sum = 0.0f32;
-    let mut factor = 1.0f32;
-    for _ in 0..octaves {
-        sum += 1.0 / factor;
-        factor *= 0.5;
-    }
-    1.0 / sum
-}
-
-/// `PerlinNoise::getValue` (145e27220): octave k at `position * 2^-k`, divided by `2^-k`.
-fn perlin(octaves: &[ImprovedNoise], [x, y, z]: [f32; 3]) -> f32 {
-    let mut total = 0.0f32;
-    let mut factor = 1.0f32;
-    for octave in octaves {
-        total = total + octave.sample_offset(x * factor + octave.xo, y * factor + octave.yo, z * factor + octave.zo) / factor;
-        factor *= 0.5;
-    }
-    total
 }
 
 impl NoiseLayer {
@@ -59,17 +37,17 @@ impl NoiseLayer {
     fn new(seed: i64, index: u32) -> Self {
         const OCTAVES: u32 = 2;
         let mut random = Mt19937::new((seed as u32).wrapping_add(index));
-        let first = legacy_octaves(&mut random, OCTAVES as usize);
-        let second = legacy_octaves(&mut random, OCTAVES as usize);
+        let first = LegacyPerlin::new(&mut random, OCTAVES as usize);
+        let second = LegacyPerlin::new(&mut random, OCTAVES as usize);
         let value_factor = 0.166_666_67 / ((1.0 / (OCTAVES + 1) as f32 + 1.0) * 0.1);
         Self { first, second, value_factor }
     }
 
     fn value(&self, qx: i32, qz: i32) -> f32 {
         let (x, z) = (qx as f32, qz as f32);
-        let a = perlin(&self.first, [x * 0.015625, 0.0, z * 0.015625]) * normalisation(self.first.len());
-        let k = 1.018_126_8_f32;
-        let b = perlin(&self.second, [x * k * 0.015625, 0.0, z * k * 0.015625]) * normalisation(self.second.len());
+        let a = self.first.value([x * 0.015625, 0.0, z * 0.015625]) * self.first.normalisation;
+        let k = f32::from_bits(0x3f82_51fb);
+        let b = self.second.value([x * k * 0.015625, 0.0, z * k * 0.015625]) * self.second.normalisation;
         (b + a) * self.value_factor
     }
 }

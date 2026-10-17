@@ -113,14 +113,7 @@ fn compare(seed: i64, world: &str) {
                         };
                         let loaded = buffer[index(x, y, z)];
                         if ours != loaded {
-                            // A cell only the density decided: BDS's air in our netherrack is a carver's, another
-                            // block a surface builder's.
-                            let stage = match stages.writer(x, y, z) {
-                                "shape" if ours == "netherrack" && matches!(loaded, "air" | "lava") => "carvers",
-                                "shape" if ours == "netherrack" => "surface",
-                                stage => stage,
-                            };
-                            tally.wrong(stage, ours, loaded);
+                            tally.wrong(stages.stage_of(x, y, z, loaded), ours, loaded);
                         } else if ours != name(saved.0) {
                             *tally.later.entry(name(saved.0).to_string()).or_default() += 1;
                         }

@@ -40,31 +40,40 @@ impl SurfaceNoises {
         }
     }
 
-    /// The adjustment noise at `position * scale` (143907ca0): octaves at doubling wavelength,
-    /// each divided by its scale, normalised by 1/7, with no origin offsets.
-    pub fn adjustment(&self, [x, y, z]: [i32; 3], scale: f32) -> f32 {
-        let mut total = 0.0f32;
-        let mut octave_scale = 1.0f32;
-        for octave in &self.adjustment {
-            let [x, y, z] = [x, y, z].map(|v| v as f32 * scale * octave_scale);
-            total = total + octave.value3(x, y, z) / octave_scale;
-            octave_scale *= 0.5;
-        }
-        total * (1.0 / 7.0)
+    pub fn adjustment(&self, position: [i32; 3], scale: f32) -> f32 {
+        adjustment(&self.adjustment, position, scale)
     }
 
     /// The depth noise at a block column (148211300, the loop before `buildChunkSurface`).
     pub fn depth(&self, x: i32, z: i32) -> f32 {
-        let mut total = 0.0f32;
-        let mut scale = 1.0f32;
-        for octave in &self.depth {
-            let [xo, zo] = octave.origin;
-            let value = octave.value(x as f32 * scale * 0.125 + xo, z as f32 * scale * 0.125 + zo);
-            total = value * (0.55 / scale) + total;
-            scale *= 0.5;
-        }
-        total
+        depth(&self.depth, x, z, 0.125)
     }
+}
+
+/// The adjustment noise at `position * scale` (143907ca0): octaves at doubling wavelength, each divided by its
+/// scale, normalised by 1/7, with no origin offsets.
+pub(crate) fn adjustment(octaves: &[SimplexNoise], [x, y, z]: [i32; 3], scale: f32) -> f32 {
+    let mut total = 0.0f32;
+    let mut octave_scale = 1.0f32;
+    for octave in octaves {
+        let [x, y, z] = [x, y, z].map(|v| v as f32 * scale * octave_scale);
+        total = total + octave.value3(x, y, z) / octave_scale;
+        octave_scale *= 0.5;
+    }
+    total * (1.0 / 7.0)
+}
+
+/// The depth noise at a block column: octaves at halving `frequency`, amplitude 0.55 over it.
+pub(crate) fn depth(octaves: &[SimplexNoise], x: i32, z: i32, frequency: f32) -> f32 {
+    let mut total = 0.0f32;
+    let mut scale = 1.0f32;
+    for octave in octaves {
+        let [xo, zo] = octave.origin;
+        let value = octave.value(x as f32 * scale * frequency + xo, z as f32 * scale * frequency + zo);
+        total = value * (0.55 / scale) + total;
+        scale *= 0.5;
+    }
+    total
 }
 
 #[cfg(test)]
