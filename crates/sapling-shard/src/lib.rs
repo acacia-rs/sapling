@@ -3,9 +3,12 @@
 //! about each other and hands each player's packets to the outbox as one batch. See
 //! docs/DESIGN.md "Threads", "Worlds", "Step 3 as built" and "Step 5 as built".
 
+mod actors;
 mod arenas;
 mod blobs;
 mod blocks;
+mod body;
+mod campfires;
 mod chat;
 mod chunks;
 mod clock;
@@ -13,7 +16,9 @@ mod commands;
 mod components;
 mod config;
 mod containers;
+mod creatures;
 mod drops;
+mod entities;
 mod experience;
 mod forms;
 mod furnaces;
@@ -24,17 +29,25 @@ mod hoppers;
 mod hud;
 mod inventory;
 mod join;
+mod late_sounds;
 mod mobs;
 mod movement;
 mod orbs;
 mod player;
 mod plugins;
 mod roster;
+mod rules;
 mod shard;
 mod skin;
+mod sleep;
+mod splash;
+mod sync;
 mod ticking;
+mod tnt;
 mod view;
 mod visibility;
+mod vitals;
+mod weather;
 mod worlds;
 
 pub use config::{ShardConfig, TICK};

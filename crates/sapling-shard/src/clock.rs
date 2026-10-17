@@ -1,10 +1,11 @@
 //! The time of day. Each world's counter (`sapling_world::Level::time`) advances a tick at a time
-//! while its daylight cycle runs. A client counts on by itself from what it was last told, so it
-//! is told at the join, when the time is set, and now and then to stay in step, in the packets
-//! of `sapling_data::world_clocks`.
+//! while its `doDayLightCycle` rule is on. A client counts on by itself from what it was last
+//! told, so it is told at the join, when the time is set or stopped, and now and then to stay in
+//! step, in the packets of `sapling_data::world_clocks`.
 
 use acacia_proto::packets::SyncWorldClocks;
 use bevy_ecs::prelude::*;
+use sapling_data::DAYLIGHT_CYCLE;
 use sapling_world::Level;
 
 use crate::chat;
@@ -17,20 +18,24 @@ fn wire_time(level: &Level) -> i32 {
     level.time.rem_euclid(i64::from(i32::MAX) + 1) as i32
 }
 
+fn runs(level: &Level) -> bool {
+    level.rules.on(DAYLIGHT_CYCLE)
+}
+
 /// What a joining player is told.
 pub(crate) fn registry(level: &Level) -> SyncWorldClocks {
-    sapling_data::world_clocks(wire_time(level), !level.daylight_cycle)
+    sapling_data::world_clocks(wire_time(level), !runs(level))
 }
 
 fn state(level: &Level) -> SyncWorldClocks {
-    sapling_data::clock_state(wire_time(level), !level.daylight_cycle)
+    sapling_data::clock_state(wire_time(level), !runs(level))
 }
 
 /// Advances every world's clock and reminds its players of it every [`SYNC_INTERVAL`] ticks.
 pub(crate) fn advance(tick: Res<Tick>, mut layers: Query<(Entity, &mut Layer)>, mut players: Query<(&Stage, &InLayer, &mut Outgoing)>) {
     for (entity, mut layer) in &mut layers {
         let level = layer.world.level_mut();
-        level.time += i64::from(level.daylight_cycle);
+        level.time += i64::from(runs(level));
         if tick.0 % SYNC_INTERVAL != 0 {
             continue;
         }
@@ -45,7 +50,12 @@ pub(crate) fn advance(tick: Res<Tick>, mut layers: Query<(Entity, &mut Layer)>, 
 pub(crate) fn set(world: &mut World, layer: Entity, time: i64) {
     let Some(mut level) = world.get_mut::<Layer>(layer) else { return };
     level.world.level_mut().time = time;
-    let now = sapling_net::encode(&state(level.world.level()));
+    tell_layer(world, layer);
+}
+
+/// Tells a world's players its time and whether it runs.
+pub(crate) fn tell_layer(world: &mut World, layer: Entity) {
+    let Some(now) = world.get::<Layer>(layer).map(|layer| sapling_net::encode(&state(layer.world.level()))) else { return };
     chat::send_to_layer(world, layer, &now);
 }
 

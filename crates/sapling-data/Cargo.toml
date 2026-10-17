@@ -10,3 +10,4 @@ description = "Game data a Bedrock client needs to join: StartGame defaults and 
 acacia-molang.workspace = true
 acacia-proto.workspace = true
 bytes.workspace = true
+serde_json.workspace = true

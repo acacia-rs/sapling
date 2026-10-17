@@ -15,17 +15,29 @@ pub fn update_attributes(runtime_entity_id: u64) -> UpdateAttributes {
     UpdateAttributes { runtime_entity_id, ..decode(UPDATE_ATTRIBUTES) }
 }
 
-/// A player's level and how far it is into the next (0 to 1), in the recorded attributes'
-/// shape (`minecraft:player.level` up to 24791, `minecraft:player.experience`).
-pub fn experience_attributes(runtime_entity_id: u64, level: i32, progress: f32) -> UpdateAttributes {
+/// How far a player is into its next level (0 to 1), and its level when that changed, in the
+/// recorded attributes' shape (`minecraft:player.experience`, `minecraft:player.level` up to
+/// 24791), at server tick `tick`. BDS sends only the progress when the level stays, and names each
+/// twice (REC: `bds_container_probe`, research/captures/containers-findings.md D5).
+pub fn experience_attributes(runtime_entity_id: u64, level: Option<i32>, progress: f32, tick: u64) -> UpdateAttributes {
     const LEVEL: &str = "minecraft:player.level";
     const PROGRESS: &str = "minecraft:player.experience";
+    const TIMES: usize = 2;
     let mut packet = update_attributes(runtime_entity_id);
-    packet.attributes.retain(|attribute| attribute.name == LEVEL || attribute.name == PROGRESS);
+    let mut seen: Vec<String> = Vec::new();
+    packet.attributes.retain(|attribute| {
+        let wanted = attribute.name == PROGRESS || attribute.name == LEVEL && level.is_some();
+        let fits = seen.iter().filter(|name| **name == attribute.name).count() < TIMES;
+        seen.push(attribute.name.clone());
+        wanted && fits
+    });
     for attribute in &mut packet.attributes {
-        attribute.current = if attribute.name == LEVEL { level as f32 } else { progress };
+        attribute.current = match level {
+            Some(level) if attribute.name == LEVEL => level as f32,
+            _ => progress,
+        };
     }
-    packet
+    UpdateAttributes { tick, ..packet }
 }
 
 /// Member permissions with the default ability layer (build, mine, doors, attack).

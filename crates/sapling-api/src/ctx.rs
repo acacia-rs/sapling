@@ -1,6 +1,9 @@
 use std::any::{Any, TypeId};
 
 use crate::form::{Form, FormResponse};
+use crate::effect::EffectBackend;
+use crate::entity::EntityBackend;
+use crate::health::HealthBackend;
 use crate::world::WorldBackend;
 use crate::{Block, BlockPos, BossBar, Difficulty, GameMode, Item, Permission, Player, PlayerId, Position, Sidebar, Slot, Title};
 
@@ -8,7 +11,7 @@ use crate::{Block, BlockPos, BossBar, Difficulty, GameMode, Item, Permission, Pl
 pub type FormCallback = Box<dyn FnOnce(&mut ShardCtx<'_>, &Player, Option<&str>) + Send>;
 
 /// What a shard offers its handlers. Implemented by sapling-shard; plugins use [`ShardCtx`].
-pub trait Backend: WorldBackend {
+pub trait Backend: WorldBackend + EntityBackend + HealthBackend + EffectBackend + crate::ExperienceBackend + crate::WeatherBackend {
     fn tick(&self) -> u64;
     fn player_count(&self) -> usize;
     fn players(&self) -> Vec<Player>;
@@ -20,11 +23,19 @@ pub trait Backend: WorldBackend {
     fn difficulty(&self) -> Difficulty;
     fn set_difficulty(&mut self, difficulty: Difficulty);
     fn block(&self, pos: BlockPos) -> Option<Block>;
+    fn power_at(&self, pos: BlockPos) -> u8;
     fn set_block(&mut self, pos: BlockPos, block: &Block) -> bool;
+    fn update_block(&mut self, pos: BlockPos, block: &Block) -> bool;
+    fn break_block(&mut self, pos: BlockPos) -> bool;
+    fn set_container_item(&mut self, pos: BlockPos, slot: usize, item: Option<&Item>) -> bool;
+    fn container_size(&mut self, pos: BlockPos) -> Option<usize>;
     fn kick(&mut self, player: PlayerId, message: &str);
     fn broadcast(&mut self, message: &str);
     fn send_message(&mut self, player: PlayerId, message: &str);
+    fn send_translation(&mut self, player: PlayerId, key: &str, parameters: &[String]);
     fn teleport(&mut self, player: PlayerId, feet: [f32; 3]);
+    /// Told to the player with its next teleport.
+    fn look(&mut self, _player: PlayerId, _yaw: f32, _pitch: f32) {}
     fn permission(&self, player: PlayerId) -> Option<Permission>;
     fn set_permission(&mut self, player: PlayerId, permission: Permission);
     fn game_mode(&self, player: PlayerId) -> Option<GameMode>;
@@ -32,7 +43,7 @@ pub trait Backend: WorldBackend {
     fn item(&self, player: PlayerId, slot: Slot) -> Option<Item>;
     fn set_item(&mut self, player: PlayerId, slot: Slot, item: Option<&Item>) -> bool;
     fn give(&mut self, player: PlayerId, item: &Item) -> u8;
-    fn clear_inventory(&mut self, player: PlayerId);
+    fn clear_inventory(&mut self, player: PlayerId) -> u32;
     fn held_slot(&self, player: PlayerId) -> Option<u8>;
     fn send_form(&mut self, player: PlayerId, json: String, on_answer: FormCallback);
     fn set_sidebar(&mut self, player: PlayerId, sidebar: Option<&Sidebar>);
@@ -113,11 +124,45 @@ impl<'a> ShardCtx<'a> {
         self.backend.block(pos)
     }
 
+    /// The redstone signal, 0 to 15, the block at a position got when circuits were last worked
+    /// out (every second tick); 0 where nothing powers it.
+    pub fn power_at(&self, pos: BlockPos) -> u8 {
+        self.backend.power_at(pos)
+    }
+
     /// Puts a block into the world and onto the screen of everyone who sees the place. False,
     /// with nothing changed, for a block the game does not have and where [`ShardCtx::block`]
     /// is `None`. Raises no event.
     pub fn set_block(&mut self, pos: BlockPos, block: &Block) -> bool {
         self.backend.set_block(pos, block)
+    }
+
+    /// [`ShardCtx::set_block`], and then what is around the block reacts as to a player's place:
+    /// liquids move, sand over a gap falls, a torch that lost its block breaks. What vanilla's
+    /// `/setblock` does. A cell that already holds `block` is left alone, and that is true too.
+    pub fn update_block(&mut self, pos: BlockPos, block: &Block) -> bool {
+        self.backend.update_block(pos, block)
+    }
+
+    /// Breaks the block at `pos` as a hand would: its fragments fly, it leaves what it drops, and
+    /// what is around reacts as to [`ShardCtx::update_block`]. False for air and a place that is
+    /// not loaded. What vanilla's `/setblock .. destroy` does first.
+    pub fn break_block(&mut self, pos: BlockPos) -> bool {
+        self.backend.break_block(pos)
+    }
+
+    /// Puts `item` (`None`: nothing) into slot `slot` of the container block at `pos` (a chest,
+    /// a furnace, a hopper; a double chest's slots run on through its other half), on the screens
+    /// of those who have it open too. False for a block that holds no items, a slot it does not
+    /// have, and an item the game does not have.
+    pub fn set_container_item(&mut self, pos: BlockPos, slot: usize, item: Option<&Item>) -> bool {
+        self.backend.set_container_item(pos, slot, item)
+    }
+
+    /// How many slots the container block at `pos` has (54 for a double chest); `None` for a
+    /// block that holds no items. `&mut` because a container nobody has open is read in.
+    pub fn container_size(&mut self, pos: BlockPos) -> Option<usize> {
+        self.backend.container_size(pos)
     }
 
     /// Disconnects a player with `message` on their screen. `on_quit` follows on a later tick.
@@ -136,8 +181,20 @@ impl<'a> ShardCtx<'a> {
         self.backend.send_message(player, message);
     }
 
+    /// Shows one player the client's line under translation key `key` (`commands.tp.successVictim`),
+    /// in their language, with `parameters` filled in.
+    pub fn send_translation(&mut self, player: PlayerId, key: &str, parameters: &[String]) {
+        self.backend.send_translation(player, key, parameters);
+    }
+
     /// Moves a player so that their feet are at `feet`, keeping where they look.
     pub fn teleport(&mut self, player: PlayerId, feet: [f32; 3]) {
+        self.backend.teleport(player, feet);
+    }
+
+    /// [`Self::teleport`], turning the player to look along `yaw` and `pitch`.
+    pub fn teleport_facing(&mut self, player: PlayerId, feet: [f32; 3], [yaw, pitch]: [f32; 2]) {
+        self.backend.look(player, yaw, pitch);
         self.backend.teleport(player, feet);
     }
 
@@ -175,9 +232,9 @@ impl<'a> ShardCtx<'a> {
         self.backend.give(player, item)
     }
 
-    /// Empties a player's hotbar, inventory, armour and offhand.
-    pub fn clear_inventory(&mut self, player: PlayerId) {
-        self.backend.clear_inventory(player);
+    /// Empties a player's hotbar, inventory, armour and offhand; how many items went.
+    pub fn clear_inventory(&mut self, player: PlayerId) -> u32 {
+        self.backend.clear_inventory(player)
     }
 
     /// The hotbar slot a player has in hand (0 to 8).

@@ -18,14 +18,15 @@ mod world;
 mod world_io;
 
 pub use acacia_proto::types::Blob;
-pub use acacia_world::{BlockRegistry, Chunk, Dimension, LevelChunkData, Material, Mining, Tool, ToolKind, ToolTier};
+pub use acacia_world::{Aabb, BlockRegistry, Chunk, Dimension, LevelChunkData, Material, Mining, Tool, ToolKind, ToolTier};
 pub use column::{SubChunkAnswer, empty_column};
 pub use folder::WorldFolder;
 pub use generated::Generated;
 pub use sapling_leveldb::LevelDat;
 pub use players::PlayerLoad;
 pub use sapling_leveldb::{
-    Actor, BlockEntity, ItemStack, Painting, PlayerData, State as ActorState, actors, container_items, new_block_entity, with_container_items,
+    Actor, BlockEntity, ItemStack, Painting, PlayerData, State as ActorState, actors, block_of_hash, container_items, harmed_actor, moved_actor, new_actor, new_item_actor, new_orb_actor, orb_value, new_block_entity, stored_actors,
+    with_container_items,
 };
 pub use storage::{Level, LevelDbStorage, MemoryStorage, StorageError, StoredColumn, WorldStorage};
 pub use template::Template;

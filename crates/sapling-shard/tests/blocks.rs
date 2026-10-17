@@ -115,7 +115,8 @@ fn a_waterlogged_block_leaves_its_water_behind() {
     let mut h = Harness::with(ShardConfig { game_mode: GameMode::Creative, ..config() }, level);
     h.enter(1, "Alex");
     h.receive(1, &block_actions(&[(Action::PredictBreak, ABOVE)]));
-    assert_eq!(updates(&h.tick(1)), [(ABOVE, hash(WATER), 0), (ABOVE, hash(AIR), 1)]);
+    // Layer 0 only: the client moves the water out of layer 1 itself, as BDS expects of it.
+    assert_eq!(updates(&h.tick(1)), [(ABOVE, hash(WATER), 0)]);
     assert_eq!(name(&mut h, ABOVE), WATER);
     // Water is not something to break.
     h.receive(1, &block_actions(&[(Action::PredictBreak, ABOVE)]));

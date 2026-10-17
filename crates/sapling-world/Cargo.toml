@@ -7,6 +7,7 @@ rust-version.workspace = true
 description = "Server-side worlds: chunk columns, their storage and their cached network encoding"
 
 [dependencies]
+sapling-data.workspace = true
 sapling-leveldb.workspace = true
 sapling-worldgen.workspace = true
 acacia-proto.workspace = true

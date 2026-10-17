@@ -1,0 +1,551 @@
+## /fill ~-1 ~-1 ~7 ~10 ~-1 ~23 stone
+     37 actor   CommandOutput success_count=0 data=None No blocks filled success=false []
+## /tp @s ~ ~ ~15 -90 0
+   1036 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.tp.success.coordinates\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor\"},{\"text\":\"0.50\"},{\"text\":\"64.00\"},{\"text\":\"15.50\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   1036 actor   MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 0.5, y: 65.62001, z: 15.5 }, pitch: 0.0, yaw: -90.0, head_yaw: -90.0, mode: Teleport, on_ground: true, ridden_runtime_id: 0, teleport: Some(MovePlayerTeleport { cause: Command, source_entity_type: Unknown(1) }), tick: 74 }
+   1036 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.tp.successVictim\",\"with\":{\"rawtext\":[{\"text\":\"0.50, 64.00, 15.50\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   1036 actor   CommandOutput success_count=1 data=None commands.tp.success.coordinates success=true ["CmdActor", "0.50", "64.00", "15.50"]
+   1036 watcher MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 0.5, y: 65.62001, z: 15.5 }, pitch: 0.0, yaw: -90.0, head_yaw: -90.0, mode: Normal, on_ground: true, ridden_runtime_id: 0, teleport: None, tick: 74 }
+   1135 watcher MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 0.5, y: 65.62001, z: 15.5 }, pitch: 0.0, yaw: -90.0, head_yaw: -90.0, mode: Normal, on_ground: false, ridden_runtime_id: 0, teleport: None, tick: 76 }
+   1185 watcher MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 0.5, y: 65.62001, z: 15.5 }, pitch: 0.0, yaw: -90.0, head_yaw: -90.0, mode: Normal, on_ground: true, ridden_runtime_id: 0, teleport: None, tick: 77 }
+## /fill ~1 ~ ~-8 ~10 ~16 ~8 air
+   2065 actor   CommandOutput success_count=0 data=None No blocks filled success=false []
+## /fill ~3 ~1 ~-5 ~5 ~3 ~-3 oak_leaves ["persistent_bit"=false]
+   3041 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 65, z: 10 }, block_runtime_id: 2110714365, flags: UpdateBlockFlags(3), layer: 0 }
+   3041 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 65, z: 10 }, block_runtime_id: 2110714365, flags: UpdateBlockFlags(3), layer: 0 }
+   3041 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 65, z: 11 }, block_runtime_id: 2110714365, flags: UpdateBlockFlags(3), layer: 0 }
+   3041 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 65, z: 12 }, block_runtime_id: 2110714365, flags: UpdateBlockFlags(3), layer: 0 }
+   3041 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 66, z: 10 }, block_runtime_id: 2110714365, flags: UpdateBlockFlags(3), layer: 0 }
+   3041 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 66, z: 11 }, block_runtime_id: 2110714365, flags: UpdateBlockFlags(3), layer: 0 }
+   3041 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 65, z: 11 }, block_runtime_id: 2110714365, flags: UpdateBlockFlags(3), layer: 0 }
+   3041 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 66, z: 12 }, block_runtime_id: 2110714365, flags: UpdateBlockFlags(3), layer: 0 }
+   3041 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 67, z: 10 }, block_runtime_id: 2110714365, flags: UpdateBlockFlags(3), layer: 0 }
+   3041 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 67, z: 11 }, block_runtime_id: 2110714365, flags: UpdateBlockFlags(3), layer: 0 }
+   3041 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 67, z: 12 }, block_runtime_id: 2110714365, flags: UpdateBlockFlags(3), layer: 0 }
+   3041 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 65, z: 10 }, block_runtime_id: 2110714365, flags: UpdateBlockFlags(3), layer: 0 }
+   3041 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 65, z: 11 }, block_runtime_id: 2110714365, flags: UpdateBlockFlags(3), layer: 0 }
+   3041 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 65, z: 12 }, block_runtime_id: 2110714365, flags: UpdateBlockFlags(3), layer: 0 }
+   3041 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 66, z: 10 }, block_runtime_id: 2110714365, flags: UpdateBlockFlags(3), layer: 0 }
+   3041 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 66, z: 11 }, block_runtime_id: 2110714365, flags: UpdateBlockFlags(3), layer: 0 }
+   3041 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 66, z: 12 }, block_runtime_id: 2110714365, flags: UpdateBlockFlags(3), layer: 0 }
+   3041 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 67, z: 10 }, block_runtime_id: 2110714365, flags: UpdateBlockFlags(3), layer: 0 }
+   3041 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 67, z: 11 }, block_runtime_id: 2110714365, flags: UpdateBlockFlags(3), layer: 0 }
+   3041 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 67, z: 12 }, block_runtime_id: 2110714365, flags: UpdateBlockFlags(3), layer: 0 }
+   3041 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 65, z: 12 }, block_runtime_id: 2110714365, flags: UpdateBlockFlags(3), layer: 0 }
+   3041 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 65, z: 10 }, block_runtime_id: 2110714365, flags: UpdateBlockFlags(3), layer: 0 }
+   3041 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 65, z: 11 }, block_runtime_id: 2110714365, flags: UpdateBlockFlags(3), layer: 0 }
+   3041 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 65, z: 12 }, block_runtime_id: 2110714365, flags: UpdateBlockFlags(3), layer: 0 }
+   3042 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 66, z: 10 }, block_runtime_id: 2110714365, flags: UpdateBlockFlags(3), layer: 0 }
+   3042 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 66, z: 10 }, block_runtime_id: 2110714365, flags: UpdateBlockFlags(3), layer: 0 }
+   3042 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 66, z: 11 }, block_runtime_id: 2110714365, flags: UpdateBlockFlags(3), layer: 0 }
+   3042 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 66, z: 11 }, block_runtime_id: 2110714365, flags: UpdateBlockFlags(3), layer: 0 }
+   3042 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 66, z: 12 }, block_runtime_id: 2110714365, flags: UpdateBlockFlags(3), layer: 0 }
+   3042 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 67, z: 10 }, block_runtime_id: 2110714365, flags: UpdateBlockFlags(3), layer: 0 }
+   3042 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 67, z: 11 }, block_runtime_id: 2110714365, flags: UpdateBlockFlags(3), layer: 0 }
+   3042 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 66, z: 12 }, block_runtime_id: 2110714365, flags: UpdateBlockFlags(3), layer: 0 }
+   3042 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 67, z: 12 }, block_runtime_id: 2110714365, flags: UpdateBlockFlags(3), layer: 0 }
+   3042 actor   CommandOutput success_count=1 data=None commands.fill.success success=true ["27"]
+   3042 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 67, z: 10 }, block_runtime_id: 2110714365, flags: UpdateBlockFlags(3), layer: 0 }
+   3042 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 67, z: 11 }, block_runtime_id: 2110714365, flags: UpdateBlockFlags(3), layer: 0 }
+   3042 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 67, z: 12 }, block_runtime_id: 2110714365, flags: UpdateBlockFlags(3), layer: 0 }
+   3042 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 65, z: 10 }, block_runtime_id: 2110714365, flags: UpdateBlockFlags(3), layer: 0 }
+   3042 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 65, z: 11 }, block_runtime_id: 2110714365, flags: UpdateBlockFlags(3), layer: 0 }
+   3042 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 65, z: 12 }, block_runtime_id: 2110714365, flags: UpdateBlockFlags(3), layer: 0 }
+   3042 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 66, z: 10 }, block_runtime_id: 2110714365, flags: UpdateBlockFlags(3), layer: 0 }
+   3042 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 66, z: 11 }, block_runtime_id: 2110714365, flags: UpdateBlockFlags(3), layer: 0 }
+   3042 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 66, z: 12 }, block_runtime_id: 2110714365, flags: UpdateBlockFlags(3), layer: 0 }
+   3042 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 67, z: 10 }, block_runtime_id: 2110714365, flags: UpdateBlockFlags(3), layer: 0 }
+   3042 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 67, z: 11 }, block_runtime_id: 2110714365, flags: UpdateBlockFlags(3), layer: 0 }
+   3042 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 67, z: 12 }, block_runtime_id: 2110714365, flags: UpdateBlockFlags(3), layer: 0 }
+   3042 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 65, z: 10 }, block_runtime_id: 2110714365, flags: UpdateBlockFlags(3), layer: 0 }
+   3042 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 65, z: 11 }, block_runtime_id: 2110714365, flags: UpdateBlockFlags(3), layer: 0 }
+   3042 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 65, z: 12 }, block_runtime_id: 2110714365, flags: UpdateBlockFlags(3), layer: 0 }
+   3042 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 66, z: 10 }, block_runtime_id: 2110714365, flags: UpdateBlockFlags(3), layer: 0 }
+   3042 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 66, z: 11 }, block_runtime_id: 2110714365, flags: UpdateBlockFlags(3), layer: 0 }
+   3042 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 66, z: 12 }, block_runtime_id: 2110714365, flags: UpdateBlockFlags(3), layer: 0 }
+   3042 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 67, z: 10 }, block_runtime_id: 2110714365, flags: UpdateBlockFlags(3), layer: 0 }
+   3042 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 67, z: 11 }, block_runtime_id: 2110714365, flags: UpdateBlockFlags(3), layer: 0 }
+   3042 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 67, z: 12 }, block_runtime_id: 2110714365, flags: UpdateBlockFlags(3), layer: 0 }
+   3042 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.fill.success\",\"with\":{\"rawtext\":[{\"text\":\"27\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /setblock ~4 ~2 ~-4 oak_log
+   4038 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 65, z: 10 }, block_runtime_id: 1055407794, flags: UpdateBlockFlags(3), layer: 0 }
+   4038 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 65, z: 11 }, block_runtime_id: 1055407794, flags: UpdateBlockFlags(3), layer: 0 }
+   4039 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 65, z: 10 }, block_runtime_id: 1055407794, flags: UpdateBlockFlags(3), layer: 0 }
+   4039 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 65, z: 11 }, block_runtime_id: 1055407794, flags: UpdateBlockFlags(3), layer: 0 }
+   4039 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 65, z: 12 }, block_runtime_id: 1055407794, flags: UpdateBlockFlags(3), layer: 0 }
+   4039 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 65, z: 12 }, block_runtime_id: 1055407794, flags: UpdateBlockFlags(3), layer: 0 }
+   4039 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 66, z: 10 }, block_runtime_id: 1055407794, flags: UpdateBlockFlags(3), layer: 0 }
+   4039 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 66, z: 11 }, block_runtime_id: 1055407794, flags: UpdateBlockFlags(3), layer: 0 }
+   4039 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 66, z: 12 }, block_runtime_id: 1055407794, flags: UpdateBlockFlags(3), layer: 0 }
+   4039 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 67, z: 10 }, block_runtime_id: 1055407794, flags: UpdateBlockFlags(3), layer: 0 }
+   4039 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 66, z: 10 }, block_runtime_id: 1055407794, flags: UpdateBlockFlags(3), layer: 0 }
+   4039 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 67, z: 11 }, block_runtime_id: 1055407794, flags: UpdateBlockFlags(3), layer: 0 }
+   4039 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 66, z: 11 }, block_runtime_id: 1055407794, flags: UpdateBlockFlags(3), layer: 0 }
+   4039 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 67, z: 12 }, block_runtime_id: 1055407794, flags: UpdateBlockFlags(3), layer: 0 }
+   4039 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 65, z: 10 }, block_runtime_id: 1055407794, flags: UpdateBlockFlags(3), layer: 0 }
+   4039 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 66, z: 12 }, block_runtime_id: 1055407794, flags: UpdateBlockFlags(3), layer: 0 }
+   4039 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 65, z: 11 }, block_runtime_id: 1055407794, flags: UpdateBlockFlags(3), layer: 0 }
+   4039 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 67, z: 10 }, block_runtime_id: 1055407794, flags: UpdateBlockFlags(3), layer: 0 }
+   4039 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 65, z: 12 }, block_runtime_id: 1055407794, flags: UpdateBlockFlags(3), layer: 0 }
+   4039 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 66, z: 10 }, block_runtime_id: 1055407794, flags: UpdateBlockFlags(3), layer: 0 }
+   4039 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 66, z: 12 }, block_runtime_id: 1055407794, flags: UpdateBlockFlags(3), layer: 0 }
+   4039 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 67, z: 11 }, block_runtime_id: 1055407794, flags: UpdateBlockFlags(3), layer: 0 }
+   4039 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 67, z: 10 }, block_runtime_id: 1055407794, flags: UpdateBlockFlags(3), layer: 0 }
+   4039 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 67, z: 12 }, block_runtime_id: 1055407794, flags: UpdateBlockFlags(3), layer: 0 }
+   4039 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 67, z: 11 }, block_runtime_id: 1055407794, flags: UpdateBlockFlags(3), layer: 0 }
+   4039 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 67, z: 12 }, block_runtime_id: 1055407794, flags: UpdateBlockFlags(3), layer: 0 }
+   4039 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 65, z: 10 }, block_runtime_id: 1055407794, flags: UpdateBlockFlags(3), layer: 0 }
+   4039 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 65, z: 11 }, block_runtime_id: 1055407794, flags: UpdateBlockFlags(3), layer: 0 }
+   4039 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 65, z: 12 }, block_runtime_id: 1055407794, flags: UpdateBlockFlags(3), layer: 0 }
+   4039 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 65, z: 10 }, block_runtime_id: 1055407794, flags: UpdateBlockFlags(3), layer: 0 }
+   4039 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 65, z: 11 }, block_runtime_id: 1055407794, flags: UpdateBlockFlags(3), layer: 0 }
+   4039 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 65, z: 12 }, block_runtime_id: 1055407794, flags: UpdateBlockFlags(3), layer: 0 }
+   4039 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 66, z: 10 }, block_runtime_id: 1055407794, flags: UpdateBlockFlags(3), layer: 0 }
+   4039 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 66, z: 11 }, block_runtime_id: 1055407794, flags: UpdateBlockFlags(3), layer: 0 }
+   4039 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 66, z: 12 }, block_runtime_id: 1055407794, flags: UpdateBlockFlags(3), layer: 0 }
+   4039 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 66, z: 10 }, block_runtime_id: 1055407794, flags: UpdateBlockFlags(3), layer: 0 }
+   4039 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 67, z: 10 }, block_runtime_id: 1055407794, flags: UpdateBlockFlags(3), layer: 0 }
+   4039 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 66, z: 12 }, block_runtime_id: 1055407794, flags: UpdateBlockFlags(3), layer: 0 }
+   4039 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 67, z: 11 }, block_runtime_id: 1055407794, flags: UpdateBlockFlags(3), layer: 0 }
+   4039 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 67, z: 10 }, block_runtime_id: 1055407794, flags: UpdateBlockFlags(3), layer: 0 }
+   4039 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 67, z: 11 }, block_runtime_id: 1055407794, flags: UpdateBlockFlags(3), layer: 0 }
+   4039 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 67, z: 12 }, block_runtime_id: 1055407794, flags: UpdateBlockFlags(3), layer: 0 }
+   4039 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 66, z: 11 }, block_runtime_id: 825916963, flags: UpdateBlockFlags(3), layer: 0 }
+   4039 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+   4039 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 67, z: 12 }, block_runtime_id: 1055407794, flags: UpdateBlockFlags(3), layer: 0 }
+   4039 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 65, z: 10 }, block_runtime_id: 1055407794, flags: UpdateBlockFlags(3), layer: 0 }
+   4040 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 65, z: 11 }, block_runtime_id: 1055407794, flags: UpdateBlockFlags(3), layer: 0 }
+   4040 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 65, z: 12 }, block_runtime_id: 1055407794, flags: UpdateBlockFlags(3), layer: 0 }
+   4040 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 66, z: 10 }, block_runtime_id: 1055407794, flags: UpdateBlockFlags(3), layer: 0 }
+   4040 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 66, z: 11 }, block_runtime_id: 1055407794, flags: UpdateBlockFlags(3), layer: 0 }
+   4040 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 66, z: 12 }, block_runtime_id: 1055407794, flags: UpdateBlockFlags(3), layer: 0 }
+   4040 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 67, z: 10 }, block_runtime_id: 1055407794, flags: UpdateBlockFlags(3), layer: 0 }
+   4040 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 67, z: 11 }, block_runtime_id: 1055407794, flags: UpdateBlockFlags(3), layer: 0 }
+   4040 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 67, z: 12 }, block_runtime_id: 1055407794, flags: UpdateBlockFlags(3), layer: 0 }
+   4040 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 66, z: 11 }, block_runtime_id: 825916963, flags: UpdateBlockFlags(3), layer: 0 }
+   4040 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /fill ~3 ~1 ~3 ~5 ~3 ~5 oak_leaves ["persistent_bit"=true]
+   5040 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 65, z: 18 }, block_runtime_id: 2148803874, flags: UpdateBlockFlags(3), layer: 0 }
+   5040 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 65, z: 18 }, block_runtime_id: 2148803874, flags: UpdateBlockFlags(3), layer: 0 }
+   5040 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 65, z: 19 }, block_runtime_id: 2148803874, flags: UpdateBlockFlags(3), layer: 0 }
+   5040 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 65, z: 19 }, block_runtime_id: 2148803874, flags: UpdateBlockFlags(3), layer: 0 }
+   5041 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 65, z: 20 }, block_runtime_id: 2148803874, flags: UpdateBlockFlags(3), layer: 0 }
+   5041 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 65, z: 20 }, block_runtime_id: 2148803874, flags: UpdateBlockFlags(3), layer: 0 }
+   5041 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 66, z: 18 }, block_runtime_id: 2148803874, flags: UpdateBlockFlags(3), layer: 0 }
+   5041 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 66, z: 19 }, block_runtime_id: 2148803874, flags: UpdateBlockFlags(3), layer: 0 }
+   5041 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 66, z: 20 }, block_runtime_id: 2148803874, flags: UpdateBlockFlags(3), layer: 0 }
+   5041 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 67, z: 18 }, block_runtime_id: 2148803874, flags: UpdateBlockFlags(3), layer: 0 }
+   5041 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 67, z: 19 }, block_runtime_id: 2148803874, flags: UpdateBlockFlags(3), layer: 0 }
+   5041 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 66, z: 18 }, block_runtime_id: 2148803874, flags: UpdateBlockFlags(3), layer: 0 }
+   5041 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 67, z: 20 }, block_runtime_id: 2148803874, flags: UpdateBlockFlags(3), layer: 0 }
+   5041 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 66, z: 19 }, block_runtime_id: 2148803874, flags: UpdateBlockFlags(3), layer: 0 }
+   5041 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 65, z: 18 }, block_runtime_id: 2148803874, flags: UpdateBlockFlags(3), layer: 0 }
+   5041 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 66, z: 20 }, block_runtime_id: 2148803874, flags: UpdateBlockFlags(3), layer: 0 }
+   5041 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 67, z: 18 }, block_runtime_id: 2148803874, flags: UpdateBlockFlags(3), layer: 0 }
+   5041 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 65, z: 19 }, block_runtime_id: 2148803874, flags: UpdateBlockFlags(3), layer: 0 }
+   5041 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 67, z: 19 }, block_runtime_id: 2148803874, flags: UpdateBlockFlags(3), layer: 0 }
+   5041 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 65, z: 20 }, block_runtime_id: 2148803874, flags: UpdateBlockFlags(3), layer: 0 }
+   5041 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 67, z: 20 }, block_runtime_id: 2148803874, flags: UpdateBlockFlags(3), layer: 0 }
+   5041 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 66, z: 18 }, block_runtime_id: 2148803874, flags: UpdateBlockFlags(3), layer: 0 }
+   5041 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 66, z: 19 }, block_runtime_id: 2148803874, flags: UpdateBlockFlags(3), layer: 0 }
+   5041 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 66, z: 20 }, block_runtime_id: 2148803874, flags: UpdateBlockFlags(3), layer: 0 }
+   5041 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 67, z: 18 }, block_runtime_id: 2148803874, flags: UpdateBlockFlags(3), layer: 0 }
+   5041 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 65, z: 18 }, block_runtime_id: 2148803874, flags: UpdateBlockFlags(3), layer: 0 }
+   5041 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 67, z: 19 }, block_runtime_id: 2148803874, flags: UpdateBlockFlags(3), layer: 0 }
+   5041 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 67, z: 20 }, block_runtime_id: 2148803874, flags: UpdateBlockFlags(3), layer: 0 }
+   5041 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 65, z: 19 }, block_runtime_id: 2148803874, flags: UpdateBlockFlags(3), layer: 0 }
+   5041 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 65, z: 20 }, block_runtime_id: 2148803874, flags: UpdateBlockFlags(3), layer: 0 }
+   5041 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 65, z: 18 }, block_runtime_id: 2148803874, flags: UpdateBlockFlags(3), layer: 0 }
+   5041 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 65, z: 19 }, block_runtime_id: 2148803874, flags: UpdateBlockFlags(3), layer: 0 }
+   5041 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 66, z: 18 }, block_runtime_id: 2148803874, flags: UpdateBlockFlags(3), layer: 0 }
+   5041 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 65, z: 20 }, block_runtime_id: 2148803874, flags: UpdateBlockFlags(3), layer: 0 }
+   5041 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 66, z: 18 }, block_runtime_id: 2148803874, flags: UpdateBlockFlags(3), layer: 0 }
+   5041 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 66, z: 19 }, block_runtime_id: 2148803874, flags: UpdateBlockFlags(3), layer: 0 }
+   5041 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 66, z: 20 }, block_runtime_id: 2148803874, flags: UpdateBlockFlags(3), layer: 0 }
+   5041 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 67, z: 18 }, block_runtime_id: 2148803874, flags: UpdateBlockFlags(3), layer: 0 }
+   5041 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 67, z: 19 }, block_runtime_id: 2148803874, flags: UpdateBlockFlags(3), layer: 0 }
+   5041 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 67, z: 20 }, block_runtime_id: 2148803874, flags: UpdateBlockFlags(3), layer: 0 }
+   5041 actor   CommandOutput success_count=1 data=None commands.fill.success success=true ["27"]
+   5041 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 66, z: 19 }, block_runtime_id: 2148803874, flags: UpdateBlockFlags(3), layer: 0 }
+   5041 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 66, z: 20 }, block_runtime_id: 2148803874, flags: UpdateBlockFlags(3), layer: 0 }
+   5041 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 67, z: 18 }, block_runtime_id: 2148803874, flags: UpdateBlockFlags(3), layer: 0 }
+   5041 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 67, z: 19 }, block_runtime_id: 2148803874, flags: UpdateBlockFlags(3), layer: 0 }
+   5041 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 67, z: 20 }, block_runtime_id: 2148803874, flags: UpdateBlockFlags(3), layer: 0 }
+   5041 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 65, z: 18 }, block_runtime_id: 2148803874, flags: UpdateBlockFlags(3), layer: 0 }
+   5041 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 65, z: 19 }, block_runtime_id: 2148803874, flags: UpdateBlockFlags(3), layer: 0 }
+   5041 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 65, z: 20 }, block_runtime_id: 2148803874, flags: UpdateBlockFlags(3), layer: 0 }
+   5041 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 66, z: 18 }, block_runtime_id: 2148803874, flags: UpdateBlockFlags(3), layer: 0 }
+   5042 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 66, z: 19 }, block_runtime_id: 2148803874, flags: UpdateBlockFlags(3), layer: 0 }
+   5042 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 66, z: 20 }, block_runtime_id: 2148803874, flags: UpdateBlockFlags(3), layer: 0 }
+   5042 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 67, z: 18 }, block_runtime_id: 2148803874, flags: UpdateBlockFlags(3), layer: 0 }
+   5042 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 67, z: 19 }, block_runtime_id: 2148803874, flags: UpdateBlockFlags(3), layer: 0 }
+   5042 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 67, z: 20 }, block_runtime_id: 2148803874, flags: UpdateBlockFlags(3), layer: 0 }
+   5042 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.fill.success\",\"with\":{\"rawtext\":[{\"text\":\"27\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /setblock ~4 ~2 ~4 oak_log
+   6036 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 66, z: 19 }, block_runtime_id: 825916963, flags: UpdateBlockFlags(3), layer: 0 }
+   6037 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 66, z: 19 }, block_runtime_id: 825916963, flags: UpdateBlockFlags(3), layer: 0 }
+   6037 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   6037 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+   6135 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 65, z: 12 }, block_runtime_id: 2110714365, flags: UpdateBlockFlags(3), layer: 0 }
+   6135 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 65, z: 12 }, block_runtime_id: 2110714365, flags: UpdateBlockFlags(3), layer: 0 }
+## /gamerule randomtickspeed 200
+   7036 actor   GameRulesChanged randomTickSpeed=Int(200)
+   7036 watcher GameRulesChanged randomTickSpeed=Int(200)
+   7036 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["randomtickspeed", "200"]
+   7036 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 65, z: 10 }, block_runtime_id: 2110714365, flags: UpdateBlockFlags(3), layer: 0 }
+   7036 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 67, z: 12 }, block_runtime_id: 2110714365, flags: UpdateBlockFlags(3), layer: 0 }
+   7036 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"randomtickspeed\"},{\"text\":\"200\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   7036 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 65, z: 10 }, block_runtime_id: 2110714365, flags: UpdateBlockFlags(3), layer: 0 }
+   7036 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 67, z: 12 }, block_runtime_id: 2110714365, flags: UpdateBlockFlags(3), layer: 0 }
+   7085 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 66, z: 10 }, block_runtime_id: 2110714365, flags: UpdateBlockFlags(3), layer: 0 }
+   7085 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 66, z: 10 }, block_runtime_id: 2110714365, flags: UpdateBlockFlags(3), layer: 0 }
+   7135 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 65, z: 10 }, block_runtime_id: 2110714365, flags: UpdateBlockFlags(3), layer: 0 }
+   7135 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 65, z: 10 }, block_runtime_id: 2110714365, flags: UpdateBlockFlags(3), layer: 0 }
+   7185 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 65, z: 11 }, block_runtime_id: 2110714365, flags: UpdateBlockFlags(3), layer: 0 }
+   7185 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 65, z: 11 }, block_runtime_id: 2110714365, flags: UpdateBlockFlags(3), layer: 0 }
+   7235 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 65, z: 12 }, block_runtime_id: 2110714365, flags: UpdateBlockFlags(3), layer: 0 }
+   7235 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 65, z: 12 }, block_runtime_id: 2110714365, flags: UpdateBlockFlags(3), layer: 0 }
+   7285 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 67, z: 11 }, block_runtime_id: 2110714365, flags: UpdateBlockFlags(3), layer: 0 }
+   7285 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 67, z: 11 }, block_runtime_id: 2110714365, flags: UpdateBlockFlags(3), layer: 0 }
+   7285 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 66, z: 10 }, block_runtime_id: 2110714365, flags: UpdateBlockFlags(3), layer: 0 }
+   7285 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 66, z: 10 }, block_runtime_id: 2110714365, flags: UpdateBlockFlags(3), layer: 0 }
+   7335 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 67, z: 12 }, block_runtime_id: 2110714365, flags: UpdateBlockFlags(3), layer: 0 }
+   7335 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 65, z: 10 }, block_runtime_id: 2110714365, flags: UpdateBlockFlags(3), layer: 0 }
+   7335 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 67, z: 12 }, block_runtime_id: 2110714365, flags: UpdateBlockFlags(3), layer: 0 }
+   7335 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 67, z: 10 }, block_runtime_id: 2110714365, flags: UpdateBlockFlags(3), layer: 0 }
+   7335 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 65, z: 10 }, block_runtime_id: 2110714365, flags: UpdateBlockFlags(3), layer: 0 }
+   7335 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 67, z: 10 }, block_runtime_id: 2110714365, flags: UpdateBlockFlags(3), layer: 0 }
+   7435 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 65, z: 11 }, block_runtime_id: 2110714365, flags: UpdateBlockFlags(3), layer: 0 }
+   7435 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 65, z: 11 }, block_runtime_id: 2110714365, flags: UpdateBlockFlags(3), layer: 0 }
+   7435 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 67, z: 12 }, block_runtime_id: 2110714365, flags: UpdateBlockFlags(3), layer: 0 }
+   7435 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 66, z: 12 }, block_runtime_id: 2110714365, flags: UpdateBlockFlags(3), layer: 0 }
+   7435 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 67, z: 12 }, block_runtime_id: 2110714365, flags: UpdateBlockFlags(3), layer: 0 }
+   7435 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 66, z: 12 }, block_runtime_id: 2110714365, flags: UpdateBlockFlags(3), layer: 0 }
+   7485 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 66, z: 12 }, block_runtime_id: 2110714365, flags: UpdateBlockFlags(3), layer: 0 }
+   7485 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 66, z: 12 }, block_runtime_id: 2110714365, flags: UpdateBlockFlags(3), layer: 0 }
+   7485 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 65, z: 12 }, block_runtime_id: 2110714365, flags: UpdateBlockFlags(3), layer: 0 }
+   7485 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 65, z: 11 }, block_runtime_id: 2110714365, flags: UpdateBlockFlags(3), layer: 0 }
+   7485 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 65, z: 12 }, block_runtime_id: 2110714365, flags: UpdateBlockFlags(3), layer: 0 }
+   7485 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 65, z: 11 }, block_runtime_id: 2110714365, flags: UpdateBlockFlags(3), layer: 0 }
+   7735 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 66, z: 11 }, block_runtime_id: 2110714365, flags: UpdateBlockFlags(3), layer: 0 }
+   7735 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 66, z: 11 }, block_runtime_id: 2110714365, flags: UpdateBlockFlags(3), layer: 0 }
+   7785 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 66, z: 11 }, block_runtime_id: 2110714365, flags: UpdateBlockFlags(3), layer: 0 }
+   7785 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 66, z: 11 }, block_runtime_id: 2110714365, flags: UpdateBlockFlags(3), layer: 0 }
+   7885 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 67, z: 10 }, block_runtime_id: 2110714365, flags: UpdateBlockFlags(3), layer: 0 }
+   7885 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 67, z: 10 }, block_runtime_id: 2110714365, flags: UpdateBlockFlags(3), layer: 0 }
+   7935 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 67, z: 11 }, block_runtime_id: 2110714365, flags: UpdateBlockFlags(3), layer: 0 }
+   7935 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 67, z: 10 }, block_runtime_id: 2110714365, flags: UpdateBlockFlags(3), layer: 0 }
+   7935 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 67, z: 11 }, block_runtime_id: 2110714365, flags: UpdateBlockFlags(3), layer: 0 }
+   7935 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 67, z: 10 }, block_runtime_id: 2110714365, flags: UpdateBlockFlags(3), layer: 0 }
+## /
+   8085 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 66, z: 12 }, block_runtime_id: 2110714365, flags: UpdateBlockFlags(3), layer: 0 }
+   8085 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 66, z: 12 }, block_runtime_id: 2110714365, flags: UpdateBlockFlags(3), layer: 0 }
+   8685 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 66, z: 10 }, block_runtime_id: 2110714365, flags: UpdateBlockFlags(3), layer: 0 }
+   8685 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 66, z: 10 }, block_runtime_id: 2110714365, flags: UpdateBlockFlags(3), layer: 0 }
+## /
+## /
+  10035 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 67, z: 11 }, block_runtime_id: 2110714365, flags: UpdateBlockFlags(3), layer: 0 }
+  10035 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 67, z: 11 }, block_runtime_id: 2110714365, flags: UpdateBlockFlags(3), layer: 0 }
+  10235 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 6513, paused: false }] }) }
+  10235 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 6513, paused: false }] }) }
+## /
+## /
+## /setblock ~4 ~2 ~-4 air
+  13037 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 65, z: 10 }, block_runtime_id: 1055407794, flags: UpdateBlockFlags(3), layer: 0 }
+  13037 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 65, z: 11 }, block_runtime_id: 1055407794, flags: UpdateBlockFlags(3), layer: 0 }
+  13037 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 65, z: 12 }, block_runtime_id: 1055407794, flags: UpdateBlockFlags(3), layer: 0 }
+  13038 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 65, z: 10 }, block_runtime_id: 1055407794, flags: UpdateBlockFlags(3), layer: 0 }
+  13038 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 65, z: 11 }, block_runtime_id: 1055407794, flags: UpdateBlockFlags(3), layer: 0 }
+  13038 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 66, z: 10 }, block_runtime_id: 1055407794, flags: UpdateBlockFlags(3), layer: 0 }
+  13038 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 65, z: 12 }, block_runtime_id: 1055407794, flags: UpdateBlockFlags(3), layer: 0 }
+  13038 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 66, z: 11 }, block_runtime_id: 1055407794, flags: UpdateBlockFlags(3), layer: 0 }
+  13038 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 66, z: 10 }, block_runtime_id: 1055407794, flags: UpdateBlockFlags(3), layer: 0 }
+  13038 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 66, z: 12 }, block_runtime_id: 1055407794, flags: UpdateBlockFlags(3), layer: 0 }
+  13038 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 66, z: 11 }, block_runtime_id: 1055407794, flags: UpdateBlockFlags(3), layer: 0 }
+  13038 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 67, z: 10 }, block_runtime_id: 1055407794, flags: UpdateBlockFlags(3), layer: 0 }
+  13038 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 67, z: 11 }, block_runtime_id: 1055407794, flags: UpdateBlockFlags(3), layer: 0 }
+  13038 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 66, z: 12 }, block_runtime_id: 1055407794, flags: UpdateBlockFlags(3), layer: 0 }
+  13038 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 67, z: 12 }, block_runtime_id: 1055407794, flags: UpdateBlockFlags(3), layer: 0 }
+  13038 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 65, z: 10 }, block_runtime_id: 1055407794, flags: UpdateBlockFlags(3), layer: 0 }
+  13038 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 65, z: 11 }, block_runtime_id: 1055407794, flags: UpdateBlockFlags(3), layer: 0 }
+  13038 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 67, z: 10 }, block_runtime_id: 1055407794, flags: UpdateBlockFlags(3), layer: 0 }
+  13038 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 65, z: 12 }, block_runtime_id: 1055407794, flags: UpdateBlockFlags(3), layer: 0 }
+  13038 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 67, z: 11 }, block_runtime_id: 1055407794, flags: UpdateBlockFlags(3), layer: 0 }
+  13038 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 67, z: 12 }, block_runtime_id: 1055407794, flags: UpdateBlockFlags(3), layer: 0 }
+  13038 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 65, z: 10 }, block_runtime_id: 1055407794, flags: UpdateBlockFlags(3), layer: 0 }
+  13038 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 65, z: 11 }, block_runtime_id: 1055407794, flags: UpdateBlockFlags(3), layer: 0 }
+  13038 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 65, z: 12 }, block_runtime_id: 1055407794, flags: UpdateBlockFlags(3), layer: 0 }
+  13038 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 66, z: 10 }, block_runtime_id: 1055407794, flags: UpdateBlockFlags(3), layer: 0 }
+  13038 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 66, z: 12 }, block_runtime_id: 1055407794, flags: UpdateBlockFlags(3), layer: 0 }
+  13038 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 67, z: 10 }, block_runtime_id: 1055407794, flags: UpdateBlockFlags(3), layer: 0 }
+  13038 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 66, z: 10 }, block_runtime_id: 1055407794, flags: UpdateBlockFlags(3), layer: 0 }
+  13038 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 67, z: 11 }, block_runtime_id: 1055407794, flags: UpdateBlockFlags(3), layer: 0 }
+  13038 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 67, z: 12 }, block_runtime_id: 1055407794, flags: UpdateBlockFlags(3), layer: 0 }
+  13038 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 66, z: 12 }, block_runtime_id: 1055407794, flags: UpdateBlockFlags(3), layer: 0 }
+  13038 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 65, z: 10 }, block_runtime_id: 1055407794, flags: UpdateBlockFlags(3), layer: 0 }
+  13038 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 65, z: 11 }, block_runtime_id: 1055407794, flags: UpdateBlockFlags(3), layer: 0 }
+  13038 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 65, z: 12 }, block_runtime_id: 1055407794, flags: UpdateBlockFlags(3), layer: 0 }
+  13038 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 66, z: 10 }, block_runtime_id: 1055407794, flags: UpdateBlockFlags(3), layer: 0 }
+  13038 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 67, z: 10 }, block_runtime_id: 1055407794, flags: UpdateBlockFlags(3), layer: 0 }
+  13038 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 66, z: 11 }, block_runtime_id: 1055407794, flags: UpdateBlockFlags(3), layer: 0 }
+  13038 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 66, z: 12 }, block_runtime_id: 1055407794, flags: UpdateBlockFlags(3), layer: 0 }
+  13038 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 67, z: 11 }, block_runtime_id: 1055407794, flags: UpdateBlockFlags(3), layer: 0 }
+  13038 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 67, z: 10 }, block_runtime_id: 1055407794, flags: UpdateBlockFlags(3), layer: 0 }
+  13038 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 67, z: 11 }, block_runtime_id: 1055407794, flags: UpdateBlockFlags(3), layer: 0 }
+  13038 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 67, z: 12 }, block_runtime_id: 1055407794, flags: UpdateBlockFlags(3), layer: 0 }
+  13038 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 67, z: 12 }, block_runtime_id: 1055407794, flags: UpdateBlockFlags(3), layer: 0 }
+  13038 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 66, z: 11 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  13038 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+  13038 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 65, z: 10 }, block_runtime_id: 1055407794, flags: UpdateBlockFlags(3), layer: 0 }
+  13038 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 65, z: 11 }, block_runtime_id: 1055407794, flags: UpdateBlockFlags(3), layer: 0 }
+  13038 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 65, z: 12 }, block_runtime_id: 1055407794, flags: UpdateBlockFlags(3), layer: 0 }
+  13038 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 66, z: 10 }, block_runtime_id: 1055407794, flags: UpdateBlockFlags(3), layer: 0 }
+  13038 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 66, z: 11 }, block_runtime_id: 1055407794, flags: UpdateBlockFlags(3), layer: 0 }
+  13038 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 66, z: 12 }, block_runtime_id: 1055407794, flags: UpdateBlockFlags(3), layer: 0 }
+  13038 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 67, z: 10 }, block_runtime_id: 1055407794, flags: UpdateBlockFlags(3), layer: 0 }
+  13038 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 67, z: 11 }, block_runtime_id: 1055407794, flags: UpdateBlockFlags(3), layer: 0 }
+  13039 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 67, z: 12 }, block_runtime_id: 1055407794, flags: UpdateBlockFlags(3), layer: 0 }
+  13039 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 66, z: 11 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  13039 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  13089 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 67, z: 11 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  13089 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 67, z: 11 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  13089 actor   LevelEvent LevelEvent { event: ParticleDestroy, position: Vec3f { x: 4.5, y: 67.5, z: 11.5 }, data: 1055407794 }
+  13089 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 65, z: 10 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  13089 watcher LevelEvent LevelEvent { event: ParticleDestroy, position: Vec3f { x: 4.5, y: 67.5, z: 11.5 }, data: 1055407794 }
+  13089 actor   LevelEvent LevelEvent { event: ParticleDestroy, position: Vec3f { x: 3.5, y: 65.5, z: 10.5 }, data: 1055407794 }
+  13089 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 67, z: 10 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  13089 actor   LevelEvent LevelEvent { event: ParticleDestroy, position: Vec3f { x: 3.5, y: 67.5, z: 10.5 }, data: 1055407794 }
+  13089 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 65, z: 10 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  13089 watcher LevelEvent LevelEvent { event: ParticleDestroy, position: Vec3f { x: 3.5, y: 65.5, z: 10.5 }, data: 1055407794 }
+  13089 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 67, z: 10 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  13089 watcher LevelEvent LevelEvent { event: ParticleDestroy, position: Vec3f { x: 3.5, y: 67.5, z: 10.5 }, data: 1055407794 }
+  13136 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 66, z: 10 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  13136 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 66, z: 10 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  13136 actor   LevelEvent LevelEvent { event: ParticleDestroy, position: Vec3f { x: 3.5, y: 66.5, z: 10.5 }, data: 1055407794 }
+  13136 watcher LevelEvent LevelEvent { event: ParticleDestroy, position: Vec3f { x: 3.5, y: 66.5, z: 10.5 }, data: 1055407794 }
+  13186 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 66, z: 11 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  13186 actor   LevelEvent LevelEvent { event: ParticleDestroy, position: Vec3f { x: 5.5, y: 66.5, z: 11.5 }, data: 1055407794 }
+  13186 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 65, z: 12 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  13186 actor   LevelEvent LevelEvent { event: ParticleDestroy, position: Vec3f { x: 3.5, y: 65.5, z: 12.5 }, data: 1055407794 }
+  13186 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 66, z: 11 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  13186 watcher LevelEvent LevelEvent { event: ParticleDestroy, position: Vec3f { x: 5.5, y: 66.5, z: 11.5 }, data: 1055407794 }
+  13186 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 65, z: 12 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  13186 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 65, z: 10 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  13186 actor   LevelEvent LevelEvent { event: ParticleDestroy, position: Vec3f { x: 4.5, y: 65.5, z: 10.5 }, data: 1055407794 }
+  13186 watcher LevelEvent LevelEvent { event: ParticleDestroy, position: Vec3f { x: 3.5, y: 65.5, z: 12.5 }, data: 1055407794 }
+  13186 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 65, z: 10 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  13186 watcher LevelEvent LevelEvent { event: ParticleDestroy, position: Vec3f { x: 4.5, y: 65.5, z: 10.5 }, data: 1055407794 }
+  13235 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 65, z: 11 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  13235 actor   LevelEvent LevelEvent { event: ParticleDestroy, position: Vec3f { x: 5.5, y: 65.5, z: 11.5 }, data: 1055407794 }
+  13235 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 65, z: 11 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  13235 watcher LevelEvent LevelEvent { event: ParticleDestroy, position: Vec3f { x: 5.5, y: 65.5, z: 11.5 }, data: 1055407794 }
+  13286 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 66, z: 11 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  13286 actor   LevelEvent LevelEvent { event: ParticleDestroy, position: Vec3f { x: 3.5, y: 66.5, z: 11.5 }, data: 1055407794 }
+  13286 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 67, z: 11 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  13286 actor   LevelEvent LevelEvent { event: ParticleDestroy, position: Vec3f { x: 3.5, y: 67.5, z: 11.5 }, data: 1055407794 }
+  13286 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 65, z: 12 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  13286 actor   LevelEvent LevelEvent { event: ParticleDestroy, position: Vec3f { x: 5.5, y: 65.5, z: 12.5 }, data: 1055407794 }
+  13286 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 67, z: 11 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  13286 actor   LevelEvent LevelEvent { event: ParticleDestroy, position: Vec3f { x: 5.5, y: 67.5, z: 11.5 }, data: 1055407794 }
+  13287 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 66, z: 11 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  13287 watcher LevelEvent LevelEvent { event: ParticleDestroy, position: Vec3f { x: 3.5, y: 66.5, z: 11.5 }, data: 1055407794 }
+  13287 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 67, z: 11 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  13287 watcher LevelEvent LevelEvent { event: ParticleDestroy, position: Vec3f { x: 3.5, y: 67.5, z: 11.5 }, data: 1055407794 }
+  13287 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 65, z: 12 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  13287 watcher LevelEvent LevelEvent { event: ParticleDestroy, position: Vec3f { x: 5.5, y: 65.5, z: 12.5 }, data: 1055407794 }
+  13287 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 67, z: 11 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  13287 watcher LevelEvent LevelEvent { event: ParticleDestroy, position: Vec3f { x: 5.5, y: 67.5, z: 11.5 }, data: 1055407794 }
+  13336 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 65, z: 10 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  13336 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 65, z: 10 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  13336 actor   LevelEvent LevelEvent { event: ParticleDestroy, position: Vec3f { x: 5.5, y: 65.5, z: 10.5 }, data: 1055407794 }
+  13336 watcher LevelEvent LevelEvent { event: ParticleDestroy, position: Vec3f { x: 5.5, y: 65.5, z: 10.5 }, data: 1055407794 }
+  13336 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 66, z: 12 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  13336 watcher LevelEvent LevelEvent { event: ParticleDestroy, position: Vec3f { x: 5.5, y: 66.5, z: 12.5 }, data: 1055407794 }
+  13336 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 66, z: 12 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  13336 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 66, z: 12 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  13336 actor   LevelEvent LevelEvent { event: ParticleDestroy, position: Vec3f { x: 5.5, y: 66.5, z: 12.5 }, data: 1055407794 }
+  13336 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 66, z: 12 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  13336 actor   LevelEvent LevelEvent { event: ParticleDestroy, position: Vec3f { x: 4.5, y: 66.5, z: 12.5 }, data: 1055407794 }
+  13336 watcher LevelEvent LevelEvent { event: ParticleDestroy, position: Vec3f { x: 4.5, y: 66.5, z: 12.5 }, data: 1055407794 }
+  13386 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 65, z: 11 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  13386 actor   LevelEvent LevelEvent { event: ParticleDestroy, position: Vec3f { x: 4.5, y: 65.5, z: 11.5 }, data: 1055407794 }
+  13386 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 66, z: 10 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  13386 actor   LevelEvent LevelEvent { event: ParticleDestroy, position: Vec3f { x: 4.5, y: 66.5, z: 10.5 }, data: 1055407794 }
+  13386 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 67, z: 12 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  13386 actor   LevelEvent LevelEvent { event: ParticleDestroy, position: Vec3f { x: 5.5, y: 67.5, z: 12.5 }, data: 1055407794 }
+  13386 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 67, z: 12 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  13386 actor   LevelEvent LevelEvent { event: ParticleDestroy, position: Vec3f { x: 3.5, y: 67.5, z: 12.5 }, data: 1055407794 }
+  13387 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 65, z: 11 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  13387 watcher LevelEvent LevelEvent { event: ParticleDestroy, position: Vec3f { x: 4.5, y: 65.5, z: 11.5 }, data: 1055407794 }
+  13387 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 66, z: 10 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  13387 watcher LevelEvent LevelEvent { event: ParticleDestroy, position: Vec3f { x: 4.5, y: 66.5, z: 10.5 }, data: 1055407794 }
+  13387 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 67, z: 12 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  13387 watcher LevelEvent LevelEvent { event: ParticleDestroy, position: Vec3f { x: 5.5, y: 67.5, z: 12.5 }, data: 1055407794 }
+  13387 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 67, z: 12 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  13387 watcher LevelEvent LevelEvent { event: ParticleDestroy, position: Vec3f { x: 3.5, y: 67.5, z: 12.5 }, data: 1055407794 }
+  13535 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 67, z: 10 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  13535 actor   LevelEvent LevelEvent { event: ParticleDestroy, position: Vec3f { x: 4.5, y: 67.5, z: 10.5 }, data: 1055407794 }
+  13535 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 67, z: 10 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  13535 watcher LevelEvent LevelEvent { event: ParticleDestroy, position: Vec3f { x: 4.5, y: 67.5, z: 10.5 }, data: 1055407794 }
+  13585 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 67, z: 12 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  13585 actor   LevelEvent LevelEvent { event: ParticleDestroy, position: Vec3f { x: 4.5, y: 67.5, z: 12.5 }, data: 1055407794 }
+  13585 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 67, z: 12 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  13585 watcher LevelEvent LevelEvent { event: ParticleDestroy, position: Vec3f { x: 4.5, y: 67.5, z: 12.5 }, data: 1055407794 }
+  13685 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 66, z: 10 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  13685 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 66, z: 10 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  13685 watcher LevelEvent LevelEvent { event: ParticleDestroy, position: Vec3f { x: 5.5, y: 66.5, z: 10.5 }, data: 1055407794 }
+  13685 actor   LevelEvent LevelEvent { event: ParticleDestroy, position: Vec3f { x: 5.5, y: 66.5, z: 10.5 }, data: 1055407794 }
+  13835 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 65, z: 11 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  13835 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 65, z: 11 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  13835 actor   LevelEvent LevelEvent { event: ParticleDestroy, position: Vec3f { x: 3.5, y: 65.5, z: 11.5 }, data: 1055407794 }
+  13835 watcher LevelEvent LevelEvent { event: ParticleDestroy, position: Vec3f { x: 3.5, y: 65.5, z: 11.5 }, data: 1055407794 }
+## /setblock ~4 ~2 ~4 air
+  14037 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 66, z: 19 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  14037 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 66, z: 19 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  14037 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+  14037 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 66, z: 12 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  14037 actor   LevelEvent LevelEvent { event: ParticleDestroy, position: Vec3f { x: 3.5, y: 66.5, z: 12.5 }, data: 1055407794 }
+  14037 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 67, z: 10 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  14037 actor   LevelEvent LevelEvent { event: ParticleDestroy, position: Vec3f { x: 5.5, y: 67.5, z: 10.5 }, data: 1055407794 }
+  14037 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  14038 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 66, z: 12 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  14038 watcher LevelEvent LevelEvent { event: ParticleDestroy, position: Vec3f { x: 3.5, y: 66.5, z: 12.5 }, data: 1055407794 }
+  14038 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 67, z: 10 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  14038 watcher LevelEvent LevelEvent { event: ParticleDestroy, position: Vec3f { x: 5.5, y: 67.5, z: 10.5 }, data: 1055407794 }
+  14285 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 65, z: 12 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  14285 actor   LevelEvent LevelEvent { event: ParticleDestroy, position: Vec3f { x: 4.5, y: 65.5, z: 12.5 }, data: 1055407794 }
+  14285 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 65, z: 12 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  14285 watcher LevelEvent LevelEvent { event: ParticleDestroy, position: Vec3f { x: 4.5, y: 65.5, z: 12.5 }, data: 1055407794 }
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+  23037 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 6769, paused: false }] }) }
+  23037 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 6769, paused: false }] }) }
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+  35835 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 7025, paused: false }] }) }
+  35835 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 7025, paused: false }] }) }
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+  48636 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 7281, paused: false }] }) }
+  48636 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 7281, paused: false }] }) }
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+  61435 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 7537, paused: false }] }) }
+  61435 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 7537, paused: false }] }) }
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+  74236 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 7793, paused: false }] }) }
+  74236 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 7793, paused: false }] }) }
+## /gamerule randomtickspeed 1
+  75135 actor   GameRulesChanged randomTickSpeed=Int(1)
+  75135 watcher GameRulesChanged randomTickSpeed=Int(1)
+  75135 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["randomtickspeed", "1"]
+  75135 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"randomtickspeed\"},{\"text\":\"1\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /fill ~1 ~ ~-8 ~10 ~16 ~8 air
+  76170 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 65, z: 18 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  76171 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 65, z: 18 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  76171 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 65, z: 19 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  76171 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 65, z: 19 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  76171 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 65, z: 20 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  76171 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 66, z: 18 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  76171 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 66, z: 19 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  76171 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 65, z: 20 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  76171 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 66, z: 20 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  76171 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 66, z: 18 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  76171 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 66, z: 19 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  76171 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 67, z: 18 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  76171 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 67, z: 19 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  76171 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 67, z: 20 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  76171 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 65, z: 18 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  76171 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 65, z: 19 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  76171 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 66, z: 20 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  76171 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 65, z: 20 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  76171 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 67, z: 18 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  76171 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 66, z: 18 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  76171 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 66, z: 20 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  76171 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 67, z: 18 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  76171 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 67, z: 19 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  76171 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: 67, z: 20 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  76171 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 67, z: 19 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  76171 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 65, z: 18 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  76171 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 67, z: 20 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  76171 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 65, z: 18 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  76171 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 65, z: 19 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  76171 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 65, z: 20 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  76171 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 66, z: 18 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  76171 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 66, z: 19 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  76171 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 66, z: 20 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  76171 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 65, z: 19 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  76171 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 67, z: 18 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  76171 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 67, z: 19 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  76171 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 67, z: 20 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  76171 actor   CommandOutput success_count=1 data=None commands.fill.success success=true ["26"]
+  76171 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 65, z: 20 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  76171 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 66, z: 18 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  76171 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 66, z: 20 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  76171 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 67, z: 18 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  76171 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 67, z: 19 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  76171 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: 67, z: 20 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  76171 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 65, z: 18 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  76171 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 65, z: 19 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  76171 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 65, z: 20 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  76171 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 66, z: 18 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  76171 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 66, z: 19 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  76172 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 66, z: 20 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  76172 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 67, z: 18 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  76172 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 67, z: 19 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  76172 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: 67, z: 20 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  76172 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.fill.success\",\"with\":{\"rawtext\":[{\"text\":\"26\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /kill @e[type=item]
+  77135 actor   CommandOutput success_count=0 data=None commands.generic.noTargetMatch success=false []
+probe exit 0

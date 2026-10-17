@@ -2,6 +2,7 @@
 //! layout, `level.dat`, and the disk chunk codec, decoding into acacia-world chunks. Formats and
 //! sources: research/worlds-and-ecs.md §1.
 
+mod actor_harm;
 mod actors;
 mod block_entities;
 mod container;
@@ -18,7 +19,8 @@ mod world;
 
 use std::path::PathBuf;
 
-pub use actors::{Actor, Painting, State, actors};
+pub use actor_harm::harmed_actor;
+pub use actors::{Actor, Painting, State, actors, moved_actor, new_actor, new_item_actor, new_orb_actor, orb_value, stored_actors};
 pub use item::ItemStack;
 pub use player::PlayerData;
 pub use block_entities::{BlockEntity, block_entities, with_block_entity, without_block_entity};
@@ -27,7 +29,7 @@ pub use data3d::Data3d;
 pub use db::{Batch, Db};
 pub use keys::{ChunkKey, ParsedKey, Tag};
 pub use level_dat::LevelDat;
-pub use states::{BlockStates, PLACEHOLDER};
+pub use states::{BlockStates, PLACEHOLDER, block_of_hash};
 pub use sub_chunk::{Layer, SubChunk};
 pub use world::{DiskColumn, LevelDbWorld};
 

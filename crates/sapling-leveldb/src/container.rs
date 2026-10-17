@@ -1,6 +1,6 @@
 //! What a container's block entity holds: `Items`, each stack with the `Slot` it lies in.
 
-use acacia_proto::nbt::{List, Value};
+use acacia_proto::nbt::{List, Str, Value};
 use acacia_world::BlockRegistry;
 
 use crate::ItemStack;
@@ -10,7 +10,7 @@ const COMPOUND: u8 = 10;
 
 /// A block entity with nothing but its kind (`Chest`, `Barrel`) and its block.
 pub fn new_block_entity(id: &str, [x, y, z]: [i32; 3]) -> Value {
-    let field = |key: &str, value| (key.to_string(), value);
+    let field = |key: &str, value| (Str::from(key), value);
     Value::Compound(vec![field("id", Value::String(id.into())), field("x", Value::Int(x)), field("y", Value::Int(y)), field("z", Value::Int(z))])
 }
 
@@ -29,6 +29,8 @@ pub fn with_container_items(entity: &Value, items: &[(u8, ItemStack)], registry:
     let stored = |(slot, stack): &(u8, ItemStack)| {
         let mut fields = stack.fields(registry);
         fields.push(("Slot".into(), Value::Byte(*slot as i8)));
+        // BDS writes it into every stack a container holds (containers-findings D10).
+        fields.push(("WasPickedUp".into(), Value::Byte(0)));
         Value::Compound(fields)
     };
     let mut fields = if let Value::Compound(fields) = entity { fields.clone() } else { Vec::new() };

@@ -1,5 +1,5 @@
 use super::{Args, ParamKind, ParseError};
-use crate::{GameMode, Player};
+use crate::{Difficulty, GameMode, Player};
 
 /// A type a command field can have. `#[derive(CommandEnum)]` writes it for an enum of words.
 pub trait Parameter: Sized {
@@ -8,6 +8,12 @@ pub trait Parameter: Sized {
 
     fn kind() -> ParamKind;
     fn parse(args: &mut Args<'_>) -> Result<Self, ParseError>;
+
+    /// Whether `next`, the next word, can start one: an optional argument that cannot is left out
+    /// and the word goes to the next.
+    fn begins(_next: &str) -> bool {
+        true
+    }
 }
 
 macro_rules! number {
@@ -74,6 +80,16 @@ impl Parameter for GameMode {
     }
 }
 
+impl Parameter for Difficulty {
+    fn kind() -> ParamKind {
+        enum_kind("Difficulty", &["peaceful", "easy", "normal", "hard"])
+    }
+
+    fn parse(args: &mut Args<'_>) -> Result<Self, ParseError> {
+        parse_choice(args, &[("peaceful", Self::Peaceful), ("easy", Self::Easy), ("normal", Self::Normal), ("hard", Self::Hard)])
+    }
+}
+
 impl Parameter for String {
     fn kind() -> ParamKind {
         ParamKind::String
@@ -128,6 +144,9 @@ impl<P: Parameter> Parameter for Option<P> {
     }
 
     fn parse(args: &mut Args<'_>) -> Result<Self, ParseError> {
-        if args.is_empty() { Ok(None) } else { P::parse(args).map(Some) }
+        match args.peek() {
+            Some(next) if P::begins(next) => P::parse(args).map(Some),
+            _ => Ok(None),
+        }
     }
 }

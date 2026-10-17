@@ -1,0 +1,38 @@
+# The state BDS sets for a block named bare (/setblock ~ ~ ~ chest) where it is not the block's first,
+# from research/captures/bds-block-defaults.txt (sapling example bds_defaults_probe, BDS 1.26.x). Left out:
+# cave_vines*, twisting_vines and weeping_vines, whose age BDS draws at random on placement.
+# name	properties
+minecraft:amethyst_cluster	minecraft:block_face=up
+minecraft:bed	direction=0,head_piece_bit=1,occupied_bit=0
+minecraft:big_dripleaf	big_dripleaf_head=1,big_dripleaf_tilt=none,minecraft:cardinal_direction=south
+minecraft:chest	minecraft:cardinal_direction=north
+minecraft:copper_chest	minecraft:cardinal_direction=north
+minecraft:ender_chest	minecraft:cardinal_direction=north
+minecraft:exposed_copper_chest	minecraft:cardinal_direction=north
+minecraft:frame	facing_direction=5,item_frame_map_bit=0,item_frame_photo_bit=0
+minecraft:glow_lichen	multi_face_direction_bits=63
+minecraft:ladder	facing_direction=3
+minecraft:large_amethyst_bud	minecraft:block_face=up
+minecraft:medium_amethyst_bud	minecraft:block_face=up
+minecraft:mushroom_stem	huge_mushroom_bits=15
+minecraft:oxidized_copper_chest	minecraft:cardinal_direction=north
+minecraft:pale_hanging_moss	tip=1
+minecraft:pointed_dripstone	dripstone_thickness=tip,hanging=1
+minecraft:resin_clump	multi_face_direction_bits=63
+minecraft:scaffolding	stability=7,stability_check=0
+minecraft:sculk_vein	multi_face_direction_bits=63
+minecraft:small_amethyst_bud	minecraft:block_face=up
+minecraft:small_dripleaf_block	minecraft:cardinal_direction=east,upper_block_bit=1
+minecraft:stonecutter_block	minecraft:cardinal_direction=north
+minecraft:straw_bed	head_piece_bit=1,minecraft:cardinal_direction=south,occupied_bit=0
+minecraft:sulfur_spike	dripstone_thickness=tip,hanging=1
+minecraft:suspicious_gravel	brushed_progress=0,hanging=1
+minecraft:suspicious_sand	brushed_progress=0,hanging=1
+minecraft:trapped_chest	minecraft:cardinal_direction=north
+minecraft:trip_wire	attached_bit=0,disarmed_bit=0,minecraft:connection_east=0,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0,powered_bit=0,suspended_bit=1
+minecraft:vine	vine_direction_bits=15
+minecraft:waxed_copper_chest	minecraft:cardinal_direction=north
+minecraft:waxed_exposed_copper_chest	minecraft:cardinal_direction=north
+minecraft:waxed_oxidized_copper_chest	minecraft:cardinal_direction=north
+minecraft:waxed_weathered_copper_chest	minecraft:cardinal_direction=north
+minecraft:weathered_copper_chest	minecraft:cardinal_direction=north

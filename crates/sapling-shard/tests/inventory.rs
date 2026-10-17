@@ -5,7 +5,7 @@ mod common;
 
 use acacia_proto::RawPacket;
 use acacia_proto::packets::{
-    AddItemEntity, AddPlayer, CreativeContent, InventoryContent, MobArmorEquipment, MobEquipment, PlayerHotbar, RemoveEntity,
+    AddItemEntity, AddPlayer, CreativeContent, InventoryContent, LevelSoundEvent, MobArmorEquipment, MobEquipment, PlayerHotbar, RemoveEntity,
     ResourcePackClientResponseResponseStatus as PackStatus, TakeItemEntity,
 };
 use acacia_proto::types::{
@@ -81,6 +81,20 @@ fn requests_move_stacks_and_a_wrong_one_is_undone() {
 }
 
 #[test]
+fn a_given_item_pops_at_the_eyes_a_tick_later() {
+    let mut h = Harness::new();
+    h.enter(1, "Steve");
+    let pops = |sent: &[RawPacket]| all::<LevelSoundEvent>(sent).into_iter().filter(|sound| sound.sound_id == "pop").collect::<Vec<_>>();
+    h.remote.run(|ctx| _ = ctx.give(STEVE, &Item::new("minecraft:stone", 3)));
+    assert!(pops(&h.tick(1)).is_empty());
+    let popped = pops(&h.tick(1));
+    assert_eq!((popped.len(), popped[0].extra_data), (1, -1));
+    h.remote.run(|ctx| _ = ctx.give(STEVE, &Item::new("sapling:no_such_item", 3)));
+    h.tick(1);
+    assert!(pops(&h.tick(1)).is_empty(), "nothing given, nothing heard");
+}
+
+#[test]
 fn the_creative_inventory_gives_items_in_creative_mode_only() {
     let mut h = Harness::new();
     h.enter(1, "Steve");
@@ -148,17 +162,21 @@ fn others_see_what_a_player_holds_and_wears_and_pick_up_what_it_throws() {
     let sent = h.tick_all();
     assert_eq!(answer(sent.to(1)), (Status::Ok, vec![(Container::Hotbar, 4, 0, 0)]));
     let lying: Vec<AddItemEntity> = [1, 2].iter().map(|conn| all::<AddItemEntity>(sent.to(*conn))[0].clone()).collect();
-    assert_eq!((lying[0].item.count, lying[0].position.z, lying[0].runtime_entity_id), (5, 2.0, lying[1].runtime_entity_id));
+    assert_eq!((lying[0].item.count, lying[0].runtime_entity_id), (5, lying[1].runtime_entity_id));
+    // Thrown south, the way Steve looks, at 0.3 give or take the spread (docs/research/items.md).
+    assert!((lying[0].velocity.z - 0.3).abs() <= 0.021 && lying[0].velocity.x.abs() <= 0.021, "{:?}", lying[0].velocity);
     assert_eq!(all::<MobEquipment>(sent.to(2))[0].item.network_id, 0, "the hand is empty now");
 
     // Nobody stands on them; once they can be taken, Alex walks over and has them.
     assert!((0..45).all(|_| all::<TakeItemEntity>(h.tick_all().to(2)).is_empty()));
-    h.receive(2, &input_at([0.5, 65.0, 1.5]));
+    h.receive(2, &input_at([0.5, 65.0, 2.5]));
     let sent = h.tick_all();
     let taken = &all::<TakeItemEntity>(sent.to(1))[0];
     assert_eq!((taken.runtime_entity_id, all::<TakeItemEntity>(sent.to(2)).len()), (lying[0].runtime_entity_id, 1));
     assert!(u64::from(taken.target) != steve.runtime_id, "Alex took them");
     assert_eq!(all::<InventoryContent>(sent.to(2))[0].input[0].count, 5);
-    let gone: Vec<i64> = [1, 2].iter().flat_map(|conn| all::<RemoveEntity>(sent.to(*conn))).map(|remove| remove.entity_id_self).collect();
-    assert_eq!(gone, [lying[0].runtime_entity_id as i64; 2]);
+    // Gone from both screens the tick after it was taken, as on BDS.
+    let next = h.tick_all();
+    let gone = |sent: &common::Sent| -> Vec<i64> { [1, 2].iter().flat_map(|conn| all::<RemoveEntity>(sent.to(*conn))).map(|remove| remove.entity_id_self).collect() };
+    assert_eq!((gone(&sent), gone(&next)), (vec![], vec![lying[0].runtime_entity_id as i64; 2]));
 }

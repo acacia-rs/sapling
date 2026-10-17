@@ -1,7 +1,23 @@
 use std::collections::HashSet;
 
 use bevy_ecs::prelude::*;
+use bytes::Bytes;
+use sapling_api::BlockPos;
 use sapling_world::ChunkPos;
+
+use crate::components::{InLayer, Outgoing, Stage};
+
+/// Hands `packets` to every player of `layer` whose view covers the column of `pos`, joined or
+/// still loading: a client that was sent the column must hear what happens in it.
+pub(crate) fn to_viewers(world: &mut World, layer: Entity, pos: BlockPos, packets: &[Bytes]) {
+    let column = ChunkPos::of_block(pos[0], pos[2]);
+    let mut players = world.query::<(&InLayer, &Stage, &View, &mut Outgoing)>();
+    for (in_layer, stage, view, mut out) in players.iter_mut(world) {
+        if in_layer.0 == layer && *stage >= Stage::Chunks && view.covers(column) {
+            out.0.extend_from_slice(packets);
+        }
+    }
+}
 
 /// The chunk columns a player sees: a circle of `radius` chunks around `center`, split into
 /// those already sent and those still queued.

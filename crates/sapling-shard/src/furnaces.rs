@@ -116,14 +116,11 @@ pub(crate) fn forget(world: &mut World, layer: Entity, pos: BlockPos) {
     containers::unpin(world, layer, pos);
 }
 
-/// What a player may not put into a furnace: anything into the result, what does not burn into
-/// the fuel (BDS `isItemAllowedInFuelSlot`, which also takes a bucket).
+/// What a player may not put into a furnace: what does not burn into the fuel (BDS
+/// `isItemAllowedInFuelSlot`, which also takes a bucket). BDS takes anything into the result
+/// (REC: `bds_container_probe`), and so does this.
 pub(crate) fn refuses(slot: usize, item: &ItemStack) -> bool {
-    match slot {
-        FUEL => fuel::burn_ticks(&item.name, 1).is_none() && item.name != fuel::BUCKET,
-        OUTPUT => true,
-        _ => false,
-    }
+    slot == FUEL && fuel::burn_ticks(&item.name, 1).is_none() && item.name != fuel::BUCKET
 }
 
 /// A hopper above fills the input with anything; one beside, the fuel with what burns.
@@ -145,7 +142,7 @@ fn owe(world: &mut World, layer: Entity, pos: BlockPos, change: impl FnOnce(i32)
     let Some(Value::Compound(mut fields)) = entity(world, layer, pos) else { return 0 };
     let owed = xp::stored(&Value::Compound(fields.clone()));
     fields.retain(|(key, _)| key != xp::STORED);
-    fields.push((xp::STORED.to_owned(), Value::Int(change(owed))));
+    fields.push((xp::STORED.into(),Value::Int(change(owed))));
     keep(world, layer, pos, &Value::Compound(fields));
     owed
 }
@@ -182,7 +179,7 @@ pub(crate) fn broken(world: &mut World, layer: Entity, pos: BlockPos, slots: &[O
 fn keep_times(world: &mut World, layer: Entity, pos: BlockPos, fire: &Fire) {
     let Some(Value::Compound(mut fields)) = entity(world, layer, pos) else { return };
     fields.retain(|(key, _)| !FIELDS.contains(&key.as_str()));
-    fields.extend(FIELDS.iter().zip(fire.times()).map(|(field, ticks)| ((*field).to_owned(), Value::Short(ticks as i16))));
+    fields.extend(FIELDS.iter().zip(fire.times()).map(|(field, ticks)| ((*field).into(), Value::Short(ticks as i16))));
     keep(world, layer, pos, &Value::Compound(fields));
 }
 
@@ -252,7 +249,7 @@ fn step(world: &mut World, layer: Entity, pos: BlockPos, fire: &mut Fire) -> boo
             }
             // The result is shown before the input goes, the game's order: a client that waits
             // for the input to empty has the whole result by then.
-            containers::set_slots(world, layer, pos, slots.clone(), None);
+            containers::set_slots(world, layer, pos, slots.clone());
             take_one(&mut slots[INPUT]);
         }
         Some(_) => fire.cook += 1,
@@ -260,7 +257,7 @@ fn step(world: &mut World, layer: Entity, pos: BlockPos, fire: &mut Fire) -> boo
         None => fire.cook = fire.cook.saturating_sub(2),
     }
     if slots != before {
-        containers::set_slots(world, layer, pos, slots, None);
+        containers::set_slots(world, layer, pos, slots);
     }
     if (fire.lit > 0) != was_lit {
         relight(world, layer, pos, &smelter, fire.lit > 0, fire);

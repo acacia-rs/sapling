@@ -13,9 +13,19 @@ pub struct OutputMessage {
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct Output {
     messages: Vec<OutputMessage>,
+    echoed: bool,
 }
 
 impl Output {
+    /// The lines other operators are shown, as BDS echoes an operator command's success to them.
+    pub fn echoed(&self) -> impl Iterator<Item = &OutputMessage> {
+        self.messages.iter().filter(|m| self.echoed && m.success)
+    }
+
+    pub(super) fn echo(&mut self) {
+        self.echoed = true;
+    }
+
     pub fn print(&mut self, text: impl Into<String>) {
         self.translate(text, Vec::new(), true);
     }
@@ -39,8 +49,9 @@ impl Output {
         self.messages.iter().all(|m| m.success)
     }
 
-    /// The answer to a line that was not run, under the keys BDS uses.
-    pub(super) fn refuse(&mut self, error: ParseError) {
+    /// The answer to a line that was not run, under the keys BDS uses; for a command whose
+    /// arguments are only found wrong once it runs.
+    pub fn refuse(&mut self, error: ParseError) {
         match error {
             ParseError::Syntax { before, token, after } => self.translate("commands.generic.syntax", vec![before, token, after], false),
             ParseError::NoTarget => self.translate("commands.generic.noTargetMatch", Vec::new(), false),

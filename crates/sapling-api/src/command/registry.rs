@@ -56,6 +56,9 @@ impl Commands {
             out.translate("commands.generic.unknown", vec![name.to_owned()], false);
             return out;
         };
+        if entry.spec.permission == Permission::Operator {
+            out.echo();
+        }
         let players: Vec<Player> = ctx.players().collect();
         let mut args = Args::new(line, name.len(), sender, &players);
         if let Err(error) = (entry.run)(ctx, sender, &mut args, &mut out) {

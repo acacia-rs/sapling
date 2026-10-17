@@ -15,6 +15,7 @@ use crate::mobs::SeesMobs;
 use crate::movement::Motion;
 use crate::roster::Profile;
 use crate::view::View;
+use crate::vitals::Vitals;
 use crate::visibility::Sees;
 
 #[derive(Bundle)]
@@ -38,6 +39,7 @@ pub(crate) struct Carried {
     pub hud: Hud,
     /// The player's items, under the stack ids its client knows them by.
     pub inventory: Inventory,
+    pub vitals: Vitals,
 }
 
 /// What a shard knows of a player only while it is there.

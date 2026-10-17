@@ -4,7 +4,7 @@ use std::any::TypeId;
 use std::collections::HashMap;
 
 use crate::ctx::State;
-use crate::{Backend, Block, BlockPos, BossBar, Difficulty, FormCallback, GameMode, Item, Permission, Player, PlayerId, Position, Sidebar, Slot, Title};
+use crate::{Backend, Block, BlockPos, BossBar, Difficulty, FormCallback, GameMode, Item, Permission, Player, PlayerId, Position, RuleValue, Sidebar, Slot, Title};
 
 #[derive(Default)]
 pub struct Fake {
@@ -18,6 +18,7 @@ pub struct Fake {
     pub items: HashMap<Slot, Item>,
     /// The world in focus; `None` is "hub".
     pub world: Option<String>,
+    rules: HashMap<String, RuleValue>,
     state: HashMap<TypeId, State>,
 }
 
@@ -73,6 +74,89 @@ impl crate::WorldBackend for Fake {
         self.log.push(format!("reset {name}"));
         true
     }
+    /// Two rules.
+    fn game_rules(&self) -> Vec<(String, RuleValue)> {
+        let defaults = [("doDayLightCycle", RuleValue::Bool(true)), ("randomTickSpeed", RuleValue::Int(1))];
+        defaults.into_iter().map(|(name, value)| (name.to_owned(), self.rules.get(name).copied().unwrap_or(value))).collect()
+    }
+    fn set_game_rule(&mut self, name: &str, value: RuleValue) -> bool {
+        let Some((rule, now)) = self.game_rules().into_iter().find(|(rule, _)| rule.eq_ignore_ascii_case(name)) else { return false };
+        let same_kind = std::mem::discriminant(&now) == std::mem::discriminant(&value);
+        if same_kind {
+            self.log.push(format!("rule {rule} {value}"));
+            self.rules.insert(rule, value);
+        }
+        same_kind
+    }
+}
+
+/// No entities: spawns are logged and refused.
+impl crate::EntityBackend for Fake {
+    fn spawn_entity(&mut self, kind: &str, feet: [f32; 3]) -> Option<crate::EntityId> {
+        self.log.push(format!("spawn {kind} at {feet:?}"));
+        None
+    }
+    fn entity(&self, _: crate::EntityId) -> Option<crate::EntityInfo> {
+        None
+    }
+    fn entities(&self) -> Vec<crate::EntityInfo> {
+        Vec::new()
+    }
+    fn move_entity(&mut self, _: crate::EntityId, _: [f32; 3]) -> bool {
+        false
+    }
+    fn set_velocity(&mut self, _: crate::EntityId, _: [f32; 3]) -> bool {
+        false
+    }
+    fn remove_entity(&mut self, _: crate::EntityId) -> bool {
+        false
+    }
+    fn kill_entity(&mut self, _: crate::EntityId) -> bool {
+        false
+    }
+}
+
+impl crate::HealthBackend for Fake {
+    fn health(&self, _: PlayerId) -> Option<f32> {
+        None
+    }
+    fn hurt_player(&mut self, _: PlayerId, _: f32, _: crate::DamageCause) -> bool {
+        false
+    }
+    fn kill_player(&mut self, _: PlayerId) -> bool {
+        false
+    }
+}
+
+impl crate::WeatherBackend for Fake {
+    fn weather(&self) -> crate::Weather {
+        crate::Weather::Clear
+    }
+    fn set_weather(&mut self, _: crate::Weather, _: Option<u32>) {}
+}
+
+impl crate::ExperienceBackend for Fake {
+    fn experience(&self, _: PlayerId) -> Option<(i32, f32)> {
+        None
+    }
+    fn give_experience(&mut self, _: PlayerId, _: u32) -> bool {
+        false
+    }
+    fn add_levels(&mut self, _: PlayerId, _: i32) -> bool {
+        false
+    }
+}
+
+impl crate::EffectBackend for Fake {
+    fn give_effect(&mut self, _: PlayerId, _: crate::Effect, _: u32, _: u8, _: bool) -> bool {
+        false
+    }
+    fn remove_effect(&mut self, _: PlayerId, _: crate::Effect) -> bool {
+        false
+    }
+    fn clear_effects(&mut self, _: PlayerId) -> bool {
+        false
+    }
 }
 
 impl Backend for Fake {
@@ -109,6 +193,34 @@ impl Backend for Fake {
     fn block(&self, pos: BlockPos) -> Option<Block> {
         (pos[1] >= 0).then(|| self.blocks.get(&pos).cloned().unwrap_or_else(Block::air))
     }
+    /// No circuits run here.
+    fn power_at(&self, _pos: BlockPos) -> u8 {
+        0
+    }
+    /// Neighbours do nothing here: the same as [`Fake::set_block`].
+    fn update_block(&mut self, pos: BlockPos, block: &Block) -> bool {
+        self.set_block(pos, block)
+    }
+
+    /// Nothing drops here: the block only goes.
+    fn break_block(&mut self, pos: BlockPos) -> bool {
+        let broken = self.blocks.remove(&pos).is_some_and(|block| !block.is_air());
+        if broken {
+            self.log.push(format!("break {pos:?}"));
+        }
+        broken
+    }
+
+    fn set_container_item(&mut self, pos: BlockPos, slot: usize, item: Option<&Item>) -> bool {
+        self.log.push(format!("container {pos:?} {slot} {:?}", item.map(|item| (&item.name, item.count))));
+        true
+    }
+
+    /// A chest wherever one was set.
+    fn container_size(&mut self, pos: BlockPos) -> Option<usize> {
+        self.blocks.get(&pos).filter(|block| block.name == "minecraft:chest").map(|_| 27)
+    }
+
     fn set_block(&mut self, pos: BlockPos, block: &Block) -> bool {
         let known = pos[1] >= 0 && block.name.starts_with("minecraft:");
         if known {
@@ -125,6 +237,9 @@ impl Backend for Fake {
     }
     fn send_message(&mut self, player: PlayerId, message: &str) {
         self.log.push(format!("message {} {message}", player.0));
+    }
+    fn send_translation(&mut self, player: PlayerId, key: &str, parameters: &[String]) {
+        self.log.push(format!("translation {} {key} {parameters:?}", player.0));
     }
     fn teleport(&mut self, player: PlayerId, feet: [f32; 3]) {
         self.log.push(format!("teleport {} {feet:?}", player.0));
@@ -156,9 +271,11 @@ impl Backend for Fake {
         self.log.push(format!("give {} {} x{}", player.0, item.name, item.count));
         0
     }
-    fn clear_inventory(&mut self, player: PlayerId) {
+    fn clear_inventory(&mut self, player: PlayerId) -> u32 {
         self.log.push(format!("clear {}", player.0));
+        let removed = self.items.values().map(|item| u32::from(item.count)).sum();
         self.items.clear();
+        removed
     }
     fn held_slot(&self, _: PlayerId) -> Option<u8> {
         Some(2)

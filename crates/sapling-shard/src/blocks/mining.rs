@@ -106,6 +106,8 @@ pub(crate) fn start(world: &mut World, player: Entity, layer: Entity, pos: Block
     if let Some(mut breaking) = world.get_mut::<Breaking>(player) {
         breaking.0 = needed.map(|needed| Started { pos, tick, needed });
     }
+    // The first blow lights redstone ore (research/captures/bds-oresteps.txt).
+    super::light_ore(world, layer, pos);
     if let Some(needed) = needed {
         send::to_viewers(world, layer, pos, &[crack(LevelEventEvent::BlockStartBreak, pos, (CRACK_SCALE / needed) as i32)]);
     }

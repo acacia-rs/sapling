@@ -1,11 +1,12 @@
+mod wire;
+
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use acacia_proto::types::SubChunkEntryItemResult;
-use acacia_world::{BlockRegistry, Dimension, Heightmap, LevelChunkData, SubChunkData};
+use acacia_world::{BlockRegistry, Dimension};
 
 use crate::ChunkPos;
-use crate::column::{Column, SubChunkAnswer};
+use crate::column::Column;
 use crate::loader::{Loader, Source};
 use crate::players::Players;
 use crate::storage::{Level, WorldStorage};
@@ -85,6 +86,16 @@ impl World {
         self.column(pos).map_or(&[], Column::actors)
     }
 
+    /// Replaces a loaded column's actors, to be saved with it; false where none is loaded.
+    pub fn set_actors(&mut self, pos: ChunkPos, actors: Vec<u8>) -> bool {
+        self.column_mut(pos).map(|column| column.set_actors(actors)).is_some()
+    }
+
+    /// The loaded columns that hold actors.
+    pub fn columns_with_actors(&self) -> Vec<ChunkPos> {
+        self.columns.iter().filter(|(_, column)| !column.actors().is_empty()).map(|(pos, _)| *pos).collect()
+    }
+
     /// The runtime id of a block's default-ordered first state, e.g. `minecraft:stone`.
     pub fn block_id(&self, name: &str) -> Option<u32> {
         self.registry.states_of(name).next().map(|(id, _)| id)
@@ -97,6 +108,12 @@ impl World {
     /// The layer-0 block at a position; air where nothing is loaded.
     pub fn block(&self, x: i32, y: i32, z: i32) -> u32 {
         self.column(ChunkPos::of_block(x, z)).map_or(self.dim.air, |column| column.block(x, y, z))
+    }
+
+    /// Where the loaded column at `pos` holds a layer-0 block `wanted` accepts.
+    pub fn find_blocks(&self, pos: ChunkPos, wanted: impl Fn(u32) -> bool) -> Vec<[i32; 3]> {
+        let found = self.column(pos).map(|column| column.find(wanted)).unwrap_or_default();
+        found.into_iter().map(|[x, y, z]| [pos.x * 16 + x, y, pos.z * 16 + z]).collect()
     }
 
     /// The y of the highest block in block column `(x, z)` that a player can stand on or in
@@ -152,24 +169,6 @@ impl World {
                 }
             }
         }
-    }
-
-    /// What announces a column in sub-chunk request mode: `.packet(x, z, dimension)` is the
-    /// `LevelChunk`, and for a blob-cache client (`cached`) `.blobs` holds the biomes it names.
-    /// `None` until the column is loaded.
-    pub fn level_chunk(&self, pos: ChunkPos, cached: bool) -> Option<&LevelChunkData> {
-        Some(self.column(pos)?.level_chunk(cached))
-    }
-
-    /// One entry of a `Subchunk` answer: section `section_y` of column `pos`, requested at
-    /// `offset` from the request's origin.
-    pub fn sub_chunk(&self, pos: ChunkPos, section_y: i32, offset: [i8; 3], cached: bool) -> SubChunkAnswer {
-        let failed = |result| {
-            let missing = SubChunkData { payload: None, blob: None, heightmap: Heightmap::TooLow };
-            SubChunkAnswer { entry: acacia_proto::types::SubChunkEntryItem { result, ..missing.entry(offset[0], offset[1], offset[2]) }, blob: None }
-        };
-        let Some(column) = self.column(pos) else { return failed(SubChunkEntryItemResult::ChunkNotFound) };
-        column.sub_chunk(section_y, &self.registry, offset, cached).unwrap_or_else(|| failed(SubChunkEntryItemResult::YIndexOutOfBounds))
     }
 
     pub(crate) fn column(&self, pos: ChunkPos) -> Option<&Column> {

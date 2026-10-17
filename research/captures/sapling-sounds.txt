@@ -1,0 +1,419 @@
+## /kill @e[type=!player]
+     36 actor   CommandOutput success_count=0 data=None commands.generic.noTargetMatch success=false []
+## /fill ~-2 ~-1 ~-2 ~6 ~-1 ~40 stone
+   1041 actor   CommandOutput success_count=0 data=None No blocks filled success=false []
+## /fill ~-2 ~ ~-2 ~6 ~4 ~40 air
+   2055 actor   CommandOutput success_count=0 data=None No blocks filled success=false []
+## /gamemode creative @s
+   3036 actor   CommandOutput success_count=1 data=None commands.gamemode.success.self success=true ["%createWorldScreen.gameMode.creative"]
+   3036 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamemode.success.self\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.creative\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /
+## /tp @s ~ ~ ~3
+   5037 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.tp.success.coordinates\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor\"},{\"text\":\"0.50\"},{\"text\":\"64.00\"},{\"text\":\"3.50\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   5037 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.tp.successVictim\",\"with\":{\"rawtext\":[{\"text\":\"0.50, 64.00, 3.50\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   5037 actor   CommandOutput success_count=1 data=None commands.tp.success.coordinates success=true ["CmdActor", "0.50", "64.00", "3.50"]
+## /setblock ~1 ~ ~ wooden_door
+   6038 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 3 }, block_runtime_id: 650702320, flags: UpdateBlockFlags(3), layer: 0 }
+   6038 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 3 }, block_runtime_id: 650702320, flags: UpdateBlockFlags(3), layer: 0 }
+   6038 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 65, z: 3 }, block_runtime_id: 1706008891, flags: UpdateBlockFlags(3), layer: 0 }
+   6038 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+   6038 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 65, z: 3 }, block_runtime_id: 1706008891, flags: UpdateBlockFlags(3), layer: 0 }
+   6038 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /
+## /!click 1 0 0
+## clicked: Ok(())
+   8037 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 3 }, block_runtime_id: 2693415357, flags: UpdateBlockFlags(3), layer: 0 }
+   8038 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 65, z: 3 }, block_runtime_id: 1638108786, flags: UpdateBlockFlags(3), layer: 0 }
+   8038 actor   LevelSoundEvent LevelSoundEvent { sound_id: "door.open", position: Vec3f { x: 1.5, y: 64.5, z: 3.5 }, extra_data: 650702320, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+   8038 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 3 }, block_runtime_id: 2693415357, flags: UpdateBlockFlags(3), layer: 0 }
+   8038 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 3 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 1 }
+   8038 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 3 }, block_runtime_id: 2693415357, flags: UpdateBlockFlags(3), layer: 0 }
+   8038 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 65, z: 3 }, block_runtime_id: 1638108786, flags: UpdateBlockFlags(3), layer: 0 }
+   8038 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 65, z: 3 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 1 }
+   8038 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 65, z: 3 }, block_runtime_id: 1638108786, flags: UpdateBlockFlags(3), layer: 0 }
+   8038 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 63, z: 3 }, block_runtime_id: 2150698529, flags: UpdateBlockFlags(3), layer: 0 }
+   8038 watcher LevelSoundEvent LevelSoundEvent { sound_id: "door.open", position: Vec3f { x: 1.5, y: 64.5, z: 3.5 }, extra_data: 650702320, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+   8038 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 63, z: 3 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 1 }
+## /
+## /
+## /!click 1 0 0
+## clicked: Ok(())
+  11036 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 3 }, block_runtime_id: 650702320, flags: UpdateBlockFlags(3), layer: 0 }
+  11036 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 3 }, block_runtime_id: 650702320, flags: UpdateBlockFlags(3), layer: 0 }
+  11036 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 65, z: 3 }, block_runtime_id: 1706008891, flags: UpdateBlockFlags(3), layer: 0 }
+  11036 actor   LevelSoundEvent LevelSoundEvent { sound_id: "door.close", position: Vec3f { x: 1.5, y: 64.5, z: 3.5 }, extra_data: -1601551939, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  11036 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 65, z: 3 }, block_runtime_id: 1706008891, flags: UpdateBlockFlags(3), layer: 0 }
+  11036 watcher LevelSoundEvent LevelSoundEvent { sound_id: "door.close", position: Vec3f { x: 1.5, y: 64.5, z: 3.5 }, extra_data: -1601551939, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  11036 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 3 }, block_runtime_id: 650702320, flags: UpdateBlockFlags(3), layer: 0 }
+  11036 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 3 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 1 }
+  11036 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 65, z: 3 }, block_runtime_id: 1706008891, flags: UpdateBlockFlags(3), layer: 0 }
+  11036 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 65, z: 3 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 1 }
+  11036 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 63, z: 3 }, block_runtime_id: 2150698529, flags: UpdateBlockFlags(3), layer: 0 }
+  11036 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 63, z: 3 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 1 }
+  11936 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 6513, paused: false }] }) }
+  11936 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 6513, paused: false }] }) }
+## /
+## /
+## /tp @s ~ ~ ~3
+  14086 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.tp.successVictim\",\"with\":{\"rawtext\":[{\"text\":\"0.50, 64.00, 6.50\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  14086 actor   CommandOutput success_count=1 data=None commands.tp.success.coordinates success=true ["CmdActor", "0.50", "64.00", "6.50"]
+  14086 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.tp.success.coordinates\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor\"},{\"text\":\"0.50\"},{\"text\":\"64.00\"},{\"text\":\"6.50\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /setblock ~1 ~ ~ trapdoor
+  15086 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 6 }, block_runtime_id: 2417373385, flags: UpdateBlockFlags(3), layer: 0 }
+  15086 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+  15086 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 6 }, block_runtime_id: 2417373385, flags: UpdateBlockFlags(3), layer: 0 }
+  15086 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /
+## /!click 1 0 0
+## clicked: Ok(())
+  17086 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 6 }, block_runtime_id: 2621867576, flags: UpdateBlockFlags(3), layer: 0 }
+  17086 actor   LevelSoundEvent LevelSoundEvent { sound_id: "trapdoor.open", position: Vec3f { x: 1.5, y: 64.5, z: 6.5 }, extra_data: -1673099720, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  17086 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 6 }, block_runtime_id: 2621867576, flags: UpdateBlockFlags(3), layer: 0 }
+  17086 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 6 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 1 }
+  17086 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 65, z: 6 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  17086 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 65, z: 6 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 1 }
+  17086 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 63, z: 6 }, block_runtime_id: 2150698529, flags: UpdateBlockFlags(3), layer: 0 }
+  17086 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 63, z: 6 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 1 }
+  17086 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 6 }, block_runtime_id: 2621867576, flags: UpdateBlockFlags(3), layer: 0 }
+  17086 watcher LevelSoundEvent LevelSoundEvent { sound_id: "trapdoor.open", position: Vec3f { x: 1.5, y: 64.5, z: 6.5 }, extra_data: -1673099720, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /
+## /
+## /!click 1 0 0
+## clicked: Ok(())
+  20086 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 6 }, block_runtime_id: 2417373385, flags: UpdateBlockFlags(3), layer: 0 }
+  20086 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 6 }, block_runtime_id: 2417373385, flags: UpdateBlockFlags(3), layer: 0 }
+  20086 actor   LevelSoundEvent LevelSoundEvent { sound_id: "trapdoor.close", position: Vec3f { x: 1.5, y: 64.5, z: 6.5 }, extra_data: -1877593911, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  20086 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 6 }, block_runtime_id: 2417373385, flags: UpdateBlockFlags(3), layer: 0 }
+  20086 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 6 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 1 }
+  20086 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 65, z: 6 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  20086 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 65, z: 6 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 1 }
+  20086 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 63, z: 6 }, block_runtime_id: 2150698529, flags: UpdateBlockFlags(3), layer: 0 }
+  20086 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 63, z: 6 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 1 }
+  20086 watcher LevelSoundEvent LevelSoundEvent { sound_id: "trapdoor.close", position: Vec3f { x: 1.5, y: 64.5, z: 6.5 }, extra_data: -1877593911, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /
+## /
+## /tp @s ~ ~ ~3
+  23086 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.tp.success.coordinates\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor\"},{\"text\":\"0.50\"},{\"text\":\"64.00\"},{\"text\":\"9.50\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  23086 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.tp.successVictim\",\"with\":{\"rawtext\":[{\"text\":\"0.50, 64.00, 9.50\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  23086 actor   CommandOutput success_count=1 data=None commands.tp.success.coordinates success=true ["CmdActor", "0.50", "64.00", "9.50"]
+## /setblock ~1 ~ ~ fence_gate
+  24086 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 9 }, block_runtime_id: 2421924416, flags: UpdateBlockFlags(3), layer: 0 }
+  24086 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+  24086 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 9 }, block_runtime_id: 2421924416, flags: UpdateBlockFlags(3), layer: 0 }
+  24086 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  24736 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 6769, paused: false }] }) }
+  24736 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 6769, paused: false }] }) }
+## /
+## /!click 1 0 0
+## clicked: Ok(())
+  26087 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 9 }, block_runtime_id: 3477230987, flags: UpdateBlockFlags(3), layer: 0 }
+  26087 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 9 }, block_runtime_id: 3477230987, flags: UpdateBlockFlags(3), layer: 0 }
+  26087 watcher LevelSoundEvent LevelSoundEvent { sound_id: "fence_gate.open", position: Vec3f { x: 1.5, y: 64.5, z: 9.5 }, extra_data: -817736309, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  26087 actor   LevelSoundEvent LevelSoundEvent { sound_id: "fence_gate.open", position: Vec3f { x: 1.5, y: 64.5, z: 9.5 }, extra_data: -817736309, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  26087 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 9 }, block_runtime_id: 3477230987, flags: UpdateBlockFlags(3), layer: 0 }
+  26087 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 9 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 1 }
+  26087 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 65, z: 9 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  26087 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 65, z: 9 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 1 }
+  26087 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 63, z: 9 }, block_runtime_id: 2150698529, flags: UpdateBlockFlags(3), layer: 0 }
+  26087 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 63, z: 9 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 1 }
+## /
+## /
+## /!click 1 0 0
+## clicked: Ok(())
+  29086 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 9 }, block_runtime_id: 2421924416, flags: UpdateBlockFlags(3), layer: 0 }
+  29086 actor   LevelSoundEvent LevelSoundEvent { sound_id: "fence_gate.close", position: Vec3f { x: 1.5, y: 64.5, z: 9.5 }, extra_data: -1873042880, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  29086 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 9 }, block_runtime_id: 2421924416, flags: UpdateBlockFlags(3), layer: 0 }
+  29086 watcher LevelSoundEvent LevelSoundEvent { sound_id: "fence_gate.close", position: Vec3f { x: 1.5, y: 64.5, z: 9.5 }, extra_data: -1873042880, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  29086 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 9 }, block_runtime_id: 2421924416, flags: UpdateBlockFlags(3), layer: 0 }
+  29086 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 9 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 1 }
+  29086 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 65, z: 9 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  29086 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 65, z: 9 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 1 }
+  29086 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 63, z: 9 }, block_runtime_id: 2150698529, flags: UpdateBlockFlags(3), layer: 0 }
+  29086 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 63, z: 9 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 1 }
+## /
+## /
+## /tp @s ~ ~ ~3
+  32086 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.tp.success.coordinates\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor\"},{\"text\":\"0.50\"},{\"text\":\"64.00\"},{\"text\":\"12.50\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  32086 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.tp.successVictim\",\"with\":{\"rawtext\":[{\"text\":\"0.50, 64.00, 12.50\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  32086 actor   CommandOutput success_count=1 data=None commands.tp.success.coordinates success=true ["CmdActor", "0.50", "64.00", "12.50"]
+## /setblock ~1 ~ ~ chest
+  33086 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 12 }, block_runtime_id: 3162850062, flags: UpdateBlockFlags(3), layer: 0 }
+  33086 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+  33086 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 12 }, block_runtime_id: 3162850062, flags: UpdateBlockFlags(3), layer: 0 }
+  33086 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /
+## /!click 1 0 0
+## clicked: Ok(())
+  35087 actor   ContainerOpen ContainerOpen { window_id: Unknown(2), window_type: Container, coordinates: BlockCoordinates { x: 1, y: 64, z: 12 }, runtime_entity_id: -1 }
+  35087 watcher BlockEvent BlockEvent { position: BlockCoordinates { x: 1, y: 64, z: 12 }, type: ChangeState, data: 1 }
+  35087 actor   BlockEvent BlockEvent { position: BlockCoordinates { x: 1, y: 64, z: 12 }, type: ChangeState, data: 1 }
+  35087 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 12 }, block_runtime_id: 3162850062, flags: UpdateBlockFlags(3), layer: 0 }
+  35087 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 12 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 1 }
+  35087 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 65, z: 12 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  35087 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 65, z: 12 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 1 }
+  35087 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 63, z: 12 }, block_runtime_id: 2150698529, flags: UpdateBlockFlags(3), layer: 0 }
+  35087 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 63, z: 12 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 1 }
+  35136 actor   LevelSoundEvent LevelSoundEvent { sound_id: "chest.open", position: Vec3f { x: 1.5, y: 64.5, z: 12.5 }, extra_data: -1132117234, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  35136 watcher LevelSoundEvent LevelSoundEvent { sound_id: "chest.open", position: Vec3f { x: 1.5, y: 64.5, z: 12.5 }, extra_data: -1132117234, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /
+## /
+  37536 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 7025, paused: false }] }) }
+  37536 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 7025, paused: false }] }) }
+## /!click 1 0 0
+## clicked: Ok(())
+  38086 watcher BlockEvent BlockEvent { position: BlockCoordinates { x: 1, y: 64, z: 12 }, type: ChangeState, data: 0 }
+  38086 watcher BlockEvent BlockEvent { position: BlockCoordinates { x: 1, y: 64, z: 12 }, type: ChangeState, data: 1 }
+  38086 actor   BlockEvent BlockEvent { position: BlockCoordinates { x: 1, y: 64, z: 12 }, type: ChangeState, data: 0 }
+  38086 actor   ContainerOpen ContainerOpen { window_id: Unknown(3), window_type: Container, coordinates: BlockCoordinates { x: 1, y: 64, z: 12 }, runtime_entity_id: -1 }
+  38087 actor   BlockEvent BlockEvent { position: BlockCoordinates { x: 1, y: 64, z: 12 }, type: ChangeState, data: 1 }
+  38087 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 12 }, block_runtime_id: 3162850062, flags: UpdateBlockFlags(3), layer: 0 }
+  38087 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 12 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 1 }
+  38087 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 65, z: 12 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  38087 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 65, z: 12 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 1 }
+  38087 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 63, z: 12 }, block_runtime_id: 2150698529, flags: UpdateBlockFlags(3), layer: 0 }
+  38087 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 63, z: 12 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 1 }
+  38136 watcher LevelSoundEvent LevelSoundEvent { sound_id: "chest.open", position: Vec3f { x: 1.5, y: 64.5, z: 12.5 }, extra_data: -1132117234, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  38136 actor   LevelSoundEvent LevelSoundEvent { sound_id: "chest.open", position: Vec3f { x: 1.5, y: 64.5, z: 12.5 }, extra_data: -1132117234, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  38336 watcher BlockEvent BlockEvent { position: BlockCoordinates { x: 1, y: 64, z: 12 }, type: ChangeState, data: 1 }
+  38336 actor   BlockEvent BlockEvent { position: BlockCoordinates { x: 1, y: 64, z: 12 }, type: ChangeState, data: 1 }
+  38336 actor   LevelSoundEvent LevelSoundEvent { sound_id: "chest.closed", position: Vec3f { x: 1.5, y: 64.5, z: 12.5 }, extra_data: -1132117234, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  38336 watcher LevelSoundEvent LevelSoundEvent { sound_id: "chest.closed", position: Vec3f { x: 1.5, y: 64.5, z: 12.5 }, extra_data: -1132117234, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /
+## /
+## /tp @s ~ ~ ~3
+  41086 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.tp.success.coordinates\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor\"},{\"text\":\"0.50\"},{\"text\":\"64.00\"},{\"text\":\"15.50\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  41086 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.tp.successVictim\",\"with\":{\"rawtext\":[{\"text\":\"0.50, 64.00, 15.50\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  41086 actor   CommandOutput success_count=1 data=None commands.tp.success.coordinates success=true ["CmdActor", "0.50", "64.00", "15.50"]
+## /setblock ~1 ~ ~ barrel
+  42087 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 15 }, block_runtime_id: 198111737, flags: UpdateBlockFlags(3), layer: 0 }
+  42088 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 15 }, block_runtime_id: 198111737, flags: UpdateBlockFlags(3), layer: 0 }
+  42088 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+  42088 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  42337 watcher BlockEvent BlockEvent { position: BlockCoordinates { x: 1, y: 64, z: 12 }, type: ChangeState, data: 1 }
+  42337 actor   BlockEvent BlockEvent { position: BlockCoordinates { x: 1, y: 64, z: 12 }, type: ChangeState, data: 1 }
+## /
+## /!click 1 0 0
+## clicked: Ok(())
+  44087 watcher BlockEvent BlockEvent { position: BlockCoordinates { x: 1, y: 64, z: 12 }, type: ChangeState, data: 0 }
+  44087 watcher BlockEvent BlockEvent { position: BlockCoordinates { x: 1, y: 64, z: 15 }, type: ChangeState, data: 1 }
+  44087 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 15 }, block_runtime_id: 3437772462, flags: UpdateBlockFlags(3), layer: 0 }
+  44087 actor   BlockEvent BlockEvent { position: BlockCoordinates { x: 1, y: 64, z: 12 }, type: ChangeState, data: 0 }
+  44087 actor   ContainerOpen ContainerOpen { window_id: Unknown(4), window_type: Container, coordinates: BlockCoordinates { x: 1, y: 64, z: 15 }, runtime_entity_id: -1 }
+  44087 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.barrel.open", position: Vec3f { x: 1.5, y: 64.5, z: 15.5 }, extra_data: -857194834, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  44087 actor   BlockEvent BlockEvent { position: BlockCoordinates { x: 1, y: 64, z: 15 }, type: ChangeState, data: 1 }
+  44087 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 15 }, block_runtime_id: 3437772462, flags: UpdateBlockFlags(3), layer: 0 }
+  44087 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.barrel.open", position: Vec3f { x: 1.5, y: 64.5, z: 15.5 }, extra_data: -857194834, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  44087 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 15 }, block_runtime_id: 3437772462, flags: UpdateBlockFlags(3), layer: 0 }
+  44087 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 15 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 1 }
+  44087 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 65, z: 15 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  44087 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 65, z: 15 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 1 }
+  44087 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 63, z: 15 }, block_runtime_id: 2150698529, flags: UpdateBlockFlags(3), layer: 0 }
+  44087 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 63, z: 15 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 1 }
+  44336 actor   LevelSoundEvent LevelSoundEvent { sound_id: "chest.closed", position: Vec3f { x: 1.5, y: 64.5, z: 12.5 }, extra_data: -1132117234, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  44336 watcher LevelSoundEvent LevelSoundEvent { sound_id: "chest.closed", position: Vec3f { x: 1.5, y: 64.5, z: 12.5 }, extra_data: -1132117234, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /
+## /
+  46336 watcher BlockEvent BlockEvent { position: BlockCoordinates { x: 1, y: 64, z: 15 }, type: ChangeState, data: 1 }
+  46336 actor   BlockEvent BlockEvent { position: BlockCoordinates { x: 1, y: 64, z: 15 }, type: ChangeState, data: 1 }
+## /!click 1 0 0
+## clicked: Ok(())
+  47087 actor   BlockEvent BlockEvent { position: BlockCoordinates { x: 1, y: 64, z: 15 }, type: ChangeState, data: 0 }
+  47087 watcher BlockEvent BlockEvent { position: BlockCoordinates { x: 1, y: 64, z: 15 }, type: ChangeState, data: 0 }
+  47087 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 15 }, block_runtime_id: 198111737, flags: UpdateBlockFlags(3), layer: 0 }
+  47087 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.barrel.close", position: Vec3f { x: 1.5, y: 64.5, z: 15.5 }, extra_data: 198111737, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  47087 actor   ContainerOpen ContainerOpen { window_id: Unknown(5), window_type: Container, coordinates: BlockCoordinates { x: 1, y: 64, z: 15 }, runtime_entity_id: -1 }
+  47087 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 15 }, block_runtime_id: 198111737, flags: UpdateBlockFlags(3), layer: 0 }
+  47087 actor   BlockEvent BlockEvent { position: BlockCoordinates { x: 1, y: 64, z: 15 }, type: ChangeState, data: 1 }
+  47087 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 15 }, block_runtime_id: 3437772462, flags: UpdateBlockFlags(3), layer: 0 }
+  47087 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.barrel.open", position: Vec3f { x: 1.5, y: 64.5, z: 15.5 }, extra_data: -857194834, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  47087 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.barrel.close", position: Vec3f { x: 1.5, y: 64.5, z: 15.5 }, extra_data: 198111737, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  47087 watcher BlockEvent BlockEvent { position: BlockCoordinates { x: 1, y: 64, z: 15 }, type: ChangeState, data: 1 }
+  47087 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 15 }, block_runtime_id: 3437772462, flags: UpdateBlockFlags(3), layer: 0 }
+  47087 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 15 }, block_runtime_id: 3437772462, flags: UpdateBlockFlags(3), layer: 0 }
+  47087 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 15 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 1 }
+  47087 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 65, z: 15 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  47087 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 65, z: 15 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 1 }
+  47087 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 63, z: 15 }, block_runtime_id: 2150698529, flags: UpdateBlockFlags(3), layer: 0 }
+  47087 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 63, z: 15 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 1 }
+  47087 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.barrel.open", position: Vec3f { x: 1.5, y: 64.5, z: 15.5 }, extra_data: -857194834, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /
+## /
+## /tp @s ~ ~ ~3
+  50086 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.tp.successVictim\",\"with\":{\"rawtext\":[{\"text\":\"0.50, 64.00, 18.50\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  50086 actor   CommandOutput success_count=1 data=None commands.tp.success.coordinates success=true ["CmdActor", "0.50", "64.00", "18.50"]
+  50086 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.tp.success.coordinates\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor\"},{\"text\":\"0.50\"},{\"text\":\"64.00\"},{\"text\":\"18.50\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  50336 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 7281, paused: false }] }) }
+  50336 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 7281, paused: false }] }) }
+  50336 watcher BlockEvent BlockEvent { position: BlockCoordinates { x: 1, y: 64, z: 15 }, type: ChangeState, data: 1 }
+  50336 actor   BlockEvent BlockEvent { position: BlockCoordinates { x: 1, y: 64, z: 15 }, type: ChangeState, data: 1 }
+## /setblock ~1 ~ ~ ender_chest
+  51088 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 18 }, block_runtime_id: 1239582919, flags: UpdateBlockFlags(3), layer: 0 }
+  51088 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+  51088 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 18 }, block_runtime_id: 1239582919, flags: UpdateBlockFlags(3), layer: 0 }
+  51088 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /
+## /!click 1 0 0
+## clicked: Ok(())
+  53086 watcher BlockEvent BlockEvent { position: BlockCoordinates { x: 1, y: 64, z: 15 }, type: ChangeState, data: 0 }
+  53087 actor   BlockEvent BlockEvent { position: BlockCoordinates { x: 1, y: 64, z: 15 }, type: ChangeState, data: 0 }
+  53087 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 15 }, block_runtime_id: 198111737, flags: UpdateBlockFlags(3), layer: 0 }
+  53087 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.barrel.close", position: Vec3f { x: 1.5, y: 64.5, z: 15.5 }, extra_data: 198111737, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  53087 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 15 }, block_runtime_id: 198111737, flags: UpdateBlockFlags(3), layer: 0 }
+  53087 actor   ContainerOpen ContainerOpen { window_id: Unknown(6), window_type: Container, coordinates: BlockCoordinates { x: 1, y: 64, z: 18 }, runtime_entity_id: -1 }
+  53087 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.barrel.close", position: Vec3f { x: 1.5, y: 64.5, z: 15.5 }, extra_data: 198111737, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  53087 watcher BlockEvent BlockEvent { position: BlockCoordinates { x: 1, y: 64, z: 18 }, type: ChangeState, data: 1 }
+  53087 actor   BlockEvent BlockEvent { position: BlockCoordinates { x: 1, y: 64, z: 18 }, type: ChangeState, data: 1 }
+  53087 watcher LevelSoundEvent LevelSoundEvent { sound_id: "enderchest.open", position: Vec3f { x: 1.5, y: 64.5, z: 18.5 }, extra_data: 1239582919, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  53087 actor   LevelSoundEvent LevelSoundEvent { sound_id: "enderchest.open", position: Vec3f { x: 1.5, y: 64.5, z: 18.5 }, extra_data: 1239582919, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  53087 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 18 }, block_runtime_id: 1239582919, flags: UpdateBlockFlags(3), layer: 0 }
+  53087 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 18 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 1 }
+  53087 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 65, z: 18 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  53087 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 65, z: 18 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 1 }
+  53087 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 63, z: 18 }, block_runtime_id: 2150698529, flags: UpdateBlockFlags(3), layer: 0 }
+  53087 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 63, z: 18 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 1 }
+## /
+  54336 watcher BlockEvent BlockEvent { position: BlockCoordinates { x: 1, y: 64, z: 18 }, type: ChangeState, data: 1 }
+  54336 actor   BlockEvent BlockEvent { position: BlockCoordinates { x: 1, y: 64, z: 18 }, type: ChangeState, data: 1 }
+## /
+## /!click 1 0 0
+## clicked: Ok(())
+  56136 watcher BlockEvent BlockEvent { position: BlockCoordinates { x: 1, y: 64, z: 18 }, type: ChangeState, data: 0 }
+  56136 actor   BlockEvent BlockEvent { position: BlockCoordinates { x: 1, y: 64, z: 18 }, type: ChangeState, data: 0 }
+  56136 actor   LevelSoundEvent LevelSoundEvent { sound_id: "enderchest.closed", position: Vec3f { x: 1.5, y: 64.5, z: 18.5 }, extra_data: 1239582919, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  56136 actor   ContainerOpen ContainerOpen { window_id: Unknown(7), window_type: Container, coordinates: BlockCoordinates { x: 1, y: 64, z: 18 }, runtime_entity_id: -1 }
+  56137 actor   BlockEvent BlockEvent { position: BlockCoordinates { x: 1, y: 64, z: 18 }, type: ChangeState, data: 1 }
+  56137 actor   LevelSoundEvent LevelSoundEvent { sound_id: "enderchest.open", position: Vec3f { x: 1.5, y: 64.5, z: 18.5 }, extra_data: 1239582919, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  56137 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 18 }, block_runtime_id: 1239582919, flags: UpdateBlockFlags(3), layer: 0 }
+  56137 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 18 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 1 }
+  56137 watcher LevelSoundEvent LevelSoundEvent { sound_id: "enderchest.closed", position: Vec3f { x: 1.5, y: 64.5, z: 18.5 }, extra_data: 1239582919, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  56137 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 65, z: 18 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  56137 watcher BlockEvent BlockEvent { position: BlockCoordinates { x: 1, y: 64, z: 18 }, type: ChangeState, data: 1 }
+  56137 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 65, z: 18 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 1 }
+  56137 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 63, z: 18 }, block_runtime_id: 2150698529, flags: UpdateBlockFlags(3), layer: 0 }
+  56137 watcher LevelSoundEvent LevelSoundEvent { sound_id: "enderchest.open", position: Vec3f { x: 1.5, y: 64.5, z: 18.5 }, extra_data: 1239582919, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  56137 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 63, z: 18 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 1 }
+## /
+## /
+  58336 actor   BlockEvent BlockEvent { position: BlockCoordinates { x: 1, y: 64, z: 18 }, type: ChangeState, data: 1 }
+  58336 watcher BlockEvent BlockEvent { position: BlockCoordinates { x: 1, y: 64, z: 18 }, type: ChangeState, data: 1 }
+## /clear @s
+  59136 actor   CommandOutput success_count=0 data=None commands.clear.failure.no.items success=false ["CmdActor"]
+## /give @s wooden_door 8
+  60137 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.give.success\",\"with\":{\"rawtext\":[{\"text\":\"Wooden Door\"},{\"text\":\"8\"},{\"text\":\"CmdActor\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  60137 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.give.successRecipient\",\"with\":{\"rawtext\":[{\"text\":\"Wooden Door\"},{\"text\":\"8\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  60137 actor   CommandOutput success_count=1 data=None commands.give.success success=true ["Wooden Door", "8", "CmdActor"]
+  60186 actor   LevelSoundEvent LevelSoundEvent { sound_id: "pop", position: Vec3f { x: 0.5, y: 65.62001, z: 18.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  60186 watcher LevelSoundEvent LevelSoundEvent { sound_id: "pop", position: Vec3f { x: 0.5, y: 65.62001, z: 18.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /
+## /tp @s ~ ~ ~4
+  62136 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.tp.success.coordinates\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor\"},{\"text\":\"0.50\"},{\"text\":\"64.00\"},{\"text\":\"22.50\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  62136 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.tp.successVictim\",\"with\":{\"rawtext\":[{\"text\":\"0.50, 64.00, 22.50\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  62136 actor   CommandOutput success_count=1 data=None commands.tp.success.coordinates success=true ["CmdActor", "0.50", "64.00", "22.50"]
+  62336 watcher BlockEvent BlockEvent { position: BlockCoordinates { x: 1, y: 64, z: 18 }, type: ChangeState, data: 1 }
+  62336 actor   BlockEvent BlockEvent { position: BlockCoordinates { x: 1, y: 64, z: 18 }, type: ChangeState, data: 1 }
+## /!place 1 -1 0
+## placed: Ok(())
+  63142 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 7537, paused: false }] }) }
+  63142 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 7537, paused: false }] }) }
+  63142 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 22 }, block_runtime_id: 650702320, flags: UpdateBlockFlags(3), layer: 0 }
+  63142 actor   LevelSoundEvent LevelSoundEvent { sound_id: "place", position: Vec3f { x: 1.5, y: 64.5, z: 22.5 }, extra_data: 650702320, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  63142 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 65, z: 22 }, block_runtime_id: 1706008891, flags: UpdateBlockFlags(3), layer: 0 }
+  63142 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 22 }, block_runtime_id: 650702320, flags: UpdateBlockFlags(3), layer: 0 }
+  63142 watcher LevelSoundEvent LevelSoundEvent { sound_id: "place", position: Vec3f { x: 1.5, y: 64.5, z: 22.5 }, extra_data: 650702320, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  63142 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 65, z: 22 }, block_runtime_id: 1706008891, flags: UpdateBlockFlags(3), layer: 0 }
+## /
+## /tp @s ~ ~ ~4
+  65186 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.tp.success.coordinates\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor\"},{\"text\":\"0.50\"},{\"text\":\"64.00\"},{\"text\":\"26.50\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  65186 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.tp.successVictim\",\"with\":{\"rawtext\":[{\"text\":\"0.50, 64.00, 26.50\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  65187 actor   CommandOutput success_count=1 data=None commands.tp.success.coordinates success=true ["CmdActor", "0.50", "64.00", "26.50"]
+## /setblock ~1 ~ ~1 stone
+  66187 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 27 }, block_runtime_id: 2150698529, flags: UpdateBlockFlags(3), layer: 0 }
+  66187 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  66187 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 27 }, block_runtime_id: 2150698529, flags: UpdateBlockFlags(3), layer: 0 }
+  66187 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+  66338 watcher BlockEvent BlockEvent { position: BlockCoordinates { x: 1, y: 64, z: 18 }, type: ChangeState, data: 1 }
+  66338 actor   BlockEvent BlockEvent { position: BlockCoordinates { x: 1, y: 64, z: 18 }, type: ChangeState, data: 1 }
+## /!place 1 -1 0
+## placed: Ok(())
+  67188 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 26 }, block_runtime_id: 650702320, flags: UpdateBlockFlags(3), layer: 0 }
+  67188 actor   LevelSoundEvent LevelSoundEvent { sound_id: "place", position: Vec3f { x: 1.5, y: 64.5, z: 26.5 }, extra_data: 650702320, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  67188 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 26 }, block_runtime_id: 650702320, flags: UpdateBlockFlags(3), layer: 0 }
+  67188 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 65, z: 26 }, block_runtime_id: 4138541774, flags: UpdateBlockFlags(3), layer: 0 }
+  67188 watcher LevelSoundEvent LevelSoundEvent { sound_id: "place", position: Vec3f { x: 1.5, y: 64.5, z: 26.5 }, extra_data: 650702320, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  67188 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 65, z: 26 }, block_runtime_id: 4138541774, flags: UpdateBlockFlags(3), layer: 0 }
+## /
+## /tp @s ~ ~ ~4
+  69236 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.tp.success.coordinates\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor\"},{\"text\":\"0.50\"},{\"text\":\"64.00\"},{\"text\":\"30.50\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  69236 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.tp.successVictim\",\"with\":{\"rawtext\":[{\"text\":\"0.50, 64.00, 30.50\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  69236 actor   CommandOutput success_count=1 data=None commands.tp.success.coordinates success=true ["CmdActor", "0.50", "64.00", "30.50"]
+## /setblock ~1 ~ ~-1 stone
+  70236 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 29 }, block_runtime_id: 2150698529, flags: UpdateBlockFlags(3), layer: 0 }
+  70236 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 29 }, block_runtime_id: 2150698529, flags: UpdateBlockFlags(3), layer: 0 }
+  70236 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+  70236 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  70336 watcher BlockEvent BlockEvent { position: BlockCoordinates { x: 1, y: 64, z: 18 }, type: ChangeState, data: 1 }
+  70336 actor   BlockEvent BlockEvent { position: BlockCoordinates { x: 1, y: 64, z: 18 }, type: ChangeState, data: 1 }
+## /!place 1 -1 0
+## placed: Ok(())
+  71236 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 30 }, block_runtime_id: 650702320, flags: UpdateBlockFlags(3), layer: 0 }
+  71237 actor   LevelSoundEvent LevelSoundEvent { sound_id: "place", position: Vec3f { x: 1.5, y: 64.5, z: 30.5 }, extra_data: 650702320, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  71237 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 65, z: 30 }, block_runtime_id: 1706008891, flags: UpdateBlockFlags(3), layer: 0 }
+  71237 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 30 }, block_runtime_id: 650702320, flags: UpdateBlockFlags(3), layer: 0 }
+  71237 watcher LevelSoundEvent LevelSoundEvent { sound_id: "place", position: Vec3f { x: 1.5, y: 64.5, z: 30.5 }, extra_data: 650702320, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  71237 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 65, z: 30 }, block_runtime_id: 1706008891, flags: UpdateBlockFlags(3), layer: 0 }
+## /
+## /tp @s ~ ~ ~4
+  73286 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.tp.success.coordinates\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor\"},{\"text\":\"0.50\"},{\"text\":\"64.00\"},{\"text\":\"34.50\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  73286 watcher BlockEvent BlockEvent { position: BlockCoordinates { x: 1, y: 64, z: 18 }, type: ChangeState, data: 0 }
+  73286 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.tp.successVictim\",\"with\":{\"rawtext\":[{\"text\":\"0.50, 64.00, 34.50\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  73287 actor   CommandOutput success_count=1 data=None commands.tp.success.coordinates success=true ["CmdActor", "0.50", "64.00", "34.50"]
+  73287 actor   BlockEvent BlockEvent { position: BlockCoordinates { x: 1, y: 64, z: 18 }, type: ChangeState, data: 0 }
+  73287 actor   LevelSoundEvent LevelSoundEvent { sound_id: "enderchest.closed", position: Vec3f { x: 1.5, y: 64.5, z: 18.5 }, extra_data: 1239582919, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  73287 watcher LevelSoundEvent LevelSoundEvent { sound_id: "enderchest.closed", position: Vec3f { x: 1.5, y: 64.5, z: 18.5 }, extra_data: 1239582919, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /!place 1 -1 1
+## placed: Ok(())
+  74287 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 35 }, block_runtime_id: 3654233977, flags: UpdateBlockFlags(3), layer: 0 }
+  74287 actor   LevelSoundEvent LevelSoundEvent { sound_id: "place", position: Vec3f { x: 1.5, y: 64.5, z: 35.5 }, extra_data: 650702320, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  74287 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 35 }, block_runtime_id: 3654233977, flags: UpdateBlockFlags(3), layer: 0 }
+  74287 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 65, z: 35 }, block_runtime_id: 2598927406, flags: UpdateBlockFlags(3), layer: 0 }
+  74287 watcher LevelSoundEvent LevelSoundEvent { sound_id: "place", position: Vec3f { x: 1.5, y: 64.5, z: 35.5 }, extra_data: 650702320, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  74287 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 65, z: 35 }, block_runtime_id: 2598927406, flags: UpdateBlockFlags(3), layer: 0 }
+## /
+  75936 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 7793, paused: false }] }) }
+  75936 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 7793, paused: false }] }) }
+## /!place 1 -1 0
+## placed: Ok(())
+  76337 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 34 }, block_runtime_id: 650702320, flags: UpdateBlockFlags(3), layer: 0 }
+  76337 actor   LevelSoundEvent LevelSoundEvent { sound_id: "place", position: Vec3f { x: 1.5, y: 64.5, z: 34.5 }, extra_data: 650702320, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  76338 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 34 }, block_runtime_id: 650702320, flags: UpdateBlockFlags(3), layer: 0 }
+  76338 watcher LevelSoundEvent LevelSoundEvent { sound_id: "place", position: Vec3f { x: 1.5, y: 64.5, z: 34.5 }, extra_data: 650702320, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  76338 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 65, z: 34 }, block_runtime_id: 1706008891, flags: UpdateBlockFlags(3), layer: 0 }
+  76339 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 65, z: 34 }, block_runtime_id: 1706008891, flags: UpdateBlockFlags(3), layer: 0 }
+## /
+## /tp @s ~ ~ ~4
+  78386 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.tp.successVictim\",\"with\":{\"rawtext\":[{\"text\":\"0.50, 64.00, 38.50\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  78386 actor   CommandOutput success_count=1 data=None commands.tp.success.coordinates success=true ["CmdActor", "0.50", "64.00", "38.50"]
+  78386 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.tp.success.coordinates\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor\"},{\"text\":\"0.50\"},{\"text\":\"64.00\"},{\"text\":\"38.50\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /!place 1 -1 -1
+## placed: Ok(())
+  79386 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 37 }, block_runtime_id: 650702320, flags: UpdateBlockFlags(3), layer: 0 }
+  79386 actor   LevelSoundEvent LevelSoundEvent { sound_id: "place", position: Vec3f { x: 1.5, y: 64.5, z: 37.5 }, extra_data: 650702320, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  79386 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 37 }, block_runtime_id: 650702320, flags: UpdateBlockFlags(3), layer: 0 }
+  79386 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 65, z: 37 }, block_runtime_id: 1706008891, flags: UpdateBlockFlags(3), layer: 0 }
+  79387 watcher LevelSoundEvent LevelSoundEvent { sound_id: "place", position: Vec3f { x: 1.5, y: 64.5, z: 37.5 }, extra_data: 650702320, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  79387 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 65, z: 37 }, block_runtime_id: 1706008891, flags: UpdateBlockFlags(3), layer: 0 }
+## /
+## /!place 1 -1 0
+## placed: Ok(())
+  81436 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 38 }, block_runtime_id: 650702320, flags: UpdateBlockFlags(3), layer: 0 }
+  81437 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 38 }, block_runtime_id: 650702320, flags: UpdateBlockFlags(3), layer: 0 }
+  81437 actor   LevelSoundEvent LevelSoundEvent { sound_id: "place", position: Vec3f { x: 1.5, y: 64.5, z: 38.5 }, extra_data: 650702320, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  81437 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 65, z: 38 }, block_runtime_id: 4138541774, flags: UpdateBlockFlags(3), layer: 0 }
+  81437 watcher LevelSoundEvent LevelSoundEvent { sound_id: "place", position: Vec3f { x: 1.5, y: 64.5, z: 38.5 }, extra_data: 650702320, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  81437 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 65, z: 38 }, block_runtime_id: 4138541774, flags: UpdateBlockFlags(3), layer: 0 }
+## /
+## /clear @s
+  83487 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.clear.success\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor\"},{\"text\":\"8\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  83487 actor   CommandOutput success_count=1 data=None commands.clear.success success=true ["CmdActor", "8"]
+## /
+probe exit 0

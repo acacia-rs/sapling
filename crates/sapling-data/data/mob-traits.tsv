@@ -1,0 +1,91 @@
+minecraft:agent	fire_immune no_fall
+minecraft:armadillo	xp=1-3 strolls=0.14 panics=0.28
+minecraft:axolotl	breathes_water xp=1-3
+minecraft:bat	no_fall
+minecraft:bee	no_fall xp=1-3
+minecraft:blaze	fire_immune no_fall xp=10-10 strolls=0.23 attack=0 speed=0.23 sees=48 shoots=173 aims=83 volley=3x6 fires
+minecraft:bogged	breathes_water burns_in_sun xp=5-5 strolls=0.25 attack=0 speed=0.25 sees=16 shoots=71 hits=poison:112
+minecraft:breeze	no_fall xp=10-10 strolls=0.4
+minecraft:camel	xp=1-3 strolls=0.18 panics=0.36
+minecraft:camel_husk	breathes_water xp=1-3 strolls=0.18
+minecraft:cat	no_fall xp=1-3 strolls=0.24 panics=0.375
+minecraft:cave_spider	xp=5-5 attack=2 speed=0.3 sees=16 by_dark
+minecraft:chicken	no_fall xp=1-3 strolls=0.25 panics=0.375
+minecraft:cod	breathes_water no_air xp=1-3
+minecraft:copper_golem	no_fall strolls=0.2 panics=0.3
+minecraft:cow	xp=1-3 strolls=0.2 panics=0.3125
+minecraft:creaking	strolls=0.12
+minecraft:creeper	xp=5-5 strolls=0.2 attack=0 speed=0.25 sees=16 explodes=3
+minecraft:dolphin	xp=1-3
+minecraft:donkey	xp=1-3 strolls=0.1225 panics=0.21
+minecraft:drowned	breathes_water burns_in_sun xp=5-5 attack=3 speed=0.23 sees=35
+minecraft:elder_guardian	breathes_water xp=10-10
+minecraft:ender_crystal	fire_immune
+minecraft:ender_dragon	fire_immune no_fall
+minecraft:enderman	xp=5-5 strolls=0.3
+minecraft:endermite	xp=3-3 strolls=0.25 attack=2 speed=0.25 sees=16
+minecraft:evocation_illager	xp=10-10 strolls=0.3
+minecraft:fox	xp=1-3 strolls=0.24 panics=0.375
+minecraft:frog	breathes_water xp=1-3
+minecraft:ghast	fire_immune no_fall xp=5-5
+minecraft:glow_squid	breathes_water no_air xp=1-3
+minecraft:goat	xp=1-3 strolls=0.24 panics=0.4
+minecraft:guardian	breathes_water xp=10-10
+minecraft:happy_ghast	no_fall xp=1-3
+minecraft:hoglin	xp=5-5 strolls=0.12
+minecraft:horse	xp=1-3
+minecraft:husk	breathes_water xp=5-5 strolls=0.23 attack=3 speed=0.23 sees=35 hits=hunger:600
+minecraft:iron_golem	no_fall strolls=0.15 attack=7 upto=21 speed=0.15 sees=16 provoked
+minecraft:llama	xp=1-3 strolls=0.175 panics=0.3
+minecraft:magma_cube	fire_immune no_fall burns_in_sun
+minecraft:mooshroom	xp=1-3 strolls=0.2 panics=0.3125
+minecraft:mule	xp=1-3 strolls=0.1225 panics=0.21
+minecraft:nautilus	breathes_water no_air xp=1-3
+minecraft:npc	fire_immune no_fall
+minecraft:ocelot	no_fall xp=1-3 strolls=0.24 panics=0.375
+minecraft:panda	xp=1-3 strolls=0.12 panics=0.1875
+minecraft:parched	breathes_water xp=5-5 strolls=0.25
+minecraft:parrot	no_fall xp=1-3
+minecraft:phantom	breathes_water burns_in_sun xp=5-5
+minecraft:pig	xp=1-3 strolls=0.25 panics=0.3125
+minecraft:piglin	xp=5-5 strolls=0.21
+minecraft:piglin_brute	xp=20-20 strolls=0.21 attack=10 speed=0.35 sees=16
+minecraft:pillager	xp=5-5 strolls=0.35 attack=0 speed=0.35 sees=16 shoots=46 closes
+minecraft:polar_bear	xp=1-3 strolls=0.25 panics=0.3125
+minecraft:pufferfish	breathes_water no_air xp=1-3
+minecraft:rabbit	xp=1-3 strolls=0.18 panics=0.66
+minecraft:ravager	xp=20-20 strolls=0 attack=12 speed=0.4 sees=16 every=31
+minecraft:salmon	breathes_water no_air xp=1-3
+minecraft:sheep	xp=1-3 strolls=0.2 panics=0.3125
+minecraft:shulker	fire_immune xp=5-5
+minecraft:silverfish	xp=5-5 attack=1 speed=0.25 sees=8
+minecraft:skeleton	breathes_water burns_in_sun xp=5-5 strolls=0.25 attack=0 speed=0.25 sees=16 shoots=61
+minecraft:skeleton_horse	breathes_water xp=1-3 strolls=0.14
+minecraft:sniffer	xp=1-3 strolls=0.09 panics=0.18
+minecraft:snow_golem	no_fall strolls=0.2
+minecraft:spider	xp=5-5 attack=2 speed=0.3 sees=16 by_dark
+minecraft:squid	breathes_water no_air xp=1-3
+minecraft:stray	breathes_water burns_in_sun xp=5-5 strolls=0.25 attack=0 speed=0.25 sees=16 shoots=61 hits=slowness:600
+minecraft:strider	fire_immune xp=1-3 strolls=0.128 panics=0.176
+minecraft:sulfur_cube	xp=1-2
+minecraft:tadpole	breathes_water no_air
+minecraft:trader_llama	xp=1-3 strolls=0.175 panics=0.3
+minecraft:tropicalfish	breathes_water no_air xp=1-3
+minecraft:turtle	breathes_water xp=1-3
+minecraft:vex	fire_immune xp=5-5
+minecraft:villager	strolls=0.3 panics=0.3
+minecraft:villager_v2	strolls=0.3 panics=0.3
+minecraft:vindicator	xp=5-5 strolls=0.35 attack=13 speed=0.35 sees=12
+minecraft:wandering_trader	strolls=0.3 panics=0.3
+minecraft:warden	fire_immune xp=5-5 strolls=0.15
+minecraft:witch	xp=5-5 strolls=0.25
+minecraft:wither	fire_immune breathes_water xp=50-50 strolls=0.25
+minecraft:wither_skeleton	fire_immune breathes_water xp=5-5 strolls=0.25 attack=9 speed=0.3125 sees=16 hits=wither:200
+minecraft:wolf	xp=1-3 strolls=0.3 panics=0.375 attack=3 speed=0.3 sees=16 provoked every=31
+minecraft:zoglin	fire_immune breathes_water xp=5-5 strolls=0.25
+minecraft:zombie	breathes_water burns_in_sun xp=5-5 strolls=0.23 attack=3 speed=0.23 sees=35
+minecraft:zombie_horse	breathes_water burns_in_sun xp=1-3
+minecraft:zombie_nautilus	breathes_water burns_in_sun xp=1-3
+minecraft:zombie_pigman	fire_immune breathes_water xp=5-5 strolls=0.23 attack=9 speed=0.23 sees=35 provoked
+minecraft:zombie_villager	breathes_water burns_in_sun xp=5-5 strolls=0.23 attack=3 speed=0.23 sees=35
+minecraft:zombie_villager_v2	breathes_water burns_in_sun xp=5-5 strolls=0.23 attack=3 speed=0.23 sees=35

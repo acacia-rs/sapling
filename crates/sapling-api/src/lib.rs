@@ -5,13 +5,18 @@
 mod block;
 pub mod command;
 mod ctx;
+mod effect;
+mod entity;
+mod experience;
 mod event;
 pub mod form;
+mod health;
 mod hud;
 mod item;
 mod player;
 #[cfg(test)]
 mod testing;
+mod weather;
 #[cfg(test)]
 mod tests;
 mod world;
@@ -19,8 +24,13 @@ mod world;
 pub use block::{Block, BlockPos, BreakEvent, Face, InteractEvent, PlaceEvent};
 pub use command::{Command, Commands, Output, Sender};
 pub use ctx::{Backend, FormCallback, ShardCtx, State};
-pub use world::WorldBackend;
+pub use effect::{Effect, EffectBackend};
+pub use experience::ExperienceBackend;
+pub use weather::{Weather, WeatherBackend};
+pub use entity::{EntityBackend, EntityId, EntityInfo};
+pub use world::{RuleValue, WorldBackend};
 pub use event::{Cancellable, ChatEvent, CommandEvent, Priority};
+pub use health::{DamageCause, HealthBackend};
 pub use form::{Custom, Form, FormResponse, Menu, Modal};
 pub use hud::{BossBar, BossBarColour, Sidebar, Title};
 pub use item::{DropEvent, Item, Slot};

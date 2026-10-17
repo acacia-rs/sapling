@@ -5,7 +5,9 @@ use std::path::Path;
 use std::sync::Mutex;
 use std::time::{SystemTime, UNIX_EPOCH};
 
+use acacia_proto::nbt::Value;
 use acacia_world::Chunk;
+use sapling_data::{GameRules, RuleValue};
 use sapling_leveldb::{ChunkKey, LevelDat, LevelDbWorld, PlayerData};
 
 use crate::ChunkPos;
@@ -29,20 +31,50 @@ impl StoredColumn {
 }
 
 /// What a world keeps besides its columns; storage saves it when the world closes.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Level {
     /// The spawn block; y 32767 leaves the height to the surface, as vanilla saves it.
     pub spawn: Option<[i32; 3]>,
-    /// The time of day counter: a day is 24000 long and the count runs on past it.
+    /// The time of day counter: a day is 24000 long and the count runs on past it, while the
+    /// `doDayLightCycle` rule is on.
     pub time: i64,
-    /// Whether `time` advances.
-    pub daylight_cycle: bool,
+    pub rules: GameRules,
 }
 
 impl Default for Level {
     /// Noon, since a world without storage has nothing to say when it is.
     fn default() -> Self {
-        Self { spawn: None, time: 6000, daylight_cycle: true }
+        Self { spawn: None, time: 6000, rules: GameRules::default() }
+    }
+}
+
+/// The rules `level.dat` sets: each under its name in lower case, a byte for a switch.
+fn read_rules(dat: &LevelDat) -> GameRules {
+    let mut rules = GameRules::default();
+    let names: Vec<&str> = rules.iter().map(|(name, _)| name).collect();
+    for name in names {
+        let value = match dat.root.get(&name.to_ascii_lowercase()) {
+            Some(Value::Byte(on)) => RuleValue::Bool(*on != 0),
+            Some(Value::Int(n)) => RuleValue::Int(*n),
+            _ => continue,
+        };
+        rules.set(name, value);
+    }
+    rules
+}
+
+/// Writes the rules `level.dat` held already and those that are not BDS's default.
+fn write_rules(dat: &mut LevelDat, rules: &GameRules) {
+    let defaults = GameRules::default();
+    for (name, value) in rules.iter() {
+        let key = name.to_ascii_lowercase();
+        if dat.root.get(&key).is_none() && defaults.get(name) == Some((name, value)) {
+            continue;
+        }
+        dat.set(&key, match value {
+            RuleValue::Bool(on) => Value::Byte(i8::from(on)),
+            RuleValue::Int(n) => Value::Int(n),
+        });
     }
 }
 
@@ -162,7 +194,7 @@ impl LevelDbStorage {
     /// What `level.dat` says of [`Level`]'s fields.
     pub fn level(&self) -> Level {
         let dat = self.0.level();
-        Level { spawn: dat.spawn(), time: dat.time().unwrap_or(Level::default().time), daylight_cycle: dat.daylight_cycle() }
+        Level { spawn: dat.spawn(), time: dat.time().unwrap_or(Level::default().time), rules: read_rules(dat) }
     }
 }
 
@@ -203,6 +235,7 @@ impl WorldStorage for LevelDbStorage {
             dat.set_last_opened_with(version);
         }
         dat.set_time(level.time);
+        write_rules(&mut dat, &level.rules);
         if let Some(spawn) = level.spawn {
             dat.set_spawn(spawn);
         }

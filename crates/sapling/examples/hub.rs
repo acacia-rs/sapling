@@ -1,6 +1,7 @@
 //! A hub, in a vanilla world folder or, without one, on a stone platform in the void: a title and
 //! a boss bar on join, a sidebar with who is online and where you stand, `/hub`, `/menu`,
-//! `/settings` and, for operators, `/gamemode`. Only operators in creative mode change blocks.
+//! `/settings` and, for operators, vanilla's commands (`/gamemode`, `/tp`, `/setblock` and the
+//! rest: `sapling::vanilla`). Only operators in creative mode change blocks.
 //! A second world, `arena`, is a stone platform on a second shard, where anyone may dig and
 //! build: `/world arena` and `/world hub` (or the menu) move you between them.
 //! `cargo run -p sapling --example hub -- [port] [world folder] [--offline] [--no-cache] [--op=Name] [--nethernet] [--lan]`
@@ -9,7 +10,6 @@
 use std::collections::HashMap;
 use std::path::Path;
 
-use sapling::command::Target;
 use sapling::{
     BossBar, BossBarColour, BreakEvent, ChatEvent, Command, Form, FormResponse, GameMode, Handler, InteractEvent, Menu, Output, Permission, PlaceEvent, Player, PlayerId, Sender,
     Lan, NetherNet, Server, ShardCtx, Sidebar, Title,
@@ -162,21 +162,6 @@ impl Command for HubCommand {
 }
 
 #[derive(Command)]
-#[command(name = "gamemode", description = "Sets a player's game mode", permission = "operator")]
-struct GameModeCommand {
-    mode: GameMode,
-    player: Option<Target>,
-}
-
-impl Command for GameModeCommand {
-    fn run(self, ctx: &mut ShardCtx<'_>, sender: &Sender, out: &mut Output) {
-        let Some(target) = self.player.map(|target| target.0).or_else(|| sender.player().cloned()) else { return out.error("Name a player") };
-        ctx.set_game_mode(target.id, self.mode);
-        out.print(format!("{} is now in {:?} mode", target.name, self.mode));
-    }
-}
-
-#[derive(Command)]
 #[command(name = "menu", description = "Opens the hub menu")]
 struct MenuCommand;
 
@@ -264,7 +249,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // The arena is on a second shard, so a move between the worlds is a handoff between threads.
     let builder = builder.default_world_name(HUB).add_platform_on(1, ARENA).handler_each(move || Hub { operators: operators.clone() });
     // A hub is looked at, not dug up, whatever the folder's own game mode.
-    let builder = builder.game_mode(GameMode::Adventure).command::<HubCommand>().command::<GameModeCommand>().command::<MenuCommand>().command::<SettingsCommand>().command::<WorldCommand>();
+    // Vanilla's operator commands, /gamemode among them.
+    let builder = builder.game_mode(GameMode::Adventure).vanilla_commands();
+    let builder = builder.command::<HubCommand>().command::<MenuCommand>().command::<SettingsCommand>().command::<WorldCommand>();
     let server = builder.start().await?;
     tokio::signal::ctrl_c().await?;
     tracing::info!("shutting down");

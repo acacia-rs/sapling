@@ -77,7 +77,7 @@ pub(crate) fn store(world: &mut World, player: Entity, slots: Vec<Option<Held>>)
         }
         Screen::Container => {
             let before = slots_at(world, viewing.layer, viewing.pos).unwrap_or_default();
-            set_slots(world, viewing.layer, viewing.pos, slots.clone(), Some(player));
+            set_slots(world, viewing.layer, viewing.pos, slots.clone());
             crate::furnaces::taken_by_player(world, player, viewing.layer, viewing.pos, &before, &slots);
         }
         Screen::Station(_) => {}
@@ -85,9 +85,9 @@ pub(crate) fn store(world: &mut World, player: Entity, slots: Vec<Option<Held>>)
 }
 
 /// Makes `slots` what the held container at `pos` holds: in the world, where each half keeps
-/// its own, and slot by changed slot on the screens of those who have it open, but for `knows`,
-/// whose request made the change and is answered with it.
-pub(crate) fn set_slots(world: &mut World, layer: Entity, pos: BlockPos, slots: Vec<Option<Held>>, knows: Option<Entity>) {
+/// its own, and slot by changed slot on the screens of those who have it open, the player whose
+/// request made the change too, as BDS does before answering it.
+pub(crate) fn set_slots(world: &mut World, layer: Entity, pos: BlockPos, slots: Vec<Option<Held>>) {
     let Some((halves, per_half, changed)) = opened(world).chests.get_mut(&(layer, pos)).filter(|chest| chest.slots != slots).map(|chest| {
         let changed: Vec<usize> = (0..slots.len().min(chest.slots.len())).filter(|slot| chest.slots[*slot] != slots[*slot]).collect();
         chest.slots = slots.clone();
@@ -95,19 +95,21 @@ pub(crate) fn set_slots(world: &mut World, layer: Entity, pos: BlockPos, slots: 
     }) else {
         return;
     };
-    for (viewer, window) in viewers(world, layer, pos).into_iter().filter(|(viewer, _)| Some(*viewer) != knows) {
+    for (viewer, window) in viewers(world, layer, pos) {
         let Some(mut out) = world.get_mut::<Outgoing>(viewer) else { continue };
         for slot in &changed {
             let window_id = WindowIDVarint::from_raw(window.into());
             out.push(&InventorySlot { window_id, slot: *slot as u32, container: None, storage_item: None, item: wire(&slots[*slot], true) });
         }
     }
+    halves.iter().for_each(|half| crate::blocks::container_changed(world, layer, *half));
     for (half, held) in halves.iter().zip(slots.chunks(per_half)) {
         let Some(entity) = entity_holding(world, layer, *half, held) else { return };
         if !world.get_mut::<Layer>(layer).is_some_and(|mut level| level.world.set_block_entity(*half, &entity)) {
             tracing::warn!(?half, "a container's items could not be kept");
         }
     }
+    super::brewing::show_bottles(world, layer, pos, &slots);
 }
 
 /// The block entity at `pos` holding `held`; a container a handler set, or one stored without

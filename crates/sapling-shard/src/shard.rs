@@ -23,10 +23,11 @@ use crate::player::{Carried, Local};
 use crate::plugins::{PluginState, Plugins};
 use crate::roster::{Elsewhere, Profile};
 use crate::view::View;
+use crate::vitals::Vitals;
 use crate::inventory::Inventory;
 use crate::visibility::ToViewers;
 use crate::worlds::{Atlas, Changes, Scope};
-use crate::{arenas, blobs, blocks, chunks, clock, commands, handlers, handoff, inventory, join, mobs, movement, ticking, visibility, worlds};
+use crate::{actors, arenas, blobs, blocks, chunks, clock, commands, entities, handlers, handoff, inventory, join, mobs, movement, ticking, visibility, worlds};
 
 /// The disconnect screen of the players of a shard that stops.
 const CLOSED: &str = "disconnect.closed";
@@ -80,12 +81,13 @@ impl Shard {
         let join = (join::resource_packs, join::chunk_radius, blobs::cache_status).chain();
         let chunks = (
             chunks::poll_worlds,
-            mobs::spawn_arrived,
+            actors::arrive,
             movement::player_input,
             chunks::send_chunks,
             chunks::sub_chunk_requests,
             blobs::blob_status,
             ticking::sweep,
+            actors::write_back_before_saving,
             chunks::save_and_unload_columns,
             mobs::despawn_unloaded,
         );
@@ -93,7 +95,7 @@ impl Shard {
         schedule.add_systems((join, clock::advance, chunks.chain(), items.chain(), join::initialized).chain());
         let mut after_handlers = Schedule::default();
         after_handlers.set_executor(SingleThreadedExecutor::new());
-        let viewers = (visibility::update, mobs::update, movement::announce, movement::relay_swings, inventory::announce, visibility::fan_out);
+        let viewers = (visibility::update, mobs::update, entities::send_held_moves, movement::announce, movement::relay_swings, inventory::announce, visibility::fan_out);
         after_handlers.add_systems((viewers.chain(), commands::announce, flush).chain());
         sapling_data::set_shield_item_id();
         world.insert_resource(CommandLists::new(&Commands::default()));
@@ -187,6 +189,7 @@ impl Shard {
     /// Saves what every world still has unsaved and waits for storage.
     pub fn save_worlds(&mut self) {
         inventory::save_all(&mut self.world);
+        actors::write_back(&mut self.world);
         let mut layers = self.world.query::<&mut Layer>();
         for mut layer in layers.iter_mut(&mut self.world) {
             let failed = layer.world.save_and_wait();
@@ -248,6 +251,7 @@ impl Shard {
             forms: Forms::default(),
             hud: Hud::default(),
             inventory: Inventory::default(),
+            vitals: Vitals::default(),
         };
         let entity = self.world.spawn((carried, Local::in_layer(layer))).id();
         self.world.resource_mut::<Players>().by_conn.insert(conn, entity);

@@ -43,6 +43,10 @@ fn place(info: &StackRequestSlotInfo) -> Option<Place> {
         ContainerSlotType::FurnaceIngredient | ContainerSlotType::BlastFurnaceIngredient | ContainerSlotType::SmokerIngredient => Some(Place::Container(0)),
         ContainerSlotType::FurnaceFuel => Some(Place::Container(1)),
         ContainerSlotType::FurnaceOutput => Some(Place::Container(2)),
+        // A brewing stand: the ingredient, three bottles, the blaze powder.
+        ContainerSlotType::BrewingInput => Some(Place::Container(0)),
+        ContainerSlotType::BrewingResult if (1..=3).contains(&slot) => Some(Place::Container(slot)),
+        ContainerSlotType::BrewingFuel => Some(Place::Container(4)),
         ContainerSlotType::CraftingInput if GRIDS.contains(&slot) => Some(Place::Ui(slot)),
         ContainerSlotType::StonecutterInput if slot == STONECUTTER_INPUT => Some(Place::Ui(slot)),
         ContainerSlotType::Hotbar | ContainerSlotType::Inventory | ContainerSlotType::HotbarAndInventory if slot < MAIN => Some(Place::Main(slot)),
@@ -120,10 +124,15 @@ fn apply(inventory: &mut Inventory, request: &Request, creative: bool, at: Stati
     craft.is_none_or(|craft| craft.is_paid()).then_some(applied).ok_or(())
 }
 
-fn response(inventory: &Inventory, request_id: i32, applied: Option<&Applied>) -> ItemStackResponse {
-    let Some(applied) = applied else {
-        return ItemStackResponse { responses: vec![ItemStackResponsesItem { status: Status::Error, request_id, containers: None }] };
-    };
+/// What BDS answers a request a container refused to hold an item in (a furnace's fuel slot asked
+/// to take stone): this status, and nothing resent (research/captures/containers-findings.md D4).
+const CANNOT_HOLD: Status = Status::Unknown(55);
+
+fn refusal(request_id: i32, status: Status) -> ItemStackResponse {
+    ItemStackResponse { responses: vec![ItemStackResponsesItem { status, request_id, containers: None }] }
+}
+
+fn response(inventory: &Inventory, request_id: i32, applied: &Applied) -> ItemStackResponse {
     let mut containers: Vec<Container> = Vec::new();
     for (name, slot, place) in &applied.touched {
         let held = inventory.slot(*place).and_then(Option::as_ref);
@@ -131,7 +140,7 @@ fn response(inventory: &Inventory, request_id: i32, applied: Option<&Applied>) -
             slot: *slot,
             hotbar_slot: *slot,
             count: held.map_or(0, |held| held.stack.count),
-            item_stack_id: Some(held.map_or(0, |held| held.id)),
+            item_stack_id: held.map(|held| held.id),
             custom_name: String::new(),
             filtered_custom_name: String::new(),
             durability_correction: 0,
@@ -158,21 +167,32 @@ fn answer(world: &mut World, plugins: &mut Plugins, entity: Entity, player: &Pla
     let (open, at) = (containers::slots_of(world, entity), containers::station(world, entity));
     let refuses = containers::refusal(world, entity);
     (trial.container, trial.refuses) = (open.clone().unwrap_or_default(), refuses);
+    let mut unrefused = Inventory { refuses: None, ..trial.clone() };
     // Tried on a copy first: the handlers see a drop before anything has left the inventory.
-    let allowed = apply(&mut trial, request, creative, at).is_ok_and(|applied| may_drop(world, plugins, player, &applied.dropped));
+    let tried = apply(&mut trial, request, creative, at);
+    let failed = tried.is_err();
+    let allowed = tried.is_ok_and(|applied| may_drop(world, plugins, player, &applied.dropped));
     let mut query = world.query::<(&mut Inventory, &mut Outgoing)>();
     let Ok((mut inventory, mut out)) = query.get_mut(world, entity) else { return };
     (inventory.container, inventory.refuses) = (open.unwrap_or_default(), refuses);
     let applied = if allowed { apply(&mut inventory, request, creative, at).ok() } else { None };
-    out.push(&response(&inventory, request.request_id, applied.as_ref()));
+    // Made before the container's slots are taken back out (the answer names them), sent after
+    // the container's slots are shown, as BDS does.
+    let answer = applied.as_ref().map(|applied| response(&inventory, request.request_id, applied));
     let (container, _) = (std::mem::take(&mut inventory.container), inventory.refuses.take());
-    match applied {
-        Some(applied) => {
+    match (applied, answer) {
+        (Some(applied), Some(answer)) => {
             containers::store(world, entity, container);
+            if let Some(mut out) = world.get_mut::<Outgoing>(entity) {
+                out.push(&answer);
+            }
             applied.dropped.into_iter().for_each(|stack| drops::throw(world, entity, stack));
         }
-        None => {
+        // Only the container's refusal stood in the way: the client undoes it by itself.
+        _ if failed && apply(&mut unrefused, request, creative, at).is_ok() => out.push(&refusal(request.request_id, CANNOT_HOLD)),
+        _ => {
             tracing::debug!(player = %player.name, ?request, "refusing an inventory request");
+            out.push(&refusal(request.request_id, Status::Error));
             inventory.send_all(&mut out);
             containers::resend(world, entity);
         }

@@ -16,6 +16,7 @@ use crate::templates::{decode, records};
 /// The hitbox of a kind without a recording, in blocks.
 const WIDTH: f32 = 0.9;
 const HEIGHT: f32 = 0.9;
+const FALLING_BLOCK_SIZE: f32 = 0.98;
 const HEALTH: &str = "minecraft:health";
 
 struct Recorded {
@@ -114,10 +115,64 @@ fn plain(identifier: &str) -> AddEntity {
     }
 }
 
-/// An experience orb worth `value` at `at`, moving at `velocity`.
+/// The width and height of a grown mob of `identifier`'s box, as BDS announced one; `None` for
+/// a kind it was not recorded announcing.
+pub fn mob_size(identifier: &str) -> Option<[f32; 2]> {
+    let grown = &RECORDED.get(identifier)?.grown;
+    let size = |key: Key| grown.metadata.iter().find(|item| item.key == key).and_then(|item| if let Value::Default(Plain::Float(size)) = item.value { Some(size) } else { None });
+    Some([size(Key::BoundingboxWidth)?, size(Key::BoundingboxHeight)?])
+}
+
+/// The full health of a mob of `identifier`, as BDS announced one.
+pub fn mob_health(identifier: &str) -> Option<f32> {
+    RECORDED.get(identifier)?.grown.attributes.iter().find(|attribute| attribute.name == HEALTH).map(|attribute| attribute.max)
+}
+
+/// The flags BDS announced a grown mob of `identifier` with; [`plain`]'s for a kind not recorded.
+pub(crate) fn mob_flags(identifier: &str) -> MetadataFlags1 {
+    let recorded = RECORDED.get(identifier).and_then(|kind| kind.grown.metadata.iter().find_map(|item| if let Value::Flags(flags) = &item.value { Some(flags.0) } else { None }));
+    MetadataFlags1(recorded.unwrap_or(MetadataFlags1::HAS_COLLISION.0 | MetadataFlags1::AFFECTED_BY_GRAVITY.0))
+}
+
+/// A falling block: BDS names the block by its network id in `Variant`, after `Health` 1; the
+/// hitbox is Java's.
+pub fn add_falling_block(id: u64, position: [f32; 3], velocity: [f32; 3], block_hash: u32) -> AddEntity {
+    let options = AddEntityOptions {
+        id,
+        identifier: "minecraft:falling_block",
+        feet: position,
+        yaw: 0.0,
+        pitch: 0.0,
+        variant: block_hash as i32,
+        mark_variant: 0,
+        color: 0,
+        baby: false,
+        flags: MetadataFlags1(0),
+        health: None,
+        name: "",
+    };
+    let mut block = add_entity(&options);
+    for item in &mut block.metadata {
+        if matches!(item.key, Key::BoundingboxWidth | Key::BoundingboxHeight) {
+            item.value = Value::Default(Plain::Float(FALLING_BLOCK_SIZE));
+        }
+    }
+    let after_flags = block.metadata.iter().position(|item| item.key == Key::Flags).map_or(0, |at| at + 1);
+    block.metadata.insert(after_flags, item(Key::Health, Plain::Int(1)));
+    let [x, y, z] = velocity;
+    AddEntity { velocity: Vec3f { x, y, z }, ..block }
+}
+
+/// An experience orb worth `value` at `at`, moving at `velocity`, in BDS's recorded shape.
 pub fn add_experience_orb(id: u64, at: [f32; 3], velocity: [f32; 3], value: i32) -> AddEntity {
-    let mut orb = plain("minecraft:xp_orb");
-    orb.metadata.push(item(Key::ExperienceValue, Plain::Int(value)));
+    const ORB: &str = "minecraft:xp_orb";
+    let mut orb = RECORDED.get(ORB).map_or_else(|| plain(ORB), |kind| kind.grown.clone());
+    // Where BDS has it among the rest, if the record does.
+    let worth = item(Key::ExperienceValue, Plain::Int(value));
+    match orb.metadata.iter_mut().find(|item| item.key == Key::ExperienceValue) {
+        Some(recorded) => *recorded = worth,
+        None => orb.metadata.push(worth),
+    }
     let ([x, y, z], [dx, dy, dz]) = (at, velocity);
     AddEntity { unique_id: id as i64, runtime_id: id, position: Vec3f { x, y, z }, velocity: Vec3f { x: dx, y: dy, z: dz }, ..orb }
 }
@@ -195,6 +250,7 @@ mod tests {
         assert!(horse.attributes.iter().any(|attribute| attribute.name == HEALTH && attribute.value == 5.5 && attribute.max > 5.5) && !is_baby(&horse));
         assert!(horse.metadata.iter().any(|item| matches!(&item.value, Value::Flags(flags) if flags.contains(MetadataFlags1::SADDLED))));
         assert_eq!(add_entity(&options("minecraft:villager", false)).entity_type, "minecraft:villager_v2");
+        assert_eq!([mob_size("minecraft:horse"), mob_size("sapling:nothing_recorded")], [Some([1.4, 1.6]), None]);
         let unknown = add_entity(&options("sapling:nothing_recorded", false));
         assert_eq!((float(&unknown, Key::BoundingboxWidth), unknown.attributes.len()), (Some(WIDTH), 0));
     }
@@ -208,5 +264,16 @@ mod tests {
         assert!(RECORDED.len() > 100 && RECORDED.values().all(|kind| kind.baby.as_ref().is_none_or(is_baby)), "{} kinds", RECORDED.len());
         let foal = add_entity(&options("minecraft:horse", true));
         assert!(float(&foal, Key::Scale).is_some_and(|scale| scale < 1.0), "a foal is recorded as one");
+    }
+}
+
+#[cfg(test)]
+mod size_tests {
+    use super::*;
+
+    #[test]
+    fn the_zombie_villager_is_known_under_the_name_bds_announces_it_by() {
+        let known: Vec<&String> = RECORDED.keys().filter(|kind| kind.contains("villager")).collect();
+        assert!(mob_size("minecraft:zombie_villager_v2").is_some() && mob_size("minecraft:villager_v2").is_some(), "recorded: {known:?}");
     }
 }

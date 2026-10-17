@@ -2,15 +2,15 @@
 //! world's runtime ids and the API's names.
 
 use acacia_proto::nbt::{Nbt, Value};
-use acacia_proto::packets::{BlockEntityData, LevelEvent, LevelEventEvent, LevelSoundEvent, UpdateBlock};
+pub(crate) use acacia_proto::packets::UpdateBlockSyncedTransitionType as Transition;
+use acacia_proto::packets::{BlockEntityData, LevelEvent, LevelEventEvent, LevelSoundEvent, UpdateBlock, UpdateBlockSynced};
 use acacia_proto::types::{BlockCoordinates, UpdateBlockFlags, Vec3f};
 use bevy_ecs::prelude::*;
 use bytes::Bytes;
 use sapling_api::{Block, BlockPos, Face};
 use sapling_world::{BlockEntity, BlockRegistry, ChunkPos};
 
-use crate::components::{InLayer, Layer, Outgoing, Stage};
-use crate::view::View;
+use crate::components::{InLayer, Layer, Outgoing};
 
 /// BDS sets these two on every UpdateBlock it sends.
 const FLAGS: UpdateBlockFlags = UpdateBlockFlags(UpdateBlockFlags::NEIGHBORS.0 | UpdateBlockFlags::NETWORK.0);
@@ -39,12 +39,18 @@ pub(crate) fn describe(registry: &BlockRegistry, id: u32) -> Block {
     registry.get(id).map_or_else(Block::air, |state| Block { name: state.name.to_owned(), properties: state.properties.to_owned() })
 }
 
-/// The runtime id of a named state; without properties, the block's first state.
+/// The runtime id of a named state: the block's default state (`sapling_data::default_properties`)
+/// with the properties it names set, so that `water` with `liquid_depth=3` needs no other.
 pub(crate) fn resolve(registry: &BlockRegistry, block: &Block) -> Option<u32> {
-    match block.properties.is_empty() {
-        true => registry.states_of(&block.name).next().map(|(id, _)| id),
-        false => registry.find(&block.name, &block.properties),
+    let first = registry.states_of(&block.name).next().map(|(id, _)| id)?;
+    let default = sapling_data::default_properties(&block.name).and_then(|properties| registry.find(&block.name, properties)).unwrap_or(first);
+    if block.properties.is_empty() {
+        return Some(default);
     }
+    registry.find(&block.name, &block.properties).or_else(|| {
+        let mut pairs = block.properties.split(',').map(|pair| pair.split_once('='));
+        pairs.try_fold(default, |id, pair| pair.and_then(|(key, value)| super::with_property(registry, id, key, value)))
+    })
 }
 
 fn update(registry: &BlockRegistry, [x, y, z]: BlockPos, id: u32, layer: u32) -> Bytes {
@@ -53,7 +59,7 @@ fn update(registry: &BlockRegistry, [x, y, z]: BlockPos, id: u32, layer: u32) ->
 
 /// What a block holds, as clients are shown it.
 pub(crate) fn block_entity_data([x, y, z]: BlockPos, entity: &BlockEntity) -> Bytes {
-    sapling_net::encode(&BlockEntityData { position: BlockCoordinates { x, y, z }, nbt: Nbt { name: String::new(), value: entity.shown() } })
+    sapling_net::encode(&BlockEntityData { position: BlockCoordinates { x, y, z }, nbt: Nbt { name: String::new(), value: entity.shown() }.into() })
 }
 
 /// The burst of fragments when a block of `id` breaks.
@@ -66,16 +72,28 @@ pub(crate) fn punch_particles(registry: &BlockRegistry, pos: BlockPos, face: Fac
     sapling_net::encode(&LevelEvent { event: PUNCH[face as usize], position: centre(pos), data: registry.network_hash(id) as i32 })
 }
 
+/// The sound of the block `id` placed: BDS names the block's first state, not the one placed.
 pub(crate) fn place_sound(registry: &BlockRegistry, pos: BlockPos, id: u32) -> Bytes {
-    sound("place", registry, pos, id)
+    let first = registry.get(id).and_then(|state| registry.states_of(state.name).next()).map_or(id, |(first, _)| first);
+    sound("place", registry, pos, first)
 }
 
 /// The sound `name` of the block `id`, which tells the client what the block is made of.
 pub(crate) fn sound(name: &str, registry: &BlockRegistry, pos: BlockPos, id: u32) -> Bytes {
+    sound_at(name, registry, centre(pos), id)
+}
+
+/// [`sound`] from a point other than the block's centre.
+pub(crate) fn sound_at(name: &str, registry: &BlockRegistry, position: Vec3f, id: u32) -> Bytes {
+    noise(name, position, registry.network_hash(id) as i32)
+}
+
+/// The sound `name` at `position`, with what it says of itself in `extra_data` (-1: nothing).
+pub(crate) fn noise(name: &str, position: Vec3f, extra_data: i32) -> Bytes {
     sapling_net::encode(&LevelSoundEvent {
         sound_id: name.into(),
-        position: centre(pos),
-        extra_data: registry.network_hash(id) as i32,
+        position,
+        extra_data,
         entity_type: String::new(),
         is_baby_mob: false,
         is_global: false,
@@ -84,16 +102,7 @@ pub(crate) fn sound(name: &str, registry: &BlockRegistry, pos: BlockPos, id: u32
     })
 }
 
-/// Hands `packets` to every player of `layer` whose view covers the column of `pos`, joined or
-/// still loading: a client that was sent the column must hear what happens in it.
-pub(crate) fn to_viewers(world: &mut World, layer: Entity, pos: BlockPos, packets: &[Bytes]) {
-    let mut players = world.query::<(&InLayer, &Stage, &View, &mut Outgoing)>();
-    for (in_layer, stage, view, mut out) in players.iter_mut(world) {
-        if in_layer.0 == layer && *stage >= Stage::Chunks && view.covers(column(pos)) {
-            out.0.extend_from_slice(packets);
-        }
-    }
-}
+pub(crate) use crate::view::to_viewers;
 
 /// Makes `entity` what the block at `pos` holds and shows it to those who see the block.
 pub(crate) fn keep_entity(world: &mut World, layer: Entity, pos: BlockPos, entity: &Value) {
@@ -105,17 +114,63 @@ pub(crate) fn keep_entity(world: &mut World, layer: Entity, pos: BlockPos, entit
     to_viewers(world, layer, pos, &shown);
 }
 
-/// Writes a layer-0 block and shows it to everyone who sees the place. False, with nothing
-/// changed, outside the world's height and where the column is not loaded or cannot be written.
+/// Writes a layer-0 block, and layer 1 as the block decides (waterlog.rs), and shows the layer-0
+/// block to everyone who sees the place: their clients move the water between layers by the same
+/// rule, and BDS sends nothing for it. False, with nothing changed, where the cell already is so,
+/// outside the world's height and where the column is not loaded or cannot be written.
 pub(crate) fn set(world: &mut World, layer: Entity, pos: BlockPos, id: u32) -> bool {
-    let Some(mut level) = world.get_mut::<Layer>(layer) else { return false };
-    let [x, y, z] = pos;
-    if !level.world.in_height(y) || !level.world.set_block(x, y, z, id) {
-        return false;
-    }
-    let packet = update(level.world.registry(), pos, id, 0);
+    let Some(id) = write(world, layer, pos, id) else { return false };
+    let Some(packet) = world.get::<Layer>(layer).map(|level| update(level.world.registry(), pos, id, 0)) else { return false };
     to_viewers(world, layer, pos, &[packet]);
     true
+}
+
+/// [`set`] without telling anyone; [`tell_synced`] does, once the entity it was for exists.
+pub(crate) fn set_quietly(world: &mut World, layer: Entity, pos: BlockPos, id: u32) -> bool {
+    write(world, layer, pos, id).is_some()
+}
+
+/// Writes layer 0 as [`set`] does: the state written, or `None` when nothing changed.
+fn write(world: &mut World, layer: Entity, pos: BlockPos, id: u32) -> Option<u32> {
+    let mut level = world.get_mut::<Layer>(layer)?;
+    let [x, y, z] = pos;
+    if !level.world.in_height(y) || !level.world.is_loaded(column(pos)) {
+        return None;
+    }
+    let (old, held) = (level.world.block(x, y, z), level.world.liquid(x, y, z));
+    let (id, now_held) = super::waterlog::written(level.world.registry(), id, old, held);
+    if (id, now_held) == (old, held) || !level.world.set_block(x, y, z, id) {
+        return None;
+    }
+    if now_held != held {
+        level.world.set_liquid(x, y, z, now_held);
+    }
+    super::redstone::notice(world, layer, pos);
+    super::daylight::written(world, layer, pos);
+    super::fire::written(world, layer, pos);
+    super::ores::written(world, layer, pos);
+    super::growth::written(world, layer, pos);
+    super::leaves::written(world, layer, pos, old);
+    super::scaffolds::written(world, layer, pos);
+    Some(id)
+}
+
+/// Shows everyone who sees `pos` its layer-0 block again, unchanged.
+pub(crate) fn show(world: &mut World, layer: Entity, pos: BlockPos) {
+    let Some(level) = world.get::<Layer>(layer).map(|layer| &layer.world) else { return };
+    let packet = update(level.registry(), pos, level.block(pos[0], pos[1], pos[2]), 0);
+    to_viewers(world, layer, pos, &[packet]);
+}
+
+/// Shows everyone who sees `pos` its block as the entity `entity` took it (`Create`: a falling
+/// block leaving it) or left it (`Destroy`: one landing), as BDS does in UpdateBlockSynced.
+pub(crate) fn tell_synced(world: &mut World, layer: Entity, pos: BlockPos, entity: u64, transition: Transition) {
+    let Some(level) = world.get::<Layer>(layer).map(|layer| &layer.world) else { return };
+    let [x, y, z] = pos;
+    let block_runtime_id = level.registry().network_hash(level.block(x, y, z));
+    let packet = UpdateBlockSynced { position: BlockCoordinates { x, y, z }, block_runtime_id, flags: FLAGS, layer: 0, entity_unique_id: entity, transition_type: transition };
+    let packet = sapling_net::encode(&packet);
+    to_viewers(world, layer, pos, &[packet]);
 }
 
 /// The block at `pos` of a layer's world; `None` where it is not loaded or does not reach.
@@ -126,24 +181,40 @@ pub(crate) fn block_at(world: &World, layer: Entity, pos: BlockPos) -> Option<Bl
 }
 
 /// Sets a block for a handler: no event, and everyone who sees the place is shown it. A
-/// container gets its block entity.
-pub(crate) fn put_block(world: &mut World, layer: Entity, pos: BlockPos, block: &Block) -> bool {
-    let Some(id) = world.get::<Layer>(layer).and_then(|layer| resolve(layer.world.registry(), block)) else { return false };
-    let placed = set(world, layer, pos, id);
-    if let Some(name) = world.get::<Layer>(layer).and_then(|layer| layer.world.registry().get(id)).map(|state| state.name).filter(|_| placed) {
-        crate::containers::furnish(world, layer, pos, name, None, sapling_api::Face::Up);
+/// container gets its block entity. Whether the cell changed; `None` where it could not be set.
+pub(crate) fn put_block(world: &mut World, layer: Entity, pos: BlockPos, block: &Block) -> Option<bool> {
+    let level = &world.get::<Layer>(layer)?.world;
+    let id = resolve(level.registry(), block)?;
+    if block_at(world, layer, pos)? == describe(level.registry(), id) {
+        return Some(false);
     }
-    placed
+    if !set(world, layer, pos, id) {
+        return None;
+    }
+    if let Some(name) = world.get::<Layer>(layer).and_then(|layer| layer.world.registry().get(id)).map(|state| state.name) {
+        crate::containers::furnish(world, layer, pos, name, None, sapling_api::Face::Up);
+        super::pistons::furnish(world, layer, pos);
+    }
+    Some(true)
 }
 
 /// Empties layer 1 at `pos` for everyone, if it held something.
 pub(crate) fn clear_liquid(world: &mut World, layer: Entity, pos: BlockPos) {
-    let Some(mut level) = world.get_mut::<Layer>(layer) else { return };
-    let ([x, y, z], air) = (pos, level.world.registry().air_id());
-    if level.world.liquid(x, y, z) != air && level.world.set_liquid(x, y, z, air) {
-        let packet = update(level.world.registry(), pos, air, 1);
-        to_viewers(world, layer, pos, &[packet]);
+    let Some(air) = world.get::<Layer>(layer).map(|level| level.world.registry().air_id()) else { return };
+    set_liquid(world, layer, pos, air);
+}
+
+/// Writes layer 1, where a waterlogged block keeps its water, and shows it to everyone who sees
+/// the place; false when it held that already or cannot be written.
+pub(crate) fn set_liquid(world: &mut World, layer: Entity, pos: BlockPos, id: u32) -> bool {
+    let Some(mut level) = world.get_mut::<Layer>(layer) else { return false };
+    let [x, y, z] = pos;
+    if !level.world.in_height(y) || level.world.liquid(x, y, z) == id || !level.world.set_liquid(x, y, z, id) {
+        return false;
     }
+    let packet = update(level.world.registry(), pos, id, 1);
+    to_viewers(world, layer, pos, &[packet]);
+    true
 }
 
 /// Shows one player both layers of each position as the world has them, undoing what its client

@@ -1,0 +1,451 @@
+## /kill @e[type=!player]
+     35 actor   CommandOutput success_count=0 data=None commands.generic.noTargetMatch success=false []
+## /
+## /fill ~-3 ~-1 ~-3 ~8 ~-1 ~8 stone
+   2036 actor   CommandOutput success_count=0 data=None No blocks filled success=false []
+## /fill ~-3 ~ ~-3 ~8 ~6 ~8 air
+   3045 actor   CommandOutput success_count=0 data=None No blocks filled success=false []
+## /gamemode survival @s
+   4035 actor   UpdatePlayerGameType UpdatePlayerGameType { gamemode: Survival, player_unique_id: 1, tick: 349 }
+   4035 actor   CommandOutput success_count=1 data=None commands.gamemode.success.self success=true ["%createWorldScreen.gameMode.survival"]
+   4035 watcher UpdatePlayerGameType UpdatePlayerGameType { gamemode: Survival, player_unique_id: 1, tick: 349 }
+   4035 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamemode.success.self\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.survival\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /
+## /damage @s 18
+   6035 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: -1, fire_at_position: None }
+   6035 actor   UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 2.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+   6035 actor   CommandOutput success_count=1 data=None commands.damage.success success=true ["CmdActor"]
+   6035 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.damage.success\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   6035 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: -1, fire_at_position: None }
+   6035 watcher UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 2.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+## /
+## /effect @s instant_health 1 0
+   8035 actor   MobEffect MobEffect { runtime_entity_id: 1, event_id: Add, effect_id: 6, amplifier: 0, particles: true, duration: 1, tick: 0, ambient: false }
+   8035 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.effect.success\",\"with\":{\"rawtext\":[{\"text\":\"%potion.heal\"},{\"text\":\"0\"},{\"text\":\"CmdActor\"},{\"text\":\"0\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   8035 actor   CommandOutput success_count=1 data=None commands.effect.success success=true ["%potion.heal", "0", "CmdActor", "0"]
+   8035 actor   MobEffect MobEffect { runtime_entity_id: 1, event_id: Remove, effect_id: 6, amplifier: 0, particles: true, duration: 0, tick: 0, ambient: false }
+   8035 actor   UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 6.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+   8035 watcher MobEffect MobEffect { runtime_entity_id: 1, event_id: Add, effect_id: 6, amplifier: 0, particles: true, duration: 1, tick: 0, ambient: false }
+   8035 watcher MobEffect MobEffect { runtime_entity_id: 1, event_id: Remove, effect_id: 6, amplifier: 0, particles: true, duration: 0, tick: 0, ambient: false }
+   8035 watcher UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 6.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+## /
+   9985 watcher UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 20.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:player.hunger", modifiers: [] }, PlayerAttributesItem { min: 0.0, max: 20.0, current: 4.0, default_min: 0.0, default_max: 20.0, default: 5.0, name: "minecraft:player.saturation", modifiers: [] }, PlayerAttributesItem { min: 0.0, max: 20.0, current: 2.0, default_min: 0.0, default_max: 20.0, default: 0.0, name: "minecraft:player.exhaustion", modifiers: [] }], tick: 468 }
+   9985 watcher UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 7.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+   9985 actor   UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 20.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:player.hunger", modifiers: [] }, PlayerAttributesItem { min: 0.0, max: 20.0, current: 4.0, default_min: 0.0, default_max: 20.0, default: 5.0, name: "minecraft:player.saturation", modifiers: [] }, PlayerAttributesItem { min: 0.0, max: 20.0, current: 2.0, default_min: 0.0, default_max: 20.0, default: 0.0, name: "minecraft:player.exhaustion", modifiers: [] }], tick: 468 }
+   9985 actor   UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 7.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+## /effect @s instant_health 1 1
+  10035 actor   MobEffect MobEffect { runtime_entity_id: 1, event_id: Add, effect_id: 6, amplifier: 1, particles: true, duration: 1, tick: 0, ambient: false }
+  10035 actor   CommandOutput success_count=1 data=None commands.effect.success success=true ["%potion.heal", "1", "CmdActor", "0"]
+  10035 actor   MobEffect MobEffect { runtime_entity_id: 1, event_id: Remove, effect_id: 6, amplifier: 1, particles: true, duration: 0, tick: 0, ambient: false }
+  10035 actor   UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 15.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+  10035 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.effect.success\",\"with\":{\"rawtext\":[{\"text\":\"%potion.heal\"},{\"text\":\"1\"},{\"text\":\"CmdActor\"},{\"text\":\"0\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  10035 watcher MobEffect MobEffect { runtime_entity_id: 1, event_id: Add, effect_id: 6, amplifier: 1, particles: true, duration: 1, tick: 0, ambient: false }
+  10035 watcher MobEffect MobEffect { runtime_entity_id: 1, event_id: Remove, effect_id: 6, amplifier: 1, particles: true, duration: 0, tick: 0, ambient: false }
+  10035 watcher UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 15.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+## /
+## /effect @s instant_health 1 4
+  12035 actor   MobEffect MobEffect { runtime_entity_id: 1, event_id: Add, effect_id: 6, amplifier: 4, particles: true, duration: 1, tick: 0, ambient: false }
+  12035 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.effect.success\",\"with\":{\"rawtext\":[{\"text\":\"%potion.heal\"},{\"text\":\"4\"},{\"text\":\"CmdActor\"},{\"text\":\"0\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  12035 actor   CommandOutput success_count=1 data=None commands.effect.success success=true ["%potion.heal", "4", "CmdActor", "0"]
+  12035 actor   MobEffect MobEffect { runtime_entity_id: 1, event_id: Remove, effect_id: 6, amplifier: 4, particles: true, duration: 0, tick: 0, ambient: false }
+  12035 actor   UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 20.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+  12035 watcher MobEffect MobEffect { runtime_entity_id: 1, event_id: Add, effect_id: 6, amplifier: 4, particles: true, duration: 1, tick: 0, ambient: false }
+  12035 watcher MobEffect MobEffect { runtime_entity_id: 1, event_id: Remove, effect_id: 6, amplifier: 4, particles: true, duration: 0, tick: 0, ambient: false }
+  12035 watcher UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 20.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+  12185 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 6513, paused: false }] }) }
+  12185 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 6513, paused: false }] }) }
+## /
+## /effect @s instant_damage 1 0
+  14036 actor   MobEffect MobEffect { runtime_entity_id: 1, event_id: Add, effect_id: 7, amplifier: 0, particles: true, duration: 1, tick: 0, ambient: false }
+  14036 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.effect.success\",\"with\":{\"rawtext\":[{\"text\":\"%potion.harm\"},{\"text\":\"0\"},{\"text\":\"CmdActor\"},{\"text\":\"0\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  14036 actor   CommandOutput success_count=1 data=None commands.effect.success success=true ["%potion.harm", "0", "CmdActor", "0"]
+  14036 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 14, fire_at_position: None }
+  14036 actor   UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 14.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+  14036 actor   MobEffect MobEffect { runtime_entity_id: 1, event_id: Remove, effect_id: 7, amplifier: 0, particles: true, duration: 0, tick: 0, ambient: false }
+  14036 watcher MobEffect MobEffect { runtime_entity_id: 1, event_id: Add, effect_id: 7, amplifier: 0, particles: true, duration: 1, tick: 0, ambient: false }
+  14036 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 14, fire_at_position: None }
+  14036 watcher UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 14.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+  14036 watcher MobEffect MobEffect { runtime_entity_id: 1, event_id: Remove, effect_id: 7, amplifier: 0, particles: true, duration: 0, tick: 0, ambient: false }
+## /
+## /effect @s instant_health 1 4
+  16035 actor   MobEffect MobEffect { runtime_entity_id: 1, event_id: Add, effect_id: 6, amplifier: 4, particles: true, duration: 1, tick: 0, ambient: false }
+  16035 actor   CommandOutput success_count=1 data=None commands.effect.success success=true ["%potion.heal", "4", "CmdActor", "0"]
+  16035 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.effect.success\",\"with\":{\"rawtext\":[{\"text\":\"%potion.heal\"},{\"text\":\"4\"},{\"text\":\"CmdActor\"},{\"text\":\"0\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  16035 actor   MobEffect MobEffect { runtime_entity_id: 1, event_id: Remove, effect_id: 6, amplifier: 4, particles: true, duration: 0, tick: 0, ambient: false }
+  16035 actor   UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 20.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+  16035 watcher MobEffect MobEffect { runtime_entity_id: 1, event_id: Add, effect_id: 6, amplifier: 4, particles: true, duration: 1, tick: 0, ambient: false }
+  16035 watcher MobEffect MobEffect { runtime_entity_id: 1, event_id: Remove, effect_id: 6, amplifier: 4, particles: true, duration: 0, tick: 0, ambient: false }
+  16035 watcher UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 20.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+## /
+## /effect @s instant_damage 1 1
+  18035 actor   MobEffect MobEffect { runtime_entity_id: 1, event_id: Add, effect_id: 7, amplifier: 1, particles: true, duration: 1, tick: 0, ambient: false }
+  18035 actor   CommandOutput success_count=1 data=None commands.effect.success success=true ["%potion.harm", "1", "CmdActor", "0"]
+  18035 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.effect.success\",\"with\":{\"rawtext\":[{\"text\":\"%potion.harm\"},{\"text\":\"1\"},{\"text\":\"CmdActor\"},{\"text\":\"0\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  18035 watcher MobEffect MobEffect { runtime_entity_id: 1, event_id: Add, effect_id: 7, amplifier: 1, particles: true, duration: 1, tick: 0, ambient: false }
+  18035 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 14, fire_at_position: None }
+  18035 actor   UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 8.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+  18035 actor   MobEffect MobEffect { runtime_entity_id: 1, event_id: Remove, effect_id: 7, amplifier: 1, particles: true, duration: 0, tick: 0, ambient: false }
+  18035 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 14, fire_at_position: None }
+  18035 watcher UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 8.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+  18035 watcher MobEffect MobEffect { runtime_entity_id: 1, event_id: Remove, effect_id: 7, amplifier: 1, particles: true, duration: 0, tick: 0, ambient: false }
+## /
+## /damage @s 4
+  20435 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.damage.success\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  20435 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: -1, fire_at_position: None }
+  20435 actor   UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 4.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+  20435 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: -1, fire_at_position: None }
+  20435 actor   CommandOutput success_count=1 data=None commands.damage.success success=true ["CmdActor"]
+  20435 watcher UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 4.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+## /
+  21985 actor   UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 20.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:player.hunger", modifiers: [] }, PlayerAttributesItem { min: 0.0, max: 20.0, current: 3.0, default_min: 0.0, default_max: 20.0, default: 5.0, name: "minecraft:player.saturation", modifiers: [] }, PlayerAttributesItem { min: 0.0, max: 20.0, current: 4.0, default_min: 0.0, default_max: 20.0, default: 0.0, name: "minecraft:player.exhaustion", modifiers: [] }], tick: 708 }
+  21985 actor   UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 5.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+  21985 watcher UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 20.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:player.hunger", modifiers: [] }, PlayerAttributesItem { min: 0.0, max: 20.0, current: 3.0, default_min: 0.0, default_max: 20.0, default: 5.0, name: "minecraft:player.saturation", modifiers: [] }, PlayerAttributesItem { min: 0.0, max: 20.0, current: 4.0, default_min: 0.0, default_max: 20.0, default: 0.0, name: "minecraft:player.exhaustion", modifiers: [] }], tick: 708 }
+  21985 watcher UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 5.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+  22035 actor   UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 20.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:player.hunger", modifiers: [] }, PlayerAttributesItem { min: 0.0, max: 20.0, current: 2.0, default_min: 0.0, default_max: 20.0, default: 5.0, name: "minecraft:player.saturation", modifiers: [] }, PlayerAttributesItem { min: 0.0, max: 20.0, current: 0.0, default_min: 0.0, default_max: 20.0, default: 0.0, name: "minecraft:player.exhaustion", modifiers: [] }], tick: 709 }
+  22035 watcher UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 20.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:player.hunger", modifiers: [] }, PlayerAttributesItem { min: 0.0, max: 20.0, current: 2.0, default_min: 0.0, default_max: 20.0, default: 5.0, name: "minecraft:player.saturation", modifiers: [] }, PlayerAttributesItem { min: 0.0, max: 20.0, current: 0.0, default_min: 0.0, default_max: 20.0, default: 0.0, name: "minecraft:player.exhaustion", modifiers: [] }], tick: 709 }
+## /effect @s regeneration 6 0
+  22435 actor   MobEffect MobEffect { runtime_entity_id: 1, event_id: Add, effect_id: 10, amplifier: 0, particles: true, duration: 120, tick: 0, ambient: false }
+  22435 actor   CommandOutput success_count=1 data=None commands.effect.success success=true ["%potion.regeneration", "0", "CmdActor", "6"]
+  22435 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.effect.success\",\"with\":{\"rawtext\":[{\"text\":\"%potion.regeneration\"},{\"text\":\"0\"},{\"text\":\"CmdActor\"},{\"text\":\"6\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  22435 watcher MobEffect MobEffect { runtime_entity_id: 1, event_id: Add, effect_id: 10, amplifier: 0, particles: true, duration: 120, tick: 0, ambient: false }
+## /
+  23435 actor   UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 6.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+  23435 watcher UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 6.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+## /
+  24985 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 6769, paused: false }] }) }
+  24985 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 6769, paused: false }] }) }
+## /
+  25935 actor   UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 7.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+  25935 watcher UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 7.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+  25985 actor   UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 20.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:player.hunger", modifiers: [] }, PlayerAttributesItem { min: 0.0, max: 20.0, current: 1.0, default_min: 0.0, default_max: 20.0, default: 5.0, name: "minecraft:player.saturation", modifiers: [] }, PlayerAttributesItem { min: 0.0, max: 20.0, current: 2.0, default_min: 0.0, default_max: 20.0, default: 0.0, name: "minecraft:player.exhaustion", modifiers: [] }], tick: 788 }
+  25985 watcher UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 20.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:player.hunger", modifiers: [] }, PlayerAttributesItem { min: 0.0, max: 20.0, current: 1.0, default_min: 0.0, default_max: 20.0, default: 5.0, name: "minecraft:player.saturation", modifiers: [] }, PlayerAttributesItem { min: 0.0, max: 20.0, current: 2.0, default_min: 0.0, default_max: 20.0, default: 0.0, name: "minecraft:player.exhaustion", modifiers: [] }], tick: 788 }
+  25985 actor   UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 8.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+  25985 watcher UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 8.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+## /
+## /
+  28385 watcher MobEffect MobEffect { runtime_entity_id: 1, event_id: Remove, effect_id: 10, amplifier: 0, particles: true, duration: 0, tick: 0, ambient: false }
+  28385 actor   MobEffect MobEffect { runtime_entity_id: 1, event_id: Remove, effect_id: 10, amplifier: 0, particles: true, duration: 0, tick: 0, ambient: false }
+## /
+## /
+  29985 actor   UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 20.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:player.hunger", modifiers: [] }, PlayerAttributesItem { min: 0.0, max: 20.0, current: 0.0, default_min: 0.0, default_max: 20.0, default: 5.0, name: "minecraft:player.saturation", modifiers: [] }, PlayerAttributesItem { min: 0.0, max: 20.0, current: 4.0, default_min: 0.0, default_max: 20.0, default: 0.0, name: "minecraft:player.exhaustion", modifiers: [] }], tick: 868 }
+  29985 watcher UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 20.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:player.hunger", modifiers: [] }, PlayerAttributesItem { min: 0.0, max: 20.0, current: 0.0, default_min: 0.0, default_max: 20.0, default: 5.0, name: "minecraft:player.saturation", modifiers: [] }, PlayerAttributesItem { min: 0.0, max: 20.0, current: 4.0, default_min: 0.0, default_max: 20.0, default: 0.0, name: "minecraft:player.exhaustion", modifiers: [] }], tick: 868 }
+  29985 watcher UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 9.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+  29985 actor   UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 9.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+  30035 actor   UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 19.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:player.hunger", modifiers: [] }, PlayerAttributesItem { min: 0.0, max: 20.0, current: 0.0, default_min: 0.0, default_max: 20.0, default: 5.0, name: "minecraft:player.saturation", modifiers: [] }, PlayerAttributesItem { min: 0.0, max: 20.0, current: 0.0, default_min: 0.0, default_max: 20.0, default: 0.0, name: "minecraft:player.exhaustion", modifiers: [] }], tick: 869 }
+  30035 watcher UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 19.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:player.hunger", modifiers: [] }, PlayerAttributesItem { min: 0.0, max: 20.0, current: 0.0, default_min: 0.0, default_max: 20.0, default: 5.0, name: "minecraft:player.saturation", modifiers: [] }, PlayerAttributesItem { min: 0.0, max: 20.0, current: 0.0, default_min: 0.0, default_max: 20.0, default: 0.0, name: "minecraft:player.exhaustion", modifiers: [] }], tick: 869 }
+## /
+## /effect @s regeneration 3 2 true
+  31435 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.effect.success\",\"with\":{\"rawtext\":[{\"text\":\"%potion.regeneration\"},{\"text\":\"2\"},{\"text\":\"CmdActor\"},{\"text\":\"3\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  31435 actor   MobEffect MobEffect { runtime_entity_id: 1, event_id: Add, effect_id: 10, amplifier: 2, particles: false, duration: 60, tick: 0, ambient: false }
+  31435 actor   CommandOutput success_count=1 data=None commands.effect.success success=true ["%potion.regeneration", "2", "CmdActor", "3"]
+  31435 actor   UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 10.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+  31435 watcher MobEffect MobEffect { runtime_entity_id: 1, event_id: Add, effect_id: 10, amplifier: 2, particles: false, duration: 60, tick: 0, ambient: false }
+  31435 watcher UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 10.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+  32035 watcher UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 11.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+  32035 actor   UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 11.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+## /
+  32635 watcher UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 12.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+  32635 actor   UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 12.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+  33235 actor   UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 13.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+  33235 watcher UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 13.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+## /
+  33835 watcher UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 14.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+  33835 actor   UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 14.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+  33985 watcher UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 18.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:player.hunger", modifiers: [] }, PlayerAttributesItem { min: 0.0, max: 20.0, current: 0.0, default_min: 0.0, default_max: 20.0, default: 5.0, name: "minecraft:player.saturation", modifiers: [] }, PlayerAttributesItem { min: 0.0, max: 20.0, current: 2.0, default_min: 0.0, default_max: 20.0, default: 0.0, name: "minecraft:player.exhaustion", modifiers: [] }], tick: 948 }
+  33985 actor   UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 18.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:player.hunger", modifiers: [] }, PlayerAttributesItem { min: 0.0, max: 20.0, current: 0.0, default_min: 0.0, default_max: 20.0, default: 5.0, name: "minecraft:player.saturation", modifiers: [] }, PlayerAttributesItem { min: 0.0, max: 20.0, current: 2.0, default_min: 0.0, default_max: 20.0, default: 0.0, name: "minecraft:player.exhaustion", modifiers: [] }], tick: 948 }
+  33985 watcher UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 15.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+  33985 actor   UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 15.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+  34385 actor   MobEffect MobEffect { runtime_entity_id: 1, event_id: Remove, effect_id: 10, amplifier: 2, particles: false, duration: 0, tick: 0, ambient: false }
+  34385 watcher MobEffect MobEffect { runtime_entity_id: 1, event_id: Remove, effect_id: 10, amplifier: 2, particles: false, duration: 0, tick: 0, ambient: false }
+## /
+## /
+## /
+## /effect @s instant_health 1 4
+  37485 actor   MobEffect MobEffect { runtime_entity_id: 1, event_id: Add, effect_id: 6, amplifier: 4, particles: true, duration: 1, tick: 0, ambient: false }
+  37485 actor   CommandOutput success_count=1 data=None commands.effect.success success=true ["%potion.heal", "4", "CmdActor", "0"]
+  37485 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.effect.success\",\"with\":{\"rawtext\":[{\"text\":\"%potion.heal\"},{\"text\":\"4\"},{\"text\":\"CmdActor\"},{\"text\":\"0\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  37485 actor   MobEffect MobEffect { runtime_entity_id: 1, event_id: Remove, effect_id: 6, amplifier: 4, particles: true, duration: 0, tick: 0, ambient: false }
+  37485 watcher MobEffect MobEffect { runtime_entity_id: 1, event_id: Add, effect_id: 6, amplifier: 4, particles: true, duration: 1, tick: 0, ambient: false }
+  37485 watcher MobEffect MobEffect { runtime_entity_id: 1, event_id: Remove, effect_id: 6, amplifier: 4, particles: true, duration: 0, tick: 0, ambient: false }
+  37485 watcher UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 20.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+  37485 actor   UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 20.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+  37785 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 7025, paused: false }] }) }
+  37785 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 7025, paused: false }] }) }
+## /
+## /effect @s poison 30 0
+  39485 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.effect.success\",\"with\":{\"rawtext\":[{\"text\":\"%potion.poison\"},{\"text\":\"0\"},{\"text\":\"CmdActor\"},{\"text\":\"30\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  39485 watcher MobEffect MobEffect { runtime_entity_id: 1, event_id: Add, effect_id: 19, amplifier: 0, particles: true, duration: 600, tick: 0, ambient: false }
+  39485 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 14, fire_at_position: None }
+  39485 actor   MobEffect MobEffect { runtime_entity_id: 1, event_id: Add, effect_id: 19, amplifier: 0, particles: true, duration: 600, tick: 0, ambient: false }
+  39485 actor   CommandOutput success_count=1 data=None commands.effect.success success=true ["%potion.poison", "0", "CmdActor", "30"]
+  39485 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 14, fire_at_position: None }
+  39486 actor   UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 19.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+  39486 watcher UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 19.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+## /
+  40735 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 14, fire_at_position: None }
+  40735 actor   UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 18.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+  40735 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 14, fire_at_position: None }
+  40735 watcher UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 18.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+## /
+  41985 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 14, fire_at_position: None }
+  41985 actor   UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 17.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+  41985 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 14, fire_at_position: None }
+  41985 watcher UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 17.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+## /
+  43235 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 14, fire_at_position: None }
+  43235 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 14, fire_at_position: None }
+  43235 actor   UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 16.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+  43266 watcher UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 16.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+  43435 watcher UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 17.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:player.hunger", modifiers: [] }, PlayerAttributesItem { min: 0.0, max: 20.0, current: 0.0, default_min: 0.0, default_max: 20.0, default: 5.0, name: "minecraft:player.saturation", modifiers: [] }, PlayerAttributesItem { min: 0.0, max: 20.0, current: 4.0, default_min: 0.0, default_max: 20.0, default: 0.0, name: "minecraft:player.exhaustion", modifiers: [] }], tick: 1137 }
+  43435 watcher UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 17.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+  43435 actor   UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 17.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:player.hunger", modifiers: [] }, PlayerAttributesItem { min: 0.0, max: 20.0, current: 0.0, default_min: 0.0, default_max: 20.0, default: 5.0, name: "minecraft:player.saturation", modifiers: [] }, PlayerAttributesItem { min: 0.0, max: 20.0, current: 4.0, default_min: 0.0, default_max: 20.0, default: 0.0, name: "minecraft:player.exhaustion", modifiers: [] }], tick: 1137 }
+  43436 actor   UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 17.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+## /
+  43485 watcher UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 16.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:player.hunger", modifiers: [] }, PlayerAttributesItem { min: 0.0, max: 20.0, current: 0.0, default_min: 0.0, default_max: 20.0, default: 5.0, name: "minecraft:player.saturation", modifiers: [] }, PlayerAttributesItem { min: 0.0, max: 20.0, current: 0.0, default_min: 0.0, default_max: 20.0, default: 0.0, name: "minecraft:player.exhaustion", modifiers: [] }], tick: 1138 }
+  43485 actor   UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 16.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:player.hunger", modifiers: [] }, PlayerAttributesItem { min: 0.0, max: 20.0, current: 0.0, default_min: 0.0, default_max: 20.0, default: 5.0, name: "minecraft:player.saturation", modifiers: [] }, PlayerAttributesItem { min: 0.0, max: 20.0, current: 0.0, default_min: 0.0, default_max: 20.0, default: 0.0, name: "minecraft:player.exhaustion", modifiers: [] }], tick: 1138 }
+## /
+  44485 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 14, fire_at_position: None }
+  44485 watcher UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 16.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+  44485 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 14, fire_at_position: None }
+  44485 actor   UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 16.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+## /
+  45735 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 14, fire_at_position: None }
+  45735 actor   UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 15.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+  45735 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 14, fire_at_position: None }
+  45735 watcher UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 15.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+## /
+  46985 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 14, fire_at_position: None }
+  46985 watcher UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 14.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+  46985 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 14, fire_at_position: None }
+  46985 actor   UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 14.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+## /
+  48235 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 14, fire_at_position: None }
+  48235 watcher UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 13.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+  48235 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 14, fire_at_position: None }
+  48235 actor   UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 13.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+## /
+## /
+  49485 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 14, fire_at_position: None }
+  49485 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 14, fire_at_position: None }
+  49485 watcher UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 12.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+  49485 actor   UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 12.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+## /
+  50585 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 7281, paused: false }] }) }
+  50585 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 7281, paused: false }] }) }
+  50735 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 14, fire_at_position: None }
+  50735 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 14, fire_at_position: None }
+  50735 actor   UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 11.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+  50735 watcher UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 11.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+## /
+  51985 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 14, fire_at_position: None }
+  51985 actor   UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 10.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+  51985 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 14, fire_at_position: None }
+  51985 watcher UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 10.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+## /
+  53235 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 14, fire_at_position: None }
+  53235 watcher UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 9.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+  53235 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 14, fire_at_position: None }
+  53235 actor   UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 9.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+## /
+## /
+  54485 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 14, fire_at_position: None }
+  54511 watcher UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 8.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+  54511 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 14, fire_at_position: None }
+  54512 actor   UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 8.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+## /
+  55736 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 14, fire_at_position: None }
+  55736 watcher UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 7.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+  55736 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 14, fire_at_position: None }
+  55736 actor   UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 7.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+## /
+  56985 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 14, fire_at_position: None }
+  56985 watcher UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 6.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+  56985 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 14, fire_at_position: None }
+  56985 actor   UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 6.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+## /
+  58235 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 14, fire_at_position: None }
+  58235 actor   UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 5.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+  58235 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 14, fire_at_position: None }
+  58235 watcher UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 5.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+## /
+## /
+  59485 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 14, fire_at_position: None }
+  59485 actor   UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 4.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+  59485 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 14, fire_at_position: None }
+  59485 watcher UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 4.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+## /
+  60735 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 14, fire_at_position: None }
+  60735 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 14, fire_at_position: None }
+  60735 actor   UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 3.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+  60735 watcher UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 3.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+## /
+  61985 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 14, fire_at_position: None }
+  61985 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 14, fire_at_position: None }
+  61985 actor   UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 2.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+  61985 watcher UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 2.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+## /
+  63235 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 14, fire_at_position: None }
+  63235 actor   UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 1.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+  63235 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 14, fire_at_position: None }
+  63235 watcher UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 1.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+  63385 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 7537, paused: false }] }) }
+  63385 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 7537, paused: false }] }) }
+## /
+## /
+## /
+## /
+## /
+## /effect @s clear
+  68485 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.effect.success.removed.all\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  68485 actor   MobEffect MobEffect { runtime_entity_id: 1, event_id: Remove, effect_id: 19, amplifier: 0, particles: true, duration: 20, tick: 0, ambient: false }
+  68485 actor   CommandOutput success_count=1 data=None commands.effect.success.removed.all success=true ["CmdActor"]
+  68485 watcher MobEffect MobEffect { runtime_entity_id: 1, event_id: Remove, effect_id: 19, amplifier: 0, particles: true, duration: 20, tick: 0, ambient: false }
+## /
+## /effect @s instant_health 1 4
+  70485 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.effect.success\",\"with\":{\"rawtext\":[{\"text\":\"%potion.heal\"},{\"text\":\"4\"},{\"text\":\"CmdActor\"},{\"text\":\"0\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  70485 actor   MobEffect MobEffect { runtime_entity_id: 1, event_id: Add, effect_id: 6, amplifier: 4, particles: true, duration: 1, tick: 0, ambient: false }
+  70485 actor   CommandOutput success_count=1 data=None commands.effect.success success=true ["%potion.heal", "4", "CmdActor", "0"]
+  70485 watcher MobEffect MobEffect { runtime_entity_id: 1, event_id: Add, effect_id: 6, amplifier: 4, particles: true, duration: 1, tick: 0, ambient: false }
+  70485 watcher MobEffect MobEffect { runtime_entity_id: 1, event_id: Remove, effect_id: 6, amplifier: 4, particles: true, duration: 0, tick: 0, ambient: false }
+  70485 actor   MobEffect MobEffect { runtime_entity_id: 1, event_id: Remove, effect_id: 6, amplifier: 4, particles: true, duration: 0, tick: 0, ambient: false }
+  70485 watcher UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 20.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+  70485 actor   UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 20.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+## /
+## /effect @s poison 3 1
+  72485 actor   MobEffect MobEffect { runtime_entity_id: 1, event_id: Add, effect_id: 19, amplifier: 1, particles: true, duration: 60, tick: 0, ambient: false }
+  72485 actor   CommandOutput success_count=1 data=None commands.effect.success success=true ["%potion.poison", "1", "CmdActor", "3"]
+  72485 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 14, fire_at_position: None }
+  72485 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.effect.success\",\"with\":{\"rawtext\":[{\"text\":\"%potion.poison\"},{\"text\":\"1\"},{\"text\":\"CmdActor\"},{\"text\":\"3\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  72485 watcher MobEffect MobEffect { runtime_entity_id: 1, event_id: Add, effect_id: 19, amplifier: 1, particles: true, duration: 60, tick: 0, ambient: false }
+  72485 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 14, fire_at_position: None }
+  72485 actor   UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 19.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+  72485 watcher UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 19.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+  73085 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 14, fire_at_position: None }
+  73085 actor   UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 18.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+  73085 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 14, fire_at_position: None }
+  73085 watcher UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 18.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+## /
+  73685 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 14, fire_at_position: None }
+  73685 actor   UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 17.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+  73685 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 14, fire_at_position: None }
+  73686 watcher UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 17.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+  74285 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 14, fire_at_position: None }
+  74285 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 14, fire_at_position: None }
+  74285 watcher UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 16.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+  74285 actor   UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 16.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+## /
+  74885 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 14, fire_at_position: None }
+  74885 actor   UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 15.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+  74885 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 14, fire_at_position: None }
+  74885 watcher UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 15.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+  75435 watcher MobEffect MobEffect { runtime_entity_id: 1, event_id: Remove, effect_id: 19, amplifier: 1, particles: true, duration: 0, tick: 0, ambient: false }
+  75435 actor   MobEffect MobEffect { runtime_entity_id: 1, event_id: Remove, effect_id: 19, amplifier: 1, particles: true, duration: 0, tick: 0, ambient: false }
+## /
+  76185 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 7793, paused: false }] }) }
+  76185 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 7793, paused: false }] }) }
+## /
+## /
+## /effect @s instant_health 1 4
+  78485 actor   MobEffect MobEffect { runtime_entity_id: 1, event_id: Add, effect_id: 6, amplifier: 4, particles: true, duration: 1, tick: 0, ambient: false }
+  78485 actor   CommandOutput success_count=1 data=None commands.effect.success success=true ["%potion.heal", "4", "CmdActor", "0"]
+  78485 actor   MobEffect MobEffect { runtime_entity_id: 1, event_id: Remove, effect_id: 6, amplifier: 4, particles: true, duration: 0, tick: 0, ambient: false }
+  78485 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.effect.success\",\"with\":{\"rawtext\":[{\"text\":\"%potion.heal\"},{\"text\":\"4\"},{\"text\":\"CmdActor\"},{\"text\":\"0\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  78485 actor   UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 20.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+  78485 watcher MobEffect MobEffect { runtime_entity_id: 1, event_id: Add, effect_id: 6, amplifier: 4, particles: true, duration: 1, tick: 0, ambient: false }
+  78485 watcher MobEffect MobEffect { runtime_entity_id: 1, event_id: Remove, effect_id: 6, amplifier: 4, particles: true, duration: 0, tick: 0, ambient: false }
+  78485 watcher UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 20.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+## /
+## /effect @s wither 5 0
+  80535 actor   MobEffect MobEffect { runtime_entity_id: 1, event_id: Add, effect_id: 20, amplifier: 0, particles: true, duration: 100, tick: 0, ambient: false }
+  80535 actor   CommandOutput success_count=1 data=None commands.effect.success success=true ["%potion.wither", "0", "CmdActor", "5"]
+  80535 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.effect.success\",\"with\":{\"rawtext\":[{\"text\":\"%potion.wither\"},{\"text\":\"0\"},{\"text\":\"CmdActor\"},{\"text\":\"5\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  80535 watcher MobEffect MobEffect { runtime_entity_id: 1, event_id: Add, effect_id: 20, amplifier: 0, particles: true, duration: 100, tick: 0, ambient: false }
+## /
+  81535 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 15, fire_at_position: None }
+  81535 actor   UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 19.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+  81535 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 15, fire_at_position: None }
+  81535 watcher UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 19.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+## /
+## /
+  83536 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 15, fire_at_position: None }
+  83536 actor   UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 18.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+  83536 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 15, fire_at_position: None }
+  83536 watcher UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 18.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+## /
+  85485 actor   MobEffect MobEffect { runtime_entity_id: 1, event_id: Remove, effect_id: 20, amplifier: 0, particles: true, duration: 0, tick: 0, ambient: false }
+  85485 watcher MobEffect MobEffect { runtime_entity_id: 1, event_id: Remove, effect_id: 20, amplifier: 0, particles: true, duration: 0, tick: 0, ambient: false }
+## /
+## /
+## /
+## /effect @s instant_health 1 4
+  88535 actor   MobEffect MobEffect { runtime_entity_id: 1, event_id: Add, effect_id: 6, amplifier: 4, particles: true, duration: 1, tick: 0, ambient: false }
+  88535 actor   CommandOutput success_count=1 data=None commands.effect.success success=true ["%potion.heal", "4", "CmdActor", "0"]
+  88535 actor   MobEffect MobEffect { runtime_entity_id: 1, event_id: Remove, effect_id: 6, amplifier: 4, particles: true, duration: 0, tick: 0, ambient: false }
+  88535 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.effect.success\",\"with\":{\"rawtext\":[{\"text\":\"%potion.heal\"},{\"text\":\"4\"},{\"text\":\"CmdActor\"},{\"text\":\"0\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  88535 actor   UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 20.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+  88535 watcher MobEffect MobEffect { runtime_entity_id: 1, event_id: Add, effect_id: 6, amplifier: 4, particles: true, duration: 1, tick: 0, ambient: false }
+  88535 watcher MobEffect MobEffect { runtime_entity_id: 1, event_id: Remove, effect_id: 6, amplifier: 4, particles: true, duration: 0, tick: 0, ambient: false }
+  88535 watcher UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 20.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+  88985 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 8049, paused: false }] }) }
+  88985 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 8049, paused: false }] }) }
+## /
+## /effect @s speed 3 1
+  90535 actor   MobEffect MobEffect { runtime_entity_id: 1, event_id: Add, effect_id: 1, amplifier: 1, particles: true, duration: 60, tick: 0, ambient: false }
+  90535 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.effect.success\",\"with\":{\"rawtext\":[{\"text\":\"%potion.moveSpeed\"},{\"text\":\"1\"},{\"text\":\"CmdActor\"},{\"text\":\"3\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  90535 actor   UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 3.4028235e38, current: 0.14, default_min: 0.0, default_max: 3.4028235e38, default: 0.1, name: "minecraft:movement", modifiers: [PlayerAttributesItemModifiersItem { id: "91aeaa56-376b-4498-935b-2f7f68070635", name: "MovementSpeed", amount: 0.4, operation: 2, operand: 2, serializable: false }] }], tick: 2079 }
+  90535 actor   CommandOutput success_count=1 data=None commands.effect.success success=true ["%potion.moveSpeed", "1", "CmdActor", "3"]
+  90535 watcher MobEffect MobEffect { runtime_entity_id: 1, event_id: Add, effect_id: 1, amplifier: 1, particles: true, duration: 60, tick: 0, ambient: false }
+  90536 watcher UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 3.4028235e38, current: 0.14, default_min: 0.0, default_max: 3.4028235e38, default: 0.1, name: "minecraft:movement", modifiers: [PlayerAttributesItemModifiersItem { id: "91aeaa56-376b-4498-935b-2f7f68070635", name: "MovementSpeed", amount: 0.4, operation: 2, operand: 2, serializable: false }] }], tick: 2079 }
+## /
+## /effect @s speed 3 0
+  92536 actor   MobEffect MobEffect { runtime_entity_id: 1, event_id: Update, effect_id: 1, amplifier: 1, particles: true, duration: 20, tick: 0, ambient: false }
+  92536 actor   UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 3.4028235e38, current: 0.14, default_min: 0.0, default_max: 3.4028235e38, default: 0.1, name: "minecraft:movement", modifiers: [PlayerAttributesItemModifiersItem { id: "91aeaa56-376b-4498-935b-2f7f68070635", name: "MovementSpeed", amount: 0.4, operation: 2, operand: 2, serializable: false }] }], tick: 2119 }
+  92536 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.effect.success\",\"with\":{\"rawtext\":[{\"text\":\"%potion.moveSpeed\"},{\"text\":\"0\"},{\"text\":\"CmdActor\"},{\"text\":\"3\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  92536 actor   CommandOutput success_count=1 data=None commands.effect.success success=true ["%potion.moveSpeed", "0", "CmdActor", "3"]
+  92536 watcher MobEffect MobEffect { runtime_entity_id: 1, event_id: Update, effect_id: 1, amplifier: 1, particles: true, duration: 20, tick: 0, ambient: false }
+  92536 watcher UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 3.4028235e38, current: 0.14, default_min: 0.0, default_max: 3.4028235e38, default: 0.1, name: "minecraft:movement", modifiers: [PlayerAttributesItemModifiersItem { id: "91aeaa56-376b-4498-935b-2f7f68070635", name: "MovementSpeed", amount: 0.4, operation: 2, operand: 2, serializable: false }] }], tick: 2119 }
+  93485 actor   MobEffect MobEffect { runtime_entity_id: 1, event_id: Remove, effect_id: 1, amplifier: 1, particles: true, duration: 0, tick: 0, ambient: false }
+  93485 watcher MobEffect MobEffect { runtime_entity_id: 1, event_id: Remove, effect_id: 1, amplifier: 1, particles: true, duration: 0, tick: 0, ambient: false }
+  93485 actor   UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 3.4028235e38, current: 0.1, default_min: 0.0, default_max: 3.4028235e38, default: 0.1, name: "minecraft:movement", modifiers: [] }], tick: 2138 }
+  93485 watcher UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 3.4028235e38, current: 0.1, default_min: 0.0, default_max: 3.4028235e38, default: 0.1, name: "minecraft:movement", modifiers: [] }], tick: 2138 }
+## /
+## /effect @s speed 0
+  94535 actor   CommandOutput success_count=0 data=None commands.effect.failure.notActive success=false ["%potion.moveSpeed", "CmdActor"]
+## /
+## /effect @s nosuch 3 1
+  96535 actor   CommandOutput success_count=0 data=None commands.generic.syntax success=false ["effect @s ", "nosuch", " 3 1"]
+## /effect @s regeneration
+  97535 actor   MobEffect MobEffect { runtime_entity_id: 1, event_id: Add, effect_id: 10, amplifier: 0, particles: true, duration: 600, tick: 0, ambient: false }
+  97535 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.effect.success\",\"with\":{\"rawtext\":[{\"text\":\"%potion.regeneration\"},{\"text\":\"0\"},{\"text\":\"CmdActor\"},{\"text\":\"30\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  97535 actor   CommandOutput success_count=1 data=None commands.effect.success success=true ["%potion.regeneration", "0", "CmdActor", "30"]
+  97535 watcher MobEffect MobEffect { runtime_entity_id: 1, event_id: Add, effect_id: 10, amplifier: 0, particles: true, duration: 600, tick: 0, ambient: false }
+## /effect @s regeneration 5 300
+  98535 actor   CommandOutput success_count=0 data=None commands.generic.num.tooBig success=false ["300", "255"]
+## /effect @s clear
+  99536 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.effect.success.removed.all\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  99536 actor   MobEffect MobEffect { runtime_entity_id: 1, event_id: Remove, effect_id: 10, amplifier: 0, particles: true, duration: 560, tick: 0, ambient: false }
+  99536 actor   CommandOutput success_count=1 data=None commands.effect.success.removed.all success=true ["CmdActor"]
+  99536 watcher MobEffect MobEffect { runtime_entity_id: 1, event_id: Remove, effect_id: 10, amplifier: 0, particles: true, duration: 560, tick: 0, ambient: false }
+## /effect @s clear
+ 100535 actor   CommandOutput success_count=0 data=None commands.effect.failure.notActive.all success=false ["CmdActor"]
+## /
+ 101785 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 8305, paused: false }] }) }
+ 101785 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 8305, paused: false }] }) }
+## /gamemode creative @s
+ 102535 actor   UpdatePlayerGameType UpdatePlayerGameType { gamemode: Creative, player_unique_id: 1, tick: 2319 }
+ 102535 actor   CommandOutput success_count=1 data=None commands.gamemode.success.self success=true ["%createWorldScreen.gameMode.creative"]
+ 102535 watcher UpdatePlayerGameType UpdatePlayerGameType { gamemode: Creative, player_unique_id: 1, tick: 2319 }
+ 102535 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamemode.success.self\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.creative\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /effect @s poison 3 1
+ 103535 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.effect.success\",\"with\":{\"rawtext\":[{\"text\":\"%potion.poison\"},{\"text\":\"1\"},{\"text\":\"CmdActor\"},{\"text\":\"3\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 103535 watcher MobEffect MobEffect { runtime_entity_id: 1, event_id: Add, effect_id: 19, amplifier: 1, particles: true, duration: 60, tick: 0, ambient: false }
+ 103535 actor   MobEffect MobEffect { runtime_entity_id: 1, event_id: Add, effect_id: 19, amplifier: 1, particles: true, duration: 60, tick: 0, ambient: false }
+ 103535 actor   CommandOutput success_count=1 data=None commands.effect.success success=true ["%potion.poison", "1", "CmdActor", "3"]
+## /
+## /
+ 106485 watcher MobEffect MobEffect { runtime_entity_id: 1, event_id: Remove, effect_id: 19, amplifier: 1, particles: true, duration: 0, tick: 0, ambient: false }
+ 106485 actor   MobEffect MobEffect { runtime_entity_id: 1, event_id: Remove, effect_id: 19, amplifier: 1, particles: true, duration: 0, tick: 0, ambient: false }
+## /
+## /
+## /
+probe exit 0

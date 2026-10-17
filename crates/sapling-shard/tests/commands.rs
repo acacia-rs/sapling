@@ -3,7 +3,7 @@
 mod common;
 
 use acacia_proto::manual::Uuid;
-use acacia_proto::packets::{AvailableCommands, CommandOutput, CommandRequest, MovePlayer, MovePlayerMode, MovePlayerTeleportCause, Text, UpdatePlayerGameType};
+use acacia_proto::packets::{AvailableCommands, CommandOutput, CommandRequest, MovePlayer, MovePlayerMode, MovePlayerTeleportCause, Text, TextContent, UpdatePlayerGameType};
 use acacia_proto::types::{CommandOrigin, GameMode as WireGameMode, InputData};
 use common::{Harness, all, input_at};
 use sapling_api::command::Target;
@@ -126,6 +126,41 @@ fn commands_are_answered_as_bds_answers_them() {
     assert_eq!(all::<CommandOutput>(&sent)[0].origin.request_id, "");
     h.receive(1, &request("/gamemode creative Nobody", 3));
     assert_eq!(answer(&h.tick(1)).0, "commands.generic.noTargetMatch");
+}
+
+fn json_lines(packets: &[acacia_proto::RawPacket]) -> Vec<String> {
+    all::<Text>(packets).into_iter().filter_map(|text| if let TextContent::Json(json) = text.content { Some(json.message) } else { None }).collect()
+}
+
+#[test]
+fn an_operators_command_is_echoed_to_the_other_operators_as_bds_echoes_it() {
+    let mut h = harness();
+    for (conn, name) in [(1, "Alex"), (2, "Steve"), (3, "Bob")] {
+        h.enter(conn, name);
+    }
+    h.receive(1, &request("/promote", 1));
+    h.receive(2, &request("/promote", 1));
+    h.tick_all();
+
+    h.receive(1, &request("/gamemode creative", 2));
+    let sent = h.tick_all();
+    let echo = r#"{"rawtext":[{"text":"§7§o["},{"translate":"Alex"},{"text":": "},{"translate":"Alex is now in Creative","with":{"rawtext":null}},{"text":"]"}]}
+"#;
+    assert_eq!((json_lines(sent.to(1)), json_lines(sent.to(2)), json_lines(sent.to(3))), (vec![], vec![echo.to_owned()], vec![]));
+    // Not a failure, and not a command members may run.
+    h.receive(1, &request("/gamemode creative Nobody", 3));
+    h.receive(1, &request("/hub", 4));
+    assert!(json_lines(h.tick_all().to(2)).is_empty());
+}
+
+#[test]
+fn a_translated_line_is_filled_in_by_the_client() {
+    let mut h = harness();
+    h.enter(1, "Alex");
+    h.remote.run(|ctx| ctx.send_translation(PlayerId(1), "commands.tp.successVictim", &["1.00, 2.00, 3.00".into()]));
+    let line = r#"{"rawtext":[{"translate":"commands.tp.successVictim","with":{"rawtext":[{"text":"1.00, 2.00, 3.00"}]}}]}
+"#;
+    assert_eq!(json_lines(&h.tick(1)), [line]);
 }
 
 #[test]

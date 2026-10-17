@@ -36,13 +36,17 @@ pub(crate) struct Pose {
     pub sneaking: bool,
     pub sprinting: bool,
     pub swimming: bool,
+    /// On fire (vitals.rs).
+    pub burning: bool,
+    /// Using the item in its hand (vitals/eating.rs).
+    pub using: bool,
 }
 
 impl Pose {
     /// The entity flags viewers get on top of the recorded ones.
     pub fn flags(self) -> MetadataFlags1 {
         let mut flags = MetadataFlags1::BREATHING;
-        for (on, flag) in [(self.sneaking, MetadataFlags1::SNEAKING), (self.sprinting, MetadataFlags1::SPRINTING), (self.swimming, MetadataFlags1::SWIMMING)] {
+        for (on, flag) in [(self.sneaking, MetadataFlags1::SNEAKING), (self.sprinting, MetadataFlags1::SPRINTING), (self.swimming, MetadataFlags1::SWIMMING), (self.burning, MetadataFlags1::ONFIRE), (self.using, MetadataFlags1::ACTION)] {
             if on {
                 flags.insert(flag);
             }
@@ -78,6 +82,8 @@ pub(crate) struct Motion {
     /// Where a teleport onto ground put the feet, and the tick the landing is given up.
     landing: Option<([f32; 3], u64)>,
     told: Option<(Position, Pose)>,
+    /// Jumps its inputs began since vitals.rs last counted them.
+    pub jumps: u8,
 }
 
 impl Motion {
@@ -118,6 +124,19 @@ pub(crate) fn teleport(world: &mut World, entity: Entity, feet: [f32; 3]) {
     out.push(&move_player(id.0, &position, Some(MovePlayerTeleportCause::Command), motion.input_tick));
 }
 
+/// Puts a player's feet at `feet` where something pushed it, telling its client as BDS told one
+/// a piston pushed (research/captures/bds-pushed.txt): its prediction is corrected.
+pub(crate) fn push(world: &mut World, entity: Entity, feet: [f32; 3]) {
+    use acacia_proto::packets::{CorrectPlayerMovePrediction, CorrectPlayerMovePredictionPredictionType as Kind};
+    let tick = world.resource::<Tick>().0;
+    let Ok((mut position, mut motion, mut out)) = world.query::<(&mut Position, &mut Motion, &mut Outgoing)>().get_mut(world, entity) else { return };
+    position.feet = feet;
+    motion.unconfirmed_teleport = Some(tick + SETBACK_TICKS);
+    // The fall a body standing still has in a tick, as BDS sent it.
+    let delta = acacia_proto::types::Vec3f { x: 0.0, y: -0.0784, z: 0.0 };
+    out.push(&CorrectPlayerMovePrediction { prediction_type: Kind::Player, position: eyes(&position), delta, rotation: acacia_proto::types::Vec2f { x: 0.0, z: 0.0 }, angular_velocity: None, on_ground: true, tick: motion.input_tick });
+}
+
 /// [`teleport`] onto ground the client may not have yet (another world's spawn): until it
 /// stands there, a client that fell meanwhile is put back, as BDS's own simulation would
 /// correct it.
@@ -141,7 +160,7 @@ fn fell_while_landing(motion: &mut Motion, feet: [f32; 3], on_ground: bool, tick
     motion.landing.is_some() && is_below
 }
 
-fn pose_packet(id: u64, pose: Pose, tick: u64) -> SetEntityData {
+pub(crate) fn pose_packet(id: u64, pose: Pose, tick: u64) -> SetEntityData {
     let height = MetadataDictionaryItem {
         key: Key::BoundingboxHeight,
         r#type: MetadataDictionaryItemType::Float,
@@ -199,6 +218,7 @@ pub(crate) fn player_input(mut packets: ResMut<PacketQueues>, tick: Res<Tick>, m
             continue;
         }
         motion.pose.apply(&input.input_data);
+        motion.jumps = motion.jumps.saturating_add(input.input_data.iter().filter(|flag| **flag == InputData::StartJumping).count() as u8);
         motion.input_tick = input.tick;
         *position = Position { feet, yaw: input.yaw, pitch: input.pitch, head_yaw: input.head_yaw, on_ground };
     }

@@ -1,6 +1,6 @@
 //! An item stack as the game stores it: `{Name, Count, Damage, Block, tag}`.
 
-use acacia_proto::nbt::Value;
+use acacia_proto::nbt::{Str, Value};
 use acacia_world::BlockRegistry;
 
 use crate::states::{block_of_hash, network_hash};
@@ -21,24 +21,24 @@ pub struct ItemStack {
 }
 
 impl ItemStack {
-    pub(crate) fn parse(item: &Value) -> Option<Self> {
+    pub fn parse(item: &Value) -> Option<Self> {
         // An empty slot is a stack without a name.
         let Some(Value::String(name)) = item.get("Name").filter(|name| !matches!(name, Value::String(name) if name.is_empty())) else { return None };
         let count = if let Some(Value::Byte(count)) = item.get("Count") { *count as u8 } else { 1 };
         let damage = if let Some(Value::Short(damage)) = item.get("Damage") { *damage } else { 0 };
-        Some(Self { name: name.clone(), count, damage, block: item.get("Block").and_then(network_hash), tag: item.get("tag").cloned() })
+        Some(Self { name: name.to_string(), count, damage, block: item.get("Block").and_then(network_hash), tag: item.get("tag").cloned() })
     }
 
     /// The stack's fields; a block the registry cannot name is left out.
-    pub(crate) fn fields(&self, registry: &BlockRegistry) -> Vec<(String, Value)> {
-        let mut fields = vec![("Name".to_string(), Value::String(self.name.clone())), ("Count".into(), Value::Byte(self.count as i8)), ("Damage".into(), Value::Short(self.damage))];
-        fields.extend(self.block.and_then(|hash| block_of_hash(registry, hash)).map(|block| ("Block".to_string(), block)));
-        fields.extend(self.tag.clone().map(|tag| ("tag".to_string(), tag)));
+    pub fn fields(&self, registry: &BlockRegistry) -> Vec<(Str, Value)> {
+        let mut fields = vec![("Name".into(), Value::String(self.name.as_str().into())), ("Count".into(), Value::Byte(self.count as i8)), ("Damage".into(), Value::Short(self.damage))];
+        fields.extend(self.block.and_then(|hash| block_of_hash(registry, hash)).map(|block| ("Block".into(), block)));
+        fields.extend(self.tag.clone().map(|tag| ("tag".into(), tag)));
         fields
     }
 
     /// The fields of a slot that holds nothing.
-    pub(crate) fn no_fields() -> Vec<(String, Value)> {
-        vec![("Name".to_string(), Value::String(String::new())), ("Count".into(), Value::Byte(0)), ("Damage".into(), Value::Short(0))]
+    pub(crate) fn no_fields() -> Vec<(Str, Value)> {
+        vec![("Name".into(), Value::String(Str::default())), ("Count".into(), Value::Byte(0)), ("Damage".into(), Value::Short(0))]
     }
 }

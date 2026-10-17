@@ -1,8 +1,7 @@
-//! The mobs and dropped items a world's storage holds, shown to players. Each stored actor of a
-//! loaded column is an entity that stays where it was saved: nothing moves it, and nothing a
-//! player does reaches it. It leaves with its column, and the column saves it back as it was
-//! (`sapling_world::Column`).
-// TODO: everything that makes a mob more than a statue.
+//! Entities shown to players: each is filed under the column it is in and announced to whoever
+//! sees that column, and removed from their screens when it goes or leaves their view. Stored
+//! actors the shard does not move (paintings, kinds without a recorded box) are statues here;
+//! the rest are entities (entities.rs, actors.rs).
 
 use std::collections::HashMap;
 
@@ -56,10 +55,11 @@ pub(crate) struct MobGrid {
     changes: u64,
 }
 
-/// `None` for a dropped item that names no item a client knows.
-fn announcement(actor: &Actor, id: u64) -> Option<Vec<Bytes>> {
+/// What shows a stored actor as it was stored; `None` for a dropped item that names no item a
+/// client knows.
+pub(crate) fn announcement(actor: &Actor, id: u64) -> Option<Vec<Bytes>> {
     if actor.identifier == ITEM {
-        let item = sapling_data::add_item_entity(id, &stack(actor.item.as_ref()?), actor.position)?;
+        let item = sapling_data::add_item_entity(id, &stack(actor.item.as_ref()?), actor.position, [0.0; 3])?;
         return Some(vec![sapling_net::encode(&item)]);
     }
     if let Some(painting) = &actor.painting {
@@ -96,39 +96,10 @@ fn announcement(actor: &Actor, id: u64) -> Option<Vec<Bytes>> {
     Some(packets)
 }
 
-/// Makes entities of the actors in the columns that came from storage this tick.
-pub(crate) fn spawn_arrived(mut commands: Commands, mut players: ResMut<Players>, mut grid: ResMut<MobGrid>, mut layers: Query<(Entity, &mut Layer)>) {
-    let before = players.next_net_id;
-    for (layer, mut level) in &mut layers {
-        for home in level.world.take_arrived() {
-            let stored = match sapling_world::actors(level.world.actors(home)) {
-                Ok(stored) => stored,
-                Err(error) => {
-                    tracing::warn!(x = home.x, z = home.z, %error, "a column's actors are unreadable; showing none of them");
-                    continue;
-                }
-            };
-            for actor in stored {
-                let id = players.next_net_id;
-                let Some(announcement) = announcement(&actor, id) else {
-                    tracing::debug!(x = home.x, z = home.z, item = ?actor.item, "a dropped item no client knows; not shown");
-                    continue;
-                };
-                players.next_net_id += 1;
-                let mob = commands.spawn((Mob { announcement, home }, NetId(id), InLayer(layer))).id();
-                grid.grid.insert(layer, home, (mob, id));
-            }
-        }
-    }
-    if players.next_net_id != before {
-        grid.changes += 1;
-    }
-}
-
-/// Puts a stack into the world as an item lying at `feet`, shown like a stored one; `None` for
-/// an item no client knows.
-pub(crate) fn spawn_item(world: &mut World, layer: Entity, item: &ItemStack, feet: [f32; 3]) -> Option<Entity> {
-    spawn_shown(world, layer, feet, |id| Some(vec![sapling_net::encode(&sapling_data::add_item_entity(id, &stack(item), feet)?)]))
+/// What shows a stack as an item at `position` moving at `velocity`; `None` for an item no
+/// client knows.
+pub(crate) fn item_announcement(id: u64, item: &ItemStack, position: [f32; 3], velocity: [f32; 3]) -> Option<Vec<Bytes>> {
+    Some(vec![sapling_net::encode(&sapling_data::add_item_entity(id, &stack(item), position, velocity)?)])
 }
 
 /// Puts an entity into the world at `feet`, shown to those who see its column by what
@@ -150,6 +121,23 @@ pub(crate) fn reannounce(world: &mut World, mob: Entity, announcement: Vec<Bytes
     if let Some(mut mob) = world.get_mut::<Mob>(mob) {
         mob.announcement = announcement;
     }
+}
+
+/// Files the entity under the column of `at` when it moved into another: it is shown to those
+/// who see that one, and unloaded with it.
+pub(crate) fn follow(world: &mut World, mob: Entity, at: [f32; 3]) {
+    let home = ChunkPos::of_block(at[0].floor() as i32, at[2].floor() as i32);
+    let Some((old, id, layer)) = world.query::<(&Mob, &NetId, &InLayer)>().get(world, mob).ok().map(|(mob, id, layer)| (mob.home, id.0, layer.0)) else { return };
+    if old == home {
+        return;
+    }
+    if let Some(mut shown) = world.get_mut::<Mob>(mob) {
+        shown.home = home;
+    }
+    let mut grid = world.resource_mut::<MobGrid>();
+    grid.grid.remove(layer, old, &(mob, id));
+    grid.grid.insert(layer, home, (mob, id));
+    grid.changes += 1;
 }
 
 /// Takes a mob out of the world; those who saw it are told by [`update`].

@@ -1,0 +1,85 @@
+## /weather query
+     35 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.weather.query\",\"with\":{\"rawtext\":[{\"text\":\"%commands.weather.query.clear\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+     35 actor   CommandOutput success_count=1 data=None commands.weather.query success=true ["%commands.weather.query.clear"]
+## /weather rain
+   1035 actor   CommandOutput success_count=1 data=None commands.weather.rain success=true []
+   1035 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.weather.rain\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   1035 watcher LevelEvent LevelEvent { event: StartRain, position: Vec3f { x: 0.0, y: 0.0, z: 0.0 }, data: 65535 }
+   1035 actor   LevelEvent LevelEvent { event: StartRain, position: Vec3f { x: 0.0, y: 0.0, z: 0.0 }, data: 65535 }
+## /
+## /
+## /weather query
+   4035 actor   CommandOutput success_count=1 data=None commands.weather.query success=true ["%commands.weather.query.rain"]
+   4035 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.weather.query\",\"with\":{\"rawtext\":[{\"text\":\"%commands.weather.query.rain\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /weather rain
+   5035 actor   CommandOutput success_count=1 data=None commands.weather.rain success=true []
+   5035 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.weather.rain\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /weather thunder
+   6035 actor   CommandOutput success_count=1 data=None commands.weather.thunder success=true []
+   6035 actor   LevelEvent LevelEvent { event: StartThunder, position: Vec3f { x: 0.0, y: 0.0, z: 0.0 }, data: 65535 }
+   6035 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.weather.thunder\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   6035 watcher LevelEvent LevelEvent { event: StartThunder, position: Vec3f { x: 0.0, y: 0.0, z: 0.0 }, data: 65535 }
+## /
+## /
+## /weather query
+   9035 actor   CommandOutput success_count=1 data=None commands.weather.query success=true ["%commands.weather.query.thunder"]
+   9069 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.weather.query\",\"with\":{\"rawtext\":[{\"text\":\"%commands.weather.query.thunder\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /weather clear
+  10035 actor   CommandOutput success_count=1 data=None commands.weather.clear success=true []
+  10035 actor   LevelEvent LevelEvent { event: StopRain, position: Vec3f { x: 0.0, y: 0.0, z: 0.0 }, data: 0 }
+  10035 actor   LevelEvent LevelEvent { event: StopThunder, position: Vec3f { x: 0.0, y: 0.0, z: 0.0 }, data: 0 }
+  10035 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.weather.clear\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  10035 watcher LevelEvent LevelEvent { event: StopRain, position: Vec3f { x: 0.0, y: 0.0, z: 0.0 }, data: 0 }
+  10035 watcher LevelEvent LevelEvent { event: StopThunder, position: Vec3f { x: 0.0, y: 0.0, z: 0.0 }, data: 0 }
+## /
+  11084 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 6513, paused: false }] }) }
+  11085 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 6513, paused: false }] }) }
+## /
+## /weather query
+  13035 actor   CommandOutput success_count=1 data=None commands.weather.query success=true ["%commands.weather.query.clear"]
+  13035 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.weather.query\",\"with\":{\"rawtext\":[{\"text\":\"%commands.weather.query.clear\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /weather rain 100
+  14035 actor   CommandOutput success_count=1 data=None commands.weather.rain success=true []
+  14060 actor   LevelEvent LevelEvent { event: StartRain, position: Vec3f { x: 0.0, y: 0.0, z: 0.0 }, data: 65535 }
+  14061 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.weather.rain\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  14061 watcher LevelEvent LevelEvent { event: StartRain, position: Vec3f { x: 0.0, y: 0.0, z: 0.0 }, data: 65535 }
+## /
+## /
+## /
+## /
+## /
+  19035 actor   LevelEvent LevelEvent { event: StopRain, position: Vec3f { x: 0.0, y: 0.0, z: 0.0 }, data: 0 }
+  19035 watcher LevelEvent LevelEvent { event: StopRain, position: Vec3f { x: 0.0, y: 0.0, z: 0.0 }, data: 0 }
+## /
+## /weather query
+  21035 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.weather.query\",\"with\":{\"rawtext\":[{\"text\":\"%commands.weather.query.clear\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  21035 actor   CommandOutput success_count=1 data=None commands.weather.query success=true ["%commands.weather.query.clear"]
+## /weather clear 50
+  22035 actor   CommandOutput success_count=1 data=None commands.weather.clear success=true []
+  22035 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.weather.clear\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /weather banana
+  23034 actor   CommandOutput success_count=0 data=None commands.generic.syntax success=false ["/weather ", "banana", ""]
+  23884 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 6769, paused: false }] }) }
+  23885 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 6769, paused: false }] }) }
+## /weather
+  24034 actor   CommandOutput success_count=0 data=None commands.generic.syntax success=false ["/weather", "", ""]
+## /toggledownfall
+  25035 actor   CommandOutput success_count=1 data=None commands.downfall.success success=true []
+  25049 actor   LevelEvent LevelEvent { event: StartRain, position: Vec3f { x: 0.0, y: 0.0, z: 0.0 }, data: 65535 }
+  25049 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.downfall.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  25049 watcher LevelEvent LevelEvent { event: StartRain, position: Vec3f { x: 0.0, y: 0.0, z: 0.0 }, data: 65535 }
+## /
+## /weather query
+  27035 actor   CommandOutput success_count=1 data=None commands.weather.query success=true ["%commands.weather.query.rain"]
+  27035 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.weather.query\",\"with\":{\"rawtext\":[{\"text\":\"%commands.weather.query.rain\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /toggledownfall
+  28085 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.downfall.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  28085 actor   CommandOutput success_count=1 data=None commands.downfall.success success=true []
+  28085 actor   LevelEvent LevelEvent { event: StopRain, position: Vec3f { x: 0.0, y: 0.0, z: 0.0 }, data: 0 }
+  28085 watcher LevelEvent LevelEvent { event: StopRain, position: Vec3f { x: 0.0, y: 0.0, z: 0.0 }, data: 0 }
+## /
+## /weather clear
+  30085 actor   CommandOutput success_count=1 data=None commands.weather.clear success=true []
+  30085 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.weather.clear\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /
+probe exit 0

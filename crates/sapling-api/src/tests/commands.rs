@@ -99,15 +99,16 @@ fn bad_input_is_reported_where_it_stands() {
     assert_eq!(parse::<Give>("give", &alex()), Err(syntax("/give", "", "")));
     assert_eq!(parse::<Give>("give 1 nan true x survival red @s", &alex()), Err(syntax("/give 1 ", "nan", " true x survival red @s")));
     assert_eq!(parse::<Give>("give 1 2 yes x survival red @s", &alex()), Err(syntax("/give 1 2 ", "yes", " x survival red @s")));
-    assert_eq!(parse::<Give>("give 1 2 true x hardcore red @s", &alex()), Err(syntax("/give 1 2 true x ", "hardcore", " red @s")));
-    assert_eq!(parse::<Give>("give 1 2 true x survival green @s", &alex()), Err(syntax("/give 1 2 true x survival ", "green", " @s")));
-    assert_eq!(parse::<Give>("give 1 2 true \"x survival red @s", &alex()), Err(syntax("/give 1 2 true ", "\"x", " survival red @s")));
-    assert_eq!(parse::<Give>("give 1 2 true x survival red", &alex()), Err(syntax("/give 1 2 true x survival red", "", "")));
+    // BDS keeps the last ten characters before the token.
+    assert_eq!(parse::<Give>("give 1 2 true x hardcore red @s", &alex()), Err(syntax(" 2 true x ", "hardcore", " red @s")));
+    assert_eq!(parse::<Give>("give 1 2 true x survival green @s", &alex()), Err(syntax(" survival ", "green", " @s")));
+    assert_eq!(parse::<Give>("give 1 2 true \"x survival red @s", &alex()), Err(syntax(" 1 2 true ", "\"x", " survival red @s")));
+    assert_eq!(parse::<Give>("give 1 2 true x survival red", &alex()), Err(syntax("rvival red", "", "")));
     assert_eq!(parse::<Give>("give 1 2 true x survival red Nobody", &alex()), Err(ParseError::NoTarget));
     assert_eq!(parse::<Give>("give 1 2 true x survival red @s", &Sender::Console), Err(ParseError::NoTarget));
-    assert_eq!(parse::<Give>("give 1 2 true x survival red @e", &alex()), Err(syntax("/give 1 2 true x survival red ", "@e", "")));
-    assert_eq!(parse::<Warp>("warp set home 300", &alex()), Err(syntax("/warp set home ", "300", "")));
-    assert_eq!(parse::<Warp>("warp list now", &alex()), Err(syntax("/warp list ", "now", "")));
+    assert_eq!(parse::<Give>("give 1 2 true x survival red @e", &alex()), Err(syntax("vival red ", "@e", "")));
+    assert_eq!(parse::<Warp>("warp set home 300", &alex()), Err(syntax(" set home ", "300", "")));
+    assert_eq!(parse::<Warp>("warp list now", &alex()), Err(syntax("warp list ", "now", "")));
     assert_eq!(parse::<Ping>("ping pong", &alex()), Err(syntax("/ping ", "pong", "")));
 }
 
@@ -161,6 +162,7 @@ fn the_registry_runs_commands_and_answers_as_bds_does() {
     let syntax = |parts: [&str; 3]| vec![("commands.generic.syntax".to_owned(), parts.map(str::to_owned).to_vec(), false)];
     assert_eq!(run(Permission::Member, "/warp banana"), syntax(["/warp ", "banana", ""]));
     assert_eq!(run(Permission::Member, "/warp"), syntax(["/warp", "", ""]));
+    assert_eq!(run(Permission::Operator, "/give 1 2 true x banana"), syntax([" 2 true x ", "banana", ""]), "the last ten characters before");
     assert_eq!(run(Permission::Operator, "/give 1 2 true x survival red Nobody"), [("commands.generic.noTargetMatch".to_owned(), vec![], false)]);
 }
 

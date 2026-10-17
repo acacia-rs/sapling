@@ -1,0 +1,29 @@
+## /setblock ~2 ~ ~ chest
+     40 actor   BlockEntityData BlockEntityData { position: BlockCoordinates { x: 2, y: 64, z: 0 }, nbt: Nbt { name: "", value: Compound([("id", String("Chest")), ("x", Int(2)), ("y", Int(64)), ("z", Int(0))]) } }
+     40 watcher BlockEntityData BlockEntityData { position: BlockCoordinates { x: 2, y: 64, z: 0 }, nbt: Nbt { name: "", value: Compound([("id", String("Chest")), ("x", Int(2)), ("y", Int(64)), ("z", Int(0))]) } }
+     40 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+     40 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+## /replaceitem block ~2 ~ ~ slot.container 0 diamond 10
+   1237 actor   CommandOutput success_count=1 data=None commands.replaceitem.success success=true ["slot.container", "0", "10", "Diamond"]
+   1237 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.replaceitem.success\",\"with\":{\"rawtext\":[{\"text\":\"slot.container\"},{\"text\":\"0\"},{\"text\":\"10\"},{\"text\":\"Diamond\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /replaceitem block ~2 ~ ~ slot.container 1 diamond
+   2435 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.replaceitem.success\",\"with\":{\"rawtext\":[{\"text\":\"slot.container\"},{\"text\":\"1\"},{\"text\":\"1\"},{\"text\":\"Diamond\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   2435 actor   CommandOutput success_count=1 data=None commands.replaceitem.success success=true ["slot.container", "1", "1", "Diamond"]
+## /replaceitem block ~2 ~ ~ slot.container 2 stone 70
+   3633 actor   CommandOutput success_count=0 data=None commands.generic.num.tooBig success=false ["70", "64"]
+## /replaceitem block ~2 ~ ~ slot.container 27 diamond
+   4833 actor   CommandOutput success_count=0 data=None commands.replaceitem.badSlotNumber success=false ["27", "0", "26"]
+## /replaceitem block ~2 ~ ~ slot.container -1 diamond
+   6183 actor   CommandOutput success_count=0 data=None commands.replaceitem.badSlotNumber success=false ["-1", "0", "26"]
+## /replaceitem block ~2 ~ ~ slot.container 3 no_such_item
+   7383 actor   CommandOutput success_count=0 data=None commands.generic.syntax success=false ["ntainer 3 ", "no_such_item", ""]
+## /replaceitem block ~2 ~ ~ slot.container 0 air
+   8583 actor   CommandOutput success_count=1 data=None commands.replaceitem.success success=true ["slot.container", "0", "1", "Air"]
+   8584 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.replaceitem.success\",\"with\":{\"rawtext\":[{\"text\":\"slot.container\"},{\"text\":\"0\"},{\"text\":\"1\"},{\"text\":\"Air\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /replaceitem block ~ ~-1 ~ slot.container 0 diamond
+   9783 actor   CommandOutput success_count=0 data=None commands.replaceitem.noContainer success=false ["Pos(0,63,0)"]
+## /replaceitem block ~2 ~ ~ slot.inventory 0 diamond
+  10983 actor   CommandOutput success_count=0 data=None commands.generic.syntax success=false ["ck ~2 ~ ~ ", "slot.inventory", " 0 diamond"]
+  12033 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 6513, paused: false }] }) }
+  12033 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 6513, paused: false }] }) }
+probe exit 0

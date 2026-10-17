@@ -1,7 +1,7 @@
 //! Tools wear: a use is counted where the game keeps it, in the stack's `Damage` tag, and a tool
 //! used once more than it lasts is gone. The rules are BDS's `ItemStackBase::hurtAndBreak`
 //! (docs/research/block-rules.md, section 5).
-// TODO: no break sound, and nothing but breaking blocks wears anything.
+// TODO: no break sound; of tools nothing but breaking blocks wears any (armour: armour_wear.rs).
 
 use acacia_proto::nbt::Value;
 use bevy_ecs::prelude::*;
@@ -14,23 +14,35 @@ const DAMAGE: &str = "Damage";
 /// The `ench` id of Unbreaking.
 const UNBREAKING: i16 = 17;
 
-fn damage(tag: &Option<Value>) -> i32 {
+impl Inventory {
+    pub(crate) fn has_helmet(&self) -> bool {
+        self.armor[0].is_some()
+    }
+
+    /// The points and toughness of the armour worn.
+    pub(crate) fn armour(&self) -> [f32; 2] {
+        let worn = self.armor.iter().flatten().filter_map(|held| sapling_data::armour(&held.stack.name));
+        worn.fold([0.0; 2], |sum, piece| [sum[0] + piece[0], sum[1] + piece[1]])
+    }
+}
+
+pub(super) fn damage(tag: &Option<Value>) -> i32 {
     match tag.as_ref().and_then(|tag| tag.get(DAMAGE)) {
         Some(Value::Int(damage)) => *damage,
         _ => 0,
     }
 }
 
-fn set_damage(tag: &mut Option<Value>, damage: i32) {
+pub(super) fn set_damage(tag: &mut Option<Value>, damage: i32) {
     if let Value::Compound(fields) = tag.get_or_insert_with(|| Value::Compound(Vec::new())) {
         fields.retain(|(key, _)| key != DAMAGE);
-        fields.push((DAMAGE.to_owned(), Value::Int(damage)));
+        fields.push((DAMAGE.into(),Value::Int(damage)));
     }
 }
 
 /// The chance in a hundred that a use wears the stack: all of them, unless it is marked
 /// `Unbreakable` (none) or has Unbreaking (100 over the level plus one).
-fn wear_chance(held: &Held) -> u32 {
+pub(super) fn wear_chance(held: &Held) -> u32 {
     let tag = held.stack.tag.as_ref();
     if tag.and_then(|tag| tag.get("Unbreakable")) == Some(&Value::Byte(1)) {
         return 0;
@@ -43,6 +55,16 @@ fn wear_chance(held: &Held) -> u32 {
 }
 
 impl Inventory {
+    /// One of the stack in the hand is gone: eaten (vitals/eating.rs).
+    pub fn take_one_in_hand(&mut self) {
+        let Some(slot) = self.slot_mut(Place::Main(usize::from(self.selected) % HOTBAR)) else { return };
+        match slot.as_mut() {
+            Some(held) if held.stack.count > 1 => held.stack.count -= 1,
+            _ => *slot = None,
+        }
+        self.unsaved = true;
+    }
+
     /// Counts `uses` against the stack in the hand, which lasts `lasts` of them.
     fn wear_hand(&mut self, uses: i32, lasts: u16) {
         let Some(slot) = self.slot_mut(Place::Main(usize::from(self.selected) % HOTBAR)) else { return };

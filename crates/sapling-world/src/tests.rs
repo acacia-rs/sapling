@@ -217,7 +217,7 @@ fn a_block_entity_leaves_with_its_block() {
     let entity = |[x, y, z]: [i32; 3]| {
         let fields = [("id", Value::String("Chest".into())), ("x", Value::Int(x)), ("y", Value::Int(y)), ("z", Value::Int(z))];
         let mut out = BytesMut::new();
-        nbt::write::<LittleEndian>(&mut out, &Nbt { name: String::new(), value: Value::Compound(fields.map(|(key, value)| (key.to_string(), value)).into()) });
+        nbt::write::<LittleEndian>(&mut out, &Nbt { name: String::new(), value: Value::Compound(fields.map(|(key, value)| (nbt::Str::from(key), value)).into()) });
         out.to_vec()
     };
     let storage = Arc::new(MemoryStorage::default());
@@ -261,7 +261,7 @@ fn actors_and_the_level_go_back_to_storage_with_the_world() {
             self.columns.store_column(pos, dimension, column)
         }
         fn flush(&self, level: &Level) -> Result<(), StorageError> {
-            *self.flushed.lock().unwrap() = Some(*level);
+            *self.flushed.lock().unwrap() = Some(level.clone());
             Ok(())
         }
     }
@@ -270,7 +270,7 @@ fn actors_and_the_level_go_back_to_storage_with_the_world() {
     storage.store_column(pos, 0, &StoredColumn { actors: b"two cows".to_vec(), ..StoredColumn::of(chunk) }).unwrap();
 
     let mut world = World::with_storage(storage.clone());
-    assert_eq!((*world.level(), world.take_arrived()), (Level::default(), Vec::new()));
+    assert_eq!((world.level().clone(), world.take_arrived()), (Level::default(), Vec::new()));
     world.load_now(pos);
     world.request(ChunkPos::new(5, 5));
     wait_loaded(&mut world, ChunkPos::new(5, 5));
@@ -279,10 +279,12 @@ fn actors_and_the_level_go_back_to_storage_with_the_world() {
 
     let stone = world.block_id("minecraft:stone").unwrap();
     assert!(world.set_block(1, 10, 1, stone));
-    *world.level_mut() = Level { spawn: Some([4, 70, -2]), time: 18_000, daylight_cycle: false };
+    let mut level = Level { spawn: Some([4, 70, -2]), time: 18_000, ..Level::default() };
+    level.rules.set(sapling_data::DAYLIGHT_CYCLE, sapling_data::RuleValue::Bool(false));
+    *world.level_mut() = level.clone();
     assert_eq!(world.save_and_wait(), 0);
     assert_eq!(storage.load_column(pos, 0).unwrap().unwrap().actors, b"two cows");
-    assert_eq!(*storage.flushed.lock().unwrap(), Some(Level { spawn: Some([4, 70, -2]), time: 18_000, daylight_cycle: false }));
+    assert_eq!(*storage.flushed.lock().unwrap(), Some(level));
 }
 
 #[test]

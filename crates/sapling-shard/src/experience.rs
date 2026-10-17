@@ -50,9 +50,9 @@ impl Experience {
     }
 }
 
-/// What the client is told of a player's experience.
-pub(crate) fn attributes(id: &NetId, experience: &Experience) -> acacia_proto::packets::UpdateAttributes {
-    sapling_data::experience_attributes(id.0, experience.level, experience.progress)
+/// What the client is told of a player's experience at `tick`: the level too when `with_level`.
+pub(crate) fn attributes(id: &NetId, experience: &Experience, with_level: bool, tick: u64) -> acacia_proto::packets::UpdateAttributes {
+    sapling_data::experience_attributes(id.0, Some(experience.level).filter(|_| with_level), experience.progress, tick)
 }
 
 /// Gives a player `points` of experience, which it is shown; a fifth level sounds, once in
@@ -62,8 +62,9 @@ pub(crate) fn give(world: &mut World, player: Entity, points: i32) {
     let mut query = world.query::<(&NetId, &Position, &mut Inventory, &mut Outgoing)>();
     let Ok((id, position, mut inventory, mut out)) = query.get_mut(world, player) else { return };
     let experience = &mut inventory.experience;
+    let level = experience.level;
     let sounds = experience.add(points) && experience.sounded.is_none_or(|last| tick >= last + SOUND_EVERY);
-    out.push(&attributes(id, experience));
+    out.push(&attributes(id, experience, experience.level != level, tick));
     if sounds {
         experience.sounded = Some(tick);
         // A volume: louder up to level 30 (BDS `Player::addLevels`).
@@ -74,6 +75,38 @@ pub(crate) fn give(world: &mut World, player: Entity, points: i32) {
         out.push(&sound);
     }
     inventory.unsaved = true;
+}
+
+/// Adds `levels` to a player's level, which it is shown; one brought under 0 is at 0 with
+/// nothing of the next (research/captures/bds-clock.txt).
+fn add_levels(world: &mut World, player: Entity, levels: i32) -> bool {
+    let tick = world.resource::<Tick>().0;
+    let mut query = world.query::<(&NetId, &mut Inventory, &mut Outgoing)>();
+    let Ok((id, mut inventory, mut out)) = query.get_mut(world, player) else { return false };
+    let experience = &mut inventory.experience;
+    let to = experience.level.saturating_add(levels);
+    (experience.level, experience.progress) = (to.max(0), if to < 0 { 0.0 } else { experience.progress });
+    out.push(&attributes(id, experience, true, tick));
+    inventory.unsaved = true;
+    true
+}
+
+impl sapling_api::ExperienceBackend for crate::handlers::Ctx<'_> {
+    fn experience(&self, player: sapling_api::PlayerId) -> Option<(i32, f32)> {
+        let experience = self.world.get::<Inventory>(self.entity(player)?)?.experience;
+        Some((experience.level, experience.progress))
+    }
+
+    fn give_experience(&mut self, player: sapling_api::PlayerId, points: u32) -> bool {
+        self.entity(player).is_some_and(|entity| {
+            give(self.world, entity, points.min(i32::MAX as u32) as i32);
+            true
+        })
+    }
+
+    fn add_levels(&mut self, player: sapling_api::PlayerId, levels: i32) -> bool {
+        self.entity(player).is_some_and(|entity| add_levels(self.world, entity, levels))
+    }
 }
 
 #[cfg(test)]

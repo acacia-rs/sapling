@@ -45,7 +45,7 @@ impl WorldFolder {
             tracing::warn!("level.dat has no RandomSeed; columns the folder lacks stay void");
             return self;
         };
-        let level = *self.world.level();
+        let level = self.world.level().clone();
         let (world, spawn) = World::with_level(Arc::new(Generated::new(self.storage.clone(), seed)), level);
         Self { world, spawn, ..self }
     }

@@ -40,8 +40,8 @@ cargo run -p sapling --example bds_mob_recorder -- <BDS folder> <its address> cr
 
 | File | Sent as | Patched per mob |
 |---|---|---|
-| `Mobs.bin` (110 kinds, 40 of them also as a baby) | `add_entity(&AddEntityOptions)` | ids, position, rotation, velocity (none), `Variant`, `MarkVariant`, `Color`, name tag, the baby flag, extra flags, health |
-| `ItemEntity.bin` | `add_item_entity(id, &Stack, feet)` | ids, position, velocity (none), the stack (network id from `ItemRegistry.bin`) |
+| `Mobs.bin` (112 kinds, 40 of them also as a baby; the villager and the zombie villager, which BDS announces as `villager_v2` and `zombie_villager_v2`, were added by `bds_kind_recorder`) | `add_entity(&AddEntityOptions)` | ids, position, rotation, velocity (none), `Variant`, `MarkVariant`, `Color`, name tag, the baby flag, extra flags, health |
+| `ItemEntity.bin` | `add_item_entity(id, &Stack, position, velocity)` | ids, position, velocity, the stack (network id from `ItemRegistry.bin`) |
 
 A kind's hitbox, attributes and flags are whatever BDS gave the summoned one. `minecraft:villager` and
 `minecraft:zombie_villager` are not recorded (BDS announces their v2 kinds instead) and are sent as
@@ -77,6 +77,36 @@ only 99 tables of 1.26.50's new blocks). Both are made by the scripts in `data/g
 Rows keep Java's block ids; `java_block` maps a Bedrock block name to one (a hand-written list of the
 renamed blocks, and `*_double_slab` to its slab). This is Java's behaviour: where Bedrock's hard-coded
 drops differ, nothing here knows.
+
+## Mob loot
+
+`mob-loot.json` (read by `mob_loot.rs`) is BDS's own: `data/generate/mob-loot.py` takes each entity's
+loot table from the vanilla behaviour packs (their `.brarchive`s, the newest pack version winning), the
+adult's in its default state, and every table those name, with old item names renamed (checked against
+`ItemRegistry.bin` by a test). Fox and piglin name tables no pack holds; slimes and magma cubes, whose
+loot goes by size, have none here.
+
+## Mob traits
+
+`mob-traits.tsv` (read by `mob_health.rs`): for each entity of the vanilla behaviour packs, which of
+these its own components (not its component groups) say, by `data/generate/mob-traits.py`:
+`xp=least-most` (`minecraft:experience_reward` of the entity or of a group not named for a baby, the
+part after `last_hit_by_player ?`, without equipment), `fire_immune` (`minecraft:fire_immune`), `no_fall` (a `minecraft:damage_sensor` trigger that takes
+no damage from `fall` or from all), `breathes_water` and `no_air` (`minecraft:breathable`).
+`strolls=` and `panics=` are `minecraft:movement` times the `speed_multiplier` of `random_stroll`
+and of `panic`, for an entity with `navigation.walk`. `attack=`, `speed=`, `sees=` and `hits=effect:ticks` are the script's own
+table of the kinds whose hunting was drilled (`docs/research/mob-attacks.md`): `attack` is
+`minecraft:attack` plus what the kind holds (a vindicator's axe 5, a wither skeleton's sword 5),
+`speed` is `minecraft:movement` times its attack's `speed_multiplier`, `sees` the `max_dist` of its
+`nearest_attackable_target` for players (16 where it names none).
+
+## Liquid reactions
+
+`liquid-reactions.tsv` (read by `liquid_reaction.rs`): for each of 736 vanilla blocks, what water
+does to it (Broken, Popped, Blocking, Noreaction) and whether it keeps a water source beside itself.
+Read statically off BDS's block registration, not out of a pack or the Java jar; how, and which rows
+are less certain: sapling's `docs/research/waterlogging.md`. A block not listed is Blocking and keeps
+nothing, BDS's default.
 
 `game_rules`, `no_player_spawn` and `world_spawn` are built, not recorded: the rules are StartGame's, the
 spawn packets have the shape `bds_entity_probe` (join) and `bds_mob_recorder` (`/setworldspawn`) print.

@@ -1,11 +1,10 @@
 use std::sync::LazyLock;
 
-use acacia_proto::packets::{GameRulesChanged, StartGame};
-use acacia_proto::types::{BlockCoordinates, GameMode, GameRuleI32, GameRuleI32Value, Vec2f, Vec3f};
+use acacia_proto::packets::StartGame;
+use acacia_proto::types::{BlockCoordinates, GameMode, Vec2f, Vec3f};
 
+use crate::GameRules;
 use crate::templates::{START_GAME, decode};
-
-const DAYLIGHT_CYCLE: &str = "dodaylightcycle";
 
 /// Player positions on the wire are the eyes, this far above the feet: BDS's own offset
 /// (acacia-physics `DEFAULT_PLAYER_HEIGHT_OFFSET`), not the round 1.62.
@@ -26,33 +25,19 @@ pub struct StartGameOptions {
     pub tick: i64,
     /// 0 peaceful to 3 hard.
     pub difficulty: i32,
-    /// Whether the client advances the time of day by itself (the `dodaylightcycle` game rule).
-    pub daylight_cycle: bool,
+    pub rules: GameRules,
     /// Whether chunk palettes and block updates carry state hashes instead of runtime ids.
     pub block_network_ids_are_hashes: bool,
 }
 
-static TEMPLATE: LazyLock<StartGame> = LazyLock::new(|| decode(START_GAME));
-
-fn rules(daylight_cycle: bool) -> Vec<GameRuleI32> {
-    let mut rules = TEMPLATE.gamerules.clone();
-    for rule in rules.iter_mut().filter(|rule| rule.name.eq_ignore_ascii_case(DAYLIGHT_CYCLE)) {
-        rule.value = GameRuleI32Value::Bool(daylight_cycle);
-    }
-    rules
-}
-
-/// Every game rule with BDS's value but the daylight cycle's; BDS repeats them after StartGame.
-pub fn game_rules(daylight_cycle: bool) -> GameRulesChanged {
-    GameRulesChanged { rules: rules(daylight_cycle) }
-}
+pub(crate) static TEMPLATE: LazyLock<StartGame> = LazyLock::new(|| decode(START_GAME));
 
 pub fn start_game(o: &StartGameOptions) -> StartGame {
     let [x, y, z] = o.position;
     let [sx, sy, sz] = o.world_spawn;
     StartGame {
         difficulty: o.difficulty,
-        gamerules: rules(o.daylight_cycle),
+        gamerules: o.rules.start_game(),
         entity_id: o.entity_id,
         runtime_entity_id: o.runtime_entity_id,
         player_gamemode: o.game_mode,
@@ -74,9 +59,11 @@ pub fn start_game(o: &StartGameOptions) -> StartGame {
 #[cfg(test)]
 mod tests {
     use acacia_proto::Packet;
+    use acacia_proto::types::GameRuleI32Value;
     use bytes::BytesMut;
 
     use super::*;
+    use crate::{DAYLIGHT_CYCLE, RuleValue};
 
     fn options() -> StartGameOptions {
         StartGameOptions {
@@ -90,7 +77,11 @@ mod tests {
             world_name: "hub".into(),
             tick: 12,
             difficulty: 2,
-            daylight_cycle: false,
+            rules: {
+                let mut rules = GameRules::default();
+                rules.set(DAYLIGHT_CYCLE, RuleValue::Bool(false));
+                rules
+            },
             block_network_ids_are_hashes: true,
         }
     }
@@ -115,6 +106,6 @@ mod tests {
         assert!(!sg.block_properties.is_empty(), "data-driven vanilla blocks are kept");
         let cycle: Vec<_> = sg.gamerules.iter().filter(|rule| rule.name.eq_ignore_ascii_case(DAYLIGHT_CYCLE)).map(|rule| rule.value.clone()).collect();
         assert_eq!((sg.difficulty, cycle), (2, vec![GameRuleI32Value::Bool(false)]), "BDS lists the rule, so it can be set");
-        assert_eq!(game_rules(false).rules, sg.gamerules);
+        assert_eq!(options().rules.packet().rules, sg.gamerules, "BDS repeats them after StartGame");
     }
 }

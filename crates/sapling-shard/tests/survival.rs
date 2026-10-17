@@ -6,7 +6,7 @@ mod common;
 use std::sync::{Arc, Mutex};
 
 use acacia_proto::RawPacket;
-use acacia_proto::packets::{AddItemEntity, InventoryContent, LevelEvent, LevelEventEvent, UpdateBlock};
+use acacia_proto::packets::{AddItemEntity, InventoryContent, LevelEvent, LevelEventEvent, UpdateAttributes};
 use acacia_proto::nbt::Value;
 use acacia_proto::types::{Action, ItemV4Extra};
 use common::{Harness, all, block_actions, click, hash};
@@ -22,7 +22,7 @@ const ALEX: PlayerId = PlayerId(1);
 
 /// The layer-0 blocks among `packets` as (position, block).
 fn blocks(packets: &[RawPacket]) -> Vec<([i32; 3], u32)> {
-    all::<UpdateBlock>(packets).iter().filter(|u| u.layer == 0).map(|u| ([u.position.x, u.position.y, u.position.z], u.block_runtime_id)).collect()
+    common::block_changes(packets)
 }
 
 /// Alex, in survival (the default), with `item` in the hand, and Steve watching.
@@ -64,10 +64,16 @@ fn a_break_takes_the_time_the_block_and_the_tool_need() {
     h.receive(1, &block_actions(&[(Action::ContinueBreak, NEAR), (Action::PredictBreak, NEAR)]));
     let sent = h.tick_all();
     assert_eq!(blocks(sent.to(2)), [(NEAR, hash(AIR))]);
+    let tired: Vec<f32> = all::<UpdateAttributes>(sent.to(2)).iter().flat_map(|update| &update.attributes).filter(|attribute| attribute.name == "minecraft:player.exhaustion").map(|attribute| attribute.current).collect();
+    assert_eq!(tired, [0.005], "a block harvested tires its breaker");
     let left = all::<AddItemEntity>(sent.to(2));
     let cobblestone = sapling_data::item(&Stack { name: "minecraft:cobblestone", count: 1, damage: 0, block: None, tag: None }, None).unwrap();
     assert_eq!((left.len(), left[0].item.network_id, left[0].item.count), (1, cobblestone.network_id, 1), "a pickaxe makes stone leave cobblestone");
-    assert_eq!([left[0].position.x, left[0].position.y, left[0].position.z], [1.5, 64.0, 0.5]);
+    // BDS tosses it up from somewhere in the cell, 0.15 in from its sides (docs/research/items.md).
+    let at = [left[0].position.x - 1.0, left[0].position.y - 64.0, left[0].position.z];
+    // Shown at 0.2 up, or a tick later (gravity, then 2% drag) when it moved before it was announced.
+    let rising = (0.2 - 0.04) * 0.98..=0.2;
+    assert!(at.iter().all(|c| (0.15..=0.85).contains(c)) && rising.contains(&left[0].velocity.y), "{:?} {:?}", left[0].position, left[0].velocity);
     let windows = all::<InventoryContent>(sent.to(1));
     let ItemV4Extra::Default(Some(pickaxe)) = &windows[0].input[0].extra else { panic!("{:?}", windows[0].input[0]) };
     assert_eq!(pickaxe.nbt.as_ref().expect("a tag").nbt.value.get("Damage"), Some(&Value::Int(1)), "the break cost the pickaxe a use");
@@ -152,7 +158,8 @@ fn a_second_door_hinges_on_the_other_side_and_a_bed_lies_ahead_of_its_placer() {
     h.receive(1, &click(NEAR, 1, None));
     let second = blocks(h.tick_all().to(2));
     assert_eq!([first.len(), second.len()], [2, 2], "{first:?} {second:?}");
-    assert!(first.iter().all(|cell| !is_hinged_right(cell.1)) && second.iter().all(|cell| is_hinged_right(cell.1)));
+    // The hinge is the upper half's alone (research/captures/bds-sounds.txt).
+    assert!(first.iter().all(|cell| !is_hinged_right(cell.1)) && second.iter().map(|cell| is_hinged_right(cell.1)).collect::<Vec<_>>() == [false, true], "{second:?}");
 
     let mut h = with_in_hand(Some(Item::new("minecraft:bed", 1)));
     let head = [1, 65, 1];
@@ -183,14 +190,14 @@ fn sand_falls_a_torch_goes_with_its_block_and_a_button_comes_out_again() {
     });
     h.tick_all();
 
-    // The dirt goes: the sand comes down into its cell, and the torch that stood on the sand
-    // breaks and leaves a torch.
+    // The dirt goes: the sand falls into its cell, and the torch that stood on the sand breaks
+    // and leaves a torch.
     h.receive(1, &block_actions(&[(Action::PredictBreak, pillar)]));
-    let sent = h.tick_all();
-    let after: std::collections::HashMap<_, _> = blocks(sent.to(2)).into_iter().collect();
+    let sent: Vec<RawPacket> = (0..20).flat_map(|_| h.tick_all().to(2).to_vec()).collect();
+    let after: std::collections::HashMap<_, _> = blocks(&sent).into_iter().collect();
     let now = [pillar, sand, torch].map(|pos| after.get(&pos).copied());
     assert_eq!(now, [Some(hash("minecraft:sand")), Some(hash(AIR)), Some(hash(AIR))], "{after:?}");
-    assert_eq!(all::<AddItemEntity>(sent.to(2)).len(), 1, "the torch lies there");
+    assert_eq!(all::<AddItemEntity>(&sent).len(), 1, "the torch lies there");
 
     let pressed = |sent: &[RawPacket]| blocks(sent).iter().filter(|(pos, _)| *pos == button).count();
     h.receive(1, &click(button, 1, None));

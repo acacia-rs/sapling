@@ -2,7 +2,7 @@
 //! the Java game's, which Bedrock follows for the blocks checked). The tables speak Java's
 //! block states; `state_holds` reads them off a Bedrock block.
 // TODO: a row about a state this cannot read off the Bedrock block is skipped, stems leave
-// nothing (their seed count is a formula the table file does not carry), a bed drops per cell.
+// nothing (their seed count is a formula the table file does not carry).
 
 use bevy_ecs::prelude::*;
 use sapling_api::{BlockPos, Item};
@@ -54,6 +54,11 @@ impl Dice {
         self.0 ^= self.0 >> 7;
         self.0 ^= self.0 << 17;
         ((self.0 >> 32) as u32) % sides.max(1)
+    }
+
+    /// A number from 0 up to 1.
+    pub fn fraction(&mut self) -> f32 {
+        self.roll(1 << 20) as f32 / (1 << 20) as f32
     }
 }
 
@@ -157,18 +162,37 @@ pub(super) fn of(block: &str, properties: &str, by: &Breaker, roll: &mut dyn FnM
     left
 }
 
+/// Adds to `items`, left by the block at `pos`, what its entity kept (entities.rs). Call before
+/// the block goes.
+pub(super) fn add_entity_loot(world: &World, layer: Entity, pos: BlockPos, items: &mut Vec<Item>) {
+    if let Some(kept) = world.get::<Layer>(layer).and_then(|layer| layer.world.block_entity(pos)) {
+        super::entities::into_loot(&kept.nbt, items);
+    }
+}
+
 /// [`of`] with the shard's dice.
 pub(super) fn thrown(world: &mut World, block: &str, properties: &str, by: &Breaker) -> Vec<Item> {
     let mut dice = world.get_resource_or_insert_with(Dice::default);
     of(block, properties, by, &mut |sides| dice.roll(sides))
 }
 
-/// Lays `items` where the block at `pos` was. Items the game lacks are left out.
+/// `items` as stacks; items the game lacks are left out.
+fn stacks(world: &World, layer: Entity, items: &[Item]) -> Vec<sapling_world::ItemStack> {
+    let Some(registry) = world.get::<Layer>(layer).map(|layer| layer.world.registry()) else { return Vec::new() };
+    items.iter().filter(|item| item.count > 0).filter_map(|item| inventory::stored(item, registry)).collect()
+}
+
+/// Lays `items` where the block at `pos` was, tossed out of its cell.
 pub(super) fn spill(world: &mut World, layer: Entity, pos: BlockPos, items: &[Item]) {
-    let Some(registry) = world.get::<Layer>(layer).map(|layer| layer.world.registry()) else { return };
-    let stacks: Vec<_> = items.iter().filter(|item| item.count > 0).filter_map(|item| inventory::stored(item, registry)).collect();
-    for stack in stacks {
+    for stack in stacks(world, layer, items) {
         drops::spill(world, layer, stack, pos);
+    }
+}
+
+/// Tosses `items` out of `centre`, where an entity that broke up was.
+pub(super) fn let_go(world: &mut World, layer: Entity, centre: [f32; 3], items: &[Item]) {
+    for stack in stacks(world, layer, items) {
+        drops::let_go(world, layer, stack, centre);
     }
 }
 
@@ -199,6 +223,9 @@ mod tests {
         assert_eq!([left("oak_slab", HAND, 0), left("oak_double_slab", HAND, 0)], [named("oak_slab", 1), named("oak_slab", 2)]);
         assert!(left("stone", Breaker { harvests: false, ..HAND }, 0).is_empty(), "nothing from a block the tool does not harvest");
         assert!(of("mod:lamp", "", &HAND, &mut |_| 0).is_empty(), "no item stands for it");
+        let signs = [left("standing_sign", HAND, 0), left("wall_sign", HAND, 0), left("spruce_standing_sign", HAND, 0), left("darkoak_wall_sign", HAND, 0)];
+        assert_eq!(signs, [named("oak_sign", 1), named("oak_sign", 1), named("spruce_sign", 1), named("dark_oak_sign", 1)]);
+        assert_eq!([left("standing_banner", HAND, 0), left("wall_banner", HAND, 0)], [named("banner", 1), named("banner", 1)]);
     }
 
     #[test]

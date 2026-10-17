@@ -24,6 +24,9 @@ pub struct ShardConfig {
     pub columns_per_tick: usize,
     /// Serve chunk data through the client blob cache to clients that report one.
     pub blob_cache: bool,
+    /// Mobs with nothing to do stroll, and flee when hit. Off, they stand where they are until
+    /// something moves them.
+    pub mobs_stroll: bool,
 }
 
 impl Default for ShardConfig {
@@ -37,6 +40,7 @@ impl Default for ShardConfig {
             max_view_radius: 8,
             columns_per_tick: 8,
             blob_cache: true,
+            mobs_stroll: true,
         }
     }
 }
