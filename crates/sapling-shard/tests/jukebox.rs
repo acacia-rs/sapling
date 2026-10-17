@@ -43,6 +43,40 @@ fn a_disc_goes_in_with_its_title_powers_the_comparator_and_comes_out() {
 }
 
 #[test]
+fn a_comparator_reads_a_decorated_pot_by_its_stack_and_no_flat_frame() {
+    // research/captures/bds-holders.txt: 1 at a stone, 2 at five, 3 at ten; a frame facing up
+    // read 0 with a diamond in it, turned or not.
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    let rig = |holder: Block| {
+        move |ctx: &mut sapling_api::ShardCtx<'_>| {
+            ctx.set_game_mode(ALEX, GameMode::Creative);
+            assert!(ctx.update_block([2, 65, 0], &holder));
+            assert!(ctx.update_block([3, 65, 0], &Block { name: "minecraft:unpowered_comparator".into(), properties: "minecraft:cardinal_direction=west".into() }));
+            assert!(ctx.update_block([4, 65, 0], &Block::new("minecraft:redstone_wire")));
+        }
+    };
+    h.remote.run(rig(Block::new("minecraft:decorated_pot")));
+    h.remote.run(|ctx| assert!(ctx.set_item(ALEX, Slot::Main(0), Some(&Item::new("minecraft:stone", 64)))));
+    h.tick_all();
+    let mut read = Vec::new();
+    for _ in 0..10 {
+        h.receive(1, &click([2, 65, 0], 1, None));
+        read.push(dust(&mut h));
+    }
+    let signal = |n: u8| format!("redstone_signal={n}");
+    assert_eq!(read, [1, 1, 1, 1, 2, 2, 2, 2, 2, 3].map(signal));
+
+    h.remote.run(rig(Block { name: "minecraft:frame".into(), properties: "facing_direction=1".into() }));
+    h.remote.run(|ctx| assert!(ctx.set_item(ALEX, Slot::Main(0), Some(&Item::new("minecraft:diamond", 64)))));
+    h.tick_all();
+    for _ in 0..4 {
+        h.receive(1, &click([2, 65, 0], 1, None));
+    }
+    assert_eq!(dust(&mut h), signal(0));
+}
+
+#[test]
 fn lit_redstone_ore_goes_out_by_itself() {
     let mut h = Harness::new();
     h.enter(1, "Alex");

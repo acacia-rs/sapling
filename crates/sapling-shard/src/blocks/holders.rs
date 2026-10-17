@@ -1,8 +1,8 @@
 //! Blocks that hold one thing put into them by hand: an item frame takes an item and later
 //! clicks turn it, a decorated pot takes a stack one at a time (docs/research/block-uses.md, "A
 //! second round"). Each keeps it as BDS does, in its entity.
-// TODO: a comparator reads neither; a frame shows no map; a pot gives nothing back but by being
-// broken.
+// TODO: a comparator reads no frame, as BDS read none lying flat; a wall frame was not drilled. A
+// frame shows no map; a pot gives nothing back but by being broken.
 
 use acacia_proto::nbt::Value;
 use acacia_proto::packets::{LevelEvent, LevelEventEvent};
@@ -49,6 +49,13 @@ fn spend(world: &mut World, player: Entity) {
 /// The item `stack` as a block's entity keeps it.
 fn kept(world: &World, layer: Entity, stack: ItemStack) -> Option<Value> {
     world.get::<Layer>(layer).map(|layer| Value::Compound(stack.fields(layer.world.registry())))
+}
+
+/// What the decorated pot at `pos` holds, for a comparator; `None` where there is no pot.
+pub(super) fn potted(world: &World, layer: Entity, pos: BlockPos) -> Option<Option<ItemStack>> {
+    let level = world.get::<Layer>(layer).map(|layer| &layer.world).filter(|level| level.in_height(pos[1]))?;
+    level.registry().get(level.block(pos[0], pos[1], pos[2])).filter(|state| state.name == POT)?;
+    Some(level.block_entity(pos).and_then(|entity| entity.nbt.get(POTTED).and_then(ItemStack::parse)).filter(|inside| inside.count > 0))
 }
 
 /// A hit on the block at `pos`: a frame that holds an item lets it go and stands, as BDS's did
@@ -105,6 +112,7 @@ pub(super) fn use_holder(world: &mut World, player: Entity, layer: Entity, pos: 
     let Some(item) = kept(world, layer, ItemStack { count, ..stack }) else { return true };
     put(&mut fields, POTTED, item);
     send::keep_entity(world, layer, pos, &fields);
+    super::container_changed(world, layer, pos);
     spend(world, player);
     // Higher the fuller it is: BDS's first stone told 707, its second 715.
     let pitch = (700.0 + 500.0 * f32::from(count) / f32::from(STACK)) as i32;

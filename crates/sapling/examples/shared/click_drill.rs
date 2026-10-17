@@ -140,6 +140,27 @@ pub fn stacks() -> Vec<String> {
     lines
 }
 
+/// What a comparator reads of a frame, a glow frame and a decorated pot a block east of the actor
+/// in creative: each holder behind a comparator with dust after it, a frame given a diamond and
+/// turned through all eight steps and back, the pot given a stone at a time; then a frame given a
+/// diamond and turned three times before the comparator is put down anew.
+pub fn holders() -> Vec<String> {
+    let comparator = "unpowered_comparator [\"minecraft:cardinal_direction\"=\"west\",\"output_subtract_bit\"=false]";
+    let mut lines: Vec<String> = ["kill @e[type=!player]", "gamemode creative @s", "clear @s", ""].map(String::from).into();
+    let frame = "frame [\"facing_direction\"=1]";
+    for (holder, item, clicks, again) in [(frame, "diamond", 9, false), ("glow_frame [\"facing_direction\"=1]", "diamond", 9, false), ("decorated_pot", "stone", 10, false), (frame, "diamond", 4, true)] {
+        lines.extend(["fill ~-1 ~-1 ~7 ~4 ~-1 ~9 stone".into(), "tp @s ~ ~ ~8 -90 0".into(), "fill ~1 ~ ~-1 ~4 ~2 ~1 air".into(), format!("setblock ~1 ~ ~ {holder}")]);
+        lines.extend([format!("setblock ~2 ~ ~ {comparator}"), "setblock ~3 ~ ~ redstone_wire".into(), format!("replaceitem entity @s slot.weapon.mainhand 0 {item} 64"), String::new()]);
+        lines.extend((0..clicks).flat_map(|_| ["!click 1 0 0".to_owned(), String::new()]));
+        if again {
+            lines.extend(["setblock ~2 ~ ~ air".to_owned(), format!("setblock ~2 ~ ~ {comparator}"), String::new()]);
+        }
+        lines.extend(["!break 1 0 0", "", "kill @e[type=item]"].map(String::from));
+    }
+    lines.extend(["fill ~1 ~ ~-1 ~4 ~2 ~1 air", "clear @s", ""].map(String::from));
+    lines
+}
+
 /// The actor in creative puts a snow layer on grass a block east of it and nine more onto it.
 pub fn snowpile() -> Vec<String> {
     let mut lines: Vec<String> =

@@ -337,8 +337,12 @@ No decompile: all of this is from the capture.
   3, 7, 11, 15 by its charges; a beehive its `honey_level`; an end portal frame 15 with its eye.
   sapling's run of the drill reads the same of every one (research/captures/sapling-redstone-reads.txt was
   taken before it knew a dispenser as a container).
+- Holders (`bds_command_probe holders`, research/captures/bds-holders.txt, 2026-10-17): a decorated pot reads as a
+  one-slot container, 1 at a stone, 2 at five, 3 at ten, 0 once broken. A frame or glow frame lying face up read 0
+  with a diamond in it at every turn, also behind a comparator put down after the item was turned.
 - Not drilled: equal strengths behind and at a side (sapling passes it, as Java), a repeater or power block at a
-  side, jukebox, lectern, item frame, a cauldron of lava or powder snow, a chiseled bookshelf, a click's sound.
+  side, lectern, a wall frame facing the comparator, a cauldron of lava or powder snow, a chiseled bookshelf, a
+  click's sound.
 
 ## Observers (2026-10-09, `bds_command_probe observer-facing` and `observers`, research/captures/bds-redstone-observers.txt)
 

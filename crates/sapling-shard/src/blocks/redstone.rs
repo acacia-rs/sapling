@@ -4,7 +4,7 @@
 //! written to are searched again from their sources (search.rs); what changed is written into
 //! the blocks at the start of the next (apply.rs).
 // TODO: the circuits of an arena's template are found only once one of their blocks is written;
-// a comparator reads no lectern or item frame; a burnt torch whose loop was broken while it was out still
+// a comparator reads no lectern; a burnt torch whose loop was broken while it was out still
 // waits for a change beside it.
 
 mod apply;
@@ -107,7 +107,8 @@ fn read_containers(world: &mut World, layer: Entity, circuit: &Circuit) -> HashM
         state_signal(state.name, state.properties)
     };
     let read = |world: &mut World, at: BlockPos| {
-        by_state(world, at).or_else(|| crate::blocks::jukebox::signal(world, layer, at)).or_else(|| {
+        let pot = |world: &World| crate::blocks::holders::potted(world, layer, at).map(|inside| fullness(inside.iter().map(|held| (held.count, sapling_data::max_stack(&held.name))), 1));
+        by_state(world, at).or_else(|| crate::blocks::jukebox::signal(world, layer, at)).or_else(|| pot(world)).or_else(|| {
             containers::with_slots(world, layer, at, |_, slots| {
                 let filled = slots.iter().flatten().map(|held| (held.stack.count, sapling_data::max_stack(&held.stack.name)));
                 fullness(filled, slots.len())
