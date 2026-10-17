@@ -2,7 +2,8 @@
 //! its surface, BDS's legacy carvers and lava lakes, its data-driven feature rules, and the biome
 //! of every block. BDS's terrain is a C++ port of Java 1.18.1's `NoiseSampler` done in f32; this
 //! crate follows BDS's arithmetic, not Java's. Everything after the terrain shape uses Bedrock's
-//! MT19937 (docs/research/worldgen-bds.md).
+//! MT19937 (docs/research/worldgen-bds.md). The Nether's generator is `nether::NetherGenerator`
+//! (docs/research/worldgen-bds-nether.md).
 
 pub mod biome;
 mod block;
