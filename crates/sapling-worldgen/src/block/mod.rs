@@ -134,7 +134,7 @@ impl Block {
 
     /// Plants placed by features: no collision, no light blocking, never terrain.
     pub fn is_plant(self) -> bool {
-        (Block::ShortGrass..Block::PointedDripstoneWet).contains(&self) || (Block::GlowLichen1..=Block::SculkVeinWet63).contains(&self)
+        (Block::ShortGrass..Block::PointedDripstoneWet).contains(&self) || (Block::GlowLichen1..=Block::SculkVeinWet63).contains(&self) || self >= Block::CrimsonRoots
     }
 
     /// Pointed dripstone or a sulfur spike with water in the second layer.

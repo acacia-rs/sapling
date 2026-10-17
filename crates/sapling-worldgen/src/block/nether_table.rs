@@ -1,5 +1,6 @@
-//! The Nether's terrain and surface blocks, after every other table's: a block hash taken over the
-//! overworld (tools/bench.sh) hashes discriminants, so new blocks go last.
+//! The Nether's blocks, after every other table's: a block hash taken over the overworld (tools/bench.sh)
+//! hashes discriminants, so new blocks go last. Solids first, then the plants from `CrimsonRoots` on
+//! (`Block::is_plant`).
 
 macro_rules! with_nether_blocks {
     ($($plants:tt)*) => {
@@ -13,6 +14,11 @@ macro_rules! with_nether_blocks {
             CrimsonNylium => "crimson_nylium" "",
             WarpedNylium => "warped_nylium" "",
             NetherWartBlock => "nether_wart_block" "",
+            CrimsonRoots => "crimson_roots" "",
+            WarpedRoots => "warped_roots" "",
+            NetherSprouts => "nether_sprouts" "",
+            CrimsonFungus => "crimson_fungus" "",
+            WarpedFungus => "warped_fungus" "",
         }
     };
 }

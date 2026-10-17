@@ -1,6 +1,6 @@
 //! The Nether as BDS's `NetherGenerator` (constructor 1481e6d60, vtable 14a923740, `loadChunk` 1481ec000)
 //! makes it: Java 1.12's hell terrain and a legacy layer biome stack, both on MT19937, then the bedrock,
-//! the biomes' surface builders and the cave carver (docs/research/worldgen-bds-nether.md).
+//! the biomes' surface builders and the cave carver, then decoration (docs/research/worldgen-bds-nether.md).
 
 mod biome;
 mod capped;
@@ -12,22 +12,28 @@ mod terrain;
 
 use std::sync::Arc;
 
+use crate::Dimension;
 use crate::biome::ChunkBiomes;
 use crate::cache::SourceCache;
 use crate::chunk::ChunkShape;
+use crate::feature::{Features, Inputs};
 use crate::random::Mt19937;
 
 pub use biome::{BASALT_DELTAS, CRIMSON_FOREST, HELL, SOULSAND_VALLEY, WARPED_FOREST};
 pub use terrain::{HEIGHT, SEA_LEVEL};
 
+/// Chunk biomes and carved chunks (about 200 and 100 kB each) kept for the neighbours that read them.
 const BIOMES_LIMIT: usize = 256;
+const CARVED_LIMIT: usize = 256;
 
 pub struct NetherGenerator {
     noises: terrain::NetherNoises,
     biomes: biome::NetherBiomes,
     surface: surface::NetherSurface,
     carver: carver::NetherCarver,
+    features: Features,
     chunk_biomes: SourceCache<(i32, i32), ChunkBiomes>,
+    carved: SourceCache<(i32, i32), ChunkShape>,
 }
 
 impl NetherGenerator {
@@ -38,7 +44,9 @@ impl NetherGenerator {
             biomes: biome::NetherBiomes::new(seed),
             surface: surface::NetherSurface::new(seed),
             carver: carver::NetherCarver::new(seed),
+            features: Features::for_dimension(seed, 1, Dimension::Nether),
             chunk_biomes: SourceCache::new(BIOMES_LIMIT),
+            carved: SourceCache::new(CARVED_LIMIT),
         }
     }
 
@@ -70,9 +78,35 @@ impl NetherGenerator {
 
     /// `surfaced_blocks`, then the pregeneration pass's carvers: the buffer `loadChunk` commits (1481eca38).
     pub fn carved_blocks(&self, chunk_x: i32, chunk_z: i32) -> ChunkShape {
-        let mut shape = self.surfaced_blocks(chunk_x, chunk_z);
-        self.carver.carve(&mut shape, chunk_x, chunk_z);
+        (*self.carved(chunk_x, chunk_z)).clone()
+    }
+
+    fn carved(&self, chunk_x: i32, chunk_z: i32) -> Arc<ChunkShape> {
+        self.carved.get((chunk_x, chunk_z), || {
+            let mut shape = self.surfaced_blocks(chunk_x, chunk_z);
+            self.carver.carve(&mut shape, chunk_x, chunk_z);
+            shape.share();
+            shape
+        })
+    }
+
+    /// Every ported stage: the carved chunk, then the decoration of every chunk that reaches it.
+    pub fn chunk_blocks(&self, chunk_x: i32, chunk_z: i32) -> ChunkShape {
+        let mut shape = self.carved_blocks(chunk_x, chunk_z);
+        let carved = |x, z| self.carved(x, z);
+        let biomes = |x, z| self.chunk_biomes(x, z);
+        let tops = |x, z| Arc::new(self.carved(x, z).tops());
+        let surface = |_, _| crate::density::NO_SURFACE;
+        let none = |_: [i32; 3]| false;
+        let inputs = Inputs { loaded: &carved, carved: &carved, generated_tops: &tops, biomes: &biomes, surface: &surface, in_structure: &none, in_tunnels: &none };
+        self.features.place(&mut shape, (chunk_x, chunk_z), inputs);
         shape
+    }
+
+    /// Decorates in the order one BDS run did (`OverworldGenerator::set_decoration_order`).
+    #[doc(hidden)]
+    pub fn set_decoration_order(&mut self, order: &[(i32, i32)], thread: Option<(u32, &[Option<u32>])>) {
+        self.features.set_order(order, thread);
     }
 
     /// Bedrock biome ids, one per column at every y.

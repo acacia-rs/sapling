@@ -30,6 +30,7 @@ mod lush;
 mod molang;
 mod monster_room;
 mod multiface;
+mod nether;
 mod order;
 mod ore;
 mod pale;
@@ -54,6 +55,7 @@ mod view_connect;
 use std::collections::HashMap;
 use std::sync::Arc;
 
+use crate::Dimension;
 use crate::biome::ChunkBiomes;
 use crate::cache::SourceCache;
 use crate::random::{LargeFeatureSeed, Mt19937};
@@ -123,14 +125,20 @@ pub struct Features {
     /// Off, multiface features keep their pushed face order, which agrees better with BDS's racy loads
     /// (docs/research/worldgen-bds-order.md, "One engine").
     pub canonical_shuffles: bool,
+    /// Whose `decorationPostProcessChunk` a source runs.
+    dimension: Dimension,
 }
 
 impl Features {
     /// Seeded like the carvers: `(x*a + z*b) ^ seed` on the low 32 bits of the world seed.
     /// Caches sized for `areas` areas generated at once (`OverworldGenerator::with_areas`).
     pub fn new(world_seed: i64, areas: usize) -> Self {
+        Self::for_dimension(world_seed, areas, Dimension::Overworld)
+    }
+
+    pub fn for_dimension(world_seed: i64, areas: usize, dimension: Dimension) -> Self {
         let (writes, before, light) = (SourceCache::new(areas * CACHE_LIMIT), SourceCache::new(areas * BEFORE_LIMIT), SourceCache::new(areas * CACHE_LIMIT));
-        Self { seed: LargeFeatureSeed::new(world_seed as u32), writes, before, light, track_reach: false, order: None, thread: None, canonical_shuffles: false }
+        Self { seed: LargeFeatureSeed::new(world_seed as u32), writes, before, light, track_reach: false, order: None, thread: None, canonical_shuffles: false, dimension }
     }
 
     /// Decorates in `order`, every source over all earlier ones; `thread`: the seed of the one worker's
@@ -250,10 +258,18 @@ impl Features {
             view.reach = self.track_reach.then(|| reach::Reach::new(&doubt));
             view.thread_random = self.thread_before(source, limit);
             let mut post_process = Mt19937::new(self.seed.chunk(source.0, source.1));
-            lake::lava_lake(&mut post_process, source, &mut view);
-            monster_room::monster_rooms(post_process, source, &mut view);
-            decorate::decorate_chunk(&self.seed, source, inputs, &mut view);
-            freeze::freeze_chunk(source, &(inputs.biomes)(source.0, source.1), &mut view);
+            match self.dimension {
+                Dimension::Overworld => {
+                    lake::lava_lake(&mut post_process, source, &mut view);
+                    monster_room::monster_rooms(post_process, source, &mut view);
+                    decorate::decorate_chunk(&self.seed, source, inputs, &mut view);
+                    freeze::freeze_chunk(source, &(inputs.biomes)(source.0, source.1), &mut view);
+                }
+                Dimension::Nether => {
+                    nether::decorate(&mut post_process, source, inputs, &mut view);
+                    decorate::decorate_chunk(&self.seed, source, inputs, &mut view);
+                }
+            }
             let inherited: Vec<_> = self.sources_before(source, limit).into_iter().flat_map(|n| self.source_writes(n, inputs).routed_to(source).collect::<Vec<_>>()).collect();
             let structure = liquid::structure_magma(&(inputs.loaded)(source.0, source.1), source);
             liquid::settle(&mut view, &structure, &inherited);

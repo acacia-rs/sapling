@@ -16,11 +16,14 @@ fn main() {
     let [x0, z0, x1, z1]: [i32; 4] = [x0, z0, x1, z1].map(|v| v.parse().unwrap());
     let (primary, _) = open(world).expect("oracle world");
     let registry = primary.registry();
+    // SAPLING_DIMENSION=1: Nether chunks.
+    let dimension: i32 = std::env::var("SAPLING_DIMENSION").map_or(0, |d| d.parse().expect("a dimension id"));
     let mut counts: BTreeMap<u32, (u64, i32, i32)> = BTreeMap::new();
     for cx in x0..=x1 {
         for cz in z0..=z1 {
-            let chunk = primary.load_column(ChunkKey::new(cx, cz, 0)).unwrap().expect("chunk saved").chunk;
-            for y in -64..320 {
+            let chunk = primary.load_column(ChunkKey::new(cx, cz, dimension)).unwrap().expect("chunk saved").chunk;
+            let ys = if dimension == 1 { 0..128 } else { -64..320 };
+            for y in ys {
                 for i in 0..256 {
                     let id = chunk.block(cx * 16 + (i & 15), y, cz * 16 + (i >> 4));
                     let entry = counts.entry(id).or_insert((0, y, y));

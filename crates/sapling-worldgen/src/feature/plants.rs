@@ -106,6 +106,10 @@ pub fn can_survive(view: &View, [x, y, z]: [i32; 3], block: Block) -> bool {
         Block::BrownMushroom | Block::RedMushroom => below.is_opaque_solid(),
         Block::SporeBlossom | Block::HangingRoots => view.block(x, y + 1, z).blocks_motion(),
         Block::MossCarpet => below != Block::Air,
+        // TODO: read the Nether plants' mayPlace off BDS; this is Java's nylium-or-soil rule.
+        Block::CrimsonRoots | Block::WarpedRoots | Block::NetherSprouts | Block::CrimsonFungus | Block::WarpedFungus => {
+            matches!(below, Block::CrimsonNylium | Block::WarpedNylium | Block::SoulSoil) || is_soil(below)
+        }
         Block::Azalea | Block::FloweringAzalea => is_soil(below) || below == Block::Clay,
         _ if (Block::SmallDripleafSouth..=Block::SmallDripleafEast).contains(&block) => {
             matches!(below, Block::Clay | Block::MossBlock) || view.block(x, y, z) == Block::Water && is_soil(below)

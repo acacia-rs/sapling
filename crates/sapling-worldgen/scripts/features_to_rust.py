@@ -14,7 +14,10 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import biome_expr  # noqa: E402
-from bds_packs import IDS, biomes, documents, load_order  # noqa: E402
+from bds_packs import IDS as OVERWORLD_IDS, NETHER_IDS, biomes, documents, load_order  # noqa: E402
+
+# Rules attach to biomes by tag at load, the Nether's too.
+IDS = {**OVERWORLD_IDS, **NETHER_IDS}
 from features_data import Features, distribution  # noqa: E402
 
 PASSES = ['first_pass', 'before_underground_pass', 'underground_pass', 'after_underground_pass', 'before_surface_pass',

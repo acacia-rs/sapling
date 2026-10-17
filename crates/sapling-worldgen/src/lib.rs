@@ -45,6 +45,13 @@ use density::Density;
 use feature::Features;
 use random::Xoroshiro;
 
+/// Which of BDS's generators a stage follows.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Dimension {
+    Overworld,
+    Nether,
+}
+
 /// Loaded columns (about 100 kB each) kept for neighbours' lakes and features.
 const LOADED_LIMIT: usize = 256;
 /// Post-processes kept (most are None: no start reaches the chunk), and ten times as many chunk states,
