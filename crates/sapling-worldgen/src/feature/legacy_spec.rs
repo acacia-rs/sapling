@@ -46,6 +46,17 @@ pub enum Legacy {
     SeaAnemone,
     /// The village piles (pile.rs).
     Pile(PileBlock),
+    /// The basalt deltas' and soul sand valleys' features (basalt.rs).
+    BasaltColumns,
+    BasaltPillar,
+    Delta,
+    /// `HugeFungusFeature` (fungus.rs): crimson, or warped without vines.
+    HugeFungus { crimson: bool },
+    /// The vine clusters (nether_vines.rs).
+    WeepingVines,
+    TwistingVines,
+    /// `NetherFossilFeature` (nether_fossil.rs).
+    NetherFossil,
 }
 
 /// The block of a village pile feature (`hay_pile_feature` and the others, vtable 14a9258d0).

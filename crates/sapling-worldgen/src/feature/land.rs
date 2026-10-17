@@ -69,6 +69,13 @@ impl Legacy {
             Legacy::CoralHang => super::coral::hang(ctx.view, ctx.random, at),
             Legacy::SeaAnemone => super::coral::anemone(ctx.view, ctx.random, at),
             Legacy::Pile(block) => super::pile::pile(ctx.view, ctx.random, at, block),
+            Legacy::BasaltColumns => super::basalt::columns(ctx.view, ctx.random, at),
+            Legacy::BasaltPillar => super::basalt::pillar(ctx.view, ctx.random, at),
+            Legacy::Delta => super::basalt::delta(ctx.view, ctx.random, at),
+            Legacy::HugeFungus { crimson } => super::fungus::huge_fungus(ctx.view, ctx.random, at, crimson),
+            Legacy::WeepingVines => super::nether_vines::weeping_cluster(ctx.view, ctx.random, at),
+            Legacy::TwistingVines => super::nether_vines::twisting_cluster(ctx.view, ctx.random, at),
+            Legacy::NetherFossil => super::nether_fossil::place(ctx, at),
         }
     }
 }
