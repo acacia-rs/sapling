@@ -1,5 +1,6 @@
 //! BDS's jigsaw structures: the pools, elements and processors its C++ registers for the
-//! hardcoded ones (1480bbe90 villages, 1480fe430 ancient cities) in pools.txt, the behaviour
+//! hardcoded ones (1480bbe90 villages, 1480fe430 ancient cities) in pools.txt, bastions
+//! (1480ed800, 14811b3f0, 1481118c0) in pools_bastion.txt, the behaviour
 //! packs' v2 ones in pools_v2.txt, and the assemblers that grow pieces from them.
 //! docs/research/worldgen-bds-jigsaw.md.
 
@@ -13,7 +14,7 @@ mod v2;
 use std::collections::HashMap;
 use std::sync::OnceLock;
 
-use super::template::{Capped, Predicate, Rule, Template, named, try_named};
+use super::template::{Capped, LinearPos, Predicate, Rule, Template, named, try_named};
 use crate::block::Block;
 
 /// A pane's or fence's states before `template::rejoin` joins it.
@@ -22,7 +23,7 @@ const UNJOINED: &str = "minecraft:connection_east=0,minecraft:connection_north=0
 pub use assemble::{Assembler, Variant, middle};
 pub use v2::{StartHeight, V2Start};
 pub use element::{Element, ElementKind, Projection};
-pub use piece::{AncientCityClass, Piece, VillageClass};
+pub use piece::{AncientCityClass, Piece, PieceClass, VillageClass};
 
 pub struct Pool {
     pub name: String,
@@ -63,7 +64,7 @@ impl Data {
 /// The parsed pools.txt.
 pub fn data() -> &'static Data {
     static DATA: OnceLock<Data> = OnceLock::new();
-    DATA.get_or_init(|| parse(&[include_str!("pools.txt"), include_str!("pools_v2.txt")].concat()))
+    DATA.get_or_init(|| parse(&[include_str!("pools.txt"), include_str!("pools_v2.txt"), include_str!("pools_bastion.txt")].concat()))
 }
 
 fn leak<T>(value: T) -> &'static T {
@@ -97,14 +98,22 @@ fn predicate(text: &str, lists: &HashMap<String, Vec<String>>) -> Predicate {
     }
 }
 
-/// `<rule>;...` (or `-` for none).
+/// `lp=<axis>:<min>:<max>:<min distance>:<max distance>`.
+fn position(text: &str) -> LinearPos {
+    let fields: Vec<&str> = text.strip_prefix("lp=").unwrap_or_else(|| panic!("bad position test {text}")).split(':').collect();
+    let axis = ["x", "y", "z"].iter().position(|a| *a == fields[0]).expect("an axis");
+    LinearPos { min: fields[1].parse().unwrap(), max: fields[2].parse().unwrap(), min_d: fields[3].parse().unwrap(), max_d: fields[4].parse().unwrap(), axis }
+}
+
+/// `<rule>;...` (or `-` for none), a rule being `input|location|output` or `input|location|position|output`.
 fn rule_list(text: &str, lists: &HashMap<String, Vec<String>>) -> &'static [Rule] {
     let parsed = text
         .split(';')
         .filter(|r| *r != "-")
         .map(|r| {
             let parts: Vec<&str> = r.split('|').collect();
-            Rule { input: predicate(parts[0], lists), location: predicate(parts[1], lists), output: output(parts[2]) }
+            let position = (parts.len() == 4).then(|| position(parts[2]));
+            Rule { input: predicate(parts[0], lists), location: predicate(parts[1], lists), position, output: output(parts[parts.len() - 1]) }
         })
         .collect::<Vec<_>>();
     Box::leak(parsed.into_boxed_slice())

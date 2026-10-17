@@ -52,16 +52,20 @@ impl<'a, R: JigsawRandom> Assembler<'a, R> {
     }
 
     /// The queued placer's start (141edde60): the start element turned so its `anchor` jigsaw
-    /// lands on `start`'s column, `height(centre) - 1` below the anchor, within `max_distance`.
+    /// lands on `start`'s column, `height(centre) - 1` below the anchor, within `max_distance`. An
+    /// empty anchor (bastions) keeps the element's origin on the column and draws no shuffle (141ede244).
     pub fn start_queued(&mut self, element: &'static Element, start: (i32, i32, i32), rotation: Rotation, anchor: &str, max_distance: i32) {
-        let mut jigsaws = element.jigsaws(start, rotation);
-        self.random.shuffle(&mut jigsaws);
+        let mut jigsaws = if anchor.is_empty() { Vec::new() } else { element.jigsaws(start, rotation) };
+        if !anchor.is_empty() {
+            self.random.shuffle(&mut jigsaws);
+        }
         let (dx, dy, dz) = jigsaws.iter().find(|j| j.name == anchor).map_or((0, 0, 0), |j| (start.0 - j.pos.0, j.pos.1 - start.1, start.2 - j.pos.2));
         let origin = (start.0 + dx, 0, start.2 + dz);
         let bb = element.bbox(origin, rotation);
         let h = (self.height)(middle(bb.x0, bb.x1), middle(bb.z0, bb.z1));
         let mut piece = Piece::new(element, origin, rotation, 0);
         piece.shift_y(h - dy - bb.y0 - 1);
+        piece.pivot = piece.origin;
         let b = piece.bb;
         let (cx, cy, cz) = (middle(b.x0, b.x1), middle(b.y0, b.y1), middle(b.z0, b.z1));
         let limit = BoundingBox::new(cx - max_distance, cy - max_distance, cz - max_distance, cx + max_distance, cy + max_distance, cz + max_distance);
@@ -198,6 +202,7 @@ impl<'a, R: JigsawRandom> Assembler<'a, R> {
                         continue;
                     }
                     let mut piece = Piece::new(element, origin, rotation, source.depth + 1);
+                    piece.pivot = source.pivot;
                     if self.variant == Variant::V2 {
                         let surface = (self.height)(jigsaw.pos.0, jigsaw.pos.2);
                         let junction = link(source, jigsaw, &mut piece, candidate, surface);

@@ -1,7 +1,7 @@
 """jdata.py <out pools.txt> <jsonl>...: turns jpools.py output into the jigsaw data file sapling loads.
 
-Lines: `l <list> <block>,...` block lists; `r <processors> <rule>;...` with rule `in|location|output`, a
-predicate being `*`, `b=<block>`, `rb=<block>@<p>`, `nl=<list>` or `lr=<list>@<p>`; `e <element> t <template>
+Lines: `l <list> <block>,...` block lists; `r <processors> <rule>;...` with rule `in|location|output` or
+`in|location|lp=<axis>:<min>:<max>:<min d>:<max d>|output` (a linear position test), a predicate being `*`, `b=<block>`, `rb=<block>@<p>`, `nl=<list>` or `lr=<list>@<p>`; `e <element> t <template>
 <processors|-> <projection> <post> <aliases|->` template elements, `e <element> f <feature>` feature elements;
 `p <pool> <fallback|-> <element>*<weight> ...`; `a <alias set> <from>=<to> ...`."""
 import json
@@ -21,7 +21,17 @@ CROPS = {
     'carrot_carrot_farm': [('wheat', 'carrots')],
 }
 
+# Axis-aligned linear position tests (vtable 14a89af30) by processor list: jpools.py does not read the test's
+# fields, so they are the constructor's arguments at 148113af9 (min, max chance, min, max distance, axis Y).
+POSITION_TESTS = {'bastion_treasure_room_highrampart': 'lp=y:0.0:0.05:0:100'}
+
 lists, procs, elements, pools, aliases, feature_recs = {}, {}, {}, [], [], {}
+
+
+def rule_text(processors, r):
+    if r['position'][0] == 'always_true':
+        return f"{pred(r['input'])}|{pred(r['location'])}|{r['output']}"
+    return f"{pred(r['input'])}|{pred(r['location'])}|{POSITION_TESTS[short(processors)]}|{r['output']}"
 
 
 def list_name(blocks):
@@ -59,9 +69,7 @@ for path in sys.argv[2:]:
             continue
         d = json.loads(line)
         if 'processors' in d:
-            rules = [f"{pred(r['input'])}|{pred(r['location'])}|{r['output']}" for r in d['rules']]
-            if r_pos := [r for r in d['rules'] if r['position'][0] != 'always_true']:
-                raise ValueError(r_pos)
+            rules = [rule_text(d['processors'], r) for r in d['rules']]
             crops = CROPS.get(short(d['processors']).removeprefix('abandoned_'), [])
             procs[d['processors']] = [f'b={a}|*|{b}[growth=7]' for a, b in crops] + rules
         elif 'feature_rec' in d:

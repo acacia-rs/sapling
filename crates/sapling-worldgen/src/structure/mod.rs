@@ -5,6 +5,7 @@
 mod adjust;
 mod ancient_city;
 mod area;
+pub(crate) mod bastion;
 mod canvas;
 mod data_driven;
 mod igloo;
