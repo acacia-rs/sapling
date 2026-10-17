@@ -21,7 +21,7 @@ impl BlockIds {
         Self { ids: Block::ALL.iter().map(|&block| id(block)).collect(), templates: Block::templates().map(id).collect() }
     }
 
-    fn id(&self, block: Block) -> u32 {
+    pub(crate) fn id(&self, block: Block) -> u32 {
         match block {
             Block::Template(i) => self.templates[i as usize],
             _ => self.ids[block.index()],

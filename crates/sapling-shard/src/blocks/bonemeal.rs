@@ -1,5 +1,6 @@
 //! Bone meal on a plant, as BDS grew them for a creative player (docs/research/bone-meal.md).
-// TODO: a sapling takes it, ages, and grows no tree; outside creative a crop's step is the Java
+// Saplings take theirs in saplings.rs.
+// TODO: outside creative a crop's step is the Java
 // game's 2 to 5, which BDS's steps of 2 to 4 fit; where grass and flowers come up, and which, is a guess at BDS's scatter; kelp,
 // vines, mushrooms, cocoa, moss, sea grass and the rest take none.
 
@@ -15,8 +16,6 @@ const RIPE_BUSH: u8 = 3;
 /// What a stem grows by a click: BDS's went 0, 3, 6, 7.
 const STEM_STEP: u8 = 3;
 const CANE_HEIGHT: i32 = 3;
-/// The chance a click ages a sapling outside creative: the Java game's.
-const SAPLING_AGES: f32 = 0.45;
 const BAMBOO_HEIGHT: i32 = 12;
 const CROPS: [&str; 4] = ["wheat", "carrots", "potatoes", "beetroot"];
 const STEMS: [&str; 2] = ["melon_stem", "pumpkin_stem"];
@@ -105,28 +104,33 @@ fn grown(level: &Level, pos: BlockPos, creative: bool, roll: &mut dyn FnMut() ->
             let over = [x, top + 1, z];
             Some(if tall < BAMBOO_HEIGHT && is_air(level, over) { vec![(over, state(level, "bamboo", "bamboo_leaf_size=small_leaves")?)] } else { Vec::new() })
         }
-        // Outside creative BDS's sapling aged at its first click and stood six more before it grew.
-        _ if name.ends_with("_sapling") => {
-            let aged = with_property(level.registry(), id, "age_bit", "1").filter(|aged| !creative && *aged != id && roll() < SAPLING_AGES);
-            Some(aged.map(|aged| (pos, aged)).into_iter().collect())
-        }
         _ => None,
     }
 }
 
 /// Bone meal on the block at `pos`: false when it takes none.
 pub(super) fn feed(world: &mut World, layer: Entity, pos: BlockPos, creative: bool) -> bool {
+    if let Some(took) = super::saplings::fertilized(world, layer, pos, creative) {
+        if took {
+            particle(world, layer, pos);
+        }
+        return took;
+    }
     let rolls: Vec<f32> = {
         let mut dice = world.get_resource_or_insert_with(Dice::default);
         (0..ROLLS).map(|_| dice.fraction()).collect()
     };
     let mut rolls = rolls.into_iter();
     let Some(grown) = level(world, layer).and_then(|level| grown(level, pos, creative, &mut || rolls.next().unwrap_or(0.5))) else { return false };
-    // From the cell's corner, as BDS sent it.
-    let [x, y, z] = pos.map(|c| c as f32);
-    send::to_viewers(world, layer, pos, &[sapling_net::encode(&LevelEvent { event: LevelEventEvent::ParticleCropGrowth, position: Vec3f { x, y, z }, data: 0 })]);
+    particle(world, layer, pos);
     for (cell, id) in grown {
         send::set(world, layer, cell, id);
     }
     true
+}
+
+/// Bone meal's sparkle, from the cell's corner as BDS sent it.
+fn particle(world: &mut World, layer: Entity, pos: BlockPos) {
+    let [x, y, z] = pos.map(|c| c as f32);
+    send::to_viewers(world, layer, pos, &[sapling_net::encode(&LevelEvent { event: LevelEventEvent::ParticleCropGrowth, position: Vec3f { x, y, z }, data: 0 })]);
 }

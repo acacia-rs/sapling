@@ -1,6 +1,7 @@
 //! Storage whose holes are generated terrain. See docs/DESIGN.md "Storage".
 
 mod convert;
+mod grow;
 #[cfg(test)]
 mod tests;
 

@@ -29,14 +29,16 @@ it does on BDS and the two captures can be diffed:
    does not names a command or a form still missing.
 
    What a click does to a block (`docs/research/block-uses.md`, `clicks`), primed TNT (`tnt`) and
-   bone meal (`docs/research/bone-meal.md`, `bonemeal`) are drilled and built; left there: trees
-   from saplings, which need a tree generator the shard does not have. Fire is lit, spreads,
+   bone meal (`docs/research/bone-meal.md`, `bonemeal`) are drilled and built. Saplings,
+   propagules and azaleas grow worldgen's trees by bone meal and random tick, by BDS's decompiled
+   rules (`docs/research/saplings.md`, `blocks/saplings.rs`); not drilled against BDS, and no
+   light is asked for. Fire is lit, spreads,
    burns and is put out (`docs/research/fire.md`, `fire`, `quench`), its spread by the Java game's odds. Crops, stems and berry bushes
    grow by themselves at BDS's pace, a ripe stem bears, cane, cactus and bamboo grow and
    farmland dries and is trodden down, grass spreads to open dirt, leaves decay when their log
    goes, and cocoa, nether wart and pitcher crops grow (`docs/research/growth.md`, `crops`,
    `grows`, `grows2`, `leaves`, `trample`);
-   left: trees from saplings and the rest of what random ticks do.
+   left: the rest of what random ticks do.
 
 ## 2. Survival gaps still open
 

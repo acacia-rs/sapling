@@ -30,6 +30,7 @@ use std::sync::Arc;
 pub use biome::ChunkBiomes;
 pub use block::Block;
 #[doc(hidden)]
+pub use feature::grow::place_feature;
 pub use feature::reach::{Cells as ReachCells, Tries as ReachTries};
 #[doc(hidden)]
 pub use structured::replay::{ReplayWrite, StructureStep};

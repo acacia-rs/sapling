@@ -44,10 +44,10 @@ Measured with `bds_command_probe bonemeal2` (`bds-bonemeal2.txt`), eight clicks 
 
 Sapling grows a crop 2 to 5 stages a click, the Java game's step, which these fit, and a bush
 one; a ripe crop takes none and spends none, where in creative it still took it. A sapling
-ages with the Java game's 45 in 100 a click and then stays a sapling.
+takes it as BDS's `SaplingBlock::onFertilized` does (saplings.md): a tree at once in creative,
+else 45 in 100 a click to age and then to grow.
 
 ## Left
 
-- Trees from saplings.
 - Kelp, sea grass, vines, mushrooms, cocoa, moss, rooted dirt and the other plants that take it.
 - A click on sugar cane or bamboo that is fully grown.

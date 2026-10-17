@@ -31,6 +31,7 @@ mod place;
 mod plates;
 mod pots;
 mod rails;
+mod saplings;
 mod scaffolds;
 mod redstone;
 mod request;

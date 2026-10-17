@@ -125,7 +125,8 @@ seconds in, half of them by 19: BDS's pace.
 ## Left
 
 - Light: the game grows nothing below light 9; sapling asks for none.
-- Trees from saplings: measured above, not built. Grass under a block does not die.
+- Trees from saplings: built from the decompile (saplings.md), not checked against the timing
+  measured above. Grass under a block does not die.
 - Farmland getting wet was not measured; a pumpkin's facing, and what ground a fruit takes, are
   the Java game's.
 - Everything else a random tick does: mycelium, ice and snow, copper, vines, kelp; fire
