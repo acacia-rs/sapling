@@ -3,7 +3,7 @@ minecraft:armadillo	xp=1-3 strolls=0.14 panics=0.28
 minecraft:axolotl	breathes_water xp=1-3
 minecraft:bat	no_fall
 minecraft:bee	no_fall xp=1-3
-minecraft:blaze	fire_immune no_fall xp=10-10 strolls=0.23 attack=0 speed=0.23 sees=48 shoots=173 aims=83 volley=3x6 fires
+minecraft:blaze	fire_immune no_fall xp=10-10 strolls=0.23 attack=0 speed=0.23 sees=48 shoots=173 aims=83 volley=3x6 shot=small_fireball
 minecraft:bogged	breathes_water burns_in_sun xp=5-5 strolls=0.25 attack=0 speed=0.25 sees=16 shoots=71 hits=poison:112
 minecraft:breeze	no_fall xp=10-10 strolls=0.4
 minecraft:camel	xp=1-3 strolls=0.18 panics=0.36
@@ -36,7 +36,7 @@ minecraft:hoglin	xp=5-5 strolls=0.12
 minecraft:horse	xp=1-3
 minecraft:husk	breathes_water xp=5-5 strolls=0.23 attack=3 speed=0.23 sees=35 hits=hunger:600
 minecraft:iron_golem	no_fall strolls=0.15 attack=7 upto=21 speed=0.15 sees=16 provoked
-minecraft:llama	xp=1-3 strolls=0.175 panics=0.3
+minecraft:llama	xp=1-3 strolls=0.175 panics=0.3 attack=0 speed=0.25 sees=16 provoked shoots=60 aims=41 shot=llama_spit calms=79
 minecraft:magma_cube	fire_immune no_fall burns_in_sun
 minecraft:mooshroom	xp=1-3 strolls=0.2 panics=0.3125
 minecraft:mule	xp=1-3 strolls=0.1225 panics=0.21

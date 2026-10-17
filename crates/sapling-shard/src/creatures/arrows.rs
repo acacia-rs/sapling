@@ -2,7 +2,7 @@
 //! "Skeletons"): loosed at its prey, one flies by its own drag and weight, sticks in the block
 //! it meets and hurts the player it meets, with its archer's effect if it has one. And a
 //! blaze's small fireballs ("The blaze"), which fly straight, burn whom they hit and are gone
-//! where they land.
+//! where they land. And a llama's spit ("Hit back by day"), which falls and throws nobody.
 // TODO: an arrow is not picked up, burns nothing and goes after a minute; a mob it hits is not
 // thrown; its
 // aim and its spread are the Java game's, fitted to no more than the speeds BDS showed.
@@ -39,13 +39,23 @@ pub(super) struct Shot {
     /// It stays in the block it meets, and it sets whom it hits on fire for this many ticks.
     sticks: bool,
     burns: u16,
+    /// It throws the player it hits as a hit does.
+    throws: bool,
     sound: &'static str,
 }
 
-pub(super) const ARROW: Shot = Shot { kind: "minecraft:arrow", ahead: 1.0, held: 1.61, speed: 1.6, aimed: 0.6, loft: 0.2, drag: 0.99, weight: 0.05, harm: None, sticks: true, burns: 0, sound: "bow" };
+const ARROW: Shot = Shot { kind: "minecraft:arrow", ahead: 1.0, held: 1.61, speed: 1.6, aimed: 0.6, loft: 0.2, drag: 0.99, weight: 0.05, harm: None, sticks: true, burns: 0, throws: true, sound: "bow" };
 /// research/captures/bds-blaze.txt: from 1.4 up the blaze, 1.15 to 1.42 a tick and no slower
 /// after; bds-kinds2.txt: 5 off the player it hit, which burnt five seconds.
-pub(super) const FIREBALL: Shot = Shot { kind: "minecraft:small_fireball", ahead: 0.0, held: 1.4, speed: 1.3, aimed: 0.9, loft: 0.0, drag: 1.0, weight: 0.0, harm: Some(5.0), sticks: false, burns: 100, sound: "shoot" };
+const FIREBALL: Shot = Shot { kind: "minecraft:small_fireball", ahead: 0.0, held: 1.4, speed: 1.3, aimed: 0.9, loft: 0.0, drag: 1.0, weight: 0.0, harm: Some(5.0), sticks: false, burns: 100, throws: true, sound: "shoot" };
+/// research/captures/bds-provoke2.txt: from 1.58 up the llama at 1.5 a tick, falling 0.06 a tick
+/// more; 1 off the player it hit, which it did not throw. Aimed as the Java game's.
+const SPIT: Shot = Shot { kind: "minecraft:llama_spit", ahead: 0.0, held: 1.58, speed: 1.5, aimed: 0.6, loft: 0.2, drag: 0.99, weight: 0.06, harm: Some(1.0), sticks: false, burns: 0, throws: false, sound: "shoot" };
+
+/// What a kind shoots, by the name of it in `mob-traits.tsv` (`shot=`); arrows where none is named.
+pub(super) fn shot_named(name: Option<&str>) -> Shot {
+    [FIREBALL, SPIT].into_iter().find(|shot| shot.kind.strip_prefix("minecraft:") == name).unwrap_or(ARROW)
+}
 
 const SIZE: [f32; 2] = [0.25, 0.25];
 /// Each part of a shot's speed is off by up to this.
@@ -153,7 +163,7 @@ fn fly(world: &mut World, arrow: Entity, layer: Entity, id: u64, now: u64) -> Op
             true => {
                 let (archer, gives) = world.get::<Arrow>(arrow).map(|arrow| (arrow.archer.clone(), arrow.gives))?;
                 // One proof against fire lost nothing to a fireball on BDS (bds-blaze.txt).
-                let landed = !(shot.burns > 0 && vitals::is_fireproof(world, struck)) && vitals::shot(world, struck, cost, &archer, body.at);
+                let landed = !(shot.burns > 0 && vitals::is_fireproof(world, struck)) && vitals::shot(world, struck, cost, &archer, body.at, shot.throws);
                 if let Some((effect, ticks)) = gives.filter(|_| landed) {
                     vitals::afflict(world, struck, effect, ticks);
                 }

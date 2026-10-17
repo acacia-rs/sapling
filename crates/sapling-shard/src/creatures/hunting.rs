@@ -111,7 +111,9 @@ fn pick(world: &mut World, entity: Entity, layer: Entity, id: u64, kind: &str, b
     let had = world.get::<Hunter>(entity)?.prey;
     let sight = sapling_data::mob_traits(kind).hunts?.sees;
     let hunts = world.resource::<Settings>().0.difficulty != Difficulty::Peaceful;
-    let mut found = had.filter(|_| hunts).and_then(|prey| Some((prey, seen(world, prey, layer, body.at, sight)?)));
+    let since = world.get::<Hunter>(entity)?.since;
+    let calm = sapling_data::mob_traits(kind).hunts?.calms.is_some_and(|calms| now >= since + u64::from(calms));
+    let mut found = had.filter(|_| hunts && !calm).and_then(|prey| Some((prey, seen(world, prey, layer, body.at, sight)?)));
     // A spider under the sun by day took none on BDS; under a roof or by night it did
     // (research/captures/bds-spiders.txt).
     let head = [body.at[0], body.at[1] + body.size[1], body.at[2]].map(|c| c.floor() as i32);
@@ -149,9 +151,9 @@ pub(super) fn provoke(world: &mut World, entity: Entity, layer: Entity, id: u64,
     let hunted = world.resource::<Settings>().0.difficulty != Difficulty::Peaceful && seen(world, player, layer, body.at, hunts.sees).is_some();
     if hunted && world.get::<Hunter>(entity).is_some_and(|hunter| hunter.prey != Some(player)) {
         take(world, entity, layer, id, kind, body, Some(player));
-        // BDS's first hit back came a second or more after.
+        // BDS's first hit back came a second or more after, a llama's spit as long as it aims.
         let now = world.resource::<Tick>().0;
-        world.get_mut::<Hunter>(entity).expect("a hunter, above").ready = now + COOLDOWN;
+        world.get_mut::<Hunter>(entity).expect("a hunter, above").ready = now + hunts.aims.map_or(COOLDOWN, u64::from);
     }
 }
 
@@ -209,7 +211,7 @@ pub(super) fn strike(world: &mut World, entity: Entity, layer: Entity, id: u64, 
     }
     if let Some(every) = hunts.shoots.filter(|_| prey.is_some()) {
         let feet = world.get::<Position>(prey?)?.feet;
-        let shot = if hunts.fires { arrows::FIREBALL } else { arrows::ARROW };
+        let shot = arrows::shot_named(hunts.shot);
         let volley = world.get::<Hunter>(entity)?.volley;
         if let Some((left, _)) = volley.filter(|(_, due)| now >= *due) {
             arrows::loose(world, layer, entity, kind, body, feet, hunts.gives, shot);

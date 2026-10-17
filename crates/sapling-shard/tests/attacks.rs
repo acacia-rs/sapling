@@ -129,6 +129,28 @@ fn a_spider_in_the_sun_and_a_polar_bear_turn_on_whoever_hits_them() {
 }
 
 #[test]
+fn a_llama_hit_spits_once_for_1_and_throws_nobody() {
+    // research/captures/bds-provoke2.txt: the spit 2.07 s after the hit, 20 to 19, no SetEntityMotion; let go 3.95 s after.
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    h.remote.run(|ctx| {
+        ctx.set_difficulty(sapling_api::Difficulty::Easy);
+        assert!(ctx.spawn_entity("minecraft:llama", [0.5, 65.0, 3.5]).is_some());
+    });
+    let llama = (0..5).flat_map(|_| all::<AddEntity>(h.tick_all().to(1))).collect::<Vec<_>>().remove(0).runtime_id;
+    h.receive(1, &attack(llama));
+    let (mut spat, mut hurt, mut thrown) = (Vec::new(), Vec::new(), 0);
+    for tick in 0..160 {
+        let sent = h.tick_all().to(1).to_vec();
+        spat.extend(all::<AddEntity>(&sent).iter().filter(|added| added.entity_type == "minecraft:llama_spit").map(|_| tick));
+        hurt.extend(all::<UpdateAttributes>(&sent).into_iter().filter(|update| update.runtime_entity_id == 1).flat_map(|update| update.attributes).filter(|attribute| attribute.name == "minecraft:health").map(|attribute| attribute.current));
+        thrown += all::<acacia_proto::packets::SetEntityMotion>(&sent).iter().filter(|motion| motion.runtime_entity_id == 1).count();
+    }
+    assert!(spat.len() == 1 && (38..=44).contains(&spat[0]), "{spat:?}");
+    assert_eq!((hurt.first(), thrown), (Some(&19.0), 0), "{hurt:?}");
+}
+
+#[test]
 fn an_iron_golem_hit_hits_back_for_7_to_21_and_throws_its_hitter_up() {
     // research/captures/bds-golem.txt: on easy half and one more, 4.5 to 11.5; thrown up at 0.4288.
     let mut h = Harness::new();

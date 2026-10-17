@@ -65,11 +65,14 @@ pub(crate) fn blasted(world: &mut World, player: Entity, amount: f32, from: [f32
     amount > 0.0 && hit_from(world, player, amount, from, push, Cause::EntityExplosion)
 }
 
-/// An arrow of a mob of `kind` that flew from `from` hurts a player for `amount` and throws it
-/// as a hit does. False where it took nothing.
-pub(crate) fn shot(world: &mut World, player: Entity, amount: f32, kind: &str, from: [f32; 3]) -> bool {
+/// An arrow of a mob of `kind` that flew from `from` hurts a player for `amount` and, if it
+/// `throws`, throws it as a hit does. False where it took nothing.
+pub(crate) fn shot(world: &mut World, player: Entity, amount: f32, kind: &str, from: [f32; 3], throws: bool) -> bool {
     world.entity_mut(player).insert(death::Slayer(kind.to_owned()));
-    let took = hit_from(world, player, amount, from, [0.0; 3], Cause::Projectile);
+    let took = match throws {
+        true => hit_from(world, player, amount, from, [0.0; 3], Cause::Projectile),
+        false => is_mortal(world, player) && hurt(world, player, amount, Cause::Projectile),
+    };
     world.entity_mut(player).remove::<death::Slayer>();
     took
 }

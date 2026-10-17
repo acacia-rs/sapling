@@ -46,7 +46,7 @@ def pace(entity, behaviour):
 
 # Drilled on BDS, not read from the packs (docs/research/mob-attacks.md, "Other kinds").
 HUNTS = {
-    "minecraft:blaze": "attack=0 speed=0.23 sees=48 shoots=173 aims=83 volley=3x6 fires",
+    "minecraft:blaze": "attack=0 speed=0.23 sees=48 shoots=173 aims=83 volley=3x6 shot=small_fireball",
     "minecraft:bogged": "attack=0 speed=0.25 sees=16 shoots=71 hits=poison:112",
     "minecraft:cave_spider": "attack=2 speed=0.3 sees=16 by_dark",
     "minecraft:creeper": "attack=0 speed=0.25 sees=16 explodes=3",
@@ -54,7 +54,8 @@ HUNTS = {
     "minecraft:endermite": "attack=2 speed=0.25 sees=16",
     "minecraft:husk": "attack=3 speed=0.23 sees=35 hits=hunger:600",
     "minecraft:iron_golem": "attack=7 upto=21 speed=0.15 sees=16 provoked",
-    "minecraft:piglin": "attack=9 speed=0.35 sees=16",
+    "minecraft:llama": "attack=0 speed=0.25 sees=16 provoked shoots=60 aims=41 shot=llama_spit calms=79",
+    "minecraft:piglin":"attack=9 speed=0.35 sees=16",
     "minecraft:piglin_brute": "attack=10 speed=0.35 sees=16",
     "minecraft:pillager": "attack=0 speed=0.35 sees=16 shoots=46 closes",
     "minecraft:polar_bear": "attack=6 speed=0.25 sees=16 provoked every=39",

@@ -290,8 +290,9 @@ A wolf and a zombified piglin hunt none but a survival player that hit them, fro
 (`hunting::provoke`), and so do an iron golem, with a hit of 7 to 21 and its throw, and a polar
 bear, every 39 ticks without its rearing; a spider dazzled by the sun takes its hitter too. A
 piglin hunts any survival player, gold worn or not, and does not turn into a zombified one. A
-piglin's fellows do not join in, and a golem guards no villager. The llama's spit, the panda and
-the bee are not built.
+piglin's fellows do not join in, and a golem guards no villager. A llama hit spits once, 41 ticks
+after, for 1 and no throw (`arrows::SPIT`, aimed as the Java game's), and lets go 79 ticks after;
+it shows no charge. The panda and the bee are not built.
 
 `creatures/hunting.rs`, for kinds with `attack=`, `speed=` and `sees=` in `mob-traits.tsv`: the
 zombie and the seven kinds above, each with its numbers and what its hit gives (not the cave
