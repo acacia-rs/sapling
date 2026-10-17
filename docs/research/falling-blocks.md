@@ -253,6 +253,14 @@ What is missing or wrong:
   in one step.
 - Snow layers fall but do not slide or break on torches. Suspicious sand and gravel break on landing with no drop.
 
+## Saved actor
+
+`FallingBlockActor::readAdditionalSaveData` (145985b20, vtable slot 14a887b10; the slot before, 145986750, is
+presumably the write) reads legacy `Tile` and `Data` bytes into `mFallingBlockId` when both are present, otherwise
+the `FallingBlock` compound (`{name, states, version}`) into `mFallingBlockSerId`, then `Time` as an unsigned byte
+(`movzx`) into the int `mTime`. The write was not decompiled; sapling writes a byte, so a fall past 255 ticks
+would wrap if BDS's does too.
+
 ## Unverified / inferred
 
 - How the generic sync handles falling blocks on the wire: MoveActorDelta and SetActorMotion every tick, or a

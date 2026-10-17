@@ -6,6 +6,8 @@
 
 mod flight;
 
+pub(crate) use flight::from_storage;
+
 use bevy_ecs::prelude::*;
 use sapling_api::{BlockPos, Face};
 use sapling_world::BlockRegistry;

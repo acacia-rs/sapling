@@ -174,6 +174,27 @@ fn a_world_folders_mobs_move_and_are_saved_where_they_are() {
 }
 
 #[test]
+fn a_world_folders_falling_blocks_fall_on_and_are_saved_until_placed() {
+    let registry = sapling_world::BlockRegistry::vanilla();
+    let (sand, sand_hash) = registry.states_of("minecraft:sand").next().map(|(id, state)| (id, state.network_hash)).unwrap();
+    let falling = |id, at| sapling_world::new_falling_block_actor(id, sand_hash, &registry, at, [0.0; 3], 1).unwrap();
+    let storage = floor_with([falling(-2, [9.5, 70.0, 9.5]), falling(-3, [12.5, 300.0, 12.5])].concat());
+    let mut h = Harness::with(common::config(), World::with_storage(storage.clone()));
+    enter_stored(&mut h, 1);
+    let kept = |storage: &sapling_world::MemoryStorage| {
+        let stored = storage.load_column(ChunkPos::new(0, 0), 0).unwrap().expect("the column");
+        let falling: Vec<(i64, f32)> = sapling_world::actors(&stored.actors).unwrap().into_iter().map(|actor| (actor.unique_id, actor.position[1])).collect();
+        (falling, stored.chunk.block(9, 64, 9) == sand)
+    };
+
+    (0..60).for_each(|_| drop(h.tick(1)));
+    h.shard.save_worlds();
+    let (falling, placed) = kept(&storage);
+    assert!(placed, "the low one landed on the floor");
+    assert!(matches!(falling[..], [(-3, y)] if y < 300.0 && y > 64.0), "only the high one is kept, lower than it was: {falling:?}");
+}
+
+#[test]
 fn a_mob_is_pushed_moved_and_removed_and_presses_a_plate() {
     let mut h = Harness::new();
     h.enter(1, "Alex");

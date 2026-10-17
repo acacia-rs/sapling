@@ -12,7 +12,7 @@ use bevy_ecs::prelude::*;
 
 use crate::blocks::{self, Dice};
 use crate::body::{Body, Physics};
-use crate::components::{InLayer, NetId, Position, Stage, Tick};
+use crate::components::{InLayer, NetId, Position, Stage};
 use crate::{entities, experience, mobs};
 
 /// How experience is split into orbs, largest first; above [`MANY`], into [`MANY_ORBS`] equal ones.
@@ -95,8 +95,7 @@ pub(crate) fn throw(world: &mut World, layer: Entity, at: [f32; 3], value: i32) 
     let body = Body::new(at, [(throw() - 0.1) * 2.0, throw() * 2.0, (throw() - 0.1) * 2.0], [SIZE; 2]);
     let entity = entities::spawn(world, layer, KIND, body, at, |id| Some(announce(id, value, &body)))?;
     world.entity_mut(entity).insert(Orb { value, age: 0, last_search: 0, target: None });
-    // Numbered as a spawned mob is (creatures.rs).
-    let unique_id = ((world.resource::<Tick>().0 as i64) << 32) | (world.get::<NetId>(entity)?.0 as i64 & 0xffff_ffff);
+    let unique_id = entities::new_unique_id(world, entity)?;
     entities::keep(world, entity, layer, unique_id, sapling_world::new_orb_actor(unique_id, value, at, body.motion));
     Some(entity)
 }

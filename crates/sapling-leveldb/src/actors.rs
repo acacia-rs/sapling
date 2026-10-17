@@ -3,10 +3,12 @@
 //! compounds under the chunk's `Entity` tag. Either way this crate hands them out as one record
 //! (records.rs). Sources: research/worlds-and-ecs.md "Actors".
 
+mod falling;
 mod lying;
 
 use std::collections::HashSet;
 
+pub use falling::{falling_block, new_falling_block_actor};
 pub use lying::{new_item_actor, new_orb_actor, orb_value};
 
 use acacia_proto::nbt::{self, LittleEndian, List, Value};

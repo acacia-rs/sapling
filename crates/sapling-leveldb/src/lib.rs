@@ -20,7 +20,7 @@ mod world;
 use std::path::PathBuf;
 
 pub use actor_harm::harmed_actor;
-pub use actors::{Actor, Painting, State, actors, moved_actor, new_actor, new_item_actor, new_orb_actor, orb_value, stored_actors};
+pub use actors::{Actor, Painting, State, actors, falling_block, moved_actor, new_actor, new_falling_block_actor, new_item_actor, new_orb_actor, orb_value, stored_actors};
 pub use item::ItemStack;
 pub use player::PlayerData;
 pub use block_entities::{BlockEntity, block_entities, with_block_entity, without_block_entity};

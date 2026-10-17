@@ -157,7 +157,7 @@ onto it.
 | --- | --- |
 | candle | `candles` one more, to 3; `item.use.on` from the middle of the cell over it, naming the new block |
 | sea pickle | `cluster_count` one more, to 3; the same sound |
-| snow layer | `height` one more; `place` from its middle |
+| snow layer | `height` one more, to 7, which is eight layers and still a snow layer; the ninth went on top as a new layer (`bds-snowpile.txt`); `place` from its middle |
 | pink petals, wildflowers, leaf litter | `growth` one more, to 3; `place` from the cell's floor |
 | turtle egg | `turtle_egg_count` one more, to four eggs; `place` |
 | oak slab | a double slab at the second, `item.use.on` from its middle; the third went on top as a slab |
