@@ -1,7 +1,7 @@
 """Bedrock .mcstructure templates (little-endian NBT) in the shape templates_to_rust.py reads Java .nbt ones: size,
 palette of {Name, Properties}, blocks of {pos, state, nbt}. Only what the bastion's mob pieces use: one block
 layer, jigsaws (their block entity's name, target, target_pool, joint, final_state), plain blocks; structure
-voids (index -1) are left out."""
+voids (index -1) and air are left out."""
 import struct
 
 # A Bedrock jigsaw's `rotation` for a vertical facing is its top direction.
@@ -61,7 +61,8 @@ def load(path):
     entities = pal.get('block_position_data', {})
     blocks = []
     for index, state in enumerate(s['block_indices'][0]):
-        if state < 0:
+        # BDS leaves a mob piece's air unplaced: the canon keeps a rampart's bricks in its top cell.
+        if state < 0 or pal['block_palette'][state]['name'] == 'minecraft:air':
             continue
         x, y, z = index // (sy * sz), index // sz % sy, index % sz
         block = {'pos': [x, y, z], 'state': state}
