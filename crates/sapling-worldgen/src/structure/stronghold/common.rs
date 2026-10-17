@@ -4,19 +4,8 @@
 use super::Door;
 use crate::block::Block;
 use crate::random::Mt19937;
-use crate::structure::BoundingBox;
 use crate::structure::canvas::Canvas;
 use crate::structure::piece::{EAST, Frame, NORTH, SOUTH, WEST};
-
-/// Java's `BoundingBox.orientBox`.
-pub fn orient_box((x, y, z): (i32, i32, i32), (ox, oy, oz): (i32, i32, i32), (sx, sy, sz): (i32, i32, i32), dir: u8) -> BoundingBox {
-    match dir {
-        NORTH => BoundingBox::new(x + ox, y + oy, z - sz + 1 + oz, x + sx - 1 + ox, y + sy - 1 + oy, z + oz),
-        WEST => BoundingBox::new(x - sz + 1 + oz, y + oy, z + ox, x + oz, y + sy - 1 + oy, z + sx - 1 + ox),
-        EAST => BoundingBox::new(x + oz, y + oy, z + ox, x + sz - 1 + oz, y + sy - 1 + oy, z + sx - 1 + ox),
-        _ => BoundingBox::new(x + ox, y + oy, z + oz, x + sx - 1 + ox, y + sy - 1 + oy, z + sz - 1 + oz),
-    }
-}
 
 /// `randomSmallDoor`: `nextInt(5)` 2 wood, 3 grates, 4 iron, else an opening.
 pub fn random_door(random: &mut Mt19937) -> Door {

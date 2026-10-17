@@ -6,6 +6,7 @@ mod biome;
 mod capped;
 mod carver;
 mod floor;
+mod stage;
 mod surface;
 mod surface_spec;
 mod terrain;
@@ -18,6 +19,9 @@ use crate::cache::SourceCache;
 use crate::chunk::ChunkShape;
 use crate::feature::{Features, Inputs};
 use crate::random::Mt19937;
+use crate::structure::nether::NetherStructures;
+use crate::structured::order::Order;
+use crate::structured::{Pieced, Source};
 
 pub use biome::{BASALT_DELTAS, CRIMSON_FOREST, HELL, SOULSAND_VALLEY, WARPED_FOREST};
 pub use terrain::{HEIGHT, SEA_LEVEL};
@@ -25,6 +29,8 @@ pub use terrain::{HEIGHT, SEA_LEVEL};
 /// Chunk biomes and carved chunks (about 200 and 100 kB each) kept for the neighbours that read them.
 const BIOMES_LIMIT: usize = 256;
 const CARVED_LIMIT: usize = 256;
+/// Post-processes kept, and ten times as many chunk states (as the overworld's).
+const PIECED_LIMIT: usize = 1024;
 
 pub struct NetherGenerator {
     noises: terrain::NetherNoises,
@@ -32,8 +38,13 @@ pub struct NetherGenerator {
     surface: surface::NetherSurface,
     carver: carver::NetherCarver,
     features: Features,
+    structures: NetherStructures,
     chunk_biomes: SourceCache<(i32, i32), ChunkBiomes>,
     carved: SourceCache<(i32, i32), ChunkShape>,
+    pieced: SourceCache<(i32, i32), Option<Source>>,
+    staged: SourceCache<(i32, i32, u8), Pieced>,
+    structure_order: Order,
+    loaded: SourceCache<(i32, i32), ChunkShape>,
 }
 
 impl NetherGenerator {
@@ -45,8 +56,13 @@ impl NetherGenerator {
             surface: surface::NetherSurface::new(seed),
             carver: carver::NetherCarver::new(seed),
             features: Features::for_dimension(seed, 1, Dimension::Nether),
+            structures: NetherStructures::new(seed),
             chunk_biomes: SourceCache::new(BIOMES_LIMIT),
             carved: SourceCache::new(CARVED_LIMIT),
+            pieced: SourceCache::new(PIECED_LIMIT),
+            staged: SourceCache::new(10 * PIECED_LIMIT),
+            structure_order: Order::default(),
+            loaded: SourceCache::new(CARVED_LIMIT),
         }
     }
 
@@ -90,15 +106,16 @@ impl NetherGenerator {
         })
     }
 
-    /// Every ported stage: the carved chunk, then the decoration of every chunk that reaches it.
+    /// Every ported stage: the structured chunk (`loaded_blocks`), then the decoration of every chunk that reaches it.
     pub fn chunk_blocks(&self, chunk_x: i32, chunk_z: i32) -> ChunkShape {
-        let mut shape = self.carved_blocks(chunk_x, chunk_z);
+        let mut shape = self.loaded_blocks(chunk_x, chunk_z);
+        let loaded = |x, z| self.loaded(x, z);
         let carved = |x, z| self.carved(x, z);
         let biomes = |x, z| self.chunk_biomes(x, z);
         let tops = |x, z| Arc::new(self.carved(x, z).tops());
         let surface = |_, _| crate::density::NO_SURFACE;
         let none = |_: [i32; 3]| false;
-        let inputs = Inputs { loaded: &carved, carved: &carved, generated_tops: &tops, biomes: &biomes, surface: &surface, in_structure: &none, in_tunnels: &none };
+        let inputs = Inputs { loaded: &loaded, carved: &carved, generated_tops: &tops, biomes: &biomes, surface: &surface, in_structure: &none, in_tunnels: &none };
         self.features.place(&mut shape, (chunk_x, chunk_z), inputs);
         shape
     }

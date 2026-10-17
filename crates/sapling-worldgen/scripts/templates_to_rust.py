@@ -26,7 +26,7 @@ import mcstructure  # noqa: E402
 HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(HERE, '..', 'src', 'structure', 'template')
 FAMILIES = ['igloo', 'shipwreck', 'ruin', 'ruined_portal', 'village', 'pillageroutpost', 'ancient_city',
-            'trial_chambers', 'trail_ruins', 'fossils', 'mansion', 'abandoned_camp']
+            'trial_chambers', 'trail_ruins', 'fossils', 'mansion', 'abandoned_camp', 'nether_fossils']
 # Transcribed after FAMILIES, their states and palette entries appended (templates_palette.state_table `first`).
 APPENDED = ['bastion']
 

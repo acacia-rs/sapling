@@ -4,6 +4,7 @@
 
 mod aquatic;
 mod attach;
+mod basalt;
 mod blob;
 mod coral;
 mod cave;
@@ -15,6 +16,7 @@ mod element;
 mod flowers;
 mod fossil;
 mod freeze;
+mod fungus;
 mod geode;
 mod ice_spike;
 mod iceberg;
@@ -31,6 +33,8 @@ mod molang;
 mod monster_room;
 mod multiface;
 mod nether;
+mod nether_fossil;
+mod nether_vines;
 mod order;
 mod ore;
 mod pale;
