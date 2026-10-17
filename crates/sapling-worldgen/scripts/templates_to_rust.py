@@ -21,11 +21,14 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from templates_palette import DATA, JIGSAW, palette_bytes, state_table  # noqa: E402
+import mcstructure  # noqa: E402
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(HERE, '..', 'src', 'structure', 'template')
 FAMILIES = ['igloo', 'shipwreck', 'ruin', 'ruined_portal', 'village', 'pillageroutpost', 'ancient_city',
             'trial_chambers', 'trail_ruins', 'fossils', 'mansion', 'abandoned_camp']
+# Transcribed after FAMILIES, their states and palette entries appended (templates_palette.state_table `first`).
+APPENDED = ['bastion']
 
 
 def version(pack):
@@ -40,10 +43,11 @@ def effective(bds):
         base = os.path.join(root, pack, 'structures')
         for dirpath, _, names in os.walk(base):
             for n in names:
-                if n.endswith('.nbt'):
+                # The bastion's mob pieces are Bedrock templates (mcstructure.py).
+                if n.endswith('.nbt') or n.endswith('.mcstructure'):
                     full = os.path.join(dirpath, n)
-                    files[os.path.relpath(full, base).replace('\\', '/')[:-4]] = full
-    return {k: v for k, v in files.items() if k.split('/')[0] in FAMILIES}
+                    files[os.path.relpath(full, base).replace('\\', '/').rsplit('.', 1)[0]] = full
+    return {k: v for k, v in files.items() if k.split('/')[0] in FAMILIES + APPENDED}
 
 
 class Nbt:
@@ -182,15 +186,19 @@ def main():
     for line in open(os.path.join(HERE, 'data', 'template_blocks.tsv')):
         java, rot, name, states, wl, flags = line.rstrip('\n').split('\t')
         table[(java, int(rot))] = (name, states, wl == '1', int(flags))
-    templates = sorted(effective(bds).items())
+    found = sorted(effective(bds).items())
+    templates = [t for t in found if t[0].split('/')[0] in FAMILIES] + [t for t in found if t[0].split('/')[0] in APPENDED]
     keys = {}
+    first = None
 
     def index(key):
         return keys.setdefault(key, len(keys))
 
     out = bytearray(b'SPT1') + struct.pack('<I', len(templates))
     for name, path in templates:
-        t = load(path)
+        if name.split('/')[0] in APPENDED and first is None:
+            first = len(keys)
+        t = mcstructure.load(path) if path.endswith('.mcstructure') else load(path)
         palette = [key_of(s['Name'], s.get('Properties', {})) for s in t.get('palette') or t['palettes'][0]]
         sx, sy, sz = t['size']
         assert max(sx, sz) < 256 and sy < 65536, name
@@ -230,7 +238,7 @@ def main():
         if (key, 0) in table and 'minecraft:connection_' in table[(key, 0)][1]:
             table.update({(key, rot): placed_sides(key, rot, table[(key, rot)]) for rot in range(4) if (key, rot) in table})
         table.update({(key, rot): as_saved(key, rot, table[(key, rot)], table) for rot in range(4) if (key, rot) in table})
-    states, palette = state_table(keys, table)
+    states, palette = state_table(keys, table, first)
     out = b'SPT1' + palette_bytes(palette) + out[4:] + states
     open(os.path.join(OUT, 'templates.bin'), 'wb').write(out)
     print(f'{len(templates)} templates, {len(keys)} states, {len(palette)} blocks, {len(out)} bytes')
