@@ -129,6 +129,28 @@ fn a_spider_in_the_sun_and_a_polar_bear_turn_on_whoever_hits_them() {
 }
 
 #[test]
+fn a_panda_and_a_bee_hit_their_hitter_back_once_and_no_more() {
+    // research/captures/bds-provoke3.txt: 2 on easy, each once, its target let go in that tick.
+    for kind in ["minecraft:panda", "minecraft:bee"] {
+        let mut h = Harness::new();
+        h.enter(1, "Alex");
+        h.remote.run(move |ctx| {
+            ctx.set_difficulty(sapling_api::Difficulty::Easy);
+            assert!(ctx.spawn_entity(kind, [0.5, 65.0, 2.5]).is_some());
+        });
+        let mob = (0..5).flat_map(|_| all::<AddEntity>(h.tick_all().to(1))).collect::<Vec<_>>().remove(0).runtime_id;
+        h.receive(1, &attack(mob));
+        let mut hurt = Vec::new();
+        for _ in 0..240 {
+            let own = all::<UpdateAttributes>(h.tick_all().to(1)).into_iter().filter(|update| update.runtime_entity_id == 1).flat_map(|update| update.attributes);
+            hurt.extend(own.filter(|attribute| attribute.name == "minecraft:health" && attribute.current < 20.0).map(|attribute| attribute.current));
+        }
+        assert_eq!(hurt.first(), Some(&18.0), "{kind}");
+        assert!(hurt.iter().all(|left| *left >= 18.0), "{kind} hits once: {hurt:?}");
+    }
+}
+
+#[test]
 fn a_llama_hit_spits_once_for_1_and_throws_nobody() {
     // research/captures/bds-provoke2.txt: the spit 2.07 s after the hit, 20 to 19, no SetEntityMotion; let go 3.95 s after.
     let mut h = Harness::new();

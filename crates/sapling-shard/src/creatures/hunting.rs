@@ -268,6 +268,9 @@ pub(super) fn strike(world: &mut World, entity: Entity, layer: Entity, id: u64, 
     if let Some((effect, ticks)) = hunts.gives.filter(|_| bitten) {
         vitals::afflict(world, prey, effect, ticks);
     }
+    if hunts.once {
+        take(world, entity, layer, id, kind, body, None);
+    }
     late_sounds::play_later(world, 1, layer, cell, sound("attack", id, kind, body, MIDDLE));
     Some(())
 }

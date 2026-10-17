@@ -151,6 +151,22 @@ pub fn provoke2() -> Vec<String> {
     lines
 }
 
+/// As `provoke2`, three pandas and three bees, each penned with the actor in glass three wide
+/// so that it cannot roll or fly out of reach, hit a second after it is summoned.
+pub fn provoke3() -> Vec<String> {
+    let mut lines: Vec<String> =
+        ["kill @e[type=!player]", "gamerule domobspawning false", "difficulty easy", "time set noon", "fill ~-3 ~-1 ~-12 ~12 ~-1 ~40 stone", "fill ~-3 ~ ~-12 ~12 ~6 ~40 air", "gamemode survival @s", "tp @s ~6 ~ ~20", ""].map(String::from).into();
+    for kind in ["panda", "panda", "panda", "bee", "bee", "bee"] {
+        let pen = ["fill ~-3 ~ ~-3 ~3 ~4 ~6 air", "fill ~-2 ~-1 ~-1 ~2 ~3 ~4 glass", "fill ~-1 ~ ~ ~1 ~2 ~3 air"].map(String::from);
+        lines.extend(pen);
+        lines.extend(["effect @s instant_health 1 4".into(), format!("summon {kind} ~ ~ ~2"), String::new(), format!("!hit {kind}")]);
+        lines.extend(std::iter::repeat_n(String::new(), 8));
+        lines.extend(["kill @e[type=!player]", "effect @s clear", ""].map(String::from));
+    }
+    lines.extend(["gamemode creative @s", ""].map(String::from));
+    lines
+}
+
 /// The actor in survival under effects not yet built: slowness at two levels; strength and
 /// weakness with a hit on a cow each (and one bare); slow falling and jump boost with a fall of
 /// eight blocks each (and one bare); water breathing under water for twenty seconds; then
