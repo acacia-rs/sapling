@@ -96,6 +96,8 @@ Tries move by `(r & m) - (r & m)` per axis, two raw MT outputs each; most draw z
   (`nextInt(8)` growth) on grass blocks; offsets x, z, y.
 - Mushrooms (149d57200): on mycelium, nylium, podzol or logs anywhere, else only with 13 points of a radius-2
   diamond in shade (149d9a560: under the light heightmap, or a not fully translucent block within 10 above).
+  A column outside the block source's region has no chunk: the height falls back to the world's bottom
+  (`BlockSource` +0x3a) and every block reads air, so it is never shaded (live: Nether canon 230,35,0, rax=0).
   The logs matter: a fallen tree's `optional_log_mushrooms_feature` puts one on the lying log in the open, and
   the next tree of the loop is refused by it.
 - Firefly bushes (`FireflyBushClusterFeature::place` 149e821d0, no JSON; `+0x20` set for the water cluster):
