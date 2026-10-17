@@ -48,10 +48,10 @@ minecraft:parched	breathes_water xp=5-5 strolls=0.25
 minecraft:parrot	no_fall xp=1-3
 minecraft:phantom	breathes_water burns_in_sun xp=5-5
 minecraft:pig	xp=1-3 strolls=0.25 panics=0.3125
-minecraft:piglin	xp=5-5 strolls=0.21
+minecraft:piglin	xp=5-5 strolls=0.21 attack=9 speed=0.35 sees=16
 minecraft:piglin_brute	xp=20-20 strolls=0.21 attack=10 speed=0.35 sees=16
 minecraft:pillager	xp=5-5 strolls=0.35 attack=0 speed=0.35 sees=16 shoots=46 closes
-minecraft:polar_bear	xp=1-3 strolls=0.25 panics=0.3125
+minecraft:polar_bear	xp=1-3 strolls=0.25 panics=0.3125 attack=6 speed=0.25 sees=16 provoked every=39
 minecraft:pufferfish	breathes_water no_air xp=1-3
 minecraft:rabbit	xp=1-3 strolls=0.18 panics=0.66
 minecraft:ravager	xp=20-20 strolls=0 attack=12 speed=0.4 sees=16 every=31

@@ -215,6 +215,23 @@ four seconds and then hit with the fist (`research/captures/bds-provoke.txt`):
   run (5.5 a second apart, 0.114 a tick). BDS's first hit back came 1 to 1.5 seconds after the
   hit, and sapling's waits a second.
 
+## Hit back by day (`provoke2`)
+
+A polar bear, a panda, a spider, a cave spider, a llama, a piglin and a bee, as `provoke` at noon
+under the sky (`research/captures/bds-provoke2.txt`, `bds-provoke2-findings.md`):
+
+- The polar bear and both spiders took the actor the tick they were hit, with `mob.warning` a
+  tick later. The bear hit for 4 on easy (its 6) every 39 ticks, the first 2.5 seconds after,
+  standing still for a moment and rearing before each; it stepped 0.1349 a tick (movement 0.25).
+  The spider bit for 2 every 20 ticks from 1.5 seconds after, at 0.194 a tick; the cave spider
+  for 2, its poison added and taken away a tick later. Each hit threw the actor 0.4 away and up.
+- The llama charged a second after its hit and spat 2.07 seconds after: a `llama_spit` 1.58
+  above its feet at some 1.5 a tick, falling 0.06 a tick, for 1 and no throw (`HurtAnimation`
+  data 3). It stayed where it was and let go of the actor 3.95 seconds after.
+- The piglin took the actor 0.36 seconds after it was summoned, unhit (no gold worn), and hit
+  for 5.5 (its 5 and its golden sword) every 20 ticks, its arm swung twice a hit.
+- The panda rolled and the bee flew out of reach; neither was hit, so neither says anything.
+
 ## Strolling (`stroll`)
 
 A zombie and a cow left alone for a minute on a floor 40 blocks square, the actor in creative
@@ -270,8 +287,11 @@ A stray and a bogged shoot as the skeleton with their effect on the arrow, and a
 it walks on, its crossbow heard loading where it stood at the shot before; it is not shown anew.
 
 A wolf and a zombified piglin hunt none but a survival player that hit them, from that tick
-(`hunting::provoke`), and so does an iron golem, with a hit of 7 to 21 and its throw; a piglin's
-fellows do not join in, and a golem guards no villager.
+(`hunting::provoke`), and so do an iron golem, with a hit of 7 to 21 and its throw, and a polar
+bear, every 39 ticks without its rearing; a spider dazzled by the sun takes its hitter too. A
+piglin hunts any survival player, gold worn or not, and does not turn into a zombified one. A
+piglin's fellows do not join in, and a golem guards no villager. The llama's spit, the panda and
+the bee are not built.
 
 `creatures/hunting.rs`, for kinds with `attack=`, `speed=` and `sees=` in `mob-traits.tsv`: the
 zombie and the seven kinds above, each with its numbers and what its hit gives (not the cave

@@ -104,6 +104,31 @@ fn a_wolf_leaves_a_player_be_until_it_is_hit_and_then_bites_it() {
 }
 
 #[test]
+fn a_spider_in_the_sun_and_a_polar_bear_turn_on_whoever_hits_them() {
+    // research/captures/bds-provoke2.txt, on easy: the spider's 2 a second, the bear's 4 each 39 ticks.
+    for (kind, bite, between) in [("minecraft:spider", 2.0, 20), ("minecraft:polar_bear", 4.0, 39)] {
+        let mut h = Harness::new();
+        h.enter(1, "Alex");
+        h.remote.run(move |ctx| {
+            ctx.set_difficulty(sapling_api::Difficulty::Easy);
+            ctx.set_time(6000);
+            assert!(ctx.spawn_entity(kind, [0.5, 65.0, 2.5]).is_some());
+        });
+        let before: Vec<acacia_proto::RawPacket> = (0..60).flat_map(|_| h.tick_all().to(1).to_vec()).collect();
+        let mob = all::<AddEntity>(&before)[0].runtime_id;
+        assert!(health(&before).iter().all(|left| *left == 20.0), "{kind} left alone bites nobody");
+        h.receive(1, &attack(mob));
+        let mut hurt = Vec::new();
+        for tick in 0..100 {
+            let own = all::<UpdateAttributes>(h.tick_all().to(1)).into_iter().filter(|update| update.runtime_entity_id == 1).flat_map(|update| update.attributes);
+            hurt.extend(own.filter(|attribute| attribute.name == "minecraft:health").map(|attribute| (tick, attribute.current)));
+        }
+        let second = hurt.iter().find(|(_, left)| (*left - (20.0 - 2.0 * bite)).abs() < 1e-3);
+        assert!(hurt.first().is_some_and(|(_, left)| *left == 20.0 - bite) && second.is_some_and(|(tick, _)| tick - hurt[0].0 == between), "{kind}: {hurt:?}");
+    }
+}
+
+#[test]
 fn an_iron_golem_hit_hits_back_for_7_to_21_and_throws_its_hitter_up() {
     // research/captures/bds-golem.txt: on easy half and one more, 4.5 to 11.5; thrown up at 0.4288.
     let mut h = Harness::new();

@@ -2,7 +2,8 @@
 //! the nearest player it could kill, walks straight at it and hits it when it is within reach.
 // TODO: a spider keeps the prey it took in the dark when day comes; prey once seen is kept behind a
 // wall; nothing pushes another aside; a spider hunts by day too and none holds what it hits with; peaceful worlds keep their
-// monsters, idle; viewers far off are told every move, where BDS told one of every other.
+// monsters, idle; viewers far off are told every move, where BDS told one of every other; a piglin
+// hunts a player in gold too, and a polar bear does not rear before its hit.
 
 use acacia_proto::packets::{EntityEvent, EntityEventEventId, LevelSoundEvent, SetEntityData};
 use acacia_proto::types::{EntityProperties, MetadataDictionaryItem, MetadataDictionaryItemKey as Key, MetadataDictionaryItemType as Type, MetadataDictionaryItemValue as Value, MetadataDictionaryItemValueDefault as Plain, Vec3f};
@@ -141,10 +142,10 @@ fn take(world: &mut World, entity: Entity, layer: Entity, id: u64, kind: &str, b
     Some(())
 }
 
-/// A player hit the mob: one that hunts none but its hitter (research/captures/bds-provoke.txt)
-/// takes it for its prey at once, if it may be hunted.
+/// A player hit the mob: one that hunts none but its hitter, or a spider that hunts by dark
+/// (research/captures/bds-provoke.txt, bds-provoke2.txt), takes it for its prey at once, if it may be hunted.
 pub(super) fn provoke(world: &mut World, entity: Entity, layer: Entity, id: u64, kind: &str, body: &Body, player: Entity) {
-    let Some(hunts) = sapling_data::mob_traits(kind).hunts.filter(|hunts| hunts.provoked) else { return };
+    let Some(hunts) = sapling_data::mob_traits(kind).hunts.filter(|hunts| hunts.provoked || hunts.by_dark) else { return };
     let hunted = world.resource::<Settings>().0.difficulty != Difficulty::Peaceful && seen(world, player, layer, body.at, hunts.sees).is_some();
     if hunted && world.get::<Hunter>(entity).is_some_and(|hunter| hunter.prey != Some(player)) {
         take(world, entity, layer, id, kind, body, Some(player));

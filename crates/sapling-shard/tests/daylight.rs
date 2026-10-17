@@ -50,8 +50,8 @@ fn a_spider_in_the_sun_leaves_a_player_be_and_one_under_a_roof_does_not() {
 
 #[test]
 fn a_drowned_an_endermite_a_piglin_brute_and_a_ravager_hit_for_what_bds_s_did() {
-    // research/captures/bds-kinds2.txt, on easy: 2.5, 2, 6 and 7 of a player's 20.
-    for (kind, left) in [("minecraft:drowned", 17.5), ("minecraft:endermite", 18.0), ("minecraft:piglin_brute", 14.0), ("minecraft:ravager", 13.0)] {
+    // research/captures/bds-kinds2.txt, on easy: 2.5, 2, 6 and 7 of a player's 20; bds-provoke2.txt: a piglin's 5.5.
+    for (kind, left) in [("minecraft:drowned", 17.5), ("minecraft:endermite", 18.0), ("minecraft:piglin_brute", 14.0), ("minecraft:ravager", 13.0), ("minecraft:piglin", 14.5)] {
         let mut h = Harness::new();
         h.enter(1, "Alex");
         h.remote.run(move |ctx| {

@@ -54,7 +54,7 @@ Each needs its rule looked up first (`bdsre` for BDS, the Java jar for data), th
    hurts and throws a mob, and its kill leaves experience (`creatures/attacks.rs`, `hit`). Left:
    what the doc lists as not drilled. A zombie and seven kinds like it take the nearest survival player, walk at it
    and hit it, a creeper blows up by it (`creatures/blast.rs`, `boom`) and a skeleton shoots at it (`creatures/arrows.rs`, `shoot`) (`creatures/hunting.rs`, `docs/research/mob-attacks.md`, `bite`, `slain`, `kinds`); and every kind that walks strolls when it has nothing to do and flees a hit (`creatures/strolling.rs`, `stroll`, `flee`); left
-   there: the kinds that shoot other things than arrows, the other kinds that turn on their hitter (`provoke` drilled a wolf and a zombified piglin). Survival players have health: falls,
+   there: the kinds that shoot other things than arrows, the other kinds that turn on their hitter (`provoke` and `provoke2` drilled a wolf, a zombified piglin, a polar bear and spiders by day, which are built; the llama's spit, a panda and a bee are not). Survival players have health: falls,
    fire, lava, water over the head and a block around them hurt, `/damage` and `/kill` too; they die
    leaving items and experience and rise by their bed or at the world's spawn (`vitals.rs`,
    `docs/research/player-damage.md`, `bds_command_probe hurt` and `smother`). A wounded player mends by its
