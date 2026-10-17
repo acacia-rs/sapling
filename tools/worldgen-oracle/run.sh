@@ -29,8 +29,9 @@ cp -r "$here/pack" "$pack"
 # WORLDGEN_LOAD_TICKS: how long a tile's area may take before it is removed and added again (a retry
 # generates its chunks a second time: README, "A repeatable BDS").
 # WORLDGEN_KICK=true: a stalled area gets a second area over its missing chunks instead (pack/scripts/main.js).
-printf 'export const REGIONS = [%s];\nexport const TILE = %d;\nexport const WORKERS = %d;\nexport const SETTLE = %d;\nexport const LOAD_TIMEOUT = %d;\nexport const KICK = %s;\n' \
-  "$regions" "$tile" "$workers" "$settle" "${WORLDGEN_LOAD_TICKS:-600}" "${WORLDGEN_KICK:-false}" >"$pack/scripts/regions.js"
+# WORLDGEN_DIMENSION=nether: the regions are Nether chunks (saved under dimension 1).
+printf 'export const REGIONS = [%s];\nexport const TILE = %d;\nexport const WORKERS = %d;\nexport const SETTLE = %d;\nexport const LOAD_TIMEOUT = %d;\nexport const KICK = %s;\nexport const DIMENSION = "%s";\n' \
+  "$regions" "$tile" "$workers" "$settle" "${WORLDGEN_LOAD_TICKS:-600}" "${WORLDGEN_KICK:-false}" "${WORLDGEN_DIMENSION:-overworld}" >"$pack/scripts/regions.js"
 mkdir -p "$bds/worlds/$level"
 echo '[{"pack_id": "7a3d2f60-5c1e-4b8a-9d47-0e6f1b2c3a01", "version": [1, 0, 0]}]' >"$bds/worlds/$level/world_behavior_packs.json"
 
@@ -69,6 +70,6 @@ version=$(grep -m1 -oE 'Version: [0-9.]+' "$log" | cut -d' ' -f2)
 mkdir -p "$out"
 cp -r "worlds/$level/." "$out/"
 rm -rf "worlds/$level"
-printf 'bds %s\nseed %s\nregions %s\ntile %s\ngenerated %s\nseconds %s\n' \
-  "$version" "$seed" "$*" "$tile" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$elapsed" >"$out/oracle.txt"
+printf 'bds %s\nseed %s\ndimension %s\nregions %s\ntile %s\ngenerated %s\nseconds %s\n' \
+  "$version" "$seed" "${WORLDGEN_DIMENSION:-overworld}" "$*" "$tile" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$elapsed" >"$out/oracle.txt"
 echo "BDS $version, $elapsed s: $(grep -m1 -oE 'WORLDGEN done.*' "$log") -> $out"

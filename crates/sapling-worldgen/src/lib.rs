@@ -16,6 +16,7 @@ mod feature;
 mod floor;
 mod fxhash;
 mod mth;
+pub mod nether;
 pub mod noise;
 pub mod random;
 pub mod shaper;
@@ -29,6 +30,7 @@ use std::sync::Arc;
 
 pub use biome::ChunkBiomes;
 pub use block::Block;
+pub use nether::NetherGenerator;
 #[doc(hidden)]
 pub use feature::reach::{Cells as ReachCells, Tries as ReachTries};
 #[doc(hidden)]

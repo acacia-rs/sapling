@@ -6,7 +6,7 @@ use super::frozen::IcebergNoises;
 use super::gradient::GradientNoises;
 use super::mesa::MesaNoises;
 use super::swamp::PuddleNoise;
-use crate::noise::SimplexNoise;
+use crate::noise::{SimplexNoise, legacy_simplex_octaves};
 use crate::random::{Mt19937, PositionalFactory};
 
 pub struct SurfaceNoises {
@@ -29,12 +29,7 @@ impl SurfaceNoises {
             .collect();
         let mut mt = Mt19937::new(seed as u32);
         mt.consume_count(20202);
-        let adjustment = (0..3)
-            .map(|_| {
-                let [a, b, c] = [mt.next_float(), mt.next_float(), mt.next_float()];
-                SimplexNoise::new([c, b, a], |bound| mt.next_int(bound as i32))
-            })
-            .collect();
+        let adjustment = legacy_simplex_octaves(&mut mt, 3);
         Self {
             depth,
             adjustment,

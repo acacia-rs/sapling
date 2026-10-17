@@ -42,6 +42,8 @@ mod cave_table;
 mod structure_table;
 #[macro_use]
 mod multiface_table;
+#[macro_use]
+mod nether_table;
 mod layers;
 mod material_table;
 mod plant_table;
@@ -165,7 +167,7 @@ impl Block {
 
     /// Plants that stand in water: BDS saves them with water in the second layer.
     pub fn is_waterlogged(self) -> bool {
-        self >= Block::Seagrass || (Block::GlowLichenWet1..=Block::SculkVeinWet63).contains(&self) || matches!(self, Block::Template(i) if palette()[i as usize].2)
+        (Block::Seagrass..=Block::SculkShriekerWet).contains(&self) || (Block::GlowLichenWet1..=Block::SculkVeinWet63).contains(&self) || matches!(self, Block::Template(i) if palette()[i as usize].2)
     }
 
     pub fn is_kelp(self) -> bool {

@@ -32,6 +32,7 @@ Addresses in the log are static VAs. dbg.log holds one line per logged hit, in o
 """
 import ctypes as C
 import json
+import os
 import struct
 import subprocess
 import sys
@@ -156,7 +157,8 @@ class Debugger:
         self.dumps.on_match(tid, bp, ctx, pos)
         if "probe" in bp:
             scope = {}
-            exec(open(bp.pop("probe")).read(), scope)
+            # A relative probe path names a file beside this script.
+            exec(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), bp.pop("probe"))).read(), scope)
             scope["probe"](self, ctx)
         if "arms" in bp:
             self.groups.arm(bp["arms"], tid, ctx["rsp"])

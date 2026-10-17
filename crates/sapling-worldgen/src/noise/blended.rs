@@ -61,31 +61,38 @@ impl BlendedNoise {
     /// The main, lower and upper octave sums (BDS's three stack buffers; examples/density_dump_diff.rs).
     #[doc(hidden)]
     pub fn parts(&self, origin: [f32; 3]) -> [Box<CellGrid>; 3] {
-        [
-            fill_octaves(&self.main, origin, |f| [MAIN_XZ_SCALE * f, MAIN_Y_SCALE * f]),
-            fill_octaves(&self.min_limit, origin, |f| [XZ_SCALE * f, XZ_SCALE * f]),
-            fill_octaves(&self.max_limit, origin, |f| [XZ_SCALE * f, XZ_SCALE * f]),
-        ]
+        let grid = |octaves: &[ImprovedNoise], scales: [f32; 2]| -> Box<CellGrid> {
+            fill_grid::<CELL_ROWS>(octaves, origin, scales).into_boxed_slice().try_into().expect("a full grid")
+        };
+        [grid(&self.main, [MAIN_XZ_SCALE, MAIN_Y_SCALE]), grid(&self.min_limit, [XZ_SCALE, XZ_SCALE]), grid(&self.max_limit, [XZ_SCALE, XZ_SCALE])]
     }
+}
+
+/// `count` octaves of one `PerlinNoise` as `LegacyBlendedNoise::addOctave` (145e29ee0) builds them off a
+/// sequential random, highest frequency first.
+pub fn legacy_octaves(random: &mut impl NoiseRandom, count: usize) -> Vec<ImprovedNoise> {
+    (0..count).map(|_| ImprovedNoise::new_blended(random)).collect()
 }
 
 const COLUMNS: usize = CELL_COLUMNS * CELL_COLUMNS;
 
 /// The grid by row, a row's columns side by side (column `gx * 5 + gz`) so an octave runs them in lanes.
-type Rows = [[f32; COLUMNS]; CELL_ROWS];
+type Rows<const ROWS: usize> = [[f32; COLUMNS]; ROWS];
 
-fn fill_octaves(octaves: &[ImprovedNoise], origin: [f32; 3], scales: impl Fn(f32) -> [f32; 2]) -> Box<CellGrid> {
-    let mut rows: Box<Rows> = Box::new([[0.0; COLUMNS]; CELL_ROWS]);
+/// The octaves summed over a 5x5 cell grid `ROWS` tall (`LegacyBlendedNoise::fillOctave` per octave), laid
+/// out `[x][z][y]`; octave k samples at `scales * 2^-k` and is divided by `2^-k`.
+pub fn fill_grid<const ROWS: usize>(octaves: &[ImprovedNoise], origin: [f32; 3], [xz_scale, y_scale]: [f32; 2]) -> Vec<f32> {
+    let mut rows: Box<Rows<ROWS>> = Box::new([[0.0; COLUMNS]; ROWS]);
     let mut factor = 1.0f32;
     for octave in octaves {
-        let [xz, y] = scales(factor);
-        fill_octave(&Octave::new(octave, origin, [xz, y, xz], factor), &mut rows);
+        let (xz, y) = (xz_scale * factor, y_scale * factor);
+        fill_octave(&Octave::<ROWS>::new(octave, origin, [xz, y, xz], factor), &mut rows);
         factor *= 0.5;
     }
-    let mut out = Box::new([0.0f32; CELL_COUNT]);
+    let mut out = vec![0.0f32; COLUMNS * ROWS];
     for (gy, row) in rows.iter().enumerate() {
         for (column, &value) in row.iter().enumerate() {
-            out[column * CELL_ROWS + gy] = value;
+            out[column * ROWS + gy] = value;
         }
     }
     out
@@ -93,13 +100,13 @@ fn fill_octaves(octaves: &[ImprovedNoise], origin: [f32; 3], scales: impl Fn(f32
 
 /// One octave over the grid (145e23fc0, general branch): each row's y lattice index and fraction,
 /// each column's x and z.
-struct Octave<'a> {
+struct Octave<'a, const ROWS: usize> {
     noise: &'a ImprovedNoise,
     y_scale: f32,
     inverse_factor: f32,
     fudge_index: i32,
     fudge_frac: f32,
-    y: [f32; CELL_ROWS],
+    y: [f32; ROWS],
     ix: [i32; COLUMNS],
     iz: [i32; COLUMNS],
     fx: [f32; COLUMNS],
@@ -108,7 +115,7 @@ struct Octave<'a> {
     sz: [f32; COLUMNS],
 }
 
-impl<'a> Octave<'a> {
+impl<'a, const ROWS: usize> Octave<'a, ROWS> {
     fn new(noise: &'a ImprovedNoise, origin: [f32; 3], scale: [f32; 3], factor: f32) -> Self {
         let fudge_y = scale[1] * 0.0 + noise.yo;
         let fudge_index = fudge_y as i32;
@@ -168,8 +175,8 @@ impl<'a> Octave<'a> {
 /// columns, as BDS does. Rows decide reuse alike in every column (the last row of one column leaves
 /// its index for the next), so the columns run together row by row, unless a column's first row
 /// would reuse the previous column's last gradients: then they run in BDS's order, one by one.
-fn fill_octave(octave: &Octave, rows: &mut Rows) {
-    let last = octave.row(CELL_ROWS - 1, -1).0;
+fn fill_octave<const ROWS: usize>(octave: &Octave<ROWS>, rows: &mut Rows<ROWS>) {
+    let last = octave.row(ROWS - 1, -1).0;
     if octave.row(0, last).2.is_none() {
         return fill_octave_serial(octave, rows);
     }
@@ -194,7 +201,7 @@ fn fill_octave(octave: &Octave, rows: &mut Rows) {
     }
 }
 
-fn fill_octave_serial(octave: &Octave, rows: &mut Rows) {
+fn fill_octave_serial<const ROWS: usize>(octave: &Octave<ROWS>, rows: &mut Rows<ROWS>) {
     let mut last_iy = -1i32;
     let mut corners = [0.0f32; 4];
     for c in 0..COLUMNS {

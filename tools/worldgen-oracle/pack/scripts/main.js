@@ -1,8 +1,9 @@
 // Loads every chunk of REGIONS tile by tile and touches its bedrock floor so BDS saves it; see ../../README.md.
 import { world, system } from "@minecraft/server";
-import { REGIONS, TILE, WORKERS, SETTLE, LOAD_TIMEOUT, KICK } from "./regions.js";
+import { REGIONS, TILE, WORKERS, SETTLE, LOAD_TIMEOUT, KICK, DIMENSION } from "./regions.js";
 
-const FLOOR = -64;
+// The lowest layer, all bedrock in a generated chunk of either dimension.
+const FLOOR = DIMENSION === "nether" ? 0 : -64;
 const LOAD_ATTEMPTS = 4;
 const log = (text) => console.warn("WORLDGEN " + text);
 const ticks = (n) => new Promise((resolve) => system.runTimeout(resolve, n));
@@ -111,7 +112,7 @@ async function runAll(dimension) {
 }
 
 world.afterEvents.worldLoad.subscribe(() => {
-  const dimension = world.getDimension("overworld");
+  const dimension = world.getDimension(DIMENSION);
   // Ticking areas tick their chunks: stop everything that would change blocks or add mobs meanwhile.
   for (const rule of ["randomtickspeed 0", "domobspawning false", "doweathercycle false", "dofiretick false", "dodaylightcycle false"])
     dimension.runCommand("gamerule " + rule);
