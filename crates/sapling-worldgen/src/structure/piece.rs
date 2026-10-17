@@ -6,13 +6,22 @@ use super::BoundingBox;
 use super::canvas::Canvas;
 use crate::block::Block;
 use crate::random::Mt19937;
-use crate::terrain::MIN_Y;
 
 /// Bedrock's legacy directions, as pieces store their orientation.
 pub const SOUTH: u8 = 0;
 pub const WEST: u8 = 1;
 pub const NORTH: u8 = 2;
 pub const EAST: u8 = 3;
+
+/// Java's `BoundingBox.orientBox`.
+pub fn orient_box((x, y, z): (i32, i32, i32), (ox, oy, oz): (i32, i32, i32), (sx, sy, sz): (i32, i32, i32), dir: u8) -> BoundingBox {
+    match dir {
+        NORTH => BoundingBox::new(x + ox, y + oy, z - sz + 1 + oz, x + sx - 1 + ox, y + sy - 1 + oy, z + oz),
+        WEST => BoundingBox::new(x - sz + 1 + oz, y + oy, z + ox, x + oz, y + sy - 1 + oy, z + sx - 1 + ox),
+        EAST => BoundingBox::new(x + oz, y + oy, z + ox, x + sz - 1 + oz, y + sy - 1 + oy, z + sx - 1 + ox),
+        _ => BoundingBox::new(x + ox, y + oy, z + oz, x + sx - 1 + ox, y + sy - 1 + oy, z + sz - 1 + oz),
+    }
+}
 
 #[derive(Debug, Clone)]
 pub struct Frame {
@@ -151,7 +160,7 @@ impl Frame {
         }
         loop {
             let here = canvas.get(wx, wy, wz);
-            if here != Block::Air && !here.is_fluid() && !here.is_plant() || wy <= MIN_Y + 1 {
+            if here != Block::Air && !here.is_fluid() && !here.is_plant() || wy <= canvas.bb.y0 + 1 {
                 break;
             }
             canvas.set(wx, wy, wz, block);

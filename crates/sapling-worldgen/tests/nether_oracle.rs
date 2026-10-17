@@ -14,7 +14,7 @@ use std::path::{Path, PathBuf};
 
 use nether_support::{Buffers, Stages, index, is_structure_block};
 use sapling_leveldb::{ChunkKey, LevelDbWorld};
-use sapling_worldgen::NetherGenerator;
+use sapling_worldgen::{NetherGenerator, StructureStep};
 
 struct Region {
     name: &'static str,
@@ -71,8 +71,18 @@ fn worlds() -> PathBuf {
     std::env::var_os("SAPLING_ORACLE_WORLDS").map(PathBuf::from).unwrap_or_else(|| PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../worlds/oracle"))
 }
 
-/// `x z [draws]` per line of a logged run (scripts/dbg_loads.py --order), if the canon has one.
+/// The canon's logged run, if it has one: `structure-order.txt` (`load x z` and `x z` lines, scripts/dbg_loads.py
+/// --structure-order) and `order.txt` (`x z [draws]` per line, --order).
 fn replay(generator: &mut NetherGenerator, root: &Path) {
+    let numbers = |line: &str| -> (i32, i32) {
+        let v: Vec<i32> = line.split(' ').map(|v| v.parse().expect("an integer")).collect();
+        (v[0], v[1])
+    };
+    if let Ok(text) = std::fs::read_to_string(root.join("structure-order.txt")) {
+        let step = |line: &str| line.strip_prefix("load ").map_or_else(|| StructureStep::Post(numbers(line)), |chunk| StructureStep::Load(numbers(chunk)));
+        let steps: Vec<StructureStep> = text.lines().map(step).collect();
+        generator.set_structure_order(&steps);
+    }
     let Ok(text) = std::fs::read_to_string(root.join("order.txt")) else { return };
     let rows: Vec<Vec<i64>> = text.lines().map(|line| line.split(' ').map(|v| v.parse().expect("an integer")).collect()).collect();
     let order: Vec<(i32, i32)> = rows.iter().map(|row| (row[0] as i32, row[1] as i32)).collect();
@@ -139,8 +149,7 @@ fn compare(seed: i64, world: &str) {
                         } else if ours.name() != bds || ours.states() != bds_states {
                             tally.missing += u64::from(ours.name() == carved && ours.name() != bds);
                             let (ours_full, bds_full) = (format!("{}[{}]", ours.name(), ours.states()), format!("{bds}[{bds_states}]"));
-                            tally.wrong(later_stage(ours.name(), bds), &ours_full, &bds_full);
-                            *tally.chunks.entry((cx, cz)).or_default() += 1;
+                            tally.wrong(later_stage(ours.name(), bds), &ours_full, &bds_full);                            *tally.chunks.entry((cx, cz)).or_default() += 1;
                         }
                     }
                 }

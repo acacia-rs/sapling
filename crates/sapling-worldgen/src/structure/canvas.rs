@@ -12,9 +12,7 @@ use crate::block::Block;
 use crate::feature::{ElementWorld, place_element};
 use crate::fxhash::FxBuild;
 use crate::random::Mt19937;
-use crate::terrain::{ChunkShape, MIN_Y};
-
-const TOP: i32 = 319;
+use crate::terrain::ChunkShape;
 
 /// Spider corridors (start, piece index) that placed their spawner: BDS keeps the flag (+0x5a)
 /// on the piece across the chunks it post-processes in.
@@ -92,6 +90,12 @@ impl<'a> Canvas<'a> {
         }
     }
 
+    /// The world's heights `floor..=top` in place of the overworld's (the box's y range bounds every read and write).
+    pub fn with_heights(mut self, floor: i32, top: i32) -> Self {
+        (self.bb.y0, self.bb.y1) = (floor, top);
+        self
+    }
+
     pub fn with_features(mut self, world: &'a ElementWorld<'a>) -> Self {
         self.features = Some(world);
         self
@@ -124,7 +128,7 @@ impl<'a> Canvas<'a> {
 
     /// Any block: the chunk's own, a neighbour's, air outside the world's heights and the view.
     pub fn get(&self, x: i32, y: i32, z: i32) -> Block {
-        if !(MIN_Y..=TOP).contains(&y) || !self.in_view(x, z) {
+        if !(self.bb.y0..=self.bb.y1).contains(&y) || !self.in_view(x, z) {
             Block::Air
         } else if self.inside(x, z) {
             self.shape.block((x & 15) as usize, y, (z & 15) as usize)
@@ -163,7 +167,7 @@ impl<'a> Canvas<'a> {
             {
                 *h = (*h).max(y + 1);
             }
-        } else if self.whole && (MIN_Y..=TOP).contains(&y) && self.in_view(x, z) {
+        } else if self.whole && (self.bb.y0..=self.bb.y1).contains(&y) && self.in_view(x, z) {
             self.record.note((x, y, z), self.get(x, y, z), block);
             self.write_past(x, y, z, block);
         }
@@ -181,7 +185,7 @@ impl<'a> Canvas<'a> {
             self.shape.set_block((x & 15) as usize, y, (z & 15) as usize, block);
             super::trace::write([x, y, z], block);
             self.touched = (self.touched.0.min(y), self.touched.1.max(y));
-        } else if (MIN_Y..=TOP).contains(&y) && self.in_view(x, z) {
+        } else if (self.bb.y0..=self.bb.y1).contains(&y) && self.in_view(x, z) {
             self.write_past(x, y, z, block);
         } else {
             return;
@@ -193,7 +197,7 @@ impl<'a> Canvas<'a> {
     pub fn set_unclipped(&mut self, x: i32, y: i32, z: i32, block: Block) {
         if self.inside(x, z) {
             self.set(x, y, z, block);
-        } else if (MIN_Y..=TOP).contains(&y) && self.in_view(x, z) {
+        } else if (self.bb.y0..=self.bb.y1).contains(&y) && self.in_view(x, z) {
             self.write_past(x, y, z, block);
         }
     }
@@ -203,25 +207,25 @@ impl<'a> Canvas<'a> {
         if let Some(&h) = self.heights.borrow().get(&(x, z)) {
             return h;
         }
-        let h = (MIN_Y..=TOP).rev().find(|&y| counts_for_height(self.get(x, y, z))).map_or(MIN_Y, |y| y + 1);
+        let h = (self.bb.y0..=self.bb.y1).rev().find(|&y| counts_for_height(self.get(x, y, z))).map_or(self.bb.y0,|y| y + 1);
         self.heights.borrow_mut().insert((x, z), h);
         h
     }
 
     /// One above the highest solid block, fluids passed (`BlockSource` vt+0x178).
     pub fn floor_height(&self, x: i32, z: i32) -> i32 {
-        (MIN_Y..=TOP).rev().find(|&y| self.get(x, y, z).is_solid()).map_or(MIN_Y, |y| y + 1)
+        (self.bb.y0..=self.bb.y1).rev().find(|&y| self.get(x, y, z).is_solid()).map_or(self.bb.y0,|y| y + 1)
     }
 
     /// One above the highest solid block, or fluid too when `fluids`.
     pub fn top(&self, x: i32, z: i32, fluids: bool) -> i32 {
-        (MIN_Y..=TOP).rev().find(|&y| self.get(x, y, z).is_solid() || fluids && self.get(x, y, z).is_fluid()).map_or(MIN_Y, |y| y + 1)
+        (self.bb.y0..=self.bb.y1).rev().find(|&y| self.get(x, y, z).is_solid() || fluids && self.get(x, y, z).is_fluid()).map_or(self.bb.y0,|y| y + 1)
     }
 
     /// Below the light heightmap (BDS's structure "interior" test); never at the world's top, nor
     /// in a column whose chunk the view lacks (`getChunk` null).
     pub fn interior(&self, x: i32, y: i32, z: i32) -> bool {
-        y < TOP + 1 && (y < MIN_Y || self.in_view(x, z) && self.height(x, z) > y)
+        y < self.bb.y1 + 1 && (y < self.bb.y0 ||self.in_view(x, z) && self.height(x, z) > y)
     }
 }
 
