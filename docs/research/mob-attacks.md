@@ -167,8 +167,9 @@ Twelve more kinds 8 blocks from the actor at midnight on easy
 | zoglin | 0.178 | 0.29 | 2.6 to 4.5 | varies | 1 s |
 
 A slime and a magma cube hop and split, a polar bear hit without a target being told, a witch
-threw potions, a blaze shot three small fireballs a second apart and an enderman was gone; none
-of these six, nor the hoglin and the zoglin, is built. The first four are (`mob-traits.py`).
+threw potions, a blaze shot three small fireballs a second apart and an enderman was gone. The
+first four of the table are built (`mob-traits.py`), and of the six the polar bear, the witch and
+the blaze (below); the slimes, the enderman, the hoglin and the zoglin are not.
 
 ## The blaze (`blaze`)
 
@@ -243,6 +244,24 @@ of reach.
   hit, no poison on easy; that tick it let go and lost its sting (`MarkVariant` 1). It was alive
   and wandering 8 seconds on.
 
+## The witch (`witch`)
+
+A witch 6 and then 12 blocks from the actor in survival at midnight, the actor healed every second
+(`research/captures/bds-witch.txt`, `bds-witch-findings.md`):
+
+- The near one took the actor as it came, walked at it 19 ticks at 0.1349 a tick (movement 0.25)
+  and stood 4.27 off; the far one took no target. It let go once the actor was 10.5 off.
+- It threw a `splash_potion` every 60 ticks, the first 61 after its target: 1.415 above its feet
+  and 1.15 along the aim, at 0.75 a tick with no spread, slowed 0.99 and falling 0.05 a tick. Its
+  rise grew with the distance, 3.35, 11.48 and 19.25 degrees at 4.27, 6.19 and 8.16 blocks, which
+  is not the Java game's formula.
+- The potions followed its pack: poison first (health 8 or more, not poisoned), then harming,
+  slowness once the actor was 8 off and not slowed. Every one hit the actor and gave it the full
+  drinkable effect: poison for 900 ticks, slowness for 1800, harming 6 and a throw 0.4 away and
+  0.4 up. Each break sent a `ParticleSplash` in the potion's colour and a `glass` sound.
+- Its own poison, splashed 4 blocks off, lasted it some 97 ticks; that is all the capture says of
+  one not hit.
+
 ## Strolling (`stroll`)
 
 A zombie and a cow left alone for a minute on a floor 40 blocks square, the actor in creative
@@ -296,6 +315,11 @@ arrows passed a hand over the player's head.
 
 A stray and a bogged shoot as the skeleton with their effect on the arrow, and a pillager while
 it walks on, its crossbow heard loading where it stood at the shot before; it is not shown anew.
+
+A witch throws as above (`creatures/arrows.rs` `POTION`, its rise fitted to the three throws),
+picking the potion by its pack's rule (`creatures/splashes.rs`). A player it hits gets the full
+effect (`vitals/splashed.rs`); one near the break gets the Java game's `1 - d/4` of each effect's
+time, which was not drilled. Mobs splashed get nothing and the witch drinks nothing.
 
 A wolf and a zombified piglin hunt none but a survival player that hit them, from that tick
 (`hunting::provoke`), and so do an iron golem, with a hit of 7 to 21 and its throw, and a polar

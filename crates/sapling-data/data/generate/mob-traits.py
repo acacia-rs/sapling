@@ -67,6 +67,7 @@ HUNTS = {
     "minecraft:spider": "attack=2 speed=0.3 sees=16 by_dark",
     "minecraft:stray": "attack=0 speed=0.25 sees=16 shoots=61 hits=slowness:600",
     "minecraft:vindicator": "attack=13 speed=0.35 sees=12",
+    "minecraft:witch": "attack=0 speed=0.25 sees=10 shoots=60 shot=splash_potion",
     "minecraft:wither_skeleton": "attack=9 speed=0.3125 sees=16 hits=wither:200",
     "minecraft:wolf": "attack=3 speed=0.3 sees=16 provoked every=31",
     "minecraft:zombie": "attack=3 speed=0.23 sees=35",

@@ -77,6 +77,14 @@ pub(crate) fn shot(world: &mut World, player: Entity, amount: f32, kind: &str, f
     took
 }
 
+/// Throws a player as a hit from `from` does.
+pub(super) fn throw_from(world: &mut World, player: Entity, id: u64, from: [f32; 3]) {
+    let Some(feet) = world.get::<Position>(player).map(|position| position.feet) else { return };
+    let (dx, dz) = (feet[0] - from[0], feet[2] - from[2]);
+    let far = dx.hypot(dz).max(1e-4);
+    throw(world, player, id, [dx / far * THROW, THROW, dz / far * THROW]);
+}
+
 fn hit_from(world: &mut World, player: Entity, amount: f32, from: [f32; 3], push: [f32; 3], cause: Cause) -> bool {
     let (Some(id), Some(feet), true) = (world.get::<NetId>(player).map(|id| id.0), world.get::<Position>(player).map(|position| position.feet), is_mortal(world, player)) else { return false };
     let (dx, dz) = (feet[0] - from[0], feet[2] - from[2]);

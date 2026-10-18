@@ -211,7 +211,10 @@ pub(super) fn strike(world: &mut World, entity: Entity, layer: Entity, id: u64, 
     }
     if let Some(every) = hunts.shoots.filter(|_| prey.is_some()) {
         let feet = world.get::<Position>(prey?)?.feet;
-        let shot = arrows::shot_named(hunts.shot);
+        let mut shot = arrows::shot_named(hunts.shot);
+        if shot.is_potion() {
+            shot = shot.of_potion(super::splashes::choose(world, prey?, (feet[0] - body.at[0]).hypot(feet[2] - body.at[2])));
+        }
         let volley = world.get::<Hunter>(entity)?.volley;
         if let Some((left, _)) = volley.filter(|(_, due)| now >= *due) {
             arrows::loose(world, layer, entity, kind, body, feet, hunts.gives, shot);

@@ -204,6 +204,19 @@ pub fn drink2() -> Vec<String> {
     lines
 }
 
+/// As `shoot`, a witch 6 and then 12 blocks off for twenty seconds each, healed every second.
+pub fn witch() -> Vec<String> {
+    let mut lines: Vec<String> =
+        ["kill @e[type=!player]", "gamerule domobspawning false", "difficulty easy", "time set midnight", "fill ~-3 ~-1 ~-12 ~12 ~-1 ~40 stone", "fill ~-3 ~ ~-12 ~12 ~6 ~40 air", "gamemode survival @s", "tp @s ~6 ~ ~20", ""].map(String::from).into();
+    for off in [6, 12] {
+        lines.push(format!("summon witch ~ ~ ~-{off}"));
+        lines.extend(std::iter::repeat_n("effect @s instant_health 1 4".to_owned(), 20));
+        lines.extend(["kill @e[type=!player]", "effect @s clear", "", ""].map(String::from));
+    }
+    lines.extend(["gamemode creative @s", ""].map(String::from));
+    lines
+}
+
 /// As `shoot`, a stray, a bogged and a pillager each 5 blocks off for ten seconds.
 pub fn shoot2() -> Vec<String> {
     let mut lines: Vec<String> =

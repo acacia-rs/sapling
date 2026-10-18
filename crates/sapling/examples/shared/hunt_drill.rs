@@ -10,6 +10,10 @@ pub const BITE_SHOWN: &[&str] = &[
 pub const KINDS_SHOWN: &[&str] = &[
     "UpdateAttributes", "EntityEvent", "SetEntityData", "LevelSoundEvent", "SetEntityMotion", "DeathInfo", "RemoveEntity", "AddEntity", "MoveEntityDelta", "MoveEntityAbsolute", "MobEffect", "MobEquipment",
 ];
+/// As [`KINDS_SHOWN`], and the splash of a thrown potion.
+pub const SPLASHES_SHOWN: &[&str] = &[
+    "UpdateAttributes", "EntityEvent", "SetEntityData", "LevelSoundEvent", "SetEntityMotion", "DeathInfo", "RemoveEntity", "AddEntity", "MoveEntityDelta", "MoveEntityAbsolute", "MobEffect", "MobEquipment", "LevelEvent",
+];
 
 const FLOOR: [&str; 8] = ["kill @e[type=!player]", "gamerule domobspawning false", "difficulty easy", "fill ~-3 ~-1 ~-25 ~12 ~-1 ~70 stone", "fill ~-3 ~ ~-25 ~12 ~6 ~70 air", "gamemode survival @s", "tp @s ~6 ~ ~20", ""];
 

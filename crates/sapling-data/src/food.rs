@@ -92,8 +92,8 @@ macro_rules! gives {
 /// What a potion of the data value `data` gives (research/captures/bds-drink.txt and
 /// bds-drink2.txt): nothing for water, the plain ones and the four of effects the shard lacks
 /// (43 to 46).
-fn potion(data: i16) -> Food {
-    let gives: &'static [Gives] = match data {
+pub fn potion_effects(data: i16) -> &'static [Gives] {
+    match data {
         5 => gives!["night_vision" 3600 0],
         6 => gives!["night_vision" 9600 0],
         7 => gives!["invisibility" 3600 0],
@@ -133,8 +133,11 @@ fn potion(data: i16) -> Food {
         41 => gives!["slow_falling" 4800 0],
         42 => gives!["slowness" 400 3],
         _ => &[],
-    };
-    Food { always: true, gives, leaves: Some("minecraft:glass_bottle"), drunk: true, ..plain(0.0, 0.0) }
+    }
+}
+
+fn potion(data: i16) -> Food {
+    Food { always: true, gives: potion_effects(data), leaves: Some("minecraft:glass_bottle"), drunk: true, ..plain(0.0, 0.0) }
 }
 
 /// What the item `name` with the data value `damage` gives one who eats or drinks it.

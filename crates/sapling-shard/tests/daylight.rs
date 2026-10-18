@@ -66,6 +66,34 @@ fn a_drowned_an_endermite_a_piglin_brute_and_a_ravager_hit_for_what_bds_s_did() 
 }
 
 #[test]
+fn a_witch_throws_poison_at_a_healthy_player_then_harming_each_three_seconds() {
+    // research/captures/bds-witch.txt: 25 then 23, 60 ticks apart; poison in full, harming 6.
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    h.remote.run(|ctx| {
+        ctx.set_difficulty(Difficulty::Easy);
+        ctx.set_time(18000);
+        assert!(ctx.spawn_entity("minecraft:witch", [0.5, 65.0, 6.5]).is_some());
+    });
+    let (mut thrown, mut effects, mut health) = (Vec::new(), Vec::new(), Vec::new());
+    for tick in 0..140 {
+        let sent = h.tick_all().to(1).to_vec();
+        for added in all::<acacia_proto::packets::AddEntity>(&sent).into_iter().filter(|added| added.entity_type == "minecraft:splash_potion") {
+            let potion = added.metadata.iter().find_map(|item| match (&item.key, &item.value) {
+                (acacia_proto::types::MetadataDictionaryItemKey::PotionAuxValue, acacia_proto::types::MetadataDictionaryItemValue::Default(acacia_proto::types::MetadataDictionaryItemValueDefault::Short(data))) => Some(*data),
+                _ => None,
+            });
+            thrown.push((tick, potion));
+        }
+        effects.extend(all::<acacia_proto::packets::MobEffect>(&sent).iter().filter(|effect| effect.runtime_entity_id == 1 && effect.event_id == acacia_proto::packets::MobEffectEventId::Add).map(|effect| (effect.effect_id, effect.duration)));
+        health.extend(all::<acacia_proto::packets::UpdateAttributes>(&sent).iter().filter(|update| update.runtime_entity_id == 1).flat_map(|update| &update.attributes).filter(|attribute| attribute.name == "minecraft:health").map(|attribute| attribute.current));
+    }
+    assert!(thrown.len() == 2 && thrown[0].1 == Some(25) && thrown[1].1 == Some(23) && thrown[1].0 - thrown[0].0 == 60 && (60..80).contains(&thrown[0].0), "{thrown:?}");
+    assert!(effects.contains(&(19, 900)), "{effects:?}");
+    assert!(health.windows(2).any(|pair| (pair[0] - pair[1] - 6.0).abs() < 1e-3), "{health:?}");
+}
+
+#[test]
 fn a_blaze_shoots_three_small_fireballs_six_ticks_apart_that_burn_whom_they_hit() {
     // research/captures/bds-blaze.txt: the first 83 ticks after it took its prey; bds-kinds2.txt: 5 and fire.
     let mut h = Harness::new();

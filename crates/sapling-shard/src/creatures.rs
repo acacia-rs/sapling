@@ -13,6 +13,7 @@ mod health;
 mod hunting;
 mod legs;
 mod paths;
+mod splashes;
 mod strolling;
 
 use bevy_ecs::prelude::*;
