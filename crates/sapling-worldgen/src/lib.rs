@@ -13,6 +13,7 @@ mod chunk;
 pub mod climate;
 mod decoration;
 pub mod density;
+pub mod end;
 mod feature;
 mod floor;
 mod fxhash;
@@ -31,6 +32,7 @@ use std::sync::Arc;
 
 pub use biome::ChunkBiomes;
 pub use block::Block;
+pub use end::EndGenerator;
 pub use nether::NetherGenerator;
 #[doc(hidden)]
 pub use feature::reach::{Cells as ReachCells, Tries as ReachTries};

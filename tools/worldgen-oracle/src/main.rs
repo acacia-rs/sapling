@@ -79,10 +79,13 @@ fn dump(world: &LevelDbWorld, x: i32, z: i32, dimension: i32) -> Result<()> {
     Ok(())
 }
 
-/// Every chunk saved with biomes in every section, and its floor (y = -64) all bedrock again.
+/// Every chunk saved with biomes in every section, and the layer the pack touched (the floor, all bedrock; the End's
+/// top layer, all air) as it was.
 fn check(world: &LevelDbWorld, keys: &[ChunkKey]) -> Result<()> {
     let registry = world.registry();
-    let is_bedrock = |id| registry.get(id).is_some_and(|state| state.name == "minecraft:bedrock");
+    let end = keys.first().is_some_and(|key| key.dimension == 2);
+    let base = if end { "minecraft:air" } else { "minecraft:bedrock" };
+    let is_bedrock = |id| registry.get(id).is_some_and(|state| state.name == base);
     let (mut missing, mut no_biomes, mut bad_floor) = (0, 0, 0);
     for &key in keys {
         let Some(saved) = world.load_column(key)? else {
@@ -90,11 +93,11 @@ fn check(world: &LevelDbWorld, keys: &[ChunkKey]) -> Result<()> {
             continue;
         };
         let chunk = saved.chunk;
-        let floor = ys(&chunk).start;
+        let floor = if end { ys(&chunk).end - 1 } else { ys(&chunk).start };
         no_biomes += usize::from(ys(&chunk).step_by(16).any(|y| chunk.biome(0, y, 0).is_none()));
         bad_floor += usize::from((0..256).any(|i| !is_bedrock(chunk.block(i & 15, floor, i >> 4))));
     }
-    println!("{} chunks: {missing} not saved, {no_biomes} without biomes for every section, {bad_floor} with a floor not all bedrock", keys.len());
+    println!("{} chunks: {missing} not saved, {no_biomes} without biomes for every section, {bad_floor} with the touched layer not all {base}", keys.len());
     if missing + no_biomes + bad_floor > 0 {
         return Err("incomplete".into());
     }

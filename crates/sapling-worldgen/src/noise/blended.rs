@@ -74,22 +74,26 @@ pub fn legacy_octaves(random: &mut impl NoiseRandom, count: usize) -> Vec<Improv
     (0..count).map(|_| ImprovedNoise::new_blended(random)).collect()
 }
 
-const COLUMNS: usize = CELL_COLUMNS * CELL_COLUMNS;
-
-/// The grid by row, a row's columns side by side (column `gx * 5 + gz`) so an octave runs them in lanes.
-type Rows<const ROWS: usize> = [[f32; COLUMNS]; ROWS];
+/// The grid by row, a row's `N` columns side by side (column `gx * S + gz`) so an octave runs them in lanes.
+type Rows<const N: usize, const ROWS: usize> = [[f32; N]; ROWS];
 
 /// The octaves summed over a 5x5 cell grid `ROWS` tall (`LegacyBlendedNoise::fillOctave` per octave), laid
 /// out `[x][z][y]`; octave k samples at `scales * 2^-k` and is divided by `2^-k`.
-pub fn fill_grid<const ROWS: usize>(octaves: &[ImprovedNoise], origin: [f32; 3], [xz_scale, y_scale]: [f32; 2]) -> Vec<f32> {
-    let mut rows: Box<Rows<ROWS>> = Box::new([[0.0; COLUMNS]; ROWS]);
+pub fn fill_grid<const ROWS: usize>(octaves: &[ImprovedNoise], origin: [f32; 3], scales: [f32; 2]) -> Vec<f32> {
+    fill_square_grid::<CELL_COLUMNS, { CELL_COLUMNS * CELL_COLUMNS }, ROWS>(octaves, origin, scales)
+}
+
+/// `fill_grid` over `S` x `S` columns (`N` = `S * S`), with independent xz and y scales per octave.
+pub fn fill_square_grid<const S: usize, const N: usize, const ROWS: usize>(octaves: &[ImprovedNoise], origin: [f32; 3], [xz_scale, y_scale]: [f32; 2]) -> Vec<f32> {
+    assert_eq!(S * S, N);
+    let mut rows: Box<Rows<N, ROWS>> = Box::new([[0.0; N]; ROWS]);
     let mut factor = 1.0f32;
     for octave in octaves {
         let (xz, y) = (xz_scale * factor, y_scale * factor);
-        fill_octave(&Octave::<ROWS>::new(octave, origin, [xz, y, xz], factor), &mut rows);
+        fill_octave(&Octave::<S, N, ROWS>::new(octave, origin, [xz, y, xz], factor), &mut rows);
         factor *= 0.5;
     }
-    let mut out = vec![0.0f32; COLUMNS * ROWS];
+    let mut out = vec![0.0f32; N * ROWS];
     for (gy, row) in rows.iter().enumerate() {
         for (column, &value) in row.iter().enumerate() {
             out[column * ROWS + gy] = value;
@@ -100,22 +104,22 @@ pub fn fill_grid<const ROWS: usize>(octaves: &[ImprovedNoise], origin: [f32; 3],
 
 /// One octave over the grid (145e23fc0, general branch): each row's y lattice index and fraction,
 /// each column's x and z.
-struct Octave<'a, const ROWS: usize> {
+struct Octave<'a, const S: usize, const N: usize, const ROWS: usize> {
     noise: &'a ImprovedNoise,
     y_scale: f32,
     inverse_factor: f32,
     fudge_index: i32,
     fudge_frac: f32,
     y: [f32; ROWS],
-    ix: [i32; COLUMNS],
-    iz: [i32; COLUMNS],
-    fx: [f32; COLUMNS],
-    fz: [f32; COLUMNS],
-    sx: [f32; COLUMNS],
-    sz: [f32; COLUMNS],
+    ix: [i32; N],
+    iz: [i32; N],
+    fx: [f32; N],
+    fz: [f32; N],
+    sx: [f32; N],
+    sz: [f32; N],
 }
 
-impl<'a, const ROWS: usize> Octave<'a, ROWS> {
+impl<'a, const S: usize, const N: usize, const ROWS: usize> Octave<'a, S, N, ROWS> {
     fn new(noise: &'a ImprovedNoise, origin: [f32; 3], scale: [f32; 3], factor: f32) -> Self {
         let fudge_y = scale[1] * 0.0 + noise.yo;
         let fudge_index = fudge_y as i32;
@@ -126,15 +130,15 @@ impl<'a, const ROWS: usize> Octave<'a, ROWS> {
             fudge_index,
             fudge_frac: fudge_y - fudge_index as f32,
             y: std::array::from_fn(|gy| ((gy as f32) + origin[1]) * scale[1] + noise.yo),
-            ix: [0; COLUMNS],
-            iz: [0; COLUMNS],
-            fx: [0.0; COLUMNS],
-            fz: [0.0; COLUMNS],
-            sx: [0.0; COLUMNS],
-            sz: [0.0; COLUMNS],
+            ix: [0; N],
+            iz: [0; N],
+            fx: [0.0; N],
+            fz: [0.0; N],
+            sx: [0.0; N],
+            sz: [0.0; N],
         };
-        for c in 0..COLUMNS {
-            let (gx, gz) = (c / CELL_COLUMNS, c % CELL_COLUMNS);
+        for c in 0..N {
+            let (gx, gz) = (c / S, c % S);
             (octave.ix[c], octave.fx[c]) = split(((gx as f32) + origin[0]) * scale[0] + noise.xo);
             (octave.iz[c], octave.fz[c]) = split(((gz as f32) + origin[2]) * scale[2] + noise.zo);
             octave.sx[c] = smoothstep(octave.fx[c]);
@@ -175,19 +179,19 @@ impl<'a, const ROWS: usize> Octave<'a, ROWS> {
 /// columns, as BDS does. Rows decide reuse alike in every column (the last row of one column leaves
 /// its index for the next), so the columns run together row by row, unless a column's first row
 /// would reuse the previous column's last gradients: then they run in BDS's order, one by one.
-fn fill_octave<const ROWS: usize>(octave: &Octave<ROWS>, rows: &mut Rows<ROWS>) {
+fn fill_octave<const S: usize, const N: usize, const ROWS: usize>(octave: &Octave<S, N, ROWS>, rows: &mut Rows<N, ROWS>) {
     let last = octave.row(ROWS - 1, -1).0;
     if octave.row(0, last).2.is_none() {
         return fill_octave_serial(octave, rows);
     }
-    let mut corners = [[0.0f32; COLUMNS]; 4];
+    let mut corners = [[0.0f32; N]; 4];
     let mut last_iy = -1;
     for (gy, row) in rows.iter_mut().enumerate() {
         let (iy, fy, gradient_y) = octave.row(gy, last_iy);
         if let Some(gy_frac) = gradient_y {
-            for gx in 0..CELL_COLUMNS {
-                let hashes = xy_hashes(octave.noise, octave.ix[gx * CELL_COLUMNS], iy);
-                for c in gx * CELL_COLUMNS..(gx + 1) * CELL_COLUMNS {
+            for gx in 0..S {
+                let hashes = xy_hashes(octave.noise, octave.ix[gx * S], iy);
+                for c in gx * S..(gx + 1) * S {
                     let computed = lerped_from(octave.noise, hashes, octave.iz[c], [octave.fx[c], gy_frac, octave.fz[c]], octave.sx[c]);
                     (0..4).for_each(|i| corners[i][c] = computed[i]);
                 }
@@ -201,10 +205,10 @@ fn fill_octave<const ROWS: usize>(octave: &Octave<ROWS>, rows: &mut Rows<ROWS>) 
     }
 }
 
-fn fill_octave_serial<const ROWS: usize>(octave: &Octave<ROWS>, rows: &mut Rows<ROWS>) {
+fn fill_octave_serial<const S: usize, const N: usize, const ROWS: usize>(octave: &Octave<S, N, ROWS>, rows: &mut Rows<N, ROWS>) {
     let mut last_iy = -1i32;
     let mut corners = [0.0f32; 4];
-    for c in 0..COLUMNS {
+    for c in 0..N {
         for (gy, row) in rows.iter_mut().enumerate() {
             let (iy, fy, gradient_y) = octave.row(gy, last_iy);
             if let Some(gy_frac) = gradient_y {

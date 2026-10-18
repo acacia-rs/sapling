@@ -3,7 +3,7 @@
 //! (`Block::is_plant`).
 
 macro_rules! with_nether_blocks {
-    ($($plants:tt)*) => {
+    ({$($plants:tt)*} {$($after:tt)*}) => {
         with_multiface_blocks! {
             $($plants)*
             Netherrack => "netherrack" "",
@@ -100,6 +100,7 @@ macro_rules! with_nether_blocks {
             TwistingVines20 => "twisting_vines" "twisting_vines_age=20", TwistingVines21 => "twisting_vines" "twisting_vines_age=21",
             TwistingVines22 => "twisting_vines" "twisting_vines_age=22", TwistingVines23 => "twisting_vines" "twisting_vines_age=23",
             TwistingVines24 => "twisting_vines" "twisting_vines_age=24", TwistingVines25 => "twisting_vines" "twisting_vines_age=25",
+            $($after)*
         }
     };
 }

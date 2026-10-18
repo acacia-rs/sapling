@@ -14,10 +14,17 @@ pub struct Buffers {
     names: HashMap<u64, u16>,
     pub kinds: Vec<String>,
     dir: PathBuf,
+    /// The breakpoint's name in the dump files: `nether`, or `end` (scripts/data/dbg_end_buffers.json).
+    prefix: &'static str,
 }
 
 impl Buffers {
     pub fn open(dir: &Path) -> Option<Self> {
+        Self::open_named(dir, "nether")
+    }
+
+    /// The End's buffers have the Nether's layout, 16x16x128.
+    pub fn open_named(dir: &Path, prefix: &'static str) -> Option<Self> {
         let table = std::fs::read_to_string(dir.join("block_ptrs.tsv")).ok()?;
         let (mut names, mut kinds, mut index) = (HashMap::new(), Vec::new(), HashMap::new());
         for line in table.lines() {
@@ -30,12 +37,12 @@ impl Buffers {
             });
             names.insert(pointer, id);
         }
-        Some(Self { names, kinds, dir: dir.to_path_buf() })
+        Some(Self { names, kinds, dir: dir.to_path_buf(), prefix })
     }
 
     /// The chunk's block names by `[x][z][y]` index, if the run dumped it.
     pub fn chunk(&self, chunk_x: i32, chunk_z: i32) -> Option<Vec<&str>> {
-        let raw = std::fs::read(self.dir.join(format!("ptr-nether-{chunk_x}_{chunk_z}-0.bin"))).ok()?;
+        let raw = std::fs::read(self.dir.join(format!("ptr-{}-{chunk_x}_{chunk_z}-0.bin", self.prefix))).ok()?;
         assert_eq!(raw.len(), CELLS * 8);
         Some(raw.chunks_exact(8).map(|cell| self.names.get(&u64::from_le_bytes(cell.try_into().unwrap())).map_or("?", |&id| self.kinds[id as usize].as_str())).collect())
     }
@@ -47,7 +54,7 @@ impl Buffers {
             .flatten()
             .filter_map(|entry| {
                 let name = entry.ok()?.file_name().into_string().ok()?;
-                let (x, z) = name.strip_prefix("ptr-nether-")?.strip_suffix("-0.bin")?.split_once('_')?;
+                let (x, z) = name.strip_prefix("ptr-")?.strip_prefix(self.prefix)?.strip_prefix('-')?.strip_suffix("-0.bin")?.split_once('_')?;
                 Some((x.parse().ok()?, z.parse().ok()?))
             })
             .collect();

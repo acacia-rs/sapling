@@ -44,6 +44,8 @@ mod structure_table;
 mod multiface_table;
 #[macro_use]
 mod nether_table;
+#[macro_use]
+mod end_table;
 mod layers;
 mod material_table;
 mod plant_table;
@@ -134,7 +136,7 @@ impl Block {
 
     /// Plants placed by features: no collision, no light blocking, never terrain.
     pub fn is_plant(self) -> bool {
-        (Block::ShortGrass..Block::PointedDripstoneWet).contains(&self) || (Block::GlowLichen1..=Block::SculkVeinWet63).contains(&self) || self >= Block::CrimsonRoots
+        (Block::ShortGrass..Block::PointedDripstoneWet).contains(&self) || (Block::GlowLichen1..=Block::SculkVeinWet63).contains(&self) || (Block::CrimsonRoots..=Block::TwistingVines25).contains(&self)
     }
 
     /// Pointed dripstone or a sulfur spike with water in the second layer.

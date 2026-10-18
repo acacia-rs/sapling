@@ -12,7 +12,7 @@ mod simplex;
 #[cfg(test)]
 mod tests;
 
-pub use blended::{BlendedNoise, CELL_COLUMNS, CELL_COUNT, CELL_ROWS, CellGrid, fill_grid, legacy_octaves};
+pub use blended::{BlendedNoise, CELL_COLUMNS, CELL_COUNT, CELL_ROWS, CellGrid, fill_grid, fill_square_grid, legacy_octaves};
 pub use improved::{ImprovedNoise, LANES, Lanes};
 pub use legacy::LegacyPerlin;
 pub use normal::NormalNoise;
