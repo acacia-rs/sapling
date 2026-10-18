@@ -53,6 +53,7 @@ HUNTS = {
     "minecraft:creeper": "attack=0 speed=0.25 sees=16 explodes=3",
     "minecraft:drowned": "attack=3 speed=0.23 sees=35",
     "minecraft:enderman": "attack=7 speed=0.45 sees=64 provoked",
+    "minecraft:evocation_illager": "attack=0 speed=0.5 sees=20 casts",
     "minecraft:endermite": "attack=2 speed=0.25 sees=16",
     "minecraft:husk": "attack=3 speed=0.23 sees=35 hits=hunger:600",
     "minecraft:iron_golem": "attack=7 upto=21 speed=0.15 sees=16 provoked",

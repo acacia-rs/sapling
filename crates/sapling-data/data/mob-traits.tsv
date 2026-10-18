@@ -24,7 +24,7 @@ minecraft:ender_crystal	fire_immune
 minecraft:ender_dragon	fire_immune no_fall
 minecraft:enderman	teleports xp=5-5 strolls=0.3 attack=7 speed=0.45 sees=64 provoked
 minecraft:endermite	xp=3-3 strolls=0.25 attack=2 speed=0.25 sees=16
-minecraft:evocation_illager	xp=10-10 strolls=0.3
+minecraft:evocation_illager	xp=10-10 strolls=0.3 attack=0 speed=0.5 sees=20 casts
 minecraft:fox	xp=1-3 strolls=0.24 panics=0.375
 minecraft:frog	breathes_water xp=1-3
 minecraft:ghast	fire_immune no_fall xp=5-5

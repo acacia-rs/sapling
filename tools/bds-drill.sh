@@ -14,7 +14,8 @@ log="$bds/drill.log"
 cd "$bds" || exit 1
 {
   n=0
-  until grep -q 'Server started' "$log" || [ "$n" -ge 120 ]; do sleep 0.5; n=$((n + 1)); done
+  # A loaded testbox took 64 s to start one (2026-10-18).
+  until grep -q 'Server started' "$log" || [ "$n" -ge 360 ]; do sleep 0.5; n=$((n + 1)); done
   "$probe" "127.0.0.1:$port" "${@:5}" >"$out" 2>&1
   echo "probe exit $?" >>"$out"
   echo stop

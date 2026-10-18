@@ -1,11 +1,12 @@
 //! Mobs, spawned through the plugin API or kept by a world folder: bodies (body.rs) that fall and
 //! collide, stroll (strolling.rs) and hunt if their kind does (hunting.rs), shown as BDS announced their kind (`sapling_data::add_entity`) or
-//! as they were stored; and the entity side of the handlers' context.
+//! as they were stored; and the entity side of the handlers' context (backend.rs).
 // TODO: no AI but strolling and hunting; their physics are the Java game's (`Physics::MOB`); a spawned mob is
 // saved with the least a compound needs, which BDS was not tried on.
 
 mod arrows;
 mod attacks;
+mod backend;
 mod blast;
 mod duels;
 mod harm;
@@ -14,6 +15,7 @@ mod hunting;
 mod legs;
 mod paths;
 mod rams;
+mod spells;
 mod splashes;
 mod strolling;
 mod teleports;
@@ -22,7 +24,7 @@ use bevy_ecs::prelude::*;
 use bytes::Bytes;
 use acacia_proto::packets::{EntityEvent, EntityEventEventId, LevelSoundEvent};
 use acacia_proto::types::{MetadataFlags1, Vec3f};
-use sapling_api::{EntityBackend, EntityId, EntityInfo, Item};
+use sapling_api::{EntityId, Item};
 use sapling_data::AddEntityOptions;
 
 use sapling_world::Actor;
@@ -34,11 +36,9 @@ pub(crate) use blast::{Wreck, explode};
 pub(crate) use harm::{holds, is_full_block, touches};
 pub(crate) use health::{Cause, Health};
 use crate::components::{InLayer, Layer, NetId, Tick};
-use crate::handlers::Ctx;
-use crate::{blocks, drops, entities, inventory, mobs, orbs, tnt, worlds};
+use crate::{blocks, drops, entities, inventory, mobs};
 
 const MOB_LOOT: &str = "doMobLoot";
-const ORB: &str = "minecraft:xp_orb";
 
 /// A mob: spawned through the API, or kept by a world folder and dressed as it was stored
 /// (`look`). Its [`Body`] and [`entities::Kind`] are beside it.
@@ -146,6 +146,7 @@ fn give_legs(world: &mut World, entity: Entity, kind: &str) {
     hunting::arm(world, entity, kind);
     teleports::arm(world, entity, kind);
     rams::arm(world, entity, kind);
+    spells::arm(world, entity, kind);
 }
 
 /// Gives a mob of a kind that dies the health BDS announced its kind with, `left` of it, and
@@ -217,6 +218,7 @@ fn leave_loot(world: &mut World, layer: Entity, kind: &str, on_fire: bool, [x, y
 /// Moves every spawned mob a tick and hurts it by where it is; a dead one goes once it has died.
 pub(crate) fn tick(world: &mut World) {
     arrows::tick(world);
+    spells::tick(world);
     let now = world.resource::<Tick>().0;
     let dead: Vec<Entity> = world.query::<(Entity, &Dying)>().iter(world).filter(|(_, dying)| now >= dying.0 + DYING).map(|(entity, _)| entity).collect();
     for entity in dead {
@@ -259,42 +261,3 @@ pub(crate) fn tick(world: &mut World) {
     }
 }
 
-impl EntityBackend for Ctx<'_> {
-    /// An orb is an orb, worth 1 and thrown as orbs are, as BDS's `/summon xp_orb` makes one.
-    fn spawn_entity(&mut self, kind: &str, feet: [f32; 3]) -> Option<EntityId> {
-        let layer = worlds::current(self.world);
-        if kind == ORB {
-            let orb = orbs::throw(self.world, layer, feet, 1)?;
-            return Some(EntityId(self.world.get::<NetId>(orb)?.0));
-        }
-        if kind == tnt::KIND {
-            let primed = tnt::prime(self.world, layer, feet, tnt::FUSE)?;
-            return Some(EntityId(self.world.get::<NetId>(primed)?.0));
-        }
-        spawn(self.world, layer, kind, feet)
-    }
-
-    fn entity(&self, id: EntityId) -> Option<EntityInfo> {
-        entities::describe(self.world, id)
-    }
-
-    fn entities(&self) -> Vec<EntityInfo> {
-        entities::listed(self.world, worlds::current(self.world))
-    }
-
-    fn move_entity(&mut self, id: EntityId, feet: [f32; 3]) -> bool {
-        entities::change(self.world, id, |body| body.at = feet)
-    }
-
-    fn set_velocity(&mut self, id: EntityId, velocity: [f32; 3]) -> bool {
-        entities::change(self.world, id, |body| body.motion = velocity)
-    }
-
-    fn remove_entity(&mut self, id: EntityId) -> bool {
-        entities::remove(self.world, id)
-    }
-
-    fn kill_entity(&mut self, id: EntityId) -> bool {
-        kill(self.world, id)
-    }
-}

@@ -243,6 +243,22 @@ pub fn goat() -> Vec<String> {
     lines
 }
 
+/// As `witch`, an evoker 10 off for thirty seconds, then one held still 2 off for fifteen.
+pub fn evoker() -> Vec<String> {
+    let mut lines: Vec<String> =
+        ["kill @e[type=!player]", "gamerule domobspawning false", "difficulty easy", "time set midnight", "fill ~-3 ~-1 ~-12 ~12 ~-1 ~40 stone", "fill ~-3 ~ ~-12 ~12 ~6 ~40 air", "gamemode survival @s", "tp @s ~6 ~ ~20", ""].map(String::from).into();
+    for (off, held, seconds) in [(10, false, 30), (2, true, 15)] {
+        lines.push(format!("summon evocation_illager ~ ~ ~-{off}"));
+        if held {
+            lines.push("effect @e[type=evocation_illager] slowness 30 255".into());
+        }
+        lines.extend(std::iter::repeat_n("effect @s instant_health 1 4".to_owned(), seconds));
+        lines.extend(["kill @e[type=!player]", "effect @s clear", "", ""].map(String::from));
+    }
+    lines.extend(["gamemode creative @s", ""].map(String::from));
+    lines
+}
+
 /// As `shoot`, a stray, a bogged and a pillager each 5 blocks off for ten seconds.
 pub fn shoot2() -> Vec<String> {
     let mut lines: Vec<String> =

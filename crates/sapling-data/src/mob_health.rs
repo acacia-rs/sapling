@@ -52,6 +52,8 @@ pub struct Hunts {
     pub provoked: bool,
     /// An archer that walks on at its prey while it shoots.
     pub closes: bool,
+    /// It casts spells at its prey and never walks at it (the evoker).
+    pub casts: bool,
     /// Its hit costs a whole number from `attack` up to this, where it varies, and it throws
     /// harder than others (the iron golem).
     pub upto: Option<f32>,
@@ -79,7 +81,7 @@ pub fn mob_traits(identifier: &str) -> MobTraits {
     let value = |name: &str| row.and_then(|(_, traits)| traits.split(' ').find_map(|held| held.strip_prefix(name)));
     let number = |name: &str| value(name).and_then(|value| value.parse::<f32>().ok());
     let gives = value("hits=").and_then(|given| given.split_once(':')).and_then(|(effect, ticks)| Some((effect, ticks.parse().ok()?)));
-    let hunts = number("attack=").zip(number("speed=")).zip(number("sees=")).map(|((attack, speed), sees)| Hunts { attack, speed, sees, gives, explodes: number("explodes="), shoots: number("shoots=").map(|ticks| ticks as u32), provoked: has("provoked"), closes: has("closes"), upto: number("upto="), every: number("every=").map(|ticks| ticks as u32), by_dark: has("by_dark"), aims: number("aims=").map(|ticks| ticks as u32), volley: value("volley=").and_then(|volley| volley.split_once('x')).and_then(|(shots, gap)| Some((shots.parse().ok()?, gap.parse().ok()?))), shot: value("shot="), calms: number("calms=").map(|ticks| ticks as u32), once: has("once") });
+    let hunts = number("attack=").zip(number("speed=")).zip(number("sees=")).map(|((attack, speed), sees)| Hunts { attack, speed, sees, gives, explodes: number("explodes="), shoots: number("shoots=").map(|ticks| ticks as u32), provoked: has("provoked"), closes: has("closes"), casts: has("casts"), upto: number("upto="), every: number("every=").map(|ticks| ticks as u32), by_dark: has("by_dark"), aims: number("aims=").map(|ticks| ticks as u32), volley: value("volley=").and_then(|volley| volley.split_once('x')).and_then(|(shots, gap)| Some((shots.parse().ok()?, gap.parse().ok()?))), shot: value("shot="), calms: number("calms=").map(|ticks| ticks as u32), once: has("once") });
     MobTraits { fire_immune: has("fire_immune"), burns_in_sun: has("burns_in_sun"), no_fall: has("no_fall"), breathes_water: has("breathes_water"), teleports: has("teleports"), experience, hunts, strolls: number("strolls="), panics: number("panics=") }
 }
 
@@ -103,6 +105,17 @@ pub fn mob_fuse(id: u64, identifier: &str, left: i32) -> SetEntityData {
         MetadataDictionaryItem { key: Key::Flags, r#type: Type::Long, legacy_type: 7, value: Value::Flags(flags) },
         MetadataDictionaryItem { key: Key::FuseLength, r#type: Type::Int, legacy_type: 2, value: Value::Default(Plain::Int(left)) },
     ];
+    SetEntityData { runtime_entity_id: id, metadata, properties: EntityProperties { ints: Vec::new(), floats: Vec::new() }, tick: 0 }
+}
+
+/// The mob `id`, a grown one of `identifier`, casts a spell of `colour` (ARGB), or stops casting.
+pub fn mob_spell(id: u64, identifier: &str, colour: Option<i32>) -> SetEntityData {
+    let flags = MetadataFlags1(mob_flags(identifier).0 | if colour.is_some() { MetadataFlags1::EVOKER_SPELL.0 } else { 0 });
+    let mut metadata = vec![MetadataDictionaryItem { key: Key::Flags, r#type: Type::Long, legacy_type: 7, value: Value::Flags(flags) }];
+    // BDS never clears the colour; it rewrites it with the next spell.
+    if let Some(colour) = colour {
+        metadata.push(MetadataDictionaryItem { key: Key::EvokerSpellCastingColor, r#type: Type::Int, legacy_type: 2, value: Value::Default(Plain::Int(colour)) });
+    }
     SetEntityData { runtime_entity_id: id, metadata, properties: EntityProperties { ints: Vec::new(), floats: Vec::new() }, tick: 0 }
 }
 

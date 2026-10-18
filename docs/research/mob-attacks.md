@@ -302,6 +302,26 @@ Three runs at noon on easy (`research/captures/bds-goat-findings.md`; `bds-goat-
   the push alone.
 - Each ram met someone, so a miss was not seen. The goats leapt the glass, 3 high.
 
+## The evoker (`evoker`)
+
+An evoker 10 off for thirty seconds, then one held still 2 off for fifteen, the actor in survival
+at midnight on easy and healed each second (`research/captures/bds-evoker-findings.md`):
+
+- It took the actor within 20 and began a cast that tick: `EVOKER_SPELL` with the spell's colour
+  (fangs `0xFF664D59`, vexes `0xFFB3B3CC`), `cast.spell` a tick later, standing still for the 39
+  ticks the flag showed. The next cast began 101 ticks after a fang cast ended, 342 after a vex one.
+- Prey 3 off or more got a line: 16 `evocation_fang`s a tick apart from 21 ticks after the cast
+  began, fang i at the floor of the evoker's x and z plus 1.25 (i + 1) towards the prey, y the top
+  of each column's ground. Nearer prey got two rings, with `prepare.attack` at the start and again
+  with the first: 5 fangs 1.5 out and, 3 ticks later, 8 at 2.5, both from the angle to the prey.
+- A fang came with `LimitedLife` 22, swung (`ArmSwing`) and bit the tick after, and sounded `throw`
+  and `fang` the tick after that; it went 11 ticks after it came. A bite cost 6 on easy by magic
+  (`HurtAnimation` 14) and threw 0.4 away from the evoker and 0.4 up; one bite a cast landed.
+- An evoker that lost its prey ended its cast at once, after 5 of its 16 fangs.
+- Its vexes (one cast in three at 10 off) came three, a block from it, flew through blocks,
+  charged at 0.91 v + 0.05 a tick and hit for 5.5. It stepped away from a player 2 off, as its
+  `avoid_mob_type` says, and walked between casts for a reason not seen.
+
 ## Strolling (`stroll`)
 
 A zombie and a cow left alone for a minute on a floor 40 blocks square, the actor in creative
@@ -368,6 +388,10 @@ calm or from beside its prey, a stare does not anger it, water does nothing to i
 
 A goat rams players as above (`creatures/rams.rs`), charging at most 8 blocks; it shows no prey
 between rams, rams no mob, and a baby rams as hard as a grown one.
+
+An evoker casts its fangs as above (`creatures/spells.rs`, `casts` in `mob-traits.tsv`), its
+line's way taken as the first fang rises, and strolls between casts. It summons no vexes, steps
+away from nobody, and its fangs bite no mob; a fang stands on full blocks only.
 
 A wolf and a zombified piglin hunt none but a survival player that hit them, from that tick
 (`hunting::provoke`), and so do an iron golem, with a hit of 7 to 21 and its throw, and a polar

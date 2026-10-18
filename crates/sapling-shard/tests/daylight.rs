@@ -121,6 +121,34 @@ fn a_goat_waits_then_runs_off_stands_and_rams_a_player_for_2_and_a_long_push() {
 }
 
 #[test]
+fn an_evoker_casts_a_line_of_sixteen_fangs_a_tick_apart_that_bite_for_6_by_magic() {
+    // research/captures/bds-evoker-findings.md: the first fang 21 ticks after the cast shows, 1.25
+    // apart from 1.25 out, each floored; one bite for 6 a cast, thrown 0.4 from the evoker.
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    h.remote.run(|ctx| {
+        ctx.set_difficulty(Difficulty::Easy);
+        ctx.set_time(18000);
+        assert!(ctx.spawn_entity("minecraft:evocation_illager", [0.5, 65.0, 6.5]).is_some());
+    });
+    let (mut cast, mut fangs, mut bites, mut throws) = (None, Vec::new(), Vec::new(), Vec::new());
+    for tick in 0..100 {
+        let sent = h.tick_all().to(1).to_vec();
+        let spell = all::<acacia_proto::packets::SetEntityData>(&sent).iter().any(|data| data.metadata.iter().any(|item| item.key == acacia_proto::types::MetadataDictionaryItemKey::EvokerSpellCastingColor));
+        cast = cast.or(spell.then_some(tick));
+        fangs.extend(all::<acacia_proto::packets::AddEntity>(&sent).iter().filter(|added| added.entity_type == "minecraft:evocation_fang").map(|added| (tick, added.position.x, added.position.z)));
+        bites.extend(all::<EntityEvent>(&sent).iter().filter(|event| event.runtime_entity_id == 1 && event.event_id == EntityEventEventId::HurtAnimation).map(|event| event.data));
+        throws.extend(all::<acacia_proto::packets::SetEntityMotion>(&sent).iter().filter(|motion| motion.runtime_entity_id == 1).map(|motion| [motion.velocity.x, motion.velocity.y, motion.velocity.z]));
+    }
+    let cast = cast.expect("a cast");
+    // Those past the platform's edge, z -8, have no ground and do not rise.
+    let lined: Vec<(u64, f32, f32)> = (0..16).map(|i| (cast + 21 + i, 0.0, (6.5 - 1.25 * (i + 1) as f32).floor())).filter(|(_, _, z)| *z >= -8.0).collect();
+    assert_eq!(fangs, lined);
+    assert_eq!(bites, [14], "one bite, by magic");
+    assert!(throws.len() == 1 && (throws[0][1] - 0.4).abs() < 1e-4 && (throws[0][2] + 0.4).abs() < 1e-3, "{throws:?}");
+}
+
+#[test]
 fn a_blaze_shoots_three_small_fireballs_six_ticks_apart_that_burn_whom_they_hit() {
     // research/captures/bds-blaze.txt: the first 83 ticks after it took its prey; bds-kinds2.txt: 5 and fire.
     let mut h = Harness::new();
