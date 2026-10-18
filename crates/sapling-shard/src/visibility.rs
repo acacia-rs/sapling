@@ -84,6 +84,17 @@ pub(crate) fn update(mut viewers: Query<Viewer>, seen: Query<Seen>) {
     }
 }
 
+/// Removes from a player's client every player and mob it has as an entity: they are of a world
+/// it leaves. The next diff shows it those of where it goes.
+pub(crate) fn forget_seen(world: &mut World, player: Entity) {
+    let seen: Vec<Entity> = world.get_mut::<Sees>(player).map(|mut sees| std::mem::take(&mut sees.0).into_iter().collect()).unwrap_or_default();
+    let mut ids: Vec<u64> = seen.into_iter().filter_map(|other| world.get::<NetId>(other).map(|id| id.0)).collect();
+    ids.extend(world.get_mut::<crate::mobs::SeesMobs>(player).map(|mut sees| sees.take_ids()).unwrap_or_default());
+    if let Some(mut out) = world.get_mut::<Outgoing>(player) {
+        ids.into_iter().for_each(|id| out.push(&RemoveEntity { entity_id_self: id as i64 }));
+    }
+}
+
 /// Hands this tick's packets about each player to the players who see it.
 pub(crate) fn fan_out(mut to_viewers: ResMut<ToViewers>, mut viewers: Query<(Entity, &Sees, &mut Outgoing)>) {
     if to_viewers.0.is_empty() {

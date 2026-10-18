@@ -72,8 +72,15 @@ impl CommandSyntax for Teleport {
 }
 
 impl Command for Teleport {
-    /// Each player moved is told where to, as BDS tells them.
     fn run(self, ctx: &mut ShardCtx<'_>, sender: &Sender, out: &mut Output) {
+        self.run_in(ctx, sender, out, None);
+    }
+}
+
+impl Teleport {
+    /// Each player moved is told where to, as BDS tells them; into `dimension` of its world when
+    /// one is named (`/execute in`), the way BDS changes a player's dimension.
+    pub(crate) fn run_in(self, ctx: &mut ShardCtx<'_>, sender: &Sender, out: &mut Output, dimension: Option<i32>) {
         let here = origin(ctx, sender);
         let (to, at) = match &self.to {
             Destination::Place(coords) => (coords.from(here), None),
@@ -91,9 +98,10 @@ impl Command for Teleport {
         let (moved_players, moved) = (or_sender(ctx, sender, self.target.as_ref()), self.target.as_ref().map_or_else(Vec::new, |target| entities(ctx, target)));
         let [x, y, z] = to.map(|c| format!("{c:.2}"));
         for player in &moved_players {
-            match self.looks {
-                Some(looks) => ctx.teleport_facing(player.id, to, looks),
-                None => ctx.teleport(player.id, to),
+            match (dimension, self.looks) {
+                (Some(dimension), _) => drop(ctx.travel(player.id, dimension, to)),
+                (None, Some(looks)) => ctx.teleport_facing(player.id, to, looks),
+                (None, None) => ctx.teleport(player.id, to),
             }
             ctx.send_translation(player.id, "commands.tp.successVictim", &[at.clone().unwrap_or_else(|| format!("{x}, {y}, {z}"))]);
         }

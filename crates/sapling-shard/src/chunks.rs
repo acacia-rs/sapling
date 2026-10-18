@@ -10,7 +10,8 @@ use bevy_ecs::prelude::*;
 use sapling_world::ChunkPos;
 
 use crate::blobs::BlobCache;
-use crate::components::{InLayer, Layer, Outgoing, PacketQueues, Position, Settings, Stage, Tick};
+use crate::components::{InLayer, Layer, NetId, Outgoing, PacketQueues, Position, Settings, Stage, Tick};
+use crate::dimensions::{self, Arriving};
 use crate::view::View;
 
 /// Sections answered per request; vanilla asks for a few columns (under 100 sections) at a time.
@@ -30,12 +31,13 @@ pub(crate) fn poll_worlds(mut layers: Query<&mut Layer>) {
     }
 }
 
-type Viewer<'a> = (&'a Position, &'a InLayer, &'a mut Stage, &'a mut View, &'a mut BlobCache, &'a mut Outgoing);
+type Viewer<'a> = (&'a NetId, &'a Position, &'a InLayer, &'a mut Stage, &'a mut View, &'a mut BlobCache, &'a mut Outgoing, Option<&'a mut Arriving>);
 
 /// Follows each player with its view and announces up to a tick's budget of the columns that
-/// entered it, nearest first, as they finish loading; a joining player then spawns.
+/// entered it, nearest first, as they finish loading; a joining player then spawns, and one
+/// changing dimension is told it may leave its loading screen (dimensions.rs).
 pub(crate) fn send_chunks(settings: Res<Settings>, mut layers: Query<&mut Layer>, mut players: Query<Viewer>) {
-    for (position, in_layer, mut stage, mut view, mut blobs, mut out) in &mut players {
+    for (id, position, in_layer, mut stage, mut view, mut blobs, mut out, mut arriving) in &mut players {
         if *stage < Stage::Chunks {
             continue;
         }
@@ -47,8 +49,9 @@ pub(crate) fn send_chunks(settings: Res<Settings>, mut layers: Query<&mut Layer>
             out.push(&NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x, y, z }, radius, saved_chunks: Vec::new() });
         }
         let budget = if blobs.is_backlogged() { 0 } else { settings.0.columns_per_tick };
-        // A joining player waits on its spawn columns: those go ahead of other players' loads.
-        let spawn = (*stage == Stage::Chunks).then(|| view.center()).flatten();
+        // A joining or arriving player waits on its spawn columns: those go ahead of other players' loads.
+        let waits = *stage == Stage::Chunks || arriving.as_ref().is_some_and(|arriving| !arriving.told_ready);
+        let spawn = waits.then(|| view.center()).flatten();
         let spawn_radius = SPAWN_RADIUS.min(view.radius());
         let urgent = |pos: ChunkPos| spawn.is_some_and(|c| (pos.x - c.x).pow(2) + (pos.z - c.z).pow(2) <= spawn_radius * spawn_radius);
         for pos in view.take_ready(budget, |pos| if urgent(pos) { world.request_urgent(pos) } else { world.request(pos) }) {
@@ -56,9 +59,16 @@ pub(crate) fn send_chunks(settings: Res<Settings>, mut layers: Query<&mut Layer>
             column.blobs.iter().for_each(|blob| blobs.advertise(blob));
             out.push(&column.packet(pos.x, pos.z, world.dimension()));
         }
-        if *stage == Stage::Chunks && !view.is_waiting_within(SPAWN_RADIUS.min(view.radius())) {
+        if view.is_waiting_within(SPAWN_RADIUS.min(view.radius())) {
+            continue;
+        }
+        if *stage == Stage::Chunks {
             out.push(&PlayStatus { status: PlayStatusStatus::PlayerSpawn });
             *stage = Stage::Loading;
+        }
+        if let Some(arriving) = arriving.as_mut().filter(|arriving| !arriving.told_ready && arriving.trip.is_none()) {
+            out.push(&dimensions::ready(id.0));
+            arriving.told_ready = true;
         }
     }
 }

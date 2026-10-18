@@ -67,7 +67,11 @@ impl World {
             }
             self.accept(done);
         }
-        if let Some(Err(error)) = self.loader.as_ref().map(|loader| loader.source().storage.flush(&self.level)) {
+        let flushed = self.loader.as_ref().map(|loader| match self.dimension {
+            crate::OVERWORLD => loader.source().storage.flush(&self.level),
+            _ => loader.source().storage.sync(),
+        });
+        if let Some(Err(error)) = flushed {
             tracing::error!(%error, "flushing storage failed");
         }
         failed.len()

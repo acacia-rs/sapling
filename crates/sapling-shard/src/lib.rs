@@ -17,6 +17,7 @@ mod components;
 mod config;
 mod containers;
 mod creatures;
+mod dimensions;
 mod drops;
 mod entities;
 mod experience;

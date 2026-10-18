@@ -3,7 +3,7 @@
 //! sections that are all air are left out.
 
 use acacia_world::{BlockRegistry, Chunk, Dimension, SECTION_VOLUME};
-use sapling_worldgen::{Block, ChunkBiomes, ChunkShape, MIN_Y};
+use sapling_worldgen::{Block, ChunkBiomes, ChunkShape};
 
 /// The runtime id of every [`Block`] the generator places, looked up once by name and states.
 pub(crate) struct BlockIds {
@@ -35,7 +35,7 @@ pub(crate) fn generated_chunk(chunk_x: i32, chunk_z: i32, shape: &ChunkShape, bi
     let mut blocks = [0u32; SECTION_VOLUME];
     let mut liquid = [dim.air; SECTION_VOLUME];
     for section in 0..chunk.section_count() as i32 {
-        let base = MIN_Y + section * 16;
+        let base = dim.min_y + section * 16;
         let (mut solid, mut waterlogged) = (false, false);
         for (index, slot) in blocks.iter_mut().enumerate() {
             let (x, z, y) = (index >> 8, (index >> 4) & 15, base + (index & 15) as i32);
@@ -50,7 +50,7 @@ pub(crate) fn generated_chunk(chunk_x: i32, chunk_z: i32, shape: &ChunkShape, bi
             chunk.set_section(base >> 4, &blocks, waterlogged.then_some(&liquid));
         }
     }
-    for y in MIN_Y..MIN_Y + dim.height as i32 {
+    for y in dim.min_y..dim.min_y + dim.height as i32 {
         for z in 0..16 {
             for x in 0..16 {
                 chunk.set_biome(x as i32, y, z as i32, biomes.biome(x, y, z));

@@ -2,11 +2,12 @@
 //! when the player leaves, every few seconds while they changed, and when the shard stops.
 
 use bevy_ecs::prelude::*;
-use sapling_world::{PlayerData, PlayerLoad};
+use sapling_world::{OVERWORLD, PlayerData, PlayerLoad};
 
 use super::{ARMOR, ENDER, Held, Inventory, MAIN, Place};
 use crate::chunks::UNLOAD_INTERVAL;
-use crate::components::{DefaultLayer, Identity, Layer, NetId, Outgoing, Stage, Tick};
+use crate::components::{DefaultLayer, Identity, Layer, NetId, Outgoing, Position, Stage, Tick};
+use crate::dimensions::{self, ClientDimension};
 use crate::experience::{self, Experience};
 use crate::handoff::{Peers, ShardMsg};
 use crate::sleep::BedSpawn;
@@ -36,7 +37,7 @@ fn kept(inventory: &Inventory) -> PlayerData {
     let stacks = |slots: Vec<Option<Held>>| slots.into_iter().map(|slot| slot.map(|held| held.stack)).collect();
     let (level, progress) = (inventory.experience.level, inventory.experience.progress);
     let (main, armor, ender, offhand) = (stacks(inventory.main), stacks(inventory.armor), stacks(inventory.ender), inventory.offhand.map(|held| held.stack));
-    PlayerData { main, armor, offhand, selected: inventory.selected, ender, level, progress, vitals: None, bed: None, effects: Vec::new() }
+    PlayerData { main, armor, offhand, selected: inventory.selected, ender, level, progress, vitals: None, bed: None, effects: Vec::new(), dimension: 0, position: None }
 }
 
 /// Gives the players storage answered for their items.
@@ -54,6 +55,9 @@ pub(crate) fn load(mut commands: Commands, mut layers: Query<(Entity, &mut Layer
                 }
                 if let Some(bed) = data.bed {
                     commands.entity(player).insert(BedSpawn::restored(bed, here));
+                }
+                if let (dimension @ 1.., Some(feet)) = (data.dimension, data.position) {
+                    commands.queue(move |world: &mut World| dimensions::start_in(world, player, dimension, feet));
                 }
                 fill(&mut inventory, data);
             }
@@ -85,10 +89,12 @@ pub(crate) fn save(world: &mut World, player: Entity) {
     let Some(id) = world.get::<Identity>(player).map(|identity| identity.0.uuid.to_string()) else { return };
     let vitals = world.get::<Vitals>(player).copied();
     let effects = crate::vitals::kept_effects(world, player);
-    let stale = vitals.is_some_and(|vitals| vitals.is_unsaved()) || effects.is_some();
+    let (dimension, position) = (world.get::<ClientDimension>(player).map_or(0, |client| client.dimension), world.get::<Position>(player).map(|position| position.feet));
+    // Outside the overworld where it is matters at its next visit (load).
+    let stale = vitals.is_some_and(|vitals| vitals.is_unsaved()) || effects.is_some() || dimension != OVERWORLD;
     let Some(mut inventory) = world.get_mut::<Inventory>(player).filter(|inventory| inventory.keep && (inventory.unsaved || stale)) else { return };
     inventory.unsaved = false;
-    let data = PlayerData { vitals: vitals.map(|vitals| vitals.kept()), effects: effects.unwrap_or_default(), ..kept(&inventory) };
+    let data = PlayerData { vitals: vitals.map(|vitals| vitals.kept()), effects: effects.unwrap_or_default(), dimension, position, ..kept(&inventory) };
     let first = world.resource::<DefaultLayer>().0;
     let data = PlayerData { bed: world.get::<BedSpawn>(player).and_then(|bed| bed.kept(first)), ..data };
     if let Some(mut vitals) = world.get_mut::<Vitals>(player) {

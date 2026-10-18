@@ -8,9 +8,9 @@ mod backend;
 use bevy_ecs::prelude::*;
 use sapling_api::PlayerId;
 
-use crate::components::{Arrivals, Identity, Layer, Outgoing, Players, Stage};
+use crate::components::{Arrivals, Identity, Layer, Outgoing, PacketQueues, Players, Stage};
 use crate::plugins::Plugins;
-use crate::{blocks, campfires, chat, commands, containers, creatures, drops, entities, forms, furnaces, hoppers, inventory, late_sounds, orbs, roster, sleep, tnt, vitals, worlds};
+use crate::{blocks, campfires, chat, commands, containers, creatures, dimensions, drops, entities, forms, furnaces, hoppers, inventory, late_sounds, orbs, roster, sleep, tnt, vitals, worlds};
 
 pub(crate) struct Ctx<'w> {
     pub world: &'w mut World,
@@ -60,7 +60,9 @@ pub(crate) fn dispatch(world: &mut World, plugins: &mut Plugins) {
     blocks::flow_liquids(world);
     blocks::dispatch(world, plugins);
     blocks::dispatch_sign_edits(world);
-    sleep::tick(world);
+    let actions = world.resource_mut::<PacketQueues>().take::<acacia_proto::packets::PlayerAction>();
+    dimensions::acknowledge(world, &actions);
+    sleep::tick(world, &actions);
     campfires::tick(world);
     // After the requests: a block placed over a gap falls in the tick it was placed, as on BDS.
     blocks::fall_blocks(world);

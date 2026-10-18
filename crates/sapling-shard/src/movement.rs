@@ -84,6 +84,21 @@ pub(crate) struct Motion {
     told: Option<(Position, Pose)>,
     /// Jumps its inputs began since vitals.rs last counted them.
     pub jumps: u8,
+    /// Changing dimension: inputs are from the loading screen (dimensions.rs).
+    held: bool,
+}
+
+/// Takes none of a player's inputs until [`release`].
+pub(crate) fn hold(world: &mut World, entity: Entity) {
+    if let Some(mut motion) = world.get_mut::<Motion>(entity) {
+        motion.held = true;
+    }
+}
+
+pub(crate) fn release(world: &mut World, entity: Entity) {
+    if let Some(mut motion) = world.get_mut::<Motion>(entity) {
+        motion.held = false;
+    }
 }
 
 impl Motion {
@@ -124,14 +139,31 @@ pub(crate) fn teleport(world: &mut World, entity: Entity, feet: [f32; 3]) {
     out.push(&move_player(id.0, &position, Some(MovePlayerTeleportCause::Command), motion.input_tick));
 }
 
+/// Puts a player's feet at `feet` facing `yaw` and tells its client with MovePlayer mode Reset,
+/// as BDS places one that came through a portal (research/captures/bds-portal-light.txt).
+pub(crate) fn reset(world: &mut World, entity: Entity, feet: [f32; 3], yaw: f32) {
+    let Ok((id, mut position, motion, mut out)) = world.query::<(&NetId, &mut Position, &Motion, &mut Outgoing)>().get_mut(world, entity) else { return };
+    (position.feet, position.yaw, position.on_ground) = (feet, yaw, true);
+    let moved = MovePlayer { mode: MovePlayerMode::Reset, ..move_player(id.0, &position, None, motion.input_tick) };
+    out.push(&moved);
+}
+
 /// Puts a player's feet at `feet` where something pushed it, telling its client as BDS told one
 /// a piston pushed (research/captures/bds-pushed.txt): its prediction is corrected.
 pub(crate) fn push(world: &mut World, entity: Entity, feet: [f32; 3]) {
-    use acacia_proto::packets::{CorrectPlayerMovePrediction, CorrectPlayerMovePredictionPredictionType as Kind};
     let tick = world.resource::<Tick>().0;
-    let Ok((mut position, mut motion, mut out)) = world.query::<(&mut Position, &mut Motion, &mut Outgoing)>().get_mut(world, entity) else { return };
+    if let Some(mut motion) = world.get_mut::<Motion>(entity) {
+        motion.unconfirmed_teleport = Some(tick + SETBACK_TICKS);
+    }
+    correct(world, entity, feet);
+}
+
+/// Puts a player's feet at `feet` by correcting its prediction, as BDS does once a client is
+/// through a dimension change, and takes its next input whatever it says (dimensions.rs).
+pub(crate) fn correct(world: &mut World, entity: Entity, feet: [f32; 3]) {
+    use acacia_proto::packets::{CorrectPlayerMovePrediction, CorrectPlayerMovePredictionPredictionType as Kind};
+    let Ok((mut position, motion, mut out)) = world.query::<(&mut Position, &Motion, &mut Outgoing)>().get_mut(world, entity) else { return };
     position.feet = feet;
-    motion.unconfirmed_teleport = Some(tick + SETBACK_TICKS);
     // The fall a body standing still has in a tick, as BDS sent it.
     let delta = acacia_proto::types::Vec3f { x: 0.0, y: -0.0784, z: 0.0 };
     out.push(&CorrectPlayerMovePrediction { prediction_type: Kind::Player, position: eyes(&position), delta, rotation: acacia_proto::types::Vec2f { x: 0.0, z: 0.0 }, angular_velocity: None, on_ground: true, tick: motion.input_tick });
@@ -186,7 +218,7 @@ pub(crate) fn player_input(mut packets: ResMut<PacketQueues>, tick: Res<Tick>, m
             blocks.take_from(entity, &mut input);
         }
         let reported = [input.position.x, input.position.y, input.position.z, input.yaw, input.pitch, input.head_yaw];
-        if *stage < Stage::Loading || reported.iter().any(|c| !c.is_finite()) {
+        if *stage < Stage::Loading || motion.held || reported.iter().any(|c| !c.is_finite()) {
             continue;
         }
         if let Some(resend_at) = motion.unconfirmed_teleport {

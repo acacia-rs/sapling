@@ -5,12 +5,14 @@ use std::sync::Arc;
 
 use crate::generated::Generated;
 use crate::storage::{Level, LevelDbStorage, WorldStorage};
-use crate::{ChunkPos, World};
+use crate::{ChunkPos, NETHER, World};
 
 /// `SpawnY` of a world whose spawn was never set by hand: "on the surface".
 const SURFACE: i32 = i16::MAX as i32;
 /// Where to stand when the spawn column is empty.
 const VOID_SPAWN_Y: i32 = 64;
+/// I/O threads of a generated Nether; they share one generator's caches.
+const NETHER_THREADS: usize = 2;
 
 /// A world opened from a folder, with what its `level.dat` says about it. The spawn block and
 /// the time are the world's own ([`World::level`]).
@@ -25,6 +27,8 @@ pub struct WorldFolder {
     /// 0 peaceful to 3 hard.
     pub difficulty: Option<i32>,
     storage: Arc<LevelDbStorage>,
+    /// Whether columns the folder lacks are generated ([`WorldFolder::generate_missing`]).
+    generates: bool,
 }
 
 impl WorldFolder {
@@ -34,7 +38,16 @@ impl WorldFolder {
         let dat = storage.level_dat();
         let (name, game_type, difficulty) = (dat.name().map(str::to_owned), dat.game_type(), dat.difficulty());
         let (world, spawn) = World::with_level(storage.clone(), storage.level());
-        Self { world, name, spawn, game_type, difficulty, storage }
+        Self { world, name, spawn, game_type, difficulty, storage, generates: false }
+    }
+
+    /// The folder's Nether, on the same database under the Nether's keys; generated where the
+    /// folder lacks it when the overworld is ([`WorldFolder::generate_missing`]). Loads nothing yet.
+    pub fn nether(&self) -> World {
+        match (self.generates, self.storage.level_dat().seed()) {
+            (true, Some(seed)) => World::with_storage_in(Arc::new(Generated::nether(self.storage.clone(), seed, NETHER_THREADS)), NETHER),
+            _ => World::with_storage_in(self.storage.clone(), NETHER),
+        }
     }
 
     /// The same folder with every overworld column it lacks generated from its `level.dat` seed,
@@ -47,7 +60,7 @@ impl WorldFolder {
         };
         let level = self.world.level().clone();
         let (world, spawn) = World::with_level(Arc::new(Generated::new(self.storage.clone(), seed)), level);
-        Self { world, spawn, ..self }
+        Self { world, spawn, generates: true, ..self }
     }
 }
 

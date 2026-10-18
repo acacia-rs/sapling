@@ -1,6 +1,6 @@
 use std::sync::LazyLock;
 
-use acacia_proto::packets::StartGame;
+use acacia_proto::packets::{StartGame, StartGameDimension};
 use acacia_proto::types::{BlockCoordinates, GameMode, Vec2f, Vec3f};
 
 use crate::GameRules;
@@ -28,6 +28,8 @@ pub struct StartGameOptions {
     pub rules: GameRules,
     /// Whether chunk palettes and block updates carry state hashes instead of runtime ids.
     pub block_network_ids_are_hashes: bool,
+    /// 0 overworld, 1 nether, 2 end.
+    pub dimension: i32,
 }
 
 pub(crate) static TEMPLATE: LazyLock<StartGame> = LazyLock::new(|| decode(START_GAME));
@@ -52,6 +54,7 @@ pub fn start_game(o: &StartGameOptions) -> StartGame {
         // BDS lets the client generate terrain it has the seed for; ours comes only from the server.
         client_side_generation: false,
         block_network_ids_are_hashes: o.block_network_ids_are_hashes,
+        dimension: StartGameDimension::from_raw(i64::from(o.dimension)),
         ..TEMPLATE.clone()
     }
 }
@@ -83,6 +86,7 @@ mod tests {
                 rules
             },
             block_network_ids_are_hashes: true,
+            dimension: 0,
         }
     }
 

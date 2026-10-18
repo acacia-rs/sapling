@@ -13,8 +13,10 @@ use sapling_leveldb::{BlockEntity, block_entities, with_block_entity, without_bl
 
 use crate::storage::StoredColumn;
 
-/// Biome of columns nobody painted (`minecraft:plains`).
-const DEFAULT_BIOME: u32 = 1;
+/// Biome of columns nobody painted: `minecraft:plains`, in the Nether `minecraft:hell`.
+fn default_biome(dim: Dimension) -> u32 {
+    if dim == Dimension::nether(dim.air) { 8 } else { 1 }
+}
 
 /// One entry of a `Subchunk` answer. For a blob-cache client the section travels as `blob`,
 /// which the entry names by hash; the sender keeps it until the client says whether it has it.
@@ -24,11 +26,12 @@ pub struct SubChunkAnswer {
     pub blob: Option<Blob>,
 }
 
-/// The announcement of an overworld column with no blocks, encoded once: it has no sections for
-/// a client to ask for, so sending it empties whatever the client holds at that position.
-pub fn empty_column(cached: bool) -> &'static LevelChunkData {
-    static EMPTY: OnceLock<Column> = OnceLock::new();
-    EMPTY.get_or_init(|| Column::empty(0, 0, Dimension::overworld(BlockRegistry::vanilla().air_id()))).level_chunk(cached)
+/// The announcement of a column with no blocks in a dimension (0 to 2), encoded once: it has no
+/// sections for a client to ask for, so sending it empties whatever the client holds there.
+pub fn empty_column(dimension: i32, cached: bool) -> &'static LevelChunkData {
+    static EMPTY: [OnceLock<Column>; 3] = [const { OnceLock::new() }; 3];
+    let slot = dimension.clamp(0, 2) as usize;
+    EMPTY[slot].get_or_init(|| Column::empty(0, 0, Dimension::from_id(slot as i32, BlockRegistry::vanilla().air_id()))).level_chunk(cached)
 }
 
 pub(crate) struct Column {
@@ -63,7 +66,7 @@ impl Column {
     /// A column as storage holds it; one saved without biomes gets the default.
     pub fn from_stored(StoredColumn { mut chunk, block_entities, actors }: StoredColumn) -> Self {
         if chunk.biome(0, chunk.dimension().min_y, 0).is_none() {
-            chunk.fill_biomes(DEFAULT_BIOME);
+            chunk.fill_biomes(default_biome(chunk.dimension()));
         }
         let sections = (0..chunk.section_count()).map(|_| OnceLock::new()).collect();
         Self { chunk, block_entities, tiles: OnceLock::new(), actors, modified: false, damaged: false, heights: OnceLock::new(), announce: OnceLock::new(), announce_cached: OnceLock::new(), sections }

@@ -4,9 +4,11 @@ use std::sync::Arc;
 use sapling_api::{Command, Difficulty, GameMode, Handler, Priority};
 use sapling_net::{Advert, Listener, Motd, NetConfig, NetherNet, SigningKeys};
 use sapling_shard::{Link, Shard, ShardConfig, ShardHandle};
-use sapling_world::{Template, World, WorldFolder};
+use sapling_world::{Template, World};
 
 use crate::layout::{self, WorldSpec};
+
+mod worlds;
 
 #[derive(Debug, thiserror::Error)]
 pub enum StartError {
@@ -42,6 +44,8 @@ pub struct ServerBuilder {
     handlers_each: Vec<(Priority, HandlerFactory)>,
     /// Each registers one command type on a shard once it exists.
     commands: Vec<fn(&mut Shard)>,
+    /// Other dimensions, each with the name of the world it belongs to.
+    dimensions: Vec<(Option<String>, World)>,
 }
 
 impl Default for ServerBuilder {
@@ -57,6 +61,7 @@ impl Default for ServerBuilder {
             handlers: Vec::new(),
             handlers_each: Vec::new(),
             commands: Vec::new(),
+            dimensions: Vec::new(),
         }
     }
 }
@@ -96,62 +101,6 @@ impl ServerBuilder {
 
     pub fn game_mode(mut self, mode: GameMode) -> Self {
         self.shard.game_mode = mode;
-        self
-    }
-
-    /// The default world, on shard 0, and where in it players appear (feet position). Without
-    /// one it is a stone platform in the void. Handlers know it as `"default"`, or by
-    /// [`ServerBuilder::default_world_name`]; players join it unless
-    /// [`ServerBuilder::join_world`] names another.
-    pub fn world(mut self, world: World, spawn: [f32; 3]) -> Self {
-        self.world = Some(world);
-        self.shard.spawn = spawn;
-        self
-    }
-
-    /// The default world opened from a folder, with the spawn, default game mode and difficulty
-    /// its `level.dat` names. Call [`ServerBuilder::game_mode`] after it to override the folder's.
-    pub fn folder(mut self, opened: WorldFolder) -> Self {
-        let game_mode = opened.game_type.and_then(|saved| [(0, GameMode::Survival), (1, GameMode::Creative), (2, GameMode::Adventure), (6, GameMode::Spectator)].into_iter().find(|(id, _)| *id == saved));
-        let difficulty = opened.difficulty.and_then(|saved| [Difficulty::Peaceful, Difficulty::Easy, Difficulty::Normal, Difficulty::Hard].get(usize::try_from(saved).ok()?).copied());
-        self.shard.game_mode = game_mode.map_or(self.shard.game_mode, |(_, mode)| mode);
-        self.shard.difficulty = difficulty.unwrap_or(self.shard.difficulty);
-        self.world(opened.world, opened.spawn)
-    }
-
-    /// The name handlers know the default world by (default `"default"`).
-    pub fn default_world_name(mut self, name: impl Into<String>) -> Self {
-        self.shard.world_id = name.into();
-        self
-    }
-
-    /// Another world on shard 0, for `ShardCtx::transfer`.
-    pub fn add_world(self, name: impl Into<String>, world: World, spawn: [f32; 3]) -> Self {
-        self.add_world_on(0, name, world, spawn)
-    }
-
-    /// Another world on the shard of this index. Shards are threads: the server runs as many as
-    /// the highest index named, plus one, and each needs a world.
-    pub fn add_world_on(mut self, shard: usize, name: impl Into<String>, world: World, spawn: [f32; 3]) -> Self {
-        self.worlds.push(WorldSpec { name: name.into(), world, spawn, shard });
-        self
-    }
-
-    /// The stone platform in the void as another world on the shard of this index.
-    pub fn add_platform_on(self, shard: usize, name: impl Into<String>) -> Self {
-        self.add_world_on(shard, name, layout::platform_world(), ShardConfig::default().spawn)
-    }
-
-    /// A map every shard can make worlds from at runtime (`ShardCtx::create_world`), with where
-    /// players appear in such a world (feet). The worlds share its blocks until they change them.
-    pub fn template(mut self, name: impl Into<String>, template: Arc<Template>, spawn: [f32; 3]) -> Self {
-        self.templates.push((name.into(), template, spawn));
-        self
-    }
-
-    /// The world players enter when they join the server (default: the default world).
-    pub fn join_world(mut self, name: impl Into<String>) -> Self {
-        self.join = Some(name.into());
         self
     }
 
@@ -200,7 +149,12 @@ impl ServerBuilder {
     pub async fn start(self) -> Result<Server, StartError> {
         let default = WorldSpec { name: self.shard.world_id.clone(), world: self.world.unwrap_or_else(layout::platform_world), spawn: self.shard.spawn, shard: 0 };
         let join = self.join.unwrap_or_else(|| default.name.clone());
+        let default_name = default.name.clone();
         let (layout, entry) = layout::plan(std::iter::once(default).chain(self.worlds).collect(), &join)?;
+        let mut dimensions: Vec<(String, World)> = self.dimensions.into_iter().map(|(of, world)| (of.unwrap_or_else(|| default_name.clone()), world)).collect();
+        if let Some((unknown, _)) = dimensions.iter().find(|(of, _)| !layout.iter().flatten().any(|world| world.name == *of)) {
+            return Err(StartError::UnknownWorld(unknown.clone()));
+        }
         if layout.len() > 1 && !self.handlers.is_empty() {
             return Err(StartError::HandlerPerShard);
         }
@@ -212,10 +166,20 @@ impl ServerBuilder {
         for ((worlds, inbox), link) in layout.into_iter().zip(inboxes).zip(Link::mesh(count, entry)) {
             let mut worlds = worlds.into_iter();
             let first = worlds.next().expect("the plan leaves no shard empty");
+            let mut names = vec![first.name.clone()];
             let cfg = ShardConfig { world_id: first.name, spawn: first.spawn, ..self.shard.clone() };
             let mut shard = Shard::linked(cfg, first.world, inbox, outbox.clone(), link);
             for world in worlds {
+                names.push(world.name.clone());
                 shard.add_world(&world.name, world.world, world.spawn);
+            }
+            let (here, elsewhere): (Vec<_>, Vec<_>) = dimensions.into_iter().partition(|(of, _)| names.contains(of));
+            dimensions = elsewhere;
+            for (of, world) in here {
+                let dimension = world.dimension();
+                if !shard.add_dimension(&of, world) {
+                    tracing::warn!(world = %of, dimension, "not added: an overworld, or a dimension the world has");
+                }
             }
             self.templates.iter().for_each(|(name, template, spawn)| shard.add_template(name, template.clone(), *spawn));
             single.take().into_iter().flatten().for_each(|(priority, handler)| shard.add_handler_at(priority, handler));

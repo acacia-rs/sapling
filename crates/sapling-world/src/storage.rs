@@ -8,7 +8,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 use acacia_proto::nbt::Value;
 use acacia_world::Chunk;
 use sapling_data::{GameRules, RuleValue};
-use sapling_leveldb::{ChunkKey, LevelDat, LevelDbWorld, PlayerData};
+use sapling_leveldb::{ChunkKey, LevelDat, LevelDbWorld, PlayerData, PortalRecord};
 
 use crate::ChunkPos;
 
@@ -39,12 +39,14 @@ pub struct Level {
     /// `doDayLightCycle` rule is on.
     pub time: i64,
     pub rules: GameRules,
+    /// The lit Nether portals of every dimension, by which a portal finds the one it leads to.
+    pub portals: Vec<PortalRecord>,
 }
 
 impl Default for Level {
     /// Noon, since a world without storage has nothing to say when it is.
     fn default() -> Self {
-        Self { spawn: None, time: 6000, rules: GameRules::default() }
+        Self { spawn: None, time: 6000, rules: GameRules::default(), portals: Vec::new() }
     }
 }
 
@@ -105,6 +107,11 @@ pub trait WorldStorage: Send + Sync + 'static {
     fn flush(&self, _level: &Level) -> Result<(), StorageError> {
         Ok(())
     }
+    /// Makes what was stored durable and leaves the level alone: what a world of another
+    /// dimension than the overworld calls when it closes.
+    fn sync(&self) -> Result<(), StorageError> {
+        Ok(())
+    }
 }
 
 /// Shared storage, e.g. a folder's database wrapped in [`crate::Generated`] while still held.
@@ -129,6 +136,9 @@ impl<S: WorldStorage + ?Sized> WorldStorage for std::sync::Arc<S> {
     }
     fn flush(&self, level: &Level) -> Result<(), StorageError> {
         (**self).flush(level)
+    }
+    fn sync(&self) -> Result<(), StorageError> {
+        (**self).sync()
     }
 }
 
@@ -194,7 +204,11 @@ impl LevelDbStorage {
     /// What `level.dat` says of [`Level`]'s fields.
     pub fn level(&self) -> Level {
         let dat = self.0.level();
-        Level { spawn: dat.spawn(), time: dat.time().unwrap_or(Level::default().time), rules: read_rules(dat) }
+        let portals = self.0.load_portals().unwrap_or_else(|error| {
+            tracing::warn!(%error, "the portal records are unreadable; portals find none");
+            Vec::new()
+        });
+        Level { spawn: dat.spawn(), time: dat.time().unwrap_or(Level::default().time), rules: read_rules(dat), portals }
     }
 }
 
@@ -239,6 +253,11 @@ impl WorldStorage for LevelDbStorage {
         if let Some(spawn) = level.spawn {
             dat.set_spawn(spawn);
         }
+        self.0.store_portals(&level.portals)?;
         Ok(self.0.flush(&dat)?)
+    }
+
+    fn sync(&self) -> Result<(), StorageError> {
+        Ok(self.0.db().flush()?)
     }
 }

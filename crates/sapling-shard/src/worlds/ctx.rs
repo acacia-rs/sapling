@@ -5,10 +5,10 @@ use sapling_api::{Player, PlayerId, RuleValue, WorldBackend};
 use sapling_net::ConnId;
 
 use super::{Atlas, Place, Scope, current, enter, name_of};
-use crate::components::{Identity, InLayer, in_world};
+use crate::components::{Identity, InLayer, Layer, in_world};
 use crate::handlers::Ctx;
 use crate::handoff::{self, Peers, ShardMsg};
-use crate::{arenas, chat, rules};
+use crate::{arenas, chat, dimensions, movement, rules};
 
 impl Ctx<'_> {
     fn place(&self, name: &str) -> Option<Place> {
@@ -98,5 +98,20 @@ impl WorldBackend for Ctx<'_> {
     fn set_game_rule(&mut self, name: &str, value: RuleValue) -> bool {
         let layer = current(self.world);
         rules::set(self.world, layer, name, value)
+    }
+
+    fn dimension_of(&self, player: PlayerId) -> Option<i32> {
+        let layer = self.layer_of(self.entity(player)?)?;
+        self.world.get::<Layer>(layer).map(|layer| layer.world.dimension())
+    }
+
+    fn travel(&mut self, player: PlayerId, dimension: i32, feet: [f32; 3]) -> bool {
+        let Some(entity) = self.entity(player).filter(|_| feet.iter().all(|c| c.is_finite()) && !handoff::is_moving(self.world, ConnId::new(player.0))) else { return false };
+        let Some(to) = self.layer_of(entity).and_then(|layer| dimensions::of(self.world, layer, dimension)) else { return false };
+        match dimensions::crosses(self.world, entity, to) {
+            true => dimensions::travel(self.world, entity, to, feet),
+            false => movement::teleport(self.world, entity, feet),
+        }
+        true
     }
 }

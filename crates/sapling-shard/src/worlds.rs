@@ -15,7 +15,7 @@ use crate::components::{DefaultLayer, InLayer, Layer, Outgoing, in_world_identit
 use crate::handoff::{Peers, ShardMsg};
 use crate::plugins::Plugins;
 use crate::view::View;
-use crate::{clock, movement};
+use crate::{clock, dimensions, movement};
 
 #[derive(Component)]
 pub(crate) struct Named(pub String);
@@ -87,6 +87,24 @@ pub(crate) fn add(world: &mut World, name: &str, level: sapling_world::World, sp
     Some(layer)
 }
 
+/// Adds `level`, a world of another dimension, as that dimension of the world `of` of this shard,
+/// named `<of>:<dimension>` (`default:nether`); `None` when `of` is not here or has one already.
+pub(crate) fn add_dimension(world: &mut World, of: &str, level: sapling_world::World) -> Option<Entity> {
+    let Some(Place::Here(overworld)) = world.resource::<Atlas>().find(of) else { return None };
+    let dimension = level.dimension();
+    if dimension == sapling_world::OVERWORLD || dimensions::of(world, overworld, dimension).is_some() {
+        return None;
+    }
+    let name = format!("{of}:{}", DIMENSION_NAMES[dimension.clamp(0, 2) as usize]);
+    let layer = add(world, &name, level, DIMENSION_SPAWN)?;
+    dimensions::link(world, overworld, layer);
+    Some(layer)
+}
+
+/// Where a player put into another dimension by name stands; portals and commands name a place.
+const DIMENSION_SPAWN: [f32; 3] = [0.5, 64.0, 0.5];
+const DIMENSION_NAMES: [&str; 3] = ["overworld", "nether", "the_end"];
+
 /// Tells the other shards that this shard's worlds are gone with it.
 pub(crate) fn withdraw(world: &World) {
     let peers = world.resource::<Peers>();
@@ -120,13 +138,16 @@ pub(crate) fn focus_on(world: &mut World, player: Entity) {
 /// the old world leave with the next visibility diff, which no longer finds them in view.
 pub(crate) fn settle(world: &mut World, player: Entity, layer: Entity) {
     let Some((spawn, dimension)) = world.get::<Layer>(layer).map(|layer| (layer.spawn, layer.world.dimension())) else { return };
+    if dimensions::crosses(world, player, layer) {
+        return dimensions::change(world, player, layer, spawn);
+    }
     let to = ChunkPos::of_block(spawn[0].floor() as i32, spawn[2].floor() as i32);
     if let Ok((mut view, mut blobs, mut backlog, mut out)) = world.query::<(&mut View, &mut BlobCache, &mut SectionBacklog, &mut Outgoing)>().get_mut(world, player) {
         blobs.release();
         backlog.clear();
         // A vanilla client keeps some of the old world's columns the new view does not cover:
         // each is overwritten with an empty one, while its publisher area is still the old one.
-        let empty = sapling_world::empty_column(blobs.is_enabled());
+        let empty = sapling_world::empty_column(dimension, blobs.is_enabled());
         for pos in view.leave(to) {
             empty.blobs.iter().for_each(|blob| blobs.advertise(blob));
             out.push(&empty.packet(pos.x, pos.z, dimension));

@@ -35,6 +35,9 @@ pub struct PlayerData {
     pub bed: Option<[[i32; 3]; 2]>,
     /// Each effect on it: its id, its level from 0, the ticks left of it, and 1 if it shows.
     pub effects: Vec<[i32; 4]>,
+    /// The dimension it was in (0 overworld, 1 nether), and where its feet were there.
+    pub dimension: i32,
+    pub position: Option<[f32; 3]>,
 }
 
 // TODO: the names the game keeps an effect under, as remembered: no BDS record was read.
@@ -54,6 +57,10 @@ fn effect_fields([id, amplifier, left, shown]: &[i32; 4]) -> Value {
     Value::Compound(vec![(EFFECT[0].into(), Value::Byte(*id as i8)), (EFFECT[1].into(), Value::Byte(*amplifier as i8)), (EFFECT[2].into(), Value::Int(*left)), (EFFECT[3].into(), Value::Byte(*shown as i8))])
 }
 
+const DIMENSION: &str = "DimensionId";
+/// Feet, not the game's eye height: the record is sapling's own.
+const POSITION: &str = "Pos";
+const FLOAT: u8 = 5;
 const BED: [&str; 3] = ["SpawnBlockPositionX", "SpawnBlockPositionY", "SpawnBlockPositionZ"];
 const BEDSIDE: [&str; 3] = ["SpawnX", "SpawnY", "SpawnZ"];
 
@@ -114,6 +121,11 @@ impl PlayerData {
             progress,
             vitals,
             effects: list(EFFECTS).iter().filter_map(effect).collect(),
+            dimension: int(DIMENSION).unwrap_or(0),
+            position: match list(POSITION) {
+                [Value::Float(x), Value::Float(y), Value::Float(z)] => Some([*x, *y, *z]),
+                _ => None,
+            },
         })
     }
 
@@ -133,6 +145,10 @@ impl PlayerData {
             ("PlayerLevelProgress".into(), Value::Float(self.progress)),
         ];
         fields.extend(bed);
+        fields.push((DIMENSION.into(), Value::Int(self.dimension)));
+        if let Some(feet) = self.position {
+            fields.push((POSITION.into(), Value::List(List { tag: FLOAT, items: feet.map(Value::Float).to_vec() })));
+        }
         if !self.effects.is_empty() {
             fields.push((EFFECTS.into(), Value::List(List { tag: COMPOUND, items: self.effects.iter().map(effect_fields).collect() })));
         }
@@ -156,11 +172,12 @@ mod tests {
         (main[0], main[8], main[35]) = (stack("minecraft:stone", 64, Some(stone)), Some(sword), stack("minecraft:diamond", 5, None));
         let ender = vec![None, None, stack("minecraft:emerald", 12, None)];
         let armor = vec![stack("minecraft:iron_helmet", 1, None), None, None, None];
-        let player = PlayerData { main, armor, offhand: stack("minecraft:shield", 1, None), selected: 8, ender, level: 17, progress: 0.25, vitals: Some([7.5, 18.0, 0.0, 2.25]), bed: Some([[5, 64, -3], [4, 64, -3]]), effects: vec![[1, 1, 600, 1], [19, 0, 40, 0]] };
+        let player = PlayerData { main, armor, offhand: stack("minecraft:shield", 1, None), selected: 8, ender, level: 17, progress: 0.25, vitals: Some([7.5, 18.0, 0.0, 2.25]), bed: Some([[5, 64, -3], [4, 64, -3]]), effects: vec![[1, 1, 600, 1], [19, 0, 40, 0]], dimension: 1, position: Some([-14.5, 34.0, 7.5]) };
         assert_eq!(PlayerData::decode(&player.encode(&registry)).unwrap(), player);
 
         let empty = PlayerData::decode(&PlayerData::default().encode(&registry)).unwrap();
         assert_eq!((empty.main.len(), empty.ender.len(), empty.offhand, empty.selected, empty.level, empty.vitals, empty.bed), (0, 0, None, 0, 0, None, None));
+        assert_eq!((empty.dimension, empty.position), (0, None));
         assert!(PlayerData::decode(&[1, 2, 3]).is_err());
     }
 }
