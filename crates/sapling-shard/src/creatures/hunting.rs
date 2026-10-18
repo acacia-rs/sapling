@@ -98,6 +98,11 @@ fn targets(id: u64, target: i64) -> bytes::Bytes {
     sapling_net::encode(&SetEntityData { runtime_entity_id: id, metadata: vec![item], properties: EntityProperties { ints: Vec::new(), floats: Vec::new() }, tick: 0 })
 }
 
+/// Where the hunter's prey stands, if it has any.
+pub(super) fn prey_at(world: &World, entity: Entity) -> Option<[f32; 3]> {
+    Some(world.get::<Position>(world.get::<Hunter>(entity)?.prey?)?.feet)
+}
+
 /// A hunter that died lets its prey go, which its viewers are told (bds-bite.txt).
 pub(super) fn let_go(world: &mut World, entity: Entity, layer: Entity, id: u64, body: &Body) {
     if world.get_mut::<Hunter>(entity).is_some_and(|mut hunter| hunter.prey.take().is_some()) {

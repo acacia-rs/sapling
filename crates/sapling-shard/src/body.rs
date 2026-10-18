@@ -111,11 +111,20 @@ impl Body {
     /// Lifts a body whose box is in a block onto that block's top, stopped, as BDS did an item
     /// dropped 0.05 into the floor (research/captures/bds-kill.txt); the tick's step lands it.
     pub fn lift_out(&mut self, level: &Level) {
-        let (min, max) = self.bounds();
-        let overlaps = |(low, high): &Bounds| (0..3).all(|axis| min[axis] < high[axis] - EPS && max[axis] > low[axis] + EPS);
-        if let Some(top) = boxes_in(level, (min, max)).iter().filter(|other| overlaps(other)).map(|(_, high)| high[1]).reduce(f32::max) {
+        if let Some(top) = self.overlapped(level).iter().map(|(_, high)| high[1]).reduce(f32::max) {
             (self.at[1], self.motion) = (top, [0.0; 3]);
         }
+    }
+
+    /// Whether no block's collision box reaches into its own.
+    pub fn is_free(&self, level: &Level) -> bool {
+        self.overlapped(level).is_empty()
+    }
+
+    fn overlapped(&self, level: &Level) -> Vec<Bounds> {
+        let (min, max) = self.bounds();
+        let overlaps = |(low, high): &Bounds| (0..3).all(|axis| min[axis] < high[axis] - EPS && max[axis] > low[axis] + EPS);
+        boxes_in(level, (min, max)).into_iter().filter(overlaps).collect()
     }
 
     /// One tick: gravity, the move, then drag; on the ground, friction and the bounce. In water or

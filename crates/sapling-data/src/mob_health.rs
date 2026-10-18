@@ -21,6 +21,8 @@ pub struct MobTraits {
     pub burns_in_sun: bool,
     pub no_fall: bool,
     pub breathes_water: bool,
+    /// It teleports about by itself (its `minecraft:teleport`'s `random_teleports`).
+    pub teleports: bool,
     /// The least and most experience a grown one killed by a player leaves.
     pub experience: Option<(i32, i32)>,
     pub hunts: Option<Hunts>,
@@ -78,7 +80,7 @@ pub fn mob_traits(identifier: &str) -> MobTraits {
     let number = |name: &str| value(name).and_then(|value| value.parse::<f32>().ok());
     let gives = value("hits=").and_then(|given| given.split_once(':')).and_then(|(effect, ticks)| Some((effect, ticks.parse().ok()?)));
     let hunts = number("attack=").zip(number("speed=")).zip(number("sees=")).map(|((attack, speed), sees)| Hunts { attack, speed, sees, gives, explodes: number("explodes="), shoots: number("shoots=").map(|ticks| ticks as u32), provoked: has("provoked"), closes: has("closes"), upto: number("upto="), every: number("every=").map(|ticks| ticks as u32), by_dark: has("by_dark"), aims: number("aims=").map(|ticks| ticks as u32), volley: value("volley=").and_then(|volley| volley.split_once('x')).and_then(|(shots, gap)| Some((shots.parse().ok()?, gap.parse().ok()?))), shot: value("shot="), calms: number("calms=").map(|ticks| ticks as u32), once: has("once") });
-    MobTraits { fire_immune: has("fire_immune"), burns_in_sun: has("burns_in_sun"), no_fall: has("no_fall"), breathes_water: has("breathes_water"), experience, hunts, strolls: number("strolls="), panics: number("panics=") }
+    MobTraits { fire_immune: has("fire_immune"), burns_in_sun: has("burns_in_sun"), no_fall: has("no_fall"), breathes_water: has("breathes_water"), teleports: has("teleports"), experience, hunts, strolls: number("strolls="), panics: number("panics=") }
 }
 
 /// The mob `id` has `left` of `max` health.

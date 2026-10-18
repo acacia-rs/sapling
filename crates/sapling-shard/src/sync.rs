@@ -29,6 +29,8 @@ pub(crate) struct Told {
     /// Its body's and its head's turn as viewers know them, and as they are now.
     turned: [u8; 2],
     turn: [u8; 2],
+    /// Its next move is a teleport, which BDS sends forced.
+    jumped: bool,
 }
 
 /// The flags viewers were told the entity has, and whether the last tick moved far enough to show `MOVING`.
@@ -43,7 +45,13 @@ struct Shown {
 impl Told {
     /// An entity just announced at `at`; its announced motion does not count.
     pub fn new(at: [f32; 3]) -> Self {
-        Self { at, motion: [0.0; 3], flags: None, turned: [0; 2], turn: [0; 2] }
+        Self { at, motion: [0.0; 3], flags: None, turned: [0; 2], turn: [0; 2], jumped: false }
+    }
+
+    /// The entity teleported: viewers are told of its next move as forced
+    /// (research/captures/bds-ender-findings.md).
+    pub fn jump(&mut self) {
+        self.jumped = true;
     }
 
     /// Tells viewers when the entity is moving, lifted and burning, as BDS tells them of items and
@@ -82,7 +90,8 @@ impl Told {
     pub fn update(&mut self, id: u64, at: [f32; 3], motion: [f32; 3], on_ground: bool) -> Vec<Bytes> {
         let mut packets = Vec::new();
         let gone = length(std::array::from_fn(|axis| at[axis] - self.at[axis]));
-        let moved = gone > MOVED || (length(motion) < STOPPING && gone > SETTLED);
+        let jumped = std::mem::take(&mut self.jumped);
+        let moved = jumped || gone > MOVED || (length(motion) < STOPPING && gone > SETTLED);
         if moved || self.turn != self.turned {
             let [x, y, z] = std::array::from_fn(|axis| (moved && at[axis] != self.at[axis]).then_some(at[axis]));
             let [rot_y, rot_z] = std::array::from_fn(|side| (self.turn[side] != self.turned[side]).then_some(self.turn[side]));
@@ -99,7 +108,7 @@ impl Told {
                 rot_y,
                 rot_z,
                 on_ground,
-                force_move: false,
+                force_move: jumped,
                 force_move_local_entity: false,
                 force_completion: false,
                 ticks: 0,

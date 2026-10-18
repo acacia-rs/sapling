@@ -15,6 +15,7 @@ mod legs;
 mod paths;
 mod splashes;
 mod strolling;
+mod teleports;
 
 use bevy_ecs::prelude::*;
 use bytes::Bytes;
@@ -142,6 +143,7 @@ fn give_legs(world: &mut World, entity: Entity, kind: &str) {
         world.entity_mut(entity).insert((legs::Legs::default(), strolling::Stroll::default()));
     }
     hunting::arm(world, entity, kind);
+    teleports::arm(world, entity, kind);
 }
 
 /// Gives a mob of a kind that dies the health BDS announced its kind with, `left` of it, and
@@ -224,6 +226,9 @@ pub(crate) fn tick(world: &mut World) {
     for (entity, layer, id, kind) in all {
         let Some(start) = world.get::<Body>(entity).copied() else { continue };
         let is_alive = world.get::<Dying>(entity).is_none();
+        if is_alive {
+            teleports::tick(world, entity, layer, hunting::prey_at(world, entity));
+        }
         if is_alive && !hunting::steer(world, entity, layer, id, &kind) {
             let traits = sapling_data::mob_traits(&kind);
             let strolls = world.resource::<crate::components::Settings>().0.mobs_stroll;

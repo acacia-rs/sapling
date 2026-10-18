@@ -52,6 +52,7 @@ HUNTS = {
     "minecraft:cave_spider": "attack=2 speed=0.3 sees=16 by_dark",
     "minecraft:creeper": "attack=0 speed=0.25 sees=16 explodes=3",
     "minecraft:drowned": "attack=3 speed=0.23 sees=35",
+    "minecraft:enderman": "attack=7 speed=0.45 sees=64 provoked",
     "minecraft:endermite": "attack=2 speed=0.25 sees=16",
     "minecraft:husk": "attack=3 speed=0.23 sees=35 hits=hunger:600",
     "minecraft:iron_golem": "attack=7 upto=21 speed=0.15 sees=16 provoked",
@@ -89,6 +90,7 @@ for document in packs.entities().values():
         ("breathes_water", breath.get("breathes_water", False)),
         ("no_air", breath.get("breathes_air", True) is False),
         ("burns_in_sun", any("minecraft:burns_in_daylight" in group for group in [components, *entity.get("component_groups", {}).values()])),
+        ("teleports", components.get("minecraft:teleport", {}).get("random_teleports", False) is True),
     ]
     held = [name for name, holds in traits if holds]
     if entity["description"]["identifier"] != "minecraft:player" and experience(entity):

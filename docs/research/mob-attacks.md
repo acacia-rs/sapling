@@ -169,7 +169,7 @@ Twelve more kinds 8 blocks from the actor at midnight on easy
 A slime and a magma cube hop and split, a polar bear hit without a target being told, a witch
 threw potions, a blaze shot three small fireballs a second apart and an enderman was gone. The
 first four of the table are built (`mob-traits.py`), and of the six the polar bear, the witch and
-the blaze (below); the slimes, the enderman, the hoglin and the zoglin are not.
+the blaze and the enderman (below); the slimes, the hoglin and the zoglin are not.
 
 ## The blaze (`blaze`)
 
@@ -262,6 +262,26 @@ A witch 6 and then 12 blocks from the actor in survival at midnight, the actor h
 - Its own poison, splashed 4 blocks off, lasted it some 97 ticks; that is all the capture says of
   one not hit.
 
+## The enderman (`ender`)
+
+Three runs on the flat ground, the actor in survival at midnight and healed each second
+(`research/captures/bds-ender-findings.md`; run 2 `bds-ender-wet.txt`, in water; run 3
+`bds-ender.txt`, a dry stone floor):
+
+- Every enderman of five teleported on its first tick. Each teleport is a `MoveEntityDelta`
+  marked `force_move`, of the axes that changed, with a `SoundEndermanTeleport` LevelEvent where
+  it left and where it came; it landed within 16 along each axis, standing on the ground below.
+- Calm, it strolled at 0.1943 a tick (movement 0.3). One calm enderman teleported some 5 seconds
+  apart, another not once in 520 ticks.
+- Seven stares from 6 off, the look set by `/tp ... facing`, took no target; nothing shows the bot
+  held the look.
+- Hit, it took its hitter that tick, was thrown 0.4 and 0.4 up, teleported 0 to 2 ticks after,
+  and showed `ANGRY` with `mob.warning` the tick after. It walked at 0.4371 a tick (movement
+  0.45) and hit for 4.5 on easy (its 7) every 20 ticks, throwing the actor 0.4 and 0.4 up.
+- Left more than 16 off, it teleported 30 ticks later to some 16 nearer, give or take 4: the
+  Java game's `teleportTowards`. Twice it teleported away from beside the actor for no cause seen.
+- It never let its target go: 32 seconds, out to 24 blocks. Water hurt it 1 and sent it off.
+
 ## Strolling (`stroll`)
 
 A zombie and a cow left alone for a minute on a floor 40 blocks square, the actor in creative
@@ -320,6 +340,11 @@ A witch throws as above (`creatures/arrows.rs` `POTION`, its rise fitted to the 
 picking the potion by its pack's rule (`creatures/splashes.rs`). A player it hits gets the full
 effect (`vitals/splashed.rs`); one near the break gets the Java game's `1 - d/4` of each effect's
 time, which was not drilled. Mobs splashed get nothing and the witch drinks nothing.
+
+An enderman teleports on its first tick, the tick after a hit and towards prey more than 16 off
+for 30 ticks (`creatures/teleports.rs`), and hunts its hitter as above. It does not teleport while
+calm or from beside its prey, a stare does not anger it, water does nothing to it, and its
+`ANGRY` flag is not shown.
 
 A wolf and a zombified piglin hunt none but a survival player that hit them, from that tick
 (`hunting::provoke`), and so do an iron golem, with a hit of 7 to 21 and its throw, and a polar

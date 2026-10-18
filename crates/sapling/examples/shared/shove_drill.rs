@@ -217,6 +217,18 @@ pub fn witch() -> Vec<String> {
     lines
 }
 
+/// The actor in survival at midnight on a dry stone floor 41 blocks square on the flat ground,
+/// where an enderman's teleports land: one held still, hit from 1.5 off and let go, then thirty
+/// seconds healed every second (research/captures/bds-ender-findings.md has an earlier run's stares).
+pub fn ender() -> Vec<String> {
+    let mut lines: Vec<String> =
+        ["kill @e[type=!player]", "gamerule domobspawning false", "difficulty easy", "time set midnight", "gamemode survival @s", "tp @s ~ -60 ~", "fill ~-20 ~-1 ~-20 ~20 ~-1 ~20 stone", "fill ~-20 ~ ~-20 ~20 ~5 ~20 air", ""].map(String::from).into();
+    lines.extend(["summon enderman ~ ~ ~2", "effect @e[type=enderman] slowness 10 255", "", "execute at @e[type=enderman,c=1] run tp @p ~ ~ ~1.5 facing ~ ~1.5 ~", "!hit enderman", "effect @e[type=enderman] clear"].map(String::from));
+    lines.extend(std::iter::repeat_n("effect @s instant_health 1 4".to_owned(), 30));
+    lines.extend(["kill @e[type=!player]", "effect @s clear", "gamemode creative @s", ""].map(String::from));
+    lines
+}
+
 /// As `shoot`, a stray, a bogged and a pillager each 5 blocks off for ten seconds.
 pub fn shoot2() -> Vec<String> {
     let mut lines: Vec<String> =
