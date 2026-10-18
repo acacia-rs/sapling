@@ -56,8 +56,9 @@ EXTRA = [
     # Mansion chest markers and entrance stairs (src/structure/mansion/piece.rs).
     ('chest', f'minecraft:cardinal_direction={d}', False, 2) for d in ('north', 'south', 'west')] + [(stairs, f'minecraft:corner=none,upside_down_bit={up},weirdo_direction={w}', False, 2)
      for stairs in ('stone_brick_stairs', 'mossy_stone_brick_stairs', 'stone_stairs') for up in range(2) for w in range(4)]
-# Placed by code for the appended families: only in the palette state_table appends, so older indices stay.
-EXTRA_APPENDED = [
+# Placed by code for each appended family (templates_to_rust.APPENDED): only in the palette state_table appends for
+# that family, so older indices stay.
+EXTRA_APPENDED = {'bastion': [
     # Bastion processor outputs (src/structure/jigsaw/pools_bastion.txt) and the Nether portal's ageing (ruined_portal_age.rs).
     (name, '', False, 3) for name in ('blackstone', 'gilded_blackstone', 'polished_blackstone_bricks', 'cracked_polished_blackstone_bricks',
                                       'polished_blackstone', 'chiseled_polished_blackstone')] + [
@@ -65,7 +66,10 @@ EXTRA_APPENDED = [
     ('polished_blackstone_brick_wall', ','.join(f'wall_connection_type_{d}=none' for d in ('east', 'north', 'south', 'west'))
      + ',wall_post_bit=0', False, 2),
     ('iron_chain', 'pillar_axis=y', False, 2)] + [(stairs, f'minecraft:corner=none,upside_down_bit={up},weirdo_direction={w}', False, 2)
-     for stairs in ('polished_blackstone_stairs', 'polished_blackstone_brick_stairs') for up in range(2) for w in range(4)]
+     for stairs in ('polished_blackstone_stairs', 'polished_blackstone_brick_stairs') for up in range(2) for w in range(4)],
+    # The end city ship's Elytra marker (handleDataMarker 14831aaa0).
+    'endcity': [('frame', f'facing_direction={d},item_frame_map_bit=0,item_frame_photo_bit=0', False, 0) for d in range(2, 6)],
+}
 CONNECTIONS = [f'minecraft:connection_{d}' for d in ('east', 'north', 'south', 'west')]
 WALL_SIDES = [f'wall_connection_type_{d}' for d in ('east', 'north', 'south', 'west')]
 SHAPED = {
@@ -91,11 +95,34 @@ def fluid(key):
     return (m.group(1), f'liquid_depth={min(int(m.group(2)), 8)}', False, 0) if m else None
 
 
-def state_table(keys, table, first=None):
+def state_table(keys, table, stages=()):
     """The state table: u16 count; per state u8 kind (0 block, 1 jigsaw, 2 structure block), then the
-    palette index placed at each clockwise rotation. Returns it and the palette dict. With `first`, the
-    palette the first `first` keys alone make comes first, unchanged, so appended families keep every
-    existing palette index (the `Block::Template` ids the overworld's blocks hash by)."""
+    palette index placed at each clockwise rotation. Returns it and the palette dict. `stages` lists each
+    appended family as (index of its first key, family) in append order: the palette the keys before it make
+    comes first, unchanged, so an appended family keeps every existing palette index (the `Block::Template`
+    ids the overworld's blocks hash by)."""
+    palette, rows = raw_palette(keys, table)
+    palette = expand(palette, [family for _, family in stages])
+    if stages and stages[0][0] < len(keys):
+        final = {}
+        for n in range(len(stages) + 1):
+            end = stages[n][0] if n < len(stages) else len(keys)
+            older = expand(raw_palette({k: i for k, i in keys.items() if i < end}, table)[0], [f for _, f in stages[:n]])
+            assert set(final) <= set(older), 'an appended family dropped an existing palette entry'
+            for e in sorted(older, key=older.get):
+                final.setdefault(e, len(final))
+        entry = {i: e for e, i in palette.items()}
+        remap = {i: final[e] for i, e in entry.items()}
+        rows = [(kind, [remap[i] for i in row]) for kind, row in rows]
+        palette = final
+    out = bytearray(struct.pack('<H', len(keys)))
+    for kind, row in rows:
+        out += bytes([kind]) + b''.join(struct.pack('<H', i) for i in row)
+    return out, palette
+
+
+def raw_palette(keys, table):
+    """The probed blocks of `keys` in key order, before expand(), and each key's (kind, per-rotation indices)."""
     palette = {AIR: 0}
     rows, missing = [], []
     for key in sorted(keys, key=keys.get):
@@ -110,25 +137,11 @@ def state_table(keys, table, first=None):
         rows.append((kind, row))
     if missing:
         print(f'{len(missing)} states without a probed block, placed as air: {missing[:8]}', file=sys.stderr)
-    palette = expand(palette, first is not None)
-    if first is not None and first < len(keys):
-        old = state_table({k: i for k, i in keys.items() if i < first}, table)[1]
-        entry = {i: e for e, i in palette.items()}
-        assert set(old) <= set(palette), 'an appended family dropped an existing palette entry'
-        final = dict(old)
-        for i in sorted(entry):
-            final.setdefault(entry[i], len(final))
-        remap = {i: final[e] for i, e in entry.items()}
-        rows = [(kind, [remap[i] for i in row]) for kind, row in rows]
-        palette = final
-    out = bytearray(struct.pack('<H', len(keys)))
-    for kind, row in rows:
-        out += bytes([kind]) + b''.join(struct.pack('<H', i) for i in row)
-    return out, palette
+    return palette, rows
 
 
-def expand(palette, appended):
-    for extra in EXTRA + (EXTRA_APPENDED if appended else []):
+def expand(palette, families):
+    for extra in EXTRA + [e for family in families for e in EXTRA_APPENDED[family]]:
         palette.setdefault(extra, len(palette))
     for (name, states, wl, flags) in list(palette):
         for family in wood_families():

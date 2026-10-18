@@ -47,7 +47,7 @@ A run takes 20-90 s for 64 chunks and 80-105 s for 1088; BDS startup is 15-55 s 
   `doweathercycle`, `dofiretick`, `dodaylightcycle` false and clears the weather, but scheduled ticks still
   run: generated water and lava may have flowed (the twins also differ in water/lava/obsidian/stone cells).
 - Chunks in the ring around a region may be saved too; only the requested ones are guaranteed.
-- The overworld and the Nether (below), default world type, no experiments. A ticking area holds at most 100
+- The overworld, the Nether and the End (below), default world type, no experiments. A ticking area holds at most 100
   chunks, hence tiles of at most 8x8.
 
 ## Oracle worlds
@@ -98,6 +98,17 @@ scripts/data/dbg_nether_buffers.json <regions>` dumps every generated chunk's bl
 compares them with ours. The canon (`20261003-nether`, its `-run2` twin and `20261003-nether-buffers`, regions in
 `tests/nether_oracle.rs`) is `~/oracle-canon/nether` on testbox; `tools/nether-replay.sh <name>` judges it by stage
 (docs/research/worldgen-bds-nether.md).
+
+## The End
+
+`WORLDGEN_DIMENSION=the_end` works the same way (dimension 2). The End has no bedrock floor, so the pack touches its
+top layer (y 255, all air) instead: air to stone and back; `check` reads it back. Buffers come from
+`scripts/data/dbg_end_buffers.json` (the commit call 1482431de, the Nether's layout: `ptr-end-<x>_<z>-0.bin`), the
+logged run from `scripts/data/dbg_end_canon.json`; `examples/end_buffers` and `examples/end_diff` compare them with
+ours. Under the debugger one tile near the origin stalls with chunks never requested: run the logged canon with
+`WORLDGEN_KICK=true WORLDGEN_LOAD_TICKS=1200`. The canon (`20261003-end`, its `-run2` link and
+`20261003-end-buffers`, regions in `tests/end_oracle.rs`) is `~/oracle-canon/end` on testbox; `tools/end-replay.sh
+<name>` judges it (docs/research/worldgen-bds-end.md).
 
 ## Running the oracle test
 

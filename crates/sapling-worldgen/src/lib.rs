@@ -52,6 +52,7 @@ use random::Xoroshiro;
 pub enum Dimension {
     Overworld,
     Nether,
+    End,
 }
 
 /// Loaded columns (about 100 kB each) kept for neighbours' lakes and features.
@@ -244,7 +245,7 @@ impl OverworldGenerator {
         let in_tunnels = |[x, y, z]: [i32; 3]| !self.structures.in_v2(&self.density, (x, y, z)) && self.structures.in_structure(&self.density, (x, y, z), false);
         let carved = |x, z| self.carved(x, z);
         let generated_tops = |x, z| self.generated_tops(x, z);
-        let inputs = feature::Inputs { loaded: &loaded, carved: &carved, generated_tops: &generated_tops, biomes: &biomes, surface: &surface,in_structure: &in_structure, in_tunnels: &in_tunnels };
+        let inputs = feature::Inputs { loaded: &loaded, carved: &carved, generated_tops: &generated_tops, biomes: &biomes, surface: &surface,in_structure: &in_structure, in_tunnels: &in_tunnels, island: None };
         run(inputs)
     }
 

@@ -13,6 +13,7 @@ mod data;
 mod decorate;
 mod disk;
 mod element;
+pub mod end;
 mod flowers;
 mod fossil;
 mod freeze;
@@ -96,6 +97,8 @@ pub struct Inputs<'a> {
     pub in_structure: &'a dyn Fn([i32; 3]) -> bool,
     /// Whether a mineshaft's or a stronghold's box holds the block (multiface.rs).
     pub in_tunnels: &'a dyn Fn([i32; 3]) -> bool,
+    /// The End's island height per chunk (end.rs); None elsewhere.
+    pub island: Option<end::IslandHeight<'a>>,
 }
 
 pub(crate) fn query_noise(x: f32, z: f32) -> f32 {
@@ -279,6 +282,12 @@ impl Features {
                     let mut rest = decorate::decorate_chunk(&self.seed, source, inputs, &mut view, true);
                     nether::after_rules(&mut rest, source, &mut view);
                     liquid::instatick(&mut view);
+                }
+                // The rules run first here (the unfiltered ones reach the_end); nothing written schedules a tick.
+                Dimension::End => {
+                    let island = inputs.island.expect("the End's island height");
+                    let mut rest = decorate::decorate_chunk(&self.seed, source, inputs, &mut view, true);
+                    end::decorate(&mut rest, source, &mut view, &crate::end::spikes(self.seed.level_seed()), island);
                 }
             }
             view.into_writes()

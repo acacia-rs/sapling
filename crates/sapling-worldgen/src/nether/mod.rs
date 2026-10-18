@@ -115,7 +115,7 @@ impl NetherGenerator {
         let tops = |x, z| Arc::new(self.carved(x, z).tops());
         let surface = |_, _| crate::density::NO_SURFACE;
         let none = |_: [i32; 3]| false;
-        let inputs = Inputs { loaded: &loaded, carved: &carved, generated_tops: &tops, biomes: &biomes, surface: &surface, in_structure: &none, in_tunnels: &none };
+        let inputs = Inputs { loaded: &loaded, carved: &carved, generated_tops: &tops, biomes: &biomes, surface: &surface, in_structure: &none, in_tunnels: &none, island: None };
         self.features.place(&mut shape, (chunk_x, chunk_z), inputs);
         shape
     }

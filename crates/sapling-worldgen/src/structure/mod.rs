@@ -8,6 +8,8 @@ mod area;
 pub(crate) mod bastion;
 mod canvas;
 mod data_driven;
+pub(crate) mod end;
+mod end_city;
 mod fortress;
 mod igloo;
 mod kind;

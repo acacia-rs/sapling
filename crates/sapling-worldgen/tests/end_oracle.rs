@@ -11,7 +11,7 @@ use std::path::PathBuf;
 
 use nether_support::{Buffers, index};
 use sapling_leveldb::{ChunkKey, LevelDbWorld};
-use sapling_worldgen::EndGenerator;
+use sapling_worldgen::{EndGenerator, StructureStep};
 
 struct Region {
     name: &'static str,
@@ -23,6 +23,7 @@ const REGIONS: &[Region] = &[
     Region { name: "end city with a ship", chunks: [82, -2, 87, 9] },
     Region { name: "outer islands", chunks: [60, -4, 67, 3] },
     Region { name: "void", chunks: [20, -2, 23, 1] },
+    Region { name: "end gateway", chunks: [72, -9, 76, -5] },
 ];
 
 const STAGES: [&str; 4] = ["terrain", "biomes", "structures", "features"];
@@ -82,7 +83,20 @@ fn compare(seed: i64, world: &str) {
         return;
     };
     let buffers = Buffers::open_named(&root.join(format!("{world}-buffers")), "end").expect("the canon's buffers");
-    let generator = EndGenerator::new(seed);
+    let mut generator = EndGenerator::new(seed);
+    // The logged run's orders (scripts/dbg_loads.py --order, --structure-order); nothing in the End draws from the
+    // thread generator.
+    let chunk = |line: &str| -> (i32, i32) {
+        let v: Vec<i32> = line.split(' ').take(2).map(|v| v.parse().expect("an integer")).collect();
+        (v[0], v[1])
+    };
+    if let Ok(text) = std::fs::read_to_string(root.join("structure-order.txt")) {
+        let step = |line: &str| line.strip_prefix("load ").map_or_else(|| StructureStep::Post(chunk(line)), |c| StructureStep::Load(chunk(c)));
+        generator.set_structure_order(&text.lines().map(step).collect::<Vec<_>>());
+    }
+    if let Ok(text) = std::fs::read_to_string(root.join("order.txt")) {
+        generator.set_decoration_order(&text.lines().map(chunk).collect::<Vec<_>>());
+    }
     let only = std::env::var("SAPLING_ORACLE_REGION").ok();
     let kept = |name: &str| only.as_deref().is_none_or(|only| only.strip_prefix('=').map_or(name.contains(only), |exact| name == exact));
     let registry = primary.registry();

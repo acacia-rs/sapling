@@ -27,8 +27,9 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(HERE, '..', 'src', 'structure', 'template')
 FAMILIES = ['igloo', 'shipwreck', 'ruin', 'ruined_portal', 'village', 'pillageroutpost', 'ancient_city',
             'trial_chambers', 'trail_ruins', 'fossils', 'mansion', 'abandoned_camp', 'nether_fossils']
-# Transcribed after FAMILIES, their states and palette entries appended (templates_palette.state_table `first`).
-APPENDED = ['bastion']
+# Transcribed after FAMILIES in this order, each family's states and palette entries appended (templates_palette.state_table
+# `stages`): a new family goes at the end.
+APPENDED = ['bastion', 'endcity']
 
 
 def version(pack):
@@ -124,14 +125,24 @@ def jigsaw_strings(nbt, props):
     return [nbt.get('name', ''), nbt.get('target', ''), nbt.get('pool', ''), nbt.get('joint', ''), props.get('orientation', 'north_up')]
 
 
-def brewing_stand(key, nbt):
-    """BDS sets a brewing stand's bottle bits from its items' raw slot numbers (Java 0-2 bottles, Bedrock
-    1-3): the stand gets its own state key, the same block at every rotation."""
+def brewing_stand(key, nbt, appended):
+    """BDS sets a brewing stand's bottle bits from its items' slots (Java 0-2 bottles, Bedrock 1-3): the stand
+    gets its own state key, the same block at every rotation."""
     if not key.startswith('minecraft:brewing_stand') or 'Items' not in nbt:
         return key, None
     slots = {item['Slot'] for item in nbt['Items']}
-    states = ','.join(f'brewing_stand_slot_{c}_bit={int(s in slots)}' for c, s in zip('abc', (1, 2, 3)))
+    # TODO: the endcity probe and oracle read Java slot k as bit k; FAMILIES (the igloo's slot-1 stand) keep the
+    # raw-slot reading that put it on bit a, until a change of the overworld hash is wanted.
+    bottles = (0, 1, 2) if appended else (1, 2, 3)
+    states = ','.join(f'brewing_stand_slot_{c}_bit={int(s in slots)}' for c, s in zip('abc', bottles))
     return f'{key}#slots={sorted(slots)}', ('brewing_stand', states, False, 2)
+
+
+def skull(key, nbt):
+    """A legacy skull's kind is its block entity's SkullType: 5 is the dragon head (table rows `#SkullType=5`)."""
+    if key.startswith('minecraft:skull[') and nbt.get('SkullType', 0) != 0:
+        return f"{key}#SkullType={nbt['SkullType']}"
+    return key
 
 
 def placed_wall(key, rot, probed):
@@ -161,7 +172,7 @@ def placed_sides(key, rot, probed):
 def as_saved(key, rot, probed, table):
     """A circuit block or corner stair as its template saved it, where the probe's lone block had settled before
     it was read: a city's circuit holds its power (docs/research/worldgen-bds-templates.md, "Saved states")."""
-    name, _, rest = key.partition('[')
+    name, _, rest = key.partition('#')[0].partition('[')
     props = dict(p.split('=', 1) for p in rest.rstrip(']').split(',') if p)
     # A corner stair is placed as one (the probe's stood alone and were straight again when read): a rule
     # that wants the default state passes it over; template/connect.rs names the corner afterwards.
@@ -187,17 +198,19 @@ def main():
         java, rot, name, states, wl, flags = line.rstrip('\n').split('\t')
         table[(java, int(rot))] = (name, states, wl == '1', int(flags))
     found = sorted(effective(bds).items())
-    templates = [t for t in found if t[0].split('/')[0] in FAMILIES] + [t for t in found if t[0].split('/')[0] in APPENDED]
+    templates = [t for t in found if t[0].split('/')[0] in FAMILIES] + [
+        t for family in APPENDED for t in found if t[0].split('/')[0] == family]
     keys = {}
-    first = None
+    stages = []
 
     def index(key):
         return keys.setdefault(key, len(keys))
 
     out = bytearray(b'SPT1') + struct.pack('<I', len(templates))
     for name, path in templates:
-        if name.split('/')[0] in APPENDED and first is None:
-            first = len(keys)
+        family = name.split('/')[0]
+        if family in APPENDED and family not in (f for _, f in stages):
+            stages.append((len(keys), family))
         t = mcstructure.load(path) if path.endswith('.mcstructure') else load(path)
         palette = [key_of(s['Name'], s.get('Properties', {})) for s in t.get('palette') or t['palettes'][0]]
         sx, sy, sz = t['size']
@@ -205,11 +218,14 @@ def main():
         # Saved before Java's flattening (DataVersion 1451; mansions carry none): the loader's old converter.
         legacy = t.get('DataVersion', 0) < 1451
         out += bytes([len(name)]) + name.encode() + struct.pack('<HHHBI', sx, sy, sz, legacy, len(t['blocks']))
+        appended = family in APPENDED
+        # TODO: mansions' 1.11 chests carry the same pre-1.13 'Chest' id, unflagged until checked against an oracle.
+        loot_chests = ('minecraft:chest', 'minecraft:trapped_chest') + (('Chest', 'TrappedChest') if appended else ())
         specials = []
         for i, b in enumerate(t['blocks']):
             x, y, z = b['pos']
             nbt = b.get('nbt', {})
-            key, fixed = brewing_stand(palette[b['state']], nbt)
+            key, fixed = brewing_stand(skull(palette[b['state']], nbt), nbt, appended)
             if fixed:
                 table.update({(key, rot): fixed for rot in range(4)})
             out += struct.pack('<BHBH', x, y, z, index(key))
@@ -221,7 +237,7 @@ def main():
                 specials.append((i, 0, strings, (index(final), priorities)))
             elif key.startswith(DATA) and 'mode=data' in key:
                 specials.append((i, 1, [nbt.get('metadata', '')], None))
-            elif nbt.get('id') in ('minecraft:chest', 'minecraft:trapped_chest') and 'LootTableSeed' not in nbt:
+            elif nbt.get('id') in loot_chests and 'LootTableSeed' not in nbt:
                 specials.append((i, 2, [], None))
             elif key.startswith('minecraft:vine[') and 'up=true' in key:
                 specials.append((i, 3, [], None))
@@ -238,7 +254,7 @@ def main():
         if (key, 0) in table and 'minecraft:connection_' in table[(key, 0)][1]:
             table.update({(key, rot): placed_sides(key, rot, table[(key, rot)]) for rot in range(4) if (key, rot) in table})
         table.update({(key, rot): as_saved(key, rot, table[(key, rot)], table) for rot in range(4) if (key, rot) in table})
-    states, palette = state_table(keys, table, first)
+    states, palette = state_table(keys, table, stages)
     out = b'SPT1' + palette_bytes(palette) + out[4:] + states
     open(os.path.join(OUT, 'templates.bin'), 'wb').write(out)
     print(f'{len(templates)} templates, {len(keys)} states, {len(palette)} blocks, {len(out)} bytes')
