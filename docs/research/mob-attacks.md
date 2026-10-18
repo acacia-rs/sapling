@@ -282,6 +282,26 @@ Three runs on the flat ground, the actor in survival at midnight and healed each
   Java game's `teleportTowards`. Twice it teleported away from beside the actor for no cause seen.
 - It never let its target go: 32 seconds, out to 24 blocks. Water hurt it 1 and sent it off.
 
+## The goat (`goat`)
+
+Three runs at noon on easy (`research/captures/bds-goat-findings.md`; `bds-goat-wet.txt` and
+`bds-goat-one.txt` one goat each, `bds-goat.txt` eight penned with the actor):
+
+- A goat took the nearest player some 8 ticks after it came, with `mob.warning`, and dropped it
+  over 16 off; holding it, it only stood and strolled (0.1243 a tick, movement 0.4 by 0.6).
+- None rammed in its first 77 seconds, one goat not in five minutes; the first rams came at 77,
+  257 and 292 seconds: its `cooldown_range` 30 to 300 is in seconds, from its coming and from each
+  ram.
+- A ram: it ran at 0.1690 a tick to a place due north, south, east or west of its prey, 7 off
+  where the floor let it (5 to 6 by the glass), stood, sounded `pre_ram` a tick later and charged
+  22 ticks after that along the axis, its steps 0.0282, 0.0583, 0.1131, 0.1888, 0.2859, 0.4043,
+  0.5458, 0.7090, 0.8950, 0.9965, 1.0521.
+- What it met took 2 on easy (`HurtAnimation` 30, a baby's 1) and two throws that tick: a hit's
+  0.4 away and 0.4 up, then half that and a push of 1.5 s² along the charge and 0.18 s² up, s
+  its step then. `attack` and `ram_impact` came the tick after. A player it could not hurt took
+  the push alone.
+- Each ram met someone, so a miss was not seen. The goats leapt the glass, 3 high.
+
 ## Strolling (`stroll`)
 
 A zombie and a cow left alone for a minute on a floor 40 blocks square, the actor in creative
@@ -345,6 +365,9 @@ An enderman teleports on its first tick, the tick after a hit and towards prey m
 for 30 ticks (`creatures/teleports.rs`), and hunts its hitter as above. It does not teleport while
 calm or from beside its prey, a stare does not anger it, water does nothing to it, and its
 `ANGRY` flag is not shown.
+
+A goat rams players as above (`creatures/rams.rs`), charging at most 8 blocks; it shows no prey
+between rams, rams no mob, and a baby rams as hard as a grown one.
 
 A wolf and a zombified piglin hunt none but a survival player that hit them, from that tick
 (`hunting::provoke`), and so do an iron golem, with a hit of 7 to 21 and its throw, and a polar

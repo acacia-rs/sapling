@@ -92,6 +92,12 @@ fn in_sight(world: &World, layer: Entity, body: &Body, feet: [f32; 3]) -> bool {
     (0..=glances as usize).all(|glance| !hides(std::array::from_fn(|axis| (from[axis] + (to[axis] - from[axis]) * glance as f32 / glances).floor() as i32)))
 }
 
+/// The nearest player within `sight` of a mob in `layer` that it sees and may hurt, and its feet.
+pub(super) fn nearest(world: &World, layer: Entity, body: &Body, sight: f32) -> Option<(Entity, [f32; 3])> {
+    let near = |(_, feet): &(Entity, [f32; 3])| distance(body.at, *feet);
+    in_world(world).into_iter().filter_map(|player| Some((player, seen(world, player, layer, body.at, sight)?))).filter(|(_, feet)| in_sight(world, layer, body, *feet)).min_by(|a, b| near(a).total_cmp(&near(b)))
+}
+
 /// The hunter `id` has the entity `target` as its prey, or none for 0.
 fn targets(id: u64, target: i64) -> bytes::Bytes {
     let item = MetadataDictionaryItem { key: Key::TargetEid, r#type: Type::Long, legacy_type: 7, value: Value::Default(Plain::Long(target)) };
@@ -125,8 +131,7 @@ fn pick(world: &mut World, entity: Entity, layer: Entity, id: u64, kind: &str, b
     let dazzled = sapling_data::mob_traits(kind).hunts?.by_dark && world.get::<Layer>(layer).is_some_and(|layer| super::harm::is_sunlit(&layer.world, head));
     let looks = !sapling_data::mob_traits(kind).hunts?.provoked && !dazzled;
     if found.is_none() && hunts && looks && (now + id).is_multiple_of(LOOKS) {
-        let near = |(_, feet): &(Entity, [f32; 3])| distance(body.at, *feet);
-        found = in_world(world).into_iter().filter_map(|player| Some((player, seen(world, player, layer, body.at, sight)?))).filter(|(_, feet)| in_sight(world, layer, body, *feet)).min_by(|a, b| near(a).total_cmp(&near(b)));
+        found = nearest(world, layer, body, sight);
     }
     let prey = found.map(|(prey, _)| prey);
     if prey != had {

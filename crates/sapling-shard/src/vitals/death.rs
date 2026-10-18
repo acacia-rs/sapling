@@ -55,7 +55,7 @@ fn words(cause: Cause) -> &'static str {
         Cause::Stalagmite => "death.attack.stalagmite",
         Cause::SonicBoom => "death.attack.sonicBoom",
         Cause::Thorns => "death.attack.thorns",
-        Cause::Projectile | Cause::Campfire | Cause::SoulCampfire | Cause::Generic | Cause::Attack => "death.attack.generic",
+        Cause::Projectile | Cause::Campfire | Cause::SoulCampfire | Cause::Generic | Cause::Attack | Cause::RamAttack => "death.attack.generic",
     }
 }
 

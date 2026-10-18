@@ -77,6 +77,28 @@ pub(crate) fn shot(world: &mut World, player: Entity, amount: f32, kind: &str, f
     took
 }
 
+/// A goat of `kind` at `from` rams a player for `amount`: thrown as a hit is, then again by half
+/// that and `push`; one it cannot hurt by `push` alone (research/captures/bds-goat-findings.md).
+/// False where it took nothing.
+pub(crate) fn rammed(world: &mut World, player: Entity, amount: f32, kind: &str, from: [f32; 3], push: [f32; 3]) -> bool {
+    let (Some(id), Some(feet)) = (world.get::<NetId>(player).map(|id| id.0), world.get::<Position>(player).map(|position| position.feet)) else { return false };
+    if !is_mortal(world, player) {
+        throw(world, player, id, push);
+        return false;
+    }
+    let (dx, dz) = (feet[0] - from[0], feet[2] - from[2]);
+    let far = dx.hypot(dz).max(1e-4);
+    let plain = [dx / far * THROW, THROW, dz / far * THROW];
+    if world.get::<Vitals>(player).is_some_and(|vitals| vitals.health.left() > amount) {
+        throw(world, player, id, plain);
+        throw(world, player, id, std::array::from_fn(|axis| plain[axis] / 2.0 + push[axis]));
+    }
+    world.entity_mut(player).insert(death::Slayer(kind.to_owned()));
+    let took = hurt(world, player, amount, Cause::RamAttack);
+    world.entity_mut(player).remove::<death::Slayer>();
+    took
+}
+
 /// Throws a player as a hit from `from` does.
 pub(super) fn throw_from(world: &mut World, player: Entity, id: u64, from: [f32; 3]) {
     let Some(feet) = world.get::<Position>(player).map(|position| position.feet) else { return };

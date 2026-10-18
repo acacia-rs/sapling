@@ -229,6 +229,20 @@ pub fn ender() -> Vec<String> {
     lines
 }
 
+/// Eight goats 5 off in a ring about the actor, penned with it in glass 13 across on a stone floor
+/// above the flat ground, for six minutes, past the longest a first ram waits; the actor healed
+/// every second (research/captures/bds-goat-findings.md: one goat rammed nobody in five).
+pub fn goat() -> Vec<String> {
+    let mut lines: Vec<String> =
+        ["kill @e[type=!player]", "gamerule domobspawning false", "difficulty easy", "time set noon", "gamemode survival @s", "fill ~-8 ~-1 ~-8 ~8 ~-1 ~8 stone", "fill ~-8 ~ ~-8 ~8 ~5 ~8 air", "fill ~-7 ~ ~-7 ~7 ~2 ~7 glass", "fill ~-6 ~ ~-6 ~6 ~2 ~6 air", ""].map(String::from).into();
+    for (x, z) in [(5, 0), (-5, 0), (0, 5), (0, -5), (4, 4), (-4, 4), (4, -4), (-4, -4)] {
+        lines.push(format!("summon goat ~{x} ~ ~{z}"));
+    }
+    lines.extend(std::iter::repeat_n("effect @s instant_health 1 4".to_owned(), 360));
+    lines.extend(["kill @e[type=!player]", "effect @s clear", "gamemode creative @s", ""].map(String::from));
+    lines
+}
+
 /// As `shoot`, a stray, a bogged and a pillager each 5 blocks off for ten seconds.
 pub fn shoot2() -> Vec<String> {
     let mut lines: Vec<String> =

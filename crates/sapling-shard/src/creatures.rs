@@ -13,6 +13,7 @@ mod health;
 mod hunting;
 mod legs;
 mod paths;
+mod rams;
 mod splashes;
 mod strolling;
 mod teleports;
@@ -144,6 +145,7 @@ fn give_legs(world: &mut World, entity: Entity, kind: &str) {
     }
     hunting::arm(world, entity, kind);
     teleports::arm(world, entity, kind);
+    rams::arm(world, entity, kind);
 }
 
 /// Gives a mob of a kind that dies the health BDS announced its kind with, `left` of it, and
@@ -229,7 +231,7 @@ pub(crate) fn tick(world: &mut World) {
         if is_alive {
             teleports::tick(world, entity, layer, hunting::prey_at(world, entity));
         }
-        if is_alive && !hunting::steer(world, entity, layer, id, &kind) {
+        if is_alive && !rams::steer(world, entity, layer, id, &kind) && !hunting::steer(world, entity, layer, id, &kind) {
             let traits = sapling_data::mob_traits(&kind);
             let strolls = world.resource::<crate::components::Settings>().0.mobs_stroll;
             if strolls {
@@ -240,6 +242,7 @@ pub(crate) fn tick(world: &mut World) {
         blocks::to_viewers(world, layer, body.at.map(|c| c.floor() as i32), &packets);
         if is_alive {
             hunting::strike(world, entity, layer, id, &kind, &body);
+            rams::strike(world, entity, layer, id, &kind, &body);
             if blast::tick(world, entity, layer, id, &kind, &body) {
                 continue;
             }

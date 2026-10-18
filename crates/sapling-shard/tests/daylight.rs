@@ -94,6 +94,33 @@ fn a_witch_throws_poison_at_a_healthy_player_then_harming_each_three_seconds() {
 }
 
 #[test]
+fn a_goat_waits_then_runs_off_stands_and_rams_a_player_for_2_and_a_long_push() {
+    // research/captures/bds-goat-findings.md: 30 to 300 s, pre_ram, 22 ticks standing, then the
+    // charge; 2 on easy, a hit's throw and then half of it and the push.
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    h.remote.run(|ctx| {
+        ctx.set_difficulty(Difficulty::Easy);
+        assert!(ctx.spawn_entity("minecraft:goat", [0.5, 65.0, 6.5]).is_some());
+    });
+    let (mut warned, mut hurt, mut throws) = (None, None, Vec::new());
+    for tick in 0..6400 {
+        let sent = h.tick_all().to(1).to_vec();
+        let sounds = all::<acacia_proto::packets::LevelSoundEvent>(&sent);
+        warned = warned.or(sounds.iter().any(|sound| sound.sound_id == "pre_ram").then_some(tick));
+        let health: Vec<f32> = all::<acacia_proto::packets::UpdateAttributes>(&sent).iter().filter(|update| update.runtime_entity_id == 1).flat_map(|update| &update.attributes).filter(|attribute| attribute.name == "minecraft:health").map(|attribute| attribute.current).collect();
+        if health.contains(&18.0) {
+            hurt = Some(tick);
+            throws = all::<acacia_proto::packets::SetEntityMotion>(&sent).iter().filter(|motion| motion.runtime_entity_id == 1).map(|motion| [motion.velocity.x, motion.velocity.y, motion.velocity.z]).collect();
+            break;
+        }
+    }
+    let (Some(warned), Some(hurt)) = (warned, hurt) else { panic!("no ram: pre_ram {warned:?}, hurt {hurt:?}") };
+    assert!(warned >= 600 && (20..40).contains(&(hurt - warned)), "pre_ram at {warned}, the ram at {hurt}");
+    assert!(throws.len() == 2 && (throws[0][1] - 0.4).abs() < 1e-4 && throws[1][2].abs() > 1.0, "{throws:?}");
+}
+
+#[test]
 fn a_blaze_shoots_three_small_fireballs_six_ticks_apart_that_burn_whom_they_hit() {
     // research/captures/bds-blaze.txt: the first 83 ticks after it took its prey; bds-kinds2.txt: 5 and fire.
     let mut h = Harness::new();
