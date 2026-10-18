@@ -36,6 +36,7 @@ mod movement;
 mod orbs;
 mod player;
 mod plugins;
+mod portals;
 mod roster;
 mod rules;
 mod shard;

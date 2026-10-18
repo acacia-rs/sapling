@@ -91,7 +91,7 @@ pub(crate) struct Motion {
 /// Takes none of a player's inputs until [`release`].
 pub(crate) fn hold(world: &mut World, entity: Entity) {
     if let Some(mut motion) = world.get_mut::<Motion>(entity) {
-        motion.held = true;
+        (motion.held, motion.landing) = (true, None);
     }
 }
 

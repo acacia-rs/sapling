@@ -1,0 +1,103 @@
+## gamemode creative at 0
+    186 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"PortalActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamemode.success.self\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.g
+    186 actor   UpdatePlayerGameType 
+    186 actor   CommandOutput CommandOutput { origin: CommandOrigin { type: "player", uuid: Uuid([51, 72, 88, 234, 110, 203, 240, 156, 101, 22, 166, 36, 134, 82, 146, 133]), request_id: "", player_entity_id: 0 }, output_type: "alloutput", success_count: 1, output: [CommandOutputOutputItem { message_id: "commands.gamemode.success.self", success: true, parameters: ["%createWorldScreen.gameMode.creative"] }], has_data: false, data: None }
+## gamerule domobspawning false at 1374
+   1385 actor   GameRulesChanged GameRulesChanged { rules: [GameRuleI32 { name: "doMobSpawning", editable: true, type: Bool, value: Bool(false) }] }
+   1385 actor   CommandOutput CommandOutput { origin: CommandOrigin { type: "player", uuid: Uuid([25, 74, 70, 236, 11, 168, 198, 161, 138, 223, 106, 24, 83, 234, 26, 158]), request_id: "", player_entity_id: 0 }, output_type: "alloutput", success_count: 1, output: [CommandOutputOutputItem { message_id: "commands.gamerule.success", success: true, parameters: ["domobspawning", "false"] }], has_data: false, data: None }
+   1385 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"PortalActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"domobspawning\"},{\"text\
+## tp @s 0.5 -60 0.5 #2000 at 2575
+   2585 actor   MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 0.5, y: -58.37999, z: 0.5 }, pitch: 0.0, yaw: 0.0, head_yaw: 0.0, mode: Teleport, on_ground: true, ridden_runtime_id: 0, teleport: Some(MovePlayerTeleport { cause: Command, source_entity_type: Unknown(1) }), tick: 104 }
+   2585 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"PortalActor\"},{\"text\":\": \"},{\"translate\":\"commands.tp.success.coordinates\",\"with\":{\"rawtext\":[{\"text\":\"PortalActor\"},{\"t
+   2585 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.tp.successVictim\",\"with\":{\"rawtext\":[{\"text\":\"0.50, -60.00, 0.50\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   2585 actor   CommandOutput CommandOutput { origin: CommandOrigin { type: "player", uuid: Uuid([52, 64, 90, 219, 80, 145, 220, 183, 135, 41, 136, 107, 68, 227, 50, 160]), request_id: "", player_entity_id: 0 }, output_type: "alloutput", success_count: 1, output: [CommandOutputOutputItem { message_id: "commands.tp.success.coordinates", success: true, parameters: ["PortalActor", "0.50", "-60.00", "0.50"] }], has_data: false, data: None }
+## !where at 4576
+## at Some([0.5, -60.0, 0.5]) dimension 0
+## fill 3 -60 5 6 -56 5 obsidian at 4577
+   4595 actor   UpdateBlock 3 -60 5 layer 0 flags UpdateBlockFlags(3) minecraft:obsidian []
+   4595 actor   UpdateBlock 3 -59 5 layer 0 flags UpdateBlockFlags(3) minecraft:obsidian []
+   4595 actor   UpdateBlock 3 -58 5 layer 0 flags UpdateBlockFlags(3) minecraft:obsidian []
+   4595 actor   UpdateBlock 3 -57 5 layer 0 flags UpdateBlockFlags(3) minecraft:obsidian []
+   4595 actor   UpdateBlock 3 -56 5 layer 0 flags UpdateBlockFlags(3) minecraft:obsidian []
+   4595 actor   UpdateBlock 4 -60 5 layer 0 flags UpdateBlockFlags(3) minecraft:obsidian []
+   4595 actor   UpdateBlock 4 -59 5 layer 0 flags UpdateBlockFlags(3) minecraft:obsidian []
+   4595 actor   UpdateBlock 4 -58 5 layer 0 flags UpdateBlockFlags(3) minecraft:obsidian []
+   4595 actor   UpdateBlock 4 -57 5 layer 0 flags UpdateBlockFlags(3) minecraft:obsidian []
+   4595 actor   UpdateBlock 4 -56 5 layer 0 flags UpdateBlockFlags(3) minecraft:obsidian []
+   4595 actor   UpdateBlock 5 -60 5 layer 0 flags UpdateBlockFlags(3) minecraft:obsidian []
+   4595 actor   UpdateBlock 5 -59 5 layer 0 flags UpdateBlockFlags(3) minecraft:obsidian []
+   4595 actor   UpdateBlock 5 -58 5 layer 0 flags UpdateBlockFlags(3) minecraft:obsidian []
+   4595 actor   UpdateBlock 5 -57 5 layer 0 flags UpdateBlockFlags(3) minecraft:obsidian []
+   4595 actor   UpdateBlock 5 -56 5 layer 0 flags UpdateBlockFlags(3) minecraft:obsidian []
+   4595 actor   UpdateBlock 6 -60 5 layer 0 flags UpdateBlockFlags(3) minecraft:obsidian []
+   4595 actor   UpdateBlock 6 -59 5 layer 0 flags UpdateBlockFlags(3) minecraft:obsidian []
+   4595 actor   UpdateBlock 6 -58 5 layer 0 flags UpdateBlockFlags(3) minecraft:obsidian []
+   4595 actor   UpdateBlock 6 -57 5 layer 0 flags UpdateBlockFlags(3) minecraft:obsidian []
+   4595 actor   UpdateBlock 6 -56 5 layer 0 flags UpdateBlockFlags(3) minecraft:obsidian []
+   4595 actor   CommandOutput CommandOutput { origin: CommandOrigin { type: "player", uuid: Uuid([122, 73, 45, 92, 12, 171, 77, 70, 141, 29, 157, 174, 117, 118, 64, 171]), request_id: "", player_entity_id: 0 }, output_type: "alloutput", success_count: 1, output: [CommandOutputOutputItem { message_id: "commands.fill.success", success: true, parameters: ["20"] }], has_data: false, data: None }
+   4595 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"PortalActor\"},{\"text\":\": \"},{\"translate\":\"commands.fill.success\",\"with\":{\"rawtext\":[{\"text\":\"20\"}]}},{\"text\":\"]\"}]}\n
+## fill 4 -59 5 5 -57 5 air at 5779
+   5786 actor   UpdateBlock 4 -59 5 layer 0 flags UpdateBlockFlags(3) minecraft:air []
+   5786 actor   UpdateBlock 4 -58 5 layer 0 flags UpdateBlockFlags(3) minecraft:air []
+   5786 actor   UpdateBlock 4 -57 5 layer 0 flags UpdateBlockFlags(3) minecraft:air []
+   5786 actor   UpdateBlock 5 -59 5 layer 0 flags UpdateBlockFlags(3) minecraft:air []
+   5786 actor   UpdateBlock 5 -58 5 layer 0 flags UpdateBlockFlags(3) minecraft:air []
+   5786 actor   UpdateBlock 5 -57 5 layer 0 flags UpdateBlockFlags(3) minecraft:air []
+   5786 actor   CommandOutput CommandOutput { origin: CommandOrigin { type: "player", uuid: Uuid([15, 75, 160, 211, 13, 182, 139, 67, 237, 94, 14, 129, 54, 243, 196, 177]), request_id: "", player_entity_id: 0 }, output_type: "alloutput", success_count: 1, output: [CommandOutputOutputItem { message_id: "commands.fill.success", success: true, parameters: ["6"] }], has_data: false, data: None }
+   5786 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"PortalActor\"},{\"text\":\": \"},{\"translate\":\"commands.fill.success\",\"with\":{\"rawtext\":[{\"text\":\"6\"}]}},{\"text\":\"]\"}]}\n"
+## replaceitem entity @s slot.weapon.mainhand 0 flint_and_steel at 6981
+   6985 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"PortalActor\"},{\"text\":\": \"},{\"translate\":\"commands.replaceitem.success.entity\",\"with\":{\"rawtext\":[{\"text\":\"slot.weapon.mai
+   6985 actor   .. InventoryContent x4
+   6985 actor   CommandOutput CommandOutput { origin: CommandOrigin { type: "player", uuid: Uuid([226, 76, 208, 240, 240, 89, 170, 54, 105, 237, 17, 130, 34, 96, 233, 164]), request_id: "", player_entity_id: 0 }, output_type: "alloutput", success_count: 1, output: [CommandOutputOutputItem { message_id: "commands.replaceitem.success.entity", success: true, parameters: ["slot.weapon.mainhand", "0", "PortalActor", "1", "Flint And Steel"] }], has_data: false, data: None }
+## tp @s 4.5 -60 3.5 at 8183
+   8235 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"PortalActor\"},{\"text\":\": \"},{\"translate\":\"commands.tp.success.coordinates\",\"with\":{\"rawtext\":[{\"text\":\"PortalActor\"},{\"t
+   8235 actor   MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 4.5, y: -58.37999, z: 3.5 }, pitch: 0.0, yaw: 0.0, head_yaw: 0.0, mode: Teleport, on_ground: true, ridden_runtime_id: 0, teleport: Some(MovePlayerTeleport { cause: Command, source_entity_type: Unknown(1) }), tick: 214 }
+   8235 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.tp.successVictim\",\"with\":{\"rawtext\":[{\"text\":\"4.50, -60.00, 3.50\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   8235 actor   CommandOutput CommandOutput { origin: CommandOrigin { type: "player", uuid: Uuid([61, 75, 106, 193, 12, 181, 107, 181, 206, 40, 19, 58, 221, 205, 105, 161]), request_id: "", player_entity_id: 0 }, output_type: "alloutput", success_count: 1, output: [CommandOutputOutputItem { message_id: "commands.tp.success.coordinates", success: true, parameters: ["PortalActor", "4.50", "-60.00", "3.50"] }], has_data: false, data: None }
+## !light 4 -60 5 up 2000 at 9384
+## lit: Ok(())
+   9486 actor   UpdateSubchunkBlocks at 0 -64 0: 4 -57 5 portal[portal_axis=x] f2; 4 -58 5 portal[portal_axis=x] f2; 4 -59 5 portal[portal_axis=x] f2; 5 -57 5 portal[portal_axis=x] f2; 5 -58 5 portal[portal_axis=x] f2; 5 -59 5 portal[portal_axis=x] f2 | extra: 
+   9486 actor   LevelSoundEvent LevelSoundEvent { sound_id: "ignite", position: Vec3f { x: 4.5, y: -58.5, z: 5.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+   9486 actor   UpdateBlock 4 -60 5 layer 0 flags UpdateBlockFlags(3) minecraft:obsidian []
+   9486 actor   UpdateBlock 4 -60 5 layer 1 flags UpdateBlockFlags(3) minecraft:air []
+   9486 actor   UpdateBlock 4 -59 5 layer 0 flags UpdateBlockFlags(3) minecraft:portal [portal_axis=x]
+   9486 actor   UpdateBlock 4 -59 5 layer 1 flags UpdateBlockFlags(3) minecraft:air []
+  11438 actor   .. SyncWorldClocks x1
+## !portals 6 at 11438
+## portals near [4, -60, 3] in dimension 0: 6
+## portal box 4 -59 5 .. 5 -57 5, states {"portal_axis=x"}
+## frame corner 3 -60 5: minecraft:obsidian
+## frame corner 6 -56 5: minecraft:obsidian
+## tp @s 4.5 -59 5.5 #14000 at 11440
+  11486 actor   MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 4.5, y: -57.37999, z: 5.5 }, pitch: 17.223707, yaw: 0.0, head_yaw: 0.0, mode: Teleport, on_ground: true, ridden_runtime_id: 0, teleport: Some(MovePlayerTeleport { cause: Command, source_entity_type: Unknown(1) }), tick: 278 }
+  11486 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.tp.successVictim\",\"with\":{\"rawtext\":[{\"text\":\"4.50, -59.00, 5.50\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  11486 actor   CommandOutput CommandOutput { origin: CommandOrigin { type: "player", uuid: Uuid([148, 68, 47, 25, 85, 56, 186, 154, 40, 127, 103, 148, 35, 37, 29, 159]), request_id: "", player_entity_id: 0 }, output_type: "alloutput", success_count: 1, output: [CommandOutputOutputItem { message_id: "commands.tp.success.coordinates", success: true, parameters: ["PortalActor", "4.50", "-59.00", "5.50"] }], has_data: false, data: None }
+  11486 actor   RemoveEntity RemoveEntity { entity_id_self: 2 }
+  11486 actor   ChangeDimension ChangeDimension { dimension: 1, position: Vec3f { x: 0.0, y: -57.37999, z: 0.0 }, respawn: false, loading_screen_id: Some(0) }
+  11486 actor   >> loading screen start Some(0)
+  11486 actor   LevelEventGeneric LevelEventGeneric { event_id: 19602, nbt: [Nbt { name: "ableToSleep", value: Int(1) }, Nbt { name: "overworldPlayerCount", value: Int(1) }, Nbt { name: "sleepingPlayerCount", value: Int(0) }] }
+  11486 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"PortalActor\"},{\"text\":\": \"},{\"translate\":\"commands.tp.success.coordinates\",\"with\":{\"rawtext\":[{\"text\":\"PortalActor\"},{\"t
+  11486 watcher LevelEventGeneric LevelEventGeneric { event_id: 19602, nbt: [Nbt { name: "ableToSleep", value: Int(1) }, Nbt { name: "overworldPlayerCount", value: Int(1) }, Nbt { name: "sleepingPlayerCount", value: Int(0) }] }
+  11486 watcher RemoveEntity RemoveEntity { entity_id_self: 1 }
+  11535 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -58, z: 0 }, radius: 128, saved_chunks: [] }
+  18284 actor   .. LevelChunk[dim 1] x26, Subchunk[dim 1] x23, ClientCacheMissResponse x7
+  18285 actor   MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: -14.5, y: 35.62001, z: 7.5 }, pitch: 17.223707, yaw: 90.0, head_yaw: 0.0, mode: Reset, on_ground: true, ridden_runtime_id: 0, teleport: None, tick: 278 }
+  18285 actor   PlayerAction PlayerAction { runtime_entity_id: 1, action: DimensionChangeAck, position: BlockCoordinates { x: 0, y: 0, z: 0 }, result_position: BlockCoordinates { x: 0, y: 0, z: 0 }, face: 0 }
+  18285 actor   >> loading screen end Some(0) + DimensionChangeAck
+  18285 actor   UpdateSubchunkBlocks at -16 32 0: -15 33 6 obsidian[] f2; -15 34 6 obsidian[] f2; -15 35 6 obsidian[] f2; -15 36 6 obsidian[] f2; -15 37 6 obsidian[] f2; -15 33 7 obsidian[] f2; -15 34 7 portal[portal_axis=z] f2; -15 35 7 portal[portal_axis=z] f2; -15 36 7 portal[portal_axis=z] f2; -15 37 7 obsidian[] f2; -15 33 8 obsidian[] f2; -15 34 8 portal[portal_axis=z] f2; -15 35 8 portal[portal_axis=z] f2; -15 36 8 portal[portal_axis=z] f2; -15 37 8 obsidian[] f2; -15 33 9 obsidian[] f2; -15 34 9 obsidian[] f2; -15 35 9 obsidian[] f2; -15 36 9 obsidian[] f2; -15 37 9 obsidian[] f2 | extra: 
+  18297 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: -15, y: 34, z: 7 }, radius: 128, saved_chunks: [] }
+  18385 actor   .. LevelChunk[dim 1] x1, ClientCacheMissResponse x2, Subchunk[dim 1] x4
+  18385 actor   MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: -14.5, y: 35.62001, z: 7.5 }, pitch: 17.223707, yaw: 90.0, head_yaw: 0.0, mode: Teleport, on_ground: true, ridden_runtime_id: 0, teleport: Some(MovePlayerTeleport { cause: Command, source_entity_type: Unknown(1) }), tick: 278 }
+  25441 actor   .. ClientCacheMissResponse x35, LevelChunk[dim 1] x129, Subchunk[dim 1] x124, SyncWorldClocks x1
+## !where at 25441
+## at Some([-14.5, 34.0, 7.5]) dimension 1
+## !portals 16 at 25442
+## portals near [-15, 34, 7] in dimension 1: 6
+## portal box -15 34 7 .. -15 36 8, states {"portal_axis=z"}
+## frame corner -16 33 7: minecraft:crimson_nylium
+## frame corner -14 37 7: minecraft:air
+## !wait 12000 at 25451
+  37452 actor   .. LevelChunk[dim 1] x41, Subchunk[dim 1] x46, ClientCacheMissResponse x14, SyncWorldClocks x1
+## !where at 37452
+## at Some([-14.5, 34.0, 7.5]) dimension 1
+probe exit 0

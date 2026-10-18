@@ -10,7 +10,7 @@ use sapling_api::PlayerId;
 
 use crate::components::{Arrivals, Identity, Layer, Outgoing, PacketQueues, Players, Stage};
 use crate::plugins::Plugins;
-use crate::{blocks, campfires, chat, commands, containers, creatures, dimensions, drops, entities, forms, furnaces, hoppers, inventory, late_sounds, orbs, roster, sleep, tnt, vitals, worlds};
+use crate::{blocks, campfires, chat, commands, containers, creatures, dimensions, drops, entities, forms, furnaces, hoppers, inventory, late_sounds, orbs, portals, roster, sleep, tnt, vitals, worlds};
 
 pub(crate) struct Ctx<'w> {
     pub world: &'w mut World,
@@ -60,6 +60,7 @@ pub(crate) fn dispatch(world: &mut World, plugins: &mut Plugins) {
     blocks::flow_liquids(world);
     blocks::dispatch(world, plugins);
     blocks::dispatch_sign_edits(world);
+    blocks::portals::settle(world);
     let actions = world.resource_mut::<PacketQueues>().take::<acacia_proto::packets::PlayerAction>();
     dimensions::acknowledge(world, &actions);
     sleep::tick(world, &actions);
@@ -84,6 +85,8 @@ pub(crate) fn dispatch(world: &mut World, plugins: &mut Plugins) {
     orbs::tick(world);
     creatures::tick(world);
     vitals::tick(world);
+    portals::tick(world);
+    portals::arrive(world);
     crate::weather::tick(world);
     entities::follow(world);
     forms::dispatch(world);

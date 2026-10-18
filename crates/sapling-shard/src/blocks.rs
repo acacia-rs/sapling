@@ -29,6 +29,7 @@ mod ores;
 mod pistons;
 mod place;
 mod plates;
+pub(crate) mod portals;
 mod pots;
 mod rails;
 mod scaffolds;

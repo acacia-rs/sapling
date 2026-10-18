@@ -41,12 +41,14 @@ pub struct Level {
     pub rules: GameRules,
     /// The lit Nether portals of every dimension, by which a portal finds the one it leads to.
     pub portals: Vec<PortalRecord>,
+    /// The world seed (`RandomSeed`): BDS seeds the draws of its portal making with it.
+    pub seed: i64,
 }
 
 impl Default for Level {
     /// Noon, since a world without storage has nothing to say when it is.
     fn default() -> Self {
-        Self { spawn: None, time: 6000, rules: GameRules::default(), portals: Vec::new() }
+        Self { spawn: None, time: 6000, rules: GameRules::default(), portals: Vec::new(), seed: 0 }
     }
 }
 
@@ -208,7 +210,7 @@ impl LevelDbStorage {
             tracing::warn!(%error, "the portal records are unreadable; portals find none");
             Vec::new()
         });
-        Level { spawn: dat.spawn(), time: dat.time().unwrap_or(Level::default().time), rules: read_rules(dat), portals }
+        Level { spawn: dat.spawn(), time: dat.time().unwrap_or(Level::default().time), rules: read_rules(dat), portals, seed: dat.seed().unwrap_or(0) }
     }
 }
 

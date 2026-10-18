@@ -326,8 +326,8 @@ it sends for `/title`, `/scoreboard`, `/gamemode`, `/tp`, a wither's bar and com
 No BDS capture exists for this step: BDS has one world per dimension. The client side of a world
 change follows dragonfly @ 1793369 (`session.handleWorldSwitch`, `Loader.ChangeWorld`), whose
 same-dimension case sends no ChangeDimension: it hides the old world's entities, teleports and
-sends every column of the view again. Every sapling world is the overworld, so ChangeDimension is
-never sent yet, and BDS's order around it (a portal, `/execute in nether`) was not recorded.
+sends every column of the view again. A move into a world of another dimension is a dimension change
+instead ("Dimensions and portals (as built)").
 
 - **Worlds in a shard** (`worlds.rs`). A world is a layer entity with a name. `Atlas` maps names to
   layers, and to a shard index for worlds elsewhere, which a shard learns by message (`WorldAdded`,
@@ -696,6 +696,25 @@ block action, and takes StopBreak and AbortBreak with a position.
   `ctx.set_block(pos, &block) -> bool`, which shows the block to its viewers and raises no event. The hub's
   whole protection is `if !may_build(ctx, player) { event.cancel() }` in `on_break` and `on_place`, with
   `may_build` = operator and in creative mode.
+
+## Dimensions and portals (as built)
+
+Details and BDS evidence: docs/research/nether-dimension.md.
+
+- **A dimension is a layer.** A world's Nether is a `sapling_world::World` of dimension 1 (its own storage
+  keys, I/O threads, load queue, generator, columns, mobs and saves) added to the overworld's shard
+  (`Shard::add_dimension`, `ServerBuilder::nether` / `dimension_of`) as `<world>:nether`. The layers of one
+  overworld are a `Realm` (sapling-shard `dimensions.rs`); the others copy the overworld's `Level` each tick,
+  so time, rules, weather and portal records are the overworld's, and only it writes `level.dat`.
+- **Dimension change** (`dimensions::change`): RemoveEntity of all seen, ChangeDimension with a counted
+  loading screen, the sleepers' count to all; inputs held until the client's DimensionChangeAck or
+  loading-screen end; BDS's own PlayerAction DimensionChangeAck once the spawn-radius columns are sent.
+  `ctx.travel(player, dimension, feet)` and `/execute in <dimension> run tp` use it; a world move into another
+  dimension's world (`transfer`, handoff) does too. The player record keeps `DimensionId` and `Pos`, and
+  StartGame waits for it so a player who left in the Nether joins there.
+- **Portals**: blocks in `blocks/portals.rs` (frame shape, lighting by flint and steel, fire charge or any
+  fire, breaking, records), travel in `portals.rs` (BDS's timer and cooldown, 8:1 scaling, record search
+  within 128, placement and portal making in `portals/arrive.rs`, MT19937 direction draws from the seed).
 
 ## Inventories (as built)
 
