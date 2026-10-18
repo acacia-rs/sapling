@@ -6662,3 +6662,219 @@ minecraft:yellow_wool	0	yellow_wool		0	3
 minecraft:yellow_wool	1	yellow_wool		0	3
 minecraft:yellow_wool	2	yellow_wool		0	3
 minecraft:yellow_wool	3	yellow_wool		0	3
+minecraft:basalt	0	basalt	pillar_axis=y	0	3
+minecraft:basalt	1	basalt	pillar_axis=y	0	3
+minecraft:basalt	2	basalt	pillar_axis=y	0	3
+minecraft:basalt	3	basalt	pillar_axis=y	0	3
+minecraft:basalt[axis=x]	0	basalt	pillar_axis=x	0	3
+minecraft:basalt[axis=x]	1	basalt	pillar_axis=z	0	3
+minecraft:basalt[axis=x]	2	basalt	pillar_axis=x	0	3
+minecraft:basalt[axis=x]	3	basalt	pillar_axis=z	0	3
+minecraft:basalt[axis=y]	0	basalt	pillar_axis=y	0	3
+minecraft:basalt[axis=y]	1	basalt	pillar_axis=y	0	3
+minecraft:basalt[axis=y]	2	basalt	pillar_axis=y	0	3
+minecraft:basalt[axis=y]	3	basalt	pillar_axis=y	0	3
+minecraft:blackstone	0	blackstone		0	3
+minecraft:blackstone	1	blackstone		0	3
+minecraft:blackstone	2	blackstone		0	3
+minecraft:blackstone	3	blackstone		0	3
+minecraft:blackstone_slab[type=bottom,waterlogged=false]	0	blackstone_slab	minecraft:vertical_half=bottom	0	2
+minecraft:blackstone_slab[type=bottom,waterlogged=false]	1	blackstone_slab	minecraft:vertical_half=bottom	0	2
+minecraft:blackstone_slab[type=bottom,waterlogged=false]	2	blackstone_slab	minecraft:vertical_half=bottom	0	2
+minecraft:blackstone_slab[type=bottom,waterlogged=false]	3	blackstone_slab	minecraft:vertical_half=bottom	0	2
+minecraft:blackstone_slab[type=top,waterlogged=false]	0	blackstone_slab	minecraft:vertical_half=top	0	2
+minecraft:blackstone_slab[type=top,waterlogged=false]	1	blackstone_slab	minecraft:vertical_half=top	0	2
+minecraft:blackstone_slab[type=top,waterlogged=false]	2	blackstone_slab	minecraft:vertical_half=top	0	2
+minecraft:blackstone_slab[type=top,waterlogged=false]	3	blackstone_slab	minecraft:vertical_half=top	0	2
+minecraft:blackstone_stairs[facing=north,half=bottom,shape=straight,waterlogged=false]	0	blackstone_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=3	0	2
+minecraft:blackstone_stairs[facing=north,half=bottom,shape=straight,waterlogged=false]	1	blackstone_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=0	0	2
+minecraft:blackstone_stairs[facing=north,half=bottom,shape=straight,waterlogged=false]	2	blackstone_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=2	0	2
+minecraft:blackstone_stairs[facing=north,half=bottom,shape=straight,waterlogged=false]	3	blackstone_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=1	0	2
+minecraft:blackstone_stairs[facing=south,half=bottom,shape=straight,waterlogged=false]	0	blackstone_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=2	0	2
+minecraft:blackstone_stairs[facing=south,half=bottom,shape=straight,waterlogged=false]	1	blackstone_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=1	0	2
+minecraft:blackstone_stairs[facing=south,half=bottom,shape=straight,waterlogged=false]	2	blackstone_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=3	0	2
+minecraft:blackstone_stairs[facing=south,half=bottom,shape=straight,waterlogged=false]	3	blackstone_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=0	0	2
+minecraft:blackstone_stairs[facing=west,half=bottom,shape=straight,waterlogged=false]	0	blackstone_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=1	0	2
+minecraft:blackstone_stairs[facing=west,half=bottom,shape=straight,waterlogged=false]	1	blackstone_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=3	0	2
+minecraft:blackstone_stairs[facing=west,half=bottom,shape=straight,waterlogged=false]	2	blackstone_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=0	0	2
+minecraft:blackstone_stairs[facing=west,half=bottom,shape=straight,waterlogged=false]	3	blackstone_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=2	0	2
+minecraft:blackstone_wall[east=low,north=low,south=low,up=true,waterlogged=false,west=low]	0	blackstone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:blackstone_wall[east=low,north=low,south=low,up=true,waterlogged=false,west=low]	1	blackstone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:blackstone_wall[east=low,north=low,south=low,up=true,waterlogged=false,west=low]	2	blackstone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:blackstone_wall[east=low,north=low,south=low,up=true,waterlogged=false,west=low]	3	blackstone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:blackstone_wall[east=low,north=low,south=none,up=true,waterlogged=false,west=low]	0	blackstone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:blackstone_wall[east=low,north=low,south=none,up=true,waterlogged=false,west=low]	1	blackstone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:blackstone_wall[east=low,north=low,south=none,up=true,waterlogged=false,west=low]	2	blackstone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:blackstone_wall[east=low,north=low,south=none,up=true,waterlogged=false,west=low]	3	blackstone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:blackstone_wall[east=low,north=none,south=low,up=true,waterlogged=false,west=low]	0	blackstone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:blackstone_wall[east=low,north=none,south=low,up=true,waterlogged=false,west=low]	1	blackstone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:blackstone_wall[east=low,north=none,south=low,up=true,waterlogged=false,west=low]	2	blackstone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:blackstone_wall[east=low,north=none,south=low,up=true,waterlogged=false,west=low]	3	blackstone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:blackstone_wall[east=none,north=low,south=low,up=false,waterlogged=false,west=none]	0	blackstone_wall	wall_connection_type_east=tall,wall_connection_type_north=tall,wall_connection_type_south=tall,wall_connection_type_west=tall,wall_post_bit=1	0	2
+minecraft:blackstone_wall[east=none,north=low,south=low,up=false,waterlogged=false,west=none]	1	blackstone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:blackstone_wall[east=none,north=low,south=low,up=false,waterlogged=false,west=none]	2	blackstone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:blackstone_wall[east=none,north=low,south=low,up=false,waterlogged=false,west=none]	3	blackstone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:blackstone_wall[east=none,north=low,south=low,up=true,waterlogged=false,west=none]	0	blackstone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:blackstone_wall[east=none,north=low,south=low,up=true,waterlogged=false,west=none]	1	blackstone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:blackstone_wall[east=none,north=low,south=low,up=true,waterlogged=false,west=none]	2	blackstone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:blackstone_wall[east=none,north=low,south=low,up=true,waterlogged=false,west=none]	3	blackstone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:blackstone_wall[east=none,north=low,south=none,up=true,waterlogged=false,west=none]	0	blackstone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:blackstone_wall[east=none,north=low,south=none,up=true,waterlogged=false,west=none]	1	blackstone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:blackstone_wall[east=none,north=low,south=none,up=true,waterlogged=false,west=none]	2	blackstone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:blackstone_wall[east=none,north=low,south=none,up=true,waterlogged=false,west=none]	3	blackstone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:blackstone_wall[east=none,north=none,south=low,up=true,waterlogged=false,west=none]	0	blackstone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:blackstone_wall[east=none,north=none,south=low,up=true,waterlogged=false,west=none]	1	blackstone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:blackstone_wall[east=none,north=none,south=low,up=true,waterlogged=false,west=none]	2	blackstone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:blackstone_wall[east=none,north=none,south=low,up=true,waterlogged=false,west=none]	3	blackstone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:blackstone_wall[east=none,north=none,south=none,up=true,waterlogged=false,west=low]	0	blackstone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:blackstone_wall[east=none,north=none,south=none,up=true,waterlogged=false,west=low]	1	blackstone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:blackstone_wall[east=none,north=none,south=none,up=true,waterlogged=false,west=low]	2	blackstone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:blackstone_wall[east=none,north=none,south=none,up=true,waterlogged=false,west=low]	3	blackstone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:blackstone_wall[east=none,north=none,south=none,up=true,waterlogged=false,west=none]	0	blackstone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:blackstone_wall[east=none,north=none,south=none,up=true,waterlogged=false,west=none]	1	blackstone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:blackstone_wall[east=none,north=none,south=none,up=true,waterlogged=false,west=none]	2	blackstone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:blackstone_wall[east=none,north=none,south=none,up=true,waterlogged=false,west=none]	3	blackstone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:blackstone_wall[east=none,north=none,south=tall,up=true,waterlogged=false,west=none]	0	blackstone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:blackstone_wall[east=none,north=none,south=tall,up=true,waterlogged=false,west=none]	1	blackstone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:blackstone_wall[east=none,north=none,south=tall,up=true,waterlogged=false,west=none]	2	blackstone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:blackstone_wall[east=none,north=none,south=tall,up=true,waterlogged=false,west=none]	3	blackstone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:blackstone_wall[east=none,north=tall,south=low,up=true,waterlogged=false,west=none]	0	blackstone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:blackstone_wall[east=none,north=tall,south=low,up=true,waterlogged=false,west=none]	1	blackstone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:blackstone_wall[east=none,north=tall,south=low,up=true,waterlogged=false,west=none]	2	blackstone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:blackstone_wall[east=none,north=tall,south=low,up=true,waterlogged=false,west=none]	3	blackstone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:blackstone_wall[east=none,north=tall,south=none,up=true,waterlogged=false,west=none]	0	blackstone_wall	wall_connection_type_east=tall,wall_connection_type_north=tall,wall_connection_type_south=tall,wall_connection_type_west=tall,wall_post_bit=1	0	2
+minecraft:blackstone_wall[east=none,north=tall,south=none,up=true,waterlogged=false,west=none]	1	blackstone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:blackstone_wall[east=none,north=tall,south=none,up=true,waterlogged=false,west=none]	2	blackstone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:blackstone_wall[east=none,north=tall,south=none,up=true,waterlogged=false,west=none]	3	blackstone_wall	wall_connection_type_east=none,wall_connection_type_north=none,wall_connection_type_south=none,wall_connection_type_west=none,wall_post_bit=1	0	2
+minecraft:blue_stained_glass	0	blue_stained_glass		0	3
+minecraft:blue_stained_glass	1	blue_stained_glass		0	3
+minecraft:blue_stained_glass	2	blue_stained_glass		0	3
+minecraft:blue_stained_glass	3	blue_stained_glass		0	3
+minecraft:chain[waterlogged=false]	0	iron_chain	pillar_axis=y	0	2
+minecraft:chain[waterlogged=false]	1	iron_chain	pillar_axis=y	0	2
+minecraft:chain[waterlogged=false]	2	iron_chain	pillar_axis=y	0	2
+minecraft:chain[waterlogged=false]	3	iron_chain	pillar_axis=y	0	2
+minecraft:chest[facing=east,type=left,waterlogged=false]	0	chest	minecraft:cardinal_direction=east	0	2
+minecraft:chest[facing=east,type=left,waterlogged=false]	1	chest	minecraft:cardinal_direction=south	0	2
+minecraft:chest[facing=east,type=left,waterlogged=false]	2	chest	minecraft:cardinal_direction=west	0	2
+minecraft:chest[facing=east,type=left,waterlogged=false]	3	chest	minecraft:cardinal_direction=north	0	2
+minecraft:chest[facing=east,type=right,waterlogged=false]	0	chest	minecraft:cardinal_direction=east	0	2
+minecraft:chest[facing=east,type=right,waterlogged=false]	1	chest	minecraft:cardinal_direction=south	0	2
+minecraft:chest[facing=east,type=right,waterlogged=false]	2	chest	minecraft:cardinal_direction=west	0	2
+minecraft:chest[facing=east,type=right,waterlogged=false]	3	chest	minecraft:cardinal_direction=north	0	2
+minecraft:chiseled_polished_blackstone	0	chiseled_polished_blackstone		0	3
+minecraft:chiseled_polished_blackstone	1	chiseled_polished_blackstone		0	3
+minecraft:chiseled_polished_blackstone	2	chiseled_polished_blackstone		0	3
+minecraft:chiseled_polished_blackstone	3	chiseled_polished_blackstone		0	3
+minecraft:cracked_polished_blackstone_bricks	0	cracked_polished_blackstone_bricks		0	3
+minecraft:cracked_polished_blackstone_bricks	1	cracked_polished_blackstone_bricks		0	3
+minecraft:cracked_polished_blackstone_bricks	2	cracked_polished_blackstone_bricks		0	3
+minecraft:cracked_polished_blackstone_bricks	3	cracked_polished_blackstone_bricks		0	3
+minecraft:emerald_block	0	emerald_block		0	3
+minecraft:emerald_block	1	emerald_block		0	3
+minecraft:emerald_block	2	emerald_block		0	3
+minecraft:emerald_block	3	emerald_block		0	3
+minecraft:fire[age=15,east=false,north=false,south=false,up=false,west=false]	0	fire	age=15	0	0
+minecraft:fire[age=15,east=false,north=false,south=false,up=false,west=false]	1	fire	age=15	0	0
+minecraft:fire[age=15,east=false,north=false,south=false,up=false,west=false]	2	fire	age=15	0	0
+minecraft:fire[age=15,east=false,north=false,south=false,up=false,west=false]	3	fire	age=15	0	0
+minecraft:glowstone	0	glowstone		0	3
+minecraft:glowstone	1	glowstone		0	3
+minecraft:glowstone	2	glowstone		0	3
+minecraft:glowstone	3	glowstone		0	3
+minecraft:nether_wart[age=3]	0	nether_wart	age=3	0	0
+minecraft:nether_wart[age=3]	1	nether_wart	age=3	0	0
+minecraft:nether_wart[age=3]	2	nether_wart	age=3	0	0
+minecraft:nether_wart[age=3]	3	nether_wart	age=3	0	0
+minecraft:oak_sign[rotation=0,waterlogged=false]	0	standing_sign	ground_sign_direction=0	0	0
+minecraft:oak_sign[rotation=0,waterlogged=false]	1	standing_sign	ground_sign_direction=0	0	0
+minecraft:oak_sign[rotation=0,waterlogged=false]	2	standing_sign	ground_sign_direction=0	0	0
+minecraft:oak_sign[rotation=0,waterlogged=false]	3	standing_sign	ground_sign_direction=0	0	0
+minecraft:polished_basalt	0	polished_basalt	pillar_axis=y	0	3
+minecraft:polished_basalt	1	polished_basalt	pillar_axis=y	0	3
+minecraft:polished_basalt	2	polished_basalt	pillar_axis=y	0	3
+minecraft:polished_basalt	3	polished_basalt	pillar_axis=y	0	3
+minecraft:polished_blackstone_brick_stairs[facing=east,half=bottom,shape=straight,waterlogged=false]	0	polished_blackstone_brick_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=0	0	2
+minecraft:polished_blackstone_brick_stairs[facing=east,half=bottom,shape=straight,waterlogged=false]	1	polished_blackstone_brick_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=2	0	2
+minecraft:polished_blackstone_brick_stairs[facing=east,half=bottom,shape=straight,waterlogged=false]	2	polished_blackstone_brick_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=1	0	2
+minecraft:polished_blackstone_brick_stairs[facing=east,half=bottom,shape=straight,waterlogged=false]	3	polished_blackstone_brick_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=3	0	2
+minecraft:polished_blackstone_brick_stairs[facing=east,half=top,shape=straight,waterlogged=false]	0	polished_blackstone_brick_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=0	0	2
+minecraft:polished_blackstone_brick_stairs[facing=east,half=top,shape=straight,waterlogged=false]	1	polished_blackstone_brick_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=2	0	2
+minecraft:polished_blackstone_brick_stairs[facing=east,half=top,shape=straight,waterlogged=false]	2	polished_blackstone_brick_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=1	0	2
+minecraft:polished_blackstone_brick_stairs[facing=east,half=top,shape=straight,waterlogged=false]	3	polished_blackstone_brick_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=3	0	2
+minecraft:polished_blackstone_brick_stairs[facing=north,half=bottom,shape=inner_left,waterlogged=false]	0	polished_blackstone_brick_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=3	0	2
+minecraft:polished_blackstone_brick_stairs[facing=north,half=bottom,shape=inner_left,waterlogged=false]	1	polished_blackstone_brick_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=0	0	2
+minecraft:polished_blackstone_brick_stairs[facing=north,half=bottom,shape=inner_left,waterlogged=false]	2	polished_blackstone_brick_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=2	0	2
+minecraft:polished_blackstone_brick_stairs[facing=north,half=bottom,shape=inner_left,waterlogged=false]	3	polished_blackstone_brick_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=1	0	2
+minecraft:polished_blackstone_brick_stairs[facing=north,half=bottom,shape=outer_left,waterlogged=false]	0	polished_blackstone_brick_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=3	0	2
+minecraft:polished_blackstone_brick_stairs[facing=north,half=bottom,shape=outer_left,waterlogged=false]	1	polished_blackstone_brick_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=0	0	2
+minecraft:polished_blackstone_brick_stairs[facing=north,half=bottom,shape=outer_left,waterlogged=false]	2	polished_blackstone_brick_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=2	0	2
+minecraft:polished_blackstone_brick_stairs[facing=north,half=bottom,shape=outer_left,waterlogged=false]	3	polished_blackstone_brick_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=1	0	2
+minecraft:polished_blackstone_brick_stairs[facing=north,half=bottom,shape=outer_right,waterlogged=false]	0	polished_blackstone_brick_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=3	0	2
+minecraft:polished_blackstone_brick_stairs[facing=north,half=bottom,shape=outer_right,waterlogged=false]	1	polished_blackstone_brick_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=0	0	2
+minecraft:polished_blackstone_brick_stairs[facing=north,half=bottom,shape=outer_right,waterlogged=false]	2	polished_blackstone_brick_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=2	0	2
+minecraft:polished_blackstone_brick_stairs[facing=north,half=bottom,shape=outer_right,waterlogged=false]	3	polished_blackstone_brick_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=1	0	2
+minecraft:polished_blackstone_brick_stairs[facing=north,half=bottom,shape=straight,waterlogged=false]	0	polished_blackstone_brick_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=3	0	2
+minecraft:polished_blackstone_brick_stairs[facing=north,half=bottom,shape=straight,waterlogged=false]	1	polished_blackstone_brick_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=0	0	2
+minecraft:polished_blackstone_brick_stairs[facing=north,half=bottom,shape=straight,waterlogged=false]	2	polished_blackstone_brick_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=2	0	2
+minecraft:polished_blackstone_brick_stairs[facing=north,half=bottom,shape=straight,waterlogged=false]	3	polished_blackstone_brick_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=1	0	2
+minecraft:polished_blackstone_brick_stairs[facing=north,half=top,shape=straight,waterlogged=false]	0	polished_blackstone_brick_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=3	0	2
+minecraft:polished_blackstone_brick_stairs[facing=north,half=top,shape=straight,waterlogged=false]	1	polished_blackstone_brick_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=0	0	2
+minecraft:polished_blackstone_brick_stairs[facing=north,half=top,shape=straight,waterlogged=false]	2	polished_blackstone_brick_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=2	0	2
+minecraft:polished_blackstone_brick_stairs[facing=north,half=top,shape=straight,waterlogged=false]	3	polished_blackstone_brick_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=1	0	2
+minecraft:polished_blackstone_brick_stairs[facing=north]	0	polished_blackstone_brick_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=3	0	2
+minecraft:polished_blackstone_brick_stairs[facing=north]	1	polished_blackstone_brick_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=0	0	2
+minecraft:polished_blackstone_brick_stairs[facing=north]	2	polished_blackstone_brick_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=2	0	2
+minecraft:polished_blackstone_brick_stairs[facing=north]	3	polished_blackstone_brick_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=1	0	2
+minecraft:polished_blackstone_brick_stairs[facing=south,half=bottom,shape=inner_left,waterlogged=false]	0	polished_blackstone_brick_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=2	0	2
+minecraft:polished_blackstone_brick_stairs[facing=south,half=bottom,shape=inner_left,waterlogged=false]	1	polished_blackstone_brick_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=1	0	2
+minecraft:polished_blackstone_brick_stairs[facing=south,half=bottom,shape=inner_left,waterlogged=false]	2	polished_blackstone_brick_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=3	0	2
+minecraft:polished_blackstone_brick_stairs[facing=south,half=bottom,shape=inner_left,waterlogged=false]	3	polished_blackstone_brick_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=0	0	2
+minecraft:polished_blackstone_brick_stairs[facing=south,half=bottom,shape=outer_left,waterlogged=false]	0	polished_blackstone_brick_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=2	0	2
+minecraft:polished_blackstone_brick_stairs[facing=south,half=bottom,shape=outer_left,waterlogged=false]	1	polished_blackstone_brick_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=1	0	2
+minecraft:polished_blackstone_brick_stairs[facing=south,half=bottom,shape=outer_left,waterlogged=false]	2	polished_blackstone_brick_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=3	0	2
+minecraft:polished_blackstone_brick_stairs[facing=south,half=bottom,shape=outer_left,waterlogged=false]	3	polished_blackstone_brick_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=0	0	2
+minecraft:polished_blackstone_brick_stairs[facing=south,half=bottom,shape=straight,waterlogged=false]	0	polished_blackstone_brick_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=2	0	2
+minecraft:polished_blackstone_brick_stairs[facing=south,half=bottom,shape=straight,waterlogged=false]	1	polished_blackstone_brick_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=1	0	2
+minecraft:polished_blackstone_brick_stairs[facing=south,half=bottom,shape=straight,waterlogged=false]	2	polished_blackstone_brick_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=3	0	2
+minecraft:polished_blackstone_brick_stairs[facing=south,half=bottom,shape=straight,waterlogged=false]	3	polished_blackstone_brick_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=0	0	2
+minecraft:polished_blackstone_brick_stairs[facing=south,half=top,shape=straight,waterlogged=false]	0	polished_blackstone_brick_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=2	0	2
+minecraft:polished_blackstone_brick_stairs[facing=south,half=top,shape=straight,waterlogged=false]	1	polished_blackstone_brick_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=1	0	2
+minecraft:polished_blackstone_brick_stairs[facing=south,half=top,shape=straight,waterlogged=false]	2	polished_blackstone_brick_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=3	0	2
+minecraft:polished_blackstone_brick_stairs[facing=south,half=top,shape=straight,waterlogged=false]	3	polished_blackstone_brick_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=0	0	2
+minecraft:polished_blackstone_brick_stairs[facing=west,half=bottom,shape=outer_left,waterlogged=false]	0	polished_blackstone_brick_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=1	0	2
+minecraft:polished_blackstone_brick_stairs[facing=west,half=bottom,shape=outer_left,waterlogged=false]	1	polished_blackstone_brick_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=3	0	2
+minecraft:polished_blackstone_brick_stairs[facing=west,half=bottom,shape=outer_left,waterlogged=false]	2	polished_blackstone_brick_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=0	0	2
+minecraft:polished_blackstone_brick_stairs[facing=west,half=bottom,shape=outer_left,waterlogged=false]	3	polished_blackstone_brick_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=2	0	2
+minecraft:polished_blackstone_brick_stairs[facing=west,half=bottom,shape=straight,waterlogged=false]	0	polished_blackstone_brick_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=1	0	2
+minecraft:polished_blackstone_brick_stairs[facing=west,half=bottom,shape=straight,waterlogged=false]	1	polished_blackstone_brick_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=3	0	2
+minecraft:polished_blackstone_brick_stairs[facing=west,half=bottom,shape=straight,waterlogged=false]	2	polished_blackstone_brick_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=0	0	2
+minecraft:polished_blackstone_brick_stairs[facing=west,half=bottom,shape=straight,waterlogged=false]	3	polished_blackstone_brick_stairs	minecraft:corner=none,upside_down_bit=0,weirdo_direction=2	0	2
+minecraft:polished_blackstone_brick_stairs[facing=west,half=top,shape=straight,waterlogged=false]	0	polished_blackstone_brick_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=1	0	2
+minecraft:polished_blackstone_brick_stairs[facing=west,half=top,shape=straight,waterlogged=false]	1	polished_blackstone_brick_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=3	0	2
+minecraft:polished_blackstone_brick_stairs[facing=west,half=top,shape=straight,waterlogged=false]	2	polished_blackstone_brick_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=0	0	2
+minecraft:polished_blackstone_brick_stairs[facing=west,half=top,shape=straight,waterlogged=false]	3	polished_blackstone_brick_stairs	minecraft:corner=none,upside_down_bit=1,weirdo_direction=2	0	2
+minecraft:polished_blackstone_bricks	0	polished_blackstone_bricks		0	3
+minecraft:polished_blackstone_bricks	1	polished_blackstone_bricks		0	3
+minecraft:polished_blackstone_bricks	2	polished_blackstone_bricks		0	3
+minecraft:polished_blackstone_bricks	3	polished_blackstone_bricks		0	3
+minecraft:quartz_block	0	quartz_block	pillar_axis=y	0	3
+minecraft:quartz_block	1	quartz_block	pillar_axis=y	0	3
+minecraft:quartz_block	2	quartz_block	pillar_axis=y	0	3
+minecraft:quartz_block	3	quartz_block	pillar_axis=y	0	3
+minecraft:smooth_quartz	0	smooth_quartz	pillar_axis=y	0	3
+minecraft:smooth_quartz	1	smooth_quartz	pillar_axis=y	0	3
+minecraft:smooth_quartz	2	smooth_quartz	pillar_axis=y	0	3
+minecraft:smooth_quartz	3	smooth_quartz	pillar_axis=y	0	3
+minecraft:smooth_quartz_slab[type=bottom,waterlogged=false]	0	smooth_quartz_slab	minecraft:vertical_half=bottom	0	2
+minecraft:smooth_quartz_slab[type=bottom,waterlogged=false]	1	smooth_quartz_slab	minecraft:vertical_half=bottom	0	2
+minecraft:smooth_quartz_slab[type=bottom,waterlogged=false]	2	smooth_quartz_slab	minecraft:vertical_half=bottom	0	2
+minecraft:smooth_quartz_slab[type=bottom,waterlogged=false]	3	smooth_quartz_slab	minecraft:vertical_half=bottom	0	2
+minecraft:smooth_quartz_slab[type=top,waterlogged=false]	0	smooth_quartz_slab	minecraft:vertical_half=top	0	2
+minecraft:smooth_quartz_slab[type=top,waterlogged=false]	1	smooth_quartz_slab	minecraft:vertical_half=top	0	2
+minecraft:smooth_quartz_slab[type=top,waterlogged=false]	2	smooth_quartz_slab	minecraft:vertical_half=top	0	2
+minecraft:smooth_quartz_slab[type=top,waterlogged=false]	3	smooth_quartz_slab	minecraft:vertical_half=top	0	2
+minecraft:spawner	0	mob_spawner		0	3
+minecraft:spawner	1	mob_spawner		0	3
+minecraft:spawner	2	mob_spawner		0	3
+minecraft:spawner	3	mob_spawner		0	3

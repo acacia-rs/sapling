@@ -113,6 +113,8 @@ Residue against the canon (`nether-replay.sh`, 2026-10-17), cells:
 | fortress | 0 | 35270 | 81572 |
 | bastion | 0 | 17045 | 73631 |
 
+With the structure stage (2026-10-17, worldgen/nether-bastion) every region is 0 but one fortress feature cell.
+
 Every loaded buffer of the run (2450 chunks) equals ours; the "later" cells are what BDS set after `loadChunk`.
 
 ## Milestone 2
@@ -123,6 +125,23 @@ Every loaded buffer of the run (2450 chunks) equals ours; the "later" cells are 
   (`dbg_canon.json`'s overworld VAs replaced by the Nether's decoration and lock entries) for its order.
 - Structures (1481ecce0): fortress (legacy pieces) and bastion (jigsaw), ruined portals; grid salts and
   spacing ([worldgen-prior-art.md](worldgen-prior-art.md): 480-block regions, 1/3 fortress odds, unverified).
+
+## Bastions and ruined portals
+`structure/bastion` and `ruined_portal::place_nether`, run by `structure/nether.rs` after the fortress.
+- Bastion (148311de0 -> 141edf3d0): rotation, start pool (`nextInt(4)` of bridge, treasure, hoglin stable,
+  units), element, then the ancient city's queued placer (depth 15, 80) with an empty anchor, which skips the
+  start shuffle; start piece at y 32; netherrack plugs down to y 0. Data: `jigsaw/pools_bastion.txt`
+  (`scripts/jigsaw_extract/jbastion.py`), templates in templates.bin (bastion appended, 54 states probed).
+- One position test (`bastion_treasure_room_highrampart`, axis Y, 0..0.05 over 0..100 from the start
+  piece's origin): one `nextFloat` once input and location pass.
+- The mob pieces are Bedrock `.mcstructure`s whose air BDS does not place; their jigsaw's final state
+  `minecraft:blackstone_bricks` names no block (air). `small_stables/inner_4`, `outer_4` are BDS names
+  without templates (no blocks).
+- Nether portal: `y = nextInt(85) + 15`, air kept below 32, heights under the roof (140a08bb0 walks down
+  through the solid roof first), no mossiness, the blackstone sweep; aged walls keep their default state;
+  placed only in its start chunk's post-process.
+- Judged: canon bastion region 0 wrong after decoration; the two portals near the canon (-16,0 and
+  -20,-16, outside its regions) match a stock BDS run over their 3x3 chunks except magma ores.
 
 ## The code-registered feature rules
 Ported in `feature/basalt.rs` (basalt columns 14827c230, pillar 14827ca10, delta 148294fc0), `fungus.rs`

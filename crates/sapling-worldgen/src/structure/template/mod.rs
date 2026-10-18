@@ -27,7 +27,7 @@ pub use load::palette;
 pub(crate) use markers::hash as marker_hash;
 #[allow(unused_imports)]
 pub use place::{Placement, Rotation, pass_cells};
-pub use rules::{Predicate, Rule, apply};
+pub use rules::{LinearPos, Predicate, Rule, apply};
 pub use update::Record;
 
 use crate::block::Block;

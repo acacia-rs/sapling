@@ -5,8 +5,10 @@
 
 use std::sync::Arc;
 
+use super::bastion::{self, Bastion};
 use super::canvas::{Canvas, Spawners};
 use super::fortress::{self, Fortress};
+use super::ruined_portal;
 use super::placement::{Grid, Spread};
 use super::stage::Placed;
 use super::start_cache::StartCache;
@@ -16,6 +18,8 @@ use crate::random::{LargeFeatureSeed, Mt19937};
 use crate::terrain::ChunkShape;
 
 pub const NETHER_GRID: Grid = Grid::new(30, 4, 30_084_232, Spread::Linear);
+/// The ruined portal's Nether grid (the feature's +0x17c, +0x180), the overworld's salt.
+const PORTAL_GRID: Grid = Grid::new(25, 10, 40_552_231, Spread::Linear);
 const FORTRESS_BIOMES: [u8; 5] = [HELL, SOULSAND_VALLEY, CRIMSON_FOREST, WARPED_FOREST, BASALT_DELTAS];
 const BASTION_BIOMES: [u8; 4] = [HELL, SOULSAND_VALLEY, CRIMSON_FOREST, WARPED_FOREST];
 /// Children stay within 112 blocks of the start piece; a piece reaches 19 past its door.
@@ -30,7 +34,6 @@ pub type QuartBiome<'a> = &'a dyn Fn(i32, i32) -> u8;
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum SharedKind {
     Fortress,
-    #[allow(dead_code)] // TODO: the bastion port's start test.
     Bastion,
 }
 
@@ -38,16 +41,37 @@ pub enum SharedKind {
 #[derive(Default)]
 pub struct NetherReaching {
     fortresses: Vec<Arc<Fortress>>,
+    /// The ruined portal starting in the chunk: it places whole through the 3x3 block source.
+    portals: Vec<(i32, i32)>,
+    bastions: Vec<Arc<Bastion>>,
+}
+
+impl NetherReaching {
+    fn is_empty(&self) -> bool {
+        self.fortresses.is_empty() && self.portals.is_empty() && self.bastions.is_empty()
+    }
 }
 
 pub struct NetherStructures {
     level_seed: u32,
     fortresses: StartCache<(i32, i32), Fortress>,
+    bastions: StartCache<(i32, i32), Bastion>,
 }
 
 impl NetherStructures {
     pub fn new(seed: i64) -> Self {
-        Self { level_seed: seed as u32, fortresses: StartCache::new(STARTS_LIMIT) }
+        Self { level_seed: seed as u32, fortresses: StartCache::new(STARTS_LIMIT), bastions: StartCache::new(STARTS_LIMIT) }
+    }
+
+    pub fn bastion(&self, start: (i32, i32), quart_biome: QuartBiome) -> Option<Arc<Bastion>> {
+        let mut random = self.select(SharedKind::Bastion, start, quart_biome)?;
+        Some(self.bastions.get(start, || Bastion::generate(&mut random, start)))
+    }
+
+    /// The Nether ruined portal starting in `chunk` (no biome test, 14835c660): only its start
+    /// chunk's post-process places it (14835d070 returns unless the origin is in the chunk).
+    fn portals_at(&self, chunk: (i32, i32)) -> Vec<(i32, i32)> {
+        (PORTAL_GRID.candidate(self.level_seed, chunk) == chunk).then_some(chunk).into_iter().collect()
     }
 
     /// The shared selector: the region's MT after its grid and pick draws when `kind` starts in
@@ -77,19 +101,24 @@ impl NetherStructures {
         let column = super::BoundingBox::chunk(chunk.0, chunk.1);
         let spacing = NETHER_GRID.spacing;
         let regions = |c: i32| (c - FORTRESS_REACH).div_euclid(spacing)..=(c + FORTRESS_REACH).div_euclid(spacing);
-        let mut fortresses = Vec::new();
+        let mut reaching = NetherReaching { portals: self.portals_at(chunk), ..Default::default() };
         for rx in regions(chunk.0) {
             for rz in regions(chunk.1) {
                 let (start, _) = NETHER_GRID.candidate_random(self.level_seed, (rx * spacing, rz * spacing));
-                if (start.0 - chunk.0).abs() > FORTRESS_REACH || (start.1 - chunk.1).abs() > FORTRESS_REACH {
-                    continue;
+                let within = |reach: i32| (start.0 - chunk.0).abs() <= reach && (start.1 - chunk.1).abs() <= reach;
+                if within(FORTRESS_REACH)
+                    && let Some(fortress) = self.fortress(start, quart_biome).filter(|f| f.bb.intersects(&column))
+                {
+                    reaching.fortresses.push(fortress);
                 }
-                if let Some(fortress) = self.fortress(start, quart_biome).filter(|f| f.bb.intersects(&column)) {
-                    fortresses.push(fortress);
+                if within(bastion::REACH)
+                    && let Some(bastion) = self.bastion(start, quart_biome).filter(|b| b.reaches(&column))
+                {
+                    reaching.bastions.push(bastion);
                 }
             }
         }
-        (!fortresses.is_empty()).then_some(NetherReaching { fortresses })
+        (!reaching.is_empty()).then_some(reaching)
     }
 
     /// The post-process of `chunk` over `shape` (`neighbour` reads the eight chunks around): per
@@ -103,8 +132,14 @@ impl NetherStructures {
             fortress.post_process(&mut canvas, &mut random);
             touched = (touched.0.min(fortress.bb.y0 - 1), touched.1.max(fortress.bb.y1 + 1));
         }
-        // TODO: Nether ruined portals (grid 25/10, salt 40552231), each on the generator reseeded.
-        // TODO: bastions (`select(SharedKind::Bastion, ..)`), each on the generator reseeded.
+        let seeds = LargeFeatureSeed::new(self.level_seed);
+        canvas.whole = true;
+        for &start in &reaching.portals {
+            ruined_portal::place_nether(&mut canvas, &mut Mt19937::new(seeds.chunk(start.0, start.1)), start);
+        }
+        canvas.whole = false;
+        let bastions: Vec<&Bastion> = reaching.bastions.iter().map(|b| &**b).collect();
+        bastion::place(&mut canvas, &bastions, seed);
         let touched = (touched.0.min(canvas.touched.0), touched.1.max(canvas.touched.1));
         let mut past = std::mem::take(&mut canvas.unclipped);
         past.append(&mut canvas.spilled);
