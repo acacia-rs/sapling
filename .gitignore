@@ -3,3 +3,13 @@
 /worlds
 /.cargo/config.toml
 __pycache__/
+.env*
+*.pem
+*.key
+.claude/
+
+# Mojang's data, regenerated from your own BDS install / Java jar: see crates/sapling-data/README.md "Provenance"
+/crates/sapling-data/data/*.bin
+/crates/sapling-data/data/mob-loot.json
+/crates/sapling-data/data/block-loot.tsv
+/crates/sapling-worldgen/src/structure/template/templates.bin
