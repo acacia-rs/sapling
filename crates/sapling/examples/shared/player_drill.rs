@@ -6,6 +6,8 @@ use std::time::Duration;
 
 use acacia_bot::Bot;
 
+#[path = "foes_drill.rs"]
+mod foes;
 #[path = "hunt_drill.rs"]
 mod hunt;
 #[path = "shove_drill.rs"]
@@ -93,10 +95,11 @@ pub fn drill(name: &str) -> Option<(Vec<String>, &'static [&'static str])> {
         "provoke" => (shove::provoke(), hunt::KINDS_SHOWN),
         "provoke2" => (shove::provoke2(), hunt::KINDS_SHOWN),
         "provoke3" => (shove::provoke3(), hunt::KINDS_SHOWN),
-        "witch" => (shove::witch(), hunt::SPLASHES_SHOWN),
-        "ender" => (shove::ender(), hunt::SPLASHES_SHOWN),
-        "goat" => (shove::goat(), hunt::KINDS_SHOWN),
-        "evoker" => (shove::evoker(), hunt::SPLASHES_SHOWN),
+        "witch" => (foes::witch(), hunt::SPLASHES_SHOWN),
+        "ender" => (foes::ender(), hunt::SPLASHES_SHOWN),
+        "goat" => (foes::goat(), hunt::KINDS_SHOWN),
+        "evoker" => (foes::evoker(), hunt::SPLASHES_SHOWN),
+        "shulker" => (foes::shulker(), hunt::SPLASHES_SHOWN),
         "fx" => (shove::fx(), HURT_SHOWN),
         "drink2" => (shove::drink2(), HURT_SHOWN),
         "shoot2" => (shove::shoot2(), SHOOT_SHOWN),

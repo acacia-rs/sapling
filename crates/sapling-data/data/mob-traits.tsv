@@ -57,7 +57,7 @@ minecraft:rabbit	xp=1-3 strolls=0.18 panics=0.66
 minecraft:ravager	xp=20-20 strolls=0 attack=12 speed=0.4 sees=16 every=31
 minecraft:salmon	breathes_water no_air xp=1-3
 minecraft:sheep	xp=1-3 strolls=0.2 panics=0.3125
-minecraft:shulker	fire_immune xp=5-5
+minecraft:shulker	fire_immune xp=5-5 attack=0 speed=0 sees=15 shoots=41 aims=37 shot=shulker_bullet
 minecraft:silverfish	xp=5-5 attack=1 speed=0.25 sees=8
 minecraft:skeleton	breathes_water burns_in_sun xp=5-5 strolls=0.25 attack=0 speed=0.25 sees=16 shoots=61
 minecraft:skeleton_horse	breathes_water xp=1-3 strolls=0.14

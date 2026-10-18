@@ -10,7 +10,7 @@ use acacia_proto::types::{EntityProperties, MetadataDictionaryItem, MetadataDict
 use bevy_ecs::prelude::*;
 use sapling_api::Difficulty;
 
-use super::{arrows, blast, legs, paths};
+use super::{blast, legs, paths};
 use crate::body::Body;
 use crate::components::{InLayer, Layer, NetId, Position, Settings, Tick, in_world};
 use crate::{entities, late_sounds, vitals};
@@ -23,9 +23,6 @@ const REPLANS: u64 = 10;
 const ARRIVED: f32 = 0.35;
 /// An iron golem's hit throws this fast away and up (research/captures/bds-golem.txt).
 const FLINGS: [f32; 2] = [0.52, 0.4288];
-/// The ticks after a shot at which a crossbow's loading is heard, and what of it.
-// TODO: heard where the archer stood at the shot, not where it has walked to since.
-const LOADS: [(u64, &str); 3] = [(3, "start"), (13, "middle"), (23, "end")];
 /// An archer walks at its prey for this many ticks after taking it (BDS's went 1.7 blocks, from
 /// 10 off and from 4), then stands while it is this near.
 const NEARS: u64 = 19;
@@ -52,9 +49,9 @@ pub(super) struct Hunter {
     prey: Option<Entity>,
     /// The tick it took its prey in.
     since: u64,
-    ready: u64,
+    pub(super) ready: u64,
     /// The shots left of a volley, and the tick the next goes in.
-    volley: Option<(u32, u64)>,
+    pub(super) volley: Option<(u32, u64)>,
     /// The cells of its way round what stands before its prey, and the tick it found them in.
     way: Vec<[i32; 3]>,
     planned: u64,
@@ -147,7 +144,9 @@ fn take(world: &mut World, entity: Entity, layer: Entity, id: u64, kind: &str, b
     (hunter.prey, hunter.since) = (prey, now);
     let target = prey.and_then(|prey| world.get::<NetId>(prey)).map_or(0, |id| id.0 as i64);
     let cell = body.at.map(|c| c.floor() as i32);
-    entities::tell_viewers(world, entity, layer, cell, vec![targets(id, target)]);
+    let mut told = vec![targets(id, target)];
+    told.extend(super::bullets::peek(world, layer, id, kind, body.at, prey.is_some()));
+    entities::tell_viewers(world, entity, layer, cell, told);
     if prey.is_some() {
         late_sounds::play_later(world, 1, layer, cell, sound("mob.warning", id, kind, body, HEAD));
     }
@@ -224,33 +223,7 @@ pub(super) fn strike(world: &mut World, entity: Entity, layer: Entity, id: u64, 
         blast::put_out(world, entity, layer, id, kind, body);
     }
     if let Some(every) = hunts.shoots.filter(|_| prey.is_some()) {
-        let feet = world.get::<Position>(prey?)?.feet;
-        let mut shot = arrows::shot_named(hunts.shot);
-        if shot.is_potion() {
-            shot = shot.of_potion(super::splashes::choose(world, prey?, (feet[0] - body.at[0]).hypot(feet[2] - body.at[2])));
-        }
-        let volley = world.get::<Hunter>(entity)?.volley;
-        if let Some((left, _)) = volley.filter(|(_, due)| now >= *due) {
-            arrows::loose(world, layer, entity, kind, body, feet, hunts.gives, shot);
-            let gap = hunts.volley.map_or(0, |(_, gap)| u64::from(gap));
-            world.get_mut::<Hunter>(entity)?.volley = (left > 1).then_some((left - 1, now + gap));
-        }
-        if ready != 0 && now >= ready {
-            arrows::loose(world, layer, entity, kind, body, feet, hunts.gives, shot);
-            let more = hunts.volley.filter(|(shots, _)| *shots > 1).map(|(shots, gap)| (shots - 1, now + u64::from(gap)));
-            world.get_mut::<Hunter>(entity)?.volley = more;
-        }
-        if ready == 0 || now >= ready {
-            // The first shot waits as long as the next, or as long as the kind aims.
-            let wait = if ready == 0 { hunts.aims.unwrap_or(every) } else { every };
-            world.get_mut::<Hunter>(entity)?.ready = now + u64::from(wait);
-            // A crossbow is heard being loaded for the next (bds-shoot2.txt).
-            let middle = [body.at[0], body.at[1] + MIDDLE * body.size[1], body.at[2]];
-            for (after, stage) in LOADS.into_iter().filter(|_| hunts.closes) {
-                late_sounds::play_later(world, after, layer, body.at.map(|c| c.floor() as i32), arrows::sound(&format!("crossbow.loading.{stage}"), middle, ""));
-            }
-        }
-        return None;
+        return super::shooting::shoot(world, entity, layer, kind, body, hunts, every, prey?);
     }
     let prey = prey.filter(|_| now >= ready)?;
     let feet = world.get::<Position>(prey)?.feet;

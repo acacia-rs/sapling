@@ -8,6 +8,7 @@ mod arrows;
 mod attacks;
 mod backend;
 mod blast;
+mod bullets;
 mod duels;
 mod harm;
 mod health;
@@ -15,6 +16,7 @@ mod hunting;
 mod legs;
 mod paths;
 mod rams;
+mod shooting;
 mod spells;
 mod splashes;
 mod strolling;
@@ -219,6 +221,7 @@ fn leave_loot(world: &mut World, layer: Entity, kind: &str, on_fire: bool, [x, y
 pub(crate) fn tick(world: &mut World) {
     arrows::tick(world);
     spells::tick(world);
+    bullets::tick(world);
     let now = world.resource::<Tick>().0;
     let dead: Vec<Entity> = world.query::<(Entity, &Dying)>().iter(world).filter(|(_, dying)| now >= dying.0 + DYING).map(|(entity, _)| entity).collect();
     for entity in dead {

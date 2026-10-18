@@ -149,6 +149,36 @@ fn an_evoker_casts_a_line_of_sixteen_fangs_a_tick_apart_that_bite_for_6_by_magic
 }
 
 #[test]
+fn a_shulker_opens_for_its_prey_and_its_bullet_flies_to_it_for_4_and_levitation() {
+    // research/captures/bds-shulker-findings.md: open 100 with the target, the first bullet 37
+    // ticks after from 0.692 up and 1 towards it, 25 ticks to a player 6 off; 4, and 200 ticks afloat.
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    h.remote.run(|ctx| {
+        ctx.set_difficulty(Difficulty::Easy);
+        assert!(ctx.spawn_entity("minecraft:shulker", [0.5, 65.0, 6.5]).is_some());
+    });
+    let (mut opened, mut fired, mut hit, mut lifted) = (None, Vec::new(), None, Vec::new());
+    for tick in 0..120 {
+        let sent = h.tick_all().to(1).to_vec();
+        let peeks = all::<acacia_proto::packets::SetEntityData>(&sent).iter().any(|data| data.metadata.iter().any(|item| item.key == acacia_proto::types::MetadataDictionaryItemKey::ShulkerPeekId));
+        opened = opened.or(peeks.then_some(tick));
+        fired.extend(all::<acacia_proto::packets::AddEntity>(&sent).iter().filter(|added| added.entity_type == "minecraft:shulker_bullet").map(|added| (tick, [added.position.x, added.position.y, added.position.z])));
+        if hit.is_none() && all::<EntityEvent>(&sent).iter().any(|event| event.runtime_entity_id == 1 && event.event_id == EntityEventEventId::HurtAnimation && event.data == 3) {
+            hit = Some(tick);
+        }
+        lifted.extend(all::<acacia_proto::packets::MobEffect>(&sent).iter().filter(|effect| effect.runtime_entity_id == 1).map(|effect| (effect.effect_id, effect.duration)));
+    }
+    let opened = opened.expect("opened");
+    let (first, from) = fired[0];
+    assert!(first == opened + 37 && from.iter().zip([0.5, 65.692, 5.5]).all(|(a, b)| (a - b).abs() < 1e-4), "opened {opened}, fired {fired:?}");
+    let hit = hit.expect("a hit");
+    assert!((20..=30).contains(&(hit - first)), "fired {first}, hit {hit}");
+    assert_eq!(lifted.first(), Some(&(24, 200)));
+    assert!(fired.len() >= 2 && fired[1].0 - first == 41, "{fired:?}");
+}
+
+#[test]
 fn a_blaze_shoots_three_small_fireballs_six_ticks_apart_that_burn_whom_they_hit() {
     // research/captures/bds-blaze.txt: the first 83 ticks after it took its prey; bds-kinds2.txt: 5 and fire.
     let mut h = Harness::new();

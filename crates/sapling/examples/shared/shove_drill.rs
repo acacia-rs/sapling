@@ -204,61 +204,6 @@ pub fn drink2() -> Vec<String> {
     lines
 }
 
-/// As `shoot`, a witch 6 and then 12 blocks off for twenty seconds each, healed every second.
-pub fn witch() -> Vec<String> {
-    let mut lines: Vec<String> =
-        ["kill @e[type=!player]", "gamerule domobspawning false", "difficulty easy", "time set midnight", "fill ~-3 ~-1 ~-12 ~12 ~-1 ~40 stone", "fill ~-3 ~ ~-12 ~12 ~6 ~40 air", "gamemode survival @s", "tp @s ~6 ~ ~20", ""].map(String::from).into();
-    for off in [6, 12] {
-        lines.push(format!("summon witch ~ ~ ~-{off}"));
-        lines.extend(std::iter::repeat_n("effect @s instant_health 1 4".to_owned(), 20));
-        lines.extend(["kill @e[type=!player]", "effect @s clear", "", ""].map(String::from));
-    }
-    lines.extend(["gamemode creative @s", ""].map(String::from));
-    lines
-}
-
-/// The actor in survival at midnight on a dry stone floor 41 blocks square on the flat ground,
-/// where an enderman's teleports land: one held still, hit from 1.5 off and let go, then thirty
-/// seconds healed every second (research/captures/bds-ender-findings.md has an earlier run's stares).
-pub fn ender() -> Vec<String> {
-    let mut lines: Vec<String> =
-        ["kill @e[type=!player]", "gamerule domobspawning false", "difficulty easy", "time set midnight", "gamemode survival @s", "tp @s ~ -60 ~", "fill ~-20 ~-1 ~-20 ~20 ~-1 ~20 stone", "fill ~-20 ~ ~-20 ~20 ~5 ~20 air", ""].map(String::from).into();
-    lines.extend(["summon enderman ~ ~ ~2", "effect @e[type=enderman] slowness 10 255", "", "execute at @e[type=enderman,c=1] run tp @p ~ ~ ~1.5 facing ~ ~1.5 ~", "!hit enderman", "effect @e[type=enderman] clear"].map(String::from));
-    lines.extend(std::iter::repeat_n("effect @s instant_health 1 4".to_owned(), 30));
-    lines.extend(["kill @e[type=!player]", "effect @s clear", "gamemode creative @s", ""].map(String::from));
-    lines
-}
-
-/// Eight goats 5 off in a ring about the actor, penned with it in glass 13 across on a stone floor
-/// above the flat ground, for six minutes, past the longest a first ram waits; the actor healed
-/// every second (research/captures/bds-goat-findings.md: one goat rammed nobody in five).
-pub fn goat() -> Vec<String> {
-    let mut lines: Vec<String> =
-        ["kill @e[type=!player]", "gamerule domobspawning false", "difficulty easy", "time set noon", "gamemode survival @s", "fill ~-8 ~-1 ~-8 ~8 ~-1 ~8 stone", "fill ~-8 ~ ~-8 ~8 ~5 ~8 air", "fill ~-7 ~ ~-7 ~7 ~2 ~7 glass", "fill ~-6 ~ ~-6 ~6 ~2 ~6 air", ""].map(String::from).into();
-    for (x, z) in [(5, 0), (-5, 0), (0, 5), (0, -5), (4, 4), (-4, 4), (4, -4), (-4, -4)] {
-        lines.push(format!("summon goat ~{x} ~ ~{z}"));
-    }
-    lines.extend(std::iter::repeat_n("effect @s instant_health 1 4".to_owned(), 360));
-    lines.extend(["kill @e[type=!player]", "effect @s clear", "gamemode creative @s", ""].map(String::from));
-    lines
-}
-
-/// As `witch`, an evoker 10 off for thirty seconds, then one held still 2 off for fifteen.
-pub fn evoker() -> Vec<String> {
-    let mut lines: Vec<String> =
-        ["kill @e[type=!player]", "gamerule domobspawning false", "difficulty easy", "time set midnight", "fill ~-3 ~-1 ~-12 ~12 ~-1 ~40 stone", "fill ~-3 ~ ~-12 ~12 ~6 ~40 air", "gamemode survival @s", "tp @s ~6 ~ ~20", ""].map(String::from).into();
-    for (off, held, seconds) in [(10, false, 30), (2, true, 15)] {
-        lines.push(format!("summon evocation_illager ~ ~ ~-{off}"));
-        if held {
-            lines.push("effect @e[type=evocation_illager] slowness 30 255".into());
-        }
-        lines.extend(std::iter::repeat_n("effect @s instant_health 1 4".to_owned(), seconds));
-        lines.extend(["kill @e[type=!player]", "effect @s clear", "", ""].map(String::from));
-    }
-    lines.extend(["gamemode creative @s", ""].map(String::from));
-    lines
-}
-
 /// As `shoot`, a stray, a bogged and a pillager each 5 blocks off for ten seconds.
 pub fn shoot2() -> Vec<String> {
     let mut lines: Vec<String> =

@@ -322,6 +322,23 @@ at midnight on easy and healed each second (`research/captures/bds-evoker-findin
   charged at 0.91 v + 0.05 a tick and hit for 5.5. It stepped away from a player 2 off, as its
   `avoid_mob_type` says, and walked between casts for a reason not seen.
 
+## The shulker (`shulker`)
+
+A shulker 6 off the actor in survival at midnight on easy, healed each second
+(`research/captures/bds-shulker-findings.md`; the 12-off half was lost to a fall death):
+
+- It took the actor in the same packet as `ShulkerPeekId` 100 and stayed open while it held it,
+  `shulker.open` a tick later; it let go some 15 off, closing (0, `shulker.close`). It never moved.
+- It shot 37 ticks after taking its target, then 36, 41 and 45 apart: a `shulker_bullet` from its
+  feet + 0.692 up and 1 towards the target, still, with `shoot` and `undefined` 0.99 up it.
+- A bullet flew as the Java game's `ShulkerBullet`, to 1e-4: a pull of 0.15 along one axis, grown
+  ×1.025 a tick, its speed eased a fifth of the way to it each tick, no gravity or drag. It chose
+  another axis towards its target where it came level with the target's middle cell, or after 10,
+  20, 30, 40 or 50 ticks; its first leg could go up. 25 ticks took it to the actor 6 off.
+- It met the actor's box 0.3 wider: 4 on easy (`HurtAnimation` 3), a throw 0.4 away and 0.4 up even
+  in mid-air, and levitation 200 ticks (refreshed by each next hit); it went the tick after with
+  `bullet.hit` where it met.
+
 ## Strolling (`stroll`)
 
 A zombie and a cow left alone for a minute on a floor 40 blocks square, the actor in creative
@@ -392,6 +409,10 @@ between rams, rams no mob, and a baby rams as hard as a grown one.
 An evoker casts its fangs as above (`creatures/spells.rs`, `casts` in `mob-traits.tsv`), its
 line's way taken as the first fang rises, and strolls between casts. It summons no vexes, steps
 away from nobody, and its fangs bite no mob; a fang stands on full blocks only.
+
+A shulker opens for its prey and shoots as above (`creatures/bullets.rs`, `creatures/shooting.rs`),
+41 ticks apart where BDS's varied; a bullet is not shown hidden on its first tick nor turned, hits
+no mob and cannot be shot down, and a shulker neither peeks idly nor teleports.
 
 A wolf and a zombified piglin hunt none but a survival player that hit them, from that tick
 (`hunting::provoke`), and so do an iron golem, with a hit of 7 to 21 and its throw, and a polar
