@@ -39,7 +39,7 @@ ChunkSource
    │  ├─ OverworldGenerator2d                  vtable 14a923f60, ctor 1482180e0  (legacy 2D worlds)
    │  └─ OverworldGeneratorMultinoise          vtable 14a924170, ctor 14821f6f0  (current overworld)
    ├─ NetherGenerator                          vtable 14a923740, ctor 1481e6d60
-   ├─ TheEndGenerator                          vtable 14a924380 (stored by 1482414a0 / 148242770)
+   ├─ TheEndGenerator                          vtable 14a924380, ctor 1482414a0 (148242770 is the dtor)
    ├─ FlatWorldGenerator, VoidGenerator        (headers only; not mapped)
    └─ DensityFunctionWorldGenerator            (headers only; Bedrock's own data-driven density system, see below)
 ```
@@ -197,8 +197,8 @@ Cave features, the sulfur caves' subsurface builder and monster rooms: [worldgen
 
 - Nether (ctor 1481e6d60): Java 1.12's hell density and BDS's legacy layer biomes on MT19937, ported:
   [worldgen-bds-nether.md](worldgen-bds-nether.md).
-- End (14a924380): BlendedNoise ×2 xz (1368.824), constants −3000, 0.72, −843.0, 1/64, −8, 7, −30 in 1482432f0;
-  `TheEndSurfaceSettings` surface builder. Not further mapped.
+- End (vtable 14a924380, ctor 1482414a0): Java 1.12's End terrain, decoration and end cities on MT19937, ported:
+  [worldgen-bds-end.md](worldgen-bds-end.md).
 
 ## Hand labels (scratch copy `names.user.json`, merge into bdsre)
 
@@ -239,8 +239,8 @@ nextFloat,consumeCount}`.
 2. Cavifier/Aquifer/OreVeinifier internals not decompiled constant-by-constant (only spot checks); `_prepareHeights`
    14822eb60 and 14822d4b0 are the functions to transcribe.
 3. Biome placement: when JSON `multinoise_generation_rules` override the hardcoded builder (never, for vanilla).
-4. Surface builders not ported: Capped, TheEnd, NoiseGradient as a top-of-column surface builder (the subsurface
-   pass is); the legacy mesa variant 1487db280 (which worlds pick it?).
+4. Surface builders not ported: NoiseGradient as a top-of-column surface builder (the subsurface pass is); the
+   legacy mesa variant 1487db280 (which worlds pick it?). Capped is the Nether's; TheEnd finds no stone to change.
 5. Who calls slot 54; which rule places `underground_cave_carver_feature`; structure post-process a/b pairing
    (assumed as the large-feature seed's).
 6. Structures: mapped in [worldgen-bds-structures.md](worldgen-bds-structures.md); templates, jigsaw and the
