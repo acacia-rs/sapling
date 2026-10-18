@@ -141,6 +141,10 @@ pub fn age(canvas: &mut Canvas, random: &mut Mt19937, b: &BoundingBox, mossiness
                     continue;
                 };
                 canvas.set(x, y, z, aged);
+                // BDS's Nether portal keeps the aged wall's default state (another BDS run, portals -16,0 and -20,-16).
+                if nether && aged.name().ends_with("_wall") {
+                    canvas.record.settle((x, y, z));
+                }
             }
         }
     }

@@ -41,6 +41,7 @@ fn worlds() -> PathBuf {
 /// run over their 3x3 chunks (`SAPLING_PORTAL_WORLD`, tools/worldgen-oracle/run.sh with
 /// WORLDGEN_DIMENSION=nether over -18,-2,-14,2 and -22,-18,-18,-14), cells either side changed from
 /// the carved chunk; with the canon's structure-order.txt beside it the stage replays that order.
+/// Netherrack against magma is BDS's magma ore, which runs after the stage this compares.
 #[test]
 #[ignore]
 fn nether_portals_match_bds() {
@@ -74,9 +75,6 @@ fn nether_portals_match_bds() {
                 if o.name() == bds && o.states() == bds_states {
                     same += 1;
                 } else {
-                    if !(o.name() == "netherrack" && bds == "magma") {
-                        println!("  at {:?} ours {} bds {bds}", (cx * 16 + x as i32, y, cz * 16 + z as i32), o.name());
-                    }
                     *pairs.entry((format!("{}[{}]", o.name(), o.states()), format!("{bds}[{bds_states}]"))).or_default() += 1;
                 }
             }
@@ -161,12 +159,6 @@ fn bastion_matches_canon() {
                 }
             }
         }
-    }
-    for p in bastion.pieces.iter().filter(|p| p.element.name.starts_with("bastion_mobs")) {
-        let (x, y, z) = p.origin;
-        let Some(saved) = world.load_column(ChunkKey::new(x >> 4, z >> 4, 1)).unwrap() else { continue };
-        let names: Vec<_> = (y - 1..y + 3).map(|y| registry.get(saved.chunk.block(x, y, z)).map_or("?".to_string(), |s| s.name.to_string())).collect();
-        println!("mob {} at {:?}: below..top {:?}", p.element.name, p.origin, names);
     }
     println!("bastion cells: {same} same, {wrong} wrong ({missing} BDS set where ours kept the carved block)");
     let mut top: Vec<_> = pairs.into_iter().collect();

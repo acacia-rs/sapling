@@ -41,7 +41,7 @@ pub enum SharedKind {
 #[derive(Default)]
 pub struct NetherReaching {
     fortresses: Vec<Arc<Fortress>>,
-    /// Ruined portal starts within a chunk: each places whole through the 3x3 block source.
+    /// The ruined portal starting in the chunk: it places whole through the 3x3 block source.
     portals: Vec<(i32, i32)>,
     bastions: Vec<Arc<Bastion>>,
 }
@@ -68,10 +68,10 @@ impl NetherStructures {
         Some(self.bastions.get(start, || Bastion::generate(&mut random, start)))
     }
 
-    /// Nether ruined portal starts within a chunk of `chunk` (no biome test, 14835c660).
-    fn portals_near(&self, chunk: (i32, i32)) -> Vec<(i32, i32)> {
-        let near = (-1..=1).flat_map(|dx| (-1..=1).map(move |dz| (chunk.0 + dx, chunk.1 + dz)));
-        near.filter(|&c| PORTAL_GRID.candidate(self.level_seed, c) == c).collect()
+    /// The Nether ruined portal starting in `chunk` (no biome test, 14835c660): only its start
+    /// chunk's post-process places it (14835d070 returns unless the origin is in the chunk).
+    fn portals_at(&self, chunk: (i32, i32)) -> Vec<(i32, i32)> {
+        (PORTAL_GRID.candidate(self.level_seed, chunk) == chunk).then_some(chunk).into_iter().collect()
     }
 
     /// The shared selector: the region's MT after its grid and pick draws when `kind` starts in
@@ -101,7 +101,7 @@ impl NetherStructures {
         let column = super::BoundingBox::chunk(chunk.0, chunk.1);
         let spacing = NETHER_GRID.spacing;
         let regions = |c: i32| (c - FORTRESS_REACH).div_euclid(spacing)..=(c + FORTRESS_REACH).div_euclid(spacing);
-        let mut reaching = NetherReaching { portals: self.portals_near(chunk), ..Default::default() };
+        let mut reaching = NetherReaching { portals: self.portals_at(chunk), ..Default::default() };
         for rx in regions(chunk.0) {
             for rz in regions(chunk.1) {
                 let (start, _) = NETHER_GRID.candidate_random(self.level_seed, (rx * spacing, rz * spacing));
