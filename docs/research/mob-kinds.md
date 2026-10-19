@@ -72,6 +72,10 @@ Three runs at noon on easy (`research/captures/bds-goat-findings.md`; `bds-goat-
   its step then. `attack` and `ram_impact` came the tick after. A player it could not hurt took
   the push alone.
 - Each ram met someone, so a miss was not seen. The goats leapt the glass, 3 high.
+- With cows and the actor in creative (`goat-cows`, `bds-goat-cows-findings.md`), every goat took
+  a cow, never the actor, the watcher or a goat. A cow rammed lost 1 to a baby and was thrown in
+  one motion, half a hit's throw and the push, then ran. A cow that walked off left the charge to
+  miss, with nothing sent; the watcher in the way took the push.
 
 ## The evoker (`evoker`)
 
@@ -199,8 +203,10 @@ water it touches costs it 1 by drowning, with a `splash`, and sends it off that 
 teleport from beside its prey, rain is not water to it, a carved pumpkin does not hide a stare,
 and its `ANGRY` flag is not shown.
 
-A goat rams players as above (`creatures/rams.rs`), charging at most 8 blocks; it shows no prey
-between rams, rams no mob, and a baby rams as hard as a grown one.
+A goat rams players and mobs as above (`creatures/rams.rs`), the nearest of either it sees,
+charging at most 8 blocks; a mob it meets is hurt and thrown at once by half a hit's throw and the
+push, and runs. It shows no prey between rams, a baby rams as hard as a grown one, and a charge at
+prey that moved goes along its axis, where BDS's went at where the prey stood.
 
 An evoker casts its fangs as above (`creatures/spells.rs`, `fights=spells` in `mob-traits.tsv`), its
 line's way taken as the first fang rises, and strolls between casts; one cast in four, while

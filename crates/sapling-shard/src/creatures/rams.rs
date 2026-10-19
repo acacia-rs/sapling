@@ -1,19 +1,21 @@
 //! A goat's ram (docs/research/mob-kinds.md, "The goat"), as BDS's were seen to
-//! (research/captures/bds-goat-findings.md): 30 to 300 seconds after it came and after each ram it
-//! runs to a place 7 off its prey along an axis, stands, and charges along that axis into whoever
-//! is in the way.
-// TODO: a goat takes and drops prey between rams, as BDS's did, without showing it here; it rams
-// players only, a baby as hard as a grown one, and a charge that meets nobody nor stops at a wall
-// was not seen.
+//! (research/captures/bds-goat-findings.md, bds-goat-cows-findings.md): 30 to 300 seconds after it
+//! came and after each ram it runs to a place 7 off its prey, the nearest survival player or mob
+//! but a goat, along an axis, stands, and charges along that axis into whoever is in the way. A mob
+//! it meets is hurt and thrown in one move, half a hit's throw and the push, and runs.
+// TODO: a goat takes and drops prey between rams, as BDS's did, without showing it here; a baby
+// rams as hard as a grown one; a charge at prey that moved off goes along the axis, where BDS's
+// went at where it stood.
 
 use acacia_proto::packets::{EntityEvent, EntityEventEventId, LevelSoundEvent};
 use acacia_proto::types::Vec3f;
 use bevy_ecs::prelude::*;
 
-use super::{hunting, legs, paths};
+use super::health::{Cause, Health};
+use super::{Creature, Dying, harm, hunting, legs, paths};
 use crate::blocks::Dice;
 use crate::body::Body;
-use crate::components::{Layer, Position, Settings, Tick};
+use crate::components::{InLayer, Layer, Position, Settings, Tick};
 use crate::sync::Told;
 use crate::{entities, late_sounds, vitals};
 
@@ -38,6 +40,9 @@ const SETTLING: f32 = -0.0784;
 const HARM: f32 = 2.0;
 const PUSH: [f32; 2] = [1.5, 0.18];
 const PLAYER: [f32; 2] = [0.6, 1.8];
+/// A hit's throw, away and up; a mob gets half of it with the push.
+const THROW: f32 = 0.4;
+const KIND: &str = "minecraft:goat";
 /// Its sounds come from its feet and from this much of its height up.
 const MIDDLE: f32 = 0.5;
 
@@ -61,7 +66,7 @@ fn rest(world: &mut World) -> u64 {
 
 /// Has the mob ram, after a first rest, if its kind does.
 pub(super) fn arm(world: &mut World, entity: Entity, kind: &str) {
-    if kind == "minecraft:goat" {
+    if kind == KIND {
         let next = world.resource::<Tick>().0 + rest(world);
         world.entity_mut(entity).insert(Ram { next, stage: Stage::Idle });
     }
@@ -83,13 +88,27 @@ fn lane(world: &World, layer: Entity, at: [f32; 3], prey: [f32; 3]) -> Option<([
     (free >= RAMS_FROM[1]).then_some((axis, free))
 }
 
+/// The living mobs of `layer` but `goat` and its own kind, and their bodies.
+fn mobs(world: &mut World, goat: Entity, layer: Entity) -> Vec<(Entity, Body)> {
+    let mut mobs = world.query_filtered::<(Entity, &InLayer, &Body, &entities::Kind), (With<Creature>, With<Health>, Without<Dying>)>();
+    mobs.iter(world).filter(|(mob, in_layer, _, kind)| *mob != goat && in_layer.0 == layer && kind.0 != KIND).map(|(mob, _, body, _)| (mob, *body)).collect()
+}
+
+/// Where the feet are of the nearest survival player or mob within [`SEES`] that the goat sees.
+fn prey(world: &mut World, goat: Entity, layer: Entity, body: &Body) -> Option<[f32; 3]> {
+    let far = |feet: [f32; 3]| (feet[0] - body.at[0]).hypot(feet[2] - body.at[2]).hypot(feet[1] - body.at[1]);
+    let player = hunting::nearest(world, layer, body, SEES).map(|(_, feet)| feet);
+    let mob = mobs(world, goat, layer).into_iter().map(|(_, its)| its.at).filter(|feet| far(*feet) <= SEES && hunting::in_sight(world, layer, body, *feet));
+    player.into_iter().chain(mob).min_by(|a, b| far(*a).total_cmp(&far(*b)))
+}
+
 /// Before the goat's move: it starts, runs, stands or charges; false while it has no ram under way.
 pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity, id: u64, kind: &str) -> bool {
     let now = world.resource::<Tick>().0;
     let (Some(body), Some(ram)) = (world.get::<Body>(entity).copied(), world.get::<Ram>(entity).map(|ram| (ram.next, ram.stage))) else { return false };
     let stage = match ram {
         (next, Stage::Idle) if now >= next && body.on_ground && world.resource::<Settings>().0.difficulty != sapling_api::Difficulty::Peaceful => {
-            let Some((axis, along)) = hunting::nearest(world, layer, &body, SEES).and_then(|(_, feet)| Some((lane(world, layer, body.at, feet)?, feet))).map(|((axis, along), feet)| (axis, [feet[0] + axis[0] * along as f32, feet[2] + axis[1] * along as f32])) else { return false };
+            let Some((axis, along)) = prey(world, entity, layer, &body).and_then(|feet| Some((lane(world, layer, body.at, feet)?, feet))).map(|((axis, along), feet)| (axis, [feet[0] + axis[0] * along as f32, feet[2] + axis[1] * along as f32])) else { return false };
             late_sounds::play_later(world, 1, layer, body.at.map(|c| c.floor() as i32), sound("mob.warning", kind, id, [body.at[0], body.at[1] + body.size[1] * MIDDLE, body.at[2]]));
             Stage::Running { spot: along, axis, since: now }
         }
@@ -149,24 +168,39 @@ fn end(world: &mut World, entity: Entity) {
     }
 }
 
-/// After the goat's move: a charging goat whose box meets a player's rams it, heard a tick later.
+/// After the goat's move: a charging goat whose box meets a player's or a mob's rams it, heard a
+/// tick later.
 pub(super) fn strike(world: &mut World, entity: Entity, layer: Entity, id: u64, kind: &str, body: &Body) {
     let Some(Stage::Charging { axis, step, .. }) = world.get::<Ram>(entity).map(|ram| ram.stage) else { return };
-    let across = (body.size[0] + PLAYER[0]) / 2.0;
-    let meets = |feet: [f32; 3]| (feet[0] - body.at[0]).abs() < across && (feet[2] - body.at[2]).abs() < across && feet[1] < body.at[1] + body.size[1] && body.at[1] < feet[1] + PLAYER[1];
-    let Some(player) = crate::components::in_world(world).into_iter().find(|player| world.get::<Position>(*player).is_some_and(|position| meets(position.feet))) else { return };
+    let meets = |feet: [f32; 3], size: [f32; 2]| {
+        let across = (body.size[0] + size[0]) / 2.0;
+        (feet[0] - body.at[0]).abs() < across && (feet[2] - body.at[2]).abs() < across && feet[1] < body.at[1] + body.size[1] && body.at[1] < feet[1] + size[1]
+    };
+    let player = crate::components::in_world(world).into_iter().find(|player| world.get::<Position>(*player).is_some_and(|position| meets(position.feet, PLAYER)));
+    let mob = player.is_none().then(|| mobs(world, entity, layer).into_iter().find(|(_, its)| meets(its.at, its.size))).flatten();
+    if player.is_none() && mob.is_none() {
+        return;
+    }
     let s = STEPS[(step.max(1) - 1).min(STEPS.len() - 1)];
     let push = [axis[0] * PUSH[0] * s * s, PUSH[1] * s * s, axis[1] * PUSH[0] * s * s];
-    let harm = match world.resource::<Settings>().0.difficulty {
-        sapling_api::Difficulty::Peaceful => 0.0,
-        sapling_api::Difficulty::Easy => HARM.min(HARM / 2.0 + 1.0),
-        sapling_api::Difficulty::Normal => HARM,
-        sapling_api::Difficulty::Hard => HARM * 1.5,
-    };
+    let Some(harm) = hunting::on_difficulty(world, HARM) else { return };
     let cell = body.at.map(|c| c.floor() as i32);
     let swing = EntityEvent { runtime_entity_id: id, event_id: EntityEventEventId::ArmSwing, data: 0, fire_at_position: None };
     entities::tell_viewers(world, entity, layer, cell, vec![sapling_net::encode(&swing)]);
-    vitals::rammed(world, player, harm, kind, body.at, push);
+    match (player, mob) {
+        (Some(player), _) => drop(vitals::rammed(world, player, harm, kind, body.at, push)),
+        (None, Some((mob, its))) => {
+            let (dx, dz) = (its.at[0] - body.at[0], its.at[2] - body.at[2]);
+            let far = dx.hypot(dz).max(1e-4);
+            let thrown = [dx / far * THROW / 2.0 + push[0], THROW / 2.0 + push[1], dz / far * THROW / 2.0 + push[2]];
+            if let Some(mut moved) = world.get_mut::<Body>(mob) {
+                moved.throw(thrown);
+            }
+            harm::wound(world, mob, layer, harm, Cause::RamAttack);
+            super::strolling::startle(world, mob);
+        }
+        (None, None) => {}
+    }
     late_sounds::play_later(world, 1, layer, cell, sound("attack", kind, id, [body.at[0], body.at[1] + body.size[1] * MIDDLE, body.at[2]]));
     late_sounds::play_later(world, 1, layer, cell, sound("ram_impact", kind, id, body.at));
     end(world, entity);

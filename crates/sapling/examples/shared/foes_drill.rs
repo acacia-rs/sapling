@@ -149,10 +149,21 @@ pub fn ender() -> Vec<String> {
 /// above the flat ground, for six minutes, past the longest a first ram waits; the actor healed
 /// every second (research/captures/bds-goat-findings.md: one goat rammed nobody in five).
 pub fn goat() -> Vec<String> {
-    let mut lines: Vec<String> =
-        ["kill @e[type=!player]", "gamerule domobspawning false", "difficulty easy", "time set noon", "gamemode survival @s", "fill ~-8 ~-1 ~-8 ~8 ~-1 ~8 stone", "fill ~-8 ~ ~-8 ~8 ~5 ~8 air", "fill ~-7 ~ ~-7 ~7 ~2 ~7 glass", "fill ~-6 ~ ~-6 ~6 ~2 ~6 air", ""].map(String::from).into();
-    for (x, z) in [(5, 0), (-5, 0), (0, 5), (0, -5), (4, 4), (-4, 4), (4, -4), (-4, -4)] {
-        lines.push(format!("summon goat ~{x} ~ ~{z}"));
+    penned("survival", &["goat"; 8])
+}
+
+/// As [`goat`], the actor in creative, so that no goat takes it, with four goats and four cows.
+pub fn goat_cows() -> Vec<String> {
+    penned("creative", &["goat", "cow", "goat", "cow", "goat", "cow", "goat", "cow"])
+}
+
+/// The actor in `mode`, penned in glass 13 across on a stone floor with one of `kinds` at each of
+/// eight places 5 off it, for six minutes, healed every second.
+fn penned(mode: &str, kinds: &[&str; 8]) -> Vec<String> {
+    let mut lines: Vec<String> = ["kill @e[type=!player]", "gamerule domobspawning false", "difficulty easy", "time set noon"].map(String::from).into();
+    lines.extend([format!("gamemode {mode} @s"), "fill ~-8 ~-1 ~-8 ~8 ~-1 ~8 stone".into(), "fill ~-8 ~ ~-8 ~8 ~5 ~8 air".into(), "fill ~-7 ~ ~-7 ~7 ~2 ~7 glass".into(), "fill ~-6 ~ ~-6 ~6 ~2 ~6 air".into(), String::new()]);
+    for ((x, z), kind) in [(5, 0), (-5, 0), (0, 5), (0, -5), (4, 4), (-4, 4), (4, -4), (-4, -4)].into_iter().zip(kinds) {
+        lines.push(format!("summon {kind} ~{x} ~ ~{z}"));
     }
     lines.extend(std::iter::repeat_n("effect @s instant_health 1 4".to_owned(), 360));
     lines.extend(["kill @e[type=!player]", "effect @s clear", "gamemode creative @s", ""].map(String::from));
