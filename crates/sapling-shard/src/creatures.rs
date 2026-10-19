@@ -10,6 +10,7 @@ mod backend;
 mod blast;
 mod breezes;
 mod dolphins;
+mod drinks;
 mod bullets;
 mod charges;
 mod duels;
@@ -119,6 +120,7 @@ fn give_legs(world: &mut World, entity: Entity, kind: &str) {
     vexes::arm(world, entity, kind);
     stares::arm(world, entity, kind);
     dolphins::arm(world, entity, kind);
+    drinks::arm(world, entity, kind);
 }
 
 /// Gives a mob of a kind that dies the health BDS announced its kind with, `left` of it, and
@@ -208,6 +210,7 @@ pub(crate) fn tick(world: &mut World) {
         let is_alive = world.get::<Dying>(entity).is_none();
         if is_alive {
             stares::watch(world, entity, layer, id, &kind, &start);
+            drinks::tick(world, entity, layer, id, &start, hunting::prey_at(world, entity));
             teleports::tick(world, entity, layer, hunting::prey_at(world, entity));
         }
         if is_alive && !rams::steer(world, entity, layer, id, &kind) && !hunting::steer(world, entity, layer, id, &kind) {

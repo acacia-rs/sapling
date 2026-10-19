@@ -121,6 +121,38 @@ fn a_goat_waits_then_runs_off_stands_and_rams_a_player_for_2_and_a_long_push() {
 }
 
 #[test]
+fn a_hurt_witch_drinks_healing_in_33_ticks_and_mends() {
+    // research/captures/bds-witch-drinks.txt: the potion (data 21) shown in its hand, gone 33 ticks
+    // on, its health up; a check a second at 0.05.
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    h.remote.run(|ctx| {
+        ctx.set_game_mode(PlayerId(1), GameMode::Creative);
+        assert!(ctx.spawn_entity("minecraft:witch", [0.5, 65.0, 2.5]).is_some());
+    });
+    let added = h.tick_all().to(1).to_vec();
+    let witch = all::<acacia_proto::packets::AddEntity>(&added)[0].runtime_id;
+    h.receive(1, &common::attack(witch));
+    let (mut drank, mut emptied, mut health) = (None, None, Vec::new());
+    for tick in 0..2400 {
+        let sent = h.tick_all().to(1).to_vec();
+        for held in all::<acacia_proto::packets::MobEquipment>(&sent).into_iter().filter(|held| held.runtime_entity_id == witch) {
+            match held.item.metadata {
+                21 => drank = drank.or(Some(tick)),
+                _ if drank.is_some() => emptied = emptied.or(Some(tick)),
+                _ => {}
+            }
+        }
+        health.extend(all::<acacia_proto::packets::UpdateAttributes>(&sent).iter().filter(|update| update.runtime_entity_id == witch).flat_map(|update| update.attributes.clone()).filter(|attribute| attribute.name == "minecraft:health").map(|attribute| attribute.current));
+        if emptied.is_some() {
+            break;
+        }
+    }
+    let (Some(drank), Some(emptied)) = (drank, emptied) else { panic!("drank {drank:?}, emptied {emptied:?}") };
+    assert!(emptied - drank == 33 && health.windows(2).any(|pair| pair[1] > pair[0]), "drank {drank}, emptied {emptied}, health {health:?}");
+}
+
+#[test]
 fn a_blaze_shoots_three_small_fireballs_six_ticks_apart_that_burn_whom_they_hit() {
     // research/captures/bds-blaze.txt: the first 83 ticks after it took its prey; bds-kinds2.txt: 5 and fire.
     let mut h = Harness::new();

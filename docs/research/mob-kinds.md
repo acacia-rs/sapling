@@ -21,6 +21,14 @@ A witch 6 and then 12 blocks from the actor in survival at midnight, the actor h
 - Its own poison, splashed 4 blocks off, lasted it some 97 ticks; that is all the capture says of
   one not hit.
 
+Drinking (`witch-drinks`, `bds-witch-drinks.txt`; the actor in creative, so the witch had no prey):
+
+- A witch hurt by 6 drank healing (data 21) 12 seconds on; one stood in fire drank fire resistance
+  (12) 3 seconds on and healing twice after the fire hurt it; one put under water floated up and
+  drank nothing. Each held the potion (`MobEquipment`, `potion` of its data) 33 ticks, then an
+  empty hand, and had its effect. Its pack's `drink_potion`: water breathing under water 0.15,
+  fire resistance on fire 0.15, healing when hurt 0.05, speed with prey 11 or more off 0.25.
+
 ## The enderman (`ender`)
 
 Three runs on the flat ground, the actor in survival at midnight and healed each second
@@ -178,7 +186,9 @@ survival on obsidian at midnight on easy (`research/captures/bds-ghast-findings.
 A witch throws as above (`creatures/arrows.rs` `POTION`, its rise fitted to the three throws),
 picking the potion by its pack's rule (`creatures/splashes.rs`). A player it hits gets the full
 effect (`vitals/splashed.rs`); one near the break gets the Java game's `1 - d/4` of each effect's
-time, which was not drilled. Mobs splashed get nothing and the witch drinks nothing.
+time, which was not drilled. Mobs splashed get nothing. A witch drinks as above (`creatures/drinks.rs`),
+a check a second (BDS's delays rule out one a tick), but only healing (4) and fire resistance
+(3 minutes) do anything, as mobs have no effects; it is not slowed as it drinks.
 
 An enderman teleports on its first tick, the tick after a hit and towards prey more than 16 off
 for 30 ticks (`creatures/teleports.rs`), and hunts its hitter as above; a player who stares at it

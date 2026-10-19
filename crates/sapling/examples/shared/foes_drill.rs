@@ -101,6 +101,26 @@ pub fn pandas() -> Vec<String> {
     lines
 }
 
+/// On [`open_floor`] with the actor in creative, so that it is nobody's prey: a witch hurt by 6,
+/// one stood in fire, and one under water, fifteen seconds each, to see what each drinks.
+pub fn witch_drinks() -> Vec<String> {
+    let mut lines = open_floor("stone", &[], 0);
+    lines.truncate(lines.len() - 5);
+    lines.push("gamemode creative @s".into());
+    let trials: [&[&str]; 3] = [
+        &["summon witch ~ ~ ~4", "", "damage @e[type=witch] 6"],
+        &["setblock ~ ~ ~4 fire", "summon witch ~ ~ ~4"],
+        &["fill ~-2 ~ ~2 ~2 ~3 ~6 glass", "fill ~-1 ~ ~3 ~1 ~3 ~5 water", "summon witch ~ ~ ~4"],
+    ];
+    for trial in trials {
+        lines.extend(trial.iter().map(|line| line.to_string()));
+        lines.extend(std::iter::repeat_n(String::new(), 15));
+        lines.extend(["kill @e[type=!player]", "fill ~-2 ~ ~2 ~2 ~3 ~6 air", ""].map(String::from));
+    }
+    lines.extend(["gamerule falldamage true", ""].map(String::from));
+    lines
+}
+
 /// A floor of `block` 41 square at y -20 with 20 of air over it, the actor in survival on it at
 /// midnight with fall damage off; `summon` run, then the actor healed each second for `seconds`.
 fn open_floor(block: &str, summon: &[&str], seconds: usize) -> Vec<String> {
