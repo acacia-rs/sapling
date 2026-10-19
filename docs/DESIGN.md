@@ -13,7 +13,7 @@ Evidence: `research/dragonfly.md`, `research/acacia-server-gaps.md`, `research/w
 | Threads | One **shard** = one OS thread with its own `bevy_ecs::World` + `Schedule` (no `bevy_app`). Many shards, created and destroyed at runtime | Cores scale with worlds; no locks in game code; no fixed world count (dragonfly has 3) |
 | Worlds | A world is a **layer entity** inside a shard (Valence model). A shard holds many worlds (e.g. 50 arenas); a player points at its layer by component | Switching world inside a shard is a component write; arenas are cheap |
 | Cross-shard | Message passing only. Player transfer = serialise, two-phase handoff over a channel, a directory forwards messages meanwhile | dragonfly's cond-var transfers are its main deadlock source (#966, #981, #990, #1448) |
-| Plugin API | Handler traits (`on_join`, `on_chat`, `on_break`, …) with default no-ops, mutable event params, `ctx.cancel()`; **many handlers with priorities**; handlers get a borrowed `ShardCtx` facade, never bevy types. Advanced plugins may add systems/components | dragonfly allows one handler and refuses plugins (#400, #314); Chorus/Valence leak bevy into the public API and got stuck on old bevy |
+| Plugin API | `Plugin::build` per shard registers **typed listeners** (`on::<BreakEvent>(priority, ..)`) and tasks, scoped to the shard, a world or a player; mutable events with `cancel()`; the `Handler` trait (`on_join`, `on_chat`, …) is filed as listeners; all get a borrowed `ShardCtx` facade, never bevy types | dragonfly allows one handler and refuses plugins (#400, #314); Chorus/Valence leak bevy into the public API and got stuck on old bevy |
 | Plugins | Rust crates compiled in. Facade types stay plain data so a WASM host can mirror them later | Speed and types now, sandboxing later |
 | Inbound packets | Network threads decode and push into per-shard queues; the shard drains them at tick start | dragonfly blocks one world round-trip per packet |
 | Outbound | Never blocks the shard. Broadcasts encoded and compressed once per layer, encrypted per player; movement batched per tick | dragonfly re-encodes per viewer and blocks the world on a full queue |
@@ -96,8 +96,9 @@ One listener task, one shard thread, one world. The pieces and why they are shap
   sends them and as the recorded StartGame announces.
 - **Packets inside a tick.** The inbox is drained into queues by packet id; each system takes the types it
   handles. Order is kept within a type, not across types.
-- **Handlers** run after the tick's systems, outside the schedule, with a `ShardCtx` over a `Backend`
-  trait object, so `sapling-api` depends on nothing but `uuid`.
+- **Listeners** run after the tick's systems, outside the schedule, with a `ShardCtx` over a `Backend`
+  trait object, so `sapling-api` depends on nothing but `uuid`. The registry (`sapling-api/src/listen.rs`)
+  is plain Rust too; the shard only feeds it events.
 - **Game data** is BDS's own packets, patched (`crates/sapling-data/README.md`).
 
 ## Step 2 as built (Map)
@@ -270,10 +271,18 @@ gave the shapes below; run against sapling it shows the same packets.
 Ground truth: `cargo run -p sapling --example bds_ui_probe -- <server>` prints BDS's command list and what
 it sends for `/title`, `/scoreboard`, `/gamemode`, `/tp`, a wither's bar and commands that fail.
 
-- **Handlers.** `Server::builder().handler_at(Priority, h)`; `Highest` runs first, `Lowest` last, `Monitor`
-  after all. `on_chat` and `on_command` get a mutable event (`ChatEvent::message`, `cancel()`); a cancel stops
-  the handlers that have not run, except monitors, which get a copy of the final event and cannot change it.
-  `on_tick` runs once a tick after the events. `on_move` was left out: it needs a resync on cancel.
+- **Plugins and listeners** (`sapling-api/src/{listen,plugin}.rs`, `sapling-shard/src/plugins.rs`).
+  `Server::builder().plugin(p)`: `Plugin::build` runs once per shard and adds commands, listeners
+  (`p.on::<E>(priority, |ctx, ev| ..)`) and tasks (`every`, `later`, in ticks). Every event carries its
+  player (`ev.player()`). `Highest` runs first, `Lowest` last, `Monitor` after all; a cancel stops the
+  listeners that have not run, except monitors (a copy of the final event, changes discarded) and those added
+  `Priority::X.receiving_cancelled()`. A running listener adds more with `ctx.in_world(name)`,
+  `ctx.for_player(id)` or `ctx.on_shard()`; they join from the next event, and a world's or player's go
+  when it is removed or they leave the shard (after their `QuitEvent`). A world's tasks run with it in
+  focus. Changes made while the registry runs wait in `plugins::Deferred`, locked because a resource
+  must be `Sync`. `Handler` is a plugin as one value: each method is a listener at the handler's priority
+  (`handler_at`). Tasks run once a tick after the events, then `TickEvent` (`on_tick`). `on_move` was left
+  out: it needs a resync on cancel.
 - **State.** `ctx.state::<T>()` is a per-shard `T::default()` keyed by type: what a plugin's handler,
   commands and form callbacks share (commands are types, not values, so they hold nothing).
 - **Commands** (`sapling-api/src/command`, `sapling-shard/src/commands.rs`). `#[derive(Command)]` on a struct
@@ -405,8 +414,8 @@ never sent yet, and BDS's order around it (a portal, `/execute in nether`) was n
   on shard 0; `add_world(name, ..)`, `add_world_on(shard, name, ..)`, `add_platform_on(shard,
   name)`, `join_world(name)`, `template(name, template, spawn)`. One thread per shard index
   used; a shard's first world is its fallback. `handler_each(|| h)` makes a handler per shard;
-  `handler(h)` is for servers of one shard (`StartError::HandlerPerShard` otherwise). Commands
-  and templates go to every shard.
+  `handler(h)` is for servers of one shard (`StartError::HandlerPerShard` otherwise). Plugins,
+  commands and templates go to every shard.
 - **Arenas** (`sapling-world/src/template.rs`, `sapling-shard/src/arenas.rs`).
   `Template::of(world)` freezes a world in memory (`World::load_all` first for a folder) with
   every encoding made; `World::arena(&template)` copies nothing and reads the template, void
@@ -459,7 +468,7 @@ block action, and takes StopBreak and AbortBreak with a position.
   `PlaceEvent::block` is public: a handler may place something else. Priorities and monitors as for chat.
 - **Defaults by game mode.** A break starts allowed in survival and creative and cancelled in adventure
   and spectator; a place starts allowed in creative only; an interaction starts cancelled for spectators.
-  A cancelled start is not a handler's cancel: every handler still sees the event (`Cancellable::is_stopped`)
+  A cancelled start is not a handler's cancel: every handler still sees the event (`Event::is_stopped`)
   and any may `allow()` it, so a plugin can open one region to adventure players. A handler's `cancel()`
   stops the handlers after it, as for chat.
 - **Taken.** A break writes air, or the water the block stood in (layer 1 is emptied), and everyone whose

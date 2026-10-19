@@ -84,7 +84,11 @@ impl WorldBackend for Ctx<'_> {
     }
 
     fn remove_world(&mut self, name: &str) -> bool {
-        arenas::remove(self.world, name)
+        let removed = arenas::remove(self.world, name);
+        if removed {
+            crate::plugins::end_scope(self.world, sapling_api::Scope::World(name.to_owned()));
+        }
+        removed
     }
 
     fn reset_world(&mut self, name: &str) -> bool {

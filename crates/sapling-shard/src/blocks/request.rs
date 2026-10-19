@@ -198,8 +198,7 @@ impl Request<'_> {
             loot::add_entity_loot(self.world, site.layer, pos, &mut drops);
         }
         let allowed = site.mode == GameMode::Creative || site.mode == GameMode::Survival && took_its_time;
-        let (event, player) = (BreakEvent::new(pos, block, drops, allowed), self.player);
-        let event = self.plugins.offer(self.world, event, |handler, ctx, event| handler.on_break(ctx, player, event));
+        let event = self.plugins.offer(self.world, BreakEvent::new(self.player.clone(), pos, block, drops, allowed));
         match !event.is_cancelled() && self.remove(&site, pos) {
             true => {
                 loot::spill(self.world, site.layer, pos, &event.drops);
@@ -276,8 +275,7 @@ impl Request<'_> {
     /// blocks), which undoes what it predicted.
     fn interact(&mut self, site: &Site, pos: BlockPos, face: Face, block: Block) {
         let name = block.name.clone();
-        let (event, player) = (InteractEvent::new(pos, face, block, site.mode != GameMode::Spectator), self.player);
-        let event = self.plugins.offer(self.world, event, |handler, ctx, event| handler.on_interact(ctx, player, event));
+        let event = self.plugins.offer(self.world, InteractEvent::new(self.player.clone(), pos, face, block, site.mode != GameMode::Spectator));
         if !event.is_cancelled() && !use_block(self.world, self.entity, site.layer, pos, &name) {
             doors::use_by_hand(self.world, site.layer, pos, &name);
         }

@@ -7,6 +7,7 @@ mod ctx;
 use std::collections::HashMap;
 
 use bevy_ecs::prelude::*;
+use sapling_api::{TransferFailedEvent, WorldChangeEvent};
 use sapling_world::ChunkPos;
 
 use crate::blobs::BlobCache;
@@ -154,8 +155,8 @@ pub(crate) fn dispatch(world: &mut World, plugins: &mut Plugins) {
         let Some(player) = in_world_identity(world, *entity) else { continue };
         focus_on(world, *entity);
         match change {
-            Change::Moved { from, to, .. } => plugins.each(world, |handler, ctx| handler.on_world_change(ctx, &player, &from, &to)),
-            Change::Failed { to, .. } => plugins.each(world, |handler, ctx| handler.on_transfer_failed(ctx, &player, &to)),
+            Change::Moved { from, to, .. } => drop(plugins.offer(world, WorldChangeEvent::new(player, from, to))),
+            Change::Failed { to, .. } => drop(plugins.offer(world, TransferFailedEvent::new(player, to))),
         }
     }
     focus(world, None);

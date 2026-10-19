@@ -8,7 +8,7 @@ use acacia_proto::Packet;
 use acacia_proto::packets::PlayerAuthInput;
 use bevy_ecs::prelude::*;
 use bevy_ecs::schedule::SingleThreadedExecutor;
-use sapling_api::{Command, Commands, Handler, Player, PlayerId, Priority};
+use sapling_api::{Command, Commands, Handler, Player, PlayerId, Plugin, Priority};
 use sapling_net::{ConnId, Inbox, NetEvent, Outbox, VerifiedLogin};
 
 use crate::blobs::BlobCache;
@@ -20,7 +20,7 @@ use crate::handoff::{Handoffs, Link, Peers, ShardMsg};
 use crate::hud::Hud;
 use crate::movement::Motion;
 use crate::player::{Carried, Local};
-use crate::plugins::{PluginState, Plugins};
+use crate::plugins::{Deferred, PluginState, Plugins};
 use crate::roster::{Elsewhere, Profile};
 use crate::view::View;
 use crate::vitals::Vitals;
@@ -100,6 +100,7 @@ impl Shard {
         sapling_data::set_shield_item_id();
         world.insert_resource(CommandLists::new(&Commands::default()));
         world.init_resource::<PluginState>();
+        world.init_resource::<Deferred>();
         Self { world, schedule, after_handlers, inbox, mailbox: link.mailbox, plugins: Plugins::default() }
     }
 
@@ -122,7 +123,13 @@ impl Shard {
 
     /// Adds a handler; see [`Priority`] for when it runs.
     pub fn add_handler_at(&mut self, priority: Priority, handler: Box<dyn Handler>) {
-        self.plugins.add(priority, handler);
+        self.plugins.add_handler(priority, handler);
+    }
+
+    /// Adds what `plugin` builds for this shard: its listeners, tasks and commands.
+    pub fn add_plugin(&mut self, plugin: &dyn Plugin) {
+        self.plugins.add_plugin(plugin);
+        self.world.insert_resource(CommandLists::new(&self.plugins.commands));
     }
 
     /// Adds a command (see [`sapling_api::command`]). Players already in the world keep the list

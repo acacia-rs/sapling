@@ -6,10 +6,10 @@
 mod backend;
 
 use bevy_ecs::prelude::*;
-use sapling_api::PlayerId;
+use sapling_api::{JoinEvent, PlayerId, QuitEvent, Scope, TickEvent};
 
 use crate::components::{Arrivals, Identity, Layer, Outgoing, Players, Stage};
-use crate::plugins::Plugins;
+use crate::plugins::{self, Plugins};
 use crate::{blocks, campfires, chat, commands, containers, creatures, drops, entities, forms, furnaces, hoppers, inventory, late_sounds, orbs, roster, sleep, tnt, vitals, worlds};
 
 pub(crate) struct Ctx<'w> {
@@ -51,7 +51,7 @@ pub(crate) fn dispatch(world: &mut World, plugins: &mut Plugins) {
         world.resource_mut::<Players>().in_world += 1;
         roster::arrive(world, entity);
         worlds::focus_on(world, entity);
-        plugins.each(world, |handler, ctx| handler.on_join(ctx, &player));
+        plugins.offer(world, JoinEvent::new(player));
     }
     chat::dispatch(world, plugins);
     commands::dispatch(world, plugins);
@@ -95,12 +95,16 @@ pub(crate) fn dispatch(world: &mut World, plugins: &mut Plugins) {
         }
         worlds::focus_on(world, entity);
         world.despawn(entity);
+        let id = player.id;
         if had_joined {
             world.resource_mut::<Players>().in_world -= 1;
-            plugins.each(world, |handler, ctx| handler.on_quit(ctx, &player));
+            plugins.offer(world, QuitEvent::new(player));
         }
+        // After the quit: a listener for this player alone hears it.
+        plugins::end_scope(world, Scope::Player(id));
     }
     worlds::focus(world, None);
-    plugins.each(world, |handler, ctx| handler.on_tick(ctx));
+    plugins.run_tasks(world);
+    plugins.offer(world, TickEvent);
     worlds::dispatch(world, plugins);
 }

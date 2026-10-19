@@ -10,6 +10,7 @@ use std::sync::mpsc::{Receiver, Sender, channel};
 use acacia_proto::packets::RemoveEntity;
 use bevy_ecs::prelude::*;
 use bytes::Bytes;
+use sapling_api::{PlayerId, Scope};
 use sapling_net::{ConnId, NetEvent};
 use sapling_world::PlayerData;
 
@@ -19,7 +20,7 @@ use crate::player::{Carried, Local};
 use crate::roster::{self, Elsewhere, ListEntry};
 use crate::visibility::Sees;
 use crate::worlds::{self, Atlas, Change, Changes, Place};
-use crate::{containers, inventory};
+use crate::{containers, inventory, plugins};
 
 /// Ticks a shard waits for the answer to a transfer before it gives up.
 const ANSWER_TICKS: u64 = 100;
@@ -169,6 +170,7 @@ fn commit(world: &mut World, entity: Entity, shard: usize, to: String) {
             world.resource_mut::<Elsewhere>().0.extend(listing);
             roster::vanish(world, entity, id);
             world.despawn(entity);
+            plugins::end_scope(world, Scope::Player(PlayerId(conn.get())));
             let mut players = world.resource_mut::<Players>();
             players.by_conn.remove(&conn);
             players.in_world -= 1;

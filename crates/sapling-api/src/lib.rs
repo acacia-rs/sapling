@@ -1,6 +1,6 @@
-//! The plugin-facing API: handler traits called on a shard's thread, with a borrowed [`ShardCtx`]
-//! for acting on the shard. Everything here is plain data or a borrowed handle; the ECS behind a
-//! shard never shows (docs/DESIGN.md "Plugin API").
+//! The plugin-facing API: [`Plugin`]s add typed listeners and tasks that run on a shard's thread
+//! with a borrowed [`ShardCtx`] for acting on the shard. Everything here is plain data or a
+//! borrowed handle; the ECS behind a shard never shows (docs/DESIGN.md "Plugin API").
 
 mod block;
 pub mod command;
@@ -13,7 +13,9 @@ pub mod form;
 mod health;
 mod hud;
 mod item;
+mod listen;
 mod player;
+mod plugin;
 #[cfg(test)]
 mod testing;
 mod weather;
@@ -29,7 +31,9 @@ pub use experience::ExperienceBackend;
 pub use weather::{Weather, WeatherBackend};
 pub use entity::{EntityBackend, EntityId, EntityInfo};
 pub use world::{RuleValue, WorldBackend};
-pub use event::{Cancellable, ChatEvent, CommandEvent, Priority};
+pub use event::{ChatEvent, CommandEvent, JoinEvent, Priority, QuitEvent, TickEvent, TransferFailedEvent, WorldChangeEvent};
+pub use listen::{Event, Listen, ListenerChange, ListenerId, Listeners, Scope};
+pub use plugin::{Plugin, PluginBuilder, Scoped};
 pub use health::{DamageCause, HealthBackend};
 pub use form::{Custom, Form, FormResponse, Menu, Modal};
 pub use hud::{BossBar, BossBarColour, Sidebar, Title};
@@ -37,8 +41,9 @@ pub use item::{DropEvent, Item, Slot};
 pub use player::{Difficulty, GameMode, Permission, Player, PlayerId, Position};
 pub use sapling_macros::{Command, CommandEnum, Form};
 
-/// Game events, one method each, all optional. Handlers run on the shard that owns the player, in
-/// [`Priority`] order.
+/// The game's events, one method each, all optional: a plugin as one value. Each method is filed
+/// as a listener for its event at the handler's priority ([`PluginBuilder::handler`]); the events'
+/// docs say when they come.
 pub trait Handler: Send + 'static {
     /// The player's client has loaded the world and left its loading screen.
     fn on_join(&mut self, ctx: &mut ShardCtx<'_>, player: &Player) {

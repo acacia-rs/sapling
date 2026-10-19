@@ -156,7 +156,7 @@ fn response(inventory: &Inventory, request_id: i32, applied: &Applied) -> ItemSt
 /// Whether the handlers let every stack a request throws out go.
 fn may_drop(world: &mut World, plugins: &mut Plugins, player: &Player, dropped: &[ItemStack]) -> bool {
     dropped.iter().all(|stack| {
-        let event = plugins.offer(world, DropEvent::new(described(stack)), |handler, ctx, event| handler.on_drop(ctx, player, event));
+        let event = plugins.offer(world, DropEvent::new(player.clone(), described(stack)));
         !event.is_cancelled()
     })
 }

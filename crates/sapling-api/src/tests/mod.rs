@@ -2,6 +2,7 @@ mod blocks;
 mod commands;
 mod forms;
 mod items;
+mod listen;
 
 use crate::testing::{Fake, player};
 use crate::{BossBar, BossBarColour, ChatEvent, CommandEvent, GameMode, Handler, Permission, Player, PlayerId, Priority, ShardCtx, Sidebar, Title};
@@ -36,7 +37,7 @@ fn handlers_act_through_the_context_and_default_to_no_ops() {
     handler.on_join(&mut ShardCtx::new(&mut backend), &steve);
     handler.on_quit(&mut ShardCtx::new(&mut backend), &steve);
     handler.on_tick(&mut ShardCtx::new(&mut backend));
-    let (mut chat, mut command) = (ChatEvent::new("hi".into()), CommandEvent::new("tp  home".into()));
+    let (mut chat, mut command) = (ChatEvent::new(steve.clone(), "hi".into()), CommandEvent::new(steve.clone(), "tp  home".into()));
     handler.on_chat(&mut ShardCtx::new(&mut backend), &steve, &mut chat);
     handler.on_command(&mut ShardCtx::new(&mut backend), &steve, &mut command);
     assert!(!chat.is_cancelled() && !command.is_cancelled() && chat.message == "hi");
@@ -89,7 +90,7 @@ fn worlds_are_named_and_within_puts_the_focus_back() {
 
 #[test]
 fn events_cancel_and_priorities_order() {
-    let mut chat = ChatEvent::new("hi".into());
+    let mut chat = ChatEvent::new(player(1, "Steve"), "hi".into());
     chat.cancel();
     assert!(chat.is_cancelled());
     let mut order = [Priority::Monitor, Priority::Low, Priority::Highest, Priority::Normal, Priority::Lowest, Priority::High];

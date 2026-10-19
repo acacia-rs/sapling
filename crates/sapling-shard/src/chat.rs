@@ -99,7 +99,7 @@ pub(crate) fn dispatch(world: &mut World, plugins: &mut Plugins) {
             continue;
         }
         worlds::focus_on(world, entity);
-        let event = plugins.offer(world, ChatEvent::new(message), |handler, ctx, event| handler.on_chat(ctx, &from, event));
+        let event = plugins.offer(world, ChatEvent::new(from.clone(), message));
         // A handler may leave anything in the message; what goes out is clean again.
         let Some(message) = clean(&event.message).filter(|_| !event.is_cancelled()) else { continue };
         // The line stays in the sender's world, wherever a handler has moved them by now.

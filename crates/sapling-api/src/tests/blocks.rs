@@ -1,5 +1,5 @@
 use crate::testing::{Fake, player};
-use crate::{Block, BreakEvent, Cancellable, Face, Handler, InteractEvent, PlaceEvent, Player, ShardCtx};
+use crate::{Block, BreakEvent, Event, Face, Handler, InteractEvent, PlaceEvent, Player, ShardCtx};
 
 /// Lets "Steve" build and nobody else; turns placed sand into glass and marks what was broken.
 struct Plot;
@@ -28,7 +28,7 @@ impl Handler for Plot {
 
 #[test]
 fn block_events_end_as_the_last_handler_left_them() {
-    let mut event = BreakEvent::new([1, 2, 3], Block::new("stone"), Vec::new(), false);
+    let mut event = BreakEvent::new(player(1, "Steve"), [1, 2, 3], Block::new("stone"), Vec::new(), false);
     assert!(event.is_cancelled() && !event.is_stopped(), "refused by default, yet every handler sees it");
     event.allow();
     assert!(!event.is_cancelled() && !event.is_stopped());
@@ -38,7 +38,7 @@ fn block_events_end_as_the_last_handler_left_them() {
     assert!(!event.is_cancelled() && !event.is_stopped());
     assert_eq!((event.pos(), event.block().name.as_str()), ([1, 2, 3], "minecraft:stone"));
 
-    let mut click = InteractEvent::new([0, 64, 0], Face::North, Block::new("minecraft:lever").with("open_bit=0"), true);
+    let mut click = InteractEvent::new(player(1, "Steve"), [0, 64, 0], Face::North, Block::new("minecraft:lever").with("open_bit=0"), true);
     assert!(!click.is_cancelled() && click.face() == Face::North && click.block().properties == "open_bit=0");
     click.cancel();
     assert!(click.is_cancelled() && click.pos() == [0, 64, 0]);
@@ -62,21 +62,21 @@ fn handlers_decide_about_blocks_and_change_the_world_through_the_context() {
     assert!(!ShardCtx::new(&mut backend).set_block([0, -1, 0], &Block::new("stone")), "no world there");
     assert!(!ShardCtx::new(&mut backend).set_block([0, 65, 0], &Block::new("mod:lamp")), "no such block");
 
-    let mut broken = BreakEvent::new([0, 64, 0], Block::new("stone"), Vec::new(), false);
+    let mut broken = BreakEvent::new(player(1, "Steve"), [0, 64, 0], Block::new("stone"), Vec::new(), false);
     handler.on_break(&mut ShardCtx::new(&mut backend), &alex, &mut broken);
     assert!(broken.is_cancelled());
     handler.on_break(&mut ShardCtx::new(&mut backend), &steve, &mut broken);
     assert!(!broken.is_cancelled());
 
-    let mut placed = PlaceEvent::new([0, 65, 0], [0, 64, 0], Face::Up, Block::new("sand"), false);
+    let mut placed = PlaceEvent::new(player(1, "Steve"), [0, 65, 0], [0, 64, 0], Face::Up, Block::new("sand"), false);
     handler.on_place(&mut ShardCtx::new(&mut backend), &steve, &mut placed);
     assert!(!placed.is_cancelled() && placed.block == Block::new("glass") && placed.pos() == [0, 65, 0]);
-    let mut floating = PlaceEvent::new([5, 65, 5], [5, 64, 5], Face::Up, Block::new("sand"), true);
+    let mut floating = PlaceEvent::new(player(1, "Steve"), [5, 65, 5], [5, 64, 5], Face::Up, Block::new("sand"), true);
     handler.on_place(&mut ShardCtx::new(&mut backend), &steve, &mut floating);
     assert!(floating.is_cancelled(), "nothing to build on");
 
     // The default methods leave an event as it came.
-    let mut click = InteractEvent::new([0, 64, 0], Face::Up, Block::new("stone"), true);
+    let mut click = InteractEvent::new(player(1, "Steve"), [0, 64, 0], Face::Up, Block::new("stone"), true);
     handler.on_interact(&mut ShardCtx::new(&mut backend), &alex, &mut click);
     assert!(!click.is_cancelled());
     assert_eq!(backend.log, ["block [0, 64, 0] minecraft:stone []", "block [0, 65, 0] minecraft:torch [torch_facing_direction=top]"]);
