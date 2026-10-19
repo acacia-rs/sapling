@@ -14,7 +14,7 @@ use crate::blobs::BlobCache;
 use crate::chunks::SectionBacklog;
 use crate::components::{DefaultLayer, InLayer, Layer, Outgoing, in_world_identity};
 use crate::handoff::{Peers, ShardMsg};
-use crate::plugins::Plugins;
+use crate::plugins;
 use crate::view::View;
 use crate::{clock, movement};
 
@@ -149,14 +149,14 @@ pub(crate) fn enter(world: &mut World, player: Entity, layer: Entity) {
 }
 
 /// Tells the handlers which players changed worlds and which transfers failed.
-pub(crate) fn dispatch(world: &mut World, plugins: &mut Plugins) {
+pub(crate) fn dispatch(world: &mut World) {
     for change in std::mem::take(&mut world.resource_mut::<Changes>().0) {
         let (Change::Moved { entity, .. } | Change::Failed { entity, .. }) = &change;
         let Some(player) = in_world_identity(world, *entity) else { continue };
         focus_on(world, *entity);
         match change {
-            Change::Moved { from, to, .. } => drop(plugins.offer(world, WorldChangeEvent::new(player, from, to))),
-            Change::Failed { to, .. } => drop(plugins.offer(world, TransferFailedEvent::new(player, to))),
+            Change::Moved { from, to, .. } => drop(plugins::offer(world, WorldChangeEvent::new(player, from, to))),
+            Change::Failed { to, .. } => drop(plugins::offer(world, TransferFailedEvent::new(player, to))),
         }
     }
     focus(world, None);

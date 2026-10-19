@@ -20,7 +20,7 @@ use crate::handoff::{Handoffs, Link, Peers, ShardMsg};
 use crate::hud::Hud;
 use crate::movement::Motion;
 use crate::player::{Carried, Local};
-use crate::plugins::{Deferred, PluginState, Plugins};
+use crate::plugins::{self, CommandRegistry, Deferred, PluginState, Registry};
 use crate::roster::{Elsewhere, Profile};
 use crate::view::View;
 use crate::vitals::Vitals;
@@ -42,7 +42,6 @@ pub struct Shard {
     inbox: Inbox,
     /// What the other shards tell this one.
     mailbox: Receiver<ShardMsg>,
-    plugins: Plugins,
 }
 
 impl Shard {
@@ -100,9 +99,11 @@ impl Shard {
         sapling_data::set_shield_item_id();
         world.insert_resource(CommandLists::new(&Commands::default()));
         world.init_resource::<PluginState>();
+        world.init_resource::<Registry>();
+        world.init_resource::<CommandRegistry>();
         world.init_resource::<Deferred>();
         world.init_resource::<crate::movement::Moves>();
-        Self { world, schedule, after_handlers, inbox, mailbox: link.mailbox, plugins: Plugins::default() }
+        Self { world, schedule, after_handlers, inbox, mailbox: link.mailbox }
     }
 
     /// Adds a world players can be moved to, with where they appear in it (feet). False for a
@@ -124,20 +125,29 @@ impl Shard {
 
     /// Adds a handler; see [`Priority`] for when it runs.
     pub fn add_handler_at(&mut self, priority: Priority, handler: Box<dyn Handler>) {
-        self.plugins.add_handler(priority, handler);
+        plugins::build(&mut self.world, |plugin| {
+            plugin.handler(priority, handler);
+        });
     }
 
     /// Adds what `plugin` builds for this shard: its listeners, tasks and commands.
     pub fn add_plugin(&mut self, plugin: &dyn Plugin) {
-        self.plugins.add_plugin(plugin);
-        self.world.insert_resource(CommandLists::new(&self.plugins.commands));
+        plugins::build(&mut self.world, |builder| plugin.build(builder));
+        self.list_commands();
     }
 
     /// Adds a command (see [`sapling_api::command`]). Players already in the world keep the list
     /// they have until their permission changes.
     pub fn add_command<C: Command>(&mut self) {
-        self.plugins.commands.register::<C>();
-        self.world.insert_resource(CommandLists::new(&self.plugins.commands));
+        plugins::build(&mut self.world, |plugin| {
+            plugin.command::<C>();
+        });
+        self.list_commands();
+    }
+
+    fn list_commands(&mut self) {
+        let lists = CommandLists::new(&self.world.resource::<CommandRegistry>().0);
+        self.world.insert_resource(lists);
     }
 
     /// One tick: take what the other shards and the network delivered, run the systems, then
@@ -149,7 +159,7 @@ impl Shard {
         }
         handoff::expire(&mut self.world).into_iter().for_each(|event| self.accept(event));
         self.schedule.run(&mut self.world);
-        handlers::dispatch(&mut self.world, &mut self.plugins);
+        handlers::dispatch(&mut self.world);
         self.after_handlers.run(&mut self.world);
         self.world.resource_mut::<PacketQueues>().clear();
         self.world.resource_mut::<Tick>().0 += 1;

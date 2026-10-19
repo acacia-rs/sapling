@@ -279,8 +279,12 @@ it sends for `/title`, `/scoreboard`, `/gamemode`, `/tp`, a wither's bar and com
   `Priority::X.receiving_cancelled()`. A running listener adds more with `ctx.in_world(name)`,
   `ctx.for_player(id)` or `ctx.on_shard()`; they join from the next event, and a world's or player's go
   when it is removed or they leave the shard (after their `QuitEvent`). A world's tasks run with it in
-  focus. Changes made while the registry runs wait in `plugins::Deferred`, locked because a resource
-  must be `Sync`. `Handler` is a plugin as one value: each method is a listener at the handler's priority
+  focus. The registry is a world resource (`plugins::Registry`), so any of the game's code raises an event
+  with `plugins::offer(world, ev)`; it is taken out while it runs, so **what a running listener or task
+  causes is not offered again** (a damage listener that hurts someone cannot set itself off; a plugin's
+  `ctx.hurt_player` goes unheard). Changes made meanwhile wait in `plugins::Deferred`; both are locked
+  because a resource must be `Sync`. Commands sit apart in an `Arc` (`CommandRegistry`), so a player's
+  command runs with the listeners in place and what it causes is heard. `Handler` is a plugin as one value: each method is a listener at the handler's priority
   (`handler_at`). Tasks run once a tick after the events, then `TickEvent` (`on_tick`).
 - **Player actions** (`sapling-shard/src/actions.rs`). `MoveEvent` (one a tick per player that moved or
   turned, from the tick's start; `changed_block()` for block-level checks): `movement::player_input` queues
@@ -289,6 +293,14 @@ it sends for `/title`, `/scoreboard`, `/gamemode`, `/tp`, a wither's bar and com
   (eating, drinking; a cancel stops the client's use), `EntityAttackEvent` / `EntityInteractEvent` a click
   on a player or an entity (`Target`); a cancelled attack does no harm, an interaction has no vanilla effect
   yet. Clicks naming nothing raise no event.
+- **Harm, death, rising** (`sapling-shard/src/damage.rs`, `vitals/{stand,struck,death}.rs`). `DamageEvent`
+  (a player or a mob, its `DamageCause`, the `Attacker` a hit's `Slayer` names, a mutable `amount`) is
+  asked before a hit lands and before its throw, so a cancel leaves no harm and no knockback. For what a
+  player's surroundings do in a tick (`stand`) the health is kept from before them: a cancel puts it back,
+  a changed amount is the loss (`Health::lose`). Not asked yet: what their surroundings do to mobs
+  (`creatures/harm.rs` `tick`), `/kill`. `DeathEvent` (players) sets `keep_inventory` and `message`
+  (`Vanilla`, `Hidden`, `Text`); the death screen keeps the game's words. `RespawnEvent::feet` starts as
+  the bed or the world's spawn.
 - **State.** `ctx.state::<T>()` is a per-shard `T::default()` keyed by type: what a plugin's handler,
   commands and form callbacks share (commands are types, not values, so they hold nothing).
 - **Commands** (`sapling-api/src/command`, `sapling-shard/src/commands.rs`). `#[derive(Command)]` on a struct

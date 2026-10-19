@@ -172,6 +172,7 @@ fn blow(world: &mut World, source: Option<Entity>, layer: Entity, at: [f32; 3], 
     for (mob, id, its) in near {
         let middle = [its.at[0], its.at[1] + its.size[1] / 2.0, its.at[2]];
         let Some((harm, _)) = reaches(world, at, middle, its.at, power, fireball).filter(|(harm, _)| *harm > 0.0) else { continue };
+        let Some(harm) = crate::damage::ask(world, mob, harm, Cause::EntityExplosion, None) else { continue };
         let Some(mut health) = world.get::<Health>(mob).copied() else { continue };
         if health.hurt(harm) {
             *world.get_mut::<Health>(mob).expect("read above") = health;

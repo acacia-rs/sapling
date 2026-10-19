@@ -6,6 +6,7 @@
 mod actions;
 mod actors;
 mod arenas;
+mod damage;
 mod blobs;
 mod blocks;
 mod body;

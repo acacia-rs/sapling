@@ -3,6 +3,7 @@
 //! borrowed handle; the ECS behind a shard never shows (docs/DESIGN.md "Plugin API").
 
 mod block;
+mod combat;
 pub mod command;
 mod ctx;
 mod effect;
@@ -24,6 +25,7 @@ mod tests;
 mod world;
 
 pub use block::{Block, BlockPos, BreakEvent, Face, InteractEvent, PlaceEvent};
+pub use combat::{Attacker, DamageEvent, DeathEvent, DeathMessage, RespawnEvent};
 pub use command::{Command, Commands, Output, Sender};
 pub use ctx::{Backend, FormCallback, ShardCtx, State};
 pub use effect::{Effect, EffectBackend};

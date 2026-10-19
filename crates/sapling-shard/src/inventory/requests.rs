@@ -17,7 +17,7 @@ use super::crafting::Craft;
 use super::{ARMOR, Inventory, MAIN, MAX_COUNT, Place, described};
 use crate::components::{Mode, Outgoing, PacketQueues, PerTick, in_world_identity};
 use crate::{containers, drops};
-use crate::plugins::Plugins;
+use crate::plugins;
 
 /// Requests looked at per player per tick; a client sends one per click.
 const MAX_REQUESTS_PER_TICK: usize = 32;
@@ -154,14 +154,14 @@ fn response(inventory: &Inventory, request_id: i32, applied: &Applied) -> ItemSt
 }
 
 /// Whether the handlers let every stack a request throws out go.
-fn may_drop(world: &mut World, plugins: &mut Plugins, player: &Player, dropped: &[ItemStack]) -> bool {
+fn may_drop(world: &mut World, player: &Player, dropped: &[ItemStack]) -> bool {
     dropped.iter().all(|stack| {
-        let event = plugins.offer(world, DropEvent::new(player.clone(), described(stack)));
+        let event = plugins::offer(world,DropEvent::new(player.clone(), described(stack)));
         !event.is_cancelled()
     })
 }
 
-fn answer(world: &mut World, plugins: &mut Plugins, entity: Entity, player: &Player, request: &Request) {
+fn answer(world: &mut World, entity: Entity, player: &Player, request: &Request) {
     let creative = world.get::<Mode>(entity).is_some_and(|mode| mode.0 == GameMode::Creative);
     let Some(mut trial) = world.get::<Inventory>(entity).filter(|inventory| inventory.loaded).cloned() else { return };
     let (open, at) = (containers::slots_of(world, entity), containers::station(world, entity));
@@ -171,7 +171,7 @@ fn answer(world: &mut World, plugins: &mut Plugins, entity: Entity, player: &Pla
     // Tried on a copy first: the handlers see a drop before anything has left the inventory.
     let tried = apply(&mut trial, request, creative, at);
     let failed = tried.is_err();
-    let allowed = tried.is_ok_and(|applied| may_drop(world, plugins, player, &applied.dropped));
+    let allowed = tried.is_ok_and(|applied| may_drop(world, player,&applied.dropped));
     let mut query = world.query::<(&mut Inventory, &mut Outgoing)>();
     let Ok((mut inventory, mut out)) = query.get_mut(world, entity) else { return };
     (inventory.container, inventory.refuses) = (open.unwrap_or_default(), refuses);
@@ -200,13 +200,13 @@ fn answer(world: &mut World, plugins: &mut Plugins, entity: Entity, player: &Pla
 }
 
 /// Answers this tick's inventory requests, in arrival order.
-pub(crate) fn dispatch(world: &mut World, plugins: &mut Plugins) {
+pub(crate) fn dispatch(world: &mut World) {
     let packets = world.resource_mut::<PacketQueues>().take::<ItemStackRequest>();
     let mut budget = PerTick::new(MAX_REQUESTS_PER_TICK);
     for (entity, packet) in packets {
         let Some(player) = in_world_identity(world, entity) else { continue };
         for request in packet.requests.iter().filter(|_| budget.allow(entity)) {
-            answer(world, plugins, entity, &player, request);
+            answer(world, entity,&player, request);
         }
     }
 }

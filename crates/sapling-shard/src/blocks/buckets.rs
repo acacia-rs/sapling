@@ -64,7 +64,7 @@ impl Request<'_> {
     fn fill(&mut self, site: &Site, pos: BlockPos) -> bool {
         let Cell::Liquid(liquid, 0) = liquid::cell(self.world, site.layer, pos) else { return false };
         let event = BreakEvent::new(self.player.clone(), pos, source(liquid), Vec::new(), Self::allowed(site));
-        if self.plugins.offer(self.world, event).is_cancelled() {
+        if crate::plugins::offer(self.world, event).is_cancelled() {
             return false;
         }
         // Water walled in by water sources and solid blocks stays: no air pocket in the sea.
@@ -106,7 +106,7 @@ impl Request<'_> {
             return false;
         }
         let event = PlaceEvent::new(self.player.clone(), target, pos, face, source(liquid), Self::allowed(site));
-        if self.plugins.offer(self.world, event).is_cancelled() {
+        if crate::plugins::offer(self.world, event).is_cancelled() {
             return false;
         }
         if snow_under {

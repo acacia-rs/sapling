@@ -101,7 +101,7 @@ impl Request<'_> {
             return false;
         }
         let allowed = site.mode == GameMode::Creative || site.mode == GameMode::Survival && from_hand;
-        let event = self.plugins.offer(self.world, PlaceEvent::new(self.player.clone(), pos, against, click.face, block, allowed));
+        let event = crate::plugins::offer(self.world,PlaceEvent::new(self.player.clone(), pos, against, click.face, block, allowed));
         let placed = !event.is_cancelled() && self.put(site, pos, click, &event.block);
         if !placed {
             self.resync(&[against, pos]);

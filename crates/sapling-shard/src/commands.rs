@@ -14,7 +14,7 @@ use sapling_api::{CommandEvent, Commands, Output, Permission, Sender, ShardCtx};
 
 use crate::components::{Outgoing, PacketQueues, PerTick, Stage, in_world, in_world_identity};
 use crate::handlers::Ctx;
-use crate::plugins::Plugins;
+use crate::plugins::{self, CommandRegistry};
 
 /// A parameter's `value_type` as BDS 1.26.52 numbers them (acacia docs/proto.md has the list and
 /// why the schema's own numbers are stale).
@@ -171,22 +171,23 @@ fn output_packet(origin: &CommandOrigin, out: &Output) -> CommandOutput {
 
 /// Runs this tick's command lines: handlers first (`on_command`), then the registry; the sender
 /// gets what the command printed.
-pub(crate) fn dispatch(world: &mut World, plugins: &mut Plugins) {
+pub(crate) fn dispatch(world: &mut World) {
     let requests = world.resource_mut::<PacketQueues>().take::<CommandRequest>();
     let mut limit = PerTick::new(MAX_COMMANDS_PER_TICK);
     for (entity, request) in requests {
         let Some(player) = in_world_identity(world, entity) else { continue };
         let Some(line) = clean(&request.command).filter(|_| limit.allow(entity)) else { continue };
         crate::worlds::focus_on(world, entity);
-        let event = plugins.offer(world, CommandEvent::new(player.clone(), line));
+        let event = plugins::offer(world, CommandEvent::new(player.clone(), line));
         if event.is_cancelled() {
             continue;
         }
         // An earlier handler may have kicked the sender or changed what it may run.
         let Some(permission) = world.get::<Access>(entity).map(|a| a.permission) else { continue };
         let name = player.name.clone();
+        let commands = world.resource::<CommandRegistry>().0.clone();
         let mut backend = Ctx { world };
-        let out = plugins.commands.run(&mut ShardCtx::new(&mut backend), &Sender::Player(player), permission, event.line());
+        let out = commands.run(&mut ShardCtx::new(&mut backend), &Sender::Player(player), permission, event.line());
         if let Some(mut outgoing) = world.get_mut::<Outgoing>(entity).filter(|_| !out.messages().is_empty()) {
             outgoing.push(&output_packet(&request.origin, &out));
         }

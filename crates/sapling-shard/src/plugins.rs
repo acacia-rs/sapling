@@ -1,11 +1,12 @@
-//! What a server adds to a shard: its listeners and tasks, and the command registry.
+//! What a server adds to a shard: its listeners and tasks, and its commands. Both live in the
+//! world, so any of the game's code can raise an event ([`offer`]).
 
 use std::any::TypeId;
 use std::collections::HashMap;
-use std::sync::Mutex;
+use std::sync::{Arc, Mutex};
 
 use bevy_ecs::prelude::*;
-use sapling_api::{Commands, Event, Handler, ListenerChange, Listeners, Plugin, PluginBuilder, Priority, Scope, ShardCtx, State};
+use sapling_api::{Commands, Event, ListenerChange, Listeners, PluginBuilder, Scope, ShardCtx, State};
 
 use crate::handlers::Ctx;
 
@@ -13,8 +14,23 @@ use crate::handlers::Ctx;
 #[derive(Resource, Default)]
 pub(crate) struct PluginState(pub HashMap<TypeId, State>);
 
-/// Changes to the listeners made while they ran, applied once the registry is free. Locked
-/// because a resource must be `Sync` and a listener is only `Send`.
+/// The shard's listeners and tasks, taken out while they run: what a listener's own doing raises
+/// is not offered to them again, so a listener cannot set itself off. Locked because a resource
+/// must be `Sync` and a listener is only `Send`.
+#[derive(Resource)]
+pub(crate) struct Registry(Mutex<Option<Listeners>>);
+
+impl Default for Registry {
+    fn default() -> Self {
+        Self(Mutex::new(Some(Listeners::default())))
+    }
+}
+
+/// The shard's commands, shared so that one runs without holding the world.
+#[derive(Resource, Default)]
+pub(crate) struct CommandRegistry(pub Arc<Commands>);
+
+/// Changes to the listeners made while they ran, applied once the registry is back.
 #[derive(Resource, Default)]
 pub(crate) struct Deferred(Mutex<Vec<ListenerChange>>);
 
@@ -29,37 +45,38 @@ pub(crate) fn end_scope(world: &World, scope: Scope) {
     world.resource::<Deferred>().push(ListenerChange::end(scope));
 }
 
-#[derive(Default)]
-pub(crate) struct Plugins {
-    listeners: Listeners,
-    pub commands: Commands,
+/// Adds listeners, tasks and commands between ticks; the caller tells players of new commands.
+pub(crate) fn build(world: &mut World, add: impl FnOnce(&mut PluginBuilder<'_>)) {
+    with_listeners(world, |world, listeners| {
+        let mut registry = world.resource_mut::<CommandRegistry>();
+        let commands = Arc::get_mut(&mut registry.0).expect("no command runs while plugins are added");
+        add(&mut PluginBuilder::new(listeners, commands));
+    });
 }
 
-impl Plugins {
-    pub fn add_handler(&mut self, priority: Priority, handler: Box<dyn Handler>) {
-        PluginBuilder::new(&mut self.listeners, &mut self.commands).handler(priority, handler);
-    }
+/// Runs `event` through the listeners and returns how it ended ([`Listeners::offer`]). Raised by
+/// a running listener's own doing, it goes by unheard.
+pub(crate) fn offer<E: Event>(world: &mut World, event: E) -> E {
+    let mut event = Some(event);
+    with_listeners(world, |world, listeners| event = event.take().map(|event| listeners.offer(&mut ShardCtx::new(&mut Ctx { world }), event)));
+    event.expect("offered or passed by")
+}
 
-    pub fn add_plugin(&mut self, plugin: &dyn Plugin) {
-        plugin.build(&mut PluginBuilder::new(&mut self.listeners, &mut self.commands));
-    }
+pub(crate) fn run_tasks(world: &mut World) {
+    with_listeners(world, |world, listeners| listeners.run_tasks(&mut ShardCtx::new(&mut Ctx { world })));
+}
 
-    /// Runs `event` through the listeners and returns how it ended ([`Listeners::offer`]).
-    pub fn offer<E: Event>(&mut self, world: &mut World, event: E) -> E {
-        self.apply_deferred(world);
-        let event = self.listeners.offer(&mut ShardCtx::new(&mut Ctx { world }), event);
-        self.apply_deferred(world);
-        event
-    }
+/// Runs `f` with the registry taken out, the changes made meanwhile applied before and after;
+/// does nothing while the registry is out.
+fn with_listeners(world: &mut World, f: impl FnOnce(&mut World, &mut Listeners)) {
+    let Some(mut listeners) = world.resource::<Registry>().0.lock().expect("listener registry lock").take() else { return };
+    apply_deferred(world, &mut listeners);
+    f(world, &mut listeners);
+    apply_deferred(world, &mut listeners);
+    *world.resource::<Registry>().0.lock().expect("listener registry lock") = Some(listeners);
+}
 
-    pub fn run_tasks(&mut self, world: &mut World) {
-        self.apply_deferred(world);
-        self.listeners.run_tasks(&mut ShardCtx::new(&mut Ctx { world }));
-        self.apply_deferred(world);
-    }
-
-    fn apply_deferred(&mut self, world: &World) {
-        let changes = std::mem::take(&mut *world.resource::<Deferred>().0.lock().expect("deferred listeners lock"));
-        changes.into_iter().for_each(|change| self.listeners.apply(change));
-    }
+fn apply_deferred(world: &World, listeners: &mut Listeners) {
+    let changes = std::mem::take(&mut *world.resource::<Deferred>().0.lock().expect("deferred listeners lock"));
+    changes.into_iter().for_each(|change| listeners.apply(change));
 }

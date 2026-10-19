@@ -4,11 +4,14 @@ mod common;
 
 use std::sync::{Arc, Mutex};
 
-use acacia_proto::packets::MovePlayer;
-use acacia_proto::types::{TransactionTransactionData, TransactionTransactionDataItemUseOnEntityActionType as OnEntity};
+use acacia_proto::packets::{MovePlayer, Respawn, SetEntityMotion, Text, UpdateAttributes};
+use acacia_proto::types::{TransactionTransactionData, TransactionTransactionDataItemUseOnEntityActionType as OnEntity, Vec3f};
 use common::cluster::platform_of;
 use common::{Harness, all, attack, input_at};
-use sapling_api::{EntityAttackEvent, EntityId, EntityInteractEvent, JoinEvent, MoveEvent, Plugin, PluginBuilder, Priority, QuitEvent, Target};
+use sapling_api::{
+    Attacker, DamageEvent, DeathEvent, DeathMessage, EntityAttackEvent, EntityId, EntityInteractEvent, JoinEvent, MoveEvent, Plugin, PluginBuilder, Priority, QuitEvent,
+    RespawnEvent, Target,
+};
 use sapling_world::Template;
 
 #[derive(Clone, Default)]
@@ -120,6 +123,81 @@ fn plugins_hear_entity_clicks_and_may_stop_a_hit() {
     assert_eq!(log.take(), [format!("attack {target}"), format!("use {target}")], "nothing for an id that names nothing");
     h.remote.run(move |ctx| assert!(ctx.entity(pig).is_some(), "the cancelled hit left the pig standing"));
     h.tick(1);
+}
+
+/// Alex (1) and Steve (2) on easy, where Alex's fist costs Steve 1 (attacks.rs).
+fn duel(plugin: &dyn Plugin) -> Harness {
+    let mut h = Harness::new();
+    h.shard.add_plugin(plugin);
+    h.enter(1, "Alex");
+    h.enter(2, "Steve");
+    h.remote.run(|ctx| ctx.set_difficulty(sapling_api::Difficulty::Easy));
+    h.tick_all();
+    h
+}
+
+fn health(sent: &[acacia_proto::RawPacket]) -> Vec<f32> {
+    all::<UpdateAttributes>(sent).iter().flat_map(|update| &update.attributes).filter(|attribute| attribute.name == "minecraft:health").map(|attribute| attribute.current).collect()
+}
+
+/// Spares everyone everything.
+struct Truce;
+
+impl Plugin for Truce {
+    fn build(&self, plugin: &mut PluginBuilder<'_>) {
+        plugin.on::<DamageEvent>(Priority::Normal, |_, event| event.cancel());
+    }
+}
+
+#[test]
+fn a_cancelled_hit_neither_hurts_nor_throws() {
+    let mut h = duel(&Truce);
+    h.receive(1, &attack(2));
+    let sent = h.tick_all().to(2).to_vec();
+    assert!(health(&sent).is_empty() && all::<SetEntityMotion>(&sent).is_empty());
+}
+
+/// Makes every hit kill, says deaths its own way, keeps what the dead held and raises them at x 5.
+struct Sudden(Log);
+
+impl Plugin for Sudden {
+    fn build(&self, plugin: &mut PluginBuilder<'_>) {
+        let log = self.0.clone();
+        plugin.on::<DamageEvent>(Priority::Normal, move |_, event| {
+            let by = match event.attacker() {
+                Some(Attacker::Player(player)) => player.name.clone(),
+                other => format!("{other:?}"),
+            };
+            log.push(format!("{by} hurts {:?} for {}", event.victim(), event.amount));
+            event.amount = 100.0;
+        });
+        let log = self.0.clone();
+        plugin.on::<DeathEvent>(Priority::Normal, move |_, event| {
+            log.push(format!("{} died of {:?}", event.player().name, event.cause()));
+            event.keep_inventory = true;
+            event.message = DeathMessage::Text(format!("{} is out", event.player().name));
+        });
+        plugin.on::<RespawnEvent>(Priority::Normal, |_, event| event.feet = [5.5, 65.0, 0.5]);
+    }
+}
+
+#[test]
+fn plugins_set_a_hits_harm_the_death_message_and_where_the_dead_rise() {
+    let log = Log::default();
+    let mut h = duel(&Sudden(log.clone()));
+    h.receive(1, &attack(2));
+    let sent = h.tick_all();
+    let lines = log.take();
+    assert_eq!(lines.len(), 2, "{lines:?}");
+    assert!(lines[0].starts_with("Alex hurts Player(Player {") && lines[0].ends_with("for 1"), "{lines:?}");
+    assert_eq!(lines[1], "Steve died of Attack");
+    assert_eq!(health(sent.to(2)), [0.0]);
+    let told = |conn: u64| all::<Text>(sent.to(conn)).iter().any(|text| format!("{:?}", text.content).contains("Steve is out"));
+    assert!(told(1) && told(2), "everyone in the world reads the plugin's words");
+
+    h.receive(2, &Respawn { position: Vec3f { x: 0.0, y: 0.0, z: 0.0 }, state: 2, runtime_entity_id: 0 });
+    let risen = all::<Respawn>(h.tick_all().to(2));
+    assert_eq!(risen.iter().filter(|respawn| respawn.state == 1).map(|respawn| respawn.position.x).collect::<Vec<_>>(), [5.5]);
 }
 
 #[test]

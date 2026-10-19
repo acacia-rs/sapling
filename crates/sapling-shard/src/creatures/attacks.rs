@@ -1,6 +1,6 @@
 //! A player's hit on a mob, as BDS answered one (docs/research/mob-damage.md, "Hits").
 // TODO: no critical hit, enchantment or wear of the item; a hit mob does not
-// fight back; a hit on an armour stand, which has no health here, tires nobody; plugins are not asked; `REACH` is the nearest whole number to what BDS allowed.
+// fight back; a hit on an armour stand, which has no health here, tires nobody; `REACH` is the nearest whole number to what BDS allowed.
 
 use acacia_proto::packets::LevelSoundEvent;
 use acacia_proto::types::Vec3f;
@@ -66,7 +66,9 @@ fn hit(world: &mut World, player: Entity, id: u64) -> Option<()> {
     };
     let mut packets = vec![sapling_net::encode(&swing)];
     let held = world.get::<Inventory>(player).and_then(|inventory| inventory.in_hand().as_ref().map(|held| held.stack.name.clone()));
-    if health.hurt(crate::vitals::hits_for(world, player, sapling_data::item_attack(held.as_deref()))) {
+    let harm = crate::vitals::hits_for(world, player, sapling_data::item_attack(held.as_deref()));
+    let hitter = in_world_identity(world, player).map(sapling_api::Attacker::Player);
+    if crate::damage::ask(world, entity, harm, Cause::Attack, hitter).is_some_and(|harm| health.hurt(harm)) {
         packets.insert(0, harm::strike(id, &health, Cause::Attack, None));
         let (dx, dz) = (body.at[0] - from[0], body.at[2] - from[2]);
         let far = (dx * dx + dz * dz).sqrt();
