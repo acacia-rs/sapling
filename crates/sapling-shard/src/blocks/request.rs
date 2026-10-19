@@ -133,6 +133,7 @@ pub(crate) fn dispatch(world: &mut World, plugins: &mut Plugins) {
                 match click.action_type {
                     TransactionUseItemActionType::ClickBlock => request.click(pos, Face::from_index(u32::from(click.face)), &click),
                     TransactionUseItemActionType::BreakBlock if broken.insert((entity, pos)) => request.break_block(pos),
+                    TransactionUseItemActionType::ClickAir if crate::eyes::throw(request.world, entity) => {}
                     TransactionUseItemActionType::ClickAir => crate::vitals::eating::start(request.world, entity),
                     _ => {}
                 }

@@ -101,6 +101,10 @@ pub(crate) struct Loader {
 }
 
 impl Loader {
+    pub fn storage(&self) -> &dyn WorldStorage {
+        &*self.source.storage
+    }
+
     /// Starts `threads` workers; they end when the loader is dropped and its queue is empty.
     pub fn spawn(source: Source, threads: usize) -> Self {
         let threads = threads.max(1);

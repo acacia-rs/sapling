@@ -34,6 +34,8 @@ fn bds_locate_answers_are_starts() {
 #[test]
 fn the_stronghold_located_is_bds_answer() {
     assert_eq!(OverworldGenerator::new(20261003).locate_stronghold(0, 0), Some([-1422, 32, -1950]));
+    // research/captures/bds-eye-throw.txt: /locate, and the eye thrown from (0.5, 151, 0.5).
+    assert_eq!(OverworldGenerator::new(20261018).locate_stronghold(0, 0), Some([-1454, 32, -2542]));
 }
 
 #[test]

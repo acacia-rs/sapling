@@ -11,6 +11,8 @@
 mod dump;
 #[path = "shared/end_drill.rs"]
 mod end;
+#[path = "shared/eye_drill.rs"]
+mod eye;
 #[path = "shared/portal_drill.rs"]
 mod portal;
 #[path = "shared/probe.rs"]
@@ -57,6 +59,8 @@ struct Run {
     /// The loading screen of the dimension change under way, until it is ended.
     screen: Option<Option<u32>>,
     tally: Vec<(String, usize)>,
+    /// An eye drill: entity packets are printed in full.
+    eye: bool,
 }
 
 impl Run {
@@ -91,7 +95,8 @@ impl Run {
     /// Prints one actor packet and answers a dimension change.
     fn actor_packet(&mut self, actor: &Bot, packet: &RawPacket) {
         let name = acacia_bot::proto::packet_name(packet.id).unwrap_or("?");
-        if TALLIED.contains(&name) {
+        let shown = DETAILED.contains(&name) || self.eye && eye::SHOWN.contains(&name);
+        if TALLIED.contains(&name) && !shown {
             let dimension = match name {
                 "LevelChunk" => packet.decode::<acacia_bot::proto::packets::LevelChunk>().map(|c| show_column(&c)).unwrap_or(-1),
                 "Subchunk" => packet.decode::<acacia_bot::proto::packets::Subchunk>().map(|c| c.dimension).unwrap_or(-1),
@@ -128,7 +133,7 @@ impl Run {
             return self.count("MovePlayer[normal]".into());
         }
         self.flush_tally();
-        let text = if DETAILED.contains(&name) { dump::dump(packet).unwrap_or_default().chars().take(SHOWN).collect() } else { String::new() };
+        let text = if shown { dump::dump(packet).unwrap_or_default().chars().take(SHOWN).collect() } else { String::new() };
         println!("{:>7} actor   {name} {text}", self.ms());
         if packet.id == ChangeDimension::ID && self.answer != Answer::Silent {
             let id = packet.decode::<ChangeDimension>().map(|change| change.loading_screen_id).unwrap_or(None);
@@ -233,7 +238,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     for bot in [&mut actor, &mut watcher] {
         while let Ok(Some(_)) = tokio::time::timeout(Duration::from_millis(5), bot.next()).await {}
     }
-    let mut run = Run { start: Instant::now(), answer, screen: None, tally: Vec::new() };
+    let mut run = Run { start: Instant::now(), answer, screen: None, tally: Vec::new(), eye: name.starts_with("eye") };
     for line in &lines {
         println!("## {line} at {}", run.ms());
         let wait = match portal::step(line) {
@@ -262,6 +267,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             portal::Step::Top(x, z) => {
                 end::print_top(&actor, x, z);
                 Duration::ZERO
+            }
+            portal::Step::Throw(yaw, pitch, wait) => {
+                if let Some(controls) = actor.controls() {
+                    (controls.yaw, controls.pitch) = (yaw, pitch);
+                }
+                actor.wait_ticks(2).await?;
+                let feet = actor.movement().and_then(|movement| movement.position());
+                println!("## throw from {feet:?} at {}", run.ms());
+                actor.use_item();
+                wait
             }
         };
         run.settle(&mut actor, &mut watcher, wait).await?;

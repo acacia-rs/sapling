@@ -30,7 +30,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Portals are made with the world seed's draws, as on the test BDS.
     ground.level_mut().seed = NETHER_SEED;
     let builder = Server::builder().bind(([127, 0, 0, 1], port).into()).name("sapling drills").online_mode(false).game_mode(GameMode::Creative);
-    let builder = builder.world(ground, [0.5, 64.0, 0.5]);
+    // SAPLING_DRILL_WORLD=generated: the seed's own overworld, as a BDS default world (bds-eye).
+    let builder = match std::env::var("SAPLING_DRILL_WORLD").as_deref() {
+        Ok("generated") => builder.world(World::with_storage(std::sync::Arc::new(Generated::with_areas(MemoryStorage::default(), NETHER_SEED, 2))), [0.5, 64.0, 0.5]),
+        _ => builder.world(ground, [0.5, 64.0, 0.5]),
+    };
     // The test BDS's Nether, generated from its seed (tools/bds-drill.sh worlds: bds-nether's level-seed).
     let nether = World::with_storage_in(std::sync::Arc::new(Generated::nether(MemoryStorage::default(), NETHER_SEED, 2)), NETHER);
     let end = World::with_storage_in(std::sync::Arc::new(Generated::end(MemoryStorage::default(), NETHER_SEED, 2)), END);

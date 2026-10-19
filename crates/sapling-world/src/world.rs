@@ -89,6 +89,12 @@ impl World {
         &self.level
     }
 
+    /// The block an eye of ender thrown from (x, z) in this world flies to
+    /// ([`WorldStorage::locate_stronghold`]); `None` without storage that makes strongholds.
+    pub fn locate_stronghold(&self, x: i32, z: i32) -> Option<[i32; 3]> {
+        self.loader.as_ref()?.storage().locate_stronghold(x, z)
+    }
+
     /// The spawn, the time and what else storage saves when the world closes.
     pub fn level_mut(&mut self) -> &mut Level {
         &mut self.level
