@@ -3,17 +3,21 @@
 //! portal long enough starts a dimension change to where the record nearest the scaled place
 //! is, or to the scaled place itself, and the traveller is put in a portal there once its
 //! columns are loaded, one being made if none is near (portals/arrive.rs;
-//! docs/research/nether-dimension.md). The portal blocks themselves: blocks/portals.rs.
+//! docs/research/nether-dimension.md). The portal blocks themselves: blocks/portals.rs. End
+//! portals: portals/end.rs; end gateways: portals/gateway.rs.
 
 mod arrive;
 mod draws;
+pub(crate) mod end;
+mod gateway;
 mod records;
 
 use bevy_ecs::prelude::*;
 use sapling_api::GameMode;
 use sapling_data::EYE_HEIGHT;
-use sapling_world::{NETHER, OVERWORLD};
+use sapling_world::{END, NETHER, OVERWORLD};
 
+use crate::blocks::end_portal::END_PORTAL;
 use crate::blocks::portals::PORTAL;
 use crate::components::{InLayer, Layer, Mode, Position, in_world};
 use crate::dimensions::{self, Arriving, Trip};
@@ -40,19 +44,19 @@ pub(crate) struct PortalTime {
     cooldown: u32,
 }
 
-/// Whether a player's body is in a portal block of its world.
-fn is_inside(world: &World, player: Entity) -> bool {
+/// Whether a player's body is in a block named `portal` of its world.
+fn is_inside(world: &World, player: Entity, portal: &str) -> bool {
     let (Some(feet), Some(level)) = (world.get::<Position>(player).map(|p| p.feet), world.get::<InLayer>(player).and_then(|l| world.get::<Layer>(l.0))) else { return false };
     let range = |low: f32, high: f32| (low.floor() as i32)..=(high.floor() as i32);
     let [x, y, z] = feet;
     range(x - HALF_WIDTH, x + HALF_WIDTH).any(|cx| {
-        range(z - HALF_WIDTH, z + HALF_WIDTH).any(|cz| range(y, y + HEIGHT - 0.01).any(|cy| level.world.in_height(cy) && level.world.registry().get(level.world.block(cx, cy, cz)).is_some_and(|state| state.name == PORTAL)))
+        range(z - HALF_WIDTH, z + HALF_WIDTH).any(|cz| range(y, y + HEIGHT - 0.01).any(|cy| level.world.in_height(cy) && level.world.registry().get(level.world.block(cx, cy, cz)).is_some_and(|state| state.name == portal)))
     })
 }
 
 /// Counts each player's time in portals and starts the trips that are due.
 pub(crate) fn tick(world: &mut World) {
-    let mut due = Vec::new();
+    let (mut due, mut ends) = (Vec::new(), Vec::new());
     for player in in_world(world) {
         let wait = match world.get::<Mode>(player).map(|mode| mode.0) {
             Some(GameMode::Creative) => CREATIVE_WAIT,
@@ -60,7 +64,11 @@ pub(crate) fn tick(world: &mut World) {
             // TODO: BDS keeps a spectator's last wait; whether it is ever inside was not read.
             _ => continue,
         };
-        let (inside, arriving) = (is_inside(world, player), world.get::<Arriving>(player).is_some());
+        let (inside, arriving) = (is_inside(world, player, PORTAL), world.get::<Arriving>(player).is_some());
+        if !arriving && in_dimension(world, player) != Some(END) && is_inside(world, player, END_PORTAL) {
+            ends.push(player);
+            continue;
+        }
         if world.get::<PortalTime>(player).is_none() {
             world.entity_mut(player).insert(PortalTime::default());
         }
@@ -80,6 +88,13 @@ pub(crate) fn tick(world: &mut World) {
         time.cooldown = time.cooldown.saturating_sub(1);
     }
     due.into_iter().for_each(|player| depart(world, player));
+    ends.into_iter().for_each(|player| end::depart(world, player));
+    let settled: Vec<Entity> = in_world(world).into_iter().filter(|player| world.get::<Arriving>(*player).is_none()).collect();
+    gateway::tick(world, &settled);
+}
+
+fn in_dimension(world: &World, player: Entity) -> Option<i32> {
+    world.get::<InLayer>(player).and_then(|in_layer| world.get::<Layer>(in_layer.0)).map(|level| level.world.dimension())
 }
 
 /// x and z scaled to the other dimension, toward zero (BDS `translatePosAcrossDimension`).

@@ -10,6 +10,7 @@ mod buckets;
 mod composter;
 mod daylight;
 mod doors;
+pub(crate) mod end_portal;
 mod entities;
 mod facing;
 mod fire;

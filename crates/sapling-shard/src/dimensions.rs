@@ -42,6 +42,9 @@ pub(crate) struct Arriving {
     /// Through a portal: where it is put is settled once the columns there are loaded
     /// (portals/arrive.rs), and the client is put there, not corrected, after it says it arrived.
     pub trip: Option<Trip>,
+    /// Through an end portal: put on the End's platform once the columns there are loaded
+    /// (portals/end.rs).
+    pub to_platform: bool,
 }
 
 /// A trip through a portal on its way: where the traveller stood (its eyes, as BDS keeps a
@@ -101,31 +104,61 @@ pub(crate) fn crosses(world: &World, player: Entity, layer: Entity) -> bool {
 /// feet at `feet`, as BDS moves one: what it saw goes, then ChangeDimension with a new loading
 /// screen; its columns follow, and its inputs are not taken until it says it arrived.
 pub(crate) fn change(world: &mut World, player: Entity, layer: Entity, feet: [f32; 3]) {
-    containers::close(world, player);
-    let Some(dimension) = world.get::<Layer>(layer).map(|level| level.world.dimension()) else { return };
-    let Some(mut in_layer) = world.get_mut::<InLayer>(player) else { return };
-    in_layer.0 = layer;
-    visibility::forget_seen(world, player);
     let screen = world.get_mut::<ClientDimension>(player).map(|mut client| {
-        client.dimension = dimension;
         client.next_screen += 1;
         client.next_screen - 1
     });
+    if !switch(world, player, layer, feet, feet, screen) {
+        return;
+    }
+    movement::hold(world, player);
+    world.entity_mut(player).insert(Arriving { told_ready: false, trip: None, to_platform: false });
+    sleep::tell_sleepers(world, home(world, layer));
+}
+
+/// Where BDS's ChangeDimension names a respawn place it has not found yet.
+const UNFOUND: [f32; 3] = [0.0, 32767.0, 0.0];
+
+/// Moves a dead player of another dimension to its overworld `home` to rise there, as BDS does
+/// (research/captures/bds-end-death-none.txt): ChangeDimension to [`UNFOUND`] with no loading
+/// screen, the sleepers' count, and at once the word that it is there. Its feet go to `feet`.
+pub(crate) fn respawn_home(world: &mut World, player: Entity, home: Entity, feet: [f32; 3]) {
+    if !switch(world, player, home, feet, UNFOUND, None) {
+        return;
+    }
+    world.entity_mut(player).remove::<Arriving>();
+    movement::release(world, player);
+    sleep::tell_sleepers(world, home);
+    let id = world.get::<crate::components::NetId>(player).map_or(0, |id| id.0);
+    if let Some(mut out) = world.get_mut::<Outgoing>(player) {
+        out.push(&ready(id));
+    }
+}
+
+/// The part of a dimension change both kinds share: the player is in `layer` with its feet at
+/// `feet`, what it saw goes and it is sent ChangeDimension naming `told`.
+fn switch(world: &mut World, player: Entity, layer: Entity, feet: [f32; 3], told: [f32; 3], screen: Option<u32>) -> bool {
+    containers::close(world, player);
+    let Some(dimension) = world.get::<Layer>(layer).map(|level| level.world.dimension()) else { return false };
+    let Some(mut in_layer) = world.get_mut::<InLayer>(player) else { return false };
+    in_layer.0 = layer;
+    visibility::forget_seen(world, player);
+    if let Some(mut client) = world.get_mut::<ClientDimension>(player) {
+        client.dimension = dimension;
+    }
     if let Ok((mut position, mut view, mut cache, mut backlog, mut out)) = world.query::<(&mut Position, &mut View, &mut blobs::BlobCache, &mut chunks::SectionBacklog, &mut Outgoing)>().get_mut(world, player) {
         // The client drops every column and entity of the old dimension by itself.
         view.leave(sapling_world::ChunkPos::of_block(feet[0].floor() as i32, feet[2].floor() as i32));
         cache.release();
         backlog.clear();
         (position.feet, position.on_ground) = (feet, true);
-        out.push(&ChangeDimension { dimension, position: Vec3f { x: feet[0], y: feet[1], z: feet[2] }, respawn: false, loading_screen_id: screen });
+        out.push(&ChangeDimension { dimension, position: Vec3f { x: told[0], y: told[1], z: told[2] }, respawn: false, loading_screen_id: screen });
     }
-    movement::hold(world, player);
-    world.entity_mut(player).insert(Arriving { told_ready: false, trip: None });
     // The dimension is kept with the items (inventory/store.rs).
     if let Some(mut inventory) = world.get_mut::<crate::inventory::Inventory>(player) {
         inventory.unsaved = true;
     }
-    sleep::tell_sleepers(world, home(world, layer));
+    true
 }
 
 /// [`change`] with the handlers told of the move (`on_world_change`).
@@ -169,7 +202,7 @@ pub(crate) fn acknowledge(world: &mut World, actions: &[(Entity, PlayerAction)])
         let Some(feet) = world.get::<Position>(player).map(|position| position.feet) else { continue };
         movement::release(world, player);
         // A portal's traveller was put in place when it was told it was ready.
-        if arriving.trip.is_none() {
+        if arriving.trip.is_none() && !arriving.to_platform {
             movement::correct(world, player, feet);
         }
     }

@@ -66,7 +66,7 @@ pub(crate) fn send_chunks(settings: Res<Settings>, mut layers: Query<&mut Layer>
             out.push(&PlayStatus { status: PlayStatusStatus::PlayerSpawn });
             *stage = Stage::Loading;
         }
-        if let Some(arriving) = arriving.as_mut().filter(|arriving| !arriving.told_ready && arriving.trip.is_none()) {
+        if let Some(arriving) = arriving.as_mut().filter(|arriving| !arriving.told_ready && arriving.trip.is_none() && !arriving.to_platform) {
             out.push(&dimensions::ready(id.0));
             arriving.told_ready = true;
         }

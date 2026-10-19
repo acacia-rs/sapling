@@ -1,0 +1,903 @@
+## gamemode creative at 0
+     94 actor   .. MovePlayer[normal] x1
+     94 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"gameMode.changed\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.creative\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+     94 actor   Event Event { runtime_id: 8589934589, event_type: CommandExecuted, use_player_id: 1, event_data: b"\x08\x02\0\x08gamemode\0" }
+     95 actor   CommandOutput CommandOutput { origin: CommandOrigin { type: "player", uuid: Uuid([178, 78, 95, 191, 183, 81, 204, 191, 89, 109, 186, 57, 144, 46, 123, 145]), request_id: "", player_entity_id: 0 }, output_type: "alloutput", success_count: 1, output: [CommandOutputOutputItem { message_id: "commands.gamemode.success.self", success: true, parameters: ["%createWorldScreen.gameMode.creative"] }], has_data: false, data: None }
+     95 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"PortalActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamemode.success.self\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.g
+   1200 actor   .. MovePlayer[normal] x23, MoveEntityDelta x19, CurrentStructureFeature x1, SetEntityData x2
+## gamerule domobspawning false at 1200
+   1211 actor   .. MovePlayer[normal] x1
+   1211 actor   GameRulesChanged GameRulesChanged { rules: [GameRuleI32 { name: "doMobSpawning", editable: true, type: Bool, value: Bool(false) }] }
+   1211 actor   Event Event { runtime_id: 8589934589, event_type: CommandExecuted, use_player_id: 1, event_data: b"\x08\x02\0\x08gamerule\0" }
+   1211 actor   CommandOutput CommandOutput { origin: CommandOrigin { type: "player", uuid: Uuid([207, 69, 80, 115, 128, 210, 103, 2, 122, 138, 144, 31, 31, 194, 192, 152]), request_id: "", player_entity_id: 0 }, output_type: "alloutput", success_count: 1, output: [CommandOutputOutputItem { message_id: "commands.gamerule.success", success: true, parameters: ["domobspawning", "false"] }], has_data: false, data: None }
+   1211 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"PortalActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"domobspawning\"},{\"text\
+   2377 actor   .. MovePlayer[normal] x23, MoveEntityDelta x16, SetEntityData x1
+   2377 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967293 }
+   2378 watcher RemoveEntity RemoveEntity { entity_id_self: -4294967293 }
+   2401 actor   .. MoveEntityDelta x1
+## tp @s 0.5 -60 0.5 #2000 at 2401
+   2412 watcher MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 0.5, y: -58.37999, z: 0.5 }, pitch: 0.0, yaw: 0.0, head_yaw: 0.0, mode: Teleport, on_ground: true, ridden_runtime_id: 0, teleport: Some(MovePlayerTeleport { cause: Command, source_entity_type: Unknown(1) }), tick: 102 }
+   2412 actor   MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 0.5, y: -58.37999, z: 0.5 }, pitch: 0.0, yaw: 0.0, head_yaw: 0.0, mode: Teleport, on_ground: true, ridden_runtime_id: 0, teleport: Some(MovePlayerTeleport { cause: Command, source_entity_type: Unknown(1) }), tick: 102 }
+   2412 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.tp.successVictim\",\"with\":{\"rawtext\":[{\"text\":\"0.50, -60.00, 0.50\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   2412 actor   Event Event { runtime_id: 8589934589, event_type: CommandExecuted, use_player_id: 1, event_data: b"\x08\x02\0\x08teleport\0" }
+   2412 actor   CommandOutput CommandOutput { origin: CommandOrigin { type: "player", uuid: Uuid([106, 65, 230, 181, 230, 57, 114, 66, 71, 238, 107, 110, 7, 135, 30, 168]), request_id: "", player_entity_id: 0 }, output_type: "alloutput", success_count: 1, output: [CommandOutputOutputItem { message_id: "commands.tp.success.coordinates", success: true, parameters: ["PortalActor", "0.50", "-60.00", "0.50"] }], has_data: false, data: None }
+   2412 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"PortalActor\"},{\"text\":\": \"},{\"translate\":\"commands.tp.success.coordinates\",\"with\":{\"rawtext\":[{\"text\":\"PortalActor\"},{\"t
+   4402 actor   .. MovePlayer[normal] x40, MoveEntityDelta x33, SetEntityData x2, CurrentStructureFeature x2
+## !where at 4402
+## at Some([0.5, -60.0, 0.5]) dimension 0
+## execute in the_end run tp @s 100.5 49 0.5 #10000 at 4403
+   4414 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967288 }
+   4414 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967290 }
+   4414 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967291 }
+   4414 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967292 }
+   4414 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967294 }
+   4415 actor   ChangeDimension ChangeDimension { dimension: 2, position: Vec3f { x: 100.5, y: 49.0, z: 0.5 }, respawn: false, loading_screen_id: Some(0) }
+   4415 actor   LevelEventGeneric LevelEventGeneric { event_id: 19602, nbt: [Nbt { name: "ableToSleep", value: Int(1) }, Nbt { name: "overworldPlayerCount", value: Int(1) }, Nbt { name: "sleepingPlayerCount", value: Int(0) }] }
+   4415 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.tp.successVictim\",\"with\":{\"rawtext\":[{\"text\":\"100.50, 49.00, 0.50\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   4415 actor   Event Event { runtime_id: 8589934589, event_type: CommandExecuted, use_player_id: 1, event_data: b"\x08\x02\0\x07execute\0" }
+   4415 actor   CommandOutput CommandOutput { origin: CommandOrigin { type: "player", uuid: Uuid([229, 70, 2, 89, 90, 199, 21, 193, 129, 252, 136, 4, 62, 86, 94, 139]), request_id: "", player_entity_id: 0 }, output_type: "alloutput", success_count: 1, output: [CommandOutputOutputItem { message_id: "commands.tp.success.coordinates", success: true, parameters: ["PortalActor", "100.50", "49.00", "0.50"] }], has_data: false, data: None }
+   4415 watcher LevelEventGeneric LevelEventGeneric { event_id: 19602, nbt: [Nbt { name: "ableToSleep", value: Int(1) }, Nbt { name: "overworldPlayerCount", value: Int(1) }, Nbt { name: "sleepingPlayerCount", value: Int(0) }] }
+   4415 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"PortalActor\"},{\"text\":\": \"},{\"translate\":\"commands.tp.success.coordinates\",\"with\":{\"rawtext\":[{\"text\":\"PortalActor\"},{\"t
+   4436 watcher RemoveEntity RemoveEntity { entity_id_self: -4294967295 }
+   4436 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+   4436 watcher PlayerLocation PlayerLocation { entity_unique_id: -4294967295, type: TypeHide, unused: 1, position: None }
+   4436 actor   PlayerLocation PlayerLocation { entity_unique_id: -4294967290, type: TypeHide, unused: 1, position: None }
+   4479 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+   4533 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+   4581 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+   4630 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+   4682 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+   4731 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+   4785 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+   4834 actor   .. LevelChunk[dim 2] x1, Subchunk[dim 2] x1
+   4834 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+   4879 actor   .. LevelChunk[dim 2] x1, Subchunk[dim 2] x1
+   4879 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+   4943 actor   .. LevelChunk[dim 2] x10, ClientCacheMissResponse x1, Subchunk[dim 2] x10
+   4943 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+## column 6 0 dim 2: sub_chunk_count 0 highest Some(4) cached true blobs 1 payload 1 bytes 00
+   4944 actor   .. LevelChunk[dim 2] x10
+   4944 actor   LevelSoundEvent LevelSoundEvent { sound_id: "spawn", position: Vec3f { x: 0.0, y: 129.0, z: -5.6875 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: -4294967287, fire_at_position: None }
+   4944 actor   PlayerAction PlayerAction { runtime_entity_id: 1, action: DimensionChangeAck, position: BlockCoordinates { x: 0, y: 0, z: 0 }, result_position: BlockCoordinates { x: 0, y: 0, z: 0 }, face: 0 }
+   4989 actor   .. Subchunk[dim 2] x10, UpdateBlock minecraft:torch x2
+   4989 actor   UpdateSubchunkBlocks at 0 64 0: 0 64 0 bedrock[infiniburn_bit=1] f3; 0 65 0 bedrock[infiniburn_bit=1] f3; 0 64 1 torch[torch_facing_direction=north] f3; 1 64 0 torch[torch_facing_direction=west] f3 | extra: 
+   4989 actor   UpdateSubchunkBlocks at -16 48 -16: -3 61 -1 end_stone[] f3; -3 62 -1 bedrock[infiniburn_bit=1] f3; -2 61 -2 end_stone[] f3; -2 61 -1 bedrock[infiniburn_bit=1] f3; -2 62 -2 bedrock[infiniburn_bit=1] f3; -1 61 -3 end_stone[] f3; -1 61 -2 bedrock[infiniburn_bit=1] f3; -1 61 -1 bedrock[infiniburn_bit=1] f3; -1 62 -3 bedrock[infiniburn_bit=1] f3 | extra: 
+   4989 actor   UpdateSubchunkBlocks at 0 48 0: 0 61 0 bedrock[infiniburn_bit=1] f3; 0 61 1 bedrock[infiniburn_bit=1] f3; 0 61 2 bedrock[infiniburn_bit=1] f3; 0 62 3 bedrock[infiniburn_bit=1] f3; 1 61 0 bedrock[infiniburn_bit=1] f3; 1 61 1 bedrock[infiniburn_bit=1] f3; 1 61 2 bedrock[infiniburn_bit=1] f3; 1 62 3 bedrock[infiniburn_bit=1] f3; 2 61 0 bedrock[infiniburn_bit=1] f3; 2 61 1 bedrock[infiniburn_bit=1] f3; 2 62 2 bedrock[infiniburn_bit=1] f3; 3 62 0 bedrock[infiniburn_bit=1] f3; 3 62 1 bedrock[infiniburn_bit=1] f3; 0 62 0 bedrock[infiniburn_bit=1] f3; 0 63 0 bedrock[infiniburn_bit=1] f3 | extra: 
+   4989 actor   UpdateSubchunkBlocks at 0 48 -16: 0 61 -3 end_stone[] f3; 0 61 -2 bedrock[infiniburn_bit=1] f3; 0 61 -1 bedrock[infiniburn_bit=1] f3; 0 62 -3 bedrock[infiniburn_bit=1] f3; 1 61 -3 end_stone[] f3; 1 61 -2 bedrock[infiniburn_bit=1] f3; 1 61 -1 bedrock[infiniburn_bit=1] f3; 1 62 -3 bedrock[infiniburn_bit=1] f3; 2 61 -1 bedrock[infiniburn_bit=1] f3; 2 62 -2 bedrock[infiniburn_bit=1] f3; 3 62 -1 bedrock[infiniburn_bit=1] f3 | extra: 
+   4989 actor   UpdateSubchunkBlocks at -16 48 0: -3 61 0 end_stone[] f3; -3 61 1 end_stone[] f3; -3 62 0 bedrock[infiniburn_bit=1] f3; -3 62 1 bedrock[infiniburn_bit=1] f3; -2 61 0 bedrock[infiniburn_bit=1] f3; -2 61 1 bedrock[infiniburn_bit=1] f3; -2 62 2 bedrock[infiniburn_bit=1] f3; -1 61 0 bedrock[infiniburn_bit=1] f3; -1 61 1 bedrock[infiniburn_bit=1] f3; -1 61 2 bedrock[infiniburn_bit=1] f3; -1 62 3 bedrock[infiniburn_bit=1] f3 | extra: 
+   4989 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+   4989 actor   .. LevelChunk[dim 2] x10
+   4989 actor   LocatorBar 
+   5027 actor   .. Subchunk[dim 2] x10, ClientCacheMissResponse x1
+   5027 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+   5084 actor   .. LevelChunk[dim 2] x10, Subchunk[dim 2] x10, ClientCacheMissResponse x1, SyncWorldClocks x1
+   5084 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+   5132 actor   .. LevelChunk[dim 2] x10, Subchunk[dim 2] x10
+   5132 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+   5179 actor   .. LevelChunk[dim 2] x10, ClientCacheMissResponse x1, Subchunk[dim 2] x10
+   5179 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+   5235 actor   .. LevelChunk[dim 2] x10, Subchunk[dim 2] x10
+   5235 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+   5236 actor   .. LevelChunk[dim 2] x10
+   5236 actor   LevelSoundEvent LevelSoundEvent { sound_id: "flap", position: Vec3f { x: -0.1772728, y: 128.95259, z: -0.9742403 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: -4294967287, fire_at_position: None }
+   5284 actor   .. Subchunk[dim 2] x10, ClientCacheMissResponse x1
+   5284 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+   5329 actor   .. LevelChunk[dim 2] x10, Subchunk[dim 2] x10
+   5329 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+   5380 actor   .. LevelChunk[dim 2] x10, Subchunk[dim 2] x10, ClientCacheMissResponse x1
+   5380 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+   5430 actor   .. LevelChunk[dim 2] x10, Subchunk[dim 2] x10
+   5430 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+## column 0 0 dim 2: sub_chunk_count 0 highest Some(5) cached true blobs 1 payload 1 bytes 00
+   5484 actor   .. LevelChunk[dim 2] x10, Subchunk[dim 2] x10, ClientCacheMissResponse x1
+   5484 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+   5536 actor   .. LevelChunk[dim 2] x10, Subchunk[dim 2] x10
+   5536 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+   5586 actor   .. LevelChunk[dim 2] x10, Subchunk[dim 2] x10, ClientCacheMissResponse x1
+   5586 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+   5632 actor   .. LevelChunk[dim 2] x10, Subchunk[dim 2] x10
+   5632 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+   5682 actor   .. LevelChunk[dim 2] x10, Subchunk[dim 2] x10, ClientCacheMissResponse x1
+   5682 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+   5734 actor   .. LevelChunk[dim 2] x10, Subchunk[dim 2] x10
+   5734 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+   5784 actor   .. LevelChunk[dim 2] x10, Subchunk[dim 2] x10, ClientCacheMissResponse x1
+   5784 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+   5833 actor   .. LevelChunk[dim 2] x10, Subchunk[dim 2] x10
+   5833 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+   5881 actor   .. LevelChunk[dim 2] x10, Subchunk[dim 2] x10
+   5881 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+   5935 actor   .. LevelChunk[dim 2] x10, Subchunk[dim 2] x10, ClientCacheMissResponse x1
+   5935 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+   5935 actor   .. LevelChunk[dim 2] x10
+   5935 actor   LevelSoundEvent LevelSoundEvent { sound_id: "flap", position: Vec3f { x: -6.535041, y: 117.597115, z: -4.5239325 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: -4294967287, fire_at_position: None }
+   5981 actor   .. Subchunk[dim 2] x10
+   5981 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+   6034 actor   .. LevelChunk[dim 2] x10, Subchunk[dim 2] x10, ClientCacheMissResponse x1
+   6034 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+   6079 actor   .. LevelChunk[dim 2] x10, Subchunk[dim 2] x10
+   6079 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+   6131 actor   .. LevelChunk[dim 2] x10, Subchunk[dim 2] x10, ClientCacheMissResponse x1
+   6131 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+   6178 actor   .. LevelChunk[dim 2] x5, Subchunk[dim 2] x5, ClientCacheMissResponse x1
+   6178 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+   6230 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+   6278 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+   6330 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+   6385 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+   6436 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+   6481 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+   6530 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+   6584 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+   6630 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+   6680 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+   6680 actor   LevelSoundEvent LevelSoundEvent { sound_id: "flap", position: Vec3f { x: -14.162021, y: 100.404655, z: 2.48425 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: -4294967287, fire_at_position: None }
+   6727 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+   6780 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+   6833 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+   6878 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+   6930 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+   6986 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+   7034 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+   7077 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+   7136 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+   7184 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+   7236 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+   7284 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+   7327 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+   7386 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+   7429 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+   7481 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+   7528 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+   7584 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+   7633 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+   7633 actor   LevelSoundEvent LevelSoundEvent { sound_id: "flap", position: Vec3f { x: -21.775648, y: 85.03043, z: 15.858396 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: -4294967287, fire_at_position: None }
+   7685 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+   7735 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+   7781 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+   7826 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+   7879 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+   7929 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+   7986 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+   8028 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+   8081 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+   8133 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+   8176 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+   8229 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+   8277 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+   8327 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+   8384 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+   8431 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+   8481 actor   .. CurrentStructureFeature x1
+   8481 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+   8528 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+   8583 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+   8627 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+   8686 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+   8731 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+   8784 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+   8828 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+   8887 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+   8887 actor   LevelSoundEvent LevelSoundEvent { sound_id: "flap", position: Vec3f { x: -24.586912, y: 85.41585, z: 33.280525 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: -4294967287, fire_at_position: None }
+   8927 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+   8984 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+   9033 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+   9082 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+   9128 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+   9186 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+   9230 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+   9279 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+   9329 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+   9379 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+   9432 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+   9486 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+   9528 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+   9582 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+   9631 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+   9682 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+   9732 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+   9785 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+   9830 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+   9881 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+   9931 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+   9984 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+   9984 actor   LevelSoundEvent LevelSoundEvent { sound_id: "mad", position: Vec3f { x: -6.2950835, y: 85.14521, z: 26.790867 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: -4294967287, fire_at_position: None }
+  10027 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  10027 actor   LevelSoundEvent LevelSoundEvent { sound_id: "flap", position: Vec3f { x: -9.485559, y: 86.14205, z: 29.93305 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: -4294967287, fire_at_position: None }
+  10082 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  10129 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  10186 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  10235 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  10283 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  10283 actor   BossEvent 
+  10326 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  10385 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  10428 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  10480 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  10527 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  10577 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  10630 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  10678 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  10730 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  10777 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  10833 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  10881 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  10936 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  10981 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  11034 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  11084 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  11134 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  11184 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  11229 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  11277 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  11277 actor   LevelSoundEvent LevelSoundEvent { sound_id: "flap", position: Vec3f { x: 5.7851634, y: 85.36761, z: 15.141383 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: -4294967287, fire_at_position: None }
+  11330 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  11330 actor   BossEvent 
+  11383 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  11432 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  11484 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  11526 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  11581 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  11635 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  11680 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  11727 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  11778 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  11827 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  11882 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  11929 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  11983 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  12030 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  12083 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  12135 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  12178 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  12229 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  12283 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  12332 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  12378 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  12378 actor   BossEvent 
+  12432 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  12432 actor   LevelSoundEvent LevelSoundEvent { sound_id: "flap", position: Vec3f { x: 16.178377, y: 77.08321, z: 0.4729724 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: -4294967287, fire_at_position: None }
+  12484 actor   .. CurrentStructureFeature x1
+  12484 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  12528 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  12577 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  12636 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  12679 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  12731 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  12781 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  12830 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  12878 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  12929 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  12977 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  13037 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  13080 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  13080 actor   LevelSoundEvent LevelSoundEvent { sound_id: "flap", position: Vec3f { x: 9.158491, y: 65.61283, z: -1.0315814 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: -4294967287, fire_at_position: None }
+  13130 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  13182 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  13227 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  13282 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  13336 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  13383 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  13428 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  13428 actor   BossEvent 
+  13478 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  13536 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  13577 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  13633 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  13686 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  13730 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  13786 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  13828 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  13881 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  13932 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  13984 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  14031 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  14081 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  14081 actor   LevelSoundEvent LevelSoundEvent { sound_id: "flap", position: Vec3f { x: 0.20769739, y: 67.941055, z: -0.26093817 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: -4294967287, fire_at_position: None }
+  14133 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  14179 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  14227 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  14286 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  14335 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  14377 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+## !where at 14404
+## at Some([0.5, -544.30927, 0.5]) dimension 2
+## gamemode survival at 14405
+  14416 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"gameMode.changed\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.survival\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  14416 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"PortalActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamemode.success.self\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.g
+  14416 actor   UpdatePlayerGameType 
+  14416 actor   Event Event { runtime_id: 8589934589, event_type: CommandExecuted, use_player_id: 1, event_data: b"\x08\x02\0\x08gamemode\0" }
+  14416 actor   CommandOutput CommandOutput { origin: CommandOrigin { type: "player", uuid: Uuid([51, 71, 243, 242, 107, 11, 18, 46, 34, 140, 166, 30, 122, 140, 119, 129]), request_id: "", player_entity_id: 0 }, output_type: "alloutput", success_count: 1, output: [CommandOutputOutputItem { message_id: "commands.gamemode.success.self", success: true, parameters: ["%createWorldScreen.gameMode.survival"] }], has_data: false, data: None }
+  14433 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  14433 actor   BossEvent 
+  14483 actor   .. SetEntityData x1
+  14483 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  14531 actor   .. SetEntityData x1
+  14531 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  14582 actor   .. SetEntityData x1
+  14582 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  14582 actor   LevelSoundEvent LevelSoundEvent { sound_id: "flap", position: Vec3f { x: 0.20769739, y: 67.941055, z: -0.26093817 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: -4294967287, fire_at_position: None }
+  14634 actor   .. SetEntityData x1
+  14634 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  14678 actor   .. SetEntityData x1
+  14678 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  14732 actor   .. SetEntityData x1
+  14732 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  14786 actor   .. SetEntityData x1
+  14786 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  14830 actor   .. SetEntityData x1
+  14830 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  14882 actor   .. SetEntityData x1
+  14882 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  14928 actor   .. SetEntityData x1
+  14928 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  14978 actor   .. SetEntityData x1
+  14978 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  15030 actor   .. SetEntityData x1
+  15031 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  15080 actor   .. SetEntityData x1
+  15080 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  15080 actor   LevelSoundEvent LevelSoundEvent { sound_id: "flap", position: Vec3f { x: 0.20769739, y: 67.941055, z: -0.26093817 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: -4294967287, fire_at_position: None }
+  15136 actor   .. SetEntityData x1
+  15136 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  15179 actor   .. SetEntityData x1
+  15179 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  15230 actor   .. SetEntityData x1
+  15230 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  15282 actor   .. SetEntityData x1
+  15282 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  15334 actor   .. SetEntityData x1
+  15334 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  15377 actor   .. SetEntityData x1
+  15378 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  15433 actor   .. SetEntityData x1
+  15433 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  15483 actor   .. SetEntityData x1
+  15483 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  15483 actor   BossEvent 
+  15536 actor   .. SetEntityData x1
+  15536 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  15577 actor   .. SetEntityData x1
+  15577 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  15577 actor   LevelSoundEvent LevelSoundEvent { sound_id: "flap", position: Vec3f { x: 0.20769739, y: 67.941055, z: -0.26093817 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: -4294967287, fire_at_position: None }
+  15607 actor   .. SetEntityData x1
+## kill @s #12000 at 15607
+  15621 actor   .. InventoryContent x4
+  15621 actor   PlayerHotbar 
+  15621 watcher Text Text { needs_translation: true, category: Parameters, type: Translation, content: Translation(TextContentTranslation { message: "death.attack.generic", parameters: ["PortalActor"] }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  15621 watcher LevelEventGeneric LevelEventGeneric { event_id: 19602, nbt: [Nbt { name: "ableToSleep", value: Int(1) }, Nbt { name: "overworldPlayerCount", value: Int(1) }, Nbt { name: "sleepingPlayerCount", value: Int(0) }] }
+  15622 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"PortalActor\"},{\"text\":\": \"},{\"translate\":\"commands.kill.successful\",\"with\":{\"rawtext\":[{\"text\":\"PortalActor\"}]}},{\"text\
+  15622 actor   .. InventoryContent x4
+  15622 actor   PlayerHotbar 
+  15622 actor   .. InventoryContent x4
+  15622 actor   PlayerHotbar 
+  15622 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: DeathAnimation, data: 0, fire_at_position: None }
+  15622 actor   .. InventoryContent x4
+  15622 actor   PlayerHotbar 
+  15622 actor   Event Event { runtime_id: 8589934589, event_type: PlayerDeath, use_player_id: 1, event_data: b"\x06\x02\x01\x1a\0" }
+  15622 actor   DeathInfo 
+  15622 actor   Text Text { needs_translation: true, category: Parameters, type: Translation, content: Translation(TextContentTranslation { message: "death.attack.generic", parameters: ["PortalActor"] }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  15622 actor   LevelEventGeneric LevelEventGeneric { event_id: 19602, nbt: [Nbt { name: "ableToSleep", value: Int(1) }, Nbt { name: "overworldPlayerCount", value: Int(1) }, Nbt { name: "sleepingPlayerCount", value: Int(0) }] }
+  15622 actor   Event Event { runtime_id: 8589934589, event_type: CommandExecuted, use_player_id: 1, event_data: b"\x08\x02\0\x04kill\0" }
+  15622 actor   CommandOutput CommandOutput { origin: CommandOrigin { type: "player", uuid: Uuid([114, 79, 63, 244, 122, 92, 67, 187, 215, 237, 66, 164, 230, 36, 80, 148]), request_id: "", player_entity_id: 0 }, output_type: "alloutput", success_count: 1, output: [CommandOutputOutputItem { message_id: "commands.kill.successful", success: true, parameters: ["PortalActor"] }], has_data: false, data: None }
+  15636 actor   Respawn Respawn { position: Vec3f { x: 100.5, y: 50.62001, z: 0.5 }, state: 0, runtime_entity_id: 0 }
+  15636 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  15682 actor   .. SetEntityData x1, UpdateAttributes x1
+  15682 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  15735 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  15785 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  15828 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  15886 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  15928 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  15977 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  16032 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  16077 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  16077 actor   LevelSoundEvent LevelSoundEvent { sound_id: "flap", position: Vec3f { x: 0.20769739, y: 67.941055, z: -0.26093817 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: -4294967287, fire_at_position: None }
+  16134 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  16186 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  16234 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  16282 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  16327 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  16384 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  16428 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  16484 actor   .. CurrentStructureFeature x1
+  16484 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  16484 actor   BossEvent 
+  16533 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  16584 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  16584 actor   LevelSoundEvent LevelSoundEvent { sound_id: "flap", position: Vec3f { x: 0.20769739, y: 67.941055, z: -0.26093817 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: -4294967287, fire_at_position: None }
+  16632 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  16684 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  16684 actor   LevelSoundEvent LevelSoundEvent { sound_id: "disappeared", position: Vec3f { x: 100.5, y: 49.1, z: 0.5 }, extra_data: -1, entity_type: "minecraft:player", is_baby_mob: false, is_global: false, entity_unique_id: -4294967295, fire_at_position: None }
+  16727 actor   .. SetEntityData x1
+  16727 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  16785 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  16836 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  16877 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  16934 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  16986 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  17033 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  17081 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  17081 actor   LevelSoundEvent LevelSoundEvent { sound_id: "flap", position: Vec3f { x: 0.20769739, y: 67.941055, z: -0.26093817 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: -4294967287, fire_at_position: None }
+  17131 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  17181 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  17233 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  17278 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  17328 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  17387 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  17430 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  17481 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  17533 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  17533 actor   BossEvent 
+  17583 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  17583 actor   LevelSoundEvent LevelSoundEvent { sound_id: "flap", position: Vec3f { x: 0.20769739, y: 67.941055, z: -0.26093817 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: -4294967287, fire_at_position: None }
+  17634 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  17676 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  17734 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  17788 actor   ChangeDimension ChangeDimension { dimension: 0, position: Vec3f { x: 0.0, y: 32767.0, z: 0.0 }, respawn: false, loading_screen_id: None }
+  17788 actor   LevelEventGeneric LevelEventGeneric { event_id: 19602, nbt: [Nbt { name: "ableToSleep", value: Int(1) }, Nbt { name: "overworldPlayerCount", value: Int(1) }, Nbt { name: "sleepingPlayerCount", value: Int(0) }] }
+  17788 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 50, z: 0 }, radius: 128, saved_chunks: [] }
+  17788 watcher LevelEventGeneric LevelEventGeneric { event_id: 19602, nbt: [Nbt { name: "ableToSleep", value: Int(1) }, Nbt { name: "overworldPlayerCount", value: Int(1) }, Nbt { name: "sleepingPlayerCount", value: Int(0) }] }
+  17788 watcher AddPlayer AddPlayer { uuid: Uuid([39, 49, 253, 23, 220, 15, 17, 71, 13, 88, 89, 226, 185, 108, 212, 134]), username: "PortalActor", runtime_id: 1, platform_chat_id: "", position: Vec3f { x: 0.0, y: 32767.002, z: 0.0 }, velocity: Vec3f { x: 0.0, y: 0.0, z: 0.0 }, pitch: 0.0, yaw: 0.0, head_yaw: 0.0, held_item:
+  17789 actor   .. LevelChunk[dim 0] x10
+  17789 actor   AddEntity 
+  17789 actor   AddPlayer AddPlayer { uuid: Uuid([26, 59, 20, 183, 122, 224, 70, 82, 17, 218, 72, 68, 237, 100, 245, 186]), username: "PortalWatcher", runtime_id: 6, platform_chat_id: "", position: Vec3f { x: 0.5, y: -60.0, z: 0.5 }, velocity: Vec3f { x: 0.0, y: -0.0784, z: 0.0 }, pitch: 0.0, yaw: 0.0, head_yaw: 0.0, held_item: ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, gamemode: Fallback, metadata: [MetadataDictionaryItem { key: Flags, type: Long, legacy_type: 7, value: Flags(MetadataFlags1(844459290394624)) }, MetadataDictionaryItem { key: Health, type: Int, legacy_type: 2, value: Default(Int(1)) }, MetadataDictionaryItem { key: Variant, type: Int, legacy_type: 2, value: Default(Int(0)) }, MetadataDictionaryItem { key: Color, type: Byte, legacy_type: 0, value: Default(Byte(0)) }, MetadataDictionaryItem { key: Nametag, type: St
+  17789 actor   AddEntity 
+  17789 actor   AddEntity 
+  17789 actor   AddEntity 
+  17789 actor   PlayerLocation PlayerLocation { entity_unique_id: -4294967290, type: Coordinates, unused: 0, position: Some(Vec3f { x: 0.5, y: -58.37999, z: 0.5 }) }
+  17789 actor   .. MovePlayer[normal] x1, MoveEntityDelta x2
+  17789 actor   PlayerAction PlayerAction { runtime_entity_id: 1, action: DimensionChangeAck, position: BlockCoordinates { x: 0, y: 0, z: 0 }, result_position: BlockCoordinates { x: 0, y: 0, z: 0 }, face: 0 }
+  17835 actor   .. Subchunk[dim 0] x10, MovePlayer[normal] x1
+  17835 actor   Respawn Respawn { position: Vec3f { x: 0.0, y: 32767.0, z: 0.0 }, state: 0, runtime_entity_id: 0 }
+  17835 actor   Respawn Respawn { position: Vec3f { x: 2.5, y: -58.37999, z: -3.5 }, state: 1, runtime_entity_id: 0 }
+  17835 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 32768, z: 0 }, radius: 128, saved_chunks: [] }
+  17835 actor   .. LevelChunk[dim 0] x10
+  17835 actor   LocatorBar 
+  17837 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: Respawn, data: 0, fire_at_position: None }
+  17837 actor   SetHealth SetHealth { health: 20 }
+  17837 actor   CameraAimAssist 
+  17881 actor   .. Subchunk[dim 0] x10, SyncWorldClocks x1
+  17881 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 32768, z: 0 }, radius: 128, saved_chunks: [] }
+  17882 actor   .. LevelChunk[dim 0] x10
+  17882 actor   LevelSoundEvent LevelSoundEvent { sound_id: "reappeared", position: Vec3f { x: 0.0, y: 32767.102, z: 0.0 }, extra_data: -1, entity_type: "minecraft:player", is_baby_mob: false, is_global: false, entity_unique_id: -4294967295, fire_at_position: None }
+  17882 actor   .. SetEntityData x1
+  17882 actor   LocatorBar 
+  17931 actor   .. UpdateAttributes x1, SetEntityData x1, ClientCacheMissResponse x1, Subchunk[dim 0] x10
+  17931 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  17984 actor   .. LevelChunk[dim 0] x10, MovePlayer[normal] x2, Subchunk[dim 0] x10
+  17984 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  18034 actor   .. LevelChunk[dim 0] x10, MoveEntityDelta x1, MovePlayer[normal] x1, Subchunk[dim 0] x10, ClientCacheMissResponse x1
+  18034 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  18083 actor   .. LevelChunk[dim 0] x10, MoveEntityDelta x1, Subchunk[dim 0] x10, MovePlayer[normal] x2
+  18083 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  18134 actor   .. LevelChunk[dim 0] x10, Subchunk[dim 0] x10, ClientCacheMissResponse x1
+  18134 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  18183 actor   .. LevelChunk[dim 0] x10, MovePlayer[normal] x1, Subchunk[dim 0] x10
+  18183 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  18226 actor   .. LevelChunk[dim 0] x10, MovePlayer[normal] x1, MoveEntityDelta x1, Subchunk[dim 0] x10
+  18226 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  18282 actor   .. LevelChunk[dim 0] x10, ClientCacheMissResponse x1, Subchunk[dim 0] x10, MovePlayer[normal] x1
+  18282 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  18333 actor   .. LevelChunk[dim 0] x10, MoveEntityDelta x1, ClientCacheMissResponse x1, Subchunk[dim 0] x10, MovePlayer[normal] x2
+  18333 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  18377 actor   .. LevelChunk[dim 0] x10, Subchunk[dim 0] x10
+  18377 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  18434 actor   .. LevelChunk[dim 0] x10, MoveEntityDelta x1, Subchunk[dim 0] x10, MovePlayer[normal] x1, ClientCacheMissResponse x1
+  18434 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  18481 actor   .. LevelChunk[dim 0] x10, Subchunk[dim 0] x10, MovePlayer[normal] x1
+  18481 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  18533 actor   .. LevelChunk[dim 0] x10, Subchunk[dim 0] x10, MovePlayer[normal] x1
+  18533 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  18578 actor   .. LevelChunk[dim 0] x10, MoveEntityDelta x1, ClientCacheMissResponse x1, Subchunk[dim 0] x10, MovePlayer[normal] x1
+  18578 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  18627 actor   .. LevelChunk[dim 0] x10, MovePlayer[normal] x1, MoveEntityDelta x1, Subchunk[dim 0] x10
+  18627 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  18683 actor   .. LevelChunk[dim 0] x10, Subchunk[dim 0] x10, MovePlayer[normal] x2, ClientCacheMissResponse x1
+  18683 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  18733 actor   .. LevelChunk[dim 0] x10, Subchunk[dim 0] x10
+  18733 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  18784 actor   .. LevelChunk[dim 0] x10, Subchunk[dim 0] x10, MovePlayer[normal] x1, ClientCacheMissResponse x1
+  18784 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  18828 actor   .. LevelChunk[dim 0] x10, MoveEntityDelta x2, Subchunk[dim 0] x10, MovePlayer[normal] x1
+  18828 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  18884 actor   .. LevelChunk[dim 0] x10, MovePlayer[normal] x1, MoveEntityDelta x1, Subchunk[dim 0] x10
+  18884 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  18932 actor   .. LevelChunk[dim 0] x10, Subchunk[dim 0] x10, ClientCacheMissResponse x1, MovePlayer[normal] x1
+  18932 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  18981 actor   .. LevelChunk[dim 0] x10, MovePlayer[normal] x1, Subchunk[dim 0] x10
+  18981 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  19035 actor   .. LevelChunk[dim 0] x10, MovePlayer[normal] x1, MoveEntityDelta x2, Subchunk[dim 0] x10
+  19035 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  19084 actor   .. LevelChunk[dim 0] x3, MoveEntityDelta x1, Subchunk[dim 0] x3, MovePlayer[normal] x1, ClientCacheMissResponse x1
+  19084 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  19128 actor   .. MovePlayer[normal] x1
+  19128 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  19181 actor   .. MoveEntityDelta x1, MovePlayer[normal] x1
+  19181 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  19234 actor   .. SetEntityData x1, MoveEntityDelta x1, MovePlayer[normal] x1
+  19234 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  19283 actor   .. MovePlayer[normal] x1
+  19283 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  19331 actor   .. MoveEntityDelta x2, MovePlayer[normal] x1
+  19331 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  19384 actor   .. MovePlayer[normal] x1
+  19384 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  19434 actor   .. MoveEntityDelta x1, MovePlayer[normal] x1
+  19434 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  19484 actor   .. MoveEntityDelta x1, MovePlayer[normal] x1
+  19484 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  19528 actor   .. MovePlayer[normal] x1
+  19528 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  19584 actor   .. MoveEntityDelta x1, MovePlayer[normal] x1
+  19584 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  19633 actor   .. MoveEntityDelta x2, MovePlayer[normal] x1
+  19633 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  19686 actor   .. MovePlayer[normal] x1
+  19686 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  19727 actor   .. MovePlayer[normal] x1
+  19727 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  19784 actor   .. MoveEntityDelta x1, MovePlayer[normal] x1
+  19784 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  19826 actor   .. MoveEntityDelta x2, MovePlayer[normal] x1
+  19826 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  19885 actor   .. MovePlayer[normal] x1
+  19885 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  19930 actor   .. MoveEntityDelta x1
+  19930 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  19984 actor   .. MovePlayer[normal] x2
+  19984 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  20034 actor   .. MoveEntityDelta x1, MovePlayer[normal] x1
+  20034 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  20084 watcher RemoveEntity RemoveEntity { entity_id_self: -4294967288 }
+  20084 actor   .. MoveEntityDelta x1, MovePlayer[normal] x1
+  20084 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  20084 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967288 }
+  20133 actor   .. MovePlayer[normal] x1
+  20133 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  20183 actor   .. MovePlayer[normal] x1
+  20183 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  20234 actor   .. MoveEntityDelta x2, MovePlayer[normal] x1
+  20234 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  20285 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  20329 actor   .. CurrentStructureFeature x1, MovePlayer[normal] x1
+  20329 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  20383 actor   .. MovePlayer[normal] x1, MoveEntityDelta x2
+  20383 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  20434 actor   .. MovePlayer[normal] x2, MoveEntityDelta x1
+  20434 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  20476 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  20534 actor   .. CurrentStructureFeature x1, MoveEntityDelta x1, MovePlayer[normal] x2
+  20534 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  20579 actor   .. MoveEntityDelta x1, MovePlayer[normal] x1
+  20579 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  20633 actor   .. MoveEntityDelta x1
+  20633 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  20680 actor   .. MoveEntityDelta x1, MovePlayer[normal] x1
+  20680 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  20735 actor   .. MovePlayer[normal] x2
+  20735 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  20784 actor   .. MoveEntityDelta x1, MovePlayer[normal] x1
+  20784 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  20831 actor   .. SetEntityData x1, MoveEntityDelta x2
+  20831 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  20877 actor   .. MovePlayer[normal] x1
+  20877 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  20934 actor   .. MovePlayer[normal] x2
+  20934 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  20984 actor   .. MoveEntityDelta x2
+  20984 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  21027 actor   .. MoveEntityDelta x1, MovePlayer[normal] x1
+  21027 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  21083 actor   .. MoveEntityDelta x1, MovePlayer[normal] x1
+  21083 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  21129 actor   .. MovePlayer[normal] x1
+  21129 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  21186 actor   .. MovePlayer[normal] x1, MoveEntityDelta x2
+  21186 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  21231 actor   .. MoveEntityDelta x1, MovePlayer[normal] x1
+  21231 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  21284 actor   .. MoveEntityDelta x1, MovePlayer[normal] x1
+  21284 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  21333 actor   .. MovePlayer[normal] x2
+  21333 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  21384 actor   .. MoveEntityDelta x2
+  21384 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  21434 actor   .. MoveEntityDelta x1, MovePlayer[normal] x1
+  21434 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  21483 actor   .. MoveEntityDelta x1, MovePlayer[normal] x2
+  21483 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  21530 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  21582 actor   .. MoveEntityDelta x2, MovePlayer[normal] x1
+  21582 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  21634 actor   .. MoveEntityDelta x1, MovePlayer[normal] x1
+  21634 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  21682 actor   .. MoveEntityDelta x1, MovePlayer[normal] x1
+  21682 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  21731 actor   .. MovePlayer[normal] x1
+  21731 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  21776 actor   .. SetEntityData x1, MoveEntityDelta x2, MovePlayer[normal] x1
+  21776 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  21834 actor   .. MoveEntityDelta x1, MovePlayer[normal] x1
+  21834 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  21884 actor   .. MoveEntityDelta x1, MovePlayer[normal] x1
+  21884 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  21927 actor   .. MovePlayer[normal] x1
+  21927 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  21984 actor   .. MoveEntityDelta x2, MovePlayer[normal] x1
+  21984 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  22035 actor   .. MoveEntityDelta x1, MovePlayer[normal] x1
+  22035 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  22085 actor   .. MoveEntityDelta x1, MovePlayer[normal] x1
+  22085 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  22128 actor   .. MovePlayer[normal] x1
+  22128 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  22184 actor   .. MoveEntityDelta x2, MovePlayer[normal] x1
+  22184 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  22234 actor   .. MovePlayer[normal] x1
+  22234 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  22283 actor   .. MoveEntityDelta x1, MovePlayer[normal] x1
+  22283 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  22334 actor   .. MovePlayer[normal] x1
+  22334 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  22377 actor   .. MoveEntityDelta x2, MovePlayer[normal] x1
+  22377 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  22428 actor   .. MovePlayer[normal] x1
+  22428 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  22484 actor   .. MoveEntityDelta x1, MovePlayer[normal] x1
+  22484 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  22534 actor   .. MovePlayer[normal] x1
+  22534 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  22577 actor   .. MoveEntityDelta x2, MovePlayer[normal] x1
+  22577 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  22634 actor   .. MovePlayer[normal] x1
+  22634 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  22682 actor   .. MoveEntityDelta x1
+  22682 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  22734 actor   .. MovePlayer[normal] x2
+  22734 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  22784 actor   .. MoveEntityDelta x2, MovePlayer[normal] x1
+  22784 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  22834 actor   .. MovePlayer[normal] x1
+  22834 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  22877 actor   .. MoveEntityDelta x1
+  22877 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  22934 actor   .. MovePlayer[normal] x2
+  22934 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  22983 actor   .. MoveEntityDelta x2, MovePlayer[normal] x1
+  22983 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  23029 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  23084 actor   .. MoveEntityDelta x1, MovePlayer[normal] x2
+  23084 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  23132 actor   .. MovePlayer[normal] x1
+  23132 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  23177 actor   .. MoveEntityDelta x2
+  23177 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  23235 actor   .. MovePlayer[normal] x2
+  23235 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  23281 actor   .. MoveEntityDelta x1
+  23281 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  23333 actor   .. MoveEntityDelta x1, MovePlayer[normal] x2
+  23333 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  23379 actor   .. MoveEntityDelta x2, MovePlayer[normal] x1
+  23379 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  23430 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  23483 actor   .. MoveEntityDelta x1, MovePlayer[normal] x2
+  23483 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  23527 actor   .. MoveEntityDelta x1
+  23527 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  23585 actor   .. MovePlayer[normal] x1, MoveEntityDelta x2
+  23585 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  23634 actor   .. SetEntityData x1, MovePlayer[normal] x1
+  23634 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  23684 actor   .. MovePlayer[normal] x1
+  23684 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  23732 actor   .. MoveEntityDelta x1, MovePlayer[normal] x1
+  23732 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  23776 actor   .. SetEntityData x1, MoveEntityDelta x2, MovePlayer[normal] x1
+  23776 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  23827 actor   .. MovePlayer[normal] x1
+  23827 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  23883 actor   .. SetEntityData x1, MovePlayer[normal] x2
+  23883 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  23934 actor   .. MoveEntityDelta x1, MovePlayer[normal] x1
+  23934 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  23977 actor   .. MoveEntityDelta x1
+  23977 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  24033 actor   .. MovePlayer[normal] x1
+  24033 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  24084 actor   .. MoveEntityDelta x1, MovePlayer[normal] x1
+  24084 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  24134 actor   .. MoveEntityDelta x1, MovePlayer[normal] x1
+  24134 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  24178 actor   .. MoveEntityDelta x1, MovePlayer[normal] x1
+  24178 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  24233 actor   .. MoveEntityDelta x1, MovePlayer[normal] x1
+  24233 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  24281 actor   .. MovePlayer[normal] x1
+  24281 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  24327 actor   .. CurrentStructureFeature x1, MoveEntityDelta x1, MovePlayer[normal] x1
+  24327 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  24384 actor   .. MovePlayer[normal] x1
+  24384 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  24434 actor   .. MoveEntityDelta x1, MovePlayer[normal] x1
+  24434 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  24483 actor   .. MovePlayer[normal] x1
+  24483 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  24534 actor   .. CurrentStructureFeature x1, MoveEntityDelta x1, MovePlayer[normal] x1
+  24534 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  24584 actor   .. MovePlayer[normal] x1
+  24584 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  24629 actor   .. MoveEntityDelta x1, MovePlayer[normal] x1
+  24629 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  24684 actor   .. MovePlayer[normal] x1
+  24684 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  24730 actor   .. MoveEntityDelta x2, MovePlayer[normal] x1
+  24730 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  24784 actor   .. MovePlayer[normal] x1
+  24784 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  24833 actor   .. MoveEntityDelta x2, MovePlayer[normal] x1
+  24833 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  24877 actor   .. SetEntityData x1, MovePlayer[normal] x1
+  24877 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  24934 actor   .. MoveEntityDelta x1, MovePlayer[normal] x1
+  24934 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  24984 actor   .. MovePlayer[normal] x1
+  24984 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  25033 actor   .. MoveEntityDelta x1, MovePlayer[normal] x1
+  25033 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  25084 actor   .. MovePlayer[normal] x1
+  25084 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  25134 actor   .. MoveEntityDelta x1, MovePlayer[normal] x1
+  25134 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  25184 actor   .. MovePlayer[normal] x1
+  25184 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  25233 actor   .. MoveEntityDelta x2, MovePlayer[normal] x1
+  25233 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  25278 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  25334 actor   .. MovePlayer[normal] x2, MoveEntityDelta x2
+  25334 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  25383 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  25433 actor   .. MoveEntityDelta x2, MovePlayer[normal] x2
+  25433 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  25485 actor   .. MovePlayer[normal] x1
+  25485 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  25534 actor   .. MoveEntityDelta x2, MovePlayer[normal] x1
+  25534 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  25578 actor   .. SetEntityData x1, MovePlayer[normal] x1
+  25578 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  25627 actor   .. MoveEntityDelta x2, MovePlayer[normal] x1
+  25627 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  25681 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  25730 actor   .. MovePlayer[normal] x1, MoveEntityDelta x2
+  25730 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  25777 actor   .. MovePlayer[normal] x1
+  25777 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  25835 actor   .. MoveEntityDelta x2, MovePlayer[normal] x1
+  25835 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  25883 actor   .. MovePlayer[normal] x1
+  25884 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  25926 actor   .. MovePlayer[normal] x1, MoveEntityDelta x2
+  25926 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  25978 actor   .. MovePlayer[normal] x2
+  25978 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  26026 actor   .. MoveEntityDelta x2
+  26026 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  26076 actor   .. MovePlayer[normal] x1
+  26076 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  26129 actor   .. MoveEntityDelta x2, MovePlayer[normal] x1
+  26129 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  26176 actor   .. MovePlayer[normal] x1
+  26176 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  26229 actor   .. MoveEntityDelta x2, MovePlayer[normal] x1
+  26229 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  26277 actor   .. MovePlayer[normal] x1
+  26277 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  26328 actor   .. MovePlayer[normal] x1, MoveEntityDelta x2
+  26328 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  26382 actor   .. MovePlayer[normal] x1
+  26382 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  26434 actor   .. MoveEntityDelta x2, MovePlayer[normal] x1
+  26434 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  26485 actor   .. MovePlayer[normal] x1
+  26485 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  26533 actor   .. MoveEntityDelta x2, MovePlayer[normal] x1
+  26533 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  26583 actor   .. MovePlayer[normal] x1
+  26583 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  26627 actor   .. SetEntityData x1, MoveEntityDelta x2, MovePlayer[normal] x1
+  26627 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  26684 actor   .. MovePlayer[normal] x1
+  26684 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  26734 actor   .. MoveEntityDelta x1, MovePlayer[normal] x1
+  26734 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  26783 actor   .. MoveEntityDelta x1, MovePlayer[normal] x1
+  26783 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  26826 actor   .. MoveEntityDelta x1, MovePlayer[normal] x1
+  26826 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  26884 actor   .. MovePlayer[normal] x1
+  26884 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  26930 actor   .. MoveEntityDelta x1, MovePlayer[normal] x1
+  26930 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  26984 actor   .. MovePlayer[normal] x1
+  26984 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  27034 actor   .. MoveEntityDelta x1, MovePlayer[normal] x1
+  27034 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  27084 actor   .. MovePlayer[normal] x1
+  27084 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  27133 actor   .. MoveEntityDelta x1, MovePlayer[normal] x1
+  27133 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  27183 actor   .. MovePlayer[normal] x1
+  27183 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  27234 actor   .. MoveEntityDelta x1, MovePlayer[normal] x1
+  27234 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  27284 actor   .. MovePlayer[normal] x1
+  27284 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  27334 actor   .. MoveEntityDelta x1, MovePlayer[normal] x1
+  27334 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  27384 actor   .. MovePlayer[normal] x1
+  27384 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  27434 actor   .. MoveEntityDelta x1, MovePlayer[normal] x1
+  27434 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  27484 actor   .. MovePlayer[normal] x1
+  27484 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  27534 actor   .. MoveEntityDelta x1, MovePlayer[normal] x1
+  27534 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  27583 actor   .. MoveEntityDelta x1, MovePlayer[normal] x1
+  27583 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  27607 actor   .. MoveEntityDelta x1
+## !where at 27607
+## at Some([2.5, -60.0, -3.5]) dimension 0
+## gamemode creative at 27608
+  27614 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"gameMode.changed\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.creative\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  27614 actor   UpdatePlayerGameType 
+  27614 actor   Event Event { runtime_id: 8589934589, event_type: CommandExecuted, use_player_id: 1, event_data: b"\x08\x02\0\x08gamemode\0" }
+  27615 actor   CommandOutput CommandOutput { origin: CommandOrigin { type: "player", uuid: Uuid([93, 75, 161, 24, 45, 197, 244, 182, 164, 203, 67, 35, 17, 72, 94, 188]), request_id: "", player_entity_id: 0 }, output_type: "alloutput", success_count: 1, output: [CommandOutputOutputItem { message_id: "commands.gamemode.success.self", success: true, parameters: ["%createWorldScreen.gameMode.creative"] }], has_data: false, data: None }
+  27615 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"PortalActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamemode.success.self\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.g
+  27634 actor   .. MovePlayer[normal] x1
+  27634 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  27684 actor   .. MoveEntityDelta x2, MovePlayer[normal] x1
+  27684 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  27734 actor   .. MovePlayer[normal] x1
+  27734 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  27784 actor   .. MovePlayer[normal] x1
+  27784 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  27835 actor   .. MoveEntityDelta x2
+  27835 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  27886 actor   .. MovePlayer[normal] x1
+  27886 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  27928 actor   .. MovePlayer[normal] x2
+  27928 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  27978 actor   .. MoveEntityDelta x1, MovePlayer[normal] x1
+  27978 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  28035 actor   .. MoveEntityDelta x1, MovePlayer[normal] x1
+  28035 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  28084 actor   .. MovePlayer[normal] x1
+  28084 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  28127 actor   .. MoveEntityDelta x1
+  28127 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  28179 actor   .. MovePlayer[normal] x1
+  28179 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  28229 actor   .. MoveEntityDelta x1, MovePlayer[normal] x1
+  28229 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  28279 actor   .. MovePlayer[normal] x1, MoveEntityDelta x1
+  28279 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  28334 actor   .. CurrentStructureFeature x1, MovePlayer[normal] x1
+  28334 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  28379 actor   .. MovePlayer[normal] x1
+  28379 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  28434 actor   .. MovePlayer[normal] x2, MoveEntityDelta x2
+  28434 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  28476 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  28534 actor   .. CurrentStructureFeature x1, MovePlayer[normal] x2
+  28534 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  28584 actor   .. SetEntityData x1, MoveEntityDelta x2, MovePlayer[normal] x1
+  28584 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  28630 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  28676 actor   .. MovePlayer[normal] x1
+  28676 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  28734 actor   .. MoveEntityDelta x2, MovePlayer[normal] x1
+  28734 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+  28781 actor   .. MovePlayer[normal] x2
+  28781 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 2, y: -59, z: -4 }, radius: 128, saved_chunks: [] }
+probe exit 0

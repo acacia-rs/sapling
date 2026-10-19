@@ -64,12 +64,22 @@ pub(crate) fn kindle(world: &mut World, layer: Entity, at: BlockPos) -> bool {
 /// Writes `cells` without telling anyone, then shows them to those who see them, in their order,
 /// one UpdateSubchunkBlocks per section.
 pub(crate) fn write_shown(world: &mut World, layer: Entity, cells: &[(BlockPos, u32)]) {
+    write_shown_flagged(world, layer, cells, NETWORK);
+}
+
+/// [`write_shown`] with the updates' flags.
+pub(crate) fn write_shown_flagged(world: &mut World, layer: Entity, cells: &[(BlockPos, u32)], flags: u32) {
     let written: Vec<(BlockPos, u32)> = cells.iter().copied().filter(|(pos, id)| send::set_quietly(world, layer, *pos, *id)).collect();
+    show_in_sections(world, layer, &written, flags);
+}
+
+/// Shows cells already written as [`write_shown`] does.
+pub(crate) fn show_in_sections(world: &mut World, layer: Entity, written: &[(BlockPos, u32)], flags: u32) {
     let Some(registry) = level(world, layer).map(|level| level.registry()) else { return };
     let mut sections: Vec<([i32; 3], Vec<BlockUpdate>)> = Vec::new();
-    for ([x, y, z], id) in written {
+    for &([x, y, z], id) in written {
         let section = [x >> 4, y >> 4, z >> 4];
-        let update = BlockUpdate { position: BlockCoordinates { x, y, z }, runtime_id: registry.network_hash(id), flags: NETWORK, entity_unique_id: 0, transition_type: BlockUpdateTransitionType::Entity };
+        let update = BlockUpdate { position: BlockCoordinates { x, y, z }, runtime_id: registry.network_hash(id), flags, entity_unique_id: 0, transition_type: BlockUpdateTransitionType::Entity };
         match sections.iter_mut().find(|(at, _)| *at == section) {
             Some((_, updates)) => updates.push(update),
             None => sections.push((section, vec![update])),

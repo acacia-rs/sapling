@@ -1,0 +1,74 @@
+## gamemode creative at 0
+     36 actor   UpdatePlayerGameType 
+     36 actor   CommandOutput CommandOutput { origin: CommandOrigin { type: "player", uuid: Uuid([87, 79, 98, 139, 57, 199, 85, 46, 3, 167, 176, 130, 159, 53, 64, 150]), request_id: "", player_entity_id: 0 }, output_type: "alloutput", success_count: 1, output: [CommandOutputOutputItem { message_id: "commands.gamemode.success.self", success: true, parameters: ["%createWorldScreen.gameMode.creative"] }], has_data: false, data: None }
+     36 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"PortalActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamemode.success.self\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.g
+## gamerule domobspawning false at 1201
+   1235 actor   GameRulesChanged GameRulesChanged { rules: [GameRuleI32 { name: "doMobSpawning", editable: true, type: Bool, value: Bool(false) }] }
+   1235 actor   CommandOutput CommandOutput { origin: CommandOrigin { type: "player", uuid: Uuid([199, 78, 38, 111, 219, 178, 24, 148, 199, 194, 211, 94, 44, 126, 50, 175]), request_id: "", player_entity_id: 0 }, output_type: "alloutput", success_count: 1, output: [CommandOutputOutputItem { message_id: "commands.gamerule.success", success: true, parameters: ["domobspawning", "false"] }], has_data: false, data: None }
+   1235 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"PortalActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"domobspawning\"},{\"text\
+## tp @s 0.5 -60 0.5 #2000 at 2402
+   2443 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"PortalActor\"},{\"text\":\": \"},{\"translate\":\"commands.tp.success.coordinates\",\"with\":{\"rawtext\":[{\"text\":\"PortalActor\"},{\"t
+   2444 actor   MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 0.5, y: -58.37999, z: 0.5 }, pitch: 0.0, yaw: 0.0, head_yaw: 0.0, mode: Teleport, on_ground: true, ridden_runtime_id: 0, teleport: Some(MovePlayerTeleport { cause: Command, source_entity_type: Unknown(1) }), tick: 103 }
+   2444 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.tp.successVictim\",\"with\":{\"rawtext\":[{\"text\":\"0.50, -60.00, 0.50\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   2444 actor   CommandOutput CommandOutput { origin: CommandOrigin { type: "player", uuid: Uuid([221, 72, 206, 45, 163, 233, 234, 211, 121, 119, 155, 225, 74, 155, 57, 143]), request_id: "", player_entity_id: 0 }, output_type: "alloutput", success_count: 1, output: [CommandOutputOutputItem { message_id: "commands.tp.success.coordinates", success: true, parameters: ["PortalActor", "0.50", "-60.00", "0.50"] }], has_data: false, data: None }
+## !where at 4404
+## at Some([0.5, -60.0, 0.5]) dimension 0
+## execute in the_end run tp @s 100.5 49 0.5 #10000 at 4406
+   4438 watcher LevelEventGeneric LevelEventGeneric { event_id: 19602, nbt: [Nbt { name: "ableToSleep", value: Int(1) }, Nbt { name: "overworldPlayerCount", value: Int(1) }, Nbt { name: "sleepingPlayerCount", value: Int(0) }] }
+   4438 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"PortalActor\"},{\"text\":\": \"},{\"translate\":\"commands.tp.success.coordinates\",\"with\":{\"rawtext\":[{\"text\":\"PortalActor\"},{\"t
+   4438 actor   RemoveEntity RemoveEntity { entity_id_self: 2 }
+   4438 actor   ChangeDimension ChangeDimension { dimension: 2, position: Vec3f { x: 100.5, y: 49.0, z: 0.5 }, respawn: false, loading_screen_id: Some(0) }
+   4438 actor   LevelEventGeneric LevelEventGeneric { event_id: 19602, nbt: [Nbt { name: "ableToSleep", value: Int(1) }, Nbt { name: "overworldPlayerCount", value: Int(1) }, Nbt { name: "sleepingPlayerCount", value: Int(0) }] }
+   4438 watcher RemoveEntity RemoveEntity { entity_id_self: 1 }
+   4438 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.tp.successVictim\",\"with\":{\"rawtext\":[{\"text\":\"100.50, 49.00, 0.50\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   4439 actor   CommandOutput CommandOutput { origin: CommandOrigin { type: "player", uuid: Uuid([120, 79, 190, 54, 77, 250, 23, 86, 36, 170, 105, 250, 5, 203, 78, 143]), request_id: "", player_entity_id: 0 }, output_type: "alloutput", success_count: 1, output: [CommandOutputOutputItem { message_id: "commands.tp.success.coordinates", success: true, parameters: ["PortalActor", "100.50", "49.00", "0.50"] }], has_data: false, data: None }
+   4494 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 100, y: 49, z: 0 }, radius: 128, saved_chunks: [] }
+## column 6 0 dim 2: sub_chunk_count 0 highest Some(4) cached true blobs 1 payload 1 bytes 00
+   5487 actor   .. LevelChunk[dim 2] x30, Subchunk[dim 2] x25, ClientCacheMissResponse x8
+   5487 actor   PlayerAction PlayerAction { runtime_entity_id: 1, action: DimensionChangeAck, position: BlockCoordinates { x: 0, y: 0, z: 0 }, result_position: BlockCoordinates { x: 0, y: 0, z: 0 }, face: 0 }
+## column 0 0 dim 2: sub_chunk_count 0 highest Some(4) cached true blobs 1 payload 1 bytes 00
+  14407 actor   .. ClientCacheMissResponse x35, LevelChunk[dim 2] x167, Subchunk[dim 2] x83, SyncWorldClocks x1
+## !where at 14407
+## at Some([0.5, -348.18753, 0.5]) dimension 2
+## gamemode survival at 14408
+  14435 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"PortalActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamemode.success.self\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.g
+  14435 actor   UpdatePlayerGameType 
+  14435 actor   CommandOutput CommandOutput { origin: CommandOrigin { type: "player", uuid: Uuid([95, 64, 150, 160, 0, 177, 160, 47, 250, 59, 237, 142, 11, 10, 83, 145]), request_id: "", player_entity_id: 0 }, output_type: "alloutput", success_count: 1, output: [CommandOutputOutputItem { message_id: "commands.gamemode.success.self", success: true, parameters: ["%createWorldScreen.gameMode.survival"] }], has_data: false, data: None }
+  14785 actor   .. SetEntityData x8
+  14785 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 4, fire_at_position: None }
+  15285 actor   .. UpdateAttributes x1, SetEntityData x10
+  15678 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 4, fire_at_position: None }
+  15678 actor   .. UpdateAttributes x1
+## kill @s #12000 at 15678
+  15686 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"PortalActor\"},{\"text\":\": \"},{\"translate\":\"commands.kill.successful\",\"with\":{\"rawtext\":[{\"text\":\"PortalActor\"}]}},{\"text\
+  15687 actor   .. SetEntityData x7, UpdateAttributes x1, InventoryContent x4
+  15687 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: DeathAnimation, data: 0, fire_at_position: None }
+  15687 actor   Text Text { needs_translation: true, category: Parameters, type: Translation, content: Translation(TextContentTranslation { message: "death.attack.generic", parameters: ["PortalActor"] }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  15687 actor   DeathInfo 
+  15687 actor   Respawn Respawn { position: Vec3f { x: 100.5, y: 50.62001, z: 0.5 }, state: 0, runtime_entity_id: 0 }
+  15687 actor   CommandOutput CommandOutput { origin: CommandOrigin { type: "player", uuid: Uuid([164, 79, 63, 72, 81, 246, 58, 216, 205, 183, 59, 183, 53, 239, 87, 156]), request_id: "", player_entity_id: 0 }, output_type: "alloutput", success_count: 1, output: [CommandOutputOutputItem { message_id: "commands.kill.successful", success: true, parameters: ["PortalActor"] }], has_data: false, data: None }
+  16685 actor   LevelSoundEvent LevelSoundEvent { sound_id: "disappeared", position: Vec3f { x: 100.5, y: 49.1, z: 0.5 }, extra_data: -1, entity_type: "minecraft:player", is_baby_mob: false, is_global: false, entity_unique_id: 1, fire_at_position: None }
+  17786 watcher LevelEventGeneric LevelEventGeneric { event_id: 19602, nbt: [Nbt { name: "ableToSleep", value: Int(1) }, Nbt { name: "overworldPlayerCount", value: Int(2) }, Nbt { name: "sleepingPlayerCount", value: Int(0) }] }
+  17786 watcher AddPlayer AddPlayer { uuid: Uuid([39, 49, 253, 23, 220, 15, 17, 71, 13, 88, 89, 226, 185, 108, 212, 134]), username: "PortalActor", runtime_id: 1, platform_chat_id: "", position: Vec3f { x: 0.5, y: 64.0, z: 0.5 }, velocity: Vec3f { x: 0.0, y: 0.0, z: 0.0 }, pitch: 0.0, yaw: 0.0, head_yaw: 0.0, held_item: Item
+  17787 actor   ChangeDimension ChangeDimension { dimension: 0, position: Vec3f { x: 0.0, y: 32767.0, z: 0.0 }, respawn: false, loading_screen_id: None }
+  17787 actor   LevelEventGeneric LevelEventGeneric { event_id: 19602, nbt: [Nbt { name: "ableToSleep", value: Int(1) }, Nbt { name: "overworldPlayerCount", value: Int(2) }, Nbt { name: "sleepingPlayerCount", value: Int(0) }] }
+  17787 actor   PlayerAction PlayerAction { runtime_entity_id: 1, action: DimensionChangeAck, position: BlockCoordinates { x: 0, y: 0, z: 0 }, result_position: BlockCoordinates { x: 0, y: 0, z: 0 }, face: 0 }
+  17787 actor   Respawn Respawn { position: Vec3f { x: 0.0, y: 32767.0, z: 0.0 }, state: 0, runtime_entity_id: 0 }
+  17787 actor   Respawn Respawn { position: Vec3f { x: 0.5, y: 65.62001, z: 0.5 }, state: 1, runtime_entity_id: 0 }
+  17787 actor   MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 0.5, y: 65.62001, z: 0.5 }, pitch: 0.0, yaw: 0.0, head_yaw: 0.0, mode: Teleport, on_ground: true, ridden_runtime_id: 0, teleport: Some(MovePlayerTeleport { cause: Command, source_entity_type: Unknown(1) }), tick: 142 }
+  17787 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: Respawn, data: 0, fire_at_position: None }
+  17787 actor   .. UpdateAttributes x2
+  17787 actor   SetHealth SetHealth { health: 20 }
+  17787 actor   .. UpdateAttributes x1
+  17787 actor   LevelSoundEvent LevelSoundEvent { sound_id: "reappeared", position: Vec3f { x: 0.0, y: 32767.1, z: 0.0 }, extra_data: -1, entity_type: "minecraft:player", is_baby_mob: false, is_global: false, entity_unique_id: 1, fire_at_position: None }
+  17836 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 64, z: 0 }, radius: 128, saved_chunks: [] }
+  17836 actor   .. LevelChunk[dim 0] x8
+  17836 actor   AddPlayer AddPlayer { uuid: Uuid([26, 59, 20, 183, 122, 224, 70, 82, 17, 218, 72, 68, 237, 100, 245, 186]), username: "PortalWatcher", runtime_id: 2, platform_chat_id: "", position: Vec3f { x: 0.5, y: 64.0, z: 0.5 }, velocity: Vec3f { x: 0.0, y: 0.0, z: 0.0 }, pitch: 0.0, yaw: 0.0, head_yaw: 0.0, held_item: ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, gamemode: Fallback, metadata: [MetadataDictionaryItem { key: Flags, type: Long, legacy_type: 7, value: Flags(MetadataFlags1(844459290394624)) }, MetadataDictionaryItem { key: Health, type: Int, legacy_type: 2, value: Default(Int(1)) }, MetadataDictionaryItem { key: Variant, type: Int, legacy_type: 2, value: Default(Int(0)) }, MetadataDictionaryItem { key: Color, type: Byte, legacy_type: 0, value: Default(Byte(0)) }, MetadataDictionaryItem { key: Nametag, type: String,
+  27679 actor   .. LevelChunk[dim 0] x189, Subchunk[dim 0] x99, ClientCacheMissResponse x11, SyncWorldClocks x1
+## !where at 27679
+## at Some([0.5, 64.0, 0.5]) dimension 0
+## gamemode creative at 27681
+  27685 actor   UpdatePlayerGameType 
+  27685 actor   CommandOutput CommandOutput { origin: CommandOrigin { type: "player", uuid: Uuid([223, 70, 235, 73, 118, 127, 127, 129, 105, 24, 143, 124, 165, 213, 140, 165]), request_id: "", player_entity_id: 0 }, output_type: "alloutput", success_count: 1, output: [CommandOutputOutputItem { message_id: "commands.gamemode.success.self", success: true, parameters: ["%createWorldScreen.gameMode.creative"] }], has_data: false, data: None }
+  27685 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"PortalActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamemode.success.self\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.g
+probe exit 0

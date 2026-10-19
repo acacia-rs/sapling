@@ -4,7 +4,7 @@ use std::sync::{Arc, Mutex};
 
 use acacia_world::{BlockRegistry, Chunk, Dimension};
 
-use crate::{ChunkPos, Level, MemoryStorage, NETHER, OVERWORLD, StorageError, StoredColumn, World, WorldStorage};
+use crate::{ChunkPos, END, Level, MemoryStorage, NETHER, OVERWORLD, StorageError, StoredColumn, World, WorldStorage};
 
 /// Memory storage that counts what closing a world did to it.
 #[derive(Default)]
@@ -87,4 +87,23 @@ fn a_nether_column_saved_without_biomes_is_hell() {
     nether.load_now(ChunkPos::new(0, 0));
     let column = nether.column(ChunkPos::new(0, 0)).unwrap();
     assert_eq!(column.stored().chunk.biome(5, 70, 5), Some(8));
+}
+
+#[test]
+fn the_end_is_256_high_saves_under_dimension_two_and_is_the_end_where_unpainted() {
+    let storage = Arc::new(MemoryStorage::default());
+    storage.insert(END, Chunk::empty(1, 0, Dimension::end(BlockRegistry::vanilla().air_id())));
+    let mut end = World::with_storage_in(storage.clone(), END);
+    let pos = ChunkPos::new(0, 0);
+    end.load_now(pos);
+    let obsidian = end.block_id("minecraft:obsidian").unwrap();
+    assert!(end.set_block(3, 255, 3, obsidian) && end.set_block(3, 256, 3, obsidian), "the top cell, and one over it ignored");
+    assert_eq!(end.block(3, 256, 3), end.registry().air_id());
+    assert_eq!((end.dimension(), end.heights()), (END, 0..256));
+    assert_eq!(end.save_and_wait(), 0);
+    assert!(storage.columns(END).unwrap().contains(&pos) && storage.columns(NETHER).unwrap().is_empty() && storage.columns(OVERWORLD).unwrap().is_empty());
+    assert_eq!(storage.load_column(pos, END).unwrap().unwrap().chunk.block(3, 255, 3), obsidian);
+    end.load_now(ChunkPos::new(1, 0));
+    assert_eq!(end.column(ChunkPos::new(1, 0)).unwrap().stored().chunk.biome(5, 70, 5), Some(9));
+    assert_eq!(crate::empty_column(END, false).highest_subchunk_count, Some(0));
 }

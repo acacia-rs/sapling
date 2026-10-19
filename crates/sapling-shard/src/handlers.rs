@@ -87,6 +87,7 @@ pub(crate) fn dispatch(world: &mut World, plugins: &mut Plugins) {
     vitals::tick(world);
     portals::tick(world);
     portals::arrive(world);
+    portals::end::arrive(world);
     crate::weather::tick(world);
     entities::follow(world);
     forms::dispatch(world);
