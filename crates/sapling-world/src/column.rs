@@ -13,9 +13,14 @@ use sapling_leveldb::{BlockEntity, block_entities, with_block_entity, without_bl
 
 use crate::storage::StoredColumn;
 
-/// Biome of columns nobody painted: `minecraft:plains`, in the Nether `minecraft:hell`.
+/// Biome of columns nobody painted: `minecraft:plains`, in the Nether `minecraft:hell`, in the End
+/// `minecraft:the_end`.
 fn default_biome(dim: Dimension) -> u32 {
-    if dim == Dimension::nether(dim.air) { 8 } else { 1 }
+    match dim {
+        _ if dim == Dimension::nether(dim.air) => 8,
+        _ if dim == Dimension::end(dim.air) => 9,
+        _ => 1,
+    }
 }
 
 /// One entry of a `Subchunk` answer. For a blob-cache client the section travels as `blob`,

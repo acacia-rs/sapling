@@ -9,6 +9,8 @@
 #[path = "shared/dump.rs"]
 #[allow(dead_code)]
 mod dump;
+#[path = "shared/end_drill.rs"]
+mod end;
 #[path = "shared/portal_drill.rs"]
 mod portal;
 #[path = "shared/probe.rs"]
@@ -29,10 +31,10 @@ const DETAILED: &[&str] = &[
     "ChangeDimension", "PlayStatus", "MovePlayer", "SetSpawnPosition", "NetworkChunkPublisherUpdate", "ChunkRadiusUpdate", "Respawn", "UpdateAttributes", "SetTime", "StopSound",
     "CommandOutput", "Text", "SetPlayerGameType", "UpdateAbilities", "UpdateAdventureSettings", "CorrectPlayerMovePrediction", "LevelEvent", "LevelSoundEvent", "RemoveEntity", "AddPlayer",
     "GameRulesChanged", "PlayerList", "ClientboundCloseForm", "LevelEventGeneric", "EntityEvent", "MobEffect", "SetHealth", "CameraInstruction", "ContainerClose", "PlayerAction",
-    "PlayerLocation", "Event", "AddPlayer", "InventoryContent", "InventorySlot",
+    "PlayerLocation", "Event", "AddPlayer", "InventoryContent", "InventorySlot", "AddActor", "BlockActorData", "ShowCredits",
 ];
 /// Blocks whose UpdateBlock is printed; others are tallied.
-const BLOCKS_SHOWN: &[&str] = &["portal", "obsidian", "fire", "air"];
+const BLOCKS_SHOWN: &[&str] = &["portal", "obsidian", "fire", "air", "bedrock", "gateway", "end_stone"];
 /// Counted per dimension and printed as a tally at the next other packet.
 const TALLIED: &[&str] = &[
     "LevelChunk", "Subchunk", "ClientCacheMissResponse", "MoveEntityDelta", "SetEntityMotion", "SyncWorldClocks", "NetworkStackLatency", "CurrentStructureFeature", "SetEntityData",
@@ -91,7 +93,7 @@ impl Run {
         let name = acacia_bot::proto::packet_name(packet.id).unwrap_or("?");
         if TALLIED.contains(&name) {
             let dimension = match name {
-                "LevelChunk" => packet.decode::<acacia_bot::proto::packets::LevelChunk>().map(|c| c.dimension).unwrap_or(-1),
+                "LevelChunk" => packet.decode::<acacia_bot::proto::packets::LevelChunk>().map(|c| show_column(&c)).unwrap_or(-1),
                 "Subchunk" => packet.decode::<acacia_bot::proto::packets::Subchunk>().map(|c| c.dimension).unwrap_or(-1),
                 _ => return self.count(name.to_string()),
             };
@@ -200,6 +202,15 @@ fn portals(actor: &Bot, reach: i32) {
     }
 }
 
+/// Prints an End column the drills compare whole; its dimension.
+fn show_column(column: &acacia_bot::proto::packets::LevelChunk) -> i32 {
+    if column.dimension == 2 && end::SHOWN_COLUMNS.contains(&(column.x, column.z)) {
+        let hex: String = column.payload.iter().map(|byte| format!("{byte:02x}")).collect();
+        println!("## column {} {} dim 2: sub_chunk_count {} highest {:?} cached {} blobs {} payload {} bytes {hex}", column.x, column.z, column.sub_chunk_count, column.highest_subchunk_count, column.cache_enabled, column.blobs.len(), column.payload.len());
+    }
+    column.dimension
+}
+
 fn position(actor: &Bot) {
     let feet = actor.movement().and_then(|movement| movement.position());
     println!("## at {feet:?} dimension {}", actor.state().player.dimension);
@@ -242,6 +253,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
             portal::Step::Where => {
                 position(&actor);
+                Duration::ZERO
+            }
+            portal::Step::Box(corners) => {
+                end::print_box(&actor, corners);
+                Duration::ZERO
+            }
+            portal::Step::Top(x, z) => {
+                end::print_top(&actor, x, z);
                 Duration::ZERO
             }
         };

@@ -5,13 +5,13 @@ use std::sync::Arc;
 
 use crate::generated::Generated;
 use crate::storage::{Level, LevelDbStorage, WorldStorage};
-use crate::{ChunkPos, NETHER, World};
+use crate::{ChunkPos, END, NETHER, World};
 
 /// `SpawnY` of a world whose spawn was never set by hand: "on the surface".
 const SURFACE: i32 = i16::MAX as i32;
 /// Where to stand when the spawn column is empty.
 const VOID_SPAWN_Y: i32 = 64;
-/// I/O threads of a generated Nether; they share one generator's caches.
+/// I/O threads of a generated Nether or End; they share one generator's caches.
 const NETHER_THREADS: usize = 2;
 
 /// A world opened from a folder, with what its `level.dat` says about it. The spawn block and
@@ -47,6 +47,14 @@ impl WorldFolder {
         match (self.generates, self.storage.level_dat().seed()) {
             (true, Some(seed)) => World::with_storage_in(Arc::new(Generated::nether(self.storage.clone(), seed, NETHER_THREADS)), NETHER),
             _ => World::with_storage_in(self.storage.clone(), NETHER),
+        }
+    }
+
+    /// The folder's End, as [`WorldFolder::nether`].
+    pub fn end(&self) -> World {
+        match (self.generates, self.storage.level_dat().seed()) {
+            (true, Some(seed)) => World::with_storage_in(Arc::new(Generated::end(self.storage.clone(), seed, NETHER_THREADS)), END),
+            _ => World::with_storage_in(self.storage.clone(), END),
         }
     }
 

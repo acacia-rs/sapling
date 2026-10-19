@@ -1,6 +1,6 @@
 //! The lines of the portal probe's drills. A line is a command, watched for 1.2 s or for the
 //! milliseconds after a final ` #`; or `!light x y z face [ms]` (the held item used on a block),
-//! `!wait ms`, `!portals reach` or `!where`.
+//! `!wait ms`, `!portals reach` or `!where`; the End's drills and steps are shared/end_drill.rs.
 
 use std::time::Duration;
 
@@ -12,6 +12,8 @@ pub enum Step<'a> {
     Wait(Duration),
     Portals(i32),
     Where,
+    Box([i32; 6]),
+    Top(i32, i32),
 }
 
 pub fn step(line: &str) -> Step<'_> {
@@ -23,6 +25,8 @@ pub fn step(line: &str) -> Step<'_> {
         "!wait" => Step::Wait(ms(1)),
         "!portals" => Step::Portals(int(1).unwrap_or(8) as i32),
         "!where" => Step::Where,
+        "!box" => Step::Box(std::array::from_fn(|i| int(i + 1).unwrap_or(0) as i32)),
+        "!top" => Step::Top(int(1).unwrap_or(0) as i32, int(2).unwrap_or(0) as i32),
         _ => match line.rsplit_once(" #") {
             Some((command, wait)) => Step::Command(command, wait.parse().map_or(WAIT, Duration::from_millis)),
             None => Step::Command(line, WAIT),
@@ -99,7 +103,7 @@ pub fn drill(name: &str) -> Option<Vec<String>> {
                 lines.extend([format!("!light {} -60 5 up 2000", x + 4), format!("tp @s {}.5 -59 5.5 #14000", x + 4), "!where".into(), "!portals 24".into()]);
             }
         }
-        _ => return None,
+        _ => lines.extend(super::end::drill(name)?),
     }
     Some(lines)
 }

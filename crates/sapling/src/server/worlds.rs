@@ -40,6 +40,13 @@ impl ServerBuilder {
         self
     }
 
+    /// The default world's End: a world of dimension 2 (`WorldFolder::end`), as
+    /// [`ServerBuilder::nether`], named `<default>:the_end`, reached by end portal and
+    /// `/execute in the_end`.
+    pub fn end(self, world: World) -> Self {
+        self.nether(world)
+    }
+
     /// [`ServerBuilder::nether`] (or another dimension) of the world named `of`.
     pub fn dimension_of(mut self, of: impl Into<String>, world: World) -> Self {
         self.dimensions.push((Some(of.into()), world));

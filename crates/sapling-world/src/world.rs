@@ -14,6 +14,7 @@ use crate::template::Template;
 
 pub const OVERWORLD: i32 = 0;
 pub const NETHER: i32 = 1;
+pub const END: i32 = 2;
 
 /// One dimension's blocks.
 ///

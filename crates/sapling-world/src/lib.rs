@@ -33,7 +33,7 @@ pub use sapling_leveldb::{
 };
 pub use storage::{Level, LevelDbStorage, MemoryStorage, StorageError, StoredColumn, WorldStorage};
 pub use template::Template;
-pub use world::{NETHER, OVERWORLD, World};
+pub use world::{END, NETHER, OVERWORLD, World};
 
 /// Chunk palettes carry block-state hashes, not runtime ids; StartGame must say the same.
 pub const NETWORK_IDS_ARE_HASHES: bool = true;

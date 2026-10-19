@@ -6,16 +6,17 @@ mod tests;
 
 use acacia_world::{BlockRegistry, Dimension};
 use sapling_leveldb::PlayerData;
-use sapling_worldgen::{ChunkBiomes, ChunkShape, NetherGenerator, OverworldGenerator};
+use sapling_worldgen::{ChunkBiomes, ChunkShape, EndGenerator, NetherGenerator, OverworldGenerator};
 
 use crate::storage::{Level, StorageError, StoredColumn, WorldStorage};
-use crate::{ChunkPos, NETHER, OVERWORLD};
+use crate::{ChunkPos, END, NETHER, OVERWORLD};
 use convert::{BlockIds, generated_chunk};
 
 /// The generator of one dimension.
 enum Generator {
     Overworld(OverworldGenerator),
     Nether(NetherGenerator),
+    End(EndGenerator),
 }
 
 impl Generator {
@@ -23,6 +24,7 @@ impl Generator {
         match self {
             Self::Overworld(_) => OVERWORLD,
             Self::Nether(_) => NETHER,
+            Self::End(_) => END,
         }
     }
 
@@ -30,6 +32,7 @@ impl Generator {
         match self {
             Self::Overworld(generator) => (generator.chunk_blocks(pos.x, pos.z), generator.chunk_biomes(pos.x, pos.z)),
             Self::Nether(generator) => (generator.chunk_blocks(pos.x, pos.z), generator.chunk_biomes(pos.x, pos.z)),
+            Self::End(generator) => (generator.chunk_blocks(pos.x, pos.z), generator.chunk_biomes(pos.x, pos.z)),
         }
     }
 }
@@ -68,6 +71,11 @@ impl<S: WorldStorage> Generated<S> {
     /// The Nether of `seed` where `inner` has none, on `areas` I/O threads sharing one generator.
     pub fn nether(inner: S, seed: i64, areas: usize) -> Self {
         Self::of(inner, Generator::Nether(NetherGenerator::new(seed)), areas.max(1))
+    }
+
+    /// The End of `seed` where `inner` has none, as [`Generated::nether`].
+    pub fn end(inner: S, seed: i64, areas: usize) -> Self {
+        Self::of(inner, Generator::End(EndGenerator::new(seed)), areas.max(1))
     }
 
     fn of(inner: S, generator: Generator, areas: usize) -> Self {

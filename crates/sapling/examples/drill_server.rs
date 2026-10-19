@@ -3,7 +3,7 @@
 //! something under it), everyone an operator in creative mode, vanilla's commands, nothing
 //! protected. `tools/sapling-drill.sh` runs a probe against it.
 //! `cargo run -p sapling --example drill_server -- [port]` (default 19190)
-use sapling::{GameMode, Generated, Handler, MemoryStorage, NETHER, Permission, Player, Server, ShardCtx, World};
+use sapling::{END, GameMode, Generated, Handler, MemoryStorage, NETHER, Permission, Player, Server, ShardCtx, World};
 
 /// The ground's corners: wider than the probes' drills reach.
 const GROUND: ([i32; 3], [i32; 3]) = ([-96, 60, -48], [96, 63, 48]);
@@ -33,7 +33,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let builder = builder.world(ground, [0.5, 64.0, 0.5]);
     // The test BDS's Nether, generated from its seed (tools/bds-drill.sh worlds: bds-nether's level-seed).
     let nether = World::with_storage_in(std::sync::Arc::new(Generated::nether(MemoryStorage::default(), NETHER_SEED, 2)), NETHER);
-    let builder = builder.nether(nether);
+    let end = World::with_storage_in(std::sync::Arc::new(Generated::end(MemoryStorage::default(), NETHER_SEED, 2)), END);
+    let builder = builder.nether(nether).end(end);
     let server = builder.handler(Operators).vanilla_commands().start().await?;
     tracing::info!(port, "started");
     tokio::signal::ctrl_c().await?;
