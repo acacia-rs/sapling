@@ -8,8 +8,12 @@ mod arrows;
 mod attacks;
 mod backend;
 mod blast;
+mod breezes;
 mod bullets;
+mod charges;
 mod duels;
+mod fireballs;
+mod ghasts;
 mod harm;
 mod health;
 mod hunting;
@@ -96,6 +100,15 @@ fn head(kind: &str, body: &Body) -> [f32; 3] {
     [x, y + HEAD_UP * height, z + forward]
 }
 
+/// How a mob of `kind` falls and slows: as most mobs, but for a breeze and a ghast.
+fn physics_of(kind: &str) -> &'static Physics {
+    match kind {
+        "minecraft:breeze" => &Physics::BREEZE,
+        "minecraft:ghast" => &Physics::FLYER,
+        _ => &Physics::MOB,
+    }
+}
+
 /// The sound a mob makes as it appears, at its head.
 fn spawn_sound(id: u64, kind: &str, body: &Body) -> Bytes {
     let [x, y, z] = head(kind, body);
@@ -149,6 +162,8 @@ fn give_legs(world: &mut World, entity: Entity, kind: &str) {
     teleports::arm(world, entity, kind);
     rams::arm(world, entity, kind);
     spells::arm(world, entity, kind);
+    breezes::arm(world, entity, kind);
+    ghasts::arm(world, entity, kind);
 }
 
 /// Gives a mob of a kind that dies the health BDS announced its kind with, `left` of it, and
@@ -222,6 +237,8 @@ pub(crate) fn tick(world: &mut World) {
     arrows::tick(world);
     spells::tick(world);
     bullets::tick(world);
+    charges::tick(world);
+    fireballs::tick(world);
     let now = world.resource::<Tick>().0;
     let dead: Vec<Entity> = world.query::<(Entity, &Dying)>().iter(world).filter(|(_, dying)| now >= dying.0 + DYING).map(|(entity, _)| entity).collect();
     for entity in dead {
@@ -243,7 +260,7 @@ pub(crate) fn tick(world: &mut World) {
                 strolling::steer(world, entity, layer, traits.strolls.or(traits.hunts.map(|hunts| hunts.speed)), traits.panics, traits.burns_in_sun);
             }
         }
-        let Some((body, packets)) = entities::step(world, entity, layer, id, &Physics::MOB, 0.0) else { continue };
+        let Some((body, packets)) = entities::step(world, entity, layer, id, physics_of(&kind), 0.0) else { continue };
         blocks::to_viewers(world, layer, body.at.map(|c| c.floor() as i32), &packets);
         if is_alive {
             hunting::strike(world, entity, layer, id, &kind, &body);

@@ -244,100 +244,9 @@ of reach.
   hit, no poison on easy; that tick it let go and lost its sting (`MarkVariant` 1). It was alive
   and wandering 8 seconds on.
 
-## The witch (`witch`)
+## Mobs that fight their own way
 
-A witch 6 and then 12 blocks from the actor in survival at midnight, the actor healed every second
-(`research/captures/bds-witch.txt`, `bds-witch-findings.md`):
-
-- The near one took the actor as it came, walked at it 19 ticks at 0.1349 a tick (movement 0.25)
-  and stood 4.27 off; the far one took no target. It let go once the actor was 10.5 off.
-- It threw a `splash_potion` every 60 ticks, the first 61 after its target: 1.415 above its feet
-  and 1.15 along the aim, at 0.75 a tick with no spread, slowed 0.99 and falling 0.05 a tick. Its
-  rise grew with the distance, 3.35, 11.48 and 19.25 degrees at 4.27, 6.19 and 8.16 blocks, which
-  is not the Java game's formula.
-- The potions followed its pack: poison first (health 8 or more, not poisoned), then harming,
-  slowness once the actor was 8 off and not slowed. Every one hit the actor and gave it the full
-  drinkable effect: poison for 900 ticks, slowness for 1800, harming 6 and a throw 0.4 away and
-  0.4 up. Each break sent a `ParticleSplash` in the potion's colour and a `glass` sound.
-- Its own poison, splashed 4 blocks off, lasted it some 97 ticks; that is all the capture says of
-  one not hit.
-
-## The enderman (`ender`)
-
-Three runs on the flat ground, the actor in survival at midnight and healed each second
-(`research/captures/bds-ender-findings.md`; run 2 `bds-ender-wet.txt`, in water; run 3
-`bds-ender.txt`, a dry stone floor):
-
-- Every enderman of five teleported on its first tick. Each teleport is a `MoveEntityDelta`
-  marked `force_move`, of the axes that changed, with a `SoundEndermanTeleport` LevelEvent where
-  it left and where it came; it landed within 16 along each axis, standing on the ground below.
-- Calm, it strolled at 0.1943 a tick (movement 0.3). One calm enderman teleported some 5 seconds
-  apart, another not once in 520 ticks.
-- Seven stares from 6 off, the look set by `/tp ... facing`, took no target; nothing shows the bot
-  held the look.
-- Hit, it took its hitter that tick, was thrown 0.4 and 0.4 up, teleported 0 to 2 ticks after,
-  and showed `ANGRY` with `mob.warning` the tick after. It walked at 0.4371 a tick (movement
-  0.45) and hit for 4.5 on easy (its 7) every 20 ticks, throwing the actor 0.4 and 0.4 up.
-- Left more than 16 off, it teleported 30 ticks later to some 16 nearer, give or take 4: the
-  Java game's `teleportTowards`. Twice it teleported away from beside the actor for no cause seen.
-- It never let its target go: 32 seconds, out to 24 blocks. Water hurt it 1 and sent it off.
-
-## The goat (`goat`)
-
-Three runs at noon on easy (`research/captures/bds-goat-findings.md`; `bds-goat-wet.txt` and
-`bds-goat-one.txt` one goat each, `bds-goat.txt` eight penned with the actor):
-
-- A goat took the nearest player some 8 ticks after it came, with `mob.warning`, and dropped it
-  over 16 off; holding it, it only stood and strolled (0.1243 a tick, movement 0.4 by 0.6).
-- None rammed in its first 77 seconds, one goat not in five minutes; the first rams came at 77,
-  257 and 292 seconds: its `cooldown_range` 30 to 300 is in seconds, from its coming and from each
-  ram.
-- A ram: it ran at 0.1690 a tick to a place due north, south, east or west of its prey, 7 off
-  where the floor let it (5 to 6 by the glass), stood, sounded `pre_ram` a tick later and charged
-  22 ticks after that along the axis, its steps 0.0282, 0.0583, 0.1131, 0.1888, 0.2859, 0.4043,
-  0.5458, 0.7090, 0.8950, 0.9965, 1.0521.
-- What it met took 2 on easy (`HurtAnimation` 30, a baby's 1) and two throws that tick: a hit's
-  0.4 away and 0.4 up, then half that and a push of 1.5 s² along the charge and 0.18 s² up, s
-  its step then. `attack` and `ram_impact` came the tick after. A player it could not hurt took
-  the push alone.
-- Each ram met someone, so a miss was not seen. The goats leapt the glass, 3 high.
-
-## The evoker (`evoker`)
-
-An evoker 10 off for thirty seconds, then one held still 2 off for fifteen, the actor in survival
-at midnight on easy and healed each second (`research/captures/bds-evoker-findings.md`):
-
-- It took the actor within 20 and began a cast that tick: `EVOKER_SPELL` with the spell's colour
-  (fangs `0xFF664D59`, vexes `0xFFB3B3CC`), `cast.spell` a tick later, standing still for the 39
-  ticks the flag showed. The next cast began 101 ticks after a fang cast ended, 342 after a vex one.
-- Prey 3 off or more got a line: 16 `evocation_fang`s a tick apart from 21 ticks after the cast
-  began, fang i at the floor of the evoker's x and z plus 1.25 (i + 1) towards the prey, y the top
-  of each column's ground. Nearer prey got two rings, with `prepare.attack` at the start and again
-  with the first: 5 fangs 1.5 out and, 3 ticks later, 8 at 2.5, both from the angle to the prey.
-- A fang came with `LimitedLife` 22, swung (`ArmSwing`) and bit the tick after, and sounded `throw`
-  and `fang` the tick after that; it went 11 ticks after it came. A bite cost 6 on easy by magic
-  (`HurtAnimation` 14) and threw 0.4 away from the evoker and 0.4 up; one bite a cast landed.
-- An evoker that lost its prey ended its cast at once, after 5 of its 16 fangs.
-- Its vexes (one cast in three at 10 off) came three, a block from it, flew through blocks,
-  charged at 0.91 v + 0.05 a tick and hit for 5.5. It stepped away from a player 2 off, as its
-  `avoid_mob_type` says, and walked between casts for a reason not seen.
-
-## The shulker (`shulker`)
-
-A shulker 6 off the actor in survival at midnight on easy, healed each second
-(`research/captures/bds-shulker-findings.md`; the 12-off half was lost to a fall death):
-
-- It took the actor in the same packet as `ShulkerPeekId` 100 and stayed open while it held it,
-  `shulker.open` a tick later; it let go some 15 off, closing (0, `shulker.close`). It never moved.
-- It shot 37 ticks after taking its target, then 36, 41 and 45 apart: a `shulker_bullet` from its
-  feet + 0.692 up and 1 towards the target, still, with `shoot` and `undefined` 0.99 up it.
-- A bullet flew as the Java game's `ShulkerBullet`, to 1e-4: a pull of 0.15 along one axis, grown
-  ×1.025 a tick, its speed eased a fifth of the way to it each tick, no gravity or drag. It chose
-  another axis towards its target where it came level with the target's middle cell, or after 10,
-  20, 30, 40 or 50 ticks; its first leg could go up. 25 ticks took it to the actor 6 off.
-- It met the actor's box 0.3 wider: 4 on easy (`HurtAnimation` 3), a throw 0.4 away and 0.4 up even
-  in mid-air, and levitation 200 ticks (refreshed by each next hit); it went the tick after with
-  `bullet.hit` where it met.
+The witch, the enderman, the goat, the evoker, the shulker, the breeze and the ghast: `mob-kinds.md`.
 
 ## Strolling (`stroll`)
 
@@ -392,27 +301,6 @@ arrows passed a hand over the player's head.
 
 A stray and a bogged shoot as the skeleton with their effect on the arrow, and a pillager while
 it walks on, its crossbow heard loading where it stood at the shot before; it is not shown anew.
-
-A witch throws as above (`creatures/arrows.rs` `POTION`, its rise fitted to the three throws),
-picking the potion by its pack's rule (`creatures/splashes.rs`). A player it hits gets the full
-effect (`vitals/splashed.rs`); one near the break gets the Java game's `1 - d/4` of each effect's
-time, which was not drilled. Mobs splashed get nothing and the witch drinks nothing.
-
-An enderman teleports on its first tick, the tick after a hit and towards prey more than 16 off
-for 30 ticks (`creatures/teleports.rs`), and hunts its hitter as above. It does not teleport while
-calm or from beside its prey, a stare does not anger it, water does nothing to it, and its
-`ANGRY` flag is not shown.
-
-A goat rams players as above (`creatures/rams.rs`), charging at most 8 blocks; it shows no prey
-between rams, rams no mob, and a baby rams as hard as a grown one.
-
-An evoker casts its fangs as above (`creatures/spells.rs`, `casts` in `mob-traits.tsv`), its
-line's way taken as the first fang rises, and strolls between casts. It summons no vexes, steps
-away from nobody, and its fangs bite no mob; a fang stands on full blocks only.
-
-A shulker opens for its prey and shoots as above (`creatures/bullets.rs`, `creatures/shooting.rs`),
-41 ticks apart where BDS's varied; a bullet is not shown hidden on its first tick nor turned, hits
-no mob and cannot be shot down, and a shulker neither peeks idly nor teleports.
 
 A wolf and a zombified piglin hunt none but a survival player that hit them, from that tick
 (`hunting::provoke`), and so do an iron golem, with a hit of 7 to 21 and its throw, and a polar

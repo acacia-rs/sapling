@@ -59,7 +59,7 @@ struct Fang {
 }
 
 pub(super) fn arm(world: &mut World, entity: Entity, kind: &str) {
-    if sapling_data::mob_traits(kind).hunts.is_some_and(|hunts| hunts.casts) {
+    if sapling_data::mob_traits(kind).hunts.is_some_and(|hunts| hunts.fights == Some("spells")) {
         world.entity_mut(entity).insert(Caster::default());
     }
 }

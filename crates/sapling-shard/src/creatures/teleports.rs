@@ -1,4 +1,4 @@
-//! An enderman's teleports (docs/research/mob-attacks.md, "The enderman"), as BDS's were seen to
+//! An enderman's teleports (docs/research/mob-kinds.md, "The enderman"), as BDS's were seen to
 //! (research/captures/bds-ender-findings.md): on its first tick, the tick after a hit, and towards
 //! prey that has been more than 16 off for 30 ticks.
 // TODO: none while calm (BDS's came some 5 seconds apart in one run and not at all in another),

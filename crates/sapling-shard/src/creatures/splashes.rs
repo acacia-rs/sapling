@@ -1,4 +1,4 @@
-//! A witch's thrown potions (docs/research/mob-attacks.md, "The witch"): which it throws, by its
+//! A witch's thrown potions (docs/research/mob-kinds.md, "The witch"): which it throws, by its
 //! definition's `shooter` list, and what one does where it breaks.
 // TODO: a mob splashed is given nothing, the witch drinks nothing, and the colours are of the four
 // potions it throws at players alone.

@@ -5,7 +5,7 @@ minecraft:bat	no_fall
 minecraft:bee	no_fall xp=1-3 attack=2 speed=0.42 sees=16 provoked once
 minecraft:blaze	fire_immune no_fall xp=10-10 strolls=0.23 attack=0 speed=0.23 sees=48 shoots=173 aims=83 volley=3x6 shot=small_fireball
 minecraft:bogged	breathes_water burns_in_sun xp=5-5 strolls=0.25 attack=0 speed=0.25 sees=16 shoots=71 hits=poison:112
-minecraft:breeze	no_fall xp=10-10 strolls=0.4
+minecraft:breeze	no_fall xp=10-10 strolls=0.4 attack=0 speed=0.48 sees=24 fights=leaps
 minecraft:camel	xp=1-3 strolls=0.18 panics=0.36
 minecraft:camel_husk	breathes_water xp=1-3 strolls=0.18
 minecraft:cat	no_fall xp=1-3 strolls=0.24 panics=0.375
@@ -24,10 +24,10 @@ minecraft:ender_crystal	fire_immune
 minecraft:ender_dragon	fire_immune no_fall
 minecraft:enderman	teleports xp=5-5 strolls=0.3 attack=7 speed=0.45 sees=64 provoked
 minecraft:endermite	xp=3-3 strolls=0.25 attack=2 speed=0.25 sees=16
-minecraft:evocation_illager	xp=10-10 strolls=0.3 attack=0 speed=0.5 sees=20 casts
+minecraft:evocation_illager	xp=10-10 strolls=0.3 attack=0 speed=0.5 sees=20 fights=spells
 minecraft:fox	xp=1-3 strolls=0.24 panics=0.375
 minecraft:frog	breathes_water xp=1-3
-minecraft:ghast	fire_immune no_fall xp=5-5
+minecraft:ghast	fire_immune no_fall xp=5-5 attack=0 speed=0.03 sees=28 fights=fireballs
 minecraft:glow_squid	breathes_water no_air xp=1-3
 minecraft:goat	xp=1-3 strolls=0.24 panics=0.4
 minecraft:guardian	breathes_water xp=10-10

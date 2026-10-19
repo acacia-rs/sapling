@@ -1,4 +1,4 @@
-//! A goat's ram (docs/research/mob-attacks.md, "The goat"), as BDS's were seen to
+//! A goat's ram (docs/research/mob-kinds.md, "The goat"), as BDS's were seen to
 //! (research/captures/bds-goat-findings.md): 30 to 300 seconds after it came and after each ram it
 //! runs to a place 7 off its prey along an axis, stands, and charges along that axis into whoever
 //! is in the way.

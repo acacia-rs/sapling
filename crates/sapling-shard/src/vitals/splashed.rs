@@ -1,4 +1,4 @@
-//! A thrown potion breaking by a player (docs/research/mob-attacks.md, "The witch"): a direct hit
+//! A thrown potion breaking by a player (docs/research/mob-kinds.md, "The witch"): a direct hit
 //! gave the potion's effects in full, and harming threw the player as a hit does.
 // TODO: one that breaks nearby gives the Java game's share, 1 less a quarter of the distance, of
 // the time, and an instant effect in full; BDS's share off a hit was not measured.

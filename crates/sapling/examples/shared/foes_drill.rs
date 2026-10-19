@@ -32,6 +32,30 @@ pub fn shulker() -> Vec<String> {
     faced(&[(&["summon shulker ~ ~ ~-6"], 20), (&["summon shulker ~ ~ ~-12"], 20)])
 }
 
+/// The actor in survival at midnight on an obsidian floor 41 square, which a fireball cannot
+/// break, with fall damage off: a ghast 12 off and 6 up, held still so that it stays in range,
+/// for forty seconds, healed each second (bds-ghast-findings.md: one let loose wandered off).
+pub fn ghast() -> Vec<String> {
+    open_floor("obsidian", &["summon ghast ~ ~6 ~-12", "effect @e[type=ghast] slowness 60 255"], 40)
+}
+
+/// As [`ghast`] on stone: a breeze 8 off for thirty seconds.
+pub fn breeze() -> Vec<String> {
+    open_floor("stone", &["summon breeze ~ ~ ~-8"], 30)
+}
+
+/// A floor of `block` 41 square at y -20 with 20 of air over it, the actor in survival on it at
+/// midnight with fall damage off; `summon` run, then the actor healed each second for `seconds`.
+fn open_floor(block: &str, summon: &[&str], seconds: usize) -> Vec<String> {
+    let mut lines: Vec<String> = ["kill @e[type=!player]", "gamerule domobspawning false", "gamerule falldamage false", "difficulty easy", "time set midnight", "gamemode survival @s"].map(String::from).into();
+    // Split under fill's limit of 32768 blocks.
+    lines.extend([format!("fill ~-20 ~-1 ~-20 ~20 ~-1 ~20 {block}"), "fill ~-20 ~ ~-20 ~20 ~9 ~20 air".into(), "fill ~-20 ~10 ~-20 ~20 ~20 ~20 air".into(), String::new()]);
+    lines.extend(summon.iter().map(|line| line.to_string()));
+    lines.extend(std::iter::repeat_n("effect @s instant_health 1 4".to_owned(), seconds));
+    lines.extend(["kill @e[type=!player]", "effect @s clear", "gamerule falldamage true", "gamemode creative @s", ""].map(String::from));
+    lines
+}
+
 /// The actor in survival at midnight on a dry stone floor 41 blocks square on the flat ground,
 /// where an enderman's teleports land: one held still, hit from 1.5 off and let go, then thirty
 /// seconds healed every second (research/captures/bds-ender-findings.md has an earlier run's stares).

@@ -192,8 +192,11 @@ fn heads(world: &mut World, entity: Entity, layer: Entity, body: &Body, feet: [f
 pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity, id: u64, kind: &str) -> bool {
     let (Some(body), Some(speed)) = (world.get::<Body>(entity).copied(), sapling_data::mob_traits(kind).hunts.map(|hunts| hunts.speed)) else { return false };
     let prey = pick(world, entity, layer, id, kind, &body);
-    if sapling_data::mob_traits(kind).hunts.is_some_and(|hunts| hunts.casts) {
-        return super::spells::steer(world, entity, layer, id, kind, &body, prey);
+    match sapling_data::mob_traits(kind).hunts.and_then(|hunts| hunts.fights) {
+        Some("spells") => return super::spells::steer(world, entity, layer, id, kind, &body, prey),
+        Some("leaps") => return super::breezes::steer(world, entity, layer, id, kind, &body, prey),
+        Some("fireballs") => return super::ghasts::steer(world, entity, layer, id, kind, &body, prey),
+        _ => {}
     }
     let Some(feet) = prey else { return blast::is_lit(world, entity) };
     // A lit creeper stands where it is, and an archer within its range.
@@ -213,7 +216,7 @@ pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity, id: u64, k
 /// After its move: a hunter whose reach its prey is in swings and hits it, heard a tick later.
 pub(super) fn strike(world: &mut World, entity: Entity, layer: Entity, id: u64, kind: &str, body: &Body) -> Option<()> {
     let now = world.resource::<Tick>().0;
-    let hunts = sapling_data::mob_traits(kind).hunts.filter(|hunts| !hunts.casts)?;
+    let hunts = sapling_data::mob_traits(kind).hunts.filter(|hunts| hunts.fights.is_none())?;
     let harm = match hunts.upto {
         Some(most) => hunts.attack + world.get_resource_or_insert_with(crate::blocks::Dice::default).roll((most - hunts.attack) as u32 + 1) as f32,
         None => hunts.attack,

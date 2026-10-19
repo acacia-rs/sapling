@@ -179,6 +179,64 @@ fn a_shulker_opens_for_its_prey_and_its_bullet_flies_to_it_for_4_and_levitation(
 }
 
 #[test]
+fn a_breeze_faces_shoots_a_wind_charge_that_bursts_on_its_prey_and_leaps() {
+    // research/captures/bds-breeze-findings.md: 16 ticks facing, the charge 1.416 up; it bursts 6
+    // ticks after it meets the player, for 1, a hit's throw and then the burst's on top; a leap
+    // readied 4 ticks after the shot is heard 11 after that.
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    h.remote.run(|ctx| {
+        ctx.set_difficulty(Difficulty::Easy);
+        assert!(ctx.spawn_entity("minecraft:breeze", [0.5, 65.0, -5.5]).is_some());
+    });
+    let (mut facing, mut shot, mut hurt, mut throws, mut jumped) = (None, None, None, Vec::new(), None);
+    for tick in 0..80 {
+        let sent = h.tick_all().to(1).to_vec();
+        let faces = all::<acacia_proto::packets::SetEntityData>(&sent).iter().any(|data| data.metadata.iter().any(|item| matches!(item.value, acacia_proto::types::MetadataDictionaryItemValue::FlagsExtended(flags) if flags.0 & (1 << 24) != 0)));
+        facing = facing.or(faces.then_some(tick));
+        shot = shot.or(all::<acacia_proto::packets::AddEntity>(&sent).iter().find(|added| added.entity_type == "minecraft:breeze_wind_charge_projectile").map(|added| (tick, added.position.y)));
+        if hurt.is_none() && all::<EntityEvent>(&sent).iter().any(|event| event.runtime_entity_id == 1 && event.event_id == EntityEventEventId::HurtAnimation && event.data == 3) {
+            hurt = Some(tick);
+            throws = all::<acacia_proto::packets::SetEntityMotion>(&sent).iter().filter(|motion| motion.runtime_entity_id == 1).map(|motion| [motion.velocity.x, motion.velocity.y, motion.velocity.z]).collect();
+        }
+        jumped = jumped.or(all::<acacia_proto::packets::LevelSoundEvent>(&sent).iter().any(|sound| sound.sound_id == "jump").then_some(tick));
+    }
+    let (facing, (shot, held)) = (facing.expect("facing"), shot.expect("a charge"));
+    assert!(shot == facing + 16 && (held - 66.416).abs() < 1e-3, "facing {facing}, shot {shot} at {held}");
+    let hurt = hurt.expect("a hit");
+    assert!((6..20).contains(&(hurt - shot)), "shot {shot}, hurt {hurt}");
+    assert!(throws.len() == 2 && (throws[0][1] - 0.4).abs() < 1e-4 && (throws[0][2] - 0.4).abs() < 1e-3 && throws[1][1] > 0.8, "{throws:?}");
+    assert_eq!(jumped, Some(shot + 15));
+}
+
+#[test]
+fn a_ghast_warns_shoots_a_fireball_21_ticks_after_that_hurts_6_and_burns_and_warns_again_60_on() {
+    // research/captures/bds-ghast-findings.md: `warn` with its mouth open 20 ticks after taking its
+    // prey, the fireball 21 after at 1.6 a tick; 6 where it meets the player, and fire.
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    h.remote.run(|ctx| {
+        ctx.set_difficulty(Difficulty::Easy);
+        // High over the platform, which is all the world there is: a ghast that wandered below it shot its underside.
+        assert!(ctx.spawn_entity("minecraft:ghast", [0.5, 78.0, -4.5]).is_some());
+    });
+    let (mut warns, mut opened, mut fired, mut hurt) = (Vec::new(), None, None, None);
+    for tick in 0..160 {
+        let sent = h.tick_all().to(1).to_vec();
+        warns.extend(all::<acacia_proto::packets::LevelSoundEvent>(&sent).iter().filter(|sound| sound.sound_id == "warn").map(|_| tick));
+        let open = all::<acacia_proto::packets::SetEntityData>(&sent).iter().any(|data| data.metadata.iter().any(|item| item.key == acacia_proto::types::MetadataDictionaryItemKey::ChargeAmount && item.value == acacia_proto::types::MetadataDictionaryItemValue::Default(acacia_proto::types::MetadataDictionaryItemValueDefault::Byte(1))));
+        opened = opened.or(open.then_some(tick));
+        fired = fired.or(all::<acacia_proto::packets::AddEntity>(&sent).iter().find(|added| added.entity_type == "minecraft:fireball").map(|added| (tick, added.velocity.x.hypot(added.velocity.y).hypot(added.velocity.z))));
+        if hurt.is_none() && all::<EntityEvent>(&sent).iter().any(|event| event.runtime_entity_id == 1 && event.event_id == EntityEventEventId::HurtAnimation && event.data == 3) {
+            hurt = Some(tick);
+        }
+    }
+    let ((fired, speed), hurt) = (fired.expect("a fireball"), hurt.expect("a hit"));
+    assert!(warns.len() >= 2 && opened == Some(warns[0]) && fired == warns[0] + 21 && warns[1] == fired + 60, "warns {warns:?}, opened {opened:?}, fired {fired}");
+    assert!((speed - 1.6).abs() < 1e-3 && hurt > fired, "speed {speed}, hurt {hurt}");
+}
+
+#[test]
 fn a_blaze_shoots_three_small_fireballs_six_ticks_apart_that_burn_whom_they_hit() {
     // research/captures/bds-blaze.txt: the first 83 ticks after it took its prey; bds-kinds2.txt: 5 and fire.
     let mut h = Harness::new();

@@ -115,6 +115,27 @@ pub(crate) fn rammed(world: &mut World, player: Entity, amount: f32, kind: &str,
     took
 }
 
+/// A breeze's wind charge, shot by a mob of `kind` at `from`, hurts a player for `amount` as a
+/// projectile: thrown as a hit from `from` is, then again with the burst's `push` added
+/// (research/captures/bds-breeze-findings.md). False where it took nothing.
+pub(crate) fn winded(world: &mut World, player: Entity, amount: f32, kind: &str, from: [f32; 3], push: [f32; 3]) -> bool {
+    let (Some(id), Some(feet), true) = (world.get::<NetId>(player).map(|id| id.0), world.get::<Position>(player).map(|position| position.feet), is_mortal(world, player)) else { return false };
+    let plain = away(from, feet);
+    throw(world, player, id, plain);
+    world.entity_mut(player).insert(death::Slayer(kind.to_owned()));
+    let took = hurt(world, player, amount, Cause::Projectile);
+    world.entity_mut(player).remove::<death::Slayer>();
+    throw(world, player, id, std::array::from_fn(|axis| plain[axis] + push[axis]));
+    took
+}
+
+/// A burst that did not hit the player throws it by `push` alone.
+pub(crate) fn pushed(world: &mut World, player: Entity, push: [f32; 3]) {
+    if let Some(id) = world.get::<NetId>(player).map(|id| id.0) {
+        throw(world, player, id, push);
+    }
+}
+
 /// Throws a player as a hit from `from` does.
 pub(super) fn throw_from(world: &mut World, player: Entity, id: u64, from: [f32; 3]) {
     let Some(feet) = world.get::<Position>(player).map(|position| position.feet) else { return };
