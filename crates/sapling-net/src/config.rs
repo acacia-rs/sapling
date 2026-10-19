@@ -15,6 +15,10 @@ pub struct NetConfig {
     pub motd: Motd,
     /// A player whose unsent backlog grows past this is kicked rather than buffered without end.
     pub max_queued_bytes: usize,
+    /// A connection with more than this unsent is congested ([`crate::Outbox::is_congested`]) until
+    /// it drains below `drained_bytes`.
+    pub congested_bytes: usize,
+    pub drained_bytes: usize,
     /// NetherNet beside RakNet. Off by default: a vanilla client that finds it stops using RakNet.
     pub nethernet: Option<NetherNet>,
 }
@@ -27,6 +31,8 @@ impl Default for NetConfig {
             max_players: 100,
             motd: Motd::default(),
             max_queued_bytes: 16 * 1024 * 1024,
+            congested_bytes: 1024 * 1024,
+            drained_bytes: 256 * 1024,
             nethernet: None,
         }
     }

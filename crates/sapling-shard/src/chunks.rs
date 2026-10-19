@@ -10,18 +10,23 @@ use bevy_ecs::prelude::*;
 use sapling_world::ChunkPos;
 
 use crate::blobs::BlobCache;
-use crate::components::{InLayer, Layer, Outgoing, PacketQueues, Position, Settings, Stage, Tick};
+use crate::components::{Conn, InLayer, Layer, Net, Outgoing, PacketQueues, Position, Settings, Stage, Tick};
 use crate::view::View;
 
 /// Sections answered per request; vanilla asks for a few columns (under 100 sections) at a time.
 const MAX_SECTIONS_PER_REQUEST: usize = 1024;
-/// Requests a player may have waiting on column loads; more are dropped.
-const MAX_BACKLOG: usize = 64;
+/// Sections a player may have waiting, per column of its view's square: more than any dimension
+/// has, so only a client asking for sections over again reaches it. Vanilla never asks twice, so
+/// a section dropped below this would stay a hole.
+const MAX_WAITING_PER_COLUMN: usize = 32;
 /// A joining player spawns once the columns this close are sent; BDS has sent about as many
 /// (26 in acacia's capture) when it sends PlayStatus(PlayerSpawn).
 const SPAWN_RADIUS: i32 = 3;
 /// Ticks between sweeps for columns to save and columns nobody sees any more.
 pub(crate) const UNLOAD_INTERVAL: u64 = 100;
+/// Ticks between drops of queued loads that left every view, so the columns a flight or teleport
+/// passed are not generated.
+const CANCEL_INTERVAL: u64 = 10;
 
 /// Takes the columns the I/O threads loaded since the last tick.
 pub(crate) fn poll_worlds(mut layers: Query<&mut Layer>) {
@@ -30,12 +35,14 @@ pub(crate) fn poll_worlds(mut layers: Query<&mut Layer>) {
     }
 }
 
-type Viewer<'a> = (&'a Position, &'a InLayer, &'a mut Stage, &'a mut View, &'a mut BlobCache, &'a mut Outgoing);
+type Viewer<'a> = (&'a Conn, &'a Position, &'a InLayer, &'a mut Stage, &'a mut View, &'a mut BlobCache, &'a mut Outgoing);
 
 /// Follows each player with its view and announces up to a tick's budget of the columns that
-/// entered it, nearest first, as they finish loading; a joining player then spawns.
-pub(crate) fn send_chunks(settings: Res<Settings>, mut layers: Query<&mut Layer>, mut players: Query<Viewer>) {
-    for (position, in_layer, mut stage, mut view, mut blobs, mut out) in &mut players {
+/// entered it, nearest first, as they finish loading; a joining player then spawns. A congested
+/// connection or a full blob cache gets none until it drains: announcements are what can wait,
+/// section answers (`sub_chunk_requests`) are not.
+pub(crate) fn send_chunks(settings: Res<Settings>, net: Res<Net>, mut layers: Query<&mut Layer>, mut players: Query<Viewer>) {
+    for (conn, position, in_layer, mut stage, mut view, mut blobs, mut out) in &mut players {
         if *stage < Stage::Chunks {
             continue;
         }
@@ -46,7 +53,8 @@ pub(crate) fn send_chunks(settings: Res<Settings>, mut layers: Query<&mut Layer>
             let radius = (view.radius() * 16) as u32;
             out.push(&NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x, y, z }, radius, saved_chunks: Vec::new() });
         }
-        let budget = if blobs.is_backlogged() { 0 } else { settings.0.columns_per_tick };
+        let held = blobs.is_backlogged() || net.0.is_congested(conn.0);
+        let budget = if held { 0 } else { settings.0.columns_per_tick };
         // A joining player waits on its spawn columns: those go ahead of other players' loads.
         let spawn = (*stage == Stage::Chunks).then(|| view.center()).flatten();
         let spawn_radius = SPAWN_RADIUS.min(view.radius());
@@ -81,13 +89,20 @@ type Requester<'a> = (&'a InLayer, &'a View, &'a mut BlobCache, &'a mut SectionB
 /// that is still loading, and after a world change one the client asked for in the old world,
 /// which is then answered from the new one. Sections outside the view are dropped.
 pub(crate) fn sub_chunk_requests(mut packets: ResMut<PacketQueues>, mut layers: Query<&mut Layer>, mut players: Query<Requester>) {
-    for (entity, request) in packets.take::<SubchunkRequest>() {
-        if let Ok((_, _, _, mut backlog, _)) = players.get_mut(entity) {
-            // A client may ask for no sections of a column that has none; that is not a request.
-            if !request.requests.is_empty() && backlog.0.len() < MAX_BACKLOG {
-                backlog.0.push(request);
-            }
+    for (entity, mut request) in packets.take::<SubchunkRequest>() {
+        let Ok((_, view, _, mut backlog, _)) = players.get_mut(entity) else { continue };
+        // A client may ask for no sections of a column that has none; that is not a request.
+        if request.requests.is_empty() {
+            continue;
         }
+        request.requests.truncate(MAX_SECTIONS_PER_REQUEST);
+        let waiting: usize = backlog.0.iter().map(|waiting| waiting.requests.len()).sum();
+        let limit = (2 * view.radius() as usize + 1).pow(2) * MAX_WAITING_PER_COLUMN;
+        if waiting + request.requests.len() > limit {
+            tracing::warn!(waiting, asked = request.requests.len(), limit, "section requests over the limit dropped");
+            continue;
+        }
+        backlog.0.push(request);
     }
     for (in_layer, view, mut blobs, mut backlog, mut out) in &mut players {
         if backlog.0.is_empty() {
@@ -103,7 +118,6 @@ pub(crate) fn sub_chunk_requests(mut packets: ResMut<PacketQueues>, mut layers: 
             }
             let origin = request.origin.clone();
             let column = |o: &Vec3i8| ChunkPos::new(origin.x + i32::from(o.x), origin.z + i32::from(o.z));
-            request.requests.truncate(MAX_SECTIONS_PER_REQUEST);
             request.requests.retain(|o| view.covers(column(o)));
             let (ready, waiting): (Vec<_>, Vec<_>) = request.requests.into_iter().partition(|o| view.has_sent(column(o)) && world.request(column(o)));
             let mut entry = |o: &Vec3i8| {
@@ -129,13 +143,38 @@ pub(crate) fn save_and_unload_columns(tick: Res<Tick>, mut layers: Query<(Entity
     if tick.0 % UNLOAD_INTERVAL != 0 {
         return;
     }
+    let views = views_by_layer(&players);
+    for (entity, mut layer) in &mut layers {
+        let seen = seen_in(&views, entity);
+        layer.world.save_modified();
+        layer.world.unload(seen);
+    }
+}
+
+/// Drops the queued loads of columns no view covers any more; a column already loading finishes.
+pub(crate) fn cancel_unseen_loads(tick: Res<Tick>, mut layers: Query<(Entity, &mut Layer)>, players: Query<(&InLayer, &View)>) {
+    if tick.0 % CANCEL_INTERVAL != 0 {
+        return;
+    }
+    let views = views_by_layer(&players);
+    for (entity, mut layer) in &mut layers {
+        let cancelled = layer.world.cancel_loads(seen_in(&views, entity));
+        if cancelled > 0 {
+            tracing::debug!(cancelled, "dropped loads nobody sees");
+        }
+    }
+}
+
+fn views_by_layer<'a>(players: &'a Query<(&InLayer, &View)>) -> HashMap<Entity, Vec<&'a View>> {
     let mut views: HashMap<Entity, Vec<&View>> = HashMap::new();
-    for (in_layer, view) in &players {
+    for (in_layer, view) in players {
         views.entry(in_layer.0).or_default().push(view);
     }
-    for (entity, mut layer) in &mut layers {
-        let seen_by = views.get(&entity).map_or(&[][..], Vec::as_slice);
-        layer.world.save_modified();
-        layer.world.unload(|pos| seen_by.iter().any(|view| view.covers(pos)));
-    }
+    views
+}
+
+/// Whether any view in `layer` covers a column.
+fn seen_in<'a>(views: &'a HashMap<Entity, Vec<&'a View>>, layer: Entity) -> impl Fn(ChunkPos) -> bool + 'a {
+    let seen_by = views.get(&layer).map_or(&[][..], Vec::as_slice);
+    move |pos| seen_by.iter().any(|view| view.covers(pos))
 }

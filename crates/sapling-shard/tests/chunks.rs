@@ -110,10 +110,38 @@ fn the_view_follows_the_player() {
     assert!(h.tick(1).is_empty());
 }
 
+#[test]
+fn a_congested_connection_gets_section_answers_but_no_new_columns() {
+    let mut h = Harness::new();
+    h.join_to_radius(1, 4);
+    assert_eq!(all::<LevelChunk>(&drain(&mut h, 1)).len(), 49);
+
+    h.congest(1, true);
+    h.receive(1, &request(&[(0, 4, 0)]));
+    assert_eq!(all::<Subchunk>(&h.tick(1)).len(), 1, "answers do not wait");
+    (1..=4).for_each(|step| h.receive(1, &input_at([0.5 + 10.0 * step as f32, 65.0, 0.5])));
+    let held = drain(&mut h, 1);
+    assert!(held.iter().all(|p| p.is::<NetworkChunkPublisherUpdate>()), "{:?}", common::ids(&held));
+
+    h.congest(1, false);
+    assert!(!all::<LevelChunk>(&drain(&mut h, 1)).is_empty(), "the columns that entered the view follow");
+}
+
+#[test]
+fn a_burst_of_section_requests_is_answered_in_full() {
+    let mut h = Harness::new();
+    h.join_to_radius(1, 4);
+    drain(&mut h, 1);
+    // Vanilla never asks again: every request dropped would be a hole until the player left.
+    (0..100).for_each(|_| h.receive(1, &request(&[(0, 4, 0)])));
+    assert_eq!(all::<Subchunk>(&h.tick(1)).len(), 100);
+}
+
 /// Storage that holds nothing, counts loads, and lets none finish until opened.
 #[derive(Clone, Default)]
 struct Gated {
     open: Arc<(Mutex<bool>, Condvar)>,
+    started: Arc<AtomicUsize>,
     loads: Arc<AtomicUsize>,
 }
 
@@ -126,6 +154,7 @@ impl Gated {
 
 impl WorldStorage for Gated {
     fn load_column(&self, pos: ChunkPos, dimension: i32) -> Result<Option<StoredColumn>, StorageError> {
+        self.started.fetch_add(1, Ordering::SeqCst);
         let mut open = self.open.0.lock().unwrap();
         while !*open {
             open = self.open.1.wait(open).unwrap();
@@ -178,6 +207,30 @@ fn a_shard_keeps_ticking_while_storage_is_slow() {
     assert!(near.clone().count() == 29 && near.into_iter().all(|p| before.contains(&p)));
     assert_eq!(all::<PlayStatus>(&sent).len(), 1);
     assert_eq!(storage.loads.load(Ordering::SeqCst), 49);
+}
+
+#[test]
+fn loads_nobody_sees_any_more_are_dropped() {
+    let storage = Gated::default();
+    let mut h = Harness::with(config(), World::with_storage(Arc::new(storage.clone())));
+    h.join_to_radius(1, 4);
+    (0..3).for_each(|_| drop(h.tick(1)));
+    let deadline = Instant::now() + Duration::from_secs(5);
+    while storage.started.load(Ordering::SeqCst) < 2 {
+        assert!(Instant::now() < deadline, "the I/O threads never took a load");
+        std::thread::sleep(Duration::from_millis(1));
+    }
+    h.leave(1);
+    (0..20).for_each(|_| h.shard.tick());
+
+    storage.open();
+    // Only the loads the two I/O threads had already taken, out of the 32 asked for.
+    let deadline = Instant::now() + Duration::from_millis(500);
+    while Instant::now() < deadline {
+        h.shard.tick();
+        std::thread::sleep(Duration::from_millis(5));
+    }
+    assert_eq!(storage.loads.load(Ordering::SeqCst), 2);
 }
 
 #[test]

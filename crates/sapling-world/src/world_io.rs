@@ -113,6 +113,12 @@ impl World {
         }
     }
 
+    /// Drops the loads still queued for columns `keep` rejects; returns how many. See
+    /// `Loader::cancel`.
+    pub fn cancel_loads(&mut self, keep: impl Fn(ChunkPos) -> bool) -> usize {
+        self.loader.as_mut().map_or(0, |loader| loader.cancel(keep))
+    }
+
     /// Columns held in memory, and loads on their way.
     pub fn loaded_columns(&self) -> (usize, usize) {
         (self.columns.len(), self.loader.as_ref().map_or(0, Loader::loading))

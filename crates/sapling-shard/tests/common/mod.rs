@@ -110,6 +110,11 @@ impl Harness {
         self.net.events.send(NetEvent::Packet { conn: ConnId::new(conn), packet }).unwrap();
     }
 
+    /// Plays the network marking `conn`'s send backlog as over (or back under) its watermark.
+    pub fn congest(&self, conn: u64, congested: bool) {
+        self.net.congestion.set(ConnId::new(conn), congested);
+    }
+
     pub fn leave(&mut self, conn: u64) {
         self.net.events.send(NetEvent::Left { conn: ConnId::new(conn), reason: "test".into() }).unwrap();
     }

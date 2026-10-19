@@ -101,6 +101,23 @@ impl<J> JobQueue<J> {
         }
     }
 
+    /// Takes the queued loads, urgent or not, that `keep` rejects out of the queue and returns
+    /// them; a load a worker already took is not affected.
+    pub fn cancel_loads(&self, keep: impl Fn(ChunkPos) -> bool) -> Vec<ChunkPos> {
+        let mut state = self.state.lock().expect("loader queue lock");
+        let mut cancelled = Vec::new();
+        let mut sweep = |pos: &ChunkPos| {
+            let kept = keep(*pos);
+            if !kept {
+                cancelled.push(*pos);
+            }
+            kept
+        };
+        state.urgent.retain(&mut sweep);
+        state.loads.retain(&mut sweep);
+        cancelled
+    }
+
     pub fn push_other(&self, job: J) {
         self.state.lock().expect("loader queue lock").other.push_back(job);
         self.queued.notify_one();
@@ -199,6 +216,20 @@ mod tests {
             assert_eq!(load(&queue, 0), ChunkPos::new(1, 0), "the next tick's column, not the far one");
         });
         assert_eq!(load(&queue, 0), ChunkPos::new(100, 0));
+    }
+
+    #[test]
+    fn cancelled_loads_are_never_handed_out() {
+        let queue = JobQueue::new(1);
+        for x in 0..4 {
+            queue.push_load(ChunkPos::new(x, 0), x == 3);
+        }
+        let mut cancelled = queue.cancel_loads(|pos| pos.x % 2 == 0);
+        cancelled.sort();
+        assert_eq!(cancelled, [ChunkPos::new(1, 0), ChunkPos::new(3, 0)]);
+        queue.close();
+        assert_eq!([load(&queue, 0), load(&queue, 0)], [ChunkPos::new(0, 0), ChunkPos::new(2, 0)]);
+        assert!(queue.next(0).is_none());
     }
 
     #[test]

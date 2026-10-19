@@ -5,6 +5,7 @@ use acacia_proto::RawPacket;
 use bytes::Bytes;
 use tokio::sync::mpsc;
 
+use crate::congestion::Congestion;
 use crate::router::Router;
 
 /// One logged-in connection. Never reused within a process, so a late message for a player who
@@ -48,22 +49,30 @@ pub enum Outbound {
 /// The game's handle for sending. Sends queue without blocking; a connection that has gone is
 /// skipped silently (its `Left` is already in the inbox). Dropping every clone stops the listener.
 #[derive(Debug, Clone)]
-pub struct Outbox(pub(crate) mpsc::UnboundedSender<Outbound>);
+pub struct Outbox {
+    pub(crate) commands: mpsc::UnboundedSender<Outbound>,
+    pub(crate) congestion: Congestion,
+}
 
 impl Outbox {
     pub fn send(&self, conn: ConnId, packets: Vec<Bytes>) {
         if !packets.is_empty() {
-            let _ = self.0.send(Outbound::Send { conn, packets });
+            let _ = self.commands.send(Outbound::Send { conn, packets });
         }
     }
 
     pub fn kick(&self, conn: ConnId, message: impl Into<String>) {
-        let _ = self.0.send(Outbound::Kick { conn, message: message.into() });
+        let _ = self.commands.send(Outbound::Kick { conn, message: message.into() });
     }
 
     /// Moves a connection to another shard; shard `from` gets [`NetEvent::Rerouted`] when done.
     pub fn route(&self, conn: ConnId, from: usize, to: usize) {
-        let _ = self.0.send(Outbound::Route { conn, from, to });
+        let _ = self.commands.send(Outbound::Route { conn, from, to });
+    }
+
+    /// Whether the connection has more unsent than it is draining: what can wait should.
+    pub fn is_congested(&self, conn: ConnId) -> bool {
+        self.congestion.contains(conn)
     }
 }
 
@@ -74,17 +83,20 @@ pub type Inbox = mpsc::UnboundedReceiver<NetEvent>;
 pub struct Loopback {
     pub events: mpsc::UnboundedSender<NetEvent>,
     pub sent: mpsc::UnboundedReceiver<Outbound>,
+    pub congestion: Congestion,
 }
 
 pub fn loopback() -> (Loopback, Outbox, Inbox) {
     let (events, inbox) = mpsc::unbounded_channel();
-    let (outbox, sent) = mpsc::unbounded_channel();
-    (Loopback { events, sent }, Outbox(outbox), inbox)
+    let (commands, sent) = mpsc::unbounded_channel();
+    let congestion = Congestion::default();
+    (Loopback { events, sent, congestion: congestion.clone() }, Outbox { commands, congestion }, inbox)
 }
 
 /// The network's side of several shards, for driving them without a listener (tests).
 pub struct ShardsLoopback {
     pub router: Router,
+    pub congestion: Congestion,
     sent: mpsc::UnboundedReceiver<Outbound>,
 }
 
@@ -105,6 +117,7 @@ impl ShardsLoopback {
 /// `shards` inboxes behind one router whose new connections join shard `entry`.
 pub fn loopback_shards(shards: usize, entry: usize) -> (ShardsLoopback, Outbox, Vec<Inbox>) {
     let (senders, inboxes) = (0..shards).map(|_| mpsc::unbounded_channel()).unzip();
-    let (outbox, sent) = mpsc::unbounded_channel();
-    (ShardsLoopback { router: Router::new(senders, entry), sent }, Outbox(outbox), inboxes)
+    let (commands, sent) = mpsc::unbounded_channel();
+    let congestion = Congestion::default();
+    (ShardsLoopback { router: Router::new(senders, entry), congestion: congestion.clone(), sent }, Outbox { commands, congestion }, inboxes)
 }

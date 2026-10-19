@@ -144,6 +144,16 @@ impl Loader {
         }
     }
 
+    /// Drops the queued loads `keep` rejects, so a later request queues them again; returns how
+    /// many. One a worker already took still arrives.
+    pub fn cancel(&mut self, keep: impl Fn(ChunkPos) -> bool) -> usize {
+        let cancelled = self.jobs.cancel_loads(keep);
+        for pos in &cancelled {
+            self.loading.remove(pos);
+        }
+        cancelled.len()
+    }
+
     pub fn loading(&self) -> usize {
         self.loading.len()
     }
