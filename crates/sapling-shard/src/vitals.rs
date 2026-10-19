@@ -10,10 +10,12 @@ pub(crate) mod eating;
 mod effects;
 pub(crate) use eating::bite;
 pub(crate) use effects::{afflict, hits_for, kept as kept_effects, restored as restored_effects};
-pub(crate) use struck::{bitten, blasted, is_fireproof, punched, set_alight, shot};
+pub(crate) use struck::{bitten, blasted, fanged, is_fireproof, punched, pushed, rammed, set_alight, shot, winded};
 mod hunger;
 mod kept;
+mod splashed;
 mod struck;
+pub(crate) use splashed::{health_left, is_under, splashed};
 
 use acacia_proto::Packet;
 use acacia_proto::packets::{EntityEvent, EntityEventEventId};

@@ -3,8 +3,8 @@
 
 use acacia_proto::nbt::{Nbt, Value};
 pub(crate) use acacia_proto::packets::UpdateBlockSyncedTransitionType as Transition;
-use acacia_proto::packets::{BlockEntityData, LevelEvent, LevelEventEvent, LevelSoundEvent, UpdateBlock, UpdateBlockSynced};
-use acacia_proto::types::{BlockCoordinates, UpdateBlockFlags, Vec3f};
+use acacia_proto::packets::{BlockEntityData, LevelEvent, LevelEventEvent, LevelSoundEvent, UpdateBlock, UpdateBlockSynced, UpdateSubchunkBlocks};
+use acacia_proto::types::{BlockCoordinates, BlockUpdate, BlockUpdateTransitionType, UpdateBlockFlags, Vec3f};
 use bevy_ecs::prelude::*;
 use bytes::Bytes;
 use sapling_api::{Block, BlockPos, Face};
@@ -128,6 +128,30 @@ pub(crate) fn set(world: &mut World, layer: Entity, pos: BlockPos, id: u32) -> b
 /// [`set`] without telling anyone; [`tell_synced`] does, once the entity it was for exists.
 pub(crate) fn set_quietly(world: &mut World, layer: Entity, pos: BlockPos, id: u32) -> bool {
     write(world, layer, pos, id).is_some()
+}
+
+/// Writes `cells` as [`set_quietly`] does, in order, and shows the ones that changed as BDS
+/// showed a grown tree: an UpdateSubchunkBlocks per sub-chunk, sub-chunks as first written
+/// (research/captures/bds-grows.txt). How many changed.
+pub(crate) fn set_many(world: &mut World, layer: Entity, cells: &[(BlockPos, u32)]) -> usize {
+    let mut sections: Vec<(BlockPos, Vec<BlockUpdate>)> = Vec::new();
+    for &(pos, id) in cells {
+        let Some(id) = write(world, layer, pos, id) else { continue };
+        let Some(runtime_id) = world.get::<Layer>(layer).map(|level| level.world.registry().network_hash(id)) else { continue };
+        let [x, y, z] = pos;
+        let update = BlockUpdate { position: BlockCoordinates { x, y, z }, runtime_id, flags: FLAGS.0, entity_unique_id: i64::MIN, transition_type: BlockUpdateTransitionType::Entity };
+        let section = pos.map(|c| c.div_euclid(16) * 16);
+        match sections.iter_mut().find(|(at, _)| *at == section) {
+            Some((_, updates)) => updates.push(update),
+            None => sections.push((section, vec![update])),
+        }
+    }
+    let changed = sections.iter().map(|(_, updates)| updates.len()).sum();
+    for ([x, y, z], blocks) in sections {
+        let packet = sapling_net::encode(&UpdateSubchunkBlocks { x, y, z, blocks, extra: Vec::new() });
+        to_viewers(world, layer, [x, y, z], &[packet]);
+    }
+    changed
 }
 
 /// Writes layer 0 as [`set`] does: the state written, or `None` when nothing changed.

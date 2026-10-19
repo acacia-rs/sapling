@@ -100,14 +100,18 @@ fn broken(world: &mut World, layer: Entity, at: [f32; 3], power: f32) -> Vec<[i3
 }
 
 /// What a blast of `power` at `at` does to a body whose eyes are at `eyes`: what it costs on
-/// this difficulty, nothing on peaceful, and the speed it throws at.
-fn reaches(world: &World, at: [f32; 3], eyes: [f32; 3], power: f32) -> Option<(f32, [f32; 3])> {
+/// this difficulty, nothing on peaceful, and the speed it throws at. A ghast's fireball's
+/// (`fireball`) goes by how far the body's `feet` are, costs no 1 more and is the same on every
+/// difficulty (research/captures/bds-ghast-findings.md).
+fn reaches(world: &World, at: [f32; 3], eyes: [f32; 3], feet: [f32; 3], power: f32, fireball: bool) -> Option<(f32, [f32; 3])> {
     let away: [f32; 3] = std::array::from_fn(|axis| eyes[axis] - at[axis]);
     let far = away.iter().map(|c| c * c).sum::<f32>().sqrt();
-    let impact = 1.0 - far / (2.0 * power);
-    let harm = (impact * impact + impact) / 2.0 * HARM * 2.0 * power + 1.0;
+    let measured = if fireball { (0..3).map(|axis| (feet[axis] - at[axis]).powi(2)).sum::<f32>().sqrt() } else { far };
+    let impact = 1.0 - measured / (2.0 * power);
+    let harm = (impact * impact + impact) / 2.0 * HARM * 2.0 * power + if fireball { 0.0 } else { 1.0 };
     let harm = match world.resource::<Settings>().0.difficulty {
         Difficulty::Peaceful => 0.0,
+        _ if fireball => harm,
         Difficulty::Easy => harm.min(harm / 2.0 + 1.0),
         Difficulty::Normal => harm,
         Difficulty::Hard => harm * 1.5,
@@ -126,6 +130,15 @@ pub(crate) enum Wreck {
 
 /// A blast of `power` at `at`: of `source`, if an entity made it, which is gone with it.
 pub(crate) fn explode(world: &mut World, source: Option<Entity>, layer: Entity, at: [f32; 3], power: f32, wreck: Wreck) {
+    blow(world, source, layer, at, power, wreck, false);
+}
+
+/// As [`explode`], a ghast's fireball's blast, by its own rule ([`reaches`]).
+pub(super) fn explode_fireball(world: &mut World, source: Entity, layer: Entity, at: [f32; 3], power: f32, wreck: Wreck) {
+    blow(world, Some(source), layer, at, power, wreck, true);
+}
+
+fn blow(world: &mut World, source: Option<Entity>, layer: Entity, at: [f32; 3], power: f32, wreck: Wreck, fireball: bool) {
     let [x, y, z] = at;
     let cell = at.map(|c| c.floor() as i32);
     let flash = LevelEvent { event: LevelEventEvent::ParticleExplosion, position: Vec3f { x, y, z }, data: power as i32 };
@@ -142,7 +155,7 @@ pub(crate) fn explode(world: &mut World, source: Option<Entity>, layer: Entity, 
     let players: Vec<(Entity, [f32; 3])> = crate::components::in_world(world).into_iter().filter_map(|player| Some((player, world.get::<Position>(player)?.feet))).filter(|(player, _)| world.get::<InLayer>(*player).map(|layer| layer.0) == Some(layer)).collect();
     for (player, feet) in players {
         let eyes = [feet[0], feet[1] + sapling_data::EYE_HEIGHT, feet[2]];
-        if let Some((harm, thrown)) = reaches(world, at, eyes, power) {
+        if let Some((harm, thrown)) = reaches(world, at, eyes, feet, power, fireball) {
             vitals::blasted(world, player, harm, at, thrown);
         }
     }
@@ -158,7 +171,7 @@ pub(crate) fn explode(world: &mut World, source: Option<Entity>, layer: Entity, 
     let near: Vec<(Entity, u64, Body)> = mobs.iter(world).filter(|(_, in_layer, ..)| in_layer.0 == layer).map(|(mob, _, body, _, id)| (mob, id.0, *body)).collect();
     for (mob, id, its) in near {
         let middle = [its.at[0], its.at[1] + its.size[1] / 2.0, its.at[2]];
-        let Some((harm, _)) = reaches(world, at, middle, power).filter(|(harm, _)| *harm > 0.0) else { continue };
+        let Some((harm, _)) = reaches(world, at, middle, its.at, power, fireball).filter(|(harm, _)| *harm > 0.0) else { continue };
         let Some(mut health) = world.get::<Health>(mob).copied() else { continue };
         if health.hurt(harm) {
             *world.get_mut::<Health>(mob).expect("read above") = health;

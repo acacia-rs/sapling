@@ -1,25 +1,38 @@
 //! Mobs, spawned through the plugin API or kept by a world folder: bodies (body.rs) that fall and
 //! collide, stroll (strolling.rs) and hunt if their kind does (hunting.rs), shown as BDS announced their kind (`sapling_data::add_entity`) or
-//! as they were stored; and the entity side of the handlers' context.
+//! as they were stored; and the entity side of the handlers' context (backend.rs).
 // TODO: no AI but strolling and hunting; their physics are the Java game's (`Physics::MOB`); a spawned mob is
 // saved with the least a compound needs, which BDS was not tried on.
 
 mod arrows;
 mod attacks;
+mod backend;
 mod blast;
+mod breezes;
+mod bullets;
+mod charges;
 mod duels;
+mod fireballs;
+mod ghasts;
 mod harm;
 mod health;
 mod hunting;
 mod legs;
 mod paths;
+mod rams;
+mod shooting;
+mod spells;
+mod splashes;
 mod strolling;
+mod stares;
+mod teleports;
+mod vexes;
 
 use bevy_ecs::prelude::*;
 use bytes::Bytes;
 use acacia_proto::packets::{EntityEvent, EntityEventEventId, LevelSoundEvent};
 use acacia_proto::types::{MetadataFlags1, Vec3f};
-use sapling_api::{EntityBackend, EntityId, EntityInfo, Item};
+use sapling_api::{EntityId, Item};
 use sapling_data::AddEntityOptions;
 
 use sapling_world::Actor;
@@ -31,11 +44,9 @@ pub(crate) use blast::{Wreck, explode};
 pub(crate) use harm::{holds, is_full_block, touches};
 pub(crate) use health::{Cause, Health};
 use crate::components::{InLayer, Layer, NetId, Tick};
-use crate::handlers::Ctx;
-use crate::{blocks, drops, entities, inventory, mobs, orbs, tnt, worlds};
+use crate::{blocks, drops, entities, inventory, mobs};
 
 const MOB_LOOT: &str = "doMobLoot";
-const ORB: &str = "minecraft:xp_orb";
 
 /// A mob: spawned through the API, or kept by a world folder and dressed as it was stored
 /// (`look`). Its [`Body`] and [`entities::Kind`] are beside it.
@@ -71,8 +82,14 @@ fn announcement(id: u64, kind: &str, body: &Body, look: Option<&Actor>, health: 
         health: left,
         name: "",
     };
-    vec![sapling_net::encode(&sapling_data::add_entity(&options))]
+    let mut shown = vec![sapling_net::encode(&sapling_data::add_entity(&options))];
+    let held = HOLDS.iter().find(|(of, _)| *of == kind).map(|(_, item)| sapling_data::Stack { name: item, count: 1, damage: 0, block: None, tag: None });
+    shown.extend(held.and_then(|stack| sapling_data::mob_hand(id, &stack, false)).map(|held| sapling_net::encode(&held)));
+    shown
 }
+
+/// What a spawned mob of each of these kinds holds, as BDS showed it (bds-evoker-findings.md).
+const HOLDS: &[(&str, &str)] = &[(vexes::KIND, "minecraft:iron_sword")];
 
 /// Kinds whose head sits forward of their feet, by this much of their width (BDS's `Animal`
 /// constructors); every other mob's is straight up (docs/research/spawn-sound.md).
@@ -89,6 +106,16 @@ fn head(kind: &str, body: &Body) -> [f32; 3] {
     let ([x, y, z], [width, height]) = (body.at, body.size);
     let forward = if ANIMALS.contains(&kind) { HEAD_FORWARD * width } else { 0.0 };
     [x, y + HEAD_UP * height, z + forward]
+}
+
+/// How a mob of `kind` falls and slows: as most mobs, but for a breeze and a ghast.
+fn physics_of(kind: &str) -> &'static Physics {
+    match kind {
+        "minecraft:breeze" => &Physics::BREEZE,
+        "minecraft:ghast" => &Physics::FLYER,
+        vexes::KIND => &Physics::GHOST,
+        _ => &Physics::MOB,
+    }
 }
 
 /// The sound a mob makes as it appears, at its head.
@@ -141,6 +168,13 @@ fn give_legs(world: &mut World, entity: Entity, kind: &str) {
         world.entity_mut(entity).insert((legs::Legs::default(), strolling::Stroll::default()));
     }
     hunting::arm(world, entity, kind);
+    teleports::arm(world, entity, kind);
+    rams::arm(world, entity, kind);
+    spells::arm(world, entity, kind);
+    breezes::arm(world, entity, kind);
+    ghasts::arm(world, entity, kind);
+    vexes::arm(world, entity, kind);
+    stares::arm(world, entity, kind);
 }
 
 /// Gives a mob of a kind that dies the health BDS announced its kind with, `left` of it, and
@@ -212,6 +246,10 @@ fn leave_loot(world: &mut World, layer: Entity, kind: &str, on_fire: bool, [x, y
 /// Moves every spawned mob a tick and hurts it by where it is; a dead one goes once it has died.
 pub(crate) fn tick(world: &mut World) {
     arrows::tick(world);
+    spells::tick(world);
+    bullets::tick(world);
+    charges::tick(world);
+    fireballs::tick(world);
     let now = world.resource::<Tick>().0;
     let dead: Vec<Entity> = world.query::<(Entity, &Dying)>().iter(world).filter(|(_, dying)| now >= dying.0 + DYING).map(|(entity, _)| entity).collect();
     for entity in dead {
@@ -223,17 +261,22 @@ pub(crate) fn tick(world: &mut World) {
     for (entity, layer, id, kind) in all {
         let Some(start) = world.get::<Body>(entity).copied() else { continue };
         let is_alive = world.get::<Dying>(entity).is_none();
-        if is_alive && !hunting::steer(world, entity, layer, id, &kind) {
+        if is_alive {
+            stares::watch(world, entity, layer, id, &kind, &start);
+            teleports::tick(world, entity, layer, hunting::prey_at(world, entity));
+        }
+        if is_alive && !rams::steer(world, entity, layer, id, &kind) && !hunting::steer(world, entity, layer, id, &kind) {
             let traits = sapling_data::mob_traits(&kind);
             let strolls = world.resource::<crate::components::Settings>().0.mobs_stroll;
             if strolls {
                 strolling::steer(world, entity, layer, traits.strolls.or(traits.hunts.map(|hunts| hunts.speed)), traits.panics, traits.burns_in_sun);
             }
         }
-        let Some((body, packets)) = entities::step(world, entity, layer, id, &Physics::MOB, 0.0) else { continue };
+        let Some((body, packets)) = entities::step(world, entity, layer, id, physics_of(&kind), 0.0) else { continue };
         blocks::to_viewers(world, layer, body.at.map(|c| c.floor() as i32), &packets);
         if is_alive {
             hunting::strike(world, entity, layer, id, &kind, &body);
+            rams::strike(world, entity, layer, id, &kind, &body);
             if blast::tick(world, entity, layer, id, &kind, &body) {
                 continue;
             }
@@ -250,42 +293,3 @@ pub(crate) fn tick(world: &mut World) {
     }
 }
 
-impl EntityBackend for Ctx<'_> {
-    /// An orb is an orb, worth 1 and thrown as orbs are, as BDS's `/summon xp_orb` makes one.
-    fn spawn_entity(&mut self, kind: &str, feet: [f32; 3]) -> Option<EntityId> {
-        let layer = worlds::current(self.world);
-        if kind == ORB {
-            let orb = orbs::throw(self.world, layer, feet, 1)?;
-            return Some(EntityId(self.world.get::<NetId>(orb)?.0));
-        }
-        if kind == tnt::KIND {
-            let primed = tnt::prime(self.world, layer, feet, tnt::FUSE)?;
-            return Some(EntityId(self.world.get::<NetId>(primed)?.0));
-        }
-        spawn(self.world, layer, kind, feet)
-    }
-
-    fn entity(&self, id: EntityId) -> Option<EntityInfo> {
-        entities::describe(self.world, id)
-    }
-
-    fn entities(&self) -> Vec<EntityInfo> {
-        entities::listed(self.world, worlds::current(self.world))
-    }
-
-    fn move_entity(&mut self, id: EntityId, feet: [f32; 3]) -> bool {
-        entities::change(self.world, id, |body| body.at = feet)
-    }
-
-    fn set_velocity(&mut self, id: EntityId, velocity: [f32; 3]) -> bool {
-        entities::change(self.world, id, |body| body.motion = velocity)
-    }
-
-    fn remove_entity(&mut self, id: EntityId) -> bool {
-        entities::remove(self.world, id)
-    }
-
-    fn kill_entity(&mut self, id: EntityId) -> bool {
-        kill(self.world, id)
-    }
-}

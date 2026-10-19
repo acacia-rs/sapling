@@ -35,6 +35,8 @@ pub enum DamageCause {
     Freezing = 27,
     Stalactite = 28,
     Stalagmite = 29,
+    /// A goat's ram.
+    RamAttack = 30,
     SonicBoom = 31,
     Campfire = 32,
     SoulCampfire = 33,
@@ -42,7 +44,7 @@ pub enum DamageCause {
 
 impl DamageCause {
     /// Each cause under the name `/damage` knows it by.
-    const NAMED: [(&'static str, DamageCause); 28] = [
+    const NAMED: [(&'static str, DamageCause); 29] = [
         ("none", Self::Generic),
         ("contact", Self::Contact),
         ("entity_attack", Self::Attack),
@@ -68,6 +70,7 @@ impl DamageCause {
         ("freezing", Self::Freezing),
         ("stalactite", Self::Stalactite),
         ("stalagmite", Self::Stalagmite),
+        ("ram_attack", Self::RamAttack),
         ("sonic_boom", Self::SonicBoom),
         ("campfire", Self::Campfire),
         ("soul_campfire", Self::SoulCampfire),

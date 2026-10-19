@@ -33,6 +33,7 @@ mod plates;
 pub(crate) mod portals;
 mod pots;
 mod rails;
+mod saplings;
 mod scaffolds;
 mod redstone;
 mod request;

@@ -20,6 +20,13 @@ from bds_packs import END_IDS, IDS as OVERWORLD_IDS, NETHER_IDS, biomes, documen
 IDS = {**OVERWORLD_IDS, **NETHER_IDS, **END_IDS}
 from features_data import Features, distribution  # noqa: E402
 
+# What a sapling grows (docs/research/saplings.md), emitted though no rule or pool reaches it.
+SAPLING_FEATURES = [f'minecraft:{name}_feature' for name in (
+    'random_oak_tree_from_sapling', 'random_oak_tree_with_beehive_from_sapling', 'select_standing_spruce_tree', 'mega_spruce_tree',
+    'birch_tree', 'birch_tree_with_beehive', 'select_undecorated_jungle_tree', 'mega_jungle_tree', 'savanna_tree', 'select_roofed_tree',
+    'cherry_tree', 'cherry_tree_with_beehive', 'pale_oak_tree', 'select_poplar_tree', 'mangrove_tree', 'mangrove_tree_with_beenest',
+    'tall_mangrove_tree', 'tall_mangrove_tree_with_beenest', 'azalea_tree')]
+
 PASSES = ['first_pass', 'before_underground_pass', 'underground_pass', 'after_underground_pass', 'before_surface_pass',
           'surface_pass', 'after_surface_pass', 'before_sky_pass', 'sky_pass', 'after_sky_pass', 'final_pass']
 
@@ -141,11 +148,19 @@ def main():
             elements.append(f'    ("{name}", {features.index(f"minecraft:{name}")}),')
         else:
             print(f'  element feature {name} not ported', file=sys.stderr)
+    for name in SAPLING_FEATURES:
+        if features.ported(name):
+            features.index(name)
+        else:
+            print(f'  sapling feature {name} not ported', file=sys.stderr)
+    emitted = sorted(features.emitted.items(), key=lambda kv: kv[1][0])
     lines = header + ['use crate::feature::tree::spec::*;', 'use crate::block::Block;', '', 'pub static FEATURES: &[Feature] = &[']
-    for name, (index, rust) in sorted(features.emitted.items(), key=lambda kv: kv[1][0]):
+    for name, (index, rust) in emitted:
         lines.append(f'    {rust}, // {index} {name}')
     lines += ['];', '', '/// The jigsaw pools\' feature elements: feature name, index.', 'pub static ELEMENTS: &[(&str, usize)] = &[']
-    write(os.path.join(sys.argv[2], 'features.rs'), lines + elements + ['];'])
+    names = ['];', '', '/// Each of `FEATURES` by its identifier.', 'pub static NAMES: &[&str] = &[']
+    names += [f'    "{name}",' for name, _ in emitted]
+    write(os.path.join(sys.argv[2], 'features.rs'), lines + elements + names + ['];'])
 
 
 def element_features():

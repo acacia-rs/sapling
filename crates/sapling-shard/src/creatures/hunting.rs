@@ -2,14 +2,15 @@
 //! the nearest player it could kill, walks straight at it and hits it when it is within reach.
 // TODO: a spider keeps the prey it took in the dark when day comes; prey once seen is kept behind a
 // wall; nothing pushes another aside; a spider hunts by day too and none holds what it hits with; peaceful worlds keep their
-// monsters, idle; viewers far off are told every move, where BDS told one of every other.
+// monsters, idle; viewers far off are told every move, where BDS told one of every other; a piglin
+// hunts a player in gold too, and a polar bear does not rear before its hit.
 
 use acacia_proto::packets::{EntityEvent, EntityEventEventId, LevelSoundEvent, SetEntityData};
 use acacia_proto::types::{EntityProperties, MetadataDictionaryItem, MetadataDictionaryItemKey as Key, MetadataDictionaryItemType as Type, MetadataDictionaryItemValue as Value, MetadataDictionaryItemValueDefault as Plain, Vec3f};
 use bevy_ecs::prelude::*;
 use sapling_api::Difficulty;
 
-use super::{arrows, blast, legs, paths};
+use super::{blast, legs, paths};
 use crate::body::Body;
 use crate::components::{InLayer, Layer, NetId, Position, Settings, Tick, in_world};
 use crate::{entities, late_sounds, vitals};
@@ -22,9 +23,6 @@ const REPLANS: u64 = 10;
 const ARRIVED: f32 = 0.35;
 /// An iron golem's hit throws this fast away and up (research/captures/bds-golem.txt).
 const FLINGS: [f32; 2] = [0.52, 0.4288];
-/// The ticks after a shot at which a crossbow's loading is heard, and what of it.
-// TODO: heard where the archer stood at the shot, not where it has walked to since.
-const LOADS: [(u64, &str); 3] = [(3, "start"), (13, "middle"), (23, "end")];
 /// An archer walks at its prey for this many ticks after taking it (BDS's went 1.7 blocks, from
 /// 10 off and from 4), then stands while it is this near.
 const NEARS: u64 = 19;
@@ -51,9 +49,9 @@ pub(super) struct Hunter {
     prey: Option<Entity>,
     /// The tick it took its prey in.
     since: u64,
-    ready: u64,
+    pub(super) ready: u64,
     /// The shots left of a volley, and the tick the next goes in.
-    volley: Option<(u32, u64)>,
+    pub(super) volley: Option<(u32, u64)>,
     /// The cells of its way round what stands before its prey, and the tick it found them in.
     way: Vec<[i32; 3]>,
     planned: u64,
@@ -66,7 +64,7 @@ pub(super) fn arm(world: &mut World, entity: Entity, kind: &str) {
     }
 }
 
-fn sound(name: &str, id: u64, kind: &str, body: &Body, up: f32) -> bytes::Bytes {
+pub(super) fn sound(name: &str, id: u64, kind: &str, body: &Body, up: f32) -> bytes::Bytes {
     let position = Vec3f { x: body.at[0], y: body.at[1] + up * body.size[1], z: body.at[2] };
     sapling_net::encode(&LevelSoundEvent { sound_id: name.into(), position, extra_data: -1, entity_type: kind.into(), is_baby_mob: false, is_global: false, entity_unique_id: id as i64, fire_at_position: None })
 }
@@ -83,7 +81,7 @@ fn seen(world: &World, player: Entity, layer: Entity, from: [f32; 3], sight: f32
 
 /// Whether no full block, glass too, is between a hunter's eyes and the player's
 /// (research/captures/bds-around.txt).
-fn in_sight(world: &World, layer: Entity, body: &Body, feet: [f32; 3]) -> bool {
+pub(super) fn in_sight(world: &World, layer: Entity, body: &Body, feet: [f32; 3]) -> bool {
     let Some(level) = world.get::<Layer>(layer).map(|layer| &layer.world) else { return false };
     let (from, to) = ([body.at[0], body.at[1] + HEAD * body.size[1], body.at[2]], [feet[0], feet[1] + sapling_data::EYE_HEIGHT, feet[2]]);
     let glances = (distance(from, to) / GLANCE).ceil().max(1.0);
@@ -91,10 +89,21 @@ fn in_sight(world: &World, layer: Entity, body: &Body, feet: [f32; 3]) -> bool {
     (0..=glances as usize).all(|glance| !hides(std::array::from_fn(|axis| (from[axis] + (to[axis] - from[axis]) * glance as f32 / glances).floor() as i32)))
 }
 
+/// The nearest player within `sight` of a mob in `layer` that it sees and may hurt, and its feet.
+pub(super) fn nearest(world: &World, layer: Entity, body: &Body, sight: f32) -> Option<(Entity, [f32; 3])> {
+    let near = |(_, feet): &(Entity, [f32; 3])| distance(body.at, *feet);
+    in_world(world).into_iter().filter_map(|player| Some((player, seen(world, player, layer, body.at, sight)?))).filter(|(_, feet)| in_sight(world, layer, body, *feet)).min_by(|a, b| near(a).total_cmp(&near(b)))
+}
+
 /// The hunter `id` has the entity `target` as its prey, or none for 0.
 fn targets(id: u64, target: i64) -> bytes::Bytes {
     let item = MetadataDictionaryItem { key: Key::TargetEid, r#type: Type::Long, legacy_type: 7, value: Value::Default(Plain::Long(target)) };
     sapling_net::encode(&SetEntityData { runtime_entity_id: id, metadata: vec![item], properties: EntityProperties { ints: Vec::new(), floats: Vec::new() }, tick: 0 })
+}
+
+/// Where the hunter's prey stands, if it has any.
+pub(super) fn prey_at(world: &World, entity: Entity) -> Option<[f32; 3]> {
+    Some(world.get::<Position>(world.get::<Hunter>(entity)?.prey?)?.feet)
 }
 
 /// A hunter that died lets its prey go, which its viewers are told (bds-bite.txt).
@@ -110,15 +119,16 @@ fn pick(world: &mut World, entity: Entity, layer: Entity, id: u64, kind: &str, b
     let had = world.get::<Hunter>(entity)?.prey;
     let sight = sapling_data::mob_traits(kind).hunts?.sees;
     let hunts = world.resource::<Settings>().0.difficulty != Difficulty::Peaceful;
-    let mut found = had.filter(|_| hunts).and_then(|prey| Some((prey, seen(world, prey, layer, body.at, sight)?)));
+    let since = world.get::<Hunter>(entity)?.since;
+    let calm = sapling_data::mob_traits(kind).hunts?.calms.is_some_and(|calms| now >= since + u64::from(calms));
+    let mut found = had.filter(|_| hunts && !calm).and_then(|prey| Some((prey, seen(world, prey, layer, body.at, sight)?)));
     // A spider under the sun by day took none on BDS; under a roof or by night it did
     // (research/captures/bds-spiders.txt).
     let head = [body.at[0], body.at[1] + body.size[1], body.at[2]].map(|c| c.floor() as i32);
     let dazzled = sapling_data::mob_traits(kind).hunts?.by_dark && world.get::<Layer>(layer).is_some_and(|layer| super::harm::is_sunlit(&layer.world, head));
     let looks = !sapling_data::mob_traits(kind).hunts?.provoked && !dazzled;
     if found.is_none() && hunts && looks && (now + id).is_multiple_of(LOOKS) {
-        let near = |(_, feet): &(Entity, [f32; 3])| distance(body.at, *feet);
-        found = in_world(world).into_iter().filter_map(|player| Some((player, seen(world, player, layer, body.at, sight)?))).filter(|(_, feet)| in_sight(world, layer, body, *feet)).min_by(|a, b| near(a).total_cmp(&near(b)));
+        found = nearest(world, layer, body, sight);
     }
     let prey = found.map(|(prey, _)| prey);
     if prey != had {
@@ -134,23 +144,25 @@ fn take(world: &mut World, entity: Entity, layer: Entity, id: u64, kind: &str, b
     (hunter.prey, hunter.since) = (prey, now);
     let target = prey.and_then(|prey| world.get::<NetId>(prey)).map_or(0, |id| id.0 as i64);
     let cell = body.at.map(|c| c.floor() as i32);
-    entities::tell_viewers(world, entity, layer, cell, vec![targets(id, target)]);
+    let mut told = vec![targets(id, target)];
+    told.extend(super::bullets::peek(world, layer, id, kind, body.at, prey.is_some()));
+    entities::tell_viewers(world, entity, layer, cell, told);
     if prey.is_some() {
         late_sounds::play_later(world, 1, layer, cell, sound("mob.warning", id, kind, body, HEAD));
     }
     Some(())
 }
 
-/// A player hit the mob: one that hunts none but its hitter (research/captures/bds-provoke.txt)
-/// takes it for its prey at once, if it may be hunted.
+/// A player hit the mob: one that hunts none but its hitter, or a spider that hunts by dark
+/// (research/captures/bds-provoke.txt, bds-provoke2.txt), takes it for its prey at once, if it may be hunted.
 pub(super) fn provoke(world: &mut World, entity: Entity, layer: Entity, id: u64, kind: &str, body: &Body, player: Entity) {
-    let Some(hunts) = sapling_data::mob_traits(kind).hunts.filter(|hunts| hunts.provoked) else { return };
+    let Some(hunts) = sapling_data::mob_traits(kind).hunts.filter(|hunts| hunts.provoked || hunts.by_dark) else { return };
     let hunted = world.resource::<Settings>().0.difficulty != Difficulty::Peaceful && seen(world, player, layer, body.at, hunts.sees).is_some();
     if hunted && world.get::<Hunter>(entity).is_some_and(|hunter| hunter.prey != Some(player)) {
         take(world, entity, layer, id, kind, body, Some(player));
-        // BDS's first hit back came a second or more after.
+        // BDS's first hit back came a second or more after, a llama's spit as long as it aims.
         let now = world.resource::<Tick>().0;
-        world.get_mut::<Hunter>(entity).expect("a hunter, above").ready = now + COOLDOWN;
+        world.get_mut::<Hunter>(entity).expect("a hunter, above").ready = now + hunts.aims.map_or(COOLDOWN, u64::from);
     }
 }
 
@@ -179,7 +191,18 @@ fn heads(world: &mut World, entity: Entity, layer: Entity, body: &Body, feet: [f
 /// Before the hunter's move: it walks at its prey, if it has any.
 pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity, id: u64, kind: &str) -> bool {
     let (Some(body), Some(speed)) = (world.get::<Body>(entity).copied(), sapling_data::mob_traits(kind).hunts.map(|hunts| hunts.speed)) else { return false };
-    let Some(feet) = pick(world, entity, layer, id, kind, &body) else { return blast::is_lit(world, entity) };
+    let prey = pick(world, entity, layer, id, kind, &body);
+    match sapling_data::mob_traits(kind).hunts.and_then(|hunts| hunts.fights) {
+        Some("spells") => return super::spells::steer(world, entity, layer, id, kind, &body, prey),
+        Some("leaps") => return super::breezes::steer(world, entity, layer, id, kind, &body, prey),
+        Some("fireballs") => return super::ghasts::steer(world, entity, layer, id, kind, &body, prey),
+        Some("charges") => {
+            let prey = prey.and(world.get::<Hunter>(entity).and_then(|hunter| hunter.prey));
+            return super::vexes::steer(world, entity, layer, id, kind, &body, prey);
+        }
+        _ => {}
+    }
+    let Some(feet) = prey else { return blast::is_lit(world, entity) };
     // A lit creeper stands where it is, and an archer within its range.
     let now = world.resource::<Tick>().0;
     let aims = sapling_data::mob_traits(kind).hunts.is_some_and(|hunts| hunts.shoots.is_some() && !hunts.closes) && world.get::<Hunter>(entity).is_some_and(|hunter| now >= hunter.since + NEARS);
@@ -194,10 +217,20 @@ pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity, id: u64, k
     true
 }
 
+/// What a mob's hit of `harm` on normal costs on the world's difficulty; none on peaceful.
+pub(super) fn on_difficulty(world: &World, harm: f32) -> Option<f32> {
+    match world.resource::<Settings>().0.difficulty {
+        Difficulty::Peaceful => None,
+        Difficulty::Easy => Some(harm.min(harm / 2.0 + 1.0)),
+        Difficulty::Normal => Some(harm),
+        Difficulty::Hard => Some(harm * 1.5),
+    }
+}
+
 /// After its move: a hunter whose reach its prey is in swings and hits it, heard a tick later.
 pub(super) fn strike(world: &mut World, entity: Entity, layer: Entity, id: u64, kind: &str, body: &Body) -> Option<()> {
     let now = world.resource::<Tick>().0;
-    let hunts = sapling_data::mob_traits(kind).hunts?;
+    let hunts = sapling_data::mob_traits(kind).hunts.filter(|hunts| hunts.fights.is_none())?;
     let harm = match hunts.upto {
         Some(most) => hunts.attack + world.get_resource_or_insert_with(crate::blocks::Dice::default).roll((most - hunts.attack) as u32 + 1) as f32,
         None => hunts.attack,
@@ -207,30 +240,7 @@ pub(super) fn strike(world: &mut World, entity: Entity, layer: Entity, id: u64, 
         blast::put_out(world, entity, layer, id, kind, body);
     }
     if let Some(every) = hunts.shoots.filter(|_| prey.is_some()) {
-        let feet = world.get::<Position>(prey?)?.feet;
-        let shot = if hunts.fires { arrows::FIREBALL } else { arrows::ARROW };
-        let volley = world.get::<Hunter>(entity)?.volley;
-        if let Some((left, _)) = volley.filter(|(_, due)| now >= *due) {
-            arrows::loose(world, layer, entity, kind, body, feet, hunts.gives, shot);
-            let gap = hunts.volley.map_or(0, |(_, gap)| u64::from(gap));
-            world.get_mut::<Hunter>(entity)?.volley = (left > 1).then_some((left - 1, now + gap));
-        }
-        if ready != 0 && now >= ready {
-            arrows::loose(world, layer, entity, kind, body, feet, hunts.gives, shot);
-            let more = hunts.volley.filter(|(shots, _)| *shots > 1).map(|(shots, gap)| (shots - 1, now + u64::from(gap)));
-            world.get_mut::<Hunter>(entity)?.volley = more;
-        }
-        if ready == 0 || now >= ready {
-            // The first shot waits as long as the next, or as long as the kind aims.
-            let wait = if ready == 0 { hunts.aims.unwrap_or(every) } else { every };
-            world.get_mut::<Hunter>(entity)?.ready = now + u64::from(wait);
-            // A crossbow is heard being loaded for the next (bds-shoot2.txt).
-            let middle = [body.at[0], body.at[1] + MIDDLE * body.size[1], body.at[2]];
-            for (after, stage) in LOADS.into_iter().filter(|_| hunts.closes) {
-                late_sounds::play_later(world, after, layer, body.at.map(|c| c.floor() as i32), arrows::sound(&format!("crossbow.loading.{stage}"), middle, ""));
-            }
-        }
-        return None;
+        return super::shooting::shoot(world, entity, layer, kind, body, hunts, every, prey?);
     }
     let prey = prey.filter(|_| now >= ready)?;
     let feet = world.get::<Position>(prey)?.feet;
@@ -249,12 +259,7 @@ pub(super) fn strike(world: &mut World, entity: Entity, layer: Entity, id: u64, 
         return None;
     }
     world.get_mut::<Hunter>(entity)?.ready = now + hunts.every.map_or(COOLDOWN, u64::from);
-    let harm = match world.resource::<Settings>().0.difficulty {
-        Difficulty::Peaceful => return None,
-        Difficulty::Easy => harm.min(harm / 2.0 + 1.0),
-        Difficulty::Normal => harm,
-        Difficulty::Hard => harm * 1.5,
-    };
+    let harm = on_difficulty(world, harm)?;
     let cell = body.at.map(|c| c.floor() as i32);
     let swing = EntityEvent { runtime_entity_id: id, event_id: EntityEventEventId::ArmSwing, data: 0, fire_at_position: None };
     entities::tell_viewers(world, entity, layer, cell, vec![sapling_net::encode(&swing)]);
@@ -264,6 +269,9 @@ pub(super) fn strike(world: &mut World, entity: Entity, layer: Entity, id: u64, 
     let bitten = vitals::bitten(world, prey, harm, kind, [away[0] * along, up, away[1] * along]);
     if let Some((effect, ticks)) = hunts.gives.filter(|_| bitten) {
         vitals::afflict(world, prey, effect, ticks);
+    }
+    if hunts.once {
+        take(world, entity, layer, id, kind, body, None);
     }
     late_sounds::play_later(world, 1, layer, cell, sound("attack", id, kind, body, MIDDLE));
     Some(())

@@ -35,6 +35,7 @@ pub use block::Block;
 pub use end::EndGenerator;
 pub use nether::NetherGenerator;
 #[doc(hidden)]
+pub use feature::grow::place_feature;
 pub use feature::reach::{Cells as ReachCells, Tries as ReachTries};
 #[doc(hidden)]
 pub use structured::replay::{ReplayWrite, StructureStep};

@@ -19,6 +19,7 @@ mod fossil;
 mod freeze;
 mod fungus;
 mod geode;
+pub(crate) mod grow;
 mod ice_spike;
 mod iceberg;
 mod jungle;

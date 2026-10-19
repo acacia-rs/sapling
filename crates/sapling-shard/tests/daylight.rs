@@ -50,8 +50,8 @@ fn a_spider_in_the_sun_leaves_a_player_be_and_one_under_a_roof_does_not() {
 
 #[test]
 fn a_drowned_an_endermite_a_piglin_brute_and_a_ravager_hit_for_what_bds_s_did() {
-    // research/captures/bds-kinds2.txt, on easy: 2.5, 2, 6 and 7 of a player's 20.
-    for (kind, left) in [("minecraft:drowned", 17.5), ("minecraft:endermite", 18.0), ("minecraft:piglin_brute", 14.0), ("minecraft:ravager", 13.0)] {
+    // research/captures/bds-kinds2.txt, on easy: 2.5, 2, 6 and 7 of a player's 20; bds-provoke2.txt: a piglin's 5.5.
+    for (kind, left) in [("minecraft:drowned", 17.5), ("minecraft:endermite", 18.0), ("minecraft:piglin_brute", 14.0), ("minecraft:ravager", 13.0), ("minecraft:piglin", 14.5)] {
         let mut h = Harness::new();
         h.enter(1, "Alex");
         h.remote.run(move |ctx| {
@@ -63,6 +63,61 @@ fn a_drowned_an_endermite_a_piglin_brute_and_a_ravager_hit_for_what_bds_s_did() 
         let health: Vec<f32> = all::<acacia_proto::packets::UpdateAttributes>(&sent).iter().filter(|update| update.runtime_entity_id == 1).flat_map(|update| &update.attributes).filter(|attribute| attribute.name == "minecraft:health").map(|attribute| attribute.current).collect();
         assert_eq!(health.first(), Some(&left), "{kind}: {health:?}");
     }
+}
+
+#[test]
+fn a_witch_throws_poison_at_a_healthy_player_then_harming_each_three_seconds() {
+    // research/captures/bds-witch.txt: 25 then 23, 60 ticks apart; poison in full, harming 6.
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    h.remote.run(|ctx| {
+        ctx.set_difficulty(Difficulty::Easy);
+        ctx.set_time(18000);
+        assert!(ctx.spawn_entity("minecraft:witch", [0.5, 65.0, 6.5]).is_some());
+    });
+    let (mut thrown, mut effects, mut health) = (Vec::new(), Vec::new(), Vec::new());
+    for tick in 0..140 {
+        let sent = h.tick_all().to(1).to_vec();
+        for added in all::<acacia_proto::packets::AddEntity>(&sent).into_iter().filter(|added| added.entity_type == "minecraft:splash_potion") {
+            let potion = added.metadata.iter().find_map(|item| match (&item.key, &item.value) {
+                (acacia_proto::types::MetadataDictionaryItemKey::PotionAuxValue, acacia_proto::types::MetadataDictionaryItemValue::Default(acacia_proto::types::MetadataDictionaryItemValueDefault::Short(data))) => Some(*data),
+                _ => None,
+            });
+            thrown.push((tick, potion));
+        }
+        effects.extend(all::<acacia_proto::packets::MobEffect>(&sent).iter().filter(|effect| effect.runtime_entity_id == 1 && effect.event_id == acacia_proto::packets::MobEffectEventId::Add).map(|effect| (effect.effect_id, effect.duration)));
+        health.extend(all::<acacia_proto::packets::UpdateAttributes>(&sent).iter().filter(|update| update.runtime_entity_id == 1).flat_map(|update| &update.attributes).filter(|attribute| attribute.name == "minecraft:health").map(|attribute| attribute.current));
+    }
+    assert!(thrown.len() == 2 && thrown[0].1 == Some(25) && thrown[1].1 == Some(23) && thrown[1].0 - thrown[0].0 == 60 && (60..80).contains(&thrown[0].0), "{thrown:?}");
+    assert!(effects.contains(&(19, 900)), "{effects:?}");
+    assert!(health.windows(2).any(|pair| (pair[0] - pair[1] - 6.0).abs() < 1e-3), "{health:?}");
+}
+
+#[test]
+fn a_goat_waits_then_runs_off_stands_and_rams_a_player_for_2_and_a_long_push() {
+    // research/captures/bds-goat-findings.md: 30 to 300 s, pre_ram, 22 ticks standing, then the
+    // charge; 2 on easy, a hit's throw and then half of it and the push.
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    h.remote.run(|ctx| {
+        ctx.set_difficulty(Difficulty::Easy);
+        assert!(ctx.spawn_entity("minecraft:goat", [0.5, 65.0, 6.5]).is_some());
+    });
+    let (mut warned, mut hurt, mut throws) = (None, None, Vec::new());
+    for tick in 0..6400 {
+        let sent = h.tick_all().to(1).to_vec();
+        let sounds = all::<acacia_proto::packets::LevelSoundEvent>(&sent);
+        warned = warned.or(sounds.iter().any(|sound| sound.sound_id == "pre_ram").then_some(tick));
+        let health: Vec<f32> = all::<acacia_proto::packets::UpdateAttributes>(&sent).iter().filter(|update| update.runtime_entity_id == 1).flat_map(|update| &update.attributes).filter(|attribute| attribute.name == "minecraft:health").map(|attribute| attribute.current).collect();
+        if health.contains(&18.0) {
+            hurt = Some(tick);
+            throws = all::<acacia_proto::packets::SetEntityMotion>(&sent).iter().filter(|motion| motion.runtime_entity_id == 1).map(|motion| [motion.velocity.x, motion.velocity.y, motion.velocity.z]).collect();
+            break;
+        }
+    }
+    let (Some(warned), Some(hurt)) = (warned, hurt) else { panic!("no ram: pre_ram {warned:?}, hurt {hurt:?}") };
+    assert!(warned >= 600 && (20..40).contains(&(hurt - warned)), "pre_ram at {warned}, the ram at {hurt}");
+    assert!(throws.len() == 2 && (throws[0][1] - 0.4).abs() < 1e-4 && throws[1][2].abs() > 1.0, "{throws:?}");
 }
 
 #[test]

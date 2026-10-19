@@ -1,7 +1,8 @@
 //! Random ticks for what grows, dries and decays: each crop, stem, berry bush, cane, cactus,
 //! bamboo, farmland, open dirt and marked leaf has the chance a tick that a cell picked at random around a player has on BDS
 //! (docs/research/growth.md); what a tick then does is in rules.rs.
-// TODO: no light is asked for, where the game wants 9; saplings grow no tree; grass under a
+// A sapling whose tick comes up grows in saplings.rs.
+// TODO: no light is asked for, where the game wants 9; grass under a
 // block does not die; ice and the rest take no random tick; only a survival player treads
 // farmland down, no mob and no creative player.
 
@@ -105,6 +106,7 @@ pub(crate) fn tick(world: &mut World) {
     let Some(growing) = world.get_resource::<Growing>().filter(|growing| !growing.0.is_empty()).map(|growing| growing.0.iter().copied().collect::<Vec<_>>()) else { return };
     let mut picks = world.remove_resource::<Picks>().unwrap_or_default();
     let (mut changed, mut done): (Vec<(Entity, rules::Change)>, Vec<(Entity, BlockPos)>) = (Vec::new(), Vec::new());
+    let mut saplings = Vec::new();
     for (layer, pos) in growing {
         let Some(name) = ticked_at(world, layer, pos) else {
             done.push((layer, pos));
@@ -113,7 +115,14 @@ pub(crate) fn tick(world: &mut World) {
         let Some(level) = level(world, layer) else { continue };
         let Some((_, RuleValue::Int(rule))) = level.level().rules.get(RULE) else { continue };
         let chance = rule.max(0) as f32 * rules::haste(name) / EVERY;
-        if (picks.below(CHANCES) as f32) < chance * CHANCES as f32 {
+        if (picks.below(CHANCES) as f32) >= chance * CHANCES as f32 {
+            continue;
+        }
+        if super::saplings::is_ticked(name.strip_prefix("minecraft:").unwrap_or(name), "") {
+            if picks.below(super::saplings::TICK_ODDS) == 0 {
+                saplings.push((layer, pos));
+            }
+        } else {
             changed.extend(rules::ticked(level, pos, &mut picks).into_iter().map(|change| (layer, change)));
         }
     }
@@ -130,5 +139,8 @@ pub(crate) fn tick(world: &mut World) {
         } else {
             send::set(world, layer, pos, id);
         }
+    }
+    for (layer, pos) in saplings {
+        super::saplings::ticked(world, layer, pos);
     }
 }

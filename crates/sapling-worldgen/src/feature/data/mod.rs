@@ -5,5 +5,5 @@ pub mod coral_crust;
 mod features;
 mod rules;
 
-pub use features::{ELEMENTS, FEATURES};
+pub use features::{ELEMENTS, FEATURES, NAMES};
 pub use rules::RULES;

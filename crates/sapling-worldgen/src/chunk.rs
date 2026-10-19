@@ -96,7 +96,7 @@ impl ChunkShape {
     }
 
     /// All air.
-    pub(crate) fn empty() -> Self {
+    pub fn empty() -> Self {
         Self::from_sections(std::array::from_fn(|_| air_section()), Vec::new())
     }
 

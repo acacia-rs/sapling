@@ -2,7 +2,7 @@
 
 use sapling_api::{Block, BlockPos, Face};
 
-use super::super::{leaves, send, with_property};
+use super::super::{leaves, saplings, send, with_property};
 use super::Picks;
 
 const RIPE: u8 = 7;
@@ -85,7 +85,7 @@ pub(super) fn is_ticked(name: &str, properties: &str) -> bool {
         _ if CROPS.contains(&name) => growth().is_some_and(|growth| growth < RIPE),
         // A stem that bore its fruit points at it and is done.
         _ if STEMS.iter().any(|(stem, _)| *stem == name) => number(properties, "facing_direction") == Some(0),
-        _ => COLUMNS.contains(&name) || leaves::is_marked(name, properties),
+        _ => COLUMNS.contains(&name) || leaves::is_marked(name, properties) || saplings::is_ticked(name.strip_prefix("minecraft:").unwrap_or(name), properties),
     }
 }
 

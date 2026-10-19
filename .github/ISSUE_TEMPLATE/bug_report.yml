@@ -1,0 +1,45 @@
+name: Bug report
+description: Something sapling does differently from the vanilla server, or a crash
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, what sapling did, and what the vanilla dedicated server does instead.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: The smallest server and steps that show it. For worldgen, the seed and coordinates.
+      placeholder: |
+        1. cargo run -p sapling --example generated -- 19132 --seed=1 --offline
+        2. Go to 120 70 -340
+        3. ...
+    validations:
+      required: true
+  - type: input
+    id: commit
+    attributes:
+      label: sapling commit
+      placeholder: 4d697ac
+    validations:
+      required: true
+  - type: input
+    id: client
+    attributes:
+      label: Client version and platform
+      placeholder: 1.26.52, Windows
+  - type: input
+    id: os
+    attributes:
+      label: Server OS
+      placeholder: Ubuntu 24.04
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: Server output around the problem, with `RUST_LOG=debug` if you can.
+      render: text

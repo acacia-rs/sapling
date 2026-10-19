@@ -14,6 +14,15 @@ cargo run -p extract-data -- --list  # the whole recorded join sequence
 cargo run -p extract-data -- --show StartGame,UpdateAbilities
 ```
 
+Mojang's data is not committed (`.gitignore`); build it before the first `cargo build`:
+
+| Files | Made by |
+|---|---|
+| `data/*.bin` | `cargo run -p extract-data` (the acacia recording above) |
+| `data/mob-loot.json` | `py -3 data/generate/mob-loot.py` (BDS's behaviour packs, `PACKS` at the top) |
+| `data/block-loot.tsv` | `py -3 data/generate/block-loot.py` (the extracted Java 26.3 client jar, `JAVA` at the top) |
+| `sapling-worldgen/src/structure/template/templates.bin` | `py -3 crates/sapling-worldgen/scripts/templates_to_rust.py <your BDS dir>` |
+
 | File | Sent as | Patched per join |
 |---|---|---|
 | `StartGame.bin` | `start_game(&StartGameOptions)` | ids, game mode, position, world spawn, world name, tick, seed (0), `client_side_generation` (off), `block_network_ids_are_hashes` |
@@ -113,8 +122,8 @@ spawn packets have the shape `bds_entity_probe` (join) and `bds_mob_recorder` (`
 
 ## Open
 
-- This is Mojang's data, taken from a server's output rather than a licensed dataset. DESIGN.md "Open items"
-  tracks replacing it with a source whose licence is clear.
+- This is Mojang's data, taken from a server's output rather than a licensed dataset, so it stays out of
+  git. DESIGN.md "Open items" tracks replacing it with a source whose licence is clear.
 - `StartGame.block_properties` (26.50's data-driven vanilla blocks) and `block_pallette_checksum` are kept
   as recorded. They match acacia-world's block palette for 26.5x and must be re-recorded with it.
 - A protocol bump needs a new recording: the templates decode with the current acacia-proto only.

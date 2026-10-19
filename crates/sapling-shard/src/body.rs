@@ -5,9 +5,11 @@
 // TODO: only items are lifted out of a block they are in, and only up.
 
 mod liquid;
+mod physics;
 
 use bevy_ecs::prelude::Component;
 pub(crate) use liquid::{InLiquid, Liquid, in_liquid};
+pub(crate) use physics::Physics;
 use sapling_world::World as Level;
 
 const ARM: &str = "piston_arm_collision";
@@ -15,40 +17,6 @@ const ARM: &str = "piston_arm_collision";
 const JUMP: f32 = 0.42;
 /// Room left between boxes that touch, against float error.
 const EPS: f32 = 1e-5;
-
-/// How a kind of body falls and slows.
-#[derive(Clone, Copy, Debug)]
-pub(crate) struct Physics {
-    pub gravity: f32,
-    /// Horizontal motion kept from one tick to the next in the air.
-    pub air_drag: f32,
-    /// Vertical motion kept from one tick to the next.
-    pub fall_drag: f32,
-    /// Horizontal motion kept on the ground: a normal block's friction 0.6 x 0.98.
-    pub ground_drag: f32,
-    /// What the vertical motion is multiplied by on the ground.
-    pub bounce: f32,
-    pub liquid: InLiquid,
-    /// Whether lava sets it on fire.
-    pub burns: bool,
-}
-
-impl Physics {
-    /// Experience orbs, which bounce (BDS `ExperienceOrb::normalTick`), and float.
-    pub const ORB: Physics = Physics { gravity: 0.04, air_drag: 0.98, fall_drag: 0.98, ground_drag: 0.588, bounce: -0.5, liquid: InLiquid::Buoyant, burns: false };
-    /// Items, which do not (BDS `ItemActor::postNormalTick`, docs/research/items.md).
-    pub const ITEM: Physics = Physics { gravity: 0.04, air_drag: 0.98, fall_drag: 0.98, ground_drag: 0.588, bounce: 0.0, liquid: InLiquid::Floats, burns: true };
-    pub const FIREPROOF_ITEM: Physics = Physics { burns: false, ..Physics::ITEM };
-    /// A falling block, which stops where it lands (BDS `FallingBlockActor::normalTick`).
-    pub const FALLING_BLOCK: Physics = Physics { gravity: 0.04, air_drag: 0.98, fall_drag: 0.98, ground_drag: 0.0, bounce: 0.0, liquid: InLiquid::Ignores, burns: false };
-    /// Primed TNT, which slides on where it lands (research/captures/bds-tnt.txt).
-    pub const TNT: Physics = Physics { ground_drag: 0.686, ..Physics::FALLING_BLOCK };
-    /// A mob that does not walk, as BDS moved an armour stand: its speed is worked out before the
-    /// move (research/captures/bds-water.txt). The drag across, 0.91 in the air and 0.6 x 0.91 on
-    /// the ground, is the Java game's (`LivingEntity.travel`).
-    /// What lava and fire do to one: creatures/harm.rs.
-    pub const MOB: Physics = Physics { gravity: 0.08, air_drag: 0.91, fall_drag: 0.98, ground_drag: 0.546, bounce: 0.0, liquid: InLiquid::Sinks, burns: false };
-}
 
 #[derive(Component, Clone, Copy, Debug, PartialEq)]
 pub(crate) struct Body {
@@ -62,10 +30,11 @@ pub(crate) struct Body {
     liquid: Option<Liquid>,
     /// Where the wave a buoyant body bobs on has got to.
     wave: f32,
-    /// The speed a hit throws a mob at; its next tick is that move alone.
+    /// The speed a hit throws a mob at; its next tick is that move alone, this much higher.
     thrown: Option<[f32; 3]>,
-    /// The speed across its own legs add in its next tick.
-    walking: [f32; 2],
+    lift: f32,
+    /// The speed its own legs or wings add in its next tick.
+    walking: [f32; 3],
     leaping: bool,
     /// Whether a mob was on the ground before its last move: that move's drag goes by it.
     stood: bool,
@@ -76,7 +45,7 @@ type Bounds = ([f32; 3], [f32; 3]);
 
 impl Body {
     pub fn new(at: [f32; 3], motion: [f32; 3], size: [f32; 2]) -> Self {
-        Self { at, motion, size, on_ground: false, liquid: None, wave: 0.0, thrown: None, walking: [0.0; 2], leaping: false, stood: false }
+        Self { at, motion, size, on_ground: false, liquid: None, wave: 0.0, thrown: None, lift: 0.0, walking: [0.0; 3], leaping: false, stood: false }
     }
 
     /// Throws a mob at `speed`: its next tick moves it by that, and the tick after slows it as
@@ -85,10 +54,20 @@ impl Body {
         self.thrown = Some(speed);
     }
 
+    /// As [`Body::throw`], its first move `lift` higher, as a breeze leaps.
+    pub fn launch(&mut self, speed: [f32; 3], lift: f32) {
+        (self.thrown, self.lift) = (Some(speed), lift);
+    }
+
     /// Has a mob walk: its next tick adds `speed` across, after the drag, and with `leap` goes
     /// up at a jump's speed (research/captures/bds-bite.txt, bds-chase.txt).
     pub fn walk(&mut self, speed: [f32; 2], leap: bool) {
-        (self.walking, self.leaping) = (speed, leap);
+        (self.walking, self.leaping) = ([speed[0], 0.0, speed[1]], leap);
+    }
+
+    /// Has a flying mob's next tick add `speed`, every way, after the drag.
+    pub fn fly(&mut self, speed: [f32; 3]) {
+        self.walking = speed;
     }
 
     /// Moves it by `by` as far as the blocks let it, its own motion kept: a piston's push.
@@ -111,11 +90,20 @@ impl Body {
     /// Lifts a body whose box is in a block onto that block's top, stopped, as BDS did an item
     /// dropped 0.05 into the floor (research/captures/bds-kill.txt); the tick's step lands it.
     pub fn lift_out(&mut self, level: &Level) {
-        let (min, max) = self.bounds();
-        let overlaps = |(low, high): &Bounds| (0..3).all(|axis| min[axis] < high[axis] - EPS && max[axis] > low[axis] + EPS);
-        if let Some(top) = boxes_in(level, (min, max)).iter().filter(|other| overlaps(other)).map(|(_, high)| high[1]).reduce(f32::max) {
+        if let Some(top) = self.overlapped(level).iter().map(|(_, high)| high[1]).reduce(f32::max) {
             (self.at[1], self.motion) = (top, [0.0; 3]);
         }
+    }
+
+    /// Whether no block's collision box reaches into its own.
+    pub fn is_free(&self, level: &Level) -> bool {
+        self.overlapped(level).is_empty()
+    }
+
+    fn overlapped(&self, level: &Level) -> Vec<Bounds> {
+        let (min, max) = self.bounds();
+        let overlaps = |(low, high): &Bounds| (0..3).all(|axis| min[axis] < high[axis] - EPS && max[axis] > low[axis] + EPS);
+        boxes_in(level, (min, max)).into_iter().filter(overlaps).collect()
     }
 
     /// One tick: gravity, the move, then drag; on the ground, friction and the bounce. In water or
@@ -156,8 +144,9 @@ impl Body {
         let stood = std::mem::replace(&mut self.stood, self.on_ground);
         if let Some(speed) = self.thrown.take() {
             self.motion = speed;
-            self.on_ground = self.slide(level, speed);
-            return speed;
+            let moved = [speed[0], speed[1] + std::mem::take(&mut self.lift), speed[2]];
+            self.on_ground = self.travel(level, physics, moved);
+            return moved;
         }
         if let Some(liquid) = liquid {
             liquid::sink(self, liquid);
@@ -167,16 +156,25 @@ impl Body {
             (self.motion[0], self.motion[2]) = (self.motion[0] * across, self.motion[2] * across);
             self.motion[1] = (self.motion[1] - physics.gravity) * physics.fall_drag;
         }
-        (self.motion[0], self.motion[2]) = (self.motion[0] + walking[0], self.motion[2] + walking[1]);
+        self.motion = std::array::from_fn(|axis| self.motion[axis] + walking[axis]);
         if leaping {
             self.motion[1] = JUMP;
         }
         let wanted = self.motion;
-        self.on_ground = self.slide(level, wanted);
+        self.on_ground = self.travel(level, physics, wanted);
         if self.on_ground {
             self.motion[1] = 0.0;
         }
         wanted
+    }
+
+    /// A mob's move by `motion`: through blocks if its physics pass them, else [`Body::slide`].
+    fn travel(&mut self, level: &Level, physics: &Physics, motion: [f32; 3]) -> bool {
+        if !physics.passes {
+            return self.slide(level, motion);
+        }
+        self.at = std::array::from_fn(|axis| self.at[axis] + motion[axis]);
+        false
     }
 
     /// Moves by `motion` as far as the blocks let it, an axis at a time (up and down first, as the

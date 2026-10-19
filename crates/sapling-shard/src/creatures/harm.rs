@@ -24,6 +24,20 @@ const FALL_LATE: u64 = 1;
 const BUBBLES: i32 = 8;
 const DOUSED: i32 = -1;
 
+/// Something costs a mob `cost` by `cause`, told to its viewers; it may die of it.
+pub(super) fn wound(world: &mut World, mob: Entity, layer: Entity, cost: f32, cause: Cause) -> Option<()> {
+    let (id, body, kind) = (world.get::<crate::components::NetId>(mob)?.0, *world.get::<Body>(mob)?, world.get::<entities::Kind>(mob)?.0.clone());
+    let mut health = *world.get::<Health>(mob)?;
+    if health.hurt(cost) {
+        *world.get_mut::<Health>(mob)? = health;
+        entities::tell_viewers(world, mob, layer, body.at.map(|c| c.floor() as i32), vec![strike(id, &health, cause, None)]);
+        if health.left() <= 0.0 {
+            super::die(world, mob, layer, &kind, &body);
+        }
+    }
+    Some(())
+}
+
 /// Whether the body's box reaches into a cell holding one of `names`, however full.
 pub(crate) fn touches(level: &Level, body: &Body, names: &[&str]) -> bool {
     const EDGE: f32 = 1e-4;

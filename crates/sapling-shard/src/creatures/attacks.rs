@@ -78,6 +78,7 @@ fn hit(world: &mut World, player: Entity, id: u64) -> Option<()> {
         crate::vitals::tire(world, player, crate::vitals::HIT_TIRES);
         super::strolling::startle(world, entity);
         super::hunting::provoke(world, entity, layer, id, &kind, &body, player);
+        super::teleports::startle(world, entity);
     }
     entities::tell_viewers(world, entity, layer, cell, packets);
     if health.left() <= 0.0 {

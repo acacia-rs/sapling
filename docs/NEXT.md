@@ -29,14 +29,16 @@ it does on BDS and the two captures can be diffed:
    does not names a command or a form still missing.
 
    What a click does to a block (`docs/research/block-uses.md`, `clicks`), primed TNT (`tnt`) and
-   bone meal (`docs/research/bone-meal.md`, `bonemeal`) are drilled and built; left there: trees
-   from saplings, which need a tree generator the shard does not have. Fire is lit, spreads,
+   bone meal (`docs/research/bone-meal.md`, `bonemeal`) are drilled and built. Saplings,
+   propagules and azaleas grow worldgen's trees by bone meal and random tick, by BDS's decompiled
+   rules (`docs/research/saplings.md`, `blocks/saplings.rs`); not drilled against BDS, and no
+   light is asked for. Fire is lit, spreads,
    burns and is put out (`docs/research/fire.md`, `fire`, `quench`), its spread by the Java game's odds. Crops, stems and berry bushes
    grow by themselves at BDS's pace, a ripe stem bears, cane, cactus and bamboo grow and
    farmland dries and is trodden down, grass spreads to open dirt, leaves decay when their log
    goes, and cocoa, nether wart and pitcher crops grow (`docs/research/growth.md`, `crops`,
    `grows`, `grows2`, `leaves`, `trample`);
-   left: trees from saplings and the rest of what random ticks do.
+   left: the rest of what random ticks do.
 
 ## 2. Survival gaps still open
 
@@ -52,7 +54,7 @@ Each needs its rule looked up first (`bdsre` for BDS, the Java jar for data), th
    hurts and throws a mob, and its kill leaves experience (`creatures/attacks.rs`, `hit`). Left:
    what the doc lists as not drilled. A zombie and seven kinds like it take the nearest survival player, walk at it
    and hit it, a creeper blows up by it (`creatures/blast.rs`, `boom`) and a skeleton shoots at it (`creatures/arrows.rs`, `shoot`) (`creatures/hunting.rs`, `docs/research/mob-attacks.md`, `bite`, `slain`, `kinds`); and every kind that walks strolls when it has nothing to do and flees a hit (`creatures/strolling.rs`, `stroll`, `flee`); left
-   there: the kinds that shoot other things than arrows, the other kinds that turn on their hitter (`provoke` drilled a wolf and a zombified piglin). Survival players have health: falls,
+   there: the kinds that shoot other things than arrows (a blaze and a witch are built; a witch's drinking and splashed mobs are not; an evoker's fangs and vexes are built, `evoker`; a shulker's bullets are built, `shulker`, a breeze's wind charges and leaps, `breeze`, and a ghast's flight and fireballs, `ghast`; docs/research/mob-kinds.md), the other kinds that turn on their hitter (`provoke`, `provoke2` and `provoke3`: a wolf, a zombified piglin, a polar bear, spiders by day, a llama's spit, a panda, a bee and an enderman, `ender`, are built; an enderman's stare is built, `stare`; left there an enderman's calm teleports and water, dolphins (which need swimming) and pandas' other genes; a goat's ram is built, `goat`, mobs rammed are not). Survival players have health: falls,
    fire, lava, water over the head and a block around them hurt, `/damage` and `/kill` too; they die
    leaving items and experience and rise by their bed or at the world's spawn (`vitals.rs`,
    `docs/research/player-damage.md`, `bds_command_probe hurt` and `smother`). A wounded player mends by its

@@ -167,8 +167,9 @@ Twelve more kinds 8 blocks from the actor at midnight on easy
 | zoglin | 0.178 | 0.29 | 2.6 to 4.5 | varies | 1 s |
 
 A slime and a magma cube hop and split, a polar bear hit without a target being told, a witch
-threw potions, a blaze shot three small fireballs a second apart and an enderman was gone; none
-of these six, nor the hoglin and the zoglin, is built. The first four are (`mob-traits.py`).
+threw potions, a blaze shot three small fireballs a second apart and an enderman was gone. The
+first four of the table are built (`mob-traits.py`), and of the six the polar bear, the witch and
+the blaze and the enderman (below); the slimes, the hoglin and the zoglin are not.
 
 ## The blaze (`blaze`)
 
@@ -214,6 +215,38 @@ four seconds and then hit with the fist (`research/captures/bds-provoke.txt`):
   bit for 2.5; the piglin did as in the first
   run (5.5 a second apart, 0.114 a tick). BDS's first hit back came 1 to 1.5 seconds after the
   hit, and sapling's waits a second.
+
+## Hit back by day (`provoke2`)
+
+A polar bear, a panda, a spider, a cave spider, a llama, a piglin and a bee, as `provoke` at noon
+under the sky (`research/captures/bds-provoke2.txt`, `bds-provoke2-findings.md`):
+
+- The polar bear and both spiders took the actor the tick they were hit, with `mob.warning` a
+  tick later. The bear hit for 4 on easy (its 6) every 39 ticks, the first 2.5 seconds after,
+  standing still for a moment and rearing before each; it stepped 0.1349 a tick (movement 0.25).
+  The spider bit for 2 every 20 ticks from 1.5 seconds after, at 0.194 a tick; the cave spider
+  for 2, its poison added and taken away a tick later. Each hit threw the actor 0.4 away and up.
+- The llama charged a second after its hit and spat 2.07 seconds after: a `llama_spit` 1.58
+  above its feet at some 1.5 a tick, falling 0.06 a tick, for 1 and no throw (`HurtAnimation`
+  data 3). It stayed where it was and let go of the actor 3.95 seconds after.
+- The piglin took the actor 0.36 seconds after it was summoned, unhit (no gold worn), and hit
+  for 5.5 (its 5 and its golden sword) every 20 ticks, its arm swung twice a hit.
+- The panda rolled and the bee flew out of reach; neither was hit, so neither says anything.
+
+`provoke3` (`bds-provoke3.txt`, `bds-provoke3-findings.md`) penned three pandas and three bees
+with the actor in glass, so that each was hit a second after it came; two bees still flew out
+of reach.
+
+- Each panda, of the playful, normal and lazy genes, took the actor as it was hit, stood some 48
+  ticks after its throw, walked up at 0.0485 a tick (movement 0.15; the lazy one at 0.0106, its
+  0.07), hit once for 2 and let go of the actor in that tick: 74, 76 and 162 ticks after.
+- The bee took the actor as it was hit and stung it 25 ticks after, for 2 and the throw of a
+  hit, no poison on easy; that tick it let go and lost its sting (`MarkVariant` 1). It was alive
+  and wandering 8 seconds on.
+
+## Mobs that fight their own way
+
+The witch, the enderman, the goat, the evoker, the shulker, the breeze and the ghast: `mob-kinds.md`.
 
 ## Strolling (`stroll`)
 
@@ -270,8 +303,14 @@ A stray and a bogged shoot as the skeleton with their effect on the arrow, and a
 it walks on, its crossbow heard loading where it stood at the shot before; it is not shown anew.
 
 A wolf and a zombified piglin hunt none but a survival player that hit them, from that tick
-(`hunting::provoke`), and so does an iron golem, with a hit of 7 to 21 and its throw; a piglin's
-fellows do not join in, and a golem guards no villager.
+(`hunting::provoke`), and so do an iron golem, with a hit of 7 to 21 and its throw, and a polar
+bear, every 39 ticks without its rearing; a spider dazzled by the sun takes its hitter too. A
+piglin hunts any survival player, gold worn or not, and does not turn into a zombified one. A
+piglin's fellows do not join in, and a golem guards no villager. A llama hit spits once, 41 ticks
+after, for 1 and no throw (`arrows::SPIT`, aimed as the Java game's), and lets go 79 ticks after;
+it shows no charge. A panda and a bee hit take their hitter, hit it once and let go (`once`); a
+panda has no gene but the normal one, does not stand before it walks up, and a bee walks, keeps
+its sting and never dies of its sting.
 
 `creatures/hunting.rs`, for kinds with `attack=`, `speed=` and `sees=` in `mob-traits.tsv`: the
 zombie and the seven kinds above, each with its numbers and what its hit gives (not the cave

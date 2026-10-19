@@ -97,6 +97,18 @@ fn the_end_is_generated_in_its_own_dimension_256_high() {
 }
 
 #[test]
+fn an_oak_tree_feature_grows_over_the_loaded_columns() {
+    let mut world = World::void();
+    let dirt = world.block_id("minecraft:dirt").unwrap();
+    world.fill([-8, 63, -8], [8, 63, 8], dirt);
+    let writes = world.place_feature("minecraft:oak_tree_feature", [0, 64, 0], 7).expect("an oak");
+    let name = |id: u32| world.registry().get(id).map(|state| state.name).unwrap_or_default();
+    assert!(writes.iter().any(|(pos, id)| *pos == [0, 64, 0] && name(*id) == "minecraft:oak_log"), "{writes:?}");
+    assert!(writes.iter().any(|(pos, id)| pos[1] > 66 && name(*id) == "minecraft:oak_leaves"));
+    assert!(world.place_feature("minecraft:no_such_feature", [0, 64, 0], 7).is_none());
+}
+
+#[test]
 fn a_generated_world_without_a_spawn_spawns_on_the_surface_above_the_origin() {
     let mut world = World::with_storage(Arc::new(Generated::new(MemoryStorage::default(), SEED)));
     let shape = OverworldGenerator::new(SEED).chunk_blocks(0, 0);
