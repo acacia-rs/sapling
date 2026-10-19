@@ -31,7 +31,10 @@ pub use experience::ExperienceBackend;
 pub use weather::{Weather, WeatherBackend};
 pub use entity::{EntityBackend, EntityId, EntityInfo};
 pub use world::{RuleValue, WorldBackend};
-pub use event::{ChatEvent, CommandEvent, JoinEvent, Priority, QuitEvent, TickEvent, TransferFailedEvent, WorldChangeEvent};
+pub use event::{
+    ChatEvent, CommandEvent, EntityAttackEvent, EntityInteractEvent, ItemUseEvent, JoinEvent, MoveEvent, Priority, QuitEvent, Target, TickEvent, TransferFailedEvent,
+    WorldChangeEvent,
+};
 pub use listen::{Event, Listen, ListenerChange, ListenerId, Listeners, Scope};
 pub use plugin::{Plugin, PluginBuilder, Scoped};
 pub use health::{DamageCause, HealthBackend};

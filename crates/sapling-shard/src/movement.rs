@@ -171,11 +171,31 @@ pub(crate) fn pose_packet(id: u64, pose: Pose, tick: u64) -> SetEntityData {
     SetEntityData { runtime_entity_id: id, metadata: flags.chain([height]).collect(), properties: EntityProperties { ints: Vec::new(), floats: Vec::new() }, tick }
 }
 
-type Mover<'a> = (&'a NetId, &'a Stage, &'a mut Position, &'a mut Motion, &'a mut Outgoing);
+/// This tick's moves for the plugins (`actions::dispatch_moves`): a player, where it was at the
+/// tick's start, where it is now.
+#[derive(Resource, Default)]
+pub(crate) struct Moves(Vec<(Entity, Position, Position)>);
+
+impl Moves {
+    /// Several inputs in a tick make one move, from the first place to the last.
+    fn record(&mut self, entity: Entity, from: Position, to: Position) {
+        match self.0.iter_mut().find(|(mover, ..)| *mover == entity) {
+            Some(moved) => moved.2 = to,
+            None => self.0.push((entity, from, to)),
+        }
+    }
+
+    pub fn take(&mut self) -> Vec<(Entity, Position, Position)> {
+        std::mem::take(&mut self.0)
+    }
+}
+
+type Mover<'a> =(&'a NetId, &'a Stage, &'a mut Position, &'a mut Motion, &'a mut Outgoing);
 
 /// Where each client says its player is. Trusted, except that non-finite values are dropped and
-/// a step no player makes in a tick is answered with a teleport back.
-pub(crate) fn player_input(mut packets: ResMut<PacketQueues>, tick: Res<Tick>, mut blocks: ResMut<BlockInputs>, mut players: Query<Mover>) {
+/// a step no player makes in a tick is answered with a teleport back. Moves are queued for the
+/// plugins (`actions::dispatch_moves`).
+pub(crate) fn player_input(mut packets: ResMut<PacketQueues>, tick: Res<Tick>, mut blocks: ResMut<BlockInputs>, mut moves: ResMut<Moves>, mut players: Query<Mover>) {
     for (entity, mut input) in packets.take::<PlayerAuthInput>() {
         let Ok((id, stage, mut position, mut motion, mut out)) = players.get_mut(entity) else { continue };
         if input.block_action.is_some() || input.transaction.is_some() || input.item_stack_request.is_some() {
@@ -220,7 +240,11 @@ pub(crate) fn player_input(mut packets: ResMut<PacketQueues>, tick: Res<Tick>, m
         motion.pose.apply(&input.input_data);
         motion.jumps = motion.jumps.saturating_add(input.input_data.iter().filter(|flag| **flag == InputData::StartJumping).count() as u8);
         motion.input_tick = input.tick;
-        *position = Position { feet, yaw: input.yaw, pitch: input.pitch, head_yaw: input.head_yaw, on_ground };
+        let moved = Position { feet, yaw: input.yaw, pitch: input.pitch, head_yaw: input.head_yaw, on_ground };
+        if *stage == Stage::InWorld && (moved.feet, moved.yaw, moved.pitch) != (position.feet, position.yaw, position.pitch) {
+            moves.record(entity, *position, moved);
+        }
+        *position = moved;
     }
 }
 

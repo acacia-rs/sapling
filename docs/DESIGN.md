@@ -281,8 +281,14 @@ it sends for `/title`, `/scoreboard`, `/gamemode`, `/tp`, a wither's bar and com
   when it is removed or they leave the shard (after their `QuitEvent`). A world's tasks run with it in
   focus. Changes made while the registry runs wait in `plugins::Deferred`, locked because a resource
   must be `Sync`. `Handler` is a plugin as one value: each method is a listener at the handler's priority
-  (`handler_at`). Tasks run once a tick after the events, then `TickEvent` (`on_tick`). `on_move` was left
-  out: it needs a resync on cancel.
+  (`handler_at`). Tasks run once a tick after the events, then `TickEvent` (`on_tick`).
+- **Player actions** (`sapling-shard/src/actions.rs`). `MoveEvent` (one a tick per player that moved or
+  turned, from the tick's start; `changed_block()` for block-level checks): `movement::player_input` queues
+  it in `movement::Moves`, since systems hold no plugins, and dispatch offers it before anything reads
+  positions; a cancel teleports the client back, as Paper does. `ItemUseEvent` is a use on nothing
+  (eating, drinking; a cancel stops the client's use), `EntityAttackEvent` / `EntityInteractEvent` a click
+  on a player or an entity (`Target`); a cancelled attack does no harm, an interaction has no vanilla effect
+  yet. Clicks naming nothing raise no event.
 - **State.** `ctx.state::<T>()` is a per-shard `T::default()` keyed by type: what a plugin's handler,
   commands and form callbacks share (commands are types, not values, so they hold nothing).
 - **Commands** (`sapling-api/src/command`, `sapling-shard/src/commands.rs`). `#[derive(Command)]` on a struct

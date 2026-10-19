@@ -1,6 +1,6 @@
 //! Listener order and the events of the game; block and item events are in block.rs and item.rs.
 
-use crate::{Event, Player};
+use crate::{EntityId, Event, Item, Player, Position};
 
 /// When a listener runs among the others: `Highest` first, `Lowest` last, `Monitor` after all of
 /// them. Within a priority, listeners run in the order they were added.
@@ -75,6 +75,99 @@ pub struct CommandEvent {
     cancelled: bool,
 }
 
+/// A player moved or turned, as its client reports: at most one a tick, from where it was at the
+/// tick's start. Cancelled, the client is put back where it was.
+#[derive(Debug, Clone, PartialEq)]
+pub struct MoveEvent {
+    player: Player,
+    from: Position,
+    to: Position,
+    cancelled: bool,
+}
+
+/// A player used the item in its hand on nothing: started eating or drinking. Cancelled, nothing
+/// starts. Clicks on blocks are [`crate::PlaceEvent`]s and [`crate::InteractEvent`]s.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ItemUseEvent {
+    player: Player,
+    item: Option<Item>,
+    cancelled: bool,
+}
+
+/// What a player clicked: another player, or an entity of the shard.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum Target {
+    Player(Player),
+    Entity(EntityId),
+}
+
+/// A player hit another player or a mob. Cancelled, it takes no harm and no knockback.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct EntityAttackEvent {
+    player: Player,
+    target: Target,
+    cancelled: bool,
+}
+
+/// A player used another player or an entity (right click). Nothing comes of it in the game yet;
+/// it is for plugins: NPCs, menus.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct EntityInteractEvent {
+    player: Player,
+    target: Target,
+    cancelled: bool,
+}
+
+impl MoveEvent {
+    pub fn new(player: Player, from: Position, to: Position) -> Self {
+        Self { player, from, to, cancelled: false }
+    }
+
+    pub fn from(&self) -> &Position {
+        &self.from
+    }
+
+    pub fn to(&self) -> &Position {
+        &self.to
+    }
+
+    /// Whether the feet changed block, not just place within one or the look.
+    pub fn changed_block(&self) -> bool {
+        self.from.feet.map(|c| c.floor() as i32) != self.to.feet.map(|c| c.floor() as i32)
+    }
+}
+
+impl ItemUseEvent {
+    pub fn new(player: Player, item: Option<Item>) -> Self {
+        Self { player, item, cancelled: false }
+    }
+
+    /// What is in the player's hand.
+    pub fn item(&self) -> Option<&Item> {
+        self.item.as_ref()
+    }
+}
+
+impl EntityAttackEvent {
+    pub fn new(player: Player, target: Target) -> Self {
+        Self { player, target, cancelled: false }
+    }
+
+    pub fn target(&self) -> &Target {
+        &self.target
+    }
+}
+
+impl EntityInteractEvent {
+    pub fn new(player: Player, target: Target) -> Self {
+        Self { player, target, cancelled: false }
+    }
+
+    pub fn target(&self) -> &Target {
+        &self.target
+    }
+}
+
 impl JoinEvent {
     pub fn new(player: Player) -> Self {
         Self { player }
@@ -146,7 +239,22 @@ macro_rules! player_event {
         }
     )*};
 }
-player_event!(JoinEvent, QuitEvent, WorldChangeEvent, TransferFailedEvent, ChatEvent, CommandEvent, crate::BreakEvent, crate::PlaceEvent, crate::InteractEvent, crate::DropEvent);
+player_event!(
+    JoinEvent,
+    QuitEvent,
+    WorldChangeEvent,
+    TransferFailedEvent,
+    ChatEvent,
+    CommandEvent,
+    MoveEvent,
+    ItemUseEvent,
+    EntityAttackEvent,
+    EntityInteractEvent,
+    crate::BreakEvent,
+    crate::PlaceEvent,
+    crate::InteractEvent,
+    crate::DropEvent
+);
 
 macro_rules! notice {
     ($($event:ty),*) => {$(
@@ -183,4 +291,4 @@ macro_rules! cancellable {
         }
     )*};
 }
-cancellable!(ChatEvent, CommandEvent, crate::DropEvent);
+cancellable!(ChatEvent, CommandEvent, MoveEvent, ItemUseEvent, EntityAttackEvent, EntityInteractEvent, crate::DropEvent);

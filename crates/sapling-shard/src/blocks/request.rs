@@ -14,7 +14,7 @@ use super::{after_break, doors, level, loot, mining, place, pots, reaches, send,
 use crate::components::{InLayer, Mode, PacketQueues, PerTick, Position, in_world_identity};
 use crate::movement::Motion;
 use crate::plugins::Plugins;
-use crate::worlds;
+use crate::{actions, worlds};
 
 /// Block actions looked at per player per tick; a client holding a break sends two or three.
 const MAX_ACTIONS_PER_TICK: usize = 16;
@@ -91,20 +91,23 @@ fn use_block(world: &mut World, player: Entity, layer: Entity, pos: BlockPos, na
 pub(crate) fn dispatch(world: &mut World, plugins: &mut Plugins) {
     let mut inputs = std::mem::take(&mut world.resource_mut::<BlockInputs>().0);
     let transactions = world.resource_mut::<PacketQueues>().take::<InventoryTransaction>();
-    let mut hits = Vec::new();
+    let (mut hits, mut uses) = (Vec::new(), Vec::new());
     inputs.extend(transactions.into_iter().filter_map(|(from, packet)| match packet.transaction.transaction_data {
         TransactionTransactionData::ItemUse(click) => Some((from, Input::Click(click))),
         TransactionTransactionData::ItemRelease(_) => {
             crate::vitals::eating::stop(world, from);
             None
         }
-        TransactionTransactionData::ItemUseOnEntity(on) if on.action_type == OnEntity::Attack => {
-            hits.push((from, on.entity_runtime_id));
+        TransactionTransactionData::ItemUseOnEntity(on) => {
+            let clicks = if on.action_type == OnEntity::Attack { &mut hits } else { &mut uses };
+            clicks.push((from, on.entity_runtime_id));
             None
         }
         _ => None,
     }));
+    let hits = actions::allowed_hits(world, plugins, hits);
     crate::creatures::attacked(world, hits);
+    actions::interacted(world, plugins, uses);
     let (mut actions, mut clicks) = (PerTick::new(MAX_ACTIONS_PER_TICK), PerTick::new(MAX_CLICKS_PER_TICK));
     // A client names a finished break twice: as a block action and as an item use.
     let mut broken = HashSet::new();
@@ -133,7 +136,9 @@ pub(crate) fn dispatch(world: &mut World, plugins: &mut Plugins) {
                 match click.action_type {
                     TransactionUseItemActionType::ClickBlock => request.click(pos, Face::from_index(u32::from(click.face)), &click),
                     TransactionUseItemActionType::BreakBlock if broken.insert((entity, pos)) => request.break_block(pos),
-                    TransactionUseItemActionType::ClickAir => crate::vitals::eating::start(request.world, entity),
+                    TransactionUseItemActionType::ClickAir if actions::may_use_item(request.world, request.plugins, entity, request.player) => {
+                        crate::vitals::eating::start(request.world, entity);
+                    }
                     _ => {}
                 }
             }

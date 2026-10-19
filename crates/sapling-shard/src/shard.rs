@@ -101,6 +101,7 @@ impl Shard {
         world.insert_resource(CommandLists::new(&Commands::default()));
         world.init_resource::<PluginState>();
         world.init_resource::<Deferred>();
+        world.init_resource::<crate::movement::Moves>();
         Self { world, schedule, after_handlers, inbox, mailbox: link.mailbox, plugins: Plugins::default() }
     }
 

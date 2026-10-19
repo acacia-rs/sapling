@@ -10,7 +10,7 @@ use sapling_api::{JoinEvent, PlayerId, QuitEvent, Scope, TickEvent};
 
 use crate::components::{Arrivals, Identity, Layer, Outgoing, Players, Stage};
 use crate::plugins::{self, Plugins};
-use crate::{blocks, campfires, chat, commands, containers, creatures, drops, entities, forms, furnaces, hoppers, inventory, late_sounds, orbs, roster, sleep, tnt, vitals, worlds};
+use crate::{actions, blocks, campfires, chat, commands, containers, creatures, drops, entities, forms, furnaces, hoppers, inventory, late_sounds, orbs, roster, sleep, tnt, vitals, worlds};
 
 pub(crate) struct Ctx<'w> {
     pub world: &'w mut World,
@@ -53,6 +53,8 @@ pub(crate) fn dispatch(world: &mut World, plugins: &mut Plugins) {
         worlds::focus_on(world, entity);
         plugins.offer(world, JoinEvent::new(player));
     }
+    // Before anything acts on where players are: a cancelled move puts one back.
+    actions::dispatch_moves(world, plugins);
     chat::dispatch(world, plugins);
     commands::dispatch(world, plugins);
     blocks::release_buttons(world);
