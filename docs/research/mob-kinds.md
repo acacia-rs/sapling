@@ -93,6 +93,21 @@ at midnight on easy and healed each second (`research/captures/bds-evoker-findin
   between charges they wandered at some 0.135 a tick. The summoning showed 99 ticks, the vexes
   came 2 later with `prepare.summon` again, and the next cast began 342 after.
 
+## The dolphin (`dolphin`)
+
+A dolphin in a pool 13 across and 7 deep at midnight on easy, the actor at its bottom breathing
+water, held still by slowness for one hit and healed each second
+(`research/captures/bds-dolphin-findings.md`; three earlier runs lost the pool or the hit):
+
+- In water it moved by `v = 0.8 v`, then a push of 0.022 along its heading, no gravity: 0.11 a
+  tick at most, calm or chasing; slowness did not slow it. It turned 10 degrees a tick at most.
+  Calm, it sank to the floor and swam about it; it never came up for air in the minute.
+- Its `Air` counted down from 4800, a tick at a time, filled again at a breach.
+- Hit (9 of 10 left), it took the actor the next tick, then `ANGRY` and `mob.warning`; it chased
+  at the same 0.11 and bit every 20 ticks within 0.8 across of its box: 2.5 on easy, a throw 0.4
+  away and 0.4 up in water. It breached once mid-chase, out of the water 7 ticks.
+- It was still angry 32 seconds on, past its pack's 25.
+
 ## The shulker (`shulker`)
 
 A shulker 6 off the actor in survival at midnight on easy, healed each second
@@ -167,6 +182,12 @@ by the Java game's vex goals: a tick in 7 a charge at prey more than 2 off, 5.5 
 their boxes meet, else a wander up to 7 off where it came; they waste from 30 to 119 seconds on.
 It steps away from nobody and its fangs bite no mob; a fang stands on full blocks only. A vex
 spawned by command charges here, where BDS's did not in 30 seconds (`bds-vex.txt`).
+
+A dolphin swims as above (`creatures/dolphins.rs`, `Physics::SWIMMER`, `InLiquid::Swims`) to
+spots of water up to 10 off, or at its hitter, which it bites as other hunters do (`provoked`,
+`fights=swims`). It holds 4800 ticks of breath (`breath=`) and here never runs out; it does not
+breach, bob under the surface, turn 10 degrees at most, flock or swim with players, flop or dry
+out on land, or pass its anger on, and its anger does not end.
 
 A shulker opens for its prey and shoots as above (`creatures/bullets.rs`, `creatures/shooting.rs`),
 41 ticks apart where BDS's varied; a bullet is not shown hidden on its first tick nor turned, hits

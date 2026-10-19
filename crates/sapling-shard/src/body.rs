@@ -115,7 +115,7 @@ impl Body {
         let before = std::mem::replace(&mut self.liquid, found);
         match (physics.liquid, found) {
             // A mob goes by what was found a tick before (research/captures/bds-water.txt, the armour stand).
-            (InLiquid::Sinks, _) => return self.mob_step(level, physics, before),
+            (InLiquid::Sinks | InLiquid::Swims, _) => return self.mob_step(level, physics, before),
             (InLiquid::Floats, Some(liquid)) => liquid::lift(self, liquid),
             (InLiquid::Buoyant, Some(Liquid::Water)) => {
                 liquid::buoy(level, self, random);
@@ -148,7 +148,9 @@ impl Body {
             self.on_ground = self.travel(level, physics, moved);
             return moved;
         }
-        if let Some(liquid) = liquid {
+        if physics.liquid == InLiquid::Swims && liquid == Some(Liquid::Water) {
+            liquid::swim(self);
+        } else if let Some(liquid) = liquid {
             liquid::sink(self, liquid);
         } else {
             // BDS slows a mob after its move by where it stood before it (research/captures/bds-chase.txt).

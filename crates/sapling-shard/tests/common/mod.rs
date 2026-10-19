@@ -275,3 +275,18 @@ pub fn input_at(feet: [f32; 3]) -> PlayerAuthInput {
         raw_move_vector: zero(),
     }
 }
+
+/// A player at the platform's spawn hits the entity `id` with an empty hand.
+pub fn attack(id: u64) -> InventoryTransaction {
+    use acacia_proto::types::{TransactionTransactionDataItemUseOnEntity as OnEntity, TransactionTransactionDataItemUseOnEntityActionType as OnEntityAction};
+    let on = OnEntity {
+        entity_runtime_id: id,
+        action_type: OnEntityAction::Attack,
+        hotbar_slot: 0,
+        held_item: ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: ItemV4Extra::Default(None) },
+        player_pos: Vec3f { x: 0.5, y: 65.0 + sapling_data::EYE_HEIGHT, z: 0.5 },
+        click_pos: Vec3f { x: 0.0, y: 0.0, z: 0.0 },
+    };
+    let legacy = TransactionLegacy { legacy_request_id: 0, legacy_transactions: None };
+    InventoryTransaction { transaction: Transaction { legacy, transaction_type: TransactionTransactionType::ItemUseOnEntity, actions: Vec::new(), transaction_data: TransactionTransactionData::ItemUseOnEntity(on) } }
+}

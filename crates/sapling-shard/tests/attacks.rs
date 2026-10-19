@@ -2,26 +2,9 @@
 
 mod common;
 
-use acacia_proto::packets::{AddEntity, EntityEvent, EntityEventEventId, InventoryTransaction, LevelSoundEvent, MoveEntityDelta, UpdateAttributes};
-use acacia_proto::types::{
-    ItemV4, ItemV4Extra, Transaction, TransactionLegacy, TransactionTransactionData, TransactionTransactionDataItemUseOnEntity, TransactionTransactionDataItemUseOnEntityActionType,
-    TransactionTransactionType, Vec3f,
-};
-use common::{Harness, all};
+use acacia_proto::packets::{AddEntity, EntityEvent, EntityEventEventId, LevelSoundEvent, MoveEntityDelta, UpdateAttributes};
+use common::{Harness, all, attack};
 use sapling_api::Block;
-
-fn attack(id: u64) -> InventoryTransaction {
-    let on = TransactionTransactionDataItemUseOnEntity {
-        entity_runtime_id: id,
-        action_type: TransactionTransactionDataItemUseOnEntityActionType::Attack,
-        hotbar_slot: 0,
-        held_item: ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: ItemV4Extra::Default(None) },
-        player_pos: Vec3f { x: 0.5, y: 65.0 + sapling_data::EYE_HEIGHT, z: 0.5 },
-        click_pos: Vec3f { x: 0.0, y: 0.0, z: 0.0 },
-    };
-    let legacy = TransactionLegacy { legacy_request_id: 0, legacy_transactions: None };
-    InventoryTransaction { transaction: Transaction { legacy, transaction_type: TransactionTransactionType::ItemUseOnEntity, actions: Vec::new(), transaction_data: TransactionTransactionData::ItemUseOnEntity(on) } }
-}
 
 fn health(sent: &[acacia_proto::RawPacket]) -> Vec<f32> {
     named(sent, "minecraft:health")

@@ -70,11 +70,13 @@ pub fn stare() -> Vec<String> {
 /// then thirty seconds pass, the actor healed each second.
 pub fn dolphin() -> Vec<String> {
     let mut lines: Vec<String> = ["kill @e[type=!player]", "gamerule domobspawning false", "difficulty easy", "time set midnight", "gamemode survival @s"].map(String::from).into();
-    lines.extend(["fill ~-7 ~-6 ~-7 ~7 ~-1 ~7 stone", "fill ~-6 ~-5 ~-6 ~6 ~-1 ~6 water", "fill ~-7 ~ ~-7 ~7 ~5 ~7 air", "effect @s water_breathing 120 0", "tp @s ~ ~-5 ~", "", "summon dolphin ~ ~1 ~3"].map(String::from));
+    // In fixed places: the actor is anywhere after earlier drills, and still moving after a `tp`.
+    lines.extend(["fill -7 -27 -7 7 -20 7 stone", "fill -6 -26 -6 6 -20 6 water", "fill -7 -19 -7 7 -14 7 air", "effect @s water_breathing 120 0", "tp @s 0.5 -26 0.5", "", "summon dolphin 0.5 -25 3.5"].map(String::from));
     lines.extend(std::iter::repeat_n(String::new(), 10));
-    lines.extend(["execute at @e[type=dolphin,c=1] run tp @p ~ ~ ~1.5 facing ~ ~0.3 ~", "!hit dolphin"].map(String::from));
+    // Held still for the hit: it swam 3 off in the second between the `tp` and the `!hit`.
+    lines.extend(["effect @e[type=dolphin] slowness 10 255", "", "execute at @e[type=dolphin,c=1] run tp @s ~ ~ ~1.5 facing ~ ~0.3 ~", "!hit dolphin", "effect @e[type=dolphin] clear"].map(String::from));
     lines.extend(std::iter::repeat_n("effect @s instant_health 1 4".to_owned(), 30));
-    lines.extend(["kill @e[type=!player]", "effect @s clear", "tp @s ~ ~5 ~", "fill ~-7 ~-6 ~-7 ~7 ~-1 ~7 stone", "gamemode creative @s", ""].map(String::from));
+    lines.extend(["kill @e[type=!player]", "effect @s clear", "fill -7 -27 -7 7 -20 7 stone", "tp @s 0.5 -19 0.5", "gamemode creative @s", ""].map(String::from));
     lines
 }
 

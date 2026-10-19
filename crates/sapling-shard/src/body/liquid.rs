@@ -32,6 +32,9 @@ pub(crate) enum InLiquid {
     Floats,
     /// Slowed and pulled down gently while its box is in either (mobs without AI).
     Sinks,
+    /// In water, keeps 0.8 of its speed every way and nothing pulls it down; in lava, sinks (a
+    /// dolphin, research/captures/bds-dolphin-findings.md).
+    Swims,
     /// Held up just under water's surface, bobbing, before its own tick (orbs, by their
     /// `minecraft:buoyant`; BDS's `BuoyancySystem`); thrown up out of lava.
     Buoyant,
@@ -138,7 +141,7 @@ pub(super) fn acting(level: &Level, body: &Body, rule: InLiquid) -> Option<Liqui
     match rule {
         InLiquid::Ignores => None,
         InLiquid::Floats => lifting_item(level, body),
-        InLiquid::Sinks => [Liquid::Water, Liquid::Lava].into_iter().find(|liquid| in_liquid(level, body, rule, *liquid)),
+        InLiquid::Sinks | InLiquid::Swims => [Liquid::Water, Liquid::Lava].into_iter().find(|liquid| in_liquid(level, body, rule, *liquid)),
         InLiquid::Buoyant if buoyed(level, body).is_some() => Some(Liquid::Water),
         InLiquid::Buoyant => depth(level, cell, Liquid::Lava).map(|_| Liquid::Lava),
     }
@@ -153,6 +156,11 @@ pub(super) fn lift(body: &mut Body, liquid: Liquid) {
 }
 
 /// Slows a mob in `liquid` and pulls it down, in place of the air's drag and gravity.
+/// A swimmer's tick in water: dragged as a sinking mob is, and not pulled down.
+pub(super) fn swim(body: &mut Body) {
+    body.motion = body.motion.map(|speed| speed * SINK_DRAG_WATER);
+}
+
 pub(super) fn sink(body: &mut Body, liquid: Liquid) {
     let drag = if liquid == Liquid::Water { SINK_DRAG_WATER } else { SINK_DRAG_LAVA };
     body.motion = body.motion.map(|speed| speed * drag);

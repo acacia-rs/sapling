@@ -9,6 +9,7 @@ mod attacks;
 mod backend;
 mod blast;
 mod breezes;
+mod dolphins;
 mod bullets;
 mod charges;
 mod duels;
@@ -114,6 +115,7 @@ fn physics_of(kind: &str) -> &'static Physics {
         "minecraft:breeze" => &Physics::BREEZE,
         "minecraft:ghast" => &Physics::FLYER,
         vexes::KIND => &Physics::GHOST,
+        "minecraft:dolphin" => &Physics::SWIMMER,
         _ => &Physics::MOB,
     }
 }
@@ -175,6 +177,7 @@ fn give_legs(world: &mut World, entity: Entity, kind: &str) {
     ghasts::arm(world, entity, kind);
     vexes::arm(world, entity, kind);
     stares::arm(world, entity, kind);
+    dolphins::arm(world, entity, kind);
 }
 
 /// Gives a mob of a kind that dies the health BDS announced its kind with, `left` of it, and

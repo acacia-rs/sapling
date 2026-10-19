@@ -41,6 +41,8 @@ impl Physics {
     /// A ghast, which nothing pulls down and which keeps 0.91 of its speed every way
     /// (research/captures/bds-ghast-findings.md).
     pub const FLYER: Physics = Physics { gravity: 0.0, air_drag: 0.91, fall_drag: 0.91, ground_drag: 0.91, ..Physics::MOB };
+    /// A dolphin, which swims in water and is a mob out of it (research/captures/bds-dolphin-findings.md).
+    pub const SWIMMER: Physics = Physics { liquid: InLiquid::Swims, ..Physics::MOB };
     /// A vex, which flies as a ghast does and through blocks (research/captures/bds-evoker-findings.md).
     pub const GHOST: Physics = Physics { passes: true, ..Physics::FLYER };
 }
