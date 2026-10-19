@@ -81,7 +81,7 @@ fn seen(world: &World, player: Entity, layer: Entity, from: [f32; 3], sight: f32
 
 /// Whether no full block, glass too, is between a hunter's eyes and the player's
 /// (research/captures/bds-around.txt).
-fn in_sight(world: &World, layer: Entity, body: &Body, feet: [f32; 3]) -> bool {
+pub(super) fn in_sight(world: &World, layer: Entity, body: &Body, feet: [f32; 3]) -> bool {
     let Some(level) = world.get::<Layer>(layer).map(|layer| &layer.world) else { return false };
     let (from, to) = ([body.at[0], body.at[1] + HEAD * body.size[1], body.at[2]], [feet[0], feet[1] + sapling_data::EYE_HEIGHT, feet[2]]);
     let glances = (distance(from, to) / GLANCE).ceil().max(1.0);
@@ -196,6 +196,10 @@ pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity, id: u64, k
         Some("spells") => return super::spells::steer(world, entity, layer, id, kind, &body, prey),
         Some("leaps") => return super::breezes::steer(world, entity, layer, id, kind, &body, prey),
         Some("fireballs") => return super::ghasts::steer(world, entity, layer, id, kind, &body, prey),
+        Some("charges") => {
+            let prey = prey.and(world.get::<Hunter>(entity).and_then(|hunter| hunter.prey));
+            return super::vexes::steer(world, entity, layer, id, kind, &body, prey);
+        }
         _ => {}
     }
     let Some(feet) = prey else { return blast::is_lit(world, entity) };
@@ -211,6 +215,16 @@ pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity, id: u64, k
         }
     }
     true
+}
+
+/// What a mob's hit of `harm` on normal costs on the world's difficulty; none on peaceful.
+pub(super) fn on_difficulty(world: &World, harm: f32) -> Option<f32> {
+    match world.resource::<Settings>().0.difficulty {
+        Difficulty::Peaceful => None,
+        Difficulty::Easy => Some(harm.min(harm / 2.0 + 1.0)),
+        Difficulty::Normal => Some(harm),
+        Difficulty::Hard => Some(harm * 1.5),
+    }
 }
 
 /// After its move: a hunter whose reach its prey is in swings and hits it, heard a tick later.
@@ -245,12 +259,7 @@ pub(super) fn strike(world: &mut World, entity: Entity, layer: Entity, id: u64, 
         return None;
     }
     world.get_mut::<Hunter>(entity)?.ready = now + hunts.every.map_or(COOLDOWN, u64::from);
-    let harm = match world.resource::<Settings>().0.difficulty {
-        Difficulty::Peaceful => return None,
-        Difficulty::Easy => harm.min(harm / 2.0 + 1.0),
-        Difficulty::Normal => harm,
-        Difficulty::Hard => harm * 1.5,
-    };
+    let harm = on_difficulty(world, harm)?;
     let cell = body.at.map(|c| c.floor() as i32);
     let swing = EntityEvent { runtime_entity_id: id, event_id: EntityEventEventId::ArmSwing, data: 0, fire_at_position: None };
     entities::tell_viewers(world, entity, layer, cell, vec![sapling_net::encode(&swing)]);

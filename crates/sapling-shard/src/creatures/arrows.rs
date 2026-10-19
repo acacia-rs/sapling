@@ -157,20 +157,6 @@ fn met_mob(world: &mut World, layer: Entity, by: Entity, at: [f32; 3]) -> Option
     }).map(|(mob, ..)| mob)
 }
 
-/// An arrow that cost `harm` hits a mob, which may die of it.
-fn pierce(world: &mut World, mob: Entity, layer: Entity, cost: f32) -> Option<()> {
-    let (id, body, kind) = (world.get::<NetId>(mob)?.0, *world.get::<Body>(mob)?, world.get::<entities::Kind>(mob)?.0.clone());
-    let mut health = *world.get::<Health>(mob)?;
-    if health.hurt(cost) {
-        *world.get_mut::<Health>(mob)? = health;
-        entities::tell_viewers(world, mob, layer, body.at.map(|c| c.floor() as i32), vec![harm::strike(id, &health, Cause::Projectile, None)]);
-        if health.left() <= 0.0 {
-            super::die(world, mob, layer, &kind, &body);
-        }
-    }
-    Some(())
-}
-
 /// A tick of one flying arrow: whether it is gone.
 fn fly(world: &mut World, arrow: Entity, layer: Entity, id: u64, now: u64) -> Option<()> {
     let mut body = *world.get::<Body>(arrow)?;
@@ -206,7 +192,7 @@ fn fly(world: &mut World, arrow: Entity, layer: Entity, id: u64, now: u64) -> Op
                     vitals::set_alight(world, struck, shot.burns);
                 }
             }
-            false => drop(pierce(world, struck, layer, cost)),
+            false => drop(harm::wound(world, struck, layer, cost, Cause::Projectile)),
         }
         if shot.sticks {
             late_sounds::play_later(world, 1, layer, body.at.map(|c| c.floor() as i32), sound("bow.hit", body.at, ""));

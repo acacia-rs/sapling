@@ -24,7 +24,9 @@ mod shooting;
 mod spells;
 mod splashes;
 mod strolling;
+mod stares;
 mod teleports;
+mod vexes;
 
 use bevy_ecs::prelude::*;
 use bytes::Bytes;
@@ -80,8 +82,14 @@ fn announcement(id: u64, kind: &str, body: &Body, look: Option<&Actor>, health: 
         health: left,
         name: "",
     };
-    vec![sapling_net::encode(&sapling_data::add_entity(&options))]
+    let mut shown = vec![sapling_net::encode(&sapling_data::add_entity(&options))];
+    let held = HOLDS.iter().find(|(of, _)| *of == kind).map(|(_, item)| sapling_data::Stack { name: item, count: 1, damage: 0, block: None, tag: None });
+    shown.extend(held.and_then(|stack| sapling_data::mob_hand(id, &stack, false)).map(|held| sapling_net::encode(&held)));
+    shown
 }
+
+/// What a spawned mob of each of these kinds holds, as BDS showed it (bds-evoker-findings.md).
+const HOLDS: &[(&str, &str)] = &[(vexes::KIND, "minecraft:iron_sword")];
 
 /// Kinds whose head sits forward of their feet, by this much of their width (BDS's `Animal`
 /// constructors); every other mob's is straight up (docs/research/spawn-sound.md).
@@ -105,6 +113,7 @@ fn physics_of(kind: &str) -> &'static Physics {
     match kind {
         "minecraft:breeze" => &Physics::BREEZE,
         "minecraft:ghast" => &Physics::FLYER,
+        vexes::KIND => &Physics::GHOST,
         _ => &Physics::MOB,
     }
 }
@@ -164,6 +173,8 @@ fn give_legs(world: &mut World, entity: Entity, kind: &str) {
     spells::arm(world, entity, kind);
     breezes::arm(world, entity, kind);
     ghasts::arm(world, entity, kind);
+    vexes::arm(world, entity, kind);
+    stares::arm(world, entity, kind);
 }
 
 /// Gives a mob of a kind that dies the health BDS announced its kind with, `left` of it, and
@@ -251,6 +262,7 @@ pub(crate) fn tick(world: &mut World) {
         let Some(start) = world.get::<Body>(entity).copied() else { continue };
         let is_alive = world.get::<Dying>(entity).is_none();
         if is_alive {
+            stares::watch(world, entity, layer, id, &kind, &start);
             teleports::tick(world, entity, layer, hunting::prey_at(world, entity));
         }
         if is_alive && !rams::steer(world, entity, layer, id, &kind) && !hunting::steer(world, entity, layer, id, &kind) {

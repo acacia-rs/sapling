@@ -1,7 +1,8 @@
 //! What an evoker casts at its prey, as BDS's did (research/captures/bds-evoker-findings.md): it
 //! stands for the cast, and a second in sends a line of sixteen fangs at a prey 3 or more off, or
-//! two rings of them about itself at one nearer. A fang bites a tick after it rises.
-// TODO: no vexes (they fly), no stepping away from a player within 8, and a fang bites no mob.
+//! two rings of them about itself at one nearer. A fang bites a tick after it rises. One cast in
+//! four, while fewer than 8 vexes are about, summons three (`vexes`) after five seconds.
+// TODO: no stepping away from a player within 8, and a fang bites no mob.
 
 use acacia_proto::packets::{EntityEvent, EntityEventEventId};
 use acacia_proto::types::{MetadataDictionaryItem, MetadataDictionaryItemKey as Key, MetadataDictionaryItemType as Type, MetadataDictionaryItemValue as Value, MetadataDictionaryItemValueDefault as Plain, MetadataFlags1};
@@ -27,6 +28,13 @@ const RING_GAP: u64 = 3;
 const LINE: u64 = 16;
 const STEP: f32 = 1.25;
 const COLOUR: i32 = 0xFF66_4D59_u32 as i32;
+/// A summoning shows for this many ticks, its vexes come this many after it began, and the next
+/// cast begins this many after it stopped showing; it is cast one time in so many.
+const SUMMON_CASTS: u64 = 99;
+const SUMMON_COMES: u64 = 101;
+const SUMMON_RESTS: u64 = 342;
+const SUMMON_COLOUR: i32 = 0xFFB3_B3CC_u32 as i32;
+const SUMMON_ODDS: u32 = 4;
 const FANG: &str = "minecraft:evocation_fang";
 const SIZE: [f32; 2] = [1.0, 0.8];
 const PLAYER: [f32; 2] = [0.6, 1.8];
@@ -43,10 +51,17 @@ pub(super) struct Caster {
     cast: Option<Cast>,
 }
 
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum Spell {
+    Line,
+    Rings,
+    Summoning,
+}
+
 #[derive(Clone, Copy)]
 struct Cast {
     began: u64,
-    rings: bool,
+    spell: Spell,
     /// Taken as the fangs begin: the way to the prey and the heights a fang may stand between.
     aim: Option<([f32; 2], [f32; 2])>,
 }
@@ -76,23 +91,52 @@ pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity, id: u64, k
     let Some(caster) = world.get::<Caster>(entity) else { return false };
     let (next, cast) = (caster.next, caster.cast);
     let cell = body.at.map(|c| c.floor() as i32);
+    let flag_off = |world: &mut World| entities::tell_viewers(world, entity, layer, cell, vec![sapling_net::encode(&sapling_data::mob_spell(id, kind, None))]);
     match (cast, prey) {
-        (Some(_), None) => end(world, entity, layer, id, kind, cell, now),
+        (Some(cast), None) => {
+            if !(cast.spell == Spell::Summoning && now > cast.began + SUMMON_CASTS) {
+                flag_off(world);
+            }
+            end(world, entity, now + RESTS);
+        }
+        (Some(cast), Some(_)) if cast.spell == Spell::Summoning => {
+            if now == cast.began + SUMMON_CASTS {
+                flag_off(world);
+            }
+            if now >= cast.began + SUMMON_COMES {
+                late_sounds::play_later(world, 0, layer, cell, hunting::sound("prepare.summon", id, kind, body, 0.0));
+                super::vexes::summon(world, layer, body);
+                end(world, entity, cast.began + SUMMON_CASTS + SUMMON_RESTS);
+            }
+            legs::rest(world, entity);
+            return true;
+        }
         (Some(cast), Some(feet)) => {
             conjure(world, entity, layer, id, kind, body, cast, feet, now);
             if now >= cast.began + CASTS {
-                end(world, entity, layer, id, kind, cell, now);
+                flag_off(world);
+                end(world, entity, now + RESTS);
             }
             legs::rest(world, entity);
             return true;
         }
         (None, Some(feet)) if now >= next => {
-            let rings = (feet[0] - body.at[0]).hypot(feet[2] - body.at[2]) < NEAR;
-            world.get_mut::<Caster>(entity).expect("a caster, above").cast = Some(Cast { began: now, rings, aim: None });
-            entities::tell_viewers(world, entity, layer, cell, vec![sapling_net::encode(&sapling_data::mob_spell(id, kind, Some(COLOUR)))]);
-            late_sounds::play_later(world, 1, layer, cell, hunting::sound("cast.spell", id, kind, body, 0.0));
-            if rings {
-                late_sounds::play_later(world, 1, layer, cell, hunting::sound("prepare.attack", id, kind, body, 0.0));
+            let summons = world.get_resource_or_insert_with(crate::blocks::Dice::default).roll(SUMMON_ODDS) == 0 && super::vexes::may_summon(world, layer, body.at);
+            let spell = match (feet[0] - body.at[0]).hypot(feet[2] - body.at[2]) {
+                _ if summons => Spell::Summoning,
+                far if far < NEAR => Spell::Rings,
+                _ => Spell::Line,
+            };
+            world.get_mut::<Caster>(entity).expect("a caster, above").cast = Some(Cast { began: now, spell, aim: None });
+            let colour = if spell == Spell::Summoning { SUMMON_COLOUR } else { COLOUR };
+            entities::tell_viewers(world, entity, layer, cell, vec![sapling_net::encode(&sapling_data::mob_spell(id, kind, Some(colour)))]);
+            let sounds: &[&str] = match spell {
+                Spell::Summoning => &["prepare.summon"],
+                Spell::Rings => &["cast.spell", "prepare.attack"],
+                Spell::Line => &["cast.spell"],
+            };
+            for sound in sounds {
+                late_sounds::play_later(world, 1, layer, cell, hunting::sound(sound, id, kind, body, 0.0));
             }
             legs::rest(world, entity);
             return true;
@@ -102,11 +146,11 @@ pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity, id: u64, k
     false
 }
 
-fn end(world: &mut World, entity: Entity, layer: Entity, id: u64, kind: &str, cell: [i32; 3], now: u64) {
+/// The cast is over; the next may begin at `next`.
+fn end(world: &mut World, entity: Entity, next: u64) {
     if let Some(mut caster) = world.get_mut::<Caster>(entity) {
-        (caster.cast, caster.next) = (None, now + RESTS);
+        (caster.cast, caster.next) = (None, next);
     }
-    entities::tell_viewers(world, entity, layer, cell, vec![sapling_net::encode(&sapling_data::mob_spell(id, kind, None))]);
 }
 
 /// The fangs of this tick of the cast.
@@ -120,7 +164,7 @@ fn conjure(world: &mut World, entity: Entity, layer: Entity, id: u64, kind: &str
     if let Some(mut caster) = world.get_mut::<Caster>(entity) {
         caster.cast = Some(cast);
     }
-    let spots: Vec<[f32; 2]> = match cast.rings {
+    let spots: Vec<[f32; 2]> = match cast.spell == Spell::Rings {
         true => {
             let Some(&(count, radius)) = RINGS.get((step / RING_GAP) as usize).filter(|_| step.is_multiple_of(RING_GAP)) else { return };
             if step == 0 {

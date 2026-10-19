@@ -145,7 +145,7 @@ impl Body {
         if let Some(speed) = self.thrown.take() {
             self.motion = speed;
             let moved = [speed[0], speed[1] + std::mem::take(&mut self.lift), speed[2]];
-            self.on_ground = self.slide(level, moved);
+            self.on_ground = self.travel(level, physics, moved);
             return moved;
         }
         if let Some(liquid) = liquid {
@@ -161,11 +161,20 @@ impl Body {
             self.motion[1] = JUMP;
         }
         let wanted = self.motion;
-        self.on_ground = self.slide(level, wanted);
+        self.on_ground = self.travel(level, physics, wanted);
         if self.on_ground {
             self.motion[1] = 0.0;
         }
         wanted
+    }
+
+    /// A mob's move by `motion`: through blocks if its physics pass them, else [`Body::slide`].
+    fn travel(&mut self, level: &Level, physics: &Physics, motion: [f32; 3]) -> bool {
+        if !physics.passes {
+            return self.slide(level, motion);
+        }
+        self.at = std::array::from_fn(|axis| self.at[axis] + motion[axis]);
+        false
     }
 
     /// Moves by `motion` as far as the blocks let it, an axis at a time (up and down first, as the

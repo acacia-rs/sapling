@@ -120,6 +120,12 @@ pub fn mob_spell(id: u64, identifier: &str, colour: Option<i32>) -> SetEntityDat
     SetEntityData { runtime_entity_id: id, metadata, properties: EntityProperties { ints: Vec::new(), floats: Vec::new() }, tick: 0 }
 }
 
+/// The flags of the mob `id`, a grown one of `identifier`, with `extra` set besides.
+pub fn mob_flags_set(id: u64, identifier: &str, extra: MetadataFlags1) -> SetEntityData {
+    let item = MetadataDictionaryItem { key: Key::Flags, r#type: Type::Long, legacy_type: 7, value: Value::Flags(MetadataFlags1(mob_flags(identifier).0 | extra.0)) };
+    SetEntityData { runtime_entity_id: id, metadata: vec![item], properties: EntityProperties { ints: Vec::new(), floats: Vec::new() }, tick: 0 }
+}
+
 /// The mob `id`, a grown one of `identifier`, readies a shot (a ghast's open mouth) or stops.
 pub fn mob_charge(id: u64, identifier: &str, charged: bool) -> SetEntityData {
     let flags = MetadataFlags1(mob_flags(identifier).0 | if charged { MetadataFlags1::CHARGED.0 } else { 0 });

@@ -44,6 +44,40 @@ pub fn breeze() -> Vec<String> {
     open_floor("stone", &["summon breeze ~ ~ ~-8"], 30)
 }
 
+/// As [`breeze`]: a vex 6 off and 1 up for thirty seconds.
+pub fn vex() -> Vec<String> {
+    open_floor("stone", &["summon vex ~ ~1 ~-6"], 30)
+}
+
+/// The actor in survival at midnight on the raised stone floor of [`open_floor`] (the flat
+/// ground's floods sent an enderman off): an enderman is summoned, put 6 off once its first
+/// teleport is done and held still, and the actor looks at a point 2.6 up it, then 0.5, 1, 1.5,
+/// 2 and 3 to its side, for three seconds each, a fresh enderman each time
+/// (bds-ender-findings.md: the bot did not hold `/tp facing`).
+pub fn stare() -> Vec<String> {
+    let mut lines = open_floor("stone", &[], 0);
+    lines.truncate(lines.len() - 5);
+    for side in ["0", "0.5", "1", "1.5", "2", "3"] {
+        lines.extend(["summon enderman ~ ~ ~6", "", "tp @e[type=enderman] ~ ~ ~6", "effect @e[type=enderman] slowness 30 255"].map(String::from));
+        lines.extend([format!("!look {side} 2.6 6"), String::new(), String::new(), String::new(), "!look 0 1.62 -10".into(), "effect @s instant_health 1 4".into(), "kill @e[type=!player]".into(), String::new()]);
+    }
+    lines.extend(["effect @s clear", "gamerule falldamage true", "gamemode creative @s", ""].map(String::from));
+    lines
+}
+
+/// The actor in survival at midnight, breathing water, at the bottom of a pool 13 across and 5
+/// deep walled in stone: a dolphin summoned in it swims ten seconds, is hit from 1.5 off, and
+/// then thirty seconds pass, the actor healed each second.
+pub fn dolphin() -> Vec<String> {
+    let mut lines: Vec<String> = ["kill @e[type=!player]", "gamerule domobspawning false", "difficulty easy", "time set midnight", "gamemode survival @s"].map(String::from).into();
+    lines.extend(["fill ~-7 ~-6 ~-7 ~7 ~-1 ~7 stone", "fill ~-6 ~-5 ~-6 ~6 ~-1 ~6 water", "fill ~-7 ~ ~-7 ~7 ~5 ~7 air", "effect @s water_breathing 120 0", "tp @s ~ ~-5 ~", "", "summon dolphin ~ ~1 ~3"].map(String::from));
+    lines.extend(std::iter::repeat_n(String::new(), 10));
+    lines.extend(["execute at @e[type=dolphin,c=1] run tp @p ~ ~ ~1.5 facing ~ ~0.3 ~", "!hit dolphin"].map(String::from));
+    lines.extend(std::iter::repeat_n("effect @s instant_health 1 4".to_owned(), 30));
+    lines.extend(["kill @e[type=!player]", "effect @s clear", "tp @s ~ ~5 ~", "fill ~-7 ~-6 ~-7 ~7 ~-1 ~7 stone", "gamemode creative @s", ""].map(String::from));
+    lines
+}
+
 /// A floor of `block` 41 square at y -20 with 20 of air over it, the actor in survival on it at
 /// midnight with fall damage off; `summon` run, then the actor healed each second for `seconds`.
 fn open_floor(block: &str, summon: &[&str], seconds: usize) -> Vec<String> {

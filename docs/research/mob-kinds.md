@@ -32,6 +32,10 @@ Three runs on the flat ground, the actor in survival at midnight and healed each
   it left and where it came; it landed within 16 along each axis, standing on the ground below.
 - Calm, it strolled at 0.1943 a tick (movement 0.3). One calm enderman teleported some 5 seconds
   apart, another not once in 520 ticks.
+- Stared at (`stare`, `bds-stare-findings.md`, the bot's look held by `!look`): a look 4.87
+  degrees off its head (2.465 up it) at 6 off for 5 ticks took the actor, then `ANGRY`,
+  `mob.warning` and `stare`, and a teleport 2 ticks later; one 9.42 off did not. The Java game's
+  `1 - 0.025 / d` (5.2 degrees there) fits; whether the enderman faced the actor did not matter.
 - Seven stares from 6 off, the look set by `/tp ... facing`, took no target; nothing shows the bot
   held the look.
 - Hit, it took its hitter that tick, was thrown 0.4 and 0.4 up, teleported 0 to 2 ticks after,
@@ -80,6 +84,14 @@ at midnight on easy and healed each second (`research/captures/bds-evoker-findin
 - Its vexes (one cast in three at 10 off) came three, a block from it, flew through blocks,
   charged at 0.91 v + 0.05 a tick and hit for 5.5. It stepped away from a player 2 off, as its
   `avoid_mob_type` says, and walked between casts for a reason not seen.
+
+- Its vexes (`bds-evoker-findings.md`, "Vexes"): three at whole-block offsets (+1, 0), (-1, -1),
+  (-1, +1) from it at its feet' height, each with an iron sword and 14 health, no collision or
+  gravity; they took the actor 2 ticks on and re-sent it every tick with `mob.warning`. A charge
+  set `CHARGE_ATTACK` with `charge` a tick later and went `v = 0.91 v + 0.05` at the actor's eyes,
+  ending at a hit (5.5 on easy, a throw 0.4 along its flight and 0.4 up, `attack` a tick later);
+  between charges they wandered at some 0.135 a tick. The summoning showed 99 ticks, the vexes
+  came 2 later with `prepare.summon` again, and the next cast began 342 after.
 
 ## The shulker (`shulker`)
 
@@ -140,16 +152,21 @@ effect (`vitals/splashed.rs`); one near the break gets the Java game's `1 - d/4`
 time, which was not drilled. Mobs splashed get nothing and the witch drinks nothing.
 
 An enderman teleports on its first tick, the tick after a hit and towards prey more than 16 off
-for 30 ticks (`creatures/teleports.rs`), and hunts its hitter as above. It does not teleport while
-calm or from beside its prey, a stare does not anger it, water does nothing to it, and its
-`ANGRY` flag is not shown.
+for 30 ticks (`creatures/teleports.rs`), and hunts its hitter as above; a player who stares at it
+5 ticks takes it as its prey with `stare` and a teleport (`creatures/stares.rs`, the Java game's
+cone). It does not teleport while calm or from beside its prey, a carved pumpkin does not hide a
+stare, water does nothing to it, and its `ANGRY` flag is not shown.
 
 A goat rams players as above (`creatures/rams.rs`), charging at most 8 blocks; it shows no prey
 between rams, rams no mob, and a baby rams as hard as a grown one.
 
 An evoker casts its fangs as above (`creatures/spells.rs`, `fights=spells` in `mob-traits.tsv`), its
-line's way taken as the first fang rises, and strolls between casts. It summons no vexes, steps
-away from nobody, and its fangs bite no mob; a fang stands on full blocks only.
+line's way taken as the first fang rises, and strolls between casts; one cast in four, while
+fewer than 8 vexes are within 16, summons three (`creatures/vexes.rs`, `Physics::GHOST`), which fly
+by the Java game's vex goals: a tick in 7 a charge at prey more than 2 off, 5.5 on easy where
+their boxes meet, else a wander up to 7 off where it came; they waste from 30 to 119 seconds on.
+It steps away from nobody and its fangs bite no mob; a fang stands on full blocks only. A vex
+spawned by command charges here, where BDS's did not in 30 seconds (`bds-vex.txt`).
 
 A shulker opens for its prey and shoots as above (`creatures/bullets.rs`, `creatures/shooting.rs`),
 41 ticks apart where BDS's varied; a bullet is not shown hidden on its first tick nor turned, hits

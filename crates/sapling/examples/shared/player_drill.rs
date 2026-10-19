@@ -20,6 +20,9 @@ mod uses;
 /// Does what a drill's `!` line asks of the actor: `!eat` holds use on what it holds, `!jump`,
 /// `!walk` and `!sprint` hold those keys until `!stop`, `!break x y z` breaks, `!click x y z` clicks and
 /// `!place x y z` puts what it holds on the block that far from its feet. False for any other line.
+/// A player's eyes are this far over its feet.
+const EYES: f32 = 1.62;
+
 pub async fn act(actor: &mut Bot, line: &str) -> bool {
     let keys = |actor: &mut Bot, forward: f32, sprint: bool, jump: bool| {
         if let Some(controls) = actor.controls() {
@@ -35,6 +38,15 @@ pub async fn act(actor: &mut Bot, line: &str) -> bool {
                 true => println!("## placed: {:?}", actor.place_block(at, up).await),
                 false => println!("## clicked: {:?}", actor.use_item_on_block(at, up).await),
             }
+        }
+        return true;
+    }
+    // The bot turns its eyes to its feet plus the offset, and holds that look.
+    if let Some(offset) = line.strip_prefix("!look ") {
+        let offset: Vec<f32> = offset.split(' ').filter_map(|part| part.parse().ok()).collect();
+        let feet = actor.movement().and_then(|movement| movement.position());
+        if let (Some([x, y, z]), &[dx, dy, dz], Some(controls)) = (feet, &offset[..], actor.controls()) {
+            controls.look_at([x, y + EYES, z], [x + dx, y + dy, z + dz]);
         }
         return true;
     }
@@ -102,6 +114,9 @@ pub fn drill(name: &str) -> Option<(Vec<String>, &'static [&'static str])> {
         "shulker" => (foes::shulker(), hunt::SPLASHES_SHOWN),
         "ghast" => (foes::ghast(), shove::BOOM_SHOWN),
         "breeze" => (foes::breeze(), shove::BOOM_SHOWN),
+        "vex" => (foes::vex(), shove::BOOM_SHOWN),
+        "stare" => (foes::stare(), hunt::SPLASHES_SHOWN),
+        "dolphin" => (foes::dolphin(), hunt::KINDS_SHOWN),
         "fx" => (shove::fx(), HURT_SHOWN),
         "drink2" => (shove::drink2(), HURT_SHOWN),
         "shoot2" => (shove::shoot2(), SHOOT_SHOWN),
