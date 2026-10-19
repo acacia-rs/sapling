@@ -1,0 +1,21 @@
+name: Feature request
+description: A mechanic, API or tool sapling should have
+labels: [enhancement]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What you want
+      description: What it is for. For a plugin API, what you would write with it.
+    validations:
+      required: true
+  - type: textarea
+    id: vanilla
+    attributes:
+      label: How vanilla does it
+      description: For a game mechanic, what the vanilla dedicated server does, and how you know.
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: What you do now
+      description: Workarounds you use, or other servers that have it.

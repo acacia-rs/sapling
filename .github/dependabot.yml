@@ -1,0 +1,13 @@
+version: 2
+updates:
+  - package-ecosystem: cargo
+    directory: /
+    schedule:
+      interval: monthly
+    open-pull-requests-limit: 5
+    ignore:
+      # acacia's crates are pinned to one rev together (Cargo.toml).
+      - dependency-name: "acacia-*"
+    groups:
+      cargo:
+        update-types: [minor, patch]

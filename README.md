@@ -117,6 +117,11 @@ and connect a Bedrock client to `127.0.0.1:19132`. Requires Rust 1.98 or newer.
 - [docs/research](docs/research): how the vanilla server behaves, mechanic by mechanic
 - `cargo doc --open` for the API reference
 
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md). Report security issues privately, as [SECURITY.md](SECURITY.md)
+describes.
+
 ## License
 
 [MIT](LICENSE). Includes MIT-licensed code from cubiomes, featurelab and dragonfly; see

@@ -1,6 +1,6 @@
 //! A world generated from a seed as BDS generates it, held in memory and lost on exit, in creative
 //! mode. Players appear on the surface above (0, 0); columns are generated as they come into view.
-//! Only the terrain stages exist: no trees, ores, structures or other features yet.
+//! Terrain, features and structures as BDS places them; the overworld only.
 //! `cargo run --release -p sapling --example generated -- [port] [--seed=N] [--offline]`
 //! (default port 19132, seed 20261003, online mode). Release: a debug build generates slowly.
 use std::sync::Arc;

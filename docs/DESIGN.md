@@ -158,7 +158,8 @@ One listener task, one shard thread, one world. The pieces and why they are shap
   `World::request_urgent`, and urgent loads go first, area by area
   (docs/research/worldgen-server-load.md). The generator's caches, structure starts included, are
   bounded per area, so memory does not grow with the ground explored.
-  Generation stops at lava lakes: no features or structures (`docs/NEXT.md`).
+  Each column goes through every ported stage, features and structures included
+  (`OverworldGenerator::chunk_blocks`); the Nether and the End are not generated yet (`docs/NEXT.md`).
 - **Block entities.** A column keeps its record as stored and saves it back. `set_block` drops the
   compounds at a position when the block there becomes another kind (a different name). Clients get
   each compound whole, as network NBT, with the section it is in: after the section's bytes, or as the
@@ -1015,8 +1016,7 @@ acacia-world = { path = "../acacia/acacia/crates/acacia-world" }
   per-player backlog limit (16 MB) matters. Skin changes in game (PlayerSkin) are ignored.
 - Chat: proper rate limiting, private messages, profanity filter fields.
 - **BDS only saves chunks that changed since generation.** A folder's holes are void unless it is
-  opened with `generate_missing`, which fills them with terrain only, without features or structures
-  ("Generation").
+  opened with `generate_missing`, which fills them as a new world would be generated ("Generation").
 - Block-state upgrader (CC0 BedrockBlockUpgradeSchema) for palettes older than the current version;
   until then see "Block states" above. Legacy sub-chunk versions (< 8, except 1) are skipped as air.
 - Block entities: no vanilla client has seen them (bots decode them), and what BDS itself puts into a
