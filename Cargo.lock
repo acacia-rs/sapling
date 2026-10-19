@@ -2629,6 +2629,7 @@ dependencies = [
  "sapling-data",
  "sapling-net",
  "sapling-world",
+ "sapling-worldgen",
  "serde_json",
  "tracing",
 ]
