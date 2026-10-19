@@ -4,7 +4,7 @@
 # usage: tools/remote-drill.sh bds|sapling <example name> <local output file> [probe words...]
 # Set REMOTE_DIR per worktree as for remote-test.sh. Probe arguments are single words.
 # BDS_DIR and BDS_PORT pick another BDS copy (one drill at a time per copy); SAPLING_PORT the drill
-# server's port (default 19183); SAPLING_DRILL_WORLD=generated its overworld (see drill_server.rs).
+# server's port (default 19183); SAPLING_DRILL_WORLD=strongholds its overworld (see drill_server.rs).
 set -uo pipefail
 target=$1 example=$2 out=$3 words="${*:4}"
 source "$(dirname "$0")/remote-sync.sh"
