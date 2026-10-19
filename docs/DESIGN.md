@@ -721,7 +721,8 @@ Details and BDS evidence: docs/research/nether-dimension.md, docs/research/end-d
   (`blocks/end_portal.rs`); a body in one goes to the End at once, onto (100, 50, 0), with BDS's obsidian
   platform built under it the tick after (`portals/end.rs`); a generated gateway sends a body over its exit
   (`portals/gateway.rs`); the dead of the End and the Nether rise in the overworld (`dimensions::respawn_home`).
-  No dragon fight: no dragon, exit portal, crystals or kill gateways.
+  No dragon fight: no dragon, exit portal, crystals or kill gateways. A thrown eye of ender flies to the
+  stronghold its world's storage locates (`WorldStorage::locate_stronghold`, only `Generated` overworlds; `eyes.rs`).
 
 ## Inventories (as built)
 
