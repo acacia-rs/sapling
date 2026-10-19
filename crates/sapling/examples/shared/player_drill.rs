@@ -117,6 +117,7 @@ pub fn drill(name: &str) -> Option<(Vec<String>, &'static [&'static str])> {
         "vex" => (foes::vex(), shove::BOOM_SHOWN),
         "stare" => (foes::stare(), hunt::SPLASHES_SHOWN),
         "dolphin" => (foes::dolphin(), hunt::KINDS_SHOWN),
+        "pandas" => (foes::pandas(), hunt::KINDS_SHOWN),
         "fx" => (shove::fx(), HURT_SHOWN),
         "drink2" => (shove::drink2(), HURT_SHOWN),
         "shoot2" => (shove::shoot2(), SHOOT_SHOWN),

@@ -80,6 +80,25 @@ pub fn dolphin() -> Vec<String> {
     lines
 }
 
+/// On [`open_floor`], a panda of each gene that fights or flees otherwise (its spawn event sets
+/// it), held still, hit from 1.5 off, then twenty seconds with the actor healed each second; the
+/// aggressive one with another aggressive one 6 off, not hit, to see the anger passed on.
+pub fn pandas() -> Vec<String> {
+    let mut lines = open_floor("stone", &[], 0);
+    lines.truncate(lines.len() - 5);
+    for gene in ["aggressive", "lazy", "worried", "weak", "playful"] {
+        lines.push(format!("summon panda ~ ~ ~3 minecraft:panda_{gene}"));
+        if gene == "aggressive" {
+            lines.push("summon panda ~6 ~ ~3 minecraft:panda_aggressive".into());
+        }
+        lines.extend(["effect @e[type=panda] slowness 10 255", "", "execute at @e[type=panda,c=1] run tp @s ~ ~ ~-1.5 facing ~ ~1 ~", "!hit panda", "effect @e[type=panda] clear"].map(String::from));
+        lines.extend(std::iter::repeat_n("effect @s instant_health 1 4".to_owned(), 20));
+        lines.extend(["kill @e[type=!player]", "tp @s 0.5 -19 0.5", ""].map(String::from));
+    }
+    lines.extend(["effect @s clear", "gamerule falldamage true", "gamemode creative @s", ""].map(String::from));
+    lines
+}
+
 /// A floor of `block` 41 square at y -20 with 20 of air over it, the actor in survival on it at
 /// midnight with fall damage off; `summon` run, then the actor healed each second for `seconds`.
 fn open_floor(block: &str, summon: &[&str], seconds: usize) -> Vec<String> {

@@ -169,8 +169,11 @@ time, which was not drilled. Mobs splashed get nothing and the witch drinks noth
 An enderman teleports on its first tick, the tick after a hit and towards prey more than 16 off
 for 30 ticks (`creatures/teleports.rs`), and hunts its hitter as above; a player who stares at it
 5 ticks takes it as its prey with `stare` and a teleport (`creatures/stares.rs`, the Java game's
-cone). It does not teleport while calm or from beside its prey, a carved pumpkin does not hide a
-stare, water does nothing to it, and its `ANGRY` flag is not shown.
+cone). It teleports at random a tick in 100 in the dark and in 20 in the sun (the component's dark
+default and its pack's `light_teleport_chance`; BDS's came 5.2 seconds apart at midnight), and
+water it touches costs it 1 by drowning, with a `splash`, and sends it off that tick. It does not
+teleport from beside its prey, rain is not water to it, a carved pumpkin does not hide a stare,
+and its `ANGRY` flag is not shown.
 
 A goat rams players as above (`creatures/rams.rs`), charging at most 8 blocks; it shows no prey
 between rams, rams no mob, and a baby rams as hard as a grown one.
