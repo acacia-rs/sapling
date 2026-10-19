@@ -87,10 +87,12 @@ pub fn pandas() -> Vec<String> {
     let mut lines = open_floor("stone", &[], 0);
     lines.truncate(lines.len() - 5);
     for gene in ["aggressive", "lazy", "worried", "weak", "playful"] {
-        lines.push(format!("summon panda ~ ~ ~3 minecraft:panda_{gene}"));
+        // The bystander first: `!hit` takes the panda summoned last. BDS takes the spawn event
+        // only after a rotation.
         if gene == "aggressive" {
-            lines.push("summon panda ~6 ~ ~3 minecraft:panda_aggressive".into());
+            lines.push("summon panda ~6 ~ ~3 0 0 minecraft:panda_aggressive".into());
         }
+        lines.push(format!("summon panda ~ ~ ~3 0 0 minecraft:panda_{gene}"));
         lines.extend(["effect @e[type=panda] slowness 10 255", "", "execute at @e[type=panda,c=1] run tp @s ~ ~ ~-1.5 facing ~ ~1 ~", "!hit panda", "effect @e[type=panda] clear"].map(String::from));
         lines.extend(std::iter::repeat_n("effect @s instant_health 1 4".to_owned(), 20));
         lines.extend(["kill @e[type=!player]", "tp @s 0.5 -19 0.5", ""].map(String::from));

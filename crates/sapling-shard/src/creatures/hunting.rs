@@ -156,7 +156,7 @@ fn take(world: &mut World, entity: Entity, layer: Entity, id: u64, kind: &str, b
 /// A player hit the mob: one that hunts none but its hitter, or a spider that hunts by dark
 /// (research/captures/bds-provoke.txt, bds-provoke2.txt), takes it for its prey at once, if it may be hunted.
 pub(super) fn provoke(world: &mut World, entity: Entity, layer: Entity, id: u64, kind: &str, body: &Body, player: Entity) {
-    let Some(hunts) = sapling_data::mob_traits(kind).hunts.filter(|hunts| hunts.provoked || hunts.by_dark) else { return };
+    let Some(hunts) = sapling_data::mob_traits(kind).hunts.filter(|hunts| (hunts.provoked || hunts.by_dark) && super::genes::fights(world, entity)) else { return };
     let hunted = world.resource::<Settings>().0.difficulty != Difficulty::Peaceful && seen(world, player, layer, body.at, hunts.sees).is_some();
     if hunted && world.get::<Hunter>(entity).is_some_and(|hunter| hunter.prey != Some(player)) {
         take(world, entity, layer, id, kind, body, Some(player));
@@ -232,6 +232,7 @@ pub(super) fn on_difficulty(world: &World, harm: f32) -> Option<f32> {
 pub(super) fn strike(world: &mut World, entity: Entity, layer: Entity, id: u64, kind: &str, body: &Body) -> Option<()> {
     let now = world.resource::<Tick>().0;
     let hunts = sapling_data::mob_traits(kind).hunts.filter(|hunts| hunts.fights.is_none_or(|fights| fights == "swims"))?;
+    let hunts = super::genes::hunts(world, entity, hunts);
     let harm = match hunts.upto {
         Some(most) => hunts.attack + world.get_resource_or_insert_with(crate::blocks::Dice::default).roll((most - hunts.attack) as u32 + 1) as f32,
         None => hunts.attack,

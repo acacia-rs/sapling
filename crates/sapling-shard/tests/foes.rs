@@ -206,6 +206,27 @@ fn an_enderman_teleports_now_and_then_by_night_and_out_of_water_which_costs_it_1
 }
 
 #[test]
+fn pandas_come_with_genes_shown_as_their_variant() {
+    // research/captures/bds-pandas-findings.md: `Variant` 0 to 6 by gene.
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    h.remote.run(|ctx| (0..24).for_each(|i| assert!(ctx.spawn_entity("minecraft:panda", [-7.5 + (i % 8) as f32 * 2.0, 65.0, -6.5 + (i / 8) as f32 * 4.0]).is_some())));
+    let sent = h.tick_all().to(1).to_vec();
+    let variants: Vec<i32> = all::<acacia_proto::packets::AddEntity>(&sent)
+        .iter()
+        .flat_map(|added| added.metadata.iter())
+        .filter_map(|item| match (&item.key, &item.value) {
+            (acacia_proto::types::MetadataDictionaryItemKey::Variant, acacia_proto::types::MetadataDictionaryItemValue::Default(acacia_proto::types::MetadataDictionaryItemValueDefault::Int(variant))) => Some(*variant),
+            _ => None,
+        })
+        .collect();
+    let mut seen = variants.clone();
+    seen.sort();
+    seen.dedup();
+    assert!(variants.len() == 24 && variants.iter().all(|variant| (0..=6).contains(variant)) && seen.len() >= 2, "{variants:?}");
+}
+
+#[test]
 fn a_vex_holds_an_iron_sword_charges_through_the_air_and_hits_for_5_5() {
     // research/captures/bds-evoker-findings.md: an iron sword; `CHARGE_ATTACK` and then `charge`;
     // 5.5 on easy (its 3 and the sword's 6) where it meets the player.

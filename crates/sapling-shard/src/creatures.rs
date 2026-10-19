@@ -14,6 +14,7 @@ mod bullets;
 mod charges;
 mod duels;
 mod fireballs;
+mod genes;
 mod ghasts;
 mod harm;
 mod health;
@@ -22,6 +23,7 @@ mod legs;
 mod paths;
 mod rams;
 mod shooting;
+mod shown;
 mod spells;
 mod splashes;
 mod strolling;
@@ -30,16 +32,14 @@ mod teleports;
 mod vexes;
 
 use bevy_ecs::prelude::*;
-use bytes::Bytes;
-use acacia_proto::packets::{EntityEvent, EntityEventEventId, LevelSoundEvent};
-use acacia_proto::types::{MetadataFlags1, Vec3f};
+use acacia_proto::packets::{EntityEvent, EntityEventEventId};
 use sapling_api::{EntityId, Item};
-use sapling_data::AddEntityOptions;
 
 use sapling_world::Actor;
 
 use crate::blocks::Dice;
-use crate::body::{Body, Physics};
+use crate::body::Body;
+use shown::{announcement, head, physics_of, spawn_sound};
 pub(crate) use attacks::attacked;
 pub(crate) use blast::{Wreck, explode};
 pub(crate) use harm::{holds, is_full_block, touches};
@@ -62,72 +62,6 @@ impl Creature {
     }
 }
 
-// TODO: a mob dressed as it was stored is not shown on fire to one who comes to see it burning.
-fn announcement(id: u64, kind: &str, body: &Body, look: Option<&Actor>, health: Option<&Health>, yaw: f32) -> Vec<Bytes> {
-    let left = health.map(Health::left);
-    if let Some(shown) = look.and_then(|look| mobs::announcement(&Actor { position: body.at, health: left.or(look.health), ..look.clone() }, id)) {
-        return shown;
-    }
-    let on_fire = health.is_some_and(Health::is_burning);
-    let options = AddEntityOptions {
-        id,
-        identifier: kind,
-        feet: body.at,
-        yaw,
-        pitch: 0.0,
-        variant: 0,
-        mark_variant: 0,
-        color: 0,
-        baby: false,
-        flags: MetadataFlags1(if on_fire { MetadataFlags1::ONFIRE.0 } else { 0 }),
-        health: left,
-        name: "",
-    };
-    let mut shown = vec![sapling_net::encode(&sapling_data::add_entity(&options))];
-    let held = HOLDS.iter().find(|(of, _)| *of == kind).map(|(_, item)| sapling_data::Stack { name: item, count: 1, damage: 0, block: None, tag: None });
-    shown.extend(held.and_then(|stack| sapling_data::mob_hand(id, &stack, false)).map(|held| sapling_net::encode(&held)));
-    shown
-}
-
-/// What a spawned mob of each of these kinds holds, as BDS showed it (bds-evoker-findings.md).
-const HOLDS: &[(&str, &str)] = &[(vexes::KIND, "minecraft:iron_sword")];
-
-/// Kinds whose head sits forward of their feet, by this much of their width (BDS's `Animal`
-/// constructors); every other mob's is straight up (docs/research/spawn-sound.md).
-const ANIMALS: &[&str] = &[
-    "minecraft:chicken", "minecraft:cow", "minecraft:mooshroom", "minecraft:rabbit", "minecraft:ocelot", "minecraft:horse", "minecraft:llama", "minecraft:turtle", "minecraft:cat",
-    "minecraft:pig",
-];
-const HEAD_FORWARD: f32 = 0.85;
-/// A mob's head is this much of its height up.
-const HEAD_UP: f32 = 0.85;
-
-/// Where a mob's head is, as BDS places it; it faces +z (yaw 0).
-fn head(kind: &str, body: &Body) -> [f32; 3] {
-    let ([x, y, z], [width, height]) = (body.at, body.size);
-    let forward = if ANIMALS.contains(&kind) { HEAD_FORWARD * width } else { 0.0 };
-    [x, y + HEAD_UP * height, z + forward]
-}
-
-/// How a mob of `kind` falls and slows: as most mobs, but for a breeze and a ghast.
-fn physics_of(kind: &str) -> &'static Physics {
-    match kind {
-        "minecraft:breeze" => &Physics::BREEZE,
-        "minecraft:ghast" => &Physics::FLYER,
-        vexes::KIND => &Physics::GHOST,
-        "minecraft:dolphin" => &Physics::SWIMMER,
-        _ => &Physics::MOB,
-    }
-}
-
-/// The sound a mob makes as it appears, at its head.
-fn spawn_sound(id: u64, kind: &str, body: &Body) -> Bytes {
-    let [x, y, z] = head(kind, body);
-    let position = Vec3f { x, y, z };
-    let sound = LevelSoundEvent { sound_id: "spawn".into(), position, extra_data: -1, entity_type: kind.into(), is_baby_mob: false, is_global: false, entity_unique_id: id as i64, fire_at_position: None };
-    sapling_net::encode(&sound)
-}
-
 /// A mob of `kind` with its feet at `feet` in `layer`: one BDS was recorded announcing, in a
 /// loaded column. It is heard appearing.
 fn spawn(world: &mut World, layer: Entity, kind: &str, feet: [f32; 3]) -> Option<EntityId> {
@@ -138,8 +72,12 @@ fn spawn(world: &mut World, layer: Entity, kind: &str, feet: [f32; 3]) -> Option
         return None;
     }
     let body = Body::new(feet, [0.0; 3], size);
-    let entity = entities::spawn(world, layer, kind, body, feet, |id| Some(announcement(id, kind, &body, None, None, 0.0)))?;
+    let gene = genes::roll(world, kind);
+    let entity = entities::spawn(world, layer, kind, body, feet, |id| Some(announcement(id, kind, &body, None, None, 0.0, gene.map_or(0, |gene| gene.0))))?;
     world.entity_mut(entity).insert(Creature { look: None });
+    if let Some(gene) = gene {
+        world.entity_mut(entity).insert(gene);
+    }
     give_legs(world, entity, kind);
     give_health(world, entity, kind, None, 0);
     let id = world.get::<NetId>(entity)?.0;
@@ -155,7 +93,10 @@ pub(crate) fn from_storage(world: &mut World, layer: Entity, actor: Actor, uniqu
     let Some(size) = sapling_data::mob_size(&actor.identifier) else { return false };
     let body = Body::new(actor.position, [0.0; 3], size);
     let kind = actor.identifier.clone();
-    let Some(entity) = entities::spawn(world, layer, &kind, body, actor.position, |id| Some(announcement(id, &kind, &body, Some(&actor), None, 0.0))) else { return false };
+    let Some(entity) = entities::spawn(world, layer, &kind, body, actor.position, |id| Some(announcement(id, &kind, &body, Some(&actor), None, 0.0, actor.variant))) else { return false };
+    if let Some(gene) = genes::stored(&kind, actor.variant) {
+        world.entity_mut(entity).insert(gene);
+    }
     give_legs(world, entity, &kind);
     give_health(world, entity, &kind, actor.health, actor.fire.max(0) as u16);
     world.entity_mut(entity).insert(Creature { look: Some(actor) });
@@ -184,6 +125,7 @@ fn give_legs(world: &mut World, entity: Entity, kind: &str) {
 /// `burning` ticks of fire.
 fn give_health(world: &mut World, entity: Entity, kind: &str, left: Option<f32>, burning: u16) {
     if let Some(max) = sapling_data::mob_health(kind).filter(|_| !NO_DEATH.contains(&kind)) {
+        let max = genes::health(world.get::<genes::Gene>(entity).copied(), max);
         world.entity_mut(entity).insert(Health::new(max, left, burning));
     }
 }
@@ -290,7 +232,7 @@ pub(crate) fn tick(world: &mut World) {
         }
         let health = world.get::<Health>(entity);
         if !packets.is_empty() || health.map(|health| (health.left(), health.is_burning())) != before {
-            let shown = announcement(id, &kind, &body, world.get::<Creature>(entity).and_then(|creature| creature.look.as_ref()), health, world.get::<legs::Legs>(entity).map_or(0.0, |legs| legs.yaw));
+            let shown = announcement(id, &kind, &body, world.get::<Creature>(entity).and_then(|creature| creature.look.as_ref()), health, world.get::<legs::Legs>(entity).map_or(0.0, |legs| legs.yaw), world.get::<genes::Gene>(entity).map_or(0, |gene| gene.0));
             mobs::reannounce(world, entity, shown);
         }
     }

@@ -108,6 +108,20 @@ water, held still by slowness for one hit and healed each second
   away and 0.4 up in water. It breached once mid-chase, out of the water 7 ticks.
 - It was still angry 32 seconds on, past its pack's 25.
 
+## Pandas' genes (`pandas`)
+
+A panda of each of five genes, summoned with its gene's event, held still and hit once, the actor
+in survival at midnight on easy (`research/captures/bds-pandas-findings.md`; `provoke3` holds the
+normal, lazy and playful ones of an earlier run):
+
+- `Variant` showed the gene: lazy 1, worried 2, playful 3, brown 4, weak 5, aggressive 6; a weak
+  one had 10 health. BDS rolled two summoned ones' genes anew a moment after (6 to 3, 2 to 4).
+- Hit, each took the actor as its target; only the aggressive one bit, 8 times in 20 seconds,
+  4 on easy (its 6), a throw 0.4 and 0.4 up, walking at it at 0.0486 a tick, and never calmed.
+  The lazy (0.066 a tick), worried, weak and playful (some 0.075) ran instead, 24 to 95 ticks.
+- A worried one kept from the actor before it was hit, sprinting while nearer than 7.
+- Every gait fit `2.16 (movement x multiplier)^2` a tick.
+
 ## The shulker (`shulker`)
 
 A shulker 6 off the actor in survival at midnight on easy, healed each second
@@ -191,6 +205,11 @@ spots of water up to 10 off, or at its hitter, which it bites as other hunters d
 `fights=swims`). It holds 4800 ticks of breath (`breath=`) and here never runs out; it does not
 breach, bob under the surface, turn 10 degrees at most, flock or swim with players, flop or dry
 out on land, or pass its anger on, and its anger does not end.
+
+A panda is born with a gene by its pack's genetics (`creatures/genes.rs`) and shows it; a weak one
+has 10 health, a normal or brown one hits its hitter back once, an aggressive one for 6 until it
+is calm, and the rest run. A lazy one keeps the common pace, a worried one keeps from nobody, a
+playful one does not roll, and an aggressive one's anger is not passed on.
 
 A shulker opens for its prey and shoots as above (`creatures/bullets.rs`, `creatures/shooting.rs`),
 41 ticks apart where BDS's varied; a bullet is not shown hidden on its first tick nor turned, hits
