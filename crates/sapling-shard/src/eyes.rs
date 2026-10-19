@@ -86,10 +86,14 @@ pub(crate) fn throw(world: &mut World, player: Entity) -> bool {
     };
     let Some(eye) = entities::spawn(world, layer, KIND, Body::new(from, [0.0; 3], SIZE), from, announce) else { return false };
     world.entity_mut(eye).insert(Eye { target: aim(from, stronghold), life: 0, survives });
+    if let Some(mut told) = world.get_mut::<Told>(eye) {
+        told.tell_every_move();
+    }
     let (sin, cos) = position.yaw.to_radians().sin_cos();
     let [x, y, z] = [position.feet[0] - sin * SOUND_AHEAD, eyes[1] - SOUND_BELOW_EYES, position.feet[2] + cos * SOUND_AHEAD];
     let sound = LevelSoundEvent { sound_id: "throw".into(), position: Vec3f { x, y, z }, extra_data: -1, entity_type: "minecraft:player".into(), is_baby_mob: false, is_global: false, entity_unique_id: by as i64, fire_at_position: None };
-    view::to_viewers(world, layer, cell, &[sapling_net::encode(&sound)]);
+    // Held back with the eye's own packets: BDS tells the eye before the throw's sound.
+    entities::tell_viewers(world, eye, layer, cell, vec![sapling_net::encode(&sound)]);
     true
 }
 
@@ -103,15 +107,33 @@ pub(crate) fn tick(world: &mut World) {
         if let Some(mut body) = world.get_mut::<Body>(eye) {
             (body.at, body.motion) = (at, motion);
         }
+        // Its last move is not told: BDS ends it in the same tick.
+        if life >= LIFE {
+            end(world, eye, layer, at, survives);
+            continue;
+        }
+        if let Some(mut state) = world.get_mut::<Eye>(eye) {
+            state.life += 1;
+        }
         // BDS tells the eye's viewers it stands on the ground.
         let packets = world.get_mut::<Told>(eye).map(|mut told| told.update(id, at, motion, true)).unwrap_or_default();
         entities::tell_viewers(world, eye, layer, at.map(|c| c.floor() as i32), packets);
-        if life >= LIFE {
-            end(world, eye, layer, at, survives);
-        } else if let Some(mut state) = world.get_mut::<Eye>(eye) {
-            state.life += 1;
-        }
     }
+}
+
+/// BDS takes a broken eye away the tick after its particles, a surviving one as its item appears.
+fn end(world: &mut World, eye: Entity, layer: Entity, at: [f32; 3], survives: bool) {
+    world.entity_mut(eye).remove::<Eye>();
+    if survives {
+        mobs::remove(world, eye);
+        let Some(stack) = world.get::<Layer>(layer).and_then(|layer| inventory::stored(&Item::new(ITEM, 1), layer.world.registry())) else { return };
+        return drops::let_go(world, layer, stack, at);
+    }
+    let [x, y, z] = at;
+    let events = [(LevelEventEvent::ParticleEyeDespawn, 10), (LevelEventEvent::SoundItemframeRemove, 0)];
+    let packets: Vec<_> = events.map(|(event, data)| sapling_net::encode(&LevelEvent { event, position: Vec3f { x, y, z }, data })).into();
+    view::to_viewers(world, layer, at.map(|c| c.floor() as i32), &packets);
+    entities::leave(world, eye);
 }
 
 #[cfg(test)]
@@ -132,16 +154,4 @@ mod tests {
         assert!(near(path[1], [0.985_103_1, 153.135_01, 0.973_96]), "{:?}", path[1]);
         assert!(near(path[80], [-4.959_399_7, 161.121_86, -9.415_638]), "{:?}", path[80]);
     }
-}
-
-fn end(world: &mut World, eye: Entity, layer: Entity, at: [f32; 3], survives: bool) {
-    mobs::remove(world, eye);
-    if survives {
-        let Some(stack) = world.get::<Layer>(layer).and_then(|layer| inventory::stored(&Item::new(ITEM, 1), layer.world.registry())) else { return };
-        return drops::let_go(world, layer, stack, at);
-    }
-    let [x, y, z] = at;
-    let events = [(LevelEventEvent::ParticleEyeDespawn, 10), (LevelEventEvent::SoundItemframeRemove, 0)];
-    let packets: Vec<_> = events.map(|(event, data)| sapling_net::encode(&LevelEvent { event, position: Vec3f { x, y, z }, data })).into();
-    view::to_viewers(world, layer, at.map(|c| c.floor() as i32), &packets);
 }
