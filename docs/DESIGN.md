@@ -699,7 +699,7 @@ block action, and takes StopBreak and AbortBreak with a position.
 
 ## Dimensions and portals (as built)
 
-Details and BDS evidence: docs/research/nether-dimension.md.
+Details and BDS evidence: docs/research/nether-dimension.md, docs/research/end-dimension.md.
 
 - **A dimension is a layer.** A world's Nether is a `sapling_world::World` of dimension 1 (its own storage
   keys, I/O threads, load queue, generator, columns, mobs and saves) added to the overworld's shard
@@ -715,6 +715,12 @@ Details and BDS evidence: docs/research/nether-dimension.md.
 - **Portals**: blocks in `blocks/portals.rs` (frame shape, lighting by flint and steel, fire charge or any
   fire, breaking, records), travel in `portals.rs` (BDS's timer and cooldown, 8:1 scaling, record search
   within 128, placement and portal making in `portals/arrive.rs`, MT19937 direction draws from the seed).
+- **The End** (docs/research/end-dimension.md): a layer of dimension 2 (`Generated::end`, `WorldFolder::end`,
+  `ServerBuilder::end`), y 0..255. An eye in the last of twelve frames facing a 3x3 fills it with end portal
+  (`blocks/end_portal.rs`); a body in one goes to the End at once, onto (100, 50, 0), with BDS's obsidian
+  platform built under it the tick after (`portals/end.rs`); a generated gateway sends a body over its exit
+  (`portals/gateway.rs`); the dead of the End and the Nether rise in the overworld (`dimensions::respawn_home`).
+  No dragon fight: no dragon, exit portal, crystals or kill gateways.
 
 ## Inventories (as built)
 

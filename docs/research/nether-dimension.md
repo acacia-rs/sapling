@@ -97,8 +97,7 @@ sends the PlayerAction with the join's spawn-radius rule and loads those columns
 ## Left
 
 - No drill made the no-site fallback (platform plus a netherrack ring round it, from the decompile only);
-  spectators in portals, the End's dimension (2) and its
-  platform, `/execute` beyond `in <dimension> run tp`, and BDS's per-tick UpdateSubchunkBlocks batching of
+  spectators in portals (the End: end-dimension.md), `/execute` beyond `in <dimension> run tp`, and BDS's per-tick UpdateSubchunkBlocks batching of
   other block changes.
 - The empty-cell rule of the site search asks BDS's "can be replaced"; sapling uses a list of plants and fire.
 - Sections of one made portal reach the client in BDS's order (upper section first in one capture),

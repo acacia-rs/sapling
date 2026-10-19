@@ -69,7 +69,7 @@ The large-feature chunk seed on one MT, nothing reseeds it. In order:
 `postProcessMobsAt` (slot 16) spawns each spike's crystal and sets bedrock on its top; it never ran on the
 player-free oracle (no bedrock on any spike), so `EndGenerator` places neither. The dragon fight (End tick 148276910)
 returns unless a player is within 200 blocks of the origin: no exit portal, dragon or main-island gateways in a
-fresh End. The (100, 48, 0) obsidian platform is built on arrival, not by worldgen.
+fresh End. The obsidian platform (y 49 under (100, 50, 0), end-dimension.md) is built on arrival, not by worldgen.
 
 ## End cities
 `EndCityFeature` (vtable 14a926270) is the End's only structure; post-processes seed as the overworld's.
@@ -121,5 +121,5 @@ cell. Seed width: every End MT takes the seed's low 32 bits; a repeatable run of
 - `EndGenerator::new(seed)`, `chunk_blocks`, `chunk_biomes` (as `NetherGenerator`; y 0..255, terrain 0..127),
   `spikes()` (positions, radii, heights, cages: the crystals and their bedrock are not placed), `island_height`,
   `locate_city`.
-- Not generation, left to the dimension: the arrival platform at (100, 48, 0), crystals on the spikes (BDS's
+- Not generation, left to the dimension: the arrival platform (built: end-dimension.md), crystals on the spikes (BDS's
   `postProcessMobsAt` with a player around), the dragon fight and its exit portal, the gateway exits' block entities.
