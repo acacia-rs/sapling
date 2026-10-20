@@ -149,6 +149,21 @@ normal, lazy and playful ones of an earlier run):
 - Every effect showed in `VisibleMobEffects` (each id doubled, 7 bits apiece, the lowest highest);
   `MobEffect` came for speed and slowness alone. A cow an effect hurt ran.
 
+## The four newest effects (`effects3`, `wind-burst`)
+
+A zombie held still and given each, then killed, the actor in creative
+(`research/captures/bds-effects3-findings.md`; potions 43 to 46 gave ids 32 to 35, three minutes,
+in `bds-drink2.txt`):
+
+- Named `effect.wind_charged`, `effect.weaving`, `effect.oozing` and `effect.infested`.
+- Wind charged: dying, it burst at its middle (`ParticleWindExplosion`, `wind_charge.burst` a tick
+  later) and pushed both players towards their eyes; by the distance from its feet, about
+  `0.82 (1 - d / 9.8)` (`bds-wind-burst.txt`, seven samples from 1 to 7 off, noisy).
+- Weaving: 2 cobwebs, its own cell and one beside, each with `AnimationSpawnCobweb`.
+- Oozing: 2 slimes of the second size (4 health) at its feet, half a block up; killed, each split
+  into tiny ones.
+- Infested: 2 of 10 hurts let out a silverfish from its middle, at 0.3 near its facing.
+
 ## The shulker (`shulker`)
 
 A shulker 6 off the actor in survival at midnight on easy, healed each second
@@ -243,7 +258,9 @@ is calm, and the rest run. A lazy one keeps the common pace, a worried one keeps
 playful one does not roll, and an aggressive one's anger is not passed on.
 
 A mob has effects as above (`creatures/afflictions.rs`): from a witch's potions, splashed or drunk,
-and from a stray's and a bogged's arrows. Their flags (fire immune, breathing) and speed's movement
+from a stray's and a bogged's arrows, and from a plugin (`ShardCtx::give_entity_effect`). The four
+newest do as above as it dies or is hurt (`creatures/omens.rs`), on mobs and not players; the burst
+pushes no mob or item, and a slime of the second size does not split. Their flags (fire immune, breathing) and speed's movement
 attribute are not shown, they are not saved with it or told to one who comes, and strength,
 weakness, levitation, slow falling and jump boost do nothing to it.
 

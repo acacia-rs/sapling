@@ -1,6 +1,6 @@
 //! The entity side of the handlers' context.
 
-use sapling_api::{EntityBackend, EntityId, EntityInfo};
+use sapling_api::{Effect, EntityBackend, EntityId, EntityInfo};
 
 use crate::components::NetId;
 use crate::handlers::Ctx;
@@ -45,5 +45,9 @@ impl EntityBackend for Ctx<'_> {
 
     fn kill_entity(&mut self, id: EntityId) -> bool {
         super::kill(self.world, id)
+    }
+
+    fn give_entity_effect(&mut self, id: EntityId, effect: Effect, ticks: u32, amplifier: u8) -> bool {
+        entities::find(self.world, id).is_some_and(|mob| super::afflictions::give(self.world, mob, effect, ticks, amplifier))
     }
 }

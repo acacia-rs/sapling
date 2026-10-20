@@ -1,4 +1,4 @@
-use crate::ShardCtx;
+use crate::{Effect, ShardCtx};
 
 /// An entity on a shard: a mob, a lying item, a falling block or an experience orb. Unique on
 /// its shard while it exists; it goes when removed, picked up or landed, or with its column.
@@ -61,6 +61,13 @@ impl ShardCtx<'_> {
     pub fn kill_entity(&mut self, id: EntityId) -> bool {
         self.backend.kill_entity(id)
     }
+
+    /// Puts `effect` on a living mob for `ticks` at `amplifier` (0 is the first level), as
+    /// `give_effect` puts one on a player; an undead mob takes no poison or regeneration. False
+    /// for one that is gone, dying, or no mob.
+    pub fn give_entity_effect(&mut self, id: EntityId, effect: Effect, ticks: u32, amplifier: u8) -> bool {
+        self.backend.give_entity_effect(id, effect, ticks, amplifier)
+    }
 }
 
 /// The entities side of [`crate::Backend`].
@@ -72,4 +79,5 @@ pub trait EntityBackend {
     fn set_velocity(&mut self, id: EntityId, velocity: [f32; 3]) -> bool;
     fn remove_entity(&mut self, id: EntityId) -> bool;
     fn kill_entity(&mut self, id: EntityId) -> bool;
+    fn give_entity_effect(&mut self, id: EntityId, effect: Effect, ticks: u32, amplifier: u8) -> bool;
 }

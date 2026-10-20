@@ -114,6 +114,10 @@ impl crate::EntityBackend for Fake {
     fn kill_entity(&mut self, _: crate::EntityId) -> bool {
         false
     }
+
+    fn give_entity_effect(&mut self, _: crate::EntityId, _: crate::Effect, _: u32, _: u8) -> bool {
+        false
+    }
 }
 
 impl crate::HealthBackend for Fake {

@@ -51,7 +51,7 @@ fn slowness_slows_a_player_by_the_modifier_bds_wrote() {
     let own: Vec<RawPacket> = [1, 2].iter().flat_map(|conn| sent.to(*conn).to_vec()).collect();
     let paces: Vec<(f32, String, f32)> = all::<UpdateAttributes>(&own).iter().flat_map(|told| told.attributes.clone()).filter(|told| told.name == "minecraft:movement").map(|told| (told.current, told.modifiers[0].name.clone(), told.modifiers[0].amount)).collect();
     assert!(paces.iter().all(|(pace, name, amount)| (pace - 0.04).abs() < 1e-6 && name == "MovementSlowdown" && (amount + 0.6).abs() < 1e-6) && !paces.is_empty(), "{paces:?}");
-    assert_eq!((Effect::ALL.len(), Effect::ALL.iter().filter(|effect| effect.name() == "levitation").count()), (25, 1));
+    assert_eq!((Effect::ALL.len(), Effect::ALL.iter().filter(|effect| effect.name() == "levitation").count()), (29, 1));
     // Health boost: 4 more a level at most, told with its modifier (bds-fx.txt).
     h.remote.run(|ctx| assert!(ctx.give_effect(ALEX, Effect::HealthBoost, 400, 1, true)));
     let sent = h.tick_all();
