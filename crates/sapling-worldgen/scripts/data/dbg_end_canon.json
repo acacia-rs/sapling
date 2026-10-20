@@ -1,0 +1,7 @@
+{"breakpoints": [
+ {"va": "0x148242a00", "name": "load", "mem": [["rdx", 120, "ii"]], "log": "all"},
+ {"va": "0x14196b2c0", "name": "structfeat", "mem": [["rsp", 40, "i"], ["rsp", 48, "i"]], "log": "all"},
+ {"va": "0x141f07ae3", "name": "upgrades", "regs": ["rax"], "mem": [["rdi", 0, "Q"]], "log": "all"},
+ {"va": "0x148245110", "name": "deco", "mem": [["rdx", 320, "i"], ["rdx", 328, "i"]], "log": "all"},
+ {"va": "0x1481ebe30", "name": "decorate", "log": "all"}
+]}

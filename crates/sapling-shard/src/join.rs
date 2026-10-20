@@ -13,6 +13,7 @@ use sapling_data::StartGameOptions;
 
 use crate::clock;
 use crate::components::{Arrivals, Conn, Identity, InLayer, Layer, Net, NetId, Outgoing, PacketQueues, Position, Settings, Stage, Tick};
+use crate::inventory::Inventory;
 use crate::view::View;
 
 /// Below this the client's own minimum render distance shows holes.
@@ -50,10 +51,11 @@ pub(crate) fn wire_game_mode(mode: GameMode) -> WireGameMode {
     }
 }
 
-type Joining<'a> = (&'a Conn, &'a Identity, &'a NetId, &'a Position, &'a InLayer, &'a mut Stage, &'a mut Outgoing);
+type Joining<'a> = (&'a Conn, &'a Identity, &'a NetId, &'a Position, &'a InLayer, &'a Inventory, &'a mut Stage, &'a mut Outgoing);
 
-/// Pack negotiation, then StartGame with the registries, the player's own state and the world's:
-/// spawn, time, difficulty and rules.
+/// Pack negotiation, then, once storage has answered for the player (it may start in another
+/// dimension: dimensions::start_in), StartGame with the registries, the player's own state and
+/// the world's: spawn, time, difficulty and rules.
 pub(crate) fn resource_packs(
     mut packets: ResMut<PacketQueues>,
     settings: Res<Settings>,
@@ -63,43 +65,49 @@ pub(crate) fn resource_packs(
     mut players: Query<Joining>,
 ) {
     for (entity, response) in packets.take::<ResourcePackClientResponse>() {
-        let Ok((conn, identity, id, position, in_layer, mut stage, mut out)) = players.get_mut(entity) else { continue };
-        let Ok(level) = layers.get(in_layer.0).map(|layer| layer.world.level()) else { continue };
+        let Ok((conn, identity, .., mut stage, mut out)) = players.get_mut(entity) else { continue };
         match (*stage, response.response_status) {
             (Stage::PacksInfo, PackStatus::HaveAllPacks) => {
                 out.push(&resource_pack_stack());
                 *stage = Stage::PackStack;
             }
-            (Stage::PackStack, PackStatus::Completed) => {
-                let options = StartGameOptions {
-                    entity_id: id.0 as i64,
-                    runtime_entity_id: id.0,
-                    game_mode: wire_game_mode(settings.0.game_mode),
-                    position: position.feet,
-                    yaw: position.yaw,
-                    pitch: position.pitch,
-                    world_spawn: position.feet.map(|c| c.floor() as i32),
-                    world_name: settings.0.world_name.clone(),
-                    tick: tick.0 as i64,
-                    difficulty: settings.0.difficulty as i32,
-                    rules: level.rules.clone(),
-                    block_network_ids_are_hashes: sapling_world::NETWORK_IDS_ARE_HASHES,
-                };
-                out.0.extend_from_slice(sapling_data::pre_start_packets());
-                out.push(&sapling_data::start_game(&options));
-                out.0.extend_from_slice(sapling_data::registry_packets());
-                out.push(&sapling_data::update_abilities(id.0 as i64));
-                out.push(&sapling_data::entity_data(id.0, &identity.0.name));
-                out.push(&sapling_data::update_attributes(id.0));
-                out.push(&sapling_data::no_player_spawn());
-                out.push(&clock::registry(level));
-                out.push(&SetDifficulty { difficulty: settings.0.difficulty as u32 });
-                out.push(&level.rules.packet());
-                *stage = Stage::StartGame;
-            }
+            (Stage::PackStack, PackStatus::Completed) => *stage = Stage::Packed,
             (_, PackStatus::Refused) => net.0.kick(conn.0, "disconnectionScreen.resourcePack"),
             (stage, status) => tracing::debug!(player = %identity.0.name, ?stage, ?status, "unexpected resource pack response"),
         }
+    }
+    for (_, identity, id, position, in_layer, inventory, mut stage, mut out) in &mut players {
+        if *stage != Stage::Packed || !inventory.loaded {
+            continue;
+        }
+        let Ok(layer) = layers.get(in_layer.0) else { continue };
+        let level = layer.world.level();
+        let options = StartGameOptions {
+            entity_id: id.0 as i64,
+            runtime_entity_id: id.0,
+            game_mode: wire_game_mode(settings.0.game_mode),
+            position: position.feet,
+            yaw: position.yaw,
+            pitch: position.pitch,
+            world_spawn: position.feet.map(|c| c.floor() as i32),
+            world_name: settings.0.world_name.clone(),
+            tick: tick.0 as i64,
+            difficulty: settings.0.difficulty as i32,
+            rules: level.rules.clone(),
+            block_network_ids_are_hashes: sapling_world::NETWORK_IDS_ARE_HASHES,
+            dimension: layer.world.dimension(),
+        };
+        out.0.extend_from_slice(sapling_data::pre_start_packets());
+        out.push(&sapling_data::start_game(&options));
+        out.0.extend_from_slice(sapling_data::registry_packets());
+        out.push(&sapling_data::update_abilities(id.0 as i64));
+        out.push(&sapling_data::entity_data(id.0, &identity.0.name));
+        out.push(&sapling_data::update_attributes(id.0));
+        out.push(&sapling_data::no_player_spawn());
+        out.push(&clock::registry(level));
+        out.push(&SetDifficulty { difficulty: settings.0.difficulty as u32 });
+        out.push(&level.rules.packet());
+        *stage = Stage::StartGame;
     }
 }
 

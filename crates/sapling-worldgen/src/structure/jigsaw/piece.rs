@@ -26,6 +26,8 @@ pub struct Piece {
     pub ground: i32,
     /// v2 junctions (Java's `JigsawJunction`s), which beard the terrain around connections.
     pub junctions: Vec<Junction>,
+    /// Where the rules' position tests measure from: the start piece's origin, passed down (141ede44a).
+    pub pivot: (i32, i32, i32),
 }
 
 /// What the piece class overrides (`PoolElementStructurePiece` vt+0x70, +0x78, +0x88).
@@ -42,6 +44,11 @@ pub trait PieceClass {
 
     /// What plugs the first hole under a solid block below the piece (flag 2).
     fn plug(&self, block: Block) -> Block;
+
+    /// The dimension's lowest y, where the plug's search down stops.
+    fn floor(&self) -> i32 {
+        -64
+    }
 }
 
 /// The light heightmap BDS's terrain matching reads (LevelChunk +0xf80, saved before structures).
@@ -49,7 +56,7 @@ pub type Heights<'a> = &'a dyn Fn(i32, i32) -> i32;
 
 impl Piece {
     pub fn new(element: &'static Element, origin: (i32, i32, i32), rotation: Rotation, depth: i32) -> Self {
-        Self { element, origin, rotation, bb: element.bbox(origin, rotation), depth, ground: 1, junctions: Vec::new() }
+        Self { element, origin, rotation, bb: element.bbox(origin, rotation), depth, ground: 1, junctions: Vec::new(), pivot: origin }
     }
 
     pub fn is_rigid(&self) -> bool {
@@ -59,6 +66,10 @@ impl Piece {
     pub fn shift_y(&mut self, dy: i32) {
         self.origin.1 += dy;
         self.bb.move_y(dy);
+    }
+
+    fn from_pivot(&self, (x, y, z): (i32, i32, i32)) -> (i32, i32, i32) {
+        (x - self.pivot.0, y - self.pivot.1, z - self.pivot.2)
     }
 
     /// The piece within the canvas's chunk; `seed` is the chunk's structure seed and `random` the
@@ -81,12 +92,13 @@ impl Piece {
         for jigsaw in self.element.jigsaws(self.origin, self.rotation) {
             let (x, y, z) = jigsaw.pos;
             if canvas.bb.contains(x, y, z) {
-                canvas.set(x, y, z, jigsaw_block(rules, jigsaw.final_state, canvas.get(x, y, z), seed));
+                canvas.set(x, y, z, jigsaw_block(rules, jigsaw.final_state, canvas.get(x, y, z), self.from_pivot((x, y, z)), seed));
             }
         }
         let mut placement = Placement::new(self.rotation, canvas.bb);
         placement.seed = seed;
         placement.rules = rules;
+        placement.pivot = self.pivot;
         placement.marker_air = true;
         let blocks: Vec<_> = {
             let world = |x: i32, y: i32, z: i32| canvas.get(x, y, z);
@@ -159,7 +171,7 @@ impl Piece {
             let (x, y, z) = jigsaw.pos;
             if canvas.bb.contains(x, 0, z) {
                 let at = heights(x, z) + y - base - 1;
-                canvas.set(x, at, z, jigsaw_block(rules, jigsaw.final_state, canvas.get(x, at, z), seed));
+                canvas.set(x, at, z, jigsaw_block(rules, jigsaw.final_state, canvas.get(x, at, z), self.from_pivot((x, at, z)), seed));
             }
         }
         let blocks: Vec<_> = {
@@ -209,7 +221,7 @@ impl Piece {
                 }
                 let plug = class.plug(top);
                 let mut below = y - 1;
-                while below > -64 {
+                while below > class.floor() {
                     let block = canvas.get(x, below, z);
                     if !block.falls() {
                         if block == Block::Air || block.name() == "water" {
@@ -227,8 +239,8 @@ impl Piece {
 /// A jigsaw's final state through the element's rules, each jigsaw on a generator of its own
 /// seeded like the template's: the jigsaws of one chunk all draw the same floats
 /// (docs/research/worldgen-bds-jigsaw.md, "Elements and processors").
-fn jigsaw_block(rules: &[Rule], final_state: Block, world: Block, seed: u32) -> Block {
-    apply(rules, final_state, world, &mut Mt19937::new(seed))
+fn jigsaw_block(rules: &[Rule], final_state: Block, world: Block, from_pivot: (i32, i32, i32), seed: u32) -> Block {
+    apply(rules, final_state, world, from_pivot, &mut Mt19937::new(seed))
 }
 
 /// Ancient city pieces (141edf3a0 / 3b0): no fill, deepslate plugs.

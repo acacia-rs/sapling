@@ -12,7 +12,7 @@ use sapling_api::{Weather, WeatherBackend};
 
 use crate::components::{InLayer, Layer, Outgoing, Tick, in_world};
 use crate::handlers::Ctx;
-use crate::worlds;
+use crate::{dimensions, worlds};
 
 /// What BDS sent with the start of rain and of thunder.
 const FULL: i32 = 65535;
@@ -34,11 +34,13 @@ pub(crate) struct Sky {
 #[derive(Component, Clone, Copy, Default)]
 struct Told(Weather);
 
+/// The sky of a world; another dimension has its overworld's.
 pub(crate) fn of(world: &World, layer: Entity) -> Weather {
-    world.get::<Sky>(layer).map_or(Weather::Clear, |sky| sky.weather)
+    world.get::<Sky>(dimensions::home(world, layer)).map_or(Weather::Clear, |sky| sky.weather)
 }
 
 pub(crate) fn set(world: &mut World, layer: Entity, weather: Weather, ticks: Option<u32>) {
+    let layer = dimensions::home(world, layer);
     let until = ticks.map(|ticks| world.resource::<Tick>().0 + u64::from(ticks));
     if world.get::<Layer>(layer).is_some() {
         world.entity_mut(layer).insert(Sky { weather, until });
@@ -77,6 +79,7 @@ fn chance(now: u64, layer: Entity) -> u64 {
 pub(crate) fn tick(world: &mut World) {
     let now = world.resource::<Tick>().0;
     let skies: Vec<(Entity, Sky, bool)> = world.query::<(Entity, &Layer, Option<&Sky>)>().iter(world).map(|(layer, level, sky)| (layer, sky.copied().unwrap_or_default(), level.world.level().rules.on(CYCLE))).collect();
+    let skies: Vec<(Entity, Sky, bool)> = skies.into_iter().filter(|(layer, ..)| dimensions::home(world, *layer) == *layer).collect();
     for (layer, sky, cycles) in skies {
         let is_over = sky.until.is_some_and(|until| now >= until);
         let lasts = |[least, most]: [u64; 2]| now + least + chance(now, layer) % (most - least);

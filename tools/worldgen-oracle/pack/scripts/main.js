@@ -1,8 +1,11 @@
 // Loads every chunk of REGIONS tile by tile and touches its bedrock floor so BDS saves it; see ../../README.md.
 import { world, system } from "@minecraft/server";
-import { REGIONS, TILE, WORKERS, SETTLE, LOAD_TIMEOUT, KICK } from "./regions.js";
+import { REGIONS, TILE, WORKERS, SETTLE, LOAD_TIMEOUT, KICK, DIMENSION } from "./regions.js";
 
-const FLOOR = -64;
+// The touched layer: the floor, all bedrock in a generated overworld or Nether chunk; the End has no floor, so its
+// top layer, all air.
+const FLOOR = { nether: 0, the_end: 255 }[DIMENSION] ?? -64;
+const BASE = DIMENSION === "the_end" ? "air" : "bedrock";
 const LOAD_ATTEMPTS = 4;
 const log = (text) => console.warn("WORLDGEN " + text);
 const ticks = (n) => new Promise((resolve) => system.runTimeout(resolve, n));
@@ -68,7 +71,7 @@ async function runTile(dimension, tile, name) {
   try {
     await loadArea(dimension, [x0 - 1, z0 - 1, x1 + 1, z1 + 1], name, extra);
     await ticks(SETTLE);
-    // fill reports no block count, so read the floor: all bedrock, then all stone, then all bedrock again.
+    // fill reports no block count, so read the layer: all BASE, then all stone, then all BASE again.
     const cells = (x1 - x0 + 1) * (z1 - z0 + 1) * 256;
     const floor = (type) => {
       let count = 0;
@@ -76,12 +79,12 @@ async function runTile(dimension, tile, name) {
         for (let z = z0 * 16; z <= z1 * 16 + 15; z++) count += dimension.getBlock({ x, y: FLOOR, z })?.typeId === type ? 1 : 0;
       return count;
     };
-    const counts = [floor("minecraft:bedrock")];
-    command(dimension, `fill ${blocks(tile)} stone replace bedrock`);
+    const counts = [floor("minecraft:" + BASE)];
+    command(dimension, `fill ${blocks(tile)} stone replace ${BASE}`);
     counts.push(floor("minecraft:stone"));
-    command(dimension, `fill ${blocks(tile)} bedrock replace stone`);
-    counts.push(floor("minecraft:bedrock"));
-    if (counts.some((count) => count !== cells)) throw new Error(`floor bedrock/stone/bedrock ${counts.join("/")} of ${cells}`);
+    command(dimension, `fill ${blocks(tile)} ${BASE} replace stone`);
+    counts.push(floor("minecraft:" + BASE));
+    if (counts.some((count) => count !== cells)) throw new Error(`layer ${BASE}/stone/${BASE} ${counts.join("/")} of ${cells}`);
     return cells / 256;
   } finally {
     for (const area of [name, ...extra]) dimension.runCommand(`tickingarea remove ${area}`);
@@ -111,7 +114,7 @@ async function runAll(dimension) {
 }
 
 world.afterEvents.worldLoad.subscribe(() => {
-  const dimension = world.getDimension("overworld");
+  const dimension = world.getDimension(DIMENSION);
   // Ticking areas tick their chunks: stop everything that would change blocks or add mobs meanwhile.
   for (const rule of ["randomtickspeed 0", "domobspawning false", "doweathercycle false", "dofiretick false", "dodaylightcycle false"])
     dimension.runCommand("gamerule " + rule);

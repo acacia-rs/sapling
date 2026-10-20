@@ -1,0 +1,878 @@
+## gamemode creative at 0
+    105 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"PortalActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamemode.success.self\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.g
+    105 actor   .. MovePlayer[normal] x1
+    105 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"gameMode.changed\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.creative\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+    105 actor   Event Event { runtime_id: 8589934589, event_type: CommandExecuted, use_player_id: 1, event_data: b"\x08\x02\0\x08gamemode\0" }
+    105 actor   CommandOutput CommandOutput { origin: CommandOrigin { type: "player", uuid: Uuid([228, 78, 156, 86, 141, 92, 193, 127, 229, 209, 9, 240, 150, 245, 92, 150]), request_id: "", player_entity_id: 0 }, output_type: "alloutput", success_count: 1, output: [CommandOutputOutputItem { message_id: "commands.gamemode.success.self", success: true, parameters: ["%createWorldScreen.gameMode.creative"] }], has_data: false, data: None }
+    684 actor   .. MovePlayer[normal] x14, MoveEntityDelta x5, CurrentStructureFeature x2, SetEntityData x1
+    684 actor   AddEntity 
+    684 actor   LevelSoundEvent LevelSoundEvent { sound_id: "spawn", position: Vec3f { x: 17.49, y: -58.895, z: -36.745 }, extra_data: -1, entity_type: "minecraft:sheep", is_baby_mob: false, is_global: false, entity_unique_id: -4294967287, fire_at_position: None }
+   1201 actor   .. MoveEntityDelta x8, MovePlayer[normal] x10
+## gamerule domobspawning false at 1201
+   1212 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"PortalActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"domobspawning\"},{\"text\
+   1212 actor   GameRulesChanged GameRulesChanged { rules: [GameRuleI32 { name: "doMobSpawning", editable: true, type: Bool, value: Bool(false) }] }
+   1212 actor   Event Event { runtime_id: 8589934589, event_type: CommandExecuted, use_player_id: 1, event_data: b"\x08\x02\0\x08gamerule\0" }
+   1212 actor   CommandOutput CommandOutput { origin: CommandOrigin { type: "player", uuid: Uuid([239, 68, 97, 24, 38, 193, 22, 140, 194, 40, 211, 210, 225, 10, 84, 158]), request_id: "", player_entity_id: 0 }, output_type: "alloutput", success_count: 1, output: [CommandOutputOutputItem { message_id: "commands.gamerule.success", success: true, parameters: ["domobspawning", "false"] }], has_data: false, data: None }
+   2402 actor   .. MoveEntityDelta x13, MovePlayer[normal] x23, SetEntityData x1
+## tp @s 0.5 -60 0.5 #2000 at 2402
+   2413 actor   .. MovePlayer[normal] x1
+   2413 actor   MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 0.5, y: -58.37999, z: 0.5 }, pitch: 0.0, yaw: 0.0, head_yaw: 0.0, mode: Teleport, on_ground: true, ridden_runtime_id: 0, teleport: Some(MovePlayerTeleport { cause: Command, source_entity_type: Unknown(1) }), tick: 101 }
+   2413 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.tp.successVictim\",\"with\":{\"rawtext\":[{\"text\":\"0.50, -60.00, 0.50\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   2413 actor   Event Event { runtime_id: 8589934589, event_type: CommandExecuted, use_player_id: 1, event_data: b"\x08\x02\0\x08teleport\0" }
+   2413 actor   CommandOutput CommandOutput { origin: CommandOrigin { type: "player", uuid: Uuid([58, 64, 101, 10, 155, 63, 218, 105, 6, 76, 133, 144, 107, 205, 155, 151]), request_id: "", player_entity_id: 0 }, output_type: "alloutput", success_count: 1, output: [CommandOutputOutputItem { message_id: "commands.tp.success.coordinates", success: true, parameters: ["PortalActor", "0.50", "-60.00", "0.50"] }], has_data: false, data: None }
+   2413 watcher MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 0.5, y: -58.37999, z: 0.5 }, pitch: 0.0, yaw: 0.0, head_yaw: 0.0, mode: Teleport, on_ground: true, ridden_runtime_id: 0, teleport: Some(MovePlayerTeleport { cause: Command, source_entity_type: Unknown(1) }), tick: 101 }
+   2413 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"PortalActor\"},{\"text\":\": \"},{\"translate\":\"commands.tp.success.coordinates\",\"with\":{\"rawtext\":[{\"text\":\"PortalActor\"},{\"t
+   4403 actor   .. MoveEntityDelta x34, MovePlayer[normal] x39, SetEntityMotion x1, SetEntityData x2, CurrentStructureFeature x1
+## !where at 4403
+## at Some([0.5, -60.0, 0.5]) dimension 0
+## execute in nether run tp @s 0.5 70 0.5 #9000 at 4405
+   4416 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967287 }
+   4416 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967288 }
+   4416 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967289 }
+   4416 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967291 }
+   4416 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967290 }
+   4416 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967293 }
+   4416 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967294 }
+   4416 actor   ChangeDimension ChangeDimension { dimension: 1, position: Vec3f { x: 0.5, y: 70.0, z: 0.5 }, respawn: false, loading_screen_id: Some(0) }
+   4416 actor   LevelEventGeneric LevelEventGeneric { event_id: 19602, nbt: [Nbt { name: "ableToSleep", value: Int(1) }, Nbt { name: "overworldPlayerCount", value: Int(1) }, Nbt { name: "sleepingPlayerCount", value: Int(0) }] }
+   4416 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.tp.successVictim\",\"with\":{\"rawtext\":[{\"text\":\"0.50, 70.00, 0.50\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   4416 actor   Event Event { runtime_id: 8589934589, event_type: CommandExecuted, use_player_id: 1, event_data: b"\x08\x02\0\x07execute\0" }
+   4416 actor   CommandOutput CommandOutput { origin: CommandOrigin { type: "player", uuid: Uuid([127, 65, 184, 70, 131, 169, 67, 198, 244, 69, 97, 165, 236, 159, 237, 135]), request_id: "", player_entity_id: 0 }, output_type: "alloutput", success_count: 1, output: [CommandOutputOutputItem { message_id: "commands.tp.success.coordinates", success: true, parameters: ["PortalActor", "0.50", "70.00", "0.50"] }], has_data: false, data: None }
+   4417 watcher LevelEventGeneric LevelEventGeneric { event_id: 19602, nbt: [Nbt { name: "ableToSleep", value: Int(1) }, Nbt { name: "overworldPlayerCount", value: Int(1) }, Nbt { name: "sleepingPlayerCount", value: Int(0) }] }
+   4417 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"PortalActor\"},{\"text\":\": \"},{\"translate\":\"commands.tp.success.coordinates\",\"with\":{\"rawtext\":[{\"text\":\"PortalActor\"},{\"t
+   4435 watcher RemoveEntity RemoveEntity { entity_id_self: -4294967295 }
+   4435 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+   4435 watcher PlayerLocation PlayerLocation { entity_unique_id: -4294967295, type: TypeHide, unused: 1, position: None }
+   4435 actor   PlayerLocation PlayerLocation { entity_unique_id: -4294967291, type: TypeHide, unused: 1, position: None }
+   4479 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+   4528 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+   4580 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+   4627 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+   4685 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+   4728 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+   4781 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+   4834 actor   .. LevelChunk[dim 1] x1, Subchunk[dim 1] x1
+   4834 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+   4880 actor   .. LevelChunk[dim 1] x10, Subchunk[dim 1] x10
+   4880 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+   4936 actor   .. LevelChunk[dim 1] x10, Subchunk[dim 1] x10, ClientCacheMissResponse x1
+   4937 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+   5023 actor   .. LevelChunk[dim 1] x10, Subchunk[dim 1] x10, ClientCacheMissResponse x1
+   5023 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+   5074 actor   .. LevelChunk[dim 1] x10
+   5074 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+   5149 actor   .. LevelChunk[dim 1] x10, Subchunk[dim 1] x10, SyncWorldClocks x1
+   5149 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+   5150 actor   .. LevelChunk[dim 1] x10
+   5150 actor   PlayerAction PlayerAction { runtime_entity_id: 1, action: DimensionChangeAck, position: BlockCoordinates { x: 0, y: 0, z: 0 }, result_position: BlockCoordinates { x: 0, y: 0, z: 0 }, face: 0 }
+   5179 actor   .. Subchunk[dim 1] x10, ClientCacheMissResponse x1, UpdateBlock minecraft:netherrack x1, UpdateSubchunkBlocks x1
+   5179 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+   5180 actor   .. LevelChunk[dim 1] x10
+   5180 actor   LocatorBar 
+   5194 actor   .. Subchunk[dim 1] x10, UpdateBlock minecraft:netherrack x4
+   5194 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+   5239 actor   .. LevelChunk[dim 1] x10, Subchunk[dim 1] x20, UpdateSubchunkBlocks x1, UpdateBlock minecraft:netherrack x6
+   5239 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+   5327 actor   .. LevelChunk[dim 1] x10, Subchunk[dim 1] x10, ClientCacheMissResponse x1, UpdateBlock minecraft:netherrack x8
+   5327 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+   5334 actor   .. LevelChunk[dim 1] x10, CurrentStructureFeature x1, UpdateBlock minecraft:netherrack x6, UpdateSubchunkBlocks x1
+   5334 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+   5387 actor   .. LevelChunk[dim 1] x10, Subchunk[dim 1] x20, ClientCacheMissResponse x1, UpdateSubchunkBlocks x1, UpdateBlock minecraft:netherrack x3
+   5387 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+   5448 actor   .. LevelChunk[dim 1] x10, Subchunk[dim 1] x10, ClientCacheMissResponse x1, UpdateBlock minecraft:netherrack x5, UpdateSubchunkBlocks x1
+   5448 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+   5489 actor   .. LevelChunk[dim 1] x10, Subchunk[dim 1] x10, UpdateSubchunkBlocks x1, UpdateBlock minecraft:netherrack x10
+   5489 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+   5532 actor   .. LevelChunk[dim 1] x10, Subchunk[dim 1] x10, UpdateBlock minecraft:netherrack x8
+   5532 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+   5604 actor   .. LevelChunk[dim 1] x10, Subchunk[dim 1] x10, ClientCacheMissResponse x1, UpdateBlock minecraft:netherrack x6, UpdateSubchunkBlocks x1
+   5604 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+   5635 actor   .. LevelChunk[dim 1] x10, Subchunk[dim 1] x10, UpdateSubchunkBlocks x1, UpdateBlock minecraft:netherrack x12
+   5635 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+   5702 actor   .. LevelChunk[dim 1] x10, Subchunk[dim 1] x10, ClientCacheMissResponse x1, UpdateSubchunkBlocks x1, UpdateBlock minecraft:netherrack x6
+   5702 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+   5734 actor   .. LevelChunk[dim 1] x10, Subchunk[dim 1] x10, UpdateBlock minecraft:netherrack x5
+   5735 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+   5784 actor   .. LevelChunk[dim 1] x10, Subchunk[dim 1] x10, UpdateBlock minecraft:netherrack x4
+   5784 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+   5852 actor   .. LevelChunk[dim 1] x10, Subchunk[dim 1] x10, ClientCacheMissResponse x1, UpdateBlock minecraft:netherrack x8
+   5852 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+   5885 actor   .. LevelChunk[dim 1] x10, Subchunk[dim 1] x10, UpdateBlock minecraft:netherrack x3
+   5885 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+   5960 actor   .. LevelChunk[dim 1] x10, Subchunk[dim 1] x10, UpdateSubchunkBlocks x2, UpdateBlock minecraft:netherrack x5
+   5960 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+   5984 actor   .. LevelChunk[dim 1] x10, ClientCacheMissResponse x1, Subchunk[dim 1] x10, UpdateBlock minecraft:netherrack x5
+   5984 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+   6048 actor   .. LevelChunk[dim 1] x10, Subchunk[dim 1] x10, ClientCacheMissResponse x1, UpdateBlock minecraft:netherrack x10
+   6048 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+   6082 actor   .. LevelChunk[dim 1] x10, Subchunk[dim 1] x10, UpdateBlock minecraft:netherrack x4
+   6082 actor   UpdateBlock -19 35 15 layer 0 flags UpdateBlockFlags(3) minecraft:fire [age=1]
+   6082 actor   .. UpdateBlock minecraft:netherrack x2
+   6082 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+   6146 actor   .. LevelChunk[dim 1] x6, Subchunk[dim 1] x6, ClientCacheMissResponse x1, UpdateBlock minecraft:netherrack x3, UpdateSubchunkBlocks x2
+   6146 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+   6185 actor   .. UpdateBlock minecraft:netherrack x5
+   6185 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+   6231 actor   .. UpdateSubchunkBlocks x1, UpdateBlock minecraft:netherrack x7
+   6231 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+   6289 actor   .. UpdateBlock minecraft:netherrack x4
+   6289 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+   6336 actor   .. UpdateBlock minecraft:netherrack x5
+   6336 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+   6384 actor   .. UpdateBlock minecraft:netherrack x5, UpdateSubchunkBlocks x1
+   6384 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+   6434 actor   .. UpdateSubchunkBlocks x1, UpdateBlock minecraft:netherrack x2
+   6434 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+   6482 actor   .. UpdateBlock minecraft:netherrack x3
+   6482 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+   6532 actor   .. UpdateBlock minecraft:netherrack x3
+   6532 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+   6585 actor   .. UpdateBlock minecraft:netherrack x3
+   6585 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+   6635 actor   .. UpdateSubchunkBlocks x2, UpdateBlock minecraft:netherrack x4
+   6635 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+   6682 actor   .. UpdateBlock minecraft:netherrack x9
+   6682 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+   6738 actor   .. UpdateBlock minecraft:netherrack x8
+   6738 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+   6781 actor   .. UpdateBlock minecraft:netherrack x6, UpdateSubchunkBlocks x1
+   6781 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+   6840 actor   .. UpdateBlock minecraft:netherrack x7
+   6840 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+   6884 actor   .. UpdateBlock minecraft:netherrack x5
+   6884 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+   6935 actor   .. UpdateBlock minecraft:netherrack x5, UpdateSubchunkBlocks x1
+   6935 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+   6989 actor   .. UpdateBlock minecraft:netherrack x5
+   6989 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+   7038 actor   .. UpdateBlock minecraft:netherrack x4, UpdateSubchunkBlocks x1
+   7038 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+   7081 actor   .. UpdateBlock minecraft:netherrack x5, UpdateSubchunkBlocks x1
+   7081 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+   7136 actor   .. UpdateBlock minecraft:netherrack x2
+   7136 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+   7183 actor   .. UpdateBlock minecraft:netherrack x3
+   7183 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+   7233 actor   .. UpdateBlock minecraft:netherrack x8
+   7233 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+   7283 actor   .. UpdateBlock minecraft:netherrack x5
+   7283 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+   7334 actor   .. UpdateSubchunkBlocks x1, UpdateBlock minecraft:netherrack x6
+   7334 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+   7389 actor   .. UpdateSubchunkBlocks x2, UpdateBlock minecraft:netherrack x3
+   7389 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+   7439 actor   .. UpdateBlock minecraft:netherrack x6
+   7439 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+   7488 actor   .. UpdateBlock minecraft:netherrack x3
+   7488 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+   7539 actor   .. UpdateBlock minecraft:netherrack x2
+   7539 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+   7581 actor   .. UpdateBlock minecraft:netherrack x2, UpdateSubchunkBlocks x1
+   7581 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+   7640 actor   .. UpdateBlock minecraft:netherrack x6
+   7640 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+   7689 actor   .. UpdateBlock minecraft:netherrack x6
+   7689 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+   7734 actor   .. UpdateBlock minecraft:netherrack x10
+   7734 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+   7786 actor   .. UpdateBlock minecraft:netherrack x8, UpdateSubchunkBlocks x1
+   7786 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+   7835 actor   .. UpdateBlock minecraft:netherrack x7, UpdateSubchunkBlocks x1
+   7835 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+   7889 actor   .. UpdateBlock minecraft:netherrack x4
+   7889 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+   7940 actor   .. UpdateBlock minecraft:netherrack x5, UpdateSubchunkBlocks x1
+   7940 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+   7983 actor   .. UpdateBlock minecraft:netherrack x5
+   7983 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+   8033 actor   .. UpdateBlock minecraft:netherrack x5
+   8033 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+   8089 actor   .. UpdateBlock minecraft:netherrack x3
+   8089 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+   8131 actor   .. UpdateBlock minecraft:netherrack x3
+   8131 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+   8190 actor   .. UpdateBlock minecraft:netherrack x3
+   8190 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+   8235 actor   .. UpdateBlock minecraft:netherrack x2
+   8235 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+   8281 actor   .. UpdateBlock minecraft:netherrack x3
+   8281 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+   8333 actor   .. UpdateBlock minecraft:netherrack x4
+   8333 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+   8383 actor   .. UpdateBlock minecraft:netherrack x5
+   8383 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+   8434 actor   .. UpdateBlock minecraft:netherrack x8
+   8434 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+   8486 actor   .. UpdateBlock minecraft:netherrack x11
+   8486 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+   8534 actor   .. UpdateBlock minecraft:netherrack x7
+   8534 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+   8584 actor   .. UpdateBlock minecraft:netherrack x12, UpdateSubchunkBlocks x1
+   8584 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+   8631 actor   .. UpdateBlock minecraft:netherrack x3
+   8631 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+   8685 actor   .. UpdateBlock minecraft:netherrack x3, UpdateSubchunkBlocks x1
+   8685 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+   8735 actor   .. UpdateBlock minecraft:netherrack x6
+   8735 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+   8783 actor   .. UpdateBlock minecraft:netherrack x5, UpdateSubchunkBlocks x1
+   8784 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+   8834 actor   .. UpdateBlock minecraft:netherrack x5, UpdateSubchunkBlocks x1
+   8834 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+   8885 actor   .. UpdateBlock minecraft:netherrack x6
+   8885 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+   8938 actor   .. UpdateBlock minecraft:netherrack x8, UpdateSubchunkBlocks x1
+   8938 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+   8983 actor   .. UpdateBlock minecraft:netherrack x9
+   8983 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+   9034 actor   .. UpdateBlock minecraft:netherrack x6, UpdateSubchunkBlocks x1
+   9034 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+   9081 actor   .. UpdateBlock minecraft:netherrack x5, UpdateSubchunkBlocks x1
+   9081 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+   9138 actor   .. UpdateBlock minecraft:netherrack x3
+   9138 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+   9187 actor   .. UpdateBlock minecraft:netherrack x5
+   9187 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+   9238 actor   .. UpdateBlock minecraft:netherrack x5
+   9238 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+   9282 actor   .. UpdateBlock minecraft:netherrack x4
+   9282 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+   9335 actor   .. CurrentStructureFeature x1
+   9335 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+   9388 actor   .. UpdateBlock minecraft:netherrack x2
+   9389 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+   9439 actor   .. UpdateBlock minecraft:netherrack x6
+   9439 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+   9486 actor   .. UpdateBlock minecraft:netherrack x7
+   9486 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+   9535 actor   .. UpdateBlock minecraft:netherrack x3
+   9535 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+   9585 actor   .. UpdateBlock minecraft:netherrack x5
+   9585 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+   9639 actor   .. UpdateBlock minecraft:netherrack x6
+   9639 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+   9682 actor   .. UpdateBlock minecraft:netherrack x2
+   9682 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+   9731 actor   .. UpdateBlock minecraft:netherrack x3
+   9731 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+   9784 actor   .. UpdateBlock minecraft:netherrack x4
+   9784 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+   9831 actor   .. UpdateBlock minecraft:netherrack x6
+   9831 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+   9888 actor   .. UpdateBlock minecraft:netherrack x7
+   9888 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+   9937 actor   .. UpdateBlock minecraft:netherrack x2
+   9937 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+   9985 actor   .. UpdateBlock minecraft:netherrack x7
+   9985 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+  10039 actor   .. UpdateBlock minecraft:netherrack x3
+  10039 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+  10088 actor   .. UpdateBlock minecraft:netherrack x8
+  10088 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+  10132 actor   .. UpdateBlock minecraft:netherrack x3, UpdateSubchunkBlocks x1
+  10132 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+  10189 actor   .. UpdateBlock minecraft:netherrack x5
+  10189 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+  10232 actor   .. UpdateBlock minecraft:netherrack x4, UpdateSubchunkBlocks x1
+  10232 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+  10290 actor   .. UpdateBlock minecraft:netherrack x6
+  10290 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+  10336 actor   .. UpdateBlock minecraft:netherrack x4
+  10336 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+  10388 actor   .. UpdateBlock minecraft:netherrack x3, UpdateSubchunkBlocks x2
+  10388 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+  10430 actor   .. UpdateBlock minecraft:netherrack x6
+  10430 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+  10488 actor   .. UpdateBlock minecraft:netherrack x2
+  10488 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+  10531 actor   .. UpdateBlock minecraft:netherrack x10
+  10532 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+  10582 actor   .. UpdateBlock minecraft:netherrack x5
+  10582 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+  10639 actor   .. UpdateBlock minecraft:netherrack x1
+  10639 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+  10682 actor   .. UpdateBlock minecraft:netherrack x4
+  10682 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+  10736 actor   .. UpdateBlock minecraft:netherrack x5, UpdateSubchunkBlocks x1
+  10736 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+  10784 actor   .. UpdateBlock minecraft:netherrack x7
+  10784 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+  10832 actor   .. UpdateBlock minecraft:netherrack x5
+  10832 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+  10886 actor   .. UpdateBlock minecraft:netherrack x6
+  10886 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+  10931 actor   .. UpdateBlock minecraft:netherrack x6
+  10931 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+  10986 actor   .. UpdateBlock minecraft:netherrack x1
+  10986 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+  11034 actor   .. UpdateBlock minecraft:netherrack x3, UpdateSubchunkBlocks x1
+  11034 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+  11083 actor   .. UpdateBlock minecraft:netherrack x4
+  11083 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+  11131 actor   .. UpdateBlock minecraft:netherrack x8
+  11132 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+  11185 actor   .. UpdateBlock minecraft:netherrack x8
+  11185 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+  11231 actor   .. UpdateBlock minecraft:netherrack x4, UpdateSubchunkBlocks x1
+  11231 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+  11282 actor   .. UpdateSubchunkBlocks x1, UpdateBlock minecraft:netherrack x4
+  11282 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+  11339 actor   .. UpdateBlock minecraft:netherrack x2
+  11339 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+  11381 actor   .. UpdateBlock minecraft:netherrack x4
+  11381 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+  11440 actor   .. UpdateBlock minecraft:netherrack x5, UpdateSubchunkBlocks x1
+  11440 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+  11481 actor   .. UpdateBlock minecraft:netherrack x6
+  11481 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+  11531 actor   .. UpdateBlock minecraft:netherrack x8
+  11531 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+  11585 actor   .. UpdateBlock minecraft:netherrack x7
+  11585 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+  11632 actor   .. UpdateBlock minecraft:netherrack x3
+  11632 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+  11681 actor   .. UpdateBlock minecraft:netherrack x5
+  11681 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+  11739 actor   .. UpdateBlock minecraft:netherrack x6
+  11739 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+  11788 actor   .. UpdateBlock minecraft:netherrack x3
+  11788 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+  11837 actor   .. UpdateBlock minecraft:netherrack x7
+  11838 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+  11887 actor   .. UpdateBlock minecraft:netherrack x6
+  11887 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+  11934 actor   .. UpdateBlock minecraft:netherrack x3
+  11934 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+  11985 actor   .. UpdateBlock minecraft:netherrack x8
+  11985 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+  12032 actor   .. UpdateBlock minecraft:netherrack x7
+  12032 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+  12088 actor   .. UpdateBlock minecraft:netherrack x6, UpdateSubchunkBlocks x1
+  12088 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+  12131 actor   .. UpdateBlock minecraft:netherrack x3, UpdateSubchunkBlocks x1
+  12131 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+  12187 actor   .. UpdateBlock minecraft:netherrack x3
+  12187 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+  12231 actor   .. UpdateBlock minecraft:netherrack x8
+  12231 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+  12282 actor   .. UpdateBlock minecraft:netherrack x1
+  12282 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+  12339 actor   .. UpdateBlock minecraft:netherrack x8
+  12339 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+  12389 actor   .. UpdateBlock minecraft:netherrack x3
+  12389 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+  12436 actor   .. UpdateBlock minecraft:netherrack x4
+  12436 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+  12482 actor   .. UpdateBlock minecraft:netherrack x11
+  12482 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+  12533 actor   .. UpdateBlock minecraft:netherrack x6, UpdateSubchunkBlocks x1
+  12533 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+  12590 actor   .. UpdateBlock minecraft:netherrack x4
+  12590 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+  12637 actor   .. UpdateBlock minecraft:netherrack x4
+  12637 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+  12680 actor   .. UpdateBlock minecraft:netherrack x5
+  12680 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+  12735 actor   .. UpdateBlock minecraft:netherrack x3
+  12736 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+  12788 actor   .. UpdateBlock minecraft:netherrack x8
+  12788 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+  12834 actor   .. UpdateBlock minecraft:netherrack x6
+  12834 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+  12889 actor   .. UpdateBlock minecraft:netherrack x5
+  12889 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+  12933 actor   .. UpdateBlock minecraft:netherrack x7
+  12933 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+  12982 actor   .. UpdateBlock minecraft:netherrack x5
+  12982 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+  13032 actor   .. UpdateBlock minecraft:netherrack x3
+  13032 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+  13083 actor   .. UpdateBlock minecraft:netherrack x7
+  13083 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+  13136 actor   .. UpdateBlock minecraft:netherrack x2
+  13136 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+  13181 actor   .. UpdateSubchunkBlocks x1, UpdateBlock minecraft:netherrack x5
+  13181 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+  13231 actor   .. UpdateSubchunkBlocks x2, UpdateBlock minecraft:netherrack x2
+  13231 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+  13282 actor   .. UpdateBlock minecraft:netherrack x6, UpdateSubchunkBlocks x1
+  13282 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+  13337 actor   .. CurrentStructureFeature x1, UpdateBlock minecraft:netherrack x5
+  13337 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+  13385 actor   .. UpdateBlock minecraft:netherrack x2
+  13385 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+## !where at 13405
+## at Some([0.5, -506.46817, 0.5]) dimension 1
+## !portals 6 at 13406
+## portals near [0, -507, 0] in dimension 1: 0
+## tp @s 8.5 70 8.5 #2000 at 13408
+  13417 actor   MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 8.5, y: 71.62001, z: 8.5 }, pitch: 0.0, yaw: 0.0, head_yaw: 0.0, mode: Teleport, on_ground: true, ridden_runtime_id: 0, teleport: Some(MovePlayerTeleport { cause: Command, source_entity_type: Unknown(1) }), tick: 140 }
+  13417 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.tp.successVictim\",\"with\":{\"rawtext\":[{\"text\":\"8.50, 70.00, 8.50\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  13417 actor   Event Event { runtime_id: 8589934589, event_type: CommandExecuted, use_player_id: 1, event_data: b"\x08\x02\0\x08teleport\0" }
+  13417 actor   CommandOutput CommandOutput { origin: CommandOrigin { type: "player", uuid: Uuid([189, 72, 210, 148, 135, 101, 214, 211, 146, 118, 213, 174, 92, 72, 246, 178]), request_id: "", player_entity_id: 0 }, output_type: "alloutput", success_count: 1, output: [CommandOutputOutputItem { message_id: "commands.tp.success.coordinates", success: true, parameters: ["PortalActor", "8.50", "70.00", "8.50"] }], has_data: false, data: None }
+  13417 watcher MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 8.5, y: 71.62001, z: 8.5 }, pitch: 0.0, yaw: 0.0, head_yaw: 0.0, mode: Teleport, on_ground: true, ridden_runtime_id: 0, teleport: Some(MovePlayerTeleport { cause: Command, source_entity_type: Unknown(1) }), tick: 140 }
+  13417 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"PortalActor\"},{\"text\":\": \"},{\"translate\":\"commands.tp.success.coordinates\",\"with\":{\"rawtext\":[{\"text\":\"PortalActor\"},{\"t
+  13433 actor   .. UpdateBlock minecraft:netherrack x8
+  13433 actor   UpdateBlock -18 32 -8 layer 0 flags UpdateBlockFlags(3) minecraft:fire [age=0]
+  13433 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: 71, z: 0 }, radius: 128, saved_chunks: [] }
+  13484 actor   .. UpdateBlock minecraft:netherrack x3, UpdateSubchunkBlocks x1
+  13484 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 8, y: 71, z: 8 }, radius: 128, saved_chunks: [] }
+  13536 actor   .. UpdateBlock minecraft:netherrack x6
+  13536 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 8, y: 71, z: 8 }, radius: 128, saved_chunks: [] }
+  13586 actor   .. UpdateBlock minecraft:netherrack x3
+  13586 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 8, y: 71, z: 8 }, radius: 128, saved_chunks: [] }
+  13635 actor   .. UpdateBlock minecraft:netherrack x2
+  13635 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 8, y: 71, z: 8 }, radius: 128, saved_chunks: [] }
+  13685 actor   .. UpdateBlock minecraft:netherrack x6
+  13685 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 8, y: 71, z: 8 }, radius: 128, saved_chunks: [] }
+  13734 actor   .. UpdateBlock minecraft:netherrack x3
+  13734 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 8, y: 71, z: 8 }, radius: 128, saved_chunks: [] }
+  13784 actor   .. UpdateBlock minecraft:netherrack x4
+  13784 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 8, y: 71, z: 8 }, radius: 128, saved_chunks: [] }
+  13834 actor   .. UpdateBlock minecraft:netherrack x8
+  13834 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 8, y: 71, z: 8 }, radius: 128, saved_chunks: [] }
+  13887 actor   .. UpdateBlock minecraft:netherrack x4, UpdateSubchunkBlocks x1
+  13887 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 8, y: 71, z: 8 }, radius: 128, saved_chunks: [] }
+  13938 actor   .. UpdateBlock minecraft:netherrack x4
+  13938 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 8, y: 71, z: 8 }, radius: 128, saved_chunks: [] }
+  13984 actor   .. UpdateBlock minecraft:netherrack x1
+  13984 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 8, y: 71, z: 8 }, radius: 128, saved_chunks: [] }
+  14040 actor   .. UpdateBlock minecraft:netherrack x2
+  14040 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 8, y: 71, z: 8 }, radius: 128, saved_chunks: [] }
+  14084 actor   .. UpdateBlock minecraft:netherrack x4, UpdateSubchunkBlocks x2
+  14084 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 8, y: 71, z: 8 }, radius: 128, saved_chunks: [] }
+  14134 actor   .. UpdateBlock minecraft:netherrack x4
+  14135 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 8, y: 71, z: 8 }, radius: 128, saved_chunks: [] }
+  14185 actor   .. UpdateBlock minecraft:netherrack x5
+  14185 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 8, y: 71, z: 8 }, radius: 128, saved_chunks: [] }
+  14232 actor   .. UpdateBlock minecraft:netherrack x4
+  14232 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 8, y: 71, z: 8 }, radius: 128, saved_chunks: [] }
+  14283 actor   .. UpdateSubchunkBlocks x1, UpdateBlock minecraft:netherrack x2
+  14283 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 8, y: 71, z: 8 }, radius: 128, saved_chunks: [] }
+  14332 actor   .. UpdateBlock minecraft:netherrack x8
+  14332 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 8, y: 71, z: 8 }, radius: 128, saved_chunks: [] }
+  14388 actor   .. UpdateBlock minecraft:netherrack x7
+  14388 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 8, y: 71, z: 8 }, radius: 128, saved_chunks: [] }
+  14434 actor   .. UpdateBlock minecraft:netherrack x8
+  14434 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 8, y: 71, z: 8 }, radius: 128, saved_chunks: [] }
+  14484 actor   .. UpdateBlock minecraft:netherrack x4
+  14484 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 8, y: 71, z: 8 }, radius: 128, saved_chunks: [] }
+  14534 actor   .. UpdateSubchunkBlocks x1, UpdateBlock minecraft:netherrack x4
+  14534 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 8, y: 71, z: 8 }, radius: 128, saved_chunks: [] }
+  14587 actor   .. UpdateBlock minecraft:netherrack x9
+  14587 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 8, y: 71, z: 8 }, radius: 128, saved_chunks: [] }
+  14637 actor   .. UpdateBlock minecraft:netherrack x4
+  14637 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 8, y: 71, z: 8 }, radius: 128, saved_chunks: [] }
+  14686 actor   .. UpdateBlock minecraft:netherrack x4
+  14686 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 8, y: 71, z: 8 }, radius: 128, saved_chunks: [] }
+  14731 actor   .. UpdateBlock minecraft:netherrack x6, UpdateSubchunkBlocks x1
+  14731 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 8, y: 71, z: 8 }, radius: 128, saved_chunks: [] }
+  14784 actor   .. UpdateBlock minecraft:netherrack x5
+  14784 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 8, y: 71, z: 8 }, radius: 128, saved_chunks: [] }
+  14834 actor   .. UpdateBlock minecraft:netherrack x5, UpdateSubchunkBlocks x1
+  14834 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 8, y: 71, z: 8 }, radius: 128, saved_chunks: [] }
+  14887 actor   .. UpdateBlock minecraft:netherrack x4
+  14887 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 8, y: 71, z: 8 }, radius: 128, saved_chunks: [] }
+  14939 actor   .. UpdateBlock minecraft:netherrack x3, UpdateSubchunkBlocks x1
+  14939 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 8, y: 71, z: 8 }, radius: 128, saved_chunks: [] }
+  14981 actor   .. UpdateBlock minecraft:netherrack x2
+  14981 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 8, y: 71, z: 8 }, radius: 128, saved_chunks: [] }
+  15041 actor   .. UpdateBlock minecraft:netherrack x5
+  15041 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 8, y: 71, z: 8 }, radius: 128, saved_chunks: [] }
+  15084 actor   .. UpdateBlock minecraft:netherrack x6
+  15084 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 8, y: 71, z: 8 }, radius: 128, saved_chunks: [] }
+  15137 actor   .. UpdateSubchunkBlocks x1, UpdateBlock minecraft:netherrack x2
+  15137 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 8, y: 71, z: 8 }, radius: 128, saved_chunks: [] }
+  15190 actor   .. UpdateBlock minecraft:netherrack x1
+  15190 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 8, y: 71, z: 8 }, radius: 128, saved_chunks: [] }
+  15239 actor   .. UpdateBlock minecraft:netherrack x8
+  15239 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 8, y: 71, z: 8 }, radius: 128, saved_chunks: [] }
+  15282 actor   .. UpdateBlock minecraft:netherrack x9
+  15282 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 8, y: 71, z: 8 }, radius: 128, saved_chunks: [] }
+  15337 actor   .. UpdateBlock minecraft:netherrack x9
+  15337 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 8, y: 71, z: 8 }, radius: 128, saved_chunks: [] }
+  15389 actor   .. UpdateBlock minecraft:netherrack x6
+  15389 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 8, y: 71, z: 8 }, radius: 128, saved_chunks: [] }
+## !where at 15408
+## at Some([8.5, 54.0, 8.5]) dimension 1
+## execute in overworld run tp @s 0.5 -60 0.5 #9000 at 15409
+  15421 actor   ChangeDimension ChangeDimension { dimension: 0, position: Vec3f { x: 0.5, y: -60.0, z: 0.5 }, respawn: false, loading_screen_id: Some(1) }
+  15421 actor   LevelEventGeneric LevelEventGeneric { event_id: 19602, nbt: [Nbt { name: "ableToSleep", value: Int(1) }, Nbt { name: "overworldPlayerCount", value: Int(2) }, Nbt { name: "sleepingPlayerCount", value: Int(0) }] }
+  15421 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.tp.successVictim\",\"with\":{\"rawtext\":[{\"text\":\"0.50, -60.00, 0.50\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  15421 actor   Event Event { runtime_id: 8589934589, event_type: CommandExecuted, use_player_id: 1, event_data: b"\x08\x02\0\x07execute\0" }
+  15421 actor   CommandOutput CommandOutput { origin: CommandOrigin { type: "player", uuid: Uuid([21, 67, 182, 130, 128, 100, 165, 18, 65, 28, 200, 236, 254, 95, 15, 155]), request_id: "", player_entity_id: 0 }, output_type: "alloutput", success_count: 1, output: [CommandOutputOutputItem { message_id: "commands.tp.success.coordinates", success: true, parameters: ["PortalActor", "0.50", "-60.00", "0.50"] }], has_data: false, data: None }
+  15422 watcher LevelEventGeneric LevelEventGeneric { event_id: 19602, nbt: [Nbt { name: "ableToSleep", value: Int(1) }, Nbt { name: "overworldPlayerCount", value: Int(2) }, Nbt { name: "sleepingPlayerCount", value: Int(0) }] }
+  15422 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"PortalActor\"},{\"text\":\": \"},{\"translate\":\"commands.tp.success.coordinates\",\"with\":{\"rawtext\":[{\"text\":\"PortalActor\"},{\"t
+  15445 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 8, y: 71, z: 8 }, radius: 128, saved_chunks: [] }
+  15445 actor   .. LevelChunk[dim 0] x10
+  15445 actor   AddEntity 
+  15445 actor   AddEntity 
+  15445 actor   AddPlayer AddPlayer { uuid: Uuid([26, 59, 20, 183, 122, 224, 70, 82, 17, 218, 72, 68, 237, 100, 245, 186]), username: "PortalWatcher", runtime_id: 5, platform_chat_id: "", position: Vec3f { x: 0.5, y: -60.0, z: 0.5 }, velocity: Vec3f { x: 0.0, y: -0.0784, z: 0.0 }, pitch: 0.0, yaw: 0.0, head_yaw: 0.0, held_item: ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, gamemode: Fallback, metadata: [MetadataDictionaryItem { key: Flags, type: Long, legacy_type: 7, value: Flags(MetadataFlags1(844459290394624)) }, MetadataDictionaryItem { key: Health, type: Int, legacy_type: 2, value: Default(Int(1)) }, MetadataDictionaryItem { key: Variant, type: Int, legacy_type: 2, value: Default(Int(0)) }, MetadataDictionaryItem { key: Color, type: Byte, legacy_type: 0, value: Default(Byte(0)) }, MetadataDictionaryItem { key: Nametag, type: St
+  15446 actor   AddEntity 
+  15446 actor   AddEntity 
+  15446 actor   AddEntity 
+  15446 actor   AddEntity 
+  15446 actor   LevelEvent LevelEvent { event: ParticleDestroy, position: Vec3f { x: 7.5, y: -59.5, z: -28.5 }, data: -567203660 }
+  15446 actor   .. MoveEntityDelta x2
+  15446 actor   PlayerAction PlayerAction { runtime_entity_id: 1, action: DimensionChangeAck, position: BlockCoordinates { x: 0, y: 0, z: 0 }, result_position: BlockCoordinates { x: 0, y: 0, z: 0 }, face: 0 }
+  15449 watcher AddPlayer AddPlayer { uuid: Uuid([39, 49, 253, 23, 220, 15, 17, 71, 13, 88, 89, 226, 185, 108, 212, 134]), username: "PortalActor", runtime_id: 1, platform_chat_id: "", position: Vec3f { x: 0.5, y: -60.0, z: 0.5 }, velocity: Vec3f { x: 0.0, y: 0.0, z: 0.0 }, pitch: 0.0, yaw: 0.0, head_yaw: 0.0, held_item: Ite
+  15483 actor   .. Subchunk[dim 0] x10, MovePlayer[normal] x1, UpdateBlock minecraft:dirt x1
+  15483 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  15484 actor   .. LevelChunk[dim 0] x10
+  15484 actor   LocatorBar 
+  15535 actor   .. Subchunk[dim 0] x10, MovePlayer[normal] x1
+  15535 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  15580 actor   .. LevelChunk[dim 0] x10, ClientCacheMissResponse x1, Subchunk[dim 0] x10
+  15580 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  15634 actor   .. LevelChunk[dim 0] x10, MovePlayer[normal] x2, MoveEntityDelta x1, Subchunk[dim 0] x10, ClientCacheMissResponse x1
+  15634 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  15680 actor   .. LevelChunk[dim 0] x10, MoveEntityDelta x1, Subchunk[dim 0] x10
+  15680 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  15734 actor   .. LevelChunk[dim 0] x10, MovePlayer[normal] x2, MoveEntityDelta x1, Subchunk[dim 0] x10, ClientCacheMissResponse x1
+  15734 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  15784 actor   .. LevelChunk[dim 0] x10, MoveEntityDelta x2, Subchunk[dim 0] x10, MovePlayer[normal] x1
+  15784 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  15837 actor   .. LevelChunk[dim 0] x10, Subchunk[dim 0] x10, ClientCacheMissResponse x1
+  15837 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  15884 actor   .. LevelChunk[dim 0] x10, Subchunk[dim 0] x10, MovePlayer[normal] x2
+  15884 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  15933 actor   .. LevelChunk[dim 0] x10, MoveEntityDelta x2, ClientCacheMissResponse x1, Subchunk[dim 0] x10
+  15933 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  15985 actor   .. LevelChunk[dim 0] x10, MovePlayer[normal] x2, MoveEntityDelta x2, ClientCacheMissResponse x1, Subchunk[dim 0] x10
+  15985 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  16033 actor   .. LevelChunk[dim 0] x10, Subchunk[dim 0] x10, ClientCacheMissResponse x1
+  16033 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  16084 actor   .. LevelChunk[dim 0] x10, MoveEntityDelta x2, Subchunk[dim 0] x10, MovePlayer[normal] x1, ClientCacheMissResponse x1
+  16084 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  16136 actor   .. LevelChunk[dim 0] x10, MovePlayer[normal] x1, Subchunk[dim 0] x10
+  16136 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  16186 actor   .. LevelChunk[dim 0] x10, MoveEntityDelta x1, MovePlayer[normal] x1, Subchunk[dim 0] x10, ClientCacheMissResponse x1
+  16186 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  16231 actor   .. LevelChunk[dim 0] x10, MoveEntityDelta x2, MovePlayer[normal] x1, Subchunk[dim 0] x10
+  16231 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  16288 actor   .. LevelChunk[dim 0] x10, MoveEntityDelta x1, Subchunk[dim 0] x10, MovePlayer[normal] x1, ClientCacheMissResponse x1
+  16288 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  16334 actor   .. LevelChunk[dim 0] x10, CurrentStructureFeature x1, MovePlayer[normal] x1, Subchunk[dim 0] x10, ClientCacheMissResponse x1
+  16334 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  16380 actor   .. LevelChunk[dim 0] x10, MoveEntityDelta x1, Subchunk[dim 0] x10, MovePlayer[normal] x1
+  16380 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  16430 actor   .. LevelChunk[dim 0] x10, MoveEntityDelta x2, Subchunk[dim 0] x10, MovePlayer[normal] x1, ClientCacheMissResponse x1
+  16430 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  16484 actor   .. LevelChunk[dim 0] x10, MoveEntityDelta x2, Subchunk[dim 0] x10, MovePlayer[normal] x2
+  16484 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  16532 actor   .. LevelChunk[dim 0] x10, MoveEntityDelta x1, ClientCacheMissResponse x1, Subchunk[dim 0] x10
+  16533 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  16584 actor   .. LevelChunk[dim 0] x10, Subchunk[dim 0] x10, MovePlayer[normal] x1, ClientCacheMissResponse x1
+  16584 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  16637 actor   .. LevelChunk[dim 0] x10, MoveEntityDelta x1, MovePlayer[normal] x1, Subchunk[dim 0] x10
+  16637 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  16688 actor   .. LevelChunk[dim 0] x10, MoveEntityDelta x2, Subchunk[dim 0] x10, MovePlayer[normal] x1
+  16688 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  16734 actor   .. LevelChunk[dim 0] x7, MoveEntityDelta x1, Subchunk[dim 0] x7, MovePlayer[normal] x1, ClientCacheMissResponse x1
+  16734 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  16784 actor   .. MovePlayer[normal] x1
+  16784 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  16834 actor   .. MoveEntityDelta x2, MovePlayer[normal] x1
+  16834 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  16885 actor   .. MovePlayer[normal] x1
+  16885 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  16934 actor   .. SetEntityData x1, MoveEntityDelta x1, MovePlayer[normal] x1
+  16935 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  16984 actor   .. MoveEntityDelta x2, MovePlayer[normal] x1
+  16984 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  17034 actor   .. MovePlayer[normal] x1
+  17034 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  17084 actor   .. MovePlayer[normal] x1
+  17084 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  17084 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967293 }
+  17084 watcher RemoveEntity RemoveEntity { entity_id_self: -4294967293 }
+  17136 actor   .. MoveEntityDelta x2, MovePlayer[normal] x1
+  17136 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  17184 actor   .. MovePlayer[normal] x1
+  17184 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  17234 actor   .. MovePlayer[normal] x1
+  17234 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  17284 actor   .. MoveEntityDelta x1, MovePlayer[normal] x1
+  17284 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  17334 actor   .. MoveEntityDelta x1, MovePlayer[normal] x1
+  17334 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  17384 actor   .. CurrentStructureFeature x1, MovePlayer[normal] x1
+  17384 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  17434 actor   .. MoveEntityDelta x1, MovePlayer[normal] x1
+  17434 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  17484 actor   .. MovePlayer[normal] x1
+  17484 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  17530 actor   .. MoveEntityDelta x1
+  17530 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  17582 actor   .. SetEntityData x1, MovePlayer[normal] x1, MoveEntityDelta x1
+  17582 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  17634 actor   .. MovePlayer[normal] x2
+  17634 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  17682 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  17732 actor   .. MovePlayer[normal] x1, MoveEntityDelta x2
+  17732 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  17785 actor   .. MovePlayer[normal] x2
+  17785 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  17838 actor   .. MovePlayer[normal] x1
+  17838 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  17889 actor   .. MoveEntityDelta x1, SyncWorldClocks x1
+  17889 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  17931 actor   .. MovePlayer[normal] x1
+  17931 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  17988 actor   .. MovePlayer[normal] x1
+  17988 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  18039 actor   .. MoveEntityDelta x1, MovePlayer[normal] x2
+  18039 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  18084 actor   .. MovePlayer[normal] x1
+  18084 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  18133 actor   .. MoveEntityDelta x1
+  18133 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  18188 actor   .. MoveEntityDelta x1, MovePlayer[normal] x1
+  18188 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  18236 actor   .. MovePlayer[normal] x1
+  18236 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  18289 actor   .. MovePlayer[normal] x1
+  18289 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  18335 actor   .. MovePlayer[normal] x1, MoveEntityDelta x2
+  18335 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  18384 actor   .. MovePlayer[normal] x1
+  18384 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  18431 actor   .. MovePlayer[normal] x1
+  18431 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  18483 actor   .. MoveEntityDelta x1, MovePlayer[normal] x1
+  18483 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  18530 actor   .. MovePlayer[normal] x1
+  18530 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  18585 actor   .. MovePlayer[normal] x1
+  18585 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  18634 actor   .. MoveEntityDelta x1, MovePlayer[normal] x1
+  18634 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  18685 actor   .. MovePlayer[normal] x1
+  18685 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  18734 actor   .. MovePlayer[normal] x1
+  18734 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  18781 actor   .. MoveEntityDelta x1, MovePlayer[normal] x1
+  18781 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  18831 actor   .. MovePlayer[normal] x2
+  18831 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  18884 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  18934 actor   .. MoveEntityDelta x2, MovePlayer[normal] x1
+  18934 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  18989 actor   .. MovePlayer[normal] x1
+  18989 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  19033 actor   .. MovePlayer[normal] x1
+  19033 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  19080 actor   .. MoveEntityDelta x1, MovePlayer[normal] x1
+  19081 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  19133 actor   .. MoveEntityDelta x1, MovePlayer[normal] x1
+  19133 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  19184 actor   .. MovePlayer[normal] x1
+  19184 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  19231 actor   .. MoveEntityDelta x1, MovePlayer[normal] x1
+  19231 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  19282 actor   .. MoveEntityDelta x1, MovePlayer[normal] x1
+  19282 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  19335 actor   .. MovePlayer[normal] x1
+  19335 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  19384 actor   .. MoveEntityDelta x1, MovePlayer[normal] x1
+  19384 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  19433 actor   .. MovePlayer[normal] x1
+  19433 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  19488 actor   .. MovePlayer[normal] x1
+  19488 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  19534 actor   .. MoveEntityDelta x2, MovePlayer[normal] x1
+  19534 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  19584 actor   .. MoveEntityDelta x1, MovePlayer[normal] x1
+  19584 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  19634 actor   .. MovePlayer[normal] x1
+  19634 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  19684 actor   .. MoveEntityDelta x1, MovePlayer[normal] x1
+  19684 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  19734 actor   .. MovePlayer[normal] x1
+  19734 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  19783 actor   .. MoveEntityDelta x1, MovePlayer[normal] x1
+  19783 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  19834 actor   .. MoveEntityDelta x1, MovePlayer[normal] x1
+  19834 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  19884 actor   .. MoveEntityDelta x1, MovePlayer[normal] x1
+  19884 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  19934 actor   .. MovePlayer[normal] x1
+  19934 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  19984 actor   .. MoveEntityDelta x1, MovePlayer[normal] x1
+  19984 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  20032 actor   .. MovePlayer[normal] x1
+  20032 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  20084 actor   .. MoveEntityDelta x1, MovePlayer[normal] x1
+  20084 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  20134 actor   .. MovePlayer[normal] x1
+  20134 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  20184 actor   .. MoveEntityDelta x1, MovePlayer[normal] x1
+  20184 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  20234 actor   .. MovePlayer[normal] x1
+  20234 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  20286 actor   .. MoveEntityDelta x1
+  20286 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  20377 actor   .. CurrentStructureFeature x1, MovePlayer[normal] x2
+  20377 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  20384 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  20434 actor   .. MoveEntityDelta x1, MovePlayer[normal] x2
+  20434 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  20484 actor   .. MoveEntityDelta x1, MovePlayer[normal] x1
+  20484 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  20534 actor   .. MovePlayer[normal] x1
+  20534 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  20584 actor   .. MovePlayer[normal] x1
+  20584 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  20631 actor   .. MoveEntityDelta x1
+  20631 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  20685 actor   .. MovePlayer[normal] x2, MoveEntityDelta x1
+  20685 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  20734 actor   .. MovePlayer[normal] x1
+  20734 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  20782 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  20835 actor   .. SetEntityData x1, MovePlayer[normal] x2
+  20835 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  20882 actor   .. MoveEntityDelta x1
+  20882 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  20930 actor   .. MovePlayer[normal] x1
+  20930 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  20984 actor   .. MovePlayer[normal] x2
+  20984 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  21034 actor   .. MovePlayer[normal] x1
+  21034 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  21084 actor   .. MoveEntityDelta x2
+  21084 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  21134 actor   .. MovePlayer[normal] x1
+  21134 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  21184 actor   .. MovePlayer[normal] x1
+  21184 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  21238 actor   .. MovePlayer[normal] x1
+  21238 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  21280 actor   .. MoveEntityDelta x2, MovePlayer[normal] x2
+  21280 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  21334 actor   .. MovePlayer[normal] x1
+  21334 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  21385 actor   .. CurrentStructureFeature x1
+  21385 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  21434 actor   .. MovePlayer[normal] x1
+  21434 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  21485 actor   .. MoveEntityDelta x1, MovePlayer[normal] x1
+  21485 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  21533 actor   .. MovePlayer[normal] x1
+  21533 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  21587 actor   .. MovePlayer[normal] x1
+  21587 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  21633 actor   .. MovePlayer[normal] x1
+  21633 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  21680 actor   .. MoveEntityDelta x1, MovePlayer[normal] x1
+  21681 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  21739 actor   .. MovePlayer[normal] x1, MoveEntityDelta x1
+  21739 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  21784 actor   .. MovePlayer[normal] x1
+  21784 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  21830 actor   .. MoveEntityDelta x1, MovePlayer[normal] x1
+  21830 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  21882 actor   .. MovePlayer[normal] x1, MoveEntityDelta x1
+  21882 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  21931 actor   .. MoveEntityDelta x1, MovePlayer[normal] x1
+  21931 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  21984 actor   .. MoveEntityDelta x1, MovePlayer[normal] x1
+  21984 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  22032 actor   .. MovePlayer[normal] x1
+  22032 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  22088 actor   .. MovePlayer[normal] x1
+  22088 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  22131 actor   .. MoveEntityDelta x1, MovePlayer[normal] x1
+  22131 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  22180 actor   .. MoveEntityDelta x1, MovePlayer[normal] x1
+  22180 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  22231 actor   .. MovePlayer[normal] x1
+  22231 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  22284 actor   .. MovePlayer[normal] x1
+  22284 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  22334 actor   .. MoveEntityDelta x2, MovePlayer[normal] x1
+  22334 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  22384 actor   .. SetEntityData x1, MoveEntityDelta x2, MovePlayer[normal] x1
+  22384 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  22434 actor   .. SetEntityData x1, MoveEntityDelta x1, MovePlayer[normal] x1
+  22434 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  22484 actor   .. MovePlayer[normal] x1
+  22484 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  22534 actor   .. MoveEntityDelta x2, MovePlayer[normal] x1
+  22534 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  22584 actor   .. MoveEntityDelta x1, MovePlayer[normal] x1
+  22585 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  22634 actor   .. MoveEntityDelta x1, MovePlayer[normal] x1
+  22634 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  22684 actor   .. MovePlayer[normal] x1
+  22684 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  22734 actor   .. MoveEntityDelta x1, MovePlayer[normal] x1
+  22734 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  22784 actor   .. MoveEntityDelta x1, MovePlayer[normal] x1
+  22784 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  22834 actor   .. MovePlayer[normal] x1
+  22834 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  22884 actor   .. MovePlayer[normal] x1
+  22884 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  22885 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967294 }
+  22885 watcher RemoveEntity RemoveEntity { entity_id_self: -4294967294 }
+  22934 actor   .. MoveEntityDelta x1
+  22934 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  22984 actor   .. MoveEntityDelta x2, MovePlayer[normal] x1
+  22984 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  23034 actor   .. MoveEntityDelta x1, MovePlayer[normal] x2
+  23035 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  23087 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  23136 actor   .. MoveEntityDelta x2, MovePlayer[normal] x2
+  23136 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  23185 actor   .. MoveEntityDelta x1, MovePlayer[normal] x1
+  23185 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  23234 actor   .. MoveEntityDelta x1, MovePlayer[normal] x1
+  23234 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  23290 actor   .. MovePlayer[normal] x1
+  23290 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  23334 actor   .. MoveEntityDelta x1, MovePlayer[normal] x1
+  23334 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  23382 actor   .. MoveEntityDelta x1
+  23382 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  23434 actor   .. MoveEntityDelta x1, MovePlayer[normal] x2
+  23434 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  23489 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  23534 actor   .. MovePlayer[normal] x1, MoveEntityDelta x1
+  23534 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  23584 actor   .. MoveEntityDelta x1, MovePlayer[normal] x2
+  23584 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  23634 actor   .. MovePlayer[normal] x1
+  23634 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  23681 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  23734 actor   .. MoveEntityDelta x1, MovePlayer[normal] x2
+  23734 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  23781 actor   .. MoveEntityDelta x1
+  23781 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  23833 actor   .. MovePlayer[normal] x1
+  23833 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  23886 actor   .. MovePlayer[normal] x1
+  23886 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  23932 actor   .. MoveEntityDelta x1, MovePlayer[normal] x1
+  23932 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  23983 actor   .. MovePlayer[normal] x1, MoveEntityDelta x1
+  23983 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  24034 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  24084 actor   .. MovePlayer[normal] x2
+  24084 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  24139 actor   .. MoveEntityDelta x2, MovePlayer[normal] x1
+  24139 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  24181 actor   .. MoveEntityDelta x1, MovePlayer[normal] x1
+  24181 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  24233 actor   .. MovePlayer[normal] x1
+  24233 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  24285 actor   .. MovePlayer[normal] x1
+  24285 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  24338 actor   .. CurrentStructureFeature x1, MoveEntityDelta x2, MovePlayer[normal] x1
+  24338 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  24384 actor   .. MoveEntityDelta x1, MovePlayer[normal] x1
+  24384 actor   NetworkChunkPublisherUpdate NetworkChunkPublisherUpdate { coordinates: BlockCoordinates { x: 0, y: -59, z: 0 }, radius: 128, saved_chunks: [] }
+  24411 actor   .. MovePlayer[normal] x1
+## !where at 24411
+## at Some([8.5, -60.0, 8.5]) dimension 0
+probe exit 0

@@ -1,0 +1,243 @@
+# BDS hardcoded jigsaw data (bastion remnant); scripts/jigsaw_extract/jbastion.py
+r bastion_housing_units rb=polished_blackstone_bricks@0.3|*|cracked_polished_blackstone_bricks;rb=blackstone@0.0001|*|air;rb=blackstone@0.01|*|gilded_blackstone
+r bastion_hoglin_stable_generic rb=polished_blackstone_bricks@0.1|*|cracked_polished_blackstone_bricks;rb=blackstone@0.0001|*|air;rb=blackstone@0.01|*|gilded_blackstone
+r bastion_hoglin_stable_sidewall rb=chiseled_polished_blackstone@0.5|*|air;rb=gold_block@0.1|*|cracked_polished_blackstone_bricks;rb=blackstone@0.01|*|gilded_blackstone
+r bastion_treasure_room_roof rb=polished_blackstone_bricks@0.3|*|cracked_polished_blackstone_bricks;rb=polished_blackstone_bricks@0.15|*|air;rb=polished_blackstone_bricks@0.3|*|blackstone
+r bastion_treasure_room_generic rb=polished_blackstone_bricks@0.35|*|cracked_polished_blackstone_bricks;rb=chiseled_polished_blackstone@0.1|*|cracked_polished_blackstone_bricks;rb=blackstone@0.01|*|gilded_blackstone
+r bastion_treasure_room_highwall rb=polished_blackstone_bricks@0.01|*|air;rb=polished_blackstone_bricks@0.5|*|cracked_polished_blackstone_bricks;rb=polished_blackstone_bricks@0.3|*|blackstone
+r bastion_treasure_room_highrampart rb=gold_block@0.3|*|cracked_polished_blackstone_bricks;b=polished_blackstone_bricks|*|lp=y:0.0:0.05:0:100|air
+r bastion_treasure_room_bottomrampart rb=magma@0.75|*|cracked_polished_blackstone_bricks;rb=cracked_polished_blackstone_bricks@0.15|*|polished_blackstone_bricks;rb=blackstone@0.01|*|gilded_blackstone
+r bastion_bridge_rampart rb=polished_blackstone_bricks@0.4|*|cracked_polished_blackstone_bricks;rb=blackstone@0.01|*|cracked_polished_blackstone_bricks;rb=polished_blackstone_bricks@0.0001|*|air;rb=blackstone@0.0001|*|air;rb=gold_block@0.3|*|cracked_polished_blackstone_bricks;rb=blackstone@0.01|*|gilded_blackstone
+r bastion_bridge_generic rb=polished_blackstone_bricks@0.3|*|cracked_polished_blackstone_bricks;rb=blackstone@0.0001|*|air;rb=gold_block@0.3|*|cracked_polished_blackstone_bricks;rb=blackstone@0.01|*|gilded_blackstone
+r bastion_bridge_entrance_replacement rb=chiseled_polished_blackstone@0.5|*|air;rb=gold_block@0.6|*|cracked_polished_blackstone_bricks;rb=blackstone@0.01|*|gilded_blackstone
+r bastion_bridge_bridge rb=polished_blackstone_bricks@0.3|*|cracked_polished_blackstone_bricks;rb=blackstone@0.0001|*|air
+e bridge_starting_pieces_entrance_base t bastion/bridge/starting_pieces/entrance_base bastion_bridge_generic 0 3 -
+e bridge_starting_pieces_entrance t bastion/bridge/starting_pieces/entrance bastion_bridge_entrance_replacement 0 0 -
+e bridge_starting_pieces_entrance_face t bastion/bridge/starting_pieces/entrance_face bastion_bridge_generic 0 0 -
+e bridge_bridge_pieces_bridge t bastion/bridge/bridge_pieces/bridge bastion_bridge_bridge 0 0 -
+e bridge_legs_leg_0 t bastion/bridge/legs/leg_0 bastion_bridge_generic 0 0 -
+e bridge_legs_leg_1 t bastion/bridge/legs/leg_1 bastion_bridge_generic 0 0 -
+e bridge_walls_wall_base_0 t bastion/bridge/walls/wall_base_0 bastion_bridge_rampart 0 0 -
+e bridge_walls_wall_base_1 t bastion/bridge/walls/wall_base_1 bastion_bridge_rampart 0 0 -
+e bridge_ramparts_rampart_0 t bastion/bridge/ramparts/rampart_0 bastion_bridge_rampart 0 0 -
+e bridge_ramparts_rampart_1 t bastion/bridge/ramparts/rampart_1 bastion_bridge_rampart 0 0 -
+e bridge_rampart_plates_plate_0 t bastion/bridge/rampart_plates/plate_0 bastion_bridge_rampart 0 0 -
+e bridge_connectors_back_bridge_top t bastion/bridge/connectors/back_bridge_top bastion_bridge_generic 0 0 -
+e bridge_connectors_back_bridge_bottom t bastion/bridge/connectors/back_bridge_bottom bastion_bridge_generic 0 0 -
+e bastion_treasure_big_air_full t bastion/treasure/big_air_full bastion_treasure_room_generic 0 3 -
+e bastion_treasure_bases_lava_basin t bastion/treasure/bases/lava_basin bastion_treasure_room_generic 0 0 -
+e bastion_treasure_stairs_lower_stairs t bastion/treasure/stairs/lower_stairs bastion_treasure_room_generic 0 0 -
+e bastion_treasure_bases_centers_center_0 t bastion/treasure/bases/centers__center_0 bastion_treasure_room_generic 0 0 -
+e bastion_treasure_bases_centers_center_1 t bastion/treasure/bases/centers__center_1 bastion_treasure_room_generic 0 0 -
+e bastion_treasure_bases_centers_center_2 t bastion/treasure/bases/centers__center_2 bastion_treasure_room_generic 0 0 -
+e bastion_treasure_bases_centers_center_3 t bastion/treasure/bases/centers__center_3 bastion_treasure_room_generic 0 0 -
+e bastion_treasure_brains_center_brain t bastion/treasure/brains/center_brain bastion_treasure_room_generic 0 0 -
+e bastion_treasure_walls_lava_wall t bastion/treasure/walls/lava_wall bastion_treasure_room_generic 0 0 -
+e bastion_treasure_walls_entrance_wall t bastion/treasure/walls/entrance_wall bastion_treasure_room_highwall 0 0 -
+e bastion_treasure_walls_outer_top_corner t bastion/treasure/walls/outer__top_corner bastion_treasure_room_highwall 0 0 -
+e bastion_treasure_walls_outer_mid_corner t bastion/treasure/walls/outer__mid_corner bastion_treasure_room_highwall 0 0 -
+e bastion_treasure_walls_outer_bottom_corner t bastion/treasure/walls/outer__bottom_corner bastion_treasure_room_highwall 0 0 -
+e bastion_treasure_walls_outer_outer_wall t bastion/treasure/walls/outer__outer_wall bastion_treasure_room_highwall 0 0 -
+e bastion_treasure_walls_outer_medium_outer_wall t bastion/treasure/walls/outer__medium_outer_wall bastion_treasure_room_highwall 0 0 -
+e bastion_treasure_walls_outer_tall_outer_wall t bastion/treasure/walls/outer__tall_outer_wall bastion_treasure_room_highwall 0 0 -
+e bastion_treasure_walls_bottom_wall_0 t bastion/treasure/walls/bottom__wall_0 bastion_treasure_room_generic 0 0 -
+e bastion_treasure_walls_bottom_wall_1 t bastion/treasure/walls/bottom__wall_1 bastion_treasure_room_generic 0 0 -
+e bastion_treasure_walls_bottom_wall_2 t bastion/treasure/walls/bottom__wall_2 bastion_treasure_room_generic 0 0 -
+e bastion_treasure_walls_bottom_wall_3 t bastion/treasure/walls/bottom__wall_3 bastion_treasure_room_generic 0 0 -
+e bastion_treasure_walls_mid_wall_0 t bastion/treasure/walls/mid__wall_0 bastion_treasure_room_generic 0 0 -
+e bastion_treasure_walls_mid_wall_1 t bastion/treasure/walls/mid__wall_1 bastion_treasure_room_generic 0 0 -
+e bastion_treasure_walls_mid_wall_2 t bastion/treasure/walls/mid__wall_2 bastion_treasure_room_generic 0 0 -
+e bastion_treasure_walls_top_main_entrance t bastion/treasure/walls/top__main_entrance bastion_treasure_room_generic 0 0 -
+e bastion_treasure_walls_top_wall_0 t bastion/treasure/walls/top__wall_0 bastion_treasure_room_generic 0 0 -
+e bastion_treasure_walls_top_wall_1 t bastion/treasure/walls/top__wall_1 bastion_treasure_room_generic 0 0 -
+e bastion_treasure_connectors_center_to_wall_middle t bastion/treasure/connectors/center_to_wall_middle bastion_treasure_room_generic 0 0 -
+e bastion_treasure_connectors_center_to_wall_top t bastion/treasure/connectors/center_to_wall_top bastion_treasure_room_generic 0 0 -
+e bastion_treasure_connectors_center_to_wall_top_entrance t bastion/treasure/connectors/center_to_wall_top_entrance bastion_treasure_room_generic 0 0 -
+e bastion_treasure_entrances_entrance_0 t bastion/treasure/entrances/entrance_0 bastion_treasure_room_generic 0 0 -
+e bastion_treasure_ramparts_mid_wall_main t bastion/treasure/ramparts/mid_wall_main bastion_treasure_room_generic 0 0 -
+e bastion_treasure_ramparts_mid_wall_side t bastion/treasure/ramparts/mid_wall_side bastion_treasure_room_generic 0 0 -
+e bastion_treasure_ramparts_bottom_wall_0 t bastion/treasure/ramparts/bottom_wall_0 bastion_treasure_room_bottomrampart 0 0 -
+e bastion_treasure_ramparts_top_wall t bastion/treasure/ramparts/top_wall bastion_treasure_room_highrampart 0 0 -
+e bastion_treasure_ramparts_lava_basin_side t bastion/treasure/ramparts/lava_basin_side bastion_treasure_room_generic 0 0 -
+e bastion_treasure_ramparts_lava_basin_main t bastion/treasure/ramparts/lava_basin_main bastion_treasure_room_generic 0 0 -
+e bastion_treasure_corners_bottom_corner_0 t bastion/treasure/corners/bottom__corner_0 bastion_treasure_room_generic 0 0 -
+e bastion_treasure_corners_bottom_corner_1 t bastion/treasure/corners/bottom__corner_1 bastion_treasure_room_generic 0 0 -
+e bastion_treasure_corners_edges_bottom t bastion/treasure/corners/edges__bottom bastion_treasure_room_highwall 0 0 -
+e bastion_treasure_corners_edges_middle t bastion/treasure/corners/edges__middle bastion_treasure_room_highwall 0 0 -
+e bastion_treasure_corners_edges_top t bastion/treasure/corners/edges__top bastion_treasure_room_highwall 0 0 -
+e bastion_treasure_corners_middle_corner_0 t bastion/treasure/corners/middle__corner_0 bastion_treasure_room_generic 0 0 -
+e bastion_treasure_corners_middle_corner_1 t bastion/treasure/corners/middle__corner_1 bastion_treasure_room_generic 0 0 -
+e bastion_treasure_corners_top_corner_0 t bastion/treasure/corners/top__corner_0 bastion_treasure_room_generic 0 0 -
+e bastion_treasure_corners_top_corner_1 t bastion/treasure/corners/top__corner_1 bastion_treasure_room_generic 0 0 -
+e bastion_treasure_extensions_empty t bastion/treasure/extensions/empty bastion_treasure_room_generic 0 0 -
+e bastion_treasure_extensions_fire_room t bastion/treasure/extensions/fire_room bastion_treasure_room_generic 0 0 -
+e bastion_treasure_extensions_large_bridge_0 t bastion/treasure/extensions/large_bridge_0 bastion_treasure_room_generic 0 0 -
+e bastion_treasure_extensions_large_bridge_1 t bastion/treasure/extensions/large_bridge_1 bastion_treasure_room_generic 0 0 -
+e bastion_treasure_extensions_large_bridge_2 t bastion/treasure/extensions/large_bridge_2 bastion_treasure_room_generic 0 0 -
+e bastion_treasure_extensions_large_bridge_3 t bastion/treasure/extensions/large_bridge_3 bastion_treasure_room_generic 0 0 -
+e bastion_treasure_extensions_roofed_bridge t bastion/treasure/extensions/roofed_bridge bastion_treasure_room_generic 0 0 -
+e bastion_treasure_extensions_small_bridge_0 t bastion/treasure/extensions/small_bridge_0 bastion_treasure_room_generic 0 0 -
+e bastion_treasure_extensions_small_bridge_1 t bastion/treasure/extensions/small_bridge_1 bastion_treasure_room_generic 0 0 -
+e bastion_treasure_extensions_small_bridge_2 t bastion/treasure/extensions/small_bridge_2 bastion_treasure_room_generic 0 0 -
+e bastion_treasure_extensions_small_bridge_3 t bastion/treasure/extensions/small_bridge_3 bastion_treasure_room_generic 0 0 -
+e bastion_treasure_extensions_house_0 t bastion/treasure/extensions/house_0 bastion_treasure_room_generic 0 0 -
+e bastion_treasure_extensions_house_1 t bastion/treasure/extensions/house_1 bastion_treasure_room_generic 0 0 -
+e bastion_treasure_roofs_wall_roof t bastion/treasure/roofs/wall_roof bastion_treasure_room_roof 0 0 -
+e bastion_treasure_roofs_corner_roof t bastion/treasure/roofs/corner_roof bastion_treasure_room_roof 0 0 -
+e bastion_treasure_roofs_center_roof t bastion/treasure/roofs/center_roof bastion_treasure_room_roof 0 0 -
+e bastion_units_air_base t bastion/units/air_base bastion_housing_units 0 3 -
+e bastion_units_center_pieces_center_0 t bastion/units/center_pieces/center_0 bastion_housing_units 0 0 -
+e bastion_units_center_pieces_center_1 t bastion/units/center_pieces/center_1 bastion_housing_units 0 0 -
+e bastion_units_center_pieces_center_2 t bastion/units/center_pieces/center_2 bastion_housing_units 0 0 -
+e bastion_units_pathways_pathway_0 t bastion/units/pathways/pathway_0 bastion_housing_units 0 0 -
+e bastion_units_pathways_pathway_wall_0 t bastion/units/pathways/pathway_wall_0 bastion_housing_units 0 0 -
+e bastion_units_walls_wall_base t bastion/units/walls/wall_base bastion_housing_units 0 0 -
+e bastion_units_walls_connected_wall t bastion/units/walls/connected_wall bastion_housing_units 0 0 -
+e bastion_units_stages_stage_0_0 t bastion/units/stages/stage_0_0 bastion_housing_units 0 0 -
+e bastion_units_stages_stage_0_1 t bastion/units/stages/stage_0_1 bastion_housing_units 0 0 -
+e bastion_units_stages_stage_0_2 t bastion/units/stages/stage_0_2 bastion_housing_units 0 0 -
+e bastion_units_stages_stage_0_3 t bastion/units/stages/stage_0_3 bastion_housing_units 0 0 -
+e bastion_units_stages_stage_1_0 t bastion/units/stages/stage_1_0 bastion_housing_units 0 0 -
+e bastion_units_stages_stage_1_1 t bastion/units/stages/stage_1_1 bastion_housing_units 0 0 -
+e bastion_units_stages_stage_1_2 t bastion/units/stages/stage_1_2 bastion_housing_units 0 0 -
+e bastion_units_stages_stage_1_3 t bastion/units/stages/stage_1_3 bastion_housing_units 0 0 -
+e bastion_units_stages_rot_stage_1_0 t bastion/units/stages/rot__stage_1_0 bastion_housing_units 0 0 -
+e bastion_units_stages_stage_2_0 t bastion/units/stages/stage_2_0 bastion_housing_units 0 0 -
+e bastion_units_stages_stage_2_1 t bastion/units/stages/stage_2_1 bastion_housing_units 0 0 -
+e bastion_units_stages_stage_3_0 t bastion/units/stages/stage_3_0 bastion_housing_units 0 0 -
+e bastion_units_stages_stage_3_1 t bastion/units/stages/stage_3_1 bastion_housing_units 0 0 -
+e bastion_units_stages_stage_3_2 t bastion/units/stages/stage_3_2 bastion_housing_units 0 0 -
+e bastion_units_stages_stage_3_3 t bastion/units/stages/stage_3_3 bastion_housing_units 0 0 -
+e bastion_units_fillers_stage_0 t bastion/units/fillers/stage_0 bastion_housing_units 0 0 -
+e bastion_units_edges_edge_0 t bastion/units/edges/edge_0 bastion_housing_units 0 0 -
+e bastion_units_wall_units_unit_0 t bastion/units/wall_units/unit_0 bastion_housing_units 0 0 -
+e bastion_units_wall_units_edge_0_large t bastion/units/wall_units/edge_0_large bastion_housing_units 0 0 -
+e bastion_units_ramparts_ramparts_0 t bastion/units/ramparts/ramparts_0 bastion_housing_units 0 0 -
+e bastion_units_ramparts_ramparts_1 t bastion/units/ramparts/ramparts_1 bastion_housing_units 0 0 -
+e bastion_units_ramparts_ramparts_2 t bastion/units/ramparts/ramparts_2 bastion_housing_units 0 0 -
+e bastion_units_rampart_plates_plate_0 t bastion/units/rampart_plates/plate_0 bastion_housing_units 0 0 -
+e bastion_hoglin_stable_air_base t bastion/hoglin_stable/air_base - 0 3 -
+e bastion_hoglin_stable_starting_pieces_starting_stairs_0 t bastion/hoglin_stable/starting_pieces/starting_stairs_0 bastion_hoglin_stable_generic 0 0 -
+e bastion_hoglin_stable_starting_pieces_starting_stairs_1 t bastion/hoglin_stable/starting_pieces/starting_stairs_1 bastion_hoglin_stable_generic 0 0 -
+e bastion_hoglin_stable_starting_pieces_starting_stairs_2 t bastion/hoglin_stable/starting_pieces/starting_stairs_2 bastion_hoglin_stable_generic 0 0 -
+e bastion_hoglin_stable_starting_pieces_starting_stairs_3 t bastion/hoglin_stable/starting_pieces/starting_stairs_3 bastion_hoglin_stable_generic 0 0 -
+e bastion_hoglin_stable_starting_pieces_starting_stairs_4 t bastion/hoglin_stable/starting_pieces/starting_stairs_4 bastion_hoglin_stable_generic 0 0 -
+e bastion_hoglin_stable_starting_pieces_stairs_0_mirrored t bastion/hoglin_stable/starting_pieces/stairs_0_mirrored bastion_hoglin_stable_generic 0 0 -
+e bastion_hoglin_stable_starting_pieces_stairs_1_mirrored t bastion/hoglin_stable/starting_pieces/stairs_1_mirrored bastion_hoglin_stable_generic 0 0 -
+e bastion_hoglin_stable_starting_pieces_stairs_2_mirrored t bastion/hoglin_stable/starting_pieces/stairs_2_mirrored bastion_hoglin_stable_generic 0 0 -
+e bastion_hoglin_stable_starting_pieces_stairs_3_mirrored t bastion/hoglin_stable/starting_pieces/stairs_3_mirrored bastion_hoglin_stable_generic 0 0 -
+e bastion_hoglin_stable_starting_pieces_stairs_4_mirrored t bastion/hoglin_stable/starting_pieces/stairs_4_mirrored bastion_hoglin_stable_generic 0 0 -
+e bastion_hoglin_stable_walls_wall_base t bastion/hoglin_stable/walls/wall_base bastion_hoglin_stable_generic 0 0 -
+e bastion_hoglin_stable_walls_side_wall_0 t bastion/hoglin_stable/walls/side_wall_0 bastion_hoglin_stable_sidewall 0 0 -
+e bastion_hoglin_stable_walls_side_wall_1 t bastion/hoglin_stable/walls/side_wall_1 bastion_hoglin_stable_sidewall 0 0 -
+e bastion_hoglin_stable_stairs_stairs_1_0 t bastion/hoglin_stable/stairs/stairs_1_0 bastion_hoglin_stable_generic 0 0 -
+e bastion_hoglin_stable_stairs_stairs_1_1 t bastion/hoglin_stable/stairs/stairs_1_1 bastion_hoglin_stable_generic 0 0 -
+e bastion_hoglin_stable_stairs_stairs_1_2 t bastion/hoglin_stable/stairs/stairs_1_2 bastion_hoglin_stable_generic 0 0 -
+e bastion_hoglin_stable_stairs_stairs_1_3 t bastion/hoglin_stable/stairs/stairs_1_3 bastion_hoglin_stable_generic 0 0 -
+e bastion_hoglin_stable_stairs_stairs_1_4 t bastion/hoglin_stable/stairs/stairs_1_4 bastion_hoglin_stable_generic 0 0 -
+e bastion_hoglin_stable_stairs_stairs_2_0 t bastion/hoglin_stable/stairs/stairs_2_0 bastion_hoglin_stable_generic 0 0 -
+e bastion_hoglin_stable_stairs_stairs_2_1 t bastion/hoglin_stable/stairs/stairs_2_1 bastion_hoglin_stable_generic 0 0 -
+e bastion_hoglin_stable_stairs_stairs_2_2 t bastion/hoglin_stable/stairs/stairs_2_2 bastion_hoglin_stable_generic 0 0 -
+e bastion_hoglin_stable_stairs_stairs_2_3 t bastion/hoglin_stable/stairs/stairs_2_3 bastion_hoglin_stable_generic 0 0 -
+e bastion_hoglin_stable_stairs_stairs_2_4 t bastion/hoglin_stable/stairs/stairs_2_4 bastion_hoglin_stable_generic 0 0 -
+e bastion_hoglin_stable_stairs_stairs_3_0 t bastion/hoglin_stable/stairs/stairs_3_0 bastion_hoglin_stable_generic 0 0 -
+e bastion_hoglin_stable_stairs_stairs_3_1 t bastion/hoglin_stable/stairs/stairs_3_1 bastion_hoglin_stable_generic 0 0 -
+e bastion_hoglin_stable_stairs_stairs_3_2 t bastion/hoglin_stable/stairs/stairs_3_2 bastion_hoglin_stable_generic 0 0 -
+e bastion_hoglin_stable_stairs_stairs_3_3 t bastion/hoglin_stable/stairs/stairs_3_3 bastion_hoglin_stable_generic 0 0 -
+e bastion_hoglin_stable_stairs_stairs_3_4 t bastion/hoglin_stable/stairs/stairs_3_4 bastion_hoglin_stable_generic 0 0 -
+e bastion_hoglin_stable_small_stables_inner_0 t bastion/hoglin_stable/small_stables/inner_0 bastion_hoglin_stable_generic 0 0 -
+e bastion_hoglin_stable_small_stables_inner_1 t bastion/hoglin_stable/small_stables/inner_1 bastion_hoglin_stable_generic 0 0 -
+e bastion_hoglin_stable_small_stables_inner_2 t bastion/hoglin_stable/small_stables/inner_2 bastion_hoglin_stable_generic 0 0 -
+e bastion_hoglin_stable_small_stables_inner_3 t bastion/hoglin_stable/small_stables/inner_3 bastion_hoglin_stable_generic 0 0 -
+e bastion_hoglin_stable_small_stables_inner_4 t bastion/hoglin_stable/small_stables/inner_4 bastion_hoglin_stable_generic 0 0 -
+e bastion_hoglin_stable_small_stables_outer_0 t bastion/hoglin_stable/small_stables/outer_0 bastion_hoglin_stable_generic 0 0 -
+e bastion_hoglin_stable_small_stables_outer_1 t bastion/hoglin_stable/small_stables/outer_1 bastion_hoglin_stable_generic 0 0 -
+e bastion_hoglin_stable_small_stables_outer_2 t bastion/hoglin_stable/small_stables/outer_2 bastion_hoglin_stable_generic 0 0 -
+e bastion_hoglin_stable_small_stables_outer_3 t bastion/hoglin_stable/small_stables/outer_3 bastion_hoglin_stable_generic 0 0 -
+e bastion_hoglin_stable_small_stables_outer_4 t bastion/hoglin_stable/small_stables/outer_4 bastion_hoglin_stable_generic 0 0 -
+e bastion_hoglin_stable_large_stables_inner_0 t bastion/hoglin_stable/large_stables/inner_0 bastion_hoglin_stable_generic 0 0 -
+e bastion_hoglin_stable_large_stables_inner_1 t bastion/hoglin_stable/large_stables/inner_1 bastion_hoglin_stable_generic 0 0 -
+e bastion_hoglin_stable_large_stables_inner_2 t bastion/hoglin_stable/large_stables/inner_2 bastion_hoglin_stable_generic 0 0 -
+e bastion_hoglin_stable_large_stables_inner_3 t bastion/hoglin_stable/large_stables/inner_3 bastion_hoglin_stable_generic 0 0 -
+e bastion_hoglin_stable_large_stables_outer_0 t bastion/hoglin_stable/large_stables/outer_0 bastion_hoglin_stable_generic 0 0 -
+e bastion_hoglin_stable_large_stables_outer_1 t bastion/hoglin_stable/large_stables/outer_1 bastion_hoglin_stable_generic 0 0 -
+e bastion_hoglin_stable_large_stables_outer_2 t bastion/hoglin_stable/large_stables/outer_2 bastion_hoglin_stable_generic 0 0 -
+e bastion_hoglin_stable_large_stables_outer_3 t bastion/hoglin_stable/large_stables/outer_3 bastion_hoglin_stable_generic 0 0 -
+e bastion_hoglin_stable_posts_stair_post t bastion/hoglin_stable/posts/stair_post bastion_hoglin_stable_generic 0 0 -
+e bastion_hoglin_stable_posts_end_post t bastion/hoglin_stable/posts/end_post bastion_hoglin_stable_generic 0 0 -
+e bastion_hoglin_stable_ramparts_ramparts_1 t bastion/hoglin_stable/ramparts/ramparts_1 bastion_hoglin_stable_generic 0 0 -
+e bastion_hoglin_stable_ramparts_ramparts_2 t bastion/hoglin_stable/ramparts/ramparts_2 bastion_hoglin_stable_generic 0 0 -
+e bastion_hoglin_stable_ramparts_ramparts_3 t bastion/hoglin_stable/ramparts/ramparts_3 bastion_hoglin_stable_generic 0 0 -
+e bastion_hoglin_stable_rampart_plates_rampart_plate_1 t bastion/hoglin_stable/rampart_plates/rampart_plate_1 bastion_hoglin_stable_generic 0 0 -
+e bastion_hoglin_stable_connectors_end_post_connector t bastion/hoglin_stable/connectors/end_post_connector bastion_hoglin_stable_generic 0 0 -
+e bastion_blocks_air t bastion/blocks/air - 0 0 -
+e bastion_blocks_gold t bastion/blocks/gold - 0 0 -
+e bastion_mobs_sword_piglin t bastion/mobs/sword_piglin - 0 0 -
+e bastion_mobs_crossbow_piglin t bastion/mobs/crossbow_piglin - 0 0 -
+e bastion_mobs_hoglin t bastion/mobs/hoglin - 0 0 -
+e bastion_mobs_melee_piglin t bastion/mobs/melee_piglin - 0 0 -
+e bastion_mobs_melee_piglin_always t bastion/mobs/melee_piglin_always - 0 0 -
+e bastion_mobs_empty t bastion/mobs/empty - 0 0 -
+p bastion/bridge/start - bridge_starting_pieces_entrance_base*1
+p bastion/bridge/starting_pieces - bridge_starting_pieces_entrance*1 bridge_starting_pieces_entrance_face*1
+p bastion/bridge/bridge_pieces - bridge_bridge_pieces_bridge*1
+p bastion/bridge/legs - bridge_legs_leg_0*1 bridge_legs_leg_1*1
+p bastion/bridge/walls - bridge_walls_wall_base_0*1 bridge_walls_wall_base_1*1
+p bastion/bridge/ramparts - bridge_ramparts_rampart_0*1 bridge_ramparts_rampart_1*1
+p bastion/bridge/rampart_plates - bridge_rampart_plates_plate_0*1
+p bastion/bridge/connectors - bridge_connectors_back_bridge_top*1 bridge_connectors_back_bridge_bottom*1
+p bastion/treasure/starters - bastion_treasure_big_air_full*1
+p bastion/treasure/bases - bastion_treasure_bases_lava_basin*1
+p bastion/treasure/stairs - bastion_treasure_stairs_lower_stairs*1
+p bastion/treasure/bases/centers - bastion_treasure_bases_centers_center_0*1 bastion_treasure_bases_centers_center_1*1 bastion_treasure_bases_centers_center_2*1 bastion_treasure_bases_centers_center_3*1
+p bastion/treasure/brains - bastion_treasure_brains_center_brain*1
+p bastion/treasure/walls - bastion_treasure_walls_lava_wall*1 bastion_treasure_walls_entrance_wall*1
+p bastion/treasure/walls/outer - bastion_treasure_walls_outer_top_corner*1 bastion_treasure_walls_outer_mid_corner*1 bastion_treasure_walls_outer_bottom_corner*1 bastion_treasure_walls_outer_outer_wall*1 bastion_treasure_walls_outer_medium_outer_wall*1 bastion_treasure_walls_outer_tall_outer_wall*1
+p bastion/treasure/walls/bottom - bastion_treasure_walls_bottom_wall_0*1 bastion_treasure_walls_bottom_wall_1*1 bastion_treasure_walls_bottom_wall_2*1 bastion_treasure_walls_bottom_wall_3*1
+p bastion/treasure/walls/mid - bastion_treasure_walls_mid_wall_0*1 bastion_treasure_walls_mid_wall_1*1 bastion_treasure_walls_mid_wall_2*1
+p bastion/treasure/walls/top - bastion_treasure_walls_top_main_entrance*1 bastion_treasure_walls_top_wall_0*1 bastion_treasure_walls_top_wall_1*1
+p bastion/treasure/connectors - bastion_treasure_connectors_center_to_wall_middle*1 bastion_treasure_connectors_center_to_wall_top*1 bastion_treasure_connectors_center_to_wall_top_entrance*1
+p bastion/treasure/entrances - bastion_treasure_entrances_entrance_0*1
+p bastion/treasure/ramparts - bastion_treasure_ramparts_mid_wall_main*1 bastion_treasure_ramparts_mid_wall_side*1 bastion_treasure_ramparts_bottom_wall_0*1 bastion_treasure_ramparts_top_wall*1 bastion_treasure_ramparts_lava_basin_side*1 bastion_treasure_ramparts_lava_basin_main*1
+p bastion/treasure/corners/bottom - bastion_treasure_corners_bottom_corner_0*1 bastion_treasure_corners_bottom_corner_1*1
+p bastion/treasure/corners/edges - bastion_treasure_corners_edges_bottom*1 bastion_treasure_corners_edges_middle*1 bastion_treasure_corners_edges_top*1
+p bastion/treasure/corners/middle - bastion_treasure_corners_middle_corner_0*1 bastion_treasure_corners_middle_corner_1*1
+p bastion/treasure/corners/top - bastion_treasure_corners_top_corner_0*1 bastion_treasure_corners_top_corner_1*1
+p bastion/treasure/extensions/large_pool - bastion_treasure_extensions_empty*3 bastion_treasure_extensions_fire_room*1 bastion_treasure_extensions_large_bridge_0*1 bastion_treasure_extensions_large_bridge_1*1 bastion_treasure_extensions_large_bridge_2*1 bastion_treasure_extensions_large_bridge_3*1 bastion_treasure_extensions_roofed_bridge*1
+p bastion/treasure/extensions/small_pool - bastion_treasure_extensions_empty*2 bastion_treasure_extensions_fire_room*1 bastion_treasure_extensions_small_bridge_0*1 bastion_treasure_extensions_small_bridge_1*1 bastion_treasure_extensions_small_bridge_2*1 bastion_treasure_extensions_small_bridge_3*1
+p bastion/treasure/extensions/houses empty bastion_treasure_extensions_house_0*1 bastion_treasure_extensions_house_1*1
+p bastion/treasure/roofs - bastion_treasure_roofs_wall_roof*1 bastion_treasure_roofs_corner_roof*1 bastion_treasure_roofs_center_roof*1
+p bastion/units/air_base - bastion_units_air_base*1
+p bastion/units/center_pieces - bastion_units_center_pieces_center_0*1 bastion_units_center_pieces_center_1*1 bastion_units_center_pieces_center_2*1
+p bastion/units/pathways - bastion_units_pathways_pathway_0*1 bastion_units_pathways_pathway_wall_0*1
+p bastion/units/walls/wall_bases - bastion_units_walls_wall_base*1 bastion_units_walls_connected_wall*1
+p bastion/units/stages/stage_0 - bastion_units_stages_stage_0_0*1 bastion_units_stages_stage_0_1*1 bastion_units_stages_stage_0_2*1 bastion_units_stages_stage_0_3*1
+p bastion/units/stages/stage_1 - bastion_units_stages_stage_1_0*1 bastion_units_stages_stage_1_1*1 bastion_units_stages_stage_1_2*1 bastion_units_stages_stage_1_3*1
+p bastion/units/stages/rot/stage_1 - bastion_units_stages_rot_stage_1_0*1
+p bastion/units/stages/stage_2 - bastion_units_stages_stage_2_0*1 bastion_units_stages_stage_2_1*1
+p bastion/units/stages/stage_3 - bastion_units_stages_stage_3_0*1 bastion_units_stages_stage_3_1*1 bastion_units_stages_stage_3_2*1 bastion_units_stages_stage_3_3*1
+p bastion/units/fillers/stage_0 - bastion_units_fillers_stage_0*1
+p bastion/units/edges - bastion_units_edges_edge_0*1
+p bastion/units/wall_units - bastion_units_wall_units_unit_0*1
+p bastion/units/edge_wall_units - bastion_units_wall_units_edge_0_large*1
+p bastion/units/ramparts - bastion_units_ramparts_ramparts_0*1 bastion_units_ramparts_ramparts_1*1 bastion_units_ramparts_ramparts_2*1
+p bastion/units/large_ramparts - bastion_units_ramparts_ramparts_0*1
+p bastion/units/rampart_plates - bastion_units_rampart_plates_plate_0*1
+p bastion/hoglin_stable/origin - bastion_hoglin_stable_air_base*1
+p bastion/hoglin_stable/starting_pieces - bastion_hoglin_stable_starting_pieces_starting_stairs_0*1 bastion_hoglin_stable_starting_pieces_starting_stairs_1*1 bastion_hoglin_stable_starting_pieces_starting_stairs_2*1 bastion_hoglin_stable_starting_pieces_starting_stairs_3*1 bastion_hoglin_stable_starting_pieces_starting_stairs_4*1
+p bastion/hoglin_stable/mirrored_starting_pieces empty bastion_hoglin_stable_starting_pieces_stairs_0_mirrored*1 bastion_hoglin_stable_starting_pieces_stairs_1_mirrored*1 bastion_hoglin_stable_starting_pieces_stairs_2_mirrored*1 bastion_hoglin_stable_starting_pieces_stairs_3_mirrored*1 bastion_hoglin_stable_starting_pieces_stairs_4_mirrored*1
+p bastion/hoglin_stable/wall_bases - bastion_hoglin_stable_walls_wall_base*1
+p bastion/hoglin_stable/walls - bastion_hoglin_stable_walls_side_wall_0*1 bastion_hoglin_stable_walls_side_wall_1*1
+p bastion/hoglin_stable/stairs - bastion_hoglin_stable_stairs_stairs_1_0*1 bastion_hoglin_stable_stairs_stairs_1_1*1 bastion_hoglin_stable_stairs_stairs_1_2*1 bastion_hoglin_stable_stairs_stairs_1_3*1 bastion_hoglin_stable_stairs_stairs_1_4*1 bastion_hoglin_stable_stairs_stairs_2_0*1 bastion_hoglin_stable_stairs_stairs_2_1*1 bastion_hoglin_stable_stairs_stairs_2_2*1 bastion_hoglin_stable_stairs_stairs_2_3*1 bastion_hoglin_stable_stairs_stairs_2_4*1 bastion_hoglin_stable_stairs_stairs_3_0*1 bastion_hoglin_stable_stairs_stairs_3_1*1 bastion_hoglin_stable_stairs_stairs_3_2*1 bastion_hoglin_stable_stairs_stairs_3_3*1 bastion_hoglin_stable_stairs_stairs_3_4*1
+p bastion/hoglin_stable/small_stables/inner - bastion_hoglin_stable_small_stables_inner_0*1 bastion_hoglin_stable_small_stables_inner_1*1 bastion_hoglin_stable_small_stables_inner_2*1 bastion_hoglin_stable_small_stables_inner_3*1 bastion_hoglin_stable_small_stables_inner_4*1
+p bastion/hoglin_stable/small_stables/outer - bastion_hoglin_stable_small_stables_outer_0*1 bastion_hoglin_stable_small_stables_outer_1*1 bastion_hoglin_stable_small_stables_outer_2*1 bastion_hoglin_stable_small_stables_outer_3*1 bastion_hoglin_stable_small_stables_outer_4*1
+p bastion/hoglin_stable/large_stables/inner - bastion_hoglin_stable_large_stables_inner_0*1 bastion_hoglin_stable_large_stables_inner_1*1 bastion_hoglin_stable_large_stables_inner_2*1 bastion_hoglin_stable_large_stables_inner_3*1
+p bastion/hoglin_stable/large_stables/outer - bastion_hoglin_stable_large_stables_outer_0*1 bastion_hoglin_stable_large_stables_outer_1*1 bastion_hoglin_stable_large_stables_outer_2*1 bastion_hoglin_stable_large_stables_outer_3*1
+p bastion/hoglin_stable/posts - bastion_hoglin_stable_posts_stair_post*1 bastion_hoglin_stable_posts_end_post*1
+p bastion/hoglin_stable/ramparts - bastion_hoglin_stable_ramparts_ramparts_1*1 bastion_hoglin_stable_ramparts_ramparts_2*1 bastion_hoglin_stable_ramparts_ramparts_3*1
+p bastion/hoglin_stable/rampart_plates - bastion_hoglin_stable_rampart_plates_rampart_plate_1*1
+p bastion/hoglin_stable/connectors - bastion_hoglin_stable_connectors_end_post_connector*1
+p bastion/mobs/piglin - bastion_mobs_melee_piglin*1 bastion_mobs_sword_piglin*4 bastion_mobs_crossbow_piglin*4 bastion_mobs_empty*1
+p bastion/mobs/piglin_melee - bastion_mobs_melee_piglin_always*1 bastion_mobs_melee_piglin*5 bastion_mobs_sword_piglin*1
+p bastion/mobs/hoglin - bastion_mobs_hoglin*2 bastion_mobs_empty*1
+p bastion/blocks/gold - bastion_blocks_air*3 bastion_blocks_gold*1

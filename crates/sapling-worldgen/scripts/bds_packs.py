@@ -19,6 +19,10 @@ IDS = {
     'dripstone_caves': 188, 'stony_peaks': 189, 'deep_dark': 190, 'mangrove_swamp': 191, 'cherry_grove': 192,
     'pale_garden': 193, 'sulfur_caves': 194,
 }
+# The Nether's (src/nether/biome.rs).
+NETHER_IDS = {'hell': 8, 'soulsand_valley': 178, 'crimson_forest': 179, 'warped_forest': 180, 'basalt_deltas': 181}
+# The End's one (src/end/mod.rs): rules with no biome filter run there too.
+END_IDS = {'the_end': 9}
 
 
 def brarchive(path):

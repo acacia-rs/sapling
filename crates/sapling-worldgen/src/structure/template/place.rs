@@ -63,11 +63,13 @@ pub struct Placement {
     pub bb: BoundingBox,
     /// Pool element processors, drawing from the integrity generator.
     pub rules: &'static [Rule],
+    /// What the rules' position tests measure from (settings +0x20).
+    pub pivot: (i32, i32, i32),
 }
 
 impl Placement {
     pub fn new(rotation: Rotation, bb: BoundingBox) -> Self {
-        Self { rotation, integrity: 1.0, seed: 0, ignore_jigsaws: true, marker_air: false, flood: false, ignore: None, wood: None, mirror: false, bb, rules: &[] }
+        Self { rotation, integrity: 1.0, seed: 0, ignore_jigsaws: true, marker_air: false, flood: false, ignore: None, wood: None, mirror: false, bb, rules: &[], pivot: (0, 0, 0) }
     }
 
     /// The template positions BDS writes at `origin`, each with its block and template block
@@ -116,7 +118,8 @@ impl Placement {
             if let Some(random) = random.as_mut()
                 && !self.rules.is_empty()
             {
-                block = apply(self.rules, block, world(at.0, at.1, at.2), random);
+                let from_pivot = (at.0 - self.pivot.0, at.1 - self.pivot.1, at.2 - self.pivot.2);
+                block = apply(self.rules, block, world(at.0, at.1, at.2), from_pivot, random);
             }
             if self.flood && at.1 < SEA_LEVEL {
                 block = if block == Block::Air { Block::Water } else { soaked(block) };

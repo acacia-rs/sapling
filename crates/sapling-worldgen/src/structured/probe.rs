@@ -1,5 +1,6 @@
 //! Probes of the structure stage: post-processes run again, outside the caches, to trace or change them.
 
+use super::Stage;
 use crate::block::Block;
 use crate::random::{LargeFeatureSeed, Mt19937};
 use crate::structure::trace;

@@ -94,6 +94,18 @@ impl ShardCtx<'_> {
         self.backend.transfer(player, world)
     }
 
+    /// The dimension of the world a player on this shard is in: 0 overworld, 1 nether, 2 end.
+    pub fn dimension_of(&self, player: PlayerId) -> Option<i32> {
+        self.backend.dimension_of(player)
+    }
+
+    /// Puts a player's feet at `feet` in `dimension` of its world (its overworld's Nether, or
+    /// back), changing dimension as BDS does; in its own dimension this is a teleport. False for
+    /// a world without that dimension and a player who is not here or is being moved.
+    pub fn travel(&mut self, player: PlayerId, dimension: i32, feet: [f32; 3]) -> bool {
+        self.backend.travel(player, dimension, feet)
+    }
+
     /// Shows `message` in the chat of every player in one world, on whichever shard it is.
     pub fn broadcast_in(&mut self, world: &str, message: &str) {
         self.backend.broadcast_in(world, message);
@@ -143,4 +155,10 @@ pub trait WorldBackend {
     fn reset_world(&mut self, name: &str) -> bool;
     fn game_rules(&self) -> Vec<(String, RuleValue)>;
     fn set_game_rule(&mut self, name: &str, value: RuleValue) -> bool;
+    fn dimension_of(&self, _player: PlayerId) -> Option<i32> {
+        None
+    }
+    fn travel(&mut self, _player: PlayerId, _dimension: i32, _feet: [f32; 3]) -> bool {
+        false
+    }
 }

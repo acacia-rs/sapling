@@ -137,6 +137,10 @@ impl LargeFeatureSeed {
         Self { level_seed, x_factor, z_factor }
     }
 
+    pub fn level_seed(&self) -> u32 {
+        self.level_seed
+    }
+
     pub fn chunk(&self, chunk_x: i32, chunk_z: i32) -> u32 {
         (chunk_z.wrapping_mul(self.z_factor).wrapping_add(chunk_x.wrapping_mul(self.x_factor))) as u32 ^ self.level_seed
     }

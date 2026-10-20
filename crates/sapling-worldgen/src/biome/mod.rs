@@ -54,6 +54,12 @@ impl ChunkBiomes {
         u32::from(self.ids[block_index(x, y, z)])
     }
 
+    /// One biome per column (`z * 16 + x`) at every y, as the Nether fills them.
+    pub(crate) fn from_columns(chunk: (i32, i32), columns: &[u8; 256]) -> Self {
+        let ids = (0..16 * 16 * HEIGHT).map(|i| columns[i % 256]).collect();
+        Self { chunk, ids, corners: None }
+    }
+
     /// The lattice point (x, y, z in lattice units) the block took its biome from; None inside a
     /// lattice cell of one biome, where no corner was picked, and for biomes not traced.
     pub fn lattice_point(&self, x: usize, y: i32, z: usize) -> Option<[i32; 3]> {

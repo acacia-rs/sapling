@@ -4,6 +4,7 @@
 
 mod aquatic;
 mod attach;
+mod basalt;
 mod blob;
 mod coral;
 mod cave;
@@ -12,9 +13,11 @@ mod data;
 mod decorate;
 mod disk;
 mod element;
+pub mod end;
 mod flowers;
 mod fossil;
 mod freeze;
+mod fungus;
 mod geode;
 pub(crate) mod grow;
 mod ice_spike;
@@ -31,6 +34,9 @@ mod lush;
 mod molang;
 mod monster_room;
 mod multiface;
+mod nether;
+mod nether_fossil;
+mod nether_vines;
 mod order;
 mod ore;
 mod pale;
@@ -55,6 +61,7 @@ mod view_connect;
 use std::collections::HashMap;
 use std::sync::Arc;
 
+use crate::Dimension;
 use crate::biome::ChunkBiomes;
 use crate::cache::SourceCache;
 use crate::random::{LargeFeatureSeed, Mt19937};
@@ -91,6 +98,8 @@ pub struct Inputs<'a> {
     pub in_structure: &'a dyn Fn([i32; 3]) -> bool,
     /// Whether a mineshaft's or a stronghold's box holds the block (multiface.rs).
     pub in_tunnels: &'a dyn Fn([i32; 3]) -> bool,
+    /// The End's island height per chunk (end.rs); None elsewhere.
+    pub island: Option<end::IslandHeight<'a>>,
 }
 
 pub(crate) fn query_noise(x: f32, z: f32) -> f32 {
@@ -124,14 +133,20 @@ pub struct Features {
     /// Off, multiface features keep their pushed face order, which agrees better with BDS's racy loads
     /// (docs/research/worldgen-bds-order.md, "One engine").
     pub canonical_shuffles: bool,
+    /// Whose `decorationPostProcessChunk` a source runs.
+    dimension: Dimension,
 }
 
 impl Features {
     /// Seeded like the carvers: `(x*a + z*b) ^ seed` on the low 32 bits of the world seed.
     /// Caches sized for `areas` areas generated at once (`OverworldGenerator::with_areas`).
     pub fn new(world_seed: i64, areas: usize) -> Self {
+        Self::for_dimension(world_seed, areas, Dimension::Overworld)
+    }
+
+    pub fn for_dimension(world_seed: i64, areas: usize, dimension: Dimension) -> Self {
         let (writes, before, light) = (SourceCache::new(areas * CACHE_LIMIT), SourceCache::new(areas * BEFORE_LIMIT), SourceCache::new(areas * CACHE_LIMIT));
-        Self { seed: LargeFeatureSeed::new(world_seed as u32), writes, before, light, track_reach: false, order: None, thread: None, canonical_shuffles: false }
+        Self { seed: LargeFeatureSeed::new(world_seed as u32), writes, before, light, track_reach: false, order: None, thread: None, canonical_shuffles: false, dimension }
     }
 
     /// Decorates in `order`, every source over all earlier ones; `thread`: the seed of the one worker's
@@ -250,14 +265,32 @@ impl Features {
             let doubt = |x: i32, z: i32| self.doubt_before((x, z), limit, inputs);
             view.reach = self.track_reach.then(|| reach::Reach::new(&doubt));
             view.thread_random = self.thread_before(source, limit);
+            view.ultrawarm = self.dimension == Dimension::Nether;
             let mut post_process = Mt19937::new(self.seed.chunk(source.0, source.1));
-            lake::lava_lake(&mut post_process, source, &mut view);
-            monster_room::monster_rooms(post_process, source, &mut view);
-            decorate::decorate_chunk(&self.seed, source, inputs, &mut view);
-            freeze::freeze_chunk(source, &(inputs.biomes)(source.0, source.1), &mut view);
-            let inherited: Vec<_> = self.sources_before(source, limit).into_iter().flat_map(|n| self.source_writes(n, inputs).routed_to(source).collect::<Vec<_>>()).collect();
-            let structure = liquid::structure_magma(&(inputs.loaded)(source.0, source.1), source);
-            liquid::settle(&mut view, &structure, &inherited);
+            match self.dimension {
+                Dimension::Overworld => {
+                    lake::lava_lake(&mut post_process, source, &mut view);
+                    monster_room::monster_rooms(post_process, source, &mut view);
+                    decorate::decorate_chunk(&self.seed, source, inputs, &mut view, false);
+                    freeze::freeze_chunk(source, &(inputs.biomes)(source.0, source.1), &mut view);
+                    let inherited: Vec<_> = self.sources_before(source, limit).into_iter().flat_map(|n| self.source_writes(n, inputs).routed_to(source).collect::<Vec<_>>()).collect();
+                    let structure = liquid::structure_magma(&(inputs.loaded)(source.0, source.1), source);
+                    liquid::settle(&mut view, &structure, &inherited);
+                }
+                Dimension::Nether => {
+                    view.ticks = ticks::TickQueue::chunk();
+                    nether::before_rules(&mut post_process, source, &mut view);
+                    let mut rest = decorate::decorate_chunk(&self.seed, source, inputs, &mut view, true);
+                    nether::after_rules(&mut rest, source, &mut view);
+                    liquid::instatick(&mut view);
+                }
+                // The rules run first here (the unfiltered ones reach the_end); nothing written schedules a tick.
+                Dimension::End => {
+                    let island = inputs.island.expect("the End's island height");
+                    let mut rest = decorate::decorate_chunk(&self.seed, source, inputs, &mut view, true);
+                    end::decorate(&mut rest, source, &mut view, &crate::end::spikes(self.seed.level_seed()), island);
+                }
+            }
             view.into_writes()
         })
     }

@@ -38,6 +38,14 @@ impl Order {
     pub fn is_canonical(&self) -> bool {
         matches!(self, Order::Canonical)
     }
+
+    /// None: a chunk the logged run did not post-process.
+    pub fn rank(&self, chunk: (i32, i32)) -> Option<Rank> {
+        match self {
+            Order::Canonical => Some((chunk.0.rem_euclid(3) * 3 + chunk.1.rem_euclid(3)) as Rank),
+            Order::Logged(logged) => logged.ranks.get(&chunk).copied(),
+        }
+    }
 }
 
 impl Logged {
@@ -80,14 +88,6 @@ impl Logged {
 }
 
 impl OverworldGenerator {
-    /// None: a chunk the logged run did not post-process.
-    pub(super) fn structure_rank(&self, chunk: (i32, i32)) -> Option<Rank> {
-        match &self.structure_order {
-            Order::Canonical => Some((chunk.0.rem_euclid(3) * 3 + chunk.1.rem_euclid(3)) as Rank),
-            Order::Logged(logged) => logged.ranks.get(&chunk).copied(),
-        }
-    }
-
     /// `starts`, the mineshafts reaching `chunk`, in the order the start map lists them while the chunk
     /// is post-processed: the logged run's, else descending x then z.
     pub(super) fn shaft_order(&self, chunk: (i32, i32), starts: &mut [(i32, i32)]) {

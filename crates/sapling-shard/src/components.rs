@@ -38,6 +38,8 @@ pub(crate) enum Stage {
     PacksInfo,
     /// ResourcePackStack sent; waiting for the client to accept it.
     PackStack,
+    /// Packs done; StartGame waits for what storage keeps of the player (join.rs).
+    Packed,
     /// StartGame and the registries sent; waiting for the client's chunk radius.
     StartGame,
     /// Radius known; chunks and PlayStatus(PlayerSpawn) go out on this tick.

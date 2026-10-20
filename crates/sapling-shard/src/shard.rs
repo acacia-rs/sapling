@@ -8,23 +8,16 @@ use acacia_proto::Packet;
 use acacia_proto::packets::PlayerAuthInput;
 use bevy_ecs::prelude::*;
 use bevy_ecs::schedule::SingleThreadedExecutor;
-use sapling_api::{Command, Commands, Handler, Player, PlayerId, Priority};
+use sapling_api::{Command, Commands, Handler, Priority};
 use sapling_net::{ConnId, Inbox, NetEvent, Outbox, VerifiedLogin};
 
-use crate::blobs::BlobCache;
-use crate::commands::{Access, CommandLists};
-use crate::components::{Arrivals, Conn, DefaultLayer, Identity, Layer, Mode, Net, NetId, Outgoing, PacketQueues, Players, Position, Settings, Stage, Tick};
+use crate::commands::CommandLists;
+use crate::components::{Arrivals, Conn, DefaultLayer, Layer, Mode, Net, Outgoing, PacketQueues, Players, Settings, Stage, Tick};
 use crate::config::{IDS_PER_SHARD, ShardConfig, TICK};
-use crate::forms::Forms;
 use crate::handoff::{Handoffs, Link, Peers, ShardMsg};
-use crate::hud::Hud;
-use crate::movement::Motion;
 use crate::player::{Carried, Local};
 use crate::plugins::{PluginState, Plugins};
-use crate::roster::{Elsewhere, Profile};
-use crate::view::View;
-use crate::vitals::Vitals;
-use crate::inventory::Inventory;
+use crate::roster::Elsewhere;
 use crate::visibility::ToViewers;
 use crate::worlds::{Atlas, Changes, Scope};
 use crate::{actors, arenas, blobs, blocks, chunks, clock, commands, entities, handlers, handoff, inventory, join, mobs, movement, ticking, visibility, worlds};
@@ -107,6 +100,12 @@ impl Shard {
     /// name this shard already has or knows of another shard.
     pub fn add_world(&mut self, name: &str, level: sapling_world::World, spawn: [f32; 3]) -> bool {
         worlds::add(&mut self.world, name, level, spawn).is_some()
+    }
+
+    /// Adds `level`, the Nether or another dimension, to the world `of` of this shard, named
+    /// `<of>:nether` (worlds::add_dimension); false when that cannot be.
+    pub fn add_dimension(&mut self, of: &str, level: sapling_world::World) -> bool {
+        worlds::add_dimension(&mut self.world, of, level).is_some()
     }
 
     /// Adds a template handlers make worlds from (`ShardCtx::create_world`), with where players
@@ -230,29 +229,9 @@ impl Shard {
         let mut players = self.world.resource_mut::<Players>();
         let net_id = players.next_net_id;
         players.next_net_id += 1;
-        let identity = &login.identity;
-        tracing::debug!(conn = conn.get(), name = %identity.display_name, authenticated = login.authenticated, "login verified");
-        let player = Player { id: PlayerId(conn.get()), name: identity.display_name.clone(), uuid: identity.uuid, xuid: identity.xuid.clone() };
-        let mut out = Outgoing::default();
-        out.push(&join::resource_packs_info());
-        let carried = Carried {
-            conn: Conn(conn),
-            identity: Identity(player),
-            net_id: NetId(net_id),
-            position: Position { feet: spawn, yaw: 0.0, pitch: 0.0, head_yaw: 0.0, on_ground: true },
-            stage: Stage::PacksInfo,
-            view: View::default(),
-            blobs: BlobCache::default(),
-            motion: Motion::default(),
-            profile: Profile::new(login, net_id),
-            out,
-            access: Access::default(),
-            mode,
-            forms: Forms::default(),
-            hud: Hud::default(),
-            inventory: Inventory::default(),
-            vitals: Vitals::default(),
-        };
+        tracing::debug!(conn = conn.get(), name = %login.identity.display_name, authenticated = login.authenticated, "login verified");
+        let dimension = self.world.get::<Layer>(layer).map_or(0, |level| level.world.dimension());
+        let carried = Carried::joining(conn, login, net_id, spawn, mode, dimension);
         let entity = self.world.spawn((carried, Local::in_layer(layer))).id();
         self.world.resource_mut::<Players>().by_conn.insert(conn, entity);
     }

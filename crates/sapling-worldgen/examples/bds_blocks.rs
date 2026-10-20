@@ -19,10 +19,12 @@ fn main() {
     let states = std::env::var_os("BDS_STATES").is_some();
     // BDS_LIST=<substring> prints every cell whose block name contains it instead.
     let list = std::env::var("BDS_LIST").ok();
+    // BDS_DIM=<id>: 1 the Nether, 2 the End.
+    let dimension = std::env::var("BDS_DIM").map_or(0, |d| d.parse().expect("a dimension id"));
     let mut counts: BTreeMap<String, (u32, (i32, i32, i32))> = BTreeMap::new();
     for x in n[0]..=n[3] {
         for z in n[2]..=n[5] {
-            let chunk = primary.load_column(ChunkKey::new(x.div_euclid(16), z.div_euclid(16), 0)).unwrap().expect("chunk").chunk;
+            let chunk = primary.load_column(ChunkKey::new(x.div_euclid(16), z.div_euclid(16), dimension)).unwrap().expect("chunk").chunk;
             for y in n[1]..=n[4] {
                 let cell = bds_cell(&primary, &chunk, x, y, z);
                 if list.as_deref().is_some_and(|wanted| cell.block.contains(wanted)) {

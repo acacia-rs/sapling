@@ -19,7 +19,7 @@ use sapling_api::{BlockPos, GameMode};
 use sapling_data::EYE_HEIGHT;
 
 use crate::blocks::{bed_head, set, with_property};
-use crate::components::{InLayer, Layer, Mode, NetId, Outgoing, PacketQueues, Position, in_world};
+use crate::components::{InLayer, Layer, Mode, NetId, Outgoing, Position, in_world};
 use crate::movement;
 use crate::visibility::ToViewers;
 
@@ -38,8 +38,9 @@ const LYING_YAW: [f32; 4] = [0.0, 90.0, 180.0, -90.0];
 const DEEP_SLEEP: u64 = 100;
 /// The sleeping bit of `PlayerFlags`.
 const SLEEPING_FLAG: i8 = 0x02;
-/// The `LevelEventGeneric` that counts the sleepers.
-const SLEEPING_PLAYERS: u32 = 9801;
+/// The `LevelEventGeneric` that counts the sleepers (9801). The game zigzags the id where
+/// acacia-proto writes a plain varint, so it goes as 19602: BDS's bytes (bds-dims-travel.txt).
+const SLEEPING_PLAYERS: u32 = 9801 << 1;
 
 /// A player lying in a bed.
 #[derive(Component)]
@@ -114,14 +115,16 @@ fn counted(world: &mut World, layer: Entity) -> usize {
     players.iter().filter(counts).count()
 }
 
-/// Tells a world's players how many of how many sleep (BDS `updateSleepingPlayerList`).
-fn tell_sleepers(world: &mut World, layer: Entity) {
+/// Tells a world's players, and those in its other dimensions, how many of how many sleep (BDS
+/// `updateSleepingPlayerList`, also sent on a dimension change).
+pub(crate) fn tell_sleepers(world: &mut World, layer: Entity) {
     let mut sleepers = world.query::<&Sleeping>();
     let sleeping = sleepers.iter(world).filter(|sleeping| sleeping.layer == layer).count();
     let required = counted(world, layer).max(1);
     let int = |name: &str, value: usize| Nbt { name: name.to_owned(), value: NbtValue::Int(value as i32) };
     let nbt = vec![int("ableToSleep", 1), int("overworldPlayerCount", required), int("sleepingPlayerCount", sleeping)];
-    crate::chat::send_to_layer(world, layer, &sapling_net::encode(&LevelEventGeneric { event_id: SLEEPING_PLAYERS, nbt }));
+    let told = sapling_net::encode(&LevelEventGeneric { event_id: SLEEPING_PLAYERS, nbt });
+    crate::dimensions::members(world, layer).into_iter().for_each(|member| crate::chat::send_to_layer(world, member, &told));
 }
 
 /// Shows a player's lying down or getting up to it and to those who see it.
@@ -231,10 +234,9 @@ fn bed_is_there(world: &World, sleeping: &Sleeping) -> bool {
 
 /// Gets up the players whose client left its bed, whose bed went or whose night ended; counts
 /// the others' sleep, and skips the night of a world whose players have all slept long enough.
-pub(crate) fn tick(world: &mut World) {
-    let left_bed = world.resource_mut::<PacketQueues>().take::<PlayerAction>();
-    for (player, _) in left_bed.into_iter().filter(|(_, action)| action.action == Action::StopSleeping) {
-        wake(world, player);
+pub(crate) fn tick(world: &mut World, actions: &[(Entity, PlayerAction)]) {
+    for (player, _) in actions.iter().filter(|(_, action)| action.action == Action::StopSleeping) {
+        wake(world, *player);
     }
     let mut sleepers = world.query::<(Entity, &mut Sleeping)>();
     let mut awake = Vec::new();

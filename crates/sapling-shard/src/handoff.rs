@@ -7,19 +7,16 @@
 use std::collections::HashMap;
 use std::sync::mpsc::{Receiver, Sender, channel};
 
-use acacia_proto::packets::RemoveEntity;
 use bevy_ecs::prelude::*;
 use bytes::Bytes;
 use sapling_net::{ConnId, NetEvent};
 use sapling_world::PlayerData;
 
-use crate::components::{Conn, DefaultLayer, InLayer, Net, NetId, Outgoing, Players, Stage, Tick};
-use crate::mobs::SeesMobs;
+use crate::components::{Conn, DefaultLayer, InLayer, Net, NetId, Players, Stage, Tick};
 use crate::player::{Carried, Local};
 use crate::roster::{self, Elsewhere, ListEntry};
-use crate::visibility::Sees;
 use crate::worlds::{self, Atlas, Change, Changes, Place};
-use crate::{containers, inventory};
+use crate::{containers, inventory, visibility};
 
 /// Ticks a shard waits for the answer to a transfer before it gives up.
 const ANSWER_TICKS: u64 = 100;
@@ -148,11 +145,7 @@ fn fail(world: &mut World, conn: ConnId, to: String) {
 fn commit(world: &mut World, entity: Entity, shard: usize, to: String) {
     let (Some(layer), Some(id)) = (world.get::<InLayer>(entity).map(|l| l.0), world.get::<NetId>(entity).map(|id| id.0)) else { return };
     let from = worlds::name_of(world, layer);
-    let seen: Vec<u64> = world.get_mut::<Sees>(entity).map(|mut sees| std::mem::take(&mut sees.0)).unwrap_or_default().into_iter().filter_map(|other| world.get::<NetId>(other).map(|id| id.0)).collect();
-    let mobs = world.get_mut::<SeesMobs>(entity).map(|mut sees| sees.take_ids()).unwrap_or_default();
-    if let Some(mut out) = world.get_mut::<Outgoing>(entity) {
-        seen.into_iter().chain(mobs).for_each(|id| out.push(&RemoveEntity { entity_id_self: id as i64 }));
-    }
+    visibility::forget_seen(world, entity);
     let listing = roster::list_entry(world, entity);
     // The items go along; this shard's storage keeps what they were when the player left it.
     containers::close(world, entity);

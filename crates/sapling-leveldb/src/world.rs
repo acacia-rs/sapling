@@ -151,6 +151,15 @@ impl LevelDbWorld {
         self.db.put(&player::key(id), &player.encode(self.registry()))
     }
 
+    /// The portal records of every dimension (portals.rs); none in a world without the key.
+    pub fn load_portals(&self) -> Result<Vec<crate::PortalRecord>, Error> {
+        self.db.get(crate::portals::KEY)?.map_or(Ok(Vec::new()), |record| crate::decode_portals(&record))
+    }
+
+    pub fn store_portals(&self, portals: &[crate::PortalRecord]) -> Result<(), Error> {
+        self.db.put(crate::portals::KEY, &crate::encode_portals(portals))
+    }
+
     /// Writes what was stored out as a table file and replaces `level.dat` with `level`. A world
     /// opened in memory flushes its copy and leaves the folder alone.
     pub fn flush(&self, level: &LevelDat) -> Result<(), Error> {

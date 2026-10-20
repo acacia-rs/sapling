@@ -5,17 +5,19 @@
 mod avx2;
 mod blended;
 mod improved;
+mod legacy;
 mod normal;
 mod perlin;
 mod simplex;
 #[cfg(test)]
 mod tests;
 
-pub use blended::{BlendedNoise, CELL_COLUMNS, CELL_COUNT, CELL_ROWS, CellGrid};
+pub use blended::{BlendedNoise, CELL_COLUMNS, CELL_COUNT, CELL_ROWS, CellGrid, fill_grid, fill_square_grid, legacy_octaves};
 pub use improved::{ImprovedNoise, LANES, Lanes};
+pub use legacy::LegacyPerlin;
 pub use normal::NormalNoise;
 pub use perlin::PerlinNoise;
-pub use simplex::SimplexNoise;
+pub use simplex::{SimplexNoise, legacy_simplex_octaves};
 
 use crate::random::{Mt19937, Xoroshiro};
 

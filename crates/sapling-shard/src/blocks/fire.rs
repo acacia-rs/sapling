@@ -113,10 +113,14 @@ fn is_rained_on(level: &Level, [x, y, z]: BlockPos) -> bool {
 /// Lights the free cell `into`, over a solid block or by one that burns; false where no fire can be.
 pub(super) fn light(world: &mut World, layer: Entity, into: BlockPos) -> bool {
     let [x, y, z] = into;
-    let Some(level) = level(world, layer) else { return false };
-    if !is_air(level, into) || !stands(level, into) {
+    if !level(world, layer).is_some_and(|level| is_air(level, into)) {
         return false;
     }
+    // In a whole frame the spark lights a portal and no fire is placed (BDS 141a79fc0).
+    if super::portals::kindle(world, layer, into) {
+        return true;
+    }
+    let Some(level) = level(world, layer).filter(|level| stands(level, into)) else { return false };
     let is_soul = name_at(level, [x, y - 1, z]).is_some_and(|under| under.contains("soul_"));
     let Some(fire) = send::resolve(level.registry(), &Block::new(if is_soul { SOUL_FIRE } else { FIRE })) else { return false };
     send::set(world, layer, into, fire);

@@ -2,8 +2,12 @@
 //! the part each shard makes anew. A component missing from both is missing after a transfer.
 
 use bevy_ecs::prelude::*;
+use sapling_api::{Player, PlayerId};
+use sapling_net::{ConnId, VerifiedLogin};
 
 use crate::blobs::BlobCache;
+use crate::dimensions::ClientDimension;
+use crate::join;
 use crate::blocks::Breaking;
 use crate::inventory::Inventory;
 use crate::chunks::SectionBacklog;
@@ -40,6 +44,36 @@ pub(crate) struct Carried {
     /// The player's items, under the stack ids its client knows them by.
     pub inventory: Inventory,
     pub vitals: Vitals,
+    pub dimension: ClientDimension,
+}
+
+impl Carried {
+    /// A player who logged in, with the first packet of its join queued.
+    pub fn joining(conn: ConnId, login: &VerifiedLogin, net_id: u64, spawn: [f32; 3], mode: Mode, dimension: i32) -> Self {
+        let identity = &login.identity;
+        let player = Player { id: PlayerId(conn.get()), name: identity.display_name.clone(), uuid: identity.uuid, xuid: identity.xuid.clone() };
+        let mut out = Outgoing::default();
+        out.push(&join::resource_packs_info());
+        Self {
+            conn: Conn(conn),
+            identity: Identity(player),
+            net_id: NetId(net_id),
+            position: Position { feet: spawn, yaw: 0.0, pitch: 0.0, head_yaw: 0.0, on_ground: true },
+            stage: Stage::PacksInfo,
+            view: View::default(),
+            blobs: BlobCache::default(),
+            motion: Motion::default(),
+            profile: Profile::new(login, net_id),
+            out,
+            access: Access::default(),
+            mode,
+            forms: Forms::default(),
+            hud: Hud::default(),
+            inventory: Inventory::default(),
+            vitals: Vitals::default(),
+            dimension: ClientDimension::new(dimension),
+        }
+    }
 }
 
 /// What a shard knows of a player only while it is there.

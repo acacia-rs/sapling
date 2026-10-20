@@ -4,6 +4,8 @@
 //! (`World::arena`) read until they write (docs/DESIGN.md "Arenas").
 
 mod column;
+#[cfg(test)]
+mod dimension_tests;
 mod folder;
 mod generated;
 mod load_queue;
@@ -25,12 +27,13 @@ pub use generated::Generated;
 pub use sapling_leveldb::LevelDat;
 pub use players::PlayerLoad;
 pub use sapling_leveldb::{
+    PortalRecord,
     Actor, BlockEntity, ItemStack, Painting, PlayerData, State as ActorState, actors, block_of_hash, container_items, falling_block, harmed_actor, moved_actor, new_actor, new_falling_block_actor, new_item_actor, new_orb_actor, orb_value, new_block_entity, stored_actors,
     with_container_items,
 };
 pub use storage::{Level, LevelDbStorage, MemoryStorage, StorageError, StoredColumn, WorldStorage};
 pub use template::Template;
-pub use world::World;
+pub use world::{END, NETHER, OVERWORLD, World};
 
 /// Chunk palettes carry block-state hashes, not runtime ids; StartGame must say the same.
 pub const NETWORK_IDS_ARE_HASHES: bool = true;

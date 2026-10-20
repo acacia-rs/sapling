@@ -14,7 +14,10 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import biome_expr  # noqa: E402
-from bds_packs import IDS, biomes, documents, load_order  # noqa: E402
+from bds_packs import END_IDS, IDS as OVERWORLD_IDS, NETHER_IDS, biomes, documents, load_order  # noqa: E402
+
+# Rules attach to biomes by tag at load, the Nether's too.
+IDS = {**OVERWORLD_IDS, **NETHER_IDS, **END_IDS}
 from features_data import Features, distribution  # noqa: E402
 
 # What a sapling grows (docs/research/saplings.md), emitted though no rule or pool reaches it.

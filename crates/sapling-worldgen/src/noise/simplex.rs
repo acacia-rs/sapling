@@ -19,6 +19,17 @@ const GRADIENTS: [[f32; 3]; 12] = [
     [0.0, -1.0, -1.0],
 ];
 
+/// `count` octaves as `PerlinSimplexNoise`'s legacy constructor (145e2a730 with its flag clear) draws them off an
+/// MT: three `nextFloat`s taken z, y, x, then the permutation.
+pub fn legacy_simplex_octaves(random: &mut crate::random::Mt19937, count: usize) -> Vec<SimplexNoise> {
+    (0..count)
+        .map(|_| {
+            let [a, b, c] = [random.next_float(), random.next_float(), random.next_float()];
+            SimplexNoise::new([c, b, a], |bound| random.next_int(bound as i32))
+        })
+        .collect()
+}
+
 #[derive(Debug, Clone)]
 pub struct SimplexNoise {
     /// Added to the coordinates by the caller.

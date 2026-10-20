@@ -47,6 +47,12 @@ pub fn settle(view: &mut View, structure: &[[i32; 3]], inherited: &[Routed]) {
     }
     super::trace::line(|| format!("{:?} liquid queue", view.chunk()));
     view.ticks.acquire(generated);
+    instatick(view);
+}
+
+/// The instatick generations over what the decoration queued, then the chunk queues' game ticks. The Nether's
+/// decoration ends with this alone: no border reset, and the chunk's own queue waits for game time.
+pub fn instatick(view: &mut View) {
     for generation in 0..GENERATIONS {
         if view.ticks.is_empty() {
             break;

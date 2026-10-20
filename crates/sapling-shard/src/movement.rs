@@ -2,6 +2,8 @@
 //! told about it: packets and field values as BDS sends them (`sapling` example `bds_probe`).
 // TODO: physics validation (acacia-physics); only teleport-sized steps are refused for now.
 
+mod placing;
+
 use std::collections::HashSet;
 
 use acacia_proto::packets::{Animate, AnimateActionId, MovePlayer, MovePlayerMode, MovePlayerTeleport, MovePlayerTeleportCause, PlayerAuthInput, SetEntityData};
@@ -15,6 +17,7 @@ use sapling_data::EYE_HEIGHT;
 use crate::blocks::BlockInputs;
 use crate::components::{NetId, Outgoing, PacketQueues, Position, Stage, Tick};
 use crate::visibility::ToViewers;
+pub(crate) use placing::{correct, correct_unmoving, push, reset, teleport, teleport_as, teleport_onto_ground};
 
 /// Blocks an input may be from the one before it; further is a teleport the server never made.
 const MAX_STEP: f32 = 10.0;
@@ -84,6 +87,21 @@ pub(crate) struct Motion {
     told: Option<(Position, Pose)>,
     /// Jumps its inputs began since vitals.rs last counted them.
     pub jumps: u8,
+    /// Changing dimension: inputs are from the loading screen (dimensions.rs).
+    held: bool,
+}
+
+/// Takes none of a player's inputs until [`release`].
+pub(crate) fn hold(world: &mut World, entity: Entity) {
+    if let Some(mut motion) = world.get_mut::<Motion>(entity) {
+        (motion.held, motion.landing) = (true, None);
+    }
+}
+
+pub(crate) fn release(world: &mut World, entity: Entity) {
+    if let Some(mut motion) = world.get_mut::<Motion>(entity) {
+        motion.held = false;
+    }
 }
 
 impl Motion {
@@ -111,40 +129,6 @@ fn move_player(id: u64, position: &Position, teleport: Option<MovePlayerTeleport
         ridden_runtime_id: 0,
         teleport: teleport.map(|cause| MovePlayerTeleport { cause, source_entity_type: LegacyEntityType::from_raw(TELEPORT_SOURCE) }),
         tick,
-    }
-}
-
-/// Puts a player's feet at `feet` and tells its client, as BDS's `/tp` does. Viewers learn of it
-/// from [`announce`].
-pub(crate) fn teleport(world: &mut World, entity: Entity, feet: [f32; 3]) {
-    let tick = world.resource::<Tick>().0;
-    let Ok((id, mut position, mut motion, mut out)) = world.query::<(&NetId, &mut Position, &mut Motion, &mut Outgoing)>().get_mut(world, entity) else { return };
-    (position.feet, position.on_ground) = (feet, true);
-    motion.unconfirmed_teleport = Some(tick + SETBACK_TICKS);
-    out.push(&move_player(id.0, &position, Some(MovePlayerTeleportCause::Command), motion.input_tick));
-}
-
-/// Puts a player's feet at `feet` where something pushed it, telling its client as BDS told one
-/// a piston pushed (research/captures/bds-pushed.txt): its prediction is corrected.
-pub(crate) fn push(world: &mut World, entity: Entity, feet: [f32; 3]) {
-    use acacia_proto::packets::{CorrectPlayerMovePrediction, CorrectPlayerMovePredictionPredictionType as Kind};
-    let tick = world.resource::<Tick>().0;
-    let Ok((mut position, mut motion, mut out)) = world.query::<(&mut Position, &mut Motion, &mut Outgoing)>().get_mut(world, entity) else { return };
-    position.feet = feet;
-    motion.unconfirmed_teleport = Some(tick + SETBACK_TICKS);
-    // The fall a body standing still has in a tick, as BDS sent it.
-    let delta = acacia_proto::types::Vec3f { x: 0.0, y: -0.0784, z: 0.0 };
-    out.push(&CorrectPlayerMovePrediction { prediction_type: Kind::Player, position: eyes(&position), delta, rotation: acacia_proto::types::Vec2f { x: 0.0, z: 0.0 }, angular_velocity: None, on_ground: true, tick: motion.input_tick });
-}
-
-/// [`teleport`] onto ground the client may not have yet (another world's spawn): until it
-/// stands there, a client that fell meanwhile is put back, as BDS's own simulation would
-/// correct it.
-pub(crate) fn teleport_onto_ground(world: &mut World, entity: Entity, feet: [f32; 3]) {
-    teleport(world, entity, feet);
-    let until = world.resource::<Tick>().0 + LANDING_TICKS;
-    if let Some(mut motion) = world.get_mut::<Motion>(entity) {
-        motion.landing = Some((feet, until));
     }
 }
 
@@ -186,7 +170,7 @@ pub(crate) fn player_input(mut packets: ResMut<PacketQueues>, tick: Res<Tick>, m
             blocks.take_from(entity, &mut input);
         }
         let reported = [input.position.x, input.position.y, input.position.z, input.yaw, input.pitch, input.head_yaw];
-        if *stage < Stage::Loading || reported.iter().any(|c| !c.is_finite()) {
+        if *stage < Stage::Loading || motion.held || reported.iter().any(|c| !c.is_finite()) {
             continue;
         }
         if let Some(resend_at) = motion.unconfirmed_teleport {

@@ -7,20 +7,43 @@ mod tests;
 
 use acacia_world::{BlockRegistry, Dimension};
 use sapling_leveldb::PlayerData;
-use sapling_worldgen::OverworldGenerator;
+use sapling_worldgen::{ChunkBiomes, ChunkShape, EndGenerator, NetherGenerator, OverworldGenerator};
 
-use crate::ChunkPos;
 use crate::storage::{Level, StorageError, StoredColumn, WorldStorage};
+use crate::{ChunkPos, END, NETHER, OVERWORLD};
 use convert::{BlockIds, generated_chunk};
 
-const OVERWORLD: i32 = 0;
+/// The generator of one dimension.
+enum Generator {
+    Overworld(OverworldGenerator),
+    Nether(NetherGenerator),
+    End(EndGenerator),
+}
 
-/// `inner` with every overworld column it lacks generated from `seed`, as BDS would generate it.
-/// Generated columns are not stored: like any loaded column, one is saved only once written to.
-/// Other dimensions keep their holes (void).
+impl Generator {
+    fn dimension(&self) -> i32 {
+        match self {
+            Self::Overworld(_) => OVERWORLD,
+            Self::Nether(_) => NETHER,
+            Self::End(_) => END,
+        }
+    }
+
+    fn chunk(&self, pos: ChunkPos) -> (ChunkShape, std::sync::Arc<ChunkBiomes>) {
+        match self {
+            Self::Overworld(generator) => (generator.chunk_blocks(pos.x, pos.z), generator.chunk_biomes(pos.x, pos.z)),
+            Self::Nether(generator) => (generator.chunk_blocks(pos.x, pos.z), generator.chunk_biomes(pos.x, pos.z)),
+            Self::End(generator) => (generator.chunk_blocks(pos.x, pos.z), generator.chunk_biomes(pos.x, pos.z)),
+        }
+    }
+}
+
+/// `inner` with every column of one dimension it lacks generated from `seed`, as BDS would
+/// generate it. Generated columns are not stored: like any loaded column, one is saved only once
+/// written to. Other dimensions keep their holes (void).
 pub struct Generated<S> {
     inner: S,
-    generator: OverworldGenerator,
+    generator: Generator,
     areas: usize,
     ids: BlockIds,
     dim: Dimension,
@@ -37,24 +60,43 @@ impl<S: WorldStorage> Generated<S> {
         Self::with_areas(inner, seed, default_areas())
     }
 
-    /// Generates on `areas` I/O threads, each keeping to its own part of the world (load_queue.rs),
-    /// with caches for that many areas at once. Peak memory grows with `areas`, about 250 MB each
-    /// (docs/research/worldgen-server-load.md).
+    /// Generates the overworld on `areas` I/O threads, each keeping to its own part of the world
+    /// (load_queue.rs), with caches for that many areas at once. Peak memory grows with `areas`,
+    /// about 250 MB each (docs/research/worldgen-server-load.md).
     /// Builds the generator's noises: tens of milliseconds, once per world.
     pub fn with_areas(inner: S, seed: i64, areas: usize) -> Self {
+        let areas = areas.max(1);
+        Self::of(inner, Generator::Overworld(OverworldGenerator::with_areas(seed, areas)), areas)
+    }
+
+    /// The Nether of `seed` where `inner` has none, on `areas` I/O threads sharing one generator.
+    pub fn nether(inner: S, seed: i64, areas: usize) -> Self {
+        Self::of(inner, Generator::Nether(NetherGenerator::new(seed)), areas.max(1))
+    }
+
+    /// The End of `seed` where `inner` has none, as [`Generated::nether`].
+    pub fn end(inner: S, seed: i64, areas: usize) -> Self {
+        Self::of(inner, Generator::End(EndGenerator::new(seed)), areas.max(1))
+    }
+
+    fn of(inner: S, generator: Generator, areas: usize) -> Self {
         let registry = BlockRegistry::vanilla();
-        let (generator, areas) = (OverworldGenerator::with_areas(seed, areas), areas.max(1));
-        Self { inner, generator, areas, ids: BlockIds::of(registry), dim: Dimension::overworld(registry.air_id()) }
+        let dim = Dimension::from_id(generator.dimension(), registry.air_id());
+        Self { inner, generator, areas, ids: BlockIds::of(registry), dim }
     }
 
     pub fn inner(&self) -> &S {
         &self.inner
     }
 
-    /// The overworld column the generator makes at `pos`, whatever `inner` holds there.
+    /// The dimension this storage generates.
+    pub fn dimension(&self) -> i32 {
+        self.generator.dimension()
+    }
+
+    /// The column the generator makes at `pos`, whatever `inner` holds there.
     pub fn generate_column(&self, pos: ChunkPos) -> StoredColumn {
-        let shape = self.generator.chunk_blocks(pos.x, pos.z);
-        let biomes = self.generator.chunk_biomes(pos.x, pos.z);
+        let (shape, biomes) = self.generator.chunk(pos);
         StoredColumn::of(generated_chunk(pos.x, pos.z, &shape, &biomes, &self.ids, self.dim))
     }
 }
@@ -66,7 +108,7 @@ impl<S: WorldStorage> WorldStorage for Generated<S> {
 
     fn load_column(&self, pos: ChunkPos, dimension: i32) -> Result<Option<StoredColumn>, StorageError> {
         match self.inner.load_column(pos, dimension)? {
-            None if dimension == OVERWORLD => Ok(Some(self.generate_column(pos))),
+            None if dimension == self.dimension() => Ok(Some(self.generate_column(pos))),
             stored => Ok(stored),
         }
     }
@@ -89,5 +131,9 @@ impl<S: WorldStorage> WorldStorage for Generated<S> {
 
     fn flush(&self, level: &Level) -> Result<(), StorageError> {
         self.inner.flush(level)
+    }
+
+    fn sync(&self) -> Result<(), StorageError> {
+        self.inner.sync()
     }
 }

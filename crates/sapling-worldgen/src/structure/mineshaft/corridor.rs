@@ -148,6 +148,7 @@ pub fn full_solid(block: Block) -> bool {
         && !matches!(block, Block::SnowLayer | Block::Web | Block::MobSpawner | Block::IronChain)
         && !(Block::RailNorthSouth..=Block::DarkOakFence15).contains(&block)
         && !(Block::StoneBrickSlab..=Block::EndPortal).contains(&block)
+        && !(Block::NetherBrickFence0..=Block::NetherBrickStairsNorthOuterRight).contains(&block)
 }
 
 /// A sturdy bottom centre that is not a falling block (148320130; Java's `canHangChainBelow`):

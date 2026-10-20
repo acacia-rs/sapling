@@ -46,7 +46,35 @@ fn random_stairs(random: &mut Mt19937, name: &str) -> Block {
     stairs(name, if upside_down { "1" } else { "0" }, &weirdo.to_string())
 }
 
-pub fn age(canvas: &mut Canvas, random: &mut Mt19937, b: &BoundingBox, mossiness: f32, cold: bool, sea_floor: bool) {
+/// The Nether's stone work, which always turns: stone to polished blackstone or its stairs,
+/// chiseled to chiseled polished blackstone, other full blocks to its bricks, cracked or stairs, brick
+/// stairs to a slab or brick stairs kept facing, slabs, walls and bars to their blackstone kin.
+fn blackstone(block: Block, random: &mut Mt19937) -> Option<Block> {
+    let name = block.name();
+    Some(if name == "stone" {
+        let choices = [named("polished_blackstone", "", false), random_stairs(random, "polished_blackstone_stairs")];
+        choices[random.next_int(2) as usize]
+    } else if name == "chiseled_stone_bricks" {
+        named("chiseled_polished_blackstone", "", false)
+    } else if FULL.contains(&name) {
+        let plain = |n: &str| named(n, "", false);
+        let choices = [plain("polished_blackstone_bricks"), plain("cracked_polished_blackstone_bricks"), random_stairs(random, "polished_blackstone_brick_stairs")];
+        choices[random.next_int(3) as usize]
+    } else if name == "stone_brick_stairs" {
+        let (weirdo, upside_down) = (state(block, "weirdo_direction"), state(block, "upside_down_bit"));
+        if random.next_float() >= 0.5 { named("polished_blackstone_brick_slab", "minecraft:vertical_half=bottom", false) } else { stairs("polished_blackstone_brick_stairs", upside_down, weirdo) }
+    } else if SLABS.contains(&name) {
+        named("polished_blackstone_brick_slab", "minecraft:vertical_half=bottom", false)
+    } else if name.ends_with("_wall") && block.states().contains("wall_post_bit") {
+        named("polished_blackstone_brick_wall", WALL_ALONE, false)
+    } else if name == "iron_bars" {
+        named("iron_chain", "pillar_axis=y", false)
+    } else {
+        return None;
+    })
+}
+
+pub fn age(canvas: &mut Canvas, random: &mut Mt19937, b: &BoundingBox, mossiness: f32, cold: bool, sea_floor: bool, nether: bool) {
     let plain = |name: &str| named(name, "", false);
     let slab = |name: &str| named(name, "minecraft:vertical_half=bottom", false);
     for x in b.x0..=b.x1 {
@@ -54,7 +82,9 @@ pub fn age(canvas: &mut Canvas, random: &mut Mt19937, b: &BoundingBox, mossiness
             for z in b.z0..=b.z1 {
                 let block = canvas.get(x, y, z);
                 let name = block.name();
-                let aged = if FULL.contains(&name) {
+                let aged = if nether && let Some(aged) = blackstone(block, random) {
+                    aged
+                } else if FULL.contains(&name) {
                     if random.next_float() < 0.5 {
                         continue;
                     }
@@ -111,6 +141,10 @@ pub fn age(canvas: &mut Canvas, random: &mut Mt19937, b: &BoundingBox, mossiness
                     continue;
                 };
                 canvas.set(x, y, z, aged);
+                // BDS's Nether portal keeps the aged wall's default state (another BDS run, portals -16,0 and -20,-16).
+                if nether && aged.name().ends_with("_wall") {
+                    canvas.record.settle((x, y, z));
+                }
             }
         }
     }

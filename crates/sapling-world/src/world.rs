@@ -12,6 +12,10 @@ use crate::players::Players;
 use crate::storage::{Level, WorldStorage};
 use crate::template::Template;
 
+pub const OVERWORLD: i32 = 0;
+pub const NETHER: i32 = 1;
+pub const END: i32 = 2;
+
 /// One dimension's blocks.
 ///
 /// Without storage every column exists: those nobody wrote to are void and encode as all air.
@@ -39,16 +43,28 @@ pub struct World {
 impl World {
     /// An empty overworld without storage.
     pub fn void() -> Self {
+        Self::void_in(OVERWORLD)
+    }
+
+    /// An empty world of a dimension (0 overworld, 1 nether, 2 end) without storage.
+    pub fn void_in(dimension: i32) -> Self {
         let registry = BlockRegistry::vanilla_arc();
-        let dim = Dimension::overworld(registry.air_id());
+        let dim = Dimension::from_id(dimension, registry.air_id());
         let (columns, void, players) = (HashMap::new(), Column::empty(0, 0, dim), Players::default());
-        Self { dimension: 0, dim, registry, columns, void, loader: None, level: Level::default(), arrived: Vec::new(), base: None, base_actors_taken: false, players }
+        Self { dimension, dim, registry, columns, void, loader: None, level: Level::default(), arrived: Vec::new(), base: None, base_actors_taken: false, players }
     }
 
     /// The overworld of `storage`, loaded on [`WorldStorage::load_threads`] threads. Columns it
     /// does not hold are void.
     pub fn with_storage(storage: Arc<dyn WorldStorage>) -> Self {
-        let mut world = Self::void();
+        Self::with_storage_in(storage, OVERWORLD)
+    }
+
+    /// The dimension `dimension` of `storage`, which keeps each dimension's columns under its own
+    /// keys. A world of another dimension than the overworld leaves the level (spawn, time,
+    /// rules) to the overworld's world: closing it flushes storage without writing its [`Level`].
+    pub fn with_storage_in(storage: Arc<dyn WorldStorage>, dimension: i32) -> Self {
+        let mut world = Self::void_in(dimension);
         let threads = storage.load_threads();
         let source = Source { storage, registry: world.registry.clone(), dimension: world.dimension, dim: world.dim };
         world.loader = Some(Loader::spawn(source, threads));
@@ -58,6 +74,11 @@ impl World {
     /// The protocol dimension id (0 = overworld).
     pub fn dimension(&self) -> i32 {
         self.dimension
+    }
+
+    /// The dimension's height range, `min_y..min_y + height`.
+    pub fn heights(&self) -> std::ops::Range<i32> {
+        self.dim.min_y..self.dim.min_y + self.dim.height as i32
     }
 
     pub fn registry(&self) -> &BlockRegistry {

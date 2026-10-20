@@ -64,8 +64,9 @@ fn a_night_slept_through_is_skipped() {
     let sent = h.tick(1);
     assert!(lies_down(&sent));
     let counts = all::<LevelEventGeneric>(&sent);
+    // 9801 zigzagged, as BDS sends it; acacia-proto reads the field unzigzagged.
     assert_eq!(counts.iter().map(|event| (event.event_id, event.nbt.iter().map(|tag| (tag.name.clone(), tag.value.clone())).collect::<Vec<_>>())).collect::<Vec<_>>(), [(
-        9801,
+        19602,
         vec![("ableToSleep".into(), Value::Int(1)), ("overworldPlayerCount".into(), Value::Int(1)), ("sleepingPlayerCount".into(), Value::Int(1))]
     )]);
     let woke = (0..110).any(|_| all::<Animate>(&h.tick(1)).iter().any(|animate| animate.action_id == AnimateActionId::WakeUp));

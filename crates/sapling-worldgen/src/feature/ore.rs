@@ -168,6 +168,6 @@ fn distance_sq(a: [f32; 3], b: [f32; 3]) -> f32 {
     dx * dx + dy * dy + dz * dz
 }
 
-fn exposed(view: &View, [x, y, z]: [i32; 3]) -> bool {
+pub(super) fn exposed(view: &View, [x, y, z]: [i32; 3]) -> bool {
     FACES.iter().any(|[fx, fy, fz]| view.block(x + fx, y + fy, z + fz) == Block::Air)
 }

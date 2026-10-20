@@ -47,8 +47,8 @@ A run takes 20-90 s for 64 chunks and 80-105 s for 1088; BDS startup is 15-55 s 
   `doweathercycle`, `dofiretick`, `dodaylightcycle` false and clears the weather, but scheduled ticks still
   run: generated water and lava may have flowed (the twins also differ in water/lava/obsidian/stone cells).
 - Chunks in the ring around a region may be saved too; only the requested ones are guaranteed.
-- Overworld only, default world type, no experiments. A ticking area holds at most 100 chunks, hence
-  tiles of at most 8x8.
+- The overworld, the Nether and the End (below), default world type, no experiments. A ticking area holds at most 100
+  chunks, hence tiles of at most 8x8.
 
 ## Oracle worlds
 
@@ -83,6 +83,32 @@ The structure stage replays from the same kind of run (`scripts/data/dbg_struct.
 Rebuild one with the `run.sh` line above and the seed and regions from this table. The `sapling-worldgen` oracle
 test and examples read them from `$SAPLING_ORACLE_WORLDS` (default: `worlds/oracle` of the checkout), so a worktree
 can point at the main checkout's copy.
+
+## The Nether
+
+`WORLDGEN_DIMENSION=nether run.sh <seed> <out> <regions>` loads Nether chunks (the pack's ticking areas live in
+that dimension; its floor at y 0 is all bedrock too) and saves them under dimension 1; `oracle.txt` names the
+dimension, which the reader's `check`, `diff` and column dump follow. On the repeatable BDS (`bds_still.py`,
+`bds_seed0.py`, `WORLDGEN_THREADS=1`) two runs saved identical worlds.
+
+The saved world holds the Nether's decoration and structures over the terrain. What `loadChunk` committed, before
+either, comes from a debugger run: `WORLDGEN_DIMENSION=nether scripts/bds_dbg_run.sh <seed> <out>
+scripts/data/dbg_nether_buffers.json <regions>` dumps every generated chunk's block buffer (`ptr-nether-<x>_<z>-0.bin`,
+16x16x128 `Block*`) and names the pointers (`block_ptrs.tsv`). `examples/nether_buffers <seed> <dbg dir> [stage]`
+compares them with ours. The canon (`20261003-nether`, its `-run2` twin and `20261003-nether-buffers`, regions in
+`tests/nether_oracle.rs`) is `~/oracle-canon/nether` on testbox; `tools/nether-replay.sh <name>` judges it by stage
+(docs/research/worldgen-bds-nether.md).
+
+## The End
+
+`WORLDGEN_DIMENSION=the_end` works the same way (dimension 2). The End has no bedrock floor, so the pack touches its
+top layer (y 255, all air) instead: air to stone and back; `check` reads it back. Buffers come from
+`scripts/data/dbg_end_buffers.json` (the commit call 1482431de, the Nether's layout: `ptr-end-<x>_<z>-0.bin`), the
+logged run from `scripts/data/dbg_end_canon.json`; `examples/end_buffers` and `examples/end_diff` compare them with
+ours. Under the debugger one tile near the origin stalls with chunks never requested: run the logged canon with
+`WORLDGEN_KICK=true WORLDGEN_LOAD_TICKS=1200`. The canon (`20261003-end`, its `-run2` link and
+`20261003-end-buffers`, regions in `tests/end_oracle.rs`) is `~/oracle-canon/end` on testbox; `tools/end-replay.sh
+<name>` judges it (docs/research/worldgen-bds-end.md).
 
 ## Running the oracle test
 

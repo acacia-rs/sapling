@@ -164,6 +164,7 @@ fn telling(registry: &BlockRegistry, pos: BlockPos, change: &Change) -> Bytes {
 
 const FLINT_AND_STEEL: &str = "minecraft:flint_and_steel";
 const FIRE_CHARGE: &str = "minecraft:fire_charge";
+const ENDER_EYE: &str = "minecraft:ender_eye";
 /// What BDS sent with a fire charge's sound.
 const CHARGE_SOUND: i32 = 78642;
 
@@ -199,7 +200,11 @@ impl Request<'_> {
         if is_event {
             send::to_viewers(self.world, site.layer, pos, std::slice::from_ref(&told));
         }
-        send::set(self.world, site.layer, pos, change.id);
+        if held == ENDER_EYE {
+            super::end_portal::fill(self.world, site.layer, pos, change.id);
+        } else {
+            send::set(self.world, site.layer, pos, change.id);
+        }
         for stack in left.iter().flat_map(|stack| std::iter::repeat_n(stack, change.leaves.1.into())) {
             drops::spill(self.world, site.layer, stack.clone(), pos);
         }

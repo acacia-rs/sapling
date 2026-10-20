@@ -130,9 +130,17 @@ pub(super) fn rise(world: &mut World) {
         if !world.get::<Vitals>(player).is_some_and(|vitals| vitals.died.is_some()) {
             continue;
         }
-        let (Some(id), Some(layer)) = (world.get::<NetId>(player).copied(), world.get::<InLayer>(player).map(|layer| layer.0)) else { continue };
+        let (Some(id), Some(died_in)) = (world.get::<NetId>(player).copied(), world.get::<InLayer>(player).map(|layer| layer.0)) else { continue };
+        // The dead of the Nether and the End rise in their overworld.
+        let layer = crate::dimensions::home(world, died_in);
         let Some(spawn) = world.get::<Layer>(layer).map(|layer| layer.spawn) else { continue };
         let by_bed = crate::sleep::spawn_of(world, player, layer).flatten();
+        let unfound = layer != died_in;
+        if unfound {
+            leave_now(world, player, died_in);
+            crate::dimensions::respawn_home(world, player, layer, by_bed.unwrap_or(spawn));
+            world.get_mut::<Outgoing>(player).expect("players have an outbox").push(&Respawn { position: Vec3f { x: 0.0, y: 32767.0, z: 0.0 }, state: SEARCHING, runtime_entity_id: 0 });
+        }
         if let Some([x, y, z]) = by_bed {
             // BDS names the cell first, then the place in it.
             let cell = Vec3f { x: x.floor(), y, z: z.floor() };
@@ -152,7 +160,8 @@ pub(super) fn rise(world: &mut World) {
         let mut out = world.get_mut::<Outgoing>(player).expect("players have an outbox");
         out.push(&SetHealth { health: MAX as i32 });
         shown.iter().for_each(|shown| out.push(shown));
-        sound(world, player, id.0, "reappeared", spawn);
+        // From another dimension BDS heard it at the place it named before it found one.
+        sound(world, player, id.0, "reappeared", if unfound { [0.0, 32767.0, 0.0] } else { spawn });
     }
 }
 

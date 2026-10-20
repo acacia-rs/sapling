@@ -5,11 +5,11 @@
 //! - The weighted pick is `genrand % total`; Java's retry until a portal room exists is replaced by
 //!   moving the last piece's slot to a portal room (14809c9e0).
 
-use super::common::{NORTH_OR_EAST, orient_box, random_door};
+use super::common::{NORTH_OR_EAST, random_door};
 use super::{Door, Kind, Piece, Stronghold};
 use crate::random::Mt19937;
 use crate::structure::BoundingBox;
-use crate::structure::piece::{EAST, Frame, NORTH, SOUTH, WEST};
+use crate::structure::piece::{EAST, Frame, NORTH, SOUTH, WEST, orient_box};
 
 const SEA_LEVEL: i32 = 63;
 const MIN_Y: i32 = -64;

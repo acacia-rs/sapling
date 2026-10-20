@@ -2,7 +2,8 @@
 //! its surface, BDS's legacy carvers and lava lakes, its data-driven feature rules, and the biome
 //! of every block. BDS's terrain is a C++ port of Java 1.18.1's `NoiseSampler` done in f32; this
 //! crate follows BDS's arithmetic, not Java's. Everything after the terrain shape uses Bedrock's
-//! MT19937 (docs/research/worldgen-bds.md).
+//! MT19937 (docs/research/worldgen-bds.md). The Nether's generator is `nether::NetherGenerator`
+//! (docs/research/worldgen-bds-nether.md), the End's `end::EndGenerator` (docs/research/worldgen-bds-end.md).
 
 pub mod biome;
 mod block;
@@ -12,10 +13,12 @@ mod chunk;
 pub mod climate;
 mod decoration;
 pub mod density;
+pub mod end;
 mod feature;
 mod floor;
 mod fxhash;
 mod mth;
+pub mod nether;
 pub mod noise;
 pub mod random;
 pub mod shaper;
@@ -29,6 +32,8 @@ use std::sync::Arc;
 
 pub use biome::ChunkBiomes;
 pub use block::Block;
+pub use end::EndGenerator;
+pub use nether::NetherGenerator;
 #[doc(hidden)]
 pub use feature::grow::place_feature;
 pub use feature::reach::{Cells as ReachCells, Tries as ReachTries};
@@ -42,6 +47,14 @@ use decoration::Decoration;
 use density::Density;
 use feature::Features;
 use random::Xoroshiro;
+
+/// Which of BDS's generators a stage follows.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Dimension {
+    Overworld,
+    Nether,
+    End,
+}
 
 /// Loaded columns (about 100 kB each) kept for neighbours' lakes and features.
 const LOADED_LIMIT: usize = 256;
@@ -233,7 +246,7 @@ impl OverworldGenerator {
         let in_tunnels = |[x, y, z]: [i32; 3]| !self.structures.in_v2(&self.density, (x, y, z)) && self.structures.in_structure(&self.density, (x, y, z), false);
         let carved = |x, z| self.carved(x, z);
         let generated_tops = |x, z| self.generated_tops(x, z);
-        let inputs = feature::Inputs { loaded: &loaded, carved: &carved, generated_tops: &generated_tops, biomes: &biomes, surface: &surface,in_structure: &in_structure, in_tunnels: &in_tunnels };
+        let inputs = feature::Inputs { loaded: &loaded, carved: &carved, generated_tops: &generated_tops, biomes: &biomes, surface: &surface,in_structure: &in_structure, in_tunnels: &in_tunnels, island: None };
         run(inputs)
     }
 

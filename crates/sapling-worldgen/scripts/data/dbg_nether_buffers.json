@@ -1,0 +1,4 @@
+{"breakpoints": [
+ {"va": "0x1481eca38", "name": "nether", "filter2": ["rsi", 120, null], "dump_ptr": [["rdx", 0, 262144]], "log": "all",
+  "probe": "dbg_block_ptrs.py"}
+]}

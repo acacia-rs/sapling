@@ -1,7 +1,8 @@
 //! Reads oracle worlds (README.md):
 //!   worldgen-oracle <world> <block x> <block z>         one column's blocks, liquids and biome ids by y
-//!   worldgen-oracle <world> check <x0,z0,x1,z1>...       every overworld chunk of the regions saved and untouched
+//!   worldgen-oracle <world> check <x0,z0,x1,z1>...       every chunk of the regions saved and untouched
 //!   worldgen-oracle <world> diff <other> <x0,z0,x1,z1>... blocks and biomes of the regions compared
+//! The dimension is the one `oracle.txt` names (run.sh's WORLDGEN_DIMENSION).
 use std::path::Path;
 
 use acacia_world::{BlockRegistry, Chunk};
@@ -11,20 +12,32 @@ type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
 
 fn main() -> Result<()> {
     let args: Vec<String> = std::env::args().skip(1).collect();
-    let world = LevelDbWorld::open_in_memory(Path::new(args.first().ok_or("usage: see the file header")?))?;
+    let path = Path::new(args.first().ok_or("usage: see the file header")?);
+    let world = LevelDbWorld::open_in_memory(path)?;
+    let dimension = dimension(path);
     match args.get(1).map(String::as_str) {
-        Some("check") => check(&world, &regions(&args[2..])?),
-        Some("diff") => diff(&world, &LevelDbWorld::open_in_memory(Path::new(args.get(2).ok_or("diff needs a second world")?))?, &regions(&args[3..])?),
-        _ => dump(&world, args.get(1).ok_or("missing x")?.parse()?, args.get(2).ok_or("missing z")?.parse()?),
+        Some("check") => check(&world, &regions(&args[2..], dimension)?),
+        Some("diff") => diff(&world, &LevelDbWorld::open_in_memory(Path::new(args.get(2).ok_or("diff needs a second world")?))?, &regions(&args[3..], dimension)?),
+        _ => dump(&world, args.get(1).ok_or("missing x")?.parse()?, args.get(2).ok_or("missing z")?.parse()?, dimension),
     }
 }
 
-fn regions(args: &[String]) -> Result<Vec<ChunkKey>> {
+/// The dimension id `run.sh` generated in (its `oracle.txt`; the overworld when absent).
+fn dimension(world: &Path) -> i32 {
+    let text = std::fs::read_to_string(world.join("oracle.txt")).unwrap_or_default();
+    match text.lines().find_map(|line| line.strip_prefix("dimension ")) {
+        Some("nether") => 1,
+        Some("the_end") => 2,
+        _ => 0,
+    }
+}
+
+fn regions(args: &[String], dimension: i32) -> Result<Vec<ChunkKey>> {
     let mut keys = Vec::new();
     for region in args {
         let parts: Vec<i32> = region.split(',').map(str::parse).collect::<std::result::Result<_, _>>()?;
         let [x0, z0, x1, z1] = parts[..] else { return Err(format!("bad region {region}").into()) };
-        keys.extend((x0..=x1).flat_map(|x| (z0..=z1).map(move |z| ChunkKey::new(x, z, 0))));
+        keys.extend((x0..=x1).flat_map(|x| (z0..=z1).map(move |z| ChunkKey::new(x, z, dimension))));
     }
     if keys.is_empty() {
         return Err("no regions given".into());
@@ -50,8 +63,8 @@ fn column(world: &LevelDbWorld, key: ChunkKey) -> Result<Chunk> {
 }
 
 /// Runs of equal (block, liquid, biome), top down.
-fn dump(world: &LevelDbWorld, x: i32, z: i32) -> Result<()> {
-    let chunk = column(world, ChunkKey::new(x >> 4, z >> 4, 0))?;
+fn dump(world: &LevelDbWorld, x: i32, z: i32, dimension: i32) -> Result<()> {
+    let chunk = column(world, ChunkKey::new(x >> 4, z >> 4, dimension))?;
     let registry = world.registry();
     let cell = |y| (chunk.block(x, y, z), chunk.liquid(x, y, z), chunk.biome(x, y, z));
     let mut top = ys(&chunk).end - 1;
@@ -66,10 +79,13 @@ fn dump(world: &LevelDbWorld, x: i32, z: i32) -> Result<()> {
     Ok(())
 }
 
-/// Every chunk saved with biomes in every section, and its floor (y = -64) all bedrock again.
+/// Every chunk saved with biomes in every section, and the layer the pack touched (the floor, all bedrock; the End's
+/// top layer, all air) as it was.
 fn check(world: &LevelDbWorld, keys: &[ChunkKey]) -> Result<()> {
     let registry = world.registry();
-    let is_bedrock = |id| registry.get(id).is_some_and(|state| state.name == "minecraft:bedrock");
+    let end = keys.first().is_some_and(|key| key.dimension == 2);
+    let base = if end { "minecraft:air" } else { "minecraft:bedrock" };
+    let is_bedrock = |id| registry.get(id).is_some_and(|state| state.name == base);
     let (mut missing, mut no_biomes, mut bad_floor) = (0, 0, 0);
     for &key in keys {
         let Some(saved) = world.load_column(key)? else {
@@ -77,11 +93,11 @@ fn check(world: &LevelDbWorld, keys: &[ChunkKey]) -> Result<()> {
             continue;
         };
         let chunk = saved.chunk;
-        let floor = ys(&chunk).start;
+        let floor = if end { ys(&chunk).end - 1 } else { ys(&chunk).start };
         no_biomes += usize::from(ys(&chunk).step_by(16).any(|y| chunk.biome(0, y, 0).is_none()));
         bad_floor += usize::from((0..256).any(|i| !is_bedrock(chunk.block(i & 15, floor, i >> 4))));
     }
-    println!("{} chunks: {missing} not saved, {no_biomes} without biomes for every section, {bad_floor} with a floor not all bedrock", keys.len());
+    println!("{} chunks: {missing} not saved, {no_biomes} without biomes for every section, {bad_floor} with the touched layer not all {base}", keys.len());
     if missing + no_biomes + bad_floor > 0 {
         return Err("incomplete".into());
     }
