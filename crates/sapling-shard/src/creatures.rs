@@ -4,6 +4,7 @@
 // TODO: no AI but strolling and hunting; their physics are the Java game's (`Physics::MOB`); a spawned mob is
 // saved with the least a compound needs, which BDS was not tried on.
 
+mod afflictions;
 mod arrows;
 mod attacks;
 mod backend;
@@ -193,6 +194,7 @@ fn leave_loot(world: &mut World, layer: Entity, kind: &str, on_fire: bool, [x, y
 /// Moves every spawned mob a tick and hurts it by where it is; a dead one goes once it has died.
 pub(crate) fn tick(world: &mut World) {
     arrows::tick(world);
+    afflictions::tick(world);
     spells::tick(world);
     bullets::tick(world);
     charges::tick(world);

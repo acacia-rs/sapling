@@ -144,12 +144,43 @@ fn a_hurt_witch_drinks_healing_in_33_ticks_and_mends() {
             }
         }
         health.extend(all::<acacia_proto::packets::UpdateAttributes>(&sent).iter().filter(|update| update.runtime_entity_id == witch).flat_map(|update| update.attributes.clone()).filter(|attribute| attribute.name == "minecraft:health").map(|attribute| attribute.current));
-        if emptied.is_some() {
+        // Its effect comes the tick after its hand is empty.
+        if emptied.is_some_and(|emptied| tick > emptied + 3) {
             break;
         }
     }
     let (Some(drank), Some(emptied)) = (drank, emptied) else { panic!("drank {drank:?}, emptied {emptied:?}") };
     assert!(emptied - drank == 33 && health.windows(2).any(|pair| pair[1] > pair[0]), "drank {drank}, emptied {emptied}, health {health:?}");
+}
+
+#[test]
+fn a_witch_s_poison_splashes_a_cow_beside_its_prey_which_it_then_hurts() {
+    // The witch's first potion at a healthy player is poison (bds-witch.txt); a mob within 4 of
+    // the break gets its share, shown in `VisibleMobEffects` (bds-mob-effects-findings.md), and
+    // poison hurts it by magic.
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    h.remote.run(|ctx| {
+        ctx.set_difficulty(Difficulty::Easy);
+        ctx.set_time(18000);
+        assert!(ctx.spawn_entity("minecraft:cow", [1.5, 65.0, 0.5]).is_some());
+        assert!(ctx.spawn_entity("minecraft:witch", [0.5, 65.0, 6.5]).is_some());
+    });
+    let added = h.tick_all().to(1).to_vec();
+    let cow = all::<acacia_proto::packets::AddEntity>(&added).iter().find(|added| added.entity_type == "minecraft:cow").expect("the cow").runtime_id;
+    let (mut poisoned, mut hurt) = (false, false);
+    for _ in 0..300 {
+        let sent = h.tick_all().to(1).to_vec();
+        // Poison, id 19, doubled into the last 7 bits.
+        poisoned |= all::<acacia_proto::packets::SetEntityData>(&sent).iter().any(|data| {
+            data.runtime_entity_id == cow && data.metadata.iter().any(|item| item.value == acacia_proto::types::MetadataDictionaryItemValue::Default(acacia_proto::types::MetadataDictionaryItemValueDefault::Long(19 << 1)))
+        });
+        hurt |= poisoned && all::<EntityEvent>(&sent).iter().any(|event| event.runtime_entity_id == cow && event.event_id == EntityEventEventId::HurtAnimation && event.data == 14);
+        if hurt {
+            break;
+        }
+    }
+    assert!(poisoned && hurt, "poisoned {poisoned}, hurt {hurt}");
 }
 
 #[test]

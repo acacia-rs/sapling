@@ -121,6 +121,52 @@ pub fn witch_drinks() -> Vec<String> {
     lines
 }
 
+/// On [`open_floor`] at midnight with the actor in creative: effects given to mobs by `/effect`,
+/// each on a mob of its own, to see what BDS does with them where the rules for players are known.
+pub fn mob_effects() -> Vec<String> {
+    let mut lines = open_floor("stone", &[], 0);
+    lines.truncate(lines.len() - 5);
+    lines.push("gamemode creative @s".into());
+    let trials: [(&[&str], usize); 8] = [
+        (&["summon cow ~3 ~ ~", "", "damage @e[type=cow] 5", "effect @e[type=cow] regeneration 10 0"], 12),
+        (&["summon cow ~3 ~ ~", "", "effect @e[type=cow] poison 15 0"], 16),
+        (&["summon cow ~3 ~ ~", "", "effect @e[type=cow] wither 10 0"], 11),
+        (&["summon zombie ~3 ~ ~", "", "effect @e[type=zombie] slowness 60 255", "damage @e[type=zombie] 8", "effect @e[type=zombie] instant_damage 1 0", "", "effect @e[type=zombie] instant_health 1 0", "", "effect @e[type=zombie] poison 5 0", "effect @e[type=zombie] regeneration 5 0"], 6),
+        (&["summon cow ~3 ~ ~", "", "effect @e[type=cow] instant_damage 1 0", "", "effect @e[type=cow] instant_health 1 0", "effect @e[type=cow] resistance 10 1", "damage @e[type=cow] 4"], 3),
+        (&["summon cow ~3 ~ ~", "effect @e[type=cow] speed 30 1"], 20),
+        (&["setblock ~3 ~ ~ fire", "summon zombie ~3 ~ ~", "effect @e[type=zombie] fire_resistance 30 0", "effect @e[type=zombie] slowness 30 255"], 8),
+        (&["fill ~2 ~-3 ~-1 ~4 ~-1 ~1 water", "summon cow ~3 ~-3 ~", "effect @e[type=cow] water_breathing 30 0"], 25),
+    ];
+    for (trial, seconds) in trials {
+        lines.extend(trial.iter().map(|line| line.to_string()));
+        lines.extend(std::iter::repeat_n(String::new(), seconds));
+        lines.extend(["kill @e[type=!player]", ""].map(String::from));
+    }
+    lines.extend(["fill ~2 ~-3 ~-1 ~4 ~-1 ~1 stone", "setblock ~3 ~ ~ air", "gamerule falldamage true", ""].map(String::from));
+    lines
+}
+
+/// As [`mob_effects`], the two its run could not judge (bds-mob-effects-findings.md): a zombie
+/// in netherrack's fire, which stays lit, without and with fire resistance, and a cow kept under
+/// water by glass, without and with water breathing.
+pub fn mob_effects2() -> Vec<String> {
+    let mut lines = open_floor("stone", &[], 0);
+    lines.truncate(lines.len() - 5);
+    lines.push("gamemode creative @s".into());
+    for given in ["", "effect @e[type=zombie] fire_resistance 30 0"] {
+        lines.extend(["setblock ~3 ~-1 ~ netherrack", "setblock ~3 ~ ~ fire", "summon zombie ~3 ~ ~", "effect @e[type=zombie] slowness 30 255", given].map(String::from));
+        lines.extend(std::iter::repeat_n(String::new(), 8));
+        lines.extend(["kill @e[type=!player]", "setblock ~3 ~ ~ air", ""].map(String::from));
+    }
+    for given in ["", "effect @e[type=cow] water_breathing 60 0"] {
+        lines.extend(["fill ~2 ~-3 ~-1 ~4 ~-1 ~1 water", "summon cow ~3 ~-3 ~", "fill ~2 ~ ~-1 ~4 ~ ~1 glass", given].map(String::from));
+        lines.extend(std::iter::repeat_n(String::new(), 30));
+        lines.extend(["kill @e[type=!player]", "fill ~2 ~-3 ~-1 ~4 ~ ~1 air", ""].map(String::from));
+    }
+    lines.extend(["fill ~2 ~-3 ~-1 ~4 ~-1 ~1 stone", "setblock ~3 ~-1 ~ stone", "gamerule falldamage true", ""].map(String::from));
+    lines
+}
+
 /// A floor of `block` 41 square at y -20 with 20 of air over it, the actor in survival on it at
 /// midnight with fall damage off; `summon` run, then the actor healed each second for `seconds`.
 fn open_floor(block: &str, summon: &[&str], seconds: usize) -> Vec<String> {

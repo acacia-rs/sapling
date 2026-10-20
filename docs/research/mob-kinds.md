@@ -134,6 +134,21 @@ normal, lazy and playful ones of an earlier run):
 - A worried one kept from the actor before it was hit, sprinting while nearer than 7.
 - Every gait fit `2.16 (movement x multiplier)^2` a tick.
 
+## Effects on mobs (`mob-effects`, `mob-effects2`)
+
+`/effect` on cows and zombies at midnight, the actor in creative
+(`research/captures/bds-mob-effects-findings.md`):
+
+- A player's rules held: regeneration 1 a 50 ticks, poison 1 a 25 down to 1 and no lower, wither 1 a
+  40, instant damage 6 and health 4 on a cow, resistance 20% a level, speed's 20% a level on the
+  stroll to 1e-5, slowness 255 standing a zombie still; fire resistance stopped a zombie's burns in
+  netherrack's fire, water breathing a cow's drowning under glass. A timed effect turned on the tick
+  it came, then whenever its time left was a whole number of turns, not at 0.
+- An undead one: instant damage mended it 6, instant health hurt it 4 unflashed; poison and
+  regeneration were not given it at all.
+- Every effect showed in `VisibleMobEffects` (each id doubled, 7 bits apiece, the lowest highest);
+  `MobEffect` came for speed and slowness alone. A cow an effect hurt ran.
+
 ## The shulker (`shulker`)
 
 A shulker 6 off the actor in survival at midnight on easy, healed each second
@@ -190,9 +205,9 @@ survival on obsidian at midnight on easy (`research/captures/bds-ghast-findings.
 A witch throws as above (`creatures/arrows.rs` `POTION`, its rise fitted to the three throws),
 picking the potion by its pack's rule (`creatures/splashes.rs`). A player it hits gets the full
 effect (`vitals/splashed.rs`); one near the break gets the Java game's `1 - d/4` of each effect's
-time, which was not drilled. Mobs splashed get nothing. A witch drinks as above (`creatures/drinks.rs`),
-a check a second (BDS's delays rule out one a tick), but only healing (4) and fire resistance
-(3 minutes) do anything, as mobs have no effects; it is not slowed as it drinks.
+time, which was not drilled; mobs near it get the same (`creatures/afflictions.rs`). A witch drinks
+as above (`creatures/drinks.rs`), a check a second (BDS's delays rule out one a tick), and has the
+potion's effects; it is not slowed as it drinks.
 
 An enderman teleports on its first tick, the tick after a hit and towards prey more than 16 off
 for 30 ticks (`creatures/teleports.rs`), and hunts its hitter as above; a player who stares at it
@@ -226,6 +241,11 @@ A panda is born with a gene by its pack's genetics (`creatures/genes.rs`) and sh
 has 10 health, a normal or brown one hits its hitter back once, an aggressive one for 6 until it
 is calm, and the rest run. A lazy one keeps the common pace, a worried one keeps from nobody, a
 playful one does not roll, and an aggressive one's anger is not passed on.
+
+A mob has effects as above (`creatures/afflictions.rs`): from a witch's potions, splashed or drunk,
+and from a stray's and a bogged's arrows. Their flags (fire immune, breathing) and speed's movement
+attribute are not shown, they are not saved with it or told to one who comes, and strength,
+weakness, levitation, slow falling and jump boost do nothing to it.
 
 A shulker opens for its prey and shoots as above (`creatures/bullets.rs`, `creatures/shooting.rs`),
 41 ticks apart where BDS's varied; a bullet is not shown hidden on its first tick nor turned, hits

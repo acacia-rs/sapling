@@ -111,6 +111,8 @@ pub fn drill(name: &str) -> Option<(Vec<String>, &'static [&'static str])> {
         "ender" => (foes::ender(), hunt::SPLASHES_SHOWN),
         "goat" => (foes::goat(), hunt::KINDS_SHOWN),
         "goat-cows" => (foes::goat_cows(), hunt::KINDS_SHOWN),
+        "mob-effects" => (foes::mob_effects(), hunt::KINDS_SHOWN),
+        "mob-effects2" => (foes::mob_effects2(), hunt::KINDS_SHOWN),
         "evoker" => (foes::evoker(), hunt::SPLASHES_SHOWN),
         "shulker" => (foes::shulker(), hunt::SPLASHES_SHOWN),
         "ghast" => (foes::ghast(), shove::BOOM_SHOWN),
