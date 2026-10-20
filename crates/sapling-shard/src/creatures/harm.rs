@@ -120,8 +120,9 @@ pub(super) fn tick(world: &mut World, entity: Entity, layer: Entity, id: u64, ki
         let [x, y, z] = super::head(kind, start);
         // Straight above its feet, not forward as the head is drawn.
         let head = [start.at[0], y, start.at[2]].map(|c| c.floor() as i32);
+        let breathes = traits.breathes_water || traits.breath.is_some() || super::afflictions::level(world, entity, sapling_api::Effect::WaterBreathing).is_some();
         let level = world.get::<Layer>(layer).map(|layer| &layer.world);
-        let (touching, in_wall, under_water) = level.map_or((false, false, false), |level| (burns && touches(level, start, FIERY), is_full_block(level, head), !traits.breathes_water && holds(level, head, WATER)));
+        let (touching, in_wall, under_water) = level.map_or((false, false, false), |level| (burns && touches(level, start, FIERY), is_full_block(level, head), !breathes && holds(level, head, WATER)));
         // Rain kept BDS's zombie from burning at noon (research/captures/bds-sun.txt).
         let sunlit = traits.burns_in_sun && level.is_some_and(|level| is_sunlit(level, head)) && crate::weather::of(world, layer) == sapling_api::Weather::Clear;
         health.begin();

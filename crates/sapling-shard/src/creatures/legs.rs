@@ -37,6 +37,7 @@ fn at_step(world: &World, layer: Entity, body: &Body, facing: f32) -> bool {
 /// Before the mob's move: it turns towards `to` and its legs push it there at `speed`, unless it
 /// is within `near` of it.
 pub(super) fn walk(world: &mut World, entity: Entity, layer: Entity, body: &Body, to: [f32; 2], speed: f32, near: f32) {
+    let speed = speed * super::afflictions::pace(world, entity);
     let Some(mut legs) = world.get_mut::<Legs>(entity) else { return };
     let (dx, dz) = (to[0] - body.at[0], to[1] - body.at[2]);
     let turn = ((-dx).atan2(dz).to_degrees() - legs.yaw + 180.0).rem_euclid(360.0) - 180.0;

@@ -21,6 +21,14 @@ A witch 6 and then 12 blocks from the actor in survival at midnight, the actor h
 - Its own poison, splashed 4 blocks off, lasted it some 97 ticks; that is all the capture says of
   one not hit.
 
+Drinking (`witch-drinks`, `bds-witch-drinks.txt`; the actor in creative, so the witch had no prey):
+
+- A witch hurt by 6 drank healing (data 21) 12 seconds on; one stood in fire drank fire resistance
+  (12) 3 seconds on and healing twice after the fire hurt it; one put under water floated up and
+  drank nothing. Each held the potion (`MobEquipment`, `potion` of its data) 33 ticks, then an
+  empty hand, and had its effect. Its pack's `drink_potion`: water breathing under water 0.15,
+  fire resistance on fire 0.15, healing when hurt 0.05, speed with prey 11 or more off 0.25.
+
 ## The enderman (`ender`)
 
 Three runs on the flat ground, the actor in survival at midnight and healed each second
@@ -64,6 +72,10 @@ Three runs at noon on easy (`research/captures/bds-goat-findings.md`; `bds-goat-
   its step then. `attack` and `ram_impact` came the tick after. A player it could not hurt took
   the push alone.
 - Each ram met someone, so a miss was not seen. The goats leapt the glass, 3 high.
+- With cows and the actor in creative (`goat-cows`, `bds-goat-cows-findings.md`), every goat took
+  a cow, never the actor, the watcher or a goat. A cow rammed lost 1 to a baby and was thrown in
+  one motion, half a hit's throw and the push, then ran. A cow that walked off left the charge to
+  miss, with nothing sent; the watcher in the way took the push.
 
 ## The evoker (`evoker`)
 
@@ -92,6 +104,50 @@ at midnight on easy and healed each second (`research/captures/bds-evoker-findin
   ending at a hit (5.5 on easy, a throw 0.4 along its flight and 0.4 up, `attack` a tick later);
   between charges they wandered at some 0.135 a tick. The summoning showed 99 ticks, the vexes
   came 2 later with `prepare.summon` again, and the next cast began 342 after.
+
+## The dolphin (`dolphin`)
+
+A dolphin in a pool 13 across and 7 deep at midnight on easy, the actor at its bottom breathing
+water, held still by slowness for one hit and healed each second
+(`research/captures/bds-dolphin-findings.md`; three earlier runs lost the pool or the hit):
+
+- In water it moved by `v = 0.8 v`, then a push of 0.022 along its heading, no gravity: 0.11 a
+  tick at most, calm or chasing; slowness did not slow it. It turned 10 degrees a tick at most.
+  Calm, it sank to the floor and swam about it; it never came up for air in the minute.
+- Its `Air` counted down from 4800, a tick at a time, filled again at a breach.
+- Hit (9 of 10 left), it took the actor the next tick, then `ANGRY` and `mob.warning`; it chased
+  at the same 0.11 and bit every 20 ticks within 0.8 across of its box: 2.5 on easy, a throw 0.4
+  away and 0.4 up in water. It breached once mid-chase, out of the water 7 ticks.
+- It was still angry 32 seconds on, past its pack's 25.
+
+## Pandas' genes (`pandas`)
+
+A panda of each of five genes, summoned with its gene's event, held still and hit once, the actor
+in survival at midnight on easy (`research/captures/bds-pandas-findings.md`; `provoke3` holds the
+normal, lazy and playful ones of an earlier run):
+
+- `Variant` showed the gene: lazy 1, worried 2, playful 3, brown 4, weak 5, aggressive 6; a weak
+  one had 10 health. BDS rolled two summoned ones' genes anew a moment after (6 to 3, 2 to 4).
+- Hit, each took the actor as its target; only the aggressive one bit, 8 times in 20 seconds,
+  4 on easy (its 6), a throw 0.4 and 0.4 up, walking at it at 0.0486 a tick, and never calmed.
+  The lazy (0.066 a tick), worried, weak and playful (some 0.075) ran instead, 24 to 95 ticks.
+- A worried one kept from the actor before it was hit, sprinting while nearer than 7.
+- Every gait fit `2.16 (movement x multiplier)^2` a tick.
+
+## Effects on mobs (`mob-effects`, `mob-effects2`)
+
+`/effect` on cows and zombies at midnight, the actor in creative
+(`research/captures/bds-mob-effects-findings.md`):
+
+- A player's rules held: regeneration 1 a 50 ticks, poison 1 a 25 down to 1 and no lower, wither 1 a
+  40, instant damage 6 and health 4 on a cow, resistance 20% a level, speed's 20% a level on the
+  stroll to 1e-5, slowness 255 standing a zombie still; fire resistance stopped a zombie's burns in
+  netherrack's fire, water breathing a cow's drowning under glass. A timed effect turned on the tick
+  it came, then whenever its time left was a whole number of turns, not at 0.
+- An undead one: instant damage mended it 6, instant health hurt it 4 unflashed; poison and
+  regeneration were not given it at all.
+- Every effect showed in `VisibleMobEffects` (each id doubled, 7 bits apiece, the lowest highest);
+  `MobEffect` came for speed and slowness alone. A cow an effect hurt ran.
 
 ## The shulker (`shulker`)
 
@@ -149,16 +205,23 @@ survival on obsidian at midnight on easy (`research/captures/bds-ghast-findings.
 A witch throws as above (`creatures/arrows.rs` `POTION`, its rise fitted to the three throws),
 picking the potion by its pack's rule (`creatures/splashes.rs`). A player it hits gets the full
 effect (`vitals/splashed.rs`); one near the break gets the Java game's `1 - d/4` of each effect's
-time, which was not drilled. Mobs splashed get nothing and the witch drinks nothing.
+time, which was not drilled; mobs near it get the same (`creatures/afflictions.rs`). A witch drinks
+as above (`creatures/drinks.rs`), a check a second (BDS's delays rule out one a tick), and has the
+potion's effects; it is not slowed as it drinks.
 
 An enderman teleports on its first tick, the tick after a hit and towards prey more than 16 off
 for 30 ticks (`creatures/teleports.rs`), and hunts its hitter as above; a player who stares at it
 5 ticks takes it as its prey with `stare` and a teleport (`creatures/stares.rs`, the Java game's
-cone). It does not teleport while calm or from beside its prey, a carved pumpkin does not hide a
-stare, water does nothing to it, and its `ANGRY` flag is not shown.
+cone). It teleports at random a tick in 100 in the dark and in 20 in the sun (the component's dark
+default and its pack's `light_teleport_chance`; BDS's came 5.2 seconds apart at midnight), and
+water it touches costs it 1 by drowning, with a `splash`, and sends it off that tick. It does not
+teleport from beside its prey, rain is not water to it, a carved pumpkin does not hide a stare,
+and its `ANGRY` flag is not shown.
 
-A goat rams players as above (`creatures/rams.rs`), charging at most 8 blocks; it shows no prey
-between rams, rams no mob, and a baby rams as hard as a grown one.
+A goat rams players and mobs as above (`creatures/rams.rs`), the nearest of either it sees,
+charging at most 8 blocks; a mob it meets is hurt and thrown at once by half a hit's throw and the
+push, and runs. It shows no prey between rams, a baby rams as hard as a grown one, and a charge at
+prey that moved goes along its axis, where BDS's went at where the prey stood.
 
 An evoker casts its fangs as above (`creatures/spells.rs`, `fights=spells` in `mob-traits.tsv`), its
 line's way taken as the first fang rises, and strolls between casts; one cast in four, while
@@ -167,6 +230,22 @@ by the Java game's vex goals: a tick in 7 a charge at prey more than 2 off, 5.5 
 their boxes meet, else a wander up to 7 off where it came; they waste from 30 to 119 seconds on.
 It steps away from nobody and its fangs bite no mob; a fang stands on full blocks only. A vex
 spawned by command charges here, where BDS's did not in 30 seconds (`bds-vex.txt`).
+
+A dolphin swims as above (`creatures/dolphins.rs`, `Physics::SWIMMER`, `InLiquid::Swims`) to
+spots of water up to 10 off, or at its hitter, which it bites as other hunters do (`provoked`,
+`fights=swims`). It holds 4800 ticks of breath (`breath=`) and here never runs out; it does not
+breach, bob under the surface, turn 10 degrees at most, flock or swim with players, flop or dry
+out on land, or pass its anger on, and its anger does not end.
+
+A panda is born with a gene by its pack's genetics (`creatures/genes.rs`) and shows it; a weak one
+has 10 health, a normal or brown one hits its hitter back once, an aggressive one for 6 until it
+is calm, and the rest run. A lazy one keeps the common pace, a worried one keeps from nobody, a
+playful one does not roll, and an aggressive one's anger is not passed on.
+
+A mob has effects as above (`creatures/afflictions.rs`): from a witch's potions, splashed or drunk,
+and from a stray's and a bogged's arrows. Their flags (fire immune, breathing) and speed's movement
+attribute are not shown, they are not saved with it or told to one who comes, and strength,
+weakness, levitation, slow falling and jump boost do nothing to it.
 
 A shulker opens for its prey and shoots as above (`creatures/bullets.rs`, `creatures/shooting.rs`),
 41 ticks apart where BDS's varied; a bullet is not shown hidden on its first tick nor turned, hits

@@ -121,6 +121,87 @@ fn a_goat_waits_then_runs_off_stands_and_rams_a_player_for_2_and_a_long_push() {
 }
 
 #[test]
+fn a_hurt_witch_drinks_healing_in_33_ticks_and_mends() {
+    // research/captures/bds-witch-drinks.txt: the potion (data 21) shown in its hand, gone 33 ticks
+    // on, its health up; a check a second at 0.05.
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    h.remote.run(|ctx| {
+        ctx.set_game_mode(PlayerId(1), GameMode::Creative);
+        assert!(ctx.spawn_entity("minecraft:witch", [0.5, 65.0, 2.5]).is_some());
+    });
+    let added = h.tick_all().to(1).to_vec();
+    let witch = all::<acacia_proto::packets::AddEntity>(&added)[0].runtime_id;
+    h.receive(1, &common::attack(witch));
+    let (mut drank, mut emptied, mut health) = (None, None, Vec::new());
+    for tick in 0..2400 {
+        let sent = h.tick_all().to(1).to_vec();
+        for held in all::<acacia_proto::packets::MobEquipment>(&sent).into_iter().filter(|held| held.runtime_entity_id == witch) {
+            match held.item.metadata {
+                21 => drank = drank.or(Some(tick)),
+                _ if drank.is_some() => emptied = emptied.or(Some(tick)),
+                _ => {}
+            }
+        }
+        health.extend(all::<acacia_proto::packets::UpdateAttributes>(&sent).iter().filter(|update| update.runtime_entity_id == witch).flat_map(|update| update.attributes.clone()).filter(|attribute| attribute.name == "minecraft:health").map(|attribute| attribute.current));
+        // Its effect comes the tick after its hand is empty.
+        if emptied.is_some_and(|emptied| tick > emptied + 3) {
+            break;
+        }
+    }
+    let (Some(drank), Some(emptied)) = (drank, emptied) else { panic!("drank {drank:?}, emptied {emptied:?}") };
+    assert!(emptied - drank == 33 && health.windows(2).any(|pair| pair[1] > pair[0]), "drank {drank}, emptied {emptied}, health {health:?}");
+}
+
+#[test]
+fn a_witch_s_poison_splashes_a_cow_beside_its_prey_which_it_then_hurts() {
+    // The witch's first potion at a healthy player is poison (bds-witch.txt); a mob within 4 of
+    // the break gets its share, shown in `VisibleMobEffects` (bds-mob-effects-findings.md), and
+    // poison hurts it by magic.
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    h.remote.run(|ctx| {
+        ctx.set_difficulty(Difficulty::Easy);
+        ctx.set_time(18000);
+        assert!(ctx.spawn_entity("minecraft:cow", [1.5, 65.0, 0.5]).is_some());
+        assert!(ctx.spawn_entity("minecraft:witch", [0.5, 65.0, 6.5]).is_some());
+    });
+    let added = h.tick_all().to(1).to_vec();
+    let cow = all::<acacia_proto::packets::AddEntity>(&added).iter().find(|added| added.entity_type == "minecraft:cow").expect("the cow").runtime_id;
+    let (mut poisoned, mut hurt) = (false, false);
+    for _ in 0..300 {
+        let sent = h.tick_all().to(1).to_vec();
+        // Poison, id 19, doubled into the last 7 bits.
+        poisoned |= all::<acacia_proto::packets::SetEntityData>(&sent).iter().any(|data| {
+            data.runtime_entity_id == cow && data.metadata.iter().any(|item| item.value == acacia_proto::types::MetadataDictionaryItemValue::Default(acacia_proto::types::MetadataDictionaryItemValueDefault::Long(19 << 1)))
+        });
+        hurt |= poisoned && all::<EntityEvent>(&sent).iter().any(|event| event.runtime_entity_id == cow && event.event_id == EntityEventEventId::HurtAnimation && event.data == 14);
+        if hurt {
+            break;
+        }
+    }
+    assert!(poisoned && hurt, "poisoned {poisoned}, hurt {hurt}");
+}
+
+#[test]
+fn a_goat_rams_a_cow_when_no_player_is_there_to_ram() {
+    // research/captures/bds-goat-cows-findings.md: the cow takes the ram (`HurtAnimation` 30).
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    h.remote.run(|ctx| {
+        ctx.set_difficulty(Difficulty::Easy);
+        ctx.set_game_mode(PlayerId(1), GameMode::Creative);
+        // Off the player's line: one met first takes the ram, as BDS's watcher did.
+        assert!(ctx.spawn_entity("minecraft:goat", [4.5, 65.0, -5.5]).is_some());
+        assert!(ctx.spawn_entity("minecraft:cow", [4.5, 65.0, 1.5]).is_some());
+    });
+    let added = h.tick_all().to(1).to_vec();
+    let cow = all::<acacia_proto::packets::AddEntity>(&added).iter().find(|added| added.entity_type == "minecraft:cow").expect("the cow").runtime_id;
+    let rammed = (0..6400).any(|_| all::<EntityEvent>(h.tick_all().to(1)).iter().any(|event| event.runtime_entity_id == cow && event.event_id == EntityEventEventId::HurtAnimation && event.data == 30));
+    assert!(rammed, "the goat rams the cow");
+}
+
+#[test]
 fn a_blaze_shoots_three_small_fireballs_six_ticks_apart_that_burn_whom_they_hit() {
     // research/captures/bds-blaze.txt: the first 83 ticks after it took its prey; bds-kinds2.txt: 5 and fire.
     let mut h = Harness::new();

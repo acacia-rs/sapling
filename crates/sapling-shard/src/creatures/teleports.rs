@@ -1,8 +1,9 @@
 //! An enderman's teleports (docs/research/mob-kinds.md, "The enderman"), as BDS's were seen to
-//! (research/captures/bds-ender-findings.md): on its first tick, the tick after a hit, and towards
-//! prey that has been more than 16 off for 30 ticks.
-// TODO: none while calm (BDS's came some 5 seconds apart in one run and not at all in another),
-// none from beside its prey or when looked at, and water neither hurts it nor sends it off.
+//! (research/captures/bds-ender-findings.md): on its first tick, the tick after a hit, towards
+//! prey that has been more than 16 off for 30 ticks, a tick in 100 in the dark and in 20 in
+//! the sun (its pack's `light_teleport_chance`, the component's dark default: BDS's came 5.2
+//! seconds apart at midnight), and away from water it touches, which costs it 1.
+// TODO: none from beside its prey; rain does not count as water.
 
 use acacia_proto::packets::{LevelEvent, LevelEventEvent};
 use acacia_proto::types::Vec3f;
@@ -24,6 +25,13 @@ const JITTER: f32 = 4.0;
 /// Places a random teleport tries before it is given up, as the Java game's on a hit.
 const TRIES: usize = 64;
 const LIQUIDS: &[&str] = &["minecraft:water", "minecraft:flowing_water", "minecraft:lava", "minecraft:flowing_lava"];
+const WATER: &[&str] = &["minecraft:water", "minecraft:flowing_water"];
+/// The chance a tick of a random teleport in the dark and in the sun.
+const DARK_CHANCE: f32 = 0.01;
+const LIGHT_CHANCE: f32 = 0.05;
+/// A touch of water costs this, and its `splash` is heard this far up it.
+const WET: f32 = 1.0;
+const SPLASH_UP: f32 = 1.45;
 
 #[derive(Component)]
 pub(super) struct Blinks {
@@ -31,13 +39,25 @@ pub(super) struct Blinks {
     due: Option<u64>,
     /// The tick its prey went further off than [`FAR`].
     far_since: Option<u64>,
+    /// Its own draws for the chance each tick, so that they shift no other roll of the shard's.
+    draws: u64,
+}
+
+impl Blinks {
+    fn chance(&mut self, odds: f32) -> bool {
+        self.draws ^= self.draws << 13;
+        self.draws ^= self.draws >> 7;
+        self.draws ^= self.draws << 17;
+        ((self.draws >> 40) as f32 / (1u64 << 24) as f32) < odds
+    }
 }
 
 /// Has the mob teleport, from its first tick, if its kind does.
 pub(super) fn arm(world: &mut World, entity: Entity, kind: &str) {
     if sapling_data::mob_traits(kind).teleports {
         let now = world.resource::<Tick>().0;
-        world.entity_mut(entity).insert(Blinks { due: Some(now), far_since: None });
+        let draws = entity.to_bits() ^ 0x2545_F491_4F6C_DD1D;
+        world.entity_mut(entity).insert(Blinks { due: Some(now), far_since: None, draws });
     }
 }
 
@@ -57,11 +77,17 @@ fn distance(a: [f32; 3], b: [f32; 3]) -> f32 {
 /// whose feet are at `prey`, if that has been far long enough.
 pub(super) fn tick(world: &mut World, entity: Entity, layer: Entity, prey: Option<[f32; 3]>) {
     let now = world.resource::<Tick>().0;
-    let (Some(body), Some(blinks)) = (world.get::<Body>(entity).copied(), world.get::<Blinks>(entity)) else { return };
+    let (Some(body), true) = (world.get::<Body>(entity).copied(), world.get::<Blinks>(entity).is_some()) else { return };
+    let head = [body.at[0], body.at[1] + body.size[1], body.at[2]].map(|c| c.floor() as i32);
+    let (wet, lit) = world.get::<Layer>(layer).map_or((false, false), |layer| (super::harm::touches(&layer.world, &body, WATER), super::harm::is_sunlit(&layer.world, head)));
+    if wet {
+        drench(world, entity, layer, &body);
+    }
+    let Some(mut blinks) = world.get_mut::<Blinks>(entity) else { return };
     let far = prey.filter(|feet| distance(*feet, body.at) > FAR);
     let far_since = far.map(|_| blinks.far_since.unwrap_or(now));
     let towards = far.filter(|_| far_since.is_some_and(|since| now >= since + FAR_FOR));
-    let random = blinks.due.is_some_and(|due| now >= due);
+    let random = blinks.chance(if lit { LIGHT_CHANCE } else { DARK_CHANCE }) || wet || blinks.due.is_some_and(|due| now >= due);
     world.get_resource_or_insert_with(Dice::default);
     let to = world.resource_scope(|world, mut dice: Mut<Dice>| {
         let level = &world.get::<Layer>(layer)?.world;
@@ -79,6 +105,15 @@ pub(super) fn tick(world: &mut World, entity: Entity, layer: Entity, prey: Optio
     if let Some(to) = to {
         jump(world, entity, layer, body.at, to);
     }
+}
+
+/// Water touches the mob: it costs it [`WET`] by drowning, heard as a `splash`.
+fn drench(world: &mut World, entity: Entity, layer: Entity, body: &Body) {
+    super::harm::wound(world, entity, layer, WET, super::health::Cause::Drowning);
+    let (Some(id), Some(kind)) = (world.get::<crate::components::NetId>(entity).map(|id| id.0), world.get::<crate::entities::Kind>(entity).map(|kind| kind.0.clone())) else { return };
+    let [x, y, z] = body.at;
+    let splash = acacia_proto::packets::LevelSoundEvent { sound_id: "splash".into(), position: Vec3f { x, y: y + SPLASH_UP, z }, extra_data: -1, entity_type: kind, is_baby_mob: false, is_global: false, entity_unique_id: id as i64, fire_at_position: None };
+    crate::entities::tell_viewers(world, entity, layer, body.at.map(|c| c.floor() as i32), vec![sapling_net::encode(&splash)]);
 }
 
 /// Somewhere in the cube about `at`.

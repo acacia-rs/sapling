@@ -95,7 +95,7 @@ pub(super) struct Arrow {
     /// The kind that shot it, named if it kills, and the mob itself, which it passes through.
     archer: String,
     by: Entity,
-    /// The effect it gives the player it hits, and for how many ticks (a stray's, a bogged's).
+    /// The effect it gives the player or mob it hits, and for how many ticks (a stray's, a bogged's).
     gives: Option<(&'static str, u32)>,
     shot: Shot,
     born: u64,
@@ -173,8 +173,8 @@ fn fly(world: &mut World, arrow: Entity, layer: Entity, id: u64, now: u64) -> Op
     let on_way = |look: usize| -> [f32; 3] { std::array::from_fn(|axis| body.at[axis] + motion[axis] * look as f32 / looks as f32) };
     let met = (1..=looks).find_map(|look| met(world, layer, on_way(look)).map(|player| (look, player, true)).or_else(|| met_mob(world, layer, by, on_way(look)).map(|mob| (look, mob, false))));
     let behind: [f32; 3] = std::array::from_fn(|axis| body.at[axis] - motion[axis]);
-    if let (Some(data), Some((_, struck, is_player))) = (shot.potion, met) {
-        super::splashes::burst(world, layer, body.at, behind, data, is_player.then_some(struck));
+    if let (Some(data), Some((_, struck, _))) = (shot.potion, met) {
+        super::splashes::burst(world, layer, body.at, behind, data, Some(struck));
         mobs::remove(world, arrow);
         return None;
     }
@@ -192,7 +192,14 @@ fn fly(world: &mut World, arrow: Entity, layer: Entity, id: u64, now: u64) -> Op
                     vitals::set_alight(world, struck, shot.burns);
                 }
             }
-            false => drop(harm::wound(world, struck, layer, cost, Cause::Projectile)),
+            false => {
+                let gives = world.get::<Arrow>(arrow).and_then(|arrow| arrow.gives);
+                if harm::wound(world, struck, layer, cost, Cause::Projectile).is_some()
+                    && let Some((effect, ticks)) = gives
+                {
+                    super::afflictions::afflict(world, struck, effect, ticks);
+                }
+            }
         }
         if shot.sticks {
             late_sounds::play_later(world, 1, layer, body.at.map(|c| c.floor() as i32), sound("bow.hit", body.at, ""));

@@ -16,26 +16,26 @@ use crate::creatures::Cause;
 use crate::handlers::Ctx;
 
 /// What instant health gives and instant damage takes at the first level; each level doubles it.
-const HEALS: f32 = 4.0;
-const HARMS: f32 = 6.0;
+pub(crate) const HEALS: f32 = 4.0;
+pub(crate) const HARMS: f32 = 6.0;
 /// Ticks between two of regeneration's, poison's and wither's turns at the first level; each
 /// level halves them.
-const REGENERATES: u32 = 50;
-const POISONS: u32 = 25;
-const WITHERS: u32 = 40;
+pub(crate) const REGENERATES: u32 = 50;
+pub(crate) const POISONS: u32 = 25;
+pub(crate) const WITHERS: u32 = 40;
 /// Poison leaves this much health.
-const POISONED: f32 = 1.0;
+pub(crate) const POISONED: f32 = 1.0;
 /// Exhaustion a tick of hunger adds a level.
 const HUNGERS: f32 = 0.005;
 /// A player's walking speed, and what a level of speed adds of it.
 const WALKS: f32 = 0.1;
-const QUICKENS: f32 = 0.2;
+pub(crate) const QUICKENS: f32 = 0.2;
 const QUICKENS_AS: &str = "91aeaa56-376b-4498-935b-2f7f68070635";
 /// Health a level of health boost adds to the most a player has.
 const BOOSTS: f32 = 4.0;
 const BOOSTS_AS: &str = "5d6f0ba2-1186-46ac-b896-c61c5cee99cc";
 /// What a level of slowness takes of it.
-const SLOWS: f32 = 0.15;
+pub(crate) const SLOWS: f32 = 0.15;
 const SLOWS_AS: &str = "7107de5e-7ce8-4030-940e-514c1f160890";
 /// A level of strength multiplies a hit by the first and adds the second; of weakness likewise
 /// (research/captures/bds-fx.txt: a fist's 1 was 3.99 at strength's second level, 0.3 weak).

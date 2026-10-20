@@ -309,8 +309,8 @@ piglin hunts any survival player, gold worn or not, and does not turn into a zom
 piglin's fellows do not join in, and a golem guards no villager. A llama hit spits once, 41 ticks
 after, for 1 and no throw (`arrows::SPIT`, aimed as the Java game's), and lets go 79 ticks after;
 it shows no charge. A panda and a bee hit take their hitter, hit it once and let go (`once`); a
-panda has no gene but the normal one, does not stand before it walks up, and a bee walks, keeps
-its sting and never dies of its sting.
+panda's other genes: `mob-kinds.md`, "Pandas' genes". A panda does not stand before it walks up,
+and a bee walks, keeps its sting and never dies of its sting.
 
 `creatures/hunting.rs`, for kinds with `attack=`, `speed=` and `sees=` in `mob-traits.tsv`: the
 zombie and the seven kinds above, each with its numbers and what its hit gives (not the cave

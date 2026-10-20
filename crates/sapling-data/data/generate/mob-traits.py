@@ -52,6 +52,7 @@ HUNTS = {
     "minecraft:bogged": "attack=0 speed=0.25 sees=16 shoots=71 hits=poison:112",
     "minecraft:cave_spider": "attack=2 speed=0.3 sees=16 by_dark",
     "minecraft:creeper": "attack=0 speed=0.25 sees=16 explodes=3",
+    "minecraft:dolphin": "attack=3 speed=0.11 sees=48 provoked fights=swims",
     "minecraft:drowned": "attack=3 speed=0.23 sees=35",
     "minecraft:enderman": "attack=7 speed=0.45 sees=64 provoked",
     "minecraft:evocation_illager": "attack=0 speed=0.5 sees=20 fights=spells",
@@ -98,6 +99,8 @@ for document in packs.entities().values():
         ("teleports", components.get("minecraft:teleport", {}).get("random_teleports", False) is True),
     ]
     held = [name for name, holds in traits if holds]
+    if breath.get("total_supply", 15) > 15:
+        held.append(f"breath={breath['total_supply'] * 20}")
     if entity["description"]["identifier"] != "minecraft:player" and experience(entity):
         held.append("xp=" + experience(entity))
     for trait, behaviour in [("strolls", "random_stroll"), ("panics", "panic")]:
