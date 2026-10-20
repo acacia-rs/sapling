@@ -89,6 +89,13 @@ impl Default for Vitals {
     }
 }
 
+impl Vitals {
+    /// Eating or drinking, which slows the player's walk.
+    pub(crate) fn is_eating(&self) -> bool {
+        self.meal.is_some()
+    }
+}
+
 pub(crate) fn is_mortal(world: &World, player: Entity) -> bool {
     let is_alive = world.get::<Vitals>(player).is_some_and(|vitals| vitals.died.is_none());
     is_alive && world.get::<Mode>(player).is_some_and(|mode| matches!(mode.0, GameMode::Survival | GameMode::Adventure))

@@ -1,6 +1,7 @@
 //! Where players are and what their bodies do, as their clients report it, and what viewers are
 //! told about it: packets and field values as BDS sends them (`sapling` example `bds_probe`).
-// TODO: physics validation (acacia-physics); only teleport-sized steps are refused for now.
+// TODO: corrections from the server's own step (simulation.rs observes only); until then only
+// teleport-sized steps are refused.
 
 use std::collections::HashSet;
 
@@ -12,9 +13,13 @@ use acacia_proto::types::{
 use bevy_ecs::prelude::*;
 use sapling_data::EYE_HEIGHT;
 
+use sapling_api::GameMode;
+
 use crate::blocks::BlockInputs;
-use crate::components::{NetId, Outgoing, PacketQueues, Position, Stage, Tick};
+use crate::components::{InLayer, Layer, Mode, NetId, Outgoing, PacketQueues, Position, Settings, Stage, Tick};
+use crate::simulation::{self, Simulated};
 use crate::visibility::ToViewers;
+use crate::vitals::Vitals;
 
 /// Blocks an input may be from the one before it; further is a teleport the server never made.
 const MAX_STEP: f32 = 10.0;
@@ -129,6 +134,9 @@ pub(crate) fn teleport(world: &mut World, entity: Entity, feet: [f32; 3]) {
 pub(crate) fn push(world: &mut World, entity: Entity, feet: [f32; 3]) {
     use acacia_proto::packets::{CorrectPlayerMovePrediction, CorrectPlayerMovePredictionPredictionType as Kind};
     let tick = world.resource::<Tick>().0;
+    if let Some(mut simulated) = world.get_mut::<Simulated>(entity) {
+        simulated.adopt(feet, [0.0, -0.0784, 0.0], true);
+    }
     let Ok((mut position, mut motion, mut out)) = world.query::<(&mut Position, &mut Motion, &mut Outgoing)>().get_mut(world, entity) else { return };
     position.feet = feet;
     motion.unconfirmed_teleport = Some(tick + SETBACK_TICKS);
@@ -190,14 +198,22 @@ impl Moves {
     }
 }
 
-type Mover<'a> =(&'a NetId, &'a Stage, &'a mut Position, &'a mut Motion, &'a mut Outgoing);
+type Mover<'a> = (&'a NetId, &'a Stage, &'a mut Position, &'a mut Motion, &'a mut Outgoing, &'a InLayer, &'a Mode, Option<&'a mut Simulated>, Option<&'a Vitals>);
 
 /// Where each client says its player is. Trusted, except that non-finite values are dropped and
 /// a step no player makes in a tick is answered with a teleport back. Moves are queued for the
 /// plugins (`actions::dispatch_moves`).
-pub(crate) fn player_input(mut packets: ResMut<PacketQueues>, tick: Res<Tick>, mut blocks: ResMut<BlockInputs>, mut moves: ResMut<Moves>, mut players: Query<Mover>) {
+pub(crate) fn player_input(
+    mut packets: ResMut<PacketQueues>,
+    tick: Res<Tick>,
+    settings: Res<Settings>,
+    mut blocks: ResMut<BlockInputs>,
+    mut moves: ResMut<Moves>,
+    layers: Query<&Layer>,
+    mut players: Query<Mover>,
+) {
     for (entity, mut input) in packets.take::<PlayerAuthInput>() {
-        let Ok((id, stage, mut position, mut motion, mut out)) = players.get_mut(entity) else { continue };
+        let Ok((id, stage, mut position, mut motion, mut out, in_layer, mode, simulated, vitals)) = players.get_mut(entity) else { continue };
         if input.block_action.is_some() || input.transaction.is_some() || input.item_stack_request.is_some() {
             tracing::debug!(tick = input.tick, actions = ?input.block_action, transaction = ?input.transaction, request = ?input.item_stack_request, "input with an action");
         }
@@ -243,6 +259,12 @@ pub(crate) fn player_input(mut packets: ResMut<PacketQueues>, tick: Res<Tick>, m
         let moved = Position { feet, yaw: input.yaw, pitch: input.pitch, head_yaw: input.head_yaw, on_ground };
         if *stage == Stage::InWorld && (moved.feet, moved.yaw, moved.pitch) != (position.feet, position.yaw, position.pitch) {
             moves.record(entity, *position, moved);
+        }
+        if let Some(mut simulated) = simulated {
+            let modelled = matches!(mode.0, GameMode::Survival | GameMode::Adventure);
+            let world = layers.get(in_layer.0).ok().filter(|_| modelled).map(|layer| &layer.world);
+            let eating = vitals.is_some_and(Vitals::is_eating);
+            simulation::observe(&mut simulated, settings.0.movement_check, world, &input, &moved, eating, id.0);
         }
         *position = moved;
     }

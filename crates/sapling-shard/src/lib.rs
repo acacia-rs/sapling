@@ -40,6 +40,7 @@ mod plugins;
 mod roster;
 mod rules;
 mod shard;
+mod simulation;
 mod skin;
 mod sleep;
 mod splash;
@@ -52,6 +53,6 @@ mod vitals;
 mod weather;
 mod worlds;
 
-pub use config::{ShardConfig, TICK};
+pub use config::{MovementCheck, ShardConfig, TICK};
 pub use handoff::Link;
 pub use shard::{Shard, ShardHandle};

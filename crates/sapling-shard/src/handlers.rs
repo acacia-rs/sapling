@@ -96,6 +96,7 @@ pub(crate) fn dispatch(world: &mut World) {
             roster::depart(world, entity);
         }
         worlds::focus_on(world, entity);
+        crate::simulation::report(world, entity);
         world.despawn(entity);
         let id = player.id;
         if had_joined {

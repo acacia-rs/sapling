@@ -15,6 +15,9 @@ use crate::creatures::Cause;
 const THROW: f32 = 0.4;
 
 fn throw(world: &mut World, player: Entity, id: u64, [x, y, z]: [f32; 3]) {
+    if let Some(mut simulated) = world.get_mut::<crate::simulation::Simulated>(player) {
+        simulated.knock([x, y, z]);
+    }
     let tick = world.resource::<Tick>().0;
     tell(world, player, &SetEntityMotion { runtime_entity_id: id, velocity: Vec3f { x, y, z }, tick });
 }

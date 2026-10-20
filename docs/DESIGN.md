@@ -932,6 +932,23 @@ only falls back to RakNet when that fails, so turning it on moves every vanilla 
 - Tests: `sapling-net/tests/nethernet.rs` (both signaling paths, beside RakNet) and the NetherNet
   bot in `sapling/tests/join.rs`.
 
+## Server-side movement (as built: Observe)
+
+`sapling-shard/src/simulation.rs`; research: `acacia/research/sapling-server-movement.md`.
+
+- `ShardConfig::movement_check`: `Trust` (the sanity checks in movement.rs only) or `Observe { threshold }`
+  (default 0.5, BDS's `player-position-acceptance-threshold`). Correcting is not built yet.
+- Each accepted `PlayerAuthInput` of a survival or adventure player is stepped with acacia-physics'
+  `tick` over the player's world (`RegistryWorld` of the feature `acacia-world`, over a `Blocks` newtype),
+  the held controls read from the input flags as acacia-bot's trace replay reads them, gliding and swimming
+  latched from their edges, eating from `Vitals`. The server's feet are compared with the client's; past the
+  threshold the input is logged (debug) and counted, and the simulation goes on from the client's place
+  but its own velocity and on-ground, so a client claiming a speed is not handed it.
+- Adopted, not stepped: the first input on a shard, an input carrying `HandledTeleport`, creative and
+  spectator players. Fed to the simulation: knockback (`vitals/struck.rs` `throw`), the speed attribute
+  (`vitals/effects.rs`), piston pushes. A leaving player's counts are logged (info): the divergence data
+  that decides when correcting is turned on, per platform.
+
 ## Building against a local acacia
 
 `Cargo.toml` takes the acacia crates from GitHub at one commit. To build against a checkout beside
@@ -1036,7 +1053,9 @@ acacia-world = { path = "../acacia/acacia/crates/acacia-world" }
 - Not sent yet, though BDS sends them for other players: UpdateAbilities, UpdateAdventureSettings,
   UpdateAttributes (sprint speed), PlayerLocation / LocatorBar, the MOVING flag and the FlagsExtended bit
   that changes with sneaking, held items and armour.
-- Movement: physics validation (acacia-physics), on-ground from collision.
+- Movement: corrections from the server's step (`CorrectPlayerMovePrediction`, BDS's 5-tick delay and
+  40-tick rewind), on-ground and fall height from it, `SetMovementAuthority` (check whether BDS sends it),
+  knockback stamped with the input tick, a per-player policy for plugins.
 - Broadcasts are encoded once but compressed per player; `SharedBatch` needs a per-layer batch in
   sapling-net. Block changes and chat still look at every player of the shard per event.
 - A newcomer gets every skin at once (about 290 KB each before compression); throttle before the
