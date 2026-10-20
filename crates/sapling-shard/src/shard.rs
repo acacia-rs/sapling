@@ -82,6 +82,7 @@ impl Shard {
             ticking::sweep,
             actors::write_back_before_saving,
             chunks::save_and_unload_columns,
+            chunks::cancel_unseen_loads,
             mobs::despawn_unloaded,
         );
         let items = (inventory::load, inventory::send_own, inventory::select, inventory::screens, inventory::save_changed);

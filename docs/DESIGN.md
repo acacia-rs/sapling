@@ -74,7 +74,11 @@ One listener task, one shard thread, one world. The pieces and why they are shap
   `Packet`s (header parsed, body undecoded) and exactly one `Left` per connection, whoever ended it. The
   game never guesses whether a player is still connected: it despawns on `Left` only.
 - **Game to network.** `Outbox::send` queues one batch per player per tick and never blocks. Backpressure
-  is per player: a connection whose RakNet backlog passes `NetConfig::max_queued_bytes` is kicked.
+  is per player and reads the transport's unsent bytes (RakNet's queue past its window, NetherNet's queues
+  past str0m's buffer). Over `NetConfig::congested_bytes` (1 MiB) the connection is congested
+  (`Outbox::is_congested`) until it drains below `drained_bytes` (256 KiB), and the game holds back what
+  can wait; past `max_queued_bytes` (16 MiB) it is kicked. Nobody paces on RTT: BDS bursts announcements and
+  the client paces the section bytes (research: `acacia/research/sapling-chunk-pacing.md`).
 - **Shutdown.** The shard owns the channels. Stopping it drops them, and the listener then tells every
   player the server closed and exits.
 - **Join sequence** (`sapling-shard/src/join.rs`, stages in `components.rs`), BDS's order and gates as
@@ -209,8 +213,12 @@ One listener task, one shard thread, one world. The pieces and why they are shap
   `ShardConfig::columns_per_tick` (8) columns that are loaded, and only the nearest `2 x` that many are
   asked of storage. `NetworkChunkPublisherUpdate` goes out when the player's chunk changes.
   PlayStatus(PlayerSpawn) follows once the columns within 3 chunks are sent (BDS: 26 columns).
-  Sub-chunk requests for a column not loaded wait (`SectionBacklog`, 64 requests a player) and are
-  answered once it is: a vanilla client disconnects itself on a `ChunkNotFound` entry.
+  A congested connection or a full blob cache gets no announcements until it drains; sub-chunk answers
+  are never held. Sub-chunk requests for a column not loaded wait (`SectionBacklog`) and are answered
+  once it is: a vanilla client disconnects itself on a `ChunkNotFound` entry, and never asks twice, so
+  requests are dropped only past 32 sections per column of the view's square. Every 10 ticks, loads
+  still queued for columns no view covers are dropped (`World::cancel_loads`), so an elytra flight or
+  teleport does not leave the I/O threads generating what nobody will see.
 - **Blob cache.** `ClientCacheStatus` turns it on per player (and `ShardConfig::blob_cache`). Each
   section is encoded once per column with its xxh64 and shared by all players, cached or not: `LevelChunk`
   names the biome blob, `Subchunk` entries name section blobs with an empty payload. A player holds

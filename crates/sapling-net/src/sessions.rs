@@ -17,6 +17,7 @@ use p384::ecdsa::{SigningKey, VerifyingKey};
 use uuid::Uuid;
 
 use crate::config::NetConfig;
+use crate::congestion::Congestion;
 use crate::event::{ConnId, NetEvent, Outbound};
 use crate::links::{Link, LinkEvent, Links, Refusal};
 use crate::router::Router;
@@ -35,12 +36,30 @@ struct Player {
     id: ConnId,
     conn: ServerConnection,
     uuid: Uuid,
+    congested: bool,
+}
+
+/// Congested above the high watermark, clear again below the low one, so a backlog hovering at
+/// either does not flap.
+fn is_congested(was: bool, queued: usize, cfg: &NetConfig) -> bool {
+    queued > if was { cfg.drained_bytes } else { cfg.congested_bytes }
+}
+
+impl Player {
+    fn track_backlog(&mut self, queued: usize, cfg: &NetConfig, congestion: &Congestion) {
+        let congested = is_congested(self.congested, queued, cfg);
+        if congested != self.congested {
+            self.congested = congested;
+            congestion.set(self.id, congested);
+        }
+    }
 }
 
 pub(crate) struct Sessions {
     cfg: NetConfig,
     verifier: Verifier,
     router: Router,
+    congestion: Congestion,
     /// Keys of answered NetherNet offers whose connection has not opened yet.
     offers: HashMap<PeerId, VerifyingKey>,
     logins: HashMap<Link, Pending>,
@@ -53,9 +72,17 @@ pub(crate) struct Sessions {
 }
 
 impl Sessions {
-    pub fn new(cfg: NetConfig, verifier: Verifier, router: Router) -> Self {
+    pub fn new(cfg: NetConfig, verifier: Verifier, router: Router, congestion: Congestion) -> Self {
         let (offers, logins, players, links) = (HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new());
-        Self { cfg, verifier, router, offers, logins, players, links, identities: HashSet::new(), next_id: 1 }
+        Self { cfg, verifier, router, congestion, offers, logins, players, links, identities: HashSet::new(), next_id: 1 }
+    }
+
+    /// Re-reads every player's unsent backlog: the transports send and get acked between the
+    /// game's sends.
+    pub fn track_backlogs(&mut self, links: &Links) {
+        for (&link, player) in &mut self.players {
+            player.track_backlog(links.queued_bytes(link), &self.cfg, &self.congestion);
+        }
     }
 
     pub fn player_count(&self) -> usize {
@@ -124,8 +151,11 @@ impl Sessions {
             Outbound::Send { conn, packets } => {
                 let Some((&link, player)) = self.links.get(&conn).and_then(|link| Some((link, self.players.get_mut(link)?))) else { return };
                 links.send(link, player.conn.encode(&packets), now);
-                if links.queued_bytes(link) > self.cfg.max_queued_bytes {
+                let queued = links.queued_bytes(link);
+                if queued > self.cfg.max_queued_bytes {
                     self.close_player(links, link, "send backlog over the limit", "disconnectionScreen.timeout", now);
+                } else {
+                    player.track_backlog(queued, &self.cfg, &self.congestion);
                 }
             }
             Outbound::Kick { conn, message } => {
@@ -210,7 +240,7 @@ impl Sessions {
         let id = ConnId(self.next_id);
         self.next_id += 1;
         self.links.insert(id, link);
-        self.players.insert(link, Player { id, conn, uuid });
+        self.players.insert(link, Player { id, conn, uuid, congested: false });
         if !self.router.deliver(NetEvent::Joined { conn: id, addr: links.remote_addr(link), login }) {
             self.close_player(links, link, "its shard is gone", CLOSED, now);
         }
@@ -248,6 +278,7 @@ impl Sessions {
 
     fn forget_player(&mut self, link: Link, reason: String) {
         let Some(player) = self.players.remove(&link) else { return };
+        self.congestion.set(player.id, false);
         self.links.remove(&player.id);
         self.identities.remove(&player.uuid);
         self.router.deliver(NetEvent::Left { conn: player.id, reason });
@@ -261,4 +292,20 @@ fn disconnect(reason: DisconnectFailReason, message: &str) -> Bytes {
 
 fn unix_now() -> i64 {
     SystemTime::now().duration_since(UNIX_EPOCH).map_or(0, |d| d.as_secs() as i64)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn congestion_holds_between_the_watermarks() {
+        let cfg = NetConfig { congested_bytes: 1000, drained_bytes: 100, ..NetConfig::default() };
+        let mut congested = false;
+        let trace: Vec<bool> = [500, 1001, 500, 101, 100, 500].into_iter().map(|queued| {
+            congested = is_congested(congested, queued, &cfg);
+            congested
+        }).collect();
+        assert_eq!(trace, [false, true, true, true, false, false]);
+    }
 }

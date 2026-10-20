@@ -13,6 +13,7 @@ use tokio::sync::mpsc;
 use tokio::task::JoinHandle;
 
 use crate::config::NetConfig;
+use crate::congestion::Congestion;
 use crate::driver::Driver;
 use crate::event::{Inbox, Outbox};
 use crate::lan::Lan;
@@ -81,7 +82,8 @@ pub async fn listen_shards(addr: SocketAddr, cfg: NetConfig, keys: SigningKeys, 
         tokio::spawn(crate::http::serve(tcp, requests));
         signaling
     });
-    let (outbox, outbound) = mpsc::unbounded_channel();
+    let (commands, outbound) = mpsc::unbounded_channel();
+    let congestion = Congestion::default();
     let driver = Driver {
         socket,
         links: Links { raknet: Server::new(raknet, Instant::now()), nethernet: host },
@@ -91,11 +93,11 @@ pub async fn listen_shards(addr: SocketAddr, cfg: NetConfig, keys: SigningKeys, 
         motd: cfg.motd.clone(),
         guid,
         max_players: cfg.max_players,
-        sessions: Sessions::new(cfg, Verifier::new(keys), Router::new(senders, entry)),
+        sessions: Sessions::new(cfg, Verifier::new(keys), Router::new(senders, entry), congestion.clone()),
         outbound,
     };
     let task = tokio::spawn(driver.run());
-    Ok((Listener { addr, lan: advert, task }, Outbox(outbox), inboxes))
+    Ok((Listener { addr, lan: advert, task }, Outbox { commands, congestion }, inboxes))
 }
 
 /// The game's UDP socket and, with NetherNet, a TCP listener on the same port number.

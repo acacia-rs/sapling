@@ -4,6 +4,7 @@
 //! [`Outbox`], which never blocks. See docs/DESIGN.md "Inbound packets", "Outbound", "NetherNet".
 
 mod config;
+mod congestion;
 mod driver;
 mod event;
 mod http;
@@ -18,6 +19,7 @@ mod sessions;
 pub use acacia_auth::login::verify::{Identity, SigningKeys, VerifiedLogin};
 pub use acacia_proto as proto;
 pub use config::{Lan, Motd, NetConfig, NetherNet};
+pub use congestion::Congestion;
 pub use event::{ConnId, Inbox, Loopback, NetEvent, Outbound, Outbox, ShardsLoopback, loopback, loopback_shards};
 #[cfg(feature = "online")]
 pub use keys::{KeyError, fetch_signing_keys};

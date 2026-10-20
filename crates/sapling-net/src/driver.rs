@@ -23,6 +23,9 @@ const LAN_BUF: usize = 8192;
 const BURST: usize = 256;
 /// Wake-up when nothing is scheduled, to notice a game that went away.
 const IDLE_WAKE: Duration = Duration::from_millis(500);
+/// How often backlogs are re-read for congestion: well inside a game tick, without walking every
+/// player on every datagram.
+const BACKLOG_CHECK: Duration = Duration::from_millis(10);
 
 pub(crate) struct Driver {
     pub socket: UdpSocket,
@@ -44,6 +47,7 @@ impl Driver {
     pub async fn run(mut self) {
         let port = self.socket.local_addr().map_or(0, |a| a.port());
         let mut advertised = usize::MAX;
+        let mut backlogs_checked = Instant::now();
         let (mut buf, mut lan_buf) = (vec![0u8; DATAGRAM_BUF], vec![0u8; LAN_BUF]);
         while self.sessions.has_game() {
             // Events first: the replies they queue must leave in this turn, not at the next wake-up.
@@ -60,6 +64,10 @@ impl Driver {
                 self.links.raknet.set_motd(self.motd.pong(self.guid, advertised, self.max_players, port));
             }
             self.flush(now).await;
+            if now.duration_since(backlogs_checked) >= BACKLOG_CHECK {
+                backlogs_checked = now;
+                self.sessions.track_backlogs(&self.links);
+            }
             let timers = self.links.poll_timeout().into_iter().chain(self.sessions.next_deadline());
             let deadline = timers.min().unwrap_or(now + IDLE_WAKE);
             tokio::select! {
