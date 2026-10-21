@@ -17,7 +17,7 @@ pub mod end;
 mod feature;
 mod floor;
 mod fxhash;
-mod mth;
+pub mod mth;
 pub mod nether;
 pub mod noise;
 pub mod random;

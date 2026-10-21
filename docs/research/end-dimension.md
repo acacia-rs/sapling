@@ -17,7 +17,10 @@ as BDS 1.26.5x does without the dragon fight. Evidence: drills of `crates/saplin
 - **Travel:** `portals/end.rs` (end portal to the platform) and `portals/gateway.rs`, run from `portals::tick`;
   `dimensions::respawn_home` (the dead of the End and the Nether rise in their overworld), from `vitals/death.rs`.
 - **Not built** (the dragon fight, left for later): the dragon, its boss bar, the exit portal, crystals' part in
-  the fight, the egg, gateways made by kills, the credits. The eye of ender is not thrown (below).
+  the fight, the egg, gateways made by kills, the credits.
+- **The eye of ender thrown** (branch `end/eye`, below): `eyes.rs` in sapling-shard, from the ClickAir arm of
+  `blocks/request.rs`; the stronghold from `World::locate_stronghold` → `WorldStorage::locate_stronghold` →
+  `Generated` → `OverworldGenerator::locate_stronghold` (sapling-worldgen `structure/locate.rs`).
 
 ## By command (bds-end-travel.txt)
 
@@ -76,6 +79,37 @@ heard at (0, 32767.1, 0). sapling the same (sapling-end-death-none.txt), Respawn
 usual MovePlayer after it; the Nether's dead go the same way. A drill answering the change with a loading-screen
 end of id none was kicked (UnexpectedPacket): drill respawns with the `none` answer.
 
+## The eye of ender (bds-eye-throw.txt, bds-eye-dims.txt, bds-eye-near.txt)
+
+Drilled on testbox `~/work/bds-eye` (port 19210, seed 20261018, a **default** world: every other copy is flat,
+and a flat world locates no stronghold); sapling's side on `drill_server` with `SAPLING_DRILL_WORLD=strongholds`
+(void columns, the seed's locate), drills `eye-*` in `shared/eye_drill.rs` (`!throw yaw pitch`).
+
+- `EnderEyeItem::use` 1436f6b50 (no `useOn`: a frame click only fills the frame, as before). It asks the
+  dimension's generator for a stronghold from the floored eye position; none (Nether, End, flat) means nothing at
+  all: no swing, no sound, the item kept (bds-eye-dims.txt). Else: EntityEvent ArmSwing, the eye spent outside
+  creative (InventoryContent), AddEntity `minecraft:eye_of_ender_signal` at the eyes + (0.5, 0.5, 0.5) with no
+  motion, then LevelSoundEvent `throw` (entity type `minecraft:player`) at the feet + 1.32 up and 0.15 along the
+  yaw. BDS gates it on gamerule slot 40 (unidentified); sapling does not.
+- The locate, `StrongholdFeature::getNearestGeneratedFeature` 1483745b0: the three spiral strongholds, then
+  200-chunk cells in rings round the origin's (the first ring the whole 3x3; a cell holding a spiral start is
+  skipped; a cell's chance is compared as a double, raw < 2^30), until a ring ends with a candidate; the nearest
+  by squared chunk distance, the first on a tie. Answer (chunk x 16 + 2, sea level - 31 = 32, chunk z 16 + 2):
+  BDS's `/locate` from the origin gave the same for seeds 20261003 and 20261018 (sapling-worldgen
+  `structure::tests`).
+- `signalTo` 142f9f750: further than 12 blocks across, the target is 12 blocks toward it and 8 up; else the
+  stronghold block itself (bds-eye-near.txt: the eye settles round y 32). The 4-in-5 survival roll is the level's
+  random on BDS, the shard's dice on sapling.
+- Flight (`EyeOfEnderPreNormalTickSystem` 14469ee30), f32, from the throw's tick: move by the motion, then speed
+  across += (distance - speed) x 0.0025, both x 0.8 within 1 block, rise += (+-1 - rise) x 0.015, aimed by Mth's
+  table. The captured path matched to 7e-6 over its 80 told ticks; sapling's MoveEntityDelta and SetEntityMotion
+  values equal BDS's bit for bit (sapling-eye-throw.txt). Every move is told, on_ground true, the last not.
+- End (`normalTick` 142fa0450), on the 81st tick: kept, RemoveEntity and an `ender_eye` item tossed up at the
+  eye (y + 0.125, 0.2 up); broken, LevelEvent 2003 (data 10) and 1041 at the eye, RemoveEntity the tick after.
+- Left different: BDS pushes the eye out of its thrower's box (bds-eye-near.txt's fall through the player left
+  the fit in x/z) and turns it (rot_x/rot_y of its deltas); sapling's item comes before the RemoveEntity, its
+  stack ids do not count up, its item's toss is the shard's dice.
+
 ## Not done, and why
 
 - **Spike bedrock and crystals.** `postProcessMobsAt` 148246230 puts an EnderCrystal (ShowBottom) at (x + 0.5,
@@ -85,6 +119,4 @@ end of id none was kicked (UnexpectedPacket): drill respawns with the `none` ans
 - **Every arrival near the island starts BDS's dragon fight** (dragon spawn, boss bar, exit portal bedrock at
   0,61..65,0): the only differences in sapling-end-travel.txt (column (0, 0) asks for 5 sections on BDS, 4 on
   sapling; a tp to (0.5, 90, 0.5) lands on the exit portal's pillar at 66 on BDS, the island at 62 on sapling).
-- **The eye of ender thrown** to find a stronghold: a new projectile entity with BDS's flight and shatter chance and
-  a stronghold locate the shard cannot reach (the generator is inside the storage). Not cheap; left.
 - **Leaving the End other than by death or command:** only the exit portal (the fight) leads back.

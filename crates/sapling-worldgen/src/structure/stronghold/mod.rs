@@ -106,7 +106,17 @@ pub fn grid_start(level_seed: u32, (x, z): (i32, i32)) -> Option<(i32, i32)> {
     if x * x + z * z <= 99 {
         return None;
     }
-    let (gx, gz) = ((x as f32 / 200.0).floor() as i32, (z as f32 / 200.0).floor() as i32);
+    let (start, chance) = cell_draws(level_seed, (cell_of(x), cell_of(z)))?;
+    (crate::random::unit(chance) < 0.25).then_some(start)
+}
+
+pub(crate) fn cell_of(chunk: i32) -> i32 {
+    (chunk as f32 / 200.0).floor() as i32
+}
+
+/// A 200x200-chunk cell's candidate start and its raw chance draw; none for a cell whose
+/// centre lies within 10 chunks of the origin.
+pub(crate) fn cell_draws(level_seed: u32, (gx, gz): (i32, i32)) -> Option<((i32, i32), u32)> {
     let (centre_x, centre_z) = (gx * 200 + 100, gz * 200 + 100);
     if centre_x * centre_x + centre_z * centre_z <= 99 {
         return None;
@@ -115,6 +125,5 @@ pub fn grid_start(level_seed: u32, (x, z): (i32, i32)) -> Option<(i32, i32)> {
     let mut random = Mt19937::new(seed.wrapping_add(level_seed).wrapping_add(0x05d5_34e7));
     let dx = (random.next_u32() % 100) as i32;
     let dz = random.next_int(100);
-    let chance = random.next_float();
-    (chance < 0.25).then_some((gx * 200 + dx + 50, gz * 200 + dz + 50))
+    Some(((gx * 200 + dx + 50, gz * 200 + dz + 50), random.next_u32()))
 }

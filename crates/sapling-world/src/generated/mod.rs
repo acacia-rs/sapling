@@ -136,4 +136,11 @@ impl<S: WorldStorage> WorldStorage for Generated<S> {
     fn sync(&self) -> Result<(), StorageError> {
         self.inner.sync()
     }
+
+    fn locate_stronghold(&self, x: i32, z: i32) -> Option<[i32; 3]> {
+        match &self.generator {
+            Generator::Overworld(generator) => generator.locate_stronghold(x, z),
+            _ => self.inner.locate_stronghold(x, z),
+        }
+    }
 }
