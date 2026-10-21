@@ -120,10 +120,10 @@ pub fn flowers(view: &mut View, random: &mut Mt19937, at: [i32; 3], kind: Flower
 
 /// In shade (149d9a560): under the light heightmap, or with a block that is not fully translucent
 /// (`BlockType` +0x15c under 1.0) among the ten above; the heightmap is stale, so leaves a tree of
-/// this chunk just grew count through the second test only. Outside the region there is no chunk: the
-/// height is the world's bottom and every block air, so such a column is never shaded.
+/// this chunk just grew count through the second test only. A column outside the region is never
+/// shaded (`View::heightmap`).
 fn shaded(view: &View, [x, y, z]: [i32; 3]) -> bool {
-    view.has_block(x, y, z) && view.heightmap(x, z) > y || (y + 1..=y + 10).any(|above| view.block(x, above, z).is_solid())
+    view.heightmap(x, z) > y || (y + 1..=y + 10).any(|above| view.block(x, above, z).is_solid())
 }
 
 /// On mycelium, podzol or a log anywhere (oracle: a fallen log's mushroom stands in the open);

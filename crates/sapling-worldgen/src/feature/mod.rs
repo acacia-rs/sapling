@@ -57,6 +57,7 @@ pub(crate) mod trace;
 mod tree;
 mod view;
 mod view_connect;
+mod view_writes;
 
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -261,11 +262,10 @@ impl Features {
             let frozen = |x: i32, z: i32| self.light.get((x, z), || light::chunk(&(inputs.carved)(x, z)));
             // The pre-worldgen heightmap is dropped when the chunk's decoration ends.
             let generated = |x: i32, z: i32| self.rank((x, z)).is_none_or(|rank| rank >= limit).then(|| (inputs.generated_tops)(x, z));
-            let mut view = View::new(source, &base).with_frozen_heights(Frozen::Maps(&frozen)).with_generated_tops(&generated);
+            let mut view = View::new(source, &base).with_frozen_heights(Frozen::Maps(&frozen)).with_generated_tops(&generated).in_dimension(self.dimension);
             let doubt = |x: i32, z: i32| self.doubt_before((x, z), limit, inputs);
             view.reach = self.track_reach.then(|| reach::Reach::new(&doubt));
             view.thread_random = self.thread_before(source, limit);
-            view.ultrawarm = self.dimension == Dimension::Nether;
             let mut post_process = Mt19937::new(self.seed.chunk(source.0, source.1));
             match self.dimension {
                 Dimension::Overworld => {

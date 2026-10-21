@@ -6,69 +6,14 @@ use std::cell::{OnceCell, RefCell};
 use std::sync::Arc;
 
 use super::light;
-use super::reach::{Cells, Reach, Tries};
+use super::reach::Reach;
 use super::ticks::TickQueue;
+pub use super::view_writes::{ChunkWrites, REACH, Routed, Write};
+use super::view_writes::{SIDE, slot};
+use crate::Dimension;
 use crate::block::Block;
 use crate::random::Mt19937;
 use crate::terrain::{ChunkShape, HEIGHT, MIN_Y};
-
-/// How many chunks around the decorated one its features may write.
-pub const REACH: i32 = 1;
-const SIDE: usize = (2 * REACH + 1) as usize;
-
-/// A write of `block` over `seen`, at `index` of the target column.
-#[derive(Debug, Clone, Copy)]
-pub struct Write {
-    pub index: u32,
-    pub block: Block,
-    pub seen: Block,
-}
-
-/// A liquid tick left on its cell's chunk queue: cell, lava, delay.
-pub type Routed = ([i32; 3], bool, u64);
-
-/// One source chunk's writes, per target chunk around it, the ticks it left on chunk queues, and
-/// what `reach` followed.
-pub struct ChunkWrites(Vec<Vec<Write>>, Vec<Routed>, Option<(Vec<Option<Cells>>, Tries)>);
-
-impl ChunkWrites {
-    /// The ticks this source left on `chunk`'s queue, in the order they came.
-    pub fn routed_to(&self, chunk: (i32, i32)) -> impl Iterator<Item = Routed> + '_ {
-        self.1.iter().copied().filter(move |(at, _, _)| (at[0].div_euclid(16), at[2].div_euclid(16)) == chunk)
-    }
-
-    /// The cells of the chunk `(dx, dz)` away that this source left in doubt (reach.rs).
-    pub fn doubt_towards(&self, dx: i32, dz: i32) -> Option<&Cells> {
-        self.2.as_ref().zip(slot(dx, dz)).and_then(|((cells, _), slot)| cells[slot].as_ref())
-    }
-
-    pub fn tries(&self) -> Tries {
-        self.2.as_ref().map_or_else(Tries::default, |&(_, tries)| tries)
-    }
-
-    /// The writes into the chunk `(dx, dz)` away from the source.
-    pub fn towards(&self, dx: i32, dz: i32) -> &[Write] {
-        slot(dx, dz).map_or(&[], |slot| &self.0[slot])
-    }
-
-    /// Every write in order of its target chunk, as world (x, y, z), block, seen.
-    pub fn world_writes(&self, source: (i32, i32)) -> Vec<([i32; 3], Block, Block)> {
-        let mut out = Vec::new();
-        for (slot, writes) in self.0.iter().enumerate() {
-            let (dx, dz) = ((slot / SIDE) as i32 - REACH, (slot % SIDE) as i32 - REACH);
-            let (x0, z0) = ((source.0 + dx) * 16, (source.1 + dz) * 16);
-            for w in writes {
-                let i = w.index as i32;
-                out.push(([x0 + (i & 15), i / 256 + MIN_Y, z0 + ((i >> 4) & 15)], w.block, w.seen));
-            }
-        }
-        out
-    }
-}
-
-fn slot(dx: i32, dz: i32) -> Option<usize> {
-    (dx.abs() <= REACH && dz.abs() <= REACH).then(|| ((dx + REACH) as usize) * SIDE + (dz + REACH) as usize)
-}
 
 /// A chunk's pre-worldgen heightmap, None once its decoration has ended.
 type Tops<'a> = &'a dyn Fn(i32, i32) -> Option<Arc<[i16; 256]>>;
@@ -102,6 +47,8 @@ pub struct View<'a> {
     pub thread_random: Option<Mt19937>,
     /// The Nether's: lava spreads as far as water and three times as often (liquid/flow.rs).
     pub ultrawarm: bool,
+    /// The dimension's height range (`BlockSource` +0x3a, +0x38), which BDS answers off the region.
+    bounds: (i32, i32),
 }
 
 impl<'a> View<'a> {
@@ -121,7 +68,19 @@ impl<'a> View<'a> {
             reach: None,
             thread_random: None,
             ultrawarm: false,
+            bounds: (MIN_Y, MIN_Y + HEIGHT as i32),
         }
+    }
+
+    /// The Nether's and the End's own height range, and the Nether's ultrawarm liquids.
+    pub fn in_dimension(mut self, dimension: Dimension) -> Self {
+        self.ultrawarm = dimension == Dimension::Nether;
+        self.bounds = match dimension {
+            Dimension::Overworld => self.bounds,
+            Dimension::Nether => (0, 128),
+            Dimension::End => (0, 256),
+        };
+        self
     }
 
     /// Heightmaps come from `frozen`'s chunks, whatever this view writes.
@@ -230,18 +189,23 @@ impl<'a> View<'a> {
     pub fn above_top_solid(&self, x: i32, z: i32) -> i32 {
         let top = MIN_Y + HEIGHT as i32;
         if self.locate(x, MIN_Y, z).is_none() {
-            return top;
+            return self.bounds.1;
         }
         let solid = |block: Block| block.material_blocks_motion() && !block.is_leaves();
-        (MIN_Y..top).rev().find(|&y| solid(self.block(x, y, z))).map_or(MIN_Y, |y| y + 1)
+        (MIN_Y..top).rev().find(|&y| solid(self.block(x, y, z))).map_or(self.bounds.0, |y| y + 1)
     }
 
-    /// `query.heightmap` (lambda 1411a2740): the chunk's light heightmap, one above the highest block
-    /// that `blocks_light`; the world's top outside the region.
-    /// Read off the `frozen` chunks when given: see worldgen-bds-features.md, "Heightmaps".
+    /// `query.heightmap` (lambda 1411a2740) and the chunk heightmap reads alike: the chunk's light
+    /// heightmap, one above the highest block that `blocks_light`, at least the world's bottom; outside
+    /// the region there is no chunk and the answer is the bottom (worldgen-bds-features.md, "Heightmaps").
+    /// Read off the `frozen` chunks when given.
     pub fn heightmap(&self, x: i32, z: i32) -> i32 {
+        let Some((slot, _)) = self.locate(x, MIN_Y, z) else { return self.bounds.0 };
+        self.region_heightmap(slot, x, z).max(self.bounds.0)
+    }
+
+    fn region_heightmap(&self, slot: usize, x: i32, z: i32) -> i32 {
         let top = MIN_Y + HEIGHT as i32;
-        let Some((slot, _)) = self.locate(x, MIN_Y, z) else { return top };
         let Some(frozen) = self.frozen else {
             return (MIN_Y..top).rev().find(|&y| light::blocks_light(self.block(x, y, z))).map_or(MIN_Y, |y| y + 1);
         };

@@ -245,6 +245,12 @@ stalagmite's columns stop under it; live: the set-pointer branch ran 1699 times 
 `View::generated_top` models it; no dripstone scan reads +0xb80 or +0xf88, and the oracle did not move (no
 stalagmite reaches a carved surface in the regions).
 
+### Outside the 3x3 (2026-10-21, worldgen/gaps)
+A column outside the source's 3x3 has no chunk in the block source: its heightmap is the dimension's min height
+(`BlockSource` +0x3a: -64, Nether and End 0), its blocks air, `above_top_solid` the max height. `View` takes the
+range from `in_dimension`. Every off-region height read in 16384 overworld, 9216 Nether and 6561 End chunks was the
+mushroom shade test (Nether); no other feature, nor the structure canvas, reads past its 3x3.
+
 ### The seasons guard (2026-10-10, worldgen/res6)
 `140a0b4e0` is `LevelChunk::checkSeasonsPostProcessDirty`. It returns true when `Dimension` +0x100 is 1 and some
 entry of the chunk's `mBiomeStates` (+0xf90, `unordered_map<BiomeIdType, BiomeChunkState>`) has a `snowLevel`

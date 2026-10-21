@@ -1,5 +1,5 @@
-//! `NetherFossilFeature::place` (149d5bcb0): a bone template sunk down to soul sand, then perhaps a dried ghast
-//! on soul soil inside it. Valid ground is `[soul_sand]`; it may not stand in lava.
+//! `NetherFossilFeature::place` (149d5bcb0): a bone template sunk down to soul sand, its air left out, then perhaps
+//! a dried ghast on soul soil inside it. Valid ground is `[soul_sand]`; it may not stand in lava.
 
 use super::basalt::{BOTTOM, TOP};
 use super::place::Ctx;
@@ -57,6 +57,7 @@ pub fn place(ctx: &mut Ctx, [x, y0, z]: [i32; 3]) -> bool {
     trace::line(|| format!("  nether fossil {} at {x} {} {z} {rotation:?}", template.name, y + 1));
     let mut placement = Placement::new(rotation, UNBOUNDED);
     placement.seed = ctx.random.seed();
+    placement.ignore = Some("air");
     for ((bx, by, bz), block, _) in placement.blocks(template, (x, y + 1, z)) {
         view.set_block(bx, by, bz, block);
     }

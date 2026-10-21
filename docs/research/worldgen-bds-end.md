@@ -84,8 +84,8 @@ fresh End. The obsidian platform (y 49 under (100, 50, 0), end-dimension.md) is 
 - Templates: Java `.nbt` files under `structures/endcity`, appended to templates.bin from a probe (scripts/
   template_probe; worldgen-bds-templates.md). Seen there: end rods come out with every horizontal facing reversed
   (Java east to 4, west 5, south 2, north 3); a SkullType 5 skull is a dragon head; a brewing stand takes bottle
-  bit a/b/c from Java slot 0/1/2 (the overworld families keep the old slot 1/2/3 reading, which the probe says puts
-  the igloo's stand one bit off: unchecked against an overworld oracle, left alone).
+  bit a/b/c from Java slot 0/1/2. The overworld families keep the slot 1/2/3 reading: the igloo canon (c-ig,
+  -891,53,-2828) has its slot-1 stand on bit a, and reading it as bit b made that cell wrong (2026-10-21).
 - `/locate structure end_city` (region rings, first hit): `EndGenerator::locate_city`, BDS's six answers in
   `end::tests`.
 
