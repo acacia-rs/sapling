@@ -18,9 +18,9 @@ pub struct EntityInfo {
     pub on_ground: bool,
 }
 
-/// Entities are simulated by the shard: each falls and slides through the blocks of its world.
-/// Mobs do nothing else: no AI, no damage. The calls that name no world act on the world of the
-/// event being handled.
+/// Entities are simulated by the shard: each falls and slides through the blocks of its world,
+/// and mobs act and take harm as vanilla's do. The calls that name no world act on the world of
+/// the event being handled.
 impl ShardCtx<'_> {
     /// Spawns a mob of `kind` (e.g. `minecraft:pig`) with its feet at `feet`; `minecraft:xp_orb`
     /// is an orb worth 1, thrown as `/summon` throws one. `None` for a kind the game does not have

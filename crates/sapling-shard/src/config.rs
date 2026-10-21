@@ -27,6 +27,17 @@ pub struct ShardConfig {
     /// Mobs with nothing to do stroll, and flee when hit. Off, they stand where they are until
     /// something moves them.
     pub mobs_stroll: bool,
+    pub movement_check: MovementCheck,
+}
+
+/// What the shard makes of where clients say their players are (simulation.rs).
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum MovementCheck {
+    /// Believed, past the sanity checks in movement.rs.
+    Trust,
+    /// Also stepped on the server, and logged where the two part by more than `threshold`
+    /// blocks; the client's word still stands. BDS corrects past 0.5.
+    Observe { threshold: f32 },
 }
 
 impl Default for ShardConfig {
@@ -41,6 +52,7 @@ impl Default for ShardConfig {
             columns_per_tick: 8,
             blob_cache: true,
             mobs_stroll: true,
+            movement_check: MovementCheck::Observe { threshold: 0.5 },
         }
     }
 }

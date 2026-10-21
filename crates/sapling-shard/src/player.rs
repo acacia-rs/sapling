@@ -18,6 +18,7 @@ use crate::hud::Hud;
 use crate::mobs::SeesMobs;
 use crate::movement::Motion;
 use crate::roster::Profile;
+use crate::simulation::Simulated;
 use crate::view::View;
 use crate::vitals::Vitals;
 use crate::visibility::Sees;
@@ -84,10 +85,13 @@ pub(crate) struct Local {
     sees: Sees,
     sees_mobs: SeesMobs,
     breaking: Breaking,
+    /// Starts from the client's place on the shard's first input.
+    simulated: Simulated,
 }
 
 impl Local {
     pub fn in_layer(layer: Entity) -> Self {
-        Self { in_layer: InLayer(layer), backlog: SectionBacklog::default(), sees: Sees::default(), sees_mobs: SeesMobs::default(), breaking: Breaking::default() }
+        let (backlog, sees, sees_mobs, breaking, simulated) = Default::default();
+        Self { in_layer: InLayer(layer), backlog, sees, sees_mobs, breaking, simulated }
     }
 }

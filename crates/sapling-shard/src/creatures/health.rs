@@ -133,6 +133,14 @@ impl Health {
         true
     }
 
+    /// Takes `amount` as it is, past the guard and resistance, the cushion first: a loss a plugin
+    /// set (damage.rs).
+    pub(crate) fn lose(&mut self, amount: f32) {
+        let soaked = amount.min(self.cushion);
+        self.cushion -= soaked;
+        self.left = (self.left - (amount - soaked)).max(0.0);
+    }
+
     /// Starts a tick: a tick of the last hit's guard is over.
     pub(crate) fn begin(&mut self) {
         self.guarded = self.guarded.saturating_sub(1);

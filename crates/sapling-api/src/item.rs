@@ -30,13 +30,14 @@ pub enum Slot {
 /// A player throwing a stack out of their inventory. Cancelled, the stack stays where it was.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct DropEvent {
+    pub(crate) player: crate::Player,
     item: Item,
     pub(crate) cancelled: bool,
 }
 
 impl DropEvent {
-    pub fn new(item: Item) -> Self {
-        Self { item, cancelled: false }
+    pub fn new(player: crate::Player, item: Item) -> Self {
+        Self { player, item, cancelled: false }
     }
 
     /// What is thrown: the item and how many of it.

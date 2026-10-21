@@ -1,5 +1,5 @@
 use crate::testing::{Fake, player};
-use crate::{Cancellable, DropEvent, Handler, Item, Player, ShardCtx, Slot};
+use crate::{DropEvent, Event, Handler, Item, Player, ShardCtx, Slot};
 
 /// Hands out a compass on join and keeps players from throwing it away.
 struct Kit;
@@ -26,7 +26,7 @@ fn a_handler_fills_an_inventory_and_refuses_a_drop() {
 
     let mut ctx = ShardCtx::new(&mut fake);
     assert_eq!((ctx.held_slot(steve.id), ctx.item(steve.id, Slot::Offhand)), (Some(2), None));
-    let (mut compass, mut bread) = (DropEvent::new(Item::new("minecraft:compass", 1)), DropEvent::new(Item::new("minecraft:bread", 3)));
+    let (mut compass, mut bread) = (DropEvent::new(player(1, "Steve"), Item::new("minecraft:compass", 1)), DropEvent::new(player(1, "Steve"), Item::new("minecraft:bread", 3)));
     Kit.on_drop(&mut ctx, &steve, &mut compass);
     Kit.on_drop(&mut ctx, &steve, &mut bread);
     assert!(compass.is_cancelled() && compass.is_stopped() && !bread.is_cancelled());

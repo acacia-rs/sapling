@@ -143,6 +143,9 @@ fn switch(world: &mut World, player: Entity, layer: Entity, feet: [f32; 3], told
     let Some(mut in_layer) = world.get_mut::<InLayer>(player) else { return false };
     in_layer.0 = layer;
     visibility::forget_seen(world, player);
+    if let Some(mut simulated) = world.get_mut::<crate::simulation::Simulated>(player) {
+        simulated.restart();
+    }
     if let Some(mut client) = world.get_mut::<ClientDimension>(player) {
         client.dimension = dimension;
     }

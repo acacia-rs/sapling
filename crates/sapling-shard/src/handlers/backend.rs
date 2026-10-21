@@ -11,7 +11,7 @@ use super::Ctx;
 use crate::commands::Access;
 use crate::components::{Identity, Layer, Mode, Net, NetId, Players, Position, Settings, Tick, in_world};
 use crate::inventory::Inventory;
-use crate::plugins::PluginState;
+use crate::plugins::{Deferred, PluginState};
 use crate::{blocks, chat, clock, containers, forms, hud, inventory, join, movement, worlds};
 
 impl Backend for Ctx<'_> {
@@ -229,5 +229,9 @@ impl Backend for Ctx<'_> {
 
     fn state(&mut self, key: TypeId, init: &dyn Fn() -> State) -> &mut State {
         self.world.resource_mut::<PluginState>().into_inner().0.entry(key).or_insert_with(init)
+    }
+
+    fn defer(&mut self, change: sapling_api::ListenerChange) {
+        self.world.resource::<Deferred>().push(change);
     }
 }

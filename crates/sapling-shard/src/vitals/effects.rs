@@ -140,7 +140,11 @@ fn boost(world: &mut World, player: Entity, id: u64) {
 fn tell_pace(world: &mut World, player: Entity, id: u64) {
     let tick = world.resource::<Tick>().0;
     let (quick, slow) = (level(world, player, Effect::Speed), level(world, player, Effect::Slowness));
-    tell(world, player, &pace(id, quick, slow, tick));
+    let told = pace(id, quick, slow, tick);
+    if let Some(mut simulated) = world.get_mut::<crate::simulation::Simulated>(player) {
+        simulated.set_speed(told.attributes[0].current);
+    }
+    tell(world, player, &told);
 }
 
 /// What a hit of `amount` by a player costs under its strength and its weakness.

@@ -1,7 +1,7 @@
 use std::net::SocketAddr;
 use std::sync::Arc;
 
-use sapling_api::{Command, Difficulty, GameMode, Handler, Priority};
+use sapling_api::{Command, Difficulty, GameMode, Handler, Plugin, Priority};
 use sapling_net::{Advert, Listener, Motd, NetConfig, NetherNet, SigningKeys};
 use sapling_shard::{Link, Shard, ShardConfig, ShardHandle};
 use sapling_world::{Template, World};
@@ -42,6 +42,7 @@ pub struct ServerBuilder {
     templates: Vec<(String, Arc<Template>, [f32; 3])>,
     handlers: Vec<(Priority, Box<dyn Handler>)>,
     handlers_each: Vec<(Priority, HandlerFactory)>,
+    plugins: Vec<Arc<dyn Plugin>>,
     /// Each registers one command type on a shard once it exists.
     commands: Vec<fn(&mut Shard)>,
     /// Other dimensions, each with the name of the world it belongs to.
@@ -60,6 +61,7 @@ impl Default for ServerBuilder {
             templates: Vec::new(),
             handlers: Vec::new(),
             handlers_each: Vec::new(),
+            plugins: Vec::new(),
             commands: Vec::new(),
             dimensions: Vec::new(),
         }
@@ -138,6 +140,12 @@ impl ServerBuilder {
         self
     }
 
+    /// Adds a plugin: [`Plugin::build`] runs once on every shard.
+    pub fn plugin(mut self, plugin: impl Plugin) -> Self {
+        self.plugins.push(Arc::new(plugin));
+        self
+    }
+
     /// Adds a command: clients that may use it see its syntax and get completions.
     pub fn command<C: Command>(mut self) -> Self {
         self.commands.push(|shard| shard.add_command::<C>());
@@ -184,6 +192,7 @@ impl ServerBuilder {
             self.templates.iter().for_each(|(name, template, spawn)| shard.add_template(name, template.clone(), *spawn));
             single.take().into_iter().flatten().for_each(|(priority, handler)| shard.add_handler_at(priority, handler));
             self.handlers_each.iter().for_each(|(priority, make)| shard.add_handler_at(*priority, make()));
+            self.plugins.iter().for_each(|plugin| shard.add_plugin(plugin.as_ref()));
             self.commands.iter().for_each(|register| register(&mut shard));
             shards.push(shard);
         }

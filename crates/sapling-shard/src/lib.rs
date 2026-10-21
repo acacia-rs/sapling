@@ -3,8 +3,10 @@
 //! about each other and hands each player's packets to the outbox as one batch. See
 //! docs/DESIGN.md "Threads", "Worlds", "Step 3 as built" and "Step 5 as built".
 
+mod actions;
 mod actors;
 mod arenas;
+mod damage;
 mod blobs;
 mod blocks;
 mod body;
@@ -40,6 +42,7 @@ mod portals;
 mod roster;
 mod rules;
 mod shard;
+mod simulation;
 mod skin;
 mod sleep;
 mod splash;
@@ -52,6 +55,6 @@ mod vitals;
 mod weather;
 mod worlds;
 
-pub use config::{ShardConfig, TICK};
+pub use config::{MovementCheck, ShardConfig, TICK};
 pub use handoff::Link;
 pub use shard::{Shard, ShardHandle};

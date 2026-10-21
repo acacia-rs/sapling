@@ -13,7 +13,7 @@ Evidence: `research/dragonfly.md`, `research/acacia-server-gaps.md`, `research/w
 | Threads | One **shard** = one OS thread with its own `bevy_ecs::World` + `Schedule` (no `bevy_app`). Many shards, created and destroyed at runtime | Cores scale with worlds; no locks in game code; no fixed world count (dragonfly has 3) |
 | Worlds | A world is a **layer entity** inside a shard (Valence model). A shard holds many worlds (e.g. 50 arenas); a player points at its layer by component | Switching world inside a shard is a component write; arenas are cheap |
 | Cross-shard | Message passing only. Player transfer = serialise, two-phase handoff over a channel, a directory forwards messages meanwhile | dragonfly's cond-var transfers are its main deadlock source (#966, #981, #990, #1448) |
-| Plugin API | Handler traits (`on_join`, `on_chat`, `on_break`, …) with default no-ops, mutable event params, `ctx.cancel()`; **many handlers with priorities**; handlers get a borrowed `ShardCtx` facade, never bevy types. Advanced plugins may add systems/components | dragonfly allows one handler and refuses plugins (#400, #314); Chorus/Valence leak bevy into the public API and got stuck on old bevy |
+| Plugin API | `Plugin::build` per shard registers **typed listeners** (`on::<BreakEvent>(priority, ..)`) and tasks, scoped to the shard, a world or a player; mutable events with `cancel()`; the `Handler` trait (`on_join`, `on_chat`, …) is filed as listeners; all get a borrowed `ShardCtx` facade, never bevy types | dragonfly allows one handler and refuses plugins (#400, #314); Chorus/Valence leak bevy into the public API and got stuck on old bevy |
 | Plugins | Rust crates compiled in. Facade types stay plain data so a WASM host can mirror them later | Speed and types now, sandboxing later |
 | Inbound packets | Network threads decode and push into per-shard queues; the shard drains them at tick start | dragonfly blocks one world round-trip per packet |
 | Outbound | Never blocks the shard. Broadcasts encoded and compressed once per layer, encrypted per player; movement batched per tick | dragonfly re-encodes per viewer and blocks the world on a full queue |
@@ -100,8 +100,9 @@ One listener task, one shard thread, one world. The pieces and why they are shap
   sends them and as the recorded StartGame announces.
 - **Packets inside a tick.** The inbox is drained into queues by packet id; each system takes the types it
   handles. Order is kept within a type, not across types.
-- **Handlers** run after the tick's systems, outside the schedule, with a `ShardCtx` over a `Backend`
-  trait object, so `sapling-api` depends on nothing but `uuid`.
+- **Listeners** run after the tick's systems, outside the schedule, with a `ShardCtx` over a `Backend`
+  trait object, so `sapling-api` depends on nothing but `uuid`. The registry (`sapling-api/src/listen.rs`)
+  is plain Rust too; the shard only feeds it events.
 - **Game data** is BDS's own packets, patched (`crates/sapling-data/README.md`).
 
 ## Step 2 as built (Map)
@@ -278,10 +279,36 @@ gave the shapes below; run against sapling it shows the same packets.
 Ground truth: `cargo run -p sapling --example bds_ui_probe -- <server>` prints BDS's command list and what
 it sends for `/title`, `/scoreboard`, `/gamemode`, `/tp`, a wither's bar and commands that fail.
 
-- **Handlers.** `Server::builder().handler_at(Priority, h)`; `Highest` runs first, `Lowest` last, `Monitor`
-  after all. `on_chat` and `on_command` get a mutable event (`ChatEvent::message`, `cancel()`); a cancel stops
-  the handlers that have not run, except monitors, which get a copy of the final event and cannot change it.
-  `on_tick` runs once a tick after the events. `on_move` was left out: it needs a resync on cancel.
+- **Plugins and listeners** (`sapling-api/src/{listen,plugin}.rs`, `sapling-shard/src/plugins.rs`).
+  `Server::builder().plugin(p)`: `Plugin::build` runs once per shard and adds commands, listeners
+  (`p.on::<E>(priority, |ctx, ev| ..)`) and tasks (`every`, `later`, in ticks). Every event carries its
+  player (`ev.player()`). `Highest` runs first, `Lowest` last, `Monitor` after all; a cancel stops the
+  listeners that have not run, except monitors (a copy of the final event, changes discarded) and those added
+  `Priority::X.receiving_cancelled()`. A running listener adds more with `ctx.in_world(name)`,
+  `ctx.for_player(id)` or `ctx.on_shard()`; they join from the next event, and a world's or player's go
+  when it is removed or they leave the shard (after their `QuitEvent`). A world's tasks run with it in
+  focus. The registry is a world resource (`plugins::Registry`), so any of the game's code raises an event
+  with `plugins::offer(world, ev)`; it is taken out while it runs, so **what a running listener or task
+  causes is not offered again** (a damage listener that hurts someone cannot set itself off; a plugin's
+  `ctx.hurt_player` goes unheard). Changes made meanwhile wait in `plugins::Deferred`; both are locked
+  because a resource must be `Sync`. Commands sit apart in an `Arc` (`CommandRegistry`), so a player's
+  command runs with the listeners in place and what it causes is heard. `Handler` is a plugin as one value: each method is a listener at the handler's priority
+  (`handler_at`). Tasks run once a tick after the events, then `TickEvent` (`on_tick`).
+- **Player actions** (`sapling-shard/src/actions.rs`). `MoveEvent` (one a tick per player that moved or
+  turned, from the tick's start; `changed_block()` for block-level checks): `movement::player_input` queues
+  it in `movement::Moves`, since systems hold no plugins, and dispatch offers it before anything reads
+  positions; a cancel teleports the client back, as Paper does. `ItemUseEvent` is a use on nothing
+  (eating, drinking; a cancel stops the client's use), `EntityAttackEvent` / `EntityInteractEvent` a click
+  on a player or an entity (`Target`); a cancelled attack does no harm, an interaction has no vanilla effect
+  yet. Clicks naming nothing raise no event.
+- **Harm, death, rising** (`sapling-shard/src/damage.rs`, `vitals/{stand,struck,death}.rs`). `DamageEvent`
+  (a player or a mob, its `DamageCause`, the `Attacker` a hit's `Slayer` names, a mutable `amount`) is
+  asked before a hit lands and before its throw, so a cancel leaves no harm and no knockback. For what a
+  player's surroundings do in a tick (`stand`) the health is kept from before them: a cancel puts it back,
+  a changed amount is the loss (`Health::lose`). Not asked yet: what their surroundings do to mobs
+  (`creatures/harm.rs` `tick`), `/kill`. `DeathEvent` (players) sets `keep_inventory` and `message`
+  (`Vanilla`, `Hidden`, `Text`); the death screen keeps the game's words. `RespawnEvent::feet` starts as
+  the bed or the world's spawn.
 - **State.** `ctx.state::<T>()` is a per-shard `T::default()` keyed by type: what a plugin's handler,
   commands and form callbacks share (commands are types, not values, so they hold nothing).
 - **Commands** (`sapling-api/src/command`, `sapling-shard/src/commands.rs`). `#[derive(Command)]` on a struct
@@ -413,8 +440,8 @@ instead ("Dimensions and portals (as built)").
   on shard 0; `add_world(name, ..)`, `add_world_on(shard, name, ..)`, `add_platform_on(shard,
   name)`, `join_world(name)`, `template(name, template, spawn)`. One thread per shard index
   used; a shard's first world is its fallback. `handler_each(|| h)` makes a handler per shard;
-  `handler(h)` is for servers of one shard (`StartError::HandlerPerShard` otherwise). Commands
-  and templates go to every shard.
+  `handler(h)` is for servers of one shard (`StartError::HandlerPerShard` otherwise). Plugins,
+  commands and templates go to every shard.
 - **Arenas** (`sapling-world/src/template.rs`, `sapling-shard/src/arenas.rs`).
   `Template::of(world)` freezes a world in memory (`World::load_all` first for a folder) with
   every encoding made; `World::arena(&template)` copies nothing and reads the template, void
@@ -467,7 +494,7 @@ block action, and takes StopBreak and AbortBreak with a position.
   `PlaceEvent::block` is public: a handler may place something else. Priorities and monitors as for chat.
 - **Defaults by game mode.** A break starts allowed in survival and creative and cancelled in adventure
   and spectator; a place starts allowed in creative only; an interaction starts cancelled for spectators.
-  A cancelled start is not a handler's cancel: every handler still sees the event (`Cancellable::is_stopped`)
+  A cancelled start is not a handler's cancel: every handler still sees the event (`Event::is_stopped`)
   and any may `allow()` it, so a plugin can open one region to adventure players. A handler's `cancel()`
   stops the handlers after it, as for chat.
 - **Taken.** A break writes air, or the water the block stood in (layer 1 is emptied), and everyone whose
@@ -938,6 +965,23 @@ only falls back to RakNet when that fails, so turning it on moves every vanilla 
 - Tests: `sapling-net/tests/nethernet.rs` (both signaling paths, beside RakNet) and the NetherNet
   bot in `sapling/tests/join.rs`.
 
+## Server-side movement (as built: Observe)
+
+`sapling-shard/src/simulation.rs`; research: `acacia/research/sapling-server-movement.md`.
+
+- `ShardConfig::movement_check`: `Trust` (the sanity checks in movement.rs only) or `Observe { threshold }`
+  (default 0.5, BDS's `player-position-acceptance-threshold`). Correcting is not built yet.
+- Each accepted `PlayerAuthInput` of a survival or adventure player is stepped with acacia-physics'
+  `tick` over the player's world (`RegistryWorld` of the feature `acacia-world`, over a `Blocks` newtype),
+  the held controls read from the input flags as acacia-bot's trace replay reads them, gliding and swimming
+  latched from their edges, eating from `Vitals`. The server's feet are compared with the client's; past the
+  threshold the input is logged (debug) and counted, and the simulation goes on from the client's place
+  but its own velocity and on-ground, so a client claiming a speed is not handed it.
+- Adopted, not stepped: the first input on a shard, an input carrying `HandledTeleport`, creative and
+  spectator players. Fed to the simulation: knockback (`vitals/struck.rs` `throw`), the speed attribute
+  (`vitals/effects.rs`), piston pushes. A leaving player's counts are logged (info): the divergence data
+  that decides when correcting is turned on, per platform.
+
 ## Building against a local acacia
 
 `Cargo.toml` takes the acacia crates from GitHub at one commit. To build against a checkout beside
@@ -1042,7 +1086,9 @@ acacia-world = { path = "../acacia/acacia/crates/acacia-world" }
 - Not sent yet, though BDS sends them for other players: UpdateAbilities, UpdateAdventureSettings,
   UpdateAttributes (sprint speed), PlayerLocation / LocatorBar, the MOVING flag and the FlagsExtended bit
   that changes with sneaking, held items and armour.
-- Movement: physics validation (acacia-physics), on-ground from collision.
+- Movement: corrections from the server's step (`CorrectPlayerMovePrediction`, BDS's 5-tick delay and
+  40-tick rewind), on-ground and fall height from it, `SetMovementAuthority` (check whether BDS sends it),
+  knockback stamped with the input tick, a per-player policy for plugins.
 - Broadcasts are encoded once but compressed per player; `SharedBatch` needs a per-layer batch in
   sapling-net. Block changes and chat still look at every player of the shard per event.
 - A newcomer gets every skin at once (about 290 KB each before compression); throttle before the

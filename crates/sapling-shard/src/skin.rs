@@ -28,7 +28,8 @@ const PIECES: [(&str, PersonaPieceType); 27] = {
         ("dress", P::Dress),
         ("top", P::Top),
         ("high_pants", P::HighPants),
-        ("hands", P::Hands),
+        // Login's name, which BDS reads (acacia-auth README "Persona piece types").
+        ("hand", P::Hands),
         ("outerwear", P::Outerwear),
         ("facial_hair", P::FacialHair),
         ("mouth", P::Mouth),

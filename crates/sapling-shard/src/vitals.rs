@@ -3,7 +3,7 @@
 //! player's (docs/research/player-damage.md). Dying and rising: death.rs; mending and
 //! starving: hunger.rs; effects: effects.rs.
 // TODO: a block over the head alone does not
-// make a player crawl; the breathing flag is not told; plugins are not asked.
+// make a player crawl; the breathing flag is not told.
 
 mod death;
 pub(crate) mod eating;
@@ -14,6 +14,7 @@ pub(crate) use struck::{bitten, blasted, fanged, is_fireproof, punched, pushed, 
 mod hunger;
 mod kept;
 mod splashed;
+mod stand;
 mod struck;
 pub(crate) use splashed::{health_left, is_under, splashed};
 
@@ -24,9 +25,8 @@ use bevy_ecs::prelude::*;
 use sapling_api::{DamageCause, GameMode, HealthBackend, PlayerId};
 use sapling_data::EYE_HEIGHT;
 
-use crate::body::Body;
-use crate::components::{InLayer, Layer, Mode, NetId, Outgoing, Position, Tick, in_world};
-use crate::creatures::{Cause, Health, holds, is_full_block, touches};
+use crate::components::{InLayer, Mode, NetId, Outgoing, Position, Tick, in_world};
+use crate::creatures::{Cause, Health};
 use crate::handlers::Ctx;
 use crate::movement::{self, Motion};
 use crate::visibility::ToViewers;
@@ -86,6 +86,13 @@ impl Default for Vitals {
         let hunger = hunger::Hunger::default();
         let [fed, saturation, exhaustion] = hunger.kept();
         Self { health: Health::new(MAX, None, 0), air: AIR, hunger, meal: None, told: MAX, padded: 0.0, was: None, died: None, leaves: None, saved: [MAX, fed, saturation, exhaustion] }
+    }
+}
+
+impl Vitals {
+    /// Eating or drinking, which slows the player's walk.
+    pub(crate) fn is_eating(&self) -> bool {
+        self.meal.is_some()
     }
 }
 
@@ -152,9 +159,20 @@ fn dress(world: &mut World, player: Entity) {
     }
 }
 
-/// Takes `amount` from a player's health as a hit of `cause`, less what its armour stops of a
-/// cause it stops; false where it took nothing.
+/// [`land`]s a hit once plugins let it; false where it took nothing.
 fn hurt(world: &mut World, player: Entity, amount: f32, cause: Cause) -> bool {
+    ask(world, player, amount, cause).is_some_and(|amount| land(world, player, amount, cause))
+}
+
+/// What plugins make of a hit on a player, from the attacker a hit's [`death::Slayer`] names.
+fn ask(world: &mut World, player: Entity, amount: f32, cause: Cause) -> Option<f32> {
+    let attacker = death::attacker(world, player);
+    crate::damage::ask(world, player, amount, cause, attacker)
+}
+
+/// Takes `amount` from a player's health as a hit of `cause`, less what its armour stops of a
+/// cause it stops; false where it took nothing. Plugins were asked ([`hurt`]).
+fn land(world: &mut World, player: Entity, amount: f32, cause: Cause) -> bool {
     dress(world, player);
     let fiery = matches!(cause, Cause::Fire | Cause::FireTick | Cause::Lava | Cause::Magma);
     if fiery && world.get::<Vitals>(player).is_some_and(|vitals| vitals.health.is_fireproof()) {
@@ -197,66 +215,6 @@ pub(crate) fn tire(world: &mut World, player: Entity, by: f32) {
     feed(world, player, |hunger| hunger.tire(by));
 }
 
-/// A tick of what the place a living player stands in does to it.
-fn stand(world: &mut World, player: Entity, layer: Entity) {
-    dress(world, player);
-    dress(world, player);
-    let gilled = effects::level(world, player, sapling_api::Effect::WaterBreathing).is_some();
-    let (Some(position), Some(mut vitals)) = (world.get::<Position>(player).copied(), world.get::<Vitals>(player).copied()) else { return };
-    let Some(level) = world.get::<Layer>(layer).map(|layer| &layer.world) else { return };
-    let body = Body::new(position.feet, [0.0; 3], SIZE);
-    let (fire, lava, water) = (touches(level, &body, FIERY), touches(level, &body, LAVA), touches(level, &body, WATER));
-    let [low, eyes] = [0.0, EYE_HEIGHT].map(|up| [position.feet[0], position.feet[1] + up, position.feet[2]].map(|c| c.floor() as i32));
-    // BDS lays a player with only its head in a block down, unhurt.
-    let (under_water, in_wall) = (holds(level, eyes, WATER) && !gilled, is_full_block(level, eyes) && is_full_block(level, low));
-    // A teleport is no fall: until the client follows it, the height starts anew.
-    let (carried, sprinting, jumps) = world.get_mut::<Motion>(player).map_or((false, false, 0), |mut motion| (motion.awaits_teleport(), motion.pose.sprinting, std::mem::take(&mut motion.jumps)));
-    let from = vitals.was.replace(position.feet).unwrap_or(position.feet);
-    let run = (position.feet[0] - from[0]).hypot(position.feet[2] - from[2]);
-    let ran = if sprinting && position.on_ground && !carried && run <= LONGEST_STEP { run } else { 0.0 };
-    let fed = vitals.hunger;
-    vitals.hunger.tire(f32::from(jumps) * if sprinting { LEAP_TIRES } else { JUMP_TIRES } + ran * SPRINT_TIRES);
-    let (health, breath) = (&mut vitals.health, vitals.air);
-    let mut hits = Vec::new();
-    health.begin();
-    // BDS does not count the move a player lands in: 12 blocks cost it 8 (bds-hurt.txt).
-    let fallen_to = if position.on_ground { position.feet[1].max(from[1]) } else { position.feet[1] };
-    let dropped = if position.on_ground && !(water || lava || carried) { health.dropped(from[1], fallen_to) } else { 0.0 };
-    hits.extend(health.fall(from, fallen_to, position.on_ground, water || lava || carried).map(|_| Cause::Fall));
-    let lit = health.is_burning();
-    hits.extend(health.burn(fire, water).map(|cause| if lit { Cause::FireTick } else { cause }));
-    hits.extend((lava && health.scald()).then_some(Cause::Lava));
-    hits.extend(health.smother(in_wall, WALLED).then_some(Cause::Suffocation));
-    vitals.air = if under_water || in_wall { breath - 1 } else { (breath + BREATH).min(AIR) };
-    if vitals.air <= -GASP {
-        vitals.air = 0;
-        hits.extend((under_water && vitals.health.hurt(DROWN_HARM)).then_some(Cause::Drowning));
-    }
-    let left = vitals.health.left();
-    match vitals.hunger.tick(left > 0.0 && left < vitals.health.max()) {
-        Some(hunger::Turn::Mend) => vitals.health.mend(1.0),
-        Some(hunger::Turn::Starve) => hits.extend((left > STARVED && vitals.health.hurt(1.0)).then_some(Cause::Starving)),
-        None => {}
-    }
-    let is_alive = vitals.health.left() > 0.0;
-    *world.get_mut::<Vitals>(player).expect("read above") = vitals;
-    if let Some(id) = world.get::<NetId>(player).map(|id| id.0).filter(|_| vitals.air != breath) {
-        tell(world, player, &sapling_data::mob_air(id, vitals.air));
-    }
-    if let Some(id) = world.get::<NetId>(player).map(|id| id.0).filter(|_| vitals.hunger.shown() != fed.shown()) {
-        let tick = world.resource::<Tick>().0;
-        tell(world, player, &vitals.hunger.told(id, tick));
-    }
-    for cause in hits.iter().filter(|_| is_alive) {
-        flash(world, player, *cause);
-    }
-    settle(world, player, hits.last().copied().unwrap_or(Cause::Fire));
-    crate::blocks::trample(world, layer, position.feet, dropped);
-    if position.on_ground {
-        crate::blocks::tread_ore(world, layer, position.feet);
-    }
-}
-
 /// Lets the dead rise who asked to, hurts the living by where they stand, and lets the bodies go.
 pub(crate) fn tick(world: &mut World) {
     death::rise(world);
@@ -265,7 +223,7 @@ pub(crate) fn tick(world: &mut World) {
     let players: Vec<(Entity, Entity)> = in_world(world).into_iter().filter_map(|player| Some((player, world.get::<InLayer>(player)?.0))).collect();
     for (player, layer) in players {
         if is_mortal(world, player) {
-            stand(world, player, layer);
+            stand::stand(world, player, layer);
         } else {
             if let Some(mut vitals) = world.get_mut::<Vitals>(player) {
                 vitals.was = None;

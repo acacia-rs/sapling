@@ -63,8 +63,8 @@ impl Request<'_> {
     /// Takes the liquid source at `pos` into an empty bucket.
     fn fill(&mut self, site: &Site, pos: BlockPos) -> bool {
         let Cell::Liquid(liquid, 0) = liquid::cell(self.world, site.layer, pos) else { return false };
-        let (event, player) = (BreakEvent::new(pos, source(liquid), Vec::new(), Self::allowed(site)), self.player);
-        if self.plugins.offer(self.world, event, |handler, ctx, event| handler.on_break(ctx, player, event)).is_cancelled() {
+        let event = BreakEvent::new(self.player.clone(), pos, source(liquid), Vec::new(), Self::allowed(site));
+        if crate::plugins::offer(self.world, event).is_cancelled() {
             return false;
         }
         // Water walled in by water sources and solid blocks stays: no air pocket in the sea.
@@ -105,8 +105,8 @@ impl Request<'_> {
         if washed.is_some() && old_state.is_solid() || super::site(self.world, self.entity, target).is_none() {
             return false;
         }
-        let (event, player) = (PlaceEvent::new(target, pos, face, source(liquid), Self::allowed(site)), self.player);
-        if self.plugins.offer(self.world, event, |handler, ctx, event| handler.on_place(ctx, player, event)).is_cancelled() {
+        let event = PlaceEvent::new(self.player.clone(), target, pos, face, source(liquid), Self::allowed(site));
+        if crate::plugins::offer(self.world, event).is_cancelled() {
             return false;
         }
         if snow_under {

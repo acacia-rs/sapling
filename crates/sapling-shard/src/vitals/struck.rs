@@ -6,7 +6,7 @@ use acacia_proto::types::Vec3f;
 use bevy_ecs::prelude::*;
 use sapling_api::GameMode;
 
-use super::{Vitals, death, hurt, is_mortal, tell};
+use super::{Vitals, ask, death, hurt, is_mortal, land, tell};
 
 use crate::components::{Mode, NetId, Position, Tick};
 use crate::creatures::Cause;
@@ -15,6 +15,9 @@ use crate::creatures::Cause;
 const THROW: f32 = 0.4;
 
 fn throw(world: &mut World, player: Entity, id: u64, [x, y, z]: [f32; 3]) {
+    if let Some(mut simulated) = world.get_mut::<crate::simulation::Simulated>(player) {
+        simulated.knock([x, y, z]);
+    }
     let tick = world.resource::<Tick>().0;
     tell(world, player, &SetEntityMotion { runtime_entity_id: id, velocity: Vec3f { x, y, z }, tick });
 }
@@ -34,16 +37,24 @@ pub(crate) fn fanged(world: &mut World, player: Entity, amount: f32, kind: &str,
 
 fn struck(world: &mut World, player: Entity, amount: f32, kind: &str, speed: [f32; 3], cause: Cause) -> bool {
     let (Some(id), true) = (world.get::<NetId>(player).map(|id| id.0), is_mortal(world, player)) else { return false };
+    slain_by(world, player, kind, |world| {
+        let Some(amount) = ask(world, player, amount, cause) else { return false };
+        // Not one a guard turns away: of two hits at once BDS threw for one (bds-pvp.txt).
+        let lands = |vitals: &Vitals| {
+            let mut tried = vitals.health;
+            tried.hurt(amount) && vitals.health.left() > amount
+        };
+        if world.get::<Vitals>(player).is_some_and(lands) {
+            throw(world, player, id, speed);
+        }
+        land(world, player, amount, cause)
+    })
+}
+
+/// Runs a hit with a mob of `kind` named as the player's [`death::Slayer`].
+fn slain_by(world: &mut World, player: Entity, kind: &str, hit: impl FnOnce(&mut World) -> bool) -> bool {
     world.entity_mut(player).insert(death::Slayer(kind.to_owned()));
-    // Not one a guard turns away: of two hits at once BDS threw for one (bds-pvp.txt).
-    let lands = |vitals: &Vitals| {
-        let mut tried = vitals.health;
-        tried.hurt(amount) && vitals.health.left() > amount
-    };
-    if world.get::<Vitals>(player).is_some_and(lands) {
-        throw(world, player, id, speed);
-    }
-    let took = hurt(world, player, amount, cause);
+    let took = hit(world);
     world.entity_mut(player).remove::<death::Slayer>();
     took
 }
@@ -86,13 +97,10 @@ pub(crate) fn blasted(world: &mut World, player: Entity, amount: f32, from: [f32
 /// An arrow of a mob of `kind` that flew from `from` hurts a player for `amount` and, if it
 /// `throws`, throws it as a hit does. False where it took nothing.
 pub(crate) fn shot(world: &mut World, player: Entity, amount: f32, kind: &str, from: [f32; 3], throws: bool) -> bool {
-    world.entity_mut(player).insert(death::Slayer(kind.to_owned()));
-    let took = match throws {
+    slain_by(world, player, kind, |world| match throws {
         true => hit_from(world, player, amount, from, [0.0; 3], Cause::Projectile),
         false => is_mortal(world, player) && hurt(world, player, amount, Cause::Projectile),
-    };
-    world.entity_mut(player).remove::<death::Slayer>();
-    took
+    })
 }
 
 /// A goat of `kind` at `from` rams a player for `amount`: thrown as a hit is, then again by half
@@ -105,14 +113,14 @@ pub(crate) fn rammed(world: &mut World, player: Entity, amount: f32, kind: &str,
         return false;
     }
     let plain = away(from, feet);
-    if world.get::<Vitals>(player).is_some_and(|vitals| vitals.health.left() > amount) {
-        throw(world, player, id, plain);
-        throw(world, player, id, std::array::from_fn(|axis| plain[axis] / 2.0 + push[axis]));
-    }
-    world.entity_mut(player).insert(death::Slayer(kind.to_owned()));
-    let took = hurt(world, player, amount, Cause::RamAttack);
-    world.entity_mut(player).remove::<death::Slayer>();
-    took
+    slain_by(world, player, kind, |world| {
+        let Some(amount) = ask(world, player, amount, Cause::RamAttack) else { return false };
+        if world.get::<Vitals>(player).is_some_and(|vitals| vitals.health.left() > amount) {
+            throw(world, player, id, plain);
+            throw(world, player, id, std::array::from_fn(|axis| plain[axis] / 2.0 + push[axis]));
+        }
+        land(world, player, amount, Cause::RamAttack)
+    })
 }
 
 /// A breeze's wind charge, shot by a mob of `kind` at `from`, hurts a player for `amount` as a
@@ -121,12 +129,13 @@ pub(crate) fn rammed(world: &mut World, player: Entity, amount: f32, kind: &str,
 pub(crate) fn winded(world: &mut World, player: Entity, amount: f32, kind: &str, from: [f32; 3], push: [f32; 3]) -> bool {
     let (Some(id), Some(feet), true) = (world.get::<NetId>(player).map(|id| id.0), world.get::<Position>(player).map(|position| position.feet), is_mortal(world, player)) else { return false };
     let plain = away(from, feet);
-    throw(world, player, id, plain);
-    world.entity_mut(player).insert(death::Slayer(kind.to_owned()));
-    let took = hurt(world, player, amount, Cause::Projectile);
-    world.entity_mut(player).remove::<death::Slayer>();
-    throw(world, player, id, std::array::from_fn(|axis| plain[axis] + push[axis]));
-    took
+    slain_by(world, player, kind, |world| {
+        let Some(amount) = ask(world, player, amount, Cause::Projectile) else { return false };
+        throw(world, player, id, plain);
+        let took = land(world, player, amount, Cause::Projectile);
+        throw(world, player, id, std::array::from_fn(|axis| plain[axis] + push[axis]));
+        took
+    })
 }
 
 /// A burst that did not hit the player throws it by `push` alone.
@@ -144,10 +153,11 @@ pub(super) fn throw_from(world: &mut World, player: Entity, id: u64, from: [f32;
 
 fn hit_from(world: &mut World, player: Entity, amount: f32, from: [f32; 3], push: [f32; 3], cause: Cause) -> bool {
     let (Some(id), Some(feet), true) = (world.get::<NetId>(player).map(|id| id.0), world.get::<Position>(player).map(|position| position.feet), is_mortal(world, player)) else { return false };
+    let Some(amount) = ask(world, player, amount, cause) else { return false };
     let (dx, dz) = (feet[0] - from[0], feet[2] - from[2]);
     let far = dx.hypot(dz).max(1e-4);
     if world.get::<Vitals>(player).is_some_and(|vitals| vitals.health.left() > amount) {
         throw(world, player, id, [dx / far * THROW + push[0], THROW + push[1], dz / far * THROW + push[2]]);
     }
-    hurt(world, player, amount, cause)
+    land(world, player, amount, cause)
 }

@@ -1,7 +1,6 @@
 //! Blocks as plugins see them: a position, a face, and a state by name.
 
-use crate::Item;
-use crate::event::Cancellable;
+use crate::{Event, Item, Player};
 
 /// A block's place in the world: x, y, z.
 pub type BlockPos = [i32; 3];
@@ -87,6 +86,7 @@ impl Block {
 /// one through. See [`crate::Priority`] for which handlers still run after a cancel.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct BreakEvent {
+    pub(crate) player: Player,
     pos: BlockPos,
     block: Block,
     /// What the block leaves lying where it stood; a handler may change it. Filled in survival
@@ -106,6 +106,7 @@ pub struct BreakEvent {
 /// client's block.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct PlaceEvent {
+    pub(crate) player: Player,
     pos: BlockPos,
     against: BlockPos,
     face: Face,
@@ -120,6 +121,7 @@ pub struct PlaceEvent {
 /// on its own screen closes again. Starts cancelled for spectators.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct InteractEvent {
+    pub(crate) player: Player,
     pos: BlockPos,
     face: Face,
     block: Block,
@@ -128,8 +130,8 @@ pub struct InteractEvent {
 }
 
 impl BreakEvent {
-    pub fn new(pos: BlockPos, block: Block, drops: Vec<Item>, allowed: bool) -> Self {
-        Self { pos, block, drops, allowed, stopped: false }
+    pub fn new(player: Player, pos: BlockPos, block: Block, drops: Vec<Item>, allowed: bool) -> Self {
+        Self { player, pos, block, drops, allowed, stopped: false }
     }
 
     pub fn pos(&self) -> BlockPos {
@@ -143,8 +145,8 @@ impl BreakEvent {
 }
 
 impl PlaceEvent {
-    pub fn new(pos: BlockPos, against: BlockPos, face: Face, block: Block, allowed: bool) -> Self {
-        Self { pos, against, face, block, allowed, stopped: false }
+    pub fn new(player: Player, pos: BlockPos, against: BlockPos, face: Face, block: Block, allowed: bool) -> Self {
+        Self { player, pos, against, face, block, allowed, stopped: false }
     }
 
     /// Where the block goes.
@@ -159,8 +161,8 @@ impl PlaceEvent {
 }
 
 impl InteractEvent {
-    pub fn new(pos: BlockPos, face: Face, block: Block, allowed: bool) -> Self {
-        Self { pos, face, block, allowed, stopped: false }
+    pub fn new(player: Player, pos: BlockPos, face: Face, block: Block, allowed: bool) -> Self {
+        Self { player, pos, face, block, allowed, stopped: false }
     }
 
     pub fn pos(&self) -> BlockPos {
@@ -180,12 +182,12 @@ impl InteractEvent {
 macro_rules! block_event {
     ($($event:ty),*) => {$(
         impl $event {
-            /// Refuses the event; only `Monitor` handlers still see it.
+            /// Refuses the event; only `Monitor` listeners still see it.
             pub fn cancel(&mut self) {
                 (self.allowed, self.stopped) = (false, true);
             }
 
-            /// Lets the event happen, also one that started cancelled. Later handlers still run
+            /// Lets the event happen, also one that started cancelled. Later listeners still run
             /// and may cancel it.
             pub fn allow(&mut self) {
                 (self.allowed, self.stopped) = (true, false);
@@ -196,11 +198,12 @@ macro_rules! block_event {
             }
         }
 
-        impl Cancellable for $event {
-            fn is_cancelled(&self) -> bool {
-                !self.allowed
+        impl Event for $event {
+            fn player(&self) -> Option<&Player> {
+                Some(&self.player)
             }
 
+            /// Cancelled by a listener, not just started cancelled: see [`crate::Priority`].
             fn is_stopped(&self) -> bool {
                 self.stopped
             }

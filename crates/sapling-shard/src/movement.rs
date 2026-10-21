@@ -1,6 +1,7 @@
 //! Where players are and what their bodies do, as their clients report it, and what viewers are
 //! told about it: packets and field values as BDS sends them (`sapling` example `bds_probe`).
-// TODO: physics validation (acacia-physics); only teleport-sized steps are refused for now.
+// TODO: corrections from the server's own step (simulation.rs observes only); until then only
+// teleport-sized steps are refused.
 
 mod placing;
 
@@ -14,9 +15,13 @@ use acacia_proto::types::{
 use bevy_ecs::prelude::*;
 use sapling_data::EYE_HEIGHT;
 
+use sapling_api::GameMode;
+
 use crate::blocks::BlockInputs;
-use crate::components::{NetId, Outgoing, PacketQueues, Position, Stage, Tick};
+use crate::components::{InLayer, Layer, Mode, NetId, Outgoing, PacketQueues, Position, Settings, Stage, Tick};
+use crate::simulation::{self, Simulated};
 use crate::visibility::ToViewers;
+use crate::vitals::Vitals;
 pub(crate) use placing::{correct, correct_unmoving, push, reset, teleport, teleport_as, teleport_onto_ground};
 
 /// Blocks an input may be from the one before it; further is a teleport the server never made.
@@ -155,13 +160,41 @@ pub(crate) fn pose_packet(id: u64, pose: Pose, tick: u64) -> SetEntityData {
     SetEntityData { runtime_entity_id: id, metadata: flags.chain([height]).collect(), properties: EntityProperties { ints: Vec::new(), floats: Vec::new() }, tick }
 }
 
-type Mover<'a> = (&'a NetId, &'a Stage, &'a mut Position, &'a mut Motion, &'a mut Outgoing);
+/// This tick's moves for the plugins (`actions::dispatch_moves`): a player, where it was at the
+/// tick's start, where it is now.
+#[derive(Resource, Default)]
+pub(crate) struct Moves(Vec<(Entity, Position, Position)>);
+
+impl Moves {
+    /// Several inputs in a tick make one move, from the first place to the last.
+    fn record(&mut self, entity: Entity, from: Position, to: Position) {
+        match self.0.iter_mut().find(|(mover, ..)| *mover == entity) {
+            Some(moved) => moved.2 = to,
+            None => self.0.push((entity, from, to)),
+        }
+    }
+
+    pub fn take(&mut self) -> Vec<(Entity, Position, Position)> {
+        std::mem::take(&mut self.0)
+    }
+}
+
+type Mover<'a> = (&'a NetId, &'a Stage, &'a mut Position, &'a mut Motion, &'a mut Outgoing, &'a InLayer, &'a Mode, Option<&'a mut Simulated>, Option<&'a Vitals>);
 
 /// Where each client says its player is. Trusted, except that non-finite values are dropped and
-/// a step no player makes in a tick is answered with a teleport back.
-pub(crate) fn player_input(mut packets: ResMut<PacketQueues>, tick: Res<Tick>, mut blocks: ResMut<BlockInputs>, mut players: Query<Mover>) {
+/// a step no player makes in a tick is answered with a teleport back. Moves are queued for the
+/// plugins (`actions::dispatch_moves`).
+pub(crate) fn player_input(
+    mut packets: ResMut<PacketQueues>,
+    tick: Res<Tick>,
+    settings: Res<Settings>,
+    mut blocks: ResMut<BlockInputs>,
+    mut moves: ResMut<Moves>,
+    layers: Query<&Layer>,
+    mut players: Query<Mover>,
+) {
     for (entity, mut input) in packets.take::<PlayerAuthInput>() {
-        let Ok((id, stage, mut position, mut motion, mut out)) = players.get_mut(entity) else { continue };
+        let Ok((id, stage, mut position, mut motion, mut out, in_layer, mode, simulated, vitals)) = players.get_mut(entity) else { continue };
         if input.block_action.is_some() || input.transaction.is_some() || input.item_stack_request.is_some() {
             tracing::debug!(tick = input.tick, actions = ?input.block_action, transaction = ?input.transaction, request = ?input.item_stack_request, "input with an action");
         }
@@ -204,7 +237,17 @@ pub(crate) fn player_input(mut packets: ResMut<PacketQueues>, tick: Res<Tick>, m
         motion.pose.apply(&input.input_data);
         motion.jumps = motion.jumps.saturating_add(input.input_data.iter().filter(|flag| **flag == InputData::StartJumping).count() as u8);
         motion.input_tick = input.tick;
-        *position = Position { feet, yaw: input.yaw, pitch: input.pitch, head_yaw: input.head_yaw, on_ground };
+        let moved = Position { feet, yaw: input.yaw, pitch: input.pitch, head_yaw: input.head_yaw, on_ground };
+        if *stage == Stage::InWorld && (moved.feet, moved.yaw, moved.pitch) != (position.feet, position.yaw, position.pitch) {
+            moves.record(entity, *position, moved);
+        }
+        if let Some(mut simulated) = simulated {
+            let modelled = matches!(mode.0, GameMode::Survival | GameMode::Adventure);
+            let world = layers.get(in_layer.0).ok().filter(|_| modelled).map(|layer| &layer.world);
+            let eating = vitals.is_some_and(Vitals::is_eating);
+            simulation::observe(&mut simulated, settings.0.movement_check, world, &input, &moved, eating, id.0);
+        }
+        *position = moved;
     }
 }
 

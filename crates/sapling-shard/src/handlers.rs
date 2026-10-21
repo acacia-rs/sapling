@@ -6,11 +6,11 @@
 mod backend;
 
 use bevy_ecs::prelude::*;
-use sapling_api::PlayerId;
+use sapling_api::{JoinEvent, PlayerId, QuitEvent, Scope, TickEvent};
 
 use crate::components::{Arrivals, Identity, Layer, Outgoing, PacketQueues, Players, Stage};
-use crate::plugins::Plugins;
-use crate::{blocks, campfires, chat, commands, containers, creatures, dimensions, drops, entities, forms, furnaces, hoppers, inventory, late_sounds, orbs, portals, roster, sleep, tnt, vitals, worlds};
+use crate::plugins;
+use crate::{actions, blocks, campfires, chat, commands, containers, creatures, dimensions, drops, entities, forms, furnaces, hoppers, inventory, late_sounds, orbs, portals, roster, sleep, tnt, vitals, worlds};
 
 pub(crate) struct Ctx<'w> {
     pub world: &'w mut World,
@@ -36,7 +36,7 @@ impl Ctx<'_> {
 /// Lists players whose client finished loading and calls `on_join` for them, runs chat, commands,
 /// block requests and form answers, removes players whose connection ended, with `on_quit` for
 /// those who had joined, and ends with `on_tick`.
-pub(crate) fn dispatch(world: &mut World, plugins: &mut Plugins) {
+pub(crate) fn dispatch(world: &mut World) {
     // First: a block changed in a tick reaches its circuit in the next, as on BDS
     // (research/captures/bds-redstone-phase.txt), and what an evaluation finds shows a tick later.
     blocks::read_daylight(world);
@@ -45,20 +45,22 @@ pub(crate) fn dispatch(world: &mut World, plugins: &mut Plugins) {
     blocks::move_pistons(world);
     let Arrivals { joined, left } = std::mem::take(&mut *world.resource_mut::<Arrivals>());
     // Players who came from another shard at the start of the tick, before what they then sent.
-    worlds::dispatch(world, plugins);
+    worlds::dispatch(world);
     for entity in joined {
         let Some(player) = world.get::<Identity>(entity).map(|i| i.0.clone()) else { continue };
         world.resource_mut::<Players>().in_world += 1;
         roster::arrive(world, entity);
         worlds::focus_on(world, entity);
-        plugins.each(world, |handler, ctx| handler.on_join(ctx, &player));
+        plugins::offer(world, JoinEvent::new(player));
     }
-    chat::dispatch(world, plugins);
-    commands::dispatch(world, plugins);
+    // Before anything acts on where players are: a cancelled move puts one back.
+    actions::dispatch_moves(world);
+    chat::dispatch(world);
+    commands::dispatch(world);
     blocks::release_buttons(world);
     blocks::press_plates(world);
     blocks::flow_liquids(world);
-    blocks::dispatch(world, plugins);
+    blocks::dispatch(world);
     blocks::dispatch_sign_edits(world);
     blocks::portals::settle(world);
     let actions = world.resource_mut::<PacketQueues>().take::<acacia_proto::packets::PlayerAction>();
@@ -72,7 +74,7 @@ pub(crate) fn dispatch(world: &mut World, plugins: &mut Plugins) {
     blocks::dim_ores(world);
     blocks::settle_scaffolds(world);
     blocks::random_ticks(world);
-    inventory::dispatch(world, plugins);
+    inventory::dispatch(world);
     containers::dispatch_closes(world);
     containers::show_lids_again(world);
     late_sounds::play_due(world);
@@ -100,13 +102,18 @@ pub(crate) fn dispatch(world: &mut World, plugins: &mut Plugins) {
             roster::depart(world, entity);
         }
         worlds::focus_on(world, entity);
+        crate::simulation::report(world, entity);
         world.despawn(entity);
+        let id = player.id;
         if had_joined {
             world.resource_mut::<Players>().in_world -= 1;
-            plugins.each(world, |handler, ctx| handler.on_quit(ctx, &player));
+            plugins::offer(world,QuitEvent::new(player));
         }
+        // After the quit: a listener for this player alone hears it.
+        plugins::end_scope(world, Scope::Player(id));
     }
     worlds::focus(world, None);
-    plugins.each(world, |handler, ctx| handler.on_tick(ctx));
-    worlds::dispatch(world, plugins);
+    plugins::run_tasks(world);
+    plugins::offer(world,TickEvent);
+    worlds::dispatch(world);
 }

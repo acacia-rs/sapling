@@ -6,6 +6,7 @@ use bevy_ecs::prelude::*;
 
 use super::{LANDING_TICKS, Motion, SETBACK_TICKS, TELEPORT_SOURCE, eyes, move_player};
 use crate::components::{NetId, Outgoing, Position, Tick};
+use crate::simulation::Simulated;
 
 /// Puts a player's feet at `feet` and tells its client, as BDS's `/tp` does. Viewers learn of it
 /// from [`super::announce`].
@@ -28,6 +29,9 @@ pub(crate) fn teleport_as(world: &mut World, entity: Entity, feet: [f32; 3], cau
 /// Puts a player's feet at `feet` facing `yaw` and tells its client with MovePlayer mode Reset,
 /// as BDS places one that came through a portal (research/captures/bds-portal-light.txt).
 pub(crate) fn reset(world: &mut World, entity: Entity, feet: [f32; 3], yaw: f32) {
+    if let Some(mut simulated) = world.get_mut::<Simulated>(entity) {
+        simulated.restart();
+    }
     let Ok((id, mut position, motion, mut out)) = world.query::<(&NetId, &mut Position, &Motion, &mut Outgoing)>().get_mut(world, entity) else { return };
     (position.feet, position.yaw, position.on_ground) = (feet, yaw, true);
     let moved = MovePlayer { mode: MovePlayerMode::Reset, ..move_player(id.0, &position, None, motion.input_tick) };
@@ -58,6 +62,9 @@ pub(crate) fn correct_unmoving(world: &mut World, entity: Entity, feet: [f32; 3]
 
 fn correction(world: &mut World, entity: Entity, feet: [f32; 3], fall: f32) {
     use acacia_proto::packets::{CorrectPlayerMovePrediction, CorrectPlayerMovePredictionPredictionType as Kind};
+    if let Some(mut simulated) = world.get_mut::<Simulated>(entity) {
+        simulated.adopt(feet, [0.0, fall, 0.0], true);
+    }
     let Ok((mut position, motion, mut out)) = world.query::<(&mut Position, &Motion, &mut Outgoing)>().get_mut(world, entity) else { return };
     position.feet = feet;
     let delta = acacia_proto::types::Vec3f { x: 0.0, y: fall, z: 0.0 };

@@ -27,6 +27,7 @@ const DOUSED: i32 = -1;
 /// Something costs a mob `cost` by `cause`, told to its viewers; it may die of it.
 pub(super) fn wound(world: &mut World, mob: Entity, layer: Entity, cost: f32, cause: Cause) -> Option<()> {
     let (id, body, kind) = (world.get::<crate::components::NetId>(mob)?.0, *world.get::<Body>(mob)?, world.get::<entities::Kind>(mob)?.0.clone());
+    let cost = crate::damage::ask(world, mob, cost, cause, None)?;
     let mut health = *world.get::<Health>(mob)?;
     if health.hurt(cost) {
         *world.get_mut::<Health>(mob)? = health;
@@ -107,6 +108,7 @@ fn steam(body: &Body) -> Bytes {
     sapling_net::encode(&LevelEvent { event: LevelEventEvent::ParticleFizzEffect, position, data: width.ceil() as i32 | (height.ceil() as i32) << 8 })
 }
 
+// TODO: what this does to a mob is not offered to plugins as a DamageEvent (damage.rs).
 /// A tick of the mob `id`'s health, its body `start` before the tick's move and `now` after;
 /// whether it died of it, which its viewers are then told here. They are told its health after a
 /// fall, fire and a block have hurt it and before lava and water do, so those two show a tick

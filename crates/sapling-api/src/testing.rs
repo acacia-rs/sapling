@@ -18,6 +18,9 @@ pub struct Fake {
     pub items: HashMap<Slot, Item>,
     /// The world in focus; `None` is "hub".
     pub world: Option<String>,
+    pub tick: u64,
+    /// What listeners asked to change in the registry.
+    pub deferred: Vec<crate::ListenerChange>,
     rules: HashMap<String, RuleValue>,
     state: HashMap<TypeId, State>,
 }
@@ -28,7 +31,7 @@ pub fn player(id: u64, name: &str) -> Player {
 
 impl Fake {
     pub fn with(names: &[&str]) -> Self {
-        Self { players: names.iter().zip(1..).map(|(name, id)| player(id, name)).collect(), ..Self::default() }
+        Self { players: names.iter().zip(1..).map(|(name, id)| player(id, name)).collect(), tick: 40, ..Self::default() }
     }
 }
 
@@ -161,7 +164,7 @@ impl crate::EffectBackend for Fake {
 
 impl Backend for Fake {
     fn tick(&self) -> u64 {
-        40
+        self.tick
     }
     fn player_count(&self) -> usize {
         self.players.len()
@@ -300,5 +303,8 @@ impl Backend for Fake {
     }
     fn state(&mut self, key: TypeId, init: &dyn Fn() -> State) -> &mut State {
         self.state.entry(key).or_insert_with(init)
+    }
+    fn defer(&mut self, change: crate::ListenerChange) {
+        self.deferred.push(change);
     }
 }

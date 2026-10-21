@@ -53,6 +53,8 @@ pub trait Backend: WorldBackend + EntityBackend + HealthBackend + EffectBackend 
     fn send_toast(&mut self, player: PlayerId, title: &str, message: &str);
     /// The value kept under `key`, made with `init` if there is none yet.
     fn state(&mut self, key: TypeId, init: &dyn Fn() -> State) -> &mut State;
+    /// Keeps a change to the shard's listeners until the event that made it is done.
+    fn defer(&mut self, change: crate::ListenerChange);
 }
 
 /// A value plugins keep on a shard.

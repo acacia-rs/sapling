@@ -7,10 +7,11 @@
 use acacia_proto::packets::{DeathInfo, EntityEvent, EntityEventEventId, LevelSoundEvent, Respawn, SetHealth};
 use acacia_proto::types::Vec3f;
 use bevy_ecs::prelude::*;
+use sapling_api::{Attacker, DeathEvent, DeathMessage, RespawnEvent};
 use sapling_data::EYE_HEIGHT;
 
 use super::{MAX, Vitals, tell};
-use crate::components::{Identity, InLayer, Layer, NetId, Outgoing, PacketQueues, Position, Tick};
+use crate::components::{Identity, InLayer, Layer, NetId, Outgoing, PacketQueues, Position, Tick, in_world, in_world_identity};
 use crate::creatures::Cause;
 use crate::{chat, drops, experience, inventory, movement, orbs};
 
@@ -30,6 +31,15 @@ pub(super) struct Slayer(pub String);
 
 /// Before the name of a player in [`Slayer`], which else holds a mob's kind.
 pub(super) const BY_PLAYER: &str = "player:";
+
+/// Who the player's [`Slayer`] names, if anyone: a player still on the shard, or a mob's kind.
+pub(super) fn attacker(world: &World, player: Entity) -> Option<Attacker> {
+    let slayer = &world.get::<Slayer>(player)?.0;
+    match slayer.strip_prefix(BY_PLAYER) {
+        Some(name) => in_world(world).into_iter().filter_map(|other| in_world_identity(world, other)).find(|other| other.name == name).map(Attacker::Player),
+        None => Some(Attacker::Mob { kind: slayer.clone() }),
+    }
+}
 
 fn words(cause: Cause) -> &'static str {
     match cause {
@@ -70,19 +80,21 @@ fn sound(world: &mut World, player: Entity, id: u64, name: &str, [x, y, z]: [f32
 }
 
 /// The player, out of health, dies of `cause`: what it held lies where it stood, unless the
-/// world keeps inventories, and its client shows the death screen.
+/// world or a plugin keeps it, and its client shows the death screen.
 pub(super) fn die(world: &mut World, player: Entity, cause: Cause) {
     let now = world.resource::<Tick>().0;
-    let (Some(id), Some(feet), Some(layer), Some(name)) = (
+    let (Some(id), Some(feet), Some(layer), Some(who)) = (
         world.get::<NetId>(player).map(|id| id.0),
         world.get::<Position>(player).map(|position| position.feet),
         world.get::<InLayer>(player).map(|layer| layer.0),
-        world.get::<Identity>(player).map(|identity| identity.0.name.clone()),
+        world.get::<Identity>(player).map(|identity| identity.0.clone()),
     ) else {
         return;
     };
+    let name = who.name.clone();
     let keeps = world.get::<Layer>(layer).is_some_and(|layer| layer.world.level().rules.on(KEEP_INVENTORY));
-    let (stacks, points) = if keeps { Default::default() } else { inventory::change(world, player, |inventory| inventory.let_go()).unwrap_or_default() };
+    let death = crate::plugins::offer(world, DeathEvent::new(who, cause, attacker(world, player), keeps));
+    let (stacks, points) = if death.keep_inventory { Default::default() } else { inventory::change(world, player, |inventory| inventory.let_go()).unwrap_or_default() };
     for stack in stacks {
         drops::toss(world, layer, stack, feet);
     }
@@ -100,8 +112,14 @@ pub(super) fn die(world: &mut World, player: Entity, cause: Cause) {
     };
     let slayer = by_player.or(slayer.map(|kind| format!("%entity.{}.name", kind.trim_start_matches("minecraft:"))));
     let messages: Vec<String> = std::iter::once(name).chain(slayer).collect();
-    let said = chat::translated_packet(key, &messages);
-    chat::send_to_layer(world, layer, &said);
+    let said = match &death.message {
+        DeathMessage::Vanilla => Some(chat::translated_packet(key, &messages)),
+        DeathMessage::Text(text) => Some(chat::raw_packet(text)),
+        DeathMessage::Hidden => None,
+    };
+    if let Some(said) = said {
+        chat::send_to_layer(world, layer, &said);
+    }
     let mut out = world.get_mut::<Outgoing>(player).expect("players have an outbox");
     out.push(&DeathInfo { cause: key.into(), messages });
     out.push(&Respawn { position: eyes(feet), state: SEARCHING, runtime_entity_id: 0 });
@@ -147,6 +165,8 @@ pub(super) fn rise(world: &mut World) {
             world.get_mut::<Outgoing>(player).expect("players have an outbox").push(&Respawn { position: cell, state: SEARCHING, runtime_entity_id: 0 });
         }
         let spawn = by_bed.unwrap_or(spawn);
+        let Some(who) = world.get::<Identity>(player).map(|identity| identity.0.clone()) else { continue };
+        let spawn = crate::plugins::offer(world, RespawnEvent::new(who, spawn)).feet;
         leave_now(world, player, layer);
         world.entity_mut(player).remove::<super::effects::Effects>();
         *world.get_mut::<Vitals>(player).expect("read above") = Vitals::default();
