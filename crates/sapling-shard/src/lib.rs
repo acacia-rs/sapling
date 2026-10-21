@@ -23,6 +23,7 @@ mod dimensions;
 mod drops;
 mod entities;
 mod experience;
+mod eyes;
 mod forms;
 mod furnaces;
 mod grid;

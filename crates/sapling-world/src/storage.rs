@@ -114,6 +114,11 @@ pub trait WorldStorage: Send + Sync + 'static {
     fn sync(&self) -> Result<(), StorageError> {
         Ok(())
     }
+    /// The block an eye of ender thrown from (x, z) flies to; `None` where storage makes no
+    /// strongholds. Computes without disk, so a tick may call it.
+    fn locate_stronghold(&self, _x: i32, _z: i32) -> Option<[i32; 3]> {
+        None
+    }
 }
 
 /// Shared storage, e.g. a folder's database wrapped in [`crate::Generated`] while still held.
@@ -141,6 +146,9 @@ impl<S: WorldStorage + ?Sized> WorldStorage for std::sync::Arc<S> {
     }
     fn sync(&self) -> Result<(), StorageError> {
         (**self).sync()
+    }
+    fn locate_stronghold(&self, x: i32, z: i32) -> Option<[i32; 3]> {
+        (**self).locate_stronghold(x, z)
     }
 }
 

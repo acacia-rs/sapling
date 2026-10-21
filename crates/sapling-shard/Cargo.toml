@@ -11,6 +11,7 @@ sapling-api.workspace = true
 sapling-data.workspace = true
 sapling-net.workspace = true
 sapling-world.workspace = true
+sapling-worldgen.workspace = true
 acacia-auth.workspace = true
 acacia-physics.workspace = true
 acacia-proto.workspace = true

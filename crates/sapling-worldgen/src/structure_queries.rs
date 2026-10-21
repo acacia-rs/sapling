@@ -58,4 +58,11 @@ impl OverworldGenerator {
     pub fn locate_structure(&self, kind: structure::StructureKind, x: i32, z: i32) -> Option<(i32, i32)> {
         self.structures.locate(&self.density, kind, (x, z))
     }
+
+    /// The block an eye of ender thrown from (x, z) flies to: its stronghold's start chunk at
+    /// (+2, +2), y the sea level less 31, as BDS answers it.
+    pub fn locate_stronghold(&self, x: i32, z: i32) -> Option<[i32; 3]> {
+        let (cx, cz) = self.structures.nearest_stronghold(&self.density, (x, z))?;
+        Some([cx * 16 + 2, 63 - 31, cz * 16 + 2])
+    }
 }

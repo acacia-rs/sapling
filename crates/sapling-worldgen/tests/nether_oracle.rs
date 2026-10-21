@@ -30,6 +30,13 @@ const REGIONS: &[Region] = &[
     Region { name: "bastion", chunks: [-24, 12, -18, 18] },
 ];
 
+/// The second canon's (`tools/nether-replay.sh <name> nether-gaps`): two ruined portals and soul sand valley fossils.
+const GAP_REGIONS: &[Region] = &[
+    Region { name: "ruined portal west", chunks: [-18, -2, -15, 1] },
+    Region { name: "ruined portal north-west", chunks: [-21, -17, -19, -15] },
+    Region { name: "soul sand valley fossils", chunks: [-8, 8, -4, 11] },
+];
+
 const STAGES: [&str; 8] = ["shape", "bedrock", "surface", "carvers", "biomes", "structures", "features", "liquids"];
 
 #[derive(Default)]
@@ -103,7 +110,7 @@ fn later_stage(ours: &str, bds: &str) -> &'static str {
     }
 }
 
-fn compare(seed: i64, world: &str) {
+fn compare(seed: i64, world: &str, regions: &[Region]) {
     let root = worlds();
     let open = |name: String| LevelDbWorld::open_in_memory(&root.join(name)).ok();
     let (Some(primary), Some(twin)) = (open(world.to_string()), open(format!("{world}-run2"))) else {
@@ -117,7 +124,7 @@ fn compare(seed: i64, world: &str) {
     let kept = |name: &str| only.as_deref().is_none_or(|only| only.strip_prefix('=').map_or(name.contains(only), |exact| name == exact));
     let registry = primary.registry();
     let name = |id: u32| registry.get(id).map_or("?", |s| s.name.trim_start_matches("minecraft:"));
-    for region in REGIONS.iter().filter(|r| kept(r.name)) {
+    for region in regions.iter().filter(|r| kept(r.name)) {
         println!("seed {seed} {world} {}:", region.name);
         let mut tally = Tally::default();
         let [x0, z0, x1, z1] = region.chunks;
@@ -162,5 +169,11 @@ fn compare(seed: i64, world: &str) {
 #[test]
 #[ignore]
 fn nether_matches_bds() {
-    compare(20261003, "20261003-nether");
+    compare(20261003, "20261003-nether", REGIONS);
+}
+
+#[test]
+#[ignore]
+fn nether_gaps_match_bds() {
+    compare(20261003, "20261003-nether-gaps", GAP_REGIONS);
 }

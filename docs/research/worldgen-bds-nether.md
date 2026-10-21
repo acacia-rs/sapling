@@ -101,6 +101,9 @@ The Mth table is the UCRT's `sinf`, read live: `mth.rs` carries the 85 entries t
   plain biome ids are a syntax error): nether wastes and basalt deltas -4,-4..3,3; warped forest -24,0..-21,3;
   crimson forest -24,-24..-21,-21; soul sand valley -8,-28..-5,-25; fortress 12,-1..19,6 (start 240, 32);
   bastion -24,12..-18,18 (start -328, 248).
+- Second canon `~/oracle-canon/nether-gaps` (2026-10-21, same recipe, `nether_gaps_match_bds`): ruined portal west
+  -18,-2..-15,1, ruined portal north-west -21,-17..-19,-15, soul sand valley fossils -8,8..-4,11; the `-run2` twin is
+  the buffers run's world. Judge with `tools/nether-replay.sh <name> nether-gaps`.
 
 Residue against the canon (`nether-replay.sh`, 2026-10-17), cells:
 
@@ -140,8 +143,8 @@ Every loaded buffer of the run (2450 chunks) equals ours; the "later" cells are 
 - Nether portal: `y = nextInt(85) + 15`, air kept below 32, heights under the roof (140a08bb0 walks down
   through the solid roof first), no mossiness, the blackstone sweep; aged walls keep their default state;
   placed only in its start chunk's post-process.
-- Judged: canon bastion region 0 wrong after decoration; the two portals near the canon (-16,0 and
-  -20,-16, outside its regions) match a stock BDS run over their 3x3 chunks except magma ores.
+- Judged: canon bastion region 0 wrong after decoration; the two portals at chunks -16,0 and -20,-16 are 0
+  wrong in the second canon (below).
 
 ## The code-registered feature rules
 Ported in `feature/basalt.rs` (basalt columns 14827c230, pillar 14827ca10, delta 148294fc0), `fungus.rs`
@@ -153,8 +156,11 @@ Ported in `feature/basalt.rs` (basalt columns 14827c230, pillar 14827ca10, delta
   it (one wrong cell there desyncs the rest of the hat).
 - Every vine cell is the vine block with its own drawn age; BDS has no `_plant` block in these.
 - The Nether plants' rule (1465ec270, 14715cd80): nylium, soul soil or the soil list 0x14ccd3328.
-- Unjudged: the canon's soul sand valley region holds no fossil, so the fossil (and its dried ghast, whose
-  version gate 149d5c3bb was not decoded and is taken as passing) has no oracle yet.
+- The fossil leaves its templates' air out (they hold more air than bone; placing it dug holes in soul soil
+  that lava then filled). Judged 0 in the second canon's fossil region, dried ghasts included.
+- The ghast's gate (149d5c3bb): `140247750` is `SemVersion` less-than (major, minor, patch as u16, then the
+  pre-release strings; byte +7 means "any"). The ghast is skipped when the level's base game version is below a
+  static version, so a world made by this BDS always passes; an old world upgraded in place would not.
 
 Seed widths, checked on seed -4172144997902289642 (two 4x4 regions, 974 chunk buffers and 4096 biome columns, all
 equal): every MT (density, noise layers, capped noises, carver, bedrock) takes the low 32 bits; the layers' LCG

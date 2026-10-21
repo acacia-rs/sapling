@@ -131,8 +131,7 @@ def brewing_stand(key, nbt, appended):
     if not key.startswith('minecraft:brewing_stand') or 'Items' not in nbt:
         return key, None
     slots = {item['Slot'] for item in nbt['Items']}
-    # TODO: the endcity probe and oracle read Java slot k as bit k; FAMILIES (the igloo's slot-1 stand) keep the
-    # raw-slot reading that put it on bit a, until a change of the overworld hash is wanted.
+    # Both canons: the end ship's slots 0, 2 are bits a, c; the igloo's slot 1 is bit a (worldgen-bds-templates.md).
     bottles = (0, 1, 2) if appended else (1, 2, 3)
     states = ','.join(f'brewing_stand_slot_{c}_bit={int(s in slots)}' for c, s in zip('abc', bottles))
     return f'{key}#slots={sorted(slots)}', ('brewing_stand', states, False, 2)

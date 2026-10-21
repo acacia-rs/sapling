@@ -33,6 +33,15 @@ fn inner_columns_come_first_and_only_overworld_holes_are_generated() {
 }
 
 #[test]
+fn only_a_generated_overworld_locates_strongholds() {
+    let overworld = World::with_storage(Arc::new(Generated::with_areas(MemoryStorage::default(), SEED, 1)));
+    assert_eq!(overworld.locate_stronghold(0, 0), Some([-1422, 32, -1950]), "BDS's /locate answer");
+    let nether = World::with_storage_in(Arc::new(Generated::nether(MemoryStorage::default(), SEED, 1)), crate::NETHER);
+    assert_eq!(nether.locate_stronghold(0, 0), None);
+    assert_eq!(World::void().locate_stronghold(0, 0), None);
+}
+
+#[test]
 fn generated_columns_are_saved_only_once_written() {
     let storage = Arc::new(Generated::new(MemoryStorage::default(), SEED));
     let mut world = World::with_storage(storage.clone());

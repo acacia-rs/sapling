@@ -31,6 +31,8 @@ pub(crate) struct Told {
     turn: [u8; 2],
     /// Its next move is a teleport, which BDS sends forced.
     jumped: bool,
+    /// Viewers are told of every move, however small (an eye of ender's, bds-eye-throw.txt).
+    every_move: bool,
 }
 
 /// The flags viewers were told the entity has, and whether the last tick moved far enough to show `MOVING`.
@@ -45,7 +47,12 @@ struct Shown {
 impl Told {
     /// An entity just announced at `at`; its announced motion does not count.
     pub fn new(at: [f32; 3]) -> Self {
-        Self { at, motion: [0.0; 3], flags: None, turned: [0; 2], turn: [0; 2], jumped: false }
+        Self { at, motion: [0.0; 3], flags: None, turned: [0; 2], turn: [0; 2], jumped: false, every_move: false }
+    }
+
+    /// Viewers are told of each of the entity's moves, not only of those past 0.01.
+    pub fn tell_every_move(&mut self) {
+        self.every_move = true;
     }
 
     /// The entity teleported: viewers are told of its next move as forced
@@ -91,7 +98,7 @@ impl Told {
         let mut packets = Vec::new();
         let gone = length(std::array::from_fn(|axis| at[axis] - self.at[axis]));
         let jumped = std::mem::take(&mut self.jumped);
-        let moved = jumped || gone > MOVED || (length(motion) < STOPPING && gone > SETTLED);
+        let moved = jumped || gone > MOVED || (length(motion) < STOPPING && gone > SETTLED) || (self.every_move && at != self.at);
         if moved || self.turn != self.turned {
             let [x, y, z] = std::array::from_fn(|axis| (moved && at[axis] != self.at[axis]).then_some(at[axis]));
             let [rot_y, rot_z] = std::array::from_fn(|side| (self.turn[side] != self.turned[side]).then_some(self.turn[side]));
