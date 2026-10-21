@@ -22,7 +22,8 @@ Companion to [worldgen-bds-structures.md](worldgen-bds-structures.md) (starts, p
   registry's keys, `registry.py` from acacia's blocks.bin). Only chunks within one of the start get blocks, so a
   second flat layout (x, z < 16) fills the rotations the first missed. Result: `scripts/data/template_blocks.tsv`
   (Java state, rotation, Bedrock name, states, waterlogged, flags). Brewing stands take their bottle bits from
-  the block entity's raw item slots (Java 0-2 read as Bedrock 1-3), set by the generator. New families need a
+  the block entity's raw item slots, set by the generator: the igloo's (canon c-ig) read Java 0-2 as Bedrock 1-3,
+  the end ship's (end canon) Java k as bit k; the script keys this on FAMILIES vs APPENDED. New families need a
   rerun for their missing states only (mkprobe's state list; the mansion's 1.11-era states took one run,
   `PROBE_SEED=20261003`, level type DEFAULT, `PROBE_REGISTRY` for parse_probe; lily pads mapped by hand).
   The pack's `scripts/data.js` is written per run: `CELLS` from mkprobe's states.tsv, `CANDIDATES` igloo starts
