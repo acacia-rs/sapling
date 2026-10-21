@@ -122,7 +122,7 @@ fn weave(world: &mut World, layer: Entity, at: [i32; 3]) {
 }
 
 fn ooze(world: &mut World, layer: Entity, feet: [f32; 3]) {
-    let Some(slime) = super::spawn(world, layer, "minecraft:slime", feet).and_then(|id| entities::find(world, id)) else { return };
+    let Some(slime) = super::spawn(world, layer, "minecraft:slime", feet, sapling_api::SpawnReason::Effect).and_then(|id| entities::find(world, id)) else { return };
     world.entity_mut(slime).insert(super::genes::Gene(SLIME_SIZE));
     if let Some(mut body) = world.get_mut::<Body>(slime) {
         body.size = [SLIME_BOX; 2];
@@ -177,7 +177,7 @@ pub(crate) fn infested_hurt(world: &mut World, layer: Entity, from: [f32; 3], fa
 }
 
 fn infest(world: &mut World, layer: Entity, from: [f32; 3], facing: f32) {
-    let Some(silverfish) = super::spawn(world, layer, "minecraft:silverfish", from).and_then(|id| entities::find(world, id)) else { return };
+    let Some(silverfish) = super::spawn(world, layer, "minecraft:silverfish", from, sapling_api::SpawnReason::Effect).and_then(|id| entities::find(world, id)) else { return };
     let off = (world.get_resource_or_insert_with(Dice::default).fraction() * 2.0 - 1.0) * SILVERFISH_SPREAD;
     let yaw = (facing + off).to_radians();
     if let Some(mut body) = world.get_mut::<Body>(silverfish) {

@@ -128,6 +128,11 @@ pub(crate) fn focus(world: &mut World, layer: Option<Entity>) {
     world.resource_mut::<Scope>().0 = layer;
 }
 
+/// The world in scope for the handlers.
+pub(crate) fn focused(world: &World) -> Option<Entity> {
+    world.resource::<Scope>().0
+}
+
 /// Puts a player's world in scope for the handlers about to be called for it.
 pub(crate) fn focus_on(world: &mut World, player: Entity) {
     let layer = world.get::<InLayer>(player).map(|in_layer| in_layer.0);

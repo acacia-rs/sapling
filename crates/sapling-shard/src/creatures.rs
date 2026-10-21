@@ -36,7 +36,7 @@ mod vexes;
 
 use bevy_ecs::prelude::*;
 use acacia_proto::packets::{EntityEvent, EntityEventEventId};
-use sapling_api::{EntityId, Item};
+use sapling_api::{EntityId, EntitySpawnEvent, Item, SpawnReason};
 
 use sapling_world::Actor;
 
@@ -68,11 +68,14 @@ impl Creature {
 
 /// A mob of `kind` with its feet at `feet` in `layer`: one BDS was recorded announcing, in a
 /// loaded column. It is heard appearing.
-fn spawn(world: &mut World, layer: Entity, kind: &str, feet: [f32; 3]) -> Option<EntityId> {
+fn spawn(world: &mut World, layer: Entity, kind: &str, feet: [f32; 3], reason: SpawnReason) -> Option<EntityId> {
     let size = sapling_data::mob_size(kind)?;
     let level = &world.get::<Layer>(layer)?.world;
     let [x, y, z] = feet.map(|c| c.floor() as i32);
     if !(level.in_height(y) && level.is_loaded(sapling_world::ChunkPos::of_block(x, z))) {
+        return None;
+    }
+    if crate::plugins::stopped_in(world, layer, |_| EntitySpawnEvent::new(kind.to_owned(), feet, reason)) {
         return None;
     }
     let body = Body::new(feet, [0.0; 3], size);

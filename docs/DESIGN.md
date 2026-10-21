@@ -315,6 +315,16 @@ it sends for `/title`, `/scoreboard`, `/gamemode`, `/tp`, a wither's bar and com
   decide nothing). Not read yet: `sendCommandFeedback` (BDS's behaviour not captured), `spawnRadius`,
   `doImmediateRespawn` (the client's), and rules for what sapling lacks (`doMobSpawning`, `doInsomnia`,
   command blocks).
+- **World events** (`sapling-api/src/world_event.rs`). What the world does on its own is offered with its
+  world in focus (`plugins::offer_in`), so `Scope::World` listeners hear their world's; each is built only
+  where a listener hears it (`plugins::stopped_in`), since flows and fire raise them often.
+  `ExplosionEvent` (`creatures/blast.rs`): source kind, `power` and the `blocks` it breaks, editable, worked
+  out before it is offered; cancelled, nothing is hurt or broken. `EntitySpawnEvent` (`creatures::spawn`):
+  kind, feet, `SpawnReason` (`Command`, `Summoned` vexes, `Effect` slimes and silverfish); mobs from
+  storage are not offered. `BlockSpreadEvent`: fire into a cell or burning it away (`blocks/fire.rs`), a
+  liquid flowing in (`blocks/liquid/flow.rs`), asked before any fizz or popped loot. `BlockGrowEvent`: a
+  random tick's growth (`blocks/growth.rs`, all of one plant's changes at once) and a sapling's tree; not
+  farmland drying or leaves decaying.
 - **Player actions** (`sapling-shard/src/actions.rs`). `MoveEvent` (one a tick per player that moved or
   turned, from the tick's start; `changed_block()` for block-level checks): `movement::player_input` queues
   it in `movement::Moves`, since systems hold no plugins, and dispatch offers it before anything reads

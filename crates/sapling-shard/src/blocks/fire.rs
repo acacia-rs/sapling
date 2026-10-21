@@ -213,7 +213,10 @@ pub(crate) fn tick(world: &mut World) {
             send::set_quietly(world, layer, pos, aged);
         }
         for (cell, id) in burnt.set {
-            send::set(world, layer, cell, id);
+            // The fire going out at `pos` is no spread.
+            if cell == pos || send::may_spread(world, layer, cell, pos, |_| Some(id)) {
+                send::set(world, layer, cell, id);
+            }
         }
         for cell in burnt.primed {
             crate::tnt::light(world, layer, cell);

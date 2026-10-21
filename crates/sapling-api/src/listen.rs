@@ -146,6 +146,11 @@ impl Listeners {
         }
     }
 
+    /// Whether any listener hears `E`: the game need not build an event nobody hears.
+    pub fn listens<E: Event>(&self) -> bool {
+        self.listeners.iter().any(|l| l.event == TypeId::of::<E>())
+    }
+
     /// Runs `event` through the listeners in its scope, in priority order, and returns how it
     /// ended. Once one cancels it, only `Monitor` listeners and those receiving cancelled events
     /// still run; `Monitor` ones get a copy of it as it ended, whatever they do to it.

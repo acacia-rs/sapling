@@ -23,6 +23,7 @@ mod weather;
 #[cfg(test)]
 mod tests;
 mod world;
+mod world_event;
 
 pub use block::{Block, BlockPos, BreakEvent, Face, InteractEvent, PlaceEvent};
 pub use combat::{Attacker, DamageEvent, DeathEvent, DeathMessage, RespawnEvent};
@@ -33,6 +34,7 @@ pub use experience::ExperienceBackend;
 pub use weather::{Weather, WeatherBackend};
 pub use entity::{EntityBackend, EntityId, EntityInfo};
 pub use world::{RuleValue, WorldBackend};
+pub use world_event::{BlockGrowEvent, BlockSpreadEvent, EntitySpawnEvent, ExplosionEvent, SpawnReason};
 pub use event::{
     ChatEvent, CommandEvent, EntityAttackEvent, EntityInteractEvent, ItemUseEvent, JoinEvent, MoveEvent, Priority, QuitEvent, Target, TickEvent, TransferFailedEvent,
     WorldChangeEvent,

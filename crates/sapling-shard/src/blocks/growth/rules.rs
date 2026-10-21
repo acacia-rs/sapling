@@ -154,6 +154,12 @@ fn bamboo(level: &Level, [x, top, z]: BlockPos, tall: i32) -> Vec<Change> {
     changes
 }
 
+/// Whether what a random tick does to `name` is growth (offered to plugins): not farmland drying
+/// or wetting, nor leaves decaying.
+pub(super) fn grows(name: &str) -> bool {
+    name != FARMLAND && !name.ends_with("leaves")
+}
+
 /// What a random tick makes of the block at `pos`.
 pub(super) fn ticked(level: &Level, pos: BlockPos, picks: &mut Picks) -> Vec<Change> {
     let Some((id, name, properties)) = state_at(level, pos) else { return Vec::new() };

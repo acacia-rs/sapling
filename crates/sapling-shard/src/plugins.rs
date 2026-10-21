@@ -54,6 +54,30 @@ pub(crate) fn build(world: &mut World, add: impl FnOnce(&mut PluginBuilder<'_>))
     });
 }
 
+/// Whether a listener hears `E`; false while the registry runs, when it would go unheard anyway.
+pub(crate) fn listening<E: Event>(world: &World) -> bool {
+    world.resource::<Registry>().0.lock().expect("listener registry lock").as_ref().is_some_and(Listeners::listens::<E>)
+}
+
+/// [`offer`] for an event of the world `layer` itself, offered with that world in focus.
+pub(crate) fn offer_in<E: Event>(world: &mut World, layer: Entity, event: E) -> E {
+    let before = crate::worlds::focused(world);
+    crate::worlds::focus(world, Some(layer));
+    let event = offer(world, event);
+    crate::worlds::focus(world, before);
+    event
+}
+
+/// Whether listeners stopped the event `make` builds in the world `layer`; it is only built where
+/// one hears it, since the world raises these often.
+pub(crate) fn stopped_in<E: Event>(world: &mut World, layer: Entity, make: impl FnOnce(&World) -> E) -> bool {
+    if !listening::<E>(world) {
+        return false;
+    }
+    let event = make(world);
+    offer_in(world, layer, event).is_stopped()
+}
+
 /// Runs `event` through the listeners and returns how it ended ([`Listeners::offer`]). Raised by
 /// a running listener's own doing, it goes by unheard.
 pub(crate) fn offer<E: Event>(world: &mut World, event: E) -> E {

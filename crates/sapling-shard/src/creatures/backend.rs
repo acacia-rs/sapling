@@ -20,7 +20,7 @@ impl EntityBackend for Ctx<'_> {
             let primed = tnt::prime(self.world, layer, feet, tnt::FUSE)?;
             return Some(EntityId(self.world.get::<NetId>(primed)?.0));
         }
-        super::spawn(self.world, layer, kind, feet)
+        super::spawn(self.world, layer, kind, feet, sapling_api::SpawnReason::Command)
     }
 
     fn entity(&self, id: EntityId) -> Option<EntityInfo> {

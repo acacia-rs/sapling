@@ -105,7 +105,7 @@ pub(crate) fn trample(world: &mut World, layer: Entity, feet: [f32; 3], dropped:
 pub(crate) fn tick(world: &mut World) {
     let Some(growing) = world.get_resource::<Growing>().filter(|growing| !growing.0.is_empty()).map(|growing| growing.0.iter().copied().collect::<Vec<_>>()) else { return };
     let mut picks = world.remove_resource::<Picks>().unwrap_or_default();
-    let (mut changed, mut done): (Vec<(Entity, rules::Change)>, Vec<(Entity, BlockPos)>) = (Vec::new(), Vec::new());
+    let (mut changed, mut done): (Vec<(Entity, BlockPos, bool, Vec<rules::Change>)>, Vec<(Entity, BlockPos)>) = (Vec::new(), Vec::new());
     let mut saplings = Vec::new();
     for (layer, pos) in growing {
         let Some(name) = ticked_at(world, layer, pos) else {
@@ -123,7 +123,7 @@ pub(crate) fn tick(world: &mut World) {
                 saplings.push((layer, pos));
             }
         } else {
-            changed.extend(rules::ticked(level, pos, &mut picks).into_iter().map(|change| (layer, change)));
+            changed.push((layer, pos, rules::grows(name), rules::ticked(level, pos, &mut picks)));
         }
     }
     world.insert_resource(picks);
@@ -131,16 +131,28 @@ pub(crate) fn tick(world: &mut World) {
     for cell in done {
         growing.0.remove(&cell);
     }
-    for (layer, rules::Change { pos, id, quiet, breaks }) in changed {
-        if breaks {
-            super::updates::pop(world, layer, pos);
-        } else if quiet {
-            send::set_quietly(world, layer, pos, id);
-        } else {
-            send::set(world, layer, pos, id);
+    for (layer, ticked, grows, changes) in changed {
+        if changes.is_empty() || grows && !may_grow(world, layer, ticked) {
+            continue;
+        }
+        for rules::Change { pos, id, quiet, breaks } in changes {
+            if breaks {
+                super::updates::pop(world, layer, pos);
+            } else if quiet {
+                send::set_quietly(world, layer, pos, id);
+            } else {
+                send::set(world, layer, pos, id);
+            }
         }
     }
     for (layer, pos) in saplings {
-        super::saplings::ticked(world, layer, pos);
+        if may_grow(world, layer, pos) {
+            super::saplings::ticked(world, layer, pos);
+        }
     }
+}
+
+/// Whether plugins let the plant at `pos` grow ([`sapling_api::BlockGrowEvent`]).
+fn may_grow(world: &mut World, layer: Entity, pos: BlockPos) -> bool {
+    !crate::plugins::stopped_in(world, layer, |world| sapling_api::BlockGrowEvent::new(pos, send::block_at(world, layer, pos).unwrap_or_else(Block::air)))
 }

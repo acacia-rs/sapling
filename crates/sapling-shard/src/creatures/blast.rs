@@ -7,7 +7,7 @@
 use acacia_proto::packets::{LevelEvent, LevelEventEvent, LevelSoundEvent};
 use acacia_proto::types::Vec3f;
 use bevy_ecs::prelude::*;
-use sapling_api::Difficulty;
+use sapling_api::{Difficulty, ExplosionEvent};
 
 use super::harm;
 use super::health::{Cause, Health};
@@ -142,6 +142,20 @@ pub(super) fn explode_fireball(world: &mut World, source: Entity, layer: Entity,
 }
 
 fn blow(world: &mut World, source: Option<Entity>, layer: Entity, at: [f32; 3], power: f32, wreck: Wreck, fireball: bool) {
+    let cells = if wreck != Wreck::Nothing { broken(world, layer, at, power) } else { Vec::new() };
+    let (power, cells) = if crate::plugins::listening::<ExplosionEvent>(world) {
+        let kind = source.and_then(|source| world.get::<entities::Kind>(source)).map(|kind| kind.0.clone());
+        let blast = crate::plugins::offer_in(world, layer, ExplosionEvent::new(at, kind, power, cells));
+        if blast.is_cancelled() {
+            if let Some(source) = source {
+                mobs::remove(world, source);
+            }
+            return;
+        }
+        (blast.power, blast.blocks)
+    } else {
+        (power, cells)
+    };
     let [x, y, z] = at;
     let cell = at.map(|c| c.floor() as i32);
     let flash = LevelEvent { event: LevelEventEvent::ParticleExplosion, position: Vec3f { x, y, z }, data: power as i32 };
@@ -183,7 +197,6 @@ fn blow(world: &mut World, source: Option<Entity>, layer: Entity, at: [f32; 3], 
         }
     }
     if wreck != Wreck::Nothing {
-        let cells = broken(world, layer, at, power);
         let leaves = match wreck {
             Wreck::Leaves => 1.0,
             Wreck::Decays => 1.0 / power,

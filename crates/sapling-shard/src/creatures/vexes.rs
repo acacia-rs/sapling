@@ -73,7 +73,7 @@ pub(super) fn summon(world: &mut World, layer: Entity, evoker: &Body) {
     let now = world.resource::<Tick>().0;
     for [dx, dz] in SUMMONS {
         let feet = [(evoker.at[0].floor() as i32 + dx) as f32, evoker.at[1], (evoker.at[2].floor() as i32 + dz) as f32];
-        let Some(vex) = super::spawn(world, layer, KIND, feet).and_then(|id| entities::find(world, id)) else { continue };
+        let Some(vex) = super::spawn(world, layer, KIND, feet, sapling_api::SpawnReason::Summoned).and_then(|id| entities::find(world, id)) else { continue };
         let more = u64::from(world.get_resource_or_insert_with(Dice::default).roll(LASTS_MORE));
         if let Some(mut bound) = world.get_mut::<Vex>(vex) {
             (bound.home, bound.wastes) = (Some(evoker.at), Some(now + LASTS + more));

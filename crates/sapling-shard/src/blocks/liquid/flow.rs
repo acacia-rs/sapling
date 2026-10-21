@@ -5,7 +5,7 @@ use sapling_api::{BlockPos, Face};
 use sapling_data::LiquidReaction;
 
 use super::super::loot::{self, Breaker};
-use super::super::{Dice, level};
+use super::super::{Dice, level, send};
 use super::{Cell, Liquid, cell, disturb, faces, harden, is_hot, schedule, set};
 
 const FARTHEST: u8 = 7;
@@ -93,8 +93,12 @@ fn spread_to(world: &mut World, layer: Entity, from: BlockPos, toward: Face, liq
         return;
     }
     let pos = toward.neighbour(from);
-    match (cell(world, layer, pos), liquid) {
-        (Cell::Liquid(Liquid::Lava, _), _) | (Cell::Liquid(Liquid::Water, _), Liquid::Water) | (Cell::Unknown, _) => return,
+    let held = cell(world, layer, pos);
+    let refused = matches!((&held, liquid), (Cell::Liquid(Liquid::Lava, _), _) | (Cell::Liquid(Liquid::Water, _), Liquid::Water) | (Cell::Unknown, _));
+    if refused || !send::may_spread(world, layer, pos, from, |registry| registry.find(liquid.name(), &format!("liquid_depth={depth}"))) {
+        return;
+    }
+    match (held, liquid) {
         (Cell::Liquid(..) | Cell::Block(..), Liquid::Lava) => harden::fizz(world, layer, pos),
         (Cell::Block(LiquidReaction::Popped, _), Liquid::Water) => {
             let named = level(world, layer).and_then(|level| level.registry().get(level.block(pos[0], pos[1], pos[2]))).map(|state| (state.name, state.properties));
@@ -103,7 +107,7 @@ fn spread_to(world: &mut World, layer: Entity, from: BlockPos, toward: Face, liq
                 loot::spill(world, layer, pos, &left);
             }
         }
-        (Cell::Air | Cell::Block(..), _) => {}
+        _ => {}
     }
     set(world, layer, pos, liquid, Some(depth));
 }

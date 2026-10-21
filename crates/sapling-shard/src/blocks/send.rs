@@ -39,6 +39,15 @@ pub(crate) fn describe(registry: &BlockRegistry, id: u32) -> Block {
     registry.get(id).map_or_else(Block::air, |state| Block { name: state.name.to_owned(), properties: state.properties.to_owned() })
 }
 
+/// Whether plugins let fire or a liquid at `source` put the state `id` names into `pos`
+/// ([`sapling_api::BlockSpreadEvent`]); `id` is only asked where one listens.
+pub(crate) fn may_spread(world: &mut World, layer: Entity, pos: BlockPos, source: BlockPos, id: impl FnOnce(&BlockRegistry) -> Option<u32>) -> bool {
+    !crate::plugins::stopped_in(world, layer, |world| {
+        let block = super::level(world, layer).and_then(|level| id(level.registry()).map(|id| describe(level.registry(), id)));
+        sapling_api::BlockSpreadEvent::new(pos, source, block.unwrap_or_else(Block::air))
+    })
+}
+
 /// The runtime id of a named state: the block's default state (`sapling_data::default_properties`)
 /// with the properties it names set, so that `water` with `liquid_depth=3` needs no other.
 pub(crate) fn resolve(registry: &BlockRegistry, block: &Block) -> Option<u32> {
