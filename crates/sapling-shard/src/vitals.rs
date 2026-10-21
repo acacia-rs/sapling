@@ -13,6 +13,7 @@ pub(crate) use effects::{afflict, hits_for, kept as kept_effects, restored as re
 pub(crate) use struck::{bitten, blasted, fanged, is_fireproof, punched, pushed, rammed, set_alight, shot, winded};
 mod hunger;
 mod kept;
+mod omens;
 mod splashed;
 mod stand;
 mod struck;
@@ -97,8 +98,12 @@ impl Vitals {
 }
 
 pub(crate) fn is_mortal(world: &World, player: Entity) -> bool {
-    let is_alive = world.get::<Vitals>(player).is_some_and(|vitals| vitals.died.is_none());
-    is_alive && world.get::<Mode>(player).is_some_and(|mode| matches!(mode.0, GameMode::Survival | GameMode::Adventure))
+    !is_dead(world, player) && world.get::<Mode>(player).is_some_and(|mode| matches!(mode.0, GameMode::Survival | GameMode::Adventure))
+}
+
+/// Died and not yet risen.
+pub(crate) fn is_dead(world: &World, player: Entity) -> bool {
+    world.get::<Vitals>(player).is_none_or(|vitals| vitals.died.is_some())
 }
 
 /// To the player and to those who see it.
@@ -193,6 +198,7 @@ fn land(world: &mut World, player: Entity, amount: f32, cause: Cause) -> bool {
     }
     if world.get::<Vitals>(player).is_some_and(|vitals| vitals.health.left() > 0.0) {
         flash(world, player, cause);
+        omens::hurt(world, player);
     }
     settle(world, player, cause);
     true

@@ -200,6 +200,31 @@ pub fn wind_burst() -> Vec<String> {
     lines
 }
 
+pub const OMENS_SHOWN: &[&str] = &[
+    "UpdateAttributes", "EntityEvent", "SetEntityData", "SetHealth", "Respawn", "LevelSoundEvent", "LevelEvent", "MovePlayer", "SetEntityMotion", "DeathInfo", "MobEffect", "RemoveEntity",
+    "AddEntity", "AddItemEntity", "MoveEntityDelta", "UpdateBlock", "PlayStatus", "CorrectPlayerMovePrediction",
+];
+
+/// As [`effects3`], the actor in survival is given each effect and killed, the watcher 3 off; put
+/// back after each respawn, the infested one first hurt ten times by 1 and healed.
+pub fn player_omens() -> Vec<String> {
+    let mut lines = open_floor("stone", &[], 0);
+    lines.truncate(lines.len() - 5);
+    lines.push("fill ~-20 ~-8 ~-20 ~20 ~-2 ~20 stone".into());
+    for effect in ["wind_charged", "weaving", "oozing", "infested"] {
+        lines.extend(["gamemode survival @s", "tp @s 0.5 -19 0.5", "tp CmdWatcher 3.5 -19 0.5", ""].map(String::from));
+        lines.extend([format!("effect @s {effect} 60 0"), String::new()]);
+        if effect == "infested" {
+            for _ in 0..10 {
+                lines.extend(["damage @s 1".into(), "effect @s instant_health 1 4".into()]);
+            }
+        }
+        lines.extend(["kill @s", "", "", "", "", "", "kill @e[type=!player]", "fill -6 -19 -6 6 -15 6 air", ""].map(String::from));
+    }
+    lines.extend(["gamemode creative @s", "gamerule falldamage true", ""].map(String::from));
+    lines
+}
+
 /// A floor of `block` 41 square at y -20 with 20 of air over it, the actor in survival on it at
 /// midnight with fall damage off; `summon` run, then the actor healed each second for `seconds`.
 fn open_floor(block: &str, summon: &[&str], seconds: usize) -> Vec<String> {

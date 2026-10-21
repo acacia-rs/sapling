@@ -47,6 +47,7 @@ pub(crate) use attacks::attacked;
 pub(crate) use blast::{Wreck, explode};
 pub(crate) use harm::{holds, is_full_block, touches};
 pub(crate) use health::{Cause, Health};
+pub(crate) use omens::{Omens, befall, infested_hurt};
 use crate::components::{InLayer, Layer, NetId, Tick};
 use crate::{blocks, drops, entities, inventory, mobs};
 
