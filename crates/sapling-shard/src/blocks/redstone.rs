@@ -141,7 +141,9 @@ pub(crate) fn evaluate(world: &mut World) {
         return;
     }
     let Some(circuits) = world.get_resource_mut::<Circuits>() else { return };
-    let layers: Vec<Entity> = circuits.layers.iter().filter(|(_, circuit)| !circuit.changed.is_empty() || circuit.unsettled).map(|(layer, _)| *layer).collect();
+    let mut layers: Vec<Entity> = circuits.layers.iter().filter(|(_, circuit)| !circuit.changed.is_empty() || circuit.unsettled).map(|(layer, _)| *layer).collect();
+    // `sapling:redstone` off pauses a world's circuits: what was written waits for it to be on.
+    layers.retain(|layer| crate::rules::on(world, *layer, sapling_data::REDSTONE));
     for layer in layers {
         let Some(mut circuit) = world.resource_mut::<Circuits>().layers.remove(&layer) else { continue };
         let now = world.resource::<Tick>().0;

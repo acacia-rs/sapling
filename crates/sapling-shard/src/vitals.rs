@@ -26,7 +26,7 @@ use bevy_ecs::prelude::*;
 use sapling_api::{DamageCause, GameMode, HealthBackend, PlayerId};
 use sapling_data::EYE_HEIGHT;
 
-use crate::components::{InLayer, Mode, NetId, Outgoing, Position, Tick, in_world};
+use crate::components::{InLayer, Layer, Mode, NetId, Outgoing, Position, Tick, in_world};
 use crate::creatures::{Cause, Health};
 use crate::handlers::Ctx;
 use crate::movement::{self, Motion};
@@ -164,9 +164,19 @@ fn dress(world: &mut World, player: Entity) {
     }
 }
 
-/// [`land`]s a hit once plugins let it; false where it took nothing.
+/// [`land`]s a hit once the world's rules and plugins let it; false where it took nothing.
 fn hurt(world: &mut World, player: Entity, amount: f32, cause: Cause) -> bool {
-    ask(world, player, amount, cause).is_some_and(|amount| land(world, player, amount, cause))
+    let spared = layer_of(world, player).and_then(|layer| world.get::<Layer>(layer)).is_some_and(|layer| crate::rules::spares_player(&layer.world.level().rules, cause));
+    !spared && ask(world, player, amount, cause).is_some_and(|amount| land(world, player, amount, cause))
+}
+
+fn layer_of(world: &World, player: Entity) -> Option<Entity> {
+    world.get::<InLayer>(player).map(|in_layer| in_layer.0)
+}
+
+/// Whether work and hunger effects tire the player: `sapling:hunger` is on in its world.
+fn tires(world: &World, player: Entity) -> bool {
+    layer_of(world, player).is_some_and(|layer| crate::rules::on(world, layer, sapling_data::HUNGER))
 }
 
 /// What plugins make of a hit on a player, from the attacker a hit's [`death::Slayer`] names.
@@ -218,7 +228,9 @@ fn feed(world: &mut World, player: Entity, change: impl FnOnce(&mut hunger::Hung
 
 /// Work tires a survival player by `by`.
 pub(crate) fn tire(world: &mut World, player: Entity, by: f32) {
-    feed(world, player, |hunger| hunger.tire(by));
+    if tires(world, player) {
+        feed(world, player, |hunger| hunger.tire(by));
+    }
 }
 
 /// Lets the dead rise who asked to, hurts the living by where they stand, and lets the bodies go.

@@ -10,14 +10,17 @@ use super::{
 };
 use crate::body::Body;
 use crate::components::{Layer, NetId, Position, Tick};
-use crate::creatures::{Cause, holds, is_full_block, touches};
+use crate::creatures::{Cause, Health, holds, is_full_block, touches};
 use crate::movement::Motion;
+
+const NATURAL_REGENERATION: &str = "naturalRegeneration";
 
 pub(super) fn stand(world: &mut World, player: Entity, layer: Entity) {
     dress(world, player);
     let gilled = effects::level(world, player, sapling_api::Effect::WaterBreathing).is_some();
     let (Some(position), Some(mut vitals)) = (world.get::<Position>(player).copied(), world.get::<Vitals>(player).copied()) else { return };
     let Some(level) = world.get::<Layer>(layer).map(|layer| &layer.world) else { return };
+    let rules = level.level().rules.clone();
     let body = Body::new(position.feet, [0.0; 3], SIZE);
     let (fire, lava, water) = (touches(level, &body, FIERY), touches(level, &body, LAVA), touches(level, &body, WATER));
     let [low, eyes] = [0.0, EYE_HEIGHT].map(|up| [position.feet[0], position.feet[1] + up, position.feet[2]].map(|c| c.floor() as i32));
@@ -29,26 +32,43 @@ pub(super) fn stand(world: &mut World, player: Entity, layer: Entity) {
     let run = (position.feet[0] - from[0]).hypot(position.feet[2] - from[2]);
     let ran = if sprinting && position.on_ground && !carried && run <= LONGEST_STEP { run } else { 0.0 };
     let fed = vitals.hunger;
-    vitals.hunger.tire(f32::from(jumps) * if sprinting { LEAP_TIRES } else { JUMP_TIRES } + ran * SPRINT_TIRES);
+    if rules.on(sapling_data::HUNGER) {
+        vitals.hunger.tire(f32::from(jumps) * if sprinting { LEAP_TIRES } else { JUMP_TIRES } + ran * SPRINT_TIRES);
+    }
     let (health, breath) = (&mut vitals.health, vitals.air);
     let mut hits = Vec::new();
     health.begin();
     let spared = *health;
+    // A hit the world's rules spare is undone, its timers kept (rules::spares_player).
+    let mut take = |health: &mut Health, before: Health, hit: Option<Cause>| match hit {
+        Some(cause) if crate::rules::spares_player(&rules, cause) => health.reweigh(&before, None),
+        Some(cause) => hits.push(cause),
+        None => {}
+    };
     // BDS does not count the move a player lands in: 12 blocks cost it 8 (bds-hurt.txt).
     let fallen_to = if position.on_ground { position.feet[1].max(from[1]) } else { position.feet[1] };
     let dropped = if position.on_ground && !(water || lava || carried) { health.dropped(from[1], fallen_to) } else { 0.0 };
-    hits.extend(health.fall(from, fallen_to, position.on_ground, water || lava || carried).map(|_| Cause::Fall));
-    let lit = health.is_burning();
-    hits.extend(health.burn(fire, water).map(|cause| if lit { Cause::FireTick } else { cause }));
-    hits.extend((lava && health.scald()).then_some(Cause::Lava));
-    hits.extend(health.smother(in_wall, WALLED).then_some(Cause::Suffocation));
+    let before = *health;
+    let fell = health.fall(from, fallen_to, position.on_ground, water || lava || carried).map(|_| Cause::Fall);
+    take(health, before, fell);
+    let (lit, before) = (health.is_burning(), *health);
+    let burnt = health.burn(fire, water).map(|cause| if lit { Cause::FireTick } else { cause });
+    take(health, before, burnt);
+    let before = *health;
+    let scalded = (lava && health.scald()).then_some(Cause::Lava);
+    take(health, before, scalded);
+    let before = *health;
+    let walled = health.smother(in_wall, WALLED).then_some(Cause::Suffocation);
+    take(health, before, walled);
     vitals.air = if under_water || in_wall { breath - 1 } else { (breath + BREATH).min(AIR) };
     if vitals.air <= -GASP {
         vitals.air = 0;
-        hits.extend((under_water && vitals.health.hurt(DROWN_HARM)).then_some(Cause::Drowning));
+        let before = vitals.health;
+        let drowned = (under_water && vitals.health.hurt(DROWN_HARM)).then_some(Cause::Drowning);
+        take(&mut vitals.health, before, drowned);
     }
     let left = vitals.health.left();
-    match vitals.hunger.tick(left > 0.0 && left < vitals.health.max()) {
+    match vitals.hunger.tick(rules.on(NATURAL_REGENERATION) && left > 0.0 && left < vitals.health.max()) {
         Some(hunger::Turn::Mend) => vitals.health.mend(1.0),
         Some(hunger::Turn::Starve) => hits.extend((left > STARVED && vitals.health.hurt(1.0)).then_some(Cause::Starving)),
         None => {}

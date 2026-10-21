@@ -8,9 +8,10 @@ use super::loot::{self, Breaker};
 
 const STACK: u8 = 64;
 
-/// Breaks `cells` for a blast: TNT among them is lit, and with `leaves` the rest leave what they
-/// would to a bare hand that could mine them, like items in one stack, out of the last cell.
-pub(crate) fn blow_out(world: &mut World, layer: Entity, cells: &[BlockPos], leaves: bool) {
+/// Breaks `cells` for a blast: TNT among them is lit, and the rest, each by the chance `leaves`,
+/// leave what they would to a bare hand that could mine them, like items in one stack, out of
+/// the last cell.
+pub(crate) fn blow_out(world: &mut World, layer: Entity, cells: &[BlockPos], leaves: f32) {
     let mut left: Vec<Item> = Vec::new();
     for &cell in cells {
         if crate::tnt::catch(world, layer, cell) {
@@ -18,7 +19,8 @@ pub(crate) fn blow_out(world: &mut World, layer: Entity, cells: &[BlockPos], lea
         }
         let [x, y, z] = cell;
         let broken = level(world, layer).and_then(|level| level.registry().get(level.block(x, y, z))).map(|state| (state.name.to_owned(), state.properties.to_owned()));
-        if let Some((name, properties)) = broken.filter(|_| leaves) {
+        let kept = leaves >= 1.0 || (leaves > 0.0 && world.get_resource_or_insert_with(super::Dice::default).fraction() < leaves);
+        if let Some((name, properties)) = broken.filter(|_| kept) {
             let mut items = loot::thrown(world, &name, &properties, &Breaker::UNAIDED);
             loot::add_entity_loot(world, layer, cell, &mut items);
             for item in items {

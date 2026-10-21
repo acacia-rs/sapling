@@ -37,6 +37,6 @@ pub use items::{CreativeItem, Stack, creative_item, is_item, item, item_name, ma
 pub use recipes::{Grid, Ingredient, Recipe, Shape, Station, has_tag, recipe, smelted};
 pub use spawn::{no_player_spawn, world_spawn};
 pub use player::{AddPlayerOptions, add_player, entity_data, experience_attributes, player_metadata, update_abilities, update_attributes};
-pub use game_rules::{DAYLIGHT_CYCLE, GameRules, RuleValue};
+pub use game_rules::{DAYLIGHT_CYCLE, GameRules, HUNGER, LIQUID_FLOW, MOB_AI, REDSTONE, RuleValue};
 pub use start_game::{EYE_HEIGHT, StartGameOptions, start_game};
 pub use templates::{pre_start_packets, registry_packets};

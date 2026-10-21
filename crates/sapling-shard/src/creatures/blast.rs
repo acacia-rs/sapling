@@ -126,6 +126,9 @@ pub(crate) enum Wreck {
     Nothing,
     Breaks,
     Leaves,
+    /// Each block leaves what it would by a chance of one in the blast's power
+    /// (`tntExplosionDropDecay`).
+    Decays,
 }
 
 /// A blast of `power` at `at`: of `source`, if an entity made it, which is gone with it.
@@ -181,7 +184,12 @@ fn blow(world: &mut World, source: Option<Entity>, layer: Entity, at: [f32; 3], 
     }
     if wreck != Wreck::Nothing {
         let cells = broken(world, layer, at, power);
-        blocks::blow_out(world, layer, &cells, wreck == Wreck::Leaves);
+        let leaves = match wreck {
+            Wreck::Leaves => 1.0,
+            Wreck::Decays => 1.0 / power,
+            Wreck::Nothing | Wreck::Breaks => 0.0,
+        };
+        blocks::blow_out(world, layer, &cells, leaves);
     }
 }
 

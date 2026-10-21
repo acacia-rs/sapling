@@ -301,6 +301,20 @@ it sends for `/title`, `/scoreboard`, `/gamemode`, `/tp`, a wither's bar and com
   `ParamKind` (only the shard and the derive match it), and values plugins write as struct literals
   (`Block`, `Item`, forms, HUD), which would lose struct-literal and `..Default::default()` construction.
   `tools/semver-check.sh [rev]` runs cargo-semver-checks on testbox against `rev` (default origin/master).
+- **Vanilla rules** (`sapling-shard/src/rules.rs`, `sapling-data/src/game_rules.rs`). A world's game rules
+  are its vanilla switches: plugins set them with `ctx.set_game_rule`, operators with `/gamerule`, and they
+  are saved in level.dat. Read: `doDayLightCycle`, `doWeatherCycle`, `doFireTick`, `randomTickSpeed`,
+  `mobGriefing`, `pvp`, `doMobLoot`, `keepInventory`, `showDeathMessages` (the `DeathEvent`'s starting
+  message), `fallDamage` / `fireDamage` / `drowningDamage` / `freezeDamage` (players only; a spared tick
+  hit keeps its timers), `naturalRegeneration`, `doTileDrops` (every block drop), `doEntityDrops` (a
+  falling block's item), `tntExplodes` (the fuse burns, nothing bursts), `tntExplosionDropDecay` (a block
+  drops by 1 in the power), `respawnBlocksExplode` (anchors), `playersSleepingPercentage`. What no BDS rule
+  switches is a `sapling:` rule in the same store, never sent to clients, each on by default:
+  `sapling:hunger` (no exhaustion), `sapling:liquidFlow` (due flows are dropped: liquids stand),
+  `sapling:redstone` (circuits pause; what was written waits), `sapling:mobAi` (mobs fall and are hurt but
+  decide nothing). Not read yet: `sendCommandFeedback` (BDS's behaviour not captured), `spawnRadius`,
+  `doImmediateRespawn` (the client's), and rules for what sapling lacks (`doMobSpawning`, `doInsomnia`,
+  command blocks).
 - **Player actions** (`sapling-shard/src/actions.rs`). `MoveEvent` (one a tick per player that moved or
   turned, from the tick's start; `changed_block()` for block-level checks): `movement::player_input` queues
   it in `movement::Moves`, since systems hold no plugins, and dispatch offers it before anything reads

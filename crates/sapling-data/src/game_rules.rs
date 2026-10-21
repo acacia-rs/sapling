@@ -11,6 +11,14 @@ use crate::start_game::TEMPLATE;
 
 pub const DAYLIGHT_CYCLE: &str = "doDayLightCycle";
 
+/// sapling's own switches, for what no BDS rule switches: kept, listed and set as BDS's are, never
+/// sent to clients. Each starts on.
+pub const HUNGER: &str = "sapling:hunger";
+pub const LIQUID_FLOW: &str = "sapling:liquidFlow";
+pub const REDSTONE: &str = "sapling:redstone";
+pub const MOB_AI: &str = "sapling:mobAi";
+const OWN: [&str; 4] = [HUNGER, LIQUID_FLOW, REDSTONE, MOB_AI];
+
 /// A game rule's value: a switch or a number.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum RuleValue {
@@ -57,26 +65,32 @@ pub struct GameRules(Vec<RuleValue>);
 
 impl Default for GameRules {
     fn default() -> Self {
-        let mut rules = Self(DEFAULTS.iter().filter_map(|rule| RuleValue::of(&rule.value)).collect());
+        let bds = DEFAULTS.iter().filter_map(|rule| RuleValue::of(&rule.value));
+        let mut rules = Self(bds.chain(OWN.map(|_| RuleValue::Bool(true))).collect());
         // The recording stopped the clock; a world runs it unless it says otherwise.
         rules.set(DAYLIGHT_CYCLE, RuleValue::Bool(true));
         rules
     }
 }
 
+/// BDS's rules, then sapling's own.
+fn names() -> impl Iterator<Item = &'static str> {
+    DEFAULTS.iter().map(|rule| rule.name.as_str()).chain(OWN)
+}
+
 fn index(name: &str) -> Option<usize> {
-    DEFAULTS.iter().position(|rule| rule.name.eq_ignore_ascii_case(name))
+    names().position(|own| own.eq_ignore_ascii_case(name))
 }
 
 impl GameRules {
-    /// Every rule's own name and value, in BDS's order.
+    /// Every rule's own name and value, in BDS's order, sapling's own after.
     pub fn iter(&self) -> impl Iterator<Item = (&'static str, RuleValue)> + '_ {
-        DEFAULTS.iter().map(|rule| rule.name.as_str()).zip(self.0.iter().copied())
+        names().zip(self.0.iter().copied())
     }
 
     /// The rule `name`, in any case: its own name and value.
     pub fn get(&self, name: &str) -> Option<(&'static str, RuleValue)> {
-        index(name).map(|at| (DEFAULTS[at].name.as_str(), self.0[at]))
+        index(name).map(|at| (names().nth(at).expect("indexed"), self.0[at]))
     }
 
     /// Whether the switch `name` is on; false for a number or no such rule.
@@ -96,9 +110,10 @@ impl GameRules {
         GameRulesChanged { rules: self.start_game() }
     }
 
-    /// The rule `name` alone, as BDS tells a world's players of a change; `None` for no such rule.
+    /// The rule `name` alone, as BDS tells a world's players of a change; `None` for no such rule
+    /// or one of sapling's own.
     pub fn changed(&self, name: &str) -> Option<GameRulesChanged> {
-        let at = index(name)?;
+        let at = index(name).filter(|&at| at < DEFAULTS.len())?;
         Some(GameRulesChanged { rules: vec![GameRuleI32 { value: self.0[at].wire(), ..DEFAULTS[at].clone() }] })
     }
 
@@ -122,9 +137,17 @@ mod tests {
     const LISTED: &str = "commandBlockOutput doDayLightCycle doEntityDrops doFireTick recipesUnlock doLimitedCrafting doMobLoot doMobSpawning doTileDrops doWeatherCycle drowningDamage fallDamage fireDamage keepInventory mobGriefing pvp showCoordinates playerWaypoints locatorbar showDaysPlayed naturalRegeneration tntExplodes sendCommandFeedback maxCommandChainLength doInsomnia commandBlocksEnabled randomTickSpeed doImmediateRespawn showDeathMessages functionCommandLimit spawnRadius showTags freezeDamage respawnBlocksExplode showBorderEffect showRecipeMessages playersSleepingPercentage projectilesCanBreakBlocks tntExplosionDropDecay";
 
     #[test]
-    fn the_recorded_rules_are_the_ones_bds_lists() {
+    fn the_recorded_rules_are_the_ones_bds_lists_and_saplings_own_follow() {
         let names: Vec<&str> = GameRules::default().iter().map(|(name, _)| name).collect();
-        assert_eq!(names.join(" "), LISTED);
+        assert_eq!(names.join(" "), format!("{LISTED} {}", OWN.join(" ")));
+    }
+
+    #[test]
+    fn saplings_own_rules_start_on_and_are_never_told() {
+        let mut rules = GameRules::default();
+        assert!(rules.on("SAPLING:HUNGER") && rules.set(HUNGER, RuleValue::Bool(false)) == Some(true) && !rules.on(HUNGER));
+        assert!(rules.changed(HUNGER).is_none());
+        assert!(!rules.packet().rules.iter().any(|rule| rule.name.starts_with("sapling:")));
     }
 
     #[test]

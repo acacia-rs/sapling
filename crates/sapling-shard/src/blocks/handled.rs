@@ -27,6 +27,7 @@ const EGG_REACH: [i32; 2] = [15, 7];
 const EGG_TRIES: usize = 64;
 /// A charged respawn anchor clicked outside the nether bursts with this power.
 const ANCHOR_POWER: f32 = 5.0;
+const ANCHORS_EXPLODE: &str = "respawnBlocksExplode";
 const NETHER: i32 = 1;
 
 /// What tells of an egg's jump by `by`: each length in a byte, and a bit for each that is negative.
@@ -89,7 +90,7 @@ pub(super) fn use_by_hand(world: &mut World, player: Entity, layer: Entity, pos:
             true
         }
         "minecraft:respawn_anchor" => {
-            if !property(properties, "respawn_anchor_charge").is_some_and(|charge| charge > 0) || level.dimension() == NETHER {
+            if !property(properties, "respawn_anchor_charge").is_some_and(|charge| charge > 0) || level.dimension() == NETHER || !level.level().rules.on(ANCHORS_EXPLODE) {
                 return false;
             }
             let air = registry.air_id();

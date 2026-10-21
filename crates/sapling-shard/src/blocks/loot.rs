@@ -15,6 +15,8 @@ use crate::{drops, inventory};
 const FROM_ONE: &[(&str, &str)] = &[("candles", "candles"), ("pickles", "cluster_count"), ("layers", "height"), ("flower_amount", "growth"), ("segment_amount", "growth")];
 /// Bedrock's `growth` of a ripe crop.
 const RIPE: i32 = 7;
+const TILE_DROPS: &str = "doTileDrops";
+const ENTITY_DROPS: &str = "doEntityDrops";
 /// Chances are thrown out of this many.
 const CHANCE_SIDES: u32 = 1_000_000;
 
@@ -182,15 +184,23 @@ fn stacks(world: &World, layer: Entity, items: &[Item]) -> Vec<sapling_world::It
     items.iter().filter(|item| item.count > 0).filter_map(|item| inventory::stored(item, registry)).collect()
 }
 
-/// Lays `items` where the block at `pos` was, tossed out of its cell.
+/// Lays `items` where the block at `pos` was, tossed out of its cell, unless the world's
+/// `doTileDrops` is off.
 pub(super) fn spill(world: &mut World, layer: Entity, pos: BlockPos, items: &[Item]) {
+    if !crate::rules::on(world, layer, TILE_DROPS) {
+        return;
+    }
     for stack in stacks(world, layer, items) {
         drops::spill(world, layer, stack, pos);
     }
 }
 
-/// Tosses `items` out of `centre`, where an entity that broke up was.
+/// Tosses `items` out of `centre`, where an entity that broke up was, unless the world's
+/// `doEntityDrops` is off.
 pub(super) fn let_go(world: &mut World, layer: Entity, centre: [f32; 3], items: &[Item]) {
+    if !crate::rules::on(world, layer, ENTITY_DROPS) {
+        return;
+    }
     for stack in stacks(world, layer, items) {
         drops::let_go(world, layer, stack, centre);
     }

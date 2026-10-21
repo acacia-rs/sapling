@@ -214,6 +214,8 @@ pub(crate) fn tick(world: &mut World) {
         flows.queued.remove(&(layer, pos, due));
         moving.push((layer, pos));
     }
+    // A world with `sapling:liquidFlow` off drops its flows: its liquids stand as they are.
+    moving.retain(|(layer, _)| crate::rules::on(world, *layer, sapling_data::LIQUID_FLOW));
     for (layer, pos) in moving {
         flow::flow(world, layer, pos);
     }

@@ -16,6 +16,7 @@ use crate::creatures::Cause;
 use crate::{chat, drops, experience, inventory, movement, orbs};
 
 const KEEP_INVENTORY: &str = "keepInventory";
+const SHOW_DEATH_MESSAGES: &str = "showDeathMessages";
 /// `Respawn` states: the server looks for a place, has one, and the client is ready for it.
 const SEARCHING: u8 = 0;
 const READY: u8 = 1;
@@ -92,8 +93,12 @@ pub(super) fn die(world: &mut World, player: Entity, cause: Cause) {
         return;
     };
     let name = who.name.clone();
-    let keeps = world.get::<Layer>(layer).is_some_and(|layer| layer.world.level().rules.on(KEEP_INVENTORY));
-    let death = crate::plugins::offer(world, DeathEvent::new(who, cause, attacker(world, player), keeps));
+    let keeps = crate::rules::on(world, layer, KEEP_INVENTORY);
+    let mut death = DeathEvent::new(who, cause, attacker(world, player), keeps);
+    if !crate::rules::on(world, layer, SHOW_DEATH_MESSAGES) {
+        death.message = DeathMessage::Hidden;
+    }
+    let death = crate::plugins::offer(world, death);
     let (stacks, points) = if death.keep_inventory { Default::default() } else { inventory::change(world, player, |inventory| inventory.let_go()).unwrap_or_default() };
     for stack in stacks {
         drops::toss(world, layer, stack, feet);

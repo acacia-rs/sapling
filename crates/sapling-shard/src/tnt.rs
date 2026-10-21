@@ -21,6 +21,9 @@ use crate::{entities, mobs};
 
 pub(crate) const KIND: &str = "minecraft:tnt";
 const SIZE: f32 = 0.98;
+/// Off, a primed TNT goes out at the end of its fuse ("whether TNT explodes after activation").
+const EXPLODES: &str = "tntExplodes";
+const DROP_DECAY: &str = "tntExplosionDropDecay";
 /// The wire position is this far above the bottom of its box.
 const WIRE_OFFSET: f32 = 0.49;
 pub(crate) const FUSE: i32 = 80;
@@ -94,9 +97,14 @@ pub(crate) fn burn(world: &mut World) {
     let primed: Vec<(Entity, Entity, u64, i32)> = world.query::<(Entity, &InLayer, &NetId, &Primed)>().iter(world).map(|(entity, layer, id, primed)| (entity, layer.0, id.0, primed.0 - 1)).collect();
     for (entity, layer, id, left) in primed {
         let Some((body, mut packets)) = entities::step(world, entity, layer, id, &Physics::TNT, WIRE_OFFSET) else { continue };
+        if left < 0 && !crate::rules::on(world, layer, EXPLODES) {
+            mobs::remove(world, entity);
+            continue;
+        }
         if left < 0 {
             let [x, y, z] = body.at;
-            creatures::explode(world, Some(entity), layer, [x, y + HEART, z], POWER, Wreck::Leaves);
+            let wreck = if crate::rules::on(world, layer, DROP_DECAY) { Wreck::Decays } else { Wreck::Leaves };
+            creatures::explode(world, Some(entity), layer, [x, y + HEART, z], POWER, wreck);
             continue;
         }
         world.entity_mut(entity).insert(Primed(left));

@@ -24,6 +24,7 @@ use crate::movement;
 use crate::visibility::ToViewers;
 
 const BED: &str = "minecraft:bed";
+const SLEEPING_PERCENTAGE: &str = "playersSleepingPercentage";
 const OCCUPIED: &str = "occupied_bit";
 /// The ticks of a clear day in which one may sleep: the sky is dark enough (BDS `skyDarken` 4).
 const NIGHT: std::ops::RangeInclusive<i64> = 12_541..=23_459;
@@ -113,6 +114,16 @@ fn counted(world: &mut World, layer: Entity) -> usize {
     let players = in_world(world);
     let counts = |player: &&Entity| world.get::<InLayer>(**player).is_some_and(|in_layer| in_layer.0 == layer) && world.get::<Mode>(**player).is_some_and(|mode| mode.0 != GameMode::Spectator);
     players.iter().filter(counts).count()
+}
+
+/// Sleepers that skip the night of the world `layer`: the world's `playersSleepingPercentage` of
+/// those [`counted`], rounded up, at least one.
+fn needed(world: &mut World, layer: Entity) -> usize {
+    let percent = world.get::<Layer>(layer).and_then(|layer| match layer.world.level().rules.get(SLEEPING_PERCENTAGE) {
+        Some((_, sapling_data::RuleValue::Int(percent))) => Some(percent.clamp(0, 100) as usize),
+        _ => None,
+    });
+    (counted(world, layer) * percent.unwrap_or(100)).div_ceil(100).max(1)
 }
 
 /// Tells a world's players, and those in its other dimensions, how many of how many sleep (BDS
@@ -256,7 +267,7 @@ pub(crate) fn tick(world: &mut World, actions: &[(Entity, PlayerAction)]) {
     }
     awake.into_iter().for_each(|player| wake(world, player));
     for (layer, sleepers) in deep {
-        if sleepers.len() < counted(world, layer).max(1) {
+        if sleepers.len() < needed(world, layer) {
             continue;
         }
         let mut all = world.query::<(Entity, &Sleeping)>();

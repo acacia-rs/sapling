@@ -224,13 +224,14 @@ pub(crate) fn tick(world: &mut World) {
         world.query_filtered::<(Entity, &InLayer, &NetId, &entities::Kind), With<Creature>>().iter(world).map(|(entity, layer, id, kind)| (entity, layer.0, id.0, kind.0.clone())).collect();
     for (entity, layer, id, kind) in all {
         let Some(start) = world.get::<Body>(entity).copied() else { continue };
-        let is_alive = world.get::<Dying>(entity).is_none();
-        if is_alive {
+        // With `sapling:mobAi` off a mob still falls, is pushed and is hurt, but decides nothing.
+        let thinks = world.get::<Dying>(entity).is_none() && crate::rules::on(world, layer, sapling_data::MOB_AI);
+        if thinks {
             stares::watch(world, entity, layer, id, &kind, &start);
             drinks::tick(world, entity, layer, id, &start, hunting::prey_at(world, entity));
             teleports::tick(world, entity, layer, hunting::prey_at(world, entity));
         }
-        if is_alive && !rams::steer(world, entity, layer, id, &kind) && !hunting::steer(world, entity, layer, id, &kind) {
+        if thinks && !rams::steer(world, entity, layer, id, &kind) && !hunting::steer(world, entity, layer, id, &kind) {
             let traits = sapling_data::mob_traits(&kind);
             let strolls = world.resource::<crate::components::Settings>().0.mobs_stroll;
             if strolls {
@@ -239,7 +240,7 @@ pub(crate) fn tick(world: &mut World) {
         }
         let Some((body, packets)) = entities::step(world, entity, layer, id, physics_of(&kind), 0.0) else { continue };
         blocks::to_viewers(world, layer, body.at.map(|c| c.floor() as i32), &packets);
-        if is_alive {
+        if thinks {
             hunting::strike(world, entity, layer, id, &kind, &body);
             rams::strike(world, entity, layer, id, &kind, &body);
             if blast::tick(world, entity, layer, id, &kind, &body) {

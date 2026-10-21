@@ -245,7 +245,7 @@ fn act(world: &mut World, player: Entity, active: &Active) {
         Effect::InstantDamage => drop(hurt(world, player, HARMS * 2f32.powi(i32::from(active.amplifier)), Cause::Magic)),
         Effect::Poison if turn(POISONS) && health > POISONED => drop(hurt(world, player, 1.0, Cause::Magic)),
         Effect::Wither if turn(WITHERS) => drop(hurt(world, player, 1.0, Cause::Wither)),
-        Effect::Hunger => feed(world, player, |hunger| hunger.tire(HUNGERS * levels)),
+        Effect::Hunger => super::tire(world, player, HUNGERS * levels),
         Effect::Saturation => feed(world, player, |hunger| hunger.feed(levels, levels * 2.0)),
         // Resistance, fire resistance, jump boost and slow falling: `vitals::dress`. Water
         // breathing: `vitals::tick`. Strength and weakness: `hits_for`.
