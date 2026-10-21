@@ -22,6 +22,7 @@ mod harm;
 mod health;
 mod hunting;
 mod legs;
+mod omens;
 mod paths;
 mod rams;
 mod shooting;
@@ -165,6 +166,7 @@ fn die(world: &mut World, entity: Entity, layer: Entity, kind: &str, body: &Body
     if let Some(id) = world.get::<NetId>(entity).map(|id| id.0) {
         hunting::let_go(world, entity, layer, id, body);
     }
+    omens::died(world, entity, layer, body);
     world.entity_mut(entity).insert(Dying(now)).remove::<entities::Stored>();
     let on_fire = world.get_mut::<Health>(entity).is_some_and(|mut health| {
         health.end();
@@ -195,6 +197,7 @@ fn leave_loot(world: &mut World, layer: Entity, kind: &str, on_fire: bool, [x, y
 pub(crate) fn tick(world: &mut World) {
     arrows::tick(world);
     afflictions::tick(world);
+    omens::tick(world);
     spells::tick(world);
     bullets::tick(world);
     charges::tick(world);

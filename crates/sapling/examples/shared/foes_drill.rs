@@ -167,6 +167,39 @@ pub fn mob_effects2() -> Vec<String> {
     lines
 }
 
+/// On [`open_floor`] at midnight with the actor in creative: a zombie held still 4 off is given
+/// each of the four newest effects in turn and killed, the infested one first hit ten times by 1,
+/// to see what each leaves (bds-drink2.txt holds their potions, 43 to 46).
+pub fn effects3() -> Vec<String> {
+    let mut lines = open_floor("stone", &[], 0);
+    lines.truncate(lines.len() - 5);
+    lines.push("gamemode creative @s".into());
+    for effect in ["wind_charged", "weaving", "oozing", "infested"] {
+        lines.extend(["summon zombie ~4 ~ ~".into(), "effect @e[type=zombie] slowness 60 255".into(), format!("effect @e[type=zombie] {effect} 60 0"), String::new()]);
+        if effect == "infested" {
+            lines.extend(std::iter::repeat_n("damage @e[type=zombie] 1".to_owned(), 10));
+        }
+        lines.extend(["kill @e[type=zombie]", "", "", "", "", "kill @e[type=!player]", "fill ~-6 ~ ~-6 ~6 ~4 ~6 air", ""].map(String::from));
+    }
+    lines.extend(["gamerule falldamage true", ""].map(String::from));
+    lines
+}
+
+/// As [`effects3`], the push of a wind charged zombie's death by how far off it is: the actor put
+/// back at one place each time, a zombie 1 to 7 off killed (bds-effects3-findings.md: one sample).
+/// Sculk older drills left under the floor is cleared first.
+pub fn wind_burst() -> Vec<String> {
+    let mut lines = open_floor("stone", &[], 0);
+    lines.truncate(lines.len() - 5);
+    lines.extend(["gamemode creative @s", "fill ~-20 ~-8 ~-20 ~20 ~-2 ~20 stone"].map(String::from));
+    for off in 1..=7 {
+        lines.extend(["tp @s 0.5 -19 0.5".into(), String::new(), format!("summon zombie {}.5 -19 0.5", off), "effect @e[type=zombie] slowness 60 255".into(), "effect @e[type=zombie] wind_charged 60 0".into()]);
+        lines.extend(["kill @e[type=zombie]", "", "", "kill @e[type=!player]", ""].map(String::from));
+    }
+    lines.extend(["gamerule falldamage true", ""].map(String::from));
+    lines
+}
+
 /// A floor of `block` 41 square at y -20 with 20 of air over it, the actor in survival on it at
 /// midnight with fall damage off; `summon` run, then the actor healed each second for `seconds`.
 fn open_floor(block: &str, summon: &[&str], seconds: usize) -> Vec<String> {

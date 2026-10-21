@@ -33,11 +33,19 @@ pub enum Effect {
     Saturation,
     Levitation,
     SlowFalling,
+    /// A mob or player that dies with it bursts as a wind charge.
+    WindCharged,
+    /// One that dies with it leaves cobwebs about.
+    Weaving,
+    /// One that dies with it leaves two slimes.
+    Oozing,
+    /// One hurt with it may let out a silverfish.
+    Infested,
 }
 
 /// Each effect with the name commands know it by, the translation key of its name, and the id
 /// the wire knows it by.
-const KNOWN: [(Effect, &str, &str, i32); 25] = [
+const KNOWN: [(Effect, &str, &str, i32); 29] = [
     (Effect::Speed, "speed", "potion.moveSpeed", 1),
     (Effect::Slowness, "slowness", "potion.moveSlowdown", 2),
     (Effect::Haste, "haste", "potion.digSpeed", 3),
@@ -63,11 +71,16 @@ const KNOWN: [(Effect, &str, &str, i32); 25] = [
     (Effect::Saturation, "saturation", "potion.saturation", 23),
     (Effect::Levitation, "levitation", "potion.levitation", 24),
     (Effect::SlowFalling, "slow_falling", "potion.slowFalling", 27),
+    // research/captures/bds-effects3-findings.md: named `effect.*`, not `potion.*`.
+    (Effect::WindCharged, "wind_charged", "effect.wind_charged", 32),
+    (Effect::Weaving, "weaving", "effect.weaving", 33),
+    (Effect::Oozing, "oozing", "effect.oozing", 34),
+    (Effect::Infested, "infested", "effect.infested", 35),
 ];
 
 impl Effect {
-    pub const ALL: [Effect; 25] = {
-        let mut all = [Effect::Speed; 25];
+    pub const ALL: [Effect; 29] = {
+        let mut all = [Effect::Speed; 29];
         let mut at = 0;
         while at < all.len() {
             all[at] = KNOWN[at].0;

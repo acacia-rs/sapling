@@ -132,6 +132,11 @@ pub fn potion_effects(data: i16) -> &'static [Gives] {
         40 => gives!["slow_falling" 1800 0],
         41 => gives!["slow_falling" 4800 0],
         42 => gives!["slowness" 400 3],
+        // research/captures/bds-drink2.txt: effect ids 32 to 35, three minutes each.
+        43 => gives!["wind_charged" 3600 0],
+        44 => gives!["weaving" 3600 0],
+        45 => gives!["oozing" 3600 0],
+        46 => gives!["infested" 3600 0],
         _ => &[],
     }
 }
@@ -161,7 +166,7 @@ mod tests {
         assert_eq!((strong_poison.gives, strong_poison.drunk, strong_poison.leaves), (&[Gives { effect: "poison", ticks: 450, amplifier: 1, chance: 1.0 }][..], true, Some("minecraft:glass_bottle")));
         let turtle = consumable("minecraft:potion", 39).unwrap().gives;
         assert_eq!((turtle.len(), turtle[0].effect, turtle[0].amplifier, turtle[1].effect, turtle[1].amplifier), (2, "slowness", 5, "resistance", 3));
-        assert!((5..=42).all(|data| !consumable("minecraft:potion", data).unwrap().gives.is_empty()) && consumable("minecraft:potion", 43).unwrap().gives.is_empty());
+        assert!((5..=46).all(|data| !consumable("minecraft:potion", data).unwrap().gives.is_empty()) && consumable("minecraft:potion", 47).unwrap().gives.is_empty());
         assert!(consumable("minecraft:potion", 0).unwrap().gives.is_empty() && consumable("minecraft:stone", 0).is_none());
         assert_eq!((food("minecraft:stone"), food("dried_kelp").map(|food| food.ticks)), (None, Some(16)));
         assert!(food("minecraft:golden_apple").is_some_and(|food| food.always));
