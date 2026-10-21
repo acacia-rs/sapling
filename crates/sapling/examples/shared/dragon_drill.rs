@@ -80,6 +80,8 @@ pub fn drill(name: &str) -> Option<Vec<String>> {
             lines.extend(owned(&[ASIDE, "kill @e[type=ender_dragon] #30000", "!box -4 58 -4 4 67 4", "replaceitem entity @s slot.weapon.mainhand 0 end_crystal 4", "tp @s 0.5 70 6.5 #3000"]));
             lines.extend(owned(&["!summon 40000", "!entities", "!spikes", "!wait 20000", "!entities", ASIDE, "kill @e[type=ender_dragon] #30000", "!entities", "!box -4 58 -4 4 67 4"]));
         }
+        // The fight of the world the last drill left (KEEP_WORLD=1), as the restarted server resumes it.
+        "dragon-resume" => lines.extend(owned(&["!wait 20000", "!entities"])),
         // Home through the exit portal in survival, twice.
         "dragon-home" => {
             lines.extend(owned(&[ASIDE, "kill @e[type=ender_dragon] #14000", "gamerule falldamage false", "gamemode survival", "!enter 20000", "!where"]));

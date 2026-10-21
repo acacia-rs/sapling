@@ -160,6 +160,15 @@ impl LevelDbWorld {
         self.db.put(crate::portals::KEY, &crate::encode_portals(portals))
     }
 
+    /// The End's dragon fight (dragon_fight.rs); `None` before one began.
+    pub fn load_dragon_fight(&self) -> Result<Option<crate::DragonFightRecord>, Error> {
+        self.db.get(crate::dragon_fight::KEY)?.map_or(Ok(None), |record| crate::decode_dragon_fight(&record))
+    }
+
+    pub fn store_dragon_fight(&self, fight: &crate::DragonFightRecord) -> Result<(), Error> {
+        self.db.put(crate::dragon_fight::KEY, &crate::encode_dragon_fight(fight))
+    }
+
     /// Writes what was stored out as a table file and replaces `level.dat` with `level`. A world
     /// opened in memory flushes its copy and leaves the folder alone.
     pub fn flush(&self, level: &LevelDat) -> Result<(), Error> {

@@ -5,11 +5,12 @@
 # Set REMOTE_DIR per worktree as for remote-test.sh. Probe arguments are single words.
 # BDS_DIR and BDS_PORT pick another BDS copy (one drill at a time per copy); SAPLING_PORT the drill
 # server's port (default 19183); SAPLING_DRILL_WORLD=strongholds its overworld (see drill_server.rs).
+# KEEP_WORLD=1 starts BDS on the last drill's world.
 set -uo pipefail
 target=$1 example=$2 out=$3 words="${*:4}"
 source "$(dirname "$0")/remote-sync.sh"
 case $target in
-  bds) run="bash tools/bds-drill.sh ${BDS_DIR:-~/work/bds-mechanisms} ${BDS_PORT:-19182} $example drill.txt $words" build="--example $example" ;;
+  bds) run="KEEP_WORLD=${KEEP_WORLD:-0} bash tools/bds-drill.sh ${BDS_DIR:-~/work/bds-mechanisms} ${BDS_PORT:-19182} $example drill.txt $words" build="--example $example" ;;
   sapling) run="SAPLING_DRILL_WORLD=${SAPLING_DRILL_WORLD:-flat} bash tools/sapling-drill.sh ${SAPLING_PORT:-19183} $example drill.txt $words" build="--example $example --example drill_server" ;;
   *) echo "first argument: bds or sapling" >&2; exit 2 ;;
 esac

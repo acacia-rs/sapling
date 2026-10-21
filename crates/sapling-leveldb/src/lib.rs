@@ -8,6 +8,7 @@ mod block_entities;
 mod container;
 mod data3d;
 mod db;
+mod dragon_fight;
 mod item;
 mod keys;
 mod level_dat;
@@ -25,6 +26,7 @@ pub use actors::{Actor, Painting, State, actors, falling_block, moved_actor, new
 pub use item::ItemStack;
 pub use player::PlayerData;
 pub use portals::{PortalRecord, decode_portals, encode_portals};
+pub use dragon_fight::{DragonFightRecord, decode_dragon_fight, encode_dragon_fight};
 pub use block_entities::{BlockEntity, block_entities, with_block_entity, without_block_entity};
 pub use container::{container_items, new_block_entity, with_container_items};
 pub use data3d::Data3d;

@@ -1,14 +1,15 @@
 #!/usr/bin/env bash
 # Runs a built probe example against a BDS on a fresh world, then stops the server.
 # usage: tools/bds-drill.sh <bds dir> <port> <example name> <output file> [probe args...]
-# The BDS dir's server.properties names the port and the world (level-name), which is wiped first.
+# The BDS dir's server.properties names the port and the world (level-name), which is wiped first
+# unless KEEP_WORLD=1 (a drill that resumes the last one's world).
 # Works with the Windows server (bedrock_server.exe) and the Linux one (bedrock_server).
 set -uo pipefail
 bds=$(realpath "$1") port=$2 out=$(realpath -m "$4")
 exe=$([ -f "$bds/bedrock_server.exe" ] && echo .exe)
 probe=$(realpath "$(dirname "$0")/../target/debug/examples/$3$exe")
 world=$(grep -E '^level-name=' "$bds/server.properties" | cut -d= -f2)
-rm -rf "$bds/worlds/$world"
+[ "${KEEP_WORLD:-0}" = 1 ] || rm -rf "$bds/worlds/$world"
 log="$bds/drill.log"
 : >"$log"
 cd "$bds" || exit 1

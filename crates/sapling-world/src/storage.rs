@@ -8,7 +8,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 use acacia_proto::nbt::Value;
 use acacia_world::Chunk;
 use sapling_data::{GameRules, RuleValue};
-use sapling_leveldb::{ChunkKey, LevelDat, LevelDbWorld, PlayerData, PortalRecord};
+use sapling_leveldb::{ChunkKey, DragonFightRecord, LevelDat, LevelDbWorld, PlayerData, PortalRecord};
 
 use crate::ChunkPos;
 
@@ -43,12 +43,14 @@ pub struct Level {
     pub portals: Vec<PortalRecord>,
     /// The world seed (`RandomSeed`): BDS seeds the draws of its portal making with it.
     pub seed: i64,
+    /// The End's dragon fight, once one began (`TheEnd`).
+    pub dragon_fight: Option<DragonFightRecord>,
 }
 
 impl Default for Level {
     /// Noon, since a world without storage has nothing to say when it is.
     fn default() -> Self {
-        Self { spawn: None, time: 6000, rules: GameRules::default(), portals: Vec::new(), seed: 0 }
+        Self { spawn: None, time: 6000, rules: GameRules::default(), portals: Vec::new(), seed: 0, dragon_fight: None }
     }
 }
 
@@ -218,7 +220,11 @@ impl LevelDbStorage {
             tracing::warn!(%error, "the portal records are unreadable; portals find none");
             Vec::new()
         });
-        Level { spawn: dat.spawn(), time: dat.time().unwrap_or(Level::default().time), rules: read_rules(dat), portals, seed: dat.seed().unwrap_or(0) }
+        let dragon_fight = self.0.load_dragon_fight().unwrap_or_else(|error| {
+            tracing::warn!(%error, "the dragon fight is unreadable; a new one begins");
+            None
+        });
+        Level { spawn: dat.spawn(), time: dat.time().unwrap_or(Level::default().time), rules: read_rules(dat), portals, seed: dat.seed().unwrap_or(0), dragon_fight }
     }
 }
 
@@ -264,6 +270,9 @@ impl WorldStorage for LevelDbStorage {
             dat.set_spawn(spawn);
         }
         self.0.store_portals(&level.portals)?;
+        if let Some(fight) = &level.dragon_fight {
+            self.0.store_dragon_fight(fight)?;
+        }
         Ok(self.0.flush(&dat)?)
     }
 

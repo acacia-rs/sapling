@@ -27,7 +27,7 @@ pub use generated::Generated;
 pub use sapling_leveldb::LevelDat;
 pub use players::PlayerLoad;
 pub use sapling_leveldb::{
-    PortalRecord,
+    DragonFightRecord, PortalRecord,
     Actor, BlockEntity, ItemStack, Painting, PlayerData, State as ActorState, actors, block_of_hash, container_items, falling_block, harmed_actor, moved_actor, new_actor, new_falling_block_actor, new_item_actor, new_orb_actor, orb_value, new_block_entity, stored_actors,
     with_container_items,
 };
