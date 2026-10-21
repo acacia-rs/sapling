@@ -244,10 +244,16 @@ impl HealthBackend for Ctx<'_> {
 
     fn kill_player(&mut self, player: PlayerId) -> bool {
         let Some(entity) = self.entity(player).filter(|entity| is_mortal(self.world, *entity)) else { return false };
+        let whole = self.world.get::<Vitals>(entity).map_or(0.0, |vitals| vitals.health.left() + vitals.health.cushion());
+        // Plugins see a kill as a hit of all it has left: one they lower lands as a hit.
+        let Some(harm) = ask(self.world, entity, whole, Cause::Generic) else { return false };
         if let Some(mut vitals) = self.world.get_mut::<Vitals>(entity) {
-            vitals.health.end();
+            if harm < whole { vitals.health.lose(harm) } else { vitals.health.end() }
+        }
+        if harm > 0.0 && harm < whole {
+            flash(self.world, entity, Cause::Generic);
         }
         settle(self.world, entity, Cause::Generic);
-        true
+        harm > 0.0
     }
 }

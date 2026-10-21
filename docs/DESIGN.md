@@ -303,10 +303,11 @@ it sends for `/title`, `/scoreboard`, `/gamemode`, `/tp`, a wither's bar and com
   yet. Clicks naming nothing raise no event.
 - **Harm, death, rising** (`sapling-shard/src/damage.rs`, `vitals/{stand,struck,death}.rs`). `DamageEvent`
   (a player or a mob, its `DamageCause`, the `Attacker` a hit's `Slayer` names, a mutable `amount`) is
-  asked before a hit lands and before its throw, so a cancel leaves no harm and no knockback. For what a
-  player's surroundings do in a tick (`stand`) the health is kept from before them: a cancel puts it back,
-  a changed amount is the loss (`Health::lose`). Not asked yet: what their surroundings do to mobs
-  (`creatures/harm.rs` `tick`), `/kill`. `DeathEvent` (players) sets `keep_inventory` and `message`
+  asked before a hit lands and before its throw, so a cancel leaves no harm and no knockback. What
+  surroundings do is asked once it is taken (`damage::weigh`): a player's tick as one loss (`stand`), each
+  of a mob's hits on its own (`creatures/harm.rs` `tick`). A cancel gives back the health and the hit's
+  guard but keeps the timers (`Health::reweigh`), so a spent landing or a fire's countdown does not come
+  back; a changed amount is the loss (`Health::lose`). `/kill` asks with all the health left. `DeathEvent` (players) sets `keep_inventory` and `message`
   (`Vanilla`, `Hidden`, `Text`); the death screen keeps the game's words. `RespawnEvent::feet` starts as
   the bed or the world's spawn.
 - **State.** `ctx.state::<T>()` is a per-shard `T::default()` keyed by type: what a plugin's handler,

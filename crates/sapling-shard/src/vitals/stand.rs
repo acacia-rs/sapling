@@ -54,19 +54,10 @@ pub(super) fn stand(world: &mut World, player: Entity, layer: Entity) {
         None => {}
     }
     // Plugins may spare the player what its surroundings took this tick, or change how much.
-    let lost = spared.left() + spared.cushion() - vitals.health.left() - vitals.health.cushion();
-    if let (Some(&cause), true) = (hits.last(), lost > 0.0) {
-        match crate::damage::ask(world, player, lost, cause, None) {
-            None => {
-                vitals.health = spared;
-                hits.clear();
-            }
-            Some(amount) if amount != lost => {
-                vitals.health = spared;
-                vitals.health.lose(amount);
-            }
-            Some(_) => {}
-        }
+    if let Some(&cause) = hits.last().filter(|_| vitals.health.lost_since(&spared) > 0.0)
+        && !crate::damage::weigh(world, player, &mut vitals.health, &spared, cause)
+    {
+        hits.clear();
     }
     let is_alive = vitals.health.left() > 0.0;
     *world.get_mut::<Vitals>(player).expect("read above") = vitals;

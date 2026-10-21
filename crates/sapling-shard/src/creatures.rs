@@ -153,6 +153,17 @@ fn kill(world: &mut World, id: EntityId) -> bool {
         mobs::remove(world, entity);
         return true;
     }
+    if let Some(health) = world.get::<Health>(entity).copied() {
+        let whole = health.left() + health.cushion();
+        let Some(harm) = crate::damage::ask(world, entity, whole, Cause::Generic, None) else { return false };
+        if harm < whole {
+            let mut health = world.get_mut::<Health>(entity).expect("read above");
+            health.lose(harm);
+            let hit = harm::strike(id.0, &health, Cause::Generic, None);
+            entities::tell_viewers(world, entity, layer, body.at.map(|c| c.floor() as i32), vec![hit]);
+            return harm > 0.0;
+        }
+    }
     let death = EntityEvent { runtime_entity_id: id.0, event_id: EntityEventEventId::DeathAnimation, data: 0, fire_at_position: None };
     entities::tell_viewers(world, entity, layer, body.at.map(|c| c.floor() as i32), vec![sapling_net::encode(&death)]);
     die(world, entity, layer, &kind, &body);

@@ -108,11 +108,10 @@ fn steam(body: &Body) -> Bytes {
     sapling_net::encode(&LevelEvent { event: LevelEventEvent::ParticleFizzEffect, position, data: width.ceil() as i32 | (height.ceil() as i32) << 8 })
 }
 
-// TODO: what this does to a mob is not offered to plugins as a DamageEvent (damage.rs).
 /// A tick of the mob `id`'s health, its body `start` before the tick's move and `now` after;
 /// whether it died of it, which its viewers are then told here. They are told its health after a
 /// fall, fire and a block have hurt it and before lava and water do, so those two show a tick
-/// late, as on BDS. A `dying` mob is only told of.
+/// late, as on BDS. A `dying` mob is only told of. Each hit is offered to plugins as it lands.
 pub(super) fn tick(world: &mut World, entity: Entity, layer: Entity, id: u64, kind: &str, start: &Body, now: &Body, dying: bool) -> bool {
     let Some(mut health) = world.get::<Health>(entity).copied() else { return false };
     let mut packets = Vec::new();
@@ -128,7 +127,11 @@ pub(super) fn tick(world: &mut World, entity: Entity, layer: Entity, id: u64, ki
         // Rain kept BDS's zombie from burning at noon (research/captures/bds-sun.txt).
         let sunlit = traits.burns_in_sun && level.is_some_and(|level| is_sunlit(level, head)) && crate::weather::of(world, layer) == sapling_api::Weather::Clear;
         health.begin();
-        if let Some((harm, from)) = health.fall(start.at, now.at[1], now.on_ground, now.liquid().is_some() || traits.no_fall) {
+        let weigh = |world: &mut World, health: &mut Health, before: Health, cause: Cause| crate::damage::weigh(world, entity, health, &before, cause);
+        let before = health;
+        if let Some((harm, from)) = health.fall(start.at, now.at[1], now.on_ground, now.liquid().is_some() || traits.no_fall)
+            && weigh(world, &mut health, before, Cause::Fall)
+        {
             packets.push(strike(id, &health, Cause::Fall, Some(now.at)));
             packets.push(land(world, layer, id, kind, from, now, harm));
         }
@@ -136,22 +139,26 @@ pub(super) fn tick(world: &mut World, entity: Entity, layer: Entity, id: u64, ki
         if burns && !wet && sunlit {
             health.kindle(SUN_BURNS);
         }
-        let lit = health.is_burning();
+        let (lit, before) = (health.is_burning(), health);
         let fire = if burns { health.burn(touching, wet) } else { None };
+        let fire = fire.filter(|cause| weigh(world, &mut health, before, *cause));
         if lit && !health.is_burning() && wet {
             packets.push(steam(now));
             splash::fizz(world, layer, now, DOUSED);
         }
         packets.extend(fire.map(|cause| strike(id, &health, cause, None)));
-        if health.smother(in_wall, WALLED) {
+        let before = health;
+        if health.smother(in_wall, WALLED) && weigh(world, &mut health, before, Cause::Suffocation) {
             packets.push(strike(id, &health, Cause::Suffocation, None));
         }
         tell(&mut health, id, kind, burns, &mut packets);
-        if burns && now.liquid() == Some(Liquid::Lava) && health.scald() {
+        let before = health;
+        if burns && now.liquid() == Some(Liquid::Lava) && health.scald() && weigh(world, &mut health, before, Cause::Lava) {
             packets.push(strike(id, &health, Cause::Lava, None));
         }
         let breath = health.breathe(in_wall || under_water);
-        if health.drown(under_water) {
+        let before = health;
+        if health.drown(under_water) && weigh(world, &mut health, before, Cause::Drowning) {
             packets.push(strike(id, &health, Cause::Drowning, None));
         }
         packets.extend(breath.map(|air| sapling_net::encode(&sapling_data::mob_air(id, air))));

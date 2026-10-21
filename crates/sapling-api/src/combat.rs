@@ -12,9 +12,10 @@ pub enum Attacker {
 
 /// A player or a mob is about to be hurt. Cancelled, it takes no harm and is not thrown.
 ///
-/// [`DamageEvent::amount`] is the hit before armour and resistance; for what a player's
-/// surroundings do to it (a fall, fire, lava, drowning, suffocation, starving) it is the health
-/// it loses in the end. Not offered yet: what their surroundings do to mobs.
+/// [`DamageEvent::amount`] is the hit before armour and resistance; for what a body's
+/// surroundings do to it (a fall, fire, lava, drowning, suffocation, a player's starving) it is
+/// the health it loses in the end. `/kill` is a [`DamageCause::Generic`] hit of all the health
+/// left: a lowered amount lands as a hit instead.
 #[derive(Debug, Clone, PartialEq)]
 pub struct DamageEvent {
     victim: Target,

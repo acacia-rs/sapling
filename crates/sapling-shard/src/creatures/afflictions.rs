@@ -143,8 +143,9 @@ fn act(world: &mut World, mob: Entity, layer: Entity, active: &Active) {
         (Effect::InstantDamage, false) => (0.0, HARMS * strength, Cause::Magic),
         (Effect::InstantHealth, true) => {
             // Unflashed and through armour, as BDS hurt its zombie.
+            let Some(harm) = crate::damage::ask(world, mob, HEALS * strength, Cause::Magic, None) else { return };
             let dies = world.get_mut::<Health>(mob).is_some_and(|mut health| {
-                health.mend(-HEALS * strength);
+                health.mend(-harm);
                 if health.left() <= 0.0 {
                     health.end();
                 }
