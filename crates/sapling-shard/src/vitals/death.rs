@@ -101,6 +101,7 @@ pub(super) fn die(world: &mut World, player: Entity, cause: Cause) {
     if let Some(mut vitals) = world.get_mut::<Vitals>(player) {
         (vitals.died, vitals.leaves) = (Some(now), Some(points));
     }
+    super::omens::died(world, player);
     tell(world, player, &EntityEvent { runtime_entity_id: id, event_id: EntityEventEventId::DeathAnimation, data: 0, fire_at_position: None });
     let slayer = world.get::<Slayer>(player).filter(|_| matches!(cause, Cause::Attack | Cause::Projectile)).map(|slayer| slayer.0.clone());
     let by_player = slayer.as_deref().and_then(|slayer| slayer.strip_prefix(BY_PLAYER)).map(str::to_owned);

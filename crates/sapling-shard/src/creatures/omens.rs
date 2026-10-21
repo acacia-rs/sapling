@@ -1,11 +1,12 @@
-//! What the four newest effects do to a mob, as BDS's zombies were drilled
-//! (research/captures/bds-effects3-findings.md, bds-wind-burst.txt): one that dies wind charged
-//! bursts at its middle and pushes every player by about `0.82 (1 - d / 9.8)` towards its eyes, d
-//! from its feet; one that dies weaving leaves 2 or 3 cobwebs about it, by the Java game's rule; one
-//! that dies oozing leaves two slimes of the second size at its feet, half a block up; one hurt while
-//! infested lets out a silverfish a time in ten, from its middle, at 0.3 within 45 degrees of its facing.
-// TODO: on a player these do nothing; the burst's fall-off is fitted to seven noisy samples and it
-// pushes no mob or item; a slime of the second size does not split when it dies.
+//! What the four newest effects do, as BDS's zombies and players were drilled
+//! (research/captures/bds-effects3-findings.md, bds-wind-burst.txt, bds-player-omens-findings.md),
+//! from a body's position (a mob's feet, a player's eyes): one that dies wind charged bursts at
+//! its middle and pushes every living player by about `0.82 (1 - d / 9.8)` towards its eyes, d
+//! from the position; one that dies weaving leaves 2 or 3 cobwebs about it, by the Java game's
+//! rule; one that dies oozing leaves two slimes of the second size half a block up; one hurt while
+//! infested lets out one or two silverfish a time in ten, at 0.3 within 90 degrees of its facing.
+// TODO: the burst's fall-off is fitted to eight noisy samples and it pushes no mob or item; a
+// slime of the second size does not split when it dies.
 
 use acacia_proto::packets::{LevelEvent, LevelEventEvent, SetEntityData};
 use acacia_proto::types::{EntityProperties, MetadataDictionaryItem, MetadataDictionaryItemKey as Key, MetadataDictionaryItemType as Type, MetadataDictionaryItemValue as Value, MetadataDictionaryItemValueDefault as Plain, Vec3f};
@@ -19,10 +20,12 @@ use crate::body::Body;
 use crate::components::{InLayer, Layer, NetId, Position, in_world};
 use crate::{blocks, entities, late_sounds, vitals};
 
-/// The burst's push at its feet, how far it reaches, and the height it pushes towards.
+/// The burst's push at its position, how far it reaches, and the height it pushes towards.
 const PUSH: f32 = 0.82;
 const REACH: f32 = 9.8;
 const EYES: f32 = 1.62;
+/// The burst's particle data for a mob.
+const MOB_FLASH: i32 = 4;
 /// Cells weaving tries, and the cobwebs it leaves: the first, and one more a time in two.
 const WEB_TRIES: usize = 15;
 /// Bedrock's name for a cobweb.
@@ -34,11 +37,20 @@ const SLIME_SIZE: i32 = 2;
 const SLIME_BOX: f32 = 1.04;
 const SLIME_HEALTH: f32 = 4.0;
 const SLIME_UP: f32 = 0.5;
-/// Infested lets out a silverfish this often a hurt, at this speed, this far either side of the
-/// mob's facing.
+/// Infested lets out silverfish this often a hurt, one and one more a time in two, at this speed,
+/// this far either side of the body's facing.
 const SILVERFISH_CHANCE: f32 = 0.1;
+const SILVERFISH: u32 = 1;
 const SILVERFISH_SPEED: f32 = 0.3;
-const SILVERFISH_SPREAD: f32 = 45.0;
+const SILVERFISH_SPREAD: f32 = 90.0;
+
+/// Which of the effects that act at death a dying body has.
+#[derive(Clone, Copy)]
+pub(crate) struct Omens {
+    pub wind: bool,
+    pub weave: bool,
+    pub ooze: bool,
+}
 
 /// A mob's health the tick before, while it is infested.
 #[derive(Component)]
@@ -46,29 +58,40 @@ pub(super) struct Watched(f32);
 
 /// The mob, of the body `body`, died: its effects do what they do.
 pub(super) fn died(world: &mut World, mob: Entity, layer: Entity, body: &Body) {
-    if afflictions::level(world, mob, Effect::WindCharged).is_some() {
-        burst(world, layer, [body.at[0], body.at[1] + body.size[1] / 2.0, body.at[2]], body.at);
+    let has = |effect| afflictions::level(world, mob, effect).is_some();
+    let omens = Omens { wind: has(Effect::WindCharged), weave: has(Effect::Weaving), ooze: has(Effect::Oozing) };
+    befall(world, layer, omens, body.at, body.size[1], MOB_FLASH);
+}
+
+/// A body at `at`, `tall` high, died with `omens`; `flash` is its burst's particle data.
+pub(crate) fn befall(world: &mut World, layer: Entity, omens: Omens, at: [f32; 3], tall: f32, flash: i32) {
+    if omens.wind {
+        burst(world, layer, [at[0], at[1] + tall / 2.0, at[2]], at, flash);
     }
-    if afflictions::level(world, mob, Effect::Weaving).is_some() {
-        weave(world, layer, body.at.map(|c| c.floor() as i32));
+    if omens.weave {
+        weave(world, layer, at.map(|c| c.floor() as i32));
     }
-    if afflictions::level(world, mob, Effect::Oozing).is_some() {
+    if omens.ooze {
         for _ in 0..SLIMES {
-            ooze(world, layer, [body.at[0], body.at[1] + SLIME_UP, body.at[2]]);
+            ooze(world, layer, [at[0], at[1] + SLIME_UP, at[2]]);
         }
     }
 }
 
-fn burst(world: &mut World, layer: Entity, at: [f32; 3], feet: [f32; 3]) {
-    let [x, y, z] = at;
-    let flash = LevelEvent { event: LevelEventEvent::ParticleWindExplosion, position: Vec3f { x, y, z }, data: 4 };
-    let cell = at.map(|c| c.floor() as i32);
+fn burst(world: &mut World, layer: Entity, middle: [f32; 3], from: [f32; 3], data: i32) {
+    let [x, y, z] = middle;
+    let flash = LevelEvent { event: LevelEventEvent::ParticleWindExplosion, position: Vec3f { x, y, z }, data };
+    let cell = middle.map(|c| c.floor() as i32);
     crate::view::to_viewers(world, layer, cell, &[sapling_net::encode(&flash)]);
-    late_sounds::play_later(world, 1, layer, cell, arrows::sound("wind_charge.burst", at, ""));
-    let players: Vec<(Entity, [f32; 3])> = in_world(world).into_iter().filter(|player| world.get::<InLayer>(*player).map(|on| on.0) == Some(layer)).filter_map(|player| Some((player, world.get::<Position>(player)?.feet))).collect();
+    late_sounds::play_later(world, 1, layer, cell, arrows::sound("wind_charge.burst", middle, ""));
+    let players: Vec<(Entity, [f32; 3])> = in_world(world)
+        .into_iter()
+        .filter(|player| world.get::<InLayer>(*player).map(|on| on.0) == Some(layer) && !vitals::is_dead(world, *player))
+        .filter_map(|player| Some((player, world.get::<Position>(player)?.feet)))
+        .collect();
     for (player, them) in players {
-        let far = (0..3).map(|axis| (them[axis] - feet[axis]).powi(2)).sum::<f32>().sqrt();
-        let towards: [f32; 3] = std::array::from_fn(|axis| them[axis] + if axis == 1 { EYES } else { 0.0 } - at[axis]);
+        let far = (0..3).map(|axis| (them[axis] - from[axis]).powi(2)).sum::<f32>().sqrt();
+        let towards: [f32; 3] = std::array::from_fn(|axis| them[axis] + if axis == 1 { EYES } else { 0.0 } - middle[axis]);
         let long = towards.iter().map(|c| c * c).sum::<f32>().sqrt().max(1e-4);
         if far < REACH {
             vitals::pushed(world, player, towards.map(|c| c / long * PUSH * (1.0 - far / REACH)));
@@ -117,7 +140,7 @@ fn ooze(world: &mut World, layer: Entity, feet: [f32; 3]) {
     entities::tell_viewers(world, slime, layer, feet.map(|c| c.floor() as i32), vec![sapling_net::encode(&sized)]);
 }
 
-/// A tick of every infested mob: one hurt since the last lets out a silverfish a time in ten.
+/// A tick of every infested mob: one hurt since the last may let out silverfish.
 pub(super) fn tick(world: &mut World) {
     let watched: Vec<(Entity, Entity, f32, Option<f32>, Body)> = world
         .query::<(Entity, &InLayer, &Health, Option<&Watched>, &Body)>()
@@ -132,11 +155,24 @@ pub(super) fn tick(world: &mut World) {
             continue;
         }
         world.entity_mut(mob).insert(Watched(left));
-        let hurt = before.is_some_and(|before| left < before && left > 0.0);
-        if hurt && world.get_resource_or_insert_with(Dice::default).fraction() < SILVERFISH_CHANCE {
+        if before.is_some_and(|before| left < before && left > 0.0) {
             let facing = world.get::<legs::Legs>(mob).map_or(0.0, |legs| legs.yaw);
-            infest(world, layer, [body.at[0], body.at[1] + body.size[1] / 2.0, body.at[2]], facing);
+            infested_hurt(world, layer, [body.at[0], body.at[1] + body.size[1] / 2.0, body.at[2]], facing);
         }
+    }
+}
+
+/// An infested body facing `facing` was hurt: a time in ten, silverfish come out at `from`.
+pub(crate) fn infested_hurt(world: &mut World, layer: Entity, from: [f32; 3], facing: f32) {
+    let count = {
+        let mut dice = world.get_resource_or_insert_with(Dice::default);
+        if dice.fraction() >= SILVERFISH_CHANCE {
+            return;
+        }
+        SILVERFISH + dice.roll(2)
+    };
+    for _ in 0..count {
+        infest(world, layer, from, facing);
     }
 }
 

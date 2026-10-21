@@ -164,6 +164,14 @@ in `bds-drink2.txt`):
   into tiny ones.
 - Infested: 2 of 10 hurts let out a silverfish from its middle, at 0.3 near its facing.
 
+On a survival player killed with each, the watcher 3 off (`player-omens`,
+`research/captures/bds-player-omens-findings.md`), the same, from where BDS puts a player, its eyes,
+and a dead one's box 0.2 high: the burst at eyes + 0.1 with data 3 (a zombie's was 4), the watcher
+pushed 0.542 (the rule from the eyes gives 0.535), the dead player not; 2 cobwebs about the eye
+cell's floor; the slimes at eyes + 0.5. Infested let out silverfish on 1 hurt of 10, two at once
+(the Java game's 1 or 2), at eyes + 0.9, at 0.3 within 90 degrees of its facing. Its effects were
+not ended at death but at its rise, their time frozen.
+
 ## The shulker (`shulker`)
 
 A shulker 6 off the actor in survival at midnight on easy, healed each second
@@ -259,8 +267,8 @@ playful one does not roll, and an aggressive one's anger is not passed on.
 
 A mob has effects as above (`creatures/afflictions.rs`): from a witch's potions, splashed or drunk,
 from a stray's and a bogged's arrows, and from a plugin (`ShardCtx::give_entity_effect`). The four
-newest do as above as it dies or is hurt (`creatures/omens.rs`), on mobs and not players; the burst
-pushes no mob or item, and a slime of the second size does not split. Their flags (fire immune, breathing) and speed's movement
+newest do as above as it dies or is hurt (`creatures/omens.rs`), to a player too
+(`vitals/omens.rs`); the burst pushes no mob or item, and a slime of the second size does not split. Their flags (fire immune, breathing) and speed's movement
 attribute are not shown, they are not saved with it or told to one who comes, and strength,
 weakness, levitation, slow falling and jump boost do nothing to it.
 
