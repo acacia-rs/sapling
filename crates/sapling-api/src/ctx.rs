@@ -36,6 +36,8 @@ pub trait Backend: WorldBackend + EntityBackend + HealthBackend + EffectBackend 
     fn teleport(&mut self, player: PlayerId, feet: [f32; 3]);
     /// Told to the player with its next teleport.
     fn look(&mut self, _player: PlayerId, _yaw: f32, _pitch: f32) {}
+    /// See `ShardCtx::dragon_fight`.
+    fn dragon_fight(&self) -> Option<crate::DragonFight> { None }
     fn permission(&self, player: PlayerId) -> Option<Permission>;
     fn set_permission(&mut self, player: PlayerId, permission: Permission);
     fn game_mode(&self, player: PlayerId) -> Option<GameMode>;

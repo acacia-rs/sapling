@@ -187,6 +187,9 @@ fn blow(world: &mut World, source: Option<Entity>, layer: Entity, at: [f32; 3], 
     let mut mobs = world.query::<(Entity, &InLayer, &Body, &Health, &NetId)>();
     let near: Vec<(Entity, u64, Body)> = mobs.iter(world).filter(|(_, in_layer, ..)| in_layer.0 == layer).map(|(mob, _, body, _, id)| (mob, id.0, *body)).collect();
     for (mob, id, its) in near {
+        if !crate::dragon::takes_blast(world, mob, source.is_some()) {
+            continue;
+        }
         let middle = [its.at[0], its.at[1] + its.size[1] / 2.0, its.at[2]];
         let Some((harm, _)) = reaches(world, at, middle, its.at, power, fireball).filter(|(harm, _)| *harm > 0.0) else { continue };
         let Some(harm) = crate::damage::ask(world, mob, harm, Cause::EntityExplosion, None) else { continue };
@@ -196,6 +199,7 @@ fn blow(world: &mut World, source: Option<Entity>, layer: Entity, at: [f32; 3], 
             entities::tell_viewers(world, mob, layer, its.at.map(|c| c.floor() as i32), vec![harm::strike(id, &health, Cause::EntityExplosion, None)]);
         }
     }
+    crate::dragon::blasted(world, layer, at, power);
     if wreck != Wreck::Nothing {
         let leaves = match wreck {
             Wreck::Leaves => 1.0,

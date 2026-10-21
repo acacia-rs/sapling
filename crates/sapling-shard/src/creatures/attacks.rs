@@ -45,10 +45,16 @@ fn hit(world: &mut World, player: Entity, id: u64) -> Option<()> {
         return Some(());
     }
     let (layer, from) = (world.get::<InLayer>(player)?.0, world.get::<Position>(player)?.feet);
-    let entity = entities::find(world, EntityId(id)).filter(|entity| world.get::<Creature>(*entity).is_some() && world.get::<super::Dying>(*entity).is_none())?;
+    let eye = [from[0], from[1] + sapling_data::EYE_HEIGHT, from[2]];
+    if let Some(crystal) = entities::find(world, EntityId(id)).filter(|entity| world.get::<crate::dragon::Crystal>(*entity).is_some()) {
+        if world.get::<Body>(crystal).is_some_and(|body| distance(eye, body) <= REACH) {
+            crate::dragon::burst(world, crystal);
+        }
+        return Some(());
+    }
+    let entity = entities::find(world, EntityId(id)).filter(|entity| world.get::<Creature>(*entity).is_some() && world.get::<super::Dying>(*entity).is_none() && !crate::dragon::is_dying(world, *entity))?;
     let (body, kind) = (*world.get::<Body>(entity)?, world.get::<entities::Kind>(entity)?.0.clone());
     let mut health = *world.get::<Health>(entity)?;
-    let eye = [from[0], from[1] + sapling_data::EYE_HEIGHT, from[2]];
     if world.get::<InLayer>(entity)?.0 != layer || world.get::<Mode>(player)?.0 == GameMode::Spectator || distance(eye, &body) > REACH {
         return None;
     }
@@ -67,8 +73,13 @@ fn hit(world: &mut World, player: Entity, id: u64) -> Option<()> {
     let mut packets = vec![sapling_net::encode(&swing)];
     let held = world.get::<Inventory>(player).and_then(|inventory| inventory.in_hand().as_ref().map(|held| held.stack.name.clone()));
     let harm = crate::vitals::hits_for(world, player, sapling_data::item_attack(held.as_deref()));
+    let harm = if kind == crate::dragon::DRAGON { crate::dragon::body_harm(harm) } else { harm };
     let hitter = in_world_identity(world, player).map(sapling_api::Attacker::Player);
+    let before = health.left();
     if crate::damage::ask(world, entity, harm, Cause::Attack, hitter).is_some_and(|harm| health.hurt(harm)) {
+        if kind == crate::dragon::DRAGON {
+            crate::dragon::hurt(world, entity, before, &mut health);
+        }
         packets.insert(0, harm::strike(id, &health, Cause::Attack, None));
         let (dx, dz) = (body.at[0] - from[0], body.at[2] - from[2]);
         let far = (dx * dx + dz * dz).sqrt();

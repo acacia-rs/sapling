@@ -61,6 +61,11 @@ pub(crate) struct Creature {
 }
 
 impl Creature {
+    /// One dressed as BDS announces its kind.
+    pub(crate) fn plain() -> Self {
+        Self { look: None }
+    }
+
     fn is_baby(&self) -> bool {
         self.look.as_ref().is_some_and(|look| look.baby)
     }
@@ -97,6 +102,9 @@ fn spawn(world: &mut World, layer: Entity, kind: &str, feet: [f32; 3], reason: S
 /// Makes the stored mob `actor` (its compound `compound`) an entity of `layer`; false for a kind
 /// with no recorded box, which stays a statue.
 pub(crate) fn from_storage(world: &mut World, layer: Entity, actor: Actor, unique_id: i64, compound: Vec<u8>) -> bool {
+    if actor.identifier == crate::dragon::CRYSTAL {
+        return crate::dragon::crystal_from_storage(world, layer, actor.position, actor.yaw, unique_id, compound);
+    }
     let Some(size) = sapling_data::mob_size(&actor.identifier) else { return false };
     let body = Body::new(actor.position, [0.0; 3], size);
     let kind = actor.identifier.clone();
@@ -107,6 +115,9 @@ pub(crate) fn from_storage(world: &mut World, layer: Entity, actor: Actor, uniqu
     give_legs(world, entity, &kind);
     give_health(world, entity, &kind, actor.health, actor.fire.max(0) as u16);
     world.entity_mut(entity).insert(Creature { look: Some(actor) });
+    if kind == crate::dragon::DRAGON {
+        crate::dragon::adopt(world, entity);
+    }
     entities::keep(world, entity, layer, unique_id, compound);
     true
 }
@@ -151,7 +162,7 @@ const NO_DEATH: &[&str] = &["minecraft:armor_stand"];
 
 /// Kills the entity `id` (see `ShardCtx::kill_entity`).
 fn kill(world: &mut World, id: EntityId) -> bool {
-    let Some(entity) = entities::find(world, id).filter(|entity| world.get::<Dying>(*entity).is_none()) else { return false };
+    let Some(entity) = entities::find(world, id).filter(|entity| world.get::<Dying>(*entity).is_none() && !crate::dragon::is_dying(world, *entity)) else { return false };
     let (Some(kind), Some(body), Some(layer)) = (world.get::<entities::Kind>(entity).map(|kind| kind.0.clone()), world.get::<Body>(entity).copied(), world.get::<InLayer>(entity).map(|layer| layer.0)) else { return false };
     if world.get::<Creature>(entity).is_none() || NO_DEATH.contains(&kind.as_str()) {
         mobs::remove(world, entity);
@@ -177,6 +188,9 @@ fn kill(world: &mut World, id: EntityId) -> bool {
 /// The mob, seen to die, is dead where it is, no longer kept by the world folder, and leaves its
 /// loot, cooked if it was on fire.
 fn die(world: &mut World, entity: Entity, layer: Entity, kind: &str, body: &Body) {
+    if crate::dragon::dies(world, entity) {
+        return;
+    }
     let now = world.resource::<Tick>().0;
     if let Some(id) = world.get::<NetId>(entity).map(|id| id.0) {
         hunting::let_go(world, entity, layer, id, body);
@@ -226,6 +240,10 @@ pub(crate) fn tick(world: &mut World) {
     let all: Vec<(Entity, Entity, u64, String)> =
         world.query_filtered::<(Entity, &InLayer, &NetId, &entities::Kind), With<Creature>>().iter(world).map(|(entity, layer, id, kind)| (entity, layer.0, id.0, kind.0.clone())).collect();
     for (entity, layer, id, kind) in all {
+        // The fight moves its dragon (dragon.rs).
+        if kind == crate::dragon::DRAGON && world.get::<crate::dragon::Dragon>(entity).is_some() {
+            continue;
+        }
         let Some(start) = world.get::<Body>(entity).copied() else { continue };
         // With `sapling:mobAi` off a mob still falls, is pushed and is hurt, but decides nothing.
         let thinks = world.get::<Dying>(entity).is_none() && crate::rules::on(world, layer, sapling_data::MOB_AI);

@@ -130,7 +130,7 @@ async fn act(run: &mut Run, actor: &mut Bot, watcher: &mut Bot, line: &str) -> D
             match feet(actor).map(|[x, _, z]| [x.floor() as i32, z.floor() as i32]).and_then(|[x, z]| (-12..=12).flat_map(|dx| (-12..=12).map(move |dz| (x + dx, z + dz))).find_map(|(x, z)| topmost(actor, x, z, 40..=90, "end_portal").map(|y| [x, y, z]))) {
                 Some([x, y, z]) => {
                     println!("## entering the portal at {x} {y} {z}");
-                    actor.client().command(&format!("tp @s {x}.5 {y} {z}.5"));
+                    actor.client().command(&format!("tp @s {} {y} {}", x as f32 + 0.5, z as f32 + 0.5));
                 }
                 None => println!("## no end portal near"),
             }
@@ -163,7 +163,7 @@ async fn act(run: &mut Run, actor: &mut Bot, watcher: &mut Bot, line: &str) -> D
                 match topmost(actor, x, z, 40..=90, "bedrock") {
                     Some(y) => {
                         // Two blocks outside the ring, on the island.
-                        actor.client().command(&format!("tp @s {}.5 {} {}.5", x * 5 / 3, y, z * 5 / 3));
+                        actor.client().command(&format!("tp @s {} {} {}", (x * 5 / 3) as f32 + 0.5, y, (z * 5 / 3) as f32 + 0.5));
                         run.settle(actor, watcher, Duration::from_millis(1500)).await;
                         use_on(run, actor, [x, y, z], Face::Up).await
                     }

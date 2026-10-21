@@ -1,7 +1,8 @@
 //! The dragon probe's drills. A line is a command, watched for 1.2 s or for the milliseconds after
 //! a final ` #`; or one of the probe's own steps:
 //! `!wait ms`, `!where`, `!box x0 y0 z0 x1 y1 z1`, `!top x z`, `!spikes` (the top of every spike),
-//! `!entities` (what the actor's client tracks), `!use x y z face [ms]` (the held item on a block),
+//! `!entities` (what the actor's client tracks), `!use x y z face [ms]` (the held item on a block;
+//! `!light` the same, as shared/end_drill.rs writes it),
 //! `!hit kind [ms]` (the nearest of the kind, hit), `!crystal [ms]` (beside the nearest crystal on a
 //! spike, then hit it), `!enter [ms]` (onto the nearest end portal cell), `!summon [ms]` (an end
 //! crystal on each side of the exit portal), `!perch [ms]` (until the dragon sits, at most that
@@ -39,7 +40,7 @@ pub fn step(line: &str) -> Step<'_> {
         "!top" => Step::Top(int(1).unwrap_or(0) as i32, int(2).unwrap_or(0) as i32),
         "!spikes" => Step::Spikes,
         "!entities" => Step::Entities,
-        "!use" => Step::Use([0, 1, 2].map(|i| int(i + 1).unwrap_or(0) as i32), words.get(4).copied().unwrap_or("up"), ms(5)),
+        "!use" | "!light" => Step::Use([0, 1, 2].map(|i| int(i + 1).unwrap_or(0) as i32), words.get(4).copied().unwrap_or("up"), ms(5)),
         "!hit" => Step::Hit(words.get(1).copied().unwrap_or("ender_dragon"), ms(2)),
         "!crystal" => Step::Crystal(ms(1)),
         "!enter" => Step::Enter(ms(1)),
@@ -79,6 +80,18 @@ pub fn drill(name: &str) -> Option<Vec<String>> {
         "dragon-again" => {
             lines.extend(owned(&[ASIDE, "kill @e[type=ender_dragon] #30000", "!box -4 58 -4 4 67 4", "replaceitem entity @s slot.weapon.mainhand 0 end_crystal 4", "tp @s 0.5 70 6.5 #3000"]));
             lines.extend(owned(&["!summon 40000", "!entities", "!spikes", "!wait 20000", "!entities", ASIDE, "kill @e[type=ender_dragon] #30000", "!entities", "!box -4 58 -4 4 67 4"]));
+        }
+        // A survival player on the island by the portal, for the dragon to flame, strafe, charge
+        // and hit; kept alive by resistance and regeneration.
+        "dragon-survival" => {
+            lines.extend(owned(&["tp @s 6.5 63 0.5 #2000", "gamemode survival", "effect @s resistance 9999 3 true", "effect @s regeneration 9999 4 true", "!wait 120000", "!entities", "gamemode creative"]));
+        }
+        // Into the End through an end portal, the dragon killed, home through the exit portal.
+        "dragon-portal" => {
+            // In the air over the default world's ground, on a floor of its own.
+            lines = owned(&["gamemode creative", "gamerule domobspawning false", "fill 5 99 3 16 99 16 stone", "tp @s 11.5 100 6.5 #3000"]);
+            lines.extend(crate::end::ring(10, 100, 10, true));
+            lines.extend(owned(&["tp @s 11.5 100 11.5 #15000", "!where", "tp @s 8.5 70 0.5 #10000", "kill @e[type=ender_dragon] #14000", "!enter 20000", "!where"]));
         }
         // The fight of the world the last drill left (KEEP_WORLD=1), as the restarted server resumes it.
         "dragon-resume" => lines.extend(owned(&["!wait 20000", "!entities"])),

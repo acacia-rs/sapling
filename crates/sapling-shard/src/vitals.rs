@@ -101,6 +101,15 @@ pub(crate) fn is_mortal(world: &World, player: Entity) -> bool {
     !is_dead(world, player) && world.get::<Mode>(player).is_some_and(|mode| matches!(mode.0, GameMode::Survival | GameMode::Adventure))
 }
 
+/// Its health whole again, as BDS's respawn after the End's exit portal makes it; the caller
+/// tells it (portals/exit.rs).
+pub(crate) fn mend_fully(world: &mut World, player: Entity) {
+    if let Some(mut vitals) = world.get_mut::<Vitals>(player) {
+        vitals.health.mend(MAX);
+        vitals.told = MAX;
+    }
+}
+
 /// Died and not yet risen.
 pub(crate) fn is_dead(world: &World, player: Entity) -> bool {
     world.get::<Vitals>(player).is_none_or(|vitals| vitals.died.is_some())

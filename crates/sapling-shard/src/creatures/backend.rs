@@ -16,6 +16,10 @@ impl EntityBackend for Ctx<'_> {
             let orb = orbs::throw(self.world, layer, feet, 1)?;
             return Some(EntityId(self.world.get::<NetId>(orb)?.0));
         }
+        if kind == crate::dragon::CRYSTAL {
+            let crystal = crate::dragon::summon_crystal(self.world, layer, feet)?;
+            return Some(EntityId(self.world.get::<NetId>(crystal)?.0));
+        }
         if kind == tnt::KIND {
             let primed = tnt::prime(self.world, layer, feet, tnt::FUSE)?;
             return Some(EntityId(self.world.get::<NetId>(primed)?.0));

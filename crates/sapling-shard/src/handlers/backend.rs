@@ -140,6 +140,10 @@ impl Backend for Ctx<'_> {
         }
     }
 
+    fn dragon_fight(&self) -> Option<sapling_api::DragonFight> {
+        crate::dragon::describe(self.world, crate::worlds::current(self.world))
+    }
+
     fn permission(&self, player: PlayerId) -> Option<Permission> {
         self.world.get::<Access>(self.entity(player)?).map(|access| access.permission)
     }

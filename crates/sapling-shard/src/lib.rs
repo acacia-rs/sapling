@@ -20,6 +20,7 @@ mod config;
 mod containers;
 mod creatures;
 mod dimensions;
+mod dragon;
 mod drops;
 mod entities;
 mod experience;

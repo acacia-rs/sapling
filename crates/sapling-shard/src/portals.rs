@@ -4,11 +4,13 @@
 //! is, or to the scaled place itself, and the traveller is put in a portal there once its
 //! columns are loaded, one being made if none is near (portals/arrive.rs;
 //! docs/research/nether-dimension.md). The portal blocks themselves: blocks/portals.rs. End
-//! portals: portals/end.rs; end gateways: portals/gateway.rs.
+//! portals: portals/end.rs, and the End's exit portal home: portals/exit.rs; end gateways:
+//! portals/gateway.rs.
 
 mod arrive;
 mod draws;
 pub(crate) mod end;
+mod exit;
 mod gateway;
 mod records;
 
@@ -23,6 +25,7 @@ use crate::components::{InLayer, Layer, Mode, Position, in_world};
 use crate::dimensions::{self, Arriving, Trip};
 
 pub(crate) use arrive::arrive;
+pub(crate) use exit::risen_home;
 
 /// A player's cooldown after a trip, held at this while it stays in a portal.
 const COOLDOWN: u32 = 10;
@@ -56,7 +59,8 @@ fn is_inside(world: &World, player: Entity, portal: &str) -> bool {
 
 /// Counts each player's time in portals and starts the trips that are due.
 pub(crate) fn tick(world: &mut World) {
-    let (mut due, mut ends) = (Vec::new(), Vec::new());
+    exit::credits_over(world);
+    let (mut due, mut ends, mut exits) = (Vec::new(), Vec::new(), Vec::new());
     for player in in_world(world) {
         let wait = match world.get::<Mode>(player).map(|mode| mode.0) {
             Some(GameMode::Creative) => CREATIVE_WAIT,
@@ -65,8 +69,8 @@ pub(crate) fn tick(world: &mut World) {
             _ => continue,
         };
         let (inside, arriving) = (is_inside(world, player, PORTAL), world.get::<Arriving>(player).is_some());
-        if !arriving && in_dimension(world, player) != Some(END) && is_inside(world, player, END_PORTAL) {
-            ends.push(player);
+        if !arriving && is_inside(world, player, END_PORTAL) {
+            if in_dimension(world, player) == Some(END) { &mut exits } else { &mut ends }.push(player);
             continue;
         }
         if world.get::<PortalTime>(player).is_none() {
@@ -89,6 +93,7 @@ pub(crate) fn tick(world: &mut World) {
     }
     due.into_iter().for_each(|player| depart(world, player));
     ends.into_iter().for_each(|player| end::depart(world, player));
+    exits.into_iter().for_each(|player| exit::enter(world, player));
     let settled: Vec<Entity> = in_world(world).into_iter().filter(|player| world.get::<Arriving>(*player).is_none()).collect();
     gateway::tick(world, &settled);
 }

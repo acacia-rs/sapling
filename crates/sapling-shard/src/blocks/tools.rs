@@ -165,6 +165,7 @@ fn telling(registry: &BlockRegistry, pos: BlockPos, change: &Change) -> Bytes {
 const FLINT_AND_STEEL: &str = "minecraft:flint_and_steel";
 const FIRE_CHARGE: &str = "minecraft:fire_charge";
 const ENDER_EYE: &str = "minecraft:ender_eye";
+const END_CRYSTAL: &str = "minecraft:end_crystal";
 /// What BDS sent with a fire charge's sound.
 const CHARGE_SOUND: i32 = 78642;
 
@@ -179,6 +180,12 @@ impl Request<'_> {
             return true;
         }
         if held == "minecraft:bone_meal" && super::bonemeal::feed(self.world, site.layer, pos, site.mode == GameMode::Creative) {
+            if site.mode != GameMode::Creative {
+                inventory::change(self.world, self.entity, |inventory| inventory.take(inventory::Place::Main(inventory.selected.into()), 1).is_ok());
+            }
+            return true;
+        }
+        if held == END_CRYSTAL && crate::dragon::place_crystal(self.world, site.layer, pos) {
             if site.mode != GameMode::Creative {
                 inventory::change(self.world, self.entity, |inventory| inventory.take(inventory::Place::Main(inventory.selected.into()), 1).is_ok());
             }

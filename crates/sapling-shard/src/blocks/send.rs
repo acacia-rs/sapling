@@ -143,24 +143,48 @@ pub(crate) fn set_quietly(world: &mut World, layer: Entity, pos: BlockPos, id: u
 /// showed a grown tree: an UpdateSubchunkBlocks per sub-chunk, sub-chunks as first written
 /// (research/captures/bds-grows.txt). How many changed.
 pub(crate) fn set_many(world: &mut World, layer: Entity, cells: &[(BlockPos, u32)]) -> usize {
-    let mut sections: Vec<(BlockPos, Vec<BlockUpdate>)> = Vec::new();
-    for &(pos, id) in cells {
-        let Some(id) = write(world, layer, pos, id) else { continue };
-        let Some(runtime_id) = world.get::<Layer>(layer).map(|level| level.world.registry().network_hash(id)) else { continue };
-        let [x, y, z] = pos;
-        let update = BlockUpdate { position: BlockCoordinates { x, y, z }, runtime_id, flags: FLAGS.0, entity_unique_id: i64::MIN, transition_type: BlockUpdateTransitionType::Entity };
+    let sections = write_by_section(world, layer, cells);
+    let changed = sections.iter().map(|(_, cells)| cells.len()).sum();
+    show_sections(world, layer, sections, false);
+    changed
+}
+
+/// [`set_many`], but a sub-chunk with one change is shown by an UpdateBlock, those first, as BDS
+/// showed the exit portal (research/captures/bds-dragon-fight.txt).
+pub(crate) fn set_sectioned(world: &mut World, layer: Entity, cells: &[(BlockPos, u32)]) {
+    let mut sections = write_by_section(world, layer, cells);
+    sections.sort_by_key(|(_, cells)| cells.len() > 1);
+    show_sections(world, layer, sections, true);
+}
+
+/// Writes `cells` in order; those that changed, by sub-chunk in the order first written.
+fn write_by_section(world: &mut World, layer: Entity, cells: &[(BlockPos, u32)]) -> Vec<(BlockPos, Vec<(BlockPos, u32)>)> {
+    let mut sections: Vec<(BlockPos, Vec<(BlockPos, u32)>)> = Vec::new();
+    for (pos, id) in cells.iter().filter_map(|&(pos, id)| Some((pos, write(world, layer, pos, id)?))) {
         let section = pos.map(|c| c.div_euclid(16) * 16);
         match sections.iter_mut().find(|(at, _)| *at == section) {
-            Some((_, updates)) => updates.push(update),
-            None => sections.push((section, vec![update])),
+            Some((_, cells)) => cells.push((pos, id)),
+            None => sections.push((section, vec![(pos, id)])),
         }
     }
-    let changed = sections.iter().map(|(_, updates)| updates.len()).sum();
-    for ([x, y, z], blocks) in sections {
-        let packet = sapling_net::encode(&UpdateSubchunkBlocks { x, y, z, blocks, extra: Vec::new() });
-        to_viewers(world, layer, [x, y, z], &[packet]);
+    sections
+}
+
+fn show_sections(world: &mut World, layer: Entity, sections: Vec<(BlockPos, Vec<(BlockPos, u32)>)>, single_as_block: bool) {
+    let packets: Vec<(BlockPos, Bytes)> = {
+        let Some(registry) = world.get::<Layer>(layer).map(|level| level.world.registry()) else { return };
+        let block = |&([x, y, z], id): &(BlockPos, u32)| BlockUpdate { position: BlockCoordinates { x, y, z }, runtime_id: registry.network_hash(id), flags: FLAGS.0, entity_unique_id: i64::MIN, transition_type: BlockUpdateTransitionType::Entity };
+        sections
+            .into_iter()
+            .map(|(corner, cells)| match cells.as_slice() {
+                [(pos, id)] if single_as_block => (*pos, update(registry, *pos, *id, 0)),
+                _ => (corner, sapling_net::encode(&UpdateSubchunkBlocks { x: corner[0], y: corner[1], z: corner[2], blocks: cells.iter().map(block).collect(), extra: Vec::new() })),
+            })
+            .collect()
+    };
+    for (pos, packet) in packets {
+        to_viewers(world, layer, pos, &[packet]);
     }
-    changed
 }
 
 /// Writes layer 0 as [`set`] does: the state written, or `None` when nothing changed.

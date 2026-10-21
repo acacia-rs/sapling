@@ -18,7 +18,7 @@ fn owned(lines: &[&str]) -> Vec<String> {
 
 /// Twelve frames round the 3x3 whose low corner is `(x, y, z)`, every eye in but the north side's
 /// middle one; `inward` faces them in.
-fn ring(x: i32, y: i32, z: i32, inward: bool) -> Vec<String> {
+pub fn ring(x: i32, y: i32, z: i32, inward: bool) -> Vec<String> {
     let mut lines = vec![format!("fill {} {} {} {} {} {} air", x - 1, y, z - 1, x + 3, y + 2, z + 3)];
     let sides: [(i32, i32, i32, i32, [&str; 2]); 4] = [(0, -1, 1, 0, ["south", "north"]), (0, 3, 1, 0, ["north", "south"]), (-1, 0, 0, 1, ["east", "west"]), (3, 0, 0, 1, ["west", "east"])];
     for (ox, oz, dx, dz, facings) in sides {
