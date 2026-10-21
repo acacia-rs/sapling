@@ -3,6 +3,7 @@
 use crate::{PlayerId, ShardCtx};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum Effect {
     Speed,
     Slowness,

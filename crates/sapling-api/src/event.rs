@@ -96,6 +96,7 @@ pub struct ItemUseEvent {
 
 /// What a player clicked: another player, or an entity of the shard.
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum Target {
     Player(Player),
     Entity(EntityId),

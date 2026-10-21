@@ -7,6 +7,7 @@ pub struct EntityId(pub u64);
 
 /// What an entity is and where, as plain data.
 #[derive(Clone, Debug, PartialEq)]
+#[non_exhaustive]
 pub struct EntityInfo {
     pub id: EntityId,
     /// Namespaced: `minecraft:pig`, `minecraft:item`, `minecraft:falling_block`, `minecraft:xp_orb`.
@@ -16,6 +17,12 @@ pub struct EntityInfo {
     /// Blocks a tick.
     pub velocity: [f32; 3],
     pub on_ground: bool,
+}
+
+impl EntityInfo {
+    pub fn new(id: EntityId, kind: String, feet: [f32; 3], velocity: [f32; 3], on_ground: bool) -> Self {
+        Self { id, kind, feet, velocity, on_ground }
+    }
 }
 
 /// Entities are simulated by the shard: each falls and slides through the blocks of its world,

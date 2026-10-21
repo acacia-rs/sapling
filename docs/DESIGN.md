@@ -294,6 +294,13 @@ it sends for `/title`, `/scoreboard`, `/gamemode`, `/tp`, a wither's bar and com
   because a resource must be `Sync`. Commands sit apart in an `Arc` (`CommandRegistry`), so a player's
   command runs with the listeners in place and what it causes is heard. `Handler` is a plugin as one value: each method is a listener at the handler's priority
   (`handler_at`). Tasks run once a tick after the events, then `TickEvent` (`on_tick`).
+- **Keeping the API stable** (`sapling-api`). Enums that will grow (`DamageCause`, `Effect`, `Attacker`,
+  `DeathMessage`, `Target`, `Sender`, `Scope`, form `Element`, `FormError`, `ParseError`) and the snapshots
+  plugins only read (`Player`, `Position`, `EntityInfo`, built with `new`) are `#[non_exhaustive]`; events
+  keep private fields. Not marked: closed enums (`Face`, `GameMode`, `Difficulty`, `Slot`, `Priority`, ..),
+  `ParamKind` (only the shard and the derive match it), and values plugins write as struct literals
+  (`Block`, `Item`, forms, HUD), which would lose struct-literal and `..Default::default()` construction.
+  `tools/semver-check.sh [rev]` runs cargo-semver-checks on testbox against `rev` (default origin/master).
 - **Player actions** (`sapling-shard/src/actions.rs`). `MoveEvent` (one a tick per player that moved or
   turned, from the tick's start; `changed_block()` for block-level checks): `movement::player_input` queues
   it in `movement::Moves`, since systems hold no plugins, and dispatch offers it before anything reads

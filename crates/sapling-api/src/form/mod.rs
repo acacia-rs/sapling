@@ -52,6 +52,7 @@ impl<T> FormResponse<T> {
 
 /// Why an answer does not fit its form. `slot` counts the form's elements from 0.
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum FormError {
     NotJson,
     /// The answer is valid JSON of the wrong shape (a string for a menu, an object for a custom form).

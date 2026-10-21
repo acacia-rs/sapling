@@ -3,6 +3,7 @@ use crate::Player;
 
 /// Why a command line was not run. The shapes are vanilla's, so the client words them itself.
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum ParseError {
     /// `token` is not what belongs there; `before` and `after` are the line around it. An empty
     /// token at the end of the line means an argument is missing.

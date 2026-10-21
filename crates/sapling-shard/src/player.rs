@@ -52,7 +52,7 @@ impl Carried {
     /// A player who logged in, with the first packet of its join queued.
     pub fn joining(conn: ConnId, login: &VerifiedLogin, net_id: u64, spawn: [f32; 3], mode: Mode, dimension: i32) -> Self {
         let identity = &login.identity;
-        let player = Player { id: PlayerId(conn.get()), name: identity.display_name.clone(), uuid: identity.uuid, xuid: identity.xuid.clone() };
+        let player = Player::new(PlayerId(conn.get()), identity.display_name.clone(), identity.uuid, identity.xuid.clone());
         let mut out = Outgoing::default();
         out.push(&join::resource_packs_info());
         Self {
