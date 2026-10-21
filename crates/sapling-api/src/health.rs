@@ -3,6 +3,7 @@ use crate::{PlayerId, ShardCtx};
 /// What hurt a player: it picks the flash its client shows, the words of its death and whether
 /// armour stops part of it. Numbered as the wire numbers them (BDS's `ActorDamageCause`).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum DamageCause {
     /// `/damage` without a cause, `/kill`.
     Generic = -1,

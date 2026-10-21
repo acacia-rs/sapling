@@ -4,6 +4,7 @@ use crate::{DamageCause, Event, Player, Target};
 
 /// Who dealt a hit, as far as the game keeps it: a player, or a mob of a kind.
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum Attacker {
     Player(Player),
     /// Namespaced: `minecraft:zombie`.
@@ -67,6 +68,7 @@ impl Event for DamageEvent {
 
 /// What the world is told of a death.
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
+#[non_exhaustive]
 pub enum DeathMessage {
     /// The game's own words: `death.attack.player` and the like.
     #[default]

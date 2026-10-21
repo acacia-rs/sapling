@@ -22,6 +22,7 @@ pub trait Event: Clone + Send + 'static {
 /// Where a listener or task applies. One in a world or for a player is dropped once the world is
 /// removed or the player leaves the shard.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[non_exhaustive]
 pub enum Scope {
     /// Every world of the shard.
     Shard,

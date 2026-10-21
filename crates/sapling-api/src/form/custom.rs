@@ -4,6 +4,7 @@ use super::{Form, FormError, index, parse};
 
 /// One row of a [`Custom`] form.
 #[derive(Debug, Clone, PartialEq)]
+#[non_exhaustive]
 pub enum Element {
     Label(String),
     /// A text box. An answer longer than `max_len` characters is refused.

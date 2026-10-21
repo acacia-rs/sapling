@@ -24,7 +24,7 @@ pub(crate) fn dispatch_moves(world: &mut World) {
 }
 
 fn api_position(position: &Position) -> sapling_api::Position {
-    sapling_api::Position { feet: position.feet, yaw: position.yaw, pitch: position.pitch }
+    sapling_api::Position::new(position.feet, position.yaw, position.pitch)
 }
 
 /// Whether plugins let `player` use the item in its hand on nothing.

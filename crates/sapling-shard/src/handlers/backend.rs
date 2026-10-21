@@ -29,7 +29,7 @@ impl Backend for Ctx<'_> {
 
     fn position(&self, player: PlayerId) -> Option<sapling_api::Position> {
         let position = self.world.get::<Position>(self.entity(player)?)?;
-        Some(sapling_api::Position { feet: position.feet, yaw: position.yaw, pitch: position.pitch })
+        Some(sapling_api::Position::new(position.feet, position.yaw, position.pitch))
     }
 
     fn spawn(&self) -> [f32; 3] {

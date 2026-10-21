@@ -65,7 +65,7 @@ fn words(cause: Cause) -> &'static str {
         Cause::Stalagmite => "death.attack.stalagmite",
         Cause::SonicBoom => "death.attack.sonicBoom",
         Cause::Thorns => "death.attack.thorns",
-        Cause::Projectile | Cause::Campfire | Cause::SoulCampfire | Cause::Generic | Cause::Attack | Cause::RamAttack => "death.attack.generic",
+        _ => "death.attack.generic",
     }
 }
 
@@ -113,9 +113,9 @@ pub(super) fn die(world: &mut World, player: Entity, cause: Cause) {
     let slayer = by_player.or(slayer.map(|kind| format!("%entity.{}.name", kind.trim_start_matches("minecraft:"))));
     let messages: Vec<String> = std::iter::once(name).chain(slayer).collect();
     let said = match &death.message {
-        DeathMessage::Vanilla => Some(chat::translated_packet(key, &messages)),
         DeathMessage::Text(text) => Some(chat::raw_packet(text)),
         DeathMessage::Hidden => None,
+        _ => Some(chat::translated_packet(key, &messages)),
     };
     if let Some(said) = said {
         chat::send_to_layer(world, layer, &said);

@@ -30,6 +30,7 @@ pub trait CommandSyntax: Sized {
 
 /// Who ran a command.
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum Sender {
     Player(Player),
     // TODO: nothing sends commands as the console yet.
