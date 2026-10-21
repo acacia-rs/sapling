@@ -1,7 +1,8 @@
 //! A server for drill probes, as plain as the test BDS they are compared with: offline, flat
 //! ground four blocks deep under the drills (a flat world's, so that what a drill digs has
 //! something under it), everyone an operator in creative mode, vanilla's commands, nothing
-//! protected. `tools/sapling-drill.sh` runs a probe against it.
+//! protected. `tools/sapling-drill.sh` runs a probe against it. `SAPLING_DRILL_WORLD` picks
+//! another overworld: `strongholds` or `generated` (below).
 //! `cargo run -p sapling --example drill_server -- [port]` (default 19190)
 use sapling::{ChunkPos, END, GameMode, Generated, Handler, MemoryStorage, NETHER, Permission, Player, Server, ShardCtx, World, WorldStorage};
 
@@ -9,6 +10,10 @@ use sapling::{ChunkPos, END, GameMode, Generated, Handler, MemoryStorage, NETHER
 const GROUND: ([i32; 3], [i32; 3]) = ([-96, 60, -48], [96, 63, 48]);
 const FLAT: ([i32; 3], [i32; 3]) = ([-96, -64, -48], [224, -61, 48]);
 const NETHER_SEED: i64 = 20261018;
+
+/// `SAPLING_DRILL_WORLD=generated`: the seed's terrain, for timing joins over a slow link
+/// (acacia's tools/netem-pacing.sh); release builds only, as below.
+const GENERATED_SPAWN: [f32; 3] = [0.5, 120.0, 0.5];
 
 /// `SAPLING_DRILL_WORLD=strongholds`: a void overworld whose eyes of ender find the seed's
 /// strongholds, as on a BDS default world (bds-eye); a debug build generates terrain too slowly.
@@ -48,6 +53,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let builder = Server::builder().bind(([127, 0, 0, 1], port).into()).name("sapling drills").online_mode(false).game_mode(GameMode::Creative);
     let builder = match std::env::var("SAPLING_DRILL_WORLD").as_deref() {
         Ok("strongholds") => builder.world(World::with_storage(std::sync::Arc::new(Strongholds(Generated::with_areas(MemoryStorage::default(), NETHER_SEED, 1)))), [0.5, 64.0, 0.5]),
+        Ok("generated") => builder.world(World::with_storage(std::sync::Arc::new(Generated::with_areas(MemoryStorage::default(), NETHER_SEED, 2))), GENERATED_SPAWN),
         _ => builder.world(ground, [0.5, 64.0, 0.5]),
     };
     // The test BDS's Nether, generated from its seed (tools/bds-drill.sh worlds: bds-nether's level-seed).
