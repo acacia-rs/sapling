@@ -115,6 +115,15 @@ pub fn drill(name: &str) -> Option<Vec<String>> {
             lines.extend(owned(&[ASIDE, "kill @e[type=ender_dragon] #40000", "tp @s 0.5 100 -1279.5 #12000"]));
             lines.extend((0..14).map(|i| format!("!top 0 {}", -1072 - 16 * i)));
             lines.push("!box -9 64 -1289 9 86 -1271".into());
+            lines.extend(owned(&["tp @s 0.5 110 -1135.5 #12000", "!top 0 -1120", "!top -6 -1123", "!top -13 -1123", "!top 0 -1136", "!box -8 64 -1128 8 76 -1112"]));
+        }
+        // A second island: a kill and a summoning, the second gateway's exit (585, 71, -850) cleared
+        // round, the second kill, and that island looked at.
+        "exit-island2" => {
+            lines.extend(owned(&[ASIDE, "kill @e[type=ender_dragon] #30000", "replaceitem entity @s slot.weapon.mainhand 0 end_crystal 4", "tp @s 0.5 70 6.5 #3000", "!summon 40000", "!wait 20000"]));
+            lines.push("tp @s 585.5 110 -845.5 #12000".into());
+            lines.extend((0..18).map(|i| format!("fill 550 0 {} 620 100 {} air", -882 + 4 * i, -879 + 4 * i)));
+            lines.extend(owned(&[ASIDE, "kill @e[type=ender_dragon] #40000", "tp @s 585.5 100 -845.5 #12000", "!box 570 64 -860 600 76 -830"]));
         }
         // The survival drill, the actor hitting each fireball that comes within 3 blocks of its eyes.
         "fireball-hit" => {

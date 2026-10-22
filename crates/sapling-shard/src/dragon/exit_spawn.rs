@@ -107,6 +107,8 @@ fn seed([x, y, z]: BlockPos) -> u32 {
 }
 
 /// The end island BDS builds at (x, 75, z) where an exit finds no spawn: its cell and its end stone.
+// TODO: the seed is the decompile's reading; BDS's two drilled islands (bds-exit-island*.txt) drew
+// other sizes than it gives, and no hash tried fits both.
 pub(super) fn island([x, _, z]: BlockPos) -> (BlockPos, Vec<BlockPos>) {
     let at = [x, ISLAND_Y, z];
     let mut random = Mt19937::new(seed(at));
@@ -125,4 +127,26 @@ pub(super) fn island([x, _, z]: BlockPos) -> (BlockPos, Vec<BlockPos>) {
         dy -= 1;
     }
     (at, cells)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// The cells of a layer of radius `r` round the middle, as BDS's islands had them
+    /// (research/captures/bds-exit-island*.txt: 145, 97, 45, 37 and 9 cells for 6, 4.5, 3, 2.5, 1).
+    fn disc(r: f32) -> usize {
+        let (lo, hi) = ((-r).floor() as i32, r.ceil() as i32);
+        (lo..=hi).flat_map(|i| (lo..=hi).map(move |k| (i, k))).filter(|(i, k)| ((i * i + k * k) as f32) <= (r + 1.0) * (r + 1.0)).count()
+    }
+
+    #[test]
+    fn an_island_is_discs_down_from_75_as_bdss() {
+        assert_eq!([6.0, 4.5, 3.0, 2.5, 1.0].map(disc), [145, 97, 45, 37, 9]);
+        let (at, cells) = island([602, 0, -829]);
+        assert_eq!(at, [602, 75, -829]);
+        let layers: Vec<usize> = (60..=75).rev().map(|y| cells.iter().filter(|cell| cell[1] == y).count()).take_while(|&n| n > 0).collect();
+        let radii = [4.0, 5.0, 6.0].map(disc);
+        assert!(radii.contains(&layers[0]) && layers.windows(2).all(|pair| pair[1] < pair[0]), "{layers:?}");
+    }
 }
