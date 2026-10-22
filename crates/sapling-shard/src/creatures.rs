@@ -43,6 +43,7 @@ use sapling_world::Actor;
 use crate::blocks::Dice;
 use crate::body::Body;
 use shown::{announcement, head, physics_of, spawn_sound};
+pub(crate) use afflictions::breathed_on;
 pub(crate) use attacks::attacked;
 pub(crate) use blast::{Wreck, explode};
 pub(crate) use harm::{holds, is_full_block, touches};

@@ -27,6 +27,7 @@ pub enum Step<'a> {
     Summon(Duration),
     Perch(Duration),
     Near([i32; 3], Duration),
+    Swat(Duration),
 }
 
 pub fn step(line: &str) -> Step<'_> {
@@ -46,6 +47,7 @@ pub fn step(line: &str) -> Step<'_> {
         "!enter" => Step::Enter(ms(1)),
         "!summon" => Step::Summon(ms(1)),
         "!perch" => Step::Perch(ms(1)),
+        "!swat" => Step::Swat(ms(1)),
         "!near" => Step::Near([0, 1, 2].map(|i| int(i + 1).unwrap_or(0) as i32), ms(4)),
         _ => match line.rsplit_once(" #") {
             Some((command, wait)) => Step::Command(command, wait.parse().map_or(WAIT, Duration::from_millis)),
@@ -101,6 +103,22 @@ pub fn drill(name: &str) -> Option<Vec<String>> {
             }
             lines.extend((0..10).map(|_| "summon xp_orb -30.5 101 0.5 #50".to_string()));
             lines.extend(owned(&["!wait 30000", "!entities", "gamemode creative"]));
+        }
+        // The first gateway's line out (x 0, z -1024 to -1296) cleared of end stone, so its exit search
+        // finds no spawn and builds an island at y 75; the island and the exit looked at.
+        "exit-island" => {
+            lines.push("tp @s 0.5 110 -1135.5 #12000".into());
+            lines.extend((0..10).map(|i| format!("fill -20 0 {} 20 100 {} air", -1100 - 7 * i, -1106 - 7 * i)));
+            lines.push("tp @s 0.5 110 -1265.5 #12000".into());
+            lines.extend((0..14).map(|i| format!("!top 0 {}", -1072 - 16 * i)));
+            lines.extend((0..5).map(|i| format!("fill -16 0 {} 16 100 {} air", -1260 - 9 * i, -1268 - 9 * i)));
+            lines.extend(owned(&[ASIDE, "kill @e[type=ender_dragon] #40000", "tp @s 0.5 100 -1279.5 #12000"]));
+            lines.extend((0..14).map(|i| format!("!top 0 {}", -1072 - 16 * i)));
+            lines.push("!box -9 64 -1289 9 86 -1271".into());
+        }
+        // The survival drill, the actor hitting each fireball that comes within 3 blocks of its eyes.
+        "fireball-hit" => {
+            lines.extend(owned(&["tp @s 6.5 63 0.5 #2000", "effect @s health_boost 9999 9 true", "effect @s regeneration 9999 4 true", "gamemode survival", "!swat 150000", "!entities", "gamemode creative"]));
         }
         // Into the End through an end portal, the dragon killed, home through the exit portal.
         "dragon-portal" => {

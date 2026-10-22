@@ -57,7 +57,7 @@ pub(super) fn new(world: &mut World, layer: Entity, random: &mut Random) -> Opti
         Some(told)
     })?;
     let born = world.resource::<Tick>().0;
-    let dragon = Dragon { born, flight: super::flight::Flight::new(AT, pitch), shown: super::wire::Shown::default() };
+    let dragon = Dragon { born, flight: super::flight::Flight::new(AT, pitch), shown: super::wire::Shown::announced(AT) };
     world.entity_mut(entity).insert((Creature::plain(), Health::new(max, None, 0), dragon));
     let unique_id = entities::new_unique_id(world, entity)?;
     entities::keep(world, entity, layer, unique_id, sapling_world::new_actor(unique_id, KIND, AT, [0.0; 3]));
@@ -67,7 +67,7 @@ pub(super) fn new(world: &mut World, layer: Entity, random: &mut Random) -> Opti
 /// Makes a dragon a world folder kept the fight's.
 pub(crate) fn adopt(world: &mut World, entity: Entity) {
     let (born, at) = (world.resource::<Tick>().0, world.get::<Body>(entity).map_or(AT, |body| body.at));
-    world.entity_mut(entity).insert(Dragon { born, flight: super::flight::Flight::new(at, 0.0), shown: super::wire::Shown::default() });
+    world.entity_mut(entity).insert(Dragon { born, flight: super::flight::Flight::new(at, 0.0), shown: super::wire::Shown::announced(at) });
 }
 
 /// A dragon of `layer` within `reach` of the island's middle every way, if one is there.
