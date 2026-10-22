@@ -1,5 +1,7 @@
 //! How each kind of body falls and slows.
 
+use acacia_physics::constants::{DEFAULT_AIR_FRICTION, DEFAULT_BLOCK_FRICTION, DEFAULT_GROUND_DRAG, NORMAL_GRAVITY, NORMAL_GRAVITY_MULTIPLIER};
+
 use super::InLiquid;
 
 /// How a kind of body falls and slows.
@@ -23,9 +25,9 @@ pub(crate) struct Physics {
 
 impl Physics {
     /// Experience orbs, which bounce (BDS `ExperienceOrb::normalTick`), and float.
-    pub const ORB: Physics = Physics { gravity: 0.04, air_drag: 0.98, fall_drag: 0.98, ground_drag: 0.588, bounce: -0.5, liquid: InLiquid::Buoyant, burns: false, passes: false };
+    pub const ORB: Physics = Physics { gravity: 0.04, air_drag: 0.98, fall_drag: 0.98, ground_drag: DEFAULT_BLOCK_FRICTION * 0.98, bounce: -0.5, liquid: InLiquid::Buoyant, burns: false, passes: false };
     /// Items, which do not (BDS `ItemActor::postNormalTick`, docs/research/items.md).
-    pub const ITEM: Physics = Physics { gravity: 0.04, air_drag: 0.98, fall_drag: 0.98, ground_drag: 0.588, bounce: 0.0, liquid: InLiquid::Floats, burns: true, passes: false };
+    pub const ITEM: Physics = Physics { gravity: 0.04, air_drag: 0.98, fall_drag: 0.98, ground_drag: DEFAULT_BLOCK_FRICTION * 0.98, bounce: 0.0, liquid: InLiquid::Floats, burns: true, passes: false };
     pub const FIREPROOF_ITEM: Physics = Physics { burns: false, ..Physics::ITEM };
     /// A falling block, which stops where it lands (BDS `FallingBlockActor::normalTick`).
     pub const FALLING_BLOCK: Physics = Physics { gravity: 0.04, air_drag: 0.98, fall_drag: 0.98, ground_drag: 0.0, bounce: 0.0, liquid: InLiquid::Ignores, burns: false, passes: false };
@@ -35,7 +37,7 @@ impl Physics {
     /// move (research/captures/bds-water.txt). The drag across, 0.91 in the air and 0.6 x 0.91 on
     /// the ground, is the Java game's (`LivingEntity.travel`).
     /// What lava and fire do to one: creatures/harm.rs.
-    pub const MOB: Physics = Physics { gravity: 0.08, air_drag: 0.91, fall_drag: 0.98, ground_drag: 0.546, bounce: 0.0, liquid: InLiquid::Sinks, burns: false, passes: false };
+    pub const MOB: Physics = Physics { gravity: NORMAL_GRAVITY, air_drag: DEFAULT_AIR_FRICTION, fall_drag: NORMAL_GRAVITY_MULTIPLIER, ground_drag: DEFAULT_GROUND_DRAG, bounce: 0.0, liquid: InLiquid::Sinks, burns: false, passes: false };
     /// A breeze, which keeps its speed in the air (research/captures/bds-breeze-findings.md).
     pub const BREEZE: Physics = Physics { air_drag: 1.0, fall_drag: 1.0, ..Physics::MOB };
     /// A ghast, which nothing pulls down and which keeps 0.91 of its speed every way

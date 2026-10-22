@@ -1,5 +1,5 @@
 //! A body the server alone moves (falling blocks, items, orbs, mobs), as BDS moves such actors: gravity,
-//! then the move, cut short by the collision boxes of blocks, then drag
+//! then the move, cut short by the collision boxes of blocks (acacia-physics `collide_box`), then drag
 //! (docs/research/falling-blocks.md, experience.md, items.md), and water and lava (liquid.rs).
 //! What viewers are told: sync.rs.
 // TODO: only items are lifted out of a block they are in, and only up.
@@ -7,16 +7,14 @@
 mod liquid;
 mod physics;
 
+use acacia_physics::constants::DEFAULT_JUMP_HEIGHT;
+use acacia_physics::{Aabb, WorldView, collide_box};
 use bevy_ecs::prelude::Component;
 pub(crate) use liquid::{InLiquid, Liquid, in_liquid};
 pub(crate) use physics::Physics;
 use sapling_world::World as Level;
 
-const ARM: &str = "piston_arm_collision";
-/// The speed a mob's jump starts up at.
-const JUMP: f32 = 0.42;
-/// Room left between boxes that touch, against float error.
-const EPS: f32 = 1e-5;
+use crate::terrain::physics_view;
 
 #[derive(Component, Clone, Copy, Debug, PartialEq)]
 pub(crate) struct Body {
@@ -40,7 +38,7 @@ pub(crate) struct Body {
     stood: bool,
 }
 
-/// A block's collision box in world coordinates.
+/// A box in world coordinates: its lowest and highest corners.
 type Bounds = ([f32; 3], [f32; 3]);
 
 impl Body {
@@ -87,10 +85,15 @@ impl Body {
         ([self.at[0] - half, self.at[1], self.at[2] - half], [self.at[0] + half, self.at[1] + self.size[1], self.at[2] + half])
     }
 
+    fn aabb(&self) -> Aabb {
+        let (min, max) = self.bounds();
+        Aabb { min, max }
+    }
+
     /// Lifts a body whose box is in a block onto that block's top, stopped, as BDS did an item
     /// dropped 0.05 into the floor (research/captures/bds-kill.txt); the tick's step lands it.
     pub fn lift_out(&mut self, level: &Level) {
-        if let Some(top) = self.overlapped(level).iter().map(|(_, high)| high[1]).reduce(f32::max) {
+        if let Some(top) = self.overlapped(level).iter().map(|b| b.max[1]).reduce(f32::max) {
             (self.at[1], self.motion) = (top, [0.0; 3]);
         }
     }
@@ -100,10 +103,10 @@ impl Body {
         self.overlapped(level).is_empty()
     }
 
-    fn overlapped(&self, level: &Level) -> Vec<Bounds> {
-        let (min, max) = self.bounds();
-        let overlaps = |(low, high): &Bounds| (0..3).all(|axis| min[axis] < high[axis] - EPS && max[axis] > low[axis] + EPS);
-        boxes_in(level, (min, max)).into_iter().filter(overlaps).collect()
+    fn overlapped(&self, level: &Level) -> Vec<Aabb> {
+        let mut boxes = Vec::new();
+        physics_view(level, |view| view.collisions(&self.aabb(), &mut boxes));
+        boxes
     }
 
     /// One tick: gravity, the move, then drag; on the ground, friction and the bounce. In water or
@@ -160,7 +163,7 @@ impl Body {
         }
         self.motion = std::array::from_fn(|axis| self.motion[axis] + walking[axis]);
         if leaping {
-            self.motion[1] = JUMP;
+            self.motion[1] = DEFAULT_JUMP_HEIGHT;
         }
         let wanted = self.motion;
         self.on_ground = self.travel(level, physics, wanted);
@@ -179,63 +182,18 @@ impl Body {
         false
     }
 
-    /// Moves by `motion` as far as the blocks let it, an axis at a time (up and down first, as the
-    /// game does); motion into a block is stopped, except downward, which the bounce answers.
-    /// Whether it came down onto something.
+    /// Moves by `motion` as far as the blocks let it; motion into a block is stopped, except
+    /// downward, which the bounce answers. Whether it came down onto something.
     fn slide(&mut self, level: &Level, motion: [f32; 3]) -> bool {
-        let (min, max) = self.bounds();
-        let reach = (std::array::from_fn(|axis| min[axis] + motion[axis].min(0.0)), std::array::from_fn(|axis| max[axis] + motion[axis].max(0.0)));
-        let boxes = boxes_in(level, reach);
-        let mut landed = false;
-        for axis in [1, 0, 2] {
-            let (min, max) = self.bounds();
-            let Some(face) = boxes.iter().filter_map(|other| stop(axis, motion[axis], (min, max), *other)).reduce(|a, b| if motion[axis] < 0.0 { a.max(b) } else { a.min(b) }) else {
-                self.at[axis] += motion[axis];
-                continue;
-            };
-            // Snapped onto the face it met, so that a body at rest is exactly on it.
-            let (low, high) = if axis == 1 { (0.0, self.size[1]) } else { (self.size[0] / 2.0, self.size[0] / 2.0) };
-            self.at[axis] = if motion[axis] < 0.0 { face + low } else { face - high };
-            landed |= axis == 1 && motion[axis] < 0.0;
-            if axis != 1 || motion[axis] > 0.0 {
+        let moved = physics_view(level, |view| collide_box(view, &self.aabb(), motion));
+        for axis in 0..3 {
+            self.at[axis] += moved[axis];
+            if moved[axis] != motion[axis] && (axis != 1 || motion[axis] > 0.0) {
                 self.motion[axis] = 0.0;
             }
         }
-        landed
+        motion[1] < 0.0 && moved[1] != motion[1]
     }
-}
-
-/// Where a body moving `delta` along `axis` meets `other`: the face it stops at, if in its way.
-fn stop(axis: usize, delta: f32, (min, max): Bounds, (other_min, other_max): Bounds) -> Option<f32> {
-    let across = (0..3).filter(|other| *other != axis).all(|o| min[o] < other_max[o] - EPS && max[o] > other_min[o] + EPS);
-    match () {
-        _ if !across || delta == 0.0 => None,
-        _ if delta < 0.0 => (other_max[axis] <= min[axis] + EPS && min[axis] + delta < other_max[axis]).then_some(other_max[axis]),
-        _ => (other_min[axis] >= max[axis] - EPS && max[axis] + delta > other_min[axis]).then_some(other_min[axis]),
-    }
-}
-
-/// The collision boxes of the blocks in reach; a fence's reach 1.5 high is why a cell below counts.
-fn boxes_in(level: &Level, (min, max): Bounds) -> Vec<Bounds> {
-    let span = |axis: usize, below: i32| (min[axis].floor() as i32 - below)..=(max[axis].floor() as i32);
-    let mut boxes = Vec::new();
-    for x in span(0, 0) {
-        for y in span(1, 1) {
-            for z in span(2, 0) {
-                if !level.in_height(y) || !level.is_loaded(sapling_world::ChunkPos::of_block(x, z)) {
-                    continue;
-                }
-                let Some(state) = level.registry().get(level.block(x, y, z)) else { continue };
-                let cell = [x as f32, y as f32, z as f32];
-                boxes.extend(state.boxes.iter().map(|b| (std::array::from_fn(|i| cell[i] + b.min[i]), std::array::from_fn(|i| cell[i] + b.max[i]))));
-                // The block table gives a piston's arm no box; BDS's stand stood on one (bds-shove.txt).
-                if state.boxes.is_empty() && state.name.ends_with(ARM) {
-                    boxes.push((cell, cell.map(|c| c + 1.0)));
-                }
-            }
-        }
-    }
-    boxes
 }
 
 #[cfg(test)]

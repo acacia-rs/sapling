@@ -2,6 +2,8 @@
 //! (docs/research/water-movement.md), and what the liquid then does by the body's [`InLiquid`]
 //! rule. Matched to BDS's captures: research/captures/bds-water.txt and bds-lava.txt.
 
+use acacia_physics::LiquidKind;
+use acacia_physics::registry_world::liquid_of;
 use sapling_world::World as Level;
 
 use super::Body;
@@ -18,6 +20,13 @@ impl Liquid {
             "minecraft:water" | "minecraft:flowing_water" => Some(Liquid::Water),
             "minecraft:lava" | "minecraft:flowing_lava" => Some(Liquid::Lava),
             _ => None,
+        }
+    }
+
+    fn kind(self) -> LiquidKind {
+        match self {
+            Liquid::Water => LiquidKind::Water,
+            Liquid::Lava => LiquidKind::Lava,
         }
     }
 }
@@ -78,20 +87,15 @@ const SHRINK: [f32; 3] = [0.001, 0.401, 0.001];
 /// An item breathes this far above its feet: 0.25 over the middle of its box.
 const ITEM_BREATH: f32 = 0.375;
 
-/// The `liquid_depth` of `liquid` in `cell`, on either layer: 0 for a source, 8 and up for a
-/// falling one.
-fn depth(level: &Level, [x, y, z]: [i32; 3], liquid: Liquid) -> Option<u8> {
-    if !level.in_height(y) || !level.is_loaded(sapling_world::ChunkPos::of_block(x, z)) {
-        return None;
-    }
+/// `liquid` in `cell`, on either layer.
+fn liquid_in(level: &Level, [x, y, z]: [i32; 3], liquid: Liquid) -> Option<acacia_physics::Liquid> {
     let registry = level.registry();
-    [level.liquid(x, y, z), level.block(x, y, z)].into_iter().find_map(|id| registry.get(id).filter(|state| Liquid::of(state.name) == Some(liquid)).map(|state| state.liquid_depth))
+    [level.liquid(x, y, z), level.block(x, y, z)].into_iter().filter_map(|id| registry.get(id).and_then(liquid_of)).find(|found| found.kind == liquid.kind())
 }
 
-/// The height of the surface of a liquid `depth` deep in the cell at `y`: a source, and a falling
-/// liquid, fill it.
-fn surface(y: i32, depth: u8) -> f32 {
-    y as f32 + 1.0 - if depth < 8 { f32::from(depth) / 9.0 } else { 0.0 }
+/// The height of the surface of `found` in the cell at `y`: a source, and a falling liquid, fill it.
+fn surface(y: i32, found: acacia_physics::Liquid) -> f32 {
+    y as f32 + found.height()
 }
 
 /// Whether any cell the body's box reaches, shrunk for all but items, holds `liquid`; no surface
@@ -108,14 +112,14 @@ pub(crate) fn in_liquid(level: &Level, body: &Body, rule: InLiquid, liquid: Liqu
         }
     }
     let cells = |axis: usize| low[axis].floor() as i32..=high[axis].floor() as i32;
-    cells(0).any(|x| cells(1).any(|y| cells(2).any(|z| depth(level, [x, y, z], liquid).is_some())))
+    cells(0).any(|x| cells(1).any(|y| cells(2).any(|z| liquid_in(level, [x, y, z], liquid).is_some())))
 }
 
 /// Whether `liquid` falls where the middle of the body is, or just under it.
 fn falls(level: &Level, body: &Body, liquid: Liquid) -> bool {
     let [x, feet, z] = body.at;
     let middle = [x.floor() as i32, (feet + body.size[1] / 2.0).floor() as i32, z.floor() as i32];
-    [middle, [middle[0], middle[1] - 1, middle[2]]].into_iter().any(|cell| depth(level, cell, liquid).is_some_and(|depth| depth > 7))
+    [middle, [middle[0], middle[1] - 1, middle[2]]].into_iter().any(|cell| liquid_in(level, cell, liquid).is_some_and(|found| found.falling))
 }
 
 /// What lifts an item: water its breathing point is under, a source's surface being the top of its
@@ -124,7 +128,7 @@ fn lifting_item(level: &Level, body: &Body) -> Option<Liquid> {
     let [x, feet, z] = body.at;
     let breath = feet + ITEM_BREATH;
     let cell = [x.floor() as i32, breath.floor() as i32, z.floor() as i32];
-    let under = depth(level, cell, Liquid::Water).is_some_and(|depth| surface(cell[1], depth) > breath);
+    let under = liquid_in(level, cell, Liquid::Water).is_some_and(|found| surface(cell[1], found) > breath);
     let liquid = if in_liquid(level, body, InLiquid::Floats, Liquid::Water) && under {
         Liquid::Water
     } else if in_liquid(level, body, InLiquid::Floats, Liquid::Lava) {
@@ -143,7 +147,7 @@ pub(super) fn acting(level: &Level, body: &Body, rule: InLiquid) -> Option<Liqui
         InLiquid::Floats => lifting_item(level, body),
         InLiquid::Sinks | InLiquid::Swims => [Liquid::Water, Liquid::Lava].into_iter().find(|liquid| in_liquid(level, body, rule, *liquid)),
         InLiquid::Buoyant if buoyed(level, body).is_some() => Some(Liquid::Water),
-        InLiquid::Buoyant => depth(level, cell, Liquid::Lava).map(|_| Liquid::Lava),
+        InLiquid::Buoyant => liquid_in(level, cell, Liquid::Lava).map(|_| Liquid::Lava),
     }
 }
 
@@ -179,12 +183,12 @@ pub(super) fn throw_up(body: &mut Body, random: &mut impl FnMut() -> f32) {
 fn buoyed(level: &Level, body: &Body) -> Option<f32> {
     let [x, y, z] = body.at;
     let cell = [x.floor() as i32, y.floor() as i32, z.floor() as i32];
-    let depth_here = depth(level, cell, Liquid::Water)?;
-    if depth(level, [cell[0], cell[1] + 1, cell[2]], Liquid::Water).is_some() {
+    let here = liquid_in(level, cell, Liquid::Water)?;
+    if liquid_in(level, [cell[0], cell[1] + 1, cell[2]], Liquid::Water).is_some() {
         return Some(1.0);
     }
     let lift = ((1.0 - (y - y.floor())) * BUOY_DEPTH + BUOY_FLOOR).clamp(0.0, 1.0);
-    (y < surface(cell[1], depth_here)).then(|| lift - WAVE_HEIGHT * (body.wave.sin() + 1.0))
+    (y < surface(cell[1], here)).then(|| lift - WAVE_HEIGHT * (body.wave.sin() + 1.0))
 }
 
 /// Holds a buoyant body up, before its own tick: its fall slows, and it rises toward a speed set

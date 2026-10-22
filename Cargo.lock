@@ -5,7 +5,7 @@ version = 4
 [[package]]
 name = "acacia-auth"
 version = "0.1.0"
-source = "git+https://github.com/acacia-rs/acacia?rev=6dde1a3ded3821520968d7618287978da0e67ce7#6dde1a3ded3821520968d7618287978da0e67ce7"
+source = "git+https://github.com/acacia-rs/acacia?rev=f5392cdf5c47bd23b5288843f53fd1c3c85a8476#f5392cdf5c47bd23b5288843f53fd1c3c85a8476"
 dependencies = [
  "async-trait",
  "base64 0.22.1",
@@ -31,7 +31,7 @@ dependencies = [
 [[package]]
 name = "acacia-bot"
 version = "0.1.0"
-source = "git+https://github.com/acacia-rs/acacia?rev=6dde1a3ded3821520968d7618287978da0e67ce7#6dde1a3ded3821520968d7618287978da0e67ce7"
+source = "git+https://github.com/acacia-rs/acacia?rev=f5392cdf5c47bd23b5288843f53fd1c3c85a8476#f5392cdf5c47bd23b5288843f53fd1c3c85a8476"
 dependencies = [
  "acacia-client",
  "acacia-molang",
@@ -51,7 +51,7 @@ dependencies = [
 [[package]]
 name = "acacia-client"
 version = "0.1.0"
-source = "git+https://github.com/acacia-rs/acacia?rev=6dde1a3ded3821520968d7618287978da0e67ce7#6dde1a3ded3821520968d7618287978da0e67ce7"
+source = "git+https://github.com/acacia-rs/acacia?rev=f5392cdf5c47bd23b5288843f53fd1c3c85a8476#f5392cdf5c47bd23b5288843f53fd1c3c85a8476"
 dependencies = [
  "acacia-auth",
  "acacia-nethernet",
@@ -75,12 +75,12 @@ dependencies = [
 [[package]]
 name = "acacia-molang"
 version = "0.1.0"
-source = "git+https://github.com/acacia-rs/acacia?rev=6dde1a3ded3821520968d7618287978da0e67ce7#6dde1a3ded3821520968d7618287978da0e67ce7"
+source = "git+https://github.com/acacia-rs/acacia?rev=f5392cdf5c47bd23b5288843f53fd1c3c85a8476#f5392cdf5c47bd23b5288843f53fd1c3c85a8476"
 
 [[package]]
 name = "acacia-nbt"
 version = "0.1.0"
-source = "git+https://github.com/acacia-rs/acacia?rev=6dde1a3ded3821520968d7618287978da0e67ce7#6dde1a3ded3821520968d7618287978da0e67ce7"
+source = "git+https://github.com/acacia-rs/acacia?rev=f5392cdf5c47bd23b5288843f53fd1c3c85a8476#f5392cdf5c47bd23b5288843f53fd1c3c85a8476"
 dependencies = [
  "bytes",
  "compact_str",
@@ -90,7 +90,7 @@ dependencies = [
 [[package]]
 name = "acacia-nethernet"
 version = "0.1.0"
-source = "git+https://github.com/acacia-rs/acacia?rev=6dde1a3ded3821520968d7618287978da0e67ce7#6dde1a3ded3821520968d7618287978da0e67ce7"
+source = "git+https://github.com/acacia-rs/acacia?rev=f5392cdf5c47bd23b5288843f53fd1c3c85a8476#f5392cdf5c47bd23b5288843f53fd1c3c85a8476"
 dependencies = [
  "aes",
  "base64 0.22.1",
@@ -113,7 +113,7 @@ dependencies = [
 [[package]]
 name = "acacia-physics"
 version = "0.1.0"
-source = "git+https://github.com/acacia-rs/acacia?rev=6dde1a3ded3821520968d7618287978da0e67ce7#6dde1a3ded3821520968d7618287978da0e67ce7"
+source = "git+https://github.com/acacia-rs/acacia?rev=f5392cdf5c47bd23b5288843f53fd1c3c85a8476#f5392cdf5c47bd23b5288843f53fd1c3c85a8476"
 dependencies = [
  "acacia-world",
 ]
@@ -121,7 +121,7 @@ dependencies = [
 [[package]]
 name = "acacia-proto"
 version = "0.1.0"
-source = "git+https://github.com/acacia-rs/acacia?rev=6dde1a3ded3821520968d7618287978da0e67ce7#6dde1a3ded3821520968d7618287978da0e67ce7"
+source = "git+https://github.com/acacia-rs/acacia?rev=f5392cdf5c47bd23b5288843f53fd1c3c85a8476#f5392cdf5c47bd23b5288843f53fd1c3c85a8476"
 dependencies = [
  "acacia-nbt",
  "bytes",
@@ -131,7 +131,7 @@ dependencies = [
 [[package]]
 name = "acacia-raknet"
 version = "0.1.0"
-source = "git+https://github.com/acacia-rs/acacia?rev=6dde1a3ded3821520968d7618287978da0e67ce7#6dde1a3ded3821520968d7618287978da0e67ce7"
+source = "git+https://github.com/acacia-rs/acacia?rev=f5392cdf5c47bd23b5288843f53fd1c3c85a8476#f5392cdf5c47bd23b5288843f53fd1c3c85a8476"
 dependencies = [
  "bytes",
 ]
@@ -139,7 +139,7 @@ dependencies = [
 [[package]]
 name = "acacia-session"
 version = "0.1.0"
-source = "git+https://github.com/acacia-rs/acacia?rev=6dde1a3ded3821520968d7618287978da0e67ce7#6dde1a3ded3821520968d7618287978da0e67ce7"
+source = "git+https://github.com/acacia-rs/acacia?rev=f5392cdf5c47bd23b5288843f53fd1c3c85a8476#f5392cdf5c47bd23b5288843f53fd1c3c85a8476"
 dependencies = [
  "acacia-auth",
  "acacia-proto",
@@ -158,7 +158,7 @@ dependencies = [
 [[package]]
 name = "acacia-testserver"
 version = "0.1.0"
-source = "git+https://github.com/acacia-rs/acacia?rev=6dde1a3ded3821520968d7618287978da0e67ce7#6dde1a3ded3821520968d7618287978da0e67ce7"
+source = "git+https://github.com/acacia-rs/acacia?rev=f5392cdf5c47bd23b5288843f53fd1c3c85a8476#f5392cdf5c47bd23b5288843f53fd1c3c85a8476"
 dependencies = [
  "acacia-auth",
  "acacia-proto",
@@ -177,7 +177,7 @@ dependencies = [
 [[package]]
 name = "acacia-world"
 version = "0.1.0"
-source = "git+https://github.com/acacia-rs/acacia?rev=6dde1a3ded3821520968d7618287978da0e67ce7#6dde1a3ded3821520968d7618287978da0e67ce7"
+source = "git+https://github.com/acacia-rs/acacia?rev=f5392cdf5c47bd23b5288843f53fd1c3c85a8476#f5392cdf5c47bd23b5288843f53fd1c3c85a8476"
 dependencies = [
  "acacia-proto",
  "bytes",
