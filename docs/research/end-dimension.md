@@ -144,8 +144,12 @@ research/dragon-fight-decompile.md (the fight manager) and research/dragon-ai-de
   0.31) and its data, the `disappeared`/`undefined`/`shoot` sounds, its first move in the same tick, flags the next,
   `reappeared` the one after; straight flight told every tick; on a block or player box grown by 0.3 a splash
   (LevelEvent, its colour) with no move told, and the tick after the cloud at the cell's middle, the fireball gone,
-  `explode`. BDS shot 1 and 4 fireballs in two 150 s runs, sapling 7 (same rules; BDS's line-of-sight test is
-  not ported).
+  `explode`. A strafe starts, and aims, only at a player the dragon sees (`canSee` 140d4f980: no block with a box
+  between its head and the player's eyes; BDS's attach points 3, the player's taken as its eyes), and the scan's
+  takeoff target must be seen too. The fight's draws are unrepeatable, as BDS's level random, so the rate is a
+  distribution: fireballs per 150 s survival drill (survival, survival2..6): BDS 1, 4, 3, 5, 6, 5 (mean 4.0);
+  sapling 3, 3, 5, 2, 5, 5 (mean 3.8); before the sight test sapling shot 6-7. Flames (pukes) 32 in most runs of both.
+- **Wing and bite** hurt on the world's difficulty (BDS's easy: 3.5 and 6) and throw 0.4 away and up as a hit.
 - **Breath clouds** (survival): the fireball's radius 6 for 2400 ticks, the flaming dragon's radius 5 for 200 at
   the tenth breath tick, half the radius out from its head on the ground; told with BDS's metadata; every fifth
   tick of age, players within the radius take 3 by magic (half an instant harm) and the throw of a magic hit; the
@@ -165,7 +169,7 @@ research/dragon-fight-decompile.md (the fight manager) and research/dragon-ai-de
 - **Dragon:** its start waits ~1.6 s on BDS's node columns, which sapling loads slower than BDS had them; its hurt
   time is not kept. The fireball is not pushed off the dragon's body (BDS's grows 4 ticks), not turned in flight,
   hits no mob and cannot be struck back; the clouds harm no mob, and BDS's pulse that stops at the owner in its
-  entity list is not copied; the strafe has no line-of-sight test.
+  entity list is not copied.
 - **The second kill's orbs** stayed where they fell on sapling (77 entities against BDS's 24 after 40 s): generic
   orb pickup, not looked at.
 - **Spike bedrock and crystals.** `postProcessMobsAt` 148246230 puts an EnderCrystal (ShowBottom) at (x + 0.5,
