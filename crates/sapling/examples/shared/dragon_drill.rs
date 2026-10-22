@@ -92,6 +92,16 @@ pub fn drill(name: &str) -> Option<Vec<String>> {
             lines.extend((0..14).map(|i| format!("!top 0 {}", -1024 - 16 * i)));
             lines.extend(["!top -13 -1123", "!top -13 -1124", "!top 7 -1092", "!top 0 -1100", "!top 8 -1120"].map(String::from));
         }
+        // Experience orbs on a floor in the air, a survival player at its middle: single orbs 4 to 24
+        // blocks off, then ten in one cell 30 off (merging), watched to rest.
+        "orbs" => {
+            lines = owned(&["gamemode creative", "gamerule domobspawning false", "fill -40 99 -12 40 99 12 stone", "tp @s 0.5 100 0.5 #3000", "gamemode survival"]);
+            for (x, z) in [(4.5, 0.5), (-7.5, 0.5), (0.5, 9.5), (12.5, 0.5), (0.5, -11.5), (-16.5, 0.5), (24.5, 0.5)] {
+                lines.push(format!("summon xp_orb {x} 101 {z} #8000"));
+            }
+            lines.extend((0..10).map(|_| "summon xp_orb -30.5 101 0.5 #50".to_string()));
+            lines.extend(owned(&["!wait 30000", "!entities", "gamemode creative"]));
+        }
         // Into the End through an end portal, the dragon killed, home through the exit portal.
         "dragon-portal" => {
             // In the air over the default world's ground, on a floor of its own.

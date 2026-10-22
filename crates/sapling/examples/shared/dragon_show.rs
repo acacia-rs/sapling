@@ -18,7 +18,7 @@ const DETAILED: &[&str] = &[
 const CHARS: usize = 8000;
 const ORB: &str = "minecraft:xp_orb";
 /// Kinds whose every packet is printed.
-const WATCHED: &[&str] = &["minecraft:ender_dragon", "minecraft:ender_crystal", "minecraft:dragon_fireball", "minecraft:area_effect_cloud"];
+const WATCHED: &[&str] = &["minecraft:ender_dragon", "minecraft:ender_crystal", "minecraft:dragon_fireball", "minecraft:area_effect_cloud", ORB];
 
 pub struct Run {
     start: Instant,
@@ -119,7 +119,6 @@ impl Run {
             RemoveEntity::ID => {
                 let unique = packet.decode::<RemoveEntity>().map_or(0, |p| p.entity_id_self);
                 match self.uniques.get(&unique).map(String::as_str) {
-                    Some(ORB) => self.count("RemoveEntity[xp_orb]".into()),
                     kind => self.print(format!("RemoveEntity {unique} {}", kind.unwrap_or("?"))),
                 }
             }
