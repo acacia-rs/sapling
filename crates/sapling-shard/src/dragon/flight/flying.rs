@@ -52,7 +52,7 @@ pub(super) fn holding(cx: &mut Ctx<'_>, flight: &mut Flight) {
         let player = cx.nearest_player([0.0, pod as f32, 0.0], STRAFE_REACH);
         let far = player.map_or(64, |(_, [x, y, z])| (((x - 0.5).powi(2) + (y - pod as f32 - 0.5).powi(2) + (z - 0.5).powi(2)) * STRAFE_SCALE) as i32);
         let near = cx.random.next_int(far.unsigned_abs() + 2) == 0;
-        if let Some((player, _)) = player.filter(|_| near || cx.random.next_int(cx.crystals + 2) == 0) {
+        if let Some((player, _)) = player.filter(|_| near || cx.random.next_int(cx.crystals + 2) == 0).filter(|(_, feet)| cx.sees(flight, *feet)) {
             flight.prey = Some(player);
             return;
         }
@@ -125,7 +125,7 @@ pub(super) fn strafe(cx: &mut Ctx<'_>, flight: &mut Flight) {
     }
     let at = flight.motion.at;
     let far = (0..3).map(|axis| (prey[axis] - at[axis]).powi(2)).sum::<f32>();
-    if far >= STRAFE_REACH * STRAFE_REACH {
+    if far >= STRAFE_REACH * STRAFE_REACH || !cx.sees(flight, prey) {
         flight.aim = flight.aim.saturating_sub(1);
         return;
     }

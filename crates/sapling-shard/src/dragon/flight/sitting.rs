@@ -103,7 +103,7 @@ pub(super) fn scanning_goes_on(cx: &mut Ctx<'_>, flight: &mut Flight) -> bool {
     if flight.timer < SCAN_FOR {
         return true;
     }
-    flight.prey = cx.nearest_player(at, TAKEOFF_REACH).map(|(player, _)| player);
+    flight.prey = cx.nearest_player(at, TAKEOFF_REACH).filter(|(_, feet)| cx.sees(flight, *feet)).map(|(player, _)| player);
     take_off(flight);
     false
 }

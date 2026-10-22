@@ -83,7 +83,7 @@ fn fight_of(world: &mut World, layer: Entity) -> Option<Mut<'_, Fight>> {
         let kept = world.get::<Layer>(home)?.world.level().dragon_fight.clone();
         let seed = seed(world, layer);
         let record = kept.unwrap_or_else(|| DragonFightRecord { dragon: -1, gateways: gateways::order(seed), ..Default::default() });
-        world.entity_mut(layer).insert(Fight { record, dragon: None, pending: Vec::new(), gateways: gateways::Jobs::default(), random: random::Random::new(seed as u64), waited: 0, respawn: None, portal_scan: 0, crystals: 0, crystal_count: 0 });
+        world.entity_mut(layer).insert(Fight { record, dragon: None, pending: Vec::new(), gateways: gateways::Jobs::default(), random: random::Random::unrepeatable(), waited: 0, respawn: None, portal_scan: 0, crystals: 0, crystal_count: 0 });
     }
     world.get_mut::<Fight>(layer)
 }

@@ -219,7 +219,7 @@ pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity, id: u64, k
 }
 
 /// What a mob's hit of `harm` on normal costs on the world's difficulty; none on peaceful.
-pub(super) fn on_difficulty(world: &World, harm: f32) -> Option<f32> {
+pub(crate) fn on_difficulty(world: &World, harm: f32) -> Option<f32> {
     match world.resource::<Settings>().0.difficulty {
         Difficulty::Peaceful => None,
         Difficulty::Easy => Some(harm.min(harm / 2.0 + 1.0)),

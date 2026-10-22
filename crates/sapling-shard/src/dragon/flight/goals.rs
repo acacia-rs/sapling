@@ -60,6 +60,15 @@ impl Ctx<'_> {
             .map(|(player, feet, _)| (player, feet))
     }
 
+    /// Whether no block with a box stands between the dragon's head and a player's eyes
+    /// (`canSee` 140d4f980, between both attach points 3; the player's taken as its eyes, unverified).
+    pub fn sees(&self, flight: &super::Flight, feet: [f32; 3]) -> bool {
+        let Some(level) = self.world.get::<Layer>(self.layer).map(|layer| &layer.world) else { return false };
+        let from = crate::dragon::parts::head_middle(flight);
+        let to = [feet[0], feet[1] + sapling_data::EYE_HEIGHT, feet[2]];
+        crate::dragon::fireball::meets_block(level, from, std::array::from_fn(|axis| to[axis] - from[axis])).is_none()
+    }
+
     /// Where a player's feet are, while it is in the End and alive.
     pub fn feet_of(&self, player: Entity) -> Option<[f32; 3]> {
         let here = self.world.get::<InLayer>(player).is_some_and(|in_layer| in_layer.0 == self.layer) && !crate::vitals::is_dead(self.world, player);

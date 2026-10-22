@@ -90,7 +90,7 @@ pub(super) fn shoot(world: &mut World, layer: Entity, dragon: Entity, from: [f32
 }
 
 /// Where along `from` to `from + by` (0..1) the point first enters a block with a box.
-fn meets_block(level: &sapling_world::World, from: [f32; 3], by: [f32; 3]) -> Option<f32> {
+pub(super) fn meets_block(level: &sapling_world::World, from: [f32; 3], by: [f32; 3]) -> Option<f32> {
     const SAMPLES: u32 = 64;
     let inside = |t: f32| {
         let [x, y, z] = [0, 1, 2].map(|axis| (from[axis] + by[axis] * t).floor() as i32);

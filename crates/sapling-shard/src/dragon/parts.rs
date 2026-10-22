@@ -16,8 +16,7 @@ use crate::components::{InLayer, Layer, Mode, Position, in_world};
 const HALF_HEIGHT: f32 = 2.0;
 const WINGS_HARM: f32 = 5.0;
 const BITE_HARM: f32 = 10.0;
-const WING_LIFT: f32 = 0.2;
-const WING_PUSH: f32 = 4.0;
+const THROW: f32 = 0.4;
 const DUST: i32 = 65;
 const GRIEFING: &str = "mobGriefing";
 /// Blocks it passes without breaking or being slowed.
@@ -41,7 +40,6 @@ fn grown((min, max): Box3, [gx, gy, gz]: [f32; 3]) -> Box3 {
 }
 
 struct Parts {
-    body: [f32; 3],
     head: Box3,
     neck: Box3,
     body_box: Box3,
@@ -67,7 +65,7 @@ fn parts(flight: &Flight) -> Parts {
         let w = 2.0 * (k as f32 + 1.0);
         around([x - (s * 1.5 + g.sin() * w) * f12, then_y - back(5)[1] + y - (w + 1.5) * f13 + 1.5, z + (c * 1.5 + g.cos() * w) * f12], [2.0, 2.0])
     };
-    Parts { body, head: around(reach(6.5), [1.0, 1.0]), neck: around(reach(5.5), [3.0, 3.0]), body_box: around(body, [5.0, 3.0]), wings: [wing(1.0), wing(-1.0)], tails: [tail(0), tail(1), tail(2)] }
+    Parts { head: around(reach(6.5), [1.0, 1.0]), neck: around(reach(5.5), [3.0, 3.0]), body_box: around(body, [5.0, 3.0]), wings: [wing(1.0), wing(-1.0)], tails: [tail(0), tail(1), tail(2)] }
 }
 
 /// The middle of its head's box.
@@ -106,17 +104,18 @@ pub(super) fn touch(world: &mut World, layer: Entity, _dragon: Entity, flight: &
             (low[1], high[1]) = (low[1] - 2.0, high[1] - 2.0);
             (low, high)
         };
+        // Both hurt on the world's difficulty and throw as any hit, 0.4 away and up: BDS's easy took
+        // 3.5 for a wing and 6 for a bite (bds-dragon-survival.txt), not Java's throw by distance.
         for (player, feet) in players(world, layer) {
             let body = player_box(feet);
-            if parts.wings.iter().any(|wing| overlaps(knocks(wing), body)) {
-                let (dx, dz) = (feet[0] - parts.body[0], feet[2] - parts.body[2]);
-                let d = (dx * dx + dz * dz).max(f32::EPSILON);
-                crate::vitals::bitten(world, player, WINGS_HARM, super::DRAGON, [dx / d * WING_PUSH, WING_LIFT, dz / d * WING_PUSH]);
-            }
-            if [parts.head, parts.neck].iter().any(|bite| overlaps(grown(*bite, [1.0; 3]), body)) {
-                let (dx, dz) = (feet[0] - flight.motion.at[0], feet[2] - flight.motion.at[2]);
-                let far = dx.hypot(dz).max(1e-4);
-                crate::vitals::bitten(world, player, BITE_HARM, super::DRAGON, [dx / far * 0.4, 0.4, dz / far * 0.4]);
+            let (dx, dz) = (feet[0] - flight.motion.at[0], feet[2] - flight.motion.at[2]);
+            let far = dx.hypot(dz).max(1e-4);
+            let throw = [dx / far * THROW, THROW, dz / far * THROW];
+            let hits = [(parts.wings.iter().any(|wing| overlaps(knocks(wing), body)), WINGS_HARM), ([parts.head, parts.neck].iter().any(|bite| overlaps(grown(*bite, [1.0; 3]), body)), BITE_HARM)];
+            for (_, harm) in hits.into_iter().filter(|(hit, _)| *hit) {
+                if let Some(harm) = crate::creatures::on_difficulty(world, harm) {
+                    crate::vitals::bitten(world, player, harm, super::DRAGON, throw);
+                }
             }
         }
     }

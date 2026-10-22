@@ -10,6 +10,13 @@ impl Random {
         Self(seed | 1)
     }
 
+    /// Seeded from the process's entropy: BDS's level random comes from the random device, so no
+    /// fight repeats another (and drills of it are judged as distributions).
+    pub fn unrepeatable() -> Self {
+        use std::hash::{BuildHasher, Hasher};
+        Self::new(std::collections::hash_map::RandomState::new().build_hasher().finish())
+    }
+
     fn next(&mut self) -> u64 {
         self.0 ^= self.0 << 13;
         self.0 ^= self.0 >> 7;
