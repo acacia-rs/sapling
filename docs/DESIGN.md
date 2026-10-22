@@ -788,8 +788,15 @@ Details and BDS evidence: docs/research/nether-dimension.md, docs/research/end-d
   (`blocks/end_portal.rs`); a body in one goes to the End at once, onto (100, 50, 0), with BDS's obsidian
   platform built under it the tick after (`portals/end.rs`); a generated gateway sends a body over its exit
   (`portals/gateway.rs`); the dead of the End and the Nether rise in the overworld (`dimensions::respawn_home`).
-  No dragon fight: no dragon, exit portal, crystals or kill gateways. A thrown eye of ender flies to the
-  stronghold its world's storage locates (`WorldStorage::locate_stronghold`, only `Generated` overworlds; `eyes.rs`).
+  A thrown eye of ender flies to the stronghold its world's storage locates (`WorldStorage::locate_stronghold`,
+  only `Generated` overworlds; `eyes.rs`).
+- **The dragon fight** (sapling-shard `dragon.rs` and `dragon/`, docs/research/end-dimension.md): a `Fight`
+  component on the End layer, its record in the realm's `Level::dragon_fight` (LevelDB `TheEnd`, sapling-leveldb
+  `dragon_fight.rs`). Run from `handlers` after the creatures' tick: dragon lookup and making, podium, crystals,
+  the death, gateways and their exits, the summoning again (`respawn.rs`), boss bar. The dragon is an entity
+  with a `Dragon` component flown by BDS's goals (`flight/`, `fly.rs`, `parts.rs`, `wire.rs`), not by
+  `creatures::tick`. The exit portal's way home with the credits is `portals/exit.rs`. Plugins read
+  `ShardCtx::dragon_fight` and get `DragonKilledEvent` and `DragonRespawnEvent`.
 
 ## Inventories (as built)
 

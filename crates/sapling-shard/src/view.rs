@@ -19,6 +19,17 @@ pub(crate) fn to_viewers(world: &mut World, layer: Entity, pos: BlockPos, packet
     }
 }
 
+/// Sends `columns` again to the players of `layer` still waiting on blobs: an update reaching a
+/// client before the section's blob is lost, and the blob was taken before the write.
+pub(crate) fn resend_to_streaming(world: &mut World, layer: Entity, columns: &[ChunkPos]) {
+    let mut players = world.query::<(&InLayer, &crate::blobs::BlobCache, &mut View)>();
+    for (in_layer, blobs, mut view) in players.iter_mut(world) {
+        if in_layer.0 == layer && blobs.awaits_any() {
+            columns.iter().for_each(|&column| view.resend(column));
+        }
+    }
+}
+
 /// The chunk columns a player sees: a circle of `radius` chunks around `center`, split into
 /// those already sent and those still queued.
 #[derive(Component, Default)]

@@ -86,6 +86,12 @@ pub fn drill(name: &str) -> Option<Vec<String>> {
         "dragon-survival" => {
             lines.extend(owned(&["tp @s 6.5 63 0.5 #2000", "gamemode survival", "effect @s resistance 9999 3 true", "effect @s regeneration 9999 4 true", "!wait 120000", "!entities", "gamemode creative"]));
         }
+        // The first gateway's line out (0, z), where the exit search walks, and round the exits BDS found.
+        "dragon-exits" => {
+            lines.extend(owned(&["tp @s 0.5 110 -1100.5 #12000"]));
+            lines.extend((0..14).map(|i| format!("!top 0 {}", -1024 - 16 * i)));
+            lines.extend(["!top -13 -1123", "!top -13 -1124", "!top 7 -1092", "!top 0 -1100", "!top 8 -1120"].map(String::from));
+        }
         // Into the End through an end portal, the dragon killed, home through the exit portal.
         "dragon-portal" => {
             // In the air over the default world's ground, on a floor of its own.

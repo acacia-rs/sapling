@@ -142,6 +142,11 @@ fn show_pending(world: &mut World, layer: Entity) {
     let pending = world.get_mut::<Fight>(layer).map(|mut fight| std::mem::take(&mut fight.pending)).unwrap_or_default();
     for cells in pending {
         crate::blocks::set_sectioned(world, layer, &cells);
+        let mut columns: Vec<ChunkPos> = cells.iter().map(|&([x, _, z], _)| ChunkPos::of_block(x, z)).collect();
+        columns.sort();
+        columns.dedup();
+        // The fight starts while its players' columns still stream in (research/captures/sapling-dragon-again.txt lost half the podium).
+        crate::view::resend_to_streaming(world, layer, &columns);
     }
 }
 

@@ -1,0 +1,518 @@
+## gamemode creative at 0
+    104 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"DragonActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamemode.success.self\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.creative\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+    104 actor   .. MovePlayer[normal] x1, Text x1, Event x1
+    104 actor   CommandOutput CommandOutput { origin: CommandOrigin { type: "player", uuid: Uuid([101, 69, 28, 79, 227, 220, 114, 143, 11, 26, 94, 240, 186, 89, 230, 147]), request_id: "", player_entity_id: 0 }, output_type: "alloutput", success_count: 1, output: [CommandOutputOutputItem { message_id: "commands.gamemode.success.self", success: true, parameters: ["%createWorldScreen.gameMode.creative"] }], has_data: false, data: None }
+   1200 actor   .. MoveEntityDelta x11, MovePlayer[normal] x23, CurrentStructureFeature x1
+## gamerule domobspawning false at 1200
+   1212 actor   GameRulesChanged GameRulesChanged { rules: [GameRuleI32 { name: "doMobSpawning", editable: true, type: Bool, value: Bool(false) }] }
+   1212 actor   .. Event x1
+   1212 actor   CommandOutput CommandOutput { origin: CommandOrigin { type: "player", uuid: Uuid([117, 67, 163, 2, 117, 171, 67, 134, 48, 8, 105, 5, 251, 64, 243, 137]), request_id: "", player_entity_id: 0 }, output_type: "alloutput", success_count: 1, output: [CommandOutputOutputItem { message_id: "commands.gamerule.success", success: true, parameters: ["domobspawning", "false"] }], has_data: false, data: None }
+   1213 actor   .. MovePlayer[normal] x1
+   1213 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"DragonActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"domobspawning\"},{\"text\":\"false\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   2402 actor   .. MoveEntityDelta x21, MovePlayer[normal] x23, SetEntityData x6, CurrentStructureFeature x1, SetEntityMotion x4
+## execute in the_end run tp @s 0.5 90 0.5 #15000 at 2402
+   2418 actor   RemoveEntity -4294967289 ?
+   2419 actor   RemoveEntity -4294967290 ?
+   2419 actor   RemoveEntity -4294967292 ?
+   2419 actor   RemoveEntity -4294967291 ?
+   2419 actor   RemoveEntity -4294967293 ?
+   2419 actor   RemoveEntity -4294967294 ?
+   2419 actor   ChangeDimension ChangeDimension { dimension: 2, position: Vec3f { x: 0.5, y: 90.0, z: 0.5 }, respawn: false, loading_screen_id: Some(0) }
+   2419 actor   LevelEventGeneric LevelEventGeneric { event_id: 19602, nbt: [Nbt { name: "ableToSleep", value: Int(1) }, Nbt { name: "overworldPlayerCount", value: Int(1) }, Nbt { name: "sleepingPlayerCount", value: Int(0) }] }
+   2419 actor   .. Text x1, Event x1
+   2419 actor   CommandOutput CommandOutput { origin: CommandOrigin { type: "player", uuid: Uuid([206, 68, 127, 223, 36, 108, 240, 188, 75, 186, 192, 125, 227, 210, 19, 173]), request_id: "", player_entity_id: 0 }, output_type: "alloutput", success_count: 1, output: [CommandOutputOutputItem { message_id: "commands.tp.success.coordinates", success: true, parameters: ["DragonActor", "0.50", "90.00", "0.50"] }], has_data: false, data: None }
+   2420 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"DragonActor\"},{\"text\":\": \"},{\"translate\":\"commands.tp.success.coordinates\",\"with\":{\"rawtext\":[{\"text\":\"DragonActor\"},{\"text\":\"0.50\"},{\"text\":\"90.00\"},{\"text\":\"0.50\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   2932 actor   .. NetworkChunkPublisherUpdate x11, PlayerLocation x1, LevelChunk x10
+   2932 actor   AddEntity AddEntity { unique_id: -4294967288, runtime_id: 8, entity_type: "minecraft:ender_dragon", position: Vec3f { x: 0.0, y: 128.0, z: 0.0 }, velocity: Vec3f { x: 0.0, y: 0.0, z: 0.0 }, pitch: 105.46875, yaw: 0.0, head_yaw: 0.0, body_yaw: 0.0, attributes: [EntityAttributesItem { name: "minecraft:health", min: 0.0, value: 200.0, max: 200.0 }, EntityAttributesItem { name: "minecraft:movement", min: 0.0, value: 0.3, max: 3.4028235e38 }, EntityAttributesItem { name: "minecraft:underwater_movement", min: 0.0, value: 0.02, max: 3.4028235e38 }, EntityAttributesItem { name: "minecraft:lava_movement", min: 0.0, value: 0.02, max: 3.4028235e38 }, EntityAttributesItem { name: "minecraft:absorption", min: 0.0, value: 0.0, max: 16.0 }, EntityAttributesItem { name: "minecraft:luck", min: -1024.0, value: 0.0, max: 1024.0 }, EntityAttributesItem { name: "minecraft:friction_modifier", min: 0.0, value: 1.0, max: 256.0 }, EntityAttributesItem { name: "minecraft:bounciness", min: 0.0, value: 0.0, max: 1.0 }, EntityAttributesItem { name: "minecraft:air_drag_modifier", min: 0.0, value: 1.0, max: 256.0 }], metadata: [MetadataDictionaryItem { key: Flags, type: Long, legacy_type: 7, value: Flags(MetadataFlags1(1125899906842624)) }, MetadataDictionaryItem { key: Health, type: Int, legacy_type: 2, value: Default(Int(1)) }, MetadataDictionaryItem { key: Variant, type: Int, legacy_type: 2, value: Default(Int(0)) }, MetadataDictionaryItem { key: Color, type: Byte, legacy_type: 0, value: Default(Byte(0)) }, MetadataDictionaryItem { key: Nametag, type: String, legacy_type: 4, value: Default(String("")) }, MetadataDictionaryItem { key: OwnerEid, type: Long, legacy_type: 7, value: Default(Long(-1)) }, MetadataDictionaryItem { key: TargetEid, type: Long, legacy_type: 7, value: Default(Long(0)) }, MetadataDictionaryItem { key: Air, type: Short, legacy_type: 1, value: Default(Short(300)) }, MetadataDictionaryItem { key: JumpDuration, type: Byte, legacy_type: 0, value: Default(Byte(0)) }, MetadataDictionaryItem { key: ChargeAmount, type: Byte, legacy_type: 0, value: Default(Byte(0)) }, MetadataDictionaryItem { key: LeadHolderEid, type: Long, legacy_type: 7, value: Default(Long(0)) }, MetadataDictionaryItem { key: Scale, type: Float, legacy_type: 3, value: Default(Float(1.0)) }, MetadataDictionaryItem { key: InteractiveTag, type: Byte, legacy_type: 0, value: Default(Byte(0)) }, MetadataDictionaryItem { key: MaxAirdataMaxAir, type: Short, legacy_type: 1, value: Default(Short(300)) }, MetadataDictionaryItem { key: MarkVariant, type: Int, legacy_type: 2, value: Default(Int(0)) }, MetadataDictionaryItem { key: ContainerType, type: Byte, legacy_type: 0, value: Default(Byte(0)) }, MetadataDictionaryItem { key: ContainerBaseSize, type: Int, legacy_type: 2, value: Default(Int(0)) }, MetadataDictionaryItem { key: ContainerExtraSlotsPerStrength, type: Int, legacy_type: 2, value: Default(Int(0)) }, MetadataDictionaryItem { key: BoundingboxWidth, type: Float, legacy_type: 3, value: Default(Float(13.0)) }, MetadataDictionaryItem { key: BoundingboxHeight, type: Float, legacy_type: 3, value: Default(Float(4.0)) }, MetadataDictionaryItem { key: FuseLength, type: Int, legacy_type: 2, value: Default(Int(-1)) }, MetadataDictionaryItem { key: RiderSeatPosition, type: Vec3f, legacy_type: 8, value: Default(Vec3f(Vec3f { x: 0.0, y: 0.0, z: 0.0 })) }, MetadataDictionaryItem { key: RiderRotationLocked, type: Byte, legacy_type: 0, value: Default(Byte(0)) }, MetadataDictionaryItem { key: RiderMaxRotation, type: Float, legacy_type: 3, value: Default(Float(0.0)) }, MetadataDictionaryItem { key: RiderMinRotation, type: Byte, legacy_type: 0, value: Default(Byte(0)) }, MetadataDictionaryItem { key: RiderSeatRotationOffset, type: Float, legacy_type: 3, value: Default(Float(0.0)) }, MetadataDictionaryItem { key: HasCommandBlock, type: Byte, legacy_type: 0, value: Default(Byte(0)) }, MetadataDictionaryItem { key: CommandBlockCommand, type: String, legacy_type: 4, value: Default(String("")) }, MetadataDictionaryItem { key: CommandBlockLastOutput, type: String, legacy_type: 4, value: Default(String("")) }, MetadataDictionaryItem { key: CommandBlockTrackOutput, type: Byte, legacy_type: 0, value: Default(Byte(1)) }, MetadataDictionaryItem { key: ControllingRiderSeatNumber, type: Byte, legacy_type: 0, value: Default(Byte(0)) }, MetadataDictionaryItem { key: Strength, type: Int, legacy_type: 2, value: Default(Int(0)) }, MetadataDictionaryItem { key: MaxStrength, type: Int, legacy_type: 2, value: Default(Int(0)) }, MetadataDictionaryItem { key: EvokerSpellCastingColor, type: Int, legacy_type: 2, value: Default(Int(0)) }, MetadataDictionaryItem { key: LimitedLife, type: Int, legacy_type: 2, value: Default(Int(-1)) }, MetadataDictionaryItem { key: AlwaysShowNametag, type: Byte, legacy_type: 0, value: Default(Byte(-1)) }, MetadataDictionaryItem { key: Color2, type: Byte, legacy_type: 0, value: Default(Byte(0)) }, MetadataDictionaryItem { key: EatingCounter, type: Int, legacy_type: 2, value: Default(Int(0)) }, MetadataDictionaryItem { key: FlagsExtended, type: Long, legacy_type: 7, value: FlagsExtended(MetadataFlags2(33554432)) }, MetadataDictionaryItem { key: TradeTier, type: Int, legacy_type: 2, value: Default(Int(0)) }, MetadataDictionaryItem { key: MaxTradeTier, type: Int, legacy_type: 2, value: Default(Int(0)) }, MetadataDictionaryItem { key: TradeExperience, type: Int, legacy_type: 2, value: Default(Int(0)) }, MetadataDictionaryItem { key: SkinId, type: Int, legacy_type: 2, value: Default(Int(0)) }, MetadataDictionaryItem { key: CommandBlockTickDelay, type: Int, legacy_type: 2, value: Default(Int(3)) }, MetadataDictionaryItem { key: CommandBlockExecuteOnFirstTick, type: Byte, legacy_type: 0, value: Default(Byte(1)) }, MetadataDictionaryItem { key: AmbientSoundInterval, type: Float, legacy_type: 3, value: Default(Float(8.0)) }, MetadataDictionaryItem { key: AmbientSoundIntervalRange, type: Float, legacy_type: 3, value: Default(Float(16.0)) }, MetadataDictionaryItem { key: AmbientSoundEventName, type: String, legacy_type: 4, value: Default(String("ambient")) }, MetadataDictionaryItem { key: FallDamageMultiplier, type: Float, legacy_type: 3, value: Default(Float(0.0)) }, MetadataDictionaryItem { key: LowTierCuredDiscount, type: Int, legacy_type: 2, value: Default(Int(0)) }, MetadataDictionaryItem { key: HighTierCuredDiscount, type: Int, legacy_type: 2, value: Default(Int(0)) }, MetadataDictionaryItem { key: NearbyCuredDiscount, type: Int, legacy_type: 2, value: Default(Int(0)) }, MetadataDictionaryItem { key: NearbyCuredDiscountTimestamp, type: Int, legacy_type: 2, value: Default(Int(0)) }, MetadataDictionaryItem { key: Hitbox, type: Compound, legacy_type: 5, value: Default(Compound(Nbt { name: "", value: Compound([]) })) }, MetadataDictionaryItem { key: IsBuoyant, type: Byte, legacy_type: 0, value: Default(Byte(0)) }, MetadataDictionaryItem { key: FreezingEffectStrength, type: Float, legacy_type: 3, value: Default(Float(0.0)) }, MetadataDictionaryItem { key: MovementSoundDistanceOffset, type: Float, legacy_type: 3, value: Default(Float(1.0)) }, MetadataDictionaryItem { key: HeartbeatIntervalTicks, type: Int, legacy_type: 2, value: Default(Int(20)) }, MetadataDictionaryItem { key: HeartbeatSoundEvent, type: Int, legacy_type: 2, value: Default(Int(614)) }, MetadataDictionaryItem { key: VisibleMobEffects, type: Long, legacy_type: 7, value: Default(Long(0)) }, MetadataDictionaryItem { key: FilteredName, type: String, legacy_type: 4, value: Default(String("")) }, MetadataDictionaryItem { key: SeatThirdPersonCameraRadius, type: Float, legacy_type: 3, value: SeatThirdPersonCameraRadius(0.0) }, MetadataDictionaryItem { key: SeatCameraRelaxDistanceSmoothing, type: Float, legacy_type: 3, value: SeatCameraRelaxDistanceSmoothing(0.0) }, MetadataDictionaryItem { key: AimAssistPriorityPresetId, type: Int, legacy_type: 2, value: Default(Int(-1)) }, MetadataDictionaryItem { key: AimAssistPriorityCategoryId, type: Int, legacy_type: 2, value: Default(I
+   2932 actor   LevelSoundEvent LevelSoundEvent { sound_id: "spawn", position: Vec3f { x: 0.0, y: 129.0, z: -5.6875 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: -4294967288, fire_at_position: None }
+   2932 actor   SetEntityData ender_dragon SetEntityData { runtime_entity_id: 8, metadata: [MetadataDictionaryItem { key: Flags, type: Long, legacy_type: 7, value: Flags(MetadataFlags1(1125899906842624)) }, MetadataDictionaryItem { key: Health, type: Int, legacy_type: 2, value: Default(Int(1)) }, MetadataDictionaryItem { key: Variant, type: Int, legacy_type: 2, value: Default(Int(0)) }, MetadataDictionaryItem { key: Color, type: Byte, legacy_type: 0, value: Default(Byte(0)) }, MetadataDictionaryItem { key: Nametag, type: String, legacy_type: 4, value: Default(String("")) }, MetadataDictionaryItem { key: OwnerEid, type: Long, legacy_type: 7, value: Default(Long(-1)) }, MetadataDictionaryItem { key: TargetEid, type: Long, legacy_type: 7, value: Default(Long(0)) }, MetadataDictionaryItem { key: Air, type: Short, legacy_type: 1, value: Default(Short(300)) }, MetadataDictionaryItem { key: ChargeAmount, type: Byte, legacy_type: 0, value: Default(Byte(0)) }, MetadataDictionaryItem { key: LeadHolderEid, type: Long, legacy_type: 7, value: Default(Long(0)) }, MetadataDictionaryItem { key: InteractiveTag, type: Byte, legacy_type: 0, value: Default(Byte(0)) }, MetadataDictionaryItem { key: MaxAirdataMaxAir, type: Short, legacy_type: 1, value: Default(Short(300)) }, MetadataDictionaryItem { key: MarkVariant, type: Int, legacy_type: 2, value: Default(Int(0)) }, MetadataDictionaryItem { key: ContainerType, type: Byte, legacy_type: 0, value: Default(Byte(0)) }, MetadataDictionaryItem { key: ContainerBaseSize, type: Int, legacy_type: 2, value: Default(Int(0)) }, MetadataDictionaryItem { key: ContainerExtraSlotsPerStrength, type: Int, legacy_type: 2, value: Default(Int(0)) }, MetadataDictionaryItem { key: BoundingboxWidth, type: Float, legacy_type: 3, value: Default(Float(13.0)) }, MetadataDictionaryItem { key: BoundingboxHeight, type: Float, legacy_type: 3, value: Default(Float(4.0)) }, MetadataDictionaryItem { key: FuseLength, type: Int, legacy_type: 2, value: Default(Int(-1)) }, MetadataDictionaryItem { key: RiderRotationLocked, type: Byte, legacy_type: 0, value: Default(Byte(0)) }, MetadataDictionaryItem { key: RiderMaxRotation, type: Float, legacy_type: 3, value: Default(Float(0.0)) }, MetadataDictionaryItem { key: RiderMinRotation, type: Byte, legacy_type: 0, value: Default(Byte(0)) }, MetadataDictionaryItem { key: RiderSeatRotationOffset, type: Float, legacy_type: 3, value: Default(Float(0.0)) }, MetadataDictionaryItem { key: HasCommandBlock, type: Byte, legacy_type: 0, value: Default(Byte(0)) }, MetadataDictionaryItem { key: CommandBlockCommand, type: String, legacy_type: 4, value: Default(String("")) }, MetadataDictionaryItem { key: CommandBlockLastOutput, type: String, legacy_type: 4, value: Default(String("")) }, MetadataDictionaryItem { key: CommandBlockTrackOutput, type: Byte, legacy_type: 0, value: Default(Byte(1)) }, MetadataDictionaryItem { key: Strength, type: Int, legacy_type: 2, value: Default(Int(0)) }, MetadataDictionaryItem { key: MaxStrength, type: Int, legacy_type: 2, value: Default(Int(0)) }, MetadataDictionaryItem { key: EvokerSpellCastingColor, type: Int, legacy_type: 2, value: Default(Int(0)) }, MetadataDictionaryItem { key: LimitedLife, type: Int, legacy_type: 2, value: Default(Int(-1)) }, MetadataDictionaryItem { key: AlwaysShowNametag, type: Byte, legacy_type: 0, value: Default(Byte(-1)) }, MetadataDictionaryItem { key: Color2, type: Byte, legacy_type: 0, value: Default(Byte(0)) }, MetadataDictionaryItem { key: EatingCounter, type: Int, legacy_type: 2, value: Default(Int(0)) }, MetadataDictionaryItem { key: FlagsExtended, type: Long, legacy_type: 7, value: FlagsExtended(MetadataFlags2(33554432)) }, MetadataDictionaryItem { key: TradeTier, type: Int, legacy_type: 2, value: Default(Int(0)) }, MetadataDictionaryItem { key: MaxTradeTier, type: Int, legacy_type: 2, value: Default(Int(0)) }, MetadataDictionaryItem { key: TradeExperience, type: Int, legacy_type: 2, value: Default(Int(0)) }, MetadataDictionaryItem { key: SkinId, type: Int, legacy_type: 2, value: Default(Int(0)) }, MetadataDictionaryItem { key: CommandBlockTickDelay, type: Int, legacy_type: 2, value: Default(Int(3)) }, MetadataDictionaryItem { key: CommandBlockExecuteOnFirstTick, type: Byte, legacy_type: 0, value: Default(Byte(1)) }, MetadataDictionaryItem { key: AmbientSoundInterval, type: Float, legacy_type: 3, value: Default(Float(8.0)) }, MetadataDictionaryItem { key: AmbientSoundIntervalRange, type: Float, legacy_type: 3, value: Default(Float(16.0)) }, MetadataDictionaryItem { key: AmbientSoundEventName, type: String, legacy_type: 4, value: Default(String("ambient")) }, MetadataDictionaryItem { key: FallDamageMultiplier, type: Float, legacy_type: 3, value: Default(Float(0.0)) }, MetadataDictionaryItem { key: LowTierCuredDiscount, type: Int, legacy_type: 2, value: Default(Int(0)) }, MetadataDictionaryItem { key: HighTierCuredDiscount, type: Int, legacy_type: 2, value: Default(Int(0)) }, MetadataDictionaryItem { key: NearbyCuredDiscount, type: Int, legacy_type: 2, value: Default(Int(0)) }, MetadataDictionaryItem { key: NearbyCuredDiscountTimestamp, type: Int, legacy_type: 2, value: Default(Int(0)) }, MetadataDictionaryItem { key: Hitbox, type: Compound, legacy_type: 5, value: Default(Compound(Nbt { name: "", value: Compound([]) })) }, MetadataDictionaryItem { key: IsBuoyant, type: Byte, legacy_type: 0, value: Default(Byte(0)) }, MetadataDictionaryItem { key: FreezingEffectStrength, type: Float, legacy_type: 3, value: Default(Float(0.0)) }, MetadataDictionaryItem { key: MovementSoundDistanceOffset, type: Float, legacy_type: 3, value: Default(Float(1.0)) }, MetadataDictionaryItem { key: HeartbeatIntervalTicks, type: Int, legacy_type: 2, value: Default(Int(20)) }, MetadataDictionaryItem { key: HeartbeatSoundEvent, type: Int, legacy_type: 2, value: Default(Int(614)) }, MetadataDictionaryItem { key: VisibleMobEffects, type: Long, legacy_type: 7, value: Default(Long(0)) }, MetadataDictionaryItem { key: FilteredName, type: String, legacy_type: 4, value: Default(String("")) }, MetadataDictionaryItem { key: SeatThirdPersonCameraRadius, type: Float, legacy_type: 3, value: SeatThirdPersonCameraRadius(0.0) }, MetadataDictionaryItem { key: SeatCameraRelaxDistanceSmoothing, type: Float, legacy_type: 3, value: SeatCameraRelaxDistanceSmoothing(0.0) }, MetadataDictionaryItem { key: AimAssistPriorityPresetId, type: Int, legacy_type: 2, value: Default(Int(-1)) }, MetadataDictionaryItem { key: AimAssistPriorityCategoryId, type: Int, legacy_type: 2, value: Default(Int(-1)) }, MetadataDictionaryItem { key: AimAssistPriorityActorId, type: Int, legacy_type: 2, value: Default(Int(-1)) }, MetadataDictionaryItem { key: FireworkDirection, type: Float, legacy_type: 3, value: Default(Float(64.0)) }], properties: EntityProperties { ints: [], floats: [] }, tick: 0 }
+   2933 actor   UpdateAttributes ender_dragon minecraft:health=200/200 minecraft:absorption=0/16 minecraft:movement=0.3/340282350000000000000000000000000000000 minecraft:underwater_movement=0.02/340282350000000000000000000000000000000 minecraft:lava_movement=0.02/340282350000000000000000000000000000000 minecraft:luck=0/1024 minecraft:friction_modifier=1/256 minecraft:bounciness=0/1 minecraft:air_drag_modifier=1/256 minecraft:health=200/200 minecraft:movement=0.3/340282350000000000000000000000000000000 minecraft:underwater_movement=0.02/340282350000000000000000000000000000000 minecraft:lava_movement=0.02/340282350000000000000000000000000000000 minecraft:absorption=0/16 minecraft:luck=0/1024 minecraft:friction_modifier=1/256 minecraft:bounciness=0/1 minecraft:air_drag_modifier=1/256 minecraft:health=200/200 minecraft:health=200/200 minecraft:health=200/200 minecraft:movement=0.3/340282350000000000000000000000000000000 minecraft:movement=0.3/340282350000000000000000000000000000000 minecraft:health=200/200 minecraft:movement=0.3/340282350000000000000000000000000000000 minecraft:underwater_movement=0.02/340282350000000000000000000000000000000 minecraft:lava_movement=0.02/340282350000000000000000000000000000000 minecraft:absorption=0/16 minecraft:luck=0/1024 minecraft:friction_modifier=1/256 minecraft:bounciness=0/1 minecraft:air_drag_modifier=1/256
+   2933 actor   D ender_dragon 0.00000 128.00000 0.00000 p 95.62 y 0.00 h 0.00
+   2933 actor   PlayerAction PlayerAction { runtime_entity_id: 1, action: DimensionChangeAck, position: BlockCoordinates { x: 0, y: 0, z: 0 }, result_position: BlockCoordinates { x: 0, y: 0, z: 0 }, face: 0 }
+   2986 actor   .. Subchunk x10
+   2986 actor   UpdateBlock -1 64 0 layer 0 flags UpdateBlockFlags(3) torch[torch_facing_direction=east]
+   2986 actor   UpdateBlock 0 64 -1 layer 0 flags UpdateBlockFlags(3) torch[torch_facing_direction=south]
+   2986 actor   UpdateSubchunkBlocks at 0 64 0: 0 64 0 bedrock[infiniburn_bit=1] f3; 0 65 0 bedrock[infiniburn_bit=1] f3; 0 64 1 torch[torch_facing_direction=north] f3; 1 64 0 torch[torch_facing_direction=west] f3 | extra: 
+   2987 actor   UpdateSubchunkBlocks at -16 48 -16: -3 61 -1 end_stone[] f3; -3 62 -1 bedrock[infiniburn_bit=1] f3; -2 61 -2 end_stone[] f3; -2 61 -1 bedrock[infiniburn_bit=1] f3; -2 62 -2 bedrock[infiniburn_bit=1] f3; -1 61 -3 end_stone[] f3; -1 61 -2 bedrock[infiniburn_bit=1] f3; -1 61 -1 bedrock[infiniburn_bit=1] f3; -1 62 -3 bedrock[infiniburn_bit=1] f3 | extra: 
+   2987 actor   UpdateSubchunkBlocks at 0 48 0: 0 61 0 bedrock[infiniburn_bit=1] f3; 0 61 1 bedrock[infiniburn_bit=1] f3; 0 61 2 bedrock[infiniburn_bit=1] f3; 0 62 3 bedrock[infiniburn_bit=1] f3; 1 61 0 bedrock[infiniburn_bit=1] f3; 1 61 1 bedrock[infiniburn_bit=1] f3; 1 61 2 bedrock[infiniburn_bit=1] f3; 1 62 3 bedrock[infiniburn_bit=1] f3; 2 61 0 bedrock[infiniburn_bit=1] f3; 2 61 1 bedrock[infiniburn_bit=1] f3; 2 62 2 bedrock[infiniburn_bit=1] f3; 3 62 0 bedrock[infiniburn_bit=1] f3; 3 62 1 bedrock[infiniburn_bit=1] f3; 0 62 0 bedrock[infiniburn_bit=1] f3; 0 63 0 bedrock[infiniburn_bit=1] f3 | extra: 
+   2987 actor   UpdateSubchunkBlocks at 0 48 -16: 0 61 -3 end_stone[] f3; 0 61 -2 bedrock[infiniburn_bit=1] f3; 0 61 -1 bedrock[infiniburn_bit=1] f3; 0 62 -3 bedrock[infiniburn_bit=1] f3; 1 61 -3 end_stone[] f3; 1 61 -2 bedrock[infiniburn_bit=1] f3; 1 61 -1 bedrock[infiniburn_bit=1] f3; 1 62 -3 bedrock[infiniburn_bit=1] f3; 2 61 -1 bedrock[infiniburn_bit=1] f3; 2 62 -2 bedrock[infiniburn_bit=1] f3; 3 62 -1 bedrock[infiniburn_bit=1] f3 | extra: 
+   2987 actor   UpdateSubchunkBlocks at -16 48 0: -3 61 0 end_stone[] f3; -3 61 1 end_stone[] f3; -3 62 0 bedrock[infiniburn_bit=1] f3; -3 62 1 bedrock[infiniburn_bit=1] f3; -2 61 0 bedrock[infiniburn_bit=1] f3; -2 61 1 bedrock[infiniburn_bit=1] f3; -2 62 2 bedrock[infiniburn_bit=1] f3; -1 61 0 bedrock[infiniburn_bit=1] f3; -1 61 1 bedrock[infiniburn_bit=1] f3; -1 61 2 bedrock[infiniburn_bit=1] f3; -1 62 3 bedrock[infiniburn_bit=1] f3 | extra: 
+   2988 actor   .. LevelChunk x10, LocatorBar x1
+   2988 actor   D ender_dragon -0.00366 127.94000 -0.05986 p 85.78 y 357.19 h 357.19
+   3029 actor   .. Subchunk x10, ClientCacheMissResponse x1, LevelChunk x10
+   3029 actor   SetEntityData ender_dragon SetEntityData { runtime_entity_id: 8, metadata: [MetadataDictionaryItem { key: Flags, type: Long, legacy_type: 7, value: Flags(MetadataFlags1(1125917086711808)) }], properties: EntityProperties { ints: [], floats: [] }, tick: 0 }
+   3029 actor   BossEvent BossEvent { target_entity_id: -4294967288, type: ShowBar, title: "entity.ender_dragon.name", filtered_title: "", progress: 1.0, color: Purple, overlay: Progress }
+   3029 actor   D ender_dragon -0.01975 127.77080 -0.22551 p 75.94 y 351.56 h 351.56
+   3082 actor   .. Subchunk x10, LevelChunk x10
+   3082 actor   D ender_dragon -0.05908 127.50223 -0.47893 p 66.09 y 344.53 h 344.53
+   3082 actor   DV ender_dragon -0.02570 -0.14950 -0.14099
+   3130 actor   .. Subchunk x10, LevelChunk x10
+   3130 actor   D ender_dragon -0.13257 127.14323 -0.80302 p 56.25 y 336.09 h 336.09
+   3183 actor   .. Subchunk x10, ClientCacheMissResponse x1, LevelChunk x1
+   3183 actor   D ender_dragon -0.24994 126.70193 -1.18095 p 46.41 y 329.06 h 329.06
+   3231 actor   .. Subchunk x1, ClientCacheMissResponse x1
+   3231 actor   LevelSoundEvent LevelSoundEvent { sound_id: "flap", position: Vec3f { x: -0.1772852, y: 128.95259, z: -0.9743185 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: -4294967288, fire_at_position: None }
+   3232 actor   D ender_dragon -0.41895 126.18576 -1.59606 p 36.56 y 320.62 h 320.62
+   3280 actor   D ender_dragon -0.64493 125.60144 -2.03198 p 25.31 y 312.19 h 312.19
+   3332 actor   .. ClientCacheMissResponse x1
+   3332 actor   D ender_dragon -0.93069 124.95511 -2.47285 p 15.47 y 303.75 h 303.75
+   3332 actor   DV ender_dragon -0.15242 -0.32138 -0.21270
+   3381 actor   D ender_dragon -1.27653 124.25235 -2.90368 p 5.62 y 295.31 h 295.31
+   3433 actor   D ender_dragon -1.68043 123.49824 -3.31062 p 0.00 y 286.88 h 286.88
+   3477 actor   .. NetworkChunkPublisherUpdate x1
+   3477 actor   D ender_dragon -2.13831 122.69740 -3.68116 p 0.00 y 278.44 h 278.44
+   3532 actor   D ender_dragon -2.64430 121.85403 -4.00435 p 0.00 y 270.00 h 270.00
+   3579 actor   D ender_dragon -3.19109 120.97196 -4.27087 p 0.00 y 262.97 h 262.97
+   3627 actor   D ender_dragon -3.77026 120.05468 -4.47338 p 0.00 y 254.53 h 254.53
+   3627 actor   DV ender_dragon -0.28658 -0.44466 -0.08223
+   3683 actor   D ender_dragon -4.37281 119.10535 -4.60687 p 0.00 y 247.50 h 247.50
+   3705 actor   SetEntityData ? SetEntityData { runtime_entity_id: 1, metadata: [MetadataDictionaryItem { key: Flags, type: Long, legacy_type: 7, value: Flags(MetadataFlags1(844476470263808)) }], properties: EntityProperties { ints: [], floats: [] }, tick: 101 }
+   3732 actor   D ender_dragon -4.98981 118.12687 -4.66883 p 0.00 y 240.47 h 240.47
+   3782 actor   D ender_dragon -5.61301 117.12185 -4.65903 p 0.00 y 234.84 h 234.84
+   3831 actor   D ender_dragon -6.23528 116.09268 -4.57915 p 0.00 y 230.62 h 230.62
+   3876 actor   D ender_dragon -6.85081 115.04153 -4.43230 p 0.00 y 226.41 h 226.41
+   3926 actor   LevelSoundEvent LevelSoundEvent { sound_id: "flap", position: Vec3f { x: -6.535269, y: 117.597115, z: -4.5244102 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: -4294967288, fire_at_position: None }
+   3926 actor   D ender_dragon -7.45519 113.97040 -4.22258 p 0.00 y 222.19 h 222.19
+   3926 actor   DV ender_dragon -0.28941 -0.51467 0.11569
+   3984 actor   D ender_dragon -8.04532 112.88106 -3.95466 p 0.00 y 219.38 h 219.38
+   4028 actor   D ender_dragon -8.61930 111.77516 -3.63348 p 0.00 y 216.56 h 216.56
+   4080 actor   BossEvent BossEvent { target_entity_id: -4294967288, type: ShowBar, title: "entity.ender_dragon.name", filtered_title: "", progress: 1.0, color: Purple, overlay: Progress }
+   4080 actor   D ender_dragon -9.17620 110.65419 -3.26401 p 0.00 y 215.16 h 215.16
+   4102 actor   CorrectPlayerMovePrediction CorrectPlayerMovePrediction { prediction_type: Player, position: Vec3f { x: 0.5, y: 87.29767, z: 0.5 }, delta: Vec3f { x: 0.0, y: -0.8259256, z: 0.0 }, rotation: Vec2f { x: 0.0, z: 0.0 }, angular_velocity: None, on_ground: false, tick: 110 }
+   4126 actor   D ender_dragon -9.71588 109.51951 -2.85106 p 0.00 y 213.75 h 213.75
+   4183 actor   D ender_dragon -10.23877 108.37235 -2.39924 p 0.00 y 212.34 h 212.34
+   4232 actor   D ender_dragon -10.74576 107.21384 -1.91282 p 0.00 y 210.94 h 210.94
+   4283 actor   D ender_dragon -11.23797 106.04499 -1.39576 p 0.00 y 210.94 h 210.94
+   4333 actor   D ender_dragon -11.71670 104.86674 -0.85165 p 0.00 y 209.53 h 209.53
+   4379 actor   D ender_dragon -12.18332 103.67992 -0.28376 p 0.00 y 209.53 h 209.53
+   4432 actor   D ender_dragon -12.63917 102.48533 0.30499 p 0.00 y 209.53 h 209.53
+   4476 actor   D ender_dragon -13.08557 101.28365 0.91197 p 0.00 y 209.53 h 209.53
+   4476 actor   DV ender_dragon -0.21448 -0.57407 0.29848
+   4530 actor   D ender_dragon -13.52372 100.07552 1.53487 p 0.00 y 209.53 h 209.53
+   4576 actor   D ender_dragon -13.95474 98.86151 2.17162 p 0.00 y 209.53 h 209.53
+   4627 actor   D ender_dragon -14.37961 97.64217 2.82042 p 0.00 y 209.53 h 209.53
+   4679 actor   LevelSoundEvent LevelSoundEvent { sound_id: "flap", position: Vec3f { x: -14.162318, y: 100.28185, z: 2.483634 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: -4294967288, fire_at_position: None }
+   4679 actor   D ender_dragon -14.79923 96.41798 3.47969 p 0.00 y 209.53 h 209.53
+   4730 actor   D ender_dragon -15.21435 95.19082 4.14804 p 0.00 y 209.53 h 209.53
+   4780 actor   .. NetworkChunkPublisherUpdate x1
+   4780 actor   D ender_dragon -15.62562 93.96518 4.82428 p 0.00 y 209.53 h 209.53
+   4828 actor   D ender_dragon -16.03361 92.74656 5.50735 p 0.00 y 209.53 h 209.53
+   4884 actor   D ender_dragon -16.43877 91.54025 6.19637 p 0.00 y 209.53 h 209.53
+   4934 actor   D ender_dragon -16.84151 90.35132 6.89055 p 0.00 y 209.53 h 209.53
+   4975 actor   D ender_dragon -17.24213 89.18467 7.58924 p 0.00 y 208.12 h 208.12
+   5006 actor   SetEntityData ? SetEntityData { runtime_entity_id: 1, metadata: [MetadataDictionaryItem { key: Flags, type: Long, legacy_type: 7, value: Flags(MetadataFlags1(844459290394624)) }], properties: EntityProperties { ints: [], floats: [] }, tick: 127 }
+   5031 actor   D ender_dragon -17.64092 88.04500 8.29187 p 0.00 y 208.12 h 208.12
+   5081 actor   D ender_dragon -18.03809 86.93682 8.99796 p 0.00 y 208.12 h 208.12
+   5132 actor   .. CurrentStructureFeature x1
+   5132 actor   BossEvent BossEvent { target_entity_id: -4294967288, type: ShowBar, title: "entity.ender_dragon.name", filtered_title: "", progress: 1.0, color: Purple, overlay: Progress }
+   5132 actor   D ender_dragon -18.43383 85.86449 9.70711 p 0.00 y 208.12 h 208.12
+   5175 actor   D ender_dragon -18.82830 84.83221 10.41899 p 0.00 y 208.12 h 208.12
+   5228 actor   D ender_dragon -19.22163 83.84400 11.13334 p 0.00 y 208.12 h 208.12
+   5274 actor   D ender_dragon -19.61394 82.90372 11.84995 p 0.00 y 208.12 h 208.12
+   5329 actor   D ender_dragon -20.00536 82.01511 12.56868 p 0.00 y 208.12 h 208.12
+   5376 actor   D ender_dragon -20.39599 81.18172 13.28943 p 0.00 y 208.12 h 208.12
+   5425 actor   D ender_dragon -20.78596 80.40697 14.01216 p 0.00 y 208.12 h 208.12
+   5425 actor   DV ender_dragon -0.18933 -0.35544 0.35162
+   5479 actor   D ender_dragon -21.17539 79.69417 14.73690 p 0.00 y 208.12 h 208.12
+   5528 actor   LevelSoundEvent LevelSoundEvent { sound_id: "flap", position: Vec3f { x: -20.975292, y: 82.051544, z: 14.363781 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: -4294967288, fire_at_position: None }
+   5528 actor   D ender_dragon -21.56441 79.04642 15.46371 p 0.00 y 208.12 h 208.12
+   5579 actor   D ender_dragon -21.95317 78.46671 16.19270 p 0.00 y 208.12 h 208.12
+   5631 actor   D ender_dragon -22.34182 77.95789 16.92403 p 0.00 y 208.12 h 208.12
+   5678 actor   D ender_dragon -22.73052 77.52263 17.65789 p 0.00 y 208.12 h 208.12
+   5730 actor   D ender_dragon -23.11942 77.16348 18.39448 p 0.00 y 208.12 h 208.12
+   5779 actor   DV ender_dragon -0.18939 -0.15357 0.35927
+   5779 actor   D ender_dragon -23.50864 76.88281 19.13396 p 0.00 y 208.12 h 208.12
+   5830 actor   D ender_dragon -23.89828 76.68286 19.87645 p 0.00 y 208.12 h 208.12
+   5884 actor   D ender_dragon -24.28666 76.56910 20.62281 p 0.00 y 206.72 h 206.72
+   5933 actor   D ender_dragon -24.66928 76.54177 21.37500 p 0.00 y 202.50 h 202.50
+   5975 actor   D ender_dragon -25.03993 76.59364 22.13504 p 0.00 y 198.28 h 198.28
+   6033 actor   D ender_dragon -25.39137 76.71766 22.90447 p 0.00 y 194.06 h 194.06
+   6033 actor   DV ender_dragon -0.16567 0.07470 0.37699
+   6077 actor   D ender_dragon -25.68409 76.88400 23.60345 p 0.00 y 188.44 h 188.44
+   6129 actor   D ender_dragon -25.97391 77.13188 24.39244 p 0.00 y 182.81 h 182.81
+   6183 actor   BossEvent BossEvent { target_entity_id: -4294967288, type: ShowBar, title: "entity.ender_dragon.name", filtered_title: "", progress: 1.0, color: Purple, overlay: Progress }
+   6183 actor   D ender_dragon -26.22167 77.43203 25.18931 p 0.00 y 175.78 h 175.78
+   6226 actor   .. SyncWorldClocks x1
+   6226 actor   D ender_dragon -26.42059 77.77829 25.99123 p 0.00 y 168.75 h 168.75
+   6281 actor   D ender_dragon -26.56477 78.16482 26.79434 p 0.00 y 163.12 h 163.12
+   6333 actor   D ender_dragon -26.64935 78.58607 27.59393 p 0.00 y 156.09 h 156.09
+   6382 actor   D ender_dragon -26.67090 79.03684 28.38467 p 0.00 y 150.47 h 150.47
+   6382 actor   DV ender_dragon 0.00469 0.22091 0.38075
+   6426 actor   D ender_dragon -26.62754 79.51221 29.16104 p 0.00 y 144.84 h 144.84
+   6483 actor   D ender_dragon -26.51899 80.00757 29.91773 p 0.00 y 139.22 h 139.22
+   6525 actor   D ender_dragon -26.34640 80.51863 30.65001 p 0.00 y 133.59 h 133.59
+   6579 actor   D ender_dragon -26.11207 81.04139 31.35393 p 0.00 y 129.38 h 129.38
+   6633 actor   D ender_dragon -25.81916 81.57210 32.02641 p 0.00 y 125.16 h 125.16
+   6676 actor   D ender_dragon -25.47139 82.10728 32.66534 p 0.00 y 120.94 h 120.94
+   6730 actor   D ender_dragon -25.07281 82.64368 33.26945 p 0.00 y 116.72 h 116.72
+   6730 actor   DV ender_dragon 0.20465 0.25550 0.28453
+   6782 actor   LevelSoundEvent LevelSoundEvent { sound_id: "flap", position: Vec3f { x: -25.290438, y: 84.362915, z: 32.966873 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: -4294967288, fire_at_position: None }
+   6782 actor   D ender_dragon -24.62758 83.17829 33.83830 p 0.00 y 113.91 h 113.91
+   6833 actor   D ender_dragon -24.13981 83.70831 34.37208 p 0.00 y 111.09 h 111.09
+   6876 actor   D ender_dragon -23.61346 84.23109 34.87154 p 0.00 y 109.69 h 109.69
+   6928 actor   D ender_dragon -23.05226 84.74422 35.33784 p 0.00 y 106.88 h 106.88
+   6982 actor   D ender_dragon -22.45969 85.24541 35.77245 p 0.00 y 105.47 h 105.47
+   7027 actor   D ender_dragon -21.83891 85.73254 36.17706 p 0.00 y 104.06 h 104.06
+   7075 actor   D ender_dragon -21.19281 86.20366 36.55345 p 0.00 y 102.66 h 102.66
+   7126 actor   D ender_dragon -20.52402 86.65690 36.90348 p 0.00 y 101.25 h 101.25
+   7183 actor   BossEvent BossEvent { target_entity_id: -4294967288, type: ShowBar, title: "entity.ender_dragon.name", filtered_title: "", progress: 1.0, color: Purple, overlay: Progress }
+   7183 actor   D ender_dragon -19.83485 87.09055 37.22897 p 0.00 y 101.25 h 101.25
+   7233 actor   D ender_dragon -19.12743 87.50300 37.53173 p 0.00 y 99.84 h 99.84
+   7233 actor   DV ender_dragon 0.34803 0.19153 0.14203
+   7282 actor   UpdateAttributes ? minecraft:movement=0.1/340282350000000000000000000000000000000 minecraft:underwater_movement=0.02/340282350000000000000000000000000000000 minecraft:lava_movement=0.02/340282350000000000000000000000000000000 minecraft:health=20/20 minecraft:player.hunger=20/20
+   7282 actor   D ender_dragon -18.40361 87.89276 37.81347 p 0.00 y 99.84 h 99.84
+   7329 actor   D ender_dragon -17.66507 88.25844 38.07579 p 0.00 y 98.44 h 98.44
+   7375 actor   D ender_dragon -16.91328 88.59875 38.32019 p 0.00 y 98.44 h 98.44
+   7432 actor   D ender_dragon -16.14957 88.91248 38.54803 p 0.00 y 97.03 h 97.03
+   7474 actor   D ender_dragon -15.37511 89.19853 38.76056 p 0.00 y 97.03 h 97.03
+   7525 actor   D ender_dragon -14.59095 89.45588 38.95889 p 0.00 y 97.03 h 97.03
+   7582 actor   D ender_dragon -13.79804 89.68358 39.14402 p 0.00 y 95.62 h 95.62
+   7625 actor   D ender_dragon -12.99721 89.88077 39.31682 p 0.00 y 95.62 h 95.62
+   7683 actor   D ender_dragon -12.18923 90.04668 39.47804 p 0.00 y 95.62 h 95.62
+   7728 actor   D ender_dragon -11.37480 90.18063 39.62835 p 0.00 y 94.22 h 94.22
+   7780 actor   D ender_dragon -10.55456 90.28201 39.76828 p 0.00 y 94.22 h 94.22
+   7829 actor   D ender_dragon -9.72911 90.35032 39.89830 p 0.00 y 94.22 h 94.22
+   7875 actor   D ender_dragon -8.89913 90.39120 40.01696 p 0.00 y 91.41 h 91.41
+   7875 actor   DV ender_dragon 0.40530 0.01446 0.05474
+   7929 actor   D ender_dragon -8.06524 90.41121 40.12003 p 0.00 y 87.19 h 87.19
+   7979 actor   LevelSoundEvent LevelSoundEvent { sound_id: "mad", position: Vec3f { x: -3.2151322, y: 91.3912, z: 40.21666 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: -4294967288, fire_at_position: None }
+   7979 actor   D ender_dragon -7.22828 90.41262 40.20166 p 0.00 y 82.97 h 82.97
+   8030 actor   D ender_dragon -6.38982 90.39762 40.25532 p 0.00 y 78.75 h 78.75
+   8077 actor   D ender_dragon -5.55240 90.36830 40.27438 p 0.00 y 73.12 h 73.12
+   8129 actor   LevelSoundEvent LevelSoundEvent { sound_id: "flap", position: Vec3f { x: -5.9814515, y: 92.38699, z: 40.274036 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: -4294967288, fire_at_position: None }
+   8129 actor   D ender_dragon -4.71952 90.32662 40.25259 p 0.00 y 67.50 h 67.50
+   8176 actor   D ender_dragon -3.89564 90.27441 40.18443 p 0.00 y 61.88 h 61.88
+   8226 actor   BossEvent BossEvent { target_entity_id: -4294967288, type: ShowBar, title: "entity.ender_dragon.name", filtered_title: "", progress: 1.0, color: Purple, overlay: Progress }
+   8226 actor   D ender_dragon -3.08601 90.21335 40.06538 p 0.00 y 54.84 h 54.84
+   8276 actor   D ender_dragon -2.29656 90.14499 39.89200 p 0.00 y 49.22 h 49.22
+   8326 actor   D ender_dragon -1.53365 90.07074 39.66212 p 0.00 y 42.19 h 42.19
+   8384 actor   D ender_dragon -0.80394 89.99187 39.37480 p 0.00 y 35.16 h 35.16
+   8384 actor   DV ender_dragon 0.34563 -0.03850 -0.15305
+   8425 actor   D ender_dragon -0.11421 89.90951 39.03040 p 0.00 y 29.53 h 29.53
+   8479 actor   D ender_dragon 0.52881 89.82469 38.63052 p 0.00 y 22.50 h 22.50
+   8531 actor   D ender_dragon 1.11862 89.73831 38.17797 p 0.00 y 15.47 h 15.47
+   8579 actor   D ender_dragon 1.64904 89.65116 37.67672 p 0.00 y 8.44 h 8.44
+   8624 actor   D ender_dragon 2.11439 89.56395 37.13178 p 0.00 y 1.41 h 1.41
+   8683 actor   D ender_dragon 2.50958 89.47727 36.54918 p 0.00 y 355.78 h 355.78
+   8683 actor   DV ender_dragon 0.17450 -0.04112 -0.29046
+   8729 actor   D ender_dragon 2.83027 89.39165 35.93580 p 0.00 y 348.75 h 348.75
+   8779 actor   D ender_dragon 3.07294 89.30755 35.29932 p 0.00 y 341.72 h 341.72
+   8832 actor   D ender_dragon 3.23503 89.22533 34.64808 p 0.00 y 334.69 h 334.69
+   8882 actor   D ender_dragon 3.31498 89.14534 33.99092 p 0.00 y 326.25 h 326.25
+   8933 actor   D ender_dragon 3.31249 89.06784 33.33696 p 0.00 y 319.22 h 319.22
+   8983 actor   D ender_dragon 3.22877 88.99305 32.69511 p 0.00 y 312.19 h 312.19
+   8984 actor   DV ender_dragon -0.05940 -0.03500 -0.30713
+   9032 actor   D ender_dragon 3.06659 88.92116 32.07352 p 0.00 y 306.56 h 306.56
+   9074 actor   D ender_dragon 2.83003 88.85231 31.47913 p 0.00 y 300.94 h 300.94
+   9127 actor   .. CurrentStructureFeature x1
+   9127 actor   D ender_dragon 2.52416 88.78662 30.91743 p 0.00 y 295.31 h 295.31
+   9183 actor   D ender_dragon 2.15461 88.72418 30.39237 p 0.00 y 291.09 h 291.09
+   9231 actor   LevelSoundEvent LevelSoundEvent { sound_id: "flap", position: Vec3f { x: 2.3601823, y: 90.75606, z: 30.653305 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: -4294967288, fire_at_position: None }
+   9231 actor   BossEvent BossEvent { target_entity_id: -4294967288, type: ShowBar, title: "entity.ender_dragon.name", filtered_title: "", progress: 1.0, color: Purple, overlay: Progress }
+   9231 actor   D ender_dragon 1.72722 88.66506 29.90645 p 0.00 y 286.88 h 286.88
+   9284 actor   D ender_dragon 1.24781 88.60930 29.46087 p 0.00 y 284.06 h 284.06
+   9284 actor   DV ender_dragon -0.24438 -0.02580 -0.20677
+   9327 actor   D ender_dragon 0.72192 88.55692 29.05573 p 0.00 y 279.84 h 279.84
+   9383 actor   D ender_dragon 0.15472 88.50794 28.69026 p 0.00 y 278.44 h 278.44
+   9435 actor   D ender_dragon -0.44903 88.46237 28.36303 p 0.00 y 275.62 h 275.62
+   9482 actor   D ender_dragon -1.08504 88.42018 28.07212 p 0.00 y 274.22 h 274.22
+   9530 actor   D ender_dragon -1.74947 88.38136 27.81530 p 0.00 y 272.81 h 272.81
+   9583 actor   D ender_dragon -2.43889 88.34586 27.59016 p 0.00 y 271.41 h 271.41
+   9634 actor   D ender_dragon -3.15027 88.31367 27.39423 p 0.00 y 271.41 h 271.41
+   9674 actor   D ender_dragon -3.88090 88.28473 27.22503 p 0.00 y 270.00 h 270.00
+   9732 actor   D ender_dragon -4.62841 88.25898 27.08017 p 0.00 y 270.00 h 270.00
+   9778 actor   D ender_dragon -5.39071 88.23637 26.95735 p 0.00 y 270.00 h 270.00
+   9778 actor   DV ender_dragon -0.37448 -0.01007 -0.05483
+   9828 actor   D ender_dragon -6.16594 88.21683 26.85446 p 0.00 y 268.59 h 268.59
+   9882 actor   D ender_dragon -6.95247 88.20029 26.76951 p 0.00 y 268.59 h 268.59
+   9926 actor   D ender_dragon -7.74887 88.18668 26.70071 p 0.00 y 268.59 h 268.59
+   9984 actor   D ender_dragon -8.55385 88.17593 26.64646 p 0.00 y 268.59 h 268.59
+  10032 actor   D ender_dragon -9.36632 88.16794 26.60530 p 0.00 y 267.19 h 267.19
+  10078 actor   D ender_dragon -10.18530 88.16262 26.57595 p 0.00 y 267.19 h 267.19
+  10134 actor   D ender_dragon -11.00991 88.15988 26.55728 p 0.00 y 267.19 h 267.19
+  10178 actor   D ender_dragon -11.83941 88.15963 26.54831 p 0.00 y 267.19 h 267.19
+  10230 actor   D ender_dragon -12.67314 88.16174 26.54817 p 0.00 y 267.19 h 267.19
+  10284 actor   BossEvent BossEvent { target_entity_id: -4294967288, type: ShowBar, title: "entity.ender_dragon.name", filtered_title: "", progress: 1.0, color: Purple, overlay: Progress }
+  10284 actor   D ender_dragon -13.51052 88.16612 26.55613 p 0.00 y 267.19 h 267.19
+  10326 actor   D ender_dragon -14.35103 88.17264 26.57155 p 0.00 y 265.78 h 265.78
+  10375 actor   LevelSoundEvent LevelSoundEvent { sound_id: "flap", position: Vec3f { x: -13.919249, y: 90.16872, z: 26.56185 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: -4294967288, fire_at_position: None }
+  10375 actor   D ender_dragon -15.19423 88.18117 26.59388 p 0.00 y 265.78 h 265.78
+  10432 actor   D ender_dragon -16.03972 88.19157 26.62267 p 0.00 y 265.78 h 265.78
+  10484 actor   D ender_dragon -16.88717 88.20370 26.65753 p 0.00 y 265.78 h 265.78
+  10533 actor   D ender_dragon -17.73627 88.21738 26.69814 p 0.00 y 265.78 h 265.78
+  10580 actor   D ender_dragon -18.58676 88.23246 26.74422 p 0.00 y 265.78 h 265.78
+  10633 actor   D ender_dragon -19.43828 88.23125 26.79357 p 0.00 y 267.19 h 267.19
+  10676 actor   D ender_dragon -20.29069 88.19997 26.84091 p 0.00 y 270.00 h 270.00
+  10728 actor   D ender_dragon -21.14397 88.14277 26.87931 p 0.00 y 274.22 h 274.22
+  10775 actor   D ender_dragon -21.99742 88.06352 26.90108 p 0.00 y 278.44 h 278.44
+  10845 actor   D ender_dragon -22.84941 87.96584 26.89841 p 0.00 y 284.06 h 284.06
+  10880 actor   D ender_dragon -23.69726 87.85304 26.86384 p 0.00 y 289.69 h 289.69
+  10925 actor   D ender_dragon -24.53724 87.72813 26.79066 p 0.00 y 295.31 h 295.31
+  10982 actor   D ender_dragon -25.36472 87.59383 26.67315 p 0.00 y 300.94 h 300.94
+  11033 actor   D ender_dragon -26.17428 87.45257 26.50672 p 0.00 y 307.97 h 307.97
+  11075 actor   D ender_dragon -26.95993 87.30649 26.28805 p 0.00 y 313.59 h 313.59
+  11127 actor   D ender_dragon -27.71528 87.15749 26.01514 p 0.00 y 320.62 h 320.62
+  11182 actor   D ender_dragon -28.43375 87.00721 25.68730 p 0.00 y 327.66 h 327.66
+  11233 actor   D ender_dragon -29.10870 86.85709 25.30515 p 0.00 y 334.69 h 334.69
+  11277 actor   D ender_dragon -29.73362 86.70836 24.87056 p 0.00 y 340.31 h 340.31
+  11329 actor   BossEvent BossEvent { target_entity_id: -4294967288, type: ShowBar, title: "entity.ender_dragon.name", filtered_title: "", progress: 1.0, color: Purple, overlay: Progress }
+  11329 actor   D ender_dragon -30.30225 86.56204 24.38659 p 0.00 y 347.34 h 347.34
+  11329 actor   DV ender_dragon -0.26179 -0.06906 -0.24586
+  11382 actor   D ender_dragon -30.80875 86.41901 23.85743 p 0.00 y 354.38 h 354.38
+  11431 actor   D ender_dragon -31.24777 86.27998 23.28833 p 0.00 y 0.00 h 0.00
+  11476 actor   D ender_dragon -31.61465 86.14556 22.68548 p 0.00 y 7.03 h 7.03
+  11532 actor   D ender_dragon -31.90543 86.01620 22.05591 p 0.00 y 14.06 h 14.06
+  11579 actor   LevelSoundEvent LevelSoundEvent { sound_id: "flap", position: Vec3f { x: -31.774982, y: 88.08263, z: 22.38618 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: -4294967288, fire_at_position: None }
+  11579 actor   D ender_dragon -32.11706 85.89229 21.40740 p 0.00 y 21.09 h 21.09
+  11626 actor   D ender_dragon -32.24741 85.77409 20.74834 p 0.00 y 28.12 h 28.12
+  11626 actor   DV ender_dragon -0.04389 -0.05499 -0.32077
+  11678 actor   D ender_dragon -32.29543 85.66183 20.08759 p 0.00 y 36.56 h 36.56
+  11725 actor   D ender_dragon -32.26112 85.55563 19.43433 p 0.00 y 43.59 h 43.59
+  11782 actor   D ender_dragon -32.14578 85.45556 18.79783 p 0.00 y 50.62 h 50.62
+  11827 actor   D ender_dragon -31.95208 85.36167 18.18698 p 0.00 y 57.66 h 57.66
+  11883 actor   D ender_dragon -31.68414 85.27394 17.60971 p 0.00 y 64.69 h 64.69
+  11930 actor   D ender_dragon -31.34723 85.19233 17.07254 p 0.00 y 70.31 h 70.31
+  11930 actor   DV ender_dragon 0.17882 -0.03750 -0.25026
+  11976 actor   D ender_dragon -30.94740 85.11677 16.58034 p 0.00 y 75.94 h 75.94
+  12033 actor   D ender_dragon -30.49101 85.04716 16.13630 p 0.00 y 80.16 h 80.16
+  12079 actor   D ender_dragon -29.98442 84.98339 15.74207 p 0.00 y 84.38 h 84.38
+  12125 actor   D ender_dragon -29.43371 84.92533 15.39794 p 0.00 y 88.59 h 88.59
+  12175 actor   D ender_dragon -28.84449 84.87283 15.10310 p 0.00 y 91.41 h 91.41
+  12226 actor   D ender_dragon -28.22185 84.82575 14.85590 p 0.00 y 92.81 h 92.81
+  12279 actor   D ender_dragon -27.57027 84.78393 14.65406 p 0.00 y 95.62 h 95.62
+  12279 actor   DV ender_dragon 0.32311 -0.01875 -0.08770
+  12327 actor   BossEvent BossEvent { target_entity_id: -4294967288, type: ShowBar, title: "entity.ender_dragon.name", filtered_title: "", progress: 1.0, color: Purple, overlay: Progress }
+  12328 actor   D ender_dragon -26.89371 84.74719 14.49487 p 0.00 y 97.03 h 97.03
+  12384 actor   D ender_dragon -26.19560 84.71537 14.37540 p 0.00 y 98.44 h 98.44
+  12426 actor   D ender_dragon -25.47889 84.68829 14.29255 p 0.00 y 99.84 h 99.84
+  12476 actor   D ender_dragon -24.74613 84.66577 14.24325 p 0.00 y 101.25 h 101.25
+  12528 actor   D ender_dragon -23.99952 84.64763 14.22449 p 0.00 y 101.25 h 101.25
+  12582 actor   D ender_dragon -23.24096 84.63368 14.23336 p 0.00 y 102.66 h 102.66
+  12629 actor   LevelSoundEvent LevelSoundEvent { sound_id: "flap", position: Vec3f { x: -23.63302, y: 86.63997, z: 14.222243 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: -4294967288, fire_at_position: None }
+  12630 actor   D ender_dragon -22.47209 84.62374 14.26716 p 0.00 y 102.66 h 102.66
+  12678 actor   D ender_dragon -21.69431 84.61761 14.32336 p 0.00 y 102.66 h 102.66
+  12726 actor   D ender_dragon -20.90886 84.61511 14.39964 p 0.00 y 102.66 h 102.66
+  12780 actor   D ender_dragon -20.11680 84.61604 14.49391 p 0.00 y 104.06 h 104.06
+  12830 actor   D ender_dragon -19.31908 84.62022 14.60426 p 0.00 y 104.06 h 104.06
+  12883 actor   D ender_dragon -18.51650 84.62743 14.72901 p 0.00 y 104.06 h 104.06
+  12927 actor   D ender_dragon -17.70979 84.63746 14.86667 p 0.00 y 104.06 h 104.06
+  12982 actor   D ender_dragon -16.89957 84.65012 15.01591 p 0.00 y 104.06 h 104.06
+  13027 actor   D ender_dragon -16.08638 84.66521 15.17560 p 0.00 y 104.06 h 104.06
+  13079 actor   D ender_dragon -15.27072 84.68250 15.34472 p 0.00 y 105.47 h 105.47
+  13128 actor   .. CurrentStructureFeature x1
+  13128 actor   D ender_dragon -14.45300 84.70177 15.52240 p 0.00 y 105.47 h 105.47
+  13183 actor   D ender_dragon -13.63361 84.72280 15.70790 p 0.00 y 105.47 h 105.47
+  13230 actor   D ender_dragon -12.81288 84.74535 15.90058 p 0.00 y 105.47 h 105.47
+  13230 actor   DV ender_dragon 0.40011 0.01107 0.09550
+  13283 actor   D ender_dragon -11.99110 84.76918 16.09989 p 0.00 y 105.47 h 105.47
+  13334 actor   BossEvent BossEvent { target_entity_id: -4294967288, type: ShowBar, title: "entity.ender_dragon.name", filtered_title: "", progress: 1.0, color: Purple, overlay: Progress }
+  13334 actor   D ender_dragon -11.16854 84.79404 16.30536 p 0.00 y 105.47 h 105.47
+  13378 actor   D ender_dragon -10.34542 84.81965 16.51660 p 0.00 y 105.47 h 105.47
+  13430 actor   D ender_dragon -9.52196 84.84573 16.73329 p 0.00 y 106.88 h 106.88
+  13482 actor   D ender_dragon -8.69834 84.87196 16.95516 p 0.00 y 106.88 h 106.88
+  13533 actor   D ender_dragon -7.87420 84.87410 17.18013 p 0.00 y 105.47 h 105.47
+  13585 actor   D ender_dragon -7.04842 84.83200 17.40328 p 0.00 y 102.66 h 102.66
+  13632 actor   D ender_dragon -6.21979 84.74911 17.61814 p 0.00 y 98.44 h 98.44
+  13682 actor   D ender_dragon -5.38754 84.62879 17.81760 p 0.00 y 94.22 h 94.22
+  13727 actor   D ender_dragon -4.55167 84.47433 17.99461 p 0.00 y 90.00 h 90.00
+  13781 actor   D ender_dragon -3.71306 84.28890 18.14269 p 0.00 y 84.38 h 84.38
+  13825 actor   D ender_dragon -2.87332 84.07561 18.25631 p 0.00 y 80.16 h 80.16
+  13883 actor   LevelSoundEvent LevelSoundEvent { sound_id: "flap", position: Vec3f { x: -3.3044043, y: 86.19388, z: 18.207207 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: -4294967288, fire_at_position: None }
+  13883 actor   D ender_dragon -2.03461 83.83747 18.33104 p 0.00 y 75.94 h 75.94
+  13932 actor   D ender_dragon -1.19937 83.57737 18.36370 p 0.00 y 71.72 h 71.72
+  13979 actor   D ender_dragon -0.37011 83.29810 18.35227 p 0.00 y 67.50 h 67.50
+  14032 actor   D ender_dragon 0.45081 83.00237 18.29581 p 0.00 y 64.69 h 64.69
+  14032 actor   DV ender_dragon 0.39674 -0.14435 -0.03813
+  14077 actor   D ender_dragon 1.26128 82.69275 18.19431 p 0.00 y 60.47 h 60.47
+  14131 actor   D ender_dragon 2.05954 82.37176 18.04848 p 0.00 y 57.66 h 57.66
+  14177 actor   D ender_dragon 2.84420 82.04179 17.85966 p 0.00 y 54.84 h 54.84
+  14232 actor   D ender_dragon 3.61427 81.70514 17.62960 p 0.00 y 52.03 h 52.03
+  14283 actor   D ender_dragon 4.36908 81.36404 17.36032 p 0.00 y 50.62 h 50.62
+  14325 actor   D ender_dragon 5.10828 81.02064 17.05405 p 0.00 y 49.22 h 49.22
+  14376 actor   BossEvent BossEvent { target_entity_id: -4294967288, type: ShowBar, title: "entity.ender_dragon.name", filtered_title: "", progress: 1.0, color: Purple, overlay: Progress }
+  14376 actor   D ender_dragon 5.83181 80.67698 16.71310 p 0.00 y 46.41 h 46.41
+  14433 actor   D ender_dragon 6.53978 80.33504 16.33980 p 0.00 y 45.00 h 45.00
+  14480 actor   D ender_dragon 7.23249 79.99675 15.93641 p 0.00 y 43.59 h 43.59
+  14527 actor   D ender_dragon 7.91038 79.66393 15.50517 p 0.00 y 42.19 h 42.19
+  14577 actor   D ender_dragon 8.57395 79.33837 15.04817 p 0.00 y 42.19 h 42.19
+  14577 actor   DV ender_dragon 0.31944 -0.15328 -0.22815
+  14627 actor   D ender_dragon 9.22376 79.02178 14.56740 p 0.00 y 40.78 h 40.78
+  14685 actor   D ender_dragon 9.86041 78.71584 14.06471 p 0.00 y 39.38 h 39.38
+  14730 actor   D ender_dragon 10.48449 78.42213 13.54181 p 0.00 y 39.38 h 39.38
+  14777 actor   D ender_dragon 11.09659 78.14224 13.00028 p 0.00 y 37.97 h 37.97
+  14829 actor   D ender_dragon 11.69726 77.87768 12.44155 p 0.00 y 37.97 h 37.97
+  14882 actor   D ender_dragon 12.28703 77.62991 11.86692 p 0.00 y 36.56 h 36.56
+  14930 actor   D ender_dragon 12.86637 77.40038 11.27756 p 0.00 y 36.56 h 36.56
+  14982 actor   D ender_dragon 13.43571 77.19049 10.67454 p 0.00 y 35.16 h 35.16
+  15030 actor   LevelSoundEvent LevelSoundEvent { sound_id: "flap", position: Vec3f { x: 13.146006, y: 79.29533, z: 10.98727 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: -4294967288, fire_at_position: None }
+  15030 actor   D ender_dragon 13.99543 77.00161 10.05881 p 0.00 y 35.16 h 35.16
+  15083 actor   D ender_dragon 14.54584 76.83508 9.43120 p 0.00 y 33.75 h 33.75
+  15130 actor   D ender_dragon 15.08719 76.69221 8.79246 p 0.00 y 33.75 h 33.75
+  15177 actor   D ender_dragon 15.61967 76.57431 8.14326 p 0.00 y 32.34 h 32.34
+  15228 actor   D ender_dragon 16.14482 76.53357 7.48513 p 0.00 y 33.75 h 33.75
+  15283 actor   D ender_dragon 16.66634 76.61110 6.82099 p 0.00 y 35.16 h 35.16
+  15283 actor   DV ender_dragon 0.25363 0.06257 -0.32446
+  15326 actor   D ender_dragon 17.18879 76.79625 6.15486 p 0.00 y 37.97 h 37.97
+  15375 actor   BossEvent BossEvent { target_entity_id: -4294967288, type: ShowBar, title: "entity.ender_dragon.name", filtered_title: "", progress: 1.0, color: Purple, overlay: Progress }
+  15376 actor   D ender_dragon 17.71684 77.07933 5.49149 p 0.00 y 42.19 h 42.19
+  15433 actor   D ender_dragon 18.25476 77.45154 4.83592 p 0.00 y 46.41 h 46.41
+  15474 actor   D ender_dragon 18.80608 77.90485 4.19326 p 0.00 y 49.22 h 49.22
+  15526 actor   D ender_dragon 19.37352 78.43196 3.56830 p 0.00 y 53.44 h 53.44
+  15526 actor   DV ender_dragon 0.27985 0.26714 -0.29901
+  15578 actor   D ender_dragon 19.95892 79.02623 2.96542 p 0.00 y 57.66 h 57.66
+  15629 actor   D ender_dragon 20.56329 79.68162 2.38836 p 0.00 y 60.47 h 60.47
+  15679 actor   D ender_dragon 21.18699 80.39262 1.84018 p 0.00 y 64.69 h 64.69
+  15731 actor   D ender_dragon 21.82979 81.15423 1.32327 p 0.00 y 67.50 h 67.50
+  15775 actor   D ender_dragon 22.49105 81.96189 0.83931 p 0.00 y 70.31 h 70.31
+  15828 actor   D ender_dragon 23.16980 82.81147 0.38941 p 0.00 y 73.12 h 73.12
+  15882 actor   D ender_dragon 23.86488 83.69918 -0.02590 p 0.00 y 75.94 h 75.94
+  15882 actor   DV ender_dragon 0.34096 0.43121 -0.19333
+  15934 actor   D ender_dragon 24.57502 84.62160 -0.40652 p 0.00 y 78.75 h 78.75
+  15983 actor   D ender_dragon 25.29886 85.57561 -0.75271 p 0.00 y 80.16 h 80.16
+  16030 actor   D ender_dragon 26.03508 86.55835 -1.06503 p 0.00 y 82.97 h 82.97
+  16078 actor   D ender_dragon 26.78235 87.56725 -1.34423 p 0.00 y 84.38 h 84.38
+  16126 actor   D ender_dragon 27.53940 88.59995 -1.59123 p 0.00 y 85.78 h 85.78
+  16176 actor   D ender_dragon 28.30505 89.65430 -1.80699 p 0.00 y 88.59 h 88.59
+  16226 actor   D ender_dragon 29.07815 90.72836 -1.99255 p 0.00 y 90.00 h 90.00
+  16275 actor   D ender_dragon 29.85764 91.82035 -2.14889 p 0.00 y 91.41 h 91.41
+  16330 actor   D ender_dragon 30.64253 92.92867 -2.27698 p 0.00 y 92.81 h 92.81
+  16379 actor   D ender_dragon 31.43188 94.05183 -2.37771 p 0.00 y 94.22 h 94.22
+  16425 actor   BossEvent BossEvent { target_entity_id: -4294967288, type: ShowBar, title: "entity.ender_dragon.name", filtered_title: "", progress: 1.0, color: Purple, overlay: Progress }
+  16425 actor   D ender_dragon 32.22480 95.18851 -2.45186 p 0.00 y 95.62 h 95.62
+  16425 actor   DV ender_dragon 0.38550 0.54449 -0.02980
+  16480 actor   LevelSoundEvent LevelSoundEvent { sound_id: "flap", position: Vec3f { x: 31.815838, y: 96.59018, z: -2.4202423 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: -4294967288, fire_at_position: None }
+  16480 actor   D ender_dragon 33.02045 96.33749 -2.50008 p 0.00 y 97.03 h 97.03
+  16527 actor   D ender_dragon 33.81799 97.49767 -2.52289 p 0.00 y 99.84 h 99.84
+  16576 actor   D ender_dragon 34.61659 98.66802 -2.52062 p 0.00 y 101.25 h 101.25
+  16633 actor   D ender_dragon 35.41541 99.84765 -2.49338 p 0.00 y 102.66 h 102.66
+  16678 actor   D ender_dragon 36.21354 101.03571 -2.44104 p 0.00 y 104.06 h 104.06
+  16729 actor   D ender_dragon 37.00996 102.23144 -2.36316 p 0.00 y 106.88 h 106.88
+  16774 actor   D ender_dragon 37.80344 103.43415 -2.25886 p 0.00 y 109.69 h 109.69
+  16825 actor   D ender_dragon 38.59247 104.64323 -2.12672 p 0.00 y 112.50 h 112.50
+  16879 actor   D ender_dragon 39.37493 105.85809 -1.96453 p 0.00 y 115.31 h 115.31
+  16928 actor   D ender_dragon 40.14783 107.07821 -1.76911 p 0.00 y 120.94 h 120.94
+  16978 actor   D ender_dragon 40.90720 108.30312 -1.53681 p 0.00 y 125.16 h 125.16
+  17030 actor   D ender_dragon 41.64813 109.53238 -1.26414 p 0.00 y 130.78 h 130.78
+  17078 actor   D ender_dragon 42.36499 110.76561 -0.94828 p 0.00 y 137.81 h 137.81
+  17078 actor   DV ender_dragon 0.34125 0.58842 0.16359
+  17131 actor   .. CurrentStructureFeature x1
+  17131 actor   D ender_dragon 43.05160 112.00246 -0.58737 p 0.00 y 143.44 h 143.44
+  17175 actor   D ender_dragon 43.70146 113.24258 -0.18070 p 0.00 y 150.47 h 150.47
+  17229 actor   D ender_dragon 44.30793 114.48570 0.27114 p 0.00 y 156.09 h 156.09
+  17276 actor   D ender_dragon 44.86465 115.61154 0.76690 p 0.00 y 163.12 h 163.12
+  17325 actor   D ender_dragon 45.36532 116.52145 1.30393 p 0.00 y 170.16 h 170.16
+  17325 actor   DV ender_dragon 0.22854 0.38671 0.26925
+  17376 actor   D ender_dragon 45.80407 117.23487 1.87811 p 0.00 y 177.19 h 177.19
+## !where at 17403
+## at Some([0.5, 66.0, 0.5]) dimension 2
+## !entities at 17404
+## entities: 1
+##   minecraft:ender_dragon 8 at 45.804 117.235 1.878 yaw 177.2 health Some(200.0)
+## !spikes at 17406
+## top 42 0: 87 obsidian[]; 86 obsidian[]; 85 obsidian[]
+## top 33 24: 102 obsidian[]; 101 obsidian[]; 100 obsidian[]
+## top 12 39: 84 obsidian[]; 83 obsidian[]; 82 obsidian[]
+## top -12 39: 82 iron_bars[minecraft:connection_east=1,minecraft:connection_north=1,minecraft:connection_south=1,minecraft:connection_west=1]; 78 obsidian[]; 77 obsidian[]
+## top -33 24: 85 iron_bars[minecraft:connection_east=1,minecraft:connection_north=1,minecraft:connection_south=1,minecraft:connection_west=1]; 81 obsidian[]; 80 obsidian[]
+## top -42 0: 93 obsidian[]; 92 obsidian[]; 91 obsidian[]
+## top -33 -24: 96 obsidian[]; 95 obsidian[]; 94 obsidian[]
+## top -12 -39: 75 obsidian[]; 74 obsidian[]; 73 obsidian[]
+## top 12 -39: 90 obsidian[]; 89 obsidian[]; 88 obsidian[]
+## top 33 -24: 99 obsidian[]; 98 obsidian[]; 97 obsidian[]
+## !box -4 58 -4 4 67 4 at 17407
+## box y 58: -4 -4 end_stone[]; -3 -4 end_stone[]; -2 -4 end_stone[]; -1 -4 end_stone[]; 0 -4 end_stone[]; 1 -4 end_stone[]; 2 -4 end_stone[]; 3 -4 end_stone[]; 4 -4 end_stone[]; -4 -3 end_stone[]; -3 -3 end_stone[]; -2 -3 end_stone[]; -1 -3 end_stone[]; 0 -3 end_stone[]; 1 -3 end_stone[]; 2 -3 end_stone[]; 3 -3 end_stone[]; 4 -3 end_stone[]; -4 -2 end_stone[]; -3 -2 end_stone[]; -2 -2 end_stone[]; -1 -2 end_stone[]; 0 -2 end_stone[]; 1 -2 end_stone[]; 2 -2 end_stone[]; 3 -2 end_stone[]; 4 -2 end_stone[]; -4 -1 end_stone[]; -3 -1 end_stone[]; -2 -1 end_stone[]; -1 -1 end_stone[]; 0 -1 end_stone[]; 1 -1 end_stone[]; 2 -1 end_stone[]; 3 -1 end_stone[]; 4 -1 end_stone[]; -4 0 end_stone[]; -3 0 end_stone[]; -2 0 end_stone[]; -1 0 end_stone[]; 0 0 end_stone[]; 1 0 end_stone[]; 2 0 end_stone[]; 3 0 end_stone[]; 4 0 end_stone[]; -4 1 end_stone[]; -3 1 end_stone[]; -2 1 end_stone[]; -1 1 end_stone[]; 0 1 end_stone[]; 1 1 end_stone[]; 2 1 end_stone[]; 3 1 end_stone[]; 4 1 end_stone[]; -4 2 end_stone[]; -3 2 end_stone[]; -2 2 end_stone[]; -1 2 end_stone[]; 0 2 end_stone[]; 1 2 end_stone[]; 2 2 end_stone[]; 3 2 end_stone[]; 4 2 end_stone[]; -4 3 end_stone[]; -3 3 end_stone[]; -2 3 end_stone[]; -1 3 end_stone[]; 0 3 end_stone[]; 1 3 end_stone[]; 2 3 end_stone[]; 3 3 end_stone[]; 4 3 end_stone[]; -4 4 end_stone[]; -3 4 end_stone[]; -2 4 end_stone[]; -1 4 end_stone[]; 0 4 end_stone[]; 1 4 end_stone[]; 2 4 end_stone[]; 3 4 end_stone[]; 4 4 end_stone[]
+## box y 59: -4 -4 end_stone[]; -3 -4 end_stone[]; -2 -4 end_stone[]; -1 -4 end_stone[]; 0 -4 end_stone[]; 1 -4 end_stone[]; 2 -4 end_stone[]; 3 -4 end_stone[]; 4 -4 end_stone[]; -4 -3 end_stone[]; -3 -3 end_stone[]; -2 -3 end_stone[]; -1 -3 end_stone[]; 0 -3 end_stone[]; 1 -3 end_stone[]; 2 -3 end_stone[]; 3 -3 end_stone[]; 4 -3 end_stone[]; -4 -2 end_stone[]; -3 -2 end_stone[]; -2 -2 end_stone[]; -1 -2 end_stone[]; 0 -2 end_stone[]; 1 -2 end_stone[]; 2 -2 end_stone[]; 3 -2 end_stone[]; 4 -2 end_stone[]; -4 -1 end_stone[]; -3 -1 end_stone[]; -2 -1 end_stone[]; -1 -1 end_stone[]; 0 -1 end_stone[]; 1 -1 end_stone[]; 2 -1 end_stone[]; 3 -1 end_stone[]; 4 -1 end_stone[]; -4 0 end_stone[]; -3 0 end_stone[]; -2 0 end_stone[]; -1 0 end_stone[]; 0 0 end_stone[]; 1 0 end_stone[]; 2 0 end_stone[]; 3 0 end_stone[]; 4 0 end_stone[]; -4 1 end_stone[]; -3 1 end_stone[]; -2 1 end_stone[]; -1 1 end_stone[]; 0 1 end_stone[]; 1 1 end_stone[]; 2 1 end_stone[]; 3 1 end_stone[]; 4 1 end_stone[]; -4 2 end_stone[]; -3 2 end_stone[]; -2 2 end_stone[]; -1 2 end_stone[]; 0 2 end_stone[]; 1 2 end_stone[]; 2 2 end_stone[]; 3 2 end_stone[]; 4 2 end_stone[]; -4 3 end_stone[]; -3 3 end_stone[]; -2 3 end_stone[]; -1 3 end_stone[]; 0 3 end_stone[]; 1 3 end_stone[]; 2 3 end_stone[]; 3 3 end_stone[]; 4 3 end_stone[]; -4 4 end_stone[]; -3 4 end_stone[]; -2 4 end_stone[]; -1 4 end_stone[]; 0 4 end_stone[]; 1 4 end_stone[]; 2 4 end_stone[]; 3 4 end_stone[]; 4 4 end_stone[]
+## box y 60: -4 -4 end_stone[]; -3 -4 end_stone[]; -2 -4 end_stone[]; -1 -4 end_stone[]; 0 -4 end_stone[]; 1 -4 end_stone[]; 2 -4 end_stone[]; 3 -4 end_stone[]; 4 -4 end_stone[]; -4 -3 end_stone[]; -3 -3 end_stone[]; -2 -3 end_stone[]; -1 -3 end_stone[]; 0 -3 end_stone[]; 1 -3 end_stone[]; 2 -3 end_stone[]; 3 -3 end_stone[]; 4 -3 end_stone[]; -4 -2 end_stone[]; -3 -2 end_stone[]; -2 -2 end_stone[]; -1 -2 end_stone[]; 0 -2 end_stone[]; 1 -2 end_stone[]; 2 -2 end_stone[]; 3 -2 end_stone[]; 4 -2 end_stone[]; -4 -1 end_stone[]; -3 -1 end_stone[]; -2 -1 end_stone[]; -1 -1 end_stone[]; 0 -1 end_stone[]; 1 -1 end_stone[]; 2 -1 end_stone[]; 3 -1 end_stone[]; 4 -1 end_stone[]; -4 0 end_stone[]; -3 0 end_stone[]; -2 0 end_stone[]; -1 0 end_stone[]; 0 0 end_stone[]; 1 0 end_stone[]; 2 0 end_stone[]; 3 0 end_stone[]; 4 0 end_stone[]; -4 1 end_stone[]; -3 1 end_stone[]; -2 1 end_stone[]; -1 1 end_stone[]; 0 1 end_stone[]; 1 1 end_stone[]; 2 1 end_stone[]; 3 1 end_stone[]; 4 1 end_stone[]; -4 2 end_stone[]; -3 2 end_stone[]; -2 2 end_stone[]; -1 2 end_stone[]; 0 2 end_stone[]; 1 2 end_stone[]; 2 2 end_stone[]; 3 2 end_stone[]; 4 2 end_stone[]; -4 3 end_stone[]; -3 3 end_stone[]; -2 3 end_stone[]; -1 3 end_stone[]; 0 3 end_stone[]; 1 3 end_stone[]; 2 3 end_stone[]; 3 3 end_stone[]; 4 3 end_stone[]; -4 4 end_stone[]; -3 4 end_stone[]; -2 4 end_stone[]; -1 4 end_stone[]; 0 4 end_stone[]; 1 4 end_stone[]; 2 4 end_stone[]; 3 4 end_stone[]; 4 4 end_stone[]
+## box y 61: 3 -4 end_stone[]; 4 -4 end_stone[]; -1 -3 end_stone[]; 0 -3 end_stone[]; 1 -3 end_stone[]; 2 -3 end_stone[]; 3 -3 end_stone[]; 4 -3 end_stone[]; -2 -2 end_stone[]; -1 -2 bedrock[infiniburn_bit=1]; 0 -2 bedrock[infiniburn_bit=1]; 1 -2 bedrock[infiniburn_bit=1]; 2 -2 end_stone[]; 3 -2 end_stone[]; 4 -2 end_stone[]; -3 -1 end_stone[]; -2 -1 bedrock[infiniburn_bit=1]; -1 -1 bedrock[infiniburn_bit=1]; 0 -1 bedrock[infiniburn_bit=1]; 1 -1 bedrock[infiniburn_bit=1]; 2 -1 bedrock[infiniburn_bit=1]; 3 -1 end_stone[]; 4 -1 end_stone[]; -3 0 end_stone[]; -2 0 bedrock[infiniburn_bit=1]; -1 0 bedrock[infiniburn_bit=1]; 0 0 bedrock[infiniburn_bit=1]; 1 0 bedrock[infiniburn_bit=1]; 2 0 bedrock[infiniburn_bit=1]; 3 0 end_stone[]; 4 0 end_stone[]; -3 1 end_stone[]; -2 1 bedrock[infiniburn_bit=1]; -1 1 bedrock[infiniburn_bit=1]; 0 1 bedrock[infiniburn_bit=1]; 1 1 bedrock[infiniburn_bit=1]; 2 1 bedrock[infiniburn_bit=1]; 3 1 end_stone[]; 4 1 end_stone[]; -2 2 end_stone[]; -1 2 bedrock[infiniburn_bit=1]; 0 2 bedrock[infiniburn_bit=1]; 1 2 bedrock[infiniburn_bit=1]; 2 2 end_stone[]; 3 2 end_stone[]; 4 2 end_stone[]; -3 3 end_stone[]; -2 3 end_stone[]; -1 3 end_stone[]; 0 3 end_stone[]; 1 3 end_stone[]; 2 3 end_stone[]; 3 3 end_stone[]; 4 3 end_stone[]; -3 4 end_stone[]; -2 4 end_stone[]; -1 4 end_stone[]; 0 4 end_stone[]; 1 4 end_stone[]; 2 4 end_stone[]; 3 4 end_stone[]; 4 4 end_stone[]
+## box y 62: -1 -3 bedrock[infiniburn_bit=1]; 0 -3 bedrock[infiniburn_bit=1]; 1 -3 bedrock[infiniburn_bit=1]; -2 -2 bedrock[infiniburn_bit=1]; 2 -2 bedrock[infiniburn_bit=1]; -3 -1 bedrock[infiniburn_bit=1]; 3 -1 bedrock[infiniburn_bit=1]; -3 0 bedrock[infiniburn_bit=1]; 0 0 bedrock[infiniburn_bit=1]; 3 0 bedrock[infiniburn_bit=1]; -3 1 bedrock[infiniburn_bit=1]; 3 1 bedrock[infiniburn_bit=1]; -2 2 bedrock[infiniburn_bit=1]; 2 2 bedrock[infiniburn_bit=1]; -1 3 bedrock[infiniburn_bit=1]; 0 3 bedrock[infiniburn_bit=1]; 1 3 bedrock[infiniburn_bit=1]
+## box y 63: 0 0 bedrock[infiniburn_bit=1]
+## box y 64: 0 -1 torch[torch_facing_direction=south]; -1 0 torch[torch_facing_direction=east]; 0 0 bedrock[infiniburn_bit=1]; 1 0 torch[torch_facing_direction=west]; 0 1 torch[torch_facing_direction=north]
+## box y 65: 0 0 bedrock[infiniburn_bit=1]
+## box y 66: all air
+## box y 67: all air
+## tp @s 0.5 110 -1100.5 #12000 at 17409
+  17420 actor   MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 0.5, y: 111.62001, z: -1100.5 }, pitch: 0.0, yaw: 0.0, head_yaw: 0.0, mode: Teleport, on_ground: true, ridden_runtime_id: 0, teleport: Some(MovePlayerTeleport { cause: Command, source_entity_type: Unknown(1) }), tick: 370 }
+  17420 actor   .. Text x1, Event x1
+  17420 actor   CommandOutput CommandOutput { origin: CommandOrigin { type: "player", uuid: Uuid([89, 73, 37, 255, 1, 169, 176, 112, 70, 77, 34, 43, 135, 12, 10, 184]), request_id: "", player_entity_id: 0 }, output_type: "alloutput", success_count: 1, output: [CommandOutputOutputItem { message_id: "commands.tp.success.coordinates", success: true, parameters: ["DragonActor", "0.50", "110.00", "-1100.50"] }], has_data: false, data: None }
+  17420 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"DragonActor\"},{\"text\":\": \"},{\"translate\":\"commands.tp.success.coordinates\",\"with\":{\"rawtext\":[{\"text\":\"DragonActor\"},{\"text\":\"0.50\"},{\"text\":\"110.00\"},{\"text\":\"-1100.50\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  17440 actor   D ender_dragon 46.17587 117.76948 2.48456 p 0.00 y 185.62 h 185.62
+  17481 actor   .. NetworkChunkPublisherUpdate x1
+  17481 actor   D ender_dragon 46.47646 118.14137 3.11764 p 0.00 y 192.66 h 192.66
+  17481 actor   DV ender_dragon 0.12852 0.14191 0.31242
+  17535 actor   RemoveEntity -4294967288 minecraft:ender_dragon
+  17988 actor   .. LevelChunk x10
+  17988 actor   CorrectPlayerMovePrediction CorrectPlayerMovePrediction { prediction_type: Player, position: Vec3f { x: 0.5, y: 111.62001, z: -1100.5 }, delta: Vec3f { x: 0.0, y: 0.0, z: 0.0 }, rotation: Vec2f { x: 0.0, z: 0.0 }, angular_velocity: None, on_ground: true, tick: 371 }
+  17988 actor   SetEntityData ? SetEntityData { runtime_entity_id: 1, metadata: [MetadataDictionaryItem { key: Flags, type: Long, legacy_type: 7, value: Flags(MetadataFlags1(844476470263808)) }], properties: EntityProperties { ints: [], floats: [] }, tick: 373 }
+  18004 actor   .. Subchunk x10
+  18004 actor   CorrectPlayerMovePrediction CorrectPlayerMovePrediction { prediction_type: Player, position: Vec3f { x: 0.5, y: 110.4749, z: -1100.5 }, delta: Vec3f { x: 0.0, y: -0.44749787, z: 0.0 }, rotation: Vec2f { x: 0.0, z: 0.0 }, angular_velocity: None, on_ground: false, tick: 377 }
+  21427 actor   .. LevelChunk x51, Subchunk x51, ClientCacheMissResponse x3, NetworkChunkPublisherUpdate x8, SyncWorldClocks x1, CurrentStructureFeature x1
+  21463 actor   CorrectPlayerMovePrediction CorrectPlayerMovePrediction { prediction_type: Player, position: Vec3f { x: 0.5, y: -38.37999, z: -1100.5 }, delta: Vec3f { x: 0.0, y: -0.0784, z: 0.0 }, rotation: Vec2f { x: 0.0, z: 0.0 }, angular_velocity: None, on_ground: true, tick: 450 }
+  21505 actor   .. NetworkChunkPublisherUpdate x1
+  21505 actor   SetEntityData ? SetEntityData { runtime_entity_id: 1, metadata: [MetadataDictionaryItem { key: Flags, type: Long, legacy_type: 7, value: Flags(MetadataFlags1(844459290394624)) }], properties: EntityProperties { ints: [], floats: [] }, tick: 450 }
+  21761 actor   CorrectPlayerMovePrediction CorrectPlayerMovePrediction { prediction_type: Player, position: Vec3f { x: 0.5, y: -38.37999, z: -1100.5 }, delta: Vec3f { x: 0.0, y: -0.0784, z: 0.0 }, rotation: Vec2f { x: 0.0, z: 0.0 }, angular_velocity: None, on_ground: true, tick: 456 }
+  22060 actor   CorrectPlayerMovePrediction CorrectPlayerMovePrediction { prediction_type: Player, position: Vec3f { x: 0.5, y: -38.37999, z: -1100.5 }, delta: Vec3f { x: 0.0, y: -0.0784, z: 0.0 }, rotation: Vec2f { x: 0.0, z: 0.0 }, angular_velocity: None, on_ground: true, tick: 462 }
+  22371 actor   CorrectPlayerMovePrediction CorrectPlayerMovePrediction { prediction_type: Player, position: Vec3f { x: 0.5, y: -38.37999, z: -1100.5 }, delta: Vec3f { x: 0.0, y: -0.0784, z: 0.0 }, rotation: Vec2f { x: 0.0, z: 0.0 }, angular_velocity: None, on_ground: true, tick: 468 }
+  22681 actor   CorrectPlayerMovePrediction CorrectPlayerMovePrediction { prediction_type: Player, position: Vec3f { x: 0.5, y: -38.37999, z: -1100.5 }, delta: Vec3f { x: 0.0, y: -0.0784, z: 0.0 }, rotation: Vec2f { x: 0.0, z: 0.0 }, angular_velocity: None, on_ground: true, tick: 474 }
+  22982 actor   CorrectPlayerMovePrediction CorrectPlayerMovePrediction { prediction_type: Player, position: Vec3f { x: 0.5, y: -38.37999, z: -1100.5 }, delta: Vec3f { x: 0.0, y: -0.0784, z: 0.0 }, rotation: Vec2f { x: 0.0, z: 0.0 }, angular_velocity: None, on_ground: true, tick: 480 }
+  23283 actor   CorrectPlayerMovePrediction CorrectPlayerMovePrediction { prediction_type: Player, position: Vec3f { x: 0.5, y: -38.37999, z: -1100.5 }, delta: Vec3f { x: 0.0, y: -0.0784, z: 0.0 }, rotation: Vec2f { x: 0.0, z: 0.0 }, angular_velocity: None, on_ground: true, tick: 486 }
+  23597 actor   CorrectPlayerMovePrediction CorrectPlayerMovePrediction { prediction_type: Player, position: Vec3f { x: 0.5, y: -38.37999, z: -1100.5 }, delta: Vec3f { x: 0.0, y: -0.0784, z: 0.0 }, rotation: Vec2f { x: 0.0, z: 0.0 }, angular_velocity: None, on_ground: true, tick: 492 }
+  23873 actor   CorrectPlayerMovePrediction CorrectPlayerMovePrediction { prediction_type: Player, position: Vec3f { x: 0.5, y: -38.37999, z: -1100.5 }, delta: Vec3f { x: 0.0, y: -0.0784, z: 0.0 }, rotation: Vec2f { x: 0.0, z: 0.0 }, angular_velocity: None, on_ground: true, tick: 498 }
+  24181 actor   CorrectPlayerMovePrediction CorrectPlayerMovePrediction { prediction_type: Player, position: Vec3f { x: 0.5, y: -38.37999, z: -1100.5 }, delta: Vec3f { x: 0.0, y: -0.0784, z: 0.0 }, rotation: Vec2f { x: 0.0, z: 0.0 }, angular_velocity: None, on_ground: true, tick: 504 }
+  24505 actor   CorrectPlayerMovePrediction CorrectPlayerMovePrediction { prediction_type: Player, position: Vec3f { x: 0.5, y: -38.37999, z: -1100.5 }, delta: Vec3f { x: 0.0, y: -0.0784, z: 0.0 }, rotation: Vec2f { x: 0.0, z: 0.0 }, angular_velocity: None, on_ground: true, tick: 510 }
+  24829 actor   CorrectPlayerMovePrediction CorrectPlayerMovePrediction { prediction_type: Player, position: Vec3f { x: 0.5, y: -38.37999, z: -1100.5 }, delta: Vec3f { x: 0.0, y: -0.0784, z: 0.0 }, rotation: Vec2f { x: 0.0, z: 0.0 }, angular_velocity: None, on_ground: true, tick: 516 }
+  25110 actor   CorrectPlayerMovePrediction CorrectPlayerMovePrediction { prediction_type: Player, position: Vec3f { x: 0.5, y: -38.37999, z: -1100.5 }, delta: Vec3f { x: 0.0, y: -0.0784, z: 0.0 }, rotation: Vec2f { x: 0.0, z: 0.0 }, angular_velocity: None, on_ground: true, tick: 522 }
+  25409 actor   .. CurrentStructureFeature x1
+  25409 actor   CorrectPlayerMovePrediction CorrectPlayerMovePrediction { prediction_type: Player, position: Vec3f { x: 0.5, y: -38.37999, z: -1100.5 }, delta: Vec3f { x: 0.0, y: -0.0784, z: 0.0 }, rotation: Vec2f { x: 0.0, z: 0.0 }, angular_velocity: None, on_ground: true, tick: 528 }
+  25740 actor   CorrectPlayerMovePrediction CorrectPlayerMovePrediction { prediction_type: Player, position: Vec3f { x: 0.5, y: -38.37999, z: -1100.5 }, delta: Vec3f { x: 0.0, y: -0.0784, z: 0.0 }, rotation: Vec2f { x: 0.0, z: 0.0 }, angular_velocity: None, on_ground: true, tick: 534 }
+  26016 actor   CorrectPlayerMovePrediction CorrectPlayerMovePrediction { prediction_type: Player, position: Vec3f { x: 0.5, y: -38.37999, z: -1100.5 }, delta: Vec3f { x: 0.0, y: -0.0784, z: 0.0 }, rotation: Vec2f { x: 0.0, z: 0.0 }, angular_velocity: None, on_ground: true, tick: 540 }
+  26352 actor   CorrectPlayerMovePrediction CorrectPlayerMovePrediction { prediction_type: Player, position: Vec3f { x: 0.5, y: -38.37999, z: -1100.5 }, delta: Vec3f { x: 0.0, y: -0.0784, z: 0.0 }, rotation: Vec2f { x: 0.0, z: 0.0 }, angular_velocity: None, on_ground: true, tick: 546 }
+  26662 actor   CorrectPlayerMovePrediction CorrectPlayerMovePrediction { prediction_type: Player, position: Vec3f { x: 0.5, y: -38.37999, z: -1100.5 }, delta: Vec3f { x: 0.0, y: -0.0784, z: 0.0 }, rotation: Vec2f { x: 0.0, z: 0.0 }, angular_velocity: None, on_ground: true, tick: 552 }
+  26945 actor   CorrectPlayerMovePrediction CorrectPlayerMovePrediction { prediction_type: Player, position: Vec3f { x: 0.5, y: -38.37999, z: -1100.5 }, delta: Vec3f { x: 0.0, y: -0.0784, z: 0.0 }, rotation: Vec2f { x: 0.0, z: 0.0 }, angular_velocity: None, on_ground: true, tick: 558 }
+  27270 actor   CorrectPlayerMovePrediction CorrectPlayerMovePrediction { prediction_type: Player, position: Vec3f { x: 0.5, y: -38.37999, z: -1100.5 }, delta: Vec3f { x: 0.0, y: -0.0784, z: 0.0 }, rotation: Vec2f { x: 0.0, z: 0.0 }, angular_velocity: None, on_ground: true, tick: 564 }
+  27552 actor   CorrectPlayerMovePrediction CorrectPlayerMovePrediction { prediction_type: Player, position: Vec3f { x: 0.5, y: -38.37999, z: -1100.5 }, delta: Vec3f { x: 0.0, y: -0.0784, z: 0.0 }, rotation: Vec2f { x: 0.0, z: 0.0 }, angular_velocity: None, on_ground: true, tick: 570 }
+  27860 actor   CorrectPlayerMovePrediction CorrectPlayerMovePrediction { prediction_type: Player, position: Vec3f { x: 0.5, y: -38.37999, z: -1100.5 }, delta: Vec3f { x: 0.0, y: -0.0784, z: 0.0 }, rotation: Vec2f { x: 0.0, z: 0.0 }, angular_velocity: None, on_ground: true, tick: 576 }
+  28175 actor   CorrectPlayerMovePrediction CorrectPlayerMovePrediction { prediction_type: Player, position: Vec3f { x: 0.5, y: -38.37999, z: -1100.5 }, delta: Vec3f { x: 0.0, y: -0.0784, z: 0.0 }, rotation: Vec2f { x: 0.0, z: 0.0 }, angular_velocity: None, on_ground: true, tick: 582 }
+  28490 actor   CorrectPlayerMovePrediction CorrectPlayerMovePrediction { prediction_type: Player, position: Vec3f { x: 0.5, y: -38.37999, z: -1100.5 }, delta: Vec3f { x: 0.0, y: -0.0784, z: 0.0 }, rotation: Vec2f { x: 0.0, z: 0.0 }, angular_velocity: None, on_ground: true, tick: 588 }
+  28790 actor   CorrectPlayerMovePrediction CorrectPlayerMovePrediction { prediction_type: Player, position: Vec3f { x: 0.5, y: -38.37999, z: -1100.5 }, delta: Vec3f { x: 0.0, y: -0.0784, z: 0.0 }, rotation: Vec2f { x: 0.0, z: 0.0 }, angular_velocity: None, on_ground: true, tick: 594 }
+  29109 actor   CorrectPlayerMovePrediction CorrectPlayerMovePrediction { prediction_type: Player, position: Vec3f { x: 0.5, y: -38.37999, z: -1100.5 }, delta: Vec3f { x: 0.0, y: -0.0784, z: 0.0 }, rotation: Vec2f { x: 0.0, z: 0.0 }, angular_velocity: None, on_ground: true, tick: 600 }
+  29406 actor   .. CurrentStructureFeature x1
+  29406 actor   CorrectPlayerMovePrediction CorrectPlayerMovePrediction { prediction_type: Player, position: Vec3f { x: 0.5, y: -38.37999, z: -1100.5 }, delta: Vec3f { x: 0.0, y: -0.0784, z: 0.0 }, rotation: Vec2f { x: 0.0, z: 0.0 }, angular_velocity: None, on_ground: true, tick: 606 }
+## !top 0 -1024 at 29410
+## top 0 -1024: 
+## !top 0 -1040 at 29412
+## top 0 -1040: 
+## !top 0 -1056 at 29413
+## top 0 -1056: 
+## !top 0 -1072 at 29414
+## top 0 -1072: 
+## !top 0 -1088 at 29416
+## top 0 -1088: 
+## !top 0 -1104 at 29417
+## top 0 -1104: 
+## !top 0 -1120 at 29418
+## top 0 -1120: 56 end_stone[]; 55 end_stone[]; 54 end_stone[]
+## !top 0 -1136 at 29419
+## top 0 -1136: 56 end_stone[]; 55 end_stone[]; 54 end_stone[]
+## !top 0 -1152 at 29421
+## top 0 -1152: 51 end_stone[]; 50 end_stone[]; 49 end_stone[]
+## !top 0 -1168 at 29422
+## top 0 -1168: 
+## !top 0 -1184 at 29424
+## top 0 -1184: 
+## !top 0 -1200 at 29425
+## top 0 -1200: 
+## !top 0 -1216 at 29427
+## top 0 -1216: 
+## !top 0 -1232 at 29428
+## top 0 -1232: 
+## !top -13 -1123 at 29429
+## top -13 -1123: 75 chorus_flower[age=5]; 74 chorus_plant[]; 73 chorus_plant[]
+## !top -13 -1124 at 29430
+## top -13 -1124: 59 end_stone[]; 58 end_stone[]; 57 end_stone[]
+## !top 7 -1092 at 29431
+## top 7 -1092: 58 end_stone[]
+## !top 0 -1100 at 29433
+## top 0 -1100: 
+## !top 8 -1120 at 29434
+## top 8 -1120: 
+probe exit 0

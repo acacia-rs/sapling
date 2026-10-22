@@ -81,6 +81,8 @@ pub(crate) struct Flight {
 const PITCH_EASE: f32 = 10.0;
 const GROWL_FROM: i32 = 200;
 const GROWL_SPREAD: u32 = 200;
+/// A new dragon's first growl is 100 ticks on (bds-dragon-watch.txt, bds-dragon-again.txt).
+const FIRST_GROWL: i32 = 100;
 
 /// Whether the columns its nodes stand on are loaded (BDS asks for those within 60 of the middle);
 /// those that are not are asked for, as sapling loads a player's view slower than BDS.
@@ -102,7 +104,7 @@ impl Flight {
             path: None,
             prey: None,
             clockwise: false,
-            growl: 0,
+            growl: FIRST_GROWL,
             landing: false,
             timer: 0.0,
             roar: 0,

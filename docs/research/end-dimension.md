@@ -1,7 +1,7 @@
 # The End in the server: dimension, end portals and gateways
 
 Branch `end/dimension` (from `worldgen/end` bd12034). How a world gets its End and how players reach and leave it,
-as BDS 1.26.5x does without the dragon fight. Evidence: drills of `crates/sapling/examples/bds_portal_probe.rs`
+as BDS 1.26.5x does, and the dragon fight (its own section). Evidence: drills of `crates/sapling/examples/bds_portal_probe.rs`
 (the End's lines in `shared/end_drill.rs`) against testbox `~/work/bds-end` (port 19202, flat world, seed
 20261018), saved as `research/captures/bds-end-*.txt`; the same drills against `drill_server`
 (`sapling-end-*.txt`); a bdsre reading of the Windows build 6ab54bee (addresses below).
@@ -16,8 +16,8 @@ as BDS 1.26.5x does without the dragon fight. Evidence: drills of `crates/saplin
 - **Blocks:** `blocks/end_portal.rs` (frames and the portal they make), called by the eye's use in `blocks/tools.rs`.
 - **Travel:** `portals/end.rs` (end portal to the platform) and `portals/gateway.rs`, run from `portals::tick`;
   `dimensions::respawn_home` (the dead of the End and the Nether rise in their overworld), from `vitals/death.rs`.
-- **Not built** (the dragon fight, left for later): the dragon, its boss bar, the exit portal, crystals' part in
-  the fight, the egg, gateways made by kills, the credits.
+- **The dragon fight** (branch `end/dragon`, section below): sapling-shard `dragon.rs` and `dragon/`, the way
+  home in `portals/exit.rs`, the record in sapling-leveldb `dragon_fight.rs`.
 - **The eye of ender thrown** (branch `end/eye`, below): `eyes.rs` in sapling-shard, from the ClickAir arm of
   `blocks/request.rs`; the stronghold from `World::locate_stronghold` → `WorldStorage::locate_stronghold` →
   `Generated` → `OverworldGenerator::locate_stronghold` (sapling-worldgen `structure/locate.rs`).
@@ -110,13 +110,51 @@ and a flat world locates no stronghold); sapling's side on `drill_server` with `
   the fit in x/z) and turns it (rot_x/rot_y of its deltas); sapling's item comes before the RemoveEntity, its
   stack ids do not count up, its item's toss is the shard's dice.
 
+## The dragon fight (bds-dragon-*.txt)
+
+Drilled with `bds_dragon_probe` (drills in `shared/dragon_drill.rs`) on testbox `~/work/bds-dragon` (port 19220,
+default world, seed 20261018, easy), sapling's side on `drill_server` (`sapling-dragon-*.txt`). Readings:
+research/dragon-fight-decompile.md (the fight manager) and research/dragon-ai-decompile.md (the dragon).
+
+- **Start** (watch, fight): a player in the cube ±200 round the origin with columns (-1|0, -1|0) loaded makes
+  the dragon at (0, 128, 0), random pitch, the spawn sound at its head, its data told twice; the unlit podium
+  (3D pattern, torches) a tick later; ShowBar about every second to players within 125. No spike crystals or
+  bedrock in the first fight. sapling the same; it resends the podium's columns to clients still waiting on
+  blobs, since its fight starts while they stream in (an again run lost half the podium on the bot without it).
+- **Flight** (watch): BDS's goals (holding pattern, strafe, charge, landing, scanning, flaming, takeoff, death)
+  over the 24 nodes. Two moves a tick: the generic move by the stored motion, then **xz × 0.91** (fitted:
+  without it sapling flew at twice BDS's speed), then the goal's steer, move and drag. The first told moves
+  are equal to 4 digits (same first node and yaw 357.19); over 75 s median speed 0.869 vs 0.877, flaps 89 vs
+  85, growls 4 vs 4, the first 100 ticks after spawn, 8 vs 6 perches. A survival player near the portal is
+  strafed and charged; landing needs none (creative players are no prey).
+- **Hits** (hits): a fist's 1 takes 1.25 (`min(d,1)+d/4`); only players and block explosions hurt it; a lethal
+  hit leaves 1 and sends it to the portal to die; sitting, a quarter of its health lost makes it take off.
+- **Death** (fight): DeathAnimation, flags reset, the death sound 2 up, 200 ticks, then the portal lit, the egg on
+  the first kill, a gateway in BDS's MT-shuffled order of 20 (first (0, 75, -96)), experience 12000 then 500.
+- **Gateway exits** (again, exits): the walk out 1024 along the gateway's direction tests the **column** at the
+  point, not Java's chunk (BDS walked past a chunk holding one end stone); the far gateway 10 over the highest
+  block within 16 of the spawn; the landing over the highest block within 5 of the far gateway, chorus counted.
+  First kill: (-13, 76, -1123) as BDS. Second: (571, 59, -838) against BDS's (585, 71, -850).
+- **Summoning again** (again): four crystals on the portal's sides; growls on the same ticks as BDS (34, all
+  within half a tick), pillars rebuilt one per 40 ticks, the new dragon at tick 604.7 vs 604.8, the four
+  crystals blown up, another gateway on its kill.
+- **Home** (home): ShowCredits once per player; ChangeDimension respawn, Respawn searching then ready, SetHealth,
+  MovePlayer Reset; the second time no credits.
+- **Kept** (resume): `TheEnd` encoded as BDS's bytes; a kept killed fight makes no dragon (shard test).
+- **API**: `ShardCtx::dragon_fight`, `DragonKilledEvent`, `DragonRespawnEvent`; the dragon is an entity.
+
 ## Not done, and why
 
+- **Dragon:** no fireball from the strafe and no breath cloud's harm (the roar and puke are told); its tail parts
+  and its climb ring are left out of where its parts reach; its start waits ~1.6 s on BDS's node columns, which
+  sapling loads slower than BDS had them.
+- **Second gateway exit off by ~15 blocks:** BDS's own spawn search (`findValidSpawn` 1487fde00: columns down
+  from y 127 over ±r chunks with neighbour tests) is not ported; sapling takes the end stone nearest the origin
+  in the point's chunk. No island is built where none is found (148274c80).
+- **The second kill's orbs** stayed where they fell on sapling (77 entities against BDS's 24 after 40 s): generic
+  orb pickup, not looked at.
 - **Spike bedrock and crystals.** `postProcessMobsAt` 148246230 puts an EnderCrystal (ShowBottom) at (x + 0.5,
   height + 1, z + 0.5) and bedrock at (x, height, z) for each spike whose centre is in the chunk, reading no fight
   state, but no caller was found, and in every drill (70 s with a player on the island) the tops stayed obsidian
   and no crystal was sent. Left out to match what BDS did.
-- **Every arrival near the island starts BDS's dragon fight** (dragon spawn, boss bar, exit portal bedrock at
-  0,61..65,0): the only differences in sapling-end-travel.txt (column (0, 0) asks for 5 sections on BDS, 4 on
-  sapling; a tp to (0.5, 90, 0.5) lands on the exit portal's pillar at 66 on BDS, the island at 62 on sapling).
-- **Leaving the End other than by death or command:** only the exit portal (the fight) leads back.
+- **Column (0, 0)** asks for 5 sections on BDS, 4 on sapling (sapling-end-travel.txt, before the fight was built).

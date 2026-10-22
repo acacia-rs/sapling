@@ -60,7 +60,7 @@ impl Search {
             if !level.request_urgent(chunk) {
                 return None;
             }
-            let empty = is_empty(level, chunk);
+            let empty = is_empty(level, self.at);
             let go = match self.phase {
                 Phase::Back if !empty && self.left > 0 => -STEP,
                 Phase::Back => {
@@ -80,9 +80,10 @@ impl Search {
     }
 }
 
-/// Whether no block of the column stands above its lowest section.
-fn is_empty(level: &Level, chunk: ChunkPos) -> bool {
-    (0..16).all(|dx| (0..16).all(|dz| level.surface(chunk.x * 16 + dx, chunk.z * 16 + dz).is_none_or(|y| y < 16)))
+/// Whether the column at the search's point holds no block. BDS tests that column's height, not
+/// Java's whole chunk (research/captures/bds-dragon-exits.txt: it walked past a chunk with one block).
+fn is_empty(level: &Level, [x, z]: [f64; 2]) -> bool {
+    level.surface(x.floor() as i32, z.floor() as i32).is_none()
 }
 
 fn named(level: &Level, [x, y, z]: BlockPos) -> Option<&'static str> {
@@ -112,17 +113,19 @@ fn spawn_in(level: &Level, chunk: ChunkPos) -> Option<BlockPos> {
     best.map(|(_, at)| at)
 }
 
-/// The highest full block within `reach` of `at` across (its own column only `with_bedrock`), or
-/// `at` itself.
+/// The highest block of any shape within `reach` of `at` across, bedrock and gateways only
+/// `with_bedrock`, or `at` itself. BDS landed a traveller on a chorus flower (bds-dragon-again.txt).
 fn highest(level: &Level, at: BlockPos, reach: i32, with_bedrock: bool) -> BlockPos {
+    let counts = |pos: BlockPos| match named(level, pos) {
+        None | Some("minecraft:air") => false,
+        Some("minecraft:bedrock" | "minecraft:end_gateway") => with_bedrock,
+        Some(_) => true,
+    };
     let mut best: Option<BlockPos> = None;
     for dx in -reach..=reach {
         for dz in -reach..=reach {
-            if dx == 0 && dz == 0 && !with_bedrock {
-                continue;
-            }
             let floor = best.map_or(0, |[_, y, _]| y);
-            let found = (floor + 1..=TOP).rev().map(|y| [at[0] + dx, y, at[2] + dz]).find(|&pos| is_normal_cube(level, pos) && (with_bedrock || named(level, pos) != Some("minecraft:bedrock")));
+            let found = (floor + 1..=TOP).rev().map(|y| [at[0] + dx, y, at[2] + dz]).find(|&pos| counts(pos));
             best = found.or(best);
         }
     }

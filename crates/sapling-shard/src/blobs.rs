@@ -29,6 +29,11 @@ impl BlobCache {
         self.enabled
     }
 
+    /// Whether blobs named to the client are still unanswered: sections it may not hold yet.
+    pub fn awaits_any(&self) -> bool {
+        !self.awaiting.is_empty()
+    }
+
     pub fn is_backlogged(&self) -> bool {
         self.awaiting.len() >= BACKLOG
     }
