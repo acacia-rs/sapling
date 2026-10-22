@@ -2,7 +2,7 @@
 //! and head round where it is and its yaw. Out of a sit its wings throw the players under them and
 //! hurt them for 5, its head and neck bite for 10; head, neck and body break the blocks they are in
 //! that are not of the End's hard ones, while mobGriefing is on, each showing its dust once.
-// TODO: the parts' heights by its past climbs (BDS's ring of 64 moves) and its hurt time are left out.
+// TODO: its hurt time, which keeps its wings and head from hurting, is left out.
 
 use acacia_proto::packets::{LevelEvent, LevelEventEvent};
 use acacia_proto::types::Vec3f;
@@ -46,17 +46,40 @@ struct Parts {
     neck: Box3,
     body_box: Box3,
     wings: [Box3; 2],
+    tails: [Box3; 3],
 }
 
 fn parts(flight: &Flight) -> Parts {
     let [x, y, z] = flight.motion.at;
-    let (s, c) = flight.motion.yaw.to_radians().sin_cos();
-    let (sh, ch) = (flight.motion.yaw.to_radians() - flight.motion.yaw_speed * 0.01).sin_cos();
-    let lift = if flight.sitting { -1.0 } else { 0.0 };
-    let reach = |r: f32| [x + sh * r, y + HALF_HEIGHT + lift, z - ch * r];
+    let (yaw, now) = (flight.motion.yaw, [flight.motion.yaw, y]);
+    let back = |n: usize| flight.trail.back(n, now);
+    let (f13, f12) = ((back(5)[1] - back(10)[1]) * 10.0).to_radians().sin_cos();
+    let (s, c) = yaw.to_radians().sin_cos();
+    let (sh, ch) = (yaw.to_radians() - flight.motion.yaw_speed * 0.01).sin_cos();
+    let lift = if flight.sitting { -1.0 } else { back(5)[1] - back(0)[1] };
+    let reach = |r: f32| [x + sh * r * f12, y + f13 * r + HALF_HEIGHT + lift, z - ch * r * f12];
     let body = [x + s * 0.5, y + HALF_HEIGHT, z - c * 0.5];
     let wing = |side: f32| around([x + side * c * 4.5, y + 2.0 + HALF_HEIGHT, z + side * s * 4.5], [4.0, 2.0]);
-    Parts { body, head: around(reach(6.5), [1.0, 1.0]), neck: around(reach(5.5), [3.0, 3.0]), body_box: around(body, [5.0, 3.0]), wings: [wing(1.0), wing(-1.0)] }
+    // BDS reads the trail 4, 6 and 8 back where Java reads 12, 14 and 16.
+    let tail = |k: usize| {
+        let [then_yaw, then_y] = back(4 + 2 * k);
+        let g = yaw.to_radians() + super::flight::wrap(then_yaw - back(5)[0]).to_radians();
+        let w = 2.0 * (k as f32 + 1.0);
+        around([x - (s * 1.5 + g.sin() * w) * f12, then_y - back(5)[1] + y - (w + 1.5) * f13 + 1.5, z + (c * 1.5 + g.cos() * w) * f12], [2.0, 2.0])
+    };
+    Parts { body, head: around(reach(6.5), [1.0, 1.0]), neck: around(reach(5.5), [3.0, 3.0]), body_box: around(body, [5.0, 3.0]), wings: [wing(1.0), wing(-1.0)], tails: [tail(0), tail(1), tail(2)] }
+}
+
+/// The middle of its head's box.
+pub(super) fn head_middle(flight: &Flight) -> [f32; 3] {
+    let (low, high) = parts(flight).head;
+    std::array::from_fn(|axis| (low[axis] + high[axis]) / 2.0)
+}
+
+/// Every part's box, where a player's hit can reach it.
+pub(crate) fn boxes(flight: &Flight) -> Vec<Box3> {
+    let parts = parts(flight);
+    [parts.head, parts.neck, parts.body_box].into_iter().chain(parts.wings).chain(parts.tails).collect()
 }
 
 fn overlaps((a_min, a_max): Box3, (b_min, b_max): Box3) -> bool {

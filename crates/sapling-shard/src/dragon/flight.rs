@@ -9,10 +9,11 @@ mod goals;
 mod motion;
 mod nodes;
 mod sitting;
+mod trail;
 
 pub(crate) use goals::{Ctx, begin_dying, take_off, think};
 pub(crate) use motion::Motion;
-use motion::wrap;
+pub(crate) use motion::wrap;
 use nodes::Node;
 
 /// The goals' groups, which the dragon's events switch between.
@@ -76,6 +77,7 @@ pub(crate) struct Flight {
     /// Damage taken since it sat down.
     pub sat_harm: f32,
     pub(crate) healer: Option<bevy_ecs::entity::Entity>,
+    pub trail: trail::Trail,
 }
 
 const PITCH_EASE: f32 = 10.0;
@@ -116,6 +118,7 @@ impl Flight {
             count: 0,
             sat_harm: 0.0,
             healer: None,
+            trail: trail::Trail::default(),
         }
     }
 

@@ -14,6 +14,8 @@ pub(crate) struct Ctx<'w> {
     pub world: &'w mut World,
     pub layer: Entity,
     pub dragon: Entity,
+    /// Where it was at the tick's start, before its stored motion carried it.
+    pub from: [f32; 3],
     pub at: [f32; 3],
     pub crystals: u32,
     pub random: &'w mut Random,

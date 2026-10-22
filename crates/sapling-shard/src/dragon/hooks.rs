@@ -8,6 +8,14 @@ use crate::body::Body;
 use crate::components::{InLayer, NetId};
 use crate::creatures::Health;
 
+/// How far `eye` is from the nearest of the dragon's parts, tail and wings included; `None` for
+/// another mob.
+pub(crate) fn part_reach(world: &World, dragon: Entity, eye: [f32; 3]) -> Option<f32> {
+    let boxes = super::parts::boxes(&world.get::<Dragon>(dragon)?.flight);
+    let far = |(low, high): &([f32; 3], [f32; 3])| (0..3).map(|axis| (eye[axis].clamp(low[axis], high[axis]) - eye[axis]).powi(2)).sum::<f32>().sqrt();
+    boxes.iter().map(far).min_by(f32::total_cmp)
+}
+
 /// Tells the dragon's viewers its health.
 fn tell_health(world: &mut World, dragon: Entity, health: &Health) {
     let (Some(id), Some(layer), Some(at)) = (world.get::<NetId>(dragon).map(|id| id.0), world.get::<InLayer>(dragon).map(|l| l.0), world.get::<Body>(dragon).map(|b| b.at)) else { return };

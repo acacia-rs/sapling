@@ -130,6 +130,27 @@ pub(super) fn flaming(cx: &mut Ctx<'_>, flight: &mut Flight) {
     if flight.breath < PUKES && flight.breath % 2 == 0 {
         cx.tell_dragon(|id| EntityEvent { runtime_entity_id: id, event_id: EntityEventEventId::DragonPuke, data: 0, fire_at_position: None });
     }
+    if flight.breath == PUKES {
+        breathe(cx, flight);
+    }
+}
+
+/// The breath cloud, half its radius out from the head, away from the body, on the ground under it.
+fn breathe(cx: &mut Ctx<'_>, flight: &Flight) {
+    let head = crate::dragon::parts::head_middle(flight).map(f32::floor);
+    let at = flight.motion.at;
+    let (dx, dz) = (head[0] - at[0], head[2] - at[2]);
+    let length = dx.hypot(dz);
+    let n = if length < 1e-4 { [0.0; 2] } else { [dx / length, dz / length] };
+    let half = crate::dragon::cloud::FLAMES.radius * 0.5;
+    let (x, z) = (head[0] + n[0] * half, head[2] + n[1] * half);
+    let Some(level) = cx.world.get::<crate::components::Layer>(cx.layer).map(|layer| &layer.world) else { return };
+    let column = [x.floor() as i32, z.floor() as i32];
+    let mut y = head[1] as i32;
+    while level.in_height(y - 1) && level.registry().get(level.block(column[0], y, column[1])).is_some_and(|state| state.is_air()) {
+        y -= 1;
+    }
+    crate::dragon::cloud::spawn(cx.world, cx.layer, [x, (y + 1) as f32, z], 0.0, crate::dragon::cloud::FLAMES);
 }
 
 pub(super) fn flaming_goes_on(flight: &mut Flight) -> bool {

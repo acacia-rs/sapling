@@ -80,7 +80,7 @@ fn step(world: &mut World, layer: Entity, dragon: Entity, kept: &mut Dragon, ran
     let (before, id) = (flight.motion.at, world.get::<NetId>(dragon).map_or(0, |id| id.0));
     flight.motion.carry();
     let crystals = crystals_of(world, layer);
-    let mut cx = Ctx { world: &mut *world, layer, dragon, at: flight.motion.at, crystals, random: &mut *random, dead: false };
+    let mut cx = Ctx { world: &mut *world, layer, dragon, from: before, at: flight.motion.at, crystals, random: &mut *random, dead: false };
     flight::think(&mut cx, flight);
     let dead = cx.dead;
     let mut told = Vec::new();
@@ -93,12 +93,15 @@ fn step(world: &mut World, layer: Entity, dragon: Entity, kept: &mut Dragon, ran
     let age = world.resource::<Tick>().0 - kept.born;
     heal(world, layer, dragon, flight, random, age);
     flight.motion.beat(before, flight.sitting);
+    flight.trail.record(super::flight::wrap(flight.motion.yaw), flight.motion.at[1]);
     flight.motion.fly();
     flight.level_out();
     if let Some(mut body) = world.get_mut::<Body>(dragon) {
         (body.at, body.motion) = (flight.motion.at, flight.motion.delta);
     }
     flight.motion.slowed = parts::touch(world, layer, dragon, flight, random);
+    let target = flight.prey.and_then(|prey| world.get::<NetId>(prey)).map_or(0, |prey| prey.0 as i64);
+    told.extend(wire::tell_target(&mut kept.shown, id, target));
     told.extend(wire::tell(&mut kept.shown, id, flight));
     crate::entities::tell_viewers(world, dragon, layer, kept.flight.motion.at.map(|c| c.floor() as i32), told);
     dead

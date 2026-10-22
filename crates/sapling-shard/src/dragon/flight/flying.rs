@@ -137,6 +137,7 @@ pub(super) fn strafe(cx: &mut Ctx<'_>, flight: &mut Flight) {
     if flight.aim >= AIM_TICKS && (0.0..AIM_ANGLE).contains(&angle) && !flight.fired {
         flight.aim = 0;
         flight.fired = true;
+        crate::dragon::fireball::shoot(cx.world, cx.layer, cx.dragon, cx.from, prey, cx.random);
         if let Some((path, index)) = &mut flight.path {
             *index = path.len();
         }

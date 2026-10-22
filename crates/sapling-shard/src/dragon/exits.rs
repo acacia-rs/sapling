@@ -1,24 +1,24 @@
 //! Where a gateway a kill opens leads (`findExitPosition` 1487fd350 and the gateway job,
-//! research/dragon-fight-decompile.md 4), as Java's end gateway finds it: 1024 out along the
-//! gateway's direction, back by 16 while the column there holds blocks, then on by 16 while it
-//! holds none; the end stone nearest the world's middle in that chunk with room over it, the
-//! highest block within 16 of that, and ten over it the far gateway. The columns it reads are
-//! asked for, and the search waits for them.
-// TODO: with no end stone in the chunk BDS also builds an island there (148274c80); this does not.
+//! research/dragon-fight-decompile.md 4, research/dragon-extras-decompile.md 1): 1024 out along
+//! the gateway's direction, back by 16 while the column there holds blocks, then on by 16 while it
+//! holds none; BDS's spawn search round that point (an end island at y 75 where it finds none), the
+//! tallest block within 16 of it and ten over that the far gateway; the near gateway lands a
+//! traveller one over the spawn search round the far gateway, the far one on the main island's top
+//! within 48 of the near gateway. The columns it reads are asked for, and the search waits for them.
 
 use sapling_api::BlockPos;
 use sapling_world::{ChunkPos, World as Level};
 
+use super::exit_spawn::{island, tallest, valid_spawn};
+
 const OUT: f64 = 1024.0;
 const STEP: f64 = 16.0;
 const STEPS: u8 = 16;
-const LOWEST: i32 = 30;
-const SPAWN_Y: i32 = 75;
-/// Reaches of the highest-block searches: round the far gateway's place, round where a traveller lands.
 const FAR_REACH: i32 = 16;
-const LANDING_REACH: i32 = 5;
 const ABOVE_FAR: i32 = 10;
-const TOP: i32 = 255;
+/// Chunks round a point its spawn search reads: round the far side, and round the near gateway.
+const FAR_SPAWN: i32 = 1;
+const BACK_SPAWN: i32 = 3;
 
 enum Phase {
     Back,
@@ -86,62 +86,34 @@ fn is_empty(level: &Level, [x, z]: [f64; 2]) -> bool {
     level.surface(x.floor() as i32, z.floor() as i32).is_none()
 }
 
-fn named(level: &Level, [x, y, z]: BlockPos) -> Option<&'static str> {
-    level.registry().get(level.block(x, y, z)).map(|state| state.name)
-}
-
-fn is_normal_cube(level: &Level, [x, y, z]: BlockPos) -> bool {
-    level.registry().get(level.block(x, y, z)).is_some_and(|state| state.is_full_cube())
-}
-
-/// The end stone of `chunk` with room for a player over it nearest the world's middle.
-fn spawn_in(level: &Level, chunk: ChunkPos) -> Option<BlockPos> {
-    let top = (0..16).flat_map(|dx| (0..16).filter_map(move |dz| level.surface(chunk.x * 16 + dx, chunk.z * 16 + dz))).max()?;
-    let top = (top >> 4) * 16 + 15;
-    let mut best: Option<(f64, BlockPos)> = None;
-    for z in chunk.z * 16..chunk.z * 16 + 16 {
-        for y in LOWEST..=top {
-            for x in chunk.x * 16..chunk.x * 16 + 16 {
-                let fits = named(level, [x, y, z]) == Some("minecraft:end_stone") && !is_normal_cube(level, [x, y + 1, z]) && !is_normal_cube(level, [x, y + 2, z]);
-                let far = [x, y, z].map(|c| (f64::from(c) + 0.5).powi(2)).iter().sum::<f64>();
-                if fits && best.is_none_or(|(least, _)| far < least) {
-                    best = Some((far, [x, y, z]));
-                }
-            }
-        }
-    }
-    best.map(|(_, at)| at)
-}
-
-/// The highest block of any shape within `reach` of `at` across, bedrock and gateways only
-/// `with_bedrock`, or `at` itself. BDS landed a traveller on a chorus flower (bds-dragon-again.txt).
-fn highest(level: &Level, at: BlockPos, reach: i32, with_bedrock: bool) -> BlockPos {
-    let counts = |pos: BlockPos| match named(level, pos) {
-        None | Some("minecraft:air") => false,
-        Some("minecraft:bedrock" | "minecraft:end_gateway") => with_bedrock,
-        Some(_) => true,
-    };
-    let mut best: Option<BlockPos> = None;
-    for dx in -reach..=reach {
-        for dz in -reach..=reach {
-            let floor = best.map_or(0, |[_, y, _]| y);
-            let found = (floor + 1..=TOP).rev().map(|y| [at[0] + dx, y, at[2] + dz]).find(|&pos| counts(pos));
-            best = found.or(best);
-        }
-    }
-    best.unwrap_or(at)
+/// Whether every column within `chunks` round `at`'s chunk can be read, asking for those not loaded.
+fn loaded(level: &mut Level, at: BlockPos, chunks: i32) -> bool {
+    let middle = ChunkPos::of_block(at[0], at[2]);
+    let wanted = (-chunks..=chunks).flat_map(|dx| (-chunks..=chunks).map(move |dz| ChunkPos::new(middle.x + dx, middle.z + dz)));
+    wanted.fold(true, |all, column| level.request_urgent(column) && all)
 }
 
 /// Waits for the columns round the far side; then where the far gateway goes and lands people.
-fn settle(level: &mut Level, chunk: ChunkPos, at: [f64; 2], near: BlockPos) -> Option<Found> {
-    let reach = (FAR_REACH + LANDING_REACH) / 16 + 1;
-    let wanted = (-reach..=reach).flat_map(|dx| (-reach..=reach).map(move |dz| ChunkPos::new(chunk.x + dx, chunk.z + dz)));
-    if !wanted.chain([ChunkPos::of_block(near[0], near[2])]).fold(true, |all, column| level.request_urgent(column) && all) {
+fn settle(level: &mut Level, chunk: ChunkPos, [x, z]: [f64; 2], near: BlockPos) -> Option<Found> {
+    let exit = [x.floor() as i32, 0, z.floor() as i32];
+    let reads = FAR_SPAWN + (FAR_REACH + 15) / 16 + 1;
+    if !loaded(level, [chunk.x * 16, 0, chunk.z * 16], reads) || !loaded(level, near, BACK_SPAWN + 1) {
         return None;
     }
-    let spawn = spawn_in(level, chunk).unwrap_or([(at[0] + 0.5).floor() as i32, SPAWN_Y, (at[1] + 0.5).floor() as i32]);
-    let [x, y, z] = highest(level, spawn, FAR_REACH, true);
-    let far = [x, y + ABOVE_FAR, z];
-    let up = |[x, y, z]: BlockPos| [x, y + 1, z];
-    Some(Found { far, landing: up(highest(level, far, LANDING_REACH, false)), back: up(highest(level, near, LANDING_REACH, false)) })
+    let (spawn, built) = match valid_spawn(level, exit, true, FAR_SPAWN) {
+        Some(spawn) => (spawn, Vec::new()),
+        None => island(exit),
+    };
+    if let Some(end_stone) = level.block_id("minecraft:end_stone") {
+        for &[x, y, z] in &built {
+            level.set_block(x, y, z, end_stone);
+        }
+    }
+    let [fx, fy, fz] = tallest(level, spawn, FAR_REACH, true);
+    let far = [fx, fy + ABOVE_FAR, fz];
+    // BDS reads round the far gateway through the near side's view, which sees none of it: the
+    // tallest-block search there falls back to the spawn (bds-dragon-again.txt's first exit).
+    let landing = valid_spawn(level, far, false, FAR_SPAWN).unwrap_or([0; 3]);
+    let back = valid_spawn(level, near, false, BACK_SPAWN).unwrap_or([0; 3]);
+    Some(Found { far, landing: [landing[0], landing[1] + 1, landing[2]], back })
 }

@@ -26,4 +26,15 @@ impl Random {
     pub fn next_float(&mut self) -> f32 {
         (self.next() >> 40) as f32 / (1u64 << 24) as f32
     }
+
+    /// A normal draw, Marsaglia's polar way as BDS's (without its kept second value).
+    pub fn next_gaussian(&mut self) -> f32 {
+        loop {
+            let (v1, v2) = (2.0 * self.next_float() - 1.0, 2.0 * self.next_float() - 1.0);
+            let s = v1 * v1 + v2 * v2;
+            if s < 1.0 && s != 0.0 {
+                return v1 * (-2.0 * s.ln() / s).sqrt();
+            }
+        }
+    }
 }

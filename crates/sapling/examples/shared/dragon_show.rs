@@ -18,7 +18,7 @@ const DETAILED: &[&str] = &[
 const CHARS: usize = 8000;
 const ORB: &str = "minecraft:xp_orb";
 /// Kinds whose every packet is printed.
-const WATCHED: &[&str] = &["minecraft:ender_dragon", "minecraft:ender_crystal"];
+const WATCHED: &[&str] = &["minecraft:ender_dragon", "minecraft:ender_crystal", "minecraft:dragon_fireball", "minecraft:area_effect_cloud"];
 
 pub struct Run {
     start: Instant,

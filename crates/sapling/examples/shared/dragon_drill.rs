@@ -82,9 +82,9 @@ pub fn drill(name: &str) -> Option<Vec<String>> {
             lines.extend(owned(&["!summon 40000", "!entities", "!spikes", "!wait 20000", "!entities", ASIDE, "kill @e[type=ender_dragon] #30000", "!entities", "!box -4 58 -4 4 67 4"]));
         }
         // A survival player on the island by the portal, for the dragon to flame, strafe, charge
-        // and hit; kept alive by resistance and regeneration.
+        // and hit; kept alive by health boost and regeneration, so each harm shows whole.
         "dragon-survival" => {
-            lines.extend(owned(&["tp @s 6.5 63 0.5 #2000", "gamemode survival", "effect @s resistance 9999 3 true", "effect @s regeneration 9999 4 true", "!wait 120000", "!entities", "gamemode creative"]));
+            lines.extend(owned(&["tp @s 6.5 63 0.5 #2000", "effect @s health_boost 9999 9 true", "effect @s regeneration 9999 4 true", "gamemode survival", "!wait 150000", "!entities", "gamemode creative"]));
         }
         // The first gateway's line out (0, z), where the exit search walks, and round the exits BDS found.
         "dragon-exits" => {

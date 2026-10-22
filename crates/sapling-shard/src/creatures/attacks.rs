@@ -55,7 +55,8 @@ fn hit(world: &mut World, player: Entity, id: u64) -> Option<()> {
     let entity = entities::find(world, EntityId(id)).filter(|entity| world.get::<Creature>(*entity).is_some() && world.get::<super::Dying>(*entity).is_none() && !crate::dragon::is_dying(world, *entity))?;
     let (body, kind) = (*world.get::<Body>(entity)?, world.get::<entities::Kind>(entity)?.0.clone());
     let mut health = *world.get::<Health>(entity)?;
-    if world.get::<InLayer>(entity)?.0 != layer || world.get::<Mode>(player)?.0 == GameMode::Spectator || distance(eye, &body) > REACH {
+    let far = crate::dragon::part_reach(world, entity, eye).map_or(distance(eye, &body), |part| part.min(distance(eye, &body)));
+    if world.get::<InLayer>(entity)?.0 != layer || world.get::<Mode>(player)?.0 == GameMode::Spectator || far > REACH {
         return None;
     }
     let cell = body.at.map(|c| c.floor() as i32);

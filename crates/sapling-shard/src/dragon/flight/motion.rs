@@ -15,7 +15,7 @@ const SITTING_BEAT: f32 = 0.1;
 const DEGREES: f32 = 57.295_776;
 
 /// Degrees into -180..180, as BDS's `fmodf` wraps them.
-pub(super) fn wrap(degrees: f32) -> f32 {
+pub(crate) fn wrap(degrees: f32) -> f32 {
     let mut a = (degrees + 180.0) % 360.0;
     if a < 0.0 {
         a += 360.0;

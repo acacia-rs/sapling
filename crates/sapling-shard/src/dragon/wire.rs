@@ -21,6 +21,17 @@ pub(crate) struct Shown {
     motion: [f32; 3],
     flags: Option<(bool, bool)>,
     moved_far: bool,
+    target: i64,
+}
+
+/// Its target's id, told whenever it changes (a strafe or a scan picks one, its end lets it go).
+pub(super) fn tell_target(shown: &mut Shown, id: u64, target: i64) -> Option<Bytes> {
+    if shown.target == target {
+        return None;
+    }
+    shown.target = target;
+    let item = super::cloud::item(acacia_proto::types::MetadataDictionaryItemKey::TargetEid, acacia_proto::types::MetadataDictionaryItemValueDefault::Long(target));
+    Some(sapling_net::encode(&acacia_proto::packets::SetEntityData { runtime_entity_id: id, metadata: vec![item], properties: acacia_proto::types::EntityProperties { ints: Vec::new(), floats: Vec::new() }, tick: 0 }))
 }
 
 fn byte(degrees: f32) -> u8 {
