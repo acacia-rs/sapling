@@ -74,7 +74,7 @@ pub(super) fn tick(world: &mut World, layer: Entity) {
 /// One tick of `dragon`; whether its last flight ended.
 fn step(world: &mut World, layer: Entity, dragon: Entity, kept: &mut Dragon, random: &mut super::random::Random) -> bool {
     let flight = &mut kept.flight;
-    if flight.nodes_missing() && world.get::<Layer>(layer).is_some_and(|level| flight::nodes_ready(&level.world)) {
+    if flight.nodes_missing() && world.get_mut::<Layer>(layer).is_some_and(|mut level| flight::nodes_ready(&mut level.world)) {
         flight.build_nodes(&world.get::<Layer>(layer).expect("read above").world);
     }
     let (before, id) = (flight.motion.at, world.get::<NetId>(dragon).map_or(0, |id| id.0));

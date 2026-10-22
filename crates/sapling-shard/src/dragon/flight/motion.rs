@@ -9,6 +9,7 @@ const TURN: f32 = 50.0;
 const PUSH: f32 = 0.06;
 const SLOWED: f32 = 0.8;
 const FALL_DRAG: f32 = 0.91;
+const AIR_FRICTION: f32 = 0.91;
 const FLAP_AT: f32 = -0.3;
 const SITTING_BEAT: f32 = 0.1;
 const DEGREES: f32 = 57.295_776;
@@ -54,9 +55,11 @@ impl Motion {
         Self { at, delta: [0.0; 3], yaw: 0.0, yaw_speed: 0.0, air_speed: 0.6, turn_factor: 0.7, target: None, anim: 0.0, prev_anim: 0.0, slowed: false }
     }
 
-    /// The move BDS makes of every actor before the dragon's own: by its stored motion.
+    /// The move BDS makes of every actor before the dragon's own: by its stored motion, after which
+    /// the air takes its xz (fitted to 4 digits on research/captures/bds-dragon-watch.txt's first ticks).
     pub fn carry(&mut self) {
         self.at = std::array::from_fn(|axis| self.at[axis] + self.delta[axis]);
+        (self.delta[0], self.delta[2]) = (self.delta[0] * AIR_FRICTION, self.delta[2] * AIR_FRICTION);
     }
 
     /// Whether a wing beat is heard this tick, by last tick's beat.
@@ -120,5 +123,23 @@ mod tests {
         }
         let bds = [-0.06, -0.1692, -0.2686, -0.359, -0.4413];
         assert!(steps.iter().zip(bds).all(|(step, bds)| (step - bds).abs() < 2e-4), "{steps:?}");
+    }
+
+    #[test]
+    fn its_first_steps_across_are_bdss() {
+        // research/captures/bds-dragon-watch.txt, by the yaws it showed; its target is far ahead.
+        let mut motion = Motion { turn_factor: 0.0, ..Motion::new([0.0, 128.0, 0.0]) };
+        let mut steps = Vec::new();
+        for yaw in [357.19_f32, 351.56, 344.53, 336.09] {
+            let before = motion.at;
+            motion.carry();
+            (motion.yaw, motion.yaw_speed) = (wrap(yaw), 0.0);
+            let (sin, cos) = yaw.to_radians().sin_cos();
+            motion.target = Some([motion.at[0] + sin * 1e4, -1e4, motion.at[2] - cos * 1e4]);
+            motion.fly();
+            steps.push((motion.at[0] - before[0]).hypot(motion.at[2] - before[2]));
+        }
+        let bds = [0.06, 0.1664, 0.2564, 0.3323];
+        assert!(steps.iter().zip(bds).all(|(step, bds)| (step - bds).abs() < 3e-3), "{steps:?}");
     }
 }

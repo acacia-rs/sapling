@@ -82,10 +82,12 @@ const PITCH_EASE: f32 = 10.0;
 const GROWL_FROM: i32 = 200;
 const GROWL_SPREAD: u32 = 200;
 
-/// Whether the columns its nodes stand on are loaded (BDS asks for those within 60 of the middle).
-pub(crate) fn nodes_ready(level: &sapling_world::World) -> bool {
+/// Whether the columns its nodes stand on are loaded (BDS asks for those within 60 of the middle);
+/// those that are not are asked for, as sapling loads a player's view slower than BDS.
+pub(crate) fn nodes_ready(level: &mut sapling_world::World) -> bool {
     let reach = nodes::BUILT_WITHIN.div_euclid(16) + 1;
-    (-reach..reach).all(|x| (-reach..reach).all(|z| level.is_loaded(sapling_world::ChunkPos::new(x, z))))
+    let columns = (-reach..reach).flat_map(|x| (-reach..reach).map(move |z| sapling_world::ChunkPos::new(x, z)));
+    columns.fold(true, |all, column| level.request(column) && all)
 }
 
 impl Flight {

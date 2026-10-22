@@ -1,0 +1,1682 @@
+## gamemode creative at 0
+     34 actor   .. SyncWorldClocks x1, UpdatePlayerGameType x1
+     34 actor   CommandOutput CommandOutput { origin: CommandOrigin { type: "player", uuid: Uuid([7, 76, 135, 91, 152, 115, 34, 212, 126, 18, 0, 44, 184, 143, 213, 179]), request_id: "", player_entity_id: 0 }, output_type: "alloutput", success_count: 1, output: [CommandOutputOutputItem { message_id: "commands.gamemode.success.self", success: true, parameters: ["%createWorldScreen.gameMode.creative"] }], has_data: false, data: None }
+     34 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"DragonActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamemode.success.self\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.creative\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## gamerule domobspawning false at 1201
+   1233 actor   GameRulesChanged GameRulesChanged { rules: [GameRuleI32 { name: "doMobSpawning", editable: true, type: Bool, value: Bool(false) }] }
+   1233 actor   CommandOutput CommandOutput { origin: CommandOrigin { type: "player", uuid: Uuid([114, 70, 187, 240, 150, 210, 223, 20, 126, 252, 207, 137, 127, 221, 72, 174]), request_id: "", player_entity_id: 0 }, output_type: "alloutput", success_count: 1, output: [CommandOutputOutputItem { message_id: "commands.gamerule.success", success: true, parameters: ["domobspawning", "false"] }], has_data: false, data: None }
+   1233 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"DragonActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"domobspawning\"},{\"text\":\"false\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## execute in the_end run tp @s 0.5 90 0.5 #15000 at 2402
+   2437 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"DragonActor\"},{\"text\":\": \"},{\"translate\":\"commands.tp.success.coordinates\",\"with\":{\"rawtext\":[{\"text\":\"DragonActor\"},{\"text\":\"0.50\"},{\"text\":\"90.00\"},{\"text\":\"0.50\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   2437 actor   RemoveEntity 2 ?
+   2438 actor   ChangeDimension ChangeDimension { dimension: 2, position: Vec3f { x: 0.5, y: 90.0, z: 0.5 }, respawn: false, loading_screen_id: Some(0) }
+   2438 actor   LevelEventGeneric LevelEventGeneric { event_id: 19602, nbt: [Nbt { name: "ableToSleep", value: Int(1) }, Nbt { name: "overworldPlayerCount", value: Int(1) }, Nbt { name: "sleepingPlayerCount", value: Int(0) }] }
+   2438 actor   .. Text x1
+   2438 actor   CommandOutput CommandOutput { origin: CommandOrigin { type: "player", uuid: Uuid([84, 77, 230, 123, 66, 205, 52, 126, 53, 185, 200, 120, 40, 95, 226, 183]), request_id: "", player_entity_id: 0 }, output_type: "alloutput", success_count: 1, output: [CommandOutputOutputItem { message_id: "commands.tp.success.coordinates", success: true, parameters: ["DragonActor", "0.50", "90.00", "0.50"] }], has_data: false, data: None }
+   2681 actor   .. NetworkChunkPublisherUpdate x1, LevelChunk x4, Subchunk x2, ClientCacheMissResponse x1
+   2681 actor   AddEntity AddEntity { unique_id: 3, runtime_id: 3, entity_type: "minecraft:ender_dragon", position: Vec3f { x: 0.0, y: 128.0, z: 0.0 }, velocity: Vec3f { x: 0.0, y: 0.0, z: 0.0 }, pitch: -179.57253, yaw: 0.0, head_yaw: 0.0, body_yaw: 0.0, attributes: [EntityAttributesItem { name: "minecraft:health", min: 0.0, value: 200.0, max: 200.0 }, EntityAttributesItem { name: "minecraft:movement", min: 0.0, value: 0.3, max: 3.4028235e38 }, EntityAttributesItem { name: "minecraft:underwater_movement", min: 0.0, value: 0.02, max: 3.4028235e38 }, EntityAttributesItem { name: "minecraft:lava_movement", min: 0.0, value: 0.02, max: 3.4028235e38 }, EntityAttributesItem { name: "minecraft:absorption", min: 0.0, value: 0.0, max: 16.0 }, EntityAttributesItem { name: "minecraft:luck", min: -1024.0, value: 0.0, max: 1024.0 }, EntityAttributesItem { name: "minecraft:friction_modifier", min: 0.0, value: 1.0, max: 256.0 }, EntityAttributesItem { name: "minecraft:bounciness", min: 0.0, value: 0.0, max: 1.0 }, EntityAttributesItem { name: "minecraft:air_drag_modifier", min: 0.0, value: 1.0, max: 256.0 }], metadata: [MetadataDictionaryItem { key: Flags, type: Long, legacy_type: 7, value: Flags(MetadataFlags1(1125899906842624)) }, MetadataDictionaryItem { key: Health, type: Int, legacy_type: 2, value: Default(Int(1)) }, MetadataDictionaryItem { key: Variant, type: Int, legacy_type: 2, value: Default(Int(0)) }, MetadataDictionaryItem { key: Color, type: Byte, legacy_type: 0, value: Default(Byte(0)) }, MetadataDictionaryItem { key: Nametag, type: String, legacy_type: 4, value: Default(String("")) }, MetadataDictionaryItem { key: OwnerEid, type: Long, legacy_type: 7, value: Default(Long(-1)) }, MetadataDictionaryItem { key: TargetEid, type: Long, legacy_type: 7, value: Default(Long(0)) }, MetadataDictionaryItem { key: Air, type: Short, legacy_type: 1, value: Default(Short(300)) }, MetadataDictionaryItem { key: JumpDuration, type: Byte, legacy_type: 0, value: Default(Byte(0)) }, MetadataDictionaryItem { key: ChargeAmount, type: Byte, legacy_type: 0, value: Default(Byte(0)) }, MetadataDictionaryItem { key: LeadHolderEid, type: Long, legacy_type: 7, value: Default(Long(0)) }, MetadataDictionaryItem { key: Scale, type: Float, legacy_type: 3, value: Default(Float(1.0)) }, MetadataDictionaryItem { key: InteractiveTag, type: Byte, legacy_type: 0, value: Default(Byte(0)) }, MetadataDictionaryItem { key: MaxAirdataMaxAir, type: Short, legacy_type: 1, value: Default(Short(300)) }, MetadataDictionaryItem { key: MarkVariant, type: Int, legacy_type: 2, value: Default(Int(0)) }, MetadataDictionaryItem { key: ContainerType, type: Byte, legacy_type: 0, value: Default(Byte(0)) }, MetadataDictionaryItem { key: ContainerBaseSize, type: Int, legacy_type: 2, value: Default(Int(0)) }, MetadataDictionaryItem { key: ContainerExtraSlotsPerStrength, type: Int, legacy_type: 2, value: Default(Int(0)) }, MetadataDictionaryItem { key: BoundingboxWidth, type: Float, legacy_type: 3, value: Default(Float(13.0)) }, MetadataDictionaryItem { key: BoundingboxHeight, type: Float, legacy_type: 3, value: Default(Float(4.0)) }, MetadataDictionaryItem { key: FuseLength, type: Int, legacy_type: 2, value: Default(Int(-1)) }, MetadataDictionaryItem { key: RiderSeatPosition, type: Vec3f, legacy_type: 8, value: Default(Vec3f(Vec3f { x: 0.0, y: 0.0, z: 0.0 })) }, MetadataDictionaryItem { key: RiderRotationLocked, type: Byte, legacy_type: 0, value: Default(Byte(0)) }, MetadataDictionaryItem { key: RiderMaxRotation, type: Float, legacy_type: 3, value: Default(Float(0.0)) }, MetadataDictionaryItem { key: RiderMinRotation, type: Byte, legacy_type: 0, value: Default(Byte(0)) }, MetadataDictionaryItem { key: RiderSeatRotationOffset, type: Float, legacy_type: 3, value: Default(Float(0.0)) }, MetadataDictionaryItem { key: HasCommandBlock, type: Byte, legacy_type: 0, value: Default(Byte(0)) }, MetadataDictionaryItem { key: CommandBlockCommand, type: String, legacy_type: 4, value: Default(String("")) }, MetadataDictionaryItem { key: CommandBlockLastOutput, type: String, legacy_type: 4, value: Default(String("")) }, MetadataDictionaryItem { key: CommandBlockTrackOutput, type: Byte, legacy_type: 0, value: Default(Byte(1)) }, MetadataDictionaryItem { key: ControllingRiderSeatNumber, type: Byte, legacy_type: 0, value: Default(Byte(0)) }, MetadataDictionaryItem { key: Strength, type: Int, legacy_type: 2, value: Default(Int(0)) }, MetadataDictionaryItem { key: MaxStrength, type: Int, legacy_type: 2, value: Default(Int(0)) }, MetadataDictionaryItem { key: EvokerSpellCastingColor, type: Int, legacy_type: 2, value: Default(Int(0)) }, MetadataDictionaryItem { key: LimitedLife, type: Int, legacy_type: 2, value: Default(Int(-1)) }, MetadataDictionaryItem { key: AlwaysShowNametag, type: Byte, legacy_type: 0, value: Default(Byte(-1)) }, MetadataDictionaryItem { key: Color2, type: Byte, legacy_type: 0, value: Default(Byte(0)) }, MetadataDictionaryItem { key: EatingCounter, type: Int, legacy_type: 2, value: Default(Int(0)) }, MetadataDictionaryItem { key: FlagsExtended, type: Long, legacy_type: 7, value: FlagsExtended(MetadataFlags2(33554432)) }, MetadataDictionaryItem { key: TradeTier, type: Int, legacy_type: 2, value: Default(Int(0)) }, MetadataDictionaryItem { key: MaxTradeTier, type: Int, legacy_type: 2, value: Default(Int(0)) }, MetadataDictionaryItem { key: TradeExperience, type: Int, legacy_type: 2, value: Default(Int(0)) }, MetadataDictionaryItem { key: SkinId, type: Int, legacy_type: 2, value: Default(Int(0)) }, MetadataDictionaryItem { key: CommandBlockTickDelay, type: Int, legacy_type: 2, value: Default(Int(3)) }, MetadataDictionaryItem { key: CommandBlockExecuteOnFirstTick, type: Byte, legacy_type: 0, value: Default(Byte(1)) }, MetadataDictionaryItem { key: AmbientSoundInterval, type: Float, legacy_type: 3, value: Default(Float(8.0)) }, MetadataDictionaryItem { key: AmbientSoundIntervalRange, type: Float, legacy_type: 3, value: Default(Float(16.0)) }, MetadataDictionaryItem { key: AmbientSoundEventName, type: String, legacy_type: 4, value: Default(String("ambient")) }, MetadataDictionaryItem { key: FallDamageMultiplier, type: Float, legacy_type: 3, value: Default(Float(0.0)) }, MetadataDictionaryItem { key: LowTierCuredDiscount, type: Int, legacy_type: 2, value: Default(Int(0)) }, MetadataDictionaryItem { key: HighTierCuredDiscount, type: Int, legacy_type: 2, value: Default(Int(0)) }, MetadataDictionaryItem { key: NearbyCuredDiscount, type: Int, legacy_type: 2, value: Default(Int(0)) }, MetadataDictionaryItem { key: NearbyCuredDiscountTimestamp, type: Int, legacy_type: 2, value: Default(Int(0)) }, MetadataDictionaryItem { key: Hitbox, type: Compound, legacy_type: 5, value: Default(Compound(Nbt { name: "", value: Compound([]) })) }, MetadataDictionaryItem { key: IsBuoyant, type: Byte, legacy_type: 0, value: Default(Byte(0)) }, MetadataDictionaryItem { key: FreezingEffectStrength, type: Float, legacy_type: 3, value: Default(Float(0.0)) }, MetadataDictionaryItem { key: MovementSoundDistanceOffset, type: Float, legacy_type: 3, value: Default(Float(1.0)) }, MetadataDictionaryItem { key: HeartbeatIntervalTicks, type: Int, legacy_type: 2, value: Default(Int(20)) }, MetadataDictionaryItem { key: HeartbeatSoundEvent, type: Int, legacy_type: 2, value: Default(Int(614)) }, MetadataDictionaryItem { key: VisibleMobEffects, type: Long, legacy_type: 7, value: Default(Long(0)) }, MetadataDictionaryItem { key: FilteredName, type: String, legacy_type: 4, value: Default(String("")) }, MetadataDictionaryItem { key: SeatThirdPersonCameraRadius, type: Float, legacy_type: 3, value: SeatThirdPersonCameraRadius(0.0) }, MetadataDictionaryItem { key: SeatCameraRelaxDistanceSmoothing, type: Float, legacy_type: 3, value: SeatCameraRelaxDistanceSmoothing(0.0) }, MetadataDictionaryItem { key: AimAssistPriorityPresetId, type: Int, legacy_type: 2, value: Default(Int(-1)) }, MetadataDictionaryItem { key: AimAssistPriorityCategoryId, type: Int, legacy_type: 2, value: Default(Int(-1)) }
+   2681 actor   LevelSoundEvent LevelSoundEvent { sound_id: "spawn", position: Vec3f { x: 0.0, y: 129.0, z: -5.6875 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: 3, fire_at_position: None }
+   2681 actor   SetEntityData ender_dragon SetEntityData { runtime_entity_id: 3, metadata: [MetadataDictionaryItem { key: Flags, type: Long, legacy_type: 7, value: Flags(MetadataFlags1(1125899906842624)) }, MetadataDictionaryItem { key: Health, type: Int, legacy_type: 2, value: Default(Int(1)) }, MetadataDictionaryItem { key: Variant, type: Int, legacy_type: 2, value: Default(Int(0)) }, MetadataDictionaryItem { key: Color, type: Byte, legacy_type: 0, value: Default(Byte(0)) }, MetadataDictionaryItem { key: Nametag, type: String, legacy_type: 4, value: Default(String("")) }, MetadataDictionaryItem { key: OwnerEid, type: Long, legacy_type: 7, value: Default(Long(-1)) }, MetadataDictionaryItem { key: TargetEid, type: Long, legacy_type: 7, value: Default(Long(0)) }, MetadataDictionaryItem { key: Air, type: Short, legacy_type: 1, value: Default(Short(300)) }, MetadataDictionaryItem { key: JumpDuration, type: Byte, legacy_type: 0, value: Default(Byte(0)) }, MetadataDictionaryItem { key: ChargeAmount, type: Byte, legacy_type: 0, value: Default(Byte(0)) }, MetadataDictionaryItem { key: LeadHolderEid, type: Long, legacy_type: 7, value: Default(Long(0)) }, MetadataDictionaryItem { key: Scale, type: Float, legacy_type: 3, value: Default(Float(1.0)) }, MetadataDictionaryItem { key: InteractiveTag, type: Byte, legacy_type: 0, value: Default(Byte(0)) }, MetadataDictionaryItem { key: MaxAirdataMaxAir, type: Short, legacy_type: 1, value: Default(Short(300)) }, MetadataDictionaryItem { key: MarkVariant, type: Int, legacy_type: 2, value: Default(Int(0)) }, MetadataDictionaryItem { key: ContainerType, type: Byte, legacy_type: 0, value: Default(Byte(0)) }, MetadataDictionaryItem { key: ContainerBaseSize, type: Int, legacy_type: 2, value: Default(Int(0)) }, MetadataDictionaryItem { key: ContainerExtraSlotsPerStrength, type: Int, legacy_type: 2, value: Default(Int(0)) }, MetadataDictionaryItem { key: BoundingboxWidth, type: Float, legacy_type: 3, value: Default(Float(13.0)) }, MetadataDictionaryItem { key: BoundingboxHeight, type: Float, legacy_type: 3, value: Default(Float(4.0)) }, MetadataDictionaryItem { key: FuseLength, type: Int, legacy_type: 2, value: Default(Int(-1)) }, MetadataDictionaryItem { key: RiderSeatPosition, type: Vec3f, legacy_type: 8, value: Default(Vec3f(Vec3f { x: 0.0, y: 0.0, z: 0.0 })) }, MetadataDictionaryItem { key: RiderRotationLocked, type: Byte, legacy_type: 0, value: Default(Byte(0)) }, MetadataDictionaryItem { key: RiderMaxRotation, type: Float, legacy_type: 3, value: Default(Float(0.0)) }, MetadataDictionaryItem { key: RiderMinRotation, type: Byte, legacy_type: 0, value: Default(Byte(0)) }, MetadataDictionaryItem { key: RiderSeatRotationOffset, type: Float, legacy_type: 3, value: Default(Float(0.0)) }, MetadataDictionaryItem { key: HasCommandBlock, type: Byte, legacy_type: 0, value: Default(Byte(0)) }, MetadataDictionaryItem { key: CommandBlockCommand, type: String, legacy_type: 4, value: Default(String("")) }, MetadataDictionaryItem { key: CommandBlockLastOutput, type: String, legacy_type: 4, value: Default(String("")) }, MetadataDictionaryItem { key: CommandBlockTrackOutput, type: Byte, legacy_type: 0, value: Default(Byte(1)) }, MetadataDictionaryItem { key: ControllingRiderSeatNumber, type: Byte, legacy_type: 0, value: Default(Byte(0)) }, MetadataDictionaryItem { key: Strength, type: Int, legacy_type: 2, value: Default(Int(0)) }, MetadataDictionaryItem { key: MaxStrength, type: Int, legacy_type: 2, value: Default(Int(0)) }, MetadataDictionaryItem { key: EvokerSpellCastingColor, type: Int, legacy_type: 2, value: Default(Int(0)) }, MetadataDictionaryItem { key: LimitedLife, type: Int, legacy_type: 2, value: Default(Int(-1)) }, MetadataDictionaryItem { key: AlwaysShowNametag, type: Byte, legacy_type: 0, value: Default(Byte(-1)) }, MetadataDictionaryItem { key: Color2, type: Byte, legacy_type: 0, value: Default(Byte(0)) }, MetadataDictionaryItem { key: EatingCounter, type: Int, legacy_type: 2, value: Default(Int(0)) }, MetadataDictionaryItem { key: FlagsExtended, type: Long, legacy_type: 7, value: FlagsExtended(MetadataFlags2(33554432)) }, MetadataDictionaryItem { key: TradeTier, type: Int, legacy_type: 2, value: Default(Int(0)) }, MetadataDictionaryItem { key: MaxTradeTier, type: Int, legacy_type: 2, value: Default(Int(0)) }, MetadataDictionaryItem { key: TradeExperience, type: Int, legacy_type: 2, value: Default(Int(0)) }, MetadataDictionaryItem { key: SkinId, type: Int, legacy_type: 2, value: Default(Int(0)) }, MetadataDictionaryItem { key: CommandBlockTickDelay, type: Int, legacy_type: 2, value: Default(Int(3)) }, MetadataDictionaryItem { key: CommandBlockExecuteOnFirstTick, type: Byte, legacy_type: 0, value: Default(Byte(1)) }, MetadataDictionaryItem { key: AmbientSoundInterval, type: Float, legacy_type: 3, value: Default(Float(8.0)) }, MetadataDictionaryItem { key: AmbientSoundIntervalRange, type: Float, legacy_type: 3, value: Default(Float(16.0)) }, MetadataDictionaryItem { key: AmbientSoundEventName, type: String, legacy_type: 4, value: Default(String("ambient")) }, MetadataDictionaryItem { key: FallDamageMultiplier, type: Float, legacy_type: 3, value: Default(Float(0.0)) }, MetadataDictionaryItem { key: LowTierCuredDiscount, type: Int, legacy_type: 2, value: Default(Int(0)) }, MetadataDictionaryItem { key: HighTierCuredDiscount, type: Int, legacy_type: 2, value: Default(Int(0)) }, MetadataDictionaryItem { key: NearbyCuredDiscount, type: Int, legacy_type: 2, value: Default(Int(0)) }, MetadataDictionaryItem { key: NearbyCuredDiscountTimestamp, type: Int, legacy_type: 2, value: Default(Int(0)) }, MetadataDictionaryItem { key: Hitbox, type: Compound, legacy_type: 5, value: Default(Compound(Nbt { name: "", value: Compound([]) })) }, MetadataDictionaryItem { key: IsBuoyant, type: Byte, legacy_type: 0, value: Default(Byte(0)) }, MetadataDictionaryItem { key: FreezingEffectStrength, type: Float, legacy_type: 3, value: Default(Float(0.0)) }, MetadataDictionaryItem { key: MovementSoundDistanceOffset, type: Float, legacy_type: 3, value: Default(Float(1.0)) }, MetadataDictionaryItem { key: HeartbeatIntervalTicks, type: Int, legacy_type: 2, value: Default(Int(20)) }, MetadataDictionaryItem { key: HeartbeatSoundEvent, type: Int, legacy_type: 2, value: Default(Int(614)) }, MetadataDictionaryItem { key: VisibleMobEffects, type: Long, legacy_type: 7, value: Default(Long(0)) }, MetadataDictionaryItem { key: FilteredName, type: String, legacy_type: 4, value: Default(String("")) }, MetadataDictionaryItem { key: SeatThirdPersonCameraRadius, type: Float, legacy_type: 3, value: SeatThirdPersonCameraRadius(0.0) }, MetadataDictionaryItem { key: SeatCameraRelaxDistanceSmoothing, type: Float, legacy_type: 3, value: SeatCameraRelaxDistanceSmoothing(0.0) }, MetadataDictionaryItem { key: AimAssistPriorityPresetId, type: Int, legacy_type: 2, value: Default(Int(-1)) }, MetadataDictionaryItem { key: AimAssistPriorityCategoryId, type: Int, legacy_type: 2, value: Default(Int(-1)) }, MetadataDictionaryItem { key: AimAssistPriorityActorId, type: Int, legacy_type: 2, value: Default(Int(-1)) }, MetadataDictionaryItem { key: ArrowShooterId, type: Long, legacy_type: 7, value: Default(Long(0)) }, MetadataDictionaryItem { key: FireworkDirection, type: Float, legacy_type: 3, value: Default(Float(64.0)) }], properties: EntityProperties { ints: [], floats: [] }, tick: 0 }
+   2682 actor   UpdateAttributes ender_dragon minecraft:health=200/200 minecraft:movement=0.3/340282350000000000000000000000000000000 minecraft:underwater_movement=0.02/340282350000000000000000000000000000000 minecraft:lava_movement=0.02/340282350000000000000000000000000000000 minecraft:absorption=0/16 minecraft:luck=0/1024 minecraft:friction_modifier=1/256 minecraft:bounciness=0/1 minecraft:air_drag_modifier=1/256
+   2776 actor   .. ClientCacheMissResponse x1
+   2776 actor   UpdateBlock 0 64 -1 layer 0 flags UpdateBlockFlags(3) torch[torch_facing_direction=south]
+   2776 actor   UpdateBlock -1 64 0 layer 0 flags UpdateBlockFlags(3) torch[torch_facing_direction=east]
+   2776 actor   UpdateSubchunkBlocks at -16 48 -16: -3 61 -1 end_stone[] f3; -3 62 -1 bedrock[infiniburn_bit=1] f3; -2 61 -2 end_stone[] f3; -2 61 -1 bedrock[infiniburn_bit=1] f3; -2 62 -2 bedrock[infiniburn_bit=1] f3; -1 61 -3 end_stone[] f3; -1 61 -2 bedrock[infiniburn_bit=1] f3; -1 61 -1 bedrock[infiniburn_bit=1] f3; -1 62 -3 bedrock[infiniburn_bit=1] f3 | extra: 
+   2778 actor   UpdateSubchunkBlocks at -16 48 0: -3 61 0 end_stone[] f3; -3 61 1 end_stone[] f3; -3 62 0 bedrock[infiniburn_bit=1] f3; -3 62 1 bedrock[infiniburn_bit=1] f3; -2 61 0 bedrock[infiniburn_bit=1] f3; -2 61 1 bedrock[infiniburn_bit=1] f3; -2 62 2 bedrock[infiniburn_bit=1] f3; -1 61 0 bedrock[infiniburn_bit=1] f3; -1 61 1 bedrock[infiniburn_bit=1] f3; -1 61 2 bedrock[infiniburn_bit=1] f3; -1 62 3 bedrock[infiniburn_bit=1] f3 | extra: 
+   2778 actor   UpdateSubchunkBlocks at 0 48 -16: 0 61 -3 end_stone[] f3; 0 61 -2 bedrock[infiniburn_bit=1] f3; 0 61 -1 bedrock[infiniburn_bit=1] f3; 0 62 -3 bedrock[infiniburn_bit=1] f3; 1 61 -3 end_stone[] f3; 1 61 -2 bedrock[infiniburn_bit=1] f3; 1 61 -1 bedrock[infiniburn_bit=1] f3; 1 62 -3 bedrock[infiniburn_bit=1] f3; 2 61 -1 bedrock[infiniburn_bit=1] f3; 2 62 -2 bedrock[infiniburn_bit=1] f3; 3 62 -1 bedrock[infiniburn_bit=1] f3 | extra: 
+   2778 actor   UpdateSubchunkBlocks at 0 48 0: 0 61 0 bedrock[infiniburn_bit=1] f3; 0 61 1 bedrock[infiniburn_bit=1] f3; 0 61 2 bedrock[infiniburn_bit=1] f3; 0 62 3 bedrock[infiniburn_bit=1] f3; 1 61 0 bedrock[infiniburn_bit=1] f3; 1 61 1 bedrock[infiniburn_bit=1] f3; 1 61 2 bedrock[infiniburn_bit=1] f3; 1 62 3 bedrock[infiniburn_bit=1] f3; 2 61 0 bedrock[infiniburn_bit=1] f3; 2 61 1 bedrock[infiniburn_bit=1] f3; 2 62 2 bedrock[infiniburn_bit=1] f3; 3 62 0 bedrock[infiniburn_bit=1] f3; 3 62 1 bedrock[infiniburn_bit=1] f3; 0 62 0 bedrock[infiniburn_bit=1] f3; 0 63 0 bedrock[infiniburn_bit=1] f3 | extra: 
+   2779 actor   UpdateSubchunkBlocks at 0 64 0: 0 64 0 bedrock[infiniburn_bit=1] f3; 0 65 0 bedrock[infiniburn_bit=1] f3; 0 64 1 torch[torch_facing_direction=north] f3; 1 64 0 torch[torch_facing_direction=west] f3 | extra: 
+   2779 actor   LevelSoundEvent LevelSoundEvent { sound_id: "mad", position: Vec3f { x: 0.0, y: 130.0, z: 0.0 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: 3, fire_at_position: None }
+   2779 actor   SetEntityData ender_dragon SetEntityData { runtime_entity_id: 3, metadata: [MetadataDictionaryItem { key: Flags, type: Long, legacy_type: 7, value: Flags(MetadataFlags1(1125899906842624)) }], properties: EntityProperties { ints: [], floats: [] }, tick: 0 }
+   2779 actor   D ender_dragon 0.00000 128.00000 0.00000 p 189.84 y 0.00 h 0.00
+   2781 actor   .. LevelChunk x3, Subchunk x2
+   2781 actor   D ender_dragon 0.00000 128.00000 0.00000 p 201.09 y 0.00 h 0.00
+   2781 actor   BossEvent BossEvent { target_entity_id: 3, type: ShowBar, title: "entity.ender_dragon.name", filtered_title: "", progress: 1.0, color: Purple, overlay: Progress }
+   2831 actor   .. LevelChunk x2, Subchunk x3, ClientCacheMissResponse x1
+   2831 actor   D ender_dragon 0.00000 128.00000 0.00000 p 210.94 y 0.00 h 0.00
+   2879 actor   .. Subchunk x2
+   2879 actor   D ender_dragon 0.00000 128.00000 0.00000 p 220.78 y 0.00 h 0.00
+   2922 actor   .. LevelChunk x2
+   2922 actor   LevelSoundEvent LevelSoundEvent { sound_id: "flap", position: Vec3f { x: 0.0, y: 130.0, z: 0.0 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: 3, fire_at_position: None }
+   2922 actor   D ender_dragon 0.00000 128.00000 0.00000 p 230.62 y 0.00 h 0.00
+   2979 actor   .. LevelChunk x2, Subchunk x2, ClientCacheMissResponse x1
+   2979 actor   D ender_dragon 0.00000 128.00000 0.00000 p 240.47 y 0.00 h 0.00
+   3026 actor   .. LevelChunk x2, Subchunk x2
+   3026 actor   D ender_dragon 0.00000 128.00000 0.00000 p 250.31 y 0.00 h 0.00
+   3076 actor   .. LevelChunk x2, Subchunk x2
+   3076 actor   D ender_dragon 0.00000 128.00000 0.00000 p 260.16 y 0.00 h 0.00
+   3130 actor   .. LevelChunk x2, Subchunk x2, ClientCacheMissResponse x1
+   3130 actor   D ender_dragon 0.00000 128.00000 0.00000 p 270.00 y 0.00 h 0.00
+   3177 actor   .. LevelChunk x2, Subchunk x2
+   3177 actor   LevelSoundEvent LevelSoundEvent { sound_id: "flap", position: Vec3f { x: 0.0, y: 130.0, z: 0.0 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: 3, fire_at_position: None }
+   3177 actor   D ender_dragon 0.00000 128.00000 0.00000 p 279.84 y 0.00 h 0.00
+   3226 actor   .. LevelChunk x1, Subchunk x2
+   3226 actor   D ender_dragon 0.00000 128.00000 0.00000 p 291.09 y 0.00 h 0.00
+   3285 actor   .. LevelChunk x2, Subchunk x1, ClientCacheMissResponse x1
+   3285 actor   D ender_dragon 0.00000 128.00000 0.00000 p 300.94 y 0.00 h 0.00
+   3331 actor   .. LevelChunk x2, Subchunk x2
+   3331 actor   D ender_dragon 0.00000 128.00000 0.00000 p 310.78 y 0.00 h 0.00
+   3376 actor   .. LevelChunk x2, Subchunk x2
+   3376 actor   D ender_dragon 0.00000 128.00000 0.00000 p 320.62 y 0.00 h 0.00
+   3431 actor   .. LevelChunk x1
+   3431 actor   PlayerAction PlayerAction { runtime_entity_id: 1, action: DimensionChangeAck, position: BlockCoordinates { x: 0, y: 0, z: 0 }, result_position: BlockCoordinates { x: 0, y: 0, z: 0 }, face: 0 }
+   3432 actor   .. Subchunk x2, ClientCacheMissResponse x1
+   3432 actor   LevelSoundEvent LevelSoundEvent { sound_id: "flap", position: Vec3f { x: 0.0, y: 130.0, z: 0.0 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: 3, fire_at_position: None }
+   3432 actor   D ender_dragon 0.00000 128.00000 0.00000 p 330.47 y 0.00 h 0.00
+   3475 actor   .. Subchunk x1
+   3475 actor   CorrectPlayerMovePrediction CorrectPlayerMovePrediction { prediction_type: Player, position: Vec3f { x: 0.5, y: 91.62001, z: 0.5 }, delta: Vec3f { x: 0.0, y: -0.0784, z: 0.0 }, rotation: Vec2f { x: 0.0, z: 0.0 }, angular_velocity: None, on_ground: true, tick: 101 }
+   3475 actor   D ender_dragon 0.00000 128.00000 0.00000 p 340.31 y 0.00 h 0.00
+   3526 actor   D ender_dragon 0.00000 128.00000 0.00000 p 350.16 y 0.00 h 0.00
+   3579 actor   .. ClientCacheMissResponse x1
+   3579 actor   D ender_dragon 0.00000 128.00000 0.00000 p 0.00 y 0.00 h 0.00
+   3674 actor   .. LevelChunk x1
+   3674 actor   LevelSoundEvent LevelSoundEvent { sound_id: "flap", position: Vec3f { x: 0.0, y: 130.0, z: 0.0 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: 3, fire_at_position: None }
+   3780 actor   .. LevelChunk x4, Subchunk x4, ClientCacheMissResponse x1
+   3780 actor   BossEvent BossEvent { target_entity_id: 3, type: ShowBar, title: "entity.ender_dragon.name", filtered_title: "", progress: 1.0, color: Purple, overlay: Progress }
+   3931 actor   .. LevelChunk x7, Subchunk x6, ClientCacheMissResponse x1
+   3942 actor   LevelSoundEvent LevelSoundEvent { sound_id: "flap", position: Vec3f { x: 0.0, y: 130.0, z: 0.0 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: 3, fire_at_position: None }
+   4183 actor   .. LevelChunk x12, Subchunk x13, ClientCacheMissResponse x2
+   4183 actor   LevelSoundEvent LevelSoundEvent { sound_id: "flap", position: Vec3f { x: 0.0, y: 130.0, z: 0.0 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: 3, fire_at_position: None }
+   4331 actor   .. LevelChunk x9, Subchunk x6, ClientCacheMissResponse x1
+   4331 actor   D ender_dragon -0.00366 127.94000 -0.05985 p 0.00 y 357.19 h 357.19
+   4377 actor   .. LevelChunk x3, Subchunk x4
+   4377 actor   SetEntityData ender_dragon SetEntityData { runtime_entity_id: 3, metadata: [MetadataDictionaryItem { key: Flags, type: Long, legacy_type: 7, value: Flags(MetadataFlags1(1125917086711808)) }], properties: EntityProperties { ints: [], floats: [] }, tick: 0 }
+   4377 actor   D ender_dragon -0.02004 127.77080 -0.22543 p 0.00 y 350.16 h 350.16
+   4431 actor   .. LevelChunk x2, Subchunk x3, ClientCacheMissResponse x1
+   4431 actor   LevelSoundEvent LevelSoundEvent { sound_id: "flap", position: Vec3f { x: -0.03213271, y: 129.6665, z: -0.3279093 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: 3, fire_at_position: None }
+   4431 actor   D ender_dragon -0.06084 127.50223 -0.47846 p 0.00 y 343.12 h 343.12
+   4431 actor   DV ender_dragon -0.02683 -0.14950 -0.14067
+   4479 actor   .. LevelChunk x2, Subchunk x2
+   4479 actor   D ender_dragon -0.13844 127.14323 -0.80100 p 0.00 y 333.28 h 333.28
+   4527 actor   .. LevelChunk x2, Subchunk x2, ClientCacheMissResponse x1
+   4527 actor   D ender_dragon -0.26423 126.70193 -1.17465 p 0.00 y 324.84 h 324.84
+   4574 actor   .. LevelChunk x1, Subchunk x2
+   4574 actor   D ender_dragon -0.44743 126.18576 -1.58019 p 0.00 y 313.59 h 313.59
+   4627 actor   .. LevelChunk x2, Subchunk x1, ClientCacheMissResponse x1
+   4627 actor   D ender_dragon -0.69414 125.60144 -1.99780 p 0.00 y 303.75 h 303.75
+   4678 actor   .. LevelChunk x2, Subchunk x2
+   4678 actor   D ender_dragon -1.00679 124.95511 -2.40758 p 0.00 y 292.50 h 292.50
+   4678 actor   DV ender_dragon -0.16665 -0.32138 -0.19405
+   4728 actor   .. LevelChunk x2, Subchunk x2, ClientCacheMissResponse x1
+   4729 actor   D ender_dragon -1.38386 124.25235 -2.79019 p 0.00 y 281.25 h 281.25
+   4776 actor   .. LevelChunk x2, Subchunk x2
+   4776 actor   D ender_dragon -1.81998 123.49824 -3.12771 p 0.00 y 270.00 h 270.00
+   4776 actor   BossEvent BossEvent { target_entity_id: 3, type: ShowBar, title: "entity.ender_dragon.name", filtered_title: "", progress: 1.0, color: Purple, overlay: Progress }
+   4828 actor   .. LevelChunk x2, Subchunk x2, ClientCacheMissResponse x1
+   4828 actor   D ender_dragon -2.30617 122.69740 -3.40432 p 0.00 y 258.75 h 258.75
+   4876 actor   .. LevelChunk x3, Subchunk x2
+   4876 actor   D ender_dragon -2.83061 121.85403 -3.60737 p 0.00 y 248.91 h 248.91
+   4931 actor   .. LevelChunk x2, Subchunk x3, ClientCacheMissResponse x1
+   4931 actor   D ender_dragon -3.37972 120.97196 -3.72838 p 0.00 y 239.06 h 239.06
+   4931 actor   DV ender_dragon -0.26921 -0.42864 -0.03859
+   4975 actor   .. LevelChunk x1, Subchunk x2
+   4975 actor   D ender_dragon -3.93975 120.05468 -3.76338 p 0.00 y 229.22 h 229.22
+   5024 actor   .. LevelChunk x2, Subchunk x1, ClientCacheMissResponse x1
+   5024 actor   D ender_dragon -4.49824 119.10535 -3.71249 p 0.00 y 222.19 h 222.19
+   5077 actor   .. LevelChunk x2, Subchunk x2, ClientCacheMissResponse x1
+   5077 actor   LevelSoundEvent LevelSoundEvent { sound_id: "flap", position: Vec3f { x: -4.7661657, y: 120.64611, z: -3.6681342 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: 3, fire_at_position: None }
+   5077 actor   D ender_dragon -5.04499 118.12687 -3.57904 p 0.00 y 215.16 h 215.16
+   5130 actor   .. LevelChunk x2, Subchunk x2, ClientCacheMissResponse x1
+   5130 actor   D ender_dragon -5.57256 117.12185 -3.36855 p 0.00 y 210.94 h 210.94
+   5178 actor   .. LevelChunk x2, Subchunk x2
+   5178 actor   D ender_dragon -6.07637 116.09268 -3.08777 p 0.00 y 206.72 h 206.72
+   5178 actor   DV ender_dragon -0.23757 -0.49557 0.15130
+   5228 actor   .. LevelChunk x2, Subchunk x2, ClientCacheMissResponse x1
+   5228 actor   D ender_dragon -6.55445 115.04153 -2.74395 p 0.00 y 203.91 h 203.91
+   5279 actor   .. LevelChunk x2, Subchunk x2
+   5279 actor   D ender_dragon -7.00698 113.97040 -2.34430 p 0.00 y 202.50 h 202.50
+   5330 actor   .. LevelChunk x2, Subchunk x2, ClientCacheMissResponse x1
+   5330 actor   D ender_dragon -7.43581 112.88106 -1.89570 p 0.00 y 201.09 h 201.09
+   5377 actor   .. LevelChunk x2, Subchunk x2
+   5377 actor   D ender_dragon -7.84399 111.77516 -1.40459 p 0.00 y 201.09 h 201.09
+   5428 actor   .. LevelChunk x2, Subchunk x1, ClientCacheMissResponse x1
+   5428 actor   D ender_dragon -8.23525 110.65419 -0.87688 p 0.00 y 201.09 h 201.09
+   5475 actor   .. LevelChunk x2, Subchunk x2
+   5476 actor   D ender_dragon -8.61370 109.51951 -0.31797 p 0.00 y 202.50 h 202.50
+   5524 actor   .. LevelChunk x2, Subchunk x2
+   5524 actor   D ender_dragon -8.98345 108.37235 0.26716 p 0.00 y 203.91 h 203.91
+   5579 actor   .. LevelChunk x2, Subchunk x2, ClientCacheMissResponse x1
+   5579 actor   D ender_dragon -9.34841 107.21384 0.87402 p 0.00 y 205.31 h 205.31
+   5630 actor   .. LevelChunk x2, Subchunk x2
+   5630 actor   D ender_dragon -9.71211 106.04499 1.49853 p 0.00 y 206.72 h 206.72
+   5677 actor   .. LevelChunk x2, Subchunk x2, ClientCacheMissResponse x1
+   5677 actor   D ender_dragon -10.07763 104.86754 2.13702 p 0.00 y 208.12 h 208.12
+   5724 actor   .. LevelChunk x1, Subchunk x2
+   5724 actor   D ender_dragon -10.44748 103.68539 2.78625 p 0.00 y 209.53 h 209.53
+   5776 actor   .. LevelChunk x2, Subchunk x1
+   5776 actor   LevelSoundEvent LevelSoundEvent { sound_id: "flap", position: Vec3f { x: -10.628208, y: 105.121666, z: 3.1034224 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: 3, fire_at_position: None }
+   5776 actor   D ender_dragon -10.82367 102.50363 3.44342 p 0.00 y 210.94 h 210.94
+   5776 actor   BossEvent BossEvent { target_entity_id: 3, type: ShowBar, title: "entity.ender_dragon.name", filtered_title: "", progress: 1.0, color: Purple, overlay: Progress }
+   5829 actor   .. LevelChunk x2, Subchunk x2, ClientCacheMissResponse x1
+   5829 actor   D ender_dragon -11.20765 101.32710 4.10613 p 0.00 y 212.34 h 212.34
+   5876 actor   .. LevelChunk x2, Subchunk x2
+   5876 actor   D ender_dragon -11.60041 100.16037 4.77240 p 0.00 y 213.75 h 213.75
+   5934 actor   .. LevelChunk x3, Subchunk x2, ClientCacheMissResponse x1
+   5934 actor   D ender_dragon -12.00252 99.00780 5.44065 p 0.00 y 213.75 h 213.75
+   5976 actor   .. LevelChunk x1, Subchunk x2
+   5976 actor   D ender_dragon -12.41416 97.87352 6.10965 p 0.00 y 215.16 h 215.16
+   6026 actor   .. LevelChunk x3, Subchunk x1
+   6026 actor   D ender_dragon -12.83525 96.76146 6.77852 p 0.00 y 216.56 h 216.56
+   6081 actor   .. LevelChunk x2, Subchunk x3, ClientCacheMissResponse x1
+   6081 actor   D ender_dragon -13.26543 95.67535 7.44664 p 0.00 y 216.56 h 216.56
+   6127 actor   .. LevelChunk x2, Subchunk x1
+   6127 actor   D ender_dragon -13.70420 94.61874 8.11365 p 0.00 y 216.56 h 216.56
+   6177 actor   .. LevelChunk x2, Subchunk x2
+   6177 actor   D ender_dragon -14.15090 93.59498 8.77939 p 0.00 y 216.56 h 216.56
+   6227 actor   .. LevelChunk x2, Subchunk x2, ClientCacheMissResponse x1
+   6227 actor   D ender_dragon -14.60482 92.60728 9.44386 p 0.00 y 216.56 h 216.56
+   6279 actor   .. LevelChunk x2, Subchunk x2, ClientCacheMissResponse x1
+   6279 actor   D ender_dragon -15.06518 91.65866 10.10721 p 0.00 y 217.97 h 217.97
+   6323 actor   .. LevelChunk x2
+   6323 actor   D ender_dragon -15.53124 90.75199 10.76963 p 0.00 y 217.97 h 217.97
+   6376 actor   .. LevelChunk x2, Subchunk x2, ClientCacheMissResponse x1
+   6376 actor   D ender_dragon -16.00223 89.88999 11.43142 p 0.00 y 217.97 h 217.97
+   6426 actor   .. LevelChunk x2, Subchunk x2
+   6426 actor   D ender_dragon -16.47747 89.07523 12.09291 p 0.00 y 216.56 h 216.56
+   6426 actor   DV ender_dragon -0.23177 -0.37719 0.32129
+   6477 actor   .. LevelChunk x2, Subchunk x1, ClientCacheMissResponse x1
+   6477 actor   D ender_dragon -16.95631 88.31013 12.75445 p 0.00 y 216.56 h 216.56
+   6528 actor   .. LevelChunk x2, Subchunk x1, ClientCacheMissResponse x1
+   6528 actor   D ender_dragon -17.43819 87.59694 13.41639 p 0.00 y 216.56 h 216.56
+   6575 actor   .. LevelChunk x2, Subchunk x1
+   6575 actor   D ender_dragon -17.92262 86.93780 14.07910 p 0.00 y 216.56 h 216.56
+   6625 actor   .. LevelChunk x2, Subchunk x1
+   6625 actor   D ender_dragon -18.40920 86.33469 14.74292 p 0.00 y 216.56 h 216.56
+   6678 actor   .. LevelChunk x2, Subchunk x1, ClientCacheMissResponse x1
+   6678 actor   LevelSoundEvent LevelSoundEvent { sound_id: "flap", position: Vec3f { x: -18.646248, y: 88.060265, z: 15.065975 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: 3, fire_at_position: None }
+   6678 actor   D ender_dragon -18.89762 85.78944 15.40819 p 0.00 y 216.56 h 216.56
+   6730 actor   .. LevelChunk x2, Subchunk x1
+   6730 actor   D ender_dragon -19.38762 85.30375 16.07524 p 0.00 y 216.56 h 216.56
+   6779 actor   .. LevelChunk x2, Subchunk x2, ClientCacheMissResponse x1
+   6779 actor   D ender_dragon -19.87902 84.87915 16.74434 p 0.00 y 216.56 h 216.56
+   6779 actor   BossEvent BossEvent { target_entity_id: 3, type: ShowBar, title: "entity.ender_dragon.name", filtered_title: "", progress: 1.0, color: Purple, overlay: Progress }
+   6826 actor   .. LevelChunk x2, Subchunk x1, ClientCacheMissResponse x1
+   6826 actor   D ender_dragon -20.37171 84.51704 17.41574 p 0.00 y 216.56 h 216.56
+   6826 actor   DV ender_dragon -0.24013 -0.15820 0.32741
+   6875 actor   .. LevelChunk x2, Subchunk x1
+   6875 actor   D ender_dragon -20.86559 84.21864 18.08964 p 0.00 y 216.56 h 216.56
+   6926 actor   .. LevelChunk x2, ClientCacheMissResponse x1
+   6926 actor   D ender_dragon -21.36059 83.98503 18.76617 p 0.00 y 216.56 h 216.56
+   6978 actor   .. LevelChunk x2, Subchunk x2
+   6978 actor   D ender_dragon -21.85663 83.81709 19.44539 p 0.00 y 215.16 h 215.16
+   7029 actor   .. LevelChunk x2, Subchunk x2, ClientCacheMissResponse x1
+   7029 actor   D ender_dragon -22.35361 83.71553 20.12727 p 0.00 y 215.16 h 215.16
+   7073 actor   .. LevelChunk x2
+   7073 actor   D ender_dragon -22.85298 83.70901 20.81050 p 0.00 y 217.97 h 217.97
+   7125 actor   .. LevelChunk x2, ClientCacheMissResponse x1
+   7125 actor   D ender_dragon -23.35851 83.81769 21.49169 p 0.00 y 220.78 h 220.78
+   7125 actor   DV ender_dragon -0.24818 0.07675 0.33074
+   7175 actor   .. LevelChunk x2
+   7175 actor   D ender_dragon -23.87513 84.03118 22.16559 p 0.00 y 225.00 h 225.00
+   7227 actor   .. LevelChunk x2, Subchunk x2
+   7227 actor   D ender_dragon -24.40803 84.34007 22.82549 p 0.00 y 230.62 h 230.62
+   7280 actor   .. LevelChunk x2, Subchunk x1, ClientCacheMissResponse x1
+   7280 actor   D ender_dragon -24.96192 84.73575 23.46346 p 0.00 y 236.25 h 236.25
+   7326 actor   .. LevelChunk x2, ClientCacheMissResponse x1
+   7326 actor   D ender_dragon -25.54043 85.21042 24.07065 p 0.00 y 243.28 h 243.28
+   7376 actor   .. LevelChunk x3, Subchunk x1
+   7376 actor   D ender_dragon -26.14568 85.75697 24.63766 p 0.00 y 251.72 h 251.72
+   7376 actor   DV ender_dragon -0.30025 0.27598 0.26466
+   7425 actor   .. LevelChunk x2, Subchunk x2, ClientCacheMissResponse x1
+   7425 actor   D ender_dragon -26.77798 86.36893 25.15484 p 0.00 y 258.75 h 258.75
+   7474 actor   .. LevelChunk x2, ClientCacheMissResponse x1
+   7474 actor   D ender_dragon -27.43565 87.04042 25.61276 p 0.00 y 267.19 h 267.19
+   7529 actor   .. LevelChunk x1, Subchunk x1
+   7529 actor   D ender_dragon -28.11495 87.76607 26.00256 p 0.00 y 275.62 h 275.62
+   7576 actor   .. LevelChunk x2
+   7576 actor   D ender_dragon -28.81017 88.54101 26.31632 p 0.00 y 284.06 h 284.06
+   7625 actor   .. LevelChunk x2, Subchunk x1, ClientCacheMissResponse x1
+   7625 actor   D ender_dragon -29.51370 89.36080 26.54749 p 0.00 y 292.50 h 292.50
+   7625 actor   DV ender_dragon -0.34121 0.40031 0.09180
+   7673 actor   .. LevelChunk x1
+   7673 actor   D ender_dragon -30.21642 90.22141 26.69125 p 0.00 y 302.34 h 302.34
+   7722 actor   .. LevelChunk x2
+   7722 actor   D ender_dragon -30.90822 91.11917 26.74515 p 0.00 y 310.78 h 310.78
+   7776 actor   .. Subchunk x1, ClientCacheMissResponse x1
+   7776 actor   D ender_dragon -31.57890 92.05074 26.70940 p 0.00 y 319.22 h 319.22
+   7776 actor   BossEvent BossEvent { target_entity_id: 3, type: ShowBar, title: "entity.ender_dragon.name", filtered_title: "", progress: 1.0, color: Purple, overlay: Progress }
+   7825 actor   D ender_dragon -32.21906 93.01306 26.58680 p 0.00 y 326.25 h 326.25
+   7872 actor   D ender_dragon -32.82085 94.00337 26.38227 p 0.00 y 333.28 h 333.28
+   7873 actor   DV ender_dragon -0.28085 0.47789 -0.11721
+   7924 actor   .. ClientCacheMissResponse x1
+   7924 actor   D ender_dragon -33.37838 95.01916 26.10224 p 0.00 y 338.91 h 338.91
+   7976 actor   LevelSoundEvent LevelSoundEvent { sound_id: "flap", position: Vec3f { x: -33.636784, y: 97.50864, z: 25.95018 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: 3, fire_at_position: None }
+   7976 actor   D ender_dragon -33.88796 96.05812 25.75398 p 0.00 y 344.53 h 344.53
+   8025 actor   D ender_dragon -34.34798 97.11818 25.34500 p 0.00 y 348.75 h 348.75
+   8072 actor   D ender_dragon -34.75871 98.19743 24.88257 p 0.00 y 351.56 h 351.56
+   8123 actor   D ender_dragon -35.12200 99.29415 24.37344 p 0.00 y 354.38 h 354.38
+   8174 actor   D ender_dragon -35.44089 100.40676 23.82367 p 0.00 y 355.78 h 355.78
+   8174 actor   DV ender_dragon -0.14435 0.53354 -0.27494
+   8225 actor   D ender_dragon -35.71931 101.53384 23.23859 p 0.00 y 357.19 h 357.19
+   8274 actor   D ender_dragon -35.96173 102.67408 22.62281 p 0.00 y 358.59 h 358.59
+   8323 actor   D ender_dragon -36.17290 103.82630 21.98030 p 0.00 y 358.59 h 358.59
+   8374 actor   D ender_dragon -36.35760 104.98784 21.31451 p 0.00 y 357.19 h 357.19
+   8422 actor   D ender_dragon -36.52052 106.15285 20.62843 p 0.00 y 357.19 h 357.19
+   8473 actor   D ender_dragon -36.66606 107.31401 19.92467 p 0.00 y 357.19 h 357.19
+   8523 actor   D ender_dragon -36.79824 108.46429 19.20556 p 0.00 y 355.78 h 355.78
+   8573 actor   D ender_dragon -36.92070 109.59687 18.47313 p 0.00 y 355.78 h 355.78
+   8621 actor   D ender_dragon -37.03656 110.70521 17.72922 p 0.00 y 354.38 h 354.38
+   8671 actor   D ender_dragon -37.14850 111.78294 16.97542 p 0.00 y 352.97 h 352.97
+   8721 actor   D ender_dragon -37.25874 112.82393 16.21315 p 0.00 y 352.97 h 352.97
+   8771 actor   D ender_dragon -37.36903 113.82219 15.44363 p 0.00 y 351.56 h 351.56
+   8771 actor   BossEvent BossEvent { target_entity_id: 3, type: ShowBar, title: "entity.ender_dragon.name", filtered_title: "", progress: 1.0, color: Purple, overlay: Progress }
+   8821 actor   D ender_dragon -37.48076 114.77193 14.66791 p 0.00 y 351.56 h 351.56
+   8871 actor   D ender_dragon -37.59492 115.66747 13.88683 p 0.00 y 350.16 h 350.16
+   8921 actor   D ender_dragon -37.71221 116.50332 13.10110 p 0.00 y 350.16 h 350.16
+   8921 actor   DV ender_dragon -0.05777 0.38408 -0.38263
+   8971 actor   D ender_dragon -37.83306 117.27406 12.31123 p 0.00 y 350.16 h 350.16
+   9021 actor   D ender_dragon -37.95770 117.97441 11.51759 p 0.00 y 350.16 h 350.16
+   9071 actor   D ender_dragon -38.08619 118.59919 10.72038 p 0.00 y 348.75 h 348.75
+   9121 actor   D ender_dragon -38.21844 119.14330 9.91968 p 0.00 y 348.75 h 348.75
+   9171 actor   D ender_dragon -38.35239 119.56404 9.11506 p 0.00 y 351.56 h 351.56
+   9171 actor   DV ender_dragon -0.06517 0.16414 -0.39283
+   9221 actor   D ender_dragon -38.48287 119.83232 8.30510 p 0.00 y 354.38 h 354.38
+   9271 actor   D ender_dragon -38.60254 119.96185 7.48883 p 0.00 y 358.59 h 358.59
+   9321 actor   D ender_dragon -38.70274 119.96513 6.66652 p 0.00 y 4.22 h 4.22
+   9371 actor   D ender_dragon -38.77413 119.85352 5.84013 p 0.00 y 9.84 h 9.84
+   9371 actor   DV ender_dragon -0.02683 -0.07809 -0.40285
+   9421 actor   D ender_dragon -38.80743 119.63734 5.01347 p 0.00 y 16.88 h 16.88
+   9471 actor   LevelSoundEvent LevelSoundEvent { sound_id: "flap", position: Vec3f { x: -38.813564, y: 121.51169, z: 4.6119313 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: 3, fire_at_position: None }
+   9471 actor   D ender_dragon -38.79400 119.32603 4.19209 p 0.00 y 25.31 h 25.31
+   9521 actor   D ender_dragon -38.72637 118.92813 3.38314 p 0.00 y 32.34 h 32.34
+   9570 actor   D ender_dragon -38.59871 118.45145 2.59503 p 0.00 y 40.78 h 40.78
+   9621 actor   D ender_dragon -38.40736 117.90306 1.83692 p 0.00 y 49.22 h 49.22
+   9621 actor   DV ender_dragon 0.10793 -0.27682 -0.35913
+   9671 actor   D ender_dragon -38.15110 117.28943 1.11800 p 0.00 y 56.25 h 56.25
+   9720 actor   D ender_dragon -37.83115 116.61642 0.44671 p 0.00 y 64.69 h 64.69
+   9771 actor   D ender_dragon -37.45074 115.88939 -0.16982 p 0.00 y 71.72 h 71.72
+   9771 actor   BossEvent BossEvent { target_entity_id: 3, type: ShowBar, title: "entity.ender_dragon.name", filtered_title: "", progress: 1.0, color: Purple, overlay: Progress }
+   9821 actor   D ender_dragon -37.01471 115.11319 -0.72621 p 0.00 y 77.34 h 77.34
+   9871 actor   D ender_dragon -36.52881 114.29225 -1.21895 p 0.00 y 82.97 h 82.97
+   9871 actor   DV ender_dragon 0.24586 -0.40083 -0.22304
+   9921 actor   D ender_dragon -35.99926 113.43060 -1.64641 p 0.00 y 88.59 h 88.59
+   9971 actor   D ender_dragon -35.43222 112.53188 -2.00866 p 0.00 y 92.81 h 92.81
+  10020 actor   D ender_dragon -34.83348 111.59946 -2.30720 p 0.00 y 97.03 h 97.03
+  10071 actor   D ender_dragon -34.20826 110.63635 -2.54467 p 0.00 y 99.84 h 99.84
+  10120 actor   D ender_dragon -33.56108 109.64532 -2.72458 p 0.00 y 102.66 h 102.66
+  10171 actor   D ender_dragon -32.89575 108.62889 -2.85102 p 0.00 y 104.06 h 104.06
+  10171 actor   DV ender_dragon 0.32602 -0.48978 -0.04917
+  10220 actor   D ender_dragon -32.21539 107.58934 -2.92841 p 0.00 y 105.47 h 105.47
+  10271 actor   D ender_dragon -31.52251 106.52875 -2.96133 p 0.00 y 106.88 h 106.88
+  10321 actor   D ender_dragon -30.81912 105.44901 -2.95435 p 0.00 y 108.28 h 108.28
+  10371 actor   LevelSoundEvent LevelSoundEvent { sound_id: "flap", position: Vec3f { x: -30.475948, y: 106.93042, z: -2.942107 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: 3, fire_at_position: None }
+  10371 actor   D ender_dragon -30.10680 104.35184 -2.91189 p 0.00 y 108.28 h 108.28
+  10421 actor   D ender_dragon -29.38680 103.23882 -2.83816 p 0.00 y 108.28 h 108.28
+  10471 actor   D ender_dragon -28.66013 102.11137 -2.73706 p 0.00 y 109.69 h 109.69
+  10521 actor   D ender_dragon -27.92760 100.97079 -2.61212 p 0.00 y 109.69 h 109.69
+  10571 actor   D ender_dragon -27.18989 99.81826 -2.46653 p 0.00 y 109.69 h 109.69
+  10620 actor   D ender_dragon -26.44761 98.65486 -2.30307 p 0.00 y 109.69 h 109.69
+  10671 actor   D ender_dragon -25.70131 97.48157 -2.12412 p 0.00 y 109.69 h 109.69
+  10721 actor   D ender_dragon -24.95149 96.29927 -1.93169 p 0.00 y 109.69 h 109.69
+  10771 actor   D ender_dragon -24.19868 95.10878 -1.72740 p 0.00 y 109.69 h 109.69
+  10771 actor   BossEvent BossEvent { target_entity_id: 3, type: ShowBar, title: "entity.ender_dragon.name", filtered_title: "", progress: 1.0, color: Purple, overlay: Progress }
+  10821 actor   D ender_dragon -23.44337 93.91084 -1.51249 p 0.00 y 109.69 h 109.69
+  10871 actor   D ender_dragon -22.68612 92.70611 -1.28786 p 0.00 y 111.09 h 111.09
+  10921 actor   D ender_dragon -21.92757 91.49520 -1.05397 p 0.00 y 111.09 h 111.09
+  10970 actor   D ender_dragon -21.16843 90.31774 -0.81028 p 0.00 y 112.50 h 112.50
+  11021 actor   D ender_dragon -20.40985 89.20966 -0.55502 p 0.00 y 113.91 h 113.91
+  11071 actor   D ender_dragon -19.65348 88.17110 -0.28581 p 0.00 y 116.72 h 116.72
+  11121 actor   D ender_dragon -18.90122 87.20207 -0.00007 p 0.00 y 119.53 h 119.53
+  11121 actor   DV ender_dragon 0.36402 -0.44591 0.14292
+  11171 actor   LevelSoundEvent LevelSoundEvent { sound_id: "flap", position: Vec3f { x: -18.537203, y: 88.75616, z: 0.14285836 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: 3, fire_at_position: None }
+  11171 actor   D ender_dragon -18.15508 86.30240 0.30473 p 0.00 y 122.34 h 122.34
+  11221 actor   D ender_dragon -17.41709 85.47178 0.63075 p 0.00 y 125.16 h 125.16
+  11271 actor   D ender_dragon -16.68921 84.70974 0.97976 p 0.00 y 127.97 h 127.97
+  11321 actor   D ender_dragon -15.97320 84.01568 1.35295 p 0.00 y 130.78 h 130.78
+  11371 actor   D ender_dragon -15.27054 83.38887 1.75105 p 0.00 y 132.19 h 132.19
+  11421 actor   D ender_dragon -14.58236 82.82844 2.17425 p 0.00 y 135.00 h 135.00
+  11421 actor   DV ender_dragon 0.33092 -0.25205 0.21161
+  11471 actor   D ender_dragon -13.90944 82.33339 2.62235 p 0.00 y 136.41 h 136.41
+  11521 actor   D ender_dragon -13.25217 81.90260 3.09478 p 0.00 y 139.22 h 139.22
+  11570 actor   D ender_dragon -12.61060 81.53484 3.59071 p 0.00 y 140.62 h 140.62
+  11621 actor   D ender_dragon -11.98445 81.22875 4.10905 p 0.00 y 142.03 h 142.03
+  11671 actor   D ender_dragon -11.37321 80.98285 4.64858 p 0.00 y 143.44 h 143.44
+  11720 actor   D ender_dragon -10.77618 80.79554 5.20794 p 0.00 y 143.44 h 143.44
+  11771 actor   D ender_dragon -10.19252 80.66511 5.78569 p 0.00 y 144.84 h 144.84
+  11771 actor   DV ender_dragon 0.28115 -0.04942 0.28553
+  11771 actor   BossEvent BossEvent { target_entity_id: 3, type: ShowBar, title: "entity.ender_dragon.name", filtered_title: "", progress: 1.0, color: Purple, overlay: Progress }
+  11820 actor   D ender_dragon -9.62132 80.58971 6.38033 p 0.00 y 144.84 h 144.84
+  11870 actor   D ender_dragon -9.06162 80.56738 6.99034 p 0.00 y 146.25 h 146.25
+  11920 actor   D ender_dragon -8.51248 80.59600 7.61420 p 0.00 y 146.25 h 146.25
+  11970 actor   D ender_dragon -7.97297 80.67330 8.25042 p 0.00 y 146.25 h 146.25
+  12021 actor   D ender_dragon -7.44221 80.79686 8.89757 p 0.00 y 146.25 h 146.25
+  12070 actor   D ender_dragon -6.91938 80.96407 9.55430 p 0.00 y 146.25 h 146.25
+  12120 actor   D ender_dragon -6.40371 81.17207 10.21936 p 0.00 y 146.25 h 146.25
+  12171 actor   D ender_dragon -5.89453 81.41782 10.89162 p 0.00 y 146.25 h 146.25
+  12220 actor   D ender_dragon -5.39121 81.69795 11.57006 p 0.00 y 147.66 h 147.66
+  12272 actor   LevelSoundEvent LevelSoundEvent { sound_id: "flap", position: Vec3f { x: -5.1475353, y: 83.838844, z: 11.901659 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: 3, fire_at_position: None }
+  12272 actor   D ender_dragon -4.89220 81.97762 12.25312 p 0.00 y 146.25 h 146.25
+  12320 actor   D ender_dragon -4.39418 82.22729 12.93856 p 0.00 y 143.44 h 143.44
+  12371 actor   D ender_dragon -3.89303 82.44823 13.62338 p 0.00 y 140.62 h 140.62
+  12420 actor   D ender_dragon -3.38441 82.64168 14.30405 p 0.00 y 137.81 h 137.81
+  12471 actor   D ender_dragon -2.86427 82.80888 14.97673 p 0.00 y 135.00 h 135.00
+  12521 actor   D ender_dragon -2.32915 82.95105 15.63740 p 0.00 y 130.78 h 130.78
+  12571 actor   D ender_dragon -1.77634 83.06937 16.28215 p 0.00 y 127.97 h 127.97
+  12621 actor   D ender_dragon -1.20398 83.16503 16.90734 p 0.00 y 123.75 h 123.75
+  12671 actor   D ender_dragon -0.61102 83.23919 17.50983 p 0.00 y 120.94 h 120.94
+  12721 actor   D ender_dragon 0.00288 83.29299 18.08706 p 0.00 y 118.12 h 118.12
+  12771 actor   D ender_dragon 0.63749 83.32757 18.63718 p 0.00 y 115.31 h 115.31
+  12771 actor   BossEvent BossEvent { target_entity_id: 3, type: ShowBar, title: "entity.ender_dragon.name", filtered_title: "", progress: 1.0, color: Purple, overlay: Progress }
+  12821 actor   D ender_dragon 1.29211 83.34403 19.15906 p 0.00 y 112.50 h 112.50
+  12871 actor   .. SyncWorldClocks x1
+  12871 actor   D ender_dragon 1.96571 83.34349 19.65226 p 0.00 y 111.09 h 111.09
+  12920 actor   D ender_dragon 2.65710 83.32703 20.11695 p 0.00 y 108.28 h 108.28
+  12970 actor   D ender_dragon 3.36492 83.29570 20.55390 p 0.00 y 106.88 h 106.88
+  13020 actor   D ender_dragon 4.08783 83.25058 20.96427 p 0.00 y 105.47 h 105.47
+  13070 actor   D ender_dragon 4.82445 83.19271 21.34963 p 0.00 y 105.47 h 105.47
+  13121 actor   D ender_dragon 5.57347 83.12314 21.71177 p 0.00 y 104.06 h 104.06
+  13171 actor   D ender_dragon 6.33363 83.04288 22.05263 p 0.00 y 104.06 h 104.06
+  13221 actor   D ender_dragon 7.10375 82.95296 22.37426 p 0.00 y 102.66 h 102.66
+  13270 actor   D ender_dragon 7.88272 82.85441 22.67871 p 0.00 y 102.66 h 102.66
+  13320 actor   D ender_dragon 8.66952 82.74823 22.96797 p 0.00 y 102.66 h 102.66
+  13370 actor   D ender_dragon 9.46321 82.63544 23.24397 p 0.00 y 102.66 h 102.66
+  13420 actor   D ender_dragon 10.26293 82.51706 23.50851 p 0.00 y 102.66 h 102.66
+  13470 actor   D ender_dragon 11.06791 82.39410 23.76322 p 0.00 y 102.66 h 102.66
+  13520 actor   D ender_dragon 11.87744 82.26759 24.00959 p 0.00 y 102.66 h 102.66
+  13521 actor   DV ender_dragon 0.39530 -0.06097 0.11819
+  13571 actor   LevelSoundEvent LevelSoundEvent { sound_id: "flap", position: Vec3f { x: 12.27274, y: 84.20661, z: 24.127779 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: 3, fire_at_position: None }
+  13571 actor   D ender_dragon 12.69090 82.13855 24.24895 p 0.00 y 102.66 h 102.66
+  13621 actor   D ender_dragon 13.50774 82.00804 24.48246 p 0.00 y 102.66 h 102.66
+  13671 actor   D ender_dragon 14.32748 81.87711 24.71110 p 0.00 y 102.66 h 102.66
+  13721 actor   D ender_dragon 15.14971 81.74685 24.93570 p 0.00 y 104.06 h 104.06
+  13771 actor   D ender_dragon 15.97408 81.61836 25.15697 p 0.00 y 104.06 h 104.06
+  13771 actor   BossEvent BossEvent { target_entity_id: 3, type: ShowBar, title: "entity.ender_dragon.name", filtered_title: "", progress: 1.0, color: Purple, overlay: Progress }
+  13821 actor   D ender_dragon 16.80028 81.49279 25.37546 p 0.00 y 104.06 h 104.06
+  13871 actor   D ender_dragon 17.62808 81.37132 25.59161 p 0.00 y 104.06 h 104.06
+  13921 actor   D ender_dragon 18.45728 81.25520 25.80576 p 0.00 y 104.06 h 104.06
+  13971 actor   D ender_dragon 18.86151 81.20122 25.90964 p 0.00 y 104.06 h 104.06
+  14021 actor   D ender_dragon 19.62274 81.10529 26.10221 p 0.00 y 101.25 h 101.25
+  14071 actor   D ender_dragon 20.39569 81.04118 26.28852 p 0.00 y 98.44 h 98.44
+  14121 actor   D ender_dragon 21.17991 81.00633 26.46117 p 0.00 y 92.81 h 92.81
+  14171 actor   D ender_dragon 21.97434 80.99819 26.61150 p 0.00 y 87.19 h 87.19
+  14220 actor   D ender_dragon 22.77682 81.01424 26.73022 p 0.00 y 81.56 h 81.56
+  14271 actor   D ender_dragon 23.50077 81.04704 26.80233 p 0.00 y 74.53 h 74.53
+  14321 actor   D ender_dragon 24.22415 81.09731 26.83040 p 0.00 y 67.50 h 67.50
+  14371 actor   D ender_dragon 24.94082 81.16306 26.80753 p 0.00 y 59.06 h 59.06
+  14421 actor   D ender_dragon 25.64329 81.24242 26.72821 p 0.00 y 50.62 h 50.62
+  14421 actor   DV ender_dragon 0.37470 0.04581 -0.06020
+  14471 actor   D ender_dragon 26.32295 81.33363 26.58863 p 0.00 y 42.19 h 42.19
+  14520 actor   D ender_dragon 26.97046 81.43504 26.38689 p 0.00 y 33.75 h 33.75
+  14570 actor   D ender_dragon 27.57603 81.54510 26.12325 p 0.00 y 23.91 h 23.91
+  14620 actor   D ender_dragon 28.13019 81.66244 25.80018 p 0.00 y 15.47 h 15.47
+  14670 actor   D ender_dragon 28.62458 81.78573 25.42241 p 0.00 y 7.03 h 7.03
+  14670 actor   DV ender_dragon 0.24813 0.06711 -0.21880
+  14720 actor   D ender_dragon 29.05276 81.91378 24.99633 p 0.00 y 358.59 h 358.59
+  14770 actor   D ender_dragon 29.41057 82.04549 24.52933 p 0.00 y 351.56 h 351.56
+  14770 actor   BossEvent BossEvent { target_entity_id: 3, type: ShowBar, title: "entity.ender_dragon.name", filtered_title: "", progress: 1.0, color: Purple, overlay: Progress }
+  14821 actor   D ender_dragon 29.69625 82.17987 24.02902 p 0.00 y 345.94 h 345.94
+  14871 actor   D ender_dragon 29.91019 82.31599 23.50258 p 0.00 y 340.31 h 340.31
+  14921 actor   D ender_dragon 30.05457 82.45299 22.95634 p 0.00 y 336.09 h 336.09
+  14921 actor   DV ender_dragon 0.05817 0.07304 -0.29992
+  14970 actor   D ender_dragon 30.13293 82.59010 22.39551 p 0.00 y 331.88 h 331.88
+  15021 actor   D ender_dragon 30.14975 82.72659 21.82408 p 0.00 y 329.06 h 329.06
+  15071 actor   D ender_dragon 30.11011 82.86179 21.24497 p 0.00 y 327.66 h 327.66
+  15121 actor   D ender_dragon 30.01941 82.99511 20.66009 p 0.00 y 326.25 h 326.25
+  15171 actor   D ender_dragon 29.88314 83.12596 20.07054 p 0.00 y 326.25 h 326.25
+  15221 actor   LevelSoundEvent LevelSoundEvent { sound_id: "flap", position: Vec3f { x: 29.796797, y: 85.19482, z: 19.749853 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: 3, fire_at_position: None }
+  15222 actor   D ender_dragon 29.70673 83.25382 19.47685 p 0.00 y 324.84 h 324.84
+  15271 actor   D ender_dragon 29.49546 83.37820 18.87910 p 0.00 y 326.25 h 326.25
+  15321 actor   D ender_dragon 29.25433 83.49864 18.27710 p 0.00 y 326.25 h 326.25
+  15370 actor   D ender_dragon 28.98804 83.61472 17.67053 p 0.00 y 326.25 h 326.25
+  15370 actor   DV ender_dragon -0.15116 0.06048 -0.33050
+  15421 actor   D ender_dragon 28.66691 83.73877 16.98878 p 0.00 y 327.66 h 327.66
+  15471 actor   D ender_dragon 28.32716 83.85703 16.30117 p 0.00 y 327.66 h 327.66
+  15521 actor   D ender_dragon 27.97264 83.96899 15.60740 p 0.00 y 329.06 h 329.06
+  15571 actor   D ender_dragon 27.60673 84.07422 14.90729 p 0.00 y 330.47 h 330.47
+  15621 actor   D ender_dragon 27.23234 84.17226 14.20078 p 0.00 y 330.47 h 330.47
+  15671 actor   D ender_dragon 26.85191 84.26271 13.48792 p 0.00 y 331.88 h 331.88
+  15720 actor   D ender_dragon 26.46745 84.34516 12.76885 p 0.00 y 331.88 h 331.88
+  15771 actor   D ender_dragon 26.08057 84.41925 12.04381 p 0.00 y 331.88 h 331.88
+  15771 actor   BossEvent BossEvent { target_entity_id: 3, type: ShowBar, title: "entity.ender_dragon.name", filtered_title: "", progress: 1.0, color: Purple, overlay: Progress }
+  15820 actor   D ender_dragon 25.69253 84.48463 11.31308 p 0.00 y 333.28 h 333.28
+  15870 actor   D ender_dragon 25.30428 84.54094 10.57703 p 0.00 y 333.28 h 333.28
+  15920 actor   D ender_dragon 24.91648 84.58788 9.83602 p 0.00 y 333.28 h 333.28
+  15970 actor   D ender_dragon 24.52960 84.62515 9.09048 p 0.00 y 333.28 h 333.28
+  16021 actor   D ender_dragon 24.13983 84.58412 8.34300 p 0.00 y 329.06 h 329.06
+  16070 actor   D ender_dragon 23.73747 84.40777 7.60040 p 0.00 y 322.03 h 322.03
+  16121 actor   D ender_dragon 23.31098 84.10619 6.87342 p 0.00 y 312.19 h 312.19
+  16121 actor   DV ender_dragon -0.21445 -0.17102 -0.34843
+  16171 actor   D ender_dragon 22.85073 83.68941 6.17579 p 0.00 y 302.34 h 302.34
+  16220 actor   D ender_dragon 22.35128 83.16739 5.52227 p 0.00 y 292.50 h 292.50
+  16271 actor   LevelSoundEvent LevelSoundEvent { sound_id: "mad", position: Vec3f { x: 22.099466, y: 84.89585, z: 5.2173533 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: 3, fire_at_position: None }
+  16271 actor   D ender_dragon 21.81196 82.54990 4.92596 p 0.00 y 284.06 h 284.06
+  16320 actor   D ender_dragon 21.23576 81.84661 4.39600 p 0.00 y 275.62 h 275.62
+  16320 actor   DV ender_dragon -0.28703 -0.35352 -0.24019
+  16370 actor   D ender_dragon 20.62755 81.06703 3.93634 p 0.00 y 271.41 h 271.41
+  16421 actor   D ender_dragon 19.99235 80.22057 3.54584 p 0.00 y 267.19 h 267.19
+  16471 actor   LevelSoundEvent LevelSoundEvent { sound_id: "flap", position: Vec3f { x: 19.679205, y: 81.80311, z: 3.3726783 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: 3, fire_at_position: None }
+  16471 actor   D ender_dragon 19.33438 79.31651 3.21914 p 0.00 y 265.78 h 265.78
+  16520 actor   D ender_dragon 18.65678 78.36406 2.94794 p 0.00 y 265.78 h 265.78
+  16570 actor   D ender_dragon 17.96177 77.37232 2.72229 p 0.00 y 267.19 h 267.19
+  16621 actor   D ender_dragon 17.25109 76.35030 2.53172 p 0.00 y 270.00 h 270.00
+  16621 actor   DV ender_dragon -0.34806 -0.49284 -0.08535
+  16671 actor   D ender_dragon 16.52636 75.30689 2.36613 p 0.00 y 272.81 h 272.81
+  16720 actor   D ender_dragon 15.78926 74.25096 2.21652 p 0.00 y 275.62 h 275.62
+  16771 actor   D ender_dragon 15.04159 73.19128 2.07544 p 0.00 y 277.03 h 277.03
+  16771 actor   BossEvent BossEvent { target_entity_id: 3, type: ShowBar, title: "entity.ender_dragon.name", filtered_title: "", progress: 1.0, color: Purple, overlay: Progress }
+  16821 actor   D ender_dragon 14.28509 72.13657 1.93727 p 0.00 y 279.84 h 279.84
+  16871 actor   D ender_dragon 13.52134 71.09558 1.79826 p 0.00 y 281.25 h 281.25
+  16921 actor   D ender_dragon 12.75163 70.07704 1.65636 p 0.00 y 281.25 h 281.25
+  16971 actor   D ender_dragon 11.97685 69.08974 1.51102 p 0.00 y 281.25 h 281.25
+  17021 actor   D ender_dragon 11.19757 68.14259 1.36284 p 0.00 y 281.25 h 281.25
+  17071 actor   D ender_dragon 10.41408 67.24460 1.21323 p 0.00 y 281.25 h 281.25
+  17121 actor   D ender_dragon 9.62645 66.40501 1.06407 p 0.00 y 279.84 h 279.84
+  17171 actor   D ender_dragon 8.83466 65.63331 0.91742 p 0.00 y 278.44 h 278.44
+  17221 actor   D ender_dragon 8.03863 64.93932 0.77525 p 0.00 y 277.03 h 277.03
+  17272 actor   UpdateBlock 0 64 -1 layer 0 flags UpdateBlockFlags(3) air[]
+  17272 actor   UpdateBlock 1 64 0 layer 0 flags UpdateBlockFlags(3) air[]
+  17272 actor   LevelEvent LevelEvent { event: ParticleProjectileHit, position: Vec3f { x: 2.4427328, y: 67.07223, z: -0.43121147 }, data: 65 }
+  17272 actor   D ender_dragon 7.23825 64.33336 0.63926 p 0.00 y 275.62 h 275.62
+  17272 actor   DV ender_dragon -0.39021 -0.26759 -0.06449
+  17321 actor   UpdateBlock -1 64 0 layer 0 flags UpdateBlockFlags(3) air[]
+  17321 actor   LevelEvent LevelEvent { event: ParticleProjectileHit, position: Vec3f { x: 1.0448887, y: 66.928505, z: -1.0358294 }, data: 65 }
+  17321 actor   D ender_dragon 6.51630 63.87422 0.52357 p 0.00 y 275.62 h 275.62
+  17371 actor   UpdateBlock 0 64 1 layer 0 flags UpdateBlockFlags(3) air[]
+  17371 actor   LevelEvent LevelEvent { event: ParticleProjectileHit, position: Vec3f { x: 0.94609785, y: 66.98218, z: -0.7854208 }, data: 65 }
+  17371 actor   LevelSoundEvent LevelSoundEvent { sound_id: "flap", position: Vec3f { x: 6.1236434, y: 65.65633, z: 0.46296507 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: 3, fire_at_position: None }
+  17371 actor   D ender_dragon 5.79012 63.51255 0.41537 p 0.00 y 274.22 h 274.22
+## !where at 17403
+## at Some([0.5, 66.0, 0.5]) dimension 2
+## !entities at 17404
+## entities: 1
+##   minecraft:ender_dragon 3 at 5.790 63.513 0.415 yaw 274.2 health Some(200.0)
+## !spikes at 17405
+## top 42 0: 87 obsidian[]; 86 obsidian[]; 85 obsidian[]
+## top 33 24: 102 obsidian[]; 101 obsidian[]; 100 obsidian[]
+## top 12 39: 84 obsidian[]; 83 obsidian[]; 82 obsidian[]
+## top -12 39: 82 iron_bars[minecraft:connection_east=1,minecraft:connection_north=1,minecraft:connection_south=1,minecraft:connection_west=1]; 78 obsidian[]; 77 obsidian[]
+## top -33 24: 85 iron_bars[minecraft:connection_east=1,minecraft:connection_north=1,minecraft:connection_south=1,minecraft:connection_west=1]; 81 obsidian[]; 80 obsidian[]
+## top -42 0: 93 obsidian[]; 92 obsidian[]; 91 obsidian[]
+## top -33 -24: 96 obsidian[]; 95 obsidian[]; 94 obsidian[]
+## top -12 -39: 75 obsidian[]; 74 obsidian[]; 73 obsidian[]
+## top 12 -39: 90 obsidian[]; 89 obsidian[]; 88 obsidian[]
+## top 33 -24: 99 obsidian[]; 98 obsidian[]; 97 obsidian[]
+## !box -4 58 -4 4 67 4 at 17407
+## box y 58: -4 -4 end_stone[]; -3 -4 end_stone[]; -2 -4 end_stone[]; -1 -4 end_stone[]; 0 -4 end_stone[]; 1 -4 end_stone[]; 2 -4 end_stone[]; 3 -4 end_stone[]; 4 -4 end_stone[]; -4 -3 end_stone[]; -3 -3 end_stone[]; -2 -3 end_stone[]; -1 -3 end_stone[]; 0 -3 end_stone[]; 1 -3 end_stone[]; 2 -3 end_stone[]; 3 -3 end_stone[]; 4 -3 end_stone[]; -4 -2 end_stone[]; -3 -2 end_stone[]; -2 -2 end_stone[]; -1 -2 end_stone[]; 0 -2 end_stone[]; 1 -2 end_stone[]; 2 -2 end_stone[]; 3 -2 end_stone[]; 4 -2 end_stone[]; -4 -1 end_stone[]; -3 -1 end_stone[]; -2 -1 end_stone[]; -1 -1 end_stone[]; 0 -1 end_stone[]; 1 -1 end_stone[]; 2 -1 end_stone[]; 3 -1 end_stone[]; 4 -1 end_stone[]; -4 0 end_stone[]; -3 0 end_stone[]; -2 0 end_stone[]; -1 0 end_stone[]; 0 0 end_stone[]; 1 0 end_stone[]; 2 0 end_stone[]; 3 0 end_stone[]; 4 0 end_stone[]; -4 1 end_stone[]; -3 1 end_stone[]; -2 1 end_stone[]; -1 1 end_stone[]; 0 1 end_stone[]; 1 1 end_stone[]; 2 1 end_stone[]; 3 1 end_stone[]; 4 1 end_stone[]; -4 2 end_stone[]; -3 2 end_stone[]; -2 2 end_stone[]; -1 2 end_stone[]; 0 2 end_stone[]; 1 2 end_stone[]; 2 2 end_stone[]; 3 2 end_stone[]; 4 2 end_stone[]; -4 3 end_stone[]; -3 3 end_stone[]; -2 3 end_stone[]; -1 3 end_stone[]; 0 3 end_stone[]; 1 3 end_stone[]; 2 3 end_stone[]; 3 3 end_stone[]; 4 3 end_stone[]; -4 4 end_stone[]; -3 4 end_stone[]; -2 4 end_stone[]; -1 4 end_stone[]; 0 4 end_stone[]; 1 4 end_stone[]; 2 4 end_stone[]; 3 4 end_stone[]; 4 4 end_stone[]
+## box y 59: -4 -4 end_stone[]; -3 -4 end_stone[]; -2 -4 end_stone[]; -1 -4 end_stone[]; 0 -4 end_stone[]; 1 -4 end_stone[]; 2 -4 end_stone[]; 3 -4 end_stone[]; 4 -4 end_stone[]; -4 -3 end_stone[]; -3 -3 end_stone[]; -2 -3 end_stone[]; -1 -3 end_stone[]; 0 -3 end_stone[]; 1 -3 end_stone[]; 2 -3 end_stone[]; 3 -3 end_stone[]; 4 -3 end_stone[]; -4 -2 end_stone[]; -3 -2 end_stone[]; -2 -2 end_stone[]; -1 -2 end_stone[]; 0 -2 end_stone[]; 1 -2 end_stone[]; 2 -2 end_stone[]; 3 -2 end_stone[]; 4 -2 end_stone[]; -4 -1 end_stone[]; -3 -1 end_stone[]; -2 -1 end_stone[]; -1 -1 end_stone[]; 0 -1 end_stone[]; 1 -1 end_stone[]; 2 -1 end_stone[]; 3 -1 end_stone[]; 4 -1 end_stone[]; -4 0 end_stone[]; -3 0 end_stone[]; -2 0 end_stone[]; -1 0 end_stone[]; 0 0 end_stone[]; 1 0 end_stone[]; 2 0 end_stone[]; 3 0 end_stone[]; 4 0 end_stone[]; -4 1 end_stone[]; -3 1 end_stone[]; -2 1 end_stone[]; -1 1 end_stone[]; 0 1 end_stone[]; 1 1 end_stone[]; 2 1 end_stone[]; 3 1 end_stone[]; 4 1 end_stone[]; -4 2 end_stone[]; -3 2 end_stone[]; -2 2 end_stone[]; -1 2 end_stone[]; 0 2 end_stone[]; 1 2 end_stone[]; 2 2 end_stone[]; 3 2 end_stone[]; 4 2 end_stone[]; -4 3 end_stone[]; -3 3 end_stone[]; -2 3 end_stone[]; -1 3 end_stone[]; 0 3 end_stone[]; 1 3 end_stone[]; 2 3 end_stone[]; 3 3 end_stone[]; 4 3 end_stone[]; -4 4 end_stone[]; -3 4 end_stone[]; -2 4 end_stone[]; -1 4 end_stone[]; 0 4 end_stone[]; 1 4 end_stone[]; 2 4 end_stone[]; 3 4 end_stone[]; 4 4 end_stone[]
+## box y 60: -4 -4 end_stone[]; -3 -4 end_stone[]; -2 -4 end_stone[]; -1 -4 end_stone[]; 0 -4 end_stone[]; 1 -4 end_stone[]; 2 -4 end_stone[]; 3 -4 end_stone[]; 4 -4 end_stone[]; -4 -3 end_stone[]; -3 -3 end_stone[]; -2 -3 end_stone[]; -1 -3 end_stone[]; 0 -3 end_stone[]; 1 -3 end_stone[]; 2 -3 end_stone[]; 3 -3 end_stone[]; 4 -3 end_stone[]; -4 -2 end_stone[]; -3 -2 end_stone[]; -2 -2 end_stone[]; -1 -2 end_stone[]; 0 -2 end_stone[]; 1 -2 end_stone[]; 2 -2 end_stone[]; 3 -2 end_stone[]; 4 -2 end_stone[]; -4 -1 end_stone[]; -3 -1 end_stone[]; -2 -1 end_stone[]; -1 -1 end_stone[]; 0 -1 end_stone[]; 1 -1 end_stone[]; 2 -1 end_stone[]; 3 -1 end_stone[]; 4 -1 end_stone[]; -4 0 end_stone[]; -3 0 end_stone[]; -2 0 end_stone[]; -1 0 end_stone[]; 0 0 end_stone[]; 1 0 end_stone[]; 2 0 end_stone[]; 3 0 end_stone[]; 4 0 end_stone[]; -4 1 end_stone[]; -3 1 end_stone[]; -2 1 end_stone[]; -1 1 end_stone[]; 0 1 end_stone[]; 1 1 end_stone[]; 2 1 end_stone[]; 3 1 end_stone[]; 4 1 end_stone[]; -4 2 end_stone[]; -3 2 end_stone[]; -2 2 end_stone[]; -1 2 end_stone[]; 0 2 end_stone[]; 1 2 end_stone[]; 2 2 end_stone[]; 3 2 end_stone[]; 4 2 end_stone[]; -4 3 end_stone[]; -3 3 end_stone[]; -2 3 end_stone[]; -1 3 end_stone[]; 0 3 end_stone[]; 1 3 end_stone[]; 2 3 end_stone[]; 3 3 end_stone[]; 4 3 end_stone[]; -4 4 end_stone[]; -3 4 end_stone[]; -2 4 end_stone[]; -1 4 end_stone[]; 0 4 end_stone[]; 1 4 end_stone[]; 2 4 end_stone[]; 3 4 end_stone[]; 4 4 end_stone[]
+## box y 61: 3 -4 end_stone[]; 4 -4 end_stone[]; -1 -3 end_stone[]; 0 -3 end_stone[]; 1 -3 end_stone[]; 2 -3 end_stone[]; 3 -3 end_stone[]; 4 -3 end_stone[]; -2 -2 end_stone[]; -1 -2 bedrock[infiniburn_bit=1]; 0 -2 bedrock[infiniburn_bit=1]; 1 -2 bedrock[infiniburn_bit=1]; 2 -2 end_stone[]; 3 -2 end_stone[]; 4 -2 end_stone[]; -3 -1 end_stone[]; -2 -1 bedrock[infiniburn_bit=1]; -1 -1 bedrock[infiniburn_bit=1]; 0 -1 bedrock[infiniburn_bit=1]; 1 -1 bedrock[infiniburn_bit=1]; 2 -1 bedrock[infiniburn_bit=1]; 3 -1 end_stone[]; 4 -1 end_stone[]; -3 0 end_stone[]; -2 0 bedrock[infiniburn_bit=1]; -1 0 bedrock[infiniburn_bit=1]; 0 0 bedrock[infiniburn_bit=1]; 1 0 bedrock[infiniburn_bit=1]; 2 0 bedrock[infiniburn_bit=1]; 3 0 end_stone[]; 4 0 end_stone[]; -3 1 end_stone[]; -2 1 bedrock[infiniburn_bit=1]; -1 1 bedrock[infiniburn_bit=1]; 0 1 bedrock[infiniburn_bit=1]; 1 1 bedrock[infiniburn_bit=1]; 2 1 bedrock[infiniburn_bit=1]; 3 1 end_stone[]; 4 1 end_stone[]; -2 2 end_stone[]; -1 2 bedrock[infiniburn_bit=1]; 0 2 bedrock[infiniburn_bit=1]; 1 2 bedrock[infiniburn_bit=1]; 2 2 end_stone[]; 3 2 end_stone[]; 4 2 end_stone[]; -3 3 end_stone[]; -2 3 end_stone[]; -1 3 end_stone[]; 0 3 end_stone[]; 1 3 end_stone[]; 2 3 end_stone[]; 3 3 end_stone[]; 4 3 end_stone[]; -3 4 end_stone[]; -2 4 end_stone[]; -1 4 end_stone[]; 0 4 end_stone[]; 1 4 end_stone[]; 2 4 end_stone[]; 3 4 end_stone[]; 4 4 end_stone[]
+## box y 62: -1 -3 bedrock[infiniburn_bit=1]; 0 -3 bedrock[infiniburn_bit=1]; 1 -3 bedrock[infiniburn_bit=1]; -2 -2 bedrock[infiniburn_bit=1]; 2 -2 bedrock[infiniburn_bit=1]; -3 -1 bedrock[infiniburn_bit=1]; 3 -1 bedrock[infiniburn_bit=1]; -3 0 bedrock[infiniburn_bit=1]; 0 0 bedrock[infiniburn_bit=1]; 3 0 bedrock[infiniburn_bit=1]; -3 1 bedrock[infiniburn_bit=1]; 3 1 bedrock[infiniburn_bit=1]; -2 2 bedrock[infiniburn_bit=1]; 2 2 bedrock[infiniburn_bit=1]; -1 3 bedrock[infiniburn_bit=1]; 0 3 bedrock[infiniburn_bit=1]; 1 3 bedrock[infiniburn_bit=1]
+## box y 63: 0 0 bedrock[infiniburn_bit=1]
+## box y 64: 0 0 bedrock[infiniburn_bit=1]
+## box y 65: 0 0 bedrock[infiniburn_bit=1]
+## box y 66: all air
+## box y 67: all air
+## !wait 60000 at 17408
+  17421 actor   D ender_dragon 5.05952 63.25738 0.31511 p 0.00 y 272.81 h 272.81
+  17470 actor   D ender_dragon 4.32445 63.11858 0.22291 p 0.00 y 272.81 h 272.81
+  17470 actor   DV ender_dragon -0.40035 -0.03935 -0.04767
+  17521 actor   D ender_dragon 3.58514 63.10723 0.13872 p 0.00 y 272.81 h 272.81
+  17571 actor   D ender_dragon 2.84236 63.23646 0.06236 p 0.00 y 271.41 h 271.41
+  17621 actor   D ender_dragon 2.09757 63.52283 -0.00627 p 0.00 y 271.41 h 271.41
+  17621 actor   DV ender_dragon -0.40392 0.19977 -0.03493
+  17671 actor   D ender_dragon 1.35287 63.98997 -0.06709 p 0.00 y 270.00 h 270.00
+  17721 actor   D ender_dragon 0.61146 64.65739 -0.11949 p 0.00 y 270.00 h 270.00
+  17721 actor   DV ender_dragon -0.39965 0.41325 -0.02573
+  17771 actor   SetEntityData ender_dragon SetEntityData { runtime_entity_id: 3, metadata: [MetadataDictionaryItem { key: Flags, type: Long, legacy_type: 7, value: Flags(MetadataFlags1(1125917103489024)) }], properties: EntityProperties { ints: [], floats: [] }, tick: 0 }
+  17771 actor   D ender_dragon 0.21181 65.07063 -0.14522 p 0.00 y 270.00 h 270.00
+  17771 actor   DV ender_dragon 0.00000 0.00000 0.00000
+  17771 actor   BossEvent BossEvent { target_entity_id: 3, type: ShowBar, title: "entity.ender_dragon.name", filtered_title: "", progress: 1.0, color: Purple, overlay: Progress }
+  17871 actor   SetEntityData ender_dragon SetEntityData { runtime_entity_id: 3, metadata: [MetadataDictionaryItem { key: Flags, type: Long, legacy_type: 7, value: Flags(MetadataFlags1(1125899923619840)) }], properties: EntityProperties { ints: [], floats: [] }, tick: 0 }
+  18221 actor   LevelSoundEvent LevelSoundEvent { sound_id: "flap", position: Vec3f { x: 0.21180573, y: 67.07063, z: -0.14522174 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: 3, fire_at_position: None }
+  18721 actor   LevelSoundEvent LevelSoundEvent { sound_id: "flap", position: Vec3f { x: 0.21180573, y: 67.07063, z: -0.14522174 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: 3, fire_at_position: None }
+  18771 actor   BossEvent BossEvent { target_entity_id: 3, type: ShowBar, title: "entity.ender_dragon.name", filtered_title: "", progress: 1.0, color: Purple, overlay: Progress }
+  19221 actor   LevelSoundEvent LevelSoundEvent { sound_id: "flap", position: Vec3f { x: 0.21180573, y: 67.07063, z: -0.14522174 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: 3, fire_at_position: None }
+  19721 actor   LevelSoundEvent LevelSoundEvent { sound_id: "flap", position: Vec3f { x: 0.21180573, y: 67.07063, z: -0.14522174 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: 3, fire_at_position: None }
+  19771 actor   BossEvent BossEvent { target_entity_id: 3, type: ShowBar, title: "entity.ender_dragon.name", filtered_title: "", progress: 1.0, color: Purple, overlay: Progress }
+  20221 actor   LevelSoundEvent LevelSoundEvent { sound_id: "flap", position: Vec3f { x: 0.21180573, y: 67.07063, z: -0.14522174 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: 3, fire_at_position: None }
+  20721 actor   LevelSoundEvent LevelSoundEvent { sound_id: "flap", position: Vec3f { x: 0.21180573, y: 67.07063, z: -0.14522174 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: 3, fire_at_position: None }
+  20771 actor   BossEvent BossEvent { target_entity_id: 3, type: ShowBar, title: "entity.ender_dragon.name", filtered_title: "", progress: 1.0, color: Purple, overlay: Progress }
+  21221 actor   LevelSoundEvent LevelSoundEvent { sound_id: "flap", position: Vec3f { x: 0.21180573, y: 67.07063, z: -0.14522174 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: 3, fire_at_position: None }
+  21721 actor   LevelSoundEvent LevelSoundEvent { sound_id: "flap", position: Vec3f { x: 0.21180573, y: 67.07063, z: -0.14522174 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: 3, fire_at_position: None }
+  21771 actor   BossEvent BossEvent { target_entity_id: 3, type: ShowBar, title: "entity.ender_dragon.name", filtered_title: "", progress: 1.0, color: Purple, overlay: Progress }
+  22221 actor   LevelSoundEvent LevelSoundEvent { sound_id: "flap", position: Vec3f { x: 0.21180573, y: 67.07063, z: -0.14522174 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: 3, fire_at_position: None }
+  22721 actor   LevelSoundEvent LevelSoundEvent { sound_id: "flap", position: Vec3f { x: 0.21180573, y: 67.07063, z: -0.14522174 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: 3, fire_at_position: None }
+  22771 actor   SetEntityData ender_dragon SetEntityData { runtime_entity_id: 3, metadata: [MetadataDictionaryItem { key: Flags, type: Long, legacy_type: 7, value: Flags(MetadataFlags1(1125899906842624)) }], properties: EntityProperties { ints: [], floats: [] }, tick: 0 }
+  22771 actor   D ender_dragon 0.16400 65.12131 -0.14811 p 0.00 y 272.81 h 272.81
+  22771 actor   BossEvent BossEvent { target_entity_id: 3, type: ShowBar, title: "entity.ender_dragon.name", filtered_title: "", progress: 1.0, color: Purple, overlay: Progress }
+  22821 actor   SetEntityData ender_dragon SetEntityData { runtime_entity_id: 3, metadata: [MetadataDictionaryItem { key: Flags, type: Long, legacy_type: 7, value: Flags(MetadataFlags1(1125917086711808)) }], properties: EntityProperties { ints: [], floats: [] }, tick: 0 }
+  22821 actor   D ender_dragon 0.02111 65.27533 -0.16362 p 0.00 y 281.25 h 281.25
+  22871 actor   D ender_dragon -0.19868 65.52215 -0.20705 p 0.00 y 293.91 h 293.91
+  22871 actor   DV ender_dragon -0.13776 0.15606 -0.03415
+  22921 actor   D ender_dragon -0.50927 65.89484 -0.30882 p 0.00 y 307.97 h 307.97
+  22971 actor   D ender_dragon -0.85307 66.34795 -0.47805 p 0.00 y 323.44 h 323.44
+  23021 actor   D ender_dragon -1.19805 66.87074 -0.72413 p 0.00 y 341.72 h 341.72
+  23071 actor   D ender_dragon -1.51283 67.45305 -1.04635 p 0.00 y 357.19 h 357.19
+  23121 actor   D ender_dragon -1.77217 68.08536 -1.43493 p 0.00 y 9.84 h 9.84
+  23121 actor   DV ender_dragon -0.10982 0.31161 -0.20135
+  23171 actor   D ender_dragon -1.96051 68.75869 -1.87556 p 0.00 y 21.09 h 21.09
+  23220 actor   D ender_dragon -2.07223 69.46455 -2.35425 p 0.00 y 28.12 h 28.12
+  23270 actor   D ender_dragon -2.10984 70.19482 -2.86075 p 0.00 y 30.94 h 30.94
+  23321 actor   D ender_dragon -2.08149 70.94180 -3.38951 p 0.00 y 30.94 h 30.94
+  23371 actor   D ender_dragon -1.99879 71.69803 -3.93904 p 0.00 y 29.53 h 29.53
+  23420 actor   D ender_dragon -1.87520 72.45638 -4.51031 p 0.00 y 25.31 h 25.31
+  23420 actor   DV ender_dragon 0.06783 0.36103 -0.28194
+  23471 actor   D ender_dragon -1.72483 73.20998 -5.10508 p 0.00 y 19.69 h 19.69
+  23521 actor   D ender_dragon -1.56127 73.95226 -5.72459 p 0.00 y 15.47 h 15.47
+  23571 actor   LevelSoundEvent LevelSoundEvent { sound_id: "flap", position: Vec3f { x: -1.4803295, y: 76.30263, z: -6.030946 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: 3, fire_at_position: None }
+  23571 actor   D ender_dragon -1.46428 74.31837 -6.08858 p 0.00 y 15.47 h 15.47
+  23571 actor   DV ender_dragon 0.01521 0.01432 -0.05463
+  23621 actor   D ender_dragon -1.41371 74.36256 -6.24874 p 0.00 y 21.09 h 21.09
+  23671 actor   D ender_dragon -1.31928 74.43215 -6.49135 p 0.00 y 30.94 h 30.94
+  23720 actor   D ender_dragon -1.16815 74.52409 -6.79323 p 0.00 y 43.59 h 43.59
+  23770 actor   D ender_dragon -0.94821 74.63541 -7.12678 p 0.00 y 57.66 h 57.66
+  23771 actor   BossEvent BossEvent { target_entity_id: 3, type: ShowBar, title: "entity.ender_dragon.name", filtered_title: "", progress: 1.0, color: Purple, overlay: Progress }
+  23821 actor   D ender_dragon -0.65251 74.76323 -7.45981 p 0.00 y 74.53 h 74.53
+  23870 actor   D ender_dragon -0.28330 74.90488 -7.75729 p 0.00 y 94.22 h 94.22
+  23870 actor   DV ender_dragon 0.19563 0.07034 -0.13189
+  23921 actor   D ender_dragon 0.14522 75.05786 -7.98517 p 0.00 y 113.91 h 113.91
+  23971 actor   D ender_dragon 0.60636 75.21992 -8.11557 p 0.00 y 135.00 h 135.00
+  24021 actor   D ender_dragon 1.06358 75.38904 -8.13249 p 0.00 y 156.09 h 156.09
+  24071 actor   D ender_dragon 1.47809 75.56340 -8.03599 p 0.00 y 175.78 h 175.78
+  24071 actor   DV ender_dragon 0.18505 0.08408 0.07161
+  24121 actor   D ender_dragon 1.81861 75.74140 -7.84062 p 0.00 y 192.66 h 192.66
+  24171 actor   D ender_dragon 2.06768 75.92162 -7.56784 p 0.00 y 205.31 h 205.31
+  24221 actor   D ender_dragon 2.22136 76.10278 -7.23760 p 0.00 y 212.34 h 212.34
+  24271 actor   D ender_dragon 2.28541 76.28373 -6.86364 p 0.00 y 216.56 h 216.56
+  24271 actor   DV ender_dragon 0.01110 0.08604 0.18977
+  24321 actor   LevelSoundEvent LevelSoundEvent { sound_id: "flap", position: Vec3f { x: 2.2965112, y: 78.369774, z: -6.673869 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: 3, fire_at_position: None }
+  24321 actor   D ender_dragon 2.27133 76.46342 -6.45267 p 0.00 y 216.56 h 216.56
+  24371 actor   D ender_dragon 2.19385 76.64091 -6.00614 p 0.00 y 212.34 h 212.34
+  24421 actor   D ender_dragon 2.06957 76.81535 -5.52263 p 0.00 y 206.72 h 206.72
+  24471 actor   D ender_dragon 1.91577 76.98593 -5.00025 p 0.00 y 201.09 h 201.09
+  24521 actor   D ender_dragon 1.74917 77.15198 -4.43844 p 0.00 y 194.06 h 194.06
+  24571 actor   D ender_dragon 1.58464 77.31285 -3.83864 p 0.00 y 187.03 h 187.03
+  24621 actor   D ender_dragon 1.43399 77.46798 -3.20420 p 0.00 y 181.41 h 181.41
+  24670 actor   D ender_dragon 1.30531 77.61684 -2.53954 p 0.00 y 177.19 h 177.19
+  24721 actor   D ender_dragon 1.20279 77.75898 -1.84925 p 0.00 y 174.38 h 174.38
+  24771 actor   D ender_dragon 1.12710 77.89396 -1.13739 p 0.00 y 172.97 h 172.97
+  24771 actor   BossEvent BossEvent { target_entity_id: 3, type: ShowBar, title: "entity.ender_dragon.name", filtered_title: "", progress: 1.0, color: Purple, overlay: Progress }
+  24820 actor   D ender_dragon 1.07603 78.02140 -0.40708 p 0.00 y 172.97 h 172.97
+  24871 actor   D ender_dragon 1.04534 78.14095 0.33938 p 0.00 y 174.38 h 174.38
+  24921 actor   D ender_dragon 1.02962 78.25231 1.10029 p 0.00 y 175.78 h 175.78
+  24970 actor   D ender_dragon 1.02297 78.35519 1.87426 p 0.00 y 177.19 h 177.19
+  25020 actor   D ender_dragon 1.01976 78.44932 2.65995 p 0.00 y 180.00 h 180.00
+  25020 actor   DV ender_dragon -0.00138 0.04284 0.38535
+  25070 actor   D ender_dragon 1.01503 78.53448 3.45594 p 0.00 y 181.41 h 181.41
+  25121 actor   D ender_dragon 1.00489 78.61049 4.26079 p 0.00 y 184.22 h 184.22
+  25171 actor   D ender_dragon 0.98665 78.67715 5.07309 p 0.00 y 185.62 h 185.62
+  25220 actor   D ender_dragon 0.95886 78.73434 5.89159 p 0.00 y 187.03 h 187.03
+  25271 actor   D ender_dragon 0.92118 78.78192 6.71526 p 0.00 y 187.03 h 187.03
+  25321 actor   D ender_dragon 0.87421 78.81981 7.54328 p 0.00 y 187.03 h 187.03
+  25370 actor   LevelSoundEvent LevelSoundEvent { sound_id: "flap", position: Vec3f { x: 0.8492357, y: 80.83565, z: 7.947603 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: 3, fire_at_position: None }
+  25371 actor   D ender_dragon 0.81922 78.84793 8.37509 p 0.00 y 187.03 h 187.03
+  25421 actor   D ender_dragon 0.75794 78.86625 9.21028 p 0.00 y 187.03 h 187.03
+  25470 actor   D ender_dragon 0.69228 78.87476 10.04853 p 0.00 y 185.62 h 185.62
+  25521 actor   D ender_dragon 0.62441 78.89592 10.88963 p 0.00 y 185.62 h 185.62
+  25571 actor   D ender_dragon 0.55675 78.94897 11.73338 p 0.00 y 184.22 h 184.22
+  25620 actor   D ender_dragon 0.49167 79.03168 12.57953 p 0.00 y 182.81 h 182.81
+  25671 actor   .. SyncWorldClocks x1
+  25671 actor   D ender_dragon 0.43115 79.14188 13.42781 p 0.00 y 181.41 h 181.41
+  25721 actor   D ender_dragon 0.37671 79.27741 14.27790 p 0.00 y 180.00 h 180.00
+  25771 actor   D ender_dragon 0.32927 79.43616 15.12947 p 0.00 y 180.00 h 180.00
+  25771 actor   BossEvent BossEvent { target_entity_id: 3, type: ShowBar, title: "entity.ender_dragon.name", filtered_title: "", progress: 1.0, color: Purple, overlay: Progress }
+  25820 actor   D ender_dragon 0.28915 79.61602 15.98221 p 0.00 y 180.00 h 180.00
+  25871 actor   D ender_dragon 0.25616 79.81493 16.83584 p 0.00 y 178.59 h 178.59
+  25921 actor   D ender_dragon 0.22966 80.03082 17.69016 p 0.00 y 178.59 h 178.59
+  25971 actor   D ender_dragon 0.20873 80.26164 18.54498 p 0.00 y 178.59 h 178.59
+  26021 actor   D ender_dragon 0.19226 80.50539 19.40019 p 0.00 y 180.00 h 180.00
+  26071 actor   D ender_dragon 0.17909 80.76002 20.25569 p 0.00 y 180.00 h 180.00
+  26121 actor   D ender_dragon 0.16812 81.02351 21.11139 p 0.00 y 180.00 h 180.00
+  26171 actor   D ender_dragon 0.15839 81.29383 21.96723 p 0.00 y 180.00 h 180.00
+  26221 actor   D ender_dragon 0.14911 81.56896 22.82316 p 0.00 y 180.00 h 180.00
+  26271 actor   D ender_dragon 0.13973 81.84686 23.67915 p 0.00 y 181.41 h 181.41
+  26321 actor   D ender_dragon 0.12990 82.12546 24.53516 p 0.00 y 181.41 h 181.41
+  26371 actor   D ender_dragon 0.11946 82.40267 25.39120 p 0.00 y 181.41 h 181.41
+  26420 actor   D ender_dragon 0.10842 82.67639 26.24728 p 0.00 y 181.41 h 181.41
+  26470 actor   D ender_dragon 0.09691 82.94445 27.10341 p 0.00 y 181.41 h 181.41
+  26520 actor   D ender_dragon 0.08515 83.20465 27.95964 p 0.00 y 181.41 h 181.41
+  26571 actor   D ender_dragon 0.07340 83.45471 28.81600 p 0.00 y 181.41 h 181.41
+  26620 actor   D ender_dragon 0.06190 83.69229 29.67255 p 0.00 y 180.00 h 180.00
+  26671 actor   D ender_dragon 0.05610 83.90576 30.52904 p 0.00 y 175.78 h 175.78
+  26720 actor   D ender_dragon 0.06964 84.08649 31.38389 p 0.00 y 165.94 h 165.94
+  26771 actor   LevelSoundEvent LevelSoundEvent { sound_id: "flap", position: Vec3f { x: 0.08276883, y: 86.165344, z: 31.799543 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: 3, fire_at_position: None }
+  26771 actor   D ender_dragon 0.12085 84.23622 32.23169 p 0.00 y 154.69 h 154.69
+  26771 actor   BossEvent BossEvent { target_entity_id: 3, type: ShowBar, title: "entity.ender_dragon.name", filtered_title: "", progress: 1.0, color: Purple, overlay: Progress }
+  26821 actor   D ender_dragon 0.22894 84.35677 33.06033 p 0.00 y 139.22 h 139.22
+  26871 actor   D ender_dragon 0.40964 84.44996 33.84954 p 0.00 y 122.34 h 122.34
+  26921 actor   D ender_dragon 0.67048 84.51760 34.57215 p 0.00 y 104.06 h 104.06
+  26970 actor   D ender_dragon 1.00730 84.56149 35.19957 p 0.00 y 87.19 h 87.19
+  26970 actor   DV ender_dragon 0.17843 0.01571 0.27660
+  27021 actor   D ender_dragon 1.40520 84.58334 35.70942 p 0.00 y 71.72 h 71.72
+  27071 actor   D ender_dragon 1.84441 84.58483 36.09106 p 0.00 y 60.47 h 60.47
+  27121 actor   D ender_dragon 2.30718 84.56758 36.34601 p 0.00 y 52.03 h 52.03
+  27171 actor   D ender_dragon 2.78227 84.53313 36.48462 p 0.00 y 46.41 h 46.41
+  27171 actor   DV ender_dragon 0.23060 -0.02015 0.04130
+  27221 actor   D ender_dragon 3.26570 84.48300 36.52165 p 0.00 y 46.41 h 46.41
+  27272 actor   D ender_dragon 3.75913 84.41865 36.47330 p 0.00 y 47.81 h 47.81
+  27320 actor   D ender_dragon 4.26729 84.34148 36.35590 p 0.00 y 50.62 h 50.62
+  27371 actor   D ender_dragon 4.79579 84.25284 36.18552 p 0.00 y 54.84 h 54.84
+  27420 actor   D ender_dragon 5.34944 84.15405 35.97756 p 0.00 y 60.47 h 60.47
+  27471 actor   D ender_dragon 5.93129 84.04634 35.74615 p 0.00 y 66.09 h 66.09
+  27521 actor   D ender_dragon 6.54238 83.93095 35.50339 p 0.00 y 70.31 h 70.31
+  27571 actor   D ender_dragon 7.18192 83.80901 35.25876 p 0.00 y 74.53 h 74.53
+  27621 actor   D ender_dragon 7.77828 83.69523 35.04298 p 0.00 y 77.34 h 77.34
+  27670 actor   D ender_dragon 8.39605 83.57748 34.83429 p 0.00 y 78.75 h 78.75
+  27721 actor   D ender_dragon 9.03260 83.45667 34.63350 p 0.00 y 78.75 h 78.75
+  27770 actor   D ender_dragon 9.68535 83.33361 34.43953 p 0.00 y 78.75 h 78.75
+  27771 actor   BossEvent BossEvent { target_entity_id: 3, type: ShowBar, title: "entity.ender_dragon.name", filtered_title: "", progress: 1.0, color: Purple, overlay: Progress }
+  27821 actor   D ender_dragon 10.35183 83.20916 34.24995 p 0.00 y 77.34 h 77.34
+  27821 actor   DV ender_dragon 0.36536 -0.06651 -0.10206
+  27871 actor   D ender_dragon 11.02967 83.08410 34.06166 p 0.00 y 75.94 h 75.94
+  27921 actor   LevelSoundEvent LevelSoundEvent { sound_id: "flap", position: Vec3f { x: 11.400541, y: 85.017494, z: 33.95931 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: 3, fire_at_position: None }
+  27921 actor   D ender_dragon 11.71662 82.95922 33.87138 p 0.00 y 73.12 h 73.12
+  27971 actor   D ender_dragon 12.41056 82.83529 33.67612 p 0.00 y 71.72 h 71.72
+  28021 actor   D ender_dragon 13.10957 82.71304 33.47347 p 0.00 y 70.31 h 70.31
+  28071 actor   D ender_dragon 13.89246 82.57939 33.23696 p 0.00 y 68.91 h 68.91
+  28121 actor   D ender_dragon 14.67767 82.44936 32.98935 p 0.00 y 67.50 h 67.50
+  28171 actor   D ender_dragon 15.46420 82.32390 32.73053 p 0.00 y 67.50 h 67.50
+  28221 actor   D ender_dragon 16.25150 82.20394 32.46109 p 0.00 y 66.09 h 66.09
+  28271 actor   D ender_dragon 17.03933 82.09044 32.18214 p 0.00 y 66.09 h 66.09
+  28321 actor   D ender_dragon 17.82774 81.98435 31.89514 p 0.00 y 67.50 h 67.50
+  28370 actor   D ender_dragon 18.61693 81.88666 31.60171 p 0.00 y 67.50 h 67.50
+  28426 actor   D ender_dragon 19.00158 81.84212 31.45744 p 0.00 y 67.50 h 67.50
+  28471 actor   D ender_dragon 19.72478 81.72871 31.18202 p 0.00 y 66.09 h 66.09
+  28521 actor   D ender_dragon 20.45476 81.57920 30.89285 p 0.00 y 61.88 h 61.88
+  28571 actor   D ender_dragon 21.18667 81.39733 30.58486 p 0.00 y 57.66 h 57.66
+  28621 actor   D ender_dragon 21.91449 81.18672 30.25206 p 0.00 y 52.03 h 52.03
+  28671 actor   D ender_dragon 22.63098 80.95084 29.88847 p 0.00 y 46.41 h 46.41
+  28721 actor   D ender_dragon 23.25742 80.72105 29.53182 p 0.00 y 39.38 h 39.38
+  28771 actor   D ender_dragon 23.85833 80.47421 29.13962 p 0.00 y 32.34 h 32.34
+  28771 actor   BossEvent BossEvent { target_entity_id: 3, type: ShowBar, title: "entity.ender_dragon.name", filtered_title: "", progress: 1.0, color: Purple, overlay: Progress }
+  28820 actor   D ender_dragon 24.42525 80.21291 28.71009 p 0.00 y 23.91 h 23.91
+  28871 actor   D ender_dragon 24.95013 79.93955 28.24340 p 0.00 y 16.88 h 16.88
+  28871 actor   DV ender_dragon 0.27042 -0.14854 -0.26314
+  28920 actor   D ender_dragon 25.42602 79.65638 27.74148 p 0.00 y 9.84 h 9.84
+  28971 actor   D ender_dragon 25.84752 79.36550 27.20763 p 0.00 y 4.22 h 4.22
+  29020 actor   D ender_dragon 26.21103 79.06886 26.64601 p 0.00 y 358.59 h 358.59
+  29071 actor   D ender_dragon 26.51482 78.76830 26.06114 p 0.00 y 352.97 h 352.97
+  29121 actor   D ender_dragon 26.75885 78.46552 25.45743 p 0.00 y 348.75 h 348.75
+  29171 actor   D ender_dragon 26.94453 78.16209 24.83892 p 0.00 y 344.53 h 344.53
+  29171 actor   DV ender_dragon 0.08367 -0.16143 -0.33809
+  29221 actor   D ender_dragon 27.07445 77.85950 24.20899 p 0.00 y 341.72 h 341.72
+  29271 actor   D ender_dragon 27.15203 77.55912 23.57037 p 0.00 y 340.31 h 340.31
+  29321 actor   D ender_dragon 27.18126 77.26224 22.92508 p 0.00 y 337.50 h 337.50
+  29371 actor   D ender_dragon 27.16647 76.97006 22.27455 p 0.00 y 337.50 h 337.50
+  29421 actor   D ender_dragon 27.11215 76.68372 21.61968 p 0.00 y 336.09 h 336.09
+  29471 actor   D ender_dragon 27.02280 76.40425 20.96099 p 0.00 y 336.09 h 336.09
+  29521 actor   LevelSoundEvent LevelSoundEvent { sound_id: "flap", position: Vec3f { x: 26.964808, y: 78.25763, z: 20.603027 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: 3, fire_at_position: None }
+  29521 actor   D ender_dragon 26.90279 76.13265 20.29870 p 0.00 y 336.09 h 336.09
+  29571 actor   D ender_dragon 26.75631 75.86984 19.63285 p 0.00 y 336.09 h 336.09
+  29621 actor   D ender_dragon 26.58728 75.61668 18.96335 p 0.00 y 336.09 h 336.09
+  29671 actor   D ender_dragon 26.37677 75.34628 18.21283 p 0.00 y 336.09 h 336.09
+  29721 actor   D ender_dragon 26.14905 75.08856 17.45800 p 0.00 y 337.50 h 337.50
+  29721 actor   DV ender_dragon -0.11453 -0.11979 -0.36848
+  29771 actor   D ender_dragon 25.90736 74.84457 16.69876 p 0.00 y 337.50 h 337.50
+  29771 actor   BossEvent BossEvent { target_entity_id: 3, type: ShowBar, title: "entity.ender_dragon.name", filtered_title: "", progress: 1.0, color: Purple, overlay: Progress }
+  29821 actor   D ender_dragon 25.65457 74.61527 15.93508 p 0.00 y 337.50 h 337.50
+  29871 actor   D ender_dragon 25.39314 74.40159 15.16696 p 0.00 y 338.91 h 338.91
+  29921 actor   D ender_dragon 25.12515 74.20440 14.39446 p 0.00 y 338.91 h 338.91
+  29971 actor   D ender_dragon 24.85233 74.02454 13.61773 p 0.00 y 338.91 h 338.91
+  30021 actor   D ender_dragon 24.57609 73.86282 12.83692 p 0.00 y 340.31 h 340.31
+  30071 actor   D ender_dragon 24.29752 73.71997 12.05224 p 0.00 y 340.31 h 340.31
+  30121 actor   D ender_dragon 24.01749 73.59673 11.26395 p 0.00 y 340.31 h 340.31
+  30171 actor   D ender_dragon 23.73661 73.49375 10.47228 p 0.00 y 340.31 h 340.31
+  30220 actor   D ender_dragon 23.45532 73.41169 9.67754 p 0.00 y 340.31 h 340.31
+  30271 actor   D ender_dragon 23.16916 73.31374 8.88190 p 0.00 y 336.09 h 336.09
+  30320 actor   D ender_dragon 22.86666 73.16830 8.09156 p 0.00 y 327.66 h 327.66
+  30371 actor   D ender_dragon 22.53395 72.97948 7.31670 p 0.00 y 316.41 h 316.41
+  30420 actor   D ender_dragon 22.15916 72.75139 6.57131 p 0.00 y 305.16 h 305.16
+  30470 actor   D ender_dragon 21.73542 72.48803 5.87131 p 0.00 y 293.91 h 293.91
+  30520 actor   D ender_dragon 21.26173 72.19333 5.23157 p 0.00 y 284.06 h 284.06
+  30571 actor   D ender_dragon 20.74177 71.87112 4.66288 p 0.00 y 277.03 h 277.03
+  30620 actor   D ender_dragon 20.18168 71.52517 4.17026 p 0.00 y 270.00 h 270.00
+  30620 actor   DV ender_dragon -0.27956 -0.16981 -0.22026
+  30670 actor   D ender_dragon 19.58781 71.15915 3.75279 p 0.00 y 267.19 h 267.19
+  30721 actor   D ender_dragon 18.96539 70.77666 3.40465 p 0.00 y 265.78 h 265.78
+  30771 actor   LevelSoundEvent LevelSoundEvent { sound_id: "flap", position: Vec3f { x: 18.657825, y: 72.59109, z: 3.2514277 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: 3, fire_at_position: None }
+  30771 actor   D ender_dragon 18.31812 70.38126 3.11663 p 0.00 y 265.78 h 265.78
+  30771 actor   BossEvent BossEvent { target_entity_id: 3, type: ShowBar, title: "entity.ender_dragon.name", filtered_title: "", progress: 1.0, color: Purple, overlay: Progress }
+  30821 actor   D ender_dragon 17.64848 69.97642 2.87768 p 0.00 y 267.19 h 267.19
+  30871 actor   D ender_dragon 16.95827 69.56554 2.67622 p 0.00 y 270.00 h 270.00
+  30921 actor   D ender_dragon 16.24924 69.15200 2.50114 p 0.00 y 272.81 h 272.81
+  30971 actor   D ender_dragon 15.52328 68.73908 2.34257 p 0.00 y 275.62 h 275.62
+  31021 actor   D ender_dragon 14.78251 68.33002 2.19238 p 0.00 y 278.44 h 278.44
+  31071 actor   D ender_dragon 14.02914 67.92803 2.04447 p 0.00 y 279.84 h 279.84
+  31121 actor   D ender_dragon 13.26520 67.53629 1.89477 p 0.00 y 281.25 h 281.25
+  31171 actor   D ender_dragon 12.49241 67.15794 1.74111 p 0.00 y 282.66 h 282.66
+  31221 actor   D ender_dragon 11.71202 66.79618 1.58297 p 0.00 y 282.66 h 282.66
+  31271 actor   D ender_dragon 10.92486 66.45419 1.42109 p 0.00 y 282.66 h 282.66
+  31321 actor   D ender_dragon 10.13141 66.13518 1.25709 p 0.00 y 281.25 h 281.25
+  31371 actor   D ender_dragon 9.33195 65.84246 1.09314 p 0.00 y 279.84 h 279.84
+  31421 actor   D ender_dragon 8.52663 65.57942 0.93162 p 0.00 y 279.84 h 279.84
+  31470 actor   D ender_dragon 7.71561 65.34959 0.77483 p 0.00 y 278.44 h 278.44
+  31520 actor   D ender_dragon 6.98316 65.17493 0.63980 p 0.00 y 277.03 h 277.03
+  31520 actor   DV ender_dragon -0.39895 -0.08313 -0.07126
+  31571 actor   D ender_dragon 6.24601 65.03629 0.51223 p 0.00 y 275.62 h 275.62
+  31621 actor   D ender_dragon 5.50450 64.93665 0.39318 p 0.00 y 274.22 h 274.22
+  31670 actor   D ender_dragon 4.75901 64.87920 0.28329 p 0.00 y 272.81 h 272.81
+  31720 actor   D ender_dragon 4.00998 64.86751 0.18287 p 0.00 y 272.81 h 272.81
+  31771 actor   D ender_dragon 3.25791 64.90561 0.09193 p 0.00 y 271.41 h 271.41
+  31771 actor   BossEvent BossEvent { target_entity_id: 3, type: ShowBar, title: "entity.ender_dragon.name", filtered_title: "", progress: 1.0, color: Purple, overlay: Progress }
+  31821 actor   D ender_dragon 2.50341 64.99843 0.01038 p 0.00 y 271.41 h 271.41
+  31871 actor   D ender_dragon 1.74733 65.15249 -0.06183 p 0.00 y 270.00 h 270.00
+  31921 actor   D ender_dragon 0.99118 65.37794 -0.12435 p 0.00 y 270.00 h 270.00
+  31921 actor   DV ender_dragon -0.40977 0.14216 -0.03096
+  31971 actor   SetEntityData ender_dragon SetEntityData { runtime_entity_id: 3, metadata: [MetadataDictionaryItem { key: Flags, type: Long, legacy_type: 7, value: Flags(MetadataFlags1(1125917103489024)) }], properties: EntityProperties { ints: [], floats: [] }, tick: 0 }
+  31971 actor   D ender_dragon 0.58141 65.52010 -0.15531 p 0.00 y 270.00 h 270.00
+  31971 actor   DV ender_dragon 0.00000 0.00000 0.00000
+  32021 actor   LevelSoundEvent LevelSoundEvent { sound_id: "flap", position: Vec3f { x: 0.58140796, y: 67.5201, z: -0.15531042 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: 3, fire_at_position: None }
+  32071 actor   SetEntityData ender_dragon SetEntityData { runtime_entity_id: 3, metadata: [MetadataDictionaryItem { key: Flags, type: Long, legacy_type: 7, value: Flags(MetadataFlags1(1125899923619840)) }], properties: EntityProperties { ints: [], floats: [] }, tick: 0 }
+  32521 actor   LevelSoundEvent LevelSoundEvent { sound_id: "flap", position: Vec3f { x: 0.58140796, y: 67.5201, z: -0.15531042 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: 3, fire_at_position: None }
+  32771 actor   BossEvent BossEvent { target_entity_id: 3, type: ShowBar, title: "entity.ender_dragon.name", filtered_title: "", progress: 1.0, color: Purple, overlay: Progress }
+  33021 actor   LevelSoundEvent LevelSoundEvent { sound_id: "flap", position: Vec3f { x: 0.58140796, y: 67.5201, z: -0.15531042 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: 3, fire_at_position: None }
+  33521 actor   LevelSoundEvent LevelSoundEvent { sound_id: "flap", position: Vec3f { x: 0.58140796, y: 67.5201, z: -0.15531042 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: 3, fire_at_position: None }
+  33771 actor   BossEvent BossEvent { target_entity_id: 3, type: ShowBar, title: "entity.ender_dragon.name", filtered_title: "", progress: 1.0, color: Purple, overlay: Progress }
+  34021 actor   LevelSoundEvent LevelSoundEvent { sound_id: "flap", position: Vec3f { x: 0.58140796, y: 67.5201, z: -0.15531042 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: 3, fire_at_position: None }
+  34521 actor   LevelSoundEvent LevelSoundEvent { sound_id: "flap", position: Vec3f { x: 0.58140796, y: 67.5201, z: -0.15531042 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: 3, fire_at_position: None }
+  34771 actor   BossEvent BossEvent { target_entity_id: 3, type: ShowBar, title: "entity.ender_dragon.name", filtered_title: "", progress: 1.0, color: Purple, overlay: Progress }
+  35021 actor   LevelSoundEvent LevelSoundEvent { sound_id: "flap", position: Vec3f { x: 0.58140796, y: 67.5201, z: -0.15531042 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: 3, fire_at_position: None }
+  35521 actor   LevelSoundEvent LevelSoundEvent { sound_id: "flap", position: Vec3f { x: 0.58140796, y: 67.5201, z: -0.15531042 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: 3, fire_at_position: None }
+  35771 actor   BossEvent BossEvent { target_entity_id: 3, type: ShowBar, title: "entity.ender_dragon.name", filtered_title: "", progress: 1.0, color: Purple, overlay: Progress }
+  36021 actor   LevelSoundEvent LevelSoundEvent { sound_id: "flap", position: Vec3f { x: 0.58140796, y: 67.5201, z: -0.15531042 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: 3, fire_at_position: None }
+  36521 actor   LevelSoundEvent LevelSoundEvent { sound_id: "flap", position: Vec3f { x: 0.58140796, y: 67.5201, z: -0.15531042 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: 3, fire_at_position: None }
+  36771 actor   BossEvent BossEvent { target_entity_id: 3, type: ShowBar, title: "entity.ender_dragon.name", filtered_title: "", progress: 1.0, color: Purple, overlay: Progress }
+  36971 actor   SetEntityData ender_dragon SetEntityData { runtime_entity_id: 3, metadata: [MetadataDictionaryItem { key: Flags, type: Long, legacy_type: 7, value: Flags(MetadataFlags1(1125899906842624)) }], properties: EntityProperties { ints: [], floats: [] }, tick: 0 }
+  36971 actor   D ender_dragon 0.52165 65.59803 -0.15915 p 0.00 y 274.22 h 274.22
+  37021 actor   LevelSoundEvent LevelSoundEvent { sound_id: "flap", position: Vec3f { x: 0.46636903, y: 67.668945, z: -0.16270807 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: 3, fire_at_position: None }
+  37021 actor   SetEntityData ender_dragon SetEntityData { runtime_entity_id: 3, metadata: [MetadataDictionaryItem { key: Flags, type: Long, legacy_type: 7, value: Flags(MetadataFlags1(1125917086711808)) }], properties: EntityProperties { ints: [], floats: [] }, tick: 0 }
+  37021 actor   D ender_dragon 0.35748 65.81708 -0.17840 p 0.00 y 282.66 h 282.66
+  37071 actor   D ender_dragon 0.10963 66.16259 -0.23028 p 0.00 y 293.91 h 293.91
+  37071 actor   DV ender_dragon -0.13659 0.19175 -0.03471
+  37121 actor   D ender_dragon -0.19848 66.62027 -0.33347 p 0.00 y 307.97 h 307.97
+  37171 actor   D ender_dragon -0.53870 67.17631 -0.50418 p 0.00 y 324.84 h 324.84
+  37221 actor   D ender_dragon -0.87922 67.81758 -0.75150 p 0.00 y 341.72 h 341.72
+  37272 actor   D ender_dragon -1.18922 68.53171 -1.07445 p 0.00 y 357.19 h 357.19
+  37272 actor   DV ender_dragon -0.13918 0.35548 -0.17271
+  37321 actor   D ender_dragon -1.44425 69.30704 -1.46334 p 0.00 y 9.84 h 9.84
+  37371 actor   D ender_dragon -1.62941 70.13261 -1.90422 p 0.00 y 21.09 h 21.09
+  37421 actor   D ender_dragon -1.73958 70.99799 -2.38364 p 0.00 y 26.72 h 26.72
+  37471 actor   D ender_dragon -1.77751 71.89328 -2.89177 p 0.00 y 29.53 h 29.53
+  37521 actor   D ender_dragon -1.75145 72.80898 -3.42325 p 0.00 y 29.53 h 29.53
+  37521 actor   DV ender_dragon 0.02636 0.43991 -0.26191
+  37571 actor   D ender_dragon -1.67308 73.73598 -3.97653 p 0.00 y 28.12 h 28.12
+  37621 actor   D ender_dragon -1.55591 74.66552 -4.55229 p 0.00 y 23.91 h 23.91
+  37671 actor   D ender_dragon -1.46591 75.11492 -4.89043 p 0.00 y 25.31 h 25.31
+  37671 actor   DV ender_dragon 0.02447 0.00627 -0.05125
+  37721 actor   D ender_dragon -1.38755 75.13426 -5.03908 p 0.00 y 32.34 h 32.34
+  37771 actor   LevelSoundEvent LevelSoundEvent { sound_id: "flap", position: Vec3f { x: -1.3363886, y: 77.14616, z: -5.131554 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: 3, fire_at_position: None }
+  37771 actor   D ender_dragon -1.24978 75.16471 -5.26014 p 0.00 y 42.19 h 42.19
+  37771 actor   BossEvent BossEvent { target_entity_id: 3, type: ShowBar, title: "entity.ender_dragon.name", filtered_title: "", progress: 1.0, color: Purple, overlay: Progress }
+  37821 actor   D ender_dragon -1.04364 75.20493 -5.52755 p 0.00 y 54.84 h 54.84
+  37871 actor   D ender_dragon -0.76247 75.25362 -5.81098 p 0.00 y 70.31 h 70.31
+  37921 actor   D ender_dragon -0.40628 75.30952 -6.07677 p 0.00 y 88.59 h 88.59
+  37971 actor   D ender_dragon 0.01490 75.37147 -6.29061 p 0.00 y 106.88 h 106.88
+  38021 actor   D ender_dragon 0.47918 75.43837 -6.42204 p 0.00 y 126.56 h 126.56
+  38021 actor   DV ender_dragon 0.23185 0.03289 -0.04118
+  38071 actor   D ender_dragon 0.95370 75.50925 -6.44981 p 0.00 y 147.66 h 147.66
+  38121 actor   D ender_dragon 1.40002 75.58321 -6.36703 p 0.00 y 168.75 h 168.75
+  38171 actor   D ender_dragon 1.78322 75.65948 -6.18245 p 0.00 y 185.62 h 185.62
+  38221 actor   D ender_dragon 2.08004 75.73735 -5.91495 p 0.00 y 199.69 h 199.69
+  38221 actor   DV ender_dragon 0.12099 0.03739 0.14542
+  38271 actor   D ender_dragon 2.28123 75.81617 -5.58518 p 0.00 y 209.53 h 209.53
+  38321 actor   D ender_dragon 2.38892 75.89537 -5.20916 p 0.00 y 215.16 h 215.16
+  38371 actor   D ender_dragon 2.41245 75.97443 -4.79606 p 0.00 y 216.56 h 216.56
+  38421 actor   D ender_dragon 2.36525 76.05286 -4.34903 p 0.00 y 213.75 h 213.75
+  38472 actor   .. SyncWorldClocks x1
+  38472 actor   LevelSoundEvent LevelSoundEvent { sound_id: "flap", position: Vec3f { x: 2.3273916, y: 78.09004, z: -4.1241193 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: 3, fire_at_position: None }
+  38472 actor   D ender_dragon 2.26310 76.13024 -3.86742 p 0.00 y 209.53 h 209.53
+  38472 actor   DV ender_dragon -0.06075 0.03658 0.24257
+  38521 actor   D ender_dragon 2.12293 76.20616 -3.34920 p 0.00 y 203.91 h 203.91
+  38571 actor   D ender_dragon 1.96163 76.28026 -2.79298 p 0.00 y 196.88 h 196.88
+  38621 actor   D ender_dragon 1.79486 76.35220 -2.19912 p 0.00 y 189.84 h 189.84
+  38671 actor   D ender_dragon 1.63572 76.42169 -1.57001 p 0.00 y 184.22 h 184.22
+  38721 actor   D ender_dragon 1.49394 76.48846 -0.90949 p 0.00 y 180.00 h 180.00
+  38771 actor   D ender_dragon 1.37544 76.55225 -0.22201 p 0.00 y 175.78 h 175.78
+  38771 actor   BossEvent BossEvent { target_entity_id: 3, type: ShowBar, title: "entity.ender_dragon.name", filtered_title: "", progress: 1.0, color: Purple, overlay: Progress }
+  38821 actor   D ender_dragon 1.28248 76.61284 0.48822 p 0.00 y 174.38 h 174.38
+  38871 actor   D ender_dragon 1.21419 76.67001 1.21774 p 0.00 y 174.38 h 174.38
+  38921 actor   D ender_dragon 1.16733 76.72356 1.96389 p 0.00 y 174.38 h 174.38
+  38971 actor   D ender_dragon 1.13712 76.77332 2.72474 p 0.00 y 175.78 h 175.78
+  39021 actor   D ender_dragon 1.11799 76.81914 3.49875 p 0.00 y 177.19 h 177.19
+  39071 actor   D ender_dragon 1.10433 76.86085 4.28452 p 0.00 y 180.00 h 180.00
+  39121 actor   D ender_dragon 1.09099 76.89832 5.08066 p 0.00 y 181.41 h 181.41
+  39171 actor   D ender_dragon 1.07370 76.93143 5.88572 p 0.00 y 184.22 h 184.22
+  39221 actor   D ender_dragon 1.04931 76.96008 6.69828 p 0.00 y 185.62 h 185.62
+  39271 actor   D ender_dragon 1.01587 76.98415 7.51704 p 0.00 y 187.03 h 187.03
+  39321 actor   D ender_dragon 0.97256 77.00357 8.34089 p 0.00 y 187.03 h 187.03
+  39371 actor   D ender_dragon 0.91956 77.01826 9.16896 p 0.00 y 188.44 h 188.44
+  39421 actor   D ender_dragon 0.85782 77.02815 10.00062 p 0.00 y 188.44 h 188.44
+  39471 actor   D ender_dragon 0.78916 77.09322 10.83547 p 0.00 y 187.03 h 187.03
+  39521 actor   D ender_dragon 0.71627 77.26412 11.67311 p 0.00 y 185.62 h 185.62
+  39571 actor   D ender_dragon 0.64219 77.53349 12.51301 p 0.00 y 184.22 h 184.22
+  39571 actor   DV ender_dragon -0.03598 0.14990 0.40924
+  39621 actor   LevelSoundEvent LevelSoundEvent { sound_id: "flap", position: Vec3f { x: 0.60621, y: 79.683395, z: 12.922241 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: 3, fire_at_position: None }
+  39621 actor   D ender_dragon 0.56992 77.89409 13.35454 p 0.00 y 182.81 h 182.81
+  39671 actor   D ender_dragon 0.50209 78.33875 14.19705 p 0.00 y 181.41 h 181.41
+  39721 actor   D ender_dragon 0.44070 78.86044 15.03994 p 0.00 y 181.41 h 181.41
+  39771 actor   D ender_dragon 0.38707 79.45216 15.88266 p 0.00 y 180.00 h 180.00
+  39771 actor   BossEvent BossEvent { target_entity_id: 3, type: ShowBar, title: "entity.ender_dragon.name", filtered_title: "", progress: 1.0, color: Purple, overlay: Progress }
+  39820 actor   D ender_dragon 0.34174 80.10704 16.72479 p 0.00 y 178.59 h 178.59
+  39871 actor   D ender_dragon 0.30461 80.81821 17.56605 p 0.00 y 178.59 h 178.59
+  39871 actor   DV ender_dragon -0.01615 0.35087 0.40850
+  39920 actor   D ender_dragon 0.27502 81.57887 18.40627 p 0.00 y 178.59 h 178.59
+  39971 actor   D ender_dragon 0.25194 82.38226 19.24536 p 0.00 y 178.59 h 178.59
+  40021 actor   D ender_dragon 0.23407 83.22161 20.08335 p 0.00 y 178.59 h 178.59
+  40071 actor   D ender_dragon 0.22005 84.09019 20.92026 p 0.00 y 180.00 h 180.00
+  40121 actor   D ender_dragon 0.20857 84.98128 21.75616 p 0.00 y 180.00 h 180.00
+  40171 actor   D ender_dragon 0.19845 85.88810 22.59115 p 0.00 y 180.00 h 180.00
+  40221 actor   D ender_dragon 0.18875 86.80389 23.42529 p 0.00 y 180.00 h 180.00
+  40271 actor   D ender_dragon 0.17877 87.72185 24.25869 p 0.00 y 181.41 h 181.41
+  40321 actor   D ender_dragon 0.16807 88.63509 25.09142 p 0.00 y 181.41 h 181.41
+  40371 actor   D ender_dragon 0.15645 89.53670 25.92359 p 0.00 y 181.41 h 181.41
+  40421 actor   D ender_dragon 0.14392 90.41962 26.75530 p 0.00 y 181.41 h 181.41
+  40471 actor   D ender_dragon 0.13062 91.27673 27.58669 p 0.00 y 181.41 h 181.41
+  40521 actor   D ender_dragon 0.11681 92.10073 28.41788 p 0.00 y 181.41 h 181.41
+  40571 actor   D ender_dragon 0.10281 92.88416 29.24905 p 0.00 y 181.41 h 181.41
+  40621 actor   D ender_dragon 0.08893 93.61931 30.08035 p 0.00 y 181.41 h 181.41
+  40671 actor   D ender_dragon 0.08065 94.28419 30.91178 p 0.00 y 175.78 h 175.78
+  40721 actor   D ender_dragon 0.09163 94.86410 31.74211 p 0.00 y 165.94 h 165.94
+  40771 actor   D ender_dragon 0.14017 95.36282 32.56631 p 0.00 y 154.69 h 154.69
+  40771 actor   BossEvent BossEvent { target_entity_id: 3, type: ShowBar, title: "entity.ender_dragon.name", filtered_title: "", progress: 1.0, color: Purple, overlay: Progress }
+  40821 actor   D ender_dragon 0.24544 95.78437 33.37276 p 0.00 y 139.22 h 139.22
+  40871 actor   D ender_dragon 0.42322 96.13289 34.14174 p 0.00 y 122.34 h 122.34
+  40871 actor   DV ender_dragon 0.10468 0.14992 0.36106
+  40921 actor   D ender_dragon 0.68120 96.41256 34.84644 p 0.00 y 104.06 h 104.06
+  40971 actor   D ender_dragon 1.01544 96.62756 35.45844 p 0.00 y 87.19 h 87.19
+  41021 actor   D ender_dragon 1.41115 96.78202 35.95514 p 0.00 y 71.72 h 71.72
+  41021 actor   DV ender_dragon 0.20182 0.06029 0.20969
+  41071 actor   D ender_dragon 1.84850 96.87995 36.32547 p 0.00 y 60.47 h 60.47
+  41121 actor   D ender_dragon 2.30952 96.92529 36.57050 p 0.00 y 52.03 h 52.03
+  41171 actor   LevelSoundEvent LevelSoundEvent { sound_id: "flap", position: Vec3f { x: 2.5344827, y: 98.93536, z: 36.65997 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: 3, fire_at_position: None }
+  41171 actor   D ender_dragon 2.78274 96.92184 36.70013 p 0.00 y 46.41 h 46.41
+  41221 actor   D ender_dragon 3.26401 96.87337 36.72878 p 0.00 y 45.00 h 45.00
+  41221 actor   DV ender_dragon 0.23418 -0.03292 -0.00792
+  41271 actor   D ender_dragon 3.75482 96.78349 36.67236 p 0.00 y 46.41 h 46.41
+  41320 actor   D ender_dragon 4.25980 96.65574 36.54708 p 0.00 y 50.62 h 50.62
+  41370 actor   D ender_dragon 4.78446 96.49355 36.36897 p 0.00 y 54.84 h 54.84
+  41420 actor   D ender_dragon 5.33362 96.30026 36.15348 p 0.00 y 60.47 h 60.47
+  41471 actor   D ender_dragon 5.91038 96.07907 35.91481 p 0.00 y 66.09 h 66.09
+  41521 actor   D ender_dragon 6.51582 95.83309 35.66520 p 0.00 y 70.31 h 70.31
+  41571 actor   D ender_dragon 7.14921 95.56534 35.41418 p 0.00 y 74.53 h 74.53
+  41621 actor   D ender_dragon 7.80856 95.27872 35.16826 p 0.00 y 77.34 h 77.34
+  41671 actor   D ender_dragon 8.49120 94.97610 34.93091 p 0.00 y 78.75 h 78.75
+  41721 actor   D ender_dragon 9.19423 94.66023 34.70290 p 0.00 y 78.75 h 78.75
+  41771 actor   D ender_dragon 9.91480 94.33385 34.48289 p 0.00 y 78.75 h 78.75
+  41771 actor   BossEvent BossEvent { target_entity_id: 3, type: ShowBar, title: "entity.ender_dragon.name", filtered_title: "", progress: 1.0, color: Purple, overlay: Progress }
+  41821 actor   D ender_dragon 10.65016 93.99961 34.26805 p 0.00 y 77.34 h 77.34
+  41821 actor   DV ender_dragon 0.36100 -0.16074 -0.10369
+  41871 actor   D ender_dragon 11.39771 93.66014 34.05485 p 0.00 y 75.94 h 75.94
+  41921 actor   D ender_dragon 12.15498 93.31805 33.83955 p 0.00 y 73.12 h 73.12
+  41971 actor   D ender_dragon 12.91963 92.97588 33.61877 p 0.00 y 71.72 h 71.72
+  42021 actor   D ender_dragon 13.68957 92.63621 33.38977 p 0.00 y 70.31 h 70.31
+  42071 actor   D ender_dragon 14.46304 92.30156 33.15066 p 0.00 y 68.91 h 68.91
+  42122 actor   LevelSoundEvent LevelSoundEvent { sound_id: "flap", position: Vec3f { x: 14.840118, y: 94.14353, z: 33.03172 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: 3, fire_at_position: None }
+  42122 actor   D ender_dragon 15.23865 91.97447 32.90041 p 0.00 y 67.50 h 67.50
+  42171 actor   D ender_dragon 16.01546 91.65750 32.63885 p 0.00 y 66.09 h 66.09
+  42221 actor   D ender_dragon 16.79296 91.35323 32.36649 p 0.00 y 66.09 h 66.09
+  42272 actor   D ender_dragon 17.57099 91.06425 32.08440 p 0.00 y 66.09 h 66.09
+  42321 actor   D ender_dragon 18.34966 90.79326 31.79398 p 0.00 y 66.09 h 66.09
+  42371 actor   D ender_dragon 19.12772 90.61499 31.49356 p 0.00 y 63.28 h 63.28
+  42421 actor   D ender_dragon 19.90189 90.59035 31.17641 p 0.00 y 57.66 h 57.66
+  42471 actor   D ender_dragon 20.66580 90.70819 30.83411 p 0.00 y 50.62 h 50.62
+  42471 actor   DV ender_dragon 0.36848 0.08730 -0.17355
+  42521 actor   D ender_dragon 21.41085 90.95776 30.45906 p 0.00 y 43.59 h 43.59
+  42571 actor   D ender_dragon 22.12758 91.32871 30.04612 p 0.00 y 36.56 h 36.56
+  42621 actor   D ender_dragon 22.80745 91.81106 29.59318 p 0.00 y 29.53 h 29.53
+  42671 actor   D ender_dragon 23.38106 92.32917 29.15346 p 0.00 y 25.31 h 25.31
+  42671 actor   DV ender_dragon 0.29821 0.30039 -0.24777
+  42721 actor   D ender_dragon 23.91372 92.93058 28.68058 p 0.00 y 21.09 h 21.09
+  42770 actor   D ender_dragon 24.40595 93.60733 28.17770 p 0.00 y 19.69 h 19.69
+  42771 actor   BossEvent BossEvent { target_entity_id: 3, type: ShowBar, title: "entity.ender_dragon.name", filtered_title: "", progress: 1.0, color: Purple, overlay: Progress }
+  42820 actor   D ender_dragon 24.86092 94.35177 27.64839 p 0.00 y 18.28 h 18.28
+  42871 actor   D ender_dragon 25.28377 95.15656 27.09628 p 0.00 y 18.28 h 18.28
+  42921 actor   D ender_dragon 25.68077 96.01463 26.52493 p 0.00 y 19.69 h 19.69
+  42921 actor   DV ender_dragon 0.20816 0.47069 -0.31403
+  42971 actor   D ender_dragon 26.05848 96.91920 25.93780 p 0.00 y 22.50 h 22.50
+  43021 actor   D ender_dragon 26.42320 97.86377 25.33823 p 0.00 y 23.91 h 23.91
+  43071 actor   D ender_dragon 26.78042 98.84207 24.72931 p 0.00 y 26.72 h 26.72
+  43121 actor   D ender_dragon 27.13453 99.84808 24.11378 p 0.00 y 28.12 h 28.12
+  43171 actor   D ender_dragon 27.48876 100.87602 23.49390 p 0.00 y 29.53 h 29.53
+  43221 actor   D ender_dragon 27.84516 101.92033 22.87136 p 0.00 y 30.94 h 30.94
+  43271 actor   D ender_dragon 28.20472 102.97564 22.24723 p 0.00 y 30.94 h 30.94
+  43321 actor   D ender_dragon 28.60938 104.16111 21.55026 p 0.00 y 30.94 h 30.94
+  43371 actor   D ender_dragon 29.01706 105.34692 20.85219 p 0.00 y 30.94 h 30.94
+  43421 actor   D ender_dragon 29.42666 106.52711 20.15274 p 0.00 y 30.94 h 30.94
+  43471 actor   D ender_dragon 29.83683 107.69585 19.45142 p 0.00 y 29.53 h 29.53
+  43521 actor   D ender_dragon 30.24617 108.84752 18.74773 p 0.00 y 29.53 h 29.53
+  43571 actor   D ender_dragon 30.65341 109.97662 18.04117 p 0.00 y 28.12 h 28.12
+  43621 actor   D ender_dragon 31.05750 111.07781 17.33142 p 0.00 y 28.12 h 28.12
+  43671 actor   D ender_dragon 31.45774 112.14591 16.61826 p 0.00 y 26.72 h 26.72
+  43721 actor   D ender_dragon 31.85373 113.17585 15.90165 p 0.00 y 26.72 h 26.72
+  43771 actor   D ender_dragon 32.24543 114.16270 15.18168 p 0.00 y 26.72 h 26.72
+  43771 actor   BossEvent BossEvent { target_entity_id: 3, type: ShowBar, title: "entity.ender_dragon.name", filtered_title: "", progress: 1.0, color: Purple, overlay: Progress }
+  43821 actor   D ender_dragon 32.63310 115.10167 14.45854 p 0.00 y 25.31 h 25.31
+  43871 actor   D ender_dragon 33.01721 115.98806 13.73250 p 0.00 y 25.31 h 25.31
+  43921 actor   LevelSoundEvent LevelSoundEvent { sound_id: "flap", position: Vec3f { x: 33.203, y: 118.39794, z: 13.379215 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: 3, fire_at_position: None }
+  43921 actor   D ender_dragon 33.39841 116.81732 13.00383 p 0.00 y 26.72 h 26.72
+  43971 actor   D ender_dragon 33.77742 117.58500 12.27281 p 0.00 y 26.72 h 26.72
+  44021 actor   D ender_dragon 34.15499 118.28675 11.53966 p 0.00 y 26.72 h 26.72
+  44071 actor   D ender_dragon 34.53184 118.91834 10.80453 p 0.00 y 26.72 h 26.72
+  44121 actor   D ender_dragon 34.90860 119.47562 10.06748 p 0.00 y 26.72 h 26.72
+  44121 actor   DV ender_dragon 0.18330 0.24820 -0.35893
+  44171 actor   D ender_dragon 35.28584 119.95457 9.32846 p 0.00 y 26.72 h 26.72
+  44221 actor   D ender_dragon 35.66397 120.35121 8.58737 p 0.00 y 26.72 h 26.72
+  44271 actor   D ender_dragon 36.04788 120.54095 7.84661 p 0.00 y 32.34 h 32.34
+  44271 actor   DV ender_dragon 0.18960 0.01808 -0.36051
+  44321 actor   D ender_dragon 36.44948 120.42712 7.11292 p 0.00 y 40.78 h 40.78
+  44371 actor   D ender_dragon 36.88185 120.03709 6.40088 p 0.00 y 53.44 h 53.44
+  44371 actor   DV ender_dragon 0.21872 -0.24568 -0.33860
+  44421 actor   D ender_dragon 37.35527 119.40311 5.73193 p 0.00 y 68.91 h 68.91
+  44471 actor   D ender_dragon 37.87363 118.56137 5.13196 p 0.00 y 85.78 h 85.78
+  44471 actor   DV ender_dragon 0.26138 -0.44444 -0.27106
+  44521 actor   D ender_dragon 38.43116 117.54504 4.62830 p 0.00 y 104.06 h 104.06
+  44571 actor   D ender_dragon 39.01072 116.38412 4.24540 p 0.00 y 123.75 h 123.75
+  44621 actor   D ender_dragon 39.58451 115.10542 3.99975 p 0.00 y 144.84 h 144.84
+  44621 actor   DV ender_dragon 0.27130 -0.63323 -0.08516
+  44671 actor   D ender_dragon 40.11739 113.73259 3.89525 p 0.00 y 165.94 h 165.94
+  44721 actor   D ender_dragon 40.57322 112.28639 3.92050 p 0.00 y 187.03 h 187.03
+  44771 actor   D ender_dragon 40.92355 110.78496 4.05058 p 0.00 y 206.72 h 206.72
+  44771 actor   DV ender_dragon 0.14152 -0.72605 0.08339
+  44771 actor   BossEvent BossEvent { target_entity_id: 3, type: ShowBar, title: "entity.ender_dragon.name", filtered_title: "", progress: 1.0, color: Purple, overlay: Progress }
+  44821 actor   D ender_dragon 41.15361 109.24413 4.25434 p 0.00 y 222.19 h 222.19
+  44871 actor   LevelSoundEvent LevelSoundEvent { sound_id: "flap", position: Vec3f { x: 41.235626, y: 110.50269, z: 4.3658633 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: 3, fire_at_position: None }
+  44871 actor   D ender_dragon 41.26215 107.67788 4.50318 p 0.00 y 233.44 h 233.44
+  44923 actor   D ender_dragon 41.25723 106.09857 4.77662 p 0.00 y 240.47 h 240.47
+  44971 actor   D ender_dragon 41.15175 104.51729 5.06393 p 0.00 y 241.88 h 241.88
+  44971 actor   DV ender_dragon -0.07270 -0.75270 0.14119
+  45021 actor   D ender_dragon 40.96056 102.94398 5.36292 p 0.00 y 240.47 h 240.47
+  45071 actor   D ender_dragon 40.69925 101.38764 5.67738 p 0.00 y 236.25 h 236.25
+  45121 actor   D ender_dragon 40.38382 99.85635 6.01420 p 0.00 y 230.62 h 230.62
+  45171 actor   D ender_dragon 40.03038 98.35742 6.38070 p 0.00 y 223.59 h 223.59
+  45220 actor   D ender_dragon 39.65442 96.89740 6.78268 p 0.00 y 216.56 h 216.56
+  45271 actor   LevelSoundEvent LevelSoundEvent { sound_id: "flap", position: Vec3f { x: 39.46877, y: 98.211296, z: 6.9862146 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: 3, fire_at_position: None }
+  45271 actor   D ender_dragon 39.26984 95.48220 7.22340 p 0.00 y 209.53 h 209.53
+  45321 actor   D ender_dragon 38.88789 94.11714 7.70344 p 0.00 y 205.31 h 205.31
+  45371 actor   D ender_dragon 38.51645 92.80700 8.22119 p 0.00 y 201.09 h 201.09
+  45371 actor   DV ender_dragon -0.17679 -0.61125 0.25942
+  45421 actor   D ender_dragon 38.15984 91.55609 8.77360 p 0.00 y 198.28 h 198.28
+  45471 actor   D ender_dragon 37.81906 90.36832 9.35688 p 0.00 y 196.88 h 196.88
+  45521 actor   D ender_dragon 37.49239 89.24718 9.96695 p 0.00 y 198.28 h 198.28
+  45572 actor   D ender_dragon 37.17622 88.19582 10.59973 p 0.00 y 198.28 h 198.28
+  45622 actor   D ender_dragon 36.86591 87.21705 11.25126 p 0.00 y 201.09 h 201.09
+  45672 actor   D ender_dragon 36.55654 86.31337 11.91777 p 0.00 y 202.50 h 202.50
+  45672 actor   DV ender_dragon -0.15047 -0.41325 0.32657
+  45721 actor   D ender_dragon 36.24358 85.48698 12.59577 p 0.00 y 205.31 h 205.31
+  45770 actor   D ender_dragon 35.95667 84.81403 13.21122 p 0.00 y 206.72 h 206.72
+  45771 actor   BossEvent BossEvent { target_entity_id: 3, type: ShowBar, title: "entity.ender_dragon.name", filtered_title: "", progress: 1.0, color: Purple, overlay: Progress }
+  45820 actor   D ender_dragon 35.66081 84.21298 13.83211 p 0.00 y 209.53 h 209.53
+  45871 actor   D ender_dragon 35.35446 83.68422 14.45673 p 0.00 y 210.94 h 210.94
+  45921 actor   D ender_dragon 35.03702 83.22793 15.08401 p 0.00 y 210.94 h 210.94
+  45971 actor   D ender_dragon 34.70868 82.84408 15.71345 p 0.00 y 212.34 h 212.34
+  45971 actor   DV ender_dragon -0.18116 -0.18377 0.34195
+  46020 actor   D ender_dragon 34.37029 82.53245 16.34508 p 0.00 y 212.34 h 212.34
+  46070 actor   D ender_dragon 34.02311 82.29256 16.97923 p 0.00 y 210.94 h 210.94
+  46120 actor   D ender_dragon 33.66875 82.12376 17.61641 p 0.00 y 210.94 h 210.94
+  46171 actor   LevelSoundEvent LevelSoundEvent { sound_id: "mad", position: Vec3f { x: 33.47455, y: 84.05394, z: 17.963257 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: 3, fire_at_position: None }
+  46171 actor   D ender_dragon 33.30890 82.02513 18.25714 p 0.00 y 210.94 h 210.94
+  46221 actor   D ender_dragon 32.94530 81.99552 18.90179 p 0.00 y 209.53 h 209.53
+  46270 actor   D ender_dragon 32.57953 82.03350 19.55054 p 0.00 y 209.53 h 209.53
+  46271 actor   DV ender_dragon -0.19893 0.03911 0.35336
+  46321 actor   D ender_dragon 32.21082 82.09151 20.20214 p 0.00 y 210.94 h 210.94
+  46371 actor   LevelSoundEvent LevelSoundEvent { sound_id: "flap", position: Vec3f { x: 32.009216, y: 84.113, z: 20.556284 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: 3, fire_at_position: None }
+  46371 actor   D ender_dragon 31.83426 82.11750 20.85294 p 0.00 y 216.56 h 216.56
+  46421 actor   D ender_dragon 31.44313 82.11377 21.49735 p 0.00 y 222.19 h 222.19
+  46471 actor   D ender_dragon 31.03093 82.08250 22.12841 p 0.00 y 229.22 h 229.22
+  46521 actor   D ender_dragon 30.59275 82.02581 22.73870 p 0.00 y 234.84 h 234.84
+  46571 actor   D ender_dragon 30.12602 81.94570 23.32140 p 0.00 y 240.47 h 240.47
+  46621 actor   D ender_dragon 29.63034 81.84411 23.87141 p 0.00 y 246.09 h 246.09
+  46671 actor   D ender_dragon 29.10700 81.72289 24.38609 p 0.00 y 248.91 h 248.91
+  46721 actor   D ender_dragon 28.55826 81.58382 24.86548 p 0.00 y 250.31 h 250.31
+  46771 actor   D ender_dragon 27.98685 81.42863 25.31201 p 0.00 y 251.72 h 251.72
+  46771 actor   DV ender_dragon -0.31585 -0.08691 0.23290
+  46771 actor   BossEvent BossEvent { target_entity_id: 3, type: ShowBar, title: "entity.ender_dragon.name", filtered_title: "", progress: 1.0, color: Purple, overlay: Progress }
+  46821 actor   D ender_dragon 27.39562 81.25894 25.72994 p 0.00 y 251.72 h 251.72
+  46871 actor   D ender_dragon 26.78743 81.07635 26.12466 p 0.00 y 250.31 h 250.31
+  46921 actor   D ender_dragon 26.16508 80.88236 26.50196 p 0.00 y 248.91 h 248.91
+  46971 actor   D ender_dragon 25.53133 80.67846 26.86743 p 0.00 y 246.09 h 246.09
+  47021 actor   D ender_dragon 24.81487 80.44073 27.26674 p 0.00 y 244.69 h 244.69
+  47071 actor   D ender_dragon 24.09145 80.19514 27.66305 p 0.00 y 243.28 h 243.28
+  47121 actor   D ender_dragon 23.36332 79.94324 28.05958 p 0.00 y 241.88 h 241.88
+  47170 actor   D ender_dragon 22.63216 79.68653 28.45839 p 0.00 y 240.47 h 240.47
+  47220 actor   D ender_dragon 21.89911 79.42649 28.86049 p 0.00 y 240.47 h 240.47
+  47272 actor   D ender_dragon 21.16478 79.16454 29.26600 p 0.00 y 240.47 h 240.47
+  47321 actor   D ender_dragon 20.42929 78.90205 29.67439 p 0.00 y 240.47 h 240.47
+  47371 actor   D ender_dragon 19.69245 78.64039 30.08465 p 0.00 y 240.47 h 240.47
+  47420 actor   D ender_dragon 18.95389 78.38087 30.49557 p 0.00 y 241.88 h 241.88
+  47471 actor   D ender_dragon 18.21315 78.12480 30.90587 p 0.00 y 241.88 h 241.88
+  47521 actor   D ender_dragon 17.46983 77.87344 31.31433 p 0.00 y 243.28 h 243.28
+  47571 actor   D ender_dragon 16.72359 77.62803 31.71999 p 0.00 y 243.28 h 243.28
+  47620 actor   D ender_dragon 15.97426 77.38979 32.12213 p 0.00 y 243.28 h 243.28
+  47670 actor   D ender_dragon 15.29915 77.18354 32.47969 p 0.00 y 244.69 h 244.69
+  47721 actor   D ender_dragon 14.62128 76.98569 32.83365 p 0.00 y 244.69 h 244.69
+  47771 actor   D ender_dragon 13.94080 76.79710 33.18415 p 0.00 y 244.69 h 244.69
+  47771 actor   BossEvent BossEvent { target_entity_id: 3, type: ShowBar, title: "entity.ender_dragon.name", filtered_title: "", progress: 1.0, color: Purple, overlay: Progress }
+  47821 actor   D ender_dragon 13.25794 76.61858 33.53152 p 0.00 y 244.69 h 244.69
+  47871 actor   D ender_dragon 12.57298 76.45094 33.87622 p 0.00 y 244.69 h 244.69
+  47920 actor   D ender_dragon 11.88623 76.29497 34.21880 p 0.00 y 244.69 h 244.69
+  47971 actor   D ender_dragon 11.19799 76.15143 34.55980 p 0.00 y 244.69 h 244.69
+  48021 actor   D ender_dragon 10.50853 76.02109 34.89974 p 0.00 y 244.69 h 244.69
+  48071 actor   LevelSoundEvent LevelSoundEvent { sound_id: "flap", position: Vec3f { x: 10.133984, y: 77.955574, z: 35.084015 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: 3, fire_at_position: None }
+  48071 actor   D ender_dragon 9.81810 75.90468 35.23906 p 0.00 y 244.69 h 244.69
+  48121 actor   D ender_dragon 9.12691 75.80293 35.57812 p 0.00 y 244.69 h 244.69
+  48171 actor   D ender_dragon 8.43383 75.71504 35.91428 p 0.00 y 247.50 h 247.50
+  48221 actor   D ender_dragon 7.73584 75.63932 36.23951 p 0.00 y 254.53 h 254.53
+  48270 actor   D ender_dragon 7.03014 75.57509 36.54266 p 0.00 y 261.56 h 261.56
+  48321 actor   D ender_dragon 6.31596 75.52171 36.81153 p 0.00 y 271.41 h 271.41
+  48371 actor   D ender_dragon 5.51246 75.47411 37.05751 p 0.00 y 279.84 h 279.84
+  48421 actor   D ender_dragon 4.70636 75.43723 37.24344 p 0.00 y 286.88 h 286.88
+  48471 actor   D ender_dragon 3.90289 75.41044 37.36465 p 0.00 y 292.50 h 292.50
+  48471 actor   DV ender_dragon -0.38887 -0.01054 0.04330
+  48521 actor   D ender_dragon 3.10635 75.39314 37.42078 p 0.00 y 296.72 h 296.72
+  48571 actor   D ender_dragon 2.31903 75.38475 37.41516 p 0.00 y 298.12 h 298.12
+  48621 actor   D ender_dragon 1.54096 75.38469 37.35380 p 0.00 y 299.53 h 299.53
+  48671 actor   D ender_dragon 0.77030 75.39239 37.24438 p 0.00 y 298.12 h 298.12
+  48721 actor   D ender_dragon 0.00407 75.40730 37.09544 p 0.00 y 296.72 h 296.72
+  48771 actor   D ender_dragon -0.76101 75.42889 36.91565 p 0.00 y 295.31 h 295.31
+  48771 actor   BossEvent BossEvent { target_entity_id: 3, type: ShowBar, title: "entity.ender_dragon.name", filtered_title: "", progress: 1.0, color: Purple, overlay: Progress }
+  48821 actor   D ender_dragon -1.52792 75.45662 36.71329 p 0.00 y 292.50 h 292.50
+  48871 actor   D ender_dragon -2.29896 75.48999 36.49578 p 0.00 y 289.69 h 289.69
+  48921 actor   D ender_dragon -3.07558 75.52849 36.26932 p 0.00 y 288.28 h 288.28
+  48970 actor   D ender_dragon -3.85848 75.57163 36.03869 p 0.00 y 286.88 h 286.88
+  49021 actor   D ender_dragon -4.64771 75.61893 35.80715 p 0.00 y 285.47 h 285.47
+  49071 actor   D ender_dragon -5.44292 75.66992 35.57650 p 0.00 y 285.47 h 285.47
+  49121 actor   D ender_dragon -6.24347 75.72413 35.34732 p 0.00 y 284.06 h 284.06
+  49171 actor   D ender_dragon -6.96579 75.77501 35.14253 p 0.00 y 285.47 h 285.47
+  49221 actor   D ender_dragon -7.69145 75.82800 34.93776 p 0.00 y 285.47 h 285.47
+  49271 actor   D ender_dragon -8.41963 75.88270 34.73173 p 0.00 y 286.88 h 286.88
+  49321 actor   D ender_dragon -9.14955 75.93875 34.52308 p 0.00 y 286.88 h 286.88
+  49371 actor   D ender_dragon -9.96404 76.00252 34.28598 p 0.00 y 288.28 h 288.28
+  49421 actor   D ender_dragon -10.77889 76.06695 34.04342 p 0.00 y 289.69 h 289.69
+  49471 actor   D ender_dragon -11.59353 76.13161 33.79470 p 0.00 y 289.69 h 289.69
+  49521 actor   D ender_dragon -12.40757 76.19605 33.53951 p 0.00 y 289.69 h 289.69
+  49571 actor   LevelSoundEvent LevelSoundEvent { sound_id: "flap", position: Vec3f { x: -12.80395, y: 78.22666, z: 33.413643 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: 3, fire_at_position: None }
+  49571 actor   D ender_dragon -13.22079 76.25985 33.27791 p 0.00 y 291.09 h 291.09
+  49620 actor   D ender_dragon -14.03311 76.32256 33.01030 p 0.00 y 291.09 h 291.09
+  49670 actor   D ender_dragon -14.84458 76.38375 32.73731 p 0.00 y 291.09 h 291.09
+  49720 actor   D ender_dragon -15.65536 76.44296 32.45972 p 0.00 y 291.09 h 291.09
+  49771 actor   D ender_dragon -16.46564 76.49974 32.17836 p 0.00 y 291.09 h 291.09
+  49771 actor   BossEvent BossEvent { target_entity_id: 3, type: ShowBar, title: "entity.ender_dragon.name", filtered_title: "", progress: 1.0, color: Purple, overlay: Progress }
+  49820 actor   D ender_dragon -17.27562 76.55363 31.89410 p 0.00 y 291.09 h 291.09
+  49870 actor   D ender_dragon -18.08549 76.60414 31.60769 p 0.00 y 289.69 h 289.69
+  49920 actor   D ender_dragon -18.89543 76.65079 31.31981 p 0.00 y 289.69 h 289.69
+  49971 actor   D ender_dragon -19.70414 76.81200 31.02743 p 0.00 y 293.91 h 293.91
+  49971 actor   DV ender_dragon -0.39295 0.12732 -0.14410
+  50021 actor   D ender_dragon -20.50678 77.18675 30.72248 p 0.00 y 299.53 h 299.53
+  50071 actor   D ender_dragon -21.29565 77.75820 30.39499 p 0.00 y 307.97 h 307.97
+  50121 actor   D ender_dragon -22.06126 78.51007 30.03571 p 0.00 y 316.41 h 316.41
+  50121 actor   DV ender_dragon -0.36495 0.39744 -0.18281
+  50170 actor   D ender_dragon -22.79372 79.42667 29.63812 p 0.00 y 323.44 h 323.44
+  50220 actor   D ender_dragon -23.48442 80.49292 29.19909 p 0.00 y 330.47 h 330.47
+  50270 actor   D ender_dragon -24.06366 81.56208 28.77016 p 0.00 y 336.09 h 336.09
+  50270 actor   DV ender_dragon -0.29996 0.60150 -0.24246
+  50320 actor   D ender_dragon -24.59799 82.74046 28.30594 p 0.00 y 340.31 h 340.31
+  50370 actor   D ender_dragon -25.14202 84.17110 27.75061 p 0.00 y 343.12 h 343.12
+  50421 actor   D ender_dragon -25.64138 85.69691 27.16366 p 0.00 y 343.12 h 343.12
+  50471 actor   D ender_dragon -26.10255 87.30531 26.54930 p 0.00 y 343.12 h 343.12
+  50471 actor   DV ender_dragon -0.21557 0.78372 -0.30401
+  50521 actor   D ender_dragon -26.53324 88.98420 25.91171 p 0.00 y 341.72 h 341.72
+  50571 actor   D ender_dragon -26.94150 90.72187 25.25500 p 0.00 y 338.91 h 338.91
+  50621 actor   D ender_dragon -27.33494 92.50704 24.58312 p 0.00 y 337.50 h 337.50
+  50671 actor   D ender_dragon -27.72021 94.32884 23.89980 p 0.00 y 334.69 h 334.69
+  50721 actor   D ender_dragon -28.10258 96.17677 23.20833 p 0.00 y 333.28 h 333.28
+  50771 actor   D ender_dragon -28.48589 98.04070 22.51141 p 0.00 y 330.47 h 330.47
+  50771 actor   BossEvent BossEvent { target_entity_id: 3, type: ShowBar, title: "entity.ender_dragon.name", filtered_title: "", progress: 1.0, color: Purple, overlay: Progress }
+  50821 actor   D ender_dragon -28.87249 99.91084 21.81107 p 0.00 y 330.47 h 330.47
+  50871 actor   D ender_dragon -29.26348 101.77769 21.10862 p 0.00 y 329.06 h 329.06
+  50921 actor   D ender_dragon -29.65887 103.63211 20.40469 p 0.00 y 329.06 h 329.06
+  50971 actor   D ender_dragon -30.05789 105.46519 19.69941 p 0.00 y 329.06 h 329.06
+  51021 actor   D ender_dragon -30.45921 107.26834 18.99251 p 0.00 y 330.47 h 330.47
+  51071 actor   D ender_dragon -30.86127 109.03319 18.28353 p 0.00 y 330.47 h 330.47
+  51121 actor   D ender_dragon -31.26242 110.75161 17.57199 p 0.00 y 331.88 h 331.88
+  51171 actor   D ender_dragon -31.66117 112.41573 16.85744 p 0.00 y 333.28 h 333.28
+  51221 actor   D ender_dragon -32.05630 114.01788 16.13959 p 0.00 y 333.28 h 333.28
+  51272 actor   .. SyncWorldClocks x1
+  51272 actor   D ender_dragon -32.44692 115.55062 15.41831 p 0.00 y 334.69 h 334.69
+  51321 actor   D ender_dragon -32.83256 117.00670 14.69366 p 0.00 y 334.69 h 334.69
+  51371 actor   D ender_dragon -33.21311 118.37907 13.96580 p 0.00 y 334.69 h 334.69
+  51421 actor   LevelSoundEvent LevelSoundEvent { sound_id: "flap", position: Vec3f { x: -33.396667, y: 121.01316, z: 13.611726 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: 3, fire_at_position: None }
+  51421 actor   D ender_dragon -33.58880 119.66087 13.23505 p 0.00 y 334.69 h 334.69
+  51421 actor   DV ender_dragon -0.18128 0.58941 -0.35540
+  51471 actor   D ender_dragon -33.96011 120.84543 12.50177 p 0.00 y 334.69 h 334.69
+  51521 actor   D ender_dragon -34.32771 121.92627 11.76632 p 0.00 y 334.69 h 334.69
+  51571 actor   D ender_dragon -34.69241 122.89708 11.02902 p 0.00 y 334.69 h 334.69
+  51621 actor   D ender_dragon -35.05504 123.75175 10.29009 p 0.00 y 334.69 h 334.69
+  51621 actor   DV ender_dragon -0.17578 0.38018 -0.35936
+  51671 actor   D ender_dragon -35.41644 124.48433 9.54960 p 0.00 y 334.69 h 334.69
+  51721 actor   D ender_dragon -35.77740 125.08907 8.80742 p 0.00 y 334.69 h 334.69
+  51771 actor   D ender_dragon -36.13866 125.56040 8.06323 p 0.00 y 334.69 h 334.69
+  51771 actor   BossEvent BossEvent { target_entity_id: 3, type: ShowBar, title: "entity.ender_dragon.name", filtered_title: "", progress: 1.0, color: Purple, overlay: Progress }
+  51821 actor   D ender_dragon -36.49722 125.82740 7.31477 p 0.00 y 337.50 h 337.50
+  51821 actor   DV ender_dragon -0.17338 0.06672 -0.36630
+  51871 actor   D ender_dragon -36.84427 125.83791 6.55729 p 0.00 y 344.53 h 344.53
+  51921 actor   D ender_dragon -37.16672 125.61073 5.78815 p 0.00 y 352.97 h 352.97
+  51921 actor   DV ender_dragon -0.14928 -0.16020 -0.37688
+  51971 actor   D ender_dragon -37.44995 125.16401 5.00834 p 0.00 y 1.41 h 1.41
+  52021 actor   D ender_dragon -37.68095 124.51529 4.22194 p 0.00 y 9.84 h 9.84
+  52071 actor   D ender_dragon -37.85045 123.68147 3.43462 p 0.00 y 18.28 h 18.28
+  52071 actor   DV ender_dragon -0.06690 -0.43749 -0.38106
+  52121 actor   D ender_dragon -37.95391 122.67886 2.65194 p 0.00 y 23.91 h 23.91
+  52170 actor   D ender_dragon -37.99123 121.52317 1.87804 p 0.00 y 28.12 h 28.12
+  52221 actor   D ender_dragon -37.96603 120.22962 1.11491 p 0.00 y 30.94 h 30.94
+  52221 actor   DV ender_dragon 0.02632 -0.64597 -0.36719
+  52272 actor   D ender_dragon -37.88450 118.81291 0.36237 p 0.00 y 30.94 h 30.94
+  52321 actor   D ender_dragon -37.75457 117.28725 -0.38147 p 0.00 y 30.94 h 30.94
+  52371 actor   D ender_dragon -37.58499 115.66637 -1.11954 p 0.00 y 29.53 h 29.53
+  52421 actor   D ender_dragon -37.38470 113.96358 -1.85507 p 0.00 y 26.72 h 26.72
+  52471 actor   D ender_dragon -37.16223 112.19173 -2.59107 p 0.00 y 23.91 h 23.91
+  52471 actor   DV ender_dragon 0.11229 -0.85849 -0.35774
+  52521 actor   LevelSoundEvent LevelSoundEvent { sound_id: "flap", position: Vec3f { x: -37.04994, y: 113.33324, z: -2.9488153 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: 3, fire_at_position: None }
+  52521 actor   D ender_dragon -36.92521 110.36324 -3.32996 p 0.00 y 22.50 h 22.50
+  52571 actor   D ender_dragon -36.67997 108.49014 -4.07339 p 0.00 y 19.69 h 19.69
+  52621 actor   D ender_dragon -36.43137 106.58408 -4.82227 p 0.00 y 18.28 h 18.28
+  52671 actor   D ender_dragon -36.18267 104.65636 -5.57692 p 0.00 y 16.88 h 16.88
+  52721 actor   D ender_dragon -35.93565 102.71791 -6.33715 p 0.00 y 16.88 h 16.88
+  52771 actor   D ender_dragon -35.69081 100.77940 -7.10245 p 0.00 y 15.47 h 15.47
+  52771 actor   BossEvent BossEvent { target_entity_id: 3, type: ShowBar, title: "entity.ender_dragon.name", filtered_title: "", progress: 1.0, color: Purple, overlay: Progress }
+  52821 actor   D ender_dragon -35.44765 98.85117 -7.87208 p 0.00 y 16.88 h 16.88
+  52871 actor   D ender_dragon -35.20501 96.94331 -8.64516 p 0.00 y 16.88 h 16.88
+  52921 actor   D ender_dragon -34.96138 95.06561 -9.42075 p 0.00 y 18.28 h 18.28
+  52971 actor   D ender_dragon -34.71518 93.22768 -10.19789 p 0.00 y 18.28 h 18.28
+  53021 actor   D ender_dragon -34.46495 91.43886 -10.97570 p 0.00 y 19.69 h 19.69
+  53071 actor   D ender_dragon -34.20959 89.70829 -11.75340 p 0.00 y 21.09 h 21.09
+  53120 actor   D ender_dragon -33.94835 88.04492 -12.53033 p 0.00 y 21.09 h 21.09
+  53171 actor   LevelSoundEvent LevelSoundEvent { sound_id: "flap", position: Vec3f { x: -33.820045, y: 89.26865, z: -12.907342 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: 3, fire_at_position: None }
+  53171 actor   D ender_dragon -33.70872 86.61975 -13.22632 p 0.00 y 22.50 h 22.50
+  53221 actor   D ender_dragon -33.46358 85.26912 -13.92097 p 0.00 y 22.50 h 22.50
+  53270 actor   D ender_dragon -33.21326 83.99901 -14.61420 p 0.00 y 22.50 h 22.50
+  53271 actor   DV ender_dragon 0.13690 -0.65222 -0.37473
+  53320 actor   D ender_dragon -32.95834 82.81520 -15.30605 p 0.00 y 22.50 h 22.50
+  53370 actor   D ender_dragon -32.69952 81.72327 -15.99669 p 0.00 y 22.50 h 22.50
+  53420 actor   D ender_dragon -32.43758 80.72862 -16.68636 p 0.00 y 22.50 h 22.50
+  53471 actor   D ender_dragon -32.17325 79.83643 -17.37541 p 0.00 y 22.50 h 22.50
+  53471 actor   DV ender_dragon 0.14368 -0.44501 -0.37289
+  53521 actor   D ender_dragon -31.90719 79.05170 -18.06424 p 0.00 y 21.09 h 21.09
+  53571 actor   D ender_dragon -31.63990 78.37921 -18.75335 p 0.00 y 21.09 h 21.09
+  53621 actor   D ender_dragon -31.37171 77.82355 -19.44333 p 0.00 y 21.09 h 21.09
+  53671 actor   D ender_dragon -31.09996 77.37036 -20.13377 p 0.00 y 25.31 h 25.31
+  53671 actor   DV ender_dragon 0.14935 -0.21754 -0.37422
+  53721 actor   D ender_dragon -30.81728 76.99829 -20.82162 p 0.00 y 30.94 h 30.94
+  53771 actor   D ender_dragon -30.51442 76.70247 -21.50134 p 0.00 y 37.97 h 37.97
+  53771 actor   BossEvent BossEvent { target_entity_id: 3, type: ShowBar, title: "entity.ender_dragon.name", filtered_title: "", progress: 1.0, color: Purple, overlay: Progress }
+  53821 actor   D ender_dragon -30.18282 76.47819 -22.16544 p 0.00 y 46.41 h 46.41
+  53871 actor   D ender_dragon -29.81636 76.32090 -22.80538 p 0.00 y 54.84 h 54.84
+  53921 actor   D ender_dragon -29.41219 76.22622 -23.41308 p 0.00 y 61.88 h 61.88
+  53921 actor   DV ender_dragon 0.23016 -0.03330 -0.31853
+  53971 actor   D ender_dragon -28.97038 76.18993 -23.98246 p 0.00 y 66.09 h 66.09
+  54021 actor   D ender_dragon -28.49312 76.20798 -24.51047 p 0.00 y 70.31 h 70.31
+  54071 actor   D ender_dragon -27.98373 76.27641 -24.99737 p 0.00 y 73.12 h 73.12
+  54121 actor   D ender_dragon -27.44591 76.39146 -25.44637 p 0.00 y 73.12 h 73.12
+  54171 actor   D ender_dragon -26.88337 76.54945 -25.86285 p 0.00 y 73.12 h 73.12
+  54221 actor   D ender_dragon -26.29971 76.74683 -26.25344 p 0.00 y 71.72 h 71.72
+  54221 actor   DV ender_dragon 0.32197 0.11568 -0.20521
+  54271 actor   D ender_dragon -25.69848 76.98020 -26.62511 p 0.00 y 68.91 h 68.91
+  54321 actor   D ender_dragon -25.01197 77.27928 -27.02507 p 0.00 y 67.50 h 67.50
+  54371 actor   D ender_dragon -24.31370 77.61105 -27.41805 p 0.00 y 64.69 h 64.69
+  54421 actor   D ender_dragon -23.60700 77.97201 -27.80905 p 0.00 y 61.88 h 61.88
+  54471 actor   D ender_dragon -22.89472 78.35871 -28.20161 p 0.00 y 60.47 h 60.47
+  54521 actor   D ender_dragon -22.17898 78.76781 -28.59787 p 0.00 y 60.47 h 60.47
+  54571 actor   D ender_dragon -21.46122 79.19604 -28.99874 p 0.00 y 59.06 h 59.06
+  54621 actor   D ender_dragon -20.74213 79.64019 -29.40410 p 0.00 y 59.06 h 59.06
+  54671 actor   D ender_dragon -20.02186 80.09710 -29.81310 p 0.00 y 59.06 h 59.06
+  54721 actor   D ender_dragon -19.30017 80.56368 -30.22440 p 0.00 y 60.47 h 60.47
+  54771 actor   D ender_dragon -18.57654 81.03690 -30.63642 p 0.00 y 60.47 h 60.47
+  54771 actor   BossEvent BossEvent { target_entity_id: 3, type: ShowBar, title: "entity.ender_dragon.name", filtered_title: "", progress: 1.0, color: Purple, overlay: Progress }
+  54821 actor   D ender_dragon -17.85045 81.51374 -31.04755 p 0.00 y 61.88 h 61.88
+  54871 actor   D ender_dragon -17.12137 81.99124 -31.45635 p 0.00 y 63.28 h 63.28
+  54921 actor   LevelSoundEvent LevelSoundEvent { sound_id: "flap", position: Vec3f { x: -16.765997, y: 84.218575, z: -31.654476 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: 3, fire_at_position: None }
+  54921 actor   D ender_dragon -16.38895 82.46648 -31.86163 p 0.00 y 63.28 h 63.28
+  54971 actor   D ender_dragon -15.65295 82.93656 -32.26258 p 0.00 y 64.69 h 64.69
+  55021 actor   D ender_dragon -14.91332 83.39860 -32.65879 p 0.00 y 64.69 h 64.69
+  55071 actor   D ender_dragon -14.17015 83.84974 -33.05019 p 0.00 y 64.69 h 64.69
+  55121 actor   D ender_dragon -13.42365 84.28712 -33.43704 p 0.00 y 64.69 h 64.69
+  55171 actor   D ender_dragon -12.67408 84.70790 -33.81987 p 0.00 y 64.69 h 64.69
+  55221 actor   D ender_dragon -11.92178 85.10922 -34.19934 p 0.00 y 64.69 h 64.69
+  55271 actor   D ender_dragon -11.16709 85.48822 -34.57623 p 0.00 y 64.69 h 64.69
+  55321 actor   D ender_dragon -10.41033 85.84200 -34.95128 p 0.00 y 64.69 h 64.69
+  55370 actor   D ender_dragon -9.65178 86.16763 -35.32522 p 0.00 y 64.69 h 64.69
+  55421 actor   D ender_dragon -8.89168 86.46214 -35.69865 p 0.00 y 64.69 h 64.69
+  55471 actor   D ender_dragon -8.12858 86.73315 -36.06842 p 0.00 y 67.50 h 67.50
+  55521 actor   D ender_dragon -7.35915 86.98905 -36.42540 p 0.00 y 74.53 h 74.53
+  55571 actor   D ender_dragon -6.58042 87.23002 -36.75703 p 0.00 y 82.97 h 82.97
+  55621 actor   D ender_dragon -5.79174 87.45626 -37.04974 p 0.00 y 91.41 h 91.41
+  55671 actor   D ender_dragon -4.99546 87.66800 -37.29125 p 0.00 y 99.84 h 99.84
+  55721 actor   D ender_dragon -4.19622 87.86549 -37.47253 p 0.00 y 106.88 h 106.88
+  55771 actor   D ender_dragon -3.39939 88.04899 -37.58881 p 0.00 y 112.50 h 112.50
+  55771 actor   BossEvent BossEvent { target_entity_id: 3, type: ShowBar, title: "entity.ender_dragon.name", filtered_title: "", progress: 1.0, color: Purple, overlay: Progress }
+  55821 actor   D ender_dragon -2.60939 88.21877 -37.63968 p 0.00 y 116.72 h 116.72
+  55821 actor   DV ender_dragon 0.38137 0.07781 -0.00946
+  55871 actor   D ender_dragon -1.82865 88.37514 -37.62840 p 0.00 y 119.53 h 119.53
+  55921 actor   D ender_dragon -1.05725 88.51837 -37.56096 p 0.00 y 119.53 h 119.53
+  55971 actor   D ender_dragon -0.29336 88.64878 -37.44501 p 0.00 y 119.53 h 119.53
+  56021 actor   D ender_dragon 0.46600 88.76669 -37.28910 p 0.00 y 118.12 h 118.12
+  56071 actor   D ender_dragon 1.22423 88.87244 -37.10191 p 0.00 y 115.31 h 115.31
+  56121 actor   D ender_dragon 1.98440 88.96637 -36.89174 p 0.00 y 113.91 h 113.91
+  56171 actor   D ender_dragon 2.74891 89.04881 -36.66605 p 0.00 y 111.09 h 111.09
+  56221 actor   D ender_dragon 3.51929 89.12011 -36.43113 p 0.00 y 108.28 h 108.28
+  56271 actor   LevelSoundEvent LevelSoundEvent { sound_id: "flap", position: Vec3f { x: 3.8961008, y: 91.151596, z: -36.315144 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: 3, fire_at_position: None }
+  56271 actor   D ender_dragon 4.29630 89.18065 -36.19181 p 0.00 y 106.88 h 106.88
+  56321 actor   D ender_dragon 5.08004 89.23078 -35.95142 p 0.00 y 105.47 h 105.47
+  56371 actor   D ender_dragon 5.78881 89.26718 -35.73634 p 0.00 y 105.47 h 105.47
+  56420 actor   D ender_dragon 6.50275 89.29495 -35.52254 p 0.00 y 105.47 h 105.47
+  56470 actor   D ender_dragon 7.22113 89.31448 -35.30970 p 0.00 y 105.47 h 105.47
+  56520 actor   D ender_dragon 7.94312 89.32616 -35.09690 p 0.00 y 106.88 h 106.88
+  56570 actor   D ender_dragon 8.66788 89.33040 -34.88288 p 0.00 y 106.88 h 106.88
+  56621 actor   D ender_dragon 9.39457 89.32759 -34.66628 p 0.00 y 108.28 h 108.28
+  56671 actor   D ender_dragon 10.12240 89.31814 -34.44585 p 0.00 y 108.28 h 108.28
+  56721 actor   D ender_dragon 10.85071 89.30245 -34.22060 p 0.00 y 109.69 h 109.69
+  56771 actor   D ender_dragon 11.57893 89.28094 -33.98986 p 0.00 y 111.09 h 111.09
+  56771 actor   BossEvent BossEvent { target_entity_id: 3, type: ShowBar, title: "entity.ender_dragon.name", filtered_title: "", progress: 1.0, color: Purple, overlay: Progress }
+  56821 actor   D ender_dragon 12.30668 89.25402 -33.75335 p 0.00 y 111.09 h 111.09
+  56871 actor   D ender_dragon 13.03372 89.22212 -33.51110 p 0.00 y 111.09 h 111.09
+  56921 actor   D ender_dragon 13.75998 89.18568 -33.26345 p 0.00 y 111.09 h 111.09
+  56971 actor   D ender_dragon 14.48549 89.14516 -33.01097 p 0.00 y 111.09 h 111.09
+  57021 actor   D ender_dragon 15.21037 89.10098 -32.75436 p 0.00 y 111.09 h 111.09
+  57071 actor   D ender_dragon 15.93480 89.05364 -32.49440 p 0.00 y 111.09 h 111.09
+  57121 actor   D ender_dragon 16.74173 88.99762 -32.20174 p 0.00 y 111.09 h 111.09
+  57171 actor   D ender_dragon 17.54857 88.93922 -31.90705 p 0.00 y 111.09 h 111.09
+  57221 actor   D ender_dragon 18.35551 88.87910 -31.61101 p 0.00 y 111.09 h 111.09
+  57272 actor   D ender_dragon 18.74866 88.85014 -31.46655 p 0.00 y 111.09 h 111.09
+  57321 actor   D ender_dragon 19.48744 88.78024 -31.19267 p 0.00 y 112.50 h 112.50
+  57371 actor   D ender_dragon 20.23273 88.69390 -30.90832 p 0.00 y 115.31 h 115.31
+  57421 actor   D ender_dragon 20.98002 88.59294 -30.60770 p 0.00 y 120.94 h 120.94
+  57421 actor   DV ender_dragon 0.36387 -0.05123 0.15103
+  57471 actor   D ender_dragon 21.72365 88.47909 -30.28418 p 0.00 y 125.16 h 125.16
+  57521 actor   D ender_dragon 22.45671 88.35401 -29.93120 p 0.00 y 132.19 h 132.19
+  57571 actor   D ender_dragon 23.17112 88.21930 -29.54297 p 0.00 y 139.22 h 139.22
+  57621 actor   D ender_dragon 23.85780 88.07646 -29.11513 p 0.00 y 146.25 h 146.25
+  57671 actor   D ender_dragon 24.50727 87.92692 -28.64524 p 0.00 y 153.28 h 153.28
+  57720 actor   D ender_dragon 25.05090 87.78848 -28.18783 p 0.00 y 161.72 h 161.72
+  57770 actor   D ender_dragon 25.54602 87.64625 -27.69406 p 0.00 y 168.75 h 168.75
+  57771 actor   BossEvent BossEvent { target_entity_id: 3, type: ShowBar, title: "entity.ender_dragon.name", filtered_title: "", progress: 1.0, color: Purple, overlay: Progress }
+  57820 actor   D ender_dragon 25.98681 87.50122 -27.16699 p 0.00 y 174.38 h 174.38
+  57820 actor   DV ender_dragon 0.22168 -0.07783 0.29415
+  57870 actor   D ender_dragon 26.36922 87.35430 -26.61071 p 0.00 y 181.41 h 181.41
+  57921 actor   D ender_dragon 26.69109 87.20632 -26.02976 p 0.00 y 185.62 h 185.62
+  57971 actor   D ender_dragon 26.95201 87.05807 -25.42869 p 0.00 y 191.25 h 191.25
+  58021 actor   LevelSoundEvent LevelSoundEvent { sound_id: "flap", position: Vec3f { x: 27.075348, y: 88.9792, z: -25.098522 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: 3, fire_at_position: None }
+  58021 actor   D ender_dragon 27.15312 86.91025 -24.81169 p 0.00 y 194.06 h 194.06
+  58071 actor   D ender_dragon 27.29677 86.76354 -24.18234 p 0.00 y 198.28 h 198.28
+  58121 actor   D ender_dragon 27.38626 86.61857 -23.54355 p 0.00 y 199.69 h 199.69
+  58171 actor   D ender_dragon 27.42547 86.47591 -22.89755 p 0.00 y 202.50 h 202.50
+  58171 actor   DV ender_dragon 0.00716 -0.07518 0.35162
+  58221 actor   D ender_dragon 27.41872 86.33610 -22.24592 p 0.00 y 203.91 h 203.91
+  58271 actor   D ender_dragon 27.37049 86.19963 -21.58972 p 0.00 y 203.91 h 203.91
+  58321 actor   D ender_dragon 27.28531 86.06698 -20.92957 p 0.00 y 205.31 h 205.31
+  58371 actor   D ender_dragon 27.16764 85.93856 -20.26580 p 0.00 y 205.31 h 205.31
+  58421 actor   D ender_dragon 27.02175 85.81480 -19.59853 p 0.00 y 205.31 h 205.31
+  58475 actor   D ender_dragon 26.83087 85.68248 -18.85080 p 0.00 y 205.31 h 205.31
+  58521 actor   D ender_dragon 26.61747 85.55624 -18.09907 p 0.00 y 203.91 h 203.91
+  58571 actor   D ender_dragon 26.38535 85.43653 -17.34327 p 0.00 y 203.91 h 203.91
+  58621 actor   D ender_dragon 26.13791 85.32381 -16.58332 p 0.00 y 203.91 h 203.91
+  58671 actor   D ender_dragon 25.87818 85.21850 -15.81919 p 0.00 y 202.50 h 202.50
+  58721 actor   D ender_dragon 25.60877 85.12098 -15.05090 p 0.00 y 202.50 h 202.50
+  58771 actor   D ender_dragon 25.33191 85.03164 -14.27855 p 0.00 y 202.50 h 202.50
+  58771 actor   BossEvent BossEvent { target_entity_id: 3, type: ShowBar, title: "entity.ender_dragon.name", filtered_title: "", progress: 1.0, color: Purple, overlay: Progress }
+  58821 actor   D ender_dragon 25.04946 84.95082 -13.50226 p 0.00 y 201.09 h 201.09
+  58871 actor   D ender_dragon 24.76295 84.87885 -12.72222 p 0.00 y 201.09 h 201.09
+  58920 actor   D ender_dragon 24.47360 84.81606 -11.93863 p 0.00 y 201.09 h 201.09
+  58970 actor   D ender_dragon 24.18235 84.76273 -11.15173 p 0.00 y 201.09 h 201.09
+  59020 actor   D ender_dragon 23.88991 84.71913 -10.36179 p 0.00 y 199.69 h 199.69
+  59070 actor   D ender_dragon 23.59679 84.68552 -9.56908 p 0.00 y 199.69 h 199.69
+  59120 actor   D ender_dragon 23.29865 84.58395 -8.77582 p 0.00 y 205.31 h 205.31
+  59170 actor   D ender_dragon 22.98438 84.34892 -7.98848 p 0.00 y 213.75 h 213.75
+  59220 actor   D ender_dragon 22.64064 83.99098 -7.21775 p 0.00 y 223.59 h 223.59
+  59221 actor   DV ender_dragon -0.17562 -0.19729 0.36929
+  59270 actor   D ender_dragon 22.25611 83.52063 -6.47796 p 0.00 y 234.84 h 234.84
+  59320 actor   D ender_dragon 21.82435 82.94822 -5.78501 p 0.00 y 246.09 h 246.09
+  59370 actor   D ender_dragon 21.34452 82.28394 -5.15332 p 0.00 y 255.94 h 255.94
+  59420 actor   LevelSoundEvent LevelSoundEvent { sound_id: "flap", position: Vec3f { x: 21.101223, y: 83.94769, z: -4.8634157 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: 3, fire_at_position: None }
+  59421 actor   D ender_dragon 20.82018 81.53780 -4.59306 p 0.00 y 264.38 h 264.38
+  59421 actor   DV ender_dragon -0.26339 -0.37301 0.25337
+  59470 actor   D ender_dragon 20.25712 80.71960 -4.10865 p 0.00 y 270.00 h 270.00
+  59520 actor   D ender_dragon 19.66138 79.83902 -3.69883 p 0.00 y 272.81 h 272.81
+  59571 actor   D ender_dragon 19.03808 78.90559 -3.35771 p 0.00 y 274.22 h 274.22
+  59621 actor   D ender_dragon 18.39097 77.92867 -3.07616 p 0.00 y 274.22 h 274.22
+  59671 actor   D ender_dragon 17.72279 76.91750 -2.84332 p 0.00 y 272.81 h 272.81
+  59671 actor   DV ender_dragon -0.32835 -0.48854 0.10266
+  59721 actor   D ender_dragon 17.03565 75.88119 -2.64773 p 0.00 y 270.00 h 270.00
+  59771 actor   D ender_dragon 16.33152 74.82871 -2.47841 p 0.00 y 267.19 h 267.19
+  59771 actor   BossEvent BossEvent { target_entity_id: 3, type: ShowBar, title: "entity.ender_dragon.name", filtered_title: "", progress: 1.0, color: Purple, overlay: Progress }
+  59821 actor   D ender_dragon 15.61244 73.76892 -2.32556 p 0.00 y 264.38 h 264.38
+  59871 actor   D ender_dragon 14.88056 72.71056 -2.18111 p 0.00 y 261.56 h 261.56
+  59921 actor   D ender_dragon 14.13799 71.66232 -2.03901 p 0.00 y 260.16 h 260.16
+  59971 actor   D ender_dragon 13.38663 70.63279 -1.89520 p 0.00 y 258.75 h 258.75
+  60021 actor   D ender_dragon 12.62802 69.63059 -1.74755 p 0.00 y 257.34 h 257.34
+  60071 actor   D ender_dragon 11.86327 68.66434 -1.59552 p 0.00 y 257.34 h 257.34
+  60121 actor   D ender_dragon 11.09305 67.74272 -1.43982 p 0.00 y 257.34 h 257.34
+  60171 actor   D ender_dragon 10.31771 66.87450 -1.28206 p 0.00 y 258.75 h 258.75
+  60221 actor   D ender_dragon 9.53737 66.06862 -1.12435 p 0.00 y 260.16 h 260.16
+  60271 actor   LevelSoundEvent LevelSoundEvent { sound_id: "flap", position: Vec3f { x: 9.1571665, y: 67.69978, z: -1.04801 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: 3, fire_at_position: None }
+  60271 actor   D ender_dragon 8.75202 65.33421 -0.96896 p 0.00 y 260.16 h 260.16
+  60321 actor   D ender_dragon 7.96156 64.68073 -0.81809 p 0.00 y 261.56 h 261.56
+  60321 actor   DV ender_dragon -0.38545 -0.29194 0.07203
+  60370 actor   D ender_dragon 7.16590 64.11801 -0.67363 p 0.00 y 262.97 h 262.97
+  60421 actor   D ender_dragon 6.44747 63.69951 -0.55067 p 0.00 y 264.38 h 264.38
+  60470 actor   D ender_dragon 5.72407 63.38000 -0.43563 p 0.00 y 265.78 h 265.78
+  60521 actor   D ender_dragon 4.99561 63.16797 -0.32905 p 0.00 y 265.78 h 265.78
+  60521 actor   DV ender_dragon -0.39690 -0.08107 0.05531
+  60571 actor   D ender_dragon 4.26217 63.07262 -0.23109 p 0.00 y 267.19 h 267.19
+  60621 actor   D ender_dragon 3.52419 63.10431 -0.14173 p 0.00 y 267.19 h 267.19
+  60671 actor   D ender_dragon 2.78267 63.27517 -0.06082 p 0.00 y 268.59 h 268.59
+  60671 actor   DV ender_dragon -0.40295 0.13236 0.04142
+  60721 actor   D ender_dragon 2.03919 63.60056 0.01176 p 0.00 y 268.59 h 268.59
+  60771 actor   D ender_dragon 1.29591 64.10235 0.07590 p 0.00 y 270.00 h 270.00
+  60771 actor   BossEvent BossEvent { target_entity_id: 3, type: ShowBar, title: "entity.ender_dragon.name", filtered_title: "", progress: 1.0, color: Purple, overlay: Progress }
+  60821 actor   D ender_dragon 0.55606 64.80016 0.13090 p 0.00 y 271.41 h 271.41
+  60821 actor   DV ender_dragon -0.39871 0.42862 0.02690
+  60871 actor   SetEntityData ender_dragon SetEntityData { runtime_entity_id: 3, metadata: [MetadataDictionaryItem { key: Flags, type: Long, legacy_type: 7, value: Flags(MetadataFlags1(1125917103489024)) }], properties: EntityProperties { ints: [], floats: [] }, tick: 0 }
+  60871 actor   D ender_dragon 0.15735 65.22878 0.15780 p 0.00 y 271.41 h 271.41
+  60871 actor   DV ender_dragon 0.00000 0.00000 0.00000
+  60971 actor   SetEntityData ender_dragon SetEntityData { runtime_entity_id: 3, metadata: [MetadataDictionaryItem { key: Flags, type: Long, legacy_type: 7, value: Flags(MetadataFlags1(1125899923619840)) }], properties: EntityProperties { ints: [], floats: [] }, tick: 0 }
+  61221 actor   LevelSoundEvent LevelSoundEvent { sound_id: "flap", position: Vec3f { x: 0.15735221, y: 67.22878, z: 0.15779927 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: 3, fire_at_position: None }
+  61721 actor   LevelSoundEvent LevelSoundEvent { sound_id: "flap", position: Vec3f { x: 0.15735221, y: 67.22878, z: 0.15779927 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: 3, fire_at_position: None }
+  61771 actor   BossEvent BossEvent { target_entity_id: 3, type: ShowBar, title: "entity.ender_dragon.name", filtered_title: "", progress: 1.0, color: Purple, overlay: Progress }
+  62221 actor   LevelSoundEvent LevelSoundEvent { sound_id: "flap", position: Vec3f { x: 0.15735221, y: 67.22878, z: 0.15779927 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: 3, fire_at_position: None }
+  62721 actor   LevelSoundEvent LevelSoundEvent { sound_id: "flap", position: Vec3f { x: 0.15735221, y: 67.22878, z: 0.15779927 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: 3, fire_at_position: None }
+  62771 actor   BossEvent BossEvent { target_entity_id: 3, type: ShowBar, title: "entity.ender_dragon.name", filtered_title: "", progress: 1.0, color: Purple, overlay: Progress }
+  63221 actor   LevelSoundEvent LevelSoundEvent { sound_id: "flap", position: Vec3f { x: 0.15735221, y: 67.22878, z: 0.15779927 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: 3, fire_at_position: None }
+  63721 actor   LevelSoundEvent LevelSoundEvent { sound_id: "flap", position: Vec3f { x: 0.15735221, y: 67.22878, z: 0.15779927 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: 3, fire_at_position: None }
+  63771 actor   BossEvent BossEvent { target_entity_id: 3, type: ShowBar, title: "entity.ender_dragon.name", filtered_title: "", progress: 1.0, color: Purple, overlay: Progress }
+  64221 actor   .. SyncWorldClocks x1
+  64221 actor   LevelSoundEvent LevelSoundEvent { sound_id: "flap", position: Vec3f { x: 0.15735221, y: 67.22878, z: 0.15779927 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: 3, fire_at_position: None }
+  64721 actor   LevelSoundEvent LevelSoundEvent { sound_id: "flap", position: Vec3f { x: 0.15735221, y: 67.22878, z: 0.15779927 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: 3, fire_at_position: None }
+  64771 actor   BossEvent BossEvent { target_entity_id: 3, type: ShowBar, title: "entity.ender_dragon.name", filtered_title: "", progress: 1.0, color: Purple, overlay: Progress }
+  65221 actor   LevelSoundEvent LevelSoundEvent { sound_id: "flap", position: Vec3f { x: 0.15735221, y: 67.22878, z: 0.15779927 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: 3, fire_at_position: None }
+  65721 actor   LevelSoundEvent LevelSoundEvent { sound_id: "flap", position: Vec3f { x: 0.15735221, y: 67.22878, z: 0.15779927 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: 3, fire_at_position: None }
+  65771 actor   BossEvent BossEvent { target_entity_id: 3, type: ShowBar, title: "entity.ender_dragon.name", filtered_title: "", progress: 1.0, color: Purple, overlay: Progress }
+  65871 actor   SetEntityData ender_dragon SetEntityData { runtime_entity_id: 3, metadata: [MetadataDictionaryItem { key: Flags, type: Long, legacy_type: 7, value: Flags(MetadataFlags1(1125899906842624)) }], properties: EntityProperties { ints: [], floats: [] }, tick: 0 }
+  65872 actor   D ender_dragon 0.10984 65.29388 0.15207 p 0.00 y 277.03 h 277.03
+  65922 actor   SetEntityData ender_dragon SetEntityData { runtime_entity_id: 3, metadata: [MetadataDictionaryItem { key: Flags, type: Long, legacy_type: 7, value: Flags(MetadataFlags1(1125917086711808)) }], properties: EntityProperties { ints: [], floats: [] }, tick: 0 }
+  65922 actor   D ender_dragon -0.03080 65.49136 0.12687 p 0.00 y 286.88 h 286.88
+  65971 actor   D ender_dragon -0.24418 65.80668 0.06602 p 0.00 y 299.53 h 299.53
+  65971 actor   DV ender_dragon -0.13246 0.19895 -0.04569
+  66021 actor   D ender_dragon -0.53954 66.28000 -0.06347 p 0.00 y 315.00 h 315.00
+  66071 actor   D ender_dragon -0.85739 66.85110 -0.26547 p 0.00 y 331.88 h 331.88
+  66121 actor   D ender_dragon -1.16265 67.50382 -0.54533 p 0.00 y 351.56 h 351.56
+  66171 actor   D ender_dragon -1.41911 68.22296 -0.89672 p 0.00 y 11.25 h 11.25
+  66171 actor   DV ender_dragon -0.10827 0.35612 -0.18462
+  66221 actor   D ender_dragon -1.59416 68.99457 -1.30017 p 0.00 y 32.34 h 32.34
+  66271 actor   D ender_dragon -1.66438 69.80605 -1.72414 p 0.00 y 53.44 h 53.44
+  66321 actor   LevelSoundEvent LevelSoundEvent { sound_id: "mad", position: Vec3f { x: -1.6719149, y: 72.20043, z: -1.928667 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: 3, fire_at_position: None }
+  66321 actor   D ender_dragon -1.62074 70.64617 -2.12991 p 0.00 y 75.94 h 75.94
+  66371 actor   D ender_dragon -1.47053 71.50500 -2.48050 p 0.00 y 94.22 h 94.22
+  66371 actor   DV ender_dragon 0.09495 0.41242 -0.15178
+  66421 actor   LevelSoundEvent LevelSoundEvent { sound_id: "flap", position: Vec3f { x: -1.3755883, y: 73.91741, z: -2.6322775 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: 3, fire_at_position: None }
+  66421 actor   D ender_dragon -1.23296 72.37374 -2.74945 p 0.00 y 111.09 h 111.09
+  66471 actor   D ender_dragon -0.93071 73.24458 -2.92429 p 0.00 y 122.34 h 122.34
+  66521 actor   D ender_dragon -0.58277 74.11051 -3.00473 p 0.00 y 127.97 h 127.97
+  66571 actor   D ender_dragon -0.20111 74.96519 -2.99882 p 0.00 y 130.78 h 130.78
+  66621 actor   D ender_dragon 0.20938 75.80287 -2.91947 p 0.00 y 129.38 h 129.38
+  66621 actor   DV ender_dragon 0.20448 0.39465 0.05370
+  66671 actor   D ender_dragon 0.46286 76.22923 -2.83121 p 0.00 y 125.16 h 125.16
+  66671 actor   DV ender_dragon 0.04617 0.02885 0.03257
+  66721 actor   D ender_dragon 0.60343 76.31850 -2.73979 p 0.00 y 119.53 h 119.53
+  66771 actor   D ender_dragon 0.82896 76.45975 -2.61116 p 0.00 y 112.50 h 112.50
+  66771 actor   BossEvent BossEvent { target_entity_id: 3, type: ShowBar, title: "entity.ender_dragon.name", filtered_title: "", progress: 1.0, color: Purple, overlay: Progress }
+  66821 actor   D ender_dragon 1.13288 76.64767 -2.46370 p 0.00 y 105.47 h 105.47
+  66871 actor   D ender_dragon 1.50785 76.87716 -2.31314 p 0.00 y 98.44 h 98.44
+  66921 actor   D ender_dragon 1.94580 77.14336 -2.17163 p 0.00 y 92.81 h 92.81
+  66921 actor   DV ender_dragon 0.22655 0.13465 0.06542
+  66971 actor   D ender_dragon 2.43850 77.44160 -2.04718 p 0.00 y 90.00 h 90.00
+  67021 actor   D ender_dragon 2.97825 77.76735 -1.94381 p 0.00 y 87.19 h 87.19
+  67071 actor   D ender_dragon 3.55836 78.11626 -1.86197 p 0.00 y 85.78 h 85.78
+  67121 actor   D ender_dragon 4.17324 78.48405 -1.79936 p 0.00 y 85.78 h 85.78
+  67171 actor   D ender_dragon 4.81836 78.86658 -1.75175 p 0.00 y 87.19 h 87.19
+  67221 actor   LevelSoundEvent LevelSoundEvent { sound_id: "flap", position: Vec3f { x: 5.1385427, y: 81.051735, z: -1.7315922 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: 3, fire_at_position: None }
+  67221 actor   D ender_dragon 5.48990 79.25976 -1.71387 p 0.00 y 90.00 h 90.00
+  67272 actor   D ender_dragon 6.18453 79.65954 -1.68013 p 0.00 y 91.41 h 91.41
+  67321 actor   D ender_dragon 6.89919 80.06193 -1.64527 p 0.00 y 94.22 h 94.22
+  67371 actor   D ender_dragon 7.63101 80.46296 -1.60485 p 0.00 y 95.62 h 95.62
+  67421 actor   D ender_dragon 8.37737 80.85865 -1.55549 p 0.00 y 98.44 h 98.44
+  67471 actor   D ender_dragon 9.13594 81.24497 -1.49503 p 0.00 y 99.84 h 99.84
+  67521 actor   D ender_dragon 9.90478 81.61785 -1.42248 p 0.00 y 101.25 h 101.25
+  67571 actor   D ender_dragon 10.68245 82.10398 -1.33848 p 0.00 y 101.25 h 101.25
+  67571 actor   DV ender_dragon 0.37938 0.28390 0.04329
+  67621 actor   D ender_dragon 11.46618 82.81126 -1.24557 p 0.00 y 99.84 h 99.84
+  67671 actor   D ender_dragon 12.25449 83.72236 -1.14729 p 0.00 y 98.44 h 98.44
+  67721 actor   D ender_dragon 13.04673 84.82027 -1.04757 p 0.00 y 97.03 h 97.03
+  67721 actor   DV ender_dragon 0.38543 0.56368 0.04829
+  67771 actor   D ender_dragon 13.84268 86.08834 -0.95018 p 0.00 y 95.62 h 95.62
+  67771 actor   BossEvent BossEvent { target_entity_id: 3, type: ShowBar, title: "entity.ender_dragon.name", filtered_title: "", progress: 1.0, color: Purple, overlay: Progress }
+  67821 actor   D ender_dragon 14.64221 87.51019 -0.85841 p 0.00 y 92.81 h 92.81
+  67871 actor   D ender_dragon 15.44516 89.06975 -0.77476 p 0.00 y 91.41 h 91.41
+  67871 actor   DV ender_dragon 0.39066 0.77257 0.03846
+  67921 actor   D ender_dragon 16.25132 90.75119 -0.70086 p 0.00 y 90.00 h 90.00
+  67971 actor   D ender_dragon 17.06044 92.53893 -0.63739 p 0.00 y 90.00 h 90.00
+  68021 actor   D ender_dragon 17.87228 94.41762 -0.58423 p 0.00 y 88.59 h 88.59
+  68071 actor   D ender_dragon 18.68661 96.37209 -0.54055 p 0.00 y 88.59 h 88.59
+  68121 actor   D ender_dragon 19.50322 98.38737 -0.50501 p 0.00 y 88.59 h 88.59
+  68121 actor   DV ender_dragon 0.39722 0.97235 0.01552
+  68170 actor   D ender_dragon 20.32190 100.44864 -0.47599 p 0.00 y 90.00 h 90.00
+  68220 actor   D ender_dragon 21.14248 102.54118 -0.45175 p 0.00 y 90.00 h 90.00
+  68270 actor   D ender_dragon 21.96474 104.65044 -0.43061 p 0.00 y 90.00 h 90.00
+  68320 actor   D ender_dragon 22.78848 106.76188 -0.41109 p 0.00 y 91.41 h 91.41
+  68371 actor   D ender_dragon 23.61349 108.86106 -0.39197 p 0.00 y 91.41 h 91.41
+  68421 actor   D ender_dragon 24.43954 110.93355 -0.37235 p 0.00 y 91.41 h 91.41
+  68470 actor   D ender_dragon 25.26641 112.96490 -0.35169 p 0.00 y 91.41 h 91.41
+  68521 actor   D ender_dragon 26.09390 114.94063 -0.32972 p 0.00 y 92.81 h 92.81
+  68571 actor   D ender_dragon 26.92181 116.84614 -0.30646 p 0.00 y 92.81 h 92.81
+  68621 actor   D ender_dragon 27.74993 118.66671 -0.28211 p 0.00 y 92.81 h 92.81
+  68670 actor   D ender_dragon 28.57806 120.38742 -0.25702 p 0.00 y 91.41 h 91.41
+  68720 actor   D ender_dragon 29.40598 121.99308 -0.23159 p 0.00 y 91.41 h 91.41
+  68720 actor   DV ender_dragon 0.40192 0.73723 0.01237
+  68771 actor   D ender_dragon 30.23348 123.46816 -0.20627 p 0.00 y 91.41 h 91.41
+  68771 actor   BossEvent BossEvent { target_entity_id: 3, type: ShowBar, title: "entity.ender_dragon.name", filtered_title: "", progress: 1.0, color: Purple, overlay: Progress }
+  68821 actor   D ender_dragon 31.06043 124.67523 -0.18662 p 0.00 y 85.78 h 85.78
+  68821 actor   DV ender_dragon 0.40144 0.48742 0.00701
+  68871 actor   D ender_dragon 31.88567 125.51109 -0.18636 p 0.00 y 77.34 h 77.34
+  68921 actor   D ender_dragon 32.70524 126.00442 -0.22387 p 0.00 y 64.69 h 64.69
+  68921 actor   DV ender_dragon 0.39691 0.16038 -0.02948
+  68971 actor   D ender_dragon 33.50941 126.18353 -0.31857 p 0.00 y 50.62 h 50.62
+  69021 actor   LevelSoundEvent LevelSoundEvent { sound_id: "flap", position: Vec3f { x: 33.895134, y: 128.20056, z: -0.38034344 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: 3, fire_at_position: None }
+  69021 actor   D ender_dragon 34.27910 126.07598 -0.48667 p 0.00 y 33.75 h 33.75
+  69021 actor   DV ender_dragon 0.36188 -0.11337 -0.10021
+  69071 actor   D ender_dragon 34.98596 125.70827 -0.73598 p 0.00 y 15.47 h 15.47
+  69121 actor   D ender_dragon 35.59992 125.10555 -1.06237 p 0.00 y 357.19 h 357.19
+  69121 actor   DV ender_dragon 0.27069 -0.33785 -0.17374
+  69171 actor   D ender_dragon 36.09850 124.29162 -1.45130 p 0.00 y 341.72 h 341.72
+  69221 actor   D ender_dragon 36.47150 123.28884 -1.88387 p 0.00 y 330.47 h 330.47
+  69221 actor   DV ender_dragon 0.14990 -0.51828 -0.21594
+  69271 actor   D ender_dragon 36.72013 122.11832 -2.34302 p 0.00 y 320.62 h 320.62
+  69321 actor   D ender_dragon 36.85344 120.80000 -2.81705 p 0.00 y 316.41 h 316.41
+  69371 actor   D ender_dragon 36.88485 119.35277 -3.30047 p 0.00 y 315.00 h 315.00
+  69371 actor   DV ender_dragon -0.00691 -0.71678 -0.23534
+  69421 actor   D ender_dragon 36.82990 117.79458 -3.79307 p 0.00 y 316.41 h 316.41
+  69470 actor   D ender_dragon 36.70501 116.14245 -4.29804 p 0.00 y 319.22 h 319.22
+  69521 actor   D ender_dragon 36.52671 114.41253 -4.82006 p 0.00 y 324.84 h 324.84
+  69570 actor   D ender_dragon 36.31091 112.62015 -5.36359 p 0.00 y 329.06 h 329.06
+  69620 actor   D ender_dragon 36.07217 110.77985 -5.93177 p 0.00 y 334.69 h 334.69
+  69621 actor   DV ender_dragon -0.11963 -0.88614 -0.28165
+  69671 actor   LevelSoundEvent LevelSoundEvent { sound_id: "flap", position: Vec3f { x: 35.95254, y: 111.89371, z: -6.2134275 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: 3, fire_at_position: None }
+  69671 actor   D ender_dragon 35.82286 108.90542 -6.52601 p 0.00 y 340.31 h 340.31
+  69720 actor   D ender_dragon 35.57252 107.00997 -7.14604 p 0.00 y 343.12 h 343.12
+  69771 actor   D ender_dragon 35.32759 105.10602 -7.79038 p 0.00 y 345.94 h 345.94
+  69771 actor   BossEvent BossEvent { target_entity_id: 3, type: ShowBar, title: "entity.ender_dragon.name", filtered_title: "", progress: 1.0, color: Purple, overlay: Progress }
+  69821 actor   D ender_dragon 35.09146 103.20550 -8.45681 p 0.00 y 347.34 h 347.34
+  69871 actor   D ender_dragon 34.86483 101.31987 -9.14275 p 0.00 y 348.75 h 348.75
+  69920 actor   D ender_dragon 34.64631 99.46012 -9.84553 p 0.00 y 347.34 h 347.34
+  69970 actor   D ender_dragon 34.43309 97.63685 -10.56245 p 0.00 y 347.34 h 347.34
+  70021 actor   D ender_dragon 34.22159 95.86025 -11.29091 p 0.00 y 344.53 h 344.53
+  70070 actor   D ender_dragon 34.00810 94.14021 -12.02835 p 0.00 y 343.12 h 343.12
+  70121 actor   D ender_dragon 33.78925 92.48624 -12.77240 p 0.00 y 341.72 h 341.72
+  70170 actor   D ender_dragon 33.58612 91.06892 -13.44370 p 0.00 y 338.91 h 338.91
+  70221 actor   D ender_dragon 33.37414 89.72591 -14.11745 p 0.00 y 337.50 h 337.50
+  70221 actor   DV ender_dragon -0.11749 -0.69270 -0.36502
+  70270 actor   D ender_dragon 33.15239 88.46343 -14.79237 p 0.00 y 337.50 h 337.50
+  70320 actor   D ender_dragon 32.92072 87.28745 -15.46758 p 0.00 y 336.09 h 336.09
+  70370 actor   D ender_dragon 32.67962 86.20368 -16.14261 p 0.00 y 336.09 h 336.09
+  70421 actor   LevelSoundEvent LevelSoundEvent { sound_id: "flap", position: Vec3f { x: 32.54654, y: 87.65391, z: -16.507753 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: 3, fire_at_position: None }
+  70421 actor   D ender_dragon 32.43008 85.21764 -16.81734 p 0.00 y 336.09 h 336.09
+  70471 actor   D ender_dragon 32.17340 84.33454 -17.49197 p 0.00 y 336.09 h 336.09
+  70471 actor   DV ender_dragon -0.14081 -0.44002 -0.36518
+  70520 actor   D ender_dragon 31.91099 83.55941 -18.16694 p 0.00 y 336.09 h 336.09
+  70570 actor   D ender_dragon 31.64426 82.89701 -18.84288 p 0.00 y 337.50 h 337.50
+  70620 actor   D ender_dragon 31.37445 82.35188 -19.52055 p 0.00 y 337.50 h 337.50
+  70671 actor   D ender_dragon 31.09981 81.91367 -20.19971 p 0.00 y 334.69 h 334.69
+  70671 actor   DV ender_dragon -0.15118 -0.20702 -0.36846
+  70720 actor   D ender_dragon 30.81371 81.56525 -20.87745 p 0.00 y 329.06 h 329.06
+  70770 actor   D ender_dragon 30.50753 81.30103 -21.54840 p 0.00 y 322.03 h 322.03
+  70770 actor   BossEvent BossEvent { target_entity_id: 3, type: ShowBar, title: "entity.ender_dragon.name", filtered_title: "", progress: 1.0, color: Purple, overlay: Progress }
+  70820 actor   D ender_dragon 30.17308 81.11560 -22.20525 p 0.00 y 313.59 h 313.59
+  70871 actor   D ender_dragon 29.80439 81.00376 -22.83959 p 0.00 y 306.56 h 306.56
+  70921 actor   D ender_dragon 29.39857 80.96049 -23.44337 p 0.00 y 299.53 h 299.53
+  70921 actor   DV ender_dragon -0.23092 -0.00434 -0.31694
+  70971 actor   D ender_dragon 28.95562 80.98098 -24.01040 p 0.00 y 293.91 h 293.91
+  71020 actor   D ender_dragon 28.47761 81.06057 -24.53736 p 0.00 y 289.69 h 289.69
+  71071 actor   D ender_dragon 27.96780 81.19479 -25.02417 p 0.00 y 288.28 h 288.28
+  71121 actor   D ender_dragon 27.42987 81.37933 -25.47366 p 0.00 y 286.88 h 286.88
+  71171 actor   D ender_dragon 26.86754 81.61001 -25.89085 p 0.00 y 286.88 h 286.88
+  71221 actor   D ender_dragon 26.21645 81.91721 -26.32549 p 0.00 y 288.28 h 288.28
+  71221 actor   DV ender_dragon -0.32145 0.15651 -0.20540
+  71271 actor   D ender_dragon 25.54639 82.26687 -26.73911 p 0.00 y 291.09 h 291.09
+  71321 actor   D ender_dragon 24.86119 82.65475 -27.13887 p 0.00 y 292.50 h 292.50
+  71371 actor   D ender_dragon 24.16450 83.07675 -27.53105 p 0.00 y 295.31 h 295.31
+  71422 actor   D ender_dragon 23.45961 83.52885 -27.92062 p 0.00 y 296.72 h 296.72
+  71471 actor   D ender_dragon 22.74928 84.00715 -28.31119 p 0.00 y 299.53 h 299.53
+  71521 actor   D ender_dragon 22.03563 84.50783 -28.70498 p 0.00 y 299.53 h 299.53
+  71571 actor   D ender_dragon 21.32004 85.02716 -29.10297 p 0.00 y 300.94 h 300.94
+  71621 actor   D ender_dragon 20.60322 85.56150 -29.50517 p 0.00 y 300.94 h 300.94
+  71671 actor   D ender_dragon 19.88533 86.10728 -29.91083 p 0.00 y 300.94 h 300.94
+  71721 actor   D ender_dragon 19.16611 86.66099 -30.31870 p 0.00 y 299.53 h 299.53
+  71770 actor   D ender_dragon 18.44510 87.21917 -30.72729 p 0.00 y 299.53 h 299.53
+  71771 actor   BossEvent BossEvent { target_entity_id: 3, type: ShowBar, title: "entity.ender_dragon.name", filtered_title: "", progress: 1.0, color: Purple, overlay: Progress }
+  71821 actor   D ender_dragon 17.79620 87.71990 -31.09324 p 0.00 y 298.12 h 298.12
+  71870 actor   D ender_dragon 17.14475 88.21893 -31.45725 p 0.00 y 296.72 h 296.72
+  71921 actor   D ender_dragon 16.49040 88.71365 -31.81829 p 0.00 y 296.72 h 296.72
+  71971 actor   D ender_dragon 15.83294 89.20148 -32.17564 p 0.00 y 295.31 h 295.31
+  72021 actor   D ender_dragon 15.17227 89.67992 -32.52889 p 0.00 y 295.31 h 295.31
+  72071 actor   D ender_dragon 14.50847 90.14649 -32.87798 p 0.00 y 295.31 h 295.31
+  72121 actor   D ender_dragon 13.84169 90.59878 -33.22312 p 0.00 y 295.31 h 295.31
+  72171 actor   D ender_dragon 13.09535 91.08422 -33.60368 p 0.00 y 295.31 h 295.31
+  72221 actor   D ender_dragon 12.34630 91.54798 -33.98106 p 0.00 y 295.31 h 295.31
+  72272 actor   D ender_dragon 11.59486 91.98689 -34.35599 p 0.00 y 295.31 h 295.31
+  72321 actor   LevelSoundEvent LevelSoundEvent { sound_id: "flap", position: Vec3f { x: 11.228715, y: 94.190025, z: -34.537933 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: 3, fire_at_position: None }
+  72321 actor   D ender_dragon 10.84134 92.39778 -34.72926 p 0.00 y 295.31 h 295.31
+  72371 actor   D ender_dragon 10.08600 92.77745 -35.10155 p 0.00 y 295.31 h 295.31
+  72421 actor   D ender_dragon 9.32907 93.12267 -35.47350 p 0.00 y 295.31 h 295.31
+  72471 actor   D ender_dragon 8.56907 93.38596 -35.84199 p 0.00 y 292.50 h 292.50
+  72521 actor   D ender_dragon 7.80212 93.52993 -36.19828 p 0.00 y 285.47 h 285.47
+  72571 actor   D ender_dragon 7.02499 93.56283 -36.53004 p 0.00 y 278.44 h 278.44
+  72621 actor   D ender_dragon 6.23706 93.49261 -36.82380 p 0.00 y 268.59 h 268.59
+  72621 actor   DV ender_dragon -0.38581 -0.05601 -0.13236
+  72671 actor   D ender_dragon 5.44091 93.32700 -37.06723 p 0.00 y 261.56 h 261.56
+  72721 actor   D ender_dragon 4.64151 93.07339 -37.25120 p 0.00 y 253.12 h 253.12
+  72771 actor   D ender_dragon 3.84453 92.73898 -37.37087 p 0.00 y 247.50 h 247.50
+  72771 actor   BossEvent BossEvent { target_entity_id: 3, type: ShowBar, title: "entity.ender_dragon.name", filtered_title: "", progress: 1.0, color: Purple, overlay: Progress }
+  72821 actor   D ender_dragon 3.05469 92.33065 -37.42577 p 0.00 y 243.28 h 243.28
+  72871 actor   D ender_dragon 2.27466 91.85509 -37.41918 p 0.00 y 241.88 h 241.88
+  72871 actor   DV ender_dragon -0.37567 -0.24112 0.01709
+  72921 actor   D ender_dragon 1.50484 91.31879 -37.35714 p 0.00 y 240.47 h 240.47
+  72971 actor   D ender_dragon 0.74374 90.72797 -37.24739 p 0.00 y 241.88 h 241.88
+  73021 actor   D ender_dragon -0.01129 90.08873 -37.09858 p 0.00 y 243.28 h 243.28
+  73071 actor   D ender_dragon -0.76330 89.40692 -36.91950 p 0.00 y 244.69 h 244.69
+  73121 actor   D ender_dragon -1.51515 88.68823 -36.71854 p 0.00 y 247.50 h 247.50
+  73171 actor   D ender_dragon -2.26910 87.93818 -36.50319 p 0.00 y 248.91 h 248.91
+  73221 actor   D ender_dragon -3.02668 87.16209 -36.27968 p 0.00 y 251.72 h 251.72
+  73271 actor   D ender_dragon -3.78873 86.36513 -36.05277 p 0.00 y 253.12 h 253.12
+  73321 actor   D ender_dragon -4.55552 85.55232 -35.82566 p 0.00 y 254.53 h 254.53
+  73371 actor   D ender_dragon -5.32688 84.72855 -35.60012 p 0.00 y 254.53 h 254.53
+  73421 actor   LevelSoundEvent LevelSoundEvent { sound_id: "flap", position: Vec3f { x: -5.702515, y: 86.334114, z: -35.491077 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: 3, fire_at_position: None }
+  73421 actor   D ender_dragon -6.10238 83.89857 -35.37663 p 0.00 y 255.94 h 255.94
+  73471 actor   D ender_dragon -6.88142 83.06699 -35.15473 p 0.00 y 254.53 h 254.53
+  73521 actor   D ender_dragon -7.66328 82.23832 -34.93326 p 0.00 y 254.53 h 254.53
+  73571 actor   D ender_dragon -8.44724 81.41695 -34.71075 p 0.00 y 253.12 h 253.12
+  73621 actor   D ender_dragon -9.23256 80.60715 -34.48562 p 0.00 y 253.12 h 253.12
+  73671 actor   D ender_dragon -10.01857 79.81314 -34.25646 p 0.00 y 251.72 h 251.72
+  73721 actor   D ender_dragon -10.80470 79.03900 -34.02213 p 0.00 y 250.31 h 250.31
+  73771 actor   D ender_dragon -11.59055 78.28874 -33.78186 p 0.00 y 250.31 h 250.31
+  73771 actor   BossEvent BossEvent { target_entity_id: 3, type: ShowBar, title: "entity.ender_dragon.name", filtered_title: "", progress: 1.0, color: Purple, overlay: Progress }
+  73821 actor   D ender_dragon -12.37586 77.56631 -33.53531 p 0.00 y 250.31 h 250.31
+  73871 actor   D ender_dragon -13.16056 76.87554 -33.28247 p 0.00 y 248.91 h 248.91
+  73921 actor   D ender_dragon -13.94471 76.22025 -33.02369 p 0.00 y 248.91 h 248.91
+  73971 actor   D ender_dragon -14.72855 75.60414 -32.75953 p 0.00 y 248.91 h 248.91
+  74021 actor   D ender_dragon -15.51239 75.03089 -32.49071 p 0.00 y 248.91 h 248.91
+  74071 actor   D ender_dragon -16.29662 74.50410 -32.21801 p 0.00 y 248.91 h 248.91
+  74121 actor   D ender_dragon -17.08163 74.02737 -31.94221 p 0.00 y 250.31 h 250.31
+  74171 actor   D ender_dragon -17.86784 73.60421 -31.66402 p 0.00 y 250.31 h 250.31
+  74221 actor   D ender_dragon -18.65560 73.23816 -31.38402 p 0.00 y 250.31 h 250.31
+  74271 actor   D ender_dragon -19.44387 73.01405 -31.09913 p 0.00 y 246.09 h 246.09
+  74271 actor   DV ender_dragon -0.38406 -0.05738 0.14077
+  74321 actor   D ender_dragon -20.22961 72.99939 -30.80068 p 0.00 y 240.47 h 240.47
+  74371 actor   D ender_dragon -21.00609 73.17894 -30.47831 p 0.00 y 233.44 h 233.44
+  74421 actor   D ender_dragon -21.76360 73.53794 -30.12282 p 0.00 y 225.00 h 225.00
+  74421 actor   DV ender_dragon -0.36232 0.21021 0.18147
+  74471 actor   LevelSoundEvent LevelSoundEvent { sound_id: "flap", position: Vec3f { x: -22.125916, y: 75.74815, z: -29.941347 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: 3, fire_at_position: None }
+  74471 actor   D ender_dragon -22.49129 74.06218 -29.72796 p 0.00 y 216.56 h 216.56
+  74521 actor   D ender_dragon -23.17946 74.73795 -29.29106 p 0.00 y 209.53 h 209.53
+  74570 actor   D ender_dragon -23.75761 75.46022 -28.86386 p 0.00 y 203.91 h 203.91
+  74570 actor   DV ender_dragon -0.29955 0.41787 0.24145
+  74620 actor   D ender_dragon -24.29156 76.29558 -28.40150 p 0.00 y 199.69 h 199.69
+  74670 actor   D ender_dragon -24.78196 77.23309 -27.90726 p 0.00 y 198.28 h 198.28
+  74721 actor   D ender_dragon -25.23239 78.26226 -27.38485 p 0.00 y 196.88 h 196.88
+  74771 actor   D ender_dragon -25.64855 79.37298 -26.83803 p 0.00 y 196.88 h 196.88
+  74771 actor   DV ender_dragon -0.21599 0.61269 0.30213
+  74771 actor   BossEvent BossEvent { target_entity_id: 3, type: ShowBar, title: "entity.ender_dragon.name", filtered_title: "", progress: 1.0, color: Purple, overlay: Progress }
+  74821 actor   D ender_dragon -26.03733 80.55556 -26.27054 p 0.00 y 198.28 h 198.28
+  74871 actor   D ender_dragon -26.40597 81.80067 -25.68602 p 0.00 y 201.09 h 201.09
+  74921 actor   D ender_dragon -26.76134 83.09937 -25.08800 p 0.00 y 203.91 h 203.91
+  74971 actor   D ender_dragon -27.10944 84.44305 -24.47982 p 0.00 y 205.31 h 205.31
+  75020 actor   D ender_dragon -27.45508 85.82347 -23.86443 p 0.00 y 208.12 h 208.12
+  75070 actor   D ender_dragon -27.80173 87.23268 -23.24428 p 0.00 y 209.53 h 209.53
+  75121 actor   D ender_dragon -28.15158 88.66305 -22.62122 p 0.00 y 210.94 h 210.94
+  75171 actor   D ender_dragon -28.50562 90.10722 -21.99641 p 0.00 y 210.94 h 210.94
+  75221 actor   D ender_dragon -28.86391 91.55813 -21.37043 p 0.00 y 210.94 h 210.94
+  75271 actor   D ender_dragon -29.22579 93.00895 -20.74337 p 0.00 y 210.94 h 210.94
+  75321 actor   D ender_dragon -29.59011 94.45312 -20.11496 p 0.00 y 210.94 h 210.94
+  75371 actor   D ender_dragon -29.95546 95.88430 -19.48476 p 0.00 y 209.53 h 209.53
+  75421 actor   D ender_dragon -30.32039 97.29636 -18.85228 p 0.00 y 208.12 h 208.12
+  75471 actor   D ender_dragon -30.72507 98.84389 -18.14405 p 0.00 y 208.12 h 208.12
+  75520 actor   D ender_dragon -31.12651 100.35617 -17.43242 p 0.00 y 206.72 h 206.72
+  75571 actor   D ender_dragon -31.52385 101.82595 -16.71726 p 0.00 y 206.72 h 206.72
+  75621 actor   D ender_dragon -31.91664 103.24615 -15.99857 p 0.00 y 206.72 h 206.72
+  75671 actor   D ender_dragon -32.30476 104.60987 -15.27655 p 0.00 y 205.31 h 205.31
+  75720 actor   D ender_dragon -32.68843 105.91037 -14.55149 p 0.00 y 205.31 h 205.31
+  75771 actor   D ender_dragon -33.06813 107.14107 -13.82377 p 0.00 y 205.31 h 205.31
+  75771 actor   BossEvent BossEvent { target_entity_id: 3, type: ShowBar, title: "entity.ender_dragon.name", filtered_title: "", progress: 1.0, color: Purple, overlay: Progress }
+  75821 actor   D ender_dragon -33.44450 108.29555 -13.09382 p 0.00 y 205.31 h 205.31
+  75871 actor   D ender_dragon -33.81828 109.36753 -12.36202 p 0.00 y 205.31 h 205.31
+  75920 actor   D ender_dragon -34.19023 110.35088 -11.62873 p 0.00 y 206.72 h 206.72
+  75970 actor   D ender_dragon -34.56108 111.23962 -10.89420 p 0.00 y 206.72 h 206.72
+  75970 actor   DV ender_dragon -0.17996 0.40131 0.35707
+  76021 actor   D ender_dragon -34.93151 112.02789 -10.15855 p 0.00 y 206.72 h 206.72
+  76071 actor   D ender_dragon -35.30209 112.70996 -9.42173 p 0.00 y 206.72 h 206.72
+  76121 actor   D ender_dragon -35.67332 113.28024 -8.68353 p 0.00 y 206.72 h 206.72
+  76171 actor   D ender_dragon -35.85410 113.52596 -8.32410 p 0.00 y 206.72 h 206.72
+  76221 actor   D ender_dragon -36.19353 113.95742 -7.64498 p 0.00 y 205.31 h 205.31
+  76221 actor   DV ender_dragon -0.16574 0.16901 0.33355
+  76271 actor   D ender_dragon -36.53198 114.23544 -6.95210 p 0.00 y 201.09 h 201.09
+  76321 actor   D ender_dragon -36.86232 114.37385 -6.24332 p 0.00 y 196.88 h 196.88
+  76371 actor   D ender_dragon -37.17570 114.38519 -5.51736 p 0.00 y 191.25 h 191.25
+  76421 actor   D ender_dragon -37.46220 114.28091 -4.77440 p 0.00 y 184.22 h 184.22
+  76421 actor   DV ender_dragon -0.13187 -0.07474 0.36547
+  76471 actor   D ender_dragon -37.71147 114.07143 -4.01644 p 0.00 y 177.19 h 177.19
+  76521 actor   D ender_dragon -37.91338 113.76619 -3.24736 p 0.00 y 170.16 h 170.16
+  76571 actor   LevelSoundEvent LevelSoundEvent { sound_id: "flap", position: Vec3f { x: -37.999146, y: 115.600006, z: -2.871701 }, extra_data: -1, entity_type: "minecraft:ender_dragon", is_baby_mob: false, is_global: false, entity_unique_id: 3, fire_at_position: None }
+  76571 actor   D ender_dragon -38.05862 113.37383 -2.47284 p 0.00 y 161.72 h 161.72
+  76621 actor   D ender_dragon -38.13919 112.90218 -1.70025 p 0.00 y 153.28 h 153.28
+  76670 actor   D ender_dragon -38.14880 112.35837 -0.93841 p 0.00 y 144.84 h 144.84
+  76671 actor   DV ender_dragon 0.01260 -0.27473 0.36537
+  76720 actor   D ender_dragon -38.08323 111.74891 -0.19727 p 0.00 y 136.41 h 136.41
+  76771 actor   D ender_dragon -37.94054 111.07970 0.51248 p 0.00 y 126.56 h 126.56
+  76771 actor   BossEvent BossEvent { target_entity_id: 3, type: ShowBar, title: "entity.ender_dragon.name", filtered_title: "", progress: 1.0, color: Purple, overlay: Progress }
+  76821 actor   D ender_dragon -37.72145 110.35612 1.18015 p 0.00 y 118.12 h 118.12
+  76871 actor   .. SyncWorldClocks x1
+  76871 actor   D ender_dragon -37.42928 109.58307 1.79591 p 0.00 y 109.69 h 109.69
+  76921 actor   D ender_dragon -37.06955 108.76498 2.35158 p 0.00 y 102.66 h 102.66
+  76921 actor   DV ender_dragon 0.18873 -0.39953 0.25348
+  76970 actor   D ender_dragon -36.64931 107.90593 2.84106 p 0.00 y 95.62 h 95.62
+  77021 actor   D ender_dragon -36.17651 107.00959 3.26056 p 0.00 y 88.59 h 88.59
+  77071 actor   D ender_dragon -35.65920 106.07932 3.60858 p 0.00 y 82.97 h 82.97
+  77121 actor   D ender_dragon -35.10509 105.11818 3.88559 p 0.00 y 78.75 h 78.75
+  77171 actor   D ender_dragon -34.52111 104.12894 4.09376 p 0.00 y 74.53 h 74.53
+  77171 actor   DV ender_dragon 0.28854 -0.47741 0.08487
+  77221 actor   D ender_dragon -33.91322 103.11413 4.23652 p 0.00 y 71.72 h 71.72
+  77272 actor   D ender_dragon -33.28633 102.07605 4.31825 p 0.00 y 68.91 h 68.91
+  77321 actor   D ender_dragon -32.64434 101.01680 4.34390 p 0.00 y 67.50 h 67.50
+  77371 actor   D ender_dragon -31.99022 99.93828 4.31873 p 0.00 y 66.09 h 66.09
+## !entities at 77409
+## entities: 1
+##   minecraft:ender_dragon 3 at -31.990 99.938 4.319 yaw 66.1 health Some(200.0)
+## !spikes at 77410
+## top 42 0: 87 obsidian[]; 86 obsidian[]; 85 obsidian[]
+## top 33 24: 102 obsidian[]; 101 obsidian[]; 100 obsidian[]
+## top 12 39: 84 obsidian[]; 83 obsidian[]; 82 obsidian[]
+## top -12 39: 82 iron_bars[minecraft:connection_east=1,minecraft:connection_north=1,minecraft:connection_south=1,minecraft:connection_west=1]; 78 obsidian[]; 77 obsidian[]
+## top -33 24: 85 iron_bars[minecraft:connection_east=1,minecraft:connection_north=1,minecraft:connection_south=1,minecraft:connection_west=1]; 81 obsidian[]; 80 obsidian[]
+## top -42 0: 93 obsidian[]; 92 obsidian[]; 91 obsidian[]
+## top -33 -24: 96 obsidian[]; 95 obsidian[]; 94 obsidian[]
+## top -12 -39: 75 obsidian[]; 74 obsidian[]; 73 obsidian[]
+## top 12 -39: 90 obsidian[]; 89 obsidian[]; 88 obsidian[]
+## top 33 -24: 99 obsidian[]; 98 obsidian[]; 97 obsidian[]
+probe exit 0
