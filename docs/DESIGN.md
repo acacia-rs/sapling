@@ -793,7 +793,8 @@ Details and BDS evidence: docs/research/nether-dimension.md, docs/research/end-d
 - **The dragon fight** (sapling-shard `dragon.rs` and `dragon/`, docs/research/end-dimension.md): a `Fight`
   component on the End layer, its record in the realm's `Level::dragon_fight` (LevelDB `TheEnd`, sapling-leveldb
   `dragon_fight.rs`). Run from `handlers` after the creatures' tick: dragon lookup and making, podium, crystals,
-  the death, gateways and their exits, the summoning again (`respawn.rs`), boss bar. The dragon is an entity
+  the death, gateways and their exits (`exits.rs`, BDS's spawn searches in `exit_spawn.rs`), the summoning again
+  (`respawn.rs`), boss bar, the strafe's fireball (`fireball.rs`) and the breath clouds (`cloud.rs`). The dragon is an entity
   with a `Dragon` component flown by BDS's goals (`flight/`, `fly.rs`, `parts.rs`, `wire.rs`), not by
   `creatures::tick`. The exit portal's way home with the credits is `portals/exit.rs`. Plugins read
   `ShardCtx::dragon_fight` and get `DragonKilledEvent` and `DragonRespawnEvent`.

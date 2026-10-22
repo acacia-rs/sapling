@@ -122,7 +122,8 @@ research/dragon-fight-decompile.md (the fight manager) and research/dragon-ai-de
   bedrock in the first fight. sapling the same; it resends the podium's columns to clients still waiting on
   blobs, since its fight starts while they stream in (an again run lost half the podium on the bot without it).
 - **Flight** (watch): BDS's goals (holding pattern, strafe, charge, landing, scanning, flaming, takeoff, death)
-  over the 24 nodes. Two moves a tick: the generic move by the stored motion, then **xz × 0.91** (fitted:
+  over the 24 nodes (rerun after the first-growl fix: perches 8 vs 8, first growl 5.0 s after spawn on both). Two
+  moves a tick: the generic move by the stored motion, then **xz × 0.91** (fitted:
   without it sapling flew at twice BDS's speed), then the goal's steer, move and drag. The first told moves
   are equal to 4 digits (same first node and yaw 357.19); over 75 s median speed 0.869 vs 0.877, flaps 89 vs
   85, growls 4 vs 4, the first 100 ticks after spawn, 8 vs 6 perches. A survival player near the portal is
@@ -131,10 +132,26 @@ research/dragon-fight-decompile.md (the fight manager) and research/dragon-ai-de
   hit leaves 1 and sends it to the portal to die; sitting, a quarter of its health lost makes it take off.
 - **Death** (fight): DeathAnimation, flags reset, the death sound 2 up, 200 ticks, then the portal lit, the egg on
   the first kill, a gateway in BDS's MT-shuffled order of 20 (first (0, 75, -96)), experience 12000 then 500.
-- **Gateway exits** (again, exits): the walk out 1024 along the gateway's direction tests the **column** at the
-  point, not Java's chunk (BDS walked past a chunk holding one end stone); the far gateway 10 over the highest
-  block within 16 of the spawn; the landing over the highest block within 5 of the far gateway, chorus counted.
-  First kill: (-13, 76, -1123) as BDS. Second: (571, 59, -838) against BDS's (585, 71, -850).
+- **Gateway exits** (again, exits; research/dragon-extras-decompile.md 1-3): the walk out 1024 along the gateway's
+  direction tests the **column** at the point, not Java's chunk (BDS walked past a chunk holding one end stone);
+  then BDS's `findValidSpawn` (column tops within ±16, end stone with no air round it first, nearest in 3D) and
+  `findTallestBlock` (chorus counts), the far gateway 10 over the tallest block within 16 of the spawn, and the
+  landing one over the spawn search round the far gateway: BDS reads that through the near side's view, so its
+  tallest-block step falls back to the spawn. Both kills' exits equal BDS's: (-13, 76, -1123), (585, 71, -850).
+  Where no spawn is found BDS's end island (MT seeded by the cell's hash) is built at y 75 (read, not drilled).
+- **Fireball** (survival, survival2; extras 4): the strafe shoots from two over the dragon's feet, a block towards
+  its prey, at the middle of the prey's box, at 1.3 with a 0.075 gaussian spread; AddEntity (owner, flags, box
+  0.31) and its data, the `disappeared`/`undefined`/`shoot` sounds, its first move in the same tick, flags the next,
+  `reappeared` the one after; straight flight told every tick; on a block or player box grown by 0.3 a splash
+  (LevelEvent, its colour) with no move told, and the tick after the cloud at the cell's middle, the fireball gone,
+  `explode`. BDS shot 1 and 4 fireballs in two 150 s runs, sapling 7 (same rules; BDS's line-of-sight test is
+  not ported).
+- **Breath clouds** (survival): the fireball's radius 6 for 2400 ticks, the flaming dragon's radius 5 for 200 at
+  the tenth breath tick, half the radius out from its head on the ground; told with BDS's metadata; every fifth
+  tick of age, players within the radius take 3 by magic (half an instant harm) and the throw of a magic hit; the
+  fireball's spares one for 20 ticks (BDS and sapling both hit once a second there).
+- **Reach**: a hit reaches the dragon by its head, neck, body, wings and three tail parts (BDS's 64-tick trail;
+  its tail reads 4, 6 and 8 back). Its target (TargetEid) is told as a strafe or a scan takes and drops one.
 - **Summoning again** (again): four crystals on the portal's sides; growls on the same ticks as BDS (34, all
   within half a tick), pillars rebuilt one per 40 ticks, the new dragon at tick 604.7 vs 604.8, the four
   crystals blown up, another gateway on its kill.
@@ -145,12 +162,10 @@ research/dragon-fight-decompile.md (the fight manager) and research/dragon-ai-de
 
 ## Not done, and why
 
-- **Dragon:** no fireball from the strafe and no breath cloud's harm (the roar and puke are told); its tail parts
-  and its climb ring are left out of where its parts reach; its start waits ~1.6 s on BDS's node columns, which
-  sapling loads slower than BDS had them.
-- **Second gateway exit off by ~15 blocks:** BDS's own spawn search (`findValidSpawn` 1487fde00: columns down
-  from y 127 over ±r chunks with neighbour tests) is not ported; sapling takes the end stone nearest the origin
-  in the point's chunk. No island is built where none is found (148274c80).
+- **Dragon:** its start waits ~1.6 s on BDS's node columns, which sapling loads slower than BDS had them; its hurt
+  time is not kept. The fireball is not pushed off the dragon's body (BDS's grows 4 ticks), not turned in flight,
+  hits no mob and cannot be struck back; the clouds harm no mob, and BDS's pulse that stops at the owner in its
+  entity list is not copied; the strafe has no line-of-sight test.
 - **The second kill's orbs** stayed where they fell on sapling (77 entities against BDS's 24 after 40 s): generic
   orb pickup, not looked at.
 - **Spike bedrock and crystals.** `postProcessMobsAt` 148246230 puts an EnderCrystal (ShowBottom) at (x + 0.5,
