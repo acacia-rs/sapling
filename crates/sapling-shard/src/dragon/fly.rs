@@ -74,12 +74,13 @@ pub(super) fn tick(world: &mut World, layer: Entity) {
 /// One tick of `dragon`; whether its last flight ended.
 fn step(world: &mut World, layer: Entity, dragon: Entity, kept: &mut Dragon, random: &mut super::random::Random) -> bool {
     let flight = &mut kept.flight;
-    // creatures::tick passes the dragon by, so its guard runs down here.
-    if let Some(mut health) = world.get_mut::<Health>(dragon) {
+    // creatures::tick passes the dragon by, so its guard runs down and its health is told here.
+    let health_told = world.get_mut::<Health>(dragon).and_then(|mut health| {
         health.begin();
-    }
-    if let Some(level) = world.get::<Layer>(layer) {
-        flight.keep_nodes(&level.world);
+        health.untold()
+    });
+    if let Some(mut level) = world.get_mut::<Layer>(layer) {
+        flight.keep_nodes(&mut level.world);
     }
     let (before, id) = (flight.motion.at, world.get::<NetId>(dragon).map_or(0, |id| id.0));
     flight.motion.carry();
@@ -90,7 +91,7 @@ fn step(world: &mut World, layer: Entity, dragon: Entity, kept: &mut Dragon, ran
     if let Some(size) = world.get::<Body>(dragon).map(|body| body.size) {
         super::fireball::pushed_by(world, layer, flight.motion.at, size);
     }
-    let mut told = Vec::new();
+    let mut told: Vec<_> = health_told.map(|(left, max)| sapling_net::encode(&sapling_data::mob_health_update(id, left, max))).into_iter().collect();
     if flight.motion.flaps() {
         told.push(sapling_net::encode(&sound("flap", id, head(flight))));
     }

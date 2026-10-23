@@ -16,13 +16,6 @@ pub(crate) fn part_reach(world: &World, dragon: Entity, eye: [f32; 3]) -> Option
     boxes.iter().map(far).min_by(f32::total_cmp)
 }
 
-/// Tells the dragon's viewers its health.
-fn tell_health(world: &mut World, dragon: Entity, health: &Health) {
-    let (Some(id), Some(layer), Some(at)) = (world.get::<NetId>(dragon).map(|id| id.0), world.get::<InLayer>(dragon).map(|l| l.0), world.get::<Body>(dragon).map(|b| b.at)) else { return };
-    let told = sapling_net::encode(&sapling_data::mob_health_update(id, health.left(), health.max()));
-    crate::entities::tell_viewers(world, dragon, layer, at.map(|c| c.floor() as i32), vec![told]);
-}
-
 /// The dragon's last flight ended at the portal: its death is shown and begins.
 pub(super) fn killed_at_portal(world: &mut World, dragon: Entity) {
     super::fly::ended(world, dragon);
@@ -81,7 +74,6 @@ pub(super) fn crystal_destroyed(world: &mut World, layer: Entity, dragon: Entity
             if health.hurt(10.0) {
                 hurt(world, dragon, before, &mut health);
                 *world.get_mut::<Health>(dragon).expect("read above") = health;
-                tell_health(world, dragon, &health);
             }
         }
     }

@@ -128,6 +128,11 @@ research/dragon-fight-decompile.md (the fight manager) and research/dragon-ai-de
   are equal to 4 digits (same first node and yaw 357.19); over 75 s median speed 0.869 vs 0.877, flaps 89 vs
   85, growls 4 vs 4, the first 100 ticks after spawn, 8 vs 6 perches. A survival player near the portal is
   strafed and charged; landing needs none (creative players are no prey).
+- **Hurt time** (hits): a second hit 6 ticks after one takes nothing on BDS and sapling (the 10-tick guard,
+  run down in the dragon's own tick, since the creatures' tick passes it by); its health goes out as
+  UpdateAttributes as BDS's (198.75, 197.5); while guarded its wings and head hurt no one (AI doc 3 step 10).
+- **Fireball turning**: pitch and yaw go a fifth of the way to its motion's each tick and are told
+  (MoveEntityDelta rot_x/rot_y, head 0), as BDS's turned from -14.06/-5.62 to 347.34/352.97.
 - **Hits** (hits): a fist's 1 takes 1.25 (`min(d,1)+d/4`); only players and block explosions hurt it; a lethal
   hit leaves 1 and sends it to the portal to die; sitting, a quarter of its health lost makes it take off.
 - **Death** (fight): DeathAnimation, flags reset, the death sound 2 up, 200 ticks, then the portal lit, the egg on
@@ -143,9 +148,11 @@ research/dragon-fight-decompile.md (the fight manager) and research/dragon-ai-de
   stopped at the column the island had stood on, so its emptiness test does not see a `/fill` (a stale
   heightmap, presumably); its spawn search did, and it built the island there. Both islands are Java's
   discs going down from 75 (layers of 145, 97, 45, 37, 9 cells and 6 layers from radius 6), the far gateway
-  10 over their first top column and the exit one over it, as sapling builds them; but the radii drawn
-  (first 6 on both) fit no seeding tried, the decompile's hash included, so sapling's island sizes are not
-  BDS's.
+  10 over their first top column and the exit one over it, as sapling builds them. The island's random is a
+  fresh MT19937 seeded by hash_combine of the cell's `std::hash<int>`s (148274c80; seen live on a Windows BDS
+  attached mid-fight: seed 0xF92C2FAE at (0, 75, -1120), the FNV-1a value). Linux BDS's libstdc++ hashes an
+  int as itself, and that seed gives both drilled islands' radii exactly (6, 4.5, 3, 2.5, 1 and 6, 5.5, 4,
+  3.5, 2, 1.5), so sapling seeds it so; a Windows BDS would build other sizes.
 - **Fireball** (survival, survival2; extras 4): the strafe shoots from two over the dragon's feet, a block towards
   its prey, at the middle of the prey's box, at 1.3 with a 0.075 gaussian spread; AddEntity (owner, flags, box
   0.31) and its data, the `disappeared`/`undefined`/`shoot` sounds, its first move in the same tick, flags the next,
@@ -167,7 +174,9 @@ research/dragon-fight-decompile.md (the fight manager) and research/dragon-ai-de
   sitting, so that rule is not copied.
 - **Start**: BDS builds the dragon's nodes on its first tick whatever is loaded and once more when the 8 x 8
   columns round the middle are, then keeps them (extras 5.5, correcting the AI doc). sapling does the same,
-  and tells the dragon's first move (it used to wait for its columns, ~1.6 s, and skip that move).
+  and tells the dragon's first move (it used to wait for its columns, ~1.6 s, and skip that move). It also
+  asks for those columns: a sapling player's view never loaded them all, and nodes kept from unloaded
+  ground (all at 73) cut the fireballs to 0, 0, 2, 0, 2, 0, 2 a run; asked for, 2, 3, 6 against BDS's mean 4.
 - **Wing and bite** hurt on the world's difficulty (BDS's easy: 3.5 and 6) and throw 0.4 away and up as a hit.
 - **Breath clouds** (survival): the fireball's radius 6 for 2400 ticks, the flaming dragon's radius 5 for 200 at
   the tenth breath tick, half the radius out from its head on the ground; told with BDS's metadata; every fifth
@@ -185,8 +194,8 @@ research/dragon-fight-decompile.md (the fight manager) and research/dragon-ai-de
 
 ## Not done, and why
 
-- **Dragon:** its hurt time is not kept. The fireball is not turned in flight and another projectile does not
-  send it back (BDS: along the shooter's look at speed 1, extras 5.1); the cloud's owner stop is not copied.
+- **Dragon:** another projectile does not send its fireball back (BDS: along the shooter's look at speed 1,
+  extras 5.1); the cloud's owner stop is not copied.
 - **The second kill's orbs**: sapling's did not join up (77 entities against BDS's 24); with merging built they
   list as BDS's (26, 26, 43 against 24, 24, 46; docs/research/experience.md "Drilled").
 - **Spike bedrock and crystals.** `postProcessMobsAt` 148246230 puts an EnderCrystal (ShowBottom) at (x + 0.5,

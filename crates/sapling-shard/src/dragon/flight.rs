@@ -88,10 +88,12 @@ const GROWL_SPREAD: u32 = 200;
 const FIRST_GROWL: i32 = 100;
 
 /// Whether the 8 x 8 columns round the middle its nodes stand on are loaded (`areChunksFullyLoaded`
-/// within 60, research/dragon-extras-decompile.md 5.5). Players' views load them; nothing else does.
-fn nodes_loaded(level: &sapling_world::World) -> bool {
+/// within 60, research/dragon-extras-decompile.md 5.5); those that are not are asked for, standing in
+/// for BDS's wider player views, which had them all loaded.
+fn nodes_loaded(level: &mut sapling_world::World) -> bool {
     let reach = nodes::BUILT_WITHIN.div_euclid(16) + 1;
-    (-reach..reach).all(|x| (-reach..reach).all(|z| level.is_loaded(sapling_world::ChunkPos::new(x, z))))
+    let columns = (-reach..reach).flat_map(|x| (-reach..reach).map(move |z| sapling_world::ChunkPos::new(x, z)));
+    columns.fold(true, |all, column| level.request(column) && all)
 }
 
 impl Flight {
@@ -125,7 +127,7 @@ impl Flight {
 
     /// BDS's node upkeep: built at the first call however little is loaded, built again the first
     /// time all its columns are, then kept.
-    pub fn keep_nodes(&mut self, level: &sapling_world::World) {
+    pub fn keep_nodes(&mut self, level: &mut sapling_world::World) {
         if self.nodes_final {
             return;
         }
