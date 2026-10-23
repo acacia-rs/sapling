@@ -1,8 +1,8 @@
 //! The dragon's parts (research/dragon-ai-decompile.md 3 step 10, 5 and 7): its body, wings, neck
-//! and head round where it is and its yaw. Out of a sit its wings throw the players under them and
-//! hurt them for 5, its head and neck bite for 10; head, neck and body break the blocks they are in
-//! that are not of the End's hard ones, while mobGriefing is on, each showing its dust once.
-// TODO: its hurt time, which keeps its wings and head from hurting, is left out.
+//! and head round where it is and its yaw. Out of a sit and past its hurt time (the 10 ticks of a
+//! hit's guard) its wings throw the players under them and hurt them for 5, its head and neck bite
+//! for 10; head, neck and body break the blocks they are in that are not of the End's hard ones,
+//! while mobGriefing is on, each showing its dust once.
 
 use acacia_proto::packets::{LevelEvent, LevelEventEvent};
 use acacia_proto::types::Vec3f;
@@ -95,9 +95,10 @@ fn player_box([x, y, z]: [f32; 3]) -> Box3 {
 }
 
 /// What its parts do this tick; whether a block slowed it.
-pub(super) fn touch(world: &mut World, layer: Entity, _dragon: Entity, flight: &Flight, random: &mut Random) -> bool {
+pub(super) fn touch(world: &mut World, layer: Entity, dragon: Entity, flight: &Flight, random: &mut Random) -> bool {
     let parts = parts(flight);
-    if !flight.sitting {
+    let hurt_lately = world.get::<crate::creatures::Health>(dragon).is_some_and(crate::creatures::Health::is_guarded);
+    if !flight.sitting && !hurt_lately {
         // A wing reaches 4 across and from 4 under it to its top.
         let knocks = |wing: &Box3| {
             let (mut low, mut high) = grown(*wing, [4.0, 2.0, 4.0]);

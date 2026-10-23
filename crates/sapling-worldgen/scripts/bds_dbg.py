@@ -43,13 +43,33 @@ from bds_dbg_groups import Groups
 from bds_dbg_win import BREAKPOINT, DBG_CONTINUE, DBG_NOT_HANDLED, REGS, SINGLE_STEP, STATIC_BASE, Context, k32
 
 
+class Attached:
+    """A process attached to rather than started: `poll` as Popen's, by its exit code."""
+
+    def __init__(self, pid):
+        self.handle = k32.OpenProcess(0x1000, False, pid)  # PROCESS_QUERY_LIMITED_INFORMATION
+
+    def poll(self):
+        code = C.c_ulong()
+        k32.GetExitCodeProcess(self.handle, C.byref(code))
+        return None if code.value == 259 else code.value  # STILL_ACTIVE
+
+
 class Debugger:
     def __init__(self, exe, config, out):
         self.cfg = config
         self.exe = exe
         self.out = out
         self.log = open(f"{out}/dbg.log", "w", buffering=1)
-        self.proc = subprocess.Popen([exe], creationflags=0x2, cwd=None)  # DEBUG_ONLY_THIS_PROCESS
+        # BDS_DBG_ATTACH=<pid> attaches to a running server instead: one that is slowed to a crawl
+        # under the debugger from its start (logins time out) can be attached just before the moment.
+        attach = os.environ.get("BDS_DBG_ATTACH")
+        if attach:
+            k32.DebugActiveProcess(int(attach))
+            k32.DebugSetProcessKillOnExit(False)
+            self.proc = Attached(int(attach))
+        else:
+            self.proc = subprocess.Popen([exe], creationflags=0x2, cwd=None)  # DEBUG_ONLY_THIS_PROCESS
         self.hproc = None
         self.base = 0
         self.threads = {}

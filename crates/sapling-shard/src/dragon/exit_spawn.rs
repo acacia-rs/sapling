@@ -95,20 +95,16 @@ pub(super) fn tallest(level: &Level, pos: BlockPos, reach: i32, with_bedrock: bo
     best.unwrap_or(pos)
 }
 
-fn fnv(value: i32) -> u64 {
-    value.to_le_bytes().iter().fold(0xcbf2_9ce4_8422_2325, |hash, &byte| (hash ^ u64::from(byte)).wrapping_mul(0x0100_0000_01b3))
-}
-
-/// The seed BDS hashes from the island's cell: FNV-1a per coordinate, joined as boost's hash_combine.
+/// The seed BDS hashes from the island's cell: each coordinate's `std::hash`, joined as boost's
+/// hash_combine. Linux BDS's libstdc++ hashes an int as itself, which both drilled islands fit
+/// (bds-exit-island*.txt); Windows BDS's MSVC hashes its bytes by FNV-1a (seen live, 148274c80).
 fn seed([x, y, z]: BlockPos) -> u32 {
-    let join = |h: u64, v: i32| (fnv(v).wrapping_add(0x9e37_79b9).wrapping_add(h << 6).wrapping_add(h >> 2)) ^ h;
-    let first = fnv(x).wrapping_add(0x9e37_79b9);
-    join(join(first, y), z) as u32
+    let hash = |v: i32| i64::from(v) as u64;
+    let join = |h: u64, v: i32| (hash(v).wrapping_add(0x9e37_79b9).wrapping_add(h << 6).wrapping_add(h >> 2)) ^ h;
+    join(join(hash(x).wrapping_add(0x9e37_79b9), y), z) as u32
 }
 
 /// The end island BDS builds at (x, 75, z) where an exit finds no spawn: its cell and its end stone.
-// TODO: the seed is the decompile's reading; BDS's two drilled islands (bds-exit-island*.txt) drew
-// other sizes than it gives, and no hash tried fits both.
 pub(super) fn island([x, _, z]: BlockPos) -> (BlockPos, Vec<BlockPos>) {
     let at = [x, ISLAND_Y, z];
     let mut random = Mt19937::new(seed(at));
@@ -141,12 +137,13 @@ mod tests {
     }
 
     #[test]
-    fn an_island_is_discs_down_from_75_as_bdss() {
-        assert_eq!([6.0, 4.5, 3.0, 2.5, 1.0].map(disc), [145, 97, 45, 37, 9]);
-        let (at, cells) = island([602, 0, -829]);
-        assert_eq!(at, [602, 75, -829]);
-        let layers: Vec<usize> = (60..=75).rev().map(|y| cells.iter().filter(|cell| cell[1] == y).count()).take_while(|&n| n > 0).collect();
-        let radii = [4.0, 5.0, 6.0].map(disc);
-        assert!(radii.contains(&layers[0]) && layers.windows(2).all(|pair| pair[1] < pair[0]), "{layers:?}");
+    fn the_islands_bds_built_are_these() {
+        let layers = |at: BlockPos| {
+            let (_, cells) = island(at);
+            (60..=75).rev().map(|y| cells.iter().filter(|cell| cell[1] == y).count()).take_while(|&n| n > 0).collect::<Vec<_>>()
+        };
+        // Radii 6, 4.5, 3, 2.5, 1 (bds-exit-island.txt) and 6, 5.5, 4, 3.5, 2, 1.5 (bds-exit-island2.txt).
+        assert_eq!(layers([0, 0, -1120]), [6.0, 4.5, 3.0, 2.5, 1.0].map(disc));
+        assert_eq!(layers([602, 0, -829]), [6.0, 5.5, 4.0, 3.5, 2.0, 1.5].map(disc));
     }
 }

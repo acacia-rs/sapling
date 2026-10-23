@@ -4,7 +4,7 @@
 //! pushes it off for its first ticks, then it flies straight, and where its point meets a block or
 //! the box of a player or mob other than a dragon, grown by 0.3, it splashes, and the tick after
 //! leaves a breath cloud (cloud.rs) and is gone. A player's hit does nothing to it (extras 5.1).
-// TODO: it is not turned as it flies; another projectile does not send it back (extras 5.1).
+// TODO: another projectile does not send it back (extras 5.1).
 
 use acacia_proto::packets::{AddEntity, LevelEvent, LevelEventEvent, LevelSoundEvent, SetEntityData};
 use acacia_proto::types::{EntityProperties, MetadataDictionaryItemKey as Key, MetadataDictionaryItemValueDefault as Plain, MetadataFlags1, Vec3f};
@@ -29,6 +29,7 @@ const POWER: f32 = 1.3;
 const SPREAD: f32 = 0.0075 * 10.0;
 const GROWN: f32 = 0.3;
 const PUSH: f32 = 0.05;
+const TURNING: f32 = 0.2;
 const PLAYER: [f32; 2] = [0.6, 1.8];
 const PLAYER_MIDDLE: f32 = 0.9;
 /// BDS's flies on until it meets something; here one that met nothing goes after this many ticks.
@@ -38,8 +39,23 @@ const STEP: f32 = 360.0 / 256.0;
 #[derive(Component)]
 struct Fireball {
     age: u32,
+    pitch: f32,
     yaw: f32,
     met: Option<[f32; 3]>,
+}
+
+/// The pitch and yaw of a motion, as BDS turns a projectile (`shoot` 1424020c0).
+fn facing([x, y, z]: [f32; 3]) -> [f32; 2] {
+    [y.atan2(x.hypot(z)).to_degrees(), x.atan2(z).to_degrees()]
+}
+
+impl Fireball {
+    /// A fifth of the way to facing its motion each tick (extras 4.2 step 6).
+    fn turn(&mut self, motion: [f32; 3]) {
+        let [pitch, yaw] = facing(motion);
+        self.pitch += super::flight::wrap(pitch - self.pitch) * TURNING;
+        self.yaw += super::flight::wrap(yaw - self.yaw) * TURNING;
+    }
 }
 
 fn sound(name: &str, [x, y, z]: [f32; 3], kind: &str, unique: i64) -> Bytes {
@@ -83,7 +99,11 @@ pub(super) fn shoot(world: &mut World, layer: Entity, dragon: Entity, from: [f32
     let turn = [turned(motion[1].atan2(motion[0].hypot(motion[2])).to_degrees()), turned(motion[0].atan2(motion[2]).to_degrees())];
     let Some(owner) = world.get::<NetId>(dragon).map(|id| id.0) else { return };
     let Some(fireball) = entities::spawn(world, layer, KIND, Body::new(at, motion, SIZE), at, |id| Some(announcement(id, owner as i64, at, motion, turn))) else { return };
-    world.entity_mut(fireball).insert(Fireball { age: 0, yaw: turn[1], met: None });
+    world.entity_mut(fireball).insert(Fireball { age: 0, pitch: turn[0], yaw: turn[1], met: None });
+    if let Some(mut told) = world.get_mut::<Told>(fireball) {
+        told.pitch(turn[0]);
+        told.face(turn[1], 0.0);
+    }
     let id = world.get::<NetId>(fireball).map_or(0, |id| id.0) as i64;
     let mouth = [from[0], anchor, from[2]];
     let sounds = vec![sound("disappeared", [from[0], from[1] + OFFSET, from[2]], KIND, id), sound("undefined", mouth, "", -1), sound("shoot", mouth, super::DRAGON, owner as i64)];
@@ -188,7 +208,15 @@ fn fly(world: &mut World, fireball: Entity, layer: Entity, id: u64) -> Option<()
     *world.get_mut::<Body>(fireball)? = body;
     // The move onto what it meets is not told (bds-dragon-survival.txt).
     if hit.is_none() {
-        told.extend(world.get_mut::<Told>(fireball)?.update(id, body.at, body.motion, false));
+        let [pitch, yaw] = {
+            let mut ball = world.get_mut::<Fireball>(fireball)?;
+            ball.turn(body.motion);
+            [ball.pitch, ball.yaw]
+        };
+        let mut kept = world.get_mut::<Told>(fireball)?;
+        kept.pitch(pitch);
+        kept.face(yaw, 0.0);
+        told.extend(kept.update(id, body.at, body.motion, false));
     }
     if hit.is_some() {
         world.get_mut::<Fireball>(fireball)?.met = Some(body.at);

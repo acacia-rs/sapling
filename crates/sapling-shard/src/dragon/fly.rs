@@ -74,6 +74,10 @@ pub(super) fn tick(world: &mut World, layer: Entity) {
 /// One tick of `dragon`; whether its last flight ended.
 fn step(world: &mut World, layer: Entity, dragon: Entity, kept: &mut Dragon, random: &mut super::random::Random) -> bool {
     let flight = &mut kept.flight;
+    // creatures::tick passes the dragon by, so its guard runs down here.
+    if let Some(mut health) = world.get_mut::<Health>(dragon) {
+        health.begin();
+    }
     if let Some(level) = world.get::<Layer>(layer) {
         flight.keep_nodes(&level.world);
     }
