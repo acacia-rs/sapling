@@ -138,7 +138,14 @@ research/dragon-fight-decompile.md (the fight manager) and research/dragon-ai-de
   `findTallestBlock` (chorus counts), the far gateway 10 over the tallest block within 16 of the spawn, and the
   landing one over the spawn search round the far gateway: BDS reads that through the near side's view, so its
   tallest-block step falls back to the spawn. Both kills' exits equal BDS's: (-13, 76, -1123), (585, 71, -850).
-  Where no spawn is found BDS's end island (MT seeded by the cell's hash) is built at y 75 (read, not drilled).
+  Where no spawn is found BDS builds an end island at (x, 75, z) of the walk's point (drills `exit-island`,
+  `exit-island2`: the first gateway's line and the second's exit cleared with `/fill`). BDS's walk still
+  stopped at the column the island had stood on, so its emptiness test does not see a `/fill` (a stale
+  heightmap, presumably); its spawn search did, and it built the island there. Both islands are Java's
+  discs going down from 75 (layers of 145, 97, 45, 37, 9 cells and 6 layers from radius 6), the far gateway
+  10 over their first top column and the exit one over it, as sapling builds them; but the radii drawn
+  (first 6 on both) fit no seeding tried, the decompile's hash included, so sapling's island sizes are not
+  BDS's.
 - **Fireball** (survival, survival2; extras 4): the strafe shoots from two over the dragon's feet, a block towards
   its prey, at the middle of the prey's box, at 1.3 with a 0.075 gaussian spread; AddEntity (owner, flags, box
   0.31) and its data, the `disappeared`/`undefined`/`shoot` sounds, its first move in the same tick, flags the next,
