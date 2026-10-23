@@ -138,7 +138,14 @@ research/dragon-fight-decompile.md (the fight manager) and research/dragon-ai-de
   `findTallestBlock` (chorus counts), the far gateway 10 over the tallest block within 16 of the spawn, and the
   landing one over the spawn search round the far gateway: BDS reads that through the near side's view, so its
   tallest-block step falls back to the spawn. Both kills' exits equal BDS's: (-13, 76, -1123), (585, 71, -850).
-  Where no spawn is found BDS's end island (MT seeded by the cell's hash) is built at y 75 (read, not drilled).
+  Where no spawn is found BDS builds an end island at (x, 75, z) of the walk's point (drills `exit-island`,
+  `exit-island2`: the first gateway's line and the second's exit cleared with `/fill`). BDS's walk still
+  stopped at the column the island had stood on, so its emptiness test does not see a `/fill` (a stale
+  heightmap, presumably); its spawn search did, and it built the island there. Both islands are Java's
+  discs going down from 75 (layers of 145, 97, 45, 37, 9 cells and 6 layers from radius 6), the far gateway
+  10 over their first top column and the exit one over it, as sapling builds them; but the radii drawn
+  (first 6 on both) fit no seeding tried, the decompile's hash included, so sapling's island sizes are not
+  BDS's.
 - **Fireball** (survival, survival2; extras 4): the strafe shoots from two over the dragon's feet, a block towards
   its prey, at the middle of the prey's box, at 1.3 with a 0.075 gaussian spread; AddEntity (owner, flags, box
   0.31) and its data, the `disappeared`/`undefined`/`shoot` sounds, its first move in the same tick, flags the next,
@@ -149,6 +156,18 @@ research/dragon-fight-decompile.md (the fight manager) and research/dragon-ai-de
   takeoff target must be seen too. The fight's draws are unrepeatable, as BDS's level random, so the rate is a
   distribution: fireballs per 150 s survival drill (survival, survival2..6): BDS 1, 4, 3, 5, 6, 5 (mean 4.0);
   sapling 3, 3, 5, 2, 5, 5 (mean 3.8); before the sight test sapling shot 6-7. Flames (pukes) 32 in most runs of both.
+- **Fireball, more** (extras 5.1-5.3): a mob's box pushes what overlaps it as Java's `Entity.push` (the larger
+  axis by 0.05), so the fireball gains speed away from the dragon's feet while in its 13-wide box, about 4
+  ticks; fitted on bds-dragon-survival.txt's first fireball with the push between the dragon's stored-motion
+  move and its own, and sapling's fireballs now gain the same 0.05 a tick. It meets mobs as players (not
+  dragons); a hit mob gets only the cloud. A player's melee does nothing to it on BDS (its `_hurt` is empty).
+- **Clouds harm mobs** as players (half an instant harm; the undead mended). BDS's pulse, which lists mobs
+  before players and stops at its owner, should spare every player while the sitting dragon is in the box
+  (extras 5.4), but bds-dragon-survival.txt's flaming cloud hurt the player three times with the dragon
+  sitting, so that rule is not copied.
+- **Start**: BDS builds the dragon's nodes on its first tick whatever is loaded and once more when the 8 x 8
+  columns round the middle are, then keeps them (extras 5.5, correcting the AI doc). sapling does the same,
+  and tells the dragon's first move (it used to wait for its columns, ~1.6 s, and skip that move).
 - **Wing and bite** hurt on the world's difficulty (BDS's easy: 3.5 and 6) and throw 0.4 away and up as a hit.
 - **Breath clouds** (survival): the fireball's radius 6 for 2400 ticks, the flaming dragon's radius 5 for 200 at
   the tenth breath tick, half the radius out from its head on the ground; told with BDS's metadata; every fifth
@@ -166,12 +185,10 @@ research/dragon-fight-decompile.md (the fight manager) and research/dragon-ai-de
 
 ## Not done, and why
 
-- **Dragon:** its start waits ~1.6 s on BDS's node columns, which sapling loads slower than BDS had them; its hurt
-  time is not kept. The fireball is not pushed off the dragon's body (BDS's grows 4 ticks), not turned in flight,
-  hits no mob and cannot be struck back; the clouds harm no mob, and BDS's pulse that stops at the owner in its
-  entity list is not copied.
-- **The second kill's orbs** stayed where they fell on sapling (77 entities against BDS's 24 after 40 s): generic
-  orb pickup, not looked at.
+- **Dragon:** its hurt time is not kept. The fireball is not turned in flight and another projectile does not
+  send it back (BDS: along the shooter's look at speed 1, extras 5.1); the cloud's owner stop is not copied.
+- **The second kill's orbs**: sapling's did not join up (77 entities against BDS's 24); with merging built they
+  list as BDS's (26, 26, 43 against 24, 24, 46; docs/research/experience.md "Drilled").
 - **Spike bedrock and crystals.** `postProcessMobsAt` 148246230 puts an EnderCrystal (ShowBottom) at (x + 0.5,
   height + 1, z + 0.5) and bedrock at (x, height, z) for each spike whose centre is in the chunk, reading no fight
   state, but no caller was found, and in every drill (70 s with a player on the island) the tops stayed obsidian

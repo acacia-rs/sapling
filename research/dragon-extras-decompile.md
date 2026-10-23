@@ -176,8 +176,9 @@ Read only far enough to port a gravity-0, inertia-1 projectile. In order each ti
    - With inertia 1 and gravity 0, **v is constant**, so the fireball flies straight at 1.3 × |dir + noise| per tick.
 7. Age `+0x30` (f32 slot `[0xc]`) += 1.
 - Whether the generic actor mover also moves it (it has `minecraft:physics`, collision box 0.31) is unverified. The
-  dragon's own movement moved twice per tick (AI doc §3), so check with a capture.
-- `reflect_on_hurt: true`: a hit on the fireball sends it back (not read).
+  dragon's own movement moved twice per tick (AI doc §3), so check with a capture. It is pushed by overlapping
+  Mobs (5.3).
+- `reflect_on_hurt: true`: see 5.1 (melee does nothing; another projectile reflects it).
 
 ### 4.3 On hit: SpawnAoECloudSubcomponent (vtable 14a7a0ae0, factory lambda_69 1424c5f20)
 - Fields: +8 potion (default −1), +0xc duration (0), +0x10 particle (default 35), +0x14 reapplication_delay (0),
@@ -214,7 +215,7 @@ Read only far enough to port a gravity-0, inertia-1 projectile. In order each ti
   8. For each entity e in fetch order:
      - affect_owner == 0 and e is the owner: **the loop stops** (`je 1429b0402`, the loop exit, at 1429b0758).
        Entities after the owner in the list are not affected this pulse. Probably a BDS bug, but it is what the code
-       does. The fetch order is the region's entity order (not read).
+       does. Fetch order: 5.4 (non-player mobs first, then players).
      - e in the victims map: skip. Not affectable (140d5b950): skip. No effect e can take (`vt 0x338`): skip.
      - 3D squared distance between the cloud position and e's position (feet), **≤ r²**, else skip.
      - victims[e] = age + reapplication delay (+0x3c8).
@@ -251,10 +252,179 @@ At flame tick c == 10 (`flame_time`):
   inside the grown box and comes before the player in the fetch order, the owner-stop rule (4.4) skips the player.
   This should be **checked live**.
 
+## 5. Follow-ups
+
+The pack JSON quoted here is `behavior_packs/vanilla_1.26.50/__brarchive/entities.brarchive` (newest copy). The
+full dragon_fireball entry: collision box 0.31, `physics {}`, **`pushable_by_entity {}`**, `pushable_by_block {}`,
+projectile `anchor middle, gravity 0, reflect_on_hurt true, hit_sound explode, power 1.3, inertia 1, offset
+(0,0.5,0), uncertainty_base 10, isolated_physics false`, on_hit **`remove_on_hit {}`** + `spawn_aoe_cloud` (§4.3).
+ender_dragon has no pushable components and no `tick_world`.
+
+### 5.1 reflect_on_hurt
+Field map (JSON reader 1423fc450, then the definition→component copy at 1423fd895): definition +0x1e9
+reflect_on_hurt → component **+0x1d7**, +0x1ea destroy_on_hurt → +0x1d8, +0x1eb stop_on_hurt → +0x1d9,
++0x1ec crit_particle_on_hurt → +0x1da, def +0x214 `reflect_immunity` (default 0.0) → +0xfc = `(int)floor(x*20)`
+ticks, +0x1f1 multiple_targets → +0x1dd, `ignored_entities` → the type vector at +0x1e8.
+
+**`reflect(pc, proj, source)` 142400b00.** Runs only if `source.getEntityCategories() & Mob (2)` (players count) or
+cause == SelfDestruct (13), and +0x1d7, and `pc+0xfc <= proj tick (+0x198)`. Then:
+1. `A = level.fetchEntity(source.getEntityUniqueID())`. `v = A.getViewVector(1.0)` (140d2bdb0: Java's, pitch/yaw
+   through the Mth sine table), normalised (zero below 1e-4); A missing: v = 0.
+2. `posDelta = v`. **Speed 1.0 per tick, not ×power**, aimed along A's look, not reversed.
+3. `setOwner(A id)` (Actor vt 0x1b0); pc+8 (owner id) := A id; pc+0x1d6 := 1 (lets the owner be hit, 5.2);
+   pc+0x26c (stuck) := 0; the stored hit result (+0x270..) reset; pc+0xf9 := 1 (unread). No sound, no event.
+   The leave-owner latch +0x266 is not reset.
+
+Callers: base `Actor::_hurt` 140d397e0 (via `ProjectileComponent` hurt handler 1424013f0: reflect, then
+destroy_on_hurt removal and the crit particle event 0x7dc) and `on_hit` 1423fe9f0 (5.2 step 4).
+
+**A player's melee does nothing to a dragon fireball.** Type 0x40004F is built by factory 141ec3d00 (registration
+at 141ea0d1d) into class vtable 14a79dc40 (a Fireball subclass, base ctor 1424b39d0). Its `_hurt` (slot 133) is
+14120a500, which returns {0, 1} and does nothing, so the ProjectileComponent hurt handler is never reached: no
+reflect, no owner change, no sound. This matches LeviLamina's `DragonFireball::_hurt` override and Java
+(`DragonFireball.hurt` returns false). The JSON `reflect_on_hurt` is dead for melee.
+
+**It can still be reflected by another projectile.** When projectile P hits an entity that has a
+ProjectileComponent (on_hit 1423ff1d6), P builds a source `ActorDamageByChildActorSource(P, owner(P),
+Projectile)` (140d90c80; P alone if it has no owner, 140d55310) and calls `reflect` on the hit one. For an arrow
+shot by a player, the source's entity is the player, so the fireball takes the **player's view vector at speed
+1** and the player as owner. An ownerless P fails the Mob-category test. The fireball is a valid target for P
+because the Fireball ctor adds a PickComponent (1424b39d0). Unverified live.
+
+**A reflected fireball does not hurt the dragon.** It can hit the dragon (no longer the owner; Mobs are
+pickable). On hit it runs `remove_on_hit` and the cloud; there is no `impact_damage`, so no direct hurt. The
+cloud's owner is now the player. The cloud skips the dragon: its per-effect test (`vt 0x338`, slot 103) is
+overridden on the dragon (vtable 14a88bde0) by 140076010 (`xor eax,eax`), so the dragon is never affected by
+effects. The generic Mob version is 140d5a920. The §4 BlockExplosion/player gate is never reached.
+
+### 5.2 Projectile entity hits (143b4e3c0 → 142ff6c90)
+- Candidates: `region vt 0xf8` (fetchEntities, the projectile excluded) in the box from pos to pos+v, grown on
+  each side by the projectile's AABB size + 1. Per candidate, the predicate (default 143b558c0; the flagged
+  variant 143b55660, 4.2), in order:
+  1. Must have **PickComponent**, else skip.
+  2. Its unique id equals the owner id (pc+8) or `proj.getSourceUniqueID()` (vt 0x298): skip unless pc+0x1d6 (set
+     by reflect or shield block). So the dragon can **never** hit its own fireball's owner before a reflect,
+     latched or not.
+  3. Latch +0x266 still 0 and the owner exists: skip when the candidate's root vehicle is the owner's root
+     vehicle (1023-step walk via 140d26680; no vehicle means itself). The latch only adds this test.
+  4. Type (140d25840) in `ignored_entities`: skip (dragon_fireball has none).
+  - Flagged variant: no step 3; step 2 also needs `pc+0x34 >= 5`.
+- Who has a PickComponent (adder 141ccef40, value = pick inflate). Every **Mob** gets 0.1 from the Mob ctor
+  1429df250, which covers players and the dragon. A Mob tick at 142cb87b0 removes it while `vt 0xf8` is true
+  (probably spectator, unverified). Also: the Fireball family (1.0, ctor 1424b39d0: fireball, small_fireball,
+  dragon_fireball, wither_skull), shulker bullet (0.1), boat 14a7e8160, minecart 14a8883c0, primed TNT 14a8899f0,
+  vtable 14a88b9a0 (probably the ender crystal), and 14a7e7d20/14a79f200/14a779950/14a8876e0 (unnamed).
+  - **Item entities, XP orbs, arrows, tridents, snowballs and area_effect_clouds were not seen adding one**, so
+    they cannot be hit. Inferred from the adder list, not from their ctors.
+- Shape tested: an actor with a **SubBBsComponent** (the dragon's ctor reaches its emplace, 141ccfc90) is tested
+  per sub box grown by the inflate. Otherwise HitboxComponent boxes, otherwise the AABB (+0x220).
+- On an entity hit, `on_hit` 1423fe9f0 does, in order:
+  1. Return at once if the target's `canInteractWithOtherEntitiesInGame` (vt 0x120) is false.
+  2. The script/gameplay hit event.
+  3. A target with a projectile-deflect component (a type list; breeze-like) re-aims the projectile, then
+     return.
+  4. A target with a ProjectileComponent is reflected (5.1).
+  5. The on_hit subcomponents in JSON order (+0x120 vector, vt 0x18): for dragon_fireball, remove_on_hit and
+     spawn_aoe_cloud.
+  6. Removal/bounce bookkeeping (+0x260..+0x265, +0x1e4).
+  7. Game event 0x14cc8a964.
+  8. If the target is creative (game type 1, or 5 with level default 1): stop here.
+  9. hit_sound (pc+0x1c8, `explode`) at the projectile's position.
+  10. Shield/stop_on_hurt handling (target `isBlocking` vt 0x160, or +0x1d9).
+- So for a hit mob or player, the only effect is the cloud at the hit point, plus the removal and the explode
+  sound. No damage, knockback or fire.
+
+### 5.3 Push by overlapping actors: Java's `Entity.push` (yes)
+- **`PushActorsSystem::tick` 143b5bba0 → 143b50bc0**: for each entity with ActorOwner, ActorMovementTickNeeded,
+  **MobFlag** and PushActorsRequest (emplaced each tick by a post-move system 141935fe0, registered from
+  `registerPostMoveTravelVelocitySystems` lambda_7; its view was not read), walked in reverse storage order: actor
+  vt 0x480 = **`Mob::pushActors` 1429f2250**, which the dragon does not override. Only Mobs push. The fireball is
+  pushed; it pushes nothing.
+- `pushActors(M)` 1429f2250:
+  1. Skip if M fails `canInteractWithOtherEntitiesInGame`.
+  2. `fetchEntities(except M, M.AABB grown 0.2 in x and z, y unchanged)`.
+  3. For each e in fetch order: skip riders and vehicles of M (ridingPrev and root-vehicle tests) and e with flag
+     +0x210 & 0x400. If e has PushableByEntity: `push(e, M)` 142fa1d50.
+- `push(e, M)` 142fa1d50 with the preset (no presets in the JSON → the component's default, 142fa26e0; defaults
+  from the struct initialiser at 148f8b390: mode 1, strength 0.05, min 0.1, max FLT_MAX, needs-overlap 1, scale
+  e 1.0, scale M 1.0):
+  1. `dx = M.pos.x − e.pos.x`, `dz = M.pos.z − e.pos.z`. **StateVector positions, i.e. feet; M's main position,
+     not a part.**
+  2. Mode 1 distance `m = max(|dx|, |dz|)`. Require `m ≥ 0.1` and `m − M.AABB.width/2 ≤ FLT_MAX`.
+  3. **Require M.AABB to intersect e.AABB** (142f77680, the needs-overlap flag). M.AABB is the dragon's main
+     13 × 4 collision box (+0x220), not its parts.
+  4. Mode 1 (142fa30c0), f32: `s = sqrt(m)`, `inv = 1/s`, `k = min(inv, 1) * 0.05`, `r = 1 − e+0x194`
+     (e+0x194 is probably push-through, 0 here, unverified). `e.posDelta += (−dx*inv*k*r*1.0, 0, −dz*inv*k*r*1.0)`
+     (142fa31d0: a plain add to posDelta for non-Mobs).
+  5. Then e `vt 0x3e0(M)`. M is pushed back only if M has PushableByEntity; the dragon has none.
+- For m ≥ 1 the major axis gains exactly 0.05 and the minor `0.05 * minor/major`, which matches the captures.
+  The push stops once the fireball's box leaves the dragon's 13-wide box (6.5 + 0.155 from its feet x/z at
+  ≈1.3/tick, starting 1 block out), about 4 ticks. Since the fireball's inertia is 1, the velocity then stays.
+  In tick 1 (m < 1), the gain is `0.05*axis/sqrt(m)`.
+- Players (Mobs) overlapping a fireball push it the same way.
+- Not read: where PushActorsSystem runs relative to ProjectileSystem and the dragon's moves in the tick, so
+  whether the push sees the fireball before or after its own move this tick. Fit it on a capture.
+
+### 5.4 Cloud pulse fetch order (1415fcd30, type 0x100)
+- `BlockSource::fetchEntities(type, box)`:
+  1. Clear the output vector.
+  2. Chunks `cx = floor((minX−2)/16) .. floor((maxX+2)/16)` (**outer, ascending**), `cz` the same on z (inner,
+     ascending).
+  3. Each loaded chunk (`vt 0x148`) appends its own entity list in **list order** (LevelChunk +0x1360, via
+     1409f8a10).
+  4. Per entity: has the type (140d27800) and its AABB strictly overlaps the box.
+  5. Then, when the type is 0x100 (Mob) or has low byte 0x3f (Player), the **dimension's players** are
+     appended (`vt 0x128 → vt 0x50` forEachPlayer, lambda 141613430, strict AABB overlap).
+- Players are not in the chunk lists (inferred: that is why the second pass exists). So in a pulse **every
+  non-player mob comes before every player**, in chunk-then-list order. With the owner-stop rule (verified: the
+  `je 1429b0402` at 1429b0758 jumps to the same exit as an empty list at 1429b06fa), once the dragon is in the
+  box, **no player is affected that pulse**.
+- The chunk list order is insertion order. Re-adding on chunk change is presumed, not read.
+- Box (1429b1cf0): the cloud's AABB grown by (r, r/2, r). The cloud's AABB is the default 0.6 × 1.8 (capture
+  metadata BoundingBoxWidth/Height on the breath clouds in `captures/bds-fireball-hit.txt`). The same metadata
+  shows `AreaEffectCloudChangeRate −0.0`, i.e. **RadiusPerTick = 0** for the breath cloud (answers 4.3 for that
+  cloud; the fireball cloud's value was not captured).
+- **Dragon on the portal.** Captured breath clouds sat at (7.5, 62.0, −0.005), r = 5, so the box is x
+  2.2..12.8, y 59.5..66.3, z −5.3..5.3. The sitting dragon (drill: feet 0.06, 66.236, 0.13; AABB ±6.5 × 4) has
+  minY 66.236 < 66.3, x −6.44..6.56 and z −6.37..6.63, so it **is inside**, by 0.064 in y.
+  - So while the dragon sits there and r ≥ ~4.97, the breath cloud damages no player.
+  - One bottle pickup (r 4.5, maxY 66.05) or a cloud 1 lower takes the dragon out of the box.
+  - Computed from the static rules and capture numbers; check live (damage taken while the dragon sits).
+
+### 5.5 Path node chunk test (findClosestNode 145997df0)
+- The call is BlockSource (vtable 14a753900) slot 55, 1415f6270 = `areChunksFullyLoaded(pos, r)` (two args;
+  LeviLamina's signature), → 1415f62f0 over the block box `pos ± r`.
+- Chunks: x `(−60)>>4 .. 60>>4` = −4..3, z the same: **8 × 8 chunks, blocks −64..63**, any y. Walked x inner, z
+  outer; the first failure returns false.
+- Per chunk:
+  1. Skipped (passes) when `ChunkSource::isWithinWorldLimit` (ChunkSource vt 0xe8) is false.
+  2. Else `BlockSource::getChunk` (vt 0x148, 1415f5900), which returns null unless the chunk's load state
+     (+0xf0) is **≥ 11 Loaded** (≥ 2 only for BlockSources with +0x1c set, worldgen ones). Null: false.
+  3. A Loaded chunk passes only if +0x152e (unidentified) or **+0x10d1** is set. +0x10d1 is written 1 once at the
+     end of 140a0a700, a once-only chunk on-load step that places block entities and entity data; probably
+     `mOnChunkLoadedCalled`.
+  - So: **all 64 chunks Loaded and through their on-load step**. Generated-only or ticking state does not matter.
+- **Correction to the AI doc §1** (`dis` 145997e55..f2e):
+  - With the latch +0x7e0 clear: `ok = areChunksFullyLoaded(0, 60)`. If !ok and nodes already exist, keep them.
+    Otherwise clear the vector, rebuild all 24 nodes, and set **latch := ok**.
+  - So the nodes are built on the very first call even when the area is not loaded (heightmaps of missing chunks;
+    the `vt 0x170` fallback value was not read). They are rebuilt once more on the first call where the test
+    passes, then frozen. The node vector is never empty after the first call.
+- Who loads those chunks:
+  - Only players. The player view source (1402a50d0 → 1409ea4d0) centres on floor(player pos) with radius
+    **player+0xb94 chunks × 16** (the negotiated chunk radius), plus 112 blocks only on a client.
+  - 1409ea4d0's other callers are the gateway jobs (fight +0x90/+0xb0, radius 0xa0, temporary), 14074fe40,
+    1402a5330 (also player) and 14371cc30 (likely ticking areas, unread).
+  - Neither TheEndDimension nor the dragon creates a view source, and the dragon JSON has no `tick_world`.
+  - The fight's own gate (fight doc §1 step 5) needs only chunks (−1|0, −1|0), plus a player within ~200.
+  - So the nodes freeze from real terrain once some player's view covers chunks −4..3 (a radius of about 5+
+    chunks from the island centre). Before that, the dragon flies on nodes built from unloaded columns.
+  - Whether the view source loads a square or a circle was not read (1409ea4d0).
+
 ## Left open
-- RadiusPerTick's default (slot 0x308); whether the 0x14cc… flags change the entity inflate; anchor "middle"'s
-  value.
+- RadiusPerTick's default for the fireball cloud (slot 0x308; the breath cloud's is 0, 5.4); whether the 0x14cc…
+  flags change the entity inflate; anchor "middle"'s value.
 - Potion 23's definition and the instant-damage buff amount; the cloud's removal function 1429b1c10.
 - Whether `mainBS` reads chunks near the far gateway (main gateway exit, §1).
-- The generic per-tick move of the fireball, if any; reflect_on_hurt; hit sound.
-- Fetch order in the cloud pulse, which decides who the owner-stop rule skips.
+- The generic per-tick move of the fireball, if any, and where PushActorsSystem runs in the tick (5.3).
+- +0x152e on LevelChunk; `vt 0x170`'s value for an unloaded column (first node build, 5.5).

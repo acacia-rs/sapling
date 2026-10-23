@@ -24,6 +24,13 @@ pub(crate) struct Shown {
     target: i64,
 }
 
+impl Shown {
+    /// What viewers were told of a dragon announced at `at`: its first move is told.
+    pub(super) fn announced(at: [f32; 3]) -> Self {
+        Self { at: Some(at), ..Self::default() }
+    }
+}
+
 /// Its target's id, told whenever it changes (a strafe or a scan picks one, its end lets it go).
 pub(super) fn tell_target(shown: &mut Shown, id: u64, target: i64) -> Option<Bytes> {
     if shown.target == target {

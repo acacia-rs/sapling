@@ -130,6 +130,18 @@ pub(super) fn splashed(world: &mut World, mob: Entity, data: i16, share: f32) {
     }
 }
 
+/// A cloud's instant harm on a mob, at `share` of a potion's (the undead are mended instead).
+pub(crate) fn breathed_on(world: &mut World, mob: Entity, layer: Entity, share: f32) {
+    if is_undead(world, mob) {
+        if let Some(mut health) = world.get_mut::<Health>(mob) {
+            health.mend(HARMS * share);
+        }
+        return;
+    }
+    harm::wound(world, mob, layer, HARMS * share, Cause::Magic);
+    strolling::startle(world, mob);
+}
+
 /// A tick of one effect on a mob: it turns when what is left of it is a whole number of its
 /// turns, its first tick too, and it is gone before 0.
 fn act(world: &mut World, mob: Entity, layer: Entity, active: &Active) {

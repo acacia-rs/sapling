@@ -121,6 +121,16 @@ Tags as in `containers-crafting.md` (REC, DATA, BDSRE, BDSRE-old, mem, inf). Not
   helper (type `minecraft:xp_orb`, metadata key 15), per-tick physics + homing (section 3), movement
   packets, `RemoveEntity` on pickup, `LevelEvent` 1051, and `UpdateAttributes` for level/experience.
 
+## Drilled (2026-10-22, `bds_dragon_probe orbs` and `dragon-again`; research/captures/{bds,sapling}-orbs.txt)
+
+- Single `/summon xp_orb` orbs on a floor round a survival player: BDS took the one 4 blocks off in 1.6 s
+  and the one 7.5 off in 26 s; those 9.5 and more off stayed. sapling: the same ones taken (3.6 s, 6 s: the
+  throw is random) and the same ones left. Taken across 1.4-1.5 blocks off the feet on both.
+- Ten orbs in one cell 30 off did not join in 30 s on BDS: consecutive ids never agree mod 13.
+- The dragon's 500-point second kill (90 orbs): BDS listed 24, 24, 46 entities over the drill, sapling 77
+  before merging was built (sapling-shard `orbs/merge.rs`, sections 1.5 and 3.2) and 26, 26, 43 after. The
+  orbs stayed for want of merging, not of pickup: the player was over 8 blocks off on both.
+
 ## Not settled
 
 1. The exact movement packets BDS sends for a moving orb (`MoveEntityDelta` flags, any `SetEntityMotion`).

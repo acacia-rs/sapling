@@ -57,6 +57,7 @@ pub(crate) struct Flight {
     pub group: Group,
     pub goal: Option<Goal>,
     nodes: Vec<Node>,
+    nodes_final: bool,
     path: Option<(Vec<Node>, usize)>,
     /// The player it means to strafe, charge or flame.
     pub prey: Option<bevy_ecs::entity::Entity>,
@@ -86,12 +87,11 @@ const GROWL_SPREAD: u32 = 200;
 /// A new dragon's first growl is 100 ticks on (bds-dragon-watch.txt, bds-dragon-again.txt).
 const FIRST_GROWL: i32 = 100;
 
-/// Whether the columns its nodes stand on are loaded (BDS asks for those within 60 of the middle);
-/// those that are not are asked for, as sapling loads a player's view slower than BDS.
-pub(crate) fn nodes_ready(level: &mut sapling_world::World) -> bool {
+/// Whether the 8 x 8 columns round the middle its nodes stand on are loaded (`areChunksFullyLoaded`
+/// within 60, research/dragon-extras-decompile.md 5.5). Players' views load them; nothing else does.
+fn nodes_loaded(level: &sapling_world::World) -> bool {
     let reach = nodes::BUILT_WITHIN.div_euclid(16) + 1;
-    let columns = (-reach..reach).flat_map(|x| (-reach..reach).map(move |z| sapling_world::ChunkPos::new(x, z)));
-    columns.fold(true, |all, column| level.request(column) && all)
+    (-reach..reach).all(|x| (-reach..reach).all(|z| level.is_loaded(sapling_world::ChunkPos::new(x, z))))
 }
 
 impl Flight {
@@ -103,6 +103,7 @@ impl Flight {
             group: Group::Flying,
             goal: None,
             nodes: Vec::new(),
+            nodes_final: false,
             path: None,
             prey: None,
             clockwise: false,
@@ -122,12 +123,16 @@ impl Flight {
         }
     }
 
-    pub fn nodes_missing(&self) -> bool {
-        self.nodes.is_empty()
-    }
-
-    pub fn build_nodes(&mut self, level: &sapling_world::World) {
-        self.nodes = nodes::build(level);
+    /// BDS's node upkeep: built at the first call however little is loaded, built again the first
+    /// time all its columns are, then kept.
+    pub fn keep_nodes(&mut self, level: &sapling_world::World) {
+        if self.nodes_final {
+            return;
+        }
+        let loaded = nodes_loaded(level);
+        if loaded || self.nodes.is_empty() {
+            (self.nodes, self.nodes_final) = (nodes::build(level), loaded);
+        }
     }
 
     /// Whether it growls this tick, in flight every 200 to 399 ticks.

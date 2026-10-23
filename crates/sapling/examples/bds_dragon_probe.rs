@@ -136,6 +136,20 @@ async fn act(run: &mut Run, actor: &mut Bot, watcher: &mut Bot, line: &str) -> D
             }
             wait
         }
+        Step::Swat(wait) => {
+            // Hits each dragon fireball once as it comes within reach of the actor's eyes.
+            let (end, mut swatted) = (Instant::now() + wait, Vec::new());
+            while Instant::now() < end && run.settle(actor, watcher, Duration::from_millis(50)).await {
+                let Some([x, y, z]) = feet(actor) else { continue };
+                let eyes = acacia_bot::proto::types::Vec3f { x, y: y + 1.62, z };
+                let near = actor.state().entities.nearest(&eyes, |entity| entity.kind == "minecraft:dragon_fireball").filter(|ball| (ball.position.x - x).powi(2) + (ball.position.y - eyes.y).powi(2) + (ball.position.z - z).powi(2) < 9.0).map(|ball| ball.runtime_id);
+                if let Some(id) = near.filter(|id| !swatted.contains(id)) {
+                    swatted.push(id);
+                    hit(run, actor, watcher, id).await;
+                }
+            }
+            Duration::ZERO
+        }
         Step::Perch(wait) => {
             let sitting = |actor: &Bot| actor.state().entities.iter().any(|entity| entity.kind == DRAGON && entity.metadata.flags().contains(acacia_bot::proto::types::MetadataFlags1::SITTING));
             let end = Instant::now() + wait;

@@ -1,10 +1,10 @@
 //! The dragon's breath clouds (`area_effect_cloud`, research/dragon-extras-decompile.md 4.3-4.5,
 //! research/captures/bds-dragon-survival.txt): one where a fireball meets something, radius 6 for
 //! 2400 ticks, and one by its head as it flames, radius 5 for 200. Neither grows nor shrinks. From
-//! the tick after it comes, every fifth tick of its age it harms each player whose feet are within
-//! its radius by half an instant harm (3), throwing them as a magic hit from the cloud does; the
-//! fireball's spares one it harmed for 20 ticks.
-// TODO: mobs are spared, and BDS's pulse stops at the owner when it meets it in its list (4.4).
+//! the tick after it comes, every fifth tick of its age it harms each player and mob whose feet are
+//! within its radius by half an instant harm (3; the undead are mended), a player thrown as by a
+//! magic hit from the cloud; the fireball's spares one it harmed for 20 ticks.
+// TODO: BDS's pulse stops at the owner when it meets it in its list (4.4).
 
 use std::collections::HashMap;
 
@@ -26,6 +26,8 @@ const HARMING: i16 = 23;
 const PARTICLE: i32 = 49;
 const PULSE: u64 = 5;
 const HARM: f32 = 3.0;
+/// Of a potion's instant harm, as `applyInstantaneousEffect(.., 0.5)` gives it.
+const HARM_SHARE: f32 = 0.5;
 const SHRINK_ON_PICKUP: f32 = -0.5;
 
 /// A cloud's look and reach.
@@ -127,13 +129,20 @@ fn pulse(world: &mut World, cloud: Entity, layer: Entity, now: u64) -> Option<()
         return Some(());
     }
     world.get_mut::<Cloud>(cloud)?.spared.retain(|_, until| *until > age);
-    for (player, feet) in mortals(world, layer) {
+    let mobs: Vec<(Entity, [f32; 3])> = world.query_filtered::<(Entity, &InLayer, &Body), (With<crate::creatures::Creature>, Without<super::Dragon>)>().iter(world).filter(|(_, in_layer, _)| in_layer.0 == layer).map(|(mob, _, body)| (mob, body.at)).collect();
+    let victims = mortals(world, layer).into_iter().map(|(player, feet)| (player, feet, true)).chain(mobs.into_iter().map(|(mob, feet)| (mob, feet, false)));
+    for (victim, feet, is_player) in victims.collect::<Vec<_>>() {
         let near = (0..3).map(|axis| (feet[axis] - at[axis]).powi(2)).sum::<f32>() <= breath.radius * breath.radius;
-        if !near || world.get::<Cloud>(cloud)?.spared.contains_key(&player) {
+        if !near || world.get::<Cloud>(cloud)?.spared.contains_key(&victim) {
             continue;
         }
-        world.get_mut::<Cloud>(cloud)?.spared.insert(player, age + breath.spares);
-        crate::vitals::fanged(world, player, HARM, super::DRAGON, at);
+        world.get_mut::<Cloud>(cloud)?.spared.insert(victim, age + breath.spares);
+        match is_player {
+            true => {
+                crate::vitals::fanged(world, victim, HARM, super::DRAGON, at);
+            }
+            false => crate::creatures::breathed_on(world, victim, layer, HARM_SHARE),
+        }
     }
     Some(())
 }

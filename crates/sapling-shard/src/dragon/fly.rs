@@ -74,8 +74,8 @@ pub(super) fn tick(world: &mut World, layer: Entity) {
 /// One tick of `dragon`; whether its last flight ended.
 fn step(world: &mut World, layer: Entity, dragon: Entity, kept: &mut Dragon, random: &mut super::random::Random) -> bool {
     let flight = &mut kept.flight;
-    if flight.nodes_missing() && world.get_mut::<Layer>(layer).is_some_and(|mut level| flight::nodes_ready(&mut level.world)) {
-        flight.build_nodes(&world.get::<Layer>(layer).expect("read above").world);
+    if let Some(level) = world.get::<Layer>(layer) {
+        flight.keep_nodes(&level.world);
     }
     let (before, id) = (flight.motion.at, world.get::<NetId>(dragon).map_or(0, |id| id.0));
     flight.motion.carry();
@@ -83,6 +83,9 @@ fn step(world: &mut World, layer: Entity, dragon: Entity, kept: &mut Dragon, ran
     let mut cx = Ctx { world: &mut *world, layer, dragon, from: before, at: flight.motion.at, crystals, random: &mut *random, dead: false };
     flight::think(&mut cx, flight);
     let dead = cx.dead;
+    if let Some(size) = world.get::<Body>(dragon).map(|body| body.size) {
+        super::fireball::pushed_by(world, layer, flight.motion.at, size);
+    }
     let mut told = Vec::new();
     if flight.motion.flaps() {
         told.push(sapling_net::encode(&sound("flap", id, head(flight))));
