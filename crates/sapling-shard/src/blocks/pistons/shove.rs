@@ -36,7 +36,7 @@ pub(super) fn shove(world: &mut World, layer: Entity, from: &[BlockPos], dir: Fa
             }
             let mut by = [0.0; 3];
             by[axis] = if ahead { low[axis] + 1.0 - min[axis] } else { low[axis] - max[axis] };
-            body.shove(level, by);
+            body.push(level, by);
         }
         if body.at != start {
             shoved.push((entity, body, is_player));

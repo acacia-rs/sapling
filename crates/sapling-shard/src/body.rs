@@ -39,6 +39,9 @@ pub(crate) struct Body {
     leaping: bool,
     /// Whether a mob was on the ground before its last move: that move's drag goes by it.
     stood: bool,
+    /// Whether a push up or down this tick left it on the ground: BDS pushes after the body's
+    /// own move, so its next tick does not change what viewers are told (bds-shove.txt).
+    pushed: Option<bool>,
 }
 
 /// A box in world coordinates: its lowest and highest corners.
@@ -46,7 +49,7 @@ type Bounds = ([f32; 3], [f32; 3]);
 
 impl Body {
     pub fn new(at: [f32; 3], motion: [f32; 3], size: [f32; 2]) -> Self {
-        Self { at, motion, size, on_ground: false, liquid: None, wave: 0.0, thrown: None, lift: 0.0, walking: [0.0; 3], leaping: false, stood: false }
+        Self { at, motion, size, on_ground: false, liquid: None, wave: 0.0, thrown: None, lift: 0.0, walking: [0.0; 3], leaping: false, stood: false, pushed: None }
     }
 
     /// Throws a mob at `speed`: its next tick moves it by that, and the tick after slows it as
@@ -71,11 +74,22 @@ impl Body {
         self.walking = speed;
     }
 
-    /// Moves it by `by` as far as the blocks let it, its own motion kept: a piston's push.
-    pub fn shove(&mut self, level: &Level, by: [f32; 3]) {
+    /// Moves it by `by` as far as the blocks let it, its own motion kept; whether it came down
+    /// onto something.
+    pub fn shove(&mut self, level: &Level, by: [f32; 3]) -> bool {
         let motion = self.motion;
-        self.slide(level, by);
+        let landed = self.slide(level, by);
         self.motion = motion;
+        landed
+    }
+
+    /// A piston's push by `by`: a push up or down also decides whether viewers are told it is on
+    /// the ground this tick.
+    pub fn push(&mut self, level: &Level, by: [f32; 3]) {
+        let landed = self.shove(level, by);
+        if by[1] != 0.0 {
+            self.pushed = Some(landed);
+        }
     }
 
     /// The liquid found to act on it where the last tick started; a mob went by the one before.
@@ -111,6 +125,14 @@ impl Body {
     /// [`Body::mob_step`]. `random` is drawn on for an orb's waves and its throw out of lava. The
     /// motion it moved by.
     pub fn step(&mut self, level: &Level, physics: &Physics, random: &mut impl FnMut() -> f32) -> [f32; 3] {
+        let wanted = self.own_step(level, physics, random);
+        if let Some(on_ground) = self.pushed.take() {
+            self.on_ground = on_ground;
+        }
+        wanted
+    }
+
+    fn own_step(&mut self, level: &Level, physics: &Physics, random: &mut impl FnMut() -> f32) -> [f32; 3] {
         let found = liquid::acting(level, self, physics.liquid);
         let before = std::mem::replace(&mut self.liquid, found);
         match (physics.liquid, found) {
@@ -243,6 +265,20 @@ mod tests {
         let body = Body::new([0.5, 68.0, 0.5], [0.0; 3], [0.98, 0.98]);
         let ticks = (1..).find(|ticks| fall(body, &Physics::FALLING_BLOCK, *ticks).on_ground).unwrap();
         assert_eq!(ticks, 13);
+    }
+
+    #[test]
+    fn a_body_pushed_up_onto_a_block_is_told_standing_only_a_tick_later() {
+        // BDS's stand on a piston pushing up: 66.0 not on the ground, then nothing until it falls (bds-shove.txt).
+        let mut level = level();
+        let stone = level.block_id("minecraft:stone").unwrap();
+        level.set_block(0, 65, 0, stone);
+        let mut body = Body::new([0.5, 65.5, 0.5], [0.0; 3], [0.5, 1.975]);
+        body.push(&level, [0.0, 0.5, 0.0]);
+        body.step(&level, &Physics::MOB, &mut || 0.5);
+        assert_eq!((body.at[1], body.on_ground), (66.0, false));
+        body.step(&level, &Physics::MOB, &mut || 0.5);
+        assert_eq!((body.at[1], body.on_ground), (66.0, true));
     }
 
     #[test]
