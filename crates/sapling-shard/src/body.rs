@@ -16,6 +16,9 @@ use sapling_world::World as Level;
 
 use crate::terrain::physics_view;
 
+/// How close a top face is to a body's feet to stand it.
+const TOUCH: f32 = 1e-4;
+
 #[derive(Component, Clone, Copy, Debug, PartialEq)]
 pub(crate) struct Body {
     /// The middle of its bottom face.
@@ -93,20 +96,14 @@ impl Body {
     /// Lifts a body whose box is in a block onto that block's top, stopped, as BDS did an item
     /// dropped 0.05 into the floor (research/captures/bds-kill.txt); the tick's step lands it.
     pub fn lift_out(&mut self, level: &Level) {
-        if let Some(top) = self.overlapped(level).iter().map(|b| b.max[1]).reduce(f32::max) {
+        if let Some(top) = overlapped(level, &self.aabb()).iter().map(|b| b.max[1]).reduce(f32::max) {
             (self.at[1], self.motion) = (top, [0.0; 3]);
         }
     }
 
     /// Whether no block's collision box reaches into its own.
     pub fn is_free(&self, level: &Level) -> bool {
-        self.overlapped(level).is_empty()
-    }
-
-    fn overlapped(&self, level: &Level) -> Vec<Aabb> {
-        let mut boxes = Vec::new();
-        physics_view(level, |view| view.collisions(&self.aabb(), &mut boxes));
-        boxes
+        overlapped(level, &self.aabb()).is_empty()
     }
 
     /// One tick: gravity, the move, then drag; on the ground, friction and the bounce. In water or
@@ -185,15 +182,30 @@ impl Body {
     /// Moves by `motion` as far as the blocks let it; motion into a block is stopped, except
     /// downward, which the bounce answers. Whether it came down onto something.
     fn slide(&mut self, level: &Level, motion: [f32; 3]) -> bool {
-        let moved = physics_view(level, |view| collide_box(view, &self.aabb(), motion));
+        let start = self.aabb();
+        let moved = physics_view(level, |view| collide_box(view, &start, motion));
         for axis in 0..3 {
             self.at[axis] += moved[axis];
             if moved[axis] != motion[axis] && (axis != 1 || motion[axis] > 0.0) {
                 self.motion[axis] = 0.0;
             }
         }
-        motion[1] < 0.0 && moved[1] != motion[1]
+        // Only a top face under its feet stands it: one held up inside a block does not (BDS's stand
+        // half-pushed by a piston, bds-shove.txt).
+        motion[1] < 0.0 && moved[1] != motion[1] && rests_on_top(level, &start.translate(moved))
     }
+}
+
+/// Whether a block's top face is where the bottom of `bounds` is.
+fn rests_on_top(level: &Level, bounds: &Aabb) -> bool {
+    overlapped(level, &bounds.extend_down(TOUCH)).iter().any(|b| (bounds.min[1] - b.max[1]).abs() <= TOUCH)
+}
+
+/// The collision boxes of blocks that reach into `bounds`.
+fn overlapped(level: &Level, bounds: &Aabb) -> Vec<Aabb> {
+    let mut boxes = Vec::new();
+    physics_view(level, |view| view.collisions(bounds, &mut boxes));
+    boxes
 }
 
 #[cfg(test)]
