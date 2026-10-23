@@ -165,7 +165,7 @@ mod tests {
     #[test]
     fn a_client_stepping_as_the_game_does_never_parts_and_a_flyer_does() {
         let world = platform();
-        let terrain = crate::terrain::Blocks(&world);
+        let terrain = crate::terrain::Blocks(&world, &[]);
         let view = acacia_physics::registry_world::RegistryWorld { view: &terrain, registry: world.registry() };
         let mut client = PlayerState::new([0.5, 65.0, -6.5]);
         let mut server = Simulated::default();
