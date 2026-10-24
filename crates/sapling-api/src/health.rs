@@ -124,3 +124,16 @@ pub trait HealthBackend {
     fn hurt_player(&mut self, player: PlayerId, amount: f32, cause: DamageCause) -> bool;
     fn kill_player(&mut self, player: PlayerId) -> bool;
 }
+
+#[cfg(test)]
+impl HealthBackend for crate::testing::Fake {
+    fn health(&self, _: PlayerId) -> Option<f32> {
+        None
+    }
+    fn hurt_player(&mut self, _: PlayerId, _: f32, _: DamageCause) -> bool {
+        false
+    }
+    fn kill_player(&mut self, _: PlayerId) -> bool {
+        false
+    }
+}

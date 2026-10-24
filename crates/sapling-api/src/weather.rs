@@ -29,3 +29,11 @@ pub trait WeatherBackend {
     fn weather(&self) -> Weather;
     fn set_weather(&mut self, weather: Weather, ticks: Option<u32>);
 }
+
+#[cfg(test)]
+impl WeatherBackend for crate::testing::Fake {
+    fn weather(&self) -> Weather {
+        Weather::Clear
+    }
+    fn set_weather(&mut self, _: Weather, _: Option<u32>) {}
+}

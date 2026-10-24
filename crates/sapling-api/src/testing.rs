@@ -126,46 +126,6 @@ impl crate::EntityBackend for Fake {
     }
 }
 
-impl crate::HealthBackend for Fake {
-    fn health(&self, _: PlayerId) -> Option<f32> {
-        None
-    }
-    fn hurt_player(&mut self, _: PlayerId, _: f32, _: crate::DamageCause) -> bool {
-        false
-    }
-    fn kill_player(&mut self, _: PlayerId) -> bool {
-        false
-    }
-}
-
-impl crate::WeatherBackend for Fake {
-    fn weather(&self) -> crate::Weather {
-        crate::Weather::Clear
-    }
-    fn set_weather(&mut self, _: crate::Weather, _: Option<u32>) {}
-}
-
-impl crate::LightBackend for Fake {
-    fn light_at(&self, _: BlockPos) -> Option<crate::Light> {
-        None
-    }
-    fn brightness_at(&self, _: BlockPos) -> Option<u8> {
-        None
-    }
-}
-
-impl crate::ExperienceBackend for Fake {
-    fn experience(&self, _: PlayerId) -> Option<(i32, f32)> {
-        None
-    }
-    fn give_experience(&mut self, _: PlayerId, _: u32) -> bool {
-        false
-    }
-    fn add_levels(&mut self, _: PlayerId, _: i32) -> bool {
-        false
-    }
-}
-
 impl crate::EffectBackend for Fake {
     fn give_effect(&mut self, _: PlayerId, _: crate::Effect, _: u32, _: u8, _: bool) -> bool {
         false

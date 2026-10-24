@@ -33,3 +33,13 @@ pub trait LightBackend {
     fn light_at(&self, pos: BlockPos) -> Option<Light>;
     fn brightness_at(&self, pos: BlockPos) -> Option<u8>;
 }
+
+#[cfg(test)]
+impl LightBackend for crate::testing::Fake {
+    fn light_at(&self, _: BlockPos) -> Option<Light> {
+        None
+    }
+    fn brightness_at(&self, _: BlockPos) -> Option<u8> {
+        None
+    }
+}
