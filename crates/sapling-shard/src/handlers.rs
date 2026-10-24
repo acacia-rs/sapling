@@ -84,6 +84,7 @@ pub(crate) fn dispatch(world: &mut World) {
     entities::remove_left(world);
     drops::fly(world);
     drops::pick_up(world);
+    orbs::touch(world);
     orbs::tick(world);
     creatures::tick(world);
     crate::dragon::tick(world);

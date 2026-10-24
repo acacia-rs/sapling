@@ -129,12 +129,21 @@ fn nearest(world: &mut World, layer: Entity, at: [f32; 3]) -> Option<Entity> {
     near.filter(|(_, distance)| *distance < FOLLOW * FOLLOW).min_by(|a, b| a.1.total_cmp(&b.1)).map(|(player, _)| player)
 }
 
-/// A player of `layer` whose pickup area touches the orb at `at` (`drops::within_pickup`).
-// TODO: BDS runs the touch from the player's tick (assumptions-checked.md 3), not the orb's.
-fn touching(world: &mut World, layer: Entity, at: [f32; 3]) -> Option<Entity> {
+/// Each player takes an orb its pickup area touches (`drops::within_pickup`), from its own side
+/// as BDS's `Player::aiStep` does (docs/research/assumptions-checked.md 3), before the orbs move.
+pub(crate) fn touch(world: &mut World) {
     let mut players = world.query::<(Entity, &Stage, &InLayer, &Position)>();
-    let mut near = players.iter(world).filter(|(_, stage, in_layer, position)| **stage == Stage::InWorld && in_layer.0 == layer && crate::drops::within_pickup(position.feet, at, SIZE));
-    near.next().map(|(player, ..)| player)
+    let standing: Vec<(Entity, Entity, [f32; 3])> = players.iter(world).filter(|(_, stage, ..)| **stage == Stage::InWorld).map(|(player, _, layer, position)| (player, layer.0, position.feet)).collect();
+    for (player, layer, feet) in standing {
+        let mut orbs = world.query::<(Entity, &InLayer, &Body, &Orb)>();
+        let touched = orbs.iter(world).find(|(_, in_layer, body, _)| in_layer.0 == layer && crate::drops::within_pickup(feet, body.at, SIZE));
+        let Some((orb, at, value)) = touched.map(|(orb, _, body, kept)| (orb, body.at, kept.value)) else { continue };
+        if takes(world, player) {
+            world.entity_mut(orb).remove::<Orb>();
+            taken(world, layer, value, at, player);
+            entities::leave(world, orb);
+        }
+    }
 }
 
 /// One tick of the orb `entity`.
@@ -142,10 +151,6 @@ fn step(world: &mut World, entity: Entity, orb: &mut Orb, layer: Entity, id: u64
     orb.age += 1;
     let Some(mut body) = world.get::<Body>(entity).copied().filter(|_| orb.age < LIFETIME) else { return Fate::Gone };
     merge::take_in_kin(world, entity, orb, layer, id, body.at);
-    if let Some(player) = touching(world, layer, body.at).filter(|player| takes(world, *player)) {
-        taken(world, layer, orb.value, body.at, player);
-        return Fate::Taken;
-    }
     // Counted in the orb's own ticks, so that the first search is 21 to 120 ticks after it appeared.
     if u64::from(orb.age) > orb.last_search + SEARCH_EVERY + id % 100 {
         orb.last_search = u64::from(orb.age);
