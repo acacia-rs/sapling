@@ -26,12 +26,13 @@ const AGGRESSIVE_ATTACK: f32 = 6.0;
 #[derive(Component, Clone, Copy)]
 pub(super) struct Gene(pub(super) i32);
 
-/// A new mob of `kind`'s gene, if its kind has one.
+/// A new mob of `kind`'s gene, if its kind has one, or its size (slimes/sizes.rs).
 pub(super) fn roll(world: &mut World, kind: &str) -> Option<Gene> {
-    (kind == KIND).then(|| {
-        let mut dice = world.get_resource_or_insert_with(Dice::default);
-        of_alleles(dice.roll(ALLELES) as i32, dice.roll(ALLELES) as i32)
-    })
+    if kind != KIND {
+        return super::slimes::sizes::roll(world, kind);
+    }
+    let mut dice = world.get_resource_or_insert_with(Dice::default);
+    Some(of_alleles(dice.roll(ALLELES) as i32, dice.roll(ALLELES) as i32))
 }
 
 fn of_alleles(main: i32, hidden: i32) -> Gene {
@@ -47,32 +48,45 @@ fn of_alleles(main: i32, hidden: i32) -> Gene {
 /// The gene a spawn `event` gives a mob of `kind`, as BDS's `/summon panda .. minecraft:panda_lazy`
 /// did (research/captures/bds-pandas.txt).
 pub(super) fn of_event(kind: &str, event: &str) -> Option<Gene> {
-    let gene = event.strip_prefix("minecraft:panda_").filter(|_| kind == KIND)?;
+    if kind != KIND {
+        return super::slimes::sizes::of_event(kind, event);
+    }
+    let gene = event.strip_prefix("minecraft:panda_")?;
     let names = [("lazy", MAIN[0]), ("worried", MAIN[1]), ("playful", MAIN[2]), ("aggressive", AGGRESSIVE), ("weak", WEAK), ("brown", BROWN), ("normal", NORMAL)];
     names.iter().find(|(name, _)| *name == gene).map(|&(_, variant)| Gene(variant))
 }
 
 /// A stored mob of `kind`'s gene, by the `Variant` it was stored with.
 pub(super) fn stored(kind: &str, variant: i32) -> Option<Gene> {
-    (kind == KIND).then_some(Gene(variant))
+    if kind != KIND {
+        return super::slimes::sizes::stored(kind, variant);
+    }
+    Some(Gene(variant))
+}
+
+fn is_panda(world: &World, entity: Entity) -> bool {
+    world.get::<crate::entities::Kind>(entity).is_some_and(|kind| kind.0 == KIND)
 }
 
 /// Whether a hit makes the mob turn on its hitter: every mob but a panda that runs.
 pub(super) fn fights(world: &World, entity: Entity) -> bool {
-    world.get::<Gene>(entity).is_none_or(|gene| [NORMAL, BROWN, AGGRESSIVE].contains(&gene.0))
+    !is_panda(world, entity) || world.get::<Gene>(entity).is_none_or(|gene| [NORMAL, BROWN, AGGRESSIVE].contains(&gene.0))
 }
 
 /// How the mob hunts, by its kind's `hunts` and its gene.
 pub(super) fn hunts(world: &World, entity: Entity, hunts: Hunts) -> Hunts {
-    match world.get::<Gene>(entity) {
+    match world.get::<Gene>(entity).filter(|_| is_panda(world, entity)) {
         Some(Gene(AGGRESSIVE)) => Hunts { attack: AGGRESSIVE_ATTACK, once: false, ..hunts },
         _ => hunts,
     }
 }
 
-/// The full health of a mob of `gene`, its kind's being `max`.
-pub(super) fn health(gene: Option<Gene>, max: f32) -> f32 {
-    if gene.is_some_and(|gene| gene.0 == WEAK) { WEAK_HEALTH } else { max }
+/// The full health of a mob of `kind` and `gene`, its kind's being `max`.
+pub(super) fn health(kind: &str, gene: Option<Gene>, max: f32) -> f32 {
+    if let Some(health) = super::slimes::sizes::health(kind, gene) {
+        return health;
+    }
+    if kind == KIND && gene.is_some_and(|gene| gene.0 == WEAK) { WEAK_HEALTH } else { max }
 }
 
 #[cfg(test)]

@@ -56,6 +56,7 @@ mod saplings;
 mod shapes;
 mod shown_effects;
 mod sleep;
+mod slimes;
 mod survival;
 mod tnt;
 mod vanilla_rules;

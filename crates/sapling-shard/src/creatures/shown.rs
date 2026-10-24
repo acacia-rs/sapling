@@ -48,7 +48,9 @@ pub(super) fn announcement(id: u64, kind: &str, body: &Body, look: Option<&Actor
         health: left,
         name: "",
     };
-    let mut shown = vec![sapling_net::encode(&sapling_data::add_entity(&options))];
+    let mut added = sapling_data::add_entity(&options);
+    super::slimes::sizes::dress(&mut added, kind, Some(super::genes::Gene(variant)));
+    let mut shown = vec![sapling_net::encode(&added)];
     let held = HOLDS.iter().find(|(of, _)| *of == kind).map(|(_, item)| sapling_data::Stack { name: item, count: 1, damage: 0, block: None, tag: None });
     shown.extend(held.and_then(|stack| sapling_data::mob_hand(id, &stack, false)).map(|held| sapling_net::encode(&held)));
     shown
@@ -61,11 +63,11 @@ pub(super) fn head(kind: &str, body: &Body) -> [f32; 3] {
     [x, y + HEAD_UP * height, z + forward]
 }
 
-/// The sound a mob makes as it appears, at its head.
-pub(super) fn spawn_sound(id: u64, kind: &str, body: &Body) -> Bytes {
+/// The sound `name` a mob makes as it appears, at its head: `spawn`, or a split slime's `born`.
+pub(super) fn spawn_sound(name: &str, id: u64, kind: &str, body: &Body) -> Bytes {
     let [x, y, z] = head(kind, body);
     let position = Vec3f { x, y, z };
-    let sound = LevelSoundEvent { sound_id: "spawn".into(), position, extra_data: -1, entity_type: kind.into(), is_baby_mob: false, is_global: false, entity_unique_id: id as i64, fire_at_position: None };
+    let sound = LevelSoundEvent { sound_id: name.into(), position, extra_data: -1, entity_type: kind.into(), is_baby_mob: false, is_global: false, entity_unique_id: id as i64, fire_at_position: None };
     sapling_net::encode(&sound)
 }
 

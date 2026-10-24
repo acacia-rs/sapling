@@ -97,7 +97,7 @@ fn hit(world: &mut World, player: Entity, id: u64) -> Option<()> {
     entities::tell_viewers(world, entity, layer, cell, packets);
     if health.left() <= 0.0 {
         let is_baby = world.get::<Creature>(entity).is_some_and(Creature::is_baby);
-        let points = sapling_data::mob_traits(&kind).experience.filter(|_| !is_baby).map_or(0, |(least, most)| {
+        let points = super::slimes::experience(world, entity, &kind).or(sapling_data::mob_traits(&kind).experience).filter(|_| !is_baby).map_or(0, |(least, most)| {
             let mut dice = world.get_resource_or_insert_with(Dice::default);
             least + (dice.fraction() * (most - least) as f32) as i32
         });

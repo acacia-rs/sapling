@@ -76,6 +76,8 @@ HUNTS = {
     "minecraft:vindicator": "attack=13 speed=0.35 sees=12",
     "minecraft:witch": "attack=0 speed=0.25 sees=10 shoots=60 shot=splash_potion",
     "minecraft:wither_skeleton": "attack=9 speed=0.3125 sees=16 hits=wither:200",
+    "minecraft:magma_cube": "attack=0 speed=0.66 sees=16 fights=hops",
+    "minecraft:slime": "attack=0 speed=0.4 sees=16 fights=hops",
     "minecraft:wolf": "attack=3 speed=0.3 sees=16 provoked every=31",
     "minecraft:zombie": "attack=3 speed=0.23 sees=35",
     "minecraft:zombie_pigman": "attack=9 speed=0.23 sees=35 provoked",
@@ -97,7 +99,7 @@ for document in packs.entities().values():
         ("no_air", breath.get("breathes_air", True) is False),
         ("burns_in_sun", any("minecraft:burns_in_daylight" in group for group in [components, *entity.get("component_groups", {}).values()])),
         ("teleports", components.get("minecraft:teleport", {}).get("random_teleports", False) is True),
-        ("floats", "minecraft:behavior.float" in components),
+        ("floats", "minecraft:behavior.float" in components or "minecraft:behavior.slime_float" in components),
     ]
     held = [name for name, holds in traits if holds]
     if breath.get("total_supply", 15) > 15:

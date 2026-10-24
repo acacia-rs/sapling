@@ -57,7 +57,7 @@ pub struct Hunts {
     /// An archer that walks on at its prey while it shoots.
     pub closes: bool,
     /// It fights its prey its own way and never walks at it: `spells` (the evoker), `leaps` (the
-    /// breeze), `fireballs` (the ghast).
+    /// breeze), `fireballs` (the ghast), `hops` (slimes and magma cubes).
     pub fights: Option<&'static str>,
     /// Its hit costs a whole number from `attack` up to this, where it varies, and it throws
     /// harder than others (the iron golem).

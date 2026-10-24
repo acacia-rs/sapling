@@ -197,6 +197,7 @@ pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity, id: u64, k
         Some("leaps") => return super::breezes::steer(world, entity, layer, id, kind, &body, prey),
         Some("fireballs") => return super::ghasts::steer(world, entity, layer, id, kind, &body, prey),
         Some("swims") => return super::dolphins::steer(world, entity, layer, &body, prey),
+        Some("hops") => return super::slimes::steer(world, entity, prey),
         Some("charges") => {
             let prey = prey.and(world.get::<Hunter>(entity).and_then(|hunter| hunter.prey));
             return super::vexes::steer(world, entity, layer, id, kind, &body, prey);

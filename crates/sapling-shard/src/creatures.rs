@@ -84,6 +84,21 @@ fn spawn(world: &mut World, layer: Entity, kind: &str, feet: [f32; 3], reason: S
 
 /// [`spawn`] facing `yaw`, and as its kind's spawn `event` makes it (a panda's gene) where known.
 fn spawn_as(world: &mut World, layer: Entity, kind: &str, feet: [f32; 3], reason: SpawnReason, yaw: f32, event: Option<&str>) -> Option<EntityId> {
+    let gene = event.and_then(|event| genes::of_event(kind, event)).or_else(|| genes::roll(world, kind));
+    born(world, layer, kind, feet, Birth { reason, yaw, gene, sound: "spawn" })
+}
+
+/// How a mob comes: why, facing where, of which gene, and heard as what.
+struct Birth {
+    reason: SpawnReason,
+    yaw: f32,
+    gene: Option<genes::Gene>,
+    sound: &'static str,
+}
+
+/// [`spawn`] as `birth` has it.
+fn born(world: &mut World, layer: Entity, kind: &str, feet: [f32; 3], birth: Birth) -> Option<EntityId> {
+    let Birth { reason, yaw, gene, sound } = birth;
     let size = sapling_data::mob_size(kind)?;
     let level = &world.get::<Layer>(layer)?.world;
     let [x, y, z] = feet.map(|c| c.floor() as i32);
@@ -93,8 +108,7 @@ fn spawn_as(world: &mut World, layer: Entity, kind: &str, feet: [f32; 3], reason
     if crate::plugins::stopped_in(world, layer, |_| EntitySpawnEvent::new(kind.to_owned(), feet, reason)) {
         return None;
     }
-    let body = Body::new(feet, [0.0; 3], size);
-    let gene = event.and_then(|event| genes::of_event(kind, event)).or_else(|| genes::roll(world, kind));
+    let body = Body::new(feet, [0.0; 3], slimes::sizes::body_size(kind, gene).unwrap_or(size));
     let entity = entities::spawn_mob(world, layer, kind, body, feet, |id| Some(announcement(id, kind, &body, None, None, yaw, gene.map_or(0, |gene| gene.0))))?;
     world.entity_mut(entity).insert(Creature { look: None });
     if let Some(gene) = gene {
@@ -107,7 +121,7 @@ fn spawn_as(world: &mut World, layer: Entity, kind: &str, feet: [f32; 3], reason
     give_health(world, entity, kind, None, 0);
     let id = world.get::<NetId>(entity)?.0;
     harm::first_breath(world, entity, layer, id, kind, &body);
-    entities::after_announcing(world, layer, [x, y, z], vec![spawn_sound(id, kind, &body)]);
+    entities::after_announcing(world, layer, [x, y, z], vec![spawn_sound(sound, id, kind, &body)]);
     let unique_id = entities::new_unique_id(world, entity)?;
     entities::keep(world, entity, layer, unique_id, sapling_world::new_actor(unique_id, kind, feet, [0.0; 3]));
     Some(EntityId(id))
@@ -120,10 +134,11 @@ pub(crate) fn from_storage(world: &mut World, layer: Entity, actor: Actor, uniqu
         return crate::dragon::crystal_from_storage(world, layer, actor.position, actor.yaw, unique_id, compound);
     }
     let Some(size) = sapling_data::mob_size(&actor.identifier) else { return false };
-    let body = Body::new(actor.position, [0.0; 3], size);
     let kind = actor.identifier.clone();
+    let gene = genes::stored(&kind, actor.variant);
+    let body = Body::new(actor.position, [0.0; 3], slimes::sizes::body_size(&kind, gene).unwrap_or(size));
     let Some(entity) = entities::spawn_mob(world, layer, &kind, body, actor.position, |id| Some(announcement(id, &kind, &body, Some(&actor), None, 0.0, actor.variant))) else { return false };
-    if let Some(gene) = genes::stored(&kind, actor.variant) {
+    if let Some(gene) = gene {
         world.entity_mut(entity).insert(gene);
     }
     give_legs(world, entity, &kind);
@@ -159,7 +174,7 @@ fn give_legs(world: &mut World, entity: Entity, kind: &str) {
 /// `burning` ticks of fire.
 fn give_health(world: &mut World, entity: Entity, kind: &str, left: Option<f32>, burning: u16) {
     if let Some(max) = sapling_data::mob_health(kind).filter(|_| !NO_DEATH.contains(&kind)) {
-        let max = genes::health(world.get::<genes::Gene>(entity).copied(), max);
+        let max = genes::health(kind, world.get::<genes::Gene>(entity).copied(), max);
         world.entity_mut(entity).insert(Health::new(max, left, burning));
     }
 }
@@ -211,6 +226,7 @@ pub(crate) fn tick(world: &mut World) {
     let dead: Vec<Entity> = world.query::<(Entity, &Dying)>().iter(world).filter(|(_, dying)| now >= dying.0 + DYING).map(|(entity, _)| entity).collect();
     for entity in dead {
         attacks::leave_experience(world, entity);
+        slimes::split(world, entity);
         mobs::remove(world, entity);
     }
     let all: Vec<(Entity, Entity, u64, String)> =
@@ -239,13 +255,14 @@ pub(crate) fn tick(world: &mut World) {
         }
         if thinks {
             floating::tick(world, entity, layer, &kind, &start);
-            slimes::tick(world, entity, &start);
+            slimes::tick(world, entity, layer, id, &kind, &start);
         }
         let Some((body, packets)) = entities::step(world, entity, layer, id, physics_of(&kind), 0.0) else { continue };
         blocks::to_viewers(world, layer, body.at.map(|c| c.floor() as i32), &packets);
         if thinks {
             hunting::strike(world, entity, layer, id, &kind, &body);
             rams::strike(world, entity, layer, id, &kind, &body);
+            slimes::after_move(world, entity, layer, id, &kind, &start, &body);
             if blast::tick(world, entity, layer, id, &kind, &body) {
                 continue;
             }
