@@ -30,7 +30,7 @@ pub(crate) struct Kick {
 
 impl Command for Kick {
     fn run(self, ctx: &mut ShardCtx<'_>, sender: &Sender, out: &mut Output) {
-        let mut kicked = players(ctx, sender, &self.target);
+        let mut kicked = players(ctx, sender, Some(&self.target));
         if kicked.is_empty() {
             return nobody(out, &self.target, "commands.kick.not.found");
         }
@@ -78,7 +78,7 @@ impl Command for Deop {
 /// Makes the targets operators or members; those who already were are the failure's names.
 fn set_role(ctx: &mut ShardCtx<'_>, sender: &Sender, out: &mut Output, target: &Selector, role: Role) {
     let (permission, key) = if role == Role::Operator { (Permission::Operator, "commands.op") } else { (Permission::Member, "commands.deop") };
-    let targets = players(ctx, sender, target);
+    let targets = players(ctx, sender, Some(target));
     if targets.is_empty() {
         return nobody(out, target, "commands.generic.player.notFound");
     }
