@@ -52,6 +52,12 @@ pub(crate) struct Dropped {
     burnt: u8,
 }
 
+impl Dropped {
+    pub(crate) fn stack(&self) -> &ItemStack {
+        &self.stack
+    }
+}
+
 /// Netherite and ancient debris, which lava does not burn.
 fn fireproof(name: &str) -> bool {
     name.strip_prefix("minecraft:").is_some_and(|name| FIREPROOF.contains(&name))

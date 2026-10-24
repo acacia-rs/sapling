@@ -1,4 +1,5 @@
-//! What plugins, and through them `/effect` and `/damage`, do to a mob's effects and health.
+//! What plugins, and through them `/effect`, `/damage` and `/kill`, see of and do to a mob's
+//! effects and health, and what a lying item holds.
 
 use crate::common;
 
@@ -7,7 +8,7 @@ use std::sync::{Arc, Mutex};
 use acacia_proto::RawPacket;
 use acacia_proto::packets::{EntityEvent, EntityEventEventId, MobEffect, MobEffectEventId};
 use common::{Harness, all};
-use sapling_api::{DamageCause, Effect, EntityId, GameMode, PlayerId, ShardCtx};
+use sapling_api::{Block, DamageCause, Effect, EntityId, GameMode, PlayerId, ShardCtx};
 
 /// A creative player and a cow 4 off it.
 fn cow() -> (Harness, EntityId) {
@@ -51,4 +52,12 @@ fn a_hurt_mob_flashes_and_a_dead_one_takes_no_more() {
     let (killed, _) = ask(&mut h, move |ctx| (ctx.hurt_entity(id, 100.0, DamageCause::Generic), ctx.hurt_entity(id, 1.0, DamageCause::Generic)));
     assert_eq!(killed, (true, false), "the harder hit kills it, the next finds it dying");
     assert!(!ask(&mut h, |ctx| ctx.hurt_entity(EntityId(9999), 1.0, DamageCause::Generic)).0, "no such mob");
+}
+
+#[test]
+fn a_lying_item_tells_what_it_holds() {
+    let (mut h, cow) = cow();
+    ask(&mut h, |ctx| assert!(ctx.set_block([2, 65, 0], &Block::new("dirt")) && ctx.break_block([2, 65, 0])));
+    let (held, _) = ask(&mut h, move |ctx| ctx.entities().into_iter().map(|entity| (entity.id == cow, entity.item.map(|item| item.name))).collect::<Vec<_>>());
+    assert_eq!(held, [(true, None), (false, Some("minecraft:dirt".to_owned()))]);
 }

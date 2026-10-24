@@ -87,7 +87,7 @@ impl Teleport {
             // The nearest of those it names.
             Destination::At(selector) => {
                 let named = players(ctx, sender, selector).into_iter().filter_map(|player| Some((ctx.position(player.id)?.feet, player.name)));
-                let all = named.chain(entities(ctx, selector).into_iter().map(|entity| (entity.feet, display_name(&entity.kind))));
+                let all = named.chain(entities(ctx, selector).into_iter().map(|entity| (entity.feet, display_name(&entity))));
                 let far = |feet: &[f32; 3]| (0..3).map(|axis| (feet[axis] - here[axis]).powi(2)).sum::<f32>();
                 match all.min_by(|a, b| far(&a.0).total_cmp(&far(&b.0))) {
                     Some((feet, name)) => (feet, Some(name)),
@@ -108,7 +108,7 @@ impl Teleport {
         for entity in &moved {
             ctx.move_entity(entity.id, to);
         }
-        let names: Vec<String> = moved_players.iter().map(|player| player.name.clone()).chain(moved.iter().map(|entity| display_name(&entity.kind))).collect();
+        let names: Vec<String> = moved_players.iter().map(|player| player.name.clone()).chain(moved.iter().map(|entity| display_name(&entity))).collect();
         match (names.is_empty(), at) {
             (true, _) => no_target(out),
             (false, Some(at)) => out.translate("commands.tp.success", vec![names.join(", "), at], true),
@@ -244,7 +244,7 @@ impl Command for Kill {
     fn run(self, ctx: &mut ShardCtx<'_>, sender: &Sender, out: &mut Output) {
         let named = self.target.as_ref().map_or_else(Vec::new, |target| entities(ctx, target));
         let mut killed: Vec<String> = or_sender(ctx, sender, self.target.as_ref()).into_iter().filter(|player| ctx.kill_player(player.id)).map(|player| player.name).collect();
-        killed.extend(named.iter().filter(|entity| ctx.kill_entity(entity.id)).map(|entity| display_name(&entity.kind)));
+        killed.extend(named.iter().filter(|entity| ctx.kill_entity(entity.id)).map(|entity| display_name(&entity)));
         match killed.is_empty() {
             true => no_target(out),
             false => out.translate("commands.kill.successful", vec![killed.join(", ")], true),

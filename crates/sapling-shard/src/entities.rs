@@ -14,6 +14,8 @@ use sapling_api::{EntityId, EntityInfo};
 use crate::blocks::Dice;
 use crate::body::{Body, InLiquid, Liquid, Physics};
 use crate::components::{InLayer, Layer, NetId, Tick};
+use crate::drops::Dropped;
+use crate::inventory::described;
 use crate::sync::Told;
 use crate::{mobs, splash, view};
 
@@ -131,7 +133,8 @@ pub(crate) fn mob_flags(world: &mut World, entity: Entity, kind: &str, flag: Met
 fn all(world: &World) -> impl Iterator<Item = (Entity, Entity, EntityInfo)> + '_ {
     world.iter_entities().filter_map(|entity| {
         let (id, layer, kind, body) = (entity.get::<NetId>()?, entity.get::<InLayer>()?, entity.get::<Kind>()?, entity.get::<Body>()?);
-        let info = EntityInfo::new(EntityId(id.0), kind.0.clone(), body.at, body.motion, body.on_ground);
+        let item = entity.get::<Dropped>().map(|dropped| described(dropped.stack()));
+        let info = EntityInfo::new(EntityId(id.0), kind.0.clone(), body.at, body.motion, body.on_ground).with_item(item);
         Some((entity.id(), layer.0, info))
     })
 }

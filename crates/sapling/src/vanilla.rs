@@ -95,9 +95,13 @@ fn tell_target(ctx: &mut ShardCtx<'_>, player: PlayerId, key: &str, parameters: 
     }
 }
 
-/// An entity type as BDS names it in a command's answer (sapling-data's `names.tsv`): `Evoker` for
-/// `minecraft:evocation_illager`.
-fn display_name(id: &str) -> String {
+/// An entity as BDS names it in a command's answer (sapling-data's `names.tsv`): `Evoker` for
+/// `minecraft:evocation_illager`, a lying item by what it holds.
+fn display_name(entity: &EntityInfo) -> String {
+    if let Some(item) = &entity.item {
+        return item_display_name(&item.name, item.damage);
+    }
+    let id = entity.kind.as_str();
     sapling_data::entity_display_name(id).or_else(|| sapling_data::item_display_name(id, 0)).map_or_else(|| title_case(id), str::to_owned)
 }
 
