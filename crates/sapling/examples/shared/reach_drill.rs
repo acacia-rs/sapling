@@ -64,3 +64,16 @@ pub fn held_use() -> Vec<String> {
     lines.extend(["gamemode creative @s", ""].map(String::from));
     lines
 }
+
+/// The shut drill: a chest, a barrel and an ender chest opened and closed by the screen, each a
+/// few seconds apart, to hear what closing them sounds like and see when an open lid is shown
+/// again (NEXT.md 3).
+pub fn shut() -> Vec<String> {
+    let mut lines: Vec<String> = ["kill @e[type=!player]", "fill ~-2 ~-1 ~-2 ~4 ~-1 ~2 stone", "fill ~-2 ~ ~-2 ~4 ~3 ~2 air", "gamemode creative @s", ""].map(String::from).into();
+    for block in ["chest", "barrel", "ender_chest"] {
+        lines.extend([format!("setblock ~1 ~ ~ {block}"), String::new(), "!click 1 0 0".into()]);
+        lines.extend(std::iter::repeat_n(String::new(), 6));
+        lines.extend(["!close".into(), String::new(), String::new(), "setblock ~1 ~ ~ air".into(), String::new()]);
+    }
+    lines
+}

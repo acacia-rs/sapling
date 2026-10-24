@@ -30,6 +30,7 @@ use crate::blocks::keep_entity;
 use crate::components::Layer;
 use crate::inventory::{Held, wire};
 
+pub(crate) use lid::show_turned_barrels;
 pub(crate) use screens::{close, dispatch_closes, open, show_lids_again, station};
 pub(crate) use shulker::is_shulker_box;
 pub(crate) use slots::{new_held, refusal, resend, set_slots, slots_at, slots_of, spill, store, viewers};
@@ -119,6 +120,8 @@ struct Chest {
     /// Empty for an ender chest, whose slots are each viewer's own.
     slots: Vec<Option<Held>>,
     viewers: Vec<Entity>,
+    /// The tick its first viewer opened it, from which its open lid is shown again.
+    opened_at: u64,
     /// Ticking (a furnace burning, a hopper): kept while nobody looks.
     pinned: bool,
 }
@@ -180,7 +183,7 @@ fn hold(world: &mut World, layer: Entity, pos: BlockPos) -> Option<BlockPos> {
         for half in halves.iter().filter(|_| kind.holds_items()) {
             slots.extend(stored_slots(world, layer, *half, kind.slots));
         }
-        opened(world).chests.insert(key, Chest { halves, per_half: kind.slots, slots, viewers: Vec::new(), pinned: false });
+        opened(world).chests.insert(key, Chest { halves, per_half: kind.slots, slots, viewers: Vec::new(), opened_at: 0, pinned: false });
     }
     Some(key.1)
 }

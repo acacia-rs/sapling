@@ -3,7 +3,7 @@
 
 use crate::common;
 
-use acacia_proto::packets::{ContainerClose, ContainerOpen, LevelSoundEvent};
+use acacia_proto::packets::{BlockEntityData, BlockEvent, ContainerClose, ContainerOpen, LevelSoundEvent, UpdateBlock};
 use common::{Harness, all, click, input_at};
 use sapling_api::Block;
 
@@ -11,9 +11,14 @@ const CHEST: [i32; 3] = [1, 65, 0];
 
 /// Alex beside a chest, in survival with an empty hand.
 fn at_a_chest() -> Harness {
+    beside("chest")
+}
+
+/// Alex beside the container `block` at [`CHEST`].
+fn beside(block: &'static str) -> Harness {
     let mut h = Harness::new();
     h.enter(1, "Alex");
-    h.remote.run(|ctx| assert!(ctx.set_block(CHEST, &Block::new("chest"))));
+    h.remote.run(move |ctx| assert!(ctx.set_block(CHEST, &Block::new(block))));
     h.tick_all();
     h
 }
@@ -36,21 +41,43 @@ fn a_chest_under_a_block_does_not_open_and_one_under_a_torch_does() {
     }
 }
 
+fn heard(sent: &[acacia_proto::RawPacket]) -> Vec<String> {
+    all::<LevelSoundEvent>(sent).into_iter().map(|sound| sound.sound_id).collect()
+}
+
+/// research/captures/bds-shut.txt: a chest sounds a tick after it opens and five after it shuts,
+/// an ender chest and a barrel two and six.
 #[test]
-fn a_chest_is_heard_a_tick_after_it_opens_and_five_after_it_shuts_as_on_bds() {
-    let mut h = at_a_chest();
-    let heard = |sent: &[acacia_proto::RawPacket]| all::<LevelSoundEvent>(sent).into_iter().map(|sound| sound.sound_id).collect::<Vec<_>>();
+fn containers_are_heard_as_late_as_on_bds() {
+    for (block, [open, shut], [opening, shutting]) in
+        [("chest", [1, 5], ["chest.open", "chest.closed"]), ("ender_chest", [2, 6], ["enderchest.open", "enderchest.closed"]), ("barrel", [2, 6], ["block.barrel.open", "block.barrel.close"])]
+    {
+        let mut h = beside(block);
+        h.receive(1, &click(CHEST, 1, None));
+        let opened = h.tick(1);
+        let window_id = all::<ContainerOpen>(&opened)[0].window_id;
+        let heard_opening: Vec<Vec<String>> = std::iter::once(heard(&opened)).chain((0..7).map(|_| heard(&h.tick(1)))).collect();
+        assert_eq!(heard_opening.iter().position(|sounds| sounds == &[opening]), Some(open), "{block}: {heard_opening:?}");
+        h.receive(1, &ContainerClose { window_id, window_type: acacia_proto::types::WindowType::Container, server: false });
+        let answered = h.tick(1);
+        let echo = all::<ContainerClose>(&answered);
+        assert_eq!(echo.iter().map(|close| (close.window_type, close.server)).collect::<Vec<_>>(), [(acacia_proto::types::WindowType::None, false)], "BDS names no type");
+        let heard_shutting: Vec<Vec<String>> = std::iter::once(heard(&answered)).chain((0..7).map(|_| heard(&h.tick(1)))).collect();
+        assert_eq!(heard_shutting.iter().position(|sounds| sounds == &[shutting]), Some(shut), "{block}: {heard_shutting:?}");
+    }
+}
+
+/// research/captures/bds-shut.txt: a barrel's top turns a tick after its lid, shown with what it
+/// holds, and an open lid is shown again 80 ticks after it opened.
+#[test]
+fn a_barrel_turns_a_tick_after_it_opens_and_its_lid_is_shown_again_80_ticks_on() {
+    let mut h = beside("barrel");
+    h.tick(7);
     h.receive(1, &click(CHEST, 1, None));
-    let opened = h.tick(1);
-    let window_id = all::<ContainerOpen>(&opened)[0].window_id;
-    let opening: Vec<Vec<String>> = std::iter::once(heard(&opened)).chain((0..2).map(|_| heard(&h.tick(1)))).collect();
-    assert_eq!(opening, [vec![], vec!["chest.open".to_owned()], vec![]]);
-    h.receive(1, &ContainerClose { window_id, window_type: acacia_proto::types::WindowType::Container, server: false });
-    let answered = h.tick(1);
-    let echo = all::<ContainerClose>(&answered);
-    assert_eq!(echo.iter().map(|close| (close.window_type, close.server)).collect::<Vec<_>>(), [(acacia_proto::types::WindowType::None, false)], "BDS names no type");
-    let shutting: Vec<Vec<String>> = std::iter::once(heard(&answered)).chain((0..6).map(|_| heard(&h.tick(1)))).collect();
-    assert_eq!(shutting.iter().position(|sounds| sounds == &["chest.closed"]), Some(5), "{shutting:?}");
+    let ticks: Vec<(usize, usize, usize)> = (0..=80).map(|_| h.tick(1)).map(|sent| (all::<BlockEvent>(&sent).len(), all::<UpdateBlock>(&sent).len(), all::<BlockEntityData>(&sent).len())).collect();
+    assert_eq!(ticks[..2], [(1, 0, 0), (0, 1, 1)]);
+    let lids: Vec<usize> = ticks.iter().enumerate().filter(|(_, (lids, ..))| *lids > 0).map(|(at, _)| at).collect();
+    assert_eq!(lids, [0, 80]);
 }
 
 /// research/captures/bds-reach-close.txt: BDS kept the screen open 64 blocks off.

@@ -54,8 +54,12 @@ pub(crate) fn open(world: &mut World, player: Entity, layer: Entity, pos: BlockP
     let Some(kind) = kind(block) else { return false };
     close(world, player);
     let Some(lead) = hold(world, layer, pos) else { return false };
+    let now = world.resource::<Tick>().0;
     let Some((halves, is_first)) = opened(world).chests.get_mut(&(layer, lead)).map(|chest| {
         chest.viewers.push(player);
+        if chest.viewers.len() == 1 {
+            chest.opened_at = now;
+        }
         (chest.halves.clone(), chest.viewers.len() == 1)
     }) else {
         return false;
@@ -150,13 +154,13 @@ pub(crate) fn dispatch_closes(world: &mut World) {
     }
 }
 
-/// Every [`lid::REPEAT`] ticks, shows the open lids again: to those who came by since.
+/// Every [`lid::REPEAT`] ticks from its opening, shows an open lid again: to those who came by
+/// since (research/captures/bds-shut.txt).
 pub(crate) fn show_lids_again(world: &mut World) {
-    if world.resource::<Tick>().0 % lid::REPEAT != 0 {
-        return;
-    }
+    let now = world.resource::<Tick>().0;
     let Some(open) = world.get_resource::<super::OpenContainers>() else { return };
-    let lids: Vec<(Entity, Vec<BlockPos>)> = open.chests.iter().filter(|(_, chest)| !chest.viewers.is_empty()).map(|((layer, _), chest)| (*layer, chest.halves.clone())).collect();
+    let is_due = |chest: &&Chest| !chest.viewers.is_empty() && now > chest.opened_at && (now - chest.opened_at) % lid::REPEAT == 0;
+    let lids: Vec<(Entity, Vec<BlockPos>)> = open.chests.iter().filter(|(_, chest)| is_due(chest)).map(|((layer, _), chest)| (*layer, chest.halves.clone())).collect();
     for (layer, halves) in lids {
         lid::show_open(world, layer, &halves);
     }

@@ -1,23 +1,28 @@
 //! What those near an open container see and hear: a chest's lid (`BlockEvent` ChangeState, 1
 //! open and 0 shut, as BDS's `ChestBlockActor::startOpen` raises it), a barrel's `open_bit`, and
-//! their sounds.
-// TODO: whether barrels, shulker boxes and ender chests sound late too, as chests do, is unrecorded.
+//! their sounds, each as late as BDS sent it (research/captures/bds-shut.txt).
+// TODO: how late a shulker box sounds is unrecorded.
 
 use acacia_proto::packets::{BlockEvent, BlockEventType};
 use acacia_proto::types::BlockCoordinates;
 use bevy_ecs::prelude::*;
 use sapling_api::BlockPos;
 
-use crate::components::Layer;
+use crate::components::{Layer, Tick};
 use crate::{blocks, late_sounds};
 
-/// Ticks from a chest's opening and shutting to its sound, as BDS sent them
-/// (research/captures/containers-findings.md D5): the lid swings first.
+/// Ticks from a chest's opening and shutting to its sound: the lid swings first.
 const CHEST_LATE: [u64; 2] = [1, 5];
+/// The same of an ender chest and a barrel.
+const LATER: [u64; 2] = [2, 6];
 
 /// Ticks between two showings of an open lid (BDS `ChestBlockActor::tick`).
 pub(super) const REPEAT: u64 = 80;
 const BARREL: &str = "minecraft:barrel";
+
+/// Barrels turned, shown a tick later: when, the world, where.
+#[derive(Resource, Default)]
+pub(crate) struct TurnedBarrels(Vec<(u64, Entity, BlockPos)>);
 
 fn event(world: &mut World, layer: Entity, halves: &[BlockPos], open: bool) {
     let has_lid = |pos: &&BlockPos| super::block_name(world, layer, **pos).and_then(super::kind).is_some_and(|kind| kind.has_lid);
@@ -37,8 +42,8 @@ pub(super) fn show_open(world: &mut World, layer: Entity, halves: &[BlockPos]) {
 /// what it sent), and how many ticks after each.
 fn sounds(name: &str) -> Option<([&'static str; 2], [u64; 2])> {
     match name {
-        BARREL => Some((["block.barrel.open", "block.barrel.close"], [0; 2])),
-        "minecraft:ender_chest" => Some((["enderchest.open", "enderchest.closed"], [0; 2])),
+        BARREL => Some((["block.barrel.open", "block.barrel.close"], LATER)),
+        "minecraft:ender_chest" => Some((["enderchest.open", "enderchest.closed"], LATER)),
         "minecraft:chest" | "minecraft:trapped_chest" => Some((["chest.open", "chest.closed"], CHEST_LATE)),
         _ if super::is_shulker_box(name) => Some((["shulkerbox.open", "shulkerbox.closed"], [0; 2])),
         _ => None,
@@ -55,11 +60,22 @@ pub(super) fn set(world: &mut World, layer: Entity, halves: &[BlockPos], open: b
     let Some(name) = registry.get(id).map(|state| state.name) else { return };
     let Some(([opening, shutting], late)) = sounds(name) else { return };
     let turned = blocks::with_property(registry, id, "open_bit", if open { "1" } else { "0" }).filter(|_| name == BARREL);
-    // A barrel's sound names the state it turns to (research/captures/bds-sounds.txt, opening;
-    // shutting was not heard there).
+    // A barrel's sound names the state it turns to.
     let heard = blocks::sound(if open { opening } else { shutting }, registry, pos, turned.unwrap_or(id));
-    if let Some(turned) = turned {
-        blocks::set(world, layer, pos, turned);
+    if turned.is_some_and(|turned| blocks::set_quietly(world, layer, pos, turned)) {
+        let due = world.resource::<Tick>().0 + 1;
+        world.get_resource_or_insert_with(TurnedBarrels::default).0.push((due, layer, pos));
     }
     late_sounds::play_later(world, late[usize::from(!open)], layer, pos, heard);
+}
+
+/// Shows the barrels turned a tick ago, with what they hold, as BDS did.
+pub(crate) fn show_turned_barrels(world: &mut World) {
+    let now = world.resource::<Tick>().0;
+    let Some(mut turned) = world.get_resource_mut::<TurnedBarrels>() else { return };
+    let (due, waiting): (Vec<_>, Vec<_>) = std::mem::take(&mut turned.0).into_iter().partition(|(when, ..)| *when <= now);
+    turned.0 = waiting;
+    for (_, layer, pos) in due {
+        blocks::show_whole(world, layer, pos);
+    }
 }

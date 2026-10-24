@@ -235,6 +235,18 @@ async fn strike(actor: &mut Bot, watcher: &mut Bot, start: Instant, shown: &[&st
     Ok(())
 }
 
+/// Does the actor's `!` line while the watcher's packets are shown, so they keep their times.
+async fn act(actor: &mut Bot, watcher: &mut Bot, start: Instant, shown: &[&str], line: &str) -> Result<(), String> {
+    let action = player::act(actor, line);
+    tokio::pin!(action);
+    loop {
+        tokio::select! {
+            _ = &mut action => return Ok(()),
+            event = watcher.next() => show(start, shown, "watcher", event)?,
+        }
+    }
+}
+
 #[tokio::main(flavor = "current_thread")]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut args = std::env::args().skip(1);
@@ -286,7 +298,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         println!("## /{line}");
         match line.strip_prefix("!hit") {
             Some(hit) => strike(&mut actor, &mut watcher, start, shown, hit).await?,
-            None if player::act(&mut actor, line).await => {}
+            None if line.starts_with('!') => act(&mut actor, &mut watcher, start, shown, line).await?,
             None if !line.is_empty() => drop(actor.client().command(line)),
             None => {}
         }

@@ -192,6 +192,15 @@ pub(crate) fn show(world: &mut World, layer: Entity, pos: BlockPos) {
     to_viewers(world, layer, pos, &[packet]);
 }
 
+/// [`show`] with what the block holds after it, as BDS showed a barrel turned
+/// (research/captures/bds-shut.txt).
+pub(crate) fn show_whole(world: &mut World, layer: Entity, pos: BlockPos) {
+    let Some(level) = world.get::<Layer>(layer).map(|layer| &layer.world) else { return };
+    let mut packets = vec![update(level.registry(), pos, level.block(pos[0], pos[1], pos[2]), 0)];
+    packets.extend(level.block_entity(pos).map(|entity| block_entity_data(pos, entity)));
+    to_viewers(world, layer, pos, &packets);
+}
+
 /// Shows everyone who sees `pos` its block as the entity `entity` took it (`Create`: a falling
 /// block leaving it) or left it (`Destroy`: one landing), as BDS does in UpdateBlockSynced.
 pub(crate) fn tell_synced(world: &mut World, layer: Entity, pos: BlockPos, entity: u64, transition: Transition) {

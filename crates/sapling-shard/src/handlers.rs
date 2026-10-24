@@ -78,6 +78,7 @@ pub(crate) fn dispatch(world: &mut World) {
     inventory::dispatch(world);
     containers::dispatch_closes(world);
     containers::show_lids_again(world);
+    containers::show_turned_barrels(world);
     late_sounds::play_due(world);
     containers::close_where_gone(world);
     furnaces::tick(world);

@@ -38,12 +38,9 @@ fn from_feet(actor: &Bot, offset: &str) -> Option<[i32; 3]> {
 fn face_named(word: &str) -> Option<acacia_bot::interact::Face> {
     use acacia_bot::interact::Face;
     Some(match word {
-        "down" => Face::Down,
-        "up" => Face::Up,
-        "north" => Face::North,
-        "south" => Face::South,
-        "west" => Face::West,
-        "east" => Face::East,
+        "down" => Face::Down, "up" => Face::Up,
+        "north" => Face::North, "south" => Face::South,
+        "west" => Face::West, "east" => Face::East,
         _ => return None,
     })
 }
@@ -51,7 +48,7 @@ fn face_named(word: &str) -> Option<acacia_bot::interact::Face> {
 /// Does what a drill's `!` line asks of the actor: `!eat` holds use on what it holds, `!jump`,
 /// `!walk` and `!sprint` hold those keys until `!stop`, `!break x y z` breaks, `!click x y z` clicks,
 /// `!place x y z` puts what it holds on and `!sleep x y z` lies in the block that far from its feet,
-/// and `!wake` leaves its bed. False for any other line.
+/// `!wake` leaves its bed and `!close` its open screen. False for any other line.
 pub async fn act(actor: &mut Bot, line: &str) -> bool {
     let keys = |actor: &mut Bot, forward: f32, sprint: bool, jump: bool| {
         if let Some(controls) = actor.controls() {
@@ -93,6 +90,7 @@ pub async fn act(actor: &mut Bot, line: &str) -> bool {
         // The use goes on as the bot is polled after (`Bot::consume`).
         "!eat" => drop(tokio::time::timeout(Duration::from_millis(1), actor.consume()).await),
         "!wake" => println!("## woke: {:?}", actor.wake().await),
+        "!close" => println!("## closed: {:?}", actor.close_container().await),
         "!jump" => keys(actor, 0.0, false, true),
         "!walk" => keys(actor, 1.0, false, false),
         "!sprint" => keys(actor, 1.0, true, false),
@@ -164,6 +162,7 @@ pub fn drill(name: &str) -> Option<(Vec<String>, &'static [&'static str])> {
         "golem" => (shove::golem(), SHOOT_SHOWN),
         "clock" => (world::clock(), CLOCK_SHOWN),
         "sounds" => (world::sounds(), world::SOUNDS_SHOWN),
+        "shut" => (reach::shut(), reach::HELD_USE_SHOWN),
         "loot" => (world::loot(), world::LOOT_SHOWN),
         "loot2" => (world::loot2(), world::LOOT2_SHOWN),
         "names" => (world::names(), &[]),

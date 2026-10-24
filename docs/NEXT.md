@@ -84,8 +84,9 @@ Each needs its rule looked up first (`bdsre` for BDS, the Java jar for data), th
   spacing between orbs taken is BDS's `+0x3c4` lookup.
 - A door's hinge was checked against BDS with a block and with a door on either side (`bds_command_probe
   sounds`); the Java game's tie-break by where the click fell is still left out.
-- The sounds of a door, trapdoor, gate, chest, barrel and ender chest opening were heard on BDS and
-  agree (`sounds`); those of a chest, barrel and ender chest shutting were not heard there.
+- The sounds of a door, trapdoor, gate, chest, barrel and ender chest opening and shutting were
+  heard on BDS and agree, tick for tick (`sounds`, `shut`), with a barrel's top a tick late and
+  an open lid shown again 80 ticks from its opening; left there: how late a shulker box sounds.
 - Block loot is the Java game's tables under Bedrock names (`sapling-data/data/block-loot.tsv`);
   26 blocks broken with a diamond pickaxe left the same items in the same numbers on BDS
   (`bds_command_probe loot`, research/captures/bds-loot.txt), but copper ore, which left 3 each of
