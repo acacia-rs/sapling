@@ -117,6 +117,12 @@ impl ServerBuilder {
         self
     }
 
+    /// Wall time between ticks (default 50 ms); shorter only for drills (examples/drill_server.rs).
+    pub fn tick(mut self, tick: std::time::Duration) -> Self {
+        self.shard.tick = tick;
+        self
+    }
+
     /// Adds a handler at [`Priority::Normal`]; equal priorities are called in the order they
     /// were added. For a server of one shard: see [`ServerBuilder::handler_each`].
     pub fn handler(self, handler: impl Handler) -> Self {

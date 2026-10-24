@@ -13,7 +13,7 @@ use sapling_net::{ConnId, Inbox, NetEvent, Outbox, VerifiedLogin};
 
 use crate::commands::CommandLists;
 use crate::components::{Arrivals, Conn, DefaultLayer, Layer, Mode, Net, Outgoing, PacketQueues, Players, Settings, Stage, Tick};
-use crate::config::{IDS_PER_SHARD, ShardConfig, TICK};
+use crate::config::{IDS_PER_SHARD, ShardConfig};
 use crate::handoff::{Handoffs, Link, Peers, ShardMsg};
 use crate::player::{Carried, Local};
 use crate::plugins::{self, CommandRegistry, Deferred, PluginState, Registry};
@@ -25,8 +25,8 @@ use crate::{actors, arenas, blobs, blocks, chunks, clock, commands, entities, ha
 /// The disconnect screen of the players of a shard that stops.
 const CLOSED: &str = "disconnect.closed";
 
-/// One game thread's state: an ECS world of layers and players, ticked 20 times a second by
-/// [`Shard::spawn`] or by hand with [`Shard::tick`] (tests).
+/// One game thread's state: an ECS world of layers and players, ticked every
+/// [`ShardConfig::tick`] (20 times a second) by [`Shard::spawn`] or by hand with [`Shard::tick`] (tests).
 pub struct Shard {
     world: World,
     schedule: Schedule,
@@ -176,15 +176,23 @@ impl Shard {
         let stop = Arc::new(AtomicBool::new(false));
         let stopped = stop.clone();
         let index = self.world.resource::<Peers>().index;
+        let tick = self.world.resource::<Settings>().0.tick;
         let run = move || {
-            let mut next = Instant::now();
+            let (mut next, mut behind) = (Instant::now(), 0u64);
             while !stopped.load(Ordering::Relaxed) {
                 self.tick();
-                next += TICK;
+                next += tick;
                 match next.checked_duration_since(Instant::now()) {
                     Some(wait) => std::thread::sleep(wait),
                     // Behind by more than a tick: skip the missed ones instead of bursting.
-                    None => next = Instant::now(),
+                    None => {
+                        next = Instant::now();
+                        behind += 1;
+                        // A drill that compresses time (drill_server.rs) is invalid after even one.
+                        if behind.is_power_of_two() {
+                            tracing::warn!(shard = index, times = behind, "shard fell behind its tick");
+                        }
+                    }
                 }
             }
             self.close();

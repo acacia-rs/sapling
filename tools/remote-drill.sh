@@ -12,7 +12,7 @@ target=$1 example=$2 out=$3 words="${*:4}"
 source "$(dirname "$0")/remote-sync.sh"
 case $target in
   bds) run="KEEP_WORLD=${KEEP_WORLD:-0} bash tools/bds-drill.sh ${BDS_DIR:-~/work/bds-mechanisms} ${BDS_PORT:-19182} $example drill.txt $words" build="--example $example" ;;
-  sapling) run="SAPLING_DRILL_WORLD=${SAPLING_DRILL_WORLD:-flat} bash tools/sapling-drill.sh ${SAPLING_PORT:-19183} $example drill.txt $words" build="--example $example --example drill_server" ;;
+  sapling) run="TICK_SCALE=${TICK_SCALE:-} SAPLING_DRILL_WORLD=${SAPLING_DRILL_WORLD:-flat} bash tools/sapling-drill.sh ${SAPLING_PORT:-19183} $example drill.txt $words" build="--example $example --example drill_server" ;;
   *) echo "first argument: bds or sapling" >&2; exit 2 ;;
 esac
 retry ssh $opts testbox "cd $remote || exit; rm -f drill.log drill.done drill.txt; { nohup flock target/.busy sh -c '$cargo build -q -p sapling $build && $run; echo \$? >drill.done' >drill.log 2>&1 </dev/null & }" || exit 1

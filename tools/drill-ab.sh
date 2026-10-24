@@ -17,4 +17,5 @@ new_code=$?
 wait "$base"
 base_code=$?
 [ "$base_code" = 0 ] && [ "$new_code" = 0 ] || { tail -n 8 "$out/base.log" "$out/new.log"; echo "drills failed: base $base_code, new $new_code"; exit 2; }
+grep -H '^LAGGED' "$out"/base/*.txt "$out"/new/*.txt 2>/dev/null
 py -3 -I "$here/drill_motion.py" "$out" base,new "$@"
