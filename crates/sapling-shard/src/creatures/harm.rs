@@ -13,6 +13,7 @@ use sapling_world::World as Level;
 use super::health::{Cause, Health, WALLED};
 use crate::body::{Body, Liquid};
 use crate::components::Layer;
+use crate::sync::Told;
 use crate::{entities, late_sounds, splash};
 
 const FIERY: &[&str] = &["minecraft:lava", "minecraft:flowing_lava", "minecraft:fire", "minecraft:soul_fire"];
@@ -119,11 +120,10 @@ pub(super) fn tick(world: &mut World, entity: Entity, layer: Entity, id: u64, ki
         let traits = sapling_data::mob_traits(kind);
         let burns = !traits.fire_immune;
         let [x, y, z] = super::head(kind, start);
-        // Straight above its feet, not forward as the head is drawn.
-        let head = [start.at[0], y, start.at[2]].map(|c| c.floor() as i32);
-        let breathes = traits.breathes_water || traits.breath.is_some() || super::afflictions::level(world, entity, sapling_api::Effect::WaterBreathing).is_some();
+        let head = head_cell(kind, start);
+        let (in_wall, under_water) = held_breath(world, entity, layer, kind, start);
         let level = world.get::<Layer>(layer).map(|layer| &layer.world);
-        let (touching, in_wall, under_water) = level.map_or((false, false, false), |level| (burns && touches(level, start, FIERY), is_full_block(level, head), !breathes && holds(level, head, WATER)));
+        let touching = burns && level.is_some_and(|level| touches(level, start, FIERY));
         // Rain kept BDS's zombie from burning at noon (research/captures/bds-sun.txt).
         let sunlit = traits.burns_in_sun && level.is_some_and(|level| is_sunlit(level, head)) && crate::weather::of(world, layer) == sapling_api::Weather::Clear;
         health.begin();
@@ -161,7 +161,7 @@ pub(super) fn tick(world: &mut World, entity: Entity, layer: Entity, id: u64, ki
         if health.drown(under_water) && weigh(world, &mut health, before, Cause::Drowning) {
             packets.push(strike(id, &health, Cause::Drowning, None));
         }
-        packets.extend(breath.map(|air| sapling_net::encode(&sapling_data::mob_air(id, air))));
+        packets.extend(breath_told(world, entity, id, in_wall || under_water, breath));
         if under_water {
             packets.push(sapling_net::encode(&LevelEvent { event: LevelEventEvent::ParticleBubble, position: Vec3f { x, y, z }, data: BUBBLES }));
         }
@@ -179,6 +179,37 @@ pub(super) fn tick(world: &mut World, entity: Entity, layer: Entity, id: u64, ki
     }
     entities::tell_viewers(world, entity, layer, now.at.map(|c| c.floor() as i32), packets);
     !dying && health.left() <= 0.0
+}
+
+/// The cell of a mob's head: straight above its feet, not forward as the head is drawn.
+fn head_cell(kind: &str, body: &Body) -> [i32; 3] {
+    [body.at[0], super::head(kind, body)[1], body.at[2]].map(|c| c.floor() as i32)
+}
+
+/// Whether the mob at `body` holds its breath for its head in a block, and for its head in water
+/// it cannot breathe.
+fn held_breath(world: &World, entity: Entity, layer: Entity, kind: &str, body: &Body) -> (bool, bool) {
+    let traits = sapling_data::mob_traits(kind);
+    let breathes = traits.breathes_water || traits.breath.is_some() || super::afflictions::level(world, entity, sapling_api::Effect::WaterBreathing).is_some();
+    let head = head_cell(kind, body);
+    world.get::<Layer>(layer).map_or((false, false), |layer| (is_full_block(&layer.world, head), !breathes && holds(&layer.world, head, WATER)))
+}
+
+/// What tells viewers that the mob `id` started or stopped breathing (`held`), with its `breath`
+/// where that changed.
+fn breath_told(world: &mut World, entity: Entity, id: u64, held: bool, breath: Option<i16>) -> Option<Bytes> {
+    let breathing = world.get_mut::<Told>(entity).and_then(|mut told| told.change_flag(MetadataFlags1::BREATHING, !held));
+    sapling_data::mob_breath(id, breathing, breath).map(|told| sapling_net::encode(&told))
+}
+
+/// The breath a mob takes in the tick it spawns, as BDS's does: its viewers see it breathing, or
+/// holding its breath where it spawned with its head in a block or water (research/captures/bds-kill.txt).
+pub(super) fn first_breath(world: &mut World, entity: Entity, layer: Entity, id: u64, kind: &str, body: &Body) {
+    let (in_wall, under_water) = held_breath(world, entity, layer, kind, body);
+    let held = in_wall || under_water;
+    let Some(breath) = world.get_mut::<Health>(entity).map(|mut health| health.breathe(held)) else { return };
+    let told = breath_told(world, entity, id, held, breath);
+    entities::tell_viewers(world, entity, layer, body.at.map(|c| c.floor() as i32), told.into_iter().collect());
 }
 
 /// Tells viewers the mob's health, and its catching or losing fire, where they changed.
