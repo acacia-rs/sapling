@@ -33,7 +33,7 @@ acacia-client = { git = "https://github.com/acacia-rs/acacia", rev = "d19b127925
 acacia-testserver = { git = "https://github.com/acacia-rs/acacia", rev = "d19b12792501a75bb56d99512c38f7657f33192b" }
 
 base64 = "0.22"
-bevy_ecs = { version = "0.19", default-features = false, features = ["std"] }
+bevy_ecs = { version = "0.20", default-features = false, features = ["std"] }
 bytes = "1.12.1"
 flate2 = "1.1"
 # The bedrock-crustaceans fork: Send + Sync, background compaction (research/worlds-and-ecs.md §2).
