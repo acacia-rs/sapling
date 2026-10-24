@@ -9,7 +9,7 @@ mod lying;
 use std::collections::HashSet;
 
 pub use falling::{falling_block, new_falling_block_actor};
-pub use lying::{new_item_actor, new_orb_actor, orb_value, orb_worth};
+pub use lying::{lying_stack, new_item_actor, new_orb_actor, orb_value, orb_worth};
 
 use acacia_proto::nbt::{self, LittleEndian, List, Value};
 

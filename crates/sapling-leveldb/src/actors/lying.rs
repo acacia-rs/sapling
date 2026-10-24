@@ -21,6 +21,11 @@ pub fn new_item_actor(unique_id: i64, stack: &ItemStack, registry: &BlockRegistr
     written(Value::Compound(fields.into_iter().map(|(key, value)| (key.into(), value)).collect()))
 }
 
+/// The item actor kept as `compound`, holding `stack` now.
+pub fn lying_stack(compound: &[u8], stack: &ItemStack, registry: &BlockRegistry) -> Result<Vec<u8>, Error> {
+    with_fields(compound, [("Item", Value::Compound(stack.fields(registry)))])
+}
+
 // TODO: the name BDS keeps an orb's worth under, as remembered: no BDS record was read.
 const WORTH: &str = "experience value";
 
@@ -60,7 +65,10 @@ mod tests {
         let registry = BlockRegistry::vanilla();
         let stack = ItemStack { name: "minecraft:beef".into(), count: 3, damage: 0, block: None, tag: None };
         let read = actors(&new_item_actor(77, &stack, &registry, [5.5, 64.0, 5.5], [0.0; 3])).unwrap().remove(0);
-        assert_eq!((read.identifier.as_str(), read.position, read.item), ("minecraft:item", [5.5, 64.0, 5.5], Some(stack)));
+        assert_eq!((read.identifier.as_str(), read.position, read.item), ("minecraft:item", [5.5, 64.0, 5.5], Some(stack.clone())));
+        let grown = ItemStack { count: 9, ..stack.clone() };
+        let kept = lying_stack(&new_item_actor(77, &stack, &registry, [5.5, 64.0, 5.5], [0.0; 3]), &grown, &registry).unwrap();
+        assert_eq!(actors(&kept).unwrap().remove(0).item, Some(grown));
         let orb = new_orb_actor(78, 7, [1.5, 64.0, 2.5], [0.0; 3]);
         assert_eq!((actors(&orb).unwrap().remove(0).identifier.as_str(), orb_value(&orb)), ("minecraft:xp_orb", Some(7)));
         assert_eq!(orb_worth(&orb, 20).ok().and_then(|grown| orb_value(&grown)), Some(20));

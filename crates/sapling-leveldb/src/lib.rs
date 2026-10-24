@@ -22,7 +22,7 @@ mod world;
 use std::path::PathBuf;
 
 pub use actor_harm::harmed_actor;
-pub use actors::{Actor, Painting, State, actors, falling_block, moved_actor, new_actor, new_falling_block_actor, new_item_actor, new_orb_actor, orb_value, orb_worth, stored_actors};
+pub use actors::{Actor, Painting, State, actors, falling_block, lying_stack, moved_actor, new_actor, new_falling_block_actor, new_item_actor, new_orb_actor, orb_value, orb_worth, stored_actors};
 pub use item::ItemStack;
 pub use player::PlayerData;
 pub use portals::{PortalRecord, decode_portals, encode_portals};

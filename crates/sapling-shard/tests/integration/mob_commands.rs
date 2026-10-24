@@ -1,5 +1,5 @@
 //! What plugins, and through them `/effect`, `/damage` and `/kill`, see of and do to a mob's
-//! effects and health, and what a lying item holds.
+//! effects and health, and what lying items hold and how they join up.
 
 use crate::common;
 
@@ -77,4 +77,20 @@ fn a_lying_item_tells_what_it_holds() {
     ask(&mut h, |ctx| assert!(ctx.set_block([2, 65, 0], &Block::new("dirt")) && ctx.break_block([2, 65, 0])));
     let (held, _) = ask(&mut h, move |ctx| ctx.entities().into_iter().map(|entity| (entity.id == cow, entity.item.map(|item| item.name))).collect::<Vec<_>>());
     assert_eq!(held, [(true, None), (false, Some("minecraft:dirt".to_owned()))]);
+}
+
+#[test]
+fn lying_items_of_a_kind_join_up_on_the_25th_tick() {
+    let (mut h, _) = cow();
+    // One above the other, so that the second block does not push the first's item out; then together, as they slide apart.
+    ask(&mut h, |ctx| assert!([65, 66].into_iter().all(|y| ctx.set_block([2, y, 0], &Block::new("dirt")) && ctx.break_block([2, y, 0]))));
+    ask(&mut h, |ctx| {
+        for (entity, dx) in ctx.entities().into_iter().filter(|entity| entity.item.is_some()).zip([0.0, 0.6]) {
+            assert!(ctx.move_entity(entity.id, [2.2 + dx, 65.0, 0.5]) && ctx.set_velocity(entity.id, [0.0; 3]));
+        }
+    });
+    let sent: Vec<_> = (0..30).flat_map(|_| h.tick_all().to(1).to_vec()).collect();
+    let merges: Vec<i32> = all::<EntityEvent>(&sent).iter().filter(|event| event.event_id == EntityEventEventId::ItemEntityMerge).map(|event| event.data).collect();
+    let (held, _) = ask(&mut h, |ctx| ctx.entities().into_iter().filter_map(|entity| entity.item.map(|item| item.count)).collect::<Vec<_>>());
+    assert_eq!((merges, held), (vec![2], vec![2]));
 }

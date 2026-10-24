@@ -1,8 +1,10 @@
 //! Items players throw out of their inventories and items broken blocks leave, as BDS's `ItemActor`
 //! (docs/research/items.md): each falls and slides as a body (body.rs) and is picked up by a player
 //! with room for it who walks over it, once its delay is over; it is gone after 6000 ticks, or
-//! burnt in lava.
-// TODO: items do not merge. Whether a throw starts at the eye is unsettled.
+//! burnt in lava. Items of a kind lying together join up (drops/merge.rs).
+// TODO: whether a throw starts at the eye is unsettled.
+
+mod merge;
 
 use std::collections::HashMap;
 
@@ -188,7 +190,11 @@ pub(crate) fn fly(world: &mut World) {
             mobs::remove(world, entity);
             continue;
         }
-        let physics = if fireproof(&item.stack.name) { Physics::FIREPROOF_ITEM } else { Physics::ITEM };
+        let (physics, age) = (if fireproof(&item.stack.name) { Physics::FIREPROOF_ITEM } else { Physics::ITEM }, item.age - 1);
+        merge::join(world, entity, layer, age);
+        if world.get::<Dropped>(entity).is_none() {
+            continue;
+        }
         lift_out(world, entity, layer);
         let Some((body, packets)) = entities::step(world, entity, layer, id, &physics, SIZE / 2.0) else { continue };
         let Some(mut item) = world.get_mut::<Dropped>(entity) else { continue };
