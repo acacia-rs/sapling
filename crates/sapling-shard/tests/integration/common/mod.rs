@@ -198,16 +198,30 @@ pub fn all<T: Packet>(packets: &[RawPacket]) -> Vec<T> {
     packets.iter().filter(|p| p.id == T::ID).map(|p| p.decode().unwrap()).collect()
 }
 
-/// The layer-0 block changes among `packets`, in order, as (position, block hash): UpdateBlock and
-/// the UpdateBlockSynced a falling block leaving or landing is told in.
+/// The block changes among `packets`, in order, as (layer, position, block hash): UpdateBlock, the
+/// UpdateBlockSynced a falling block leaving or landing is told in, and each block of an
+/// UpdateSubchunkBlocks (its `extra` layer 1).
+#[allow(dead_code)]
+pub fn layered_changes(packets: &[RawPacket]) -> Vec<(u32, [i32; 3], u32)> {
+    let at = |p: acacia_proto::types::BlockCoordinates| [p.x, p.y, p.z];
+    packets
+        .iter()
+        .flat_map(|packet| match packet.id {
+            acacia_proto::packets::UpdateBlock::ID => packet.decode::<acacia_proto::packets::UpdateBlock>().ok().map(|u| (u.layer, at(u.position), u.block_runtime_id)).into_iter().collect(),
+            acacia_proto::packets::UpdateBlockSynced::ID => packet.decode::<acacia_proto::packets::UpdateBlockSynced>().ok().map(|u| (u.layer, at(u.position), u.block_runtime_id)).into_iter().collect(),
+            acacia_proto::packets::UpdateSubchunkBlocks::ID => packet.decode::<acacia_proto::packets::UpdateSubchunkBlocks>().map_or_else(|_| Vec::new(), |batch| {
+                let blocks = batch.blocks.into_iter().map(|block| (0, at(block.position), block.runtime_id));
+                blocks.chain(batch.extra.into_iter().map(|block| (1, at(block.position), block.runtime_id))).collect()
+            }),
+            _ => Vec::new(),
+        })
+        .collect()
+}
+
+/// The layer-0 block changes among `packets`, in order, as (position, block hash): see [`layered_changes`].
 #[allow(dead_code)]
 pub fn block_changes(packets: &[RawPacket]) -> Vec<([i32; 3], u32)> {
-    let change = |packet: &RawPacket| match packet.id {
-        acacia_proto::packets::UpdateBlock::ID => packet.decode::<acacia_proto::packets::UpdateBlock>().ok().map(|u| (u.layer, u.position, u.block_runtime_id)),
-        acacia_proto::packets::UpdateBlockSynced::ID => packet.decode::<acacia_proto::packets::UpdateBlockSynced>().ok().map(|u| (u.layer, u.position, u.block_runtime_id)),
-        _ => None,
-    };
-    packets.iter().filter_map(change).filter(|(layer, ..)| *layer == 0).map(|(_, p, block)| ([p.x, p.y, p.z], block)).collect()
+    layered_changes(packets).into_iter().filter(|(layer, ..)| *layer == 0).map(|(_, at, block)| (at, block)).collect()
 }
 
 pub fn pack_response(status: PackStatus) -> ResourcePackClientResponse {

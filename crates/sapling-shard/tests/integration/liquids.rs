@@ -5,9 +5,9 @@ use crate::common;
 use std::sync::{Arc, Mutex};
 
 use acacia_proto::RawPacket;
-use acacia_proto::packets::{LevelSoundEvent, UpdateBlock};
+use acacia_proto::packets::LevelSoundEvent;
 use acacia_proto::types::Action;
-use common::{Harness, all, block_actions, click, hash};
+use common::{Harness, all, block_actions, block_changes, click, hash, layered_changes};
 use sapling_api::{Block, GameMode, Item, PlayerId, ShardCtx, Slot};
 
 const ALEX: PlayerId = PlayerId(1);
@@ -24,7 +24,7 @@ fn set(ctx: &mut ShardCtx<'_>, pos: [i32; 3], block: &str) {
 /// The layer-0 changes `conn` is told of over `ticks` ticks, as (position, block).
 fn changes_over(h: &mut Harness, conn: u64, ticks: usize) -> Vec<([i32; 3], u32)> {
     let sent: Vec<RawPacket> = (0..ticks).flat_map(|_| h.tick_all().to(conn).to_vec()).collect();
-    all::<UpdateBlock>(&sent).iter().filter(|u| u.layer == 0).map(|u| ([u.position.x, u.position.y, u.position.z], u.block_runtime_id)).collect()
+    block_changes(&sent)
 }
 
 /// Alex in creative, Steve watching, and a pool of `name` at x 4 dammed at x 3.
@@ -80,7 +80,7 @@ fn a_bucket_takes_a_source_and_pours_it_out_again() {
     // One of the two buckets is filled: it goes into the next free slot.
     h.receive(1, &click(source, 1, None));
     let sent = h.tick_all();
-    assert_eq!(all::<UpdateBlock>(sent.to(2)).iter().map(|u| ([u.position.x, u.position.y, u.position.z], u.block_runtime_id)).collect::<Vec<_>>(), [(source, hash("minecraft:air"))]);
+    assert_eq!(layered_changes(sent.to(2)).into_iter().map(|(_, at, block)| (at, block)).collect::<Vec<_>>(), [(source, hash("minecraft:air"))]);
     assert_eq!(sounds(sent.to(2)), ["bucket.fill.water"]);
     assert_eq!([held(&mut h, 0), held(&mut h, 1)], [Some(("minecraft:bucket".into(), 1)), Some(("minecraft:water_bucket".into(), 1))]);
 
@@ -89,7 +89,7 @@ fn a_bucket_takes_a_source_and_pours_it_out_again() {
     h.tick_all();
     h.receive(1, &click([1, 64, 0], 1, None));
     let sent = h.tick_all();
-    let poured: Vec<_> = all::<UpdateBlock>(sent.to(2)).iter().map(|u| ([u.position.x, u.position.y, u.position.z], u.block_runtime_id)).collect();
+    let poured: Vec<_> = layered_changes(sent.to(2)).into_iter().map(|(_, at, block)| (at, block)).collect();
     assert_eq!((poured, sounds(sent.to(2))), (vec![([1, 65, 0], liquid("minecraft:water", 0))], vec!["bucket.empty.water".to_string()]));
     assert_eq!(held(&mut h, 0), Some(("minecraft:bucket".into(), 1)));
     let ran = changes_over(&mut h, 2, 6);
@@ -108,7 +108,7 @@ fn a_bucket_takes_a_source_and_pours_it_out_again() {
 
 /// Both layers `conn` is told of at `pos` over one tick, as (layer, block).
 fn layers_at(h: &mut Harness, conn: u64, pos: [i32; 3]) -> Vec<(u32, u32)> {
-    all::<UpdateBlock>(h.tick_all().to(conn)).iter().filter(|u| [u.position.x, u.position.y, u.position.z] == pos).map(|u| (u.layer, u.block_runtime_id)).collect()
+    layered_changes(h.tick_all().to(conn)).into_iter().filter(|(_, at, _)| *at == pos).map(|(layer, _, block)| (layer, block)).collect()
 }
 
 #[test]

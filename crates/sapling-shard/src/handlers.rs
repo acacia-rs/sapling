@@ -40,9 +40,9 @@ pub(crate) fn dispatch(world: &mut World) {
     // First: a block changed in a tick reaches its circuit in the next, as on BDS
     // (research/captures/bds-redstone-phase.txt), and what an evaluation finds shows a tick later.
     blocks::read_daylight(world);
-    blocks::apply_redstone(world);
-    blocks::evaluate_redstone(world);
-    blocks::move_pistons(world);
+    blocks::batched(world, blocks::apply_redstone);
+    blocks::batched(world, blocks::evaluate_redstone);
+    blocks::batched(world, blocks::move_pistons);
     let Arrivals { joined, left } = std::mem::take(&mut *world.resource_mut::<Arrivals>());
     // Players who came from another shard at the start of the tick, before what they then sent.
     worlds::dispatch(world);
@@ -59,7 +59,7 @@ pub(crate) fn dispatch(world: &mut World) {
     commands::dispatch(world);
     blocks::release_buttons(world);
     blocks::press_plates(world);
-    blocks::flow_liquids(world);
+    blocks::batched(world, blocks::flow_liquids);
     blocks::dispatch(world);
     blocks::dispatch_sign_edits(world);
     blocks::portals::settle(world);
@@ -74,7 +74,7 @@ pub(crate) fn dispatch(world: &mut World) {
     blocks::dim_ores(world);
     blocks::sound_hits(world);
     blocks::settle_scaffolds(world);
-    blocks::random_ticks(world);
+    blocks::batched(world, blocks::random_ticks);
     inventory::dispatch(world);
     containers::dispatch_closes(world);
     containers::show_lids_again(world);

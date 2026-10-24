@@ -83,7 +83,7 @@ impl Backend for Ctx<'_> {
     }
 
     fn hold_blocks(&mut self) -> bool {
-        blocks::hold(self.world)
+        blocks::hold(self.world, acacia_proto::types::UpdateBlockFlags::NETWORK)
     }
 
     fn show_held_blocks(&mut self) {
