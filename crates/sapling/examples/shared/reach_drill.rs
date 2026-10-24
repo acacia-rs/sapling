@@ -38,6 +38,17 @@ pub fn trapdoors() -> Vec<String> {
     lines
 }
 
+/// The place-faces drill: stone put by hand on the top, a side and the bottom of a block, to see
+/// which cells the server shows its placer again (NEXT.md 3).
+pub fn place_faces() -> Vec<String> {
+    let mut lines: Vec<String> = ["kill @e[type=!player]", "fill ~-2 ~-1 ~-2 ~4 ~-1 ~2 stone", "fill ~-2 ~ ~-2 ~4 ~4 ~2 air", "gamemode creative @s", "replaceitem entity @s slot.weapon.mainhand 0 stone", ""].map(String::from).into();
+    for (anchor, click) in [("~1 ~-1 ~", "1 -1 0 up"), ("~2 ~ ~", "2 0 0 west"), ("~1 ~ ~-1", "1 0 -1 south"), ("~1 ~2 ~", "1 2 0 down")] {
+        lines.extend([format!("setblock {anchor} gold_block"), String::new(), format!("!place {click}"), String::new(), String::new(), "fill ~1 ~ ~-1 ~2 ~2 ~1 air".into(), "fill ~1 ~-1 ~ ~1 ~-1 ~ stone".into(), String::new()]);
+    }
+    lines.extend(["gamemode creative @s", ""].map(String::from));
+    lines
+}
+
 pub const HELD_USE_SHOWN: &[&str] = &["UpdateBlock", "UpdateSubchunkBlocks", "BlockEntityData", "ContainerOpen", "ContainerClose", "BlockEvent", "LevelSoundEvent"];
 
 /// The held-use drill: a lever, a chest and a door clicked holding dirt, then by an empty hand;

@@ -62,8 +62,8 @@ impl Request<'_> {
     /// Builds `id`, turned as `click` asks, against the block at `against`, or into its cell
     /// when that block gives way. `from_hand`: the block came out of the server's copy of the
     /// hand, which a survival place then takes one from; any other place needs creative mode or
-    /// a handler's word. Outside creative mode the client is shown its windows afterwards, as
-    /// from BDS: it counted one off its stack whether the place happened or not.
+    /// a handler's word. The client is shown its windows afterwards, as from BDS: it counted one
+    /// off its stack whether the place happened or not, in creative mode too.
     pub(super) fn place(&mut self, site: &Site, against: BlockPos, click: &Click, id: u32, from_hand: bool) {
         let placed = self.try_place(site, against, click, id, from_hand);
         if site.mode != GameMode::Creative {
@@ -72,6 +72,8 @@ impl Request<'_> {
                     let _ = inventory.take(Place::Main(inventory.selected.into()), 1);
                 }
             });
+        } else {
+            inventory::show_after_creative_place(self.world, self.entity);
         }
     }
 
@@ -105,8 +107,12 @@ impl Request<'_> {
         let placed = !event.is_cancelled() && self.put(site, pos, click, &event.block);
         if !placed {
             self.resync(&[against, pos]);
+            return false;
         }
-        placed
+        // BDS showed its placer the clicked and the placed cell, each with those above and below.
+        let column = |cell: BlockPos| [cell, Face::Up.neighbour(cell), Face::Down.neighbour(cell)];
+        send::show_to(self.world, self.entity, &[column(against), column(pos)].concat());
+        true
     }
 
     /// Puts what a place event ended with into the world; false for a block the game lacks.

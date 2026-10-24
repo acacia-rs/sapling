@@ -34,6 +34,20 @@ fn from_feet(actor: &Bot, offset: &str) -> Option<[i32; 3]> {
     Some([feet[0] + x, feet[1] + y, feet[2] + z])
 }
 
+/// The face a `!click` or `!place` line names after its offset (`up` when it names none).
+fn face_named(word: &str) -> Option<acacia_bot::interact::Face> {
+    use acacia_bot::interact::Face;
+    Some(match word {
+        "down" => Face::Down,
+        "up" => Face::Up,
+        "north" => Face::North,
+        "south" => Face::South,
+        "west" => Face::West,
+        "east" => Face::East,
+        _ => return None,
+    })
+}
+
 /// Does what a drill's `!` line asks of the actor: `!eat` holds use on what it holds, `!jump`,
 /// `!walk` and `!sprint` hold those keys until `!stop`, `!break x y z` breaks, `!click x y z` clicks,
 /// `!place x y z` puts what it holds on and `!sleep x y z` lies in the block that far from its feet,
@@ -45,11 +59,11 @@ pub async fn act(actor: &mut Bot, line: &str) -> bool {
         }
     };
     if let Some((places, offset)) = line.strip_prefix("!click ").map(|offset| (false, offset)).or(line.strip_prefix("!place ").map(|offset| (true, offset))) {
+        let (offset, face) = offset.rsplit_once(' ').and_then(|(rest, word)| Some((rest, face_named(word)?))).unwrap_or((offset, acacia_bot::interact::Face::Up));
         if let Some(at) = from_feet(actor, offset) {
-            let up = acacia_bot::interact::Face::Up;
             match places {
-                true => println!("## placed: {:?}", actor.place_block(at, up).await),
-                false => println!("## clicked: {:?}", actor.use_item_on_block(at, up).await),
+                true => println!("## placed: {:?}", actor.place_block(at, face).await),
+                false => println!("## clicked: {:?}", actor.use_item_on_block(at, face).await),
             }
         }
         return true;
@@ -160,6 +174,7 @@ pub fn drill(name: &str) -> Option<(Vec<String>, &'static [&'static str])> {
         "lids" => (reach::lids(), reach::REACH_SHOWN),
         "held-use" => (reach::held_use(), reach::HELD_USE_SHOWN),
         "trapdoors" => (reach::trapdoors(), world::PLACING_SHOWN),
+        "place-faces" => (reach::place_faces(), &["UpdateBlock", "InventorySlot", "InventoryContent", "ItemStackResponse", "PlayerHotbar", "MobEquipment"]),
         "spiders" => (world::spiders(), hunt::KINDS_SHOWN),
         "kinds2" => (world::kinds2(), hunt::KINDS_SHOWN),
         "pushed" => (world::pushed(), world::PUSHED_SHOWN),

@@ -125,7 +125,8 @@ fn an_event_that_starts_cancelled_is_shown_to_every_handler_and_may_be_allowed()
     h.receive(1, &click([3, 64, -2], 1, None));
     let placed = changes(&mut h, 1);
     assert_eq!(placed[0], ([2, 65, -1], hash(STONE)));
-    assert!(placed[1..].iter().all(|(pos, block)| *block == hash(if pos[1] == 64 { STONE } else { AIR })), "the rest is resync: {placed:?}");
+    let is_stone = |pos: &[i32; 3]| pos[1] == 64 || *pos == [2, 65, -1];
+    assert!(placed[1..].iter().all(|(pos, block)| *block == hash(if is_stone(pos) { STONE } else { AIR })), "the rest is resync: {placed:?}");
     let seen = taken(&log);
     assert_eq!(seen[..5], ["highest place 2 cancelled", "high place 2 cancelled", "normal place 2 cancelled", "low place 2 cancelled", "monitor place 2"]);
     assert_eq!(seen[5..8], ["highest place 3 cancelled", "high place 3 cancelled", "monitor place 3 cancelled"]);

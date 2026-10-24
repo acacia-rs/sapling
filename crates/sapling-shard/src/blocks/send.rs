@@ -247,6 +247,18 @@ pub(crate) fn set_liquid(world: &mut World, layer: Entity, pos: BlockPos, id: u3
     true
 }
 
+/// Shows one player layer 0 of each of `positions` in order, repeats and all, as BDS showed its
+/// placer the cells about a place (research/captures/bds-place-faces.txt).
+pub(crate) fn show_to(world: &mut World, player: Entity, positions: &[BlockPos]) {
+    let Some(layer) = world.get::<InLayer>(player).and_then(|in_layer| world.get::<Layer>(in_layer.0)) else { return };
+    let level = &layer.world;
+    let shown = positions.iter().filter(|pos| level.in_height(pos[1]) && level.is_loaded(column(**pos)));
+    let packets: Vec<Bytes> = shown.map(|&[x, y, z]| update(level.registry(), [x, y, z], level.block(x, y, z), 0)).collect();
+    if let Some(mut out) = world.get_mut::<Outgoing>(player) {
+        out.0.extend(packets);
+    }
+}
+
 /// Shows one player both layers of each position as the world has them, undoing what its client
 /// predicted there. Positions the world does not hold are skipped: the client has nothing there.
 pub(crate) fn resync(world: &mut World, player: Entity, positions: &[BlockPos]) {

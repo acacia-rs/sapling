@@ -286,6 +286,18 @@ impl Inventory {
     }
 }
 
+/// Shows a client every window and its held slot, twice, the second time selecting it, as BDS
+/// answered a place in creative mode, whose stack the client had counted down
+/// (research/captures/bds-place-faces.txt).
+pub(crate) fn show_after_creative_place(world: &mut World, player: Entity) {
+    let mut query = world.query::<(&Inventory, &mut Outgoing)>();
+    let Ok((inventory, mut out)) = query.get_mut(world, player) else { return };
+    for select_slot in [false, true] {
+        inventory.send_all(&mut out);
+        out.push(&sapling_data::player_hotbar(inventory.selected, select_slot));
+    }
+}
+
 /// Runs `change` on a player's inventory and shows the client the result; armour put on is heard.
 pub(crate) fn change<T>(world: &mut World, player: Entity, change: impl FnOnce(&mut Inventory) -> T) -> Option<T> {
     let mut query = world.query::<(&mut Inventory, &mut Outgoing)>();

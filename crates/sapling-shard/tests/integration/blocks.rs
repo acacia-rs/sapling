@@ -155,8 +155,12 @@ fn a_place_in_creative_puts_the_held_block_on_the_clicked_face() {
     h.shard.add_handler(Box::new(WestIsProtected::default()));
     h.receive(1, &click(NEAR, UP, Some(DIRT)));
     let sent = h.tick_all();
+    // The placer is shown the clicked and the placed cell again, each with those above and below,
+    // as BDS showed it (research/captures/bds-place-faces.txt).
+    let around = [(NEAR, hash(STONE), 0), (ABOVE, hash(DIRT), 0), ([1, 63, 0], hash(AIR), 0), (ABOVE, hash(DIRT), 0), ([1, 66, 0], hash(AIR), 0), (NEAR, hash(STONE), 0)];
+    assert_eq!(updates(sent.to(1)), [&[(ABOVE, hash(DIRT), 0)][..], &around].concat());
+    assert_eq!(updates(sent.to(2)), [(ABOVE, hash(DIRT), 0)]);
     for conn in [1, 2] {
-        assert_eq!(updates(sent.to(conn)), [(ABOVE, hash(DIRT), 0)]);
         let sounds = all::<LevelSoundEvent>(sent.to(conn));
         let at = &sounds[0].position;
         assert_eq!((sounds.len(), sounds[0].sound_id.as_str(), [at.x, at.y, at.z], sounds[0].extra_data), (1, "place", [1.5, 65.5, 0.5], hash(DIRT) as i32));

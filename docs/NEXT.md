@@ -95,10 +95,10 @@ Each needs its rule looked up first (`bdsre` for BDS, the Java jar for data), th
 - 75 blocks put down by hand from one stance took the same state on BDS and here in 65
   (`bds_command_probe placing`, research/captures/bds-placing.txt), after dispensers, pistons,
   observers, gates, anvils, bells, grindstones, amethyst, frames and rails were set right. Scaffolding and trapdoors (`trapdoors`: `oak_trapdoor` is no item, the
-  drill's mistake) take BDS's states too. Left: BDS sends its placer, in the tick of the click,
-  the clicked block, the placed one and cells about them as they now are (six UpdateBlocks for a
-  top face, bds-placing.txt), then the placement to all a tick later; sapling sends the placement
-  once. Which cells for another face is not drilled. A second run of 51 more (`placing2`) agreed in 31
+  drill's mistake) take BDS's states too. A placer is shown the clicked and the placed cell again,
+  each with the cells above and below, and in creative its windows twice, as on BDS
+  (`place-faces`: top, side and bottom faces); left: BDS's own copy of the placement comes after
+  those six, sapling's before. A second run of 51 more (`placing2`) agreed in 31
   and set right a crafter, a decorated pot, a chiseled bookshelf, a calibrated sculk sensor, what
   clings (lichen, sculk vein, resin) and what hangs (moss, roots, a spore blossom, a vine, a
   hanging sign) and a pitcher plant, which stands on its own lower half; a vault is not woken. BDS's commands take old item names too (`chain`
