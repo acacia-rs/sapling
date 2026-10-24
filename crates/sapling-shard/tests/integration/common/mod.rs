@@ -163,15 +163,16 @@ impl Harness {
     }
 
     /// Walks `conn` through packs and StartGame up to its chunk radius request; the next tick
-    /// starts the chunks.
-    pub fn join_to_radius(&mut self, conn: u64, radius: i32) {
+    /// starts the chunks. Returns what was sent on the way.
+    pub fn join_to_radius(&mut self, conn: u64, radius: i32) -> Vec<RawPacket> {
         self.join(conn, "Steve");
-        self.tick(conn);
+        let mut sent = self.tick(conn);
         self.receive(conn, &pack_response(PackStatus::HaveAllPacks));
-        self.tick(conn);
+        sent.extend(self.tick(conn));
         self.receive(conn, &pack_response(PackStatus::Completed));
-        self.tick(conn);
+        sent.extend(self.tick(conn));
         self.receive(conn, &RequestChunkRadius { chunk_radius: radius, max_radius: radius as u8 });
+        sent
     }
 
     pub fn log(&self) -> Vec<String> {

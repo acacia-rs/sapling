@@ -144,11 +144,11 @@ impl LevelDbWorld {
 
     /// What was kept of the player with this id (its UUID as text); `None` for a first visit.
     pub fn load_player(&self, id: &str) -> Result<Option<PlayerData>, Error> {
-        self.db.get(&player::key(id))?.map(|record| PlayerData::decode(&record)).transpose()
+        player::load(&self.db, id)
     }
 
     pub fn store_player(&self, id: &str, player: &PlayerData) -> Result<(), Error> {
-        self.db.put(&player::key(id), &player.encode(self.registry()))
+        player::store(&self.db, id, player, self.registry())
     }
 
     /// The portal records of every dimension (portals.rs); none in a world without the key.

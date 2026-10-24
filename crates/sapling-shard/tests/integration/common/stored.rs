@@ -43,7 +43,7 @@ pub fn floor_holding(actors: Vec<u8>, blocks: &[([i32; 3], &str)]) -> Arc<Memory
 
 /// Joins `conn` and ticks until it is in the world; returns everything it was sent.
 pub fn enter_stored(h: &mut Harness, conn: u64) -> Vec<RawPacket> {
-    h.join_to_radius(conn, 2);
+    let joined = h.join_to_radius(conn, 2);
     let deadline = Instant::now() + Duration::from_secs(10);
     let mut sent = Vec::new();
     while all::<PlayStatus>(&sent).is_empty() {
@@ -53,5 +53,5 @@ pub fn enter_stored(h: &mut Harness, conn: u64) -> Vec<RawPacket> {
     }
     h.receive(conn, &SetLocalPlayerAsInitialized { runtime_entity_id: 0 });
     (0..3).for_each(|_| sent.extend(h.tick(conn)));
-    sent
+    [joined, sent].concat()
 }
