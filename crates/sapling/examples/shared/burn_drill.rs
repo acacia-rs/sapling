@@ -61,6 +61,18 @@ pub fn douse() -> Vec<String> {
     lines
 }
 
+/// Mobs let go at the bottom of a pool of still water three deep, to see which swim up and how
+/// they keep their heads out; shown with `HIT_SHOWN`, which has their moves.
+pub fn swim() -> Vec<String> {
+    let mut lines: Vec<String> = ["kill @e[type=!player]", "", "", "fill ~2 ~-1 ~4 ~12 ~4 ~10 stone", "fill ~3 ~ ~5 ~11 ~4 ~9 air", "fill ~3 ~ ~5 ~11 ~2 ~9 water"].map(String::from).into();
+    for kind in ["pig", "cow", "chicken", "zombie", "skeleton", "spider", "iron_golem"] {
+        lines.push(format!("summon {kind} ~7 ~ ~7"));
+        lines.extend(std::iter::repeat_n(String::new(), 6));
+        lines.extend([format!("kill @e[type={kind}]"), String::new()]);
+    }
+    lines
+}
+
 pub const HIT_SHOWN: &[&str] = &[
     "AddEntity", "AddItemEntity", "RemoveEntity", "EntityEvent", "SetEntityData", "LevelSoundEvent", "UpdateAttributes", "SetEntityMotion", "MoveEntityDelta", "LevelEvent", "Animate", "MobEquipment",
 ];

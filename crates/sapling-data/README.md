@@ -102,7 +102,8 @@ loot goes by size, have none here.
 these its own components (not its component groups) say, by `data/generate/mob-traits.py`:
 `xp=least-most` (`minecraft:experience_reward` of the entity or of a group not named for a baby, the
 part after `last_hit_by_player ?`, without equipment), `fire_immune` (`minecraft:fire_immune`), `no_fall` (a `minecraft:damage_sensor` trigger that takes
-no damage from `fall` or from all), `breathes_water` and `no_air` (`minecraft:breathable`).
+no damage from `fall` or from all), `breathes_water` and `no_air` (`minecraft:breathable`), `floats`
+(`minecraft:behavior.float`).
 `strolls=` and `panics=` are `minecraft:movement` times the `speed_multiplier` of `random_stroll`
 and of `panic`, for an entity with `navigation.walk`. `attack=`, `speed=`, `sees=` and `hits=effect:ticks` are the script's own
 table of the kinds whose hunting was drilled (`docs/research/mob-attacks.md`): `attack` is

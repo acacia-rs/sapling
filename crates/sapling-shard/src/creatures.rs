@@ -16,6 +16,7 @@ mod bullets;
 mod charges;
 mod duels;
 mod fireballs;
+mod floating;
 mod genes;
 mod ghasts;
 mod harm;
@@ -262,6 +263,9 @@ pub(crate) fn tick(world: &mut World) {
             if strolls {
                 strolling::steer(world, entity, layer, traits.strolls.or(traits.hunts.map(|hunts| hunts.speed)), traits.panics, traits.burns_in_sun);
             }
+        }
+        if thinks {
+            floating::tick(world, entity, layer, &kind, &start);
         }
         let Some((body, packets)) = entities::step(world, entity, layer, id, physics_of(&kind), 0.0) else { continue };
         blocks::to_viewers(world, layer, body.at.map(|c| c.floor() as i32), &packets);

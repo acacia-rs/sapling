@@ -10,7 +10,7 @@ mod physics;
 use acacia_physics::constants::DEFAULT_JUMP_HEIGHT;
 use acacia_physics::{Aabb, WorldView, collide_box};
 use bevy_ecs::prelude::Component;
-pub(crate) use liquid::{InLiquid, Liquid, in_liquid};
+pub(crate) use liquid::{InLiquid, Liquid, in_liquid, liquid_in, surface};
 pub(crate) use physics::Physics;
 use sapling_api::BlockPos;
 use sapling_world::World as Level;
@@ -68,6 +68,11 @@ impl Body {
     /// up at a jump's speed (research/captures/bds-bite.txt, bds-chase.txt).
     pub fn walk(&mut self, speed: [f32; 2], leap: bool) {
         (self.walking, self.leaping) = ([speed[0], 0.0, speed[1]], leap);
+    }
+
+    /// Has a swimming mob's next tick add `speed` up, after the drag, on top of its walk.
+    pub fn swim_up(&mut self, speed: f32) {
+        self.walking[1] += speed;
     }
 
     /// Has a flying mob's next tick add `speed`, every way, after the drag.
