@@ -14,7 +14,7 @@ use acacia_client::{BlobStore, DisconnectReason, MemoryBlobStore};
 use acacia_world::{BlockAccess, BlockRegistry, Chunk};
 use bytes::Bytes;
 use common::{GOAL, GROUND, SPAWN, fixture};
-use sapling::Server;
+use sapling::{MovementCheck, MovementPolicy, Server};
 use sapling_leveldb::{ChunkKey, LevelDbWorld};
 
 async fn start() -> Server {
@@ -128,9 +128,11 @@ async fn walk(bot: &mut Bot) {
     assert!(has(bot, cx + radius + 1, cz + 1), "the column that came into view was sent: radius {radius}, row {row:?}");
 }
 
+/// Under Correct, so that a bot stepping as the game does draws no correction from the server's step.
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn a_bot_walks_the_map_without_the_blob_cache() {
-    let server = start().await;
+    let check = MovementCheck { policy: MovementPolicy::Correct, ..MovementCheck::default() };
+    let server = common::start(crate::common::builder().movement_check(check)).await;
     let mut bot = arrive(&server, "Plain", None).await;
     walk(&mut bot).await;
     bot.disconnect().await;

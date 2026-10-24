@@ -1015,12 +1015,23 @@ only falls back to RakNet when that fails, so turning it on moves every vanilla 
 - Tests: `sapling-net/tests/nethernet.rs` (both signaling paths, beside RakNet) and the NetherNet
   bot in `sapling/tests/integration/join.rs`.
 
-## Server-side movement (as built: Observe)
+## Server-side movement (Observe by default, Correct opt-in)
 
 `sapling-shard/src/simulation.rs`; research: `acacia/research/sapling-server-movement.md`.
 
-- `ShardConfig::movement_check`: `Trust` (the sanity checks in movement.rs only) or `Observe { threshold }`
-  (default 0.5, BDS's `player-position-acceptance-threshold`). Correcting is not built yet.
+- `ShardConfig::movement_check` (`ServerBuilder::movement_check`): a default `MovementPolicy`, `threshold`
+  (0.5, BDS's `player-position-acceptance-threshold`) and `correction_delay` (5,
+  `player-rewind-min-correction-delay-ticks`). `Trust`: the sanity checks in movement.rs only. `Observe`
+  (the default): stepped and logged, below. `Correct`: past the threshold the server's place stands, sent
+  as `CorrectPlayerMovePrediction` stamped with the input's tick, and the next `correction_delay` inputs
+  (predicted before the client heard) take the server's place untold; inside the threshold the client's
+  place stands but the server keeps its own step, so a stray does not add up unseen. The player's
+  `Position`, fall and `MoveEvent` are then the server's.
+- A plugin sets one player's policy (`ctx.set_movement_policy(player, Some(policy))`, `None` for the
+  shard's), which restarts the step from the client (`simulation/policy.rs`). No physics overrides.
+- Correct is opt-in until real clients' Observe counts are clean: acacia's BDS-exact bots walk under it
+  with no correction (`tests/integration/map.rs`), while the shard harness's hand-made inputs, which jump
+  without physics, are corrected (12 harness tests fail with Correct as the default).
 - Each accepted `PlayerAuthInput` of a survival or adventure player is stepped with acacia-physics'
   `tick` over the player's world (`RegistryWorld` of the feature `acacia-world`, over a `Blocks` newtype),
   the held controls read from the input flags as acacia-bot's trace replay reads them, gliding and swimming
