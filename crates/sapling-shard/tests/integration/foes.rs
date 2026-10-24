@@ -206,6 +206,24 @@ fn an_enderman_teleports_now_and_then_by_night_and_out_of_water_which_costs_it_1
 }
 
 #[test]
+fn an_enderman_teleporting_down_off_a_pillar_takes_no_fall() {
+    // research/captures/bds-stare.txt: BDS's teleported 41 down as it came, unhurt.
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    h.remote.run(|ctx| {
+        ctx.set_time(18000);
+        ctx.set_game_mode(sapling_api::PlayerId(1), sapling_api::GameMode::Creative);
+        assert!((65..85).all(|y| ctx.set_block([0, y, 8], &sapling_api::Block::new("stone"))));
+        assert!(ctx.spawn_entity("minecraft:enderman", [0.5, 85.0, 8.5]).is_some());
+    });
+    let sent: Vec<acacia_proto::RawPacket> = (0..400).flat_map(|_| h.tick_all().to(1).to_vec()).collect();
+    let enderman = all::<acacia_proto::packets::AddEntity>(&sent)[0].runtime_id;
+    let down = all::<acacia_proto::packets::MoveEntityDelta>(&sent).iter().any(|moved| moved.runtime_entity_id == enderman && moved.force_move && moved.y.is_some_and(|y| y < 70.0));
+    let hurt = all::<EntityEvent>(&sent).iter().any(|event| event.runtime_entity_id == enderman && event.event_id == EntityEventEventId::HurtAnimation);
+    assert!(down && !hurt, "teleported down {down}, hurt {hurt}");
+}
+
+#[test]
 fn pandas_come_with_genes_shown_as_their_variant() {
     // research/captures/bds-pandas-findings.md: `Variant` 0 to 6 by gene.
     let mut h = Harness::new();

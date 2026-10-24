@@ -13,7 +13,8 @@ const NAMED: [(&str, i64); 6] = [("day", 1000), ("noon", 6000), ("sunset", 12000
 
 pub(crate) enum Time {
     Set(i64),
-    /// A time of the day it is.
+    /// A time of day, its next coming: BDS's noon after a midnight was the next day's
+    /// (research/captures/bds-spiders.txt: noon 30000, midnight 42000, noon 54000).
     SetNamed(i64),
     Add(i64),
     Query(&'static str),
@@ -47,7 +48,12 @@ impl Command for Time {
         let now = ctx.time();
         match self {
             Self::Set(time) | Self::SetNamed(time) => {
-                let time = if matches!(self, Self::SetNamed(_)) { now.div_euclid(DAY) * DAY + time } else { time };
+                let today = now.div_euclid(DAY) * DAY + time;
+                let time = match self {
+                    Self::SetNamed(_) if today < now => today + DAY,
+                    Self::SetNamed(_) => today,
+                    _ => time,
+                };
                 ctx.set_time(time);
                 out.translate("commands.time.set", vec![time.to_string()], true);
             }

@@ -257,6 +257,8 @@ pub(crate) fn tick(world: &mut World) {
             drinks::tick(world, entity, layer, id, &start, hunting::prey_at(world, entity));
             teleports::tick(world, entity, layer, hunting::prey_at(world, entity));
         }
+        // A teleport starts the tick afresh where it landed: no fall from where it left.
+        let Some(start) = world.get::<Body>(entity).copied() else { continue };
         if thinks && !rams::steer(world, entity, layer, id, &kind) && !hunting::steer(world, entity, layer, id, &kind) {
             let traits = sapling_data::mob_traits(&kind);
             let strolls = world.resource::<crate::components::Settings>().0.mobs_stroll;
