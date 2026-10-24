@@ -25,6 +25,19 @@ pub fn lids() -> Vec<String> {
     lines
 }
 
+/// The trapdoors drill: the actor in creative puts three trapdoors on the floor a block east of it,
+/// looking each of four ways, to see the state each takes (the placing drill named them wrongly).
+pub fn trapdoors() -> Vec<String> {
+    let mut lines: Vec<String> = ["kill @e[type=!player]", "fill ~-2 ~-1 ~-2 ~4 ~-1 ~30 stone", "fill ~-2 ~ ~-2 ~4 ~3 ~30 air", "gamemode creative @s", "clear @s", ""].map(String::from).into();
+    for item in ["trapdoor", "spruce_trapdoor", "iron_trapdoor"] {
+        for yaw in [0, 90, 180, -90] {
+            lines.extend([format!("tp @s ~ ~ ~2 {yaw} 0"), "fill ~1 ~ ~ ~1 ~1 ~ air".into(), format!("replaceitem entity @s slot.weapon.mainhand 0 {item}"), "!place 1 -1 0".into()]);
+        }
+    }
+    lines.extend(["clear @s", ""].map(String::from));
+    lines
+}
+
 pub const HELD_USE_SHOWN: &[&str] = &["UpdateBlock", "UpdateSubchunkBlocks", "BlockEntityData", "ContainerOpen", "ContainerClose", "BlockEvent", "LevelSoundEvent"];
 
 /// The held-use drill: a lever, a chest and a door clicked holding dirt, then by an empty hand;

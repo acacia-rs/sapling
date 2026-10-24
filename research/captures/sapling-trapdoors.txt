@@ -1,0 +1,241 @@
+## drill starts at 1792872781105
+## /kill @e[type=!player]
+     23 actor   CommandOutput success_count=0 data=None commands.generic.noTargetMatch success=false []
+    773 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 6513, paused: false }] }) }
+    773 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 6513, paused: false }] }) }
+## /fill ~-2 ~-1 ~-2 ~4 ~-1 ~30 stone
+   1029 actor   CommandOutput success_count=0 data=None commands.fill.success success=false ["0"]
+## /fill ~-2 ~ ~-2 ~4 ~3 ~30 air
+   2043 actor   CommandOutput success_count=0 data=None commands.fill.success success=false ["0"]
+## /gamemode creative @s
+   3023 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"gameMode.changed\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.creative\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   3023 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamemode.success.self\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.creative\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   3023 actor   CommandOutput success_count=1 data=None commands.gamemode.success.self success=true ["%createWorldScreen.gameMode.creative"]
+## /clear @s
+   4024 actor   CommandOutput success_count=0 data=None commands.clear.failure.no.items success=false ["CmdActor"]
+## /
+## /tp @s ~ ~ ~2 0 0
+   6025 actor   MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 0.5, y: 65.62001, z: 2.5 }, pitch: 0.0, yaw: 0.0, head_yaw: 0.0, mode: Teleport, on_ground: true, ridden_runtime_id: 0, teleport: Some(MovePlayerTeleport { cause: Command, source_entity_type: Unknown(1) }), tick: 172 }
+   6025 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.tp.success.coordinates\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor\"},{\"text\":\"0.50\"},{\"text\":\"64.00\"},{\"text\":\"2.50\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   6025 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.tp.successVictim\",\"with\":{\"rawtext\":[{\"text\":\"0.50, 64.00, 2.50\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   6025 watcher MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 0.5, y: 65.62001, z: 2.5 }, pitch: 0.0, yaw: 0.0, head_yaw: 0.0, mode: Normal, on_ground: true, ridden_runtime_id: 0, teleport: None, tick: 172 }
+   6025 actor   CommandOutput success_count=1 data=None commands.tp.success.coordinates success=true ["CmdActor", "0.50", "64.00", "2.50"]
+   6173 watcher MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 0.5, y: 65.62001, z: 2.5 }, pitch: 0.0, yaw: 0.0, head_yaw: 0.0, mode: Normal, on_ground: false, ridden_runtime_id: 0, teleport: None, tick: 174 }
+   6222 watcher MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 0.5, y: 65.62001, z: 2.5 }, pitch: 0.0, yaw: 0.0, head_yaw: 0.0, mode: Normal, on_ground: true, ridden_runtime_id: 0, teleport: None, tick: 175 }
+## /fill ~1 ~ ~ ~1 ~1 ~ air
+   7023 actor   CommandOutput success_count=0 data=None commands.fill.success success=false ["0"]
+## /replaceitem entity @s slot.weapon.mainhand 0 trapdoor
+   8024 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.replaceitem.success.entity\",\"with\":{\"rawtext\":[{\"text\":\"slot.weapon.mainhand\"},{\"text\":\"0\"},{\"text\":\"CmdActor\"},{\"text\":\"1\"},{\"text\":\"Trapdoor\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   8025 actor   CommandOutput success_count=1 data=None commands.replaceitem.success.entity success=true ["slot.weapon.mainhand", "0", "CmdActor", "1", "Trapdoor"]
+## /!place 1 -1 0
+## placed: Ok(())
+   9089 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 2 }, block_runtime_id: 2272872970, flags: UpdateBlockFlags(3), layer: 0 }
+   9090 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 2 }, block_runtime_id: 2272872970, flags: UpdateBlockFlags(3), layer: 0 }
+   9090 watcher MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 0.5, y: 65.62001, z: 2.5 }, pitch: 58.3138, yaw: -90.0, head_yaw: -90.0, mode: Normal, on_ground: true, ridden_runtime_id: 0, teleport: None, tick: 231 }
+## /tp @s ~ ~ ~2 90 0
+  10124 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.tp.success.coordinates\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor\"},{\"text\":\"0.50\"},{\"text\":\"64.00\"},{\"text\":\"4.50\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  10124 watcher MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 0.5, y: 65.62001, z: 4.5 }, pitch: 0.0, yaw: 90.0, head_yaw: 90.0, mode: Normal, on_ground: true, ridden_runtime_id: 0, teleport: None, tick: 252 }
+  10125 actor   MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 0.5, y: 65.62001, z: 4.5 }, pitch: 0.0, yaw: 90.0, head_yaw: 90.0, mode: Teleport, on_ground: true, ridden_runtime_id: 0, teleport: Some(MovePlayerTeleport { cause: Command, source_entity_type: Unknown(1) }), tick: 252 }
+  10125 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.tp.successVictim\",\"with\":{\"rawtext\":[{\"text\":\"0.50, 64.00, 4.50\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  10125 actor   CommandOutput success_count=1 data=None commands.tp.success.coordinates success=true ["CmdActor", "0.50", "64.00", "4.50"]
+  10222 watcher MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 0.5, y: 65.62001, z: 4.5 }, pitch: 0.0, yaw: 90.0, head_yaw: 90.0, mode: Normal, on_ground: false, ridden_runtime_id: 0, teleport: None, tick: 254 }
+  10272 watcher MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 0.5, y: 65.62001, z: 4.5 }, pitch: 0.0, yaw: 90.0, head_yaw: 90.0, mode: Normal, on_ground: true, ridden_runtime_id: 0, teleport: None, tick: 255 }
+## /fill ~1 ~ ~ ~1 ~1 ~ air
+  11124 actor   CommandOutput success_count=0 data=None commands.fill.success success=false ["0"]
+## /replaceitem entity @s slot.weapon.mainhand 0 trapdoor
+  12125 actor   CommandOutput success_count=1 data=None commands.replaceitem.success.entity success=true ["slot.weapon.mainhand", "0", "CmdActor", "1", "Trapdoor"]
+  12125 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.replaceitem.success.entity\",\"with\":{\"rawtext\":[{\"text\":\"slot.weapon.mainhand\"},{\"text\":\"0\"},{\"text\":\"CmdActor\"},{\"text\":\"1\"},{\"text\":\"Trapdoor\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /!place 1 -1 0
+## placed: Ok(())
+  13141 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 4 }, block_runtime_id: 2272872970, flags: UpdateBlockFlags(3), layer: 0 }
+  13141 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 4 }, block_runtime_id: 2272872970, flags: UpdateBlockFlags(3), layer: 0 }
+  13141 watcher MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 0.5, y: 65.62001, z: 4.5 }, pitch: 58.3138, yaw: -90.0, head_yaw: -90.0, mode: Normal, on_ground: true, ridden_runtime_id: 0, teleport: None, tick: 311 }
+  13573 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 6769, paused: false }] }) }
+  13573 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 6769, paused: false }] }) }
+## /tp @s ~ ~ ~2 180 0
+  14174 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.tp.success.coordinates\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor\"},{\"text\":\"0.50\"},{\"text\":\"64.00\"},{\"text\":\"6.50\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  14174 watcher MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 0.5, y: 65.62001, z: 6.5 }, pitch: 0.0, yaw: 180.0, head_yaw: 180.0, mode: Normal, on_ground: true, ridden_runtime_id: 0, teleport: None, tick: 332 }
+  14174 actor   MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 0.5, y: 65.62001, z: 6.5 }, pitch: 0.0, yaw: 180.0, head_yaw: 180.0, mode: Teleport, on_ground: true, ridden_runtime_id: 0, teleport: Some(MovePlayerTeleport { cause: Command, source_entity_type: Unknown(1) }), tick: 332 }
+  14174 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.tp.successVictim\",\"with\":{\"rawtext\":[{\"text\":\"0.50, 64.00, 6.50\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  14174 actor   CommandOutput success_count=1 data=None commands.tp.success.coordinates success=true ["CmdActor", "0.50", "64.00", "6.50"]
+  14273 watcher MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 0.5, y: 65.62001, z: 6.5 }, pitch: 0.0, yaw: -180.0, head_yaw: -180.0, mode: Normal, on_ground: true, ridden_runtime_id: 0, teleport: None, tick: 333 }
+  14322 watcher MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 0.5, y: 65.62001, z: 6.5 }, pitch: 0.0, yaw: -180.0, head_yaw: -180.0, mode: Normal, on_ground: false, ridden_runtime_id: 0, teleport: None, tick: 334 }
+  14373 watcher MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 0.5, y: 65.62001, z: 6.5 }, pitch: 0.0, yaw: -180.0, head_yaw: -180.0, mode: Normal, on_ground: true, ridden_runtime_id: 0, teleport: None, tick: 335 }
+## /fill ~1 ~ ~ ~1 ~1 ~ air
+  15173 actor   CommandOutput success_count=0 data=None commands.fill.success success=false ["0"]
+## /replaceitem entity @s slot.weapon.mainhand 0 trapdoor
+  16174 actor   CommandOutput success_count=1 data=None commands.replaceitem.success.entity success=true ["slot.weapon.mainhand", "0", "CmdActor", "1", "Trapdoor"]
+  16174 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.replaceitem.success.entity\",\"with\":{\"rawtext\":[{\"text\":\"slot.weapon.mainhand\"},{\"text\":\"0\"},{\"text\":\"CmdActor\"},{\"text\":\"1\"},{\"text\":\"Trapdoor\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /!place 1 -1 0
+## placed: Ok(())
+  17241 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 6 }, block_runtime_id: 2272872970, flags: UpdateBlockFlags(3), layer: 0 }
+  17241 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 6 }, block_runtime_id: 2272872970, flags: UpdateBlockFlags(3), layer: 0 }
+  17241 watcher MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 0.5, y: 65.62001, z: 6.5 }, pitch: 58.3138, yaw: -90.0, head_yaw: -90.0, mode: Normal, on_ground: true, ridden_runtime_id: 0, teleport: None, tick: 391 }
+## /tp @s ~ ~ ~2 -90 0
+  18275 actor   MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 0.5, y: 65.62001, z: 8.5 }, pitch: 0.0, yaw: -90.0, head_yaw: -90.0, mode: Teleport, on_ground: true, ridden_runtime_id: 0, teleport: Some(MovePlayerTeleport { cause: Command, source_entity_type: Unknown(1) }), tick: 412 }
+  18275 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.tp.successVictim\",\"with\":{\"rawtext\":[{\"text\":\"0.50, 64.00, 8.50\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  18275 actor   CommandOutput success_count=1 data=None commands.tp.success.coordinates success=true ["CmdActor", "0.50", "64.00", "8.50"]
+  18275 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.tp.success.coordinates\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor\"},{\"text\":\"0.50\"},{\"text\":\"64.00\"},{\"text\":\"8.50\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  18275 watcher MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 0.5, y: 65.62001, z: 8.5 }, pitch: 0.0, yaw: -90.0, head_yaw: -90.0, mode: Normal, on_ground: true, ridden_runtime_id: 0, teleport: None, tick: 412 }
+  18372 watcher MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 0.5, y: 65.62001, z: 8.5 }, pitch: 0.0, yaw: -90.0, head_yaw: -90.0, mode: Normal, on_ground: false, ridden_runtime_id: 0, teleport: None, tick: 414 }
+  18473 watcher MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 0.5, y: 65.62001, z: 8.5 }, pitch: 0.0, yaw: -90.0, head_yaw: -90.0, mode: Normal, on_ground: true, ridden_runtime_id: 0, teleport: None, tick: 416 }
+## /fill ~1 ~ ~ ~1 ~1 ~ air
+  19273 actor   CommandOutput success_count=0 data=None commands.fill.success success=false ["0"]
+## /replaceitem entity @s slot.weapon.mainhand 0 trapdoor
+  20275 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.replaceitem.success.entity\",\"with\":{\"rawtext\":[{\"text\":\"slot.weapon.mainhand\"},{\"text\":\"0\"},{\"text\":\"CmdActor\"},{\"text\":\"1\"},{\"text\":\"Trapdoor\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  20275 actor   CommandOutput success_count=1 data=None commands.replaceitem.success.entity success=true ["slot.weapon.mainhand", "0", "CmdActor", "1", "Trapdoor"]
+## /!place 1 -1 0
+## placed: Ok(())
+  21330 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 8 }, block_runtime_id: 2272872970, flags: UpdateBlockFlags(3), layer: 0 }
+  21330 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 8 }, block_runtime_id: 2272872970, flags: UpdateBlockFlags(3), layer: 0 }
+  21330 watcher MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 0.5, y: 65.62001, z: 8.5 }, pitch: 58.3138, yaw: -90.0, head_yaw: -90.0, mode: Normal, on_ground: true, ridden_runtime_id: 0, teleport: None, tick: 471 }
+## /tp @s ~ ~ ~2 0 0
+  22374 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.tp.success.coordinates\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor\"},{\"text\":\"0.50\"},{\"text\":\"64.00\"},{\"text\":\"10.50\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  22374 watcher MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 0.5, y: 65.62001, z: 10.5 }, pitch: 0.0, yaw: 0.0, head_yaw: 0.0, mode: Normal, on_ground: true, ridden_runtime_id: 0, teleport: None, tick: 492 }
+  22374 actor   MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 0.5, y: 65.62001, z: 10.5 }, pitch: 0.0, yaw: 0.0, head_yaw: 0.0, mode: Teleport, on_ground: true, ridden_runtime_id: 0, teleport: Some(MovePlayerTeleport { cause: Command, source_entity_type: Unknown(1) }), tick: 492 }
+  22374 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.tp.successVictim\",\"with\":{\"rawtext\":[{\"text\":\"0.50, 64.00, 10.50\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  22374 actor   CommandOutput success_count=1 data=None commands.tp.success.coordinates success=true ["CmdActor", "0.50", "64.00", "10.50"]
+  22473 watcher MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 0.5, y: 65.62001, z: 10.5 }, pitch: 0.0, yaw: 0.0, head_yaw: 0.0, mode: Normal, on_ground: false, ridden_runtime_id: 0, teleport: None, tick: 494 }
+  22523 watcher MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 0.5, y: 65.62001, z: 10.5 }, pitch: 0.0, yaw: 0.0, head_yaw: 0.0, mode: Normal, on_ground: true, ridden_runtime_id: 0, teleport: None, tick: 495 }
+## /fill ~1 ~ ~ ~1 ~1 ~ air
+  23372 actor   CommandOutput success_count=0 data=None commands.fill.success success=false ["0"]
+## /replaceitem entity @s slot.weapon.mainhand 0 spruce_trapdoor
+  24374 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.replaceitem.success.entity\",\"with\":{\"rawtext\":[{\"text\":\"slot.weapon.mainhand\"},{\"text\":\"0\"},{\"text\":\"CmdActor\"},{\"text\":\"1\"},{\"text\":\"Spruce Trapdoor\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  24375 actor   CommandOutput success_count=1 data=None commands.replaceitem.success.entity success=true ["slot.weapon.mainhand", "0", "CmdActor", "1", "Spruce Trapdoor"]
+## /!place 1 -1 0
+## placed: Ok(())
+  25411 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 10 }, block_runtime_id: 3628619730, flags: UpdateBlockFlags(3), layer: 0 }
+  25413 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 10 }, block_runtime_id: 3628619730, flags: UpdateBlockFlags(3), layer: 0 }
+  25413 watcher MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 0.5, y: 65.62001, z: 10.5 }, pitch: 58.3138, yaw: -90.0, head_yaw: -90.0, mode: Normal, on_ground: true, ridden_runtime_id: 0, teleport: None, tick: 551 }
+  26372 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 7025, paused: false }] }) }
+  26372 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 7025, paused: false }] }) }
+## /tp @s ~ ~ ~2 90 0
+  26424 actor   MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 0.5, y: 65.62001, z: 12.5 }, pitch: 0.0, yaw: 90.0, head_yaw: 90.0, mode: Teleport, on_ground: true, ridden_runtime_id: 0, teleport: Some(MovePlayerTeleport { cause: Command, source_entity_type: Unknown(1) }), tick: 571 }
+  26424 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.tp.successVictim\",\"with\":{\"rawtext\":[{\"text\":\"0.50, 64.00, 12.50\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  26424 actor   CommandOutput success_count=1 data=None commands.tp.success.coordinates success=true ["CmdActor", "0.50", "64.00", "12.50"]
+  26424 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.tp.success.coordinates\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor\"},{\"text\":\"0.50\"},{\"text\":\"64.00\"},{\"text\":\"12.50\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  26424 watcher MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 0.5, y: 65.62001, z: 12.5 }, pitch: 0.0, yaw: 90.0, head_yaw: 90.0, mode: Normal, on_ground: true, ridden_runtime_id: 0, teleport: None, tick: 571 }
+## /fill ~1 ~ ~ ~1 ~1 ~ air
+  27423 actor   CommandOutput success_count=0 data=None commands.fill.success success=false ["0"]
+## /replaceitem entity @s slot.weapon.mainhand 0 spruce_trapdoor
+  28475 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.replaceitem.success.entity\",\"with\":{\"rawtext\":[{\"text\":\"slot.weapon.mainhand\"},{\"text\":\"0\"},{\"text\":\"CmdActor\"},{\"text\":\"1\"},{\"text\":\"Spruce Trapdoor\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  28475 actor   CommandOutput success_count=1 data=None commands.replaceitem.success.entity success=true ["slot.weapon.mainhand", "0", "CmdActor", "1", "Spruce Trapdoor"]
+## /!place 1 -1 0
+## placed: Ok(())
+  29574 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 12 }, block_runtime_id: 3628619730, flags: UpdateBlockFlags(3), layer: 0 }
+  29574 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 12 }, block_runtime_id: 3628619730, flags: UpdateBlockFlags(3), layer: 0 }
+  29574 watcher MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 0.5, y: 65.62001, z: 12.5 }, pitch: 58.3138, yaw: -90.0, head_yaw: -90.0, mode: Normal, on_ground: true, ridden_runtime_id: 0, teleport: None, tick: 633 }
+## /tp @s ~ ~ ~2 180 0
+  30625 actor   MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 0.5, y: 65.62001, z: 14.5 }, pitch: 0.0, yaw: 180.0, head_yaw: 180.0, mode: Teleport, on_ground: true, ridden_runtime_id: 0, teleport: Some(MovePlayerTeleport { cause: Command, source_entity_type: Unknown(1) }), tick: 654 }
+  30625 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.tp.successVictim\",\"with\":{\"rawtext\":[{\"text\":\"0.50, 64.00, 14.50\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  30625 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.tp.success.coordinates\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor\"},{\"text\":\"0.50\"},{\"text\":\"64.00\"},{\"text\":\"14.50\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  30625 actor   CommandOutput success_count=1 data=None commands.tp.success.coordinates success=true ["CmdActor", "0.50", "64.00", "14.50"]
+  30625 watcher MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 0.5, y: 65.62001, z: 14.5 }, pitch: 0.0, yaw: 180.0, head_yaw: 180.0, mode: Normal, on_ground: true, ridden_runtime_id: 0, teleport: None, tick: 654 }
+  30673 watcher MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 0.5, y: 65.62001, z: 14.5 }, pitch: 0.0, yaw: -180.0, head_yaw: -180.0, mode: Normal, on_ground: true, ridden_runtime_id: 0, teleport: None, tick: 655 }
+## /fill ~1 ~ ~ ~1 ~1 ~ air
+  31623 actor   CommandOutput success_count=0 data=None commands.fill.success success=false ["0"]
+## /replaceitem entity @s slot.weapon.mainhand 0 spruce_trapdoor
+  32625 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.replaceitem.success.entity\",\"with\":{\"rawtext\":[{\"text\":\"slot.weapon.mainhand\"},{\"text\":\"0\"},{\"text\":\"CmdActor\"},{\"text\":\"1\"},{\"text\":\"Spruce Trapdoor\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  32625 actor   CommandOutput success_count=1 data=None commands.replaceitem.success.entity success=true ["slot.weapon.mainhand", "0", "CmdActor", "1", "Spruce Trapdoor"]
+## /!place 1 -1 0
+## placed: Ok(())
+  33703 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 14 }, block_runtime_id: 3628619730, flags: UpdateBlockFlags(3), layer: 0 }
+  33703 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 14 }, block_runtime_id: 3628619730, flags: UpdateBlockFlags(3), layer: 0 }
+  33704 watcher MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 0.5, y: 65.62001, z: 14.5 }, pitch: 58.3138, yaw: -90.0, head_yaw: -90.0, mode: Normal, on_ground: true, ridden_runtime_id: 0, teleport: None, tick: 714 }
+## /tp @s ~ ~ ~2 -90 0
+  34724 actor   MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 0.5, y: 65.62001, z: 16.5 }, pitch: 0.0, yaw: -90.0, head_yaw: -90.0, mode: Teleport, on_ground: true, ridden_runtime_id: 0, teleport: Some(MovePlayerTeleport { cause: Command, source_entity_type: Unknown(1) }), tick: 734 }
+  34725 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.tp.successVictim\",\"with\":{\"rawtext\":[{\"text\":\"0.50, 64.00, 16.50\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  34725 actor   CommandOutput success_count=1 data=None commands.tp.success.coordinates success=true ["CmdActor", "0.50", "64.00", "16.50"]
+  34725 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.tp.success.coordinates\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor\"},{\"text\":\"0.50\"},{\"text\":\"64.00\"},{\"text\":\"16.50\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  34725 watcher MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 0.5, y: 65.62001, z: 16.5 }, pitch: 0.0, yaw: -90.0, head_yaw: -90.0, mode: Normal, on_ground: true, ridden_runtime_id: 0, teleport: None, tick: 734 }
+  34823 watcher MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 0.5, y: 65.62001, z: 16.5 }, pitch: 0.0, yaw: -90.0, head_yaw: -90.0, mode: Normal, on_ground: false, ridden_runtime_id: 0, teleport: None, tick: 736 }
+  34874 watcher MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 0.5, y: 65.62001, z: 16.5 }, pitch: 0.0, yaw: -90.0, head_yaw: -90.0, mode: Normal, on_ground: true, ridden_runtime_id: 0, teleport: None, tick: 737 }
+## /fill ~1 ~ ~ ~1 ~1 ~ air
+  35722 actor   CommandOutput success_count=0 data=None commands.fill.success success=false ["0"]
+## /replaceitem entity @s slot.weapon.mainhand 0 spruce_trapdoor
+  36725 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.replaceitem.success.entity\",\"with\":{\"rawtext\":[{\"text\":\"slot.weapon.mainhand\"},{\"text\":\"0\"},{\"text\":\"CmdActor\"},{\"text\":\"1\"},{\"text\":\"Spruce Trapdoor\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  36725 actor   CommandOutput success_count=1 data=None commands.replaceitem.success.entity success=true ["slot.weapon.mainhand", "0", "CmdActor", "1", "Spruce Trapdoor"]
+## /!place 1 -1 0
+## placed: Ok(())
+  37792 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 16 }, block_runtime_id: 3628619730, flags: UpdateBlockFlags(3), layer: 0 }
+  37793 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 16 }, block_runtime_id: 3628619730, flags: UpdateBlockFlags(3), layer: 0 }
+  37793 watcher MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 0.5, y: 65.62001, z: 16.5 }, pitch: 58.3138, yaw: -90.0, head_yaw: -90.0, mode: Normal, on_ground: true, ridden_runtime_id: 0, teleport: None, tick: 794 }
+## /tp @s ~ ~ ~2 0 0
+  38824 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.tp.success.coordinates\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor\"},{\"text\":\"0.50\"},{\"text\":\"64.00\"},{\"text\":\"18.50\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  38824 actor   MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 0.5, y: 65.62001, z: 18.5 }, pitch: 0.0, yaw: 0.0, head_yaw: 0.0, mode: Teleport, on_ground: true, ridden_runtime_id: 0, teleport: Some(MovePlayerTeleport { cause: Command, source_entity_type: Unknown(1) }), tick: 815 }
+  38824 watcher MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 0.5, y: 65.62001, z: 18.5 }, pitch: 0.0, yaw: 0.0, head_yaw: 0.0, mode: Normal, on_ground: true, ridden_runtime_id: 0, teleport: None, tick: 815 }
+  38824 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.tp.successVictim\",\"with\":{\"rawtext\":[{\"text\":\"0.50, 64.00, 18.50\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  38824 actor   CommandOutput success_count=1 data=None commands.tp.success.coordinates success=true ["CmdActor", "0.50", "64.00", "18.50"]
+  38923 watcher MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 0.5, y: 65.62001, z: 18.5 }, pitch: 0.0, yaw: 0.0, head_yaw: 0.0, mode: Normal, on_ground: false, ridden_runtime_id: 0, teleport: None, tick: 817 }
+  38973 watcher MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 0.5, y: 65.62001, z: 18.5 }, pitch: 0.0, yaw: 0.0, head_yaw: 0.0, mode: Normal, on_ground: true, ridden_runtime_id: 0, teleport: None, tick: 818 }
+  39173 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 7281, paused: false }] }) }
+  39173 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 7281, paused: false }] }) }
+## /fill ~1 ~ ~ ~1 ~1 ~ air
+  39823 actor   CommandOutput success_count=0 data=None commands.fill.success success=false ["0"]
+## /replaceitem entity @s slot.weapon.mainhand 0 iron_trapdoor
+  40825 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.replaceitem.success.entity\",\"with\":{\"rawtext\":[{\"text\":\"slot.weapon.mainhand\"},{\"text\":\"0\"},{\"text\":\"CmdActor\"},{\"text\":\"1\"},{\"text\":\"Iron Trapdoor\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  40825 actor   CommandOutput success_count=1 data=None commands.replaceitem.success.entity success=true ["slot.weapon.mainhand", "0", "CmdActor", "1", "Iron Trapdoor"]
+## /!place 1 -1 0
+## placed: Ok(())
+  41885 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 18 }, block_runtime_id: 1573670384, flags: UpdateBlockFlags(3), layer: 0 }
+  41886 watcher MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 0.5, y: 65.62001, z: 18.5 }, pitch: 58.3138, yaw: -90.0, head_yaw: -90.0, mode: Normal, on_ground: true, ridden_runtime_id: 0, teleport: None, tick: 874 }
+  41886 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 18 }, block_runtime_id: 1573670384, flags: UpdateBlockFlags(3), layer: 0 }
+## /tp @s ~ ~ ~2 90 0
+  42924 actor   MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 0.5, y: 65.62001, z: 20.5 }, pitch: 0.0, yaw: 90.0, head_yaw: 90.0, mode: Teleport, on_ground: true, ridden_runtime_id: 0, teleport: Some(MovePlayerTeleport { cause: Command, source_entity_type: Unknown(1) }), tick: 895 }
+  42924 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.tp.successVictim\",\"with\":{\"rawtext\":[{\"text\":\"0.50, 64.00, 20.50\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  42924 actor   CommandOutput success_count=1 data=None commands.tp.success.coordinates success=true ["CmdActor", "0.50", "64.00", "20.50"]
+  42924 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.tp.success.coordinates\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor\"},{\"text\":\"0.50\"},{\"text\":\"64.00\"},{\"text\":\"20.50\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  42924 watcher MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 0.5, y: 65.62001, z: 20.5 }, pitch: 0.0, yaw: 90.0, head_yaw: 90.0, mode: Normal, on_ground: true, ridden_runtime_id: 0, teleport: None, tick: 895 }
+  43022 watcher MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 0.5, y: 65.62001, z: 20.5 }, pitch: 0.0, yaw: 90.0, head_yaw: 90.0, mode: Normal, on_ground: false, ridden_runtime_id: 0, teleport: None, tick: 897 }
+  43072 watcher MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 0.5, y: 65.62001, z: 20.5 }, pitch: 0.0, yaw: 90.0, head_yaw: 90.0, mode: Normal, on_ground: true, ridden_runtime_id: 0, teleport: None, tick: 898 }
+## /fill ~1 ~ ~ ~1 ~1 ~ air
+  43923 actor   CommandOutput success_count=0 data=None commands.fill.success success=false ["0"]
+## /replaceitem entity @s slot.weapon.mainhand 0 iron_trapdoor
+  44925 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.replaceitem.success.entity\",\"with\":{\"rawtext\":[{\"text\":\"slot.weapon.mainhand\"},{\"text\":\"0\"},{\"text\":\"CmdActor\"},{\"text\":\"1\"},{\"text\":\"Iron Trapdoor\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  44925 actor   CommandOutput success_count=1 data=None commands.replaceitem.success.entity success=true ["slot.weapon.mainhand", "0", "CmdActor", "1", "Iron Trapdoor"]
+## /!place 1 -1 0
+## placed: Ok(())
+  46018 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 20 }, block_runtime_id: 1573670384, flags: UpdateBlockFlags(3), layer: 0 }
+  46018 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 20 }, block_runtime_id: 1573670384, flags: UpdateBlockFlags(3), layer: 0 }
+  46018 watcher MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 0.5, y: 65.62001, z: 20.5 }, pitch: 58.3138, yaw: -90.0, head_yaw: -90.0, mode: Normal, on_ground: true, ridden_runtime_id: 0, teleport: None, tick: 955 }
+## /tp @s ~ ~ ~2 180 0
+  47075 actor   MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 0.5, y: 65.62001, z: 22.5 }, pitch: 0.0, yaw: 180.0, head_yaw: 180.0, mode: Teleport, on_ground: true, ridden_runtime_id: 0, teleport: Some(MovePlayerTeleport { cause: Command, source_entity_type: Unknown(1) }), tick: 976 }
+  47075 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.tp.successVictim\",\"with\":{\"rawtext\":[{\"text\":\"0.50, 64.00, 22.50\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  47075 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.tp.success.coordinates\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor\"},{\"text\":\"0.50\"},{\"text\":\"64.00\"},{\"text\":\"22.50\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  47075 watcher MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 0.5, y: 65.62001, z: 22.5 }, pitch: 0.0, yaw: 180.0, head_yaw: 180.0, mode: Normal, on_ground: true, ridden_runtime_id: 0, teleport: None, tick: 976 }
+  47075 actor   CommandOutput success_count=1 data=None commands.tp.success.coordinates success=true ["CmdActor", "0.50", "64.00", "22.50"]
+  47123 watcher MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 0.5, y: 65.62001, z: 22.5 }, pitch: 0.0, yaw: -180.0, head_yaw: -180.0, mode: Normal, on_ground: false, ridden_runtime_id: 0, teleport: None, tick: 978 }
+  47223 watcher MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 0.5, y: 65.62001, z: 22.5 }, pitch: 0.0, yaw: -180.0, head_yaw: -180.0, mode: Normal, on_ground: true, ridden_runtime_id: 0, teleport: None, tick: 980 }
+## /fill ~1 ~ ~ ~1 ~1 ~ air
+  48073 actor   CommandOutput success_count=0 data=None commands.fill.success success=false ["0"]
+## /replaceitem entity @s slot.weapon.mainhand 0 iron_trapdoor
+  49074 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.replaceitem.success.entity\",\"with\":{\"rawtext\":[{\"text\":\"slot.weapon.mainhand\"},{\"text\":\"0\"},{\"text\":\"CmdActor\"},{\"text\":\"1\"},{\"text\":\"Iron Trapdoor\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  49075 actor   CommandOutput success_count=1 data=None commands.replaceitem.success.entity success=true ["slot.weapon.mainhand", "0", "CmdActor", "1", "Iron Trapdoor"]
+## /!place 1 -1 0
+## placed: Ok(())
+  50085 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 22 }, block_runtime_id: 1573670384, flags: UpdateBlockFlags(3), layer: 0 }
+  50085 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 22 }, block_runtime_id: 1573670384, flags: UpdateBlockFlags(3), layer: 0 }
+  50085 watcher MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 0.5, y: 65.62001, z: 22.5 }, pitch: 58.3138, yaw: -90.0, head_yaw: -90.0, mode: Normal, on_ground: true, ridden_runtime_id: 0, teleport: None, tick: 1035 }
+## /tp @s ~ ~ ~2 -90 0
+  51125 actor   MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 0.5, y: 65.62001, z: 24.5 }, pitch: 0.0, yaw: -90.0, head_yaw: -90.0, mode: Teleport, on_ground: true, ridden_runtime_id: 0, teleport: Some(MovePlayerTeleport { cause: Command, source_entity_type: Unknown(1) }), tick: 1056 }
+  51125 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.tp.successVictim\",\"with\":{\"rawtext\":[{\"text\":\"0.50, 64.00, 24.50\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  51125 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.tp.success.coordinates\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor\"},{\"text\":\"0.50\"},{\"text\":\"64.00\"},{\"text\":\"24.50\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  51125 watcher MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 0.5, y: 65.62001, z: 24.5 }, pitch: 0.0, yaw: -90.0, head_yaw: -90.0, mode: Normal, on_ground: true, ridden_runtime_id: 0, teleport: None, tick: 1056 }
+  51125 actor   CommandOutput success_count=1 data=None commands.tp.success.coordinates success=true ["CmdActor", "0.50", "64.00", "24.50"]
+  51973 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 7537, paused: false }] }) }
+  51973 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 7537, paused: false }] }) }
+## /fill ~1 ~ ~ ~1 ~1 ~ air
+  52123 actor   CommandOutput success_count=0 data=None commands.fill.success success=false ["0"]
+## /replaceitem entity @s slot.weapon.mainhand 0 iron_trapdoor
+  53125 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.replaceitem.success.entity\",\"with\":{\"rawtext\":[{\"text\":\"slot.weapon.mainhand\"},{\"text\":\"0\"},{\"text\":\"CmdActor\"},{\"text\":\"1\"},{\"text\":\"Iron Trapdoor\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  53125 actor   CommandOutput success_count=1 data=None commands.replaceitem.success.entity success=true ["slot.weapon.mainhand", "0", "CmdActor", "1", "Iron Trapdoor"]
+## /!place 1 -1 0
+## placed: Ok(())
+  54158 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 24 }, block_runtime_id: 1573670384, flags: UpdateBlockFlags(3), layer: 0 }
+  54158 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 24 }, block_runtime_id: 1573670384, flags: UpdateBlockFlags(3), layer: 0 }
+  54158 watcher MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 0.5, y: 65.62001, z: 24.5 }, pitch: 58.3138, yaw: -90.0, head_yaw: -90.0, mode: Normal, on_ground: true, ridden_runtime_id: 0, teleport: None, tick: 1115 }
+## /clear @s
+  55175 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.clear.success\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor\"},{\"text\":\"1\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  55176 actor   CommandOutput success_count=1 data=None commands.clear.success success=true ["CmdActor", "1"]
+## /
+probe exit 0
