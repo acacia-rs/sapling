@@ -18,7 +18,7 @@ What sapling did otherwise, by how often:
 |---|---|---|
 | `/fill` that changes nothing answered "No blocks filled"; BDS: `commands.fill.success ["0"]`, failed | 155 lines, most words | fixed |
 | Other players' `MovePlayer`: BDS relays one a tick per moving input, sapling only when a player moved | 76k packets | open, likely harmless |
-| Item and entity names in answers by title case: BDS `Raw Chicken`, `Flint and Steel`, `Potion of Slowness`, `Water Bottle`, a lying item by its item (`Rotten Flesh`, not `Item`) | ~40 lines | open: needs BDS's description ids (blocks use old keys, `tile.planks.oak`) |
+| Item and entity names in answers by title case: BDS `Raw Chicken`, `Flint and Steel`, `Potion of Slowness`, `Water Bottle`, a lying item by its item (`Rotten Flesh`, not `Item`) | ~40 lines | fixed but for lying items (`/kill` still says `Item`): `sapling-data/data/names.tsv` by `examples/bds_name_probe.rs` |
 | Big fills as `UpdateBlock` each where BDS sends `UpdateSubchunkBlocks` | 27.8k extra UpdateBlock | open |
 | Sounds BDS makes and sapling not: a player's `land` to others (248), `hit` (60), `fall` (43), `jump_to_block` (41), `born` (23), `armor.equip_iron` (22), `open`/`close` (34), underwater enter/exit (34), `bottle.empty` (44) | ~600 | open; `land` is the server's (acacia's bot sends no sounds), to everyone but the lander |
 | Mobs never showed `MOVING` (bit 34), which BDS toggles by docs/research/moving-flag.md's rule for every actor: 9871 toggles to sapling's 62 | 12 mob words: 565 BDS, 6 before, 184 after (AI differs) | fixed: a mob's flags are one word (`sync::Told::flag_mob`/`set_flag`), so fire, fuses, charges and spells no longer clear each other's bits either |
