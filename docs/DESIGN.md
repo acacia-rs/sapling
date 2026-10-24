@@ -399,7 +399,19 @@ it sends for `/title`, `/scoreboard`, `/gamemode`, `/tp`, a wither's bar and com
   ShowBar bytes prove that layout (acacia `docs/proto.md`); BDS sends no other type, not even when the
   player leaves the wither's range, so the others rest on gophertunnel.
 - **Titles.** SetDurations, SetSubtitle, SetTitle in that order, unset times -1, as `/title` sends them;
-  `send_actionbar`; `send_toast` (ToastRequest).
+  `send_actionbar`; `send_toast` (ToastRequest). `ctx.title_action` sends one step of `/title` alone
+  (title, subtitle, action bar, their rawtext `*Json` types, durations passed on as given, -1 too,
+  Clear, Reset).
+- **Sounds and particles** (`sapling-api/src/sound.rs`, `sapling-shard/src/sounds.rs`). `ctx.play_sound`
+  (PlaySound, position in eighths of a block cut toward zero, as BDS's `-147` for y -18.375),
+  `ctx.stop_sound` (StopSound; no name is `stop_all`), `ctx.spawn_particle` (SpawnParticleEffect, entity -1,
+  the world's dimension); the `_in_world` forms go to whoever sees the place.
+- **Rawtext** (`sapling-api/src/command/rawtext.rs`). The `RawText` parameter (wire type 74, json) reads a
+  JSON object to its closing bracket and checks it with BDS's `commands.tellraw.error.*` keys
+  (`ParseError::Invalid`); text that is no JSON is a syntax error at its first word. Parts with no known
+  key are dropped. `resolve` replaces selectors and scores; `to_json` writes it as BDS sends it (`with`
+  always a rawtext, no parts `null`, a trailing newline). `ctx.tell_raw` sends a JsonWhisper, `ctx.emote`
+  `/me`'s sender-less Chat `* name message`.
 - **Teleport.** `ctx.teleport` sends MovePlayer mode Teleport, cause Command, as `/tp`; the player's inputs
   are ignored until one carries `HandledTeleport`, and the teleport is repeated after 20 ticks without one.
 - **Game mode.** `ctx.set_game_mode` sends UpdatePlayerGameType to everyone in the world, the player
@@ -690,7 +702,16 @@ block action, and takes StopBreak and AbortBreak with a position.
   (`research/captures/bds-gamerule.txt`); its rule names are not completed. `/say <message>`
   (operators) announces `[name] message` to the shard (`ctx.announce`); `/tell`, `/w` and `/msg <target>
   <message>` (anyone) whisper to each target (`ctx.whisper`), as BDS sent them
-  (`research/captures/bds-feedback.txt`). `/kick <target> [reason]`, `/op` and `/deop` (operators,
+  (`research/captures/bds-feedback.txt`). `/me` (anyone), `/tellraw`, `/title`, `/titleraw`,
+  `/playsound`, `/stopsound` and `/particle` answer and send as BDS did (`vanilla/messaging.rs`,
+  `titles.rs`, `sounds.rs`; `bds_command_probe messaging`, research/captures/bds-messaging.txt):
+  `/me` and `/tellraw` go unanswered when they work; a rawtext selector (any selector, through
+  `ShardCtx::select`) names who it finds from the sender, `, `-joined, or is dropped; scores are
+  always dropped (no scoreboard; BDS kept a `*` score raw for a reader without one). `/playsound`
+  with no place plays at each target's eyes; out of range (16, or 16 per unit of volume over 1) it
+  is moved 2 blocks from the hearer at `minimumVolume`, or not played (Java's rule; BDS's answers
+  and positions fit it). Sound and particle names are not checked, as on BDS.
+  `/kick <target> [reason]`, `/op` and `/deop` (operators,
   `vanilla/operators.rs`) answer under BDS's keys; with access lists `/op` and `/deop` save the role
   of a player with an XUID, and a joining player gets the role `permissions.json` has for them.
   `ServerBuilder::access` adds `/allowlist` (`/whitelist`: add, remove, list, on, off, reload; on and
@@ -1240,7 +1261,7 @@ acacia-world = { path = "../acacia/acacia/crates/acacia-world" }
 - Commands: console sender, selectors in `Target` parameters, position and item parameters, soft enums
   (UpdateSoftEnum) for dynamic completions, several overloads for a struct, permission nodes.
 - Forms: images are untested, `ServerSettings`, ClientboundCloseForm, a timeout for unanswered forms.
-- HUD: list and below-name objectives, several boss bars (needs an entity each), `/title` clear and reset.
+- HUD: list and below-name objectives, several boss bars (needs an entity each); a scoreboard for rawtext scores.
 - Not sent yet, though BDS sends them for other players: UpdateAbilities, UpdateAdventureSettings,
   UpdateAttributes (sprint speed), PlayerLocation / LocatorBar, the MOVING flag and the FlagsExtended bit
   that changes with sneaking, held items and armour.

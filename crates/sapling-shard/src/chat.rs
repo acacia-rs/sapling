@@ -2,7 +2,7 @@
 //! under the sender's verified name, whatever name the packet claims.
 
 use acacia_proto::packets::{
-    Text, TextCategory, TextContent, TextContentAnnouncement, TextContentChat, TextContentJson, TextContentRaw, TextContentTranslation, TextContentWhisper, TextType,
+    Text, TextCategory, TextContent, TextContentAnnouncement, TextContentChat, TextContentJson, TextContentJsonWhisper, TextContentRaw, TextContentTranslation, TextContentWhisper, TextType,
 };
 use bevy_ecs::prelude::*;
 use bytes::Bytes;
@@ -99,6 +99,20 @@ impl sapling_api::ChatBackend for crate::handlers::Ctx<'_> {
     fn whisper(&mut self, to: PlayerId, from: &str, message: &str) {
         let content = TextContentWhisper { source_name: from.to_owned(), message: message.to_owned() };
         let packet = text(TextType::Whisper, TextCategory::Authored, TextContent::Whisper(content), "");
+        if let Some(mut out) = self.out(to) {
+            out.0.push(packet);
+        }
+    }
+
+    /// `/me`'s line is a Chat with no sender (research/captures/bds-messaging.txt).
+    fn emote(&mut self, from: &str, message: &str) {
+        let content = TextContentChat { source_name: String::new(), message: format!("* {from} {message}") };
+        send_to_all(self.world, &text(TextType::Chat, TextCategory::Authored, TextContent::Chat(content), ""));
+    }
+
+    fn tell_raw(&mut self, to: PlayerId, json: &str) {
+        let content = TextContent::JsonWhisper(TextContentJsonWhisper { message: json.to_owned() });
+        let packet = text(TextType::JsonWhisper, TextCategory::MessageOnly, content, "");
         if let Some(mut out) = self.out(to) {
             out.0.push(packet);
         }

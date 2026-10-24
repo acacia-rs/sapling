@@ -6,7 +6,8 @@ mod listen;
 mod selectors;
 
 use crate::testing::{Fake, player};
-use crate::{BossBar, BossBarColour, ChatEvent, CommandEvent, GameMode, Handler, Permission, Player, PlayerId, Priority, ShardCtx, Sidebar, Title};
+use crate::command::{RawPart, RawText};
+use crate::{BossBar, BossBarColour, ChatEvent, CommandEvent, GameMode, Handler, Permission, Player, PlayerId, Priority, ShardCtx, Sidebar, Sound, Title, TitleAction};
 
 struct Hub;
 
@@ -60,6 +61,34 @@ fn handlers_act_through_the_context_and_default_to_no_ops() {
     ];
     assert_eq!(backend.log, expected);
     assert!(ShardCtx::new(&mut backend).position(PlayerId(9)).is_none());
+}
+
+#[test]
+fn sounds_particles_titles_and_rawtext_go_to_the_backend() {
+    let mut backend = Fake::with(&["Steve"]);
+    let mut ctx = ShardCtx::new(&mut backend);
+    let steve = PlayerId(1);
+    ctx.play_sound(steve, &Sound::new("random.orb", [1.0, 2.0, 3.0]).volume(2.0).pitch(0.5));
+    ctx.play_sound_in_world(&Sound::new("note.harp", [0.0; 3]));
+    ctx.stop_sound(steve, Some("random.orb"));
+    ctx.stop_sound(steve, None);
+    ctx.spawn_particle(steve, "minecraft:heart_particle", [1.0, 2.0, 3.0]);
+    ctx.spawn_particle_in_world("minecraft:heart_particle", [0.0; 3]);
+    ctx.title_action(steve, &TitleAction::Times { fade_in: -1, stay: 2, fade_out: 3 });
+    ctx.emote("Steve", "waves");
+    ctx.tell_raw(steve, &RawText(vec![RawPart::Text("hi".into())]));
+    let expected = [
+        "sound Some(PlayerId(1)) random.orb [1.0, 2.0, 3.0] 2 0.5",
+        "sound None note.harp [0.0, 0.0, 0.0] 1 1",
+        r#"stop sound 1 Some("random.orb")"#,
+        "stop sound 1 None",
+        "particle Some(PlayerId(1)) minecraft:heart_particle [1.0, 2.0, 3.0]",
+        "particle None minecraft:heart_particle [0.0, 0.0, 0.0]",
+        "title action 1 Times { fade_in: -1, stay: 2, fade_out: 3 }",
+        "emote Steve waves",
+        r#"tell raw 1 {"rawtext":[{"text":"hi"}]}"#,
+    ];
+    assert_eq!(backend.log, expected);
 }
 
 #[test]

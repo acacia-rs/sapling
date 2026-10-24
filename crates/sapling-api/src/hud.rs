@@ -1,6 +1,9 @@
 //! What a player sees on top of the world: sidebar, boss bar, titles. Plain data; a shard turns
 //! changes into packets when it is handed to [`crate::ShardCtx`].
 
+use crate::command::RawText;
+use crate::{PlayerId, ShardCtx};
+
 /// The scoreboard on the right of the screen: a title over at most [`Sidebar::MAX_LINES`] lines.
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct Sidebar {
@@ -86,5 +89,42 @@ impl Title {
     pub fn times(mut self, fade_in: u32, stay: u32, fade_out: u32) -> Self {
         (self.fade_in, self.stay, self.fade_out) = (fade_in, stay, fade_out);
         self
+    }
+}
+
+/// One step of what `/title` and `/titleraw` do to a player's screen, each its own packet: a
+/// subtitle and times wait for the next title.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum TitleAction {
+    Title(String),
+    Subtitle(String),
+    ActionBar(String),
+    RawTitle(RawText),
+    RawSubtitle(RawText),
+    RawActionBar(RawText),
+    /// Ticks to fade in, stay and fade out; BDS passes -1 on as it is given.
+    Times { fade_in: i32, stay: i32, fade_out: i32 },
+    /// Takes the title off the screen.
+    Clear,
+    /// Clear, and the subtitle and times back to the client's own.
+    Reset,
+}
+
+impl ShardCtx<'_> {
+    /// Does one [`TitleAction`] to a player's screen, as `/title` does.
+    pub fn title_action(&mut self, player: PlayerId, action: &TitleAction) {
+        self.backend.title_action(player, action);
+    }
+}
+
+/// The `/title` side of [`crate::Backend`].
+pub trait TitleBackend {
+    fn title_action(&mut self, player: PlayerId, action: &TitleAction);
+}
+
+#[cfg(test)]
+impl TitleBackend for crate::testing::Fake {
+    fn title_action(&mut self, player: PlayerId, action: &TitleAction) {
+        self.log.push(format!("title action {} {action:?}", player.0));
     }
 }

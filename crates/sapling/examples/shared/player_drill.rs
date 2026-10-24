@@ -139,6 +139,7 @@ pub fn drill(name: &str) -> Option<(Vec<String>, &'static [&'static str])> {
         "sun" => (world::sun(), hunt::KINDS_SHOWN),
         "weather" => (world::weather(), world::WEATHER_SHOWN),
         "feedback" => (feedback::feedback(), feedback::FEEDBACK_SHOWN),
+        "messaging" => (feedback::MESSAGING.iter().map(|line| line.to_string()).collect(), feedback::MESSAGING_SHOWN),
         "spiders" => (world::spiders(), hunt::KINDS_SHOWN),
         "kinds2" => (world::kinds2(), hunt::KINDS_SHOWN),
         "pushed" => (world::pushed(), world::PUSHED_SHOWN),

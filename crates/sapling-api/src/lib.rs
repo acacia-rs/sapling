@@ -21,6 +21,7 @@ mod listen;
 mod movement;
 mod player;
 mod plugin;
+mod sound;
 mod tags;
 #[cfg(test)]
 mod testing;
@@ -52,7 +53,8 @@ pub use listen::{Event, Listen, ListenerChange, ListenerId, Listeners, Scope};
 pub use plugin::{Plugin, PluginBuilder, Scoped};
 pub use health::{DamageCause, HealthBackend};
 pub use form::{Custom, Form, FormResponse, Menu, Modal};
-pub use hud::{BossBar, BossBarColour, Sidebar, Title};
+pub use hud::{BossBar, BossBarColour, Sidebar, Title, TitleAction, TitleBackend};
+pub use sound::{Sound, SoundBackend};
 pub use item::{DropEvent, Item, Slot};
 pub use player::{Difficulty, GameMode, Permission, Player, PlayerId, Position};
 pub use tags::Tagged;
