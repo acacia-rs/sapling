@@ -1,15 +1,20 @@
 //! Vanilla's commands, for operators, built on the plugin API alone: `/setblock`, `/fill`, `/tp`,
-//! `/give`, `/clear`, `/gamemode`, `/summon`, `/kill`, `/damage`, `/difficulty`, `/effect`, `/gamerule`, `/replaceitem`. Opt in with
+//! `/give`, `/clear`, `/gamemode`, `/summon`, `/kill`, `/damage`, `/difficulty`, `/effect`, `/gamerule`, `/replaceitem`,
+//! `/kick`, `/op`, `/deop`, and with access lists `/allowlist` and the ban commands. Opt in with
 //! [`crate::ServerBuilder::vanilla_commands`]. Positions take `~`; targets take names and every
 //! Bedrock selector with its filters ([`sapling_api::command::Selector`]). Blocks are written as `/setblock` writes them: their neighbours react.
 // TODO: the other vanilla commands.
 
+mod access;
+mod allowlist;
+mod bans;
 mod blocks;
 mod chat;
 mod clock;
 mod containers;
 mod effects;
 mod execute;
+mod operators;
 mod players;
 mod rules;
 
@@ -26,11 +31,13 @@ use crate::ServerBuilder;
 impl ServerBuilder {
     /// Adds vanilla's commands for operators (this module): `/setblock`, `/fill`, `/tp`, `/give`,
     /// `/clear`, `/gamemode`, `/summon`, `/kill`, `/gamerule`, `/time`, `/xp`, `/replaceitem block`,
-    /// `/execute in <dimension> run tp`, `/say` and `/tell` (for anyone). A command
-    /// added later under the same name replaces one of these.
+    /// `/execute in <dimension> run tp`, `/kick`, `/op`, `/deop`, `/say` and `/tell` (for anyone).
+    /// A command added later under the same name replaces one of these. The ban and allowlist
+    /// commands come with [`ServerBuilder::access`].
     pub fn vanilla_commands(self) -> Self {
         let blocks = self.command::<SetBlock>().command::<Fill>().command::<TestForBlock>().command::<ReplaceItem>();
         blocks.command::<Teleport>().command::<Give>().command::<Clear>().command::<GameModeCommand>().command::<Summon>().command::<Kill>().command::<Damage>().command::<DifficultyCommand>().command::<effects::EffectCommand>().command::<GameRule>().command::<clock::Time>().command::<clock::Xp>().command::<clock::WeatherCommand>().command::<clock::ToggleDownfall>().command::<execute::Execute>().command::<chat::Say>().command::<chat::Tell>()
+            .command::<operators::Kick>().command::<operators::Op>().command::<operators::Deop>()
     }
 }
 

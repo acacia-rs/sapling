@@ -2,7 +2,7 @@ use std::net::SocketAddr;
 use std::sync::Arc;
 
 use sapling_api::{Command, Difficulty, GameMode, Handler, Plugin, Priority};
-use sapling_net::{Advert, Listener, Motd, NetConfig, NetherNet, SigningKeys};
+use sapling_net::{Admission, Advert, Listener, Motd, NetConfig, NetherNet, SigningKeys};
 use sapling_shard::{Link, Shard, ShardConfig, ShardHandle};
 use sapling_world::{Template, World};
 
@@ -33,7 +33,7 @@ type HandlerFactory = Box<dyn Fn() -> Box<dyn Handler> + Send>;
 
 pub struct ServerBuilder {
     addr: SocketAddr,
-    net: NetConfig,
+    pub(crate) net: NetConfig,
     shard: ShardConfig,
     /// The default world, named `shard.world_id`; without one it is the stone platform.
     world: Option<World>,
@@ -90,6 +90,13 @@ impl ServerBuilder {
 
     pub fn max_players(mut self, max: usize) -> Self {
         self.net.max_players = max;
+        self
+    }
+
+    /// Limits on each address's connections (default: 8 at once, 10 new ones per 10 s; loopback
+    /// exempt). [`Admission::off`] for load tests from another machine.
+    pub fn admission(mut self, admission: Admission) -> Self {
+        self.net.admission = admission;
         self
     }
 

@@ -5,6 +5,9 @@ use acacia_nethernet::lan::{DISCOVERY_PORT, ServerData};
 use acacia_proto::{GAME_VERSION, PROTOCOL_VERSION};
 use p384::ecdsa::SigningKey;
 
+use crate::access::AccessLists;
+use crate::admission::Admission;
+
 #[derive(Debug, Clone)]
 pub struct NetConfig {
     /// Admit only logins the authorization service or Mojang signed.
@@ -21,6 +24,10 @@ pub struct NetConfig {
     pub drained_bytes: usize,
     /// NetherNet beside RakNet. Off by default: a vanilla client that finds it stops using RakNet.
     pub nethernet: Option<NetherNet>,
+    /// Limits on each address's connections.
+    pub admission: Admission,
+    /// Bans and the allowlist each login is checked against; none by default.
+    pub access: Option<AccessLists>,
 }
 
 impl Default for NetConfig {
@@ -34,6 +41,8 @@ impl Default for NetConfig {
             congested_bytes: 1024 * 1024,
             drained_bytes: 256 * 1024,
             nethernet: None,
+            admission: Admission::default(),
+            access: None,
         }
     }
 }
