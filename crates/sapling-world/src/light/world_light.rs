@@ -115,8 +115,8 @@ impl World {
     }
 }
 
-/// Spreads from the cells along each side of a column that faces a loaded neighbour, on both
-/// sides, except where both sections are at one and the same level.
+/// Spreads across each side of a column that faces a loaded neighbour, from whichever of two
+/// facing cells is bright enough to raise the other; sections at one and the same level are skipped.
 fn join(flood: &mut Flood, grid: &WorldGrid, pos: ChunkPos, channel: Channel) {
     let Some(own) = grid.columns.get(&pos) else { return };
     let floor = grid.world.heights().start;
@@ -135,8 +135,13 @@ fn join(flood: &mut Flood, grid: &WorldGrid, pos: ChunkPos, channel: Channel) {
                 };
                 let (x, z) = (pos.x * 16 + edge(dx), pos.z * 16 + edge(dz));
                 for y in floor + 16 * slot as i32..floor + 16 * slot as i32 + 16 {
-                    flood.spread_from([x, y, z]);
-                    flood.spread_from([x + dx, y, z + dz]);
+                    let (Some(here), Some(there)) = (own.get(channel, x, y, z), other.get(channel, x + dx, y, z + dz)) else { continue };
+                    // Light crossing a side loses at least 1, so only a gap of 2 or more spreads.
+                    if here > there + 1 {
+                        flood.spread_from([x, y, z]);
+                    } else if there > here + 1 {
+                        flood.spread_from([x + dx, y, z + dz]);
+                    }
                 }
             }
         }

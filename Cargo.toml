@@ -60,6 +60,9 @@ p384 = { opt-level = 3 }
 primeorder = { opt-level = 3 }
 elliptic-curve = { opt-level = 3 }
 ecdsa = { opt-level = 3 }
+# Light floods are ~6 µs a cell unoptimised: joining a few loaded columns held a debug tick 150 ms.
+sapling-world = { opt-level = 2 }
+acacia-world = { opt-level = 2 }
 crypto-bigint = { opt-level = 3 }
 sha2 = { opt-level = 3 }
 aes = { opt-level = 3 }
