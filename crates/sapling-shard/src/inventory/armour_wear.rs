@@ -2,14 +2,14 @@
 //! wear"): each piece by a quarter of the hit, the helmet by far more of what falls on it.
 // TODO: a piece that breaks goes without a sound, and nobody else sees it go.
 
-use acacia_proto::packets::{InventorySlot, PlayerArmorDamage};
-use acacia_proto::types::{ArmorDamageEntry, ArmorDamageEntryArmorSlot, WindowIDVarint};
+use acacia_proto::packets::{InventorySlot, LevelSoundEvent, PlayerArmorDamage};
+use acacia_proto::types::{ArmorDamageEntry, ArmorDamageEntryArmorSlot, Vec3f, WindowIDVarint};
 use bevy_ecs::prelude::*;
 
 use super::wear::{damage, set_damage, wear_chance};
 use super::{Inventory, wire};
 use crate::blocks::Dice;
-use crate::components::Outgoing;
+use crate::components::{NetId, Outgoing, Position};
 
 /// A hit wears each piece by its amount over this, and by one at least.
 const SHARE: f32 = 4.0;
@@ -58,5 +58,42 @@ pub(crate) fn wear_armour(world: &mut World, player: Entity, amount: f32, on_hea
         let id = inventory.new_id();
         inventory.armor[0].as_mut().expect("worn").id = id;
         out.push(&InventorySlot { window_id: WindowIDVarint::Armor, slot: 0, container: None, storage_item: None, item: wire(&inventory.armor[0], true) });
+        let helmet = inventory.armor[0].as_ref().map(|held| held.stack.name.clone());
+        helmet.into_iter().for_each(|helmet| equip_sound(world, player, &helmet));
     }
+}
+
+/// The stack ids and items in a player's armour slots, to tell later which [`equipped`] set.
+pub(crate) fn worn(inventory: &Inventory) -> Vec<Option<(i32, String)>> {
+    inventory.armor.iter().map(|slot| slot.as_ref().map(|held| (held.id, held.stack.name.clone()))).collect()
+}
+
+/// Plays the equip sound of each piece of armour put in a slot since `before`, even one like
+/// the last, as BDS does whenever it sets a slot: by `/replaceitem`, and a helmet sent anew after
+/// a fall on it (research/captures/bds-armour.txt, bds-wear.txt).
+pub(crate) fn equipped(world: &mut World, player: Entity, before: &[Option<(i32, String)>]) {
+    let Some(now) = world.get::<Inventory>(player).map(worn) else { return };
+    for (now, before) in now.iter().zip(before) {
+        if let Some((_, piece)) = now.as_ref().filter(|_| now != before) {
+            equip_sound(world, player, piece);
+        }
+    }
+}
+
+/// `armor.equip_<material>` at the player's eyes, to it and its viewers.
+// TODO: chainmail, gold, turtle and elytra are named as the client's sounds are, not drilled.
+fn equip_sound(world: &mut World, player: Entity, piece: &str) {
+    let Some(_) = sapling_data::armour_lasts(piece) else { return };
+    let plain = piece.strip_prefix("minecraft:").unwrap_or(piece);
+    let material = match plain.split('_').next() {
+        Some(material @ ("leather" | "iron" | "diamond" | "netherite")) => material,
+        Some("chainmail") => "chain",
+        Some("golden") => "gold",
+        _ if plain == "elytra" => "elytra",
+        _ => "generic",
+    };
+    let (Some(id), Some([x, y, z])) = (world.get::<NetId>(player).map(|id| id.0), world.get::<Position>(player).map(|position| position.feet)) else { return };
+    let position = Vec3f { x, y: y + sapling_data::EYE_HEIGHT, z };
+    let sound = LevelSoundEvent { sound_id: format!("armor.equip_{material}"), position, extra_data: -1, entity_type: "minecraft:player".into(), is_baby_mob: false, is_global: false, entity_unique_id: id as i64, fire_at_position: None };
+    crate::vitals::tell(world, player, &sound);
 }
