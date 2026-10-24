@@ -150,9 +150,11 @@ research/dragon-fight-decompile.md (the fight manager) and research/dragon-ai-de
   discs going down from 75 (layers of 145, 97, 45, 37, 9 cells and 6 layers from radius 6), the far gateway
   10 over their first top column and the exit one over it, as sapling builds them. The island's random is a
   fresh MT19937 seeded by hash_combine of the cell's `std::hash<int>`s (148274c80; seen live on a Windows BDS
-  attached mid-fight: seed 0xF92C2FAE at (0, 75, -1120), the FNV-1a value). Linux BDS's libstdc++ hashes an
-  int as itself, and that seed gives both drilled islands' radii exactly (6, 4.5, 3, 2.5, 1 and 6, 5.5, 4,
-  3.5, 2, 1.5), so sapling seeds it so; a Windows BDS would build other sizes.
+  attached mid-fight: seed 0xF92C2FAE at (0, 75, -1120), MSVC's FNV-1a over each coordinate's bytes).
+  sapling builds worlds as Windows BDS does (the user's rule, as all of worldgen), so it seeds the island so:
+  radii 5, 4.5, 3, 1.5, 1 there. The testbox's Linux BDS hashes an int as itself (libstdc++) and built
+  other islands (6, 4.5, 3, 2.5, 1 and 6, 5.5, 4, 3.5, 2, 1.5 in the two drills); a unit test keeps that
+  seeding reproducing them, so testbox drills of islands differ from sapling by design.
 - **Fireball** (survival, survival2; extras 4): the strafe shoots from two over the dragon's feet, a block towards
   its prey, at the middle of the prey's box, at 1.3 with a 0.075 gaussian spread; AddEntity (owner, flags, box
   0.31) and its data, the `disappeared`/`undefined`/`shoot` sounds, its first move in the same tick, flags the next,
