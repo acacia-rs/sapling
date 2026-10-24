@@ -227,6 +227,17 @@ fn a_click_that_places_nothing_is_an_interaction_and_shows_the_blocks_again() {
     assert_eq!(*seen.0.lock().unwrap(), ["Alex clicked minecraft:stone at [1, 64, 0] Up", "Alex clicked minecraft:crafting_table at [2, 65, 0] Up"]);
 }
 
+/// research/captures/bds-sounds.txt: BDS showed a door it opened, and nothing more.
+#[test]
+fn a_block_used_by_an_empty_hand_is_shown_as_it_changed_and_no_more() {
+    let mut h = two_players(GameMode::Survival);
+    h.remote.run(|ctx| assert!(ctx.set_block(ABOVE, &Block::new("lever"))));
+    h.tick_all();
+    h.receive(1, &click(ABOVE, UP, None));
+    let sent = updates(h.tick_all().to(1));
+    assert_eq!(sent.iter().map(|(pos, _, layer)| (*pos, *layer)).collect::<Vec<_>>(), [(ABOVE, 0)], "{sent:?}");
+}
+
 #[test]
 fn requests_out_of_reach_out_of_the_world_or_malformed_change_nothing() {
     let mut h = two_players(GameMode::Survival);

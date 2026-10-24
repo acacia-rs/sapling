@@ -152,8 +152,8 @@ fn a_stored_block_entity_comes_with_its_section_and_after_a_resync() {
     let payload = all::<Subchunk>(&h.tick(1))[0].entries[0].payload.clone().expect("a payload");
     assert!(payload.ends_with(&wire) && payload.len() > wire.len(), "the chest's data follows its section");
 
-    // A click is answered with the blocks as they are, which would leave the chest nameless.
-    h.receive(1, &click([3, 67, 3], 1, None));
+    // A click holding a block is answered with the blocks as they are, which would leave the chest nameless.
+    h.receive(1, &click([3, 67, 3], 1, Some("minecraft:dirt")));
     let shown = all::<BlockEntityData>(&h.tick(1));
     assert_eq!(shown.iter().map(|data| (data.position.y, data.nbt.decode().unwrap().value)).collect::<Vec<_>>(), [(67, chest)]);
 }
