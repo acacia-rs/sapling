@@ -6,7 +6,7 @@ fn armour_takes_off_a_hit_what_it_took_off_on_bds() {
     // diamond and of netherite against 5, and the netherite against 2.
     let behind = |armour: [f32; 2], amount: f32| {
         let mut health = Health::new(20.0, None, 0);
-        health.wear(armour);
+        health.wear(armour, Warding::default());
         (health.shielded(amount) * 1000.0).round() / 1000.0
     };
     let taken = [behind([0.0, 0.0], 5.0), behind([3.0, 0.0], 5.0), behind([6.0, 0.0], 5.0), behind([15.0, 0.0], 5.0), behind([20.0, 8.0], 5.0), behind([20.0, 12.0], 5.0), behind([20.0, 12.0], 2.0)];

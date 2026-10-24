@@ -751,8 +751,29 @@ block action, and takes StopBreak and AbortBreak with a position.
   (a sword: two) in the `Damage` tag of the tool in the hand, where the game keeps it; the tool is gone
   when its damage would pass its durability, so a wooden tool lasts 60 uses (BDS
   `ItemStackBase::hurtAndBreak`: breaks on `max < new`). One throw in a hundred decides whether a use
-  counts: always, or 100 / (level + 1) with Unbreaking (the formula is other servers', the single
-  throw is BDS's), never with an `Unbreakable` tag. No break sound; `Item::damage` does not show it.
+  counts: always, or 100 / (level + 1) with Unbreaking (armour 60 + 40 / (level + 1), the wiki's),
+  never with an `Unbreakable` tag. No break sound; `Item::damage` does not show it.
+- **Enchantments** (`sapling_data::enchant`, all the rules; `enchants.rs` reads what a player wears
+  and holds; `docs/research/enchantments.md`, decompiled BDS). Levels come from the stack's `ench`
+  list. Sharpness (1.25 a level), Smite and Bane of Arthropods (2.5 on undead and arthropods), summed
+  and floored, add to a hit before strength (`creatures/attacks.rs`, `duels.rs`); Bane slows an
+  arthropod (amplifier 0, 20 + up to 10 x level ticks), Fire Aspect burns 80 ticks a level, Knockback
+  throws half a block a level further (the Java game's: BDS's throw was not traced), Looting goes
+  into the mob's loot table (`looting_enchant`, `random_chance_with_looting`; a player's kill also
+  meets `killed_by_player`). Protection's points (Protection 1 a level on all but void, starving and a
+  sonic boom; Fire, Blast and Projectile 2, Feather Falling 3 on their own), summed over the pieces,
+  each take 4 hundredths off past the armour, 20 at most (`Health::warded`, every path a player is
+  hurt by). Fire Protection shortens a burn by 15 hundredths a level, summed. Thorns: each piece
+  rolls 0.15 a level, hurts a mob or player that hit (melee) for 1 to 4, and wears 3 when it hurt
+  back, 1 when not. Respiration keeps a breath with level / (level + 1). Depth Strider goes into
+  the server's movement step. Frost Walker freezes still water in a square of 2 + level (6 counts at
+  most) around a player that moved, as frosted ice that ages and melts by the Java game's rule
+  (`blocks/frost.rs`). Mending: an orb mends one damaged Mending stack worn or held, two of wear a
+  point, before the rest is experience. Curse of Vanishing is gone at death; Curse of Binding keeps
+  a piece on outside creative (`inventory/enchanted.rs`). Not done: bows, crossbows, tridents,
+  fishing rods and the mace and their enchantments; Aqua Affinity (the server does not slow a break
+  under water); Soul Speed, Swift Sneak; Thorns against arrows; Blast Protection's throw (BDS reads
+  none); Looting on armour.
 - **What a block leaves** (`blocks/loot.rs`, `sapling_data::block_loot`). `BreakEvent::drops` starts as
   what the game's loot table for the block gives, in survival when the tool in the server's hand
   harvests the block; empty otherwise. The tables are the Java game's (`data/block-loot.tsv`, made from
@@ -951,8 +972,8 @@ Details and BDS evidence: docs/research/nether-dimension.md, docs/research/end-d
   `addExperience` (the Java formula), go to its client as the `player.experience` attribute, with
   `player.level` when the level changed (as recorded), and are kept
   with its items (`PlayerLevel`, `PlayerLevelProgress`); a fifth level sounds `levelup`. Orbs join
-  up as BDS's (`orbs/merge.rs`) and are kept with their column at what they are worth. Not done:
-  Mending.
+  up as BDS's (`orbs/merge.rs`) and are kept with their column at what they are worth. An orb
+  mends a Mending stack first (Enchantments).
 - **Double chests** (`containers/pairs.rs`). Two chests of one kind, side by side and facing the same
   way, name each other in their block entities (`pairx`, `pairz`, `pairlead`), which clients are sent
   and draw one large chest from. A chest placed beside a single one pairs with it, the old one leading

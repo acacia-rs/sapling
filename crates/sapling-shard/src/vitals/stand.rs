@@ -1,13 +1,16 @@
 //! What the place a living player stands in does to it each tick: a fall, fire, lava, water over
-//! its head, a block around it, and the hunger its moves cost.
+//! its head (less often with Respiration), a block around it, and the hunger its moves cost;
+//! boots with Frost Walker freeze the water around.
 
 use bevy_ecs::prelude::*;
 use sapling_data::EYE_HEIGHT;
+use sapling_data::enchant;
 
 use super::{
     AIR, BREATH, DROWN_HARM, FIERY, GASP, JUMP_TIRES, LAVA, LEAP_TIRES, LONGEST_STEP, SIZE, SPRINT_TIRES, STARVED, Vitals, WALLED, WATER, dress, effects, flash, hunger,
     settle, tell,
 };
+use crate::blocks::Dice;
 use crate::body::Body;
 use crate::components::{Layer, NetId, Position, Tick};
 use crate::creatures::{Cause, Health, holds, is_full_block, touches};
@@ -17,6 +20,7 @@ const NATURAL_REGENERATION: &str = "naturalRegeneration";
 
 pub(super) fn stand(world: &mut World, player: Entity, layer: Entity) {
     dress(world, player);
+    let warding = crate::enchants::warding(world, player);
     let gilled = effects::level(world, player, sapling_api::Effect::WaterBreathing).is_some();
     let (Some(position), Some(mut vitals)) = (world.get::<Position>(player).copied(), world.get::<Vitals>(player).copied()) else { return };
     let Some(level) = world.get::<Layer>(layer).map(|layer| &layer.world) else { return };
@@ -60,7 +64,11 @@ pub(super) fn stand(world: &mut World, player: Entity, layer: Entity) {
     let before = *health;
     let walled = health.smother(in_wall, WALLED).then_some(Cause::Suffocation);
     take(health, before, walled);
-    vitals.air = if under_water || in_wall { breath - 1 } else { (breath + BREATH).min(AIR) };
+    vitals.air = match under_water || in_wall {
+        true if warding.respiration > 0 && world.get_resource_or_insert_with(Dice::default).fraction() < enchant::holds_breath(warding.respiration) => breath,
+        true => breath - 1,
+        false => (breath + BREATH).min(AIR),
+    };
     if vitals.air <= -GASP {
         vitals.air = 0;
         let before = vitals.health;
@@ -95,5 +103,8 @@ pub(super) fn stand(world: &mut World, player: Entity, layer: Entity) {
     crate::blocks::trample(world, layer, position.feet, dropped);
     if position.on_ground {
         crate::blocks::tread_ore(world, layer, position.feet);
+    }
+    if run > 0.0 && !carried {
+        crate::blocks::frost_walk(world, layer, position.feet, warding.frost_walker);
     }
 }

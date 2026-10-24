@@ -1,11 +1,13 @@
-//! A player's hit on a mob, as BDS answered one (docs/research/mob-damage.md, "Hits").
-// TODO: no critical hit, enchantment or wear of the item; a hit mob does not
+//! A player's hit on a mob, as BDS answered one (docs/research/mob-damage.md, "Hits"), with
+//! what the weapon's enchantments add (enchanted.rs).
+// TODO: no critical hit or wear of the item; a hit mob does not
 // fight back; a hit on an armour stand, which has no health here, tires nobody; `REACH` is the nearest whole number to what BDS allowed.
 
 use acacia_proto::packets::LevelSoundEvent;
 use acacia_proto::types::Vec3f;
 use bevy_ecs::prelude::*;
 use sapling_api::{EntityId, GameMode};
+use sapling_data::enchant::{self, Enchant};
 
 use super::Creature;
 use super::harm;
@@ -26,9 +28,9 @@ const KEPT: f32 = 0.5;
 /// A player's sounds come from the middle of its box.
 const HALF_PLAYER: f32 = 0.9;
 
-/// A mob a player killed, and the experience it leaves when it goes.
+/// A mob a player killed, the experience it leaves when it goes, and the Looting it was killed with.
 #[derive(Component)]
-pub(super) struct Slain(pub i32);
+pub(super) struct Slain(pub i32, pub u8);
 
 /// This tick's hits, each a player and the entity it named.
 pub(crate) fn attacked(world: &mut World, hits: Vec<(Entity, u64)>) {
@@ -73,7 +75,9 @@ fn hit(world: &mut World, player: Entity, id: u64) -> Option<()> {
     };
     let mut packets = vec![sapling_net::encode(&swing)];
     let held = world.get::<Inventory>(player).and_then(|inventory| inventory.in_hand().as_ref().map(|held| held.stack.name.clone()));
-    let harm = crate::vitals::hits_for(world, player, sapling_data::item_attack(held.as_deref()));
+    let weapon = crate::enchants::weapon(world, player);
+    // The enchantments' bonus goes in before strength and weakness (BDS 1429e56c0).
+    let harm = crate::vitals::hits_for(world, player, sapling_data::item_attack(held.as_deref()) + enchant::melee_bonus(weapon.as_ref(), Some(kind.as_str())));
     let harm = if kind == crate::dragon::DRAGON { crate::dragon::body_harm(harm) } else { harm };
     let hitter = in_world_identity(world, player).map(sapling_api::Attacker::Player);
     let before = health.left();
@@ -85,10 +89,12 @@ fn hit(world: &mut World, player: Entity, id: u64) -> Option<()> {
         let (dx, dz) = (body.at[0] - from[0], body.at[2] - from[2]);
         let far = (dx * dx + dz * dz).sqrt();
         let away = if far > 1e-4 { [dx / far, dz / far] } else { [0.0; 2] };
+        let [along, up] = enchant::knockback(enchant::level(weapon.as_ref(), Enchant::Knockback), [THROW; 2]);
         let mut thrown = world.get_mut::<Body>(entity)?;
-        let speed = [thrown.motion[0] * KEPT + away[0] * THROW, THROW, thrown.motion[2] * KEPT + away[1] * THROW];
+        let speed = [thrown.motion[0] * KEPT + away[0] * along, up, thrown.motion[2] * KEPT + away[1] * along];
         thrown.throw(speed);
         *world.get_mut::<Health>(entity)? = health;
+        super::enchanted::struck(world, entity, &kind, weapon.as_ref());
         crate::vitals::tire(world, player, crate::vitals::HIT_TIRES);
         super::strolling::startle(world, entity);
         super::hunting::provoke(world, entity, layer, id, &kind, &body, player);
@@ -101,7 +107,7 @@ fn hit(world: &mut World, player: Entity, id: u64) -> Option<()> {
             let mut dice = world.get_resource_or_insert_with(Dice::default);
             least + (dice.fraction() * (most - least) as f32) as i32
         });
-        world.entity_mut(entity).insert(Slain(points));
+        world.entity_mut(entity).insert(Slain(points, enchant::level(weapon.as_ref(), Enchant::Looting)));
         super::die(world, entity, layer, &kind, &body);
     }
     Some(())
