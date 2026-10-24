@@ -12,7 +12,7 @@ use sapling_api::GameMode;
 use sapling_data::StartGameOptions;
 
 use crate::clock;
-use crate::components::{Arrivals, Conn, Identity, InLayer, Layer, Net, NetId, Outgoing, PacketQueues, Position, Settings, Stage, Tick};
+use crate::components::{Arrivals, Conn, Identity, InLayer, Layer, Mode, Net, NetId, Outgoing, PacketQueues, Position, Settings, Stage, Tick};
 use crate::inventory::Inventory;
 use crate::view::View;
 
@@ -51,7 +51,7 @@ pub(crate) fn wire_game_mode(mode: GameMode) -> WireGameMode {
     }
 }
 
-type Joining<'a> = (&'a Conn, &'a Identity, &'a NetId, &'a Position, &'a InLayer, &'a Inventory, &'a mut Stage, &'a mut Outgoing);
+type Joining<'a> = (&'a Conn, &'a Identity, &'a NetId, &'a Position, &'a InLayer, &'a Inventory, &'a Mode, &'a mut Stage, &'a mut Outgoing);
 
 /// Pack negotiation, then, once storage has answered for the player (it may start in another
 /// dimension: dimensions::start_in), StartGame with the registries, the player's own state and
@@ -76,7 +76,7 @@ pub(crate) fn resource_packs(
             (stage, status) => tracing::debug!(player = %identity.0.name, ?stage, ?status, "unexpected resource pack response"),
         }
     }
-    for (_, identity, id, position, in_layer, inventory, mut stage, mut out) in &mut players {
+    for (_, identity, id, position, in_layer, inventory, mode, mut stage, mut out) in &mut players {
         if *stage != Stage::Packed || !inventory.loaded {
             continue;
         }
@@ -85,11 +85,12 @@ pub(crate) fn resource_packs(
         let options = StartGameOptions {
             entity_id: id.0 as i64,
             runtime_entity_id: id.0,
-            game_mode: wire_game_mode(settings.0.game_mode),
+            game_mode: wire_game_mode(mode.0),
+            world_game_mode: wire_game_mode(settings.0.game_mode),
             position: position.feet,
             yaw: position.yaw,
             pitch: position.pitch,
-            world_spawn: position.feet.map(|c| c.floor() as i32),
+            world_spawn: layer.spawn.map(|c| c.floor() as i32),
             world_name: settings.0.world_name.clone(),
             tick: tick.0 as i64,
             difficulty: settings.0.difficulty as i32,

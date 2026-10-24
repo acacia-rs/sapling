@@ -787,7 +787,7 @@ Details and BDS evidence: docs/research/nether-dimension.md, docs/research/end-d
   loading-screen end; BDS's own PlayerAction DimensionChangeAck once the spawn-radius columns are sent.
   `ctx.travel(player, dimension, feet)` and `/execute in <dimension> run tp` use it; a world move into another
   dimension's world (`transfer`, handoff) does too. The player record keeps `DimensionId` and `Pos`, and
-  StartGame waits for it so a player who left in the Nether joins there.
+  StartGame waits for it so a player joins in the dimension it left from (`dimensions::start_in`).
 - **Portals**: blocks in `blocks/portals.rs` (frame shape, lighting by flint and steel, fire charge or any
   fire, breaking, records), travel in `portals.rs` (BDS's timer and cooldown, 8:1 scaling, record search
   within 128, placement and portal making in `portals/arrive.rs`, MT19937 direction draws from the seed).
@@ -863,14 +863,18 @@ Details and BDS evidence: docs/research/nether-dimension.md, docs/research/end-d
   `Pos`, `Rotation`, `Motion`: what BDS reads of one is untried). Not done: AI, damage; saving the
   items players throw, orbs and falling blocks; a kept entity that wanders into a column that is not
   loaded is lost with it.
-- **Kept between visits.** The first world's storage keeps hotbar, inventory, armour, offhand and the
-  selected slot, the ender chest's slots and the experience under `sapling_player_<uuid>`, with the
-  game's field names (`Inventory` with `Slot`, `Armor`, `Offhand`, `SelectedInventorySlot`,
-  `EnderChestInventory`, `PlayerLevel`, `PlayerLevelProgress`) and item layout. It is not the game's own
-  `player_server_<id>` record: one holding only items is not a player BDS can load. Loads and saves run
-  on the world's I/O threads; a save happens when the player leaves, every 100 ticks while the items
-  changed, and when the shard stops. One save per player is in flight at a time, and a player back
-  before it lands is given what is being saved. A record that cannot be read is never written over.
+- **Kept between visits** (`sapling-leveldb/src/player`, docs/research/player-records.md). The first
+  world's storage keeps a player where BDS does: `player_<uuid>` maps it to a `player_server_` compound
+  with BDS's fields: items (`Inventory` with `Slot`, `Armor`, `Offhand`, `SelectedInventorySlot`,
+  `EnderChestInventory`), `PlayerLevel`/`PlayerLevelProgress`, health and hunger as `Attributes`,
+  `ActiveEffects`, the bed (`SpawnBlockPosition*`, `Spawn*`, `SpawnDimension`), `DimensionId`, `Pos` (at
+  the eyes, as BDS), `Rotation` and `PlayerGameMode`. Fields sapling does not know stay as stored. A record
+  under sapling's old `sapling_player_<uuid>` is read while no vanilla one exists and dropped at the next
+  save. A player joins where it left, facing the same way, in its own game mode; a place in the void or
+  past the world's edge, or in another world than the entry shard's first, starts it at the spawn. Loads
+  and saves run on the world's I/O threads; a save happens when the player leaves, every 100 ticks while
+  something of it changed (its place too), and when the shard stops. One save per player is in flight at a time, and a player back before it lands
+  is given what is being saved. A record that cannot be read is never written over.
 - **Chests and barrels** (`containers.rs`). 27 slots, kept where the game keeps them: the `Items` of the
   block's entity, so a world's own chests open with what they hold. A placed chest gets an empty entity
   (`BlockEntityData` to viewers); clients are never sent `Items`, in chunks or otherwise. An allowed
