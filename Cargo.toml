@@ -49,8 +49,13 @@ tracing = "0.1.44"
 tracing-subscriber = { version = "0.3.23", features = ["env-filter", "fmt"] }
 uuid = "1"
 
+# testbox's disk is the build bottleneck: full debuginfo made every linked test binary hundreds of MB.
+[profile.dev]
+debug = "line-tables-only"
+
 # Login crypto is ~100x slower unoptimised; debug servers would answer the handshake seconds late.
 [profile.dev.package]
+"*" = { debug = false }
 p384 = { opt-level = 3 }
 primeorder = { opt-level = 3 }
 elliptic-curve = { opt-level = 3 }
