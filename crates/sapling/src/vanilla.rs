@@ -95,9 +95,20 @@ fn tell_target(ctx: &mut ShardCtx<'_>, player: PlayerId, key: &str, parameters: 
     }
 }
 
-/// An entity type or item as BDS names it in a command's answer: `minecraft:armor_stand` is
-/// `Armor Stand`.
+/// An entity type as BDS names it in a command's answer (sapling-data's `names.tsv`): `Evoker` for
+/// `minecraft:evocation_illager`.
 fn display_name(id: &str) -> String {
+    sapling_data::entity_display_name(id).or_else(|| sapling_data::item_display_name(id, 0)).map_or_else(|| title_case(id), str::to_owned)
+}
+
+/// An item of `data` as BDS names it in a command's answer: `Raw Chicken`, `Potion of Slowness`.
+fn item_display_name(id: &str, data: i16) -> String {
+    sapling_data::item_display_name(id, u16::try_from(data).unwrap_or(0)).map_or_else(|| title_case(id), str::to_owned)
+}
+
+/// The name of a kind `names.tsv` lacks (or a build without it): the identifier title-cased,
+/// `minecraft:armor_stand` as `Armor Stand`.
+fn title_case(id: &str) -> String {
     let words = id.rsplit(':').next().unwrap_or(id).split('_');
     let capitalised = words.map(|word| {
         let mut chars = word.chars();

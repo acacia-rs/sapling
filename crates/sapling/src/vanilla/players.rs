@@ -4,7 +4,7 @@
 use sapling_api::command::{Args, CommandSpec, CommandSyntax, Coords, Overload, Parameter, ParameterSpec, ParseError, Selector};
 use sapling_api::{Command, Difficulty, GameMode, Item, Output, Permission, Sender, ShardCtx};
 
-use super::{display_name, entities, no_target, origin, players, tell_target};
+use super::{display_name, entities, item_display_name, no_target, origin, players, tell_target};
 
 fn namespaced(name: &str) -> String {
     if name.contains(':') { name.to_owned() } else { format!("minecraft:{name}") }
@@ -128,7 +128,7 @@ pub(crate) struct Give {
 impl Command for Give {
     fn run(self, ctx: &mut ShardCtx<'_>, sender: &Sender, out: &mut Output) {
         let item = Item::new(super::item_named(&self.item), self.amount.unwrap_or(1).max(1));
-        let (shown, count) = (display_name(&item.name), item.count.to_string());
+        let (shown, count) = (item_display_name(&item.name, 0), item.count.to_string());
         let given = players(ctx, sender, &self.player);
         for player in &given {
             ctx.give(player.id, &item);

@@ -13,6 +13,7 @@ online = ["sapling-net/online"]
 
 [dependencies]
 sapling-api.workspace = true
+sapling-data.workspace = true
 sapling-net.workspace = true
 sapling-shard.workspace = true
 sapling-world.workspace = true

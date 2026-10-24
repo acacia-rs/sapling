@@ -10,7 +10,7 @@
 use sapling_api::command::{Args, BlockCoords, CommandSpec, CommandSyntax, Overload, ParamKind, Parameter, ParameterSpec, ParseError, Selector};
 use sapling_api::{Command, Item, Output, Permission, Sender, ShardCtx, Slot};
 
-use super::{display_name, no_target, origin, players};
+use super::{item_display_name, no_target, origin, players};
 
 const SLOT_TYPE: &str = "slot.container";
 /// A player's slot types, and the inventory slot the first of each is; the hand is the held one.
@@ -98,7 +98,8 @@ impl Command for ReplaceItem {
             return out.translate("commands.generic.num.tooBig", vec![count.to_string(), MOST.to_string()], false);
         }
         let name = super::item_named(&self.item);
-        let item = (name != "minecraft:air").then(|| Item { damage: self.data.unwrap_or(0) as i16, ..Item::new(&name, count.clamp(1, MOST) as u8) });
+        let data = self.data.unwrap_or(0) as i16;
+        let item = (name != "minecraft:air").then(|| Item { damage: data, ..Item::new(&name, count.clamp(1, MOST) as u8) });
         let bad_slot = |out: &mut Output, size: usize| out.translate("commands.replaceitem.badSlotNumber", vec![self.slot.to_string(), "0".into(), (size - 1).to_string()], false);
         match &self.target {
             Target::Block(position) => {
@@ -111,7 +112,7 @@ impl Command for ReplaceItem {
                 if !ctx.set_container_item(pos, slot, item.as_ref()) {
                     return out.refuse(self.item_wrong);
                 }
-                out.translate("commands.replaceitem.success", vec![SLOT_TYPE.into(), slot.to_string(), count.to_string(), display_name(&name)], true);
+                out.translate("commands.replaceitem.success", vec![SLOT_TYPE.into(), slot.to_string(), count.to_string(), item_display_name(&name, data)], true);
             }
             Target::Entity(selector, kind) => {
                 let found = players(ctx, sender, selector);
@@ -126,7 +127,7 @@ impl Command for ReplaceItem {
                     if !ctx.set_item(player.id, place, item.as_ref()) {
                         return out.refuse(self.item_wrong);
                     }
-                    out.translate("commands.replaceitem.success.entity", vec![kind.clone(), slot.to_string(), player.name.clone(), count.to_string(), display_name(&name)], true);
+                    out.translate("commands.replaceitem.success.entity", vec![kind.clone(), slot.to_string(), player.name.clone(), count.to_string(), item_display_name(&name, data)], true);
                 }
             }
         }

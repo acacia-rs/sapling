@@ -2546,6 +2546,7 @@ dependencies = [
  "acacia-world",
  "bytes",
  "sapling-api",
+ "sapling-data",
  "sapling-leveldb",
  "sapling-net",
  "sapling-shard",
