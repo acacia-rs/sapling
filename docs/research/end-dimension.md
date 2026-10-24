@@ -171,9 +171,10 @@ research/dragon-fight-decompile.md (the fight manager) and research/dragon-ai-de
   move and its own, and sapling's fireballs now gain the same 0.05 a tick. It meets mobs as players (not
   dragons); a hit mob gets only the cloud. A player's melee does nothing to it on BDS (its `_hurt` is empty).
 - **Clouds harm mobs** as players (half an instant harm; the undead mended). BDS's pulse, which lists mobs
-  before players and stops at its owner, should spare every player while the sitting dragon is in the box
+  before players and stops at its owner, would spare every player while a sitting owner is in the box
   (extras 5.4), but bds-dragon-survival.txt's flaming cloud hurt the player three times with the dragon
-  sitting, so that rule is not copied.
+  sitting. Both its clouds are told with OwnerEid -1: they have no owner to stop at, which fits. sapling's
+  clouds have none either.
 - **Start**: BDS builds the dragon's nodes on its first tick whatever is loaded and once more when the 8 x 8
   columns round the middle are, then keeps them (extras 5.5, correcting the AI doc). sapling does the same,
   and tells the dragon's first move (it used to wait for its columns, ~1.6 s, and skip that move). It also
@@ -197,7 +198,7 @@ research/dragon-fight-decompile.md (the fight manager) and research/dragon-ai-de
 ## Not done, and why
 
 - **Dragon:** another projectile does not send its fireball back (BDS: along the shooter's look at speed 1,
-  extras 5.1); the cloud's owner stop is not copied.
+  extras 5.1); sapling's players do not shoot yet, and no mob that does comes near the fight.
 - **The second kill's orbs**: sapling's did not join up (77 entities against BDS's 24); with merging built they
   list as BDS's (26, 26, 43 against 24, 24, 46; docs/research/experience.md "Drilled").
 - **Spike bedrock and crystals.** `postProcessMobsAt` 148246230 puts an EnderCrystal (ShowBottom) at (x + 0.5,
