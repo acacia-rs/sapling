@@ -31,6 +31,7 @@ mod spells;
 mod splashes;
 mod strolling;
 mod stares;
+mod summoned;
 mod teleports;
 mod vexes;
 

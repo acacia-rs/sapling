@@ -8,8 +8,9 @@ use acacia_proto::types::{MetadataDictionaryItemKey as Key, MetadataDictionaryIt
 use common::{Harness, all, click};
 use sapling_api::{Block, Difficulty, GameMode, PlayerId};
 
-fn fuses(sent: &[RawPacket]) -> Vec<i32> {
-    all::<SetEntityData>(sent).iter().flat_map(|data| &data.metadata).filter(|item| item.key == Key::FuseLength).map(|item| if let Value::Default(Plain::Int(left)) = item.value { left } else { -1 }).collect()
+/// The fuse lengths told of the entity `id` (an item's whole metadata has one too).
+fn fuses(sent: &[RawPacket], id: u64) -> Vec<i32> {
+    all::<SetEntityData>(sent).iter().filter(|data| data.runtime_entity_id == id).flat_map(|data| &data.metadata).filter(|item| item.key == Key::FuseLength).map(|item| if let Value::Default(Plain::Int(left)) = item.value { left } else { -1 }).collect()
 }
 
 #[test]
@@ -39,7 +40,7 @@ fn tnt_by_a_block_of_redstone_hops_burns_eighty_ticks_and_bursts() {
         burst(&sent).is_some()
     });
     assert_eq!(ticks, Some(80));
-    let fuses = fuses(&sent);
+    let fuses = fuses(&sent, tnt.runtime_id);
     assert_eq!((fuses.len(), fuses.first(), fuses.last()), (80, Some(&79), Some(&0)));
     let flash = burst(&sent).expect("found above");
     assert!(flash.data == 4 && (flash.position.y - 65.06125).abs() < 1e-3, "{flash:?}");

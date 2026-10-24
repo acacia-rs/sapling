@@ -1,4 +1,4 @@
-use crate::{Effect, ShardCtx};
+use crate::{Effect, PlayerId, ShardCtx};
 
 /// An entity on a shard: a mob, a lying item, a falling block or an experience orb. Unique on
 /// its shard while it exists; it goes when removed, picked up or landed, or with its column.
@@ -34,6 +34,12 @@ impl ShardCtx<'_> {
     /// or the game alone makes (items, falling blocks), and where the world is not loaded.
     pub fn spawn_entity(&mut self, kind: &str, feet: [f32; 3]) -> Option<EntityId> {
         self.backend.spawn_entity(kind, feet)
+    }
+
+    /// [`ShardCtx::spawn_entity`] as `/summon` by `by`: BDS also shows `by` and those who see it
+    /// that it summoned.
+    pub fn summon(&mut self, by: PlayerId, kind: &str, feet: [f32; 3]) -> Option<EntityId> {
+        self.backend.summon(by, kind, feet)
     }
 
     /// An entity of this shard; `None` once it is gone.
@@ -80,6 +86,9 @@ impl ShardCtx<'_> {
 /// The entities side of [`crate::Backend`].
 pub trait EntityBackend {
     fn spawn_entity(&mut self, kind: &str, feet: [f32; 3]) -> Option<EntityId>;
+    fn summon(&mut self, _by: PlayerId, kind: &str, feet: [f32; 3]) -> Option<EntityId> {
+        self.spawn_entity(kind, feet)
+    }
     fn entity(&self, id: EntityId) -> Option<EntityInfo>;
     fn entities(&self) -> Vec<EntityInfo>;
     fn move_entity(&mut self, id: EntityId, feet: [f32; 3]) -> bool;

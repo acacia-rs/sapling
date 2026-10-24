@@ -18,9 +18,9 @@ commands answered alike (CommandOutput, echo, GameRulesChanged) but for the star
 
 /kill (`bds_command_probe kill`, `bds-kill.txt` vs `sapling-kill.txt`, 2026-10-07): DeathAnimation with the answer,
 loot (BDS's tables) at the mob's feet + 0.075 in the same tick, RemoveEntity 21 ticks on; the armor stand goes at once
-without either; none with `doMobLoot` off. The loot lands at once, lifted out of the floor (body.rs `lift_out`). Left:
-BDS also sends the summoner `EntityEvent EntitySpawn` with data `(actor type id << 16) | 2`, and repeats an item's
-whole metadata in a SetEntityData after AddItemEntity (D9).
+without either; none with `doMobLoot` off. The loot lands at once, lifted out of the floor (body.rs `lift_out`).
+2026-10-24: the summoner's `EntityEvent EntitySpawn` (data `(legacy type id << 16) | 2`, to it and its viewers,
+`creatures/summoned.rs`) and an item's whole metadata again after AddItemEntity (`mobs::item_shown`) now agree.
 
 Plates (`bds_plate_probe`, `bds-plates.txt` vs `sapling-plates.txt`, 2026-10-07): walking on and off a written and
 a hand-placed plate gives the same states, clicks, positions and data on both. Sapling pressed under a summoned
@@ -105,8 +105,9 @@ was used; match BDS's cell list. Low.
 Low.
 
 **D9. Item entity metadata.** 2026-10-07: MOVING now follows BDS for items and falling blocks (sync.rs
-`Told::moving`: set a tick after a tick that began in the air, cleared two after landing). Still missing: the full
-SetEntityData BDS repeats after AddItemEntity, which only restates the announcement. BDS follows AddItemEntity with a full SetEntityData (Flags + Health ...), Flags |=
+`Told::moving`: set a tick after a tick that began in the air, cleared two after landing). 2026-10-24: the full
+SetEntityData after AddItemEntity is sent (`mobs::item_shown`); in the kill drill sapling's loot still sends none of
+BDS's two Flags-only updates (MOVING set, then cleared). BDS follows AddItemEntity with a full SetEntityData (Flags + Health ...), Flags |=
 MOVING the next tick, cleared on landing (B:1274, 1277, 1315). Sapling sends none. Same family as the known
 falling-block gap. Low.
 

@@ -5,8 +5,8 @@
 
 use std::collections::HashMap;
 
-use acacia_proto::packets::RemoveEntity;
-use acacia_proto::types::MetadataFlags1;
+use acacia_proto::packets::{AddItemEntity, RemoveEntity, SetEntityData};
+use acacia_proto::types::{EntityProperties, MetadataFlags1};
 use bevy_ecs::prelude::*;
 use bytes::Bytes;
 use sapling_data::{AddEntityOptions, Stack};
@@ -59,8 +59,7 @@ pub(crate) struct MobGrid {
 /// client knows.
 pub(crate) fn announcement(actor: &Actor, id: u64) -> Option<Vec<Bytes>> {
     if actor.identifier == ITEM {
-        let item = sapling_data::add_item_entity(id, &stack(actor.item.as_ref()?), actor.position, [0.0; 3])?;
-        return Some(vec![sapling_net::encode(&item)]);
+        return Some(item_shown(sapling_data::add_item_entity(id, &stack(actor.item.as_ref()?), actor.position, [0.0; 3])?));
     }
     if let Some(painting) = &actor.painting {
         return Some(vec![sapling_net::encode(&sapling_data::add_painting(id, actor.position, painting.direction.into(), &painting.motif))]);
@@ -99,7 +98,13 @@ pub(crate) fn announcement(actor: &Actor, id: u64) -> Option<Vec<Bytes>> {
 /// What shows a stack as an item at `position` moving at `velocity`; `None` for an item no
 /// client knows.
 pub(crate) fn item_announcement(id: u64, item: &ItemStack, position: [f32; 3], velocity: [f32; 3]) -> Option<Vec<Bytes>> {
-    Some(vec![sapling_net::encode(&sapling_data::add_item_entity(id, &stack(item), position, velocity)?)])
+    Some(item_shown(sapling_data::add_item_entity(id, &stack(item), position, velocity)?))
+}
+
+/// An item's announcement and its metadata again, as BDS follows one (findings D9, bds-kill.txt).
+fn item_shown(item: AddItemEntity) -> Vec<Bytes> {
+    let again = SetEntityData { runtime_entity_id: item.runtime_entity_id, metadata: item.metadata.clone(), properties: EntityProperties { ints: Vec::new(), floats: Vec::new() }, tick: 0 };
+    vec![sapling_net::encode(&item), sapling_net::encode(&again)]
 }
 
 /// Puts an entity into the world at `feet`, shown to those who see its column by what

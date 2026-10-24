@@ -223,7 +223,11 @@ impl Command for Summon {
         let at = self.position.map_or(here, |position| position.from(here));
         // BDS summons its newer zombie villager under the older one's name, and knows no other.
         let kind = Some(namespaced(&self.kind)).filter(|kind| kind != "minecraft:zombie_villager").unwrap_or_else(|| "minecraft:zombie_villager_v2".into());
-        let summoned = ctx.spawn_entity(&kind, at).is_some();
+        let summoned = match sender.player() {
+            Some(by) => ctx.summon(by.id, &kind, at),
+            None => ctx.spawn_entity(&kind, at),
+        }
+        .is_some();
         out.translate(if summoned { "commands.summon.success" } else { "commands.summon.failed" }, Vec::new(), summoned);
     }
 }

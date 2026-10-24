@@ -1,6 +1,6 @@
 //! The entity side of the handlers' context.
 
-use sapling_api::{Effect, EntityBackend, EntityId, EntityInfo};
+use sapling_api::{Effect, EntityBackend, EntityId, EntityInfo, PlayerId};
 
 use crate::components::NetId;
 use crate::handlers::Ctx;
@@ -9,6 +9,14 @@ use crate::{entities, orbs, tnt, worlds};
 const ORB: &str = "minecraft:xp_orb";
 
 impl EntityBackend for Ctx<'_> {
+    fn summon(&mut self, by: PlayerId, kind: &str, feet: [f32; 3]) -> Option<EntityId> {
+        let summoned = self.spawn_entity(kind, feet)?;
+        if let Some(player) = self.entity(by) {
+            super::summoned::show(self.world, player, kind);
+        }
+        Some(summoned)
+    }
+
     /// An orb is an orb, worth 1 and thrown as orbs are, as BDS's `/summon xp_orb` makes one.
     fn spawn_entity(&mut self, kind: &str, feet: [f32; 3]) -> Option<EntityId> {
         let layer = worlds::current(self.world);

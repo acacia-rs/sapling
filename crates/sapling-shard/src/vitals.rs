@@ -116,7 +116,7 @@ pub(crate) fn is_dead(world: &World, player: Entity) -> bool {
 }
 
 /// To the player and to those who see it.
-fn tell<T: Packet>(world: &mut World, player: Entity, packet: &T) {
+pub(crate) fn tell<T: Packet>(world: &mut World, player: Entity, packet: &T) {
     if let Some(mut out) = world.get_mut::<Outgoing>(player) {
         out.push(packet);
     }
