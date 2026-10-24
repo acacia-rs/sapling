@@ -1,4 +1,31 @@
-# sapling vs BDS: mechanisms capture, round 2
+# sapling vs BDS
+
+## Sweep of every bds_command_probe word (2026-10-24)
+
+All 105 words that have a `bds-<word>.txt` were run on sapling master (`tools/remote-drills.sh`, 2x ticks) and
+compared drill line by drill line with `tools/drill_vs_bds.py`: answers and chat exactly (decimals masked),
+every other packet by count per bot. Rerun: `tools/remote-drills.sh bds_command_probe <dir> <words>`, then
+`py -3 -I tools/drill_vs_bds.py --sweep research/captures <dir> <words>`.
+
+The BDS captures come from a different world, so much of what differs is the setup, not sapling: BDS's bots
+stand near y -19 (sapling's at 64), its ground is not all stone (a `/fill` there changes blocks sapling's
+leaves alone), and its world has campfires and sculk near the drills (8437 `block.campfire.crackle`, 703 sculk
+sounds). Read a word's differences with that in mind.
+
+What sapling did otherwise, by how often:
+
+| Gap | Size | State |
+|---|---|---|
+| `/fill` that changes nothing answered "No blocks filled"; BDS: `commands.fill.success ["0"]`, failed | 155 lines, most words | fixed |
+| Other players' `MovePlayer`: BDS relays one a tick per moving input, sapling only when a player moved | 76k packets | open, likely harmless |
+| Item and entity names in answers by title case: BDS `Raw Chicken`, `Flint and Steel`, `Potion of Slowness`, `Water Bottle`, a lying item by its item (`Rotten Flesh`, not `Item`) | ~40 lines | open: needs BDS's description ids (blocks use old keys, `tile.planks.oak`) |
+| Big fills as `UpdateBlock` each where BDS sends `UpdateSubchunkBlocks` | 27.8k extra UpdateBlock | open |
+| Sounds BDS makes and sapling not: a player's `land` to others (248), `hit` (60), `fall` (43), `jump_to_block` (41), `born` (23), `armor.equip_iron` (22), `open`/`close` (34), underwater enter/exit (34), `bottle.empty` (44) | ~600 | open; `land` is the server's (acacia's bot sends no sounds), to everyone but the lander |
+| `SetEntityData` (15.6k) and `UpdateAttributes` (2.5k) BDS sends that sapling does not, in ~60 words | | open, not yet broken down |
+| `/effect` and `/damage` took players alone: none found where BDS's put slowness on a zombie (`effects3`, `mob-effects`, `wind-burst`, `stare`) | 30 lines | fixed (`ctx.remove_entity_effect`, `clear_entity_effects`, `hurt_entity`) |
+| `/kill @e[type=!player]` found nothing where BDS killed items or mobs still there (`effects3`, `wind-burst`, `stare`); `stare`'s enderman is gone before its `/tp` and `/effect` | ~25 lines | open |
+
+# Mechanisms capture, round 2
 
 Sources: `bds-mechanisms.txt` (ground truth) and `sapling-mechanisms.txt`, same probe
 (`crates/sapling/examples/bds_mechanism_probe.rs`, radius 8, `stand()` waits for cells). `B:n` / `S:n` = line n of

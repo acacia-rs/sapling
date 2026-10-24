@@ -8,6 +8,7 @@ mod blocks;
 mod chat;
 mod clock;
 mod containers;
+mod damage;
 mod effects;
 mod execute;
 mod players;
@@ -15,7 +16,8 @@ mod rules;
 
 use blocks::{Fill, SetBlock, TestForBlock};
 use containers::ReplaceItem;
-use players::{Clear, Damage, DifficultyCommand, GameModeCommand, Give, Kill, Summon, Teleport};
+use damage::Damage;
+use players::{Clear, DifficultyCommand, GameModeCommand, Give, Kill, Summon, Teleport};
 use rules::GameRule;
 
 use sapling_api::command::Selector;

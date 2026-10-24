@@ -38,6 +38,7 @@ mod leftovers;
 mod level;
 mod liquids;
 mod mechanisms;
+mod mob_commands;
 mod movement_policy;
 mod omens;
 mod pistons;

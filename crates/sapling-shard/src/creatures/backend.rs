@@ -1,8 +1,9 @@
 //! The entity side of the handlers' context.
 
-use sapling_api::{Effect, EntityBackend, EntityId, EntityInfo, PlayerId};
+use sapling_api::{DamageCause, Effect, EntityBackend, EntityId, EntityInfo, PlayerId};
 
-use crate::components::NetId;
+use super::health::Health;
+use crate::components::{InLayer, NetId};
 use crate::handlers::Ctx;
 use crate::{entities, orbs, tnt, worlds};
 
@@ -61,5 +62,20 @@ impl EntityBackend for Ctx<'_> {
 
     fn give_entity_effect(&mut self, id: EntityId, effect: Effect, ticks: u32, amplifier: u8) -> bool {
         entities::find(self.world, id).is_some_and(|mob| super::afflictions::give(self.world, mob, effect, ticks, amplifier))
+    }
+
+    fn remove_entity_effect(&mut self, id: EntityId, effect: Effect) -> bool {
+        entities::find(self.world, id).is_some_and(|mob| super::afflictions::take(self.world, mob, Some(effect)))
+    }
+
+    fn clear_entity_effects(&mut self, id: EntityId) -> bool {
+        entities::find(self.world, id).is_some_and(|mob| super::afflictions::take(self.world, mob, None))
+    }
+
+    fn hurt_entity(&mut self, id: EntityId, amount: f32, cause: DamageCause) -> bool {
+        let Some(mob) = entities::find(self.world, id).filter(|mob| self.world.get::<super::Dying>(*mob).is_none()) else { return false };
+        let (Some(layer), Some(before)) = (self.world.get::<InLayer>(mob).map(|layer| layer.0), self.world.get::<Health>(mob).map(Health::left)) else { return false };
+        super::harm::wound(self.world, mob, layer, amount, cause);
+        self.world.get::<super::Dying>(mob).is_some() || self.world.get::<Health>(mob).is_some_and(|health| health.left() < before)
     }
 }

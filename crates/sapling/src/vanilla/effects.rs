@@ -1,11 +1,11 @@
 //! `/effect <target> <effect> [seconds] [amplifier] [hideParticles]` and `/effect <target> clear`,
 //! answering as BDS does (research/captures/bds-effects.txt).
-// TODO: only players, and only the effects the shard knows (`sapling_api::Effect`).
+// TODO: only the effects the shard knows (`sapling_api::Effect`).
 
 use sapling_api::command::{Args, ParamKind, Parameter, ParseError, Selector, parse_choice};
-use sapling_api::{Command, Effect, Output, Sender, ShardCtx};
+use sapling_api::{Command, Effect, EntityId, Output, PlayerId, Sender, ShardCtx};
 
-use super::{no_target, players};
+use super::{display_name, entities, no_target, players};
 
 /// Seconds an effect lasts when none are given.
 const SECONDS: i32 = 30;
@@ -45,28 +45,58 @@ impl Command for EffectCommand {
         if amplifier > STRONGEST {
             return out.translate("commands.generic.num.tooBig", vec![amplifier.to_string(), STRONGEST.to_string()], false);
         }
-        let found = players(ctx, sender, &self.target);
+        let named_players = players(ctx, sender, &self.target).into_iter().map(|player| (Target::Player(player.id), player.name));
+        let found: Vec<(Target, String)> = named_players.chain(entities(ctx, &self.target).into_iter().map(|entity| (Target::Entity(entity.id), display_name(&entity.kind)))).collect();
         if found.is_empty() {
             return no_target(out);
         }
-        for player in found {
-            let name = player.name.clone();
+        for (target, name) in found {
             match self.effect {
-                Named::Clear => match ctx.clear_effects(player.id) {
+                Named::Clear => match target.clear(ctx) {
                     true => out.translate("commands.effect.success.removed.all", vec![name], true),
                     false => out.translate("commands.effect.failure.notActive.all", vec![name], false),
                 },
                 // BDS says so of one that was not on, too.
                 Named::Effect(effect) if seconds == 0 => {
-                    ctx.remove_effect(player.id, effect);
+                    target.remove(ctx, effect);
                     out.translate("commands.effect.success.removed", vec![format!("%{}", effect.key()), name], true);
                 }
                 Named::Effect(effect) => {
-                    ctx.give_effect(player.id, effect, seconds as u32 * TICKS, amplifier.max(0) as u8, self.hide_particles != Some(true));
+                    target.give(ctx, effect, seconds as u32 * TICKS, amplifier.max(0) as u8, self.hide_particles != Some(true));
                     let shown = if effect.is_instant() { 0 } else { seconds };
                     out.translate("commands.effect.success", vec![format!("%{}", effect.key()), amplifier.to_string(), name, shown.to_string()], true);
                 }
             }
+        }
+    }
+}
+
+/// Whom an `/effect` acts on: a player, or a mob (research/captures/bds-mob-effects.txt).
+#[derive(Clone, Copy)]
+enum Target {
+    Player(PlayerId),
+    Entity(EntityId),
+}
+
+impl Target {
+    fn give(self, ctx: &mut ShardCtx<'_>, effect: Effect, ticks: u32, amplifier: u8, particles: bool) {
+        match self {
+            Target::Player(id) => drop(ctx.give_effect(id, effect, ticks, amplifier, particles)),
+            Target::Entity(id) => drop(ctx.give_entity_effect(id, effect, ticks, amplifier)),
+        }
+    }
+
+    fn remove(self, ctx: &mut ShardCtx<'_>, effect: Effect) {
+        match self {
+            Target::Player(id) => drop(ctx.remove_effect(id, effect)),
+            Target::Entity(id) => drop(ctx.remove_entity_effect(id, effect)),
+        }
+    }
+
+    fn clear(self, ctx: &mut ShardCtx<'_>) -> bool {
+        match self {
+            Target::Player(id) => ctx.clear_effects(id),
+            Target::Entity(id) => ctx.clear_entity_effects(id),
         }
     }
 }

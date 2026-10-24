@@ -125,11 +125,8 @@ impl Command for Fill {
                 }
             }
         }
-        match filled {
-            // BDS's line for this has no key in its own strings.
-            0 => out.error("No blocks filled"),
-            _ => out.translate("commands.fill.success", vec![filled.to_string()], true),
-        }
+        // Nothing changed is BDS's success line with a 0, failed (73 of research/captures/bds-*.txt).
+        out.translate("commands.fill.success", vec![filled.to_string()], filled > 0);
     }
 }
 

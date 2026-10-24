@@ -112,6 +112,33 @@ pub(super) fn give(world: &mut World, mob: Entity, effect: Effect, ticks: u32, a
     true
 }
 
+/// Takes `only` off a mob, or every effect it has: whether it had any of them.
+pub(super) fn take(world: &mut World, mob: Entity, only: Option<Effect>) -> bool {
+    let Some(mut afflicted) = world.get_mut::<Afflicted>(mob) else { return false };
+    let gone: Vec<Active> = afflicted.0.iter().copied().filter(|active| only.is_none_or(|effect| active.effect == effect)).collect();
+    afflicted.0.retain(|active| only.is_some_and(|effect| active.effect != effect));
+    lose(world, mob, &gone);
+    !gone.is_empty()
+}
+
+/// Tells a mob's viewers what is left of its effects after `gone` went; one with none left is
+/// warded no more.
+fn lose(world: &mut World, mob: Entity, gone: &[Active]) {
+    let (Some(id), Some(afflicted)) = (world.get::<NetId>(mob).map(|id| id.0), world.get::<Afflicted>(mob)) else { return };
+    if gone.is_empty() {
+        return;
+    }
+    let left = afflicted.0.is_empty();
+    let mut packets = vec![shown(id, &afflicted.0)];
+    packets.extend(gone.iter().filter(|active| is_told(active.effect)).map(|active| told(id, MobEffectEventId::Remove, active)));
+    if left
+        && let Some(mut health) = world.get_mut::<Health>(mob)
+    {
+        health.ward(1.0, false);
+    }
+    tell(world, mob, packets);
+}
+
 /// Gives a mob the effect named `effect` at its first level for `ticks`.
 pub(super) fn afflict(world: &mut World, mob: Entity, effect: &str, ticks: u32) {
     if let Some(effect) = Effect::ALL.into_iter().find(|known| known.name() == effect) {
@@ -202,21 +229,10 @@ pub(super) fn tick(world: &mut World) {
         if let Some(mut health) = world.get_mut::<Health>(mob) {
             health.ward((1.0 - resists).max(0.0), fireproof);
         }
-        let Some(id) = world.get::<NetId>(mob).map(|id| id.0) else { continue };
         let Some(mut afflicted) = world.get_mut::<Afflicted>(mob) else { continue };
         afflicted.0.iter_mut().for_each(|active| active.left = active.left.saturating_sub(1));
         let gone: Vec<Active> = afflicted.0.iter().copied().filter(|active| active.left == 0).collect();
-        if gone.is_empty() {
-            continue;
-        }
         afflicted.0.retain(|active| active.left > 0);
-        let mut packets = vec![shown(id, &afflicted.0)];
-        packets.extend(gone.iter().filter(|active| is_told(active.effect)).map(|active| told(id, MobEffectEventId::Remove, active)));
-        if afflicted.0.is_empty()
-            && let Some(mut health) = world.get_mut::<Health>(mob)
-        {
-            health.ward(1.0, false);
-        }
-        tell(world, mob, packets);
+        lose(world, mob, &gone);
     }
 }

@@ -2,7 +2,7 @@
 //! `/kill` and `/damage`.
 
 use sapling_api::command::{Args, CommandSpec, CommandSyntax, Coords, Overload, Parameter, ParameterSpec, ParseError, Selector};
-use sapling_api::{Command, DamageCause, Difficulty, GameMode, Item, Output, Permission, Sender, ShardCtx};
+use sapling_api::{Command, Difficulty, GameMode, Item, Output, Permission, Sender, ShardCtx};
 
 use super::{display_name, entities, no_target, origin, players, tell_target};
 
@@ -248,33 +248,6 @@ impl Command for Kill {
         match killed.is_empty() {
             true => no_target(out),
             false => out.translate("commands.kill.successful", vec![killed.join(", ")], true),
-        }
-    }
-}
-
-/// `/damage <target> <amount> [cause]`, for players (research/captures/bds-hurt.txt).
-// TODO: what BDS answers an unknown cause was not recorded; entities
-// other than players are not hurt.
-#[derive(Command)]
-#[command(crate = "crate", name = "damage", description = "Apply damage to the specified entities", permission = "operator")]
-pub(crate) struct Damage {
-    target: Selector,
-    amount: i32,
-    cause: Option<String>,
-}
-
-impl Command for Damage {
-    fn run(self, ctx: &mut ShardCtx<'_>, sender: &Sender, out: &mut Output) {
-        let found = players(ctx, sender, &self.target);
-        let names = || found.iter().map(|player| player.name.clone()).collect::<Vec<_>>().join(", ");
-        // BDS fails `suffocation` for anyone (research/captures/bds-worn.txt).
-        let Some(cause) = DamageCause::named(self.cause.as_deref().unwrap_or("none")).filter(|cause| *cause != DamageCause::Suffocation) else {
-            return out.translate("commands.damage.failed", vec![names()], false);
-        };
-        let hurt: Vec<String> = found.iter().filter(|player| ctx.hurt_player(player.id, self.amount as f32, cause)).map(|player| player.name.clone()).collect();
-        match hurt.is_empty() {
-            true => out.translate("commands.damage.failed", vec![names()], false),
-            false => out.translate("commands.damage.success", vec![hurt.join(", ")], true),
         }
     }
 }
