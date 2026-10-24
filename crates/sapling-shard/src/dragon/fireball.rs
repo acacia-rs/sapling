@@ -4,7 +4,7 @@
 //! pushes it off for its first ticks, then it flies straight, and where its point meets a block or
 //! the box of a player or mob other than a dragon, grown by 0.3, it splashes, and the tick after
 //! leaves a breath cloud (cloud.rs) and is gone. A player's hit does nothing to it (extras 5.1).
-// TODO: another projectile does not send it back (extras 5.1).
+// TODO: a projectile that hits it sends it off along its shooter's look (extras 5.1), once players shoot.
 
 use acacia_proto::packets::{AddEntity, LevelEvent, LevelEventEvent, LevelSoundEvent, SetEntityData};
 use acacia_proto::types::{EntityProperties, MetadataDictionaryItemKey as Key, MetadataDictionaryItemValueDefault as Plain, MetadataFlags1, Vec3f};

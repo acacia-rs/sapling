@@ -3,8 +3,8 @@
 use acacia_proto::nbt::{self, LittleEndian, Value};
 use acacia_world::BlockRegistry;
 
-use super::{floats, written};
-use crate::ItemStack;
+use super::{floats, with_fields, written};
+use crate::{Error, ItemStack};
 
 /// A new item actor: `stack` lying with the bottom of its box at `position`. `registry` names
 /// the block a block item places.
@@ -37,6 +37,11 @@ pub fn new_orb_actor(unique_id: i64, value: i32, position: [f32; 3], motion: [f3
     written(Value::Compound(fields.into_iter().map(|(key, value)| (key.into(), value)).collect()))
 }
 
+/// The orb kept as `compound`, worth `value` now.
+pub fn orb_worth(compound: &[u8], value: i32) -> Result<Vec<u8>, Error> {
+    with_fields(compound, [(WORTH, Value::Int(value))])
+}
+
 /// What the orb kept as `compound` is worth, if it says.
 pub fn orb_value(compound: &[u8]) -> Option<i32> {
     match nbt::read::<LittleEndian>(&mut &compound[..]).ok()?.value.get(WORTH) {
@@ -58,5 +63,6 @@ mod tests {
         assert_eq!((read.identifier.as_str(), read.position, read.item), ("minecraft:item", [5.5, 64.0, 5.5], Some(stack)));
         let orb = new_orb_actor(78, 7, [1.5, 64.0, 2.5], [0.0; 3]);
         assert_eq!((actors(&orb).unwrap().remove(0).identifier.as_str(), orb_value(&orb)), ("minecraft:xp_orb", Some(7)));
+        assert_eq!(orb_worth(&orb, 20).ok().and_then(|grown| orb_value(&grown)), Some(20));
     }
 }

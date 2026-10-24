@@ -9,7 +9,7 @@ mod lying;
 use std::collections::HashSet;
 
 pub use falling::{falling_block, new_falling_block_actor};
-pub use lying::{new_item_actor, new_orb_actor, orb_value};
+pub use lying::{new_item_actor, new_orb_actor, orb_value, orb_worth};
 
 use acacia_proto::nbt::{self, LittleEndian, List, Value};
 
@@ -142,8 +142,13 @@ pub(crate) fn written(value: Value) -> Vec<u8> {
 /// One stored actor's compound with its feet at `position` and moving at `motion`; the rest of
 /// what the game keeps of it as it was.
 pub fn moved_actor(compound: &[u8], position: [f32; 3], motion: [f32; 3]) -> Result<Vec<u8>, Error> {
+    with_fields(compound, [("Pos", floats(&position)), ("Motion", floats(&motion))])
+}
+
+/// `compound` with each of `set` replacing the field of its name, or added where it had none.
+fn with_fields<const N: usize>(compound: &[u8], set: [(&str, Value); N]) -> Result<Vec<u8>, Error> {
     let Value::Compound(mut fields) = nbt::read::<LittleEndian>(&mut &compound[..])?.value else { return Err(Error::Actor("an actor that is no compound")) };
-    for (key, value) in [("Pos", floats(&position)), ("Motion", floats(&motion))] {
+    for (key, value) in set {
         match fields.iter_mut().find(|(name, _)| name == key) {
             Some((_, old)) => *old = value,
             None => fields.push((key.into(), value)),

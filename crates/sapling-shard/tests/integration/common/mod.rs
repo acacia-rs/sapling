@@ -3,6 +3,7 @@
 #![allow(dead_code)]
 
 pub mod cluster;
+pub mod orbs;
 pub mod requests;
 pub mod stored;
 

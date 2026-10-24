@@ -2,7 +2,6 @@
 //! a path by the rings to the portal's top and a last leg onto it; scanning for a player near,
 //! which flames one found and otherwise takes off after five seconds; flaming, a roar and a puke;
 //! and the death's flight to the portal, where its health goes.
-// TODO: the breath's cloud of harm is left out; the roar and the puke are told.
 
 use acacia_proto::packets::{EntityEvent, EntityEventEventId};
 

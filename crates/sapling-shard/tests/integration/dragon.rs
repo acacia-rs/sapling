@@ -6,7 +6,7 @@ use crate::common;
 use std::sync::{Arc, Mutex};
 
 use acacia_proto::packets::{AddEntity, BossEvent, BossEventType, ChangeDimension, MovePlayer, MovePlayerMode, PlayerAction, PlayerAuthInput, Respawn, ShowCredits};
-use acacia_proto::types::{Action, BlockCoordinates, InputData, MetadataDictionaryItemKey as Key, MetadataDictionaryItemValue as Value, MetadataDictionaryItemValueDefault as Plain};
+use acacia_proto::types::{Action, BlockCoordinates, InputData};
 use common::{Harness, all, click, input_at};
 use sapling_api::{DragonFight, EntityInfo, Item, PlayerId, Slot};
 use sapling_world::{END, World};
@@ -65,8 +65,7 @@ fn block(h: &mut Harness, at: [i32; 3]) -> String {
 }
 
 fn experience(sent: &[acacia_proto::RawPacket]) -> i32 {
-    let worth = |orb: &AddEntity| orb.metadata.iter().find(|item| item.key == Key::ExperienceValue).and_then(|item| if let Value::Default(Plain::Int(value)) = item.value { Some(value) } else { None });
-    all::<AddEntity>(sent).iter().filter(|added| added.entity_type == "minecraft:xp_orb").filter_map(worth).sum()
+    common::orbs::worths(sent).into_iter().sum()
 }
 
 fn kill(h: &mut Harness) -> Vec<acacia_proto::RawPacket> {
