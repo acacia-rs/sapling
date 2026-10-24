@@ -24,3 +24,19 @@ pub fn lids() -> Vec<String> {
     lines.extend(["gamemode creative @s", ""].map(String::from));
     lines
 }
+
+pub const HELD_USE_SHOWN: &[&str] = &["UpdateBlock", "BlockEntityData", "ContainerOpen", "ContainerClose", "BlockEvent", "LevelSoundEvent"];
+
+/// The held-use drill: a lever, a chest and a door clicked holding dirt, then by an empty hand;
+/// whether the server shows the blocks again after a use with a block in hand (NEXT.md 3).
+pub fn held_use() -> Vec<String> {
+    let mut lines: Vec<String> = ["kill @e[type=!player]", "fill ~-2 ~-1 ~-2 ~4 ~-1 ~2 stone", "fill ~-2 ~ ~-2 ~4 ~3 ~2 air", "gamemode survival @s", ""].map(String::from).into();
+    for held in ["dirt", "air"] {
+        lines.push(format!("replaceitem entity @s slot.weapon.mainhand 0 {held}"));
+        for block in ["lever", "chest", "wooden_door"] {
+            lines.extend([format!("setblock ~1 ~ ~ {block}"), String::new(), "!click 1 0 0".into(), String::new(), String::new(), "fill ~1 ~ ~ ~1 ~1 ~ air".into(), String::new()]);
+        }
+    }
+    lines.extend(["gamemode creative @s", ""].map(String::from));
+    lines
+}

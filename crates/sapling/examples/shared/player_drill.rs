@@ -158,6 +158,7 @@ pub fn drill(name: &str) -> Option<(Vec<String>, &'static [&'static str])> {
         "feedback" => (feedback::feedback(), feedback::FEEDBACK_SHOWN),
         "reach-close" => (reach::reach_close(), reach::REACH_SHOWN),
         "lids" => (reach::lids(), reach::REACH_SHOWN),
+        "held-use" => (reach::held_use(), reach::HELD_USE_SHOWN),
         "spiders" => (world::spiders(), hunt::KINDS_SHOWN),
         "kinds2" => (world::kinds2(), hunt::KINDS_SHOWN),
         "pushed" => (world::pushed(), world::PUSHED_SHOWN),

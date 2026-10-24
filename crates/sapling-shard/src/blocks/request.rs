@@ -261,10 +261,9 @@ impl Request<'_> {
         let (yaw, feet) = self.world.get::<Position>(self.entity).map_or((0.0, [0.0; 3]), |position| (position.yaw, position.feet));
         let is_near = (feet[0] - target[0] as f32 - 0.5).abs() < 2.0 && (feet[2] - target[2] as f32 - 0.5).abs() < 2.0;
         let eyes_over = is_near.then(|| feet[1] + facing::EYES - target[1] as f32);
-        let block = in_hand.or_else(|| place::claimed_block(registry, &click.held_item, face));
-        match block.filter(|_| builds) {
+        match in_hand.or_else(|| place::claimed_block(registry, &click.held_item, face)).filter(|_| builds) {
             Some(id) => self.place(&site, pos, &Click { face, height: click.click_pos.y, yaw, eyes_over }, id, in_hand.is_some()),
-            None => self.interact(&site, pos, face, send::describe(registry, clicked), block.is_some()),
+            None => self.interact(&site, pos, face, send::describe(registry, clicked)),
         }
     }
 
@@ -277,15 +276,14 @@ impl Request<'_> {
     }
 
     /// Allowed, the block is used ([`use_block`]) or, if it moves by hand, moved (doors.rs). A
-    /// click that does neither, or made `holding_a_block` the client may have built, shows the
-    /// client the block and its neighbours as they are (a door is two blocks), which undoes what it
-    /// predicted; BDS sent nothing more after an empty hand used a door, a chest or a bed
-    /// (research/captures/bds-sounds.txt, bds-wake.txt).
-    fn interact(&mut self, site: &Site, pos: BlockPos, face: Face, block: Block, holding_a_block: bool) {
+    /// click that does neither shows the client the block and its neighbours as they are (a door
+    /// is two blocks), which undoes what it predicted; BDS sent nothing more after a lever, a door,
+    /// a chest or a bed it used, a block in hand or not (research/captures/bds-held-use.txt).
+    fn interact(&mut self, site: &Site, pos: BlockPos, face: Face, block: Block) {
         let name = block.name.clone();
         let event = plugins::offer(self.world,InteractEvent::new(self.player.clone(), pos, face, block, site.mode != GameMode::Spectator));
         let used = !event.is_cancelled() && (use_block(self.world, self.entity, site.layer, pos, &name) || doors::use_by_hand(self.world, site.layer, pos, &name));
-        if !used || holding_a_block {
+        if !used {
             self.resync(&[pos, face.neighbour(pos), Face::Up.neighbour(pos), Face::Down.neighbour(pos)]);
         }
     }

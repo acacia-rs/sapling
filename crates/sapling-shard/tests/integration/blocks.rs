@@ -217,11 +217,12 @@ fn a_click_that_places_nothing_is_an_interaction_and_shows_the_blocks_again() {
     h.remote.run(move |ctx| assert!(ctx.set_block(table, &Block::new("crafting_table"))));
     assert_eq!(updates(h.tick_all().to(2)), [(table, hash("minecraft:crafting_table"), 0)], "a handler's block reaches the viewers");
 
-    // An empty hand on stone, then a block in hand on a table: neither builds.
+    // An empty hand on stone, then a block in hand on a table: neither builds, and only the stone,
+    // which nothing used, is shown again (research/captures/bds-held-use.txt).
     h.receive(1, &click(NEAR, UP, None));
     h.receive(1, &click(table, UP, Some(DIRT)));
     let sent = h.tick_all();
-    let expected = [shown(NEAR, STONE), shown(ABOVE, AIR), shown([1, 63, 0], AIR), shown(table, "minecraft:crafting_table"), shown([2, 66, 0], AIR), shown([2, 64, 0], STONE)].concat();
+    let expected = [shown(NEAR, STONE), shown(ABOVE, AIR), shown([1, 63, 0], AIR)].concat();
     assert_eq!(updates(sent.to(1)), expected);
     assert!(quiet(sent.to(2)));
     assert_eq!(*seen.0.lock().unwrap(), ["Alex clicked minecraft:stone at [1, 64, 0] Up", "Alex clicked minecraft:crafting_table at [2, 65, 0] Up"]);
