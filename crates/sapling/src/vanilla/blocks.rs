@@ -117,14 +117,8 @@ impl Command for Fill {
             return out.translate("commands.fill.tooManyBlocks", vec![count.to_string(), MAX_FILL.to_string()], false);
         }
         let block = block(&self.block, self.states.as_ref());
-        let mut filled = 0;
-        for x in low[0]..=high[0] {
-            for y in low[1]..=high[1] {
-                for z in low[2]..=high[2] {
-                    filled += u32::from(changed(ctx, [x, y, z], &block));
-                }
-            }
-        }
+        let cells: Vec<BlockPos> = (low[0]..=high[0]).flat_map(|x| (low[1]..=high[1]).flat_map(move |y| (low[2]..=high[2]).map(move |z| [x, y, z]))).collect();
+        let filled: u32 = ctx.batch_blocks(|ctx| cells.iter().map(|&pos| u32::from(changed(ctx, pos, &block))).sum());
         // Nothing changed is BDS's success line with a 0, failed (73 of research/captures/bds-*.txt).
         out.translate("commands.fill.success", vec![filled.to_string()], filled > 0);
     }

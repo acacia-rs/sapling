@@ -1,5 +1,5 @@
 //! Blocks shown a sub-chunk at a time, in UpdateSubchunkBlocks, as BDS showed a grown tree, the
-//! exit portal and a door's two halves.
+//! exit portal, a door's two halves and a `/fill` (a plugin's batch, held until it is done).
 
 use acacia_proto::packets::UpdateSubchunkBlocks;
 use acacia_proto::types::{BlockCoordinates, BlockUpdate, BlockUpdateTransitionType, UpdateBlockFlags};
@@ -7,7 +7,7 @@ use bevy_ecs::prelude::*;
 use bytes::Bytes;
 use sapling_api::BlockPos;
 
-use super::{FLAGS, to_viewers, update, write};
+use super::{FLAGS, block_entity_data, to_viewers, update_flagged, write};
 use crate::components::Layer;
 
 /// A cell, the block shown in it, and the flags it is shown with.
@@ -40,6 +40,50 @@ pub(crate) fn show_together(world: &mut World, layer: Entity, cells: &[(BlockPos
     show_sections(world, layer, sections, false);
 }
 
+/// The cells [`super::set`] wrote while a plugin's batch was open, shown when it closes.
+#[derive(Resource, Default)]
+pub(crate) struct Held(Option<Vec<(Entity, BlockPos)>>);
+
+/// Opens a batch: [`super::set`] keeps what it shows until [`show_held`]. False where one is open
+/// already, which then takes these changes in too.
+pub(crate) fn hold(world: &mut World) -> bool {
+    let mut held = world.get_resource_or_insert_with(Held::default);
+    held.0.is_none() && held.0.replace(Vec::new()).is_none()
+}
+
+/// Whether a batch is open, which then keeps the cell [`super::set`] wrote to show later.
+pub(super) fn held(world: &mut World, layer: Entity, pos: BlockPos) -> bool {
+    let Some(cells) = world.get_resource_mut::<Held>().and_then(|held| held.into_inner().0.as_mut()) else { return false };
+    cells.push((layer, pos));
+    true
+}
+
+/// Closes the batch and shows what it changed as BDS showed a `/fill` (research/captures/bds-batch.txt):
+/// as [`set_sectioned`] does, but each cell as it is now and with the network flag alone, and then
+/// their block entities, which an UpdateBlock would otherwise empty.
+pub(crate) fn show_held(world: &mut World) {
+    let Some(cells) = world.get_resource_mut::<Held>().and_then(|mut held| held.0.take()) else { return };
+    let mut layers: Vec<Entity> = cells.iter().map(|(layer, _)| *layer).collect();
+    layers.dedup();
+    for layer in layers {
+        let Some(level) = world.get::<Layer>(layer).map(|layer| &layer.world) else { continue };
+        let mut seen: Vec<BlockPos> = Vec::new();
+        let mut entities: Vec<(BlockPos, Bytes)> = Vec::new();
+        for &(_, pos) in cells.iter().filter(|(at, _)| *at == layer) {
+            if !seen.contains(&pos) {
+                seen.push(pos);
+                entities.extend(level.block_entity(pos).map(|entity| (pos, block_entity_data(pos, entity))));
+            }
+        }
+        let mut sections = by_section(seen.iter().map(|&pos| (pos, level.block(pos[0], pos[1], pos[2]), UpdateBlockFlags::NETWORK.0)));
+        sections.sort_by_key(|(_, cells)| cells.len() > 1);
+        show_sections(world, layer, sections, true);
+        for (pos, packet) in entities {
+            to_viewers(world, layer, pos, &[packet]);
+        }
+    }
+}
+
 /// Writes `cells` in order; those that changed, by sub-chunk in the order first written.
 fn write_by_section(world: &mut World, layer: Entity, cells: &[(BlockPos, u32)]) -> Vec<(BlockPos, Vec<Cell>)> {
     let written: Vec<Cell> = cells.iter().filter_map(|&(pos, id)| Some((pos, write(world, layer, pos, id)?, FLAGS.0))).collect();
@@ -65,7 +109,7 @@ fn show_sections(world: &mut World, layer: Entity, sections: Vec<(BlockPos, Vec<
         sections
             .into_iter()
             .map(|(corner, cells)| match cells.as_slice() {
-                [(pos, id, _)] if single_as_block => (*pos, update(registry, *pos, *id, 0)),
+                [(pos, id, flags)] if single_as_block => (*pos, update_flagged(registry, *pos, *id, 0, UpdateBlockFlags(*flags))),
                 _ => (corner, sapling_net::encode(&UpdateSubchunkBlocks { x: corner[0], y: corner[1], z: corner[2], blocks: cells.iter().map(block).collect(), extra: Vec::new() })),
             })
             .collect()

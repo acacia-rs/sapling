@@ -18,15 +18,15 @@ for word in $words; do
   i=\$((i + 1))
 done
 wait"
-printf '%s\n' "$job" | retry ssh $opts testbox "cat > $remote/drills.sh" || exit 1
-retry ssh $opts testbox "cd $remote || exit; rm -f drills.log drills.done; { nohup flock target/.busy sh -c 'bash drills.sh; echo \$? >drills.done' >drills.log 2>&1 </dev/null & }" || exit 1
+printf '%s\n' "$job" | retry ssh $opts $host "cat > $remote/drills.sh" || exit 1
+retry ssh $opts $host "cd $remote || exit; rm -f drills.log drills.done; { nohup flock target/.busy sh -c 'bash drills.sh; echo \$? >drills.done' >drills.log 2>&1 </dev/null & }" || exit 1
 # Poll with short calls; a single long ssh would die with the link.
-until ssh $opts testbox "test -f $remote/drills.done" 2>/dev/null; do sleep 5; done
+until ssh $opts $host "test -f $remote/drills.done" 2>/dev/null; do sleep 5; done
 mkdir -p "$out"
-retry ssh $opts testbox "tail -n 20 $remote/drills.log"
-ssh $opts testbox "tar czf - -C $remote/drills ." | tar xzf - -C "$out" || exit 1
+retry ssh $opts $host "tail -n 20 $remote/drills.log"
+ssh $opts $host "tar czf - -C $remote/drills ." | tar xzf - -C "$out" || exit 1
 for word in "$@"; do echo "$word: $(tail -1 "$out/$word.txt" 2>/dev/null), $(wc -l <"$out/$word.txt" 2>/dev/null) lines"; done
-code=$(retry ssh $opts testbox "cat $remote/drills.done")
+code=$(retry ssh $opts $host "cat $remote/drills.done")
 grep -h '^LAGGED' "$out"/*.txt 2>/dev/null | head -1
 echo "exit: $code"
 exit "$code"

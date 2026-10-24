@@ -3,6 +3,8 @@
 //! drill's own packets. The ground truth for sapling's vanilla commands (`sapling::vanilla`).
 //! `cargo run -p sapling --example bds_command_probe -- <server> [gamerule|kill|replaceitem|defaults|concrete|water|lava|redstone|redstone-phase|conductors|shapes|burnout|repeater-facing|repeaters|comparators|reads|observer-facing|observers|piston-facing|pistons|slime|burn|harm|douse|hit|tools|reach|hurt|smother|hunger|eat|tire|bite|slain|chase|toil|armour|effects|sick|worn|kinds|stroll|flee|around|drink|more|shove|byhand|bedspawn|boom|shoot|wear|provoke|provoke2|provoke3|witch|ender|goat|evoker|shulker|ghast|breeze|vex|stare|dolphin|pandas|witch-drinks|goat-cows|mob-effects|mob-effects2|effects3|wind-burst|player-omens|fx|drink2|shoot2|golem|clock|sounds|loot|loot2|names|sun|weather|spiders|kinds2|pushed|pvp|blaze|duel|placing|item-names|placing2|daylight|clicks|tnt|bonemeal|fire|quench|discs|ores|crops|grows|leaves|trample|clicks2|scaffold|grows2|copper|oresteps|bonemeal2|leafreach|stacks|snowpile]` (offline mode,
 //! operators by default; `gamerule` when none is named).
+#[path = "shared/batch_drill.rs"]
+mod batch;
 #[path = "shared/burn_drill.rs"]
 mod burn;
 #[path = "shared/comparator_drill.rs"]
@@ -264,6 +266,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         Some("hit") => (burn::hit(), burn::HIT_SHOWN, burn::BURN_SETTLE),
         Some("tools") => (burn::tools(), burn::HIT_SHOWN, burn::BURN_SETTLE),
         Some("swim") => (burn::swim(), burn::HIT_SHOWN, burn::BURN_SETTLE),
+        Some("batch") => (batch::batch(), batch::BATCH_SHOWN, burn::BURN_SETTLE),
         Some("reach") => (burn::reach(), burn::HIT_SHOWN, burn::BURN_SETTLE),
         Some("shapes") => (redstone::shapes(), redstone::REDSTONE_SHOWN, redstone::CONDUCTORS_SETTLE),
         Some(other) => match player::drill(other) {
