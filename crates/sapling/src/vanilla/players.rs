@@ -121,13 +121,13 @@ impl Teleport {
 #[command(crate = "crate", name = "give", description = "Gives an item to a player", permission = "operator")]
 pub(crate) struct Give {
     player: Selector,
-    item: String,
+    item: super::names::ItemName,
     amount: Option<u8>,
 }
 
 impl Command for Give {
     fn run(self, ctx: &mut ShardCtx<'_>, sender: &Sender, out: &mut Output) {
-        let item = Item::new(super::item_named(&self.item), self.amount.unwrap_or(1).max(1));
+        let item = Item::new(super::item_named(&self.item.0), self.amount.unwrap_or(1).max(1));
         let (shown, count) = (item_display_name(&item.name, 0), item.count.to_string());
         let given = players(ctx, sender, &self.player);
         for player in &given {

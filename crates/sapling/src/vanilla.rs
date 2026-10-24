@@ -11,6 +11,7 @@ mod containers;
 mod damage;
 mod effects;
 mod execute;
+mod names;
 mod players;
 mod rules;
 
