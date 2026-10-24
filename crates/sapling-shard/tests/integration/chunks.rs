@@ -92,7 +92,7 @@ fn the_view_follows_the_player() {
     let first: HashSet<(i32, i32)> = all::<LevelChunk>(&drain(&mut h, 1)).iter().map(|c| (c.x, c.z)).collect();
     assert_eq!(first.len(), 49);
 
-    // Forty blocks east in steps a player can make (tests/players.rs has the step that is refused).
+    // Forty blocks east in steps a player can make (players.rs has the step that is refused).
     (1..=4).for_each(|step| h.receive(1, &input_at([0.5 + 10.0 * step as f32, 65.0, 0.5])));
     let sent = drain(&mut h, 1);
     let publisher: NetworkChunkPublisherUpdate = sent[0].decode().unwrap();

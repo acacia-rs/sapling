@@ -1004,7 +1004,7 @@ only falls back to RakNet when that fails, so turning it on moves every vanilla 
 - **Host key.** Every answer is signed by `NetherNet::host_key`; clients pin it per address on
   first use, so `sapling::host_key(path)` keeps it in a file.
 - Tests: `sapling-net/tests/nethernet.rs` (both signaling paths, beside RakNet) and the NetherNet
-  bot in `sapling/tests/join.rs`.
+  bot in `sapling/tests/integration/join.rs`.
 
 ## Server-side movement (as built: Observe)
 

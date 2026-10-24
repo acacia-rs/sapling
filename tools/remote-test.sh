@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Runs `cargo test` on testbox (31 GB, Linux) for machines short on RAM, as acacia's tool of the same name.
-# usage: tools/remote-test.sh [cargo test args...]   e.g. tools/remote-test.sh -p sapling-shard --test commands
+# usage: tools/remote-test.sh [cargo test args...]   e.g. tools/remote-test.sh -p sapling-shard --test integration commands::
 # Each worktree gets its own remote dir (work/<folder>); REMOTE_DIR picks another.
 set -uo pipefail
 source "$(dirname "$0")/remote-sync.sh"
