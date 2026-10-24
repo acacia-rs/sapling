@@ -17,6 +17,7 @@ mod health;
 mod hud;
 mod item;
 mod listen;
+mod movement;
 mod player;
 mod plugin;
 #[cfg(test)]
@@ -29,6 +30,7 @@ mod world_event;
 
 pub use block::{Block, BlockPos, BreakEvent, Face, InteractEvent, PlaceEvent};
 pub use chat::ChatBackend;
+pub use movement::{MovementBackend, MovementPolicy};
 pub use combat::{Attacker, DamageEvent, DeathEvent, DeathMessage, RespawnEvent};
 pub use command::{Command, Commands, Output, Sender};
 pub use ctx::{Backend, FormCallback, ShardCtx, State};

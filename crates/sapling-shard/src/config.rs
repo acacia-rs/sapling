@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use sapling_api::{Difficulty, GameMode};
+use sapling_api::{Difficulty, GameMode, MovementPolicy};
 
 pub const TICK: Duration = Duration::from_millis(50);
 
@@ -32,14 +32,24 @@ pub struct ShardConfig {
     pub tick: Duration,
 }
 
-/// What the shard makes of where clients say their players are (simulation.rs).
+/// What the shard makes of where clients say their players are (simulation.rs), under the names of
+/// BDS's `server.properties` keys.
 #[derive(Debug, Clone, Copy, PartialEq)]
-pub enum MovementCheck {
-    /// Believed, past the sanity checks in movement.rs.
-    Trust,
-    /// Also stepped on the server, and logged where the two part by more than `threshold`
-    /// blocks; the client's word still stands. BDS corrects past 0.5.
-    Observe { threshold: f32 },
+pub struct MovementCheck {
+    /// Every player's, until a plugin gives one its own (`ShardCtx::set_movement_policy`).
+    pub policy: MovementPolicy,
+    /// Blocks the server's step and the client's may part by before it counts:
+    /// `player-position-acceptance-threshold`.
+    pub threshold: f32,
+    /// Inputs after a correction before the next, while those in flight still carry the old
+    /// prediction: `player-rewind-min-correction-delay-ticks`.
+    pub correction_delay: u64,
+}
+
+impl Default for MovementCheck {
+    fn default() -> Self {
+        Self { policy: MovementPolicy::Observe, threshold: 0.5, correction_delay: 5 }
+    }
 }
 
 impl Default for ShardConfig {
@@ -54,7 +64,7 @@ impl Default for ShardConfig {
             columns_per_tick: 8,
             blob_cache: true,
             mobs_stroll: true,
-            movement_check: MovementCheck::Observe { threshold: 0.5 },
+            movement_check: MovementCheck::default(),
             tick: TICK,
         }
     }

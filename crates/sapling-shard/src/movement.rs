@@ -19,7 +19,7 @@ use sapling_api::GameMode;
 
 use crate::blocks::BlockInputs;
 use crate::components::{InLayer, Layer, Mode, NetId, Outgoing, PacketQueues, Position, Settings, Stage, Tick};
-use crate::simulation::{self, Simulated};
+use crate::simulation::{self, Own, Ruling, Simulated};
 use crate::visibility::ToViewers;
 use crate::vitals::Vitals;
 pub(crate) use placing::{correct, correct_unmoving, push, reset, teleport, teleport_as, teleport_onto_ground};
@@ -179,7 +179,7 @@ impl Moves {
     }
 }
 
-type Mover<'a> = (&'a NetId, &'a Stage, &'a mut Position, &'a mut Motion, &'a mut Outgoing, &'a InLayer, &'a Mode, Option<&'a mut Simulated>, Option<&'a Vitals>);
+type Mover<'a> = (&'a NetId, &'a Stage, &'a mut Position, &'a mut Motion, &'a mut Outgoing, &'a InLayer, &'a Mode, Option<&'a mut Simulated>, Option<&'a Vitals>, Option<&'a Own>);
 
 /// Where each client says its player is. Trusted, except that non-finite values are dropped and
 /// a step no player makes in a tick is answered with a teleport back. Moves are queued for the
@@ -194,7 +194,7 @@ pub(crate) fn player_input(
     mut players: Query<Mover>,
 ) {
     for (entity, mut input) in packets.take::<PlayerAuthInput>() {
-        let Ok((id, stage, mut position, mut motion, mut out, in_layer, mode, simulated, vitals)) = players.get_mut(entity) else { continue };
+        let Ok((id, stage, mut position, mut motion, mut out, in_layer, mode, simulated, vitals, own)) = players.get_mut(entity) else { continue };
         if input.block_action.is_some() || input.transaction.is_some() || input.item_stack_request.is_some() {
             tracing::debug!(tick = input.tick, actions = ?input.block_action, transaction = ?input.transaction, request = ?input.item_stack_request, "input with an action");
         }
@@ -237,15 +237,21 @@ pub(crate) fn player_input(
         motion.pose.apply(&input.input_data);
         motion.jumps = motion.jumps.saturating_add(input.input_data.iter().filter(|flag| **flag == InputData::StartJumping).count() as u8);
         motion.input_tick = input.tick;
-        let moved = Position { feet, yaw: input.yaw, pitch: input.pitch, head_yaw: input.head_yaw, on_ground };
-        if *stage == Stage::InWorld && (moved.feet, moved.yaw, moved.pitch) != (position.feet, position.yaw, position.pitch) {
-            moves.record(entity, *position, moved);
-        }
+        let mut moved = Position { feet, yaw: input.yaw, pitch: input.pitch, head_yaw: input.head_yaw, on_ground };
         if let Some(mut simulated) = simulated {
             let modelled = matches!(mode.0, GameMode::Survival | GameMode::Adventure);
             let world = layers.get(in_layer.0).ok().filter(|_| modelled).map(|layer| &layer.world);
             let eating = vitals.is_some_and(Vitals::is_eating);
-            simulation::observe(&mut simulated, settings.0.movement_check, world, &input, &moved, eating, id.0);
+            let check = &settings.0.movement_check;
+            if let Ruling::Server { stepped, tell } = simulation::judge(&mut simulated, check, Own::or(own, check.policy), world, &input, &moved, eating, id.0) {
+                (moved.feet, moved.on_ground) = (stepped.feet, stepped.on_ground);
+                if tell {
+                    out.push(&placing::prediction(&moved, stepped.delta, input.tick));
+                }
+            }
+        }
+        if *stage == Stage::InWorld && (moved.feet, moved.yaw, moved.pitch) != (position.feet, position.yaw, position.pitch) {
+            moves.record(entity, *position, moved);
         }
         *position = moved;
     }

@@ -1,6 +1,6 @@
 //! The server putting a player somewhere, told to its client as BDS tells it.
 
-use acacia_proto::packets::{MovePlayer, MovePlayerMode, MovePlayerTeleport, MovePlayerTeleportCause};
+use acacia_proto::packets::{CorrectPlayerMovePrediction, CorrectPlayerMovePredictionPredictionType as Kind, MovePlayer, MovePlayerMode, MovePlayerTeleport, MovePlayerTeleportCause};
 use acacia_proto::types::LegacyEntityType;
 use bevy_ecs::prelude::*;
 
@@ -61,14 +61,19 @@ pub(crate) fn correct_unmoving(world: &mut World, entity: Entity, feet: [f32; 3]
 }
 
 fn correction(world: &mut World, entity: Entity, feet: [f32; 3], fall: f32) {
-    use acacia_proto::packets::{CorrectPlayerMovePrediction, CorrectPlayerMovePredictionPredictionType as Kind};
     if let Some(mut simulated) = world.get_mut::<Simulated>(entity) {
         simulated.adopt(feet, [0.0, fall, 0.0], true);
     }
     let Ok((mut position, motion, mut out)) = world.query::<(&mut Position, &Motion, &mut Outgoing)>().get_mut(world, entity) else { return };
-    position.feet = feet;
-    let delta = acacia_proto::types::Vec3f { x: 0.0, y: fall, z: 0.0 };
-    out.push(&CorrectPlayerMovePrediction { prediction_type: Kind::Player, position: eyes(&position), delta, rotation: acacia_proto::types::Vec2f { x: 0.0, z: 0.0 }, angular_velocity: None, on_ground: true, tick: motion.input_tick });
+    (position.feet, position.on_ground) = (feet, true);
+    out.push(&prediction(&position, [0.0, fall, 0.0], motion.input_tick));
+}
+
+/// The client's prediction put right: at `position` moving by `delta` at the end of input `tick`.
+pub(crate) fn prediction(position: &Position, [x, y, z]: [f32; 3], tick: u64) -> CorrectPlayerMovePrediction {
+    let delta = acacia_proto::types::Vec3f { x, y, z };
+    let rotation = acacia_proto::types::Vec2f { x: 0.0, z: 0.0 };
+    CorrectPlayerMovePrediction { prediction_type: Kind::Player, position: eyes(position), delta, rotation, angular_velocity: None, on_ground: position.on_ground, tick }
 }
 
 /// [`teleport`] onto ground the client may not have yet (another world's spawn): until it

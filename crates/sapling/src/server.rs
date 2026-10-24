@@ -117,6 +117,13 @@ impl ServerBuilder {
         self
     }
 
+    /// What the server makes of where clients say their players are (default: Observe, BDS's 0.5
+    /// threshold and 5-tick correction delay); a plugin may give one player its own policy.
+    pub fn movement_check(mut self, check: sapling_shard::MovementCheck) -> Self {
+        self.shard.movement_check = check;
+        self
+    }
+
     /// Wall time between ticks (default 50 ms); shorter only for drills (examples/drill_server.rs).
     pub fn tick(mut self, tick: std::time::Duration) -> Self {
         self.shard.tick = tick;
