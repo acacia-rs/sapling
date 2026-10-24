@@ -169,7 +169,7 @@ fn slime_counts_what_it_holds_to_the_12_and_a_sticky_piston_draws_it_back_with_t
 #[test]
 fn a_piston_pushes_what_stands_before_its_arm_and_its_blocks_as_on_bds() {
     // research/captures/bds-shove.txt: a stand in the arm's way went 0.25, then 0.5; one behind a
-    // pushed stone ended before the stone; one against obsidian stopped at it.
+    // pushed stone went once, 0.75, to end before the stone; one against obsidian stopped at it.
     let mut h = ready();
     put(&mut h, &[([0, 65, 2], "piston", EAST), ([0, 65, 4], "piston", EAST), ([1, 65, 4], "stone", ""), ([0, 65, 6], "piston", EAST), ([2, 65, 6], "obsidian", ""), ([-4, 65, 2], "piston", "facing_direction=1")]);
     h.remote.run(|ctx| {
@@ -191,7 +191,7 @@ fn a_piston_pushes_what_stands_before_its_arm_and_its_blocks_as_on_bds() {
         places.dedup();
         places
     };
-    assert_eq!([steps(0), steps(1), steps(2)], [vec![1.5, 1.75, 2.25], vec![2.5, 2.75, 3.25], vec![1.5, 1.75]]);
+    assert_eq!([steps(0), steps(1), steps(2)], [vec![1.5, 1.75, 2.25], vec![2.5, 3.25], vec![1.5, 1.75]]);
     assert_eq!(steps(3).last(), Some(&67.0), "the one on a piston that pushes up stands on its arm: {:?}", steps(3));
 }
 

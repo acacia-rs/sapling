@@ -191,7 +191,8 @@ fn stage(world: &mut World, going: &mut Move) -> Option<()> {
                 let name = if piston.is_sticky { "minecraft:sticky_piston_arm_collision" } else { "minecraft:piston_arm_collision" };
                 let head = level(world, layer)?.registry().find(name, &format!("facing_direction={}", piston.facing))?;
                 send::set(world, layer, front, head);
-                shove::shove(world, layer, &pushed(going), piston.front, HALFWAY);
+                // Only the arm pushes halfway: what is behind a moved block goes once, at the end (bds-shove.txt).
+                shove::shove(world, layer, &[pos], piston.front, HALFWAY);
             }
         }
         2 => {
