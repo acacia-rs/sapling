@@ -143,6 +143,17 @@ pub fn mob_air(id: u64, air: i16) -> SetEntityData {
     SetEntityData { runtime_entity_id: id, metadata: vec![item], properties: EntityProperties { ints: Vec::new(), floats: Vec::new() }, tick: 0 }
 }
 
+/// The effects of the ids `effects` shown on the entity `id`, as BDS packs `VisibleMobEffects` for a
+/// mob and a player alike (research/captures/bds-mob-effects.txt, bds-effects.txt): each id doubled,
+/// 7 bits apiece, the lowest highest.
+pub fn visible_effects(id: u64, effects: impl IntoIterator<Item = i32>) -> SetEntityData {
+    let mut ids: Vec<i64> = effects.into_iter().map(i64::from).collect();
+    ids.sort_unstable();
+    let packed = ids.into_iter().fold(0i64, |packed, effect| (packed << 7) | (effect << 1));
+    let item = MetadataDictionaryItem { key: Key::VisibleMobEffects, r#type: Type::Long, legacy_type: 7, value: Value::Default(Plain::Long(packed)) };
+    SetEntityData { runtime_entity_id: id, metadata: vec![item], properties: EntityProperties { ints: Vec::new(), floats: Vec::new() }, tick: 0 }
+}
+
 /// The mob `id`'s flags, where `BREATHING` came or went, and its breath, where that changed, in
 /// one packet as BDS sends them (research/captures/bds-kill.txt); `None` where neither did.
 pub fn mob_breath(id: u64, flags: Option<MetadataFlags1>, air: Option<i16>) -> Option<SetEntityData> {

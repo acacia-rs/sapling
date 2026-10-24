@@ -8,8 +8,7 @@
 // with it, strength and weakness do not change its hit, and levitation, slow falling and jump
 // boost do nothing to it.
 
-use acacia_proto::packets::{MobEffect, MobEffectEventId, SetEntityData};
-use acacia_proto::types::{EntityProperties, MetadataDictionaryItem, MetadataDictionaryItemKey as Key, MetadataDictionaryItemType as Type, MetadataDictionaryItemValue as Value, MetadataDictionaryItemValueDefault as Plain};
+use acacia_proto::packets::{MobEffect, MobEffectEventId};
 use bevy_ecs::prelude::*;
 use sapling_api::Effect;
 
@@ -28,8 +27,6 @@ const UNDEAD: &[&str] = &[
 const RESISTS: f32 = 0.2;
 /// Effects shorter than this, shared out by a splash, are not given.
 const SHORTEST: f32 = 20.0;
-/// Each effect is 7 bits of `VisibleMobEffects`.
-const SHOWN_BITS: u32 = 7;
 
 #[derive(Clone, Copy)]
 struct Active {
@@ -50,13 +47,8 @@ fn told(id: u64, event_id: MobEffectEventId, active: &Active) -> bytes::Bytes {
     sapling_net::encode(&MobEffect { runtime_entity_id: id, event_id, effect_id: active.effect.id(), amplifier: i32::from(active.amplifier), particles: true, duration: active.left as i32, tick: 0, ambient: false })
 }
 
-/// `VisibleMobEffects` for `active`: each effect's id doubled, the lowest highest, 7 bits apiece.
 fn shown(id: u64, active: &[Active]) -> bytes::Bytes {
-    let mut ids: Vec<i64> = active.iter().map(|active| i64::from(active.effect.id())).collect();
-    ids.sort();
-    let packed = ids.into_iter().fold(0i64, |packed, effect| (packed << SHOWN_BITS) | (effect << 1));
-    let item = MetadataDictionaryItem { key: Key::VisibleMobEffects, r#type: Type::Long, legacy_type: 7, value: Value::Default(Plain::Long(packed)) };
-    sapling_net::encode(&SetEntityData { runtime_entity_id: id, metadata: vec![item], properties: EntityProperties { ints: Vec::new(), floats: Vec::new() }, tick: 0 })
+    sapling_net::encode(&sapling_data::visible_effects(id, active.iter().map(|active| active.effect.id())))
 }
 
 fn tell(world: &mut World, mob: Entity, packets: Vec<bytes::Bytes>) {

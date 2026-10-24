@@ -1,12 +1,16 @@
 //! Effects on a player, counted down a tick at a time and told as BDS tells them
 //! (docs/research/effects.md).
 // TODO: the effects drilled and no others; one who comes
-// to see a player is not told its effects, nor are `VisibleMobEffects`; they end unsaid as the
+// to see a player is not told its effects or `VisibleMobEffects`; they end unsaid as the
 // player rises. Kept between visits (inventory/store.rs) are the effects and not what is left
 // of absorption's cushion, and what BDS tells of them at a join was not drilled.
 
-use acacia_proto::packets::{MobEffect, MobEffectEventId, UpdateAttributes};
-use acacia_proto::types::{PlayerAttributesItem, PlayerAttributesItemModifiersItem};
+mod attributes;
+
+use acacia_proto::packets::{MobEffect, MobEffectEventId};
+use acacia_proto::types::PlayerAttributesItemModifiersItem;
+use attributes::pace;
+pub(crate) use attributes::cushion;
 use bevy_ecs::prelude::*;
 use sapling_api::{Effect, EffectBackend, PlayerId};
 
@@ -27,23 +31,18 @@ pub(crate) const WITHERS: u32 = 40;
 pub(crate) const POISONED: f32 = 1.0;
 /// Exhaustion a tick of hunger adds a level.
 const HUNGERS: f32 = 0.005;
-/// A player's walking speed, and what a level of speed adds of it.
-const WALKS: f32 = 0.1;
+/// What a level of speed adds of a player's walking speed, and a level of slowness takes.
 pub(crate) const QUICKENS: f32 = 0.2;
-const QUICKENS_AS: &str = "91aeaa56-376b-4498-935b-2f7f68070635";
+pub(crate) const SLOWS: f32 = 0.15;
 /// Health a level of health boost adds to the most a player has.
 const BOOSTS: f32 = 4.0;
 const BOOSTS_AS: &str = "5d6f0ba2-1186-46ac-b896-c61c5cee99cc";
-/// What a level of slowness takes of it.
-pub(crate) const SLOWS: f32 = 0.15;
-const SLOWS_AS: &str = "7107de5e-7ce8-4030-940e-514c1f160890";
 /// A level of strength multiplies a hit by the first and adds the second; of weakness likewise
 /// (research/captures/bds-fx.txt: a fist's 1 was 3.99 at strength's second level, 0.3 weak).
 const STRENGTHENS: [f32; 2] = [1.3, 0.3];
 const WEAKENS: [f32; 2] = [0.8, 0.4];
-/// Health a level of absorption puts on top, and the most the client shows.
+/// Health a level of absorption puts on top.
 const CUSHIONS: f32 = 4.0;
-const MOST_CUSHION: f32 = 16.0;
 
 #[derive(Clone, Copy)]
 struct Active {
@@ -91,32 +90,6 @@ fn told(id: u64, event_id: MobEffectEventId, active: &Active, duration: u32) -> 
     MobEffect { runtime_entity_id: id, event_id, effect_id: active.effect.id(), amplifier: i32::from(active.amplifier), particles: active.particles, duration: duration as i32, tick: 0, ambient: false }
 }
 
-/// The player's walking speed under levels of speed and of slowness, as BDS writes it.
-// TODO: both at once were not drilled: each is taken to multiply the other's.
-fn pace(id: u64, quick: Option<u8>, slow: Option<u8>, tick: u64) -> UpdateAttributes {
-    let modifier = |levels: Option<u8>, id: &str, name: &str, each: f32| {
-        levels.map(|levels| PlayerAttributesItemModifiersItem { id: id.into(), name: name.into(), amount: each * (f32::from(levels) + 1.0), operation: 2, operand: 2, serializable: false })
-    };
-    let modifiers: Vec<_> = [modifier(quick, QUICKENS_AS, "MovementSpeed", QUICKENS), modifier(slow, SLOWS_AS, "MovementSlowdown", -SLOWS)].into_iter().flatten().collect();
-    let movement = PlayerAttributesItem {
-        min: 0.0,
-        max: f32::MAX,
-        current: modifiers.iter().fold(WALKS, |pace, modifier| pace * (1.0 + modifier.amount)).max(0.0),
-        default_min: 0.0,
-        default_max: f32::MAX,
-        default: WALKS,
-        name: "minecraft:movement".into(),
-        modifiers,
-    };
-    UpdateAttributes { runtime_entity_id: id, attributes: vec![movement], tick }
-}
-
-/// The health on top of a player's own, as BDS writes it.
-pub(super) fn cushion(id: u64, amount: f32, tick: u64) -> UpdateAttributes {
-    let absorption = PlayerAttributesItem { min: 0.0, max: MOST_CUSHION, current: amount, default_min: 0.0, default_max: MOST_CUSHION, default: 0.0, name: "minecraft:absorption".into(), modifiers: Vec::new() };
-    UpdateAttributes { runtime_entity_id: id, attributes: vec![absorption], tick }
-}
-
 /// Puts `amount` of health on top of a player's own, told at once.
 fn pad(world: &mut World, player: Entity, amount: f32) {
     if let Some(mut vitals) = world.get_mut::<Vitals>(player) {
@@ -159,8 +132,24 @@ pub(crate) fn hits_for(world: &World, player: Entity, amount: f32) -> f32 {
     under(under(amount, Effect::Strength, STRENGTHENS), Effect::Weakness, WEAKENS).max(0.0)
 }
 
+/// The ids of the effects on a player that show their particles, in order.
+fn shown(world: &World, player: Entity) -> Vec<i32> {
+    let mut ids: Vec<i32> = world.get::<Effects>(player).map_or_else(Vec::new, |effects| effects.0.iter().filter(|active| active.particles).map(|active| active.effect.id()).collect());
+    ids.sort_unstable();
+    ids
+}
+
+/// Tells the player and its viewers the effects it shows, where they are not `before`'s.
+fn show(world: &mut World, player: Entity, id: u64, before: &[i32]) {
+    let now = shown(world, player);
+    if now != before {
+        tell(world, player, &sapling_data::visible_effects(id, now));
+    }
+}
+
 /// Takes the effects `gone` picks off a player, telling each with what was left of it.
 fn take(world: &mut World, player: Entity, gone: impl Fn(&Active) -> bool) -> bool {
+    let before = shown(world, player);
     let (Some(id), Some(mut effects)) = (world.get::<NetId>(player).map(|id| id.0), world.get_mut::<Effects>(player)) else { return false };
     let taken: Vec<Active> = effects.0.iter().copied().filter(|active| gone(active)).collect();
     effects.0.retain(|active| !gone(active));
@@ -174,6 +163,7 @@ fn take(world: &mut World, player: Entity, gone: impl Fn(&Active) -> bool) -> bo
             _ => {}
         }
     }
+    show(world, player, id, &before);
     !taken.is_empty()
 }
 
@@ -196,6 +186,7 @@ pub(super) fn clear(world: &mut World, player: Entity) -> bool {
 pub(super) fn give(world: &mut World, player: Entity, effect: Effect, ticks: u32, amplifier: u8, particles: bool) -> bool {
     let Some(id) = world.get::<NetId>(player).map(|id| id.0) else { return false };
     let new = Active { effect, amplifier, left: if effect.is_instant() { 1 } else { ticks }, particles };
+    let before = shown(world, player);
     if world.get::<Effects>(player).is_none() {
         world.entity_mut(player).insert(Effects::default());
     }
@@ -220,6 +211,7 @@ pub(super) fn give(world: &mut World, player: Entity, effect: Effect, ticks: u32
         Effect::HealthBoost => boost(world, player, id),
         _ => {}
     }
+    show(world, player, id, &before);
     true
 }
 

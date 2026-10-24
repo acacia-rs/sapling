@@ -52,6 +52,7 @@ mod priorities;
 mod redstone;
 mod saplings;
 mod shapes;
+mod shown_effects;
 mod sleep;
 mod survival;
 mod tnt;
