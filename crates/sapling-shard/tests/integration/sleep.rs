@@ -55,8 +55,8 @@ fn a_bed_by_day_only_moves_the_spawn() {
     assert!(!lies_down(&sent));
 }
 
-/// research/captures/bds-wake.txt: lying down and a teleport out of bed correct the client's
-/// prediction; the teleport wakes it where it was sent.
+/// research/captures/bds-wake.txt: lying down corrects the client's prediction; a teleport wakes
+/// it where it was sent.
 #[test]
 fn a_sleeper_is_put_in_its_bed_and_a_teleport_gets_it_up_where_it_was_sent() {
     use acacia_proto::packets::CorrectPlayerMovePrediction;
@@ -69,7 +69,9 @@ fn a_sleeper_is_put_in_its_bed_and_a_teleport_gets_it_up_where_it_was_sent() {
     h.remote.run(|ctx| ctx.teleport(ALEX, [5.5, 65.0, 5.5]));
     let sent = h.tick(1);
     assert!(all::<Animate>(&sent).iter().any(|animate| animate.action_id == AnimateActionId::WakeUp));
-    assert_eq!(corrected(&sent), [([5.5, 65.0 + sapling_data::EYE_HEIGHT, 5.5], 0.0)]);
+    let moved = all::<acacia_proto::packets::MovePlayer>(&sent);
+    assert_eq!(moved.iter().map(|to| [to.position.x, to.position.y, to.position.z]).collect::<Vec<_>>(), [[5.5, 65.0 + sapling_data::EYE_HEIGHT, 5.5]]);
+    assert!(corrected(&sent).is_empty());
 }
 
 #[test]

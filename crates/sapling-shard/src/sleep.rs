@@ -192,17 +192,15 @@ fn get_up(world: &mut World, player: Entity, sent_to: Option<[f32; 3]>) -> bool 
     if let Some(mut out) = world.get_mut::<Outgoing>(player) {
         out.push(&Animate { action_id: AnimateActionId::WakeUp, runtime_entity_id: id, data: 0.0, has_swing_source: false, swing_source: None });
     }
-    if let Some(feet) = sent_to {
-        movement::teleport(world, player, feet);
-    }
-    show(world, player, None);
+    // A correction a tick after the teleport came in one BDS run of two: not the wake's own.
     match sent_to {
-        Some(feet) => movement::correct_unmoving(world, player, feet),
+        Some(feet) => movement::teleport(world, player, feet),
         None => {
             let [x, y, z] = sleeping.entered.map(f32::floor);
             movement::correct(world, player, [x + 0.5, y + STAND_UP_HEIGHT, z + 0.5]);
         }
     }
+    show(world, player, None);
     set_occupied(world, sleeping.layer, sleeping.head, false);
     tell_sleepers(world, sleeping.layer);
     true
