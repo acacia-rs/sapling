@@ -31,10 +31,11 @@ RUN=\$PWD/target/testbox
 rm -rf \$RUN/$name.src \$RUN/$name.log ${FETCH:+\$RUN/$FETCH} && mkdir \$RUN/$name.src && tar xzf \$RUN/$name.tgz -C \$RUN/$name.src &&
   rsync -rlpc --delete --exclude=/target --exclude=/target-prof \$RUN/$name.src/ . || { echo 'sync failed' > \$RUN/$name.log; echo 97 > \$RUN/$name.done; exit; }
 rm -rf \$RUN/$name.src \$RUN/$name.tgz
-env SAPLING_ORACLE_WORLDS=\$HOME/oracle-worlds ${ENVS:-} \$HOME/.cargo/bin/cargo +stable $(printf '%q ' "$@") > \$RUN/$name.log 2>&1
+env SAPLING_ORACLE_WORLDS=\$HOME/oracle-worlds RUSTC_WRAPPER=\$HOME/.cargo/bin/sccache ${ENVS:-} \$HOME/.cargo/bin/cargo +stable $(printf '%q ' "$@") > \$RUN/$name.log 2>&1
 echo \$? > \$RUN/$name.done"
 write_job() { printf '%s\n' "$job" | ssh $opts testbox "rm -f $run/$name.done && cat > $run/$name.sh"; }
 
+retry ssh $opts testbox "bash -s -- $remote" <"$root/tools/testbox-target.sh" || exit 1
 retry upload || exit 1
 retry write_job || exit 1
 retry ssh $opts testbox "{ nohup flock $run/lock sh $run/$name.sh </dev/null >/dev/null 2>&1 & }" || exit 1
