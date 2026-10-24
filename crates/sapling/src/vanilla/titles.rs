@@ -48,7 +48,7 @@ fn parse<T: Parameter>(args: &mut Args<'_>) -> Result<(Selector, Shown<T>), Pars
 
 /// Does `action` to each target and names them all in the answer under `key`.
 fn show(ctx: &mut ShardCtx<'_>, sender: &Sender, target: &Selector, out: &mut Output, key: &str, action: &TitleAction) {
-    let found = players(ctx, sender, target);
+    let found = players(ctx, sender, Some(target));
     if found.is_empty() {
         return no_target(out);
     }

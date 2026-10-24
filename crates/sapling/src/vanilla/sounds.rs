@@ -4,7 +4,7 @@
 use sapling_api::command::{Coords, Selector};
 use sapling_api::{Command, Output, Sender, ShardCtx, Sound};
 
-use super::{no_target, origin, players};
+use super::{no_target, players};
 
 /// A player's eyes are this far over its feet; a sound with no place is played there.
 const EYES: f32 = 1.62;
@@ -39,11 +39,11 @@ pub(crate) struct PlaySound {
 
 impl Command for PlaySound {
     fn run(self, ctx: &mut ShardCtx<'_>, sender: &Sender, out: &mut Output) {
-        let found = players(ctx, sender, self.player.as_ref().unwrap_or(&Selector::Sender));
+        let found = players(ctx, sender, self.player.as_ref());
         if found.is_empty() {
             return no_target(out);
         }
-        let at = self.position.map(|position| position.from(origin(ctx, sender)));
+        let at = self.position.map(|position| position.from(ctx.origin(sender)));
         let (volume, minimum) = (self.volume.unwrap_or(1.0), self.minimum_volume.unwrap_or(0.0));
         let mut played = 0;
         for player in &found {
@@ -71,7 +71,7 @@ pub(crate) struct StopSound {
 
 impl Command for StopSound {
     fn run(self, ctx: &mut ShardCtx<'_>, sender: &Sender, out: &mut Output) {
-        let found = players(ctx, sender, &self.player);
+        let found = players(ctx, sender, Some(&self.player));
         if found.is_empty() {
             return no_target(out);
         }
@@ -93,7 +93,7 @@ pub(crate) struct Particle {
 
 impl Command for Particle {
     fn run(self, ctx: &mut ShardCtx<'_>, sender: &Sender, out: &mut Output) {
-        let here = origin(ctx, sender);
+        let here = ctx.origin(sender);
         ctx.spawn_particle_in_world(&self.effect, self.position.map_or(here, |position| position.from(here)));
         out.translate("commands.spawnParticleEmitter.success", vec![self.effect], true);
     }

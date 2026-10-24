@@ -5,19 +5,20 @@ use sapling_api::command::{Args, Parameter, RawPart, RawText, Selector, Text};
 use sapling_api::{Command, Output, Player, Sender, ShardCtx};
 
 use super::chat::speaker;
-use super::{display_name, entities, no_target, players};
+use super::{display_name, no_target, players, targets};
 
 /// `text` with each selector replaced by the names it finds from `sender`, `, `-joined, and left
 /// out where it finds none, as BDS did.
 // TODO: scores are always left out: sapling has no scoreboard. BDS left a `*` score raw for a
 // reader without a score and dropped the others it could not find.
-pub(super) fn resolved(ctx: &ShardCtx<'_>, sender: &Sender, text: &RawText) -> RawText {
+pub(super) fn resolved(ctx: &mut ShardCtx<'_>, sender: &Sender, text: &RawText) -> RawText {
     let online: Vec<Player> = ctx.players().collect();
     text.resolve(&mut |part| {
         let RawPart::Selector(written) = part else { return None };
         let selector = Selector::parse(&mut Args::new(written, 0, sender, &online)).ok()?;
-        let found = players(ctx, sender, &selector).into_iter().map(|player| player.name);
-        let names: Vec<String> = found.chain(entities(ctx, &selector).iter().map(|entity| display_name(&entity.kind))).collect();
+        let (players, entities) = targets(ctx, sender, Some(&selector));
+        let found = players.into_iter().map(|player| player.name);
+        let names: Vec<String> = found.chain(entities.iter().map(|entity| display_name(&entity.kind))).collect();
         (!names.is_empty()).then(|| RawPart::Text(names.join(", ")))
     })
 }
@@ -46,7 +47,7 @@ pub(crate) struct TellRaw {
 
 impl Command for TellRaw {
     fn run(self, ctx: &mut ShardCtx<'_>, sender: &Sender, out: &mut Output) {
-        let told = players(ctx, sender, &self.target);
+        let told = players(ctx, sender, Some(&self.target));
         if told.is_empty() {
             return no_target(out);
         }
