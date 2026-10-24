@@ -18,7 +18,7 @@ What sapling did otherwise, by how often:
 |---|---|---|
 | `/fill` that changes nothing answered "No blocks filled"; BDS: `commands.fill.success ["0"]`, failed | 155 lines, most words | fixed |
 | Other players' `MovePlayer`: BDS relays one a tick per moving input, sapling only when a player moved | 76k packets | open, likely harmless |
-| Item and entity names in answers by title case: BDS `Raw Chicken`, `Flint and Steel`, `Potion of Slowness`, `Water Bottle`, a lying item by its item (`Rotten Flesh`, not `Item`) | ~40 lines | fixed: `sapling-data/data/names.tsv` by `examples/bds_name_probe.rs`; a lying item by `EntityInfo::item`. Left: BDS merged two lying coal into one (`kill`: `Coal` to sapling's `Coal, Coal`); sapling's items do not merge |
+| Item and entity names in answers by title case: BDS `Raw Chicken`, `Flint and Steel`, `Potion of Slowness`, `Water Bottle`, a lying item by its item (`Rotten Flesh`, not `Item`) | ~40 lines | fixed: `sapling-data/data/names.tsv` by `examples/bds_name_probe.rs`; a lying item by `EntityInfo::item` |
 | Big fills as `UpdateBlock` each where BDS sends `UpdateSubchunkBlocks` | 27.8k extra UpdateBlock | open |
 | Sounds BDS makes and sapling not: a player's `land` to others (248), `hit` (60), `fall` (43), `jump_to_block` (41), `born` (23), `armor.equip_iron` (22), `open`/`close` (34), underwater enter/exit (34), `bottle.empty` (44) | ~600 | open; `land` is the server's (acacia's bot sends no sounds), to everyone but the lander |
 | Mobs never showed `MOVING` (bit 34), which BDS toggles by docs/research/moving-flag.md's rule for every actor: 9871 toggles to sapling's 62 | 12 mob words: 565 BDS, 6 before, 184 after (AI differs) | fixed: a mob's flags are one word (`sync::Told::flag_mob`/`set_flag`), so fire, fuses, charges and spells no longer clear each other's bits either |
@@ -27,7 +27,9 @@ What sapling did otherwise, by how often:
 | `VisibleMobEffects` and the whole-dictionary `SetEntityData` BDS repeats (D9) | ~15k | open |
 | A summoned armour stand moves in its spawn tick on sapling, the tick after on BDS (bds-water-flags.txt 48061/48112), so its `MOVING` shows a tick early too; BDS's zombie moved within 1 ms, but in a batch of three ticks, so the rule for mobs is not settled | | open |
 | `/effect` and `/damage` took players alone: none found where BDS's put slowness on a zombie (`effects3`, `mob-effects`, `wind-burst`, `stare`) | 30 lines | fixed (`ctx.remove_entity_effect`, `clear_entity_effects`, `hurt_entity`) |
-| `/kill @e[type=!player]` found nothing where BDS killed items or mobs still there (`effects3`, `wind-burst`, `stare`); `stare`'s enderman is gone before its `/tp` and `/effect` | ~25 lines | open |
+| `/kill @e[type=!player]` found nothing where BDS killed items or mobs still there (`effects3`, `wind-burst`, `stare`, `reach`, `tools`) | ~25 lines | not sapling's: each is the drill's opening `/kill` (ms 101-271), which found what BDS's world kept from the drill before; sapling's starts empty |
+| `stare`'s enderman is gone before its `/tp` and `/effect` | | open |
+| Lying items never merged (`kill`: BDS `Coal`, sapling `Coal, Coal`) | 104 `ItemEntityMerge` in `tools` | fixed (`drops/merge.rs`, docs/research/items.md's rule): `tools` 52 BDS / 61 sapling, `reach` 32 / 29. BDS removes the absorbed item a tick after the merge event, sapling at once |
 
 # Mechanisms capture, round 2
 
