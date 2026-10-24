@@ -1,4 +1,4 @@
-use crate::{Effect, PlayerId, ShardCtx};
+use crate::{DamageCause, Effect, PlayerId, ShardCtx};
 
 /// An entity on a shard: a mob, a lying item, a falling block or an experience orb. Unique on
 /// its shard while it exists; it goes when removed, picked up or landed, or with its column.
@@ -81,6 +81,23 @@ impl ShardCtx<'_> {
     pub fn give_entity_effect(&mut self, id: EntityId, effect: Effect, ticks: u32, amplifier: u8) -> bool {
         self.backend.give_entity_effect(id, effect, ticks, amplifier)
     }
+
+    /// Takes `effect` off a mob. False where it had none of it, or is gone or no mob.
+    pub fn remove_entity_effect(&mut self, id: EntityId, effect: Effect) -> bool {
+        self.backend.remove_entity_effect(id, effect)
+    }
+
+    /// Takes every effect off a mob. False where it had none, or is gone or no mob.
+    pub fn clear_entity_effects(&mut self, id: EntityId) -> bool {
+        self.backend.clear_entity_effects(id)
+    }
+
+    /// Hurts a living mob by `amount` of `cause`, as `hurt_player` hurts a player: its armour,
+    /// effects and the world's rules weigh it, and it flashes and may die. False where it took
+    /// nothing, or is gone, dying or no mob.
+    pub fn hurt_entity(&mut self, id: EntityId, amount: f32, cause: DamageCause) -> bool {
+        self.backend.hurt_entity(id, amount, cause)
+    }
 }
 
 /// The entities side of [`crate::Backend`].
@@ -96,4 +113,13 @@ pub trait EntityBackend {
     fn remove_entity(&mut self, id: EntityId) -> bool;
     fn kill_entity(&mut self, id: EntityId) -> bool;
     fn give_entity_effect(&mut self, id: EntityId, effect: Effect, ticks: u32, amplifier: u8) -> bool;
+    fn remove_entity_effect(&mut self, _id: EntityId, _effect: Effect) -> bool {
+        false
+    }
+    fn clear_entity_effects(&mut self, _id: EntityId) -> bool {
+        false
+    }
+    fn hurt_entity(&mut self, _id: EntityId, _amount: f32, _cause: DamageCause) -> bool {
+        false
+    }
 }

@@ -22,7 +22,8 @@ What sapling did otherwise, by how often:
 | Big fills as `UpdateBlock` each where BDS sends `UpdateSubchunkBlocks` | 27.8k extra UpdateBlock | open |
 | Sounds BDS makes and sapling not: a player's `land` to others (248), `hit` (60), `fall` (43), `jump_to_block` (41), `born` (23), `armor.equip_iron` (22), `open`/`close` (34), underwater enter/exit (34), `bottle.empty` (44) | ~600 | open; `land` is the server's (acacia's bot sends no sounds), to everyone but the lander |
 | `SetEntityData` (15.6k) and `UpdateAttributes` (2.5k) BDS sends that sapling does not, in ~60 words | | open, not yet broken down |
-| `/effect` and `/damage` on a zombie found none where BDS's found one (`effects3`, `mob-effects`, `wind-burst`, `stare`) | 30 lines | open, not yet looked at |
+| `/effect` and `/damage` took players alone: none found where BDS's put slowness on a zombie (`effects3`, `mob-effects`, `wind-burst`, `stare`) | 30 lines | fixed (`ctx.remove_entity_effect`, `clear_entity_effects`, `hurt_entity`) |
+| `/kill @e[type=!player]` found nothing where BDS killed items or mobs still there (`effects3`, `wind-burst`, `stare`); `stare`'s enderman is gone before its `/tp` and `/effect` | ~25 lines | open |
 
 # Mechanisms capture, round 2
 
