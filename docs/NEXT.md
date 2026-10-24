@@ -112,8 +112,9 @@ Each needs its rule looked up first (`bdsre` for BDS, the Java jar for data), th
 - Stair corners and hanging-sign states by Java's rules; a placed skull's `SkullType` (-1 as BDS
   leaves it), the cauldron's `PotionId` defaults (`docs/research/block-entities.md`, "Open checks").
 - A double chest asks both halves above, a slab too, as on BDS (`bds_command_probe lids`). Getting
-  up by `StopSleeping`, by day and by `/tp` is told as on BDS (`wake`); left there: the `Flags` and
-  box-size data BDS sends a sleeper, and an occupied bit sent with flags 2, not 3.
+  up by `StopSleeping`, by day and by `/tp`, and a sleeper's data and box, are told as on BDS
+  (`wake`); left there: the occupied bit is sent with flags 3 where BDS sent 2, and a player's other
+  `FlagsExtended` bits, which sapling never sends.
 - Which block each liquid rule belongs to was read by where the block's name sits in BDS's code:
   sure for whole families (stairs, slabs, walls), not for single blocks (`waterlogging.md`).
 
