@@ -24,7 +24,7 @@ use std::time::{Duration, Instant};
 
 use acacia_bot::{Bot, BotEvent};
 use acacia_bot::proto::{Packet, packets};
-use probe::{SETTLE, connect};
+use probe::{SETTLE, clock, connect};
 
 const GAMERULE: &[&str] = &[
     "gamerule",
@@ -191,7 +191,7 @@ fn show(start: Instant, shown: &[&str], who: &str, event: Option<BotEvent>) -> R
         Some(_) => return Ok(()),
         None => return Err(format!("{who} is gone")),
     };
-    let ms = start.elapsed().as_millis();
+    let ms = clock::tick_ms(start);
     if packet.id == packets::CommandOutput::ID {
         let answer = packet.decode::<packets::CommandOutput>().map_err(|e| e.to_string())?;
         let lines: Vec<String> = answer.output.iter().map(|line| format!("{} success={} {:?}", line.message_id, line.success, line.parameters)).collect();
@@ -225,7 +225,7 @@ async fn strike(actor: &mut Bot, watcher: &mut Bot, start: Instant, shown: &[&st
         tokio::pin!(action);
         loop {
             tokio::select! {
-                result = &mut action => break println!("## hit {id}: {result:?} at {}", start.elapsed().as_millis()),
+                result = &mut action => break println!("## hit {id}: {result:?} at {}", clock::tick_ms(start)),
                 event = watcher.next() => show(start, shown, "watcher", event)?,
             }
         }
@@ -277,6 +277,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         while let Ok(Some(_)) = tokio::time::timeout(Duration::from_millis(5), bot.next()).await {}
     }
     let start = Instant::now();
+    clock::mark_start();
     for line in &lines {
         println!("## /{line}");
         match line.strip_prefix("!hit") {
@@ -285,7 +286,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             None if !line.is_empty() => drop(actor.client().command(line)),
             None => {}
         }
-        let end = tokio::time::Instant::now() + settle;
+        let end = tokio::time::Instant::now() + clock::scaled(settle);
         loop {
             tokio::select! {
                 event = actor.next() => show(start, shown, "actor", event)?,

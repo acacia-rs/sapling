@@ -12,6 +12,9 @@ use acacia_world::BlockAccess;
 
 use crate::dump;
 
+#[path = "clock.rs"]
+pub mod clock;
+
 /// Characters of a decoded packet shown.
 const SHOWN: usize = 600;
 /// How long a step's consequences are watched for, unless the step says otherwise.
@@ -31,7 +34,7 @@ fn show(start: Instant, shown: &[&str], who: &str, event: Option<BotEvent>) -> R
             let name = acacia_bot::proto::packet_name(packet.id).unwrap_or("?");
             if shown.contains(&name) {
                 let text: String = dump::dump(&packet).unwrap_or_default().chars().take(SHOWN).collect();
-                println!("{:>7} {who:<7} {name} {text}", start.elapsed().as_millis());
+                println!("{:>7} {who:<7} {name} {text}", clock::tick_ms(start));
             }
             Ok(())
         }
@@ -63,7 +66,7 @@ impl Probe {
     }
 
     pub async fn settle(&mut self, wait: Duration) -> Result<(), String> {
-        let end = tokio::time::Instant::now() + wait;
+        let end = tokio::time::Instant::now() + clock::scaled(wait);
         loop {
             tokio::select! {
                 event = self.actor.next() => show(self.start, self.shown, "actor", event)?,

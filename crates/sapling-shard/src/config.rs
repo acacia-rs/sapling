@@ -28,6 +28,8 @@ pub struct ShardConfig {
     /// something moves them.
     pub mobs_stroll: bool,
     pub movement_check: MovementCheck,
+    /// Wall time between ticks: [`TICK`], or shorter for drills that compress time (drill_server.rs).
+    pub tick: Duration,
 }
 
 /// What the shard makes of where clients say their players are (simulation.rs).
@@ -53,6 +55,7 @@ impl Default for ShardConfig {
             blob_cache: true,
             mobs_stroll: true,
             movement_check: MovementCheck::Observe { threshold: 0.5 },
+            tick: TICK,
         }
     }
 }

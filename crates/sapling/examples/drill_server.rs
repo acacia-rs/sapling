@@ -4,6 +4,10 @@
 //! protected. `tools/sapling-drill.sh` runs a probe against it. `SAPLING_DRILL_WORLD` picks
 //! another overworld: `strongholds` or `generated` (below).
 //! `cargo run -p sapling --example drill_server -- [port]` (default 19190)
+#[path = "shared/clock.rs"]
+#[allow(dead_code)]
+mod clock;
+
 use sapling::{ChunkPos, END, GameMode, Generated, Handler, MemoryStorage, NETHER, Permission, Player, Server, ShardCtx, World, WorldStorage};
 
 /// The ground's corners: wider than the probes' drills reach.
@@ -51,6 +55,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Portals are made with the world seed's draws, as on the test BDS.
     ground.level_mut().seed = NETHER_SEED;
     let builder = Server::builder().bind(([127, 0, 0, 1], port).into()).name("sapling drills").online_mode(false).game_mode(GameMode::Creative);
+    // The probes' bots and settles run `ACACIA_TICK_SCALE` times faster too (shared/clock.rs).
+    let builder = builder.tick(clock::scaled(sapling_shard::TICK));
     let builder = match std::env::var("SAPLING_DRILL_WORLD").as_deref() {
         Ok("strongholds") => builder.world(World::with_storage(std::sync::Arc::new(Strongholds(Generated::with_areas(MemoryStorage::default(), NETHER_SEED, 1)))), [0.5, 64.0, 0.5]),
         Ok("generated") => builder.world(World::with_storage(std::sync::Arc::new(Generated::with_areas(MemoryStorage::default(), NETHER_SEED, 2))), GENERATED_SPAWN),
