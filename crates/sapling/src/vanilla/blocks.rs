@@ -3,8 +3,6 @@
 use sapling_api::command::{BlockCoords, States};
 use sapling_api::{Block, BlockPos, Command, CommandEnum, Output, Sender, ShardCtx};
 
-use super::origin;
-
 /// The most blocks one `/fill` changes, as vanilla.
 const MAX_FILL: i64 = 32_768;
 
@@ -87,7 +85,7 @@ pub(crate) struct SetBlock {
 
 impl Command for SetBlock {
     fn run(self, ctx: &mut ShardCtx<'_>, sender: &Sender, out: &mut Output) {
-        let pos = self.position.from(origin(ctx, sender));
+        let pos = self.position.from(ctx.origin(sender));
         let mode = self.mode.unwrap_or(SetMode::Replace);
         let kept = mode == SetMode::Keep && ctx.block(pos).is_some_and(|there| !there.is_air());
         let broke = mode == SetMode::Destroy && ctx.break_block(pos);
@@ -109,7 +107,7 @@ pub(crate) struct Fill {
 
 impl Command for Fill {
     fn run(self, ctx: &mut ShardCtx<'_>, sender: &Sender, out: &mut Output) {
-        let here = origin(ctx, sender);
+        let here = ctx.origin(sender);
         let (from, to) = (self.from.from(here), self.to.from(here));
         let (low, high): (BlockPos, BlockPos) = (std::array::from_fn(|axis| from[axis].min(to[axis])), std::array::from_fn(|axis| from[axis].max(to[axis])));
         let count: i64 = (0..3).map(|axis| i64::from(high[axis] - low[axis]) + 1).product();
@@ -147,7 +145,7 @@ impl Command for TestForBlock {
     // TODO: BDS names a block by its `tile.` key, which for some is not its name (stone is
     // `tile.stone.stone.name`); here the key is made of the name.
     fn run(self, ctx: &mut ShardCtx<'_>, sender: &Sender, out: &mut Output) {
-        let pos = self.position.from(origin(ctx, sender));
+        let pos = self.position.from(ctx.origin(sender));
         let place = || pos.map(|c| c.to_string()).to_vec();
         let wanted = block(&self.block, self.states.as_ref());
         let there = ctx.block(pos).unwrap_or_else(|| Block::new(Block::AIR));

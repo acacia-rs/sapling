@@ -107,12 +107,40 @@ impl<'a> Args<'a> {
     /// is `("/gamemode ", "banana", "")`, a missing argument `("/gamemode", "", "")`. BDS keeps
     /// only the last ten characters before it: `/gamerule randomtickspeed true` is `("tickspeed ", "true", "")`.
     pub fn error_at(&self, mark: usize) -> ParseError {
-        const BEFORE_KEPT: usize = 10;
         let rest = &self.line[mark..];
-        let end = mark + rest.find(char::is_whitespace).unwrap_or(rest.len());
-        let before = format!("/{}", if rest.is_empty() { self.line.trim_end() } else { &self.line[..mark] });
+        self.error_span(mark, mark + rest.find(char::is_whitespace).unwrap_or(rest.len()))
+    }
+
+    /// The error for bytes `start..end` of the line, a part of a word (a selector's filter).
+    pub fn error_span(&self, start: usize, end: usize) -> ParseError {
+        const BEFORE_KEPT: usize = 10;
+        let before = format!("/{}", if start >= self.line.len() { self.line.trim_end() } else { &self.line[..start] });
         let cut = before.char_indices().rev().nth(BEFORE_KEPT - 1).map_or(0, |(at, _)| at);
-        ParseError::Syntax { before: before[cut..].to_owned(), token: self.line[mark..end].to_owned(), after: self.line[end..].to_owned() }
+        ParseError::Syntax { before: before[cut..].to_owned(), token: self.line[start..end].to_owned(), after: self.line[end..].to_owned() }
+    }
+
+    /// The next word, where spaces in quotes, brackets or braces do not end it
+    /// (`@e[type=pig, name="a b"]`), and where it starts.
+    pub fn balanced(&mut self) -> Result<(usize, &'a str), ParseError> {
+        let start = self.pos;
+        let rest = &self.line[start..];
+        if rest.is_empty() {
+            return Err(self.error_at(start));
+        }
+        let (mut depth, mut quoted) = (0i32, false);
+        let ends = |&(_, c): &(usize, char)| {
+            match c {
+                '"' => quoted = !quoted,
+                '[' | '{' if !quoted => depth += 1,
+                ']' | '}' if !quoted => depth -= 1,
+                _ => {}
+            }
+            c.is_whitespace() && !quoted && depth <= 0
+        };
+        let end = rest.char_indices().find(ends).map_or(rest.len(), |(at, _)| at);
+        self.pos = start + end;
+        self.skip_spaces();
+        Ok((start, &rest[..end]))
     }
 
     /// An error if arguments are left over.

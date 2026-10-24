@@ -94,13 +94,13 @@ impl CommandSyntax for Xp {
 
 impl Command for Xp {
     fn run(self, ctx: &mut ShardCtx<'_>, sender: &Sender, out: &mut Output) {
-        if matches!(&self.target, Some(Selector::Entities { kind: Some(kind) }) if kind != "minecraft:player") {
+        if self.target.as_ref().is_some_and(Selector::excludes_players) {
             return out.translate("commands.generic.targetNotPlayer", Vec::new(), false);
         }
         if !self.levels && self.amount < 0 {
             return out.translate("commands.xp.failure.widthdrawXp", Vec::new(), false);
         }
-        let found = players(ctx, sender, self.target.as_ref().unwrap_or(&Selector::Sender));
+        let found = players(ctx, sender, self.target.as_ref());
         if found.is_empty() {
             return no_target(out);
         }

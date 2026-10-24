@@ -17,11 +17,15 @@ pub struct EntityInfo {
     /// Blocks a tick.
     pub velocity: [f32; 3],
     pub on_ground: bool,
+    /// Where its body faces and its pitch, in degrees: yaw -180 to 180, pitch -90 (up) to 90.
+    pub yaw: f32,
+    pub pitch: f32,
 }
 
 impl EntityInfo {
+    /// One facing yaw 0 and pitch 0.
     pub fn new(id: EntityId, kind: String, feet: [f32; 3], velocity: [f32; 3], on_ground: bool) -> Self {
-        Self { id, kind, feet, velocity, on_ground }
+        Self { id, kind, feet, velocity, on_ground, yaw: 0.0, pitch: 0.0 }
     }
 }
 
@@ -75,6 +79,12 @@ impl ShardCtx<'_> {
     pub fn give_entity_effect(&mut self, id: EntityId, effect: Effect, ticks: u32, amplifier: u8) -> bool {
         self.backend.give_entity_effect(id, effect, ticks, amplifier)
     }
+
+    /// The families vanilla puts entities of `kind` in (`minecraft:player` is `player`,
+    /// `minecraft:zombie` `zombie undead monster mob`), what a selector's `family=` tests.
+    pub fn families(&self, kind: &str) -> Vec<String> {
+        self.backend.families(kind)
+    }
 }
 
 /// The entities side of [`crate::Backend`].
@@ -87,4 +97,7 @@ pub trait EntityBackend {
     fn remove_entity(&mut self, id: EntityId) -> bool;
     fn kill_entity(&mut self, id: EntityId) -> bool;
     fn give_entity_effect(&mut self, id: EntityId, effect: Effect, ticks: u32, amplifier: u8) -> bool;
+    fn families(&self, _kind: &str) -> Vec<String> {
+        Vec::new()
+    }
 }

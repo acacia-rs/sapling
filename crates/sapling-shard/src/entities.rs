@@ -104,7 +104,10 @@ pub(crate) fn flag_moving(world: &mut World, entity: Entity, ticked: bool) {
 fn all(world: &World) -> impl Iterator<Item = (Entity, Entity, EntityInfo)> + '_ {
     world.iter_entities().filter_map(|entity| {
         let (id, layer, kind, body) = (entity.get::<NetId>()?, entity.get::<InLayer>()?, entity.get::<Kind>()?, entity.get::<Body>()?);
-        let info = EntityInfo::new(EntityId(id.0), kind.0.clone(), body.at, body.motion, body.on_ground);
+        let mut info = EntityInfo::new(EntityId(id.0), kind.0.clone(), body.at, body.motion, body.on_ground);
+        if let Some(told) = entity.get::<Told>() {
+            [info.yaw, info.pitch] = told.facing();
+        }
         Some((entity.id(), layer.0, info))
     })
 }

@@ -21,6 +21,7 @@ mod listen;
 mod movement;
 mod player;
 mod plugin;
+mod tags;
 #[cfg(test)]
 mod testing;
 mod weather;
@@ -54,6 +55,7 @@ pub use form::{Custom, Form, FormResponse, Menu, Modal};
 pub use hud::{BossBar, BossBarColour, Sidebar, Title};
 pub use item::{DropEvent, Item, Slot};
 pub use player::{Difficulty, GameMode, Permission, Player, PlayerId, Position};
+pub use tags::Tagged;
 pub use sapling_macros::{Command, CommandEnum, Form};
 
 /// The game's events, one method each, all optional: a plugin as one value. Each method is filed

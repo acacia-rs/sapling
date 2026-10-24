@@ -54,4 +54,8 @@ impl EntityBackend for Ctx<'_> {
     fn give_entity_effect(&mut self, id: EntityId, effect: Effect, ticks: u32, amplifier: u8) -> bool {
         entities::find(self.world, id).is_some_and(|mob| super::afflictions::give(self.world, mob, effect, ticks, amplifier))
     }
+
+    fn families(&self, kind: &str) -> Vec<String> {
+        sapling_data::mob_families(kind).into_iter().map(str::to_owned).collect()
+    }
 }

@@ -671,8 +671,8 @@ block action, and takes StopBreak and AbortBreak with a position.
   players and entities; `/give <player> <item> [amount]`, `/clear [player]`, `/gamemode <mode>
   [player]`, `/summon <kind> [pos]` (`ctx.spawn_entity`) and `/kill [target]` (`ctx.kill_entity`),
   which leaves players alone (no damage). Positions take `~` and `~<offset>` from the sender;
-  whole numbers are the middle of their block across, as Bedrock reads them. Targets: `@s`, `@p`,
-  `@a`, `@e` with `[type=...]`, a name. Block states come as typed, `["liquid_depth"=3]`, and a
+  whole numbers are the middle of their block across, as Bedrock reads them. Targets: a name or
+  any Bedrock selector (`@s @p @a @r @e @n @initiator`) with its filters, see "Selectors" below. Block states come as typed, `["liquid_depth"=3]`, and a
   block named with some of its states takes the rest from its first state. The client is told the
   parameters as BDS types them (position 65, block position 64, block states 84). `/gamerule`
   lists, shows and sets the world's rules with BDS's answers, bounds and errors
@@ -680,7 +680,26 @@ block action, and takes StopBreak and AbortBreak with a position.
   (operators) announces `[name] message` to the shard (`ctx.announce`); `/tell`, `/w` and `/msg <target>
   <message>` (anyone) whisper to each target (`ctx.whisper`), as BDS sent them
   (`research/captures/bds-feedback.txt`). Not done: the rest of
-  vanilla's commands, `@r` and selector arguments besides `type`.
+  vanilla's commands.
+- **Selectors** (`sapling-api/src/command/selector/`). Parsed into a `Selector` (`Named` or
+  `Variable(Base, Filters)`); `ShardCtx::select(sender, &selector)` is the one resolver, used by every
+  vanilla command and open to plugins. Bases: `@p` and `@n` the nearest (players / everything),
+  `@a` players and `@e` everything in join then creation order, `@r` a random player (any entity
+  once `type=` is given), `@initiator` nobody (no NPC dialogues). Filters: `x y z` (with `~`),
+  `dx dy dz` (whole blocks from the origin), `r rm`, `c` (nearest first, negative farthest; `@r`
+  random), `name type family tag m` (each with `!`, each one that is given must pass), `l lm`,
+  `rx rxm ry rym` (yaw round past 180), `scores`, `hasitem` (item, data, quantity range with `!`,
+  location and slot), `haspermission`. `r`, `l`, `rx`, `ry` take a range too (`r=..5`). Brackets may
+  hold spaces. An unknown key, a repeated one-only key, a `!` where none goes or a bad value is a
+  `commands.generic.syntax` pointing at the key or value. Families come from the behaviour packs
+  (`sapling-data` `mob_families`); tags from `ShardCtx::add_tag` (shard state, not saved); entity
+  rotation is what viewers were last told. Not done: no scoreboard, so any `scores` test fails; no
+  `/inputpermission`, so every input is enabled; entities have no name tags (`name=` sees an empty
+  name) and no inventory for `hasitem`; selectors do not look into other dimensions apart; `Target`
+  parameters still take only `@s` and names. Not checked on BDS (no capture has selectors beyond
+  `type`): the error tokens, `@r` taking entities with `type=!x`, `m` numbers 5 and 6, whole-block
+  volumes, unnamed entities' `name`, `hasitem` with no location counting armour and offhand,
+  ranges on `r`/`l`/`rx`/`ry`, `c=0` refused, case-sensitive `name=`.
 - **Neighbours** (`blocks/updates.rs`). After a player's break or place: falling blocks around are
   queued to fall (next bullet); what stood on a block that is gone (the Java game's `canSurvive`
   blocks: plants, rails, carpets, doors, standing torches and signs, candles, floor buttons and levers)
@@ -1194,7 +1213,7 @@ acacia-world = { path = "../acacia/acacia/crates/acacia-world" }
   sidebar with two lines of the same text; removing and re-adding a line in one batch without flicker;
   RemoveObjective alone to hide the sidebar (BDS also clears the slot); ToastRequest;
   UpdatePlayerGameType for another player's id.
-- Commands: console sender, `@a`/`@p`/`@r` selectors, position and item parameters, soft enums
+- Commands: console sender, selectors in `Target` parameters, position and item parameters, soft enums
   (UpdateSoftEnum) for dynamic completions, several overloads for a struct, permission nodes.
 - Forms: images are untested, `ServerSettings`, ClientboundCloseForm, a timeout for unanswered forms.
 - HUD: list and below-name objectives, several boss bars (needs an entity each), `/title` clear and reset.
