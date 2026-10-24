@@ -35,6 +35,7 @@ mod inventory;
 mod join;
 mod jukebox;
 mod kept_drops;
+mod landing_sounds;
 mod leftovers;
 mod level;
 mod liquids;

@@ -1,6 +1,8 @@
 //! What the place a living player stands in does to it each tick: a fall, fire, lava, water over
 //! its head, a block around it, and the hunger its moves cost.
 
+use acacia_proto::packets::LevelSoundEvent;
+use acacia_proto::types::Vec3f;
 use bevy_ecs::prelude::*;
 use sapling_data::EYE_HEIGHT;
 
@@ -14,6 +16,30 @@ use crate::creatures::{Cause, Health, holds, is_full_block, touches};
 use crate::movement::Motion;
 
 const NATURAL_REGENERATION: &str = "naturalRegeneration";
+/// A landing that costs more than this is a big one.
+const BIG_FALL: f32 = 4.0;
+
+/// The sounds of a player's landing, heard by the others a tick later as on BDS
+/// (research/captures/bds-around.txt, bds-hurt.txt): from where the landing tick began, `land`
+/// naming the block landed on, or for a landing that hurts `fall.small` or `fall.big` and `fall`;
+/// with fall damage off a hurting one is `fall` alone.
+fn sound_landing(world: &mut World, player: Entity, layer: Entity, from: [f32; 3], feet: [f32; 3], harm: Option<f32>, spared: bool) {
+    let (Some(id), Some(level)) = (world.get::<NetId>(player).map(|id| id.0), world.get::<Layer>(layer).map(|layer| &layer.world)) else { return };
+    let cell = [feet[0].floor() as i32, (feet[1] - 0.5).floor() as i32, feet[2].floor() as i32];
+    let under = level.registry().network_hash(level.block(cell[0], cell[1], cell[2])) as i32;
+    let [x, y, z] = from;
+    let sound = |sound_id: &str, extra_data: i32| {
+        sapling_net::encode(&LevelSoundEvent { sound_id: sound_id.into(), position: Vec3f { x, y, z }, extra_data, entity_type: "minecraft:player".into(), is_baby_mob: false, is_global: false, entity_unique_id: id as i64, fire_at_position: None })
+    };
+    let sounds = match harm {
+        Some(harm) if !spared => vec![sound(if harm > BIG_FALL { "fall.big" } else { "fall.small" }, -1), sound("fall", under)],
+        Some(_) => vec![sound("fall", under)],
+        None => vec![sound("land", under)],
+    };
+    for sound in sounds {
+        crate::late_sounds::play_later_but(world, 1, layer, cell, Some(player), sound);
+    }
+}
 
 pub(super) fn stand(world: &mut World, player: Entity, layer: Entity) {
     dress(world, player);
@@ -48,8 +74,10 @@ pub(super) fn stand(world: &mut World, player: Entity, layer: Entity) {
     // BDS does not count the move a player lands in: 12 blocks cost it 8 (bds-hurt.txt).
     let fallen_to = if position.on_ground { position.feet[1].max(from[1]) } else { position.feet[1] };
     let dropped = if position.on_ground && !(water || lava || carried) { health.dropped(from[1], fallen_to) } else { 0.0 };
+    let landed = position.on_ground && health.is_airborne() && !(water || lava || carried);
     let before = *health;
     let fell = health.fall(from, fallen_to, position.on_ground, water || lava || carried).map(|_| Cause::Fall);
+    let landing = landed.then(|| (health.landing(), crate::rules::spares_player(&rules, Cause::Fall)));
     take(health, before, fell);
     let (lit, before) = (health.is_burning(), *health);
     let burnt = health.burn(fire, water).map(|cause| if lit { Cause::FireTick } else { cause });
@@ -92,6 +120,9 @@ pub(super) fn stand(world: &mut World, player: Entity, layer: Entity) {
         flash(world, player, *cause);
     }
     settle(world, player, hits.last().copied().unwrap_or(Cause::Fire));
+    if let Some((harm, spared)) = landing {
+        sound_landing(world, player, layer, from, position.feet, harm, spared);
+    }
     crate::blocks::trample(world, layer, position.feet, dropped);
     if position.on_ground {
         crate::blocks::tread_ore(world, layer, position.feet);
