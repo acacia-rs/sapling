@@ -62,8 +62,12 @@ pub(crate) fn resolve(registry: &BlockRegistry, block: &Block) -> Option<u32> {
     })
 }
 
-fn update(registry: &BlockRegistry, [x, y, z]: BlockPos, id: u32, layer: u32) -> Bytes {
-    sapling_net::encode(&UpdateBlock { position: BlockCoordinates { x, y, z }, block_runtime_id: registry.network_hash(id), flags: FLAGS, layer })
+fn update(registry: &BlockRegistry, pos: BlockPos, id: u32, layer: u32) -> Bytes {
+    update_flagged(registry, pos, id, layer, FLAGS)
+}
+
+fn update_flagged(registry: &BlockRegistry, [x, y, z]: BlockPos, id: u32, layer: u32, flags: UpdateBlockFlags) -> Bytes {
+    sapling_net::encode(&UpdateBlock { position: BlockCoordinates { x, y, z }, block_runtime_id: registry.network_hash(id), flags, layer })
 }
 
 /// What a block holds, as clients are shown it.
@@ -130,6 +134,15 @@ pub(crate) fn keep_entity(world: &mut World, layer: Entity, pos: BlockPos, entit
 pub(crate) fn set(world: &mut World, layer: Entity, pos: BlockPos, id: u32) -> bool {
     let Some(id) = write(world, layer, pos, id) else { return false };
     let Some(packet) = world.get::<Layer>(layer).map(|level| update(level.world.registry(), pos, id, 0)) else { return false };
+    to_viewers(world, layer, pos, &[packet]);
+    true
+}
+
+/// [`set`] told with the network flag alone, as BDS told a bed's `occupied_bit`
+/// (research/captures/bds-wake.txt).
+pub(crate) fn set_network_only(world: &mut World, layer: Entity, pos: BlockPos, id: u32) -> bool {
+    let Some(id) = write(world, layer, pos, id) else { return false };
+    let Some(packet) = world.get::<Layer>(layer).map(|level| update_flagged(level.world.registry(), pos, id, 0, UpdateBlockFlags::NETWORK)) else { return false };
     to_viewers(world, layer, pos, &[packet]);
     true
 }

@@ -63,7 +63,7 @@ pub(crate) use liquid::tick as flow_liquids;
 pub(crate) use mining::{Breaking, sound_hits};
 pub(crate) use request::{BlockInputs, dispatch};
 use request::{Request, Site, site};
-pub(crate) use send::{block_at, keep_entity, put_block, set, set_sectioned, sound, to_viewers};
+pub(crate) use send::{block_at, keep_entity, put_block, set, set_network_only, set_sectioned, sound, to_viewers};
 pub(crate) use updates::break_block;
 
 use bevy_ecs::prelude::*;

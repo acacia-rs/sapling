@@ -113,8 +113,8 @@ Each needs its rule looked up first (`bdsre` for BDS, the Java jar for data), th
   leaves it), the cauldron's `PotionId` defaults (`docs/research/block-entities.md`, "Open checks").
 - A double chest asks both halves above, a slab too, as on BDS (`bds_command_probe lids`). Getting
   up by `StopSleeping`, by day and by `/tp`, and a sleeper's data and box, are told as on BDS
-  (`wake`); left there: the occupied bit is sent with flags 3 where BDS sent 2, and a player's other
-  `FlagsExtended` bits, which sapling never sends.
+  (`wake`); left there: a player's other `FlagsExtended` bits, which sapling never sends, and the
+  clicked block and its neighbours shown again after a click on a bed, which BDS did not do.
 - Which block each liquid rule belongs to was read by where the block's name sits in BDS's code:
   sure for whole families (stairs, slabs, walls), not for single blocks (`waterlogging.md`).
 

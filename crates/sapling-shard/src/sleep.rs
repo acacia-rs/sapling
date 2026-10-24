@@ -22,7 +22,7 @@ use sapling_data::EYE_HEIGHT;
 
 pub(crate) use spawn::{BedSpawn, spawn_of};
 
-use crate::blocks::{bed_head, set, with_property};
+use crate::blocks::{bed_head, set_network_only, with_property};
 use crate::components::{InLayer, Layer, Mode, NetId, Outgoing, Position, in_world};
 use crate::movement;
 use crate::visibility::ToViewers;
@@ -149,7 +149,7 @@ fn set_occupied(world: &mut World, layer: Entity, head: BlockPos, occupied: bool
     let id = level.block(head[0], head[1], head[2]);
     if level.registry().get(id).is_some_and(|state| state.name == BED) {
         if let Some(new) = with_property(level.registry(), id, OCCUPIED, if occupied { "1" } else { "0" }).filter(|new| *new != id) {
-            set(world, layer, head, new);
+            set_network_only(world, layer, head, new);
         }
     }
 }
