@@ -27,7 +27,7 @@ enum Target {
 pub(crate) struct ReplaceItem {
     target: Target,
     slot: i32,
-    item: String,
+    item: super::names::ItemName,
     /// How BDS reports the item when the game does not have it.
     item_wrong: ParseError,
     amount: Option<i32>,
@@ -82,7 +82,7 @@ impl CommandSyntax for ReplaceItem {
         };
         let slot = i32::parse(args)?;
         let mark = args.mark();
-        let item = args.word()?.to_owned();
+        let item = super::names::ItemName::parse(args)?;
         let item_wrong = args.error_at(mark);
         let amount = Option::<i32>::parse(args)?;
         let data = Option::<i32>::parse(args)?;
@@ -97,7 +97,7 @@ impl Command for ReplaceItem {
         if count > MOST {
             return out.translate("commands.generic.num.tooBig", vec![count.to_string(), MOST.to_string()], false);
         }
-        let name = super::item_named(&self.item);
+        let name = super::item_named(&self.item.0);
         let data = self.data.unwrap_or(0) as i16;
         let item = (name != "minecraft:air").then(|| Item { damage: data, ..Item::new(&name, count.clamp(1, MOST) as u8) });
         let bad_slot = |out: &mut Output, size: usize| out.translate("commands.replaceitem.badSlotNumber", vec![self.slot.to_string(), "0".into(), (size - 1).to_string()], false);

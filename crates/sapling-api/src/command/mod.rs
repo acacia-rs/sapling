@@ -8,11 +8,13 @@ mod output;
 mod params;
 mod places;
 mod registry;
+mod selector;
 
 pub use args::{Args, ParseError};
 pub use output::{Output, OutputMessage};
 pub use params::{Parameter, Target, Text, parse_choice};
-pub use places::{Axis, BlockCoords, Coords, Selector, States};
+pub use places::{Axis, BlockCoords, Coords, States};
+pub use selector::{Filter, Pick, Selector};
 pub use registry::Commands;
 
 use crate::{Permission, Player, ShardCtx};

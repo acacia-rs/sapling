@@ -5,7 +5,7 @@
 use sapling_api::command::{Args, ParamKind, Parameter, ParseError, Selector, parse_choice};
 use sapling_api::{Command, Effect, EntityId, Output, PlayerId, Sender, ShardCtx};
 
-use super::{display_name, entities, no_target, players};
+use super::{display_name, no_target, targets};
 
 /// Seconds an effect lasts when none are given.
 const SECONDS: i32 = 30;
@@ -45,8 +45,9 @@ impl Command for EffectCommand {
         if amplifier > STRONGEST {
             return out.translate("commands.generic.num.tooBig", vec![amplifier.to_string(), STRONGEST.to_string()], false);
         }
-        let named_players = players(ctx, sender, &self.target).into_iter().map(|player| (Target::Player(player.id), player.name));
-        let found: Vec<(Target, String)> = named_players.chain(entities(ctx, &self.target).into_iter().map(|entity| (Target::Entity(entity.id), display_name(&entity)))).collect();
+        let (named_players, named) = targets(ctx, sender, &self.target);
+        let named_players = named_players.into_iter().map(|player| (Target::Player(player.id), player.name));
+        let found: Vec<(Target, String)> = named_players.chain(named.into_iter().map(|entity| (Target::Entity(entity.id), display_name(&entity)))).collect();
         if found.is_empty() {
             return no_target(out);
         }

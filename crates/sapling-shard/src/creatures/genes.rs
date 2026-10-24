@@ -44,6 +44,14 @@ fn of_alleles(main: i32, hidden: i32) -> Gene {
     })
 }
 
+/// The gene a spawn `event` gives a mob of `kind`, as BDS's `/summon panda .. minecraft:panda_lazy`
+/// did (research/captures/bds-pandas.txt).
+pub(super) fn of_event(kind: &str, event: &str) -> Option<Gene> {
+    let gene = event.strip_prefix("minecraft:panda_").filter(|_| kind == KIND)?;
+    let names = [("lazy", MAIN[0]), ("worried", MAIN[1]), ("playful", MAIN[2]), ("aggressive", AGGRESSIVE), ("weak", WEAK), ("brown", BROWN), ("normal", NORMAL)];
+    names.iter().find(|(name, _)| *name == gene).map(|&(_, variant)| Gene(variant))
+}
+
 /// A stored mob of `kind`'s gene, by the `Variant` it was stored with.
 pub(super) fn stored(kind: &str, variant: i32) -> Option<Gene> {
     (kind == KIND).then_some(Gene(variant))
@@ -75,5 +83,12 @@ mod tests {
     fn a_main_allele_under_4_decides_and_else_both_must_be_weak_or_brown() {
         let genes = [(0, 15), (3, 0), (5, 7), (5, 8), (9, 8), (9, 10), (15, 15)].map(|(main, hidden)| of_alleles(main, hidden).0);
         assert_eq!(genes, [1, AGGRESSIVE, WEAK, NORMAL, BROWN, NORMAL, NORMAL]);
+    }
+
+    #[test]
+    fn a_spawn_event_names_bds_s_variant_of_its_gene() {
+        let genes = ["lazy", "worried", "playful", "aggressive", "weak"].map(|gene| of_event(KIND, &format!("minecraft:panda_{gene}")).map(|gene| gene.0));
+        assert_eq!(genes, [1, 2, 3, 6, 5].map(Some));
+        assert!(of_event("minecraft:cow", "minecraft:panda_lazy").is_none() && of_event(KIND, "minecraft:entity_born").is_none());
     }
 }

@@ -1,8 +1,8 @@
 //! Vanilla's commands, for operators, built on the plugin API alone: `/setblock`, `/fill`, `/tp`,
 //! `/give`, `/clear`, `/gamemode`, `/summon`, `/kill`, `/damage`, `/difficulty`, `/effect`, `/gamerule`, `/replaceitem`. Opt in with
-//! [`crate::ServerBuilder::vanilla_commands`]. Positions take `~`; targets take `@s`, `@p`, `@a`,
-//! `@e[type=...]`, `@e[type=!...]` and names. Blocks are written as `/setblock` writes them: their neighbours react.
-// TODO: the other vanilla commands; `@r` and selector arguments besides `type`.
+//! [`crate::ServerBuilder::vanilla_commands`]. Positions take `~`; targets take `@s`, `@p`, `@r`, `@a`,
+//! `@e` with `type`, `name`, `c`, `r`, `rm`, `x y z` and `m` (select.rs), and names. Blocks are written as `/setblock` writes them: their neighbours react.
+// TODO: the other vanilla commands.
 
 mod blocks;
 mod chat;
@@ -11,13 +11,17 @@ mod containers;
 mod damage;
 mod effects;
 mod execute;
+mod names;
 mod players;
 mod rules;
+mod select;
+mod teleport;
 
 use blocks::{Fill, SetBlock, TestForBlock};
 use containers::ReplaceItem;
 use damage::Damage;
-use players::{Clear, DifficultyCommand, GameModeCommand, Give, Kill, Summon, Teleport};
+use players::{Clear, DifficultyCommand, GameModeCommand, Give, Kill, Summon};
+use teleport::Teleport;
 use rules::GameRule;
 
 use sapling_api::command::Selector;
@@ -128,21 +132,15 @@ fn origin(ctx: &ShardCtx<'_>, sender: &Sender) -> [f32; 3] {
 
 /// The players `selector` names, in the sender's world.
 fn players(ctx: &ShardCtx<'_>, sender: &Sender, selector: &Selector) -> Vec<Player> {
-    let here = origin(ctx, sender);
-    let distance = |player: &Player| ctx.position(player.id).map_or(f32::MAX, |position| (0..3).map(|axis| (position.feet[axis] - here[axis]).powi(2)).sum());
-    match selector {
-        Selector::Sender => sender.player().cloned().into_iter().collect(),
-        Selector::Nearest => ctx.players().min_by(|a, b| distance(a).total_cmp(&distance(b))).into_iter().collect(),
-        Selector::Players => ctx.players().collect(),
-        Selector::Named(name) => ctx.players().filter(|player| player.name.eq_ignore_ascii_case(name)).collect(),
-        Selector::Entities { kind } => ctx.players().filter(|_| Selector::takes(kind.as_deref(), "minecraft:player")).collect(),
-    }
+    players_near(ctx, sender, selector, origin(ctx, sender))
 }
 
-/// The entities other than players that `selector` names, in the world calls act on.
-fn entities(ctx: &ShardCtx<'_>, selector: &Selector) -> Vec<EntityInfo> {
-    match selector {
-        Selector::Entities { kind } => ctx.entities().into_iter().filter(|entity| Selector::takes(kind.as_deref(), &entity.kind)).collect(),
-        _ => Vec::new(),
-    }
+/// [`players`], nearness counted from `here` (an `/execute at`'s place).
+fn players_near(ctx: &ShardCtx<'_>, sender: &Sender, selector: &Selector, here: [f32; 3]) -> Vec<Player> {
+    select::targets(ctx, sender, selector, here).0
+}
+
+/// The players and the other entities `selector` names, in the sender's world (select.rs).
+fn targets(ctx: &ShardCtx<'_>, sender: &Sender, selector: &Selector) -> (Vec<Player>, Vec<EntityInfo>) {
+    select::targets(ctx, sender, selector, origin(ctx, sender))
 }

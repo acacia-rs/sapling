@@ -1,6 +1,5 @@
 //! Parameters vanilla's commands take: positions as three numbers, each of which may be `~` with
-//! an offset from where the sender is; a block's states in brackets; and a selector of players or
-//! entities (`@s`, `@p`, `@a`, `@e[type=minecraft:pig]`, a player's name).
+//! an offset from where the sender is, and a block's states in brackets (selectors: selector.rs).
 
 use super::{Args, ParamKind, Parameter, ParseError};
 
@@ -15,15 +14,20 @@ impl Axis {
     fn parse(args: &mut Args<'_>) -> Result<Self, ParseError> {
         let mark = args.mark();
         let word = args.word()?;
-        let number = |text: &str| if text.is_empty() { Some(0.0) } else { text.parse::<f32>().ok().filter(|n| n.is_finite()) };
-        let axis = match word.strip_prefix('~') {
-            Some(offset) => number(offset).map(Self::Off),
-            None => word.parse::<f32>().ok().filter(|n| n.is_finite()).map(Self::At),
-        };
-        axis.ok_or_else(|| args.error_at(mark))
+        Self::read(word).ok_or_else(|| args.error_at(mark))
     }
 
-    fn from(self, origin: f32) -> f32 {
+    /// One axis as written: `3`, `~` or `~-1.5`.
+    pub(crate) fn read(word: &str) -> Option<Self> {
+        let number = |text: &str| if text.is_empty() { Some(0.0) } else { text.parse::<f32>().ok().filter(|n| n.is_finite()) };
+        match word.strip_prefix('~') {
+            Some(offset) => number(offset).map(Self::Off),
+            None => word.parse::<f32>().ok().filter(|n| n.is_finite()).map(Self::At),
+        }
+    }
+
+    /// The value, `~` counted from `origin`.
+    pub fn from(self, origin: f32) -> f32 {
         match self {
             Self::At(at) => at,
             Self::Off(off) => origin + off,
@@ -139,7 +143,7 @@ mod tests {
     }
 
     #[test]
-    fn states_and_selectors_read_as_vanilla_writes_them() {
+    fn states_read_as_vanilla_writes_them() {
         assert_eq!(parsed::<States>(r#"["torch_facing_direction"="top", "a"=1]"#).unwrap(), States("a=1,torch_facing_direction=top".into()));
         assert!(parsed::<States>("liquid_depth=3").is_err(), "brackets are required");
         assert_eq!(parsed::<States>(r#"["open_bit"=true,"b"=false,"c"="true"]"#).unwrap(), States("b=0,c=true,open_bit=1".into()), "bools as the table keeps them");
@@ -149,62 +153,5 @@ mod tests {
         assert_eq!((states, after), (States("a=1,b=2".into()), "destroy"), "they end at their bracket");
         let mut args = Args::new("destroy", 0, &sender, &[]);
         assert_eq!(Option::<States>::parse(&mut args), Ok(None), "left out when the next word is not one");
-        assert_eq!(parsed::<Selector>("@e[type=chicken]").unwrap(), Selector::Entities { kind: Some("minecraft:chicken".into()) });
-        assert_eq!(parsed::<Selector>("@e[type=!player]").unwrap(), Selector::Entities { kind: Some("!minecraft:player".into()) });
-        let takes = |wanted: Option<&str>| [Selector::takes(wanted, "minecraft:player"), Selector::takes(wanted, "minecraft:pig")];
-        assert_eq!([takes(None), takes(Some("minecraft:pig")), takes(Some("!minecraft:player"))], [[true, true], [false, true], [false, true]]);
-        assert_eq!([parsed::<Selector>("@s").unwrap(), parsed::<Selector>("Alex").unwrap()], [Selector::Sender, Selector::Named("Alex".into())]);
-        assert!(parsed::<Selector>("@x").is_err());
-    }
-}
-
-/// Who or what a command is aimed at.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum Selector {
-    /// `@s`: the sender.
-    Sender,
-    /// `@p`: the player nearest the sender.
-    Nearest,
-    /// `@a`: every player.
-    Players,
-    /// `@e`, optionally of one kind (`type=`, namespaced or not) or of every kind but one
-    /// (`type=!`, kept with its `!`); see [`Selector::takes`].
-    Entities { kind: Option<String> },
-    /// A player by name.
-    Named(String),
-}
-
-impl Selector {
-    /// Whether an entity of `kind` is one `@e` with this `type=` names.
-    pub fn takes(wanted: Option<&str>, kind: &str) -> bool {
-        match wanted.map(|wanted| wanted.strip_prefix('!').map_or((wanted, true), |other| (other, false))) {
-            Some((wanted, is_wanted)) => (wanted == kind) == is_wanted,
-            None => true,
-        }
-    }
-}
-
-impl Parameter for Selector {
-    fn kind() -> ParamKind {
-        ParamKind::Target
-    }
-
-    fn parse(args: &mut Args<'_>) -> Result<Self, ParseError> {
-        let mark = args.mark();
-        let word = args.word()?;
-        let Some(selector) = word.strip_prefix('@') else { return Ok(Self::Named(word.to_owned())) };
-        let (base, filters) = selector.split_once('[').map_or((selector, ""), |(base, filters)| (base, filters.trim_end_matches(']')));
-        let filter = |key: &str| filters.split(',').filter_map(|pair| pair.split_once('=')).find(|(name, _)| name.trim() == key).map(|(_, value)| value.trim().trim_matches('"').to_owned());
-        let namespaced = |kind: String| {
-            let (not, kind) = kind.strip_prefix('!').map_or(("", kind.as_str()), |kind| ("!", kind));
-            if kind.contains(':') { format!("{not}{kind}") } else { format!("{not}minecraft:{kind}") }
-        };
-        Ok(match base {
-            "s" => Self::Sender,
-            "p" => Self::Nearest,
-            "a" => Self::Players,
-            "e" => Self::Entities { kind: filter("type").map(namespaced) },
-            _ => return Err(args.error_at(mark)),
-        })
     }
 }

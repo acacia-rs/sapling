@@ -3,6 +3,7 @@
 use sapling_api::command::{BlockCoords, States};
 use sapling_api::{Block, BlockPos, Command, CommandEnum, Output, Sender, ShardCtx};
 
+use super::names::BlockName;
 use super::origin;
 
 /// The most blocks one `/fill` changes, as vanilla.
@@ -80,7 +81,7 @@ pub(crate) enum SetMode {
 #[command(crate = "crate", name = "setblock", description = "Changes a block to another block", permission = "operator")]
 pub(crate) struct SetBlock {
     position: BlockCoords,
-    block: String,
+    block: BlockName,
     states: Option<States>,
     mode: Option<SetMode>,
 }
@@ -91,7 +92,7 @@ impl Command for SetBlock {
         let mode = self.mode.unwrap_or(SetMode::Replace);
         let kept = mode == SetMode::Keep && ctx.block(pos).is_some_and(|there| !there.is_air());
         let broke = mode == SetMode::Destroy && ctx.break_block(pos);
-        match !kept && (changed(ctx, pos, &block(&self.block, self.states.as_ref())) || broke) {
+        match !kept && (changed(ctx, pos, &block(&self.block.0, self.states.as_ref())) || broke) {
             true => out.translate("commands.setblock.success", Vec::new(), true),
             false => out.translate("commands.setblock.noChange", Vec::new(), false),
         }
@@ -103,7 +104,7 @@ impl Command for SetBlock {
 pub(crate) struct Fill {
     from: BlockCoords,
     to: BlockCoords,
-    block: String,
+    block: BlockName,
     states: Option<States>,
 }
 
@@ -116,7 +117,7 @@ impl Command for Fill {
         if count > MAX_FILL {
             return out.translate("commands.fill.tooManyBlocks", vec![count.to_string(), MAX_FILL.to_string()], false);
         }
-        let block = block(&self.block, self.states.as_ref());
+        let block = block(&self.block.0, self.states.as_ref());
         let cells: Vec<BlockPos> = (low[0]..=high[0]).flat_map(|x| (low[1]..=high[1]).flat_map(move |y| (low[2]..=high[2]).map(move |z| [x, y, z]))).collect();
         let filled: u32 = ctx.batch_blocks(|ctx| cells.iter().map(|&pos| u32::from(changed(ctx, pos, &block))).sum());
         // Nothing changed is BDS's success line with a 0, failed (73 of research/captures/bds-*.txt).
@@ -128,7 +129,7 @@ impl Command for Fill {
 #[command(crate = "crate", name = "testforblock", description = "Tests whether a certain block is in a specific location", permission = "operator")]
 pub(crate) struct TestForBlock {
     position: BlockCoords,
-    block: String,
+    block: BlockName,
     states: Option<States>,
 }
 
@@ -140,7 +141,7 @@ impl Command for TestForBlock {
     fn run(self, ctx: &mut ShardCtx<'_>, sender: &Sender, out: &mut Output) {
         let pos = self.position.from(origin(ctx, sender));
         let place = || pos.map(|c| c.to_string()).to_vec();
-        let wanted = block(&self.block, self.states.as_ref());
+        let wanted = block(&self.block.0, self.states.as_ref());
         let there = ctx.block(pos).unwrap_or_else(|| Block::new(Block::AIR));
         let key = |name: &str| format!("%tile.{}.name", name.rsplit(':').next().unwrap_or(name));
         let has = |state: &str| there.properties.split(',').any(|held| held == state);
