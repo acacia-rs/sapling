@@ -100,9 +100,9 @@ pub(crate) fn update_block(world: &mut World, layer: Entity, pos: BlockPos, bloc
         (Some(registry), Some((put, id))) if put != id => Some(send::describe(registry, put)),
         _ => None,
     };
-    let put = put_block(world, layer, pos, swapped.as_ref().unwrap_or(block));
+    let door = put_as.and_then(|(put, _)| doors::put_whole(world, layer, pos, put));
+    let put = door.or_else(|| put_block(world, layer, pos, swapped.as_ref().unwrap_or(block)));
     if put == Some(true) {
-        doors::put_upper_half(world, layer, pos);
         updates::settle(world, layer, pos);
     }
     put.is_some()

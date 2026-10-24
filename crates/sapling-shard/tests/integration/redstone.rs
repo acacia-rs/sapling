@@ -106,7 +106,9 @@ fn a_powered_iron_door_opens_its_lower_half_with_a_sound_and_shuts_again() {
     let (lower, upper) = (door(0, 0), door(1, 0));
     put(&mut h, &[([10, 65, 8], "iron_door", &lower)]);
     let placed: Vec<RawPacket> = watch(&mut h, 4).concat();
-    assert!(block_changes(&placed).contains(&([10, 66, 8], state("minecraft:iron_door", &upper))), "its upper half comes with it, as /setblock on BDS");
+    let together: Vec<([i32; 3], u32, u32)> = all::<acacia_proto::packets::UpdateSubchunkBlocks>(&placed).iter().flat_map(|update| update.blocks.iter().map(|cell| ([cell.position.x, cell.position.y, cell.position.z], cell.runtime_id, cell.flags))).collect();
+    let halves = [([10, 65, 8], state("minecraft:iron_door", &lower), 3), ([10, 66, 8], state("minecraft:iron_door", &upper), 2)];
+    assert_eq!(together, halves, "both halves in one update, the upper with flags 2, as /setblock on BDS (bds-held-use.txt)");
 
     put(&mut h, &[([11, 65, 8], "redstone_block", "")]);
     let opened: Vec<RawPacket> = watch(&mut h, 4).concat();

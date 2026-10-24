@@ -89,16 +89,25 @@ pub(super) fn lower_half(registry: &BlockRegistry, id: u32) -> u32 {
     with(registry, id, HINGE, "0").filter(|_| property(registry, id, UPPER) == Some("0")).unwrap_or(id)
 }
 
-/// Stands the upper half of a door whose lower half was just put at `pos`, shut, when the cell
-/// above is air: BDS's `/setblock` shows both (research/captures/bds-redstone.txt).
-pub(super) fn put_upper_half(world: &mut World, layer: Entity, [x, y, z]: BlockPos) {
-    let Some(level) = level(world, layer) else { return };
-    let (registry, id) = (level.registry(), level.block(x, y, z));
+/// Puts the lower half of a door, `id`, at `pos` with its upper half shut above, where that cell
+/// is air, both shown in one UpdateSubchunkBlocks, the upper with the network flag alone, as BDS's
+/// `/setblock` showed a door (research/captures/bds-held-use.txt). `None` for any other block or
+/// a door with no room, `Some(false)` where the door already stands.
+pub(super) fn put_whole(world: &mut World, layer: Entity, pos: BlockPos, id: u32) -> Option<bool> {
+    let [x, y, z] = pos;
+    let level = level(world, layer)?;
+    let registry = level.registry();
     let is_free = level.in_height(y + 1) && level.block(x, y + 1, z) == registry.air_id();
-    let upper = with(registry, id, UPPER, "1").and_then(|upper| with(registry, upper, OPEN, "0"));
-    if let Some(upper) = upper.filter(|_| is_free && property(registry, id, UPPER) == Some("0")) {
-        send::set(world, layer, [x, y + 1, z], upper);
+    let upper = with(registry, id, UPPER, "1").and_then(|upper| with(registry, upper, OPEN, "0")).filter(|_| is_free && property(registry, id, UPPER) == Some("0"))?;
+    if level.block(x, y, z) == id {
+        return Some(false);
     }
+    let above = [x, y + 1, z];
+    if !send::set_quietly(world, layer, pos, id) || !send::set_quietly(world, layer, above, upper) {
+        return None;
+    }
+    send::show_together(world, layer, &[(pos, send::FLAGS), (above, acacia_proto::types::UpdateBlockFlags::NETWORK)]);
+    Some(true)
 }
 
 /// The door `id` about to stand at `pos`, placed by a look into `quarter`, hinged on the right
