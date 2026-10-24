@@ -14,7 +14,7 @@ use acacia_proto::nbt::{Nbt, Value as NbtValue};
 use acacia_proto::packets::{Animate, AnimateActionId, LevelEventGeneric, PlayerAction, SetEntityData};
 use acacia_proto::types::{
     Action, EntityProperties, MetadataDictionaryItem, MetadataDictionaryItemKey as Key, MetadataDictionaryItemType as Type, MetadataDictionaryItemValue as Value,
-    MetadataDictionaryItemValueDefault as Plain, Vec3i,
+    MetadataDictionaryItemValueDefault as Plain, MetadataFlags2, Vec3f, Vec3i,
 };
 use bevy_ecs::prelude::*;
 use sapling_api::{BlockPos, GameMode};
@@ -45,6 +45,11 @@ const LYING_YAW: [f32; 4] = [0.0, 90.0, 180.0, -90.0];
 const DEEP_SLEEP: u64 = 100;
 /// The sleeping bit of `PlayerFlags`.
 const SLEEPING_FLAG: i8 = 0x02;
+/// The bit of `FlagsExtended` BDS set on a sleeper (acacia-proto names it `WANTS_TO_WAKE`).
+const SLEEPING_EXTENDED: i64 = 1 << 12;
+/// A player's box, wide and high, lying in a bed and standing.
+const LYING_BOX: [f32; 2] = [0.2, 0.2];
+const STANDING_BOX: [f32; 2] = [0.6, 1.8];
 /// The `LevelEventGeneric` that counts the sleepers (9801). The game zigzags the id where
 /// acacia-proto writes a plain varint, so it goes as 19602: BDS's bytes (bds-dims-travel.txt).
 const SLEEPING_PLAYERS: u32 = 9801 << 1;
@@ -67,11 +72,25 @@ fn tell(world: &mut World, player: Entity, key: &str) {
     }
 }
 
-/// What a sleeper's viewers and its own client are told: the flag, and the bed it lies in.
-fn lying_data(id: u64, head: Option<BlockPos>) -> SetEntityData {
-    let flags = MetadataDictionaryItem { key: Key::PlayerFlags, r#type: Type::Byte, legacy_type: 0, value: Value::Default(Plain::Byte(if head.is_some() { SLEEPING_FLAG } else { 0 })) };
-    let bed = head.map(|[x, y, z]| MetadataDictionaryItem { key: Key::PlayerBedPosition, r#type: Type::Vec3i, legacy_type: 6, value: Value::Default(Plain::Vec3i(Vec3i { x, y, z })) });
-    SetEntityData { runtime_entity_id: id, metadata: [flags].into_iter().chain(bed).collect(), properties: EntityProperties { ints: Vec::new(), floats: Vec::new() }, tick: 0 }
+fn entity_data(id: u64, metadata: Vec<MetadataDictionaryItem>) -> SetEntityData {
+    SetEntityData { runtime_entity_id: id, metadata, properties: EntityProperties { ints: Vec::new(), floats: Vec::new() }, tick: 0 }
+}
+
+/// What a sleeper's viewers and its own client are told: the flags, and the bed it lies in at
+/// `head` and the eyes it lay down from (research/captures/bds-wake.txt).
+fn lying_data(id: u64, lying: Option<(BlockPos, [f32; 3])>) -> SetEntityData {
+    let flags = MetadataDictionaryItem { key: Key::PlayerFlags, r#type: Type::Byte, legacy_type: 0, value: Value::Default(Plain::Byte(if lying.is_some() { SLEEPING_FLAG } else { 0 })) };
+    let bed = lying.map(|([x, y, z], _)| MetadataDictionaryItem { key: Key::PlayerBedPosition, r#type: Type::Vec3i, legacy_type: 6, value: Value::Default(Plain::Vec3i(Vec3i { x, y, z })) });
+    let extended = MetadataDictionaryItem { key: Key::FlagsExtended, r#type: Type::Long, legacy_type: 7, value: Value::FlagsExtended(MetadataFlags2(if lying.is_some() { SLEEPING_EXTENDED } else { 0 })) };
+    let entered = lying.map(|(_, [x, y, z])| MetadataDictionaryItem { key: Key::BedEnterPosition, r#type: Type::Vec3f, legacy_type: 8, value: Value::Default(Plain::Vec3f(Vec3f { x, y: y + EYE_HEIGHT, z })) });
+    entity_data(id, [flags].into_iter().chain(bed).chain([extended]).chain(entered).collect())
+}
+
+/// A player's box, small while it lies in a bed.
+fn box_data(id: u64, lying: bool) -> SetEntityData {
+    let [width, height] = if lying { LYING_BOX } else { STANDING_BOX };
+    let size = |key, value| MetadataDictionaryItem { key, r#type: Type::Float, legacy_type: 3, value: Value::Default(Plain::Float(value)) };
+    entity_data(id, vec![size(Key::BoundingboxWidth, width), size(Key::BoundingboxHeight, height)])
 }
 
 /// Players of the world `layer` that count for skipping its night: all but spectators.
@@ -103,13 +122,25 @@ pub(crate) fn tell_sleepers(world: &mut World, layer: Entity) {
     crate::dimensions::members(world, layer).into_iter().for_each(|member| crate::chat::send_to_layer(world, member, &told));
 }
 
-/// Shows a player's lying down or getting up to it and to those who see it.
-fn show(world: &mut World, player: Entity, head: Option<BlockPos>) {
-    let Some(id) = world.get::<NetId>(player).map(|id| id.0) else { return };
-    let data = lying_data(id, head);
-    world.resource_mut::<ToViewers>().push(player, &data);
+/// Shows a player's lying down in the bed at `head` from `entered` (its feet), or getting up, to
+/// it and to those who see it.
+fn show(world: &mut World, player: Entity, lying: Option<(BlockPos, [f32; 3])>) {
+    if let Some(id) = world.get::<NetId>(player).map(|id| id.0) {
+        tell_all(world, player, &lying_data(id, lying));
+    }
+}
+
+/// Shows a player's box, lying or standing, to it and to those who see it.
+fn show_box(world: &mut World, player: Entity, lying: bool) {
+    if let Some(id) = world.get::<NetId>(player).map(|id| id.0) {
+        tell_all(world, player, &box_data(id, lying));
+    }
+}
+
+fn tell_all(world: &mut World, player: Entity, data: &SetEntityData) {
+    world.resource_mut::<ToViewers>().push(player, data);
     if let Some(mut out) = world.get_mut::<Outgoing>(player) {
-        out.push(&data);
+        out.push(data);
     }
 }
 
@@ -162,10 +193,11 @@ pub(crate) fn lie_down(world: &mut World, player: Entity, layer: Entity, pos: Bl
     if let Some(mut lying) = world.get_mut::<Position>(player) {
         (lying.yaw, lying.head_yaw, lying.pitch) = (yaw, yaw, 0.0);
     }
-    movement::correct_unmoving(world, player, [head[0] as f32 + 0.5, head[1] as f32 + LYING_HEIGHT - EYE_HEIGHT, head[2] as f32 + 0.5]);
     world.entity_mut(player).insert(Sleeping { layer, head, entered: position.feet, ticks: 0 });
+    show(world, player, Some((head, position.feet)));
+    movement::correct_unmoving(world, player, [head[0] as f32 + 0.5, head[1] as f32 + LYING_HEIGHT - EYE_HEIGHT, head[2] as f32 + 0.5]);
+    show_box(world, player, true);
     set_occupied(world, layer, head, true);
-    show(world, player, Some(head));
     tell_sleepers(world, layer);
     true
 }
@@ -202,6 +234,7 @@ fn get_up(world: &mut World, player: Entity, sent_to: Option<[f32; 3]>) -> bool 
     }
     show(world, player, None);
     set_occupied(world, sleeping.layer, sleeping.head, false);
+    show_box(world, player, false);
     tell_sleepers(world, sleeping.layer);
     true
 }

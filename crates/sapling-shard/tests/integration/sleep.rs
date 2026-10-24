@@ -65,13 +65,17 @@ fn a_sleeper_is_put_in_its_bed_and_a_teleport_gets_it_up_where_it_was_sent() {
     h.remote.run(|ctx| ctx.set_time(13_000));
     h.tick(1);
     h.receive(1, &click(HEAD, 1, None));
-    assert_eq!(corrected(&h.tick(1)), [([1.5, 65.90625, 1.5], 0.0)]);
+    let lay = h.tick(1);
+    assert_eq!(corrected(&lay), [([1.5, 65.90625, 1.5], 0.0)]);
+    let width = |sent: &[acacia_proto::RawPacket]| all::<SetEntityData>(sent).iter().flat_map(|data| data.metadata.clone()).filter(|item| item.key == Key::BoundingboxWidth).map(|item| format!("{:?}", item.value)).collect::<Vec<_>>();
+    assert_eq!(width(&lay), ["Default(Float(0.2))"], "a sleeper's box is small");
     h.remote.run(|ctx| ctx.teleport(ALEX, [5.5, 65.0, 5.5]));
     let sent = h.tick(1);
     assert!(all::<Animate>(&sent).iter().any(|animate| animate.action_id == AnimateActionId::WakeUp));
     let moved = all::<acacia_proto::packets::MovePlayer>(&sent);
     assert_eq!(moved.iter().map(|to| [to.position.x, to.position.y, to.position.z]).collect::<Vec<_>>(), [[5.5, 65.0 + sapling_data::EYE_HEIGHT, 5.5]]);
     assert!(corrected(&sent).is_empty());
+    assert_eq!(width(&sent), ["Default(Float(0.6))"]);
 }
 
 #[test]
