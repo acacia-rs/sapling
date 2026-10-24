@@ -8,6 +8,7 @@ mod column;
 mod dimension_tests;
 mod folder;
 mod generated;
+mod light;
 mod load_queue;
 mod loader;
 mod players;
@@ -24,6 +25,7 @@ pub use acacia_world::{Aabb, BlockRegistry, Chunk, Dimension, LevelChunkData, Ma
 pub use column::{SubChunkAnswer, empty_column};
 pub use folder::WorldFolder;
 pub use generated::Generated;
+pub use light::FULL_LIGHT;
 pub use sapling_leveldb::LevelDat;
 pub use players::PlayerLoad;
 pub use sapling_leveldb::{

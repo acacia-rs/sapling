@@ -17,11 +17,7 @@ const INVERTED: &str = "minecraft:daylight_detector_inverted";
 const SIGNAL: &str = "redstone_signal";
 /// Ticks between two readings.
 const EVERY: u64 = 20;
-const DAY: f32 = 24000.0;
 const FULL: i32 = 15;
-/// What the sky loses of its light at most by night, and what rain and thunder each take of it.
-const DARKEST: f32 = 11.0;
-const CLOUDED: f32 = 5.0 / 16.0;
 
 /// Where detectors are, by world.
 #[derive(Resource, Default)]
@@ -30,12 +26,8 @@ pub(crate) struct Detectors(HashSet<(Entity, BlockPos)>);
 /// The signal of a detector under an open sky at `time`: the Java game's reckoning, which gave
 /// each of the twenty readings BDS showed but one (research/captures/bds-daylight.txt).
 pub(super) fn signal(time: i64, weather: Weather) -> u8 {
-    let day = (time.rem_euclid(DAY as i64) as f32 / DAY - 0.25).rem_euclid(1.0);
-    let turn = day + (0.5 - (day * PI).cos() / 2.0 - day) / 3.0;
-    let (rain, thunder) = (f32::from(u8::from(weather != Weather::Clear)), f32::from(u8::from(weather == Weather::Thunder)));
-    let light = (1.0 - (1.0 - ((turn * 2.0 * PI).cos() * 2.0 + 0.5)).clamp(0.0, 1.0)) * (1.0 - rain * CLOUDED) * (1.0 - thunder * CLOUDED);
-    let bright = FULL - ((1.0 - light) * DARKEST) as i32;
-    let sun = turn * 2.0 * PI;
+    let bright = FULL - i32::from(crate::light::sky_darken(time, weather));
+    let sun = crate::light::sun_turn(time) * 2.0 * PI;
     let towards = if sun < PI { 0.0 } else { 2.0 * PI };
     (bright as f32 * (sun + (towards - sun) * 0.2).cos()).round().clamp(0.0, FULL as f32) as u8
 }

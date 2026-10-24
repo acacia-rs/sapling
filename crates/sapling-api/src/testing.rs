@@ -142,6 +142,15 @@ impl crate::WeatherBackend for Fake {
     fn set_weather(&mut self, _: crate::Weather, _: Option<u32>) {}
 }
 
+impl crate::LightBackend for Fake {
+    fn light_at(&self, _: BlockPos) -> Option<crate::Light> {
+        None
+    }
+    fn brightness_at(&self, _: BlockPos) -> Option<u8> {
+        None
+    }
+}
+
 impl crate::ExperienceBackend for Fake {
     fn experience(&self, _: PlayerId) -> Option<(i32, f32)> {
         None

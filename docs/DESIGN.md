@@ -20,7 +20,7 @@ Evidence: `research/dragonfly.md`, `research/acacia-server-gaps.md`, `research/w
 | Storage | `WorldStorage` trait. Backends: vanilla LevelDB (rusty-leveldb, bedrock-crustaceans fork, pinned) and in-memory. All disk I/O on an I/O pool, one write batch per chunk | Build maps in vanilla, host them, take SMP worlds back to vanilla |
 | Arenas | Immutable `TemplateWorld` (chunk → `Arc` sections) + `ArenaWorld` holding only changed chunks. Clone O(1), first write copies one section, reset = drop the diff | Nobody does real CoW (Minestom/Valence/Chorus deep-copy) |
 | Chunk sending | Sub-chunk request mode + blob cache. Encoded section payloads cached per template section, shared by all arenas until changed | One encode per map, not per player per arena; client blob cache hits across arenas |
-| Lighting | Not stored | The Bedrock client computes its own |
+| Lighting | Reckoned on the server for its rules only ("Light (as built)"); never sent or saved | The Bedrock client computes its own; BDS saves none |
 | Commands / forms | `#[derive(Command)]` / `#[derive(Form)]` macros (dragonfly's struct model without reflection) | Typed and checked at compile time |
 | Tests | Synchronous shard mode (manual tick) + acacia-bot as the test client | Deterministic; acacia already drives a full client |
 | Licence | MIT. Port dragonfly (MIT, keep notice); block upgrade data from pmmp schema repo (CC0). Never read GPL code (PocketMine, PowerNukkitX, Pumpkin, AdvancedSlimePaper) | Same rule as acacia |
@@ -984,6 +984,35 @@ Details and BDS evidence: docs/research/nether-dimension.md, docs/research/end-d
 the cells its view reaches into; packets about a player go to the viewers found by inverting the `Sees`
 sets once a tick. Mobs sit in a grid that changes only when they come or go, and a player's mob set is
 remade only when its view moved or the grid changed.
+
+## Light (as built)
+
+Sky light and block light for the server's rules (`sapling-world` `light/`); the client lights what
+it draws itself, and nothing is saved (BDS saves no light), so a column is lit anew each load.
+
+- **Data.** What a state emits and filters is acacia-world's `light_emission` / `light_filter`
+  (minecraft-data corrected by the wiki's Bedrock table, not read from BDS); a waterlogged cell takes
+  the stronger of both layers. Light is a nibble per cell per channel, per section, and a section at
+  one level throughout holds no array: an open column holds none, a generated one about three.
+- **Rules.** A step loses 1 + the filter of the cell entered; full sky light going down loses only the
+  filter. The nether and the end have no sky light. `World::brightness_at` is BDS's
+  `getRawBrightness` (docs/research/saplings.md): sky less `skyDarken`, or block light if brighter, 0
+  inside a block of filter 15; the shard's `light::sky_darken` is the daylight detector's reckoning.
+- **Work off the tick.** A loaded column is lit alone on the I/O thread that loads it (`own.rs`, a
+  few ms a generated column). On the shard, `World::relight` joins each arrived column to its loaded
+  neighbours (only the section faces whose levels differ), then mends the light around every block
+  written since (a write is noted only when it changes emission or filter) in one flood per channel.
+  Light stops at a column that is not loaded and flows in when it arrives. An unloaded column's light
+  goes with it. An arena reads its template's light (lit when the template was made) until it changes
+  a column's; a world without storage has open sky in every column nobody lit.
+- **When.** The shard relights at the start of every tick (`chunks::poll_and_relight_worlds`) and
+  again before random ticks, so a block written in a tick shows in light from the next of those.
+  Plugins read `ShardCtx::light_at` and `brightness_at`.
+- **Not done.** No consumer but saplings (raw brightness 9 over them, propagules none): crops,
+  grass and mycelium spread and death, ice and snow melting, mob spawning, daylight detectors
+  through leaves and water, and undead burning in sunlight still use their own reckonings or none.
+  Unverified against BDS: the filter table, the sky's loss going down through a filter, and whether
+  BDS lags light updates as sapling does.
 
 ## NetherNet (as built)
 

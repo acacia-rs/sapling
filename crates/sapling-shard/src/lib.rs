@@ -35,6 +35,7 @@ mod hud;
 mod inventory;
 mod join;
 mod late_sounds;
+mod light;
 mod mobs;
 mod movement;
 mod orbs;

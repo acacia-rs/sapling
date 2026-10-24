@@ -69,3 +69,22 @@ fn an_oak_sapling_ages_and_then_grows_by_random_ticks() {
     });
     assert!(grown, "a tree within 3000 ticks at a thousand times the speed");
 }
+
+#[test]
+fn a_sapling_shut_in_the_dark_does_not_grow() {
+    let mut h = planted(&[([2, 65, 0], "minecraft:oak_sapling")]);
+    h.remote.run(|ctx| {
+        assert!(ctx.set_game_rule("randomTickSpeed", sapling_api::RuleValue::Int(1000)));
+        let walls = (65..=66).flat_map(|y| [[1, y, 0], [3, y, 0], [2, y, 1], [2, y, -1]]);
+        for at in walls.chain([[2, 67, 0]]) {
+            assert!(ctx.set_block(at, &Block::new("minecraft:stone")));
+        }
+    });
+    h.tick_all();
+    let (sent, got) = std::sync::mpsc::channel();
+    h.remote.run(move |ctx| sent.send((ctx.brightness_at([2, 66, 0]), ctx.brightness_at([2, 68, 0]))).expect("the test waits"));
+    h.tick_all();
+    assert_eq!(got.recv().expect("ran"), (Some(0), Some(15)));
+    (0..200).for_each(|_| drop(h.tick_all()));
+    assert_eq!(names(&mut h, vec![[2, 65, 0]]), ["minecraft:oak_sapling"], "in the light 200 ticks at a thousand times the speed grow it many times over");
+}

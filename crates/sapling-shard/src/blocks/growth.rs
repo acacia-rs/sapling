@@ -2,7 +2,7 @@
 //! bamboo, farmland, open dirt and marked leaf has the chance a tick that a cell picked at random around a player has on BDS
 //! (docs/research/growth.md); what a tick then does is in rules.rs.
 // A sapling whose tick comes up grows in saplings.rs.
-// TODO: no light is asked for, where the game wants 9; grass under a
+// TODO: no light is asked for (`crate::light::brightness`), where the game wants 9; grass under a
 // block does not die; ice and the rest take no random tick; only a survival player treads
 // farmland down, no mob and no creative player.
 
