@@ -60,7 +60,7 @@ pub(crate) use redstone::{apply as apply_redstone, arrived as circuits_arrived, 
 pub(crate) use signs::dispatch_edits as dispatch_sign_edits;
 pub(crate) use loot::Dice;
 pub(crate) use liquid::tick as flow_liquids;
-pub(crate) use mining::Breaking;
+pub(crate) use mining::{Breaking, sound_hits};
 pub(crate) use request::{BlockInputs, dispatch};
 use request::{Request, Site, site};
 pub(crate) use send::{block_at, keep_entity, put_block, set, set_sectioned, sound, to_viewers};
