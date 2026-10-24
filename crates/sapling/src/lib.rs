@@ -17,7 +17,7 @@ pub use sapling_api::{
     Block, BlockPos, BossBar, BossBarColour, BreakEvent, ChatEvent, Command, CommandEnum, CommandEvent, Custom, Difficulty, DropEvent, EntityId, EntityInfo, Face, Form, FormResponse, GameMode,
     Handler, InteractEvent, Item, Menu, Modal, MovementPolicy, Output, Permission, PlaceEvent, Player, PlayerId, Position, Priority, RuleValue, Sender, ShardCtx, Sidebar, Slot, Title, command, form,
 };
-pub use sapling_net::{Advert, Lan, NetherNet, host_key};
+pub use sapling_net::{AccessLists, Admission, Advert, Lan, NetherNet, access, host_key};
 pub use sapling_world::{ChunkPos, Generated, Level, END, LevelDbStorage, MemoryStorage, NETHER, OVERWORLD, Template, World, WorldFolder, WorldStorage};
 pub use server::{Server, ServerBuilder, StartError};
 pub use sapling_shard::MovementCheck;

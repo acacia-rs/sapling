@@ -2,6 +2,7 @@
 
 mod common;
 
+mod access;
 mod api;
 mod blocks;
 mod chest;

@@ -73,6 +73,17 @@ One listener task, one shard thread, one world. The pieces and why they are shap
   machine with a deadline, the server-full check and the identity reservation. It then reports `Joined`,
   `Packet`s (header parsed, body undecoded) and exactly one `Left` per connection, whoever ended it. The
   game never guesses whether a player is still connected: it despawns on `Left` only.
+- **Admission and access lists.** As a transport comes up, before its login costs a key pair, an
+  address over `NetConfig::admission` (8 connections at once, 10 new ones per 10 s; loopback exempt)
+  is closed (`admission.rs`; acacia caps peers and handshakes for the socket, R7). Opted into with
+  `ServerBuilder::access`, `sapling_net::AccessLists` (`access/`) holds `allowlist.json` and
+  `permissions.json` in BDS's format and `banned-players.json`/`banned-ips.json` in sapling's own
+  (BDS has no bans; times in Unix seconds, optional expiry). Clones share one set, saved on each
+  change. A finished login is checked before `Joined`: a ban by XUID, name or IP gets its screen
+  (Java's wording, `DisconnectFailReason::Kicked`), an unlisted player with the allowlist on
+  `disconnectionScreen.notAllowed`, and `ignoresPlayerLimit` passes the server-full check. A name-only
+  allowlist entry takes the XUID of its first online join, as BDS's does. A new ban drops the players
+  it names at the driver's next turn (`Sessions::enforce_bans`).
 - **Game to network.** `Outbox::send` queues one batch per player per tick and never blocks. Backpressure
   is per player and reads the transport's unsent bytes (RakNet's queue past its window, NetherNet's queues
   past str0m's buffer). Over `NetConfig::congested_bytes` (1 MiB) the connection is congested
@@ -679,8 +690,16 @@ block action, and takes StopBreak and AbortBreak with a position.
   (`research/captures/bds-gamerule.txt`); its rule names are not completed. `/say <message>`
   (operators) announces `[name] message` to the shard (`ctx.announce`); `/tell`, `/w` and `/msg <target>
   <message>` (anyone) whisper to each target (`ctx.whisper`), as BDS sent them
-  (`research/captures/bds-feedback.txt`). Not done: the rest of
-  vanilla's commands, `@r` and selector arguments besides `type`.
+  (`research/captures/bds-feedback.txt`). `/kick <target> [reason]`, `/op` and `/deop` (operators,
+  `vanilla/operators.rs`) answer under BDS's keys; with access lists `/op` and `/deop` save the role
+  of a player with an XUID, and a joining player gets the role `permissions.json` has for them.
+  `ServerBuilder::access` adds `/allowlist` (`/whitelist`: add, remove, list, on, off, reload; on and
+  off not saved, as on BDS) and Java's and PocketMine's `/ban <name> [reason]`, `/ban-ip <ip|player>
+  [reason]`, `/pardon`, `/pardon-ip` and `/banlist [players|ips]` (BDS has none; operator-only,
+  answered under the client's old `commands.ban*` keys, `vanilla/bans.rs`). Not done: the rest of
+  vanilla's commands, `@r` and selector arguments besides `type`; `/permission list|reload`; a
+  ban's expiry from a command (the API takes one); `/kick` and `/op` reach players of the sender's
+  shard only; `whitelist.json` is not read in place of `allowlist.json` as BDS does.
 - **Neighbours** (`blocks/updates.rs`). After a player's break or place: falling blocks around are
   queued to fall (next bullet); what stood on a block that is gone (the Java game's `canSurvive`
   blocks: plants, rails, carpets, doors, standing torches and signs, candles, floor buttons and levers)
@@ -1064,7 +1083,12 @@ acacia-world = { path = "../acacia/acacia/crates/acacia-world" }
   game (bots only so far); whether it wants the status JSON or BDS's empty body; whether the LAN
   list shows a server that answers from a dedicated process.
 - **NetherNet, left out:** the signaling service (friends list, Realms-style joins), TURN and
-  server-reflexive candidates, HTTPS signaling, IPv6 LAN discovery, rate limits on signaling.
+  server-reflexive candidates, HTTPS signaling, IPv6 LAN discovery, rate limits on signaling (the
+  per-address admission counts a NetherNet connection once it opens, not its offers).
+- **Access lists, not checked against BDS:** the kick screen without a reason (`disconnect.kicked`)
+  and with one (the reason alone); `/kick` refusing the sender; the allowlist list's "seen" count
+  (sapling gives the entry count twice); whether `ignoresPlayerLimit` counts with the allowlist off;
+  BDS's `commands.allowlist.noOnlineAuth` refusal offline is not copied.
 
 - **Step 6, only a vanilla client can confirm:** which actions a creative client sends for an instant
   break (sapling breaks on PredictBreak and on an item use of type BreakBlock, never on StartBreak

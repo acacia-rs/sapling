@@ -59,6 +59,7 @@ impl Driver {
                 self.sessions.on_event(&mut self.links, event, now);
             }
             self.sessions.expire_logins(&mut self.links, now);
+            self.sessions.enforce_bans(&mut self.links, now);
             if advertised != self.sessions.player_count() {
                 advertised = self.sessions.player_count();
                 self.links.raknet.set_motd(self.motd.pong(self.guid, advertised, self.max_players, port));
