@@ -12,7 +12,7 @@ use crate::commands::Access;
 use crate::components::{Identity, Layer, Mode, Net, NetId, Players, Position, Settings, Tick, in_world};
 use crate::inventory::Inventory;
 use crate::plugins::{Deferred, PluginState};
-use crate::{blocks, chat, clock, containers, forms, hud, inventory, join, movement, worlds};
+use crate::{blocks, chat, clock, containers, forms, hud, inventory, join, worlds};
 
 impl Backend for Ctx<'_> {
     fn tick(&self) -> u64 {
@@ -130,7 +130,7 @@ impl Backend for Ctx<'_> {
 
     fn teleport(&mut self, player: PlayerId, feet: [f32; 3]) {
         if let Some(entity) = self.entity(player).filter(|_| feet.iter().all(|c| c.is_finite())) {
-            movement::teleport(self.world, entity, feet);
+            crate::sleep::teleport_waking(self.world, entity, feet);
         }
     }
 

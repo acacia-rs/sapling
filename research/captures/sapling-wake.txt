@@ -1,0 +1,217 @@
+## drill starts at 1792862362168
+## /kill @e[type=!player]
+     20 actor   CommandOutput success_count=0 data=None commands.generic.noTargetMatch success=false []
+    570 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 6513, paused: false }] }) }
+    570 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 6513, paused: false }] }) }
+## /time set 18000
+   1070 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 18000, paused: false }] }) }
+   1070 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 18000, paused: false }] }) }
+   1070 actor   CommandOutput success_count=1 data=None commands.time.set success=true ["18000"]
+   1070 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.time.set\",\"with\":{\"rawtext\":[{\"text\":\"18000\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /fill ~-2 ~-1 ~-2 ~4 ~-1 ~2 stone
+   2071 actor   CommandOutput success_count=0 data=None commands.fill.success success=false ["0"]
+## /fill ~-2 ~ ~-2 ~4 ~3 ~2 air
+   3072 actor   CommandOutput success_count=0 data=None commands.fill.success success=false ["0"]
+## /gamemode survival @s
+   4070 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamemode.success.self\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.survival\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   4070 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"gameMode.changed\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.survival\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   4070 actor   CommandOutput success_count=1 data=None commands.gamemode.success.self success=true ["%createWorldScreen.gameMode.survival"]
+## /summon armor_stand ~ ~ ~
+   5087 actor   CommandOutput success_count=1 data=None commands.summon.success success=true []
+   5087 actor   LevelSoundEvent LevelSoundEvent { sound_id: "spawn", position: Vec3f { x: 0.5, y: 65.67875, z: 0.5 }, extra_data: -1, entity_type: "minecraft:armor_stand", is_baby_mob: false, is_global: false, entity_unique_id: 3, fire_at_position: None }
+   5088 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.summon.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   5088 watcher LevelSoundEvent LevelSoundEvent { sound_id: "spawn", position: Vec3f { x: 0.5, y: 65.67875, z: 0.5 }, extra_data: -1, entity_type: "minecraft:armor_stand", is_baby_mob: false, is_global: false, entity_unique_id: 3, fire_at_position: None }
+## /
+## /fill ~1 ~ ~ ~1 ~ ~1 air
+   7071 actor   CommandOutput success_count=0 data=None commands.fill.success success=false ["0"]
+## /setblock ~1 ~ ~ bed
+   8073 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 0 }, block_runtime_id: 2268230312, flags: UpdateBlockFlags(3), layer: 0 }
+   8073 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 0 }, block_runtime_id: 2268230312, flags: UpdateBlockFlags(3), layer: 0 }
+   8073 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+   8073 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /
+## /!sleep 1 0 0
+## slept: Ok(())
+  10955 actor   SetSpawnPosition SetSpawnPosition { spawn_type: Player, player_position: BlockCoordinates { x: 0, y: 64, z: 0 }, dimension: 0, world_position: BlockCoordinates { x: 1, y: 64, z: 0 } }
+  10955 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7\"},{\"translate\":\"tile.bed.respawnSet\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  10955 actor   CorrectPlayerMovePrediction CorrectPlayerMovePrediction { prediction_type: Player, position: Vec3f { x: 1.5, y: 64.90625, z: 0.5 }, delta: Vec3f { x: 0.0, y: 0.0, z: 0.0 }, rotation: Vec2f { x: 0.0, z: 0.0 }, angular_velocity: None, on_ground: true, tick: 250 }
+  10957 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 0 }, block_runtime_id: 3323536883, flags: UpdateBlockFlags(3), layer: 0 }
+  10957 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 0 }, block_runtime_id: 3323536883, flags: UpdateBlockFlags(3), layer: 0 }
+  10957 actor   SetEntityData SetEntityData { runtime_entity_id: 1, metadata: [MetadataDictionaryItem { key: PlayerFlags, type: Byte, legacy_type: 0, value: Default(Byte(2)) }, MetadataDictionaryItem { key: PlayerBedPosition, type: Vec3i, legacy_type: 6, value: Default(Vec3i(Vec3i { x: 1, y: 64, z: 0 })) }], properties: EntityProperties { ints: [], floats: [] }, tick: 0 }
+  10957 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 0 }, block_runtime_id: 3323536883, flags: UpdateBlockFlags(3), layer: 0 }
+  10957 watcher SetEntityData SetEntityData { runtime_entity_id: 1, metadata: [MetadataDictionaryItem { key: PlayerFlags, type: Byte, legacy_type: 0, value: Default(Byte(2)) }, MetadataDictionaryItem { key: PlayerBedPosition, type: Vec3i, legacy_type: 6, value: Default(Vec3i(Vec3i { x: 1, y: 64, z: 0 })) }], properties: EntityProperties { ints: [], floats: [] }, tick: 0 }
+  10957 watcher MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 1.5, y: 64.90625, z: 0.5 }, pitch: 0.0, yaw: 0.0, head_yaw: 0.0, mode: Normal, on_ground: true, ridden_runtime_id: 0, teleport: None, tick: 250 }
+  10957 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 0 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 1 }
+  10957 watcher Animate Animate { action_id: SwingArm, runtime_entity_id: 1, data: 0.0, has_swing_source: false, swing_source: None }
+  10958 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 65, z: 0 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  10958 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 65, z: 0 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 1 }
+  10958 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 63, z: 0 }, block_runtime_id: 2150698529, flags: UpdateBlockFlags(3), layer: 0 }
+  10958 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 63, z: 0 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 1 }
+## /
+## /
+  13371 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 18246, paused: false }] }) }
+  13371 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 18246, paused: false }] }) }
+## /!wake
+## woke: Ok(())
+  13971 actor   Animate Animate { action_id: WakeUp, runtime_entity_id: 1, data: 0.0, has_swing_source: false, swing_source: None }
+  13971 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 0 }, block_runtime_id: 2268230312, flags: UpdateBlockFlags(3), layer: 0 }
+  13972 actor   SetEntityData SetEntityData { runtime_entity_id: 1, metadata: [MetadataDictionaryItem { key: PlayerFlags, type: Byte, legacy_type: 0, value: Default(Byte(0)) }], properties: EntityProperties { ints: [], floats: [] }, tick: 0 }
+  13972 actor   CorrectPlayerMovePrediction CorrectPlayerMovePrediction { prediction_type: Player, position: Vec3f { x: 0.5, y: 65.72001, z: 0.5 }, delta: Vec3f { x: 0.0, y: -0.0784, z: 0.0 }, rotation: Vec2f { x: 0.0, z: 0.0 }, angular_velocity: None, on_ground: true, tick: 326 }
+  13972 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 0 }, block_runtime_id: 2268230312, flags: UpdateBlockFlags(3), layer: 0 }
+  13972 watcher SetEntityData SetEntityData { runtime_entity_id: 1, metadata: [MetadataDictionaryItem { key: PlayerFlags, type: Byte, legacy_type: 0, value: Default(Byte(0)) }], properties: EntityProperties { ints: [], floats: [] }, tick: 0 }
+  13972 watcher MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 0.5, y: 65.72001, z: 0.5 }, pitch: 0.0, yaw: 0.0, head_yaw: 0.0, mode: Normal, on_ground: true, ridden_runtime_id: 0, teleport: None, tick: 326 }
+  14021 watcher MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 0.5, y: 65.62001, z: 0.5 }, pitch: 31.799343, yaw: -90.0, head_yaw: -90.0, mode: Normal, on_ground: true, ridden_runtime_id: 0, teleport: None, tick: 328 }
+## /
+## /
+## /
+## /tp @s @e[type=armor_stand]
+  18021 actor   MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 0.5, y: 65.62001, z: 0.5 }, pitch: 31.799343, yaw: -90.0, head_yaw: -90.0, mode: Teleport, on_ground: true, ridden_runtime_id: 0, teleport: Some(MovePlayerTeleport { cause: Command, source_entity_type: Unknown(1) }), tick: 406 }
+  18021 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.tp.success\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor\"},{\"text\":\"Armor Stand\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  18021 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.tp.successVictim\",\"with\":{\"rawtext\":[{\"text\":\"Armor Stand\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  18022 actor   CommandOutput success_count=1 data=None commands.tp.success success=true ["CmdActor", "Armor Stand"]
+  18121 watcher MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 0.5, y: 65.62001, z: 0.5 }, pitch: 31.799343, yaw: -90.0, head_yaw: -90.0, mode: Normal, on_ground: false, ridden_runtime_id: 0, teleport: None, tick: 408 }
+  18172 watcher MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 0.5, y: 65.62001, z: 0.5 }, pitch: 31.799343, yaw: -90.0, head_yaw: -90.0, mode: Normal, on_ground: true, ridden_runtime_id: 0, teleport: None, tick: 409 }
+## /time set 18000
+  19022 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 18000, paused: false }] }) }
+  19022 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 18000, paused: false }] }) }
+  19022 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.time.set\",\"with\":{\"rawtext\":[{\"text\":\"18000\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  19022 actor   CommandOutput success_count=1 data=None commands.time.set success=true ["18000"]
+## /
+## /fill ~1 ~ ~ ~1 ~ ~1 air
+  21021 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 0 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  21021 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 0 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  21021 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.fill.success\",\"with\":{\"rawtext\":[{\"text\":\"1\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  21022 actor   CommandOutput success_count=1 data=None commands.fill.success success=true ["1"]
+## /setblock ~1 ~ ~ bed
+  22021 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 0 }, block_runtime_id: 2268230312, flags: UpdateBlockFlags(3), layer: 0 }
+  22021 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  22022 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 0 }, block_runtime_id: 2268230312, flags: UpdateBlockFlags(3), layer: 0 }
+  22022 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+## /
+## /!sleep 1 0 0
+## slept: Ok(())
+  25250 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 0 }, block_runtime_id: 3323536883, flags: UpdateBlockFlags(3), layer: 0 }
+  25250 actor   SetSpawnPosition SetSpawnPosition { spawn_type: Player, player_position: BlockCoordinates { x: 0, y: 64, z: 0 }, dimension: 0, world_position: BlockCoordinates { x: 1, y: 64, z: 0 } }
+  25250 actor   CorrectPlayerMovePrediction CorrectPlayerMovePrediction { prediction_type: Player, position: Vec3f { x: 1.5, y: 64.90625, z: 0.5 }, delta: Vec3f { x: 0.0, y: 0.0, z: 0.0 }, rotation: Vec2f { x: 0.0, z: 0.0 }, angular_velocity: None, on_ground: true, tick: 523 }
+  25250 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 0 }, block_runtime_id: 3323536883, flags: UpdateBlockFlags(3), layer: 0 }
+  25250 actor   SetEntityData SetEntityData { runtime_entity_id: 1, metadata: [MetadataDictionaryItem { key: PlayerFlags, type: Byte, legacy_type: 0, value: Default(Byte(2)) }, MetadataDictionaryItem { key: PlayerBedPosition, type: Vec3i, legacy_type: 6, value: Default(Vec3i(Vec3i { x: 1, y: 64, z: 0 })) }], properties: EntityProperties { ints: [], floats: [] }, tick: 0 }
+  25250 watcher SetEntityData SetEntityData { runtime_entity_id: 1, metadata: [MetadataDictionaryItem { key: PlayerFlags, type: Byte, legacy_type: 0, value: Default(Byte(2)) }, MetadataDictionaryItem { key: PlayerBedPosition, type: Vec3i, legacy_type: 6, value: Default(Vec3i(Vec3i { x: 1, y: 64, z: 0 })) }], properties: EntityProperties { ints: [], floats: [] }, tick: 0 }
+  25250 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 0 }, block_runtime_id: 3323536883, flags: UpdateBlockFlags(3), layer: 0 }
+  25250 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 0 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 1 }
+  25251 watcher MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 1.5, y: 64.90625, z: 0.5 }, pitch: 0.0, yaw: 0.0, head_yaw: 0.0, mode: Normal, on_ground: true, ridden_runtime_id: 0, teleport: None, tick: 523 }
+  25251 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 65, z: 0 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  25251 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 65, z: 0 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 1 }
+  25251 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 63, z: 0 }, block_runtime_id: 2150698529, flags: UpdateBlockFlags(3), layer: 0 }
+  25251 watcher Animate Animate { action_id: SwingArm, runtime_entity_id: 1, data: 0.0, has_swing_source: false, swing_source: None }
+  25251 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 63, z: 0 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 1 }
+  26171 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 18143, paused: false }] }) }
+  26171 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 18143, paused: false }] }) }
+## /
+## /
+## /time set 1000
+  28272 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 1000, paused: false }] }) }
+  28272 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.time.set\",\"with\":{\"rawtext\":[{\"text\":\"1000\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  28272 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 1000, paused: false }] }) }
+  28272 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 0 }, block_runtime_id: 2268230312, flags: UpdateBlockFlags(3), layer: 0 }
+  28272 actor   CommandOutput success_count=1 data=None commands.time.set success=true ["1000"]
+  28273 actor   Animate Animate { action_id: WakeUp, runtime_entity_id: 1, data: 0.0, has_swing_source: false, swing_source: None }
+  28273 watcher SetEntityData SetEntityData { runtime_entity_id: 1, metadata: [MetadataDictionaryItem { key: PlayerFlags, type: Byte, legacy_type: 0, value: Default(Byte(0)) }], properties: EntityProperties { ints: [], floats: [] }, tick: 0 }
+  28273 watcher MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 0.5, y: 65.72001, z: 0.5 }, pitch: 0.0, yaw: 0.0, head_yaw: 0.0, mode: Normal, on_ground: true, ridden_runtime_id: 0, teleport: None, tick: 607 }
+  28273 actor   SetEntityData SetEntityData { runtime_entity_id: 1, metadata: [MetadataDictionaryItem { key: PlayerFlags, type: Byte, legacy_type: 0, value: Default(Byte(0)) }], properties: EntityProperties { ints: [], floats: [] }, tick: 0 }
+  28273 actor   CorrectPlayerMovePrediction CorrectPlayerMovePrediction { prediction_type: Player, position: Vec3f { x: 0.5, y: 65.72001, z: 0.5 }, delta: Vec3f { x: 0.0, y: -0.0784, z: 0.0 }, rotation: Vec2f { x: 0.0, z: 0.0 }, angular_velocity: None, on_ground: true, tick: 607 }
+  28273 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 0 }, block_runtime_id: 2268230312, flags: UpdateBlockFlags(3), layer: 0 }
+  28371 watcher MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 0.5, y: 65.64161, z: 0.5 }, pitch: 31.799343, yaw: -90.0, head_yaw: -90.0, mode: Normal, on_ground: false, ridden_runtime_id: 0, teleport: None, tick: 608 }
+  28421 watcher MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 0.5, y: 65.62001, z: 0.5 }, pitch: 31.799343, yaw: -90.0, head_yaw: -90.0, mode: Normal, on_ground: true, ridden_runtime_id: 0, teleport: None, tick: 610 }
+## /
+## /
+## /
+## /tp @s @e[type=armor_stand]
+  32321 actor   MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 0.5, y: 65.62001, z: 0.5 }, pitch: 31.799343, yaw: -90.0, head_yaw: -90.0, mode: Teleport, on_ground: true, ridden_runtime_id: 0, teleport: Some(MovePlayerTeleport { cause: Command, source_entity_type: Unknown(1) }), tick: 686 }
+  32322 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.tp.successVictim\",\"with\":{\"rawtext\":[{\"text\":\"Armor Stand\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  32322 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.tp.success\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor\"},{\"text\":\"Armor Stand\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  32322 actor   CommandOutput success_count=1 data=None commands.tp.success success=true ["CmdActor", "Armor Stand"]
+  32420 watcher MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 0.5, y: 65.62001, z: 0.5 }, pitch: 31.799343, yaw: -90.0, head_yaw: -90.0, mode: Normal, on_ground: false, ridden_runtime_id: 0, teleport: None, tick: 688 }
+  32471 watcher MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 0.5, y: 65.62001, z: 0.5 }, pitch: 31.799343, yaw: -90.0, head_yaw: -90.0, mode: Normal, on_ground: true, ridden_runtime_id: 0, teleport: None, tick: 689 }
+## /time set 18000
+  33322 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 18000, paused: false }] }) }
+  33322 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 18000, paused: false }] }) }
+  33322 actor   CommandOutput success_count=1 data=None commands.time.set success=true ["18000"]
+  33322 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.time.set\",\"with\":{\"rawtext\":[{\"text\":\"18000\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /
+## /fill ~1 ~ ~ ~1 ~ ~1 air
+  35321 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 0 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  35321 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.fill.success\",\"with\":{\"rawtext\":[{\"text\":\"1\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  35321 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 0 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  35321 actor   CommandOutput success_count=1 data=None commands.fill.success success=true ["1"]
+## /setblock ~1 ~ ~ bed
+  36322 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 0 }, block_runtime_id: 2268230312, flags: UpdateBlockFlags(3), layer: 0 }
+  36322 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+  36322 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 0 }, block_runtime_id: 2268230312, flags: UpdateBlockFlags(3), layer: 0 }
+  36322 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /
+## /!sleep 1 0 0
+## slept: Ok(())
+  39197 actor   SetSpawnPosition SetSpawnPosition { spawn_type: Player, player_position: BlockCoordinates { x: 0, y: 64, z: 0 }, dimension: 0, world_position: BlockCoordinates { x: 1, y: 64, z: 0 } }
+  39198 actor   CorrectPlayerMovePrediction CorrectPlayerMovePrediction { prediction_type: Player, position: Vec3f { x: 1.5, y: 64.90625, z: 0.5 }, delta: Vec3f { x: 0.0, y: 0.0, z: 0.0 }, rotation: Vec2f { x: 0.0, z: 0.0 }, angular_velocity: None, on_ground: true, tick: 804 }
+  39198 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 0 }, block_runtime_id: 3323536883, flags: UpdateBlockFlags(3), layer: 0 }
+  39198 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 0 }, block_runtime_id: 3323536883, flags: UpdateBlockFlags(3), layer: 0 }
+  39198 watcher SetEntityData SetEntityData { runtime_entity_id: 1, metadata: [MetadataDictionaryItem { key: PlayerFlags, type: Byte, legacy_type: 0, value: Default(Byte(2)) }, MetadataDictionaryItem { key: PlayerBedPosition, type: Vec3i, legacy_type: 6, value: Default(Vec3i(Vec3i { x: 1, y: 64, z: 0 })) }], properties: EntityProperties { ints: [], floats: [] }, tick: 0 }
+  39198 actor   SetEntityData SetEntityData { runtime_entity_id: 1, metadata: [MetadataDictionaryItem { key: PlayerFlags, type: Byte, legacy_type: 0, value: Default(Byte(2)) }, MetadataDictionaryItem { key: PlayerBedPosition, type: Vec3i, legacy_type: 6, value: Default(Vec3i(Vec3i { x: 1, y: 64, z: 0 })) }], properties: EntityProperties { ints: [], floats: [] }, tick: 0 }
+  39198 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 0 }, block_runtime_id: 3323536883, flags: UpdateBlockFlags(3), layer: 0 }
+  39198 watcher MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 1.5, y: 64.90625, z: 0.5 }, pitch: 0.0, yaw: 0.0, head_yaw: 0.0, mode: Normal, on_ground: true, ridden_runtime_id: 0, teleport: None, tick: 804 }
+  39198 watcher Animate Animate { action_id: SwingArm, runtime_entity_id: 1, data: 0.0, has_swing_source: false, swing_source: None }
+  39198 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 0 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 1 }
+  39198 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 65, z: 0 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  39198 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 18113, paused: false }] }) }
+  39199 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 65, z: 0 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 1 }
+  39199 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 63, z: 0 }, block_runtime_id: 2150698529, flags: UpdateBlockFlags(3), layer: 0 }
+  39199 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 63, z: 0 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 1 }
+  39199 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 18113, paused: false }] }) }
+## /
+## /
+## /setblock ~1 ~ ~ air
+  42321 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 2, y: 63, z: 0 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  42321 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+  42321 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 2, y: 63, z: 0 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  42321 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /
+## /
+## /
+## /tp @s @e[type=armor_stand]
+  46323 actor   Animate Animate { action_id: WakeUp, runtime_entity_id: 1, data: 0.0, has_swing_source: false, swing_source: None }
+  46323 actor   MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 0.5, y: 65.62001, z: 0.5 }, pitch: 0.0, yaw: 0.0, head_yaw: 0.0, mode: Teleport, on_ground: true, ridden_runtime_id: 0, teleport: Some(MovePlayerTeleport { cause: Command, source_entity_type: Unknown(1) }), tick: 961 }
+  46323 actor   SetEntityData SetEntityData { runtime_entity_id: 1, metadata: [MetadataDictionaryItem { key: PlayerFlags, type: Byte, legacy_type: 0, value: Default(Byte(0)) }], properties: EntityProperties { ints: [], floats: [] }, tick: 0 }
+  46323 actor   CorrectPlayerMovePrediction CorrectPlayerMovePrediction { prediction_type: Player, position: Vec3f { x: 0.5, y: 65.62001, z: 0.5 }, delta: Vec3f { x: 0.0, y: 0.0, z: 0.0 }, rotation: Vec2f { x: 0.0, z: 0.0 }, angular_velocity: None, on_ground: true, tick: 961 }
+  46323 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 0 }, block_runtime_id: 2268230312, flags: UpdateBlockFlags(3), layer: 0 }
+  46323 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.tp.successVictim\",\"with\":{\"rawtext\":[{\"text\":\"Armor Stand\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  46323 actor   CommandOutput success_count=1 data=None commands.tp.success success=true ["CmdActor", "Armor Stand"]
+  46323 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 0 }, block_runtime_id: 2268230312, flags: UpdateBlockFlags(3), layer: 0 }
+  46323 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.tp.success\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor\"},{\"text\":\"Armor Stand\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  46323 watcher SetEntityData SetEntityData { runtime_entity_id: 1, metadata: [MetadataDictionaryItem { key: PlayerFlags, type: Byte, legacy_type: 0, value: Default(Byte(0)) }], properties: EntityProperties { ints: [], floats: [] }, tick: 0 }
+  46323 watcher MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 0.5, y: 65.62001, z: 0.5 }, pitch: 0.0, yaw: 0.0, head_yaw: 0.0, mode: Normal, on_ground: true, ridden_runtime_id: 0, teleport: None, tick: 961 }
+  46421 watcher MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 0.5, y: 65.62001, z: 0.5 }, pitch: 0.0, yaw: 0.0, head_yaw: 0.0, mode: Normal, on_ground: false, ridden_runtime_id: 0, teleport: None, tick: 963 }
+  46520 watcher MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 0.5, y: 65.62001, z: 0.5 }, pitch: 0.0, yaw: 0.0, head_yaw: 0.0, mode: Normal, on_ground: true, ridden_runtime_id: 0, teleport: None, tick: 965 }
+## /time set 18000
+  47371 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 18000, paused: false }] }) }
+  47371 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 18000, paused: false }] }) }
+  47371 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.time.set\",\"with\":{\"rawtext\":[{\"text\":\"18000\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  47371 actor   CommandOutput success_count=1 data=None commands.time.set success=true ["18000"]
+## /
+## /time set 1000
+  49370 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 1000, paused: false }] }) }
+  49371 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 1000, paused: false }] }) }
+  49371 actor   CommandOutput success_count=1 data=None commands.time.set success=true ["1000"]
+  49371 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.time.set\",\"with\":{\"rawtext\":[{\"text\":\"1000\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /fill ~-2 ~ ~-2 ~4 ~1 ~2 air
+  50373 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 0 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  50373 actor   CommandOutput success_count=1 data=None commands.fill.success success=true ["1"]
+  50373 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 1, y: 64, z: 0 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  50373 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.fill.success\",\"with\":{\"rawtext\":[{\"text\":\"1\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamemode creative @s
+  51372 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"gameMode.changed\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.creative\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  51372 actor   CommandOutput success_count=1 data=None commands.gamemode.success.self success=true ["%createWorldScreen.gameMode.creative"]
+  51372 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamemode.success.self\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.creative\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  51770 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 1048, paused: false }] }) }
+  51771 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 1048, paused: false }] }) }
+## /
+probe exit 0

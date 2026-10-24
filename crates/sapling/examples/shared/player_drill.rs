@@ -1,11 +1,13 @@
-//! The hurt, smother, hunger, eat, tire, toil, armour and effects drills of bds_command_probe: a
-//! player harmed, killed and risen again (docs/research/player-damage.md, effects.md). A zombie's
-//! and what food does besides feeding: hunt_drill.rs.
+//! The hurt, smother, hunger, eat and tire drills of bds_command_probe: a player harmed, killed
+//! and risen again (docs/research/player-damage.md). Toil, armour, effects and beds:
+//! armour_drill.rs; a zombie's and what food does besides feeding: hunt_drill.rs.
 
 use std::time::Duration;
 
 use acacia_bot::Bot;
 
+#[path = "armour_drill.rs"]
+mod armour;
 #[path = "feedback_drill.rs"]
 mod feedback;
 #[path = "foes_drill.rs"]
@@ -21,12 +23,21 @@ mod world;
 #[path = "use_drill.rs"]
 mod uses;
 
-/// Does what a drill's `!` line asks of the actor: `!eat` holds use on what it holds, `!jump`,
-/// `!walk` and `!sprint` hold those keys until `!stop`, `!break x y z` breaks, `!click x y z` clicks and
-/// `!place x y z` puts what it holds on the block that far from its feet. False for any other line.
 /// A player's eyes are this far over its feet.
 const EYES: f32 = 1.62;
 
+/// The block `offset` (three whole numbers) from the actor's feet.
+fn from_feet(actor: &Bot, offset: &str) -> Option<[i32; 3]> {
+    let offset: Vec<i32> = offset.split(' ').filter_map(|part| part.parse().ok()).collect();
+    let feet = actor.movement().and_then(|movement| movement.position()).map(|at| at.map(|c| c.floor() as i32))?;
+    let &[x, y, z] = &offset[..] else { return None };
+    Some([feet[0] + x, feet[1] + y, feet[2] + z])
+}
+
+/// Does what a drill's `!` line asks of the actor: `!eat` holds use on what it holds, `!jump`,
+/// `!walk` and `!sprint` hold those keys until `!stop`, `!break x y z` breaks, `!click x y z` clicks,
+/// `!place x y z` puts what it holds on and `!sleep x y z` lies in the block that far from its feet,
+/// and `!wake` leaves its bed. False for any other line.
 pub async fn act(actor: &mut Bot, line: &str) -> bool {
     let keys = |actor: &mut Bot, forward: f32, sprint: bool, jump: bool| {
         if let Some(controls) = actor.controls() {
@@ -34,10 +45,8 @@ pub async fn act(actor: &mut Bot, line: &str) -> bool {
         }
     };
     if let Some((places, offset)) = line.strip_prefix("!click ").map(|offset| (false, offset)).or(line.strip_prefix("!place ").map(|offset| (true, offset))) {
-        let offset: Vec<i32> = offset.split(' ').filter_map(|part| part.parse().ok()).collect();
-        let feet = actor.movement().and_then(|movement| movement.position()).map(|at| at.map(|c| c.floor() as i32));
-        if let (Some(feet), &[x, y, z]) = (feet, &offset[..]) {
-            let (at, up) = ([feet[0] + x, feet[1] + y, feet[2] + z], acacia_bot::interact::Face::Up);
+        if let Some(at) = from_feet(actor, offset) {
+            let up = acacia_bot::interact::Face::Up;
             match places {
                 true => println!("## placed: {:?}", actor.place_block(at, up).await),
                 false => println!("## clicked: {:?}", actor.use_item_on_block(at, up).await),
@@ -54,17 +63,22 @@ pub async fn act(actor: &mut Bot, line: &str) -> bool {
         }
         return true;
     }
-    if let Some(offset) = line.strip_prefix("!break ") {
-        let offset: Vec<i32> = offset.split(' ').filter_map(|part| part.parse().ok()).collect();
-        let feet = actor.movement().and_then(|movement| movement.position()).map(|at| at.map(|c| c.floor() as i32));
-        if let (Some(feet), &[x, y, z]) = (feet, &offset[..]) {
-            println!("## broke: {:?}", actor.break_block([feet[0] + x, feet[1] + y, feet[2] + z]).await);
+    if let Some(at) = line.strip_prefix("!break ") {
+        if let Some(at) = from_feet(actor, at) {
+            println!("## broke: {:?}", actor.break_block(at).await);
+        }
+        return true;
+    }
+    if let Some(at) = line.strip_prefix("!sleep ") {
+        if let Some(at) = from_feet(actor, at) {
+            println!("## slept: {:?}", actor.sleep(at).await);
         }
         return true;
     }
     match line {
         // The use goes on as the bot is polled after (`Bot::consume`).
         "!eat" => drop(tokio::time::timeout(Duration::from_millis(1), actor.consume()).await),
+        "!wake" => println!("## woke: {:?}", actor.wake().await),
         "!jump" => keys(actor, 0.0, false, true),
         "!walk" => keys(actor, 1.0, false, false),
         "!sprint" => keys(actor, 1.0, true, false),
@@ -82,6 +96,7 @@ pub const HURT_SHOWN: &[&str] = &[
     "MobEffect", "SetPlayerGameType", "UpdatePlayerGameType", "RemoveEntity", "AddPlayer", "AddItemEntity", "AddEntity", "InventoryContent", "InventorySlot", "MobEquipment", "MobArmorEquipment",
     "SetSpawnPosition", "CorrectPlayerMovePrediction", "PlayStatus", "ChangeDimension", "SpawnExperienceOrb", "CompletedUsingItem", "ItemStackResponse",
 ];
+const WAKE_SHOWN: &[&str] = &["UpdateBlock", "SetEntityData", "MovePlayer", "PlayerAction", "Animate", "Text", "SetSpawnPosition", "LevelSoundEvent", "CorrectPlayerMovePrediction"];
 
 /// The lines and shown packets of the drill `name`, if it is one of these.
 pub fn drill(name: &str) -> Option<(Vec<String>, &'static [&'static str])> {
@@ -153,9 +168,10 @@ pub fn drill(name: &str) -> Option<(Vec<String>, &'static [&'static str])> {
         "item-names" => (world::item_names(), world::ITEM_NAMES_SHOWN),
         "placing2" => (world::placing2(), world::PLACING_SHOWN),
         "daylight" => (world::daylight(), world::PLACING_SHOWN),
-        "toil" => (toil(), HURT_SHOWN),
-        "armour" => (armour(), HURT_SHOWN),
-        "effects" => (effects(), HURT_SHOWN),
+        "toil" => (armour::toil(), HURT_SHOWN),
+        "armour" => (armour::armour(), HURT_SHOWN),
+        "effects" => (armour::effects(), HURT_SHOWN),
+        "wake" => (armour::wake(), WAKE_SHOWN),
         _ => return uses::named(name),
     })
 }
@@ -262,68 +278,5 @@ pub fn tire() -> Vec<String> {
         wait(&mut lines, 2);
     }
     lines.extend(["gamemode creative @s", ""].map(String::from));
-    lines
-}
-
-
-/// The actor, in survival: breaks four blocks of dirt and one of stone by hand, hits a cow three
-/// times and an armour stand once, and swings at nothing.
-pub fn toil() -> Vec<String> {
-    let mut lines: Vec<String> = ["kill @e[type=!player]", "", "fill ~-3 ~-1 ~-3 ~8 ~-1 ~8 stone", "fill ~-3 ~ ~-3 ~8 ~6 ~8 air", "gamemode survival @s", ""].map(String::from).into();
-    for at in 2..6 {
-        lines.extend([format!("setblock ~1 ~ ~{at} dirt"), format!("!break 1 0 {at}"), String::new()]);
-    }
-    lines.extend(["setblock ~1 ~1 ~ stone", "!break 1 1 0", "", "summon cow ~2 ~ ~"].map(String::from));
-    for _ in 0..3 {
-        lines.extend(["!hit cow", "", ""].map(String::from));
-    }
-    lines.extend(["kill @e[type=cow]", "summon armor_stand ~2 ~ ~", "", "!hit armor_stand", "", "damage @s 2", "", "", "gamemode creative @s", "kill @e[type=!player]", ""].map(String::from));
-    lines
-}
-
-/// The actor, in survival, hit for 5 by `/damage` as an entity's attack: bare, in a leather and an
-/// iron chestplate, in all of iron, of diamond and of netherite; then for 2 in the netherite by
-/// each other cause.
-pub fn armour() -> Vec<String> {
-    let mut lines: Vec<String> = ["kill @e[type=!player]", "", "fill ~-3 ~-1 ~-3 ~8 ~-1 ~8 stone", "fill ~-3 ~ ~-3 ~8 ~6 ~8 air", "gamemode survival @s", ""].map(String::from).into();
-    let wear = |lines: &mut Vec<String>, part: &str, item: &str| lines.push(format!("replaceitem entity @s slot.armor.{part} 0 {item}"));
-    let hit = |lines: &mut Vec<String>, harm: &str| lines.extend([format!("damage @s {harm}"), String::new(), "effect @s instant_health 1 4".into(), String::new()]);
-    hit(&mut lines, "5 entity_attack");
-    for chestplate in ["leather_chestplate", "iron_chestplate"] {
-        wear(&mut lines, "chest", chestplate);
-        hit(&mut lines, "5 entity_attack");
-    }
-    for metal in ["iron", "diamond", "netherite"] {
-        for (part, piece) in [("head", "helmet"), ("chest", "chestplate"), ("legs", "leggings"), ("feet", "boots")] {
-            wear(&mut lines, part, &format!("{metal}_{piece}"));
-        }
-        hit(&mut lines, "5 entity_attack");
-    }
-    for cause in ["", " fall", " fire", " drowning", " suffocation", " lava"] {
-        hit(&mut lines, &format!("2{cause}"));
-    }
-    lines.extend(["gamemode creative @s", "clear @s", ""].map(String::from));
-    lines
-}
-
-/// The actor, in survival, under `/effect`: healed and harmed at once by two strengths, mended by
-/// regeneration at two, poisoned to its last health, withered, made quick, and cleared.
-pub fn effects() -> Vec<String> {
-    let mut lines: Vec<String> = ["kill @e[type=!player]", "", "fill ~-3 ~-1 ~-3 ~8 ~-1 ~8 stone", "fill ~-3 ~ ~-3 ~8 ~6 ~8 air", "gamemode survival @s", ""].map(String::from).into();
-    let wait = |lines: &mut Vec<String>, seconds: usize| lines.extend(std::iter::repeat_n(String::new(), seconds));
-    lines.extend(["damage @s 18", "", "effect @s instant_health 1 0", "", "effect @s instant_health 1 1", "", "effect @s instant_health 1 4", ""].map(String::from));
-    lines.extend(["effect @s instant_damage 1 0", "", "effect @s instant_health 1 4", "", "effect @s instant_damage 1 1", "", "damage @s 4", ""].map(String::from));
-    lines.push("effect @s regeneration 6 0".into());
-    wait(&mut lines, 8);
-    lines.push("effect @s regeneration 3 2 true".into());
-    wait(&mut lines, 5);
-    lines.extend(["effect @s instant_health 1 4", "", "effect @s poison 30 0"].map(String::from));
-    wait(&mut lines, 28);
-    lines.extend(["effect @s clear", "", "effect @s instant_health 1 4", "", "effect @s poison 3 1"].map(String::from));
-    wait(&mut lines, 5);
-    lines.extend(["effect @s instant_health 1 4", "", "effect @s wither 5 0"].map(String::from));
-    wait(&mut lines, 7);
-    lines.extend(["effect @s instant_health 1 4", "", "effect @s speed 3 1", "", "effect @s speed 3 0", "", "effect @s speed 0", "", "effect @s nosuch 3 1", "effect @s regeneration", "effect @s regeneration 5 300", "effect @s clear", "effect @s clear", ""].map(String::from));
-    lines.extend(["gamemode creative @s", "effect @s poison 3 1", "", "", "", "", ""].map(String::from));
     lines
 }
