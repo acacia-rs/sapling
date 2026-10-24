@@ -141,6 +141,15 @@ pub fn mob_air(id: u64, air: i16) -> SetEntityData {
     SetEntityData { runtime_entity_id: id, metadata: vec![item], properties: EntityProperties { ints: Vec::new(), floats: Vec::new() }, tick: 0 }
 }
 
+/// The mob `id`'s flags, where `BREATHING` came or went, and its breath, where that changed, in
+/// one packet as BDS sends them (research/captures/bds-kill.txt); `None` where neither did.
+pub fn mob_breath(id: u64, flags: Option<MetadataFlags1>, air: Option<i16>) -> Option<SetEntityData> {
+    let flags = flags.map(|flags| MetadataDictionaryItem { key: Key::Flags, r#type: Type::Long, legacy_type: 7, value: Value::Flags(flags) });
+    let air = air.map(|air| mob_air(id, air).metadata.remove(0));
+    let metadata: Vec<_> = flags.into_iter().chain(air).collect();
+    (!metadata.is_empty()).then(|| SetEntityData { runtime_entity_id: id, metadata, properties: EntityProperties { ints: Vec::new(), floats: Vec::new() }, tick: 0 })
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

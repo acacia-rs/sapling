@@ -96,6 +96,7 @@ fn spawn(world: &mut World, layer: Entity, kind: &str, feet: [f32; 3], reason: S
     give_legs(world, entity, kind);
     give_health(world, entity, kind, None, 0);
     let id = world.get::<NetId>(entity)?.0;
+    harm::first_breath(world, entity, layer, id, kind, &body);
     entities::after_announcing(world, layer, [x, y, z], vec![spawn_sound(id, kind, &body)]);
     let unique_id = entities::new_unique_id(world, entity)?;
     entities::keep(world, entity, layer, unique_id, sapling_world::new_actor(unique_id, kind, feet, [0.0; 3]));

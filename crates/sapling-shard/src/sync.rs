@@ -108,6 +108,15 @@ impl Told {
         Some(Flags(shown.told))
     }
 
+    /// [`Told::set_flag`], `None` too where viewers already knew `flag` to be so.
+    pub fn change_flag(&mut self, flag: Flags, on: bool) -> Option<Flags> {
+        let told = self.flags?.told;
+        if (told & flag.0 != 0) == on {
+            return None;
+        }
+        self.set_flag(flag, on)
+    }
+
     /// The flags of the entity `id` when they changed, after a tick that moved it by `gone`, a
     /// liquid holding it up in place of gravity (`lifted`) and lava `burning` it. On BDS `MOVING`
     /// shows whether the tick before moved it far (docs/research/moving-flag.md); the rest go with

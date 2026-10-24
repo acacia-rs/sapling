@@ -6,7 +6,8 @@ use crate::common;
 use std::sync::{Arc, Mutex};
 
 use acacia_proto::RawPacket;
-use acacia_proto::packets::{EntityEvent, EntityEventEventId, MobEffect, MobEffectEventId};
+use acacia_proto::packets::{EntityEvent, EntityEventEventId, MobEffect, MobEffectEventId, SetEntityData};
+use acacia_proto::types::{MetadataDictionaryItemValue as MetaValue, MetadataDictionaryItemValueDefault as Plain, MetadataFlags1};
 use common::{Harness, all};
 use sapling_api::{Block, DamageCause, Effect, EntityId, GameMode, PlayerId, ShardCtx};
 
@@ -52,6 +53,22 @@ fn a_hurt_mob_flashes_and_a_dead_one_takes_no_more() {
     let (killed, _) = ask(&mut h, move |ctx| (ctx.hurt_entity(id, 100.0, DamageCause::Generic), ctx.hurt_entity(id, 1.0, DamageCause::Generic)));
     assert_eq!(killed, (true, false), "the harder hit kills it, the next finds it dying");
     assert!(!ask(&mut h, |ctx| ctx.hurt_entity(EntityId(9999), 1.0, DamageCause::Generic)).0, "no such mob");
+}
+
+#[test]
+fn a_mob_breathes_until_water_covers_its_head_and_holds_its_breath_under_it() {
+    let (mut h, cow) = cow();
+    let breathing = |sent: &[RawPacket]| -> Vec<(bool, Option<i16>)> {
+        let told = all::<SetEntityData>(sent).into_iter().filter(|data| data.runtime_entity_id == cow.0);
+        let flags = |data: &SetEntityData| data.metadata.iter().find_map(|item| if let MetaValue::Flags(flags) = item.value { Some(flags.contains(MetadataFlags1::BREATHING)) } else { None });
+        let air = |data: &SetEntityData| data.metadata.iter().find_map(|item| if let MetaValue::Default(Plain::Short(air)) = item.value { Some(air) } else { None });
+        told.filter_map(|data| flags(&data).map(|on| (on, air(&data)))).collect()
+    };
+    let (_, sent) = ask(&mut h, |_| ());
+    assert_eq!(breathing(&sent), [], "it was told breathing already");
+    let (_, sent) = ask(&mut h, |ctx| assert!((65..=67).all(|y| ctx.set_block([4, y, 0], &Block::new("water")))));
+    let (_, later) = ask(&mut h, |_| ());
+    assert_eq!([breathing(&sent), breathing(&later)].concat(), [(false, Some(299))], "the flag goes with its first held breath");
 }
 
 #[test]
