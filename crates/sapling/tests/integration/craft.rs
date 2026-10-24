@@ -6,7 +6,7 @@ use crate::common;
 use acacia_bot::interact::Face;
 use acacia_bot::workstation::CraftMode;
 use acacia_bot::{Bot, BotConfig};
-use sapling::{Block, Handler, Item, Player, Server, ShardCtx, Slot};
+use sapling::{Block, Handler, Item, Player, ShardCtx, Slot};
 
 /// A ground block two east of the spawn, which the server makes dirt with air above it.
 const BASE: [i32; 3] = [common::SPAWN.0 + 2, common::GROUND, common::SPAWN.1];
@@ -38,7 +38,7 @@ fn held(bot: &Bot, name: &str) -> u32 {
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn a_bot_crafts_in_its_own_grid_and_at_a_table() {
-    let server = common::start(Server::builder().handler(Kit)).await;
+    let server = common::start(crate::common::builder().handler(Kit)).await;
     let mut alice = common::spawn(common::client(&server, "Alice"), BotConfig::default()).await;
     alice.wait_ticks(20).await.expect("connected");
 

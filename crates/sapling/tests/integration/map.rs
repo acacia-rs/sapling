@@ -18,7 +18,7 @@ use sapling::Server;
 use sapling_leveldb::{ChunkKey, LevelDbWorld};
 
 async fn start() -> Server {
-    common::start(Server::builder()).await
+    common::start(crate::common::builder()).await
 }
 
 /// A blob store that counts what the server had to send.

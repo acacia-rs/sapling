@@ -16,7 +16,7 @@ use acacia_bot::state::{Entity, Trackers};
 use acacia_bot::{Bot, BotConfig, BotEvent, Events};
 use acacia_world::BlockAccess;
 use common::{GROUND, SPAWN};
-use sapling::{Command, Handler, Output, Player, Sender, Server, ShardCtx};
+use sapling::{Command, Handler, Output, Player, Sender, ShardCtx};
 
 const WAIT: Duration = Duration::from_secs(10);
 /// The widest view a shard gives (`ShardConfig::max_view_radius`), in chunks.
@@ -172,7 +172,7 @@ fn column(bot: &Bot) -> [i32; 3] {
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn a_bot_goes_to_a_world_on_another_shard_and_back() {
-    let builder = Server::builder().default_world_name("hub").add_platform_on(1, "arena").handler_each(|| Gate).command::<WorldCommand>().command::<Where>();
+    let builder = crate::common::builder().default_world_name("hub").add_platform_on(1, "arena").handler_each(|| Gate).command::<WorldCommand>().command::<Where>();
     let server = common::start(builder).await;
     assert_eq!(server.shard_count(), 2);
     let travelling = BotConfig { subscribe: PacketFilter::none().with(CommandOutput::ID).with(LevelChunk::ID), events: Events::CHAT, ..BotConfig::default() };
@@ -196,10 +196,11 @@ async fn a_bot_goes_to_a_world_on_another_shard_and_back() {
     assert_swapped(&held.0, &held.1, radius_sq, ARENA_CHUNK);
     assert!(seen(&bob, "Alice").is_none() && bob.state().player_list.by_name("Alice").is_some(), "gone from the world, not from the server");
     // She stands on the arena's platform, which her client was sent: put there once, and again
-    // for each tick she fell before the platform arrived.
+    // for each tick she fell before the platform arrived (wall time, so more ticks when they run faster).
     assert_eq!((column(&alice), block(&alice, [0, 64, 0]), block(&alice, [0, 65, 0])), ([0, 65, 0], "minecraft:stone", "minecraft:air"));
     let to_arena = alice.movement().expect("physics").teleports;
-    assert!((1..=4).contains(&to_arena), "{to_arena} teleports");
+    let most = 4 * common::clock::tick_scale().ceil() as u32;
+    assert!((1..=most).contains(&to_arena), "{to_arena} teleports");
 
     // The other shard hears her: a command, and chat that stays in her world.
     assert_eq!(run(&mut alice, "where").await, (r#"arena of ["arena", "hub"], 1 here"#.to_owned(), true));
@@ -220,7 +221,7 @@ async fn a_bot_goes_to_a_world_on_another_shard_and_back() {
     assert_eq!(column(&alice), [SPAWN.0, GROUND + 1, SPAWN.1]);
     assert_ne!(block(&alice, [SPAWN.0, GROUND, SPAWN.1]), "minecraft:air");
     let teleports = alice.movement().expect("physics").teleports;
-    assert!((to_arena + 1..=to_arena + 4).contains(&teleports), "{teleports} teleports after {to_arena}");
+    assert!((to_arena + 1..=to_arena + most).contains(&teleports), "{teleports} teleports after {to_arena}");
     assert_eq!((alice.disconnect_reason(), bob.disconnect_reason()), (None, None));
 
     // She leaves from the arena: the hub's shard unlists her and hears where she left.

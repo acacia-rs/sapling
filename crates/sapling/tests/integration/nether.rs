@@ -10,7 +10,7 @@ use acacia_bot::proto::Packet;
 use acacia_bot::proto::packets::{ChangeDimension, CommandOutput, LevelChunk, MovePlayer, PlayerAction};
 use acacia_bot::BotConfig;
 use common::{GROUND, SPAWN};
-use sapling::{Server, World};
+use sapling::World;
 use travel::{Operators, arrive, block, run};
 
 /// Where the Nether's floor is, around the fixture's spawn divided by 8.
@@ -28,7 +28,7 @@ fn nether() -> World {
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn a_bot_lights_a_portal_goes_through_it_and_comes_back_through_the_one_made() {
-    let server = common::start(Server::builder().nether(nether()).handler(Operators).vanilla_commands()).await;
+    let server = common::start(crate::common::builder().nether(nether()).handler(Operators).vanilla_commands()).await;
     let subscribed = PacketFilter::none().with(MovePlayer::ID).with(ChangeDimension::ID).with(PlayerAction::ID).with(CommandOutput::ID);
     let mut alice = common::spawn(common::client(&server, "Alice"), BotConfig { subscribe: subscribed, ..BotConfig::default() }).await;
     let (x, y, z) = (SPAWN.0 + 3, GROUND + 1, SPAWN.1);
@@ -60,7 +60,7 @@ async fn a_bot_lights_a_portal_goes_through_it_and_comes_back_through_the_one_ma
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn a_bot_goes_to_the_nether_by_command_and_back() {
-    let server = common::start(Server::builder().nether(nether()).handler(Operators).vanilla_commands()).await;
+    let server = common::start(crate::common::builder().nether(nether()).handler(Operators).vanilla_commands()).await;
     let subscribed = PacketFilter::none().with(MovePlayer::ID).with(ChangeDimension::ID).with(PlayerAction::ID).with(CommandOutput::ID).with(LevelChunk::ID);
     let mut alice = common::spawn(common::client(&server, "Alice"), BotConfig { subscribe: subscribed, ..BotConfig::default() }).await;
     alice.wait_ticks(20).await.expect("connected");

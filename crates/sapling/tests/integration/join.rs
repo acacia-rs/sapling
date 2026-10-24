@@ -24,7 +24,7 @@ impl Handler for Report {
 }
 
 async fn start() -> (Server, mpsc::UnboundedReceiver<String>) {
-    start_with(Server::builder()).await
+    start_with(crate::common::builder()).await
 }
 
 async fn start_with(builder: ServerBuilder) -> (Server, mpsc::UnboundedReceiver<String>) {
@@ -110,7 +110,7 @@ async fn a_physics_bot_stands_on_the_platform() {
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn a_physics_bot_joins_over_nethernet() {
     let host_key = sapling::host_key(&std::env::temp_dir().join("sapling-join-test-host.key")).expect("a host key");
-    let (server, mut events) = start_with(Server::builder().nethernet(NetherNet::new(host_key))).await;
+    let (server, mut events) = start_with(crate::common::builder().nethernet(NetherNet::new(host_key))).await;
     let config = BotConfig { physics: true, ..BotConfig::default() };
     let client = client(&server, "Webber").transport(TransportKind::NetherNet);
     let mut bot = Bot::connect(client, config).await.expect("the bot spawns");

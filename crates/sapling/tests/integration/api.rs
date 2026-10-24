@@ -155,7 +155,7 @@ async fn join(server: &Server, name: &str) -> (Bot, Vec<String>, Vec<BotEvent>) 
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn a_bot_uses_commands_forms_and_the_hud() {
-    let builder = Server::builder().handler(Hub).command::<HubCommand>().command::<Ask>().command::<Clear>();
+    let builder = crate::common::builder().handler(Hub).command::<HubCommand>().command::<Ask>().command::<Clear>();
     let server = common::start(builder).await;
     let (mut alice, commands, events) = join(&server, "Alice").await;
     assert_eq!(commands, ["hub", "ask", "clear"]);

@@ -18,7 +18,7 @@ use acacia_bot::proto::types::{
 use acacia_bot::{ActionError, Bot, BotConfig, BotEvent};
 use acacia_world::BlockAccess;
 use common::{GROUND, SPAWN};
-use sapling::{Block, GameMode, Handler, Player, Server, ShardCtx};
+use sapling::{Block, GameMode, Handler, Player, ShardCtx};
 
 const STONE: &str = "minecraft:stone";
 const DIRT: &str = "minecraft:dirt";
@@ -108,7 +108,7 @@ async fn updates(bot: &mut Bot) -> BTreeSet<([i32; 3], u32)> {
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn bots_break_and_place_blocks_and_adventure_is_refused() {
-    let server = common::start(Server::builder().handler(Plot::default())).await;
+    let server = common::start(crate::common::builder().handler(Plot::default())).await;
     let mut alice = common::spawn(common::client(&server, "Alice"), BotConfig::default()).await;
     let mut bob = common::spawn(common::client(&server, "Bob"), BotConfig::default()).await;
     all(&mut [&mut alice, &mut bob], 20).await;

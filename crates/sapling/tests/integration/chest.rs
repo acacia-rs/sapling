@@ -10,7 +10,7 @@ use acacia_bot::proto::Packet;
 use acacia_bot::proto::packets::AddItemEntity;
 use acacia_bot::{Bot, BotConfig};
 use common::packet;
-use sapling::{Block, Handler, Item, Player, Server, ShardCtx, Slot};
+use sapling::{Block, Handler, Item, Player, ShardCtx, Slot};
 
 /// A ground block two east of the spawn, which the server makes dirt with air above it.
 const BASE: [i32; 3] = [common::SPAWN.0 + 2, common::GROUND, common::SPAWN.1];
@@ -41,7 +41,7 @@ fn count(bot: &Bot, slot: SlotRef) -> u16 {
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn a_chest_keeps_what_one_bot_puts_in_for_the_next_and_spills_when_broken() {
-    let server = common::start(Server::builder().handler(Kit)).await;
+    let server = common::start(crate::common::builder().handler(Kit)).await;
     let mut alice = common::spawn(common::client(&server, "Alice"), BotConfig::default()).await;
     let watching = PacketFilter::none().with(AddItemEntity::ID);
     let mut bob = common::spawn(common::client(&server, "Bob"), BotConfig { subscribe: watching, ..BotConfig::default() }).await;

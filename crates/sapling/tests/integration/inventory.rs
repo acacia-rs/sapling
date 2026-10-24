@@ -3,8 +3,6 @@
 
 use crate::common;
 
-use std::time::Duration;
-
 use acacia_bot::client::PacketFilter;
 use acacia_bot::items::SlotRef;
 use acacia_bot::proto::Packet;
@@ -12,7 +10,7 @@ use acacia_bot::proto::packets::{AddItemEntity, MobEquipment, TakeItemEntity};
 use acacia_bot::{ActionError, Bot, BotConfig};
 use acacia_bot::interact::Face;
 use common::packet;
-use sapling::{Block, DropEvent, Handler, Item, Player, Server, ShardCtx, Slot};
+use sapling::{Block, DropEvent, Handler, Item, Player, ShardCtx, Slot};
 
 /// A ground block two east of the spawn, which the server makes dirt with air above it.
 const BASE: [i32; 3] = [common::SPAWN.0 + 2, common::GROUND, common::SPAWN.1];
@@ -44,7 +42,7 @@ fn count(bot: &Bot, slot: u8) -> u16 {
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn a_bot_moves_swaps_and_throws_its_items_and_takes_them_back() {
-    let server = common::start(Server::builder().handler(Kit)).await;
+    let server = common::start(crate::common::builder().handler(Kit)).await;
     let mut alice = common::spawn(common::client(&server, "Alice"), BotConfig::default()).await;
     let watching = PacketFilter::none().with(AddItemEntity::ID).with(TakeItemEntity::ID).with(MobEquipment::ID);
     let mut bob = common::spawn(common::client(&server, "Bob"), BotConfig { subscribe: watching, ..BotConfig::default() }).await;
@@ -84,7 +82,8 @@ async fn a_bot_moves_swaps_and_throws_its_items_and_takes_them_back() {
     assert_eq!(count(&alice, 1), 19);
     let started = std::time::Instant::now();
     alice.break_block([BASE[0], BASE[1] + 1, BASE[2]]).await.expect("a break that took its time is taken");
-    assert!(started.elapsed() > Duration::from_secs(7), "{:?}", started.elapsed());
+    let took = crate::common::clock::tick_ms(started);
+    assert!(took > 7000, "{took} ms");
 
     for bot in [&mut alice, &mut bob] {
         assert_eq!(bot.disconnect_reason(), None);

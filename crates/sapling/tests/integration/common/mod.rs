@@ -15,6 +15,14 @@ pub const GROUND: i32 = 71;
 /// A walk BDS let the same bot make on this terrain.
 pub const GOAL: (i32, i32) = (45, 213);
 
+#[path = "../../../examples/shared/clock.rs"]
+pub mod clock;
+
+/// `Server::builder()` ticking `ACACIA_TICK_SCALE` times faster, as the bots then run too (tools/remote-test.sh).
+pub fn builder() -> ServerBuilder {
+    Server::builder().tick(clock::scaled(sapling_shard::TICK))
+}
+
 pub fn fixture() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR")).join("../sapling-leveldb/tests/fixtures/world")
 }

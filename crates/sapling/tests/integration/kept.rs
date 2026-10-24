@@ -6,7 +6,7 @@ use crate::common;
 use std::time::Duration;
 
 use acacia_bot::{Bot, BotConfig};
-use sapling::{Command, Handler, Item, Output, Player, Sender, Server, ShardCtx};
+use sapling::{Command, Handler, Item, Output, Player, Sender, ShardCtx};
 
 const DIAMOND: &str = "minecraft:diamond";
 
@@ -40,7 +40,7 @@ fn held(bot: &Bot, name: &str) -> u32 {
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn what_a_player_gains_on_another_shard_is_there_when_it_joins_again() {
-    let builder = Server::builder().default_world_name("hub").add_platform_on(1, "arena").handler_each(|| Prize).command::<ToArena>();
+    let builder = crate::common::builder().default_world_name("hub").add_platform_on(1, "arena").handler_each(|| Prize).command::<ToArena>();
     let server = common::start(builder).await;
     assert_eq!(server.shard_count(), 2);
 
