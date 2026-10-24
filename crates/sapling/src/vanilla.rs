@@ -14,11 +14,13 @@ mod execute;
 mod names;
 mod players;
 mod rules;
+mod teleport;
 
 use blocks::{Fill, SetBlock, TestForBlock};
 use containers::ReplaceItem;
 use damage::Damage;
-use players::{Clear, DifficultyCommand, GameModeCommand, Give, Kill, Summon, Teleport};
+use players::{Clear, DifficultyCommand, GameModeCommand, Give, Kill, Summon};
+use teleport::Teleport;
 use rules::GameRule;
 
 use sapling_api::command::Selector;
@@ -129,7 +131,11 @@ fn origin(ctx: &ShardCtx<'_>, sender: &Sender) -> [f32; 3] {
 
 /// The players `selector` names, in the sender's world.
 fn players(ctx: &ShardCtx<'_>, sender: &Sender, selector: &Selector) -> Vec<Player> {
-    let here = origin(ctx, sender);
+    players_near(ctx, sender, selector, origin(ctx, sender))
+}
+
+/// [`players`], `@p` the nearest to `here` (an `/execute at`'s place).
+fn players_near(ctx: &ShardCtx<'_>, sender: &Sender, selector: &Selector, here: [f32; 3]) -> Vec<Player> {
     let distance = |player: &Player| ctx.position(player.id).map_or(f32::MAX, |position| (0..3).map(|axis| (position.feet[axis] - here[axis]).powi(2)).sum());
     match selector {
         Selector::Sender => sender.player().cloned().into_iter().collect(),

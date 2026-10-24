@@ -18,6 +18,18 @@ impl EntityBackend for Ctx<'_> {
         Some(summoned)
     }
 
+    fn summon_as(&mut self, by: Option<PlayerId>, kind: &str, feet: [f32; 3], yaw: f32, event: Option<&str>) -> Option<EntityId> {
+        let made_alone = [ORB, crate::dragon::CRYSTAL, tnt::KIND].contains(&kind);
+        let summoned = match made_alone {
+            true => self.spawn_entity(kind, feet)?,
+            false => super::spawn_as(self.world, worlds::current(self.world), kind, feet, sapling_api::SpawnReason::Command, yaw, event)?,
+        };
+        if let Some(player) = by.and_then(|by| self.entity(by)) {
+            super::summoned::show(self.world, player, kind);
+        }
+        Some(summoned)
+    }
+
     /// An orb is an orb, worth 1 and thrown as orbs are, as BDS's `/summon xp_orb` makes one.
     fn spawn_entity(&mut self, kind: &str, feet: [f32; 3]) -> Option<EntityId> {
         let layer = worlds::current(self.world);

@@ -48,6 +48,13 @@ impl ShardCtx<'_> {
         self.backend.summon(by, kind, feet)
     }
 
+    /// [`ShardCtx::summon`] (by the console where `by` is `None`) facing `yaw`, and made as its kind's
+    /// spawn `event` makes one where the shard knows it (`minecraft:panda_aggressive`), as
+    /// `/summon <kind> <position> <yaw> <pitch> <event>` does.
+    pub fn summon_as(&mut self, by: Option<PlayerId>, kind: &str, feet: [f32; 3], yaw: f32, event: Option<&str>) -> Option<EntityId> {
+        self.backend.summon_as(by, kind, feet, yaw, event)
+    }
+
     /// An entity of this shard; `None` once it is gone.
     pub fn entity(&self, id: EntityId) -> Option<EntityInfo> {
         self.backend.entity(id)
@@ -111,6 +118,12 @@ pub trait EntityBackend {
     fn spawn_entity(&mut self, kind: &str, feet: [f32; 3]) -> Option<EntityId>;
     fn summon(&mut self, _by: PlayerId, kind: &str, feet: [f32; 3]) -> Option<EntityId> {
         self.spawn_entity(kind, feet)
+    }
+    fn summon_as(&mut self, by: Option<PlayerId>, kind: &str, feet: [f32; 3], _yaw: f32, _event: Option<&str>) -> Option<EntityId> {
+        match by {
+            Some(by) => self.summon(by, kind, feet),
+            None => self.spawn_entity(kind, feet),
+        }
     }
     fn entity(&self, id: EntityId) -> Option<EntityInfo>;
     fn entities(&self) -> Vec<EntityInfo>;

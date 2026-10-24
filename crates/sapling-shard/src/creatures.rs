@@ -78,6 +78,11 @@ impl Creature {
 /// A mob of `kind` with its feet at `feet` in `layer`: one BDS was recorded announcing, in a
 /// loaded column. It is heard appearing.
 fn spawn(world: &mut World, layer: Entity, kind: &str, feet: [f32; 3], reason: SpawnReason) -> Option<EntityId> {
+    spawn_as(world, layer, kind, feet, reason, 0.0, None)
+}
+
+/// [`spawn`] facing `yaw`, and as its kind's spawn `event` makes it (a panda's gene) where known.
+fn spawn_as(world: &mut World, layer: Entity, kind: &str, feet: [f32; 3], reason: SpawnReason, yaw: f32, event: Option<&str>) -> Option<EntityId> {
     let size = sapling_data::mob_size(kind)?;
     let level = &world.get::<Layer>(layer)?.world;
     let [x, y, z] = feet.map(|c| c.floor() as i32);
@@ -88,13 +93,16 @@ fn spawn(world: &mut World, layer: Entity, kind: &str, feet: [f32; 3], reason: S
         return None;
     }
     let body = Body::new(feet, [0.0; 3], size);
-    let gene = genes::roll(world, kind);
-    let entity = entities::spawn_mob(world, layer, kind, body, feet, |id| Some(announcement(id, kind, &body, None, None, 0.0, gene.map_or(0, |gene| gene.0))))?;
+    let gene = event.and_then(|event| genes::of_event(kind, event)).or_else(|| genes::roll(world, kind));
+    let entity = entities::spawn_mob(world, layer, kind, body, feet, |id| Some(announcement(id, kind, &body, None, None, yaw, gene.map_or(0, |gene| gene.0))))?;
     world.entity_mut(entity).insert(Creature { look: None });
     if let Some(gene) = gene {
         world.entity_mut(entity).insert(gene);
     }
     give_legs(world, entity, kind);
+    if let Some(mut legs) = world.get_mut::<legs::Legs>(entity) {
+        legs.yaw = yaw;
+    }
     give_health(world, entity, kind, None, 0);
     let id = world.get::<NetId>(entity)?.0;
     harm::first_breath(world, entity, layer, id, kind, &body);
