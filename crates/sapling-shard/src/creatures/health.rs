@@ -188,6 +188,16 @@ impl Health {
         due
     }
 
+    /// Whether it was off the ground when its last tick ended.
+    pub(crate) fn is_airborne(&self) -> bool {
+        self.peak.is_some()
+    }
+
+    /// What the landing of this tick will cost, the next.
+    pub(crate) fn landing(&self) -> Option<f32> {
+        self.landed.map(|(harm, _)| harm)
+    }
+
     /// How far it has fallen when it comes from `from` to `to`.
     pub(crate) fn dropped(&self, from: f32, to: f32) -> f32 {
         self.peak.map_or(from, |peak| peak.max(from)).max(to) - to
