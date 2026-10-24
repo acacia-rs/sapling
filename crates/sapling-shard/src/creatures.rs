@@ -29,6 +29,7 @@ mod paths;
 mod rams;
 mod shooting;
 mod shown;
+mod slimes;
 mod spells;
 mod splashes;
 mod strolling;
@@ -142,6 +143,7 @@ fn give_legs(world: &mut World, entity: Entity, kind: &str) {
         world.entity_mut(entity).insert((legs::Legs::default(), strolling::Stroll::default()));
     }
     hunting::arm(world, entity, kind);
+    slimes::arm(world, entity, kind);
     teleports::arm(world, entity, kind);
     rams::arm(world, entity, kind);
     spells::arm(world, entity, kind);
@@ -237,6 +239,7 @@ pub(crate) fn tick(world: &mut World) {
         }
         if thinks {
             floating::tick(world, entity, layer, &kind, &start);
+            slimes::tick(world, entity, &start);
         }
         let Some((body, packets)) = entities::step(world, entity, layer, id, physics_of(&kind), 0.0) else { continue };
         blocks::to_viewers(world, layer, body.at.map(|c| c.floor() as i32), &packets);
