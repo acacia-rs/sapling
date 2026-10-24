@@ -33,7 +33,7 @@ pub(crate) struct Tell {
 
 impl Command for Tell {
     fn run(self, ctx: &mut ShardCtx<'_>, sender: &Sender, out: &mut Output) {
-        let told = players(ctx, sender, &self.target);
+        let told = players(ctx, sender, Some(&self.target));
         if told.is_empty() {
             return no_target(out);
         }

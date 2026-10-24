@@ -1,0 +1,124 @@
+minecraft:allay	allay mob
+minecraft:armadillo	armadillo mob
+minecraft:armor_stand	armor_stand inanimate mob
+minecraft:arrow	projectile arrow
+minecraft:axolotl	aquatic axolotl mob
+minecraft:bat	bat mob
+minecraft:bee	bee mob arthropod
+minecraft:blaze	blaze monster mob
+minecraft:boat	boat inanimate
+minecraft:bogged	bogged skeleton monster mob undead
+minecraft:breeze	breeze monster mob
+minecraft:breeze_wind_charge_projectile	projectile wind_charge wind_charge_projectile breeze_wind_charge_projectile
+minecraft:camel	camel mob
+minecraft:camel_husk	camel_husk mob undead
+minecraft:cat	cat mob
+minecraft:cave_spider	cavespider monster arthropod mob
+minecraft:chest_boat	boat inanimate
+minecraft:chest_minecart	minecart inanimate
+minecraft:chicken	chicken mob
+minecraft:cod	aquatic cod fish
+minecraft:command_block_minecart	minecart inanimate
+minecraft:copper_golem	copper_golem mob
+minecraft:cow	cow mob
+minecraft:creaking	creaking monster mob
+minecraft:creeper	creeper monster mob
+minecraft:cushion	cushion inanimate actor
+minecraft:dolphin	aquatic dolphin mob
+minecraft:donkey	donkey mob
+minecraft:dragon_fireball	projectile dragon_fireball
+minecraft:drowned	drowned baby_undead zombie undead monster mob
+minecraft:egg	projectile egg
+minecraft:elder_guardian	aquatic guardian_elder monster mob
+minecraft:ender_dragon	dragon mob
+minecraft:ender_pearl	projectile ender_pearl
+minecraft:enderman	enderman monster mob
+minecraft:endermite	endermite arthropod monster mob
+minecraft:evocation_illager	evocation_illager monster illager mob
+minecraft:fireball	projectile fireball
+minecraft:fireworks_rocket	projectile fireworks_rocket
+minecraft:fishing_hook	projectile fishing_hook
+minecraft:fox	fox mob
+minecraft:frog	frog mob
+minecraft:ghast	ghast monster mob
+minecraft:glow_squid	aquatic squid mob
+minecraft:goat	goat animal
+minecraft:guardian	aquatic guardian monster mob
+minecraft:happy_ghast	happy_ghast mob
+minecraft:hoglin	hoglin hoglin_baby mob hoglin_adult hoglin_huntable
+minecraft:hopper_minecart	minecart inanimate
+minecraft:horse	horse mob
+minecraft:husk	husk zombie undead monster mob
+minecraft:iron_golem	irongolem mob
+minecraft:lightning_bolt	lightning
+minecraft:lingering_potion	projectile lingering_potion
+minecraft:llama	llama mob
+minecraft:llama_spit	projectile llama_spit
+minecraft:magma_cube	magmacube monster mob
+minecraft:minecart	minecart inanimate
+minecraft:mooshroom	mushroomcow mob
+minecraft:mule	mule mob
+minecraft:nautilus	aquatic nautilus mob
+minecraft:npc	npc mob
+minecraft:ocelot	ocelot mob
+minecraft:panda	panda
+minecraft:parched	parched skeleton monster mob undead
+minecraft:parrot	parrot_tame mob parrot_wild
+minecraft:phantom	phantom undead monster mob
+minecraft:pig	pig mob
+minecraft:piglin	piglin baby_piglin monster mob piglin_hunter
+minecraft:piglin_brute	piglin adult_piglin piglin_brute monster
+minecraft:pillager	pillager monster illager mob
+minecraft:player	player
+minecraft:polar_bear	polarbear mob
+minecraft:pufferfish	aquatic pufferfish fish
+minecraft:rabbit	rabbit mob
+minecraft:ravager	monster ravager mob
+minecraft:salmon	aquatic salmon fish
+minecraft:sheep	sheep mob
+minecraft:shulker	shulker monster mob
+minecraft:shulker_bullet	projectile shulker_bullet
+minecraft:silverfish	silverfish monster mob arthropod
+minecraft:skeleton	skeleton undead monster mob
+minecraft:skeleton_horse	skeletonhorse undead mob
+minecraft:slime	slime monster mob
+minecraft:small_fireball	projectile small_fireball
+minecraft:sniffer	sniffer mob
+minecraft:snow_golem	snowgolem mob
+minecraft:snowball	projectile snowball
+minecraft:spider	spider monster mob arthropod
+minecraft:splash_potion	projectile splash_potion
+minecraft:squid	aquatic squid mob
+minecraft:stray	stray skeleton monster mob undead
+minecraft:strider	strider mob
+minecraft:sulfur_cube	sulfur_cube animal mob
+minecraft:tadpole	aquatic tadpole mob
+minecraft:thrown_trident	projectile thrown_trident
+minecraft:tnt	tnt inanimate
+minecraft:tnt_minecart	minecart inanimate
+minecraft:trader_llama	trader_llama llama mob
+minecraft:tripod_camera	tripodcamera inanimate mob
+minecraft:tropicalfish	aquatic tropicalfish fish
+minecraft:turtle	aquatic turtle baby_turtle mob
+minecraft:vex	vex monster mob
+minecraft:villager	villager mob
+minecraft:villager_v2	villager mob
+minecraft:vindicator	vindicator monster illager mob
+minecraft:wandering_trader	wandering_trader mob
+minecraft:warden	warden monster mob
+minecraft:wind_charge_projectile	projectile wind_charge wind_charge_projectile
+minecraft:witch	witch monster mob
+minecraft:wither	wither skeleton monster undead mob
+minecraft:wither_skeleton	wither monster undead skeleton mob
+minecraft:wither_skull	projectile wither_skull
+minecraft:wither_skull_dangerous	projectile wither_skull_dangerous
+minecraft:wolf	wolf mob
+minecraft:xp_bottle	projectile xp_bottle
+minecraft:xp_orb	inanimate
+minecraft:zoglin	zoglin zoglin_adult undead monster mob zoglin_baby
+minecraft:zombie	zombie undead monster mob
+minecraft:zombie_horse	zombiehorse undead mob
+minecraft:zombie_nautilus	aquatic zombie_nautilus undead monster mob
+minecraft:zombie_pigman	baby_undead baby_zombie_pigman undead monster mob zombie_pigman
+minecraft:zombie_villager	armorer zombie_villager zombie undead monster mob cartographer weaponsmith butcher cleric farmer fisherman fletcher leatherworker librarian shepherd toolsmith
+minecraft:zombie_villager_v2	cartographer zombie_villager zombie undead monster mob armorer baby_undead weaponsmith butcher cleric farmer fisherman fletcher librarian leatherworker stone_mason nitwit unskilled shepherd toolsmith

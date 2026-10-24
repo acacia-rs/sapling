@@ -45,7 +45,7 @@ impl Command for EffectCommand {
         if amplifier > STRONGEST {
             return out.translate("commands.generic.num.tooBig", vec![amplifier.to_string(), STRONGEST.to_string()], false);
         }
-        let found = players(ctx, sender, &self.target);
+        let found = players(ctx, sender, Some(&self.target));
         if found.is_empty() {
             return no_target(out);
         }

@@ -109,6 +109,13 @@ table of the kinds whose hunting was drilled (`docs/research/mob-attacks.md`): `
 `speed` is `minecraft:movement` times its attack's `speed_multiplier`, `sees` the `max_dist` of its
 `nearest_attackable_target` for players (16 where it names none).
 
+## Mob families
+
+`mob-families.tsv` (read by `families.rs`, tested by a selector's `family=`): each entity's
+`minecraft:type_family` from the vanilla behaviour packs, by `data/generate/mob-families.py`: its own
+components', or, for a kind that has them only in component groups, every group's together. Kinds the
+packs give no family (items, falling blocks) are not listed.
+
 ## Liquid reactions
 
 `liquid-reactions.tsv` (read by `liquid_reaction.rs`): for each of 736 vanilla blocks, what water

@@ -4,15 +4,10 @@
 use sapling_api::command::{Args, CommandSpec, CommandSyntax, Coords, Overload, Parameter, ParameterSpec, ParseError, Selector};
 use sapling_api::{Command, DamageCause, Difficulty, GameMode, Item, Output, Permission, Sender, ShardCtx};
 
-use super::{display_name, entities, no_target, origin, players, tell_target};
+use super::{display_name, no_target, players, targets, tell_target};
 
 fn namespaced(name: &str) -> String {
     if name.contains(':') { name.to_owned() } else { format!("minecraft:{name}") }
-}
-
-/// The players a missing target means: the sender.
-fn or_sender(ctx: &ShardCtx<'_>, sender: &Sender, target: Option<&Selector>) -> Vec<sapling_api::Player> {
-    players(ctx, sender, target.unwrap_or(&Selector::Sender))
 }
 
 /// `/tp [victim] <destination>`: the first word is a target unless it is a coordinate, and the
@@ -81,13 +76,14 @@ impl Teleport {
     /// Each player moved is told where to, as BDS tells them; into `dimension` of its world when
     /// one is named (`/execute in`), the way BDS changes a player's dimension.
     pub(crate) fn run_in(self, ctx: &mut ShardCtx<'_>, sender: &Sender, out: &mut Output, dimension: Option<i32>) {
-        let here = origin(ctx, sender);
+        let here = ctx.origin(sender);
         let (to, at) = match &self.to {
             Destination::Place(coords) => (coords.from(here), None),
             // The nearest of those it names.
             Destination::At(selector) => {
-                let named = players(ctx, sender, selector).into_iter().filter_map(|player| Some((ctx.position(player.id)?.feet, player.name)));
-                let all = named.chain(entities(ctx, selector).into_iter().map(|entity| (entity.feet, display_name(&entity.kind))));
+                let (players, entities) = targets(ctx, sender, Some(selector));
+                let named = players.into_iter().filter_map(|player| Some((ctx.position(player.id)?.feet, player.name)));
+                let all = named.chain(entities.into_iter().map(|entity| (entity.feet, display_name(&entity.kind))));
                 let far = |feet: &[f32; 3]| (0..3).map(|axis| (feet[axis] - here[axis]).powi(2)).sum::<f32>();
                 match all.min_by(|a, b| far(&a.0).total_cmp(&far(&b.0))) {
                     Some((feet, name)) => (feet, Some(name)),
@@ -95,7 +91,7 @@ impl Teleport {
                 }
             }
         };
-        let (moved_players, moved) = (or_sender(ctx, sender, self.target.as_ref()), self.target.as_ref().map_or_else(Vec::new, |target| entities(ctx, target)));
+        let (moved_players, moved) = targets(ctx, sender, self.target.as_ref());
         let [x, y, z] = to.map(|c| format!("{c:.2}"));
         for player in &moved_players {
             match (dimension, self.looks) {
@@ -129,7 +125,7 @@ impl Command for Give {
     fn run(self, ctx: &mut ShardCtx<'_>, sender: &Sender, out: &mut Output) {
         let item = Item::new(super::item_named(&self.item), self.amount.unwrap_or(1).max(1));
         let (shown, count) = (display_name(&item.name), item.count.to_string());
-        let given = players(ctx, sender, &self.player);
+        let given = players(ctx, sender, Some(&self.player));
         for player in &given {
             ctx.give(player.id, &item);
             tell_target(ctx, player.id, "commands.give.successRecipient", &[shown.clone(), count.clone()]);
@@ -157,7 +153,7 @@ pub(crate) struct Clear {
 impl Command for Clear {
     /// One line per player, as BDS answers.
     fn run(self, ctx: &mut ShardCtx<'_>, sender: &Sender, out: &mut Output) {
-        let cleared = or_sender(ctx, sender, self.player.as_ref());
+        let cleared = players(ctx, sender, self.player.as_ref());
         if cleared.is_empty() {
             return no_target(out);
         }
@@ -179,7 +175,7 @@ pub(crate) struct GameModeCommand {
 
 impl Command for GameModeCommand {
     fn run(self, ctx: &mut ShardCtx<'_>, sender: &Sender, out: &mut Output) {
-        let changed = or_sender(ctx, sender, self.player.as_ref());
+        let changed = players(ctx, sender, self.player.as_ref());
         // A parameter starting with `%` is a translation key too.
         let mode = format!("%createWorldScreen.gameMode.{}", format!("{:?}", self.mode).to_lowercase());
         if changed.is_empty() {
@@ -219,7 +215,7 @@ pub(crate) struct Summon {
 
 impl Command for Summon {
     fn run(self, ctx: &mut ShardCtx<'_>, sender: &Sender, out: &mut Output) {
-        let here = origin(ctx, sender);
+        let here = ctx.origin(sender);
         let at = self.position.map_or(here, |position| position.from(here));
         // BDS summons its newer zombie villager under the older one's name, and knows no other.
         let kind = Some(namespaced(&self.kind)).filter(|kind| kind != "minecraft:zombie_villager").unwrap_or_else(|| "minecraft:zombie_villager_v2".into());
@@ -238,8 +234,8 @@ impl Command for Kill {
     /// The players named die (`kill_player`: not those in creative), the sender where none is
     /// named, and so does every other entity named (`kill_entity`).
     fn run(self, ctx: &mut ShardCtx<'_>, sender: &Sender, out: &mut Output) {
-        let named = self.target.as_ref().map_or_else(Vec::new, |target| entities(ctx, target));
-        let mut killed: Vec<String> = or_sender(ctx, sender, self.target.as_ref()).into_iter().filter(|player| ctx.kill_player(player.id)).map(|player| player.name).collect();
+        let (players, named) = targets(ctx, sender, self.target.as_ref());
+        let mut killed: Vec<String> = players.into_iter().filter(|player| ctx.kill_player(player.id)).map(|player| player.name).collect();
         killed.extend(named.iter().filter(|entity| ctx.kill_entity(entity.id)).map(|entity| display_name(&entity.kind)));
         match killed.is_empty() {
             true => no_target(out),
@@ -261,7 +257,7 @@ pub(crate) struct Damage {
 
 impl Command for Damage {
     fn run(self, ctx: &mut ShardCtx<'_>, sender: &Sender, out: &mut Output) {
-        let found = players(ctx, sender, &self.target);
+        let found = players(ctx, sender, Some(&self.target));
         let names = || found.iter().map(|player| player.name.clone()).collect::<Vec<_>>().join(", ");
         // BDS fails `suffocation` for anyone (research/captures/bds-worn.txt).
         let Some(cause) = DamageCause::named(self.cause.as_deref().unwrap_or("none")).filter(|cause| *cause != DamageCause::Suffocation) else {
@@ -278,17 +274,17 @@ impl Command for Damage {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use sapling_api::command::Base;
 
     #[test]
     fn tp_takes_a_place_or_a_target_to_go_to_with_or_without_a_victim() {
         let sender = Sender::Console;
-        let parsed = |line: &str| Teleport::parse(&mut Args::new(line, 0, &sender, &[])).map(|tp| (tp.target, matches!(tp.to, Destination::At(Selector::Entities { .. }))));
-        let golem = Some(Selector::Entities { kind: Some("minecraft:iron_golem".into()) });
+        let parsed = |line: &str| Teleport::parse(&mut Args::new(line, 0, &sender, &[])).map(|tp| (tp.target, matches!(tp.to, Destination::At(Selector::Variable(Base::Entities, _)))));
         assert_eq!(parsed("~ ~8 ~").ok(), Some((None, false)));
-        assert_eq!(parsed("@s 1 2 3").ok(), Some((Some(Selector::Sender), false)));
-        assert_eq!(parsed("@s @e[type=iron_golem,c=1]").ok(), Some((Some(Selector::Sender), true)));
+        assert_eq!(parsed("@s 1 2 3").ok(), Some((Some(Selector::sender()), false)));
+        assert_eq!(parsed("@s @e[type=iron_golem, c=1]").ok(), Some((Some(Selector::sender()), true)));
         assert_eq!(parsed("@e[type=iron_golem]").ok(), Some((None, true)));
-        assert_eq!(golem.is_some() && parsed("@s").is_ok(), true, "alone, a target is where to");
+        assert!(matches!(parsed("@s"), Ok((None, false))), "alone, a target is where to");
         let looks = |line: &str| Teleport::parse(&mut Args::new(line, 0, &sender, &[])).ok().and_then(|tp| tp.looks);
         assert_eq!([looks("~ ~ ~4 -90 10"), looks("@s ~ ~ ~4 45"), looks("~ ~ ~4")], [Some([-90.0, 10.0]), Some([45.0, 0.0]), None]);
     }

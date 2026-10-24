@@ -10,7 +10,7 @@
 use sapling_api::command::{Args, BlockCoords, CommandSpec, CommandSyntax, Overload, ParamKind, Parameter, ParameterSpec, ParseError, Selector};
 use sapling_api::{Command, Item, Output, Permission, Sender, ShardCtx, Slot};
 
-use super::{display_name, no_target, origin, players};
+use super::{display_name, no_target, players};
 
 const SLOT_TYPE: &str = "slot.container";
 /// A player's slot types, and the inventory slot the first of each is; the hand is the held one.
@@ -102,7 +102,7 @@ impl Command for ReplaceItem {
         let bad_slot = |out: &mut Output, size: usize| out.translate("commands.replaceitem.badSlotNumber", vec![self.slot.to_string(), "0".into(), (size - 1).to_string()], false);
         match &self.target {
             Target::Block(position) => {
-                let pos = position.from(origin(ctx, sender));
+                let pos = position.from(ctx.origin(sender));
                 let Some(size) = ctx.container_size(pos) else {
                     let [x, y, z] = pos;
                     return out.translate("commands.replaceitem.noContainer", vec![format!("Pos({x},{y},{z})")], false);
@@ -114,7 +114,7 @@ impl Command for ReplaceItem {
                 out.translate("commands.replaceitem.success", vec![SLOT_TYPE.into(), slot.to_string(), count.to_string(), display_name(&name)], true);
             }
             Target::Entity(selector, kind) => {
-                let found = players(ctx, sender, selector);
+                let found = players(ctx, sender, Some(selector));
                 if found.is_empty() {
                     return no_target(out);
                 }

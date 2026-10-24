@@ -21,6 +21,9 @@ pub struct Fake {
     pub tick: u64,
     /// What listeners asked to change in the registry.
     pub deferred: Vec<crate::ListenerChange>,
+    /// Where players stand that are not at 1 2 3.
+    pub feet: HashMap<PlayerId, [f32; 3]>,
+    pub entities: Vec<crate::EntityInfo>,
     rules: HashMap<String, RuleValue>,
     state: HashMap<TypeId, State>,
 }
@@ -93,7 +96,7 @@ impl crate::WorldBackend for Fake {
     }
 }
 
-/// No entities: spawns are logged and refused.
+/// Only the entities a test puts in: spawns are logged and refused.
 impl crate::EntityBackend for Fake {
     fn spawn_entity(&mut self, kind: &str, feet: [f32; 3]) -> Option<crate::EntityId> {
         self.log.push(format!("spawn {kind} at {feet:?}"));
@@ -103,7 +106,7 @@ impl crate::EntityBackend for Fake {
         None
     }
     fn entities(&self) -> Vec<crate::EntityInfo> {
-        Vec::new()
+        self.entities.clone()
     }
     fn move_entity(&mut self, _: crate::EntityId, _: [f32; 3]) -> bool {
         false
@@ -177,7 +180,8 @@ impl Backend for Fake {
         self.players.clone()
     }
     fn position(&self, player: PlayerId) -> Option<Position> {
-        self.players.iter().any(|p| p.id == player).then_some(Position { feet: [1.0, 2.0, 3.0], yaw: 90.0, pitch: 0.0 })
+        let feet = self.feet.get(&player).copied().unwrap_or([1.0, 2.0, 3.0]);
+        self.players.iter().any(|p| p.id == player).then_some(Position { feet, yaw: 90.0, pitch: 0.0 })
     }
     fn spawn(&self) -> [f32; 3] {
         [0.5, 65.0, 0.5]
