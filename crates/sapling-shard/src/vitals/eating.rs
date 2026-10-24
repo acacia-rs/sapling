@@ -16,6 +16,9 @@ use crate::movement::{self, Motion};
 
 /// A burp is heard from this far under the eyes.
 const MOUTH: f32 = 0.1;
+/// An emptied bottle is heard from this far under the eyes and this far ahead of them.
+const BOTTLE_BELOW: f32 = 0.2;
+const BOTTLE_AHEAD: f32 = 0.2;
 
 /// A food being eaten: its item's network id, what it feeds, and the tick it is eaten in.
 #[derive(Clone, Copy)]
@@ -93,7 +96,17 @@ fn leave(world: &mut World, player: Entity, food: &sapling_data::Food) {
     }
 }
 
-/// The food is eaten: one less in the hand, the hunger fed, and a burp; a drink is not heard.
+/// A drink is gone: the bottle is heard emptied, under the eyes and ahead of them, as BDS's
+/// (research/captures/bds-drink.txt).
+// TODO: only drunk facing south (yaw 0): the way ahead is taken to turn with the yaw.
+fn drained(world: &mut World, player: Entity) {
+    let Some(position) = world.get::<Position>(player).copied() else { return };
+    let ([x, y, z], (sin, cos)) = (position.feet, position.yaw.to_radians().sin_cos());
+    let position = Vec3f { x: x - sin * BOTTLE_AHEAD, y: y + EYE_HEIGHT - BOTTLE_BELOW, z: z + cos * BOTTLE_AHEAD };
+    tell(world, player, &LevelSoundEvent { sound_id: "bottle.empty".into(), position, extra_data: -1, entity_type: String::new(), is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None });
+}
+
+/// The food is eaten: one less in the hand, the hunger fed, and a burp; a drink empties its bottle.
 fn finish(world: &mut World, player: Entity, meal: Meal) {
     let now = world.resource::<Tick>().0;
     let use_method = match (meal.food.drunk, meal.food.cures) {
@@ -114,6 +127,7 @@ fn finish(world: &mut World, player: Entity, meal: Meal) {
     tell(world, player, &hunger.told(id, now));
     show(world, player, false);
     if meal.food.drunk {
+        drained(world, player);
         return;
     }
     let position = Vec3f { x, y: y + EYE_HEIGHT - MOUTH, z };
