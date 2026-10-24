@@ -93,7 +93,8 @@ drops differ, nothing here knows.
 loot table from the vanilla behaviour packs (their `.brarchive`s, the newest pack version winning), the
 adult's in its default state, and every table those name, with old item names renamed (checked against
 `ItemRegistry.bin` by a test). Fox and piglin name tables no pack holds; slimes and magma cubes, whose
-loot goes by size, have none here.
+loot goes by size, have none here. A death is no one's or a player's (`Killer`), with the Looting it
+held (`enchant.rs`); a pet's kill counts as no one's.
 
 ## Mob traits
 

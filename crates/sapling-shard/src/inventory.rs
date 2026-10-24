@@ -4,6 +4,7 @@
 mod armour_wear;
 mod crafting;
 mod death;
+mod enchanted;
 mod equipment;
 mod give;
 mod plugin;
@@ -19,7 +20,7 @@ use sapling_world::ItemStack;
 use crate::components::Outgoing;
 use crate::experience::Experience;
 
-pub(crate) use armour_wear::wear_armour;
+pub(crate) use armour_wear::{wear_armour, wear_thorny};
 pub(crate) use crafting::clear_grid;
 pub(crate) use equipment::{announce, in_hand, screens, select, spawn_packets};
 pub(crate) use give::give_and_pop;

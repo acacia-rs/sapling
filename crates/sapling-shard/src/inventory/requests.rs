@@ -80,8 +80,10 @@ impl Applied {
 }
 
 /// Does every action of `request`, or fails at the first that cannot be done as asked, or at
-/// the end over a craft that did not use up what its recipe needs.
+/// the end over a craft that did not use up what its recipe needs or, out of creative, over a
+/// piece with Curse of Binding that left its slot.
 fn apply(inventory: &mut Inventory, request: &Request, creative: bool, at: Station) -> Result<Applied, ()> {
+    let bound = if creative { [None; ARMOR] } else { inventory.bound() };
     let mut applied = Applied::default();
     let mut craft: Option<Craft> = None;
     for action in &request.actions {
@@ -121,7 +123,7 @@ fn apply(inventory: &mut Inventory, request: &Request, creative: bool, at: Stati
         }
     }
     inventory.put(Place::Created, None);
-    craft.is_none_or(|craft| craft.is_paid()).then_some(applied).ok_or(())
+    (craft.is_none_or(|craft| craft.is_paid()) && inventory.keeps(&bound)).then_some(applied).ok_or(())
 }
 
 /// What BDS answers a request a container refused to hold an item in (a furnace's fuel slot asked

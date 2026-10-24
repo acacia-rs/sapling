@@ -19,6 +19,7 @@ mod daylight;
 mod dimension_saves;
 mod dimensions;
 mod dragon;
+mod enchantments;
 mod end;
 mod entities;
 mod eyes;

@@ -5,14 +5,13 @@
 
 use acacia_proto::nbt::Value;
 use bevy_ecs::prelude::*;
+use sapling_data::enchant::{self, Enchant};
 use sapling_world::{Tool, ToolKind};
 
 use super::{HOTBAR, Held, Inventory, Place, change};
 use crate::blocks::Dice;
 
 const DAMAGE: &str = "Damage";
-/// The `ench` id of Unbreaking.
-const UNBREAKING: i16 = 17;
 
 impl Inventory {
     pub(crate) fn has_helmet(&self) -> bool {
@@ -40,18 +39,14 @@ pub(super) fn set_damage(tag: &mut Option<Value>, damage: i32) {
     }
 }
 
-/// The chance in a hundred that a use wears the stack: all of them, unless it is marked
-/// `Unbreakable` (none) or has Unbreaking (100 over the level plus one).
-pub(super) fn wear_chance(held: &Held) -> u32 {
+/// The chance in a hundred that a use wears the stack, `armour` or not: all of them, unless it
+/// is marked `Unbreakable` (none) or has Unbreaking.
+pub(super) fn wear_chance(held: &Held, armour: bool) -> u32 {
     let tag = held.stack.tag.as_ref();
     if tag.and_then(|tag| tag.get("Unbreakable")) == Some(&Value::Byte(1)) {
         return 0;
     }
-    let level = match tag.and_then(|tag| tag.get("ench")) {
-        Some(Value::List(list)) => list.items.iter().find(|enchantment| enchantment.get("id") == Some(&Value::Short(UNBREAKING))).and_then(|enchantment| enchantment.get("lvl")),
-        _ => None,
-    };
-    if let Some(Value::Short(level)) = level { 100 / (u32::try_from(*level).unwrap_or(0) + 1) } else { 100 }
+    enchant::wear_chance(enchant::level(tag, Enchant::Unbreaking), armour)
 }
 
 impl Inventory {
@@ -82,7 +77,7 @@ impl Inventory {
 /// whether the whole use counts.
 pub(crate) fn wear_tool_in_hand(world: &mut World, player: Entity) {
     let Some(held) = world.get::<Inventory>(player).and_then(|inventory| inventory.in_hand().as_ref()) else { return };
-    let (Some(tool), chance) = (Tool::from_identifier(&held.stack.name), wear_chance(held)) else { return };
+    let (Some(tool), chance) = (Tool::from_identifier(&held.stack.name), wear_chance(held, false)) else { return };
     if chance < 100 && world.get_resource_or_insert_with(Dice::default).roll(100) >= chance {
         return;
     }

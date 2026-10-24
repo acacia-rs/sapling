@@ -15,6 +15,7 @@ mod drinks;
 mod bullets;
 mod charges;
 mod duels;
+mod enchanted;
 mod fireballs;
 mod genes;
 mod ghasts;
@@ -46,6 +47,7 @@ use shown::{announcement, head, physics_of, spawn_sound};
 pub(crate) use afflictions::breathed_on;
 pub(crate) use attacks::attacked;
 pub(crate) use blast::{Wreck, explode};
+pub(crate) use enchanted::thorned;
 pub(crate) use harm::{holds, is_full_block, touches};
 pub(crate) use health::{Cause, Health};
 pub(crate) use hunting::on_difficulty;
@@ -203,8 +205,12 @@ fn die(world: &mut World, entity: Entity, layer: Entity, kind: &str, body: &Body
         health.end();
         health.is_burning()
     });
+    let killer = match world.get::<attacks::Slain>(entity) {
+        Some(slain) => sapling_data::Killer::Player { looting: slain.1 },
+        None => sapling_data::Killer::None,
+    };
     if leaves_loot(world, layer) {
-        leave_loot(world, layer, kind, on_fire, body.at);
+        leave_loot(world, layer, kind, on_fire, killer, body.at);
     }
 }
 
@@ -212,10 +218,10 @@ fn leaves_loot(world: &World, layer: Entity) -> bool {
     world.get::<Layer>(layer).is_some_and(|layer| layer.world.level().rules.on(MOB_LOOT))
 }
 
-fn leave_loot(world: &mut World, layer: Entity, kind: &str, on_fire: bool, [x, y, z]: [f32; 3]) {
+fn leave_loot(world: &mut World, layer: Entity, kind: &str, on_fire: bool, killer: sapling_data::Killer, [x, y, z]: [f32; 3]) {
     let loot = {
         let mut dice = world.get_resource_or_insert_with(Dice::default);
-        sapling_data::mob_loot(kind, on_fire, &mut || dice.fraction())
+        sapling_data::mob_loot(kind, on_fire, killer, &mut || dice.fraction())
     };
     let Some(registry) = world.get::<Layer>(layer).map(|layer| layer.world.registry()) else { return };
     let stacks: Vec<_> = loot.into_iter().filter_map(|(name, count)| inventory::stored(&Item::new(name, count.min(64) as u8), registry)).collect();

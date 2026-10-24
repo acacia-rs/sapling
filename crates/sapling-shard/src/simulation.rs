@@ -97,6 +97,11 @@ impl Simulated {
         self.state.set_movement_attribute(movement);
     }
 
+    /// The Depth Strider level of the boots worn.
+    pub fn equip(&mut self, depth_strider: u8) {
+        self.state.equipment.depth_strider = i32::from(depth_strider);
+    }
+
     /// Steps one input over `world`; `None` for the first after a restart, which takes the
     /// client's place.
     fn advance(&mut self, world: &sapling_world::World, input: &PlayerAuthInput, feet: [f32; 3], on_ground: bool, using_item: bool) -> Option<Stepped> {

@@ -22,6 +22,7 @@ mod creatures;
 mod dimensions;
 mod dragon;
 mod drops;
+mod enchants;
 mod entities;
 mod experience;
 mod eyes;
