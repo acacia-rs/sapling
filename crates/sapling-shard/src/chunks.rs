@@ -29,10 +29,11 @@ pub(crate) const UNLOAD_INTERVAL: u64 = 100;
 /// passed are not generated.
 const CANCEL_INTERVAL: u64 = 10;
 
-/// Takes the columns the I/O threads loaded since the last tick.
-pub(crate) fn poll_worlds(mut layers: Query<&mut Layer>) {
+/// Takes the columns the I/O threads loaded since the last tick and lights each world anew.
+pub(crate) fn poll_and_relight_worlds(mut layers: Query<&mut Layer>) {
     for mut layer in &mut layers {
         layer.world.poll();
+        layer.world.relight();
     }
 }
 

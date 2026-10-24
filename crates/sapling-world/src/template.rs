@@ -9,6 +9,7 @@ use std::sync::Arc;
 use acacia_world::{BlockRegistry, Dimension};
 
 use crate::column::Column;
+use crate::light::{ColumnLight, Lights};
 use crate::storage::{Level, StorageError};
 use crate::{ChunkPos, World};
 
@@ -20,18 +21,25 @@ pub struct Template {
     /// The columns that hold actors: an arena's mobs start from them.
     with_actors: Vec<ChunkPos>,
     level: Level,
+    /// Lit whole: an arena copies a column's light only when it changes it.
+    light: Lights,
 }
 
 impl Template {
     /// Freezes a world as it is in memory: the columns written to it or loaded from its storage
-    /// ([`World::load_all`]), with everything a client can ask of them encoded now. Its storage
-    /// is let go, and what was not saved is not saved: a template only lives in memory.
-    pub fn of(world: World) -> Arc<Self> {
-        let World { dimension, dim, registry, columns, level, .. } = world;
+    /// ([`World::load_all`]), with everything a client can ask of them encoded and lit now. Its
+    /// storage is let go, and what was not saved is not saved: a template only lives in memory.
+    pub fn of(mut world: World) -> Arc<Self> {
+        world.relight();
+        let World { dimension, dim, registry, columns, level, light, .. } = world;
         columns.values().for_each(|column| column.warm(&registry));
         let mut with_actors: Vec<ChunkPos> = columns.iter().filter(|(_, column)| !column.actors().is_empty()).map(|(pos, _)| *pos).collect();
         with_actors.sort();
-        Arc::new(Self { dimension, dim, registry, columns, with_actors, level })
+        Arc::new(Self { dimension, dim, registry, columns, with_actors, level, light })
+    }
+
+    pub(crate) fn light(&self, pos: ChunkPos) -> Option<&ColumnLight> {
+        self.light.columns.get(&pos)
     }
 
     /// How many columns the template holds; the rest is void.
@@ -60,6 +68,7 @@ impl World {
             base: Some(template.clone()),
             base_actors_taken: false,
             players: crate::players::Players::default(),
+            light: Lights::sharing(template.light.props.clone()),
         }
     }
 
@@ -76,7 +85,10 @@ impl World {
     /// which. Does nothing to a world that is not an arena.
     pub fn reset(&mut self) -> Vec<ChunkPos> {
         match self.base {
-            Some(_) => self.columns.drain().map(|(pos, _)| pos).collect(),
+            Some(_) => {
+                self.light.retain(|_| false);
+                self.columns.drain().map(|(pos, _)| pos).collect()
+            }
             None => Vec::new(),
         }
     }
