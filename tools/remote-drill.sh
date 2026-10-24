@@ -15,8 +15,8 @@ case $target in
   sapling) run="TICK_SCALE=${TICK_SCALE:-} SAPLING_DRILL_WORLD=${SAPLING_DRILL_WORLD:-flat} bash tools/sapling-drill.sh ${SAPLING_PORT:-19183} $example drill.txt $words" build="--example $example --example drill_server" ;;
   *) echo "first argument: bds or sapling" >&2; exit 2 ;;
 esac
-retry ssh $opts testbox "cd $remote || exit; rm -f drill.log drill.done drill.txt; { nohup flock target/.busy sh -c '$cargo build -q -p sapling $build && $run; echo \$? >drill.done' >drill.log 2>&1 </dev/null & }" || exit 1
+retry ssh $opts $host "cd $remote || exit; rm -f drill.log drill.done drill.txt; { nohup flock target/.busy sh -c '$cargo build -q -p sapling $build && $run; echo \$? >drill.done' >drill.log 2>&1 </dev/null & }" || exit 1
 # Poll with short calls; a single long ssh would die with the link.
-until ssh $opts testbox "test -f $remote/drill.done" 2>/dev/null; do sleep 5; done
-retry ssh $opts testbox "cd $remote; tail -n 20 drill.log"
-retry scp $opts "testbox:$remote/drill.txt" "$out"
+until ssh $opts $host "test -f $remote/drill.done" 2>/dev/null; do sleep 5; done
+retry ssh $opts $host "cd $remote; tail -n 20 drill.log"
+retry scp $opts "$host:$remote/drill.txt" "$out"
