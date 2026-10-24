@@ -3,17 +3,21 @@
 
 use acacia_proto::nbt::{Nbt, Value};
 pub(crate) use acacia_proto::packets::UpdateBlockSyncedTransitionType as Transition;
-use acacia_proto::packets::{BlockEntityData, LevelEvent, LevelEventEvent, LevelSoundEvent, UpdateBlock, UpdateBlockSynced, UpdateSubchunkBlocks};
-use acacia_proto::types::{BlockCoordinates, BlockUpdate, BlockUpdateTransitionType, UpdateBlockFlags, Vec3f};
+use acacia_proto::packets::{BlockEntityData, LevelEvent, LevelEventEvent, LevelSoundEvent, UpdateBlock, UpdateBlockSynced};
+use acacia_proto::types::{BlockCoordinates, UpdateBlockFlags, Vec3f};
 use bevy_ecs::prelude::*;
 use bytes::Bytes;
 use sapling_api::{Block, BlockPos, Face};
 use sapling_world::{BlockEntity, BlockRegistry, ChunkPos};
 
+mod sections;
+
+pub(crate) use sections::{set_many, set_sectioned, show_together};
+
 use crate::components::{InLayer, Layer, Outgoing};
 
 /// BDS sets these two on every UpdateBlock it sends.
-const FLAGS: UpdateBlockFlags = UpdateBlockFlags(UpdateBlockFlags::NEIGHBORS.0 | UpdateBlockFlags::NETWORK.0);
+pub(crate) const FLAGS: UpdateBlockFlags = UpdateBlockFlags(UpdateBlockFlags::NEIGHBORS.0 | UpdateBlockFlags::NETWORK.0);
 /// `entity_unique_id` of a sound no entity made.
 const NO_ENTITY: i64 = -1;
 const PUNCH: [LevelEventEvent; 6] = [
@@ -150,54 +154,6 @@ pub(crate) fn set_network_only(world: &mut World, layer: Entity, pos: BlockPos, 
 /// [`set`] without telling anyone; [`tell_synced`] does, once the entity it was for exists.
 pub(crate) fn set_quietly(world: &mut World, layer: Entity, pos: BlockPos, id: u32) -> bool {
     write(world, layer, pos, id).is_some()
-}
-
-/// Writes `cells` as [`set_quietly`] does, in order, and shows the ones that changed as BDS
-/// showed a grown tree: an UpdateSubchunkBlocks per sub-chunk, sub-chunks as first written
-/// (research/captures/bds-grows.txt). How many changed.
-pub(crate) fn set_many(world: &mut World, layer: Entity, cells: &[(BlockPos, u32)]) -> usize {
-    let sections = write_by_section(world, layer, cells);
-    let changed = sections.iter().map(|(_, cells)| cells.len()).sum();
-    show_sections(world, layer, sections, false);
-    changed
-}
-
-/// [`set_many`], but a sub-chunk with one change is shown by an UpdateBlock, those first, as BDS
-/// showed the exit portal (research/captures/bds-dragon-fight.txt).
-pub(crate) fn set_sectioned(world: &mut World, layer: Entity, cells: &[(BlockPos, u32)]) {
-    let mut sections = write_by_section(world, layer, cells);
-    sections.sort_by_key(|(_, cells)| cells.len() > 1);
-    show_sections(world, layer, sections, true);
-}
-
-/// Writes `cells` in order; those that changed, by sub-chunk in the order first written.
-fn write_by_section(world: &mut World, layer: Entity, cells: &[(BlockPos, u32)]) -> Vec<(BlockPos, Vec<(BlockPos, u32)>)> {
-    let mut sections: Vec<(BlockPos, Vec<(BlockPos, u32)>)> = Vec::new();
-    for (pos, id) in cells.iter().filter_map(|&(pos, id)| Some((pos, write(world, layer, pos, id)?))) {
-        let section = pos.map(|c| c.div_euclid(16) * 16);
-        match sections.iter_mut().find(|(at, _)| *at == section) {
-            Some((_, cells)) => cells.push((pos, id)),
-            None => sections.push((section, vec![(pos, id)])),
-        }
-    }
-    sections
-}
-
-fn show_sections(world: &mut World, layer: Entity, sections: Vec<(BlockPos, Vec<(BlockPos, u32)>)>, single_as_block: bool) {
-    let packets: Vec<(BlockPos, Bytes)> = {
-        let Some(registry) = world.get::<Layer>(layer).map(|level| level.world.registry()) else { return };
-        let block = |&([x, y, z], id): &(BlockPos, u32)| BlockUpdate { position: BlockCoordinates { x, y, z }, runtime_id: registry.network_hash(id), flags: FLAGS.0, entity_unique_id: i64::MIN, transition_type: BlockUpdateTransitionType::Entity };
-        sections
-            .into_iter()
-            .map(|(corner, cells)| match cells.as_slice() {
-                [(pos, id)] if single_as_block => (*pos, update(registry, *pos, *id, 0)),
-                _ => (corner, sapling_net::encode(&UpdateSubchunkBlocks { x: corner[0], y: corner[1], z: corner[2], blocks: cells.iter().map(block).collect(), extra: Vec::new() })),
-            })
-            .collect()
-    };
-    for (pos, packet) in packets {
-        to_viewers(world, layer, pos, &[packet]);
-    }
 }
 
 /// Writes layer 0 as [`set`] does: the state written, or `None` when nothing changed.

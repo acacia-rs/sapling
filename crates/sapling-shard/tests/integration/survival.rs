@@ -133,11 +133,15 @@ fn a_door_is_two_cells_that_are_placed_opened_and_broken_together() {
     assert_eq!([placed[0].0, placed[1].0], [ABOVE, top], "{placed:?}");
     assert_ne!(placed[0].1, placed[1].1, "the upper cell says that it is one");
 
-    // The hand is empty now: a click on either cell opens both.
+    // The hand is empty now: a click on either cell opens the door. Its lower cell holds the open
+    // bit and both are shown in one UpdateSubchunkBlocks (research/captures/bds-held-use.txt).
     h.receive(1, &click(top, 2, None));
-    let opened = blocks(h.tick_all().to(2));
-    assert_eq!([opened[0].0, opened[1].0], [top, ABOVE], "{opened:?}");
-    assert!(!placed.iter().any(|cell| opened.iter().any(|open| open.1 == cell.1)), "both changed state");
+    let sent = h.tick_all();
+    let shown = all::<acacia_proto::packets::UpdateSubchunkBlocks>(sent.to(2));
+    let opened: Vec<([i32; 3], u32)> = shown.iter().flat_map(|update| update.blocks.iter().map(|cell| ([cell.position.x, cell.position.y, cell.position.z], cell.runtime_id))).collect();
+    assert_eq!(opened.iter().map(|cell| cell.0).collect::<Vec<_>>(), [ABOVE, top], "{opened:?}");
+    assert_ne!(opened[0].1, placed[0].1, "the lower cell opened");
+    assert_eq!(opened[1].1, placed[1].1, "the upper cell is shown as it was");
 
     h.remote.run(|ctx| ctx.set_game_mode(ALEX, sapling_api::GameMode::Creative));
     h.tick_all();

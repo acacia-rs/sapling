@@ -25,7 +25,7 @@ pub fn lids() -> Vec<String> {
     lines
 }
 
-pub const HELD_USE_SHOWN: &[&str] = &["UpdateBlock", "BlockEntityData", "ContainerOpen", "ContainerClose", "BlockEvent", "LevelSoundEvent"];
+pub const HELD_USE_SHOWN: &[&str] = &["UpdateBlock", "UpdateSubchunkBlocks", "BlockEntityData", "ContainerOpen", "ContainerClose", "BlockEvent", "LevelSoundEvent"];
 
 /// The held-use drill: a lever, a chest and a door clicked holding dirt, then by an empty hand;
 /// whether the server shows the blocks again after a use with a block in hand (NEXT.md 3).

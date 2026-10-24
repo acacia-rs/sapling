@@ -114,9 +114,10 @@ Each needs its rule looked up first (`bdsre` for BDS, the Java jar for data), th
 - A double chest asks both halves above, a slab too, as on BDS (`bds_command_probe lids`). Getting
   up by `StopSleeping`, by day and by `/tp`, and a sleeper's data and box, are told as on BDS
   (`wake`); left there: a player's other `FlagsExtended` bits, which sapling never sends. A block a hand
-  uses, a block held or not, is shown as it changed and no more, as on BDS (`held-use`); left: BDS
-  showed its clicker no UpdateBlock for a door it opened or set, where sapling shows both halves
-  (the drill did not record `UpdateSubchunkBlocks`).
+  uses, a block held or not, is shown as it changed and no more, as on BDS (`held-use`); a door opened
+  by hand keeps `open_bit` in its lower half and is shown whole in one UpdateSubchunkBlocks, as
+  there. Left: BDS shows a door `/setblock` puts and `/fill` clears the same way (upper flags 2,
+  and 2 for both of a fill), where sapling sends an UpdateBlock a half.
 - Which block each liquid rule belongs to was read by where the block's name sits in BDS's code:
   sure for whole families (stairs, slabs, walls), not for single blocks (`waterlogging.md`).
 

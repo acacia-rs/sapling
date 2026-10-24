@@ -223,19 +223,24 @@ pub(super) fn use_by_hand(world: &mut World, layer: Entity, pos: BlockPos, name:
     true
 }
 
-/// Opens or shuts the block at `pos`, both cells of a door; whether it is open now, or `None`
-/// for a block that does neither.
+/// Opens or shuts the block at `pos`; whether it is open now, or `None` for a block that does
+/// neither. A door keeps `open_bit` in its lower half alone and is shown whole, both halves in one
+/// UpdateSubchunkBlocks, as BDS showed one opened by hand (research/captures/bds-held-use.txt).
 fn toggle(world: &mut World, layer: Entity, pos: BlockPos) -> Option<bool> {
-    let cells = [Some(pos), other_half(world, layer, pos)];
-    let mut now_open = None;
-    for [x, y, z] in cells.into_iter().flatten() {
-        let level = level(world, layer)?;
-        let (registry, id) = (level.registry(), level.block(x, y, z));
-        let opens = property(registry, id, OPEN).map(|open| open == "0");
-        let Some((id, opens)) = opens.and_then(|opens| Some((with(registry, id, OPEN, if opens { "1" } else { "0" })?, opens))) else { continue };
-        if send::set(world, layer, [x, y, z], id) {
-            now_open = Some(opens);
-        }
+    let (lower, upper) = match other_half(world, layer, pos) {
+        Some(other) if other[1] < pos[1] => (other, Some(pos)),
+        other => (pos, other),
+    };
+    let level = level(world, layer)?;
+    let (registry, id) = (level.registry(), level.block(lower[0], lower[1], lower[2]));
+    let opens = property(registry, id, OPEN)? == "0";
+    let id = with(registry, id, OPEN, if opens { "1" } else { "0" })?;
+    if !send::set_quietly(world, layer, lower, id) {
+        return None;
     }
-    now_open
+    match upper {
+        Some(upper) => send::show_together(world, layer, &[(lower, send::FLAGS), (upper, send::FLAGS)]),
+        None => send::show(world, layer, lower),
+    }
+    Some(opens)
 }
