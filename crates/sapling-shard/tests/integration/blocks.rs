@@ -172,6 +172,17 @@ fn a_place_in_creative_puts_the_held_block_on_the_clicked_face() {
     assert!(quiet(sent.to(2)));
 }
 
+/// BDS stood a pitcher plant two high on stone (research/captures/bds-placing2.txt).
+#[test]
+fn a_tall_plant_stands_on_its_own_lower_half() {
+    for plant in ["minecraft:pitcher_plant", "minecraft:sunflower"] {
+        let mut h = two_players(GameMode::Creative);
+        h.receive(1, &click(NEAR, UP, Some(plant)));
+        h.tick_all();
+        assert_eq!((name(&mut h, ABOVE), name(&mut h, [1, 66, 0])), (plant.to_owned(), plant.to_owned()));
+    }
+}
+
 #[test]
 fn a_refused_place_shows_the_clicked_block_and_its_neighbour_on_both_layers() {
     // Cancelled by a handler in creative, and refused in survival, where nobody vouches for the item.

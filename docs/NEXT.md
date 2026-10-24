@@ -80,7 +80,8 @@ Each needs its rule looked up first (`bdsre` for BDS, the Java jar for data), th
   screen open however far its player goes and closes it when the block goes (`reach-close`, now copied);
   orbs are taken by BDS's pickup area with no age gate, lava stops at BDS's `isLavaBlocking` list
   (`blocks/liquid/lava.rs`), the 16 fire-resistant items are listed by name, and `stripped_bamboo_block`
-  burns. Left there: the orb touch runs from the orb's tick, not the player's.
+  burns; the orb touch runs from the player's side (`orbs::touch`). Left there: whether the 2-tick
+  spacing between orbs taken is BDS's `+0x3c4` lookup.
 - A door's hinge was checked against BDS with a block and with a door on either side (`bds_command_probe
   sounds`); the Java game's tie-break by where the click fell is still left out.
 - The sounds of a door, trapdoor, gate, chest, barrel and ender chest opening were heard on BDS and
@@ -96,8 +97,7 @@ Each needs its rule looked up first (`bdsre` for BDS, the Java jar for data), th
   observers, gates, anvils, bells, grindstones, amethyst, frames and rails were set right. Left: scaffolding's `stability_check`, and a trapdoor, whose row was spoilt. A second run of 51 more (`placing2`) agreed in 31
   and set right a crafter, a decorated pot, a chiseled bookshelf, a calibrated sculk sensor, what
   clings (lichen, sculk vein, resin) and what hangs (moss, roots, a spore blossom, a vine, a
-  hanging sign); a pitcher plant, which BDS stood two high on stone, is not placed here, and a
-  vault is not woken. BDS's commands take old item names too (`chain`
+  hanging sign) and a pitcher plant, which stands on its own lower half; a vault is not woken. BDS's commands take old item names too (`chain`
   for `iron_chain`): sapling's `/give` and `/replaceitem` take the 31 that were tried and found
   (`vanilla.rs` `OLD_ITEM_NAMES`, `bds_command_probe item-names`). Which way a dispenser or a
   piston turns up or down is the old game's rule, of which BDS showed one case.
