@@ -19,18 +19,18 @@ sapling-worldgen = { path = "crates/sapling-worldgen" }
 
 # acacia at one commit of its `master`: bump every `rev` together. To build against a checkout
 # beside this one instead, see docs/DESIGN.md "Building against a local acacia".
-acacia-auth = { git = "https://github.com/acacia-rs/acacia", rev = "6dde1a3ded3821520968d7618287978da0e67ce7", default-features = false }
-acacia-molang = { git = "https://github.com/acacia-rs/acacia", rev = "6dde1a3ded3821520968d7618287978da0e67ce7" }
-acacia-physics = { git = "https://github.com/acacia-rs/acacia", rev = "6dde1a3ded3821520968d7618287978da0e67ce7", features = ["acacia-world"] }
-acacia-nethernet = { git = "https://github.com/acacia-rs/acacia", rev = "6dde1a3ded3821520968d7618287978da0e67ce7" }
-acacia-proto = { git = "https://github.com/acacia-rs/acacia", rev = "6dde1a3ded3821520968d7618287978da0e67ce7" }
-acacia-raknet = { git = "https://github.com/acacia-rs/acacia", rev = "6dde1a3ded3821520968d7618287978da0e67ce7" }
-acacia-session = { git = "https://github.com/acacia-rs/acacia", rev = "6dde1a3ded3821520968d7618287978da0e67ce7" }
-acacia-world = { git = "https://github.com/acacia-rs/acacia", rev = "6dde1a3ded3821520968d7618287978da0e67ce7" }
+acacia-auth = { git = "https://github.com/acacia-rs/acacia", rev = "9d84c81cc8e3ad9127c87b7aebfa47c356573b9a", default-features = false }
+acacia-molang = { git = "https://github.com/acacia-rs/acacia", rev = "9d84c81cc8e3ad9127c87b7aebfa47c356573b9a" }
+acacia-physics = { git = "https://github.com/acacia-rs/acacia", rev = "9d84c81cc8e3ad9127c87b7aebfa47c356573b9a", features = ["acacia-world"] }
+acacia-nethernet = { git = "https://github.com/acacia-rs/acacia", rev = "9d84c81cc8e3ad9127c87b7aebfa47c356573b9a" }
+acacia-proto = { git = "https://github.com/acacia-rs/acacia", rev = "9d84c81cc8e3ad9127c87b7aebfa47c356573b9a" }
+acacia-raknet = { git = "https://github.com/acacia-rs/acacia", rev = "9d84c81cc8e3ad9127c87b7aebfa47c356573b9a" }
+acacia-session = { git = "https://github.com/acacia-rs/acacia", rev = "9d84c81cc8e3ad9127c87b7aebfa47c356573b9a" }
+acacia-world = { git = "https://github.com/acacia-rs/acacia", rev = "9d84c81cc8e3ad9127c87b7aebfa47c356573b9a" }
 # Test clients and the recorded BDS join (dev-dependencies only).
-acacia-bot = { git = "https://github.com/acacia-rs/acacia", rev = "6dde1a3ded3821520968d7618287978da0e67ce7" }
-acacia-client = { git = "https://github.com/acacia-rs/acacia", rev = "6dde1a3ded3821520968d7618287978da0e67ce7" }
-acacia-testserver = { git = "https://github.com/acacia-rs/acacia", rev = "6dde1a3ded3821520968d7618287978da0e67ce7" }
+acacia-bot = { git = "https://github.com/acacia-rs/acacia", rev = "9d84c81cc8e3ad9127c87b7aebfa47c356573b9a" }
+acacia-client = { git = "https://github.com/acacia-rs/acacia", rev = "9d84c81cc8e3ad9127c87b7aebfa47c356573b9a" }
+acacia-testserver = { git = "https://github.com/acacia-rs/acacia", rev = "9d84c81cc8e3ad9127c87b7aebfa47c356573b9a" }
 
 base64 = "0.22"
 bevy_ecs = { version = "0.19", default-features = false, features = ["std"] }
@@ -49,8 +49,13 @@ tracing = "0.1.44"
 tracing-subscriber = { version = "0.3.23", features = ["env-filter", "fmt"] }
 uuid = "1"
 
+# testbox's disk is the build bottleneck: full debuginfo made every linked test binary hundreds of MB.
+[profile.dev]
+debug = "line-tables-only"
+
 # Login crypto is ~100x slower unoptimised; debug servers would answer the handshake seconds late.
 [profile.dev.package]
+"*" = { debug = false }
 p384 = { opt-level = 3 }
 primeorder = { opt-level = 3 }
 elliptic-curve = { opt-level = 3 }

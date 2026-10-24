@@ -435,7 +435,7 @@ pushing east, powered by a block of redstone above.
   0.25 three ticks after the power and 0.5 a tick later: each tick it is put before the arm's
   front, which goes half a block a tick.
 - A stand behind a stone the arm pushes ended with its box against the stone's new face, 0.75
-  from where it stood.
+  from where it stood, in one move on the tick the stone arrived: only the arm pushes halfway.
 - A sticky piston pushes it the same and leaves it there as it draws back.
 - A stand on a piston that pushes up rose half a block a tick with the arm and fell back when
   the arm went.

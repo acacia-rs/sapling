@@ -95,21 +95,32 @@ pub(super) fn tallest(level: &Level, pos: BlockPos, reach: i32, with_bedrock: bo
     best.unwrap_or(pos)
 }
 
-fn fnv(value: i32) -> u64 {
+/// boost's hash_combine of each coordinate's `std::hash`, cut to the random's seed.
+fn combined([x, y, z]: BlockPos, hash: fn(i32) -> u64) -> u32 {
+    let join = |h: u64, v: i32| (hash(v).wrapping_add(0x9e37_79b9).wrapping_add(h << 6).wrapping_add(h >> 2)) ^ h;
+    join(join(hash(x).wrapping_add(0x9e37_79b9), y), z) as u32
+}
+
+/// MSVC's `std::hash<int>`: FNV-1a over its four bytes.
+fn msvc_hash(value: i32) -> u64 {
     value.to_le_bytes().iter().fold(0xcbf2_9ce4_8422_2325, |hash, &byte| (hash ^ u64::from(byte)).wrapping_mul(0x0100_0000_01b3))
 }
 
-/// The seed BDS hashes from the island's cell: FNV-1a per coordinate, joined as boost's hash_combine.
-fn seed([x, y, z]: BlockPos) -> u32 {
-    let join = |h: u64, v: i32| (fnv(v).wrapping_add(0x9e37_79b9).wrapping_add(h << 6).wrapping_add(h >> 2)) ^ h;
-    let first = fnv(x).wrapping_add(0x9e37_79b9);
-    join(join(first, y), z) as u32
+/// The seed Windows BDS hashes from the island's cell (seen live in 148274c80: 0xF92C2FAE at
+/// (0, 75, -1120)). sapling builds worlds as Windows BDS does; Linux BDS's libstdc++ hashes an
+/// int as itself and builds other islands (tests).
+fn seed(at: BlockPos) -> u32 {
+    combined(at, msvc_hash)
 }
 
 /// The end island BDS builds at (x, 75, z) where an exit finds no spawn: its cell and its end stone.
 pub(super) fn island([x, _, z]: BlockPos) -> (BlockPos, Vec<BlockPos>) {
     let at = [x, ISLAND_Y, z];
-    let mut random = Mt19937::new(seed(at));
+    island_seeded(at, seed(at))
+}
+
+fn island_seeded(at @ [x, _, z]: BlockPos, seed: u32) -> (BlockPos, Vec<BlockPos>) {
+    let mut random = Mt19937::new(seed);
     let mut r = random.next_int(3) as f32 + 4.0;
     let (mut dy, mut cells) = (0, Vec::new());
     while r > 0.5 {
@@ -125,4 +136,34 @@ pub(super) fn island([x, _, z]: BlockPos) -> (BlockPos, Vec<BlockPos>) {
         dy -= 1;
     }
     (at, cells)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// The cells of a layer of radius `r` round the middle, as BDS's islands had them
+    /// (research/captures/bds-exit-island*.txt: 145, 97, 45, 37 and 9 cells for 6, 4.5, 3, 2.5, 1).
+    fn disc(r: f32) -> usize {
+        let (lo, hi) = ((-r).floor() as i32, r.ceil() as i32);
+        (lo..=hi).flat_map(|i| (lo..=hi).map(move |k| (i, k))).filter(|(i, k)| ((i * i + k * k) as f32) <= (r + 1.0) * (r + 1.0)).count()
+    }
+
+    fn layers((_, cells): (BlockPos, Vec<BlockPos>)) -> Vec<usize> {
+        (60..=75).rev().map(|y| cells.iter().filter(|cell| cell[1] == y).count()).take_while(|&n| n > 0).collect()
+    }
+
+    #[test]
+    fn the_island_is_seeded_as_windows_bds_seeds_it() {
+        assert_eq!(seed([0, 75, -1120]), 0xF92C_2FAE);
+        assert_eq!(layers(island([0, 0, -1120])), [5.0, 4.5, 3.0, 1.5, 1.0].map(disc));
+    }
+
+    #[test]
+    fn linux_seeding_builds_the_islands_testbox_bds_built() {
+        // Radii 6, 4.5, 3, 2.5, 1 (bds-exit-island.txt) and 6, 5.5, 4, 3.5, 2, 1.5 (bds-exit-island2.txt).
+        let linux = |at: BlockPos| island_seeded(at, combined(at, |v| i64::from(v) as u64));
+        assert_eq!(layers(linux([0, 75, -1120])), [6.0, 4.5, 3.0, 2.5, 1.0].map(disc));
+        assert_eq!(layers(linux([602, 75, -829])), [6.0, 5.5, 4.0, 3.5, 2.0, 1.5].map(disc));
+    }
 }

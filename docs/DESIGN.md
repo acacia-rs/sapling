@@ -938,8 +938,9 @@ Details and BDS evidence: docs/research/nether-dimension.md, docs/research/end-d
   looks (BDS took one let out at the player after 7 ticks) (`LevelEvent` SoundOrb). A player's level and progress follow BDS's
   `addExperience` (the Java formula), go to its client as the `player.experience` attribute, with
   `player.level` when the level changed (as recorded), and are kept
-  with its items (`PlayerLevel`, `PlayerLevelProgress`); a fifth level sounds `levelup`. Not done:
-  orbs merging, being saved; Mending.
+  with its items (`PlayerLevel`, `PlayerLevelProgress`); a fifth level sounds `levelup`. Orbs join
+  up as BDS's (`orbs/merge.rs`) and are kept with their column at what they are worth. Not done:
+  Mending.
 - **Double chests** (`containers/pairs.rs`). Two chests of one kind, side by side and facing the same
   way, name each other in their block entities (`pairx`, `pairz`, `pairlead`), which clients are sent
   and draw one large chest from. A chest placed beside a single one pairs with it, the old one leading
@@ -1004,7 +1005,7 @@ only falls back to RakNet when that fails, so turning it on moves every vanilla 
 - **Host key.** Every answer is signed by `NetherNet::host_key`; clients pin it per address on
   first use, so `sapling::host_key(path)` keeps it in a file.
 - Tests: `sapling-net/tests/nethernet.rs` (both signaling paths, beside RakNet) and the NetherNet
-  bot in `sapling/tests/join.rs`.
+  bot in `sapling/tests/integration/join.rs`.
 
 ## Server-side movement (as built: Observe)
 

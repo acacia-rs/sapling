@@ -3,8 +3,10 @@
 //! them: the client only shows where they are. An orb falls, slides to a stop, and from 21 to 120
 //! ticks after it appears looks for the nearest player within eight blocks every twenty and flies
 //! to it; a player it touches on the way, or before, takes it, worth its experience.
-// TODO: orbs do not merge (BDS merges those whose ids agree mod 13, and spreads new experience
-// over 13 orbs already in a cell). Kept with their column (actors.rs), they come back new.
+// They join up as BDS's do (merge.rs). Kept with their column (actors.rs), they come back new,
+// worth what they were when saved.
+
+mod merge;
 
 use acacia_proto::packets::{LevelEvent, LevelEventEvent};
 use acacia_proto::types::Vec3f;
@@ -85,7 +87,9 @@ fn announce(id: u64, value: i32, body: &Body) -> Vec<bytes::Bytes> {
 /// Lets `points` of experience out at `at` as orbs, each thrown a little up and aside.
 pub(crate) fn spawn(world: &mut World, layer: Entity, at: [f32; 3], points: i32) {
     for value in split(points) {
-        throw(world, layer, at, value);
+        if !merge::shared(world, layer, at, value) {
+            throw(world, layer, at, value);
+        }
     }
 }
 
@@ -142,6 +146,7 @@ fn touching(world: &mut World, layer: Entity, at: [f32; 3]) -> Option<Entity> {
 fn step(world: &mut World, entity: Entity, orb: &mut Orb, layer: Entity, id: u64) -> Fate {
     orb.age += 1;
     let Some(mut body) = world.get::<Body>(entity).copied().filter(|_| orb.age < LIFETIME) else { return Fate::Gone };
+    merge::take_in_kin(world, entity, orb, layer, id, body.at);
     if let Some(player) = touching(world, layer, body.at).filter(|player| takes(world, *player)) {
         taken(world, layer, orb.value, body.at, player);
         return Fate::Taken;
@@ -184,7 +189,8 @@ pub(crate) fn tick(world: &mut World) {
     let mut orbs = world.query::<(Entity, &InLayer, &NetId, &Orb)>();
     let all: Vec<(Entity, Entity, u64)> = orbs.iter(world).map(|(entity, layer, id, _)| (entity, layer.0, id.0)).collect();
     for (entity, layer, id) in all {
-        let Some(mut orb) = world.entity_mut(entity).take::<Orb>() else { continue };
+        // One taken in by another earlier this tick is gone.
+        let Some(mut orb) = world.get_entity_mut(entity).ok().and_then(|mut kept| kept.take::<Orb>()) else { continue };
         match step(world, entity, &mut orb, layer, id) {
             Fate::Stays => drop(world.entity_mut(entity).insert(orb)),
             Fate::Gone => mobs::remove(world, entity),

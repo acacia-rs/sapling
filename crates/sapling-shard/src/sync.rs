@@ -29,6 +29,8 @@ pub(crate) struct Told {
     /// Its body's and its head's turn as viewers know them, and as they are now.
     turned: [u8; 2],
     turn: [u8; 2],
+    /// Its pitch as viewers know it and as it is now; `None` for an entity whose pitch is not told.
+    pitched: Option<[u8; 2]>,
     /// Its next move is a teleport, which BDS sends forced.
     jumped: bool,
     /// Viewers are told of every move, however small (an eye of ender's, bds-eye-throw.txt).
@@ -47,7 +49,14 @@ struct Shown {
 impl Told {
     /// An entity just announced at `at`; its announced motion does not count.
     pub fn new(at: [f32; 3]) -> Self {
-        Self { at, motion: [0.0; 3], flags: None, turned: [0; 2], turn: [0; 2], jumped: false, every_move: false }
+        Self { at, motion: [0.0; 3], flags: None, turned: [0; 2], turn: [0; 2], pitched: None, jumped: false, every_move: false }
+    }
+
+    /// The entity now pitches `pitch` degrees, told with its next [`Told::update`] (a projectile's);
+    /// the first call is the pitch it was announced with.
+    pub fn pitch(&mut self, pitch: f32) {
+        let byte = (pitch.rem_euclid(360.0) * 256.0 / 360.0) as u8;
+        self.pitched = Some([self.pitched.map_or(byte, |[told, _]| told), byte]);
     }
 
     /// Viewers are told of each of the entity's moves, not only of those past 0.01.
@@ -99,10 +108,14 @@ impl Told {
         let gone = length(std::array::from_fn(|axis| at[axis] - self.at[axis]));
         let jumped = std::mem::take(&mut self.jumped);
         let moved = jumped || gone > MOVED || (length(motion) < STOPPING && gone > SETTLED) || (self.every_move && at != self.at);
-        if moved || self.turn != self.turned {
+        let pitched = self.pitched.filter(|[told, now]| told != now).map(|[_, now]| now);
+        if moved || self.turn != self.turned || pitched.is_some() {
             let [x, y, z] = std::array::from_fn(|axis| (moved && at[axis] != self.at[axis]).then_some(at[axis]));
             let [rot_y, rot_z] = std::array::from_fn(|side| (self.turn[side] != self.turned[side]).then_some(self.turn[side]));
             self.turned = self.turn;
+            if let (Some(now), Some(pitch)) = (pitched, self.pitched.as_mut()) {
+                pitch[0] = now;
+            }
             if moved {
                 self.at = at;
             }
@@ -111,7 +124,7 @@ impl Told {
                 x,
                 y,
                 z,
-                rot_x: None,
+                rot_x: pitched,
                 rot_y,
                 rot_z,
                 on_ground,

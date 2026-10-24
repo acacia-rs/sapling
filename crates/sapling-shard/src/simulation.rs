@@ -1,16 +1,14 @@
 //! The server's own step of each player input (acacia-physics) beside what the client reports.
 //! Observe mode only logs where the two part; see docs/DESIGN.md "Server-side movement".
 
-use acacia_physics::registry_world::{RegistryWorld, Terrain};
 use acacia_physics::{Input, PlayerState, tick};
 use acacia_proto::packets::PlayerAuthInput;
 use acacia_proto::types::InputData;
-use acacia_world::BlockAccess;
 use bevy_ecs::prelude::*;
-use sapling_world::ChunkPos;
 
 use crate::components::Position;
 use crate::config::MovementCheck;
+use crate::terrain::physics_view;
 
 /// What the server makes of a player's inputs, and how often it parted from the client.
 #[derive(Component)]
@@ -29,25 +27,6 @@ pub(crate) struct Simulated {
 impl Default for Simulated {
     fn default() -> Self {
         Self { state: PlayerState::new([0.0; 3]), gliding: false, swimming: false, fresh: true, steps: 0, parted: 0, worst: 0.0 }
-    }
-}
-
-/// A shard's world as the physics reads it.
-struct Blocks<'a>(&'a sapling_world::World);
-
-impl BlockAccess for Blocks<'_> {
-    fn block(&self, x: i32, y: i32, z: i32) -> u32 {
-        self.0.block(x, y, z)
-    }
-
-    fn liquid(&self, x: i32, y: i32, z: i32) -> u32 {
-        self.0.liquid(x, y, z)
-    }
-}
-
-impl Terrain for Blocks<'_> {
-    fn is_column_loaded(&self, cx: i32, cz: i32) -> bool {
-        self.0.is_loaded(ChunkPos::new(cx, cz))
     }
 }
 
@@ -103,8 +82,7 @@ impl Simulated {
             self.adopt(feet, delta, on_ground);
             return None;
         }
-        let terrain = Blocks(world);
-        let out = tick(&mut self.state, &input_of(input, self.gliding, self.swimming, using_item), &RegistryWorld { view: &terrain, registry: world.registry() });
+        let out = physics_view(world, |view| tick(&mut self.state, &input_of(input, self.gliding, self.swimming, using_item), view));
         self.steps += 1;
         let apart = (0..3).map(|axis| (out.position[axis] - feet[axis]).powi(2)).sum::<f32>().sqrt();
         if apart <= threshold {
@@ -187,8 +165,8 @@ mod tests {
     #[test]
     fn a_client_stepping_as_the_game_does_never_parts_and_a_flyer_does() {
         let world = platform();
-        let terrain = Blocks(&world);
-        let view = RegistryWorld { view: &terrain, registry: world.registry() };
+        let terrain = crate::terrain::Blocks(&world, &[]);
+        let view = acacia_physics::registry_world::RegistryWorld { view: &terrain, registry: world.registry() };
         let mut client = PlayerState::new([0.5, 65.0, -6.5]);
         let mut server = Simulated::default();
         let walk = Input { move_vector: [0.0, 1.0], ..Input::default() };

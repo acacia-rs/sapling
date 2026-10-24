@@ -24,6 +24,7 @@ pub(super) fn shove(world: &mut World, layer: Entity, from: &[BlockPos], dir: Fa
     let here = |player: &Entity| world.get::<InLayer>(*player).map(|in_layer| in_layer.0) == Some(layer);
     moved.extend(in_world(world).into_iter().filter(here).filter_map(|player| Some((player, Body::new(world.get::<Position>(player)?.feet, [0.0; 3], PLAYER), true))));
     let Some(level) = super::level(world, layer) else { return };
+    let moving: Vec<BlockPos> = from.iter().map(|cell| dir.neighbour(*cell)).collect();
     let mut shoved = Vec::new();
     for (entity, mut body, is_player) in moved {
         let start = body.at;
@@ -36,7 +37,7 @@ pub(super) fn shove(world: &mut World, layer: Entity, from: &[BlockPos], dir: Fa
             }
             let mut by = [0.0; 3];
             by[axis] = if ahead { low[axis] + 1.0 - min[axis] } else { low[axis] - max[axis] };
-            body.shove(level, by);
+            body.push(level, by, &moving);
         }
         if body.at != start {
             shoved.push((entity, body, is_player));

@@ -1,0 +1,19 @@
+//! One test binary for the server's integration tests, as sapling-shard's (see its tests/integration/main.rs).
+
+mod common;
+
+mod api;
+mod blocks;
+mod chest;
+mod craft;
+mod end;
+mod eyes;
+mod furnace;
+mod inventory;
+mod join;
+mod kept;
+mod level;
+mod map;
+mod nether;
+mod players;
+mod worlds;

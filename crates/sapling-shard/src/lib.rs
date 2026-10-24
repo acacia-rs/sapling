@@ -50,6 +50,7 @@ mod sleep;
 mod splash;
 mod sync;
 mod ticking;
+mod terrain;
 mod tnt;
 mod view;
 mod visibility;

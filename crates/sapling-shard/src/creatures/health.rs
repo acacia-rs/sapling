@@ -156,6 +156,19 @@ impl Health {
         }
     }
 
+    /// Its health and the most, where viewers were last told otherwise; they are taken as told.
+    pub(crate) fn untold(&mut self) -> Option<(f32, f32)> {
+        (self.left != self.told).then(|| {
+            self.told = self.left;
+            (self.left, self.max)
+        })
+    }
+
+    /// Whether the last hit's guard (BDS's hurt time) is still running.
+    pub(crate) fn is_guarded(&self) -> bool {
+        self.guarded > 0
+    }
+
     /// Starts a tick: a tick of the last hit's guard is over.
     pub(crate) fn begin(&mut self) {
         self.guarded = self.guarded.saturating_sub(1);
