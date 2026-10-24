@@ -18,14 +18,14 @@ pub(crate) struct Damage {
 impl Command for Damage {
     fn run(self, ctx: &mut ShardCtx<'_>, sender: &Sender, out: &mut Output) {
         let (found, mobs) = (players(ctx, sender, &self.target), entities(ctx, &self.target));
-        let names = || found.iter().map(|player| player.name.clone()).chain(mobs.iter().map(|mob| display_name(&mob.kind))).collect::<Vec<_>>().join(", ");
+        let names = || found.iter().map(|player| player.name.clone()).chain(mobs.iter().map(|mob| display_name(mob))).collect::<Vec<_>>().join(", ");
         // BDS fails `suffocation` for anyone (research/captures/bds-worn.txt).
         let Some(cause) = DamageCause::named(self.cause.as_deref().unwrap_or("none")).filter(|cause| *cause != DamageCause::Suffocation) else {
             return out.translate("commands.damage.failed", vec![names()], false);
         };
         let amount = self.amount as f32;
         let mut hurt: Vec<String> = found.iter().filter(|player| ctx.hurt_player(player.id, amount, cause)).map(|player| player.name.clone()).collect();
-        hurt.extend(mobs.iter().filter(|mob| ctx.hurt_entity(mob.id, amount, cause)).map(|mob| display_name(&mob.kind)));
+        hurt.extend(mobs.iter().filter(|mob| ctx.hurt_entity(mob.id, amount, cause)).map(|mob| display_name(mob)));
         match hurt.is_empty() {
             true => out.translate("commands.damage.failed", vec![names()], false),
             false => out.translate("commands.damage.success", vec![hurt.join(", ")], true),

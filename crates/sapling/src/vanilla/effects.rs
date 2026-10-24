@@ -46,7 +46,7 @@ impl Command for EffectCommand {
             return out.translate("commands.generic.num.tooBig", vec![amplifier.to_string(), STRONGEST.to_string()], false);
         }
         let named_players = players(ctx, sender, &self.target).into_iter().map(|player| (Target::Player(player.id), player.name));
-        let found: Vec<(Target, String)> = named_players.chain(entities(ctx, &self.target).into_iter().map(|entity| (Target::Entity(entity.id), display_name(&entity.kind)))).collect();
+        let found: Vec<(Target, String)> = named_players.chain(entities(ctx, &self.target).into_iter().map(|entity| (Target::Entity(entity.id), display_name(&entity)))).collect();
         if found.is_empty() {
             return no_target(out);
         }

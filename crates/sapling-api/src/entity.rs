@@ -1,4 +1,4 @@
-use crate::{DamageCause, Effect, PlayerId, ShardCtx};
+use crate::{DamageCause, Effect, Item, PlayerId, ShardCtx};
 
 /// An entity on a shard: a mob, a lying item, a falling block or an experience orb. Unique on
 /// its shard while it exists; it goes when removed, picked up or landed, or with its column.
@@ -17,11 +17,17 @@ pub struct EntityInfo {
     /// Blocks a tick.
     pub velocity: [f32; 3],
     pub on_ground: bool,
+    /// What a lying item holds; `None` for anything else.
+    pub item: Option<Item>,
 }
 
 impl EntityInfo {
     pub fn new(id: EntityId, kind: String, feet: [f32; 3], velocity: [f32; 3], on_ground: bool) -> Self {
-        Self { id, kind, feet, velocity, on_ground }
+        Self { id, kind, feet, velocity, on_ground, item: None }
+    }
+
+    pub fn with_item(self, item: Option<Item>) -> Self {
+        Self { item, ..self }
     }
 }
 
