@@ -7,9 +7,10 @@ use acacia_proto::packets::{
     SetScoreEntriesItemContentFakePlayer as FakePlayer, SetScoreEntriesItemContentRemove as Remove, SetScoreEntriesItemEntryType as EntryType, SetTitle, SetTitleType, ToastRequest,
 };
 use bevy_ecs::prelude::*;
-use sapling_api::{BossBar, BossBarColour, Sidebar, Title};
+use sapling_api::{BossBar, BossBarColour, PlayerId, Sidebar, Title, TitleAction, TitleBackend};
 
 use crate::components::{NetId, Outgoing};
+use crate::handlers::Ctx;
 
 /// The one objective a sidebar is shown as.
 const OBJECTIVE: &str = "sapling";
@@ -128,6 +129,30 @@ pub(crate) fn send_title(out: &mut Outgoing, title: &Title) {
 
 pub(crate) fn send_actionbar(out: &mut Outgoing, text: &str) {
     out.push(&title_packet(SetTitleType::ActionBarMessage, text, [UNSET; 3]));
+}
+
+/// The one SetTitle `/title` and `/titleraw` send for `action` (research/captures/bds-messaging.txt).
+fn action_packet(action: &TitleAction) -> SetTitle {
+    let (r#type, text, times) = match action {
+        TitleAction::Title(text) => (SetTitleType::SetTitle, text.clone(), [UNSET; 3]),
+        TitleAction::Subtitle(text) => (SetTitleType::SetSubtitle, text.clone(), [UNSET; 3]),
+        TitleAction::ActionBar(text) => (SetTitleType::ActionBarMessage, text.clone(), [UNSET; 3]),
+        TitleAction::RawTitle(text) => (SetTitleType::SetTitleJson, text.to_json(), [UNSET; 3]),
+        TitleAction::RawSubtitle(text) => (SetTitleType::SetSubtitleJson, text.to_json(), [UNSET; 3]),
+        TitleAction::RawActionBar(text) => (SetTitleType::ActionBarMessageJson, text.to_json(), [UNSET; 3]),
+        TitleAction::Times { fade_in, stay, fade_out } => (SetTitleType::SetDurations, String::new(), [*fade_in, *stay, *fade_out]),
+        TitleAction::Clear => (SetTitleType::Clear, String::new(), [UNSET; 3]),
+        TitleAction::Reset => (SetTitleType::Reset, String::new(), [UNSET; 3]),
+    };
+    title_packet(r#type, &text, times)
+}
+
+impl TitleBackend for Ctx<'_> {
+    fn title_action(&mut self, player: PlayerId, action: &TitleAction) {
+        if let Some(mut out) = self.out(player) {
+            out.push(&action_packet(action));
+        }
+    }
 }
 
 pub(crate) fn send_toast(out: &mut Outgoing, title: &str, message: &str) {

@@ -10,6 +10,9 @@ pub enum ParseError {
     Syntax { before: String, token: String, after: String },
     /// A player argument named nobody who is online.
     NoTarget,
+    /// The argument reads but is not one the command takes; the answer is this translation key
+    /// (`commands.tellraw.error.notArray`).
+    Invalid(String),
 }
 
 /// The rest of a command line, consumed one argument at a time by [`super::Parameter::parse`].
@@ -90,6 +93,34 @@ impl<'a> Args<'a> {
         self.pos = start + end;
         self.skip_spaces();
         Ok(&rest[..end])
+    }
+
+    /// The next JSON object or array, spaces and all, up to the bracket that closes it.
+    pub fn json(&mut self) -> Result<&'a str, ParseError> {
+        let start = self.pos;
+        let rest = &self.line[start..];
+        let (mut depth, mut quoted, mut escaped) = (0usize, false, false);
+        for (at, c) in rest.char_indices() {
+            if quoted {
+                (quoted, escaped) = (escaped || c != '"', !escaped && c == '\\');
+                continue;
+            }
+            match c {
+                '"' if depth > 0 => quoted = true,
+                '{' | '[' => depth += 1,
+                '}' | ']' if depth > 0 => {
+                    depth -= 1;
+                    if depth == 0 {
+                        self.pos = start + at + 1;
+                        self.skip_spaces();
+                        return Ok(&rest[..=at]);
+                    }
+                }
+                _ if depth == 0 => break,
+                _ => {}
+            }
+        }
+        Err(self.error_at(start))
     }
 
     /// Everything left, as typed.

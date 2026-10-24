@@ -8,7 +8,7 @@ use sapling_api::{Command, Output, Sender, ShardCtx};
 use super::{no_target, players};
 
 /// Who a line is from: BDS's console is `Server`.
-fn speaker(sender: &Sender) -> String {
+pub(super) fn speaker(sender: &Sender) -> String {
     sender.player().map_or_else(|| "Server".to_owned(), |player| player.name.clone())
 }
 

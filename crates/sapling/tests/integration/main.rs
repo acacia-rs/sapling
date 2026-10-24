@@ -14,6 +14,7 @@ mod join;
 mod kept;
 mod level;
 mod map;
+mod messaging;
 mod nether;
 mod players;
 mod worlds;

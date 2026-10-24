@@ -1,5 +1,6 @@
 //! Vanilla's commands, for operators, built on the plugin API alone: `/setblock`, `/fill`, `/tp`,
-//! `/give`, `/clear`, `/gamemode`, `/summon`, `/kill`, `/damage`, `/difficulty`, `/effect`, `/gamerule`, `/replaceitem`. Opt in with
+//! `/give`, `/clear`, `/gamemode`, `/summon`, `/kill`, `/damage`, `/difficulty`, `/effect`, `/gamerule`, `/replaceitem`,
+//! the messaging commands (`/me`, `/tellraw`, `/title`, `/titleraw`, `/playsound`, `/stopsound`, `/particle`). Opt in with
 //! [`crate::ServerBuilder::vanilla_commands`]. Positions take `~`; targets take `@s`, `@p`, `@a`,
 //! `@e[type=...]`, `@e[type=!...]` and names. Blocks are written as `/setblock` writes them: their neighbours react.
 // TODO: the other vanilla commands; `@r` and selector arguments besides `type`.
@@ -10,8 +11,11 @@ mod clock;
 mod containers;
 mod effects;
 mod execute;
+mod messaging;
 mod players;
 mod rules;
+mod sounds;
+mod titles;
 
 use blocks::{Fill, SetBlock, TestForBlock};
 use containers::ReplaceItem;
@@ -26,11 +30,14 @@ use crate::ServerBuilder;
 impl ServerBuilder {
     /// Adds vanilla's commands for operators (this module): `/setblock`, `/fill`, `/tp`, `/give`,
     /// `/clear`, `/gamemode`, `/summon`, `/kill`, `/gamerule`, `/time`, `/xp`, `/replaceitem block`,
-    /// `/execute in <dimension> run tp`, `/say` and `/tell` (for anyone). A command
+    /// `/execute in <dimension> run tp`, `/say`, `/tell` and `/me` (for anyone), `/tellraw`,
+    /// `/title`, `/titleraw`, `/playsound`, `/stopsound` and `/particle`. A command
     /// added later under the same name replaces one of these.
     pub fn vanilla_commands(self) -> Self {
         let blocks = self.command::<SetBlock>().command::<Fill>().command::<TestForBlock>().command::<ReplaceItem>();
-        blocks.command::<Teleport>().command::<Give>().command::<Clear>().command::<GameModeCommand>().command::<Summon>().command::<Kill>().command::<Damage>().command::<DifficultyCommand>().command::<effects::EffectCommand>().command::<GameRule>().command::<clock::Time>().command::<clock::Xp>().command::<clock::WeatherCommand>().command::<clock::ToggleDownfall>().command::<execute::Execute>().command::<chat::Say>().command::<chat::Tell>()
+        let blocks = blocks.command::<Teleport>().command::<Give>().command::<Clear>().command::<GameModeCommand>().command::<Summon>().command::<Kill>().command::<Damage>().command::<DifficultyCommand>().command::<effects::EffectCommand>().command::<GameRule>().command::<clock::Time>().command::<clock::Xp>().command::<clock::WeatherCommand>().command::<clock::ToggleDownfall>().command::<execute::Execute>().command::<chat::Say>().command::<chat::Tell>();
+        let messaging = blocks.command::<messaging::Me>().command::<messaging::TellRaw>().command::<titles::Title>().command::<titles::TitleRaw>();
+        messaging.command::<sounds::PlaySound>().command::<sounds::StopSound>().command::<sounds::Particle>()
     }
 }
 

@@ -47,6 +47,7 @@ mod shard;
 mod simulation;
 mod skin;
 mod sleep;
+mod sounds;
 mod splash;
 mod sync;
 mod ticking;

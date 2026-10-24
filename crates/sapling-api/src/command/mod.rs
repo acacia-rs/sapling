@@ -7,12 +7,14 @@ mod args;
 mod output;
 mod params;
 mod places;
+mod rawtext;
 mod registry;
 
 pub use args::{Args, ParseError};
 pub use output::{Output, OutputMessage};
 pub use params::{Parameter, Target, Text, parse_choice};
 pub use places::{Axis, BlockCoords, Coords, Selector, States};
+pub use rawtext::{RawPart, RawText};
 pub use registry::Commands;
 
 use crate::{Permission, Player, ShardCtx};
@@ -104,4 +106,6 @@ pub enum ParamKind {
     BlockPosition,
     /// A block's states in brackets.
     BlockStates,
+    /// A JSON object: rawtext.
+    Json,
 }

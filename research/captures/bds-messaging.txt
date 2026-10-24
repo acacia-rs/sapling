@@ -1,0 +1,320 @@
+## drill starts at 1792877086849
+## /me waves hello
+     93 watcher Text Text { needs_translation: false, category: Authored, type: Chat, content: Chat(TextContentChat { source_name: "", message: "* CmdActor waves hello" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+     93 actor   Text Text { needs_translation: false, category: Authored, type: Chat, content: Chat(TextContentChat { source_name: "", message: "* CmdActor waves hello" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+    429 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+    429 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /me
+   1013 actor   CommandOutput success_count=0 data=None commands.generic.invalidMessage success=false []
+   1383 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+   1383 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+   1831 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+   1831 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+   1881 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+   1881 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /tellraw @a {"rawtext":[{"text":"hi "},{"translate":"commands.give.success","with":["a","b","c"]},{"text":" "},{"selector":"@a"}]}
+   2012 actor   Text Text { needs_translation: false, category: MessageOnly, type: JsonWhisper, content: JsonWhisper(TextContentJsonWhisper { message: "{\"rawtext\":[{\"text\":\"hi \"},{\"translate\":\"commands.give.success\",\"with\":{\"rawtext\":[{\"text\":\"a\"},{\"text\":\"b\"},{\"text\":\"c\"}]}},{\"text\":\" \"},{\"text\":\"CmdActor, CmdWatcher\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   2012 watcher Text Text { needs_translation: false, category: MessageOnly, type: JsonWhisper, content: JsonWhisper(TextContentJsonWhisper { message: "{\"rawtext\":[{\"text\":\"hi \"},{\"translate\":\"commands.give.success\",\"with\":{\"rawtext\":[{\"text\":\"a\"},{\"text\":\"b\"},{\"text\":\"c\"}]}},{\"text\":\" \"},{\"text\":\"CmdActor, CmdWatcher\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /tellraw @a {"rawtext":[{"translate":"%%s and %%s","with":{"rawtext":[{"text":"x"},{"selector":"@s"}]}}]}
+   3013 actor   Text Text { needs_translation: false, category: MessageOnly, type: JsonWhisper, content: JsonWhisper(TextContentJsonWhisper { message: "{\"rawtext\":[{\"translate\":\"%%s and %%s\",\"with\":{\"rawtext\":[{\"text\":\"x\"},{\"text\":\"CmdActor\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   3013 watcher Text Text { needs_translation: false, category: MessageOnly, type: JsonWhisper, content: JsonWhisper(TextContentJsonWhisper { message: "{\"rawtext\":[{\"translate\":\"%%s and %%s\",\"with\":{\"rawtext\":[{\"text\":\"x\"},{\"text\":\"CmdActor\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   3732 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+   3732 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+   3827 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+   3827 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /tellraw @a {"rawtext":[{"selector":"@e[type=cow]"},{"text":"|"},{"score":{"name":"@s","objective":"obj"}},{"text":"|"}]}
+   4010 actor   Text Text { needs_translation: false, category: MessageOnly, type: JsonWhisper, content: JsonWhisper(TextContentJsonWhisper { message: "{\"rawtext\":[{\"text\":\"|\"},{\"text\":\"|\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   4011 watcher Text Text { needs_translation: false, category: MessageOnly, type: JsonWhisper, content: JsonWhisper(TextContentJsonWhisper { message: "{\"rawtext\":[{\"text\":\"|\"},{\"text\":\"|\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   4881 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+   4881 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /tellraw CmdWatcher {"rawtext":[{"text":"only you"}]}
+   5011 watcher Text Text { needs_translation: false, category: MessageOnly, type: JsonWhisper, content: JsonWhisper(TextContentJsonWhisper { message: "{\"rawtext\":[{\"text\":\"only you\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   5234 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 10020, paused: false }] }) }
+   5234 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 10020, paused: false }] }) }
+## /tellraw @a {"rawtext":[]}
+   6014 watcher Text Text { needs_translation: false, category: MessageOnly, type: JsonWhisper, content: JsonWhisper(TextContentJsonWhisper { message: "{\"rawtext\":null}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   6014 actor   Text Text { needs_translation: false, category: MessageOnly, type: JsonWhisper, content: JsonWhisper(TextContentJsonWhisper { message: "{\"rawtext\":null}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /tellraw @a not json
+   7011 actor   CommandOutput success_count=0 data=None commands.generic.syntax success=false ["ellraw @a ", "not", " json"]
+   7483 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+   7483 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /tellraw @a {"text":"x"}
+   8020 actor   CommandOutput success_count=0 data=None commands.tellraw.error.notArray success=false []
+## /tellraw @a {"rawtext":"x"}
+   9021 actor   CommandOutput success_count=0 data=None commands.tellraw.error.notArray success=false []
+   9127 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+   9127 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+   9127 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+   9127 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+   9728 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+   9728 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /tellraw @a {"rawtext":[{"bogus":"x"}]}
+  10024 actor   Text Text { needs_translation: false, category: MessageOnly, type: JsonWhisper, content: JsonWhisper(TextContentJsonWhisper { message: "{\"rawtext\":null}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  10024 watcher Text Text { needs_translation: false, category: MessageOnly, type: JsonWhisper, content: JsonWhisper(TextContentJsonWhisper { message: "{\"rawtext\":null}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  10531 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  10531 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  10778 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  10778 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /tellraw @a {"rawtext":[{"text":5}]}
+  11021 actor   CommandOutput success_count=0 data=None commands.tellraw.error.textNotString success=false []
+## /tellraw @a {"rawtext":[{"translate":"x","with":5}]}
+  12021 actor   CommandOutput success_count=0 data=None commands.tellraw.error.withNotArrayOrRawText success=false []
+## /tellraw @a {"rawtext":[{"score":{"name":"@s"}}]}
+  13023 actor   CommandOutput success_count=0 data=None commands.tellraw.error.scoreObjectiveNotString success=false []
+  13131 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  13131 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /tellraw @a {"rawtext":[{"text":"a"}]} extra
+  14022 actor   CommandOutput success_count=0 data=None commands.generic.syntax success=false ["t\":\"a\"}]} ", "extra", ""]
+## /tellraw nobody {"rawtext":[{"text":"x"}]}
+  15021 actor   CommandOutput success_count=0 data=None commands.generic.noTargetMatch success=false []
+## /tellraw @x {"rawtext":[{"text":"x"}]}
+  16033 actor   CommandOutput success_count=0 data=None commands.generic.syntax success=false ["/tellraw ", "@x", " {\"rawtext"]
+  16384 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  16384 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /tellraw @a
+  17033 actor   CommandOutput success_count=0 data=None commands.generic.syntax success=false ["tellraw @a", "", ""]
+## /scoreboard objectives add obj dummy
+  18032 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 10276, paused: false }] }) }
+  18032 actor   CommandOutput success_count=1 data=None commands.scoreboard.objectives.add.success success=true ["obj"]
+  18032 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 10276, paused: false }] }) }
+  18032 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.scoreboard.objectives.add.success\",\"with\":{\"rawtext\":[{\"text\":\"obj\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  18578 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  18579 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /scoreboard players set @s obj 7
+  19038 actor   CommandOutput success_count=1 data=None commands.scoreboard.players.set.success success=true ["obj", "CmdActor", "7"]
+  19038 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.scoreboard.players.set.success\",\"with\":{\"rawtext\":[{\"text\":\"obj\"},{\"text\":\"CmdActor\"},{\"text\":\"7\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  19977 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  19977 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /scoreboard players set Fake obj 3
+  20026 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  20026 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  20031 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.scoreboard.players.set.success\",\"with\":{\"rawtext\":[{\"text\":\"obj\"},{\"text\":\"Fake\"},{\"text\":\"3\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  20031 actor   CommandOutput success_count=1 data=None commands.scoreboard.players.set.success success=true ["obj", "Fake", "3"]
+## /tellraw @a {"rawtext":[{"score":{"name":"@s","objective":"obj"}},{"text":"|"},{"score":{"name":"*","objective":"obj"}},{"text":"|"},{"score":{"name":"Fake","objective":"obj"}},{"text":"|"},{"score":{"name":"CmdWatcher","objective":"obj"}},{"text":"|"},{"score":{"name":"@s","objective":"none"}}]}
+  21032 actor   Text Text { needs_translation: false, category: MessageOnly, type: JsonWhisper, content: JsonWhisper(TextContentJsonWhisper { message: "{\"rawtext\":[{\"text\":\"7\"},{\"text\":\"|\"},{\"text\":\"7\"},{\"text\":\"|\"},{\"text\":\"3\"},{\"text\":\"|\"},{\"text\":\"|\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  21032 watcher Text Text { needs_translation: false, category: MessageOnly, type: JsonWhisper, content: JsonWhisper(TextContentJsonWhisper { message: "{\"rawtext\":[{\"text\":\"7\"},{\"text\":\"|\"},{\"score\":{\"name\":\"*\",\"objective\":\"obj\"}},{\"text\":\"|\"},{\"text\":\"3\"},{\"text\":\"|\"},{\"text\":\"|\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  21832 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  21832 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /scoreboard objectives remove obj
+  22038 actor   CommandOutput success_count=1 data=None commands.scoreboard.objectives.remove.success success=true ["obj"]
+  22038 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.scoreboard.objectives.remove.success\",\"with\":{\"rawtext\":[{\"text\":\"obj\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /title @a title Hello there
+  23041 actor   SetTitle SetTitle { type: SetTitle, text: "Hello there", fade_in_time: -1, stay_time: -1, fade_out_time: -1, xuid: "", platform_online_id: "", filtered_message: "" }
+  23041 actor   CommandOutput success_count=2 data=None commands.title.success success=true ["CmdActor, CmdWatcher"]
+  23041 watcher SetTitle SetTitle { type: SetTitle, text: "Hello there", fade_in_time: -1, stay_time: -1, fade_out_time: -1, xuid: "", platform_online_id: "", filtered_message: "" }
+  23041 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.title.success\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor, CmdWatcher\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /title @a subtitle Sub
+  24040 actor   SetTitle SetTitle { type: SetSubtitle, text: "Sub", fade_in_time: -1, stay_time: -1, fade_out_time: -1, xuid: "", platform_online_id: "", filtered_message: "" }
+  24040 actor   CommandOutput success_count=2 data=None commands.title.success success=true ["CmdActor, CmdWatcher"]
+  24040 watcher SetTitle SetTitle { type: SetSubtitle, text: "Sub", fade_in_time: -1, stay_time: -1, fade_out_time: -1, xuid: "", platform_online_id: "", filtered_message: "" }
+  24040 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.title.success\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor, CmdWatcher\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  24481 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  24481 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /title @a actionbar Bar
+  25042 actor   SetTitle SetTitle { type: ActionBarMessage, text: "Bar", fade_in_time: -1, stay_time: -1, fade_out_time: -1, xuid: "", platform_online_id: "", filtered_message: "" }
+  25042 watcher SetTitle SetTitle { type: ActionBarMessage, text: "Bar", fade_in_time: -1, stay_time: -1, fade_out_time: -1, xuid: "", platform_online_id: "", filtered_message: "" }
+  25042 actor   CommandOutput success_count=2 data=None commands.title.success success=true ["CmdActor, CmdWatcher"]
+  25042 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.title.success\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor, CmdWatcher\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  25381 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  25381 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /title @a times 5 40 10
+  26041 actor   SetTitle SetTitle { type: SetDurations, text: "", fade_in_time: 5, stay_time: 40, fade_out_time: 10, xuid: "", platform_online_id: "", filtered_message: "" }
+  26041 actor   CommandOutput success_count=2 data=None commands.title.success success=true ["CmdActor, CmdWatcher"]
+  26041 watcher SetTitle SetTitle { type: SetDurations, text: "", fade_in_time: 5, stay_time: 40, fade_out_time: 10, xuid: "", platform_online_id: "", filtered_message: "" }
+  26041 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.title.success\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor, CmdWatcher\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /title @a clear
+  27045 actor   SetTitle SetTitle { type: Clear, text: "", fade_in_time: -1, stay_time: -1, fade_out_time: -1, xuid: "", platform_online_id: "", filtered_message: "" }
+  27045 actor   CommandOutput success_count=2 data=None commands.title.success success=true ["CmdActor, CmdWatcher"]
+  27045 watcher SetTitle SetTitle { type: Clear, text: "", fade_in_time: -1, stay_time: -1, fade_out_time: -1, xuid: "", platform_online_id: "", filtered_message: "" }
+  27045 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.title.success\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor, CmdWatcher\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  27131 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  27131 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  27180 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  27181 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  27433 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  27433 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /title @a reset
+  28041 watcher SetTitle SetTitle { type: Reset, text: "", fade_in_time: -1, stay_time: -1, fade_out_time: -1, xuid: "", platform_online_id: "", filtered_message: "" }
+  28041 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.title.success\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor, CmdWatcher\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  28041 actor   SetTitle SetTitle { type: Reset, text: "", fade_in_time: -1, stay_time: -1, fade_out_time: -1, xuid: "", platform_online_id: "", filtered_message: "" }
+  28041 actor   CommandOutput success_count=2 data=None commands.title.success success=true ["CmdActor, CmdWatcher"]
+  28384 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  28384 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /title @s title
+  29046 actor   CommandOutput success_count=0 data=None commands.generic.invalidMessage success=false []
+  29931 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  29931 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /title @a times -1 2 3
+  30048 actor   SetTitle SetTitle { type: SetDurations, text: "", fade_in_time: -1, stay_time: 2, fade_out_time: 3, xuid: "", platform_online_id: "", filtered_message: "" }
+  30065 actor   CommandOutput success_count=2 data=None commands.title.success success=true ["CmdActor, CmdWatcher"]
+  30065 watcher SetTitle SetTitle { type: SetDurations, text: "", fade_in_time: -1, stay_time: 2, fade_out_time: 3, xuid: "", platform_online_id: "", filtered_message: "" }
+  30065 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.title.success\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor, CmdWatcher\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  30633 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  30633 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  30831 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 10532, paused: false }] }) }
+  30831 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 10532, paused: false }] }) }
+## /title @a times 1 2
+  31048 actor   CommandOutput success_count=0 data=None commands.generic.syntax success=false [" times 1 2", "", ""]
+## /title @a banana x
+  32049 actor   CommandOutput success_count=0 data=None commands.generic.syntax success=false ["/title @a ", "banana", " x"]
+  32481 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  32481 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  32732 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  32732 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /title nobody title x
+  33050 actor   CommandOutput success_count=0 data=None commands.generic.noTargetMatch success=false []
+## /titleraw @a title {"rawtext":[{"text":"Raw"},{"selector":"@s"}]}
+  34053 watcher SetTitle SetTitle { type: SetTitleJson, text: "{\"rawtext\":[{\"text\":\"Raw\"},{\"text\":\"CmdActor\"}]}\n", fade_in_time: -1, stay_time: -1, fade_out_time: -1, xuid: "", platform_online_id: "", filtered_message: "" }
+  34053 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.titleraw.success\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor, CmdWatcher\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  34053 actor   SetTitle SetTitle { type: SetTitleJson, text: "{\"rawtext\":[{\"text\":\"Raw\"},{\"text\":\"CmdActor\"}]}\n", fade_in_time: -1, stay_time: -1, fade_out_time: -1, xuid: "", platform_online_id: "", filtered_message: "" }
+  34053 actor   CommandOutput success_count=2 data=None commands.titleraw.success success=true ["CmdActor, CmdWatcher"]
+## /titleraw @a subtitle {"rawtext":[{"text":"RawSub"}]}
+  35052 actor   SetTitle SetTitle { type: SetSubtitleJson, text: "{\"rawtext\":[{\"text\":\"RawSub\"}]}\n", fade_in_time: -1, stay_time: -1, fade_out_time: -1, xuid: "", platform_online_id: "", filtered_message: "" }
+  35053 watcher SetTitle SetTitle { type: SetSubtitleJson, text: "{\"rawtext\":[{\"text\":\"RawSub\"}]}\n", fade_in_time: -1, stay_time: -1, fade_out_time: -1, xuid: "", platform_online_id: "", filtered_message: "" }
+  35053 actor   CommandOutput success_count=2 data=None commands.titleraw.success success=true ["CmdActor, CmdWatcher"]
+  35053 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.titleraw.success\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor, CmdWatcher\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  35333 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  35333 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  35574 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  35574 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /titleraw @a actionbar {"rawtext":[{"translate":"commands.give.success","with":["a","b","c"]}]}
+  36053 actor   SetTitle SetTitle { type: ActionBarMessageJson, text: "{\"rawtext\":[{\"translate\":\"commands.give.success\",\"with\":{\"rawtext\":[{\"text\":\"a\"},{\"text\":\"b\"},{\"text\":\"c\"}]}}]}\n", fade_in_time: -1, stay_time: -1, fade_out_time: -1, xuid: "", platform_online_id: "", filtered_message: "" }
+  36053 watcher SetTitle SetTitle { type: ActionBarMessageJson, text: "{\"rawtext\":[{\"translate\":\"commands.give.success\",\"with\":{\"rawtext\":[{\"text\":\"a\"},{\"text\":\"b\"},{\"text\":\"c\"}]}}]}\n", fade_in_time: -1, stay_time: -1, fade_out_time: -1, xuid: "", platform_online_id: "", filtered_message: "" }
+  36053 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.titleraw.success\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor, CmdWatcher\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  36053 actor   CommandOutput success_count=2 data=None commands.titleraw.success success=true ["CmdActor, CmdWatcher"]
+## /titleraw @a times 1 2 3
+  37051 watcher SetTitle SetTitle { type: SetDurations, text: "", fade_in_time: 1, stay_time: 2, fade_out_time: 3, xuid: "", platform_online_id: "", filtered_message: "" }
+  37051 actor   SetTitle SetTitle { type: SetDurations, text: "", fade_in_time: 1, stay_time: 2, fade_out_time: 3, xuid: "", platform_online_id: "", filtered_message: "" }
+  37051 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.titleraw.success\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor, CmdWatcher\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  37051 actor   CommandOutput success_count=2 data=None commands.titleraw.success success=true ["CmdActor, CmdWatcher"]
+## /titleraw @a clear
+  38052 actor   SetTitle SetTitle { type: Clear, text: "", fade_in_time: -1, stay_time: -1, fade_out_time: -1, xuid: "", platform_online_id: "", filtered_message: "" }
+  38052 actor   CommandOutput success_count=2 data=None commands.titleraw.success success=true ["CmdActor, CmdWatcher"]
+  38052 watcher SetTitle SetTitle { type: Clear, text: "", fade_in_time: -1, stay_time: -1, fade_out_time: -1, xuid: "", platform_online_id: "", filtered_message: "" }
+  38052 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.titleraw.success\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor, CmdWatcher\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  38233 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  38233 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /titleraw @a reset
+  39051 actor   SetTitle SetTitle { type: Reset, text: "", fade_in_time: -1, stay_time: -1, fade_out_time: -1, xuid: "", platform_online_id: "", filtered_message: "" }
+  39051 actor   CommandOutput success_count=2 data=None commands.titleraw.success success=true ["CmdActor, CmdWatcher"]
+  39051 watcher SetTitle SetTitle { type: Reset, text: "", fade_in_time: -1, stay_time: -1, fade_out_time: -1, xuid: "", platform_online_id: "", filtered_message: "" }
+  39051 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.titleraw.success\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor, CmdWatcher\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  39633 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  39633 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  40033 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  40034 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /titleraw @a title notjson
+  40049 actor   CommandOutput success_count=0 data=None commands.generic.syntax success=false [" @a title ", "notjson", ""]
+  40681 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  40681 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /playsound random.orb
+  41054 actor   PlaySound PlaySound { name: "random.orb", coordinates: BlockCoordinates { x: 4, y: -147, z: 4 }, volume: 1.0, pitch: 1.0, loop_count: 0, bypass_listener_range_check: false, handle: None, playback_position_seconds: None }
+  41054 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.playsound.success.single\",\"with\":{\"rawtext\":[{\"text\":\"random.orb\"},{\"text\":\"CmdActor\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  41054 actor   CommandOutput success_count=1 data=None commands.playsound.success.single success=true ["random.orb", "CmdActor"]
+  41381 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  41381 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  42025 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  42025 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /playsound random.orb @a
+  42059 actor   PlaySound PlaySound { name: "random.orb", coordinates: BlockCoordinates { x: 4, y: -147, z: 4 }, volume: 1.0, pitch: 1.0, loop_count: 0, bypass_listener_range_check: false, handle: None, playback_position_seconds: None }
+  42060 actor   CommandOutput success_count=1 data=None commands.playsound.success.multiple success=true ["random.orb", "2"]
+  42060 watcher PlaySound PlaySound { name: "random.orb", coordinates: BlockCoordinates { x: 4, y: -147, z: 4 }, volume: 1.0, pitch: 1.0, loop_count: 0, bypass_listener_range_check: false, handle: None, playback_position_seconds: None }
+  42060 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.playsound.success.multiple\",\"with\":{\"rawtext\":[{\"text\":\"random.orb\"},{\"text\":\"2\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /playsound random.orb @s ~ ~ ~ 2 0.5 0.1
+  43058 actor   PlaySound PlaySound { name: "random.orb", coordinates: BlockCoordinates { x: 4, y: -160, z: 4 }, volume: 2.0, pitch: 0.5, loop_count: 0, bypass_listener_range_check: false, handle: None, playback_position_seconds: None }
+  43058 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.playsound.success.single\",\"with\":{\"rawtext\":[{\"text\":\"random.orb\"},{\"text\":\"CmdActor\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  43058 actor   CommandOutput success_count=1 data=None commands.playsound.success.single success=true ["random.orb", "CmdActor"]
+  43633 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 10788, paused: false }] }) }
+  43633 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 10788, paused: false }] }) }
+  43933 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  43933 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /playsound random.orb @a ~100 ~ ~
+  44063 actor   CommandOutput success_count=0 data=None commands.playsound.failed success=false []
+## /playsound random.orb @a ~100 ~ ~ 1 1 0.5
+  45061 actor   PlaySound PlaySound { name: "random.orb", coordinates: BlockCoordinates { x: 19, y: -147, z: 4 }, volume: 0.5, pitch: 1.0, loop_count: 0, bypass_listener_range_check: false, handle: None, playback_position_seconds: None }
+  45061 watcher PlaySound PlaySound { name: "random.orb", coordinates: BlockCoordinates { x: 19, y: -147, z: 4 }, volume: 0.5, pitch: 1.0, loop_count: 0, bypass_listener_range_check: false, handle: None, playback_position_seconds: None }
+  45061 actor   CommandOutput success_count=1 data=None commands.playsound.success.multiple success=true ["random.orb", "2"]
+  45061 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.playsound.success.multiple\",\"with\":{\"rawtext\":[{\"text\":\"random.orb\"},{\"text\":\"2\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /playsound random.orb @a ~ ~ ~ -1
+  46059 actor   PlaySound PlaySound { name: "random.orb", coordinates: BlockCoordinates { x: 4, y: -160, z: 4 }, volume: -1.0, pitch: 1.0, loop_count: 0, bypass_listener_range_check: false, handle: None, playback_position_seconds: None }
+  46059 actor   CommandOutput success_count=1 data=None commands.playsound.success.multiple success=true ["random.orb", "2"]
+  46059 watcher PlaySound PlaySound { name: "random.orb", coordinates: BlockCoordinates { x: 4, y: -160, z: 4 }, volume: -1.0, pitch: 1.0, loop_count: 0, bypass_listener_range_check: false, handle: None, playback_position_seconds: None }
+  46059 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.playsound.success.multiple\",\"with\":{\"rawtext\":[{\"text\":\"random.orb\"},{\"text\":\"2\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /playsound random.orb @a ~ ~ ~ 1 300
+  47067 watcher PlaySound PlaySound { name: "random.orb", coordinates: BlockCoordinates { x: 4, y: -160, z: 4 }, volume: 1.0, pitch: 300.0, loop_count: 0, bypass_listener_range_check: false, handle: None, playback_position_seconds: None }
+  47068 actor   PlaySound PlaySound { name: "random.orb", coordinates: BlockCoordinates { x: 4, y: -160, z: 4 }, volume: 1.0, pitch: 300.0, loop_count: 0, bypass_listener_range_check: false, handle: None, playback_position_seconds: None }
+  47068 actor   CommandOutput success_count=1 data=None commands.playsound.success.multiple success=true ["random.orb", "2"]
+  47068 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.playsound.success.multiple\",\"with\":{\"rawtext\":[{\"text\":\"random.orb\"},{\"text\":\"2\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /playsound no.such.sound @a
+  48068 actor   PlaySound PlaySound { name: "no.such.sound", coordinates: BlockCoordinates { x: 4, y: -147, z: 4 }, volume: 1.0, pitch: 1.0, loop_count: 0, bypass_listener_range_check: false, handle: None, playback_position_seconds: None }
+  48068 watcher PlaySound PlaySound { name: "no.such.sound", coordinates: BlockCoordinates { x: 4, y: -147, z: 4 }, volume: 1.0, pitch: 1.0, loop_count: 0, bypass_listener_range_check: false, handle: None, playback_position_seconds: None }
+  48068 actor   CommandOutput success_count=1 data=None commands.playsound.success.multiple success=true ["no.such.sound", "2"]
+  48068 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.playsound.success.multiple\",\"with\":{\"rawtext\":[{\"text\":\"no.such.sound\"},{\"text\":\"2\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  48283 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  48283 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  48334 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  48334 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /playsound random.orb nobody
+  49070 actor   CommandOutput success_count=0 data=None commands.generic.noTargetMatch success=false []
+## /stopsound @a random.orb
+  50073 actor   StopSound StopSound { name: "random.orb", stop_all: false, stop_music_legacy: false }
+  50073 watcher StopSound StopSound { name: "random.orb", stop_all: false, stop_music_legacy: false }
+  50073 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.stopsound.success\",\"with\":{\"rawtext\":[{\"text\":\"random.orb\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  50073 actor   CommandOutput success_count=1 data=None commands.stopsound.success success=true ["random.orb"]
+## /stopsound @a
+  51067 actor   StopSound StopSound { name: "", stop_all: true, stop_music_legacy: false }
+  51067 watcher StopSound StopSound { name: "", stop_all: true, stop_music_legacy: false }
+  51067 actor   CommandOutput success_count=1 data=None commands.stopsound.success.all success=true []
+  51067 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.stopsound.success.all\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  51233 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  51234 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /stopsound nobody
+  52070 actor   CommandOutput success_count=0 data=None commands.generic.noTargetMatch success=false []
+## /particle minecraft:heart_particle ~ ~2 ~
+  53076 actor   SpawnParticleEffect SpawnParticleEffect { dimension: 0, entity_id: -1, position: Vec3f { x: 0.5, y: -18.0, z: 0.5 }, particle_name: "minecraft:heart_particle", molang_variables: None }
+  53076 actor   CommandOutput success_count=1 data=None commands.spawnParticleEmitter.success success=true ["minecraft:heart_particle"]
+  53076 watcher SpawnParticleEffect SpawnParticleEffect { dimension: 0, entity_id: -1, position: Vec3f { x: 0.5, y: -18.0, z: 0.5 }, particle_name: "minecraft:heart_particle", molang_variables: None }
+  53076 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.spawnParticleEmitter.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:heart_particle\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /particle minecraft:heart_particle
+  54075 actor   SpawnParticleEffect SpawnParticleEffect { dimension: 0, entity_id: -1, position: Vec3f { x: 0.5, y: -20.0, z: 0.5 }, particle_name: "minecraft:heart_particle", molang_variables: None }
+  54075 actor   CommandOutput success_count=1 data=None commands.spawnParticleEmitter.success success=true ["minecraft:heart_particle"]
+  54075 watcher SpawnParticleEffect SpawnParticleEffect { dimension: 0, entity_id: -1, position: Vec3f { x: 0.5, y: -20.0, z: 0.5 }, particle_name: "minecraft:heart_particle", molang_variables: None }
+  54075 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.spawnParticleEmitter.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:heart_particle\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  54583 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  54583 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /particle no:such ~ ~ ~
+  55076 watcher SpawnParticleEffect SpawnParticleEffect { dimension: 0, entity_id: -1, position: Vec3f { x: 0.5, y: -20.0, z: 0.5 }, particle_name: "no:such", molang_variables: None }
+  55076 actor   SpawnParticleEffect SpawnParticleEffect { dimension: 0, entity_id: -1, position: Vec3f { x: 0.5, y: -20.0, z: 0.5 }, particle_name: "no:such", molang_variables: None }
+  55076 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.spawnParticleEmitter.success\",\"with\":{\"rawtext\":[{\"text\":\"no:such\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  55076 actor   CommandOutput success_count=1 data=None commands.spawnParticleEmitter.success success=true ["no:such"]
+  55432 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  55432 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /particle minecraft:heart_particle 1 2
+  56077 actor   CommandOutput success_count=0 data=None commands.generic.syntax success=false ["rticle 1 2", "", ""]
+  56278 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  56279 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  56428 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 11044, paused: false }] }) }
+  56428 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 11044, paused: false }] }) }
+## /gamerule sendcommandfeedback false
+  57082 actor   GameRulesChanged sendCommandFeedback=Bool(false)
+  57082 watcher GameRulesChanged sendCommandFeedback=Bool(false)
+## /title @a title quiet
+  58101 actor   SetTitle SetTitle { type: SetTitle, text: "quiet", fade_in_time: -1, stay_time: -1, fade_out_time: -1, xuid: "", platform_online_id: "", filtered_message: "" }
+  58101 watcher SetTitle SetTitle { type: SetTitle, text: "quiet", fade_in_time: -1, stay_time: -1, fade_out_time: -1, xuid: "", platform_online_id: "", filtered_message: "" }
+## /playsound random.orb @a
+  59102 watcher PlaySound PlaySound { name: "random.orb", coordinates: BlockCoordinates { x: 4, y: -147, z: 4 }, volume: 1.0, pitch: 1.0, loop_count: 0, bypass_listener_range_check: false, handle: None, playback_position_seconds: None }
+  59102 actor   PlaySound PlaySound { name: "random.orb", coordinates: BlockCoordinates { x: 4, y: -147, z: 4 }, volume: 1.0, pitch: 1.0, loop_count: 0, bypass_listener_range_check: false, handle: None, playback_position_seconds: None }
+  59828 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  59828 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /particle minecraft:heart_particle ~ ~2 ~
+  60095 watcher SpawnParticleEffect SpawnParticleEffect { dimension: 0, entity_id: -1, position: Vec3f { x: 0.5, y: -18.0, z: 0.5 }, particle_name: "minecraft:heart_particle", molang_variables: None }
+  60095 actor   SpawnParticleEffect SpawnParticleEffect { dimension: 0, entity_id: -1, position: Vec3f { x: 0.5, y: -18.0, z: 0.5 }, particle_name: "minecraft:heart_particle", molang_variables: None }
+## /tellraw @a {"rawtext":[{"text":"quiet"}]}
+  61106 watcher Text Text { needs_translation: false, category: MessageOnly, type: JsonWhisper, content: JsonWhisper(TextContentJsonWhisper { message: "{\"rawtext\":[{\"text\":\"quiet\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  61106 actor   Text Text { needs_translation: false, category: MessageOnly, type: JsonWhisper, content: JsonWhisper(TextContentJsonWhisper { message: "{\"rawtext\":[{\"text\":\"quiet\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule sendcommandfeedback true
+  62107 watcher GameRulesChanged sendCommandFeedback=Bool(true)
+  62107 actor   GameRulesChanged sendCommandFeedback=Bool(true)
+  62107 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["sendcommandfeedback", "true"]
+  62107 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"sendcommandfeedback\"},{\"text\":\"true\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+probe exit 0
