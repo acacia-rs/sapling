@@ -2,7 +2,8 @@
 # Runs a probe example on testbox against its Linux BDS (~/work/bds-mechanisms, port 19182) or
 # against sapling's drill_server, and copies the capture back.
 # usage: tools/remote-drill.sh bds|sapling <example name> <local output file> [probe words...]
-# REMOTE_DIR as for remote-test.sh. Probe arguments are single words.
+# REMOTE_DIR as for remote-test.sh. Probe arguments are single words. Several sapling drills at once:
+# tools/remote-drills.sh; an A/B against a git ref: tools/drill-ab.sh.
 # BDS_DIR and BDS_PORT pick another BDS copy (one drill at a time per copy); SAPLING_PORT the drill
 # server's port (default 19183); SAPLING_DRILL_WORLD=strongholds its overworld (see drill_server.rs).
 # KEEP_WORLD=1 starts BDS on the last drill's world.
