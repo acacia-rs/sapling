@@ -1,10 +1,12 @@
 //! Chat: a client's line is cleaned, shown to the handlers and sent to everyone in the world
 //! under the sender's verified name, whatever name the packet claims.
 
-use acacia_proto::packets::{Text, TextCategory, TextContent, TextContentChat, TextContentJson, TextContentRaw, TextContentTranslation, TextType};
+use acacia_proto::packets::{
+    Text, TextCategory, TextContent, TextContentAnnouncement, TextContentChat, TextContentJson, TextContentRaw, TextContentTranslation, TextContentWhisper, TextType,
+};
 use bevy_ecs::prelude::*;
 use bytes::Bytes;
-use sapling_api::{ChatEvent, Player};
+use sapling_api::{ChatEvent, Player, PlayerId};
 
 use crate::components::{InLayer, Outgoing, PacketQueues, PerTick, in_world, in_world_identity};
 use crate::plugins;
@@ -83,6 +85,22 @@ pub(crate) fn send_to_layer(world: &mut World, layer: Entity, packet: &Bytes) {
     for player in in_world(world) {
         if world.get::<InLayer>(player).is_some_and(|in_layer| in_layer.0 == layer) {
             world.get_mut::<Outgoing>(player).expect("players have an outbox").0.push(packet.clone());
+        }
+    }
+}
+
+/// `/say`'s and `/tell`'s lines as BDS sent them (research/captures/bds-feedback.txt).
+impl sapling_api::ChatBackend for crate::handlers::Ctx<'_> {
+    fn announce(&mut self, from: &str, message: &str) {
+        let content = TextContentAnnouncement { source_name: from.to_owned(), message: format!("[{from}] {message}") };
+        send_to_all(self.world, &text(TextType::Announcement, TextCategory::Authored, TextContent::Announcement(content), ""));
+    }
+
+    fn whisper(&mut self, to: PlayerId, from: &str, message: &str) {
+        let content = TextContentWhisper { source_name: from.to_owned(), message: message.to_owned() };
+        let packet = text(TextType::Whisper, TextCategory::Authored, TextContent::Whisper(content), "");
+        if let Some(mut out) = self.out(to) {
+            out.0.push(packet);
         }
     }
 }

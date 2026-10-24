@@ -6,6 +6,8 @@ use std::time::Duration;
 
 use acacia_bot::Bot;
 
+#[path = "feedback_drill.rs"]
+mod feedback;
 #[path = "foes_drill.rs"]
 mod foes;
 #[path = "hunt_drill.rs"]
@@ -136,6 +138,7 @@ pub fn drill(name: &str) -> Option<(Vec<String>, &'static [&'static str])> {
         "names" => (world::names(), &[]),
         "sun" => (world::sun(), hunt::KINDS_SHOWN),
         "weather" => (world::weather(), world::WEATHER_SHOWN),
+        "feedback" => (feedback::feedback(), feedback::FEEDBACK_SHOWN),
         "spiders" => (world::spiders(), hunt::KINDS_SHOWN),
         "kinds2" => (world::kinds2(), hunt::KINDS_SHOWN),
         "pushed" => (world::pushed(), world::PUSHED_SHOWN),

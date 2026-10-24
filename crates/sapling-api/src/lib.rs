@@ -3,6 +3,7 @@
 //! borrowed handle; the ECS behind a shard never shows (docs/DESIGN.md "Plugin API").
 
 mod block;
+mod chat;
 mod combat;
 pub mod command;
 mod ctx;
@@ -27,6 +28,7 @@ mod world;
 mod world_event;
 
 pub use block::{Block, BlockPos, BreakEvent, Face, InteractEvent, PlaceEvent};
+pub use chat::ChatBackend;
 pub use combat::{Attacker, DamageEvent, DeathEvent, DeathMessage, RespawnEvent};
 pub use command::{Command, Commands, Output, Sender};
 pub use ctx::{Backend, FormCallback, ShardCtx, State};
