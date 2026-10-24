@@ -14,6 +14,7 @@ mod dolphins;
 mod drinks;
 mod bullets;
 mod charges;
+mod death;
 mod duels;
 mod fireballs;
 mod floating;
@@ -38,12 +39,12 @@ mod vexes;
 
 use bevy_ecs::prelude::*;
 use acacia_proto::packets::{EntityEvent, EntityEventEventId};
-use sapling_api::{EntityId, EntitySpawnEvent, Item, SpawnReason};
+use sapling_api::{EntityId, EntitySpawnEvent, SpawnReason};
 
 use sapling_world::Actor;
 
-use crate::blocks::Dice;
 use crate::body::Body;
+use death::{die, leaves_loot};
 use shown::{announcement, head, physics_of, spawn_sound};
 pub(crate) use afflictions::breathed_on;
 pub(crate) use attacks::attacked;
@@ -53,9 +54,8 @@ pub(crate) use health::{Cause, Health};
 pub(crate) use hunting::on_difficulty;
 pub(crate) use omens::{Omens, befall, infested_hurt};
 use crate::components::{InLayer, Layer, NetId, Tick};
-use crate::{blocks, drops, entities, inventory, mobs};
+use crate::{blocks, entities, mobs};
 
-const MOB_LOOT: &str = "doMobLoot";
 
 /// A mob: spawned through the API, or kept by a world folder and dressed as it was stored
 /// (`look`). Its [`Body`] and [`entities::Kind`] are beside it.
@@ -166,10 +166,8 @@ fn give_health(world: &mut World, entity: Entity, kind: &str, left: Option<f32>,
 #[derive(Component)]
 struct Dying(u64);
 
-/// Ticks from a mob's death to its going, and how far above its feet its loot appears (where the
-/// wire puts it), as BDS was seen to (research/captures/bds-kill.txt).
+/// Ticks from a mob's death to its going, as BDS was seen to (research/captures/bds-kill.txt).
 const DYING: u64 = 21;
-const LOOT_LIFT: f32 = 0.075;
 /// Killed, these go at once, without a death or loot, as BDS's armor stand.
 const NO_DEATH: &[&str] = &["minecraft:armor_stand"];
 
@@ -196,43 +194,6 @@ fn kill(world: &mut World, id: EntityId) -> bool {
     entities::tell_viewers(world, entity, layer, body.at.map(|c| c.floor() as i32), vec![sapling_net::encode(&death)]);
     die(world, entity, layer, &kind, &body);
     true
-}
-
-/// The mob, seen to die, is dead where it is, no longer kept by the world folder, and leaves its
-/// loot, cooked if it was on fire.
-fn die(world: &mut World, entity: Entity, layer: Entity, kind: &str, body: &Body) {
-    if crate::dragon::dies(world, entity) {
-        return;
-    }
-    let now = world.resource::<Tick>().0;
-    if let Some(id) = world.get::<NetId>(entity).map(|id| id.0) {
-        hunting::let_go(world, entity, layer, id, body);
-    }
-    omens::died(world, entity, layer, body);
-    world.entity_mut(entity).insert(Dying(now)).remove::<entities::Stored>();
-    let on_fire = world.get_mut::<Health>(entity).is_some_and(|mut health| {
-        health.end();
-        health.is_burning()
-    });
-    if leaves_loot(world, layer) {
-        leave_loot(world, layer, kind, on_fire, body.at);
-    }
-}
-
-fn leaves_loot(world: &World, layer: Entity) -> bool {
-    world.get::<Layer>(layer).is_some_and(|layer| layer.world.level().rules.on(MOB_LOOT))
-}
-
-fn leave_loot(world: &mut World, layer: Entity, kind: &str, on_fire: bool, [x, y, z]: [f32; 3]) {
-    let loot = {
-        let mut dice = world.get_resource_or_insert_with(Dice::default);
-        sapling_data::mob_loot(kind, on_fire, &mut || dice.fraction())
-    };
-    let Some(registry) = world.get::<Layer>(layer).map(|layer| layer.world.registry()) else { return };
-    let stacks: Vec<_> = loot.into_iter().filter_map(|(name, count)| inventory::stored(&Item::new(name, count.min(64) as u8), registry)).collect();
-    for stack in stacks {
-        drops::toss(world, layer, stack, [x, y + LOOT_LIFT, z]);
-    }
 }
 
 /// Moves every spawned mob a tick and hurts it by where it is; a dead one goes once it has died.
