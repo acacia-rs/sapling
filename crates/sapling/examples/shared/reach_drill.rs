@@ -12,3 +12,15 @@ pub fn reach_close() -> Vec<String> {
     lines.extend(["!click 1 0 0", "", "setblock ~1 ~ ~ air", "", "", "gamemode creative @s", ""].map(String::from));
     lines
 }
+
+/// The lids drill: whether a double chest opens with a block over its other half, the one clicked,
+/// a slab over the other, or nothing (NEXT.md 3); each chest goes after, shutting what opened.
+pub fn lids() -> Vec<String> {
+    let mut lines: Vec<String> = ["kill @e[type=!player]", "fill ~-2 ~-1 ~-2 ~4 ~-1 ~2 stone", "fill ~-2 ~ ~-2 ~4 ~4 ~2 air", "gamemode survival @s", ""].map(String::from).into();
+    for (over, click) in [("~2 ~1 ~ stone", 1), ("~1 ~1 ~ stone", 2), ("~2 ~1 ~ oak_slab", 1), ("~3 ~1 ~ stone", 1)] {
+        lines.extend(["setblock ~1 ~ ~ chest".into(), "setblock ~2 ~ ~ chest".into(), format!("setblock {over}"), String::new(), format!("!click {click} 0 0"), String::new(), String::new()]);
+        lines.extend(["fill ~1 ~ ~ ~3 ~1 ~ air", "", ""].map(String::from));
+    }
+    lines.extend(["gamemode creative @s", ""].map(String::from));
+    lines
+}

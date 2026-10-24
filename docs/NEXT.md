@@ -111,8 +111,8 @@ Each needs its rule looked up first (`bdsre` for BDS, the Java jar for data), th
   (`docs/research/standing-and-shapes.md`, "Open checks").
 - Stair corners and hanging-sign states by Java's rules; a placed skull's `SkullType` (-1 as BDS
   leaves it), the cauldron's `PotionId` defaults (`docs/research/block-entities.md`, "Open checks").
-- Whether a double chest asks both halves above, and the handler for `PlayerAction StopSleeping`
-  (`docs/research/beds-and-containers.md`).
+- The handler for `PlayerAction StopSleeping` (`docs/research/beds-and-containers.md`). A double
+  chest asks both halves above, a slab too, as on BDS (`bds_command_probe lids`).
 - Which block each liquid rule belongs to was read by where the block's name sits in BDS's code:
   sure for whole families (stairs, slabs, walls), not for single blocks (`waterlogging.md`).
 

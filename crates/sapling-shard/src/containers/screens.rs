@@ -134,13 +134,14 @@ pub(super) fn shut_out(world: &mut World, layer: Entity, lead: BlockPos) -> Opti
 }
 
 /// Confirms every screen a client closes, which it waits for, and ends its look into the
-/// block that screen showed.
+/// block that screen showed. BDS's answer names no screen type, whatever the client's named
+/// (research/captures/bds-lids.txt).
 pub(crate) fn dispatch_closes(world: &mut World) {
     let closes = world.resource_mut::<PacketQueues>().take::<ContainerClose>();
     for (player, closed) in closes {
         let window = closed.window_id.to_raw();
         if let Some(mut out) = world.get_mut::<Outgoing>(player) {
-            out.push(&ContainerClose { server: false, ..closed });
+            out.push(&ContainerClose { window_type: WindowType::None, server: false, ..closed });
         }
         if world.get::<Viewing>(player).is_some_and(|viewing| i64::from(viewing.window) == window) {
             close(world, player);

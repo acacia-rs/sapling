@@ -46,7 +46,10 @@ fn a_chest_is_heard_a_tick_after_it_opens_and_five_after_it_shuts_as_on_bds() {
     let opening: Vec<Vec<String>> = std::iter::once(heard(&opened)).chain((0..2).map(|_| heard(&h.tick(1)))).collect();
     assert_eq!(opening, [vec![], vec!["chest.open".to_owned()], vec![]]);
     h.receive(1, &ContainerClose { window_id, window_type: acacia_proto::types::WindowType::Container, server: false });
-    let shutting: Vec<Vec<String>> = (0..7).map(|_| heard(&h.tick(1))).collect();
+    let answered = h.tick(1);
+    let echo = all::<ContainerClose>(&answered);
+    assert_eq!(echo.iter().map(|close| (close.window_type, close.server)).collect::<Vec<_>>(), [(acacia_proto::types::WindowType::None, false)], "BDS names no type");
+    let shutting: Vec<Vec<String>> = std::iter::once(heard(&answered)).chain((0..6).map(|_| heard(&h.tick(1)))).collect();
     assert_eq!(shutting.iter().position(|sounds| sounds == &["chest.closed"]), Some(5), "{shutting:?}");
 }
 
