@@ -4,7 +4,7 @@
 //! ticks after it appears looks for the nearest player within eight blocks every twenty and flies
 //! to it; a player it touches on the way, or before, takes it, worth its experience.
 // They join up as BDS's do (merge.rs). Kept with their column (actors.rs), they come back new,
-// worth what they were first.
+// worth what they were when saved.
 
 mod merge;
 
@@ -146,7 +146,7 @@ fn touching(world: &mut World, layer: Entity, at: [f32; 3]) -> Option<Entity> {
 fn step(world: &mut World, entity: Entity, orb: &mut Orb, layer: Entity, id: u64) -> Fate {
     orb.age += 1;
     let Some(mut body) = world.get::<Body>(entity).copied().filter(|_| orb.age < LIFETIME) else { return Fate::Gone };
-    merge::take_in_kin(world, orb, layer, id, body.at);
+    merge::take_in_kin(world, entity, orb, layer, id, body.at);
     if let Some(player) = touching(world, layer, body.at).filter(|player| takes(world, *player)) {
         taken(world, layer, orb.value, body.at, player);
         return Fate::Taken;

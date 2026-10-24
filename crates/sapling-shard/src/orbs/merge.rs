@@ -9,6 +9,7 @@ use bevy_ecs::prelude::*;
 use super::Orb;
 use crate::body::Body;
 use crate::components::{InLayer, NetId};
+use crate::entities::Stored;
 use crate::{blocks, mobs};
 
 const EVERY: u32 = 20;
@@ -26,7 +27,16 @@ fn around(world: &mut World, layer: Entity, at: [f32; 3]) -> Vec<(Entity, u64, i
     orbs.iter(world).filter(|(_, in_layer, _, body, _)| in_layer.0 == layer && inside(at, body.at)).map(|(orb, _, id, _, kept)| (orb, id.0, kept.value, kept.age)).collect()
 }
 
-/// Tells viewers an orb is worth `value` now.
+/// Keeps the orb `orb` as worth `value` now, and tells viewers.
+fn set_worth(world: &mut World, orb: Entity, layer: Entity, id: u64, at: [f32; 3], value: i32) {
+    if let Some(mut stored) = world.get_mut::<Stored>(orb)
+        && let Ok(grown) = sapling_world::orb_worth(&stored.compound, value)
+    {
+        stored.compound = grown;
+    }
+    tell_worth(world, layer, id, at, value);
+}
+
 fn tell_worth(world: &mut World, layer: Entity, id: u64, at: [f32; 3], value: i32) {
     let item = MetadataDictionaryItem { key: Key::ExperienceValue, r#type: Type::Int, legacy_type: 2, value: Value::Default(Plain::Int(value)) };
     let told = SetEntityData { runtime_entity_id: id, metadata: vec![item], properties: EntityProperties { ints: Vec::new(), floats: Vec::new() }, tick: 0 };
@@ -34,7 +44,7 @@ fn tell_worth(world: &mut World, layer: Entity, id: u64, at: [f32; 3], value: i3
 }
 
 /// On the orb's twentieth ticks, the kin it takes in.
-pub(super) fn take_in_kin(world: &mut World, orb: &mut Orb, layer: Entity, id: u64, at: [f32; 3]) {
+pub(super) fn take_in_kin(world: &mut World, entity: Entity, orb: &mut Orb, layer: Entity, id: u64, at: [f32; 3]) {
     if orb.age % EVERY != 1 {
         return;
     }
@@ -45,7 +55,7 @@ pub(super) fn take_in_kin(world: &mut World, orb: &mut Orb, layer: Entity, id: u
         mobs::remove(world, other);
     }
     if grew {
-        tell_worth(world, layer, id, at, orb.value);
+        set_worth(world, entity, layer, id, at, orb.value);
     }
 }
 
@@ -62,7 +72,7 @@ pub(super) fn shared(world: &mut World, layer: Entity, at: [f32; 3], value: i32)
         if let Some(mut kept) = world.get_mut::<Orb>(orb) {
             kept.value = worth;
         }
-        tell_worth(world, layer, id, kept_at, worth);
+        set_worth(world, orb, layer, id, kept_at, worth);
     }
     true
 }

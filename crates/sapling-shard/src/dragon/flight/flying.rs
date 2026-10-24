@@ -1,7 +1,6 @@
 //! The dragon's flying goals (research/dragon-ai-decompile.md 2): the holding pattern round the
 //! node rings, from which it lands or strafes a player; the takeoff from the portal; strafing,
 //! which shoots a fireball once its aim has held; and the charge at a player it saw while sitting.
-// TODO: the strafe's fireball and the sight test (`canSee`) are left out.
 
 use super::goals::{Ctx, land};
 use super::{Flight, nodes};

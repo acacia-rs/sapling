@@ -4,7 +4,7 @@
 //! the tick after it comes, every fifth tick of its age it harms each player and mob whose feet are
 //! within its radius by half an instant harm (3; the undead are mended), a player thrown as by a
 //! magic hit from the cloud; the fireball's spares one it harmed for 20 ticks.
-// TODO: BDS's pulse stops at the owner when it meets it in its list (4.4).
+// BDS's pulse stops at its owner (extras 5.4), but these clouds have none (OwnerEid -1 as captured).
 
 use std::collections::HashMap;
 
