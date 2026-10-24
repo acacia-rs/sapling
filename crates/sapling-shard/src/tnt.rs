@@ -111,7 +111,7 @@ pub(crate) fn burn(world: &mut World) {
         if !packets.is_empty() {
             mobs::reannounce(world, entity, announcement(id, &body));
         }
-        packets.insert(0, sapling_net::encode(&sapling_data::mob_fuse(id, KIND, left)));
+        packets.insert(0, sapling_net::encode(&sapling_data::mob_fuse(id, sapling_data::grown_flags(KIND, MetadataFlags1::IGNITED), left)));
         entities::tell_viewers(world, entity, layer, body.at.map(|c| c.floor() as i32), packets);
     }
 }

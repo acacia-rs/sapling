@@ -88,7 +88,7 @@ fn spawn(world: &mut World, layer: Entity, kind: &str, feet: [f32; 3], reason: S
     }
     let body = Body::new(feet, [0.0; 3], size);
     let gene = genes::roll(world, kind);
-    let entity = entities::spawn(world, layer, kind, body, feet, |id| Some(announcement(id, kind, &body, None, None, 0.0, gene.map_or(0, |gene| gene.0))))?;
+    let entity = entities::spawn_mob(world, layer, kind, body, feet, |id| Some(announcement(id, kind, &body, None, None, 0.0, gene.map_or(0, |gene| gene.0))))?;
     world.entity_mut(entity).insert(Creature { look: None });
     if let Some(gene) = gene {
         world.entity_mut(entity).insert(gene);
@@ -111,7 +111,7 @@ pub(crate) fn from_storage(world: &mut World, layer: Entity, actor: Actor, uniqu
     let Some(size) = sapling_data::mob_size(&actor.identifier) else { return false };
     let body = Body::new(actor.position, [0.0; 3], size);
     let kind = actor.identifier.clone();
-    let Some(entity) = entities::spawn(world, layer, &kind, body, actor.position, |id| Some(announcement(id, &kind, &body, Some(&actor), None, 0.0, actor.variant))) else { return false };
+    let Some(entity) = entities::spawn_mob(world, layer, &kind, body, actor.position, |id| Some(announcement(id, &kind, &body, Some(&actor), None, 0.0, actor.variant))) else { return false };
     if let Some(gene) = genes::stored(&kind, actor.variant) {
         world.entity_mut(entity).insert(gene);
     }

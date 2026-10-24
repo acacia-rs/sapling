@@ -5,6 +5,7 @@
 //! shot (`fireballs`).
 // TODO: a spot is not checked to hold its box, and slowness does not stop it.
 
+use acacia_proto::types::MetadataFlags1;
 use bevy_ecs::prelude::*;
 
 use crate::blocks::Dice;
@@ -69,7 +70,10 @@ pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity, id: u64, k
         }
     }
     let cell = body.at.map(|c| c.floor() as i32);
-    let mouth = |world: &mut World, open: bool| entities::tell_viewers(world, entity, layer, cell, vec![sapling_net::encode(&sapling_data::mob_charge(id, kind, open))]);
+    let mouth = |world: &mut World, open: bool| {
+        let flags = entities::mob_flags(world, entity, kind, MetadataFlags1::CHARGED, open);
+        entities::tell_viewers(world, entity, layer, cell, vec![sapling_net::encode(&sapling_data::mob_charge(id, flags, open))]);
+    };
     let (warns, shoots) = match (prey, warns, shoots) {
         (None, _, shoots) => {
             if shoots.is_some() {

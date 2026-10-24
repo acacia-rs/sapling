@@ -7,7 +7,7 @@
 use bevy_ecs::prelude::*;
 use bytes::Bytes;
 use acacia_proto::packets::{EntityEvent, EntityEventEventId, LevelEvent, LevelEventEvent, LevelSoundEvent};
-use acacia_proto::types::Vec3f;
+use acacia_proto::types::{MetadataFlags1, Vec3f};
 use sapling_world::World as Level;
 
 use super::health::{Cause, Health, WALLED};
@@ -151,7 +151,7 @@ pub(super) fn tick(world: &mut World, entity: Entity, layer: Entity, id: u64, ki
         if health.smother(in_wall, WALLED) && weigh(world, &mut health, before, Cause::Suffocation) {
             packets.push(strike(id, &health, Cause::Suffocation, None));
         }
-        tell(&mut health, id, kind, burns, &mut packets);
+        tell(world, entity, &mut health, id, kind, burns, &mut packets);
         let before = health;
         if burns && now.liquid() == Some(Liquid::Lava) && health.scald() && weigh(world, &mut health, before, Cause::Lava) {
             packets.push(strike(id, &health, Cause::Lava, None));
@@ -172,7 +172,7 @@ pub(super) fn tick(world: &mut World, entity: Entity, layer: Entity, id: u64, ki
             packets.push(steam(now));
             splash::fizz(world, layer, now, DOUSED);
         }
-        tell(&mut health, id, kind, true, &mut packets);
+        tell(world, entity, &mut health, id, kind, true, &mut packets);
     }
     if let Some(mut kept) = world.get_mut::<Health>(entity) {
         *kept = health;
@@ -182,13 +182,14 @@ pub(super) fn tick(world: &mut World, entity: Entity, layer: Entity, id: u64, ki
 }
 
 /// Tells viewers the mob's health, and its catching or losing fire, where they changed.
-fn tell(health: &mut Health, id: u64, kind: &str, burns: bool, packets: &mut Vec<Bytes>) {
+fn tell(world: &mut World, entity: Entity, health: &mut Health, id: u64, kind: &str, burns: bool, packets: &mut Vec<Bytes>) {
     if health.left() != health.told {
         health.told = health.left();
         packets.push(sapling_net::encode(&sapling_data::mob_health_update(id, health.left(), health.max())));
     }
     if burns && health.is_burning() != health.lit {
         health.lit = health.is_burning();
-        packets.push(sapling_net::encode(&sapling_data::mob_fire_flags(id, kind, health.lit)));
+        let flags = entities::mob_flags(world, entity, kind, MetadataFlags1::ONFIRE, health.lit);
+        packets.push(sapling_net::encode(&sapling_data::mob_flags_set(id, flags)));
     }
 }

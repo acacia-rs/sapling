@@ -21,7 +21,9 @@ What sapling did otherwise, by how often:
 | Item and entity names in answers by title case: BDS `Raw Chicken`, `Flint and Steel`, `Potion of Slowness`, `Water Bottle`, a lying item by its item (`Rotten Flesh`, not `Item`) | ~40 lines | open: needs BDS's description ids (blocks use old keys, `tile.planks.oak`) |
 | Big fills as `UpdateBlock` each where BDS sends `UpdateSubchunkBlocks` | 27.8k extra UpdateBlock | open |
 | Sounds BDS makes and sapling not: a player's `land` to others (248), `hit` (60), `fall` (43), `jump_to_block` (41), `born` (23), `armor.equip_iron` (22), `open`/`close` (34), underwater enter/exit (34), `bottle.empty` (44) | ~600 | open; `land` is the server's (acacia's bot sends no sounds), to everyone but the lander |
-| `SetEntityData` (15.6k) and `UpdateAttributes` (2.5k) BDS sends that sapling does not, in ~60 words | | open, not yet broken down |
+| Mobs never showed `MOVING` (bit 34), which BDS toggles by docs/research/moving-flag.md's rule for every actor: 9871 toggles to sapling's 62 | 12 mob words: 565 BDS, 6 before, 184 after (AI differs) | fixed: a mob's flags are one word (`sync::Told::flag_mob`/`set_flag`), so fire, fuses, charges and spells no longer clear each other's bits either |
+| `BREATHING` (bit 35) toggles of mobs under water (342), `VisibleMobEffects`, and the whole-dictionary `SetEntityData` BDS repeats (D9) | ~15k | open |
+| A summoned armour stand moves in its spawn tick on sapling, the tick after on BDS (bds-water-flags.txt 48061/48112), so its `MOVING` shows a tick early too; BDS's zombie moved within 1 ms, but in a batch of three ticks, so the rule for mobs is not settled | | open |
 | `/effect` and `/damage` took players alone: none found where BDS's put slowness on a zombie (`effects3`, `mob-effects`, `wind-burst`, `stare`) | 30 lines | fixed (`ctx.remove_entity_effect`, `clear_entity_effects`, `hurt_entity`) |
 | `/kill @e[type=!player]` found nothing where BDS killed items or mobs still there (`effects3`, `wind-burst`, `stare`); `stare`'s enderman is gone before its `/tp` and `/effect` | ~25 lines | open |
 

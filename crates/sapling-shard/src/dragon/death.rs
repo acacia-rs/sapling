@@ -65,7 +65,7 @@ pub(super) fn tick(world: &mut World, layer: Entity) {
         let id = world.get::<NetId>(dragon).map_or(0, |id| id.0);
         let cell = body.at.map(|c| c.floor() as i32);
         if ticks == FLAGS_AFTER {
-            entities::tell_viewers(world, dragon, layer, cell, vec![sapling_net::encode(&sapling_data::mob_flags_set(id, super::DRAGON, acacia_proto::types::MetadataFlags1(0)))]);
+            entities::tell_viewers(world, dragon, layer, cell, vec![sapling_net::encode(&sapling_data::mob_flags_set(id, sapling_data::grown_flags(super::DRAGON, acacia_proto::types::MetadataFlags1(0))))]);
         }
         if ticks == HEARD_AFTER {
             let [x, y, z] = body.at;

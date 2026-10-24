@@ -44,6 +44,20 @@ struct Shown {
     lifted: bool,
     burning: bool,
     moved_far: Option<bool>,
+    /// A mob's: the flags it was announced with, and those set since (on fire, a fuse, a charge).
+    mob: Option<[i64; 2]>,
+    /// The whole word viewers were last told.
+    told: i64,
+}
+
+impl Shown {
+    fn word(&self) -> i64 {
+        let bit = |on: bool, flag: Flags| if on { flag.0 } else { 0 };
+        match self.mob {
+            Some([announced, set]) => announced | set | bit(self.moving, Flags::MOVING),
+            None => Flags::HAS_COLLISION.0 | bit(!self.lifted, Flags::AFFECTED_BY_GRAVITY) | bit(self.moving, Flags::MOVING) | bit(self.burning, Flags::ONFIRE),
+        }
+    }
 }
 
 impl Told {
@@ -74,7 +88,24 @@ impl Told {
     /// falling blocks; `ticked` when its body already made a move, far enough to show, that viewers
     /// were not told of.
     pub fn flag_moving(&mut self, ticked: bool) {
-        self.flags = Some(Shown { moving: false, lifted: false, burning: false, moved_far: ticked.then_some(true) });
+        let shown = Shown { moving: false, lifted: false, burning: false, moved_far: ticked.then_some(true), mob: None, told: 0 };
+        self.flags = Some(Shown { told: shown.word(), ..shown });
+    }
+
+    /// Tells viewers when the mob, announced with `announced`, is moving; its other flags go
+    /// through [`Told::set_flag`] so that each word told has them all.
+    pub fn flag_mob(&mut self, announced: Flags) {
+        self.flags = Some(Shown { moving: false, lifted: false, burning: false, moved_far: None, mob: Some([announced.0, 0]), told: announced.0 });
+    }
+
+    /// Sets or clears `flag` of a mob's: the whole word to tell viewers now, which is then what
+    /// they know. `None` for an entity that is no mob [`Told::flag_mob`] was called for.
+    pub fn set_flag(&mut self, flag: Flags, on: bool) -> Option<Flags> {
+        let shown = self.flags.as_mut()?;
+        let [_, set] = shown.mob.as_mut()?;
+        *set = if on { *set | flag.0 } else { *set & !flag.0 };
+        shown.told = shown.word();
+        Some(Flags(shown.told))
     }
 
     /// The flags of the entity `id` when they changed, after a tick that moved it by `gone`, a
@@ -84,14 +115,13 @@ impl Told {
     pub fn flags(&mut self, id: u64, gone: [f32; 3], lifted: bool, burning: bool) -> Option<Bytes> {
         let shown = self.flags.as_mut()?;
         let moved_far = gone.iter().map(|axis| axis * axis).sum::<f32>() > MOVING;
-        let moving = std::mem::replace(&mut shown.moved_far, Some(moved_far)).unwrap_or(shown.moving);
-        if (moving, lifted, burning) == (shown.moving, shown.lifted, shown.burning) {
+        shown.moving = std::mem::replace(&mut shown.moved_far, Some(moved_far)).unwrap_or(shown.moving);
+        (shown.lifted, shown.burning) = (lifted, burning);
+        if shown.word() == shown.told {
             return None;
         }
-        (shown.moving, shown.lifted, shown.burning) = (moving, lifted, burning);
-        let bit = |on: bool, flag: Flags| if on { flag.0 } else { 0 };
-        let flags = Flags(Flags::HAS_COLLISION.0 | bit(!lifted, Flags::AFFECTED_BY_GRAVITY) | bit(moving, Flags::MOVING) | bit(burning, Flags::ONFIRE));
-        let item = MetadataDictionaryItem { key: Key::Flags, r#type: Type::Long, legacy_type: 7, value: Value::Flags(flags) };
+        shown.told = shown.word();
+        let item = MetadataDictionaryItem { key: Key::Flags, r#type: Type::Long, legacy_type: 7, value: Value::Flags(Flags(shown.told)) };
         Some(sapling_net::encode(&SetEntityData { runtime_entity_id: id, metadata: vec![item], properties: EntityProperties { ints: Vec::new(), floats: Vec::new() }, tick: 0 }))
     }
 
@@ -208,6 +238,19 @@ mod tests {
             Value::Flags(flags) => flags.0,
             ref other => panic!("{other:?}"),
         }
+    }
+
+    #[test]
+    fn a_mob_shows_moving_a_tick_after_it_walks_and_keeps_the_flags_set_meanwhile() {
+        let announced = Flags(Flags::HAS_COLLISION.0 | Flags::WALKER.0);
+        let mut told = Told::new([0.0; 3]);
+        assert_eq!(told.set_flag(Flags::ONFIRE, true), None, "no mob yet");
+        told.flag_mob(announced);
+        assert!(told.flags(1, [0.1, 0.0, 0.0], false, false).is_none(), "the tick it walks");
+        assert_eq!(sent_flags(&told.flags(1, [0.1, 0.0, 0.0], false, false).unwrap()), announced.0 | Flags::MOVING.0);
+        assert_eq!(told.set_flag(Flags::ONFIRE, true), Some(Flags(announced.0 | Flags::MOVING.0 | Flags::ONFIRE.0)));
+        assert!(told.flags(1, [0.0; 3], false, false).is_none(), "still moving: it moved last tick");
+        assert_eq!(sent_flags(&told.flags(1, [0.0; 3], false, false).unwrap()), announced.0 | Flags::ONFIRE.0);
     }
 
     #[test]

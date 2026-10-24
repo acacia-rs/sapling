@@ -57,7 +57,7 @@ pub(super) fn tell(shown: &mut Shown, id: u64, flight: &Flight) -> Vec<Bytes> {
         shown.flags = Some(flags);
         let bit = |on: bool, flag: MetadataFlags1| if on { flag } else { MetadataFlags1(0) };
         let extra = MetadataFlags1(bit(moving, MetadataFlags1::MOVING).0 | bit(flight.sitting, MetadataFlags1::SITTING).0);
-        packets.push(sapling_net::encode(&sapling_data::mob_flags_set(id, super::DRAGON, extra)));
+        packets.push(sapling_net::encode(&sapling_data::mob_flags_set(id, sapling_data::grown_flags(super::DRAGON, extra))));
     }
     let turn = [byte(flight.pitch), byte(flight.motion.yaw), byte(flight.motion.yaw)];
     if at != last || turn != shown.turn {

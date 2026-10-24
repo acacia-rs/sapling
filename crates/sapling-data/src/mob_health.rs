@@ -94,16 +94,13 @@ pub fn mob_health_update(id: u64, left: f32, max: f32) -> UpdateAttributes {
     UpdateAttributes { runtime_entity_id: id, attributes: vec![health], tick: 0 }
 }
 
-/// The flags of the mob `id`, a grown one of `identifier`, on fire or not.
-pub fn mob_fire_flags(id: u64, identifier: &str, on_fire: bool) -> SetEntityData {
-    let flags = MetadataFlags1(mob_flags(identifier).0 | if on_fire { MetadataFlags1::ONFIRE.0 } else { 0 });
-    let item = MetadataDictionaryItem { key: Key::Flags, r#type: Type::Long, legacy_type: 7, value: Value::Flags(flags) };
-    SetEntityData { runtime_entity_id: id, metadata: vec![item], properties: EntityProperties { ints: Vec::new(), floats: Vec::new() }, tick: 0 }
+/// The flags BDS announced a grown mob of `identifier` with, and `extra` besides.
+pub fn grown_flags(identifier: &str, extra: MetadataFlags1) -> MetadataFlags1 {
+    MetadataFlags1(mob_flags(identifier).0 | extra.0)
 }
 
-/// The mob `id`, a grown one of `identifier`, has a lit fuse with `left` ticks to go.
-pub fn mob_fuse(id: u64, identifier: &str, left: i32) -> SetEntityData {
-    let flags = MetadataFlags1(mob_flags(identifier).0 | MetadataFlags1::IGNITED.0);
+/// The mob `id`, whose flags are now `flags` (`IGNITED` among them), has a lit fuse with `left` ticks to go.
+pub fn mob_fuse(id: u64, flags: MetadataFlags1, left: i32) -> SetEntityData {
     let metadata = vec![
         MetadataDictionaryItem { key: Key::Flags, r#type: Type::Long, legacy_type: 7, value: Value::Flags(flags) },
         MetadataDictionaryItem { key: Key::FuseLength, r#type: Type::Int, legacy_type: 2, value: Value::Default(Plain::Int(left)) },
@@ -111,9 +108,9 @@ pub fn mob_fuse(id: u64, identifier: &str, left: i32) -> SetEntityData {
     SetEntityData { runtime_entity_id: id, metadata, properties: EntityProperties { ints: Vec::new(), floats: Vec::new() }, tick: 0 }
 }
 
-/// The mob `id`, a grown one of `identifier`, casts a spell of `colour` (ARGB), or stops casting.
-pub fn mob_spell(id: u64, identifier: &str, colour: Option<i32>) -> SetEntityData {
-    let flags = MetadataFlags1(mob_flags(identifier).0 | if colour.is_some() { MetadataFlags1::EVOKER_SPELL.0 } else { 0 });
+/// The mob `id`, whose flags are now `flags` (`EVOKER_SPELL` among them while it casts), casts a
+/// spell of `colour` (ARGB), or stops casting.
+pub fn mob_spell(id: u64, flags: MetadataFlags1, colour: Option<i32>) -> SetEntityData {
     let mut metadata = vec![MetadataDictionaryItem { key: Key::Flags, r#type: Type::Long, legacy_type: 7, value: Value::Flags(flags) }];
     // BDS never clears the colour; it rewrites it with the next spell.
     if let Some(colour) = colour {
@@ -122,15 +119,15 @@ pub fn mob_spell(id: u64, identifier: &str, colour: Option<i32>) -> SetEntityDat
     SetEntityData { runtime_entity_id: id, metadata, properties: EntityProperties { ints: Vec::new(), floats: Vec::new() }, tick: 0 }
 }
 
-/// The flags of the mob `id`, a grown one of `identifier`, with `extra` set besides.
-pub fn mob_flags_set(id: u64, identifier: &str, extra: MetadataFlags1) -> SetEntityData {
-    let item = MetadataDictionaryItem { key: Key::Flags, r#type: Type::Long, legacy_type: 7, value: Value::Flags(MetadataFlags1(mob_flags(identifier).0 | extra.0)) };
+/// The mob `id`'s flags are now `flags`.
+pub fn mob_flags_set(id: u64, flags: MetadataFlags1) -> SetEntityData {
+    let item = MetadataDictionaryItem { key: Key::Flags, r#type: Type::Long, legacy_type: 7, value: Value::Flags(flags) };
     SetEntityData { runtime_entity_id: id, metadata: vec![item], properties: EntityProperties { ints: Vec::new(), floats: Vec::new() }, tick: 0 }
 }
 
-/// The mob `id`, a grown one of `identifier`, readies a shot (a ghast's open mouth) or stops.
-pub fn mob_charge(id: u64, identifier: &str, charged: bool) -> SetEntityData {
-    let flags = MetadataFlags1(mob_flags(identifier).0 | if charged { MetadataFlags1::CHARGED.0 } else { 0 });
+/// The mob `id`, whose flags are now `flags` (`CHARGED` among them while it does), readies a shot
+/// (a ghast's open mouth) or stops.
+pub fn mob_charge(id: u64, flags: MetadataFlags1, charged: bool) -> SetEntityData {
     let metadata = vec![
         MetadataDictionaryItem { key: Key::Flags, r#type: Type::Long, legacy_type: 7, value: Value::Flags(flags) },
         MetadataDictionaryItem { key: Key::ChargeAmount, r#type: Type::Byte, legacy_type: 0, value: Value::Default(Plain::Byte(i8::from(charged))) },
@@ -158,7 +155,7 @@ mod tests {
 
     #[test]
     fn a_burning_pig_keeps_its_own_flags() {
-        let flags = |on_fire| match mob_fire_flags(7, "minecraft:pig", on_fire).metadata[0].value {
+        let flags = |on_fire: bool| match mob_flags_set(7, grown_flags("minecraft:pig", MetadataFlags1(i64::from(on_fire)))).metadata[0].value {
             Value::Flags(MetadataFlags1(flags)) => flags,
             _ => unreachable!(),
         };

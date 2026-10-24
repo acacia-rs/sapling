@@ -177,6 +177,13 @@ pub fn add_experience_orb(id: u64, at: [f32; 3], velocity: [f32; 3], value: i32)
     AddEntity { unique_id: id as i64, runtime_id: id, position: Vec3f { x, y, z }, velocity: Vec3f { x: dx, y: dy, z: dz }, ..orb }
 }
 
+/// The flags [`add_entity`] announces `o` with.
+pub fn announced_flags(o: &AddEntityOptions<'_>) -> MetadataFlags1 {
+    let entity = add_entity(o);
+    let flags = entity.metadata.iter().find_map(|item| if let Value::Flags(flags) = &item.value { Some(flags.0) } else { None });
+    MetadataFlags1(flags.unwrap_or(0))
+}
+
 pub fn add_entity(o: &AddEntityOptions<'_>) -> AddEntity {
     let identifier = SUCCEEDED.iter().find(|(old, _)| *old == o.identifier).map_or(o.identifier, |(_, new)| new);
     let recorded = RECORDED.get(identifier);

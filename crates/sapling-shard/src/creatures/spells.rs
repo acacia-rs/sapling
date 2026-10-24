@@ -91,7 +91,10 @@ pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity, id: u64, k
     let Some(caster) = world.get::<Caster>(entity) else { return false };
     let (next, cast) = (caster.next, caster.cast);
     let cell = body.at.map(|c| c.floor() as i32);
-    let flag_off = |world: &mut World| entities::tell_viewers(world, entity, layer, cell, vec![sapling_net::encode(&sapling_data::mob_spell(id, kind, None))]);
+    let flag_off = |world: &mut World| {
+        let flags = entities::mob_flags(world, entity, kind, MetadataFlags1::EVOKER_SPELL, false);
+        entities::tell_viewers(world, entity, layer, cell, vec![sapling_net::encode(&sapling_data::mob_spell(id, flags, None))]);
+    };
     match (cast, prey) {
         (Some(cast), None) => {
             if !(cast.spell == Spell::Summoning && now > cast.began + SUMMON_CASTS) {
@@ -129,7 +132,8 @@ pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity, id: u64, k
             };
             world.get_mut::<Caster>(entity).expect("a caster, above").cast = Some(Cast { began: now, spell, aim: None });
             let colour = if spell == Spell::Summoning { SUMMON_COLOUR } else { COLOUR };
-            entities::tell_viewers(world, entity, layer, cell, vec![sapling_net::encode(&sapling_data::mob_spell(id, kind, Some(colour)))]);
+            let flags = entities::mob_flags(world, entity, kind, MetadataFlags1::EVOKER_SPELL, true);
+            entities::tell_viewers(world, entity, layer, cell, vec![sapling_net::encode(&sapling_data::mob_spell(id, flags, Some(colour)))]);
             let sounds: &[&str] = match spell {
                 Spell::Summoning => &["prepare.summon"],
                 Spell::Rings => &["cast.spell", "prepare.attack"],

@@ -85,7 +85,7 @@ fn charging(world: &mut World, entity: Entity, layer: Entity, id: u64, kind: &st
     if let Some(mut vex) = world.get_mut::<Vex>(entity) {
         vex.charging = on;
     }
-    let flags = sapling_data::mob_flags_set(id, kind, if on { MetadataFlags1::CHARGE_ATTACK } else { MetadataFlags1(0) });
+    let flags = sapling_data::mob_flags_set(id, entities::mob_flags(world, entity, kind, MetadataFlags1::CHARGE_ATTACK, on));
     let cell = body.at.map(|c| c.floor() as i32);
     entities::tell_viewers(world, entity, layer, cell, vec![sapling_net::encode(&flags)]);
     if on {

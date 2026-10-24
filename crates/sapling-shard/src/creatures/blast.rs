@@ -5,7 +5,7 @@
 // it is (`withstands`), for want of the game's table.
 
 use acacia_proto::packets::{LevelEvent, LevelEventEvent, LevelSoundEvent};
-use acacia_proto::types::Vec3f;
+use acacia_proto::types::{MetadataFlags1, Vec3f};
 use bevy_ecs::prelude::*;
 use sapling_api::{Difficulty, ExplosionEvent};
 
@@ -38,7 +38,7 @@ pub(super) fn is_lit(world: &World, entity: Entity) -> bool {
 }
 
 fn tell(world: &mut World, entity: Entity, layer: Entity, id: u64, kind: &str, body: &Body, left: i32) {
-    let told = sapling_data::mob_fuse(id, kind, left);
+    let told = sapling_data::mob_fuse(id, entities::mob_flags(world, entity, kind, MetadataFlags1::IGNITED, true), left);
     entities::tell_viewers(world, entity, layer, body.at.map(|c| c.floor() as i32), vec![sapling_net::encode(&told)]);
 }
 
@@ -53,7 +53,7 @@ pub(super) fn light(world: &mut World, entity: Entity, layer: Entity, id: u64, k
 /// Puts the mob's fuse out, if it is lit: its prey is gone or far.
 pub(super) fn put_out(world: &mut World, entity: Entity, layer: Entity, id: u64, kind: &str, body: &Body) {
     if world.entity_mut(entity).take::<Fuse>().is_some() {
-        let unlit = sapling_data::mob_fire_flags(id, kind, false);
+        let unlit = sapling_data::mob_flags_set(id, entities::mob_flags(world, entity, kind, MetadataFlags1::IGNITED, false));
         entities::tell_viewers(world, entity, layer, body.at.map(|c| c.floor() as i32), vec![sapling_net::encode(&unlit)]);
     }
 }

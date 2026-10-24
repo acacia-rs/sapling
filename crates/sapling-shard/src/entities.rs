@@ -4,6 +4,9 @@
 //! drops.rs, orbs.rs, blocks/falling.
 // TODO: the mobs a world folder stores are still statues (mobs.rs), outside this.
 
+use acacia_proto::RawPacket;
+use acacia_proto::packets::AddEntity;
+use acacia_proto::types::{MetadataDictionaryItemValue, MetadataFlags1};
 use bevy_ecs::prelude::*;
 use bytes::Bytes;
 use sapling_api::{EntityId, EntityInfo};
@@ -98,6 +101,30 @@ pub(crate) fn flag_moving(world: &mut World, entity: Entity, ticked: bool) {
     if let Some(mut told) = world.get_mut::<Told>(entity) {
         told.flag_moving(ticked);
     }
+}
+
+/// [`spawn`]s a mob whose viewers are told when it moves, from the flags its `AddEntity` (the
+/// first packet `announce` makes) gave it.
+pub(crate) fn spawn_mob(world: &mut World, layer: Entity, kind: &str, body: Body, wire: [f32; 3], announce: impl FnOnce(u64) -> Option<Vec<Bytes>>) -> Option<Entity> {
+    let mut announced = None;
+    let entity = spawn(world, layer, kind, body, wire, |id| {
+        let packets = announce(id)?;
+        announced = packets.first().and_then(|first| RawPacket::parse(first.clone()).ok()?.decode::<AddEntity>().ok()).and_then(|added| {
+            added.metadata.into_iter().find_map(|item| if let MetadataDictionaryItemValue::Flags(flags) = item.value { Some(flags) } else { None })
+        });
+        Some(packets)
+    })?;
+    if let (Some(announced), Some(mut told)) = (announced, world.get_mut::<Told>(entity)) {
+        told.flag_mob(announced);
+    }
+    Some(entity)
+}
+
+/// Sets or clears `flag` of the mob `entity` of `kind`: the whole word of flags to tell its
+/// viewers now, `MOVING` too, so that no writer clears another's.
+pub(crate) fn mob_flags(world: &mut World, entity: Entity, kind: &str, flag: MetadataFlags1, on: bool) -> MetadataFlags1 {
+    let tracked = world.get_mut::<Told>(entity).and_then(|mut told| told.set_flag(flag, on));
+    tracked.unwrap_or_else(|| sapling_data::grown_flags(kind, if on { flag } else { MetadataFlags1(0) }))
 }
 
 /// Each entity with a body: its ECS entity, world and what the API is told of it.
