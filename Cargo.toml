@@ -39,7 +39,7 @@ flate2 = "1.1"
 # The bedrock-crustaceans fork: Send + Sync, background compaction (research/worlds-and-ecs.md §2).
 # Never enable its `zstd` feature: it would claim compression id 2, which is zlib in worlds.
 rusty-leveldb = { git = "https://github.com/bedrock-crustaceans/rusty-leveldb", rev = "3365b32b747ad50fefdd8b6a6f988dacf357a114", default-features = false, features = ["fs"] }
-p384 = { version = "0.13", features = ["ecdsa"] }
+p384 = { version = "0.14", features = ["ecdsa"] }
 rand_core = { version = "0.6", features = ["getrandom"] }
 serde_json = "1"
 socket2 = "0.6"
