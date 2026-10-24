@@ -14,7 +14,7 @@ use acacia_bot::proto::packets::{AddEntity, StartGame, SyncWorldClocks, SyncWorl
 use acacia_bot::{BotConfig, BotEvent};
 use bytes::BytesMut;
 use common::{GROUND, SPAWN, fixture};
-use sapling::{Handler, RuleValue, Server, ShardCtx, World};
+use sapling::{Handler, RuleValue, ShardCtx, World};
 use sapling_leveldb::{ChunkKey, LevelDbWorld, actors};
 
 const HORSE: [f32; 3] = [SPAWN.0 as f32 + 2.5, GROUND as f32 + 1.0, SPAWN.1 as f32 + 0.5];
@@ -72,7 +72,7 @@ async fn a_folder_brings_its_time_and_mobs_and_takes_the_time_back() {
     let folder = folder_with_a_horse();
     let opened = World::open_folder(&folder).expect("the copy opens");
     let saved_time = opened.world.level().time;
-    let server = Server::builder().bind("127.0.0.1:0".parse().unwrap()).online_mode(false).folder(opened).handler(Dusk).start().await.expect("the server starts");
+    let server = crate::common::builder().bind("127.0.0.1:0".parse().unwrap()).online_mode(false).folder(opened).handler(Dusk).start().await.expect("the server starts");
 
     let subscribe = PacketFilter::none().with(AddEntity::ID).with(SyncWorldClocks::ID).with(StartGame::ID);
     let mut bot = common::spawn(common::client(&server, "Rider"), BotConfig { subscribe, ..BotConfig::default() }).await;

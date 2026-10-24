@@ -9,7 +9,7 @@ use acacia_bot::interact::Face;
 use acacia_bot::proto::Packet;
 use acacia_bot::proto::packets::ContainerSetData;
 use common::packet;
-use sapling::{Block, Handler, Item, Player, Server, ShardCtx, Slot};
+use sapling::{Block, Handler, Item, Player, ShardCtx, Slot};
 
 /// A ground block two east of the spawn, which the server makes dirt with air above it.
 const BASE: [i32; 3] = [common::SPAWN.0 + 2, common::GROUND, common::SPAWN.1];
@@ -34,7 +34,7 @@ impl Handler for Kit {
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn a_blast_furnace_smelts_what_a_bot_puts_in_on_one_piece_of_coal() {
-    let server = common::start(Server::builder().handler(Kit)).await;
+    let server = common::start(crate::common::builder().handler(Kit)).await;
     let watching = PacketFilter::none().with(ContainerSetData::ID);
     let mut bot = common::spawn(common::client(&server, "Alice"), BotConfig { subscribe: watching, ..BotConfig::default() }).await;
     bot.wait_ticks(20).await.expect("connected");

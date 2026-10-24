@@ -13,7 +13,7 @@ use acacia_bot::state::{Entity, Trackers};
 use acacia_bot::text::strip_formatting;
 use acacia_bot::{Bot, BotConfig, BotEvent, Events};
 use common::{GOAL, GROUND, SPAWN};
-use sapling::{ChatEvent, Handler, Player, Server, ShardCtx};
+use sapling::{ChatEvent, Handler, Player, ShardCtx};
 
 const WAIT: Duration = Duration::from_secs(10);
 
@@ -98,7 +98,7 @@ async fn walk_watched(walker: &mut Bot, watcher: &mut Bot) -> Vec<[f32; 2]> {
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn two_bots_see_each_other_move_and_chat() {
-    let server = common::start(Server::builder().handler(Hub)).await;
+    let server = common::start(crate::common::builder().handler(Hub)).await;
     let mut alice = common::spawn(common::client(&server, "Alice"), BotConfig::default()).await;
     let watching = BotConfig { trackers: Trackers { entities: true, ..Trackers::default() }, events: Events::CHAT | Events::PLAYERS, ..BotConfig::default() };
     let mut bob = common::spawn(common::client(&server, "Bob"), watching).await;

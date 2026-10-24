@@ -30,7 +30,7 @@ async fn bot(server: &Server) -> Bot {
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn a_bot_goes_to_the_end_by_command_and_back() {
-    let server = common::start(Server::builder().end(end()).handler(Operators).vanilla_commands()).await;
+    let server = common::start(crate::common::builder().end(end()).handler(Operators).vanilla_commands()).await;
     let mut alice = bot(&server).await;
     alice.client().command("execute in the_end run tp @s 100.5 49 0.5");
     let (change, placed) = arrive(&mut alice, END).await;
@@ -48,7 +48,7 @@ async fn a_bot_goes_to_the_end_by_command_and_back() {
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn a_bot_fills_a_ring_of_frames_and_walks_into_the_portal_onto_the_platform() {
-    let server = common::start(Server::builder().end(end()).handler(Operators).vanilla_commands()).await;
+    let server = common::start(crate::common::builder().end(end()).handler(Operators).vanilla_commands()).await;
     let mut alice = bot(&server).await;
     // The ring round the 3 x 3 from (x, y, z), one eye short, and the bot south of it facing in.
     let (x, y, z) = (SPAWN.0 + 3, GROUND + 1, SPAWN.1 + 3);

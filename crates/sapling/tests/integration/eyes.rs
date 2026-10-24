@@ -12,7 +12,7 @@ use acacia_bot::proto::Packet;
 use acacia_bot::proto::packets::{AddEntity, CommandOutput, MoveEntityDelta};
 use acacia_bot::{BotConfig, BotEvent};
 use acacia_world::{BlockRegistry, Chunk, Dimension};
-use sapling::{ChunkPos, Generated, MemoryStorage, Server, World, WorldStorage};
+use sapling::{ChunkPos, Generated, MemoryStorage, World, WorldStorage};
 use sapling_world::{StorageError, StoredColumn};
 use travel::{Operators, WAIT, run};
 
@@ -53,7 +53,7 @@ fn world(generator: Arc<Generated<MemoryStorage>>) -> World {
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn a_thrown_eye_flies_toward_the_located_stronghold() {
     let generator = Arc::new(Generated::with_areas(MemoryStorage::default(), SEED, 1));
-    let builder = Server::builder().bind("127.0.0.1:0".parse().unwrap()).online_mode(false).world(world(generator.clone()), FEET).handler(Operators).vanilla_commands();
+    let builder = crate::common::builder().bind("127.0.0.1:0".parse().unwrap()).online_mode(false).world(world(generator.clone()), FEET).handler(Operators).vanilla_commands();
     let server = builder.start().await.expect("the server starts");
     let subscribed = PacketFilter::none().with(AddEntity::ID).with(MoveEntityDelta::ID).with(CommandOutput::ID);
     let mut alice = common::spawn(common::client(&server, "Alice"), BotConfig { subscribe: subscribed, ..BotConfig::default() }).await;
