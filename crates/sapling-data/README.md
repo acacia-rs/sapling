@@ -112,7 +112,8 @@ table of the kinds whose hunting was drilled (`docs/research/mob-attacks.md`): `
 
 ## Mob families
 
-`mob-families.tsv` (read by `families.rs`, tested by a selector's `family=`): each entity's
+`mob-families.tsv` (read by `families.rs`, tested by a selector's `family=`, Smite, Bane of Arthropods and the undead's
+potion rules): each entity's
 `minecraft:type_family` from the vanilla behaviour packs, by `data/generate/mob-families.py`: its own
 components', or, for a kind that has them only in component groups, every group's together. Kinds the
 packs give no family (items, falling blocks) are not listed.
