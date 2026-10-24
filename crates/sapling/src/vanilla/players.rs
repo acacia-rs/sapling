@@ -4,7 +4,7 @@
 use sapling_api::command::{Coords, Selector};
 use sapling_api::{Command, Difficulty, GameMode, Item, Output, Sender, ShardCtx};
 
-use super::{display_name, entities, item_display_name, no_target, origin, players, tell_target};
+use super::{display_name, item_display_name, no_target, origin, players, targets, tell_target};
 
 fn namespaced(name: &str) -> String {
     if name.contains(':') { name.to_owned() } else { format!("minecraft:{name}") }
@@ -12,7 +12,7 @@ fn namespaced(name: &str) -> String {
 
 /// The players a missing target means: the sender.
 fn or_sender(ctx: &ShardCtx<'_>, sender: &Sender, target: Option<&Selector>) -> Vec<sapling_api::Player> {
-    players(ctx, sender, target.unwrap_or(&Selector::Sender))
+    players(ctx, sender, target.unwrap_or(&Selector::sender()))
 }
 
 
@@ -143,8 +143,8 @@ impl Command for Kill {
     /// The players named die (`kill_player`: not those in creative), the sender where none is
     /// named, and so does every other entity named (`kill_entity`).
     fn run(self, ctx: &mut ShardCtx<'_>, sender: &Sender, out: &mut Output) {
-        let named = self.target.as_ref().map_or_else(Vec::new, |target| entities(ctx, target));
-        let mut killed: Vec<String> = or_sender(ctx, sender, self.target.as_ref()).into_iter().filter(|player| ctx.kill_player(player.id)).map(|player| player.name).collect();
+        let (people, named) = targets(ctx, sender, self.target.as_ref().unwrap_or(&Selector::sender()));
+        let mut killed: Vec<String> = people.into_iter().filter(|player| ctx.kill_player(player.id)).map(|player| player.name).collect();
         killed.extend(named.iter().filter(|entity| ctx.kill_entity(entity.id)).map(|entity| display_name(&entity)));
         match killed.is_empty() {
             true => no_target(out),

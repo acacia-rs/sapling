@@ -5,7 +5,7 @@
 use sapling_api::command::Selector;
 use sapling_api::{Command, DamageCause, Output, Sender, ShardCtx};
 
-use super::{display_name, entities, players};
+use super::{display_name, targets};
 
 #[derive(Command)]
 #[command(crate = "crate", name = "damage", description = "Apply damage to the specified entities", permission = "operator")]
@@ -17,7 +17,7 @@ pub(crate) struct Damage {
 
 impl Command for Damage {
     fn run(self, ctx: &mut ShardCtx<'_>, sender: &Sender, out: &mut Output) {
-        let (found, mobs) = (players(ctx, sender, &self.target), entities(ctx, &self.target));
+        let (found, mobs) = targets(ctx, sender, &self.target);
         let names = || found.iter().map(|player| player.name.clone()).chain(mobs.iter().map(|mob| display_name(mob))).collect::<Vec<_>>().join(", ");
         // BDS fails `suffocation` for anyone (research/captures/bds-worn.txt).
         let Some(cause) = DamageCause::named(self.cause.as_deref().unwrap_or("none")).filter(|cause| *cause != DamageCause::Suffocation) else {

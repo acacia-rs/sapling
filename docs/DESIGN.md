@@ -295,7 +295,8 @@ it sends for `/title`, `/scoreboard`, `/gamemode`, `/tp`, a wither's bar and com
   command runs with the listeners in place and what it causes is heard. `Handler` is a plugin as one value: each method is a listener at the handler's priority
   (`handler_at`). Tasks run once a tick after the events, then `TickEvent` (`on_tick`).
 - **Keeping the API stable** (`sapling-api`). Enums that will grow (`DamageCause`, `Effect`, `Attacker`,
-  `DeathMessage`, `Target`, `Sender`, `Scope`, form `Element`, `FormError`, `ParseError`) and the snapshots
+  `DeathMessage`, `Target`, `Sender`, `Scope`, form `Element`, `FormError`, `ParseError`, a command's `Selector`,
+  `Pick` and `Filter`, which took its arguments in 0.2.0) and the snapshots
   plugins only read (`Player`, `Position`, `EntityInfo`, built with `new`) are `#[non_exhaustive]`; events
   keep private fields. Not marked: closed enums (`Face`, `GameMode`, `Difficulty`, `Slot`, `Priority`, ..),
   `ParamKind` (only the shard and the derive match it), and values plugins write as struct literals

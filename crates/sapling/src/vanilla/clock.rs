@@ -3,7 +3,7 @@
 // TODO: a named time is set on the day it is, as BDS did on day 0 and day 15; whether a time
 // already past moves to the next day was not drilled.
 
-use sapling_api::command::{Args, CommandSpec, CommandSyntax, Overload, ParamKind, Parameter, ParameterSpec, ParseError, Selector};
+use sapling_api::command::{Args, CommandSpec, CommandSyntax, Filter, Overload, ParamKind, Parameter, ParameterSpec, ParseError, Pick, Selector};
 use sapling_api::{Command, Output, Permission, Sender, ShardCtx, Weather};
 
 use super::{no_target, players};
@@ -100,13 +100,13 @@ impl CommandSyntax for Xp {
 
 impl Command for Xp {
     fn run(self, ctx: &mut ShardCtx<'_>, sender: &Sender, out: &mut Output) {
-        if matches!(&self.target, Some(Selector::Entities { kind: Some(kind) }) if kind != "minecraft:player") {
+        if matches!(&self.target, Some(Selector::Pick(Pick::Entities, Filter { kind: Some(kind), .. })) if kind != "minecraft:player") {
             return out.translate("commands.generic.targetNotPlayer", Vec::new(), false);
         }
         if !self.levels && self.amount < 0 {
             return out.translate("commands.xp.failure.widthdrawXp", Vec::new(), false);
         }
-        let found = players(ctx, sender, self.target.as_ref().unwrap_or(&Selector::Sender));
+        let found = players(ctx, sender, self.target.as_ref().unwrap_or(&Selector::sender()));
         if found.is_empty() {
             return no_target(out);
         }

@@ -7,7 +7,7 @@ use sapling_api::command::{Args, CommandSpec, CommandSyntax, Overload, ParamKind
 use sapling_api::{Command, Output, Permission, Sender, ShardCtx};
 
 use super::teleport::Teleport;
-use super::{entities, no_target, players};
+use super::{no_target, targets};
 
 const DIMENSIONS: [(&str, i32); 3] = [("overworld", 0), ("nether", 1), ("the_end", 2)];
 
@@ -59,7 +59,8 @@ impl Command for Execute {
                 self.teleport.run_from(ctx, sender, out, Some(dimension), here);
             }
             Context::At(selector) => {
-                let stood: Vec<[f32; 3]> = players(ctx, sender, &selector).into_iter().filter_map(|player| ctx.position(player.id).map(|at| at.feet)).chain(entities(ctx, &selector).into_iter().map(|entity| entity.feet)).collect();
+                let (people, others) = targets(ctx, sender, &selector);
+                let stood: Vec<[f32; 3]> = people.into_iter().filter_map(|player| ctx.position(player.id).map(|at| at.feet)).chain(others.into_iter().map(|entity| entity.feet)).collect();
                 if stood.is_empty() {
                     return no_target(out);
                 }

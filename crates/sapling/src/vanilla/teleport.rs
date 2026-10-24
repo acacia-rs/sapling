@@ -3,7 +3,7 @@
 use sapling_api::command::{Args, CommandSpec, CommandSyntax, Coords, Overload, Parameter, ParameterSpec, ParseError, Selector};
 use sapling_api::{Command, Output, Permission, Sender, ShardCtx};
 
-use super::{display_name, entities, no_target, origin, players_near, tell_target};
+use super::{display_name, no_target, origin, select, tell_target};
 
 /// `/tp [victim] <destination>`: the first word is a target unless it is a coordinate, and the
 /// destination a place or whoever a target names (research/captures/bds-golem.txt). A place may
@@ -95,8 +95,9 @@ impl Teleport {
             Destination::Place(coords) => (coords.from(here), None),
             // The nearest of those it names.
             Destination::At(selector) => {
-                let named = players_near(ctx, sender, selector, here).into_iter().filter_map(|player| Some((ctx.position(player.id)?.feet, player.name)));
-                let all = named.chain(entities(ctx, selector).into_iter().map(|entity| (entity.feet, display_name(&entity))));
+                let (people, others) = select::targets(ctx, sender, selector, here);
+                let named = people.into_iter().filter_map(|player| Some((ctx.position(player.id)?.feet, player.name)));
+                let all = named.chain(others.into_iter().map(|entity| (entity.feet, display_name(&entity))));
                 let far = |feet: &[f32; 3]| (0..3).map(|axis| (feet[axis] - here[axis]).powi(2)).sum::<f32>();
                 match all.min_by(|a, b| far(&a.0).total_cmp(&far(&b.0))) {
                     Some((feet, name)) => (feet, Some(name)),
@@ -109,8 +110,7 @@ impl Teleport {
             Some(Looks::Facing(point)) => Some(facing(to, point.from(here))),
             None => None,
         };
-        let moved_players = players_near(ctx, sender, self.target.as_ref().unwrap_or(&Selector::Sender), here);
-        let moved = self.target.as_ref().map_or_else(Vec::new, |target| entities(ctx, target));
+        let (moved_players, moved) = select::targets(ctx, sender, self.target.as_ref().unwrap_or(&Selector::sender()), here);
         let [x, y, z] = to.map(|c| format!("{c:.2}"));
         for player in &moved_players {
             match (dimension, looks) {
@@ -139,10 +139,10 @@ mod tests {
     #[test]
     fn tp_takes_a_place_or_a_target_to_go_to_with_or_without_a_victim() {
         let sender = Sender::Console;
-        let parsed = |line: &str| Teleport::parse(&mut Args::new(line, 0, &sender, &[])).map(|tp| (tp.target, matches!(tp.to, Destination::At(Selector::Entities { .. }))));
+        let parsed = |line: &str| Teleport::parse(&mut Args::new(line, 0, &sender, &[])).map(|tp| (tp.target, matches!(tp.to, Destination::At(Selector::Pick(sapling_api::command::Pick::Entities, _)))));
         assert_eq!(parsed("~ ~8 ~").ok(), Some((None, false)));
-        assert_eq!(parsed("@s 1 2 3").ok(), Some((Some(Selector::Sender), false)));
-        assert_eq!(parsed("@s @e[type=iron_golem,c=1]").ok(), Some((Some(Selector::Sender), true)));
+        assert_eq!(parsed("@s 1 2 3").ok(), Some((Some(Selector::sender()), false)));
+        assert_eq!(parsed("@s @e[type=iron_golem,c=1]").ok(), Some((Some(Selector::sender()), true)));
         assert_eq!(parsed("@e[type=iron_golem]").ok(), Some((None, true)));
         assert!(parsed("@s").is_ok(), "alone, a target is where to");
         let looks = |line: &str| match Teleport::parse(&mut Args::new(line, 0, &sender, &[])).ok().and_then(|tp| tp.looks) {
