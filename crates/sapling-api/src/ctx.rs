@@ -26,6 +26,9 @@ pub trait Backend: WorldBackend + EntityBackend + HealthBackend + EffectBackend 
     fn power_at(&self, pos: BlockPos) -> u8;
     fn set_block(&mut self, pos: BlockPos, block: &Block) -> bool;
     fn update_block(&mut self, pos: BlockPos, block: &Block) -> bool;
+    /// See `ShardCtx::batch_blocks`: opens a batch (false where one is open already) and shows it.
+    fn hold_blocks(&mut self) -> bool { false }
+    fn show_held_blocks(&mut self) {}
     fn break_block(&mut self, pos: BlockPos) -> bool;
     fn set_container_item(&mut self, pos: BlockPos, slot: usize, item: Option<&Item>) -> bool;
     fn container_size(&mut self, pos: BlockPos) -> Option<usize>;
@@ -146,6 +149,18 @@ impl<'a> ShardCtx<'a> {
     /// `/setblock` does. A cell that already holds `block` is left alone, and that is true too.
     pub fn update_block(&mut self, pos: BlockPos, block: &Block) -> bool {
         self.backend.update_block(pos, block)
+    }
+
+    /// Runs `change` with the blocks it sets held back from screens, and then shows them together
+    /// as BDS shows a `/fill`: a sub-chunk where more than one changed in one packet. Worth it for
+    /// many blocks at once; what `change` returns.
+    pub fn batch_blocks<T>(&mut self, change: impl FnOnce(&mut Self) -> T) -> T {
+        let opened = self.backend.hold_blocks();
+        let done = change(self);
+        if opened {
+            self.backend.show_held_blocks();
+        }
+        done
     }
 
     /// Breaks the block at `pos` as a hand would: its fragments fly, it leaves what it drops, and

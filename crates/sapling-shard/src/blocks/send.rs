@@ -12,7 +12,7 @@ use sapling_world::{BlockEntity, BlockRegistry, ChunkPos};
 
 mod sections;
 
-pub(crate) use sections::{set_many, set_sectioned, show_together};
+pub(crate) use sections::{hold, set_many, set_sectioned, show_held, show_together};
 
 use crate::components::{InLayer, Layer, Outgoing};
 
@@ -137,6 +137,9 @@ pub(crate) fn keep_entity(world: &mut World, layer: Entity, pos: BlockPos, entit
 /// outside the world's height and where the column is not loaded or cannot be written.
 pub(crate) fn set(world: &mut World, layer: Entity, pos: BlockPos, id: u32) -> bool {
     let Some(id) = write(world, layer, pos, id) else { return false };
+    if sections::held(world, layer, pos) {
+        return true;
+    }
     let Some(packet) = world.get::<Layer>(layer).map(|level| update(level.world.registry(), pos, id, 0)) else { return false };
     to_viewers(world, layer, pos, &[packet]);
     true

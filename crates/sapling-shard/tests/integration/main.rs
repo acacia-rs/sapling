@@ -4,6 +4,7 @@
 mod common;
 
 mod arenas;
+mod batched_blocks;
 mod armour_wear;
 mod attacks;
 mod block_rules;

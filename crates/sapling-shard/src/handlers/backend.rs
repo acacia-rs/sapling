@@ -82,6 +82,14 @@ impl Backend for Ctx<'_> {
         blocks::update_block(self.world, layer, pos, block)
     }
 
+    fn hold_blocks(&mut self) -> bool {
+        blocks::hold(self.world)
+    }
+
+    fn show_held_blocks(&mut self) {
+        blocks::show_held(self.world);
+    }
+
     fn break_block(&mut self, pos: BlockPos) -> bool {
         let layer = worlds::current(self.world);
         blocks::break_block(self.world, layer, pos)
