@@ -28,11 +28,16 @@ fn is_solid(world: &World, layer: Entity, [x, y, z]: BlockPos) -> bool {
     level(world, layer).is_some_and(|level| level.in_height(y) && level.registry().get(level.block(x, y, z)).is_some_and(|state| state.is_solid()))
 }
 
+/// Whether the block at `pos` keeps lava out, the water a waterlogged one holds aside.
+fn keeps_lava_out(world: &World, layer: Entity, [x, y, z]: BlockPos) -> bool {
+    level(world, layer).is_some_and(|level| level.in_height(y) && level.registry().get(level.block(x, y, z)).is_some_and(|state| super::lava::keeps_out(state.name, state.is_solid())))
+}
+
 /// Whether `liquid` at `from` cannot run into the cell on `toward`: that cell keeps it out (lava
 /// a waterlogged block too), or, for water, a face between them is closed (faces.rs).
 fn stopped(world: &World, layer: Entity, from: BlockPos, toward: Face, liquid: Liquid) -> bool {
     let to = toward.neighbour(from);
-    cell(world, layer, to).stops(liquid) || liquid == Liquid::Lava && is_solid(world, layer, to) || liquid == Liquid::Water && !faces::passes(world, layer, from, toward)
+    cell(world, layer, to).stops(liquid) || liquid == Liquid::Lava && keeps_lava_out(world, layer, to) || liquid == Liquid::Water && !faces::passes(world, layer, from, toward)
 }
 
 /// What the flowing liquid at `pos` should be, going by what is beside and above it: `None` when

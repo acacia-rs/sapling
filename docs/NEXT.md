@@ -75,8 +75,12 @@ Each needs its rule looked up first (`bdsre` for BDS, the Java jar for data), th
 
 ## 3. Things assumed, not verified
 
-- Mirrored shaped recipes are accepted (`Recipe::is_laid_out`) from memory of the game; decompile
-  `ShapedRecipe::matches` to confirm.
+- Checked 2026-10-24 (docs/research/assumptions-checked.md): mirrored shaped recipes match BDS for every
+  vanilla recipe (its `assume_symmetry` is never false; sapling does not read it); BDS keeps a container
+  screen open however far its player goes and closes it when the block goes (`reach-close`, now copied);
+  orbs are taken by BDS's pickup area with no age gate, lava stops at BDS's `isLavaBlocking` list
+  (`blocks/liquid/lava.rs`), the 16 fire-resistant items are listed by name, and `stripped_bamboo_block`
+  burns. Left there: the orb touch runs from the orb's tick, not the player's.
 - A door's hinge was checked against BDS with a block and with a door on either side (`bds_command_probe
   sounds`); the Java game's tie-break by where the click fell is still left out.
 - The sounds of a door, trapdoor, gate, chest, barrel and ender chest opening were heard on BDS and
@@ -102,21 +106,15 @@ Each needs its rule looked up first (`bdsre` for BDS, the Java jar for data), th
   does not know is a syntax error there and `commands.setblock.noChange` here.
 - Whether a vanilla client names a hopper's slots `Container` is the bot's assumption.
 - A placed shulker box's `facing` is the face clicked (`shulker-ender.md`).
-- An orb is taken within Java's pickup box once 7 ticks old (`orbs.rs`): one recorded pickup; BDS's
-  touch rule was not decompiled.
-- Wooden blocks burn by a list of names where BDS reads a material (`furnaces/fuel.rs`).
 - Who fences, panes and walls join, and what gives a rail, wire or repeater support, are the Java
   game's lists and collision boxes; the dirt and sand tags sugar cane asks for are Java's
   (`docs/research/standing-and-shapes.md`, "Open checks").
 - Stair corners and hanging-sign states by Java's rules; a placed skull's `SkullType` (-1 as BDS
   leaves it), the cauldron's `PotionId` defaults (`docs/research/block-entities.md`, "Open checks").
-- The distance at which BDS closes an open container, whether a double chest asks both halves
-  above, and the handler for `PlayerAction StopSleeping` (`docs/research/beds-and-containers.md`).
+- Whether a double chest asks both halves above, and the handler for `PlayerAction StopSleeping`
+  (`docs/research/beds-and-containers.md`).
 - Which block each liquid rule belongs to was read by where the block's name sits in BDS's code:
   sure for whole families (stairs, slabs, walls), not for single blocks (`waterlogging.md`).
-- Lava burns what has no collision; BDS asks each block (`isLavaBlocking`, 23 overriding classes).
-- Which items lava does not burn: netherite's and ancient debris, by name (`drops.rs` `fireproof`);
-  BDS reads a flag of each item.
 
 ## 4. A vanilla client session
 

@@ -53,10 +53,29 @@ pub(crate) struct Dropped {
 }
 
 /// Netherite and ancient debris, which lava does not burn.
-// TODO: by name, from the Java game's list: BDS reads a flag of each item.
 fn fireproof(name: &str) -> bool {
-    name == "minecraft:ancient_debris" || (name.starts_with("minecraft:netherite_") && !name.ends_with("_template"))
+    name.strip_prefix("minecraft:").is_some_and(|name| FIREPROOF.contains(&name))
 }
+
+/// The items BDS flags fire resistant (docs/research/assumptions-checked.md 5).
+const FIREPROOF: [&str; 16] = [
+    "netherite_sword",
+    "netherite_shovel",
+    "netherite_pickaxe",
+    "netherite_axe",
+    "netherite_hoe",
+    "netherite_spear",
+    "netherite_ingot",
+    "netherite_scrap",
+    "netherite_helmet",
+    "netherite_chestplate",
+    "netherite_leggings",
+    "netherite_boots",
+    "netherite_horse_armor",
+    "netherite_nautilus_armor",
+    "netherite_block",
+    "ancient_debris",
+];
 
 const KIND: &str = "minecraft:item";
 
@@ -193,11 +212,12 @@ fn column(at: [f32; 3]) -> ChunkPos {
     ChunkPos::of_block(at[0].floor() as i32, at[2].floor() as i32)
 }
 
-/// Whether the item's box, its bottom at `item`, touches the reach of a player standing at `feet`.
-fn reaches(feet: [f32; 3], item: [f32; 3]) -> bool {
-    let across = PLAYER_HALF_WIDTH + REACH[0] + SIZE / 2.0;
-    let up = item[1] - feet[1];
-    (item[0] - feet[0]).abs() <= across && (item[2] - feet[2]).abs() <= across && up >= -REACH[1] - SIZE && up <= PLAYER_HEIGHT + REACH[1]
+/// Whether a box `size` wide and high, its bottom at `at`, touches the reach of a player standing at
+/// `feet`: BDS's pickup area for items and orbs (docs/research/assumptions-checked.md 3).
+pub(crate) fn within_pickup(feet: [f32; 3], at: [f32; 3], size: f32) -> bool {
+    let across = PLAYER_HALF_WIDTH + REACH[0] + size / 2.0;
+    let up = at[1] - feet[1];
+    (at[0] - feet[0]).abs() <= across && (at[2] - feet[2]).abs() <= across && up >= -REACH[1] - size && up <= PLAYER_HEIGHT + REACH[1]
 }
 
 /// Gives each item that can be picked up to a player standing on it who has room, whole or as
@@ -219,7 +239,7 @@ pub(crate) fn pick_up(world: &mut World) {
     for (item, stack, at, layer, item_id) in ready {
         let home = column(at);
         let around = (-1..=1).flat_map(|dx| (-1..=1).map(move |dz| ChunkPos::new(home.x + dx, home.z + dz)));
-        let near = around.filter_map(|pos| standing.get(&(layer, pos))).flatten().filter(|(_, feet, _)| reaches(*feet, at));
+        let near = around.filter_map(|pos| standing.get(&(layer, pos))).flatten().filter(|(_, feet, _)| within_pickup(*feet, at, SIZE));
         let taker = near.copied().find(|(player, ..)| world.get::<Inventory>(*player).is_some_and(|inventory| inventory.loaded && inventory.has_room_for(&stack)));
         let Some((player, _, player_id)) = taker else { continue };
         let left = inventory::change(world, player, |inventory| inventory.add(&stack)).unwrap_or(stack.count);

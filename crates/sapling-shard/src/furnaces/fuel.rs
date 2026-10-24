@@ -18,7 +18,7 @@ const WOODEN_PARTS: &[&str] = &["_stairs", "_fence", "_fence_gate", "_trapdoor",
 const WOODEN: &[&str] = &[
     "fence_gate", "trapdoor", "wooden_button", "wooden_pressure_plate", "chest", "trapped_chest", "bookshelf", "chiseled_bookshelf", "crafting_table",
     "cartography_table", "fletching_table", "smithing_table", "loom", "barrel", "lectern", "composter", "jukebox", "noteblock", "daylight_detector",
-    "daylight_detector_inverted", "ladder",
+    "daylight_detector_inverted", "ladder", "stripped_bamboo_block",
 ];
 const BUTTONS: &[&str] = &["wooden_button", "_button"];
 const SMALL_PLANTS: &[&str] = &["_sapling", "mangrove_propagule", "azalea", "flowering_azalea", "deadbush", "leaf_litter", "short_dry_grass", "tall_dry_grass"];
@@ -104,6 +104,7 @@ mod tests {
         assert_eq!([ticks("oak_planks"), ticks("birch_log"), ticks("oak_slab"), ticks("spruce_stairs"), ticks("fence_gate"), ticks("chest")], [Some(300); 6]);
         assert_eq!([ticks("wooden_pickaxe"), ticks("bow"), ticks("bowl"), ticks("spruce_door"), ticks("oak_sign")], [Some(200); 5]);
         assert_eq!([ticks("oak_boat"), ticks("oak_chest_boat"), ticks("bamboo_raft"), ticks("oak_hanging_sign")], [Some(1200), Some(1200), Some(1200), Some(800)]);
+        assert_eq!(ticks("stripped_bamboo_block"), Some(300), "Wood by its material on BDS (assumptions-checked.md 6)");
         assert_eq!([ticks("stick"), ticks("oak_sapling"), ticks("wooden_button"), ticks("birch_button"), ticks("bamboo"), ticks("scaffolding")], [Some(100), Some(100), Some(100), Some(100), Some(50), Some(50)]);
         let none = ["stone", "crimson_planks", "warped_door", "white_wool", "white_carpet", "iron_ingot", "stone_button", "crimson_hanging_sign"];
         assert_eq!(none.map(ticks), [None; 8]);

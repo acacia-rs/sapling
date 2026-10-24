@@ -10,6 +10,8 @@ use acacia_bot::Bot;
 mod feedback;
 #[path = "foes_drill.rs"]
 mod foes;
+#[path = "reach_drill.rs"]
+mod reach;
 #[path = "hunt_drill.rs"]
 mod hunt;
 #[path = "shove_drill.rs"]
@@ -139,6 +141,7 @@ pub fn drill(name: &str) -> Option<(Vec<String>, &'static [&'static str])> {
         "sun" => (world::sun(), hunt::KINDS_SHOWN),
         "weather" => (world::weather(), world::WEATHER_SHOWN),
         "feedback" => (feedback::feedback(), feedback::FEEDBACK_SHOWN),
+        "reach-close" => (reach::reach_close(), reach::REACH_SHOWN),
         "spiders" => (world::spiders(), hunt::KINDS_SHOWN),
         "kinds2" => (world::kinds2(), hunt::KINDS_SHOWN),
         "pushed" => (world::pushed(), world::PUSHED_SHOWN),

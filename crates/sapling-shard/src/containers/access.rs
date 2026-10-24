@@ -1,16 +1,14 @@
-//! Who may use a container: a chest under a block does not open, and a screen closes on a
-//! player who walks out of reach (docs/research/beds-and-containers.md, sections 5 and 6).
-// TODO: BDS's close distance was not found; the reach of a click stands in for it. Sitting
-// cats are not looked for; shulker boxes are not checked.
+//! Who may use a container: a chest under a block does not open, and a screen closes once its
+//! block is gone (docs/research/beds-and-containers.md, sections 5 and 6).
+// TODO: sitting cats are not looked for; shulker boxes are not checked.
 
 use acacia_proto::packets::ContainerClose;
 use acacia_proto::types::{WindowID, WindowType};
 use bevy_ecs::prelude::*;
 use sapling_api::BlockPos;
 
-use super::screens::Viewing;
+use super::screens::{Viewing, still_shows};
 use super::{close, pairs};
-use crate::blocks;
 use crate::components::{Layer, Outgoing};
 
 /// What a lid needs above a chest, within the cell above (BDS `getObstructionAABB`).
@@ -32,11 +30,19 @@ pub(super) fn is_blocked(world: &World, layer: Entity, pos: BlockPos, block: &st
     LIDDED.contains(&block) && pairs::halves(world, layer, pos).into_iter().any(|half| lid_is_held_down(world, layer, half))
 }
 
-/// Shuts the screen of every player who walked out of reach of the block it shows.
-pub(crate) fn close_out_of_reach(world: &mut World) {
+/// Whether the block `viewing` shows is still there.
+fn is_there(world: &World, viewing: &Viewing) -> bool {
+    let [x, y, z] = viewing.pos;
+    let Some(level) = world.get::<Layer>(viewing.layer).map(|layer| &layer.world).filter(|level| level.in_height(y)) else { return false };
+    level.registry().get(level.block(x, y, z)).is_some_and(|state| still_shows(viewing.screen, state.name))
+}
+
+/// Shuts the screen of every player whose block is gone, as BDS does; however far a player walks
+/// it stays open (research/captures/bds-reach-close.txt).
+pub(crate) fn close_where_gone(world: &mut World) {
     let mut viewers = world.query::<(Entity, &Viewing)>();
-    let far: Vec<(Entity, u8)> = viewers.iter(world).filter(|(player, viewing)| !blocks::reaches(world, *player, viewing.pos)).map(|(player, viewing)| (player, viewing.window)).collect();
-    for (player, window) in far {
+    let gone: Vec<(Entity, u8)> = viewers.iter(world).filter(|(_, viewing)| !is_there(world, viewing)).map(|(player, viewing)| (player, viewing.window)).collect();
+    for (player, window) in gone {
         close(world, player);
         if let Some(mut out) = world.get_mut::<Outgoing>(player) {
             out.push(&ContainerClose { window_id: WindowID::from_raw(window.into()), window_type: WindowType::Container, server: true });

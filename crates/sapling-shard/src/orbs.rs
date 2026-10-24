@@ -31,10 +31,6 @@ const SEARCH_EVERY: u64 = 20;
 const TOUCH: f32 = 0.225;
 /// Where on a player an orb flies to, above its feet.
 const BODY: f32 = 0.9;
-/// How far from a player's feet an orb is touched: across, and from below to above.
-const TOUCH_ACROSS: f32 = 1.55;
-const TOUCH_BELOW: f32 = -1.0;
-const TOUCH_ABOVE: f32 = 2.3;
 /// A player takes an orb a touch no sooner than this many ticks after the last; the orb goes the
 /// tick after (BDS took a furnace's two orbs 2 ticks apart, research/captures/containers-findings.md).
 const TAKE_EVERY: u64 = 2;
@@ -133,12 +129,11 @@ fn nearest(world: &mut World, layer: Entity, at: [f32; 3]) -> Option<Entity> {
     near.filter(|(_, distance)| *distance < FOLLOW * FOLLOW).min_by(|a, b| a.1.total_cmp(&b.1)).map(|(player, _)| player)
 }
 
-/// A player of `layer` whose reach touches the orb at `at`: its box grown by one block across and
-/// half a block up and down (Java's pickup box; BDS took an orb 1.1 blocks off in 7 ticks).
+/// A player of `layer` whose pickup area touches the orb at `at` (`drops::within_pickup`).
+// TODO: BDS runs the touch from the player's tick (assumptions-checked.md 3), not the orb's.
 fn touching(world: &mut World, layer: Entity, at: [f32; 3]) -> Option<Entity> {
     let mut players = world.query::<(Entity, &Stage, &InLayer, &Position)>();
-    let touches = |feet: [f32; 3]| (at[0] - feet[0]).abs() <= TOUCH_ACROSS && (at[2] - feet[2]).abs() <= TOUCH_ACROSS && (TOUCH_BELOW..=TOUCH_ABOVE).contains(&(at[1] - feet[1]));
-    let mut near = players.iter(world).filter(|(_, stage, in_layer, position)| **stage == Stage::InWorld && in_layer.0 == layer && touches(position.feet));
+    let mut near = players.iter(world).filter(|(_, stage, in_layer, position)| **stage == Stage::InWorld && in_layer.0 == layer && crate::drops::within_pickup(position.feet, at, SIZE));
     near.next().map(|(player, ..)| player)
 }
 

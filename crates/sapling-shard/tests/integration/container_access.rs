@@ -1,5 +1,5 @@
-//! Who may use a container: not one under a block that holds its lid down, and not from out of
-//! reach.
+//! Who may use a container: not one under a block that holds its lid down; a screen open until its
+//! block goes.
 
 use crate::common;
 
@@ -50,13 +50,15 @@ fn a_chest_is_heard_a_tick_after_it_opens_and_five_after_it_shuts_as_on_bds() {
     assert_eq!(shutting.iter().position(|sounds| sounds == &["chest.closed"]), Some(5), "{shutting:?}");
 }
 
+/// research/captures/bds-reach-close.txt: BDS kept the screen open 64 blocks off.
 #[test]
-fn a_screen_closes_on_a_player_who_walks_out_of_reach() {
+fn a_screen_stays_open_however_far_its_player_goes_and_closes_when_its_chest_goes() {
     let mut h = at_a_chest();
     assert!(opens(&mut h));
     h.receive(1, &input_at([0.5, 65.0, 4.5]));
-    assert!(all::<ContainerClose>(&h.tick(1)).is_empty(), "still within reach");
-    h.receive(1, &input_at([0.5, 65.0, 9.5]));
-    let closed = all::<ContainerClose>(&h.tick(1));
+    h.remote.run(|ctx| ctx.teleport(sapling_api::PlayerId(1), [64.5, 65.0, 0.5]));
+    assert!((0..3).all(|_| all::<ContainerClose>(&h.tick(1)).is_empty()), "open while far off");
+    h.remote.run(|ctx| assert!(ctx.set_block(CHEST, &Block::air())));
+    let closed: Vec<ContainerClose> = (0..2).flat_map(|_| all::<ContainerClose>(&h.tick(1))).collect();
     assert_eq!(closed.iter().map(|close| close.server).collect::<Vec<_>>(), [true]);
 }

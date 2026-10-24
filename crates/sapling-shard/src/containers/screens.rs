@@ -32,6 +32,14 @@ pub(crate) struct Viewing {
     pub(super) screen: Screen,
 }
 
+/// Whether the block `block` still has the screen `screen` a player has open on its cell.
+pub(super) fn still_shows(screen: Screen, block: &str) -> bool {
+    match screen {
+        Screen::Station(station) => [(TABLE, Station::Table), (STONECUTTER, Station::Stonecutter)].contains(&(block, station)),
+        Screen::Container | Screen::Own => kind(block).is_some(),
+    }
+}
+
 /// Opens the screen of the block `block` at `pos` for a player: a container's with what it
 /// holds, a crafting table's, a stonecutter's. False for a block without one.
 pub(crate) fn open(world: &mut World, player: Entity, layer: Entity, pos: BlockPos, block: &str) -> bool {

@@ -9,6 +9,7 @@
 mod faces;
 mod flow;
 mod harden;
+mod lava;
 
 use std::collections::{BTreeMap, HashSet};
 
@@ -62,7 +63,7 @@ impl Liquid {
 pub(super) enum Cell {
     Liquid(Liquid, u8),
     Air,
-    /// A block, by what water does to it and whether it has collision.
+    /// A block, by what water does to it and whether it keeps lava out (lava.rs).
     Block(LiquidReaction, bool),
     /// Outside the world's height or not loaded.
     Unknown,
@@ -70,13 +71,13 @@ pub(super) enum Cell {
 
 impl Cell {
     /// Whether `liquid` cannot run into the cell (BDS `LiquidBlock::_isLiquidBlocking`): water by
-    /// the block's reaction, lava by the block's collision (`isLavaBlocking`).
+    /// the block's reaction, lava by the block's type (`isLavaBlocking`).
     pub(super) fn stops(self, liquid: Liquid) -> bool {
         match (self, liquid) {
             (Cell::Unknown, _) => true,
             (Cell::Liquid(..) | Cell::Air, _) => false,
             (Cell::Block(reaction, _), Liquid::Water) => reaction == LiquidReaction::Blocking,
-            (Cell::Block(_, solid), Liquid::Lava) => solid,
+            (Cell::Block(_, keeps_lava_out), Liquid::Lava) => keeps_lava_out,
         }
     }
 }
@@ -93,7 +94,7 @@ pub(super) fn cell(world: &World, layer: Entity, [x, y, z]: BlockPos) -> Cell {
     }
     match registry.get(block) {
         Some(state) if state.is_air() => Cell::Air,
-        Some(state) => Cell::Block(waterlog::reaction(registry, block), state.is_solid()),
+        Some(state) => Cell::Block(waterlog::reaction(registry, block), lava::keeps_out(state.name, state.is_solid())),
         None => Cell::Unknown,
     }
 }

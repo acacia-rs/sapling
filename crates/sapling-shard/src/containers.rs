@@ -13,7 +13,7 @@ mod screens;
 mod shulker;
 mod slots;
 
-pub(crate) use access::close_out_of_reach;
+pub(crate) use access::close_where_gone;
 
 use std::collections::HashMap;
 

@@ -942,8 +942,9 @@ Details and BDS evidence: docs/research/nether-dimension.md, docs/research/end-d
   by the actor sync: a `MoveEntityDelta` of the axes that changed every tick it moves, as recorded;
   the client does not move them). One falls, slides to a stop, and from 21 to 120 of its ticks looks for the nearest
   player within 8 blocks every 20 and flies to it; a player whose box, grown by a block across and
-  half a block up and down (Java's), touches it takes it once it is 7 ticks old, also before it
-  looks (BDS took one let out at the player after 7 ticks) (`LevelEvent` SoundOrb). A player's level and progress follow BDS's
+  half a block up and down, overlaps its box takes it, with no age gate, also before it looks
+  (BDS's `Player::aiStep` pickup area, `drops::within_pickup`, docs/research/assumptions-checked.md 3)
+  (`LevelEvent` SoundOrb). A player's level and progress follow BDS's
   `addExperience` (the Java formula), go to its client as the `player.experience` attribute, with
   `player.level` when the level changed (as recorded), and are kept
   with its items (`PlayerLevel`, `PlayerLevelProgress`); a fifth level sounds `levelup`. Orbs join
