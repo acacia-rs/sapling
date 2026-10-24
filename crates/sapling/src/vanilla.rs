@@ -5,6 +5,7 @@
 // TODO: the other vanilla commands; `@r` and selector arguments besides `type`.
 
 mod blocks;
+mod chat;
 mod clock;
 mod containers;
 mod effects;
@@ -18,18 +19,18 @@ use players::{Clear, Damage, DifficultyCommand, GameModeCommand, Give, Kill, Sum
 use rules::GameRule;
 
 use sapling_api::command::Selector;
-use sapling_api::{EntityInfo, Output, Player, Sender, ShardCtx};
+use sapling_api::{EntityInfo, Output, Player, PlayerId, RuleValue, Sender, ShardCtx};
 
 use crate::ServerBuilder;
 
 impl ServerBuilder {
     /// Adds vanilla's commands for operators (this module): `/setblock`, `/fill`, `/tp`, `/give`,
-    /// `/clear`, `/gamemode`, `/summon`, `/kill`, `/gamerule`, `/time`, `/xp`, `/replaceitem block` and
-    /// `/execute in <dimension> run tp`. A command
+    /// `/clear`, `/gamemode`, `/summon`, `/kill`, `/gamerule`, `/time`, `/xp`, `/replaceitem block`,
+    /// `/execute in <dimension> run tp`, `/say` and `/tell` (for anyone). A command
     /// added later under the same name replaces one of these.
     pub fn vanilla_commands(self) -> Self {
         let blocks = self.command::<SetBlock>().command::<Fill>().command::<TestForBlock>().command::<ReplaceItem>();
-        blocks.command::<Teleport>().command::<Give>().command::<Clear>().command::<GameModeCommand>().command::<Summon>().command::<Kill>().command::<Damage>().command::<DifficultyCommand>().command::<effects::EffectCommand>().command::<GameRule>().command::<clock::Time>().command::<clock::Xp>().command::<clock::WeatherCommand>().command::<clock::ToggleDownfall>().command::<execute::Execute>()
+        blocks.command::<Teleport>().command::<Give>().command::<Clear>().command::<GameModeCommand>().command::<Summon>().command::<Kill>().command::<Damage>().command::<DifficultyCommand>().command::<effects::EffectCommand>().command::<GameRule>().command::<clock::Time>().command::<clock::Xp>().command::<clock::WeatherCommand>().command::<clock::ToggleDownfall>().command::<execute::Execute>().command::<chat::Say>().command::<chat::Tell>()
     }
 }
 
@@ -82,6 +83,14 @@ fn item_named(name: &str) -> String {
 
 fn no_target(out: &mut Output) {
     out.translate("commands.generic.noTargetMatch", Vec::new(), false);
+}
+
+/// Tells `player` what a command did to it, unless the world's `sendCommandFeedback` is off
+/// (research/captures/bds-feedback.txt: the shard holds back the sender's answer too).
+fn tell_target(ctx: &mut ShardCtx<'_>, player: PlayerId, key: &str, parameters: &[String]) {
+    if !matches!(ctx.game_rule("sendCommandFeedback"), Some((_, RuleValue::Bool(false)))) {
+        ctx.send_translation(player, key, parameters);
+    }
 }
 
 /// An entity type or item as BDS names it in a command's answer: `minecraft:armor_stand` is

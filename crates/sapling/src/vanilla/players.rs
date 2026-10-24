@@ -4,7 +4,7 @@
 use sapling_api::command::{Args, CommandSpec, CommandSyntax, Coords, Overload, Parameter, ParameterSpec, ParseError, Selector};
 use sapling_api::{Command, DamageCause, Difficulty, GameMode, Item, Output, Permission, Sender, ShardCtx};
 
-use super::{display_name, entities, no_target, origin, players};
+use super::{display_name, entities, no_target, origin, players, tell_target};
 
 fn namespaced(name: &str) -> String {
     if name.contains(':') { name.to_owned() } else { format!("minecraft:{name}") }
@@ -103,7 +103,7 @@ impl Teleport {
                 (None, Some(looks)) => ctx.teleport_facing(player.id, to, looks),
                 (None, None) => ctx.teleport(player.id, to),
             }
-            ctx.send_translation(player.id, "commands.tp.successVictim", &[at.clone().unwrap_or_else(|| format!("{x}, {y}, {z}"))]);
+            tell_target(ctx, player.id, "commands.tp.successVictim", &[at.clone().unwrap_or_else(|| format!("{x}, {y}, {z}"))]);
         }
         for entity in &moved {
             ctx.move_entity(entity.id, to);
@@ -132,11 +132,14 @@ impl Command for Give {
         let given = players(ctx, sender, &self.player);
         for player in &given {
             ctx.give(player.id, &item);
-            ctx.send_translation(player.id, "commands.give.successRecipient", &[shown.clone(), count.clone()]);
+            tell_target(ctx, player.id, "commands.give.successRecipient", &[shown.clone(), count.clone()]);
         }
         match given.is_empty() {
             true => no_target(out),
-            false => out.translate("commands.give.success", vec![shown, count, names(&given)], true),
+            false => {
+                out.translate("commands.give.success", vec![shown, count, names(&given)], true);
+                out.done_to(given.len() as u32);
+            }
         }
     }
 }
@@ -184,6 +187,7 @@ impl Command for GameModeCommand {
         }
         for player in &changed {
             ctx.set_game_mode(player.id, self.mode);
+            tell_target(ctx, player.id, "gameMode.changed", std::slice::from_ref(&mode));
             match sender.player().is_some_and(|me| me.id == player.id) {
                 true => out.translate("commands.gamemode.success.self", vec![mode.clone()], true),
                 false => out.translate("commands.gamemode.success.other", vec![mode.clone(), player.name.clone()], true),

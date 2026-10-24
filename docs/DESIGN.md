@@ -312,7 +312,7 @@ it sends for `/title`, `/scoreboard`, `/gamemode`, `/tp`, a wither's bar and com
   switches is a `sapling:` rule in the same store, never sent to clients, each on by default:
   `sapling:hunger` (no exhaustion), `sapling:liquidFlow` (due flows are dropped: liquids stand),
   `sapling:redstone` (circuits pause; what was written waits), `sapling:mobAi` (mobs fall and are hurt but
-  decide nothing). Not read yet: `sendCommandFeedback` (BDS's behaviour not captured), `spawnRadius`,
+  decide nothing). `sendCommandFeedback` is under Commands. Not read yet: `spawnRadius`,
   `doImmediateRespawn` (the client's), and rules for what sapling lacks (`doMobSpawning`, `doInsomnia`,
   command blocks).
 - **World events** (`sapling-api/src/world_event.rs`). What the world does on its own is offered with its
@@ -358,9 +358,14 @@ it sends for `/title`, `/scoreboard`, `/gamemode`, `/tp`, a wither's bar and com
   - Answers are `CommandOutput` with the request's origin echoed, `output_type` "alloutput", and BDS's keys
     for failures: `commands.generic.unknown [name]`, `commands.generic.syntax [before, token, after]`,
     `commands.generic.noTargetMatch`. `out.print` / `out.error` send text as the message id, as dragonfly does.
-  - An operator command's success lines are echoed to the other operators on the shard as BDS echoes them:
-    a Json `Text`, `§7§o[` + the sender's name + `: ` + the line + `]`. `ctx.send_translation` sends one
-    player a Json line under a key, as BDS tells a `/tp` victim (`commands.tp.successVictim`).
+  - An operator's success lines, whatever the command, are echoed to the other operators on the shard as BDS
+    echoes them (it echoed an operator's `/tell`): a Json `Text`, `§7§o[` + the sender's name + `: ` + the
+    line + `]`. `ctx.send_translation` sends one player a Json line under a key, as BDS tells a `/tp` victim
+    (`commands.tp.successVictim`). `out.done_to(n)` sets `success_count` (BDS's `/give @a` and `/tell @a`).
+  - Where the sender's world has `sendCommandFeedback` off, a command that succeeds goes untold: no answer,
+    no echo, and vanilla's lines to its targets held back; failures are answered, and so is a command that
+    calls `out.always_answer()` (`/tell`). The rule is read after the command, so turning it off goes
+    unanswered (research/captures/bds-feedback.txt, `bds_command_probe feedback`).
   - Three lines a tick per player, 512 characters, control characters dropped.
 - **Forms** (`sapling-api/src/form`, `sapling-shard/src/forms.rs`). `Menu` (answer: button index), `Modal`
   (bool), `Custom` (one `Value` per element), and `#[derive(Form)]`: a struct whose value holds the defaults
@@ -671,7 +676,10 @@ block action, and takes StopBreak and AbortBreak with a position.
   block named with some of its states takes the rest from its first state. The client is told the
   parameters as BDS types them (position 65, block position 64, block states 84). `/gamerule`
   lists, shows and sets the world's rules with BDS's answers, bounds and errors
-  (`research/captures/bds-gamerule.txt`); its rule names are not completed. Not done: the rest of
+  (`research/captures/bds-gamerule.txt`); its rule names are not completed. `/say <message>`
+  (operators) announces `[name] message` to the shard (`ctx.announce`); `/tell`, `/w` and `/msg <target>
+  <message>` (anyone) whisper to each target (`ctx.whisper`), as BDS sent them
+  (`research/captures/bds-feedback.txt`). Not done: the rest of
   vanilla's commands, `@r` and selector arguments besides `type`.
 - **Neighbours** (`blocks/updates.rs`). After a player's break or place: falling blocks around are
   queued to fall (next bullet); what stood on a block that is gone (the Java game's `canSurvive`

@@ -14,10 +14,12 @@ pub struct OutputMessage {
 pub struct Output {
     messages: Vec<OutputMessage>,
     echoed: bool,
+    done_to: Option<u32>,
+    always: bool,
 }
 
 impl Output {
-    /// The lines other operators are shown, as BDS echoes an operator command's success to them.
+    /// The lines other operators are shown, as BDS echoes the success of an operator's command to them.
     pub fn echoed(&self) -> impl Iterator<Item = &OutputMessage> {
         self.messages.iter().filter(|m| self.echoed && m.success)
     }
@@ -47,6 +49,26 @@ impl Output {
     /// Whether the command did what it was asked: no line is an error.
     pub fn succeeded(&self) -> bool {
         self.messages.iter().all(|m| m.success)
+    }
+
+    /// Says the command acted on `count` targets, which its sender is told (BDS's `successCount`).
+    pub fn done_to(&mut self, count: u32) {
+        self.done_to = Some(count);
+    }
+
+    /// Has the sender answered even where the world's `sendCommandFeedback` is off, as `/tell` is.
+    pub fn always_answer(&mut self) {
+        self.always = true;
+    }
+
+    /// Whether the answer goes to the sender whatever `sendCommandFeedback` says.
+    pub fn answers_always(&self) -> bool {
+        self.always
+    }
+
+    /// How many targets the command acted on: 0 if it failed, 1 unless it said ([`Output::done_to`]).
+    pub fn success_count(&self) -> u32 {
+        if self.succeeded() { self.done_to.unwrap_or(1) } else { 0 }
     }
 
     /// The answer to a line that was not run, under the keys BDS uses; for a command whose

@@ -12,7 +12,7 @@ use bytes::Bytes;
 use sapling_api::command::{CommandSpec, ParamKind};
 use sapling_api::{CommandEvent, Commands, Output, Permission, Sender, ShardCtx};
 
-use crate::components::{Outgoing, PacketQueues, PerTick, Stage, in_world, in_world_identity};
+use crate::components::{InLayer, Outgoing, PacketQueues, PerTick, Stage, in_world, in_world_identity};
 use crate::handlers::Ctx;
 use crate::plugins::{self, CommandRegistry};
 
@@ -33,6 +33,7 @@ const ANYONE: &str = "any";
 const MAX_CHARS: usize = 512;
 const MAX_COMMANDS_PER_TICK: usize = 3;
 const MAX_REQUEST_ID: usize = 64;
+const SEND_COMMAND_FEEDBACK: &str = "sendCommandFeedback";
 
 /// A player's command permission and the one its command list was last built for.
 #[derive(Component, Default)]
@@ -162,7 +163,7 @@ fn output_packet(origin: &CommandOrigin, out: &Output) -> CommandOutput {
     CommandOutput {
         origin: CommandOrigin { r#type: "player".into(), uuid: origin.uuid, request_id, player_entity_id: 0 },
         output_type: "alloutput".into(),
-        success_count: u32::from(out.succeeded()),
+        success_count: out.success_count(),
         output: out.messages().iter().map(line).collect(),
         has_data: false,
         data: None,
@@ -188,11 +189,20 @@ pub(crate) fn dispatch(world: &mut World) {
         let commands = world.resource::<CommandRegistry>().0.clone();
         let mut backend = Ctx { world };
         let out = commands.run(&mut ShardCtx::new(&mut backend), &Sender::Player(player), permission, event.line());
-        if let Some(mut outgoing) = world.get_mut::<Outgoing>(entity).filter(|_| !out.messages().is_empty()) {
+        let quiet = out.succeeded() && !feedback_on(world, entity);
+        if let Some(mut outgoing) = world.get_mut::<Outgoing>(entity).filter(|_| !out.messages().is_empty() && (!quiet || out.answers_always())) {
             outgoing.push(&output_packet(&request.origin, &out));
         }
-        echo(world, entity, &name, &out);
+        if !quiet {
+            echo(world, entity, &name, &out);
+        }
     }
+}
+
+/// Whether the sender's world answers commands that succeed, to it and to the other operators: read
+/// after the command ran, so turning the rule off goes unanswered and on is answered, as on BDS.
+fn feedback_on(world: &World, sender: Entity) -> bool {
+    world.get::<InLayer>(sender).is_none_or(|layer| crate::rules::on(world, layer.0, SEND_COMMAND_FEEDBACK))
 }
 
 /// Shows the other operators on the shard what an operator's command did, as BDS does: a grey

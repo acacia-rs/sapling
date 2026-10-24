@@ -56,7 +56,8 @@ impl Commands {
             out.translate("commands.generic.unknown", vec![name.to_owned()], false);
             return out;
         };
-        if entry.spec.permission == Permission::Operator {
+        // By who sends it: BDS showed other operators an operator's `/tell`, which anyone may use.
+        if permission == Permission::Operator {
             out.echo();
         }
         let players: Vec<Player> = ctx.players().collect();

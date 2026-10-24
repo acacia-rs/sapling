@@ -28,7 +28,7 @@ impl Ctx<'_> {
         self.world.get::<Layer>(worlds::current(self.world)).expect("the world in scope exists")
     }
 
-    fn out(&mut self, player: PlayerId) -> Option<Mut<'_, Outgoing>> {
+    pub(crate) fn out(&mut self, player: PlayerId) -> Option<Mut<'_, Outgoing>> {
         self.entity(player).and_then(|entity| self.world.get_mut::<Outgoing>(entity))
     }
 }

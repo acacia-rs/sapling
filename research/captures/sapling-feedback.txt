@@ -1,0 +1,116 @@
+## /gamerule sendcommandfeedback true
+     31 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["sendcommandfeedback", "true"]
+     31 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"sendcommandfeedback\"},{\"text\":\"true\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /
+## /time query daytime
+   2030 actor   CommandOutput success_count=1 data=None commands.time.query.daytime success=true ["6307"]
+   2030 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.time.query.daytime\",\"with\":{\"rawtext\":[{\"text\":\"6307\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /time set 1000
+   3032 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 1000, paused: false }] }) }
+   3032 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.time.set\",\"with\":{\"rawtext\":[{\"text\":\"1000\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   3032 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 1000, paused: false }] }) }
+   3032 actor   CommandOutput success_count=1 data=None commands.time.set success=true ["1000"]
+## /gamemode creative @s
+   4030 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"gameMode.changed\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.creative\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   4030 actor   CommandOutput success_count=1 data=None commands.gamemode.success.self success=true ["%createWorldScreen.gameMode.creative"]
+   4030 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamemode.success.self\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.creative\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /give @s stone 2
+   5036 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.give.success\",\"with\":{\"rawtext\":[{\"text\":\"Stone\"},{\"text\":\"2\"},{\"text\":\"CmdActor\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   5039 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.give.successRecipient\",\"with\":{\"rawtext\":[{\"text\":\"Stone\"},{\"text\":\"2\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   5039 actor   CommandOutput success_count=1 data=None commands.give.success success=true ["Stone", "2", "CmdActor"]
+## /give @a dirt 1
+   6034 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.give.successRecipient\",\"with\":{\"rawtext\":[{\"text\":\"Dirt\"},{\"text\":\"1\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   6034 actor   CommandOutput success_count=2 data=None commands.give.success success=true ["Dirt", "1", "CmdActor, CmdWatcher"]
+   6034 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.give.successRecipient\",\"with\":{\"rawtext\":[{\"text\":\"Dirt\"},{\"text\":\"1\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   6034 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.give.success\",\"with\":{\"rawtext\":[{\"text\":\"Dirt\"},{\"text\":\"1\"},{\"text\":\"CmdActor, CmdWatcher\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /xp 3 @s
+   7030 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.xp.success\",\"with\":{\"rawtext\":[{\"text\":\"3\"},{\"text\":\"CmdActor\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   7030 actor   CommandOutput success_count=1 data=None commands.xp.success success=true ["3", "CmdActor"]
+## /effect @s speed 5
+   8030 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.effect.success\",\"with\":{\"rawtext\":[{\"text\":\"%potion.moveSpeed\"},{\"text\":\"0\"},{\"text\":\"CmdActor\"},{\"text\":\"5\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   8031 actor   CommandOutput success_count=1 data=None commands.effect.success success=true ["%potion.moveSpeed", "0", "CmdActor", "5"]
+## /say hello
+   9031 watcher Text Text { needs_translation: false, category: Authored, type: Announcement, content: Announcement(TextContentAnnouncement { source_name: "CmdActor", message: "[CmdActor] hello" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   9031 actor   Text Text { needs_translation: false, category: Authored, type: Announcement, content: Announcement(TextContentAnnouncement { source_name: "CmdActor", message: "[CmdActor] hello" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /tell @a psst
+  10031 watcher Text Text { needs_translation: false, category: Authored, type: Whisper, content: Whisper(TextContentWhisper { source_name: "CmdActor", message: "psst" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  10031 actor   Text Text { needs_translation: false, category: Authored, type: Whisper, content: Whisper(TextContentWhisper { source_name: "CmdActor", message: "psst" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  10031 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.message.display.outgoing\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor, CmdWatcher\"},{\"text\":\"psst\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  10031 actor   CommandOutput success_count=2 data=None commands.message.display.outgoing success=true ["CmdActor, CmdWatcher", "psst"]
+## /time set banana
+  11030 actor   CommandOutput success_count=0 data=None commands.generic.syntax success=false ["/time set ", "banana", ""]
+## /
+  12329 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 1186, paused: false }] }) }
+  12329 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 1186, paused: false }] }) }
+## /gamerule sendcommandfeedback false
+  13082 watcher GameRulesChanged sendCommandFeedback=Bool(false)
+  13082 actor   GameRulesChanged sendCommandFeedback=Bool(false)
+## /
+## /time query daytime
+## /time set 1000
+  16079 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 1000, paused: false }] }) }
+  16079 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 1000, paused: false }] }) }
+## /gamemode creative @s
+## /give @s stone 2
+## /give @a dirt 1
+## /xp 3 @s
+## /effect @s speed 5
+## /say hello
+  22079 actor   Text Text { needs_translation: false, category: Authored, type: Announcement, content: Announcement(TextContentAnnouncement { source_name: "CmdActor", message: "[CmdActor] hello" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  22079 watcher Text Text { needs_translation: false, category: Authored, type: Announcement, content: Announcement(TextContentAnnouncement { source_name: "CmdActor", message: "[CmdActor] hello" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /tell @a psst
+  23080 watcher Text Text { needs_translation: false, category: Authored, type: Whisper, content: Whisper(TextContentWhisper { source_name: "CmdActor", message: "psst" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  23080 actor   Text Text { needs_translation: false, category: Authored, type: Whisper, content: Whisper(TextContentWhisper { source_name: "CmdActor", message: "psst" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  23080 actor   CommandOutput success_count=2 data=None commands.message.display.outgoing success=true ["CmdActor, CmdWatcher", "psst"]
+## /time set banana
+  24079 actor   CommandOutput success_count=0 data=None commands.generic.syntax success=false ["/time set ", "banana", ""]
+## /
+  25129 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 1181, paused: false }] }) }
+  25129 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 1181, paused: false }] }) }
+## /gamerule sendcommandfeedback true
+  26080 watcher GameRulesChanged sendCommandFeedback=Bool(true)
+  26080 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"sendcommandfeedback\"},{\"text\":\"true\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  26081 actor   GameRulesChanged sendCommandFeedback=Bool(true)
+  26081 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["sendcommandfeedback", "true"]
+## /
+## /time query daytime
+  28080 actor   CommandOutput success_count=1 data=None commands.time.query.daytime success=true ["1240"]
+  28080 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.time.query.daytime\",\"with\":{\"rawtext\":[{\"text\":\"1240\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /time set 1000
+  29080 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 1000, paused: false }] }) }
+  29080 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 1000, paused: false }] }) }
+  29080 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.time.set\",\"with\":{\"rawtext\":[{\"text\":\"1000\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  29081 actor   CommandOutput success_count=1 data=None commands.time.set success=true ["1000"]
+## /gamemode creative @s
+  30080 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamemode.success.self\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.creative\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  30080 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"gameMode.changed\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.creative\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  30080 actor   CommandOutput success_count=1 data=None commands.gamemode.success.self success=true ["%createWorldScreen.gameMode.creative"]
+## /give @s stone 2
+  31081 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.give.success\",\"with\":{\"rawtext\":[{\"text\":\"Stone\"},{\"text\":\"2\"},{\"text\":\"CmdActor\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  31081 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.give.successRecipient\",\"with\":{\"rawtext\":[{\"text\":\"Stone\"},{\"text\":\"2\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  31082 actor   CommandOutput success_count=1 data=None commands.give.success success=true ["Stone", "2", "CmdActor"]
+## /give @a dirt 1
+  32081 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.give.successRecipient\",\"with\":{\"rawtext\":[{\"text\":\"Dirt\"},{\"text\":\"1\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  32081 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.give.success\",\"with\":{\"rawtext\":[{\"text\":\"Dirt\"},{\"text\":\"1\"},{\"text\":\"CmdActor, CmdWatcher\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  32082 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.give.successRecipient\",\"with\":{\"rawtext\":[{\"text\":\"Dirt\"},{\"text\":\"1\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  32082 actor   CommandOutput success_count=2 data=None commands.give.success success=true ["Dirt", "1", "CmdActor, CmdWatcher"]
+## /xp 3 @s
+  33085 actor   CommandOutput success_count=1 data=None commands.xp.success success=true ["3", "CmdActor"]
+  33085 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.xp.success\",\"with\":{\"rawtext\":[{\"text\":\"3\"},{\"text\":\"CmdActor\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /effect @s speed 5
+  34081 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.effect.success\",\"with\":{\"rawtext\":[{\"text\":\"%potion.moveSpeed\"},{\"text\":\"0\"},{\"text\":\"CmdActor\"},{\"text\":\"5\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  34081 actor   CommandOutput success_count=1 data=None commands.effect.success success=true ["%potion.moveSpeed", "0", "CmdActor", "5"]
+## /say hello
+  35080 actor   Text Text { needs_translation: false, category: Authored, type: Announcement, content: Announcement(TextContentAnnouncement { source_name: "CmdActor", message: "[CmdActor] hello" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  35080 watcher Text Text { needs_translation: false, category: Authored, type: Announcement, content: Announcement(TextContentAnnouncement { source_name: "CmdActor", message: "[CmdActor] hello" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /tell @a psst
+  36081 watcher Text Text { needs_translation: false, category: Authored, type: Whisper, content: Whisper(TextContentWhisper { source_name: "CmdActor", message: "psst" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  36081 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.message.display.outgoing\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor, CmdWatcher\"},{\"text\":\"psst\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  36082 actor   Text Text { needs_translation: false, category: Authored, type: Whisper, content: Whisper(TextContentWhisper { source_name: "CmdActor", message: "psst" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  36082 actor   CommandOutput success_count=2 data=None commands.message.display.outgoing success=true ["CmdActor, CmdWatcher", "psst"]
+## /time set banana
+  37081 actor   CommandOutput success_count=0 data=None commands.generic.syntax success=false ["/time set ", "banana", ""]
+  37946 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 1177, paused: false }] }) }
+  38120 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 1177, paused: false }] }) }
+## /
+probe exit 0

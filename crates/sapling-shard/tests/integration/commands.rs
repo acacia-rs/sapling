@@ -7,7 +7,7 @@ use acacia_proto::packets::{AvailableCommands, CommandOutput, CommandRequest, Mo
 use acacia_proto::types::{CommandOrigin, GameMode as WireGameMode, InputData};
 use common::{Harness, all, input_at};
 use sapling_api::command::Target;
-use sapling_api::{Command, GameMode, Output, Permission, PlayerId, Sender, ShardCtx};
+use sapling_api::{Command, GameMode, Output, Permission, PlayerId, RuleValue, Sender, ShardCtx};
 use sapling_data::EYE_HEIGHT;
 
 #[derive(Command)]
@@ -147,10 +147,29 @@ fn an_operators_command_is_echoed_to_the_other_operators_as_bds_echoes_it() {
     let echo = r#"{"rawtext":[{"text":"§7§o["},{"translate":"Alex"},{"text":": "},{"translate":"Alex is now in Creative","with":{"rawtext":null}},{"text":"]"}]}
 "#;
     assert_eq!((json_lines(sent.to(1)), json_lines(sent.to(2)), json_lines(sent.to(3))), (vec![], vec![echo.to_owned()], vec![]));
-    // Not a failure, and not a command members may run.
+    // Not a failure; but any command an operator sends, as BDS echoed an operator's `/tell`.
     h.receive(1, &request("/gamemode creative Nobody", 3));
-    h.receive(1, &request("/hub", 4));
     assert!(json_lines(h.tick_all().to(2)).is_empty());
+    h.receive(1, &request("/hub", 4));
+    assert_eq!(json_lines(h.tick_all().to(2)).len(), 1);
+}
+
+/// research/captures/bds-feedback.txt.
+#[test]
+fn with_send_command_feedback_off_only_failures_are_answered() {
+    let mut h = harness();
+    for (conn, name) in [(1, "Alex"), (2, "Steve")] {
+        h.enter(conn, name);
+        h.receive(conn, &request("/promote", 1));
+    }
+    h.tick_all();
+    h.remote.run(|ctx| assert!(ctx.set_game_rule("sendCommandFeedback", RuleValue::Bool(false))));
+    h.tick_all();
+    h.receive(1, &request("/gamemode creative", 2));
+    let sent = h.tick_all();
+    assert!(all::<CommandOutput>(sent.to(1)).is_empty() && json_lines(sent.to(2)).is_empty(), "a success goes untold");
+    h.receive(1, &request("/gamemode banana", 3));
+    assert_eq!(answer(h.tick_all().to(1)).0, "commands.generic.syntax");
 }
 
 #[test]

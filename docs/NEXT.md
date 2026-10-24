@@ -138,9 +138,11 @@ were recorded on a testbox BDS by `cargo run -p sapling --example bds_container_
 
 The overworld generates block-exact against a one-worker, seed-0 BDS (`tools/replay-all.sh`, every
 region 0); the stock oracle (`tools/oracle.sh`) is a regression signal only, since stock BDS does not
-repeat itself (`docs/research/worldgen-bds-order.md`). Left:
+repeat itself (`docs/research/worldgen-bds-order.md`). The Nether and the End generate the same way
+(`tools/nether-replay.sh`, `tools/end-replay.sh`), with their dimensions, portals and the dragon fight
+(`docs/research/nether-dimension.md`, `docs/research/end-dimension.md`, whose "Not done" lists what is
+left). Left:
 
-- The Nether and the End: not generated at all.
 - Wall times on a quiet testbox: every speed result so far compares instructions
   (`tools/bench.sh`, `docs/research/worldgen-perf.md`).
 - Cache room for spawn areas beyond the generator's areas, if mass joins matter: spawn priority
