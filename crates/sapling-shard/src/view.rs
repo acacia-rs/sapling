@@ -10,10 +10,15 @@ use crate::components::{InLayer, Outgoing, Stage};
 /// Hands `packets` to every player of `layer` whose view covers the column of `pos`, joined or
 /// still loading: a client that was sent the column must hear what happens in it.
 pub(crate) fn to_viewers(world: &mut World, layer: Entity, pos: BlockPos, packets: &[Bytes]) {
+    to_viewers_but(world, layer, pos, None, packets);
+}
+
+/// [`to_viewers`], but for the player `but`.
+pub(crate) fn to_viewers_but(world: &mut World, layer: Entity, pos: BlockPos, but: Option<Entity>, packets: &[Bytes]) {
     let column = ChunkPos::of_block(pos[0], pos[2]);
-    let mut players = world.query::<(&InLayer, &Stage, &View, &mut Outgoing)>();
-    for (in_layer, stage, view, mut out) in players.iter_mut(world) {
-        if in_layer.0 == layer && *stage >= Stage::Chunks && view.covers(column) {
+    let mut players = world.query::<(Entity, &InLayer, &Stage, &View, &mut Outgoing)>();
+    for (player, in_layer, stage, view, mut out) in players.iter_mut(world) {
+        if Some(player) != but && in_layer.0 == layer && *stage >= Stage::Chunks && view.covers(column) {
             out.0.extend_from_slice(packets);
         }
     }

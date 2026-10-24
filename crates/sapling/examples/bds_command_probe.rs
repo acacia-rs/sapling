@@ -263,6 +263,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         Some("douse") => (burn::douse(), burn::BURN_SHOWN, burn::BURN_SETTLE),
         Some("hit") => (burn::hit(), burn::HIT_SHOWN, burn::BURN_SETTLE),
         Some("tools") => (burn::tools(), burn::HIT_SHOWN, burn::BURN_SETTLE),
+        Some("swim") => (burn::swim(), burn::HIT_SHOWN, burn::BURN_SETTLE),
         Some("reach") => (burn::reach(), burn::HIT_SHOWN, burn::BURN_SETTLE),
         Some("shapes") => (redstone::shapes(), redstone::REDSTONE_SHOWN, redstone::CONDUCTORS_SETTLE),
         Some(other) => match player::drill(other) {

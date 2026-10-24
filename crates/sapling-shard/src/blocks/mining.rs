@@ -14,7 +14,7 @@ use sapling_world::{Material, Mining, Tool, ToolKind, ToolTier};
 
 use super::loot::Breaker;
 use super::send;
-use crate::components::Tick;
+use crate::components::{InLayer, Layer, Tick};
 use crate::inventory::Inventory;
 
 /// Ticks a break may arrive early: an input can be a tick or two ahead of the shard's count.
@@ -25,6 +25,7 @@ const SILK_TOUCH: i16 = 16;
 const FORTUNE: i16 = 18;
 /// `BlockStartBreak` carries this over the break's ticks: the crack's growth per tick.
 const CRACK_SCALE: u32 = 65535;
+const HITS_EVERY: u64 = 5;
 
 /// The break a player has started and not finished.
 #[derive(Component, Default)]
@@ -110,6 +111,25 @@ pub(crate) fn start(world: &mut World, player: Entity, layer: Entity, pos: Block
     super::light_ore(world, layer, pos);
     if let Some(needed) = needed {
         send::to_viewers(world, layer, pos, &[crack(LevelEventEvent::BlockStartBreak, pos, (CRACK_SCALE / needed) as i32)]);
+        hit(world, player, layer, pos);
+    }
+}
+
+/// The breaker's blow on the block at `pos`, heard by those who see it but not the breaker.
+fn hit(world: &mut World, player: Entity, layer: Entity, pos: BlockPos) {
+    let Some(level) = world.get::<Layer>(layer).map(|layer| &layer.world) else { return };
+    let sound = send::sound("hit", level.registry(), pos, level.block(pos[0], pos[1], pos[2]));
+    crate::view::to_viewers_but(world, layer, pos, Some(player), &[sound]);
+}
+
+/// Each break under way is heard hit on every [`HITS_EVERY`]th tick from its start, as BDS's were
+/// (bds-oresteps.txt, bds-toil.txt: one at the start, then one every fifth input).
+pub(crate) fn sound_hits(world: &mut World) {
+    let tick = world.resource::<Tick>().0;
+    let mut breakers = world.query::<(Entity, &Breaking, &InLayer)>();
+    let due: Vec<_> = breakers.iter(world).filter_map(|(player, breaking, layer)| breaking.0.as_ref().filter(|started| tick > started.tick && (tick - started.tick) % HITS_EVERY == 0).map(|started| (player, layer.0, started.pos))).collect();
+    for (player, layer, pos) in due {
+        hit(world, player, layer, pos);
     }
 }
 

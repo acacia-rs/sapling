@@ -286,13 +286,15 @@ impl Inventory {
     }
 }
 
-/// Runs `change` on a player's inventory and shows the client the result.
+/// Runs `change` on a player's inventory and shows the client the result; armour put on is heard.
 pub(crate) fn change<T>(world: &mut World, player: Entity, change: impl FnOnce(&mut Inventory) -> T) -> Option<T> {
     let mut query = world.query::<(&mut Inventory, &mut Outgoing)>();
     let (mut inventory, mut out) = query.get_mut(world, player).ok()?;
+    let before = armour_wear::worn(&inventory);
     let result = change(&mut inventory);
     if inventory.sent {
         inventory.send_all(&mut out);
+        armour_wear::equipped(world, player, &before);
     }
     Some(result)
 }

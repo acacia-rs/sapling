@@ -88,13 +88,13 @@ const SHRINK: [f32; 3] = [0.001, 0.401, 0.001];
 const ITEM_BREATH: f32 = 0.375;
 
 /// `liquid` in `cell`, on either layer.
-fn liquid_in(level: &Level, [x, y, z]: [i32; 3], liquid: Liquid) -> Option<acacia_physics::Liquid> {
+pub(crate) fn liquid_in(level: &Level, [x, y, z]: [i32; 3], liquid: Liquid) -> Option<acacia_physics::Liquid> {
     let registry = level.registry();
     [level.liquid(x, y, z), level.block(x, y, z)].into_iter().filter_map(|id| registry.get(id).and_then(liquid_of)).find(|found| found.kind == liquid.kind())
 }
 
 /// The height of the surface of `found` in the cell at `y`: a source, and a falling liquid, fill it.
-fn surface(y: i32, found: acacia_physics::Liquid) -> f32 {
+pub(crate) fn surface(y: i32, found: acacia_physics::Liquid) -> f32 {
     y as f32 + found.height()
 }
 
