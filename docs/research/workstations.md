@@ -32,7 +32,8 @@ screen for the others); a request whose consumes do not match is refused.
   Unlike Java, a shelf off a corner looks through the corner cell, not the side.
 - **RNG**: one MT19937 `Random` seeded with the player's enchant seed for all three offers;
   `nextInt(n) = genrand % n`, `nextFloat = genrand · 2⁻³²`.
-- **Gate**: enchantability > 0 and no `ench` list on the item; else no offers.
+- **Gate**: a non-null stack (`141a549d0`: air, or count and aux all zero, is null), count > 0,
+  enchantability > 0 and no `ench` list on the item; else no offers.
 - **Costs** (141b63d40): `base = nextInt(8) + 1 + b/2 + nextInt(b+1)`;
   `[max(base/3, 1), base·2/3 + 1, max(base, 2b)]`. No zeroing of low offers (Java has it).
 - **Per offer, in order**: select enchantments, then the name (`nextInt(2)+3` words, each
@@ -149,7 +150,6 @@ compass, elytra: 0 (never offered).
 ## Unverified
 
 - The bookshelf gap flag (taken as air only; may include replaceable blocks).
-- What `141a549d0` rejects in the table's item gate.
 - Bow, crossbow, book and mace enchantability (1, 1, 1, 15 from the wiki).
 - Whether an offer with no enchantments is sent (sapling sends all three).
 - The offer name's trailing space (sapling trims it).
