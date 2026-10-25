@@ -29,6 +29,7 @@ mod start_game;
 mod templates;
 mod husbandry;
 mod raised_look;
+pub mod trades;
 
 pub use block_defaults::default_properties;
 pub use block_loot::{BlockLoot, Fortune, LootRow, StateTest, Tooling, block_loot, java_block, ripe_age};

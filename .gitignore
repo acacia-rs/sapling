@@ -16,5 +16,6 @@ __pycache__/
 /crates/sapling-data/data/command-names.tsv
 /crates/sapling-data/data/spawn-rules.tsv
 /crates/sapling-data/data/despawns.tsv
+/crates/sapling-data/data/trades.json
 /crates/sapling-worldgen/src/structure/template/templates.bin
 /crates/sapling-data/data/husbandry.tsv

@@ -95,8 +95,11 @@ impl Command for Summon {
     fn run(self, ctx: &mut ShardCtx<'_>, sender: &Sender, out: &mut Output) {
         let here = ctx.origin(sender);
         let at = self.position.map_or(here, |position| position.from(here));
-        // BDS summons its newer zombie villager under the older one's name, and knows no other.
-        let kind = Some(namespaced(&self.kind)).filter(|kind| kind != "minecraft:zombie_villager").unwrap_or_else(|| "minecraft:zombie_villager_v2".into());
+        // BDS summons its newer villager and zombie villager under the older ones' names, and knows no others.
+        let kind = match namespaced(&self.kind) {
+            kind if kind == "minecraft:zombie_villager" || kind == "minecraft:villager" => format!("{kind}_v2"),
+            kind => kind,
+        };
         // TODO: the pitch is taken and not kept.
         let _ = self.pitch;
         let summoned = ctx.summon_as(sender.player().map(|by| by.id), &kind, at, self.yaw.unwrap_or(0.0), self.event.as_deref()).is_some();

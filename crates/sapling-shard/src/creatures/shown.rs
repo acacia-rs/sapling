@@ -76,7 +76,11 @@ fn shown_now(world: &World, entity: Entity) -> Option<Vec<Bytes>> {
     let mut shown = announcement(id, kind, body, (look, raised), world.get::<Health>(entity), yaw, world.get::<Gene>(entity).map_or(0, |gene| gene.0));
     let flags = world.get::<Told>(entity).and_then(Told::mob_flags);
     shown.extend(flags.and_then(|flags| super::husbandry::links_packet(world, entity, id, flags)));
-    Some(shown)
+    Some(super::villagers::dressed(world, entity, shown))
+}
+
+pub(crate) fn is_baby(world: &World, entity: Entity) -> bool {
+    world.get::<Raised>(entity).is_some_and(Raised::is_baby)
 }
 
 /// Players who come to see the mob later are told of it as it is now.

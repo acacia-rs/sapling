@@ -174,6 +174,7 @@ pub(crate) fn dispatch_closes(world: &mut World) {
         if world.get::<Viewing>(player).is_some_and(|viewing| i64::from(viewing.window) == window) {
             close(world, player);
         }
+        crate::creatures::stop_trading(world, player, window);
         inventory::clear_grid(world, player);
     }
 }

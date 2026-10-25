@@ -7,6 +7,7 @@
 use acacia_proto::types::ContainerSlotType;
 use sapling_data::Made;
 use sapling_data::enchant::{Offer, anvil, grind, table};
+use sapling_data::trades::ANY_DAMAGE;
 use sapling_world::ItemStack;
 
 use super::{Held, Inventory, Place, stack};
@@ -20,6 +21,8 @@ const GRINDSTONE_ADDITIONAL: usize = 17;
 const SMITHING_INPUT: usize = 51;
 const SMITHING_MATERIAL: usize = 52;
 const SMITHING_TEMPLATE: usize = 53;
+/// The trading screen's two payment slots.
+const PAYMENT: [usize; 2] = [4, 5];
 
 /// The `Ui` slot a request names a workstation's slot of the kind `kind` by.
 pub(super) fn ui_slot(kind: ContainerSlotType) -> Option<usize> {
@@ -33,6 +36,8 @@ pub(super) fn ui_slot(kind: ContainerSlotType) -> Option<usize> {
         ContainerSlotType::SmithingTableInput => SMITHING_INPUT,
         ContainerSlotType::SmithingTableMaterial => SMITHING_MATERIAL,
         ContainerSlotType::SmithingTableTemplate => SMITHING_TEMPLATE,
+        ContainerSlotType::Trade2Ingredient1 | ContainerSlotType::TradeIngredient1 => PAYMENT[0],
+        ContainerSlotType::Trade2Ingredient2 | ContainerSlotType::TradeIngredient2 => PAYMENT[1],
         _ => return None,
     })
 }
@@ -50,6 +55,18 @@ pub(crate) enum Bench {
     Anvil,
     Grindstone,
     Smithing,
+    /// A trader's screen, with its offers.
+    Trade(Vec<Bargain>),
+}
+
+/// An offer of an open trading screen as a request pays for it: the recipe id it is named by,
+/// what it wants at its price now (a `Damage` of [`ANY_DAMAGE`] takes any), what it gives.
+#[derive(Clone, Debug)]
+pub(crate) struct Bargain {
+    pub net_id: u32,
+    pub wants: [Option<ItemStack>; 2],
+    pub gives: ItemStack,
+    pub sold_out: bool,
 }
 
 /// What a done craft leaves the world to do (workstations.rs).
@@ -61,6 +78,8 @@ pub(crate) enum Forged {
     /// Experience let out, from the first to the second.
     Ground([u32; 2]),
     Smithed,
+    /// The trader's offer of this place was traded once.
+    Traded(usize),
 }
 
 /// A craft at a workstation, and what the request used up so far.
@@ -108,6 +127,7 @@ impl Forge {
         match bench {
             Bench::Enchanting(offers) => Self::enchant(inventory, offers, id, creative),
             Bench::Smithing => Self::smith(inventory, id),
+            Bench::Trade(bargains) => Self::trade(inventory, bargains, id),
             Bench::Anvil | Bench::Grindstone => Err(()),
         }
     }
@@ -166,6 +186,28 @@ impl Forge {
         lay(inventory, &base, made, 1)?;
         let takes = [SMITHING_TEMPLATE, SMITHING_INPUT, SMITHING_MATERIAL].map(|slot| (Place::Ui(slot), 1)).to_vec();
         Ok(Self::new(takes, Forged::Smithed))
+    }
+
+    /// A trade of the offer a `CraftRecipe` names, paid from the payment slots (BDS's
+    /// `CraftHandlerTrade::_handleTrade2`: a sold-out offer is refused).
+    fn trade(inventory: &mut Inventory, bargains: &[Bargain], id: u32) -> Result<Self, ()> {
+        let index = bargains.iter().position(|bargain| bargain.net_id == id).ok_or(())?;
+        let bargain = &bargains[index];
+        if bargain.sold_out {
+            return Err(());
+        }
+        let mut takes = Vec::new();
+        for (slot, want) in PAYMENT.into_iter().zip(&bargain.wants) {
+            let Some(want) = want else { continue };
+            let paid = held(inventory, slot).is_some_and(|held| held.stack.name == want.name && (want.damage == ANY_DAMAGE || held.stack.damage == want.damage) && held.stack.count >= want.count);
+            if !paid {
+                return Err(());
+            }
+            takes.push((Place::Ui(slot), want.count));
+        }
+        let gives = bargain.gives.clone();
+        lay(inventory, &gives, Made { name: gives.name.clone(), tag: gives.tag.clone() }, gives.count)?;
+        Ok(Self::new(takes, Forged::Traded(index)))
     }
 
     /// Counts `count` taken from `from` as used up.

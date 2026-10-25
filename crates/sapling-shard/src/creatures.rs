@@ -43,6 +43,7 @@ mod struck;
 mod summoned;
 mod teleports;
 mod vexes;
+mod villagers;
 mod wither;
 
 use bevy_ecs::prelude::*;
@@ -66,6 +67,7 @@ pub(crate) use hunting::{on_difficulty, sees};
 pub(crate) use husbandry::{Raised, interact, kept as kept_raising, owner_hit, owner_hurt, shear_in, tie_to_fence};
 pub(crate) use omens::{Omens, befall, infested_hurt};
 pub(crate) use struck::struck_by_lightning;
+pub(crate) use villagers::{bargains, interact as trade_with, stop_trading, traded};
 pub(crate) use wither::{build as build_wither, hurt as wither_hurt, spares};
 use crate::components::{InLayer, Layer, NetId, Tick};
 use crate::{blocks, entities, mobs};
@@ -94,7 +96,10 @@ pub(crate) fn spawn(world: &mut World, layer: Entity, kind: &str, feet: [f32; 3]
 /// [`spawn`] facing `yaw`, and as its kind's spawn `event` makes it (a panda's gene) where known.
 fn spawn_as(world: &mut World, layer: Entity, kind: &str, feet: [f32; 3], reason: SpawnReason, yaw: f32, event: Option<&str>) -> Option<EntityId> {
     let gene = event.and_then(|event| genes::of_event(kind, event)).or_else(|| genes::roll(world, kind));
-    born(world, layer, kind, feet, Birth { reason, yaw, gene, sound: "spawn" })
+    let id = born(world, layer, kind, feet, Birth { reason, yaw, gene, sound: "spawn" })?;
+    let entity = entities::find(world, id)?;
+    villagers::arm(world, entity, layer, kind, false, event);
+    Some(id)
 }
 
 /// How a mob comes: why, facing where, of which gene, and heard as what.
@@ -162,6 +167,7 @@ pub(crate) fn from_storage(world: &mut World, layer: Entity, actor: Actor, uniqu
         crate::dragon::adopt(world, entity);
     }
     entities::keep(world, entity, layer, unique_id, compound);
+    villagers::arm(world, entity, layer, &kind, true, None);
     reshow(world, entity);
     true
 }
@@ -271,10 +277,13 @@ pub(crate) fn tick(world: &mut World) {
             stares::watch(world, entity, layer, id, &kind, &start);
             drinks::tick(world, entity, layer, id, &start, hunting::prey_at(world, entity));
             teleports::tick(world, entity, layer, hunting::prey_at(world, entity));
+            if villagers::tick(world, entity, layer) {
+                continue;
+            }
         }
         // A teleport starts the tick afresh where it landed: no fall from where it left.
         let Some(start) = world.get::<Body>(entity).copied() else { continue };
-        if thinks && !wither::steer(world, entity, layer) && !rams::steer(world, entity, layer, id, &kind) && !hunting::steer(world, entity, layer, id, &kind) && !husbandry::steer(world, entity, layer, &kind) {
+        if thinks && !wither::steer(world, entity, layer) && !rams::steer(world, entity, layer, id, &kind) && !hunting::steer(world, entity, layer, id, &kind) && !husbandry::steer(world, entity, layer, &kind) && !villagers::steer(world, entity, layer) {
             let traits = sapling_data::mob_traits(&kind);
             let strolls = world.resource::<crate::components::Settings>().0.mobs_stroll;
             if strolls {

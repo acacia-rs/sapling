@@ -32,32 +32,33 @@ pub(super) fn name(world: &mut World, entity: Entity, name: String) {
     crate::creatures::reshow(world, entity);
 }
 
-/// The player clicked the mob or knot `entity`.
-pub(crate) fn interact(world: &mut World, player: Entity, entity: Entity) {
-    if knots::undo(world, entity) || world.get::<Raised>(entity).is_none() {
-        return;
+/// The player clicked the mob or knot `entity`; false where nothing here took the click.
+pub(crate) fn interact(world: &mut World, player: Entity, entity: Entity) -> bool {
+    if knots::undo(world, entity) {
+        return true;
+    }
+    if world.get::<Raised>(entity).is_none() {
+        return false;
     }
     if world.get::<Raised>(entity).is_some_and(|raised| raised.holder == Some(player)) {
-        return leads::untie(world, entity, "lead.unleash");
+        leads::untie(world, entity, "lead.unleash");
+        return true;
     }
-    let Some(kind) = world.get::<Kind>(entity).map(|kind| kind.0.clone()) else { return };
+    let Some(kind) = world.get::<Kind>(entity).map(|kind| kind.0.clone()) else { return false };
     let item = world.get::<Inventory>(player).and_then(|inventory| inventory.in_hand().as_ref().map(|held| held.stack.name.clone())).unwrap_or_default();
     let variant = world.get::<Creature>(entity).and_then(|creature| creature.look.as_ref()).map_or(0, |look| look.variant);
     if item == NAME_TAG {
-        if let Some(given) = given_name(world, player) {
-            name(world, entity, given);
-            spend(world, player);
-        }
-        return;
+        let Some(given) = given_name(world, player) else { return false };
+        name(world, entity, given);
+        spend(world, player);
+        return true;
     }
-    if item == leads::LEAD {
-        if leads::leash(world, entity, &kind, player) {
-            spend(world, player);
-        }
-        return;
+    if item == leads::LEAD && leads::leash(world, entity, &kind, player) {
+        spend(world, player);
+        return true;
     }
     if products::take(world, entity, &kind, &item, player, variant) {
-        return;
+        return true;
     }
     let fed = heal(world, entity, &kind, &item)
         || ageing::feed(world, entity, &kind, &item)
@@ -67,11 +68,13 @@ pub(crate) fn interact(world: &mut World, player: Entity, entity: Entity) {
     if fed {
         spend(world, player);
         crate::creatures::reshow(world, entity);
-        return;
+        return true;
     }
-    if owners::toggle_sitting(world, entity, &kind, player) {
+    let sat = owners::toggle_sitting(world, entity, &kind, player);
+    if sat {
         crate::creatures::reshow(world, entity);
     }
+    sat
 }
 
 /// A tamed mob that is hurt eats one of its healing foods.
