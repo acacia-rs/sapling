@@ -23,10 +23,10 @@ use crate::{entities, late_sounds, vitals};
 /// prey: their packs' `jump_delay`s.
 const CALM: [[u32; 2]; 2] = [[10, 30], [40, 120]];
 const AGGRESSIVE: [[u32; 2]; 2] = [[3, 10], [13, 40]];
-/// Of its pace, what a hop throws it ahead and what it adds in the air each tick after
-/// (bds-kinds2.txt: a medium slime's 0.0856 a tick at the jump, about 0.082 after).
-const HOP: f32 = 0.214;
-const AIR: f32 = 0.0185;
+/// Of its hop (sizes.rs), what it adds in the air each tick after; it slides to a stop after it
+/// lands. Fitted to BDS's medium and large slimes (bds-kinds2.txt, bds-player-omens.txt): 1.00 to
+/// 1.03 across in the air, 0.33 from a landing to the next jump.
+const AIR: f32 = 0.105;
 /// Ticks between a calm one's turns, least and most.
 const TURNS: [u32; 2] = [40, 100];
 /// Its touch: how near boxes come, the ticks between two, and how fast it throws a player away
@@ -110,7 +110,7 @@ pub(super) fn tick(world: &mut World, entity: Entity, layer: Entity, id: u64, ki
         hops.wait = if leap { hops.roll(delay) } else { hops.wait.min(delay[1]).saturating_sub(1) };
     }
     let (sin, cos) = hops.yaw.to_radians().sin_cos();
-    let ahead = if leap { HOP } else if start.on_ground { 0.0 } else { AIR } * size.pace;
+    let ahead = if leap { 1.0 } else if start.on_ground { 0.0 } else { AIR } * size.hop;
     hops.hopping |= leap;
     if let Some(mut kept) = world.get_mut::<Hops>(entity) {
         *kept = hops;
@@ -122,10 +122,6 @@ pub(super) fn tick(world: &mut World, entity: Entity, layer: Entity, id: u64, ki
         told.face(hops.yaw, hops.yaw);
     }
     if let Some(mut body) = world.get_mut::<Body>(entity) {
-        // BDS's comes to a stop where it lands, and moves again with its next hop.
-        if start.on_ground && !leap {
-            (body.motion[0], body.motion[2]) = (0.0, 0.0);
-        }
         body.walk([-sin * ahead, cos * ahead], leap);
     }
 }

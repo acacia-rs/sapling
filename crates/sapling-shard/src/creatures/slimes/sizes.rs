@@ -9,21 +9,25 @@ use bevy_ecs::prelude::*;
 use super::super::genes::Gene;
 use crate::blocks::Dice;
 
-/// Of each kind, by size: its box, health, pace and what its touch costs (none for a small slime's).
+/// Of each kind, by size: its box, health, pace, what its touch costs (none for a small slime's)
+/// and how fast across a hop throws it.
 pub(super) struct Size {
     pub(super) size: [f32; 2],
     health: f32,
-    pub(super) pace: f32,
+    pace: f32,
     pub(super) touch: f32,
+    pub(super) hop: f32,
 }
 
-const fn size(width: f32, height: f32, health: f32, pace: f32, touch: f32) -> Size {
-    Size { size: [width, height], health, pace, touch }
+const fn size(width: f32, height: f32, health: f32, pace: f32, touch: f32, hop: f32) -> Size {
+    Size { size: [width, height], health, pace, touch, hop }
 }
 
-/// The packs' `slime_small`, `slime_medium` and `slime_large` groups.
-const SLIME: [Size; 3] = [size(0.52, 0.52, 1.0, 0.3, 0.0), size(1.04, 1.04, 4.0, 0.4, 2.0), size(2.08, 2.08, 16.0, 0.6, 4.0)];
-const MAGMA_CUBE: [Size; 3] = [size(0.52, 0.52, 1.0, 0.6, 3.0), size(1.04, 1.02, 4.0, 0.66, 4.0), size(2.08, 2.08, 16.0, 0.75, 6.0)];
+/// The packs' `slime_small`, `slime_medium` and `slime_large` groups. A slime's hop is not by its
+/// pace: BDS's medium and large ones jumped 0.0856 across, a small one 0.0482 (bds-player-omens.txt,
+/// bds-effects3.txt); a magma cube's was not drilled, and is its pace's as a medium slime's.
+const SLIME: [Size; 3] = [size(0.52, 0.52, 1.0, 0.3, 0.0, 0.0482), size(1.04, 1.04, 4.0, 0.4, 2.0, 0.0856), size(2.08, 2.08, 16.0, 0.6, 4.0, 0.0856)];
+const MAGMA_CUBE: [Size; 3] = [size(0.52, 0.52, 1.0, 0.6, 3.0, 0.1284), size(1.04, 1.02, 4.0, 0.66, 4.0, 0.1412), size(2.08, 2.08, 16.0, 0.75, 6.0, 0.1605)];
 pub(super) const KINDS: [&str; 2] = ["minecraft:slime", "minecraft:magma_cube"];
 const VARIANTS: [i32; 3] = [1, 2, 4];
 const EVENTS: [&str; 3] = ["spawn_small", "spawn_medium", "spawn_large"];

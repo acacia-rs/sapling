@@ -190,6 +190,8 @@ impl Body {
         self.motion = std::array::from_fn(|axis| self.motion[axis] + walking[axis]);
         if leaping {
             self.motion[1] = DEFAULT_JUMP_HEIGHT;
+            // A jump leaves the ground: the next tick's drag is the air's (bds-kinds2.txt's slimes).
+            self.stood = false;
         }
         let wanted = self.motion;
         self.on_ground = self.travel(level, physics, wanted);
