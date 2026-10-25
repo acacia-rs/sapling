@@ -25,6 +25,8 @@ mod piston;
 mod redstone;
 #[path = "shared/world_command_drill.rs"]
 mod world_commands;
+#[path = "shared/structure_drill.rs"]
+mod structures;
 
 use std::time::{Duration, Instant};
 
@@ -206,6 +208,8 @@ fn show(start: Instant, shown: &[&str], who: &str, event: Option<BotEvent>) -> R
         let rules = packet.decode::<packets::GameRulesChanged>().map_err(|e| e.to_string())?;
         let shown: Vec<String> = rules.rules.iter().map(|rule| format!("{}={:?}", rule.name, rule.value)).collect();
         println!("{ms:>7} {who:<7} GameRulesChanged {}", shown.join(" "));
+    } else if let Some(cells) = structures::block_names(&packet).filter(|_| shown.contains(&"UpdateSubchunkBlocks")) {
+        println!("{ms:>7} {who:<7} {cells}");
     } else if let Some(name) = acacia_bot::proto::packet_name(packet.id).filter(|name| ["Text", "SetTime", "SyncWorldClocks"].contains(name) || shown.contains(name)) {
         let text: String = dump::dump(&packet).unwrap_or_default().chars().take(SHOWN).collect();
         println!("{ms:>7} {who:<7} {name} {text}");
@@ -288,7 +292,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         Some("worldcmds") => (world_commands::world(), world_commands::WORLD_SHOWN, SETTLE),
         Some("itemcmds") => (world_commands::items(), world_commands::ITEM_SHOWN, SETTLE),
         Some("functions") => (functions::functions(), functions::FUNCTIONS_SHOWN, SETTLE),
-        Some(other) => match player::drill(other) {
+        Some(other) => match player::drill(other).or_else(|| structures::drill(other)) {
             Some((lines, shown)) => (lines, shown, burn::BURN_SETTLE),
             None => return Err(format!("no drill {other}").into()),
         },

@@ -2,14 +2,14 @@
 
 use std::any::TypeId;
 
-use acacia_proto::packets::{SetDifficulty, UpdatePlayerGameType};
+use acacia_proto::packets::SetDifficulty;
 use bevy_ecs::prelude::*;
 use sapling_api::{Backend, Block, BlockPos, BossBar, Difficulty, FormCallback, GameMode, Item, Permission, Player, PlayerId, Sidebar, Slot, State, Title};
 use sapling_net::ConnId;
 
 use super::Ctx;
 use crate::commands::Access;
-use crate::components::{Identity, Layer, Mode, Net, NetId, Players, Position, Settings, Tick, in_world};
+use crate::components::{Identity, Layer, Mode, Net, Players, Position, Settings, Tick, in_world};
 use crate::inventory::Inventory;
 use crate::plugins::{Deferred, PluginState};
 use crate::{blocks, chat, clock, containers, forms, hud, inventory, join, worlds};
@@ -169,12 +169,7 @@ impl Backend for Ctx<'_> {
 
     fn set_game_mode(&mut self, player: PlayerId, mode: GameMode) {
         let Some(entity) = self.entity(player) else { return };
-        let (tick, Some(id)) = (self.tick(), self.world.get::<NetId>(entity).copied()) else { return };
-        let Some(mut current) = self.world.get_mut::<Mode>(entity) else { return };
-        current.0 = mode;
-        // BDS's `/gamemode` sends this to the player itself; the others learn whom to show how.
-        let packet = UpdatePlayerGameType { gamemode: join::wire_game_mode(mode), player_unique_id: id.0 as i64, tick };
-        chat::send_to_all(self.world, &sapling_net::encode(&packet));
+        join::set_game_mode(self.world, entity, mode);
     }
 
     fn item(&self, player: PlayerId, slot: Slot) -> Option<Item> {

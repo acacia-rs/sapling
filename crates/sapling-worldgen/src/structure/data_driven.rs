@@ -115,17 +115,32 @@ impl Structures {
         let mut found = Vec::new();
         for kind in V2_KINDS {
             for at in self.starts_near(density, kind, chunk, reach(kind) + 1) {
-                let pieces = self.templates.v2.get((kind, at), || {
-                    let raw = RawHeights::new(density);
-                    let start = self.v2_start(density, kind, at).expect("a v2 start");
-                    start.assemble(&mut JavaRandom::large_feature(self.seed, at.0, at.1), self.seed, at, &|x, z| raw.at(x, z))
-                });
+                let pieces = self.v2_assembled(density, kind, at, || self.v2_start(density, kind, at).expect("a v2 start"));
                 if pieces.iter().any(|p| near(&p.bb)) {
                     found.push((kind, pieces));
                 }
             }
         }
         found
+    }
+
+    /// The pieces of `kind`'s start in `at`, which `start` gives.
+    fn v2_assembled(&self, density: &Density, kind: StructureKind, at: (i32, i32), start: impl FnOnce() -> V2Start) -> Arc<Vec<Piece>> {
+        self.templates.v2.get((kind, at), || {
+            let raw = RawHeights::new(density);
+            start().assemble(&mut JavaRandom::large_feature(self.seed, at.0, at.1), self.seed, at, &|x, z| raw.at(x, z))
+        })
+    }
+
+    /// The pieces of `kind` started in `at` without its biome test; camps still pick their variant
+    /// by biome, so None when none fits.
+    pub(super) fn forced_v2(&self, density: &Density, kind: StructureKind, at: (i32, i32)) -> Option<Arc<Vec<Piece>>> {
+        let start = match kind {
+            StructureKind::TrailRuins => TRAIL_RUINS,
+            StructureKind::TrialChambers => TRIAL_CHAMBERS,
+            _ => self.v2_start(density, kind, at)?,
+        };
+        Some(self.v2_assembled(density, kind, at, || start))
     }
 
     /// For probes: the template blocks of v2 pieces in `chunk` as (position, template name, unturned block, rotation, turned block).

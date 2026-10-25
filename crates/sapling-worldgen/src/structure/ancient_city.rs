@@ -39,12 +39,13 @@ impl Structures {
     /// Ancient cities around `chunk` with a piece that `near` accepts.
     pub(super) fn ancient_cities_reaching(&self, density: &Density, chunk: (i32, i32), near: &dyn Fn(&BoundingBox) -> bool) -> Vec<Arc<AncientCity>> {
         let starts = self.starts_near(density, StructureKind::AncientCity, chunk, REACH + 1);
+        starts.into_iter().map(|start| self.ancient_city(start)).filter(|c| c.pieces.iter().any(|p| near(&p.bb))).collect()
+    }
+
+    /// The city starting in `start`, whatever its start check.
+    pub(super) fn ancient_city(&self, start: (i32, i32)) -> Arc<AncientCity> {
         let grid = StructureKind::AncientCity.grid().unwrap();
-        starts
-            .into_iter()
-            .map(|start| self.templates.ancient_cities.get(start, || generate(&mut grid.candidate_random(self.level_seed, start).1, start)))
-            .filter(|c| c.pieces.iter().any(|p| near(&p.bb)))
-            .collect()
+        self.templates.ancient_cities.get(start, || generate(&mut grid.candidate_random(self.level_seed, start).1, start))
     }
 
     /// Every city piece meeting the canvas's chunk, in assembly order.

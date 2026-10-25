@@ -43,7 +43,7 @@ impl TemplateStarts {
 }
 
 impl Structures {
-    fn centre_biome(density: &Density, (x, z): (i32, i32)) -> u32 {
+    pub(super) fn centre_biome(density: &Density, (x, z): (i32, i32)) -> u32 {
         let probe = Probe { density };
         probe.biome(x * 16 + 8, probe.surface((x, z)), z * 16 + 8)
     }
@@ -66,15 +66,14 @@ impl Structures {
     /// start's box sits at y 62 or 30 by the biome at its centre, and the piece tests the biome
     /// at the box's corner one above that.
     pub(super) fn shipwrecks_near(&self, density: &Density, chunk: (i32, i32)) -> Vec<((i32, i32), bool)> {
-        let beach = |x: i32, y: i32, z: i32| shipwreck::BEACHES.contains(&density.climate.biome_at(x, y, z));
         let starts = self.starts_near(density, StructureKind::Shipwreck, chunk, 1);
-        starts
-            .into_iter()
-            .map(|(x, z)| {
-                let y = if beach(x * 16 + 8, 63, z * 16 + 8) { 63 } else { 31 };
-                ((x, z), beach(x * 16, y, z * 16))
-            })
-            .collect()
+        starts.into_iter().map(|start| (start, Self::beached(density, start))).collect()
+    }
+
+    pub(super) fn beached(density: &Density, (x, z): (i32, i32)) -> bool {
+        let beach = |x: i32, y: i32, z: i32| shipwreck::BEACHES.contains(&density.climate.biome_at(x, y, z));
+        let y = if beach(x * 16 + 8, 63, z * 16 + 8) { 63 } else { 31 };
+        beach(x * 16, y, z * 16)
     }
 
     pub(super) fn place_shipwrecks(&self, canvas: &mut Canvas, shipwrecks: &[((i32, i32), bool)]) {
@@ -101,12 +100,13 @@ impl Structures {
     pub(super) fn outposts_near(&self, density: &Density, chunk: (i32, i32)) -> Vec<Arc<outpost::Outpost>> {
         let column = BoundingBox::chunk(chunk.0, chunk.1);
         let starts = self.starts_near(density, StructureKind::Outpost, chunk, OUTPOST_REACH);
+        starts.into_iter().map(|start| self.outpost(start)).filter(|o| o.pieces.iter().any(|p| p.bb.intersects(&column))).collect()
+    }
+
+    /// The outpost starting in `start`, whatever its start check.
+    pub(super) fn outpost(&self, start: (i32, i32)) -> Arc<outpost::Outpost> {
         let grid = StructureKind::Outpost.grid().unwrap();
-        starts
-            .into_iter()
-            .map(|start| self.templates.outposts.get(start, || outpost::generate(&mut grid.candidate_random(self.level_seed, start).1, start)))
-            .filter(|o| o.pieces.iter().any(|p| p.bb.intersects(&column)))
-            .collect()
+        self.templates.outposts.get(start, || outpost::generate(&mut grid.candidate_random(self.level_seed, start).1, start))
     }
 
     /// Every outpost piece meeting the canvas's chunk, each at the height it finds before any is placed.
@@ -137,7 +137,7 @@ impl Structures {
             .collect()
     }
 
-    fn ocean_ruin(&self, density: &Density, start: (i32, i32)) -> Arc<ocean_ruin::OceanRuin> {
+    pub(super) fn ocean_ruin(&self, density: &Density, start: (i32, i32)) -> Arc<ocean_ruin::OceanRuin> {
         self.templates.ocean_ruins.get(start, || {
             let warm = ocean_ruin::WARM_OCEANS.contains(&Self::centre_biome(density, start));
             ocean_ruin::generate(self.monument_checked_random(start), start, warm)

@@ -20,5 +20,6 @@ mod nether;
 mod packs;
 mod players;
 mod scoreboard;
+mod structure_commands;
 mod world_commands;
 mod worlds;

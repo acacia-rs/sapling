@@ -405,6 +405,21 @@ it sends for `/title`, `/scoreboard`, `/gamemode`, `/tp`, a wither's bar and com
   the world it left (`Hud::board_objectives`, carried). No SetScoreboardIdentity: BDS sent none in the
   drills. Tags (`tags.rs`): a player's in `Marks` (carried, saved as `Tags`), an entity's in its stored
   compound's `Tags`. Answers and packets: `docs/research/scoreboard.md`.
+- **Structure templates** (`sapling-shard` `structures.rs`, `structures/`; API `sapling-api`
+  `structure.rs`; NBT in `sapling-leveldb` `structure.rs`). Per realm: saved ones in the level
+  (`Level::structures`, written as `structuretemplate_` keys), the world folder's `structures/*.mcstructure`
+  read once, memory ones in an `InMemory` component on the realm's home layer. The level's maps are `Arc`s
+  because `dimensions::share_levels` clones the level each tick. `capture.rs` reads a box, `place.rs` writes
+  one turned (`turn.rs`) as one batch with its block entities and entities.
+- **Kept columns** (`kept.rs`). A world's ticking areas (in its level, per dimension) and a plugin's forced
+  chunks are counted every 10 ticks into a `Kept` component; `chunks::seen_in` and `ticking::seen` count
+  them as seen, so they load, stay and tick with nobody near. No spawn chunks, as on Bedrock.
+- **Hardcore and the border** (`border.rs`). `Level::hardcore` (level.dat `IsHardcore`) goes in StartGame;
+  a player rising there is put in spectator (`vitals/death.rs`). `WorldBorder` is a plugin API, not
+  vanilla (BDS has none): `border::keep_inside` puts a player past it back inside.
+- **On-demand worldgen** (`generation.rs`; `sapling-world` `locate.rs`, `generated/on_demand.rs`). `/place`
+  writes a feature, structure or jigsaw the generator draws over the loaded columns; `/locate` asks the
+  generator's placement and climate. Evidence: `docs/research/structures-and-ticking.md`.
 - **Boss bar.** One per player, on the player's own entity id (dragonfly's way: no extra entity).
   A new bar is ShowBar, `remove_boss_bar` HideBar; a bar that is shown changes by SetBarTitle,
   SetBarProgress and Texture (colour), one for each part that differs. A vanilla client ignores ShowBar
@@ -747,6 +762,9 @@ block action, and takes StopBreak and AbortBreak with a position.
   `scoreboard/`, `tag.rs`; `bds_command_probe scoreboard|scoreboard2`) answer under BDS's keys
   (docs/research/scoreboard.md); a name is the online player of that name or a fake player, `*`
   everyone with a score.
+  `/structure`, `/tickingarea`, `/place` and `/locate` (`vanilla/structure.rs`, `tickingarea.rs`,
+  `worldgen.rs`; `bds_command_probe structures|ticking|place|locate`) answer under BDS's keys; what is
+  not copied is listed in docs/research/structures-and-ticking.md "Unverified".
   `/kick <target> [reason]`, `/op` and `/deop` (operators,
   `vanilla/operators.rs`) answer under BDS's keys; with access lists `/op` and `/deop` save the role
   of a player with an XUID, and a joining player gets the role `permissions.json` has for them.

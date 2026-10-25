@@ -3,7 +3,7 @@
 
 use acacia_proto::packets::{
     ChunkRadiusUpdate, RequestChunkRadius, ResourcePackClientResponse, ResourcePackClientResponseResponseStatus as PackStatus, SetDifficulty,
-    SetLocalPlayerAsInitialized,
+    SetLocalPlayerAsInitialized, UpdatePlayerGameType,
 };
 use acacia_proto::types::GameMode as WireGameMode;
 use bevy_ecs::prelude::*;
@@ -25,6 +25,16 @@ pub(crate) fn wire_game_mode(mode: GameMode) -> WireGameMode {
         GameMode::Adventure => WireGameMode::Adventure,
         GameMode::Spectator => WireGameMode::Spectator,
     }
+}
+
+/// Puts a player in `mode`. BDS's `/gamemode` sends the change to the player itself; the others
+/// learn whom to show how.
+pub(crate) fn set_game_mode(world: &mut World, player: Entity, mode: GameMode) {
+    let (tick, Some(id)) = (world.resource::<Tick>().0, world.get::<NetId>(player).copied()) else { return };
+    let Some(mut current) = world.get_mut::<Mode>(player) else { return };
+    current.0 = mode;
+    let packet = UpdatePlayerGameType { gamemode: wire_game_mode(mode), player_unique_id: id.0 as i64, tick };
+    crate::chat::send_to_all(world, &sapling_net::encode(&packet));
 }
 
 type Joining<'a> = (&'a Conn, &'a Identity, &'a NetId, &'a Position, &'a InLayer, &'a Inventory, &'a Mode, &'a mut Stage, &'a mut Outgoing);
@@ -83,6 +93,7 @@ pub(crate) fn resource_packs(
             rules: level.rules.clone(),
             block_network_ids_are_hashes: sapling_world::NETWORK_IDS_ARE_HASHES,
             dimension: layer.world.dimension(),
+            hardcore: level.hardcore,
         };
         out.0.extend_from_slice(sapling_data::pre_start_packets());
         out.push(&sapling_data::start_game(&options));

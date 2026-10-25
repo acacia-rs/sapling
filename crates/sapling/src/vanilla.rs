@@ -37,9 +37,12 @@ mod selecting;
 mod session;
 mod sounds;
 mod spawns;
+mod structure;
 mod tag;
 mod teleport;
+mod tickingarea;
 mod titles;
+mod worldgen;
 
 use blocks::{SetBlock, TestForBlock};
 use containers::ReplaceItem;
@@ -69,7 +72,8 @@ impl ServerBuilder {
         let admin = server.command::<operators::Kick>().command::<operators::Op>().command::<operators::Deop>();
         let messaging = admin.command::<messaging::Me>().command::<messaging::TellRaw>().command::<titles::Title>().command::<titles::TitleRaw>();
         let sounds = messaging.command::<sounds::PlaySound>().command::<sounds::StopSound>().command::<sounds::Particle>();
-        sounds.command::<scoreboard::Scoreboard>().command::<tag::Tag>().command::<scriptevent::ScriptEventCommand>().command::<riding::Ride>()
+        let world_tools = sounds.command::<structure::StructureCommand>().command::<tickingarea::TickingAreaCommand>().command::<worldgen::Place>().command::<worldgen::Locate>();
+        world_tools.command::<scoreboard::Scoreboard>().command::<tag::Tag>().command::<scriptevent::ScriptEventCommand>().command::<riding::Ride>()
     }
 }
 

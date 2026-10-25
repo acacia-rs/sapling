@@ -24,13 +24,13 @@ fn id(entity: &Value) -> Option<&str> {
     }
 }
 
-/// The loaded columns some player's view covers, by layer.
+/// The loaded columns some player's view covers or the world keeps (kept.rs), by layer.
 fn seen(world: &mut World) -> HashSet<(Entity, ChunkPos)> {
-    let (mut players, mut layers) = (world.query::<(&InLayer, &View)>(), world.query::<(Entity, &Layer)>());
+    let (mut players, mut layers) = (world.query::<(&InLayer, &View)>(), world.query::<(Entity, &Layer, Option<&crate::kept::Kept>)>());
     let world = &*world;
     let mut seen = HashSet::new();
-    for (layer, level) in layers.iter(world) {
-        let is_seen = |pos: &ChunkPos| players.iter(world).any(|(in_layer, view)| in_layer.0 == layer && view.covers(*pos));
+    for (layer, level, kept) in layers.iter(world) {
+        let is_seen = |pos: &ChunkPos| kept.is_some_and(|kept| kept.holds(*pos)) || players.iter(world).any(|(in_layer, view)| in_layer.0 == layer && view.covers(*pos));
         seen.extend(level.world.loaded().filter(is_seen).map(|pos| (layer, pos)));
     }
     seen

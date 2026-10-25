@@ -117,6 +117,41 @@ fn an_oak_tree_feature_grows_over_the_loaded_columns() {
     assert!(world.place_feature("minecraft:no_such_feature", [0, 64, 0], 7).is_none());
 }
 
+/// The world of research/captures/bds-locate.txt.
+const LOCATE_SEED: i64 = 12345;
+
+#[test]
+fn structures_are_located_where_bds_located_them() {
+    let world = World::with_storage(Arc::new(Generated::with_areas(MemoryStorage::default(), LOCATE_SEED, 1)));
+    let answers = [
+        ("village", [-488, 248]),
+        ("minecraft:stronghold", [1458, -830]),
+        ("monument", [312, 1784]),
+        ("ruins", [-168, -152]),
+        ("shipwreck", [-216, -88]),
+        ("ruined_portal", [120, 104]),
+        ("ancient_city", [-312, -216]),
+        ("pillager_outpost", [552, 136]),
+        ("mansion", [-8584, 5592]),
+        ("temple", [552, 648]),
+        ("buried_treasure", [-184, 264]),
+    ];
+    let found: Vec<(&str, Option<[i32; 2]>)> = answers.iter().map(|(name, _)| (*name, world.locate_structure(name, 0, 0))).collect();
+    assert_eq!(found, answers.map(|(name, at)| (name, Some(at))));
+    assert_eq!([world.locate_structure("abandoned_camp", 0, 0), world.locate_structure("fortress", 0, 0)], [None, None]);
+    assert_eq!(World::void().locate_structure("village", 0, 0), None);
+}
+
+#[test]
+fn a_biome_is_located_on_a_32_block_grid() {
+    let world = World::with_storage(Arc::new(Generated::with_areas(MemoryStorage::default(), LOCATE_SEED, 1)));
+    let plains = sapling_data::biome_id("minecraft:plains").unwrap();
+    let [x, _, z] = world.locate_biome(plains, [0, 120, 0]).expect("plains near the origin");
+    assert_eq!((x % 32, z % 32), (0, 0));
+    assert!(x * x + z * z <= 742 * 742, "BDS found plains at -736 -96: ({x}, {z})");
+    assert_eq!(World::void().locate_biome(plains, [0, 120, 0]), None);
+}
+
 #[test]
 fn a_generated_world_without_a_spawn_spawns_on_the_surface_above_the_origin() {
     let mut world = World::with_storage(Arc::new(Generated::new(MemoryStorage::default(), SEED)));

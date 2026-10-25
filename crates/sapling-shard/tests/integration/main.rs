@@ -73,6 +73,7 @@ mod sleep;
 mod slimes;
 mod spawners;
 mod spawning;
+mod structures;
 mod survival;
 mod throws;
 mod tnt;

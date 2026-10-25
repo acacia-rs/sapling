@@ -61,12 +61,13 @@ impl Structures {
     /// Villages around `chunk` with a piece that `near` accepts.
     pub(super) fn villages_reaching(&self, density: &Density, chunk: (i32, i32), near: &dyn Fn(&BoundingBox) -> bool) -> Vec<Arc<Village>> {
         let starts = self.starts_near(density, StructureKind::Village, chunk, REACH + 1);
+        starts.into_iter().map(|start| self.village(density, start)).filter(|v| v.pieces.iter().any(|p| near(&p.bb))).collect()
+    }
+
+    /// The village starting in `start`, whatever its start check.
+    pub(super) fn village(&self, density: &Density, start: (i32, i32)) -> Arc<Village> {
         let grid = StructureKind::Village.grid().unwrap();
-        starts
-            .into_iter()
-            .map(|start| self.templates.villages.get(start, || generate(density, &mut grid.candidate_random(self.level_seed, start).1, start)))
-            .filter(|v| v.pieces.iter().any(|p| near(&p.bb)))
-            .collect()
+        self.templates.villages.get(start, || generate(density, &mut grid.candidate_random(self.level_seed, start).1, start))
     }
 
     /// Every village piece meeting the canvas's chunk, in assembly order; `seed` is the chunk's

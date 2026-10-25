@@ -46,6 +46,12 @@ static TAGS: LazyLock<HashMap<u32, Vec<String>>> = LazyLock::new(|| {
     tags
 });
 
+/// The id chunks store for the biome `name` (`minecraft:desert` or `desert`).
+pub fn biome_id(name: &str) -> Option<u32> {
+    let name = name.strip_prefix("minecraft:").unwrap_or(name);
+    IDS.iter().find(|(known, _)| *known == name).map(|(_, id)| *id)
+}
+
 /// Whether the biome chunks store as `biome` has the tag `tag` (`monster`, `ocean`, ..).
 pub fn biome_has_tag(biome: u32, tag: &str) -> bool {
     TAGS.get(&biome).is_some_and(|tags| tags.iter().any(|own| own == tag))

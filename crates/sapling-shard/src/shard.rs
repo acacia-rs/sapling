@@ -18,7 +18,7 @@ use crate::roster::Elsewhere;
 use crate::timing::{Phase, ShardTiming, TickMeter};
 use crate::visibility::ToViewers;
 use crate::worlds::{Atlas, Changes, Scope};
-use crate::{actors, arenas, blobs, blocks, chunks, clock, commands, entities, handlers, handoff, idle, inventory, join, mobs, movement, packs, scoreboard, ticking, visibility, worlds};
+use crate::{actors, arenas, blobs, blocks, border, chunks, clock, commands, entities, handlers, handoff, idle, inventory, join, kept, mobs, movement, packs, scoreboard, ticking, visibility, worlds};
 
 /// The disconnect screen of the players of a shard that stops.
 const CLOSED: &str = "disconnect.closed";
@@ -76,6 +76,7 @@ impl Shard {
             chunks::poll_and_relight_worlds,
             actors::arrive,
             movement::player_input,
+            border::keep_inside,
             chunks::send_chunks,
             chunks::sub_chunk_requests,
             blobs::blob_status,
@@ -83,6 +84,7 @@ impl Shard {
             actors::write_back_before_saving,
             chunks::save_and_unload_columns,
             chunks::cancel_unseen_loads,
+            kept::keep_columns,
             mobs::despawn_unloaded,
         );
         let items = (inventory::load, inventory::send_own, inventory::select, inventory::screens, inventory::save_changed);
