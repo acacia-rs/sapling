@@ -19,6 +19,9 @@ impl BlockEntityBackend for Ctx<'_> {
             return false;
         }
         blocks::keep_entity(self.world, layer, pos, &blocks::block_entity_at(entity.clone(), pos));
+        if crate::spawners::is_spawner(entity) {
+            crate::spawners::watch(self.world, layer, pos);
+        }
         true
     }
 }

@@ -60,6 +60,8 @@ pub enum SpawnReason {
     SpawnEgg,
     /// Where something thrown landed: an egg's chicks, an ender pearl's endermite.
     Thrown,
+    /// A monster spawner or a trial spawner.
+    Spawner,
 }
 
 /// A mob is about to appear. Cancelled, it does not. Mobs coming back with their column from

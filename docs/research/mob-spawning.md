@@ -67,8 +67,7 @@ Decompiled from the bds-blocks build (`BDS_EXE=acacia/.testserver/bds-blocks/bed
   Every spawn is also clipped so the world holds at most 200 spawnable mobs (BDS: those ticked last tick).
   The per-category caps were not found (read off the dimension, `region vfunc 0x128`); sapling uses
   monster 8, animal 4, water_animal 5, ambient 2 for both [U].
-- Monster spawner block defaults: delay 200 to 800, 4 a time, at most 6 nearby, a player within 16,
-  spread 4 (not built).
+- Monster spawner blocks: built, docs/research/spawners.md.
 
 ## Despawning
 
@@ -87,13 +86,13 @@ despawns (wandering trader, piglin brute, zoglin) are not built.
 
 Per-category caps, the herd size expression, persistence from name tags, taming, leashes and picked-up
 items (no `PersistentComponent` seen besides rules' `mPersistence`), structure spawns (fortresses,
-monuments, huts: the tick's second part), patrols, phantoms, slimes, herd events, monster spawners,
-trial spawners. Peaceful does not remove monsters already there [U]. Whether `doMobSpawning` stops
+monuments, huts: the tick's second part), patrols, phantoms, slimes, herd events (spawner blocks:
+docs/research/spawners.md). Peaceful does not remove monsters already there [U]. Whether `doMobSpawning` stops
 spawners and eggs was not checked; sapling's eggs ignore it.
 
 ## Spawn eggs [U]
 
 A spawn egg used on a block hatches its kind (the egg's name less `_spawn_egg`; `evoker`, `tropical_fish`,
 `villager` and `zombie_villager` renamed) at the centre of the cell before the face clicked, whatever the
-light and rules; spent outside creative. Monster spawners (block entities ticking their stored
-`EntityIdentifier`) are not built.
+light and rules; spent outside creative. Used on a monster or trial spawner it sets the spawner's
+kind instead (docs/research/spawners.md).

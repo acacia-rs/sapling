@@ -46,6 +46,14 @@ pub fn mob_loot(kind: &str, on_fire: bool, killer: Killer, roll: &mut dyn FnMut(
     left
 }
 
+/// What the table at `table` (its path in the packs, `loot_tables/...json`) gives a block that
+/// ejects it (a trial spawner, a vault), as [`mob_loot`] gives it. Nothing for a table not kept.
+pub fn table_loot(table: &str, roll: &mut dyn FnMut() -> f32) -> Vec<(String, u32)> {
+    let mut left = Vec::new();
+    run(table, Death { on_fire: false, killer: Killer::None }, roll, &mut left);
+    left
+}
+
 fn run(table: &str, death: Death, roll: &mut dyn FnMut() -> f32, left: &mut Vec<(String, u32)>) {
     let Some(pools) = LOOT["tables"][table]["pools"].as_array() else { return };
     for pool in pools {
@@ -125,8 +133,9 @@ fn holds(conditions: &Value, death: Death, roll: &mut dyn FnMut() -> f32) -> boo
 
 /// A whole number, or one from `{"min", "max"}` inclusive.
 fn number(value: &Value, roll: &mut dyn FnMut() -> f32) -> u32 {
-    if let Some(n) = value.as_u64() {
-        return n as u32;
+    // Some tables write a count as `1.0`.
+    if let Some(n) = value.as_f64() {
+        return n.max(0.0) as u32;
     }
     let (min, max) = (value["min"].as_u64().unwrap_or(0) as u32, value["max"].as_u64().unwrap_or(0) as u32);
     min + ((roll() * (max.saturating_sub(min) + 1) as f32) as u32).min(max.saturating_sub(min))

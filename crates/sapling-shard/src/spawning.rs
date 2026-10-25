@@ -19,7 +19,7 @@ use crate::components::{InLayer, Mode, Position, Stage};
 use crate::view::View;
 
 pub(crate) use despawn::tick as despawn;
-pub(crate) use eggs::hatch;
+pub(crate) use eggs::{hatch, kind_of as egg_kind};
 
 const MOB_SPAWNING: &str = "doMobSpawning";
 /// The chunks about a player that tick, BDS's default `tick-distance`.

@@ -62,6 +62,7 @@ mod shapes;
 mod shown_effects;
 mod sleep;
 mod slimes;
+mod spawners;
 mod spawning;
 mod survival;
 mod throws;

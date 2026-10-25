@@ -185,6 +185,12 @@ impl Request<'_> {
             }
             return true;
         }
+        if let Some(spent) = crate::spawners::use_item(self.world, self.entity, site.layer, pos, held) {
+            if spent && site.mode != GameMode::Creative {
+                inventory::change(self.world, self.entity, |inventory| inventory.take(inventory::Place::Main(inventory.selected.into()), 1).is_ok());
+            }
+            return true;
+        }
         if crate::spawning::hatch(self.world, site.layer, held, face.neighbour(pos)) {
             if site.mode != GameMode::Creative {
                 inventory::change(self.world, self.entity, |inventory| inventory.take(inventory::Place::Main(inventory.selected.into()), 1).is_ok());

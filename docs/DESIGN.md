@@ -1037,7 +1037,11 @@ Details and BDS evidence: docs/research/nether-dimension.md, docs/research/end-d
   view covers their column, as BDS ticks block actors near players. On the column sweep (every 100
   ticks, before saving) those in seen columns with work start (a furnace whose entity says it was
   burning or cooking, every hopper, a campfire with food on it) and those in columns nobody sees stop, their state written to their entity.
-  A placed hopper and an opened furnace start at once. A ticking container's slots stay held
+  A placed hopper and an opened furnace start at once. Monster spawners, trial spawners and vaults
+  (`spawners.rs`, docs/research/spawners.md) tick in seen columns too, every one, from the sweep or at
+  once when a plugin or a spawn egg sets them: a spawner spawns its kind near players by BDS's rules, a
+  trial spawner runs its waves and ejects rewards, a vault takes a key once per player and ejects its
+  loot (BDS's tables, `sapling_data::table_loot`). A ticking container's slots stay held
   (`containers::pin`); hoppers reach other containers through `containers::with_slots`.
 - **Hoppers** (`hoppers.rs`; `docs/research/hoppers.md`). A container of five. Each tick its cooldown
   counts down; when it is over and the hopper is not powered (`toggle_bit`), it pushes one item from

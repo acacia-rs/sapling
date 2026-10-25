@@ -63,6 +63,10 @@ pub(super) fn placed(block: &str, pos: BlockPos, placing: &Placing) -> Option<Va
             ("Cauldron", vec![("Items", items), ("PotionId", Value::Short(-1)), ("PotionType", Value::Short(-1))])
         }
         _ if CAMPFIRES.contains(&block) => ("Campfire", ["ItemTime1", "ItemTime2", "ItemTime3", "ItemTime4"].map(|time| (time, Value::Int(0))).into()),
+        // Bare: spawners.rs reads BDS's defaults where a field is missing.
+        "minecraft:mob_spawner" => ("MobSpawner", Vec::new()),
+        "minecraft:trial_spawner" => ("TrialSpawner", Vec::new()),
+        "minecraft:vault" => ("Vault", Vec::new()),
         _ => return None,
     };
     let mut entity = new_block_entity(id, pos);
