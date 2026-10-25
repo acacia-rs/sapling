@@ -26,17 +26,28 @@ const DOUSED: i32 = -1;
 
 /// Something costs a mob `cost` by `cause`, told to its viewers; it may die of it.
 pub(super) fn wound(world: &mut World, mob: Entity, layer: Entity, cost: f32, cause: Cause) -> Option<()> {
+    wound_by(world, mob, layer, cost, cause, None).map(drop)
+}
+
+/// As [`wound`], by the player `by` if one: plugins are told who, and a mob it kills is the
+/// player's, for its experience. Whether it took any of it.
+pub(super) fn wound_by(world: &mut World, mob: Entity, layer: Entity, cost: f32, cause: Cause, by: Option<Entity>) -> Option<bool> {
     let (id, body, kind) = (world.get::<crate::components::NetId>(mob)?.0, *world.get::<Body>(mob)?, world.get::<entities::Kind>(mob)?.0.clone());
-    let cost = crate::damage::ask(world, mob, cost, cause, None)?;
+    let attacker = by.and_then(|player| crate::components::in_world_identity(world, player)).map(sapling_api::Attacker::Player);
+    let cost = crate::damage::ask(world, mob, cost, cause, attacker)?;
     let mut health = *world.get::<Health>(mob)?;
-    if health.hurt(cost) {
+    let took = health.hurt(cost);
+    if took {
         *world.get_mut::<Health>(mob)? = health;
         entities::tell_viewers(world, mob, layer, body.at.map(|c| c.floor() as i32), vec![strike(id, &health, cause, None)]);
         if health.left() <= 0.0 {
+            if by.is_some() {
+                super::attacks::slay(world, mob, &kind, 0);
+            }
             super::die(world, mob, layer, &kind, &body);
         }
     }
-    Some(())
+    Some(took)
 }
 
 /// Whether the body's box reaches into a cell holding one of `names`, however full.

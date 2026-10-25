@@ -27,7 +27,7 @@ pub(crate) use give::give_and_pop;
 pub(crate) use plugin::{described, item_at, set_item, stored};
 pub(crate) use requests::dispatch;
 pub(crate) use store::{keep_here, load, save, save_all, save_changed, send_own};
-pub(crate) use wear::wear_tool_in_hand;
+pub(crate) use wear::{wear_hand_by, wear_tool_in_hand};
 
 pub(crate) const MAIN: usize = 36;
 pub(crate) const HOTBAR: usize = 9;

@@ -46,6 +46,7 @@ mod portals;
 mod roster;
 mod rules;
 mod shard;
+mod shots;
 mod simulation;
 mod skin;
 mod sleep;

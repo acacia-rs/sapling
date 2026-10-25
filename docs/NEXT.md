@@ -14,8 +14,8 @@ it does on BDS and the two captures can be diffed:
    simulated on the server with BDS's gravity and drag and collide with blocks; no AI. One model for
    spawned mobs, the mobs a world folder stores (today statues, `mobs.rs`), lying items and falling
    blocks: built (`body.rs`, `sync.rs`, `entities.rs`, `creatures.rs`, `actors.rs`), stored mobs
-   saved back where they are. Items let go, orbs and falling blocks are saved with their column (`drops.rs`, `orbs.rs`,
-   `blocks/falling/flight.rs`); a falling block's `Time` is kept as its fall began.
+   saved back where they are. Items let go, orbs, falling blocks and players' stuck arrows and tridents are saved with their column (`drops.rs`, `orbs.rs`,
+   `blocks/falling/flight.rs`, `creatures/flight.rs`); a falling block's `Time` is kept as its fall began.
 2. **Vanilla commands**: built (`sapling::vanilla`); the drill probe runs on sapling
    (`tools/sapling-drill.sh`, on testbox `tools/remote-drill.sh`). Left: what the BDS-against-sapling
    diff of the drill captures still shows (`research/captures/sapling-vs-bds-findings.md`).
@@ -62,7 +62,7 @@ Each needs its rule looked up first (`bdsre` for BDS, the Java jar for data), th
    leaving items and experience and rise by their bed or at the world's spawn (`vitals.rs`,
    `docs/research/player-damage.md`, `bds_command_probe hurt` and `smother`). A wounded player mends by its
    hunger and an empty hunger starves it (`vitals/hunger.rs`, `hunger`). Food in the hand is eaten
-   (`vitals/eating.rs`, `eat`). Jumps, sprints, harvested blocks and hits tire a player (`tire`, `toil`). Armour stops part of a hit of the causes it stopped on BDS (`armour`, `worn`). Twenty-five effects by `/effect` (`vitals/effects.rs`, `docs/research/effects.md`, `effects`); food and potions give theirs and milk ends them (`docs/research/food-effects.md`, `sick`, `drink`). A player hits a player where `pvp` is on (`creatures/duels.rs`, `pvp`, `duel`). Enchantments of weapons and armour, Mending and the curses act by BDS's decompiled rules (`sapling_data::enchant`, `docs/research/enchantments.md`; not drilled: a `bds_*` drill of a Sharpness hit, a Protection hit and a Thorns hit would check them, and of Knockback's throw). The newest four effects act on mobs and players (`effects3`, `player-omens`, docs/research/mob-kinds.md). Left there: the doc's "Sapling" list.
+   (`vitals/eating.rs`, `eat`). Players draw bows, load crossbows and throw tridents, pearls, potions and the rest (`shots.rs`, `docs/research/projectiles.md`; not drilled against BDS). Jumps, sprints, harvested blocks and hits tire a player (`tire`, `toil`). Armour stops part of a hit of the causes it stopped on BDS (`armour`, `worn`). Twenty-five effects by `/effect` (`vitals/effects.rs`, `docs/research/effects.md`, `effects`); food and potions give theirs and milk ends them (`docs/research/food-effects.md`, `sick`, `drink`). A player hits a player where `pvp` is on (`creatures/duels.rs`, `pvp`, `duel`). Enchantments of weapons and armour, Mending and the curses act by BDS's decompiled rules (`sapling_data::enchant`, `docs/research/enchantments.md`; not drilled: a `bds_*` drill of a Sharpness hit, a Protection hit and a Thorns hit would check them, and of Knockback's throw). The newest four effects act on mobs and players (`effects3`, `player-omens`, docs/research/mob-kinds.md). Left there: the doc's "Sapling" list.
 2. **Redstone**: plates, buttons, levers, blocks of redstone and torches power dust, lamps, doors,
    trapdoors, gates and hopper locks (`blocks/redstone.rs`, `docs/research/redstone.md`; plugins
    read `ctx.power_at`), checked against `bds_command_probe redstone`. Circuits a world folder

@@ -76,11 +76,18 @@ impl Inventory {
 /// a sword wears twice as fast, and a hand without a tool is left alone. One throw decides
 /// whether the whole use counts.
 pub(crate) fn wear_tool_in_hand(world: &mut World, player: Entity) {
+    let Some(tool) = world.get::<Inventory>(player).and_then(|inventory| Tool::from_identifier(&inventory.in_hand().as_ref()?.stack.name)) else { return };
+    let uses = if tool.kind == ToolKind::Sword { 2 } else { 1 };
+    wear_hand_by(world, player, uses, tool.max_durability());
+}
+
+/// Counts `uses` against what the player holds, which lasts `lasts` of them, unless Unbreaking
+/// spares it; shows the client the result.
+pub(crate) fn wear_hand_by(world: &mut World, player: Entity, uses: i32, lasts: u16) {
     let Some(held) = world.get::<Inventory>(player).and_then(|inventory| inventory.in_hand().as_ref()) else { return };
-    let (Some(tool), chance) = (Tool::from_identifier(&held.stack.name), wear_chance(held, false)) else { return };
+    let chance = wear_chance(held, false);
     if chance < 100 && world.get_resource_or_insert_with(Dice::default).roll(100) >= chance {
         return;
     }
-    let uses = if tool.kind == ToolKind::Sword { 2 } else { 1 };
-    change(world, player, |inventory| inventory.wear_hand(uses, tool.max_durability()));
+    change(world, player, |inventory| inventory.wear_hand(uses, lasts));
 }

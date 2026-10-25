@@ -194,7 +194,7 @@ fn column(at: [f32; 3]) -> ChunkPos {
 }
 
 /// Whether the item's box, its bottom at `item`, touches the reach of a player standing at `feet`.
-fn reaches(feet: [f32; 3], item: [f32; 3]) -> bool {
+pub(crate) fn reaches(feet: [f32; 3], item: [f32; 3]) -> bool {
     let across = PLAYER_HALF_WIDTH + REACH[0] + SIZE / 2.0;
     let up = item[1] - feet[1];
     (item[0] - feet[0]).abs() <= across && (item[2] - feet[2]).abs() <= across && up >= -REACH[1] - SIZE && up <= PLAYER_HEIGHT + REACH[1]

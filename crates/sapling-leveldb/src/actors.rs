@@ -5,11 +5,13 @@
 
 mod falling;
 mod lying;
+mod stuck;
 
 use std::collections::HashSet;
 
 pub use falling::{falling_block, new_falling_block_actor};
 pub use lying::{new_item_actor, new_orb_actor, orb_value, orb_worth};
+pub use stuck::{ShotRecord, new_shot_actor, shot_record};
 
 use acacia_proto::nbt::{self, LittleEndian, List, Value};
 

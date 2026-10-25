@@ -84,7 +84,7 @@ fn fly(world: &mut World, fireball: Entity, layer: Entity, id: u64) -> Option<()
     let (kind, born, met_at) = world.get::<Fireball>(fireball).map(|ball| (ball.kind.clone(), ball.born, ball.met))?;
     // It hurts as it stops standing, and blows up the tick after.
     if let Some((since, player)) = met_at {
-        if now == since + STANDS && vitals::shot(world, player, HARM, &kind, body.at, false) {
+        if now == since + STANDS && vitals::shot(world, player, HARM, &kind, body.at, false, [0.0; 3]) {
             vitals::set_alight(world, player, BURNS);
         }
         if now > since + STANDS {

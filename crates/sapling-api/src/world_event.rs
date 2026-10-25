@@ -52,6 +52,8 @@ pub enum SpawnReason {
     Summoned,
     /// An effect on a body: oozing's slimes, infestation's silverfish.
     Effect,
+    /// Where something thrown landed: an egg's chicks, an ender pearl's endermite.
+    Thrown,
 }
 
 /// A mob is about to appear. Cancelled, it does not. Mobs coming back with their column from

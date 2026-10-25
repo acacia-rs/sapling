@@ -178,7 +178,7 @@ fn fly(world: &mut World, bullet: Entity, layer: Entity, id: u64, kind: &str) ->
     let end = along(1.0);
     let walled = !is_empty(&world.get::<Layer>(layer)?.world, end.map(|c| c.floor() as i32));
     if let Some((player, point)) = struck {
-        if vitals::shot(world, player, HARM, kind, by, true) {
+        if vitals::shot(world, player, HARM, kind, by, true, [0.0; 3]) {
             vitals::afflict(world, player, "levitation", LIFTS);
         }
         world.get_mut::<Bullet>(bullet)?.spent = Some(point);

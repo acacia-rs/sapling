@@ -19,6 +19,7 @@ mod mob_health;
 mod mob_loot;
 mod player;
 mod recipes;
+pub mod shots;
 mod spawn;
 mod start_game;
 mod templates;

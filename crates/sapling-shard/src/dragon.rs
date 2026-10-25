@@ -6,7 +6,7 @@
 //! Blocks the fight itself writes reach clients a tick later, as BDS's did.
 
 mod boss_bar;
-mod cloud;
+pub(crate) mod cloud;
 mod count;
 mod crystals;
 mod death;
