@@ -1156,6 +1156,51 @@ only falls back to RakNet when that fails, so turning it on moves every vanilla 
   (`vitals/effects.rs`), piston pushes. A leaving player's counts are logged (info): the divergence data
   that decides when correcting is turned on, per platform.
 
+## Operations (as built)
+
+All set through `ServerBuilder` (`sapling/src/server/ops.rs`).
+
+- **`server.properties`** (`server/properties.rs`): `config_file(path)` or `ServerProperties::load` +
+  `properties(&props)`. Read: `server-name`, `level-name` (the list's level and StartGame's name; the
+  folder is the binary's to open), `gamemode`, `difficulty` (names or numbers), `max-players`,
+  `online-mode`, `allow-list`/`white-list` (sets the `access` lists' allowlist; on without lists is
+  `StartError::NoAllowlist`), `server-ip`, `server-port`, `view-distance` (≥ 5), `player-idle-timeout`,
+  `level-seed` (numbers only, for the binary), `compression-threshold`, `compression-algorithm`,
+  `player-position-acceptance-threshold`, `player-rewind-min-correction-delay-ticks`. Every other key
+  (`server-portv6`, `tick-distance`, `force-gamemode`, `allow-cheats`, `default-player-permission-level`,
+  `transport`, `enable-lan-visibility`, ...) is logged as ignored. Bad values fail with their line.
+  Settings made after it win. `examples/generated.rs --properties=` uses it.
+- **Compression**: `NetConfig::compression` (zlib = raw deflate, or snappy) and `compression_threshold`
+  (default 1) go into acacia's `LoginConfig`, i.e. NetworkSettings.
+- **Packet limits** (`sapling-net/src/limits.rs`, `NetConfig::packet_limits`): per session and one-second
+  window, 400 game packets of all types and 10 Text, 10 CommandRequest, 40 Animate, 5 Emote, 10 BookEdit;
+  the excess is dropped and the second is a strike, five strikes in a row close the session with
+  `disconnect.spam`. Loopback sessions are not metered (drills and bot tests run the clock faster).
+  `PacketLimits::off()` for load tests.
+- **Chat spam** (`chat.rs`): Java's rule, BDS's being unknown: a line adds 20, a tick takes 1, over 200
+  the player is kicked with `disconnect.spam` (a line a second goes on for ever, ten at once is the most);
+  the 3-lines-a-tick cap stays. Commands do not count and operators are not exempt (Java exempts them).
+- **Idle kick** (`idle.rs`, `ShardConfig::idle_timeout`, `idle_timeout(d)` or `player-idle-timeout`):
+  the first system of the tick, before packets are taken. Activity is a changed position, yaw or pitch,
+  or any of Text, CommandRequest, InventoryTransaction, ItemStackRequest, Interact, Animate,
+  PlayerAction, ModalFormResponse, MobEquipment. Counted in ticks of 50 ms, so drills compress it.
+  Kicked once with `KickedForIdle` and `disconnectionScreen.body.idleTooLong` (`Outbox::kick_for`).
+- **Tick timing** (`sapling-shard/src/timing.rs`): `Shard::tick` publishes its phase (Messages, Systems,
+  Handlers, Sending) and start time into `ShardTiming` atomics, and the mean, longest and rate of the
+  last 100 ticks when it ends; no lock. `Server::tick_stats()`, or a `Metrics` handle given to
+  `ServerBuilder::metrics` before start (for a plugin's `/tps`), with `Metrics::prometheus()` text.
+- **Watchdog** (`watchdog.rs`, `ServerBuilder::watchdog`): one thread reads every `ShardTiming` every
+  quarter of `slow` (10-250 ms) and logs a tick past `slow` (1 s) once, past `hung` (10 s, BDS's script
+  watchdog) once with shard, tick and phase, no stack; past `abort` (off by default) it writes a crash
+  report and aborts the process, since a stuck thread cannot be saved or stopped from outside.
+- **Crash handling** (`running.rs`, `crash.rs`, `ServerBuilder::crash_reports(dir)`): each tick runs
+  under `catch_unwind`. A panic stops that shard only: it closes as on shutdown (handoffs forwarded,
+  players kicked with `disconnect.closed`, inventories, actors and columns saved), then writes
+  `crash-<unix>-shard<N>-panic.txt` (time, versions, shard, tick, phase, message, location, worlds with
+  dimension, loaded columns and players, whether saving worked, the backtrace a panic hook kept for
+  shard threads); without a dir the report is logged. The other shards go on; players routed to the
+  dead shard are closed by the router.
+
 ## Building against a local acacia
 
 `Cargo.toml` takes the acacia crates from GitHub at one commit. To build against a checkout beside
@@ -1272,7 +1317,10 @@ acacia-world = { path = "../acacia/acacia/crates/acacia-world" }
   sapling-net. Block changes and chat still look at every player of the shard per event.
 - A newcomer gets every skin at once (about 290 KB each before compression); throttle before the
   per-player backlog limit (16 MB) matters. Skin changes in game (PlayerSkin) are ignored.
-- Chat: proper rate limiting, private messages, profanity filter fields.
+- Chat: private messages, profanity filter fields.
+- **Operations, not checked against BDS:** the idle kick's activity rule and screen, BDS's chat or
+  packet rate limits (Java's chat rule is used), `level-seed` text hashing, `tick-distance`, an IPv6
+  listener beside the IPv4 one (`server-portv6`), config hot reload.
 - **BDS only saves chunks that changed since generation.** A folder's holes are void unless it is
   opened with `generate_missing`, which fills them as a new world would be generated ("Generation").
 - Block-state upgrader (CC0 BedrockBlockUpgradeSchema) for palettes older than the current version;

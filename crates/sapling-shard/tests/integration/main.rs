@@ -42,6 +42,7 @@ mod liquids;
 mod mechanisms;
 mod movement_policy;
 mod omens;
+mod operations;
 mod pistons;
 mod placed_items;
 mod player_omens;

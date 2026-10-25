@@ -1,12 +1,14 @@
 //! Every connection of one listener: logins in progress, then players. Network-free: it reacts to
 //! the transports' events and the game's outbound commands, and queues replies on the links.
 
+mod offers;
+
 use std::collections::{HashMap, HashSet};
-use std::net::{IpAddr, SocketAddr};
+use std::net::IpAddr;
 use std::time::Instant;
 
 use acacia_auth::login::verify::{VerifiedLogin, Verifier};
-use acacia_nethernet::host::{Answer, PeerId};
+use acacia_nethernet::host::PeerId;
 use acacia_proto::RawPacket;
 use acacia_proto::types::DisconnectFailReason;
 use acacia_session::server::ServerConnection;
@@ -19,12 +21,15 @@ use crate::admission::Throttle;
 use crate::config::NetConfig;
 use crate::congestion::Congestion;
 use crate::event::{ConnId, NetEvent, Outbound};
-use crate::links::{Link, LinkEvent, Links, Refusal};
+use crate::limits::{Meter, Verdict};
+use crate::links::{Link, LinkEvent, Links};
 use crate::players::{Player, disconnect};
 use crate::router::Router;
 
 /// The disconnect screen of a player whose server, or whose part of it, stopped.
 const CLOSED: &str = "disconnect.closed";
+/// Java's screen for a flood, which the Bedrock client's strings also hold.
+const SPAM: &str = "disconnect.spam";
 
 struct Pending {
     login: ServerLogin,
@@ -81,31 +86,6 @@ impl Sessions {
         self.router.is_open()
     }
 
-    /// Answers a NetherNet offer that reached us at `local`, if its identity is good enough for
-    /// this server: online mode wants the auth service's token, offline takes any or none.
-    pub fn admit_offer(&mut self, links: &mut Links, offer: &str, local: SocketAddr, trickle: bool, now: Instant) -> Result<Answer, Refusal> {
-        let host = links.nethernet.as_mut().ok_or(Refusal::Full)?;
-        let identity = acacia_nethernet::verify_offer(offer).map_err(|error| {
-            tracing::debug!(%error, "offer refused");
-            Refusal::Identity
-        })?;
-        if self.cfg.online_mode && identity.as_ref().is_none_or(|identity| identity.self_signed) {
-            return Err(Refusal::Identity);
-        }
-        let answered = if trickle { host.trickle_answer(offer, local, now) } else { host.answer(offer, local, now) };
-        let answer = answered.map_err(|error| match error {
-            acacia_nethernet::Error::HostFull => Refusal::Full,
-            error => {
-                tracing::debug!(%error, "offer refused");
-                Refusal::Offer
-            }
-        })?;
-        if let Some(identity) = identity {
-            self.offers.insert(answer.peer, identity.key);
-        }
-        Ok(answer)
-    }
-
     pub fn on_event(&mut self, links: &mut Links, event: LinkEvent, now: Instant) {
         match event {
             LinkEvent::Connected(link) => {
@@ -121,7 +101,8 @@ impl Sessions {
                     Link::RakNet(_) => (ServerConnection::new(key), None),
                     Link::NetherNet(peer) => (ServerConnection::nethernet(key), self.offers.remove(&peer)),
                 };
-                let cfg = LoginConfig { require_authenticated: self.cfg.online_mode, ..LoginConfig::default() };
+                let (compression, compression_threshold) = (self.cfg.compression.settings(), self.cfg.compression_threshold);
+                let cfg = LoginConfig { require_authenticated: self.cfg.online_mode, compression, compression_threshold, ..LoginConfig::default() };
                 self.logins.insert(link, Pending { login: ServerLogin::new(conn, cfg), deadline: now + self.cfg.login_timeout, offer_key, ip });
             }
             LinkEvent::Message(link, msg) if self.players.contains_key(&link) => self.on_game_message(links, link, &msg, now),
@@ -148,9 +129,9 @@ impl Sessions {
                     player.track_backlog(queued, &self.cfg, &self.congestion);
                 }
             }
-            Outbound::Kick { conn, message } => {
+            Outbound::Kick { conn, reason, message } => {
                 if let Some(&link) = self.links.get(&conn) {
-                    self.close_player(links, link, "kicked", &message, now);
+                    self.close_player_for(links, link, "kicked", reason, &message, now);
                 }
             }
             Outbound::Route { conn, from, to } => {
@@ -250,7 +231,8 @@ impl Sessions {
         self.next_id += 1;
         self.links.insert(id, link);
         let (uuid, name, xuid) = (identity.uuid, identity.display_name.clone(), identity.xuid.clone());
-        self.players.insert(link, Player { id, conn, uuid, name, xuid, ip: pending.ip, congested: false });
+        let meter = (!pending.ip.is_loopback()).then(|| Meter::new(now));
+        self.players.insert(link, Player { id, conn, uuid, name, xuid, ip: pending.ip, congested: false, meter });
         if !self.router.deliver(NetEvent::Joined { conn: id, addr: links.remote_addr(link), login }) {
             self.close_player(links, link, "its shard is gone", CLOSED, now);
         }
@@ -261,25 +243,40 @@ impl Sessions {
         let packets = player.conn.decode(msg).map_err(|e| e.to_string()).and_then(|packets| {
             packets.into_iter().map(|p| RawPacket::parse(p).map_err(|e| e.to_string())).collect::<Result<Vec<_>, _>>()
         });
-        match packets {
-            Ok(packets) => {
-                let id = player.id;
-                let delivered = packets.into_iter().all(|packet| self.router.deliver(NetEvent::Packet { conn: id, packet }));
-                if !delivered {
-                    self.close_player(links, link, "its shard is gone", CLOSED, now);
-                }
-            }
+        let mut packets = match packets {
+            Ok(packets) => packets,
             Err(error) => {
                 tracing::debug!(%link, %error, "unreadable batch");
-                self.close_player(links, link, "unreadable batch", "disconnectionScreen.badPacket", now);
+                return self.close_player(links, link, "unreadable batch", "disconnectionScreen.badPacket", now);
             }
+        };
+        let (id, limits, mut flood) = (player.id, &self.cfg.packet_limits, false);
+        if let Some(meter) = &mut player.meter {
+            packets.retain(|packet| match meter.count(limits, packet.id, now) {
+                Verdict::Pass => true,
+                Verdict::Drop => false,
+                Verdict::Close => {
+                    flood = true;
+                    false
+                }
+            });
+        }
+        if flood {
+            return self.close_player(links, link, "packet flood", SPAM, now);
+        }
+        if !packets.into_iter().all(|packet| self.router.deliver(NetEvent::Packet { conn: id, packet })) {
+            self.close_player(links, link, "its shard is gone", CLOSED, now);
         }
     }
 
     /// Sends the disconnect screen, closes the connection and reports the player as gone.
     fn close_player(&mut self, links: &mut Links, link: Link, reason: &str, message: &str, now: Instant) {
+        self.close_player_for(links, link, reason, DisconnectFailReason::Kicked, message, now);
+    }
+
+    fn close_player_for(&mut self, links: &mut Links, link: Link, reason: &str, code: DisconnectFailReason, message: &str, now: Instant) {
         if let Some(player) = self.players.get_mut(&link) {
-            let notice = player.conn.encode(&[disconnect(DisconnectFailReason::Kicked, message)]);
+            let notice = player.conn.encode(&[disconnect(code, message)]);
             links.send(link, notice, now);
         }
         links.close(link, now);

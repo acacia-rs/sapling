@@ -1,8 +1,5 @@
 use std::sync::Arc;
-use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::mpsc::Receiver;
-use std::thread::JoinHandle;
-use std::time::Instant;
 
 use acacia_proto::Packet;
 use acacia_proto::packets::PlayerAuthInput;
@@ -18,9 +15,10 @@ use crate::handoff::{Handoffs, Link, Peers, ShardMsg};
 use crate::player::{Carried, Local};
 use crate::plugins::{self, CommandRegistry, Deferred, PluginState, Registry};
 use crate::roster::Elsewhere;
+use crate::timing::{Phase, ShardTiming, TickMeter};
 use crate::visibility::ToViewers;
 use crate::worlds::{Atlas, Changes, Scope};
-use crate::{actors, arenas, blobs, blocks, chunks, clock, commands, entities, handlers, handoff, inventory, join, mobs, movement, ticking, visibility, worlds};
+use crate::{actors, arenas, blobs, blocks, chunks, clock, commands, entities, handlers, handoff, idle, inventory, join, mobs, movement, ticking, visibility, worlds};
 
 /// The disconnect screen of the players of a shard that stops.
 const CLOSED: &str = "disconnect.closed";
@@ -28,13 +26,14 @@ const CLOSED: &str = "disconnect.closed";
 /// One game thread's state: an ECS world of layers and players, ticked every
 /// [`ShardConfig::tick`] (20 times a second) by [`Shard::spawn`] or by hand with [`Shard::tick`] (tests).
 pub struct Shard {
-    world: World,
+    pub(crate) world: World,
     schedule: Schedule,
     /// Runs after the handlers, so what they and this tick's arrivals caused goes out in the tick.
     after_handlers: Schedule,
     inbox: Inbox,
     /// What the other shards tell this one.
     mailbox: Receiver<ShardMsg>,
+    pub(crate) meter: TickMeter,
 }
 
 impl Shard {
@@ -70,7 +69,7 @@ impl Shard {
         let mut schedule = Schedule::default();
         // Shards scale across threads; inside one, systems run in this order every tick.
         schedule.set_executor(SingleThreadedExecutor::new());
-        let join = (join::resource_packs, join::chunk_radius, blobs::cache_status).chain();
+        let join = (idle::kick_idle, join::resource_packs, join::chunk_radius, blobs::cache_status).chain();
         let chunks = (
             chunks::poll_and_relight_worlds,
             actors::arrive,
@@ -97,7 +96,7 @@ impl Shard {
         world.init_resource::<CommandRegistry>();
         world.init_resource::<Deferred>();
         world.init_resource::<crate::movement::Moves>();
-        Self { world, schedule, after_handlers, inbox, mailbox: link.mailbox }
+        Self { world, schedule, after_handlers, inbox, mailbox: link.mailbox, meter: TickMeter::new(link.index) }
     }
 
     /// Adds a world players can be moved to, with where they appear in it (feet). False for a
@@ -153,16 +152,21 @@ impl Shard {
     /// One tick: take what the other shards and the network delivered, run the systems, then
     /// the handlers, then tell players about each other and send what the tick produced.
     pub fn tick(&mut self) {
+        self.meter.begin();
         self.take_messages();
         while let Ok(event) = self.inbox.try_recv() {
             self.accept(event);
         }
         handoff::expire(&mut self.world).into_iter().for_each(|event| self.accept(event));
+        self.meter.enter(Phase::Systems);
         self.schedule.run(&mut self.world);
+        self.meter.enter(Phase::Handlers);
         handlers::dispatch(&mut self.world);
+        self.meter.enter(Phase::Sending);
         self.after_handlers.run(&mut self.world);
         self.world.resource_mut::<PacketQueues>().clear();
         self.world.resource_mut::<Tick>().0 += 1;
+        self.meter.end();
     }
 
     fn take_messages(&mut self) {
@@ -171,34 +175,9 @@ impl Shard {
         }
     }
 
-    /// Runs the shard on its own thread until the handle is stopped or dropped, then closes it.
-    pub fn spawn(mut self) -> ShardHandle {
-        let stop = Arc::new(AtomicBool::new(false));
-        let stopped = stop.clone();
-        let index = self.world.resource::<Peers>().index;
-        let tick = self.world.resource::<Settings>().0.tick;
-        let run = move || {
-            let (mut next, mut behind) = (Instant::now(), 0u64);
-            while !stopped.load(Ordering::Relaxed) {
-                self.tick();
-                next += tick;
-                match next.checked_duration_since(Instant::now()) {
-                    Some(wait) => std::thread::sleep(wait),
-                    // Behind by more than a tick: skip the missed ones instead of bursting.
-                    None => {
-                        next = Instant::now();
-                        behind += 1;
-                        // A drill that compresses time (drill_server.rs) is invalid after even one.
-                        if behind.is_power_of_two() {
-                            tracing::warn!(shard = index, times = behind, "shard fell behind its tick");
-                        }
-                    }
-                }
-            }
-            self.close();
-        };
-        let thread = std::thread::Builder::new().name(format!("sapling-shard-{index}")).spawn(run).expect("spawning the shard thread");
-        ShardHandle { stop, thread: Some(thread) }
+    /// What the shard publishes about its ticks, for a watchdog and for metrics.
+    pub fn timing(&self) -> Arc<ShardTiming> {
+        self.meter.shared()
     }
 
     /// A stopping shard's last act: the players promised to it are taken in, the forwards it
@@ -270,32 +249,5 @@ fn flush(net: Res<Net>, mut players: Query<(&Conn, &mut Outgoing)>) {
         if !out.0.is_empty() {
             net.0.send(conn.0, std::mem::take(&mut out.0));
         }
-    }
-}
-
-/// A running shard thread. Stopping the last one drops the server's channels, which closes its
-/// listener.
-pub struct ShardHandle {
-    stop: Arc<AtomicBool>,
-    thread: Option<JoinHandle<()>>,
-}
-
-impl ShardHandle {
-    /// Stops after the current tick and waits for the thread.
-    pub fn stop(mut self) {
-        self.halt();
-    }
-
-    fn halt(&mut self) {
-        self.stop.store(true, Ordering::Relaxed);
-        if let Some(thread) = self.thread.take() {
-            let _ = thread.join();
-        }
-    }
-}
-
-impl Drop for ShardHandle {
-    fn drop(&mut self) {
-        self.halt();
     }
 }

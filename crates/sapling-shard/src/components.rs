@@ -160,4 +160,9 @@ impl PacketQueues {
     pub fn clear(&mut self) {
         self.0.values_mut().for_each(Vec::clear);
     }
+
+    /// Who sent a packet of one of `ids` this tick and has not had it taken yet.
+    pub fn senders<'a>(&'a self, ids: &'a [u32]) -> impl Iterator<Item = Entity> + 'a {
+        ids.iter().filter_map(|id| self.0.get(id)).flatten().map(|(from, _)| *from)
+    }
 }
