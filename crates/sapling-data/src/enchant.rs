@@ -1,9 +1,26 @@
 //! Enchantments: their ids in a stack's `ench` list, and what each level does, as BDS reckons it
-//! (docs/research/enchantments.md). Protection and the rest of what armour's do: warding.rs.
+//! (docs/research/enchantments.md). Protection and the rest of what armour's do: warding.rs. The
+//! workstations that give and take them (docs/research/workstations.md): the enchanting table
+//! (table.rs), the anvil (anvil.rs) and the grindstone (grind.rs), all by kinds.rs.
 
+pub mod anvil;
+pub mod grind;
+mod kinds;
+mod list;
+pub mod table;
 mod warding;
 
+pub use list::{all, with_all};
+pub use table::Offer;
 pub use warding::{Harm, THORNS_WEAR, Warding, thorns};
+
+/// The random numbers the workstations draw: BDS's `Random` in the shard.
+pub trait Draws {
+    /// From 0 to below `bound`; 0 for a bound below 1.
+    fn int(&mut self, bound: i32) -> i32;
+    /// From 0 to below 1.
+    fn float(&mut self) -> f32;
+}
 
 use acacia_proto::nbt::Value;
 
@@ -129,3 +146,5 @@ pub fn looting_chance(chance: f32, per_level: f32, level: u8) -> f32 {
 
 #[cfg(test)]
 mod tests;
+#[cfg(test)]
+mod workstation_tests;

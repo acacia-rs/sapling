@@ -26,6 +26,7 @@ fn fill(inventory: &mut Inventory, data: PlayerData) {
         inventory.ender[slot] = stack.map(|stack| Held { stack, id: inventory.new_id() });
     }
     inventory.experience = Experience::new(data.level, data.progress);
+    inventory.enchant_seed = data.enchant_seed.unwrap_or(inventory.enchant_seed);
     (inventory.selected, inventory.unsaved) = (data.selected, false);
 }
 
@@ -38,7 +39,8 @@ fn kept(inventory: &Inventory) -> PlayerData {
     let stacks = |slots: Vec<Option<Held>>| slots.into_iter().map(|slot| slot.map(|held| held.stack)).collect();
     let (level, progress) = (inventory.experience.level, inventory.experience.progress);
     let (main, armor, ender, offhand) = (stacks(inventory.main), stacks(inventory.armor), stacks(inventory.ender), inventory.offhand.map(|held| held.stack));
-    PlayerData { main, armor, offhand, selected: inventory.selected, ender, level, progress, ..PlayerData::default() }
+    let enchant_seed = Some(inventory.enchant_seed);
+    PlayerData { main, armor, offhand, selected: inventory.selected, ender, level, progress, enchant_seed, ..PlayerData::default() }
 }
 
 /// BDS's game type numbers (`PlayerGameMode`).
@@ -62,6 +64,7 @@ pub(crate) fn load(mut commands: Commands, mut layers: Query<(Entity, &mut Layer
         for (id, answer) in layer.world.take_players() {
             let Some((player, _, mut inventory, vitals)) = players.iter_mut().find(|(_, identity, inventory, _)| !inventory.loaded && identity.0.uuid.to_string() == id) else { continue };
             (inventory.loaded, inventory.keep) = (true, answer != PlayerLoad::Unreadable);
+            inventory.enchant_seed = crate::workstations::new_seed();
             if let PlayerLoad::Stored(data) = answer {
                 if let Some((mut vitals, kept)) = vitals.zip(data.vitals) {
                     vitals.restore(kept);

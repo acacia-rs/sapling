@@ -2572,6 +2572,7 @@ version = "0.1.0"
 dependencies = [
  "acacia-molang",
  "acacia-proto",
+ "acacia-world",
  "bytes",
  "serde_json",
 ]

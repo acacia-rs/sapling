@@ -14,9 +14,10 @@ use sapling_data::Station;
 use sapling_world::ItemStack;
 
 use super::crafting::Craft;
+use super::forge::{self, Bench, Forge, Forged};
 use super::{ARMOR, Inventory, MAIN, MAX_COUNT, Place, described};
 use crate::components::{Mode, Outgoing, PacketQueues, PerTick, in_world_identity};
-use crate::{containers, drops};
+use crate::{containers, drops, workstations};
 use crate::plugins;
 
 /// Requests looked at per player per tick; a client sends one per click.
@@ -33,6 +34,14 @@ struct Applied {
     /// The slots it named, as it named them: the answer says what each holds now.
     touched: Vec<(FullContainerName, u8, Place)>,
     dropped: Vec<ItemStack>,
+    forged: Option<Forged>,
+}
+
+/// Where a request is made: the station whose recipes it may craft, and the workstation it may
+/// craft at by the server's reckoning.
+struct At {
+    station: Station,
+    bench: Option<Bench>,
 }
 
 fn place(info: &StackRequestSlotInfo) -> Option<Place> {
@@ -54,6 +63,7 @@ fn place(info: &StackRequestSlotInfo) -> Option<Place> {
         ContainerSlotType::Offhand => Some(Place::Offhand),
         ContainerSlotType::Cursor => Some(Place::Cursor),
         ContainerSlotType::CreativeOutput if info.slot == CREATED_SLOT => Some(Place::Created),
+        kind if forge::ui_slot(kind) == Some(slot) => Some(Place::Ui(slot)),
         _ => None,
     }
 }
@@ -82,40 +92,54 @@ impl Applied {
 /// Does every action of `request`, or fails at the first that cannot be done as asked, or at
 /// the end over a craft that did not use up what its recipe needs or, out of creative, over a
 /// piece with Curse of Binding that left its slot.
-fn apply(inventory: &mut Inventory, request: &Request, creative: bool, at: Station) -> Result<Applied, ()> {
+fn apply(inventory: &mut Inventory, request: &Request, creative: bool, at: &At) -> Result<Applied, ()> {
     let bound = if creative { [None; ARMOR] } else { inventory.bound() };
     let mut applied = Applied::default();
     let mut craft: Option<Craft> = None;
+    let mut forge: Option<Forge> = None;
+    let station = at.station;
     for action in &request.actions {
-        match &action.content {
-            Action::CraftRecipe(asked) if craft.is_none() => craft = Some(Craft::start(inventory, asked.recipe_network_id, asked.times_crafted, at, true)?),
-            Action::CraftRecipeAuto(asked) if craft.is_none() => craft = Some(Craft::start(inventory, asked.recipe_network_id, asked.times_crafted, at, false)?),
-            Action::Create(asked) => craft.as_mut().ok_or(())?.create(inventory, asked.result_slot_id.into())?,
-            Action::Consume(used) => {
-                let from = applied.named(inventory, &used.source)?;
-                craft.as_mut().ok_or(())?.use_up(from, inventory.take(from, used.count)?)?;
+        let unstarted = craft.is_none() && forge.is_none();
+        match (&action.content, &at.bench) {
+            (Action::CraftRecipe(asked), Some(bench)) if unstarted => forge = Some(Forge::by_recipe(inventory, bench, asked.recipe_network_id, creative)?),
+            (Action::Optional(asked), Some(Bench::Anvil)) if unstarted => {
+                let name = usize::try_from(asked.filtered_string_index).ok().and_then(|index| request.custom_names.get(index));
+                forge = Some(Forge::repair(inventory, name.map(String::as_str), creative)?);
             }
-            Action::Take(take) => applied.transfer(inventory, take.count, &take.source, &take.destination)?,
-            Action::Place(place) => applied.transfer(inventory, place.count, &place.source, &place.destination)?,
-            Action::Swap(swap) => {
+            (Action::CraftGrindstoneRequest(asked), Some(Bench::Grindstone)) if unstarted => forge = Some(Forge::grind(inventory, asked.recipe_network_id, asked.cost)?),
+            (Action::CraftRecipe(asked), None) if unstarted => craft = Some(Craft::start(inventory, asked.recipe_network_id, asked.times_crafted, station, true)?),
+            (Action::CraftRecipeAuto(asked), None) if unstarted => craft = Some(Craft::start(inventory, asked.recipe_network_id, asked.times_crafted, station, false)?),
+            (Action::Create(asked), _) => craft.as_mut().ok_or(())?.create(inventory, asked.result_slot_id.into())?,
+            (Action::Consume(used), _) => {
+                let from = applied.named(inventory, &used.source)?;
+                let taken = inventory.take(from, used.count)?;
+                match (craft.as_mut(), forge.as_mut()) {
+                    (Some(craft), _) => craft.use_up(from, taken)?,
+                    (_, Some(forge)) => forge.use_up(from, used.count),
+                    _ => return Err(()),
+                }
+            }
+            (Action::Take(take), _) => applied.transfer(inventory, take.count, &take.source, &take.destination)?,
+            (Action::Place(place), _) => applied.transfer(inventory, place.count, &place.source, &place.destination)?,
+            (Action::Swap(swap), _) => {
                 let (a, b) = (applied.named(inventory, &swap.source)?, applied.named(inventory, &swap.destination)?);
                 inventory.swap(a, b)?;
             }
-            Action::Drop(thrown) => {
+            (Action::Drop(thrown), _) => {
                 let from = applied.named(inventory, &thrown.source)?;
                 applied.dropped.push(inventory.take(from, thrown.count)?);
             }
-            Action::Destroy(destroy) if creative => {
+            (Action::Destroy(destroy), _) if creative => {
                 let from = applied.named(inventory, &destroy.source)?;
                 inventory.take(from, destroy.count)?;
             }
-            Action::CraftCreative(pick) if creative => {
+            (Action::CraftCreative(pick), _) if creative => {
                 let item = sapling_data::creative_item(pick.item_id).ok_or(())?;
                 let made = ItemStack { name: item.name.to_owned(), count: MAX_COUNT, damage: item.damage, block: item.block, tag: item.tag.clone() };
                 inventory.put(Place::Created, Some(made));
             }
             // Follows a pick with what the client expects of it; the server's own result counts.
-            Action::ResultsDeprecated(_) => {}
+            (Action::ResultsDeprecated(_), _) => {}
             _ => return Err(()),
         }
         if let Some(craft) = craft.as_mut() {
@@ -123,7 +147,9 @@ fn apply(inventory: &mut Inventory, request: &Request, creative: bool, at: Stati
         }
     }
     inventory.put(Place::Created, None);
-    (craft.is_none_or(|craft| craft.is_paid()) && inventory.keeps(&bound)).then_some(applied).ok_or(())
+    let paid = craft.is_none_or(|craft| craft.is_paid()) && forge.as_ref().is_none_or(Forge::is_paid);
+    applied.forged = forge.map(|forge| forge.done);
+    (paid && inventory.keeps(&bound)).then_some(applied).ok_or(())
 }
 
 /// What BDS answers a request a container refused to hold an item in (a furnace's fuel slot asked
@@ -166,7 +192,8 @@ fn may_drop(world: &mut World, player: &Player, dropped: &[ItemStack]) -> bool {
 fn answer(world: &mut World, entity: Entity, player: &Player, request: &Request) {
     let creative = world.get::<Mode>(entity).is_some_and(|mode| mode.0 == GameMode::Creative);
     let Some(mut trial) = world.get::<Inventory>(entity).filter(|inventory| inventory.loaded).cloned() else { return };
-    let (open, at) = (containers::slots_of(world, entity), containers::station(world, entity));
+    let open = containers::slots_of(world, entity);
+    let at = &At { station: containers::station(world, entity), bench: workstations::bench(world, entity) };
     let refuses = containers::refusal(world, entity);
     (trial.container, trial.refuses) = (open.clone().unwrap_or_default(), refuses);
     let mut unrefused = Inventory { refuses: None, ..trial.clone() };
@@ -189,6 +216,7 @@ fn answer(world: &mut World, entity: Entity, player: &Player, request: &Request)
                 out.push(&answer);
             }
             applied.dropped.into_iter().for_each(|stack| drops::throw(world, entity, stack));
+            workstations::answered(world, entity, applied.forged);
         }
         // Only the container's refusal stood in the way: the client undoes it by itself.
         _ if failed && apply(&mut unrefused, request, creative, at).is_ok() => out.push(&refusal(request.request_id, CANNOT_HOLD)),

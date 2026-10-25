@@ -3,11 +3,11 @@
 //! stored mob's items with (`bds_entity_probe`); a player's hand names its hotbar slot.
 
 use acacia_proto::packets::{Interact, InteractActionId, MobEquipment};
-use acacia_proto::types::{ItemV4, WindowID};
+use acacia_proto::types::{ItemV4, WindowID, WindowIDVarint};
 use bevy_ecs::prelude::*;
 use bytes::Bytes;
 
-use super::{HOTBAR, Held, Inventory, stack, wire};
+use super::{HOTBAR, Held, Inventory, UI, stack, wire};
 use crate::components::{NetId, Outgoing, PacketQueues, Position, Stage};
 use crate::visibility::ToViewers;
 
@@ -21,6 +21,27 @@ impl Inventory {
     pub(crate) fn next_window(&mut self) -> u8 {
         self.window = self.window % LAST_WINDOW + 1;
         self.window
+    }
+
+    /// One of the player's own windows as its client is sent it.
+    fn window(&self, window: WindowIDVarint) -> Vec<ItemV4> {
+        match window {
+            WindowIDVarint::Inventory => self.main.iter().map(|slot| wire(slot, true)).collect(),
+            // The fifth is the body slot, which players leave empty.
+            WindowIDVarint::Armor => self.armor.iter().map(|slot| wire(slot, true)).chain([sapling_data::no_item()]).collect(),
+            WindowIDVarint::Offhand => vec![wire(&self.offhand, true)],
+            _ => {
+                let shown = |slot: usize| if slot == 0 { Some(&self.cursor) } else { self.grid.get(slot) };
+                (0..UI).map(|slot| shown(slot).map_or_else(sapling_data::no_item, |held| wire(held, true))).collect()
+            }
+        }
+    }
+
+    /// Sends the client every window, as BDS does at join and after `/give`.
+    pub fn send_all(&self, out: &mut Outgoing) {
+        for window in [WindowIDVarint::Inventory, WindowIDVarint::Armor, WindowIDVarint::Ui, WindowIDVarint::Offhand] {
+            out.push(&sapling_data::inventory_content(window, self.window(window)));
+        }
     }
 }
 

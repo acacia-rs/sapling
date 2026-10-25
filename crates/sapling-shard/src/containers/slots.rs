@@ -28,7 +28,7 @@ pub(crate) fn slots_of(world: &World, player: Entity) -> Option<Vec<Option<Held>
     match viewing.screen {
         Screen::Own => Some(world.get::<Inventory>(player)?.ender.clone()),
         Screen::Container => slots_at(world, viewing.layer, viewing.pos),
-        Screen::Station(_) => None,
+        Screen::Station(_) | Screen::Workstation(_) => None,
     }
 }
 
@@ -80,7 +80,7 @@ pub(crate) fn store(world: &mut World, player: Entity, slots: Vec<Option<Held>>)
             set_slots(world, viewing.layer, viewing.pos, slots.clone());
             crate::furnaces::taken_by_player(world, player, viewing.layer, viewing.pos, &before, &slots);
         }
-        Screen::Station(_) => {}
+        Screen::Station(_) | Screen::Workstation(_) => {}
     }
 }
 

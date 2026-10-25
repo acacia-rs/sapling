@@ -1061,8 +1061,16 @@ Details and BDS evidence: docs/research/nether-dimension.md, docs/research/end-d
   laid out in the cells (`Recipe::is_laid_out`: a shaped one anywhere, mirrored or not, the mirroring
   from memory of the game and not decompiled; a shapeless one in any cells; nothing beside it), and the
   request must consume the crafts' count from each filled cell and from nowhere else. A
-  `CraftRecipeAuto` is held only to what it used. Not done: smithing,
-  the special recipes (maps, fireworks).
+  `CraftRecipeAuto` is held only to what it used. Not done: the special recipes (maps, fireworks).
+- **Workstations** (`workstations.rs`, `inventory/forge.rs`, `sapling_data::enchant::{table, anvil,
+  grind}`, `sapling_data::smithed`; docs/research/workstations.md). The enchanting table, anvil,
+  grindstone and smithing table open their screens on a click, and the server works out each result
+  from the screen's slots as BDS does: the request must consume exactly what that result takes. The
+  table's three offers are drawn from the player's `EnchantmentSeed` (kept in its record, new after
+  each enchant) and the bookshelves, and sent as `PlayerEnchantOptions` with the answer to the
+  request that laid the item in. The anvil charges BDS's levels (what enchantments gain, not Java's
+  sums), wears 12% of crafts out of creative and says so (level events 1021, 1020); the grindstone
+  lets out experience at the player. Not done: the anvil's map recipes, `AnvilDamage` (ignored).
 - **API.** `ctx.item`, `set_item`, `give` (returns what did not fit), `clear_inventory`, `held_slot`,
   `held_item`, with `Item { name, count, damage }` and `Slot::{Main, Armor, Offhand}`; every change
   resends the four windows, as BDS does after `/give`. A stack's tag stays with it but does not show.

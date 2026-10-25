@@ -31,7 +31,7 @@ use crate::components::Layer;
 use crate::inventory::{Held, wire};
 
 pub(crate) use lid::show_turned_barrels;
-pub(crate) use screens::{close, dispatch_closes, open, show_lids_again, station};
+pub(crate) use screens::{close, dispatch_closes, open, show_lids_again, station, workstation};
 pub(crate) use shulker::is_shulker_box;
 pub(crate) use slots::{new_held, refusal, resend, set_slots, slots_at, slots_of, spill, store, viewers};
 

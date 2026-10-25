@@ -1,4 +1,5 @@
-//! Opening and closing the screens of blocks: containers, crafting tables and stonecutters.
+//! Opening and closing the screens of blocks: containers, crafting tables, stonecutters and the
+//! workstations (workstations.rs).
 
 use acacia_proto::packets::ContainerClose;
 use acacia_proto::types::{WindowID, WindowType};
@@ -10,6 +11,7 @@ use super::{Chest, content, hold, kind, lid, opened, slots};
 use crate::components::{Outgoing, PacketQueues, Tick};
 use crate::inventory::{self, Held, Inventory};
 use crate::furnaces;
+use crate::workstations::{self, Workstation};
 
 const TABLE: &str = "minecraft:crafting_table";
 const STONECUTTER: &str = "minecraft:stonecutter_block";
@@ -20,6 +22,7 @@ pub(super) enum Screen {
     /// An ender chest's: the slots are the viewer's own.
     Own,
     Station(Station),
+    Workstation(Workstation),
 }
 
 /// The block whose screen a player has open, and the window its client knows it as. For a
@@ -50,6 +53,11 @@ pub(crate) fn open(world: &mut World, player: Entity, layer: Entity, pos: BlockP
     if let Some((_, station)) = station {
         let window = if station == Station::Table { WindowType::Workbench } else { WindowType::Stonecutter };
         return show_screen(world, player, Viewing { layer, pos, window: 0, screen: Screen::Station(station) }, window, None);
+    }
+    if let Some((workstation, window)) = workstations::of_block(block) {
+        let shown = show_screen(world, player, Viewing { layer, pos, window: 0, screen: Screen::Workstation(workstation) }, window, None);
+        workstations::opened(world, player, workstation);
+        return shown;
     }
     let Some(kind) = kind(block) else { return false };
     close(world, player);
@@ -100,6 +108,15 @@ pub(crate) fn station(world: &World, player: Entity) -> Station {
     match world.get::<Viewing>(player).map(|viewing| viewing.screen) {
         Some(Screen::Station(station)) => station,
         _ => Station::Hand,
+    }
+}
+
+/// The workstation whose screen a player has open, and where it stands.
+pub(crate) fn workstation(world: &World, player: Entity) -> Option<(Workstation, Entity, BlockPos)> {
+    let viewing = world.get::<Viewing>(player)?;
+    match viewing.screen {
+        Screen::Workstation(workstation) => Some((workstation, viewing.layer, viewing.pos)),
+        _ => None,
     }
 }
 
