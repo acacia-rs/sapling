@@ -21,6 +21,7 @@ Mojang's data is not committed (`.gitignore`); build it before the first `cargo 
 | `data/*.bin` | `cargo run -p extract-data` (the acacia recording above) |
 | `data/mob-loot.json` | `py -3 data/generate/mob-loot.py` (BDS's behaviour packs, `PACKS` at the top) |
 | `data/block-loot.tsv` | `py -3 data/generate/block-loot.py` (the extracted Java 26.3 client jar, `JAVA` at the top) |
+| `data/spawn-rules.tsv`, `data/despawns.tsv` | `py -3 data/generate/spawn-rules.py` (BDS's behaviour packs, as `mob-loot.py`) |
 | `sapling-worldgen/src/structure/template/templates.bin` | `py -3 crates/sapling-worldgen/scripts/templates_to_rust.py <your BDS dir>` |
 
 | File | Sent as | Patched per join |
@@ -117,6 +118,20 @@ potion rules): each entity's
 `minecraft:type_family` from the vanilla behaviour packs, by `data/generate/mob-families.py`: its own
 components', or, for a kind that has them only in component groups, every group's together. Kinds the
 packs give no family (items, falling blocks) are not listed.
+
+## Spawn rules
+
+`spawn-rules.tsv` (read by `spawn_rules.rs`): one row per condition of the vanilla packs'
+`spawn_rules/*.json`, the newest pack's file winning, by `data/generate/spawn-rules.py`: kind,
+`population_control`, where it spawns (`surface`, `underground`, `underwater`, `lava`), weight, herd
+size, then `light=min~max` (`w`: `adjust_for_weather`), `difficulty=`, `height=`, `distance=`,
+`density=surface:underground` (`-` for none), `on=` and `not_on=` blocks (old names renamed),
+`permute=weight:kind,..`, and the biome filter in prefix form (`&(..)` all of, `|(..)` any of, `!|(..)`
+none of, `!tag` not, `snow` for `is_snow_covered`). Left out: conditions that need patrols or villages
+(`pillager_patrol`), and the phantom, guardian and slime, whose spawning BDS's own code gates. Herd
+events (babies, variants, riders) are not kept. `despawns.tsv`: each entity's own `minecraft:despawn`
+`despawn_from_distance` as `near-far` (32 and 128 where it names none). Biome tags are read from
+`BiomeDefinitionList.bin` by the ids chunks store (`spawn_rules/biomes.rs`).
 
 ## Liquid reactions
 

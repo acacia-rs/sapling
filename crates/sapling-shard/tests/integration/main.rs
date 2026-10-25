@@ -54,6 +54,7 @@ mod redstone;
 mod saplings;
 mod shapes;
 mod sleep;
+mod spawning;
 mod survival;
 mod tnt;
 mod vanilla_rules;

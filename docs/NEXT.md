@@ -33,7 +33,8 @@ it does on BDS and the two captures can be diffed:
    propagules and azaleas grow worldgen's trees by bone meal and random tick, by BDS's decompiled
    rules (`docs/research/saplings.md`, `blocks/saplings.rs`), in light of 9 or more; not drilled
    against BDS. The server reckons light now (DESIGN.md "Light (as built)"); left there: asking it
-   in crop growth, grass spread, melting, mob spawning and daylight detectors; the flood's grid
+   in crop growth, grass spread, melting and daylight detectors (mob spawning reads it:
+   `spawning.rs`, docs/research/mob-spawning.md, whose "Left" lists what is not built); the flood's grid
    looks a column up by hash per cell (~0.7 µs a cell optimised: three columns arriving cost a tick
    15 ms), worth caching. Fire is lit, spreads,
    burns and is put out (`docs/research/fire.md`, `fire`, `quench`), its spread by the Java game's odds. Crops, stems and berry bushes

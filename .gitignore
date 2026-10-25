@@ -12,4 +12,6 @@ __pycache__/
 /crates/sapling-data/data/*.bin
 /crates/sapling-data/data/mob-loot.json
 /crates/sapling-data/data/block-loot.tsv
+/crates/sapling-data/data/spawn-rules.tsv
+/crates/sapling-data/data/despawns.tsv
 /crates/sapling-worldgen/src/structure/template/templates.bin

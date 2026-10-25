@@ -323,15 +323,16 @@ it sends for `/title`, `/scoreboard`, `/gamemode`, `/tp`, a wither's bar and com
   switches is a `sapling:` rule in the same store, never sent to clients, each on by default:
   `sapling:hunger` (no exhaustion), `sapling:liquidFlow` (due flows are dropped: liquids stand),
   `sapling:redstone` (circuits pause; what was written waits), `sapling:mobAi` (mobs fall and are hurt but
-  decide nothing). `sendCommandFeedback` is under Commands. Not read yet: `spawnRadius`,
-  `doImmediateRespawn` (the client's), and rules for what sapling lacks (`doMobSpawning`, `doInsomnia`,
-  command blocks).
+  decide nothing). `sendCommandFeedback` is under Commands. `doMobSpawning` stops natural spawning
+  (`spawning.rs`), not eggs or commands. Not read yet: `spawnRadius`, `doImmediateRespawn` (the client's),
+  and rules for what sapling lacks (`doInsomnia`, command blocks).
 - **World events** (`sapling-api/src/world_event.rs`). What the world does on its own is offered with its
   world in focus (`plugins::offer_in`), so `Scope::World` listeners hear their world's; each is built only
   where a listener hears it (`plugins::stopped_in`), since flows and fire raise them often.
   `ExplosionEvent` (`creatures/blast.rs`): source kind, `power` and the `blocks` it breaks, editable, worked
   out before it is offered; cancelled, nothing is hurt or broken. `EntitySpawnEvent` (`creatures::spawn`):
-  kind, feet, `SpawnReason` (`Command`, `Summoned` vexes, `Effect` slimes and silverfish); mobs from
+  kind, feet, `SpawnReason` (`Command`, `Summoned` vexes, `Effect` slimes and silverfish, `Natural`,
+  `SpawnEgg`); mobs from
   storage are not offered. `BlockSpreadEvent`: fire into a cell or burning it away (`blocks/fire.rs`), a
   liquid flowing in (`blocks/liquid/flow.rs`), asked before any fizz or popped loot. `BlockGrowEvent`: a
   random tick's growth (`blocks/growth.rs`, all of one plant's changes at once) and a sapling's tree; not
@@ -940,7 +941,9 @@ Details and BDS evidence: docs/research/nether-dimension.md, docs/research/end-d
   stand, goes at once. A spawned mob is heard (`spawn` at its head, docs/research/spawn-sound.md).
   Mobs press every pressure plate, items and falling blocks wooden and weighted ones, orbs none.
   A spawned mob is saved with its column as a new actor (`UniqueID`, `identifier`, `definitions`,
-  `Pos`, `Rotation`, `Motion`: what BDS reads of one is untried). Not done: AI, damage; saving the
+  `Pos`, `Rotation`, `Motion`: what BDS reads of one is untried). Mobs also appear by themselves
+  around players by the vanilla packs' spawn rules, capped by category, and go again by their kind's
+  despawn distances; spawn eggs hatch them (`spawning.rs`, docs/research/mob-spawning.md). Not done: AI, damage; saving the
   items players throw, orbs and falling blocks; a kept entity that wanders into a column that is not
   loaded is lost with it.
 - **Kept between visits** (`sapling-leveldb/src/player`, docs/research/player-records.md). The first
@@ -1092,8 +1095,9 @@ it draws itself, and nothing is saved (BDS saves no light), so a column is lit a
 - **When.** The shard relights at the start of every tick (`chunks::poll_and_relight_worlds`) and
   again before random ticks, so a block written in a tick shows in light from the next of those.
   Plugins read `ShardCtx::light_at` and `brightness_at`.
-- **Not done.** No consumer but saplings (raw brightness 9 over them, propagules none): crops,
-  grass and mycelium spread and death, ice and snow melting, mob spawning, daylight detectors
+- **Not done.** No consumers but saplings (raw brightness 9 over them, propagules none) and mob
+  spawning's brightness filters: crops,
+  grass and mycelium spread and death, ice and snow melting, daylight detectors
   through leaves and water, and undead burning in sunlight still use their own reckonings or none.
   Unverified against BDS: the filter table, the sky's loss going down through a filter, and whether
   BDS lags light updates as sapling does.

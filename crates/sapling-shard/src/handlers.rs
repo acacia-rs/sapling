@@ -88,6 +88,8 @@ pub(crate) fn dispatch(world: &mut World) {
     drops::pick_up(world);
     orbs::tick(world);
     creatures::tick(world);
+    crate::spawning::despawn(world);
+    crate::spawning::tick(world);
     crate::dragon::tick(world);
     crate::eyes::tick(world);
     vitals::tick(world);

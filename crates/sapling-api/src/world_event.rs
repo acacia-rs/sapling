@@ -52,6 +52,10 @@ pub enum SpawnReason {
     Summoned,
     /// An effect on a body: oozing's slimes, infestation's silverfish.
     Effect,
+    /// Natural spawning, by the world's spawn rules.
+    Natural,
+    /// A spawn egg used on a block.
+    SpawnEgg,
 }
 
 /// A mob is about to appear. Cancelled, it does not. Mobs coming back with their column from

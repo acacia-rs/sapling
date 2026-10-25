@@ -77,7 +77,7 @@ impl Creature {
 
 /// A mob of `kind` with its feet at `feet` in `layer`: one BDS was recorded announcing, in a
 /// loaded column. It is heard appearing.
-fn spawn(world: &mut World, layer: Entity, kind: &str, feet: [f32; 3], reason: SpawnReason) -> Option<EntityId> {
+pub(crate) fn spawn(world: &mut World, layer: Entity, kind: &str, feet: [f32; 3], reason: SpawnReason) -> Option<EntityId> {
     let size = sapling_data::mob_size(kind)?;
     let level = &world.get::<Layer>(layer)?.world;
     let [x, y, z] = feet.map(|c| c.floor() as i32);

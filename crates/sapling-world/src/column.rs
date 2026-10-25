@@ -15,7 +15,7 @@ use crate::storage::StoredColumn;
 
 /// Biome of columns nobody painted: `minecraft:plains`, in the Nether `minecraft:hell`, in the End
 /// `minecraft:the_end`.
-fn default_biome(dim: Dimension) -> u32 {
+pub(crate) fn default_biome(dim: Dimension) -> u32 {
     match dim {
         _ if dim == Dimension::nether(dim.air) => 8,
         _ if dim == Dimension::end(dim.air) => 9,

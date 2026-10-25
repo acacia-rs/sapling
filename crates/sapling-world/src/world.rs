@@ -152,6 +152,19 @@ impl World {
         self.column(ChunkPos::of_block(x, z))?.top(x, z, stands)
     }
 
+    /// The y of the highest block in block column `(x, z)` that has collision; `None` where there
+    /// is none or the column is not loaded.
+    pub fn top_solid(&self, x: i32, z: i32) -> Option<i32> {
+        self.column(ChunkPos::of_block(x, z))?.top(x, z, |id| self.registry.get(id).is_some_and(|s| s.is_solid()))
+    }
+
+    /// The biome id stored at a position (the dimension's own where none was); `None` where
+    /// nothing is loaded.
+    pub fn biome(&self, x: i32, y: i32, z: i32) -> Option<u32> {
+        let column = self.column(ChunkPos::of_block(x, z))?;
+        Some(column.chunk().biome(x, y, z).unwrap_or_else(|| crate::column::default_biome(self.dim)))
+    }
+
     /// Sets a layer-0 block by runtime id; false when the column is not loaded or storage
     /// could not read it. Positions outside the dimension's height are ignored.
     pub fn set_block(&mut self, x: i32, y: i32, z: i32, id: u32) -> bool {
