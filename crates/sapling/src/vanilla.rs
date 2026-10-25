@@ -4,7 +4,7 @@
 //! `/replaceitem`, the spawn commands (`/setworldspawn`, `/spawnpoint`, `/clearspawnpoint`),
 //! `/testfor`, `/spreadplayers`, the server commands (`/defaultgamemode`, `/setmaxplayers`, `/seed`,
 //! `/version`, `/transfer`), `/kick`, `/op`, `/deop`, the messaging commands (`/me`, `/tellraw`,
-//! `/title`, `/titleraw`, `/playsound`, `/stopsound`, `/particle`), and with access lists
+//! `/title`, `/titleraw`, `/playsound`, `/stopsound`, `/particle`), `/scoreboard`, `/tag`, and with access lists
 //! `/allowlist` and the ban commands. Opt in with [`crate::ServerBuilder::vanilla_commands`].
 //! Positions take `~`; targets take names and every Bedrock selector with its filters
 //! ([`sapling_api::command::Selector`]). Blocks are written as `/setblock` writes them: their
@@ -30,10 +30,12 @@ mod operators;
 mod players;
 mod regions;
 mod rules;
+mod scoreboard;
 mod selecting;
 mod session;
 mod sounds;
 mod spawns;
+mod tag;
 mod teleport;
 mod titles;
 
@@ -64,7 +66,8 @@ impl ServerBuilder {
         let server = world.command::<session::DefaultGameMode>().command::<session::SetMaxPlayers>().command::<session::Seed>().command::<session::Version>().command::<session::Transfer>();
         let admin = server.command::<operators::Kick>().command::<operators::Op>().command::<operators::Deop>();
         let messaging = admin.command::<messaging::Me>().command::<messaging::TellRaw>().command::<titles::Title>().command::<titles::TitleRaw>();
-        messaging.command::<sounds::PlaySound>().command::<sounds::StopSound>().command::<sounds::Particle>()
+        let sounds = messaging.command::<sounds::PlaySound>().command::<sounds::StopSound>().command::<sounds::Particle>();
+        sounds.command::<scoreboard::Scoreboard>().command::<tag::Tag>()
     }
 }
 

@@ -113,7 +113,8 @@ impl CommandSyntax for TitleRaw {
 impl Command for TitleRaw {
     fn run(self, ctx: &mut ShardCtx<'_>, sender: &Sender, out: &mut Output) {
         let shown = match self.shown {
-            Shown::Text(which, text) => Shown::Text(which, resolved(ctx, sender, &text)),
+            // Unverified on BDS: a `*` score is left for each reader's client.
+            Shown::Text(which, text) => Shown::Text(which, resolved(ctx, sender, &text, None)),
             other => other,
         };
         let action = plain(shown, |which, text| [TitleAction::RawTitle, TitleAction::RawSubtitle, TitleAction::RawActionBar][which](text));

@@ -46,6 +46,10 @@ pub struct PlayerData {
     pub game_mode: Option<i32>,
     /// What its enchanting table offers are drawn from; `None` in a record without one.
     pub enchant_seed: Option<i32>,
+    /// What `/tag` put on it.
+    pub tags: Vec<String>,
+    /// Its actor id (`UniqueID`), by which the world's scoreboard knows it.
+    pub unique_id: Option<i64>,
 }
 
 /// BDS keeps an actor's `Pos` where its position is, a player's eyes: this far above the feet.
@@ -54,6 +58,7 @@ const DIMENSION: &str = "DimensionId";
 const EFFECTS: &str = "ActiveEffects";
 const GAME_MODE: &str = "PlayerGameMode";
 const ENCHANT_SEED: &str = "EnchantmentSeed";
+const UNIQUE_ID: &str = "UniqueID";
 const BED: [&str; 3] = ["SpawnBlockPositionX", "SpawnBlockPositionY", "SpawnBlockPositionZ"];
 const BEDSIDE: [&str; 3] = ["SpawnX", "SpawnY", "SpawnZ"];
 const SPAWN_DIMENSION: &str = "SpawnDimension";
@@ -114,6 +119,8 @@ impl PlayerData {
             },
             game_mode: int(GAME_MODE),
             enchant_seed: int(ENCHANT_SEED),
+            tags: crate::actor_tags::read_tags(&player),
+            unique_id: if let Some(Value::Long(id)) = player.get(UNIQUE_ID) { Some(*id) } else { None },
         })
     }
 
@@ -151,6 +158,10 @@ impl PlayerData {
         if let Some(seed) = self.enchant_seed {
             set(&mut fields, ENCHANT_SEED, Value::Int(seed));
         }
+        if let Some(id) = self.unique_id {
+            set(&mut fields, UNIQUE_ID, Value::Long(id));
+        }
+        crate::actor_tags::write_tags(&mut fields, &self.tags);
         match self.effects.is_empty() {
             true => remove(&mut fields, EFFECTS),
             false => set(&mut fields, EFFECTS, Value::List(List { tag: COMPOUND, items: self.effects.iter().map(effect_fields).collect() })),

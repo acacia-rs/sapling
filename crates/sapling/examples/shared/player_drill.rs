@@ -175,6 +175,8 @@ pub fn drill(name: &str) -> Option<(Vec<String>, &'static [&'static str])> {
         "trapdoors" => (reach::trapdoors(), world::PLACING_SHOWN),
         "place-faces" => (reach::place_faces(), &["UpdateBlock", "InventorySlot", "InventoryContent", "ItemStackResponse", "PlayerHotbar", "MobEquipment"]),
         "messaging" => (feedback::MESSAGING.iter().map(|line| line.to_string()).collect(), feedback::MESSAGING_SHOWN),
+        "scoreboard" => (feedback::SCOREBOARD.iter().map(|line| line.to_string()).collect(), feedback::SCOREBOARD_SHOWN),
+        "scoreboard2" => (feedback::SCOREBOARD2.iter().map(|line| line.to_string()).collect(), feedback::SCOREBOARD_SHOWN),
         "spiders" => (world::spiders(), hunt::KINDS_SHOWN),
         "kinds2" => (world::kinds2(), hunt::KINDS_SHOWN),
         "pushed" => (world::pushed(), world::PUSHED_SHOWN),

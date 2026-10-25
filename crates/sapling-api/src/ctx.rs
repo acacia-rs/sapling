@@ -11,7 +11,7 @@ use crate::{Block, BlockPos, BossBar, Difficulty, GameMode, Item, Permission, Pl
 pub type FormCallback = Box<dyn FnOnce(&mut ShardCtx<'_>, &Player, Option<&str>) + Send>;
 
 /// What a shard offers its handlers. Implemented by sapling-shard; plugins use [`ShardCtx`].
-pub trait Backend: WorldBackend + EntityBackend + HealthBackend + EffectBackend + crate::ExperienceBackend + crate::WeatherBackend + crate::LightBackend + crate::ChatBackend + crate::MovementBackend + crate::SoundBackend + crate::TitleBackend + crate::SpawnBackend + crate::ServerBackend + crate::BlockEntityBackend {
+pub trait Backend: WorldBackend + EntityBackend + HealthBackend + EffectBackend + crate::ExperienceBackend + crate::WeatherBackend + crate::LightBackend + crate::ChatBackend + crate::MovementBackend + crate::SoundBackend + crate::TitleBackend + crate::SpawnBackend + crate::ServerBackend + crate::BlockEntityBackend + crate::ScoreboardBackend + crate::TagBackend {
     fn tick(&self) -> u64;
     fn player_count(&self) -> usize;
     fn players(&self) -> Vec<Player>;
@@ -278,6 +278,7 @@ impl<'a> ShardCtx<'a> {
     }
 
     /// Shows `sidebar` to a player, or changes the one they have: only lines that differ are sent.
+    /// It hides the sidebar of the world's scoreboard until it is removed.
     pub fn set_sidebar(&mut self, player: PlayerId, sidebar: &Sidebar) {
         self.backend.set_sidebar(player, Some(sidebar));
     }

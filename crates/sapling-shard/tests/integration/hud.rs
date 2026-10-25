@@ -9,7 +9,7 @@ use acacia_proto::packets::{
     ToastRequest,
 };
 use common::{Harness, all};
-use sapling_api::{BossBar, BossBarColour, PlayerId, ShardCtx, Sidebar, Title};
+use sapling_api::{BossBar, BossBarColour, Display, DisplaySlot, Objective, PlayerId, ScoreHolder, ShardCtx, Sidebar, SortOrder, Title};
 
 /// Runs `action` in the next tick and returns what it made the shard send to player 1.
 fn after(h: &mut Harness, action: impl FnOnce(&mut ShardCtx<'_>) + Send + 'static) -> Vec<RawPacket> {
@@ -25,16 +25,17 @@ fn show(h: &mut Harness, title: &'static str, lines: &'static [&'static str]) ->
     after(h, move |ctx| ctx.set_sidebar(PlayerId(1), &board(title, lines)))
 }
 
-/// Every score entry among `packets` in order: `+id score text` for a set, `-id` for a remove.
+/// Every score entry among `packets` in order: `+line score text` for a set, `-line` for a
+/// remove; line n has id -n, below the world board's ids.
 fn scores(packets: &[RawPacket]) -> Vec<String> {
     let entry = |e: &acacia_proto::packets::SetScoreEntriesItem| match &e.content {
         Content::FakePlayer(line) => {
             assert_eq!((line.objective_name.as_str(), e.entry_type_name.as_str()), ("sapling", "changefakeplayer"));
-            format!("+{} {} {}", e.scoreboard_id, line.score, line.custom_name)
+            format!("+{} {} {}", -e.scoreboard_id, line.score, line.custom_name)
         }
         Content::Remove(removed) => {
             assert_eq!((removed.objective_name.as_deref(), e.entry_type_name.as_str()), (Some("sapling"), "remove"));
-            format!("-{}", e.scoreboard_id)
+            format!("-{}", -e.scoreboard_id)
         }
         Content::Default(other) => panic!("an entity score: {other:?}"),
     };
@@ -81,6 +82,25 @@ fn a_sidebar_update_sends_only_the_lines_that_changed() {
     assert_eq!((kinds(&sent), all::<RemoveObjective>(&sent)[0].objective_name.as_str()), (vec!["RemoveObjective"], "sapling"));
     assert!(after(&mut h, |ctx| ctx.remove_sidebar(PlayerId(1))).is_empty());
     assert_eq!(kinds(&show(&mut h, "Lobby", &["back"])), ["SetDisplayObjective", "SetScore"]);
+}
+
+#[test]
+fn a_players_sidebar_hides_the_worlds_until_it_goes() {
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    let shown = after(&mut h, |ctx| {
+        ctx.add_objective(&Objective::dummy("kills", "Kills"));
+        ctx.set_score(&ScoreHolder::Fake("Bob".into()), "kills", 4);
+        ctx.set_display(DisplaySlot::Sidebar, Some(&Display { objective: "kills".into(), order: SortOrder::Descending }));
+    });
+    assert_eq!((kinds(&shown), all::<SetDisplayObjective>(&shown)[0].objective_name.as_str()), (vec!["SetDisplayObjective", "SetScore"], "kills"));
+    show(&mut h, "Own", &["mine"]);
+    assert!(after(&mut h, |ctx| {
+        ctx.set_score(&ScoreHolder::Fake("Bob".into()), "kills", 5);
+    }).iter().all(|p| acacia_proto::packet_name(p.id) == Some("SetScore")), "the world's sidebar stays hidden");
+    let sent = after(&mut h, |ctx| ctx.remove_sidebar(PlayerId(1)));
+    assert_eq!(kinds(&sent), ["RemoveObjective", "SetDisplayObjective", "SetScore"], "the world's comes back");
+    assert_eq!(all::<SetDisplayObjective>(&sent)[0].objective_name, "kills");
 }
 
 #[test]

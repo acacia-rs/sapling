@@ -2,19 +2,27 @@
 //! unanswered when they work; `/tellraw` sends each target its rawtext as a JsonWhisper.
 
 use sapling_api::command::{Args, Parameter, RawPart, RawText, Selector, Text};
-use sapling_api::{Command, Output, Player, Sender, ShardCtx};
+use sapling_api::{Command, Output, Player, PlayerId, ScoreHolder, Sender, ShardCtx};
 
 use super::chat::speaker;
 use super::{display_name, no_target, players, targets};
 
-/// `text` with each selector replaced by the names it finds from `sender`, `, `-joined, and left
-/// out where it finds none, as BDS did.
-// TODO: scores are always left out: sapling has no scoreboard. BDS left a `*` score raw for a
-// reader without a score and dropped the others it could not find.
-pub(super) fn resolved(ctx: &mut ShardCtx<'_>, sender: &Sender, text: &RawText) -> RawText {
+/// `text` with each selector replaced by the names it finds from `sender`, `, `-joined, and each
+/// score by the scores of those it names, `*` being `reader`; either left out where it finds
+/// none, as BDS did, but a `*` score without one is left for the client
+/// (research/captures/bds-messaging.txt).
+pub(super) fn resolved(ctx: &mut ShardCtx<'_>, sender: &Sender, text: &RawText, reader: Option<PlayerId>) -> RawText {
     let online: Vec<Player> = ctx.players().collect();
     text.resolve(&mut |part| {
-        let RawPart::Selector(written) = part else { return None };
+        let written = match part {
+            RawPart::Score { name, objective } if name == "*" => {
+                let score = reader.and_then(|reader| ctx.score(&ScoreHolder::Player(reader), objective));
+                return Some(score.map_or_else(|| part.clone(), |score| RawPart::Text(score.to_string())));
+            }
+            RawPart::Score { name, objective } => return ctx.score_text(sender, name, objective).map(RawPart::Text),
+            RawPart::Selector(written) => written,
+            _ => return None,
+        };
         let selector = Selector::parse(&mut Args::new(written, 0, sender, &online)).ok()?;
         let (players, entities) = targets(ctx, sender, Some(&selector));
         let found = players.into_iter().map(|player| player.name);
@@ -51,7 +59,9 @@ impl Command for TellRaw {
         if told.is_empty() {
             return no_target(out);
         }
-        let text = resolved(ctx, sender, &self.message);
-        told.iter().for_each(|player| ctx.tell_raw(player.id, &text));
+        for player in told {
+            let text = resolved(ctx, sender, &self.message, Some(player.id));
+            ctx.tell_raw(player.id, &text);
+        }
     }
 }

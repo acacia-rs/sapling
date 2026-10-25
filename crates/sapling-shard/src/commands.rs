@@ -194,6 +194,8 @@ pub(crate) fn dispatch(world: &mut World) {
         let commands = world.resource::<CommandRegistry>().0.clone();
         let mut backend = Ctx { world };
         let out = commands.run(&mut ShardCtx::new(&mut backend), &Sender::Player(player), permission, event.line());
+        // BDS sends what a command changed on the scoreboard before its answer.
+        crate::scoreboard::send(world);
         let quiet = out.succeeded() && !feedback_on(world, entity);
         if let Some(mut outgoing) = world.get_mut::<Outgoing>(entity).filter(|_| !out.messages().is_empty() && (!quiet || out.answers_always())) {
             outgoing.push(&output_packet(&request.origin, &out));

@@ -99,13 +99,13 @@ fn bad_filters_are_syntax_errors_at_the_key_or_value() {
 
 fn mob(id: u64, kind: &str, feet: [f32; 3]) -> Candidate {
     let entity = EntityInfo::new(EntityId(id), format!("minecraft:{kind}"), feet, [0.0; 3], true);
-    Candidate { target: Selected::Entity(entity), kind: format!("minecraft:{kind}"), name: String::new(), feet, rotation: [0.0; 2], families: Vec::new(), tags: Vec::new(), mode: None, level: None, inventory: None }
+    Candidate { target: Selected::Entity(entity), kind: format!("minecraft:{kind}"), name: String::new(), feet, rotation: [0.0; 2], families: Vec::new(), tags: Vec::new(), scores: Vec::new(), mode: None, level: None, inventory: None }
 }
 
 fn someone(id: u64, name: &str, feet: [f32; 3]) -> Candidate {
     let player = Selected::Player(player(id, name));
     let (families, inventory) = (vec!["player".to_owned()], Some(Inventory::default()));
-    Candidate { target: player, kind: "minecraft:player".into(), name: name.into(), feet, rotation: [0.0; 2], families, tags: Vec::new(), mode: Some(GameMode::Survival), level: Some(0), inventory }
+    Candidate { target: player, kind: "minecraft:player".into(), name: name.into(), feet, rotation: [0.0; 2], families, tags: Vec::new(), scores: Vec::new(), mode: Some(GameMode::Survival), level: Some(0), inventory }
 }
 
 /// Alex, Bob and Cara, two pigs and a zombie, around 0 0 0.
@@ -114,6 +114,7 @@ fn world() -> Vec<Candidate> {
     alex.inventory = Some(Inventory { items: vec![(Slot::Main(0), Item::new("minecraft:apple", 2))], held: 0 });
     let mut bob = someone(2, "Bob", [10.0, 0.0, 0.0]);
     (bob.mode, bob.level, bob.tags) = (Some(GameMode::Creative), Some(5), vec!["red".into()]);
+    (alex.scores, bob.scores) = (vec![("kills".into(), 3), ("deaths".into(), 0)], vec![("kills".into(), -1)]);
     let mut cara = someone(3, "Cara", [-1.0, 0.0, 0.0]);
     cara.rotation = [90.0, 30.0];
     let mut pigs = [mob(4, "pig", [1.5, 0.0, 0.0]), mob(5, "pig", [20.0, 0.0, 0.0])];
@@ -189,7 +190,9 @@ fn who_filters_test_names_kinds_tags_and_players() {
     assert_eq!([picks("@e[m=creative]"), picks("@e[m=!c]"), picks("@a[m=d]")], [vec!["Bob"], vec!["Alex", "Cara"], vec!["Alex", "Cara"]], "m is for players");
     assert_eq!([picks("@a[lm=1]"), picks("@e[l=..4]")], [vec!["Bob"], vec!["Alex", "Cara"]]);
     assert_eq!([picks("@e[haspermission={camera=enabled}]"), picks("@a[haspermission={jump=disabled}]")], [vec!["Alex", "Bob", "Cara"], vec![]]);
-    assert_eq!([picks("@e[scores={}]").len(), picks("@e[scores={kills=0..}]").len()], [6, 0], "no scoreboard: nobody has a score");
+    assert_eq!([picks("@e[scores={}]").len(), picks("@e[scores={kills=0..}]").len()], [6, 1]);
+    assert_eq!([picks("@e[scores={kills=!0..}]"), picks("@e[scores={kills=..5,deaths=0}]")], [vec!["Bob"], vec!["Alex"]], "objectives are all tested");
+    assert!(picks("@e[scores={deaths=!1}]") == ["Alex"] && picks("@e[scores={none=..0}]").is_empty(), "no score fails, `!` or not, as on BDS");
     assert_eq!(picks("@a[hasitem={item=apple}]"), ["Alex"]);
     assert_eq!(picks("@e[hasitem={item=apple,quantity=0}]"), ["Bob", "Cara", "pig4", "pig5", "zombie6"]);
 }

@@ -18,6 +18,8 @@ pub struct Candidate {
     pub rotation: [f32; 2],
     pub families: Vec<String>,
     pub tags: Vec<String>,
+    /// By objective.
+    pub scores: Vec<(String, i32)>,
     /// `None` for anything but a player, as is `level`.
     pub mode: Option<GameMode>,
     pub level: Option<i32>,
@@ -54,8 +56,8 @@ pub(super) fn passes(filters: &Filters, candidate: &Candidate, origin: [f32; 3])
         && player_only(!filters.permissions.is_empty(), &|| filters.permissions.iter().all(|(_, enabled)| *enabled))
         && filters.pitch.holds(candidate.rotation[1])
         && turned(filters.yaw, candidate.rotation[0])
-        // TODO: no scoreboard yet; with no objective nobody has a score, so any score test fails.
-        && filters.scores.is_empty()
+        // Without a score a test fails, `!` or not (research/captures/bds-scoreboard.txt).
+        && filters.scores.iter().all(|(objective, test)| candidate.scores.iter().any(|(held, score)| held == objective && test.passes(test.value.holds(*score))))
         && filters.items.iter().all(|test| test.holds(candidate.inventory.as_ref()))
 }
 

@@ -31,6 +31,8 @@ it does on BDS and the two captures can be diffed:
    full), selecting and server commands answer as BDS did (`worldcmds`, `itemcmds`). Left there:
    `/give`'s `can_destroy` and `can_place_on`, data-value block overloads, what BDS guesses are
    listed in `docs/research/world-commands.md`.
+   `/scoreboard` and `/tag` answer as BDS did (`bds_command_probe scoreboard|scoreboard2`); left:
+   the unverified list in `docs/research/scoreboard.md`, and saving the board only at shutdown.
 
    What a click does to a block (`docs/research/block-uses.md`, `clicks`), primed TNT (`tnt`) and
    bone meal (`docs/research/bone-meal.md`, `bonemeal`) are drilled and built. Saplings,

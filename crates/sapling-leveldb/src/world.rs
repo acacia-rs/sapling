@@ -169,6 +169,15 @@ impl LevelDbWorld {
         self.db.put(crate::dragon_fight::KEY, &crate::encode_dragon_fight(fight))
     }
 
+    /// The world's scoreboard (scoreboard.rs); `None` in a world that never had one.
+    pub fn load_scoreboard(&self) -> Result<Option<crate::ScoreboardRecord>, Error> {
+        self.db.get(crate::scoreboard::KEY)?.map(|record| crate::decode_scoreboard(&record)).transpose()
+    }
+
+    pub fn store_scoreboard(&self, board: &crate::ScoreboardRecord) -> Result<(), Error> {
+        self.db.put(crate::scoreboard::KEY, &crate::encode_scoreboard(board))
+    }
+
     /// Writes what was stored out as a table file and replaces `level.dat` with `level`. A world
     /// opened in memory flushes its copy and leaves the folder alone.
     pub fn flush(&self, level: &LevelDat) -> Result<(), Error> {

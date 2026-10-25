@@ -22,7 +22,8 @@ fn player() -> PlayerData {
     PlayerData {
         main, armor, offhand: stack("minecraft:shield", 1, None), selected: 8, ender, level: 17, progress: 0.25, vitals: Some([7.5, 18.0, 0.0, 2.25]),
         bed: Some([[5, 64, -3], [4, 64, -3]]), effects: vec![[1, 1, 600, 1], [19, 0, 40, 0]], dimension: 1, position: Some([-14.5, 34.0, 7.5]),
-        rotation: Some([135.0, -12.5]), game_mode: Some(1), enchant_seed: Some(-123_456),
+        rotation: Some([135.0, -12.5]), game_mode: Some(1), enchant_seed: Some(-123_456), tags: vec!["vip".into(), "§cred".into()],
+        unique_id: Some(-4294967295),
     }
 }
 
@@ -71,7 +72,9 @@ fn writing_over_a_record_keeps_what_sapling_does_not_know() {
     let player = PlayerData { vitals: Some([9.0, 20.0, 5.0, 0.0]), ..PlayerData::default() };
     let record = fields(&player.encode_over(&registry, Some(&previous)).unwrap());
 
-    assert_eq!(record.get("UniqueID"), Some(&Value::Long(-77)));
+    assert_eq!((record.get("UniqueID"), record.get("Tags")), (Some(&Value::Long(-77)), None));
+    let tags = Value::List(List { tag: 8, items: vec![Value::String("vip".into()), Value::String("§cred".into())] });
+    assert_eq!(fields(&self::player().encode(&registry)).get("Tags"), Some(&tags), "a list of strings, as BDS keeps them");
     let Some(Value::List(kept)) = record.get("Attributes") else { panic!("no attributes") };
     assert_eq!(kept.items[..2], [attribute("minecraft:health", 20.0, 9.0), attribute("minecraft:movement", 0.1, 0.1)]);
     assert_eq!(kept.items.len(), 5, "the vitals it lacked are added");

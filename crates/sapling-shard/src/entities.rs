@@ -44,7 +44,7 @@ pub(crate) fn new_unique_id(world: &World, entity: Entity) -> Option<i64> {
 /// Makes the entity one a world folder keeps.
 pub(crate) fn keep(world: &mut World, entity: Entity, layer: Entity, unique_id: i64, compound: Vec<u8>) {
     world.get_resource_or_insert_with(Managed::default).0.insert((layer, unique_id));
-    world.entity_mut(entity).insert(Stored { compound });
+    world.entity_mut(entity).insert((Stored { compound }, crate::tags::UniqueId(unique_id)));
 }
 
 /// The tick an entity appeared in: its viewers are told of it after the tick's handlers, so a

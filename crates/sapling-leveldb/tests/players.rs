@@ -75,7 +75,7 @@ fn a_record_bds_mapped_elsewhere_is_read_and_written_where_it_is() {
     assert_eq!(world.db().get(format!("player_server_{ID}").as_bytes()).unwrap(), None, "no second record");
     let written = read(&world.db().get(server.as_bytes()).unwrap().unwrap());
     assert_eq!((written.get("UniqueID"), written.get("PlayerGameMode")), (Some(&Value::Long(-4294967295)), Some(&Value::Int(2))));
-    assert_eq!(world.load_player(ID).unwrap(), Some(traveller()));
+    assert_eq!(world.load_player(ID).unwrap(), Some(PlayerData { unique_id: Some(-4294967295), ..traveller() }), "BDS's id read back");
 }
 
 #[test]
