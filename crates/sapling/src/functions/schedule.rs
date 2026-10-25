@@ -2,7 +2,7 @@
 //! (research/captures/bds-functions.txt): a function is run by the server, in the world it was
 //! scheduled in, once its delay (`20`, `2s`, `1d`) has passed, and the operators are told; a delay
 //! of 0 runs it at once. `on_area_loaded` waits for ticking areas.
-// TODO: `/schedule on_area_loaded`, once ticking areas exist.
+// TODO: `/schedule on_area_loaded`: ticking areas exist now (sapling-shard ticking.rs) but are not waited on.
 
 use sapling_api::command::{Args, CommandSpec, CommandSyntax, Overload, ParamKind, ParameterSpec, ParseError, RawPart, RawText};
 use sapling_api::{Command, Output, Permission, RuleValue, Sender, ShardCtx};

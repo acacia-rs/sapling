@@ -109,7 +109,7 @@ uncertainty are the entity JSON's `minecraft:projectile` (`power`, `uncertainty_
 | bucket (14a9092c0) | 147a9b070 | D12 |
 | bone meal / rapid fertilizer | 1436f8210 | D13 |
 | flint and steel | 141a7a660 | D14 |
-| shears | 142ef54b0 | fetch entities in the cell, `minecraft:on_sheared` / loot `*_shear.json` (sheep, mooshroom, snow golem, bogged), sound `Shear` 45; beehive path via 142ef52d0 with `BlockClick`; not read in detail |
+| shears | 142ef54b0 | fetch entities in the cell, `minecraft:on_sheared` / loot `*_shear.json` (sheep, mooshroom, snow golem, bogged), sound `Shear` 45; beehive path via 142ef52d0 with `BlockClick`; not read in detail; built for sheep and mooshrooms (`creatures::shear_in`) |
 | potion (water bottle) | 141a717e0 | D15 |
 | glass bottle | 147a937f0 | D17 |
 | humanoid armor / elytra | 141a81110 | D16 slot `item.mArmorSlot + 2`, no swap |
@@ -118,7 +118,7 @@ uncertainty are the entity JSON's `minecraft:projectile` (`power`, `uncertainty_
 | horse armor family (14a76ba40, 14a770430) | 141a6b300 | into the slot of an entity `ContainerComponent` in the cell; `EquipGeneric` 96 + `BlockClick` |
 | saddle, harness, wolf armor, carpet, chest | 142ef1960, 141a7f810, 1420b7ed0, 141a3ef60, 148b26600 | equip/`on_saddled`/`on_harnessed`/`on_chest`; out of scope |
 | spawn egg (14a7c93b0) | 142a788e0 | D18 |
-| boat, minecart, firework, brush | 141a6af10, 142a863f0, 1436fe320, 147a951b0 | out of scope |
+| boat, minecart, firework, brush | 141a6af10, 142a863f0, 1436fe320, 147a951b0 | out of scope; the firework is built since (`fireworks::dispense`, not read here) |
 
 - D12 Bucket (147a9b070), `mBucketType` at Item+0x218 (0 empty, 1 milk, 2–5 fish, 8 water, 10 lava, 11 powder
   snow, 12 axolotl, 13 tadpole):

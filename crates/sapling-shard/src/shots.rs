@@ -2,8 +2,8 @@
 //! a crossbow loaded and shot (crossbows.rs), snowballs, eggs, ender pearls, splash and lingering
 //! potions, bottles o' enchanting and wind charges thrown (throws.rs), a trident thrown or ridden
 //! (tridents.rs). Their flight and what they do where they meet something: creatures/flight.rs.
-//! Stuck ones are picked up (pickup.rs); a lingering potion leaves a cloud (clouds.rs).
-// TODO: no fireworks (sapling has none) and no Channeling (sapling has no lightning).
+//! Stuck ones are picked up (pickup.rs); a lingering potion leaves a cloud (clouds.rs). A crossbow's
+//! rocket is the fireworks' (fireworks.rs), a Channeling trident's bolt the lightning's (lightning.rs).
 
 mod aim;
 mod ammo;
