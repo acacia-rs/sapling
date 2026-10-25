@@ -84,7 +84,15 @@ Each needs its rule looked up first (`bdsre` for BDS, the Java jar for data), th
    (`blocks/pistons/plan.rs`, `bds_command_probe slime`). What stands in a piston's way is pushed before it, a player too (`blocks/pistons/shove.rs`, `shove`, `pushed`). Left: the circuits of an arena's
    template, and what a comparator reads of a lectern or a wall frame (a jukebox is read by its disc, `discs`; a
    decorated pot by its stack and a flat frame not at all, `holders`). Dust does not lag a lever or
-   button worked by hand (`byhand`; docs/research/redstone.md, "Observers").
+   button worked by hand (`byhand`; docs/research/redstone.md, "Observers"). Dispensers, droppers and
+   crafters fire on a rising signal (`blocks/dispensers.rs`, `blocks/crafter.rs`,
+   docs/research/dispensers.md, `dispensers`); note blocks keep their note and play on a rise, copper
+   bulbs toggle, targets, tripwire hooks, lightning rods (`blocks::lightning_struck`) and jukeboxes give
+   a signal, sculk sensors and shriekers hear vibrations (`blocks/sculk.rs`, docs/research/sculk.md,
+   `redstone_blocks`). Copper weathers, waxes and scrapes (`blocks/copper.rs`, docs/research/copper.md,
+   `copper`). All by decompiled BDS, not drilled; left: each note's "Unverified" list, shears,
+   minecarts and boats from a dispenser, armour onto mobs, water bottles to mud, glass bottles,
+   horse armour, warden summoning, wool occluding vibrations.
 
 ## 3. Things assumed, not verified
 

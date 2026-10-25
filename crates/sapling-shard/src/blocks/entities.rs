@@ -88,7 +88,7 @@ fn held_items(kept: &Value) -> Vec<Item> {
         Some(Value::String(name)) if sapling_data::is_item(name) => Some(Item::new(name.clone(), 1)),
         _ => None,
     };
-    let food = ["Item1", "Item2", "Item3", "Item4", super::holders::FRAMED, super::holders::POTTED].into_iter().filter_map(|slot| sapling_world::ItemStack::parse(kept.get(slot)?));
+    let food = ["Item1", "Item2", "Item3", "Item4", super::holders::FRAMED, super::holders::POTTED, super::jukebox::RECORD].into_iter().filter_map(|slot| sapling_world::ItemStack::parse(kept.get(slot)?));
     plant.into_iter().chain(food.map(|stack| Item { damage: stack.damage, ..Item::new(stack.name, stack.count) })).collect()
 }
 

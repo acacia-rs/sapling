@@ -48,7 +48,7 @@ pub(super) fn use_by_hand(world: &mut World, player: Entity, layer: Entity, pos:
     let Some(properties) = registry.get(id).map(|state| state.properties) else { return false };
     match name {
         "minecraft:noteblock" => {
-            super::notes::play(world, layer, pos);
+            super::notes::tuned(world, layer, pos);
             true
         }
         super::composter::COMPOSTER => super::composter::empty(world, layer, pos),

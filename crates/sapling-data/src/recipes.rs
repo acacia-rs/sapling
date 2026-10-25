@@ -169,6 +169,13 @@ fn outputs(made: Vec<ItemLegacy>) -> Vec<(CreativeItem, u8)> {
     made.into_iter().filter_map(|item| Some((u8::try_from(item.count).ok()?, described(item)?))).map(|(count, item)| (item, count)).collect()
 }
 
+/// The crafting table's recipe a grid lays out, as a crafter looks for one: the lowest network id
+/// of those that fit, so that the choice does not turn on the map's order.
+pub fn laid_out_in(grid: &Grid<'_>) -> Option<&'static Recipe> {
+    let fits = |(_, recipe): &(&u32, &Recipe)| matches!(recipe.station, Station::Hand | Station::Table) && recipe.is_laid_out(grid);
+    RECIPES.iter().filter(fits).min_by_key(|(id, _)| **id).map(|(_, recipe)| recipe)
+}
+
 /// The recipe a client names by `network_id` in a craft request.
 pub fn recipe(network_id: u32) -> Option<&'static Recipe> {
     RECIPES.get(&network_id)

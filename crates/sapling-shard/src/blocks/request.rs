@@ -235,6 +235,7 @@ impl Request<'_> {
             return false;
         }
         updates::settle(self.world, site.layer, [x, y, z]);
+        super::vibrate_at(self.world, site.layer, [x, y, z], super::GameEvent::BlockDestroy, true);
         true
     }
 
@@ -248,9 +249,10 @@ impl Request<'_> {
         let Some(site) = site(self.world, self.entity, pos) else { return self.resync(&[pos, target]) };
         let Some((registry, clicked)) = self.block(&site, pos) else { return };
         let Some(name) = registry.get(clicked).filter(|state| !state.is_air()).map(|state| state.name) else { return self.resync(&[pos, target]) };
-        // The clicked block's own use comes first, unless the player sneaks.
-        let builds = site.sneaking || !is_used(name);
-        let held = self.held_item(site.mode, click).filter(|_| builds);
+        // The clicked block's own use comes first, unless the player sneaks or works copper.
+        let held = self.held_item(site.mode, click);
+        let builds = site.sneaking || !is_used(name) || held.as_deref().is_some_and(|held| super::copper::is_worked_by(name, held));
+        let held = held.filter(|_| builds);
         if held.as_ref().is_some_and(|held| self.use_tool(&site, pos, face, held) || self.stack(&site, pos, face, held)) {
             return self.resync(&[pos, target]);
         }

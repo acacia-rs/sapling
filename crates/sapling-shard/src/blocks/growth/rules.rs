@@ -84,7 +84,7 @@ pub(super) fn is_ticked(name: &str, properties: &str) -> bool {
     let growth = || number(properties, "growth");
     match name {
         FARMLAND | BAMBOO => true,
-        _ if cover::is_ticked(name) => true,
+        _ if cover::is_ticked(name) || super::copper::is_ticked(name) => true,
         BUSH => growth().is_some_and(|growth| growth < RIPE_BUSH),
         PITCHER => number(properties, UPPER) == Some(0) && growth().is_some_and(|growth| growth < RIPE_PITCHER),
         _ if AGED.iter().any(|(aged, ..)| *aged == name) => number(properties, "age").zip(AGED.iter().find(|(aged, ..)| *aged == name)).is_some_and(|(age, (_, last, _))| age < *last),
@@ -158,7 +158,7 @@ fn bamboo(level: &Level, [x, top, z]: BlockPos, tall: i32) -> Vec<Change> {
 /// Whether what a random tick does to `name` is growth (offered to plugins): not farmland drying
 /// or wetting, leaves decaying, grass dying nor ice melting; grass spreading is.
 pub(super) fn grows(name: &str) -> bool {
-    name == cover::DIRT || name != FARMLAND && !name.ends_with("leaves") && !cover::is_ticked(name)
+    name == cover::DIRT || name != FARMLAND && !name.ends_with("leaves") && !cover::is_ticked(name) && !super::copper::is_ticked(name)
 }
 
 /// What a random tick makes of the block at `pos`.
@@ -207,6 +207,7 @@ pub(super) fn ticked(level: &Level, pos: BlockPos, darken: u8, picks: &mut Picks
             if tall > BAMBOO_HEIGHT { Vec::new() } else { bamboo(level, above, tall) }
         }
         _ if cover::is_ticked(name) => cover::ticked(level, pos, name, darken, picks),
+        _ if super::copper::is_ticked(name) => super::copper::ticked(level, pos, picks),
         // Marked leaves drop on their first tick with no wood near, as BDS's did; held, they rest.
         _ if leaves::is_marked(name, properties) => match leaves::hangs(level, pos) {
             true => with_property(registry, id, "update_bit", "0").map(|id| shown(pos, id)).into_iter().collect(),

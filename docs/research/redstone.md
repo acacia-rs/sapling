@@ -454,3 +454,11 @@ time by `CorrectPlayerMovePrediction` (its eyes' place, a delta of -0.0784 down,
 When the arm under it drew back the player stood a block lower than it began, in the piston's
 row, so the two cases after that (against a wall, a sticky piston) showed nothing. Sapling
 pushes players so (`pistons/shove.rs`, `movement::push`).
+
+## More parts (2026-10-25, decompiled, not drilled)
+
+Dispensers, droppers and crafters: dispensers.md. Note blocks, copper bulbs, targets, tripwire,
+lightning rods, jukeboxes: redstone-blocks.md. Sculk sensors and shriekers: sculk.md. Copper:
+copper.md. In sapling a producer whose block does not store its strength (target, sculk sensor,
+jukebox) is held by `redstone::emit`; users firing on a rising edge keep the edge in their state
+(`triggered_bit`, `powered_bit`) or, for a note block, in the evaluation's old and new signal.

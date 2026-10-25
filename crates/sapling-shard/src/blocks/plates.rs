@@ -82,12 +82,12 @@ impl Plate {
 }
 
 /// Something that may press a plate.
-struct Body {
-    layer: Entity,
-    min: [f32; 3],
-    max: [f32; 3],
+pub(super) struct Body {
+    pub(super) layer: Entity,
+    pub(super) min: [f32; 3],
+    pub(super) max: [f32; 3],
     is_mob: bool,
-    spectator: bool,
+    pub(super) spectator: bool,
 }
 
 impl Body {
@@ -103,7 +103,7 @@ impl Body {
     }
 
     /// The cells whose plate this body could be on.
-    fn cells(&self) -> impl Iterator<Item = BlockPos> + '_ {
+    pub(super) fn cells(&self) -> impl Iterator<Item = BlockPos> + '_ {
         let span = |axis: usize, below: f32| (self.min[axis] - below).floor() as i32..=self.max[axis].floor() as i32;
         span(0, 0.0).flat_map(move |x| span(1, FELT_HEIGHT).flat_map(move |y| span(2, 0.0).map(move |z| [x, y, z])))
     }
@@ -113,7 +113,7 @@ impl Body {
 #[derive(Resource, Default)]
 pub(crate) struct DownPlates(HashMap<(Entity, BlockPos), u64>);
 
-fn bodies(world: &mut World) -> Vec<Body> {
+pub(super) fn bodies(world: &mut World) -> Vec<Body> {
     let mut players = world.query::<(&InLayer, &Stage, &Position, &Mode)>();
     let mut bodies: Vec<Body> = players
         .iter(world)
