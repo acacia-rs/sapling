@@ -7,9 +7,11 @@ use crate::{ChunkPos, World};
 const COLD: f32 = 0.15;
 
 impl World {
-    /// The biome id at a cell of a loaded column.
+    /// The biome id stored at a cell (the dimension's own where none was); `None` where nothing
+    /// is loaded.
     pub fn biome(&self, x: i32, y: i32, z: i32) -> Option<u32> {
-        self.column(ChunkPos::of_block(x, z))?.chunk().biome(x, y, z)
+        let column = self.column(ChunkPos::of_block(x, z))?;
+        Some(column.chunk().biome(x, y, z).unwrap_or_else(|| crate::column::default_biome(self.dim)))
     }
 
     /// Whether it is cold enough at a cell for water to freeze and snow to fall; never outside

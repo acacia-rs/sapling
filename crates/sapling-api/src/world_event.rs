@@ -54,6 +54,10 @@ pub enum SpawnReason {
     Effect,
     /// A slime or magma cube split as it died.
     Split,
+    /// Natural spawning, by the world's spawn rules.
+    Natural,
+    /// A spawn egg used on a block.
+    SpawnEgg,
 }
 
 /// A mob is about to appear. Cancelled, it does not. Mobs coming back with their column from

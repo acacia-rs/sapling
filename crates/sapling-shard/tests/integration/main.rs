@@ -60,6 +60,7 @@ mod shapes;
 mod shown_effects;
 mod sleep;
 mod slimes;
+mod spawning;
 mod survival;
 mod tnt;
 mod vanilla_rules;

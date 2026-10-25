@@ -50,6 +50,7 @@ mod simulation;
 mod skin;
 mod sleep;
 mod sounds;
+mod spawning;
 mod splash;
 mod sync;
 mod ticking;

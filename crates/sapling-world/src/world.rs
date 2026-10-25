@@ -152,6 +152,12 @@ impl World {
         self.column(ChunkPos::of_block(x, z))?.top(x, z, stands)
     }
 
+    /// The y of the highest block in block column `(x, z)` that has collision; `None` where there
+    /// is none or the column is not loaded.
+    pub fn top_solid(&self, x: i32, z: i32) -> Option<i32> {
+        self.column(ChunkPos::of_block(x, z))?.top(x, z, |id| self.registry.get(id).is_some_and(|s| s.is_solid()))
+    }
+
     /// Sets a layer-0 block by runtime id; false when the column is not loaded or storage
     /// could not read it. Positions outside the dimension's height are ignored.
     pub fn set_block(&mut self, x: i32, y: i32, z: i32, id: u32) -> bool {

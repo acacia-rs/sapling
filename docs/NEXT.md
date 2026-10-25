@@ -35,7 +35,9 @@ it does on BDS and the two captures can be diffed:
    against BDS. The server reckons light now (DESIGN.md "Light (as built)"), and crops, stems,
    bamboo, grass and mycelium, ice and snow, freezing and snowfall, mushrooms, daylight detectors
    and the sun's burning ask it by BDS's decompiled rules (docs/research/growth.md "Light"; not
-   drilled); left there: mob spawning, mushrooms spreading, vines and cave vines; the flood's grid
+   drilled), as does mob spawning (`spawning.rs`, docs/research/mob-spawning.md, whose "Left"
+   lists what is not built: slimes, built now, still never spawn naturally, as BDS's code gates
+   them by slime chunk and swamp moon phase, not by spawn rules alone); left there: mushrooms spreading, vines and cave vines; the flood's grid
    looks a column up by hash per cell (~0.7 µs a cell optimised: three columns arriving cost a tick
    15 ms), worth caching. Fire is lit, spreads,
    burns and is put out (`docs/research/fire.md`, `fire`, `quench`), its spread by the Java game's odds. Crops, stems and berry bushes

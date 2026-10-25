@@ -80,7 +80,7 @@ impl Creature {
 
 /// A mob of `kind` with its feet at `feet` in `layer`: one BDS was recorded announcing, in a
 /// loaded column. It is heard appearing.
-fn spawn(world: &mut World, layer: Entity, kind: &str, feet: [f32; 3], reason: SpawnReason) -> Option<EntityId> {
+pub(crate) fn spawn(world: &mut World, layer: Entity, kind: &str, feet: [f32; 3], reason: SpawnReason) -> Option<EntityId> {
     spawn_as(world, layer, kind, feet, reason, 0.0, None)
 }
 
