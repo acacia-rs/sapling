@@ -24,6 +24,7 @@ Mojang's data is not committed (`.gitignore`); build it before the first `cargo 
 | `data/names.tsv` | `cargo run -p sapling --example bds_name_probe -- <your BDS> > data/names.tsv`, on testbox `tools/remote-drill.sh bds bds_name_probe data/names.tsv` (BDS's own answers to `/give` and `/kill`); optional: without it names are made from identifiers |
 | `data/command-names.tsv` | `cargo run -p sapling --example bds_enum_probe -- <your BDS> > data/command-names.tsv` (drop a trailing `probe exit` line when made by `tools/remote-drill.sh bds bds_enum_probe`): the `Item` and `Block` enums of BDS's AvailableCommands; optional: without it commands take every name |
 | `data/spawn-rules.tsv`, `data/despawns.tsv` | `py -3 data/generate/spawn-rules.py` (BDS's behaviour packs, as `mob-loot.py`) |
+| `data/trades.json` | `py -3 data/generate/trades.py` (BDS's behaviour packs, as `mob-loot.py`) |
 | `sapling-worldgen/src/structure/template/templates.bin` | `py -3 crates/sapling-worldgen/scripts/templates_to_rust.py <your BDS dir>` |
 
 | File | Sent as | Patched per join |
@@ -139,6 +140,17 @@ none of, `!tag` not, `snow` for `is_snow_covered`). Left out: conditions that ne
 events (babies, variants, riders) are not kept. `despawns.tsv`: each entity's own `minecraft:despawn`
 `despawn_from_distance` as `near-far` (32 and 128 where it names none). Biome tags are read from
 `BiomeDefinitionList.bin` by the ids chunks store (`spawn_rules/biomes.rs`).
+
+## Trades
+
+`trades.json` (read by `trades.rs`) is BDS's own: `data/generate/trades.py` takes the vanilla packs'
+`trading/economy_trades/*.json` (the newest pack's file winning; some ship compiled, `MCB`, which the
+script reads: format in sapling's `docs/research/villagers.md`), with old item names and data values
+renamed (checked against `ItemRegistry.bin` by a test), `set_potion` turned into the item's data value
+and biome `filters` into the villager types (`MarkVariant`) they let through. `trades::roll` draws a
+tier's offers: `num_to_select` of each group by weight, an alternative of each item, its count, and its
+functions (`enchant_with_levels` and `enchant_book_for_trading` through `enchant/table.rs`,
+`random_aux_value`, `random_dye`); a trade with an `exploration_map` is never offered.
 
 ## Liquid reactions
 

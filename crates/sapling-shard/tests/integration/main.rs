@@ -67,6 +67,7 @@ mod survival;
 mod throws;
 mod tnt;
 mod vanilla_rules;
+mod villagers;
 mod veto_events;
 mod vitals;
 mod workstations;

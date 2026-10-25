@@ -41,6 +41,7 @@ mod stares;
 mod summoned;
 mod teleports;
 mod vexes;
+mod villagers;
 
 use bevy_ecs::prelude::*;
 use acacia_proto::packets::{EntityEvent, EntityEventEventId};
@@ -61,6 +62,7 @@ pub(crate) use harm::{holds, is_full_block, touches};
 pub(crate) use health::{Cause, Health};
 pub(crate) use hunting::on_difficulty;
 pub(crate) use omens::{Omens, befall, infested_hurt};
+pub(crate) use villagers::{bargains, interact as trade_with, stop_trading, traded};
 use crate::components::{InLayer, Layer, NetId, Tick};
 use crate::{blocks, entities, mobs};
 
@@ -92,7 +94,10 @@ pub(crate) fn spawn(world: &mut World, layer: Entity, kind: &str, feet: [f32; 3]
 /// [`spawn`] facing `yaw`, and as its kind's spawn `event` makes it (a panda's gene) where known.
 fn spawn_as(world: &mut World, layer: Entity, kind: &str, feet: [f32; 3], reason: SpawnReason, yaw: f32, event: Option<&str>) -> Option<EntityId> {
     let gene = event.and_then(|event| genes::of_event(kind, event)).or_else(|| genes::roll(world, kind));
-    born(world, layer, kind, feet, Birth { reason, yaw, gene, sound: "spawn" })
+    let id = born(world, layer, kind, feet, Birth { reason, yaw, gene, sound: "spawn" })?;
+    let entity = entities::find(world, id)?;
+    villagers::arm(world, entity, layer, kind, false, event);
+    Some(id)
 }
 
 /// How a mob comes: why, facing where, of which gene, and heard as what.
@@ -155,6 +160,7 @@ pub(crate) fn from_storage(world: &mut World, layer: Entity, actor: Actor, uniqu
         crate::dragon::adopt(world, entity);
     }
     entities::keep(world, entity, layer, unique_id, compound);
+    villagers::arm(world, entity, layer, &kind, true, None);
     true
 }
 
@@ -250,10 +256,13 @@ pub(crate) fn tick(world: &mut World) {
             stares::watch(world, entity, layer, id, &kind, &start);
             drinks::tick(world, entity, layer, id, &start, hunting::prey_at(world, entity));
             teleports::tick(world, entity, layer, hunting::prey_at(world, entity));
+            if villagers::tick(world, entity, layer) {
+                continue;
+            }
         }
         // A teleport starts the tick afresh where it landed: no fall from where it left.
         let Some(start) = world.get::<Body>(entity).copied() else { continue };
-        if thinks && !rams::steer(world, entity, layer, id, &kind) && !hunting::steer(world, entity, layer, id, &kind) {
+        if thinks && !rams::steer(world, entity, layer, id, &kind) && !hunting::steer(world, entity, layer, id, &kind) && !villagers::steer(world, entity, layer) {
             let traits = sapling_data::mob_traits(&kind);
             let strolls = world.resource::<crate::components::Settings>().0.mobs_stroll;
             if strolls {
@@ -281,6 +290,7 @@ pub(crate) fn tick(world: &mut World) {
         let health = world.get::<Health>(entity);
         if !packets.is_empty() || health.map(|health| (health.left(), health.is_burning())) != before {
             let shown = announcement(id, &kind, &body, world.get::<Creature>(entity).and_then(|creature| creature.look.as_ref()), health, world.get::<legs::Legs>(entity).map_or(0.0, |legs| legs.yaw), world.get::<genes::Gene>(entity).map_or(0, |gene| gene.0));
+            let shown = villagers::dressed(world, entity, shown);
             mobs::reannounce(world, entity, shown);
         }
     }

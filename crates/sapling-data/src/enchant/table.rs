@@ -139,6 +139,30 @@ pub fn enchanted(item: &Stack<'_>, offer: &Offer) -> Option<Made> {
     Some(Made { name: name.to_owned(), tag: with_all(item.tag.cloned(), &offer.enchants) }).filter(|_| !offer.enchants.is_empty())
 }
 
+/// `item` enchanted as an offer of `cost` would enchant it: a trade's `enchant_with_levels`.
+// TODO: BDS's `enchant_with_levels` was not decompiled; this is the table's draw at that cost.
+pub fn with_levels(item: &Stack<'_>, cost: u8, draws: &mut dyn Draws) -> Option<Made> {
+    let gear = gear(item.name).filter(|gear| gear.enchantability > 0)?;
+    let enchants = chosen(gear.slots, gear.enchantability, cost, draws);
+    enchanted(item, &Offer { cost, slots: gear.slots, enchants, name: String::new() })
+}
+
+/// Enchantments a librarian never sells beside the curses: Soul Speed, Swift Sneak, Wind Burst.
+const UNTRADED: [i16; 3] = [36, 37, 38];
+
+/// A librarian's book: an enchantment other than a curse at any of its levels, and whether it is a
+/// treasure, which doubles its price.
+pub fn for_trade(draws: &mut dyn Draws) -> (i16, u8, bool) {
+    let sold: Vec<(i16, &kinds::Kind)> = KINDS.iter().enumerate().map(|(id, kind)| (id as i16, kind)).filter(|(id, kind)| !kind.curse && !UNTRADED.contains(id)).collect();
+    let (id, kind) = sold[draws.int(sold.len() as i32) as usize];
+    (id, draws.int(i32::from(kind.max)) as u8 + 1, kind.treasure)
+}
+
+/// An enchanted book of `levels`, as a librarian sells it.
+pub fn book(levels: &[(i16, u8)]) -> Made {
+    Made { name: ENCHANTED_BOOK.to_owned(), tag: with_all(None, levels) }
+}
+
 /// An offer's enchantments in the three lists the screen shows: worn, held, on the item itself.
 pub fn by_activation(enchants: &[(i16, u8)]) -> [Vec<(i16, u8)>; 3] {
     let of = |activation: Activation| enchants.iter().filter(|(id, _)| kinds::of(*id).is_some_and(|kind| kind.activation == activation)).copied().collect();

@@ -44,10 +44,12 @@ pub(crate) fn allowed_hits(world: &mut World, hits: Vec<(Entity, u64)>) -> Vec<(
     hits.into_iter().filter(|&(entity, id)| offer_click(world, entity, id, EntityAttackEvent::new).is_some_and(|event| !event.is_cancelled())).collect()
 }
 
-/// Offers this tick's uses of players and entities; nothing in the game answers them yet.
+/// Offers this tick's uses of players and entities; a trader answers one let through.
 pub(crate) fn interacted(world: &mut World, uses: Vec<(Entity, u64)>) {
     for (entity, id) in uses {
-        offer_click(world, entity, id, EntityInteractEvent::new);
+        if offer_click(world, entity, id, EntityInteractEvent::new).is_some_and(|event| !event.is_cancelled()) {
+            crate::creatures::trade_with(world, entity, id);
+        }
     }
 }
 

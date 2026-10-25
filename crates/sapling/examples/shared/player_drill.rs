@@ -22,6 +22,8 @@ mod shove;
 mod world;
 #[path = "use_drill.rs"]
 mod uses;
+#[path = "trade_drill.rs"]
+mod trades;
 
 /// A player's eyes are this far over its feet.
 const EYES: f32 = 1.62;
@@ -77,6 +79,16 @@ pub async fn act(actor: &mut Bot, line: &str) -> bool {
     if let Some(at) = line.strip_prefix("!break ") {
         if let Some(at) = from_feet(actor, at) {
             println!("## broke: {:?}", actor.break_block(at).await);
+        }
+        return true;
+    }
+    // `!trade kind offer times`: trades with the newest mob of that kind it knows of.
+    if let Some(words) = line.strip_prefix("!trade ") {
+        let words: Vec<&str> = words.split(' ').collect();
+        let (kind, offer, times) = (format!("minecraft:{}", words[0]), words.get(1).and_then(|w| w.parse().ok()).unwrap_or(0), words.get(2).and_then(|w| w.parse().ok()).unwrap_or(1));
+        match actor.state().entities.iter().filter(|entity| entity.kind == kind).map(|entity| entity.runtime_id).max() {
+            Some(id) => println!("## traded: {:?}", actor.trade(id, offer, times).await),
+            None => println!("## no {kind} to trade with"),
         }
         return true;
     }
@@ -178,6 +190,8 @@ pub fn drill(name: &str) -> Option<(Vec<String>, &'static [&'static str])> {
         "scoreboard" => (feedback::SCOREBOARD.iter().map(|line| line.to_string()).collect(), feedback::SCOREBOARD_SHOWN),
         "scoreboard2" => (feedback::SCOREBOARD2.iter().map(|line| line.to_string()).collect(), feedback::SCOREBOARD_SHOWN),
         "spiders" => (world::spiders(), hunt::KINDS_SHOWN),
+        "job" => (trades::job(), trades::TRADE_SHOWN),
+        "trade" => (trades::trade(), trades::TRADE_SHOWN),
         "kinds2" => (world::kinds2(), hunt::KINDS_SHOWN),
         "pushed" => (world::pushed(), world::PUSHED_SHOWN),
         "pvp" => (world::pvp(), HURT_SHOWN),

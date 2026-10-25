@@ -121,6 +121,11 @@ pub(crate) fn spawn_shown(world: &mut World, layer: Entity, feet: [f32; 3], anno
     Some(mob)
 }
 
+/// What players who come to see the entity are told of it now.
+pub(crate) fn announced(world: &World, mob: Entity) -> Option<Vec<Bytes>> {
+    world.get::<Mob>(mob).map(|mob| mob.announcement.clone())
+}
+
 /// What players who come to see a moving entity later are told of it.
 pub(crate) fn reannounce(world: &mut World, mob: Entity, announcement: Vec<Bytes>) {
     if let Some(mut mob) = world.get_mut::<Mob>(mob) {

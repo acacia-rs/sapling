@@ -50,9 +50,9 @@ pub(crate) fn opened(world: &mut World, player: Entity, workstation: Workstation
     }
 }
 
-/// The workstation a player's request is made at, with what it offers.
+/// The workstation a player's request is made at, with what it offers: a trader's screen too.
 pub(crate) fn bench(world: &World, player: Entity) -> Option<Bench> {
-    let (workstation, ..) = containers::workstation(world, player)?;
+    let Some((workstation, ..)) = containers::workstation(world, player) else { return crate::creatures::bargains(world, player).map(Bench::Trade) };
     Some(match workstation {
         Workstation::Enchanting => Bench::Enchanting(world.get::<Offers>(player).map(Offers::listed).unwrap_or_default()),
         Workstation::Anvil => Bench::Anvil,
@@ -64,6 +64,9 @@ pub(crate) fn bench(world: &World, player: Entity) -> Option<Bench> {
 /// What follows a request a player made, done: what its craft (`forged`) leaves the world to do,
 /// and the enchanting table's offers for what now lies in it.
 pub(crate) fn answered(world: &mut World, player: Entity, forged: Option<Forged>) {
+    if let Some(Forged::Traded(index)) = forged {
+        return crate::creatures::traded(world, player, index);
+    }
     let Some((workstation, layer, pos)) = containers::workstation(world, player) else { return };
     let creative = world.get::<Mode>(player).is_some_and(|mode| mode.0 == GameMode::Creative);
     match forged {

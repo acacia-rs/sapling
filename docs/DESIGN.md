@@ -1402,8 +1402,9 @@ acacia-world = { path = "../acacia/acacia/crates/acacia-world" }
 - Saving: a vanilla client has not opened a sapling-written world (BDS has), and the BDS check does not
   cover biomes or block entities, which sapling now also writes (chests, barrels).
 - Mobs: a vanilla client has not seen them or the dropped items (bots decode both). A mob looks like a
-  freshly summoned one of its kind: what it stores beyond the fields above (a villager's profession, a
-  horse's armour slot, effects) is not shown. A stored block
+  freshly summoned one of its kind: what it stores beyond the fields above (a horse's armour slot,
+  effects) is not shown; villagers and wandering traders are shown and kept as traders
+  (docs/research/villagers.md). A stored block
   item saved by an older game version carries old states, whose hash a client may not know. Movement,
   AI, damage, riding.
 - Clock and level: a vanilla client has not confirmed `SyncWorldClocks` or the other join packets as
