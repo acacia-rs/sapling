@@ -1,0 +1,44 @@
+## BDS console, no player online: the commands only its console and owners may run, and the ones
+## it lacks (bds_command_probe worldcmds answered an operator with
+## commands.generic.error.permissions or commands.generic.unknown for these). Run through the
+## server's stdin, 1.5 s apart; the lines themselves are not echoed by BDS. In order: /help of
+## defaultgamemode, setmaxplayers, seed, version and transfer; eight /defaultgamemode forms;
+## /setmaxplayers 5, 0, 1, 31, 40, -3, 10; /seed; /version; /transfer to an unknown name, twice
+## to @a, and once to a selector that matched nobody. Startup banners left out.
+[2026-10-25 09:26:46:877 INFO] Server started.
+[2026-10-25 09:26:47:679 ERROR] Syntax error: Unexpected "defaultgamemode": at "/help >>defaultgamemode<<"
+[2026-10-25 09:26:49:184 INFO] §esetmaxplayers:
+§eSets the maximum number of players for this game session.
+Usage:
+- /setmaxplayers <maxPlayers: int>
+[2026-10-25 09:26:50:684 ERROR] Syntax error: Unexpected "seed": at "/help >>seed<<"
+[2026-10-25 09:26:52:189 ERROR] Syntax error: Unexpected "version": at "/help >>version<<"
+[2026-10-25 09:26:53:694 INFO] §etransfer:
+§eTransfers a player to another server.
+Usage:
+- /transfer <pfidOrMSA: string> <server: string> [port: int]
+[2026-10-25 09:26:55:199 ERROR] Unknown command: defaultgamemode. Please check that the command exists and that you have permission to use it.
+[2026-10-25 09:26:56:699 ERROR] Unknown command: defaultgamemode. Please check that the command exists and that you have permission to use it.
+[2026-10-25 09:26:58:204 ERROR] Unknown command: defaultgamemode. Please check that the command exists and that you have permission to use it.
+[2026-10-25 09:26:59:704 ERROR] Unknown command: defaultgamemode. Please check that the command exists and that you have permission to use it.
+[2026-10-25 09:27:01:209 ERROR] Unknown command: defaultgamemode. Please check that the command exists and that you have permission to use it.
+[2026-10-25 09:27:02:714 ERROR] Unknown command: defaultgamemode. Please check that the command exists and that you have permission to use it.
+[2026-10-25 09:27:04:214 ERROR] Unknown command: defaultgamemode. Please check that the command exists and that you have permission to use it.
+[2026-10-25 09:27:05:719 ERROR] Unknown command: defaultgamemode. Please check that the command exists and that you have permission to use it.
+[2026-10-25 09:27:07:224 INFO] Set max players to 5.
+[2026-10-25 09:27:08:729 INFO] Set max players to 0.
+[2026-10-25 09:27:10:234 INFO] Set max players to 1.
+[2026-10-25 09:27:11:739 INFO] Set max players to 31.
+[2026-10-25 09:27:13:244 INFO] Set max players to 40.
+[2026-10-25 09:27:14:744 INFO] Set max players to 0.
+(Bound to current player count)
+[2026-10-25 09:27:16:249 INFO] Set max players to 10.
+[2026-10-25 09:27:17:754 ERROR] Unknown command: seed. Please check that the command exists and that you have permission to use it.
+[2026-10-25 09:27:19:259 ERROR] Unknown command: version. Please check that the command exists and that you have permission to use it.
+[2026-10-25 09:27:20:764 ERROR] That player cannot be found
+[2026-10-25 09:27:22:269 ERROR] Syntax error: Unexpected "@a": at "/transfer >>@a<< 127.0.0.1"
+[2026-10-25 09:27:23:774 ERROR] Syntax error: Unexpected "@a": at "/transfer >>@a<< 127.0.0.1"
+[2026-10-25 09:27:25:279 ERROR] No targets matched selector
+[2026-10-25 09:27:26:279 INFO] Server stop requested.
+[2026-10-25 09:27:26:328 INFO] Stopping server...
+Quit correctly

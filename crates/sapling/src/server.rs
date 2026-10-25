@@ -88,8 +88,8 @@ impl ServerBuilder {
         self
     }
 
-    pub fn max_players(mut self, max: usize) -> Self {
-        self.net.max_players = max;
+    pub fn max_players(self, max: usize) -> Self {
+        self.net.max_players.reset(max);
         self
     }
 
@@ -281,6 +281,6 @@ mod tests {
     fn the_name_reaches_the_server_list_and_the_world() {
         let builder = Server::builder().name("lobby").online_mode(false).max_players(7);
         assert_eq!((builder.net.motd.name.as_str(), builder.shard.world_name.as_str()), ("lobby", "lobby"));
-        assert_eq!((builder.net.online_mode, builder.net.max_players), (false, 7));
+        assert_eq!((builder.net.online_mode, builder.net.max_players.get()), (false, 7));
     }
 }

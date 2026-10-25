@@ -2551,6 +2551,7 @@ dependencies = [
  "sapling-net",
  "sapling-shard",
  "sapling-world",
+ "serde_json",
  "thiserror",
  "tokio",
  "tracing",

@@ -3,6 +3,7 @@
 //! borrowed handle; the ECS behind a shard never shows (docs/DESIGN.md "Plugin API").
 
 mod block;
+mod block_entity;
 mod chat;
 mod combat;
 pub mod command;
@@ -21,7 +22,9 @@ mod listen;
 mod movement;
 mod player;
 mod plugin;
+mod server;
 mod sound;
+mod spawns;
 mod tags;
 #[cfg(test)]
 mod testing;
@@ -32,6 +35,9 @@ mod world;
 mod world_event;
 
 pub use block::{Block, BlockPos, BreakEvent, Face, InteractEvent, PlaceEvent};
+pub use block_entity::{BlockEntityBackend, BlockEntityData};
+pub use server::ServerBackend;
+pub use spawns::SpawnBackend;
 pub use chat::ChatBackend;
 pub use movement::{MovementBackend, MovementPolicy};
 pub use combat::{Attacker, DamageEvent, DeathEvent, DeathMessage, RespawnEvent};
@@ -55,7 +61,7 @@ pub use health::{DamageCause, HealthBackend};
 pub use form::{Custom, Form, FormResponse, Menu, Modal};
 pub use hud::{BossBar, BossBarColour, Sidebar, Title, TitleAction, TitleBackend};
 pub use sound::{Sound, SoundBackend};
-pub use item::{DropEvent, Item, Slot};
+pub use item::{DropEvent, Item, ItemLock, Slot};
 pub use player::{Difficulty, GameMode, Permission, Player, PlayerId, Position};
 pub use tags::Tagged;
 pub use sapling_macros::{Command, CommandEnum, Form};

@@ -15,6 +15,7 @@ mod keys;
 mod lan;
 mod links;
 mod listener;
+mod player_limit;
 mod players;
 mod router;
 mod sessions;
@@ -30,6 +31,7 @@ pub use event::{ConnId, Inbox, Loopback, NetEvent, Outbound, Outbox, ShardsLoopb
 pub use keys::{KeyError, fetch_signing_keys};
 pub use listener::{Advert, Listener, host_key, listen, listen_shards};
 pub use router::Router;
+pub use player_limit::PlayerLimit;
 
 use acacia_proto::Packet;
 use bytes::{Bytes, BytesMut};

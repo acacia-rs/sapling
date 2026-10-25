@@ -691,11 +691,27 @@ block action, and takes StopBreak and AbortBreak with a position.
   `research/captures/`.
 - **Vanilla commands** (`sapling::vanilla`, opted into with `ServerBuilder::vanilla_commands`; on the
   plugin API alone). For operators: `/setblock <pos> <block> [states]` and `/fill <from> <to>
-  <block> [states]` (32768 blocks at most) write with `ctx.update_block`, which settles neighbours
-  as a player's place does (`ctx.set_block` still settles nothing); `/tp [victim] <pos>` moves
-  players and entities; `/give <player> <item> [amount]`, `/clear [player]`, `/gamemode <mode>
+  <block> [states] [replace [block] [states]|destroy|keep|hollow|outline]` (32768 blocks at most,
+  counting the blocks it changed) write with `ctx.update_block`, which settles neighbours
+  as a player's place does (`ctx.set_block` still settles nothing); `/clone <begin> <end> <dest>
+  [replace|masked] [normal|force|move]` or `filtered <mode> <block> [states]` copies blocks with
+  their block entity (`ctx.block_entity`, opaque to plugins) and `/testforblocks [all|masked]`
+  compares (`vanilla/regions.rs`, `copying.rs`); `/tp [victim] <pos>` moves
+  players and entities; `/give <player> <item> [amount] [data] [components]` (old coloured names
+  take their colour from data; `keep_on_death` and `item_lock` components), `/clear [player] [item]
+  [data] [maxCount]`, `/enchant <player> <id|name> [level]` (the table in `sapling_data::enchant`;
+  `Item` carries enchantments, `keep_on_death` and `item_lock`), `/gamemode <mode>
   [player]`, `/summon <kind> [pos]` (`ctx.spawn_entity`) and `/kill [target]` (`ctx.kill_entity`),
-  which leaves players alone (no damage). Positions take `~` and `~<offset>` from the sender;
+  which leaves players alone (no damage). `/setworldspawn`, `/spawnpoint` and `/clearspawnpoint`
+  (`ctx.set_spawn_point`, kept as a bed spawn is), `/testfor`, `/spreadplayers` (`vanilla/spawns.rs`,
+  `selecting.rs`), `/difficulty` with letters and 0-3, and `/setmaxplayers` (a `PlayerLimit` the
+  listener reads, up to the limit it started with), `/transfer <name> <server> [port]`
+  (`ctx.send_to_server`, the Transfer packet; `ctx.transfer` moves between this server's worlds),
+  `/defaultgamemode` (this shard's newcomers), `/seed` and `/version` (`vanilla/session.rs`) answer
+  as BDS did (`bds_command_probe worldcmds|itemcmds`, research/captures/bds-worldcmds.txt,
+  bds-itemcmds.txt, bds-console-cmds.txt; BDS has no `/defaultgamemode`, `/seed` or `/version`,
+  and keeps `/setmaxplayers` and `/transfer` for its console; unverified details:
+  docs/research/world-commands.md). Positions take `~` and `~<offset>` from the sender;
   whole numbers are the middle of their block across, as Bedrock reads them. Targets: a name or
   any Bedrock selector (`@s @p @a @r @e @n @initiator`) with its filters, see "Selectors" below. Block states come as typed, `["liquid_depth"=3]`, and a
   block named with some of its states takes the rest from its first state. The client is told the
@@ -720,7 +736,7 @@ block action, and takes StopBreak and AbortBreak with a position.
   off not saved, as on BDS) and Java's and PocketMine's `/ban <name> [reason]`, `/ban-ip <ip|player>
   [reason]`, `/pardon`, `/pardon-ip` and `/banlist [players|ips]` (BDS has none; operator-only,
   answered under the client's old `commands.ban*` keys, `vanilla/bans.rs`). Not done: the rest of
-  vanilla's commands; `/permission list|reload`; a ban's expiry from a command (the API takes one);
+  vanilla's commands; `/give`'s `can_destroy` and `can_place_on` (stacks do not carry them); `/permission list|reload`; a ban's expiry from a command (the API takes one);
   `/kick` and `/op` reach players of the sender's shard only; `whitelist.json` is not read in place
   of `allowlist.json` as BDS does.
 - **Selectors** (`sapling-api/src/command/selector/`). Parsed into a `Selector` (`Named` or

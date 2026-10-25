@@ -18,4 +18,5 @@ mod map;
 mod messaging;
 mod nether;
 mod players;
+mod world_commands;
 mod worlds;

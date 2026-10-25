@@ -14,7 +14,7 @@ pub struct NetConfig {
     pub online_mode: bool,
     /// From the connection to PlayStatus(LoginSuccess); slower clients are dropped.
     pub login_timeout: Duration,
-    pub max_players: usize,
+    pub max_players: crate::PlayerLimit,
     pub motd: Motd,
     /// A player whose unsent backlog grows past this is kicked rather than buffered without end.
     pub max_queued_bytes: usize,
@@ -35,7 +35,7 @@ impl Default for NetConfig {
         Self {
             online_mode: true,
             login_timeout: Duration::from_secs(10),
-            max_players: 100,
+            max_players: crate::PlayerLimit::default(),
             motd: Motd::default(),
             max_queued_bytes: 16 * 1024 * 1024,
             congested_bytes: 1024 * 1024,

@@ -64,7 +64,7 @@ async fn online_mode_refuses_self_signed_logins() {
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn a_full_server_and_a_slow_login_are_turned_away() {
-    let (listener, _outbox, mut inbox) = start(NetConfig { max_players: 0, ..offline() }).await;
+    let (listener, _outbox, mut inbox) = start(NetConfig { max_players: sapling_net::PlayerLimit::new(0), ..offline() }).await;
     assert_eq!(kick_reason(client(listener.local_addr(), "Bob").connect().await), "ServerFull");
     assert!(inbox.try_recv().is_err());
 

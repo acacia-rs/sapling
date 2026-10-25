@@ -40,6 +40,7 @@ pub(super) fn still_shows(screen: Screen, block: &str) -> bool {
     match screen {
         Screen::Station(station) => [(TABLE, Station::Table), (STONECUTTER, Station::Stonecutter)].contains(&(block, station)),
         Screen::Container | Screen::Own => kind(block).is_some(),
+        Screen::Workstation(workstation) => workstations::of_block(block).is_some_and(|(shown, _)| shown == workstation),
     }
 }
 

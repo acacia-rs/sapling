@@ -1,7 +1,9 @@
 //! Enchantments: their ids in a stack's `ench` list, and what each level does, as BDS reckons it
 //! (docs/research/enchantments.md). Protection and the rest of what armour's do: warding.rs. The
 //! workstations that give and take them (docs/research/workstations.md): the enchanting table
-//! (table.rs), the anvil (anvil.rs) and the grindstone (grind.rs), all by kinds.rs.
+//! (table.rs), the anvil (anvil.rs) and the grindstone (grind.rs), all by kinds.rs. `/enchant`'s
+//! words, limits and refusals: words.rs.
+// TODO: words.rs and kinds.rs each keep what an enchantment goes on and goes with; one table.
 
 pub mod anvil;
 mod archery;
@@ -10,10 +12,12 @@ mod kinds;
 mod list;
 pub mod table;
 mod warding;
+mod words;
 
 pub use archery::{FLAME_BURNS, charge_ticks, impaling, loyalty_pull, multishot, piercing, power_bonus, punch, riptide};
 pub use list::{all, with_all};
 pub use table::Offer;
+pub use words::{Gear, KINDS, Kind, compatible, gear, goes_on, kind_of, named};
 pub use warding::{Harm, THORNS_WEAR, Warding, thorns};
 
 /// The random numbers the workstations draw: BDS's `Random` in the shard.
