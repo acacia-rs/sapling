@@ -9,6 +9,8 @@ mod batch;
 mod burn;
 #[path = "shared/comparator_drill.rs"]
 mod comparator;
+#[path = "shared/functions_drill.rs"]
+mod functions;
 #[path = "shared/dump.rs"]
 #[allow(dead_code)]
 mod dump;
@@ -285,6 +287,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         Some("shapes") => (redstone::shapes(), redstone::REDSTONE_SHOWN, redstone::CONDUCTORS_SETTLE),
         Some("worldcmds") => (world_commands::world(), world_commands::WORLD_SHOWN, SETTLE),
         Some("itemcmds") => (world_commands::items(), world_commands::ITEM_SHOWN, SETTLE),
+        Some("functions") => (functions::functions(), functions::FUNCTIONS_SHOWN, SETTLE),
         Some(other) => match player::drill(other) {
             Some((lines, shown)) => (lines, shown, burn::BURN_SETTLE),
             None => return Err(format!("no drill {other}").into()),

@@ -42,6 +42,7 @@ mod light;
 mod mobs;
 mod movement;
 mod orbs;
+mod packs;
 mod player;
 mod plugins;
 mod portals;
@@ -72,6 +73,7 @@ mod workstations;
 mod worlds;
 
 pub use config::{MovementCheck, ShardConfig, TICK};
+pub use packs::{ResourcePack, ResourcePacks};
 pub use handoff::Link;
 pub use running::ShardHandle;
 pub use shard::Shard;

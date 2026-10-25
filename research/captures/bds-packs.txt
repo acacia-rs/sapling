@@ -1,0 +1,20 @@
+     0 ResourcePacksInfo { must_accept: true, has_addons: false, has_scripts: false, disable_vibrant_visuals: false, world_template: ResourcePacksInfoWorldTemplate { uuid: Uuid([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]), version: "0.0.0" }, texture_packs: [TexturePackInfosItem { uuid: Uuid([71, 75, 47, 93, 82, 10, 154, 93, 1, 240, 177, 226, 192, 52, 67, 154]), version: "1.0.0", size: 3000271, content_key: "", sub_pack_name: "", content_identity: "5d9a0a52-5d2f-4b47-9a43-34c0e2b1f001", has_scripts: false, addon_pack: false, rtx_enabled: false, cdn_url: "" }] }
+     0 ResourcePackDataInfo pack_id=5d9a0a52-5d2f-4b47-9a43-34c0e2b1f001_1.0.0 max_chunk_size=102400 chunk_count=1 size=3349 hash_len=32 premium=false type=Resources
+     0 ResourcePackChunkData pack_id=5d9a0a52-5d2f-4b47-9a43-34c0e2b1f001_1.0.0 index=0 progress=0 len=3349
+     0 ResourcePackStack { must_accept: true, resource_packs: [ResourcePackIdVersionsItem { uuid: "5d9a0a52-5d2f-4b47-9a43-34c0e2b1f001", version: "1.0.0", name: "" }], game_version: "*", experiments: [], experiments_previously_used: false, has_editor_packs: false }
+     0 StartGame
+     0 /function name:type 17 (Valid)
+     0 /schedule mode:ScheduleActionDelay[delay] condition:RequestActionAdd[add] function:type 17 (Valid) time:type 1 (Valid) DelayMode?:DelayMode[replace|append]
+     0 /schedule mode:ScheduleActionDelay[delay] condition:RequestActionAdd[add] function:type 17 (Valid) time:type 0 (Suffixed) DelayMode?:DelayMode[replace|append]
+     0 /schedule mode:ScheduleActionDelay[delay] condition:RequestActionAdd[add] function:type 17 (Valid) time:type 1 (Suffixed) DelayMode?:DelayMode[replace|append]
+     0 /schedule mode:ScheduleActionDelay[delay] condition:RequestActionAdd[add] function:type 17 (Valid) time:type 2 (Suffixed) DelayMode?:DelayMode[replace|append]
+     0 /schedule mode:ScheduleActionDelay[delay] condition:RequestActionClear[clear] function:type 17 (Valid)
+     0 /schedule mode:ScheduleActionClear[clear] function:type 17 (Valid)
+     0 /schedule mode:ScheduleActionOnAreaLoaded[on_area_loaded] condition:RequestActionAdd[add] from:type 64 (Valid) to:type 64 (Valid) function:type 17 (Valid)
+     0 /schedule mode:ScheduleActionOnAreaLoaded[on_area_loaded] condition:RequestActionAdd[add] type:CircleArea[circle] center:type 64 (Valid) radius:type 1 (Valid) function:type 17 (Valid)
+     0 /schedule mode:ScheduleActionOnAreaLoaded[on_area_loaded] condition:RequestActionAdd[add] type:TickingArea[tickingarea] name:type 56 (Valid) function:type 17 (Valid)
+     0 /schedule mode:ScheduleActionOnAreaLoaded[on_area_loaded] condition:RequestActionClear[clear] cleartype:TickingAreaName[tickingarea] name:type 56 (Valid) function?:type 17 (Valid)
+     0 /schedule mode:ScheduleActionOnAreaLoaded[on_area_loaded] condition:RequestActionClear[clear] cleartype:FunctionName[function] function:type 17 (Valid)
+     0 /scriptevent messageId:type 56 (Valid) message:type 68 (Valid)
+## 5d9a0a52-5d2f-4b47-9a43-34c0e2b1f001_1.0.0: 3349 bytes, sha256 matches: true, zip: true
+probe exit 0

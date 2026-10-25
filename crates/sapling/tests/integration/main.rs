@@ -17,6 +17,7 @@ mod level;
 mod map;
 mod messaging;
 mod nether;
+mod packs;
 mod players;
 mod scoreboard;
 mod world_commands;

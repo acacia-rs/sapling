@@ -167,3 +167,36 @@ left). Left:
   (`tools/bench.sh`, `docs/research/worldgen-perf.md`).
 - Cache room for spawn areas beyond the generator's areas, if mass joins matter: spawn priority
   costs +13–30% instructions when 8–16 players join at once (`docs/research/worldgen-server-load.md`).
+
+## 7. Packs, the rest
+
+Resource packs, functions, `/schedule delay` and `/scriptevent` are built (DESIGN.md "Packs (as
+built)"). Left:
+
+- **`/schedule on_area_loaded`**: waits for ticking areas (`/tickingarea`, another branch). BDS ran
+  it at once when the area was loaded (`research/captures/bds-functions.txt`).
+- **`texturepack-required`** in `server.properties` → `ResourcePacks::required`; BDS's
+  `resource_packs` folder and the world lists read by `config_file`.
+- **The Script API** (`@minecraft/server`): a question for the user, since plugins are compiled
+  crates. It would take an embedded JS engine (QuickJS via `rquickjs`, or V8 via `deno_core`) run
+  on each shard's thread, module loading from a pack's `scripts/` entry, and bindings for the API
+  surface packs use: `world`/`system` events (before/after), entities, players, blocks, dimensions,
+  `system.run`/`runInterval`, commands, scoreboard, forms (`@minecraft/server-ui`); each class mapped
+  onto `ShardCtx`, with handles that stay valid across ticks. Clients are told `has_scripts`.
+  `ScriptEvent` already carries `/scriptevent` to plugins.
+- **Behavior pack data beyond functions**, from third-party packs. Each needs the data read from
+  the pack and a registry today built from vanilla's packs (`sapling-data`) opened to additions:
+  - Entities (`entities/*.json`): components and component groups, events, filters; a behaviour
+    engine over mobs (`mobs.rs` is hand-written per kind) and `AvailableEntityIdentifiers` /
+    `AddActor` for custom ids, with client resource-pack definitions.
+  - Items (`items/*.json`): custom item ids in `ItemRegistry` (component-based, `is_component_based`)
+    and in creative content, item components (food, durability, cooldown, use).
+  - Blocks (`blocks/*.json`): custom block states into the network-id hash table, block properties
+    and components (geometry, collision, light, destroy time) in StartGame's block properties, and
+    the shard's block rules to read them.
+  - Recipes (`recipes/*.json`): the crafting tables (`CraftingData` and the server's matcher) take
+    added shaped, shapeless, furnace and brewing recipes.
+  - Loot tables (`loot_tables/**`): drops from blocks and mobs, read as vanilla's tables are.
+  - Spawn rules (`spawn_rules/*.json`): the spawner (`spawning.rs`) reads vanilla's; packs add or
+    override by identifier.
+  - Feature and biome files and trading tables, likewise.

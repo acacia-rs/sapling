@@ -48,6 +48,7 @@ mod movement_policy;
 mod omens;
 mod operations;
 mod pistons;
+mod resource_packs;
 mod placed_items;
 mod player_omens;
 mod players;
