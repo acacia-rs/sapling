@@ -36,7 +36,16 @@ pub(crate) fn arrive(world: &mut World) {
     }
 }
 
-fn bring_in(world: &mut World, layer: Entity, home: ChunkPos, actor: Option<sapling_world::Actor>, unique_id: Option<i64>, compound: Vec<u8>) {
+/// A kept entity's stored compound with its place, motion, health and fire as they are now.
+pub(crate) fn compound_now(body: &Body, stored: &Stored, health: Option<&creatures::Health>) -> Option<Vec<u8>> {
+    let moved = sapling_world::moved_actor(&stored.compound, body.at, body.motion).ok()?;
+    match health {
+        Some(health) => sapling_world::harmed_actor(&moved, health.left(), health.max(), health.burning() as i16).ok(),
+        None => Some(moved),
+    }
+}
+
+pub(crate) fn bring_in(world: &mut World, layer: Entity, home: ChunkPos, actor: Option<sapling_world::Actor>, unique_id: Option<i64>, compound: Vec<u8>) {
     let (Some(actor), Some(unique_id)) = (actor, unique_id) else { return };
     let moved = match (&actor.item, actor.identifier == ITEM) {
         (Some(stack), true) => drops::from_storage(world, layer, stack.clone(), actor.position, unique_id, compound),
@@ -69,12 +78,7 @@ pub(crate) fn write_back(world: &mut World) {
         .iter(world)
         .filter_map(|(layer, body, stored, health)| {
             let home = ChunkPos::of_block(body.at[0].floor() as i32, body.at[2].floor() as i32);
-            let moved = sapling_world::moved_actor(&stored.compound, body.at, body.motion).ok()?;
-            let now = match health {
-                Some(health) => sapling_world::harmed_actor(&moved, health.left(), health.max(), health.burning() as i16).ok()?,
-                None => moved,
-            };
-            Some((layer.0, home, now))
+            Some((layer.0, home, compound_now(body, stored, health)?))
         })
         .collect();
     let managed = world.get_resource::<Managed>().map(|managed| managed.0.clone()).unwrap_or_default();

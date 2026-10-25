@@ -4,6 +4,7 @@
 
 mod block;
 mod block_entity;
+mod border;
 mod chat;
 mod combat;
 pub mod command;
@@ -14,6 +15,7 @@ mod entity;
 mod experience;
 mod event;
 pub mod form;
+mod generation;
 mod health;
 mod hud;
 mod item;
@@ -26,17 +28,23 @@ mod scoreboard;
 mod server;
 mod sound;
 mod spawns;
+mod structure;
 mod tags;
 #[cfg(test)]
 mod testing;
 mod weather;
 #[cfg(test)]
 mod tests;
+mod ticking;
 mod world;
 mod world_event;
 
 pub use block::{Block, BlockPos, BreakEvent, Face, InteractEvent, PlaceEvent};
 pub use block_entity::{BlockEntityBackend, BlockEntityData};
+pub use border::{BorderBackend, WorldBorder};
+pub use generation::{GenerationBackend, PlaceError};
+pub use structure::{Mirror, Rotation, StructureBackend, StructureError, StructureLoad};
+pub use ticking::{MOST_TICKING_AREAS, TickingArea, TickingBackend};
 pub use server::ServerBackend;
 pub use spawns::SpawnBackend;
 pub use chat::ChatBackend;

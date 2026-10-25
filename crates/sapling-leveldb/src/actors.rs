@@ -147,6 +147,12 @@ pub fn moved_actor(compound: &[u8], position: [f32; 3], motion: [f32; 3]) -> Res
     with_fields(compound, [("Pos", floats(&position)), ("Motion", floats(&motion))])
 }
 
+/// One stored actor's compound as another actor: kept under `unique_id`, its feet at `position`
+/// and turned to `rotation` (yaw, pitch), as a loaded structure places the actors it holds.
+pub fn placed_actor(compound: &[u8], unique_id: i64, position: [f32; 3], rotation: [f32; 2]) -> Result<Vec<u8>, Error> {
+    with_fields(compound, [("UniqueID", Value::Long(unique_id)), ("Pos", floats(&position)), ("Rotation", floats(&rotation))])
+}
+
 /// `compound` with each of `set` replacing the field of its name, or added where it had none.
 fn with_fields<const N: usize>(compound: &[u8], set: [(&str, Value); N]) -> Result<Vec<u8>, Error> {
     let Value::Compound(mut fields) = nbt::read::<LittleEndian>(&mut &compound[..])?.value else { return Err(Error::Actor("an actor that is no compound")) };

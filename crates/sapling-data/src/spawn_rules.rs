@@ -7,7 +7,7 @@ mod biomes;
 use std::sync::LazyLock;
 
 use biomes::Filter;
-pub use biomes::biome_has_tag;
+pub use biomes::{biome_has_tag, biome_id};
 
 /// Where a spot is: under open sky or below something, and in what.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

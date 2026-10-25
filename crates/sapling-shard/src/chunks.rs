@@ -12,6 +12,7 @@ use sapling_world::ChunkPos;
 use crate::blobs::BlobCache;
 use crate::components::{Conn, InLayer, Layer, Net, NetId, Outgoing, PacketQueues, Position, Settings, Stage, Tick};
 use crate::dimensions::{self, Arriving};
+use crate::kept::Kept;
 use crate::view::View;
 
 /// Sections answered per request; vanilla asks for a few columns (under 100 sections) at a time.
@@ -150,26 +151,26 @@ pub(crate) fn sub_chunk_requests(mut packets: ResMut<PacketQueues>, mut layers: 
 
 /// Every few seconds, hands the columns written since the last sweep to storage and drops the
 /// loaded ones that are in no player's view.
-pub(crate) fn save_and_unload_columns(tick: Res<Tick>, mut layers: Query<(Entity, &mut Layer)>, players: Query<(&InLayer, &View)>) {
+pub(crate) fn save_and_unload_columns(tick: Res<Tick>, mut layers: Query<(Entity, &mut Layer, Option<&Kept>)>, players: Query<(&InLayer, &View)>) {
     if tick.0 % UNLOAD_INTERVAL != 0 {
         return;
     }
     let views = views_by_layer(&players);
-    for (entity, mut layer) in &mut layers {
-        let seen = seen_in(&views, entity);
+    for (entity, mut layer, kept) in &mut layers {
+        let seen = seen_in(&views, entity, kept);
         layer.world.save_modified();
         layer.world.unload(seen);
     }
 }
 
 /// Drops the queued loads of columns no view covers any more; a column already loading finishes.
-pub(crate) fn cancel_unseen_loads(tick: Res<Tick>, mut layers: Query<(Entity, &mut Layer)>, players: Query<(&InLayer, &View)>) {
+pub(crate) fn cancel_unseen_loads(tick: Res<Tick>, mut layers: Query<(Entity, &mut Layer, Option<&Kept>)>, players: Query<(&InLayer, &View)>) {
     if tick.0 % CANCEL_INTERVAL != 0 {
         return;
     }
     let views = views_by_layer(&players);
-    for (entity, mut layer) in &mut layers {
-        let cancelled = layer.world.cancel_loads(seen_in(&views, entity));
+    for (entity, mut layer, kept) in &mut layers {
+        let cancelled = layer.world.cancel_loads(seen_in(&views, entity, kept));
         if cancelled > 0 {
             tracing::debug!(cancelled, "dropped loads nobody sees");
         }
@@ -184,8 +185,8 @@ fn views_by_layer<'a>(players: &'a Query<(&InLayer, &View)>) -> HashMap<Entity, 
     views
 }
 
-/// Whether any view in `layer` covers a column.
-fn seen_in<'a>(views: &'a HashMap<Entity, Vec<&'a View>>, layer: Entity) -> impl Fn(ChunkPos) -> bool + 'a {
+/// Whether any view in `layer` covers a column, or the world keeps it (kept.rs).
+fn seen_in<'a>(views: &'a HashMap<Entity, Vec<&'a View>>, layer: Entity, kept: Option<&'a Kept>) -> impl Fn(ChunkPos) -> bool + 'a {
     let seen_by = views.get(&layer).map_or(&[][..], Vec::as_slice);
-    move |pos| seen_by.iter().any(|view| view.covers(pos))
+    move |pos| seen_by.iter().any(|view| view.covers(pos)) || kept.is_some_and(|kept| kept.holds(pos))
 }

@@ -20,6 +20,7 @@ const TEMPLE_REACH: i32 = 1;
 /// A monument's building spans its start chunk and two chunks either way.
 const MONUMENT_REACH: i32 = 2;
 
+#[derive(Default)]
 pub struct Reaching {
     pub(super) strongholds: Vec<Arc<Stronghold>>,
     pub(super) temples: Vec<Scattered>,

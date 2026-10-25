@@ -178,6 +178,9 @@ pub(super) fn rise(world: &mut World) {
         *world.get_mut::<Vitals>(player).expect("read above") = Vitals::default();
         world.get_mut::<Outgoing>(player).expect("players have an outbox").push(&Respawn { position: eyes(spawn), state: READY, runtime_entity_id: 0 });
         movement::teleport_onto_ground(world, player, spawn);
+        if crate::border::is_hardcore(world, layer) {
+            crate::join::set_game_mode(world, player, sapling_api::GameMode::Spectator);
+        }
         tell(world, player, &EntityEvent { runtime_entity_id: id.0, event_id: EntityEventEventId::Respawn, data: 0, fire_at_position: None });
         tell(world, player, &sapling_data::mob_health_update(id.0, MAX, MAX));
         let tick = world.resource::<Tick>().0;

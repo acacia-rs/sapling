@@ -32,6 +32,8 @@ pub struct StartGameOptions {
     pub block_network_ids_are_hashes: bool,
     /// 0 overworld, 1 nether, 2 end.
     pub dimension: i32,
+    /// The world's `IsHardcore`: the client shows hardcore hearts and its death screen.
+    pub hardcore: bool,
 }
 
 pub(crate) static TEMPLATE: LazyLock<StartGame> = LazyLock::new(|| decode(START_GAME));
@@ -57,6 +59,7 @@ pub fn start_game(o: &StartGameOptions) -> StartGame {
         client_side_generation: false,
         block_network_ids_are_hashes: o.block_network_ids_are_hashes,
         dimension: StartGameDimension::from_raw(i64::from(o.dimension)),
+        hardcore: o.hardcore,
         ..TEMPLATE.clone()
     }
 }
@@ -90,6 +93,7 @@ mod tests {
             },
             block_network_ids_are_hashes: true,
             dimension: 0,
+            hardcore: false,
         }
     }
 

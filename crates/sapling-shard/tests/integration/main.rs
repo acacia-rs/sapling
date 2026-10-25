@@ -63,6 +63,7 @@ mod shown_effects;
 mod sleep;
 mod slimes;
 mod spawning;
+mod structures;
 mod survival;
 mod throws;
 mod tnt;

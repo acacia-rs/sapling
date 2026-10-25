@@ -85,12 +85,13 @@ impl Structures {
     pub(super) fn mansions_near(&self, density: &Density, chunk: (i32, i32)) -> Vec<Arc<Mansion>> {
         let column = BoundingBox::chunk(chunk.0, chunk.1);
         let starts = self.starts_near(density, StructureKind::Mansion, chunk, REACH);
+        starts.into_iter().map(|start| self.mansion(density, start)).filter(|m| m.bb.intersects(&column)).collect()
+    }
+
+    /// The mansion starting in `start`, whatever its start check.
+    pub(super) fn mansion(&self, density: &Density, start: (i32, i32)) -> Arc<Mansion> {
         let grid = StructureKind::Mansion.grid().unwrap();
-        starts
-            .into_iter()
-            .map(|start| self.templates.mansions.get(start, || generate(density, &mut grid.candidate_random(self.level_seed, start).1, start)))
-            .filter(|m| m.bb.intersects(&column))
-            .collect()
+        self.templates.mansions.get(start, || generate(density, &mut grid.candidate_random(self.level_seed, start).1, start))
     }
 
     pub(super) fn place_mansions(canvas: &mut Canvas, mansions: &[Arc<Mansion>]) {

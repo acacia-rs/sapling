@@ -178,6 +178,52 @@ impl LevelDbWorld {
         self.db.put(crate::scoreboard::KEY, &crate::encode_scoreboard(board))
     }
 
+    /// The structure templates saved in the world, by name (`mystructure:house`), as stored.
+    pub fn load_structures(&self) -> Result<Vec<(String, Vec<u8>)>, Error> {
+        let named = |(key, record): (Vec<u8>, Vec<u8>)| Some((String::from_utf8(key.strip_prefix(crate::STRUCTURE_PREFIX)?.to_vec()).ok()?, record));
+        Ok(self.db.prefixed(crate::STRUCTURE_PREFIX)?.into_iter().filter_map(named).collect())
+    }
+
+    /// Makes `structures` the world's saved templates: the others are deleted.
+    pub fn store_structures(&self, structures: &[(String, Vec<u8>)]) -> Result<(), Error> {
+        let key = |name: &str| [crate::STRUCTURE_PREFIX, name.as_bytes()].concat();
+        let keys: Vec<Vec<u8>> = structures.iter().map(|(name, _)| key(name)).collect();
+        self.replace_prefixed(crate::STRUCTURE_PREFIX, keys.iter().zip(structures).map(|(key, (_, record))| (&key[..], &record[..])))
+    }
+
+    /// The world's ticking areas; one that does not read is logged and left out.
+    pub fn load_ticking_areas(&self) -> Result<Vec<crate::TickingAreaRecord>, Error> {
+        let read = |(key, record): (Vec<u8>, Vec<u8>)| match crate::TickingAreaRecord::decode(&key, &record) {
+            Ok(area) => area,
+            Err(error) => {
+                tracing::warn!(%error, "skipping an unreadable ticking area");
+                None
+            }
+        };
+        Ok(self.db.prefixed(crate::TICKING_AREA_PREFIX)?.into_iter().filter_map(read).collect())
+    }
+
+    /// Makes `areas` the world's ticking areas: the others are deleted.
+    pub fn store_ticking_areas(&self, areas: &[crate::TickingAreaRecord]) -> Result<(), Error> {
+        let records: Vec<(Vec<u8>, Vec<u8>)> = areas.iter().map(|area| (area.key(), area.encode())).collect();
+        self.replace_prefixed(crate::TICKING_AREA_PREFIX, records.iter().map(|(key, record)| (&key[..], &record[..])))
+    }
+
+    fn replace_prefixed<'a>(&self, prefix: &[u8], records: impl Iterator<Item = (&'a [u8], &'a [u8])>) -> Result<(), Error> {
+        let mut batch = Batch::default();
+        let mut kept = std::collections::HashSet::new();
+        for (key, record) in records {
+            batch.put(key, record);
+            kept.insert(key.to_vec());
+        }
+        for (key, _) in self.db.prefixed(prefix)? {
+            if !kept.contains(&key) {
+                batch.delete(&key);
+            }
+        }
+        self.db.write(batch)
+    }
+
     /// Writes what was stored out as a table file and replaces `level.dat` with `level`. A world
     /// opened in memory flushes its copy and leaves the folder alone.
     pub fn flush(&self, level: &LevelDat) -> Result<(), Error> {
