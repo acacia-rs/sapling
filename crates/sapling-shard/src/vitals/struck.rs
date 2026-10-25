@@ -145,6 +145,18 @@ pub(crate) fn winded(world: &mut World, player: Entity, amount: f32, kind: &str,
     })
 }
 
+/// Lightning strikes a player for `amount` and sets one that fire can hurt alight for `burns`
+/// ticks; false where it took nothing.
+pub(crate) fn electrocuted(world: &mut World, player: Entity, amount: f32, burns: u16) -> bool {
+    set_alight(world, player, burns);
+    is_mortal(world, player) && hurt(world, player, amount, Cause::Lightning)
+}
+
+/// A firework rocket bursting at `from` hurts a player for `amount`; false where it took nothing.
+pub(crate) fn fireworked(world: &mut World, player: Entity, amount: f32, from: [f32; 3]) -> bool {
+    hit_from(world, player, amount, from, [0.0; 3], Cause::Fireworks)
+}
+
 /// A burst that did not hit the player throws it by `push` alone.
 pub(crate) fn pushed(world: &mut World, player: Entity, push: [f32; 3]) {
     if let Some(id) = world.get::<NetId>(player).map(|id| id.0) {

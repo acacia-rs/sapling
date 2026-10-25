@@ -2,7 +2,7 @@
 //! server's side of a craft: what a recipe uses up and what it makes.
 // TODO: the crafting grid's shaped and shapeless recipes, the stonecutter's, the three
 // smelters' and campfires', the smithing table's (smithing.rs); the special recipes (maps,
-// fireworks, dyed armour) are sent to clients but not read here.
+// fireworks, dyed armour) are known by network id alone (`is_special`); what they make is the shard's.
 
 use std::collections::{HashMap, HashSet};
 use std::sync::LazyLock;
@@ -174,6 +174,15 @@ pub fn recipe(network_id: u32) -> Option<&'static Recipe> {
     RECIPES.get(&network_id)
 }
 
+/// The network ids of the special recipes, whose result the grid's items decide.
+static SPECIAL: LazyLock<HashSet<u32>> = LazyLock::new(|| decode::<CraftingData>(CRAFTING_DATA).multi_recipes.into_iter().map(|recipe| recipe.network_id).collect());
+
+/// Whether a client's craft request names one of the special recipes.
+pub fn is_special(network_id: u32) -> bool {
+    crate::set_shield_item_id();
+    SPECIAL.contains(&network_id)
+}
+
 /// The items of each tag the recipes name (`data/item-tags.tsv`, README.md "Item tags"): clients
 /// have the tags built in and no packet carries them.
 static TAGGED: LazyLock<HashSet<(&'static str, &'static str)>> = LazyLock::new(|| {
@@ -239,5 +248,11 @@ mod tests {
         let log = Some(("minecraft:oak_log", 0));
         assert!(from_log.is_laid_out(&[None, None, None, log]) && !from_log.is_laid_out(&[log, None, None, log]) && !from_log.is_laid_out(&[None; 4]));
         assert!(has_tag("minecraft:birch_planks", "minecraft:planks") && has_tag("minecraft:charcoal", "minecraft:coals") && !has_tag("minecraft:stone", "minecraft:planks"));
+    }
+
+    #[test]
+    fn the_special_recipes_are_known_by_id_and_listed_apart() {
+        assert!(SPECIAL.len() >= 3, "{} special recipes", SPECIAL.len());
+        assert!(SPECIAL.iter().all(|id| is_special(*id) && recipe(*id).is_none()));
     }
 }

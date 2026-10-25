@@ -2,8 +2,7 @@
 //! `/weather` (research/captures/bds-weather.txt). A player is told whenever what it was last
 //! told differs from its world's sky, so one who joins or changes worlds is too.
 // TODO: how long a sky lasts where `doWeatherCycle` is on, and how often rain is thunder, are the
-// Java game's and a guess: BDS's were not watched; snow falls on no block; lightning does not
-// strike.
+// Java game's and a guess: BDS's were not watched; snow falls on no block. Lightning: lightning.rs.
 
 use acacia_proto::packets::{LevelEvent, LevelEventEvent};
 use acacia_proto::types::Vec3f;

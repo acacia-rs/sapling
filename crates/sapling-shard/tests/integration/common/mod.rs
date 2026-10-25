@@ -2,6 +2,7 @@
 //! packet is checked in order without sockets or clocks.
 #![allow(dead_code)]
 
+pub mod asking;
 pub mod cluster;
 pub mod orbs;
 pub mod requests;

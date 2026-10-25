@@ -111,7 +111,7 @@ fn is_rained_on(level: &Level, [x, y, z]: BlockPos) -> bool {
 }
 
 /// Lights the free cell `into`, over a solid block or by one that burns; false where no fire can be.
-pub(super) fn light(world: &mut World, layer: Entity, into: BlockPos) -> bool {
+pub(crate) fn light(world: &mut World, layer: Entity, into: BlockPos) -> bool {
     let [x, y, z] = into;
     if !level(world, layer).is_some_and(|level| is_air(level, into)) {
         return false;

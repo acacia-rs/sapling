@@ -44,7 +44,7 @@ pub use mob_loot::{Killer, mob_loot};
 pub use inventory::{block_screen,inventory_content, inventory_screen, player_hotbar};
 pub use item_entity::{add_item_entity, mob_armor, mob_hand};
 pub use items::{CreativeItem, Stack, creative_item, is_item, item, item_name, max_stack, no_item, set_shield_item_id};
-pub use recipes::{Grid, Ingredient, Recipe, Shape, Station, has_tag, recipe, smelted, smithed};
+pub use recipes::{Grid, Ingredient, Recipe, Shape, Station, has_tag, is_special as is_special_recipe, recipe, smelted, smithed};
 pub use gear::{Gear, Made, gear};
 pub use spawn::{no_player_spawn, world_spawn};
 pub use spawn_rules::{Medium, SpawnRule, Spot, biome_has_tag, despawn_distances, spawn_category, spawn_rules};

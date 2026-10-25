@@ -85,6 +85,12 @@ Each needs its rule looked up first (`bdsre` for BDS, the Java jar for data), th
    template, and what a comparator reads of a lectern or a wall frame (a jukebox is read by its disc, `discs`; a
    decorated pot by its stack and a flat frame not at all, `holders`). Dust does not lag a lever or
    button worked by hand (`byhand`; docs/research/redstone.md, "Observers").
+3. **Lightning, fireworks, the wither**: storms strike, rods draw and scrape copper, mobs turn,
+   Channeling calls bolts; rockets are crafted, launched off blocks and crossbows and burst; the
+   wither is built, charges, shoots skulls, breaks blocks and is armoured at half health
+   (`lightning.rs`, `fireworks.rs`, `creatures/wither.rs`, docs/research/wither-lightning-fireworks.md).
+   Not drilled against BDS. Left: the doc's "Left out" lists (elytra boost, the wither's dash and
+   death, the skeleton trap).
 
 ## 3. Things assumed, not verified
 

@@ -4,6 +4,7 @@
 // TODO: a craft by the recipe book is only held to what it used, not to where it took it from;
 // no recipe unlocking.
 
+use std::borrow::Cow;
 use std::ops::Range;
 
 use bevy_ecs::prelude::*;
@@ -19,7 +20,7 @@ const TABLE_GRID: Range<usize> = 32..41;
 
 /// The craft a request asked for, and what it has used up so far.
 pub(super) struct Craft {
-    recipe: &'static Recipe,
+    recipe: Cow<'static, Recipe>,
     times: u8,
     used: Vec<ItemStack>,
     /// The grid cells a craft by hand has yet to use up, `times` of each.
@@ -38,6 +39,16 @@ fn laid_out(inventory: &Inventory, recipe: &Recipe, at: Station) -> Result<Vec<P
     recipe.is_laid_out(&grid).then(|| cells.filter(|slot| held(*slot).is_some()).map(Place::Ui).collect()).ok_or(())
 }
 
+/// A special recipe as what the grid at `at` holds makes of it (fireworks/recipes.rs): one of
+/// each filled cell for what it makes.
+fn special(inventory: &Inventory, at: Station) -> Option<Recipe> {
+    let cells = if at == Station::Table { TABLE_GRID } else { HAND_GRID };
+    let grid: Vec<&ItemStack> = cells.filter_map(|slot| inventory.slot(Place::Ui(slot)).and_then(Option::as_ref)).map(|held| &held.stack).collect();
+    let made = crate::fireworks::crafted(&grid)?;
+    let inputs = grid.iter().map(|stack| (Ingredient::Item { name: stack.name.clone(), damage: Some(stack.damage) }, 1)).collect();
+    Some(Recipe { inputs, outputs: vec![made], station: Station::Hand, shape: None })
+}
+
 impl Craft {
     /// Starts `times` crafts of the recipe a client names, at the screen the player has open.
     /// One made by hand in a grid needs the recipe laid out there, and is then held to using up
@@ -48,10 +59,16 @@ impl Craft {
             Station::Hand => at != Station::Stonecutter,
             station => station == at,
         };
-        let recipe = sapling_data::recipe(network_id).filter(fits).filter(|_| times > 0).ok_or(())?;
-        let cells = (by_hand && at != Station::Stonecutter).then(|| laid_out(inventory, recipe, at)).transpose()?;
+        let recipe = match sapling_data::recipe(network_id) {
+            Some(listed) => Cow::Borrowed(listed),
+            None if sapling_data::is_special_recipe(network_id) && at != Station::Stonecutter => Cow::Owned(special(inventory, at).ok_or(())?),
+            None => return Err(()),
+        };
+        let recipe = Some(recipe).filter(|recipe| fits(&&**recipe)).filter(|_| times > 0).ok_or(())?;
+        let cells = (by_hand && at != Station::Stonecutter).then(|| laid_out(inventory, &recipe, at)).transpose()?;
+        let single = recipe.outputs.len() == 1;
         let mut craft = Self { recipe, times, used: Vec::new(), cells, result: 0, pending: 0 };
-        if recipe.outputs.len() == 1 {
+        if single {
             craft.create(inventory, 0)?;
         }
         Ok(craft)

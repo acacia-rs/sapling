@@ -26,7 +26,7 @@ const BUBBLES: i32 = 8;
 const DOUSED: i32 = -1;
 
 /// Something costs a mob `cost` by `cause`, told to its viewers; it may die of it.
-pub(super) fn wound(world: &mut World, mob: Entity, layer: Entity, cost: f32, cause: Cause) -> Option<()> {
+pub(crate) fn wound(world: &mut World, mob: Entity, layer: Entity, cost: f32, cause: Cause) -> Option<()> {
     wound_by(world, mob, layer, cost, cause, None).map(drop)
 }
 

@@ -139,6 +139,7 @@ impl Request<'_> {
             crate::containers::furnish(self.world, site.layer, pos, &block.name, tag.as_ref(), click.face);
             super::pistons::furnish(self.world, site.layer, pos);
             updates::settle(self.world, site.layer, pos);
+            super::summoning::placed(self.world, site.layer, pos, &block.name);
         }
         placed
     }
