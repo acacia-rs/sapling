@@ -1,6 +1,5 @@
 //! What a dispenser does with each kind of item (docs/research/dispensers.md, D9-D20); anything not
-//! named here is thrown out. Shears, minecarts and boats are not dispensed (no sheep shearing or
-//! vehicles here).
+//! named here is thrown out. Shears shear only sheep and mooshrooms; minecarts and boats are thrown.
 
 use acacia_proto::packets::LevelEventEvent;
 use bevy_ecs::prelude::*;
@@ -17,6 +16,7 @@ const BUCKET: &str = "minecraft:bucket";
 const POWDER_SNOW: &str = "minecraft:powder_snow";
 const POWDER_SNOW_BUCKET: &str = "minecraft:powder_snow_bucket";
 const FLINT_AND_STEEL_LASTS: u16 = 65;
+const SHEARS_LAST: u16 = 238;
 const ARMOUR_PIECES: [&str; 4] = ["_helmet", "_chestplate", "_leggings", "_boots"];
 /// A player's box, for armour put on whoever stands in front.
 const PLAYER_SIZE: [f32; 2] = [0.6, 1.8];
@@ -52,6 +52,10 @@ pub(super) fn dispense(world: &mut World, layer: Entity, pos: BlockPos, face: Fa
             launched(world, layer, pos, face, LevelEventEvent::SoundIgnite);
             vibrate_at(world, layer, front, GameEvent::PrimeFuse, false);
             Dispensed::Spent
+        }
+        "minecraft:shears" => {
+            let sheared = crate::creatures::shear_in(world, layer, front);
+            Dispensed::or_fails(world, layer, pos, sheared, Dispensed::Worn(SHEARS_LAST))
         }
         crate::fireworks::ROCKET => match crate::fireworks::dispense(world, layer, pos, face, stack) {
             Some(_) => Dispensed::Spent,

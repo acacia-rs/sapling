@@ -6,11 +6,15 @@
 // TODO: sheep spawned by the shard are all white; the grass a sheep eats is only the block it stands on or in.
 
 use bevy_ecs::prelude::*;
+use sapling_api::BlockPos;
 use sapling_world::ItemStack;
 
 use super::{Raised, regroup, shown};
 use crate::blocks::{self, Dice};
-use crate::components::{Layer, Mode};
+use crate::body::Body;
+use crate::components::{InLayer, Layer, Mode};
+use crate::creatures::Creature;
+use crate::entities::Kind;
 use crate::inventory;
 
 const SHEEP: &str = "minecraft:sheep";
@@ -102,8 +106,9 @@ pub(super) fn graze(world: &mut World, entity: Entity, kind: &str) {
     shown::wool(world, entity);
 }
 
-/// Shears on a grown sheep with its wool, or a grown mooshroom. False where they do nothing.
-pub(super) fn shear(world: &mut World, entity: Entity, kind: &str, player: Entity, variant: i32) -> bool {
+/// Shears, a player's or a dispenser's, on a grown sheep with its wool, or a grown mooshroom.
+/// False where they do nothing.
+fn shear(world: &mut World, entity: Entity, kind: &str, player: Option<Entity>, variant: i32) -> bool {
     let Some(raised) = world.get::<Raised>(entity).filter(|raised| !raised.is_baby()) else { return false };
     let colour = COLOURS[raised.kept.colour.clamp(0, 15) as usize];
     match kind {
@@ -124,10 +129,22 @@ pub(super) fn shear(world: &mut World, entity: Entity, kind: &str, player: Entit
         _ => return false,
     }
     shown::sound(world, entity, "shear");
-    if !is_creative(world, player) {
+    if let Some(player) = player.filter(|player| !is_creative(world, *player)) {
         inventory::wear_hand_by(world, player, 1, SHEARS_LAST);
     }
     true
+}
+
+/// Shears from a dispenser on the mobs whose box is in `cell`: whether one was sheared.
+pub(crate) fn shear_in(world: &mut World, layer: Entity, cell: BlockPos) -> bool {
+    let [x, y, z] = cell.map(|c| c as f32);
+    let inside = |body: &Body| {
+        let (half, tall) = (body.size[0] / 2.0, body.size[1]);
+        body.at[0] + half > x && body.at[0] - half < x + 1.0 && body.at[1] + tall > y && body.at[1] < y + 1.0 && body.at[2] + half > z && body.at[2] - half < z + 1.0
+    };
+    let mut mobs = world.query_filtered::<(Entity, &InLayer, &Body, &Kind, &Creature), With<Raised>>();
+    let found: Vec<(Entity, String, i32)> = mobs.iter(world).filter(|(_, on, body, ..)| on.0 == layer && inside(body)).map(|(mob, _, _, kind, creature)| (mob, kind.0.clone(), creature.look.as_ref().map_or(0, |look| look.variant))).collect();
+    found.into_iter().any(|(mob, kind, variant)| shear(world, mob, &kind, None, variant))
 }
 
 /// A bucket on a cow, a mooshroom or a grown goat fills with milk. False for anything else.
@@ -196,7 +213,7 @@ pub(super) fn brush(world: &mut World, entity: Entity, kind: &str, player: Entit
 /// What the item `item` in the player's hand takes from the mob, if it is a tool or container for it.
 pub(super) fn take(world: &mut World, entity: Entity, kind: &str, item: &str, player: Entity, variant: i32) -> bool {
     match item {
-        SHEARS => shear(world, entity, kind, player, variant),
+        SHEARS => shear(world, entity, kind, Some(player), variant),
         BRUSH => brush(world, entity, kind, player),
         "minecraft:bucket" => milk(world, entity, kind, player),
         "minecraft:bowl" => stew(world, entity, kind, player),

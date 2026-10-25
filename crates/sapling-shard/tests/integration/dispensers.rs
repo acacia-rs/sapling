@@ -128,6 +128,14 @@ fn a_dispenser_shoots_an_arrow_and_a_snowball_and_primes_tnt() {
 }
 
 #[test]
+fn shears_from_a_dispenser_shear_the_sheep_in_front() {
+    let mut h = setup(Block::new("dispenser").with("facing_direction=5"), vec![Item::new("minecraft:shears", 1)], vec![]);
+    h.remote.run(|ctx| assert!(ctx.spawn_entity("minecraft:sheep", [4.5, 65.0, 3.5]).is_some()));
+    power(&mut h, true, 8);
+    assert!(!lying(&mut h, "minecraft:white_wool").is_empty(), "the sheep's wool");
+}
+
+#[test]
 fn a_dispenser_pours_a_water_bucket_and_takes_the_water_back() {
     let mut h = setup(Block::new("dispenser").with("facing_direction=5"), vec![Item::new("minecraft:water_bucket", 1)], vec![]);
     power(&mut h, true, 8);

@@ -26,6 +26,7 @@ pub(crate) use clicks::interact;
 pub(crate) use guarding::{owner_hit, owner_hurt};
 pub(crate) use knots::{KNOT, from_storage as knot_from_storage, tie_to_fence, undo as undo_knot};
 pub(crate) use owners::is_owner;
+pub(crate) use products::shear_in;
 pub(crate) use shown::links_packet;
 pub(crate) use state::Raised;
 

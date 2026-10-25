@@ -63,7 +63,7 @@ pub(crate) use enchanted::thorned;
 pub(crate) use harm::{holds, is_full_block, touches, wound};
 pub(crate) use health::{Cause, Health};
 pub(crate) use hunting::{on_difficulty, sees};
-pub(crate) use husbandry::{Raised, interact, kept as kept_raising, owner_hit, owner_hurt, tie_to_fence};
+pub(crate) use husbandry::{Raised, interact, kept as kept_raising, owner_hit, owner_hurt, shear_in, tie_to_fence};
 pub(crate) use omens::{Omens, befall, infested_hurt};
 pub(crate) use struck::struck_by_lightning;
 pub(crate) use wither::{build as build_wither, hurt as wither_hurt, spares};
