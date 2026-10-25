@@ -1003,14 +1003,16 @@ Details and BDS evidence: docs/research/nether-dimension.md, docs/research/end-d
 - **Husbandry** (`creatures/husbandry`, `sapling_data::husbandry`, docs/research/husbandry.md). Every
   creature has a `Raised`: what the world folder keeps of its raising (`sapling_world::Raising`, BDS's
   actor fields, written back with its compound) and what lives only while it is loaded (its lead's
-  holder, its partner, its foe, its next egg). A player's click on a mob (`actions::interacted`, after
-  plugins) does what its kind's packs say of the held item (`clicks.rs`): name tags, leads, shears,
-  buckets, bowls, flowers, dyes, brushes, healing, growing a baby, breeding, taming, temper, sitting.
+  holder, its partner, its foe, its next egg). A player's click on an entity (`actions::interacted`,
+  after plugins) goes to the first that takes it: a vehicle's own use, raising, a trader's screen,
+  then tack or a seat (riding). Raising does what the mob's packs say of the held item (`clicks.rs`):
+  name tags, leads, shears (a dispenser's too, `shear_in`), buckets, bowls, flowers, dyes, brushes,
+  healing, growing a baby, breeding, taming, temper, sitting.
   Before a mob's move, its raising may steer it (sit, be pulled on its lead, fight for its owner,
   court, follow its owner, follow food) ahead of strolling. Its flags, scale, wool, name, owner and
   lead holder are told as they change and shown to new viewers (`creatures/shown.rs`); a kept
-  `definitions` list gains and loses the groups each event swaps. Riding is not here: the riding code
-  reads `Raised::saddled`/`chested` and tames a mount by `owners::tame_by_riding`.
+  `definitions` list gains and loses the groups each event swaps. Riding keeps a mob's saddle in
+  `Raised::saddled` and reads its taming; getting on a wild mount calls `owners::tame_by_riding`.
 - **Kept between visits** (`sapling-leveldb/src/player`, docs/research/player-records.md). The first
   world's storage keeps a player where BDS does: `player_<uuid>` maps it to a `player_server_` compound
   with BDS's fields: items (`Inventory` with `Slot`, `Armor`, `Offhand`, `SelectedInventorySlot`,
@@ -1076,8 +1078,8 @@ Details and BDS evidence: docs/research/nether-dimension.md, docs/research/end-d
 - **Riding** (`riding.rs`, `docs/research/vehicles.md`). A vehicle's `Seats` list its riders, the
   first drives; a rider has `Riding`. Seating tells viewers BDS's `mount` sound, the seat's
   `SetEntityData` and a `SetEntityLink`; later viewers get them after the vehicle's announcement
-  (`mobs::show_after`). A player gets on by a click (`riding/mounts.rs`: saddles and horse armour go
-  on first), leaves on `Interact LeaveVehicle` (`inventory::screens` takes it in); a player rider's
+  (`mobs::show_after`). A player gets on by a click no raising took (`riding/mounts.rs`: saddles and
+  horse armour go on first; a wild mount's temper may tame it or it throws the rider off), leaves on `Interact LeaveVehicle` (`inventory::screens` takes it in); a player rider's
   input goes into `Reins` instead of moving it (movement.rs), and riders are carried to their seats
   each tick (`riding/carry.rs`). A driver's client moves a boat or a tamed, saddled horse
   (`riding/drive.rs`, trusted); a pig or strider walks the way its rider looks while the rider

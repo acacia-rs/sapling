@@ -1,17 +1,18 @@
 //! Mobs that take a rider (docs/research/vehicles.md "Rideable mobs"): a saddle or horse armour
 //! put on by hand, getting on by a click, and how a ridden pig, strider or camel is steered. A
-//! tamed and saddled horse, donkey or mule is moved by its rider's client (drive.rs).
-// TODO: taming is another area's: a horse is tamed only as stored (`IsTamed`); a wild one is
-// ridden but neither tamed nor bucks its rider. The horse's inventory screen is not opened, and
-// a mob's tack does not come off.
+//! tamed and saddled horse, donkey or mule is moved by its rider's client (drive.rs). Tamed and
+//! saddled are the mob's raising (`creatures::Raised`); getting on a wild mount tries to tame it.
+// TODO: a wild mount that is not tamed throws its rider off at once; BDS lets it ride a while
+// first. The horse's inventory screen is not opened, and a mob's tack does not come off.
 
 use bevy_ecs::prelude::*;
 use bytes::Bytes;
-use sapling_world::{ActorState, ItemStack};
+use sapling_world::ItemStack;
 
 use super::{Reins, Seats, packets};
 use crate::body::Body;
 use crate::components::{NetId, Position, Tick};
+use crate::creatures::Raised;
 use crate::entities::{self, Kind};
 use crate::inventory::Inventory;
 use crate::movement::Motion;
@@ -47,21 +48,20 @@ const STEERED: [Steered; 2] = [
 const CAMEL: &str = "minecraft:camel";
 const CAMEL_SPEED: f32 = 0.09;
 
-/// A mob's saddle and armour once a player changed them, and the tick its boost ends.
+/// A mob's armour once a player put it on, and the tick its boost ends.
 #[derive(Component, Default, Clone)]
 pub(crate) struct Tack {
-    pub saddle: bool,
     pub armor: Option<ItemStack>,
     boosted_until: u64,
 }
 
 /// Whether the mob has a saddle on.
 pub(crate) fn saddled(world: &World, mob: Entity) -> bool {
-    world.get::<Tack>(mob).map_or_else(|| creatures::was_stored(world, mob, ActorState::Saddled), |tack| tack.saddle)
+    world.get::<Raised>(mob).is_some_and(|raised| raised.saddled)
 }
 
 fn tamed(world: &World, mob: Entity) -> bool {
-    creatures::was_stored(world, mob, ActorState::Tamed)
+    world.get::<Raised>(mob).is_some_and(Raised::is_tamed)
 }
 
 /// Whether a tamed, saddled horse's rider's client moves it (acacia's riding notes).
@@ -94,17 +94,26 @@ pub(crate) fn used_on(world: &mut World, player: Entity, target: Entity) -> bool
     if sneaking && (SNEAK_SKIPS.contains(&kind.as_str()) || (TAMED_SADDLED.contains(&kind.as_str()) && tamed(world, target))) {
         return false;
     }
-    super::seat(world, player, target).is_ok()
+    let wild = !tamed(world, target) && sapling_data::husbandry(&kind).is_some_and(|rules| rules.temper.is_some());
+    if super::seat(world, player, target).is_err() {
+        return false;
+    }
+    if wild && !creatures::tame_by_riding(world, target, player) {
+        super::unseat(world, player, true);
+    }
+    true
 }
 
 /// Puts the saddle or the horse armour a player holds on `mob`; false when it takes neither now.
 fn put_on(world: &mut World, player: Entity, mob: Entity, kind: &str) -> bool {
     let Some(stack) = held(world, player) else { return false };
     let grown = !creatures::is_baby(world, mob);
-    let mut tack = world.get::<Tack>(mob).cloned().unwrap_or_else(|| Tack { saddle: saddled(world, mob), ..Tack::default() });
+    let mut tack = world.get::<Tack>(mob).cloned().unwrap_or_default();
     let saddles = ALWAYS_SADDLED.contains(&kind) || (TAMED_SADDLED.contains(&kind) && tamed(world, mob));
-    let sound = if stack.name == SADDLE && saddles && grown && !tack.saddle {
-        tack.saddle = true;
+    let sound = if stack.name == SADDLE && saddles && grown && !saddled(world, mob) {
+        if let Some(mut raised) = world.get_mut::<Raised>(mob) {
+            raised.saddled = true;
+        }
         "saddle"
     } else if stack.name.ends_with("_horse_armor") && kind == HORSE && grown && tamed(world, mob) && tack.armor.is_none() {
         tack.armor = Some(ItemStack { count: 1, ..stack });
@@ -127,7 +136,7 @@ fn put_on(world: &mut World, player: Entity, mob: Entity, kind: &str) -> bool {
 pub(super) fn worn(world: &mut World, mob: Entity) -> Vec<Bytes> {
     let Some(tack) = world.get::<Tack>(mob).cloned() else { return Vec::new() };
     let (Some(id), Some(kind)) = (world.get::<NetId>(mob).map(|id| id.0), world.get::<Kind>(mob).map(|kind| kind.0.clone())) else { return Vec::new() };
-    let word = entities::mob_flags(world, mob, &kind, acacia_proto::types::MetadataFlags1::SADDLED, tack.saddle);
+    let word = entities::mob_flags(world, mob, &kind, acacia_proto::types::MetadataFlags1::SADDLED, saddled(world, mob));
     let mut shown = vec![packets::flags(id, word)];
     if let Some(armor) = &tack.armor {
         let slots = [None, None, None, None, Some(crate::inventory::stack(armor))];
@@ -142,8 +151,9 @@ pub(super) fn worn(world: &mut World, mob: Entity) -> Vec<Bytes> {
 fn keep_tack(world: &mut World, mob: Entity) {
     let Some(tack) = world.get::<Tack>(mob).cloned() else { return };
     let armor: Vec<(u8, ItemStack)> = tack.armor.into_iter().map(|armor| (1, armor)).collect();
+    let on = saddled(world, mob);
     entities::restore(world, mob, |compound, registry| {
-        let saddled = sapling_world::flagged_actor(compound, "Saddled", tack.saddle).ok()?;
+        let saddled = sapling_world::flagged_actor(compound, "Saddled", on).ok()?;
         sapling_world::chested_actor(&saddled, &armor, registry).ok()
     });
 }
@@ -188,7 +198,7 @@ pub(crate) fn boost(world: &mut World, player: Entity) -> bool {
     let Some(kind) = world.get::<Kind>(mob).map(|kind| kind.0.clone()) else { return false };
     let Some(steered) = STEERED.iter().find(|steered| steered.kind == kind && held(world, player).is_some_and(|stack| stack.name == steered.stick)) else { return false };
     let now = world.resource::<Tick>().0;
-    let mut tack = world.get::<Tack>(mob).cloned().unwrap_or_else(|| Tack { saddle: saddled(world, mob), ..Tack::default() });
+    let mut tack = world.get::<Tack>(mob).cloned().unwrap_or_default();
     if tack.boosted_until > now {
         return true;
     }

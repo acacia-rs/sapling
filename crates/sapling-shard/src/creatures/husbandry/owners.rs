@@ -78,7 +78,6 @@ pub(super) fn calm(world: &mut World, entity: Entity, kind: &str, item: &str) ->
 /// A rider tries to ride the wild mount `entity`: it is tamed if its kind's most temper, rolled,
 /// is below its temper; else it grows calmer and its viewers see it refuse. True when it is tamed
 /// now; for the riding code, which throws the rider off where it is not.
-#[allow(dead_code)] // TODO: the riding code calls it, through an export of its own, once mobs can be ridden.
 pub(crate) fn tame_by_riding(world: &mut World, entity: Entity, rider: Entity) -> bool {
     let Some(kind) = world.get::<crate::entities::Kind>(entity).map(|kind| kind.0.clone()) else { return false };
     let Some((_, most)) = sapling_data::husbandry(&kind).and_then(|rules| rules.temper) else { return false };

@@ -10,7 +10,7 @@ use sapling_world::{Actor, ActorState, Raising};
 #[derive(Component, Clone, Debug, Default)]
 pub(crate) struct Raised {
     pub kept: Raising,
-    /// Read from storage for the riding code; this module never changes them.
+    /// Read from storage; riding/mounts.rs saddles a mob.
     pub saddled: bool,
     pub chested: bool,
     /// The entity holding its lead, once the kept `leasher` is found, and the tick it was looked for since.

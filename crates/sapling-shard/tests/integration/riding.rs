@@ -107,6 +107,32 @@ fn a_saddle_put_on_a_pig_is_spent_and_the_next_click_rides_it() {
     assert!(links(&sent).contains(&(pig.0 as i64, 1, 1)), "{:?}", links(&sent));
 }
 
+fn riders(h: &mut Harness, of: EntityId) -> usize {
+    let count = Arc::new(Mutex::new(0));
+    let slot = count.clone();
+    h.remote.run(move |ctx| *slot.lock().unwrap() = ctx.riders(of).len());
+    h.tick(1);
+    let riders = *count.lock().unwrap();
+    riders
+}
+
+#[test]
+fn a_wild_horse_throws_its_rider_off_until_its_temper_lets_a_ride_tame_it() {
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    let horse = spawned(&mut h, &[("minecraft:horse", [2.5, 65.0, 0.5])])[0];
+    h.receive(1, &interact(horse.0));
+    ticks(&mut h, 2);
+    assert_eq!(riders(&mut h, horse), 0, "a new horse's temper is 0: the first ride fails");
+    // Each failed ride adds 5 to its temper, of 100: by the 20th the roll cannot fail.
+    let tamed = (0..20).any(|_| {
+        h.receive(1, &interact(horse.0));
+        ticks(&mut h, 2);
+        riders(&mut h, horse) == 1
+    });
+    assert!(tamed, "a ride tamed it and its rider stays on");
+}
+
 #[test]
 fn a_boat_kept_with_its_rider_takes_it_back_when_loaded() {
     let link = compound([("entityID", Value::Long(-20)), ("linkID", Value::Int(0))]);
