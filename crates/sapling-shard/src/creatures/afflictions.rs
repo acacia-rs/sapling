@@ -19,10 +19,6 @@ use crate::components::{InLayer, NetId};
 use crate::entities;
 use crate::vitals::effects::{HARMS, HEALS, POISONED, POISONS, QUICKENS, REGENERATES, SLOWS, WITHERS};
 
-const UNDEAD: &[&str] = &[
-    "minecraft:zombie", "minecraft:husk", "minecraft:drowned", "minecraft:zombie_villager", "minecraft:zombie_villager_v2", "minecraft:zombie_pigman", "minecraft:zoglin",
-    "minecraft:skeleton", "minecraft:stray", "minecraft:wither_skeleton", "minecraft:bogged", "minecraft:phantom", "minecraft:wither", "minecraft:skeleton_horse", "minecraft:zombie_horse",
-];
 /// What a level of resistance takes off a hit.
 const RESISTS: f32 = 0.2;
 /// Effects shorter than this, shared out by a splash, are not given.
@@ -57,7 +53,7 @@ fn tell(world: &mut World, mob: Entity, packets: Vec<bytes::Bytes>) {
 }
 
 fn is_undead(world: &World, mob: Entity) -> bool {
-    world.get::<entities::Kind>(mob).is_some_and(|kind| UNDEAD.contains(&kind.0.as_str()))
+    world.get::<entities::Kind>(mob).is_some_and(|kind| sapling_data::is_undead(&kind.0))
 }
 
 /// The level, from 0, of an effect on a mob.

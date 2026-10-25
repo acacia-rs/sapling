@@ -176,12 +176,16 @@ fn step(world: &mut World, entity: Entity, orb: &mut Orb, layer: Entity, id: u64
     Fate::Stays
 }
 
-/// A player takes an orb worth `value` at `at`: it hears it, and gets its experience.
+/// A player takes an orb worth `value` at `at`: it hears it, the orb mends what it has on with
+/// Mending first, and it gets the rest as experience.
 fn taken(world: &mut World, layer: Entity, value: i32, at: [f32; 3], player: Entity) {
     let [x, y, z] = at;
     let sound = LevelEvent { event: LevelEventEvent::SoundOrb, position: Vec3f { x, y, z }, data: 0 };
     blocks::to_viewers(world, layer, at.map(|c| c.floor() as i32), &[sapling_net::encode(&sound)]);
-    experience::give(world, player, value);
+    let left = crate::enchants::mend(world, player, value);
+    if left > 0 {
+        experience::give(world, player, left);
+    }
 }
 
 /// Moves every orb a tick: falling, following and being taken.

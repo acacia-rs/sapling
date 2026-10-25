@@ -4,6 +4,7 @@ use std::collections::HashSet;
 use std::collections::hash_map::Entry;
 
 use crate::column::Column;
+use crate::light::ColumnLight;
 use crate::loader::{Finished, Loader};
 use crate::{ChunkPos, World};
 
@@ -18,8 +19,8 @@ impl World {
     /// Applies one finished job; true for a loaded column. A failed save leaves its column unsaved.
     fn accept(&mut self, done: Finished) -> bool {
         match done {
-            Finished::Loaded(pos, column) => {
-                self.insert_loaded(pos, column);
+            Finished::Loaded(pos, column, light) => {
+                self.insert_loaded(pos, column, light);
                 true
             }
             Finished::Saved { pos, ok } => {
@@ -47,10 +48,11 @@ impl World {
         self.queue_saves(&HashSet::new())
     }
 
-    fn insert_loaded(&mut self, pos: ChunkPos, column: Column) {
+    fn insert_loaded(&mut self, pos: ChunkPos, column: Column, light: ColumnLight) {
         if let Entry::Vacant(slot) = self.columns.entry(pos) {
             slot.insert(column);
             self.arrived.push(pos);
+            self.light.arrived(pos, light);
         }
     }
 
@@ -112,8 +114,8 @@ impl World {
     /// Loads a column on the calling thread: for opening a world (folder.rs), not for a shard.
     pub(crate) fn load_now(&mut self, pos: ChunkPos) {
         if let (false, Some(loader)) = (self.is_loaded(pos), &self.loader) {
-            let column = loader.source().load(pos);
-            self.insert_loaded(pos, column);
+            let (column, light) = loader.source().load(pos);
+            self.insert_loaded(pos, column, light);
         }
     }
 
@@ -133,6 +135,8 @@ impl World {
     pub fn unload(&mut self, keep: impl Fn(ChunkPos) -> bool) {
         if let Some(loader) = &self.loader {
             self.columns.retain(|pos, column| column.is_modified() || loader.is_saving(*pos) || keep(*pos));
+            let columns = &self.columns;
+            self.light.retain(|pos| columns.contains_key(&pos));
         }
     }
 }

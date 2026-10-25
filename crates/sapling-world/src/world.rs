@@ -7,6 +7,7 @@ use acacia_world::{BlockRegistry, Dimension};
 
 use crate::ChunkPos;
 use crate::column::Column;
+use crate::light::Lights;
 use crate::loader::{Loader, Source};
 use crate::players::Players;
 use crate::storage::{Level, WorldStorage};
@@ -38,6 +39,7 @@ pub struct World {
     pub(crate) base: Option<Arc<Template>>,
     pub(crate) base_actors_taken: bool,
     pub(crate) players: Players,
+    pub(crate) light: Lights,
 }
 
 impl World {
@@ -50,8 +52,8 @@ impl World {
     pub fn void_in(dimension: i32) -> Self {
         let registry = BlockRegistry::vanilla_arc();
         let dim = Dimension::from_id(dimension, registry.air_id());
-        let (columns, void, players) = (HashMap::new(), Column::empty(0, 0, dim), Players::default());
-        Self { dimension, dim, registry, columns, void, loader: None, level: Level::default(), arrived: Vec::new(), base: None, base_actors_taken: false, players }
+        let (columns, void, players, light) = (HashMap::new(), Column::empty(0, 0, dim), Players::default(), Lights::new(&registry));
+        Self { dimension, dim, registry, columns, void, loader: None, level: Level::default(), arrived: Vec::new(), base: None, base_actors_taken: false, players, light }
     }
 
     /// The overworld of `storage`, loaded on [`WorldStorage::load_threads`] threads. Columns it
@@ -66,7 +68,7 @@ impl World {
     pub fn with_storage_in(storage: Arc<dyn WorldStorage>, dimension: i32) -> Self {
         let mut world = Self::void_in(dimension);
         let threads = storage.load_threads();
-        let source = Source { storage, registry: world.registry.clone(), dimension: world.dimension, dim: world.dim };
+        let source = Source { storage, registry: world.registry.clone(), dimension: world.dimension, dim: world.dim, light: world.light.props.clone() };
         world.loader = Some(Loader::spawn(source, threads));
         world
     }
@@ -153,8 +155,12 @@ impl World {
     /// Sets a layer-0 block by runtime id; false when the column is not loaded or storage
     /// could not read it. Positions outside the dimension's height are ignored.
     pub fn set_block(&mut self, x: i32, y: i32, z: i32, id: u32) -> bool {
-        let registry = self.registry.clone();
-        self.column_mut(ChunkPos::of_block(x, z)).map(|column| column.set_block(x, y, z, id, &registry)).is_some()
+        let (registry, before) = (self.registry.clone(), self.light_props(x, y, z));
+        let set = self.column_mut(ChunkPos::of_block(x, z)).map(|column| column.set_block(x, y, z, id, &registry)).is_some();
+        if set {
+            self.light_written([x, y, z], before);
+        }
+        set
     }
 
     /// The column to write to, if it is loaded and storage could read it. An arena's first
@@ -178,7 +184,12 @@ impl World {
         let pos = ChunkPos::of_block(x, z);
         // A column nobody wrote to has no block for a liquid to stand in.
         let written = self.columns.contains_key(&pos) || self.base.as_ref().is_some_and(|template| template.column(pos).is_some());
-        written && self.column_mut(pos).map(|column| column.set_liquid(x, y, z, id)).is_some()
+        let before = self.light_props(x, y, z);
+        let set = written && self.column_mut(pos).map(|column| column.set_liquid(x, y, z, id)).is_some();
+        if set {
+            self.light_written([x, y, z], before);
+        }
+        set
     }
 
     /// Whether blocks exist at this height.

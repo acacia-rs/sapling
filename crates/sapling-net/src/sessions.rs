@@ -2,24 +2,25 @@
 //! the transports' events and the game's outbound commands, and queues replies on the links.
 
 use std::collections::{HashMap, HashSet};
-use std::net::SocketAddr;
-use std::time::{Instant, SystemTime, UNIX_EPOCH};
+use std::net::{IpAddr, SocketAddr};
+use std::time::Instant;
 
 use acacia_auth::login::verify::{VerifiedLogin, Verifier};
 use acacia_nethernet::host::{Answer, PeerId};
 use acacia_proto::RawPacket;
-use acacia_proto::packets::{Disconnect, DisconnectContent};
 use acacia_proto::types::DisconnectFailReason;
 use acacia_session::server::ServerConnection;
 use acacia_session::server::login::{LoginConfig, ServerLogin};
-use bytes::Bytes;
 use p384::ecdsa::{SigningKey, VerifyingKey};
 use uuid::Uuid;
 
+use crate::access;
+use crate::admission::Throttle;
 use crate::config::NetConfig;
 use crate::congestion::Congestion;
 use crate::event::{ConnId, NetEvent, Outbound};
 use crate::links::{Link, LinkEvent, Links, Refusal};
+use crate::players::{Player, disconnect};
 use crate::router::Router;
 
 /// The disconnect screen of a player whose server, or whose part of it, stopped.
@@ -30,29 +31,7 @@ struct Pending {
     deadline: Instant,
     /// The key a NetherNet offer was signed with; the Login must come from the same one.
     offer_key: Option<VerifyingKey>,
-}
-
-struct Player {
-    id: ConnId,
-    conn: ServerConnection,
-    uuid: Uuid,
-    congested: bool,
-}
-
-/// Congested above the high watermark, clear again below the low one, so a backlog hovering at
-/// either does not flap.
-fn is_congested(was: bool, queued: usize, cfg: &NetConfig) -> bool {
-    queued > if was { cfg.drained_bytes } else { cfg.congested_bytes }
-}
-
-impl Player {
-    fn track_backlog(&mut self, queued: usize, cfg: &NetConfig, congestion: &Congestion) {
-        let congested = is_congested(self.congested, queued, cfg);
-        if congested != self.congested {
-            self.congested = congested;
-            congestion.set(self.id, congested);
-        }
-    }
+    ip: IpAddr,
 }
 
 pub(crate) struct Sessions {
@@ -69,12 +48,16 @@ pub(crate) struct Sessions {
     /// both reach the game (dragonfly #1364).
     identities: HashSet<Uuid>,
     next_id: u64,
+    throttle: Throttle,
+    /// The access lists' ban count the players were last checked against.
+    bans_seen: u64,
 }
 
 impl Sessions {
     pub fn new(cfg: NetConfig, verifier: Verifier, router: Router, congestion: Congestion) -> Self {
         let (offers, logins, players, links) = (HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new());
-        Self { cfg, verifier, router, congestion, offers, logins, players, links, identities: HashSet::new(), next_id: 1 }
+        let (throttle, bans_seen) = (Throttle::new(cfg.admission.clone()), cfg.access.as_ref().map_or(0, |access| access.bans_changed()));
+        Self { cfg, verifier, router, congestion, offers, logins, players, links, identities: HashSet::new(), next_id: 1, throttle, bans_seen }
     }
 
     /// Re-reads every player's unsent backlog: the transports send and get acked between the
@@ -126,13 +109,20 @@ impl Sessions {
     pub fn on_event(&mut self, links: &mut Links, event: LinkEvent, now: Instant) {
         match event {
             LinkEvent::Connected(link) => {
+                let ip = links.remote_addr(link).ip();
+                let open = self.logins.values().filter(|p| p.ip == ip).count() + self.players.values().filter(|p| p.ip == ip).count();
+                if let Err(turned) = self.throttle.admit(ip, open, now) {
+                    tracing::debug!(%link, ?turned, "connection turned away");
+                    links.close(link, now);
+                    return;
+                }
                 let key = SigningKey::random(&mut rand_core::OsRng);
                 let (conn, offer_key) = match link {
                     Link::RakNet(_) => (ServerConnection::new(key), None),
                     Link::NetherNet(peer) => (ServerConnection::nethernet(key), self.offers.remove(&peer)),
                 };
                 let cfg = LoginConfig { require_authenticated: self.cfg.online_mode, ..LoginConfig::default() };
-                self.logins.insert(link, Pending { login: ServerLogin::new(conn, cfg), deadline: now + self.cfg.login_timeout, offer_key });
+                self.logins.insert(link, Pending { login: ServerLogin::new(conn, cfg), deadline: now + self.cfg.login_timeout, offer_key, ip });
             }
             LinkEvent::Message(link, msg) if self.players.contains_key(&link) => self.on_game_message(links, link, &msg, now),
             LinkEvent::Message(link, msg) => self.on_login_message(links, link, &msg, now),
@@ -185,6 +175,19 @@ impl Sessions {
         }
     }
 
+    /// Drops the players a ban made since the last call names, with the ban's screen.
+    pub fn enforce_bans(&mut self, links: &mut Links, now: Instant) {
+        let Some(access) = &self.cfg.access else { return };
+        if access.bans_changed() == self.bans_seen {
+            return;
+        }
+        self.bans_seen = access.bans_changed();
+        let banned: Vec<(Link, String)> = self.players.iter().filter_map(|(&link, p)| Some((link, access.ban_screen(&p.name, &p.xuid, p.ip)?))).collect();
+        for (link, screen) in banned {
+            self.close_player(links, link, "banned", &screen, now);
+        }
+    }
+
     /// Tells every player the server is closing and drops all connections.
     pub fn close_all(&mut self, links: &mut Links, now: Instant) {
         for link in self.logins.drain().map(|(link, _)| link).collect::<Vec<_>>() {
@@ -197,7 +200,7 @@ impl Sessions {
 
     fn on_login_message(&mut self, links: &mut Links, link: Link, msg: &[u8], now: Instant) {
         let Some(pending) = self.logins.get_mut(&link) else { return };
-        match pending.login.handle(msg, &self.verifier, unix_now()) {
+        match pending.login.handle(msg, &self.verifier, access::unix_now() as i64) {
             Ok(step) => {
                 for message in step.send {
                     links.send(link, message, now);
@@ -220,27 +223,34 @@ impl Sessions {
     fn admit(&mut self, links: &mut Links, link: Link, login: Box<VerifiedLogin>, now: Instant) {
         let Some(pending) = self.logins.remove(&link) else { return };
         let mut conn = pending.login.into_connection();
-        let uuid = login.identity.uuid;
+        let identity = &login.identity;
+        let (listed, ignores_limit) = self.cfg.access.as_ref().map_or((None, false), |access| access.admit(&identity.display_name, &identity.xuid, pending.ip));
         // Someone else's Login over a connection whose offer another key signed.
         let refusal = if pending.offer_key.is_some_and(|key| key != VerifyingKey::from(&login.client_key)) {
-            Some((DisconnectFailReason::NotAuthenticated, "disconnectionScreen.notAuthenticated"))
-        } else if self.players.len() >= self.cfg.max_players {
-            Some((DisconnectFailReason::ServerFull, "disconnectionScreen.serverFull"))
-        } else if !self.identities.insert(uuid) {
-            Some((DisconnectFailReason::LoggedInOtherLocation, "disconnectionScreen.loggedinOtherLocation"))
+            Some((DisconnectFailReason::NotAuthenticated, "disconnectionScreen.notAuthenticated".to_owned()))
+        } else if let Some(listed) = listed {
+            Some(listed.screen())
+        } else if self.players.len() >= self.cfg.max_players && !ignores_limit {
+            Some((DisconnectFailReason::ServerFull, "disconnectionScreen.serverFull".to_owned()))
+        } else if !self.identities.insert(identity.uuid) {
+            Some((DisconnectFailReason::LoggedInOtherLocation, "disconnectionScreen.loggedinOtherLocation".to_owned()))
         } else {
             None
         };
         if let Some((reason, message)) = refusal {
-            tracing::debug!(%link, name = %login.identity.display_name, ?reason, "login refused");
-            links.send(link, conn.encode(&[disconnect(reason, message)]), now);
+            tracing::debug!(%link, name = %identity.display_name, ?reason, "login refused");
+            links.send(link, conn.encode(&[disconnect(reason, &message)]), now);
             links.close(link, now);
             return;
+        }
+        if let Some(access) = &self.cfg.access {
+            access.joined(&identity.display_name, pending.ip);
         }
         let id = ConnId(self.next_id);
         self.next_id += 1;
         self.links.insert(id, link);
-        self.players.insert(link, Player { id, conn, uuid, congested: false });
+        let (uuid, name, xuid) = (identity.uuid, identity.display_name.clone(), identity.xuid.clone());
+        self.players.insert(link, Player { id, conn, uuid, name, xuid, ip: pending.ip, congested: false });
         if !self.router.deliver(NetEvent::Joined { conn: id, addr: links.remote_addr(link), login }) {
             self.close_player(links, link, "its shard is gone", CLOSED, now);
         }
@@ -281,31 +291,9 @@ impl Sessions {
         self.congestion.set(player.id, false);
         self.links.remove(&player.id);
         self.identities.remove(&player.uuid);
+        if let Some(access) = &self.cfg.access {
+            access.left(&player.name);
+        }
         self.router.deliver(NetEvent::Left { conn: player.id, reason });
-    }
-}
-
-fn disconnect(reason: DisconnectFailReason, message: &str) -> Bytes {
-    let content = DisconnectContent { message: message.into(), filtered_message: String::new() };
-    crate::encode(&Disconnect { reason, hide_disconnect_reason: false, content: Some(content) })
-}
-
-fn unix_now() -> i64 {
-    SystemTime::now().duration_since(UNIX_EPOCH).map_or(0, |d| d.as_secs() as i64)
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn congestion_holds_between_the_watermarks() {
-        let cfg = NetConfig { congested_bytes: 1000, drained_bytes: 100, ..NetConfig::default() };
-        let mut congested = false;
-        let trace: Vec<bool> = [500, 1001, 500, 101, 100, 500].into_iter().map(|queued| {
-            congested = is_congested(congested, queued, &cfg);
-            congested
-        }).collect();
-        assert_eq!(trace, [false, true, true, true, false, false]);
     }
 }

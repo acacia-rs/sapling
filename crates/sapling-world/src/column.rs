@@ -130,6 +130,10 @@ impl Column {
         }
     }
 
+    pub fn chunk(&self) -> &Chunk {
+        &self.chunk
+    }
+
     pub fn block(&self, x: i32, y: i32, z: i32) -> u32 {
         self.chunk.block(x, y, z)
     }

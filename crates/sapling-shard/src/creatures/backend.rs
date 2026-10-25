@@ -90,4 +90,8 @@ impl EntityBackend for Ctx<'_> {
         super::harm::wound(self.world, mob, layer, amount, cause);
         self.world.get::<super::Dying>(mob).is_some() || self.world.get::<Health>(mob).is_some_and(|health| health.left() < before)
     }
+
+    fn families(&self, kind: &str) -> Vec<String> {
+        sapling_data::mob_families(kind).into_iter().map(str::to_owned).collect()
+    }
 }

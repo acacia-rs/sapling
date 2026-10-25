@@ -12,6 +12,7 @@ use sapling_leveldb::PlayerData;
 
 use crate::ChunkPos;
 use crate::column::Column;
+use crate::light::{ColumnLight, Props, light_column};
 use crate::load_queue::{JobQueue, Next};
 use crate::players::PlayerLoad;
 use crate::storage::{StoredColumn, WorldStorage};
@@ -23,12 +24,13 @@ pub(crate) struct Source {
     pub registry: Arc<BlockRegistry>,
     pub dimension: i32,
     pub dim: Dimension,
+    pub light: Arc<Props>,
 }
 
 impl Source {
-    /// Reads and encodes one column on the calling thread. A column storage does not have is
-    /// void; one it cannot read is [`Column::damaged`].
-    pub fn load(&self, pos: ChunkPos) -> Column {
+    /// Reads, encodes and lights one column on the calling thread. A column storage does not have
+    /// is void; one it cannot read is [`Column::damaged`].
+    pub fn load(&self, pos: ChunkPos) -> (Column, ColumnLight) {
         let column = match catch_unwind(AssertUnwindSafe(|| self.storage.load_column(pos, self.dimension))) {
             Ok(Ok(Some(stored))) => Column::from_stored(stored),
             Ok(Ok(None)) => Column::empty(pos.x, pos.z, self.dim),
@@ -42,7 +44,8 @@ impl Source {
             }
         };
         column.warm(&self.registry);
-        column
+        let light = light_column(column.chunk(), &self.light);
+        (column, light)
     }
 
     /// Writes one column on the calling thread; false, and logged, when storage refuses it.
@@ -83,7 +86,7 @@ enum Job {
 
 /// One job the I/O threads are done with.
 pub(crate) enum Finished {
-    Loaded(ChunkPos, Column),
+    Loaded(ChunkPos, Column, ColumnLight),
     Saved { pos: ChunkPos, ok: bool },
     PlayerLoaded(String, PlayerLoad),
     PlayerSaved(String, PlayerData),
@@ -115,7 +118,10 @@ impl Loader {
             let work = move || {
                 while let Some(next) = queue.next(index) {
                     let done = match next {
-                        Next::Load(pos) => Finished::Loaded(pos, source.load(pos)),
+                        Next::Load(pos) => {
+                            let (column, light) = source.load(pos);
+                            Finished::Loaded(pos, column, light)
+                        }
                         Next::Other(Job::Save(pos, chunk)) => Finished::Saved { pos, ok: source.save(pos, &chunk) },
                         Next::Other(Job::LoadPlayer(id)) => {
                             let load = source.load_player(&id);
@@ -204,7 +210,7 @@ impl Loader {
 
     fn settle(&mut self, done: &Finished) {
         match done {
-            Finished::Loaded(pos, _) => drop(self.loading.remove(pos)),
+            Finished::Loaded(pos, ..) => drop(self.loading.remove(pos)),
             Finished::Saved { pos, .. } => drop(self.saving.remove(pos)),
             Finished::PlayerLoaded(..) | Finished::PlayerSaved(..) => self.player_jobs -= 1,
         }

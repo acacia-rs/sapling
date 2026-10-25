@@ -72,7 +72,7 @@ impl Shard {
         schedule.set_executor(SingleThreadedExecutor::new());
         let join = (join::resource_packs, join::chunk_radius, blobs::cache_status).chain();
         let chunks = (
-            chunks::poll_worlds,
+            chunks::poll_and_relight_worlds,
             actors::arrive,
             movement::player_input,
             chunks::send_chunks,

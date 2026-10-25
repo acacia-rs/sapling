@@ -1,9 +1,14 @@
 //! Vanilla's commands, for operators, built on the plugin API alone: `/setblock`, `/fill`, `/tp`,
-//! `/give`, `/clear`, `/gamemode`, `/summon`, `/kill`, `/damage`, `/difficulty`, `/effect`, `/gamerule`, `/replaceitem`. Opt in with
-//! [`crate::ServerBuilder::vanilla_commands`]. Positions take `~`; targets take `@s`, `@p`, `@r`, `@a`,
-//! `@e` with `type`, `name`, `c`, `r`, `rm`, `x y z` and `m` (select.rs), and names. Blocks are written as `/setblock` writes them: their neighbours react.
+//! `/give`, `/clear`, `/gamemode`, `/summon`, `/kill`, `/damage`, `/difficulty`, `/effect`, `/gamerule`, `/replaceitem`,
+//! `/kick`, `/op`, `/deop`, the messaging commands (`/me`, `/tellraw`, `/title`, `/titleraw`, `/playsound`,
+//! `/stopsound`, `/particle`), and with access lists `/allowlist` and the ban commands. Opt in with
+//! [`crate::ServerBuilder::vanilla_commands`]. Positions take `~`; targets take names and every
+//! Bedrock selector with its filters ([`sapling_api::command::Selector`]). Blocks are written as `/setblock` writes them: their neighbours react.
 // TODO: the other vanilla commands.
 
+mod access;
+mod allowlist;
+mod bans;
 mod blocks;
 mod chat;
 mod clock;
@@ -11,11 +16,14 @@ mod containers;
 mod damage;
 mod effects;
 mod execute;
+mod messaging;
 mod names;
+mod operators;
 mod players;
 mod rules;
-mod select;
+mod sounds;
 mod teleport;
+mod titles;
 
 use blocks::{Fill, SetBlock, TestForBlock};
 use containers::ReplaceItem;
@@ -24,7 +32,7 @@ use players::{Clear, DifficultyCommand, GameModeCommand, Give, Kill, Summon};
 use teleport::Teleport;
 use rules::GameRule;
 
-use sapling_api::command::Selector;
+use sapling_api::command::{Selected, Selector};
 use sapling_api::{EntityInfo, Output, Player, PlayerId, RuleValue, Sender, ShardCtx};
 
 use crate::ServerBuilder;
@@ -32,11 +40,16 @@ use crate::ServerBuilder;
 impl ServerBuilder {
     /// Adds vanilla's commands for operators (this module): `/setblock`, `/fill`, `/tp`, `/give`,
     /// `/clear`, `/gamemode`, `/summon`, `/kill`, `/gamerule`, `/time`, `/xp`, `/replaceitem block`,
-    /// `/execute in <dimension> run tp`, `/say` and `/tell` (for anyone). A command
-    /// added later under the same name replaces one of these.
+    /// `/execute in <dimension> run tp`, `/kick`, `/op`, `/deop`, `/say`, `/tell` and `/me` (for
+    /// anyone), `/tellraw`, `/title`, `/titleraw`, `/playsound`, `/stopsound` and `/particle`. A
+    /// command added later under the same name replaces one of these. The ban and allowlist
+    /// commands come with [`ServerBuilder::access`].
     pub fn vanilla_commands(self) -> Self {
         let blocks = self.command::<SetBlock>().command::<Fill>().command::<TestForBlock>().command::<ReplaceItem>();
-        blocks.command::<Teleport>().command::<Give>().command::<Clear>().command::<GameModeCommand>().command::<Summon>().command::<Kill>().command::<Damage>().command::<DifficultyCommand>().command::<effects::EffectCommand>().command::<GameRule>().command::<clock::Time>().command::<clock::Xp>().command::<clock::WeatherCommand>().command::<clock::ToggleDownfall>().command::<execute::Execute>().command::<chat::Say>().command::<chat::Tell>()
+        let blocks = blocks.command::<Teleport>().command::<Give>().command::<Clear>().command::<GameModeCommand>().command::<Summon>().command::<Kill>().command::<Damage>().command::<DifficultyCommand>().command::<effects::EffectCommand>().command::<GameRule>().command::<clock::Time>().command::<clock::Xp>().command::<clock::WeatherCommand>().command::<clock::ToggleDownfall>().command::<execute::Execute>().command::<chat::Say>().command::<chat::Tell>();
+        let admin = blocks.command::<operators::Kick>().command::<operators::Op>().command::<operators::Deop>();
+        let messaging = admin.command::<messaging::Me>().command::<messaging::TellRaw>().command::<titles::Title>().command::<titles::TitleRaw>();
+        messaging.command::<sounds::PlaySound>().command::<sounds::StopSound>().command::<sounds::Particle>()
     }
 }
 
@@ -125,22 +138,30 @@ fn title_case(id: &str) -> String {
     capitalised.collect::<Vec<_>>().join(" ")
 }
 
-/// Where the sender is, as `~` counts from: its feet, or the spawn for the console.
-fn origin(ctx: &ShardCtx<'_>, sender: &Sender) -> [f32; 3] {
-    sender.player().and_then(|player| ctx.position(player.id)).map_or_else(|| ctx.spawn(), |position| position.feet)
+/// The players and the other entities `selector` names ([`ShardCtx::select`]), each in its order;
+/// the sender where there is no selector.
+fn targets(ctx: &mut ShardCtx<'_>, sender: &Sender, selector: Option<&Selector>) -> (Vec<Player>, Vec<EntityInfo>) {
+    let Some(selector) = selector else { return (sender.player().cloned().into_iter().collect(), Vec::new()) };
+    split(ctx.select(sender, selector))
 }
 
-/// The players `selector` names, in the sender's world.
-fn players(ctx: &ShardCtx<'_>, sender: &Sender, selector: &Selector) -> Vec<Player> {
-    players_near(ctx, sender, selector, origin(ctx, sender))
+/// [`targets`] of a selector, nearness counted from `here` (an `/execute at`'s place).
+fn targets_from(ctx: &mut ShardCtx<'_>, sender: &Sender, selector: &Selector, here: [f32; 3]) -> (Vec<Player>, Vec<EntityInfo>) {
+    split(ctx.select_from(sender, selector, here))
 }
 
-/// [`players`], nearness counted from `here` (an `/execute at`'s place).
-fn players_near(ctx: &ShardCtx<'_>, sender: &Sender, selector: &Selector, here: [f32; 3]) -> Vec<Player> {
-    select::targets(ctx, sender, selector, here).0
+fn split(found: Vec<Selected>) -> (Vec<Player>, Vec<EntityInfo>) {
+    let (mut players, mut entities) = (Vec::new(), Vec::new());
+    for one in found {
+        match one {
+            Selected::Player(player) => players.push(player),
+            Selected::Entity(entity) => entities.push(entity),
+        }
+    }
+    (players, entities)
 }
 
-/// The players and the other entities `selector` names, in the sender's world (select.rs).
-fn targets(ctx: &ShardCtx<'_>, sender: &Sender, selector: &Selector) -> (Vec<Player>, Vec<EntityInfo>) {
-    select::targets(ctx, sender, selector, origin(ctx, sender))
+/// The players `selector` names; the sender where there is none.
+fn players(ctx: &mut ShardCtx<'_>, sender: &Sender, selector: Option<&Selector>) -> Vec<Player> {
+    targets(ctx, sender, selector).0
 }

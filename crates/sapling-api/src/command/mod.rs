@@ -7,6 +7,7 @@ mod args;
 mod output;
 mod params;
 mod places;
+mod rawtext;
 mod registry;
 mod selector;
 
@@ -14,7 +15,8 @@ pub use args::{Args, ParseError};
 pub use output::{Output, OutputMessage};
 pub use params::{Parameter, Target, Text, parse_choice};
 pub use places::{Axis, BlockCoords, Coords, States};
-pub use selector::{Filter, Pick, Selector};
+pub use rawtext::{RawPart, RawText};
+pub use selector::{Base, Bounds, Filters, Input, Inventory, ItemTest, Location, Not, Selected, Selector};
 pub use registry::Commands;
 
 use crate::{Permission, Player, ShardCtx};
@@ -96,7 +98,7 @@ pub enum ParamKind {
     String,
     /// Everything up to the end of the line.
     Text,
-    /// A player: a name or `@s`.
+    /// A player's name or a selector.
     Target,
     /// One of a fixed set of words, completed by the client.
     Enum { name: String, values: Vec<String> },
@@ -106,4 +108,6 @@ pub enum ParamKind {
     BlockPosition,
     /// A block's states in brackets.
     BlockStates,
+    /// A JSON object: rawtext.
+    Json,
 }

@@ -4,17 +4,11 @@
 use sapling_api::command::{Coords, Selector};
 use sapling_api::{Command, Difficulty, GameMode, Item, Output, Sender, ShardCtx};
 
-use super::{display_name, item_display_name, no_target, origin, players, targets, tell_target};
+use super::{display_name, item_display_name, no_target, players, targets, tell_target};
 
 fn namespaced(name: &str) -> String {
     if name.contains(':') { name.to_owned() } else { format!("minecraft:{name}") }
 }
-
-/// The players a missing target means: the sender.
-fn or_sender(ctx: &ShardCtx<'_>, sender: &Sender, target: Option<&Selector>) -> Vec<sapling_api::Player> {
-    players(ctx, sender, target.unwrap_or(&Selector::sender()))
-}
-
 
 #[derive(Command)]
 #[command(crate = "crate", name = "give", description = "Gives an item to a player", permission = "operator")]
@@ -28,7 +22,7 @@ impl Command for Give {
     fn run(self, ctx: &mut ShardCtx<'_>, sender: &Sender, out: &mut Output) {
         let item = Item::new(super::item_named(&self.item.0), self.amount.unwrap_or(1).max(1));
         let (shown, count) = (item_display_name(&item.name, 0), item.count.to_string());
-        let given = players(ctx, sender, &self.player);
+        let given = players(ctx, sender, Some(&self.player));
         for player in &given {
             ctx.give(player.id, &item);
             tell_target(ctx, player.id, "commands.give.successRecipient", &[shown.clone(), count.clone()]);
@@ -56,7 +50,7 @@ pub(crate) struct Clear {
 impl Command for Clear {
     /// One line per player, as BDS answers.
     fn run(self, ctx: &mut ShardCtx<'_>, sender: &Sender, out: &mut Output) {
-        let cleared = or_sender(ctx, sender, self.player.as_ref());
+        let cleared = players(ctx, sender, self.player.as_ref());
         if cleared.is_empty() {
             return no_target(out);
         }
@@ -78,7 +72,7 @@ pub(crate) struct GameModeCommand {
 
 impl Command for GameModeCommand {
     fn run(self, ctx: &mut ShardCtx<'_>, sender: &Sender, out: &mut Output) {
-        let changed = or_sender(ctx, sender, self.player.as_ref());
+        let changed = players(ctx, sender, self.player.as_ref());
         // A parameter starting with `%` is a translation key too.
         let mode = format!("%createWorldScreen.gameMode.{}", format!("{:?}", self.mode).to_lowercase());
         if changed.is_empty() {
@@ -122,7 +116,7 @@ pub(crate) struct Summon {
 
 impl Command for Summon {
     fn run(self, ctx: &mut ShardCtx<'_>, sender: &Sender, out: &mut Output) {
-        let here = origin(ctx, sender);
+        let here = ctx.origin(sender);
         let at = self.position.map_or(here, |position| position.from(here));
         // BDS summons its newer zombie villager under the older one's name, and knows no other.
         let kind = Some(namespaced(&self.kind)).filter(|kind| kind != "minecraft:zombie_villager").unwrap_or_else(|| "minecraft:zombie_villager_v2".into());
@@ -143,7 +137,7 @@ impl Command for Kill {
     /// The players named die (`kill_player`: not those in creative), the sender where none is
     /// named, and so does every other entity named (`kill_entity`).
     fn run(self, ctx: &mut ShardCtx<'_>, sender: &Sender, out: &mut Output) {
-        let (people, named) = targets(ctx, sender, self.target.as_ref().unwrap_or(&Selector::sender()));
+        let (people, named) = targets(ctx, sender, self.target.as_ref());
         let mut killed: Vec<String> = people.into_iter().filter(|player| ctx.kill_player(player.id)).map(|player| player.name).collect();
         killed.extend(named.iter().filter(|entity| ctx.kill_entity(entity.id)).map(|entity| display_name(&entity)));
         match killed.is_empty() {

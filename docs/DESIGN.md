@@ -20,7 +20,7 @@ Evidence: `research/dragonfly.md`, `research/acacia-server-gaps.md`, `research/w
 | Storage | `WorldStorage` trait. Backends: vanilla LevelDB (rusty-leveldb, bedrock-crustaceans fork, pinned) and in-memory. All disk I/O on an I/O pool, one write batch per chunk | Build maps in vanilla, host them, take SMP worlds back to vanilla |
 | Arenas | Immutable `TemplateWorld` (chunk → `Arc` sections) + `ArenaWorld` holding only changed chunks. Clone O(1), first write copies one section, reset = drop the diff | Nobody does real CoW (Minestom/Valence/Chorus deep-copy) |
 | Chunk sending | Sub-chunk request mode + blob cache. Encoded section payloads cached per template section, shared by all arenas until changed | One encode per map, not per player per arena; client blob cache hits across arenas |
-| Lighting | Not stored | The Bedrock client computes its own |
+| Lighting | Reckoned on the server for its rules only ("Light (as built)"); never sent or saved | The Bedrock client computes its own; BDS saves none |
 | Commands / forms | `#[derive(Command)]` / `#[derive(Form)]` macros (dragonfly's struct model without reflection) | Typed and checked at compile time |
 | Tests | Synchronous shard mode (manual tick) + acacia-bot as the test client | Deterministic; acacia already drives a full client |
 | Licence | MIT. Port dragonfly (MIT, keep notice); block upgrade data from pmmp schema repo (CC0). Never read GPL code (PocketMine, PowerNukkitX, Pumpkin, AdvancedSlimePaper) | Same rule as acacia |
@@ -73,6 +73,17 @@ One listener task, one shard thread, one world. The pieces and why they are shap
   machine with a deadline, the server-full check and the identity reservation. It then reports `Joined`,
   `Packet`s (header parsed, body undecoded) and exactly one `Left` per connection, whoever ended it. The
   game never guesses whether a player is still connected: it despawns on `Left` only.
+- **Admission and access lists.** As a transport comes up, before its login costs a key pair, an
+  address over `NetConfig::admission` (8 connections at once, 10 new ones per 10 s; loopback exempt)
+  is closed (`admission.rs`; acacia caps peers and handshakes for the socket, R7). Opted into with
+  `ServerBuilder::access`, `sapling_net::AccessLists` (`access/`) holds `allowlist.json` and
+  `permissions.json` in BDS's format and `banned-players.json`/`banned-ips.json` in sapling's own
+  (BDS has no bans; times in Unix seconds, optional expiry). Clones share one set, saved on each
+  change. A finished login is checked before `Joined`: a ban by XUID, name or IP gets its screen
+  (Java's wording, `DisconnectFailReason::Kicked`), an unlisted player with the allowlist on
+  `disconnectionScreen.notAllowed`, and `ignoresPlayerLimit` passes the server-full check. A name-only
+  allowlist entry takes the XUID of its first online join, as BDS's does. A new ban drops the players
+  it names at the driver's next turn (`Sessions::enforce_bans`).
 - **Game to network.** `Outbox::send` queues one batch per player per tick and never blocks. Backpressure
   is per player and reads the transport's unsent bytes (RakNet's queue past its window, NetherNet's queues
   past str0m's buffer). Over `NetConfig::congested_bytes` (1 MiB) the connection is congested
@@ -389,7 +400,19 @@ it sends for `/title`, `/scoreboard`, `/gamemode`, `/tp`, a wither's bar and com
   ShowBar bytes prove that layout (acacia `docs/proto.md`); BDS sends no other type, not even when the
   player leaves the wither's range, so the others rest on gophertunnel.
 - **Titles.** SetDurations, SetSubtitle, SetTitle in that order, unset times -1, as `/title` sends them;
-  `send_actionbar`; `send_toast` (ToastRequest).
+  `send_actionbar`; `send_toast` (ToastRequest). `ctx.title_action` sends one step of `/title` alone
+  (title, subtitle, action bar, their rawtext `*Json` types, durations passed on as given, -1 too,
+  Clear, Reset).
+- **Sounds and particles** (`sapling-api/src/sound.rs`, `sapling-shard/src/sounds.rs`). `ctx.play_sound`
+  (PlaySound, position in eighths of a block cut toward zero, as BDS's `-147` for y -18.375),
+  `ctx.stop_sound` (StopSound; no name is `stop_all`), `ctx.spawn_particle` (SpawnParticleEffect, entity -1,
+  the world's dimension); the `_in_world` forms go to whoever sees the place.
+- **Rawtext** (`sapling-api/src/command/rawtext.rs`). The `RawText` parameter (wire type 74, json) reads a
+  JSON object to its closing bracket and checks it with BDS's `commands.tellraw.error.*` keys
+  (`ParseError::Invalid`); text that is no JSON is a syntax error at its first word. Parts with no known
+  key are dropped. `resolve` replaces selectors and scores; `to_json` writes it as BDS sends it (`with`
+  always a rawtext, no parts `null`, a trailing newline). `ctx.tell_raw` sends a JsonWhisper, `ctx.emote`
+  `/me`'s sender-less Chat `* name message`.
 - **Teleport.** `ctx.teleport` sends MovePlayer mode Teleport, cause Command, as `/tp`; the player's inputs
   are ignored until one carries `HandledTeleport`, and the teleport is repeated after 20 ticks without one.
 - **Game mode.** `ctx.set_game_mode` sends UpdatePlayerGameType to everyone in the world, the player
@@ -672,16 +695,52 @@ block action, and takes StopBreak and AbortBreak with a position.
   players and entities; `/give <player> <item> [amount]`, `/clear [player]`, `/gamemode <mode>
   [player]`, `/summon <kind> [pos]` (`ctx.spawn_entity`) and `/kill [target]` (`ctx.kill_entity`),
   which leaves players alone (no damage). Positions take `~` and `~<offset>` from the sender;
-  whole numbers are the middle of their block across, as Bedrock reads them. Targets: `@s`, `@p`,
-  `@a`, `@e` with `[type=...]`, a name. Block states come as typed, `["liquid_depth"=3]`, and a
+  whole numbers are the middle of their block across, as Bedrock reads them. Targets: a name or
+  any Bedrock selector (`@s @p @a @r @e @n @initiator`) with its filters, see "Selectors" below. Block states come as typed, `["liquid_depth"=3]`, and a
   block named with some of its states takes the rest from its first state. The client is told the
   parameters as BDS types them (position 65, block position 64, block states 84). `/gamerule`
   lists, shows and sets the world's rules with BDS's answers, bounds and errors
   (`research/captures/bds-gamerule.txt`); its rule names are not completed. `/say <message>`
   (operators) announces `[name] message` to the shard (`ctx.announce`); `/tell`, `/w` and `/msg <target>
   <message>` (anyone) whisper to each target (`ctx.whisper`), as BDS sent them
-  (`research/captures/bds-feedback.txt`). Not done: the rest of
-  vanilla's commands, `@r` and selector arguments besides `type`.
+  (`research/captures/bds-feedback.txt`). `/me` (anyone), `/tellraw`, `/title`, `/titleraw`,
+  `/playsound`, `/stopsound` and `/particle` answer and send as BDS did (`vanilla/messaging.rs`,
+  `titles.rs`, `sounds.rs`; `bds_command_probe messaging`, research/captures/bds-messaging.txt):
+  `/me` and `/tellraw` go unanswered when they work; a rawtext selector (any selector, through
+  `ShardCtx::select`) names who it finds from the sender, `, `-joined, or is dropped; scores are
+  always dropped (no scoreboard; BDS kept a `*` score raw for a reader without one). `/playsound`
+  with no place plays at each target's eyes; out of range (16, or 16 per unit of volume over 1) it
+  is moved 2 blocks from the hearer at `minimumVolume`, or not played (Java's rule; BDS's answers
+  and positions fit it). Sound and particle names are not checked, as on BDS.
+  `/kick <target> [reason]`, `/op` and `/deop` (operators,
+  `vanilla/operators.rs`) answer under BDS's keys; with access lists `/op` and `/deop` save the role
+  of a player with an XUID, and a joining player gets the role `permissions.json` has for them.
+  `ServerBuilder::access` adds `/allowlist` (`/whitelist`: add, remove, list, on, off, reload; on and
+  off not saved, as on BDS) and Java's and PocketMine's `/ban <name> [reason]`, `/ban-ip <ip|player>
+  [reason]`, `/pardon`, `/pardon-ip` and `/banlist [players|ips]` (BDS has none; operator-only,
+  answered under the client's old `commands.ban*` keys, `vanilla/bans.rs`). Not done: the rest of
+  vanilla's commands; `/permission list|reload`; a ban's expiry from a command (the API takes one);
+  `/kick` and `/op` reach players of the sender's shard only; `whitelist.json` is not read in place
+  of `allowlist.json` as BDS does.
+- **Selectors** (`sapling-api/src/command/selector/`). Parsed into a `Selector` (`Named` or
+  `Variable(Base, Filters)`); `ShardCtx::select(sender, &selector)` is the one resolver, used by every
+  vanilla command and open to plugins (`select_from` counts from another place: `/execute at`). Bases: `@p` and `@n` the nearest (players / everything),
+  `@a` players and `@e` everything in join then creation order, `@r` a random player (any entity
+  once `type=` is given), `@initiator` nobody (no NPC dialogues). Filters: `x y z` (with `~`),
+  `dx dy dz` (whole blocks from the origin), `r rm`, `c` (nearest first, negative farthest; `@r`
+  random), `name type family tag m` (each with `!`, each one that is given must pass), `l lm`,
+  `rx rxm ry rym` (yaw round past 180), `scores`, `hasitem` (item, data, quantity range with `!`,
+  location and slot), `haspermission`. `r`, `l`, `rx`, `ry` take a range too (`r=..5`). Brackets may
+  hold spaces. An unknown key, a repeated one-only key, a `!` where none goes or a bad value is a
+  `commands.generic.syntax` pointing at the key or value. Families come from the behaviour packs
+  (`sapling-data` `mob_families`); tags from `ShardCtx::add_tag` (shard state, not saved); entity
+  rotation is what viewers were last told. Not done: no scoreboard, so any `scores` test fails; no
+  `/inputpermission`, so every input is enabled; entities have no name tags (`name=` sees an empty
+  name) and no inventory for `hasitem`; selectors do not look into other dimensions apart; `Target`
+  parameters still take only `@s` and names. Not checked on BDS (no capture has selectors beyond
+  `type`): the error tokens, `@r` taking entities with `type=!x`, `m` numbers 5 and 6, whole-block
+  volumes, unnamed entities' `name`, `hasitem` with no location counting armour and offhand,
+  ranges on `r`/`l`/`rx`/`ry`, `c=0` refused, `name=` and `type=` matched in any case.
 - **Neighbours** (`blocks/updates.rs`). After a player's break or place: falling blocks around are
   queued to fall (next bullet); what stood on a block that is gone (the Java game's `canSurvive`
   blocks: plants, rails, carpets, doors, standing torches and signs, candles, floor buttons and levers)
@@ -752,8 +811,29 @@ block action, and takes StopBreak and AbortBreak with a position.
   (a sword: two) in the `Damage` tag of the tool in the hand, where the game keeps it; the tool is gone
   when its damage would pass its durability, so a wooden tool lasts 60 uses (BDS
   `ItemStackBase::hurtAndBreak`: breaks on `max < new`). One throw in a hundred decides whether a use
-  counts: always, or 100 / (level + 1) with Unbreaking (the formula is other servers', the single
-  throw is BDS's), never with an `Unbreakable` tag. No break sound; `Item::damage` does not show it.
+  counts: always, or 100 / (level + 1) with Unbreaking (armour 60 + 40 / (level + 1), the wiki's),
+  never with an `Unbreakable` tag. No break sound; `Item::damage` does not show it.
+- **Enchantments** (`sapling_data::enchant`, all the rules; `enchants.rs` reads what a player wears
+  and holds; `docs/research/enchantments.md`, decompiled BDS). Levels come from the stack's `ench`
+  list. Sharpness (1.25 a level), Smite and Bane of Arthropods (2.5 on undead and arthropods), summed
+  and floored, add to a hit before strength (`creatures/attacks.rs`, `duels.rs`); Bane slows an
+  arthropod (amplifier 0, 20 + up to 10 x level ticks), Fire Aspect burns 80 ticks a level, Knockback
+  throws half a block a level further (the Java game's: BDS's throw was not traced), Looting goes
+  into the mob's loot table (`looting_enchant`, `random_chance_with_looting`; a player's kill also
+  meets `killed_by_player`). Protection's points (Protection 1 a level on all but void, starving and a
+  sonic boom; Fire, Blast and Projectile 2, Feather Falling 3 on their own), summed over the pieces,
+  each take 4 hundredths off past the armour, 20 at most (`Health::warded`, every path a player is
+  hurt by). Fire Protection shortens a burn by 15 hundredths a level, summed. Thorns: each piece
+  rolls 0.15 a level, hurts a mob or player that hit (melee) for 1 to 4, and wears 3 when it hurt
+  back, 1 when not. Respiration keeps a breath with level / (level + 1). Depth Strider goes into
+  the server's movement step. Frost Walker freezes still water in a square of 2 + level (6 counts at
+  most) around a player that moved, as frosted ice that ages and melts by the Java game's rule
+  (`blocks/frost.rs`). Mending: an orb mends one damaged Mending stack worn or held, two of wear a
+  point, before the rest is experience. Curse of Vanishing is gone at death; Curse of Binding keeps
+  a piece on outside creative (`inventory/enchanted.rs`). Not done: bows, crossbows, tridents,
+  fishing rods and the mace and their enchantments; Aqua Affinity (the server does not slow a break
+  under water); Soul Speed, Swift Sneak; Thorns against arrows; Blast Protection's throw (BDS reads
+  none); Looting on armour.
 - **What a block leaves** (`blocks/loot.rs`, `sapling_data::block_loot`). `BreakEvent::drops` starts as
   what the game's loot table for the block gives, in survival when the tool in the server's hand
   harvests the block; empty otherwise. The tables are the Java game's (`data/block-loot.tsv`, made from
@@ -788,7 +868,7 @@ Details and BDS evidence: docs/research/nether-dimension.md, docs/research/end-d
   loading-screen end; BDS's own PlayerAction DimensionChangeAck once the spawn-radius columns are sent.
   `ctx.travel(player, dimension, feet)` and `/execute in <dimension> run tp` use it; a world move into another
   dimension's world (`transfer`, handoff) does too. The player record keeps `DimensionId` and `Pos`, and
-  StartGame waits for it so a player who left in the Nether joins there.
+  StartGame waits for it so a player joins in the dimension it left from (`dimensions::start_in`).
 - **Portals**: blocks in `blocks/portals.rs` (frame shape, lighting by flint and steel, fire charge or any
   fire, breaking, records), travel in `portals.rs` (BDS's timer and cooldown, 8:1 scaling, record search
   within 128, placement and portal making in `portals/arrive.rs`, MT19937 direction draws from the seed).
@@ -864,14 +944,18 @@ Details and BDS evidence: docs/research/nether-dimension.md, docs/research/end-d
   `Pos`, `Rotation`, `Motion`: what BDS reads of one is untried). Not done: AI, damage; saving the
   items players throw, orbs and falling blocks; a kept entity that wanders into a column that is not
   loaded is lost with it.
-- **Kept between visits.** The first world's storage keeps hotbar, inventory, armour, offhand and the
-  selected slot, the ender chest's slots and the experience under `sapling_player_<uuid>`, with the
-  game's field names (`Inventory` with `Slot`, `Armor`, `Offhand`, `SelectedInventorySlot`,
-  `EnderChestInventory`, `PlayerLevel`, `PlayerLevelProgress`) and item layout. It is not the game's own
-  `player_server_<id>` record: one holding only items is not a player BDS can load. Loads and saves run
-  on the world's I/O threads; a save happens when the player leaves, every 100 ticks while the items
-  changed, and when the shard stops. One save per player is in flight at a time, and a player back
-  before it lands is given what is being saved. A record that cannot be read is never written over.
+- **Kept between visits** (`sapling-leveldb/src/player`, docs/research/player-records.md). The first
+  world's storage keeps a player where BDS does: `player_<uuid>` maps it to a `player_server_` compound
+  with BDS's fields: items (`Inventory` with `Slot`, `Armor`, `Offhand`, `SelectedInventorySlot`,
+  `EnderChestInventory`), `PlayerLevel`/`PlayerLevelProgress`, health and hunger as `Attributes`,
+  `ActiveEffects`, the bed (`SpawnBlockPosition*`, `Spawn*`, `SpawnDimension`), `DimensionId`, `Pos` (at
+  the eyes, as BDS), `Rotation` and `PlayerGameMode`. Fields sapling does not know stay as stored. A record
+  under sapling's old `sapling_player_<uuid>` is read while no vanilla one exists and dropped at the next
+  save. A player joins where it left, facing the same way, in its own game mode; a place in the void or
+  past the world's edge, or in another world than the entry shard's first, starts it at the spawn. Loads
+  and saves run on the world's I/O threads; a save happens when the player leaves, every 100 ticks while
+  something of it changed (its place too), and when the shard stops. One save per player is in flight at a time, and a player back before it lands
+  is given what is being saved. A record that cannot be read is never written over.
 - **Chests and barrels** (`containers.rs`). 27 slots, kept where the game keeps them: the `Items` of the
   block's entity, so a world's own chests open with what they hold. A placed chest gets an empty entity
   (`BlockEntityData` to viewers); clients are never sent `Items`, in chunks or otherwise. An allowed
@@ -949,8 +1033,8 @@ Details and BDS evidence: docs/research/nether-dimension.md, docs/research/end-d
   `addExperience` (the Java formula), go to its client as the `player.experience` attribute, with
   `player.level` when the level changed (as recorded), and are kept
   with its items (`PlayerLevel`, `PlayerLevelProgress`); a fifth level sounds `levelup`. Orbs join
-  up as BDS's (`orbs/merge.rs`) and are kept with their column at what they are worth. Not done:
-  Mending.
+  up as BDS's (`orbs/merge.rs`) and are kept with their column at what they are worth. An orb
+  mends a Mending stack first (Enchantments).
 - **Double chests** (`containers/pairs.rs`). Two chests of one kind, side by side and facing the same
   way, name each other in their block entities (`pairx`, `pairz`, `pairlead`), which clients are sent
   and draw one large chest from. A chest placed beside a single one pairs with it, the old one leading
@@ -986,6 +1070,35 @@ Details and BDS evidence: docs/research/nether-dimension.md, docs/research/end-d
 the cells its view reaches into; packets about a player go to the viewers found by inverting the `Sees`
 sets once a tick. Mobs sit in a grid that changes only when they come or go, and a player's mob set is
 remade only when its view moved or the grid changed.
+
+## Light (as built)
+
+Sky light and block light for the server's rules (`sapling-world` `light/`); the client lights what
+it draws itself, and nothing is saved (BDS saves no light), so a column is lit anew each load.
+
+- **Data.** What a state emits and filters is acacia-world's `light_emission` / `light_filter`
+  (minecraft-data corrected by the wiki's Bedrock table, not read from BDS); a waterlogged cell takes
+  the stronger of both layers. Light is a nibble per cell per channel, per section, and a section at
+  one level throughout holds no array: an open column holds none, a generated one about three.
+- **Rules.** A step loses 1 + the filter of the cell entered; full sky light going down loses only the
+  filter. The nether and the end have no sky light. `World::brightness_at` is BDS's
+  `getRawBrightness` (docs/research/saplings.md): sky less `skyDarken`, or block light if brighter, 0
+  inside a block of filter 15; the shard's `light::sky_darken` is the daylight detector's reckoning.
+- **Work off the tick.** A loaded column is lit alone on the I/O thread that loads it (`own.rs`, a
+  few ms a generated column). On the shard, `World::relight` joins each arrived column to its loaded
+  neighbours (only the section faces whose levels differ), then mends the light around every block
+  written since (a write is noted only when it changes emission or filter) in one flood per channel.
+  Light stops at a column that is not loaded and flows in when it arrives. An unloaded column's light
+  goes with it. An arena reads its template's light (lit when the template was made) until it changes
+  a column's; a world without storage has open sky in every column nobody lit.
+- **When.** The shard relights at the start of every tick (`chunks::poll_and_relight_worlds`) and
+  again before random ticks, so a block written in a tick shows in light from the next of those.
+  Plugins read `ShardCtx::light_at` and `brightness_at`.
+- **Not done.** No consumer but saplings (raw brightness 9 over them, propagules none): crops,
+  grass and mycelium spread and death, ice and snow melting, mob spawning, daylight detectors
+  through leaves and water, and undead burning in sunlight still use their own reckonings or none.
+  Unverified against BDS: the filter table, the sky's loss going down through a filter, and whether
+  BDS lags light updates as sapling does.
 
 ## NetherNet (as built)
 
@@ -1066,7 +1179,12 @@ acacia-world = { path = "../acacia/acacia/crates/acacia-world" }
   game (bots only so far); whether it wants the status JSON or BDS's empty body; whether the LAN
   list shows a server that answers from a dedicated process.
 - **NetherNet, left out:** the signaling service (friends list, Realms-style joins), TURN and
-  server-reflexive candidates, HTTPS signaling, IPv6 LAN discovery, rate limits on signaling.
+  server-reflexive candidates, HTTPS signaling, IPv6 LAN discovery, rate limits on signaling (the
+  per-address admission counts a NetherNet connection once it opens, not its offers).
+- **Access lists, not checked against BDS:** the kick screen without a reason (`disconnect.kicked`)
+  and with one (the reason alone); `/kick` refusing the sender; the allowlist list's "seen" count
+  (sapling gives the entry count twice); whether `ignoresPlayerLimit` counts with the allowlist off;
+  BDS's `commands.allowlist.noOnlineAuth` refusal offline is not copied.
 
 - **Step 6, only a vanilla client can confirm:** which actions a creative client sends for an instant
   break (sapling breaks on PredictBreak and on an item use of type BreakBlock, never on StartBreak
@@ -1142,10 +1260,10 @@ acacia-world = { path = "../acacia/acacia/crates/acacia-world" }
   sidebar with two lines of the same text; removing and re-adding a line in one batch without flicker;
   RemoveObjective alone to hide the sidebar (BDS also clears the slot); ToastRequest;
   UpdatePlayerGameType for another player's id.
-- Commands: console sender, `@a`/`@p`/`@r` selectors, position and item parameters, soft enums
+- Commands: console sender, selectors in `Target` parameters, position and item parameters, soft enums
   (UpdateSoftEnum) for dynamic completions, several overloads for a struct, permission nodes.
 - Forms: images are untested, `ServerSettings`, ClientboundCloseForm, a timeout for unanswered forms.
-- HUD: list and below-name objectives, several boss bars (needs an entity each), `/title` clear and reset.
+- HUD: list and below-name objectives, several boss bars (needs an entity each); a scoreboard for rawtext scores.
 - Not sent yet, though BDS sends them for other players: UpdateAbilities, UpdateAdventureSettings,
   UpdateAttributes (sprint speed), PlayerLocation / LocatorBar, the MOVING flag and the FlagsExtended bit
   that changes with sneaking, held items and armour.

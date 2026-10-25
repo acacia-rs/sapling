@@ -1,6 +1,6 @@
 //! What a hit with an item in hand costs a mob.
 //! Every row is what BDS took from a cow (research/captures/bds-tools.txt).
-// TODO: no enchantment, effect or critical hit.
+// TODO: no critical hit. Enchantments add in enchant.rs, effects in the shard's vitals/effects.rs.
 
 const HAND: f32 = 1.0;
 /// A sword of each material; an axe costs 1 less, a pickaxe or hoe 2, a shovel 3.

@@ -72,6 +72,12 @@ pub(crate) fn punched(world: &mut World, player: Entity, amount: f32, by: &str, 
     bitten(world, player, amount, &format!("{}{by}", death::BY_PLAYER), speed)
 }
 
+/// The Thorns of what `player` hit hurt it for `amount`; false where `player` is no player, or
+/// it took nothing.
+pub(crate) fn thorned(world: &mut World, player: Entity, amount: f32) -> bool {
+    world.get::<Vitals>(player).is_some() && is_mortal(world, player) && hurt(world, player, amount, Cause::Thorns)
+}
+
 pub(crate) fn is_fireproof(world: &World, player: Entity) -> bool {
     world.get::<Vitals>(player).is_some_and(|vitals| vitals.health.is_fireproof())
 }

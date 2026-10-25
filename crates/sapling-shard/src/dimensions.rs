@@ -14,6 +14,8 @@ use crate::{blobs, chunks, containers, movement, sleep, visibility};
 
 /// `ServerboundLoadingScreen` type of a screen the client closed.
 const SCREEN_ENDED: i32 = 2;
+/// How far from 0 a kept place may lie on X and Z: Bedrock's world is 30 million blocks across each way.
+const WORLD_EDGE: f32 = 30_000_000.0;
 
 /// The layers of one overworld's dimensions by protocol id (0 overworld, 1 nether, 2 end);
 /// every member layer holds the same.
@@ -190,15 +192,23 @@ pub(crate) fn travel(world: &mut World, player: Entity, layer: Entity, feet: [f3
     world.resource_mut::<Changes>().0.push(Change::Moved { entity: player, from, to });
 }
 
-/// Puts a joining player whose last visit ended in another dimension back there, before its
-/// client is told where it is (StartGame); later, or where the world has no such dimension, it
-/// stays where it joins.
-pub(crate) fn start_in(world: &mut World, player: Entity, dimension: i32, feet: [f32; 3]) {
+/// Puts a joining player back where its last visit ended, facing as it faced, before its client
+/// is told where it is (StartGame). Later, where the world has no such dimension, or from a place
+/// no player can be (in the void, past the world's edge), it stays at the spawn it joins at.
+pub(crate) fn start_in(world: &mut World, player: Entity, dimension: i32, feet: [f32; 3], rotation: Option<[f32; 2]>) {
     let (Some(stage), Some(layer)) = (world.get::<crate::components::Stage>(player).copied(), world.get::<InLayer>(player).map(|in_layer| in_layer.0)) else { return };
     let Some(to) = of(world, layer, dimension).filter(|_| stage < crate::components::Stage::StartGame) else { return };
+    let floor = world.get::<Layer>(to).map_or(i32::MAX, |layer| layer.world.heights().start) as f32;
+    let [x, y, z] = feet;
+    if !(feet.iter().all(|c| c.is_finite()) && y >= floor && x.abs() < WORLD_EDGE && z.abs() < WORLD_EDGE) {
+        return;
+    }
     world.get_mut::<InLayer>(player).expect("checked above").0 = to;
     if let Some(mut position) = world.get_mut::<Position>(player) {
         position.feet = feet;
+        if let Some([yaw, pitch]) = rotation {
+            (position.yaw, position.pitch, position.head_yaw) = (yaw, pitch, yaw);
+        }
     }
     if let Some(mut client) = world.get_mut::<ClientDimension>(player) {
         client.dimension = dimension;

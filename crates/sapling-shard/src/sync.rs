@@ -140,6 +140,13 @@ impl Told {
         self.turn = [yaw, head].map(|degrees| (degrees.rem_euclid(360.0) * 256.0 / 360.0) as u8);
     }
 
+    /// Its body's yaw and its pitch as they are now, in degrees from -180 to 180, to the
+    /// 1.4 degrees viewers are told them in.
+    pub fn facing(&self) -> [f32; 2] {
+        let degrees = |byte: u8| (f32::from(byte) * 360.0 / 256.0 + 180.0).rem_euclid(360.0) - 180.0;
+        [degrees(self.turn[0]), self.pitched.map_or(0.0, |[_, now]| degrees(now))]
+    }
+
     /// The packets that bring viewers of the entity `id` to `at` (where the wire puts it) and
     /// `motion`. BDS sends 0 in their tick fields.
     pub fn update(&mut self, id: u64, at: [f32; 3], motion: [f32; 3], on_ground: bool) -> Vec<Bytes> {

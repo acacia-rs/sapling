@@ -95,7 +95,8 @@ drops differ, nothing here knows.
 loot table from the vanilla behaviour packs (their `.brarchive`s, the newest pack version winning), the
 adult's in its default state, and every table those name, with old item names renamed (checked against
 `ItemRegistry.bin` by a test). Fox and piglin name tables no pack holds; slimes and magma cubes, whose
-loot goes by size, have none here.
+loot goes by size, have none here. A death is no one's or a player's (`Killer`), with the Looting it
+held (`enchant.rs`); a pet's kill counts as no one's.
 
 ## Mob traits
 
@@ -111,6 +112,14 @@ table of the kinds whose hunting was drilled (`docs/research/mob-attacks.md`): `
 `minecraft:attack` plus what the kind holds (a vindicator's axe 5, a wither skeleton's sword 5),
 `speed` is `minecraft:movement` times its attack's `speed_multiplier`, `sees` the `max_dist` of its
 `nearest_attackable_target` for players (16 where it names none).
+
+## Mob families
+
+`mob-families.tsv` (read by `families.rs`, tested by a selector's `family=`, Smite, Bane of Arthropods and the undead's
+potion rules): each entity's
+`minecraft:type_family` from the vanilla behaviour packs, by `data/generate/mob-families.py`: its own
+components', or, for a kind that has them only in component groups, every group's together. Kinds the
+packs give no family (items, falling blocks) are not listed.
 
 ## Liquid reactions
 

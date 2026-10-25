@@ -5,11 +5,11 @@
 // TODO: no haste, mining fatigue, water or mid-air slowdown: the server has no effects and only a
 // rough on-ground flag, and each would only make a break slower than what is asked for here.
 
-use acacia_proto::nbt::Value;
 use acacia_proto::packets::{LevelEvent, LevelEventEvent};
 use acacia_proto::types::Vec3f;
 use bevy_ecs::prelude::*;
 use sapling_api::BlockPos;
+use sapling_data::enchant::{self, Enchant};
 use sapling_world::{Material, Mining, Tool, ToolKind, ToolTier};
 
 use super::loot::Breaker;
@@ -19,10 +19,6 @@ use crate::inventory::Inventory;
 
 /// Ticks a break may arrive early: an input can be a tick or two ahead of the shard's count.
 const LEEWAY: u64 = 3;
-/// `ench` ids.
-const EFFICIENCY: i16 = 15;
-const SILK_TOUCH: i16 = 16;
-const FORTUNE: i16 = 18;
 /// `BlockStartBreak` carries this over the break's ticks: the crack's growth per tick.
 const CRACK_SCALE: u32 = 65535;
 const HITS_EVERY: u64 = 5;
@@ -64,28 +60,23 @@ pub(crate) fn break_ticks(mining: &Mining, tool: Option<Tool>, efficiency: u8) -
     if !harvests {
         speed = 1.0;
     }
-    if speed > 1.0 && efficiency > 0 {
-        speed += f32::from(efficiency).powi(2) + 1.0;
+    if speed > 1.0 {
+        speed += enchant::efficiency(efficiency);
     }
     let ticks = f64::from(mining.hardness) * if harvests { 30.0 } else { 100.0 } / f64::from(speed);
     // Hardnesses like 0.6 are not exact: without the epsilon 18.0000007 would round up to 19.
     Some((ticks - 1e-4).ceil().max(1.0) as u32)
 }
 
-/// The tool in a player's hand and its levels of the enchantments `ids` name.
-fn held_tool<const N: usize>(world: &World, player: Entity, ids: [i16; N]) -> (Option<Tool>, [u8; N]) {
+/// The tool in a player's hand and its levels of `enchants`.
+fn held_tool<const N: usize>(world: &World, player: Entity, enchants: [Enchant; N]) -> (Option<Tool>, [u8; N]) {
     let Some(held) = world.get::<Inventory>(player).and_then(|inventory| inventory.in_hand().as_ref()) else { return (None, [0; N]) };
-    let level = |id: i16| match held.stack.tag.as_ref().and_then(|tag| tag.get("ench")) {
-        Some(Value::List(list)) => list.items.iter().find(|enchantment| enchantment.get("id") == Some(&Value::Short(id))).and_then(|enchantment| enchantment.get("lvl")),
-        _ => None,
-    };
-    let levels = ids.map(|id| if let Some(Value::Short(level)) = level(id) { *level as u8 } else { 0 });
-    (Tool::from_identifier(&held.stack.name), levels)
+    (Tool::from_identifier(&held.stack.name), enchants.map(|enchant| enchant::level(held.stack.tag.as_ref(), enchant)))
 }
 
 /// What the tool in a player's hand means for the drop of a block of `mining`.
 pub(crate) fn breaker(world: &World, player: Entity, mining: &Mining) -> Breaker {
-    let (tool, [silk_touch, fortune]) = held_tool(world, player, [SILK_TOUCH, FORTUNE]);
+    let (tool, [silk_touch, fortune]) = held_tool(world, player, [Enchant::SilkTouch, Enchant::Fortune]);
     let is = |kind: ToolKind| tool.is_some_and(|tool| tool.kind == kind);
     Breaker { harvests: mining.can_harvest(tool), silk_touch: silk_touch > 0, shears: is(ToolKind::Shears), pickaxe: is(ToolKind::Pickaxe), fortune, by_entity: true }
 }
@@ -98,7 +89,7 @@ fn crack(event: LevelEventEvent, pos: BlockPos, data: i32) -> bytes::Bytes {
 /// A survival player started on the block at `pos`: the break is timed from now, and those who
 /// see the block watch it crack, as from BDS.
 pub(crate) fn start(world: &mut World, player: Entity, layer: Entity, pos: BlockPos, mining: &Mining) {
-    let (tool, [efficiency]) = held_tool(world, player, [EFFICIENCY]);
+    let (tool, [efficiency]) = held_tool(world, player, [Enchant::Efficiency]);
     // The sword and shears speeds are the Java game's, never faster than Bedrock's but perhaps
     // slower: a break with one of them is taken as soon as it is claimed.
     let is_unsure = tool.is_some_and(|tool| matches!(tool.kind, ToolKind::Sword | ToolKind::Shears));

@@ -71,9 +71,11 @@ pub(crate) fn dispatch(world: &mut World) {
     blocks::fall_blocks(world);
     tnt::burn(world);
     blocks::burn_fires(world);
+    blocks::melt_frost(world);
     blocks::dim_ores(world);
     blocks::sound_hits(world);
     blocks::settle_scaffolds(world);
+    crate::light::relight(world);
     blocks::batched(world, blocks::random_ticks);
     inventory::dispatch(world);
     containers::dispatch_closes(world);

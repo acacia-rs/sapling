@@ -1,12 +1,13 @@
-//! A player's items, health, hunger and bed between visits: asked of the first world's storage at login, handed back
-//! when the player leaves, every few seconds while they changed, and when the shard stops.
+//! A player's items, health, hunger, bed, place and game mode between visits: asked of the first world's storage at
+//! login, handed back when the player leaves, every few seconds while something changed, and when the shard stops.
 
 use bevy_ecs::prelude::*;
-use sapling_world::{OVERWORLD, PlayerData, PlayerLoad};
+use sapling_api::GameMode;
+use sapling_world::{PlayerData, PlayerLoad};
 
 use super::{ARMOR, ENDER, Held, Inventory, MAIN, Place};
 use crate::chunks::UNLOAD_INTERVAL;
-use crate::components::{DefaultLayer, Identity, Layer, NetId, Outgoing, Position, Stage, Tick};
+use crate::components::{DefaultLayer, Identity, InLayer, Layer, Mode, NetId, Outgoing, Position, Stage, Tick};
 use crate::dimensions::{self, ClientDimension};
 use crate::experience::{self, Experience};
 use crate::handoff::{Peers, ShardMsg};
@@ -37,7 +38,22 @@ fn kept(inventory: &Inventory) -> PlayerData {
     let stacks = |slots: Vec<Option<Held>>| slots.into_iter().map(|slot| slot.map(|held| held.stack)).collect();
     let (level, progress) = (inventory.experience.level, inventory.experience.progress);
     let (main, armor, ender, offhand) = (stacks(inventory.main), stacks(inventory.armor), stacks(inventory.ender), inventory.offhand.map(|held| held.stack));
-    PlayerData { main, armor, offhand, selected: inventory.selected, ender, level, progress, vitals: None, bed: None, effects: Vec::new(), dimension: 0, position: None }
+    PlayerData { main, armor, offhand, selected: inventory.selected, ender, level, progress, ..PlayerData::default() }
+}
+
+/// BDS's game type numbers (`PlayerGameMode`).
+fn game_type(mode: GameMode) -> i32 {
+    match mode {
+        GameMode::Survival => 0,
+        GameMode::Creative => 1,
+        GameMode::Adventure => 2,
+        GameMode::Spectator => 6,
+    }
+}
+
+/// `None` for BDS's "the world's default" (5) and anything unknown.
+fn game_mode(stored: i32) -> Option<GameMode> {
+    [GameMode::Survival, GameMode::Creative, GameMode::Adventure, GameMode::Spectator].into_iter().find(|mode| game_type(*mode) == stored)
 }
 
 /// Gives the players storage answered for their items.
@@ -56,8 +72,12 @@ pub(crate) fn load(mut commands: Commands, mut layers: Query<(Entity, &mut Layer
                 if let Some(bed) = data.bed {
                     commands.entity(player).insert(BedSpawn::restored(bed, here));
                 }
-                if let (dimension @ 1.., Some(feet)) = (data.dimension, data.position) {
-                    commands.queue(move |world: &mut World| dimensions::start_in(world, player, dimension, feet));
+                if let Some(mode) = data.game_mode.and_then(game_mode) {
+                    commands.entity(player).insert(Mode(mode));
+                }
+                if let Some(feet) = data.position {
+                    let (dimension, rotation) = (data.dimension, data.rotation);
+                    commands.queue(move |world: &mut World| dimensions::start_in(world, player, dimension, feet, rotation));
                 }
                 fill(&mut inventory, data);
             }
@@ -83,24 +103,34 @@ pub(crate) fn send_own(tick: Res<Tick>, mut players: Query<(&NetId, &Stage, &mut
     }
 }
 
-/// Has a player's items kept if they changed since they last were: by this shard's storage, or
+/// Where a player was, which way it faced, its dimension and game mode, when it was last kept.
+#[derive(Component, Clone, Copy, PartialEq)]
+pub(crate) struct KeptPlace(Option<([f32; 3], [f32; 2])>, i32, Option<i32>);
+
+/// Has a player kept if anything of it changed since it last was: by this shard's storage, or
 /// by the entry shard's when this is another (`Peers::entry`).
 pub(crate) fn save(world: &mut World, player: Entity) {
     let Some(id) = world.get::<Identity>(player).map(|identity| identity.0.uuid.to_string()) else { return };
     let vitals = world.get::<Vitals>(player).copied();
     let effects = crate::vitals::kept_effects(world, player);
-    let (dimension, position) = (world.get::<ClientDimension>(player).map_or(0, |client| client.dimension), world.get::<Position>(player).map(|position| position.feet));
-    // Outside the overworld where it is matters at its next visit (load).
-    let stale = vitals.is_some_and(|vitals| vitals.is_unsaved()) || effects.is_some() || dimension != OVERWORLD;
+    let dimension = world.get::<ClientDimension>(player).map_or(0, |client| client.dimension);
+    let first = world.resource::<DefaultLayer>().0;
+    let (index, entry) = (world.resource::<Peers>().index, world.resource::<Peers>().entry);
+    // The player starts in the entry shard's first world (load): a place in another world is not kept.
+    let home = index == entry && world.get::<InLayer>(player).is_some_and(|in_layer| dimensions::of(world, first, dimension) == Some(in_layer.0));
+    let place = world.get::<Position>(player).filter(|_| home).map(|position| (position.feet, [position.yaw, position.pitch]));
+    let now = KeptPlace(place, dimension, world.get::<Mode>(player).map(|mode| game_type(mode.0)));
+    let stale = vitals.is_some_and(|vitals| vitals.is_unsaved()) || effects.is_some() || world.get::<KeptPlace>(player) != Some(&now);
     let Some(mut inventory) = world.get_mut::<Inventory>(player).filter(|inventory| inventory.keep && (inventory.unsaved || stale)) else { return };
     inventory.unsaved = false;
-    let data = PlayerData { vitals: vitals.map(|vitals| vitals.kept()), effects: effects.unwrap_or_default(), dimension, position, ..kept(&inventory) };
-    let first = world.resource::<DefaultLayer>().0;
+    let KeptPlace(place, _, game_mode) = now;
+    let (position, rotation) = (place.map(|place| place.0), place.map(|place| place.1));
+    let data = PlayerData { vitals: vitals.map(|vitals| vitals.kept()), effects: effects.unwrap_or_default(), dimension, position, rotation, game_mode, ..kept(&inventory) };
     let data = PlayerData { bed: world.get::<BedSpawn>(player).and_then(|bed| bed.kept(first)), ..data };
+    world.entity_mut(player).insert(now);
     if let Some(mut vitals) = world.get_mut::<Vitals>(player) {
         vitals.mark_saved();
     }
-    let (index, entry) = (world.resource::<Peers>().index, world.resource::<Peers>().entry);
     if index == entry {
         return keep_here(world, &id, data);
     }
@@ -122,7 +152,7 @@ pub(crate) fn save_all(world: &mut World) {
     players.into_iter().for_each(|player| save(world, player));
 }
 
-/// On the ticks columns are saved, saves the players whose items changed.
+/// On the ticks columns are saved, saves the players something of whom changed.
 pub(crate) fn save_changed(world: &mut World) {
     if world.resource::<Tick>().0 % UNLOAD_INTERVAL == 0 {
         save_all(world);

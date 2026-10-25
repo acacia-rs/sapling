@@ -77,6 +77,7 @@ impl Output {
         match error {
             ParseError::Syntax { before, token, after } => self.translate("commands.generic.syntax", vec![before, token, after], false),
             ParseError::NoTarget => self.translate("commands.generic.noTargetMatch", Vec::new(), false),
+            ParseError::Invalid(key) => self.translate(key, Vec::new(), false),
         }
     }
 }

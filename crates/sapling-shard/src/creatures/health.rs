@@ -3,6 +3,7 @@
 //! viewers, is harm.rs.
 
 use bevy_ecs::prelude::Component;
+use sapling_data::enchant::Warding;
 
 /// Ticks after a hit in which only a harder one lands, and only by what it adds.
 const GUARD: u8 = 10;
@@ -38,8 +39,9 @@ pub(crate) struct Health {
     walled: u8,
     /// A landing that hurts in the tick after it: what it costs, and where that tick began.
     landed: Option<(f32, [f32; 3])>,
-    /// The points and toughness of what it wears.
+    /// The points and toughness of what it wears, and what that armour's enchantments ward off.
     armour: [f32; 2],
+    warding: Warding,
     /// Health on top of its own that hits take first (the absorption effect).
     cushion: f32,
     /// What it takes of a hit (the resistance effect), and whether fire does nothing to it.
@@ -56,7 +58,7 @@ impl Health {
     /// A mob of `max` health with `left` of it, `burning` ticks more.
     pub(crate) fn new(max: f32, left: Option<f32>, burning: u16) -> Self {
         let left = left.map_or(max, |left| left.clamp(0.0, max));
-        Self { left, max, last: 0.0, guarded: 0, burning, peak: None, air: AIR, walled: 0, landed: None, armour: [0.0; 2], cushion: 0.0, takes: 1.0, fireproof: false, springs: 0.0, told: left, lit: false }
+        Self { left, max, last: 0.0, guarded: 0, burning, peak: None, air: AIR, walled: 0, landed: None, armour: [0.0; 2], warding: Warding::default(), cushion: 0.0, takes: 1.0, fireproof: false, springs: 0.0, told: left, lit: false }
     }
 
     pub(crate) fn left(&self) -> f32 {
@@ -108,8 +110,13 @@ impl Health {
         self.fireproof
     }
 
-    pub(crate) fn wear(&mut self, armour: [f32; 2]) {
-        self.armour = armour;
+    pub(crate) fn wear(&mut self, armour: [f32; 2], warding: Warding) {
+        (self.armour, self.warding) = (armour, warding);
+    }
+
+    /// What is left of a hit of `amount` by `cause` past its armour's protection enchantments.
+    pub(crate) fn warded(&self, amount: f32, cause: Cause) -> f32 {
+        crate::enchants::harm_of(cause).map_or(amount, |harm| self.warding.spared(amount, harm))
     }
 
     /// What is left of a hit of `amount` behind its armour: the Java game's rule, which BDS
@@ -178,7 +185,7 @@ impl Health {
     /// last tick's landing if it hurt, as what it cost and where that tick began. BDS hurts a
     /// tick after the move that lands.
     pub(crate) fn fall(&mut self, from: [f32; 3], to: f32, on_ground: bool, in_liquid: bool) -> Option<(f32, [f32; 3])> {
-        let due = self.landed.take().filter(|(harm, _)| self.hurt(*harm));
+        let due = self.landed.take().filter(|(harm, _)| self.hurt(self.warded(*harm, Cause::Fall)));
         let peak = self.peak.map_or(from[1], |peak| peak.max(from[1])).max(to);
         self.peak = (!on_ground && !in_liquid).then_some(peak);
         let harm = (peak - to - SAFE_FALL - self.springs).ceil();
@@ -203,9 +210,10 @@ impl Health {
         self.peak.map_or(from, |peak| peak.max(from)).max(to) - to
     }
 
-    /// Sets it on fire for `ticks` more, if it would not burn that long anyway.
+    /// Sets it on fire for `ticks` more, less what Fire Protection spares it, if it would not burn
+    /// that long anyway.
     pub(crate) fn ignite(&mut self, ticks: u16) {
-        self.burning = self.burning.max(ticks);
+        self.burning = self.burning.max(self.warding.burns_for(ticks));
     }
 
     /// Sets it on fire for `ticks` if it is not: the first hurts at once, as the sun's did on
@@ -219,15 +227,15 @@ impl Health {
     /// A tick of fire, `touching` fire or lava, or in water: what hurt it, if anything.
     pub(crate) fn burn(&mut self, touching: bool, wet: bool) -> Option<Cause> {
         if touching {
-            self.burning = BURNS;
-            return (!self.fireproof && self.hurt(self.shielded(FIRE_HARM))).then_some(Cause::Fire);
+            self.burning = self.warding.burns_for(BURNS);
+            return (!self.fireproof && self.hurt(self.warded(self.shielded(FIRE_HARM), Cause::Fire))).then_some(Cause::Fire);
         }
         if wet || self.burning == 0 {
             self.burning = 0;
             return None;
         }
         self.burning -= 1;
-        (self.burning > 0 && self.burning % BURN_EVERY == 0 && !self.fireproof && self.hurt(FIRE_HARM)).then_some(Cause::FireTick)
+        (self.burning > 0 && self.burning % BURN_EVERY == 0 && !self.fireproof && self.hurt(self.warded(FIRE_HARM, Cause::FireTick))).then_some(Cause::FireTick)
     }
 
     /// A tick with its head in a block or not: whether the block, borne `spared` ticks, hurt it.
@@ -237,7 +245,7 @@ impl Health {
     }
 
     pub(crate) fn scald(&mut self) -> bool {
-        !self.fireproof && self.hurt(self.shielded(LAVA_HARM))
+        !self.fireproof && self.hurt(self.warded(self.shielded(LAVA_HARM), Cause::Lava))
     }
 
     /// A tick of breath, held where it has none to draw: its breath when that changed.
@@ -248,7 +256,7 @@ impl Health {
 
     /// Whether, out of breath under water, it was hurt.
     pub(crate) fn drown(&mut self, under_water: bool) -> bool {
-        under_water && self.air == 0 && self.hurt(DROWN_HARM)
+        under_water && self.air == 0 && self.hurt(self.warded(DROWN_HARM, Cause::Drowning))
     }
 }
 

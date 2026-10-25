@@ -17,7 +17,7 @@ pub(crate) struct Damage {
 
 impl Command for Damage {
     fn run(self, ctx: &mut ShardCtx<'_>, sender: &Sender, out: &mut Output) {
-        let (found, mobs) = targets(ctx, sender, &self.target);
+        let (found, mobs) = targets(ctx, sender, Some(&self.target));
         let names = || found.iter().map(|player| player.name.clone()).chain(mobs.iter().map(|mob| display_name(mob))).collect::<Vec<_>>().join(", ");
         // BDS fails `suffocation` for anyone (research/captures/bds-worn.txt).
         let Some(cause) = DamageCause::named(self.cause.as_deref().unwrap_or("none")).filter(|cause| *cause != DamageCause::Suffocation) else {
