@@ -38,6 +38,8 @@ struct Plot {
 impl Handler for Plot {
     fn on_join(&mut self, ctx: &mut ShardCtx<'_>, player: &Player) {
         if !std::mem::replace(&mut self.laid, true) {
+            // Lit dirt beside grass turns to grass on a random tick.
+            assert!(ctx.set_game_rule("randomTickSpeed", sapling::RuleValue::Int(0)));
             for east in 1..=4 {
                 assert!(ctx.set_block(at(east, 0), &Block::new("dirt")));
                 (1..=3).for_each(|up| assert!(ctx.set_block(at(east, up), &Block::air())));

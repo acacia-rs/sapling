@@ -14,11 +14,21 @@ use acacia_client::{BlobStore, DisconnectReason, MemoryBlobStore};
 use acacia_world::{BlockAccess, BlockRegistry, Chunk};
 use bytes::Bytes;
 use common::{GOAL, GROUND, SPAWN, fixture};
-use sapling::{MovementCheck, MovementPolicy, Server};
+use sapling::{Handler, MovementCheck, MovementPolicy, Player, RuleValue, Server, ShardCtx};
 use sapling_leveldb::{ChunkKey, LevelDbWorld};
 
 async fn start() -> Server {
-    common::start(crate::common::builder()).await
+    common::start(crate::common::builder().handler(Still)).await
+}
+
+/// Stops random ticks once a player is in: a section they change (grass spreading, snow) is a new
+/// blob for the second join.
+struct Still;
+
+impl Handler for Still {
+    fn on_join(&mut self, ctx: &mut ShardCtx<'_>, _: &Player) {
+        ctx.set_game_rule("randomTickSpeed", RuleValue::Int(0));
+    }
 }
 
 /// A blob store that counts what the server had to send.
