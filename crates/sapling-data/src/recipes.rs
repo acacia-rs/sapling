@@ -1,8 +1,8 @@
 //! The crafting recipes clients are told of (`CraftingData.bin`, BDS's own list), read for the
 //! server's side of a craft: what a recipe uses up and what it makes.
 // TODO: the crafting grid's shaped and shapeless recipes, the stonecutter's, the three
-// smelters' and campfires'; smithing and the special recipes (maps, fireworks, dyed armour) are
-// sent to clients but not read here.
+// smelters' and campfires', the smithing table's (smithing.rs); the special recipes (maps,
+// fireworks, dyed armour) are sent to clients but not read here.
 
 use std::collections::{HashMap, HashSet};
 use std::sync::LazyLock;
@@ -14,6 +14,9 @@ use crate::items::{CreativeItem, described};
 use crate::templates::{CRAFTING_DATA, decode};
 
 mod molang;
+mod smithing;
+
+pub use smithing::smithed;
 
 const GRID: &str = "crafting_table";
 /// The metadata of an ingredient that takes any.

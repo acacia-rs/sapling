@@ -93,6 +93,13 @@ pub(crate) fn spawn(world: &mut World, layer: Entity, at: [f32; 3], points: i32)
     }
 }
 
+/// Pays `points` to the player as orbs where it stands, at its eyes.
+pub(crate) fn pay_player(world: &mut World, player: Entity, points: i32) {
+    let (Some(position), Some(layer)) = (world.get::<Position>(player).copied(), world.get::<InLayer>(player).map(|layer| layer.0)) else { return };
+    let [x, y, z] = position.feet;
+    spawn(world, layer, [x, y + sapling_data::EYE_HEIGHT, z], points);
+}
+
 /// One orb worth `value`, thrown a little up and aside from `at`.
 pub(crate) fn throw(world: &mut World, layer: Entity, at: [f32; 3], value: i32) -> Option<Entity> {
     let mut throw = || random(world) * 0.2;

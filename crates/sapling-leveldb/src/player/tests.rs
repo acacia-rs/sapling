@@ -22,7 +22,7 @@ fn player() -> PlayerData {
     PlayerData {
         main, armor, offhand: stack("minecraft:shield", 1, None), selected: 8, ender, level: 17, progress: 0.25, vitals: Some([7.5, 18.0, 0.0, 2.25]),
         bed: Some([[5, 64, -3], [4, 64, -3]]), effects: vec![[1, 1, 600, 1], [19, 0, 40, 0]], dimension: 1, position: Some([-14.5, 34.0, 7.5]),
-        rotation: Some([135.0, -12.5]), game_mode: Some(1),
+        rotation: Some([135.0, -12.5]), game_mode: Some(1), enchant_seed: Some(-123_456),
     }
 }
 
@@ -44,6 +44,7 @@ fn the_record_has_bds_fields_and_shapes() {
     assert_eq!(record.get("Pos"), Some(&Value::List(List { tag: 5, items: vec![Value::Float(-14.5), Value::Float(34.0 + EYE_HEIGHT), Value::Float(7.5)] })));
     assert_eq!(record.get("Rotation"), Some(&Value::List(List { tag: 5, items: vec![Value::Float(135.0), Value::Float(-12.5)] })));
     assert_eq!((record.get("PlayerGameMode"), record.get("DimensionId"), record.get("SpawnDimension")), (Some(&Value::Int(1)), Some(&Value::Int(1)), Some(&Value::Int(0))));
+    assert_eq!(record.get("EnchantmentSeed"), Some(&Value::Int(-123_456)));
     let Some(Value::List(effects)) = record.get("ActiveEffects") else { panic!("no effects") };
     let speed = &effects.items[0];
     let parts = ["Id", "Amplifier", "Duration", "DurationEasy", "DurationNormal", "DurationHard", "Ambient", "ShowParticles"].map(|key| speed.get(key).cloned());

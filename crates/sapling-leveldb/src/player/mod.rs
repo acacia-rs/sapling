@@ -44,6 +44,8 @@ pub struct PlayerData {
     pub rotation: Option<[f32; 2]>,
     /// BDS's game type: 0 survival, 1 creative, 2 adventure, 6 spectator (5 is the world's).
     pub game_mode: Option<i32>,
+    /// What its enchanting table offers are drawn from; `None` in a record without one.
+    pub enchant_seed: Option<i32>,
 }
 
 /// BDS keeps an actor's `Pos` where its position is, a player's eyes: this far above the feet.
@@ -51,6 +53,7 @@ const EYE_HEIGHT: f32 = 1.62001;
 const DIMENSION: &str = "DimensionId";
 const EFFECTS: &str = "ActiveEffects";
 const GAME_MODE: &str = "PlayerGameMode";
+const ENCHANT_SEED: &str = "EnchantmentSeed";
 const BED: [&str; 3] = ["SpawnBlockPositionX", "SpawnBlockPositionY", "SpawnBlockPositionZ"];
 const BEDSIDE: [&str; 3] = ["SpawnX", "SpawnY", "SpawnZ"];
 const SPAWN_DIMENSION: &str = "SpawnDimension";
@@ -110,6 +113,7 @@ impl PlayerData {
                 _ => None,
             },
             game_mode: int(GAME_MODE),
+            enchant_seed: int(ENCHANT_SEED),
         })
     }
 
@@ -143,6 +147,9 @@ impl PlayerData {
         }
         if let Some(mode) = self.game_mode {
             set(&mut fields, GAME_MODE, Value::Int(mode));
+        }
+        if let Some(seed) = self.enchant_seed {
+            set(&mut fields, ENCHANT_SEED, Value::Int(seed));
         }
         match self.effects.is_empty() {
             true => remove(&mut fields, EFFECTS),

@@ -68,7 +68,11 @@ stacks needs acacia-proto to know which item is the shield: `set_shield_item_id(
 (`extract-data -- --show InventoryContent,PlayerHotbar`). `max_stack` is a list of name endings, not data.
 
 `recipes.rs` reads the crafting grid's shaped and shapeless recipes out of `CraftingData.bin`, by the
-network id a craft request names: what each cell takes and what a craft makes.
+network id a craft request names: what each cell takes and what a craft makes. `recipes/smithing.rs`
+reads the smithing table's transform and trim recipes from the same file and the trims' patterns and
+materials from `TrimData.bin`. The other workstations' rules are `enchant/{table, anvil, grind}.rs`,
+over each enchantment's BDS numbers (`enchant/kinds.rs`) and what each item takes (`gear.rs`;
+docs/research/workstations.md).
 
 ## Item tags and block loot
 

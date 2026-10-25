@@ -59,6 +59,7 @@ mod view;
 mod visibility;
 mod vitals;
 mod weather;
+mod workstations;
 mod worlds;
 
 pub use config::{MovementCheck, ShardConfig, TICK};

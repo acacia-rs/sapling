@@ -59,4 +59,5 @@ mod tnt;
 mod vanilla_rules;
 mod veto_events;
 mod vitals;
+mod workstations;
 mod worlds;
