@@ -80,7 +80,6 @@ pub(crate) use send::{batched, block_at, hold, keep_entity, put_block, set, set_
 pub(crate) use updates::break_block;
 pub(crate) use crafter::{crafter_slot, dispatch_toggles as dispatch_crafter_toggles};
 pub(crate) use queued::tick as run_queued;
-#[allow(unused_imports)]
 pub(crate) use rods::struck as lightning_struck;
 pub(crate) use sculk::{GameEvent, tick as hear_vibrations, vibrate, vibrate_at, walked};
 pub(crate) use target::shot_stopped;

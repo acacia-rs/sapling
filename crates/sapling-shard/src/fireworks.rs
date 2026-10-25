@@ -99,8 +99,6 @@ pub(crate) fn launch_held(world: &mut World, player: Entity, pos: BlockPos, face
 }
 
 /// A dispenser at `pos` facing `facing` shoots `stack` out of its face, along it.
-// TODO: dispensers call this once they shoot (the dispenser work is its own branch).
-#[allow(dead_code)]
 pub(crate) fn dispense(world: &mut World, layer: Entity, pos: BlockPos, facing: Face, stack: &ItemStack) -> Option<Entity> {
     let way = facing.offset().map(|c| c as f32);
     let mut at: [f32; 3] = std::array::from_fn(|axis| pos[axis] as f32 + 0.5 + way[axis] * (0.5 + SIZE[0] / 2.0));

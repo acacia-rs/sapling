@@ -928,9 +928,10 @@ Details and BDS evidence: docs/research/nether-dimension.md, docs/research/end-d
 - **Lightning, fireworks, the wither** (sapling-shard `lightning.rs` and `lightning/`, `fireworks.rs` and
   `fireworks/`, `creatures/wither.rs` and `creatures/wither/`, `blocks/summoning.rs`;
   docs/research/wither-lightning-fireworks.md). A bolt is an entity that strikes once on its first tick
-  (`creatures/struck.rs` for mobs) and lives through its flashes; storms pick columns near players.
-  Rockets fly by their own tick and burst by `fireworks/burst.rs`; `fireworks::launch` is a dispenser's
-  way in. The wither is a creature whose `Wither` part steers it ahead of hunting; `damage::ask` asks
+  (`creatures/struck.rs` for mobs) and lives through its flashes; storms pick columns near players,
+  drawn to rods by `lightning/rods.rs`; what the strike does to a rod and copper is
+  `blocks::lightning_struck`'s. Rockets fly by their own tick and burst by `fireworks/burst.rs`;
+  dispensers launch them by `fireworks::dispense`. The wither is a creature whose `Wither` part steers it ahead of hunting; `damage::ask` asks
   `creatures::spares` first, so its charge, armour and own blasts hold for every kind of harm.
 - **The dragon fight** (sapling-shard `dragon.rs` and `dragon/`, docs/research/end-dimension.md): a `Fight`
   component on the End layer, its record in the realm's `Level::dragon_fight` (LevelDB `TheEnd`, sapling-leveldb

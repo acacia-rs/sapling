@@ -53,6 +53,10 @@ pub(super) fn dispense(world: &mut World, layer: Entity, pos: BlockPos, face: Fa
             vibrate_at(world, layer, front, GameEvent::PrimeFuse, false);
             Dispensed::Spent
         }
+        crate::fireworks::ROCKET => match crate::fireworks::dispense(world, layer, pos, face, stack) {
+            Some(_) => Dispensed::Spent,
+            None => Dispensed::Thrown,
+        },
         _ if crate::spawning::hatch(world, layer, name, front) => Dispensed::Spent,
         _ if crate::containers::is_shulker_box(name) => return place_shulker_box(world, layer, front, face, stack),
         _ if ARMOUR_PIECES.iter().any(|piece| name.ends_with(piece)) || name == "minecraft:turtle_helmet" || name == "minecraft:elytra" => equip(world, layer, front, stack),

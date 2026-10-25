@@ -121,6 +121,10 @@ fn a_dispenser_shoots_an_arrow_and_a_snowball_and_primes_tnt() {
     let tnt: Vec<EntityInfo> = entities(&mut h).into_iter().filter(|entity| entity.kind == "minecraft:tnt").collect();
     assert_eq!(tnt.len(), 1, "primed TNT");
     assert!((tnt[0].feet[0] - 4.5).abs() < 0.2, "in front: {:?}", tnt[0]);
+
+    let mut h = setup(Block::new("dispenser").with("facing_direction=5"), vec![Item::new("minecraft:firework_rocket", 1)], vec![]);
+    power(&mut h, true, 8);
+    assert!(entities(&mut h).iter().any(|entity| entity.kind == "minecraft:fireworks_rocket" && entity.feet[0] > 4.0), "a rocket launched east");
 }
 
 #[test]

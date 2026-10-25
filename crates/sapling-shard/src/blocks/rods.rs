@@ -26,8 +26,6 @@ fn power(world: &mut World, layer: Entity, pos: BlockPos, on: bool) -> bool {
 /// The hook for lightning striking the cell `pos` (the bolt's position, floored): a rod there is
 /// powered, and copper there and from the block below or the rod's own block on is cleaned
 /// (docs/research/copper.md, L3-L4). Whether it was a rod.
-// TODO: lightning (another branch) calls this where a bolt strikes.
-#[allow(dead_code)]
 pub(crate) fn struck(world: &mut World, layer: Entity, pos: BlockPos) -> bool {
     let is_rod = power(world, layer, pos, true);
     let start = match is_rod.then(|| facing(world, layer, pos)).flatten() {

@@ -1,7 +1,7 @@
 //! Lightning, as BDS's `LightningBolt` struck (docs/research/wither-lightning-fireworks.md,
 //! "Lightning"): a bolt a thunderstorm (storms.rs), `/summon lightning_bolt` or a trident's
-//! Channeling calls down is heard as thunder and a blast, strikes the block it lands in (a rod,
-//! rods.rs) and scrapes the copper under it, lights fire on normal and hard, and hurts once whom
+//! Channeling calls down is heard as thunder and a blast, strikes the block it lands in (a rod or
+//! copper, blocks/rods.rs; rods draw it, rods.rs), lights fire on normal and hard, and hurts once whom
 //! it reaches: a player 5 and 8 seconds alight, a mob as its kind takes it (creatures/struck.rs).
 //! It flashes again one to three times, lighting fire each time, then goes.
 
@@ -63,7 +63,7 @@ pub(crate) fn strike(world: &mut World, layer: Entity, at: [f32; 3], harms: bool
     world.entity_mut(bolt).insert(Bolt { life: LIFE, flashes, harms });
     let cell = at.map(|c| c.floor() as i32);
     entities::after_announcing(world, layer, cell, vec![sound("thunder", at), sound("explode", at)]);
-    rods::struck(world, layer, cell);
+    crate::blocks::lightning_struck(world, layer, cell);
     kindle(world, layer, cell, harms, MORE_FIRES);
     if harms {
         hurt(world, layer, at);
@@ -130,10 +130,9 @@ pub(crate) fn channel(world: &mut World, layer: Entity, feet: [f32; 3]) {
     }
 }
 
-/// Storms strike, bolts flash and go, struck rods go dark.
+/// Storms strike, bolts flash and go.
 pub(crate) fn tick(world: &mut World) {
     storms::tick(world);
-    rods::tick(world);
     let bolts: Vec<(Entity, Entity)> = world.query_filtered::<(Entity, &InLayer), (With<Bolt>, With<NetId>)>().iter(world).map(|(bolt, layer)| (bolt, layer.0)).collect();
     for (bolt, layer) in bolts {
         flash(world, bolt, layer);
