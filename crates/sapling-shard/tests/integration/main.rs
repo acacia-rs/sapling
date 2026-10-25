@@ -32,6 +32,8 @@ mod growth;
 mod handoff;
 mod hud;
 mod hunting;
+mod husbandry;
+mod husbandry_products;
 mod inventory;
 mod join;
 mod jukebox;

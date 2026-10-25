@@ -27,6 +27,8 @@ mod spawn;
 mod spawn_rules;
 mod start_game;
 mod templates;
+mod husbandry;
+mod raised_look;
 
 pub use block_defaults::default_properties;
 pub use block_loot::{BlockLoot, Fortune, LootRow, StateTest, Tooling, block_loot, java_block, ripe_age};
@@ -52,3 +54,5 @@ pub use player::{AddPlayerOptions, add_player, entity_data, experience_attribute
 pub use game_rules::{DAYLIGHT_CYCLE, GameRules, HUNGER, LIQUID_FLOW, MOB_AI, REDSTONE, RuleValue};
 pub use start_game::{EYE_HEIGHT, StartGameOptions, start_game};
 pub use templates::{pre_start_packets, registry_packets};
+pub use husbandry::{Husbandry, Swap, husbandry};
+pub use raised_look::{mob_age_set, mob_colour_set, mob_links_set, mob_look, mob_name_set};

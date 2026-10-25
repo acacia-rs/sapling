@@ -60,6 +60,10 @@ pub enum SpawnReason {
     SpawnEgg,
     /// Where something thrown landed: an egg's chicks, an ender pearl's endermite.
     Thrown,
+    /// Born to two animals that bred.
+    Bred,
+    /// Another mob became it: a sheared mooshroom's cow.
+    Transformed,
 }
 
 /// A mob is about to appear. Cancelled, it does not. Mobs coming back with their column from

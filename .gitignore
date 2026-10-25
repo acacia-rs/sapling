@@ -17,3 +17,4 @@ __pycache__/
 /crates/sapling-data/data/spawn-rules.tsv
 /crates/sapling-data/data/despawns.tsv
 /crates/sapling-worldgen/src/structure/template/templates.bin
+/crates/sapling-data/data/husbandry.tsv

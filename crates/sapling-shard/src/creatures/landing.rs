@@ -10,18 +10,16 @@ use acacia_proto::types::Vec3f;
 use bevy_ecs::prelude::*;
 use sapling_api::SpawnReason;
 use sapling_data::shots;
-use sapling_world::Actor;
 
 use super::arrows::Lands;
 use super::charges::{self, Gust};
 use super::flight::{self, Loosed};
+use super::harm;
 use super::health::Cause;
-use super::shown::announcement;
-use super::{Creature, harm};
 use crate::blocks::Dice;
 use crate::body::Body;
-use crate::components::{InLayer, NetId};
-use crate::{entities, late_sounds, mobs, view, vitals};
+use crate::components::InLayer;
+use crate::{entities, late_sounds, view, vitals};
 
 const BLAZE: &str = "minecraft:blaze";
 const CHICKEN: &str = "minecraft:chicken";
@@ -119,30 +117,6 @@ fn knock(world: &mut World, struck: Entity, is_player: bool, layer: Entity, from
 /// A baby chicken hatches at `at`, shown as one.
 fn hatch(world: &mut World, layer: Entity, at: [f32; 3]) -> Option<()> {
     let chick = super::spawn(world, layer, CHICKEN, at, SpawnReason::Thrown).and_then(|id| entities::find(world, id))?;
-    let id = world.get::<NetId>(chick)?.0;
-    let look = Actor {
-        unique_id: id as i64,
-        identifier: CHICKEN.to_owned(),
-        position: at,
-        yaw: 0.0,
-        pitch: 0.0,
-        variant: 0,
-        mark_variant: 0,
-        color: 0,
-        baby: true,
-        name: String::new(),
-        item: None,
-        painting: None,
-        states: Vec::new(),
-        armor: Vec::new(),
-        mainhand: None,
-        offhand: None,
-        health: None,
-        fire: 0,
-    };
-    let body = *world.get::<Body>(chick)?;
-    let shown = announcement(id, CHICKEN, &body, Some(&look), None, 0.0, 0);
-    world.get_mut::<Creature>(chick)?.look = Some(look);
-    mobs::reannounce(world, chick, shown);
+    super::husbandry::be_born(world, chick, CHICKEN);
     Some(())
 }

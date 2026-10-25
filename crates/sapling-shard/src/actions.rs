@@ -44,10 +44,15 @@ pub(crate) fn allowed_hits(world: &mut World, hits: Vec<(Entity, u64)>) -> Vec<(
     hits.into_iter().filter(|&(entity, id)| offer_click(world, entity, id, EntityAttackEvent::new).is_some_and(|event| !event.is_cancelled())).collect()
 }
 
-/// Offers this tick's uses of players and entities; nothing in the game answers them yet.
+/// Offers this tick's uses of players and entities; one no plugin cancelled on a mob is raising's
+/// (creatures/husbandry/clicks.rs).
 pub(crate) fn interacted(world: &mut World, uses: Vec<(Entity, u64)>) {
     for (entity, id) in uses {
-        offer_click(world, entity, id, EntityInteractEvent::new);
+        let offered = offer_click(world, entity, id, EntityInteractEvent::new);
+        let mob = entities::find(world, EntityId(id)).filter(|_| offered.is_some_and(|event| !event.is_cancelled()));
+        if let Some(mob) = mob {
+            crate::creatures::interact(world, entity, mob);
+        }
     }
 }
 

@@ -1,7 +1,7 @@
 //! Mobs, spawned through the plugin API or kept by a world folder: bodies (body.rs) that fall and
-//! collide, stroll (strolling.rs) and hunt if their kind does (hunting.rs), shown as BDS announced their kind (`sapling_data::add_entity`) or
+//! collide, stroll (strolling.rs), hunt if their kind does (hunting.rs) and are raised (husbandry.rs), shown as BDS announced their kind (`sapling_data::add_entity`) or
 //! as they were stored; and the entity side of the handlers' context (backend.rs).
-// TODO: no AI but strolling and hunting; their physics are the Java game's (`Physics::MOB`); a spawned mob is
+// TODO: no AI but strolling, hunting and raising; their physics are the Java game's (`Physics::MOB`); a spawned mob is
 // saved with the least a compound needs, which BDS was not tried on.
 
 mod afflictions;
@@ -26,6 +26,7 @@ mod harm;
 mod health;
 mod hits;
 mod hunting;
+mod husbandry;
 mod landing;
 mod legs;
 mod omens;
@@ -50,7 +51,7 @@ use sapling_world::Actor;
 
 use crate::body::Body;
 use death::{die, leaves_loot};
-use shown::{announcement, head, physics_of, spawn_sound};
+use shown::{announcement, head, physics_of, reshow, spawn_sound};
 pub(crate) use afflictions::{breathed_on, splashed};
 pub(crate) use arrows::{ARROW, Lands, Shot};
 pub(crate) use flight::{Arrow, Launch, Loosed, Pickup, from_storage as shot_from_storage, launch, lying as lying_shots, unstick};
@@ -60,6 +61,7 @@ pub(crate) use enchanted::thorned;
 pub(crate) use harm::{holds, is_full_block, touches};
 pub(crate) use health::{Cause, Health};
 pub(crate) use hunting::on_difficulty;
+pub(crate) use husbandry::{Raised, interact, kept as kept_raising, owner_hit, owner_hurt, tie_to_fence};
 pub(crate) use omens::{Omens, befall, infested_hurt};
 use crate::components::{InLayer, Layer, NetId, Tick};
 use crate::{blocks, entities, mobs};
@@ -76,10 +78,6 @@ impl Creature {
     /// One dressed as BDS announces its kind.
     pub(crate) fn plain() -> Self {
         Self { look: None }
-    }
-
-    fn is_baby(&self) -> bool {
-        self.look.as_ref().is_some_and(|look| look.baby)
     }
 }
 
@@ -116,8 +114,9 @@ fn born(world: &mut World, layer: Entity, kind: &str, feet: [f32; 3], birth: Bir
         return None;
     }
     let body = Body::new(feet, [0.0; 3], slimes::sizes::body_size(kind, gene).unwrap_or(size));
-    let entity = entities::spawn_mob(world, layer, kind, body, feet, |id| Some(announcement(id, kind, &body, None, None, yaw, gene.map_or(0, |gene| gene.0))))?;
+    let entity = entities::spawn_mob(world, layer, kind, body, feet, |id| Some(announcement(id, kind, &body, (None, None), None, yaw, gene.map_or(0, |gene| gene.0))))?;
     world.entity_mut(entity).insert(Creature { look: None });
+    husbandry::adopt(world, entity, kind, None);
     if let Some(gene) = gene {
         world.entity_mut(entity).insert(gene);
     }
@@ -140,22 +139,32 @@ pub(crate) fn from_storage(world: &mut World, layer: Entity, actor: Actor, uniqu
     if actor.identifier == crate::dragon::CRYSTAL {
         return crate::dragon::crystal_from_storage(world, layer, actor.position, actor.yaw, unique_id, compound);
     }
+    if actor.identifier == husbandry::KNOT {
+        return husbandry::knot_from_storage(world, layer, actor.position, unique_id, compound);
+    }
     let Some(size) = sapling_data::mob_size(&actor.identifier) else { return false };
     let kind = actor.identifier.clone();
     let gene = genes::stored(&kind, actor.variant);
     let body = Body::new(actor.position, [0.0; 3], slimes::sizes::body_size(&kind, gene).unwrap_or(size));
-    let Some(entity) = entities::spawn_mob(world, layer, &kind, body, actor.position, |id| Some(announcement(id, &kind, &body, Some(&actor), None, 0.0, actor.variant))) else { return false };
+    let Some(entity) = entities::spawn_mob(world, layer, &kind, body, actor.position, |id| Some(announcement(id, &kind, &body, (Some(&actor), None), None, 0.0, actor.variant))) else { return false };
     if let Some(gene) = gene {
         world.entity_mut(entity).insert(gene);
     }
     give_legs(world, entity, &kind);
     give_health(world, entity, &kind, actor.health, actor.fire.max(0) as u16);
+    husbandry::adopt(world, entity, &kind, Some((&actor, &compound)));
     world.entity_mut(entity).insert(Creature { look: Some(actor) });
     if kind == crate::dragon::DRAGON {
         crate::dragon::adopt(world, entity);
     }
     entities::keep(world, entity, layer, unique_id, compound);
+    reshow(world, entity);
     true
+}
+
+/// A mob of `kind` that appears at `feet` for `reason`, as [`spawn`] but the entity.
+fn spawn_entity(world: &mut World, layer: Entity, kind: &str, feet: [f32; 3], reason: SpawnReason) -> Option<Entity> {
+    spawn(world, layer, kind, feet, reason).and_then(|id| entities::find(world, id))
 }
 
 /// Gives a mob of a kind that strolls or hunts what it does so with.
@@ -229,6 +238,7 @@ pub(crate) fn tick(world: &mut World) {
     bullets::tick(world);
     charges::tick(world);
     fireballs::tick(world);
+    husbandry::tick(world);
     let now = world.resource::<Tick>().0;
     let dead: Vec<Entity> = world.query::<(Entity, &Dying)>().iter(world).filter(|(_, dying)| now >= dying.0 + DYING).map(|(entity, _)| entity).collect();
     for entity in dead {
@@ -253,7 +263,7 @@ pub(crate) fn tick(world: &mut World) {
         }
         // A teleport starts the tick afresh where it landed: no fall from where it left.
         let Some(start) = world.get::<Body>(entity).copied() else { continue };
-        if thinks && !rams::steer(world, entity, layer, id, &kind) && !hunting::steer(world, entity, layer, id, &kind) {
+        if thinks && !rams::steer(world, entity, layer, id, &kind) && !hunting::steer(world, entity, layer, id, &kind) && !husbandry::steer(world, entity, layer, &kind) {
             let traits = sapling_data::mob_traits(&kind);
             let strolls = world.resource::<crate::components::Settings>().0.mobs_stroll;
             if strolls {
@@ -280,8 +290,7 @@ pub(crate) fn tick(world: &mut World) {
         }
         let health = world.get::<Health>(entity);
         if !packets.is_empty() || health.map(|health| (health.left(), health.is_burning())) != before {
-            let shown = announcement(id, &kind, &body, world.get::<Creature>(entity).and_then(|creature| creature.look.as_ref()), health, world.get::<legs::Legs>(entity).map_or(0.0, |legs| legs.yaw), world.get::<genes::Gene>(entity).map_or(0, |gene| gene.0));
-            mobs::reannounce(world, entity, shown);
+            reshow(world, entity);
         }
     }
 }

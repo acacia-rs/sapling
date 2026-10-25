@@ -28,10 +28,17 @@ pub fn plain(name: &str) -> Option<ItemStack> {
 
 /// A stored actor with one field of its kind's own.
 pub fn actor(id: i64, identifier: &str, feet: [f32; 3], own: (&str, Value)) -> Vec<u8> {
+    actor_with(id, identifier, feet, vec![own])
+}
+
+/// A stored actor with fields of its kind's own.
+pub fn actor_with(id: i64, identifier: &str, feet: [f32; 3], own: Vec<(&str, Value)>) -> Vec<u8> {
     let floats = |items: &[f32]| Value::List(List { tag: 5, items: items.iter().map(|&item| Value::Float(item)).collect() });
-    let fields = [("UniqueID", Value::Long(id)), ("identifier", Value::String(identifier.into())), ("Pos", floats(&feet)), ("Rotation", floats(&[90.0, 0.0])), own];
+    let mut fields = vec![("UniqueID", Value::Long(id)), ("identifier", Value::String(identifier.into())), ("Pos", floats(&feet)), ("Rotation", floats(&[90.0, 0.0]))];
+    fields.extend(own);
+    let value = Value::Compound(fields.into_iter().map(|(key, value)| (nbt::Str::from(key), value)).collect());
     let mut out = BytesMut::new();
-    nbt::write::<LittleEndian>(&mut out, &Nbt { name: String::new(), value: compound(fields) });
+    nbt::write::<LittleEndian>(&mut out, &Nbt { name: String::new(), value });
     out.to_vec()
 }
 

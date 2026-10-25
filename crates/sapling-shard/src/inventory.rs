@@ -25,7 +25,7 @@ pub(crate) use armour_wear::{wear_armour, wear_thorny};
 pub(crate) use crafting::clear_grid;
 pub(crate) use forge::{Bench, Forged, enchanting_input};
 pub(crate) use equipment::{announce, in_hand, screens, select, spawn_packets};
-pub(crate) use give::give_and_pop;
+pub(crate) use give::{give_and_pop, swap_held, use_up_held};
 pub(crate) use plugin::{described, item_at, set_item, stored};
 pub(crate) use requests::dispatch;
 pub(crate) use store::{keep_here, load, save, save_all, save_changed, send_own};
