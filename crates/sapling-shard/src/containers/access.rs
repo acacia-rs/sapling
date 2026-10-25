@@ -7,7 +7,7 @@ use acacia_proto::types::{WindowID, WindowType};
 use bevy_ecs::prelude::*;
 use sapling_api::BlockPos;
 
-use super::screens::{Viewing, still_shows};
+use super::screens::{Screen, Viewing, still_shows};
 use super::{close, pairs};
 use crate::components::{Layer, Outgoing};
 
@@ -32,6 +32,9 @@ pub(super) fn is_blocked(world: &World, layer: Entity, pos: BlockPos, block: &st
 
 /// Whether the block `viewing` shows is still there.
 fn is_there(world: &World, viewing: &Viewing) -> bool {
+    if let Screen::Carried(vehicle) = viewing.screen {
+        return crate::vehicles::cargo(world, vehicle).is_some();
+    }
     let [x, y, z] = viewing.pos;
     let Some(level) = world.get::<Layer>(viewing.layer).map(|layer| &layer.world).filter(|level| level.in_height(y)) else { return false };
     level.registry().get(level.block(x, y, z)).is_some_and(|state| still_shows(viewing.screen, state.name))

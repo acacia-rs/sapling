@@ -44,10 +44,15 @@ pub(crate) fn allowed_hits(world: &mut World, hits: Vec<(Entity, u64)>) -> Vec<(
     hits.into_iter().filter(|&(entity, id)| offer_click(world, entity, id, EntityAttackEvent::new).is_some_and(|event| !event.is_cancelled())).collect()
 }
 
-/// Offers this tick's uses of players and entities; nothing in the game answers them yet.
+/// Offers this tick's uses of players and entities; those let through open, prime, saddle or
+/// mount what was used.
 pub(crate) fn interacted(world: &mut World, uses: Vec<(Entity, u64)>) {
     for (entity, id) in uses {
-        offer_click(world, entity, id, EntityInteractEvent::new);
+        let allowed = offer_click(world, entity, id, EntityInteractEvent::new).is_some_and(|event| !event.is_cancelled());
+        let Some(target) = entities::find(world, EntityId(id)).filter(|_| allowed) else { continue };
+        if !crate::vehicles::used_on(world, entity, target) {
+            crate::riding::used_on(world, entity, target);
+        }
     }
 }
 

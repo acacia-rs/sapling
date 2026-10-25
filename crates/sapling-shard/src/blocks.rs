@@ -56,6 +56,7 @@ pub(crate) use growth::{arrived as plants_arrived, tick as random_ticks, trample
 pub(crate) use ores::{light as light_ore, tick as dim_ores, tread as tread_ore};
 pub(crate) use scaffolds::tick as settle_scaffolds;
 pub(crate) use doors::{bed_head, release_buttons, with as with_property};
+pub(crate) use holders::spend as spend_held;
 pub(crate) use pistons::{at_place as block_entity_at, tick as move_pistons};
 pub(crate) use plates::press_plates;
 pub(crate) use redstone::{apply as apply_redstone, arrived as circuits_arrived, container_changed, evaluate as evaluate_redstone, power_at};

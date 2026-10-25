@@ -31,11 +31,11 @@ pub fn add_item_entity(id: u64, stack: &Stack<'_>, position: [f32; 3], velocity:
     })
 }
 
-/// What a mob wears: helmet, chestplate, leggings, boots. A slot that is empty, missing, or holds
-/// an item the registry does not list shows nothing.
+/// What a mob wears: helmet, chestplate, leggings, boots, then a horse's body armour. A slot that
+/// is empty, missing, or holds an item the registry does not list shows nothing.
 pub fn mob_armor(runtime_entity_id: u64, slots: &[Option<Stack<'_>>]) -> MobArmorEquipment {
     let slot = |index: usize| slots.get(index).and_then(Option::as_ref).and_then(item).unwrap_or_else(nothing);
-    MobArmorEquipment { runtime_entity_id, helmet: slot(0), chestplate: slot(1), leggings: slot(2), boots: slot(3), body: nothing() }
+    MobArmorEquipment { runtime_entity_id, helmet: slot(0), chestplate: slot(1), leggings: slot(2), boots: slot(3), body: slot(4) }
 }
 
 /// What a mob holds in its main hand, or in the other; `None` for an item the registry does not list.

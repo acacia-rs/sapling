@@ -104,11 +104,23 @@ pub(crate) fn select(mut packets: ResMut<PacketQueues>, mut players: Query<&mut 
 
 /// Opens the inventory screen for a client that asks, which it waits for (as it does for the
 /// close: `containers::dispatch_closes`). The screen names no entity, as from BDS
-/// (`ServerPlayer::openInventory` passes -1).
-pub(crate) fn screens(mut packets: ResMut<PacketQueues>, mut players: Query<(&Position, &mut Inventory, &mut Outgoing)>) {
+/// (`ServerPlayer::openInventory` passes -1). A rider's asks go to riding: to leave, and to open
+/// what it rides when that carries goods.
+pub(crate) fn screens(
+    mut packets: ResMut<PacketQueues>,
+    mut leaving: ResMut<crate::riding::Leaving>,
+    mut cargo: ResMut<crate::vehicles::CargoAsked>,
+    carriers: Query<(), With<crate::vehicles::Cargo>>,
+    mut players: Query<(&Position, &mut Inventory, &mut Outgoing, Option<&crate::riding::Riding>)>,
+) {
     for (entity, interact) in packets.take::<Interact>() {
-        let Ok((position, mut inventory, mut out)) = players.get_mut(entity) else { continue };
-        if interact.action_id == InteractActionId::OpenInventory {
+        let Ok((position, mut inventory, mut out, riding)) = players.get_mut(entity) else { continue };
+        let carrier = riding.map(|riding| riding.vehicle).filter(|vehicle| carriers.contains(*vehicle));
+        if interact.action_id == InteractActionId::LeaveVehicle && riding.is_some_and(|riding| riding.id == interact.target_entity_id) {
+            leaving.0.push(entity);
+        } else if let (InteractActionId::OpenInventory, Some(vehicle)) = (interact.action_id, carrier) {
+            cargo.0.push((entity, vehicle));
+        } else if interact.action_id == InteractActionId::OpenInventory {
             let (window, block) = (inventory.next_window(), position.feet.map(|c| c.floor() as i32));
             out.push(&sapling_data::inventory_screen(WindowID::from_raw(window.into()), block, NO_ENTITY));
         }

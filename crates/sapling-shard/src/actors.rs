@@ -43,6 +43,7 @@ fn bring_in(world: &mut World, layer: Entity, home: ChunkPos, actor: Option<sapl
         (_, false) if actor.identifier == ORB => orbs::from_storage(world, layer, actor.position, unique_id, compound),
         (_, false) if actor.identifier == FALLING_BLOCK => blocks::falling_from_storage(world, layer, actor.position, unique_id, compound),
         (_, false) if crate::shots::is_kept(&actor.identifier) => crate::shots::from_storage(world, layer, &actor, unique_id, compound),
+        (_, false) if crate::vehicles::is_vehicle(&actor.identifier) => crate::vehicles::from_storage(world, layer, &actor, unique_id, compound),
         (_, false) if actor.painting.is_none() => creatures::from_storage(world, layer, actor.clone(), unique_id, compound),
         _ => false,
     };

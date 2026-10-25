@@ -54,6 +54,14 @@ fn hit(world: &mut World, player: Entity, id: u64) -> Option<()> {
         }
         return Some(());
     }
+    if let Some(vehicle) = entities::find(world, EntityId(id)).filter(|entity| world.get::<crate::vehicles::Vehicle>(*entity).is_some()) {
+        if world.get::<Body>(vehicle).is_some_and(|body| distance(eye, body) <= REACH) && world.get::<Mode>(player)?.0 != GameMode::Spectator {
+            let held = world.get::<Inventory>(player).and_then(|inventory| inventory.in_hand().as_ref().map(|held| held.stack.name.clone()));
+            let damage = crate::vitals::hits_for(world, player, sapling_data::item_attack(held.as_deref()));
+            crate::vehicles::hit(world, player, vehicle, damage);
+        }
+        return Some(());
+    }
     let entity = entities::find(world, EntityId(id)).filter(|entity| world.get::<Creature>(*entity).is_some() && world.get::<super::Dying>(*entity).is_none() && !crate::dragon::is_dying(world, *entity))?;
     let (body, kind) = (*world.get::<Body>(entity)?, world.get::<entities::Kind>(entity)?.0.clone());
     let mut health = *world.get::<Health>(entity)?;

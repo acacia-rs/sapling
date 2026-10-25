@@ -51,6 +51,7 @@ use sapling_world::Actor;
 use crate::body::Body;
 use death::{die, leaves_loot};
 use shown::{announcement, head, physics_of, spawn_sound};
+pub(crate) use shown::{is_baby, was_stored};
 pub(crate) use afflictions::{breathed_on, splashed};
 pub(crate) use arrows::{ARROW, Lands, Shot};
 pub(crate) use flight::{Arrow, Launch, Loosed, Pickup, from_storage as shot_from_storage, launch, lying as lying_shots, unstick};
@@ -155,6 +156,7 @@ pub(crate) fn from_storage(world: &mut World, layer: Entity, actor: Actor, uniqu
         crate::dragon::adopt(world, entity);
     }
     entities::keep(world, entity, layer, unique_id, compound);
+    crate::riding::adopt(world, entity);
     true
 }
 
@@ -243,7 +245,10 @@ pub(crate) fn tick(world: &mut World) {
         if kind == crate::dragon::DRAGON && world.get::<crate::dragon::Dragon>(entity).is_some() {
             continue;
         }
-        let Some(start) = world.get::<Body>(entity).copied() else { continue };
+        // A rider is carried to its seat, a vehicle its driver's client moves put where it says (riding.rs).
+        // TODO: a riding mob neither thinks nor is harmed.
+        let ridden = world.get::<crate::riding::Riding>(entity).is_some() || crate::riding::is_driven(world, entity);
+        let Some(start) = world.get::<Body>(entity).copied().filter(|_| !ridden) else { continue };
         // With `sapling:mobAi` off a mob still falls, is pushed and is hurt, but decides nothing.
         let thinks = world.get::<Dying>(entity).is_none() && crate::rules::on(world, layer, sapling_data::MOB_AI);
         if thinks {
@@ -253,7 +258,7 @@ pub(crate) fn tick(world: &mut World) {
         }
         // A teleport starts the tick afresh where it landed: no fall from where it left.
         let Some(start) = world.get::<Body>(entity).copied() else { continue };
-        if thinks && !rams::steer(world, entity, layer, id, &kind) && !hunting::steer(world, entity, layer, id, &kind) {
+        if thinks && !legs::ridden(world, entity, layer, &kind, &start) && !rams::steer(world, entity, layer, id, &kind) && !hunting::steer(world, entity, layer, id, &kind) {
             let traits = sapling_data::mob_traits(&kind);
             let strolls = world.resource::<crate::components::Settings>().0.mobs_stroll;
             if strolls {

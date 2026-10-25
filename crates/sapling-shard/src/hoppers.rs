@@ -83,7 +83,7 @@ fn state(world: &World, layer: Entity, pos: BlockPos) -> Option<(Face, bool)> {
 
 /// Puts as many of `item` as fit into the first slot of `slots` that `accepts` it, empty or
 /// holding its kind; returns how many went in.
-fn insert(world: &mut World, slots: &mut [Option<Held>], item: &ItemStack, accepts: impl Fn(usize) -> bool) -> u8 {
+pub(crate) fn insert(world: &mut World, slots: &mut [Option<Held>], item: &ItemStack, accepts: impl Fn(usize) -> bool) -> u8 {
     let limit = sapling_data::max_stack(&item.name);
     for slot in (0..slots.len()).filter(|slot| accepts(*slot)) {
         match &mut slots[slot] {

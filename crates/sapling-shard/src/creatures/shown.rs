@@ -5,7 +5,8 @@ use acacia_proto::packets::LevelSoundEvent;
 use acacia_proto::types::{MetadataFlags1, Vec3f};
 use bytes::Bytes;
 use sapling_data::AddEntityOptions;
-use sapling_world::Actor;
+use bevy_ecs::prelude::*;
+use sapling_world::{Actor, ActorState};
 
 use super::health::Health;
 use super::vexes;
@@ -69,6 +70,15 @@ pub(super) fn spawn_sound(name: &str, id: u64, kind: &str, body: &Body) -> Bytes
     let position = Vec3f { x, y, z };
     let sound = LevelSoundEvent { sound_id: name.into(), position, extra_data: -1, entity_type: kind.into(), is_baby_mob: false, is_global: false, entity_unique_id: id as i64, fire_at_position: None };
     sapling_net::encode(&sound)
+}
+
+/// Whether a mob was stored with `state` (saddled, tamed); a spawned one has none.
+pub(crate) fn was_stored(world: &World, entity: Entity, state: ActorState) -> bool {
+    world.get::<super::Creature>(entity).and_then(|creature| creature.look.as_ref()).is_some_and(|look| look.states.contains(&state))
+}
+
+pub(crate) fn is_baby(world: &World, entity: Entity) -> bool {
+    world.get::<super::Creature>(entity).is_some_and(super::Creature::is_baby)
 }
 
 /// How a mob of `kind` falls and slows: as most mobs, but for those that leap, fly and swim.

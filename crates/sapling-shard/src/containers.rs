@@ -31,9 +31,9 @@ use crate::components::Layer;
 use crate::inventory::{Held, wire};
 
 pub(crate) use lid::show_turned_barrels;
-pub(crate) use screens::{close, dispatch_closes, open, show_lids_again, station, workstation};
+pub(crate) use screens::{close, dispatch_closes, open, show_carried, show_lids_again, station, workstation};
 pub(crate) use shulker::is_shulker_box;
-pub(crate) use slots::{new_held, refusal, resend, set_slots, slots_at, slots_of, spill, store, viewers};
+pub(crate) use slots::{carried_viewers, new_held, refusal, resend, set_slots, slots_at, slots_of, spill, store, tell_changed, viewers};
 
 /// Stack ids of what a container held when it was opened; players' own count up from 1.
 const FIRST_ID: i32 = 1 << 24;

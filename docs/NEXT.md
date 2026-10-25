@@ -85,6 +85,13 @@ Each needs its rule looked up first (`bdsre` for BDS, the Java jar for data), th
    template, and what a comparator reads of a lectern or a wall frame (a jukebox is read by its disc, `discs`; a
    decorated pot by its stack and a flat frame not at all, `holders`). Dust does not lag a lever or
    button worked by hand (`byhand`; docs/research/redstone.md, "Observers").
+3. **Riding and vehicles**: boats, chest boats and minecarts (plain, chest, hopper, TNT) are placed,
+   ridden, broken and opened, carts roll by BDS's rail rules, pigs and striders take saddles and
+   sticks, horses and their kin take riders, `/ride` answers as BDS did (`riding.rs`,
+   `vehicles.rs`, `docs/research/vehicles.md`, `bds_ride_probe ride|mounts|boats`; carts not drilled:
+   `bds_ride_probe carts`). Left: BDS re-simulating a driver's boat or horse, a player's `RideID`,
+   the horse screen and a horse's charged jump, taming (`Tamed` is read when stored), hoppers
+   filling carts, a rail's own redstone line, and the doc's "Unverified" list.
 
 ## 3. Things assumed, not verified
 

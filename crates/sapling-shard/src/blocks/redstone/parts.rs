@@ -20,6 +20,9 @@ pub(super) enum User {
     Lamp { lit: bool },
     Opens(Opens),
     Hopper,
+    /// A powered or activator rail, on while powered (vehicles/rails.rs).
+    // TODO: power does not pass along a line of rails as in vanilla.
+    Rail,
     Tnt,
     /// Pushes out of its `front`, where it takes no power.
     Piston { front: Face },
@@ -82,6 +85,9 @@ impl Part {
             "observer" => Part::Observer { lit: get("powered_bit") == Some("1"), watch: side(get("minecraft:facing_direction")) },
             "redstone_lamp" | "lit_redstone_lamp" => Part::User(User::Lamp { lit: name == "lit_redstone_lamp" }),
             "hopper" => Part::User(User::Hopper),
+            "golden_rail" | "activator_rail" => Part::User(User::Rail),
+            // A minecart on it turns it on (vehicles/rails.rs).
+            "detector_rail" => Part::Producer { strength: on("rail_data_bit"), strong: Some(Face::Down) },
             "tnt" => Part::User(User::Tnt),
             "piston" | "sticky_piston" => match get("facing_direction").and_then(crate::blocks::pistons::pushes) {
                 Some(front) => Part::User(User::Piston { front }),

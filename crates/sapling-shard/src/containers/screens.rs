@@ -1,7 +1,7 @@
 //! Opening and closing the screens of blocks: containers, crafting tables, stonecutters and the
 //! workstations (workstations.rs).
 
-use acacia_proto::packets::ContainerClose;
+use acacia_proto::packets::{ContainerClose, ContainerOpen};
 use acacia_proto::types::{WindowID, WindowType};
 use bevy_ecs::prelude::*;
 use sapling_api::BlockPos;
@@ -23,6 +23,8 @@ pub(super) enum Screen {
     Own,
     Station(Station),
     Workstation(Workstation),
+    /// A chest boat's or minecart's (vehicles/cargo.rs).
+    Carried(Entity),
 }
 
 /// The block whose screen a player has open, and the window its client knows it as. For a
@@ -41,7 +43,20 @@ pub(super) fn still_shows(screen: Screen, block: &str) -> bool {
         Screen::Station(station) => [(TABLE, Station::Table), (STONECUTTER, Station::Stonecutter)].contains(&(block, station)),
         Screen::Container | Screen::Own => kind(block).is_some(),
         Screen::Workstation(workstation) => workstations::of_block(block).is_some_and(|(shown, _)| shown == workstation),
+        Screen::Carried(_) => false,
     }
+}
+
+/// Opens the screen of the goods `slots` of `vehicle` (its id `id`, its cell `pos`) for a player.
+pub(crate) fn show_carried(world: &mut World, player: Entity, layer: Entity, pos: BlockPos, vehicle: (Entity, u64), window_type: WindowType, slots: &[Option<Held>]) -> bool {
+    close(world, player);
+    let mut query = world.query::<(&mut Inventory, &mut Outgoing)>();
+    let Ok((mut inventory, mut out)) = query.get_mut(world, player) else { return false };
+    let window = inventory.next_window();
+    out.push(&ContainerOpen { runtime_entity_id: vehicle.1 as i64, ..sapling_data::block_screen(WindowID::from_raw(window.into()), window_type, pos) });
+    out.push(&content(window, slots));
+    world.entity_mut(player).insert(Viewing { layer, pos, window, screen: Screen::Carried(vehicle.0) });
+    true
 }
 
 /// Opens the screen of the block `block` at `pos` for a player: a container's with what it
