@@ -8,26 +8,14 @@ use sapling_world::{Template, World};
 
 use crate::layout::{self, WorldSpec};
 
+mod error;
+mod ops;
+mod properties;
 mod worlds;
 
-#[derive(Debug, thiserror::Error)]
-pub enum StartError {
-    #[error("binding the server socket: {0}")]
-    Bind(#[from] std::io::Error),
-    #[cfg(feature = "online")]
-    #[error(transparent)]
-    Keys(#[from] sapling_net::KeyError),
-    #[error("online mode needs the `online` feature, which fetches the login signing keys")]
-    OnlineUnavailable,
-    #[error("two worlds are named {0:?}")]
-    DuplicateWorld(String),
-    #[error("players are to join the world {0:?}, which the server does not have")]
-    UnknownWorld(String),
-    #[error("shard {0} has no world, though a later shard has")]
-    EmptyShard(usize),
-    #[error("a server of several shards needs a handler per shard: add handlers with `handler_each`")]
-    HandlerPerShard,
-}
+pub use error::StartError;
+pub use ops::Metrics;
+pub use properties::{ConfigError, ServerProperties};
 
 type HandlerFactory = Box<dyn Fn() -> Box<dyn Handler> + Send>;
 
@@ -47,6 +35,7 @@ pub struct ServerBuilder {
     commands: Vec<fn(&mut Shard)>,
     /// Other dimensions, each with the name of the world it belongs to.
     dimensions: Vec<(Option<String>, World)>,
+    ops: ops::Ops,
 }
 
 impl Default for ServerBuilder {
@@ -64,6 +53,7 @@ impl Default for ServerBuilder {
             plugins: Vec::new(),
             commands: Vec::new(),
             dimensions: Vec::new(),
+            ops: ops::Ops::default(),
         }
     }
 }
@@ -186,6 +176,7 @@ impl ServerBuilder {
         if layout.len() > 1 && !self.handlers.is_empty() {
             return Err(StartError::HandlerPerShard);
         }
+        self.ops.apply_allow_list(&self.net)?;
         let keys = if self.net.online_mode { signing_keys().await? } else { SigningKeys::empty() };
         let (listener, outbox, inboxes) = sapling_net::listen_shards(self.addr, self.net, keys, layout.len(), entry).await?;
         let count = layout.len();
@@ -217,8 +208,9 @@ impl ServerBuilder {
             shards.push(shard);
         }
         tracing::info!(addr = %listener.local_addr(), shards = count, "sapling listening");
+        let watching = self.ops.watch(&shards, self.shard.crash_reports.clone());
         // Started together: each shard's first tick finds the others' worlds announced.
-        Ok(Server { listener, shards: shards.into_iter().map(Shard::spawn).collect(), entry })
+        Ok(Server { listener, shards: shards.into_iter().map(Shard::spawn).collect(), entry, watching })
     }
 }
 
@@ -241,6 +233,7 @@ pub struct Server {
     shards: Vec<ShardHandle>,
     /// The shard new players join on, which keeps what is kept of every player.
     entry: usize,
+    watching: ops::Watching,
 }
 
 impl Server {
@@ -264,7 +257,8 @@ impl Server {
 
     /// Stops the game, disconnects every player and closes the socket.
     pub async fn shutdown(self) {
-        let Server { listener, mut shards, entry } = self;
+        let Server { listener, mut shards, entry, watching } = self;
+        drop(watching);
         // The entry shard last: the others hand it their players' items as they stop.
         let last = shards.remove(entry);
         // Joining the game threads can take a tick; keep that off the async runtime.

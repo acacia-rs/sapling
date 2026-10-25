@@ -46,6 +46,7 @@ mod mechanisms;
 mod mob_commands;
 mod movement_policy;
 mod omens;
+mod operations;
 mod pistons;
 mod placed_items;
 mod player_omens;

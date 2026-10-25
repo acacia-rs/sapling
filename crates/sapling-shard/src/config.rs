@@ -1,3 +1,4 @@
+use std::path::PathBuf;
 use std::time::Duration;
 
 use sapling_api::{Difficulty, GameMode, MovementPolicy};
@@ -30,6 +31,11 @@ pub struct ShardConfig {
     pub movement_check: MovementCheck,
     /// Wall time between ticks: [`TICK`], or shorter for drills that compress time (drill_server.rs).
     pub tick: Duration,
+    /// A player who neither moves, turns nor acts for this long is kicked: BDS's
+    /// `player-idle-timeout`. Counted in ticks of [`TICK`]. None (default): never.
+    pub idle_timeout: Option<Duration>,
+    /// Where a shard that panics writes its crash report; without one the report is logged.
+    pub crash_reports: Option<PathBuf>,
 }
 
 /// What the shard makes of where clients say their players are (simulation.rs), under the names of
@@ -66,6 +72,8 @@ impl Default for ShardConfig {
             mobs_stroll: true,
             movement_check: MovementCheck::default(),
             tick: TICK,
+            idle_timeout: None,
+            crash_reports: None,
         }
     }
 }

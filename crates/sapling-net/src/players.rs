@@ -11,6 +11,7 @@ use uuid::Uuid;
 use crate::config::NetConfig;
 use crate::congestion::Congestion;
 use crate::event::ConnId;
+use crate::limits::Meter;
 
 pub(crate) struct Player {
     pub id: ConnId,
@@ -20,6 +21,8 @@ pub(crate) struct Player {
     pub xuid: String,
     pub ip: IpAddr,
     pub congested: bool,
+    /// None for a loopback session, which is not metered (limits.rs).
+    pub meter: Option<Meter>,
 }
 
 /// Congested above the high watermark, clear again below the low one, so a backlog hovering at
