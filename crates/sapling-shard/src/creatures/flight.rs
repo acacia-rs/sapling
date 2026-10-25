@@ -197,7 +197,13 @@ fn fly(world: &mut World, arrow: Entity, layer: Entity, id: u64, now: u64) -> Op
     let before = body.at;
     body.motion = motion;
     body.shove(&world.get::<Layer>(layer)?.world, motion);
-    let stopped = (0..3).any(|axis| (body.at[axis] - before[axis] - motion[axis]).abs() > 1e-4);
+    let short: [bool; 3] = std::array::from_fn(|axis| (body.at[axis] - before[axis] - motion[axis]).abs() > 1e-4);
+    let stopped = short.contains(&true);
+    if stopped {
+        crate::blocks::shot_stopped(world, layer, body.at, motion, shot.size, short, shot.sticks);
+        let by_player = world.get::<crate::components::Identity>(by).is_some();
+        crate::blocks::vibrate(world, layer, body.at, crate::blocks::GameEvent::ProjectileLand, by_player);
+    }
     if stopped && !shot.sticks {
         landing::land(world, arrow, layer, body.at, behind, None);
         mobs::remove(world, arrow);

@@ -7,12 +7,17 @@ mod after_break;
 mod bonemeal;
 mod blown;
 mod buckets;
+mod bulbs;
 mod composter;
+mod copper;
+mod crafter;
 mod daylight;
+mod dispensers;
 mod doors;
 pub(crate) mod end_portal;
 mod entities;
 mod facing;
+mod fields;
 mod fire;
 mod falling;
 mod frost;
@@ -33,9 +38,12 @@ mod place;
 mod plates;
 pub(crate) mod portals;
 mod pots;
+mod queued;
 mod rails;
+mod rods;
 mod saplings;
 mod scaffolds;
+mod sculk;
 mod redstone;
 mod request;
 mod send;
@@ -43,7 +51,9 @@ mod shapes;
 mod sign_ink;
 mod signs;
 mod stacking;
+mod target;
 mod tools;
+mod tripwire;
 mod updates;
 mod waterlog;
 
@@ -67,9 +77,16 @@ pub(crate) use request::{BlockInputs, dispatch};
 use request::{Request, Site, site};
 pub(crate) use send::{batched, block_at, hold, keep_entity, put_block, set, set_network_only, set_quietly, set_sectioned, show_held, show_whole, sound, to_viewers};
 pub(crate) use updates::break_block;
+pub(crate) use crafter::{crafter_slot, dispatch_toggles as dispatch_crafter_toggles};
+pub(crate) use queued::tick as run_queued;
+#[allow(unused_imports)]
+pub(crate) use rods::struck as lightning_struck;
+pub(crate) use sculk::{GameEvent, tick as hear_vibrations, vibrate, vibrate_at, walked};
+pub(crate) use target::shot_stopped;
+pub(crate) use tripwire::tick as trip_wires;
 
 use bevy_ecs::prelude::*;
-use sapling_api::{Block, BlockPos, GameMode};
+use sapling_api::{Block, BlockPos, Face, GameMode};
 use sapling_data::EYE_HEIGHT;
 
 use crate::components::{Layer, Mode, Position};
@@ -81,6 +98,17 @@ const CREATIVE_REACH: f32 = 13.0;
 
 fn level(world: &World, layer: Entity) -> Option<&sapling_world::World> {
     world.get::<Layer>(layer).map(|layer| &layer.world)
+}
+
+fn opposite(face: Face) -> Face {
+    match face {
+        Face::Down => Face::Up,
+        Face::Up => Face::Down,
+        Face::North => Face::South,
+        Face::South => Face::North,
+        Face::West => Face::East,
+        Face::East => Face::West,
+    }
 }
 
 /// Whether the middle of the block at `pos` is within the player's reach of its eyes.

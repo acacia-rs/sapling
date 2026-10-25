@@ -19,6 +19,9 @@ pub(crate) fn dispatch_moves(world: &mut World) {
                 *position = from;
             }
             movement::teleport(world, entity, from.feet);
+        } else if let Some(layer) = world.get::<crate::components::InLayer>(entity).map(|layer| layer.0) {
+            let sneaking = world.get::<movement::Motion>(entity).is_some_and(|motion| motion.pose.sneaking);
+            crate::blocks::walked(world, entity, layer, from.feet, to.feet, to.on_ground, sneaking);
         }
     }
 }

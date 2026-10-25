@@ -1,5 +1,7 @@
-//! Redstone: plates, buttons, levers, blocks of redstone, torches, repeaters, comparators and
-//! observers powering dust, lamps, pistons, doors, trapdoors, fence gates and hoppers, by BDS's
+//! Redstone: plates, buttons, levers, blocks of redstone, torches, repeaters, comparators,
+//! observers, tripwire hooks, targets, sculk sensors, lightning rods and jukeboxes powering dust,
+//! lamps, copper bulbs, pistons, doors, trapdoors, fence gates, hoppers, note blocks, dispensers,
+//! droppers and crafters, by BDS's
 //! circuit system (docs/research/redstone.md). Every second tick, at its start, the circuits
 //! written to are searched again from their sources (search.rs); what changed is written into
 //! the blocks at the start of the next (apply.rs).
@@ -11,6 +13,7 @@ mod apply;
 mod capacitors;
 mod observers;
 mod parts;
+mod reads;
 mod search;
 
 use std::collections::{HashMap, HashSet};
@@ -21,16 +24,17 @@ use sapling_world::ChunkPos;
 
 use super::level;
 use crate::components::Tick;
-use crate::containers;
-use capacitors::{RepeaterState, TorchState, compared, fullness, state_signal};
+use capacitors::{RepeaterState, TorchState, compared};
 use parts::{Part, User};
+use reads::read_containers;
 
 /// Game ticks between evaluations (`Dimension::tickRedstone`).
 const EVERY: u64 = 2;
 /// What to write into a block at the start of the next tick.
 #[derive(Clone, Copy, Debug)]
 enum Due {
-    Signal(u8),
+    /// The signal now and at the evaluation before.
+    Signal(u8, u8),
     /// A torch or repeater lit or not.
     Lit { lit: bool, fizz: bool },
 }
@@ -46,6 +50,8 @@ struct Circuit {
     comparators: HashMap<BlockPos, u8>,
     /// Whether each observer was lit at the last evaluation: dust shows that, an evaluation late.
     observers: HashMap<BlockPos, bool>,
+    /// The strength of each producer whose block does not store it ([`emit`]).
+    held: HashMap<BlockPos, u8>,
     /// Cells written since the last evaluation.
     changed: HashSet<BlockPos>,
     /// The last evaluation flipped a torch or repeater, or one waits to flip: the next must look again.
@@ -74,9 +80,16 @@ pub(crate) fn arrived(world: &mut World, layer: Entity, column: ChunkPos) {
     let Some(level) = level(world, layer) else { return };
     let registry = level.registry();
     let found = level.find_blocks(column, |id| matches!(Part::of(registry, id), part if part.is_source() || matches!(part, Part::Dust { .. })));
-    if !found.is_empty() {
-        world.get_resource_or_insert_with(Circuits::default).layers.entry(layer).or_default().changed.extend(found);
+    if found.is_empty() {
+        return;
     }
+    // A jukebox keeps its disc in its entity, which the block's state does not tell.
+    let playing: Vec<(BlockPos, u8)> = found.iter().map(|pos| (*pos, super::jukebox::power(world, layer, *pos))).filter(|(_, power)| *power > 0).collect();
+    super::sculk::found(world, layer, &found);
+    let mut circuits = world.get_resource_or_insert_with(Circuits::default);
+    let circuit = circuits.layers.entry(layer).or_default();
+    circuit.held.extend(playing);
+    circuit.changed.extend(found);
 }
 
 /// Notes a container whose slots changed, where a comparator may read it.
@@ -87,35 +100,17 @@ pub(crate) fn container_changed(world: &mut World, layer: Entity, pos: BlockPos)
     }
 }
 
-/// What each comparator of `circuit` reads off a container, or a block it reads by its state,
-/// behind it or behind the block behind it.
-fn read_containers(world: &mut World, layer: Entity, circuit: &Circuit) -> HashMap<BlockPos, u8> {
-    let mut part = reader(world, layer);
-    let behind: Vec<(BlockPos, BlockPos, Option<BlockPos>)> = (circuit.sources.iter().chain(&circuit.changed))
-        .filter_map(|pos| match part(*pos) {
-            Part::Comparator { input, .. } => {
-                let near = input.neighbour(*pos);
-                Some((*pos, near, (part(near) == Part::Conductor).then(|| input.neighbour(near))))
-            }
-            _ => None,
-        })
-        .collect();
-    drop(part);
-    let by_state = |world: &World, at: BlockPos| {
-        let level = level(world, layer).filter(|level| level.in_height(at[1]))?;
-        let state = level.registry().get(level.block(at[0], at[1], at[2]))?;
-        state_signal(state.name, state.properties)
-    };
-    let read = |world: &mut World, at: BlockPos| {
-        let pot = |world: &World| crate::blocks::holders::potted(world, layer, at).map(|inside| fullness(inside.iter().map(|held| (held.count, sapling_data::max_stack(&held.name))), 1));
-        by_state(world, at).or_else(|| crate::blocks::jukebox::signal(world, layer, at)).or_else(|| pot(world)).or_else(|| {
-            containers::with_slots(world, layer, at, |_, slots| {
-                let filled = slots.iter().flatten().map(|held| (held.stack.count, sapling_data::max_stack(&held.stack.name)));
-                fullness(filled, slots.len())
-            })
-        })
-    };
-    behind.into_iter().filter_map(|(pos, near, far)| Some((pos, read(world, near).or_else(|| read(world, far?))?))).collect()
+/// Holds the strength of the producer at `pos` whose block does not store it (a target, a sculk
+/// sensor, a jukebox), to be searched from at the next evaluation; 0 lets it go.
+pub(crate) fn emit(world: &mut World, layer: Entity, pos: BlockPos, strength: u8) {
+    let mut circuits = world.get_resource_or_insert_with(Circuits::default);
+    let circuit = circuits.layers.entry(layer).or_default();
+    if strength > 0 {
+        circuit.held.insert(pos, strength);
+    } else {
+        circuit.held.remove(&pos);
+    }
+    circuit.changed.insert(pos);
 }
 
 /// The signal the block at `pos` got at the last evaluation.
@@ -190,8 +185,10 @@ fn evaluate_circuit(world: &World, layer: Entity, circuit: &mut Circuit, now: u6
     circuit.repeaters.retain(|pos, _| circuit.sources.contains(pos));
     circuit.comparators.retain(|pos, _| circuit.sources.contains(pos));
     circuit.observers.retain(|pos, _| circuit.sources.contains(pos));
+    circuit.held.retain(|pos, _| circuit.sources.contains(pos));
 
     let as_kept = |pos: &BlockPos, part: Part| match part {
+        Part::Producer { strength, strong } => Part::Producer { strength: strength.max(circuit.held.get(pos).copied().unwrap_or(0)), strong },
         Part::Comparator { lit, input, subtracts, output } => Part::Comparator { lit, input, subtracts, output: circuit.comparators.get(pos).copied().unwrap_or(output) },
         Part::Observer { lit, watch } => Part::Observer { lit: circuit.observers.get(pos).copied().unwrap_or(lit), watch },
         other => other,
@@ -258,7 +255,7 @@ fn evaluate_circuit(world: &World, layer: Entity, circuit: &mut Circuit, now: u6
             _ => false,
         };
         if write {
-            due.push((pos, Due::Signal(new)));
+            due.push((pos, Due::Signal(new, old)));
         }
         if new > 0 {
             power.insert(pos, new);

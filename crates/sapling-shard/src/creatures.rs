@@ -52,7 +52,7 @@ use crate::body::Body;
 use death::{die, leaves_loot};
 use shown::{announcement, head, physics_of, spawn_sound};
 pub(crate) use afflictions::{breathed_on, splashed};
-pub(crate) use arrows::{ARROW, Lands, Shot};
+pub(crate) use arrows::{ARROW, FIREBALL, Lands, Shot};
 pub(crate) use flight::{Arrow, Launch, Loosed, Pickup, from_storage as shot_from_storage, launch, lying as lying_shots, unstick};
 pub(crate) use attacks::attacked;
 pub(crate) use blast::{Wreck, explode};

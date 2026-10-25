@@ -48,7 +48,8 @@ fn place(info: &StackRequestSlotInfo) -> Option<Place> {
     let slot = usize::from(info.slot);
     match info.slot_type.container_id {
         // Which slots there are is the open container's to say: none while nothing is open.
-        ContainerSlotType::Container | ContainerSlotType::Barrel | ContainerSlotType::Shulker => Some(Place::Container(slot)),
+        // `Container` is the protocol's `LevelEntity`: chests, hoppers, dispensers and droppers alike.
+        ContainerSlotType::Container | ContainerSlotType::Barrel | ContainerSlotType::Shulker | ContainerSlotType::Crafter => Some(Place::Container(slot)),
         ContainerSlotType::FurnaceIngredient | ContainerSlotType::BlastFurnaceIngredient | ContainerSlotType::SmokerIngredient => Some(Place::Container(0)),
         ContainerSlotType::FurnaceFuel => Some(Place::Container(1)),
         ContainerSlotType::FurnaceOutput => Some(Place::Container(2)),

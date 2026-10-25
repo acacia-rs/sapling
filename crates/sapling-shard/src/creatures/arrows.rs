@@ -89,7 +89,7 @@ pub(crate) const ARROW: Shot = Shot {
 };
 /// research/captures/bds-blaze.txt: from 1.4 up the blaze, 1.15 to 1.42 a tick and no slower
 /// after; bds-kinds2.txt: 5 off the player it hit, which burnt five seconds.
-const FIREBALL: Shot = Shot { kind: "minecraft:small_fireball", ahead: 0.0, held: 1.4, speed: 1.3, aimed: 0.9, loft: 0.0, drag: 1.0, wet_drag: 1.0, weight: 0.0, harm: Some(5.0), sticks: false, burns: 100, sound: "shoot", lasts: Some(FLIES), ..ARROW };
+pub(crate) const FIREBALL: Shot = Shot { kind: "minecraft:small_fireball", ahead: 0.0, held: 1.4, speed: 1.3, aimed: 0.9, loft: 0.0, drag: 1.0, wet_drag: 1.0, weight: 0.0, harm: Some(5.0), sticks: false, burns: 100, sound: "shoot", lasts: Some(FLIES), ..ARROW };
 /// research/captures/bds-provoke2.txt: from 1.58 up the llama at 1.5 a tick, falling 0.06 a tick
 /// more; 1 off the player it hit, which it did not throw. Aimed as the Java game's.
 const SPIT: Shot = Shot { kind: "minecraft:llama_spit", ahead: 0.0, held: 1.58, speed: 1.5, weight: 0.06, harm: Some(1.0), sticks: false, throws: false, sound: "shoot", lasts: Some(FLIES), ..ARROW };

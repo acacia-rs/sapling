@@ -73,6 +73,9 @@ pub(crate) fn open(world: &mut World, player: Entity, layer: Entity, pos: BlockP
     }) else {
         return false;
     };
+    if is_first && kind.has_lid {
+        crate::blocks::vibrate_at(world, layer, pos, crate::blocks::GameEvent::ContainerOpen, true);
+    }
     let screen = if kind.is_per_player { Screen::Own } else { Screen::Container };
     let viewing = Viewing { layer, pos: lead, window: 0, screen };
     let shown_slots = match screen {
@@ -134,6 +137,9 @@ pub(crate) fn close(world: &mut World, player: Entity) {
     let halves = chest.halves.clone();
     lid::set(world, viewing.layer, &halves, false);
     slots::release(world, viewing.layer, viewing.pos);
+    if super::kind_at(world, viewing.layer, viewing.pos).is_some_and(|kind| kind.has_lid) {
+        crate::blocks::vibrate_at(world, viewing.layer, viewing.pos, crate::blocks::GameEvent::ContainerClose, true);
+    }
 }
 
 fn stop_viewing(world: &mut World, player: Entity) -> Option<Viewing> {

@@ -1,7 +1,7 @@
 //! Blocks that hold items (chests, barrels, shulker boxes, ender chests, hoppers, brewing stands,
-//! dispensers, droppers and the three furnaces), kept in the block's entity as the game keeps them, shown to the players who have
+//! dispensers, droppers, crafters and the three furnaces), kept in the block's entity as the game keeps them, shown to the players who have
 //! the block open (screens.rs) and changed by their inventory requests (inventory/requests.rs),
-//! by a furnace's burning (furnaces.rs) and by hoppers (hoppers.rs). Two paired chests are one
+//! by a furnace's burning (furnaces.rs), by firing (blocks/dispensers.rs) and by hoppers (hoppers.rs). Two paired chests are one
 //! container of 54 (pairs.rs); an ender chest opens its player's own 27 slots. What BDS does, and
 //! the evidence: docs/research/containers-crafting.md, shulker-ender.md, hoppers.md, furnaces.md.
 
@@ -22,9 +22,6 @@ use acacia_proto::types::{WindowIDVarint, WindowType};
 use bevy_ecs::prelude::*;
 use sapling_api::{BlockPos, Face};
 use sapling_world::{ItemStack, container_items, new_block_entity};
-
-// TODO: a dispenser or dropper only holds its 9 slots: it throws nothing out when powered, and
-// its screen was never opened by a client.
 
 use crate::blocks::keep_entity;
 use crate::components::Layer;
@@ -94,6 +91,7 @@ pub(crate) fn kind(block: &str) -> Option<Kind> {
         "minecraft:hopper" => HOPPER,
         "minecraft:dispenser" => Kind { entity: "Dispenser", slots: 9, window: WindowType::Dispenser, has_lid: false, ..CHEST },
         "minecraft:dropper" => Kind { entity: "Dropper", slots: 9, window: WindowType::Dropper, has_lid: false, ..CHEST },
+        "minecraft:crafter" => Kind { entity: "Crafter", slots: 9, window: WindowType::Crafter, has_lid: false, ..CHEST },
         "minecraft:brewing_stand" => Kind { entity: "BrewingStand", slots: 5, window: WindowType::BrewingStand, has_lid: false, ..CHEST },
         "minecraft:furnace" | "minecraft:lit_furnace" => smelter("Furnace", WindowType::Furnace),
         "minecraft:blast_furnace" | "minecraft:lit_blast_furnace" => smelter("BlastFurnace", WindowType::BlastFurnace),
@@ -203,6 +201,11 @@ pub(crate) fn unpin(world: &mut World, layer: Entity, pos: BlockPos) {
         chest.pinned = false;
     }
     slots::release(world, layer, pos);
+}
+
+/// What the container at `pos` holds, held or not.
+pub(crate) fn contents(world: &mut World, layer: Entity, pos: BlockPos) -> Option<Vec<Option<Held>>> {
+    with_slots(world, layer, pos, |_, slots| slots.clone())
 }
 
 /// Runs `change` on the slots of the container at `pos` (a double chest's 54) and keeps what it

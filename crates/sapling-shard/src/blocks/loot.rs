@@ -62,6 +62,12 @@ impl Dice {
     pub fn fraction(&mut self) -> f32 {
         self.roll(1 << 20) as f32 / (1 << 20) as f32
     }
+
+    /// A number from the normal spread about 0 (Box-Muller).
+    pub fn gaussian(&mut self) -> f32 {
+        let (u, v) = (1.0 - self.fraction(), self.fraction());
+        (-2.0 * u.ln()).sqrt() * (std::f32::consts::TAU * v).cos()
+    }
 }
 
 fn some(name: &str, count: u32) -> Vec<Item> {

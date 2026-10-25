@@ -61,6 +61,9 @@ pub(crate) fn dispatch(world: &mut World) {
     commands::dispatch(world);
     blocks::release_buttons(world);
     blocks::press_plates(world);
+    blocks::batched(world, blocks::trip_wires);
+    blocks::batched(world, blocks::run_queued);
+    blocks::batched(world, blocks::hear_vibrations);
     blocks::batched(world, blocks::flow_liquids);
     blocks::dispatch(world);
     blocks::dispatch_sign_edits(world);
@@ -80,6 +83,7 @@ pub(crate) fn dispatch(world: &mut World) {
     crate::light::relight(world);
     blocks::batched(world, blocks::random_ticks);
     inventory::dispatch(world);
+    blocks::dispatch_crafter_toggles(world);
     containers::dispatch_closes(world);
     containers::show_lids_again(world);
     containers::show_turned_barrels(world);

@@ -10,6 +10,7 @@ mod ammo;
 mod bows;
 pub(crate) mod clouds;
 mod crossbows;
+pub(crate) mod dispensed;
 mod kinds;
 mod pickup;
 mod throws;

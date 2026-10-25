@@ -6,6 +6,7 @@
 // TODO: mushrooms, vines, kelp and cave vines take no random tick; only a survival player treads
 // farmland down, no mob and no creative player.
 
+mod copper;
 mod cover;
 mod rules;
 mod snowfall;

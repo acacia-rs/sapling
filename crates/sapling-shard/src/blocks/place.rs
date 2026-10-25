@@ -124,6 +124,7 @@ impl Request<'_> {
         let placed = send::set(self.world, site.layer, pos, falling::as_put(self.world, site.layer, pos, id));
         if placed {
             send::to_viewers(self.world, site.layer, pos, &[sound]);
+            super::vibrate_at(self.world, site.layer, pos, super::GameEvent::BlockPlace, true);
             let second = doors::place_second_cell(self.world, site.layer, pos, whole);
             // A bed's colour and a banner's are the item's, which the block cannot say.
             let damage = self.world.get::<Inventory>(self.entity).and_then(|inventory| inventory.in_hand().as_ref()).map_or(0, |held| held.stack.damage);

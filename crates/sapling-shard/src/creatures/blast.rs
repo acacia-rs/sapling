@@ -142,6 +142,7 @@ pub(super) fn explode_fireball(world: &mut World, source: Entity, layer: Entity,
 }
 
 fn blow(world: &mut World, source: Option<Entity>, layer: Entity, at: [f32; 3], power: f32, wreck: Wreck, fireball: bool) {
+    crate::blocks::vibrate(world, layer, at, crate::blocks::GameEvent::Explode, false);
     let cells = if wreck != Wreck::Nothing { broken(world, layer, at, power) } else { Vec::new() };
     let (power, cells) = if crate::plugins::listening::<ExplosionEvent>(world) {
         let kind = source.and_then(|source| world.get::<entities::Kind>(source)).map(|kind| kind.0.clone());
