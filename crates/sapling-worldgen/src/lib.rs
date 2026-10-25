@@ -7,6 +7,7 @@
 
 pub mod biome;
 mod block;
+mod block_entity;
 mod cache;
 mod carver;
 mod chunk;
@@ -32,12 +33,14 @@ use std::sync::Arc;
 
 pub use biome::ChunkBiomes;
 pub use block::Block;
+pub use block_entity::BlockEntity;
 pub use end::EndGenerator;
 pub use nether::NetherGenerator;
 #[doc(hidden)]
 pub use feature::grow::{is_feature, place_feature};
 pub use feature::reach::{Cells as ReachCells, Tries as ReachTries};
 #[doc(hidden)]
+pub use structured::StructureWrites;
 pub use structured::replay::{ReplayWrite, StructureStep};
 pub use structure::{PlaceFailure, StructureKind};
 pub use surface::temperature;

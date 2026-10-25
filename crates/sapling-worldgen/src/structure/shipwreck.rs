@@ -7,6 +7,7 @@ use super::BoundingBox;
 use super::canvas::Canvas;
 use super::template::{Placement, Rotation, Template};
 use crate::block::Block;
+use crate::block_entity::BlockEntity;
 use crate::random::Mt19937;
 
 const SEA_LEVEL: i32 = 63;
@@ -64,7 +65,7 @@ pub fn place(canvas: &mut Canvas, random: &mut Mt19937, start: (i32, i32), beach
     placement.flood = !beached;
     placement.wood = Some([Some(oak), None, None, None, None, Some(dark_oak)]);
     let chests = placement.place(canvas, template, origin);
-    random.consume_count(chests as u32);
+    chests.draw_seeds(canvas, random);
     super::trace::label(|| format!("{} markers", template.name));
     let water_or_air = |y: i32| if y < SEA_LEVEL { Block::Water } else { Block::Air };
     for ((x, y, z), marker) in template.markers_at(origin, rotation) {
@@ -73,10 +74,20 @@ pub fn place(canvas: &mut Canvas, random: &mut Mt19937, start: (i32, i32), beach
         let removed = matches!(marker, "treasureChest" | "supplyChest") && random.next_int(10) < 5;
         if removed {
             canvas.set(x, y - 1, z, if SEA_LEVEL < y { Block::Air } else { Block::Water });
-        } else if matches!(marker, "treasureChest" | "supplyChest" | "mapChest") {
-            random.next_u32();
+        } else if let Some(table) = chest_table(marker) {
+            canvas.set_entity(x, y - 1, z, BlockEntity::Loot { table, seed: random.next_int_unbounded() });
         }
     }
+}
+
+/// The table a chest marker gives the chest below it.
+fn chest_table(marker: &str) -> Option<&'static str> {
+    Some(match marker {
+        "supplyChest" => "loot_tables/chests/shipwrecksupply.json",
+        "treasureChest" => "loot_tables/chests/shipwrecktreasure.json",
+        "mapChest" => "loot_tables/chests/shipwreck.json",
+        _ => return None,
+    })
 }
 
 /// The mean floor height over the middle half of the turned template's footprint.

@@ -8,6 +8,7 @@ use super::java_states::v2_block;
 use super::rules::{Rule, apply_first};
 use super::{Kind, Rotation, Template, named};
 use crate::block::Block;
+use crate::block_entity::{BlockEntity, cell_seed};
 use crate::random::JavaRandom;
 use crate::structure::BoundingBox;
 
@@ -15,6 +16,8 @@ use crate::structure::BoundingBox;
 pub struct Capped {
     pub limit: usize,
     pub rules: &'static [Rule],
+    /// The loot table its rules' `append_loot` gives what they change (archaeology).
+    pub loot: Option<&'static str>,
 }
 
 pub struct JavaPlacement<'a> {
@@ -25,10 +28,10 @@ pub struct JavaPlacement<'a> {
 }
 
 impl JavaPlacement<'_> {
-    /// The processed blocks of `template` at `origin` within `clip`, in placement order; `world` is
-    /// what the world holds where a rule's location predicate looks. Without capped processors a
-    /// block's result depends on nothing outside it, so the rest is skipped.
-    pub fn blocks(&self, template: &Template, origin: (i32, i32, i32), clip: &BoundingBox, world: &dyn Fn(i32, i32, i32) -> Block) -> Vec<((i32, i32, i32), Block)> {
+    /// The processed blocks of `template` at `origin` within `clip`, in placement order, with their
+    /// block entities; `world` is what the world holds where a rule's location predicate looks.
+    /// Without capped processors a block's result depends on nothing outside it, so the rest is skipped.
+    pub fn blocks(&self, template: &Template, origin: (i32, i32, i32), clip: &BoundingBox, world: &dyn Fn(i32, i32, i32) -> Block) -> Vec<((i32, i32, i32), Block, Option<BlockEntity>)> {
         let mut out = Vec::with_capacity(template.blocks.len());
         for (index, b) in template.blocks.iter().enumerate() {
             let mut block = match b.state.kind() {
@@ -51,7 +54,7 @@ impl JavaPlacement<'_> {
             if let Some(output) = apply_first(self.rules, block, world(at.0, at.1, at.2), at) {
                 block = output;
             }
-            out.push((at, block));
+            out.push((at, block, template.entity(index, || cell_seed([at.0, at.1, at.2]))));
         }
         for capped in self.capped {
             let mut random = JavaRandom::new(self.level_seed).fork_at(origin.0, origin.1, origin.2);
@@ -63,11 +66,14 @@ impl JavaPlacement<'_> {
                 if changed == limit {
                     break;
                 }
-                let (at, block) = out[k];
+                let (at, block, _) = out[k];
                 if let Some(output) = apply_first(capped.rules, block, world(at.0, at.1, at.2), at)
                     && output != block
                 {
                     out[k].1 = output;
+                    if let Some(table) = capped.loot {
+                        out[k].2 = Some(BlockEntity::Loot { table, seed: cell_seed([at.0, at.1, at.2]) });
+                    }
                     changed += 1;
                 }
             }

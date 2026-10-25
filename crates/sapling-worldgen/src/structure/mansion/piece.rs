@@ -5,6 +5,7 @@
 
 use super::{Mansion, Mirror, Piece, Pos};
 use crate::block::Block;
+use crate::block_entity::{BlockEntity, cell_seed};
 use crate::structure::BoundingBox;
 use crate::structure::canvas::Canvas;
 use crate::structure::template::{Placement, Rotation, named};
@@ -62,6 +63,7 @@ impl Piece {
                 if canvas.get(x, y, z).name() != "chest" {
                     canvas.set(x, y, z, facing);
                 }
+                canvas.set_entity(x, y, z, BlockEntity::Loot { table: "loot_tables/chests/woodland_mansion.json", seed: cell_seed([x, y, z]) });
             }
         }
     }

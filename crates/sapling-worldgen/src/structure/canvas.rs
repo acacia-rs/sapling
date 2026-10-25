@@ -9,6 +9,7 @@ use std::sync::Arc;
 use super::BoundingBox;
 use super::template::Record;
 use crate::block::Block;
+use crate::block_entity::BlockEntity;
 use crate::feature::{ElementWorld, place_element};
 use crate::fxhash::FxBuild;
 use crate::random::Mt19937;
@@ -63,6 +64,8 @@ pub struct Canvas<'a> {
     pub spilled: Vec<Past>,
     /// `setBlock` writes into the neighbours: mineshaft floors, whole pieces, update passes.
     pub unclipped: Vec<Past>,
+    /// Block entities filed for cells of the neighbours (whole pieces), in order.
+    pub past_entities: Vec<([i32; 3], BlockEntity)>,
     /// `unclipped` as this post-process reads it back.
     written: HashMap<(i32, i32, i32), Block, FxBuild>,
     /// Fences this post-process's mineshaft pieces placed: still the piece's unjoined fence block
@@ -85,6 +88,7 @@ impl<'a> Canvas<'a> {
             features: None,
             spilled: Vec::new(),
             unclipped: Vec::new(),
+            past_entities: Vec::new(),
             written: HashMap::default(),
             shaft_fences: HashSet::new(),
         }
@@ -170,6 +174,15 @@ impl<'a> Canvas<'a> {
         } else if self.whole && (self.bb.y0..=self.bb.y1).contains(&y) && self.in_view(x, z) {
             self.record.note((x, y, z), self.get(x, y, z), block);
             self.write_past(x, y, z, block);
+        }
+    }
+
+    /// Files `entity` for the block `set` just wrote at `(x, y, z)`: wherever `set` writes, nowhere else.
+    pub fn set_entity(&mut self, x: i32, y: i32, z: i32, entity: BlockEntity) {
+        if self.bb.contains(x, y, z) {
+            self.shape.add_block_entity(ChunkShape::index((x & 15) as usize, y, (z & 15) as usize), entity);
+        } else if self.whole && (self.bb.y0..=self.bb.y1).contains(&y) && self.in_view(x, z) {
+            self.past_entities.push(([x, y, z], entity));
         }
     }
 

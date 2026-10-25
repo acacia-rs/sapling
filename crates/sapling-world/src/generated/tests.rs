@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+use acacia_proto::nbt::Value;
 use acacia_world::{BlockRegistry, Chunk, Dimension};
 use sapling_worldgen::{Block, EndGenerator, MIN_Y, NetherGenerator, OverworldGenerator};
 
@@ -103,6 +104,21 @@ fn the_end_is_generated_in_its_own_dimension_256_high() {
     // Sections up to the highest one holding a block, as BDS's End columns (research/captures/bds-end-travel.txt).
     let top = (0..256).rev().find(|&y| (0..16).any(|x| (0..16).any(|z| shape.block(x, y, z) != Block::Air))).unwrap();
     assert_eq!(world.level_chunk(pos, false).unwrap().highest_subchunk_count, Some(top / 16 + 1));
+}
+
+#[test]
+fn a_generated_dungeon_saves_its_block_entities_as_bds() {
+    // The dungeon at 123,-20,270, whose spawner and chest BDS saved in the oracle world 20261003-structures.
+    let column = Generated::new(MemoryStorage::default(), SEED).generate_column(ChunkPos::new(7, 16));
+    let entities = sapling_leveldb::block_entities(&column.block_entities).unwrap();
+    let at = |pos: [i32; 3]| &entities.iter().find(|e| e.pos == pos).unwrap_or_else(|| panic!("nothing at {pos:?}: {entities:?}")).nbt;
+    let text = |s: &str| Some(Value::String(s.into()));
+    let spawner = at([123, -20, 270]);
+    assert_eq!((spawner.get("id").cloned(), spawner.get("EntityIdentifier").cloned()), (text("MobSpawner"), text("minecraft:spider")));
+    assert_eq!(spawner.get("Delay"), Some(&Value::Short(20)));
+    let chest = at([125, -20, 270]);
+    assert_eq!((chest.get("id").cloned(), chest.get("LootTable").cloned()), (text("Chest"), text("loot_tables/chests/simple_dungeon.json")));
+    assert_eq!(chest.get("LootTableSeed"), Some(&Value::Int(357601146)));
 }
 
 #[test]

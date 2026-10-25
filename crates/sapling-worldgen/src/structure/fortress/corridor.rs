@@ -57,7 +57,7 @@ pub fn turn(f: &Frame, c: &mut Canvas, random: &mut Mt19937, chest: bool, left: 
     fences(f, c, (1, 3, 4), (1, 4, 4));
     fences(f, c, (3, 3, 4), (3, 4, 4));
     if chest {
-        create_chest(f, c, random, (if left { 3 } else { 1 }, 2, 3), Block::ChestWest);
+        create_chest(f, c, random, (if left { 3 } else { 1 }, 2, 3), Block::ChestWest, "loot_tables/chests/nether_bridge.json");
     }
     bricks(f, c, (0, 6, 0), (4, 6, 4));
     corridor_floor(f, c);

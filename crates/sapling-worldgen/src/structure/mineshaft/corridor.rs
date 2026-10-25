@@ -3,6 +3,7 @@
 
 use super::{Builder, Kind, Materials, Piece, fence_at, frame};
 use crate::block::Block;
+use crate::block_entity::BlockEntity;
 use crate::random::Mt19937;
 use crate::structure::BoundingBox;
 use crate::structure::canvas::Canvas;
@@ -98,6 +99,7 @@ impl Corridor {
                 let (wx, wy, wz) = f.world(1, 0, spawner);
                 if canvas.bb.contains(wx, wy, wz) && canvas.interior(wx, wy, wz) {
                     canvas.set(wx, wy, wz, Block::MobSpawner);
+                    canvas.set_entity(wx, wy, wz, BlockEntity::Spawner("minecraft:cave_spider"));
                     *spawner_placed = true;
                 }
             }

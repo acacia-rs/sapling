@@ -12,6 +12,7 @@ pub use super::view_writes::{ChunkWrites, REACH, Routed, Write};
 use super::view_writes::{SIDE, slot};
 use crate::Dimension;
 use crate::block::Block;
+use crate::block_entity::BlockEntity;
 use crate::random::Mt19937;
 use crate::terrain::{ChunkShape, HEIGHT, MIN_Y};
 
@@ -49,6 +50,8 @@ pub struct View<'a> {
     pub ultrawarm: bool,
     /// The dimension's height range (`BlockSource` +0x3a, +0x38), which BDS answers off the region.
     bounds: (i32, i32),
+    /// Block entities filed for cells of the region, in order (world cell).
+    entities: Vec<([i32; 3], BlockEntity)>,
 }
 
 impl<'a> View<'a> {
@@ -69,6 +72,14 @@ impl<'a> View<'a> {
             thread_random: None,
             ultrawarm: false,
             bounds: (MIN_Y, MIN_Y + HEIGHT as i32),
+            entities: Vec::new(),
+        }
+    }
+
+    /// Files `entity` for the block just set at `at`; nothing outside the writable region.
+    pub fn set_block_entity(&mut self, at: [i32; 3], entity: BlockEntity) {
+        if self.has_block(at[0], at[1], at[2]) {
+            self.entities.push((at, entity));
         }
     }
 
@@ -251,6 +262,6 @@ impl<'a> View<'a> {
     }
 
     pub fn into_writes(self) -> ChunkWrites {
-        ChunkWrites(self.writes, self.routed, self.reach.map(Reach::into_parts))
+        ChunkWrites(self.writes, self.routed, self.reach.map(Reach::into_parts), self.entities)
     }
 }

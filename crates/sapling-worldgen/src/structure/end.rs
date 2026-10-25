@@ -75,6 +75,6 @@ impl EndStructures {
         let touched = (touched.0.min(canvas.touched.0), touched.1.max(canvas.touched.1));
         let mut past = std::mem::take(&mut canvas.unclipped);
         past.append(&mut canvas.spilled);
-        Placed { touched, past, spawners: Spawners::new(), settled: canvas.record.take_settled(), temple_heights: Vec::new() }
+        Placed { touched, past, past_entities: std::mem::take(&mut canvas.past_entities), spawners: Spawners::new(), settled: canvas.record.take_settled(), temple_heights: Vec::new() }
     }
 }

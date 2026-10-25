@@ -15,6 +15,7 @@ use super::stronghold::{self, Stronghold};
 use super::{BoundingBox, StructureKind, Structures, template, treasure};
 use crate::biome::ChunkBiomes;
 use crate::block::Block;
+use crate::block_entity::BlockEntity;
 use crate::density::Density;
 use crate::feature::ElementWorld;
 use crate::random::{LargeFeatureSeed, Mt19937};
@@ -26,6 +27,8 @@ pub struct Placed {
     pub touched: (i32, i32),
     /// Its writes into the neighbours in order: `setBlock`s, then its pieces' features'.
     pub past: Vec<Past>,
+    /// The block entities of those writes.
+    pub past_entities: Vec<([i32; 3], BlockEntity)>,
     /// Spider corridors whose spawner is placed by the end of this chunk.
     pub spawners: Spawners,
     /// In order: a cell a template pass decided (true) or a piece wrote afterwards (false).
@@ -105,7 +108,7 @@ impl Structures {
         let touched = placed.iter().fold(canvas.touched, |(lo, hi), b| (lo.min(b.y0 - 1), hi.max(b.y1 + 1)));
         let mut past = std::mem::take(&mut canvas.unclipped);
         past.append(&mut canvas.spilled);
-        Placed { touched, past, spawners, settled: canvas.record.take_settled(), temple_heights }
+        Placed { touched, past, past_entities: std::mem::take(&mut canvas.past_entities), spawners, settled: canvas.record.take_settled(), temple_heights }
     }
 
     /// The village pieces meeting `chunk` in post-process order, described, for probes.

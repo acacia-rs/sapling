@@ -11,6 +11,7 @@ use super::super::template::{JavaPlacement, Placement, Rotation, Rule, apply, na
 use super::assemble::middle;
 use super::element::{Element, ElementKind, Projection};
 use crate::block::Block;
+use crate::block_entity::cell_seed;
 use crate::feature::element_random;
 use crate::random::Mt19937;
 
@@ -109,8 +110,9 @@ impl Piece {
             canvas.set(x, y, z, block);
             // A chest's block actor (type 2, trapped ones too; not a barrel's) takes one draw of the chunk's generator
             // for its `LootTableSeed` (`placeInWorld` 141eed154; worldgen-bds-order.md, "replay5").
-            if matches!(block.name(), "chest" | "trapped_chest") {
-                random.next_u32();
+            let drawn = matches!(block.name(), "chest" | "trapped_chest").then(|| random.next_int_unbounded());
+            if let Some(entity) = template.entity(index, || drawn.unwrap_or_else(|| cell_seed([x, y, z]))) {
+                canvas.set_entity(x, y, z, entity);
             }
         }
         placement.update_pass(canvas, template, self.origin);
@@ -150,9 +152,12 @@ impl Piece {
         let placement = JavaPlacement { rotation: self.rotation, rules, capped, level_seed };
         let blocks = placement.blocks(template, self.origin, &canvas.bb, &|x, y, z| canvas.get(x, y, z));
         canvas.begin_template();
-        for ((x, y, z), block) in blocks {
+        for ((x, y, z), block, entity) in blocks {
             if canvas.bb.contains(x, y, z) {
                 canvas.set(x, y, z, block);
+                if let Some(entity) = entity {
+                    canvas.set_entity(x, y, z, entity);
+                }
             }
         }
         trace::label(|| format!("{} update pass", template.name));

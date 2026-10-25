@@ -27,7 +27,7 @@ pub use acacia_proto::types::Blob;
 pub use acacia_world::{Aabb, BlockRegistry, Chunk, Dimension, LevelChunkData, Material, Mining, Tool, ToolKind, ToolTier};
 pub use column::{SubChunkAnswer, empty_column};
 pub use folder::WorldFolder;
-pub use generated::Generated;
+pub use generated::{Generated, PlacedStructure};
 pub use light::FULL_LIGHT;
 pub use sapling_leveldb::LevelDat;
 pub use players::PlayerLoad;

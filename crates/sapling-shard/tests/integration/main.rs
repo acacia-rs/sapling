@@ -30,6 +30,7 @@ mod fire;
 mod fireworks;
 mod foes;
 mod forms;
+mod generated_structures;
 mod ground;
 mod growth;
 mod handoff;

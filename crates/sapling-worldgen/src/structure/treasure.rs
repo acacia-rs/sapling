@@ -4,6 +4,7 @@
 use super::canvas::Canvas;
 use super::mineshaft::full_solid;
 use crate::block::Block;
+use crate::block_entity::BlockEntity;
 use crate::random::Mt19937;
 
 const MIN_Y: i32 = 6;
@@ -32,4 +33,5 @@ pub fn place(canvas: &mut Canvas, random: &mut Mt19937, start: (i32, i32)) {
         chest -= 1;
     }
     canvas.set(x, chest, z, Block::ChestNorth);
+    canvas.set_entity(x, chest, z, BlockEntity::Loot { table: "loot_tables/chests/buriedtreasure.json", seed: random.next_int_unbounded() });
 }

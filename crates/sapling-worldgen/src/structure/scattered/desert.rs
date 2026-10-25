@@ -3,6 +3,7 @@
 
 use super::{STAIRS_DATA, cellar, stairs};
 use crate::block::Block;
+use crate::block_entity::BlockEntity;
 use crate::random::Mt19937;
 use crate::structure::canvas::Canvas;
 use crate::structure::piece::Frame;
@@ -139,15 +140,15 @@ fn treasure_room(f: &Frame, canvas: &mut Canvas, random: &mut Mt19937) {
         f.place(canvas, cut, x + dx, -11, z + dz);
     }
     for (x, z, chest) in [(10, 12, Block::ChestNorth),(8, 10, Block::ChestEast), (10, 8, Block::ChestSouth), (12, 10, Block::ChestWest)] {
-        create_chest(f, canvas, random, (x, -11, z), chest);
+        create_chest(f, canvas, random, (x, -11, z), chest, "loot_tables/chests/desert_pyramid.json");
     }
 }
 
-/// `createChest` (141f49ef0): a chest set directly where none is, then one draw for its loot.
-pub fn create_chest(f: &Frame, canvas: &mut Canvas, random: &mut Mt19937, (x, y, z): (i32, i32, i32), chest: Block) {
+/// `createChest` (141f49ef0): a chest set directly where none is, then one draw for its loot `table`'s seed.
+pub fn create_chest(f: &Frame, canvas: &mut Canvas, random: &mut Mt19937, (x, y, z): (i32, i32, i32), chest: Block, table: &'static str) {
     let (wx, wy, wz) = f.world(x, y, z);
     if canvas.bb.contains(wx, wy, wz) && !Block::CHESTS.contains(&canvas.get(wx, wy, wz)) {
         canvas.set(wx, wy, wz, chest);
-        random.next_int_unbounded();
+        canvas.set_entity(wx, wy, wz, BlockEntity::Loot { table, seed: random.next_int_unbounded() });
     }
 }

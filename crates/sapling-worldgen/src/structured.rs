@@ -13,10 +13,12 @@ pub(crate) mod replay;
 
 use std::sync::Arc;
 
+use crate::block_entity::BlockEntity;
 use crate::cache::SourceCache;
 use crate::structure::{self, Past, Settled, Spawners, trace};
 use crate::terrain::ChunkShape;
 pub(crate) use around::Around;
+pub use on_demand::StructureWrites;
 use order::Rank;
 
 type Pos = (i32, i32, i32);
@@ -37,6 +39,8 @@ pub struct Source {
     own: Pieced,
     /// Its writes into the chunks around, in order.
     past: Vec<Past>,
+    /// The block entities of those writes.
+    past_entities: Vec<([i32; 3], BlockEntity)>,
     /// The cells around its chunk that its passes decided (true) or its pieces wrote afterwards.
     settled_past: Vec<(Pos, bool)>,
     /// The spider corridors whose spawner is placed by its end.
@@ -69,6 +73,9 @@ impl Source {
             Arc::make_mut(&mut after.shape).set_block((x & 15) as usize, y, (z & 15) as usize, block);
             after.touched = widen(after.touched, (y, y));
         }
+        for &([x, y, z], entity) in self.past_entities.iter().filter(|(p, _)| (p[0] >> 4, p[2] >> 4) == chunk) {
+            Arc::make_mut(&mut after.shape).add_block_entity(ChunkShape::index((x & 15) as usize, y, (z & 15) as usize), entity);
+        }
         for &(at, decided) in self.settled_past.iter().filter(|(p, _)| (p.0 >> 4, p.2 >> 4) == chunk) {
             settle(&mut after.settled, at, decided);
         }
@@ -91,7 +98,7 @@ impl Source {
         }
         shape.share();
         let own = Pieced { shape: Arc::new(shape), settled, touched: widen(before.touched, placed.touched) };
-        Source { own, past: placed.past, settled_past, spawners: placed.spawners, temple_heights: placed.temple_heights }
+        Source { own, past: placed.past, past_entities: placed.past_entities, settled_past, spawners: placed.spawners, temple_heights: placed.temple_heights }
     }
 
     pub(crate) fn spawners(&self) -> &Spawners {

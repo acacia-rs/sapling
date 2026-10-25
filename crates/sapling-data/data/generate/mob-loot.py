@@ -117,6 +117,12 @@ def default_table(base, groups):
 RENAMES = {
     "minecraft:muttonRaw": "minecraft:mutton", "minecraft:netherStar": "minecraft:nether_star", "minecraft:clownfish": "minecraft:tropical_fish",
     "minecraft:fish": "minecraft:cod", "minecraft:totem": "minecraft:totem_of_undying",
+    "minecraft:appleEnchanted": "minecraft:enchanted_golden_apple", "minecraft:chain": "minecraft:iron_chain",
+    "minecraft:horsearmoriron": "minecraft:iron_horse_armor", "minecraft:horsearmorgold": "minecraft:golden_horse_armor",
+    "minecraft:horsearmordiamond": "minecraft:diamond_horse_armor", "minecraft:fireball": "minecraft:fire_charge",
+    "minecraft:speckled_melon": "minecraft:glistering_melon_slice", "minecraft:sign": "minecraft:oak_sign",
+    # An explorer map: BDS fills it in; left a blank map here (no map data yet).
+    "minecraft:map": "minecraft:empty_map",
 }
 # (name, data) -> the item that data now names; a sheep's wool is its colour's, white by default.
 BY_DATA = {("minecraft:dye", 0): "minecraft:ink_sac", ("minecraft:skull", 1): "minecraft:wither_skeleton_skull", ("minecraft:wool", "colour"): "minecraft:white_wool"}
@@ -127,6 +133,8 @@ BLOCK_TABLES = [
     "loot_tables/spawners/trial_chamber/items_to_drop_when_ominous.json",
     "loot_tables/chests/trial_chambers/reward.json", "loot_tables/chests/trial_chambers/reward_ominous.json",
 ]
+# Tables generated containers, pots and suspicious blocks roll when first opened or brushed (containers.rs in sapling-shard).
+CONTAINER_TABLES = re.compile(r"loot_tables/(chests|dispensers|pots)/.*\.json|loot_tables/entities/.*brushable_block.*\.json")
 # Kinds whose table is not what they leave when they die.
 NOT_MOBS = {"minecraft:fishing_hook", "minecraft:player", "minecraft:npc", "minecraft:tripod_camera"}
 
@@ -136,7 +144,7 @@ def renamed(entry):
     name, functions = entry["name"], entry.get("functions", [])
     for function in functions:
         data = "colour" if function["function"] == "minecraft:set_data_from_color_index" else function.get("data") if function["function"] == "set_data" else None
-        if (name, data) in BY_DATA:
+        if not isinstance(data, dict) and (name, data) in BY_DATA:
             return {**entry, "name": BY_DATA[(name, data)], "functions": [f for f in functions if f is not function]}
     if name.startswith("minecraft:record_"):
         name = "minecraft:music_disc_" + name.removeprefix("minecraft:record_")
@@ -176,6 +184,8 @@ def main():
     for table in BLOCK_TABLES:
         if table not in tables:
             print(f"no file for {table}")
+        named_tables(table, tables, used)
+    for table in sorted(t for t in tables if CONTAINER_TABLES.fullmatch(t)):
         named_tables(table, tables, used)
     with open(OUT, "w", encoding="utf-8", newline="\n") as out:
         json.dump({"entities": found, "tables": dict(sorted(used.items()))}, out, separators=(",", ":"), sort_keys=True)

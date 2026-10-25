@@ -176,6 +176,10 @@ One listener task, one shard thread, one world. The pieces and why they are shap
   bounded per area, so memory does not grow with the ground explored.
   Each column goes through every ported stage, features and structures included
   (`OverworldGenerator::chunk_blocks`); the Nether and the End are not generated yet (`docs/NEXT.md`).
+  The block entities generation leaves (spawners, loot tables with their seeds, trial spawners, vaults,
+  pots) ride on the shape (`ChunkShape::block_entities`) and are saved as BDS saves them
+  (`generated/entities.rs`, `sapling-leveldb` `generated.rs`); a container rolls its table when the
+  shard first holds it (`containers/loot.rs`). docs/research/structure-block-entities.md.
 - **Block entities.** A column keeps its record as stored and saves it back. `set_block` drops the
   compounds at a position when the block there becomes another kind (a different name). Clients get
   each compound whole, as network NBT, with the section it is in: after the section's bytes, or as the
@@ -418,7 +422,8 @@ it sends for `/title`, `/scoreboard`, `/gamemode`, `/tp`, a wither's bar and com
   a player rising there is put in spectator (`vitals/death.rs`). `WorldBorder` is a plugin API, not
   vanilla (BDS has none): `border::keep_inside` puts a player past it back inside.
 - **On-demand worldgen** (`generation.rs`; `sapling-world` `locate.rs`, `generated/on_demand.rs`). `/place`
-  writes a feature, structure or jigsaw the generator draws over the loaded columns; `/locate` asks the
+  writes a feature, structure or jigsaw the generator draws over the loaded columns, a structure's block
+  entities after its blocks (`PlacedStructure`); `/locate` asks the
   generator's placement and climate. Evidence: `docs/research/structures-and-ticking.md`.
 - **Boss bar.** One per player, on the player's own entity id (dragonfly's way: no extra entity).
   A new bar is ShowBar, `remove_boss_bar` HideBar; a bar that is shown changes by SetBarTitle,

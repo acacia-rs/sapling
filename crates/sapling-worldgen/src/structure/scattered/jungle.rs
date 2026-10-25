@@ -5,9 +5,12 @@
 use super::desert::create_chest;
 use super::{STAIRS_DATA, stairs};
 use crate::block::Block;
+use crate::block_entity::BlockEntity;
 use crate::random::Mt19937;
 use crate::structure::canvas::Canvas;
 use crate::structure::piece::Frame;
+
+const CHEST_TABLE: &str = "loot_tables/chests/jungle_temple.json";
 
 const STONE_STAIRS: [Block; 4] = [Block::StoneStairsEast, Block::StoneStairsWest, Block::StoneStairsSouth, Block::StoneStairsNorth];
 
@@ -135,7 +138,7 @@ fn traps(f: &Frame, canvas: &mut Canvas, random: &mut Mt19937) {
     f.place(canvas, wire, 9, -2, 4);
     create_container(f, canvas, random, (9, -2, 3), Block::DispenserWest);
     place(canvas, Block::VineAllSides, &[(8, -1, 3), (8, -2, 3)]);
-    create_chest(f, canvas, random, (8, -3, 3), Block::ChestWest);
+    create_chest(f, canvas, random, (8, -3, 3), Block::ChestWest, CHEST_TABLE);
     place(canvas, mossy, &[(9, -3, 2), (8, -3, 1), (4, -3, 5), (5, -2, 5), (5, -1, 5), (6, -3, 5), (7, -2, 5), (7, -1, 5), (8, -3, 5)]);
     stone(f, canvas, random, (9, -1, 1), (9, -1, 5));
     air(f, canvas, (8, -3, 8), (10, -1, 10));
@@ -148,7 +151,7 @@ fn traps(f: &Frame, canvas: &mut Canvas, random: &mut Mt19937) {
     f.place(canvas, Block::StickyPistonUp, 9, -2, 8);
     place(canvas, Block::StickyPistonWest, &[(10, -2, 8), (10, -1, 8)]);
     f.place(canvas, Block::RepeaterSouth, 10, -2, 10);
-    create_chest(f, canvas, random, (9, -3, 10), Block::ChestSouth);
+    create_chest(f, canvas, random, (9, -3, 10), Block::ChestSouth, CHEST_TABLE);
 }
 
 /// `createDispenser` (141f4a850): as `createChest`, one draw for the loot when placed.
@@ -156,6 +159,6 @@ fn create_container(f: &Frame, canvas: &mut Canvas, random: &mut Mt19937, (x, y,
     let (wx, wy, wz) = f.world(x, y, z);
     if canvas.bb.contains(wx, wy, wz) && !matches!(canvas.get(wx, wy, wz), Block::DispenserSouth | Block::DispenserWest) {
         canvas.set(wx, wy, wz, block);
-        random.next_int_unbounded();
+        canvas.set_entity(wx, wy, wz, BlockEntity::Loot { table: "loot_tables/chests/dispenser_trap.json", seed: random.next_int_unbounded() });
     }
 }

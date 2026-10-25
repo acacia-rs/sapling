@@ -8,6 +8,7 @@ use super::canvas::Canvas;
 use super::placement::{Grid, Spread};
 use super::template::{Placement, Rotation, Template, named};
 use crate::block::Block;
+use crate::block_entity::{BlockEntity, cell_seed};
 use crate::chunk::ChunkShape;
 use crate::random::Mt19937;
 
@@ -68,11 +69,13 @@ impl EndCity {
                 placement.ignore = Some("air");
             }
             placement.place(canvas, template, piece.pos);
-            // "Chest" and "Sentry" markers write nothing; their cells keep what was there.
-            for (index, _) in template.markers.iter().filter(|(_, m)| m == "Elytra") {
+            // "Chest" and "Sentry" markers write nothing; their cells keep what was there. A chest marker's chest is below it.
+            for (index, marker) in &template.markers {
                 let (dx, dy, dz) = piece.rotation.apply(template.blocks[*index].pos);
                 let (x, y, z) = (piece.pos.0 + dx, piece.pos.1 + dy, piece.pos.2 + dz);
-                if bb.contains(x, y, z) {
+                if marker == "Chest" && canvas.get(x, y - 1, z).name() == "chest" {
+                    canvas.set_entity(x, y - 1, z, BlockEntity::Loot { table: "loot_tables/chests/end_city_treasure.json", seed: cell_seed([x, y - 1, z]) });
+                } else if marker == "Elytra" && bb.contains(x, y, z) {
                     let facing = [3, 4, 2, 5][piece.rotation as usize];
                     canvas.set(x, y, z, named("frame", &format!("facing_direction={facing},item_frame_map_bit=0,item_frame_photo_bit=0"), false));
                 }
