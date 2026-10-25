@@ -99,6 +99,13 @@ Each needs its rule looked up first (`bdsre` for BDS, the Java jar for data), th
    (`lightning.rs`, `fireworks.rs`, `creatures/wither.rs`, docs/research/wither-lightning-fireworks.md).
    Not drilled against BDS. Left: the doc's "Left out" lists (elytra boost, the wither's dash and
    death, the skeleton trap).
+4. **Riding and vehicles**: boats, chest boats and minecarts (plain, chest, hopper, TNT) are placed,
+   ridden, broken and opened, carts roll by BDS's rail rules, pigs and striders take saddles and
+   sticks, horses and their kin take riders and are tamed by riding, `/ride` answers as BDS did
+   (`riding.rs`, `vehicles.rs`, `docs/research/vehicles.md`, `bds_ride_probe ride|mounts|boats`; carts
+   not drilled: `bds_ride_probe carts`). Left: BDS re-simulating a driver's boat or horse, a player's
+   `RideID`, the horse screen and a horse's charged jump, a wild horse bucking a rider off later in
+   the ride, hoppers filling carts, a rail's own redstone line, and the doc's "Unverified" list.
 
 ## 3. Things assumed, not verified
 

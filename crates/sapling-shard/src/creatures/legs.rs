@@ -55,6 +55,16 @@ pub(super) fn walk(world: &mut World, entity: Entity, layer: Entity, body: &Body
     }
 }
 
+/// Before the move of a mob its rider steers (riding/mounts.rs): false where it is left to itself.
+pub(super) fn ridden(world: &mut World, entity: Entity, layer: Entity, kind: &str, body: &Body) -> bool {
+    match crate::riding::steers(world, entity, kind, body) {
+        crate::riding::Rein::Free => return false,
+        crate::riding::Rein::Held => rest(world, entity),
+        crate::riding::Rein::Walk(to, speed) => walk(world, entity, layer, body, to, speed, 0.0),
+    }
+    true
+}
+
 /// The mob stands: its legs start from nothing when it next walks.
 pub(super) fn rest(world: &mut World, entity: Entity) {
     if let Some(mut legs) = world.get_mut::<Legs>(entity) {

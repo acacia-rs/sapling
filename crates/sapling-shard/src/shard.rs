@@ -62,6 +62,8 @@ impl Shard {
         world.init_resource::<ToViewers>();
         world.init_resource::<mobs::MobGrid>();
         world.init_resource::<blocks::BlockInputs>();
+        world.init_resource::<crate::riding::Leaving>();
+        world.init_resource::<crate::vehicles::CargoAsked>();
         let layer = worlds::add(&mut world, &cfg.world_id, level, cfg.spawn).expect("a new shard has no world of that name");
         world.insert_resource(DefaultLayer(layer));
         world.insert_resource(Settings(cfg));

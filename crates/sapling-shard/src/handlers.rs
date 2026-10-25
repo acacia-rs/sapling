@@ -96,7 +96,10 @@ pub(crate) fn dispatch(world: &mut World) {
     drops::pick_up(world);
     orbs::touch(world);
     orbs::tick(world);
+    crate::riding::drive(world);
     creatures::tick(world);
+    crate::vehicles::tick(world);
+    crate::riding::carry(world);
     crate::spawning::despawn(world);
     crate::spawning::tick(world);
     crate::spawners::tick(world);
@@ -114,6 +117,7 @@ pub(crate) fn dispatch(world: &mut World) {
     forms::dispatch(world);
     for entity in left {
         let had_joined = world.get::<Stage>(entity) == Some(&Stage::InWorld);
+        crate::riding::forget(world, entity);
         containers::close(world, entity);
         inventory::save(world, entity);
         let Some(player) = world.get::<Identity>(entity).map(|i| i.0.clone()) else { continue };

@@ -138,7 +138,7 @@ pub(crate) fn dispatch(world: &mut World) {
                     TransactionUseItemActionType::ClickBlock => request.click(pos, Face::from_index(u32::from(click.face)), &click),
                     TransactionUseItemActionType::BreakBlock if broken.insert((entity, pos)) => request.break_block(pos),
                     TransactionUseItemActionType::ClickAir if actions::may_use_item(request.world, entity, request.player) => {
-                        if !crate::shots::use_in_air(request.world, entity) && !crate::eyes::throw(request.world, entity) {
+                        if !crate::riding::boost(request.world, entity) && !crate::shots::use_in_air(request.world, entity) && !crate::eyes::throw(request.world, entity) {
                             crate::vitals::eating::start(request.world, entity);
                         }
                     }
@@ -254,6 +254,10 @@ impl Request<'_> {
         let held = self.held_item(site.mode, click);
         let builds = site.sneaking || !is_used(name) || held.as_deref().is_some_and(|held| super::copper::is_worked_by(name, held));
         let held = held.filter(|_| builds);
+        let at = [click.click_pos.x, click.click_pos.y, click.click_pos.z];
+        if held.as_ref().is_some_and(|held| crate::vehicles::place(self.world, self.entity, site.layer, pos, face, at, held)) {
+            return;
+        }
         if held.as_ref().is_some_and(|held| self.use_tool(&site, pos, face, held) || self.stack(&site, pos, face, held)) {
             return self.resync(&[pos, target]);
         }

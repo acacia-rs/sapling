@@ -29,6 +29,7 @@ mod names;
 mod operators;
 mod players;
 mod regions;
+mod riding;
 mod rules;
 mod scoreboard;
 mod scriptevent;
@@ -68,7 +69,7 @@ impl ServerBuilder {
         let admin = server.command::<operators::Kick>().command::<operators::Op>().command::<operators::Deop>();
         let messaging = admin.command::<messaging::Me>().command::<messaging::TellRaw>().command::<titles::Title>().command::<titles::TitleRaw>();
         let sounds = messaging.command::<sounds::PlaySound>().command::<sounds::StopSound>().command::<sounds::Particle>();
-        sounds.command::<scoreboard::Scoreboard>().command::<tag::Tag>().command::<scriptevent::ScriptEventCommand>()
+        sounds.command::<scoreboard::Scoreboard>().command::<tag::Tag>().command::<scriptevent::ScriptEventCommand>().command::<riding::Ride>()
     }
 }
 

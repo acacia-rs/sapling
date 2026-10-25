@@ -47,6 +47,16 @@ pub(crate) fn keep(world: &mut World, entity: Entity, layer: Entity, unique_id: 
     world.entity_mut(entity).insert((Stored { compound }, crate::tags::UniqueId(unique_id)));
 }
 
+/// Rewrites what a world folder keeps of the entity by `change`, which gets its world's blocks;
+/// left as it was where `change` makes nothing.
+pub(crate) fn restore(world: &mut World, entity: Entity, change: impl FnOnce(&[u8], &sapling_world::BlockRegistry) -> Option<Vec<u8>>) {
+    let level = world.get::<InLayer>(entity).and_then(|layer| world.get::<Layer>(layer.0));
+    let Some(compound) = level.zip(world.get::<Stored>(entity)).and_then(|(level, stored)| change(&stored.compound, level.world.registry())) else { return };
+    if let Some(mut stored) = world.get_mut::<Stored>(entity) {
+        stored.compound = compound;
+    }
+}
+
 /// The tick an entity appeared in: its viewers are told of it after the tick's handlers, so a
 /// move in that tick would reach them before the entity does.
 #[derive(Component)]
@@ -185,7 +195,7 @@ pub(crate) fn step(world: &mut World, entity: Entity, layer: Entity, id: u64, ph
     Some((body, packets))
 }
 
-fn is_new(world: &World, entity: Entity) -> bool {
+pub(crate) fn is_new(world: &World, entity: Entity) -> bool {
     world.get::<Born>(entity).is_some_and(|born| born.0 == world.resource::<Tick>().0)
 }
 

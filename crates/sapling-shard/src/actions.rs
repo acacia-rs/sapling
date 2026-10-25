@@ -48,12 +48,17 @@ pub(crate) fn allowed_hits(world: &mut World, hits: Vec<(Entity, u64)>) -> Vec<(
 }
 
 /// Offers this tick's uses of players and entities; one no plugin cancelled goes to the first that
-/// takes it: raising (creatures/husbandry/clicks.rs), then a trader's screen.
+/// takes it: a vehicle's own use (vehicles.rs), raising (creatures/husbandry/clicks.rs), a trader's
+/// screen, then tack or a seat (riding/mounts.rs), as BDS mounts only on a click no `minecraft:interact`
+/// took (docs/research/vehicles.md, "Mounting").
 pub(crate) fn interacted(world: &mut World, uses: Vec<(Entity, u64)>) {
     for (player, id) in uses {
         let allowed = offer_click(world, player, id, EntityInteractEvent::new).is_some_and(|event| !event.is_cancelled());
         let Some(target) = entities::find(world, EntityId(id)).filter(|_| allowed) else { continue };
-        let _ = crate::creatures::interact(world, player, target) || crate::creatures::trade_with(world, player, id);
+        let _ = crate::vehicles::used_on(world, player, target)
+            || crate::creatures::interact(world, player, target)
+            || crate::creatures::trade_with(world, player, id)
+            || crate::riding::used_on(world, player, target);
     }
 }
 

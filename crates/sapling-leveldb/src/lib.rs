@@ -4,6 +4,7 @@
 
 mod actor_harm;
 mod actor_raising;
+mod actor_riding;
 mod actor_tags;
 mod actors;
 mod block_entities;
@@ -25,6 +26,7 @@ mod world;
 use std::path::PathBuf;
 
 pub use actor_harm::harmed_actor;
+pub use actor_riding::{actor_chest, actor_links, chested_actor, flagged_actor, linked_actor, varied_actor};
 pub use actor_tags::{actor_tags, tagged_actor};
 pub use scoreboard::{DisplayRecord, ObjectiveRecord, ScoreIdentity, ScoreboardRecord, decode_scoreboard, encode_scoreboard};
 pub use actor_raising::{Raising, raised_actor, raising, regrouped_actor};

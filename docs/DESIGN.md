@@ -1073,6 +1073,22 @@ Details and BDS evidence: docs/research/nether-dimension.md, docs/research/end-d
   input, from the sides only fuel, and gives its result (and an empty bucket in its fuel slot)
   downwards; ender chests are not reached. Not done: BDS ticks the hoppers below first, so a chain
   moves an item in one tick; composters; minecarts.
+- **Riding** (`riding.rs`, `docs/research/vehicles.md`). A vehicle's `Seats` list its riders, the
+  first drives; a rider has `Riding`. Seating tells viewers BDS's `mount` sound, the seat's
+  `SetEntityData` and a `SetEntityLink`; later viewers get them after the vehicle's announcement
+  (`mobs::show_after`). A player gets on by a click (`riding/mounts.rs`: saddles and horse armour go
+  on first), leaves on `Interact LeaveVehicle` (`inventory::screens` takes it in); a player rider's
+  input goes into `Reins` instead of moving it (movement.rs), and riders are carried to their seats
+  each tick (`riding/carry.rs`). A driver's client moves a boat or a tamed, saddled horse
+  (`riding/drive.rs`, trusted); a pig or strider walks the way its rider looks while the rider
+  holds its stick (`creatures/legs.rs`). A vehicle's `LinksTag` is written and read
+  (`adopt`). Plugins and `/ride` go through `ShardCtx::ride` and its kin (`riding/backend.rs`).
+- **Boats and minecarts** (`vehicles.rs`, `vehicles/*`). Placed from their items (`blocks/request.rs`),
+  hit until their integrity goes and dropped as their item, broken by blasts. Empty boats float with
+  acacia-physics' `boat_tick`; carts roll by BDS's rail rules (`vehicles/rails.rs`), fall off them,
+  are pushed, press detector rails and are acted on by activator rails (`vehicles/carts.rs`).
+  Chest boats and chest and hopper carts carry slots on a screen naming the vehicle
+  (`containers::Screen::Carried`, `vehicles/cargo.rs`); boats, minecarts and camels pull in mobs.
 - **Furnaces, blast furnaces and smokers** (`furnaces.rs`, `sapling_data::smelted`;
   `docs/research/furnaces.md`). Containers of three slots (input 0, fuel 1, result 2; window types
   Furnace, BlastFurnace, Smoker), which requests name by slot type (`FurnaceIngredient` and its two
@@ -1464,7 +1480,7 @@ acacia-world = { path = "../acacia/acacia/crates/acacia-world" }
   effects) is not shown; villagers and wandering traders are shown and kept as traders
   (docs/research/villagers.md). A stored block
   item saved by an older game version carries old states, whose hash a client may not know. Movement,
-  AI, damage, riding.
+  AI, damage; a player's `RideID`.
 - Clock and level: a vanilla client has not confirmed `SyncWorldClocks` or the other join packets as
   sapling sends them; game rules other than the daylight cycle are not read from `level.dat`. A
   difficulty set while the server runs (`ShardCtx::set_difficulty`) is not saved.
