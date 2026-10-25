@@ -2,7 +2,7 @@
 //! (docs/research/player-damage.md, "Death").
 // TODO: only the words of fall, fire, lava, `/kill` and a zombie were seen on BDS, the rest are
 // the game's keys from memory; the body's box is not shrunk and `PlayerLastDeathPosition` is not told; every death
-// rises by its bed or at the world's spawn (no anchor); `doImmediateRespawn` is not read.
+// rises at its spawn point (a bed or `/spawnpoint`) or the world's spawn (no anchor); `doImmediateRespawn` is not read.
 
 use acacia_proto::packets::{DeathInfo, EntityEvent, EntityEventEventId, LevelSoundEvent, Respawn, SetHealth};
 use acacia_proto::types::Vec3f;

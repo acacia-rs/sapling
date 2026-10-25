@@ -230,7 +230,7 @@ impl Sessions {
             Some((DisconnectFailReason::NotAuthenticated, "disconnectionScreen.notAuthenticated".to_owned()))
         } else if let Some(listed) = listed {
             Some(listed.screen())
-        } else if self.players.len() >= self.cfg.max_players && !ignores_limit {
+        } else if self.players.len() >= self.cfg.max_players.get() && !ignores_limit {
             Some((DisconnectFailReason::ServerFull, "disconnectionScreen.serverFull".to_owned()))
         } else if !self.identities.insert(identity.uuid) {
             Some((DisconnectFailReason::LoggedInOtherLocation, "disconnectionScreen.loggedinOtherLocation".to_owned()))

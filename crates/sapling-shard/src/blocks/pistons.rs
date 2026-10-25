@@ -155,7 +155,7 @@ fn carry(world: &mut World, layer: Entity, from: BlockPos, to: BlockPos, piston:
 }
 
 /// The block entity `entity` at another place.
-fn at_place(entity: Value, pos: BlockPos) -> Value {
+pub(crate) fn at_place(entity: Value, pos: BlockPos) -> Value {
     let Value::Compound(fields) = entity else { return entity };
     let placed = |(key, value): (Str, Value)| match ["x", "y", "z"].iter().position(|axis| key == Str::from(*axis)) {
         Some(axis) => (key, Value::Int(pos[axis])),

@@ -1,8 +1,10 @@
 //! Enchantments: their ids in a stack's `ench` list, and what each level does, as BDS reckons it
 //! (docs/research/enchantments.md). Protection and the rest of what armour's do: warding.rs.
 
+mod table;
 mod warding;
 
+pub use table::{Gear, KINDS, Kind, compatible, gear, goes_on, kind_of, named};
 pub use warding::{Harm, THORNS_WEAR, Warding, thorns};
 
 use acacia_proto::nbt::Value;

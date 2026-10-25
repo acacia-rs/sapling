@@ -97,3 +97,15 @@ fn thorns_hurts_back_by_chance() {
     assert_eq!([thorns(3, &mut always(0.44)), thorns(3, &mut always(0.46)), thorns(0, &mut always(0.0))], [Some(2.0), None, None]);
     assert_eq!(thorns(12, &mut always(0.0)), Some(2.0));
 }
+
+#[test]
+fn the_table_goes_on_and_combines_as_bds_let_enchant() {
+    let [sharpness, smite, protection, silk, fortune, riptide, loyalty, channeling] =
+        ["sharpness", "smite", "protection", "silk_touch", "fortune", "riptide", "loyalty", "channeling"].map(|word| named(word).expect("a word /enchant takes"));
+    assert_eq!((sharpness.id, sharpness.max, sharpness.key), (Enchant::Sharpness as i16, 5, "enchantment.damage.all"));
+    assert!(goes_on(sharpness, "minecraft:diamond_sword") && goes_on(sharpness, "minecraft:book"));
+    assert!(!goes_on(protection, "minecraft:diamond_sword") && !goes_on(sharpness, "minecraft:stone"));
+    assert!(!compatible(sharpness, smite) && !compatible(silk, fortune) && compatible(sharpness, sharpness));
+    assert!(!compatible(loyalty, riptide) && !compatible(riptide, channeling) && compatible(loyalty, channeling));
+    assert!(KINDS.iter().enumerate().all(|(at, kind)| kind.id == at as i16 && kind_of(kind.id).is_some()));
+}

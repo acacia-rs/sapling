@@ -5,7 +5,7 @@ use std::time::Duration;
 
 use acacia_client::{Client, ConnectError, DisconnectReason, TransportKind};
 use sapling_net::access::{AllowEntry, Ban, Terms};
-use sapling_net::{AccessLists, Inbox, NetConfig, NetEvent, SigningKeys, listen};
+use sapling_net::{AccessLists, Inbox, NetConfig, NetEvent, PlayerLimit, SigningKeys, listen};
 
 const WAIT: Duration = Duration::from_secs(10);
 
@@ -25,7 +25,7 @@ async fn next(inbox: &mut Inbox) -> NetEvent {
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn banned_and_unlisted_logins_are_refused_and_a_new_ban_drops_a_player() {
     let lists = AccessLists::in_memory();
-    let cfg = NetConfig { online_mode: false, max_players: 1, access: Some(lists.clone()), ..NetConfig::default() };
+    let cfg = NetConfig { online_mode: false, max_players: PlayerLimit::new(1), access: Some(lists.clone()), ..NetConfig::default() };
     let (listener, _outbox, mut inbox) = listen("127.0.0.1:0".parse().unwrap(), cfg, SigningKeys::empty()).await.unwrap();
     let client = |name: &str| Client::builder(listener.local_addr().to_string()).offline(name).transport(TransportKind::RakNet).login_timeout(WAIT).connect();
 

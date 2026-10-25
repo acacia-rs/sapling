@@ -66,9 +66,11 @@ impl Output {
         self.always
     }
 
-    /// How many targets the command acted on: 0 if it failed, 1 unless it said ([`Output::done_to`]).
+    /// How many targets the command acted on: 0 if no line succeeded, 1 unless it said
+    /// ([`Output::done_to`]). `/clear @a` clearing one player of two counted 1
+    /// (research/captures/bds-itemcmds.txt).
     pub fn success_count(&self) -> u32 {
-        if self.succeeded() { self.done_to.unwrap_or(1) } else { 0 }
+        if self.messages.iter().any(|m| m.success) { self.done_to.unwrap_or(1) } else { 0 }
     }
 
     /// The answer to a line that was not run, under the keys BDS uses; for a command whose

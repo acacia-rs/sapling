@@ -71,8 +71,8 @@ pub async fn listen_shards(addr: SocketAddr, cfg: NetConfig, keys: SigningKeys, 
     let (socket, tcp) = bind(addr, cfg.nethernet.is_some()).await?;
     let addr = socket.local_addr()?;
     let guid = rand_core::OsRng.next_u64();
-    let mut raknet = ServerConfig::new(guid, cfg.motd.pong(guid, 0, cfg.max_players, addr.port()));
-    raknet.max_peers = cfg.max_players + HANDSHAKE_SLACK;
+    let mut raknet = ServerConfig::new(guid, cfg.motd.pong(guid, 0, cfg.max_players.get(), addr.port()));
+    raknet.max_peers = cfg.max_players.ceiling() + HANDSHAKE_SLACK;
     let (senders, inboxes) = (0..shards.max(1)).map(|_| mpsc::unbounded_channel()).unzip();
     let host = cfg.nethernet.as_ref().map(|n| Host::new(n.host_key.clone(), HostConfig { max_peers: raknet.max_peers, ..HostConfig::default() }));
     let lan = cfg.nethernet.as_ref().and_then(|n| n.lan.as_ref()).map(|lan| Lan::bind(lan.port)).transpose()?;
@@ -92,7 +92,7 @@ pub async fn listen_shards(addr: SocketAddr, cfg: NetConfig, keys: SigningKeys, 
         public_ip: cfg.nethernet.as_ref().and_then(|n| n.public_ip),
         motd: cfg.motd.clone(),
         guid,
-        max_players: cfg.max_players,
+        max_players: cfg.max_players.clone(),
         sessions: Sessions::new(cfg, Verifier::new(keys), Router::new(senders, entry), congestion.clone()),
         outbound,
     };

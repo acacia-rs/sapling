@@ -1,15 +1,17 @@
-//! `/setblock`, `/fill` and `/testforblock`.
+//! `/setblock` and `/testforblock`, and the block names and states the block commands share.
 
 use sapling_api::command::{BlockCoords, States};
 use sapling_api::{Block, BlockPos, Command, CommandEnum, Output, Sender, ShardCtx};
 
-/// The most blocks one `/fill` changes, as vanilla.
-const MAX_FILL: i64 = 32_768;
-
 /// Writes the block as `/setblock` does; whether the cell changed (vanilla counts no other).
-fn changed(ctx: &mut ShardCtx<'_>, pos: BlockPos, block: &Block) -> bool {
+pub(super) fn changed(ctx: &mut ShardCtx<'_>, pos: BlockPos, block: &Block) -> bool {
     let before = ctx.block(pos);
     ctx.update_block(pos, block) && ctx.block(pos) != before
+}
+
+/// Whether `there` has each of `states` (`a=1,b=2`, the form [`States`] reads).
+pub(super) fn has_states(there: &Block, states: &str) -> bool {
+    states.split(',').filter(|state| !state.is_empty()).all(|state| there.properties.split(',').any(|held| held == state))
 }
 
 /// Old names of blocks that BDS's commands still take, and what they name now: each was set by
@@ -54,7 +56,7 @@ const OLD_NAMES: [(&str, &str); 34] = [
     ("light_block", "light_block_0"),
 ];
 
-fn block(name: &str, states: Option<&States>) -> Block {
+pub(super) fn block(name: &str, states: Option<&States>) -> Block {
     let plain = name.strip_prefix("minecraft:").unwrap_or(name);
     let block = Block::new(OLD_NAMES.iter().find(|(old, _)| *old == plain).map_or(name, |(_, new)| new));
     match states {
@@ -97,41 +99,6 @@ impl Command for SetBlock {
 }
 
 #[derive(Command)]
-#[command(crate = "crate", name = "fill", description = "Fills all or parts of a region with a block", permission = "operator")]
-pub(crate) struct Fill {
-    from: BlockCoords,
-    to: BlockCoords,
-    block: String,
-    states: Option<States>,
-}
-
-impl Command for Fill {
-    fn run(self, ctx: &mut ShardCtx<'_>, sender: &Sender, out: &mut Output) {
-        let here = ctx.origin(sender);
-        let (from, to) = (self.from.from(here), self.to.from(here));
-        let (low, high): (BlockPos, BlockPos) = (std::array::from_fn(|axis| from[axis].min(to[axis])), std::array::from_fn(|axis| from[axis].max(to[axis])));
-        let count: i64 = (0..3).map(|axis| i64::from(high[axis] - low[axis]) + 1).product();
-        if count > MAX_FILL {
-            return out.translate("commands.fill.tooManyBlocks", vec![count.to_string(), MAX_FILL.to_string()], false);
-        }
-        let block = block(&self.block, self.states.as_ref());
-        let mut filled = 0;
-        for x in low[0]..=high[0] {
-            for y in low[1]..=high[1] {
-                for z in low[2]..=high[2] {
-                    filled += u32::from(changed(ctx, [x, y, z], &block));
-                }
-            }
-        }
-        match filled {
-            // BDS's line for this has no key in its own strings.
-            0 => out.error("No blocks filled"),
-            _ => out.translate("commands.fill.success", vec![filled.to_string()], true),
-        }
-    }
-}
-
-#[derive(Command)]
 #[command(crate = "crate", name = "testforblock", description = "Tests whether a certain block is in a specific location", permission = "operator")]
 pub(crate) struct TestForBlock {
     position: BlockCoords,
@@ -150,11 +117,10 @@ impl Command for TestForBlock {
         let wanted = block(&self.block, self.states.as_ref());
         let there = ctx.block(pos).unwrap_or_else(|| Block::new(Block::AIR));
         let key = |name: &str| format!("%tile.{}.name", name.rsplit(':').next().unwrap_or(name));
-        let has = |state: &str| there.properties.split(',').any(|held| held == state);
         if there.name != wanted.name {
             return out.translate("commands.testforblock.failed.tile", [place(), vec![key(&there.name), key(&wanted.name)]].concat(), false);
         }
-        match self.states.as_ref().is_none_or(|states| states.0.split(',').filter(|state| !state.is_empty()).all(has)) {
+        match self.states.as_ref().is_none_or(|states| has_states(&there, &states.0)) {
             true => out.translate("commands.testforblock.success", place(), true),
             false => out.translate("commands.testforblock.failed.data", place(), false),
         }

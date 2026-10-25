@@ -20,6 +20,8 @@ use crate::plugins::{self, CommandRegistry};
 /// why the schema's own numbers are stale).
 const INT: u16 = 1;
 const FLOAT: u16 = 3;
+// TODO: minecraft-data's number, not checked against BDS's `/spreadplayers` list.
+const VALUE: u16 = 4;
 const TARGET: u16 = 8;
 const STRING: u16 = 56;
 const BLOCK_POSITION: u16 = 64;
@@ -85,6 +87,7 @@ impl Tables {
         let (value_type, enum_type) = match kind {
             ParamKind::Int => (INT, EnumType::Valid),
             ParamKind::Float => (FLOAT, EnumType::Valid),
+            ParamKind::Value => (VALUE, EnumType::Valid),
             ParamKind::String => (STRING, EnumType::Valid),
             ParamKind::Text => (MESSAGE, EnumType::Valid),
             ParamKind::Target => (TARGET, EnumType::Valid),

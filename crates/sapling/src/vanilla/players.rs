@@ -1,8 +1,8 @@
-//! The commands aimed at players and entities: `/tp`, `/give`, `/clear`, `/gamemode`, `/summon`
-//! `/kill` and `/damage`.
+//! The commands aimed at players and entities: `/tp`, `/gamemode`, `/summon`, `/kill` and
+//! `/damage`, and `/difficulty`.
 
 use sapling_api::command::{Args, CommandSpec, CommandSyntax, Coords, Overload, Parameter, ParameterSpec, ParseError, Selector};
-use sapling_api::{Command, DamageCause, Difficulty, GameMode, Item, Output, Permission, Sender, ShardCtx};
+use sapling_api::{Command, DamageCause, Difficulty, GameMode, Output, Permission, Sender, ShardCtx};
 
 use super::{display_name, no_target, players, targets, tell_target};
 
@@ -114,59 +114,6 @@ impl Teleport {
 }
 
 #[derive(Command)]
-#[command(crate = "crate", name = "give", description = "Gives an item to a player", permission = "operator")]
-pub(crate) struct Give {
-    player: Selector,
-    item: String,
-    amount: Option<u8>,
-}
-
-impl Command for Give {
-    fn run(self, ctx: &mut ShardCtx<'_>, sender: &Sender, out: &mut Output) {
-        let item = Item::new(super::item_named(&self.item), self.amount.unwrap_or(1).max(1));
-        let (shown, count) = (display_name(&item.name), item.count.to_string());
-        let given = players(ctx, sender, Some(&self.player));
-        for player in &given {
-            ctx.give(player.id, &item);
-            tell_target(ctx, player.id, "commands.give.successRecipient", &[shown.clone(), count.clone()]);
-        }
-        match given.is_empty() {
-            true => no_target(out),
-            false => {
-                out.translate("commands.give.success", vec![shown, count, names(&given)], true);
-                out.done_to(given.len() as u32);
-            }
-        }
-    }
-}
-
-fn names(players: &[sapling_api::Player]) -> String {
-    players.iter().map(|player| player.name.as_str()).collect::<Vec<_>>().join(", ")
-}
-
-#[derive(Command)]
-#[command(crate = "crate", name = "clear", description = "Clears items from a player's inventory", permission = "operator")]
-pub(crate) struct Clear {
-    player: Option<Selector>,
-}
-
-impl Command for Clear {
-    /// One line per player, as BDS answers.
-    fn run(self, ctx: &mut ShardCtx<'_>, sender: &Sender, out: &mut Output) {
-        let cleared = players(ctx, sender, self.player.as_ref());
-        if cleared.is_empty() {
-            return no_target(out);
-        }
-        for player in &cleared {
-            match ctx.clear_inventory(player.id) {
-                0 => out.translate("commands.clear.failure.no.items", vec![player.name.clone()], false),
-                removed => out.translate("commands.clear.success", vec![player.name.clone(), removed.to_string()], true),
-            }
-        }
-    }
-}
-
-#[derive(Command)]
 #[command(crate = "crate", name = "gamemode", description = "Sets a player's game mode", permission = "operator")]
 pub(crate) struct GameModeCommand {
     mode: GameMode,
@@ -192,17 +139,47 @@ impl Command for GameModeCommand {
     }
 }
 
-// TODO: the game also takes `p`, `e`, `n`, `h` and 0 to 3; not tried on BDS.
-#[derive(Command)]
-#[command(crate = "crate", name = "difficulty", description = "Sets the difficulty level", permission = "operator")]
+/// `/difficulty <difficulty>`: a name, its first letter, or 0 to 3; another number is refused
+/// when run (research/captures/bds-worldcmds.txt).
 pub(crate) struct DifficultyCommand {
-    difficulty: Difficulty,
+    difficulty: Result<Difficulty, i32>,
+}
+
+impl CommandSyntax for DifficultyCommand {
+    fn spec() -> CommandSpec {
+        let overload = |parameter: ParameterSpec| Overload { parameters: vec![parameter] };
+        CommandSpec {
+            name: "difficulty".into(),
+            aliases: Vec::new(),
+            description: "Sets the difficulty level".into(),
+            permission: Permission::Operator,
+            overloads: vec![overload(ParameterSpec::of::<Difficulty>("difficulty")), overload(ParameterSpec::of::<i32>("difficulty"))],
+        }
+    }
+
+    fn parse(args: &mut Args<'_>) -> Result<Self, ParseError> {
+        let levels = [Difficulty::Peaceful, Difficulty::Easy, Difficulty::Normal, Difficulty::Hard];
+        let difficulty = match args.peek().and_then(|word| word.parse::<i32>().ok()) {
+            Some(number) => {
+                args.word()?;
+                usize::try_from(number).ok().and_then(|at| levels.get(at).copied()).ok_or(number)
+            }
+            None => Ok(Difficulty::parse(args)?),
+        };
+        args.finish()?;
+        Ok(Self { difficulty })
+    }
 }
 
 impl Command for DifficultyCommand {
     fn run(self, ctx: &mut ShardCtx<'_>, _: &Sender, out: &mut Output) {
-        ctx.set_difficulty(self.difficulty);
-        out.translate("commands.difficulty.success", vec![format!("{:?}", self.difficulty).to_uppercase()], true);
+        match self.difficulty {
+            Ok(difficulty) => {
+                ctx.set_difficulty(difficulty);
+                out.translate("commands.difficulty.success", vec![format!("{difficulty:?}").to_uppercase()], true);
+            }
+            Err(number) => out.translate("commands.generic.parameter.invalid", vec![number.to_string()], false),
+        }
     }
 }
 
@@ -287,5 +264,14 @@ mod tests {
         assert!(matches!(parsed("@s"), Ok((None, false))), "alone, a target is where to");
         let looks = |line: &str| Teleport::parse(&mut Args::new(line, 0, &sender, &[])).ok().and_then(|tp| tp.looks);
         assert_eq!([looks("~ ~ ~4 -90 10"), looks("@s ~ ~ ~4 45"), looks("~ ~ ~4")], [Some([-90.0, 10.0]), Some([45.0, 0.0]), None]);
+    }
+
+    #[test]
+    fn difficulty_takes_names_letters_and_numbers() {
+        let sender = Sender::Console;
+        let parsed = |line: &str| DifficultyCommand::parse(&mut Args::new(line, 0, &sender, &[])).map(|command| command.difficulty);
+        assert_eq!(["p", "e", "N", "hard", "0", "3"].map(|line| parsed(line).unwrap()), [Ok(Difficulty::Peaceful), Ok(Difficulty::Easy), Ok(Difficulty::Normal), Ok(Difficulty::Hard), Ok(Difficulty::Peaceful), Ok(Difficulty::Hard)]);
+        assert_eq!(parsed("4").unwrap(), Err(4));
+        assert!(parsed("x").is_err());
     }
 }

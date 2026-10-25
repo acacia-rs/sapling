@@ -102,6 +102,8 @@ pub enum ParamKind {
     Target,
     /// One of a fixed set of words, completed by the client.
     Enum { name: String, values: Vec<String> },
+    /// One number that may be `~` and an offset: an axis of a place.
+    Value,
     /// Three numbers, each perhaps `~` and an offset: a point.
     Position,
     /// The same, naming a block.

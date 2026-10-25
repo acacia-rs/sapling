@@ -25,11 +25,22 @@ impl Axis {
         }
     }
 
-    pub(crate) fn from(self, origin: f32) -> f32 {
+    /// The number, `~` counted from `origin`.
+    pub fn from(self, origin: f32) -> f32 {
         match self {
             Self::At(at) => at,
             Self::Off(off) => origin + off,
         }
+    }
+}
+
+impl Parameter for Axis {
+    fn kind() -> ParamKind {
+        ParamKind::Value
+    }
+
+    fn parse(args: &mut Args<'_>) -> Result<Self, ParseError> {
+        Self::parse(args)
     }
 }
 

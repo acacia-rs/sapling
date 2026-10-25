@@ -4,6 +4,8 @@
 //! [`ShardCtx`]: sapling_api::ShardCtx
 
 mod backend;
+mod block_entities;
+mod server;
 
 use bevy_ecs::prelude::*;
 use sapling_api::{JoinEvent, PlayerId, QuitEvent, Scope, TickEvent};

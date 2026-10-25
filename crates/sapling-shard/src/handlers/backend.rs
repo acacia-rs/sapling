@@ -175,10 +175,7 @@ impl Backend for Ctx<'_> {
 
     fn set_item(&mut self, player: PlayerId, slot: Slot, item: Option<&Item>) -> bool {
         let Some(entity) = self.entity(player) else { return false };
-        match item.map(|item| inventory::stored(item, self.layer().world.registry())) {
-            Some(None) => false,
-            stack => inventory::set_item(self.world, entity, slot, stack.flatten()),
-        }
+        inventory::set_item(self.world, entity, slot, item)
     }
 
     fn give(&mut self, player: PlayerId, item: &Item) -> u8 {
