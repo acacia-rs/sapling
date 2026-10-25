@@ -122,14 +122,39 @@ after sapling's capture, which shows it three times too fast.
 In sapling's run of the drill (`sapling-crops.txt`) all 24 wheat were ripe between 7 and 35
 seconds in, half of them by 19: BDS's pace.
 
-## Left
+## Light
 
-- Light: the game grows nothing below light 9; sapling asks it of saplings only (DESIGN.md
-  "Light (as built)"), not yet of crops, stems, cane or grass.
+Read from the bds-blocks build with bdsre (labels in `bdsre/names.user.json`); not drilled.
+"Light" is `BlockSource::getRawBrightness` (1415f7870): sky light less `skyDarken` where the
+night counts ("darkened"), or block light if brighter. [D] decompiled, [I] inferred.
+
+| What | BDS | Sapling |
+| --- | --- | --- |
+| crops (`CropBlock::randomTick` 1471459b0) | grow in darkened light >= a field (9 [I]) in their own cell [D] | 9 in the cell |
+| crops (`CropBlock::canSurvive` 147146150) | break when light, night not counted, < a field (8 [I]) and the cell is under the heightmap [D] | on a neighbour's change (`blocks/ground.rs`), not on placing [I] |
+| stems (146616700) | darkened light >= 9 in their cell [D] | as BDS |
+| bamboo (1458106a0, 145812a70) | one tick in 3, darkened light >= 9 over it; a stalk up to 12 + a hash of its column % 5 [D] | the light; its odds and height stay as measured above |
+| berry bush (1471efab0), cocoa (148b2b230), vines (1425e0490), cave vines (148b208d0) | no light read [D] | none |
+| grass (`GrassBlockBase::randomTick` 147165820) | dirt if `_canBeGrass` (147165b50) fails: liquid or a block that keeps light out over it; with darkened light >= 9 over it, 4 tries 1 across, 3 under to 1 over, at dirt that could be grass [D] | dies under a block of filter 15 or liquid; the dirt must be open to the air |
+| mycelium (1465eb280) | light, night not counted: dies with < 4 over it under a solid block; with >= 9 over it, 4 tries 1 across, 2 either way, at dirt with >= 4 over it and nothing solid or liquid [D] | as BDS, the dirt open to the air |
+| ice (`IceBlock::randomTick` 142fd3470) | block light in its cell > 11 - its light block (0): water, air in an ultrawarm dimension [D] | block light in its cell, or one less beside it, >= 12: sapling's light table gives ice filter 2, where BDS's constructor gives none |
+| snow layer (`TopSnowBlock::randomTick` 1471fb850) | block light b >= 12 in its cell melts b - 11 layers, up to 8 [D]; also one layer now and then in a biome over 0.15 when not snowing | the light; not the warm biome |
+| freezing (`LevelChunk::tick` 1409f98a0) | `randomTickSpeed` picks a chunk a tick at the rain top; one in 16 freezes still water that is not water on all four sides, biome <= 0.15, block light < 10 (`Weather::shouldFreeze` 14119e860), whatever the weather [D] | as BDS, up to 16 picks a column a tick, chunks within 4 of a player (`growth/snowfall.rs`) |
+| snow lying | while raining, `doWeatherCycle` on, one in 256 - min(512 x rain x downfall, 240); block light < 12, cold, ground that holds it; layers up to the biome's most (`Weather::canPlaceTopSnow` 14119d880) [D] | one in 16 (full rain, downfall >= 0.47), one layer only [I] |
+| mushrooms (1465ea600, `canSurvive` 1465eac10) | spread one tick in 25, at most 5 in 9x3x9; survive on mycelium and podzol [I], else light, night not counted, < 13 [D] | pop by light on a neighbour's change; no spreading |
+| sun (`BurnsInDaylightSystem` 148485460, `Actor::isInDaylight` 140d38060) | `skyDarken` <= 3, sky over the head by the heightmap, brightness over 0.5; not in water, nor rain in a biome over 0.15 (snow does not save it), no item in the head slot, not in powder snow [I]; fire for 8 s, no random roll [D] | sky light 15 at the head; mobs wear nothing here, powder snow not asked |
+
+Kelp takes no random tick on BDS (no subscription found).
+
+
+- Light: none of "Light" above was drilled against BDS; the crops' 9 and 8, the soils mushrooms
+  keep to and snow's odds are inferred. Daylight detectors read the sky light in their cell by the
+  reckoning in redstone.md. Mushrooms, vines and cave vines take no random tick in sapling: the
+  tracked-cell set is walked every tick, and cave floors full of them would cost it.
 - Trees from saplings: built from the decompile (saplings.md), not checked against the timing
-  measured above. Grass under a block does not die.
+  measured above.
 - Farmland getting wet was not measured; a pumpkin's facing, and what ground a fruit takes, are
   the Java game's.
-- Everything else a random tick does: mycelium, ice and snow, copper, vines, kelp; fire
+- Everything else a random tick does: mushrooms spreading, copper, vines, cave vines; fire
   and lit ore sapling times by themselves (`blocks/fire.rs`, `blocks/ores.rs`).
 - Beetroot's and the other crops' own odds, which were not measured.

@@ -39,6 +39,7 @@ pub use feature::grow::place_feature;
 pub use feature::reach::{Cells as ReachCells, Tries as ReachTries};
 #[doc(hidden)]
 pub use structured::replay::{ReplayWrite, StructureStep};
+pub use surface::temperature;
 pub use terrain::{CellKind, ChunkShape, HEIGHT, MIN_Y};
 
 use cache::SourceCache;

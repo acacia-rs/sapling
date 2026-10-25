@@ -1094,10 +1094,15 @@ it draws itself, and nothing is saved (BDS saves no light), so a column is lit a
 - **When.** The shard relights at the start of every tick (`chunks::poll_and_relight_worlds`) and
   again before random ticks, so a block written in a tick shows in light from the next of those.
   Plugins read `ShardCtx::light_at` and `brightness_at`.
-- **Not done.** No consumer but saplings (raw brightness 9 over them, propagules none): crops,
-  grass and mycelium spread and death, ice and snow melting, mob spawning, daylight detectors
-  through leaves and water, and undead burning in sunlight still use their own reckonings or none.
-  Unverified against BDS: the filter table, the sky's loss going down through a filter, and whether
+- **Consumers.** Saplings (raw brightness 9 over them, propagules none); crops and stems (9 in
+  their cell, `CropBlock::randomTick`) and bamboo (9 over it); a crop with under 8 in its cell or
+  a mushroom off mycelium with 13 or more, night not counted, breaks when a neighbour changes;
+  grass and mycelium spread from blocks with 9 over them and die under a block; ice and snow melt
+  by block light of 12; water freezes and snow lies where the biome is cold and dim
+  (`blocks/growth/`); daylight detectors read the sky light in their cell; undead burn where their
+  head has the sky's full 15 by day (`creatures/harm.rs`).
+  docs/research/growth.md "Light" has the rules and what is unverified.
+- **Not done.** Mob spawning. Unverified against BDS: the filter table, the sky's loss going down through a filter, and whether
   BDS lags light updates as sapling does.
 
 ## NetherNet (as built)

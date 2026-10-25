@@ -39,6 +39,7 @@ mod kept_drops;
 mod landing_sounds;
 mod leftovers;
 mod light;
+mod lit_rules;
 mod level;
 mod liquids;
 mod mechanisms;
