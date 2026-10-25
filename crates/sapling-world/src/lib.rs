@@ -3,6 +3,7 @@
 //! cache that every player shares. A [`Template`] is a world frozen in memory that arenas
 //! (`World::arena`) read until they write (docs/DESIGN.md "Arenas").
 
+mod climate;
 mod column;
 #[cfg(test)]
 mod dimension_tests;

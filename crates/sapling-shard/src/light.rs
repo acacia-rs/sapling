@@ -38,11 +38,16 @@ pub(crate) fn sky_darken(time: i64, weather: Weather) -> u8 {
     ((1.0 - light) * DARKEST) as u8
 }
 
+/// What the night and the weather take from a world's sky light now ([`sky_darken`]).
+pub(crate) fn darken(world: &World, layer: Entity) -> u8 {
+    let weather = crate::weather::of(world, layer);
+    world.get::<Layer>(layer).map_or(0, |level| sky_darken(level.world.level().time, weather))
+}
+
 /// The raw brightness of a cell of a world (`World::brightness_at`) at its time and weather now.
 pub(crate) fn brightness(world: &World, layer: Entity, [x, y, z]: BlockPos) -> Option<u8> {
-    let weather = crate::weather::of(world, layer);
-    let level = &world.get::<Layer>(layer)?.world;
-    level.brightness_at(x, y, z, sky_darken(level.level().time, weather))
+    let darken = darken(world, layer);
+    world.get::<Layer>(layer)?.world.brightness_at(x, y, z, darken)
 }
 
 impl LightBackend for Ctx<'_> {

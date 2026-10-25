@@ -423,8 +423,10 @@ gives every one of these but 23000, where it gives 2 and no change from 0 was se
 set by `/setblock` in the drill gave 0 and did not change in it; one put down by hand read at
 once (`placing`).
 
-Sapling reads each detector written while it runs every 20 ticks by that reckoning, 0 under a
-roof, and a click turns one inside out (`blocks/daylight.rs`).
+Sapling reads each detector written while it runs every 20 ticks by that reckoning, with the sky
+light in the detector's cell for the sky's 15 (so 14 under one block, 0 shut in), and a click
+turns one inside out (`blocks/daylight.rs`). An inverted detector gives 15 less the reading; the
+Java game's gives 15 less the light without the sun's angle, and BDS's was not watched.
 
 ## Pistons and entities
 

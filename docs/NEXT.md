@@ -32,13 +32,15 @@ it does on BDS and the two captures can be diffed:
    bone meal (`docs/research/bone-meal.md`, `bonemeal`) are drilled and built. Saplings,
    propagules and azaleas grow worldgen's trees by bone meal and random tick, by BDS's decompiled
    rules (`docs/research/saplings.md`, `blocks/saplings.rs`), in light of 9 or more; not drilled
-   against BDS. The server reckons light now (DESIGN.md "Light (as built)"); left there: asking it
-   in crop growth, grass spread, melting, mob spawning and daylight detectors; the flood's grid
+   against BDS. The server reckons light now (DESIGN.md "Light (as built)"), and crops, stems,
+   bamboo, grass and mycelium, ice and snow, freezing and snowfall, mushrooms, daylight detectors
+   and the sun's burning ask it by BDS's decompiled rules (docs/research/growth.md "Light"; not
+   drilled); left there: mob spawning, mushrooms spreading, vines and cave vines; the flood's grid
    looks a column up by hash per cell (~0.7 µs a cell optimised: three columns arriving cost a tick
    15 ms), worth caching. Fire is lit, spreads,
    burns and is put out (`docs/research/fire.md`, `fire`, `quench`), its spread by the Java game's odds. Crops, stems and berry bushes
    grow by themselves at BDS's pace, a ripe stem bears, cane, cactus and bamboo grow and
-   farmland dries and is trodden down, grass spreads to open dirt, leaves decay when their log
+   farmland dries and is trodden down, grass and mycelium spread to open dirt, leaves decay when their log
    goes, and cocoa, nether wart and pitcher crops grow (`docs/research/growth.md`, `crops`,
    `grows`, `grows2`, `leaves`, `trample`);
    left: the rest of what random ticks do.

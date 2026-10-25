@@ -37,6 +37,7 @@ mod jukebox;
 mod kept_drops;
 mod leftovers;
 mod light;
+mod lit_rules;
 mod level;
 mod liquids;
 mod mechanisms;

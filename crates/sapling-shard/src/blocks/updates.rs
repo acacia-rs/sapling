@@ -111,7 +111,7 @@ pub(super) fn settle(world: &mut World, layer: Entity, pos: BlockPos) {
         for face in Face::ALL {
             let beside = face.neighbour(pos);
             let Some((registry, id)) = block(world, layer, beside) else { continue };
-            let stands = level(world, layer).is_none_or(|level| ground::may_stand(level, beside, id));
+            let stands = level(world, layer).is_none_or(|level| ground::may_stand(level, beside, id) && !ground::is_wrongly_lit(level, beside, id));
             if is_gone && depended(registry, id, face) || !stands {
                 pop(world, layer, beside);
                 changed.push_back(beside);

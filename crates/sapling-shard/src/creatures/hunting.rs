@@ -125,7 +125,7 @@ fn pick(world: &mut World, entity: Entity, layer: Entity, id: u64, kind: &str, b
     // A spider under the sun by day took none on BDS; under a roof or by night it did
     // (research/captures/bds-spiders.txt).
     let head = [body.at[0], body.at[1] + body.size[1], body.at[2]].map(|c| c.floor() as i32);
-    let dazzled = sapling_data::mob_traits(kind).hunts?.by_dark && world.get::<Layer>(layer).is_some_and(|layer| super::harm::is_sunlit(&layer.world, head));
+    let dazzled = sapling_data::mob_traits(kind).hunts?.by_dark && super::harm::sun_on(world, layer, head);
     let looks = !sapling_data::mob_traits(kind).hunts?.provoked && !dazzled;
     if found.is_none() && hunts && looks && (now + id).is_multiple_of(LOOKS) {
         found = nearest(world, layer, body, sight);

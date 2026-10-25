@@ -59,17 +59,27 @@ fn is_within(level: &Level, [x, y, z]: [i32; 3]) -> bool {
 
 /// The sun burns a mob for this many ticks at a time.
 const SUN_BURNS: u16 = 160;
-const DAY: i64 = 24000;
-/// The first and the last tick of a day the sun burns in: BDS's zombie burnt at 0, 12000 and
-/// 23500 and not at 12600 or 23000; the bounds between are the Java game's.
-const SUNLIT: [i64; 2] = [23460, 12541];
+/// It is day while the sky is darkened by no more than this (`Actor::isInDaylight`): BDS's zombie
+/// burnt at 0, 12000 and 23500 and not at 12600 or 23000.
+const DAY_DARKEN: u8 = 3;
 
-/// Whether the sun reaches the cell `at`: it is day, and nothing above holds the light back.
-/// A stone roof and leaves did on BDS, glass did not (research/captures/bds-sun.txt).
-pub(super) fn is_sunlit(level: &Level, [x, y, z]: [i32; 3]) -> bool {
-    let time = level.level().time.rem_euclid(DAY);
-    let shades = |y: i32| level.registry().get(level.block(x, y, z)).is_some_and(|state| state.is_solid() && !state.name.contains("glass"));
-    (time >= SUNLIT[0] || time <= SUNLIT[1]) && (y + 1..).take_while(|y| level.in_height(*y)).all(|y| !shades(y))
+/// Whether the sun reaches the cell `at` with the sky darkened by `darken`
+/// (`crate::light::darken`): it is day, and the cell has the sky's full light. A stone roof and
+/// leaves held it back on BDS, glass did not (research/captures/bds-sun.txt).
+fn is_sunlit(level: &Level, [x, y, z]: [i32; 3], darken: u8) -> bool {
+    darken <= DAY_DARKEN && level.light_at(x, y, z).is_some_and(|(sky, _)| sky == sapling_world::FULL_LIGHT)
+}
+
+/// [`is_sunlit`] in the world `layer` now.
+pub(super) fn sun_on(world: &World, layer: Entity, at: [i32; 3]) -> bool {
+    let darken = crate::light::darken(world, layer);
+    world.get::<Layer>(layer).is_some_and(|layer| is_sunlit(&layer.world, at, darken))
+}
+
+/// Whether rain falls on the cell `at` in `weather`: the sky is over it and the biome is not
+/// cold enough for snow, which does not put a burning mob out (`Actor::isInWaterOrRain`).
+fn is_rained_on(level: &Level, [x, y, z]: [i32; 3], weather: sapling_api::Weather) -> bool {
+    weather != sapling_api::Weather::Clear && level.light_at(x, y, z).is_some_and(|(sky, _)| sky == sapling_world::FULL_LIGHT) && !level.is_cold(x, y, z)
 }
 
 pub(crate) fn is_full_block(level: &Level, [x, y, z]: [i32; 3]) -> bool {
@@ -122,10 +132,12 @@ pub(super) fn tick(world: &mut World, entity: Entity, layer: Entity, id: u64, ki
         // Straight above its feet, not forward as the head is drawn.
         let head = [start.at[0], y, start.at[2]].map(|c| c.floor() as i32);
         let breathes = traits.breathes_water || traits.breath.is_some() || super::afflictions::level(world, entity, sapling_api::Effect::WaterBreathing).is_some();
+        let (darken, weather) = (crate::light::darken(world, layer), crate::weather::of(world, layer));
         let level = world.get::<Layer>(layer).map(|layer| &layer.world);
         let (touching, in_wall, under_water) = level.map_or((false, false, false), |level| (burns && touches(level, start, FIERY), is_full_block(level, head), !breathes && holds(level, head, WATER)));
         // Rain kept BDS's zombie from burning at noon (research/captures/bds-sun.txt).
-        let sunlit = traits.burns_in_sun && level.is_some_and(|level| is_sunlit(level, head)) && crate::weather::of(world, layer) == sapling_api::Weather::Clear;
+        let feet = start.at.map(|c| c.floor() as i32);
+        let sunlit = traits.burns_in_sun && level.is_some_and(|level| is_sunlit(level, head, darken) && !is_rained_on(level, feet, weather));
         health.begin();
         let weigh = |world: &mut World, health: &mut Health, before: Health, cause: Cause| crate::damage::weigh(world, entity, health, &before, cause);
         let before = health;

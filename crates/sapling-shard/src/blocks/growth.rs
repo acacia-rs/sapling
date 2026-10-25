@@ -1,12 +1,14 @@
-//! Random ticks for what grows, dries and decays: each crop, stem, berry bush, cane, cactus,
-//! bamboo, farmland, open dirt and marked leaf has the chance a tick that a cell picked at random around a player has on BDS
-//! (docs/research/growth.md); what a tick then does is in rules.rs.
+//! Random ticks for what grows, dries, decays and melts: each crop, stem, berry bush, cane, cactus,
+//! bamboo, farmland, open dirt, smothered grass, lit ice and snow and marked leaf has the chance a
+//! tick that a cell picked at random around a player has on BDS (docs/research/growth.md); what a
+//! tick then does is in rules.rs and cover.rs, and snowfall.rs freezes water and lays snow.
 // A sapling whose tick comes up grows in saplings.rs.
-// TODO: no light is asked for (`crate::light::brightness`), where the game wants 9; grass under a
-// block does not die; ice and the rest take no random tick; only a survival player treads
+// TODO: mushrooms, vines, kelp and cave vines take no random tick; only a survival player treads
 // farmland down, no mob and no creative player.
 
+mod cover;
 mod rules;
+mod snowfall;
 
 use std::collections::HashSet;
 
@@ -56,20 +58,24 @@ impl Picks {
 /// The name of the block at `pos`, if it is one kept track of.
 fn kept(level: &sapling_world::World, [x, y, z]: BlockPos) -> Option<&str> {
     let name = level.in_height(y).then(|| level.registry().get(level.block(x, y, z))).flatten().filter(|state| rules::is_ticked(state.name, state.properties)).map(|state| state.name)?;
-    (name != DIRT || rules::is_open(level, [x, y, z])).then_some(name)
+    (!cover::is_ticked(name) || cover::is_kept(level, [x, y, z], name)).then_some(name)
 }
 
 fn ticked_at(world: &World, layer: Entity, pos: BlockPos) -> Option<&str> {
     kept(level(world, layer)?, pos)
 }
 
-/// A block was written at `pos`: one a random tick changes is kept track of.
+/// A block was written at `pos`: one a random tick changes is kept track of, and one that
+/// shines enough to melt has the ice and snow near it looked at from the next tick, when its
+/// light is in.
 pub(super) fn written(world: &mut World, layer: Entity, pos: BlockPos) {
-    // And the cell under it: dirt a block was taken off is open now.
-    for cell in [pos, [pos[0], pos[1] - 1, pos[2]]] {
-        if ticked_at(world, layer, cell).is_some() {
-            world.get_resource_or_insert_with(Growing::default).0.insert((layer, cell));
-        }
+    // And the cell under it: dirt a block was taken off is open now, grass a block was put on is not.
+    let mut cells: Vec<BlockPos> = [pos, [pos[0], pos[1] - 1, pos[2]]].into_iter().filter(|cell| ticked_at(world, layer, *cell).is_some()).collect();
+    if let Some(level) = level(world, layer) {
+        cells.extend(cover::melted_by(level, pos));
+    }
+    if !cells.is_empty() {
+        world.get_resource_or_insert_with(Growing::default).0.extend(cells.into_iter().map(|cell| (layer, cell)));
     }
 }
 
@@ -103,8 +109,12 @@ pub(crate) fn trample(world: &mut World, layer: Entity, feet: [f32; 3], dropped:
 
 /// A tick's random ticks of everything kept track of.
 pub(crate) fn tick(world: &mut World) {
-    let Some(growing) = world.get_resource::<Growing>().filter(|growing| !growing.0.is_empty()).map(|growing| growing.0.iter().copied().collect::<Vec<_>>()) else { return };
     let mut picks = world.remove_resource::<Picks>().unwrap_or_default();
+    snowfall::tick(world, &mut picks);
+    let Some(growing) = world.get_resource::<Growing>().filter(|growing| !growing.0.is_empty()).map(|growing| growing.0.iter().copied().collect::<Vec<_>>()) else {
+        world.insert_resource(picks);
+        return;
+    };
     let (mut changed, mut done): (Vec<(Entity, BlockPos, bool, Vec<rules::Change>)>, Vec<(Entity, BlockPos)>) = (Vec::new(), Vec::new());
     let mut saplings = Vec::new();
     for (layer, pos) in growing {
@@ -123,7 +133,7 @@ pub(crate) fn tick(world: &mut World) {
                 saplings.push((layer, pos));
             }
         } else {
-            changed.push((layer, pos, rules::grows(name), rules::ticked(level, pos, &mut picks)));
+            changed.push((layer, pos, rules::grows(name), rules::ticked(level, pos, crate::light::darken(world, layer), &mut picks)));
         }
     }
     world.insert_resource(picks);
@@ -135,13 +145,12 @@ pub(crate) fn tick(world: &mut World) {
         if changes.is_empty() || grows && !may_grow(world, layer, ticked) {
             continue;
         }
-        for rules::Change { pos, id, quiet, breaks } in changes {
-            if breaks {
-                super::updates::pop(world, layer, pos);
-            } else if quiet {
-                send::set_quietly(world, layer, pos, id);
-            } else {
-                send::set(world, layer, pos, id);
+        for rules::Change { pos, id, how } in changes {
+            match how {
+                rules::How::Breaks => super::updates::pop(world, layer, pos),
+                rules::How::Quiet => _ = send::set_quietly(world, layer, pos, id),
+                rules::How::Shown => _ = send::set(world, layer, pos, id),
+                rules::How::Melts => _ = super::liquid::pour(world, layer, pos, super::liquid::Liquid::Water, false),
             }
         }
     }
