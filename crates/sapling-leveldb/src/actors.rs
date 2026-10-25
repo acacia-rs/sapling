@@ -22,7 +22,7 @@ use crate::{Batch, Db, Error, ItemStack};
 const ACTOR: &[u8] = b"actorprefix";
 /// NBT tag numbers of a list's items.
 const FLOAT_TAG: u8 = 5;
-const STRING_TAG: u8 = 8;
+pub(crate) const STRING_TAG: u8 = 8;
 
 /// What every stored actor says about itself; the rest of its compound is its kind's business.
 #[derive(Debug, Clone, PartialEq)]
@@ -148,7 +148,7 @@ pub fn moved_actor(compound: &[u8], position: [f32; 3], motion: [f32; 3]) -> Res
 }
 
 /// `compound` with each of `set` replacing the field of its name, or added where it had none.
-fn with_fields<const N: usize>(compound: &[u8], set: [(&str, Value); N]) -> Result<Vec<u8>, Error> {
+pub(crate) fn with_fields<const N: usize>(compound: &[u8], set: [(&str, Value); N]) -> Result<Vec<u8>, Error> {
     let Value::Compound(mut fields) = nbt::read::<LittleEndian>(&mut &compound[..])?.value else { return Err(Error::Actor("an actor that is no compound")) };
     for (key, value) in set {
         match fields.iter_mut().find(|(name, _)| name == key) {

@@ -12,6 +12,33 @@ use crate::late_sounds;
 /// Ticks from a given item to its `pop`, as BDS sent it (research/captures/bds-containers.txt).
 const POP_LATE: u64 = 1;
 
+/// One of the stack the player holds becomes `into`: in its slot when it was the last, else added
+/// to the inventory or, without room, thrown.
+pub(crate) fn swap_held(world: &mut World, player: Entity, into: &str) {
+    let new = ItemStack { name: into.to_owned(), count: 1, damage: 0, block: None, tag: None };
+    let spilled = super::change(world, player, |inventory| {
+        let slot = super::Place::Main(inventory.selected.into());
+        inventory.take(slot, 1).ok()?;
+        if inventory.slot(slot).is_some_and(Option::is_none) {
+            inventory.put(slot, Some(new.clone()));
+            return None;
+        }
+        (inventory.add(&new) > 0).then(|| new.clone())
+    });
+    if let Some(Some(stack)) = spilled {
+        crate::drops::throw(world, player, stack);
+    }
+}
+
+/// Takes one of the stack the player holds; false when it holds nothing.
+pub(crate) fn use_up_held(world: &mut World, player: Entity) -> bool {
+    super::change(world, player, |inventory| {
+        let slot = super::Place::Main(inventory.selected.into());
+        inventory.take(slot, 1).is_ok()
+    })
+    .unwrap_or(false)
+}
+
 /// Adds `stack` to the player's items, and has those near hear the `pop` at their eyes when any
 /// fit; returns how many did not, `None` for no player.
 pub(crate) fn give_and_pop(world: &mut World, player: Entity, stack: &ItemStack) -> Option<u8> {

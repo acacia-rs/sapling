@@ -73,7 +73,7 @@ fn is_used(name: &str) -> bool {
 /// a bed is slept in, a sign is written on, a pot takes or gives a plant, a campfire takes food.
 /// False when it does none of these.
 fn use_block(world: &mut World, player: Entity, layer: Entity, pos: BlockPos, name: &str) -> bool {
-    let uses: [fn(&mut World, Entity, Entity, BlockPos, &str) -> bool; 8] = [
+    let uses: [fn(&mut World, Entity, Entity, BlockPos, &str) -> bool; 9] = [
         crate::containers::open,
         crate::sleep::lie_down,
         signs::edit_by_click,
@@ -82,6 +82,7 @@ fn use_block(world: &mut World, player: Entity, layer: Entity, pos: BlockPos, na
         super::handled::use_by_hand,
         super::jukebox::use_jukebox,
         super::holders::use_holder,
+        crate::creatures::tie_to_fence,
     ];
     uses.iter().any(|used| used(world, player, layer, pos, name))
 }

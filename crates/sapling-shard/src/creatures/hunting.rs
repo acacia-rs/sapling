@@ -161,7 +161,7 @@ fn take(world: &mut World, entity: Entity, layer: Entity, id: u64, kind: &str, b
 /// (research/captures/bds-provoke.txt, bds-provoke2.txt), takes it for its prey at once, if it may be hunted.
 pub(super) fn provoke(world: &mut World, entity: Entity, layer: Entity, id: u64, kind: &str, body: &Body, player: Entity) {
     let Some(hunts) = sapling_data::mob_traits(kind).hunts.filter(|hunts| (hunts.provoked || hunts.by_dark) && super::genes::fights(world, entity)) else { return };
-    let hunted = world.resource::<Settings>().0.difficulty != Difficulty::Peaceful && seen(world, player, layer, body.at, hunts.sees).is_some();
+    let hunted = world.resource::<Settings>().0.difficulty != Difficulty::Peaceful && seen(world, player, layer, body.at, hunts.sees).is_some() && !super::husbandry::is_owner(world, entity, player);
     if hunted && world.get::<Hunter>(entity).is_some_and(|hunter| hunter.prey != Some(player)) {
         take(world, entity, layer, id, kind, body, Some(player));
         // BDS's first hit back came a second or more after, a llama's spit as long as it aims.
@@ -279,6 +279,7 @@ pub(super) fn strike(world: &mut World, entity: Entity, layer: Entity, id: u64, 
     }
     if bitten {
         crate::enchants::thorns(world, prey, entity);
+        super::owner_hurt(world, prey, entity);
     }
     if hunts.once {
         take(world, entity, layer, id, kind, body, None);

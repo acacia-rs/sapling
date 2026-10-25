@@ -48,6 +48,9 @@ fn hit(world: &mut World, player: Entity, id: u64) -> Option<()> {
     }
     let (layer, from) = (world.get::<InLayer>(player)?.0, world.get::<Position>(player)?.feet);
     let eye = [from[0], from[1] + sapling_data::EYE_HEIGHT, from[2]];
+    if entities::find(world, EntityId(id)).is_some_and(|knot| super::husbandry::undo_knot(world, knot)) {
+        return Some(());
+    }
     if let Some(crystal) = entities::find(world, EntityId(id)).filter(|entity| world.get::<crate::dragon::Crystal>(*entity).is_some()) {
         if world.get::<Body>(crystal).is_some_and(|body| distance(eye, body) <= REACH) {
             crate::dragon::burst(world, crystal);
@@ -99,6 +102,7 @@ fn hit(world: &mut World, player: Entity, id: u64) -> Option<()> {
         super::strolling::startle(world, entity);
         super::hunting::provoke(world, entity, layer, id, &kind, &body, player);
         super::teleports::startle(world, entity);
+        super::owner_hit(world, player, entity);
     }
     entities::tell_viewers(world, entity, layer, cell, packets);
     if health.left() <= 0.0 {
@@ -111,7 +115,7 @@ fn hit(world: &mut World, player: Entity, id: u64) -> Option<()> {
 /// The mob of `kind` was killed by a player with Looting at `looting`: it is [`Slain`], for the
 /// experience its kind leaves.
 pub(super) fn slay(world: &mut World, entity: Entity, kind: &str, looting: u8) {
-    let is_baby = world.get::<Creature>(entity).is_some_and(Creature::is_baby);
+    let is_baby = world.get::<super::Raised>(entity).is_some_and(super::Raised::is_baby);
     let points = super::slimes::experience(world, entity, kind).or(sapling_data::mob_traits(kind).experience).filter(|_| !is_baby).map_or(0, |(least, most)| {
         let mut dice = world.get_resource_or_insert_with(Dice::default);
         least + (dice.fraction() * (most - least) as f32) as i32

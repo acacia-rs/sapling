@@ -45,6 +45,7 @@ pub(super) fn hit(world: &mut World, hitter: Entity, id: u64) -> Option<()> {
         vitals::tire(world, hitter, vitals::HIT_TIRES);
         vitals::set_alight(world, struck, enchant::aspect_burn(enchant::level(weapon.as_ref(), Enchant::FireAspect)));
         crate::enchants::thorns(world, struck, hitter);
+        super::owner_hurt(world, struck, hitter);
     }
     Some(())
 }

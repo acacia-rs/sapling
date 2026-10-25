@@ -1000,6 +1000,17 @@ Details and BDS evidence: docs/research/nether-dimension.md, docs/research/end-d
   despawn distances; spawn eggs hatch them (`spawning.rs`, docs/research/mob-spawning.md). Not done: AI, damage; saving the
   items players throw, orbs and falling blocks; a kept entity that wanders into a column that is not
   loaded is lost with it.
+- **Husbandry** (`creatures/husbandry`, `sapling_data::husbandry`, docs/research/husbandry.md). Every
+  creature has a `Raised`: what the world folder keeps of its raising (`sapling_world::Raising`, BDS's
+  actor fields, written back with its compound) and what lives only while it is loaded (its lead's
+  holder, its partner, its foe, its next egg). A player's click on a mob (`actions::interacted`, after
+  plugins) does what its kind's packs say of the held item (`clicks.rs`): name tags, leads, shears,
+  buckets, bowls, flowers, dyes, brushes, healing, growing a baby, breeding, taming, temper, sitting.
+  Before a mob's move, its raising may steer it (sit, be pulled on its lead, fight for its owner,
+  court, follow its owner, follow food) ahead of strolling. Its flags, scale, wool, name, owner and
+  lead holder are told as they change and shown to new viewers (`creatures/shown.rs`); a kept
+  `definitions` list gains and loses the groups each event swaps. Riding is not here: the riding code
+  reads `Raised::saddled`/`chested` and tames a mount by `owners::tame_by_riding`.
 - **Kept between visits** (`sapling-leveldb/src/player`, docs/research/player-records.md). The first
   world's storage keeps a player where BDS does: `player_<uuid>` maps it to a `player_server_` compound
   with BDS's fields: items (`Inventory` with `Slot`, `Armor`, `Offhand`, `SelectedInventorySlot`,

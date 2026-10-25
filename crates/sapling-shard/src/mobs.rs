@@ -58,6 +58,11 @@ pub(crate) struct MobGrid {
 /// What shows a stored actor as it was stored; `None` for a dropped item that names no item a
 /// client knows.
 pub(crate) fn announcement(actor: &Actor, id: u64) -> Option<Vec<Bytes>> {
+    announcement_with(actor, id, MetadataFlags1(0))
+}
+
+/// [`announcement`] with `extra` flags on top of those its stored states show.
+pub(crate) fn announcement_with(actor: &Actor, id: u64, extra: MetadataFlags1) -> Option<Vec<Bytes>> {
     if actor.identifier == ITEM {
         return Some(item_shown(sapling_data::add_item_entity(id, &stack(actor.item.as_ref()?), actor.position, [0.0; 3])?));
     }
@@ -72,7 +77,7 @@ pub(crate) fn announcement(actor: &Actor, id: u64) -> Option<Vec<Bytes>> {
         ActorState::Sitting => MetadataFlags1::SITTING,
     };
     let mut packets = vec![sapling_net::encode(&sapling_data::add_entity(&AddEntityOptions {
-        flags: MetadataFlags1(actor.states.iter().fold(0, |flags, state| flags | flag(state).0)),
+        flags: MetadataFlags1(actor.states.iter().fold(extra.0, |flags, state| flags | flag(state).0)),
         health: actor.health,
         id,
         identifier: &actor.identifier,

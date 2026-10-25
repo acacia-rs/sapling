@@ -65,14 +65,18 @@ pub(crate) fn write_back_before_saving(world: &mut World) {
 /// Writes every loaded column's actors anew from what the shard has (see the module).
 pub(crate) fn write_back(world: &mut World) {
     let kept: Vec<(Entity, ChunkPos, Vec<u8>)> = world
-        .query::<(&InLayer, &Body, &Stored, Option<&creatures::Health>)>()
+        .query::<(&InLayer, &Body, &Stored, Option<&creatures::Health>, Option<&creatures::Raised>)>()
         .iter(world)
-        .filter_map(|(layer, body, stored, health)| {
+        .filter_map(|(layer, body, stored, health, raised)| {
             let home = ChunkPos::of_block(body.at[0].floor() as i32, body.at[2].floor() as i32);
             let moved = sapling_world::moved_actor(&stored.compound, body.at, body.motion).ok()?;
-            let now = match health {
+            let harmed = match health {
                 Some(health) => sapling_world::harmed_actor(&moved, health.left(), health.max(), health.burning() as i16).ok()?,
                 None => moved,
+            };
+            let now = match raised {
+                Some(raised) => creatures::kept_raising(&harmed, raised)?,
+                None => harmed,
             };
             Some((layer.0, home, now))
         })

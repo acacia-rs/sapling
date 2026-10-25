@@ -24,6 +24,7 @@ Mojang's data is not committed (`.gitignore`); build it before the first `cargo 
 | `data/names.tsv` | `cargo run -p sapling --example bds_name_probe -- <your BDS> > data/names.tsv`, on testbox `tools/remote-drill.sh bds bds_name_probe data/names.tsv` (BDS's own answers to `/give` and `/kill`); optional: without it names are made from identifiers |
 | `data/command-names.tsv` | `cargo run -p sapling --example bds_enum_probe -- <your BDS> > data/command-names.tsv` (drop a trailing `probe exit` line when made by `tools/remote-drill.sh bds bds_enum_probe`): the `Item` and `Block` enums of BDS's AvailableCommands; optional: without it commands take every name |
 | `data/spawn-rules.tsv`, `data/despawns.tsv` | `py -3 data/generate/spawn-rules.py` (BDS's behaviour packs, as `mob-loot.py`) |
+| `data/husbandry.tsv` | `py -3 data/generate/husbandry.py` (BDS's behaviour packs, as `mob-loot.py`) |
 | `sapling-worldgen/src/structure/template/templates.bin` | `py -3 crates/sapling-worldgen/scripts/templates_to_rust.py <your BDS dir>` |
 
 | File | Sent as | Patched per join |
@@ -118,6 +119,21 @@ table of the kinds whose hunting was drilled (`docs/research/mob-attacks.md`): `
 `minecraft:attack` plus what the kind holds (a vindicator's axe 5, a wither skeleton's sword 5),
 `speed` is `minecraft:movement` times its attack's `speed_multiplier`, `sees` the `max_dist` of its
 `nearest_attackable_target` for players (16 where it names none).
+
+## Husbandry
+
+`husbandry.tsv` (read by `husbandry.rs`, git-ignored, made by `data/generate/husbandry.py` from the
+vanilla behaviour packs; docs/research/husbandry.md): for each entity whose packs raise it, what its
+own components or first group holding one say: `breed=`, `mates=`, `breed_tame`, `breed_healthy`
+(`minecraft:breedable`); `grows=` ticks and `grow=item:share` (`minecraft:ageable`); `tame=` and
+`tame_chance=` (`minecraft:tameable`), with `tame_health=` and `tame_attack=` of its tamed groups;
+`temper=least-most` and `temper_feed=item:mod` (`minecraft:tamemount`); `heal=item:amount`; `lays=item:least-most`
+ticks (`minecraft:spawn_entity`); `follows=start-stop`, `sits`, `defends`, `leashable`; `tempt=` and
+`tempt_speed=`; `walks=` (`minecraft:movement`, a range's middle); and `on_born`, `on_grow`, `on_tame`,
+`on_sheared`, `on_regrow` as `-group,+group`, the events followed through their triggers and
+unfiltered sequence steps. Old item names are renamed as for mob loot. `raised_look.rs` builds the
+SetEntityData of a baby's scale and box (the recorded baby AddEntity's), a sheep's wool, a name tag,
+and the owner and lead holder.
 
 ## Mob families
 

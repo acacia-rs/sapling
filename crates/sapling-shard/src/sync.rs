@@ -108,6 +108,19 @@ impl Told {
         Some(Flags(shown.told))
     }
 
+    /// A mob's `flag` no longer counts among those it was announced with (a stored baby's, a
+    /// tamed one's), so that [`Told::set_flag`] can clear it.
+    pub fn forget_announced(&mut self, flag: Flags) {
+        if let Some([announced, _]) = self.flags.as_mut().and_then(|shown| shown.mob.as_mut()) {
+            *announced &= !flag.0;
+        }
+    }
+
+    /// The whole word of a mob's flags its viewers know; `None` for an entity that is no mob.
+    pub fn mob_flags(&self) -> Option<Flags> {
+        self.flags.filter(|shown| shown.mob.is_some()).map(|shown| Flags(shown.told))
+    }
+
     /// [`Told::set_flag`], `None` too where viewers already knew `flag` to be so.
     pub fn change_flag(&mut self, flag: Flags, on: bool) -> Option<Flags> {
         let told = self.flags?.told;

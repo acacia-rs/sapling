@@ -5,6 +5,7 @@
 pub mod asking;
 pub mod cluster;
 pub mod orbs;
+pub mod raising;
 pub mod requests;
 pub mod shooting;
 pub mod stored;

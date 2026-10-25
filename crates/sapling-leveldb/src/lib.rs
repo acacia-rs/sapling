@@ -3,6 +3,7 @@
 //! sources: research/worlds-and-ecs.md §1.
 
 mod actor_harm;
+mod actor_raising;
 mod actor_tags;
 mod actors;
 mod block_entities;
@@ -26,6 +27,7 @@ use std::path::PathBuf;
 pub use actor_harm::harmed_actor;
 pub use actor_tags::{actor_tags, tagged_actor};
 pub use scoreboard::{DisplayRecord, ObjectiveRecord, ScoreIdentity, ScoreboardRecord, decode_scoreboard, encode_scoreboard};
+pub use actor_raising::{Raising, raised_actor, raising, regrouped_actor};
 pub use actors::{Actor, Painting, State, actors, falling_block, lying_stack, moved_actor, new_actor, new_falling_block_actor, new_item_actor, new_orb_actor, new_shot_actor, orb_value, orb_worth, shot_record, stored_actors, ShotRecord};
 pub use item::ItemStack;
 pub use player::PlayerData;
