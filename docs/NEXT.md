@@ -27,6 +27,8 @@ it does on BDS and the two captures can be diffed:
    clock`: the answers agree line for line; BDS writes its experience attributes in another
    order). A sapling capture that answers `commands.generic.unknown` or `.syntax` where BDS's
    does not names a command or a form still missing.
+   `/scoreboard` and `/tag` answer as BDS did (`bds_command_probe scoreboard|scoreboard2`); left:
+   the unverified list in `docs/research/scoreboard.md`, and saving the board only at shutdown.
 
    What a click does to a block (`docs/research/block-uses.md`, `clicks`), primed TNT (`tnt`) and
    bone meal (`docs/research/bone-meal.md`, `bonemeal`) are drilled and built. Saplings,

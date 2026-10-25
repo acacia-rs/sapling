@@ -3,6 +3,7 @@
 //! sources: research/worlds-and-ecs.md §1.
 
 mod actor_harm;
+mod actor_tags;
 mod actors;
 mod block_entities;
 mod container;
@@ -15,6 +16,7 @@ mod level_dat;
 mod player;
 mod portals;
 mod records;
+mod scoreboard;
 mod states;
 mod sub_chunk;
 mod world;
@@ -22,6 +24,8 @@ mod world;
 use std::path::PathBuf;
 
 pub use actor_harm::harmed_actor;
+pub use actor_tags::{actor_tags, tagged_actor};
+pub use scoreboard::{DisplayRecord, ObjectiveRecord, ScoreIdentity, ScoreboardRecord, decode_scoreboard, encode_scoreboard};
 pub use actors::{Actor, Painting, State, actors, falling_block, moved_actor, new_actor, new_falling_block_actor, new_item_actor, new_orb_actor, orb_value, orb_worth, stored_actors};
 pub use item::ItemStack;
 pub use player::PlayerData;

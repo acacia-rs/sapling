@@ -1,4 +1,4 @@
-//! A player's items, health, hunger, bed, place and game mode between visits: asked of the first world's storage at
+//! A player's items, health, hunger, bed, place, game mode, tags and `UniqueID` between visits: asked of the first world's storage at
 //! login, handed back when the player leaves, every few seconds while something changed, and when the shard stops.
 
 use bevy_ecs::prelude::*;
@@ -12,6 +12,7 @@ use crate::dimensions::{self, ClientDimension};
 use crate::experience::{self, Experience};
 use crate::handoff::{Peers, ShardMsg};
 use crate::sleep::BedSpawn;
+use crate::tags::Marks;
 use crate::vitals::Vitals;
 
 fn fill(inventory: &mut Inventory, data: PlayerData) {
@@ -57,12 +58,15 @@ fn game_mode(stored: i32) -> Option<GameMode> {
 }
 
 /// Gives the players storage answered for their items.
-pub(crate) fn load(mut commands: Commands, mut layers: Query<(Entity, &mut Layer)>, mut players: Query<(Entity, &Identity, &mut Inventory, Option<&mut Vitals>)>) {
+pub(crate) fn load(mut commands: Commands, mut layers: Query<(Entity, &mut Layer)>, mut players: Query<(Entity, &Identity, &mut Inventory, Option<&mut Vitals>, Option<&mut Marks>)>) {
     for (here, mut layer) in &mut layers {
         for (id, answer) in layer.world.take_players() {
-            let Some((player, _, mut inventory, vitals)) = players.iter_mut().find(|(_, identity, inventory, _)| !inventory.loaded && identity.0.uuid.to_string() == id) else { continue };
+            let Some((player, _, mut inventory, vitals, marks)) = players.iter_mut().find(|(_, identity, inventory, ..)| !inventory.loaded && identity.0.uuid.to_string() == id) else { continue };
             (inventory.loaded, inventory.keep) = (true, answer != PlayerLoad::Unreadable);
-            if let PlayerLoad::Stored(data) = answer {
+            if let PlayerLoad::Stored(mut data) = answer {
+                if let Some(mut marks) = marks {
+                    marks.restore(data.unique_id, std::mem::take(&mut data.tags));
+                }
                 if let Some((mut vitals, kept)) = vitals.zip(data.vitals) {
                     vitals.restore(kept);
                 }
@@ -120,14 +124,18 @@ pub(crate) fn save(world: &mut World, player: Entity) {
     let home = index == entry && world.get::<InLayer>(player).is_some_and(|in_layer| dimensions::of(world, first, dimension) == Some(in_layer.0));
     let place = world.get::<Position>(player).filter(|_| home).map(|position| (position.feet, [position.yaw, position.pitch]));
     let now = KeptPlace(place, dimension, world.get::<Mode>(player).map(|mode| game_type(mode.0)));
-    let stale = vitals.is_some_and(|vitals| vitals.is_unsaved()) || effects.is_some() || world.get::<KeptPlace>(player) != Some(&now);
+    let marks = world.get::<Marks>(player).cloned().unwrap_or_default();
+    let stale = vitals.is_some_and(|vitals| vitals.is_unsaved()) || effects.is_some() || marks.unsaved || world.get::<KeptPlace>(player) != Some(&now);
     let Some(mut inventory) = world.get_mut::<Inventory>(player).filter(|inventory| inventory.keep && (inventory.unsaved || stale)) else { return };
     inventory.unsaved = false;
     let KeptPlace(place, _, game_mode) = now;
     let (position, rotation) = (place.map(|place| place.0), place.map(|place| place.1));
     let data = PlayerData { vitals: vitals.map(|vitals| vitals.kept()), effects: effects.unwrap_or_default(), dimension, position, rotation, game_mode, ..kept(&inventory) };
-    let data = PlayerData { bed: world.get::<BedSpawn>(player).and_then(|bed| bed.kept(first)), ..data };
+    let data = PlayerData { bed: world.get::<BedSpawn>(player).and_then(|bed| bed.kept(first)), tags: marks.tags, unique_id: Some(marks.unique_id), ..data };
     world.entity_mut(player).insert(now);
+    if let Some(mut marks) = world.get_mut::<Marks>(player) {
+        marks.unsaved = false;
+    }
     if let Some(mut vitals) = world.get_mut::<Vitals>(player) {
         vitals.mark_saved();
     }

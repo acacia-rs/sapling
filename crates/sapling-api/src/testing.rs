@@ -24,6 +24,9 @@ pub struct Fake {
     /// Where players stand that are not at 1 2 3.
     pub feet: HashMap<PlayerId, [f32; 3]>,
     pub entities: Vec<crate::EntityInfo>,
+    pub board: crate::scoreboard::fake::FakeBoard,
+    /// Each one's tags, oldest first.
+    pub tags: HashMap<crate::Tagged, Vec<String>>,
     rules: HashMap<String, RuleValue>,
     state: HashMap<TypeId, State>,
 }

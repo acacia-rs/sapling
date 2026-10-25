@@ -1,12 +1,12 @@
 //! The candidates a selector's base looks at, with what its filters ask of them read from the
-//! shard (and only that: inventories, tags and families are read when a filter tests them).
+//! shard (and only that: inventories, tags, scores and families are read when a filter tests them).
 
 use super::Selected;
 use super::filters::Filters;
 use super::items::Inventory;
 use super::matching::Candidate;
 use super::Base;
-use crate::{Player, Sender, ShardCtx, Slot, Tagged};
+use crate::{Player, ScoreHolder, Sender, ShardCtx, Slot, Tagged};
 
 const PLAYER: &str = "minecraft:player";
 
@@ -33,6 +33,7 @@ pub(super) fn candidates(ctx: &mut ShardCtx<'_>, sender: &Sender, base: Base, fi
             rotation: [position.yaw, position.pitch],
             families: families(ctx, filters, PLAYER),
             tags: tags(ctx, filters, Tagged::Player(player.id)),
+            scores: scores(ctx, filters, ScoreHolder::Player(player.id)),
             mode: ctx.game_mode(player.id),
             level: ctx.experience(player.id).map(|(level, _)| level),
             inventory: (!filters.items.is_empty()).then(|| inventory(ctx, &player)),
@@ -48,6 +49,7 @@ pub(super) fn candidates(ctx: &mut ShardCtx<'_>, sender: &Sender, base: Base, fi
             rotation: [entity.yaw, entity.pitch],
             families: families(ctx, filters, &entity.kind),
             tags: tags(ctx, filters, Tagged::Entity(entity.id)),
+            scores: scores(ctx, filters, ScoreHolder::Entity(entity.id)),
             mode: None,
             level: None,
             inventory: None,
@@ -62,8 +64,12 @@ fn families(ctx: &ShardCtx<'_>, filters: &Filters, kind: &str) -> Vec<String> {
     if filters.families.is_empty() { Vec::new() } else { ctx.families(kind) }
 }
 
-fn tags(ctx: &mut ShardCtx<'_>, filters: &Filters, of: Tagged) -> Vec<String> {
+fn tags(ctx: &ShardCtx<'_>, filters: &Filters, of: Tagged) -> Vec<String> {
     if filters.tags.is_empty() { Vec::new() } else { ctx.tags(of) }
+}
+
+fn scores(ctx: &ShardCtx<'_>, filters: &Filters, holder: ScoreHolder) -> Vec<(String, i32)> {
+    if filters.scores.is_empty() { Vec::new() } else { ctx.scores(&holder) }
 }
 
 fn inventory(ctx: &ShardCtx<'_>, player: &Player) -> Inventory {

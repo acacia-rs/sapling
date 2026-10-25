@@ -42,5 +42,5 @@ dimension to 3 when the fields are missing, and the save writes them as held; sa
   `schedulerWT`, `scoreboard`). BDS seems to keep only players with an account id, which is why the mapping's
   key for an authenticated player (by `MsaId`?) is unchecked. A record written by an Xbox-signed client is the
   check still to make.
-- Whether BDS loads a record sapling wrote fresh: sapling writes no `UniqueID`, `identifier` or `Motion`.
+- Whether BDS loads a record sapling wrote fresh: sapling writes no `identifier` or `Motion`; its `UniqueID` (made from the UUID when the record had none, for the scoreboard) is not BDS's numbering.
 - `Pos` at the eyes is read from the code path, not from a saved file.

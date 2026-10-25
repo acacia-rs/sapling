@@ -19,6 +19,7 @@ use crate::mobs::SeesMobs;
 use crate::movement::Motion;
 use crate::roster::Profile;
 use crate::simulation::Simulated;
+use crate::tags::Marks;
 use crate::view::View;
 use crate::vitals::Vitals;
 use crate::visibility::Sees;
@@ -42,6 +43,7 @@ pub(crate) struct Carried {
     pub forms: Forms,
     /// What the client shows; it keeps showing it, so nothing is sent again.
     pub hud: Hud,
+    pub marks: Marks,
     /// The player's items, under the stack ids its client knows them by.
     pub inventory: Inventory,
     pub vitals: Vitals,
@@ -70,6 +72,7 @@ impl Carried {
             mode,
             forms: Forms::default(),
             hud: Hud::default(),
+            marks: Marks::new(identity.uuid.as_bytes()),
             inventory: Inventory::default(),
             vitals: Vitals::default(),
             dimension: ClientDimension::new(dimension),

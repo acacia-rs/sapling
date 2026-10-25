@@ -44,6 +44,10 @@ pub struct PlayerData {
     pub rotation: Option<[f32; 2]>,
     /// BDS's game type: 0 survival, 1 creative, 2 adventure, 6 spectator (5 is the world's).
     pub game_mode: Option<i32>,
+    /// What `/tag` put on it.
+    pub tags: Vec<String>,
+    /// Its actor id (`UniqueID`), by which the world's scoreboard knows it.
+    pub unique_id: Option<i64>,
 }
 
 /// BDS keeps an actor's `Pos` where its position is, a player's eyes: this far above the feet.
@@ -51,6 +55,7 @@ const EYE_HEIGHT: f32 = 1.62001;
 const DIMENSION: &str = "DimensionId";
 const EFFECTS: &str = "ActiveEffects";
 const GAME_MODE: &str = "PlayerGameMode";
+const UNIQUE_ID: &str = "UniqueID";
 const BED: [&str; 3] = ["SpawnBlockPositionX", "SpawnBlockPositionY", "SpawnBlockPositionZ"];
 const BEDSIDE: [&str; 3] = ["SpawnX", "SpawnY", "SpawnZ"];
 const SPAWN_DIMENSION: &str = "SpawnDimension";
@@ -110,6 +115,8 @@ impl PlayerData {
                 _ => None,
             },
             game_mode: int(GAME_MODE),
+            tags: crate::actor_tags::read_tags(&player),
+            unique_id: if let Some(Value::Long(id)) = player.get(UNIQUE_ID) { Some(*id) } else { None },
         })
     }
 
@@ -144,6 +151,10 @@ impl PlayerData {
         if let Some(mode) = self.game_mode {
             set(&mut fields, GAME_MODE, Value::Int(mode));
         }
+        if let Some(id) = self.unique_id {
+            set(&mut fields, UNIQUE_ID, Value::Long(id));
+        }
+        crate::actor_tags::write_tags(&mut fields, &self.tags);
         match self.effects.is_empty() {
             true => remove(&mut fields, EFFECTS),
             false => set(&mut fields, EFFECTS, Value::List(List { tag: COMPOUND, items: self.effects.iter().map(effect_fields).collect() })),

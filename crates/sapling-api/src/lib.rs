@@ -21,6 +21,7 @@ mod listen;
 mod movement;
 mod player;
 mod plugin;
+mod scoreboard;
 mod sound;
 mod tags;
 #[cfg(test)]
@@ -57,7 +58,8 @@ pub use hud::{BossBar, BossBarColour, Sidebar, Title, TitleAction, TitleBackend}
 pub use sound::{Sound, SoundBackend};
 pub use item::{DropEvent, Item, Slot};
 pub use player::{Difficulty, GameMode, Permission, Player, PlayerId, Position};
-pub use tags::Tagged;
+pub use tags::{TagBackend, Tagged};
+pub use scoreboard::{Display, DisplaySlot, Objective, ScoreHolder, ScoreOperation, ScoreboardBackend, SortOrder};
 pub use sapling_macros::{Command, CommandEnum, Form};
 
 /// The game's events, one method each, all optional: a plugin as one value. Each method is filed

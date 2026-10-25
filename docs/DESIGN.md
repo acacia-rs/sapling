@@ -387,9 +387,22 @@ it sends for `/title`, `/scoreboard`, `/gamemode`, `/tp`, a wither's bar and com
   unless `max_len`), 32 KiB in total. Anything that fails is `Closed`. JSON as in acacia's
   `docs/research/forms.md` (menus use the legacy `buttons` array).
 - **Sidebar** (`hud.rs`). One objective `sapling` in slot `sidebar`, ascending, one fake player per line
-  (id = line + 1, score = line). `ctx.set_sidebar` diffs against what the player was shown: changed lines are
-  removed and set again (the client keeps the text of an entry it knows), a new title rebuilds the board,
-  15 lines at most.
+  (id = -(line + 1), below the world board's ids; score = line). `ctx.set_sidebar` diffs against what the
+  player was shown: changed lines are removed and set again (the client keeps the text of an entry it
+  knows), a new title rebuilds the board, 15 lines at most. It hides the world board's sidebar, which is
+  shown again when it goes.
+- **Scoreboard** (`sapling-shard` `scoreboard.rs`, `scoreboard/`; API `sapling-api` `scoreboard.rs`). One
+  board per world (BDS: per level, so a realm's dimensions share it), a `Board` component on the
+  overworld layer, made from the level's `scoreboard` record when first needed and handed back to it on
+  save (`keep_all`); NBT layout in `sapling-leveldb` `scoreboard.rs`. Holders are a player's or entity's
+  `UniqueID` (players: `Marks`, saved in their record, made from the UUID until one is; entities:
+  `UniqueId`, from `entities::keep`) or a fake name; scoreboard ids count from 1. A change is a `Change`;
+  after each command (before its answer, as on BDS) and after the handlers `scoreboard::send` tells
+  every player of that world (SetDisplayObjective, SetScore, RemoveObjective, as BDS: a score only
+  while its objective is shown, a replaced slot cleared first, a removed objective to everyone) and shows a player entering a world its slots after removing those of
+  the world it left (`Hud::board_objectives`, carried). No SetScoreboardIdentity: BDS sent none in the
+  drills. Tags (`tags.rs`): a player's in `Marks` (carried, saved as `Tags`), an entity's in its stored
+  compound's `Tags`. Answers and packets: `docs/research/scoreboard.md`.
 - **Boss bar.** One per player, on the player's own entity id (dragonfly's way: no extra entity).
   A new bar is ShowBar, `remove_boss_bar` HideBar; a bar that is shown changes by SetBarTitle,
   SetBarProgress and Texture (colour), one for each part that differs. A vanilla client ignores ShowBar
@@ -706,11 +719,16 @@ block action, and takes StopBreak and AbortBreak with a position.
   `/playsound`, `/stopsound` and `/particle` answer and send as BDS did (`vanilla/messaging.rs`,
   `titles.rs`, `sounds.rs`; `bds_command_probe messaging`, research/captures/bds-messaging.txt):
   `/me` and `/tellraw` go unanswered when they work; a rawtext selector (any selector, through
-  `ShardCtx::select`) names who it finds from the sender, `, `-joined, or is dropped; scores are
-  always dropped (no scoreboard; BDS kept a `*` score raw for a reader without one). `/playsound`
+  `ShardCtx::select`) names who it finds from the sender, `, `-joined, or is dropped; a score part
+  the scores of those it names that have one, `, `-joined, or is dropped; `*` is the reader, kept raw
+  for a reader without one (`/titleraw`: always kept raw, unverified). `/playsound`
   with no place plays at each target's eyes; out of range (16, or 16 per unit of volume over 1) it
   is moved 2 blocks from the hearer at `minimumVolume`, or not played (Java's rule; BDS's answers
   and positions fit it). Sound and particle names are not checked, as on BDS.
+  `/scoreboard` (BDS's 11 overloads, every subcommand) and `/tag` (`vanilla/scoreboard.rs`,
+  `scoreboard/`, `tag.rs`; `bds_command_probe scoreboard|scoreboard2`) answer under BDS's keys
+  (docs/research/scoreboard.md); a name is the online player of that name or a fake player, `*`
+  everyone with a score.
   `/kick <target> [reason]`, `/op` and `/deop` (operators,
   `vanilla/operators.rs`) answer under BDS's keys; with access lists `/op` and `/deop` save the role
   of a player with an XUID, and a joining player gets the role `permissions.json` has for them.
@@ -732,9 +750,9 @@ block action, and takes StopBreak and AbortBreak with a position.
   location and slot), `haspermission`. `r`, `l`, `rx`, `ry` take a range too (`r=..5`). Brackets may
   hold spaces. An unknown key, a repeated one-only key, a `!` where none goes or a bad value is a
   `commands.generic.syntax` pointing at the key or value. Families come from the behaviour packs
-  (`sapling-data` `mob_families`); tags from `ShardCtx::add_tag` (shard state, not saved); entity
-  rotation is what viewers were last told. Not done: no scoreboard, so any `scores` test fails; no
-  `/inputpermission`, so every input is enabled; entities have no name tags (`name=` sees an empty
+  (`sapling-data` `mob_families`); tags from `ShardCtx::add_tag` (saved, `tags.rs`); `scores` from the
+  world's board, a holder without the score failing even with `!`; entity rotation is what viewers were
+  last told. Not done: no `/inputpermission`, so every input is enabled; entities have no name tags (`name=` sees an empty
   name) and no inventory for `hasitem`; selectors do not look into other dimensions apart; `Target`
   parameters still take only `@s` and names. Not checked on BDS (no capture has selectors beyond
   `type`): the error tokens, `@r` taking entities with `type=!x`, `m` numbers 5 and 6, whole-block
@@ -1261,7 +1279,7 @@ acacia-world = { path = "../acacia/acacia/crates/acacia-world" }
 - Commands: console sender, selectors in `Target` parameters, position and item parameters, soft enums
   (UpdateSoftEnum) for dynamic completions, several overloads for a struct, permission nodes.
 - Forms: images are untested, `ServerSettings`, ClientboundCloseForm, a timeout for unanswered forms.
-- HUD: list and below-name objectives, several boss bars (needs an entity each); a scoreboard for rawtext scores.
+- HUD: several boss bars (needs an entity each).
 - Not sent yet, though BDS sends them for other players: UpdateAbilities, UpdateAdventureSettings,
   UpdateAttributes (sprint speed), PlayerLocation / LocatorBar, the MOVING flag and the FlagsExtended bit
   that changes with sneaking, held items and armour.

@@ -1,6 +1,6 @@
-//! Tags on players and entities: what `/tag` adds and a selector's `tag=` tests.
-
-use std::collections::{BTreeSet, HashMap};
+//! Tags on players and entities: what `/tag` adds and a selector's `tag=` tests. They go with a
+//! player to other worlds and shards and are saved with players and stored entities, as BDS saves
+//! them.
 
 use crate::{EntityId, PlayerId, ShardCtx};
 
@@ -11,24 +11,47 @@ pub enum Tagged {
     Entity(EntityId),
 }
 
-// TODO: kept in the shard's state: not saved, not taken along to another shard, and an entity's
-// stay after it is gone.
-#[derive(Default)]
-struct Tags(HashMap<Tagged, BTreeSet<String>>);
-
 impl ShardCtx<'_> {
-    /// The tags of a player or entity, sorted.
-    pub fn tags(&mut self, of: Tagged) -> Vec<String> {
-        self.state::<Tags>().0.get(&of).map_or_else(Vec::new, |tags| tags.iter().cloned().collect())
+    /// The tags of a player or entity, newest first, as BDS's `/tag list` showed them.
+    pub fn tags(&self, of: Tagged) -> Vec<String> {
+        self.backend.tags(of)
     }
 
-    /// Puts `tag` on a player or entity; false if it was there.
+    /// Puts `tag` on a player or entity; false if it was there or the target is gone.
     pub fn add_tag(&mut self, of: Tagged, tag: &str) -> bool {
-        self.state::<Tags>().0.entry(of).or_default().insert(tag.to_owned())
+        self.backend.add_tag(of, tag)
     }
 
     /// Takes `tag` off a player or entity; false if it was not there.
     pub fn remove_tag(&mut self, of: Tagged, tag: &str) -> bool {
-        self.state::<Tags>().0.get_mut(&of).is_some_and(|tags| tags.remove(tag))
+        self.backend.remove_tag(of, tag)
+    }
+}
+
+/// The tag side of [`crate::Backend`].
+pub trait TagBackend {
+    fn tags(&self, of: Tagged) -> Vec<String>;
+    fn add_tag(&mut self, of: Tagged, tag: &str) -> bool;
+    fn remove_tag(&mut self, of: Tagged, tag: &str) -> bool;
+}
+
+#[cfg(test)]
+impl TagBackend for crate::testing::Fake {
+    fn tags(&self, of: Tagged) -> Vec<String> {
+        self.tags.get(&of).map_or_else(Vec::new, |tags| tags.iter().rev().cloned().collect())
+    }
+    fn add_tag(&mut self, of: Tagged, tag: &str) -> bool {
+        let tags = self.tags.entry(of).or_default();
+        let new = !tags.iter().any(|held| held == tag);
+        if new {
+            tags.push(tag.to_owned());
+        }
+        new
+    }
+    fn remove_tag(&mut self, of: Tagged, tag: &str) -> bool {
+        let Some(tags) = self.tags.get_mut(&of) else { return false };
+        let before = tags.len();
+        tags.retain(|held| held != tag);
+        tags.len() < before
     }
 }
