@@ -923,7 +923,15 @@ Details and BDS evidence: docs/research/nether-dimension.md, docs/research/end-d
   kind), hurts by `creatures/hits.rs` and lands by `creatures/landing.rs`. A player's carries `Loosed`
   (Power, crit, Punch, tip, Piercing, Impaling, Loyalty, who may pick it up). A stuck player's arrow or
   trident is kept with its column (sapling-leveldb `actors/stuck.rs`) and picked up as an item is
-  (`shots/pickup.rs`). Not done: fireworks and Channeling (sapling has neither), drowned tridents.
+  (`shots/pickup.rs`). A loaded crossbow may hold a firework rocket (`fireworks.rs`); a Channeling
+  trident calls lightning down on what it hits while it thunders (`lightning.rs`). Not done: drowned tridents.
+- **Lightning, fireworks, the wither** (sapling-shard `lightning.rs` and `lightning/`, `fireworks.rs` and
+  `fireworks/`, `creatures/wither.rs` and `creatures/wither/`, `blocks/summoning.rs`;
+  docs/research/wither-lightning-fireworks.md). A bolt is an entity that strikes once on its first tick
+  (`creatures/struck.rs` for mobs) and lives through its flashes; storms pick columns near players.
+  Rockets fly by their own tick and burst by `fireworks/burst.rs`; `fireworks::launch` is a dispenser's
+  way in. The wither is a creature whose `Wither` part steers it ahead of hunting; `damage::ask` asks
+  `creatures::spares` first, so its charge, armour and own blasts hold for every kind of harm.
 - **The dragon fight** (sapling-shard `dragon.rs` and `dragon/`, docs/research/end-dimension.md): a `Fight`
   component on the End layer, its record in the realm's `Level::dragon_fight` (LevelDB `TheEnd`, sapling-leveldb
   `dragon_fight.rs`). Run from `handlers` after the creatures' tick: dragon lookup and making, podium, crystals,
@@ -1105,7 +1113,9 @@ Details and BDS evidence: docs/research/nether-dimension.md, docs/research/end-d
   laid out in the cells (`Recipe::is_laid_out`: a shaped one anywhere, mirrored or not, the mirroring
   from memory of the game and not decompiled; a shapeless one in any cells; nothing beside it), and the
   request must consume the crafts' count from each filled cell and from nowhere else. A
-  `CraftRecipeAuto` is held only to what it used. Not done: the special recipes (maps, fireworks).
+  `CraftRecipeAuto` is held only to what it used. Of the special recipes (`CraftingData`'s multi
+  recipes, `sapling_data::is_special_recipe`) only fireworks are made: the grid's stacks are read by
+  `fireworks::crafted` into a recipe of one craft. Not done: maps, banners, dyed armour and the rest.
 - **Workstations** (`workstations.rs`, `inventory/forge.rs`, `sapling_data::enchant::{table, anvil,
   grind}`, `sapling_data::smithed`; docs/research/workstations.md). The enchanting table, anvil,
   grindstone and smithing table open their screens on a click, and the server works out each result

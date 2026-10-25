@@ -93,6 +93,12 @@ Each needs its rule looked up first (`bdsre` for BDS, the Java jar for data), th
    `copper`). All by decompiled BDS, not drilled; left: each note's "Unverified" list, shears,
    minecarts and boats from a dispenser, armour onto mobs, water bottles to mud, glass bottles,
    horse armour, warden summoning, wool occluding vibrations.
+3. **Lightning, fireworks, the wither**: storms strike, rods draw and scrape copper, mobs turn,
+   Channeling calls bolts; rockets are crafted, launched off blocks and crossbows and burst; the
+   wither is built, charges, shoots skulls, breaks blocks and is armoured at half health
+   (`lightning.rs`, `fireworks.rs`, `creatures/wither.rs`, docs/research/wither-lightning-fireworks.md).
+   Not drilled against BDS. Left: the doc's "Left out" lists (elytra boost, the wither's dash and
+   death, the skeleton trap).
 
 ## 3. Things assumed, not verified
 

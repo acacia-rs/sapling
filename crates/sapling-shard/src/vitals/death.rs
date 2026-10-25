@@ -61,6 +61,7 @@ fn words(cause: Cause) -> &'static str {
         Cause::FlyIntoWall => "death.attack.flyIntoWall",
         Cause::Magma => "death.attack.magma",
         Cause::Lightning => "death.attack.lightningBolt",
+        Cause::Fireworks => "death.attack.fireworks",
         Cause::Freezing => "death.attack.freeze",
         Cause::Stalactite => "death.attack.stalactite",
         Cause::Stalagmite => "death.attack.stalagmite",

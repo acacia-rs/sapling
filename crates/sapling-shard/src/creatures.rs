@@ -38,9 +38,11 @@ mod spells;
 mod splashes;
 mod strolling;
 mod stares;
+mod struck;
 mod summoned;
 mod teleports;
 mod vexes;
+mod wither;
 
 use bevy_ecs::prelude::*;
 use acacia_proto::packets::{EntityEvent, EntityEventEventId};
@@ -53,14 +55,16 @@ use death::{die, leaves_loot};
 use shown::{announcement, head, physics_of, spawn_sound};
 pub(crate) use afflictions::{breathed_on, splashed};
 pub(crate) use arrows::{ARROW, FIREBALL, Lands, Shot};
-pub(crate) use flight::{Arrow, Launch, Loosed, Pickup, from_storage as shot_from_storage, launch, lying as lying_shots, unstick};
+pub(crate) use flight::{Arrow, Launch, Loosed, Pickup, facing, from_storage as shot_from_storage, launch, lying as lying_shots, unstick};
 pub(crate) use attacks::attacked;
 pub(crate) use blast::{Wreck, explode};
 pub(crate) use enchanted::thorned;
-pub(crate) use harm::{holds, is_full_block, touches};
+pub(crate) use harm::{holds, is_full_block, touches, wound};
 pub(crate) use health::{Cause, Health};
-pub(crate) use hunting::on_difficulty;
+pub(crate) use hunting::{on_difficulty, sees};
 pub(crate) use omens::{Omens, befall, infested_hurt};
+pub(crate) use struck::struck_by_lightning;
+pub(crate) use wither::{build as build_wither, hurt as wither_hurt, spares};
 use crate::components::{InLayer, Layer, NetId, Tick};
 use crate::{blocks, entities, mobs};
 
@@ -175,6 +179,7 @@ fn give_legs(world: &mut World, entity: Entity, kind: &str) {
     stares::arm(world, entity, kind);
     dolphins::arm(world, entity, kind);
     drinks::arm(world, entity, kind);
+    wither::arm(world, entity, kind);
 }
 
 /// Gives a mob of a kind that dies the health BDS announced its kind with, `left` of it, and
@@ -229,6 +234,7 @@ pub(crate) fn tick(world: &mut World) {
     bullets::tick(world);
     charges::tick(world);
     fireballs::tick(world);
+    wither::tick(world);
     let now = world.resource::<Tick>().0;
     let dead: Vec<Entity> = world.query::<(Entity, &Dying)>().iter(world).filter(|(_, dying)| now >= dying.0 + DYING).map(|(entity, _)| entity).collect();
     for entity in dead {
@@ -253,7 +259,7 @@ pub(crate) fn tick(world: &mut World) {
         }
         // A teleport starts the tick afresh where it landed: no fall from where it left.
         let Some(start) = world.get::<Body>(entity).copied() else { continue };
-        if thinks && !rams::steer(world, entity, layer, id, &kind) && !hunting::steer(world, entity, layer, id, &kind) {
+        if thinks && !wither::steer(world, entity, layer) && !rams::steer(world, entity, layer, id, &kind) && !hunting::steer(world, entity, layer, id, &kind) {
             let traits = sapling_data::mob_traits(&kind);
             let strolls = world.resource::<crate::components::Settings>().0.mobs_stroll;
             if strolls {

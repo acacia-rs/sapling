@@ -48,6 +48,10 @@ pub(super) fn hit(world: &mut World, arrow: Entity, layer: Entity, struck: Entit
             throw_mob(world, struck, layer, motion, push, loosed.player);
         }
     }
+    if loosed.as_ref().and_then(|loosed| loosed.item.as_ref()).is_some_and(|item| enchant::level(item.tag.as_ref(), enchant::Enchant::Channeling) > 0) {
+        let feet = world.get::<crate::components::Position>(struck).map(|position| position.feet).or_else(|| world.get::<Body>(struck).map(|body| body.at));
+        crate::lightning::channel(world, layer, feet.unwrap_or(at));
+    }
     if shot.sticks {
         late_sounds::play_later(world, 1, layer, at.map(|c| c.floor() as i32), flight::sound(shot.heard[0], at, ""));
     }

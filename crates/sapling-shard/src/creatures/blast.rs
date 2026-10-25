@@ -225,6 +225,7 @@ pub(super) fn tick(world: &mut World, entity: Entity, layer: Entity, id: u64, ki
         return false;
     };
     let griefs = world.get::<Layer>(layer).is_some_and(|layer| layer.world.level().rules.on(GRIEFING));
+    let power = if world.get::<super::struck::Charged>(entity).is_some() { power * 2.0 } else { power };
     explode(world, Some(entity), layer, body.at, power, if griefs { Wreck::Breaks } else { Wreck::Nothing });
     true
 }

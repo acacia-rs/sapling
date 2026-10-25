@@ -19,7 +19,7 @@ impl EntityBackend for Ctx<'_> {
     }
 
     fn summon_as(&mut self, by: Option<PlayerId>, kind: &str, feet: [f32; 3], yaw: f32, event: Option<&str>) -> Option<EntityId> {
-        let made_alone = [ORB, crate::dragon::CRYSTAL, tnt::KIND].contains(&kind);
+        let made_alone = [ORB, crate::dragon::CRYSTAL, tnt::KIND, crate::lightning::KIND].contains(&kind);
         let summoned = match made_alone {
             true => self.spawn_entity(kind, feet)?,
             false => super::spawn_as(self.world, worlds::current(self.world), kind, feet, sapling_api::SpawnReason::Command, yaw, event)?,
@@ -44,6 +44,10 @@ impl EntityBackend for Ctx<'_> {
         if kind == tnt::KIND {
             let primed = tnt::prime(self.world, layer, feet, tnt::FUSE)?;
             return Some(EntityId(self.world.get::<NetId>(primed)?.0));
+        }
+        if kind == crate::lightning::KIND {
+            let bolt = crate::lightning::strike(self.world, layer, feet, true)?;
+            return Some(EntityId(self.world.get::<NetId>(bolt)?.0));
         }
         super::spawn(self.world, layer, kind, feet, sapling_api::SpawnReason::Command)
     }

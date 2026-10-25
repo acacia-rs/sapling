@@ -2,6 +2,7 @@
 //! use (BDS's `CrossbowItem::use` 1436ec1a0): every arrow critical, three with Multishot, of which
 //! the side ones are never picked up, through as many more bodies as Piercing's level. The loaded
 //! arrow lies in the crossbow's `chargedItem`, as the client shows it; it wears 3 with Multishot.
+//! A firework rocket in the offhand loads before any arrow and flies as fireworks.rs has it.
 // TODO: `chargedItem` as remembered of Bedrock's item tag; no capture of a loaded crossbow was read.
 
 use acacia_proto::nbt::Value;
@@ -12,13 +13,17 @@ use sapling_world::ItemStack;
 
 use super::ammo;
 use super::kinds::PLAYER_ARROW;
+use crate::components::{InLayer, Position};
 use crate::creatures::{Loosed, Pickup};
+use crate::fireworks;
+use crate::inventory::{Inventory, Place};
 
 pub(super) const CROSSBOW: &str = "minecraft:crossbow";
 const CHARGED: &str = "chargedItem";
+/// What a shot wears with Multishot or with a rocket.
 const MULTISHOT_WEAR: i32 = 3;
 
-/// The arrow a crossbow is loaded with.
+/// The arrow or rocket a crossbow is loaded with.
 fn loaded(stack: &ItemStack) -> Option<ItemStack> {
     let charged = stack.tag.as_ref()?.get(CHARGED)?;
     let Some(Value::String(name)) = charged.get("Name") else { return None };
@@ -26,7 +31,22 @@ fn loaded(stack: &ItemStack) -> Option<ItemStack> {
         Some(Value::Short(damage)) => *damage,
         _ => 0,
     };
-    Some(ItemStack { name: name.to_string(), count: 1, damage, block: None, tag: None })
+    Some(ItemStack { name: name.to_string(), count: 1, damage, block: None, tag: charged.get("tag").cloned() })
+}
+
+/// What the player loads next: a rocket in its offhand, else its next arrow.
+fn ammo(world: &World, player: Entity) -> Option<(Place, ItemStack)> {
+    let offhand = world.get::<Inventory>(player)?.slot(Place::Offhand)?.as_ref().filter(|held| held.stack.name == fireworks::ROCKET).map(|held| (Place::Offhand, ItemStack { count: 1, ..held.stack.clone() }));
+    offhand.or_else(|| ammo::find(world, player))
+}
+
+/// The loaded crossbow shoots `rocket`, once a turn of `turns`, along the player's look.
+fn shoot_rockets(world: &mut World, player: Entity, rocket: &ItemStack, turns: &[f32]) {
+    let (Some(layer), Some(position)) = (world.get::<InLayer>(player).map(|layer| layer.0), world.get::<Position>(player).copied()) else { return };
+    let from = [position.feet[0], position.feet[1] + sapling_data::EYE_HEIGHT, position.feet[2]];
+    for turn in turns {
+        fireworks::launch(world, layer, from, super::aim::turned(super::aim::look(&position, 0.0), *turn), rocket);
+    }
 }
 
 /// `stack` loaded with `arrow`, or emptied.
@@ -35,7 +55,8 @@ fn charged(stack: &ItemStack, arrow: Option<&ItemStack>) -> ItemStack {
     if let Value::Compound(fields) = &mut tag {
         fields.retain(|(key, _)| key != CHARGED);
         if let Some(arrow) = arrow {
-            let item = vec![("Name".into(), Value::String(arrow.name.as_str().into())), ("Count".into(), Value::Byte(1)), ("Damage".into(), Value::Short(arrow.damage)), ("WasPickedUp".into(), Value::Byte(0))];
+            let mut item = vec![("Name".into(), Value::String(arrow.name.as_str().into())), ("Count".into(), Value::Byte(1)), ("Damage".into(), Value::Short(arrow.damage)), ("WasPickedUp".into(), Value::Byte(0))];
+            item.extend(arrow.tag.clone().map(|tag| ("tag".into(), tag)));
             fields.push((CHARGED.into(), Value::Compound(item)));
         }
     }
@@ -48,7 +69,7 @@ fn charged(stack: &ItemStack, arrow: Option<&ItemStack>) -> ItemStack {
 
 /// Whether the player may load the `stack` it holds: an empty crossbow, with an arrow or in creative.
 pub(super) fn may_load(world: &World, player: Entity, stack: &ItemStack) -> bool {
-    stack.name == CROSSBOW && loaded(stack).is_none() && (super::is_creative(world, player) || ammo::find(world, player).is_some())
+    stack.name == CROSSBOW && loaded(stack).is_none() && (super::is_creative(world, player) || ammo(world, player).is_some())
 }
 
 /// The crossbow `stack` let go after `ticks` of loading: loaded, if that was long enough.
@@ -57,7 +78,7 @@ pub(super) fn load(world: &mut World, player: Entity, stack: &ItemStack, ticks: 
         return;
     }
     let creative = super::is_creative(world, player);
-    let Some((place, arrow)) = ammo::find(world, player).map(|(place, arrow)| (Some(place), arrow)).or_else(|| creative.then(|| (None, ammo::plain()))) else { return };
+    let Some((place, arrow)) = ammo(world, player).map(|(place, arrow)| (Some(place), arrow)).or_else(|| creative.then(|| (None, ammo::plain()))) else { return };
     if let Some(place) = place.filter(|_| !creative) {
         ammo::spend(world, player, place);
     }
@@ -72,7 +93,11 @@ pub(super) fn shoot(world: &mut World, player: Entity, stack: &ItemStack) -> boo
     let tag = stack.tag.as_ref();
     let turns = enchant::multishot(enchant::level(tag, Enchant::Multishot));
     let pierces = enchant::piercing(enchant::level(tag, Enchant::Piercing));
-    for (index, turn) in turns.iter().enumerate() {
+    let rocket = arrow.name == fireworks::ROCKET;
+    if rocket {
+        shoot_rockets(world, player, &arrow, &turns);
+    }
+    for (index, turn) in turns.iter().enumerate().filter(|_| !rocket) {
         let pickup = match (index, creative) {
             (0, false) => Pickup::Anyone,
             (0, true) => Pickup::Creative,
@@ -83,7 +108,7 @@ pub(super) fn shoot(world: &mut World, player: Entity, stack: &ItemStack) -> boo
     }
     super::set_hand(world, player, Some(charged(stack, None)));
     if !creative {
-        let uses = if turns.len() > 1 { MULTISHOT_WEAR } else { 1 };
+        let uses = if turns.len() > 1 || rocket { MULTISHOT_WEAR } else { 1 };
         crate::inventory::wear_hand_by(world, player, uses, shots::shooter_lasts(CROSSBOW).unwrap_or(u16::MAX));
     }
     super::heard(world, player, "crossbow.shoot");
