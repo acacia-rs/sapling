@@ -1,7 +1,10 @@
 use std::path::PathBuf;
+use std::sync::Arc;
 use std::time::Duration;
 
 use sapling_api::{Difficulty, GameMode, MovementPolicy};
+
+use crate::packs::ResourcePacks;
 
 pub const TICK: Duration = Duration::from_millis(50);
 
@@ -36,6 +39,8 @@ pub struct ShardConfig {
     pub idle_timeout: Option<Duration>,
     /// Where a shard that panics writes its crash report; without one the report is logged.
     pub crash_reports: Option<PathBuf>,
+    /// What joining clients are sent to download (packs.rs); none by default.
+    pub resource_packs: Arc<ResourcePacks>,
 }
 
 /// What the shard makes of where clients say their players are (simulation.rs), under the names of
@@ -74,6 +79,7 @@ impl Default for ShardConfig {
             tick: TICK,
             idle_timeout: None,
             crash_reports: None,
+            resource_packs: Arc::default(),
         }
     }
 }

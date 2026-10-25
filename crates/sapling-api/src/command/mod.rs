@@ -112,4 +112,6 @@ pub enum ParamKind {
     BlockStates,
     /// A JSON object: rawtext.
     Json,
+    /// A path of words between `/`: a function's name.
+    FilePath,
 }

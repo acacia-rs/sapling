@@ -1,10 +1,9 @@
 //! The join sequence after login, in BDS's order with BDS's gates (sapling-data README): each
 //! [`Stage`] sends its packets and waits for the client packet that opens the next one.
 
-use acacia_proto::manual::Uuid;
 use acacia_proto::packets::{
-    ChunkRadiusUpdate, RequestChunkRadius, ResourcePackClientResponse, ResourcePackClientResponseResponseStatus as PackStatus, ResourcePackStack,
-    ResourcePacksInfo, ResourcePacksInfoWorldTemplate, SetDifficulty, SetLocalPlayerAsInitialized,
+    ChunkRadiusUpdate, RequestChunkRadius, ResourcePackClientResponse, ResourcePackClientResponseResponseStatus as PackStatus, SetDifficulty,
+    SetLocalPlayerAsInitialized,
 };
 use acacia_proto::types::GameMode as WireGameMode;
 use bevy_ecs::prelude::*;
@@ -18,29 +17,6 @@ use crate::view::View;
 
 /// Below this the client's own minimum render distance shows holes.
 const MIN_VIEW_RADIUS: i32 = 2;
-
-/// The first packet after login: no packs to download.
-pub(crate) fn resource_packs_info() -> ResourcePacksInfo {
-    ResourcePacksInfo {
-        must_accept: false,
-        has_addons: false,
-        has_scripts: false,
-        disable_vibrant_visuals: false,
-        world_template: ResourcePacksInfoWorldTemplate { uuid: Uuid::default(), version: "0.0.0".into() },
-        texture_packs: Vec::new(),
-    }
-}
-
-fn resource_pack_stack() -> ResourcePackStack {
-    ResourcePackStack {
-        must_accept: false,
-        resource_packs: Vec::new(),
-        game_version: "*".into(),
-        experiments: Vec::new(),
-        experiments_previously_used: false,
-        has_editor_packs: false,
-    }
-}
 
 pub(crate) fn wire_game_mode(mode: GameMode) -> WireGameMode {
     match mode {
@@ -66,13 +42,23 @@ pub(crate) fn resource_packs(
 ) {
     for (entity, response) in packets.take::<ResourcePackClientResponse>() {
         let Ok((conn, identity, .., mut stage, mut out)) = players.get_mut(entity) else { continue };
+        let packs = &settings.0.resource_packs;
         match (*stage, response.response_status) {
+            (Stage::PacksInfo, PackStatus::SendPacks) => {
+                let infos = packs.data_infos(response.resourcepackids.as_deref().unwrap_or_default());
+                infos.iter().for_each(|info| out.push(info));
+            }
             (Stage::PacksInfo, PackStatus::HaveAllPacks) => {
-                out.push(&resource_pack_stack());
+                out.push(&packs.stack(true));
                 *stage = Stage::PackStack;
             }
             (Stage::PackStack, PackStatus::Completed) => *stage = Stage::Packed,
-            (_, PackStatus::Refused) => net.0.kick(conn.0, "disconnectionScreen.resourcePack"),
+            (_, PackStatus::Refused) if packs.required => net.0.kick(conn.0, "disconnectionScreen.resourcePack"),
+            // Optional packs turned down: the world without them.
+            (Stage::PacksInfo, PackStatus::Refused) => {
+                out.push(&packs.stack(false));
+                *stage = Stage::PackStack;
+            }
             (stage, status) => tracing::debug!(player = %identity.0.name, ?stage, ?status, "unexpected resource pack response"),
         }
     }

@@ -10,6 +10,7 @@ use crate::layout::{self, WorldSpec};
 
 mod error;
 mod ops;
+mod packs;
 mod properties;
 mod worlds;
 

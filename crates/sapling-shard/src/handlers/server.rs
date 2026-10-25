@@ -2,10 +2,13 @@
 
 use acacia_proto::packets::{SetDefaultGameType, SetSpawnPosition, SetSpawnPositionSpawnType, Transfer};
 use acacia_proto::types::BlockCoordinates;
-use sapling_api::{BlockPos, GameMode, PlayerId, ServerBackend, SpawnBackend};
+use std::sync::Arc;
+
+use sapling_api::{BlockPos, Commands, GameMode, PlayerId, ScriptEvent, ServerBackend, SpawnBackend};
 
 use super::Ctx;
 use crate::components::{InLayer, Layer, Outgoing, Settings};
+use crate::plugins::{CommandRegistry, ScriptEvents};
 use crate::sleep::BedSpawn;
 use crate::{chat, join};
 
@@ -30,6 +33,14 @@ impl ServerBackend for Ctx<'_> {
         let Some(mut out) = self.out(player) else { return false };
         out.push(&Transfer { server_address: address.to_owned(), port, reload_world: false, gatherings_configuration: None });
         true
+    }
+
+    fn commands(&self) -> Arc<Commands> {
+        self.world.resource::<CommandRegistry>().0.clone()
+    }
+
+    fn send_script_event(&mut self, event: ScriptEvent) {
+        self.world.resource_mut::<ScriptEvents>().0.push(event);
     }
 }
 

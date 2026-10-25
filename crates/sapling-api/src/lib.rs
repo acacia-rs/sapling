@@ -37,7 +37,7 @@ mod world_event;
 
 pub use block::{Block, BlockPos, BreakEvent, Face, InteractEvent, PlaceEvent};
 pub use block_entity::{BlockEntityBackend, BlockEntityData};
-pub use server::ServerBackend;
+pub use server::{ScriptEvent, ServerBackend};
 pub use spawns::SpawnBackend;
 pub use chat::ChatBackend;
 pub use movement::{MovementBackend, MovementPolicy};

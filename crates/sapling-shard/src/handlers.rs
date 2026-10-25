@@ -125,6 +125,7 @@ pub(crate) fn dispatch(world: &mut World) {
         plugins::end_scope(world, Scope::Player(id));
     }
     worlds::focus(world, None);
+    plugins::offer_script_events(world);
     plugins::run_tasks(world);
     plugins::offer(world,TickEvent);
     worlds::dispatch(world);

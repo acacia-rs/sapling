@@ -6,6 +6,7 @@ type Runner = fn(&mut ShardCtx<'_>, &Sender, &mut Args<'_>, &mut Output) -> Resu
 struct Entry {
     spec: CommandSpec,
     run: Runner,
+    check: fn(&mut Args<'_>) -> Result<(), ParseError>,
 }
 
 fn run<C: Command>(ctx: &mut ShardCtx<'_>, sender: &Sender, args: &mut Args<'_>, out: &mut Output) -> Result<(), ParseError> {
@@ -13,6 +14,11 @@ fn run<C: Command>(ctx: &mut ShardCtx<'_>, sender: &Sender, args: &mut Args<'_>,
     args.finish()?;
     command.run(ctx, sender, out);
     Ok(())
+}
+
+fn check<C: Command>(args: &mut Args<'_>) -> Result<(), ParseError> {
+    C::parse(args)?;
+    args.finish()
 }
 
 /// The commands of a server.
@@ -32,7 +38,19 @@ impl Commands {
             assert!(overload.parameters[first_optional..].iter().all(|p| p.optional), "/{}: a required parameter follows an optional one", spec.name);
         }
         self.entries.retain(|e| e.spec.name != spec.name);
-        self.entries.push(Entry { spec, run: run::<C> });
+        self.entries.push(Entry { spec, run: run::<C>, check: check::<C> });
+    }
+
+    /// Whether `line` reads as a command a sender with `permission` may run, without running it:
+    /// what BDS asks of each line of a function. A name that is nobody online passes.
+    pub fn parses(&self, line: &str, permission: Permission) -> bool {
+        let line = line.trim();
+        let line = line.strip_prefix('/').unwrap_or(line);
+        let name = line.split_whitespace().next().unwrap_or("");
+        let Some(entry) = self.find(name, permission) else { return false };
+        let sender = Sender::Console;
+        let mut args = Args::new(line, name.len(), &sender, &[]);
+        matches!((entry.check)(&mut args), Ok(()) | Err(ParseError::NoTarget))
     }
 
     /// The commands a player with `permission` may use, in the order they were added.

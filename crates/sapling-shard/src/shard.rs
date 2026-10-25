@@ -18,7 +18,7 @@ use crate::roster::Elsewhere;
 use crate::timing::{Phase, ShardTiming, TickMeter};
 use crate::visibility::ToViewers;
 use crate::worlds::{Atlas, Changes, Scope};
-use crate::{actors, arenas, blobs, blocks, chunks, clock, commands, entities, handlers, handoff, idle, inventory, join, mobs, movement, scoreboard, ticking, visibility, worlds};
+use crate::{actors, arenas, blobs, blocks, chunks, clock, commands, entities, handlers, handoff, idle, inventory, join, mobs, movement, packs, scoreboard, ticking, visibility, worlds};
 
 /// The disconnect screen of the players of a shard that stops.
 const CLOSED: &str = "disconnect.closed";
@@ -69,7 +69,7 @@ impl Shard {
         let mut schedule = Schedule::default();
         // Shards scale across threads; inside one, systems run in this order every tick.
         schedule.set_executor(SingleThreadedExecutor::new());
-        let join = (idle::kick_idle, join::resource_packs, join::chunk_radius, blobs::cache_status).chain();
+        let join = (idle::kick_idle, join::resource_packs, packs::serve_chunks, join::chunk_radius, blobs::cache_status).chain();
         let chunks = (
             chunks::poll_and_relight_worlds,
             actors::arrive,
@@ -95,6 +95,7 @@ impl Shard {
         world.init_resource::<Registry>();
         world.init_resource::<CommandRegistry>();
         world.init_resource::<Deferred>();
+        world.init_resource::<plugins::ScriptEvents>();
         world.init_resource::<crate::movement::Moves>();
         Self { world, schedule, after_handlers, inbox, mailbox: link.mailbox, meter: TickMeter::new(link.index) }
     }
@@ -238,7 +239,8 @@ impl Shard {
         players.next_net_id += 1;
         tracing::debug!(conn = conn.get(), name = %login.identity.display_name, authenticated = login.authenticated, "login verified");
         let dimension = self.world.get::<Layer>(layer).map_or(0, |level| level.world.dimension());
-        let carried = Carried::joining(conn, login, net_id, spawn, mode, dimension);
+        let first = self.world.resource::<Settings>().0.resource_packs.info();
+        let carried = Carried::joining(conn, login, net_id, spawn, mode, dimension, &first);
         let entity = self.world.spawn((carried, Local::in_layer(layer))).id();
         self.world.resource_mut::<Players>().by_conn.insert(conn, entity);
     }

@@ -6,7 +6,7 @@ use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
 use bevy_ecs::prelude::*;
-use sapling_api::{Commands, Event, ListenerChange, Listeners, PluginBuilder, Scope, ShardCtx, State};
+use sapling_api::{Commands, Event, ListenerChange, Listeners, PluginBuilder, Scope, ScriptEvent, ShardCtx, State};
 
 use crate::handlers::Ctx;
 
@@ -29,6 +29,22 @@ impl Default for Registry {
 /// The shard's commands, shared so that one runs without holding the world.
 #[derive(Resource, Default)]
 pub(crate) struct CommandRegistry(pub Arc<Commands>);
+
+/// `/scriptevent`s waiting to be offered: one a listener's or task's command raised would go unheard.
+#[derive(Resource, Default)]
+pub(crate) struct ScriptEvents(pub Vec<ScriptEvent>);
+
+/// Offers the waiting script events, each in its sender's world.
+pub(crate) fn offer_script_events(world: &mut World) {
+    for event in std::mem::take(&mut world.resource_mut::<ScriptEvents>().0) {
+        match event.sender.player().and_then(|player| world.resource::<crate::components::Players>().entity(player.id)) {
+            Some(entity) => crate::worlds::focus_on(world, entity),
+            None => crate::worlds::focus(world, None),
+        }
+        offer(world, event);
+    }
+    crate::worlds::focus(world, None);
+}
 
 /// Changes to the listeners made while they ran, applied once the registry is back.
 #[derive(Resource, Default)]

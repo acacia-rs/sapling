@@ -97,7 +97,7 @@ One listener task, one shard thread, one world. The pieces and why they are shap
 
   | Server sends | then waits for |
   |---|---|
-  | ResourcePacksInfo (no packs) | ResourcePackClientResponse(HaveAllPacks) |
+  | ResourcePacksInfo (the configured packs, "Packs (as built)") | ResourcePackClientResponse(HaveAllPacks) |
   | ResourcePackStack | ResourcePackClientResponse(Completed) |
   | StartGame, ItemRegistry, BiomeDefinitionList, AvailableEntityIdentifiers, CreativeContent, UpdateAbilities, SetEntityData, UpdateAttributes | RequestChunkRadius |
   | ChunkRadiusUpdate, NetworkChunkPublisherUpdate, a LevelChunk per column in view, PlayStatus(PlayerSpawn) | SetLocalPlayerAsInitialized |
@@ -1262,6 +1262,38 @@ All set through `ServerBuilder` (`sapling/src/server/ops.rs`).
   dimension, loaded columns and players, whether saving worked, the backtrace a panic hook kept for
   shard threads); without a dir the report is logged. The other shards go on; players routed to the
   dead shard are closed by the router.
+
+## Packs (as built)
+
+Opt-in on `ServerBuilder` (`sapling/src/server/packs.rs`); packs are read once, when the server is
+built: no runtime loading, as the README's non-goals say. Evidence: `research/captures/bds-packs.txt`,
+`bds-functions.txt`; notes and what is unverified: `docs/research/packs-and-functions.md`.
+
+- **Reading** (`sapling/src/packs/`): a pack is a folder with `manifest.json`, or a `.mcpack`/`.zip`
+  of one (rooted at the shallowest manifest; stored or deflated entries, read by `archive.rs`, no zip
+  crate). `world(world, folder)` takes the packs `world_resource_packs.json` /
+  `world_behavior_packs.json` name, from the world's own pack folder or `folder`.
+- **Resource packs** (`ResourcePacks` → `sapling_shard::ResourcePacks` in `ShardConfig`, served by
+  `sapling-shard/src/packs.rs`): info lists each pack with its unpacked size, content key (given by
+  config; an encrypted pack without one is warned of), uuid as content identity and CDN url;
+  `required` is `texturepack-required` (must_accept, refusing disconnects with
+  `disconnectionScreen.resourcePack`). SendPacks → a DataInfo per pack (102400-byte chunks, SHA-256
+  of the zip, which is the pack's own zip or one deflated from the folder); chunk requests are
+  queued per player and sent two a tick while the connection is not congested. Stack after
+  HaveAllPacks, `game_version` `*`.
+- **Functions** (`sapling/src/functions/`, a plugin): `functions/**/*.mcfunction` by path, case kept;
+  comments and blank lines dropped, leading spaces trimmed. A function with an invalid line or a line
+  starting with `/` is not found (checked on first use against the command registry). `/function`
+  runs BDS's stack model: each line counts once, a nested `function` line counts and pushes its lines,
+  the run stops at `functionCommandLimit` (10000 if unset); inner output goes nowhere, the sender is
+  told `commands.function.success [count]`. `tick.json` functions run every tick as the server in
+  every world. `/schedule delay add|clear`, `/schedule clear` keep due ticks per shard; a due function
+  runs as the server in the world it was scheduled in and operators get `commands.schedule.functionRan`.
+- **`/scriptevent`** (`vanilla/scriptevent.rs`): BDS's answers; the event goes to plugins as
+  `ScriptEvent`, queued and offered before tasks each tick (raised from a task or listener, heard the
+  next tick).
+- Not done: behavior pack data beyond functions, `/schedule on_area_loaded`, the Script API, and
+  `server.properties` `texturepack-required` (docs/NEXT.md).
 
 ## Building against a local acacia
 

@@ -1,13 +1,13 @@
 //! What a player entity is made of: the part that goes with the player to another shard, and
 //! the part each shard makes anew. A component missing from both is missing after a transfer.
 
+use acacia_proto::packets::ResourcePacksInfo;
 use bevy_ecs::prelude::*;
 use sapling_api::{Player, PlayerId};
 use sapling_net::{ConnId, VerifiedLogin};
 
 use crate::blobs::BlobCache;
 use crate::dimensions::ClientDimension;
-use crate::join;
 use crate::blocks::Breaking;
 use crate::inventory::Inventory;
 use crate::chunks::SectionBacklog;
@@ -51,12 +51,12 @@ pub(crate) struct Carried {
 }
 
 impl Carried {
-    /// A player who logged in, with the first packet of its join queued.
-    pub fn joining(conn: ConnId, login: &VerifiedLogin, net_id: u64, spawn: [f32; 3], mode: Mode, dimension: i32) -> Self {
+    /// A player who logged in, with `first`, the first packet of its join, queued.
+    pub fn joining(conn: ConnId, login: &VerifiedLogin, net_id: u64, spawn: [f32; 3], mode: Mode, dimension: i32, first: &ResourcePacksInfo) -> Self {
         let identity = &login.identity;
         let player = Player::new(PlayerId(conn.get()), identity.display_name.clone(), identity.uuid, identity.xuid.clone());
         let mut out = Outgoing::default();
-        out.push(&join::resource_packs_info());
+        out.push(first);
         Self {
             conn: Conn(conn),
             identity: Identity(player),
