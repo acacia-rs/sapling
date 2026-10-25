@@ -76,7 +76,8 @@ pub(super) fn lay(world: &mut World, entity: Entity, kind: &str, now: u64) {
     world.get_mut::<Raised>(entity).expect("read above").lays_at = Some(now + wait);
 }
 
-/// A tick of a sheep: now and then it eats the grass it stands on, or in, growing back its wool.
+/// A tick of a sheep that thinks (`sapling:mobAi`): now and then it eats the grass it stands on, or
+/// in, growing back its wool.
 pub(super) fn graze(world: &mut World, entity: Entity, kind: &str) {
     if kind != SHEEP {
         return;
@@ -85,7 +86,7 @@ pub(super) fn graze(world: &mut World, entity: Entity, kind: &str) {
     if world.get_resource_or_insert_with(Dice::default).fraction() >= GRAZES[usize::from(!baby)] {
         return;
     }
-    let Some((layer, _, _, body)) = shown::of(world, entity) else { return };
+    let Some((layer, _, _, body)) = shown::of(world, entity).filter(|(layer, ..)| crate::rules::on(world, *layer, sapling_data::MOB_AI)) else { return };
     let [x, y, z] = body.at.map(|c| c.floor() as i32);
     let Some(level) = world.get::<Layer>(layer).map(|layer| &layer.world) else { return };
     let named = |y: i32| level.registry().get(level.block(x, y, z)).map(|state| state.name);

@@ -21,13 +21,14 @@ async fn start() -> Server {
     common::start(crate::common::builder().handler(Still)).await
 }
 
-/// Stops random ticks once a player is in: a section they change (grass spreading, snow) is a new
-/// blob for the second join.
+/// Stops random ticks and mobs once a player is in: a section they change (grass spreading, snow, a
+/// sheep eating grass to dirt) is a new blob for the second join and no longer the save.
 struct Still;
 
 impl Handler for Still {
     fn on_join(&mut self, ctx: &mut ShardCtx<'_>, _: &Player) {
         ctx.set_game_rule("randomTickSpeed", RuleValue::Int(0));
+        ctx.set_game_rule(sapling_data::MOB_AI, RuleValue::Bool(false));
     }
 }
 
