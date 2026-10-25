@@ -18,12 +18,15 @@ mod death;
 mod duels;
 mod enchanted;
 mod fireballs;
+mod flight;
 mod floating;
 mod genes;
 mod ghasts;
 mod harm;
 mod health;
+mod hits;
 mod hunting;
+mod landing;
 mod legs;
 mod omens;
 mod paths;
@@ -48,7 +51,9 @@ use sapling_world::Actor;
 use crate::body::Body;
 use death::{die, leaves_loot};
 use shown::{announcement, head, physics_of, spawn_sound};
-pub(crate) use afflictions::breathed_on;
+pub(crate) use afflictions::{breathed_on, splashed};
+pub(crate) use arrows::{ARROW, Lands, Shot};
+pub(crate) use flight::{Arrow, Launch, Loosed, Pickup, from_storage as shot_from_storage, launch, lying as lying_shots, unstick};
 pub(crate) use attacks::attacked;
 pub(crate) use blast::{Wreck, explode};
 pub(crate) use enchanted::thorned;
@@ -217,7 +222,7 @@ fn kill(world: &mut World, id: EntityId) -> bool {
 
 /// Moves every spawned mob a tick and hurts it by where it is; a dead one goes once it has died.
 pub(crate) fn tick(world: &mut World) {
-    arrows::tick(world);
+    flight::tick(world);
     afflictions::tick(world);
     omens::tick(world);
     spells::tick(world);

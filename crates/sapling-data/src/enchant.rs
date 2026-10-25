@@ -4,12 +4,14 @@
 //! (table.rs), the anvil (anvil.rs) and the grindstone (grind.rs), all by kinds.rs.
 
 pub mod anvil;
+mod archery;
 pub mod grind;
 mod kinds;
 mod list;
 pub mod table;
 mod warding;
 
+pub use archery::{FLAME_BURNS, charge_ticks, impaling, loyalty_pull, multishot, piercing, power_bonus, punch, riptide};
 pub use list::{all, with_all};
 pub use table::Offer;
 pub use warding::{Harm, THORNS_WEAR, Warding, thorns};
@@ -46,10 +48,21 @@ pub enum Enchant {
     SilkTouch = 16,
     Unbreaking = 17,
     Fortune = 18,
+    Power = 19,
+    Punch = 20,
+    Flame = 21,
+    Infinity = 22,
     FrostWalker = 25,
     Mending = 26,
     Binding = 27,
     Vanishing = 28,
+    Impaling = 29,
+    Riptide = 30,
+    Loyalty = 31,
+    Channeling = 32,
+    Multishot = 33,
+    Piercing = 34,
+    QuickCharge = 35,
 }
 
 /// The level of `enchant` on a stack whose NBT is `tag`; 0 without it.

@@ -5,6 +5,7 @@
 pub mod cluster;
 pub mod orbs;
 pub mod requests;
+pub mod shooting;
 pub mod stored;
 
 use std::collections::HashMap;

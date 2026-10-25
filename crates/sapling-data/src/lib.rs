@@ -22,6 +22,7 @@ mod names;
 mod command_names;
 mod player;
 mod recipes;
+pub mod shots;
 mod spawn;
 mod spawn_rules;
 mod start_game;

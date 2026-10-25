@@ -100,11 +100,12 @@ pub(crate) fn blasted(world: &mut World, player: Entity, amount: f32, from: [f32
     amount > 0.0 && hit_from(world, player, amount, from, push, Cause::EntityExplosion)
 }
 
-/// An arrow of a mob of `kind` that flew from `from` hurts a player for `amount` and, if it
-/// `throws`, throws it as a hit does. False where it took nothing.
-pub(crate) fn shot(world: &mut World, player: Entity, amount: f32, kind: &str, from: [f32; 3], throws: bool) -> bool {
+/// A shot of `kind` (a mob's, or "player:" and a player's name) that flew from `from` hurts a
+/// player for `amount` and, if it `throws`, throws it as a hit does and by `push` besides. False
+/// where it took nothing.
+pub(crate) fn shot(world: &mut World, player: Entity, amount: f32, kind: &str, from: [f32; 3], throws: bool, push: [f32; 3]) -> bool {
     slain_by(world, player, kind, |world| match throws {
-        true => hit_from(world, player, amount, from, [0.0; 3], Cause::Projectile),
+        true => hit_from(world, player, amount, from, push, Cause::Projectile),
         false => is_mortal(world, player) && hurt(world, player, amount, Cause::Projectile),
     })
 }
@@ -150,6 +151,24 @@ pub(crate) fn pushed(world: &mut World, player: Entity, push: [f32; 3]) {
         throw(world, player, id, push);
     }
 }
+
+/// A thrown thing that hurts nobody (a snowball, an egg) throws a player as a hit from `from` does.
+pub(crate) fn knocked(world: &mut World, player: Entity, from: [f32; 3]) {
+    if let (Some(id), true) = (world.get::<NetId>(player).map(|id| id.0), is_mortal(world, player)) {
+        throw_from(world, player, id, from);
+    }
+}
+
+/// The ender pearl a player threw takes it to `to` (a pearl's teleport: the Bedrock id of the
+/// thrown pearl, 87, names its source) and costs a mortal one `amount` as a fall.
+pub(crate) fn pearled(world: &mut World, player: Entity, to: [f32; 3], amount: f32) {
+    crate::movement::teleport_as(world, player, to, acacia_proto::packets::MovePlayerTeleportCause::Projectile, &[PEARL_SOURCE]);
+    if is_mortal(world, player) {
+        hurt(world, player, amount, Cause::Fall);
+    }
+}
+
+const PEARL_SOURCE: i64 = 87;
 
 /// Throws a player as a hit from `from` does.
 pub(super) fn throw_from(world: &mut World, player: Entity, id: u64, from: [f32; 3]) {

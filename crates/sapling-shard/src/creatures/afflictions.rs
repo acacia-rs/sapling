@@ -135,7 +135,7 @@ pub(super) fn afflict(world: &mut World, mob: Entity, effect: &str, ticks: u32) 
 }
 
 /// The potion of data value `data` broke `share` of its full strength on a mob.
-pub(super) fn splashed(world: &mut World, mob: Entity, data: i16, share: f32) {
+pub(crate) fn splashed(world: &mut World, mob: Entity, data: i16, share: f32) {
     for gives in sapling_data::potion_effects(data) {
         let Some(effect) = Effect::ALL.into_iter().find(|effect| effect.name() == gives.effect) else { continue };
         let ticks = gives.ticks as f32 * share;

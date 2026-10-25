@@ -5,25 +5,14 @@ use crate::common;
 
 use std::sync::{Arc, Mutex};
 
-use acacia_proto::nbt::{List, Value};
+use acacia_proto::nbt::Value;
 use acacia_proto::packets::{AddEntity, AddItemEntity, UpdateAttributes};
-use common::stored::{compound, enter_stored, floor_with};
+use common::stored::{enchanted, enter_stored, floor_with, plain};
 use common::{Harness, all, attack, config};
 use sapling_api::{DamageCause, PlayerId};
-use sapling_world::{ItemStack, MemoryStorage, PlayerData, World, WorldStorage, new_orb_actor};
+use sapling_world::{MemoryStorage, PlayerData, World, WorldStorage, new_orb_actor};
 
 const STEVE: PlayerId = PlayerId(1);
-
-/// A stack of one `name` with `levels` of enchantments (by id) and worn by `damage`.
-fn enchanted(name: &str, levels: &[(i16, i16)], damage: i32) -> Option<ItemStack> {
-    let entry = |(id, level): &(i16, i16)| compound([("id", Value::Short(*id)), ("lvl", Value::Short(*level))]);
-    let tag = compound([("ench", Value::List(List { tag: 10, items: levels.iter().map(entry).collect() })), ("Damage", Value::Int(damage))]);
-    Some(ItemStack { name: name.into(), count: 1, damage: 0, block: None, tag: Some(tag) })
-}
-
-fn plain(name: &str) -> Option<ItemStack> {
-    Some(ItemStack { name: name.into(), count: 1, damage: 0, block: None, tag: None })
-}
 
 /// Steve, as `data` kept him, in a world whose column holds `actors`.
 fn steve(data: PlayerData, actors: Vec<u8>) -> (Harness, Arc<MemoryStorage>) {

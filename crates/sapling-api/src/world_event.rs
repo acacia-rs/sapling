@@ -58,6 +58,8 @@ pub enum SpawnReason {
     Natural,
     /// A spawn egg used on a block.
     SpawnEgg,
+    /// Where something thrown landed: an egg's chicks, an ender pearl's endermite.
+    Thrown,
 }
 
 /// A mob is about to appear. Cancelled, it does not. Mobs coming back with their column from

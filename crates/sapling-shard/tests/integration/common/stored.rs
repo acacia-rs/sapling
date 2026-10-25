@@ -7,12 +7,23 @@ use acacia_proto::RawPacket;
 use acacia_proto::nbt::{self, List, LittleEndian, Nbt, Value};
 use acacia_proto::packets::{PlayStatus, SetLocalPlayerAsInitialized};
 use bytes::BytesMut;
-use sapling_world::{BlockRegistry, Chunk, ChunkPos, Dimension, MemoryStorage, StoredColumn, WorldStorage};
+use sapling_world::{BlockRegistry, Chunk, ChunkPos, Dimension, ItemStack, MemoryStorage, StoredColumn, WorldStorage};
 
 use super::{Harness, all};
 
 pub fn compound<const N: usize>(fields: [(&str, Value); N]) -> Value {
     Value::Compound(fields.map(|(key, value)| (nbt::Str::from(key), value)).into())
+}
+
+/// A stack of one `name` with `levels` of enchantments (by id) and worn by `damage`.
+pub fn enchanted(name: &str, levels: &[(i16, i16)], damage: i32) -> Option<ItemStack> {
+    let entry = |(id, level): &(i16, i16)| compound([("id", Value::Short(*id)), ("lvl", Value::Short(*level))]);
+    let tag = compound([("ench", Value::List(List { tag: 10, items: levels.iter().map(entry).collect() })), ("Damage", Value::Int(damage))]);
+    Some(ItemStack { name: name.into(), count: 1, damage: 0, block: None, tag: Some(tag) })
+}
+
+pub fn plain(name: &str) -> Option<ItemStack> {
+    Some(ItemStack { name: name.into(), count: 1, damage: 0, block: None, tag: None })
 }
 
 /// A stored actor with one field of its kind's own.

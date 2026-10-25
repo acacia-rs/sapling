@@ -5,8 +5,9 @@ use crate::common;
 use std::sync::Arc;
 
 use acacia_proto::RawPacket;
-use acacia_proto::packets::{AddEntity, AddItemEntity, EntityEvent, EntityEventEventId, InventoryTransaction, LevelEvent, LevelEventEvent, LevelSoundEvent, MoveEntityDelta, PlayerAuthInput, RemoveEntity};
-use acacia_proto::types::{InputData, TransactionTransactionData, TransactionUseItemActionType};
+use acacia_proto::packets::{AddEntity, AddItemEntity, EntityEvent, EntityEventEventId, LevelEvent, LevelEventEvent, LevelSoundEvent, MoveEntityDelta, PlayerAuthInput, RemoveEntity};
+use acacia_proto::types::InputData;
+use common::shooting::click_air;
 use common::{Harness, all, input_at};
 use sapling_api::{GameMode, Item, PlayerId, Slot};
 use sapling_world::{ChunkPos, MemoryStorage, StorageError, StoredColumn, World, WorldStorage};
@@ -29,14 +30,6 @@ impl WorldStorage for Strongholds {
     fn locate_stronghold(&self, _: i32, _: i32) -> Option<[i32; 3]> {
         Some(STRONGHOLD)
     }
-}
-
-fn click_air() -> InventoryTransaction {
-    let mut click = common::click([0, 0, 0], 255, None);
-    if let TransactionTransactionData::ItemUse(used) = &mut click.transaction.transaction_data {
-        used.action_type = TransactionUseItemActionType::ClickAir;
-    }
-    click
 }
 
 /// Alex at `FEET` in a world of `level`, two eyes in hand, in `mode`.

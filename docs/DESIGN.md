@@ -831,7 +831,8 @@ block action, and takes StopBreak and AbortBreak with a position.
   most) around a player that moved, as frosted ice that ages and melts by the Java game's rule
   (`blocks/frost.rs`). Mending: an orb mends one damaged Mending stack worn or held, two of wear a
   point, before the rest is experience. Curse of Vanishing is gone at death; Curse of Binding keeps
-  a piece on outside creative (`inventory/enchanted.rs`). Not done: bows, crossbows, tridents,
+  a piece on outside creative (`inventory/enchanted.rs`). Power, Punch, Flame, Infinity, Multishot,
+  Piercing, Quick Charge, Loyalty, Riptide and Impaling: see "Players' shots". Not done: Channeling,
   fishing rods and the mace and their enchantments; Aqua Affinity (the server does not slow a break
   under water); Soul Speed, Swift Sneak; Thorns against arrows; Blast Protection's throw (BDS reads
   none); Looting on armour.
@@ -880,6 +881,15 @@ Details and BDS evidence: docs/research/nether-dimension.md, docs/research/end-d
   (`portals/gateway.rs`); the dead of the End and the Nether rise in the overworld (`dimensions::respawn_home`).
   A thrown eye of ender flies to the stronghold its world's storage locates (`WorldStorage::locate_stronghold`,
   only `Generated` overworlds; `eyes.rs`).
+- **Players' shots** (sapling-shard `shots.rs` and `shots/`, `sapling_data::shots`,
+  `sapling_data::enchant` archery, docs/research/projectiles.md). A click in the air throws a snowball,
+  egg, ender pearl, splash or lingering potion, bottle o' enchanting or wind charge, shoots a loaded
+  crossbow, or starts drawing a bow, loading a crossbow or readying a trident (`Drawing`); `ItemRelease`
+  looses it. Every shot, a mob's or a player's, flies by `creatures/flight.rs` (one `Shot` table per
+  kind), hurts by `creatures/hits.rs` and lands by `creatures/landing.rs`. A player's carries `Loosed`
+  (Power, crit, Punch, tip, Piercing, Impaling, Loyalty, who may pick it up). A stuck player's arrow or
+  trident is kept with its column (sapling-leveldb `actors/stuck.rs`) and picked up as an item is
+  (`shots/pickup.rs`). Not done: fireworks and Channeling (sapling has neither), drowned tridents.
 - **The dragon fight** (sapling-shard `dragon.rs` and `dragon/`, docs/research/end-dimension.md): a `Fight`
   component on the End layer, its record in the realm's `Level::dragon_fight` (LevelDB `TheEnd`, sapling-leveldb
   `dragon_fight.rs`). Run from `handlers` after the creatures' tick: dragon lookup and making, podium, crystals,

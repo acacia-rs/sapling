@@ -10,7 +10,7 @@ pub(crate) mod eating;
 pub(crate) mod effects;
 pub(crate) use eating::bite;
 pub(crate) use effects::{afflict, hits_for, kept as kept_effects, restored as restored_effects};
-pub(crate) use struck::{bitten, blasted, fanged, is_fireproof, punched, pushed, rammed, set_alight, shot, thorned, winded};
+pub(crate) use struck::{bitten, blasted, fanged, is_fireproof, knocked, pearled, punched, pushed, rammed, set_alight, shot, thorned, winded};
 mod hunger;
 mod kept;
 mod omens;
