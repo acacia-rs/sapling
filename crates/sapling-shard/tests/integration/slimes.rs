@@ -42,7 +42,8 @@ fn a_medium_slime_takes_its_prey_squishes_as_it_hops_at_it_and_hurts_it_for_2_by
     }
     assert_eq!(shown.map(|(_, width, max)| (width, max)), Some((Some(1.04), Some(4.0))));
     assert!(targeted, "takes the player");
-    assert!(ages.len() >= 4 && ages.chunks(2).all(|pair| pair == [2, 1]), "{ages:?}");
+    // The window may end with it in the air, squished and not yet landed.
+    assert!(ages.len() >= 4 && ages.chunks_exact(2).all(|pair| pair == [2, 1]) && (ages.len() % 2 == 0 || ages.last() == Some(&2)), "{ages:?}");
     assert!(!hurt.is_empty(), "touched: {moves:?}");
 }
 

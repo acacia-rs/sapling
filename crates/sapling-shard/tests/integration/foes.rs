@@ -140,7 +140,13 @@ fn an_enderman_stared_at_for_5_ticks_takes_the_starer_with_stare_and_one_looked_
         drop(h.tick_all());
         let pitch = -(65.0_f32 + 2.465 - 65.0 - 1.62).atan2(6.0).to_degrees();
         h.receive(1, &acacia_proto::packets::PlayerAuthInput { pitch, yaw: off, head_yaw: off, ..common::input_at([0.5, 65.0, 0.5]) });
-        let sent: Vec<acacia_proto::RawPacket> = (0..12).flat_map(|_| h.tick_all().to(1).to_vec()).collect();
+        // Held in place: its random teleports (a tick in 20 in the sun) would take it out of the look.
+        let sent: Vec<acacia_proto::RawPacket> = (0..12)
+            .flat_map(|_| {
+                h.remote.run(move |ctx| assert!(ctx.move_entity(sapling_api::EntityId(enderman), [0.5, 65.0, 6.5])));
+                h.tick_all().to(1).to_vec()
+            })
+            .collect();
         let targeted = all::<acacia_proto::packets::SetEntityData>(&sent).iter().any(|data| data.runtime_entity_id == enderman && data.metadata.iter().any(|item| item.key == acacia_proto::types::MetadataDictionaryItemKey::TargetEid));
         targeted && all::<acacia_proto::packets::LevelSoundEvent>(&sent).iter().any(|sound| sound.sound_id == "stare")
     };
