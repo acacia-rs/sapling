@@ -101,7 +101,8 @@ loot table from the vanilla behaviour packs (their `.brarchive`s, the newest pac
 adult's in its default state, and every table those name, with old item names renamed (checked against
 `ItemRegistry.bin` by a test). Fox and piglin name tables no pack holds; slimes and magma cubes, whose
 loot goes by size, have none here. A death is no one's or a player's (`Killer`), with the Looting it
-held (`enchant.rs`); a pet's kill counts as no one's.
+held (`enchant.rs`); a pet's kill counts as no one's. The script also keeps the tables blocks eject,
+named in its `BLOCK_TABLES` (trial spawners' and vaults'), rolled by `table_loot`.
 
 ## Mob traits
 

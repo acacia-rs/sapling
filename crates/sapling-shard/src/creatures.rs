@@ -195,6 +195,11 @@ fn give_health(world: &mut World, entity: Entity, kind: &str, left: Option<f32>,
 #[derive(Component)]
 struct Dying(u64);
 
+/// Whether the entity is a mob that has not died.
+pub(crate) fn is_alive(world: &World, entity: Entity) -> bool {
+    world.get::<Creature>(entity).is_some() && world.get::<Dying>(entity).is_none()
+}
+
 /// Ticks from a mob's death to its going, as BDS was seen to (research/captures/bds-kill.txt).
 const DYING: u64 = 21;
 /// Killed, these go at once, without a death or loot, as BDS's armor stand.

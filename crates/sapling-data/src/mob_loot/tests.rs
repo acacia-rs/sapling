@@ -55,3 +55,14 @@ fn a_players_kill_leaves_the_rare_drops_and_looting_adds_to_them() {
     assert_eq!([feathers(0), feathers(3)], [Some(2), Some(2 + enchant::looted([0.0, 1.0], 3, &mut always(0.999)))]);
     assert!(feathers(3) > feathers(0));
 }
+
+#[test]
+fn trial_tables_give_a_key_food_and_a_reward() {
+    let key = |table: &str| table_loot(table, &mut always(0.5));
+    assert_eq!(key("loot_tables/spawners/trial_chamber/key.json"), [("minecraft:trial_key".to_owned(), 1)]);
+    assert_eq!(key("loot_tables/spawners/ominous/trial_chamber/key.json"), [("minecraft:ominous_trial_key".to_owned(), 1)]);
+    // A count written `1.0` is one.
+    assert_eq!(table_loot("loot_tables/spawners/trial_chamber/consumables.json", &mut always(0.0)), [("minecraft:cooked_chicken".to_owned(), 1)]);
+    assert!(!table_loot("loot_tables/chests/trial_chambers/reward.json", &mut always(0.1)).is_empty());
+    assert!(table_loot("loot_tables/nothing.json", &mut always(0.1)).is_empty());
+}

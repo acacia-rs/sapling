@@ -58,6 +58,7 @@ mod simulation;
 mod skin;
 mod sleep;
 mod sounds;
+mod spawners;
 mod spawning;
 mod splash;
 mod sync;

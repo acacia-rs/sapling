@@ -64,6 +64,8 @@ pub enum SpawnReason {
     Lightning,
     /// Built of blocks: a wither of soul sand and skulls.
     Built,
+    /// A monster spawner or a trial spawner.
+    Spawner,
 }
 
 /// A mob is about to appear. Cancelled, it does not. Mobs coming back with their column from

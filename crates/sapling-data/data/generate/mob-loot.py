@@ -120,6 +120,13 @@ RENAMES = {
 }
 # (name, data) -> the item that data now names; a sheep's wool is its colour's, white by default.
 BY_DATA = {("minecraft:dye", 0): "minecraft:ink_sac", ("minecraft:skull", 1): "minecraft:wither_skeleton_skull", ("minecraft:wool", "colour"): "minecraft:white_wool"}
+# Tables blocks eject, not named by any entity: trial spawners' and vaults' (spawners.rs in sapling-shard).
+BLOCK_TABLES = [
+    "loot_tables/spawners/trial_chamber/consumables.json", "loot_tables/spawners/trial_chamber/key.json",
+    "loot_tables/spawners/ominous/trial_chamber/consumables.json", "loot_tables/spawners/ominous/trial_chamber/key.json",
+    "loot_tables/spawners/trial_chamber/items_to_drop_when_ominous.json",
+    "loot_tables/chests/trial_chambers/reward.json", "loot_tables/chests/trial_chambers/reward_ominous.json",
+]
 # Kinds whose table is not what they leave when they die.
 NOT_MOBS = {"minecraft:fishing_hook", "minecraft:player", "minecraft:npc", "minecraft:tripod_camera"}
 
@@ -166,6 +173,10 @@ def main():
             named_tables(table, tables, used)
         elif table:
             print(f"{name}: no file for {table}")
+    for table in BLOCK_TABLES:
+        if table not in tables:
+            print(f"no file for {table}")
+        named_tables(table, tables, used)
     with open(OUT, "w", encoding="utf-8", newline="\n") as out:
         json.dump({"entities": found, "tables": dict(sorted(used.items()))}, out, separators=(",", ":"), sort_keys=True)
     print(f"{len(found)} entities, {len(used)} tables -> {OUT}")

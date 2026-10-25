@@ -149,7 +149,8 @@ pub(crate) fn toss(world: &mut World, layer: Entity, stack: ItemStack, centre: [
     lay(world, layer, stack, [centre[0], centre[1] - SIZE / 2.0, centre[2]], motion, from);
 }
 
-/// Shoots `stack` out from `centre` (the middle of its box) at `motion`, as a dispenser does.
+/// Shoots `stack` out from `centre` (the middle of its box) at `motion`, picked up as soon as what
+/// a broken block leaves: a dispenser's shot, a trial spawner's or a vault's reward.
 pub(crate) fn eject(world: &mut World, layer: Entity, stack: ItemStack, centre: [f32; 3], motion: [f32; 3]) {
     let from = world.resource::<Tick>().0 + SPILL_DELAY;
     lay(world, layer, stack, [centre[0], centre[1] - SIZE / 2.0, centre[2]], motion, from);

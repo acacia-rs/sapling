@@ -99,6 +99,7 @@ pub(crate) fn dispatch(world: &mut World) {
     creatures::tick(world);
     crate::spawning::despawn(world);
     crate::spawning::tick(world);
+    crate::spawners::tick(world);
     crate::dragon::tick(world);
     crate::eyes::tick(world);
     crate::shots::tick(world);
