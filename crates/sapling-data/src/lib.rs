@@ -51,7 +51,7 @@ pub use recipes::{Grid, Ingredient, Recipe, Shape, Station, has_tag, is_special 
 pub use gear::{Gear, Made, gear};
 pub use spawn::{no_player_spawn, world_spawn};
 pub use spawn_rules::{Medium, SpawnRule, Spot, biome_has_tag, biome_id, despawn_distances, spawn_category, spawn_rules};
-pub use player::{AddPlayerOptions, add_player, entity_data, experience_attributes, player_metadata, update_abilities, update_attributes};
+pub use player::{AddPlayerOptions, add_player, entity_data, experience_attributes, player_flags_extended, player_metadata, update_abilities, update_attributes};
 pub use game_rules::{DAYLIGHT_CYCLE, GameRules, HUNGER, LIQUID_FLOW, MOB_AI, REDSTONE, RuleValue};
 pub use start_game::{EYE_HEIGHT, StartGameOptions, start_game};
 pub use templates::{pre_start_packets, registry_packets};

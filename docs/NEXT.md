@@ -156,7 +156,7 @@ Each needs its rule looked up first (`bdsre` for BDS, the Java jar for data), th
   leaves it), the cauldron's `PotionId` defaults (`docs/research/block-entities.md`, "Open checks").
 - A double chest asks both halves above, a slab too, as on BDS (`bds_command_probe lids`). Getting
   up by `StopSleeping`, by day and by `/tp`, and a sleeper's data and box, are told as on BDS
-  (`wake`); left there: a player's other `FlagsExtended` bits, which sapling never sends. A block a hand
+  (`wake`), a sleeper's `FlagsExtended` with the bits BDS keeps on every player. A block a hand
   uses, a block held or not, is shown as it changed and no more, as on BDS (`held-use`); a door opened
   by hand keeps `open_bit` in its lower half and is shown whole in one UpdateSubchunkBlocks, as
   there. A door `/setblock` puts is shown so too, its upper half with flags 2.

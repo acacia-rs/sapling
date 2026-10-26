@@ -69,8 +69,11 @@ fn a_sleeper_is_put_in_its_bed_and_a_teleport_gets_it_up_where_it_was_sent() {
     assert_eq!(corrected(&lay), [([1.5, 65.90625, 1.5], 0.0)]);
     let width = |sent: &[acacia_proto::RawPacket]| all::<SetEntityData>(sent).iter().flat_map(|data| data.metadata.clone()).filter(|item| item.key == Key::BoundingboxWidth).map(|item| format!("{:?}", item.value)).collect::<Vec<_>>();
     assert_eq!(width(&lay), ["Default(Float(0.2))"], "a sleeper's box is small");
+    let extended = |sent: &[acacia_proto::RawPacket]| all::<SetEntityData>(sent).iter().flat_map(|data| data.metadata.clone()).filter(|item| item.key == Key::FlagsExtended).map(|item| format!("{:?}", item.value)).collect::<Vec<_>>();
+    assert_eq!(extended(&lay), ["FlagsExtended(MetadataFlags2(35184405647360))"], "BDS's player bits and the sleeper's");
     h.remote.run(|ctx| ctx.teleport(ALEX, [5.5, 65.0, 5.5]));
     let sent = h.tick(1);
+    assert_eq!(extended(&sent), ["FlagsExtended(MetadataFlags2(35184405643264))"]);
     assert!(all::<Animate>(&sent).iter().any(|animate| animate.action_id == AnimateActionId::WakeUp));
     let moved = all::<acacia_proto::packets::MovePlayer>(&sent);
     assert_eq!(moved.iter().map(|to| [to.position.x, to.position.y, to.position.z]).collect::<Vec<_>>(), [[5.5, 65.0 + sapling_data::EYE_HEIGHT, 5.5]]);
