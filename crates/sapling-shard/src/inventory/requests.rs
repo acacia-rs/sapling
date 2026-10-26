@@ -224,7 +224,7 @@ fn answer(world: &mut World, entity: Entity, player: &Player, request: &Request)
         _ => {
             tracing::debug!(player = %player.name, ?request, "refusing an inventory request");
             out.push(&refusal(request.request_id, Status::Error));
-            inventory.send_all(&mut out);
+            inventory.send_all(&mut out, false);
             containers::resend(world, entity);
         }
     }

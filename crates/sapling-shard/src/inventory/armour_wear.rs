@@ -74,7 +74,7 @@ fn wear(world: &mut World, player: Entity, uses: impl Fn(usize, &Held) -> i32, m
     let lost = |piece: usize| inventory.armor[piece].as_ref().map(|held| ArmorDamageEntry { armor_slot: ArmorDamageEntryArmorSlot::from_raw(piece as i64 * 2), damage: (damage(&held.stack.tag) - unsaid(piece)) as i16 });
     out.push(&PlayerArmorDamage { entries: (0..inventory.armor.len()).filter_map(lost).collect() });
     if broke {
-        inventory.send_all(&mut out);
+        inventory.send_all(&mut out, false);
     } else if more.is_some() && inventory.armor[0].is_some() {
         let id = inventory.new_id();
         inventory.armor[0].as_mut().expect("worn").id = id;

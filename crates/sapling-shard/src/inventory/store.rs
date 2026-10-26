@@ -97,8 +97,7 @@ pub(crate) fn load(mut commands: Commands, mut layers: Query<(Entity, &mut Layer
 pub(crate) fn send_own(tick: Res<Tick>, mut players: Query<(&NetId, &Stage, &mut Inventory, &mut Outgoing, Option<&mut Vitals>)>) {
     for (id, stage, mut inventory, mut out, vitals) in &mut players {
         if *stage >= Stage::StartGame && inventory.loaded && !inventory.sent {
-            inventory.send_all(&mut out);
-            out.push(&sapling_data::player_hotbar(inventory.selected, true));
+            inventory.send_all(&mut out, true);
             if inventory.experience != Experience::default() {
                 out.push(&experience::attributes(id, &inventory.experience, true, tick.0));
             }

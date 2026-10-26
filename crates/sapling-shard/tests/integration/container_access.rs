@@ -85,6 +85,23 @@ fn a_barrel_turns_a_tick_after_it_opens_and_its_lid_is_shown_again_80_ticks_on()
     assert_eq!(lids, [0, 80]);
 }
 
+/// research/captures/bds-chest-moves.txt: an opened chest's slots are followed by the player's
+/// windows, its held slot and the slots again, and those once more a tick on.
+#[test]
+fn an_opened_chest_is_shown_with_the_players_windows_and_again_a_tick_on() {
+    use acacia_proto::Packet;
+    use acacia_proto::packets::{InventoryContent, PlayerHotbar};
+    let shown = [ContainerOpen::ID, InventoryContent::ID, PlayerHotbar::ID];
+    let kinds = |sent: &[acacia_proto::RawPacket]| common::ids(sent).into_iter().filter(|id| shown.contains(id)).collect::<Vec<_>>();
+    let mut h = at_a_chest();
+    h.receive(1, &click(CHEST, 1, None));
+    let opened = h.tick(1);
+    let content = InventoryContent::ID;
+    assert_eq!(kinds(&opened), [ContainerOpen::ID, content, content, content, content, content, PlayerHotbar::ID, content]);
+    assert_eq!(kinds(&h.tick(1)), [content]);
+    assert!(kinds(&h.tick(1)).is_empty());
+}
+
 /// research/captures/bds-reach-close.txt: BDS kept the screen open 64 blocks off.
 #[test]
 fn a_screen_stays_open_however_far_its_player_goes_and_closes_when_its_chest_goes() {

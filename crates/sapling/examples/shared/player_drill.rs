@@ -1,6 +1,6 @@
-//! The hurt, smother, hunger, eat and tire drills of bds_command_probe: a player harmed, killed
-//! and risen again (docs/research/player-damage.md). Toil, armour, effects and beds:
-//! armour_drill.rs; a zombie's and what food does besides feeding: hunt_drill.rs.
+//! The player drills of bds_command_probe: what a drill's `!` lines make the actor do, and which
+//! drill is in which file (harm and hunger: vitals_drill.rs; toil, armour, effects and beds:
+//! armour_drill.rs; a zombie's and what food does besides feeding: hunt_drill.rs).
 
 use std::time::Duration;
 
@@ -24,6 +24,8 @@ mod world;
 mod uses;
 #[path = "trade_drill.rs"]
 mod trades;
+#[path = "vitals_drill.rs"]
+mod vitals;
 
 /// A player's eyes are this far over its feet.
 const EYES: f32 = 1.62;
@@ -50,7 +52,8 @@ fn face_named(word: &str) -> Option<acacia_bot::interact::Face> {
 /// Does what a drill's `!` line asks of the actor: `!eat` holds use on what it holds, `!jump`,
 /// `!walk` and `!sprint` hold those keys until `!stop`, `!break x y z` breaks, `!click x y z` clicks,
 /// `!place x y z` puts what it holds on and `!sleep x y z` lies in the block that far from its feet,
-/// `!wake` leaves its bed and `!close` its open screen. False for any other line.
+/// `!wake` leaves its bed and `!close` its open screen; `!put`, `!take` and `!takeall` move items
+/// in and out of the open container. False for any other line.
 pub async fn act(actor: &mut Bot, line: &str) -> bool {
     let keys = |actor: &mut Bot, forward: f32, sprint: bool, jump: bool| {
         if let Some(controls) = actor.controls() {
@@ -98,11 +101,27 @@ pub async fn act(actor: &mut Bot, line: &str) -> bool {
         }
         return true;
     }
+    // `!put from to [count]`: main inventory slot `from` (all of it, or `count`) into the open
+    // container's slot `to`; `!take slot` moves one of its stacks out, `!takeall` every one.
+    if let Some(words) = line.strip_prefix("!put ") {
+        use acacia_bot::items::SlotRef;
+        let numbers: Vec<u8> = words.split(' ').filter_map(|word| word.parse().ok()).collect();
+        if let [from, to, ref rest @ ..] = numbers[..] {
+            let all = SlotRef::Main(from).stack(actor.state()).map_or(0, |stack| u8::try_from(stack.count).unwrap_or(u8::MAX));
+            println!("## put: {:?}", actor.move_item(SlotRef::Main(from), SlotRef::Container(to), rest.first().copied().unwrap_or(all)).await);
+        }
+        return true;
+    }
+    if let Some(slot) = line.strip_prefix("!take ").and_then(|slot| slot.parse().ok()) {
+        println!("## took: {:?}", actor.move_to_inventory(slot).await);
+        return true;
+    }
     match line {
         // The use goes on as the bot is polled after (`Bot::consume`).
         "!eat" => drop(tokio::time::timeout(Duration::from_millis(1), actor.consume()).await),
         "!wake" => println!("## woke: {:?}", actor.wake().await),
         "!close" => println!("## closed: {:?}", actor.close_container().await),
+        "!takeall" => println!("## took all: {:?}", actor.take_all().await),
         "!jump" => keys(actor, 0.0, false, true),
         "!walk" => keys(actor, 1.0, false, false),
         "!sprint" => keys(actor, 1.0, true, false),
@@ -125,11 +144,11 @@ const WAKE_SHOWN: &[&str] = &["UpdateBlock", "SetEntityData", "MovePlayer", "Pla
 /// The lines and shown packets of the drill `name`, if it is one of these.
 pub fn drill(name: &str) -> Option<(Vec<String>, &'static [&'static str])> {
     Some(match name {
-        "hurt" => (hurt(), HURT_SHOWN),
-        "smother" => (smother(), HURT_SHOWN),
-        "hunger" => (hunger(), HURT_SHOWN),
-        "eat" => (eat(), HURT_SHOWN),
-        "tire" => (tire(), HURT_SHOWN),
+        "hurt" => (vitals::hurt(), HURT_SHOWN),
+        "smother" => (vitals::smother(), HURT_SHOWN),
+        "hunger" => (vitals::hunger(), HURT_SHOWN),
+        "eat" => (vitals::eat(), HURT_SHOWN),
+        "tire" => (vitals::tire(), HURT_SHOWN),
         "bite" => (hunt::bite(), hunt::BITE_SHOWN),
         "slain" => (hunt::slain(), hunt::BITE_SHOWN),
         "chase" => (hunt::chase(), hunt::BITE_SHOWN),
@@ -175,6 +194,7 @@ pub fn drill(name: &str) -> Option<(Vec<String>, &'static [&'static str])> {
         "clock" => (world::clock(), CLOCK_SHOWN),
         "sounds" => (world::sounds(), world::SOUNDS_SHOWN),
         "shut" => (reach::shut(), reach::HELD_USE_SHOWN),
+        "chest-moves" => (reach::chest_moves(), reach::MOVES_SHOWN),
         "loot" => (world::loot(), world::LOOT_SHOWN),
         "loot2" => (world::loot2(), world::LOOT2_SHOWN),
         "names" => (world::names(), &[]),
@@ -207,109 +227,4 @@ pub fn drill(name: &str) -> Option<(Vec<String>, &'static [&'static str])> {
         "wake" => (armour::wake(), WAKE_SHOWN),
         _ => return uses::named(name),
     })
-}
-
-/// The actor, in survival on a stone floor: harmed by `/damage` with and without a cause, twice at
-/// once, dropped 6 and 12 blocks, stood in fire and in lava and put out by water, left to mend,
-/// killed holding a stack and risen, then killed by a fall.
-pub fn hurt() -> Vec<String> {
-    let mut lines: Vec<String> = ["kill @e[type=!player]", "", "fill ~-3 ~-4 ~-3 ~8 ~-1 ~8 stone", "fill ~-3 ~ ~-3 ~8 ~14 ~8 air", "gamemode survival @s", ""].map(String::from).into();
-    let wait = |lines: &mut Vec<String>, seconds: usize| lines.extend(std::iter::repeat_n(String::new(), seconds));
-    lines.extend(["damage @s 3", "", "damage @s 2 fall", "", "damage @s 1 fire", "", "damage @s 1 drowning", "", "damage @s 1 entity_attack", ""].map(String::from));
-    lines.extend(["damage @s 1", "damage @s 1"].map(String::from));
-    wait(&mut lines, 2);
-    lines.extend(["effect @s instant_health 1 4", "", "tp @s ~ ~6 ~"].map(String::from));
-    wait(&mut lines, 3);
-    lines.extend(["effect @s instant_health 1 4", "", "tp @s ~ ~12 ~"].map(String::from));
-    wait(&mut lines, 4);
-    lines.extend(["effect @s instant_health 1 4", "", "setblock ~ ~-1 ~ netherrack", "setblock ~ ~ ~ fire"].map(String::from));
-    wait(&mut lines, 3);
-    lines.extend(["setblock ~ ~ ~ air", "setblock ~ ~-1 ~ stone"].map(String::from));
-    wait(&mut lines, 10);
-    lines.extend(["effect @s instant_health 1 4", "", "setblock ~ ~ ~ lava"].map(String::from));
-    wait(&mut lines, 2);
-    lines.push("setblock ~ ~ ~ water".into());
-    wait(&mut lines, 2);
-    lines.push("setblock ~ ~ ~ air".into());
-    wait(&mut lines, 12);
-    lines.extend(["give @s stone 5", "xp 30 @s", "", "kill @s"].map(String::from));
-    wait(&mut lines, 8);
-    lines.extend(["gamemode survival @s", "tp @s ~ ~40 ~"].map(String::from));
-    wait(&mut lines, 10);
-    lines.extend(["gamemode creative @s", "kill @e[type=!player]", ""].map(String::from));
-    lines
-}
-
-/// The actor, in survival in a glass cell: its head under water until it drowns a while, given
-/// air, then its head in stone, then both blocks of it.
-pub fn smother() -> Vec<String> {
-    let mut lines: Vec<String> = ["kill @e[type=!player]", "", "fill ~-3 ~-4 ~-3 ~8 ~-1 ~8 stone", "fill ~-3 ~ ~-3 ~8 ~14 ~8 air", "gamemode survival @s", ""].map(String::from).into();
-    let wait = |lines: &mut Vec<String>, seconds: usize| lines.extend(std::iter::repeat_n(String::new(), seconds));
-    lines.extend(["fill ~-1 ~ ~-1 ~1 ~2 ~1 glass", "fill ~ ~ ~ ~ ~1 ~ water"].map(String::from));
-    wait(&mut lines, 22);
-    lines.push("fill ~ ~ ~ ~ ~1 ~ air".into());
-    wait(&mut lines, 4);
-    lines.extend(["effect @s instant_health 1 4", "", "setblock ~ ~1 ~ stone"].map(String::from));
-    wait(&mut lines, 4);
-    lines.push("setblock ~ ~1 ~ air".into());
-    wait(&mut lines, 2);
-    lines.extend(["effect @s instant_health 1 4", "", "fill ~ ~ ~ ~ ~1 ~ stone"].map(String::from));
-    wait(&mut lines, 3);
-    lines.extend(["gamemode creative @s", "fill ~-1 ~ ~-1 ~1 ~2 ~1 air", ""].map(String::from));
-    lines
-}
-
-/// The actor, in survival: hurt 14 and left to mend until its hunger stops that, its hunger
-/// drained by the effect and left to starve, fed by the saturation effect, and hurt again.
-pub fn hunger() -> Vec<String> {
-    let mut lines: Vec<String> = ["kill @e[type=!player]", "", "fill ~-3 ~-4 ~-3 ~8 ~-1 ~8 stone", "fill ~-3 ~ ~-3 ~8 ~14 ~8 air", "gamemode survival @s", ""].map(String::from).into();
-    let wait = |lines: &mut Vec<String>, seconds: usize| lines.extend(std::iter::repeat_n(String::new(), seconds));
-    lines.push("damage @s 14".into());
-    wait(&mut lines, 45);
-    lines.push("effect @s hunger 12 255 true".into());
-    wait(&mut lines, 40);
-    lines.push("effect @s saturation 1 9 true".into());
-    wait(&mut lines, 12);
-    lines.extend(["damage @s 4", "", "damage @s 1 fall"].map(String::from));
-    wait(&mut lines, 10);
-    lines.extend(["gamemode creative @s", ""].map(String::from));
-    lines
-}
-
-/// The actor, in survival, hurt and made hungry: eats two apples, a steak put in its hand, and tries
-/// one more with its hunger full. `!eat` holds use on what it holds.
-pub fn eat() -> Vec<String> {
-    let mut lines: Vec<String> = ["kill @e[type=!player]", "", "fill ~-3 ~-4 ~-3 ~8 ~-1 ~8 stone", "fill ~-3 ~ ~-3 ~8 ~14 ~8 air", "gamemode survival @s", ""].map(String::from).into();
-    let wait = |lines: &mut Vec<String>, seconds: usize| lines.extend(std::iter::repeat_n(String::new(), seconds));
-    // Mending takes a hunger point in 17 seconds, where there is no hunger effect to.
-    lines.push("damage @s 14".into());
-    wait(&mut lines, 18);
-    lines.extend(["give @s apple 3", "effect @s hunger 2 255 true"].map(String::from));
-    wait(&mut lines, 4);
-    for _ in 0..2 {
-        lines.push("!eat".into());
-        wait(&mut lines, 4);
-    }
-    lines.extend(["replaceitem entity @s slot.weapon.mainhand 0 cooked_beef 2", "", "!eat"].map(String::from));
-    wait(&mut lines, 4);
-    lines.extend(["effect @s saturation 1 19 true", "", "!eat"].map(String::from));
-    wait(&mut lines, 4);
-    lines.extend(["gamemode creative @s", ""].map(String::from));
-    lines
-}
-
-/// The actor, in survival at the end of a 60 block floor: jumps in place, walks, sprints and
-/// sprints jumping, five seconds each, back at the start between.
-pub fn tire() -> Vec<String> {
-    let mut lines: Vec<String> = ["kill @e[type=!player]", "", "fill ~-3 ~-1 ~-3 ~3 ~-1 ~60 stone", "fill ~-3 ~ ~-3 ~3 ~6 ~60 air", "gamemode survival @s", ""].map(String::from).into();
-    let wait = |lines: &mut Vec<String>, seconds: usize| lines.extend(std::iter::repeat_n(String::new(), seconds));
-    for key in ["!jump", "!walk", "!sprint", "!leap"] {
-        lines.push(key.into());
-        wait(&mut lines, 5);
-        lines.extend(["!stop", ""].map(String::from));
-        lines.push(if key == "!jump" { String::new() } else { "tp @s ~ ~ ~-30".into() });
-        wait(&mut lines, 2);
-    }
-    lines.extend(["gamemode creative @s", ""].map(String::from));
-    lines
 }
