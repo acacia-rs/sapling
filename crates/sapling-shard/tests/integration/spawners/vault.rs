@@ -62,6 +62,16 @@ fn the_wrong_item_is_refused_aloud_and_kept() {
     assert_eq!((state(&mut h), ask(&mut h, |ctx| ctx.item(ALEX, Slot::Main(0)).map(|held| held.count))), ("active".to_owned(), Some(1)));
 }
 
+/// research/captures/bds-placing2.txt: BDS woke a vault put down by hand beside its placer.
+#[test]
+fn a_vault_put_down_by_hand_wakes_for_its_placer() {
+    let mut h = alex_on(GameMode::Survival, "minecraft:glowstone", false);
+    held(&mut h, "minecraft:vault", 1);
+    h.receive(1, &click([VAULT[0], VAULT[1] - 1, VAULT[2]], 1, None));
+    run(&mut h, 25);
+    assert_eq!(state(&mut h), "active");
+}
+
 #[test]
 fn a_vault_sleeps_when_no_one_is_near() {
     let mut h = beside_a_vault();

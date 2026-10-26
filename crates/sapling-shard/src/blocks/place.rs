@@ -149,6 +149,9 @@ impl Request<'_> {
             for cell in [Some(pos), second].into_iter().flatten() {
                 if let Some(entity) = entities::placed(&block.name, cell, &placing) {
                     send::keep_entity(self.world, site.layer, cell, &entity);
+                    if crate::spawners::is_spawner(&entity) {
+                        crate::spawners::watch(self.world, site.layer, cell);
+                    }
                 }
             }
             signs::open_editor(self.world, self.entity, site.layer, pos, &block.name);

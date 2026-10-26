@@ -140,7 +140,7 @@ Each needs its rule looked up first (`bdsre` for BDS, the Java jar for data), th
   watchers the hand before the place (sapling after), and once more after a creative place. A second run of 51 more (`placing2`) agreed in 31
   and set right a crafter, a decorated pot, a chiseled bookshelf, a calibrated sculk sensor, what
   clings (lichen, sculk vein, resin) and what hangs (moss, roots, a spore blossom, a vine, a
-  hanging sign) and a pitcher plant, which stands on its own lower half; a vault is not woken. BDS's commands take old item names too (`chain`
+  hanging sign) and a pitcher plant, which stands on its own lower half, and a vault, which wakes for its placer. BDS's commands take old item names too (`chain`
   for `iron_chain`): sapling's `/give` and `/replaceitem` take the 31 that were tried and found
   (`vanilla.rs` `OLD_ITEM_NAMES`, `bds_command_probe item-names`). Which way a dispenser or a
   piston turns up or down is the old game's rule, of which BDS showed one case.
