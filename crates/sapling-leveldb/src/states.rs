@@ -156,6 +156,12 @@ fn typed_states(state: &BlockState) -> Option<Value> {
 }
 
 /// The registry's spelling of a state compound: `key=value` sorted by key, booleans as 0/1.
+/// A palette entry's block name and its states as the registry writes them (`key=value`, sorted).
+pub fn palette_block(entry: &Value) -> Option<(String, String)> {
+    let Some(Value::String(name)) = entry.get("name") else { return None };
+    Some((name.to_string(), entry.get("states").map(properties).unwrap_or_default()))
+}
+
 fn properties(states: &Value) -> String {
     let Value::Compound(entries) = states else { return String::new() };
     let text = |value: &Value| match value {

@@ -2,7 +2,8 @@
 //! `mayPlace` / `canSurvive` of each (docs/research/standing-and-shapes.md, part A). Blocks
 //! not named here need only what updates.rs asks.
 // TODO: which blocks give a face's centre or edge support is approximated from collision
-// boxes; the dirt and sand tags are Java's lists; light is never asked, as BDS never does.
+// boxes; the dirt and sand tags are Java's lists. Light is asked only on a neighbour's change
+// ([`is_wrongly_lit`]), not on placing.
 
 use sapling_api::BlockPos;
 use sapling_world::{BlockRegistry, World};
@@ -130,6 +131,22 @@ const BAMBOO_GROUND: &[&str] = &[
     "minecraft:grass_block", "minecraft:dirt", "minecraft:coarse_dirt", "minecraft:podzol", "minecraft:mycelium", "minecraft:dirt_with_roots", "minecraft:moss_block", "minecraft:mud",
     "minecraft:sand", "minecraft:red_sand", "minecraft:gravel", "minecraft:bamboo", "minecraft:bamboo_sapling",
 ];
+
+/// Whether the block `id` at `pos` has the wrong light to stay when a neighbour changes, its
+/// brightness read with no night in it: a crop under 8 (`CropBlock::canSurvive`; open sky over
+/// it always gives that), a mushroom from 13 up off mycelium and podzol (`MushroomBlock`'s).
+pub(super) fn is_wrongly_lit(level: &World, [x, y, z]: BlockPos, id: u32) -> bool {
+    const DARK_KILLS: &[&str] = &["minecraft:wheat", "minecraft:carrots", "minecraft:potatoes", "minecraft:beetroot", "minecraft:torchflower_crop"];
+    const MUSHROOMS: &[&str] = &["minecraft:brown_mushroom", "minecraft:red_mushroom"];
+    const MUSHROOM_GROUND: &[&str] = &["minecraft:mycelium", "minecraft:podzol"];
+    let Some(name) = level.registry().get(id).map(|state| state.name) else { return false };
+    let light = || level.brightness_at(x, y, z, 0).unwrap_or(0);
+    match name {
+        _ if DARK_KILLS.contains(&name) => level.light_at(x, y, z).is_some() && light() < 8,
+        _ if MUSHROOMS.contains(&name) => !self::name(level, [x, y - 1, z]).is_some_and(|under| MUSHROOM_GROUND.contains(&under)) && light() >= 13,
+        _ => false,
+    }
+}
 
 /// Whether [`may_stand`] has a rule for the block `name`, which then replaces updates.rs's.
 pub(super) fn has_rule(name: &str) -> bool {

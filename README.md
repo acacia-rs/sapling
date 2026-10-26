@@ -17,6 +17,10 @@ _Currently supported Minecraft version: `1.26.52` (protocol `2193`)._
   priorities, cancellable events and a `ShardCtx` facade that never exposes bevy types
 - `#[derive(Command)]` and `#[derive(Form)]` for typed commands and forms, checked at compile time
 - Online (Xbox Live) and offline login over RakNet or NetherNet, and LAN discovery
+- Running it: BDS's `server.properties`, access lists, per-address and per-session packet limits,
+  idle kicks, a tick watchdog, tick metrics, and crash reports from a shard that saves before it stops
+- Resource packs sent to joining clients, and behavior pack functions (`/function`, `/schedule`,
+  `tick.json`)
 - Vanilla [LevelDB worlds](crates/sapling-leveldb), read and saved, or in-memory worlds; copy-on-write
   arenas for minigames
 - Outbound packets never block a shard, and broadcasts are encoded once per world

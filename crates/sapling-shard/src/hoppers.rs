@@ -83,7 +83,7 @@ fn state(world: &World, layer: Entity, pos: BlockPos) -> Option<(Face, bool)> {
 
 /// Puts as many of `item` as fit into the first slot of `slots` that `accepts` it, empty or
 /// holding its kind; returns how many went in.
-fn insert(world: &mut World, slots: &mut [Option<Held>], item: &ItemStack, accepts: impl Fn(usize) -> bool) -> u8 {
+pub(crate) fn insert(world: &mut World, slots: &mut [Option<Held>], item: &ItemStack, accepts: impl Fn(usize) -> bool) -> u8 {
     let limit = sapling_data::max_stack(&item.name);
     for slot in (0..slots.len()).filter(|slot| accepts(*slot)) {
         match &mut slots[slot] {
@@ -114,21 +114,39 @@ fn one(held: &Held) -> ItemStack {
     ItemStack { count: 1, ..held.stack.clone() }
 }
 
+/// Whether the block at `target` holds items a hopper or dropper can put into.
+pub(crate) fn takes_items(world: &World, layer: Entity, target: BlockPos) -> bool {
+    containers::kind_at(world, layer, target).is_some_and(|kind| kind.holds_items())
+}
+
+/// Puts one `item` into the container at `target` through its face `face`, as a hopper does;
+/// whether it went in. A crafter takes it into its emptiest slot that is not disabled.
+pub(crate) fn put_one(world: &mut World, layer: Entity, target: BlockPos, face: Face, item: &ItemStack) -> bool {
+    let Some(kind) = containers::kind_at(world, layer, target).filter(|kind| kind.holds_items()) else { return false };
+    let item = ItemStack { count: 1, ..item.clone() };
+    let was_empty = containers::slots_at(world, layer, target).is_some_and(|slots| slots.iter().all(Option::is_none));
+    let moved = match crate::blocks::crafter_slot(world, layer, target, &item) {
+        Some(slot) => containers::with_slots(world, layer, target, |world, into| insert(world, into, &item, |at| Some(at) == slot) > 0),
+        None => containers::with_slots(world, layer, target, |world, into| insert(world, into, &item, |at| kind.takes_from_hopper(at, face, &item)) > 0),
+    };
+    if moved == Some(true) && kind.is_hopper() && was_empty {
+        delay_receiver(world, layer, target);
+    }
+    moved == Some(true)
+}
+
 /// Moves one item from the first slot that can give one into the container the hopper faces.
 fn push(world: &mut World, layer: Entity, pos: BlockPos, slots: &mut [Option<Held>], facing: Face) -> bool {
     let target = facing.neighbour(pos);
-    let Some(kind) = containers::kind_at(world, layer, target).filter(|kind| kind.holds_items()) else { return false };
+    if !takes_items(world, layer, target) {
+        return false;
+    }
     // The target's face that touches the hopper.
     let face = Face::from_index(facing as u32 ^ 1).unwrap_or(facing);
-    let was_empty = containers::slots_at(world, layer, target).is_some_and(|slots| slots.iter().all(Option::is_none));
     for slot in 0..slots.len() {
         let Some(item) = slots[slot].as_ref().map(one) else { continue };
-        let moved = containers::with_slots(world, layer, target, |world, into| insert(world, into, &item, |at| kind.takes_from_hopper(at, face, &item)) > 0);
-        if moved == Some(true) {
+        if put_one(world, layer, target, face, &item) {
             take_one(&mut slots[slot]);
-            if kind.is_hopper() && was_empty {
-                delay_receiver(world, layer, target);
-            }
             return true;
         }
     }

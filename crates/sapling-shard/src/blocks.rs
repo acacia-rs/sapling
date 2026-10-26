@@ -7,14 +7,20 @@ mod after_break;
 mod bonemeal;
 mod blown;
 mod buckets;
+mod bulbs;
 mod composter;
+mod copper;
+mod crafter;
 mod daylight;
+mod dispensers;
 mod doors;
 pub(crate) mod end_portal;
 mod entities;
 mod facing;
+mod fields;
 mod fire;
 mod falling;
+mod frost;
 mod ground;
 mod growth;
 mod handled;
@@ -32,9 +38,12 @@ mod place;
 mod plates;
 pub(crate) mod portals;
 mod pots;
+mod queued;
 mod rails;
+mod rods;
 mod saplings;
 mod scaffolds;
+mod sculk;
 mod redstone;
 mod request;
 mod send;
@@ -42,19 +51,24 @@ mod shapes;
 mod sign_ink;
 mod signs;
 mod stacking;
+mod summoning;
+mod target;
 mod tools;
+mod tripwire;
 mod updates;
 mod waterlog;
 
 pub(crate) use blown::blow_out;
 pub(crate) use falling::from_storage as falling_from_storage;
 pub(crate) use daylight::tick as read_daylight;
-pub(crate) use fire::tick as burn_fires;
+pub(crate) use fire::{light as light_fire, tick as burn_fires};
+pub(crate) use frost::{frost_walk, tick as melt_frost};
 pub(crate) use growth::{arrived as plants_arrived, tick as random_ticks, trample};
 pub(crate) use ores::{light as light_ore, tick as dim_ores, tread as tread_ore};
 pub(crate) use scaffolds::tick as settle_scaffolds;
 pub(crate) use doors::{bed_head, release_buttons, with as with_property};
-pub(crate) use pistons::tick as move_pistons;
+pub(crate) use holders::spend as spend_held;
+pub(crate) use pistons::{at_place as block_entity_at, tick as move_pistons};
 pub(crate) use plates::press_plates;
 pub(crate) use redstone::{apply as apply_redstone, arrived as circuits_arrived, container_changed, evaluate as evaluate_redstone, power_at};
 pub(crate) use signs::dispatch_edits as dispatch_sign_edits;
@@ -63,11 +77,18 @@ pub(crate) use liquid::tick as flow_liquids;
 pub(crate) use mining::{Breaking, sound_hits};
 pub(crate) use request::{BlockInputs, dispatch};
 use request::{Request, Site, site};
-pub(crate) use send::{batched, block_at, hold, keep_entity, put_block, set, set_network_only, set_quietly, set_sectioned, show_held, show_whole, sound, to_viewers};
+pub(crate) use send::{batched, block_at, hold, keep_entity, put_block, resolve, set, set_liquid, set_many, set_network_only, set_quietly, set_sectioned, show_held, show_whole, sound, to_viewers};
+pub(crate) use liquid::neighbours_changed;
 pub(crate) use updates::break_block;
+pub(crate) use crafter::{crafter_slot, dispatch_toggles as dispatch_crafter_toggles};
+pub(crate) use queued::tick as run_queued;
+pub(crate) use rods::struck as lightning_struck;
+pub(crate) use sculk::{GameEvent, tick as hear_vibrations, vibrate, vibrate_at, walked};
+pub(crate) use target::shot_stopped;
+pub(crate) use tripwire::tick as trip_wires;
 
 use bevy_ecs::prelude::*;
-use sapling_api::{Block, BlockPos, GameMode};
+use sapling_api::{Block, BlockPos, Face, GameMode};
 use sapling_data::EYE_HEIGHT;
 
 use crate::components::{Layer, Mode, Position};
@@ -79,6 +100,17 @@ const CREATIVE_REACH: f32 = 13.0;
 
 fn level(world: &World, layer: Entity) -> Option<&sapling_world::World> {
     world.get::<Layer>(layer).map(|layer| &layer.world)
+}
+
+fn opposite(face: Face) -> Face {
+    match face {
+        Face::Down => Face::Up,
+        Face::Up => Face::Down,
+        Face::North => Face::South,
+        Face::South => Face::North,
+        Face::West => Face::East,
+        Face::East => Face::West,
+    }
 }
 
 /// Whether the middle of the block at `pos` is within the player's reach of its eyes.

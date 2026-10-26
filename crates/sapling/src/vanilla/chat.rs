@@ -8,7 +8,7 @@ use sapling_api::{Command, Output, Sender, ShardCtx};
 use super::{no_target, players};
 
 /// Who a line is from: BDS's console is `Server`.
-fn speaker(sender: &Sender) -> String {
+pub(super) fn speaker(sender: &Sender) -> String {
     sender.player().map_or_else(|| "Server".to_owned(), |player| player.name.clone())
 }
 
@@ -33,7 +33,7 @@ pub(crate) struct Tell {
 
 impl Command for Tell {
     fn run(self, ctx: &mut ShardCtx<'_>, sender: &Sender, out: &mut Output) {
-        let told = players(ctx, sender, &self.target);
+        let told = players(ctx, sender, Some(&self.target));
         if told.is_empty() {
             return no_target(out);
         }

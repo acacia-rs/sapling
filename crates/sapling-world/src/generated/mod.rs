@@ -2,14 +2,15 @@
 
 mod convert;
 mod grow;
+mod on_demand;
 #[cfg(test)]
 mod tests;
 
 use acacia_world::{BlockRegistry, Dimension};
 use sapling_leveldb::PlayerData;
-use sapling_worldgen::{ChunkBiomes, ChunkShape, EndGenerator, NetherGenerator, OverworldGenerator};
+use sapling_worldgen::{Block, ChunkBiomes, ChunkShape, EndGenerator, NetherGenerator, OverworldGenerator, PlaceFailure};
 
-use crate::storage::{Level, StorageError, StoredColumn, WorldStorage};
+use crate::storage::{Level, ShapeLoader, StorageError, StoredColumn, WorldStorage};
 use crate::{ChunkPos, END, NETHER, OVERWORLD};
 use convert::{BlockIds, generated_chunk};
 
@@ -142,5 +143,25 @@ impl<S: WorldStorage> WorldStorage for Generated<S> {
             Generator::Overworld(generator) => generator.locate_stronghold(x, z),
             _ => self.inner.locate_stronghold(x, z),
         }
+    }
+
+    fn locate_structure(&self, name: &str, x: i32, z: i32) -> Option<[i32; 2]> {
+        let Generator::Overworld(generator) = &self.generator else { return self.inner.locate_structure(name, x, z) };
+        on_demand::locate(generator, name, x, z)
+    }
+
+    fn generated_biome(&self, x: i32, y: i32, z: i32) -> Option<u32> {
+        let Generator::Overworld(generator) = &self.generator else { return self.inner.generated_biome(x, y, z) };
+        Some(generator.density().climate.biome_at(x, y, z))
+    }
+
+    fn structure_writes(&self, name: &str, start: ChunkPos, load: &ShapeLoader<'_>) -> Option<Result<Vec<([i32; 3], Block)>, PlaceFailure>> {
+        let Generator::Overworld(generator) = &self.generator else { return self.inner.structure_writes(name, start, load) };
+        Some(on_demand::structure(generator, name, start, load))
+    }
+
+    fn jigsaw_writes(&self, pool: &str, target: &str, max_depth: u32, at: [i32; 3], load: &ShapeLoader<'_>) -> Option<Result<Vec<([i32; 3], Block)>, PlaceFailure>> {
+        let Generator::Overworld(generator) = &self.generator else { return self.inner.jigsaw_writes(pool, target, max_depth, at, load) };
+        Some(generator.place_jigsaw(pool, target, max_depth, at, load))
     }
 }

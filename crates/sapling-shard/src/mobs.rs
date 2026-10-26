@@ -24,6 +24,8 @@ const ITEM: &str = "minecraft:item";
 pub(crate) struct Mob {
     /// What tells a client of it: the entity, then what it wears and holds.
     announcement: Vec<Bytes>,
+    /// Told after every mob a client is shown that tick: what refers to others (its riders).
+    after: Vec<Bytes>,
     home: ChunkPos,
 }
 
@@ -58,6 +60,11 @@ pub(crate) struct MobGrid {
 /// What shows a stored actor as it was stored; `None` for a dropped item that names no item a
 /// client knows.
 pub(crate) fn announcement(actor: &Actor, id: u64) -> Option<Vec<Bytes>> {
+    announcement_with(actor, id, MetadataFlags1(0))
+}
+
+/// [`announcement`] with `extra` flags on top of those its stored states show.
+pub(crate) fn announcement_with(actor: &Actor, id: u64, extra: MetadataFlags1) -> Option<Vec<Bytes>> {
     if actor.identifier == ITEM {
         return Some(item_shown(sapling_data::add_item_entity(id, &stack(actor.item.as_ref()?), actor.position, [0.0; 3])?));
     }
@@ -72,7 +79,7 @@ pub(crate) fn announcement(actor: &Actor, id: u64) -> Option<Vec<Bytes>> {
         ActorState::Sitting => MetadataFlags1::SITTING,
     };
     let mut packets = vec![sapling_net::encode(&sapling_data::add_entity(&AddEntityOptions {
-        flags: MetadataFlags1(actor.states.iter().fold(0, |flags, state| flags | flag(state).0)),
+        flags: MetadataFlags1(actor.states.iter().fold(extra.0, |flags, state| flags | flag(state).0)),
         health: actor.health,
         id,
         identifier: &actor.identifier,
@@ -114,17 +121,30 @@ pub(crate) fn spawn_shown(world: &mut World, layer: Entity, feet: [f32; 3], anno
     let announcement = announce(id)?;
     world.resource_mut::<Players>().next_net_id += 1;
     let home = ChunkPos::of_block(feet[0].floor() as i32, feet[2].floor() as i32);
-    let mob = world.spawn((Mob { announcement, home }, NetId(id), InLayer(layer))).id();
+    let mob = world.spawn((Mob { announcement, after: Vec::new(), home }, NetId(id), InLayer(layer))).id();
     let mut grid = world.resource_mut::<MobGrid>();
     grid.grid.insert(layer, home, (mob, id));
     grid.changes += 1;
     Some(mob)
 }
 
+/// What players who come to see the entity are told of it now.
+pub(crate) fn announced(world: &World, mob: Entity) -> Option<Vec<Bytes>> {
+    world.get::<Mob>(mob).map(|mob| mob.announcement.clone())
+}
+
 /// What players who come to see a moving entity later are told of it.
 pub(crate) fn reannounce(world: &mut World, mob: Entity, announcement: Vec<Bytes>) {
     if let Some(mut mob) = world.get_mut::<Mob>(mob) {
         mob.announcement = announcement;
+    }
+}
+
+/// What players who come to see the entity later are told once every entity they are shown with
+/// it is announced.
+pub(crate) fn show_after(world: &mut World, mob: Entity, after: Vec<Bytes>) {
+    if let Some(mut mob) = world.get_mut::<Mob>(mob) {
+        mob.after = after;
     }
 }
 
@@ -145,8 +165,10 @@ pub(crate) fn follow(world: &mut World, mob: Entity, at: [f32; 3]) {
     grid.changes += 1;
 }
 
-/// Takes a mob out of the world; those who saw it are told by [`update`].
+/// Takes a mob out of the world, off what it rode and from under its riders; those who saw it
+/// are told by [`update`].
 pub(crate) fn remove(world: &mut World, mob: Entity) {
+    crate::riding::forget(world, mob);
     let Some((home, id, layer)) = world.query::<(&Mob, &NetId, &InLayer)>().get(world, mob).ok().map(|(mob, id, layer)| (mob.home, id.0, layer.0)) else { return };
     let mut grid = world.resource_mut::<MobGrid>();
     grid.grid.remove(layer, home, &(mob, id));
@@ -181,10 +203,12 @@ pub(crate) fn update(grid: Res<MobGrid>, mut viewers: Query<Viewer>, mobs: Query
         }
         let mut covered: Vec<(Entity, u64)> = grid.grid.covered(in_layer.0, view).copied().collect();
         covered.sort_unstable_by_key(|(_, id)| *id);
-        for (entity, _) in covered.iter().filter(|(entity, _)| !sees.mobs.contains_key(entity)) {
-            if let Ok(mob) = mobs.get(*entity) {
-                out.0.extend_from_slice(&mob.announcement);
-            }
+        let new: Vec<&Mob> = covered.iter().filter(|(entity, _)| !sees.mobs.contains_key(entity)).filter_map(|(entity, _)| mobs.get(*entity).ok()).collect();
+        for mob in &new {
+            out.0.extend_from_slice(&mob.announcement);
+        }
+        for mob in &new {
+            out.0.extend_from_slice(&mob.after);
         }
         let now: HashMap<Entity, u64> = covered.into_iter().collect();
         for (_, id) in sees.mobs.iter().filter(|(gone, _)| !now.contains_key(*gone)) {

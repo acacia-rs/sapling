@@ -5,7 +5,7 @@ use acacia_proto::manual::Uuid;
 use acacia_proto::packets::{AddPlayer, SetEntityData, UpdateAbilities, UpdateAttributes};
 use acacia_proto::types::{
     DeviceOS, GameMode, ItemV4, MetadataDictionary, MetadataDictionaryItemKey as Key, MetadataDictionaryItemValue as Value,
-    MetadataDictionaryItemValueDefault as Default, MetadataFlags1, Vec3f,
+    MetadataDictionaryItemValueDefault as Default, MetadataFlags1, MetadataFlags2, Vec3f,
 };
 
 use crate::templates::{SET_ENTITY_DATA, UPDATE_ABILITIES, UPDATE_ATTRIBUTES, decode};
@@ -57,6 +57,12 @@ pub fn player_metadata(name: &str, flags: MetadataFlags1) -> MetadataDictionary 
         }
     }
     metadata
+}
+
+/// The `FlagsExtended` BDS keeps on every player, as recorded.
+pub fn player_flags_extended() -> MetadataFlags2 {
+    let metadata = decode::<SetEntityData>(SET_ENTITY_DATA).metadata;
+    metadata.into_iter().find_map(|item| if let Value::FlagsExtended(flags) = item.value { Some(flags) } else { None }).unwrap_or_default()
 }
 
 /// The player's own metadata, as sent to it at join.

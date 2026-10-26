@@ -20,9 +20,18 @@ pub(super) enum User {
     Lamp { lit: bool },
     Opens(Opens),
     Hopper,
+    /// A powered or activator rail, on while powered (vehicles/rails.rs).
+    // TODO: power does not pass along a line of rails as in vanilla.
+    Rail,
     Tnt,
     /// Pushes out of its `front`, where it takes no power.
     Piston { front: Face },
+    /// A dispenser, dropper or crafter, `triggered` by the rise of its last signal.
+    Fires { triggered: bool },
+    /// Plays on a rise of its signal.
+    Note,
+    /// A copper bulb, which turns on and off at each rise of its signal.
+    Bulb { powered: bool },
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -82,6 +91,20 @@ impl Part {
             "observer" => Part::Observer { lit: get("powered_bit") == Some("1"), watch: side(get("minecraft:facing_direction")) },
             "redstone_lamp" | "lit_redstone_lamp" => Part::User(User::Lamp { lit: name == "lit_redstone_lamp" }),
             "hopper" => Part::User(User::Hopper),
+            "dispenser" | "dropper" | "crafter" => Part::User(User::Fires { triggered: get("triggered_bit") == Some("1") }),
+            "noteblock" => Part::User(User::Note),
+            _ if name.ends_with("copper_bulb") => Part::User(User::Bulb { powered: get("powered_bit") == Some("1") }),
+            "tripwire_hook" => Part::Producer { strength: on("powered_bit"), strong: get("direction").and_then(hook_support) },
+            _ if name.ends_with("lightning_rod") => {
+                let support = get("facing_direction").and_then(|face| face.parse().ok()).and_then(Face::from_index).map(opposite);
+                Part::Producer { strength: on("powered_bit"), strong: support }
+            }
+            // Their strength is held by the circuit (`redstone::emit`), not their block.
+            "target" | "jukebox" => Part::Producer { strength: 0, strong: None },
+            "sculk_sensor" | "calibrated_sculk_sensor" => Part::Producer { strength: 0, strong: Some(Face::Down) },
+            "golden_rail" | "activator_rail" => Part::User(User::Rail),
+            // A minecart on it turns it on (vehicles/rails.rs).
+            "detector_rail" => Part::Producer { strength: on("rail_data_bit"), strong: Some(Face::Down) },
             "tnt" => Part::User(User::Tnt),
             "piston" | "sticky_piston" => match get("facing_direction").and_then(crate::blocks::pistons::pushes) {
                 Some(front) => Part::User(User::Piston { front }),
@@ -132,16 +155,7 @@ fn conducts(name: &str, is_full_cube: bool) -> bool {
     }
 }
 
-pub(super) fn opposite(face: Face) -> Face {
-    match face {
-        Face::Down => Face::Up,
-        Face::Up => Face::Down,
-        Face::North => Face::South,
-        Face::South => Face::North,
-        Face::West => Face::East,
-        Face::East => Face::West,
-    }
-}
+pub(super) use crate::blocks::opposite;
 
 /// The side a lever's block is on, by its `lever_direction` (updates.rs `LEVER_ON`).
 fn lever_support(direction: &str) -> Option<Face> {
@@ -152,6 +166,18 @@ fn lever_support(direction: &str) -> Option<Face> {
         "south" => Face::North,
         "west" => Face::East,
         "east" => Face::West,
+        _ => return None,
+    })
+}
+
+/// The side a tripwire hook's block is on, behind the way its `direction` faces (0 south, 1 west,
+/// 2 north, 3 east).
+fn hook_support(direction: &str) -> Option<Face> {
+    Some(match direction {
+        "0" => Face::North,
+        "1" => Face::East,
+        "2" => Face::South,
+        "3" => Face::West,
         _ => return None,
     })
 }

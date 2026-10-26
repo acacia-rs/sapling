@@ -19,11 +19,15 @@ pub struct EntityInfo {
     pub on_ground: bool,
     /// What a lying item holds; `None` for anything else.
     pub item: Option<Item>,
+    /// Where its body faces and its pitch, in degrees: yaw -180 to 180, pitch -90 (up) to 90.
+    pub yaw: f32,
+    pub pitch: f32,
 }
 
 impl EntityInfo {
+    /// One facing yaw 0 and pitch 0.
     pub fn new(id: EntityId, kind: String, feet: [f32; 3], velocity: [f32; 3], on_ground: bool) -> Self {
-        Self { id, kind, feet, velocity, on_ground, item: None }
+        Self { id, kind, feet, velocity, on_ground, item: None, yaw: 0.0, pitch: 0.0 }
     }
 
     pub fn with_item(self, item: Option<Item>) -> Self {
@@ -111,6 +115,12 @@ impl ShardCtx<'_> {
     pub fn hurt_entity(&mut self, id: EntityId, amount: f32, cause: DamageCause) -> bool {
         self.backend.hurt_entity(id, amount, cause)
     }
+
+    /// The families vanilla puts entities of `kind` in (`minecraft:player` is `player`,
+    /// `minecraft:zombie` `zombie undead monster mob`), what a selector's `family=` tests.
+    pub fn families(&self, kind: &str) -> Vec<String> {
+        self.backend.families(kind)
+    }
 }
 
 /// The entities side of [`crate::Backend`].
@@ -140,5 +150,8 @@ pub trait EntityBackend {
     }
     fn hurt_entity(&mut self, _id: EntityId, _amount: f32, _cause: DamageCause) -> bool {
         false
+    }
+    fn families(&self, _kind: &str) -> Vec<String> {
+        Vec::new()
     }
 }

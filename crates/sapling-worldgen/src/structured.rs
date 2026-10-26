@@ -5,6 +5,7 @@
 //! (docs/research/worldgen-bds-order.md, "One engine"), and for every dimension (`Stage`).
 
 mod around;
+mod on_demand;
 pub(crate) mod order;
 mod overworld;
 mod probe;

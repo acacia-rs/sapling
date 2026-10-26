@@ -55,11 +55,11 @@ impl Command for Execute {
     fn run(self, ctx: &mut ShardCtx<'_>, sender: &Sender, out: &mut Output) {
         match self.context {
             Context::In(dimension) => {
-                let here = super::origin(ctx, sender);
+                let here = ctx.origin(sender);
                 self.teleport.run_from(ctx, sender, out, Some(dimension), here);
             }
             Context::At(selector) => {
-                let (people, others) = targets(ctx, sender, &selector);
+                let (people, others) = targets(ctx, sender, Some(&selector));
                 let stood: Vec<[f32; 3]> = people.into_iter().filter_map(|player| ctx.position(player.id).map(|at| at.feet)).chain(others.into_iter().map(|entity| entity.feet)).collect();
                 if stood.is_empty() {
                     return no_target(out);

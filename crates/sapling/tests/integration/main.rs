@@ -2,6 +2,7 @@
 
 mod common;
 
+mod access;
 mod api;
 mod blocks;
 mod chest;
@@ -14,6 +15,11 @@ mod join;
 mod kept;
 mod level;
 mod map;
+mod messaging;
 mod nether;
+mod packs;
 mod players;
+mod scoreboard;
+mod structure_commands;
+mod world_commands;
 mod worlds;

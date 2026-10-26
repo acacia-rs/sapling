@@ -35,7 +35,7 @@ fn held(world: &World, player: Entity) -> Option<(i16, sapling_data::Food)> {
 }
 
 /// Shows the player and, through `movement::announce`, its viewers whether it is using an item.
-fn show(world: &mut World, player: Entity, using: bool) {
+pub(crate) fn show(world: &mut World, player: Entity, using: bool) {
     let tick = world.resource::<Tick>().0;
     let Some(id) = world.get::<NetId>(player).map(|id| id.0) else { return };
     let Some(mut motion) = world.get_mut::<Motion>(player).filter(|motion| motion.pose.using != using) else { return };

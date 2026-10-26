@@ -11,6 +11,7 @@ use bytes::Bytes;
 use sapling_api::{BlockPos, Face, GameMode, Item};
 use sapling_world::BlockRegistry;
 
+use super::copper::Copper;
 use super::{Request, Site, level, send, with_property};
 use crate::{drops, inventory};
 
@@ -53,13 +54,6 @@ const MIDDLE: [f32; 3] = [0.5; 3];
 const CORNER: [f32; 3] = [0.0; 3];
 const FAR_CORNER: [f32; 3] = [1.0; 3];
 
-/// The block `name` without its `minecraft:`, one step less weathered or unwaxed.
-fn copper(registry: &BlockRegistry, bare: &str, properties: &str, from: &str, to: &str) -> Option<u32> {
-    let swapped = bare.replacen(from, to, 1);
-    let named = if swapped == "copper" { "copper_block" } else { &swapped };
-    bare.contains(from).then(|| registry.find(&format!("minecraft:{named}"), properties)).flatten()
-}
-
 /// What clicking `held` on `face` of the block `id` makes of it.
 fn change(registry: &BlockRegistry, held: &str, id: u32, face: Face) -> Option<Change> {
     let state = registry.get(id)?;
@@ -86,19 +80,17 @@ fn change(registry: &BlockRegistry, held: &str, id: u32, face: Face) -> Option<C
             done(registry.find("minecraft:grass_path", "")?, Told::Sound("item.use.on", MIDDLE, true), Cost::Wear)
         }
         axe if axe.ends_with("_axe") => {
-            if let Some(unwaxed) = copper(registry, bare, properties, "waxed_", "") {
-                return done(unwaxed, event(LevelEventEvent::ParticleWaxOff), Cost::Wear);
-            }
-            let scraped = [("exposed_", ""), ("weathered_", "exposed_"), ("oxidized_", "weathered_")].iter().find_map(|(from, to)| copper(registry, bare, properties, from, to));
-            if let Some(scraped) = scraped {
-                return done(scraped, event(LevelEventEvent::ParticleScrape), Cost::Wear);
+            match Copper::of(bare) {
+                Some(copper) if copper.waxed => return done(Copper { waxed: false, ..copper }.state(registry, id)?, event(LevelEventEvent::ParticleWaxOff), Cost::Wear),
+                Some(copper) if copper.stage > 0 => return done(Copper { stage: copper.stage - 1, ..copper }.state(registry, id)?, event(LevelEventEvent::ParticleScrape), Cost::Wear),
+                _ => {}
             }
             let stripped = registry.find(&format!("minecraft:stripped_{bare}"), properties).filter(|_| !bare.starts_with("stripped_"))?;
             done(stripped, Told::Sound("item.use.on", MIDDLE, true), Cost::Wear)
         }
-        "honeycomb" if bare.contains("copper") && !bare.contains("waxed_") => {
-            let waxed = if bare == "copper_block" { "minecraft:waxed_copper".to_owned() } else { format!("minecraft:waxed_{bare}") };
-            done(registry.find(&waxed, properties)?, event(LevelEventEvent::ParticleWaxOn), Cost::Spend)
+        "honeycomb" => {
+            let copper = Copper::of(bare).filter(|copper| !copper.waxed)?;
+            done(Copper { waxed: true, ..copper }.state(registry, id)?, event(LevelEventEvent::ParticleWaxOn), Cost::Spend)
         }
         "shears" if bare == "pumpkin" => {
             // Carved from above it faced south whichever way the carver looked; that a side's
@@ -185,7 +177,25 @@ impl Request<'_> {
             }
             return true;
         }
+        if let Some(spent) = crate::spawners::use_item(self.world, self.entity, site.layer, pos, held) {
+            if spent && site.mode != GameMode::Creative {
+                inventory::change(self.world, self.entity, |inventory| inventory.take(inventory::Place::Main(inventory.selected.into()), 1).is_ok());
+            }
+            return true;
+        }
+        if crate::spawning::hatch(self.world, site.layer, held, face.neighbour(pos)) {
+            if site.mode != GameMode::Creative {
+                inventory::change(self.world, self.entity, |inventory| inventory.take(inventory::Place::Main(inventory.selected.into()), 1).is_ok());
+            }
+            return true;
+        }
         if held == END_CRYSTAL && crate::dragon::place_crystal(self.world, site.layer, pos) {
+            if site.mode != GameMode::Creative {
+                inventory::change(self.world, self.entity, |inventory| inventory.take(inventory::Place::Main(inventory.selected.into()), 1).is_ok());
+            }
+            return true;
+        }
+        if held == crate::fireworks::ROCKET && crate::fireworks::launch_held(self.world, self.entity, pos, face) {
             if site.mode != GameMode::Creative {
                 inventory::change(self.world, self.entity, |inventory| inventory.take(inventory::Place::Main(inventory.selected.into()), 1).is_ok());
             }
@@ -203,12 +213,15 @@ impl Request<'_> {
         let Some(change) = change(registry, held, level.block(x, y, z), face).filter(|_| !covered) else { return (held == FLINT_AND_STEEL || held == FIRE_CHARGE) && self.strike(site, face.neighbour(pos), held) };
         let (told, is_event) = (telling(registry, pos, &change), matches!(change.told, Told::Event(..)));
         let left = inventory::stored(&Item::new(change.leaves.0.to_owned(), 1), registry);
+        let copper = registry.get(change.id).and_then(|state| Copper::of(state.name)).filter(|copper| copper.is_door());
         // BDS tells an event before the block and a sound after it.
         if is_event {
             send::to_viewers(self.world, site.layer, pos, std::slice::from_ref(&told));
         }
         if held == ENDER_EYE {
             super::end_portal::fill(self.world, site.layer, pos, change.id);
+        } else if let Some(copper) = copper {
+            super::copper::turn(self.world, site.layer, pos, copper);
         } else {
             send::set(self.world, site.layer, pos, change.id);
         }

@@ -6,7 +6,7 @@ use bevy_ecs::prelude::*;
 use sapling_api::Item;
 
 use super::health::Health;
-use super::{Dying, hunting, omens};
+use super::{Dying, attacks, hunting, omens};
 use crate::blocks::Dice;
 use crate::body::Body;
 use crate::components::{Layer, NetId, Tick};
@@ -37,8 +37,12 @@ pub(super) fn die(world: &mut World, entity: Entity, layer: Entity, kind: &str, 
         health.end();
         health.is_burning()
     });
+    let killer = match world.get::<attacks::Slain>(entity) {
+        Some(slain) => sapling_data::Killer::Player { looting: slain.1 },
+        None => sapling_data::Killer::None,
+    };
     if leaves_loot(world, layer) {
-        leave_loot(world, layer, kind, on_fire, body.at);
+        leave_loot(world, layer, kind, on_fire, killer, body.at);
     }
 }
 
@@ -47,10 +51,10 @@ pub(super) fn leaves_loot(world: &World, layer: Entity) -> bool {
     world.get::<Layer>(layer).is_some_and(|layer| layer.world.level().rules.on(MOB_LOOT))
 }
 
-fn leave_loot(world: &mut World, layer: Entity, kind: &str, on_fire: bool, [x, y, z]: [f32; 3]) {
+fn leave_loot(world: &mut World, layer: Entity, kind: &str, on_fire: bool, killer: sapling_data::Killer, [x, y, z]: [f32; 3]) {
     let loot = {
         let mut dice = world.get_resource_or_insert_with(Dice::default);
-        sapling_data::mob_loot(kind, on_fire, &mut || dice.fraction())
+        sapling_data::mob_loot(kind, on_fire, killer, &mut || dice.fraction())
     };
     let Some(registry) = world.get::<Layer>(layer).map(|layer| layer.world.registry()) else { return };
     let stacks: Vec<_> = loot.into_iter().filter_map(|(name, count)| inventory::stored(&Item::new(name, count.min(64) as u8), registry)).collect();

@@ -35,10 +35,12 @@ pub use block::Block;
 pub use end::EndGenerator;
 pub use nether::NetherGenerator;
 #[doc(hidden)]
-pub use feature::grow::place_feature;
+pub use feature::grow::{is_feature, place_feature};
 pub use feature::reach::{Cells as ReachCells, Tries as ReachTries};
 #[doc(hidden)]
 pub use structured::replay::{ReplayWrite, StructureStep};
+pub use structure::{PlaceFailure, StructureKind};
+pub use surface::temperature;
 pub use terrain::{CellKind, ChunkShape, HEIGHT, MIN_Y};
 
 use cache::SourceCache;

@@ -4,6 +4,8 @@
 //! [`ShardCtx`]: sapling_api::ShardCtx
 
 mod backend;
+mod block_entities;
+mod server;
 
 use bevy_ecs::prelude::*;
 use sapling_api::{JoinEvent, PlayerId, QuitEvent, Scope, TickEvent};
@@ -59,6 +61,9 @@ pub(crate) fn dispatch(world: &mut World) {
     commands::dispatch(world);
     blocks::release_buttons(world);
     blocks::press_plates(world);
+    blocks::batched(world, blocks::trip_wires);
+    blocks::batched(world, blocks::run_queued);
+    blocks::batched(world, blocks::hear_vibrations);
     blocks::batched(world, blocks::flow_liquids);
     blocks::dispatch(world);
     blocks::dispatch_sign_edits(world);
@@ -71,11 +76,14 @@ pub(crate) fn dispatch(world: &mut World) {
     blocks::fall_blocks(world);
     tnt::burn(world);
     blocks::burn_fires(world);
+    blocks::melt_frost(world);
     blocks::dim_ores(world);
     blocks::sound_hits(world);
     blocks::settle_scaffolds(world);
+    crate::light::relight(world);
     blocks::batched(world, blocks::random_ticks);
     inventory::dispatch(world);
+    blocks::dispatch_crafter_toggles(world);
     containers::dispatch_closes(world);
     containers::show_lids_again(world);
     containers::show_turned_barrels(world);
@@ -88,9 +96,18 @@ pub(crate) fn dispatch(world: &mut World) {
     drops::pick_up(world);
     orbs::touch(world);
     orbs::tick(world);
+    crate::riding::drive(world);
     creatures::tick(world);
+    crate::vehicles::tick(world);
+    crate::riding::carry(world);
+    crate::spawning::despawn(world);
+    crate::spawning::tick(world);
+    crate::spawners::tick(world);
     crate::dragon::tick(world);
     crate::eyes::tick(world);
+    crate::shots::tick(world);
+    crate::fireworks::tick(world);
+    crate::lightning::tick(world);
     vitals::tick(world);
     portals::tick(world);
     portals::arrive(world);
@@ -100,6 +117,7 @@ pub(crate) fn dispatch(world: &mut World) {
     forms::dispatch(world);
     for entity in left {
         let had_joined = world.get::<Stage>(entity) == Some(&Stage::InWorld);
+        crate::riding::forget(world, entity);
         containers::close(world, entity);
         inventory::save(world, entity);
         let Some(player) = world.get::<Identity>(entity).map(|i| i.0.clone()) else { continue };
@@ -118,6 +136,7 @@ pub(crate) fn dispatch(world: &mut World) {
         plugins::end_scope(world, Scope::Player(id));
     }
     worlds::focus(world, None);
+    plugins::offer_script_events(world);
     plugins::run_tasks(world);
     plugins::offer(world,TickEvent);
     worlds::dispatch(world);

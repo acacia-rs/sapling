@@ -1,7 +1,7 @@
 //! Runs a drill of command lines as an operator bot while a second operator watches, and prints
 //! what each was answered: CommandOutput in full, Text, GameRulesChanged as `rule=value`, and the
 //! drill's own packets. The ground truth for sapling's vanilla commands (`sapling::vanilla`).
-//! `cargo run -p sapling --example bds_command_probe -- <server> [gamerule|kill|replaceitem|defaults|concrete|water|lava|redstone|redstone-phase|conductors|shapes|burnout|repeater-facing|repeaters|comparators|reads|observer-facing|observers|piston-facing|pistons|slime|burn|harm|douse|hit|tools|reach|hurt|smother|hunger|eat|tire|bite|slain|chase|toil|armour|effects|sick|worn|kinds|stroll|flee|around|drink|more|shove|byhand|bedspawn|boom|shoot|wear|provoke|provoke2|provoke3|witch|ender|goat|evoker|shulker|ghast|breeze|vex|stare|dolphin|pandas|witch-drinks|goat-cows|mob-effects|mob-effects2|effects3|wind-burst|player-omens|fx|drink2|shoot2|golem|clock|sounds|loot|loot2|names|sun|weather|spiders|kinds2|pushed|pvp|blaze|duel|placing|item-names|placing2|daylight|clicks|tnt|bonemeal|fire|quench|discs|ores|crops|grows|leaves|trample|clicks2|scaffold|grows2|copper|oresteps|bonemeal2|leafreach|stacks|snowpile]` (offline mode,
+//! `cargo run -p sapling --example bds_command_probe -- <server> [gamerule|kill|replaceitem|defaults|concrete|water|lava|redstone|redstone-phase|conductors|shapes|burnout|repeater-facing|repeaters|comparators|reads|observer-facing|observers|piston-facing|pistons|slime|burn|harm|douse|hit|tools|reach|hurt|smother|hunger|eat|tire|bite|slain|chase|toil|armour|effects|sick|worn|kinds|stroll|flee|around|drink|more|shove|byhand|bedspawn|boom|shoot|wear|provoke|provoke2|provoke3|witch|ender|goat|evoker|shulker|ghast|breeze|vex|stare|dolphin|pandas|witch-drinks|goat-cows|mob-effects|mob-effects2|effects3|wind-burst|player-omens|fx|drink2|shoot2|golem|clock|sounds|loot|loot2|names|sun|weather|spiders|kinds2|pushed|pvp|blaze|duel|placing|item-names|placing2|daylight|clicks|tnt|bonemeal|fire|quench|discs|ores|crops|grows|leaves|trample|clicks2|scaffold|grows2|copper|oresteps|bonemeal2|leafreach|stacks|snowpile|worldcmds|itemcmds]` (offline mode,
 //! operators by default; `gamerule` when none is named).
 #[path = "shared/batch_drill.rs"]
 mod batch;
@@ -9,9 +9,13 @@ mod batch;
 mod burn;
 #[path = "shared/comparator_drill.rs"]
 mod comparator;
+#[path = "shared/functions_drill.rs"]
+mod functions;
 #[path = "shared/dump.rs"]
 #[allow(dead_code)]
 mod dump;
+#[path = "shared/liquid_drill.rs"]
+mod liquid;
 #[path = "shared/player_drill.rs"]
 mod player;
 #[path = "shared/probe.rs"]
@@ -21,12 +25,17 @@ mod probe;
 mod piston;
 #[path = "shared/redstone_drills.rs"]
 mod redstone;
+#[path = "shared/world_command_drill.rs"]
+mod world_commands;
+#[path = "shared/structure_drill.rs"]
+mod structures;
 
 use std::time::{Duration, Instant};
 
 use acacia_bot::{Bot, BotEvent};
 use acacia_bot::proto::{Packet, packets};
 use probe::{SETTLE, clock, connect};
+use liquid::{CONCRETE, CONCRETE_SHOWN, LAVA, LAVA_SHOWN, WATER, WATER_SETTLE, WATER_SHOWN};
 
 const GAMERULE: &[&str] = &[
     "gamerule",
@@ -126,62 +135,6 @@ const DEFAULTS: &[&str] = &[
 ];
 const DEFAULTS_SHOWN: &[&str] = &["UpdateBlock"];
 
-/// When concrete powder sets, on a stone stage: put beside water, dropped into a pool two deep and
-/// one deep, water put beside it and on it.
-const CONCRETE: &[&str] = &[
-    "fill ~2 ~-4 ~6 ~14 ~-1 ~8 stone",
-    "fill ~2 ~ ~6 ~14 ~4 ~8 air",
-    // Water only in holes in the stone, where it stays.
-    "setblock ~3 ~-1 ~7 water",
-    "setblock ~4 ~-1 ~7 red_concrete_powder",
-    "fill ~6 ~-2 ~7 ~6 ~-1 ~7 water",
-    "setblock ~6 ~3 ~7 red_concrete_powder",
-    "setblock ~13 ~-1 ~7 water",
-    "setblock ~13 ~3 ~7 red_concrete_powder",
-    "setblock ~8 ~-1 ~7 red_concrete_powder",
-    "setblock ~9 ~-1 ~7 water",
-    // Last: this water spreads over the stage.
-    "setblock ~11 ~-1 ~7 red_concrete_powder",
-    "setblock ~11 ~ ~7 water",
-];
-/// What water does to an item, an orb and an armour stand dropped into a pool three deep.
-const WATER: &[&str] = &[
-    "fill ~2 ~-5 ~6 ~8 ~-1 ~12 stone",
-    "fill ~2 ~ ~6 ~8 ~4 ~12 air",
-    "fill ~3 ~-4 ~7 ~7 ~-1 ~9 water",
-    "setblock ~5 ~2 ~8 dirt",
-    "setblock ~5 ~2 ~8 air destroy",
-    "summon xp_orb ~6.5 ~1 ~8.5",
-    "summon armor_stand ~3.5 ~1 ~8.5",
-];
-const WATER_SHOWN: &[&str] = &["AddItemEntity", "AddEntity", "RemoveEntity", "MoveEntityDelta", "SetEntityMotion", "MotionPredictionHints", "LevelSoundEvent", "SetEntityData"];
-/// The water drill over a pool of lava, which also burns what falls in.
-const LAVA: &[&str] = &[
-    "fill ~2 ~-5 ~6 ~8 ~-1 ~12 stone",
-    "fill ~2 ~ ~6 ~8 ~4 ~12 air",
-    "fill ~3 ~-4 ~7 ~7 ~-1 ~9 lava",
-    "setblock ~5 ~2 ~8 dirt",
-    "setblock ~5 ~2 ~8 air destroy",
-    // Mid-pool: /summon throws an orb up to about two blocks.
-    "summon xp_orb ~5.5 ~1 ~8.5",
-    "summon armor_stand ~3.5 ~1 ~8.5",
-];
-const LAVA_SHOWN: &[&str] = &[
-    "AddItemEntity",
-    "AddEntity",
-    "RemoveEntity",
-    "MoveEntityDelta",
-    "SetEntityMotion",
-    "MotionPredictionHints",
-    "LevelSoundEvent",
-    "EntityEvent",
-    "SetEntityData",
-    "LevelEvent",
-];
-/// Long enough to see a thing sink or rise through the pool.
-const WATER_SETTLE: Duration = Duration::from_millis(8000);
-const CONCRETE_SHOWN: &[&str] = &["UpdateBlock", "UpdateBlockSynced", "UpdateSubchunkBlocks", "AddEntity", "RemoveEntity", "AddItemEntity", "LevelEvent", "LevelSoundEvent"];
-
 const KILL_SHOWN: &[&str] = &["EntityEvent", "AddEntity", "AddItemEntity", "RemoveEntity", "LevelSoundEvent", "SetEntityData", "Animate", "MobEffect"];
 /// How long each line of the kill drill is watched: a dead mob goes a second after.
 const KILL_SETTLE: Duration = Duration::from_millis(2500);
@@ -202,6 +155,8 @@ fn show(start: Instant, shown: &[&str], who: &str, event: Option<BotEvent>) -> R
         let rules = packet.decode::<packets::GameRulesChanged>().map_err(|e| e.to_string())?;
         let shown: Vec<String> = rules.rules.iter().map(|rule| format!("{}={:?}", rule.name, rule.value)).collect();
         println!("{ms:>7} {who:<7} GameRulesChanged {}", shown.join(" "));
+    } else if let Some(cells) = structures::block_names(&packet).filter(|_| shown.contains(&"UpdateSubchunkBlocks")) {
+        println!("{ms:>7} {who:<7} {cells}");
     } else if let Some(name) = acacia_bot::proto::packet_name(packet.id).filter(|name| ["Text", "SetTime", "SyncWorldClocks"].contains(name) || shown.contains(name)) {
         let text: String = dump::dump(&packet).unwrap_or_default().chars().take(SHOWN).collect();
         println!("{ms:>7} {who:<7} {name} {text}");
@@ -250,7 +205,7 @@ async fn act(actor: &mut Bot, watcher: &mut Bot, start: Instant, shown: &[&str],
 #[tokio::main(flavor = "current_thread")]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut args = std::env::args().skip(1);
-    let server = args.next().ok_or("usage: bds_command_probe <server> [gamerule|kill|replaceitem|defaults|concrete|water|lava|redstone|redstone-phase|conductors|shapes|burnout|repeater-facing|repeaters|comparators|reads|observer-facing|observers|piston-facing|pistons|slime|burn|harm|douse|hit|tools|reach|hurt|smother|hunger|eat|tire|bite|slain|chase|toil|armour|effects|sick|worn|kinds|stroll|flee|around|drink|more|shove|byhand|bedspawn|boom|shoot|wear|provoke|provoke2|provoke3|witch|ender|goat|evoker|shulker|ghast|breeze|vex|stare|dolphin|pandas|witch-drinks|goat-cows|mob-effects|mob-effects2|effects3|wind-burst|player-omens|fx|drink2|shoot2|golem|clock|sounds|loot|loot2|names|sun|weather|spiders|kinds2|pushed|pvp|blaze|duel|placing|item-names|placing2|daylight|clicks|tnt|bonemeal|fire|quench|discs|ores|crops|grows|leaves|trample|clicks2|scaffold|grows2|copper|oresteps|bonemeal2|leafreach|stacks|snowpile|holders]")?;
+    let server = args.next().ok_or("usage: bds_command_probe <server> [gamerule|kill|replaceitem|defaults|concrete|water|lava|redstone|redstone-phase|conductors|shapes|burnout|repeater-facing|repeaters|comparators|reads|observer-facing|observers|piston-facing|pistons|slime|burn|harm|douse|hit|tools|reach|hurt|smother|hunger|eat|tire|bite|slain|chase|toil|armour|effects|sick|worn|kinds|stroll|flee|around|drink|more|shove|byhand|bedspawn|boom|shoot|wear|provoke|provoke2|provoke3|witch|ender|goat|evoker|shulker|ghast|breeze|vex|stare|dolphin|pandas|witch-drinks|goat-cows|mob-effects|mob-effects2|effects3|wind-burst|player-omens|fx|drink2|shoot2|golem|clock|sounds|loot|loot2|names|sun|weather|spiders|kinds2|pushed|pvp|blaze|duel|placing|item-names|placing2|daylight|clicks|tnt|bonemeal|fire|quench|discs|ores|crops|grows|leaves|trample|clicks2|scaffold|grows2|copper|oresteps|bonemeal2|leafreach|stacks|snowpile|holders|messaging|scoreboard|scoreboard2]")?;
     let (lines, shown, settle) = match args.next().as_deref() {
         None | Some("gamerule") => (owned(GAMERULE), &[][..], SETTLE),
         Some("kill") => (owned(KILL), KILL_SHOWN, KILL_SETTLE),
@@ -281,7 +236,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         Some("batch") => (batch::batch(), batch::BATCH_SHOWN, burn::BURN_SETTLE),
         Some("reach") => (burn::reach(), burn::HIT_SHOWN, burn::BURN_SETTLE),
         Some("shapes") => (redstone::shapes(), redstone::REDSTONE_SHOWN, redstone::CONDUCTORS_SETTLE),
-        Some(other) => match player::drill(other) {
+        Some("worldcmds") => (world_commands::world(), world_commands::WORLD_SHOWN, SETTLE),
+        Some("itemcmds") => (world_commands::items(), world_commands::ITEM_SHOWN, SETTLE),
+        Some("functions") => (functions::functions(), functions::FUNCTIONS_SHOWN, SETTLE),
+        Some(other) => match player::drill(other).or_else(|| structures::drill(other)) {
             Some((lines, shown)) => (lines, shown, burn::BURN_SETTLE),
             None => return Err(format!("no drill {other}").into()),
         },

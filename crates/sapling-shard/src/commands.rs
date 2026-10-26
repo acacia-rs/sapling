@@ -20,13 +20,18 @@ use crate::plugins::{self, CommandRegistry};
 /// why the schema's own numbers are stale).
 const INT: u16 = 1;
 const FLOAT: u16 = 3;
+// TODO: minecraft-data's number, not checked against BDS's `/spreadplayers` list.
+const VALUE: u16 = 4;
 const TARGET: u16 = 8;
+/// `/function`'s and `/schedule`'s function (research/captures/bds-packs.txt).
+const FILE_PATH: u16 = 17;
 const STRING: u16 = 56;
 const BLOCK_POSITION: u16 = 64;
 const POSITION: u16 = 65;
 /// The rest of the line.
 const MESSAGE: u16 = 68;
 const BLOCK_STATES: u16 = 84;
+const JSON: u16 = 74;
 /// Every command is sent at this level: the list is filtered per player on the server instead.
 const ANYONE: &str = "any";
 /// The chat box takes 512 characters.
@@ -84,12 +89,15 @@ impl Tables {
         let (value_type, enum_type) = match kind {
             ParamKind::Int => (INT, EnumType::Valid),
             ParamKind::Float => (FLOAT, EnumType::Valid),
+            ParamKind::Value => (VALUE, EnumType::Valid),
             ParamKind::String => (STRING, EnumType::Valid),
             ParamKind::Text => (MESSAGE, EnumType::Valid),
             ParamKind::Target => (TARGET, EnumType::Valid),
             ParamKind::Position => (POSITION, EnumType::Valid),
             ParamKind::BlockPosition => (BLOCK_POSITION, EnumType::Valid),
             ParamKind::BlockStates => (BLOCK_STATES, EnumType::Valid),
+            ParamKind::Json => (JSON, EnumType::Valid),
+            ParamKind::FilePath => (FILE_PATH, EnumType::Valid),
             // An enum parameter carries its enum's index where the others carry a type.
             ParamKind::Enum { name, values } => (self.enumeration(name, values) as u16, EnumType::Enum),
         };
@@ -189,6 +197,8 @@ pub(crate) fn dispatch(world: &mut World) {
         let commands = world.resource::<CommandRegistry>().0.clone();
         let mut backend = Ctx { world };
         let out = commands.run(&mut ShardCtx::new(&mut backend), &Sender::Player(player), permission, event.line());
+        // BDS sends what a command changed on the scoreboard before its answer.
+        crate::scoreboard::send(world);
         let quiet = out.succeeded() && !feedback_on(world, entity);
         if let Some(mut outgoing) = world.get_mut::<Outgoing>(entity).filter(|_| !out.messages().is_empty() && (!quiet || out.answers_always())) {
             outgoing.push(&output_packet(&request.origin, &out));

@@ -15,7 +15,9 @@ pub const EYE_HEIGHT: f32 = 1.62001;
 pub struct StartGameOptions {
     pub entity_id: i64,
     pub runtime_entity_id: u64,
+    /// The player's own, and the world's default.
     pub game_mode: GameMode,
+    pub world_game_mode: GameMode,
     /// Feet position.
     pub position: [f32; 3],
     pub yaw: f32,
@@ -30,6 +32,8 @@ pub struct StartGameOptions {
     pub block_network_ids_are_hashes: bool,
     /// 0 overworld, 1 nether, 2 end.
     pub dimension: i32,
+    /// The world's `IsHardcore`: the client shows hardcore hearts and its death screen.
+    pub hardcore: bool,
 }
 
 pub(crate) static TEMPLATE: LazyLock<StartGame> = LazyLock::new(|| decode(START_GAME));
@@ -43,7 +47,7 @@ pub fn start_game(o: &StartGameOptions) -> StartGame {
         entity_id: o.entity_id,
         runtime_entity_id: o.runtime_entity_id,
         player_gamemode: o.game_mode,
-        world_gamemode: o.game_mode,
+        world_gamemode: o.world_game_mode,
         player_position: Vec3f { x, y: y + EYE_HEIGHT, z },
         rotation: Vec2f { x: o.pitch, z: o.yaw },
         spawn_position: BlockCoordinates { x: sx, y: sy, z: sz },
@@ -55,6 +59,7 @@ pub fn start_game(o: &StartGameOptions) -> StartGame {
         client_side_generation: false,
         block_network_ids_are_hashes: o.block_network_ids_are_hashes,
         dimension: StartGameDimension::from_raw(i64::from(o.dimension)),
+        hardcore: o.hardcore,
         ..TEMPLATE.clone()
     }
 }
@@ -73,6 +78,7 @@ mod tests {
             entity_id: 7,
             runtime_entity_id: 7,
             game_mode: GameMode::Adventure,
+            world_game_mode: GameMode::Adventure,
             position: [0.5, 65.0, 0.5],
             yaw: 90.0,
             pitch: 0.0,
@@ -87,6 +93,7 @@ mod tests {
             },
             block_network_ids_are_hashes: true,
             dimension: 0,
+            hardcore: false,
         }
     }
 

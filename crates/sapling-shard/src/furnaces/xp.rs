@@ -9,7 +9,6 @@ use sapling_api::BlockPos;
 use sapling_world::ItemStack;
 
 use crate::blocks::Dice;
-use crate::components::{InLayer, Position};
 use crate::orbs;
 
 /// The key of what is owed, in hundredths, and the old one in whole points.
@@ -97,13 +96,6 @@ pub(super) fn reward(world: &mut World, item: &ItemStack, count: u8, owed: i32) 
 /// What a hopper taking `item` out leaves owed, in hundredths.
 pub(super) fn owed_for(item: &ItemStack) -> i32 {
     (f32::from(item.count) * per_item(&item.name) * 100.0) as i32
-}
-
-/// Pays `points` to the player as orbs where it stands.
-pub(super) fn pay_player(world: &mut World, player: Entity, points: i32) {
-    let (Some(position), Some(layer)) = (world.get::<Position>(player).copied(), world.get::<InLayer>(player).map(|layer| layer.0)) else { return };
-    let [x, y, z] = position.feet;
-    orbs::spawn(world, layer, [x, y + sapling_data::EYE_HEIGHT, z], points);
 }
 
 /// Pays `points` as orbs at the corner of a broken furnace.

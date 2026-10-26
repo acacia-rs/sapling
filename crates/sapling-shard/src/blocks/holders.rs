@@ -40,7 +40,8 @@ fn held(world: &World, player: Entity) -> Option<ItemStack> {
     world.get::<Inventory>(player).and_then(|inventory| inventory.in_hand().as_ref()).map(|held| held.stack.clone())
 }
 
-fn spend(world: &mut World, player: Entity) {
+/// Takes one of what a player holds, unless it plays in creative.
+pub(crate) fn spend(world: &mut World, player: Entity) {
     if world.get::<Mode>(player).is_none_or(|mode| mode.0 != GameMode::Creative) {
         inventory::change(world, player, |inventory| inventory.take(Place::Main(inventory.selected.into()), 1).is_ok());
     }

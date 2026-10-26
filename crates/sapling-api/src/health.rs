@@ -32,6 +32,8 @@ pub enum DamageCause {
     FallingBlock = 19,
     FlyIntoWall = 21,
     Magma = 22,
+    /// A firework rocket's burst.
+    Fireworks = 23,
     Lightning = 24,
     Freezing = 27,
     Stalactite = 28,
@@ -45,7 +47,7 @@ pub enum DamageCause {
 
 impl DamageCause {
     /// Each cause under the name `/damage` knows it by.
-    const NAMED: [(&'static str, DamageCause); 29] = [
+    const NAMED: [(&'static str, DamageCause); 30] = [
         ("none", Self::Generic),
         ("contact", Self::Contact),
         ("entity_attack", Self::Attack),
@@ -67,6 +69,7 @@ impl DamageCause {
         ("falling_block", Self::FallingBlock),
         ("fly_into_wall", Self::FlyIntoWall),
         ("magma", Self::Magma),
+        ("fireworks", Self::Fireworks),
         ("lightning", Self::Lightning),
         ("freezing", Self::Freezing),
         ("stalactite", Self::Stalactite),
@@ -89,7 +92,7 @@ impl DamageCause {
 
     /// Whether armour stops part of it, as BDS's did (docs/research/player-damage.md, "Armour").
     pub fn is_stopped_by_armour(self) -> bool {
-        matches!(self, Self::Generic | Self::Contact | Self::Attack | Self::Projectile | Self::Fire | Self::Lava | Self::BlockExplosion | Self::EntityExplosion | Self::Anvil | Self::Thorns | Self::FallingBlock | Self::Magma | Self::Lightning | Self::Stalactite | Self::Campfire | Self::SoulCampfire)
+        matches!(self, Self::Generic | Self::Contact | Self::Attack | Self::Projectile | Self::Fire | Self::Lava | Self::BlockExplosion | Self::EntityExplosion | Self::Anvil | Self::Thorns | Self::FallingBlock | Self::Magma | Self::Fireworks | Self::Lightning | Self::Stalactite | Self::Campfire | Self::SoulCampfire)
     }
 
     /// Falls on the head: a helmet takes a quarter of it first.
@@ -123,4 +126,17 @@ pub trait HealthBackend {
     fn health(&self, player: PlayerId) -> Option<f32>;
     fn hurt_player(&mut self, player: PlayerId, amount: f32, cause: DamageCause) -> bool;
     fn kill_player(&mut self, player: PlayerId) -> bool;
+}
+
+#[cfg(test)]
+impl HealthBackend for crate::testing::Fake {
+    fn health(&self, _: PlayerId) -> Option<f32> {
+        None
+    }
+    fn hurt_player(&mut self, _: PlayerId, _: f32, _: DamageCause) -> bool {
+        false
+    }
+    fn kill_player(&mut self, _: PlayerId) -> bool {
+        false
+    }
 }

@@ -10,16 +10,7 @@ use sapling_world::BlockRegistry;
 
 use super::super::{level, send};
 
-pub(super) fn opposite(face: Face) -> Face {
-    match face {
-        Face::Down => Face::Up,
-        Face::Up => Face::Down,
-        Face::North => Face::South,
-        Face::South => Face::North,
-        Face::West => Face::East,
-        Face::East => Face::West,
-    }
-}
+pub(super) use super::super::opposite;
 
 fn property<'a>(registry: &'a BlockRegistry, id: u32, key: &str) -> Option<&'a str> {
     registry.get(id)?.property(key)

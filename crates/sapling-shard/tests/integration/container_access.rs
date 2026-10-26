@@ -46,23 +46,28 @@ fn heard(sent: &[acacia_proto::RawPacket]) -> Vec<String> {
 }
 
 /// research/captures/bds-shut.txt: a chest sounds a tick after it opens and five after it shuts,
-/// an ender chest and a barrel two and six.
+/// an ender chest and a barrel two and six, a shulker box two and eleven.
 #[test]
 fn containers_are_heard_as_late_as_on_bds() {
-    for (block, [open, shut], [opening, shutting]) in
-        [("chest", [1, 5], ["chest.open", "chest.closed"]), ("ender_chest", [2, 6], ["enderchest.open", "enderchest.closed"]), ("barrel", [2, 6], ["block.barrel.open", "block.barrel.close"])]
-    {
+    let containers = [
+        ("chest", [1, 5], ["chest.open", "chest.closed"]),
+        ("trapped_chest", [1, 5], ["chest.open", "chest.closed"]),
+        ("ender_chest", [2, 6], ["enderchest.open", "enderchest.closed"]),
+        ("barrel", [2, 6], ["block.barrel.open", "block.barrel.close"]),
+        ("undyed_shulker_box", [2, 11], ["shulkerbox.open", "shulkerbox.closed"]),
+    ];
+    for (block, [open, shut], [opening, shutting]) in containers {
         let mut h = beside(block);
         h.receive(1, &click(CHEST, 1, None));
         let opened = h.tick(1);
         let window_id = all::<ContainerOpen>(&opened)[0].window_id;
-        let heard_opening: Vec<Vec<String>> = std::iter::once(heard(&opened)).chain((0..7).map(|_| heard(&h.tick(1)))).collect();
+        let heard_opening: Vec<Vec<String>> = std::iter::once(heard(&opened)).chain((0..12).map(|_| heard(&h.tick(1)))).collect();
         assert_eq!(heard_opening.iter().position(|sounds| sounds == &[opening]), Some(open), "{block}: {heard_opening:?}");
         h.receive(1, &ContainerClose { window_id, window_type: acacia_proto::types::WindowType::Container, server: false });
         let answered = h.tick(1);
         let echo = all::<ContainerClose>(&answered);
         assert_eq!(echo.iter().map(|close| (close.window_type, close.server)).collect::<Vec<_>>(), [(acacia_proto::types::WindowType::None, false)], "BDS names no type");
-        let heard_shutting: Vec<Vec<String>> = std::iter::once(heard(&answered)).chain((0..7).map(|_| heard(&h.tick(1)))).collect();
+        let heard_shutting: Vec<Vec<String>> = std::iter::once(heard(&answered)).chain((0..12).map(|_| heard(&h.tick(1)))).collect();
         assert_eq!(heard_shutting.iter().position(|sounds| sounds == &[shutting]), Some(shut), "{block}: {heard_shutting:?}");
     }
 }

@@ -3,7 +3,7 @@
 use sapling_api::command::{Args, CommandSpec, CommandSyntax, Coords, Overload, Parameter, ParameterSpec, ParseError, Selector};
 use sapling_api::{Command, Output, Permission, Sender, ShardCtx};
 
-use super::{display_name, no_target, origin, select, tell_target};
+use super::{display_name, no_target, targets_from, tell_target};
 
 /// `/tp [victim] <destination>`: the first word is a target unless it is a coordinate, and the
 /// destination a place or whoever a target names (research/captures/bds-golem.txt). A place may
@@ -81,7 +81,7 @@ impl CommandSyntax for Teleport {
 
 impl Command for Teleport {
     fn run(self, ctx: &mut ShardCtx<'_>, sender: &Sender, out: &mut Output) {
-        let here = origin(ctx, sender);
+        let here = ctx.origin(sender);
         self.run_from(ctx, sender, out, None, here);
     }
 }
@@ -95,7 +95,7 @@ impl Teleport {
             Destination::Place(coords) => (coords.from(here), None),
             // The nearest of those it names.
             Destination::At(selector) => {
-                let (people, others) = select::targets(ctx, sender, selector, here);
+                let (people, others) = targets_from(ctx, sender, selector, here);
                 let named = people.into_iter().filter_map(|player| Some((ctx.position(player.id)?.feet, player.name)));
                 let all = named.chain(others.into_iter().map(|entity| (entity.feet, display_name(&entity))));
                 let far = |feet: &[f32; 3]| (0..3).map(|axis| (feet[axis] - here[axis]).powi(2)).sum::<f32>();
@@ -110,7 +110,7 @@ impl Teleport {
             Some(Looks::Facing(point)) => Some(facing(to, point.from(here))),
             None => None,
         };
-        let (moved_players, moved) = select::targets(ctx, sender, self.target.as_ref().unwrap_or(&Selector::sender()), here);
+        let (moved_players, moved) = targets_from(ctx, sender, self.target.as_ref().unwrap_or(&Selector::sender()), here);
         let [x, y, z] = to.map(|c| format!("{c:.2}"));
         for player in &moved_players {
             match (dimension, looks) {
@@ -139,7 +139,7 @@ mod tests {
     #[test]
     fn tp_takes_a_place_or_a_target_to_go_to_with_or_without_a_victim() {
         let sender = Sender::Console;
-        let parsed = |line: &str| Teleport::parse(&mut Args::new(line, 0, &sender, &[])).map(|tp| (tp.target, matches!(tp.to, Destination::At(Selector::Pick(sapling_api::command::Pick::Entities, _)))));
+        let parsed = |line: &str| Teleport::parse(&mut Args::new(line, 0, &sender, &[])).map(|tp| (tp.target, matches!(tp.to, Destination::At(Selector::Variable(sapling_api::command::Base::Entities, _)))));
         assert_eq!(parsed("~ ~8 ~").ok(), Some((None, false)));
         assert_eq!(parsed("@s 1 2 3").ok(), Some((Some(Selector::sender()), false)));
         assert_eq!(parsed("@s @e[type=iron_golem,c=1]").ok(), Some((Some(Selector::sender()), true)));

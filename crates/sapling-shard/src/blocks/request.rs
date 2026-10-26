@@ -73,7 +73,7 @@ fn is_used(name: &str) -> bool {
 /// a bed is slept in, a sign is written on, a pot takes or gives a plant, a campfire takes food.
 /// False when it does none of these.
 fn use_block(world: &mut World, player: Entity, layer: Entity, pos: BlockPos, name: &str) -> bool {
-    let uses: [fn(&mut World, Entity, Entity, BlockPos, &str) -> bool; 8] = [
+    let uses: [fn(&mut World, Entity, Entity, BlockPos, &str) -> bool; 9] = [
         crate::containers::open,
         crate::sleep::lie_down,
         signs::edit_by_click,
@@ -82,6 +82,7 @@ fn use_block(world: &mut World, player: Entity, layer: Entity, pos: BlockPos, na
         super::handled::use_by_hand,
         super::jukebox::use_jukebox,
         super::holders::use_holder,
+        crate::creatures::tie_to_fence,
     ];
     uses.iter().any(|used| used(world, player, layer, pos, name))
 }
@@ -95,6 +96,7 @@ pub(crate) fn dispatch(world: &mut World) {
         TransactionTransactionData::ItemUse(click) => Some((from, Input::Click(click))),
         TransactionTransactionData::ItemRelease(_) => {
             crate::vitals::eating::stop(world, from);
+            crate::shots::release(world, from);
             None
         }
         TransactionTransactionData::ItemUseOnEntity(on) => {
@@ -136,7 +138,7 @@ pub(crate) fn dispatch(world: &mut World) {
                     TransactionUseItemActionType::ClickBlock => request.click(pos, Face::from_index(u32::from(click.face)), &click),
                     TransactionUseItemActionType::BreakBlock if broken.insert((entity, pos)) => request.break_block(pos),
                     TransactionUseItemActionType::ClickAir if actions::may_use_item(request.world, entity, request.player) => {
-                        if !crate::eyes::throw(request.world, entity) {
+                        if !crate::riding::boost(request.world, entity) && !crate::shots::use_in_air(request.world, entity) && !crate::eyes::throw(request.world, entity) {
                             crate::vitals::eating::start(request.world, entity);
                         }
                     }
@@ -234,6 +236,7 @@ impl Request<'_> {
             return false;
         }
         updates::settle(self.world, site.layer, [x, y, z]);
+        super::vibrate_at(self.world, site.layer, [x, y, z], super::GameEvent::BlockDestroy, true);
         true
     }
 
@@ -247,9 +250,14 @@ impl Request<'_> {
         let Some(site) = site(self.world, self.entity, pos) else { return self.resync(&[pos, target]) };
         let Some((registry, clicked)) = self.block(&site, pos) else { return };
         let Some(name) = registry.get(clicked).filter(|state| !state.is_air()).map(|state| state.name) else { return self.resync(&[pos, target]) };
-        // The clicked block's own use comes first, unless the player sneaks.
-        let builds = site.sneaking || !is_used(name);
-        let held = self.held_item(site.mode, click).filter(|_| builds);
+        // The clicked block's own use comes first, unless the player sneaks or works copper.
+        let held = self.held_item(site.mode, click);
+        let builds = site.sneaking || !is_used(name) || held.as_deref().is_some_and(|held| super::copper::is_worked_by(name, held));
+        let held = held.filter(|_| builds);
+        let at = [click.click_pos.x, click.click_pos.y, click.click_pos.z];
+        if held.as_ref().is_some_and(|held| crate::vehicles::place(self.world, self.entity, site.layer, pos, face, at, held)) {
+            return;
+        }
         if held.as_ref().is_some_and(|held| self.use_tool(&site, pos, face, held) || self.stack(&site, pos, face, held)) {
             return self.resync(&[pos, target]);
         }

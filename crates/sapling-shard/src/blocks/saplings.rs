@@ -1,8 +1,7 @@
 //! Saplings, mangrove propagules and azaleas growing into trees, by random tick and bone meal, as
 //! BDS's `SaplingBlock`, `MangrovePropaguleBlock` and `AzaleaBlock` do (docs/research/saplings.md).
 //! The tree is worldgen's own feature, placed over the live world (`World::place_feature`).
-// TODO: no light is asked for, where BDS wants a raw brightness of 9 over the sapling; a hanging
-// propagule neither ages nor takes bone meal.
+// TODO: a hanging propagule neither ages nor takes bone meal.
 
 use bevy_ecs::prelude::*;
 use sapling_api::BlockPos;
@@ -37,6 +36,8 @@ const AZALEAS: [&str; 2] = ["azalea", "flowering_azalea"];
 const AGE: &str = "age_bit";
 /// A random tick's chance, as one in this many.
 pub(super) const TICK_ODDS: u32 = 7;
+/// The raw brightness over a sapling a random tick needs to age or grow it; a propagule needs none.
+const GROWING_LIGHT: u8 = 9;
 const BONE_MEAL: f32 = 0.45;
 const BEEHIVE: f32 = 0.05;
 /// A beehive comes only with one of these within two blocks across at the sapling's height.
@@ -131,12 +132,14 @@ fn grow_mangrove(world: &mut World, layer: Entity, pos: BlockPos) -> bool {
 }
 
 /// A random tick that came up for the block at `pos` (one in [`TICK_ODDS`] of those it is
-/// picked for): a sapling ages, or grows if it already had.
+/// picked for): a sapling with light enough over it ages, or grows if it already had.
 pub(super) fn ticked(world: &mut World, layer: Entity, pos: BlockPos) {
+    let [x, y, z] = pos;
     match name_at(world, layer, pos) {
         Some(PROPAGULE) => _ = grow_mangrove(world, layer, pos),
         Some(name) => {
-            if let Some(species) = of(name).filter(|_| !aged(world, layer, pos)) {
+            let lit = crate::light::brightness(world, layer, [x, y + 1, z]).is_some_and(|light| light >= GROWING_LIGHT);
+            if let Some(species) = of(name).filter(|_| lit && !aged(world, layer, pos)) {
                 grow(world, layer, pos, species);
             }
         }

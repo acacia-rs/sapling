@@ -1,6 +1,7 @@
-//! Opening and closing the screens of blocks: containers, crafting tables and stonecutters.
+//! Opening and closing the screens of blocks: containers, crafting tables, stonecutters and the
+//! workstations (workstations.rs).
 
-use acacia_proto::packets::ContainerClose;
+use acacia_proto::packets::{ContainerClose, ContainerOpen};
 use acacia_proto::types::{WindowID, WindowType};
 use bevy_ecs::prelude::*;
 use sapling_api::BlockPos;
@@ -10,6 +11,7 @@ use super::{Chest, content, hold, kind, lid, opened, slots};
 use crate::components::{Outgoing, PacketQueues, Tick};
 use crate::inventory::{self, Held, Inventory};
 use crate::furnaces;
+use crate::workstations::{self, Workstation};
 
 const TABLE: &str = "minecraft:crafting_table";
 const STONECUTTER: &str = "minecraft:stonecutter_block";
@@ -20,6 +22,9 @@ pub(super) enum Screen {
     /// An ender chest's: the slots are the viewer's own.
     Own,
     Station(Station),
+    Workstation(Workstation),
+    /// A chest boat's or minecart's (vehicles/cargo.rs).
+    Carried(Entity),
 }
 
 /// The block whose screen a player has open, and the window its client knows it as. For a
@@ -37,7 +42,21 @@ pub(super) fn still_shows(screen: Screen, block: &str) -> bool {
     match screen {
         Screen::Station(station) => [(TABLE, Station::Table), (STONECUTTER, Station::Stonecutter)].contains(&(block, station)),
         Screen::Container | Screen::Own => kind(block).is_some(),
+        Screen::Workstation(workstation) => workstations::of_block(block).is_some_and(|(shown, _)| shown == workstation),
+        Screen::Carried(_) => false,
     }
+}
+
+/// Opens the screen of the goods `slots` of `vehicle` (its id `id`, its cell `pos`) for a player.
+pub(crate) fn show_carried(world: &mut World, player: Entity, layer: Entity, pos: BlockPos, vehicle: (Entity, u64), window_type: WindowType, slots: &[Option<Held>]) -> bool {
+    close(world, player);
+    let mut query = world.query::<(&mut Inventory, &mut Outgoing)>();
+    let Ok((mut inventory, mut out)) = query.get_mut(world, player) else { return false };
+    let window = inventory.next_window();
+    out.push(&ContainerOpen { runtime_entity_id: vehicle.1 as i64, ..sapling_data::block_screen(WindowID::from_raw(window.into()), window_type, pos) });
+    out.push(&content(window, slots));
+    world.entity_mut(player).insert(Viewing { layer, pos, window, screen: Screen::Carried(vehicle.0) });
+    true
 }
 
 /// Opens the screen of the block `block` at `pos` for a player: a container's with what it
@@ -50,6 +69,11 @@ pub(crate) fn open(world: &mut World, player: Entity, layer: Entity, pos: BlockP
     if let Some((_, station)) = station {
         let window = if station == Station::Table { WindowType::Workbench } else { WindowType::Stonecutter };
         return show_screen(world, player, Viewing { layer, pos, window: 0, screen: Screen::Station(station) }, window, None);
+    }
+    if let Some((workstation, window)) = workstations::of_block(block) {
+        let shown = show_screen(world, player, Viewing { layer, pos, window: 0, screen: Screen::Workstation(workstation) }, window, None);
+        workstations::opened(world, player, workstation);
+        return shown;
     }
     let Some(kind) = kind(block) else { return false };
     close(world, player);
@@ -64,6 +88,9 @@ pub(crate) fn open(world: &mut World, player: Entity, layer: Entity, pos: BlockP
     }) else {
         return false;
     };
+    if is_first && kind.has_lid {
+        crate::blocks::vibrate_at(world, layer, pos, crate::blocks::GameEvent::ContainerOpen, true);
+    }
     let screen = if kind.is_per_player { Screen::Own } else { Screen::Container };
     let viewing = Viewing { layer, pos: lead, window: 0, screen };
     let shown_slots = match screen {
@@ -103,6 +130,15 @@ pub(crate) fn station(world: &World, player: Entity) -> Station {
     }
 }
 
+/// The workstation whose screen a player has open, and where it stands.
+pub(crate) fn workstation(world: &World, player: Entity) -> Option<(Workstation, Entity, BlockPos)> {
+    let viewing = world.get::<Viewing>(player)?;
+    match viewing.screen {
+        Screen::Workstation(workstation) => Some((workstation, viewing.layer, viewing.pos)),
+        _ => None,
+    }
+}
+
 /// Ends a player's look into a block's screen. The last one to leave a container shuts its lid,
 /// and its slots are let go unless it ticks.
 pub(crate) fn close(world: &mut World, player: Entity) {
@@ -116,6 +152,9 @@ pub(crate) fn close(world: &mut World, player: Entity) {
     let halves = chest.halves.clone();
     lid::set(world, viewing.layer, &halves, false);
     slots::release(world, viewing.layer, viewing.pos);
+    if super::kind_at(world, viewing.layer, viewing.pos).is_some_and(|kind| kind.has_lid) {
+        crate::blocks::vibrate_at(world, viewing.layer, viewing.pos, crate::blocks::GameEvent::ContainerClose, true);
+    }
 }
 
 fn stop_viewing(world: &mut World, player: Entity) -> Option<Viewing> {
@@ -150,6 +189,7 @@ pub(crate) fn dispatch_closes(world: &mut World) {
         if world.get::<Viewing>(player).is_some_and(|viewing| i64::from(viewing.window) == window) {
             close(world, player);
         }
+        crate::creatures::stop_trading(world, player, window);
         inventory::clear_grid(world, player);
     }
 }

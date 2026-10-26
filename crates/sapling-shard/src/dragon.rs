@@ -6,7 +6,7 @@
 //! Blocks the fight itself writes reach clients a tick later, as BDS's did.
 
 mod boss_bar;
-mod cloud;
+pub(crate) mod cloud;
 mod count;
 mod crystals;
 mod death;
@@ -33,6 +33,7 @@ use sapling_world::{ChunkPos, DragonFightRecord, END};
 use crate::body::Body;
 use crate::components::{InLayer, Layer, Position, in_world};
 
+pub(crate) use boss_bar::show as show_boss_bar;
 pub(crate) use crystals::{Crystal, KIND as CRYSTAL, burst, from_storage as crystal_from_storage, place as place_crystal};
 pub(crate) use hooks::{blasted, body_harm, describe, dies, hurt, is_dying, part_reach, takes_blast};
 pub(crate) use spawn::{Dragon, KIND as DRAGON, adopt};

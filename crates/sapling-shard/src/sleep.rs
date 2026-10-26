@@ -81,7 +81,7 @@ fn entity_data(id: u64, metadata: Vec<MetadataDictionaryItem>) -> SetEntityData 
 fn lying_data(id: u64, lying: Option<(BlockPos, [f32; 3])>) -> SetEntityData {
     let flags = MetadataDictionaryItem { key: Key::PlayerFlags, r#type: Type::Byte, legacy_type: 0, value: Value::Default(Plain::Byte(if lying.is_some() { SLEEPING_FLAG } else { 0 })) };
     let bed = lying.map(|([x, y, z], _)| MetadataDictionaryItem { key: Key::PlayerBedPosition, r#type: Type::Vec3i, legacy_type: 6, value: Value::Default(Plain::Vec3i(Vec3i { x, y, z })) });
-    let extended = MetadataDictionaryItem { key: Key::FlagsExtended, r#type: Type::Long, legacy_type: 7, value: Value::FlagsExtended(MetadataFlags2(if lying.is_some() { SLEEPING_EXTENDED } else { 0 })) };
+    let extended = MetadataDictionaryItem { key: Key::FlagsExtended, r#type: Type::Long, legacy_type: 7, value: Value::FlagsExtended(MetadataFlags2(sapling_data::player_flags_extended().0 | if lying.is_some() { SLEEPING_EXTENDED } else { 0 })) };
     let entered = lying.map(|(_, [x, y, z])| MetadataDictionaryItem { key: Key::BedEnterPosition, r#type: Type::Vec3f, legacy_type: 8, value: Value::Default(Plain::Vec3f(Vec3f { x, y: y + EYE_HEIGHT, z })) });
     entity_data(id, [flags].into_iter().chain(bed).chain([extended]).chain(entered).collect())
 }

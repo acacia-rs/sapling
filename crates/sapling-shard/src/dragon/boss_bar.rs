@@ -28,13 +28,19 @@ pub(super) fn tick(world: &mut World, layer: Entity) {
         .map(|(_, _, id, body, health)| (id.0 as i64, health.left() / health.max(), body.at))
         .collect();
     for (id, progress, at) in due {
-        let near = |player: &Entity| world.get::<InLayer>(*player).is_some_and(|in_layer| in_layer.0 == layer) && world.get::<Position>(*player).is_some_and(|p| (0..3).map(|axis| (p.feet[axis] - at[axis]).powi(2)).sum::<f32>() <= REACH * REACH);
-        let players: Vec<Entity> = in_world(world).into_iter().filter(near).collect();
-        let bar = BossEvent { target_entity_id: id, r#type: BossEventType::ShowBar, title: TITLE.into(), filtered_title: String::new(), progress, color: BossEventColor::Purple, overlay: BossEventOverlay::Progress };
-        for player in players {
-            if let Some(mut out) = world.get_mut::<Outgoing>(player) {
-                out.push(&bar);
-            }
+        show(world, layer, id, TITLE, BossEventColor::Purple, progress, at, REACH);
+    }
+}
+
+/// Shows the bar of the boss `id` at `at`, `progress` of it full, to the players of `layer` within `reach` of it.
+#[allow(clippy::too_many_arguments)]
+pub(crate) fn show(world: &mut World, layer: Entity, id: i64, title: &str, color: BossEventColor, progress: f32, at: [f32; 3], reach: f32) {
+    let near = |player: &Entity| world.get::<InLayer>(*player).is_some_and(|in_layer| in_layer.0 == layer) && world.get::<Position>(*player).is_some_and(|p| (0..3).map(|axis| (p.feet[axis] - at[axis]).powi(2)).sum::<f32>() <= reach * reach);
+    let players: Vec<Entity> = in_world(world).into_iter().filter(near).collect();
+    let bar = BossEvent { target_entity_id: id, r#type: BossEventType::ShowBar, title: title.into(), filtered_title: String::new(), progress, color, overlay: BossEventOverlay::Progress };
+    for player in players {
+        if let Some(mut out) = world.get_mut::<Outgoing>(player) {
+            out.push(&bar);
         }
     }
 }

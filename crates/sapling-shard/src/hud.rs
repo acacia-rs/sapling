@@ -7,9 +7,10 @@ use acacia_proto::packets::{
     SetScoreEntriesItemContentFakePlayer as FakePlayer, SetScoreEntriesItemContentRemove as Remove, SetScoreEntriesItemEntryType as EntryType, SetTitle, SetTitleType, ToastRequest,
 };
 use bevy_ecs::prelude::*;
-use sapling_api::{BossBar, BossBarColour, Sidebar, Title};
+use sapling_api::{BossBar, BossBarColour, PlayerId, Sidebar, Title, TitleAction, TitleBackend};
 
 use crate::components::{NetId, Outgoing};
+use crate::handlers::Ctx;
 
 /// The one objective a sidebar is shown as.
 const OBJECTIVE: &str = "sapling";
@@ -20,8 +21,11 @@ const UNSET: i32 = -1;
 
 #[derive(Component, Default)]
 pub(crate) struct Hud {
-    sidebar: Option<Sidebar>,
+    /// A sidebar of the player's own, shown over the board's (scoreboard/sync.rs).
+    pub(crate) sidebar: Option<Sidebar>,
     boss_bar: Option<BossBar>,
+    /// The objectives of its world's board the client was shown, to take away when it leaves.
+    pub(crate) board_objectives: Vec<String>,
 }
 
 fn show_objective(title: &str) -> SetDisplayObjective {
@@ -30,12 +34,17 @@ fn show_objective(title: &str) -> SetDisplayObjective {
 
 fn set_line(index: usize, text: &str) -> SetScoreEntriesItem {
     let content = Content::FakePlayer(FakePlayer { objective_name: OBJECTIVE.into(), score: index as i32, custom_name: text.to_owned() });
-    SetScoreEntriesItem { entry_type: EntryType::FakePlayer, entry_type_name: "changefakeplayer".into(), scoreboard_id: index as i64 + 1, content }
+    SetScoreEntriesItem { entry_type: EntryType::FakePlayer, entry_type_name: "changefakeplayer".into(), scoreboard_id: line_id(index), content }
 }
 
 fn remove_line(index: usize) -> SetScoreEntriesItem {
     let content = Content::Remove(Remove { objective_name: Some(OBJECTIVE.into()) });
-    SetScoreEntriesItem { entry_type: EntryType::Remove, entry_type_name: "remove".into(), scoreboard_id: index as i64 + 1, content }
+    SetScoreEntriesItem { entry_type: EntryType::Remove, entry_type_name: "remove".into(), scoreboard_id: line_id(index), content }
+}
+
+/// Below zero, where the world's board, counting from 1, has none: the client keeps one entry per id.
+fn line_id(index: usize) -> i64 {
+    -(index as i64 + 1)
 }
 
 fn push_scores(out: &mut Outgoing, entries: Vec<SetScoreEntriesItem>) {
@@ -105,7 +114,11 @@ pub(crate) fn set_sidebar(world: &mut World, entity: Entity, sidebar: Option<&Si
     let shown = sidebar.map(|s| Sidebar { title: s.title.clone(), lines: s.lines.iter().take(Sidebar::MAX_LINES).cloned().collect() });
     let Ok((mut hud, mut out)) = world.query::<(&mut Hud, &mut Outgoing)>().get_mut(world, entity) else { return };
     send_sidebar(&mut out, hud.sidebar.as_ref(), shown.as_ref());
+    let gone = hud.sidebar.is_some() && shown.is_none();
     hud.sidebar = shown;
+    if gone {
+        crate::scoreboard::show_sidebar(world, entity);
+    }
 }
 
 pub(crate) fn set_boss_bar(world: &mut World, entity: Entity, bar: Option<&BossBar>) {
@@ -128,6 +141,30 @@ pub(crate) fn send_title(out: &mut Outgoing, title: &Title) {
 
 pub(crate) fn send_actionbar(out: &mut Outgoing, text: &str) {
     out.push(&title_packet(SetTitleType::ActionBarMessage, text, [UNSET; 3]));
+}
+
+/// The one SetTitle `/title` and `/titleraw` send for `action` (research/captures/bds-messaging.txt).
+fn action_packet(action: &TitleAction) -> SetTitle {
+    let (r#type, text, times) = match action {
+        TitleAction::Title(text) => (SetTitleType::SetTitle, text.clone(), [UNSET; 3]),
+        TitleAction::Subtitle(text) => (SetTitleType::SetSubtitle, text.clone(), [UNSET; 3]),
+        TitleAction::ActionBar(text) => (SetTitleType::ActionBarMessage, text.clone(), [UNSET; 3]),
+        TitleAction::RawTitle(text) => (SetTitleType::SetTitleJson, text.to_json(), [UNSET; 3]),
+        TitleAction::RawSubtitle(text) => (SetTitleType::SetSubtitleJson, text.to_json(), [UNSET; 3]),
+        TitleAction::RawActionBar(text) => (SetTitleType::ActionBarMessageJson, text.to_json(), [UNSET; 3]),
+        TitleAction::Times { fade_in, stay, fade_out } => (SetTitleType::SetDurations, String::new(), [*fade_in, *stay, *fade_out]),
+        TitleAction::Clear => (SetTitleType::Clear, String::new(), [UNSET; 3]),
+        TitleAction::Reset => (SetTitleType::Reset, String::new(), [UNSET; 3]),
+    };
+    title_packet(r#type, &text, times)
+}
+
+impl TitleBackend for Ctx<'_> {
+    fn title_action(&mut self, player: PlayerId, action: &TitleAction) {
+        if let Some(mut out) = self.out(player) {
+            out.push(&action_packet(action));
+        }
+    }
 }
 
 pub(crate) fn send_toast(out: &mut Outgoing, title: &str, message: &str) {

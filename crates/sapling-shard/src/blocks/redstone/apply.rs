@@ -7,11 +7,13 @@ use sapling_api::BlockPos;
 
 use super::parts::{Opens, Part, SIGNAL, User};
 use super::{Circuits, Due, power_at};
-use crate::blocks::{doors, level, pistons, send, with_property};
+use crate::blocks::{bulbs, doors, level, notes, pistons, queued, send, with_property};
 use crate::components::Tick;
 
 /// Ticks a lamp stays lit once its signal ended (`RedstoneLampBlock`, a queued tick of 4).
 const LAMP_DELAY: u64 = 4;
+/// Ticks from a dispenser's, dropper's or crafter's rising signal to its firing.
+const FIRE_DELAY: u64 = 4;
 const LIT_LAMP: &str = "minecraft:lit_redstone_lamp";
 const LAMP: &str = "minecraft:redstone_lamp";
 
@@ -43,12 +45,13 @@ fn play(world: &mut World, layer: Entity, pos: BlockPos, name: &str) {
 pub(super) fn write(world: &mut World, layer: Entity, pos: BlockPos, due: Due) {
     let Some((id, part)) = at(world, layer, pos) else { return };
     match (part, due) {
-        (Part::Dust { signal }, Due::Signal(new)) if signal != new => {
+        (Part::Dust { signal }, Due::Signal(new, _)) if signal != new => {
             if let Some(id) = with(world, layer, pos, SIGNAL, &new.to_string()) {
                 send::set(world, layer, pos, id);
             }
         }
-        (Part::User(user), Due::Signal(signal)) => use_signal(world, layer, pos, id, user, signal),
+        (Part::User(User::Note), Due::Signal(signal, was)) if signal > 0 && was == 0 => notes::sounded(world, layer, pos),
+        (Part::User(user), Due::Signal(signal, _)) => use_signal(world, layer, pos, id, user, signal),
         (Part::Torch { lit, .. } | Part::Repeater { lit, .. } | Part::Comparator { lit, .. }, Due::Lit { lit: now, fizz }) if lit != now => {
             let names = match part {
                 Part::Torch { .. } => ["minecraft:unlit_redstone_torch", "minecraft:redstone_torch"],
@@ -84,8 +87,9 @@ fn use_signal(world: &mut World, layer: Entity, pos: BlockPos, id: u32, user: Us
             }
         }
         User::Lamp { lit: false } => {}
-        User::Hopper => {
-            if let Some(id) = with(world, layer, pos, "toggle_bit", if signal > 0 { "1" } else { "0" }) {
+        User::Hopper | User::Rail => {
+            let key = if user == User::Hopper { "toggle_bit" } else { "rail_data_bit" };
+            if let Some(id) = with(world, layer, pos, key, if signal > 0 { "1" } else { "0" }) {
                 send::set(world, layer, pos, id);
             }
         }
@@ -96,6 +100,17 @@ fn use_signal(world: &mut World, layer: Entity, pos: BlockPos, id: u32, user: Us
         }
         User::Piston { .. } => pistons::power(world, layer, pos, signal > 0),
         User::Opens(opens) => open(world, layer, pos, opens, signal),
+        User::Note => {}
+        User::Fires { triggered } if triggered != (signal > 0) => {
+            if let Some(id) = with(world, layer, pos, "triggered_bit", if signal > 0 { "1" } else { "0" }) {
+                send::set(world, layer, pos, id);
+            }
+            if signal > 0 {
+                queued::after(world, layer, pos, FIRE_DELAY, queued::Job::Fire);
+            }
+        }
+        User::Fires { .. } => {}
+        User::Bulb { powered } => bulbs::powered(world, layer, pos, powered, signal > 0),
     }
 }
 

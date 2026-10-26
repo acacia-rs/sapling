@@ -3,6 +3,8 @@
 //! borrowed handle; the ECS behind a shard never shows (docs/DESIGN.md "Plugin API").
 
 mod block;
+mod block_entity;
+mod border;
 mod chat;
 mod combat;
 pub mod command;
@@ -13,24 +15,42 @@ mod entity;
 mod experience;
 mod event;
 pub mod form;
+mod generation;
 mod health;
 mod hud;
 mod item;
+mod light;
 mod listen;
 mod movement;
 mod player;
 mod plugin;
+mod riding;
+mod scoreboard;
+mod server;
+mod sound;
+mod spawns;
+mod structure;
+mod tags;
 #[cfg(test)]
 mod testing;
 mod weather;
 #[cfg(test)]
 mod tests;
+mod ticking;
 mod world;
 mod world_event;
 
 pub use block::{Block, BlockPos, BreakEvent, Face, InteractEvent, PlaceEvent};
+pub use block_entity::{BlockEntityBackend, BlockEntityData};
+pub use border::{BorderBackend, WorldBorder};
+pub use generation::{GenerationBackend, PlaceError};
+pub use structure::{Mirror, Rotation, StructureBackend, StructureError, StructureLoad};
+pub use ticking::{MOST_TICKING_AREAS, TickingArea, TickingBackend};
+pub use server::{ScriptEvent, ServerBackend};
+pub use spawns::SpawnBackend;
 pub use chat::ChatBackend;
 pub use movement::{MovementBackend, MovementPolicy};
+pub use riding::{Mount, RidingBackend};
 pub use combat::{Attacker, DamageEvent, DeathEvent, DeathMessage, RespawnEvent};
 pub use command::{Command, Commands, Output, Sender};
 pub use ctx::{Backend, FormCallback, ShardCtx, State};
@@ -38,6 +58,7 @@ pub use dragon::{DragonFight, DragonKilledEvent, DragonRespawnEvent};
 pub use effect::{Effect, EffectBackend};
 pub use experience::ExperienceBackend;
 pub use weather::{Weather, WeatherBackend};
+pub use light::{Light, LightBackend};
 pub use entity::{EntityBackend, EntityId, EntityInfo};
 pub use world::{RuleValue, WorldBackend};
 pub use world_event::{BlockGrowEvent, BlockSpreadEvent, EntitySpawnEvent, ExplosionEvent, SpawnReason};
@@ -49,9 +70,12 @@ pub use listen::{Event, Listen, ListenerChange, ListenerId, Listeners, Scope};
 pub use plugin::{Plugin, PluginBuilder, Scoped};
 pub use health::{DamageCause, HealthBackend};
 pub use form::{Custom, Form, FormResponse, Menu, Modal};
-pub use hud::{BossBar, BossBarColour, Sidebar, Title};
-pub use item::{DropEvent, Item, Slot};
+pub use hud::{BossBar, BossBarColour, Sidebar, Title, TitleAction, TitleBackend};
+pub use sound::{Sound, SoundBackend};
+pub use item::{DropEvent, Item, ItemLock, Slot};
 pub use player::{Difficulty, GameMode, Permission, Player, PlayerId, Position};
+pub use tags::{TagBackend, Tagged};
+pub use scoreboard::{Display, DisplaySlot, Objective, ScoreHolder, ScoreOperation, ScoreboardBackend, SortOrder};
 pub use sapling_macros::{Command, CommandEnum, Form};
 
 /// The game's events, one method each, all optional: a plugin as one value. Each method is filed

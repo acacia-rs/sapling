@@ -19,6 +19,7 @@ use sapling_api::GameMode;
 
 use crate::blocks::BlockInputs;
 use crate::components::{InLayer, Layer, Mode, NetId, Outgoing, PacketQueues, Position, Settings, Stage, Tick};
+use crate::riding::{Reins, Riding};
 use crate::simulation::{self, Own, Ruling, Simulated};
 use crate::visibility::ToViewers;
 use crate::vitals::Vitals;
@@ -179,7 +180,8 @@ impl Moves {
     }
 }
 
-type Mover<'a> = (&'a NetId, &'a Stage, &'a mut Position, &'a mut Motion, &'a mut Outgoing, &'a InLayer, &'a Mode, Option<&'a mut Simulated>, Option<&'a Vitals>, Option<&'a Own>);
+type Mover<'a> =
+    (&'a NetId, &'a Stage, &'a mut Position, &'a mut Motion, &'a mut Outgoing, &'a InLayer, &'a Mode, Option<&'a mut Simulated>, Option<&'a Vitals>, Option<&'a Own>, Option<&'a mut Reins>);
 
 /// Where each client says its player is. Trusted, except that non-finite values are dropped and
 /// a step no player makes in a tick is answered with a teleport back. Moves are queued for the
@@ -194,7 +196,7 @@ pub(crate) fn player_input(
     mut players: Query<Mover>,
 ) {
     for (entity, mut input) in packets.take::<PlayerAuthInput>() {
-        let Ok((id, stage, mut position, mut motion, mut out, in_layer, mode, simulated, vitals, own)) = players.get_mut(entity) else { continue };
+        let Ok((id, stage, mut position, mut motion, mut out, in_layer, mode, simulated, vitals, own, reins)) = players.get_mut(entity) else { continue };
         if input.block_action.is_some() || input.transaction.is_some() || input.item_stack_request.is_some() {
             tracing::debug!(tick = input.tick, actions = ?input.block_action, transaction = ?input.transaction, request = ?input.item_stack_request, "input with an action");
         }
@@ -216,6 +218,13 @@ pub(crate) fn player_input(
                 }
                 continue;
             }
+        }
+        // A rider's place is its seat's (riding/carry.rs); its input steers (riding/drive.rs).
+        if let Some(mut reins) = reins {
+            reins.take(&input);
+            motion.input_tick = input.tick;
+            (position.yaw, position.pitch, position.head_yaw) = (input.yaw, input.pitch, input.head_yaw);
+            continue;
         }
         let feet = [reported[0], reported[1] - EYE_HEIGHT, reported[2]];
         let step: f32 = feet.iter().zip(position.feet).map(|(to, from)| (to - from).powi(2)).sum();
@@ -258,8 +267,8 @@ pub(crate) fn player_input(
 }
 
 /// Queues, once per player that moved or changed pose, what its viewers need to know.
-pub(crate) fn announce(mut to_viewers: ResMut<ToViewers>, mut players: Query<(Entity, &NetId, &Stage, &Position, &mut Motion)>) {
-    for (entity, id, stage, position, mut motion) in &mut players {
+pub(crate) fn announce(mut to_viewers: ResMut<ToViewers>, mut players: Query<(Entity, &NetId, &Stage, &Position, &mut Motion, Option<&Riding>)>) {
+    for (entity, id, stage, position, mut motion, riding) in &mut players {
         if *stage != Stage::InWorld {
             continue;
         }
@@ -267,7 +276,7 @@ pub(crate) fn announce(mut to_viewers: ResMut<ToViewers>, mut players: Query<(En
         // A new viewer learns the current state from AddPlayer; only changes are announced.
         let Some(told) = motion.told.replace(now) else { continue };
         if told.0 != now.0 {
-            to_viewers.push(entity, &move_player(id.0, position, None, tick));
+            to_viewers.push(entity, &MovePlayer { ridden_runtime_id: riding.map_or(0, |riding| riding.id as u32), ..move_player(id.0, position, None, tick) });
         }
         if told.1 != now.1 {
             to_viewers.push(entity, &pose_packet(id.0, now.1, tick));

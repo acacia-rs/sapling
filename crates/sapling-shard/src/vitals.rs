@@ -9,8 +9,8 @@ mod death;
 pub(crate) mod eating;
 pub(crate) mod effects;
 pub(crate) use eating::bite;
-pub(crate) use effects::{afflict, hits_for, kept as kept_effects, restored as restored_effects};
-pub(crate) use struck::{bitten, blasted, fanged, is_fireproof, punched, pushed, rammed, set_alight, shot, winded};
+pub(crate) use effects::{afflict, give as give_effect, hits_for, kept as kept_effects, restored as restored_effects};
+pub(crate) use struck::{bitten, blasted, electrocuted, fanged, fireworked, is_fireproof, knocked, pearled, punched, pushed, rammed, set_alight, shot, thorned, winded};
 mod hunger;
 mod kept;
 mod omens;
@@ -157,17 +157,22 @@ fn settle(world: &mut World, player: Entity, cause: Cause) {
     }
 }
 
-/// Has the player's health know the armour it wears now and what its effects ward off: a
-/// level of resistance takes a fifth off every hit (research/captures/bds-more.txt).
+/// Has the player's health know the armour it wears now, what its enchantments and its effects
+/// ward off, and its movement the boots' Depth Strider: a level of resistance takes a fifth off
+/// every hit (research/captures/bds-more.txt).
 fn dress(world: &mut World, player: Entity) {
     let armour = world.get::<crate::inventory::Inventory>(player).map_or([0.0; 2], |inventory| inventory.armour());
+    let warding = crate::enchants::warding(world, player);
+    if let Some(mut simulated) = world.get_mut::<crate::simulation::Simulated>(player) {
+        simulated.equip(warding.depth_strider);
+    }
     let resisted = effects::level(world, player, sapling_api::Effect::Resistance).map_or(0.0, |level| RESISTS * (f32::from(level) + 1.0));
     let fireproof = effects::level(world, player, sapling_api::Effect::FireResistance).is_some();
     // A level of jump boost forgives a block of a fall, slow falling all of it (bds-fx.txt).
     let floats = effects::level(world, player, sapling_api::Effect::SlowFalling).is_some();
     let springs = if floats { f32::INFINITY } else { effects::level(world, player, sapling_api::Effect::JumpBoost).map_or(0.0, |level| f32::from(level) + 1.0) };
     if let Some(mut vitals) = world.get_mut::<Vitals>(player) {
-        vitals.health.wear(armour);
+        vitals.health.wear(armour, warding);
         vitals.health.ward((1.0 - resisted).max(0.0), fireproof);
         vitals.health.spring(springs);
     }
@@ -195,7 +200,8 @@ fn ask(world: &mut World, player: Entity, amount: f32, cause: Cause) -> Option<f
 }
 
 /// Takes `amount` from a player's health as a hit of `cause`, less what its armour stops of a
-/// cause it stops; false where it took nothing. Plugins were asked ([`hurt`]).
+/// cause it stops and what its enchantments ward off; false where it took nothing. Plugins were
+/// asked ([`hurt`]).
 fn land(world: &mut World, player: Entity, amount: f32, cause: Cause) -> bool {
     dress(world, player);
     let fiery = matches!(cause, Cause::Fire | Cause::FireTick | Cause::Lava | Cause::Magma);
@@ -207,6 +213,7 @@ fn land(world: &mut World, player: Entity, amount: f32, cause: Cause) -> bool {
     let amount = if helmeted { amount * HELMETED } else { amount };
     let lands = |mut vitals: Mut<Vitals>| {
         let amount = if cause.is_stopped_by_armour() { vitals.health.shielded(amount) } else { amount };
+        let amount = vitals.health.warded(amount, cause);
         vitals.health.hurt(amount)
     };
     if !is_mortal(world, player) || !world.get_mut::<Vitals>(player).is_some_and(lands) {

@@ -2,7 +2,7 @@
 //! (docs/research/player-damage.md, "Death").
 // TODO: only the words of fall, fire, lava, `/kill` and a zombie were seen on BDS, the rest are
 // the game's keys from memory; the body's box is not shrunk and `PlayerLastDeathPosition` is not told; every death
-// rises by its bed or at the world's spawn (no anchor); `doImmediateRespawn` is not read.
+// rises at its spawn point (a bed or `/spawnpoint`) or the world's spawn (no anchor); `doImmediateRespawn` is not read.
 
 use acacia_proto::packets::{DeathInfo, EntityEvent, EntityEventEventId, LevelSoundEvent, Respawn, SetHealth};
 use acacia_proto::types::Vec3f;
@@ -61,6 +61,7 @@ fn words(cause: Cause) -> &'static str {
         Cause::FlyIntoWall => "death.attack.flyIntoWall",
         Cause::Magma => "death.attack.magma",
         Cause::Lightning => "death.attack.lightningBolt",
+        Cause::Fireworks => "death.attack.fireworks",
         Cause::Freezing => "death.attack.freeze",
         Cause::Stalactite => "death.attack.stalactite",
         Cause::Stalagmite => "death.attack.stalagmite",
@@ -178,6 +179,9 @@ pub(super) fn rise(world: &mut World) {
         *world.get_mut::<Vitals>(player).expect("read above") = Vitals::default();
         world.get_mut::<Outgoing>(player).expect("players have an outbox").push(&Respawn { position: eyes(spawn), state: READY, runtime_entity_id: 0 });
         movement::teleport_onto_ground(world, player, spawn);
+        if crate::border::is_hardcore(world, layer) {
+            crate::join::set_game_mode(world, player, sapling_api::GameMode::Spectator);
+        }
         tell(world, player, &EntityEvent { runtime_entity_id: id.0, event_id: EntityEventEventId::Respawn, data: 0, fire_at_position: None });
         tell(world, player, &sapling_data::mob_health_update(id.0, MAX, MAX));
         let tick = world.resource::<Tick>().0;

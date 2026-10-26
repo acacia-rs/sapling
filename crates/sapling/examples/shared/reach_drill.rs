@@ -38,14 +38,15 @@ pub fn trapdoors() -> Vec<String> {
     lines
 }
 
-/// The place-faces drill: stone put by hand on the top, a side and the bottom of a block, to see
-/// which cells the server shows its placer again (NEXT.md 3).
+/// The place-faces drill: stone put by hand on the top, a side and the bottom of a block, then on
+/// a top in survival, to see which cells and windows the server shows its placer again, and when.
 pub fn place_faces() -> Vec<String> {
     let mut lines: Vec<String> = ["kill @e[type=!player]", "fill ~-2 ~-1 ~-2 ~4 ~-1 ~2 stone", "fill ~-2 ~ ~-2 ~4 ~4 ~2 air", "gamemode creative @s", "replaceitem entity @s slot.weapon.mainhand 0 stone", ""].map(String::from).into();
     for (anchor, click) in [("~1 ~-1 ~", "1 -1 0 up"), ("~2 ~ ~", "2 0 0 west"), ("~1 ~ ~-1", "1 0 -1 south"), ("~1 ~2 ~", "1 2 0 down")] {
         lines.extend([format!("setblock {anchor} gold_block"), String::new(), format!("!place {click}"), String::new(), String::new(), "fill ~1 ~ ~-1 ~2 ~2 ~1 air".into(), "fill ~1 ~-1 ~ ~1 ~-1 ~ stone".into(), String::new()]);
     }
-    lines.extend(["gamemode creative @s", ""].map(String::from));
+    lines.extend(["gamemode survival @s", "replaceitem entity @s slot.weapon.mainhand 0 stone 4", "setblock ~1 ~-1 ~ gold_block", "", "!place 1 -1 0 up", "", ""].map(String::from));
+    lines.extend(["fill ~1 ~ ~-1 ~2 ~2 ~1 air", "fill ~1 ~-1 ~ ~1 ~-1 ~ stone", "gamemode creative @s", ""].map(String::from));
     lines
 }
 
@@ -70,7 +71,7 @@ pub fn held_use() -> Vec<String> {
 /// again (NEXT.md 3).
 pub fn shut() -> Vec<String> {
     let mut lines: Vec<String> = ["kill @e[type=!player]", "fill ~-2 ~-1 ~-2 ~4 ~-1 ~2 stone", "fill ~-2 ~ ~-2 ~4 ~3 ~2 air", "gamemode creative @s", ""].map(String::from).into();
-    for block in ["chest", "barrel", "ender_chest"] {
+    for block in ["chest", "barrel", "ender_chest", "undyed_shulker_box", "trapped_chest"] {
         lines.extend([format!("setblock ~1 ~ ~ {block}"), String::new(), "!click 1 0 0".into()]);
         lines.extend(std::iter::repeat_n(String::new(), 6));
         lines.extend(["!close".into(), String::new(), String::new(), "setblock ~1 ~ ~ air".into(), String::new()]);

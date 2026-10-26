@@ -62,7 +62,7 @@ pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity, strolls: O
         let to = [body.at[0] + (dice.fraction() * 2.0 - 1.0) * far, body.at[2] + (dice.fraction() * 2.0 - 1.0) * far];
         let head = |[x, z]: [f32; 2]| [x, body.at[1] + body.size[1], z].map(|c| c.floor() as i32);
         let into_sun = shuns_sun
-            && world.get::<Layer>(layer).is_some_and(|layer| !super::harm::is_sunlit(&layer.world, head([body.at[0], body.at[2]])) && super::harm::is_sunlit(&layer.world, head(to)));
+            && !super::harm::sun_on(world, layer, head([body.at[0], body.at[2]])) && super::harm::sun_on(world, layer, head(to));
         (!into_sun && is_floor(world, layer, &body, to)).then_some((to, now + PATIENCE))
     });
     let ahead = goal.map(|(to, _)| {

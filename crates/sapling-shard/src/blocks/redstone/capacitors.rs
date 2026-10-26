@@ -111,6 +111,7 @@ pub(super) fn state_signal(name: &str, properties: &str) -> Option<u8> {
         "respawn_anchor" => Some((4 * value("respawn_anchor_charge")?).saturating_sub(1)),
         "beehive" | "bee_nest" => value("honey_level"),
         "end_portal_frame" => Some(15 * value("end_portal_eye_bit")?.min(1)),
+        bulb if bulb.ends_with("copper_bulb") => Some(15 * value("lit")?.min(1)),
         _ => None,
     }
 }

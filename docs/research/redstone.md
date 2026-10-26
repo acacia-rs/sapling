@@ -423,8 +423,10 @@ gives every one of these but 23000, where it gives 2 and no change from 0 was se
 set by `/setblock` in the drill gave 0 and did not change in it; one put down by hand read at
 once (`placing`).
 
-Sapling reads each detector written while it runs every 20 ticks by that reckoning, 0 under a
-roof, and a click turns one inside out (`blocks/daylight.rs`).
+Sapling reads each detector written while it runs every 20 ticks by that reckoning, with the sky
+light in the detector's cell for the sky's 15 (so 14 under one block, 0 shut in), and a click
+turns one inside out (`blocks/daylight.rs`). An inverted detector gives 15 less the reading; the
+Java game's gives 15 less the light without the sun's angle, and BDS's was not watched.
 
 ## Pistons and entities
 
@@ -452,3 +454,11 @@ time by `CorrectPlayerMovePrediction` (its eyes' place, a delta of -0.0784 down,
 When the arm under it drew back the player stood a block lower than it began, in the piston's
 row, so the two cases after that (against a wall, a sticky piston) showed nothing. Sapling
 pushes players so (`pistons/shove.rs`, `movement::push`).
+
+## More parts (2026-10-25, decompiled, not drilled)
+
+Dispensers, droppers and crafters: dispensers.md. Note blocks, copper bulbs, targets, tripwire,
+lightning rods, jukeboxes: redstone-blocks.md. Sculk sensors and shriekers: sculk.md. Copper:
+copper.md. In sapling a producer whose block does not store its strength (target, sculk sensor,
+jukebox) is held by `redstone::emit`; users firing on a rising edge keep the edge in their state
+(`triggered_bit`, `powered_bit`) or, for a note block, in the evaluation's old and new signal.

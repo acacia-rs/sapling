@@ -2,8 +2,13 @@ use std::net::IpAddr;
 use std::time::Duration;
 
 use acacia_nethernet::lan::{DISCOVERY_PORT, ServerData};
+use acacia_proto::packets::NetworkSettingsCompressionAlgorithm;
 use acacia_proto::{GAME_VERSION, PROTOCOL_VERSION};
 use p384::ecdsa::SigningKey;
+
+use crate::access::AccessLists;
+use crate::admission::Admission;
+use crate::limits::PacketLimits;
 
 #[derive(Debug, Clone)]
 pub struct NetConfig {
@@ -11,7 +16,7 @@ pub struct NetConfig {
     pub online_mode: bool,
     /// From the connection to PlayStatus(LoginSuccess); slower clients are dropped.
     pub login_timeout: Duration,
-    pub max_players: usize,
+    pub max_players: crate::PlayerLimit,
     pub motd: Motd,
     /// A player whose unsent backlog grows past this is kicked rather than buffered without end.
     pub max_queued_bytes: usize,
@@ -21,6 +26,16 @@ pub struct NetConfig {
     pub drained_bytes: usize,
     /// NetherNet beside RakNet. Off by default: a vanilla client that finds it stops using RakNet.
     pub nethernet: Option<NetherNet>,
+    /// Limits on each address's connections.
+    pub admission: Admission,
+    /// Bans and the allowlist each login is checked against; none by default.
+    pub access: Option<AccessLists>,
+    /// How batches are compressed: BDS's `compression-algorithm` (default zlib).
+    pub compression: Compression,
+    /// Batches at least this long are compressed: `compression-threshold` (default 1, as BDS's).
+    pub compression_threshold: u16,
+    /// What one player's client may send a second.
+    pub packet_limits: PacketLimits,
 }
 
 impl Default for NetConfig {
@@ -28,12 +43,35 @@ impl Default for NetConfig {
         Self {
             online_mode: true,
             login_timeout: Duration::from_secs(10),
-            max_players: 100,
+            max_players: crate::PlayerLimit::default(),
             motd: Motd::default(),
             max_queued_bytes: 16 * 1024 * 1024,
             congested_bytes: 1024 * 1024,
             drained_bytes: 256 * 1024,
             nethernet: None,
+            admission: Admission::default(),
+            access: None,
+            compression: Compression::default(),
+            compression_threshold: 1,
+            packet_limits: PacketLimits::default(),
+        }
+    }
+}
+
+/// A batch compression algorithm, under the names of `compression-algorithm`'s values.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum Compression {
+    /// Raw deflate, which BDS calls zlib.
+    #[default]
+    Zlib,
+    Snappy,
+}
+
+impl Compression {
+    pub(crate) fn settings(self) -> NetworkSettingsCompressionAlgorithm {
+        match self {
+            Self::Zlib => NetworkSettingsCompressionAlgorithm::Deflate,
+            Self::Snappy => NetworkSettingsCompressionAlgorithm::Snappy,
         }
     }
 }

@@ -27,3 +27,16 @@ pub trait ExperienceBackend {
     fn give_experience(&mut self, player: PlayerId, points: u32) -> bool;
     fn add_levels(&mut self, player: PlayerId, levels: i32) -> bool;
 }
+
+#[cfg(test)]
+impl ExperienceBackend for crate::testing::Fake {
+    fn experience(&self, _: PlayerId) -> Option<(i32, f32)> {
+        None
+    }
+    fn give_experience(&mut self, _: PlayerId, _: u32) -> bool {
+        false
+    }
+    fn add_levels(&mut self, _: PlayerId, _: i32) -> bool {
+        false
+    }
+}

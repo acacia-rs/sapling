@@ -3,11 +3,11 @@
 use acacia_proto::types::ItemV4;
 use bevy_ecs::prelude::*;
 use sapling_api::{Block, BlockPos, Face, GameMode, PlaceEvent};
-use sapling_world::BlockRegistry;
+use sapling_world::{BlockRegistry, ItemStack};
 
 use super::facing::{self, Click};
 use super::{Request, Site, doors, entities, falling, items, level, rails, send, signs, updates};
-use crate::components::{InLayer, Position, Stage};
+use crate::components::{InLayer, Outgoing, Position, Stage};
 use crate::inventory::{self, Inventory, Place};
 
 pub(super) const PLAYER_HALF_WIDTH: f32 = 0.3;
@@ -58,27 +58,47 @@ fn is_occupied(world: &mut World, layer: Entity, pos: BlockPos) -> bool {
     players.iter(world).any(|(in_layer, stage, position)| in_layer.0 == layer && *stage == Stage::InWorld && overlaps(position.feet))
 }
 
+/// Takes one off the hand's stack, which BDS then held under a new id (bds-place-faces.txt).
+fn spend_one(inventory: &mut Inventory) {
+    let rest = inventory.in_hand().as_ref().map(|held| ItemStack { count: held.stack.count - 1, ..held.stack.clone() });
+    inventory.put(Place::Main(inventory.selected.into()), rest);
+}
+
 impl Request<'_> {
     /// Builds `id`, turned as `click` asks, against the block at `against`, or into its cell
     /// when that block gives way. `from_hand`: the block came out of the server's copy of the
     /// hand, which a survival place then takes one from; any other place needs creative mode or
     /// a handler's word. The client is shown its windows afterwards, as from BDS: it counted one
-    /// off its stack whether the place happened or not, in creative mode too.
+    /// off its stack whether the place happened or not, in creative mode too. What the place
+    /// changed reaches the placer after that answer (research/captures/bds-place-faces.txt).
     pub(super) fn place(&mut self, site: &Site, against: BlockPos, click: &Click, id: u32, from_hand: bool) {
+        let mark = self.world.get::<Outgoing>(self.entity).map_or(0, |out| out.0.len());
         let placed = self.try_place(site, against, click, id, from_hand);
-        if site.mode != GameMode::Creative {
-            inventory::change(self.world, self.entity, |inventory| {
-                if placed && from_hand {
-                    let _ = inventory.take(Place::Main(inventory.selected.into()), 1);
-                }
-            });
+        let changed = placed.and_then(|_| self.world.get_mut::<Outgoing>(self.entity)).map(|mut out| {
+            let from = mark.min(out.0.len());
+            out.0.split_off(from)
+        });
+        if site.mode == GameMode::Creative {
+            // BDS showed its placer the clicked and the placed cell, each with those above and below.
+            let column = |cell: BlockPos| [cell, Face::Up.neighbour(cell), Face::Down.neighbour(cell)];
+            inventory::show_windows(self.world, self.entity, false);
+            placed.inspect(|&pos| send::show_to(self.world, self.entity, &[column(against), column(pos)].concat()));
+            inventory::show_windows(self.world, self.entity, true);
+            inventory::show_hand(self.world, self.entity);
         } else {
-            inventory::show_after_creative_place(self.world, self.entity);
+            if let Some(mut inventory) = self.world.get_mut::<Inventory>(self.entity).filter(|_| placed.is_some() && from_hand) {
+                spend_one(&mut inventory);
+            }
+            inventory::show_windows(self.world, self.entity, false);
+        }
+        if let Some(mut out) = self.world.get_mut::<Outgoing>(self.entity) {
+            out.0.extend(changed.into_iter().flatten());
         }
     }
 
-    fn try_place(&mut self, site: &Site, against: BlockPos, click: &Click, id: u32, from_hand: bool) -> bool {
-        let Some(level) = level(self.world, site.layer) else { return false };
+    /// Puts the block into the world; the cell it went into, or none for a refusal.
+    fn try_place(&mut self, site: &Site, against: BlockPos, click: &Click, id: u32, from_hand: bool) -> Option<BlockPos> {
+        let level = level(self.world, site.layer)?;
         let registry = level.registry();
         let into_clicked = gives_way(registry, level.block(against[0], against[1], against[2]));
         let pos = if into_clicked { against } else { click.face.neighbour(against) };
@@ -100,19 +120,16 @@ impl Request<'_> {
         let is_held_up = !updates::lacks_support(self.world, site.layer, pos, id) && !on_side && !off_floor;
         if !is_free || !has_headroom || !is_held_up || is_solid && is_occupied(self.world, site.layer, pos) {
             self.resync(&[against, pos]);
-            return false;
+            return None;
         }
         let allowed = site.mode == GameMode::Creative || site.mode == GameMode::Survival && from_hand;
-        let event = crate::plugins::offer(self.world,PlaceEvent::new(self.player.clone(), pos, against, click.face, block, allowed));
+        let event = crate::plugins::offer(self.world, PlaceEvent::new(self.player.clone(), pos, against, click.face, block, allowed));
         let placed = !event.is_cancelled() && self.put(site, pos, click, &event.block);
         if !placed {
             self.resync(&[against, pos]);
-            return false;
+            return None;
         }
-        // BDS showed its placer the clicked and the placed cell, each with those above and below.
-        let column = |cell: BlockPos| [cell, Face::Up.neighbour(cell), Face::Down.neighbour(cell)];
-        send::show_to(self.world, self.entity, &[column(against), column(pos)].concat());
-        true
+        Some(pos)
     }
 
     /// Puts what a place event ended with into the world; false for a block the game lacks.
@@ -124,6 +141,7 @@ impl Request<'_> {
         let placed = send::set(self.world, site.layer, pos, falling::as_put(self.world, site.layer, pos, id));
         if placed {
             send::to_viewers(self.world, site.layer, pos, &[sound]);
+            super::vibrate_at(self.world, site.layer, pos, super::GameEvent::BlockPlace, true);
             let second = doors::place_second_cell(self.world, site.layer, pos, whole);
             // A bed's colour and a banner's are the item's, which the block cannot say.
             let damage = self.world.get::<Inventory>(self.entity).and_then(|inventory| inventory.in_hand().as_ref()).map_or(0, |held| held.stack.damage);
@@ -131,6 +149,9 @@ impl Request<'_> {
             for cell in [Some(pos), second].into_iter().flatten() {
                 if let Some(entity) = entities::placed(&block.name, cell, &placing) {
                     send::keep_entity(self.world, site.layer, cell, &entity);
+                    if crate::spawners::is_spawner(&entity) {
+                        crate::spawners::watch(self.world, site.layer, cell);
+                    }
                 }
             }
             signs::open_editor(self.world, self.entity, site.layer, pos, &block.name);
@@ -139,6 +160,7 @@ impl Request<'_> {
             crate::containers::furnish(self.world, site.layer, pos, &block.name, tag.as_ref(), click.face);
             super::pistons::furnish(self.world, site.layer, pos);
             updates::settle(self.world, site.layer, pos);
+            super::summoning::placed(self.world, site.layer, pos, &block.name);
         }
         placed
     }

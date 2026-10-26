@@ -132,6 +132,11 @@ impl LevelDat {
     pub fn difficulty(&self) -> Option<i32> {
         self.int("Difficulty")
     }
+
+    /// Whether the world is hardcore (`IsHardcore`, a byte; off when absent).
+    pub fn hardcore(&self) -> bool {
+        matches!(self.root.get("IsHardcore"), Some(Value::Byte(on)) if *on != 0)
+    }
 }
 
 #[cfg(test)]

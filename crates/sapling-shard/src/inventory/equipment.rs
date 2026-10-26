@@ -3,11 +3,11 @@
 //! stored mob's items with (`bds_entity_probe`); a player's hand names its hotbar slot.
 
 use acacia_proto::packets::{Interact, InteractActionId, MobEquipment};
-use acacia_proto::types::{ItemV4, WindowID};
+use acacia_proto::types::{ItemV4, WindowID, WindowIDVarint};
 use bevy_ecs::prelude::*;
 use bytes::Bytes;
 
-use super::{HOTBAR, Held, Inventory, stack, wire};
+use super::{HOTBAR, Held, Inventory, UI, stack, wire};
 use crate::components::{NetId, Outgoing, PacketQueues, Position, Stage};
 use crate::visibility::ToViewers;
 
@@ -22,6 +22,27 @@ impl Inventory {
         self.window = self.window % LAST_WINDOW + 1;
         self.window
     }
+
+    /// One of the player's own windows as its client is sent it.
+    fn window(&self, window: WindowIDVarint) -> Vec<ItemV4> {
+        match window {
+            WindowIDVarint::Inventory => self.main.iter().map(|slot| wire(slot, true)).collect(),
+            // The fifth is the body slot, which players leave empty.
+            WindowIDVarint::Armor => self.armor.iter().map(|slot| wire(slot, true)).chain([sapling_data::no_item()]).collect(),
+            WindowIDVarint::Offhand => vec![wire(&self.offhand, true)],
+            _ => {
+                let shown = |slot: usize| if slot == 0 { Some(&self.cursor) } else { self.grid.get(slot) };
+                (0..UI).map(|slot| shown(slot).map_or_else(sapling_data::no_item, |held| wire(held, true))).collect()
+            }
+        }
+    }
+
+    /// Sends the client every window, as BDS does at join and after `/give`.
+    pub fn send_all(&self, out: &mut Outgoing) {
+        for window in [WindowIDVarint::Inventory, WindowIDVarint::Armor, WindowIDVarint::Ui, WindowIDVarint::Offhand] {
+            out.push(&sapling_data::inventory_content(window, self.window(window)));
+        }
+    }
 }
 
 /// The item in a player's hand, as AddPlayer and MobEquipment carry it: without a stack id.
@@ -31,6 +52,13 @@ pub(crate) fn in_hand(inventory: &Inventory) -> ItemV4 {
 
 fn hand(id: u64, inventory: &Inventory) -> MobEquipment {
     MobEquipment { runtime_entity_id: id, item: in_hand(inventory), slot: inventory.selected, selected_slot: inventory.selected, window_id: WindowID::Inventory }
+}
+
+/// Shows a player's viewers its hand again, as BDS did after a place in creative mode
+/// (research/captures/bds-place-faces.txt).
+pub(crate) fn show_hand(world: &mut World, player: Entity) {
+    let Some(packet) = world.get::<NetId>(player).zip(world.get::<Inventory>(player)).map(|(id, inventory)| hand(id.0, inventory)) else { return };
+    world.resource_mut::<ToViewers>().push(player, &packet);
 }
 
 fn offhand(id: u64, inventory: &Inventory) -> MobEquipment {
@@ -83,11 +111,23 @@ pub(crate) fn select(mut packets: ResMut<PacketQueues>, mut players: Query<&mut 
 
 /// Opens the inventory screen for a client that asks, which it waits for (as it does for the
 /// close: `containers::dispatch_closes`). The screen names no entity, as from BDS
-/// (`ServerPlayer::openInventory` passes -1).
-pub(crate) fn screens(mut packets: ResMut<PacketQueues>, mut players: Query<(&Position, &mut Inventory, &mut Outgoing)>) {
+/// (`ServerPlayer::openInventory` passes -1). A rider's asks go to riding: to leave, and to open
+/// what it rides when that carries goods.
+pub(crate) fn screens(
+    mut packets: ResMut<PacketQueues>,
+    mut leaving: ResMut<crate::riding::Leaving>,
+    mut cargo: ResMut<crate::vehicles::CargoAsked>,
+    carriers: Query<(), With<crate::vehicles::Cargo>>,
+    mut players: Query<(&Position, &mut Inventory, &mut Outgoing, Option<&crate::riding::Riding>)>,
+) {
     for (entity, interact) in packets.take::<Interact>() {
-        let Ok((position, mut inventory, mut out)) = players.get_mut(entity) else { continue };
-        if interact.action_id == InteractActionId::OpenInventory {
+        let Ok((position, mut inventory, mut out, riding)) = players.get_mut(entity) else { continue };
+        let carrier = riding.map(|riding| riding.vehicle).filter(|vehicle| carriers.contains(*vehicle));
+        if interact.action_id == InteractActionId::LeaveVehicle && riding.is_some_and(|riding| riding.id == interact.target_entity_id) {
+            leaving.0.push(entity);
+        } else if let (InteractActionId::OpenInventory, Some(vehicle)) = (interact.action_id, carrier) {
+            cargo.0.push((entity, vehicle));
+        } else if interact.action_id == InteractActionId::OpenInventory {
             let (window, block) = (inventory.next_window(), position.feet.map(|c| c.floor() as i32));
             out.push(&sapling_data::inventory_screen(WindowID::from_raw(window.into()), block, NO_ENTITY));
         }

@@ -16,7 +16,8 @@ mod temperature;
 pub(crate) use biomes::surface_spec;
 pub(crate) use noise::{adjustment as adjustment_noise, depth as depth_noise};
 pub use noise::SurfaceNoises;
-pub(crate) use temperature::{info_noise, temperature};
+pub(crate) use temperature::info_noise;
+pub use temperature::temperature;
 
 use crate::biome::ChunkBiomes;
 use crate::block::Block;

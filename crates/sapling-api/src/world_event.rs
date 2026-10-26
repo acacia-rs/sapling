@@ -54,6 +54,22 @@ pub enum SpawnReason {
     Effect,
     /// A slime or magma cube split as it died.
     Split,
+    /// Natural spawning, by the world's spawn rules.
+    Natural,
+    /// A spawn egg used on a block.
+    SpawnEgg,
+    /// Where something thrown landed: an egg's chicks, an ender pearl's endermite.
+    Thrown,
+    /// Lightning turned another mob into it: a pig's zombified piglin, a villager's witch.
+    Lightning,
+    /// Built of blocks: a wither of soul sand and skulls.
+    Built,
+    /// A monster spawner or a trial spawner.
+    Spawner,
+    /// Born to two animals that bred.
+    Bred,
+    /// Another mob became it: a sheared mooshroom's cow.
+    Transformed,
 }
 
 /// A mob is about to appear. Cancelled, it does not. Mobs coming back with their column from

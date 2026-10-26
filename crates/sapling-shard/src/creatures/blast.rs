@@ -142,6 +142,7 @@ pub(super) fn explode_fireball(world: &mut World, source: Entity, layer: Entity,
 }
 
 fn blow(world: &mut World, source: Option<Entity>, layer: Entity, at: [f32; 3], power: f32, wreck: Wreck, fireball: bool) {
+    crate::blocks::vibrate(world, layer, at, crate::blocks::GameEvent::Explode, false);
     let cells = if wreck != Wreck::Nothing { broken(world, layer, at, power) } else { Vec::new() };
     let (power, cells) = if crate::plugins::listening::<ExplosionEvent>(world) {
         let kind = source.and_then(|source| world.get::<entities::Kind>(source)).map(|kind| kind.0.clone());
@@ -184,6 +185,7 @@ fn blow(world: &mut World, source: Option<Entity>, layer: Entity, at: [f32; 3], 
             mobs::remove(world, item);
         }
     }
+    crate::vehicles::blasted(world, layer, at, reach);
     let mut mobs = world.query::<(Entity, &InLayer, &Body, &Health, &NetId)>();
     let near: Vec<(Entity, u64, Body)> = mobs.iter(world).filter(|(_, in_layer, ..)| in_layer.0 == layer).map(|(mob, _, body, _, id)| (mob, id.0, *body)).collect();
     for (mob, id, its) in near {
@@ -224,6 +226,7 @@ pub(super) fn tick(world: &mut World, entity: Entity, layer: Entity, id: u64, ki
         return false;
     };
     let griefs = world.get::<Layer>(layer).is_some_and(|layer| layer.world.level().rules.on(GRIEFING));
+    let power = if world.get::<super::struck::Charged>(entity).is_some() { power * 2.0 } else { power };
     explode(world, Some(entity), layer, body.at, power, if griefs { Wreck::Breaks } else { Wreck::Nothing });
     true
 }

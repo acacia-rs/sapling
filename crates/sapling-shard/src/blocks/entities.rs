@@ -63,6 +63,10 @@ pub(super) fn placed(block: &str, pos: BlockPos, placing: &Placing) -> Option<Va
             ("Cauldron", vec![("Items", items), ("PotionId", Value::Short(-1)), ("PotionType", Value::Short(-1))])
         }
         _ if CAMPFIRES.contains(&block) => ("Campfire", ["ItemTime1", "ItemTime2", "ItemTime3", "ItemTime4"].map(|time| (time, Value::Int(0))).into()),
+        // Bare: spawners.rs reads BDS's defaults where a field is missing.
+        "minecraft:mob_spawner" => ("MobSpawner", Vec::new()),
+        "minecraft:trial_spawner" => ("TrialSpawner", Vec::new()),
+        "minecraft:vault" => ("Vault", Vec::new()),
         _ => return None,
     };
     let mut entity = new_block_entity(id, pos);
@@ -88,7 +92,7 @@ fn held_items(kept: &Value) -> Vec<Item> {
         Some(Value::String(name)) if sapling_data::is_item(name) => Some(Item::new(name.clone(), 1)),
         _ => None,
     };
-    let food = ["Item1", "Item2", "Item3", "Item4", super::holders::FRAMED, super::holders::POTTED].into_iter().filter_map(|slot| sapling_world::ItemStack::parse(kept.get(slot)?));
+    let food = ["Item1", "Item2", "Item3", "Item4", super::holders::FRAMED, super::holders::POTTED, super::jukebox::RECORD].into_iter().filter_map(|slot| sapling_world::ItemStack::parse(kept.get(slot)?));
     plant.into_iter().chain(food.map(|stack| Item { damage: stack.damage, ..Item::new(stack.name, stack.count) })).collect()
 }
 

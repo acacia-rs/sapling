@@ -1,5 +1,6 @@
 //! Armour wears by the hits it stops, as BDS's did (docs/research/player-damage.md, "Armour
-//! wear"): each piece by a quarter of the hit, the helmet by far more of what falls on it.
+//! wear"): each piece by a quarter of the hit, the helmet by far more of what falls on it; a
+//! piece whose Thorns hurt back wears more besides.
 // TODO: a piece that breaks goes without a sound, and nobody else sees it go.
 
 use acacia_proto::packets::{InventorySlot, LevelSoundEvent, PlayerArmorDamage};
@@ -7,7 +8,7 @@ use acacia_proto::types::{ArmorDamageEntry, ArmorDamageEntryArmorSlot, Vec3f, Wi
 use bevy_ecs::prelude::*;
 
 use super::wear::{damage, set_damage, wear_chance};
-use super::{Inventory, wire};
+use super::{Held, Inventory, wire};
 use crate::blocks::Dice;
 use crate::components::{NetId, Outgoing, Position};
 
@@ -25,17 +26,37 @@ pub(crate) fn wear_armour(world: &mut World, player: Entity, amount: f32, on_hea
         let mut dice = world.get_resource_or_insert_with(Dice::default);
         (std::array::from_fn(|_| dice.roll(100)), on_head.then(|| (amount * ON_HEAD + dice.fraction() * amount * ON_HEAD_MORE) as i32))
     };
+    let share = ((amount / SHARE) as i32).max(1);
+    wear(world, player, |piece, held| if rolls[piece] < wear_chance(held, true) { share } else { 0 }, more);
+}
+
+/// The pieces with Thorns wear by a hit, by more where they hurt the hitter back (`pricked`,
+/// `None` for a piece without Thorns); Unbreaking spares them as it spares any wear.
+pub(crate) fn wear_thorny(world: &mut World, player: Entity, pricked: [Option<bool>; 4]) {
+    let rolls: [u32; 4] = {
+        let mut dice = world.get_resource_or_insert_with(Dice::default);
+        std::array::from_fn(|_| dice.roll(100))
+    };
+    let [back, idle] = sapling_data::enchant::THORNS_WEAR;
+    let uses = |piece: usize, held: &Held| match pricked[piece] {
+        Some(hurt) if rolls[piece] < wear_chance(held, true) => if hurt { back } else { idle },
+        _ => 0,
+    };
+    wear(world, player, uses, None);
+}
+
+/// Wears each piece by `uses`, the helmet by `more` on top, and tells the client.
+fn wear(world: &mut World, player: Entity, uses: impl Fn(usize, &Held) -> i32, more: Option<i32>) {
     let mut query = world.query::<(&mut Inventory, &mut Outgoing)>();
     let Ok((mut inventory, mut out)) = query.get_mut(world, player) else { return };
     if inventory.armor.iter().all(Option::is_none) {
         return;
     }
-    let share = ((amount / SHARE) as i32).max(1);
     let mut broke = false;
     for piece in 0..inventory.armor.len() {
         let Some(held) = inventory.armor[piece].as_mut() else { continue };
         let Some(lasts) = sapling_data::armour_lasts(&held.stack.name) else { continue };
-        let uses = if rolls[piece] < wear_chance(held) { share } else { 0 } + more.filter(|_| piece == 0).unwrap_or(0);
+        let uses = uses(piece, held) + more.filter(|_| piece == 0).unwrap_or(0);
         let worn = damage(&held.stack.tag) + uses;
         if worn > i32::from(lasts) {
             (inventory.armor[piece], broke) = (None, true);

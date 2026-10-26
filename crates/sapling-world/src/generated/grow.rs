@@ -1,11 +1,11 @@
 //! A worldgen feature placed over the loaded columns, as a sapling grows its tree
-//! (`sapling_worldgen::place_feature`).
+//! (`sapling_worldgen::place_feature`), and the generator's structures placed the same way.
 
 use std::collections::HashMap;
 use std::sync::{Arc, OnceLock};
 
 use acacia_world::BlockRegistry;
-use sapling_worldgen::{Block, ChunkShape, HEIGHT, MIN_Y};
+use sapling_worldgen::{Block, ChunkShape, HEIGHT, MIN_Y, PlaceFailure};
 
 use super::convert::BlockIds;
 use crate::{ChunkPos, World};
@@ -37,6 +37,23 @@ impl World {
         let load = |chunk_x: i32, chunk_z: i32| Arc::new(self.shape_of(ChunkPos::new(chunk_x, chunk_z), ids));
         let writes = sapling_worldgen::place_feature(name, at, seed, &load, &|_| None)?;
         Some(writes.into_iter().map(|(pos, block, _)| (pos, ids.forward.id(block))).collect())
+    }
+
+    /// The generator's structure `name` drawn over the loaded columns as though it started in
+    /// chunk `start`: the cells and their runtime ids; `None` without a generator.
+    pub fn place_structure(&self, name: &str, start: ChunkPos) -> Option<Result<Vec<([i32; 3], u32)>, PlaceFailure>> {
+        let ids = ids(&self.registry);
+        let load = |chunk_x: i32, chunk_z: i32| Arc::new(self.shape_of(ChunkPos::new(chunk_x, chunk_z), ids));
+        let writes = self.loader.as_ref()?.storage().structure_writes(name, start, &load)?;
+        Some(writes.map(|writes| writes.into_iter().map(|(pos, block)| (pos, ids.forward.id(block))).collect()))
+    }
+
+    /// [`World::place_structure`] for a jigsaw pool assembled from `at`, as `/place jigsaw` does.
+    pub fn place_jigsaw(&self, pool: &str, target: &str, max_depth: u32, at: [i32; 3]) -> Option<Result<Vec<([i32; 3], u32)>, PlaceFailure>> {
+        let ids = ids(&self.registry);
+        let load = |chunk_x: i32, chunk_z: i32| Arc::new(self.shape_of(ChunkPos::new(chunk_x, chunk_z), ids));
+        let writes = self.loader.as_ref()?.storage().jigsaw_writes(pool, target, max_depth, at, &load)?;
+        Some(writes.map(|writes| writes.into_iter().map(|(pos, block)| (pos, ids.forward.id(block))).collect()))
     }
 
     fn shape_of(&self, pos: ChunkPos, ids: &Ids) -> ChunkShape {

@@ -1,7 +1,6 @@
 //! What those near an open container see and hear: a chest's lid (`BlockEvent` ChangeState, 1
 //! open and 0 shut, as BDS's `ChestBlockActor::startOpen` raises it), a barrel's `open_bit`, and
 //! their sounds, each as late as BDS sent it (research/captures/bds-shut.txt).
-// TODO: how late a shulker box sounds is unrecorded.
 
 use acacia_proto::packets::{BlockEvent, BlockEventType};
 use acacia_proto::types::BlockCoordinates;
@@ -15,6 +14,8 @@ use crate::{blocks, late_sounds};
 const CHEST_LATE: [u64; 2] = [1, 5];
 /// The same of an ender chest and a barrel.
 const LATER: [u64; 2] = [2, 6];
+/// The same of a shulker box, which is heard shut once its lid is all the way down.
+const SHULKER_LATE: [u64; 2] = [2, 11];
 
 /// Ticks between two showings of an open lid (BDS `ChestBlockActor::tick`).
 pub(super) const REPEAT: u64 = 80;
@@ -45,7 +46,7 @@ fn sounds(name: &str) -> Option<([&'static str; 2], [u64; 2])> {
         BARREL => Some((["block.barrel.open", "block.barrel.close"], LATER)),
         "minecraft:ender_chest" => Some((["enderchest.open", "enderchest.closed"], LATER)),
         "minecraft:chest" | "minecraft:trapped_chest" => Some((["chest.open", "chest.closed"], CHEST_LATE)),
-        _ if super::is_shulker_box(name) => Some((["shulkerbox.open", "shulkerbox.closed"], [0; 2])),
+        _ if super::is_shulker_box(name) => Some((["shulkerbox.open", "shulkerbox.closed"], SHULKER_LATE)),
         _ => None,
     }
 }

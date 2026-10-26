@@ -4,14 +4,16 @@
 mod armour_wear;
 mod crafting;
 mod death;
+mod enchanted;
 mod equipment;
+mod forge;
 mod give;
 mod plugin;
 mod requests;
 mod store;
 mod wear;
 
-use acacia_proto::types::{ItemV4, WindowIDVarint};
+use acacia_proto::types::ItemV4;
 use bevy_ecs::prelude::*;
 use sapling_data::Stack;
 use sapling_world::ItemStack;
@@ -19,14 +21,15 @@ use sapling_world::ItemStack;
 use crate::components::Outgoing;
 use crate::experience::Experience;
 
-pub(crate) use armour_wear::wear_armour;
+pub(crate) use armour_wear::{wear_armour, wear_thorny};
 pub(crate) use crafting::clear_grid;
-pub(crate) use equipment::{announce, in_hand, screens, select, spawn_packets};
-pub(crate) use give::give_and_pop;
+pub(crate) use forge::{Bargain, Bench, Forged, enchanting_input};
+pub(crate) use equipment::{announce, in_hand, screens, select, show_hand, spawn_packets};
+pub(crate) use give::{give_and_pop, swap_held, use_up_held};
 pub(crate) use plugin::{described, item_at, set_item, stored};
 pub(crate) use requests::dispatch;
 pub(crate) use store::{keep_here, load, save, save_all, save_changed, send_own};
-pub(crate) use wear::wear_tool_in_hand;
+pub(crate) use wear::{wear_hand_by, wear_tool_in_hand};
 
 pub(crate) const MAIN: usize = 36;
 pub(crate) const HOTBAR: usize = 9;
@@ -78,6 +81,8 @@ pub(crate) struct Inventory {
     /// What the player's ender chests hold.
     pub ender: Vec<Option<Held>>,
     pub experience: Experience,
+    /// What its enchanting table offers are drawn from (workstations/enchanting.rs).
+    pub enchant_seed: i32,
     /// The hotbar slot in the hand.
     pub selected: u8,
     next_id: i32,
@@ -107,6 +112,7 @@ impl Default for Inventory {
             refuses: None,
             ender: vec![None; ENDER],
             experience: Experience::default(),
+            enchant_seed: 0,
             selected: 0,
             next_id: 1,
             loaded: false,
@@ -263,39 +269,15 @@ impl Inventory {
         let id = |slot: &Option<Held>| slot.as_ref().map_or(0, |held| held.id);
         [id(self.in_hand()), id(&self.armor[0]), id(&self.armor[1]), id(&self.armor[2]), id(&self.armor[3]), id(&self.offhand)]
     }
-
-    /// One of the player's own windows as its client is sent it.
-    fn window(&self, window: WindowIDVarint) -> Vec<ItemV4> {
-        match window {
-            WindowIDVarint::Inventory => self.main.iter().map(|slot| wire(slot, true)).collect(),
-            // The fifth is the body slot, which players leave empty.
-            WindowIDVarint::Armor => self.armor.iter().map(|slot| wire(slot, true)).chain([sapling_data::no_item()]).collect(),
-            WindowIDVarint::Offhand => vec![wire(&self.offhand, true)],
-            _ => {
-                let shown = |slot: usize| if slot == 0 { Some(&self.cursor) } else { self.grid.get(slot) };
-                (0..UI).map(|slot| shown(slot).map_or_else(sapling_data::no_item, |held| wire(held, true))).collect()
-            }
-        }
-    }
-
-    /// Sends the client every window, as BDS does at join and after `/give`.
-    pub fn send_all(&self, out: &mut Outgoing) {
-        for window in [WindowIDVarint::Inventory, WindowIDVarint::Armor, WindowIDVarint::Ui, WindowIDVarint::Offhand] {
-            out.push(&sapling_data::inventory_content(window, self.window(window)));
-        }
-    }
 }
 
-/// Shows a client every window and its held slot, twice, the second time selecting it, as BDS
-/// answered a place in creative mode, whose stack the client had counted down
-/// (research/captures/bds-place-faces.txt).
-pub(crate) fn show_after_creative_place(world: &mut World, player: Entity) {
+/// Shows a client every window and its held slot, as BDS answered a place, whose stack the client
+/// had counted down (research/captures/bds-place-faces.txt).
+pub(crate) fn show_windows(world: &mut World, player: Entity, select_slot: bool) {
     let mut query = world.query::<(&Inventory, &mut Outgoing)>();
     let Ok((inventory, mut out)) = query.get_mut(world, player) else { return };
-    for select_slot in [false, true] {
-        inventory.send_all(&mut out);
-        out.push(&sapling_data::player_hotbar(inventory.selected, select_slot));
-    }
+    inventory.send_all(&mut out);
+    out.push(&sapling_data::player_hotbar(inventory.selected, select_slot));
 }
 
 /// Runs `change` on a player's inventory and shows the client the result; armour put on is heard.

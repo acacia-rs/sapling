@@ -225,6 +225,8 @@ pub(super) fn use_by_hand(world: &mut World, layer: Entity, pos: BlockPos, name:
     // (research/captures/bds-sounds.txt).
     let before = level(world, layer).map(|level| level.block(pos[0], pos[1], pos[2])).filter(|_| sounds[0] == "door.open");
     let Some(now_open) = toggle(world, layer, pos) else { return false };
+    let event = if now_open { super::GameEvent::BlockOpen } else { super::GameEvent::BlockClose };
+    super::vibrate_at(world, layer, pos, event, true);
     match before {
         Some(id) => play_as(world, layer, pos, sounds[usize::from(!now_open)], id),
         None => play(world, layer, pos, sounds[usize::from(!now_open)]),

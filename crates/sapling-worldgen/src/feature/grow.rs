@@ -12,6 +12,11 @@ use crate::density::NO_SURFACE;
 use crate::random::Mt19937;
 use crate::terrain::ChunkShape;
 
+/// Whether `name` (`minecraft:oak_tree_feature`) is a ported feature [`place_feature`] knows.
+pub fn is_feature(name: &str) -> bool {
+    NAMES.contains(&name)
+}
+
 /// Places the feature `name` (`minecraft:oak_tree_feature`) at `at` with a generator seeded
 /// `seed`, over the chunks `load` gives (those within a chunk of `at`'s): its writes as world
 /// (x, y, z), block placed, block replaced. `None` for a name not ported or a feature that did not place.

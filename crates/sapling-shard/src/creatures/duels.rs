@@ -1,11 +1,13 @@
 //! A player's hit on another player, as BDS's landed (docs/research/player-damage.md, "Another
 //! player's hit"): what the hand holds costs as it does a mob, on any difficulty, where the
-//! `pvp` rule is on.
+//! `pvp` rule is on; Sharpness, Knockback and Fire Aspect add as they do on a mob, and the
+//! struck player's Thorns hurt back.
 // TODO: a weapon does not wear by it, and a sprinting hitter throws no further.
 
 use acacia_proto::packets::LevelSoundEvent;
 use acacia_proto::types::Vec3f;
 use bevy_ecs::prelude::*;
+use sapling_data::enchant::{self, Enchant};
 
 use crate::components::{InLayer, Layer, Mode, NetId, Position, in_world, in_world_identity};
 use crate::inventory::Inventory;
@@ -32,13 +34,18 @@ pub(super) fn hit(world: &mut World, hitter: Entity, id: u64) -> Option<()> {
     let swing = LevelSoundEvent { sound_id: "attack.strong".into(), position: Vec3f { x, y: y + HALF_PLAYER, z }, extra_data: -1, entity_type: "minecraft:player".into(), is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None };
     crate::blocks::to_viewers(world, layer, to.map(|c| c.floor() as i32), &[sapling_net::encode(&swing)]);
     let held = world.get::<Inventory>(hitter).and_then(|inventory| inventory.in_hand().as_ref().map(|held| held.stack.name.clone()));
-    let harm = vitals::hits_for(world, hitter, sapling_data::item_attack(held.as_deref()));
+    let weapon = crate::enchants::weapon(world, hitter);
+    let harm = vitals::hits_for(world, hitter, sapling_data::item_attack(held.as_deref()) + enchant::melee_bonus(weapon.as_ref(), None));
+    let [along, up] = enchant::knockback(enchant::level(weapon.as_ref(), Enchant::Knockback), [THROW; 2]);
     let (dx, dz) = (to[0] - from[0], to[2] - from[2]);
     let apart = dx.hypot(dz);
-    let away = if apart > 1e-4 { [dx / apart * THROW, dz / apart * THROW] } else { [0.0; 2] };
+    let away = if apart > 1e-4 { [dx / apart * along, dz / apart * along] } else { [0.0; 2] };
     let name = in_world_identity(world, hitter)?.name;
-    if vitals::punched(world, struck, harm, &name, [away[0], THROW, away[1]]) {
+    if vitals::punched(world, struck, harm, &name, [away[0], up, away[1]]) {
         vitals::tire(world, hitter, vitals::HIT_TIRES);
+        vitals::set_alight(world, struck, enchant::aspect_burn(enchant::level(weapon.as_ref(), Enchant::FireAspect)));
+        crate::enchants::thorns(world, struck, hitter);
+        super::owner_hurt(world, struck, hitter);
     }
     Some(())
 }

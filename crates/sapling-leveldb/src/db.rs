@@ -143,6 +143,20 @@ impl Db {
         }
         Ok(())
     }
+
+    /// The entries whose key starts with `prefix`, in key order, found by a seek.
+    pub fn prefixed(&self, prefix: &[u8]) -> Result<Vec<(Vec<u8>, Vec<u8>)>, Error> {
+        let mut entries = self.0.new_iter()?;
+        entries.seek(prefix);
+        let mut found = Vec::new();
+        while let Some((key, value)) = entries.current().filter(|(key, _)| key.starts_with(prefix)) {
+            found.push((key, value));
+            if !entries.advance() {
+                break;
+            }
+        }
+        Ok(found)
+    }
 }
 
 #[cfg(test)]

@@ -2,6 +2,7 @@ use std::net::SocketAddr;
 
 use acacia_auth::login::verify::VerifiedLogin;
 use acacia_proto::RawPacket;
+use acacia_proto::types::DisconnectFailReason;
 use bytes::Bytes;
 use tokio::sync::mpsc;
 
@@ -41,7 +42,7 @@ pub enum Outbound {
     /// Packets (each with its header) to send as one batch.
     Send { conn: ConnId, packets: Vec<Bytes> },
     /// Shows `message` on the client's disconnect screen and closes the connection.
-    Kick { conn: ConnId, message: String },
+    Kick { conn: ConnId, reason: DisconnectFailReason, message: String },
     /// Hands the connection's events to shard `to` from here on ([`crate::Router::reroute`]).
     Route { conn: ConnId, from: usize, to: usize },
 }
@@ -62,7 +63,12 @@ impl Outbox {
     }
 
     pub fn kick(&self, conn: ConnId, message: impl Into<String>) {
-        let _ = self.commands.send(Outbound::Kick { conn, message: message.into() });
+        self.kick_for(conn, DisconnectFailReason::Kicked, message);
+    }
+
+    /// [`Outbox::kick`] under another reason code than `Kicked`.
+    pub fn kick_for(&self, conn: ConnId, reason: DisconnectFailReason, message: impl Into<String>) {
+        let _ = self.commands.send(Outbound::Kick { conn, reason, message: message.into() });
     }
 
     /// Moves a connection to another shard; shard `from` gets [`NetEvent::Rerouted`] when done.

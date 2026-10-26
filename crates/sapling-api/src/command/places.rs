@@ -1,5 +1,5 @@
 //! Parameters vanilla's commands take: positions as three numbers, each of which may be `~` with
-//! an offset from where the sender is, and a block's states in brackets (selectors: selector.rs).
+//! an offset from where the sender is, and a block's states in brackets.
 
 use super::{Args, ParamKind, Parameter, ParseError};
 
@@ -13,25 +13,34 @@ pub enum Axis {
 impl Axis {
     fn parse(args: &mut Args<'_>) -> Result<Self, ParseError> {
         let mark = args.mark();
-        let word = args.word()?;
-        Self::read(word).ok_or_else(|| args.error_at(mark))
+        Self::read(args.word()?).ok_or_else(|| args.error_at(mark))
     }
 
-    /// One axis as written: `3`, `~` or `~-1.5`.
     pub(crate) fn read(word: &str) -> Option<Self> {
-        let number = |text: &str| if text.is_empty() { Some(0.0) } else { text.parse::<f32>().ok().filter(|n| n.is_finite()) };
+        let number = |text: &str| text.parse::<f32>().ok().filter(|n| n.is_finite());
         match word.strip_prefix('~') {
+            Some("") => Some(Self::Off(0.0)),
             Some(offset) => number(offset).map(Self::Off),
-            None => word.parse::<f32>().ok().filter(|n| n.is_finite()).map(Self::At),
+            None => number(word).map(Self::At),
         }
     }
 
-    /// The value, `~` counted from `origin`.
+    /// The number, `~` counted from `origin`.
     pub fn from(self, origin: f32) -> f32 {
         match self {
             Self::At(at) => at,
             Self::Off(off) => origin + off,
         }
+    }
+}
+
+impl Parameter for Axis {
+    fn kind() -> ParamKind {
+        ParamKind::Value
+    }
+
+    fn parse(args: &mut Args<'_>) -> Result<Self, ParseError> {
+        Self::parse(args)
     }
 }
 
@@ -155,3 +164,4 @@ mod tests {
         assert_eq!(Option::<States>::parse(&mut args), Ok(None), "left out when the next word is not one");
     }
 }
+

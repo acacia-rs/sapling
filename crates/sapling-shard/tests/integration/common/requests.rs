@@ -4,7 +4,7 @@ use acacia_proto::RawPacket;
 use acacia_proto::packets::{ItemStackRequest, ItemStackResponse};
 use acacia_proto::types::{
     ContainerSlotType as Container, FullContainerName, ItemStackRequest as Request, ItemStackRequestActionsItem as ActionItem,
-    ItemStackRequestActionsItemContent as Action, ItemStackRequestActionsItemContentPlace as Place, ItemStackRequestActionsItemContentTake as Take,
+    ItemStackRequestActionsItemContent as Action, ItemStackRequestActionsItemContentConsume as Consume, ItemStackRequestActionsItemContentPlace as Place, ItemStackRequestActionsItemContentTake as Take,
     ItemStackRequestActionsItemTypeId as Kind, ItemStackRequestCause, ItemStackResponsesItemStatus as Status, StackRequestSlotInfo,
 };
 
@@ -22,11 +22,26 @@ pub fn request(request_id: i32, actions: Vec<Action>) -> ItemStackRequest {
         Action::Swap(_) => (Kind::Swap, 2),
         Action::Drop(_) => (Kind::Drop, 3),
         Action::Destroy(_) => (Kind::Destroy, 4),
+        Action::Consume(_) => (Kind::Consume, 5),
+        Action::CraftRecipe(_) => (Kind::CraftRecipe, 12),
         Action::CraftCreative(_) => (Kind::CraftCreative, 12),
+        Action::Optional(_) => (Kind::Optional, 15),
+        Action::CraftGrindstoneRequest(_) => (Kind::CraftGrindstoneRequest, 16),
         other => panic!("{other:?}"),
     };
     let actions = actions.into_iter().map(|content| ActionItem { type_id: kind(&content).0, legacy_type_id: kind(&content).1, content }).collect();
     ItemStackRequest { requests: vec![Request { request_id, actions, custom_names: Vec::new(), cause: ItemStackRequestCause::Unknown(-1) }] }
+}
+
+/// As [`request`], renaming at an anvil to `name`.
+pub fn renaming(request_id: i32, actions: Vec<Action>, name: &str) -> ItemStackRequest {
+    let mut named = request(request_id, actions);
+    (named.requests[0].custom_names, named.requests[0].cause) = (vec![name.to_owned()], ItemStackRequestCause::AnvilText);
+    named
+}
+
+pub fn consume(count: u8, source: StackRequestSlotInfo) -> Action {
+    Action::Consume(Consume { count, source })
 }
 
 pub fn take(count: u8, source: StackRequestSlotInfo, destination: StackRequestSlotInfo) -> Action {

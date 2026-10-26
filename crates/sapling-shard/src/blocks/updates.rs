@@ -111,7 +111,7 @@ pub(super) fn settle(world: &mut World, layer: Entity, pos: BlockPos) {
         for face in Face::ALL {
             let beside = face.neighbour(pos);
             let Some((registry, id)) = block(world, layer, beside) else { continue };
-            let stands = level(world, layer).is_none_or(|level| ground::may_stand(level, beside, id));
+            let stands = level(world, layer).is_none_or(|level| ground::may_stand(level, beside, id) && !ground::is_wrongly_lit(level, beside, id));
             // A tall plant's upper half stands on its own lower half, which is not solid.
             let is_own_half = doors::other_half(world, layer, beside) == Some(pos);
             if is_gone && depended(registry, id, face) && !is_own_half || !stands {

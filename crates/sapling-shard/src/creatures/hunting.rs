@@ -83,7 +83,11 @@ fn seen(world: &World, player: Entity, layer: Entity, from: [f32; 3], sight: f32
 /// (research/captures/bds-around.txt).
 pub(super) fn in_sight(world: &World, layer: Entity, body: &Body, feet: [f32; 3]) -> bool {
     let Some(level) = world.get::<Layer>(layer).map(|layer| &layer.world) else { return false };
-    let (from, to) = ([body.at[0], body.at[1] + HEAD * body.size[1], body.at[2]], [feet[0], feet[1] + sapling_data::EYE_HEIGHT, feet[2]]);
+    sees(level, [body.at[0], body.at[1] + HEAD * body.size[1], body.at[2]], [feet[0], feet[1] + sapling_data::EYE_HEIGHT, feet[2]])
+}
+
+/// Whether no full block, glass too, is on the line from `from` to `to`.
+pub(crate) fn sees(level: &sapling_world::World, from: [f32; 3], to: [f32; 3]) -> bool {
     let glances = (distance(from, to) / GLANCE).ceil().max(1.0);
     let hides = |[x, y, z]: [i32; 3]| level.in_height(y) && level.registry().get(level.block(x, y, z)).is_some_and(|state| state.is_full_cube());
     (0..=glances as usize).all(|glance| !hides(std::array::from_fn(|axis| (from[axis] + (to[axis] - from[axis]) * glance as f32 / glances).floor() as i32)))
@@ -125,7 +129,7 @@ fn pick(world: &mut World, entity: Entity, layer: Entity, id: u64, kind: &str, b
     // A spider under the sun by day took none on BDS; under a roof or by night it did
     // (research/captures/bds-spiders.txt).
     let head = [body.at[0], body.at[1] + body.size[1], body.at[2]].map(|c| c.floor() as i32);
-    let dazzled = sapling_data::mob_traits(kind).hunts?.by_dark && world.get::<Layer>(layer).is_some_and(|layer| super::harm::is_sunlit(&layer.world, head));
+    let dazzled = sapling_data::mob_traits(kind).hunts?.by_dark && super::harm::sun_on(world, layer, head);
     let looks = !sapling_data::mob_traits(kind).hunts?.provoked && !dazzled;
     if found.is_none() && hunts && looks && (now + id).is_multiple_of(LOOKS) {
         found = nearest(world, layer, body, sight);
@@ -157,7 +161,7 @@ fn take(world: &mut World, entity: Entity, layer: Entity, id: u64, kind: &str, b
 /// (research/captures/bds-provoke.txt, bds-provoke2.txt), takes it for its prey at once, if it may be hunted.
 pub(super) fn provoke(world: &mut World, entity: Entity, layer: Entity, id: u64, kind: &str, body: &Body, player: Entity) {
     let Some(hunts) = sapling_data::mob_traits(kind).hunts.filter(|hunts| (hunts.provoked || hunts.by_dark) && super::genes::fights(world, entity)) else { return };
-    let hunted = world.resource::<Settings>().0.difficulty != Difficulty::Peaceful && seen(world, player, layer, body.at, hunts.sees).is_some();
+    let hunted = world.resource::<Settings>().0.difficulty != Difficulty::Peaceful && seen(world, player, layer, body.at, hunts.sees).is_some() && !super::husbandry::is_owner(world, entity, player);
     if hunted && world.get::<Hunter>(entity).is_some_and(|hunter| hunter.prey != Some(player)) {
         take(world, entity, layer, id, kind, body, Some(player));
         // BDS's first hit back came a second or more after, a llama's spit as long as it aims.
@@ -272,6 +276,10 @@ pub(super) fn strike(world: &mut World, entity: Entity, layer: Entity, id: u64, 
     let bitten = vitals::bitten(world, prey, harm, kind, [away[0] * along, up, away[1] * along]);
     if let Some((effect, ticks)) = hunts.gives.filter(|_| bitten) {
         vitals::afflict(world, prey, effect, ticks);
+    }
+    if bitten {
+        crate::enchants::thorns(world, prey, entity);
+        super::owner_hurt(world, prey, entity);
     }
     if hunts.once {
         take(world, entity, layer, id, kind, body, None);

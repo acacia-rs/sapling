@@ -82,11 +82,13 @@ impl Parameter for GameMode {
 
 impl Parameter for Difficulty {
     fn kind() -> ParamKind {
-        enum_kind("Difficulty", &["peaceful", "easy", "normal", "hard"])
+        enum_kind("Difficulty", &["peaceful", "p", "easy", "e", "normal", "n", "hard", "h"])
     }
 
+    /// A name or its first letter, as BDS takes them (research/captures/bds-worldcmds.txt).
     fn parse(args: &mut Args<'_>) -> Result<Self, ParseError> {
-        parse_choice(args, &[("peaceful", Self::Peaceful), ("easy", Self::Easy), ("normal", Self::Normal), ("hard", Self::Hard)])
+        let levels = [("peaceful", Self::Peaceful), ("p", Self::Peaceful), ("easy", Self::Easy), ("e", Self::Easy), ("normal", Self::Normal), ("n", Self::Normal), ("hard", Self::Hard), ("h", Self::Hard)];
+        parse_choice(args, &levels)
     }
 }
 

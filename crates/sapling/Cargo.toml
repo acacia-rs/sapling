@@ -17,6 +17,8 @@ sapling-data.workspace = true
 sapling-net.workspace = true
 sapling-shard.workspace = true
 sapling-world.workspace = true
+flate2.workspace = true
+serde_json.workspace = true
 thiserror.workspace = true
 tokio.workspace = true
 tracing.workspace = true
@@ -27,5 +29,6 @@ acacia-client.workspace = true
 acacia-world.workspace = true
 bytes.workspace = true
 sapling-leveldb.workspace = true
+sha2.workspace = true
 tokio ={ workspace = true, features = ["rt-multi-thread", "signal"] }
 tracing-subscriber.workspace = true

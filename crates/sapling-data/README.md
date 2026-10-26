@@ -23,6 +23,9 @@ Mojang's data is not committed (`.gitignore`); build it before the first `cargo 
 | `data/block-loot.tsv` | `py -3 data/generate/block-loot.py` (the extracted Java 26.3 client jar, `JAVA` at the top) |
 | `data/names.tsv` | `cargo run -p sapling --example bds_name_probe -- <your BDS> > data/names.tsv`, on testbox `tools/remote-drill.sh bds bds_name_probe data/names.tsv` (BDS's own answers to `/give` and `/kill`); optional: without it names are made from identifiers |
 | `data/command-names.tsv` | `cargo run -p sapling --example bds_enum_probe -- <your BDS> > data/command-names.tsv` (drop a trailing `probe exit` line when made by `tools/remote-drill.sh bds bds_enum_probe`): the `Item` and `Block` enums of BDS's AvailableCommands; optional: without it commands take every name |
+| `data/spawn-rules.tsv`, `data/despawns.tsv` | `py -3 data/generate/spawn-rules.py` (BDS's behaviour packs, as `mob-loot.py`) |
+| `data/husbandry.tsv` | `py -3 data/generate/husbandry.py` (BDS's behaviour packs, as `mob-loot.py`) |
+| `data/trades.json` | `py -3 data/generate/trades.py` (BDS's behaviour packs, as `mob-loot.py`) |
 | `sapling-worldgen/src/structure/template/templates.bin` | `py -3 crates/sapling-worldgen/scripts/templates_to_rust.py <your BDS dir>` |
 
 | File | Sent as | Patched per join |
@@ -70,7 +73,11 @@ stacks needs acacia-proto to know which item is the shield: `set_shield_item_id(
 (`extract-data -- --show InventoryContent,PlayerHotbar`). `max_stack` is a list of name endings, not data.
 
 `recipes.rs` reads the crafting grid's shaped and shapeless recipes out of `CraftingData.bin`, by the
-network id a craft request names: what each cell takes and what a craft makes.
+network id a craft request names: what each cell takes and what a craft makes. `recipes/smithing.rs`
+reads the smithing table's transform and trim recipes from the same file and the trims' patterns and
+materials from `TrimData.bin`. The other workstations' rules are `enchant/{table, anvil, grind}.rs`,
+over each enchantment's BDS numbers (`enchant/kinds.rs`) and what each item takes (`gear.rs`;
+docs/research/workstations.md).
 
 ## Item tags and block loot
 
@@ -95,7 +102,9 @@ drops differ, nothing here knows.
 loot table from the vanilla behaviour packs (their `.brarchive`s, the newest pack version winning), the
 adult's in its default state, and every table those name, with old item names renamed (checked against
 `ItemRegistry.bin` by a test). Fox and piglin name tables no pack holds; slimes and magma cubes, whose
-loot goes by size, have none here.
+loot goes by size, have none here. A death is no one's or a player's (`Killer`), with the Looting it
+held (`enchant.rs`); a pet's kill counts as no one's. The script also keeps the tables blocks eject,
+named in its `BLOCK_TABLES` (trial spawners' and vaults'), rolled by `table_loot`.
 
 ## Mob traits
 
@@ -111,6 +120,54 @@ table of the kinds whose hunting was drilled (`docs/research/mob-attacks.md`): `
 `minecraft:attack` plus what the kind holds (a vindicator's axe 5, a wither skeleton's sword 5),
 `speed` is `minecraft:movement` times its attack's `speed_multiplier`, `sees` the `max_dist` of its
 `nearest_attackable_target` for players (16 where it names none).
+
+## Husbandry
+
+`husbandry.tsv` (read by `husbandry.rs`, git-ignored, made by `data/generate/husbandry.py` from the
+vanilla behaviour packs; docs/research/husbandry.md): for each entity whose packs raise it, what its
+own components or first group holding one say: `breed=`, `mates=`, `breed_tame`, `breed_healthy`
+(`minecraft:breedable`); `grows=` ticks and `grow=item:share` (`minecraft:ageable`); `tame=` and
+`tame_chance=` (`minecraft:tameable`), with `tame_health=` and `tame_attack=` of its tamed groups;
+`temper=least-most` and `temper_feed=item:mod` (`minecraft:tamemount`); `heal=item:amount`; `lays=item:least-most`
+ticks (`minecraft:spawn_entity`); `follows=start-stop`, `sits`, `defends`, `leashable`; `tempt=` and
+`tempt_speed=`; `walks=` (`minecraft:movement`, a range's middle); and `on_born`, `on_grow`, `on_tame`,
+`on_sheared`, `on_regrow` as `-group,+group`, the events followed through their triggers and
+unfiltered sequence steps. Old item names are renamed as for mob loot. `raised_look.rs` builds the
+SetEntityData of a baby's scale and box (the recorded baby AddEntity's), a sheep's wool, a name tag,
+and the owner and lead holder.
+
+## Mob families
+
+`mob-families.tsv` (read by `families.rs`, tested by a selector's `family=`, Smite, Bane of Arthropods and the undead's
+potion rules): each entity's
+`minecraft:type_family` from the vanilla behaviour packs, by `data/generate/mob-families.py`: its own
+components', or, for a kind that has them only in component groups, every group's together. Kinds the
+packs give no family (items, falling blocks) are not listed.
+
+## Spawn rules
+
+`spawn-rules.tsv` (read by `spawn_rules.rs`): one row per condition of the vanilla packs'
+`spawn_rules/*.json`, the newest pack's file winning, by `data/generate/spawn-rules.py`: kind,
+`population_control`, where it spawns (`surface`, `underground`, `underwater`, `lava`), weight, herd
+size, then `light=min~max` (`w`: `adjust_for_weather`), `difficulty=`, `height=`, `distance=`,
+`density=surface:underground` (`-` for none), `on=` and `not_on=` blocks (old names renamed),
+`permute=weight:kind,..`, and the biome filter in prefix form (`&(..)` all of, `|(..)` any of, `!|(..)`
+none of, `!tag` not, `snow` for `is_snow_covered`). Left out: conditions that need patrols or villages
+(`pillager_patrol`), and the phantom, guardian and slime, whose spawning BDS's own code gates. Herd
+events (babies, variants, riders) are not kept. `despawns.tsv`: each entity's own `minecraft:despawn`
+`despawn_from_distance` as `near-far` (32 and 128 where it names none). Biome tags are read from
+`BiomeDefinitionList.bin` by the ids chunks store (`spawn_rules/biomes.rs`).
+
+## Trades
+
+`trades.json` (read by `trades.rs`) is BDS's own: `data/generate/trades.py` takes the vanilla packs'
+`trading/economy_trades/*.json` (the newest pack's file winning; some ship compiled, `MCB`, which the
+script reads: format in sapling's `docs/research/villagers.md`), with old item names and data values
+renamed (checked against `ItemRegistry.bin` by a test), `set_potion` turned into the item's data value
+and biome `filters` into the villager types (`MarkVariant`) they let through. `trades::roll` draws a
+tier's offers: `num_to_select` of each group by weight, an alternative of each item, its count, and its
+functions (`enchant_with_levels` and `enchant_book_for_trading` through `enchant/table.rs`,
+`random_aux_value`, `random_dye`); a trade with an `exploration_map` is never offered.
 
 ## Liquid reactions
 

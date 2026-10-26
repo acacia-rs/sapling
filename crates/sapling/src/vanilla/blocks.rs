@@ -1,18 +1,19 @@
-//! `/setblock`, `/fill` and `/testforblock`.
+//! `/setblock` and `/testforblock`, and the block names and states the block commands share.
 
 use sapling_api::command::{BlockCoords, States};
 use sapling_api::{Block, BlockPos, Command, CommandEnum, Output, Sender, ShardCtx};
 
 use super::names::BlockName;
-use super::origin;
-
-/// The most blocks one `/fill` changes, as vanilla.
-const MAX_FILL: i64 = 32_768;
 
 /// Writes the block as `/setblock` does; whether the cell changed (vanilla counts no other).
-fn changed(ctx: &mut ShardCtx<'_>, pos: BlockPos, block: &Block) -> bool {
+pub(super) fn changed(ctx: &mut ShardCtx<'_>, pos: BlockPos, block: &Block) -> bool {
     let before = ctx.block(pos);
     ctx.update_block(pos, block) && ctx.block(pos) != before
+}
+
+/// Whether `there` has each of `states` (`a=1,b=2`, the form [`States`] reads).
+pub(super) fn has_states(there: &Block, states: &str) -> bool {
+    states.split(',').filter(|state| !state.is_empty()).all(|state| there.properties.split(',').any(|held| held == state))
 }
 
 /// Old names of blocks that BDS's commands still take, and what they name now: each was set by
@@ -57,7 +58,7 @@ const OLD_NAMES: [(&str, &str); 34] = [
     ("light_block", "light_block_0"),
 ];
 
-fn block(name: &str, states: Option<&States>) -> Block {
+pub(super) fn block(name: &str, states: Option<&States>) -> Block {
     let plain = name.strip_prefix("minecraft:").unwrap_or(name);
     let block = Block::new(OLD_NAMES.iter().find(|(old, _)| *old == plain).map_or(name, |(_, new)| new));
     match states {
@@ -88,7 +89,7 @@ pub(crate) struct SetBlock {
 
 impl Command for SetBlock {
     fn run(self, ctx: &mut ShardCtx<'_>, sender: &Sender, out: &mut Output) {
-        let pos = self.position.from(origin(ctx, sender));
+        let pos = self.position.from(ctx.origin(sender));
         let mode = self.mode.unwrap_or(SetMode::Replace);
         let kept = mode == SetMode::Keep && ctx.block(pos).is_some_and(|there| !there.is_air());
         let broke = mode == SetMode::Destroy && ctx.break_block(pos);
@@ -96,32 +97,6 @@ impl Command for SetBlock {
             true => out.translate("commands.setblock.success", Vec::new(), true),
             false => out.translate("commands.setblock.noChange", Vec::new(), false),
         }
-    }
-}
-
-#[derive(Command)]
-#[command(crate = "crate", name = "fill", description = "Fills all or parts of a region with a block", permission = "operator")]
-pub(crate) struct Fill {
-    from: BlockCoords,
-    to: BlockCoords,
-    block: BlockName,
-    states: Option<States>,
-}
-
-impl Command for Fill {
-    fn run(self, ctx: &mut ShardCtx<'_>, sender: &Sender, out: &mut Output) {
-        let here = origin(ctx, sender);
-        let (from, to) = (self.from.from(here), self.to.from(here));
-        let (low, high): (BlockPos, BlockPos) = (std::array::from_fn(|axis| from[axis].min(to[axis])), std::array::from_fn(|axis| from[axis].max(to[axis])));
-        let count: i64 = (0..3).map(|axis| i64::from(high[axis] - low[axis]) + 1).product();
-        if count > MAX_FILL {
-            return out.translate("commands.fill.tooManyBlocks", vec![count.to_string(), MAX_FILL.to_string()], false);
-        }
-        let block = block(&self.block.0, self.states.as_ref());
-        let cells: Vec<BlockPos> = (low[0]..=high[0]).flat_map(|x| (low[1]..=high[1]).flat_map(move |y| (low[2]..=high[2]).map(move |z| [x, y, z]))).collect();
-        let filled: u32 = ctx.batch_blocks(|ctx| cells.iter().map(|&pos| u32::from(changed(ctx, pos, &block))).sum());
-        // Nothing changed is BDS's success line with a 0, failed (73 of research/captures/bds-*.txt).
-        out.translate("commands.fill.success", vec![filled.to_string()], filled > 0);
     }
 }
 
@@ -139,16 +114,15 @@ impl Command for TestForBlock {
     // TODO: BDS names a block by its `tile.` key, which for some is not its name (stone is
     // `tile.stone.stone.name`); here the key is made of the name.
     fn run(self, ctx: &mut ShardCtx<'_>, sender: &Sender, out: &mut Output) {
-        let pos = self.position.from(origin(ctx, sender));
+        let pos = self.position.from(ctx.origin(sender));
         let place = || pos.map(|c| c.to_string()).to_vec();
         let wanted = block(&self.block.0, self.states.as_ref());
         let there = ctx.block(pos).unwrap_or_else(|| Block::new(Block::AIR));
         let key = |name: &str| format!("%tile.{}.name", name.rsplit(':').next().unwrap_or(name));
-        let has = |state: &str| there.properties.split(',').any(|held| held == state);
         if there.name != wanted.name {
             return out.translate("commands.testforblock.failed.tile", [place(), vec![key(&there.name), key(&wanted.name)]].concat(), false);
         }
-        match self.states.as_ref().is_none_or(|states| states.0.split(',').filter(|state| !state.is_empty()).all(has)) {
+        match self.states.as_ref().is_none_or(|states| has_states(&there, &states.0)) {
             true => out.translate("commands.testforblock.success", place(), true),
             false => out.translate("commands.testforblock.failed.data", place(), false),
         }

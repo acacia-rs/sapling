@@ -87,8 +87,11 @@ Mobs summoned 4 blocks from the actor under an open sky:
   in rain.
 
 Sapling burns the kinds whose pack entry has `minecraft:burns_in_daylight` (`mob-traits.tsv`
-`burns_in_sun`) so, between the Java game's bounds of the day (`creatures/harm.rs` `is_sunlit`);
-rain keeps them from it as there (`weather.rs`), and a helmet does not shade.
+`burns_in_sun`) so while the sky is darkened by 3 or less and their head's cell has sky light 15
+(`creatures/harm.rs` `is_sunlit`); rain keeps them from it where it falls on their feet in a
+biome too warm for snow. BDS's rule (`BurnsInDaylightSystem`, read with bdsre) is in
+growth.md "Light": BDS also spares a mob with something on its head, which sapling's mobs never
+have, and one in powder snow, which sapling does not ask.
 
 ## Where sapling differs
 

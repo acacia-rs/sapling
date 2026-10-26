@@ -89,6 +89,13 @@ pub(crate) fn spawn(world: &mut World, layer: Entity, at: [f32; 3], points: i32)
     }
 }
 
+/// Pays `points` to the player as orbs where it stands, at its eyes.
+pub(crate) fn pay_player(world: &mut World, player: Entity, points: i32) {
+    let (Some(position), Some(layer)) = (world.get::<Position>(player).copied(), world.get::<InLayer>(player).map(|layer| layer.0)) else { return };
+    let [x, y, z] = position.feet;
+    spawn(world, layer, [x, y + sapling_data::EYE_HEIGHT, z], points);
+}
+
 /// One orb worth `value`, thrown a little up and aside from `at`.
 pub(crate) fn throw(world: &mut World, layer: Entity, at: [f32; 3], value: i32) -> Option<Entity> {
     let mut throw = || random(world) * 0.2;
@@ -176,12 +183,16 @@ fn step(world: &mut World, entity: Entity, orb: &mut Orb, layer: Entity, id: u64
     Fate::Stays
 }
 
-/// A player takes an orb worth `value` at `at`: it hears it, and gets its experience.
+/// A player takes an orb worth `value` at `at`: it hears it, the orb mends what it has on with
+/// Mending first, and it gets the rest as experience.
 fn taken(world: &mut World, layer: Entity, value: i32, at: [f32; 3], player: Entity) {
     let [x, y, z] = at;
     let sound = LevelEvent { event: LevelEventEvent::SoundOrb, position: Vec3f { x, y, z }, data: 0 };
     blocks::to_viewers(world, layer, at.map(|c| c.floor() as i32), &[sapling_net::encode(&sound)]);
-    experience::give(world, player, value);
+    let left = crate::enchants::mend(world, player, value);
+    if left > 0 {
+        experience::give(world, player, left);
+    }
 }
 
 /// Moves every orb a tick: falling, following and being taken.

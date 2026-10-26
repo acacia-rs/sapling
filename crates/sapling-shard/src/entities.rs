@@ -44,7 +44,17 @@ pub(crate) fn new_unique_id(world: &World, entity: Entity) -> Option<i64> {
 /// Makes the entity one a world folder keeps.
 pub(crate) fn keep(world: &mut World, entity: Entity, layer: Entity, unique_id: i64, compound: Vec<u8>) {
     world.get_resource_or_insert_with(Managed::default).0.insert((layer, unique_id));
-    world.entity_mut(entity).insert(Stored { compound });
+    world.entity_mut(entity).insert((Stored { compound }, crate::tags::UniqueId(unique_id)));
+}
+
+/// Rewrites what a world folder keeps of the entity by `change`, which gets its world's blocks;
+/// left as it was where `change` makes nothing.
+pub(crate) fn restore(world: &mut World, entity: Entity, change: impl FnOnce(&[u8], &sapling_world::BlockRegistry) -> Option<Vec<u8>>) {
+    let level = world.get::<InLayer>(entity).and_then(|layer| world.get::<Layer>(layer.0));
+    let Some(compound) = level.zip(world.get::<Stored>(entity)).and_then(|(level, stored)| change(&stored.compound, level.world.registry())) else { return };
+    if let Some(mut stored) = world.get_mut::<Stored>(entity) {
+        stored.compound = compound;
+    }
 }
 
 /// The tick an entity appeared in: its viewers are told of it after the tick's handlers, so a
@@ -134,7 +144,10 @@ fn all(world: &World) -> impl Iterator<Item = (Entity, Entity, EntityInfo)> + '_
     world.iter_entities().filter_map(|entity| {
         let (id, layer, kind, body) = (entity.get::<NetId>()?, entity.get::<InLayer>()?, entity.get::<Kind>()?, entity.get::<Body>()?);
         let item = entity.get::<Dropped>().map(|dropped| described(dropped.stack()));
-        let info = EntityInfo::new(EntityId(id.0), kind.0.clone(), body.at, body.motion, body.on_ground).with_item(item);
+        let mut info = EntityInfo::new(EntityId(id.0), kind.0.clone(), body.at, body.motion, body.on_ground).with_item(item);
+        if let Some(told) = entity.get::<Told>() {
+            [info.yaw, info.pitch] = told.facing();
+        }
         Some((entity.id(), layer.0, info))
     })
 }
@@ -184,7 +197,7 @@ pub(crate) fn step(world: &mut World, entity: Entity, layer: Entity, id: u64, ph
     Some((body, packets))
 }
 
-fn is_new(world: &World, entity: Entity) -> bool {
+pub(crate) fn is_new(world: &World, entity: Entity) -> bool {
     world.get::<Born>(entity).is_some_and(|born| born.0 == world.resource::<Tick>().0)
 }
 

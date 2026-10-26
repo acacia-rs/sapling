@@ -28,7 +28,8 @@ pub(crate) fn slots_of(world: &World, player: Entity) -> Option<Vec<Option<Held>
     match viewing.screen {
         Screen::Own => Some(world.get::<Inventory>(player)?.ender.clone()),
         Screen::Container => slots_at(world, viewing.layer, viewing.pos),
-        Screen::Station(_) => None,
+        Screen::Carried(vehicle) => crate::vehicles::cargo(world, vehicle),
+        Screen::Station(_) | Screen::Workstation(_) => None,
     }
 }
 
@@ -80,7 +81,8 @@ pub(crate) fn store(world: &mut World, player: Entity, slots: Vec<Option<Held>>)
             set_slots(world, viewing.layer, viewing.pos, slots.clone());
             crate::furnaces::taken_by_player(world, player, viewing.layer, viewing.pos, &before, &slots);
         }
-        Screen::Station(_) => {}
+        Screen::Carried(vehicle) => crate::vehicles::load_cargo(world, vehicle, slots),
+        Screen::Station(_) | Screen::Workstation(_) => {}
     }
 }
 
@@ -95,13 +97,7 @@ pub(crate) fn set_slots(world: &mut World, layer: Entity, pos: BlockPos, slots: 
     }) else {
         return;
     };
-    for (viewer, window) in viewers(world, layer, pos) {
-        let Some(mut out) = world.get_mut::<Outgoing>(viewer) else { continue };
-        for slot in &changed {
-            let window_id = WindowIDVarint::from_raw(window.into());
-            out.push(&InventorySlot { window_id, slot: *slot as u32, container: None, storage_item: None, item: wire(&slots[*slot], true) });
-        }
-    }
+    tell_changed(world, viewers(world, layer, pos), &changed, &slots);
     halves.iter().for_each(|half| crate::blocks::container_changed(world, layer, *half));
     for (half, held) in halves.iter().zip(slots.chunks(per_half)) {
         let Some(entity) = entity_holding(world, layer, *half, held) else { return };
@@ -110,6 +106,22 @@ pub(crate) fn set_slots(world: &mut World, layer: Entity, pos: BlockPos, slots: 
         }
     }
     super::brewing::show_bottles(world, layer, pos, &slots);
+}
+
+/// Shows `viewers` (each with its window) the `changed` slots of `slots`, slot by slot.
+pub(crate) fn tell_changed(world: &mut World, viewers: Vec<(Entity, u8)>, changed: &[usize], slots: &[Option<Held>]) {
+    for (viewer, window) in viewers {
+        let Some(mut out) = world.get_mut::<Outgoing>(viewer) else { continue };
+        for slot in changed {
+            let window_id = WindowIDVarint::from_raw(window.into());
+            out.push(&InventorySlot { window_id, slot: *slot as u32, container: None, storage_item: None, item: wire(&slots[*slot], true) });
+        }
+    }
+}
+
+/// The players who have the goods of `vehicle` open, each with its window.
+pub(crate) fn carried_viewers(world: &mut World, vehicle: Entity) -> Vec<(Entity, u8)> {
+    world.query::<(Entity, &Viewing)>().iter(world).filter(|(_, viewing)| viewing.screen == Screen::Carried(vehicle)).map(|(player, viewing)| (player, viewing.window)).collect()
 }
 
 /// The block entity at `pos` holding `held`; a container a handler set, or one stored without

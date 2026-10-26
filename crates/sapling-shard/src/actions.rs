@@ -19,6 +19,9 @@ pub(crate) fn dispatch_moves(world: &mut World) {
                 *position = from;
             }
             movement::teleport(world, entity, from.feet);
+        } else if let Some(layer) = world.get::<crate::components::InLayer>(entity).map(|layer| layer.0) {
+            let sneaking = world.get::<movement::Motion>(entity).is_some_and(|motion| motion.pose.sneaking);
+            crate::blocks::walked(world, entity, layer, from.feet, to.feet, to.on_ground, sneaking);
         }
     }
 }
@@ -44,10 +47,18 @@ pub(crate) fn allowed_hits(world: &mut World, hits: Vec<(Entity, u64)>) -> Vec<(
     hits.into_iter().filter(|&(entity, id)| offer_click(world, entity, id, EntityAttackEvent::new).is_some_and(|event| !event.is_cancelled())).collect()
 }
 
-/// Offers this tick's uses of players and entities; nothing in the game answers them yet.
+/// Offers this tick's uses of players and entities; one no plugin cancelled goes to the first that
+/// takes it: a vehicle's own use (vehicles.rs), raising (creatures/husbandry/clicks.rs), a trader's
+/// screen, then tack or a seat (riding/mounts.rs), as BDS mounts only on a click no `minecraft:interact`
+/// took (docs/research/vehicles.md, "Mounting").
 pub(crate) fn interacted(world: &mut World, uses: Vec<(Entity, u64)>) {
-    for (entity, id) in uses {
-        offer_click(world, entity, id, EntityInteractEvent::new);
+    for (player, id) in uses {
+        let allowed = offer_click(world, player, id, EntityInteractEvent::new).is_some_and(|event| !event.is_cancelled());
+        let Some(target) = entities::find(world, EntityId(id)).filter(|_| allowed) else { continue };
+        let _ = crate::vehicles::used_on(world, player, target)
+            || crate::creatures::interact(world, player, target)
+            || crate::creatures::trade_with(world, player, id)
+            || crate::riding::used_on(world, player, target);
     }
 }
 

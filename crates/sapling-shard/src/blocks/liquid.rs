@@ -134,7 +134,7 @@ pub(super) fn disturb(world: &mut World, layer: Entity, pos: BlockPos) {
 /// After a block at `pos` changed for another reason (a break, a place, a handler's write): only
 /// the liquid beside it is queued, as BDS's `neighborChanged` reaches the neighbours; a liquid
 /// written there itself waits for them (`setblock water` stands still). Lava hardens all the same.
-pub(super) fn neighbours_changed(world: &mut World, layer: Entity, pos: BlockPos) {
+pub(crate) fn neighbours_changed(world: &mut World, layer: Entity, pos: BlockPos) {
     wake(world, layer, pos, false);
 }
 

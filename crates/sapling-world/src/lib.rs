@@ -3,13 +3,17 @@
 //! cache that every player shares. A [`Template`] is a world frozen in memory that arenas
 //! (`World::arena`) read until they write (docs/DESIGN.md "Arenas").
 
+mod climate;
 mod column;
 #[cfg(test)]
 mod dimension_tests;
 mod folder;
 mod generated;
+mod level;
+mod light;
 mod load_queue;
 mod loader;
+mod locate;
 mod players;
 mod storage;
 mod template;
@@ -24,14 +28,18 @@ pub use acacia_world::{Aabb, BlockRegistry, Chunk, Dimension, LevelChunkData, Ma
 pub use column::{SubChunkAnswer, empty_column};
 pub use folder::WorldFolder;
 pub use generated::Generated;
+pub use light::FULL_LIGHT;
 pub use sapling_leveldb::LevelDat;
 pub use players::PlayerLoad;
+pub use sapling_leveldb::{Raising, raised_actor, raising, regrouped_actor};
 pub use sapling_leveldb::{
-    DragonFightRecord, PortalRecord,
-    Actor, BlockEntity, ItemStack, Painting, PlayerData, State as ActorState, actors, block_of_hash, container_items, falling_block, harmed_actor, lying_stack, moved_actor, new_actor, new_falling_block_actor, new_item_actor, new_orb_actor, orb_value, orb_worth, new_block_entity, stored_actors,
-    with_container_items,
+    DragonFightRecord, PortalRecord, DisplayRecord, ObjectiveRecord, ScoreIdentity, ScoreboardRecord, actor_tags, decode_scoreboard, encode_scoreboard, tagged_actor,
+    Actor, BlockEntity, ItemStack, Painting, PlayerData, State as ActorState, actors, block_of_hash, container_items, falling_block, harmed_actor, lying_stack, moved_actor, new_actor, new_falling_block_actor, new_item_actor, new_orb_actor, new_shot_actor, orb_value, orb_worth, new_block_entity, shot_record, stored_actors, ShotRecord,
+    with_container_items, actor_chest, actor_links, chested_actor, flagged_actor, linked_actor, varied_actor,
+    StructureTemplate, TickingAreaRecord, structure_name, palette_block, placed_actor,
 };
-pub use storage::{Level, LevelDbStorage, MemoryStorage, StorageError, StoredColumn, WorldStorage};
+pub use storage::{Level, LevelDbStorage, MemoryStorage, ShapeLoader, StorageError, StoredColumn, WorldStorage};
+pub use sapling_worldgen::{PlaceFailure, is_feature};
 pub use template::Template;
 pub use world::{END, NETHER, OVERWORLD, World};
 

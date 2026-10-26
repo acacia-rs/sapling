@@ -53,10 +53,32 @@ impl V2Start {
 
     pub fn assemble(&self, random: &mut JavaRandom, level_seed: i64, chunk: (i32, i32), height: &dyn Fn(i32, i32) -> i32) -> Vec<Piece> {
         let (piece, (x, y, z)) = self.start_piece(random, chunk, height);
-        let (h, v, pad) = (self.horizontal, self.vertical, self.padding);
-        let limit = BoundingBox::new(x - h, (y - v).max(MIN_Y + pad), z - h, x + h, (y + v).min(MAX_Y - pad), z + h);
         let start_y = if self.project { y - height(x, z) } else { y };
         let aliases = self.resolve_aliases(level_seed, (chunk.0 * 16, start_y, chunk.1 * 16));
+        self.grow(piece, (x, y, z), aliases, random, height)
+    }
+
+    /// Java's `/place jigsaw` start (`JigsawPlacement.addPieces` given a start jigsaw name): a
+    /// rotation and an element of the pool, placed so its first shuffled jigsaw named `target` is
+    /// at `at`, then sunk one as every v2 start; None when the element has no such jigsaw.
+    pub fn named_start(&self, target: &str, at: (i32, i32, i32), random: &mut JavaRandom) -> Option<(Piece, (i32, i32, i32))> {
+        let pool = data().pool(self.pool).filter(|p| !p.list.is_empty())?;
+        let rotation = Rotation::from_index(random.next_int(4));
+        let element = pool.list[random.next_int(pool.list.len() as i32) as usize];
+        let mut jigsaws = element.jigsaws((0, 0, 0), rotation);
+        random.shuffle(&mut jigsaws);
+        let jigsaw = jigsaws.iter().find(|j| j.name == target)?;
+        let mut piece = Piece::new(element, (at.0 - jigsaw.pos.0, at.1 - jigsaw.pos.1, at.2 - jigsaw.pos.2), rotation, 0);
+        piece.shift_y(-1);
+        let b = piece.bb;
+        Some((piece, (middle(b.x0, b.x1), at.1, middle(b.z0, b.z1))))
+    }
+
+    /// The queued placer from `piece`, within the structure's reach of `centre`, kept off the
+    /// world's top and bottom by the padding.
+    pub fn grow(&self, piece: Piece, (x, y, z): (i32, i32, i32), aliases: Vec<(&'static str, &'static str)>, random: &mut JavaRandom, height: &dyn Fn(i32, i32) -> i32) -> Vec<Piece> {
+        let (h, v, pad) = (self.horizontal, self.vertical, self.padding);
+        let limit = BoundingBox::new(x - h, (y - v).max(MIN_Y + pad), z - h, x + h, (y + v).min(MAX_Y - pad), z + h);
         let mut assembler = Assembler::new(Variant::V2, self.max_depth, random, height);
         assembler.aliases = aliases;
         assembler.run_queue(piece, limit);

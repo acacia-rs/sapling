@@ -1,8 +1,8 @@
 //! The crafting recipes clients are told of (`CraftingData.bin`, BDS's own list), read for the
 //! server's side of a craft: what a recipe uses up and what it makes.
 // TODO: the crafting grid's shaped and shapeless recipes, the stonecutter's, the three
-// smelters' and campfires'; smithing and the special recipes (maps, fireworks, dyed armour) are
-// sent to clients but not read here.
+// smelters' and campfires', the smithing table's (smithing.rs); the special recipes (maps,
+// fireworks, dyed armour) are known by network id alone (`is_special`); what they make is the shard's.
 
 use std::collections::{HashMap, HashSet};
 use std::sync::LazyLock;
@@ -14,6 +14,9 @@ use crate::items::{CreativeItem, described};
 use crate::templates::{CRAFTING_DATA, decode};
 
 mod molang;
+mod smithing;
+
+pub use smithing::smithed;
 
 const GRID: &str = "crafting_table";
 /// The metadata of an ingredient that takes any.
@@ -166,9 +169,25 @@ fn outputs(made: Vec<ItemLegacy>) -> Vec<(CreativeItem, u8)> {
     made.into_iter().filter_map(|item| Some((u8::try_from(item.count).ok()?, described(item)?))).map(|(count, item)| (item, count)).collect()
 }
 
+/// The crafting table's recipe a grid lays out, as a crafter looks for one: the lowest network id
+/// of those that fit, so that the choice does not turn on the map's order.
+pub fn laid_out_in(grid: &Grid<'_>) -> Option<&'static Recipe> {
+    let fits = |(_, recipe): &(&u32, &Recipe)| matches!(recipe.station, Station::Hand | Station::Table) && recipe.is_laid_out(grid);
+    RECIPES.iter().filter(fits).min_by_key(|(id, _)| **id).map(|(_, recipe)| recipe)
+}
+
 /// The recipe a client names by `network_id` in a craft request.
 pub fn recipe(network_id: u32) -> Option<&'static Recipe> {
     RECIPES.get(&network_id)
+}
+
+/// The network ids of the special recipes, whose result the grid's items decide.
+static SPECIAL: LazyLock<HashSet<u32>> = LazyLock::new(|| decode::<CraftingData>(CRAFTING_DATA).multi_recipes.into_iter().map(|recipe| recipe.network_id).collect());
+
+/// Whether a client's craft request names one of the special recipes.
+pub fn is_special(network_id: u32) -> bool {
+    crate::set_shield_item_id();
+    SPECIAL.contains(&network_id)
 }
 
 /// The items of each tag the recipes name (`data/item-tags.tsv`, README.md "Item tags"): clients
@@ -236,5 +255,11 @@ mod tests {
         let log = Some(("minecraft:oak_log", 0));
         assert!(from_log.is_laid_out(&[None, None, None, log]) && !from_log.is_laid_out(&[log, None, None, log]) && !from_log.is_laid_out(&[None; 4]));
         assert!(has_tag("minecraft:birch_planks", "minecraft:planks") && has_tag("minecraft:charcoal", "minecraft:coals") && !has_tag("minecraft:stone", "minecraft:planks"));
+    }
+
+    #[test]
+    fn the_special_recipes_are_known_by_id_and_listed_apart() {
+        assert!(SPECIAL.len() >= 3, "{} special recipes", SPECIAL.len());
+        assert!(SPECIAL.iter().all(|id| is_special(*id) && recipe(*id).is_none()));
     }
 }

@@ -123,6 +123,12 @@ pub fn mob_size(identifier: &str) -> Option<[f32; 2]> {
     Some([size(Key::BoundingboxWidth)?, size(Key::BoundingboxHeight)?])
 }
 
+/// How BDS announced a grown or a baby mob of `identifier`.
+pub(crate) fn recorded(identifier: &str, baby: bool) -> Option<&'static AddEntity> {
+    let kind = RECORDED.get(identifier)?;
+    if baby { kind.baby.as_ref() } else { Some(&kind.grown) }
+}
+
 /// The full health of a mob of `identifier`, as BDS announced one.
 pub fn mob_health(identifier: &str) -> Option<f32> {
     RECORDED.get(identifier)?.grown.attributes.iter().find(|attribute| attribute.name == HEALTH).map(|attribute| attribute.max)

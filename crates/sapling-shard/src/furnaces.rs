@@ -164,7 +164,7 @@ pub(crate) fn taken_by_player(world: &mut World, player: Entity, layer: Entity, 
     let Some(taken) = was.stack.count.checked_sub(left).filter(|taken| *taken > 0) else { return };
     let owed = owe(world, layer, pos, |_| 0);
     let points = xp::reward(world, &was.stack, taken, owed);
-    xp::pay_player(world, player, points);
+    crate::orbs::pay_player(world, player, points);
 }
 
 /// The furnace at `pos` is being broken with `slots`: its result's and owed experience lies there.

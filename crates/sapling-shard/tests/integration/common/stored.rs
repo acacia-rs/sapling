@@ -7,7 +7,7 @@ use acacia_proto::RawPacket;
 use acacia_proto::nbt::{self, List, LittleEndian, Nbt, Value};
 use acacia_proto::packets::{PlayStatus, SetLocalPlayerAsInitialized};
 use bytes::BytesMut;
-use sapling_world::{BlockRegistry, Chunk, ChunkPos, Dimension, MemoryStorage, StoredColumn, WorldStorage};
+use sapling_world::{BlockRegistry, Chunk, ChunkPos, Dimension, ItemStack, MemoryStorage, StoredColumn, WorldStorage};
 
 use super::{Harness, all};
 
@@ -15,12 +15,30 @@ pub fn compound<const N: usize>(fields: [(&str, Value); N]) -> Value {
     Value::Compound(fields.map(|(key, value)| (nbt::Str::from(key), value)).into())
 }
 
+/// A stack of one `name` with `levels` of enchantments (by id) and worn by `damage`.
+pub fn enchanted(name: &str, levels: &[(i16, i16)], damage: i32) -> Option<ItemStack> {
+    let entry = |(id, level): &(i16, i16)| compound([("id", Value::Short(*id)), ("lvl", Value::Short(*level))]);
+    let tag = compound([("ench", Value::List(List { tag: 10, items: levels.iter().map(entry).collect() })), ("Damage", Value::Int(damage))]);
+    Some(ItemStack { name: name.into(), count: 1, damage: 0, block: None, tag: Some(tag) })
+}
+
+pub fn plain(name: &str) -> Option<ItemStack> {
+    Some(ItemStack { name: name.into(), count: 1, damage: 0, block: None, tag: None })
+}
+
 /// A stored actor with one field of its kind's own.
 pub fn actor(id: i64, identifier: &str, feet: [f32; 3], own: (&str, Value)) -> Vec<u8> {
+    actor_with(id, identifier, feet, vec![own])
+}
+
+/// A stored actor with fields of its kind's own.
+pub fn actor_with(id: i64, identifier: &str, feet: [f32; 3], own: Vec<(&str, Value)>) -> Vec<u8> {
     let floats = |items: &[f32]| Value::List(List { tag: 5, items: items.iter().map(|&item| Value::Float(item)).collect() });
-    let fields = [("UniqueID", Value::Long(id)), ("identifier", Value::String(identifier.into())), ("Pos", floats(&feet)), ("Rotation", floats(&[90.0, 0.0])), own];
+    let mut fields = vec![("UniqueID", Value::Long(id)), ("identifier", Value::String(identifier.into())), ("Pos", floats(&feet)), ("Rotation", floats(&[90.0, 0.0]))];
+    fields.extend(own);
+    let value = Value::Compound(fields.into_iter().map(|(key, value)| (nbt::Str::from(key), value)).collect());
     let mut out = BytesMut::new();
-    nbt::write::<LittleEndian>(&mut out, &Nbt { name: String::new(), value: compound(fields) });
+    nbt::write::<LittleEndian>(&mut out, &Nbt { name: String::new(), value });
     out.to_vec()
 }
 
@@ -43,7 +61,7 @@ pub fn floor_holding(actors: Vec<u8>, blocks: &[([i32; 3], &str)]) -> Arc<Memory
 
 /// Joins `conn` and ticks until it is in the world; returns everything it was sent.
 pub fn enter_stored(h: &mut Harness, conn: u64) -> Vec<RawPacket> {
-    h.join_to_radius(conn, 2);
+    let joined = h.join_to_radius(conn, 2);
     let deadline = Instant::now() + Duration::from_secs(10);
     let mut sent = Vec::new();
     while all::<PlayStatus>(&sent).is_empty() {
@@ -53,5 +71,5 @@ pub fn enter_stored(h: &mut Harness, conn: u64) -> Vec<RawPacket> {
     }
     h.receive(conn, &SetLocalPlayerAsInitialized { runtime_entity_id: 0 });
     (0..3).for_each(|_| sent.extend(h.tick(conn)));
-    sent
+    [joined, sent].concat()
 }

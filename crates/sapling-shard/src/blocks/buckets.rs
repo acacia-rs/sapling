@@ -9,14 +9,12 @@ use acacia_proto::packets::{LevelEvent, LevelEventEvent};
 use acacia_proto::types::Vec3f;
 use sapling_api::{Block, BlockPos, BreakEvent, Face, GameMode, PlaceEvent};
 use sapling_data::LiquidReaction;
-use sapling_world::ItemStack;
 
 use super::liquid::{self, Cell, Liquid};
 use super::loot::{self, Breaker};
 use super::{Request, Site, level, send, waterlog};
 use crate::components::Position;
-use crate::drops;
-use crate::inventory::{self, Inventory, Place};
+use crate::inventory;
 
 const BUCKET: &str = "minecraft:bucket";
 const WATER_BUCKET: &str = "minecraft:water_bucket";
@@ -147,21 +145,8 @@ impl Request<'_> {
         send::to_viewers(self.world, site.layer, feet.map(|c| c.floor() as i32), &[send::noise(name, Vec3f { x, y, z }, -1)]);
     }
 
-    /// One of the held stack becomes `into`: in its slot when it was the last, else added to the
-    /// inventory or, without room, thrown.
+    /// See [`inventory::swap_held`].
     pub(super) fn swap_held(&mut self, into: &str) {
-        let new = ItemStack { name: into.to_owned(), count: 1, damage: 0, block: None, tag: None };
-        let spilled = inventory::change(self.world, self.entity, |inventory: &mut Inventory| {
-            let slot = Place::Main(inventory.selected.into());
-            inventory.take(slot, 1).ok()?;
-            if inventory.slot(slot).is_some_and(Option::is_none) {
-                inventory.put(slot, Some(new.clone()));
-                return None;
-            }
-            (inventory.add(&new) > 0).then(|| new.clone())
-        });
-        if let Some(Some(stack)) = spilled {
-            drops::throw(self.world, self.entity, stack);
-        }
+        inventory::swap_held(self.world, self.entity, into);
     }
 }

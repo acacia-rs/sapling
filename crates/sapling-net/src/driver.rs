@@ -39,14 +39,14 @@ pub(crate) struct Driver {
     pub public_ip: Option<IpAddr>,
     pub motd: Motd,
     pub guid: u64,
-    pub max_players: usize,
+    pub max_players: crate::PlayerLimit,
 }
 
 impl Driver {
     /// Runs until the game drops its outbox or inbox, then says goodbye to every player.
     pub async fn run(mut self) {
         let port = self.socket.local_addr().map_or(0, |a| a.port());
-        let mut advertised = usize::MAX;
+        let mut advertised = (usize::MAX, 0);
         let mut backlogs_checked = Instant::now();
         let (mut buf, mut lan_buf) = (vec![0u8; DATAGRAM_BUF], vec![0u8; LAN_BUF]);
         while self.sessions.has_game() {
@@ -59,9 +59,10 @@ impl Driver {
                 self.sessions.on_event(&mut self.links, event, now);
             }
             self.sessions.expire_logins(&mut self.links, now);
-            if advertised != self.sessions.player_count() {
-                advertised = self.sessions.player_count();
-                self.links.raknet.set_motd(self.motd.pong(self.guid, advertised, self.max_players, port));
+            self.sessions.enforce_bans(&mut self.links, now);
+            if advertised != (self.sessions.player_count(), self.max_players.get()) {
+                advertised = (self.sessions.player_count(), self.max_players.get());
+                self.links.raknet.set_motd(self.motd.pong(self.guid, advertised.0, advertised.1, port));
             }
             self.flush(now).await;
             if now.duration_since(backlogs_checked) >= BACKLOG_CHECK {
@@ -106,7 +107,7 @@ impl Driver {
     fn on_request(&mut self, request: Request, port: u16) {
         match request {
             Request::Status(reply) => {
-                let _ = reply.send(self.motd.status(self.sessions.player_count(), self.max_players));
+                let _ = reply.send(self.motd.status(self.sessions.player_count(), self.max_players.get()));
             }
             Request::Join { offer, local, reply } => {
                 let local = SocketAddr::new(self.public_ip.unwrap_or(local), port);
@@ -119,7 +120,7 @@ impl Driver {
     async fn on_lan_datagram(&mut self, data: &[u8], from: SocketAddr, port: u16) {
         let Some(lan) = self.lan.as_mut() else { return };
         let (players, online) = (self.sessions.player_count(), self.sessions.online_mode());
-        let advert = || self.motd.server_data(players, self.max_players, online);
+        let advert = || self.motd.server_data(players, self.max_players.get(), online);
         for reply in lan.handle(data, from, port, advert, &mut self.sessions, &mut self.links, Instant::now()) {
             let _ = lan.socket.send_to(&reply, from).await;
         }

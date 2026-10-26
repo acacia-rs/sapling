@@ -5,12 +5,13 @@ use std::path::Path;
 use std::sync::Mutex;
 use std::time::{SystemTime, UNIX_EPOCH};
 
-use acacia_proto::nbt::Value;
 use acacia_world::Chunk;
-use sapling_data::{GameRules, RuleValue};
-use sapling_leveldb::{ChunkKey, DragonFightRecord, LevelDat, LevelDbWorld, PlayerData, PortalRecord};
+use sapling_leveldb::{ChunkKey, LevelDat, LevelDbWorld, PlayerData};
+use sapling_worldgen::{Block, ChunkShape, PlaceFailure};
 
 use crate::ChunkPos;
+pub use crate::level::Level;
+use crate::level::{read_rules, read_structures, write_rules};
 
 pub type StorageError = Box<dyn std::error::Error + Send + Sync>;
 
@@ -27,60 +28,6 @@ pub struct StoredColumn {
 impl StoredColumn {
     pub fn of(chunk: Chunk) -> Self {
         Self { chunk, block_entities: Vec::new(), actors: Vec::new() }
-    }
-}
-
-/// What a world keeps besides its columns; storage saves it when the world closes.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Level {
-    /// The spawn block; y 32767 leaves the height to the surface, as vanilla saves it.
-    pub spawn: Option<[i32; 3]>,
-    /// The time of day counter: a day is 24000 long and the count runs on past it, while the
-    /// `doDayLightCycle` rule is on.
-    pub time: i64,
-    pub rules: GameRules,
-    /// The lit Nether portals of every dimension, by which a portal finds the one it leads to.
-    pub portals: Vec<PortalRecord>,
-    /// The world seed (`RandomSeed`): BDS seeds the draws of its portal making with it.
-    pub seed: i64,
-    /// The End's dragon fight, once one began (`TheEnd`).
-    pub dragon_fight: Option<DragonFightRecord>,
-}
-
-impl Default for Level {
-    /// Noon, since a world without storage has nothing to say when it is.
-    fn default() -> Self {
-        Self { spawn: None, time: 6000, rules: GameRules::default(), portals: Vec::new(), seed: 0, dragon_fight: None }
-    }
-}
-
-/// The rules `level.dat` sets: each under its name in lower case, a byte for a switch.
-fn read_rules(dat: &LevelDat) -> GameRules {
-    let mut rules = GameRules::default();
-    let names: Vec<&str> = rules.iter().map(|(name, _)| name).collect();
-    for name in names {
-        let value = match dat.root.get(&name.to_ascii_lowercase()) {
-            Some(Value::Byte(on)) => RuleValue::Bool(*on != 0),
-            Some(Value::Int(n)) => RuleValue::Int(*n),
-            _ => continue,
-        };
-        rules.set(name, value);
-    }
-    rules
-}
-
-/// Writes the rules `level.dat` held already and those that are not BDS's default.
-fn write_rules(dat: &mut LevelDat, rules: &GameRules) {
-    let defaults = GameRules::default();
-    for (name, value) in rules.iter() {
-        let key = name.to_ascii_lowercase();
-        if dat.root.get(&key).is_none() && defaults.get(name) == Some((name, value)) {
-            continue;
-        }
-        dat.set(&key, match value {
-            RuleValue::Bool(on) => Value::Byte(i8::from(on)),
-            RuleValue::Int(n) => Value::Int(n),
-        });
     }
 }
 
@@ -121,7 +68,28 @@ pub trait WorldStorage: Send + Sync + 'static {
     fn locate_stronghold(&self, _x: i32, _z: i32) -> Option<[i32; 3]> {
         None
     }
+    /// The block column (x, z) `/locate structure` answers for the structure `name` from block
+    /// (x, z); `None` where storage makes none. Computes without disk.
+    fn locate_structure(&self, _name: &str, _x: i32, _z: i32) -> Option<[i32; 2]> {
+        None
+    }
+    /// The biome the generator gives the cell; `None` where storage generates nothing.
+    fn generated_biome(&self, _x: i32, _y: i32, _z: i32) -> Option<u32> {
+        None
+    }
+    /// The blocks the generator's structure `name` places when it starts in chunk `start`, over
+    /// the shapes `load` gives; `None` where storage generates no structures.
+    fn structure_writes(&self, _name: &str, _start: ChunkPos, _load: &ShapeLoader<'_>) -> Option<Result<Vec<([i32; 3], Block)>, PlaceFailure>> {
+        None
+    }
+    /// [`WorldStorage::structure_writes`] for the jigsaw pool `pool`, as `/place jigsaw` assembles it.
+    fn jigsaw_writes(&self, _pool: &str, _target: &str, _max_depth: u32, _at: [i32; 3], _load: &ShapeLoader<'_>) -> Option<Result<Vec<([i32; 3], Block)>, PlaceFailure>> {
+        None
+    }
 }
+
+/// What the generator draws a structure over: the shape of chunk (x, z) as the world holds it.
+pub type ShapeLoader<'a> = dyn Fn(i32, i32) -> std::sync::Arc<ChunkShape> + 'a;
 
 /// Shared storage, e.g. a folder's database wrapped in [`crate::Generated`] while still held.
 impl<S: WorldStorage + ?Sized> WorldStorage for std::sync::Arc<S> {
@@ -151,6 +119,18 @@ impl<S: WorldStorage + ?Sized> WorldStorage for std::sync::Arc<S> {
     }
     fn locate_stronghold(&self, x: i32, z: i32) -> Option<[i32; 3]> {
         (**self).locate_stronghold(x, z)
+    }
+    fn locate_structure(&self, name: &str, x: i32, z: i32) -> Option<[i32; 2]> {
+        (**self).locate_structure(name, x, z)
+    }
+    fn generated_biome(&self, x: i32, y: i32, z: i32) -> Option<u32> {
+        (**self).generated_biome(x, y, z)
+    }
+    fn structure_writes(&self, name: &str, start: ChunkPos, load: &ShapeLoader<'_>) -> Option<Result<Vec<([i32; 3], Block)>, PlaceFailure>> {
+        (**self).structure_writes(name, start, load)
+    }
+    fn jigsaw_writes(&self, pool: &str, target: &str, max_depth: u32, at: [i32; 3], load: &ShapeLoader<'_>) -> Option<Result<Vec<([i32; 3], Block)>, PlaceFailure>> {
+        (**self).jigsaw_writes(pool, target, max_depth, at, load)
     }
 }
 
@@ -224,7 +204,18 @@ impl LevelDbStorage {
             tracing::warn!(%error, "the dragon fight is unreadable; a new one begins");
             None
         });
-        Level { spawn: dat.spawn(), time: dat.time().unwrap_or(Level::default().time), rules: read_rules(dat), portals, seed: dat.seed().unwrap_or(0), dragon_fight }
+        let scoreboard = self.0.load_scoreboard().unwrap_or_else(|error| {
+            tracing::warn!(%error, "the scoreboard is unreadable; it starts empty");
+            None
+        });
+        let [folder_structures, structures] = read_structures(&self.0);
+        let ticking_areas = self.0.load_ticking_areas().unwrap_or_else(|error| {
+            tracing::warn!(%error, "the ticking areas are unreadable; there are none");
+            Vec::new()
+        });
+        let (spawn, rules, seed, hardcore) = (dat.spawn(), read_rules(dat), dat.seed().unwrap_or(0), dat.hardcore());
+        let (structures, folder_structures) = (structures.into(), folder_structures.into());
+        Level { spawn, time: dat.time().unwrap_or(Level::default().time), rules, portals, seed, dragon_fight, scoreboard, structures, folder_structures, ticking_areas, hardcore }
     }
 }
 
@@ -270,9 +261,15 @@ impl WorldStorage for LevelDbStorage {
             dat.set_spawn(spawn);
         }
         self.0.store_portals(&level.portals)?;
+        if let Some(board) = &level.scoreboard {
+            self.0.store_scoreboard(board)?;
+        }
         if let Some(fight) = &level.dragon_fight {
             self.0.store_dragon_fight(fight)?;
         }
+        let structures: Vec<(String, Vec<u8>)> = level.structures.iter().map(|(name, bytes)| (name.clone(), bytes.clone())).collect();
+        self.0.store_structures(&structures)?;
+        self.0.store_ticking_areas(&level.ticking_areas)?;
         Ok(self.0.flush(&dat)?)
     }
 

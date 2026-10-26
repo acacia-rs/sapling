@@ -104,7 +104,8 @@ impl Told {
     /// `ticks`, by the entity's `limits`.
     pub fn told_to(&mut self, viewer: Entity, eye: [f32; 3], now: u64, limits: Option<Limits>) -> Option<u64> {
         let pending = self.pending.as_ref()?;
-        let dropped = if pending.at_once { 0 } else { pace::dropped(limits, eye, self.at) };
+        let moving = [pending.delta.x, pending.delta.y, pending.delta.z].iter().any(Option::is_some);
+        let dropped = if pending.at_once { 0 } else { pace::dropped(limits, eye, self.at, moving) };
         self.paced.due(viewer, now, dropped).then_some(dropped)
     }
 
@@ -161,6 +162,19 @@ impl Told {
         Some(Flags(shown.told))
     }
 
+    /// A mob's `flag` no longer counts among those it was announced with (a stored baby's, a
+    /// tamed one's), so that [`Told::set_flag`] can clear it.
+    pub fn forget_announced(&mut self, flag: Flags) {
+        if let Some([announced, _]) = self.flags.as_mut().and_then(|shown| shown.mob.as_mut()) {
+            *announced &= !flag.0;
+        }
+    }
+
+    /// The whole word of a mob's flags its viewers know; `None` for an entity that is no mob.
+    pub fn mob_flags(&self) -> Option<Flags> {
+        self.flags.filter(|shown| shown.mob.is_some()).map(|shown| Flags(shown.told))
+    }
+
     /// [`Told::set_flag`], `None` too where viewers already knew `flag` to be so.
     pub fn change_flag(&mut self, flag: Flags, on: bool) -> Option<Flags> {
         let told = self.flags?.told;
@@ -191,6 +205,13 @@ impl Told {
     /// its next [`Told::update`].
     pub fn face(&mut self, yaw: f32, head: f32) {
         self.turn = [yaw, head].map(|degrees| (degrees.rem_euclid(360.0) * 256.0 / 360.0) as u8);
+    }
+
+    /// Its body's yaw and its pitch as they are now, in degrees from -180 to 180, to the
+    /// 1.4 degrees viewers are told them in.
+    pub fn facing(&self) -> [f32; 2] {
+        let degrees = |byte: u8| (f32::from(byte) * 360.0 / 256.0 + 180.0).rem_euclid(360.0) - 180.0;
+        [degrees(self.turn[0]), self.pitched.map_or(0.0, |[_, now]| degrees(now))]
     }
 
     /// The packets that bring viewers of the entity `id` to `at` (where the wire puts it) and

@@ -150,7 +150,8 @@ fn an_enderman_teleports_as_it_comes_and_when_hit_then_hits_its_hitter_for_4_5_a
     let enderman = all::<AddEntity>(&first)[0].runtime_id;
     assert!(teleported(&first) && heard(&first) == 2, "it teleports as it comes");
     let quiet: Vec<acacia_proto::RawPacket> = (0..40).flat_map(|_| h.tick_all().to(1).to_vec()).collect();
-    assert!(!teleported(&quiet) && health(&quiet).iter().all(|left| *left == 20.0), "then strolls, hitting nobody");
+    // Not "and no teleport": one a tick in 100 in the dark is BDS's too, drawn from its entity's id.
+    assert!(health(&quiet).iter().all(|left| *left == 20.0), "then strolls, hitting nobody");
 
     h.remote.run(move |ctx| assert!(ctx.move_entity(sapling_api::EntityId(enderman), [0.5, 65.0, 2.5])));
     drop(h.tick_all());

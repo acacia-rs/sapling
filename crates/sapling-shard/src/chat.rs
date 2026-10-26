@@ -1,14 +1,16 @@
 //! Chat: a client's line is cleaned, shown to the handlers and sent to everyone in the world
 //! under the sender's verified name, whatever name the packet claims.
 
+use std::collections::HashMap;
+
 use acacia_proto::packets::{
-    Text, TextCategory, TextContent, TextContentAnnouncement, TextContentChat, TextContentJson, TextContentRaw, TextContentTranslation, TextContentWhisper, TextType,
+    Text, TextCategory, TextContent, TextContentAnnouncement, TextContentChat, TextContentJson, TextContentJsonWhisper, TextContentRaw, TextContentTranslation, TextContentWhisper, TextType,
 };
 use bevy_ecs::prelude::*;
 use bytes::Bytes;
 use sapling_api::{ChatEvent, Player, PlayerId};
 
-use crate::components::{InLayer, Outgoing, PacketQueues, PerTick, in_world, in_world_identity};
+use crate::components::{Conn, InLayer, Net, Outgoing, PacketQueues, PerTick, in_world, in_world_identity};
 use crate::plugins;
 use crate::worlds;
 
@@ -17,6 +19,30 @@ const MAX_CHARS: usize = 512;
 /// Lines one player may send in a tick; more are dropped.
 const MAX_LINES_PER_TICK: usize = 3;
 const FORMAT: char = '§';
+/// Java's spam rule, BDS's not being known: a line adds 20, a tick takes 1 away, and a player
+/// over 200 (a line a second, or ten at once) is kicked.
+const SPAM_PER_LINE: u32 = 20;
+const SPAM_LIMIT: u32 = 200;
+const SPAM: &str = "disconnect.spam";
+
+/// Each player's spam count, by [`SPAM_PER_LINE`].
+#[derive(Resource, Default)]
+struct Spam(HashMap<Entity, u32>);
+
+/// Counts a line of `from`'s; false once it is over the limit, when it is also kicked.
+fn count_spam(world: &mut World, from: Entity) -> bool {
+    let mut spam = world.resource_mut::<Spam>();
+    let count = spam.0.entry(from).or_default();
+    let (was, now) = (*count, count.saturating_add(SPAM_PER_LINE));
+    *count = now;
+    if now <= SPAM_LIMIT {
+        return true;
+    }
+    if was <= SPAM_LIMIT && let Some(conn) = world.get::<Conn>(from).map(|conn| conn.0) {
+        world.resource::<Net>().0.kick(conn, SPAM);
+    }
+    false
+}
 
 /// A chat line without control characters and formatting codes, cut to length; `None` if nothing is left.
 fn clean(message: &str) -> Option<String> {
@@ -103,17 +129,35 @@ impl sapling_api::ChatBackend for crate::handlers::Ctx<'_> {
             out.0.push(packet);
         }
     }
+
+    /// `/me`'s line is a Chat with no sender (research/captures/bds-messaging.txt).
+    fn emote(&mut self, from: &str, message: &str) {
+        let content = TextContentChat { source_name: String::new(), message: format!("* {from} {message}") };
+        send_to_all(self.world, &text(TextType::Chat, TextCategory::Authored, TextContent::Chat(content), ""));
+    }
+
+    fn tell_raw(&mut self, to: PlayerId, json: &str) {
+        let content = TextContent::JsonWhisper(TextContentJsonWhisper { message: json.to_owned() });
+        let packet = text(TextType::JsonWhisper, TextCategory::MessageOnly, content, "");
+        if let Some(mut out) = self.out(to) {
+            out.0.push(packet);
+        }
+    }
 }
 
 /// Runs this tick's chat lines through the handlers and sends what they let through.
 pub(crate) fn dispatch(world: &mut World) {
+    world.get_resource_or_insert_with(Spam::default).0.retain(|_, count| {
+        *count -= 1;
+        *count > 0
+    });
     let lines = world.resource_mut::<PacketQueues>().take::<Text>();
     let mut limit = PerTick::new(MAX_LINES_PER_TICK);
     for (entity, packet) in lines {
         let TextContent::Chat(chat) = packet.content else { continue };
         let Some(from) = in_world_identity(world, entity) else { continue };
         let Some(message) = clean(&chat.message) else { continue };
-        if !limit.allow(entity) {
+        if !limit.allow(entity) || !count_spam(world, entity) {
             continue;
         }
         worlds::focus_on(world, entity);

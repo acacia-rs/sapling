@@ -14,8 +14,8 @@ it does on BDS and the two captures can be diffed:
    simulated on the server with BDS's gravity and drag and collide with blocks; no AI. One model for
    spawned mobs, the mobs a world folder stores (today statues, `mobs.rs`), lying items and falling
    blocks: built (`body.rs`, `sync.rs`, `entities.rs`, `creatures.rs`, `actors.rs`), stored mobs
-   saved back where they are. Items let go, orbs and falling blocks are saved with their column (`drops.rs`, `orbs.rs`,
-   `blocks/falling/flight.rs`); a falling block's `Time` is kept as its fall began.
+   saved back where they are. Items let go, orbs, falling blocks and players' stuck arrows and tridents are saved with their column (`drops.rs`, `orbs.rs`,
+   `blocks/falling/flight.rs`, `creatures/flight.rs`); a falling block's `Time` is kept as its fall began.
 2. **Vanilla commands**: built (`sapling::vanilla`); the drill probe runs on sapling
    (`tools/sapling-drill.sh`, on testbox `tools/remote-drill.sh`). Left: what the BDS-against-sapling
    diff of the drill captures still shows (`research/captures/sapling-vs-bds-findings.md`).
@@ -27,15 +27,31 @@ it does on BDS and the two captures can be diffed:
    clock`: the answers agree line for line; BDS writes its experience attributes in another
    order). A sapling capture that answers `commands.generic.unknown` or `.syntax` where BDS's
    does not names a command or a form still missing.
+   The spawn, region (`/clone`, `/fill`'s modes), item (`/enchant`, `/give` and `/clear` in
+   full), selecting and server commands answer as BDS did (`worldcmds`, `itemcmds`). Left there:
+   `/give`'s `can_destroy` and `can_place_on`, data-value block overloads, what BDS guesses are
+   listed in `docs/research/world-commands.md`.
+   `/scoreboard` and `/tag` answer as BDS did (`bds_command_probe scoreboard|scoreboard2`); left:
+   the unverified list in `docs/research/scoreboard.md`, and saving the board only when its shard closes or panics (no periodic world saves yet).
+   `/structure`, `/tickingarea`, `/place`, `/locate` and hardcore are built (`structures`, `ticking`,
+   `place`, `locate`, `hardcore`); left: the "Unverified" list of docs/research/structures-and-ticking.md,
+   structure blocks (StructureBlockUpdate, StructureTemplateDataRequest) and `/structure`'s animations.
 
    What a click does to a block (`docs/research/block-uses.md`, `clicks`), primed TNT (`tnt`) and
    bone meal (`docs/research/bone-meal.md`, `bonemeal`) are drilled and built. Saplings,
    propagules and azaleas grow worldgen's trees by bone meal and random tick, by BDS's decompiled
-   rules (`docs/research/saplings.md`, `blocks/saplings.rs`); not drilled against BDS, and no
-   light is asked for. Fire is lit, spreads,
+   rules (`docs/research/saplings.md`, `blocks/saplings.rs`), in light of 9 or more; not drilled
+   against BDS. The server reckons light now (DESIGN.md "Light (as built)"), and crops, stems,
+   bamboo, grass and mycelium, ice and snow, freezing and snowfall, mushrooms, daylight detectors
+   and the sun's burning ask it by BDS's decompiled rules (docs/research/growth.md "Light"; not
+   drilled), as does mob spawning (`spawning.rs`, docs/research/mob-spawning.md, whose "Left"
+   lists what is not built: slimes, built now, still never spawn naturally, as BDS's code gates
+   them by slime chunk and swamp moon phase, not by spawn rules alone); left there: mushrooms spreading, vines and cave vines; the flood's grid
+   looks a column up by hash per cell (~0.7 µs a cell optimised: three columns arriving cost a tick
+   15 ms), worth caching. Fire is lit, spreads,
    burns and is put out (`docs/research/fire.md`, `fire`, `quench`), its spread by the Java game's odds. Crops, stems and berry bushes
    grow by themselves at BDS's pace, a ripe stem bears, cane, cactus and bamboo grow and
-   farmland dries and is trodden down, grass spreads to open dirt, leaves decay when their log
+   farmland dries and is trodden down, grass and mycelium spread to open dirt, leaves decay when their log
    goes, and cocoa, nether wart and pitcher crops grow (`docs/research/growth.md`, `crops`,
    `grows`, `grows2`, `leaves`, `trample`);
    left: the rest of what random ticks do.
@@ -53,13 +69,13 @@ Each needs its rule looked up first (`bdsre` for BDS, the Java jar for data), th
    saved with it. Water puts a fire out with BDS's fizz (`douse`). A player's hit
    hurts and throws a mob, and its kill leaves experience (`creatures/attacks.rs`, `hit`). Left:
    what the doc lists as not drilled. A zombie and seven kinds like it take the nearest survival player, walk at it
-   and hit it, a creeper blows up by it (`creatures/blast.rs`, `boom`) and a skeleton shoots at it (`creatures/arrows.rs`, `shoot`) (`creatures/hunting.rs`, `docs/research/mob-attacks.md`, `bite`, `slain`, `kinds`); and every kind that walks strolls when it has nothing to do and flees a hit (`creatures/strolling.rs`, `stroll`, `flee`); left
+   and hit it, a creeper blows up by it (`creatures/blast.rs`, `boom`) and a skeleton shoots at it (`creatures/arrows.rs`, `shoot`) (`creatures/hunting.rs`, `docs/research/mob-attacks.md`, `bite`, `slain`, `kinds`); and every kind that walks strolls when it has nothing to do and flees a hit (`creatures/strolling.rs`, `stroll`, `flee`); animals breed, grow up, are tamed, sit, follow and defend their owners, take leads and knots, and give wool, milk, stew, eggs and scutes by their packs (`creatures/husbandry`, docs/research/husbandry.md, not drilled against BDS: its "Unverified" list); left
    there: the kinds that shoot other things than arrows (a blaze and a witch are built; a witch drinks, `witch-drinks`, and mobs have effects, splashed too, `mob-effects`; an evoker's fangs and vexes are built, `evoker`; a shulker's bullets are built, `shulker`, a breeze's wind charges and leaps, `breeze`, and a ghast's flight and fireballs, `ghast`; docs/research/mob-kinds.md), the other kinds that turn on their hitter (`provoke`, `provoke2` and `provoke3`: a wolf, a zombified piglin, a polar bear, spiders by day, a llama's spit, a panda, a bee and an enderman, `ender`, are built; an enderman's stare is built, `stare`; a dolphin swims and bites back, `dolphin`; an enderman's calm teleports and water are built; left there rain on an enderman, a dolphin's breath, breaching and shared anger, and of pandas' genes a lazy one's pace, a worried one's keeping away, a playful one's roll and an aggressive one's anger passed on (`pandas`); a goat's ram is built, of players and mobs, `goat`, `goat-cows`). Survival players have health: falls,
    fire, lava, water over the head and a block around them hurt, `/damage` and `/kill` too; they die
    leaving items and experience and rise by their bed or at the world's spawn (`vitals.rs`,
    `docs/research/player-damage.md`, `bds_command_probe hurt` and `smother`). A wounded player mends by its
    hunger and an empty hunger starves it (`vitals/hunger.rs`, `hunger`). Food in the hand is eaten
-   (`vitals/eating.rs`, `eat`). Jumps, sprints, harvested blocks and hits tire a player (`tire`, `toil`). Armour stops part of a hit of the causes it stopped on BDS (`armour`, `worn`). Twenty-five effects by `/effect` (`vitals/effects.rs`, `docs/research/effects.md`, `effects`); food and potions give theirs and milk ends them (`docs/research/food-effects.md`, `sick`, `drink`). A player hits a player where `pvp` is on (`creatures/duels.rs`, `pvp`, `duel`). The newest four effects act on mobs and players (`effects3`, `player-omens`, docs/research/mob-kinds.md). Left there: the doc's "Sapling" list.
+   (`vitals/eating.rs`, `eat`). Players draw bows, load crossbows and throw tridents, pearls, potions and the rest (`shots.rs`, `docs/research/projectiles.md`; not drilled against BDS). Jumps, sprints, harvested blocks and hits tire a player (`tire`, `toil`). Armour stops part of a hit of the causes it stopped on BDS (`armour`, `worn`). Twenty-five effects by `/effect` (`vitals/effects.rs`, `docs/research/effects.md`, `effects`); food and potions give theirs and milk ends them (`docs/research/food-effects.md`, `sick`, `drink`). A player hits a player where `pvp` is on (`creatures/duels.rs`, `pvp`, `duel`). Enchantments of weapons and armour, Mending and the curses act by BDS's decompiled rules (`sapling_data::enchant`, `docs/research/enchantments.md`; not drilled: a `bds_*` drill of a Sharpness hit, a Protection hit and a Thorns hit would check them, and of Knockback's throw). The enchanting table, anvil, grindstone and smithing table craft by BDS's decompiled rules (`workstations.rs`, `inventory/forge.rs`, `docs/research/workstations.md`, `workstations`; not drilled: a `bds_*` drill of a table's offers for a known seed and of an anvil's costs would check them; the doc's "Unverified" list). The newest four effects act on mobs and players (`effects3`, `player-omens`, docs/research/mob-kinds.md). Left there: the doc's "Sapling" list. Monster spawners, trial spawners and vaults work by BDS's decompiled rules (`spawners.rs`, docs/research/spawners.md; not drilled); left there: its "Left out" list, first block entities for the spawners and vaults of worlds sapling generates (worldgen writes no block entities: `sapling-worldgen/src/feature/monster_room.rs` rolls a dungeon's mob and drops it, and the column's output has no place for one), and Bad Omen and Trial Omen. Villagers take job sites, trade on BDS's tables, level up and restock at work; wandering traders trade and leave (`creatures/villagers.rs`, `sapling_data::trades`, docs/research/villagers.md, `job`, `trade`); left there: the doc's "Left out" and "Unverified" lists.
 2. **Redstone**: plates, buttons, levers, blocks of redstone and torches power dust, lamps, doors,
    trapdoors, gates and hopper locks (`blocks/redstone.rs`, `docs/research/redstone.md`; plugins
    read `ctx.power_at`), checked against `bds_command_probe redstone`. Circuits a world folder
@@ -71,7 +87,28 @@ Each needs its rule looked up first (`bdsre` for BDS, the Java jar for data), th
    (`blocks/pistons/plan.rs`, `bds_command_probe slime`). What stands in a piston's way is pushed before it, a player too (`blocks/pistons/shove.rs`, `shove`, `pushed`). Left: the circuits of an arena's
    template, and what a comparator reads of a lectern or a wall frame (a jukebox is read by its disc, `discs`; a
    decorated pot by its stack and a flat frame not at all, `holders`). Dust does not lag a lever or
-   button worked by hand (`byhand`; docs/research/redstone.md, "Observers").
+   button worked by hand (`byhand`; docs/research/redstone.md, "Observers"). Dispensers, droppers and
+   crafters fire on a rising signal (`blocks/dispensers.rs`, `blocks/crafter.rs`,
+   docs/research/dispensers.md, `dispensers`); note blocks keep their note and play on a rise, copper
+   bulbs toggle, targets, tripwire hooks, lightning rods (`blocks::lightning_struck`) and jukeboxes give
+   a signal, sculk sensors and shriekers hear vibrations (`blocks/sculk.rs`, docs/research/sculk.md,
+   `redstone_blocks`). Copper weathers, waxes and scrapes (`blocks/copper.rs`, docs/research/copper.md,
+   `copper`). All by decompiled BDS, not drilled; left: each note's "Unverified" list, minecarts
+   and boats from a dispenser, its shears on more than sheep and mooshrooms, armour onto mobs, water bottles to mud, glass bottles,
+   horse armour, warden summoning, wool occluding vibrations.
+3. **Lightning, fireworks, the wither**: storms strike, rods draw and scrape copper, mobs turn,
+   Channeling calls bolts; rockets are crafted, launched off blocks and crossbows and burst; the
+   wither is built, charges, shoots skulls, breaks blocks and is armoured at half health
+   (`lightning.rs`, `fireworks.rs`, `creatures/wither.rs`, docs/research/wither-lightning-fireworks.md).
+   Not drilled against BDS. Left: the doc's "Left out" lists (elytra boost, the wither's dash and
+   death, the skeleton trap).
+4. **Riding and vehicles**: boats, chest boats and minecarts (plain, chest, hopper, TNT) are placed,
+   ridden, broken and opened, carts roll by BDS's rail rules, pigs and striders take saddles and
+   sticks, horses and their kin take riders and are tamed by riding, `/ride` answers as BDS did
+   (`riding.rs`, `vehicles.rs`, `docs/research/vehicles.md`, `bds_ride_probe ride|mounts|boats`; carts
+   not drilled: `bds_ride_probe carts`). Left: BDS re-simulating a driver's boat or horse, a player's
+   `RideID`, the horse screen and a horse's charged jump, a wild horse bucking a rider off later in
+   the ride, hoppers filling carts, a rail's own redstone line, and the doc's "Unverified" list.
 
 ## 3. Things assumed, not verified
 
@@ -84,9 +121,9 @@ Each needs its rule looked up first (`bdsre` for BDS, the Java jar for data), th
   spacing between orbs taken is BDS's `+0x3c4` lookup.
 - A door's hinge was checked against BDS with a block and with a door on either side (`bds_command_probe
   sounds`); the Java game's tie-break by where the click fell is still left out.
-- The sounds of a door, trapdoor, gate, chest, barrel and ender chest opening and shutting were
-  heard on BDS and agree, tick for tick (`sounds`, `shut`), with a barrel's top a tick late and
-  an open lid shown again 80 ticks from its opening; left there: how late a shulker box sounds.
+- The sounds of a door, trapdoor, gate, chest, trapped chest, barrel, ender chest and shulker box
+  opening and shutting were heard on BDS and agree, tick for tick (`sounds`, `shut`), with a
+  barrel's top a tick late and an open lid shown again 80 ticks from its opening.
 - Block loot is the Java game's tables under Bedrock names (`sapling-data/data/block-loot.tsv`);
   26 blocks broken with a diamond pickaxe left the same items in the same numbers on BDS
   (`bds_command_probe loot`, research/captures/bds-loot.txt), but copper ore, which left 3 each of
@@ -96,13 +133,14 @@ Each needs its rule looked up first (`bdsre` for BDS, the Java jar for data), th
 - 75 blocks put down by hand from one stance took the same state on BDS and here in 65
   (`bds_command_probe placing`, research/captures/bds-placing.txt), after dispensers, pistons,
   observers, gates, anvils, bells, grindstones, amethyst, frames and rails were set right. Scaffolding and trapdoors (`trapdoors`: `oak_trapdoor` is no item, the
-  drill's mistake) take BDS's states too. A placer is shown the clicked and the placed cell again,
-  each with the cells above and below, and in creative its windows twice, as on BDS
-  (`place-faces`: top, side and bottom faces); left: BDS's own copy of the placement comes after
-  those six, sapling's before. A second run of 51 more (`placing2`) agreed in 31
+  drill's mistake) take BDS's states too. A placer is answered packet for packet as on BDS
+  (`place-faces`: top, side and bottom faces, and a top in survival): in creative its windows, the
+  clicked and the placed cell each with those above and below, its windows again, then the place;
+  in survival its windows once and the place, the stack left under a new id. Left: BDS shows
+  watchers the hand before the place (sapling after), and once more after a creative place. A second run of 51 more (`placing2`) agreed in 31
   and set right a crafter, a decorated pot, a chiseled bookshelf, a calibrated sculk sensor, what
   clings (lichen, sculk vein, resin) and what hangs (moss, roots, a spore blossom, a vine, a
-  hanging sign) and a pitcher plant, which stands on its own lower half; a vault is not woken. BDS's commands take old item names too (`chain`
+  hanging sign) and a pitcher plant, which stands on its own lower half, and a vault, which wakes for its placer. BDS's commands take old item names too (`chain`
   for `iron_chain`): sapling's `/give` and `/replaceitem` take the 31 that were tried and found
   (`vanilla.rs` `OLD_ITEM_NAMES`, `bds_command_probe item-names`). Which way a dispenser or a
   piston turns up or down is the old game's rule, of which BDS showed one case.
@@ -118,7 +156,7 @@ Each needs its rule looked up first (`bdsre` for BDS, the Java jar for data), th
   leaves it), the cauldron's `PotionId` defaults (`docs/research/block-entities.md`, "Open checks").
 - A double chest asks both halves above, a slab too, as on BDS (`bds_command_probe lids`). Getting
   up by `StopSleeping`, by day and by `/tp`, and a sleeper's data and box, are told as on BDS
-  (`wake`); left there: a player's other `FlagsExtended` bits, which sapling never sends. A block a hand
+  (`wake`), a sleeper's `FlagsExtended` with the bits BDS keeps on every player. A block a hand
   uses, a block held or not, is shown as it changed and no more, as on BDS (`held-use`); a door opened
   by hand keeps `open_bit` in its lower half and is shown whole in one UpdateSubchunkBlocks, as
   there. A door `/setblock` puts is shown so too, its upper half with flags 2.
@@ -154,3 +192,36 @@ left). Left:
   (`tools/bench.sh`, `docs/research/worldgen-perf.md`).
 - Cache room for spawn areas beyond the generator's areas, if mass joins matter: spawn priority
   costs +13–30% instructions when 8–16 players join at once (`docs/research/worldgen-server-load.md`).
+
+## 7. Packs, the rest
+
+Resource packs, functions, `/schedule delay` and `/scriptevent` are built (DESIGN.md "Packs (as
+built)"). Left:
+
+- **`/schedule on_area_loaded`**: waits for ticking areas, which are built now (`ticking.rs`,
+  `/tickingarea`). BDS ran it at once when the area was loaded (`research/captures/bds-functions.txt`).
+- **`texturepack-required`** in `server.properties` → `ResourcePacks::required`; BDS's
+  `resource_packs` folder and the world lists read by `config_file`.
+- **The Script API** (`@minecraft/server`): a question for the user, since plugins are compiled
+  crates. It would take an embedded JS engine (QuickJS via `rquickjs`, or V8 via `deno_core`) run
+  on each shard's thread, module loading from a pack's `scripts/` entry, and bindings for the API
+  surface packs use: `world`/`system` events (before/after), entities, players, blocks, dimensions,
+  `system.run`/`runInterval`, commands, scoreboard, forms (`@minecraft/server-ui`); each class mapped
+  onto `ShardCtx`, with handles that stay valid across ticks. Clients are told `has_scripts`.
+  `ScriptEvent` already carries `/scriptevent` to plugins.
+- **Behavior pack data beyond functions**, from third-party packs. Each needs the data read from
+  the pack and a registry today built from vanilla's packs (`sapling-data`) opened to additions:
+  - Entities (`entities/*.json`): components and component groups, events, filters; a behaviour
+    engine over mobs (`mobs.rs` is hand-written per kind) and `AvailableEntityIdentifiers` /
+    `AddActor` for custom ids, with client resource-pack definitions.
+  - Items (`items/*.json`): custom item ids in `ItemRegistry` (component-based, `is_component_based`)
+    and in creative content, item components (food, durability, cooldown, use).
+  - Blocks (`blocks/*.json`): custom block states into the network-id hash table, block properties
+    and components (geometry, collision, light, destroy time) in StartGame's block properties, and
+    the shard's block rules to read them.
+  - Recipes (`recipes/*.json`): the crafting tables (`CraftingData` and the server's matcher) take
+    added shaped, shapeless, furnace and brewing recipes.
+  - Loot tables (`loot_tables/**`): drops from blocks and mobs, read as vanilla's tables are.
+  - Spawn rules (`spawn_rules/*.json`): the spawner (`spawning.rs`) reads vanilla's; packs add or
+    override by identifier.
+  - Feature and biome files and trading tables, likewise.

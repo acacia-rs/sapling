@@ -174,6 +174,10 @@ fn write(world: &mut World, layer: Entity, pos: BlockPos, id: u32) -> Option<u32
     if now_held != held {
         level.world.set_liquid(x, y, z, now_held);
     }
+    let name = |id: u32| level.world.registry().get(id).map_or("", |state| state.name);
+    let (was, now) = (name(old), name(id));
+    super::tripwire::written(world, layer, pos, was, now);
+    super::sculk::written(world, layer, pos, was, now);
     super::redstone::notice(world, layer, pos);
     super::daylight::written(world, layer, pos);
     super::fire::written(world, layer, pos);

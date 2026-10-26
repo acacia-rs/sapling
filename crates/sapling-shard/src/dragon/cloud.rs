@@ -19,8 +19,8 @@ use crate::body::Body;
 use crate::components::{InLayer, Mode, Position, Tick, in_world};
 use crate::{entities, mobs};
 
-const KIND: &str = "minecraft:area_effect_cloud";
-const SIZE: [f32; 2] = [0.6, 1.8];
+pub(crate) const KIND: &str = "minecraft:area_effect_cloud";
+pub(crate) const SIZE: [f32; 2] = [0.6, 1.8];
 const FLAGS: u64 = 0x6_0000_0000_0000;
 const HARMING: i16 = 23;
 const PARTICLE: i32 = 49;
@@ -52,7 +52,7 @@ struct Cloud {
     spared: HashMap<Entity, u64>,
 }
 
-pub(super) fn item(key: Key, value: Plain) -> MetadataDictionaryItem {
+pub(crate) fn item(key: Key, value: Plain) -> MetadataDictionaryItem {
     let (r#type, legacy_type) = match value {
         Plain::Byte(_) => (Type::Byte, 0),
         Plain::Short(_) => (Type::Short, 1),
@@ -65,7 +65,7 @@ pub(super) fn item(key: Key, value: Plain) -> MetadataDictionaryItem {
 }
 
 /// Sets `items` over `metadata`'s, appending those it lacks, and its flags to `flags`.
-pub(super) fn with(metadata: &mut Vec<MetadataDictionaryItem>, flags: u64, items: Vec<MetadataDictionaryItem>) {
+pub(crate) fn with(metadata: &mut Vec<MetadataDictionaryItem>, flags: u64, items: Vec<MetadataDictionaryItem>) {
     for added in items {
         metadata.retain(|item| item.key != added.key);
         metadata.push(added);
@@ -75,20 +75,31 @@ pub(super) fn with(metadata: &mut Vec<MetadataDictionaryItem>, flags: u64, items
     }
 }
 
-fn announcement(id: u64, at: [f32; 3], yaw: f32, breath: Breath) -> Vec<Bytes> {
+/// How a cloud is shown: its reach, its life, its colour, its potion and how fast it shrinks.
+#[derive(Clone, Copy, Debug)]
+pub(crate) struct Shown {
+    pub radius: f32,
+    pub ticks: u64,
+    pub colour: i32,
+    pub potion: i16,
+    pub shrinks: f32,
+}
+
+/// An `area_effect_cloud` coming into view, as BDS announced the dragon's.
+pub(crate) fn announcement(id: u64, at: [f32; 3], yaw: f32, shown: Shown) -> Vec<Bytes> {
     let options = AddEntityOptions { id, identifier: KIND, feet: at, yaw, pitch: 0.0, variant: 0, mark_variant: 0, color: 0, baby: false, flags: MetadataFlags1(0), health: None, name: "" };
     let mut added: AddEntity = sapling_data::add_entity(&options);
     let items = vec![
         item(Key::Health, Plain::Int(1)),
         item(Key::OwnerEid, Plain::Long(-1)),
-        item(Key::PotionColor, Plain::Int(breath.colour)),
-        item(Key::PotionAuxValue, Plain::Short(HARMING)),
+        item(Key::PotionColor, Plain::Int(shown.colour)),
+        item(Key::PotionAuxValue, Plain::Short(shown.potion)),
         item(Key::BoundingboxWidth, Plain::Float(SIZE[0])),
         item(Key::BoundingboxHeight, Plain::Float(SIZE[1])),
-        item(Key::AreaEffectCloudRadius, Plain::Float(breath.radius)),
+        item(Key::AreaEffectCloudRadius, Plain::Float(shown.radius)),
         item(Key::AreaEffectCloudParticleId, Plain::Int(PARTICLE)),
-        item(Key::AreaEffectCloudDuration, Plain::Int(breath.ticks as i32)),
-        item(Key::AreaEffectCloudChangeRate, Plain::Float(-0.0)),
+        item(Key::AreaEffectCloudDuration, Plain::Int(shown.ticks as i32)),
+        item(Key::AreaEffectCloudChangeRate, Plain::Float(shown.shrinks)),
         item(Key::AreaEffectCloudChangeOnPickup, Plain::Float(SHRINK_ON_PICKUP)),
         item(Key::AreaEffectCloudPickupCount, Plain::Int(0)),
     ];
@@ -99,7 +110,8 @@ fn announcement(id: u64, at: [f32; 3], yaw: f32, breath: Breath) -> Vec<Bytes> {
 
 /// A cloud of `breath` at `at`, turned `yaw`.
 pub(super) fn spawn(world: &mut World, layer: Entity, at: [f32; 3], yaw: f32, breath: Breath) -> Option<Entity> {
-    let cloud = entities::spawn(world, layer, KIND, Body::new(at, [0.0; 3], SIZE), at, |id| Some(announcement(id, at, yaw, breath)))?;
+    let shown = Shown { radius: breath.radius, ticks: breath.ticks, colour: breath.colour, potion: HARMING, shrinks: -0.0 };
+    let cloud = entities::spawn(world, layer, KIND, Body::new(at, [0.0; 3], SIZE), at, |id| Some(announcement(id, at, yaw, shown)))?;
     world.entity_mut(cloud).insert(Cloud { breath, born: None, spared: HashMap::new() });
     Some(cloud)
 }

@@ -183,7 +183,7 @@ pub(super) fn clear(world: &mut World, player: Entity) -> bool {
 }
 
 /// See `ShardCtx::give_effect`.
-pub(super) fn give(world: &mut World, player: Entity, effect: Effect, ticks: u32, amplifier: u8, particles: bool) -> bool {
+pub(crate) fn give(world: &mut World, player: Entity, effect: Effect, ticks: u32, amplifier: u8, particles: bool) -> bool {
     let Some(id) = world.get::<NetId>(player).map(|id| id.0) else { return false };
     let new = Active { effect, amplifier, left: if effect.is_instant() { 1 } else { ticks }, particles };
     let before = shown(world, player);

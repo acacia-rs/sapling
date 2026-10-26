@@ -2545,12 +2545,15 @@ dependencies = [
  "acacia-client",
  "acacia-world",
  "bytes",
+ "flate2",
  "sapling-api",
  "sapling-data",
  "sapling-leveldb",
  "sapling-net",
  "sapling-shard",
  "sapling-world",
+ "serde_json",
+ "sha2",
  "thiserror",
  "tokio",
  "tracing",
@@ -2572,6 +2575,7 @@ version = "0.1.0"
 dependencies = [
  "acacia-molang",
  "acacia-proto",
+ "acacia-world",
  "bytes",
  "serde_json",
 ]
@@ -2639,6 +2643,7 @@ dependencies = [
  "sapling-world",
  "sapling-worldgen",
  "serde_json",
+ "sha2",
  "tracing",
 ]
 

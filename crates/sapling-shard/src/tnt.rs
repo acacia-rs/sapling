@@ -22,7 +22,7 @@ use crate::{entities, mobs};
 pub(crate) const KIND: &str = "minecraft:tnt";
 const SIZE: f32 = 0.98;
 /// Off, a primed TNT goes out at the end of its fuse ("whether TNT explodes after activation").
-const EXPLODES: &str = "tntExplodes";
+pub(crate) const EXPLODES: &str = "tntExplodes";
 const DROP_DECAY: &str = "tntExplosionDropDecay";
 /// The wire position is this far above the bottom of its box.
 const WIRE_OFFSET: f32 = 0.49;
@@ -71,6 +71,7 @@ fn set_off(world: &mut World, layer: Entity, pos: BlockPos, fuse: i32) -> bool {
     blocks::update_block(world, layer, pos, &Block::new("minecraft:air"));
     let [x, y, z] = pos.map(|c| c as f32);
     prime(world, layer, [x + 0.5, y, z + 0.5], fuse);
+    blocks::vibrate_at(world, layer, pos, blocks::GameEvent::PrimeFuse, false);
     true
 }
 

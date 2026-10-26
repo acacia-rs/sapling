@@ -84,23 +84,39 @@ fn met(world: &World, layer: Entity, at: [f32; 3]) -> Option<Entity> {
     })
 }
 
-/// The burst at `at`: `struck` is hurt and thrown from the breeze, every other player within
-/// [`REACH`] is pushed; seen and heard there.
-fn burst(world: &mut World, charge: Entity, layer: Entity, at: [f32; 3], struck: Option<Entity>) -> Option<()> {
-    let (breeze, kind) = world.get::<Charge>(charge).map(|charge| (charge.breeze, charge.kind.clone()))?;
-    let from = world.get::<Body>(breeze).map_or(at, |body| body.at);
+/// How a wind burst reaches: this far, throwing this hard at 0 off, and costing whom it struck this.
+#[derive(Clone, Copy)]
+pub(super) struct Gust {
+    pub reach: f32,
+    pub push: f32,
+    pub harm: f32,
+}
+
+const BREEZE: Gust = Gust { reach: REACH, push: PUSH, harm: HARM };
+
+/// A wind burst at `at` from a charge shot by `kind` at `from`: `struck` is hurt and thrown from
+/// `from`, every other player within its reach is pushed towards its eyes.
+pub(super) fn gust(world: &mut World, layer: Entity, at: [f32; 3], struck: Option<Entity>, kind: &str, from: [f32; 3], gust: Gust) {
     let near: Vec<(Entity, [f32; 3])> = in_world(world).into_iter().filter(|player| world.get::<InLayer>(*player).map(|layer| layer.0) == Some(layer)).filter_map(|player| Some((player, world.get::<Position>(player)?.feet))).collect();
     for (player, feet) in near {
         let off = (0..3).map(|axis| (feet[axis] - at[axis]).powi(2)).sum::<f32>().sqrt();
         let towards: [f32; 3] = std::array::from_fn(|axis| feet[axis] + if axis == 1 { EYES } else { 0.0 } - at[axis]);
         let long = towards.iter().map(|c| c * c).sum::<f32>().sqrt().max(1e-4);
-        let push = if off < REACH { towards.map(|c| c / long * PUSH * (1.0 - off / REACH)) } else { [0.0; 3] };
+        let push = if off < gust.reach { towards.map(|c| c / long * gust.push * (1.0 - off / gust.reach)) } else { [0.0; 3] };
         match Some(player) == struck {
-            true => drop(vitals::winded(world, player, HARM, &kind, from, push)),
-            false if off < REACH => vitals::pushed(world, player, push),
+            true => drop(vitals::winded(world, player, gust.harm, kind, from, push)),
+            false if off < gust.reach => vitals::pushed(world, player, push),
             false => {}
         }
     }
+}
+
+/// The burst at `at`: `struck` is hurt and thrown from the breeze, every other player within
+/// [`REACH`] is pushed; seen and heard there.
+fn burst(world: &mut World, charge: Entity, layer: Entity, at: [f32; 3], struck: Option<Entity>) -> Option<()> {
+    let (breeze, kind) = world.get::<Charge>(charge).map(|charge| (charge.breeze, charge.kind.clone()))?;
+    let from = world.get::<Body>(breeze).map_or(at, |body| body.at);
+    gust(world, layer, at, struck, &kind, from, BREEZE);
     let [x, y, z] = at;
     let flash = LevelEvent { event: LevelEventEvent::ParticleBreezeWindExplosion, position: Vec3f { x, y, z }, data: 3 };
     let mut packets = vec![sapling_net::encode(&flash)];

@@ -79,7 +79,7 @@ pub(super) fn tick(world: &mut World, entity: Entity, layer: Entity, prey: Optio
     let now = world.resource::<Tick>().0;
     let (Some(body), true) = (world.get::<Body>(entity).copied(), world.get::<Blinks>(entity).is_some()) else { return };
     let head = [body.at[0], body.at[1] + body.size[1], body.at[2]].map(|c| c.floor() as i32);
-    let (wet, lit) = world.get::<Layer>(layer).map_or((false, false), |layer| (super::harm::touches(&layer.world, &body, WATER), super::harm::is_sunlit(&layer.world, head)));
+    let (wet, lit) = (world.get::<Layer>(layer).is_some_and(|layer| super::harm::touches(&layer.world, &body, WATER)), super::harm::sun_on(world, layer, head));
     if wet {
         drench(world, entity, layer, &body);
     }
