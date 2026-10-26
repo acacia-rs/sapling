@@ -6,10 +6,17 @@
 
 use acacia_proto::packets::{MoveEntityDelta, SetEntityData, SetEntityMotion};
 use acacia_proto::types::{EntityProperties, MetadataDictionaryItem, MetadataDictionaryItemKey as Key, MetadataDictionaryItemType as Type, MetadataDictionaryItemValue as Value, MetadataFlags1 as Flags, Vec3f};
-use bevy_ecs::prelude::Component;
+use bevy_ecs::prelude::{Component, Entity};
 use bytes::Bytes;
 
+pub(crate) mod pace;
+
+use pace::{Limits, Paced};
+
 const MOVED: f32 = 0.01;
+/// Degrees of turn, summed over yaw, head yaw and pitch, past which viewers are told
+/// (research/bds-actor-move-sync.md).
+const TURNED: f32 = 4.0;
 const SETTLED: f32 = 0.001;
 const STOPPING: f32 = 0.001;
 const NEW_MOTION: f32 = 0.2;
@@ -21,7 +28,7 @@ fn length(v: [f32; 3]) -> f32 {
 }
 
 /// What viewers were last told of an entity.
-#[derive(Component, Clone, Copy, Debug)]
+#[derive(Component, Clone, Debug)]
 pub(crate) struct Told {
     at: [f32; 3],
     motion: [f32; 3],
@@ -35,6 +42,28 @@ pub(crate) struct Told {
     jumped: bool,
     /// Viewers are told of every move, however small (an eye of ender's, bds-eye-throw.txt).
     every_move: bool,
+    /// This tick's move until it is handed to viewers, each as often as pace.rs lets it.
+    pending: Option<Pending>,
+    paced: Paced,
+    /// Whether the last move told stood on the ground; none was told yet.
+    grounded: Option<bool>,
+}
+
+/// A move not yet handed to viewers, and what they knew before it.
+#[derive(Clone, Debug)]
+pub(crate) struct Pending {
+    pub delta: MoveEntityDelta,
+    pub bytes: Bytes,
+    /// It jumps, lands or teleports: every viewer is told at once.
+    at_once: bool,
+    before: Before,
+}
+
+#[derive(Clone, Copy, Debug)]
+struct Before {
+    at: [f32; 3],
+    turned: [u8; 2],
+    pitched: Option<[u8; 2]>,
 }
 
 /// The flags viewers were told the entity has, and whether the last tick moved far enough to show `MOVING`.
@@ -63,7 +92,31 @@ impl Shown {
 impl Told {
     /// An entity just announced at `at`; its announced motion does not count.
     pub fn new(at: [f32; 3]) -> Self {
-        Self { at, motion: [0.0; 3], flags: None, turned: [0; 2], turn: [0; 2], pitched: None, jumped: false, every_move: false }
+        Self { at, motion: [0.0; 3], flags: None, turned: [0; 2], turn: [0; 2], pitched: None, jumped: false, every_move: false, pending: None, paced: Paced::default(), grounded: None }
+    }
+
+    /// This tick's move, not yet handed to viewers.
+    pub fn pending(&self) -> Option<&Pending> {
+        self.pending.as_ref()
+    }
+
+    /// Whether `viewer`, its eye at `eye`, is told of the pending move at `now`, and with how many
+    /// `ticks`, by the entity's `limits`.
+    pub fn told_to(&mut self, viewer: Entity, eye: [f32; 3], now: u64, limits: Option<Limits>) -> Option<u64> {
+        let pending = self.pending.as_ref()?;
+        let dropped = if pending.at_once { 0 } else { pace::dropped(limits, eye, self.at) };
+        self.paced.due(viewer, now, dropped).then_some(dropped)
+    }
+
+    /// The pending move was handed out, to some viewer or `none`; told to none, BDS compares the
+    /// next tick's with what they knew before it.
+    pub fn settle(&mut self, none: bool) {
+        let Some(pending) = self.pending.take() else { return };
+        if none {
+            (self.at, self.turned, self.pitched) = (pending.before.at, pending.before.turned, pending.before.pitched);
+        } else {
+            self.grounded = Some(pending.delta.on_ground);
+        }
     }
 
     /// The entity now pitches `pitch` degrees, told with its next [`Told::update`] (a projectile's);
@@ -144,11 +197,15 @@ impl Told {
     /// `motion`. BDS sends 0 in their tick fields.
     pub fn update(&mut self, id: u64, at: [f32; 3], motion: [f32; 3], on_ground: bool) -> Vec<Bytes> {
         let mut packets = Vec::new();
+        self.pending = None;
         let gone = length(std::array::from_fn(|axis| at[axis] - self.at[axis]));
         let jumped = std::mem::take(&mut self.jumped);
         let moved = jumped || gone > MOVED || (length(motion) < STOPPING && gone > SETTLED) || (self.every_move && at != self.at);
         let pitched = self.pitched.filter(|[told, now]| told != now).map(|[_, now]| now);
-        if moved || self.turn != self.turned || pitched.is_some() {
+        let degrees = |[told, now]: [u8; 2]| (f32::from(now) - f32::from(told)).abs() * 360.0 / 256.0;
+        let turned = degrees([self.turned[0], self.turn[0]]) + degrees([self.turned[1], self.turn[1]]) + self.pitched.map_or(0.0, degrees);
+        if moved || turned > TURNED {
+            let before = Before { at: self.at, turned: self.turned, pitched: self.pitched };
             let [x, y, z] = std::array::from_fn(|axis| (moved && at[axis] != self.at[axis]).then_some(at[axis]));
             let [rot_y, rot_z] = std::array::from_fn(|side| (self.turn[side] != self.turned[side]).then_some(self.turn[side]));
             self.turned = self.turn;
@@ -172,7 +229,10 @@ impl Told {
                 force_completion: false,
                 ticks: 0,
             };
-            packets.push(sapling_net::encode(&delta));
+            let bytes = sapling_net::encode(&delta);
+            packets.push(bytes.clone());
+            let at_once = jumped || self.grounded != Some(on_ground);
+            self.pending = Some(Pending { delta, bytes, at_once, before });
         }
         let change = length(std::array::from_fn(|axis| motion[axis] - self.motion[axis]));
         let stopped = motion == [0.0; 3] && self.motion != [0.0; 3];
@@ -186,89 +246,4 @@ impl Told {
 }
 
 #[cfg(test)]
-mod tests {
-    use acacia_proto::{Packet, RawPacket};
-
-    use super::*;
-
-    fn kinds(packets: &[Bytes]) -> Vec<u32> {
-        packets.iter().map(|packet| RawPacket::parse(packet.clone()).unwrap().id).collect()
-    }
-
-    fn axes(packet: &Bytes) -> [bool; 3] {
-        let delta: MoveEntityDelta = RawPacket::parse(packet.clone()).unwrap().decode().unwrap();
-        [delta.x.is_some(), delta.y.is_some(), delta.z.is_some()]
-    }
-
-    #[test]
-    fn a_move_counts_all_axes_together_and_sends_each_that_changed() {
-        // BDS's orb: no axis past 0.01, together past it, all three sent.
-        let mut told = Told::new([6.0, -19.0, 8.0]);
-        let sent = told.update(1, [5.99276, -19.00726, 7.99742], [-0.007, -0.007, -0.002], false);
-        assert_eq!(axes(&sent[0]), [true, true, true]);
-        assert_eq!(axes(&told.update(1, [5.99276, -19.02, 7.99742], [0.0, -0.01, 0.0], false)[0]), [false, true, false]);
-    }
-
-    #[test]
-    fn an_all_but_stopped_body_is_sent_its_last_small_move() {
-        // An item at the bottom of its bob on BDS: 0.007 sent as it turned.
-        let mut told = Told::new([0.5, 60.0, 0.5]);
-        assert!(told.update(1, [0.5, 59.993, 0.5], [0.0, -0.002, 0.0], false).is_empty());
-        assert_eq!(kinds(&told.update(1, [0.5, 59.993, 0.5], [0.0, 0.0005, 0.0], false)), [MoveEntityDelta::ID]);
-        assert!(told.update(1, [0.5, 59.9935, 0.5], [0.0, 0.0005, 0.0], false).is_empty());
-    }
-
-    #[test]
-    fn small_moves_are_kept_and_motion_is_sent_when_it_changed_a_lot_or_stopped() {
-        let mut told = Told::new([0.5, 70.0, 0.5]);
-        assert!(told.update(1, [0.5, 69.995, 0.5], [0.0, -0.1, 0.0], false).is_empty());
-        assert_eq!(kinds(&told.update(1, [0.5, 69.9, 0.5], [0.0, -0.19, 0.0], false)), [MoveEntityDelta::ID]);
-        assert_eq!(kinds(&told.update(1, [0.5, 69.6, 0.5], [0.0, -0.25, 0.0], false)), [MoveEntityDelta::ID, SetEntityMotion::ID]);
-        assert_eq!(kinds(&told.update(1, [0.5, 69.0, 0.5], [0.0; 3], true)), [MoveEntityDelta::ID, SetEntityMotion::ID]);
-    }
-
-    #[test]
-    fn moving_is_flagged_a_tick_after_a_move_of_more_than_0_0316_as_on_bds() {
-        let mut told = Told::new([0.0; 3]);
-        assert!(told.flags(1, [0.0; 3], false, false).is_none(), "only for kinds that asked");
-        told.flag_moving(false);
-        // BDS's item 18 rising in water: 0.000991 squared stays off, 0.001001 shows the next tick.
-        let moves = [[0.0, 0.2, 0.0], [0.0107, 0.0011, 0.0], [0.00155, 0.03148, 0.0], [0.00155, 0.0316, 0.0], [0.0, 0.0316, 0.0]];
-        let sent: Vec<bool> = moves.into_iter().map(|gone| told.flags(1, gone, false, false).is_some()).collect();
-        assert_eq!(sent, [false, true, true, false, true]);
-        let mut fallen = Told::new([0.0; 3]);
-        fallen.flag_moving(true);
-        assert!(fallen.flags(1, [0.0; 3], false, false).is_some(), "a falling block is flagged as it is shown");
-    }
-
-    fn sent_flags(packet: &Bytes) -> i64 {
-        let data: SetEntityData = RawPacket::parse(packet.clone()).unwrap().decode().unwrap();
-        match data.metadata[0].value {
-            Value::Flags(flags) => flags.0,
-            ref other => panic!("{other:?}"),
-        }
-    }
-
-    #[test]
-    fn a_mob_shows_moving_a_tick_after_it_walks_and_keeps_the_flags_set_meanwhile() {
-        let announced = Flags(Flags::HAS_COLLISION.0 | Flags::WALKER.0);
-        let mut told = Told::new([0.0; 3]);
-        assert_eq!(told.set_flag(Flags::ONFIRE, true), None, "no mob yet");
-        told.flag_mob(announced);
-        assert!(told.flags(1, [0.1, 0.0, 0.0], false, false).is_none(), "the tick it walks");
-        assert_eq!(sent_flags(&told.flags(1, [0.1, 0.0, 0.0], false, false).unwrap()), announced.0 | Flags::MOVING.0);
-        assert_eq!(told.set_flag(Flags::ONFIRE, true), Some(Flags(announced.0 | Flags::MOVING.0 | Flags::ONFIRE.0)));
-        assert!(told.flags(1, [0.0; 3], false, false).is_none(), "still moving: it moved last tick");
-        assert_eq!(sent_flags(&told.flags(1, [0.0; 3], false, false).unwrap()), announced.0 | Flags::ONFIRE.0);
-    }
-
-    #[test]
-    fn a_lifted_item_loses_its_gravity_and_one_in_lava_burns_as_on_bds() {
-        let mut told = Told::new([0.0; 3]);
-        told.flag_moving(true);
-        // BDS's item into water, then lava: 281492156579840 and 281492156579841.
-        assert_eq!(sent_flags(&told.flags(1, [0.0, -0.1, 0.0], true, false).unwrap()), 281_492_156_579_840);
-        assert_eq!(sent_flags(&told.flags(1, [0.0, -0.1, 0.0], true, true).unwrap()), 281_492_156_579_841);
-        assert!(told.flags(1, [0.0, -0.1, 0.0], true, true).is_none());
-    }
-}
+mod tests;

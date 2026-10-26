@@ -205,7 +205,7 @@ pub(crate) fn fly(world: &mut World) {
             }
         }
         if !packets.is_empty() {
-            blocks::to_viewers(world, layer, body.at.map(|c| c.floor() as i32), &packets);
+            entities::tell_viewers(world, entity, layer, body.at.map(|c| c.floor() as i32), packets);
             let shown = world.get::<Dropped>(entity).and_then(|item| mobs::item_announcement(id, &item.stack, wire(body.at), body.motion));
             shown.into_iter().for_each(|shown| mobs::reannounce(world, entity, shown));
         }

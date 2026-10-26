@@ -55,7 +55,7 @@ pub(crate) use health::{Cause, Health};
 pub(crate) use hunting::on_difficulty;
 pub(crate) use omens::{Omens, befall, infested_hurt};
 use crate::components::{InLayer, Layer, NetId, Tick};
-use crate::{blocks, entities, mobs};
+use crate::{entities, mobs};
 
 
 /// A mob: spawned through the API, or kept by a world folder and dressed as it was stored
@@ -258,7 +258,7 @@ pub(crate) fn tick(world: &mut World) {
             slimes::tick(world, entity, layer, id, &kind, &start);
         }
         let Some((body, packets)) = entities::step(world, entity, layer, id, physics_of(&kind), 0.0) else { continue };
-        blocks::to_viewers(world, layer, body.at.map(|c| c.floor() as i32), &packets);
+        entities::tell_viewers(world, entity, layer, body.at.map(|c| c.floor() as i32), packets.clone());
         if thinks {
             hunting::strike(world, entity, layer, id, &kind, &body);
             rams::strike(world, entity, layer, id, &kind, &body);

@@ -170,7 +170,7 @@ fn step(world: &mut World, entity: Entity, orb: &mut Orb, layer: Entity, id: u64
     }
     let Some((body, packets)) = entities::step(world, entity, layer, id, &Physics::ORB, 0.0) else { return Fate::Gone };
     if !packets.is_empty() {
-        blocks::to_viewers(world, layer, body.at.map(|c| c.floor() as i32), &packets);
+        entities::tell_viewers(world, entity, layer, body.at.map(|c| c.floor() as i32), packets);
         mobs::reannounce(world, entity, announce(id, orb.value, &body));
     }
     Fate::Stays
