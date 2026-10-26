@@ -4,6 +4,8 @@
 
 use bevy_ecs::prelude::*;
 
+use acacia_physics::constants::DEFAULT_JUMP_HEIGHT;
+
 use crate::body::Body;
 use crate::components::Layer;
 use crate::sync::Told;
@@ -48,7 +50,7 @@ pub(super) fn walk(world: &mut World, entity: Entity, layer: Entity, body: &Body
     let facing = yaw.to_radians();
     let leap = body.on_ground && push > 0.0 && at_step(world, layer, body, facing);
     if let Some(mut body) = world.get_mut::<Body>(entity) {
-        body.walk([-facing.sin() * push, facing.cos() * push], leap);
+        body.walk([-facing.sin() * push, facing.cos() * push], leap.then_some(DEFAULT_JUMP_HEIGHT));
     }
     if let Some(mut told) = world.get_mut::<Told>(entity) {
         told.face(yaw, yaw);

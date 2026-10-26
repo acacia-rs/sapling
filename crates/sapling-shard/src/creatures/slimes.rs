@@ -1,11 +1,11 @@
 //! Slimes and magma cubes get about by hopping, as BDS's (`minecraft:movement.jump`;
 //! research/captures/bds-kinds2.txt): on the ground one waits out its `jump_delay`, then jumps
-//! 0.42 up and ahead the way it faces, and keeps going ahead in the air. A calm one turns another
+//! up and ahead the way it faces, by its size (sizes.rs), and keeps going ahead in the air. A calm one turns another
 //! way now and then; one with prey (hunting.rs, `fights=hops`) faces it and waits less. Its viewers
 //! see it squish as it jumps and as it lands (`EntityAge` 2 and 1), and a player its box touches is
 //! hurt by its size (sizes.rs), at most once in [`TOUCHES`] ticks.
 // TODO: a split one's AddEntity shows its kind's box and a velocity, then its whole dictionary, as
-// BDS's; it splits only once dead, not when despawned; a magma cube's higher hop; it hops in lava; its touch hurts golems.
+// BDS's; it splits only once dead, not when despawned; it hops in lava; its touch hurts golems.
 
 pub(super) mod sizes;
 
@@ -14,7 +14,7 @@ use acacia_proto::types::{EntityProperties, MetadataDictionaryItem, MetadataDict
 use bevy_ecs::prelude::*;
 
 use super::genes::Gene;
-use crate::body::Body;
+use crate::body::{Body, Physics};
 use crate::components::{InLayer, Position, Tick, in_world};
 use crate::sync::Told;
 use crate::{entities, late_sounds, vitals};
@@ -23,10 +23,11 @@ use crate::{entities, late_sounds, vitals};
 /// prey: their packs' `jump_delay`s.
 const CALM: [[u32; 2]; 2] = [[10, 30], [40, 120]];
 const AGGRESSIVE: [[u32; 2]; 2] = [[3, 10], [13, 40]];
-/// Of its hop (sizes.rs), what it adds in the air each tick after; it slides to a stop after it
-/// lands. Fitted to BDS's medium and large slimes (bds-kinds2.txt, bds-player-omens.txt): 1.00 to
-/// 1.03 across in the air, 0.33 from a landing to the next jump.
-const AIR: f32 = 0.105;
+/// Of its pace, what it adds across in the air each tick after its hop; it slides to a stop after
+/// it lands. Fitted to how BDS's slimes' and magma cubes' told motion in the air settles
+/// (bds-kinds2.txt, bds-player-omens.txt): medium slimes then hop 1.004 across in the air and
+/// 0.336 from a landing to the next jump.
+const AIR: f32 = 0.0196;
 /// Ticks between a calm one's turns, least and most.
 const TURNS: [u32; 2] = [40, 100];
 /// Its touch: how near boxes come, the ticks between two, and how fast it throws a player away
@@ -110,7 +111,7 @@ pub(super) fn tick(world: &mut World, entity: Entity, layer: Entity, id: u64, ki
         hops.wait = if leap { hops.roll(delay) } else { hops.wait.min(delay[1]).saturating_sub(1) };
     }
     let (sin, cos) = hops.yaw.to_radians().sin_cos();
-    let ahead = if leap { 1.0 } else if start.on_ground { 0.0 } else { AIR } * size.hop;
+    let ahead = if leap { size.hop / Physics::MOB.ground_drag } else if start.on_ground { 0.0 } else { AIR * size.pace };
     hops.hopping |= leap;
     if let Some(mut kept) = world.get_mut::<Hops>(entity) {
         *kept = hops;
@@ -122,7 +123,7 @@ pub(super) fn tick(world: &mut World, entity: Entity, layer: Entity, id: u64, ki
         told.face(hops.yaw, hops.yaw);
     }
     if let Some(mut body) = world.get_mut::<Body>(entity) {
-        body.walk([-sin * ahead, cos * ahead], leap);
+        body.walk([-sin * ahead, cos * ahead], leap.then_some(size.rise));
     }
 }
 

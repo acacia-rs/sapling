@@ -7,7 +7,6 @@
 mod liquid;
 mod physics;
 
-use acacia_physics::constants::DEFAULT_JUMP_HEIGHT;
 use acacia_physics::{Aabb, WorldView, collide_box};
 use bevy_ecs::prelude::Component;
 pub(crate) use liquid::{InLiquid, Liquid, in_liquid, liquid_in, surface};
@@ -37,7 +36,7 @@ pub(crate) struct Body {
     lift: f32,
     /// The speed its own legs or wings add in its next tick.
     walking: [f32; 3],
-    leaping: bool,
+    leaping: Option<f32>,
     /// Whether a mob was on the ground before its last move: that move's drag goes by it.
     stood: bool,
     /// Whether a push up or down this tick left it on the ground: BDS pushes after the body's
@@ -50,7 +49,7 @@ type Bounds = ([f32; 3], [f32; 3]);
 
 impl Body {
     pub fn new(at: [f32; 3], motion: [f32; 3], size: [f32; 2]) -> Self {
-        Self { at, motion, size, on_ground: false, liquid: None, wave: 0.0, thrown: None, lift: 0.0, walking: [0.0; 3], leaping: false, stood: false, pushed: None }
+        Self { at, motion, size, on_ground: false, liquid: None, wave: 0.0, thrown: None, lift: 0.0, walking: [0.0; 3], leaping: None, stood: false, pushed: None }
     }
 
     /// Throws a mob at `speed`: its next tick moves it by that, and the tick after slows it as
@@ -64,10 +63,10 @@ impl Body {
         (self.thrown, self.lift) = (Some(speed), lift);
     }
 
-    /// Has a mob walk: its next tick adds `speed` across, after the drag, and with `leap` goes
-    /// up at a jump's speed (research/captures/bds-bite.txt, bds-chase.txt).
-    pub fn walk(&mut self, speed: [f32; 2], leap: bool) {
-        (self.walking, self.leaping) = ([speed[0], 0.0, speed[1]], leap);
+    /// Has a mob walk: its next tick adds `speed` across, after the drag, and with `rise` goes up
+    /// that fast (research/captures/bds-bite.txt, bds-chase.txt).
+    pub fn walk(&mut self, speed: [f32; 2], rise: Option<f32>) {
+        (self.walking, self.leaping) = ([speed[0], 0.0, speed[1]], rise);
     }
 
     /// Has a swimming mob's next tick add `speed` up, after the drag, on top of its walk.
@@ -177,6 +176,21 @@ impl Body {
             self.on_ground = self.travel(level, physics, moved);
             return moved;
         }
+        self.drag(physics, liquid, stood);
+        self.motion = std::array::from_fn(|axis| self.motion[axis] + walking[axis]);
+        if let Some(rise) = leaping {
+            self.motion[1] = rise;
+        }
+        let wanted = self.motion;
+        self.on_ground = self.travel(level, physics, wanted);
+        if self.on_ground {
+            self.motion[1] = 0.0;
+        }
+        wanted
+    }
+
+    /// A mob's slowing at the start of its tick, by gravity and drag in the air or `liquid`.
+    fn drag(&mut self, physics: &Physics, liquid: Option<Liquid>, stood: bool) {
         if physics.liquid == InLiquid::Swims && liquid == Some(Liquid::Water) {
             liquid::swim(self);
         } else if let Some(liquid) = liquid {
@@ -187,18 +201,18 @@ impl Body {
             (self.motion[0], self.motion[2]) = (self.motion[0] * across, self.motion[2] * across);
             self.motion[1] = (self.motion[1] - physics.gravity) * physics.fall_drag;
         }
-        self.motion = std::array::from_fn(|axis| self.motion[axis] + walking[axis]);
-        if leaping {
-            self.motion[1] = DEFAULT_JUMP_HEIGHT;
-            // A jump leaves the ground: the next tick's drag is the air's (bds-kinds2.txt's slimes).
-            self.stood = false;
+    }
+
+    /// Its motion as BDS holds it after a tick, which viewers are told: a mob's slows after its
+    /// move there, where sapling slows it as its next tick starts (a jump's 0.42 up is told
+    /// 0.3332; research/captures/bds-chase.txt, bds-kinds2.txt).
+    pub fn held_motion(&self, physics: &Physics) -> [f32; 3] {
+        if !matches!(physics.liquid, InLiquid::Sinks | InLiquid::Swims) {
+            return self.motion;
         }
-        let wanted = self.motion;
-        self.on_ground = self.travel(level, physics, wanted);
-        if self.on_ground {
-            self.motion[1] = 0.0;
-        }
-        wanted
+        let mut held = *self;
+        held.drag(physics, self.liquid, self.stood);
+        held.motion
     }
 
     /// A mob's move by `motion`: through blocks if its physics pass them, else [`Body::slide`].

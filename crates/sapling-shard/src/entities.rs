@@ -173,7 +173,7 @@ pub(crate) fn step(world: &mut World, entity: Entity, layer: Entity, id: u64, ph
     let [x, y, z] = body.at;
     let mut told = world.get_mut::<Told>(entity)?;
     let flags = told.flags(id, std::array::from_fn(|axis| body.at[axis] - start.at[axis]), lifted, physics.burns && in_lava);
-    let packets: Vec<Bytes> = flags.into_iter().chain(told.update(id, [x, y + lift, z], body.motion, body.on_ground)).chain(splash).collect();
+    let packets: Vec<Bytes> = flags.into_iter().chain(told.update(id, [x, y + lift, z], body.held_motion(physics), body.on_ground)).chain(splash).collect();
     // Not yet announced: this move follows the announcement, in the same batch, as on BDS.
     if is_new(world, entity) {
         after_announcing(world, layer, body.at.map(|c| c.floor() as i32), packets);
