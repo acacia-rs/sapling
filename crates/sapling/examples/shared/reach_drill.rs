@@ -50,6 +50,20 @@ pub fn place_faces() -> Vec<String> {
     lines
 }
 
+pub const MOVES_SHOWN: &[&str] = &["ItemStackResponse", "InventorySlot", "InventoryContent", "ContainerOpen", "ContainerClose", "PlayerHotbar", "MobEquipment", "LevelSoundEvent"];
+
+/// The chest-moves drill: a survival player's items into a chest, whole, in part and onto a stack
+/// there, then a stack and the rest taken back out, to see what the server answers each move with.
+pub fn chest_moves() -> Vec<String> {
+    let mut lines: Vec<String> = ["kill @e[type=!player]", "fill ~-2 ~-1 ~-2 ~4 ~-1 ~2 stone", "fill ~-2 ~ ~-2 ~4 ~3 ~2 air", "gamemode survival @s", "clear @s", ""].map(String::from).into();
+    lines.extend(["give @s cobblestone 40", "give @s diamond 3", "setblock ~1 ~ ~ chest", "", "replaceitem block ~1 ~ ~ slot.container 3 iron_ingot 5", ""].map(String::from));
+    for step in ["!click 1 0 0", "!put 0 0", "!put 1 1 2", "!put 1 1 1", "!take 3", "!takeall", "!close"] {
+        lines.extend([step.to_owned(), String::new()]);
+    }
+    lines.extend(["setblock ~1 ~ ~ air", "clear @s", "gamemode creative @s", ""].map(String::from));
+    lines
+}
+
 pub const HELD_USE_SHOWN: &[&str] = &["UpdateBlock", "UpdateSubchunkBlocks", "BlockEntityData", "ContainerOpen", "ContainerClose", "BlockEvent", "LevelSoundEvent"];
 
 /// The held-use drill: a lever, a chest and a door clicked holding dirt, then by an empty hand;

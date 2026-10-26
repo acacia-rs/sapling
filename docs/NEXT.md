@@ -174,9 +174,11 @@ picture. Needs a person at the client.
 
 Record the bot doing the same things against the BDS in `acacia/.testserver` and diff the packets
 with sapling's (`tools/bds-drill.sh` runs a probe on a fresh world; `bds-blocks` is a copy kept for
-the drills, port 19182): chest and furnace traffic was never recorded (`research/containers-crafting.md`
-says where it is decompiled only), nor door and bed placement. One agent at a time uses that
-server. A hopper's rate, shulker box drops, a furnace's result and fuel slots and experience orbs
+the drills, port 19182). A chest opened, items put in whole, in part and onto a stack, a stack
+and the rest taken back, and `/clear` are answered packet for packet as there (`chest-moves`:
+the windows after the slots at opening, each changed slot again a tick on); stack ids are
+numbered otherwise (BDS spends two on a `/give`), which no client checks. Doors and beds are
+placed in `sounds` and `wake`. One agent at a time uses that server. A hopper's rate, shulker box drops, a furnace's result and fuel slots and experience orbs
 were recorded on a testbox BDS by `cargo run -p sapling --example bds_container_probe` (2026-10-06).
 
 ## 6. World generation, the rest

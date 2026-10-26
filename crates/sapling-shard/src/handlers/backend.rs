@@ -188,7 +188,14 @@ impl Backend for Ctx<'_> {
 
     fn clear_inventory(&mut self, player: PlayerId) -> u32 {
         let Some(entity) = self.entity(player) else { return 0 };
-        inventory::change(self.world, entity, |inventory| inventory.clear()).unwrap_or(0)
+        // BDS told the emptied cursor first and selected the held slot last (bds-chest-moves.txt).
+        let cursor = acacia_proto::packets::InventorySlot { window_id: acacia_proto::types::WindowIDVarint::Ui, slot: 0, container: None, storage_item: None, item: sapling_data::no_item() };
+        if let Some(mut out) = self.world.get_mut::<crate::components::Outgoing>(entity) {
+            out.push(&cursor);
+        }
+        let removed = self.world.get_mut::<Inventory>(entity).map_or(0, |mut inventory| inventory.clear());
+        inventory::show_windows(self.world, entity, true);
+        removed
     }
 
     fn held_slot(&self, player: PlayerId) -> Option<u8> {

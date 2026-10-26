@@ -6,6 +6,7 @@
 //! the evidence: docs/research/containers-crafting.md, shulker-ender.md, hoppers.md, furnaces.md.
 
 mod access;
+mod again;
 mod brewing;
 mod lid;
 mod pairs;
@@ -27,6 +28,7 @@ use crate::blocks::keep_entity;
 use crate::components::Layer;
 use crate::inventory::{Held, wire};
 
+pub(crate) use again::show_due as show_again_due;
 pub(crate) use lid::show_turned_barrels;
 pub(crate) use screens::{close, dispatch_closes, open, show_carried, show_lids_again, station, workstation};
 pub(crate) use shulker::is_shulker_box;

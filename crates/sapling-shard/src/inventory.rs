@@ -276,8 +276,7 @@ impl Inventory {
 pub(crate) fn show_windows(world: &mut World, player: Entity, select_slot: bool) {
     let mut query = world.query::<(&Inventory, &mut Outgoing)>();
     let Ok((inventory, mut out)) = query.get_mut(world, player) else { return };
-    inventory.send_all(&mut out);
-    out.push(&sapling_data::player_hotbar(inventory.selected, select_slot));
+    inventory.send_all(&mut out, select_slot);
 }
 
 /// Runs `change` on a player's inventory and shows the client the result; armour put on is heard.
@@ -287,7 +286,7 @@ pub(crate) fn change<T>(world: &mut World, player: Entity, change: impl FnOnce(&
     let before = armour_wear::worn(&inventory);
     let result = change(&mut inventory);
     if inventory.sent {
-        inventory.send_all(&mut out);
+        inventory.send_all(&mut out, false);
         armour_wear::equipped(world, player, &before);
     }
     Some(result)

@@ -37,11 +37,13 @@ impl Inventory {
         }
     }
 
-    /// Sends the client every window, as BDS does at join and after `/give`.
-    pub fn send_all(&self, out: &mut Outgoing) {
+    /// Sends the client every window and then its held slot, selecting it or not, as BDS does at
+    /// join, after `/give` and wherever it shows them all (research/captures/bds-chest-moves.txt).
+    pub fn send_all(&self, out: &mut Outgoing, select_slot: bool) {
         for window in [WindowIDVarint::Inventory, WindowIDVarint::Armor, WindowIDVarint::Ui, WindowIDVarint::Offhand] {
             out.push(&sapling_data::inventory_content(window, self.window(window)));
         }
+        out.push(&sapling_data::player_hotbar(self.selected, select_slot));
     }
 }
 
