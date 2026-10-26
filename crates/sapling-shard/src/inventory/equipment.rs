@@ -54,6 +54,13 @@ fn hand(id: u64, inventory: &Inventory) -> MobEquipment {
     MobEquipment { runtime_entity_id: id, item: in_hand(inventory), slot: inventory.selected, selected_slot: inventory.selected, window_id: WindowID::Inventory }
 }
 
+/// Shows a player's viewers its hand again, as BDS did after a place in creative mode
+/// (research/captures/bds-place-faces.txt).
+pub(crate) fn show_hand(world: &mut World, player: Entity) {
+    let Some(packet) = world.get::<NetId>(player).zip(world.get::<Inventory>(player)).map(|(id, inventory)| hand(id.0, inventory)) else { return };
+    world.resource_mut::<ToViewers>().push(player, &packet);
+}
+
 fn offhand(id: u64, inventory: &Inventory) -> MobEquipment {
     MobEquipment { runtime_entity_id: id, item: wire(&inventory.offhand, false), slot: 0, selected_slot: 0, window_id: WindowID::Offhand }
 }

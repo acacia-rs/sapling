@@ -24,7 +24,7 @@ use crate::experience::Experience;
 pub(crate) use armour_wear::{wear_armour, wear_thorny};
 pub(crate) use crafting::clear_grid;
 pub(crate) use forge::{Bargain, Bench, Forged, enchanting_input};
-pub(crate) use equipment::{announce, in_hand, screens, select, spawn_packets};
+pub(crate) use equipment::{announce, in_hand, screens, select, show_hand, spawn_packets};
 pub(crate) use give::{give_and_pop, swap_held, use_up_held};
 pub(crate) use plugin::{described, item_at, set_item, stored};
 pub(crate) use requests::dispatch;
@@ -271,16 +271,13 @@ impl Inventory {
     }
 }
 
-/// Shows a client every window and its held slot, twice, the second time selecting it, as BDS
-/// answered a place in creative mode, whose stack the client had counted down
-/// (research/captures/bds-place-faces.txt).
-pub(crate) fn show_after_creative_place(world: &mut World, player: Entity) {
+/// Shows a client every window and its held slot, as BDS answered a place, whose stack the client
+/// had counted down (research/captures/bds-place-faces.txt).
+pub(crate) fn show_windows(world: &mut World, player: Entity, select_slot: bool) {
     let mut query = world.query::<(&Inventory, &mut Outgoing)>();
     let Ok((inventory, mut out)) = query.get_mut(world, player) else { return };
-    for select_slot in [false, true] {
-        inventory.send_all(&mut out);
-        out.push(&sapling_data::player_hotbar(inventory.selected, select_slot));
-    }
+    inventory.send_all(&mut out);
+    out.push(&sapling_data::player_hotbar(inventory.selected, select_slot));
 }
 
 /// Runs `change` on a player's inventory and shows the client the result; armour put on is heard.

@@ -1,9 +1,10 @@
-//! What crops, sugar cane and redstone need to stand on.
+//! What crops, sugar cane and redstone need to stand on, and what a place in survival shows.
 
 use crate::common;
 
-use acacia_proto::packets::UpdateBlock;
-use common::{Harness, all, click};
+use acacia_proto::Packet;
+use acacia_proto::packets::{InventoryContent, MobEquipment, PlayerHotbar, UpdateBlock};
+use common::{Harness, all, click, ids};
 use sapling_api::{Block, Item, PlayerId, Slot};
 
 const ALEX: PlayerId = PlayerId(1);
@@ -28,6 +29,19 @@ fn placed_on(h: &mut Harness, pos: [i32; 3]) -> Option<&'static str> {
     let registry = sapling_world::BlockRegistry::vanilla();
     let updates = all::<UpdateBlock>(h.tick_all().to(2));
     updates.iter().filter(|update| update.layer == 0).find_map(|update| registry.get(registry.runtime_id_from_hash(update.block_runtime_id)?)).map(|state| state.name)
+}
+
+/// research/captures/bds-place-faces.txt: the placer is shown its windows and held slot, then
+/// the block, and none of the cells about it; what is left in the hand is a new stack to watchers.
+#[test]
+fn a_place_in_survival_answers_with_the_windows_then_the_block() {
+    let mut h = with("minecraft:stone", &[]);
+    h.receive(1, &click([1, 64, 0], 1, None));
+    let sent = h.tick_all();
+    let shown = [InventoryContent::ID, PlayerHotbar::ID, UpdateBlock::ID];
+    let to_alex: Vec<u32> = ids(sent.to(1)).into_iter().filter(|id| shown.contains(id)).collect();
+    assert_eq!(to_alex, [[InventoryContent::ID; 4].as_slice(), &[PlayerHotbar::ID, UpdateBlock::ID]].concat());
+    assert_eq!(all::<MobEquipment>(sent.to(2)).iter().map(|hand| hand.item.count).collect::<Vec<_>>(), [7]);
 }
 
 #[test]

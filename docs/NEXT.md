@@ -121,9 +121,9 @@ Each needs its rule looked up first (`bdsre` for BDS, the Java jar for data), th
   spacing between orbs taken is BDS's `+0x3c4` lookup.
 - A door's hinge was checked against BDS with a block and with a door on either side (`bds_command_probe
   sounds`); the Java game's tie-break by where the click fell is still left out.
-- The sounds of a door, trapdoor, gate, chest, barrel and ender chest opening and shutting were
-  heard on BDS and agree, tick for tick (`sounds`, `shut`), with a barrel's top a tick late and
-  an open lid shown again 80 ticks from its opening; left there: how late a shulker box sounds.
+- The sounds of a door, trapdoor, gate, chest, trapped chest, barrel, ender chest and shulker box
+  opening and shutting were heard on BDS and agree, tick for tick (`sounds`, `shut`), with a
+  barrel's top a tick late and an open lid shown again 80 ticks from its opening.
 - Block loot is the Java game's tables under Bedrock names (`sapling-data/data/block-loot.tsv`);
   26 blocks broken with a diamond pickaxe left the same items in the same numbers on BDS
   (`bds_command_probe loot`, research/captures/bds-loot.txt), but copper ore, which left 3 each of
@@ -133,10 +133,11 @@ Each needs its rule looked up first (`bdsre` for BDS, the Java jar for data), th
 - 75 blocks put down by hand from one stance took the same state on BDS and here in 65
   (`bds_command_probe placing`, research/captures/bds-placing.txt), after dispensers, pistons,
   observers, gates, anvils, bells, grindstones, amethyst, frames and rails were set right. Scaffolding and trapdoors (`trapdoors`: `oak_trapdoor` is no item, the
-  drill's mistake) take BDS's states too. A placer is shown the clicked and the placed cell again,
-  each with the cells above and below, and in creative its windows twice, as on BDS
-  (`place-faces`: top, side and bottom faces); left: BDS's own copy of the placement comes after
-  those six, sapling's before. A second run of 51 more (`placing2`) agreed in 31
+  drill's mistake) take BDS's states too. A placer is answered packet for packet as on BDS
+  (`place-faces`: top, side and bottom faces, and a top in survival): in creative its windows, the
+  clicked and the placed cell each with those above and below, its windows again, then the place;
+  in survival its windows once and the place, the stack left under a new id. Left: BDS shows
+  watchers the hand before the place (sapling after), and once more after a creative place. A second run of 51 more (`placing2`) agreed in 31
   and set right a crafter, a decorated pot, a chiseled bookshelf, a calibrated sculk sensor, what
   clings (lichen, sculk vein, resin) and what hangs (moss, roots, a spore blossom, a vine, a
   hanging sign) and a pitcher plant, which stands on its own lower half; a vault is not woken. BDS's commands take old item names too (`chain`
