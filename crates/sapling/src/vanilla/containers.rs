@@ -103,7 +103,7 @@ impl Command for ReplaceItem {
         let bad_slot = |out: &mut Output, size: usize| out.translate("commands.replaceitem.badSlotNumber", vec![self.slot.to_string(), "0".into(), (size - 1).to_string()], false);
         match &self.target {
             Target::Block(position) => {
-                let pos = position.from(ctx.origin(sender));
+                let pos = position.resolve(ctx, sender);
                 let Some(size) = ctx.container_size(pos) else {
                     let [x, y, z] = pos;
                     return out.translate("commands.replaceitem.noContainer", vec![format!("Pos({x},{y},{z})")], false);

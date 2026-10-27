@@ -11,8 +11,7 @@ const HEIGHTS: [i32; 2] = [-64, 319];
 
 /// The block a command means: `at` from the sender, or the sender's own.
 fn block_at(ctx: &mut ShardCtx<'_>, sender: &Sender, at: Option<&BlockCoords>) -> BlockPos {
-    let here = ctx.origin(sender);
-    at.map_or_else(|| here.map(|c| c.floor() as i32), |at| at.from(here))
+    at.map_or_else(|| ctx.origin(sender).map(|c| c.floor() as i32), |at| at.resolve(ctx, sender))
 }
 
 fn shown([x, y, z]: BlockPos) -> [String; 3] {

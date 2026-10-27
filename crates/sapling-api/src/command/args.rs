@@ -35,6 +35,11 @@ impl<'a> Args<'a> {
         self.sender
     }
 
+    /// The whole command, without its `/`.
+    pub fn line(&self) -> &'a str {
+        self.line
+    }
+
     /// The players a [`super::Target`] can name.
     pub fn players(&self) -> &'a [Player] {
         self.players

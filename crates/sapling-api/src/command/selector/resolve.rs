@@ -14,10 +14,36 @@ pub enum Selected {
 }
 
 impl ShardCtx<'_> {
-    /// Where `~` and a selector's distances count from for `sender`: its feet, or the spawn for
-    /// the console.
+    /// Where `~` and a selector's distances count from for `sender`: its feet, where an `/execute`
+    /// put it, or the spawn for the console.
     pub fn origin(&self, sender: &Sender) -> [f32; 3] {
+        if let Sender::Executed(executed) = sender {
+            return executed.position;
+        }
         sender.player().and_then(|player| self.position(player.id)).map_or_else(|| self.spawn(), |position| position.feet)
+    }
+
+    /// The point `[left, up, forward]` from `sender`'s anchor along where it faces: `^ ^ ^`.
+    /// A player counts from its feet along its look (BDS's `tp @s ^ ^ ^1`).
+    pub(crate) fn local_point(&self, sender: &Sender, [left, up, forward]: [f32; 3]) -> [f32; 3] {
+        let ([x, y, z], [yaw, pitch]) = match sender {
+            Sender::Executed(executed) => {
+                let [x, y, z] = executed.position;
+                ([x, y + executed.anchor, z], executed.rotation)
+            }
+            _ => match sender.player().and_then(|player| self.position(player.id)) {
+                Some(position) => (position.feet, [position.yaw, position.pitch]),
+                None => (self.spawn(), [0.0, 0.0]),
+            },
+        };
+        // Java's LocalCoordinates: forward along the look, up square to it, left their cross.
+        let (yaw, pitch) = ((yaw + 90.0).to_radians(), (-pitch).to_radians());
+        let lift = pitch + std::f32::consts::FRAC_PI_2;
+        let ahead = [yaw.cos() * pitch.cos(), pitch.sin(), yaw.sin() * pitch.cos()];
+        let above = [yaw.cos() * lift.cos(), lift.sin(), yaw.sin() * lift.cos()];
+        let side = [-(ahead[1] * above[2] - ahead[2] * above[1]), -(ahead[2] * above[0] - ahead[0] * above[2]), -(ahead[0] * above[1] - ahead[1] * above[0])];
+        let base = [x, y, z];
+        std::array::from_fn(|axis| base[axis] + ahead[axis] * forward + above[axis] * up + side[axis] * left)
     }
 
     /// The players and entities `selector` names for `sender`, in vanilla's order: the nearest

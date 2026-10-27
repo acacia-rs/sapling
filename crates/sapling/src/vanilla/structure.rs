@@ -113,11 +113,10 @@ fn is_bool(word: Option<&str>) -> bool {
 
 impl Command for StructureCommand {
     fn run(self, ctx: &mut ShardCtx<'_>, sender: &Sender, out: &mut Output) {
-        let here = ctx.origin(sender);
         let full = sapling_world::structure_name(&self.name);
         match self.action {
             Action::Save { from, to, include_entities, include_blocks, to_disk } => {
-                let (from, to) = (from.from(here), to.from(here));
+                let (from, to) = (from.resolve(ctx, sender), to.resolve(ctx, sender));
                 let size: [i32; 3] = std::array::from_fn(|axis| (from[axis] - to[axis]).abs() + 1);
                 if (0..3).any(|axis| size[axis] > MOST[axis]) {
                     let limits = MOST.iter().chain(&size).map(i32::to_string).collect();
@@ -137,7 +136,7 @@ impl Command for StructureCommand {
                 }
                 how.integrity = integrity / 100.0;
                 let Some(size) = ctx.structure_size(&self.name) else { return out.translate("commands.structure.notFound", vec![full], false) };
-                let at = to.from(here);
+                let at = to.resolve(ctx, sender);
                 if at[1] > HEIGHT_END - size[1] {
                     return out.translate("commands.structure.y.tooHigh", vec![(HEIGHT_END - size[1]).to_string()], false);
                 }

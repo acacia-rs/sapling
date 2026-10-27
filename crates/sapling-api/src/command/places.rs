@@ -1,37 +1,57 @@
 //! Parameters vanilla's commands take: positions as three numbers, each of which may be `~` with
-//! an offset from where the sender is, and a block's states in brackets.
+//! an offset from where the sender is or `^` with one along where it faces, and a block's states
+//! in brackets.
 
 use super::{Args, ParamKind, Parameter, ParseError};
+use crate::{Sender, ShardCtx};
 
-/// One axis of a position: a number, or `~` and an offset from the sender's own.
+/// One axis of a position: a number, `~` and an offset from the sender's own, or `^` and an offset
+/// along where the sender faces (left, up, forward; all three axes or none).
 #[derive(Debug, Clone, Copy, PartialEq)]
+#[non_exhaustive]
 pub enum Axis {
     At(f32),
     Off(f32),
+    Local(f32),
 }
 
 impl Axis {
     fn parse(args: &mut Args<'_>) -> Result<Self, ParseError> {
         let mark = args.mark();
-        Self::read(args.word()?).ok_or_else(|| args.error_at(mark))
+        let word = args.word()?;
+        match word.strip_prefix('^') {
+            Some(offset) => offset_of(offset).map(Self::Local),
+            None => Self::read(word),
+        }
+        .ok_or_else(|| args.error_at(mark))
     }
 
     pub(crate) fn read(word: &str) -> Option<Self> {
-        let number = |text: &str| text.parse::<f32>().ok().filter(|n| n.is_finite());
         match word.strip_prefix('~') {
-            Some("") => Some(Self::Off(0.0)),
-            Some(offset) => number(offset).map(Self::Off),
+            Some(offset) => offset_of(offset).map(Self::Off),
             None => number(word).map(Self::At),
         }
     }
 
-    /// The number, `~` counted from `origin`.
+    /// The number, `~` counted from `origin`; `^` too, which only [`Coords::resolve`] turns.
     pub fn from(self, origin: f32) -> f32 {
         match self {
             Self::At(at) => at,
-            Self::Off(off) => origin + off,
+            Self::Off(off) | Self::Local(off) => origin + off,
         }
     }
+
+    fn local(self) -> Option<f32> {
+        if let Self::Local(off) = self { Some(off) } else { None }
+    }
+}
+
+fn number(text: &str) -> Option<f32> {
+    text.parse::<f32>().ok().filter(|n| n.is_finite())
+}
+
+fn offset_of(text: &str) -> Option<f32> {
+    if text.is_empty() { Some(0.0) } else { number(text) }
 }
 
 impl Parameter for Axis {
@@ -45,7 +65,18 @@ impl Parameter for Axis {
 }
 
 fn three(args: &mut Args<'_>) -> Result<[Axis; 3], ParseError> {
-    Ok([Axis::parse(args)?, Axis::parse(args)?, Axis::parse(args)?])
+    let first = Axis::parse(args)?;
+    let mut next = || {
+        let mark = args.mark();
+        let axis = Axis::parse(args)?;
+        if axis.local().is_some() == first.local().is_some() { Ok(axis) } else { Err(args.error_at(mark)) }
+    };
+    Ok([first, next()?, next()?])
+}
+
+/// The offsets of an all-`^` position.
+fn local(axes: &[Axis; 3]) -> Option<[f32; 3]> {
+    Some([axes[0].local()?, axes[1].local()?, axes[2].local()?])
 }
 
 /// A point: `x y z`, where a whole number is the middle of its block across (as vanilla reads
@@ -60,6 +91,14 @@ impl Coords {
             Axis::At(at) if axis != 1 && at.fract() == 0.0 => at + 0.5,
             other => other.from(origin[axis]),
         })
+    }
+
+    /// The point for `sender`: `~` from [`ShardCtx::origin`], `^` along where it faces.
+    pub fn resolve(&self, ctx: &ShardCtx<'_>, sender: &Sender) -> [f32; 3] {
+        match local(&self.0) {
+            Some(offsets) => ctx.local_point(sender, offsets),
+            None => self.from(ctx.origin(sender)),
+        }
     }
 }
 
@@ -80,6 +119,14 @@ pub struct BlockCoords(pub [Axis; 3]);
 impl BlockCoords {
     pub fn from(&self, origin: [f32; 3]) -> [i32; 3] {
         std::array::from_fn(|axis| self.0[axis].from(origin[axis].floor()).floor() as i32)
+    }
+
+    /// The block for `sender`, as [`Coords::resolve`] finds a point.
+    pub fn resolve(&self, ctx: &ShardCtx<'_>, sender: &Sender) -> [i32; 3] {
+        match local(&self.0) {
+            Some(offsets) => ctx.local_point(sender, offsets).map(|at| at.floor() as i32),
+            None => self.from(ctx.origin(sender)),
+        }
     }
 }
 
@@ -149,6 +196,20 @@ mod tests {
         assert_eq!(parsed::<Coords>("3 64 -2").unwrap().from(here), [3.5, 64.0, -1.5]);
         assert_eq!(parsed::<BlockCoords>("~-4 ~-1 ~2").unwrap().from(here), [6, 63, -2]);
         assert!(parsed::<Coords>("1 2").is_err() && parsed::<Coords>("1 two 3").is_err());
+    }
+
+    #[test]
+    fn carets_count_along_where_the_sender_faces() {
+        let mut fake = crate::testing::Fake::with(&["Alex"]);
+        fake.feet.insert(crate::PlayerId(1), [1.5, 2.0, 3.5]);
+        let ctx = ShardCtx::new(&mut fake);
+        let alex = Sender::Player(crate::testing::player(1, "Alex"));
+        // Yaw 90 faces west (research/captures/bds-execute.txt: `rotated 90 0 run tp @s ^ ^ ^2`).
+        let [x, y, z] = parsed::<Coords>("^ ^1 ^2").unwrap().resolve(&ctx, &alex);
+        assert!((x + 0.5).abs() < 1e-5 && (y - 3.0).abs() < 1e-5 && (z - 3.5).abs() < 1e-5, "{x} {y} {z}");
+        assert_eq!(parsed::<BlockCoords>("^1 ^ ^").unwrap().resolve(&ctx, &alex), [1, 2, 4], "left of west is south");
+        assert_eq!(parsed::<BlockCoords>("~ ~ ~1").unwrap().resolve(&ctx, &alex), [1, 2, 4]);
+        assert!(parsed::<Coords>("~ ^ ~").is_err() && parsed::<Coords>("^ ^ 3").is_err());
     }
 
     #[test]

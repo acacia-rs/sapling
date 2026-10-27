@@ -8,6 +8,7 @@ mod blocks;
 mod chest;
 mod craft;
 mod end;
+mod execute;
 mod eyes;
 mod furnace;
 mod inventory;

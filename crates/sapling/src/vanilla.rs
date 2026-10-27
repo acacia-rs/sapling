@@ -4,9 +4,10 @@
 //! `/replaceitem`, the spawn commands (`/setworldspawn`, `/spawnpoint`, `/clearspawnpoint`),
 //! `/testfor`, `/spreadplayers`, the server commands (`/defaultgamemode`, `/setmaxplayers`, `/seed`,
 //! `/version`, `/transfer`), `/kick`, `/op`, `/deop`, the messaging commands (`/me`, `/tellraw`,
-//! `/title`, `/titleraw`, `/playsound`, `/stopsound`, `/particle`), `/scoreboard`, `/tag`, `/scriptevent`, and with access lists
-//! `/allowlist` and the ban commands. Opt in with [`crate::ServerBuilder::vanilla_commands`].
-//! Positions take `~`; targets take names and every Bedrock selector with its filters
+//! `/title`, `/titleraw`, `/playsound`, `/stopsound`, `/particle`), `/scoreboard`, `/tag`, `/scriptevent`,
+//! `/execute`, and with access lists `/allowlist` and the ban commands. Opt in with
+//! [`crate::ServerBuilder::vanilla_commands`].
+//! Positions take `~` and `^`; targets take names and every Bedrock selector with its filters
 //! ([`sapling_api::command::Selector`]). Blocks are written as `/setblock` writes them: their
 //! neighbours react.
 // TODO: the other vanilla commands.
@@ -59,7 +60,7 @@ use crate::ServerBuilder;
 
 impl ServerBuilder {
     /// Adds vanilla's commands for operators (this module), `/time`, `/xp`, `/weather`,
-    /// `/execute in <dimension> run tp`, and `/say`, `/tell` and `/me` for anyone. A command added
+    /// `/execute`, and `/say`, `/tell` and `/me` for anyone. A command added
     /// later under the same name replaces one of these. The ban and allowlist commands come with
     /// [`ServerBuilder::access`].
     pub fn vanilla_commands(self) -> Self {
@@ -167,11 +168,6 @@ fn title_case(id: &str) -> String {
 fn targets(ctx: &mut ShardCtx<'_>, sender: &Sender, selector: Option<&Selector>) -> (Vec<Player>, Vec<EntityInfo>) {
     let Some(selector) = selector else { return (sender.player().cloned().into_iter().collect(), Vec::new()) };
     split(ctx.select(sender, selector))
-}
-
-/// [`targets`] of a selector, nearness counted from `here` (an `/execute at`'s place).
-fn targets_from(ctx: &mut ShardCtx<'_>, sender: &Sender, selector: &Selector, here: [f32; 3]) -> (Vec<Player>, Vec<EntityInfo>) {
-    split(ctx.select_from(sender, selector, here))
 }
 
 fn split(found: Vec<Selected>) -> (Vec<Player>, Vec<EntityInfo>) {
