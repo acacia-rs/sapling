@@ -9,6 +9,7 @@ mod blown;
 mod bubbles;
 mod buckets;
 mod bulbs;
+mod cauldrons;
 mod composter;
 mod copper;
 mod crafter;

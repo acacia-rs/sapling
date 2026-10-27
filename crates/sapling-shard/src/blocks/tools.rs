@@ -2,8 +2,8 @@
 //! path, an axe strips and
 //! scrapes, honeycomb waxes, shears carve, a bottle and a bucket empty and fill
 //! (docs/research/block-uses.md).
-// TODO: no handler is asked; an empty bucket takes nothing out of a cauldron, and a cauldron
-// keeps no lava, powder snow or potion.
+// TODO: no handler is asked; a bucket on a potion or dyed cauldron treats it as water, and a
+// cauldron keeps no powder snow. Potions and dyes are cauldrons.rs's.
 
 use acacia_proto::packets::{LevelEvent, LevelEventEvent};
 use acacia_proto::types::Vec3f;
@@ -165,6 +165,9 @@ impl Request<'_> {
     /// A click with `held` in the hand on the block at `pos`: false when it does nothing to it.
     /// A hoe and a shovel want air over the ground they work.
     pub(super) fn use_tool(&mut self, site: &Site, pos: BlockPos, face: Face, held: &str) -> bool {
+        if super::cauldrons::use_on(self.world, self.entity, site.layer, pos, site.mode == GameMode::Creative) {
+            return true;
+        }
         if let Some(spent) = super::composter::fill(self.world, site.layer, pos, held) {
             if spent && site.mode != GameMode::Creative {
                 inventory::change(self.world, self.entity, |inventory| inventory.take(inventory::Place::Main(inventory.selected.into()), 1).is_ok());
