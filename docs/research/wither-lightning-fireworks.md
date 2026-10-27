@@ -76,7 +76,9 @@ less 0.5; its flight (Java's way of keeping 5 over its prey at 0.3 a tick; BDS s
 Left out: the armoured dash (20 ticks aiming, 10 at 2 a tick, 15 to what it meets), the 200-tick
 death and its power-7 blast (it dies as other mobs do, dropping its nether star by `mob-loot.json`),
 fire rate halving each sixth of health lost, a blue skull's `max_resistance` 4, skulls meeting mobs,
-the stored `Invul`, `Phase`, `ShieldHealth` and the rest, the soul particles of building, a lying T.
+`ShieldHealth`, `firerate` and `lastHealthInterval` (the charge, `Phase`, armour and `maxHealth` are
+kept: research/captures/bds-keepmobs.txt; a summoned wither charges as a built one, at its difficulty's
+share of the pack's 600), the soul particles of building, a lying T.
 
 ## Fireworks
 

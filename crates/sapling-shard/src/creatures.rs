@@ -112,6 +112,13 @@ const DYING: u64 = 21;
 /// Killed, these go at once, without a death or loot, as BDS's armor stand.
 const NO_DEATH: &[&str] = &["minecraft:armor_stand"];
 
+/// Writes what mobs keep beyond their place and health (effects, a wither's fight) into what the
+/// world folder keeps of them.
+pub(crate) fn keep_state(world: &mut World) {
+    afflictions::keep(world);
+    wither::keep(world);
+}
+
 /// Kills the entity `id` (see `ShardCtx::kill_entity`).
 fn kill(world: &mut World, id: EntityId) -> bool {
     let Some(entity) = entities::find(world, id).filter(|entity| world.get::<Dying>(*entity).is_none() && !crate::dragon::is_dying(world, *entity)) else { return false };

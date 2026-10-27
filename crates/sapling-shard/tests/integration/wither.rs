@@ -12,6 +12,8 @@ use sapling_api::{Block, DamageCause, Difficulty, EntityId, GameMode, Item, Play
 const ALEX: PlayerId = PlayerId(1);
 const WITHER: &str = "minecraft:wither";
 const SKULL: &str = "minecraft:wither_skeleton_skull";
+/// Ticks a new wither, built or summoned, charges for.
+const CHARGE: usize = 201;
 
 fn watch(h: &mut Harness, ticks: usize) -> Vec<RawPacket> {
     (0..ticks).flat_map(|_| h.tick_all().to(1).to_vec()).collect()
@@ -84,6 +86,8 @@ fn at_half_health_it_is_armoured_and_calls_three_skeletons() {
         ctx.set_game_mode(ALEX, GameMode::Creative);
     });
     let id = ask(&mut h, |ctx| ctx.spawn_entity(WITHER, [6.5, 70.0, 6.5]).unwrap());
+    assert!(!ask(&mut h, move |ctx| ctx.hurt_entity(id, 350.0, DamageCause::Attack)), "a summoned one charges too");
+    watch(&mut h, CHARGE);
     assert!(ask(&mut h, move |ctx| ctx.hurt_entity(id, 350.0, DamageCause::Attack)));
     let sent = watch(&mut h, 3);
     assert_eq!(told(&sent, id.0, Key::WitherAerialAttack), [0]);
@@ -98,9 +102,12 @@ fn its_heads_shoot_skulls_at_a_player_in_sight() {
     h.enter(1, "Alex");
     h.remote.run(|ctx| {
         ctx.set_difficulty(Difficulty::Normal);
+        ctx.set_game_mode(ALEX, GameMode::Creative);
         assert!(ctx.spawn_entity(WITHER, [0.5, 66.0, 8.5]).is_some());
     });
-    let sent = watch(&mut h, 40);
+    let mut sent = watch(&mut h, CHARGE);
+    h.remote.run(|ctx| ctx.set_game_mode(ALEX, GameMode::Survival));
+    sent.extend(watch(&mut h, 40));
     let skulls = all::<AddEntity>(&sent).into_iter().filter(|added| added.entity_type == "minecraft:wither_skull").count();
     assert!(skulls >= 2, "{skulls}");
     let wither = all::<AddEntity>(&sent).into_iter().find(|added| added.entity_type == WITHER).unwrap().runtime_id;

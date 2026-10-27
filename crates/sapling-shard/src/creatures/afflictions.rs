@@ -2,10 +2,11 @@
 //! turns and sizes of a player's (`vitals::effects`), counted down a tick at a time, shown to its
 //! viewers in `VisibleMobEffects` and, for speed and slowness alone, a `MobEffect`. An undead mob
 //! is mended by instant damage and hurt, unflashed, by instant health, each its own size, and
-//! takes no poison or regeneration at all. A mob an effect hurts runs.
+//! takes no poison or regeneration at all. A mob an effect hurts runs. Its effects are kept with
+//! it as BDS keeps them (`ActiveEffects`, research/captures/bds-keepmobs.txt).
 // TODO: BDS's flags for fire resistance and water breathing (fire immune, breathing) are not
-// shown, nor is speed's change to the movement attribute; one who comes to see a mob is not told its effects, they are not saved
-// with it, strength and weakness do not change its hit, and levitation, slow falling and jump
+// shown, nor is speed's change to the movement attribute; one who comes to see a mob is not told
+// its effects, strength and weakness do not change its hit, and levitation, slow falling and jump
 // boost do nothing to it.
 
 use acacia_proto::packets::{MobEffect, MobEffectEventId};
@@ -29,10 +30,35 @@ struct Active {
     effect: Effect,
     amplifier: u8,
     left: u32,
+    particles: bool,
 }
 
 #[derive(Component, Default)]
 pub(super) struct Afflicted(Vec<Active>);
+
+/// Puts the effects a world folder kept with the mob (its compound `compound`) back on it.
+pub(super) fn adopt(world: &mut World, mob: Entity, compound: &[u8]) {
+    let active = |[id, amplifier, left, shown]: [i32; 4]| {
+        let effect = Effect::ALL.into_iter().find(|known| known.id() == id)?;
+        Some(Active { effect, amplifier: u8::try_from(amplifier).ok()?, left: u32::try_from(left).ok().filter(|left| *left > 0)?, particles: shown != 0 })
+    };
+    let kept: Vec<Active> = sapling_world::actor_effects(compound).into_iter().filter_map(active).collect();
+    if !kept.is_empty() {
+        world.entity_mut(mob).insert(Afflicted(kept));
+    }
+}
+
+/// Writes each kept mob's effects into what the world folder keeps of it.
+pub(super) fn keep(world: &mut World) {
+    let afflicted: Vec<(Entity, Vec<[i32; 4]>)> = world
+        .query_filtered::<(Entity, &Afflicted), With<entities::Stored>>()
+        .iter(world)
+        .map(|(mob, afflicted)| (mob, afflicted.0.iter().map(|active| [active.effect.id(), i32::from(active.amplifier), active.left as i32, i32::from(active.particles)]).collect()))
+        .collect();
+    for (mob, effects) in afflicted {
+        entities::restore(world, mob, |compound, _| sapling_world::effected_actor(compound, &effects).ok());
+    }
+}
 
 /// Whether BDS tells a mob's viewers of the effect with a `MobEffect`, as it did speed and slowness alone.
 fn is_told(effect: Effect) -> bool {
@@ -40,7 +66,7 @@ fn is_told(effect: Effect) -> bool {
 }
 
 fn told(id: u64, event_id: MobEffectEventId, active: &Active) -> bytes::Bytes {
-    sapling_net::encode(&MobEffect { runtime_entity_id: id, event_id, effect_id: active.effect.id(), amplifier: i32::from(active.amplifier), particles: true, duration: active.left as i32, tick: 0, ambient: false })
+    sapling_net::encode(&MobEffect { runtime_entity_id: id, event_id, effect_id: active.effect.id(), amplifier: i32::from(active.amplifier), particles: active.particles, duration: active.left as i32, tick: 0, ambient: false })
 }
 
 fn shown(id: u64, active: &[Active]) -> bytes::Bytes {
@@ -75,7 +101,7 @@ pub(super) fn give(world: &mut World, mob: Entity, effect: Effect, ticks: u32, a
         return false;
     }
     let Some(id) = world.get::<NetId>(mob).map(|id| id.0) else { return false };
-    let new = Active { effect, amplifier, left: if effect.is_instant() { 1 } else { ticks } };
+    let new = Active { effect, amplifier, left: if effect.is_instant() { 1 } else { ticks }, particles: true };
     if world.get::<Afflicted>(mob).is_none() {
         world.entity_mut(mob).insert(Afflicted::default());
     }

@@ -4,7 +4,7 @@
 //! keeps the rest as they were.
 
 mod keys;
-mod parts;
+pub(crate) mod parts;
 #[cfg(test)]
 mod tests;
 

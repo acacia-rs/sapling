@@ -57,7 +57,7 @@ pub(super) fn read_slotted(stored: &[Value]) -> Result<Vec<Option<ItemStack>>, E
 const EFFECT: [&str; 4] = ["Id", "Amplifier", "Duration", "ShowParticles"];
 const DURATIONS: [&str; 3] = ["DurationEasy", "DurationNormal", "DurationHard"];
 
-pub(super) fn effect(kept: &Value) -> Option<[i32; 4]> {
+pub(crate) fn effect(kept: &Value) -> Option<[i32; 4]> {
     let part = |key: &str| match kept.get(key) {
         Some(Value::Byte(part)) => Some(i32::from(*part)),
         Some(Value::Int(part)) => Some(*part),

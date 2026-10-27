@@ -4,8 +4,8 @@
 //! (heads.rs, skulls.rs), it breaks the blocks about it a second after it is hurt (wreck.rs), and
 //! at half health it is armoured, blows up again and calls three wither skeletons. Its boss bar
 //! shows every second to players within 55; with none within 50 it heals 1 a second.
-// TODO: the armoured dash, the 200-tick death and its blast, a stored wither's charge, phase and
-// shield, and the fire rate halving with each sixth of its health lost are not done.
+// TODO: the armoured dash, the 200-tick death and its blast, a stored wither's shield, and the
+// fire rate halving with each sixth of its health lost are not done.
 
 mod heads;
 mod skulls;
@@ -28,7 +28,9 @@ const SKELETON: &str = "minecraft:wither_skeleton";
 const CHARGE: u32 = 200;
 const BLAST: f32 = 7.0;
 const GRIEFING: &str = "mobGriefing";
-/// Its health's share of its kind's on easy and normal.
+/// Its pack's health: the health BDS announced it with was already normal's share of it.
+const PACK_HEALTH: f32 = 600.0;
+/// Its health's share of its pack's on easy and normal.
 const EASY: f32 = 0.5;
 const NORMAL: f32 = 0.75;
 /// Ticks it stands stunned after its half-health blast, which is this far up it, and how many
@@ -69,21 +71,50 @@ pub(super) fn arm(world: &mut World, entity: Entity, kind: &str) {
     }
 }
 
-/// A wither built of blocks with its feet at `feet`: it comes with 1 health of a max its
-/// difficulty scales, and charges.
+/// Puts a wither a world folder kept (its compound `compound`) back as it was: its max health,
+/// its charge and its armour (research/captures/bds-keepmobs.txt).
+pub(super) fn adopt(world: &mut World, wither: Entity, compound: &[u8]) {
+    let Some(record) = sapling_world::wither_record(compound).filter(|_| world.get::<Wither>(wither).is_some()) else { return };
+    if let Some(health) = world.get::<Health>(wither).copied() {
+        let max = record.max_health as f32;
+        world.entity_mut(wither).insert(Health::new(max, Some(health.left().min(max)), health.burning()));
+    }
+    let charging = u32::try_from(record.charging).unwrap_or(0);
+    world.entity_mut(wither).insert(Wither { charging, armoured: record.armoured, ..Wither::default() });
+}
+
+/// Writes each kept wither's fight into what the world folder keeps of it.
+pub(super) fn keep(world: &mut World) {
+    let withers: Vec<(Entity, sapling_world::WitherRecord)> = world
+        .query_filtered::<(Entity, &Wither, &Health), With<entities::Stored>>()
+        .iter(world)
+        .map(|(wither, kept, health)| (wither, sapling_world::WitherRecord { charging: kept.charging as i32, armoured: kept.armoured, max_health: health.max() as i32 }))
+        .collect();
+    for (wither, record) in withers {
+        entities::restore(world, wither, |compound, _| sapling_world::withered_actor(compound, record).ok());
+    }
+}
+
+/// A wither built of blocks with its feet at `feet` (it charges as [`begin`] has it).
 pub(crate) fn build(world: &mut World, layer: Entity, feet: [f32; 3]) -> Option<Entity> {
-    let difficulty = world.resource::<Settings>().0.difficulty;
     let id = super::born(world, layer, KIND, feet, Birth { reason: SpawnReason::Built, yaw: 0.0, gene: None, sound: "spawn" })?;
-    let wither = entities::find(world, id)?;
-    let share = match difficulty {
+    entities::find(world, id)
+}
+
+/// A new wither, built or summoned: it comes with 1 health of a max its difficulty scales, and
+/// charges (BDS's summoned one was kept charging at full health, research/captures/bds-keepmobs.txt).
+pub(super) fn begin(world: &mut World, wither: Entity, layer: Entity) {
+    let share = match world.resource::<Settings>().0.difficulty {
         Difficulty::Easy => EASY,
         Difficulty::Normal => NORMAL,
         _ => 1.0,
     };
-    let max = world.get::<Health>(wither)?.max() * share;
+    if world.get::<Wither>(wither).is_none() {
+        return;
+    }
+    let max = PACK_HEALTH * share;
     world.entity_mut(wither).insert((Health::new(max, Some(1.0), 0), Wither { charging: CHARGE, ..Wither::default() }));
     tell(world, wither, layer, vec![(Key::WitherInvulnerableTicks, Plain::Int(CHARGE as i32)), (Key::WitherAerialAttack, Plain::Byte(1))]);
-    Some(wither)
 }
 
 /// Whether a hit by `cause` leaves the mob whole: a charging wither takes nothing but the void,
