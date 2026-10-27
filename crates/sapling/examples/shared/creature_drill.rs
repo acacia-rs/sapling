@@ -176,10 +176,11 @@ pub fn drowned() -> Vec<String> {
 /// An adult piglin handed a gold ingot, and one that finds an ingot thrown: their admiring and
 /// what they barter.
 pub fn barter() -> Vec<String> {
-    let mut lines = with(floor(), &["summon piglin 3.5 -26 2.5 0 0 minecraft:spawn_adult", "give @s gold_ingot 4", "", "!interact piglin"]);
-    waits(&mut lines, 10);
-    lines.extend(["kill @e[type=piglin]", "kill @e[type=item]", "summon piglin 3.5 -26 -1.5 0 0 minecraft:spawn_adult", "", "!drop 0 1"].map(String::from));
+    // Within the actor's reach of 3 (the first run's piglin was 3.31 off).
+    let mut lines = with(floor(), &["summon piglin 2.5 -26 1.5 0 0 minecraft:spawn_adult", "give @s gold_ingot 4", "", "!interact piglin"]);
     waits(&mut lines, 12);
+    lines.extend(["kill @e[type=piglin]", "kill @e[type=item]", "summon piglin 3.5 -26 -1.5 0 0 minecraft:spawn_adult", "", "!drop 0 1"].map(String::from));
+    waits(&mut lines, 14);
     lines
 }
 
