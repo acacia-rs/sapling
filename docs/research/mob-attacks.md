@@ -244,6 +244,14 @@ of reach.
   hit, no poison on easy; that tick it let go and lost its sting (`MarkVariant` 1). It was alive
   and wandering 8 seconds on.
 
+## Hoglins, zoglins, the warden and the creaking (`beasts`, `creaking`)
+
+`research/captures/bds-wander-findings.md`: a hoglin hits every 40 ticks for 3 to 9 and a zoglin
+every 20 for 3 to 8, drawn with fractions; both are heard `angry` a tick after their growl. A
+warden hunts only a player that hit it, for 30 every 20 ticks, and no hit moves it. A creaking
+takes a player that looks at it, stands frozen while anyone does, and hunts it at 0.4 once looked
+away from, hitting for 3 every 40 ticks.
+
 ## Mobs that fight their own way
 
 The witch, the enderman, the goat, the evoker, the shulker, the breeze and the ghast: `mob-kinds.md`.
@@ -312,6 +320,11 @@ it shows no charge. A panda and a bee hit take their hitter, hit it once and let
 panda's other genes: `mob-kinds.md`, "Pandas' genes". A panda does not stand before it walks up,
 and a bee walks, keeps its sting and never dies of its sting.
 
+A hoglin, a zoglin and a warden hunt as above with their numbers (`varies=` draws the hoglin's and
+zoglin's hits); the warden neither sniffs, roars, nor sonic-booms, and its anger is only `provoked`.
+A creaking (`creatures/creaking.rs`) freezes under a look within 60 degrees of its middle from 16
+blocks, the Java game's rule; it has no heart.
+
 `creatures/hunting.rs`, for kinds with `attack=`, `speed=` and `sees=` in `mob-traits.tsv`: the
 zombie and the seven kinds above, each with its numbers and what its hit gives (not the cave
 spider's poison, which lasts no time on easy).
@@ -325,6 +338,6 @@ mobs do not look for a way.
 Different: it keeps prey it has seen
 whatever comes between, sends a mob's speed as it is before the drag, turns 60
 degrees a tick with its head, stops when its box touches the
-player's since nothing pushes anything, shows no mob holding
+player's since players and mobs do not push each other, shows no mob holding
 its weapon, lets a spider hunt by day, hunts nobody on peaceful
 (where BDS has no monsters), and tells every viewer every move.
