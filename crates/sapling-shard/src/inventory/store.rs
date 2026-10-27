@@ -1,4 +1,4 @@
-//! A player's items, health, hunger, bed, place, game mode, tags and `UniqueID` between visits: asked of the first world's storage at
+//! A player's items, health, hunger, bed or anchor, last death, place, game mode, tags and `UniqueID` between visits: asked of the first world's storage at
 //! login, handed back when the player leaves, every few seconds while something changed, and when the shard stops.
 
 use bevy_ecs::prelude::*;
@@ -13,7 +13,7 @@ use crate::experience::{self, Experience};
 use crate::handoff::{Peers, ShardMsg};
 use crate::sleep::BedSpawn;
 use crate::tags::Marks;
-use crate::vitals::Vitals;
+use crate::vitals::{LastDeath, Vitals};
 
 fn fill(inventory: &mut Inventory, data: PlayerData) {
     for (slot, stack) in data.main.into_iter().take(MAIN).enumerate() {
@@ -77,7 +77,15 @@ pub(crate) fn load(mut commands: Commands, mut layers: Query<(Entity, &mut Layer
                     commands.entity(player).insert(effects);
                 }
                 if let Some(bed) = data.bed {
-                    commands.entity(player).insert(BedSpawn::restored(bed, here));
+                    let dimension = data.spawn_dimension;
+                    commands.queue(move |world: &mut World| {
+                        if let Some(layer) = dimensions::of(world, here, dimension) {
+                            world.entity_mut(player).insert(BedSpawn::restored(bed, layer));
+                        }
+                    });
+                }
+                if let Some((at, dimension)) = data.last_death {
+                    commands.entity(player).insert(LastDeath { at, dimension });
                 }
                 if let Some(mode) = data.game_mode.and_then(game_mode) {
                     commands.entity(player).insert(Mode(mode));
@@ -94,8 +102,8 @@ pub(crate) fn load(mut commands: Commands, mut layers: Query<(Entity, &mut Layer
 
 /// Sends each joining player its windows once it has items to show, in BDS's order: inventory,
 /// armour, the screen's own slots, offhand, then the slot in hand.
-pub(crate) fn send_own(tick: Res<Tick>, mut players: Query<(&NetId, &Stage, &mut Inventory, &mut Outgoing, Option<&mut Vitals>)>) {
-    for (id, stage, mut inventory, mut out, vitals) in &mut players {
+pub(crate) fn send_own(tick: Res<Tick>, mut players: Query<(&NetId, &Stage, &mut Inventory, &mut Outgoing, Option<&mut Vitals>, Option<&LastDeath>)>) {
+    for (id, stage, mut inventory, mut out, vitals, last_death) in &mut players {
         if *stage >= Stage::StartGame && inventory.loaded && !inventory.sent {
             inventory.send_all(&mut out, true);
             if inventory.experience != Experience::default() {
@@ -103,6 +111,9 @@ pub(crate) fn send_own(tick: Res<Tick>, mut players: Query<(&NetId, &Stage, &mut
             }
             for told in vitals.map(|mut vitals| vitals.greeting(id.0, tick.0)).unwrap_or_default() {
                 out.push(&told);
+            }
+            if let Some(last_death) = last_death {
+                out.push(&crate::vitals::last_death_greeting(id.0, *last_death, tick.0));
             }
             inventory.sent = true;
         }
@@ -133,7 +144,9 @@ pub(crate) fn save(world: &mut World, player: Entity) {
     let KeptPlace(place, _, game_mode) = now;
     let (position, rotation) = (place.map(|place| place.0), place.map(|place| place.1));
     let data = PlayerData { vitals: vitals.map(|vitals| vitals.kept()), effects: effects.unwrap_or_default(), dimension, position, rotation, game_mode, ..kept(&inventory) };
-    let data = PlayerData { bed: world.get::<BedSpawn>(player).and_then(|bed| bed.kept(first)), tags: marks.tags, unique_id: Some(marks.unique_id), ..data };
+    let (bed, spawn_dimension) = world.get::<BedSpawn>(player).and_then(|bed| bed.kept(world, &dimensions::members(world, first))).map_or((None, 0), |(bed, dimension)| (Some(bed), dimension));
+    let last_death = world.get::<LastDeath>(player).map(|death| (death.at, death.dimension));
+    let data = PlayerData { bed, spawn_dimension, last_death, tags: marks.tags, unique_id: Some(marks.unique_id), ..data };
     world.entity_mut(player).insert(now);
     if let Some(mut marks) = world.get_mut::<Marks>(player) {
         marks.unsaved = false;

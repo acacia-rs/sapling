@@ -1,8 +1,8 @@
 //! A player's death and its rising, in the packets BDS sends for them
-//! (docs/research/player-damage.md, "Death").
+//! (docs/research/player-damage.md, "Death"). `doImmediateRespawn` asks nothing of the server:
+//! BDS answered a client's respawn alike with it on (research/captures/bds-anchor.txt).
 // TODO: only the words of fall, fire, lava, `/kill` and a zombie were seen on BDS, the rest are
-// the game's keys from memory; the body's box is not shrunk and `PlayerLastDeathPosition` is not told; every death
-// rises at its spawn point (a bed or `/spawnpoint`) or the world's spawn (no anchor); `doImmediateRespawn` is not read.
+// the game's keys from memory.
 
 use acacia_proto::packets::{DeathInfo, EntityEvent, EntityEventEventId, LevelSoundEvent, Respawn, SetHealth};
 use acacia_proto::types::Vec3f;
@@ -10,9 +10,11 @@ use bevy_ecs::prelude::*;
 use sapling_api::{Attacker, DeathEvent, DeathMessage, RespawnEvent};
 use sapling_data::EYE_HEIGHT;
 
+use super::last_death::{self, LastDeath};
 use super::{MAX, Vitals, tell};
 use crate::components::{Identity, InLayer, Layer, NetId, Outgoing, PacketQueues, Position, Tick, in_world, in_world_identity};
 use crate::creatures::Cause;
+use crate::sleep::Own;
 use crate::{chat, drops, experience, inventory, movement, orbs};
 
 const KEEP_INVENTORY: &str = "keepInventory";
@@ -127,9 +129,22 @@ pub(super) fn die(world: &mut World, player: Entity, cause: Cause) {
     if let Some(said) = said {
         chat::send_to_layer(world, layer, &said);
     }
-    let mut out = world.get_mut::<Outgoing>(player).expect("players have an outbox");
-    out.push(&DeathInfo { cause: key.into(), messages });
-    out.push(&Respawn { position: eyes(feet), state: SEARCHING, runtime_entity_id: 0 });
+    world.get_mut::<Outgoing>(player).expect("players have an outbox").push(&DeathInfo { cause: key.into(), messages });
+    remember(world, player, id, feet, layer);
+    world.get_mut::<Outgoing>(player).expect("players have an outbox").push(&Respawn { position: eyes(feet), state: SEARCHING, runtime_entity_id: 0 });
+}
+
+/// Keeps where the player died and shows its body shrunk, with the place, to it and its viewers.
+fn remember(world: &mut World, player: Entity, id: u64, feet: [f32; 3], layer: Entity) {
+    let dimension = world.get::<Layer>(layer).map_or(0, |layer| layer.world.dimension());
+    let now = LastDeath::at_feet(feet, dimension);
+    let before = world.get::<LastDeath>(player).copied();
+    let tick = world.resource::<Tick>().0;
+    tell(world, player, &last_death::told(id, before, now, crate::sleep::LYING_BOX, tick));
+    world.entity_mut(player).insert(now);
+    if let Some(mut inventory) = world.get_mut::<inventory::Inventory>(player) {
+        inventory.unsaved = true;
+    }
 }
 
 /// A dead player's body goes once it has lain, leaving its experience.
@@ -147,37 +162,44 @@ pub(super) fn leave(world: &mut World, player: Entity, layer: Entity) {
     sound(world, player, id, "disappeared", feet);
 }
 
-/// The dead whose clients are ready rise by the bed they last clicked, or at their world's
-/// spawn, whole.
+/// The dead whose clients are ready rise by the bed or anchor they last clicked, or at their
+/// world's spawn, whole.
 pub(super) fn rise(world: &mut World) {
     let ready: Vec<Entity> = world.resource_mut::<PacketQueues>().take::<Respawn>().into_iter().filter(|(_, asked)| asked.state == CLIENT_READY).map(|(player, _)| player).collect();
     for player in ready {
         if !world.get::<Vitals>(player).is_some_and(|vitals| vitals.died.is_some()) {
             continue;
         }
-        let (Some(id), Some(died_in)) = (world.get::<NetId>(player).copied(), world.get::<InLayer>(player).map(|layer| layer.0)) else { continue };
-        // The dead of the Nether and the End rise in their overworld.
-        let layer = crate::dimensions::home(world, died_in);
+        let (Some(id), Some(died_in), Some(body)) = (world.get::<NetId>(player).copied(), world.get::<InLayer>(player).map(|layer| layer.0), world.get::<Position>(player).map(|position| position.feet)) else { continue };
+        // The dead of the Nether and the End rise in their overworld, but by an anchor.
+        let realm = crate::dimensions::members(world, died_in);
+        let (own, anchor, lapsed, layer) = match crate::sleep::spawn_of(world, player, &realm) {
+            Own::At { layer, feet, anchor } => (Some(feet), anchor, None, layer),
+            Own::Lapsed(anchor) => (None, None, Some(anchor), crate::dimensions::home(world, died_in)),
+            Own::None => (None, None, None, crate::dimensions::home(world, died_in)),
+        };
         let Some(spawn) = world.get::<Layer>(layer).map(|layer| layer.spawn) else { continue };
-        let by_bed = crate::sleep::spawn_of(world, player, layer).flatten();
         let unfound = layer != died_in;
         if unfound {
             leave_now(world, player, died_in);
-            crate::dimensions::respawn_home(world, player, layer, by_bed.unwrap_or(spawn));
+            crate::dimensions::respawn_home(world, player, layer, own.unwrap_or(spawn));
             world.get_mut::<Outgoing>(player).expect("players have an outbox").push(&Respawn { position: Vec3f { x: 0.0, y: 32767.0, z: 0.0 }, state: SEARCHING, runtime_entity_id: 0 });
         }
-        if let Some([x, y, z]) = by_bed {
+        if let Some([x, y, z]) = own {
             // BDS names the cell first, then the place in it.
             let cell = Vec3f { x: x.floor(), y, z: z.floor() };
             world.get_mut::<Outgoing>(player).expect("players have an outbox").push(&Respawn { position: cell, state: SEARCHING, runtime_entity_id: 0 });
         }
-        let spawn = by_bed.unwrap_or(spawn);
+        let spawn = own.unwrap_or(spawn);
         let Some(who) = world.get::<Identity>(player).map(|identity| identity.0.clone()) else { continue };
         let spawn = crate::plugins::offer(world, RespawnEvent::new(who, spawn)).feet;
         leave_now(world, player, layer);
         world.entity_mut(player).remove::<super::effects::Effects>();
         *world.get_mut::<Vitals>(player).expect("read above") = Vitals::default();
         world.get_mut::<Outgoing>(player).expect("players have an outbox").push(&Respawn { position: eyes(spawn), state: READY, runtime_entity_id: 0 });
+        if let Some(anchor) = anchor {
+            crate::sleep::sound_anchor_spent(world, layer, anchor);
+        }
         movement::teleport_onto_ground(world, player, spawn);
         if crate::border::is_hardcore(world, layer) {
             crate::join::set_game_mode(world, player, sapling_api::GameMode::Spectator);
@@ -190,9 +212,27 @@ pub(super) fn rise(world: &mut World) {
         let mut out = world.get_mut::<Outgoing>(player).expect("players have an outbox");
         out.push(&SetHealth { health: MAX as i32 });
         shown.iter().for_each(|shown| out.push(shown));
-        // From another dimension BDS heard it at the place it named before it found one.
-        sound(world, player, id.0, "reappeared", if unfound { [0.0, 32767.0, 0.0] } else { spawn });
+        if let Some(anchor) = lapsed {
+            crate::sleep::tell_lapsed(world, player, anchor);
+        }
+        if let Some(anchor) = anchor {
+            crate::sleep::spend_anchor(world, layer, anchor);
+        }
+        // Heard where the body lay, or from another dimension at the place named before one was
+        // found (research/captures/bds-hurt.txt, bds-anchor.txt).
+        sound(world, player, id.0, "reappeared", if unfound { [0.0, 32767.0, 0.0] } else { body });
+        tell(world, player, &whole(world, player, id.0, tick));
     }
+}
+
+/// The risen body's flags and its box whole again, as BDS told them.
+fn whole(world: &World, player: Entity, id: u64, tick: u64) -> acacia_proto::packets::SetEntityData {
+    let mut whole = crate::sleep::box_data(id, false);
+    if let Some(pose) = world.get::<movement::Motion>(player).map(|motion| motion.pose) {
+        let flags = movement::pose_packet(id, pose, tick).metadata.into_iter().filter(|item| item.key == acacia_proto::types::MetadataDictionaryItemKey::Flags);
+        whole.metadata = flags.chain(whole.metadata).collect();
+    }
+    whole
 }
 
 /// What [`leave`] would leave later, left as the player rises before its body went.

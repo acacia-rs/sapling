@@ -121,7 +121,8 @@ A chiseled bookshelf clicked on its top took no book, and a hoe on rooted dirt s
 Sapling does the rows down to the dragon egg the same, state for state and sound for sound, but
 for the powder snow, which it leaves alone. An egg jumps up to 15 across and 7 up or down to a
 free cell, the Java game's reach. A charged respawn anchor clicked outside the nether is gone
-in a blast of power 5 at its middle, which breaks blocks and leaves their items as TNT's does.
+in a blast of power 5 at its middle, which breaks blocks and leaves their items as TNT's does; in
+the nether it becomes the clicker's spawn (docs/research/player-damage.md).
 An item frame keeps the item in its entity as `Item` and turns it by `ItemRotation`, 45 a
 click; a decorated pot keeps its stack as `item`, one more a click of the same thing, the
 sound's pitch 700 and 500 for a full stack (`blocks/holders.rs`). Both leave what they hold when

@@ -20,7 +20,7 @@ use bevy_ecs::prelude::*;
 use sapling_api::{BlockPos, GameMode};
 use sapling_data::EYE_HEIGHT;
 
-pub(crate) use spawn::{BedSpawn, spawn_of};
+pub(crate) use spawn::{BedSpawn, Own, set_anchor_spawn, sound_anchor_spent, spawn_of, spend_anchor, tell_lapsed};
 
 use crate::blocks::{bed_head, set_network_only, with_property};
 use crate::components::{InLayer, Layer, Mode, NetId, Outgoing, Position, in_world};
@@ -48,7 +48,7 @@ const SLEEPING_FLAG: i8 = 0x02;
 /// The bit of `FlagsExtended` BDS set on a sleeper (acacia-proto names it `WANTS_TO_WAKE`).
 const SLEEPING_EXTENDED: i64 = 1 << 12;
 /// A player's box, wide and high, lying in a bed and standing.
-const LYING_BOX: [f32; 2] = [0.2, 0.2];
+pub(crate) const LYING_BOX: [f32; 2] = [0.2, 0.2];
 const STANDING_BOX: [f32; 2] = [0.6, 1.8];
 /// The `LevelEventGeneric` that counts the sleepers (9801). The game zigzags the id where
 /// acacia-proto writes a plain varint, so it goes as 19602: BDS's bytes (bds-dims-travel.txt).
@@ -64,9 +64,10 @@ pub(crate) struct Sleeping {
     ticks: u64,
 }
 
-/// Tells a player why it did not lie down, as BDS does: the game's own grey line.
+/// Tells a player why it did not lie down, or that its spawn is set, as BDS does: the game's own
+/// grey line.
 fn tell(world: &mut World, player: Entity, key: &str) {
-    let packet = crate::chat::json_packet(vec![serde_json::json!({ "text": "§7" }), serde_json::json!({ "translate": format!("tile.bed.{key}") })]);
+    let packet = crate::chat::json_packet(vec![serde_json::json!({ "text": "§7" }), serde_json::json!({ "translate": key })]);
     if let Some(mut out) = world.get_mut::<Outgoing>(player) {
         out.0.push(packet);
     }
@@ -86,8 +87,8 @@ fn lying_data(id: u64, lying: Option<(BlockPos, [f32; 3])>) -> SetEntityData {
     entity_data(id, [flags].into_iter().chain(bed).chain([extended]).chain(entered).collect())
 }
 
-/// A player's box, small while it lies in a bed.
-fn box_data(id: u64, lying: bool) -> SetEntityData {
+/// A player's box, small while it lies in a bed (and dead: vitals/death.rs).
+pub(crate) fn box_data(id: u64, lying: bool) -> SetEntityData {
     let [width, height] = if lying { LYING_BOX } else { STANDING_BOX };
     let size = |key, value| MetadataDictionaryItem { key, r#type: Type::Float, legacy_type: 3, value: Value::Default(Plain::Float(value)) };
     entity_data(id, vec![size(Key::BoundingboxWidth, width), size(Key::BoundingboxHeight, height)])
@@ -169,7 +170,7 @@ pub(crate) fn lie_down(world: &mut World, player: Entity, layer: Entity, pos: Bl
     if occupied {
         let mut sleepers = world.query::<&Sleeping>();
         if sleepers.iter(world).any(|sleeping| sleeping.layer == layer && sleeping.head == head) {
-            tell(world, player, "occupied");
+            tell(world, player, "tile.bed.occupied");
             return true;
         }
         set_occupied(world, layer, head, false);
@@ -177,7 +178,7 @@ pub(crate) fn lie_down(world: &mut World, player: Entity, layer: Entity, pos: Bl
     let Some(position) = world.get::<Position>(player).copied() else { return true };
     let eye = [position.feet[0], position.feet[1] + EYE_HEIGHT, position.feet[2]];
     if (0..3).any(|axis| (eye[axis] - head[axis] as f32).abs() > BED_REACH[axis]) {
-        tell(world, player, "tooFar");
+        tell(world, player, "tile.bed.tooFar");
         return true;
     }
     if world.get::<Sleeping>(player).is_some() {
@@ -185,7 +186,7 @@ pub(crate) fn lie_down(world: &mut World, player: Entity, layer: Entity, pos: Bl
     }
     spawn::set_spawn(world, player, head);
     if !is_night(world, layer) {
-        tell(world, player, "noSleep");
+        tell(world, player, "tile.bed.noSleep");
         return true;
     }
     let direction = world.get::<Layer>(layer).and_then(|level| level.world.registry().get(level.world.block(head[0], head[1], head[2]))?.property("direction")?.parse::<usize>().ok());

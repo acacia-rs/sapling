@@ -33,8 +33,12 @@ pub struct PlayerData {
     pub progress: f32,
     /// Health, hunger, saturation and exhaustion; `None` in a record older than they are kept.
     pub vitals: Option<[f32; 4]>,
-    /// The head of the bed it rises by and the cell it rises in, in the overworld.
+    /// The head of the bed (or the respawn anchor) it rises by and the cell it rises in.
     pub bed: Option<[[i32; 3]; 2]>,
+    /// The dimension `bed` is in (0 overworld, 1 nether).
+    pub spawn_dimension: i32,
+    /// The cell of its eyes when it last died, and the dimension; `None` for one never dead.
+    pub last_death: Option<([i32; 3], i32)>,
     /// Each effect on it: its id, its level from 0, the ticks left of it, and 1 if it shows.
     pub effects: Vec<[i32; 4]>,
     /// The dimension it was in (0 overworld, 1 nether, 2 end), and where its feet were there.
@@ -62,6 +66,10 @@ const UNIQUE_ID: &str = "UniqueID";
 const BED: [&str; 3] = ["SpawnBlockPositionX", "SpawnBlockPositionY", "SpawnBlockPositionZ"];
 const BEDSIDE: [&str; 3] = ["SpawnX", "SpawnY", "SpawnZ"];
 const SPAWN_DIMENSION: &str = "SpawnDimension";
+/// Where it last died (BDSRE: Player load 1402af220 reads them only all together).
+const DEATH: [&str; 3] = ["DeathPositionX", "DeathPositionY", "DeathPositionZ"];
+const DEATH_DIMENSION: &str = "DeathDimension";
+const HAS_DIED: &str = "HasDiedBefore";
 /// What BDS keeps in the spawn fields of a player with no spawn point of its own (BDSRE: Player
 /// load 1402af220 sets these when the fields are missing).
 const NO_SPAWN: i32 = i32::MIN;
@@ -96,9 +104,12 @@ impl PlayerData {
         let int = |key: &str| if let Some(Value::Int(value)) = player.get(key) { Some(*value) } else { None };
         let float = |key: &str| if let Some(Value::Float(value)) = player.get(key) { Some(*value) } else { None };
         let cell = |keys: [&str; 3]| if let [Some(x), Some(y), Some(z)] = keys.map(int) { Some([x, y, z]).filter(|cell| !cell.contains(&NO_SPAWN)) } else { None };
-        let overworld_spawn = int(SPAWN_DIMENSION).is_none_or(|dimension| dimension == 0);
+        let spawn_dimension = int(SPAWN_DIMENSION).unwrap_or(0);
+        let died = matches!(player.get(HAS_DIED), Some(Value::Byte(1..)));
         Ok(Self {
-            bed: cell(BED).zip(cell(BEDSIDE)).filter(|_| overworld_spawn).map(|(head, spot)| [head, spot]),
+            bed: cell(BED).zip(cell(BEDSIDE)).filter(|_| matches!(spawn_dimension, 0 | 1)).map(|(head, spot)| [head, spot]),
+            spawn_dimension: if spawn_dimension == 1 { 1 } else { 0 },
+            last_death: cell(DEATH).zip(int(DEATH_DIMENSION)).filter(|_| died),
             main: read_slotted(list("Inventory"))?,
             armor: list("Armor").iter().map(ItemStack::parse).collect(),
             offhand: list("Offhand").first().and_then(ItemStack::parse),
@@ -170,7 +181,14 @@ impl PlayerData {
         for (key, value) in BED.into_iter().zip(head).chain(BEDSIDE.into_iter().zip(spot)) {
             set(&mut fields, key, Value::Int(value));
         }
-        set(&mut fields, SPAWN_DIMENSION, Value::Int(if self.bed.is_some() { 0 } else { NO_SPAWN_DIMENSION }));
+        set(&mut fields, SPAWN_DIMENSION, Value::Int(if self.bed.is_some() { self.spawn_dimension } else { NO_SPAWN_DIMENSION }));
+        if let Some((at, dimension)) = self.last_death {
+            for (key, value) in DEATH.into_iter().zip(at) {
+                set(&mut fields, key, Value::Int(value));
+            }
+            set(&mut fields, DEATH_DIMENSION, Value::Int(dimension));
+            set(&mut fields, HAS_DIED, Value::Byte(1));
+        }
         let mut out = BytesMut::new();
         nbt::write::<LittleEndian>(&mut out, &Nbt { name: String::new(), value: Value::Compound(fields) });
         Ok(out.to_vec())

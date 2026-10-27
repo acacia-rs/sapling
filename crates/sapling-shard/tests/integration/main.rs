@@ -3,6 +3,7 @@
 
 mod common;
 
+mod anchors;
 mod arenas;
 mod batched_blocks;
 mod armour_wear;

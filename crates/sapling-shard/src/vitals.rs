@@ -13,6 +13,8 @@ pub(crate) use effects::{afflict, give as give_effect, hits_for, kept as kept_ef
 pub(crate) use struck::{bitten, blasted, electrocuted, fanged, fireworked, is_fireproof, knocked, pearled, punched, pushed, rammed, set_alight, shot, thorned, winded};
 mod hunger;
 mod kept;
+mod last_death;
+pub(crate) use last_death::{LastDeath, greeting as last_death_greeting};
 mod omens;
 mod splashed;
 mod stand;

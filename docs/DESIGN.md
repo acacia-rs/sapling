@@ -327,7 +327,7 @@ it sends for `/title`, `/scoreboard`, `/gamemode`, `/tp`, a wither's bar and com
   `sapling:hunger` (no exhaustion), `sapling:liquidFlow` (due flows are dropped: liquids stand),
   `sapling:redstone` (circuits pause; what was written waits), `sapling:mobAi` (mobs fall and are hurt but
   decide nothing). `sendCommandFeedback` is under Commands. `doMobSpawning` stops natural spawning
-  (`spawning.rs`), not eggs or commands. Not read yet: `spawnRadius`, `doImmediateRespawn` (the client's),
+  (`spawning.rs`), not eggs or commands. `doImmediateRespawn` is the client's alone (docs/research/player-damage.md). Not read yet: `spawnRadius`,
   and rules for what sapling lacks (`doInsomnia`, command blocks).
 - **World events** (`sapling-api/src/world_event.rs`). What the world does on its own is offered with its
   world in focus (`plugins::offer_in`), so `Scope::World` listeners hear their world's; each is built only
