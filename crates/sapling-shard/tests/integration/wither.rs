@@ -23,6 +23,7 @@ fn watch(h: &mut Harness, ticks: usize) -> Vec<RawPacket> {
 fn told(sent: &[RawPacket], id: u64, key: Key) -> Vec<i64> {
     let value = |plain: &Plain| match plain {
         Plain::Byte(byte) => i64::from(*byte),
+        Plain::Short(short) => i64::from(*short),
         Plain::Int(int) => i64::from(*int),
         Plain::Long(long) => *long,
         _ => -1,
@@ -75,6 +76,28 @@ fn on_peaceful_the_t_stays() {
     let (mut h, sent) = build(Difficulty::Peaceful);
     assert!(all::<AddEntity>(&sent).iter().all(|added| added.entity_type != WITHER));
     assert_eq!(ask(&mut h, |ctx| ctx.block([0, 65, 3]).map(|block| block.name)).as_deref(), Some("minecraft:soul_sand"));
+}
+
+/// Against research/captures/bds-witherdeath.txt.
+#[test]
+fn killed_it_counts_down_200_ticks_flashing_faster_then_bursts_and_leaves_a_nether_star() {
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    h.remote.run(|ctx| ctx.set_game_mode(ALEX, GameMode::Creative));
+    let id = ask(&mut h, |ctx| ctx.spawn_entity(WITHER, [6.5, 66.0, 6.5]).unwrap());
+    watch(&mut h, CHARGE);
+    assert!(ask(&mut h, move |ctx| ctx.kill_entity(id)));
+    let sent = watch(&mut h, 199);
+    let counted = told(&sent, id.0, Key::WitherInvulnerableTicks);
+    assert_eq!((counted.first(), counted.last(), counted.len()), (Some(&199), Some(&1), 199));
+    let left = |data: &SetEntityData| data.metadata.iter().find(|item| item.key == Key::WitherInvulnerableTicks).and_then(|item| if let Value::Default(Plain::Int(left)) = item.value { Some(i64::from(left)) } else { None });
+    let flashes: Vec<i64> = all::<SetEntityData>(&sent).iter().filter(|data| data.runtime_entity_id == id.0 && data.metadata.iter().any(|item| item.key == Key::WitherAerialAttack)).filter_map(left).take(16).collect();
+    assert_eq!(flashes, [185, 172, 161, 152, 145, 140, 137, 136, 130, 128, 125, 124, 122, 120, 119, 118]);
+    let deaths = all::<acacia_proto::packets::EntityEvent>(&sent).iter().filter(|event| event.runtime_entity_id == id.0).count();
+    assert!(deaths == 1 && all::<LevelEvent>(&sent).iter().any(|event| event.event == LevelEventEvent::ParticleExplosion && event.data == 7), "its second death and blast at the end");
+    watch(&mut h, 2);
+    let left = ask(&mut h, move |ctx| (ctx.entity(id).is_some(), ctx.entities().into_iter().filter_map(|entity| entity.item).map(|item| item.name).collect::<Vec<_>>()));
+    assert!(!left.0 && left.1.contains(&"minecraft:nether_star".to_owned()), "{left:?}");
 }
 
 #[test]

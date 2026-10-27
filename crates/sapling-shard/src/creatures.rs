@@ -100,7 +100,7 @@ impl Creature {
     }
 }
 
-/// A mob that died at the tick it holds; it goes [`DYING`] ticks after.
+/// A mob that died: the tick it goes in, [`DYING`] after its death (a wither's later, wither/dying.rs).
 #[derive(Component)]
 struct Dying(u64);
 
@@ -160,7 +160,7 @@ pub(crate) fn tick(world: &mut World) {
     husbandry::tick(world);
     crowding::tick(world);
     let now = world.resource::<Tick>().0;
-    let dead: Vec<Entity> = world.query::<(Entity, &Dying)>().iter(world).filter(|(_, dying)| now >= dying.0 + DYING).map(|(entity, _)| entity).collect();
+    let dead: Vec<Entity> = world.query::<(Entity, &Dying)>().iter(world).filter(|(_, dying)| now >= dying.0).map(|(entity, _)| entity).collect();
     for entity in dead {
         attacks::leave_experience(world, entity);
         slimes::split(world, entity);

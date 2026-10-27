@@ -4,12 +4,15 @@
 //! (heads.rs, skulls.rs), it breaks the blocks about it a second after it is hurt (wreck.rs), and
 //! at half health it is armoured, blows up again and calls three wither skeletons. Its boss bar
 //! shows every second to players within 55; with none within 50 it heals 1 a second.
-// TODO: the armoured dash, the 200-tick death and its blast, a stored wither's shield, and the
-// fire rate halving with each sixth of its health lost are not done.
+// TODO: the armoured dash, a stored wither's shield, and the fire rate halving with each sixth of
+// its health lost are not done.
 
+mod dying;
 mod heads;
 mod skulls;
 mod wreck;
+
+pub(super) use dying::dies;
 
 use acacia_proto::packets::{BossEventColor, SetEntityData};
 use acacia_proto::types::{EntityProperties, MetadataDictionaryItem, MetadataDictionaryItemKey as Key, MetadataDictionaryItemType as Type, MetadataDictionaryItemValue as Value, MetadataDictionaryItemValueDefault as Plain};
@@ -27,6 +30,9 @@ const SKELETON: &str = "minecraft:wither_skeleton";
 /// Ticks it charges for; it heals max/200 (rounded up) a tick of them.
 const CHARGE: u32 = 200;
 const BLAST: f32 = 7.0;
+/// Its charge's and its death's blasts are this far over its feet (bds-witherdeath.txt: 2.7 over
+/// them at 22035 and 35030).
+const BLAST_UP: f32 = 2.7;
 const GRIEFING: &str = "mobGriefing";
 /// Its pack's health: the health BDS announced it with was already normal's share of it.
 const PACK_HEALTH: f32 = 600.0;
@@ -114,7 +120,7 @@ pub(super) fn begin(world: &mut World, wither: Entity, layer: Entity) {
     }
     let max = PACK_HEALTH * share;
     world.entity_mut(wither).insert((Health::new(max, Some(1.0), 0), Wither { charging: CHARGE, ..Wither::default() }));
-    tell(world, wither, layer, vec![(Key::WitherInvulnerableTicks, Plain::Int(CHARGE as i32)), (Key::WitherAerialAttack, Plain::Byte(1))]);
+    tell(world, wither, layer, vec![(Key::WitherInvulnerableTicks, Plain::Int(CHARGE as i32)), (Key::WitherAerialAttack, Plain::Short(1))]);
 }
 
 /// Whether a hit by `cause` leaves the mob whole: a charging wither takes nothing but the void,
@@ -130,6 +136,7 @@ fn tell(world: &mut World, wither: Entity, layer: Entity, items: Vec<(Key, Plain
     let (Some(id), Some(at)) = (world.get::<NetId>(wither).map(|id| id.0), world.get::<Body>(wither).map(|body| body.at)) else { return };
     let legacy = |plain: &Plain| match plain {
         Plain::Byte(_) => (Type::Byte, 0),
+        Plain::Short(_) => (Type::Short, 1),
         Plain::Int(_) => (Type::Int, 2),
         _ => (Type::Long, 7),
     };
@@ -157,7 +164,7 @@ fn charge(world: &mut World, wither: Entity, layer: Entity, body: &Body) {
         health.mend(by);
     }
     if left == 0 {
-        blow_up(world, wither, layer, body.at);
+        blow_up(world, wither, layer, [body.at[0], body.at[1] + BLAST_UP, body.at[2]]);
         entities::after_announcing(world, layer, body.at.map(|c| c.floor() as i32), vec![heads::sound("spawn", body.at)]);
     }
     if let Some(mut kept) = world.get_mut::<Wither>(wither) {
@@ -175,7 +182,7 @@ fn armour(world: &mut World, wither: Entity, layer: Entity, body: &Body) {
     if let Some(mut kept) = world.get_mut::<Wither>(wither) {
         (kept.armoured, kept.stunned) = (true, STUNNED);
     }
-    tell(world, wither, layer, vec![(Key::WitherAerialAttack, Plain::Byte(0))]);
+    tell(world, wither, layer, vec![(Key::WitherAerialAttack, Plain::Short(0))]);
     blow_up(world, wither, layer, [body.at[0], body.at[1] + HEAD_UP, body.at[2]]);
     if matches!(world.resource::<Settings>().0.difficulty, Difficulty::Normal | Difficulty::Hard) {
         for _ in 0..SKELETONS {
@@ -248,6 +255,7 @@ pub(crate) fn hurt(world: &mut World, mob: Entity) {
 /// Skulls fly, and each wither's bar shows every second.
 pub(super) fn tick(world: &mut World) {
     skulls::tick(world);
+    dying::tick(world);
     if world.resource::<Tick>().0 % SECOND != 0 {
         return;
     }
