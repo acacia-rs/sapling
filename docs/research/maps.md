@@ -59,6 +59,18 @@ Java's `MapItem.update`: `f = 1 << scale`, `r = 128 / f` (halved under a ceiling
 - No pixels: to the asker only, the creation packet (with `included_in`) and the whole map with the last markers.
 - With `client_pixels`: each written at `index % 128, index / 128` as given, told as a changed rectangle.
 
+## Cartography (captures `bds-maps.txt`, `bds-stations.txt`)
+
+- ContainerOpen window type Cartography; the client puts the map in `CartographyInput` 12 and the added item in
+  `CartographyAdditional` 13, then `CraftRecipeOptional` (the multi recipe's network id, filter string 0, cause
+  CartographyText), Consume of both, Place from CreatedOutput 50. Multi recipe UUIDs: copy (empty map)
+  `442d85ed-…`, zoom (paper) `8b36268c-…`, lock (glass pane) `602234e4-…`; a rename alone names recipe 0.
+- Copy: two of the map, tag kept. Zoom: map id + 1 (its `included_in`), scale + 1, centred anew from the old
+  centre (`(256, -256)` → `(320, -192)`), tag `{map_is_init: 1, map_name_index (kept), map_uuid}`; BDS sent the
+  zoomed map whole, blank. Lock: a new id (BDS: 255902174), `locked: true`, pixels copied, damage 6 on the item.
+- A renamed result's response slot carries `custom_name`; BDS resent no inventory.
+- The bot's reads were paused during the table's actions, so who got the result packet and when is not known.
+
 ## Open
 
 - Tints: BDS blends biome tints across neighbours; `map-tints.tsv` holds one probed spot per biome.

@@ -103,6 +103,8 @@ pub fn max_stack(name: &str) -> u8 {
 }
 
 fn extra(name: &str, tag: Option<&nbt::Value>) -> ItemV4Extra {
+    let shown = tag.map(shown_tag);
+    let tag = shown.as_deref();
     // Never the empty extra a reader takes for "none": BDS always writes one, tag or not.
     let nbt = || Nbt { name: String::new(), value: tag.cloned().unwrap_or(nbt::Value::Compound(Vec::new())) };
     if name == SHIELD {
@@ -114,6 +116,20 @@ fn extra(name: &str, tag: Option<&nbt::Value>) -> ItemV4Extra {
     let nbt = tag.map(|_| ExtraNbt { version: NBT_VERSION, nbt: nbt() });
     ItemV4Extra::Default(Some(Extra { has_nbt, nbt, can_place_on: Vec::new(), can_destroy: Vec::new() }))
 }
+
+/// A tag as clients see it: a bundle's contents stay on the server, which shows them as a
+/// container of their own (research/captures/bds-bundles.txt).
+fn shown_tag(tag: &nbt::Value) -> std::borrow::Cow<'_, nbt::Value> {
+    match tag {
+        nbt::Value::Compound(fields) if fields.iter().any(|(key, _)| key == STORAGE_CONTENT) => {
+            std::borrow::Cow::Owned(nbt::Value::Compound(fields.iter().filter(|(key, _)| key != STORAGE_CONTENT).cloned().collect()))
+        }
+        other => std::borrow::Cow::Borrowed(other),
+    }
+}
+
+/// Where a bundle's tag keeps what it holds, as BDS saves it.
+pub const STORAGE_CONTENT: &str = "storage_item_component_content";
 
 /// An empty slot.
 pub fn no_item() -> ItemV4 {

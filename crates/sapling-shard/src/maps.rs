@@ -21,7 +21,7 @@ use sapling_world::ItemStack;
 
 use crate::blocks::Dice;
 use crate::components::{InLayer, Layer, NetId, Outgoing, PacketQueues, Position, Tick};
-use crate::inventory::{self, Inventory};
+use crate::inventory::{self, CARTOGRAPHY_INPUT, Chart, Inventory, Place};
 
 pub(crate) use render::Colours;
 
@@ -39,6 +39,7 @@ const IDS_PER_MAP: i64 = 5;
 /// BDS's map ids are unique ids: the top half all ones.
 const ID_BASE: i64 = -(1 << 32);
 
+#[derive(Clone)]
 pub(crate) struct MapData {
     pub id: i64,
     pub scale: u8,
@@ -80,6 +81,13 @@ pub(crate) struct Maps {
     colours: Colours,
 }
 
+impl Maps {
+    /// The id the next new map takes.
+    fn next_id(&self) -> i64 {
+        ID_BASE + 1 + self.made * IDS_PER_MAP
+    }
+}
+
 /// The centre of the square of `128 << scale` blocks that `at` lies in, on one axis (Java's
 /// `MapItemSavedData.calculateCenter`).
 pub(crate) fn centre(at: f32, scale: u8) -> i32 {
@@ -99,7 +107,7 @@ pub(crate) fn map_id(stack: &ItemStack) -> Option<i64> {
 pub(crate) fn make(world: &mut World, layer: Entity, dimension: i32, centre: [i32; 2], scale: u8, locked: bool) -> (i64, i32) {
     let born = world.resource::<Tick>().0;
     let mut maps = world.get_resource_or_insert_with(Maps::default);
-    let id = ID_BASE + 1 + maps.made * IDS_PER_MAP;
+    let id = maps.next_id();
     maps.made += 1;
     maps.names += 1;
     let size = render::SIZE as usize;
@@ -147,6 +155,39 @@ pub(crate) fn fill(world: &mut World, player: Entity) -> bool {
     let sound = LevelSoundEvent { sound_id: "ui.cartography_table.take_result".into(), position: Vec3f { x, y, z }, extra_data: -1, entity_type: String::new(), is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None };
     crate::late_sounds::play_later(world, 1, layer, [x, y, z].map(|c| c as i32), sapling_net::encode(&sound));
     true
+}
+
+/// What a player's cartography table knows of the map in its input.
+pub(crate) fn chart(world: &World, player: Entity) -> Chart {
+    let maps = world.get_resource::<Maps>();
+    let held = world.get::<Inventory>(player).and_then(|inventory| inventory.slot(Place::Ui(CARTOGRAPHY_INPUT))?.as_ref().and_then(|held| map_id(&held.stack)));
+    let input = held.and_then(|id| maps?.maps.get(&id)).map(|map| (map.id, map.scale, map.locked));
+    Chart { input, fresh: maps.map_or(ID_BASE + 1, Maps::next_id) }
+}
+
+/// Makes the map `to` a cartography table made of the map `from`: zoomed out (blank, a scale
+/// up, centred anew around the old centre) or locked (a copy that never redraws), and tells
+/// everyone in its world all of it. A zoom level made before is kept as it is.
+pub(crate) fn charted(world: &mut World, from: i64, to: i64, zoomed: bool) {
+    let now = world.resource::<Tick>().0;
+    let Some(mut maps) = world.get_resource_mut::<Maps>() else { return };
+    let Some(old) = maps.maps.get(&from).filter(|_| !maps.maps.contains_key(&to)).cloned() else { return };
+    let mut map = MapData { id: to, changed: None, tracked: Vec::new(), marks: Vec::new(), redraw: 0, told: 0, born: now.wrapping_sub(1), ..old.clone() };
+    if zoomed {
+        map.scale += 1;
+        map.centre = old.centre.map(|axis| centre(axis as f32, map.scale));
+        map.pixels.fill(0);
+    } else {
+        map.locked = true;
+    }
+    if to == maps.next_id() {
+        maps.made += 1;
+    }
+    let size = render::SIZE as usize;
+    let whole = marks::update(&map, Some([0, 0, size, size]));
+    let layer = map.layer;
+    maps.maps.insert(to, map);
+    tell_layer(world, layer, &whole);
 }
 
 /// Answers this tick's `MapInfoRequest`s: the whole map to the asker, or the pixels it sent painted in.

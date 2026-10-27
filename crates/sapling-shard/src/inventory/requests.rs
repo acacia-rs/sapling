@@ -103,9 +103,12 @@ fn apply(inventory: &mut Inventory, request: &Request, creative: bool, at: &At) 
         let unstarted = craft.is_none() && forge.is_none();
         match (&action.content, &at.bench) {
             (Action::CraftRecipe(asked), Some(bench)) if unstarted => forge = Some(Forge::by_recipe(inventory, bench, asked.recipe_network_id, creative)?),
-            (Action::Optional(asked), Some(Bench::Anvil)) if unstarted => {
-                let name = usize::try_from(asked.filtered_string_index).ok().and_then(|index| request.custom_names.get(index));
-                forge = Some(Forge::repair(inventory, name.map(String::as_str), creative)?);
+            (Action::Optional(asked), Some(bench @ (Bench::Anvil | Bench::Cartography(_)))) if unstarted => {
+                let name = usize::try_from(asked.filtered_string_index).ok().and_then(|index| request.custom_names.get(index)).map(String::as_str);
+                forge = Some(match bench {
+                    Bench::Cartography(chart) => Forge::chart(inventory, chart, asked.recipe_network_id, name)?,
+                    _ => Forge::repair(inventory, name, creative)?,
+                });
             }
             (Action::CraftGrindstoneRequest(asked), Some(Bench::Grindstone)) if unstarted => forge = Some(Forge::grind(inventory, asked.recipe_network_id, asked.cost)?),
             (Action::CraftLoomRequest(asked), Some(Bench::Loom)) if unstarted => forge = Some(Forge::loom(inventory, &asked.pattern)?),
@@ -178,7 +181,8 @@ fn response(inventory: &Inventory, request_id: i32, applied: &Applied) -> ItemSt
             hotbar_slot: *slot,
             count: held.map_or(0, |held| held.stack.count),
             item_stack_id: held.map(|held| held.id),
-            custom_name: String::new(),
+            // BDS named a renamed map's slot by its new name (research/captures/bds-maps.txt).
+            custom_name: held.and_then(|held| sapling_data::enchant::anvil::custom_name(held.stack.tag.as_ref())).unwrap_or_default().to_owned(),
             filtered_custom_name: String::new(),
             durability_correction: 0,
         };

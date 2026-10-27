@@ -24,7 +24,7 @@ use crate::experience::Experience;
 
 pub(crate) use armour_wear::{elytra_flies, wear_armour, wear_elytra, wear_thorny};
 pub(crate) use crafting::clear_grid;
-pub(crate) use forge::{Bargain, Bench, Forged, enchanting_input};
+pub(crate) use forge::{Bargain, Bench, CARTOGRAPHY_INPUT, Chart, Forged, enchanting_input};
 pub(crate) use equipment::{announce, in_hand, screens, select, show_hand, spawn_packets};
 pub(crate) use give::{give_and_pop, swap_held, swap_held_for, use_up_held};
 pub(crate) use picking::dispatch as dispatch_picks;

@@ -55,7 +55,8 @@ pub fn custom_name(tag: Option<&Value>) -> Option<&str> {
     }
 }
 
-fn with_name(tag: Option<Value>, name: Option<&str>) -> Option<Value> {
+/// `tag` with `display.Name` set to `name`, or taken off for `None`.
+pub fn with_name(tag: Option<Value>, name: Option<&str>) -> Option<Value> {
     let display = tag.as_ref().and_then(|tag| tag.get(DISPLAY)).cloned();
     let display = with_field(display, NAME, name.map(|name| Value::String(name.into())));
     with_field(tag, DISPLAY, display)

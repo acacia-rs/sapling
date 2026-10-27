@@ -11,6 +11,7 @@ mod attacks;
 mod block_rules;
 mod block_use;
 mod bubble_columns;
+mod cartography;
 mod blocks;
 mod brewing;
 mod bonemeal;
