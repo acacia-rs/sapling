@@ -23,7 +23,7 @@ const MAX_CLICKS_PER_TICK: usize = 4;
 const USED: &[&str] = &["daylight_detector", "daylight_detector_inverted", 
     "door", "button", "lever", "fence_gate", "chest", "barrel", "shulker_box", "furnace", "smoker", "crafting_table", "anvil", "enchanting_table", "hopper",
     "dropper", "dispenser", "_sign", "noteblock", "repeater", "comparator", "brewing_stand", "beacon", "loom", "grindstone", "stonecutter_block", ":bed",
-    "cartography_table", "smithing_table", "flower_pot", "jukebox", ":frame", "glow_frame", "decorated_pot", "lectern",
+    "cartography_table", "smithing_table", "flower_pot", "jukebox", ":frame", "glow_frame", "decorated_pot", "lectern", ":bell",
 ];
 
 enum Input {
@@ -238,6 +238,7 @@ impl Request<'_> {
         let particles = send::destroy_particles(level.registry(), [x, y, z], id);
         doors::remove_other_half(self.world, site.layer, [x, y, z]);
         crate::containers::spill(self.world, site.layer, [x, y, z], site.mode == GameMode::Creative);
+        super::bookshelves::spill(self.world, site.layer, [x, y, z], site.mode == GameMode::Creative);
         // BDS sends the fragments before the block; the cell is loaded and not air, so it changes.
         send::to_viewers(self.world, site.layer, [x, y, z], &[particles]);
         if !send::set(self.world, site.layer, [x, y, z], air) {
@@ -263,6 +264,9 @@ impl Request<'_> {
         let builds = site.sneaking || !is_used(name) || held.as_deref().is_some_and(|held| super::copper::is_worked_by(name, held));
         let held = held.filter(|_| builds);
         let at = [click.click_pos.x, click.click_pos.y, click.click_pos.z];
+        if !site.sneaking && super::bookshelves::use_on(self.world, self.entity, site.layer, pos, face, at, site.mode == GameMode::Creative) {
+            return;
+        }
         if held.as_ref().is_some_and(|held| crate::vehicles::place(self.world, self.entity, site.layer, pos, face, at, held)) {
             return;
         }
@@ -298,7 +302,7 @@ impl Request<'_> {
     fn interact(&mut self, site: &Site, pos: BlockPos, face: Face, block: Block) {
         let name = block.name.clone();
         let event = plugins::offer(self.world,InteractEvent::new(self.player.clone(), pos, face, block, site.mode != GameMode::Spectator));
-        let used = !event.is_cancelled() && (use_block(self.world, self.entity, site.layer, pos, &name) || doors::use_by_hand(self.world, site.layer, pos, &name));
+        let used = !event.is_cancelled() && (super::bells::ring_by_hand(self.world, self.entity, site.layer, pos, face, &name) || use_block(self.world, self.entity, site.layer, pos, &name) || doors::use_by_hand(self.world, site.layer, pos, &name));
         if !used {
             self.resync(&[pos, face.neighbour(pos), Face::Up.neighbour(pos), Face::Down.neighbour(pos)]);
         }

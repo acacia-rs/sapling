@@ -109,6 +109,45 @@ window: WindowType::BrewingStand, has_lid: false }`; `requests.rs` maps the thre
 | Lit campfire with raw food | First empty `Item1..4` slot gets one; `ItemTime` counts up, done at 600 ticks (Java `cookingTime`), the cooked item pops out | BDS fields; JAVA campfire recipes |
 | Cauldron + water bucket | `fill_level=6`, `cauldron_liquid=water` (buckets needed; out of scope) | REG |
 
+## 6. Bells, chiseled bookshelves, conduits, beehives (2026-10-27, `bds_command_probe bells|bookshelves|conduits|hives`)
+
+### Bells
+
+`bds-bells.txt`. Placed: `Bell` entity `Direction` 255, `Ringing` 0, `Ticks` 0. A click rings it on every face tried
+(side and hanging bells: all six; standing bell: the four sides) but a standing bell's top: the block with
+`toggle_bit` flipped, the entity `Ringing` 1, `Ticks` 0 and `Direction` the horizontal way (south 0, west 1, north 2,
+east 3) from the bell toward the clicker, then `block.bell.hit` at the block's corner (integer position). A block of
+redstone put beside a standing bell (south of it, bell facing south) rang it the same with `Direction` 0 and no
+`toggle_bit` flip; taking it away sent nothing. BDS never showed `Ringing` back to 0. Sapling: `blocks/bells.rs`.
+
+### Chiseled bookshelves
+
+`bds-bookshelves.txt`. Placed: a bare `ChiseledBookshelf` entity. A click on the front (`direction` 1: west) at the
+face's middle used slot 1 (top middle): with a book, `insert` at the block's centre carrying the shelf's state hash
+before, then a tick later `books_stored=2` and the entity with all six `Items` (empty ones `Name` "", `Count` 0, each
+with `WasPickedUp` 0) and `LastInteractedSlot` 2. Any click on the full slot (enchanted book or empty hand) took the
+book (`pickup`, same hash rule) and left the entity bare; an empty hand on an empty slot did nothing. A comparator
+behind it gave 2, and still 2 once the shelf was empty, until the shelf broke. Broken in creative it left its book.
+Sapling: `blocks/bookshelves.rs`.
+
+### Conduits
+
+`bds-conduits.txt`. Placed: `Conduit` with `Active` 0, `Target` -1, `BlockEntityVersion` 0. A water bucket on it
+waterlogged it (layer 1 `water`, the entity told again unchanged, `bucket.empty.water`). A prismarine shell round it
+filled with water, then three faces turned to glass: over 30 s BDS sent no `BlockEntityData`, sound or event, so
+whether it woke is not on the wire (the client works the frame out itself). Sapling keeps `Active` by the Java game's
+rule (water 3 by 3 by 3, 16 frame blocks, every 40 ticks) without telling anyone. Not done: Conduit Power (no such
+effect in sapling) and hunting (`Target`). Sapling: `blocks/conduits.rs`.
+
+### Beehives
+
+`bds-hives.txt`. Shears and bottle on a full hive and nest were already sapling's (`tools.rs`). A bee entering a
+hive: `block.beehive.enter` at the block's corner, no entity shown; `block.beehive.work` at its centre now and then.
+A creative break of a hive with a bee in it left a beehive item whose tag holds `Occupants` (`ActorIdentifier`
+`minecraft:bee<>`, the bee's whole `SaveData`). At noon the other hive's bee came out: AddEntity at the middle of the
+cell in front (`direction` 1: west), yaw 90, with `block.beehive.exit` at the hive's corner. Sapling keeps no bees
+in hives: none ever go in (bee flight), so `Occupants` are neither written nor released.
+
 ## Open checks (one bot session on BDS)
 
 Placed skull's saved `SkullType` (-1 or kind); cauldron `PotionId`/`PotionType` defaults; sign text cap in the

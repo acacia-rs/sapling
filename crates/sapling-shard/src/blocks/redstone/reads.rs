@@ -39,6 +39,7 @@ fn read(world: &mut World, layer: Entity, at: BlockPos) -> Option<u8> {
     by_state(world, layer, at)
         .or_else(|| crate::blocks::jukebox::signal(world, layer, at))
         .or_else(|| crate::blocks::lectern::signal(world, layer, at))
+        .or_else(|| crate::blocks::bookshelves::signal(world, layer, at))
         .or_else(|| pot(world))
         .or_else(|| crate::blocks::sculk::signal(world, layer, at))
         .or_else(|| crate::blocks::crafter::signal(world, layer, at))

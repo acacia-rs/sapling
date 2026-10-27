@@ -7,7 +7,7 @@ use sapling_api::BlockPos;
 
 use super::parts::{Opens, Part, SIGNAL, User};
 use super::{Circuits, Due, power_at};
-use crate::blocks::{bulbs, doors, level, notes, pistons, queued, send, with_property};
+use crate::blocks::{bells, bulbs, doors, level, notes, pistons, queued, send, with_property};
 use crate::components::Tick;
 
 /// Ticks a lamp stays lit once its signal ended (`RedstoneLampBlock`, a queued tick of 4).
@@ -51,6 +51,7 @@ pub(super) fn write(world: &mut World, layer: Entity, pos: BlockPos, due: Due) {
             }
         }
         (Part::User(User::Note), Due::Signal(signal, was)) if signal > 0 && was == 0 => notes::sounded(world, layer, pos),
+        (Part::User(User::Bell), Due::Signal(signal, was)) if signal > 0 && was == 0 => bells::ring_by_power(world, layer, pos),
         (Part::User(user), Due::Signal(signal, _)) => use_signal(world, layer, pos, id, user, signal),
         (Part::Torch { lit, .. } | Part::Repeater { lit, .. } | Part::Comparator { lit, .. }, Due::Lit { lit: now, fizz }) if lit != now => {
             let names = match part {
@@ -92,18 +93,18 @@ fn use_signal(world: &mut World, layer: Entity, pos: BlockPos, id: u32, user: Us
                 send::set(world, layer, pos, id);
             }
         }
-        User::Tnt => {
         User::Rail => {
             super::rail_line::relight(world, layer, pos);
             crate::blocks::rails::switch(world, layer, pos, signal > 0);
         }
+        User::Tnt => {
             if signal > 0 {
                 crate::tnt::light(world, layer, pos);
             }
         }
         User::Piston { .. } => pistons::power(world, layer, pos, signal > 0),
         User::Opens(opens) => open(world, layer, pos, opens, signal),
-        User::Note => {}
+        User::Note | User::Bell => {}
         User::Fires { triggered } if triggered != (signal > 0) => {
             if let Some(id) = with(world, layer, pos, "triggered_bit", if signal > 0 { "1" } else { "0" }) {
                 send::set(world, layer, pos, id);

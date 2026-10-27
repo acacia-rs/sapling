@@ -30,6 +30,8 @@ pub(super) enum User {
     Fires { triggered: bool },
     /// Plays on a rise of its signal.
     Note,
+    /// Rings on a rise of its signal (bells.rs).
+    Bell,
     /// A copper bulb, which turns on and off at each rise of its signal.
     Bulb { powered: bool },
 }
@@ -93,6 +95,7 @@ impl Part {
             "hopper" => Part::User(User::Hopper),
             "dispenser" | "dropper" | "crafter" => Part::User(User::Fires { triggered: get("triggered_bit") == Some("1") }),
             "noteblock" => Part::User(User::Note),
+            "bell" => Part::User(User::Bell),
             _ if name.ends_with("copper_bulb") => Part::User(User::Bulb { powered: get("powered_bit") == Some("1") }),
             "tripwire_hook" => Part::Producer { strength: on("powered_bit"), strong: get("direction").and_then(hook_support) },
             _ if name.ends_with("lightning_rod") => {
