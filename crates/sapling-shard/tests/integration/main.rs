@@ -78,6 +78,7 @@ mod placed_items;
 mod player_omens;
 mod players;
 mod plugin_damage;
+mod piglins;
 mod plugins;
 mod portals;
 mod priorities;

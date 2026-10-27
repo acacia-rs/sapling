@@ -131,6 +131,8 @@ BLOCK_TABLES = [
     "loot_tables/chests/trial_chambers/reward.json", "loot_tables/chests/trial_chambers/reward_ominous.json",
     # A fishing hook's catch (fishing.rs in sapling-shard), not its death's: NOT_MOBS.
     "loot_tables/gameplay/fishing.json", "loot_tables/gameplay/jungle_fishing.json",
+    # What a piglin hands back for gold (`minecraft:barter`), not what it leaves.
+    "loot_tables/entities/piglin_barter.json",
 ]
 # Kinds whose table is not what they leave when they die.
 NOT_MOBS = {"minecraft:fishing_hook", "minecraft:player", "minecraft:npc", "minecraft:tripod_camera"}

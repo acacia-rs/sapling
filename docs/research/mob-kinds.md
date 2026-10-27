@@ -243,6 +243,15 @@ the actor and 77 ticks on swung (sapling waits Java's 20 to 60 by distance), a `
 pack's power 4), heard `item.trident.throw` from the drowned. It kept its own trident; the thrown
 one stuck in the floor. One handed a trident by `replaceitem` (an earlier run) only bit.
 
+## Piglins bartering (`barter`)
+
+A piglin in the warded room (`research/captures/bds-barter.txt`) picked a thrown gold ingot up: shown
+in its offhand (`MobEquipment` window `Offhand`, slot 1) that tick, `admire` from its head a tick
+later, and 161 ticks on (`admire_item` 8 s) the ingot went to its main hand and the offhand emptied.
+No barter came out in three runs: the clicks with an ingot fell out of reach. sapling barters on the
+click (the pack's `minecraft:interact` with `barter`), with that timing, and drops a roll of
+`piglin_barter.json` (read by `mob-loot.py` with the block tables) as the offhand empties.
+
 ## Sapling
 
 A witch throws as above (`creatures/arrows.rs` `POTION`, its rise fitted to the three throws),
