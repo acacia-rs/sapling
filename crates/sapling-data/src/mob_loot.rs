@@ -141,5 +141,9 @@ fn number(value: &Value, roll: &mut dyn FnMut() -> f32) -> u32 {
     min + ((roll() * (max.saturating_sub(min) + 1) as f32) as u32).min(max.saturating_sub(min))
 }
 
+mod fishing;
+
+pub use fishing::{Caught, fishing_loot};
+
 #[cfg(test)]
 mod tests;

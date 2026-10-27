@@ -646,7 +646,8 @@ block action, and takes StopBreak and AbortBreak with a position.
   placement (`Sign` with empty `FrontText`/`BackText`, `Skull` with the floor rotation, `Banner`
   with `Base` = the item's damage, ...); a brewing stand is a container of five (window type
   BrewingStand; ingredient, three bottles, fuel) whose block shows a bottle in each place that
-  holds something (`containers/brewing.rs`); it brews nothing. Breaking gives
+  holds something (`containers/brewing.rs`) and brews by BDS's tick and mixes (`brewing.rs`,
+  docs/research/brewing.md). Breaking gives
   the item back what the entity kept: a bed's and a banner's colour, a pot's plant, a campfire's
   food. Signs of every wood leave their wood's sign, banners `banner`. Not done: cauldrons hold
   nothing, a banner's patterns are lost (`Item` has no tag).
@@ -885,8 +886,9 @@ block action, and takes StopBreak and AbortBreak with a position.
   (`blocks/frost.rs`). Mending: an orb mends one damaged Mending stack worn or held, two of wear a
   point, before the rest is experience. Curse of Vanishing is gone at death; Curse of Binding keeps
   a piece on outside creative (`inventory/enchanted.rs`). Power, Punch, Flame, Infinity, Multishot,
-  Piercing, Quick Charge, Loyalty, Riptide and Impaling: see "Players' shots". Not done: Channeling,
-  fishing rods and the mace and their enchantments; Aqua Affinity (the server does not slow a break
+  Piercing, Quick Charge, Loyalty, Riptide and Impaling: see "Players' shots". Lure and Luck of the
+  Sea: see fishing (`fishing.rs`, docs/research/fishing.md). Not done: Channeling, the mace and its
+  enchantments; Aqua Affinity (the server does not slow a break
   under water); Soul Speed, Swift Sneak; Thorns against arrows; Blast Protection's throw (BDS reads
   none); Looting on armour.
 - **What a block leaves** (`blocks/loot.rs`, `sapling_data::block_loot`). `BreakEvent::drops` starts as

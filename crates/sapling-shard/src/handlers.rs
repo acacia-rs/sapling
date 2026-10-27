@@ -91,6 +91,7 @@ pub(crate) fn dispatch(world: &mut World) {
     late_sounds::play_due(world);
     containers::close_where_gone(world);
     furnaces::tick(world);
+    crate::brewing::tick(world);
     hoppers::tick(world);
     entities::remove_left(world);
     drops::fly(world);
@@ -107,6 +108,7 @@ pub(crate) fn dispatch(world: &mut World) {
     crate::dragon::tick(world);
     crate::eyes::tick(world);
     crate::shots::tick(world);
+    crate::fishing::tick(world);
     crate::fireworks::tick(world);
     crate::lightning::tick(world);
     vitals::tick(world);

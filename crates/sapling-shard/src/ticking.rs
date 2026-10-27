@@ -15,7 +15,7 @@ use sapling_world::ChunkPos;
 use crate::chunks::UNLOAD_INTERVAL;
 use crate::components::{InLayer, Layer, Tick};
 use crate::view::View;
-use crate::{campfires, furnaces, hoppers, spawners};
+use crate::{brewing, campfires, furnaces, hoppers, spawners};
 
 fn id(entity: &Value) -> Option<&str> {
     match entity.get("id") {
@@ -43,9 +43,10 @@ pub(crate) fn sweep(world: &mut World) {
     }
     let seen = seen(world);
     let column = |pos: BlockPos| ChunkPos::of_block(pos[0], pos[2]);
-    let watched: Vec<(Entity, BlockPos)> = [furnaces::watched(world), hoppers::watched(world), campfires::watched(world), spawners::watched(world)].concat();
+    let watched: Vec<(Entity, BlockPos)> = [furnaces::watched(world), brewing::watched(world), hoppers::watched(world), campfires::watched(world), spawners::watched(world)].concat();
     for (layer, pos) in watched.into_iter().filter(|(layer, pos)| !seen.contains(&(*layer, column(*pos)))) {
         furnaces::forget(world, layer, pos);
+        brewing::forget(world, layer, pos);
         hoppers::forget(world, layer, pos);
         campfires::forget(world, layer, pos);
         spawners::forget(world, layer, pos);
@@ -58,6 +59,7 @@ pub(crate) fn sweep(world: &mut World) {
             let watch: Watch = match id(&entity.nbt) {
                 Some("Hopper") => hoppers::watch,
                 Some("Furnace" | "BlastFurnace" | "Smoker") if furnaces::was_at_work(&entity.nbt) => furnaces::watch,
+                Some("BrewingStand") if brewing::was_at_work(&entity.nbt) => brewing::watch,
                 Some("Campfire") if campfires::is_cooking(&entity.nbt) => campfires::watch,
                 _ if spawners::is_spawner(&entity.nbt) => spawners::watch,
                 _ => continue,

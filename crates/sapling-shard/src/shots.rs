@@ -49,7 +49,7 @@ fn mode(world: &World, player: Entity) -> Option<GameMode> {
 /// crossbow or a trident is drawn until let go. True where the hand held one of these.
 pub(crate) fn use_in_air(world: &mut World, player: Entity) -> bool {
     let Some(stack) = held(world, player).filter(|_| mode(world, player) != Some(GameMode::Spectator)) else { return false };
-    if throws::throw(world, player, &stack) || crossbows::shoot(world, player, &stack) {
+    if crate::fishing::use_rod(world, player, &stack) || throws::throw(world, player, &stack) || crossbows::shoot(world, player, &stack) {
         return true;
     }
     let draws = bows::may_draw(world, player, &stack) || crossbows::may_load(world, player, &stack) || tridents::may_ready(world, player, &stack);

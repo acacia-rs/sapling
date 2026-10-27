@@ -104,6 +104,9 @@ pub(crate) fn open(world: &mut World, player: Entity, layer: Entity, pos: BlockP
     if kind.is_smelter() {
         furnaces::watch(world, layer, pos);
     }
+    if kind.is_stand() {
+        crate::brewing::opened(world, layer, pos);
+    }
     shown
 }
 
