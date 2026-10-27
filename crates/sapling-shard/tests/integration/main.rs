@@ -54,6 +54,7 @@ mod leftovers;
 mod light;
 mod lightning;
 mod lit_rules;
+mod maps;
 mod level;
 mod liquids;
 mod mechanisms;

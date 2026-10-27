@@ -1,0 +1,21 @@
+{
+  "format_version": 2,
+  "header": {
+    "name": "map colours",
+    "description": "Prints every block's map colour (Block.getMapColor) and the minecraft:map_color component",
+    "uuid": "3c1f5e20-8a4b-4d7e-b9a1-6d2e0f4c5a01",
+    "version": [1, 0, 0],
+    "min_engine_version": [1, 26, 0]
+  },
+  "modules": [
+    { "type": "data", "uuid": "3c1f5e20-8a4b-4d7e-b9a1-6d2e0f4c5a02", "version": [1, 0, 0] },
+    {
+      "type": "script",
+      "language": "javascript",
+      "uuid": "3c1f5e20-8a4b-4d7e-b9a1-6d2e0f4c5a03",
+      "version": [1, 0, 0],
+      "entry": "scripts/main.js"
+    }
+  ],
+  "dependencies": [{ "module_name": "@minecraft/server", "version": "2.6.0" }]
+}

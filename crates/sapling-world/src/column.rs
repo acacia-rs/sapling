@@ -213,7 +213,10 @@ impl Column {
     /// The y of the highest block `counts` accepts in block column `(x, z)`.
     pub fn top(&self, x: i32, z: i32, counts: impl Fn(u32) -> bool) -> Option<i32> {
         let dim = self.chunk.dimension();
-        (dim.min_y..dim.min_y + dim.height as i32).rev().find(|&y| counts(self.chunk.block(x, y, z)))
+        (0..self.chunk.section_count()).rev().filter(|&section| self.chunk.section_uniform(section).is_none_or(&counts)).find_map(|section| {
+            let floor = dim.min_y + 16 * section as i32;
+            (floor..floor + 16).rev().find(|&y| counts(self.chunk.block(x, y, z)))
+        })
     }
 
     /// Encodes everything a client can ask of this column.

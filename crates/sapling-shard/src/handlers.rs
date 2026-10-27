@@ -85,6 +85,8 @@ pub(crate) fn dispatch(world: &mut World) {
     inventory::dispatch(world);
     blocks::dispatch_crafter_toggles(world);
     crate::books::dispatch(world);
+    crate::maps::dispatch(world);
+    crate::maps::tick(world);
     blocks::turn_lectern_pages(world);
     containers::dispatch_closes(world);
     containers::show_lids_again(world);
