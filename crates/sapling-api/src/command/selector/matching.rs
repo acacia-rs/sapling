@@ -25,6 +25,8 @@ pub struct Candidate {
     pub level: Option<i32>,
     /// `None` for what carries nothing sapling can look into.
     pub inventory: Option<Inventory>,
+    /// The inputs `/inputpermission` stopped, as [`super::Input`]'s bits.
+    pub input_locks: u32,
 }
 
 impl Candidate {
@@ -52,8 +54,7 @@ pub(super) fn passes(filters: &Filters, candidate: &Candidate, origin: [f32; 3])
         && all(&filters.tags, &tagged)
         && player_only(!filters.modes.is_empty(), &mode)
         && player_only(!filters.level.is_open(), &|| candidate.level.is_some_and(|level| filters.level.holds(level)))
-        // TODO: no `/inputpermission` yet, so every input is enabled.
-        && player_only(!filters.permissions.is_empty(), &|| filters.permissions.iter().all(|(_, enabled)| *enabled))
+        && player_only(!filters.permissions.is_empty(), &|| filters.permissions.iter().all(|(input, enabled)| (candidate.input_locks & input.lock() == 0) == *enabled))
         && filters.pitch.holds(candidate.rotation[1])
         && turned(filters.yaw, candidate.rotation[0])
         // Without a score a test fails, `!` or not (research/captures/bds-scoreboard.txt).

@@ -132,8 +132,11 @@ impl Execute {
             Err(error) => error,
         };
         match error {
-            ParseError::Syntax { token, after, .. } => {
-                let start = at + command.len() - token.len() - after.len();
+            ParseError::Syntax { before, token, after } => {
+                // The error keeps only ten characters each side; find them in the command again.
+                let quoted = format!("/{command}");
+                let found = quoted.find(&format!("{before}{token}{after}")).map_or(command.len() - token.len(), |pos| pos + before.len() - 1);
+                let start = at + found;
                 Some(Args::new(&self.line, 0, sender, &[]).error_span(start, start + token.len()))
             }
             other => Some(other),

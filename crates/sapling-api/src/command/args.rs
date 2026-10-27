@@ -141,7 +141,9 @@ impl<'a> Args<'a> {
 
     /// The error for the argument that started at `mark`, as BDS reports one: `/gamemode banana`
     /// is `("/gamemode ", "banana", "")`, a missing argument `("/gamemode", "", "")`. BDS keeps
-    /// only the last ten characters before it: `/gamerule randomtickspeed true` is `("tickspeed ", "true", "")`.
+    /// only the last ten characters before it and the first ten after: `/gamerule randomtickspeed
+    /// true` is `("tickspeed ", "true", "")`, and `/loot spawn ~ ~ ~ loot entities/armor_stand` is
+    /// `("t entities", "/", "armor_stan")` (research/captures/bds-lootcmd.txt).
     pub fn error_at(&self, mark: usize) -> ParseError {
         let rest = &self.line[mark..];
         self.error_span(mark, mark + rest.find(char::is_whitespace).unwrap_or(rest.len()))
@@ -149,10 +151,11 @@ impl<'a> Args<'a> {
 
     /// The error for bytes `start..end` of the line, a part of a word (a selector's filter).
     pub fn error_span(&self, start: usize, end: usize) -> ParseError {
-        const BEFORE_KEPT: usize = 10;
+        const KEPT: usize = 10;
         let before = format!("/{}", if start >= self.line.len() { self.line.trim_end() } else { &self.line[..start] });
-        let cut = before.char_indices().rev().nth(BEFORE_KEPT - 1).map_or(0, |(at, _)| at);
-        ParseError::Syntax { before: before[cut..].to_owned(), token: self.line[start..end].to_owned(), after: self.line[end..].to_owned() }
+        let cut = before.char_indices().rev().nth(KEPT - 1).map_or(0, |(at, _)| at);
+        let after = self.line[end..].chars().take(KEPT).collect();
+        ParseError::Syntax { before: before[cut..].to_owned(), token: self.line[start..end].to_owned(), after }
     }
 
     /// The next word, where spaces in quotes, brackets or braces do not end it
