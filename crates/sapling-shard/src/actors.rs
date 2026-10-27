@@ -13,6 +13,8 @@ use crate::body::Body;
 use crate::chunks::UNLOAD_INTERVAL;
 use crate::components::{InLayer, Layer, Tick};
 use crate::entities::{Managed, Stored};
+use crate::kept::Kept;
+use crate::view::View;
 use crate::{blocks, creatures, drops, mobs, orbs};
 
 const ITEM: &str = "minecraft:item";
@@ -79,29 +81,42 @@ pub(crate) fn write_back_before_saving(world: &mut World) {
 
 /// Writes every loaded column's actors anew from what the shard has (see the module).
 pub(crate) fn write_back(world: &mut World) {
-    let kept: Vec<(Entity, ChunkPos, Vec<u8>)> = world
-        .query::<(&InLayer, &Body, &Stored, Option<&creatures::Health>, Option<&creatures::Raised>)>()
+    let kept: Vec<(Entity, ChunkPos, i64, Vec<u8>)> = world
+        .query::<(&InLayer, &Body, &Stored, &crate::tags::UniqueId, Option<&creatures::Health>, Option<&creatures::Raised>)>()
         .iter(world)
-        .filter_map(|(layer, body, stored, health, raised)| {
+        .filter_map(|(layer, body, stored, unique_id, health, raised)| {
             let home = ChunkPos::of_block(body.at[0].floor() as i32, body.at[2].floor() as i32);
-            Some((layer.0, home, compound_now(body, stored, health, raised)?))
+            Some((layer.0, home, unique_id.0, compound_now(body, stored, health, raised)?))
         })
         .collect();
     let managed = world.get_resource::<Managed>().map(|managed| managed.0.clone()).unwrap_or_default();
     let layers: Vec<Entity> = world.query_filtered::<Entity, With<Layer>>().iter(world).collect();
     for layer in layers {
+        let views: Vec<&View> = world.query::<(&InLayer, &View)>().iter(world).filter(|(in_layer, _)| in_layer.0 == layer).map(|(_, view)| view).collect();
+        let held = world.get::<Kept>(layer);
+        let seen = |pos: ChunkPos| views.iter().any(|view| view.covers(pos)) || held.is_some_and(|held| held.holds(pos));
         let Some(level) = world.get::<Layer>(layer).map(|level| &level.world) else { continue };
         let mut columns = level.columns_with_actors();
-        columns.extend(kept.iter().filter(|(in_layer, ..)| *in_layer == layer).map(|(_, home, _)| *home));
+        columns.extend(kept.iter().filter(|(in_layer, ..)| *in_layer == layer).map(|(_, home, ..)| *home));
         columns.sort_unstable_by_key(|pos| (pos.x, pos.z));
         columns.dedup();
         let records: Vec<(ChunkPos, Vec<u8>)> = columns
             .into_iter()
             .filter(|pos| level.is_loaded(*pos))
             .filter_map(|pos| {
-                let unmoved = sapling_world::stored_actors(level.actors(pos)).ok()?.into_iter().filter(|(_, id, _)| id.is_none_or(|id| !managed.contains(&(layer, id))));
+                let stored = sapling_world::stored_actors(level.actors(pos)).ok()?;
+                let here = || kept.iter().filter(|(in_layer, home, ..)| *in_layer == layer && *home == pos);
+                // A column nobody sees keeps where its own entities were: a fish that never stops would
+                // otherwise make it changed at every save and never let it unload.
+                let mut filed: Vec<i64> = stored.iter().filter_map(|(_, id, _)| id.filter(|id| managed.contains(&(layer, *id)))).collect();
+                let mut now: Vec<i64> = here().map(|(_, _, id, _)| *id).collect();
+                (filed.sort_unstable(), now.sort_unstable());
+                if filed == now && !seen(pos) {
+                    return None;
+                }
+                let unmoved = stored.into_iter().filter(|(_, id, _)| id.is_none_or(|id| !managed.contains(&(layer, id))));
                 let mut record: Vec<u8> = unmoved.flat_map(|(.., compound)| compound).collect();
-                kept.iter().filter(|(in_layer, home, _)| *in_layer == layer && *home == pos).for_each(|(.., compound)| record.extend(compound));
+                here().for_each(|(.., compound)| record.extend(compound));
                 Some((pos, record))
             })
             .collect();
