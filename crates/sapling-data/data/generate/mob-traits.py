@@ -34,14 +34,25 @@ def experience(entity):
     return f"{rolled[1]}-{rolled[2]}" if rolled else f"{fixed[1]}-{fixed[1]}" if fixed else None
 
 
-def pace(entity, behaviour):
-    """The speed a grown one that walks goes at under `behaviour`, or None for a kind without it."""
+def middle(value):
+    """A number, or a range's middle (a horse's movement)."""
+    if isinstance(value, dict) and "range_min" in value:
+        return (value["range_min"] + value["range_max"]) / 2
+    return value if isinstance(value, (int, float)) else None
+
+
+def pace(entity, behaviour, movement_key="minecraft:movement"):
+    """The speed a grown one that walks (or swims, by `underwater_movement`) goes at under
+    `behaviour`, or None for a kind without it."""
     holders = [("", entity.get("components", {}))] + list(entity.get("component_groups", {}).items())
     find = lambda key: next((held[key] for group, held in holders if key in held and "baby" not in group), None)
-    goal, walks, movement = find("minecraft:behavior." + behaviour), find("minecraft:navigation.walk"), find("minecraft:movement")
-    if goal is None or walks is None or not isinstance(movement, dict) or not isinstance(movement.get("value"), (int, float)):
+    goal, movement = find("minecraft:behavior." + behaviour), find(movement_key)
+    walks = find("minecraft:navigation.walk") is not None or (find("minecraft:navigation.generic") or {}).get("can_walk", False)
+    swims = (find("minecraft:navigation.generic") or {}).get("can_swim", False)
+    speed = middle(movement.get("value")) if isinstance(movement, dict) else None
+    if goal is None or speed is None or not (swims if behaviour == "random_swim" else walks):
         return None
-    return round(movement["value"] * goal.get("speed_multiplier", 1), 4)
+    return round(speed * goal.get("speed_multiplier", 1), 4)
 
 
 # Drilled on BDS, not read from the packs (docs/research/mob-attacks.md, "Other kinds").
@@ -106,9 +117,12 @@ for document in packs.entities().values():
         held.append(f"breath={breath['total_supply'] * 20}")
     if entity["description"]["identifier"] != "minecraft:player" and experience(entity):
         held.append("xp=" + experience(entity))
-    for trait, behaviour in [("strolls", "random_stroll"), ("panics", "panic")]:
-        if entity["description"]["identifier"] != "minecraft:player" and pace(entity, behaviour) is not None:
-            held.append(f"{trait}={pace(entity, behaviour):g}")
+    for trait, behaviour, movement in [("strolls", "random_stroll", "minecraft:movement"), ("panics", "panic", "minecraft:movement"), ("swims", "random_swim", "minecraft:underwater_movement")]:
+        if entity["description"]["identifier"] != "minecraft:player" and pace(entity, behaviour, movement) is not None:
+            held.append(f"{trait}={pace(entity, behaviour, movement):g}")
+    swim = components.get("minecraft:behavior.random_swim")
+    if swim and any(name.startswith("swims=") for name in held):
+        held.append(f"roams={swim.get('xz_dist', 10)}x{swim.get('y_dist', 7)}")
     held.extend(filter(None, [HUNTS.get(entity["description"]["identifier"])]))
     if held:
         rows.append((entity["description"]["identifier"], " ".join(held)))

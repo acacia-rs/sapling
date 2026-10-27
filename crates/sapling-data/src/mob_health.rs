@@ -35,6 +35,9 @@ pub struct MobTraits {
     pub strolls: Option<f32>,
     /// The speed it flees a hit at: its movement times its `panic`'s `speed_multiplier`.
     pub panics: Option<f32>,
+    /// The speed a kind that swims about swims at: its `underwater_movement` times its
+    /// `random_swim`'s `speed_multiplier`, and how far across and up or down a swim goes.
+    pub swims: Option<(f32, [u32; 2])>,
 }
 
 /// A kind that hunts players (README "Mob traits").
@@ -87,7 +90,9 @@ pub fn mob_traits(identifier: &str) -> MobTraits {
     let number = |name: &str| value(name).and_then(|value| value.parse::<f32>().ok());
     let gives = value("hits=").and_then(|given| given.split_once(':')).and_then(|(effect, ticks)| Some((effect, ticks.parse().ok()?)));
     let hunts = number("attack=").zip(number("speed=")).zip(number("sees=")).map(|((attack, speed), sees)| Hunts { attack, speed, sees, gives, explodes: number("explodes="), shoots: number("shoots=").map(|ticks| ticks as u32), provoked: has("provoked"), closes: has("closes"), fights: value("fights="), upto: number("upto="), every: number("every=").map(|ticks| ticks as u32), by_dark: has("by_dark"), aims: number("aims=").map(|ticks| ticks as u32), volley: value("volley=").and_then(|volley| volley.split_once('x')).and_then(|(shots, gap)| Some((shots.parse().ok()?, gap.parse().ok()?))), shot: value("shot="), calms: number("calms=").map(|ticks| ticks as u32), once: has("once") });
-    MobTraits { fire_immune: has("fire_immune"), burns_in_sun: has("burns_in_sun"), no_fall: has("no_fall"), breathes_water: has("breathes_water"), breath: number("breath=").map(|ticks| ticks as u32), teleports: has("teleports"), floats: has("floats"), experience, hunts, strolls: number("strolls="), panics: number("panics=") }
+    let roams = value("roams=").and_then(|roams| roams.split_once('x')).and_then(|(across, up)| Some([across.parse().ok()?, up.parse().ok()?]));
+    let swims = number("swims=").zip(roams);
+    MobTraits { fire_immune: has("fire_immune"), burns_in_sun: has("burns_in_sun"), no_fall: has("no_fall"), breathes_water: has("breathes_water"), breath: number("breath=").map(|ticks| ticks as u32), teleports: has("teleports"), floats: has("floats"), experience, hunts, strolls: number("strolls="), panics: number("panics="), swims }
 }
 
 /// The mob `id` has `left` of `max` health.
@@ -173,6 +178,7 @@ mod tests {
         assert_eq!((mob_traits("minecraft:creeper").experience, mob_traits("minecraft:armor_stand").experience), (Some((5, 5)), None));
         assert!(mob_traits("minecraft:strider").fire_immune && mob_traits("minecraft:chicken").no_fall && mob_traits("minecraft:cod").breathes_water);
         assert!(!mob_traits("minecraft:chicken").fire_immune);
+        assert_eq!(mob_traits("minecraft:cod").swims, Some((0.1, [16, 4])));
     }
 
     #[test]
