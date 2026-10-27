@@ -118,9 +118,10 @@ pub fn glide() -> Vec<String> {
 pub fn buckets() -> Vec<String> {
     let mut lines = floor();
     lines.extend(owned(["setblock ~2 ~ ~ powder_snow", "replaceitem entity @s slot.weapon.mainhand 0 bucket", "", "!click 2 0 0", "", "", "!click 3 -1 0", "", ""]));
-    lines.extend(owned(["fill ~2 ~ ~ ~3 ~ ~ air", "setblock ~2 ~-1 ~ water", "summon cod ~2.5 ~-1 ~0.5", "replaceitem entity @s slot.weapon.mainhand 0 bucket", "", "!entity cod", "", ""]));
+    // Within the bot's reach of 3 from the eye: the pool starts a block out.
+    lines.extend(owned(["fill ~2 ~ ~ ~3 ~ ~ air", "fill ~1 ~-1 ~-1 ~2 ~-1 ~1 water", "summon cod ~1 ~-1 ~", "replaceitem entity @s slot.weapon.mainhand 0 bucket", "", "!entity cod", "", ""]));
     lines.extend(owned(["replaceitem entity @s slot.weapon.mainhand 0 water_bucket", "", "!entity cod", "", "", "!click 4 -1 0", "", "", ""]));
-    lines.extend(owned(["kill @e[type=!player]", "fill ~4 ~ ~ ~4 ~ ~ air", "summon axolotl ~2.5 ~-1 ~0.5", "replaceitem entity @s slot.weapon.mainhand 0 water_bucket", "", "!entity axolotl", "", ""]));
+    lines.extend(owned(["kill @e[type=!player]", "fill ~4 ~ ~ ~4 ~ ~ air", "summon axolotl ~1 ~-1 ~", "replaceitem entity @s slot.weapon.mainhand 0 water_bucket", "", "!entity axolotl", "", ""]));
     lines.extend(owned(["!click 4 -1 0", "", "", "", "kill @e[type=!player]", "gamemode creative @s", "clear @s", ""]));
     lines
 }
