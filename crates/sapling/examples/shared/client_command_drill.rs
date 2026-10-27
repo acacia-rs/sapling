@@ -12,12 +12,69 @@ pub const CLIENT_SHOWN: &[&str] = &[
 pub fn drill(name: &str) -> Option<(Vec<String>, &'static [&'static str])> {
     let lines = match name {
         "lootcmd" => LOOT,
+        "lootcmd2" => LOOT2,
         "screen" => SCREEN,
         "controls" => CONTROLS,
+        "controls2" => CONTROLS2,
+        "music" => return Some((MUSIC.iter().map(|line| line.to_string()).collect(), &["LevelEventGeneric"])),
         _ => return None,
     };
     Some((lines.iter().map(|line| line.to_string()).collect(), CLIENT_SHOWN))
 }
+
+/// `/loot` with its tables quoted, as BDS reads a path: each target and source, tools, slots.
+const LOOT2: &[&str] = &[
+    "gamerule domobspawning false",
+    "clear @s",
+    "loot give @s loot \"entities/chicken\"",
+    "loot give @a loot \"entities/chicken\"",
+    "loot give nobody loot \"entities/chicken\"",
+    "loot give @s loot \"entities/zombie\" mainhand",
+    "loot give @s loot \"entities/zombie\" diamond_sword",
+    "loot spawn ~2 ~ ~ loot \"chests/simple_dungeon\"",
+    "loot spawn ~2 ~ ~ loot \"entities/armor_stand\"",
+    "loot spawn ~2 ~ ~ loot \"gameplay/fishing\"",
+    "loot spawn ~2 ~ ~ loot \"entities/sheep\"",
+    "loot spawn ~2 ~ ~ loot \"Entities/Chicken\"",
+    "setblock ~3 ~ ~ chest",
+    "loot insert ~3 ~ ~ loot \"entities/chicken\"",
+    "loot insert ~3 ~1 ~ loot \"entities/chicken\"",
+    "clear @s",
+    "loot replace entity @s slot.hotbar 0 loot \"entities/chicken\"",
+    "loot replace entity @s slot.hotbar 1 2 loot \"entities/cow\"",
+    "loot replace entity @s slot.hotbar 9 loot \"entities/chicken\"",
+    "loot replace entity @s slot.armor.head 0 loot \"entities/chicken\"",
+    "loot replace entity @s slot.weapon.mainhand 0 loot \"entities/chicken\"",
+    "loot replace entity @s slot.inventory 3 loot \"entities/chicken\"",
+    "summon cow ~3 ~ ~-3",
+    "loot replace entity @e[type=cow] slot.weapon.mainhand 0 loot \"entities/chicken\"",
+    "loot replace block ~3 ~ ~ slot.container 5 loot \"entities/chicken\"",
+    "loot replace block ~3 ~ ~ slot.container 5 3 loot \"entities/cow\"",
+    "loot replace block ~3 ~ ~ slot.container 40 loot \"entities/chicken\"",
+    "loot replace block ~3 ~1 ~ slot.container 0 loot \"entities/chicken\"",
+    "loot give @s kill @e[type=cow]",
+    "loot give @s kill @e[type=cow] diamond_sword",
+    "loot spawn ~2 ~ ~ mine ~3 ~ ~",
+    "setblock ~2 ~ ~2 stone",
+    "loot give @s mine ~2 ~ ~2",
+    "loot give @s mine ~2 ~ ~2 wooden_pickaxe",
+    "loot give @s mine ~2 ~ ~2 nosuch_item",
+    "setblock ~2 ~ ~2 oak_leaves",
+    "loot give @s mine ~2 ~ ~2 shears",
+    "setblock ~2 ~ ~2 gravel",
+    "loot give @s mine ~2 ~ ~2",
+    "clear @s",
+    "give @s diamond_pickaxe",
+    "setblock ~2 ~ ~2 stone",
+    "loot spawn ~2 ~ ~ mine ~2 ~ ~2 mainhand",
+    "loot spawn ~2 ~ ~ mine ~2 ~ ~2 offhand",
+    "kill @e[type=cow]",
+    "kill @e[type=item]",
+    "clear @s",
+];
+
+/// What BDS sends for `/music`: every packet's name.
+const MUSIC: &[&str] = &["music play record.cat", "music queue record.13 1 0 play_once", "music volume 0.3", "music stop 2", "music stop"];
 
 const LOOT: &[&str] = &[
     "gamerule domobspawning false",
@@ -187,4 +244,36 @@ const CONTROLS: &[&str] = &[
     "ability @s mayfly true",
     "kill @e[type=sheep]",
     "kill @e[type=npc]",
+];
+
+/// The inputs `controls` left out, a recipe already known, and `query` of several players.
+const CONTROLS2: &[&str] = &[
+    "inputpermission set @s lateral_movement disabled",
+    "inputpermission set @s dismount disabled",
+    "inputpermission set @s move_forward disabled",
+    "inputpermission set @s move_backward disabled",
+    "inputpermission set @s move_right disabled",
+    "inputpermission set @s move_right disabled",
+    "inputpermission query @a move_right",
+    "inputpermission query @a move_right disabled",
+    "inputpermission query @a move_right enabled",
+    "inputpermission set @a move_right enabled",
+    "inputpermission set @s lateral_movement enabled",
+    "inputpermission set @s dismount enabled",
+    "inputpermission set @s move_forward enabled",
+    "inputpermission set @s move_backward enabled",
+    "inputpermission query nobody camera",
+    "recipe give @s minecraft:stick",
+    "recipe give @s minecraft:stick",
+    "recipe give @a minecraft:stick",
+    "recipe take @s minecraft:stick",
+    "recipe take @s minecraft:stick",
+    "recipe give @s stick",
+    "recipe give @s minecraft:WorkBench_recipeId_from_oak",
+    "recipe take @s minecraft:WorkBench_recipeId_from_oak",
+    "mobevent minecraft:wandering_trader_event false",
+    "mobevent minecraft:wandering_trader_event",
+    "mobevent minecraft:ender_dragon_event",
+    "mobevent minecraft:wandering_trader_event true",
+    "mobevent events_enabled",
 ];

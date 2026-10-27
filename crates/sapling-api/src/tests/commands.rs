@@ -97,12 +97,12 @@ fn bad_input_is_reported_where_it_stands() {
     // The shapes BDS gives `/gamemode banana` and a bare `/gamemode`.
     assert_eq!(parse::<Give>("give lots", &alex()), Err(syntax("/give ", "lots", "")));
     assert_eq!(parse::<Give>("give", &alex()), Err(syntax("/give", "", "")));
-    assert_eq!(parse::<Give>("give 1 nan true x survival red @s", &alex()), Err(syntax("/give 1 ", "nan", " true x survival red @s")));
-    assert_eq!(parse::<Give>("give 1 2 yes x survival red @s", &alex()), Err(syntax("/give 1 2 ", "yes", " x survival red @s")));
-    // BDS keeps the last ten characters before the token.
+    assert_eq!(parse::<Give>("give 1 nan true x survival red @s", &alex()), Err(syntax("/give 1 ", "nan", " true x su")));
+    assert_eq!(parse::<Give>("give 1 2 yes x survival red @s", &alex()), Err(syntax("/give 1 2 ", "yes", " x surviva")));
+    // BDS keeps the last ten characters before the token and the first ten after it.
     assert_eq!(parse::<Give>("give 1 2 true x hardcore red @s", &alex()), Err(syntax(" 2 true x ", "hardcore", " red @s")));
     assert_eq!(parse::<Give>("give 1 2 true x survival green @s", &alex()), Err(syntax(" survival ", "green", " @s")));
-    assert_eq!(parse::<Give>("give 1 2 true \"x survival red @s", &alex()), Err(syntax(" 1 2 true ", "\"x", " survival red @s")));
+    assert_eq!(parse::<Give>("give 1 2 true \"x survival red @s", &alex()), Err(syntax(" 1 2 true ", "\"x", " survival ")));
     assert_eq!(parse::<Give>("give 1 2 true x survival red", &alex()), Err(syntax("rvival red", "", "")));
     assert_eq!(parse::<Give>("give 1 2 true x survival red Nobody", &alex()), Err(ParseError::NoTarget));
     assert_eq!(parse::<Give>("give 1 2 true x survival red @s", &Sender::Console), Err(ParseError::NoTarget));

@@ -1,0 +1,27 @@
+## drill starts at 1793116022941
+## /music play record.cat
+     90 actor   LevelEventGeneric LevelEventGeneric { event_id: 3802, nbt: [Nbt { name: "fadeSeconds", value: Float(0.0) }, Nbt { name: "repeatMode", value: Byte(0) }, Nbt { name: "trackName", value: String("record.cat") }, Nbt { name: "volume", value: Float(1.0) }] }
+     91 actor   CommandOutput success_count=1 data=None commands.music.success.playAction success=true ["record.cat"]
+     91 watcher LevelEventGeneric LevelEventGeneric { event_id: 3802, nbt: [Nbt { name: "fadeSeconds", value: Float(0.0) }, Nbt { name: "repeatMode", value: Byte(0) }, Nbt { name: "trackName", value: String("record.cat") }, Nbt { name: "volume", value: Float(1.0) }] }
+     91 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.music.success.playAction\",\"with\":{\"rawtext\":[{\"text\":\"record.cat\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /music queue record.13 1 0 play_once
+   1011 actor   LevelEventGeneric LevelEventGeneric { event_id: 3800, nbt: [Nbt { name: "fadeSeconds", value: Float(0.0) }, Nbt { name: "repeatMode", value: Byte(0) }, Nbt { name: "trackName", value: String("record.13") }, Nbt { name: "volume", value: Float(1.0) }] }
+   1011 actor   CommandOutput success_count=1 data=None commands.music.success.queueAction success=true ["record.13"]
+   1011 watcher LevelEventGeneric LevelEventGeneric { event_id: 3800, nbt: [Nbt { name: "fadeSeconds", value: Float(0.0) }, Nbt { name: "repeatMode", value: Byte(0) }, Nbt { name: "trackName", value: String("record.13") }, Nbt { name: "volume", value: Float(1.0) }] }
+   1011 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.music.success.queueAction\",\"with\":{\"rawtext\":[{\"text\":\"record.13\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /music volume 0.3
+   2012 watcher LevelEventGeneric LevelEventGeneric { event_id: 3806, nbt: [Nbt { name: "volume", value: Float(0.3) }] }
+   2012 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.music.success.volumeAction\",\"with\":{\"rawtext\":[{\"text\":\"0.30\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   2012 actor   LevelEventGeneric LevelEventGeneric { event_id: 3806, nbt: [Nbt { name: "volume", value: Float(0.3) }] }
+   2012 actor   CommandOutput success_count=1 data=None commands.music.success.volumeAction success=true ["0.30"]
+## /music stop 2
+   3009 actor   LevelEventGeneric LevelEventGeneric { event_id: 3804, nbt: [Nbt { name: "fadeSeconds", value: Float(2.0) }] }
+   3009 watcher LevelEventGeneric LevelEventGeneric { event_id: 3804, nbt: [Nbt { name: "fadeSeconds", value: Float(2.0) }] }
+   3009 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.music.success.stopAction\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   3009 actor   CommandOutput success_count=1 data=None commands.music.success.stopAction success=true []
+## /music stop
+   4014 actor   LevelEventGeneric LevelEventGeneric { event_id: 3804, nbt: [Nbt { name: "fadeSeconds", value: Float(0.0) }] }
+   4014 actor   CommandOutput success_count=1 data=None commands.music.success.stopAction success=true []
+   4014 watcher LevelEventGeneric LevelEventGeneric { event_id: 3804, nbt: [Nbt { name: "fadeSeconds", value: Float(0.0) }] }
+   4014 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.music.success.stopAction\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+probe exit 0

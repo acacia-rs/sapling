@@ -17,6 +17,7 @@ pub(crate) const ITEM_REGISTRY: &[u8] = include_bytes!("../data/ItemRegistry.bin
 pub(crate) const CREATIVE_CONTENT: &[u8] = include_bytes!("../data/CreativeContent.bin");
 pub(crate) const CRAFTING_DATA: &[u8] = include_bytes!("../data/CraftingData.bin");
 pub(crate) const TRIM_DATA: &[u8] = include_bytes!("../data/TrimData.bin");
+pub(crate) const UNLOCKED_RECIPES: &[u8] = include_bytes!("../data/UnlockedRecipes.bin");
 
 pub(crate) fn decode<T: Packet>(body: &[u8]) -> T {
     T::decode(&mut &body[..]).unwrap_or_else(|e| panic!("bundled {} template: {e}", T::NAME))
@@ -65,7 +66,7 @@ pub fn registry_packets() -> &'static [Bytes] {
             // BDS sends the recipes after the player's own windows; here they go with the rest.
             framed::<CraftingData>(CRAFTING_DATA),
             // StartGame says recipes unlock: without this list a recipe book has little in it.
-            framed::<UnlockedRecipes>(include_bytes!("../data/UnlockedRecipes.bin")),
+            framed::<UnlockedRecipes>(UNLOCKED_RECIPES),
         ]
     });
     &*PACKETS

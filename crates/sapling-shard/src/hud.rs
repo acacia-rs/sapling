@@ -7,7 +7,7 @@ use acacia_proto::packets::{
     SetScoreEntriesItemContentFakePlayer as FakePlayer, SetScoreEntriesItemContentRemove as Remove, SetScoreEntriesItemEntryType as EntryType, SetTitle, SetTitleType, ToastRequest,
 };
 use bevy_ecs::prelude::*;
-use sapling_api::{BossBar, BossBarColour, PlayerId, Sidebar, Title, TitleAction, TitleBackend};
+use sapling_api::{Animation, BossBar, BossBarColour, EntityId, PlayerId, ScreenAction, Sidebar, Title, TitleAction, TitleBackend};
 
 use crate::components::{NetId, Outgoing};
 use crate::handlers::Ctx;
@@ -26,6 +26,8 @@ pub(crate) struct Hud {
     boss_bar: Option<BossBar>,
     /// The objectives of its world's board the client was shown, to take away when it leaves.
     pub(crate) board_objectives: Vec<String>,
+    /// The inputs `/inputpermission` stopped (screen.rs).
+    pub(crate) input_locks: u32,
 }
 
 fn show_objective(title: &str) -> SetDisplayObjective {
@@ -164,6 +166,22 @@ impl TitleBackend for Ctx<'_> {
         if let Some(mut out) = self.out(player) {
             out.push(&action_packet(action));
         }
+    }
+
+    fn screen_action(&mut self, player: PlayerId, action: &ScreenAction) {
+        self.act_on_screen(player, action);
+    }
+
+    fn input_locks(&self, player: PlayerId) -> u32 {
+        self.locked_inputs(player)
+    }
+
+    fn set_input_locks(&mut self, player: PlayerId, locks: u32) {
+        self.lock_inputs(player, locks);
+    }
+
+    fn animate(&mut self, players: &[PlayerId], entities: &[EntityId], animation: &Animation) {
+        self.play_animation(players, entities, animation);
     }
 }
 

@@ -308,11 +308,12 @@ it sends for `/title`, `/scoreboard`, `/gamemode`, `/tp`, a wither's bar and com
   (`handler_at`). Tasks run once a tick after the events, then `TickEvent` (`on_tick`).
 - **Keeping the API stable** (`sapling-api`). Enums that will grow (`DamageCause`, `Effect`, `Attacker`,
   `DeathMessage`, `Target`, `Sender`, `Scope`, form `Element`, `FormError`, `ParseError`, a command's `Selector`,
-  `Pick` and `Filter`, which took its arguments in 0.2.0, a position's `Axis`, which took `^` in 0.3.0) and the snapshots
+  `Pick` and `Filter`, which took its arguments in 0.2.0, a position's `Axis`, which took `^` in 0.3.0,
+  `ScreenAction`, `RecipeChange`, `Music`) and the snapshots
   plugins only read (`Player`, `Position`, `EntityInfo`, built with `new`) are `#[non_exhaustive]`; events
   keep private fields. Not marked: closed enums (`Face`, `GameMode`, `Difficulty`, `Slot`, `Priority`, ..),
   `ParamKind` (only the shard and the derive match it), and values plugins write as struct literals
-  (`Block`, `Item`, forms, HUD), which would lose struct-literal and `..Default::default()` construction.
+  (`Block`, `Item`, forms, HUD, `Camera`, `Animation`), which would lose struct-literal and `..Default::default()` construction.
   `tools/semver-check.sh [rev]` runs cargo-semver-checks on testbox against `rev` (default origin/master).
 - **Vanilla rules** (`sapling-shard/src/rules.rs`, `sapling-data/src/game_rules.rs`). A world's game rules
   are its vanilla switches: plugins set them with `ctx.set_game_rule`, operators with `/gamerule`, and they

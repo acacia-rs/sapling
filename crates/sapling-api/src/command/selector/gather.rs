@@ -41,6 +41,7 @@ pub(super) fn candidates(ctx: &mut ShardCtx<'_>, sender: &Sender, base: Base, fi
             mode: ctx.game_mode(player.id),
             level: ctx.experience(player.id).map(|(level, _)| level),
             inventory: (!filters.items.is_empty()).then(|| inventory(ctx, &player)),
+            input_locks: ctx.backend.input_locks(player.id),
             target: Selected::Player(player),
         };
         found.push(candidate);
@@ -57,6 +58,7 @@ pub(super) fn candidates(ctx: &mut ShardCtx<'_>, sender: &Sender, base: Base, fi
             mode: None,
             level: None,
             inventory: None,
+            input_locks: 0,
             target: Selected::Entity(entity),
         };
         found.push(candidate);

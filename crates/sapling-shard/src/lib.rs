@@ -59,6 +59,7 @@ mod roster;
 mod rules;
 mod running;
 mod scoreboard;
+mod screen;
 mod shard;
 mod shots;
 mod simulation;

@@ -75,7 +75,7 @@ pub(crate) use pistons::{at_place as block_entity_at, tick as move_pistons};
 pub(crate) use plates::press_plates;
 pub(crate) use redstone::{apply as apply_redstone, arrived as circuits_arrived, container_changed, evaluate as evaluate_redstone, power_at};
 pub(crate) use signs::dispatch_edits as dispatch_sign_edits;
-pub(crate) use loot::Dice;
+pub(crate) use loot::{Dice, mined};
 pub(crate) use liquid::tick as flow_liquids;
 pub(crate) use mining::{Breaking, sound_hits};
 pub(crate) use request::{BlockInputs, dispatch};

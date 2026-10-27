@@ -12,7 +12,7 @@ use crate::commands::Access;
 use crate::components::{Identity, Layer, Mode, Net, Players, Position, Settings, Tick, in_world};
 use crate::inventory::Inventory;
 use crate::plugins::{Deferred, PluginState};
-use crate::{blocks, chat, clock, containers, forms, hud, inventory, join, worlds};
+use crate::{blocks, chat, clock, containers, drops, forms, hud, inventory, join, worlds};
 
 impl Backend for Ctx<'_> {
     fn tick(&self) -> u64 {
@@ -114,6 +114,23 @@ impl Backend for Ctx<'_> {
     fn container_size(&mut self, pos: BlockPos) -> Option<usize> {
         let layer = worlds::current(self.world);
         containers::with_slots(self.world, layer, pos, |_, slots| slots.len())
+    }
+
+    fn container_item(&mut self, pos: BlockPos, slot: usize) -> Option<Item> {
+        let layer = worlds::current(self.world);
+        containers::with_slots(self.world, layer, pos, |_, slots| slots.get(slot).cloned().flatten().map(|held| inventory::described(&held.stack))).flatten()
+    }
+
+    fn block_loot(&mut self, pos: BlockPos, tool: Option<&Item>) -> Vec<Item> {
+        let layer = worlds::current(self.world);
+        blocks::mined(self.world, layer, pos, tool)
+    }
+
+    fn drop_item(&mut self, item: &Item, at: [f32; 3]) -> bool {
+        let layer = worlds::current(self.world);
+        let Some(stack) = inventory::stored(item, self.layer().world.registry()) else { return false };
+        drops::toss(self.world, layer, stack, at);
+        true
     }
 
     fn kick(&mut self, player: PlayerId, message: &str) {

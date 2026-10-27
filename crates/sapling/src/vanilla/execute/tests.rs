@@ -39,7 +39,7 @@ fn errors_are_placed_as_bds_places_them() {
     assert_eq!(error("if blocks ~2 ~ ~2 ~2 ~ ~2 ~10 ~ ~10 banana"), syntax("~10 ~ ~10 ", "banana", ""));
     assert_eq!(error("align banana run say x"), Some(ParseError::Invalid("commands.execute.align.invalidInput".into())));
     assert_eq!(error("align xx run say x"), Some(ParseError::Invalid("commands.execute.align.invalidInput".into())));
-    assert_eq!(error("positioned ^ ~ ^ run say x"), syntax("itioned ^ ", "~", " ^ run say x"), "`^` all or none");
+    assert_eq!(error("positioned ^ ~ ^ run say x"), syntax("itioned ^ ", "~", " ^ run say"), "`^` all or none");
 }
 
 #[test]

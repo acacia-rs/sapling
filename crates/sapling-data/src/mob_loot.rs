@@ -49,9 +49,20 @@ pub fn mob_loot(kind: &str, on_fire: bool, killer: Killer, roll: &mut dyn FnMut(
 /// What the table at `table` (its path in the packs, `loot_tables/...json`) gives a block that
 /// ejects it (a trial spawner, a vault), as [`mob_loot`] gives it. Nothing for a table not kept.
 pub fn table_loot(table: &str, roll: &mut dyn FnMut() -> f32) -> Vec<(String, u32)> {
+    table_loot_for(table, Killer::None, roll)
+}
+
+/// [`table_loot`] as `killer` sees it, as `/loot ... loot <table> <tool>` runs a table.
+pub fn table_loot_for(table: &str, killer: Killer, roll: &mut dyn FnMut() -> f32) -> Vec<(String, u32)> {
     let mut left = Vec::new();
-    run(table, Death { on_fire: false, killer: Killer::None }, roll, &mut left);
+    run(table, Death { on_fire: false, killer }, roll, &mut left);
     left
+}
+
+/// Whether the table at `table` is kept: the mobs', those blocks eject and what their entries name.
+// TODO: BDS's tables nothing here names (`gameplay/fishing`, ..) are not kept: `/loot` calls them unknown.
+pub fn has_loot_table(table: &str) -> bool {
+    LOOT["tables"].get(table).is_some()
 }
 
 fn run(table: &str, death: Death, roll: &mut dyn FnMut() -> f32, left: &mut Vec<(String, u32)>) {
