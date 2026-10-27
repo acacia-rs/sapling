@@ -21,11 +21,11 @@ use sapling_world::ItemStack;
 use crate::components::Outgoing;
 use crate::experience::Experience;
 
-pub(crate) use armour_wear::{wear_armour, wear_thorny};
+pub(crate) use armour_wear::{elytra_flies, wear_armour, wear_elytra, wear_thorny};
 pub(crate) use crafting::clear_grid;
 pub(crate) use forge::{Bargain, Bench, Forged, enchanting_input};
 pub(crate) use equipment::{announce, in_hand, screens, select, show_hand, spawn_packets};
-pub(crate) use give::{give_and_pop, swap_held, use_up_held};
+pub(crate) use give::{give_and_pop, swap_held, swap_held_for, use_up_held};
 pub(crate) use plugin::{described, item_at, set_item, stored};
 pub(crate) use requests::dispatch;
 pub(crate) use store::{keep_here, load, save, save_all, save_changed, send_own};

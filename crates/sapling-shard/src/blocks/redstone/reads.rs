@@ -38,6 +38,7 @@ fn read(world: &mut World, layer: Entity, at: BlockPos) -> Option<u8> {
     let pot = |world: &World| crate::blocks::holders::potted(world, layer, at).map(|inside| fullness(inside.iter().map(|held| (held.count, sapling_data::max_stack(&held.name))), 1));
     by_state(world, layer, at)
         .or_else(|| crate::blocks::jukebox::signal(world, layer, at))
+        .or_else(|| crate::blocks::lectern::signal(world, layer, at))
         .or_else(|| pot(world))
         .or_else(|| crate::blocks::sculk::signal(world, layer, at))
         .or_else(|| crate::blocks::crafter::signal(world, layer, at))

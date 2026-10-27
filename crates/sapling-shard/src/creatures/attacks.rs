@@ -86,7 +86,9 @@ fn hit(world: &mut World, player: Entity, id: u64) -> Option<()> {
         let away = if far > 1e-4 { [dx / far, dz / far] } else { [0.0; 2] };
         let mut thrown = world.get_mut::<Body>(entity)?;
         let speed = enchant::knockback(enchant::level(weapon.as_ref(), Enchant::Knockback), blow.sprinting, thrown.motion, away);
-        thrown.throw(speed);
+        if !sapling_data::mob_traits(&kind).steadfast {
+            thrown.throw(speed);
+        }
         *world.get_mut::<Health>(entity)? = health;
         super::enchanted::struck(world, entity, &kind, weapon.as_ref());
         crate::vitals::tire(world, player, crate::vitals::HIT_TIRES);

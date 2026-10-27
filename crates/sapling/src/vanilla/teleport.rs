@@ -3,7 +3,7 @@
 use sapling_api::command::{Args, CommandSpec, CommandSyntax, Coords, Overload, Parameter, ParameterSpec, ParseError, Selector};
 use sapling_api::{Command, Output, Permission, Sender, ShardCtx};
 
-use super::{display_name, no_target, targets_from, tell_target};
+use super::{display_name, no_target, targets, tell_target};
 
 /// `/tp [victim] <destination>`: the first word is a target unless it is a coordinate, and the
 /// destination a place or whoever a target names (research/captures/bds-golem.txt). A place may
@@ -51,7 +51,7 @@ impl CommandSyntax for Teleport {
     }
 
     fn parse(args: &mut Args<'_>) -> Result<Self, ParseError> {
-        let is_coordinate = |word: &str| word.starts_with('~') || word.parse::<f32>().is_ok();
+        let is_coordinate = |word: &str| word.starts_with(['~', '^']) || word.parse::<f32>().is_ok();
         let first = match args.peek() {
             Some(word) if !is_coordinate(word) => Some(Selector::parse(args)?),
             _ => None,
@@ -80,22 +80,20 @@ impl CommandSyntax for Teleport {
 }
 
 impl Command for Teleport {
+    /// Each player moved is told where to, as BDS tells them; into the dimension an `/execute in`
+    /// names, the way BDS changes a player's dimension. `~`, `^` and the nearest are counted from
+    /// the sender, or where an `/execute` runs it.
     fn run(self, ctx: &mut ShardCtx<'_>, sender: &Sender, out: &mut Output) {
         let here = ctx.origin(sender);
-        self.run_from(ctx, sender, out, None, here);
-    }
-}
-
-impl Teleport {
-    /// Each player moved is told where to, as BDS tells them; into `dimension` of its world when
-    /// one is named (`/execute in`), the way BDS changes a player's dimension. `~` and the nearest
-    /// are counted from `here`: the sender, or where an `/execute at` runs it.
-    pub(crate) fn run_from(self, ctx: &mut ShardCtx<'_>, sender: &Sender, out: &mut Output, dimension: Option<i32>, here: [f32; 3]) {
+        let dimension = match sender {
+            Sender::Executed(executed) => Some(executed.dimension),
+            _ => None,
+        };
         let (to, at) = match &self.to {
-            Destination::Place(coords) => (coords.from(here), None),
+            Destination::Place(coords) => (coords.resolve(ctx, sender), None),
             // The nearest of those it names.
             Destination::At(selector) => {
-                let (people, others) = targets_from(ctx, sender, selector, here);
+                let (people, others) = targets(ctx, sender, Some(selector));
                 let named = people.into_iter().filter_map(|player| Some((ctx.position(player.id)?.feet, player.name)));
                 let all = named.chain(others.into_iter().map(|entity| (entity.feet, display_name(&entity))));
                 let far = |feet: &[f32; 3]| (0..3).map(|axis| (feet[axis] - here[axis]).powi(2)).sum::<f32>();
@@ -107,13 +105,13 @@ impl Teleport {
         };
         let looks = match &self.looks {
             Some(Looks::Along(looks)) => Some(*looks),
-            Some(Looks::Facing(point)) => Some(facing(to, point.from(here))),
+            Some(Looks::Facing(point)) => Some(facing(to, point.resolve(ctx, sender))),
             None => None,
         };
-        let (moved_players, moved) = targets_from(ctx, sender, self.target.as_ref().unwrap_or(&Selector::sender()), here);
+        let (moved_players, moved) = targets(ctx, sender, Some(self.target.as_ref().unwrap_or(&Selector::sender())));
         let [x, y, z] = to.map(|c| format!("{c:.2}"));
         for player in &moved_players {
-            match (dimension, looks) {
+            match (dimension.filter(|dimension| ctx.dimension_of(player.id) != Some(*dimension)), looks) {
                 (Some(dimension), _) => drop(ctx.travel(player.id, dimension, to)),
                 (None, Some(looks)) => ctx.teleport_facing(player.id, to, looks),
                 (None, None) => ctx.teleport(player.id, to),

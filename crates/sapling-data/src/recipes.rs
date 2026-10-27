@@ -13,9 +13,13 @@ use acacia_proto::types::{ItemLegacy, RecipeIngredient, RecipeIngredientContent 
 use crate::items::{CreativeItem, described};
 use crate::templates::{CRAFTING_DATA, decode};
 
+mod book;
+mod brewing;
 mod molang;
 mod smithing;
 
+pub use book::{initial_recipes, recipe_ids};
+pub use brewing::{brewed, is_brewing_bottle, is_brewing_ingredient};
 pub use smithing::smithed;
 
 const GRID: &str = "crafting_table";

@@ -56,6 +56,8 @@ pub enum Enchant {
     Punch = 20,
     Flame = 21,
     Infinity = 22,
+    LuckOfTheSea = 23,
+    Lure = 24,
     FrostWalker = 25,
     Mending = 26,
     Binding = 27,

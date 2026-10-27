@@ -27,6 +27,8 @@ pub fn request(request_id: i32, actions: Vec<Action>) -> ItemStackRequest {
         Action::CraftCreative(_) => (Kind::CraftCreative, 12),
         Action::Optional(_) => (Kind::Optional, 15),
         Action::CraftGrindstoneRequest(_) => (Kind::CraftGrindstoneRequest, 16),
+        Action::CraftLoomRequest(_) => (Kind::CraftLoomRequest, 17),
+        Action::BeaconPayment(_) => (Kind::BeaconPayment, 8),
         other => panic!("{other:?}"),
     };
     let actions = actions.into_iter().map(|content| ActionItem { type_id: kind(&content).0, legacy_type_id: kind(&content).1, content }).collect();

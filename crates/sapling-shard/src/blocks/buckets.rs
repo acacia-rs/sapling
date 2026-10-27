@@ -1,26 +1,31 @@
 //! Buckets, by BDS `BucketItem::_useOn` (docs/research/buckets-lava.md): an empty one takes the
 //! liquid source that was clicked, a full one pours its liquid into a block that keeps water or
 //! the cell on the clicked face. Taking is offered to handlers as a break and pouring as a place,
-//! so what protects blocks protects them from buckets too.
-// TODO: no powder snow, fish, milk or cauldrons; a handler's change of the event's block is not
-// followed; the nether's evaporation particles are not sent.
+//! so what protects blocks protects them from buckets too. Powder snow is taken and put as a
+//! block, heard as `bucket.fill.powder_snow` and `bucket.empty.powder_snow`; a fish bucket pours
+//! water and lets its mob out (creatures/scooping.rs; research/captures/bds-buckets.txt).
+// TODO: no milk or cauldrons; a handler's change of the event's block is not followed; the
+// nether's evaporation particles are not sent.
 
 use acacia_proto::packets::{LevelEvent, LevelEventEvent};
 use acacia_proto::types::Vec3f;
 use sapling_api::{Block, BlockPos, BreakEvent, Face, GameMode, PlaceEvent};
 use sapling_data::LiquidReaction;
+use sapling_world::ItemStack;
 
 use super::liquid::{self, Cell, Liquid};
 use super::loot::{self, Breaker};
 use super::{Request, Site, level, send, waterlog};
 use crate::components::Position;
-use crate::inventory;
+use crate::inventory::{self, Inventory};
 
 const BUCKET: &str = "minecraft:bucket";
 const WATER_BUCKET: &str = "minecraft:water_bucket";
 const LAVA_BUCKET: &str = "minecraft:lava_bucket";
 const SNOW: &str = "minecraft:snow_layer";
 const PORTAL: &str = "minecraft:portal";
+const POWDER_SNOW: &str = "minecraft:powder_snow";
+const SNOW_BUCKET: &str = "minecraft:powder_snow_bucket";
 
 /// What a bucket item holds: `Some(None)` for an empty one, `None` for an item that is no bucket.
 fn contents(item: &str) -> Option<Option<Liquid>> {
@@ -41,10 +46,13 @@ impl Request<'_> {
     /// bucket. As BDS: a refusal resends the cells the client may have predicted and not the
     /// inventory; a use resends the inventory, in creative too.
     pub(super) fn use_bucket(&mut self, site: &Site, pos: BlockPos, face: Face, held: &str) -> bool {
-        let Some(contents) = contents(held) else { return false };
-        let worked = match contents {
-            None => self.fill(site, pos),
-            Some(liquid) => self.pour(site, pos, face, liquid),
+        let mob = crate::creatures::bucketed_kind(held).and_then(|_| self.world.get::<Inventory>(self.entity)?.in_hand().as_ref().map(|held| held.stack.clone()));
+        let worked = match (held, contents(held)) {
+            (SNOW_BUCKET, _) => self.pour_snow(site, pos, face),
+            (_, Some(None)) => self.fill_snow(site, pos).unwrap_or_else(|| self.fill(site, pos)),
+            (_, Some(Some(liquid))) => self.pour(site, pos, face, liquid, None),
+            (_, None) if mob.is_some() => self.pour(site, pos, face, Liquid::Water, mob.as_ref()),
+            (_, None) => return false,
         };
         let target = face.neighbour(pos);
         match worked {
@@ -79,7 +87,7 @@ impl Request<'_> {
 
     /// Pours a full bucket's `liquid` out: water into the clicked block when that keeps water,
     /// otherwise into the cell on `face`, or the snow layer under that cell.
-    fn pour(&mut self, site: &Site, pos: BlockPos, face: Face, liquid: Liquid) -> bool {
+    fn pour(&mut self, site: &Site, pos: BlockPos, face: Face, liquid: Liquid, mob: Option<&ItemStack>) -> bool {
         let Some(level) = level(self.world, site.layer) else { return false };
         let registry = level.registry();
         let at = |cell: BlockPos| (level.block(cell[0], cell[1], cell[2]), level.liquid(cell[0], cell[1], cell[2]));
@@ -126,8 +134,52 @@ impl Request<'_> {
             if !liquid::pour(self.world, site.layer, target, liquid, waterlogs) {
                 return false;
             }
-            self.hear(site, if is_water { "bucket.empty.water" } else { "bucket.empty.lava" });
+            let sound = match (is_water, mob) {
+                (true, Some(_)) => "bucket.empty.fish",
+                (true, None) => "bucket.empty.water",
+                (false, _) => "bucket.empty.lava",
+            };
+            self.hear(site, sound);
         }
+        if let Some(bucket) = mob {
+            crate::creatures::release_from_bucket(self.world, site.layer, bucket, target);
+        }
+        if site.mode != GameMode::Creative {
+            self.swap_held(BUCKET);
+        }
+        true
+    }
+
+    /// Takes the powder snow at `pos` into an empty bucket; `None` when it is none.
+    fn fill_snow(&mut self, site: &Site, pos: BlockPos) -> Option<bool> {
+        let snow = Block { name: POWDER_SNOW.to_owned(), properties: String::new() };
+        (super::send::block_at(self.world, site.layer, pos)?.name == POWDER_SNOW).then_some(())?;
+        let event = BreakEvent::new(self.player.clone(), pos, snow, Vec::new(), Self::allowed(site));
+        if crate::plugins::offer(self.world, event).is_cancelled() || !super::update_block(self.world, site.layer, pos, &Block::air()) {
+            return Some(false);
+        }
+        self.hear(site, "bucket.fill.powder_snow");
+        if site.mode != GameMode::Creative {
+            self.swap_held(SNOW_BUCKET);
+        }
+        Some(true)
+    }
+
+    /// Puts powder snow into the cell on `face`, or the clicked cell when that gives way, as a
+    /// block is placed.
+    fn pour_snow(&mut self, site: &Site, pos: BlockPos, face: Face) -> bool {
+        let Some(level) = level(self.world, site.layer) else { return false };
+        let gives_way = |[x, y, z]: BlockPos| level.in_height(y) && super::place::gives_way(level.registry(), level.block(x, y, z));
+        let target = if gives_way(pos) { pos } else { face.neighbour(pos) };
+        if !gives_way(target) || super::site(self.world, self.entity, target).is_none() {
+            return false;
+        }
+        let snow = Block { name: POWDER_SNOW.to_owned(), properties: String::new() };
+        let event = PlaceEvent::new(self.player.clone(), target, pos, face, snow.clone(), Self::allowed(site));
+        if crate::plugins::offer(self.world, event).is_cancelled() || !super::update_block(self.world, site.layer, target, &snow) {
+            return false;
+        }
+        self.hear(site, "bucket.empty.powder_snow");
         if site.mode != GameMode::Creative {
             self.swap_held(BUCKET);
         }

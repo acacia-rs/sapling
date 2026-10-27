@@ -104,8 +104,9 @@ pub(crate) fn announcement_with(actor: &Actor, id: u64, extra: MetadataFlags1) -
 
 /// What shows a stack as an item at `position` moving at `velocity`; `None` for an item no
 /// client knows.
-pub(crate) fn item_announcement(id: u64, item: &ItemStack, position: [f32; 3], velocity: [f32; 3]) -> Option<Vec<Bytes>> {
-    Some(item_shown(sapling_data::add_item_entity(id, &stack(item), position, velocity)?))
+pub(crate) fn item_announcement(id: u64, item: &ItemStack, position: [f32; 3], velocity: [f32; 3], fished: bool) -> Option<Vec<Bytes>> {
+    let shown = sapling_data::add_item_entity(id, &stack(item), position, velocity)?;
+    Some(item_shown(AddItemEntity { is_from_fishing: fished, ..shown }))
 }
 
 /// An item's announcement and its metadata again, as BDS follows one (findings D9, bds-kill.txt).

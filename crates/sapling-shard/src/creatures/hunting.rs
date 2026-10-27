@@ -1,7 +1,7 @@
 //! Mobs that hunt players, as BDS's were seen to (docs/research/mob-attacks.md): one picks
 //! the nearest player it could kill, walks straight at it and hits it when it is within reach.
 // TODO: a spider keeps the prey it took in the dark when day comes; prey once seen is kept behind a
-// wall; nothing pushes another aside; a spider hunts by day too and none holds what it hits with; peaceful worlds keep their
+// wall; a player and a hunter do not push each other aside; a spider hunts by day too and none holds what it hits with; peaceful worlds keep their
 // monsters, idle; viewers far off are told every move, where BDS told one of every other; a piglin
 // hunts a player in gold too, and a polar bear does not rear before its hit.
 
@@ -42,6 +42,8 @@ const GLANCE: f32 = 0.25;
 /// Its sounds come from this much of its height up: its growl, and its hit.
 const HEAD: f32 = 0.85;
 const MIDDLE: f32 = 0.5;
+/// Kinds heard `angry` a tick after their growl as they take prey (research/captures/bds-beasts.txt).
+const ANGERED: &[&str] = &["minecraft:hoglin", "minecraft:zoglin"];
 
 #[derive(Component, Default)]
 pub(super) struct Hunter {
@@ -152,6 +154,9 @@ fn take(world: &mut World, entity: Entity, layer: Entity, id: u64, kind: &str, b
     entities::tell_viewers(world, entity, layer, cell, told);
     if prey.is_some() {
         late_sounds::play_later(world, 1, layer, cell, sound("mob.warning", id, kind, body, HEAD));
+    }
+    if prey.is_some() && ANGERED.contains(&kind) {
+        late_sounds::play_later(world, 2, layer, cell, sound("angry", id, kind, body, HEAD));
     }
     Some(())
 }
@@ -265,6 +270,7 @@ pub(super) fn strike(world: &mut World, entity: Entity, layer: Entity, id: u64, 
         return None;
     }
     world.get_mut::<Hunter>(entity)?.ready = now + hunts.every.map_or(COOLDOWN, u64::from);
+    let harm = harm + hunts.varies.map_or(0.0, |most| world.get_resource_or_insert_with(crate::blocks::Dice::default).fraction() * (most - hunts.attack));
     let harm = on_difficulty(world, harm)?;
     let cell = body.at.map(|c| c.floor() as i32);
     let swing = EntityEvent { runtime_entity_id: id, event_id: EntityEventEventId::ArmSwing, data: 0, fire_at_position: None };

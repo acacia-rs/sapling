@@ -32,6 +32,16 @@ pub trait Backend: WorldBackend + EntityBackend + HealthBackend + EffectBackend 
     fn break_block(&mut self, pos: BlockPos) -> bool;
     fn set_container_item(&mut self, pos: BlockPos, slot: usize, item: Option<&Item>) -> bool;
     fn container_size(&mut self, pos: BlockPos) -> Option<usize>;
+    /// See loot.rs.
+    fn container_item(&mut self, _pos: BlockPos, _slot: usize) -> Option<Item> {
+        None
+    }
+    fn block_loot(&mut self, _pos: BlockPos, _tool: Option<&Item>) -> Vec<Item> {
+        Vec::new()
+    }
+    fn drop_item(&mut self, _item: &Item, _at: [f32; 3]) -> bool {
+        false
+    }
     fn kick(&mut self, player: PlayerId, message: &str);
     fn broadcast(&mut self, message: &str);
     fn send_message(&mut self, player: PlayerId, message: &str);

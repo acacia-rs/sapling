@@ -34,14 +34,25 @@ def experience(entity):
     return f"{rolled[1]}-{rolled[2]}" if rolled else f"{fixed[1]}-{fixed[1]}" if fixed else None
 
 
-def pace(entity, behaviour):
-    """The speed a grown one that walks goes at under `behaviour`, or None for a kind without it."""
+def middle(value):
+    """A number, or a range's middle (a horse's movement)."""
+    if isinstance(value, dict) and "range_min" in value:
+        return (value["range_min"] + value["range_max"]) / 2
+    return value if isinstance(value, (int, float)) else None
+
+
+def pace(entity, behaviour, movement_key="minecraft:movement"):
+    """The speed a grown one that walks (or swims, by `underwater_movement`) goes at under
+    `behaviour`, or None for a kind without it."""
     holders = [("", entity.get("components", {}))] + list(entity.get("component_groups", {}).items())
     find = lambda key: next((held[key] for group, held in holders if key in held and "baby" not in group), None)
-    goal, walks, movement = find("minecraft:behavior." + behaviour), find("minecraft:navigation.walk"), find("minecraft:movement")
-    if goal is None or walks is None or not isinstance(movement, dict) or not isinstance(movement.get("value"), (int, float)):
+    goal, movement = find("minecraft:behavior." + behaviour), find(movement_key)
+    walks = find("minecraft:navigation.walk") is not None or (find("minecraft:navigation.generic") or {}).get("can_walk", False)
+    swims = (find("minecraft:navigation.generic") or {}).get("can_swim", False)
+    speed = middle(movement.get("value")) if isinstance(movement, dict) else None
+    if goal is None or speed is None or not (swims if behaviour == "random_swim" else walks):
         return None
-    return round(movement["value"] * goal.get("speed_multiplier", 1), 4)
+    return round(speed * goal.get("speed_multiplier", 1), 4)
 
 
 # Drilled on BDS, not read from the packs (docs/research/mob-attacks.md, "Other kinds").
@@ -51,6 +62,7 @@ HUNTS = {
     "minecraft:breeze": "attack=0 speed=0.48 sees=24 fights=leaps",
     "minecraft:bogged": "attack=0 speed=0.25 sees=16 shoots=71 hits=poison:112",
     "minecraft:cave_spider": "attack=2 speed=0.3 sees=16 by_dark",
+    "minecraft:creaking": "attack=3 speed=0.4 sees=16 provoked every=40",
     "minecraft:creeper": "attack=0 speed=0.25 sees=16 explodes=3",
     "minecraft:dolphin": "attack=3 speed=0.11 sees=48 provoked fights=swims",
     "minecraft:drowned": "attack=3 speed=0.23 sees=35",
@@ -59,6 +71,7 @@ HUNTS = {
     "minecraft:ghast": "attack=0 speed=0.03 sees=28 fights=fireballs",
     "minecraft:endermite": "attack=2 speed=0.25 sees=16",
     "minecraft:husk": "attack=3 speed=0.23 sees=35 hits=hunger:600",
+    "minecraft:hoglin": "attack=3 varies=9 speed=0.3 sees=16 every=40",
     "minecraft:iron_golem": "attack=7 upto=21 speed=0.15 sees=16 provoked",
     "minecraft:llama": "attack=0 speed=0.25 sees=16 provoked shoots=60 aims=41 shot=llama_spit calms=79",
     "minecraft:panda": "attack=2 speed=0.15 sees=16 provoked once",
@@ -78,7 +91,9 @@ HUNTS = {
     "minecraft:wither_skeleton": "attack=9 speed=0.3125 sees=16 hits=wither:200",
     "minecraft:magma_cube": "attack=0 speed=0.66 sees=16 fights=hops",
     "minecraft:slime": "attack=0 speed=0.4 sees=16 fights=hops",
+    "minecraft:warden": "attack=30 speed=0.36 sees=16 provoked",
     "minecraft:wolf": "attack=3 speed=0.3 sees=16 provoked every=31",
+    "minecraft:zoglin": "attack=3 varies=8 speed=0.2875 sees=16",
     "minecraft:zombie": "attack=3 speed=0.23 sees=35",
     "minecraft:zombie_pigman": "attack=9 speed=0.23 sees=35 provoked",
     "minecraft:zombie_villager": "attack=3 speed=0.23 sees=35",
@@ -100,15 +115,19 @@ for document in packs.entities().values():
         ("burns_in_sun", any("minecraft:burns_in_daylight" in group for group in [components, *entity.get("component_groups", {}).values()])),
         ("teleports", components.get("minecraft:teleport", {}).get("random_teleports", False) is True),
         ("floats", "minecraft:behavior.float" in components or "minecraft:behavior.slime_float" in components),
+        ("steadfast", components.get("minecraft:knockback_resistance", {}).get("value", 0) >= 1),
     ]
     held = [name for name, holds in traits if holds]
     if breath.get("total_supply", 15) > 15:
         held.append(f"breath={breath['total_supply'] * 20}")
     if entity["description"]["identifier"] != "minecraft:player" and experience(entity):
         held.append("xp=" + experience(entity))
-    for trait, behaviour in [("strolls", "random_stroll"), ("panics", "panic")]:
-        if entity["description"]["identifier"] != "minecraft:player" and pace(entity, behaviour) is not None:
-            held.append(f"{trait}={pace(entity, behaviour):g}")
+    for trait, behaviour, movement in [("strolls", "random_stroll", "minecraft:movement"), ("panics", "panic", "minecraft:movement"), ("swims", "random_swim", "minecraft:underwater_movement")]:
+        if entity["description"]["identifier"] != "minecraft:player" and pace(entity, behaviour, movement) is not None:
+            held.append(f"{trait}={pace(entity, behaviour, movement):g}")
+    swim = components.get("minecraft:behavior.random_swim")
+    if swim and any(name.startswith("swims=") for name in held):
+        held.append(f"roams={swim.get('xz_dist', 10)}x{swim.get('y_dist', 7)}")
     held.extend(filter(None, [HUNTS.get(entity["description"]["identifier"])]))
     if held:
         rows.append((entity["description"]["identifier"], " ".join(held)))

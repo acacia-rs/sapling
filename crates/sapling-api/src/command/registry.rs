@@ -44,13 +44,19 @@ impl Commands {
     /// Whether `line` reads as a command a sender with `permission` may run, without running it:
     /// what BDS asks of each line of a function. A name that is nobody online passes.
     pub fn parses(&self, line: &str, permission: Permission) -> bool {
+        matches!(self.check(line, permission), Ok(()) | Err(ParseError::NoTarget))
+    }
+
+    /// Why `line` would not run for a sender with `permission`, without running it: what its
+    /// arguments meet, or a syntax error at its name where it names no command (as BDS answers
+    /// `/execute run banana`). A name that is nobody online is [`ParseError::NoTarget`].
+    pub fn check(&self, line: &str, permission: Permission) -> Result<(), ParseError> {
         let line = line.trim();
         let line = line.strip_prefix('/').unwrap_or(line);
         let name = line.split_whitespace().next().unwrap_or("");
-        let Some(entry) = self.find(name, permission) else { return false };
         let sender = Sender::Console;
-        let mut args = Args::new(line, name.len(), &sender, &[]);
-        matches!((entry.check)(&mut args), Ok(()) | Err(ParseError::NoTarget))
+        let Some(entry) = self.find(name, permission) else { return Err(Args::new(line, 0, &sender, &[]).error_at(0)) };
+        (entry.check)(&mut Args::new(line, name.len(), &sender, &[]))
     }
 
     /// The commands a player with `permission` may use, in the order they were added.

@@ -84,6 +84,8 @@ pub(crate) fn dispatch(world: &mut World) {
     blocks::batched(world, blocks::random_ticks);
     inventory::dispatch(world);
     blocks::dispatch_crafter_toggles(world);
+    crate::books::dispatch(world);
+    blocks::turn_lectern_pages(world);
     containers::dispatch_closes(world);
     containers::show_lids_again(world);
     containers::show_turned_barrels(world);
@@ -91,6 +93,8 @@ pub(crate) fn dispatch(world: &mut World) {
     late_sounds::play_due(world);
     containers::close_where_gone(world);
     furnaces::tick(world);
+    crate::brewing::tick(world);
+    crate::beacons::tick(world);
     hoppers::tick(world);
     entities::remove_left(world);
     drops::fly(world);
@@ -107,6 +111,9 @@ pub(crate) fn dispatch(world: &mut World) {
     crate::dragon::tick(world);
     crate::eyes::tick(world);
     crate::shots::tick(world);
+    crate::fishing::tick(world);
+    crate::gliding::tick(world);
+    crate::instruments::tick(world);
     crate::fireworks::tick(world);
     crate::lightning::tick(world);
     vitals::tick(world);

@@ -119,13 +119,18 @@ RENAMES = {
     "minecraft:fish": "minecraft:cod", "minecraft:totem": "minecraft:totem_of_undying",
 }
 # (name, data) -> the item that data now names; a sheep's wool is its colour's, white by default.
-BY_DATA = {("minecraft:dye", 0): "minecraft:ink_sac", ("minecraft:skull", 1): "minecraft:wither_skeleton_skull", ("minecraft:wool", "colour"): "minecraft:white_wool"}
+BY_DATA = {
+    ("minecraft:dye", 0): "minecraft:ink_sac", ("minecraft:dye", 3): "minecraft:cocoa_beans", ("minecraft:skull", 1): "minecraft:wither_skeleton_skull",
+    ("minecraft:wool", "colour"): "minecraft:white_wool",
+}
 # Tables blocks eject, not named by any entity: trial spawners' and vaults' (spawners.rs in sapling-shard).
 BLOCK_TABLES = [
     "loot_tables/spawners/trial_chamber/consumables.json", "loot_tables/spawners/trial_chamber/key.json",
     "loot_tables/spawners/ominous/trial_chamber/consumables.json", "loot_tables/spawners/ominous/trial_chamber/key.json",
     "loot_tables/spawners/trial_chamber/items_to_drop_when_ominous.json",
     "loot_tables/chests/trial_chambers/reward.json", "loot_tables/chests/trial_chambers/reward_ominous.json",
+    # A fishing hook's catch (fishing.rs in sapling-shard), not its death's: NOT_MOBS.
+    "loot_tables/gameplay/fishing.json", "loot_tables/gameplay/jungle_fishing.json",
 ]
 # Kinds whose table is not what they leave when they die.
 NOT_MOBS = {"minecraft:fishing_hook", "minecraft:player", "minecraft:npc", "minecraft:tripod_camera"}

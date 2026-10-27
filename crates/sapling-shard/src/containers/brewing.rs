@@ -1,6 +1,6 @@
 //! A brewing stand shows a bottle in each of its three places that holds something
 //! (`brewing_stand_slot_a_bit` to `_c_bit` for slots 1 to 3; docs/research/block-entities.md,
-//! section 4). It brews nothing.
+//! section 4). The brewing: brewing.rs.
 
 use bevy_ecs::prelude::*;
 use sapling_api::BlockPos;

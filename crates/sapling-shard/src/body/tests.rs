@@ -61,6 +61,25 @@ fn a_wall_stops_a_body_and_ground_friction_slows_it() {
 }
 
 #[test]
+fn swimmers_and_bats_settle_at_their_kinds_speed() {
+    // bds-wander-findings.md: a cod pushed 0.0098 a tick settled at 0.049, a turtle pushed 0.0141 at
+    // 0.141, a bat pushed 0.1 up at 0.25.
+    let mut level = Level::void();
+    let (stone, water) = (level.block_id("minecraft:stone").unwrap(), level.block_id("minecraft:water").unwrap());
+    level.fill([-16, 59, -2], [16, 59, 2], stone);
+    level.fill([-16, 60, -2], [16, 64, 2], water);
+    for (physics, push, settles) in [(&Physics::SWIMMER, [0.0098, 0.0, 0.0], 0.049), (&Physics::TURTLE, [0.0141, 0.0, 0.0], 0.141), (&Physics::BAT, [0.0, 0.1, 0.0], 0.25)] {
+        let mut body = Body::new([-14.5, if physics.fall_drag == 0.6 { 70.0 } else { 62.0 }, 0.5], [0.0; 3], [0.5, 0.3]);
+        for _ in 0..80 {
+            body.fly(push);
+            body.step(&level, physics, &mut || 0.5);
+        }
+        let speed = body.motion[0] + body.motion[1];
+        assert!((speed - settles).abs() < 1e-3, "{speed} for {settles}: {body:?}");
+    }
+}
+
+#[test]
 fn a_mobs_jump_is_told_after_its_ticks_drag_and_gravity_as_on_bds() {
     // bds-chase.txt: a zombie's jump of 0.42 up told 0.3332, its 0.114 across 0.0623.
     let level = level();

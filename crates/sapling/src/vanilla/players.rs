@@ -93,8 +93,7 @@ pub(crate) struct Summon {
 
 impl Command for Summon {
     fn run(self, ctx: &mut ShardCtx<'_>, sender: &Sender, out: &mut Output) {
-        let here = ctx.origin(sender);
-        let at = self.position.map_or(here, |position| position.from(here));
+        let at = self.position.map_or_else(|| ctx.origin(sender), |position| position.resolve(ctx, sender));
         // BDS summons its newer villager and zombie villager under the older ones' names, and knows no others.
         let kind = match namespaced(&self.kind) {
             kind if kind == "minecraft:zombie_villager" || kind == "minecraft:villager" => format!("{kind}_v2"),
@@ -122,7 +121,11 @@ impl Command for Kill {
         killed.extend(named.iter().filter(|entity| ctx.kill_entity(entity.id)).map(|entity| display_name(&entity)));
         match killed.is_empty() {
             true => no_target(out),
-            false => out.translate("commands.kill.successful", vec![killed.join(", ")], true),
+            false => {
+                // BDS counts each one killed (research/captures/bds-execute-if.txt `kill @e[type=cow]`).
+                out.done_to(killed.len() as u32);
+                out.translate("commands.kill.successful", vec![killed.join(", ")], true);
+            }
         }
     }
 }

@@ -81,6 +81,14 @@ pub(crate) fn breaker(world: &World, player: Entity, mining: &Mining) -> Breaker
     Breaker { harvests: mining.can_harvest(tool), silk_touch: silk_touch > 0, shears: is(ToolKind::Shears), pickaxe: is(ToolKind::Pickaxe), fortune, by_entity: true }
 }
 
+/// [`breaker`] for a tool not in a hand, as `/loot ... mine` names one: an unknown item is none.
+pub(crate) fn breaker_of(item: Option<&sapling_api::Item>, mining: &Mining) -> Breaker {
+    let tool = item.and_then(|item| Tool::from_identifier(&item.name));
+    let level = |enchant: Enchant| item.and_then(|item| item.enchantments.iter().find(|(id, _)| *id == enchant as i16)).map_or(0, |(_, level)| (*level).clamp(0, 255) as u8);
+    let is = |kind: ToolKind| tool.is_some_and(|tool| tool.kind == kind);
+    Breaker { harvests: mining.can_harvest(tool), silk_touch: level(Enchant::SilkTouch) > 0, shears: is(ToolKind::Shears), pickaxe: is(ToolKind::Pickaxe), fortune: level(Enchant::Fortune), by_entity: true }
+}
+
 fn crack(event: LevelEventEvent, pos: BlockPos, data: i32) -> bytes::Bytes {
     let [x, y, z] = pos.map(|c| c as f32);
     sapling_net::encode(&LevelEvent { event, position: Vec3f { x, y, z }, data })

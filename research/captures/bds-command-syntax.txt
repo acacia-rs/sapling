@@ -1,0 +1,115 @@
+## join
+/camera "commands.camera.description" aliases None chained []
+    players:8/16  set:set{set}  preset:~CameraPresets{6}  ease:ease{ease}  easeTime:3/16  easeType:Easing{linear|spring|in_quad|out_quad|in_out_quad|in_cubic|out_cubic|in_out_cubic|in_quart|out_quart|in_out_quart|in_quint|out_quint|in_out_quint|in_sine|out_sine|in_out_sine|in_expo|out_expo|in_out_expo|in_circ|out_circ|in_out_circ|in_bounce|out_bounce|in_out_bounce|in_back|out_back|in_out_back|in_elastic|out_elastic|in_out_elastic}  pos:pos{pos}  position:65/16  rot:rot{rot}  xRot:4/16  yRot:4/16
+    players:8/16  set:set{set}  preset:~CameraPresets{6}  ease:ease{ease}  easeTime:3/16  easeType:Easing{linear|spring|in_quad|out_quad|in_out_quad|in_cubic|out_cubic|in_out_cubic|in_quart|out_quart|in_out_quart|in_quint|out_quint|in_out_quint|in_sine|out_sine|in_out_sine|in_expo|out_expo|in_out_expo|in_circ|out_circ|in_out_circ|in_bounce|out_bounce|in_out_bounce|in_back|out_back|in_out_back|in_elastic|out_elastic|in_out_elastic}  pos:pos{pos}  position:65/16  facing:facing{facing}  lookAtEntity:8/16
+    players:8/16  set:set{set}  preset:~CameraPresets{6}  ease:ease{ease}  easeTime:3/16  easeType:Easing{linear|spring|in_quad|out_quad|in_out_quad|in_cubic|out_cubic|in_out_cubic|in_quart|out_quart|in_out_quart|in_quint|out_quint|in_out_quint|in_sine|out_sine|in_out_sine|in_expo|out_expo|in_out_expo|in_circ|out_circ|in_out_circ|in_bounce|out_bounce|in_out_bounce|in_back|out_back|in_out_back|in_elastic|out_elastic|in_out_elastic}  pos:pos{pos}  position:65/16  facing:facing{facing}  lookAtPosition:65/16
+    players:8/16  set:set{set}  preset:~CameraPresets{6}  ease:ease{ease}  easeTime:3/16  easeType:Easing{linear|spring|in_quad|out_quad|in_out_quad|in_cubic|out_cubic|in_out_cubic|in_quart|out_quart|in_out_quart|in_quint|out_quint|in_out_quint|in_sine|out_sine|in_out_sine|in_expo|out_expo|in_out_expo|in_circ|out_circ|in_out_circ|in_bounce|out_bounce|in_out_bounce|in_back|out_back|in_out_back|in_elastic|out_elastic|in_out_elastic}  pos:pos{pos}  position:65/16
+    players:8/16  set:set{set}  preset:~CameraPresets{6}  ease:ease{ease}  easeTime:3/16  easeType:Easing{linear|spring|in_quad|out_quad|in_out_quad|in_cubic|out_cubic|in_out_cubic|in_quart|out_quart|in_out_quart|in_quint|out_quint|in_out_quint|in_sine|out_sine|in_out_sine|in_expo|out_expo|in_out_expo|in_circ|out_circ|in_out_circ|in_bounce|out_bounce|in_out_bounce|in_back|out_back|in_out_back|in_elastic|out_elastic|in_out_elastic}  rot:rot{rot}  xRot:4/16  yRot:4/16
+    players:8/16  set:set{set}  preset:~CameraPresets{6}  ease:ease{ease}  easeTime:3/16  easeType:Easing{linear|spring|in_quad|out_quad|in_out_quad|in_cubic|out_cubic|in_out_cubic|in_quart|out_quart|in_out_quart|in_quint|out_quint|in_out_quint|in_sine|out_sine|in_out_sine|in_expo|out_expo|in_out_expo|in_circ|out_circ|in_out_circ|in_bounce|out_bounce|in_out_bounce|in_back|out_back|in_out_back|in_elastic|out_elastic|in_out_elastic}  facing:facing{facing}  lookAtEntity:8/16
+    players:8/16  set:set{set}  preset:~CameraPresets{6}  ease:ease{ease}  easeTime:3/16  easeType:Easing{linear|spring|in_quad|out_quad|in_out_quad|in_cubic|out_cubic|in_out_cubic|in_quart|out_quart|in_out_quart|in_quint|out_quint|in_out_quint|in_sine|out_sine|in_out_sine|in_expo|out_expo|in_out_expo|in_circ|out_circ|in_out_circ|in_bounce|out_bounce|in_out_bounce|in_back|out_back|in_out_back|in_elastic|out_elastic|in_out_elastic}  facing:facing{facing}  lookAtPosition:65/16
+    players:8/16  set:set{set}  preset:~CameraPresets{6}  ease:ease{ease}  easeTime:3/16  easeType:Easing{linear|spring|in_quad|out_quad|in_out_quad|in_cubic|out_cubic|in_out_cubic|in_quart|out_quart|in_out_quart|in_quint|out_quint|in_out_quint|in_sine|out_sine|in_out_sine|in_expo|out_expo|in_out_expo|in_circ|out_circ|in_out_circ|in_bounce|out_bounce|in_out_bounce|in_back|out_back|in_out_back|in_elastic|out_elastic|in_out_elastic}  default?:default{default}
+    players:8/16  set:set{set}  preset:~CameraPresets{6}  pos:pos{pos}  position:65/16  rot:rot{rot}  xRot:4/16  yRot:4/16
+    players:8/16  set:set{set}  preset:~CameraPresets{6}  pos:pos{pos}  position:65/16  facing:facing{facing}  lookAtEntity:8/16
+    players:8/16  set:set{set}  preset:~CameraPresets{6}  pos:pos{pos}  position:65/16  facing:facing{facing}  lookAtPosition:65/16
+    players:8/16  attach_to_entity:attach_to_entity{attach_to_entity}  entity:8/16
+    players:8/16  detach_from_entity:detach_from_entity{detach_from_entity}
+    players:8/16  play_spline:play_spline{play_spline}  name:56/16
+    players:8/16  targetEntity:target_entity{target_entity}  entity:8/16
+    players:8/16  targetEntity:target_entity{target_entity}  entity:8/16  targetCenterOffset:target_center_offset{target_center_offset}  xTargetCenterOffset:3/16  yTargetCenterOffset:3/16  zTargetCenterOffset:3/16
+    players:8/16  removeTarget:remove_target{remove_target}
+    players:8/16  set:set{set}  preset:~CameraPresets{6}  view_offset:view_offset{view_offset}  xViewOffset:3/16  yViewOffset:3/16
+    players:8/16  set:set{set}  preset:~CameraPresets{6}  entity_offset:entity_offset{entity_offset}  xEntityOffset:3/16  yEntityOffset:3/16  zEntityOffset:3/16
+    players:8/16  set:set{set}  preset:~CameraPresets{6}  rot:rot{rot}  xRot:4/16  yRot:4/16  view_offset:view_offset{view_offset}  xViewOffset:3/16  yViewOffset:3/16
+    players:8/16  set:set{set}  preset:~CameraPresets{6}  rot:rot{rot}  xRot:4/16  yRot:4/16  entity_offset:entity_offset{entity_offset}  xEntityOffset:3/16  yEntityOffset:3/16  zEntityOffset:3/16
+    players:8/16  set:set{set}  preset:~CameraPresets{6}  view_offset:view_offset{view_offset}  xViewOffset:3/16  yViewOffset:3/16  entity_offset:entity_offset{entity_offset}  xEntityOffset:3/16  yEntityOffset:3/16  zEntityOffset:3/16
+    players:8/16  set:set{set}  preset:~CameraPresets{6}  rot:rot{rot}  xRot:4/16  yRot:4/16  view_offset:view_offset{view_offset}  xViewOffset:3/16  yViewOffset:3/16  entity_offset:entity_offset{entity_offset}  xEntityOffset:3/16  yEntityOffset:3/16  zEntityOffset:3/16
+    players:8/16  set:set{set}  preset:~CameraPresets{6}  ease:ease{ease}  easeTime:3/16  easeType:Easing{linear|spring|in_quad|out_quad|in_out_quad|in_cubic|out_cubic|in_out_cubic|in_quart|out_quart|in_out_quart|in_quint|out_quint|in_out_quint|in_sine|out_sine|in_out_sine|in_expo|out_expo|in_out_expo|in_circ|out_circ|in_out_circ|in_bounce|out_bounce|in_out_bounce|in_back|out_back|in_out_back|in_elastic|out_elastic|in_out_elastic}  view_offset:view_offset{view_offset}  xViewOffset:3/16  yViewOffset:3/16
+    players:8/16  set:set{set}  preset:~CameraPresets{6}  ease:ease{ease}  easeTime:3/16  easeType:Easing{linear|spring|in_quad|out_quad|in_out_quad|in_cubic|out_cubic|in_out_cubic|in_quart|out_quart|in_out_quart|in_quint|out_quint|in_out_quint|in_sine|out_sine|in_out_sine|in_expo|out_expo|in_out_expo|in_circ|out_circ|in_out_circ|in_bounce|out_bounce|in_out_bounce|in_back|out_back|in_out_back|in_elastic|out_elastic|in_out_elastic}  entity_offset:entity_offset{entity_offset}  xEntityOffset:3/16  yEntityOffset:3/16  zEntityOffset:3/16
+    players:8/16  set:set{set}  preset:~CameraPresets{6}  ease:ease{ease}  easeTime:3/16  easeType:Easing{linear|spring|in_quad|out_quad|in_out_quad|in_cubic|out_cubic|in_out_cubic|in_quart|out_quart|in_out_quart|in_quint|out_quint|in_out_quint|in_sine|out_sine|in_out_sine|in_expo|out_expo|in_out_expo|in_circ|out_circ|in_out_circ|in_bounce|out_bounce|in_out_bounce|in_back|out_back|in_out_back|in_elastic|out_elastic|in_out_elastic}  rot:rot{rot}  xRot:4/16  yRot:4/16  view_offset:view_offset{view_offset}  xViewOffset:3/16  yViewOffset:3/16
+    players:8/16  set:set{set}  preset:~CameraPresets{6}  ease:ease{ease}  easeTime:3/16  easeType:Easing{linear|spring|in_quad|out_quad|in_out_quad|in_cubic|out_cubic|in_out_cubic|in_quart|out_quart|in_out_quart|in_quint|out_quint|in_out_quint|in_sine|out_sine|in_out_sine|in_expo|out_expo|in_out_expo|in_circ|out_circ|in_out_circ|in_bounce|out_bounce|in_out_bounce|in_back|out_back|in_out_back|in_elastic|out_elastic|in_out_elastic}  rot:rot{rot}  xRot:4/16  yRot:4/16  entity_offset:entity_offset{entity_offset}  xEntityOffset:3/16  yEntityOffset:3/16  zEntityOffset:3/16
+    players:8/16  set:set{set}  preset:~CameraPresets{6}  ease:ease{ease}  easeTime:3/16  easeType:Easing{linear|spring|in_quad|out_quad|in_out_quad|in_cubic|out_cubic|in_out_cubic|in_quart|out_quart|in_out_quart|in_quint|out_quint|in_out_quint|in_sine|out_sine|in_out_sine|in_expo|out_expo|in_out_expo|in_circ|out_circ|in_out_circ|in_bounce|out_bounce|in_out_bounce|in_back|out_back|in_out_back|in_elastic|out_elastic|in_out_elastic}  view_offset:view_offset{view_offset}  xViewOffset:3/16  yViewOffset:3/16  entity_offset:entity_offset{entity_offset}  xEntityOffset:3/16  yEntityOffset:3/16  zEntityOffset:3/16
+    players:8/16  set:set{set}  preset:~CameraPresets{6}  ease:ease{ease}  easeTime:3/16  easeType:Easing{linear|spring|in_quad|out_quad|in_out_quad|in_cubic|out_cubic|in_out_cubic|in_quart|out_quart|in_out_quart|in_quint|out_quint|in_out_quint|in_sine|out_sine|in_out_sine|in_expo|out_expo|in_out_expo|in_circ|out_circ|in_out_circ|in_bounce|out_bounce|in_out_bounce|in_back|out_back|in_out_back|in_elastic|out_elastic|in_out_elastic}  rot:rot{rot}  xRot:4/16  yRot:4/16  view_offset:view_offset{view_offset}  xViewOffset:3/16  yViewOffset:3/16  entity_offset:entity_offset{entity_offset}  xEntityOffset:3/16  yEntityOffset:3/16  zEntityOffset:3/16
+    players:8/16  set:set{set}  preset:~CameraPresets{6}  pos:pos{pos}  position:65/16
+    players:8/16  set:set{set}  preset:~CameraPresets{6}  rot:rot{rot}  xRot:4/16  yRot:4/16
+    players:8/16  set:set{set}  preset:~CameraPresets{6}  facing:facing{facing}  lookAtEntity:8/16
+    players:8/16  set:set{set}  preset:~CameraPresets{6}  facing:facing{facing}  lookAtPosition:65/16
+    players:8/16  set:set{set}  preset:~CameraPresets{6}  default?:default{default}
+    players:8/16  clear:clear{clear}
+    players:8/16  fade:fade{fade}  time:time{time}  fadeInSeconds:3/16  holdSeconds:3/16  fadeOutSeconds:3/16  color:color{color}  red:1/16  green:1/16  blue:1/16
+    players:8/16  fade:fade{fade}  time:time{time}  fadeInSeconds:3/16  holdSeconds:3/16  fadeOutSeconds:3/16
+    players:8/16  fade:fade{fade}  color:color{color}  red:1/16  green:1/16  blue:1/16
+    players:8/16  fade:fade{fade}
+    players:8/16  fov_set:fov_set{fov_set}  fov_value:3/16  fovEaseTime?:3/16  fovEaseType?:Easing{linear|spring|in_quad|out_quad|in_out_quad|in_cubic|out_cubic|in_out_cubic|in_quart|out_quart|in_out_quart|in_quint|out_quint|in_out_quint|in_sine|out_sine|in_out_sine|in_expo|out_expo|in_out_expo|in_circ|out_circ|in_out_circ|in_bounce|out_bounce|in_out_bounce|in_back|out_back|in_out_back|in_elastic|out_elastic|in_out_elastic}
+    players:8/16  fov_clear:fov_clear{fov_clear}  fovEaseTime?:3/16  fovEaseType?:Easing{linear|spring|in_quad|out_quad|in_out_quad|in_cubic|out_cubic|in_out_cubic|in_quart|out_quart|in_out_quart|in_quint|out_quint|in_out_quint|in_sine|out_sine|in_out_sine|in_expo|out_expo|in_out_expo|in_circ|out_circ|in_out_circ|in_bounce|out_bounce|in_out_bounce|in_back|out_back|in_out_back|in_elastic|out_elastic|in_out_elastic}
+/camerashake "commands.screenshake.description" aliases None chained []
+    action:CameraShakeActionAdd{add}  player:8/16  intensity?:3/16  seconds?:3/16  shakeType?:CameraShakeType{positional|rotational}
+    action:CameraShakeActionStop{stop}  player?:8/16
+/daylock "commands.daylock.description" aliases Some("daylock|alwaysday") chained []
+    lock?:Boolean{true|false}
+/dialogue "commands.dialogue.description" aliases None chained []
+    open:DialogueOpenAction{open}  npc:8/16  player:8/16  sceneName?:56/16
+    change:DialogueChangeAction{change}  npc:8/16  sceneName:56/16  players?:8/16
+/event "commands.event.description" aliases None chained []
+    entity:EventEntityAction{entity}  target:8/16  eventName:~EntityEvents{479}
+/execute "commands.execute.description" aliases None chained [0]
+    chaining subcommand:Option_As{as}  origin:8/16  chainedCommand:chainedSome("ExecuteChainedOption_0")
+    chaining subcommand:Option_At{at}  origin:8/16  chainedCommand:chainedSome("ExecuteChainedOption_0")
+    chaining subcommand:Option_In{in}  dimension:Dimension{overworld|nether|the_end}  chainedCommand:chainedSome("ExecuteChainedOption_0")
+    chaining subcommand:Option_Positioned{positioned}  position:65/16  chainedCommand:chainedSome("ExecuteChainedOption_0")
+    chaining subcommand:Option_Positioned{positioned}  secondary subcommand:Option_As{as}  origin:8/16  chainedCommand:chainedSome("ExecuteChainedOption_0")
+    chaining subcommand:Option_Rotated{rotated}  yaw:4/16  pitch:4/16  chainedCommand:chainedSome("ExecuteChainedOption_0")
+    chaining subcommand:Option_Rotated{rotated}  secondary subcommand:Option_As{as}  origin:8/16  chainedCommand:chainedSome("ExecuteChainedOption_0")
+    chaining subcommand:Option_Facing{facing}  position:65/16  chainedCommand:chainedSome("ExecuteChainedOption_0")
+    chaining subcommand:Option_Facing{facing}  secondary subcommand:Option_Entity{entity}  origin:8/16  anchor:ActorLocation{eyes|feet}  chainedCommand:chainedSome("ExecuteChainedOption_0")
+    chaining subcommand:Option_Align{align}  axes:56/16  chainedCommand:chainedSome("ExecuteChainedOption_0")
+    chaining subcommand:Option_Anchored{anchored}  anchored:ActorLocation{eyes|feet}  chainedCommand:chainedSome("ExecuteChainedOption_0")
+    chaining subcommand:Option_If_Unless{if|unless}  secondary subcommand:Option_Condition_Block{block}  position:64/16  block:Block{minecraft:cyan_terracotta|cyan_terracotta|minecraft:blue_candle|blue_candle|minecraft:dark_oak_wood|dark_oak_wood|minecraft:birch_standing_sign|birch_standing_sign|minecraft:polished_basalt|polished_basalt|minecraft:nether_gold_ore|nether_gold_ore|minecraft:zombie_head|zombie_head|minecraft:waxed_weathered_copper_chain|waxed_weathered_copper_chain|minecraft:waxed_weathered_copper_chest|waxed_weathered_copper_chest|minecraft:leaf_litter|leaf_litter|minecraft:warped_door|warped_door|minecraft:light_blue_concrete_powder|light_blue_concrete_powder|minecraft:bamboo_
+    chaining subcommand:Option_If_Unless{if|unless}  secondary subcommand:Option_Condition_Blocks{blocks}  begin:64/16  end:64/16  destination:64/16  scan mode:BlocksScanMode{masked|all}  chainedCommand?:chainedSome("ExecuteChainedOption_0")
+    chaining subcommand:Option_If_Unless{if|unless}  secondary subcommand:Option_Condition_Entity{entity}  target:8/16  chainedCommand?:chainedSome("ExecuteChainedOption_0")
+    chaining subcommand:Option_If_Unless{if|unless}  secondary subcommand:Option_Condition_Score{score}  target:8/16  objective:~ScoreboardObjectives{0}  operation:7/16  source:8/16  objective:~ScoreboardObjectives{0}  chainedCommand?:chainedSome("ExecuteChainedOption_0")
+    chaining subcommand:Option_If_Unless{if|unless}  secondary subcommand:Option_Condition_Score{score}  target:8/16  objective:~ScoreboardObjectives{0}  matches:ScoreRangeMode{matches}  range:23/16  chainedCommand?:chainedSome("ExecuteChainedOption_0")
+    chaining subcommand:Option_Run{run}  command:90/16
+/fog "commands.fog.description" aliases None chained []
+    victim:8/16  mode:add{push}  fogId:56/16  userProvidedId:56/16
+    victim:8/16  mode:delete{pop|remove}  userProvidedId:56/16
+/hud "commands.hud.description" aliases None chained []
+    target:8/16  visible:HudVisibility{hide|reset}  hud_element?:HudElement{hunger|all|paperdoll|armor|tooltips|touch_controls|crosshair|hotbar|health|progress_bar|air_bubbles|horse_health|status_effects|item_text}
+/inputpermission "commands.inputpermission.description" aliases None chained []
+    option:Option_Set{set}  targets:8/16  permission:permission{camera|movement|jump|lateral_movement|sneak|dismount|mount|move_backward|move_forward|move_left|move_right}  state:state{enabled|disabled}
+    option:Option_Query{query}  targets:8/16  permission:permission{camera|movement|jump|lateral_movement|sneak|dismount|mount|move_backward|move_forward|move_left|move_right}  state?:state{enabled|disabled}
+/loot "commands.loot.description" aliases None chained []
+    target:TargetSpawn{spawn}  position:65/16  source:SourceLoot{loot}  loot_table:56/16  <tool>|mainhand|offhand?:~Tool{2078}
+    target:TargetSpawn{spawn}  position:65/16  source:SourceKill{kill}  entity:8/16  <tool>|mainhand|offhand?:~Tool{2078}
+    target:TargetSpawn{spawn}  position:65/16  source:SourceMine{mine}  TargetBlockPosition:65/16  <tool>|mainhand|offhand?:~Tool{2078}
+    target:TargetGive{give}  players:8/16  source:SourceLoot{loot}  loot_table:56/16  <tool>|mainhand|offhand?:~Tool{2078}
+    target:TargetGive{give}  players:8/16  source:SourceKill{kill}  entity:8/16  <tool>|mainhand|offhand?:~Tool{2078}
+    target:TargetGive{give}  players:8/16  source:SourceMine{mine}  TargetBlockPosition:65/16  <tool>|mainhand|offhand?:~Tool{2078}
+    target:TargetInsert{insert}  position:65/16  source:SourceLoot{loot}  loot_table:56/16  <tool>|mainhand|offhand?:~Tool{2078}
+    target:TargetInsert{insert}  position:65/16  source:SourceKill{kill}  entity:8/16  <tool>|mainhand|offhand?:~Tool{2078}
+    target:TargetInsert{insert}  position:65/16  source:SourceMine{mine}  TargetBlockPosition:65/16  <tool>|mainhand|offhand?:~Tool{2078}
+    target:TargetReplace{replace}  entity:TargetEntity{entity}  entity:8/16  slotType:EntityEquipmentSlot{slot.weapon.mainhand|slot.weapon.offhand|slot.armor.head|slot.armor.chest|slot.armor.legs|slot.armor.feet|slot.armor.body|slot.hotbar|slot.inventory|slot.enderchest|slot.saddle|slot.armor|slot.chest|slot.equippable}  slotId:1/16  count:1/16  source:SourceLoot{loot}  loot_table:56/16  <tool>|mainhand|offhand?:~Tool{2078}
+    target:TargetReplace{replace}  entity:TargetEntity{entity}  entity:8/16  slotType:EntityEquipmentSlot{slot.weapon.mainhand|slot.weapon.offhand|slot.armor.head|slot.armor.chest|slot.armor.legs|slot.armor.feet|slot.armor.body|slot.hotbar|slot.inventory|slot.enderchest|slot.saddle|slot.armor|slot.chest|slot.equippable}  slotId:1/16  source:SourceLoot{loot}  loot_table:56/16  <tool>|mainhand|offhand?:~Tool{2078}
+    target:TargetReplace{replace}  entity:TargetEntity{entity}  entity:8/16  slotType:EntityEquipmentSlot{slot.weapon.mainhand|slot.weapon.offhand|slot.armor.head|slot.armor.chest|slot.armor.legs|slot.armor.feet|slot.armor.body|slot.hotbar|slot.inventory|slot.enderchest|slot.saddle|slot.armor|slot.chest|slot.equippable}  slotId:1/16  count:1/16  source:SourceKill{kill}  entity:8/16  <tool>|mainhand|offhand?:~Tool{2078}
+    target:TargetReplace{replace}  entity:TargetEntity{entity}  entity:8/16  slotType:EntityEquipmentSlot{slot.weapon.mainhand|slot.weapon.offhand|slot.armor.head|slot.armor.chest|slot.armor.legs|slot.armor.feet|slot.armor.body|slot.hotbar|slot.inventory|slot.enderchest|slot.saddle|slot.armor|slot.chest|slot.equippable}  slotId:1/16  source:SourceKill{kill}  entity:8/16  <tool>|mainhand|offhand?:~Tool{2078}
+    target:TargetReplace{replace}  entity:TargetEntity{entity}  entity:8/16  slotType:EntityEquipmentSlot{slot.weapon.mainhand|slot.weapon.offhand|slot.armor.head|slot.armor.chest|slot.armor.legs|slot.armor.feet|slot.armor.body|slot.hotbar|slot.inventory|slot.enderchest|slot.saddle|slot.armor|slot.chest|slot.equippable}  slotId:1/16  count:1/16  source:SourceMine{mine}  TargetBlockPosition:65/16  <tool>|mainhand|offhand?:~Tool{2078}
+    target:TargetReplace{replace}  entity:TargetEntity{entity}  entity:8/16  slotType:EntityEquipmentSlot{slot.weapon.mainhand|slot.weapon.offhand|slot.armor.head|slot.armor.chest|slot.armor.legs|slot.armor.feet|slot.armor.body|slot.hotbar|slot.inventory|slot.enderchest|slot.saddle|slot.armor|slot.chest|slot.equippable}  slotId:1/16  source:SourceMine{mine}  TargetBlockPosition:65/16  <tool>|mainhand|offhand?:~Tool{2078}
+    target:TargetReplace{replace}  block:TargetBlock{block}  position:65/16  slotType:BlockEquipmentSlot{slot.container}  slotId:1/16  count:1/16  source:SourceLoot{loot}  loot_table:56/16  <tool>|mainhand|offhand?:~Tool{2078}
+    target:TargetReplace{replace}  block:TargetBlock{block}  position:65/16  slotType:BlockEquipmentSlot{slot.container}  slotId:1/16  source:SourceLoot{loot}  loot_table:56/16  <tool>|mainhand|offhand?:~Tool{2078}
+    target:TargetReplace{replace}  block:TargetBlock{block}  position:65/16  slotType:BlockEquipmentSlot{slot.container}  slotId:1/16  count:1/16  source:SourceKill{kill}  entity:8/16  <tool>|mainhand|offhand?:~Tool{2078}
+    target:TargetReplace{replace}  block:TargetBlock{block}  position:65/16  slotType:BlockEquipmentSlot{slot.container}  slotId:1/16  source:SourceKill{kill}  entity:8/16  <tool>|mainhand|offhand?:~Tool{2078}
+    target:TargetReplace{replace}  block:TargetBlock{block}  position:65/16  slotType:BlockEquipmentSlot{slot.container}  slotId:1/16  count:1/16  source:SourceMine{mine}  TargetBlockPosition:65/16  <tool>|mainhand|offhand?:~Tool{2078}
+    target:TargetReplace{replace}  block:TargetBlock{block}  position:65/16  slotType:BlockEquipmentSlot{slot.container}  slotId:1/16  source:SourceMine{mine}  TargetBlockPosition:65/16  <tool>|mainhand|offhand?:~Tool{2078}
+/mobevent "commands.mobevent.description" aliases None chained []
+    event:MobEvent{minecraft:pillager_patrols_event|minecraft:wandering_trader_event|minecraft:ender_dragon_event|events_enabled}  value?:Boolean{true|false}
+/music "commands.music.description" aliases None chained []
+    action:MusicQueueAction{queue}  trackName:56/16  volume?:3/16  fadeSeconds?:3/16  repeatMode?:MusicRepeatMode{play_once|loop}
+    action:MusicPlayAction{play}  trackName:56/16  volume?:3/16  fadeSeconds?:3/16  repeatMode?:MusicRepeatMode{play_once|loop}
+    action:MusicStopAction{stop}  fadeSeconds?:3/16
+    action:MusicVolumeAction{volume}  volume:3/16
+/playanimation "commands.playanimation.description" aliases None chained []
+    entity:8/16  animation:56/16  next_state?:56/16  blend_out_time?:3/16  stop_expression?:56/16  controller?:56/16
+/recipe "commands.recipes.description" aliases None chained []
+    give:Give{give}  player:8/16  recipe:~UnlockableRecipeValues{4202}
+    take:Take{take}  player:8/16  recipe:~UnlockableRecipeValues{4202}
+probe exit 0
+chained ExecuteChainedOption_0 as=77 at=78 in=79 positioned=80 rotated=81 facing=82 align=84 anchored=85 if=86 unless=86 run=91

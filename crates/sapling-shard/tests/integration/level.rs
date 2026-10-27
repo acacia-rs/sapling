@@ -223,10 +223,12 @@ fn stored_mobs_are_shown_and_leave_with_their_column() {
     let sent = enter_stored(&mut h, 1);
     let mut mobs = all::<AddEntity>(&sent);
     mobs.sort_by(|a, b| a.entity_type.cmp(&b.entity_type));
-    let shown: Vec<_> = mobs.iter().map(|mob| (mob.entity_type.as_str(), [mob.position.x, mob.position.z], mob.yaw)).collect();
-    assert_eq!(shown, [("minecraft:bat", [9.5, 2.5], 90.0), ("minecraft:horse", [4.5, 6.5], 90.0)]);
-    // The horse stands on the floor; the bat, which does not fly here, is falling to it.
-    assert!(mobs[1].position.y == 64.0 && (64.0..=70.0).contains(&mobs[0].position.y), "{:?}", mobs.iter().map(|mob| mob.position.y).collect::<Vec<_>>());
+    let shown: Vec<_> = mobs.iter().map(|mob| (mob.entity_type.as_str(), mob.yaw)).collect();
+    assert_eq!(shown, [("minecraft:bat", 90.0), ("minecraft:horse", 90.0)]);
+    // The horse stands on the floor where it was kept; the bat has begun to fly about from there.
+    let near = |mob: &AddEntity, [x, y, z]: [f32; 3]| (mob.position.x - x).abs() < 1.0 && (mob.position.y - y).abs() < 1.0 && (mob.position.z - z).abs() < 1.0;
+    let at = |mob: &AddEntity| [mob.position.x, mob.position.y, mob.position.z];
+    assert!(near(&mobs[0], [9.5, 70.0, 2.5]) && at(&mobs[1]) == [4.5, 64.0, 6.5], "{:?}", mobs.iter().map(at).collect::<Vec<_>>());
     assert!(mobs.iter().all(|mob| !mob.attributes.is_empty()), "each as BDS announces its kind");
     let saddled = |mob: &AddEntity| mob.metadata.iter().any(|item| matches!(&item.value, Metadata::Flags(flags) if flags.contains(MetadataFlags1::SADDLED)));
     assert_eq!(mobs.iter().map(saddled).collect::<Vec<_>>(), [false, true], "the horse wears what it was stored with");
@@ -243,7 +245,8 @@ fn stored_mobs_are_shown_and_leave_with_their_column() {
 
     // Nobody sees the column: it is unloaded and its mobs go; whoever comes next meets new ones.
     h.leave(1);
-    (0..150).for_each(|_| h.shard.tick());
+    // Two sweeps: the mobs moved since the last, so the first saves the column and the second drops it.
+    (0..250).for_each(|_| h.shard.tick());
     let sent = enter_stored(&mut h, 2);
     let again = all::<AddEntity>(&sent);
     assert_eq!((again.len(), all::<AddItemEntity>(&sent).len()), (2, 1));

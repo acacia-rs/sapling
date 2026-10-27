@@ -1,4 +1,4 @@
-//! Which furnaces, hoppers, campfires and spawner blocks (spawners.rs, every one) tick. BDS ticks block actors only near players; here one
+//! Which furnaces, hoppers, campfires, lit beacons and spawner blocks (spawners.rs, every one) tick. BDS ticks block actors only near players; here one
 //! ticks while its column is in a player's view. Every [`UNLOAD_INTERVAL`] ticks, before columns
 //! are saved, those in seen columns that have work start (a furnace that was burning when its
 //! world was saved, any hopper, a campfire with food on it), and those in columns nobody sees any
@@ -15,7 +15,7 @@ use sapling_world::ChunkPos;
 use crate::chunks::UNLOAD_INTERVAL;
 use crate::components::{InLayer, Layer, Tick};
 use crate::view::View;
-use crate::{campfires, furnaces, hoppers, spawners};
+use crate::{beacons, brewing, campfires, furnaces, hoppers, spawners};
 
 fn id(entity: &Value) -> Option<&str> {
     match entity.get("id") {
@@ -43,9 +43,12 @@ pub(crate) fn sweep(world: &mut World) {
     }
     let seen = seen(world);
     let column = |pos: BlockPos| ChunkPos::of_block(pos[0], pos[2]);
-    let watched: Vec<(Entity, BlockPos)> = [furnaces::watched(world), hoppers::watched(world), campfires::watched(world), spawners::watched(world)].concat();
+    let watched: Vec<(Entity, BlockPos)> =
+        [furnaces::watched(world), brewing::watched(world), hoppers::watched(world), campfires::watched(world), spawners::watched(world), beacons::watched(world)].concat();
     for (layer, pos) in watched.into_iter().filter(|(layer, pos)| !seen.contains(&(*layer, column(*pos)))) {
+        beacons::forget(world, layer, pos);
         furnaces::forget(world, layer, pos);
+        brewing::forget(world, layer, pos);
         hoppers::forget(world, layer, pos);
         campfires::forget(world, layer, pos);
         spawners::forget(world, layer, pos);
@@ -57,7 +60,9 @@ pub(crate) fn sweep(world: &mut World) {
         for entity in level.block_entities_in(pos) {
             let watch: Watch = match id(&entity.nbt) {
                 Some("Hopper") => hoppers::watch,
+                Some("Beacon") if beacons::is_lit(&entity.nbt) => beacons::watch,
                 Some("Furnace" | "BlastFurnace" | "Smoker") if furnaces::was_at_work(&entity.nbt) => furnaces::watch,
+                Some("BrewingStand") if brewing::was_at_work(&entity.nbt) => brewing::watch,
                 Some("Campfire") if campfires::is_cooking(&entity.nbt) => campfires::watch,
                 _ if spawners::is_spawner(&entity.nbt) => spawners::watch,
                 _ => continue,

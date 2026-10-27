@@ -21,7 +21,8 @@ const HEAD_SHAPE: u8 = 3;
 const DYES: [&str; 16] = ["black", "red", "green", "brown", "blue", "purple", "cyan", "light_gray", "gray", "pink", "lime", "yellow", "light_blue", "magenta", "orange", "white"];
 const OLD_DYES: &[(&str, u8)] = &[("minecraft:ink_sac", 0), ("minecraft:cocoa_beans", 3), ("minecraft:lapis_lazuli", 4), ("minecraft:bone_meal", 15)];
 
-fn dye(name: &str) -> Option<u8> {
+/// The dye colour number of a dye item, banners' numbering too.
+pub(crate) fn dye(name: &str) -> Option<u8> {
     let named = name.strip_prefix("minecraft:").and_then(|bare| bare.strip_suffix("_dye")).and_then(|colour| DYES.iter().position(|dye| *dye == colour));
     named.map(|colour| colour as u8).or_else(|| OLD_DYES.iter().find(|(old, _)| *old == name).map(|(_, colour)| *colour))
 }

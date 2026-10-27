@@ -1,6 +1,7 @@
 //! The player drills of bds_command_probe: what a drill's `!` lines make the actor do, and which
 //! drill is in which file (harm and hunger: vitals_drill.rs; toil, armour, effects and beds:
-//! armour_drill.rs; a zombie's and what food does besides feeding: hunt_drill.rs).
+//! armour_drill.rs; a zombie's and what food does besides feeding: hunt_drill.rs; mobs left to
+//! themselves and the beasts' attacks: wander_drill.rs).
 
 use std::time::Duration;
 
@@ -12,6 +13,10 @@ mod armour;
 mod combat;
 #[path = "feedback_drill.rs"]
 mod feedback;
+#[path = "fishing_drill.rs"]
+mod fishing;
+#[path = "items_drill.rs"]
+mod items;
 #[path = "foes_drill.rs"]
 mod foes;
 #[path = "reach_drill.rs"]
@@ -28,6 +33,8 @@ mod uses;
 mod trades;
 #[path = "vitals_drill.rs"]
 mod vitals;
+#[path = "wander_drill.rs"]
+mod wander;
 
 /// A player's eyes are this far over its feet.
 const EYES: f32 = 1.62;
@@ -57,6 +64,9 @@ fn face_named(word: &str) -> Option<acacia_bot::interact::Face> {
 /// `!wake` leaves its bed and `!close` its open screen; `!put`, `!take` and `!takeall` move items
 /// in and out of the open container. False for any other line.
 pub async fn act(actor: &mut Bot, line: &str) -> bool {
+    if items::act(actor, line).await {
+        return true;
+    }
     let keys = |actor: &mut Bot, forward: f32, sprint: bool, jump: bool| {
         if let Some(controls) = actor.controls() {
             (controls.forward, controls.sprint, controls.jump) = (forward, sprint, jump);
@@ -123,6 +133,11 @@ pub async fn act(actor: &mut Bot, line: &str) -> bool {
         }
         return true;
     }
+    // `!fish secs`: casts, waits up to that long for a bite and reels in (`Bot::fish`).
+    if let Some(secs) = line.strip_prefix("!fish ").and_then(|secs| secs.parse().ok()) {
+        println!("## fished: {:?}", actor.fish(Duration::from_secs(secs)).await);
+        return true;
+    }
     if let Some(slot) = line.strip_prefix("!take ").and_then(|slot| slot.parse().ok()) {
         println!("## took: {:?}", actor.move_to_inventory(slot).await);
         return true;
@@ -130,6 +145,10 @@ pub async fn act(actor: &mut Bot, line: &str) -> bool {
     match line {
         // The use goes on as the bot is polled after (`Bot::consume`).
         "!eat" => drop(tokio::time::timeout(Duration::from_millis(1), actor.consume()).await),
+        "!use" => {
+            actor.swing();
+            actor.use_item();
+        }
         "!wake" => println!("## woke: {:?}", actor.wake().await),
         "!close" => println!("## closed: {:?}", actor.close_container().await),
         "!takeall" => println!("## took all: {:?}", actor.take_all().await),
@@ -237,6 +256,15 @@ pub fn drill(name: &str) -> Option<(Vec<String>, &'static [&'static str])> {
         "armour" => (armour::armour(), HURT_SHOWN),
         "effects" => (armour::effects(), HURT_SHOWN),
         "wake" => (armour::wake(), WAKE_SHOWN),
-        _ => return uses::named(name).or_else(|| Some((combat::named(name)?, HURT_SHOWN))),
+        "fish" => (fishing::fish(), fishing::FISH_SHOWN),
+        "brew" => (fishing::brew(), fishing::BREW_SHOWN),
+        "swimmers" => (wander::swimmers(), hunt::KINDS_SHOWN),
+        "flyers" => (wander::flyers(), hunt::KINDS_SHOWN),
+        "grazers" => (wander::grazers(), hunt::KINDS_SHOWN),
+        "amphibians" => (wander::amphibians(), hunt::KINDS_SHOWN),
+        "beasts" => (wander::beasts(), hunt::BITE_SHOWN),
+        "creaking" => (wander::creaking(), hunt::BITE_SHOWN),
+        "crowd" => (wander::crowd(), hunt::KINDS_SHOWN),
+        _ => return uses::named(name).or_else(|| items::drill(name)).or_else(|| Some((combat::named(name)?, HURT_SHOWN))),
     })
 }

@@ -31,6 +31,10 @@ mod world_commands;
 mod structures;
 #[path = "shared/nature_drill.rs"]
 mod nature;
+#[path = "shared/execute_drill.rs"]
+mod execute;
+#[path = "shared/client_command_drill.rs"]
+mod client;
 
 use std::time::{Duration, Instant};
 
@@ -162,9 +166,16 @@ fn show(start: Instant, shown: &[&str], who: &str, event: Option<BotEvent>) -> R
     } else if let Some(name) = acacia_bot::proto::packet_name(packet.id).filter(|name| ["Text", "SetTime", "SyncWorldClocks"].contains(name) || shown.contains(name)) {
         let text: String = dump::dump(&packet).unwrap_or_default().chars().take(SHOWN).collect();
         println!("{ms:>7} {who:<7} {name} {text}");
+    } else if acacia_bot::proto::packet_name(packet.id).is_none() && (shown.contains(&"Unknown") || shown.contains(&"*")) {
+        println!("{ms:>7} {who:<7} Unknown id {} {} bytes", packet.id, packet.body.len());
+    } else if let Some(name) = acacia_bot::proto::packet_name(packet.id).filter(|name| shown.contains(&"*") && !EVERY_TICK.contains(name)) {
+        println!("{ms:>7} {who:<7} {name} {} bytes", packet.body.len());
     }
     Ok(())
 }
+
+/// What a `*` drill leaves out: the packets that come whatever a command does.
+const EVERY_TICK: &[&str] = &["MovePlayer", "MoveEntityAbsolute", "MoveEntityDelta", "SetEntityMotion", "SetEntityData", "UpdateAttributes", "NetworkChunkPublisherUpdate", "LevelChunk", "SubChunk", "NetworkStackLatency", "CurrentStructureFeature"];
 
 /// Characters of a drill's own packets shown.
 const SHOWN: usize = 4000;
@@ -241,7 +252,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         Some("worldcmds") => (world_commands::world(), world_commands::WORLD_SHOWN, SETTLE),
         Some("itemcmds") => (world_commands::items(), world_commands::ITEM_SHOWN, SETTLE),
         Some("functions") => (functions::functions(), functions::FUNCTIONS_SHOWN, SETTLE),
-        Some(other) => match player::drill(other).or_else(|| structures::drill(other)).or_else(|| nature::drill(other)) {
+        Some(other) => match player::drill(other).or_else(|| structures::drill(other)).or_else(|| nature::drill(other)).or_else(|| execute::drill(other)).or_else(|| client::drill(other)) {
             Some((lines, shown)) => (lines, shown, burn::BURN_SETTLE),
             None => return Err(format!("no drill {other}").into()),
         },

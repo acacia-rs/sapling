@@ -36,6 +36,13 @@ it does on BDS and the two captures can be diffed:
    `/structure`, `/tickingarea`, `/place`, `/locate` and hardcore are built (`structures`, `ticking`,
    `place`, `locate`, `hardcore`); left: the "Unverified" list of docs/research/structures-and-ticking.md,
    structure blocks (StructureBlockUpdate, StructureTemplateDataRequest) and `/structure`'s animations.
+   `/execute` has every sub-command BDS has (`execute`, `execute-if`, `execute-run`, `execute2`;
+   research/captures/bds-execute-findings.md); left: `run function`, as sapling has no `/function`.
+   `/loot`, `/camera`, `/camerashake`, `/fog`, `/hud`, `/music`, `/playanimation`, `/daylock`,
+   `/recipe`, `/inputpermission` and `/mobevent` answer and send as BDS did (`lootcmd2`, `screen`,
+   `music`, `controls`, `controls2`; research/captures/bds-commands-findings.md). Left: tables
+   mob-loot.json does not keep (`gameplay/fishing`), `/loot replace entity` on mobs, `/camera`'s
+   fade, fov and other forms, `/recipe` answering before its packet, `/event`, `/dialogue`.
 
    What a click does to a block (`docs/research/block-uses.md`, `clicks`), primed TNT (`tnt`) and
    bone meal (`docs/research/bone-meal.md`, `bonemeal`) are drilled and built. Saplings,

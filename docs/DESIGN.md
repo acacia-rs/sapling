@@ -308,11 +308,12 @@ it sends for `/title`, `/scoreboard`, `/gamemode`, `/tp`, a wither's bar and com
   (`handler_at`). Tasks run once a tick after the events, then `TickEvent` (`on_tick`).
 - **Keeping the API stable** (`sapling-api`). Enums that will grow (`DamageCause`, `Effect`, `Attacker`,
   `DeathMessage`, `Target`, `Sender`, `Scope`, form `Element`, `FormError`, `ParseError`, a command's `Selector`,
-  `Pick` and `Filter`, which took its arguments in 0.2.0) and the snapshots
+  `Pick` and `Filter`, which took its arguments in 0.2.0, a position's `Axis`, which took `^` in 0.3.0,
+  `ScreenAction`, `RecipeChange`, `Music`) and the snapshots
   plugins only read (`Player`, `Position`, `EntityInfo`, built with `new`) are `#[non_exhaustive]`; events
   keep private fields. Not marked: closed enums (`Face`, `GameMode`, `Difficulty`, `Slot`, `Priority`, ..),
   `ParamKind` (only the shard and the derive match it), and values plugins write as struct literals
-  (`Block`, `Item`, forms, HUD), which would lose struct-literal and `..Default::default()` construction.
+  (`Block`, `Item`, forms, HUD, `Camera`, `Animation`), which would lose struct-literal and `..Default::default()` construction.
   `tools/semver-check.sh [rev]` runs cargo-semver-checks on testbox against `rev` (default origin/master).
 - **Vanilla rules** (`sapling-shard/src/rules.rs`, `sapling-data/src/game_rules.rs`). A world's game rules
   are its vanilla switches: plugins set them with `ctx.set_game_rule`, operators with `/gamerule`, and they
@@ -361,7 +362,9 @@ it sends for `/title`, `/scoreboard`, `/gamemode`, `/tp`, a wither's bar and com
   (fields = parameters) or an enum (variants = sub-commands) writes `CommandSyntax`; the plugin writes
   `Command::run(self, ctx, sender, out)`. Parameters: integers, floats, `bool`, `String` (a word or a quoted
   run), `Text` (rest of the line), `Target` (an online player or `@s`), `GameMode`, any `#[derive(CommandEnum)]`,
-  and `Option<T>` for trailing optional ones. `Sender` is `Player | Console`; only players send yet.
+  and `Option<T>` for trailing optional ones. `Sender` is `Player | Console`, or `Executed` for a command an
+  `/execute` runs: who sent it, the executor, the place, turn, anchor and dimension it runs at (`~` and `^`
+  count from there, `@s` names the executor; research/captures/bds-execute-findings.md).
   - `AvailableCommands` is built once per permission level and sent when a player enters the world and when
     `ctx.set_permission` changes its level (`Member` / `Operator`). Hidden commands are left out entirely and
     answer as unknown; every command sent carries permission `"any"` and flags 0.
@@ -646,7 +649,8 @@ block action, and takes StopBreak and AbortBreak with a position.
   placement (`Sign` with empty `FrontText`/`BackText`, `Skull` with the floor rotation, `Banner`
   with `Base` = the item's damage, ...); a brewing stand is a container of five (window type
   BrewingStand; ingredient, three bottles, fuel) whose block shows a bottle in each place that
-  holds something (`containers/brewing.rs`); it brews nothing. Breaking gives
+  holds something (`containers/brewing.rs`) and brews by BDS's tick and mixes (`brewing.rs`,
+  docs/research/brewing.md). Breaking gives
   the item back what the entity kept: a bed's and a banner's colour, a pot's plant, a campfire's
   food. Signs of every wood leave their wood's sign, banners `banner`. Not done: cauldrons hold
   nothing, a banner's patterns are lost (`Item` has no tag).
@@ -885,8 +889,9 @@ block action, and takes StopBreak and AbortBreak with a position.
   (`blocks/frost.rs`). Mending: an orb mends one damaged Mending stack worn or held, two of wear a
   point, before the rest is experience. Curse of Vanishing is gone at death; Curse of Binding keeps
   a piece on outside creative (`inventory/enchanted.rs`). Power, Punch, Flame, Infinity, Multishot,
-  Piercing, Quick Charge, Loyalty, Riptide and Impaling: see "Players' shots". Not done: Channeling,
-  fishing rods and the mace and their enchantments; Aqua Affinity (the server does not slow a break
+  Piercing, Quick Charge, Loyalty, Riptide and Impaling: see "Players' shots". Lure and Luck of the
+  Sea: see fishing (`fishing.rs`, docs/research/fishing.md). Not done: Channeling, the mace and its
+  enchantments; Aqua Affinity (the server does not slow a break
   under water); Soul Speed, Swift Sneak; Thorns against arrows; Blast Protection's throw (BDS reads
   none); Looting on armour.
 - **What a block leaves** (`blocks/loot.rs`, `sapling_data::block_loot`). `BreakEvent::drops` starts as

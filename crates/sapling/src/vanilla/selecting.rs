@@ -99,14 +99,14 @@ fn ground(ctx: &ShardCtx<'_>, [x, from, z]: BlockPos) -> Option<i32> {
 }
 
 /// Numbers in [0, 1), from a seed the process picks at random.
-struct Roll(u64);
+pub(super) struct Roll(u64);
 
 impl Roll {
-    fn new() -> Self {
+    pub(super) fn new() -> Self {
         Self(std::collections::hash_map::RandomState::new().build_hasher().finish() | 1)
     }
 
-    fn next(&mut self) -> f32 {
+    pub(super) fn next(&mut self) -> f32 {
         self.0 ^= self.0 << 13;
         self.0 ^= self.0 >> 7;
         self.0 ^= self.0 << 17;

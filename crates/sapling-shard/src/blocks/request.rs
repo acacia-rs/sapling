@@ -23,7 +23,7 @@ const MAX_CLICKS_PER_TICK: usize = 4;
 const USED: &[&str] = &["daylight_detector", "daylight_detector_inverted", 
     "door", "button", "lever", "fence_gate", "chest", "barrel", "shulker_box", "furnace", "smoker", "crafting_table", "anvil", "enchanting_table", "hopper",
     "dropper", "dispenser", "_sign", "noteblock", "repeater", "comparator", "brewing_stand", "beacon", "loom", "grindstone", "stonecutter_block", ":bed",
-    "cartography_table", "smithing_table", "flower_pot", "jukebox", ":frame", "glow_frame", "decorated_pot",
+    "cartography_table", "smithing_table", "flower_pot", "jukebox", ":frame", "glow_frame", "decorated_pot", "lectern",
 ];
 
 enum Input {
@@ -73,7 +73,8 @@ fn is_used(name: &str) -> bool {
 /// a bed is slept in, a sign is written on, a pot takes or gives a plant, a campfire takes food.
 /// False when it does none of these.
 fn use_block(world: &mut World, player: Entity, layer: Entity, pos: BlockPos, name: &str) -> bool {
-    let uses: [fn(&mut World, Entity, Entity, BlockPos, &str) -> bool; 9] = [
+    let uses: [fn(&mut World, Entity, Entity, BlockPos, &str) -> bool; 10] = [
+        super::lectern::use_lectern,
         crate::containers::open,
         crate::sleep::lie_down,
         signs::edit_by_click,
@@ -97,6 +98,7 @@ pub(crate) fn dispatch(world: &mut World) {
         TransactionTransactionData::ItemRelease(_) => {
             crate::vitals::eating::stop(world, from);
             crate::shots::release(world, from);
+            crate::instruments::release(world, from);
             None
         }
         TransactionTransactionData::ItemUseOnEntity(on) => {
@@ -138,7 +140,13 @@ pub(crate) fn dispatch(world: &mut World) {
                     TransactionUseItemActionType::ClickBlock => request.click(pos, Face::from_index(u32::from(click.face)), &click),
                     TransactionUseItemActionType::BreakBlock if broken.insert((entity, pos)) => request.break_block(pos),
                     TransactionUseItemActionType::ClickAir if actions::may_use_item(request.world, entity, request.player) => {
-                        if !crate::riding::boost(request.world, entity) && !crate::shots::use_in_air(request.world, entity) && !crate::eyes::throw(request.world, entity) {
+                        let used = crate::riding::boost(request.world, entity)
+                            || crate::gliding::boost(request.world, entity)
+                            || crate::shots::use_in_air(request.world, entity)
+                            || crate::eyes::throw(request.world, entity)
+                            || crate::instruments::start(request.world, entity)
+                            || crate::books::open(request.world, entity);
+                        if !used {
                             crate::vitals::eating::start(request.world, entity);
                         }
                     }
