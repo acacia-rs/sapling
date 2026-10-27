@@ -160,6 +160,7 @@ pub(crate) fn spill(world: &mut World, layer: Entity, pos: BlockPos, by_creative
     pairs::unpair(world, layer, &halves, pos);
     crate::hoppers::forget(world, layer, pos);
     crate::furnaces::forget(world, layer, pos);
+    crate::brewing::forget(world, layer, pos);
     crate::furnaces::broken(world, layer, pos, &slots);
     if shulker::is_shulker_box(name) {
         let drops = !by_creative || slots.iter().any(Option::is_some);

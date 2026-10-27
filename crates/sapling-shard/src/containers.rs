@@ -55,11 +55,16 @@ pub(crate) struct Kind {
 
 const CHEST: Kind = Kind { entity: "Chest", slots: 27, window: WindowType::Container, has_lid: true, refuses: None, is_per_player: false };
 pub(crate) const HOPPER: Kind = Kind { entity: "Hopper", slots: 5, window: WindowType::Hopper, has_lid: false, ..CHEST };
+const STAND: Kind = Kind { entity: "BrewingStand", slots: 5, window: WindowType::BrewingStand, has_lid: false, refuses: Some(crate::brewing::refuses), is_per_player: false };
 const SMELTER_SLOTS: usize = 3;
 
 impl Kind {
     fn is_smelter(self) -> bool {
         self.slots == SMELTER_SLOTS
+    }
+
+    fn is_stand(self) -> bool {
+        self.entity == STAND.entity
     }
 
     /// Whether it keeps its own slots, which hoppers can reach.
@@ -74,13 +79,19 @@ impl Kind {
     /// Whether a hopper may put `item` into `slot` through the container's face `face`
     /// (BDS `canPushInItem`; docs/research/hoppers.md, "Container rules").
     pub fn takes_from_hopper(self, slot: usize, face: Face, item: &ItemStack) -> bool {
-        if self.is_smelter() { crate::furnaces::takes_from_hopper(slot, face, item) } else { self.refuses.is_none_or(|refuses| !refuses(slot, item)) }
+        if self.is_smelter() {
+            crate::furnaces::takes_from_hopper(slot, face, item)
+        } else if self.is_stand() {
+            crate::brewing::takes_from_hopper(slot, face, item)
+        } else {
+            self.refuses.is_none_or(|refuses| !refuses(slot, item))
+        }
     }
 
     /// Whether a hopper may take `item` out of `slot` through the container's face `face`
     /// (BDS `canPullOutItem`).
     pub fn gives_to_hopper(self, slot: usize, face: Face, item: &ItemStack) -> bool {
-        !self.is_smelter() || crate::furnaces::gives_to_hopper(slot, face, item)
+        if self.is_stand() { crate::brewing::gives_to_hopper(slot, face) } else { !self.is_smelter() || crate::furnaces::gives_to_hopper(slot, face, item) }
     }
 }
 
@@ -94,7 +105,7 @@ pub(crate) fn kind(block: &str) -> Option<Kind> {
         "minecraft:dispenser" => Kind { entity: "Dispenser", slots: 9, window: WindowType::Dispenser, has_lid: false, ..CHEST },
         "minecraft:dropper" => Kind { entity: "Dropper", slots: 9, window: WindowType::Dropper, has_lid: false, ..CHEST },
         "minecraft:crafter" => Kind { entity: "Crafter", slots: 9, window: WindowType::Crafter, has_lid: false, ..CHEST },
-        "minecraft:brewing_stand" => Kind { entity: "BrewingStand", slots: 5, window: WindowType::BrewingStand, has_lid: false, ..CHEST },
+        "minecraft:brewing_stand" => STAND,
         "minecraft:furnace" | "minecraft:lit_furnace" => smelter("Furnace", WindowType::Furnace),
         "minecraft:blast_furnace" | "minecraft:lit_blast_furnace" => smelter("BlastFurnace", WindowType::BlastFurnace),
         "minecraft:smoker" | "minecraft:lit_smoker" => smelter("Smoker", WindowType::Smoker),

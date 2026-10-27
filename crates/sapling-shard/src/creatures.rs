@@ -61,7 +61,7 @@ pub(crate) use birth::{from_storage, spawn};
 pub(crate) use shown::is_baby;
 pub(crate) use afflictions::{breathed_on, splashed};
 pub(crate) use arrows::{ARROW, FIREBALL, Lands, Shot};
-pub(crate) use flight::{Arrow, Launch, Loosed, Pickup, facing, from_storage as shot_from_storage, launch, lying as lying_shots, unstick};
+pub(crate) use flight::{Arrow, Launch, Loosed, Pickup, facing, from_storage as shot_from_storage, launch, lying as lying_shots, sound, unstick};
 pub(crate) use attacks::attacked;
 pub(crate) use blast::{Wreck, explode};
 pub(crate) use enchanted::thorned;
