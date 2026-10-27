@@ -82,7 +82,7 @@ fn burst(world: &mut World, skull: Entity, layer: Entity, at: [f32; 3], struck: 
     if let Some(wither) = wither {
         world.entity_mut(wither).insert(Blasting);
     }
-    blast::explode(world, Some(skull), layer, at, POWER, if griefs { Wreck::Leaves } else { Wreck::Nothing });
+    blast::explode(world, Some(skull), layer, at, POWER, if griefs { Wreck::Decays } else { Wreck::Nothing });
     if let Some(wither) = wither {
         world.entity_mut(wither).remove::<Blasting>();
     }

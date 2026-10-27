@@ -4,6 +4,7 @@
 mod armour;
 mod block_defaults;
 mod block_loot;
+mod block_resistance;
 mod clock;
 pub mod enchant;
 mod entity;
@@ -32,6 +33,7 @@ mod raised_look;
 pub mod trades;
 
 pub use block_defaults::default_properties;
+pub use block_resistance::blast_resistance;
 pub use block_loot::{BlockLoot, Fortune, LootRow, StateTest, Tooling, block_loot, java_block, ripe_age};
 pub use clock::{clock_state, world_clocks};
 pub use names::{entity_display_name, item_display_name};

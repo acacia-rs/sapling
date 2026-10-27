@@ -114,7 +114,7 @@ fn tell(world: &mut World, wither: Entity, layer: Entity, items: Vec<(Key, Plain
 fn blow_up(world: &mut World, wither: Entity, layer: Entity, at: [f32; 3]) {
     let griefs = world.get::<Layer>(layer).is_some_and(|layer| layer.world.level().rules.on(GRIEFING));
     world.entity_mut(wither).insert(Blasting);
-    blast::explode(world, None, layer, at, BLAST, if griefs { blast::Wreck::Leaves } else { blast::Wreck::Nothing });
+    blast::explode(world, None, layer, at, BLAST, if griefs { blast::Wreck::Decays } else { blast::Wreck::Nothing });
     world.entity_mut(wither).remove::<Blasting>();
 }
 
