@@ -109,6 +109,7 @@ pub(crate) fn dispatch(world: &mut World) {
     crate::eyes::tick(world);
     crate::shots::tick(world);
     crate::fishing::tick(world);
+    crate::gliding::tick(world);
     crate::fireworks::tick(world);
     crate::lightning::tick(world);
     vitals::tick(world);

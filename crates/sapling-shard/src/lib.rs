@@ -34,6 +34,7 @@ mod fishing;
 mod forms;
 mod furnaces;
 mod generation;
+mod gliding;
 mod grid;
 mod handlers;
 mod handoff;

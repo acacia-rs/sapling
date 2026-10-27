@@ -18,6 +18,10 @@ const SHARE: f32 = 4.0;
 /// times the hit above that.
 const ON_HEAD: f32 = 4.0;
 const ON_HEAD_MORE: f32 = 2.0;
+const CHEST: usize = 1;
+const ELYTRA: &str = "minecraft:elytra";
+/// An elytra's damage once it is worn to its last use: it lasts 432.
+const ELYTRA_WORN: i32 = 431;
 
 /// A hit of `amount` that armour stops wears what a player has on; `on_head`, it fell on the
 /// helmet. The client is told what each piece has lost, and sent the helmet anew if it was hit.
@@ -82,6 +86,28 @@ fn wear(world: &mut World, player: Entity, uses: impl Fn(usize, &Held) -> i32, m
         let helmet = inventory.armor[0].as_ref().map(|held| held.stack.name.clone());
         helmet.into_iter().for_each(|helmet| equip_sound(world, player, &helmet));
     }
+}
+
+/// Whether the chest holds an elytra that still flies: one worn to its last use stays on but no
+/// longer opens (research/captures/bds-glide.txt).
+pub(crate) fn elytra_flies(inventory: &Inventory) -> bool {
+    inventory.armor[CHEST].as_ref().is_some_and(|held| held.stack.name == ELYTRA && damage(&held.stack.tag) < ELYTRA_WORN)
+}
+
+/// A second of gliding wears the elytra by one, unless Unbreaking spares it; the client is told
+/// the chest's damage alone, as BDS told it. False once it no longer flies.
+pub(crate) fn wear_elytra(world: &mut World, player: Entity) -> bool {
+    let roll = world.get_resource_or_insert_with(Dice::default).roll(100);
+    let mut query = world.query::<(&mut Inventory, &mut Outgoing)>();
+    let Ok((mut inventory, mut out)) = query.get_mut(world, player) else { return false };
+    let Some(held) = inventory.armor[CHEST].as_mut().filter(|held| held.stack.name == ELYTRA) else { return false };
+    if roll < wear_chance(held, false) {
+        let worn = (damage(&held.stack.tag) + 1).min(ELYTRA_WORN);
+        set_damage(&mut held.stack.tag, worn);
+        inventory.unsaved = true;
+        out.push(&PlayerArmorDamage { entries: vec![ArmorDamageEntry { armor_slot: ArmorDamageEntryArmorSlot::from_raw(CHEST as i64 * 2), damage: worn as i16 }] });
+    }
+    elytra_flies(&inventory)
 }
 
 /// The stack ids and items in a player's armour slots, to tell later which [`equipped`] set.

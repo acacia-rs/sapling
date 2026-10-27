@@ -21,7 +21,7 @@ use sapling_world::ItemStack;
 use crate::components::Outgoing;
 use crate::experience::Experience;
 
-pub(crate) use armour_wear::{wear_armour, wear_thorny};
+pub(crate) use armour_wear::{elytra_flies, wear_armour, wear_elytra, wear_thorny};
 pub(crate) use crafting::clear_grid;
 pub(crate) use forge::{Bargain, Bench, Forged, enchanting_input};
 pub(crate) use equipment::{announce, in_hand, screens, select, show_hand, spawn_packets};

@@ -31,6 +31,7 @@ mod entities;
 mod eyes;
 mod fire;
 mod fireworks;
+mod gliding;
 mod fishing;
 mod foes;
 mod forms;

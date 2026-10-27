@@ -13,6 +13,8 @@ mod armour;
 mod feedback;
 #[path = "fishing_drill.rs"]
 mod fishing;
+#[path = "items_drill.rs"]
+mod items;
 #[path = "foes_drill.rs"]
 mod foes;
 #[path = "reach_drill.rs"]
@@ -60,6 +62,9 @@ fn face_named(word: &str) -> Option<acacia_bot::interact::Face> {
 /// `!wake` leaves its bed and `!close` its open screen; `!put`, `!take` and `!takeall` move items
 /// in and out of the open container. False for any other line.
 pub async fn act(actor: &mut Bot, line: &str) -> bool {
+    if items::act(actor, line).await {
+        return true;
+    }
     let keys = |actor: &mut Bot, forward: f32, sprint: bool, jump: bool| {
         if let Some(controls) = actor.controls() {
             (controls.forward, controls.sprint, controls.jump) = (forward, sprint, jump);
@@ -258,6 +263,6 @@ pub fn drill(name: &str) -> Option<(Vec<String>, &'static [&'static str])> {
         "beasts" => (wander::beasts(), hunt::BITE_SHOWN),
         "creaking" => (wander::creaking(), hunt::BITE_SHOWN),
         "crowd" => (wander::crowd(), hunt::KINDS_SHOWN),
-        _ => return uses::named(name),
+        _ => return uses::named(name).or_else(|| items::drill(name)),
     })
 }
