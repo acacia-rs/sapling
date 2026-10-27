@@ -50,6 +50,40 @@ are the mobs' entity files in the vanilla behaviour pack (`mob-traits.py`).
   rolled movement 0.3132 (the pack rolls 0.1125–0.3375; sapling takes the middle), donkey and mule
   0.0324, llama 0.0661. Legs last 100–400 ticks; none gave up within ~300.
 
+## Hoglin, zoglin, warden (`bds-beasts.txt`; the actor in survival on easy, healed every second)
+
+- Each took the actor as its target (TargetEid) and walked at it by the legs rule: hoglin steps
+  0.19427 (movement 0.3), zoglin 0.1784 (0.25 × melee 1.15), warden up to 0.271 (0.3 × 1.2).
+  Hoglin and zoglin: `mob.warning` a tick after the target, `angry` a tick after that, both at
+  0.85 of their height.
+- Hits: ArmSwing, the actor thrown (±0.4 across, 0.4 up) as by any hunter, `attack` a tick later at
+  half its height. Hoglin every 40 ticks (`cooldown_time` 2), zoglin and warden every 20. On easy
+  the hoglin's hits cost 2.58–5.04 and the zoglin's 3.10–4.56, fractions: `[3, 9]` and `[3, 8]` are
+  drawn as floats (`min(h, h/2 + 1)` on easy). The warden's cost 16 (30 on normal).
+- The warden took no target until hit (51377: TargetEid, `mob.warning` the same tick), and was not
+  moved by the hit (`knockback_resistance` 1; BDS's iron golem in `bds-golem.txt` kept its y the same way).
+  No sonic boom: the actor never left its reach.
+
+## Creaking (`bds-beasts.txt` at noon, `bds-creaking.txt` at midnight)
+
+- Unwatched it strolls at 0.0311 (movement 0.4 × 0.3), day or night; it took no target in 10 s
+  behind the actor's back.
+- Looked at by the survival actor: TargetEid that tick, then `mob.warning`, `stare` (at 0.85 of its
+  height) and `activate` (at its feet) a tick later; it stops and is heard `stare` every 3 ticks.
+- Looked away from: `unfreeze` (feet), then it charges at 0.345 (0.4 by the legs rule) and hits
+  every 40 ticks for 3 (2.5 on easy), throwing as any hunter. Looked at again: `freeze`.
+
+## Crowds (`bds-crowd.txt`)
+
+- Four cows summoned on one spot, and four pigs in a 2×2 pen, stayed exactly together: no push
+  under 0.01 apart.
+- Once a cow strolled off the spot its steps grew past its walk by exactly
+  `2 × 0.05 × sqrt(d)` for each cow it overlapped (`d` the larger of |dx|, |dz| at the tick's
+  start; Java's `Entity.push` with `min(1, 1/sqrt d)`, felt from both sides): 0.0707 at 0.125 from
+  two cows, 0.107 at 0.285, 0.151 at 0.573, 0.1995 at 0.995. The cows it left were pushed the
+  other way, 0.0354 each. They still pushed 0.995 apart, past their 0.9-wide boxes, and no more at
+  1.561: sapling counts boxes 0.2 wider (an untested pick between the two).
+
 ## Sapling's run of the same drills (2026-10-27, tools/remote-drills.sh)
 
 Path over the run, BDS → sapling: cod 43 → 44, salmon 57 → 61, pufferfish 69 → 71, tropical

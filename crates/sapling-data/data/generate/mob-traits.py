@@ -62,6 +62,7 @@ HUNTS = {
     "minecraft:breeze": "attack=0 speed=0.48 sees=24 fights=leaps",
     "minecraft:bogged": "attack=0 speed=0.25 sees=16 shoots=71 hits=poison:112",
     "minecraft:cave_spider": "attack=2 speed=0.3 sees=16 by_dark",
+    "minecraft:creaking": "attack=3 speed=0.4 sees=16 provoked every=40",
     "minecraft:creeper": "attack=0 speed=0.25 sees=16 explodes=3",
     "minecraft:dolphin": "attack=3 speed=0.11 sees=48 provoked fights=swims",
     "minecraft:drowned": "attack=3 speed=0.23 sees=35",
@@ -70,6 +71,7 @@ HUNTS = {
     "minecraft:ghast": "attack=0 speed=0.03 sees=28 fights=fireballs",
     "minecraft:endermite": "attack=2 speed=0.25 sees=16",
     "minecraft:husk": "attack=3 speed=0.23 sees=35 hits=hunger:600",
+    "minecraft:hoglin": "attack=3 varies=9 speed=0.3 sees=16 every=40",
     "minecraft:iron_golem": "attack=7 upto=21 speed=0.15 sees=16 provoked",
     "minecraft:llama": "attack=0 speed=0.25 sees=16 provoked shoots=60 aims=41 shot=llama_spit calms=79",
     "minecraft:panda": "attack=2 speed=0.15 sees=16 provoked once",
@@ -89,7 +91,9 @@ HUNTS = {
     "minecraft:wither_skeleton": "attack=9 speed=0.3125 sees=16 hits=wither:200",
     "minecraft:magma_cube": "attack=0 speed=0.66 sees=16 fights=hops",
     "minecraft:slime": "attack=0 speed=0.4 sees=16 fights=hops",
+    "minecraft:warden": "attack=30 speed=0.36 sees=16 provoked",
     "minecraft:wolf": "attack=3 speed=0.3 sees=16 provoked every=31",
+    "minecraft:zoglin": "attack=3 varies=8 speed=0.2875 sees=16",
     "minecraft:zombie": "attack=3 speed=0.23 sees=35",
     "minecraft:zombie_pigman": "attack=9 speed=0.23 sees=35 provoked",
     "minecraft:zombie_villager": "attack=3 speed=0.23 sees=35",
@@ -111,6 +115,7 @@ for document in packs.entities().values():
         ("burns_in_sun", any("minecraft:burns_in_daylight" in group for group in [components, *entity.get("component_groups", {}).values()])),
         ("teleports", components.get("minecraft:teleport", {}).get("random_teleports", False) is True),
         ("floats", "minecraft:behavior.float" in components or "minecraft:behavior.slime_float" in components),
+        ("steadfast", components.get("minecraft:knockback_resistance", {}).get("value", 0) >= 1),
     ]
     held = [name for name, holds in traits if holds]
     if breath.get("total_supply", 15) > 15:

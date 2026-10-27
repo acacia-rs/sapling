@@ -1,0 +1,84 @@
+//! The creaking, as BDS's was in the `beasts` and `creaking` drills
+//! (research/captures/bds-wander-findings.md, "Creaking"): it strolls until a survival player
+//! looks at it, takes that player as its prey (`provoked` in mob-traits.tsv) and stands frozen,
+//! heard `stare` every 3 ticks, while anyone looks at it; looked away from, it hunts its prey and
+//! hits it every 2 seconds (hunting.rs).
+// TODO: a look is the Java game's (`isLookingAtMe`: within 60 degrees of its middle, in sight);
+// no creaking heart, and it is the same by day and by night (BDS's was drilled at both, summoned).
+
+use bevy_ecs::prelude::*;
+
+use crate::body::Body;
+use crate::components::{InLayer, Position, Tick, in_world};
+use crate::{entities, late_sounds, vitals};
+use super::{hunting, legs};
+
+const KIND: &str = "minecraft:creaking";
+/// A look at its middle within this cosine, from up to this far, freezes it.
+const LOOK: f32 = 0.5;
+const SEEN_FROM: f32 = 16.0;
+const STARES: u64 = 3;
+/// Its stare is heard from its head.
+const HEAD: f32 = 0.85;
+
+#[derive(Component, Default)]
+pub(super) struct Creaking {
+    /// The tick it froze in, while it is frozen.
+    frozen: Option<u64>,
+}
+
+pub(super) fn arm(world: &mut World, entity: Entity, kind: &str) {
+    if kind == KIND {
+        world.entity_mut(entity).insert(Creaking::default());
+    }
+}
+
+pub(super) fn is_frozen(world: &World, entity: Entity) -> bool {
+    world.get::<Creaking>(entity).is_some_and(|creaking| creaking.frozen.is_some())
+}
+
+/// Whether the player at `position` looks at the point `at`, `SEEN_FROM` off at most.
+fn looks_at(position: &Position, at: [f32; 3]) -> bool {
+    let eyes = [position.feet[0], position.feet[1] + sapling_data::EYE_HEIGHT, position.feet[2]];
+    let towards: [f32; 3] = std::array::from_fn(|axis| at[axis] - eyes[axis]);
+    let far = towards.iter().map(|c| c * c).sum::<f32>().sqrt();
+    let (yaw, pitch) = (position.yaw.to_radians(), position.pitch.to_radians());
+    let look = [-yaw.sin() * pitch.cos(), -pitch.sin(), yaw.cos() * pitch.cos()];
+    far > 1e-4 && far <= SEEN_FROM && (0..3).map(|axis| look[axis] * towards[axis] / far).sum::<f32>() > LOOK
+}
+
+/// Before its move: looked at, it takes the looker as its prey if it has none and stands; looked
+/// away from, it thaws and is steered on as any hunter. True while it stands frozen.
+pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity, id: u64, kind: &str) -> bool {
+    let (Some(creaking), Some(body)) = (world.get::<Creaking>(entity), world.get::<Body>(entity).copied()) else { return false };
+    let frozen = creaking.frozen;
+    let now = world.resource::<Tick>().0;
+    let middle = [body.at[0], body.at[1] + body.size[1] / 2.0, body.at[2]];
+    let looker = in_world(world).into_iter().find(|player| {
+        world.get::<InLayer>(*player).map(|layer| layer.0) == Some(layer)
+            && vitals::is_mortal(world, *player)
+            && world.get::<Position>(*player).is_some_and(|position| looks_at(position, middle) && hunting::in_sight(world, layer, &body, position.feet))
+    });
+    let cell = body.at.map(|c| c.floor() as i32);
+    let Some(player) = looker else {
+        if frozen.is_some() {
+            entities::tell_viewers(world, entity, layer, cell, vec![hunting::sound("unfreeze", id, kind, &body, 0.0)]);
+            world.get_mut::<Creaking>(entity).expect("read above").frozen = None;
+        }
+        return false;
+    };
+    let since = frozen.unwrap_or(now);
+    if frozen.is_none() {
+        let woke = hunting::prey_at(world, entity).is_none();
+        if woke {
+            hunting::provoke(world, entity, layer, id, kind, &body, player);
+        }
+        late_sounds::play_later(world, 1, layer, cell, hunting::sound(if woke { "activate" } else { "freeze" }, id, kind, &body, 0.0));
+        world.get_mut::<Creaking>(entity).expect("read above").frozen = Some(now);
+    }
+    if (now - since).is_multiple_of(STARES) {
+        late_sounds::play_later(world, 1, layer, cell, hunting::sound("stare", id, kind, &body, HEAD));
+    }
+    legs::rest(world, entity);
+    true
+}

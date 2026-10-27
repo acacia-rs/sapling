@@ -15,6 +15,7 @@ mod dolphins;
 mod drinks;
 mod bullets;
 mod charges;
+mod creaking;
 mod death;
 mod duels;
 mod enchanted;
@@ -174,7 +175,7 @@ pub(crate) fn tick(world: &mut World) {
         }
         // A teleport starts the tick afresh where it landed: no fall from where it left.
         let Some(start) = world.get::<Body>(entity).copied() else { continue };
-        if thinks && !legs::ridden(world, entity, layer, &kind, &start) && !wither::steer(world, entity, layer) && !rams::steer(world, entity, layer, id, &kind) && !hunting::steer(world, entity, layer, id, &kind) && !husbandry::steer(world, entity, layer, &kind) && !villagers::steer(world, entity, layer)
+        if thinks && !legs::ridden(world, entity, layer, &kind, &start) && !wither::steer(world, entity, layer) && !rams::steer(world, entity, layer, id, &kind) && !creaking::steer(world, entity, layer, id, &kind) && !hunting::steer(world, entity, layer, id, &kind) && !husbandry::steer(world, entity, layer, &kind) && !villagers::steer(world, entity, layer)
             && !swimming::steer(world, entity, layer, &kind) && !squids::steer(world, entity) && !wings::steer(world, entity, layer, &kind)
         {
             let traits = sapling_data::mob_traits(&kind);
@@ -190,7 +191,9 @@ pub(crate) fn tick(world: &mut World) {
         let Some((body, packets)) = entities::step(world, entity, layer, id, physics_of(&kind), 0.0) else { continue };
         entities::tell_viewers(world, entity, layer, body.at.map(|c| c.floor() as i32), packets.clone());
         if thinks {
-            hunting::strike(world, entity, layer, id, &kind, &body);
+            if !creaking::is_frozen(world, entity) {
+                hunting::strike(world, entity, layer, id, &kind, &body);
+            }
             rams::strike(world, entity, layer, id, &kind, &body);
             slimes::after_move(world, entity, layer, id, &kind, &start, &body);
             if blast::tick(world, entity, layer, id, &kind, &body) {
