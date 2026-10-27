@@ -1,7 +1,7 @@
 //! Mobs, spawned through the plugin API or kept by a world folder (birth.rs): bodies (body.rs) that fall and
-//! collide, stroll (strolling.rs), hunt if their kind does (hunting.rs) and are raised (husbandry.rs), shown as BDS announced their kind (`sapling_data::add_entity`) or
+//! collide, stroll (strolling.rs), swim (swimming.rs, squids.rs), fly about (wings.rs), hunt if their kind does (hunting.rs) and are raised (husbandry.rs), shown as BDS announced their kind (`sapling_data::add_entity`) or
 //! as they were stored; and the entity side of the handlers' context (backend.rs).
-// TODO: no AI but strolling, hunting and raising; their physics are the Java game's (`Physics::MOB`); a spawned mob is
+// TODO: no AI but strolling, swimming, flying about, hunting and raising; a spawned mob is
 // saved with the least a compound needs, which BDS was not tried on.
 
 mod afflictions;
@@ -38,13 +38,16 @@ mod shown;
 mod slimes;
 mod spells;
 mod splashes;
+mod squids;
 mod strolling;
 mod stares;
 mod struck;
 mod summoned;
+mod swimming;
 mod teleports;
 mod vexes;
 mod villagers;
+mod wings;
 mod wither;
 
 use bevy_ecs::prelude::*;
@@ -171,7 +174,9 @@ pub(crate) fn tick(world: &mut World) {
         }
         // A teleport starts the tick afresh where it landed: no fall from where it left.
         let Some(start) = world.get::<Body>(entity).copied() else { continue };
-        if thinks && !legs::ridden(world, entity, layer, &kind, &start) && !wither::steer(world, entity, layer) && !rams::steer(world, entity, layer, id, &kind) && !hunting::steer(world, entity, layer, id, &kind) && !husbandry::steer(world, entity, layer, &kind) && !villagers::steer(world, entity, layer) {
+        if thinks && !legs::ridden(world, entity, layer, &kind, &start) && !wither::steer(world, entity, layer) && !rams::steer(world, entity, layer, id, &kind) && !hunting::steer(world, entity, layer, id, &kind) && !husbandry::steer(world, entity, layer, &kind) && !villagers::steer(world, entity, layer)
+            && !swimming::steer(world, entity, layer, &kind) && !squids::steer(world, entity) && !wings::steer(world, entity, layer, &kind)
+        {
             let traits = sapling_data::mob_traits(&kind);
             let strolls = world.resource::<crate::components::Settings>().0.mobs_stroll;
             if strolls {

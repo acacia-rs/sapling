@@ -6,7 +6,7 @@ use sapling_api::{EntityId, EntitySpawnEvent, SpawnReason};
 use sapling_world::Actor;
 
 use super::shown::{announcement, reshow, spawn_sound};
-use super::{Creature, Health, NO_DEATH, breezes, dolphins, drinks, genes, ghasts, harm, hunting, husbandry, legs, rams, slimes, spells, stares, strolling, teleports, vexes, villagers, wither};
+use super::{Creature, Health, NO_DEATH, breezes, dolphins, drinks, genes, ghasts, harm, hunting, husbandry, legs, rams, slimes, spells, squids, stares, strolling, swimming, teleports, vexes, villagers, wings, wither};
 use crate::body::Body;
 use crate::components::{Layer, NetId};
 use crate::entities;
@@ -118,6 +118,9 @@ fn give_legs(world: &mut World, entity: Entity, kind: &str) {
     vexes::arm(world, entity, kind);
     stares::arm(world, entity, kind);
     dolphins::arm(world, entity, kind);
+    swimming::arm(world, entity, kind);
+    squids::arm(world, entity, kind);
+    wings::arm(world, entity, kind);
     drinks::arm(world, entity, kind);
     wither::arm(world, entity, kind);
 }

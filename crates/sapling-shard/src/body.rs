@@ -195,7 +195,7 @@ impl Body {
     /// A mob's slowing at the start of its tick, by gravity and drag in the air or `liquid`.
     fn drag(&mut self, physics: &Physics, liquid: Option<Liquid>, stood: bool) {
         if physics.liquid == InLiquid::Swims && liquid == Some(Liquid::Water) {
-            liquid::swim(self);
+            liquid::swim(self, physics.water_drag);
         } else if let Some(liquid) = liquid {
             liquid::sink(self, liquid);
         } else {
