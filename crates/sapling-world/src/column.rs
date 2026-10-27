@@ -47,6 +47,8 @@ pub(crate) struct Column {
     tiles: OnceLock<Vec<(BlockEntity, Bytes)>>,
     /// As stored (`StoredColumn::actors`): nothing here moves or changes them.
     actors: Vec<u8>,
+    /// As stored (`StoredColumn::pending_ticks`); the shard writes them back before a save.
+    pending_ticks: Vec<u8>,
     /// Written since it was created, loaded or last handed to storage.
     modified: bool,
     damaged: bool,
@@ -69,12 +71,12 @@ impl Column {
     }
 
     /// A column as storage holds it; one saved without biomes gets the default.
-    pub fn from_stored(StoredColumn { mut chunk, block_entities, actors }: StoredColumn) -> Self {
+    pub fn from_stored(StoredColumn { mut chunk, block_entities, actors, pending_ticks }: StoredColumn) -> Self {
         if chunk.biome(0, chunk.dimension().min_y, 0).is_none() {
             chunk.fill_biomes(default_biome(chunk.dimension()));
         }
         let sections = (0..chunk.section_count()).map(|_| OnceLock::new()).collect();
-        Self { chunk, block_entities, tiles: OnceLock::new(), actors, modified: false, damaged: false, heights: OnceLock::new(), announce: OnceLock::new(), announce_cached: OnceLock::new(), sections }
+        Self { chunk, block_entities, tiles: OnceLock::new(), actors, pending_ticks, modified: false, damaged: false, heights: OnceLock::new(), announce: OnceLock::new(), announce_cached: OnceLock::new(), sections }
     }
 
     /// A copy for an arena to write to. The blocks are copied; the encodings are the same bytes
@@ -86,6 +88,7 @@ impl Column {
             block_entities: self.block_entities.clone(),
             tiles: self.tiles.clone(),
             actors: self.actors.clone(),
+            pending_ticks: self.pending_ticks.clone(),
             modified: false,
             damaged: false,
             heights: self.heights.clone(),
@@ -115,7 +118,7 @@ impl Column {
 
     /// A copy of the column as storage should hold it.
     pub fn stored(&self) -> StoredColumn {
-        StoredColumn { chunk: self.chunk.clone(), block_entities: self.block_entities.clone(), actors: self.actors.clone() }
+        StoredColumn { chunk: self.chunk.clone(), block_entities: self.block_entities.clone(), actors: self.actors.clone(), pending_ticks: self.pending_ticks.clone() }
     }
 
     pub fn actors(&self) -> &[u8] {
@@ -124,10 +127,16 @@ impl Column {
 
     /// Replaces the column's actors; it needs saving when they changed.
     pub fn set_actors(&mut self, actors: Vec<u8>) {
-        if actors != self.actors {
-            self.actors = actors;
-            self.modified = true;
-        }
+        self.modified |= replace(&mut self.actors, actors);
+    }
+
+    pub fn pending_ticks(&self) -> &[u8] {
+        &self.pending_ticks
+    }
+
+    /// Replaces the column's waiting block ticks; it needs saving when they changed.
+    pub fn set_pending_ticks(&mut self, ticks: Vec<u8>) {
+        self.modified |= replace(&mut self.pending_ticks, ticks);
     }
 
     pub fn chunk(&self) -> &Chunk {
@@ -284,4 +293,11 @@ impl Column {
     pub fn is_section_cached(&self, section_y: i32) -> bool {
         self.slot(section_y).and_then(|slot| self.sections.get(slot)).is_some_and(|s| s.get().is_some())
     }
+}
+
+/// Puts `new` in `kept`; whether that changed it.
+fn replace(kept: &mut Vec<u8>, new: Vec<u8>) -> bool {
+    let changed = *kept != new;
+    *kept = new;
+    changed
 }

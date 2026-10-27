@@ -46,7 +46,7 @@ fn folder_with_a_horse() -> PathBuf {
     let world = LevelDbWorld::open(&copy).unwrap();
     let key = spawn_column();
     let column = world.load_column(key).unwrap().unwrap();
-    world.store_column(key, &column.chunk, &column.block_entities, &horse()).unwrap();
+    world.store_column(key, &column.chunk, &column.block_entities, &horse(), &column.pending_ticks).unwrap();
     world.flush(world.level()).unwrap();
     copy
 }

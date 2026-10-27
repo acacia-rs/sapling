@@ -53,6 +53,7 @@ mod mob_commands;
 mod movement_policy;
 mod omens;
 mod operations;
+mod pending_ticks;
 mod pistons;
 mod resource_packs;
 mod placed_items;

@@ -96,7 +96,24 @@ pub(super) fn unsettled(world: &mut World, layer: Entity, pos: BlockPos, change:
     if !name_at(world, layer, pos).is_some_and(falls) || matches!(change, Change::Placed) && set_if_wet(world, layer, pos) {
         return;
     }
-    let due = world.resource::<Tick>().0 + change.delay();
+    queue(world, layer, pos, change.delay());
+}
+
+/// What waits to fall, for its column to keep (pending.rs): each block and when it is due.
+pub(super) fn waiting(world: &World) -> Vec<(Entity, BlockPos, u64)> {
+    world.get_resource::<Slides>().map(|slides| slides.0.iter().map(|&(when, layer, pos)| (layer, pos, when)).collect()).unwrap_or_default()
+}
+
+/// Drops what waits where `saved` says its column kept it and is gone.
+pub(super) fn forget(world: &mut World, saved: &dyn Fn(Entity, BlockPos) -> bool) {
+    if let Some(mut slides) = world.get_resource_mut::<Slides>() {
+        slides.0.retain(|&(_, layer, pos)| !saved(layer, pos));
+    }
+}
+
+/// Queues the block at `pos` to fall in `delay` ticks, unless it is already; also what a column kept.
+pub(super) fn queue(world: &mut World, layer: Entity, pos: BlockPos, delay: u64) {
+    let due = world.resource::<Tick>().0 + delay.max(1);
     let mut slides = world.get_resource_or_insert_with(Slides::default);
     if !slides.0.iter().any(|(_, at_layer, at)| (*at_layer, *at) == (layer, pos)) {
         slides.0.push((due, layer, pos));
