@@ -52,6 +52,8 @@ fn floor() -> Vec<String> {
     [
         "kill @e[type=!player]",
         "gamerule domobspawning false",
+        // The drill world can be raining: bees kept in, a snow golem melted (bds-beesout.txt, bds-snowgolem.txt).
+        "weather clear",
         "difficulty easy",
         "gamemode creative @s",
         "gamemode creative CmdWatcher",
