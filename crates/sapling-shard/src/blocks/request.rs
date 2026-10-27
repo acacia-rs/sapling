@@ -145,7 +145,8 @@ pub(crate) fn dispatch(world: &mut World) {
                             || crate::shots::use_in_air(request.world, entity)
                             || crate::eyes::throw(request.world, entity)
                             || crate::instruments::start(request.world, entity)
-                            || crate::books::open(request.world, entity);
+                            || crate::books::open(request.world, entity)
+                            || crate::maps::fill(request.world, entity);
                         if !used {
                             crate::vitals::eating::start(request.world, entity);
                         }

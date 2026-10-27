@@ -52,6 +52,7 @@ mod kept;
 mod late_sounds;
 mod light;
 mod lightning;
+mod maps;
 mod mobs;
 mod movement;
 mod orbs;

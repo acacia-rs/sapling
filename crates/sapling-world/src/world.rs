@@ -167,6 +167,12 @@ impl World {
         self.column(ChunkPos::of_block(x, z))?.top(x, z, stands)
     }
 
+    /// The y of the highest layer-0 block in block column `(x, z)` that `counts` accepts; `None` where
+    /// there is none or the column is not loaded.
+    pub fn top_where(&self, x: i32, z: i32, counts: impl Fn(u32) -> bool) -> Option<i32> {
+        self.column(ChunkPos::of_block(x, z))?.top(x, z, counts)
+    }
+
     /// The y of the highest block in block column `(x, z)` that has collision; `None` where there
     /// is none or the column is not loaded.
     pub fn top_solid(&self, x: i32, z: i32) -> Option<i32> {
