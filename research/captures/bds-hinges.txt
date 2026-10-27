@@ -1,0 +1,122 @@
+## drill starts at 1793055841100
+## /kill @e[type=!player]
+    104 actor   CommandOutput success_count=0 data=None commands.generic.noTargetMatch success=false []
+## /fill ~-6 ~-1 ~-2 ~6 ~-1 ~4 stone
+   1011 actor   CommandOutput success_count=0 data=None commands.fill.success success=false ["0"]
+   1032 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+   1032 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+   1482 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+   1482 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+   1633 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+   1633 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /fill ~-6 ~ ~-2 ~6 ~3 ~4 air
+   2003 actor   CommandOutput success_count=0 data=None commands.fill.success success=false ["0"]
+   2978 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+   2978 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /gamemode creative @s
+   3013 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"gameMode.changed\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.creative\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   3013 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamemode.success.self\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.creative\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   3013 actor   CommandOutput success_count=1 data=None commands.gamemode.success.self success=true ["%createWorldScreen.gameMode.creative"]
+## /tp @s ~ ~ ~ 0 0
+   4013 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.tp.successVictim\",\"with\":{\"rawtext\":[{\"text\":\"0.50, -20.00, 0.50\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   4013 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.tp.success.coordinates\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor\"},{\"text\":\"0.50\"},{\"text\":\"-20.00\"},{\"text\":\"0.50\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   4013 actor   CommandOutput success_count=1 data=None commands.tp.success.coordinates success=true ["CmdActor", "0.50", "-20.00", "0.50"]
+   4683 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+   4683 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /replaceitem entity @s slot.weapon.mainhand 0 wooden_door
+   5013 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.replaceitem.success.entity\",\"with\":{\"rawtext\":[{\"text\":\"slot.weapon.mainhand\"},{\"text\":\"0\"},{\"text\":\"CmdActor\"},{\"text\":\"1\"},{\"text\":\"Oak Door\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   5013 actor   CommandOutput success_count=1 data=None commands.replaceitem.success.entity success=true ["slot.weapon.mainhand", "0", "CmdActor", "1", "Oak Door"]
+   5083 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 14677, paused: false }] }) }
+   5083 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 14677, paused: false }] }) }
+## /
+   6683 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+   6683 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /!placeat -4 -1 2 0.1 1 0.5
+   7133 watcher UpdateSubchunkBlocks -4 -20 2 wooden_door[door_hinge_bit=0,minecraft:cardinal_direction=north,open_bit=0,upper_block_bit=0]; -4 -19 2 wooden_door[door_hinge_bit=0,minecraft:cardinal_direction=north,open_bit=0,upper_block_bit=1] | extra: 
+   7133 watcher LevelSoundEvent LevelSoundEvent { sound_id: "place", position: Vec3f { x: -4.0, y: -20.0, z: 2.0 }, extra_data: 1424728638, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## placed: Ok(())
+   7150 actor   UpdateBlock -4 -21 2 layer 0 stone[]
+   7150 actor   UpdateBlock -4 -20 2 layer 0 wooden_door[door_hinge_bit=0,minecraft:cardinal_direction=north,open_bit=0,upper_block_bit=0]
+   7150 actor   UpdateBlock -4 -22 2 layer 0 stone[]
+   7150 actor   UpdateBlock -4 -20 2 layer 0 wooden_door[door_hinge_bit=0,minecraft:cardinal_direction=north,open_bit=0,upper_block_bit=0]
+   7151 actor   UpdateBlock -4 -19 2 layer 0 wooden_door[door_hinge_bit=0,minecraft:cardinal_direction=north,open_bit=0,upper_block_bit=1]
+   7151 actor   UpdateBlock -4 -21 2 layer 0 stone[]
+   7151 actor   UpdateSubchunkBlocks -4 -20 2 wooden_door[door_hinge_bit=0,minecraft:cardinal_direction=north,open_bit=0,upper_block_bit=0]; -4 -19 2 wooden_door[door_hinge_bit=0,minecraft:cardinal_direction=north,open_bit=0,upper_block_bit=1] | extra: 
+   7151 actor   LevelSoundEvent LevelSoundEvent { sound_id: "place", position: Vec3f { x: -4.0, y: -20.0, z: 2.0 }, extra_data: 1424728638, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+   7533 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+   7533 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /
+## /!placeat -2 -1 2 0.5 1 0.5
+   9283 watcher UpdateSubchunkBlocks -2 -20 2 wooden_door[door_hinge_bit=0,minecraft:cardinal_direction=north,open_bit=0,upper_block_bit=0]; -2 -19 2 wooden_door[door_hinge_bit=0,minecraft:cardinal_direction=north,open_bit=0,upper_block_bit=1] | extra: 
+   9283 watcher LevelSoundEvent LevelSoundEvent { sound_id: "place", position: Vec3f { x: -2.0, y: -20.0, z: 2.0 }, extra_data: 1424728638, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## placed: Ok(())
+   9286 actor   UpdateBlock -2 -21 2 layer 0 stone[]
+   9286 actor   UpdateBlock -2 -20 2 layer 0 wooden_door[door_hinge_bit=0,minecraft:cardinal_direction=north,open_bit=0,upper_block_bit=0]
+   9286 actor   UpdateBlock -2 -22 2 layer 0 stone[]
+   9286 actor   UpdateBlock -2 -20 2 layer 0 wooden_door[door_hinge_bit=0,minecraft:cardinal_direction=north,open_bit=0,upper_block_bit=0]
+   9286 actor   UpdateBlock -2 -19 2 layer 0 wooden_door[door_hinge_bit=0,minecraft:cardinal_direction=north,open_bit=0,upper_block_bit=1]
+   9286 actor   UpdateBlock -2 -21 2 layer 0 stone[]
+   9286 actor   UpdateSubchunkBlocks -2 -20 2 wooden_door[door_hinge_bit=0,minecraft:cardinal_direction=north,open_bit=0,upper_block_bit=0]; -2 -19 2 wooden_door[door_hinge_bit=0,minecraft:cardinal_direction=north,open_bit=0,upper_block_bit=1] | extra: 
+   9286 actor   LevelSoundEvent LevelSoundEvent { sound_id: "place", position: Vec3f { x: -2.0, y: -20.0, z: 2.0 }, extra_data: 1424728638, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /
+## /!placeat 0 -1 2 0.9 1 0.5
+## placed: Ok(())
+  11370 actor   UpdateBlock 0 -21 2 layer 0 stone[]
+  11370 actor   UpdateBlock 0 -20 2 layer 0 wooden_door[door_hinge_bit=0,minecraft:cardinal_direction=west,open_bit=0,upper_block_bit=0]
+  11370 actor   UpdateBlock 0 -22 2 layer 0 stone[]
+  11370 actor   UpdateBlock 0 -20 2 layer 0 wooden_door[door_hinge_bit=0,minecraft:cardinal_direction=west,open_bit=0,upper_block_bit=0]
+  11370 actor   UpdateBlock 0 -19 2 layer 0 wooden_door[door_hinge_bit=0,minecraft:cardinal_direction=west,open_bit=0,upper_block_bit=1]
+  11370 actor   UpdateBlock 0 -21 2 layer 0 stone[]
+  11380 actor   UpdateSubchunkBlocks 0 -20 2 wooden_door[door_hinge_bit=0,minecraft:cardinal_direction=west,open_bit=0,upper_block_bit=0]; 0 -19 2 wooden_door[door_hinge_bit=0,minecraft:cardinal_direction=west,open_bit=0,upper_block_bit=1] | extra: 
+  11380 watcher UpdateSubchunkBlocks 0 -20 2 wooden_door[door_hinge_bit=0,minecraft:cardinal_direction=west,open_bit=0,upper_block_bit=0]; 0 -19 2 wooden_door[door_hinge_bit=0,minecraft:cardinal_direction=west,open_bit=0,upper_block_bit=1] | extra: 
+  11380 actor   LevelSoundEvent LevelSoundEvent { sound_id: "place", position: Vec3f { x: 0.0, y: -20.0, z: 2.0 }, extra_data: -640733319, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  11380 watcher LevelSoundEvent LevelSoundEvent { sound_id: "place", position: Vec3f { x: 0.0, y: -20.0, z: 2.0 }, extra_data: -640733319, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  11833 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  11833 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  12283 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  12283 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /
+  12583 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  12583 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  12782 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  12783 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /!placeat 2 -1 2 0.5 1 0.1
+## placed: Ok(())
+  13482 actor   UpdateBlock 2 -21 2 layer 0 stone[]
+  13482 actor   UpdateBlock 2 -20 2 layer 0 wooden_door[door_hinge_bit=0,minecraft:cardinal_direction=south,open_bit=0,upper_block_bit=0]
+  13482 actor   UpdateBlock 2 -22 2 layer 0 stone[]
+  13482 actor   UpdateBlock 2 -20 2 layer 0 wooden_door[door_hinge_bit=0,minecraft:cardinal_direction=south,open_bit=0,upper_block_bit=0]
+  13482 actor   UpdateBlock 2 -19 2 layer 0 wooden_door[door_hinge_bit=0,minecraft:cardinal_direction=south,open_bit=0,upper_block_bit=1]
+  13482 actor   UpdateBlock 2 -21 2 layer 0 stone[]
+  13482 actor   UpdateSubchunkBlocks 2 -20 2 wooden_door[door_hinge_bit=0,minecraft:cardinal_direction=south,open_bit=0,upper_block_bit=0]; 2 -19 2 wooden_door[door_hinge_bit=0,minecraft:cardinal_direction=south,open_bit=0,upper_block_bit=1] | extra: 
+  13482 actor   LevelSoundEvent LevelSoundEvent { sound_id: "place", position: Vec3f { x: 2.0, y: -20.0, z: 2.0 }, extra_data: 650702320, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  13482 watcher UpdateSubchunkBlocks 2 -20 2 wooden_door[door_hinge_bit=0,minecraft:cardinal_direction=south,open_bit=0,upper_block_bit=0]; 2 -19 2 wooden_door[door_hinge_bit=0,minecraft:cardinal_direction=south,open_bit=0,upper_block_bit=1] | extra: 
+  13482 watcher LevelSoundEvent LevelSoundEvent { sound_id: "place", position: Vec3f { x: 2.0, y: -20.0, z: 2.0 }, extra_data: 650702320, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /
+## /!placeat 4 -1 2 0.5 1 0.9
+  15582 watcher UpdateSubchunkBlocks 4 -20 2 wooden_door[door_hinge_bit=0,minecraft:cardinal_direction=south,open_bit=0,upper_block_bit=0]; 4 -19 2 wooden_door[door_hinge_bit=0,minecraft:cardinal_direction=south,open_bit=0,upper_block_bit=1] | extra: 
+  15582 watcher LevelSoundEvent LevelSoundEvent { sound_id: "place", position: Vec3f { x: 4.0, y: -20.0, z: 2.0 }, extra_data: 650702320, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## placed: Ok(())
+  15624 actor   UpdateBlock 4 -21 2 layer 0 stone[]
+  15624 actor   UpdateBlock 4 -20 2 layer 0 wooden_door[door_hinge_bit=0,minecraft:cardinal_direction=south,open_bit=0,upper_block_bit=0]
+  15624 actor   UpdateBlock 4 -22 2 layer 0 stone[]
+  15624 actor   UpdateBlock 4 -20 2 layer 0 wooden_door[door_hinge_bit=0,minecraft:cardinal_direction=south,open_bit=0,upper_block_bit=0]
+  15624 actor   UpdateBlock 4 -19 2 layer 0 wooden_door[door_hinge_bit=0,minecraft:cardinal_direction=south,open_bit=0,upper_block_bit=1]
+  15624 actor   UpdateBlock 4 -21 2 layer 0 stone[]
+  15624 actor   UpdateSubchunkBlocks 4 -20 2 wooden_door[door_hinge_bit=0,minecraft:cardinal_direction=south,open_bit=0,upper_block_bit=0]; 4 -19 2 wooden_door[door_hinge_bit=0,minecraft:cardinal_direction=south,open_bit=0,upper_block_bit=1] | extra: 
+  15624 actor   LevelSoundEvent LevelSoundEvent { sound_id: "place", position: Vec3f { x: 4.0, y: -20.0, z: 2.0 }, extra_data: 650702320, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  16583 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  16583 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /
+## /
+  17883 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 14933, paused: false }] }) }
+  17883 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 14933, paused: false }] }) }
+## /fill ~-6 ~ ~-2 ~6 ~3 ~4 air
+  18638 actor   CommandOutput success_count=1 data=None commands.fill.success success=true ["10"]
+  18638 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.fill.success\",\"with\":{\"rawtext\":[{\"text\":\"10\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  18687 actor   UpdateSubchunkBlocks 0 -20 2 air[]; 0 -19 2 air[]; 2 -20 2 air[]; 2 -19 2 air[]; 4 -20 2 air[]; 4 -19 2 air[] | extra: 
+  18687 actor   UpdateSubchunkBlocks -4 -20 2 air[]; -4 -19 2 air[]; -2 -20 2 air[]; -2 -19 2 air[] | extra: 
+  18687 watcher UpdateSubchunkBlocks 0 -20 2 air[]; 0 -19 2 air[]; 2 -20 2 air[]; 2 -19 2 air[]; 4 -20 2 air[]; 4 -19 2 air[] | extra: 
+  18688 watcher UpdateSubchunkBlocks -4 -20 2 air[]; -4 -19 2 air[]; -2 -20 2 air[]; -2 -19 2 air[] | extra: 
+## /
+probe exit 0

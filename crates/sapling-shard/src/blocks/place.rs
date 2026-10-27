@@ -137,12 +137,20 @@ impl Request<'_> {
         let Some(registry) = level(self.world, site.layer).map(|level| level.registry()) else { return false };
         let Some(whole) = send::resolve(registry, block).filter(|_| !block.is_air()) else { return false };
         let id = doors::lower_half(registry, whole);
-        let sound = send::place_sound(registry, pos, id);
-        let placed = send::set(self.world, site.layer, pos, falling::as_put(self.world, site.layer, pos, id));
+        let door = doors::upper_by_hand(registry, whole, pos);
+        // A door is heard from its cell's corner, naming the state put down (bds-hinges.txt).
+        let sound = match door {
+            Some(_) => send::sound_at("place", registry, acacia_proto::types::Vec3f { x: pos[0] as f32, y: pos[1] as f32, z: pos[2] as f32 }, id),
+            None => send::place_sound(registry, pos, id),
+        };
+        let placed = match door {
+            Some(upper) => doors::place_by_hand(self.world, site.layer, pos, id, upper),
+            None => send::set(self.world, site.layer, pos, falling::as_put(self.world, site.layer, pos, id)),
+        };
         if placed {
             send::to_viewers(self.world, site.layer, pos, &[sound]);
             super::vibrate_at(self.world, site.layer, pos, super::GameEvent::BlockPlace, true);
-            let second = doors::place_second_cell(self.world, site.layer, pos, whole);
+            let second = door.map(|(above, _)| above).or_else(|| doors::place_second_cell(self.world, site.layer, pos, whole));
             // A bed's colour and a banner's are the item's, which the block cannot say.
             let damage = self.world.get::<Inventory>(self.entity).and_then(|inventory| inventory.in_hand().as_ref()).map_or(0, |held| held.stack.damage);
             let placing = entities::Placing { damage, yaw: click.yaw, properties: &block.properties };

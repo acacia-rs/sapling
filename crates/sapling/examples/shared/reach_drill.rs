@@ -64,6 +64,18 @@ pub fn chest_moves() -> Vec<String> {
     lines
 }
 
+/// The hinges drill: doors put down alone on a floor, facing south, clicked at the west and east
+/// edges and the middle of the floor's top, and at its north and south edges, to see whether the
+/// click picks the hinge.
+pub fn hinges() -> Vec<String> {
+    let mut lines: Vec<String> = ["kill @e[type=!player]", "fill ~-6 ~-1 ~-2 ~6 ~-1 ~4 stone", "fill ~-6 ~ ~-2 ~6 ~3 ~4 air", "gamemode creative @s", "tp @s ~ ~ ~ 0 0", "replaceitem entity @s slot.weapon.mainhand 0 wooden_door", ""].map(String::from).into();
+    for (x, [cx, cz]) in [(-4, [0.1, 0.5]), (-2, [0.5, 0.5]), (0, [0.9, 0.5]), (2, [0.5, 0.1]), (4, [0.5, 0.9])] {
+        lines.extend([format!("!placeat {x} -1 2 {cx} 1 {cz}"), String::new()]);
+    }
+    lines.extend(["", "fill ~-6 ~ ~-2 ~6 ~3 ~4 air", ""].map(String::from));
+    lines
+}
+
 pub const HELD_USE_SHOWN: &[&str] = &["UpdateBlock", "UpdateSubchunkBlocks", "BlockEntityData", "ContainerOpen", "ContainerClose", "BlockEvent", "LevelSoundEvent"];
 
 /// The held-use drill: a lever, a chest and a door clicked holding dirt, then by an empty hand;

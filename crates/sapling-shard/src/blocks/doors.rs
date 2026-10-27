@@ -110,11 +110,26 @@ pub(super) fn put_whole(world: &mut World, layer: Entity, pos: BlockPos, id: u32
     Some(true)
 }
 
+/// The upper half over `pos` of the door `whole` put down by hand, which BDS showed with the lower
+/// in one UpdateSubchunkBlocks (research/captures/bds-hinges.txt); `None` for any other block.
+pub(super) fn upper_by_hand(registry: &BlockRegistry, whole: u32, pos: BlockPos) -> Option<(BlockPos, u32)> {
+    second_cell(registry, whole, pos).filter(|(cell, _)| cell[1] == pos[1] + 1)
+}
+
+/// Puts a door's two halves by hand and shows them together; false where either is unchanged.
+pub(super) fn place_by_hand(world: &mut World, layer: Entity, pos: BlockPos, lower: u32, (above, upper): (BlockPos, u32)) -> bool {
+    if !send::set_quietly(world, layer, pos, lower) || !send::set_quietly(world, layer, above, upper) {
+        return false;
+    }
+    send::show_together(world, layer, &[(pos, send::FLAGS), (above, acacia_proto::types::UpdateBlockFlags::NETWORK)]);
+    true
+}
+
 /// The door `id` about to stand at `pos`, placed by a look into `quarter`, hinged on the right
 /// where the same door stands to its left or only its right has a solid block to hang on, a
 /// door not being one: what BDS did with a block and with a door on each side
-/// (research/captures/bds-sounds.txt), without the Java game's tie-break by where the click
-/// fell (docs/research/block-rules.md). Any other block is left as it is.
+/// (research/captures/bds-sounds.txt); where the click fell picks nothing, unlike the Java game
+/// (research/captures/bds-hinges.txt). Any other block is left as it is.
 pub(super) fn hinged(level: &sapling_world::World, id: u32, pos: BlockPos, quarter: usize) -> u32 {
     let (registry, [x, z]) = (level.registry(), LEFT[quarter % 4]);
     let beside = |side: i32| registry.get(level.block(pos[0] + side * x, pos[1], pos[2] + side * z));

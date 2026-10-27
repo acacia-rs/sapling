@@ -70,6 +70,15 @@ pub async fn act(actor: &mut Bot, line: &str) -> bool {
         }
         return true;
     }
+    // `!placeat x y z cx cy cz`: puts what it holds on the top of that block, clicked at `c`.
+    if let Some(words) = line.strip_prefix("!placeat ") {
+        let numbers: Vec<f32> = words.split(' ').filter_map(|word| word.parse().ok()).collect();
+        if let (&[x, y, z, cx, cy, cz], Some([fx, fy, fz])) = (&numbers[..], actor.movement().and_then(|movement| movement.position()).map(|at| at.map(|c| c.floor() as i32))) {
+            let at = [fx + x as i32, fy + y as i32, fz + z as i32];
+            println!("## placed: {:?}", actor.place_block_at(at, acacia_bot::interact::Face::Up, [cx, cy, cz]).await);
+        }
+        return true;
+    }
     // The bot turns its eyes to its feet plus the offset, and holds that look.
     if let Some(offset) = line.strip_prefix("!look ") {
         let offset: Vec<f32> = offset.split(' ').filter_map(|part| part.parse().ok()).collect();
@@ -195,6 +204,7 @@ pub fn drill(name: &str) -> Option<(Vec<String>, &'static [&'static str])> {
         "sounds" => (world::sounds(), world::SOUNDS_SHOWN),
         "shut" => (reach::shut(), reach::HELD_USE_SHOWN),
         "chest-moves" => (reach::chest_moves(), reach::MOVES_SHOWN),
+        "hinges" => (reach::hinges(), reach::HELD_USE_SHOWN),
         "loot" => (world::loot(), world::LOOT_SHOWN),
         "loot2" => (world::loot2(), world::LOOT2_SHOWN),
         "names" => (world::names(), &[]),
