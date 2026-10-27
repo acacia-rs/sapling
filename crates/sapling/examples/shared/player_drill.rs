@@ -10,6 +10,8 @@ use acacia_bot::Bot;
 mod armour;
 #[path = "feedback_drill.rs"]
 mod feedback;
+#[path = "fishing_drill.rs"]
+mod fishing;
 #[path = "foes_drill.rs"]
 mod foes;
 #[path = "reach_drill.rs"]
@@ -121,6 +123,11 @@ pub async fn act(actor: &mut Bot, line: &str) -> bool {
         }
         return true;
     }
+    // `!fish secs`: casts, waits up to that long for a bite and reels in (`Bot::fish`).
+    if let Some(secs) = line.strip_prefix("!fish ").and_then(|secs| secs.parse().ok()) {
+        println!("## fished: {:?}", actor.fish(Duration::from_secs(secs)).await);
+        return true;
+    }
     if let Some(slot) = line.strip_prefix("!take ").and_then(|slot| slot.parse().ok()) {
         println!("## took: {:?}", actor.move_to_inventory(slot).await);
         return true;
@@ -128,6 +135,10 @@ pub async fn act(actor: &mut Bot, line: &str) -> bool {
     match line {
         // The use goes on as the bot is polled after (`Bot::consume`).
         "!eat" => drop(tokio::time::timeout(Duration::from_millis(1), actor.consume()).await),
+        "!use" => {
+            actor.swing();
+            actor.use_item();
+        }
         "!wake" => println!("## woke: {:?}", actor.wake().await),
         "!close" => println!("## closed: {:?}", actor.close_container().await),
         "!takeall" => println!("## took all: {:?}", actor.take_all().await),
@@ -235,6 +246,8 @@ pub fn drill(name: &str) -> Option<(Vec<String>, &'static [&'static str])> {
         "armour" => (armour::armour(), HURT_SHOWN),
         "effects" => (armour::effects(), HURT_SHOWN),
         "wake" => (armour::wake(), WAKE_SHOWN),
+        "fish" => (fishing::fish(), fishing::FISH_SHOWN),
+        "brew" => (fishing::brew(), fishing::BREW_SHOWN),
         _ => return uses::named(name),
     })
 }
