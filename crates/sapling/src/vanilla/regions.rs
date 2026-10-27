@@ -117,8 +117,7 @@ impl Command for Fill {
     /// BDS counts the blocks that changed: none for `air destroy`, whose blocks the breaking
     /// already took.
     fn run(self, ctx: &mut ShardCtx<'_>, sender: &Sender, out: &mut Output) {
-        let here = ctx.origin(sender);
-        let region = Region::between(self.from.from(here), self.to.from(here));
+        let region = Region::between(self.from.resolve(ctx, sender), self.to.resolve(ctx, sender));
         if region.count() > MOST_BLOCKS {
             return out.translate("commands.fill.tooManyBlocks", vec![region.count().to_string(), MOST_BLOCKS.to_string()], false);
         }

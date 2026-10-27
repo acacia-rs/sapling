@@ -98,9 +98,8 @@ fn refused(ctx: &ShardCtx<'_>, regions: [Region; 2], out: &mut Output, too_many:
 impl Command for CloneCommand {
     /// BDS counts every block it copies, changed or not.
     fn run(self, ctx: &mut ShardCtx<'_>, sender: &Sender, out: &mut Output) {
-        let here = ctx.origin(sender);
-        let source = Region::between(self.begin.from(here), self.end.from(here));
-        let target = source.moved_to(self.destination.from(here));
+        let source = Region::between(self.begin.resolve(ctx, sender), self.end.resolve(ctx, sender));
+        let target = source.moved_to(self.destination.resolve(ctx, sender));
         if refused(ctx, [source, target], out, "commands.clone.tooManyBlocks") {
             return;
         }
@@ -157,25 +156,33 @@ pub(crate) enum CompareMode {
 
 impl Command for TestForBlocks {
     fn run(self, ctx: &mut ShardCtx<'_>, sender: &Sender, out: &mut Output) {
-        let here = ctx.origin(sender);
-        let source = Region::between(self.begin.from(here), self.end.from(here));
-        let target = source.moved_to(self.destination.from(here));
+        let source = Region::between(self.begin.resolve(ctx, sender), self.end.resolve(ctx, sender));
+        let target = source.moved_to(self.destination.resolve(ctx, sender));
         if refused(ctx, [source, target], out, "commands.compare.tooManyBlocks") {
             return;
         }
-        let mut compared = 0;
-        for pos in source.cells() {
-            let there = ctx.block(pos).unwrap_or_else(Block::air);
-            if self.mode == Some(CompareMode::Masked) && there.is_air() {
-                continue;
-            }
-            if ctx.block(std::array::from_fn(|axis| pos[axis] - source.low[axis] + target.low[axis])) != Some(there) {
-                return out.translate("commands.compare.failed", Vec::new(), false);
-            }
-            compared += 1;
+        match matched(ctx, source, target, self.mode == Some(CompareMode::Masked)) {
+            Some(compared) => out.translate("commands.compare.success", vec![compared.to_string()], true),
+            None => out.translate("commands.compare.failed", Vec::new(), false),
         }
-        out.translate("commands.compare.success", vec![compared.to_string()], true);
     }
+}
+
+/// How many blocks of `source` `target` holds alike, `None` where one differs; `masked` leaves
+/// out the source's air.
+pub(super) fn matched(ctx: &ShardCtx<'_>, source: Region, target: Region, masked: bool) -> Option<u32> {
+    let mut compared = 0;
+    for pos in source.cells() {
+        let there = ctx.block(pos).unwrap_or_else(Block::air);
+        if masked && there.is_air() {
+            continue;
+        }
+        if ctx.block(std::array::from_fn(|axis| pos[axis] - source.low[axis] + target.low[axis])) != Some(there) {
+            return None;
+        }
+        compared += 1;
+    }
+    Some(compared)
 }
 
 #[cfg(test)]

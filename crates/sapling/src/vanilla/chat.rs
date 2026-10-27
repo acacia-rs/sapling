@@ -2,14 +2,22 @@
 //! answered by its announcement alone; `/tell` whispers to each target and answers its sender even
 //! where `sendCommandFeedback` is off.
 
-use sapling_api::command::{Selector, Text};
+use sapling_api::command::{Selected, Selector, Text};
 use sapling_api::{Command, Output, Sender, ShardCtx};
 
-use super::{no_target, players};
+use super::{display_name, no_target, players};
 
-/// Who a line is from: BDS's console is `Server`.
+/// Who a line is from: BDS's console is `Server`, a mob an `/execute as` names its kind's name
+/// (research/captures/bds-execute.txt: `[Cow] moo`).
 pub(super) fn speaker(sender: &Sender) -> String {
-    sender.player().map_or_else(|| "Server".to_owned(), |player| player.name.clone())
+    match sender {
+        Sender::Executed(executed) => match &executed.executor {
+            Some(Selected::Entity(entity)) => display_name(entity),
+            Some(Selected::Player(player)) => player.name.clone(),
+            None => speaker(&executed.by),
+        },
+        _ => sender.player().map_or_else(|| "Server".to_owned(), |player| player.name.clone()),
+    }
 }
 
 #[derive(Command)]
