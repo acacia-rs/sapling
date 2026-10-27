@@ -144,11 +144,12 @@ pub fn wither_death() -> Vec<String> {
 
 /// A summoned wither past its charge, hurt below half (armoured), with an iron golem to go at.
 pub fn wither_dash() -> Vec<String> {
-    let mut lines = with(floor(), &["summon wither 6.5 -26 0.5"]);
+    // Its blasts must leave the floor: the first run's wither fell out of the world.
+    let mut lines = with(floor(), &["gamerule mobgriefing false", "summon wither 6.5 -26 0.5"]);
     waits(&mut lines, 12);
     lines.extend(["damage @e[type=wither] 200", "summon iron_golem 14.5 -26 6.5"].map(String::from));
     waits(&mut lines, 25);
-    lines
+    with(lines, &["gamerule mobgriefing true"])
 }
 
 /// A snow golem with a zombie eight blocks off: its snowballs and its trail.
