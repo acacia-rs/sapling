@@ -1,0 +1,101 @@
+## drill starts at 1793122875625
+## /gamerule domobspawning false
+     39 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["domobspawning", "false"]
+## /kill @e[type=!player]
+   1012 actor   CommandOutput success_count=19 data=None commands.kill.successful success=true ["Cobblestone, Raw Beef, Cobblestone, Creeper, Leather, Leather, Raw Beef, Leather, Enderman, Zombie, Spider, Skeleton, Pig, Zombie, Raw Beef, Cow, Cow, Cow, Skeleton"]
+   1032 actor   AddItemEntity AddItemEntity { entity_id_self: -55834574821, runtime_entity_id: 40, item: ItemV4 { network_id: 303, count: 2, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(Some(ItemExtraDataWithoutBlockingTick { has_nbt: False, nbt: None, can_pl
+   1032 actor   AddItemEntity AddItemEntity { entity_id_self: -55834574823, runtime_entity_id: 38, item: ItemV4 { network_id: 384, count: 1, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(Some(ItemExtraDataWithoutBlockingTick { has_nbt: False, nbt: None, can_pl
+   1032 actor   AddItemEntity AddItemEntity { entity_id_self: -55834574825, runtime_entity_id: 36, item: ItemV4 { network_id: 273, count: 1, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(Some(ItemExtraDataWithoutBlockingTick { has_nbt: False, nbt: None, can_pl
+   1033 actor   AddItemEntity AddItemEntity { entity_id_self: -55834574826, runtime_entity_id: 35, item: ItemV4 { network_id: 384, count: 1, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(Some(ItemExtraDataWithoutBlockingTick { has_nbt: False, nbt: None, can_pl
+   1033 actor   AddItemEntity AddItemEntity { entity_id_self: -55834574831, runtime_entity_id: 30, item: ItemV4 { network_id: 277, count: 2, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(Some(ItemExtraDataWithoutBlockingTick { has_nbt: False, nbt: None, can_pl
+   1033 actor   AddItemEntity AddItemEntity { entity_id_self: -55834574832, runtime_entity_id: 29, item: ItemV4 { network_id: 331, count: 2, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(Some(ItemExtraDataWithoutBlockingTick { has_nbt: False, nbt: None, can_pl
+   1033 actor   AddItemEntity AddItemEntity { entity_id_self: -55834574828, runtime_entity_id: 33, item: ItemV4 { network_id: 418, count: 1, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(Some(ItemExtraDataWithoutBlockingTick { has_nbt: False, nbt: None, can_pl
+   1033 actor   AddItemEntity AddItemEntity { entity_id_self: -55834574827, runtime_entity_id: 34, item: ItemV4 { network_id: 262, count: 3, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(Some(ItemExtraDataWithoutBlockingTick { has_nbt: False, nbt: None, can_pl
+   1033 actor   RemoveEntity RemoveEntity { entity_id_self: -47244640232 }
+   1033 actor   RemoveEntity RemoveEntity { entity_id_self: -47244640228 }
+   1033 actor   AddItemEntity AddItemEntity { entity_id_self: -55834574830, runtime_entity_id: 31, item: ItemV4 { network_id: 329, count: 2, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(Some(ItemExtraDataWithoutBlockingTick { has_nbt: False, nbt: None, can_pl
+   1034 actor   AddItemEntity AddItemEntity { entity_id_self: -55834574829, runtime_entity_id: 32, item: ItemV4 { network_id: 303, count: 2, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(Some(ItemExtraDataWithoutBlockingTick { has_nbt: False, nbt: None, can_pl
+   1034 actor   AddItemEntity AddItemEntity { entity_id_self: -55834574824, runtime_entity_id: 37, item: ItemV4 { network_id: 273, count: 3, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(Some(ItemExtraDataWithoutBlockingTick { has_nbt: False, nbt: None, can_pl
+   1034 actor   RemoveEntity RemoveEntity { entity_id_self: -47244640247 }
+   1034 actor   RemoveEntity RemoveEntity { entity_id_self: -47244640248 }
+   1034 actor   RemoveEntity RemoveEntity { entity_id_self: -47244640245 }
+   1034 actor   AddItemEntity AddItemEntity { entity_id_self: -55834574822, runtime_entity_id: 39, item: ItemV4 { network_id: 273, count: 3, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(Some(ItemExtraDataWithoutBlockingTick { has_nbt: False, nbt: None, can_pl
+   1034 actor   RemoveEntity RemoveEntity { entity_id_self: -47244640249 }
+   1034 actor   RemoveEntity RemoveEntity { entity_id_self: -47244640246 }
+   1034 actor   RemoveEntity RemoveEntity { entity_id_self: -51539607539 }
+   1034 actor   UpdateAttributes UpdateAttributes { runtime_entity_id: 28, attributes: [PlayerAttributesItem { min: 0.0, max: 10.0, current: 0.0, default_min: 0.0, default_max: 10.0, default: 10.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+   1034 actor   UpdateAttributes UpdateAttributes { runtime_entity_id: 27, attributes: [PlayerAttributesItem { min: 0.0, max: 10.0, current: 0.0, default_min: 0.0, default_max: 10.0, default: 10.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+   1034 actor   UpdateAttributes UpdateAttributes { runtime_entity_id: 26, attributes: [PlayerAttributesItem { min: 0.0, max: 10.0, current: 0.0, default_min: 0.0, default_max: 10.0, default: 10.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+   1034 actor   UpdateAttributes UpdateAttributes { runtime_entity_id: 25, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 0.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+   1034 actor   UpdateAttributes UpdateAttributes { runtime_entity_id: 24, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 0.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+   1034 actor   UpdateAttributes UpdateAttributes { runtime_entity_id: 23, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 0.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+   1034 actor   UpdateAttributes UpdateAttributes { runtime_entity_id: 22, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 0.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+   1034 actor   UpdateAttributes UpdateAttributes { runtime_entity_id: 20, attributes: [PlayerAttributesItem { min: 0.0, max: 40.0, current: 0.0, default_min: 0.0, default_max: 40.0, default: 40.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+   1034 actor   UpdateAttributes UpdateAttributes { runtime_entity_id: 21, attributes: [PlayerAttributesItem { min: 0.0, max: 16.0, current: 0.0, default_min: 0.0, default_max: 16.0, default: 16.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+   1034 actor   UpdateAttributes UpdateAttributes { runtime_entity_id: 18, attributes: [PlayerAttributesItem { min: 0.0, max: 10.0, current: 0.0, default_min: 0.0, default_max: 10.0, default: 10.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+   1034 actor   UpdateAttributes UpdateAttributes { runtime_entity_id: 15, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 0.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+## /fill ~-3 ~-1 ~-3 ~3 ~-1 ~3 dirt
+   2015 actor   CommandOutput success_count=1 data=None commands.fill.success success=true ["49"]
+   2083 actor   RemoveEntity RemoveEntity { entity_id_self: -55834574833 }
+   2083 actor   RemoveEntity RemoveEntity { entity_id_self: -55834574835 }
+   2083 actor   RemoveEntity RemoveEntity { entity_id_self: -55834574837 }
+   2083 actor   RemoveEntity RemoveEntity { entity_id_self: -55834574838 }
+   2083 actor   RemoveEntity RemoveEntity { entity_id_self: -55834574839 }
+   2083 actor   RemoveEntity RemoveEntity { entity_id_self: -55834574834 }
+   2083 actor   RemoveEntity RemoveEntity { entity_id_self: -55834574841 }
+   2083 actor   RemoveEntity RemoveEntity { entity_id_self: -55834574836 }
+   2083 actor   RemoveEntity RemoveEntity { entity_id_self: -55834574843 }
+   2083 actor   RemoveEntity RemoveEntity { entity_id_self: -55834574846 }
+   2083 actor   RemoveEntity RemoveEntity { entity_id_self: -55834574840 }
+   2332 actor   RemoveEntity RemoveEntity { entity_id_self: -55834574825 }
+   2332 actor   RemoveEntity RemoveEntity { entity_id_self: -55834574826 }
+   2332 actor   RemoveEntity RemoveEntity { entity_id_self: -55834574822 }
+## /fill ~-3 ~ ~-3 ~3 ~3 ~3 air
+   3008 actor   CommandOutput success_count=1 data=None commands.fill.success success=true ["1"]
+## /tp CmdWatcher ~30 ~ ~
+   4022 actor   CommandOutput success_count=1 data=None commands.tp.success.coordinates success=true ["CmdWatcher", "30.50", "-51.00", "0.50"]
+## /clear @s
+   5017 actor   CommandOutput success_count=0 data=None commands.clear.failure.no.items success=false ["CmdActor"]
+## /gamemode spectator @s
+   6018 actor   CommandOutput success_count=1 data=None commands.gamemode.success.self success=true ["%createWorldScreen.gameMode.spectator"]
+   7132 actor   UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 3.4028235e38, current: 0.1, default_min: 0.0, default_max: 3.4028235e38, default: 0.1, name: "minecraft:movement", modifiers: [] }, PlayerAttributesItem { min: 0.0, max: 3.402
+   7382 actor   UpdateAttributes UpdateAttributes { runtime_entity_id: 17, attributes: [PlayerAttributesItem { min: 0.0, max: 3.4028235e38, current: 0.1, default_min: 0.0, default_max: 3.4028235e38, default: 0.1, name: "minecraft:movement", modifiers: [] }, PlayerAttributesItem { min: 0.0, max: 3.40
+## /loot spawn ~1 ~ ~ mine ~ ~-1 ~
+   8017 actor   CommandOutput success_count=1 data=None commands.loot.success success=true ["1"]
+   8032 actor   AddItemEntity AddItemEntity { entity_id_self: -55834574820, runtime_entity_id: 41, item: ItemV4 { network_id: 3, count: 1, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 2186211206, extra: Default(Some(ItemExtraDataWithoutBlockingTick { has_nbt: False, nbt: None,
+## /summon xp_orb ~1 ~ ~
+   9022 actor   CommandOutput success_count=1 data=None commands.summon.success success=true []
+   9032 actor   AddEntity AddEntity { unique_id: -55834574819, runtime_id: 42, entity_type: "minecraft:xp_orb", position: Vec3f { x: 1.5, y: -51.0, z: 0.5 }, velocity: Vec3f { x: 0.062971935, y: 0.24245372, z: 0.0774502 }, pitch: 0.0, yaw: 0.0, head_yaw: 0.0, body_yaw: 0.0, attributes: [], metadata:
+## /summon xp_orb ~-1 ~ ~
+  10021 actor   CommandOutput success_count=1 data=None commands.summon.success success=true []
+  10032 actor   AddEntity AddEntity { unique_id: -55834574818, runtime_id: 43, entity_type: "minecraft:xp_orb", position: Vec3f { x: -0.5, y: -51.0, z: 0.5 }, velocity: Vec3f { x: 0.0020869523, y: 0.28043455, z: -0.13391249 }, pitch: 0.0, yaw: 0.0, head_yaw: 0.0, body_yaw: 0.0, attributes: [], metad
+## /summon xp_orb ~ ~ ~1
+  11022 actor   CommandOutput success_count=1 data=None commands.summon.success success=true []
+  11032 actor   AddEntity AddEntity { unique_id: -55834574817, runtime_id: 44, entity_type: "minecraft:xp_orb", position: Vec3f { x: 0.5, y: -51.0, z: 1.5 }, velocity: Vec3f { x: -0.16906418, y: 0.33234164, z: 0.1463954 }, pitch: 0.0, yaw: 0.0, head_yaw: 0.0, body_yaw: 0.0, attributes: [], metadata:
+## /gamemode survival @s
+  16029 actor   CommandOutput success_count=1 data=None commands.gamemode.success.self success=true ["%createWorldScreen.gameMode.survival"]
+  16031 actor   TakeItemEntity TakeItemEntity { runtime_entity_id: 41, target: 1 }
+  16081 actor   RemoveEntity RemoveEntity { entity_id_self: -55834574820 }
+  18035 actor   UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 1.0, current: 0.14285715, default_min: 0.0, default_max: 1.0, default: 0.0, name: "minecraft:player.experience", modifiers: [] }, PlayerAttributesItem { min: 0.0, max: 1.0, cu
+  18081 actor   RemoveEntity RemoveEntity { entity_id_self: -55834574819 }
+  18281 actor   UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 1.0, current: 0.2857143, default_min: 0.0, default_max: 1.0, default: 0.0, name: "minecraft:player.experience", modifiers: [] }, PlayerAttributesItem { min: 0.0, max: 1.0, cur
+  18335 actor   RemoveEntity RemoveEntity { entity_id_self: -55834574817 }
+  19232 actor   UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 1.0, current: 0.42857146, default_min: 0.0, default_max: 1.0, default: 0.0, name: "minecraft:player.experience", modifiers: [] }, PlayerAttributesItem { min: 0.0, max: 1.0, cu
+  19283 actor   RemoveEntity RemoveEntity { entity_id_self: -55834574818 }
+## /gamemode creative @s
+  20032 actor   CommandOutput success_count=1 data=None commands.gamemode.success.self success=true ["%createWorldScreen.gameMode.creative"]
+## /kill @e[type=!player]
+  21032 actor   CommandOutput success_count=9 data=None commands.kill.successful success=true ["Gunpowder, Rotten Flesh, String, Arrow, Bone, Raw Porkchop, Raw Beef, Leather, Arrow"]
+  21082 actor   RemoveEntity RemoveEntity { entity_id_self: -55834574821 }
+  21083 actor   RemoveEntity RemoveEntity { entity_id_self: -55834574823 }
+  21083 actor   RemoveEntity RemoveEntity { entity_id_self: -55834574831 }
+  21083 actor   RemoveEntity RemoveEntity { entity_id_self: -55834574832 }
+  21083 actor   RemoveEntity RemoveEntity { entity_id_self: -55834574828 }
+  21083 actor   RemoveEntity RemoveEntity { entity_id_self: -55834574827 }
+  21083 actor   RemoveEntity RemoveEntity { entity_id_self: -55834574830 }
+  21083 actor   RemoveEntity RemoveEntity { entity_id_self: -55834574829 }
+  21083 actor   RemoveEntity RemoveEntity { entity_id_self: -55834574824 }
+## /tp CmdWatcher @s
+  22036 actor   CommandOutput success_count=2 data=None commands.tp.success success=true ["CmdWatcher", "CmdActor"]
+## /gamerule domobspawning true
+  23039 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["domobspawning", "true"]

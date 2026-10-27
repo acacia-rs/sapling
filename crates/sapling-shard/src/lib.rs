@@ -28,6 +28,7 @@ mod creatures;
 mod dimensions;
 mod dragon;
 mod drops;
+mod emotes;
 mod enchants;
 mod entities;
 mod experience;

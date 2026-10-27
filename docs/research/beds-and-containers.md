@@ -170,5 +170,11 @@ ender chest and barrel actors; shulker box has its own AABB). Fields set by the 
 
 ## sapling gaps (vs `crates/sapling-shard/src`)
 
-- No sleeping at all (`blocks/doors.rs:4` TODO): needs 1-4.
+- Sleeping (`sleep.rs`, `sleep/rest.rs`, `sleep/stand.rs`) does 1-4 but the water check (2.2.1) and the
+  straw bed. `bds_command_probe rest` (research/captures/bds-rest.txt) confirmed: a zombie 6 off the bed
+  refuses (`tile.bed.notSafe`, after the spawn is set), one 9 off does not, a zombified piglin 3 off refuses;
+  a storm at noon lets one sleep, but 8 s of it skipped nothing (sapling skips only a night); and the
+  stand-up cell is `findStandUpPosition`'s, whose tables (14a7d6220, 14a7d62b0) turn about the bed's
+  **foot**: an open spot gave the cell lain in from, that cell walled the one north of it, a walled ring
+  the one two north.
 - `containers.rs:8`: blocked chests open; no reach close (5 is still open in BDS too).

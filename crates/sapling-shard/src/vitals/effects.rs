@@ -132,6 +132,16 @@ pub(crate) fn hits_for(world: &World, player: Entity, amount: f32) -> f32 {
     under(under(amount, Effect::Strength, STRENGTHENS), Effect::Weakness, WEAKENS).max(0.0)
 }
 
+/// What a player's haste and mining fatigue multiply its digging speed by. BDS's stone breaks
+/// (research/captures/bds-dig.txt) fit Java's 1 + 0.2 a level of haste times another 1.2 a level,
+/// and Java's 0.3 a level of fatigue times another 0.7: 1.44 and 2.76 faster, 0.21 and 0.044.
+pub(crate) fn dig_speed(world: &World, player: Entity) -> f32 {
+    let levels = |effect| level(world, player, effect).map(|level| i32::from(level) + 1);
+    let haste = levels(Effect::Haste).map_or(1.0, |n| (1.0 + 0.2 * n as f32) * 1.2f32.powi(n));
+    let fatigue = levels(Effect::MiningFatigue).map_or(1.0, |n| 0.21f32.powi(n));
+    haste * fatigue
+}
+
 /// The ids of the effects on a player that show their particles, in order.
 fn shown(world: &World, player: Entity) -> Vec<i32> {
     let mut ids: Vec<i32> = world.get::<Effects>(player).map_or_else(Vec::new, |effects| effects.0.iter().filter(|active| active.particles).map(|active| active.effect.id()).collect());

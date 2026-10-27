@@ -2,8 +2,9 @@
 //! long. The time is vanilla's, as acacia-bot computes it for its own breaks
 //! (acacia-bot `interact/break_time.rs` has the sources): the held tool's speed on the block's
 //! material, hardness x 30 ticks when the tool harvests the block and x 100 when it does not.
-// TODO: no haste, mining fatigue, water or mid-air slowdown: the server has no effects and only a
-// rough on-ground flag, and each would only make a break slower than what is asked for here.
+//! Haste and mining fatigue scale the speed (vitals::effects::dig_speed).
+// TODO: no water or mid-air slowdown: the server has only a rough on-ground flag, and each would
+// only make a break slower than what is asked for here.
 
 use acacia_proto::packets::{LevelEvent, LevelEventEvent};
 use acacia_proto::types::Vec3f;
@@ -51,7 +52,7 @@ fn tool_speed(material: Material, tool: Option<Tool>) -> Option<f32> {
 
 /// Ticks from StartBreak until the block breaks (1: at once); `None` for a block that cannot be
 /// broken or whose hardness is not known.
-pub(crate) fn break_ticks(mining: &Mining, tool: Option<Tool>, efficiency: u8) -> Option<u32> {
+pub(crate) fn break_ticks(mining: &Mining, tool: Option<Tool>, efficiency: u8, effects: f32) -> Option<u32> {
     if mining.hardness.is_nan() || mining.is_unbreakable() {
         return None;
     }
@@ -63,6 +64,7 @@ pub(crate) fn break_ticks(mining: &Mining, tool: Option<Tool>, efficiency: u8) -
     if speed > 1.0 {
         speed += enchant::efficiency(efficiency);
     }
+    speed *= effects;
     let ticks = f64::from(mining.hardness) * if harvests { 30.0 } else { 100.0 } / f64::from(speed);
     // Hardnesses like 0.6 are not exact: without the epsilon 18.0000007 would round up to 19.
     Some((ticks - 1e-4).ceil().max(1.0) as u32)
@@ -101,7 +103,8 @@ pub(crate) fn start(world: &mut World, player: Entity, layer: Entity, pos: Block
     // The sword and shears speeds are the Java game's, never faster than Bedrock's but perhaps
     // slower: a break with one of them is taken as soon as it is claimed.
     let is_unsure = tool.is_some_and(|tool| matches!(tool.kind, ToolKind::Sword | ToolKind::Shears));
-    let needed = break_ticks(mining, tool, efficiency).map(|ticks| if is_unsure { 1 } else { ticks });
+    let effects = crate::vitals::effects::dig_speed(world, player);
+    let needed = break_ticks(mining, tool, efficiency, effects).map(|ticks| if is_unsure { 1 } else { ticks });
     let tick = world.resource::<Tick>().0;
     if let Some(mut breaking) = world.get_mut::<Breaking>(player) {
         breaking.0 = needed.map(|needed| Started { pos, tick, needed });
@@ -155,7 +158,7 @@ mod tests {
     fn ticks(block: &str, tool: &str, efficiency: u8) -> Option<u32> {
         let registry = BlockRegistry::vanilla();
         let mining = registry.states_of(block).next().expect("a vanilla block").1.mining;
-        break_ticks(&mining, Tool::from_identifier(tool), efficiency)
+        break_ticks(&mining, Tool::from_identifier(tool), efficiency, 1.0)
     }
 
     #[test]
@@ -166,5 +169,12 @@ mod tests {
         assert!(ticks("minecraft:stone", "minecraft:diamond_pickaxe", 5) < Some(3));
         assert_eq!([ticks("minecraft:dirt", "minecraft:stick", 0), ticks("minecraft:dirt", "minecraft:iron_shovel", 0)], [Some(15), Some(3)]);
         assert_eq!([ticks("minecraft:bedrock", "minecraft:diamond_pickaxe", 0), ticks("minecraft:torch", "", 0)], [None, Some(1)]);
+    }
+
+    #[test]
+    fn haste_and_fatigue_scale_a_break_as_on_bds() {
+        // research/captures/bds-dig.txt: stone by hand at 65535/629 and 65535/91 ticks.
+        let stone = BlockRegistry::vanilla().states_of("minecraft:stone").next().expect("stone").1.mining;
+        assert_eq!([1.44, 0.21].map(|effects| break_ticks(&stone, None, 0, effects)), [Some(105), Some(715)]);
     }
 }

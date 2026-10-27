@@ -15,7 +15,7 @@ use sapling_world::{ChunkPos, ItemStack};
 
 use crate::blocks::Dice;
 use crate::body::{Body, Liquid, Physics};
-use crate::components::{InLayer, Layer, NetId, Position, Stage, Tick};
+use crate::components::{InLayer, Layer, Mode, NetId, Position, Stage, Tick};
 use crate::inventory::Inventory;
 use crate::{blocks, entities, inventory, mobs};
 
@@ -250,6 +250,12 @@ pub(crate) fn within_pickup(feet: [f32; 3], at: [f32; 3], size: f32) -> bool {
     (at[0] - feet[0]).abs() <= across && (at[2] - feet[2]).abs() <= across && up >= -REACH[1] - size && up <= PLAYER_HEIGHT + REACH[1]
 }
 
+/// Whether a player in `mode` takes up items and orbs: a spectator does neither
+/// (research/captures/bds-spectate.txt).
+pub(crate) fn takes_up(mode: Option<&Mode>) -> bool {
+    mode.is_none_or(|mode| mode.0 != sapling_api::GameMode::Spectator)
+}
+
 /// Gives each item that can be picked up to a player standing on it who has room, whole or as
 /// much as fits; what is left lies on as a new item.
 pub(crate) fn pick_up(world: &mut World) {
@@ -259,10 +265,10 @@ pub(crate) fn pick_up(world: &mut World) {
     if ready.is_empty() {
         return;
     }
-    let mut players = world.query::<(Entity, &Stage, &InLayer, &Position, &NetId)>();
+    let mut players = world.query::<(Entity, &Stage, &InLayer, &Position, &NetId, Option<&Mode>)>();
     let mut standing: HashMap<(Entity, ChunkPos), Vec<(Entity, [f32; 3], u64)>> = HashMap::new();
-    for (player, stage, layer, position, id) in players.iter(world) {
-        if *stage == Stage::InWorld {
+    for (player, stage, layer, position, id, mode) in players.iter(world) {
+        if *stage == Stage::InWorld && takes_up(mode) {
             standing.entry((layer.0, column(position.feet))).or_default().push((player, position.feet, id.0));
         }
     }

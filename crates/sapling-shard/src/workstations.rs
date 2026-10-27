@@ -17,6 +17,7 @@ use crate::components::{Mode, NetId, Outgoing, Tick};
 use crate::inventory::{Bench, Forged, Inventory};
 use crate::{containers, experience, orbs};
 
+pub(crate) use anvil::dispatch_damage as dispatch_anvil_damage;
 pub(crate) use enchanting::Offers;
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
