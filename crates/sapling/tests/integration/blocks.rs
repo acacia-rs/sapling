@@ -90,7 +90,8 @@ async fn all(bots: &mut [&mut Bot], ticks: u32) {
     }
 }
 
-/// The (position, layer) of every UpdateBlock `bot` gets in the next half second.
+/// The (position, layer) of every UpdateBlock in the plot's row that `bot` gets in the next half second;
+/// the fixture's sheep graze elsewhere whatever randomTickSpeed is.
 async fn updates(bot: &mut Bot) -> BTreeSet<([i32; 3], u32)> {
     let mut seen = BTreeSet::new();
     let end = tokio::time::Instant::now() + Duration::from_millis(500);
@@ -98,7 +99,10 @@ async fn updates(bot: &mut Bot) -> BTreeSet<([i32; 3], u32)> {
         match event {
             Some(BotEvent::Packet(packet)) if packet.id == UpdateBlock::ID => {
                 let update: UpdateBlock = packet.decode().expect("the bot decodes what sapling sent");
-                seen.insert(([update.position.x, update.position.y, update.position.z], update.layer));
+                let cell = [update.position.x, update.position.y, update.position.z];
+                if cell[2] == SPAWN.1 && (SPAWN.0..=SPAWN.0 + 5).contains(&cell[0]) {
+                    seen.insert((cell, update.layer));
+                }
             }
             Some(BotEvent::Disconnected(reason)) => panic!("disconnected: {reason:?}"),
             Some(_) => {}
