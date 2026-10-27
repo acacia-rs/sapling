@@ -19,6 +19,9 @@ const MOUTH: f32 = 0.1;
 /// An emptied bottle is heard from this far under the eyes and this far ahead of them.
 const BOTTLE_BELOW: f32 = 0.2;
 const BOTTLE_AHEAD: f32 = 0.2;
+/// Chorus fruit's cooldown category, as BDS names it, and its length.
+const CHORUS: &str = "minecraft:chorusfruit";
+const CHORUS_COOLDOWN: u64 = 20;
 
 /// A food being eaten: its item's network id, what it feeds, and the tick it is eaten in.
 #[derive(Clone, Copy)]
@@ -49,9 +52,22 @@ pub(crate) fn show(world: &mut World, player: Entity, using: bool) {
 pub(crate) fn start(world: &mut World, player: Entity) {
     let now = world.resource::<Tick>().0;
     let Some((id, food)) = held(world, player).filter(|_| is_mortal(world, player)) else { return };
+    let chorus = holds_chorus(world, player);
+    if chorus && crate::cooldowns::is_cooling(world, player, CHORUS) {
+        return;
+    }
     let Some(mut vitals) = world.get_mut::<Vitals>(player).filter(|vitals| vitals.meal.is_none() && (food.always || !vitals.hunger.is_full())) else { return };
     vitals.meal = Some(Meal { id, food, done: now + u64::from(food.ticks) });
+    if chorus {
+        crate::cooldowns::tell(world, player, CHORUS, CHORUS_COOLDOWN, false);
+    }
     show(world, player, true);
+}
+
+/// Chorus fruit cools down once eaten; BDS told it as the eating started too (research/captures/bds-small.txt).
+// TODO: the fruit does not teleport its eater.
+fn holds_chorus(world: &World, player: Entity) -> bool {
+    world.get::<Inventory>(player).and_then(|inventory| inventory.in_hand().as_ref()).is_some_and(|held| held.stack.name == "minecraft:chorus_fruit")
 }
 
 /// Use let go before the food was eaten.
@@ -115,6 +131,9 @@ fn finish(world: &mut World, player: Entity, meal: Meal) {
         (false, _) => CompletedUsingItemUseMethod::Eat,
     };
     let used = CompletedUsingItem { used_item_id: meal.id, use_method };
+    if holds_chorus(world, player) {
+        crate::cooldowns::tell(world, player, CHORUS, CHORUS_COOLDOWN, true);
+    }
     // BDS tells the effects first.
     afflict(world, player, &meal.food);
     world.get_mut::<Outgoing>(player).expect("players have an outbox").push(&used);

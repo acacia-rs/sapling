@@ -135,6 +135,11 @@ pub fn books() -> Vec<String> {
         "setblock ~2 ~ ~ lectern", "setblock ~3 ~ ~ unpowered_comparator [\"minecraft:cardinal_direction\"=\"west\",\"output_subtract_bit\"=false]", "setblock ~4 ~ ~ redstone_wire", "",
         "!click 2 0 0", "", "", "!lectern 2 0 0 1 3", "", "", "!lectern 2 0 0 2 3", "", "", "!close", "",
     ]));
+    // The comparator set again reads the lectern afresh: what a page gives, if a turn told it nothing.
+    let comparator = "setblock ~3 ~ ~ unpowered_comparator [\"minecraft:cardinal_direction\"=\"west\",\"output_subtract_bit\"=false]";
+    for page in ["1", "0"] {
+        lines.extend([format!("!lectern 2 0 0 {page} 3"), String::new(), "setblock ~3 ~ ~ air".to_owned(), comparator.to_owned(), String::new(), String::new()]);
+    }
     lines.extend(owned(["replaceitem entity @s slot.weapon.mainhand 0 writable_book", "!click 2 0 0", "", "", "!break 2 0 0", "", "", "gamemode creative @s", "clear @s", ""]));
     lines
 }

@@ -25,6 +25,8 @@ pub(crate) enum Workstation {
     Anvil,
     Grindstone,
     Smithing,
+    /// Only read at: its book turns by LecternUpdate (blocks/lectern.rs).
+    Lectern,
 }
 
 /// The workstation the block `block` is, and the screen it opens.
@@ -34,6 +36,7 @@ pub(crate) fn of_block(block: &str) -> Option<(Workstation, WindowType)> {
         _ if anvil::is_anvil(block) => (Workstation::Anvil, WindowType::Anvil),
         "minecraft:grindstone" => (Workstation::Grindstone, WindowType::Grindstone),
         "minecraft:smithing_table" => (Workstation::Smithing, WindowType::SmithingTable),
+        "minecraft:lectern" => (Workstation::Lectern, WindowType::Lectern),
         _ => return None,
     })
 }
@@ -58,6 +61,7 @@ pub(crate) fn bench(world: &World, player: Entity) -> Option<Bench> {
         Workstation::Anvil => Bench::Anvil,
         Workstation::Grindstone => Bench::Grindstone,
         Workstation::Smithing => Bench::Smithing,
+        Workstation::Lectern => return None,
     })
 }
 
