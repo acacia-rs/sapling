@@ -45,7 +45,8 @@ pub async fn act(actor: &mut acacia_bot::Bot, line: &str) -> bool {
 }
 
 fn floor() -> Vec<String> {
-    ["kill @e[type=!player]", "gamerule domobspawning false", "gamemode creative @s", "tp @s 0.5 ~ 0.5 -90 0", "fill ~-8 ~-1 ~-8 ~16 ~-1 ~8 stone", "fill ~-8 ~ ~-8 ~16 ~10 ~8 air", "clear @s", ""]
+    // An absolute height: a bot that joined falling was once left in the void below the floor.
+    ["kill @e[type=!player]", "gamerule domobspawning false", "gamemode creative @s", "tp @s 0.5 -60 0.5 -90 0", "fill ~-8 ~-1 ~-8 ~16 ~-1 ~8 stone", "fill ~-8 ~ ~-8 ~16 ~10 ~8 air", "clear @s", ""]
         .map(String::from)
         .into()
 }
