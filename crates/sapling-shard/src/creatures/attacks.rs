@@ -1,7 +1,7 @@
 //! A player's hit on a mob, as BDS answered one (docs/research/mob-damage.md, "Hits"), with
 //! what the weapon's enchantments add (enchanted.rs).
 // TODO: no critical hit or wear of the item; a hit mob does not
-// fight back; a hit on an armour stand, which has no health here, tires nobody; `REACH` is the nearest whole number to what BDS allowed.
+// fight back; a hit on an armour stand, which has no health here, tires nobody.
 
 use acacia_proto::packets::LevelSoundEvent;
 use acacia_proto::types::Vec3f;
@@ -20,8 +20,10 @@ use crate::entities;
 
 /// Hits looked at per player per tick.
 const MAX_HITS_PER_TICK: usize = 4;
-/// How far from a player's eyes the nearest point of a mob it hits may be.
-const REACH: f32 = 3.0;
+/// How far from a player's eyes the position (feet) of a mob it hits may be, as BDS measures
+/// (docs/research/reach.md).
+const REACH: f32 = 6.7;
+const CREATIVE_REACH: f32 = 12.0;
 /// The speed a hit throws a mob at, away from the hitter and up; what it moved at across counts half.
 const THROW: f32 = 0.4;
 const KEPT: f32 = 0.5;
@@ -48,17 +50,18 @@ fn hit(world: &mut World, player: Entity, id: u64) -> Option<()> {
     }
     let (layer, from) = (world.get::<InLayer>(player)?.0, world.get::<Position>(player)?.feet);
     let eye = [from[0], from[1] + sapling_data::EYE_HEIGHT, from[2]];
+    let reach = if world.get::<Mode>(player)?.0 == GameMode::Creative { CREATIVE_REACH } else { REACH };
     if entities::find(world, EntityId(id)).is_some_and(|knot| super::husbandry::undo_knot(world, knot)) {
         return Some(());
     }
     if let Some(crystal) = entities::find(world, EntityId(id)).filter(|entity| world.get::<crate::dragon::Crystal>(*entity).is_some()) {
-        if world.get::<Body>(crystal).is_some_and(|body| distance(eye, body) <= REACH) {
+        if world.get::<Body>(crystal).is_some_and(|body| distance(eye, body) <= reach) {
             crate::dragon::burst(world, crystal);
         }
         return Some(());
     }
     if let Some(vehicle) = entities::find(world, EntityId(id)).filter(|entity| world.get::<crate::vehicles::Vehicle>(*entity).is_some()) {
-        if world.get::<Body>(vehicle).is_some_and(|body| distance(eye, body) <= REACH) && world.get::<Mode>(player)?.0 != GameMode::Spectator {
+        if world.get::<Body>(vehicle).is_some_and(|body| distance(eye, body) <= reach) &&world.get::<Mode>(player)?.0 != GameMode::Spectator {
             let held = world.get::<Inventory>(player).and_then(|inventory| inventory.in_hand().as_ref().map(|held| held.stack.name.clone()));
             let damage = crate::vitals::hits_for(world, player, sapling_data::item_attack(held.as_deref()));
             crate::vehicles::hit(world, player, vehicle, damage);
@@ -69,7 +72,7 @@ fn hit(world: &mut World, player: Entity, id: u64) -> Option<()> {
     let (body, kind) = (*world.get::<Body>(entity)?, world.get::<entities::Kind>(entity)?.0.clone());
     let mut health = *world.get::<Health>(entity)?;
     let far = crate::dragon::part_reach(world, entity, eye).map_or(distance(eye, &body), |part| part.min(distance(eye, &body)));
-    if world.get::<InLayer>(entity)?.0 != layer || world.get::<Mode>(player)?.0 == GameMode::Spectator || far > REACH {
+    if world.get::<InLayer>(entity)?.0 != layer || world.get::<Mode>(player)?.0 == GameMode::Spectator || far > reach {
         return None;
     }
     let cell = body.at.map(|c| c.floor() as i32);
@@ -133,10 +136,9 @@ pub(super) fn slay(world: &mut World, entity: Entity, kind: &str, looting: u8) {
     world.entity_mut(entity).insert(Slain(points, looting));
 }
 
-/// From `eye` to the nearest point of the body's box.
+/// From `eye` to the body's position (its feet).
 fn distance(eye: [f32; 3], body: &Body) -> f32 {
-    let (low, high) = body.bounds();
-    (0..3).map(|axis| (eye[axis].clamp(low[axis], high[axis]) - eye[axis]).powi(2)).sum::<f32>().sqrt()
+    (0..3).map(|axis| (body.at[axis] - eye[axis]).powi(2)).sum::<f32>().sqrt()
 }
 
 /// Lets out what a mob a player killed leaves as it goes: its experience, where it lies.
