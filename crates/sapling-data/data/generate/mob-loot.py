@@ -116,7 +116,7 @@ def default_table(base, groups):
 # Old item names the tables still use -> today's (checked by `mob_loot.rs`'s tests against ItemRegistry.bin).
 RENAMES = {
     "minecraft:muttonRaw": "minecraft:mutton", "minecraft:netherStar": "minecraft:nether_star", "minecraft:clownfish": "minecraft:tropical_fish",
-    "minecraft:fish": "minecraft:cod", "minecraft:totem": "minecraft:totem_of_undying",
+    "minecraft:fish": "minecraft:cod", "minecraft:totem": "minecraft:totem_of_undying", "minecraft:fireball": "minecraft:fire_charge",
 }
 # (name, data) -> the item that data now names; a sheep's wool is its colour's, white by default.
 BY_DATA = {
