@@ -1,0 +1,420 @@
+## drill starts at 1793127606266
+## /kill @e[type=!player]
+     42 actor   CommandOutput success_count=0 data=None commands.generic.noTargetMatch success=false []
+    574 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+    575 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /gamerule domobspawning false
+   1012 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"domobspawning\"},{\"text\":\"false\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   1012 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["domobspawning", "false"]
+## /weather clear
+   2013 actor   LevelEvent LevelEvent { event: StopRain, position: Vec3f { x: 0.0, y: 0.0, z: 0.0 }, data: 0 }
+   2014 actor   LevelEvent LevelEvent { event: StopThunder, position: Vec3f { x: 0.0, y: 0.0, z: 0.0 }, data: 0 }
+   2014 actor   CommandOutput success_count=1 data=None commands.weather.clear success=true []
+   2014 watcher LevelEvent LevelEvent { event: StopRain, position: Vec3f { x: 0.0, y: 0.0, z: 0.0 }, data: 0 }
+   2014 watcher LevelEvent LevelEvent { event: StopThunder, position: Vec3f { x: 0.0, y: 0.0, z: 0.0 }, data: 0 }
+   2014 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.weather.clear\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamemode creative @s
+   3014 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"gameMode.changed\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.creative\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   3014 actor   CommandOutput success_count=1 data=None commands.gamemode.success.self success=true ["%createWorldScreen.gameMode.creative"]
+   3014 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamemode.success.self\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.creative\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /tp @s 0.5 ~ 0.5 -90 0
+   4013 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.tp.successVictim\",\"with\":{\"rawtext\":[{\"text\":\"0.50, -20.00, 0.50\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   4013 actor   CommandOutput success_count=1 data=None commands.tp.success.coordinates success=true ["CmdActor", "0.50", "-20.00", "0.50"]
+   4013 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.tp.success.coordinates\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor\"},{\"text\":\"0.50\"},{\"text\":\"-20.00\"},{\"text\":\"0.50\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   4583 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+   4584 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+   4633 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+   4633 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /fill ~-2 ~-1 ~-6 ~10 ~-1 ~6 stone
+   5017 actor   CommandOutput success_count=0 data=None commands.fill.success success=false ["0"]
+   5279 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 139271, paused: false }] }) }
+   5279 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 139271, paused: false }] }) }
+   5379 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+   5379 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+   5482 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+   5482 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /fill ~-2 ~ ~-6 ~10 ~6 ~6 air
+   6023 actor   CommandOutput success_count=0 data=None commands.fill.success success=false ["0"]
+## /clear @s
+   7019 actor   InventorySlot InventorySlot { window_id: Ui, slot: 0, container: None, storage_item: None, item: ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) } }
+   7019 actor   CommandOutput success_count=0 data=None commands.clear.failure.no.items success=false ["CmdActor"]
+## /
+## /setblock ~2 ~ ~0 cauldron
+   9022 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   9022 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+   9028 actor   UpdateBlock 2 -20 0 layer 0 cauldron[cauldron_liquid=water,fill_level=0]
+   9028 actor   BlockEntityData BlockEntityData { position: BlockCoordinates { x: 2, y: -20, z: 0 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("Items", List(List { tag: 0, items: [] })), ("PotionId", Short(-1)), ("PotionType", Short(-1)), ("id", String("Cauldron")), ("x", Int(2)), ("y", Int(-20)), ("z", Int(0))]) } }
+   9028 watcher UpdateBlock 2 -20 0 layer 0 cauldron[cauldron_liquid=water,fill_level=0]
+   9028 watcher BlockEntityData BlockEntityData { position: BlockCoordinates { x: 2, y: -20, z: 0 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("Items", List(List { tag: 0, items: [] })), ("PotionId", Short(-1)), ("PotionType", Short(-1)), ("id", String("Cauldron")), ("x", Int(2)), ("y", Int(-20)), ("z", Int(0))]) } }
+   9081 actor   UpdateBlock 2 -20 0 layer 0 cauldron[cauldron_liquid=water,fill_level=0]
+   9081 actor   BlockEntityData BlockEntityData { position: BlockCoordinates { x: 2, y: -20, z: 0 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("Items", List(List { tag: 0, items: [] })), ("PotionId", Short(-1)), ("PotionType", Short(-1)), ("id", String("Cauldron")), ("x", Int(2)), ("y", Int(-20)), ("z", Int(0))]) } }
+   9081 watcher UpdateBlock 2 -20 0 layer 0 cauldron[cauldron_liquid=water,fill_level=0]
+   9081 watcher BlockEntityData BlockEntityData { position: BlockCoordinates { x: 2, y: -20, z: 0 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("Items", List(List { tag: 0, items: [] })), ("PotionId", Short(-1)), ("PotionType", Short(-1)), ("id", String("Cauldron")), ("x", Int(2)), ("y", Int(-20)), ("z", Int(0))]) } }
+## /gamemode survival @s
+  10024 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"gameMode.changed\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.survival\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  10024 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamemode.success.self\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.survival\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  10024 actor   CommandOutput success_count=1 data=None commands.gamemode.success.self success=true ["%createWorldScreen.gameMode.survival"]
+## /
+  11080 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  11080 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /replaceitem entity @s slot.weapon.mainhand 0 potion 1 14
+  12026 actor   CommandOutput success_count=1 data=None commands.replaceitem.success.entity success=true ["slot.weapon.mainhand", "0", "CmdActor", "1", "Potion of Swiftness"]
+  12026 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.replaceitem.success.entity\",\"with\":{\"rawtext\":[{\"text\":\"slot.weapon.mainhand\"},{\"text\":\"0\"},{\"text\":\"CmdActor\"},{\"text\":\"1\"},{\"text\":\"Potion of Swiftness\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /!click 2 0 0
+## clicked: Ok(())
+  13092 actor   LevelEvent LevelEvent { event: CauldronFillPotion, position: Vec3f { x: 2.5, y: -19.375, z: 0.5 }, data: -13374465 }
+  13092 actor   UpdateBlock 2 -20 0 layer 0 cauldron[cauldron_liquid=water,fill_level=2]
+  13092 actor   UpdateBlock 2 -19 0 layer 0 air[]
+  13092 actor   UpdateBlock 2 -21 0 layer 0 stone[]
+  13092 actor   UpdateBlock 2 -19 0 layer 0 air[]
+  13092 actor   UpdateBlock 2 -18 0 layer 0 air[]
+  13092 actor   UpdateBlock 2 -20 0 layer 0 cauldron[cauldron_liquid=water,fill_level=2]
+  13092 watcher LevelEvent LevelEvent { event: CauldronFillPotion, position: Vec3f { x: 2.5, y: -19.375, z: 0.5 }, data: -13374465 }
+  13126 watcher UpdateBlock 2 -20 0 layer 0 cauldron[cauldron_liquid=water,fill_level=2]
+  13126 watcher BlockEntityData BlockEntityData { position: BlockCoordinates { x: 2, y: -20, z: 0 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("Items", List(List { tag: 0, items: [] })), ("PotionId", Short(14)), ("PotionType", Short(0)), ("id", String("Cauldron")), ("x", Int(2)), ("y", Int(-20)), ("z", Int(0))]) } }
+  13126 actor   UpdateBlock 2 -20 0 layer 0 cauldron[cauldron_liquid=water,fill_level=2]
+  13126 actor   BlockEntityData BlockEntityData { position: BlockCoordinates { x: 2, y: -20, z: 0 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("Items", List(List { tag: 0, items: [] })), ("PotionId", Short(14)), ("PotionType", Short(0)), ("id", String("Cauldron")), ("x", Int(2)), ("y", Int(-20)), ("z", Int(0))]) } }
+  13126 actor   LevelSoundEvent LevelSoundEvent { sound_id: "bottle.empty", position: Vec3f { x: 2.5, y: -19.5, z: 0.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  13126 watcher LevelSoundEvent LevelSoundEvent { sound_id: "bottle.empty", position: Vec3f { x: 2.5, y: -19.5, z: 0.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  13182 actor   UpdateBlock 2 -20 0 layer 0 cauldron[cauldron_liquid=water,fill_level=2]
+  13182 actor   BlockEntityData BlockEntityData { position: BlockCoordinates { x: 2, y: -20, z: 0 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("Items", List(List { tag: 0, items: [] })), ("PotionId", Short(14)), ("PotionType", Short(0)), ("id", String("Cauldron")), ("x", Int(2)), ("y", Int(-20)), ("z", Int(0))]) } }
+  13182 watcher UpdateBlock 2 -20 0 layer 0 cauldron[cauldron_liquid=water,fill_level=2]
+  13182 watcher BlockEntityData BlockEntityData { position: BlockCoordinates { x: 2, y: -20, z: 0 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("Items", List(List { tag: 0, items: [] })), ("PotionId", Short(14)), ("PotionType", Short(0)), ("id", String("Cauldron")), ("x", Int(2)), ("y", Int(-20)), ("z", Int(0))]) } }
+  13825 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  13825 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /
+  14883 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  14883 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  14883 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  14883 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /replaceitem entity @s slot.weapon.mainhand 0 potion 1 14
+  15033 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.replaceitem.success.entity\",\"with\":{\"rawtext\":[{\"text\":\"slot.weapon.mainhand\"},{\"text\":\"0\"},{\"text\":\"CmdActor\"},{\"text\":\"1\"},{\"text\":\"Potion of Swiftness\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  15033 actor   CommandOutput success_count=1 data=None commands.replaceitem.success.entity success=true ["slot.weapon.mainhand", "0", "CmdActor", "1", "Potion of Swiftness"]
+  15480 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  15480 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /!click 2 0 0
+## clicked: Ok(())
+  16055 actor   LevelEvent LevelEvent { event: CauldronFillPotion, position: Vec3f { x: 2.5, y: -19.125, z: 0.5 }, data: -13374465 }
+  16055 actor   UpdateBlock 2 -20 0 layer 0 cauldron[cauldron_liquid=water,fill_level=4]
+  16055 actor   UpdateBlock 2 -19 0 layer 0 air[]
+  16055 actor   UpdateBlock 2 -21 0 layer 0 stone[]
+  16055 actor   UpdateBlock 2 -19 0 layer 0 air[]
+  16055 actor   UpdateBlock 2 -18 0 layer 0 air[]
+  16055 actor   UpdateBlock 2 -20 0 layer 0 cauldron[cauldron_liquid=water,fill_level=4]
+  16060 watcher LevelEvent LevelEvent { event: CauldronFillPotion, position: Vec3f { x: 2.5, y: -19.125, z: 0.5 }, data: -13374465 }
+  16083 actor   UpdateBlock 2 -20 0 layer 0 cauldron[cauldron_liquid=water,fill_level=4]
+  16083 watcher UpdateBlock 2 -20 0 layer 0 cauldron[cauldron_liquid=water,fill_level=4]
+  16083 actor   BlockEntityData BlockEntityData { position: BlockCoordinates { x: 2, y: -20, z: 0 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("Items", List(List { tag: 0, items: [] })), ("PotionId", Short(14)), ("PotionType", Short(0)), ("id", String("Cauldron")), ("x", Int(2)), ("y", Int(-20)), ("z", Int(0))]) } }
+  16083 actor   LevelSoundEvent LevelSoundEvent { sound_id: "bottle.empty", position: Vec3f { x: 2.5, y: -19.5, z: 0.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  16083 watcher BlockEntityData BlockEntityData { position: BlockCoordinates { x: 2, y: -20, z: 0 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("Items", List(List { tag: 0, items: [] })), ("PotionId", Short(14)), ("PotionType", Short(0)), ("id", String("Cauldron")), ("x", Int(2)), ("y", Int(-20)), ("z", Int(0))]) } }
+  16083 watcher LevelSoundEvent LevelSoundEvent { sound_id: "bottle.empty", position: Vec3f { x: 2.5, y: -19.5, z: 0.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  16134 actor   UpdateBlock 2 -20 0 layer 0 cauldron[cauldron_liquid=water,fill_level=4]
+  16134 actor   BlockEntityData BlockEntityData { position: BlockCoordinates { x: 2, y: -20, z: 0 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("Items", List(List { tag: 0, items: [] })), ("PotionId", Short(14)), ("PotionType", Short(0)), ("id", String("Cauldron")), ("x", Int(2)), ("y", Int(-20)), ("z", Int(0))]) } }
+  16134 watcher UpdateBlock 2 -20 0 layer 0 cauldron[cauldron_liquid=water,fill_level=4]
+  16134 watcher BlockEntityData BlockEntityData { position: BlockCoordinates { x: 2, y: -20, z: 0 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("Items", List(List { tag: 0, items: [] })), ("PotionId", Short(14)), ("PotionType", Short(0)), ("id", String("Cauldron")), ("x", Int(2)), ("y", Int(-20)), ("z", Int(0))]) } }
+  16182 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  16182 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /
+  17034 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  17034 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  17527 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  17527 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /replaceitem entity @s slot.weapon.mainhand 0 potion 1 17
+  18040 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.replaceitem.success.entity\",\"with\":{\"rawtext\":[{\"text\":\"slot.weapon.mainhand\"},{\"text\":\"0\"},{\"text\":\"CmdActor\"},{\"text\":\"1\"},{\"text\":\"Potion of Slowness\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  18041 actor   CommandOutput success_count=1 data=None commands.replaceitem.success.entity success=true ["slot.weapon.mainhand", "0", "CmdActor", "1", "Potion of Slowness"]
+  18083 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 139527, paused: false }] }) }
+  18083 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 139527, paused: false }] }) }
+  18432 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  18432 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /!click 2 0 0
+## clicked: Ok(())
+  19064 watcher LevelEvent LevelEvent { event: CauldronExplode, position: Vec3f { x: 2.5, y: -19.625, z: 0.5 }, data: -1087090343 }
+  19064 actor   LevelEvent LevelEvent { event: CauldronExplode, position: Vec3f { x: 2.5, y: -19.625, z: 0.5 }, data: -1087090343 }
+  19064 actor   UpdateBlock 2 -20 0 layer 0 cauldron[cauldron_liquid=water,fill_level=0]
+  19064 actor   UpdateBlock 2 -19 0 layer 0 air[]
+  19064 actor   UpdateBlock 2 -21 0 layer 0 stone[]
+  19064 actor   UpdateBlock 2 -19 0 layer 0 air[]
+  19064 actor   UpdateBlock 2 -18 0 layer 0 air[]
+  19064 actor   UpdateBlock 2 -20 0 layer 0 cauldron[cauldron_liquid=water,fill_level=0]
+  19084 actor   UpdateBlock 2 -20 0 layer 0 cauldron[cauldron_liquid=water,fill_level=0]
+  19084 actor   BlockEntityData BlockEntityData { position: BlockCoordinates { x: 2, y: -20, z: 0 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("Items", List(List { tag: 0, items: [] })), ("PotionId", Short(-1)), ("PotionType", Short(0)), ("id", String("Cauldron")), ("x", Int(2)), ("y", Int(-20)), ("z", Int(0))]) } }
+  19084 watcher UpdateBlock 2 -20 0 layer 0 cauldron[cauldron_liquid=water,fill_level=0]
+  19084 actor   LevelSoundEvent LevelSoundEvent { sound_id: "bottle.empty", position: Vec3f { x: 2.5, y: -19.5, z: 0.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  19084 watcher BlockEntityData BlockEntityData { position: BlockCoordinates { x: 2, y: -20, z: 0 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("Items", List(List { tag: 0, items: [] })), ("PotionId", Short(-1)), ("PotionType", Short(0)), ("id", String("Cauldron")), ("x", Int(2)), ("y", Int(-20)), ("z", Int(0))]) } }
+  19084 watcher LevelSoundEvent LevelSoundEvent { sound_id: "bottle.empty", position: Vec3f { x: 2.5, y: -19.5, z: 0.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  19126 actor   UpdateBlock 2 -20 0 layer 0 cauldron[cauldron_liquid=water,fill_level=0]
+  19126 actor   BlockEntityData BlockEntityData { position: BlockCoordinates { x: 2, y: -20, z: 0 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("Items", List(List { tag: 0, items: [] })), ("PotionId", Short(-1)), ("PotionType", Short(0)), ("id", String("Cauldron")), ("x", Int(2)), ("y", Int(-20)), ("z", Int(0))]) } }
+  19126 watcher UpdateBlock 2 -20 0 layer 0 cauldron[cauldron_liquid=water,fill_level=0]
+  19126 watcher BlockEntityData BlockEntityData { position: BlockCoordinates { x: 2, y: -20, z: 0 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("Items", List(List { tag: 0, items: [] })), ("PotionId", Short(-1)), ("PotionType", Short(0)), ("id", String("Cauldron")), ("x", Int(2)), ("y", Int(-20)), ("z", Int(0))]) } }
+## /
+## /replaceitem entity @s slot.weapon.mainhand 0 potion 1 14
+  21038 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.replaceitem.success.entity\",\"with\":{\"rawtext\":[{\"text\":\"slot.weapon.mainhand\"},{\"text\":\"0\"},{\"text\":\"CmdActor\"},{\"text\":\"1\"},{\"text\":\"Potion of Swiftness\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  21038 actor   CommandOutput success_count=1 data=None commands.replaceitem.success.entity success=true ["slot.weapon.mainhand", "0", "CmdActor", "1", "Potion of Swiftness"]
+## /!click 2 0 0
+## clicked: Ok(())
+  22052 actor   LevelEvent LevelEvent { event: CauldronFillPotion, position: Vec3f { x: 2.5, y: -19.375, z: 0.5 }, data: -13374465 }
+  22053 actor   UpdateBlock 2 -20 0 layer 0 cauldron[cauldron_liquid=water,fill_level=2]
+  22053 actor   UpdateBlock 2 -19 0 layer 0 air[]
+  22053 actor   UpdateBlock 2 -21 0 layer 0 stone[]
+  22053 actor   UpdateBlock 2 -19 0 layer 0 air[]
+  22053 actor   UpdateBlock 2 -18 0 layer 0 air[]
+  22053 actor   UpdateBlock 2 -20 0 layer 0 cauldron[cauldron_liquid=water,fill_level=2]
+  22053 watcher LevelEvent LevelEvent { event: CauldronFillPotion, position: Vec3f { x: 2.5, y: -19.375, z: 0.5 }, data: -13374465 }
+  22083 actor   UpdateBlock 2 -20 0 layer 0 cauldron[cauldron_liquid=water,fill_level=2]
+  22083 actor   BlockEntityData BlockEntityData { position: BlockCoordinates { x: 2, y: -20, z: 0 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("Items", List(List { tag: 0, items: [] })), ("PotionId", Short(14)), ("PotionType", Short(0)), ("id", String("Cauldron")), ("x", Int(2)), ("y", Int(-20)), ("z", Int(0))]) } }
+  22083 actor   LevelSoundEvent LevelSoundEvent { sound_id: "bottle.empty", position: Vec3f { x: 2.5, y: -19.5, z: 0.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  22083 watcher UpdateBlock 2 -20 0 layer 0 cauldron[cauldron_liquid=water,fill_level=2]
+  22083 watcher BlockEntityData BlockEntityData { position: BlockCoordinates { x: 2, y: -20, z: 0 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("Items", List(List { tag: 0, items: [] })), ("PotionId", Short(14)), ("PotionType", Short(0)), ("id", String("Cauldron")), ("x", Int(2)), ("y", Int(-20)), ("z", Int(0))]) } }
+  22083 watcher LevelSoundEvent LevelSoundEvent { sound_id: "bottle.empty", position: Vec3f { x: 2.5, y: -19.5, z: 0.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  22133 actor   UpdateBlock 2 -20 0 layer 0 cauldron[cauldron_liquid=water,fill_level=2]
+  22133 actor   BlockEntityData BlockEntityData { position: BlockCoordinates { x: 2, y: -20, z: 0 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("Items", List(List { tag: 0, items: [] })), ("PotionId", Short(14)), ("PotionType", Short(0)), ("id", String("Cauldron")), ("x", Int(2)), ("y", Int(-20)), ("z", Int(0))]) } }
+  22133 watcher UpdateBlock 2 -20 0 layer 0 cauldron[cauldron_liquid=water,fill_level=2]
+  22133 watcher BlockEntityData BlockEntityData { position: BlockCoordinates { x: 2, y: -20, z: 0 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("Items", List(List { tag: 0, items: [] })), ("PotionId", Short(14)), ("PotionType", Short(0)), ("id", String("Cauldron")), ("x", Int(2)), ("y", Int(-20)), ("z", Int(0))]) } }
+  22283 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  22283 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  22733 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  22733 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /
+## /replaceitem entity @s slot.weapon.mainhand 0 potion 1 14
+  24045 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.replaceitem.success.entity\",\"with\":{\"rawtext\":[{\"text\":\"slot.weapon.mainhand\"},{\"text\":\"0\"},{\"text\":\"CmdActor\"},{\"text\":\"1\"},{\"text\":\"Potion of Swiftness\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  24046 actor   CommandOutput success_count=1 data=None commands.replaceitem.success.entity success=true ["slot.weapon.mainhand", "0", "CmdActor", "1", "Potion of Swiftness"]
+## /!click 2 0 0
+## clicked: Ok(())
+  25083 actor   LevelEvent LevelEvent { event: CauldronFillPotion, position: Vec3f { x: 2.5, y: -19.125, z: 0.5 }, data: -13374465 }
+  25083 actor   UpdateBlock 2 -20 0 layer 0 cauldron[cauldron_liquid=water,fill_level=4]
+  25083 actor   UpdateBlock 2 -19 0 layer 0 air[]
+  25083 actor   UpdateBlock 2 -21 0 layer 0 stone[]
+  25083 actor   UpdateBlock 2 -19 0 layer 0 air[]
+  25083 actor   UpdateBlock 2 -18 0 layer 0 air[]
+  25083 actor   UpdateBlock 2 -20 0 layer 0 cauldron[cauldron_liquid=water,fill_level=4]
+  25084 watcher LevelEvent LevelEvent { event: CauldronFillPotion, position: Vec3f { x: 2.5, y: -19.125, z: 0.5 }, data: -13374465 }
+  25133 actor   UpdateBlock 2 -20 0 layer 0 cauldron[cauldron_liquid=water,fill_level=4]
+  25133 actor   BlockEntityData BlockEntityData { position: BlockCoordinates { x: 2, y: -20, z: 0 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("Items", List(List { tag: 0, items: [] })), ("PotionId", Short(14)), ("PotionType", Short(0)), ("id", String("Cauldron")), ("x", Int(2)), ("y", Int(-20)), ("z", Int(0))]) } }
+  25133 actor   LevelSoundEvent LevelSoundEvent { sound_id: "bottle.empty", position: Vec3f { x: 2.5, y: -19.5, z: 0.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  25133 watcher UpdateBlock 2 -20 0 layer 0 cauldron[cauldron_liquid=water,fill_level=4]
+  25133 watcher BlockEntityData BlockEntityData { position: BlockCoordinates { x: 2, y: -20, z: 0 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("Items", List(List { tag: 0, items: [] })), ("PotionId", Short(14)), ("PotionType", Short(0)), ("id", String("Cauldron")), ("x", Int(2)), ("y", Int(-20)), ("z", Int(0))]) } }
+  25133 watcher LevelSoundEvent LevelSoundEvent { sound_id: "bottle.empty", position: Vec3f { x: 2.5, y: -19.5, z: 0.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  25183 actor   UpdateBlock 2 -20 0 layer 0 cauldron[cauldron_liquid=water,fill_level=4]
+  25183 actor   BlockEntityData BlockEntityData { position: BlockCoordinates { x: 2, y: -20, z: 0 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("Items", List(List { tag: 0, items: [] })), ("PotionId", Short(14)), ("PotionType", Short(0)), ("id", String("Cauldron")), ("x", Int(2)), ("y", Int(-20)), ("z", Int(0))]) } }
+  25183 watcher UpdateBlock 2 -20 0 layer 0 cauldron[cauldron_liquid=water,fill_level=4]
+  25183 watcher BlockEntityData BlockEntityData { position: BlockCoordinates { x: 2, y: -20, z: 0 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("Items", List(List { tag: 0, items: [] })), ("PotionId", Short(14)), ("PotionType", Short(0)), ("id", String("Cauldron")), ("x", Int(2)), ("y", Int(-20)), ("z", Int(0))]) } }
+  25883 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  25883 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /
+  26982 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  26982 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /replaceitem entity @s slot.weapon.mainhand 0 glass_bottle 1
+  27048 actor   CommandOutput success_count=1 data=None commands.replaceitem.success.entity success=true ["slot.weapon.mainhand", "0", "CmdActor", "1", "Glass Bottle"]
+  27048 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.replaceitem.success.entity\",\"with\":{\"rawtext\":[{\"text\":\"slot.weapon.mainhand\"},{\"text\":\"0\"},{\"text\":\"CmdActor\"},{\"text\":\"1\"},{\"text\":\"Glass Bottle\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  27275 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  27275 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /!click 2 0 0
+## clicked: Ok(())
+  28073 actor   LevelEvent LevelEvent { event: CauldronTakePotion, position: Vec3f { x: 2.5, y: -19.125, z: 0.5 }, data: -13374465 }
+  28073 actor   UpdateBlock 2 -20 0 layer 0 cauldron[cauldron_liquid=water,fill_level=2]
+  28073 actor   UpdateBlock 2 -19 0 layer 0 air[]
+  28073 actor   UpdateBlock 2 -21 0 layer 0 stone[]
+  28073 actor   UpdateBlock 2 -19 0 layer 0 air[]
+  28073 actor   UpdateBlock 2 -18 0 layer 0 air[]
+  28073 actor   UpdateBlock 2 -20 0 layer 0 cauldron[cauldron_liquid=water,fill_level=2]
+  28073 watcher LevelEvent LevelEvent { event: CauldronTakePotion, position: Vec3f { x: 2.5, y: -19.125, z: 0.5 }, data: -13374465 }
+  28083 actor   UpdateBlock 2 -20 0 layer 0 cauldron[cauldron_liquid=water,fill_level=2]
+  28083 actor   BlockEntityData BlockEntityData { position: BlockCoordinates { x: 2, y: -20, z: 0 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("Items", List(List { tag: 0, items: [] })), ("PotionId", Short(14)), ("PotionType", Short(0)), ("id", String("Cauldron")), ("x", Int(2)), ("y", Int(-20)), ("z", Int(0))]) } }
+  28083 watcher UpdateBlock 2 -20 0 layer 0 cauldron[cauldron_liquid=water,fill_level=2]
+  28083 actor   LevelSoundEvent LevelSoundEvent { sound_id: "bottle.fill", position: Vec3f { x: 2.5, y: -19.5, z: 0.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  28083 watcher BlockEntityData BlockEntityData { position: BlockCoordinates { x: 2, y: -20, z: 0 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("Items", List(List { tag: 0, items: [] })), ("PotionId", Short(14)), ("PotionType", Short(0)), ("id", String("Cauldron")), ("x", Int(2)), ("y", Int(-20)), ("z", Int(0))]) } }
+  28083 watcher LevelSoundEvent LevelSoundEvent { sound_id: "bottle.fill", position: Vec3f { x: 2.5, y: -19.5, z: 0.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /
+## /replaceitem entity @s slot.weapon.mainhand 0 splash_potion 1 14
+  30058 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.replaceitem.success.entity\",\"with\":{\"rawtext\":[{\"text\":\"slot.weapon.mainhand\"},{\"text\":\"0\"},{\"text\":\"CmdActor\"},{\"text\":\"1\"},{\"text\":\"Splash Potion of Swiftness\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  30058 actor   CommandOutput success_count=1 data=None commands.replaceitem.success.entity success=true ["slot.weapon.mainhand", "0", "CmdActor", "1", "Splash Potion of Swiftness"]
+  30875 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 139783, paused: false }] }) }
+  30875 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 139783, paused: false }] }) }
+## /!click 2 0 0
+## clicked: Ok(())
+  31073 watcher LevelEvent LevelEvent { event: CauldronFillPotion, position: Vec3f { x: 2.5, y: -19.125, z: 0.5 }, data: -13374465 }
+  31073 actor   LevelEvent LevelEvent { event: CauldronFillPotion, position: Vec3f { x: 2.5, y: -19.125, z: 0.5 }, data: -13374465 }
+  31073 actor   UpdateBlock 2 -20 0 layer 0 cauldron[cauldron_liquid=water,fill_level=4]
+  31073 actor   UpdateBlock 2 -19 0 layer 0 air[]
+  31073 actor   UpdateBlock 2 -21 0 layer 0 stone[]
+  31073 actor   UpdateBlock 2 -19 0 layer 0 air[]
+  31073 actor   UpdateBlock 2 -18 0 layer 0 air[]
+  31073 actor   UpdateBlock 2 -20 0 layer 0 cauldron[cauldron_liquid=water,fill_level=4]
+  31082 actor   UpdateBlock 2 -20 0 layer 0 cauldron[cauldron_liquid=water,fill_level=4]
+  31082 watcher UpdateBlock 2 -20 0 layer 0 cauldron[cauldron_liquid=water,fill_level=4]
+  31082 actor   BlockEntityData BlockEntityData { position: BlockCoordinates { x: 2, y: -20, z: 0 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("Items", List(List { tag: 0, items: [] })), ("PotionId", Short(14)), ("PotionType", Short(1)), ("id", String("Cauldron")), ("x", Int(2)), ("y", Int(-20)), ("z", Int(0))]) } }
+  31082 actor   LevelSoundEvent LevelSoundEvent { sound_id: "bottle.empty", position: Vec3f { x: 2.5, y: -19.5, z: 0.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  31082 watcher BlockEntityData BlockEntityData { position: BlockCoordinates { x: 2, y: -20, z: 0 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("Items", List(List { tag: 0, items: [] })), ("PotionId", Short(14)), ("PotionType", Short(1)), ("id", String("Cauldron")), ("x", Int(2)), ("y", Int(-20)), ("z", Int(0))]) } }
+  31082 watcher LevelSoundEvent LevelSoundEvent { sound_id: "bottle.empty", position: Vec3f { x: 2.5, y: -19.5, z: 0.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  31127 actor   UpdateBlock 2 -20 0 layer 0 cauldron[cauldron_liquid=water,fill_level=4]
+  31127 watcher UpdateBlock 2 -20 0 layer 0 cauldron[cauldron_liquid=water,fill_level=4]
+  31127 actor   BlockEntityData BlockEntityData { position: BlockCoordinates { x: 2, y: -20, z: 0 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("Items", List(List { tag: 0, items: [] })), ("PotionId", Short(14)), ("PotionType", Short(1)), ("id", String("Cauldron")), ("x", Int(2)), ("y", Int(-20)), ("z", Int(0))]) } }
+  31127 watcher BlockEntityData BlockEntityData { position: BlockCoordinates { x: 2, y: -20, z: 0 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("Items", List(List { tag: 0, items: [] })), ("PotionId", Short(14)), ("PotionType", Short(1)), ("id", String("Cauldron")), ("x", Int(2)), ("y", Int(-20)), ("z", Int(0))]) } }
+## /
+## /replaceitem entity @s slot.weapon.mainhand 0 arrow 16
+  33051 actor   CommandOutput success_count=1 data=None commands.replaceitem.success.entity success=true ["slot.weapon.mainhand", "0", "CmdActor", "16", "Arrow"]
+  33051 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.replaceitem.success.entity\",\"with\":{\"rawtext\":[{\"text\":\"slot.weapon.mainhand\"},{\"text\":\"0\"},{\"text\":\"CmdActor\"},{\"text\":\"16\"},{\"text\":\"Arrow\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /!click 2 0 0
+## clicked: Ok(())
+  34113 actor   UpdateBlock 2 -20 0 layer 0 cauldron[cauldron_liquid=water,fill_level=3]
+  34113 actor   UpdateBlock 2 -19 0 layer 0 air[]
+  34113 actor   UpdateBlock 2 -21 0 layer 0 stone[]
+  34113 actor   UpdateBlock 2 -19 0 layer 0 air[]
+  34113 actor   UpdateBlock 2 -18 0 layer 0 air[]
+  34113 actor   UpdateBlock 2 -20 0 layer 0 cauldron[cauldron_liquid=water,fill_level=3]
+  34133 actor   UpdateBlock 2 -20 0 layer 0 cauldron[cauldron_liquid=water,fill_level=3]
+  34133 watcher UpdateBlock 2 -20 0 layer 0 cauldron[cauldron_liquid=water,fill_level=3]
+  34133 watcher BlockEntityData BlockEntityData { position: BlockCoordinates { x: 2, y: -20, z: 0 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("Items", List(List { tag: 0, items: [] })), ("PotionId", Short(14)), ("PotionType", Short(1)), ("id", String("Cauldron")), ("x", Int(2)), ("y", Int(-20)), ("z", Int(0))]) } }
+  34133 actor   BlockEntityData BlockEntityData { position: BlockCoordinates { x: 2, y: -20, z: 0 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("Items", List(List { tag: 0, items: [] })), ("PotionId", Short(14)), ("PotionType", Short(1)), ("id", String("Cauldron")), ("x", Int(2)), ("y", Int(-20)), ("z", Int(0))]) } }
+  34684 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  34684 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  34883 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  34883 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /
+  35476 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  35476 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /setblock ~2 ~ ~-3 cauldron ["fill_level"=6]
+  36060 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+  36061 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  36083 actor   UpdateBlock 2 -20 -3 layer 0 cauldron[cauldron_liquid=water,fill_level=6]
+  36083 actor   BlockEntityData BlockEntityData { position: BlockCoordinates { x: 2, y: -20, z: -3 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("Items", List(List { tag: 0, items: [] })), ("PotionId", Short(-1)), ("PotionType", Short(-1)), ("id", String("Cauldron")), ("x", Int(2)), ("y", Int(-20)), ("z", Int(-3))]) } }
+  36083 watcher UpdateBlock 2 -20 -3 layer 0 cauldron[cauldron_liquid=water,fill_level=6]
+  36083 watcher BlockEntityData BlockEntityData { position: BlockCoordinates { x: 2, y: -20, z: -3 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("Items", List(List { tag: 0, items: [] })), ("PotionId", Short(-1)), ("PotionType", Short(-1)), ("id", String("Cauldron")), ("x", Int(2)), ("y", Int(-20)), ("z", Int(-3))]) } }
+  36126 actor   UpdateBlock 2 -20 -3 layer 0 cauldron[cauldron_liquid=water,fill_level=6]
+  36126 actor   BlockEntityData BlockEntityData { position: BlockCoordinates { x: 2, y: -20, z: -3 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("Items", List(List { tag: 0, items: [] })), ("PotionId", Short(-1)), ("PotionType", Short(-1)), ("id", String("Cauldron")), ("x", Int(2)), ("y", Int(-20)), ("z", Int(-3))]) } }
+  36126 watcher UpdateBlock 2 -20 -3 layer 0 cauldron[cauldron_liquid=water,fill_level=6]
+  36126 watcher BlockEntityData BlockEntityData { position: BlockCoordinates { x: 2, y: -20, z: -3 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("Items", List(List { tag: 0, items: [] })), ("PotionId", Short(-1)), ("PotionType", Short(-1)), ("id", String("Cauldron")), ("x", Int(2)), ("y", Int(-20)), ("z", Int(-3))]) } }
+## /setblock ~2 ~ ~3 cauldron ["fill_level"=6]
+  37057 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+  37057 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  37083 actor   UpdateBlock 2 -20 3 layer 0 cauldron[cauldron_liquid=water,fill_level=6]
+  37083 actor   BlockEntityData BlockEntityData { position: BlockCoordinates { x: 2, y: -20, z: 3 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("Items", List(List { tag: 0, items: [] })), ("PotionId", Short(-1)), ("PotionType", Short(-1)), ("id", String("Cauldron")), ("x", Int(2)), ("y", Int(-20)), ("z", Int(3))]) } }
+  37083 watcher UpdateBlock 2 -20 3 layer 0 cauldron[cauldron_liquid=water,fill_level=6]
+  37083 watcher BlockEntityData BlockEntityData { position: BlockCoordinates { x: 2, y: -20, z: 3 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("Items", List(List { tag: 0, items: [] })), ("PotionId", Short(-1)), ("PotionType", Short(-1)), ("id", String("Cauldron")), ("x", Int(2)), ("y", Int(-20)), ("z", Int(3))]) } }
+  37127 actor   UpdateBlock 2 -20 3 layer 0 cauldron[cauldron_liquid=water,fill_level=6]
+  37127 actor   BlockEntityData BlockEntityData { position: BlockCoordinates { x: 2, y: -20, z: 3 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("Items", List(List { tag: 0, items: [] })), ("PotionId", Short(-1)), ("PotionType", Short(-1)), ("id", String("Cauldron")), ("x", Int(2)), ("y", Int(-20)), ("z", Int(3))]) } }
+  37127 watcher UpdateBlock 2 -20 3 layer 0 cauldron[cauldron_liquid=water,fill_level=6]
+  37127 watcher BlockEntityData BlockEntityData { position: BlockCoordinates { x: 2, y: -20, z: 3 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("Items", List(List { tag: 0, items: [] })), ("PotionId", Short(-1)), ("PotionType", Short(-1)), ("id", String("Cauldron")), ("x", Int(2)), ("y", Int(-20)), ("z", Int(3))]) } }
+  37526 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  37526 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /
+## /replaceitem entity @s slot.weapon.mainhand 0 red_dye 1
+  39063 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.replaceitem.success.entity\",\"with\":{\"rawtext\":[{\"text\":\"slot.weapon.mainhand\"},{\"text\":\"0\"},{\"text\":\"CmdActor\"},{\"text\":\"1\"},{\"text\":\"Red Dye\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  39063 actor   CommandOutput success_count=1 data=None commands.replaceitem.success.entity success=true ["slot.weapon.mainhand", "0", "CmdActor", "1", "Red Dye"]
+## /!click 2 0 -3
+## clicked: Ok(())
+  40153 watcher LevelEvent LevelEvent { event: CauldronAddDye, position: Vec3f { x: 2.5, y: -18.875, z: -2.5 }, data: -5231066 }
+  40153 actor   LevelEvent LevelEvent { event: CauldronAddDye, position: Vec3f { x: 2.5, y: -18.875, z: -2.5 }, data: -5231066 }
+  40154 actor   UpdateBlock 2 -20 -3 layer 0 cauldron[cauldron_liquid=water,fill_level=6]
+  40154 actor   UpdateBlock 2 -19 -3 layer 0 air[]
+  40154 actor   UpdateBlock 2 -21 -3 layer 0 stone[]
+  40154 actor   UpdateBlock 2 -19 -3 layer 0 air[]
+  40154 actor   UpdateBlock 2 -18 -3 layer 0 air[]
+  40154 actor   UpdateBlock 2 -20 -3 layer 0 cauldron[cauldron_liquid=water,fill_level=6]
+  40184 actor   UpdateSubchunkBlocks 2 -20 -3 cauldron[cauldron_liquid=water,fill_level=5]; 2 -20 -3 cauldron[cauldron_liquid=water,fill_level=6] | extra: 
+  40184 watcher UpdateSubchunkBlocks 2 -20 -3 cauldron[cauldron_liquid=water,fill_level=5]; 2 -20 -3 cauldron[cauldron_liquid=water,fill_level=6] | extra: 
+  40184 actor   BlockEntityData BlockEntityData { position: BlockCoordinates { x: 2, y: -20, z: -3 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("CustomColor", Int(-5231066)), ("Items", List(List { tag: 0, items: [] })), ("PotionId", Short(-1)), ("PotionType", Short(-1)), ("id", String("Cauldron")), ("x", Int(2)), ("y", Int(-20)), ("z", Int(-3))]) } }
+  40184 actor   BlockEntityData BlockEntityData { position: BlockCoordinates { x: 2, y: -20, z: -3 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("CustomColor", Int(-5231066)), ("Items", List(List { tag: 0, items: [] })), ("PotionId", Short(-1)), ("PotionType", Short(-1)), ("id", String("Cauldron")), ("x", Int(2)), ("y", Int(-20)), ("z", Int(-3))]) } }
+  40184 watcher BlockEntityData BlockEntityData { position: BlockCoordinates { x: 2, y: -20, z: -3 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("CustomColor", Int(-5231066)), ("Items", List(List { tag: 0, items: [] })), ("PotionId", Short(-1)), ("PotionType", Short(-1)), ("id", String("Cauldron")), ("x", Int(2)), ("y", Int(-20)), ("z", Int(-3))]) } }
+  40184 watcher BlockEntityData BlockEntityData { position: BlockCoordinates { x: 2, y: -20, z: -3 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("CustomColor", Int(-5231066)), ("Items", List(List { tag: 0, items: [] })), ("PotionId", Short(-1)), ("PotionType", Short(-1)), ("id", String("Cauldron")), ("x", Int(2)), ("y", Int(-20)), ("z", Int(-3))]) } }
+  40233 actor   UpdateBlock 2 -20 -3 layer 0 cauldron[cauldron_liquid=water,fill_level=6]
+  40233 actor   BlockEntityData BlockEntityData { position: BlockCoordinates { x: 2, y: -20, z: -3 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("CustomColor", Int(-5231066)), ("Items", List(List { tag: 0, items: [] })), ("PotionId", Short(-1)), ("PotionType", Short(-1)), ("id", String("Cauldron")), ("x", Int(2)), ("y", Int(-20)), ("z", Int(-3))]) } }
+  40233 watcher UpdateBlock 2 -20 -3 layer 0 cauldron[cauldron_liquid=water,fill_level=6]
+  40233 watcher BlockEntityData BlockEntityData { position: BlockCoordinates { x: 2, y: -20, z: -3 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("CustomColor", Int(-5231066)), ("Items", List(List { tag: 0, items: [] })), ("PotionId", Short(-1)), ("PotionType", Short(-1)), ("id", String("Cauldron")), ("x", Int(2)), ("y", Int(-20)), ("z", Int(-3))]) } }
+## /
+## /replaceitem entity @s slot.weapon.mainhand 0 leather_helmet 1
+  42124 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.replaceitem.success.entity\",\"with\":{\"rawtext\":[{\"text\":\"slot.weapon.mainhand\"},{\"text\":\"0\"},{\"text\":\"CmdActor\"},{\"text\":\"1\"},{\"text\":\"Leather Cap\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  42124 actor   CommandOutput success_count=1 data=None commands.replaceitem.success.entity success=true ["slot.weapon.mainhand", "0", "CmdActor", "1", "Leather Cap"]
+## /!click 2 0 -3
+## clicked: Ok(())
+  43133 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  43133 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  43163 actor   LevelEvent LevelEvent { event: CauldronDyeArmor, position: Vec3f { x: 2.5, y: -19.0, z: -2.5 }, data: -5231066 }
+  43163 actor   UpdateBlock 2 -20 -3 layer 0 cauldron[cauldron_liquid=water,fill_level=5]
+  43163 actor   UpdateBlock 2 -19 -3 layer 0 air[]
+  43163 actor   UpdateBlock 2 -21 -3 layer 0 stone[]
+  43163 actor   UpdateBlock 2 -19 -3 layer 0 air[]
+  43163 actor   UpdateBlock 2 -18 -3 layer 0 air[]
+  43163 actor   UpdateBlock 2 -20 -3 layer 0 cauldron[cauldron_liquid=water,fill_level=5]
+  43164 watcher LevelEvent LevelEvent { event: CauldronDyeArmor, position: Vec3f { x: 2.5, y: -19.0, z: -2.5 }, data: -5231066 }
+  43189 actor   UpdateBlock 2 -20 -3 layer 0 cauldron[cauldron_liquid=water,fill_level=5]
+  43189 actor   BlockEntityData BlockEntityData { position: BlockCoordinates { x: 2, y: -20, z: -3 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("CustomColor", Int(-5231066)), ("Items", List(List { tag: 0, items: [] })), ("PotionId", Short(-1)), ("PotionType", Short(-1)), ("id", String("Cauldron")), ("x", Int(2)), ("y", Int(-20)), ("z", Int(-3))]) } }
+  43189 watcher UpdateBlock 2 -20 -3 layer 0 cauldron[cauldron_liquid=water,fill_level=5]
+  43189 watcher BlockEntityData BlockEntityData { position: BlockCoordinates { x: 2, y: -20, z: -3 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("CustomColor", Int(-5231066)), ("Items", List(List { tag: 0, items: [] })), ("PotionId", Short(-1)), ("PotionType", Short(-1)), ("id", String("Cauldron")), ("x", Int(2)), ("y", Int(-20)), ("z", Int(-3))]) } }
+  43682 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 140039, paused: false }] }) }
+  43682 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 140039, paused: false }] }) }
+## /
+## /!click 2 0 3
+## clicked: Ok(())
+  45215 actor   LevelEvent LevelEvent { event: CauldronCleanArmor, position: Vec3f { x: 2.5, y: -19.0, z: 3.5 }, data: -1087090343 }
+  45215 actor   UpdateBlock 2 -20 3 layer 0 cauldron[cauldron_liquid=water,fill_level=5]
+  45215 actor   UpdateBlock 2 -19 3 layer 0 air[]
+  45215 actor   UpdateBlock 2 -21 3 layer 0 stone[]
+  45215 actor   UpdateBlock 2 -19 3 layer 0 air[]
+  45215 actor   UpdateBlock 2 -18 3 layer 0 air[]
+  45215 actor   UpdateBlock 2 -20 3 layer 0 cauldron[cauldron_liquid=water,fill_level=5]
+  45216 watcher LevelEvent LevelEvent { event: CauldronCleanArmor, position: Vec3f { x: 2.5, y: -19.0, z: 3.5 }, data: -1087090343 }
+  45233 actor   UpdateBlock 2 -20 3 layer 0 cauldron[cauldron_liquid=water,fill_level=5]
+  45234 actor   BlockEntityData BlockEntityData { position: BlockCoordinates { x: 2, y: -20, z: 3 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("Items", List(List { tag: 0, items: [] })), ("PotionId", Short(-1)), ("PotionType", Short(-1)), ("id", String("Cauldron")), ("x", Int(2)), ("y", Int(-20)), ("z", Int(3))]) } }
+  45234 watcher UpdateBlock 2 -20 3 layer 0 cauldron[cauldron_liquid=water,fill_level=5]
+  45234 watcher BlockEntityData BlockEntityData { position: BlockCoordinates { x: 2, y: -20, z: 3 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("Items", List(List { tag: 0, items: [] })), ("PotionId", Short(-1)), ("PotionType", Short(-1)), ("id", String("Cauldron")), ("x", Int(2)), ("y", Int(-20)), ("z", Int(3))]) } }
+  45880 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  45880 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /
+  46433 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  46433 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /replaceitem entity @s slot.weapon.mainhand 0 red_shulker_box 1
+  47173 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.replaceitem.success.entity\",\"with\":{\"rawtext\":[{\"text\":\"slot.weapon.mainhand\"},{\"text\":\"0\"},{\"text\":\"CmdActor\"},{\"text\":\"1\"},{\"text\":\"Red Shulker Box\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  47173 actor   CommandOutput success_count=1 data=None commands.replaceitem.success.entity success=true ["slot.weapon.mainhand", "0", "CmdActor", "1", "Red Shulker Box"]
+## /!click 2 0 3
+## clicked: Ok(())
+  48227 actor   LevelEvent LevelEvent { event: CauldronCleanArmor, position: Vec3f { x: 2.5, y: -19.125, z: 3.5 }, data: -1087090343 }
+  48227 actor   UpdateBlock 2 -20 3 layer 0 cauldron[cauldron_liquid=water,fill_level=4]
+  48227 actor   UpdateBlock 2 -19 3 layer 0 air[]
+  48227 actor   UpdateBlock 2 -21 3 layer 0 stone[]
+  48227 actor   UpdateBlock 2 -19 3 layer 0 air[]
+  48227 actor   UpdateBlock 2 -18 3 layer 0 air[]
+  48227 actor   UpdateBlock 2 -20 3 layer 0 cauldron[cauldron_liquid=water,fill_level=4]
+  48228 watcher LevelEvent LevelEvent { event: CauldronCleanArmor, position: Vec3f { x: 2.5, y: -19.125, z: 3.5 }, data: -1087090343 }
+  48284 watcher UpdateBlock 2 -20 3 layer 0 cauldron[cauldron_liquid=water,fill_level=4]
+  48284 actor   UpdateBlock 2 -20 3 layer 0 cauldron[cauldron_liquid=water,fill_level=4]
+  48284 actor   BlockEntityData BlockEntityData { position: BlockCoordinates { x: 2, y: -20, z: 3 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("Items", List(List { tag: 0, items: [] })), ("PotionId", Short(-1)), ("PotionType", Short(-1)), ("id", String("Cauldron")), ("x", Int(2)), ("y", Int(-20)), ("z", Int(3))]) } }
+  48284 watcher BlockEntityData BlockEntityData { position: BlockCoordinates { x: 2, y: -20, z: 3 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("Items", List(List { tag: 0, items: [] })), ("PotionId", Short(-1)), ("PotionType", Short(-1)), ("id", String("Cauldron")), ("x", Int(2)), ("y", Int(-20)), ("z", Int(3))]) } }
+  48432 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  48432 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /
+  49634 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  49634 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /replaceitem entity @s slot.weapon.mainhand 0 banner 1 1
+  50178 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.replaceitem.success.entity\",\"with\":{\"rawtext\":[{\"text\":\"slot.weapon.mainhand\"},{\"text\":\"0\"},{\"text\":\"CmdActor\"},{\"text\":\"1\"},{\"text\":\"Red Banner\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  50178 actor   CommandOutput success_count=1 data=None commands.replaceitem.success.entity success=true ["slot.weapon.mainhand", "0", "CmdActor", "1", "Red Banner"]
+  50234 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  50234 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  50633 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  50633 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /!click 2 0 3
+## clicked: Ok(())
+## /
+## /gamemode creative @s
+  53184 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"gameMode.changed\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.creative\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  53184 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamemode.success.self\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.creative\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  53184 actor   CommandOutput success_count=1 data=None commands.gamemode.success.self success=true ["%createWorldScreen.gameMode.creative"]
+## /fill ~-2 ~ ~-6 ~10 ~6 ~6 air
+  54183 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.fill.success\",\"with\":{\"rawtext\":[{\"text\":\"3\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  54183 actor   CommandOutput success_count=1 data=None commands.fill.success success=true ["3"]
+  54229 actor   UpdateSubchunkBlocks 2 -20 0 air[]; 2 -20 3 air[] | extra: 
+  54229 actor   UpdateBlock 2 -20 -3 layer 0 air[]
+  54230 watcher UpdateSubchunkBlocks 2 -20 0 air[]; 2 -20 3 air[] | extra: 
+  54230 watcher UpdateBlock 2 -20 -3 layer 0 air[]
+  54530 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  54530 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /clear @s
+  55185 actor   InventorySlot InventorySlot { window_id: Ui, slot: 0, container: None, storage_item: None, item: ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) } }
+  55185 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.clear.success\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor\"},{\"text\":\"1\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  55185 actor   CommandOutput success_count=1 data=None commands.clear.success success=true ["CmdActor", "1"]
+## /
+  56480 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 140295, paused: false }] }) }
+  56481 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 140295, paused: false }] }) }
+  56729 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  56729 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+probe exit 0
