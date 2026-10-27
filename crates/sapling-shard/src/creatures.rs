@@ -14,6 +14,7 @@ mod blast;
 mod breezes;
 mod dolphins;
 mod drinks;
+mod drowned;
 mod bullets;
 mod charges;
 mod creaking;
@@ -41,6 +42,7 @@ mod scooping;
 mod shooting;
 mod shown;
 mod slimes;
+mod snow_golems;
 mod spells;
 mod splashes;
 mod squids;
@@ -159,6 +161,7 @@ pub(crate) fn tick(world: &mut World) {
     wither::tick(world);
     bees::tick(world);
     guardians::tick(world);
+    snow_golems::tick(world);
     husbandry::tick(world);
     crowding::tick(world);
     let now = world.resource::<Tick>().0;
@@ -191,7 +194,7 @@ pub(crate) fn tick(world: &mut World) {
         }
         // A teleport starts the tick afresh where it landed: no fall from where it left.
         let Some(start) = world.get::<Body>(entity).copied() else { continue };
-        if thinks && !legs::ridden(world, entity, layer, &kind, &start) && !wither::steer(world, entity, layer) && !rams::steer(world, entity, layer, id, &kind) && !creaking::steer(world, entity, layer, id, &kind) && !hunting::steer(world, entity, layer, id, &kind) && !husbandry::steer(world, entity, layer, &kind) && !villagers::steer(world, entity, layer)
+        if thinks && !legs::ridden(world, entity, layer, &kind, &start) && !wither::steer(world, entity, layer) && !rams::steer(world, entity, layer, id, &kind) && !creaking::steer(world, entity, layer, id, &kind) && !hunting::steer(world, entity, layer, id, &kind) && !snow_golems::steer(world, entity, layer, id, &kind) && !husbandry::steer(world, entity, layer, &kind) && !villagers::steer(world, entity, layer)
             && !swimming::steer(world, entity, layer, &kind) && !squids::steer(world, entity) && !wings::steer(world, entity, layer, &kind)
         {
             let traits = sapling_data::mob_traits(&kind);
@@ -211,6 +214,7 @@ pub(crate) fn tick(world: &mut World) {
                 hunting::strike(world, entity, layer, id, &kind, &body);
             }
             rams::strike(world, entity, layer, id, &kind, &body);
+            drowned::throw(world, entity, layer, id, &kind, &body);
             slimes::after_move(world, entity, layer, id, &kind, &start, &body);
             if blast::tick(world, entity, layer, id, &kind, &body) {
                 continue;

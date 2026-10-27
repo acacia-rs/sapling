@@ -7,7 +7,7 @@
 
 mod strike;
 
-pub(super) use strike::strike;
+pub(super) use strike::{strike, swing};
 
 use acacia_proto::packets::{LevelSoundEvent, SetEntityData};
 use acacia_proto::types::{EntityProperties, MetadataDictionaryItem, MetadataDictionaryItemKey as Key, MetadataDictionaryItemType as Type, MetadataDictionaryItemValue as Value, MetadataDictionaryItemValueDefault as Plain, Vec3f};
@@ -45,7 +45,7 @@ const PLAYER: [f32; 2] = [0.6, 1.8];
 /// How far apart a line of sight is looked at.
 const GLANCE: f32 = 0.25;
 /// Its sounds come from this much of its height up: its growl, and its hit.
-const HEAD: f32 = 0.85;
+pub(super) const HEAD: f32 = 0.85;
 const MIDDLE: f32 = 0.5;
 /// Kinds heard `angry` a tick after their growl as they take prey (research/captures/bds-beasts.txt).
 const ANGERED: &[&str] = &["minecraft:hoglin", "minecraft:zoglin"];
@@ -106,7 +106,7 @@ pub(super) fn nearest(world: &World, layer: Entity, body: &Body, sight: f32) -> 
 }
 
 /// The hunter `id` has the entity `target` as its prey, or none for 0.
-fn targets(id: u64, target: i64) -> bytes::Bytes {
+pub(super) fn targets(id: u64, target: i64) -> bytes::Bytes {
     let item = MetadataDictionaryItem { key: Key::TargetEid, r#type: Type::Long, legacy_type: 7, value: Value::Default(Plain::Long(target)) };
     sapling_net::encode(&SetEntityData { runtime_entity_id: id, metadata: vec![item], properties: EntityProperties { ints: Vec::new(), floats: Vec::new() }, tick: 0 })
 }

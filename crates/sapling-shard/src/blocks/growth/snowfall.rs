@@ -64,7 +64,7 @@ fn near_players(world: &mut World) -> Vec<(Entity, ChunkPos)> {
 }
 
 /// Whether a layer of snow can lie on the block `id`: leaves, or a full top that is not ice.
-fn holds_snow(level: &Level, id: u32) -> bool {
+pub(crate) fn holds_snow(level: &Level, id: u32) -> bool {
     level.registry().get(id).is_some_and(|state| state.name.ends_with("leaves") || state.is_full_cube() && !matches!(state.name, ICE | "minecraft:frosted_ice" | "minecraft:packed_ice" | "minecraft:blue_ice" | "minecraft:barrier"))
 }
 

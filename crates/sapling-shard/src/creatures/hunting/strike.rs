@@ -13,6 +13,12 @@ use crate::{entities, late_sounds, vitals};
 /// The kinds of fight whose hit is a bite within reach; the others hit their own way.
 const BITES: &[&str] = &["swims", "flies"];
 
+/// Its viewers see the mob swing its arm.
+pub(in crate::creatures) fn swing(world: &mut World, mob: Entity, layer: Entity, id: u64, body: &Body) {
+    let swing = EntityEvent { runtime_entity_id: id, event_id: EntityEventEventId::ArmSwing, data: 0, fire_at_position: None };
+    entities::tell_viewers(world, mob, layer, body.at.map(|c| c.floor() as i32), vec![sapling_net::encode(&swing)]);
+}
+
 /// After its move: a hunter whose reach its prey is in swings and hits it, heard a tick later.
 pub(in crate::creatures) fn strike(world: &mut World, entity: Entity, layer: Entity, id: u64, kind: &str, body: &Body) -> Option<()> {
     let now = world.resource::<Tick>().0;
@@ -49,8 +55,7 @@ pub(in crate::creatures) fn strike(world: &mut World, entity: Entity, layer: Ent
     let harm = harm + hunts.varies.map_or(0.0, |most| world.get_resource_or_insert_with(crate::blocks::Dice::default).fraction() * (most - hunts.attack));
     let harm = on_difficulty(world, harm)?;
     let cell = body.at.map(|c| c.floor() as i32);
-    let swing = EntityEvent { runtime_entity_id: id, event_id: EntityEventEventId::ArmSwing, data: 0, fire_at_position: None };
-    entities::tell_viewers(world, entity, layer, cell, vec![sapling_net::encode(&swing)]);
+    swing(world, entity, layer, id, body);
     let far = dx.hypot(dz);
     let away = if far > 1e-4 { [dx / far, dz / far] } else { [0.0; 2] };
     let [along, up] = if hunts.upto.is_some() { FLINGS } else { [THROW; 2] };

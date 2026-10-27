@@ -17,6 +17,12 @@ impl World {
     /// Whether it is cold enough at a cell for water to freeze and snow to fall; never outside
     /// the overworld's sky or a loaded column.
     pub fn is_cold(&self, x: i32, y: i32, z: i32) -> bool {
-        self.dim.sky && self.biome(x, y, z).and_then(|biome| sapling_worldgen::temperature(biome, [x, y, z])).is_some_and(|t| t <= COLD)
+        self.dim.sky && self.temperature(x, y, z).is_some_and(|t| t <= COLD)
+    }
+
+    /// The temperature at a cell, cooled with height; `None` where nothing is loaded or the biome
+    /// has no climate here.
+    pub fn temperature(&self, x: i32, y: i32, z: i32) -> Option<f32> {
+        sapling_worldgen::temperature(self.biome(x, y, z)?, [x, y, z])
     }
 }

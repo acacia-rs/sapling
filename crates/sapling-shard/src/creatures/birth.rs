@@ -23,6 +23,7 @@ pub(super) fn spawn_as(world: &mut World, layer: Entity, kind: &str, feet: [f32;
     let id = born(world, layer, kind, feet, Birth { reason, yaw, gene, sound: "spawn" })?;
     let entity = entities::find(world, id)?;
     villagers::arm(world, entity, layer, kind, false, event);
+    super::drowned::arm(world, entity, kind, event);
     Some(id)
 }
 

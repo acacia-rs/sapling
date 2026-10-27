@@ -223,6 +223,26 @@ survival on obsidian at midnight on easy (`research/captures/bds-ghast-findings.
   1 came the tick after, `7 (a² + a)` with `a = 1 - d/2`, d from the feet, the same on every
   difficulty, and lit fire about it. One that met the floor blew up there.
 
+## The snow golem (`snowgolem`)
+
+A snow golem on plains at noon with a zombie 8 off (`research/captures/bds-snowgolem.txt`):
+
+- A layer of snow came the tick after it was summoned under its feet, and as it walked one under
+  each of the four cells a quarter block about where it stood at the tick's start, in one update
+  where several were new (temperature under 0.81, the pack's `trail`).
+- It took the zombie (`TargetEid` the zombie's unique id, `mob.warning` a tick later) once it was
+  within 6, walked at it, and threw its snowball 22 ticks after taking it (Java's `RangedAttackGoal`
+  throws at 21 with a 20-tick interval), from about its eyes at 1.5 a tick, heard `shoot` from its
+  middle. The zombie, which had taken the golem 4 ticks after it came, killed it (health 4) first.
+
+## Drowned with tridents (`drowned`)
+
+A drowned summoned `as_ranged_adult` in a pool 8 from the actor at midnight
+(`research/captures/bds-drowned.txt`): shown holding a trident (`MobEquipment`) as it came; it took
+the actor and 77 ticks on swung (sapling waits Java's 20 to 60 by distance), a `thrown_trident` following a tick later at 3.94 a tick (the
+pack's power 4), heard `item.trident.throw` from the drowned. It kept its own trident; the thrown
+one stuck in the floor. One handed a trident by `replaceitem` (an earlier run) only bit.
+
 ## Sapling
 
 A witch throws as above (`creatures/arrows.rs` `POTION`, its rise fitted to the three throws),

@@ -90,7 +90,7 @@ pub(super) fn sun_on(world: &World, layer: Entity, at: [i32; 3]) -> bool {
 
 /// Whether rain falls on the cell `at` in `weather`: the sky is over it and the biome is not
 /// cold enough for snow, which does not put a burning mob out (`Actor::isInWaterOrRain`).
-fn is_rained_on(level: &Level, [x, y, z]: [i32; 3], weather: sapling_api::Weather) -> bool {
+pub(super) fn is_rained_on(level: &Level, [x, y, z]: [i32; 3], weather: sapling_api::Weather) -> bool {
     weather != sapling_api::Weather::Clear && level.light_at(x, y, z).is_some_and(|(sky, _)| sky == sapling_world::FULL_LIGHT) && !level.is_cold(x, y, z)
 }
 

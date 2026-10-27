@@ -25,6 +25,7 @@ use sapling_world::ChunkPos;
 use super::{level, send};
 
 pub(super) use kelp::meal as meal_kelp;
+pub(crate) use snowfall::holds_snow;
 
 const RULE: &str = "randomTickSpeed";
 /// Ticks between a cell's random ticks for each unit of the rule: BDS's lit ores lasted 1760 on
