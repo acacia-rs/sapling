@@ -5,6 +5,7 @@
 // saved with the least a compound needs, which BDS was not tried on.
 
 mod afflictions;
+mod armour_stands;
 mod arrows;
 mod attacks;
 mod backend;
@@ -71,6 +72,7 @@ use shown::{head, physics_of, reshow};
 pub(crate) use birth::{from_storage, spawn};
 pub(crate) use shown::is_baby;
 pub(crate) use afflictions::{breathed_on, splashed};
+pub(crate) use armour_stands::use_on as dress_stand;
 pub(crate) use arrows::{ARROW, FIREBALL, Lands, Shot};
 pub(crate) use flight::{Arrow, Launch, Loosed, Pickup, facing, from_storage as shot_from_storage, launch, lying as lying_shots, sound, unstick};
 pub(crate) use attacks::attacked;

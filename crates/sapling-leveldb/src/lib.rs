@@ -2,6 +2,7 @@
 //! layout, `level.dat`, and the disk chunk codec, decoding into acacia-world chunks. Formats and
 //! sources: research/worlds-and-ecs.md §1.
 
+mod actor_gear;
 mod actor_harm;
 mod actor_raising;
 mod actor_riding;
@@ -30,6 +31,7 @@ mod world;
 
 use std::path::PathBuf;
 
+pub use actor_gear::{actor_pose, geared_actor};
 pub use actor_harm::harmed_actor;
 pub use actor_riding::{actor_chest, actor_links, chested_actor, flagged_actor, linked_actor, varied_actor};
 pub use actor_tags::{actor_tags, tagged_actor};

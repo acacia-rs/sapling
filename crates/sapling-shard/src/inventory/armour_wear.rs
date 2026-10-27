@@ -127,10 +127,10 @@ pub(crate) fn equipped(world: &mut World, player: Entity, before: &[Option<(i32,
     }
 }
 
-/// `armor.equip_<material>` at the player's eyes, to it and its viewers.
+/// `armor.equip_<material>` of an armour piece; `None` for anything else.
 // TODO: chainmail, gold, turtle and elytra are named as the client's sounds are, not drilled.
-fn equip_sound(world: &mut World, player: Entity, piece: &str) {
-    let Some(_) = sapling_data::armour_lasts(piece) else { return };
+pub(crate) fn equip_sound_name(piece: &str) -> Option<String> {
+    sapling_data::armour_lasts(piece)?;
     let plain = piece.strip_prefix("minecraft:").unwrap_or(piece);
     let material = match plain.split('_').next() {
         Some(material @ ("leather" | "iron" | "diamond" | "netherite")) => material,
@@ -139,8 +139,14 @@ fn equip_sound(world: &mut World, player: Entity, piece: &str) {
         _ if plain == "elytra" => "elytra",
         _ => "generic",
     };
+    Some(format!("armor.equip_{material}"))
+}
+
+/// `armor.equip_<material>` at the player's eyes, to it and its viewers.
+fn equip_sound(world: &mut World, player: Entity, piece: &str) {
+    let Some(sound_id) = equip_sound_name(piece) else { return };
     let (Some(id), Some([x, y, z])) = (world.get::<NetId>(player).map(|id| id.0), world.get::<Position>(player).map(|position| position.feet)) else { return };
     let position = Vec3f { x, y: y + sapling_data::EYE_HEIGHT, z };
-    let sound = LevelSoundEvent { sound_id: format!("armor.equip_{material}"), position, extra_data: -1, entity_type: "minecraft:player".into(), is_baby_mob: false, is_global: false, entity_unique_id: id as i64, fire_at_position: None };
+    let sound = LevelSoundEvent { sound_id, position, extra_data: -1, entity_type: "minecraft:player".into(), is_baby_mob: false, is_global: false, entity_unique_id: id as i64, fire_at_position: None };
     crate::vitals::tell(world, player, &sound);
 }

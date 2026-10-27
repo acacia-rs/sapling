@@ -26,7 +26,7 @@ pub(super) fn floats(values: &[f32]) -> Value {
 }
 
 /// Every slot in order, an empty one as a stack without a name.
-pub(super) fn stacks(slots: &[Option<ItemStack>], registry: &BlockRegistry) -> Value {
+pub(crate) fn stacks(slots: &[Option<ItemStack>], registry: &BlockRegistry) -> Value {
     let stack = |slot: &Option<ItemStack>| Value::Compound(slot.as_ref().map_or_else(ItemStack::no_fields, |stack| stack.fields(registry)));
     Value::List(List { tag: COMPOUND, items: slots.iter().map(stack).collect() })
 }

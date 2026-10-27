@@ -102,8 +102,10 @@ pub(crate) fn dispatch(world: &mut World) {
             None
         }
         TransactionTransactionData::ItemUseOnEntity(on) => {
-            let clicks = if on.action_type == OnEntity::Attack { &mut hits } else { &mut uses };
-            clicks.push((from, on.entity_runtime_id));
+            match on.action_type {
+                OnEntity::Attack => hits.push((from, on.entity_runtime_id)),
+                _ => uses.push((from, on.entity_runtime_id, [on.click_pos.x, on.click_pos.y, on.click_pos.z])),
+            }
             None
         }
         _ => None,

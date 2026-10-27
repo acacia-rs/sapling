@@ -49,17 +49,19 @@ pub(crate) fn allowed_hits(world: &mut World, hits: Vec<(Entity, u64)>) -> Vec<(
 
 /// Offers this tick's uses of players and entities; one no plugin cancelled goes to the first that
 /// takes it: a vehicle's own use (vehicles.rs), a water bucket's scoop (creatures/scooping.rs),
-/// raising (creatures/husbandry/clicks.rs), a piglin's barter (creatures/piglins.rs), a trader's
-/// screen, then tack or a seat (riding/mounts.rs), as BDS mounts only on a click no `minecraft:interact`
+/// raising (creatures/husbandry/clicks.rs), a piglin's barter (creatures/piglins.rs), an armour
+/// stand's gear (creatures/armour_stands.rs, by the world point `click` hit), a trader's screen,
+/// then tack or a seat (riding/mounts.rs), as BDS mounts only on a click no `minecraft:interact`
 /// took (docs/research/vehicles.md, "Mounting").
-pub(crate) fn interacted(world: &mut World, uses: Vec<(Entity, u64)>) {
-    for (player, id) in uses {
+pub(crate) fn interacted(world: &mut World, uses: Vec<(Entity, u64, [f32; 3])>) {
+    for (player, id, click) in uses {
         let allowed = offer_click(world, player, id, EntityInteractEvent::new).is_some_and(|event| !event.is_cancelled());
         let Some(target) = entities::find(world, EntityId(id)).filter(|_| allowed) else { continue };
         let _ = crate::vehicles::used_on(world, player, target)
             || crate::creatures::scoop(world, player, target)
             || crate::creatures::interact(world, player, target)
             || crate::creatures::barter(world, player, target)
+            || crate::creatures::dress_stand(world, player, target, click)
             || crate::creatures::trade_with(world, player, id)
             || crate::riding::used_on(world, player, target);
     }

@@ -6,6 +6,7 @@ mod common;
 mod anchors;
 mod arenas;
 mod batched_blocks;
+mod armour_stands;
 mod armour_wear;
 mod attacks;
 mod bees;

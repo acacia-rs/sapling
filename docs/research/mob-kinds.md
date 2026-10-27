@@ -257,6 +257,24 @@ half a block to the viewer's left and up for an even width and height (Java's of
 (`paintings.rs`) does the same with "solid" as collision, and keeps the painting with its column.
 Breaking one is not built; a hung painting is a statue like the stored ones.
 
+## Armour stands (`armorstand`)
+
+`ArmorStand::getInteraction` (`1429b5e20`): nothing for a spectator; a sneaking click is
+`action.interact.armorstand.pose`, which moves `PoseIndex` on by one of 13 (`142a044f0`). Otherwise
+the height of the point hit above the stand's feet picks a slot, in this order: 0.1 to 0.55 feet,
+0.9 to 1.6 chest, 0.4 to 1.2 legs, 1.6 up head, below 0.1 none. A held armour piece goes to its own
+slot, anything else to the main hand; an empty hand takes from the slot clicked, the main hand first
+when the chest is clicked. The swap (`1429ba2c0`) does nothing for the same stack on both sides; a
+creative player's item is copied onto an empty slot; from a stack of two or more one goes on and the
+stand's item goes to the inventory (refused without room); otherwise the two trade places. Then
+`mob.armor_stand.place` at the stand's position plus 0.5 on each axis. In
+`research/captures/bds-armorstand.txt` a creative player's diamond helmet went on (main hand, offhand
+then armour `MobEquipment`s, `armor.equip_diamond` from the stand's eyes, then the place sound) and
+the player kept it; a second click with it did nothing. sapling (`creatures/armour_stands.rs`)
+keeps the gear and pose with the stand (`Armor`, `Mainhand`, `Offhand`, `Pose`/`PoseIndex`, the
+names the stand's save at `1429b4d80` writes). Which slot heads, skulls and pumpkins take, and
+where the stand's old item goes on a plain swap (here: the player's hand) are [U].
+
 ## Piglins bartering (`barter`)
 
 A piglin in the warded room (`research/captures/bds-barter.txt`) picked a thrown gold ingot up: shown
