@@ -6,6 +6,7 @@
 mod after_break;
 mod bonemeal;
 mod blown;
+mod bubbles;
 mod buckets;
 mod bulbs;
 mod composter;
