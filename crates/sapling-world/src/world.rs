@@ -125,6 +125,21 @@ impl World {
         self.columns.iter().filter(|(_, column)| !column.actors().is_empty()).map(|(pos, _)| *pos).collect()
     }
 
+    /// The block ticks a loaded column was stored with, or last given (`StoredColumn::pending_ticks`).
+    pub fn pending_ticks(&self, pos: ChunkPos) -> &[u8] {
+        self.column(pos).map_or(&[], Column::pending_ticks)
+    }
+
+    /// Replaces a loaded column's waiting block ticks, to be saved with it; false where none is loaded.
+    pub fn set_pending_ticks(&mut self, pos: ChunkPos, ticks: Vec<u8>) -> bool {
+        self.column_mut(pos).map(|column| column.set_pending_ticks(ticks)).is_some()
+    }
+
+    /// The loaded columns, for writing back what is kept beside their blocks.
+    pub fn loaded_positions(&self) -> Vec<ChunkPos> {
+        self.columns.keys().copied().collect()
+    }
+
     /// The runtime id of a block's default-ordered first state, e.g. `minecraft:stone`.
     pub fn block_id(&self, name: &str) -> Option<u32> {
         self.registry.states_of(name).next().map(|(id, _)| id)

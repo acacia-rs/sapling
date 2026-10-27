@@ -126,7 +126,8 @@ One listener task, one shard thread, one world. The pieces and why they are shap
   (tests, read-only maps). `LevelDbWorld::store_column` writes a column as one batch: version 42,
   FinalizedState 2, Data3D (heightmap recomputed, biome headers with bit 0 set as BDS has them) and v9
   sub-chunks, one layer unless a block is waterlogged; sections of air are deleted. The block-entity
-  record is written as the world holds it; pending ticks are left as stored.
+  record is written as the world holds it, and so is `PendingTicks` (`pending_ticks.rs`), which the shard
+  fills from its liquid, falling-block, fire and job queues before a save (`blocks/pending.rs`).
   `LevelDbWorld::flush` writes the memtable out and replaces `level.dat` with the one it is given,
   keeping the old file as `level.dat_old`; a world opened in memory never touches its folder.
 - **Actors** (`actors.rs`). A column's mobs and items are read through `digp` + `actorprefix`, or the

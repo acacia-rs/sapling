@@ -28,6 +28,8 @@ pub struct DiskColumn {
     pub block_entities: Vec<u8>,
     /// The column's actors as one record of compounds (actors.rs).
     pub actors: Vec<u8>,
+    /// The block ticks that were waiting when it was saved, one compound (pending_ticks.rs).
+    pub pending_ticks: Vec<u8>,
 }
 
 pub struct LevelDbWorld {
@@ -108,17 +110,20 @@ impl LevelDbWorld {
         }
         let block_entities = self.db.get(&key.tag(Tag::BlockEntities))?.unwrap_or_default();
         let actors = actors::load(&self.db, key)?;
-        Ok(Some(DiskColumn { chunk, version: version.first().copied().unwrap_or(0), data3d, block_entities, actors }))
+        let pending_ticks = self.db.get(&key.tag(Tag::PendingTicks))?.unwrap_or_default();
+        Ok(Some(DiskColumn { chunk, version: version.first().copied().unwrap_or(0), data3d, block_entities, actors, pending_ticks }))
     }
 
-    /// Writes a column's blocks, biomes, heightmap, block entities and actors as one batch. Its
-    /// other records (pending ticks) stay as they are.
-    pub fn store_column(&self, key: ChunkKey, chunk: &Chunk, block_entities: &[u8], actors: &[u8]) -> Result<(), Error> {
+    /// Writes a column's blocks, biomes, heightmap, block entities, actors and pending ticks
+    /// (pending_ticks.rs) as one batch.
+    pub fn store_column(&self, key: ChunkKey, chunk: &Chunk, block_entities: &[u8], actors: &[u8], pending_ticks: &[u8]) -> Result<(), Error> {
         let mut batch = Batch::default();
         actors::store(&self.db, &mut batch, key, actors)?;
-        match block_entities {
-            [] => batch.delete(&key.tag(Tag::BlockEntities)),
-            record => batch.put(&key.tag(Tag::BlockEntities), record),
+        for (tag, record) in [(Tag::BlockEntities, block_entities), (Tag::PendingTicks, pending_ticks)] {
+            match record {
+                [] => batch.delete(&key.tag(tag)),
+                record => batch.put(&key.tag(tag), record),
+            }
         }
         batch.put(&key.tag(Tag::Version), &[CHUNK_VERSION]);
         batch.delete(&key.tag(Tag::LegacyVersion));

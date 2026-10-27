@@ -1,9 +1,9 @@
 //! Fire: flint and steel or a fire charge lights it over a solid block or by one that burns, soul
 //! fire over soul sand; it ages, spreads to what burns, burns that away and goes out
-//! (docs/research/fire.md).
+//! (docs/research/fire.md). Any fire written ticks, lava's and lightning's too; one a world folder
+//! holds ticks when its column kept its tick (pending.rs), as on BDS.
 // TODO: the spread is the Java game's rule and odds, which BDS's burning planks and wool fit
-// only loosely; rain puts none out; fire a world folder holds, and fire from lava or lightning,
-// is not ticked.
+// only loosely; BDS times fire on its random-tick queue, which runs faster with `randomtickspeed`.
 
 use bevy_ecs::prelude::*;
 use sapling_api::{Block, BlockPos, Difficulty, Face, Weather};
@@ -88,6 +88,23 @@ fn schedule(world: &mut World, layer: Entity, pos: BlockPos, after: u64) {
     }
 }
 
+/// What waits, for its column to keep (pending.rs): each fire and when it ticks.
+pub(super) fn waiting(world: &World) -> Vec<(Entity, BlockPos, u64)> {
+    world.get_resource::<Fires>().map(|fires| fires.0.iter().map(|&(when, layer, pos)| (layer, pos, when)).collect()).unwrap_or_default()
+}
+
+/// Drops what waits where `saved` says its column kept it and is gone.
+pub(super) fn forget(world: &mut World, saved: &dyn Fn(Entity, BlockPos) -> bool) {
+    if let Some(mut fires) = world.get_resource_mut::<Fires>() {
+        fires.0.retain(|&(_, layer, pos)| !saved(layer, pos));
+    }
+}
+
+/// Has the fire at `pos` tick in `delay` ticks, as its column kept it.
+pub(super) fn again(world: &mut World, layer: Entity, pos: BlockPos, delay: u64) {
+    schedule(world, layer, pos, delay.max(1));
+}
+
 fn wait(world: &mut World) -> u64 {
     let [least, more] = EVERY;
     u64::from(least + world.get_resource_or_insert_with(Dice::default).roll(more))
@@ -128,6 +145,34 @@ pub(crate) fn light(world: &mut World, layer: Entity, into: BlockPos) -> bool {
         schedule(world, layer, into, 1);
     }
     true
+}
+
+/// A random tick of the lava at `pos`: with air or what burns over it, up to ten cells around it
+/// are tried, and the first that burns sets fire to the first air beside it, +x, -x, +y, -y, +z, -z
+/// (`LiquidBlock::randomTick` 148b5cd10, not the Java game's rule).
+pub(super) fn kindled_by_lava(world: &mut World, layer: Entity, pos: BlockPos, roll: &mut impl FnMut(u32) -> u32) {
+    const TRIES: usize = 10;
+    const BESIDE: [BlockPos; 6] = [[1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1]];
+    if !crate::rules::on(world, layer, RULE) {
+        return;
+    }
+    let Some(level) = level(world, layer) else { return };
+    let flammable = |cell: BlockPos| name_at(level, cell).and_then(burns).is_some();
+    let over = Face::Up.neighbour(pos);
+    if !is_air(level, over) && !flammable(over) {
+        return;
+    }
+    for _ in 0..TRIES {
+        let tried: BlockPos = std::array::from_fn(|axis| pos[axis] + roll(3) as i32 - 1);
+        if !flammable(tried) {
+            continue;
+        }
+        let Some(air) = BESIDE.iter().map(|step| std::array::from_fn(|axis| tried[axis] + step[axis])).find(|cell| is_air(level, *cell)) else { continue };
+        if let Some(fire) = fire_of(level, 0) {
+            send::set(world, layer, air, fire);
+        }
+        return;
+    }
 }
 
 /// What a fire's tick does.

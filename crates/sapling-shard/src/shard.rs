@@ -82,6 +82,7 @@ impl Shard {
             blobs::blob_status,
             ticking::sweep,
             actors::write_back_before_saving,
+            blocks::write_back_ticks_before_saving,
             chunks::save_and_unload_columns,
             chunks::cancel_unseen_loads,
             kept::keep_columns,
@@ -200,6 +201,7 @@ impl Shard {
     pub fn save_worlds(&mut self) {
         inventory::save_all(&mut self.world);
         actors::write_back(&mut self.world);
+        blocks::write_back_ticks(&mut self.world);
         scoreboard::keep_all(&mut self.world);
         let mut layers = self.world.query::<&mut Layer>();
         for mut layer in layers.iter_mut(&mut self.world) {

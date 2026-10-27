@@ -25,6 +25,28 @@ const FREEZE_DIM: u8 = 10;
 const SNOW_DIM: u8 = 12;
 const ICE: &str = "minecraft:ice";
 const SNOW: &str = "minecraft:snow_layer";
+/// A snow layer's `height` when it is a whole block, and the layers that is.
+const FULL: u8 = 7;
+const LAYERS: u8 = 8;
+/// Biomes whose snow piles past one layer, and how far: `snow_accumulation`'s top times 8 in
+/// BDS's vanilla biome definitions (behavior_packs/vanilla biomes.brarchive); one elsewhere.
+const PILES: [(&str, u8); 15] = [
+    ("cold_beach", 2),
+    ("cold_taiga", 4),
+    ("cold_taiga_hills", 4),
+    ("deep_frozen_ocean", 2),
+    ("extreme_hills", 2),
+    ("extreme_hills_edge", 2),
+    ("frozen_ocean", 2),
+    ("frozen_river", 2),
+    ("ice_mountains", 12),
+    ("ice_plains", 8),
+    ("ice_plains_spikes", 12),
+    ("legacy_frozen_ocean", 2),
+    ("stone_beach", 2),
+    ("taiga", 2),
+    ("taiga_hills", 2),
+];
 
 type Level = sapling_world::World;
 
@@ -63,11 +85,31 @@ fn fallen(level: &Level, x: i32, z: i32, freezes: bool, snows: bool) -> Option<(
     if freezes && is_still_water(level, ground) && level.is_cold(x, top, z) && block_light(level, ground) < FREEZE_DIM && is_shore() {
         return send::resolve(registry, &Block::new(ICE)).map(|ice| (ground, ice));
     }
+    if !snows {
+        return None;
+    }
+    let lies = |pos: BlockPos| level.is_cold(pos[0], pos[1], pos[2]) && block_light(level, pos) < SNOW_DIM;
+    if let Some(height) = snow_height(level, ground) {
+        let depth = height + 1 + if snow_height(level, [x, top - 1, z]) == Some(FULL) { LAYERS } else { 0 };
+        return (height < FULL && depth < most_layers(level, ground) && lies(ground)).then(|| registry.find(SNOW, &format!("covered_bit=0,height={}", height + 1)).map(|snow| (ground, snow))).flatten();
+    }
     let is_air = level.in_height(top + 1) && level.block(x, top + 1, z) == registry.air_id();
-    if snows && is_air && holds_snow(level, level.block(x, top, z)) && level.is_cold(x, top + 1, z) && block_light(level, over) < SNOW_DIM {
+    if is_air && holds_snow(level, level.block(x, top, z)) && lies(over) {
         return send::resolve(registry, &Block::new(SNOW)).map(|snow| (over, snow));
     }
     None
+}
+
+/// The `height` of the snow layer at `pos`, 0 for one layer.
+fn snow_height(level: &Level, [x, y, z]: BlockPos) -> Option<u8> {
+    let state = level.in_height(y).then(|| level.registry().get(level.block(x, y, z))).flatten().filter(|state| state.name == SNOW)?;
+    state.properties.split(',').filter_map(|pair| pair.split_once('=')).find(|(key, _)| *key == "height").and_then(|(_, value)| value.parse().ok())
+}
+
+/// How many layers snow piles to in the biome at `pos`: its `snow_accumulation`'s top times 8.
+fn most_layers(level: &Level, [x, y, z]: BlockPos) -> u8 {
+    let biome = level.biome(x, y, z);
+    PILES.iter().find(|(name, _)| sapling_data::biome_id(name) == biome && biome.is_some()).map_or(1, |(_, layers)| *layers)
 }
 
 /// A tick's picks around every player.
