@@ -58,6 +58,9 @@ pub(super) fn placed(block: &str, pos: BlockPos, placing: &Placing) -> Option<Va
         }
         _ if BANNERS.contains(&block) => ("Banner", vec![("Base", Value::Int(placing.damage.into())), ("Type", Value::Int(0))]),
         "minecraft:flower_pot" => ("FlowerPot", Vec::new()),
+        "minecraft:bell" => ("Bell", super::bells::UNRUNG.into()),
+        "minecraft:chiseled_bookshelf" => ("ChiseledBookshelf", Vec::new()),
+        "minecraft:conduit" => ("Conduit", vec![("Active", Value::Byte(0)), ("Target", Value::Long(-1))]),
         "minecraft:cauldron" => {
             let items = Value::List(List { tag: COMPOUND, items: Vec::new() });
             ("Cauldron", vec![("Items", items), ("PotionId", Value::Short(-1)), ("PotionType", Value::Short(-1))])
@@ -86,14 +89,16 @@ fn number(value: Option<&Value>) -> Option<i16> {
 }
 
 /// The items a broken block's entity adds to what it leaves: a flower pot's plant, the food on
-/// a campfire, and what an item frame or a decorated pot holds. Each by its name only: what else the stack carried is lost.
+/// a campfire, what an item frame or a decorated pot holds and a chiseled bookshelf's books. Each
+/// by its name only: what else the stack carried is lost.
 fn held_items(kept: &Value) -> Vec<Item> {
     let plant = match kept.get("PlantBlock").and_then(|plant| plant.get("name")) {
         Some(Value::String(name)) if sapling_data::is_item(name) => Some(Item::new(name.clone(), 1)),
         _ => None,
     };
     let food = ["Item1", "Item2", "Item3", "Item4", super::holders::FRAMED, super::holders::POTTED, super::jukebox::RECORD, super::lectern::BOOK].into_iter().filter_map(|slot| sapling_world::ItemStack::parse(kept.get(slot)?));
-    plant.into_iter().chain(food.map(|stack| Item { damage: stack.damage, ..Item::new(stack.name, stack.count) })).collect()
+    let held = food.chain(super::bookshelves::books(kept));
+    plant.into_iter().chain(held.map(|stack| Item { damage: stack.damage, ..Item::new(stack.name, stack.count) })).collect()
 }
 
 /// Gives `items`, which a broken block leaves, what its entity `kept` that they carry: a bed's

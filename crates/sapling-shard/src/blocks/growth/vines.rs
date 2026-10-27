@@ -55,6 +55,16 @@ fn held(level: &Level, pos: BlockPos, bits: u8) -> u8 {
     HORIZONTAL.iter().filter(|(face, bit)| bits & bit != 0 && holds_to(level, face.neighbour(pos))).fold(0, |kept, (_, bit)| kept | bit)
 }
 
+/// The faces the vine at `pos` keeps after a change beside it: those with a block to hold to or
+/// that the vine over it has (Java 1.12 `BlockVine.recheckGrownSides`; bds-holds.txt: a vine and
+/// the one hanging from it went with the stone it held to, and one under a stone went with that).
+/// `None` where it is no vine or keeps every face.
+pub(in crate::blocks) fn loosened(level: &Level, pos: BlockPos) -> Option<u8> {
+    let bits = bits_at(level, pos)?;
+    let over = bits_at(level, Face::Up.neighbour(pos)).unwrap_or(0);
+    Some(held(level, pos, bits) | (bits & over)).filter(|kept| *kept != bits)
+}
+
 fn is_crowded(level: &Level, [x, y, z]: BlockPos) -> bool {
     let cells = (-4..=4).flat_map(|dx| (-1..=1).flat_map(move |dy| (-4..=4).map(move |dz| [x + dx, y + dy, z + dz])));
     cells.filter(|cell| bits_at(level, *cell).is_some()).take(CROWDED).count() >= CROWDED

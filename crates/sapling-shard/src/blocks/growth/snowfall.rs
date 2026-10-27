@@ -1,4 +1,5 @@
-//! Water freezing and snow lying where it is cold, as BDS's `LevelChunk::tick` does it: a column
+//! Water freezing, snow lying where it is cold and rain filling cauldrons, as BDS's
+//! `LevelChunk::tick` does it: a column
 //! of each chunk around a player is picked `randomTickSpeed` times a tick and its top looked at
 //! (docs/research/growth.md "Light").
 
@@ -119,9 +120,14 @@ pub(super) fn tick(world: &mut World, picks: &mut Picks) {
         let Some(level) = level(world, layer).filter(|level| level.is_loaded(column)) else { continue };
         let rules = &level.level().rules;
         let Some((_, RuleValue::Int(speed))) = rules.get("randomTickSpeed") else { continue };
-        let snowing = rules.on("doWeatherCycle") && crate::weather::of(world, layer) != Weather::Clear;
+        let raining = crate::weather::of(world, layer) != Weather::Clear;
+        let snowing = rules.on("doWeatherCycle") && raining;
         for _ in 0..speed.clamp(0, MOST_PICKS) {
             let [x, z] = [column.x * 16 + picks.below(16) as i32, column.z * 16 + picks.below(16) as i32];
+            // TODO: how often BDS's picks fill a cauldron is not measured; here every pick on one does.
+            if let Some(filled) = level.surface(x, z).filter(|_| raining).and_then(|top| Some((top, super::super::cauldrons::rained_in(level, [x, top, z])?))) {
+                fell.push((layer, [x, filled.0, z], filled.1));
+            }
             let (freezes, snows) = (picks.below(ODDS) == 0, snowing && picks.below(ODDS) == 0);
             if freezes || snows {
                 fell.extend(fallen(level, x, z, freezes, snows).map(|(pos, id)| (layer, pos, id)));

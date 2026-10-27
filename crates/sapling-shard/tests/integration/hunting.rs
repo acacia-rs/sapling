@@ -187,7 +187,8 @@ fn a_creeper_lights_its_fuse_three_blocks_off_and_bursts_as_on_bds() {
     // the stone under it.
     let (mut h, creeper) = hunted_by("minecraft:creeper", Difficulty::Easy);
     let (ticks, sent) = until_hit(&mut h, 80);
-    let fuses: Vec<i32> = all::<SetEntityData>(&sent).iter().flat_map(|data| &data.metadata).filter(|item| item.key == Key::FuseLength).map(|item| if let Value::Default(Plain::Int(left)) = item.value { left } else { -1 }).collect();
+    // The blast's loot comes with its whole metadata, FuseLength -1 among it.
+    let fuses: Vec<i32> = all::<SetEntityData>(&sent).iter().filter(|data| data.runtime_entity_id == creeper).flat_map(|data| &data.metadata).filter(|item| item.key == Key::FuseLength).map(|item| if let Value::Default(Plain::Int(left)) = item.value { left } else { -1 }).collect();
     assert_eq!((fuses.len(), fuses.first(), fuses.last()), (30, Some(&29), Some(&0)), "lit at tick {}", ticks - 31);
     assert!(all::<LevelEvent>(&sent).iter().any(|event| event.event == LevelEventEvent::ParticleExplosion && event.data == 3) && all::<RemoveEntity>(&sent).len() == 1);
     let hurt = 20.0 - health(&sent)[0];

@@ -1,6 +1,5 @@
 //! A placed rail joins the rails around it and they turn to it: the Java game's `RailState`
 //! (docs/research/standing-and-shapes.md, B5). Taking a rail away leaves the others as they are.
-// TODO: no power, so a plain rail at a junction never switches and `rail_data_bit` stays 0.
 
 use bevy_ecs::prelude::*;
 use sapling_api::BlockPos;
@@ -133,8 +132,9 @@ fn rising(level: &Level, pos: BlockPos, shape: Option<u8>) -> Option<u8> {
     })
 }
 
-/// The shape a rail placed at `pos` takes among its neighbours (Java `RailState.place`, unpowered).
-fn placed_shape(level: &Level, rail: &Rail, default: u8) -> u8 {
+/// The shape a rail placed at `pos` takes among its neighbours (Java `RailState.place`): at a
+/// junction of three, a powered plain rail takes the curve an unpowered one would take last.
+fn placed_shape(level: &Level, rail: &Rail, default: u8, powered: bool) -> u8 {
     let [n, s, w, e] = [N, S, W, E].map(|side| rail.is_joined_from(level, step(rail.pos, side)));
     let (along_z, along_x) = (n || s, w || e);
     let mut shape = match (along_z, along_x) {
@@ -149,7 +149,11 @@ fn placed_shape(level: &Level, rail: &Rail, default: u8) -> u8 {
         shape = if along_z && along_x { Some(default) } else { None };
         if !rail.straight {
             // The last that fits wins.
-            for (fits, curve) in [(n && w, NORTH_WEST), (n && e, NORTH_EAST), (s && w, SOUTH_WEST), (s && e, SOUTH_EAST)] {
+            let mut curves = [(n && w, NORTH_WEST), (n && e, NORTH_EAST), (s && w, SOUTH_WEST), (s && e, SOUTH_EAST)];
+            if powered {
+                curves.reverse();
+            }
+            for (fits, curve) in curves {
                 if fits {
                     shape = Some(curve);
                 }
@@ -169,9 +173,24 @@ fn set_shape(world: &mut World, layer: Entity, pos: BlockPos, shape: u8) {
 
 /// Shapes the rail just placed at `pos` to the rails around it, and turns those that can to it.
 pub(super) fn join_placed(world: &mut World, layer: Entity, pos: BlockPos) {
+    let powered = super::power_at(world, layer, pos) > 0;
+    join(world, layer, pos, powered);
+}
+
+/// Turns the plain rail at `pos`, whose signal changed, where three rails meet it (Java
+/// `RailBlock.updateState`).
+pub(super) fn switch(world: &mut World, layer: Entity, pos: BlockPos, powered: bool) {
+    let Some(level) = level(world, layer) else { return };
+    let is_plain = Rail::at(level, pos).is_some_and(|rail| !rail.straight);
+    if is_plain && [N, S, W, E].iter().filter(|side| Rail::near(level, step(pos, **side)).is_some()).count() == 3 {
+        join(world, layer, pos, powered);
+    }
+}
+
+fn join(world: &mut World, layer: Entity, pos: BlockPos, powered: bool) {
     let Some(rail) = level(world, layer).and_then(|level| Rail::at(level, pos)) else { return };
     let default = level(world, layer).and_then(|level| level.registry().get(level.block(pos[0], pos[1], pos[2]))?.property("rail_direction")?.parse().ok()).unwrap_or(NS);
-    let Some(shape) = level(world, layer).map(|level| placed_shape(level, &rail, default)) else { return };
+    let Some(shape) = level(world, layer).map(|level| placed_shape(level, &rail, default, powered)) else { return };
     set_shape(world, layer, pos, shape);
     let rail = Rail { ends: ends(pos, shape), ..rail };
     for end in &rail.ends {

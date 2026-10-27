@@ -77,6 +77,63 @@ throw's exact size (sapling's, by the Java game's rule, is about (-0.53, 0.29) t
 `MOVING` flag BDS turned on and off. TNT a blast reaches is primed on the Java game's short fuse
 of 10 to 30 ticks, which was not measured.
 
+## Blasts
+
+Read off BDS 1.26.52.3 with bdsre (`Explosion::explode` at 140795690, `getSeenPercent` at 141602290,
+the drop roll in 141a23c30) and measured with `bds_command_probe blasts` and `creeperdrops`
+(`bds-blasts.txt`, `bds-creeperdrops.txt`):
+
+- What a block withstands is its own `Block` field (+0xac), read out of a running BDS into
+  sapling-data's `block-resistance.tsv`: stone 6, dirt 0.5, obsidian 1200, water and lava 100. A
+  ray loses `(resistance + 0.3) x 0.3` in each block and 0.225 a step; air costs nothing. A ray stops
+  at water (a block or a waterlogged one), and a blast whose middle is in water breaks nothing.
+- Each broken block leaves its items by a chance of one in the blast's power, except TNT's and a TNT
+  minecart's with `tntExplosionDropDecay` off, which leave all. The creeper (power 3) broke 77 dirt
+  blocks over three blasts, which left 29; TNT with the rule on broke 64 for 13, with it off 64 for 64.
+- Like items are merged into stacks of at most 16, 16 more for every five stacks already made, each
+  falling out of the cell whose block started it.
+- A mob within twice the power is measured from its feet, less half its width. Its impact is
+  `(1 - distance / (2 x power))` times the share of points through its box that see the blast (a
+  grid of `1 / (2 x size + 1)` steps, 0.1 up from its bottom; all of it when the blast is inside),
+  and it is hurt by `(impact^2 + impact) / 2 x 7 x 2 x power + 1`: at least 1 however hidden.
+- The hurt throws it as a hit from the blast does: 0.4 across and 0.4 up. Unless no hit throws it, it
+  is then pushed by `impact` along the way from the blast to 0.9 of its height: a pig 4.87 off in the
+  open went (0.838, 0.467, 0.027), and pigs behind a wall one high and three high only (0, 0.4, 0.4).
+- Primed TNT is pushed away by its impact too.
+
+Sapling does the same (`creatures/blast.rs`, `creatures/blast/rays.rs`, `blocks/blown.rs`). Not
+done: which order BDS's set of broken cells is walked in (stacks start in another cell), arrows,
+orbs and falling blocks are not pushed, and Blast Protection does not shorten a mob's push.
+
+## Cauldrons
+
+`bds_command_probe cauldrons` (`bds-cauldrons.txt`, BDS 1.26.52.3), the actor in survival. A potion cauldron is
+`cauldron_liquid=water` with the potion in its entity: `PotionId` (the potion's data) and `PotionType` (0 drunk, 1
+splash, 2 lingering); a dyed one has `CustomColor`. Every event is told at the surface (0.375 over the floor and an
+eighth a level), every sound at the block's middle.
+
+| Cauldron | Hand | BDS |
+|---|---|---|
+| empty | potion of swiftness | level 2, `PotionId` 14, `CauldronFillPotion` at the new surface with the potion's colour, `bottle.empty`, a glass bottle back |
+| swiftness | potion of swiftness | two levels more |
+| swiftness, 4 | potion of slowness | empty, `PotionId` -1, `PotionType` 0, `CauldronExplode` at the floor with water's colour, `bottle.empty` |
+| swiftness, 4 | glass bottle | two levels less, `CauldronTakePotion` at the old surface, `bottle.fill` |
+| swiftness, 2 | splash potion of swiftness | level 4, `PotionType` 1 |
+| swiftness, 4 | 16 arrows | level 3, nothing told but the block |
+| water, 6 | red dye | `CustomColor` the dye's colour (0xFFB02E26), `CauldronAddDye` at the surface, level kept |
+| red water, 6 | leather cap | level 5, `CauldronDyeArmor` at the new surface with the colour |
+| water, 6 | the red cap | level 5, `CauldronCleanArmor` at the new surface with water's colour |
+| water, 5 | red shulker box | level 4, `CauldronCleanArmor` |
+| water, 4 | plain red banner | nothing |
+
+Rain (`bds_command_probe cauldronrain`, `bds-cauldronrain.txt`, `randomtickspeed` 100): an empty cauldron under the
+sky filled a level at a time, six levels in 2.3 s starting 0.9 s after the rain, each with the block and its entity
+sent again. Sapling fills a level at each of the rain picks of snowfall.rs that lands on one; BDS's rate is not
+measured further.
+
+Sapling does the same (`blocks/cauldrons.rs`), tipping arrows into `arrow` of the potion's data plus one, as BDS
+names tipped arrows.
+
 ## Redstone ore
 
 Measured with `bds_command_probe ores` (`bds-ores.txt`): of 25 lit redstone ores set at once, 16

@@ -27,6 +27,11 @@ use crate::{entities, inventory};
 pub(crate) use item::ROCKET;
 pub(crate) use recipes::{crafted, dye};
 
+/// The RGB of a dye item's colour.
+pub(crate) fn dye_rgb(name: &str) -> Option<u32> {
+    item::RGB.get(usize::from(dye(name)?)).copied()
+}
+
 pub(crate) const KIND: &str = "minecraft:fireworks_rocket";
 const SIZE: [f32; 2] = [0.25, 0.25];
 /// A rocket's life: this many ticks a unit of `Flight` and one more, and a roll of each of these more.

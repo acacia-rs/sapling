@@ -5,10 +5,14 @@
 
 mod after_break;
 mod bonemeal;
+mod bells;
 mod blown;
+mod bookshelves;
 mod bubbles;
 mod buckets;
 mod bulbs;
+mod cauldrons;
+mod conduits;
 mod composter;
 mod copper;
 mod crafter;
@@ -87,6 +91,7 @@ pub(crate) use updates::break_block;
 pub(crate) use crafter::{crafter_slot, dispatch_toggles as dispatch_crafter_toggles};
 pub(crate) use queued::tick as run_queued;
 pub(crate) use lectern::turn_pages as turn_lectern_pages;
+pub(crate) use conduits::tick as wake_conduits;
 pub(crate) use pending::{arrived as ticks_arrived, write_back as write_back_ticks, write_back_before_saving as write_back_ticks_before_saving};
 pub(crate) use rods::struck as lightning_struck;
 pub(crate) use sculk::{GameEvent, tick as hear_vibrations, vibrate, vibrate_at, walked};

@@ -74,14 +74,14 @@ pub fn bottle_experience(roll: &mut dyn FnMut() -> f32) -> i32 {
     BOTTLE[0] + (roll() * BOTTLE[1] as f32) as i32
 }
 
-/// Effects' colours: BDS's for the three a witch's splash showed (research/captures/bds-witch.txt),
-/// the Java game's for the rest.
+/// Effects' colours: BDS's for the three a witch's splash showed (research/captures/bds-witch.txt)
+/// and for speed, which a cauldron showed (bds-cauldrons.txt); the Java game's for the rest.
 const COLOURS: &[(&str, u32)] = &[
     ("slowness", 0xFF8B_AFE0),
     ("instant_damage", 0xFFA9_656A),
     ("poison", 0xFF87_A363),
     ("weakness", 0xFF48_4D48),
-    ("speed", 0xFF7C_AFC6),
+    ("speed", 0xFF33_EBFF),
     ("strength", 0xFF93_2423),
     ("instant_health", 0xFFF8_2423),
     ("jump_boost", 0xFF22_FF4C),

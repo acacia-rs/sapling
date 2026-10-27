@@ -1,8 +1,10 @@
 //! Mobs that blow up, as BDS's creeper did (docs/research/mob-attacks.md, "Creepers"): lit near
-//! its prey, it burns a fuse down and bursts, hurting and throwing who is near and breaking blocks.
-// TODO: a fuse does not go out for a prey out of sight; nothing between a blast and a body shields it; mobs are hurt
-// and not thrown; the blocks a creeper breaks leave nothing; what a block withstands is guessed from how hard
-// it is (`withstands`), for want of the game's table.
+//! its prey, it burns a fuse down and bursts, hurting and throwing who is near and breaking blocks
+//! (docs/research/block-uses.md, "Blasts").
+// TODO: a fuse does not go out for a prey out of sight; a blast throws no arrows, orbs or falling
+// blocks; Blast Protection does not lessen a mob's throw.
+
+mod rays;
 
 use acacia_proto::packets::{LevelEvent, LevelEventEvent, LevelSoundEvent};
 use acacia_proto::types::{MetadataFlags1, Vec3f};
@@ -11,7 +13,7 @@ use sapling_api::{Difficulty, ExplosionEvent};
 
 use super::harm;
 use super::health::{Cause, Health};
-use crate::blocks::{self, Dice};
+use crate::blocks;
 use crate::body::Body;
 use crate::components::{InLayer, Layer, NetId, Position, Settings};
 use crate::{drops, entities, late_sounds, mobs, vitals};
@@ -21,13 +23,13 @@ const FUSE: i32 = 30;
 const HISSES: i32 = 2;
 const HEAD: f32 = 0.85;
 const GRIEFING: &str = "mobGriefing";
-/// A blast's rays: from its middle to each cell of the faces of a cube this many across, in
-/// steps this long, each step costing this much and what the block it is in withstands.
-const RAYS: i32 = 16;
-const STEP: f32 = 0.3;
-const FADES: f32 = 0.225;
 /// A blast's worst, at its middle, for each unit of its power.
 const HARM: f32 = 7.0;
+/// What a blast's harm throws a mob by, away from it and up (bds-blasts.txt).
+const KNOCK: f32 = 0.4;
+/// A mob is thrown from the blast towards this far up its height (a pig's 0.81 of 0.9).
+const EYES: f32 = 0.9;
+const PLAYER_SIZE: [f32; 2] = [0.6, 1.8];
 
 /// A lit fuse: the ticks left of it.
 #[derive(Component)]
@@ -58,56 +60,26 @@ pub(super) fn put_out(world: &mut World, entity: Entity, layer: Entity, id: u64,
     }
 }
 
-/// What a block of this hardness withstands of a blast: the Java game gives most blocks their
-/// hardness, stone and its like 6, and obsidian far more than any blast has.
-fn withstands(hardness: f32, needs_pickaxe: bool) -> f32 {
-    match hardness {
-        hard if hard < 0.0 || hard >= 50.0 => f32::INFINITY,
-        hard if needs_pickaxe && hard <= 2.0 => 6.0,
-        hard => hard,
-    }
+fn distance(a: [f32; 3], b: [f32; 3]) -> f32 {
+    (0..3).map(|axis| (a[axis] - b[axis]).powi(2)).sum::<f32>().sqrt()
 }
 
-/// The cells a blast of `power` at `at` breaks: the Java game's rays, which broke the one stone
-/// under BDS's creeper.
-fn broken(world: &mut World, layer: Entity, at: [f32; 3], power: f32) -> Vec<[i32; 3]> {
-    let strengths: Vec<f32> = {
-        let mut dice = world.get_resource_or_insert_with(Dice::default);
-        (0..RAYS * RAYS * RAYS).map(|_| power * (0.7 + dice.fraction() * 0.6)).collect()
-    };
-    let Some(level) = world.get::<Layer>(layer).map(|layer| &layer.world) else { return Vec::new() };
-    let mut cells = Vec::new();
-    let edge = |i: i32| i == 0 || i == RAYS - 1;
-    for (ray, [i, j, k]) in (0..RAYS).flat_map(|i| (0..RAYS).flat_map(move |j| (0..RAYS).map(move |k| [i, j, k]))).enumerate().filter(|(_, [i, j, k])| edge(*i) || edge(*j) || edge(*k)) {
-        let towards = [i, j, k].map(|c| c as f32 / (RAYS - 1) as f32 * 2.0 - 1.0);
-        let long = towards.iter().map(|c| c * c).sum::<f32>().sqrt();
-        let (mut left, mut here) = (strengths[ray], at);
-        while left > 0.0 {
-            let [x, y, z] = here.map(|c| c.floor() as i32);
-            let state = level.in_height(y).then(|| level.registry().get(level.block(x, y, z))).flatten();
-            if let Some(state) = state.filter(|state| !state.is_air()) {
-                let solid = !state.is_liquid();
-                left -= (if solid { withstands(state.mining.hardness, state.mining.harvest_tools != 0) } else { 100.0 } + STEP) * STEP;
-                if left > 0.0 && solid && !cells.contains(&[x, y, z]) {
-                    cells.push([x, y, z]);
-                }
-            }
-            here = std::array::from_fn(|axis| here[axis] + towards[axis] / long * STEP);
-            left -= FADES;
-        }
-    }
-    cells
+/// How much of a body standing at `feet`, `size` wide and high, sees a blast at `at`.
+fn seen(world: &World, layer: Entity, at: [f32; 3], feet: [f32; 3], [wide, high]: [f32; 2]) -> f32 {
+    let Some(level) = world.get::<Layer>(layer).map(|layer| &layer.world) else { return 1.0 };
+    let half = wide / 2.0;
+    rays::seen(level, at, [feet[0] - half, feet[1], feet[2] - half], [feet[0] + half, feet[1] + high, feet[2] + half])
 }
 
-/// What a blast of `power` at `at` does to a body whose eyes are at `eyes`: what it costs on
-/// this difficulty, nothing on peaceful, and the speed it throws at. A ghast's fireball's
-/// (`fireball`) goes by how far the body's `feet` are, costs no 1 more and is the same on every
-/// difficulty (research/captures/bds-ghast-findings.md).
-fn reaches(world: &World, at: [f32; 3], eyes: [f32; 3], feet: [f32; 3], power: f32, fireball: bool) -> Option<(f32, [f32; 3])> {
+/// What a blast of `power` at `at` does to a player whose eyes are at `eyes`, `seen` of it seeing
+/// the blast: what it costs on this difficulty, nothing on peaceful, and the speed it throws at.
+/// A ghast's fireball's (`fireball`) goes by how far the body's `feet` are, costs no 1 more and is
+/// the same on every difficulty (research/captures/bds-ghast-findings.md).
+fn reaches(world: &World, at: [f32; 3], eyes: [f32; 3], feet: [f32; 3], power: f32, seen: f32, fireball: bool) -> Option<(f32, [f32; 3])> {
     let away: [f32; 3] = std::array::from_fn(|axis| eyes[axis] - at[axis]);
-    let far = away.iter().map(|c| c * c).sum::<f32>().sqrt();
-    let measured = if fireball { (0..3).map(|axis| (feet[axis] - at[axis]).powi(2)).sum::<f32>().sqrt() } else { far };
-    let impact = 1.0 - measured / (2.0 * power);
+    let far = distance(eyes, at);
+    let measured = if fireball { distance(feet, at) } else { far };
+    let impact = (1.0 - measured / (2.0 * power)) * seen;
     let harm = (impact * impact + impact) / 2.0 * HARM * 2.0 * power + if fireball { 0.0 } else { 1.0 };
     let harm = match world.resource::<Settings>().0.difficulty {
         Difficulty::Peaceful => 0.0,
@@ -116,7 +88,7 @@ fn reaches(world: &World, at: [f32; 3], eyes: [f32; 3], feet: [f32; 3], power: f
         Difficulty::Normal => harm,
         Difficulty::Hard => harm * 1.5,
     };
-    (impact > 0.0 && far > 1e-4).then(|| (harm, away.map(|c| c / far * impact)))
+    (measured < 2.0 * power && far > 1e-4).then(|| (harm, away.map(|c| c / far * impact)))
 }
 
 /// What a blast does to the blocks it reaches: nothing, or it breaks them, and they may leave
@@ -126,8 +98,8 @@ pub(crate) enum Wreck {
     Nothing,
     Breaks,
     Leaves,
-    /// Each block leaves what it would by a chance of one in the blast's power
-    /// (`tntExplosionDropDecay`).
+    /// Each block leaves what it would by a chance of one in the blast's power: every blast but
+    /// TNT's with `tntExplosionDropDecay` off (BDS's `Explosion::explode`).
     Decays,
 }
 
@@ -143,7 +115,7 @@ pub(super) fn explode_fireball(world: &mut World, source: Entity, layer: Entity,
 
 fn blow(world: &mut World, source: Option<Entity>, layer: Entity, at: [f32; 3], power: f32, wreck: Wreck, fireball: bool) {
     crate::blocks::vibrate(world, layer, at, crate::blocks::GameEvent::Explode, false);
-    let cells = if wreck != Wreck::Nothing { broken(world, layer, at, power) } else { Vec::new() };
+    let cells = if wreck != Wreck::Nothing { rays::broken(world, layer, at, power) } else { Vec::new() };
     let (power, cells) = if crate::plugins::listening::<ExplosionEvent>(world) {
         let kind = source.and_then(|source| world.get::<entities::Kind>(source)).map(|kind| kind.0.clone());
         let blast = crate::plugins::offer_in(world, layer, ExplosionEvent::new(at, kind, power, cells));
@@ -173,32 +145,27 @@ fn blow(world: &mut World, source: Option<Entity>, layer: Entity, at: [f32; 3], 
     let players: Vec<(Entity, [f32; 3])> = crate::components::in_world(world).into_iter().filter_map(|player| Some((player, world.get::<Position>(player)?.feet))).filter(|(player, _)| world.get::<InLayer>(*player).map(|layer| layer.0) == Some(layer)).collect();
     for (player, feet) in players {
         let eyes = [feet[0], feet[1] + sapling_data::EYE_HEIGHT, feet[2]];
-        if let Some((harm, thrown)) = reaches(world, at, eyes, feet, power, fireball) {
+        let seen = seen(world, layer, at, feet, PLAYER_SIZE);
+        if let Some((harm, thrown)) = reaches(world, at, eyes, feet, power, seen, fireball) {
             vitals::blasted(world, player, harm, at, thrown);
         }
     }
     // Items lying in it are gone, as the stacks BDS's first TNT left were with its second.
     let reach = 2.0 * power;
     for (item, _) in drops::lying_in(world, layer, at.map(|c| c - reach), at.map(|c| c + reach)) {
-        let far = world.get::<Body>(item).map_or(f32::MAX, |its| (0..3).map(|axis| (its.at[axis] - at[axis]).powi(2)).sum::<f32>().sqrt());
+        let far = world.get::<Body>(item).map_or(f32::MAX, |its| distance(its.at, at));
         if far < reach {
             mobs::remove(world, item);
         }
     }
     crate::vehicles::blasted(world, layer, at, reach);
+    throw_primed(world, layer, at, reach);
     let mut mobs = world.query::<(Entity, &InLayer, &Body, &Health, &NetId)>();
     let near: Vec<(Entity, u64, Body)> = mobs.iter(world).filter(|(_, in_layer, ..)| in_layer.0 == layer).map(|(mob, _, body, _, id)| (mob, id.0, *body)).collect();
-    for (mob, id, its) in near {
-        if !crate::dragon::takes_blast(world, mob, source.is_some()) {
-            continue;
-        }
-        let middle = [its.at[0], its.at[1] + its.size[1] / 2.0, its.at[2]];
-        let Some((harm, _)) = reaches(world, at, middle, its.at, power, fireball).filter(|(harm, _)| *harm > 0.0) else { continue };
-        let Some(harm) = crate::damage::ask(world, mob, harm, Cause::EntityExplosion, None) else { continue };
-        let Some(mut health) = world.get::<Health>(mob).copied() else { continue };
-        if health.hurt(harm) {
-            *world.get_mut::<Health>(mob).expect("read above") = health;
-            entities::tell_viewers(world, mob, layer, its.at.map(|c| c.floor() as i32), vec![harm::strike(id, &health, Cause::EntityExplosion, None)]);
+    // The source's removal lands later in the tick; it is gone to the blast already.
+    for (mob, id, its) in near.into_iter().filter(|(mob, ..)| Some(*mob) != source) {
+        if crate::dragon::takes_blast(world, mob, source.is_some()) {
+            blast_mob(world, layer, mob, id, &its, at, reach);
         }
     }
     crate::dragon::blasted(world, layer, at, power);
@@ -209,6 +176,63 @@ fn blow(world: &mut World, source: Option<Entity>, layer: Entity, at: [f32; 3], 
             Wreck::Nothing | Wreck::Breaks => 0.0,
         };
         blocks::blow_out(world, layer, &cells, leaves);
+    }
+}
+
+/// How hard a blast at `at` that reaches `reach` hits a mob at `feet`, `size` wide and high:
+/// BDS measures to its feet and takes half its width off (`Explosion::explode`).
+fn impact(world: &World, layer: Entity, at: [f32; 3], feet: [f32; 3], size: [f32; 2], reach: f32) -> Option<f32> {
+    let far = (distance(feet, at) - size[0] / 2.0).max(0.0);
+    (far <= reach).then(|| (1.0 - far / reach) * seen(world, layer, at, feet, size))
+}
+
+/// The way from `from` to `to`, `long` long.
+fn towards(from: [f32; 3], to: [f32; 3], long: f32) -> [f32; 3] {
+    let far = distance(from, to);
+    if far < 1e-4 { [0.0; 3] } else { std::array::from_fn(|axis| (to[axis] - from[axis]) / far * long) }
+}
+
+/// A mob in a blast at `at`: hurt by at least 1 however hidden, thrown off as by a hit from the
+/// blast and, unless no hit throws it, towards its eyes by the blast's impact (bds-blasts.txt).
+fn blast_mob(world: &mut World, layer: Entity, mob: Entity, id: u64, its: &Body, at: [f32; 3], reach: f32) {
+    let Some(impact) = impact(world, layer, at, its.at, its.size, reach) else { return };
+    let harm = (impact * impact + impact) / 2.0 * HARM * reach + 1.0;
+    let hurt = crate::damage::ask(world, mob, harm, Cause::EntityExplosion, None).and_then(|harm| {
+        let mut health = world.get::<Health>(mob).copied()?;
+        // Resistance that takes all of it still hurts and throws (the drill's pigs had it).
+        let resisted = !health.is_guarded() && health.left() > 0.0;
+        (health.hurt(harm) || resisted).then(|| {
+            *world.get_mut::<Health>(mob).expect("read above") = health;
+            entities::tell_viewers(world, mob, layer, its.at.map(|c| c.floor() as i32), vec![harm::strike(id, &health, Cause::EntityExplosion, None)]);
+        })
+    });
+    let kind = world.get::<entities::Kind>(mob).map(|kind| kind.0.clone()).unwrap_or_default();
+    if sapling_data::mob_traits(&kind).steadfast {
+        return;
+    }
+    let knock = match hurt {
+        Some(()) => {
+            let [x, _, z] = towards([at[0], 0.0, at[2]], [its.at[0], 0.0, its.at[2]], KNOCK);
+            [x, KNOCK, z]
+        }
+        None => [0.0; 3],
+    };
+    let push = towards(at, [its.at[0], its.at[1] + its.size[1] * EYES, its.at[2]], impact);
+    if let Some(mut body) = world.get_mut::<Body>(mob) {
+        body.throw(std::array::from_fn(|axis| knock[axis] + push[axis]));
+    }
+}
+
+/// Primed TNT in a blast at `at` that reaches `reach` is pushed away by its impact.
+fn throw_primed(world: &mut World, layer: Entity, at: [f32; 3], reach: f32) {
+    let primed: Vec<(Entity, Body)> = world.query_filtered::<(Entity, &InLayer, &Body), With<crate::tnt::Primed>>().iter(world).filter(|(_, in_layer, _)| in_layer.0 == layer).map(|(entity, _, body)| (entity, *body)).collect();
+    for (entity, its) in primed {
+        if let Some(impact) = impact(world, layer, at, its.at, its.size, reach) {
+            let push = towards(at, its.at, impact);
+            if let Some(mut body) = world.get_mut::<Body>(entity) {
+                body.motion = std::array::from_fn(|axis| body.motion[axis] + push[axis]);
+            }
+        }
     }
 }
 
@@ -227,6 +251,6 @@ pub(super) fn tick(world: &mut World, entity: Entity, layer: Entity, id: u64, ki
     };
     let griefs = world.get::<Layer>(layer).is_some_and(|layer| layer.world.level().rules.on(GRIEFING));
     let power = if world.get::<super::struck::Charged>(entity).is_some() { power * 2.0 } else { power };
-    explode(world, Some(entity), layer, body.at, power, if griefs { Wreck::Breaks } else { Wreck::Nothing });
+    explode(world, Some(entity), layer, body.at, power, if griefs { Wreck::Decays } else { Wreck::Nothing });
     true
 }

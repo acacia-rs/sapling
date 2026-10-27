@@ -14,7 +14,7 @@ use super::rails::{self, Rail, RailKind, Roll};
 use super::{MINECART, TNT_MINECART, is_crowded, spawn};
 use crate::body::{Body, InLiquid, Physics};
 use crate::components::{InLayer, Layer, NetId, Position, Tick};
-use crate::creatures::{self, Wreck};
+use crate::creatures;
 use crate::entities::{self, Kind};
 use crate::riding::{Reins, Riding};
 use crate::sync::Told;
@@ -119,7 +119,7 @@ pub(super) fn tick(world: &mut World) {
         state.fuse = state.fuse.map(|fuse| fuse - 1);
         if landed_hard || state.fuse.is_some_and(|fuse| fuse <= 0) {
             crate::riding::forget(world, cart);
-            creatures::explode(world, Some(cart), layer, body.at, BLAST, Wreck::Leaves);
+            creatures::explode(world, Some(cart), layer, body.at, BLAST, crate::tnt::wreck(world, layer));
             continue;
         }
         if let Ok(mut entity) = world.get_entity_mut(cart) {

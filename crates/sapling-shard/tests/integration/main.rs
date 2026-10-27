@@ -53,6 +53,7 @@ mod husbandry_products;
 mod inventory;
 mod join;
 mod jukebox;
+mod keepers;
 mod kept_drops;
 mod landing_sounds;
 mod leftovers;

@@ -12,7 +12,7 @@ mod kelp;
 mod rules;
 mod sampled;
 mod snowfall;
-mod vines;
+pub(super) mod vines;
 mod wild;
 
 use std::collections::HashSet;

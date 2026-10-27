@@ -181,6 +181,12 @@ Read statically off BDS's block registration, not out of a pack or the Java jar;
 are less certain: sapling's `docs/research/waterlogging.md`. A block not listed is Blocking and keeps
 nothing, BDS's default.
 
+## Blast resistance
+
+`block-resistance.tsv` (read by `block_resistance.rs`): the explosion resistance of each of BDS's 1477
+blocks, read out of a running BDS's memory (`data/generate/block-resistance.py`, which says how), not
+the Java game's table. Every state of a block had the same value.
+
 ## Map colours
 
 `map-colours.tsv` (read by `map_colours.rs`): each block type's colour on a map, read off maps BDS drew
