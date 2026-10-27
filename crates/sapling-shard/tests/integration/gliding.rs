@@ -1,9 +1,10 @@
-//! Elytra flight: started, worn, boosted and ended as BDS did (research/captures/bds-glide.txt).
+//! Elytra flight: started, worn, boosted and ended as BDS did (research/captures/bds-glide.txt);
+//! flying into a wall as BDS's code reads (research/captures/bds-combat-findings.md).
 
 use crate::common;
 
 use acacia_proto::RawPacket;
-use acacia_proto::packets::{MovementEffect, PlayerArmorDamage, PlayerAuthInput, SetEntityData};
+use acacia_proto::packets::{LevelSoundEvent, MovementEffect, PlayerArmorDamage, PlayerAuthInput, SetEntityData, UpdateAttributes};
 use acacia_proto::types::{InputData, MetadataDictionaryItemKey as Key, MetadataDictionaryItemValue as Value, MetadataDictionaryItemValueDefault as Plain, MetadataFlags1, MovementEffectType, Vec3f};
 use common::shooting::{ALEX, added, click_air, held};
 use common::{Harness, all, input_at};
@@ -89,4 +90,22 @@ fn a_glide_without_an_elytra_is_refused_and_the_client_set_right() {
     assert_eq!(glides(h.tick_all().to(1)), [(false, 1.8)], "not on the ground");
     h.receive(1, &click_air());
     assert!(all::<MovementEffect>(h.tick_all().to(1)).is_empty(), "no boost without a glide");
+}
+
+#[test]
+fn flying_into_a_wall_costs_ten_for_each_block_a_tick_of_speed_lost_less_three() {
+    let mut h = aloft(Some("minecraft:elytra"));
+    fly(&mut h, vec![InputData::StartGliding]);
+    let (mut own, mut seen) = (Vec::new(), Vec::new());
+    for across in [1.5, 1.5, 0.0, 0.0] {
+        h.receive(1, &PlayerAuthInput { delta: Vec3f { x: across, y: -0.1, z: 0.0 }, ..input_at(HIGH) });
+        let sent = h.tick_all();
+        own.extend(sent.to(1).to_vec());
+        seen.extend(sent.to(2).to_vec());
+    }
+    let told = all::<UpdateAttributes>(&own).into_iter().flat_map(|update| update.attributes);
+    let health: Vec<f32> = told.filter(|attribute| attribute.name == "minecraft:health").map(|attribute| attribute.current).collect();
+    assert_eq!(health, [8.0], "(1.5 - 0) * 10 - 3, once");
+    let heard: Vec<String> = all::<LevelSoundEvent>(&seen).into_iter().map(|sound| sound.sound_id).collect();
+    assert!(heard.iter().any(|sound| sound == "fall.big"), "{heard:?}");
 }

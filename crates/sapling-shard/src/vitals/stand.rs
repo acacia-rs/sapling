@@ -59,6 +59,7 @@ pub(super) fn stand(world: &mut World, player: Entity, layer: Entity) {
     dress(world, player);
     let warding = crate::enchants::warding(world, player);
     let gilled = effects::level(world, player, sapling_api::Effect::WaterBreathing).is_some();
+    let into_wall = hazards::into_wall(world, player);
     let (Some(position), Some(mut vitals)) = (world.get::<Position>(player).copied(), world.get::<Vitals>(player).copied()) else { return };
     let Some(level) = world.get::<Layer>(layer).map(|layer| &layer.world) else { return };
     let rules = level.level().rules.clone();
@@ -111,6 +112,9 @@ pub(super) fn stand(world: &mut World, player: Entity, layer: Entity) {
     let before = *health;
     let fell_out = (in_void && health.hurt(hazards::VOID_HARM)).then_some(Cause::Void);
     take(health, before, fell_out);
+    let before = *health;
+    let flown = into_wall.is_some_and(|harm| health.hurt(harm)).then_some(Cause::FlyIntoWall);
+    take(health, before, flown);
     vitals.air = match under_water || in_wall {
         true if warding.respiration > 0 && world.get_resource_or_insert_with(Dice::default).fraction() < enchant::holds_breath(warding.respiration) => breath,
         true => breath - 1,
@@ -152,6 +156,9 @@ pub(super) fn stand(world: &mut World, player: Entity, layer: Entity) {
     settle(world, player, hits.last().copied().unwrap_or(Cause::Fire));
     if let Some((harm, spared)) = landing {
         sound_landing(world, player, layer, from, position.feet, harm, spared);
+    }
+    if let Some(harm) = into_wall.filter(|_| hits.contains(&Cause::FlyIntoWall)) {
+        hazards::sound_wall(world, player, layer, harm);
     }
     crate::blocks::trample(world, layer, position.feet, dropped);
     if position.on_ground {

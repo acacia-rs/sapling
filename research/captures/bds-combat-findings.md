@@ -65,4 +65,7 @@ Inventory, Armor, Ui and Offhand windows. A stack that broke: LevelSoundEvent `b
 - Anvil: 6 blocks up cost 10, 16 killed (`death.attack.anvil`); HurtAnimation (cause 17) before LevelEvent
   SoundAnvilFall at the landing cell. Two a block past the first, at most 40, as Java. The helmet case died too,
   so what a helmet spares is unmeasured.
-- Fly-into-wall needs elytra flight, which sapling lacks; read: `(speed before - after)*10 - 3`.
+- Fly-into-wall (decompile only, not drilled): a glider's horizontal speed lost between two
+  ticks, `(before - after)*10 - 3` when above 0, cause `fly_into_wall` (21), heard as sound 24
+  `fall.big` above 4 else 25 `fall.small`. sapling reads both speeds off the client's input delta
+  (`gliding::velocity`), in vitals/hazards.rs.
