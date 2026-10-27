@@ -91,6 +91,17 @@ Sapling's `settle` pops only when the cell under turns non-solid: crops on farml
 nether wart on non-soul-sand are missed. Rule to add: on a change at P, re-run the placement test of the block at
 P+up (and of the cocoa beside P, the cave vines under P) and pop on failure.
 
+### A5. Levers, vines, wall banners, beds (2026-10-27, `bds_command_probe holds`, research/captures/bds-holds.txt)
+
+Each support was `/setblock`ed to air. A lever on a stone's side and a wall banner on one popped a tick later with their
+item. A vine on a stone's side went a tick later with no item and the vine hanging under it the tick after: a vine
+keeps the faces with a solid block beside or that the vine over it has (JAVA 1.12 `BlockVine.recheckGrownSides`), and
+goes with none. A vine under a stone, its only face on air, went with the stone. A bed's half set to air took the
+other half in the same packet, with that half's break particles and no item. Sapling does all of this in the change's own tick (`blocks/updates.rs`).
+
+`/setblock bed` put the head on the named cell and the foot behind it, both with `Bed` entities (color 14), and
+refused a second `/setblock` on the head; sapling's `/setblock` puts the one half.
+
 ## Part B: shapes that reconnect
 
 ### B1. States (REG)

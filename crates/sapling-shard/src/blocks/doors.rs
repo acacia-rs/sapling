@@ -50,13 +50,20 @@ fn ahead(registry: &BlockRegistry, id: u32, [x, y, z]: BlockPos, steps: i32) -> 
 pub(super) fn other_half(world: &World, layer: Entity, pos: BlockPos) -> Option<BlockPos> {
     let level = level(world, layer)?;
     let (registry, id) = (level.registry(), level.block(pos[0], pos[1], pos[2]));
-    let other = match (property(registry, id, UPPER), property(registry, id, HEAD)) {
-        (Some(upper), _) => if upper == "1" { Face::Down.neighbour(pos) } else { Face::Up.neighbour(pos) },
-        (None, Some(head)) => ahead(registry, id, pos, if head == "1" { -1 } else { 1 })?,
-        (None, None) => return None,
-    };
+    let other = half_wanted(world, layer, pos)?;
     let same = level.in_height(other[1]) && registry.get(level.block(other[0], other[1], other[2]))?.name == registry.get(id)?.name;
     same.then_some(other)
+}
+
+/// Where the other half of the two-cell block at `pos` belongs, whatever is there.
+pub(super) fn half_wanted(world: &World, layer: Entity, pos: BlockPos) -> Option<BlockPos> {
+    let level = level(world, layer)?;
+    let (registry, id) = (level.registry(), level.block(pos[0], pos[1], pos[2]));
+    match (property(registry, id, UPPER), property(registry, id, HEAD)) {
+        (Some(upper), _) => Some(if upper == "1" { Face::Down.neighbour(pos) } else { Face::Up.neighbour(pos) }),
+        (None, Some(head)) => ahead(registry, id, pos, if head == "1" { -1 } else { 1 }),
+        (None, None) => None,
+    }
 }
 
 /// The cell of the head of the bed one of whose cells is at `pos`.
