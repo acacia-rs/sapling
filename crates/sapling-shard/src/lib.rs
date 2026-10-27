@@ -57,6 +57,7 @@ mod mobs;
 mod movement;
 mod orbs;
 mod packs;
+mod paintings;
 mod player;
 mod plugins;
 mod portals;

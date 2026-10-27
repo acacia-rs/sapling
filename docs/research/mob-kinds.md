@@ -243,6 +243,20 @@ the actor and 77 ticks on swung (sapling waits Java's 20 to 60 by distance), a `
 pack's power 4), heard `item.trident.throw` from the drowned. It kept its own trident; the thrown
 one stuck in the floor. One handed a trident by `replaceitem` (an earlier run) only bit.
 
+## Paintings (`paintings`)
+
+BDS's pictures are `Motive`s built in one static initialiser (`142a1ce60`, each at `1429f4250` with
+its width and height in pixels and a flag for whether a hung painting may take it: Earth, Wind,
+Fire and Water may not). The painting's constructor (`1429fbbe0`) walks them in order, keeps each
+that survives (`1429cce40`: no collision in its box, a solid block behind each cell, no hanging
+actor in the box) at an area no less than the best so far, drops those smaller than the last best,
+and takes one by the level random's `nextInt`. In `research/captures/bds-paintings.txt` west faces of
+a wall at x 3 gave a 4 by 4 (`unpacked`, `BurningSkull`) on an open wall, `Sea` in a 2 by 1 gap and
+`Bust` in a 2 by 2 one, each `AddPainting` at the wall less 1/32 and the middle of its cells, moved
+half a block to the viewer's left and up for an even width and height (Java's offsets). sapling
+(`paintings.rs`) does the same with "solid" as collision, and keeps the painting with its column.
+Breaking one is not built; a hung painting is a statue like the stored ones.
+
 ## Piglins bartering (`barter`)
 
 A piglin in the warded room (`research/captures/bds-barter.txt`) picked a thrown gold ingot up: shown
