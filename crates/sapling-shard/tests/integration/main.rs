@@ -3,6 +3,7 @@
 
 mod common;
 
+mod anchors;
 mod arenas;
 mod batched_blocks;
 mod armour_wear;
@@ -25,6 +26,7 @@ mod dimensions;
 mod dispensers;
 mod dragon;
 mod dripstone;
+mod emotes;
 mod enchantments;
 mod end;
 mod entities;
@@ -83,6 +85,7 @@ mod sleep;
 mod slimes;
 mod spawners;
 mod spawning;
+mod spectators;
 mod structures;
 mod survival;
 mod throws;

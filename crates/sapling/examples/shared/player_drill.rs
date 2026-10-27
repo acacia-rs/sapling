@@ -19,6 +19,14 @@ mod items;
 mod foes;
 #[path = "reach_drill.rs"]
 mod reach;
+#[path = "respawn_drill.rs"]
+mod respawn;
+#[path = "packets_drill.rs"]
+mod packets;
+#[path = "rest_drill.rs"]
+mod rest;
+#[path = "fx_drill.rs"]
+mod fx;
 #[path = "hunt_drill.rs"]
 mod hunt;
 #[path = "shove_drill.rs"]
@@ -62,7 +70,7 @@ fn face_named(word: &str) -> Option<acacia_bot::interact::Face> {
 /// `!wake` leaves its bed and `!close` its open screen; `!put`, `!take` and `!takeall` move items
 /// in and out of the open container. False for any other line.
 pub async fn act(actor: &mut Bot, line: &str) -> bool {
-    if items::act(actor, line).await {
+    if items::act(actor, line).await || packets::act(actor, line).await {
         return true;
     }
     let keys = |actor: &mut Bot, forward: f32, sprint: bool, jump: bool| {
@@ -263,6 +271,12 @@ pub fn drill(name: &str) -> Option<(Vec<String>, &'static [&'static str])> {
         "beasts" => (wander::beasts(), hunt::BITE_SHOWN),
         "creaking" => (wander::creaking(), hunt::BITE_SHOWN),
         "crowd" => (wander::crowd(), hunt::KINDS_SHOWN),
+        "anchor" => (respawn::anchor(), respawn::ANCHOR_SHOWN),
+        "packets" => (packets::packets(), packets::PACKETS_SHOWN),
+        "rest" => (rest::rest(), rest::REST_SHOWN),
+        "spectate" => (rest::spectate(), rest::SPECTATE_SHOWN),
+        "fx2" => (fx::fx2(), HURT_SHOWN),
+        "dig" => (fx::dig(), fx::DIG_SHOWN),
         _ => return uses::named(name).or_else(|| items::drill(name)),
     })
 }

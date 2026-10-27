@@ -1,7 +1,7 @@
 //! What a click does to a block that needs nothing in the hand: a cake is bitten, redstone ore
 //! lights, a berry bush and cave vines are picked, a note block plays, a full composter empties,
-//! a dragon egg is gone elsewhere, a charged respawn anchor bursts outside the nether
-//! (docs/research/block-uses.md).
+//! a dragon egg is gone elsewhere, a charged respawn anchor bursts outside the nether and is made
+//! the clicker's spawn in it (docs/research/block-uses.md, sleep/spawn.rs).
 // TODO: where a dragon egg goes is the Java game's reach; BDS's one jump was 15 east and 9 north.
 
 use acacia_proto::types::Vec3f;
@@ -90,7 +90,13 @@ pub(super) fn use_by_hand(world: &mut World, player: Entity, layer: Entity, pos:
             true
         }
         "minecraft:respawn_anchor" => {
-            if !property(properties, "respawn_anchor_charge").is_some_and(|charge| charge > 0) || level.dimension() == NETHER || !level.level().rules.on(ANCHORS_EXPLODE) {
+            if !property(properties, "respawn_anchor_charge").is_some_and(|charge| charge > 0) {
+                return false;
+            }
+            if level.dimension() == NETHER {
+                return crate::sleep::set_anchor_spawn(world, player, layer, pos);
+            }
+            if !level.level().rules.on(ANCHORS_EXPLODE) {
                 return false;
             }
             let air = registry.air_id();

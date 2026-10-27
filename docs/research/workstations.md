@@ -155,6 +155,8 @@ compass, elytra: 0 (never offered).
 - The offer name's trailing space (sapling trims it).
 - The activation list (worn / held / itself) each enchantment is sent in.
 - Whether a rename to an item's default name counts (sapling compares the custom name only).
-- Whether a 1.26 client still sends `AnvilDamagePacket` (sapling ignores it; BDS rolls again).
+- Whether a 1.26 client still sends `AnvilDamagePacket`. BDS's handler (1409aa040) rolls the wear
+  again for an anvil within 8.7 of the player (14 in creative); sapling does the same out of
+  creative. A creative player's packet got no answer at all (research/captures/bds-packets.txt).
 - Which of the request's two name lists is the filtered one.
 - No `bds_*` drill was run against BDS for any of this; the numbers are from the exe only.

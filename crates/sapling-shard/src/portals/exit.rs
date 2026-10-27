@@ -60,7 +60,15 @@ pub(crate) fn credits_over(world: &mut World) {
 
 fn spawn_of(world: &mut World, player: Entity) -> Option<(Entity, [f32; 3])> {
     let home = dimensions::home(world, world.get::<InLayer>(player)?.0);
-    let spawn = crate::sleep::spawn_of(world, player, home).flatten().unwrap_or(world.get::<Layer>(home)?.spawn);
+    let own = match crate::sleep::spawn_of(world, player, &[home]) {
+        crate::sleep::Own::At { feet, .. } => Some(feet),
+        crate::sleep::Own::Lapsed(anchor) => {
+            crate::sleep::tell_lapsed(world, player, anchor);
+            None
+        }
+        crate::sleep::Own::None => None,
+    };
+    let spawn = own.unwrap_or(world.get::<Layer>(home)?.spawn);
     Some((home, spawn))
 }
 
