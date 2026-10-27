@@ -180,6 +180,12 @@ pub fn new_actor(unique_id: i64, identifier: &str, position: [f32; 3], motion: [
     written(Value::Compound(fields.into_iter().map(|(key, value)| (key.into(), value)).collect()))
 }
 
+/// A new painting showing `motif`, facing `direction` (as [`Painting`]), its middle at `position`.
+pub fn new_painting_actor(unique_id: i64, position: [f32; 3], direction: i8, motif: &str) -> Vec<u8> {
+    let actor = new_actor(unique_id, "minecraft:painting", position, [0.0; 3]);
+    with_fields(&actor, [("Direction", Value::Byte(direction)), ("Motif", Value::String(motif.into()))]).expect("a compound just written")
+}
+
 fn actor_key(id: &[u8]) -> Vec<u8> {
     [ACTOR, id].concat()
 }

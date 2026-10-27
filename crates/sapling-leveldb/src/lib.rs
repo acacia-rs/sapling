@@ -2,9 +2,11 @@
 //! layout, `level.dat`, and the disk chunk codec, decoding into acacia-world chunks. Formats and
 //! sources: research/worlds-and-ecs.md §1.
 
+mod actor_gear;
 mod actor_harm;
 mod actor_raising;
 mod actor_riding;
+mod actor_state;
 mod actor_tags;
 mod actors;
 mod block_entities;
@@ -12,6 +14,7 @@ mod container;
 mod data3d;
 mod db;
 mod dragon_fight;
+mod hive;
 mod item;
 mod keys;
 mod level_dat;
@@ -28,12 +31,15 @@ mod world;
 
 use std::path::PathBuf;
 
+pub use actor_gear::{actor_pose, geared_actor};
 pub use actor_harm::harmed_actor;
 pub use actor_riding::{actor_chest, actor_links, chested_actor, flagged_actor, linked_actor, varied_actor};
 pub use actor_tags::{actor_tags, tagged_actor};
+pub use actor_state::{WitherRecord, actor_effects, actor_fuse, effected_actor, fused_actor, wither_record, withered_actor};
+pub use hive::{Occupant, hive_occupants, new_hive, occupied_hive};
 pub use scoreboard::{DisplayRecord, ObjectiveRecord, ScoreIdentity, ScoreboardRecord, decode_scoreboard, encode_scoreboard};
 pub use actor_raising::{Raising, raised_actor, raising, regrouped_actor};
-pub use actors::{Actor, Painting, State, actors, falling_block, lying_stack, moved_actor, new_actor, new_falling_block_actor, new_item_actor, new_orb_actor, new_shot_actor, orb_value, orb_worth, placed_actor, shot_record, stored_actors, ShotRecord};
+pub use actors::{Actor, Painting, State, actors, falling_block, lying_stack, moved_actor, new_actor, new_falling_block_actor, new_item_actor, new_orb_actor, new_painting_actor, new_shot_actor, orb_value, orb_worth, placed_actor, shot_record, stored_actors, ShotRecord};
 pub use item::ItemStack;
 pub use pending_ticks::{PendingTick, decode_pending_ticks, encode_pending_ticks};
 pub use player::PlayerData;

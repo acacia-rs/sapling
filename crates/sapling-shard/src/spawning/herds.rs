@@ -9,6 +9,7 @@ use sapling_api::{Difficulty, SpawnReason};
 use sapling_data::{SpawnRule, spawn_category, spawn_rules};
 use sapling_world::ChunkPos;
 
+use super::{gates, phantoms};
 use super::spots::{self, Found};
 use super::{Natural, SpawnDice, Watcher};
 use crate::body::Body;
@@ -78,7 +79,8 @@ pub(super) fn attempt(world: &mut World, layer: Entity, chunk: ChunkPos, watcher
 fn cluster(world: &mut World, layer: Entity, found: &Found, watchers: &[Watcher]) -> Option<()> {
     let distance = watchers.iter().filter(|watcher| watcher.layer == layer).map(|watcher| watcher.distance(found.feet())).fold(f32::INFINITY, f32::min);
     let spot = found.spot(difficulty(world), distance);
-    let admitted: Vec<&SpawnRule> = spawn_rules().iter().filter(|rule| rule.admits(&spot)).collect();
+    let mut admitted: Vec<&SpawnRule> = spawn_rules().iter().filter(|rule| rule.admits(&spot)).collect();
+    admitted.retain(|rule| gates::admits(world, layer, rule.kind, found));
     let rule = pick(&admitted, fraction(world))?;
     let place = usize::from(!found.surface);
     let counts = count(world, layer, ChunkPos::of_block(found.cell[0], found.cell[2]));
@@ -91,7 +93,10 @@ fn cluster(world: &mut World, layer: Entity, found: &Found, watchers: &[Watcher]
     let size = (rule.herd.0 + (fraction(world) * (rule.herd.1 - rule.herd.0 + 1) as f32) as u32).min(rule.herd.1).min(room);
     for _ in 0..size {
         let kind = rule.permuted(fraction(world));
-        spawn(world, layer, kind, found);
+        let place = if kind == phantoms::PHANTOM { phantoms::place(world, layer, found) } else { Some(*found) };
+        if let Some(place) = place {
+            spawn(world, layer, kind, &place);
+        }
     }
     Some(())
 }

@@ -192,6 +192,12 @@ impl Request<'_> {
             }
             return true;
         }
+        if held == crate::paintings::PAINTING && crate::paintings::hang(self.world, site.layer, pos, face) {
+            if site.mode != GameMode::Creative {
+                inventory::change(self.world, self.entity, |inventory| inventory.take(inventory::Place::Main(inventory.selected.into()), 1).is_ok());
+            }
+            return true;
+        }
         if held == END_CRYSTAL && crate::dragon::place_crystal(self.world, site.layer, pos) {
             if site.mode != GameMode::Creative {
                 inventory::change(self.world, self.entity, |inventory| inventory.take(inventory::Place::Main(inventory.selected.into()), 1).is_ok());

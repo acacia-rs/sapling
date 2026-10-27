@@ -58,6 +58,7 @@ pub(crate) fn bring_in(world: &mut World, layer: Entity, home: ChunkPos, actor: 
         (Some(stack), true) => drops::from_storage(world, layer, stack.clone(), actor.position, unique_id, compound),
         (_, false) if actor.identifier == ORB => orbs::from_storage(world, layer, actor.position, unique_id, compound),
         (_, false) if actor.identifier == FALLING_BLOCK => blocks::falling_from_storage(world, layer, actor.position, unique_id, compound),
+        (_, false) if actor.identifier == crate::tnt::KIND => crate::tnt::from_storage(world, layer, actor.position, unique_id, compound),
         (_, false) if crate::shots::is_kept(&actor.identifier) => crate::shots::from_storage(world, layer, &actor, unique_id, compound),
         (_, false) if crate::vehicles::is_vehicle(&actor.identifier) => crate::vehicles::from_storage(world, layer, &actor, unique_id, compound),
         (_, false) if actor.painting.is_none() => creatures::from_storage(world, layer, actor.clone(), unique_id, compound),
@@ -81,6 +82,8 @@ pub(crate) fn write_back_before_saving(world: &mut World) {
 
 /// Writes every loaded column's actors anew from what the shard has (see the module).
 pub(crate) fn write_back(world: &mut World) {
+    crate::tnt::keep_fuses(world);
+    creatures::keep_state(world);
     let kept: Vec<(Entity, ChunkPos, i64, Vec<u8>)> = world
         .query::<(&InLayer, &Body, &Stored, &crate::tags::UniqueId, Option<&creatures::Health>, Option<&creatures::Raised>)>()
         .iter(world)

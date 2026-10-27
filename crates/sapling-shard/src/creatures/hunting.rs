@@ -5,7 +5,11 @@
 // monsters, idle; viewers far off are told every move, where BDS told one of every other; a piglin
 // hunts a player in gold too, and a polar bear does not rear before its hit.
 
-use acacia_proto::packets::{EntityEvent, EntityEventEventId, LevelSoundEvent, SetEntityData};
+mod strike;
+
+pub(super) use strike::{strike, swing};
+
+use acacia_proto::packets::{LevelSoundEvent, SetEntityData};
 use acacia_proto::types::{EntityProperties, MetadataDictionaryItem, MetadataDictionaryItemKey as Key, MetadataDictionaryItemType as Type, MetadataDictionaryItemValue as Value, MetadataDictionaryItemValueDefault as Plain, Vec3f};
 use bevy_ecs::prelude::*;
 use sapling_api::Difficulty;
@@ -34,13 +38,14 @@ const GOES_OUT: f32 = 6.0;
 const REACH: f32 = 0.8;
 const COOLDOWN: u64 = 20;
 /// The speed its hit throws a player at, away from it and up.
-const THROW: f32 = 0.4;/// Nearer than this to its prey it stands: their boxes touch.
+const THROW: f32 = 0.4;
+/// Nearer than this to its prey it stands: their boxes touch.
 const TOUCHING: f32 = 0.6;
 const PLAYER: [f32; 2] = [0.6, 1.8];
 /// How far apart a line of sight is looked at.
 const GLANCE: f32 = 0.25;
 /// Its sounds come from this much of its height up: its growl, and its hit.
-const HEAD: f32 = 0.85;
+pub(super) const HEAD: f32 = 0.85;
 const MIDDLE: f32 = 0.5;
 /// Kinds heard `angry` a tick after their growl as they take prey (research/captures/bds-beasts.txt).
 const ANGERED: &[&str] = &["minecraft:hoglin", "minecraft:zoglin"];
@@ -101,7 +106,7 @@ pub(super) fn nearest(world: &World, layer: Entity, body: &Body, sight: f32) -> 
 }
 
 /// The hunter `id` has the entity `target` as its prey, or none for 0.
-fn targets(id: u64, target: i64) -> bytes::Bytes {
+pub(super) fn targets(id: u64, target: i64) -> bytes::Bytes {
     let item = MetadataDictionaryItem { key: Key::TargetEid, r#type: Type::Long, legacy_type: 7, value: Value::Default(Plain::Long(target)) };
     sapling_net::encode(&SetEntityData { runtime_entity_id: id, metadata: vec![item], properties: EntityProperties { ints: Vec::new(), floats: Vec::new() }, tick: 0 })
 }
@@ -164,13 +169,15 @@ fn take(world: &mut World, entity: Entity, layer: Entity, id: u64, kind: &str, b
 /// A player hit the mob: one that hunts none but its hitter, or a spider that hunts by dark
 /// (research/captures/bds-provoke.txt, bds-provoke2.txt), takes it for its prey at once, if it may be hunted.
 pub(super) fn provoke(world: &mut World, entity: Entity, layer: Entity, id: u64, kind: &str, body: &Body, player: Entity) {
-    let Some(hunts) = sapling_data::mob_traits(kind).hunts.filter(|hunts| (hunts.provoked || hunts.by_dark) && super::genes::fights(world, entity)) else { return };
+    let fights = super::genes::fights(world, entity) && !super::bees::is_spent(world, entity);
+    let Some(hunts) = sapling_data::mob_traits(kind).hunts.filter(|hunts| (hunts.provoked || hunts.by_dark) && fights) else { return };
     let hunted = world.resource::<Settings>().0.difficulty != Difficulty::Peaceful && seen(world, player, layer, body.at, hunts.sees).is_some() && !super::husbandry::is_owner(world, entity, player);
     if hunted && world.get::<Hunter>(entity).is_some_and(|hunter| hunter.prey != Some(player)) {
         take(world, entity, layer, id, kind, body, Some(player));
         // BDS's first hit back came a second or more after, a llama's spit as long as it aims.
         let now = world.resource::<Tick>().0;
         world.get_mut::<Hunter>(entity).expect("a hunter, above").ready = now + hunts.aims.map_or(COOLDOWN, u64::from);
+        super::bees::spread_anger(world, entity, layer, body.at, player);
     }
 }
 
@@ -206,6 +213,8 @@ pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity, id: u64, k
         Some("fireballs") => return super::ghasts::steer(world, entity, layer, id, kind, &body, prey),
         Some("swims") => return super::dolphins::steer(world, entity, layer, &body, prey),
         Some("hops") => return super::slimes::steer(world, entity, prey),
+        Some("flies") => return super::bees::steer(world, entity, layer, &body, prey),
+        Some("lasers") => return super::guardians::steer(world, entity, layer, id, kind, &body, prey),
         Some("charges") => {
             let prey = prey.and(world.get::<Hunter>(entity).and_then(|hunter| hunter.prey));
             return super::vexes::steer(world, entity, layer, id, kind, &body, prey);
@@ -237,63 +246,13 @@ pub(crate) fn on_difficulty(world: &World, harm: f32) -> Option<f32> {
     }
 }
 
-/// After its move: a hunter whose reach its prey is in swings and hits it, heard a tick later.
-pub(super) fn strike(world: &mut World, entity: Entity, layer: Entity, id: u64, kind: &str, body: &Body) -> Option<()> {
-    let now = world.resource::<Tick>().0;
-    let hunts = sapling_data::mob_traits(kind).hunts.filter(|hunts| hunts.fights.is_none_or(|fights| fights == "swims"))?;
-    let hunts = super::genes::hunts(world, entity, hunts);
-    let harm = match hunts.upto {
-        Some(most) => hunts.attack + world.get_resource_or_insert_with(crate::blocks::Dice::default).roll((most - hunts.attack) as u32 + 1) as f32,
-        None => hunts.attack,
-    };
-    let (prey, ready) = world.get::<Hunter>(entity).map(|hunter| (hunter.prey, hunter.ready))?;
-    if prey.is_none() && hunts.explodes.is_some() {
-        blast::put_out(world, entity, layer, id, kind, body);
-    }
-    if let Some(every) = hunts.shoots.filter(|_| prey.is_some()) {
-        return super::shooting::shoot(world, entity, layer, kind, body, hunts, every, prey?);
-    }
-    let prey = prey.filter(|_| now >= ready)?;
-    let feet = world.get::<Position>(prey)?.feet;
-    let (dx, dz) = (feet[0] - body.at[0], feet[2] - body.at[2]);
-    if hunts.explodes.is_some() {
-        // Between their boxes, as the pack's `target_nearby_sensor` counts.
-        match distance(feet, body.at) - (body.size[0] + PLAYER[0]) / 2.0 {
-            gap if gap < IGNITES => blast::light(world, entity, layer, id, kind, body),
-            gap if gap > GOES_OUT => blast::put_out(world, entity, layer, id, kind, body),
-            _ => {}
-        }
-        return None;
-    }
-    let across = (body.size[0] + PLAYER[0]) / 2.0 + REACH;
-    if dx.abs() >= across || dz.abs() >= across || feet[1] >= body.at[1] + body.size[1] || body.at[1] >= feet[1] + PLAYER[1] {
-        return None;
-    }
-    world.get_mut::<Hunter>(entity)?.ready = now + hunts.every.map_or(COOLDOWN, u64::from);
-    let harm = harm + hunts.varies.map_or(0.0, |most| world.get_resource_or_insert_with(crate::blocks::Dice::default).fraction() * (most - hunts.attack));
-    let harm = on_difficulty(world, harm)?;
-    let cell = body.at.map(|c| c.floor() as i32);
-    let swing = EntityEvent { runtime_entity_id: id, event_id: EntityEventEventId::ArmSwing, data: 0, fire_at_position: None };
-    entities::tell_viewers(world, entity, layer, cell, vec![sapling_net::encode(&swing)]);
-    let far = dx.hypot(dz);
-    let away = if far > 1e-4 { [dx / far, dz / far] } else { [0.0; 2] };
-    let [along, up] = if hunts.upto.is_some() { FLINGS } else { [THROW; 2] };
-    let blocked = vitals::blocks(world, prey, body.at, harm, super::Cause::Attack, vitals::wields_axe(kind));
-    if blocked && let Some(mut thrown) = world.get_mut::<Body>(entity) {
-        let back = vitals::thrown_back(thrown.motion, [-away[0], -away[1]]);
-        thrown.throw(back);
-    }
-    let bitten = !blocked && vitals::bitten(world, prey, harm, kind, [away[0] * along, up, away[1] * along]);
-    if let Some((effect, ticks)) = hunts.gives.filter(|_| bitten) {
-        vitals::afflict(world, prey, effect, ticks);
-    }
-    if bitten {
-        crate::enchants::thorns(world, prey, entity);
-        super::owner_hurt(world, prey, entity);
-    }
-    if hunts.once {
-        take(world, entity, layer, id, kind, body, None);
-    }
-    late_sounds::play_later(world, 1, layer, cell, sound("attack", id, kind, body, MIDDLE));
-    Some(())
+/// The hunter's prey and the tick it took it in.
+pub(super) fn quarry(world: &World, entity: Entity) -> Option<(Entity, u64)> {
+    let hunter = world.get::<Hunter>(entity)?;
+    Some((hunter.prey?, hunter.since))
+}
+
+/// The hunter lets its prey go, which its viewers are told; it may take it again at its next look.
+pub(super) fn give_up(world: &mut World, entity: Entity, layer: Entity, id: u64, kind: &str, body: &Body) {
+    take(world, entity, layer, id, kind, body, None);
 }

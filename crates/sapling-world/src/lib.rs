@@ -32,9 +32,12 @@ pub use light::FULL_LIGHT;
 pub use sapling_leveldb::LevelDat;
 pub use players::PlayerLoad;
 pub use sapling_leveldb::{Raising, raised_actor, raising, regrouped_actor};
+pub use sapling_leveldb::{actor_pose, geared_actor};
+pub use sapling_leveldb::{WitherRecord, actor_effects, actor_fuse, effected_actor, fused_actor, wither_record, withered_actor};
+pub use sapling_leveldb::{Occupant, hive_occupants, new_hive, occupied_hive};
 pub use sapling_leveldb::{
     DragonFightRecord, PortalRecord, DisplayRecord, ObjectiveRecord, ScoreIdentity, ScoreboardRecord, actor_tags, decode_scoreboard, encode_scoreboard, tagged_actor,
-    Actor, BlockEntity, ItemStack, Painting, PlayerData, State as ActorState, actors, block_of_hash, container_items, falling_block, harmed_actor, lying_stack, moved_actor, new_actor, new_falling_block_actor, new_item_actor, new_orb_actor, new_shot_actor, orb_value, orb_worth, new_block_entity, shot_record, stored_actors, ShotRecord,
+    Actor, BlockEntity, ItemStack, Painting, PlayerData, State as ActorState, actors, block_of_hash, container_items, falling_block, harmed_actor, lying_stack, moved_actor, new_actor, new_falling_block_actor, new_item_actor, new_orb_actor, new_painting_actor, new_shot_actor, orb_value, orb_worth, new_block_entity, shot_record, stored_actors, ShotRecord,
     with_container_items, actor_chest, actor_links, chested_actor, flagged_actor, linked_actor, varied_actor,
     StructureTemplate, TickingAreaRecord, structure_name, palette_block, placed_actor, PendingTick, decode_pending_ticks, encode_pending_ticks,
 };

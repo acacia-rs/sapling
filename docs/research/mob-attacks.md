@@ -252,6 +252,21 @@ warden hunts only a player that hit it, for 30 every 20 ticks, and no hit moves 
 takes a player that looks at it, stands frozen while anyone does, and hunts it at 0.4 once looked
 away from, hitting for 3 every 40 ticks.
 
+## Guardians (`guardians`, `guardianhits`)
+
+A guardian and an elder guardian in a pool beside a survival actor on normal
+(`research/captures/bds-guardians.txt`, `bds-guardianhits.txt`):
+
+- It takes the actor (`TargetEid`) a tick after it is summoned and is heard `mob.warning` a tick
+  later; 9 ticks on it shows its laser (`EntityEvent` `GuardianAttack`).
+- 80 ticks after that (an elder 60) the laser lands: `HurtAnimation` 2 then 14 (magic) the same
+  tick, health 20 to 15 from either kind, the throw 0.4 up and 0.4 to 0.6 away. Then `TargetEid`
+  goes to 0 and it takes the actor again some 9 ticks later.
+- An elder curses a survival player within 50 every 100 ticks: `MobEffect` mining fatigue (4) at
+  amplifier 2 for 6000 ticks with particles, `EntityEvent` `ElderGuardianCurse` on the player.
+  bdsre's `GuardianPreAIStepSystem` (1459a1130) skips one with amplifier 2 or more and 1200 ticks
+  or more left; sapling follows it (`creatures/guardians.rs`).
+
 ## Mobs that fight their own way
 
 The witch, the enderman, the goat, the evoker, the shulker, the breeze and the ghast: `mob-kinds.md`.
@@ -317,8 +332,9 @@ piglin hunts any survival player, gold worn or not, and does not turn into a zom
 piglin's fellows do not join in, and a golem guards no villager. A llama hit spits once, 41 ticks
 after, for 1 and no throw (`arrows::SPIT`, aimed as the Java game's), and lets go 79 ticks after;
 it shows no charge. A panda and a bee hit take their hitter, hit it once and let go (`once`); a
-panda's other genes: `mob-kinds.md`, "Pandas' genes". A panda does not stand before it walks up,
-and a bee walks, keeps its sting and never dies of its sting.
+panda's other genes: `mob-kinds.md`, "Pandas' genes". A panda does not stand before it walks up.
+A bee flies at its hitter (`fights=flies`, creatures/bees.rs), angers the bees within 20, poisons on
+normal and hard, and dies 10 to 60 s after its sting (2026-10-27).
 
 A hoglin, a zoglin and a warden hunt as above with their numbers (`varies=` draws the hoglin's and
 zoglin's hits); the warden neither sniffs, roars, nor sonic-booms, and its anger is only `provoked`.

@@ -6,7 +6,7 @@ use sapling_api::{EntityId, EntitySpawnEvent, SpawnReason};
 use sapling_world::Actor;
 
 use super::shown::{announcement, reshow, spawn_sound};
-use super::{Creature, Health, NO_DEATH, breezes, creaking, dolphins, drinks, genes, ghasts, harm, hunting, husbandry, legs, rams, slimes, spells, squids, stares, strolling, swimming, teleports, vexes, villagers, wings, wither};
+use super::{Creature, Health, NO_DEATH, afflictions, bees, breezes, creaking, dolphins, drinks, genes, ghasts, harm, hunting, husbandry, legs, rams, slimes, spells, squids, stares, strolling, swimming, teleports, vexes, villagers, wings, wither};
 use crate::body::Body;
 use crate::components::{Layer, NetId};
 use crate::entities;
@@ -23,6 +23,7 @@ pub(super) fn spawn_as(world: &mut World, layer: Entity, kind: &str, feet: [f32;
     let id = born(world, layer, kind, feet, Birth { reason, yaw, gene, sound: "spawn" })?;
     let entity = entities::find(world, id)?;
     villagers::arm(world, entity, layer, kind, false, event);
+    super::drowned::arm(world, entity, kind, event);
     Some(id)
 }
 
@@ -58,6 +59,7 @@ pub(super) fn born(world: &mut World, layer: Entity, kind: &str, feet: [f32; 3],
         legs.yaw = yaw;
     }
     give_health(world, entity, kind, None, 0);
+    wither::begin(world, entity, layer);
     let id = world.get::<NetId>(entity)?.0;
     harm::first_breath(world, entity, layer, id, kind, &body);
     entities::after_announcing(world, layer, [x, y, z], vec![spawn_sound(sound, id, kind, &body)]);
@@ -85,6 +87,8 @@ pub(crate) fn from_storage(world: &mut World, layer: Entity, actor: Actor, uniqu
     }
     give_legs(world, entity, &kind);
     give_health(world, entity, &kind, actor.health, actor.fire.max(0) as u16);
+    afflictions::adopt(world, entity, &compound);
+    wither::adopt(world, entity, &compound);
     husbandry::adopt(world, entity, &kind, Some((&actor, &compound)));
     world.entity_mut(entity).insert(Creature { look: Some(actor) });
     if kind == crate::dragon::DRAGON {
@@ -122,6 +126,7 @@ fn give_legs(world: &mut World, entity: Entity, kind: &str) {
     swimming::arm(world, entity, kind);
     squids::arm(world, entity, kind);
     wings::arm(world, entity, kind);
+    bees::arm(world, entity, kind);
     drinks::arm(world, entity, kind);
     wither::arm(world, entity, kind);
 }

@@ -22,7 +22,7 @@ use sapling_world::ItemStack;
 use crate::components::Outgoing;
 use crate::experience::Experience;
 
-pub(crate) use armour_wear::{elytra_flies, wear_armour, wear_elytra, wear_thorny};
+pub(crate) use armour_wear::{elytra_flies, equip_sound_name, wear_armour, wear_elytra, wear_thorny};
 pub(crate) use bundles::number as number_bundles;
 pub(crate) use wire::{stack, stacks_with, wire};
 pub(crate) use crafting::clear_grid;

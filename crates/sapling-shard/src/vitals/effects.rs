@@ -225,6 +225,11 @@ pub(crate) fn give(world: &mut World, player: Entity, effect: Effect, ticks: u32
     true
 }
 
+/// The amplifier of `effect` on a player and the ticks it has left, if it is on it.
+pub(crate) fn on(world: &World, player: Entity, effect: Effect) -> Option<(u8, u32)> {
+    world.get::<Effects>(player)?.0.iter().find(|active| active.effect == effect).map(|active| (active.amplifier, active.left))
+}
+
 /// Gives a living player the effect named `effect` at its first level for `ticks`.
 pub(crate) fn afflict(world: &mut World, player: Entity, effect: &str, ticks: u32) {
     if let Some(effect) = Effect::ALL.into_iter().find(|known| known.name() == effect) {

@@ -5,7 +5,9 @@
 
 mod despawn;
 mod eggs;
+mod gates;
 mod herds;
+mod phantoms;
 mod spots;
 
 use std::collections::BTreeSet;
@@ -20,6 +22,7 @@ use crate::view::View;
 
 pub(crate) use despawn::tick as despawn;
 pub(crate) use eggs::{hatch, kind_of as egg_kind};
+pub(crate) use phantoms::Rested;
 
 const MOB_SPAWNING: &str = "doMobSpawning";
 /// The chunks about a player that tick, BDS's default `tick-distance`.
@@ -71,9 +74,10 @@ pub(crate) fn watchers(world: &mut World) -> Vec<Watcher> {
         .collect()
 }
 
-/// Rolls an attempt in every chunk within [`TICK_RANGE`] of a player of a world where
-/// `doMobSpawning` is on.
+/// Counts the players' sleeplessness, then rolls an attempt in every chunk within [`TICK_RANGE`]
+/// of a player of a world where `doMobSpawning` is on.
 pub(crate) fn tick(world: &mut World) {
+    phantoms::count_sleepless(world);
     let watchers = watchers(world);
     let mut ticked = BTreeSet::new();
     for watcher in watchers.iter().filter(|watcher| crate::rules::on(world, watcher.layer, MOB_SPAWNING)) {

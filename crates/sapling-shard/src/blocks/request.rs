@@ -102,8 +102,10 @@ pub(crate) fn dispatch(world: &mut World) {
             None
         }
         TransactionTransactionData::ItemUseOnEntity(on) => {
-            let clicks = if on.action_type == OnEntity::Attack { &mut hits } else { &mut uses };
-            clicks.push((from, on.entity_runtime_id));
+            match on.action_type {
+                OnEntity::Attack => hits.push((from, on.entity_runtime_id)),
+                _ => uses.push((from, on.entity_runtime_id, [on.click_pos.x, on.click_pos.y, on.click_pos.z])),
+            }
             None
         }
         _ => None,
@@ -215,8 +217,10 @@ impl Request<'_> {
         }
         let allowed = site.mode == GameMode::Creative || site.mode == GameMode::Survival && took_its_time;
         let event = plugins::offer(self.world,BreakEvent::new(self.player.clone(), pos, block, drops, allowed));
+        let bees = crate::creatures::bees_in(self.world, site.layer, pos);
         match !event.is_cancelled() && self.remove(&site, pos) {
             true => {
+                crate::creatures::hive_broken(self.world, site.layer, pos, &name, bees, by.silk_touch);
                 loot::spill(self.world, site.layer, pos, &event.drops);
                 if site.mode == GameMode::Survival {
                     after_break::leave(self.world, site.layer, pos, &name, &by);

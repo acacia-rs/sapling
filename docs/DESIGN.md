@@ -1027,7 +1027,10 @@ Details and BDS evidence: docs/research/nether-dimension.md, docs/research/end-d
   stand, goes at once. A spawned mob is heard (`spawn` at its head, docs/research/spawn-sound.md).
   Mobs press every pressure plate, items and falling blocks wooden and weighted ones, orbs none.
   A spawned mob is saved with its column as a new actor (`UniqueID`, `identifier`, `definitions`,
-  `Pos`, `Rotation`, `Motion`: what BDS reads of one is untried). Mobs also appear by themselves
+  `Pos`, `Rotation`, `Motion`: what BDS reads of one is untried); its effects (`ActiveEffects`), a
+  primed TNT's `Fuse` and a wither's charge, armour and max health (`Invul`, `SpawningFrames`,
+  `Phase`, `AirAttack`, `maxHealth`) go with it and come back as a BDS world held them
+  (sapling-leveldb `actor_state.rs`, research/captures/bds-keepmobs.txt). Mobs also appear by themselves
   around players by the vanilla packs' spawn rules, capped by category, and go again by their kind's
   despawn distances; spawn eggs hatch them (`spawning.rs`, docs/research/mob-spawning.md). Not done: AI, damage; saving the
   items players throw, orbs and falling blocks; a kept entity that wanders into a column that is not

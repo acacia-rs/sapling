@@ -57,7 +57,8 @@ def pace(entity, behaviour, movement_key="minecraft:movement"):
 
 # Drilled on BDS, not read from the packs (docs/research/mob-attacks.md, "Other kinds").
 HUNTS = {
-    "minecraft:bee": "attack=2 speed=0.42 sees=16 provoked once",
+    # Angry 25 s (`minecraft:angry`); flies at its prey (creatures/bees.rs).
+    "minecraft:bee": "attack=2 speed=0.42 sees=16 provoked once calms=500 fights=flies",
     "minecraft:blaze":"attack=0 speed=0.23 sees=48 shoots=173 aims=83 volley=3x6 shot=small_fireball",
     "minecraft:breeze": "attack=0 speed=0.48 sees=24 fights=leaps",
     "minecraft:bogged": "attack=0 speed=0.25 sees=16 shoots=71 hits=poison:112",
@@ -66,7 +67,10 @@ HUNTS = {
     "minecraft:creeper": "attack=0 speed=0.25 sees=16 explodes=3",
     "minecraft:dolphin": "attack=3 speed=0.11 sees=48 provoked fights=swims",
     "minecraft:drowned": "attack=3 speed=0.23 sees=35",
+    # The pack's `minecraft:attack` 5 for both; they fire lasers (creatures/guardians.rs).
+    "minecraft:elder_guardian": "attack=5 speed=0.3 sees=16 fights=lasers",
     "minecraft:enderman": "attack=7 speed=0.45 sees=64 provoked",
+    "minecraft:guardian": "attack=5 speed=0.12 sees=16 fights=lasers",
     "minecraft:evocation_illager": "attack=0 speed=0.5 sees=20 fights=spells",
     "minecraft:ghast": "attack=0 speed=0.03 sees=28 fights=fireballs",
     "minecraft:endermite": "attack=2 speed=0.25 sees=16",

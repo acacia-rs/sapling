@@ -113,7 +113,7 @@ pub(super) fn physics_of(kind: &str) -> &'static Physics {
         vexes::KIND => &Physics::GHOST,
         "minecraft:turtle" => &Physics::TURTLE,
         "minecraft:bat" => &Physics::BAT,
-        "minecraft:allay" => &Physics::HOVER,
+        "minecraft:allay" | super::bees::KIND => &Physics::HOVER,
         "minecraft:parrot" => &Physics::PARROT,
         "minecraft:squid" | "minecraft:glow_squid" => &Physics::SWIMMER,
         _ if sapling_data::mob_traits(kind).swims.is_some() => &Physics::SWIMMER,
