@@ -12,6 +12,7 @@ use crate::dimensions::{self, ClientDimension};
 use crate::experience::{self, Experience};
 use crate::handoff::{Peers, ShardMsg};
 use crate::sleep::BedSpawn;
+use crate::spawning::Rested;
 use crate::tags::Marks;
 use crate::vitals::{LastDeath, Vitals};
 
@@ -87,6 +88,9 @@ pub(crate) fn load(mut commands: Commands, mut layers: Query<(Entity, &mut Layer
                 if let Some((at, dimension)) = data.last_death {
                     commands.entity(player).insert(LastDeath { at, dimension });
                 }
+                if let Some(rested) = data.rested {
+                    commands.entity(player).insert(Rested(rested));
+                }
                 if let Some(mode) = data.game_mode.and_then(game_mode) {
                     commands.entity(player).insert(Mode(mode));
                 }
@@ -146,7 +150,8 @@ pub(crate) fn save(world: &mut World, player: Entity) {
     let data = PlayerData { vitals: vitals.map(|vitals| vitals.kept()), effects: effects.unwrap_or_default(), dimension, position, rotation, game_mode, ..kept(&inventory) };
     let (bed, spawn_dimension) = world.get::<BedSpawn>(player).and_then(|bed| bed.kept(world, &dimensions::members(world, first))).map_or((None, 0), |(bed, dimension)| (Some(bed), dimension));
     let last_death = world.get::<LastDeath>(player).map(|death| (death.at, death.dimension));
-    let data = PlayerData { bed, spawn_dimension, last_death, tags: marks.tags, unique_id: Some(marks.unique_id), ..data };
+    let rested = world.get::<Rested>(player).map(|rested| rested.0);
+    let data = PlayerData { bed, spawn_dimension, last_death, tags: marks.tags, unique_id: Some(marks.unique_id), rested, ..data };
     world.entity_mut(player).insert(now);
     if let Some(mut marks) = world.get_mut::<Marks>(player) {
         marks.unsaved = false;

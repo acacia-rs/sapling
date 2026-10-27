@@ -54,6 +54,8 @@ pub struct PlayerData {
     pub tags: Vec<String>,
     /// Its actor id (`UniqueID`), by which the world's scoreboard knows it.
     pub unique_id: Option<i64>,
+    /// Ticks since it last slept, which phantoms come by (`TimeSinceRest`, an int: BDSRE 141bf7240).
+    pub rested: Option<i32>,
 }
 
 /// BDS keeps an actor's `Pos` where its position is, a player's eyes: this far above the feet.
@@ -63,6 +65,7 @@ const EFFECTS: &str = "ActiveEffects";
 const GAME_MODE: &str = "PlayerGameMode";
 const ENCHANT_SEED: &str = "EnchantmentSeed";
 const UNIQUE_ID: &str = "UniqueID";
+const RESTED: &str = "TimeSinceRest";
 const BED: [&str; 3] = ["SpawnBlockPositionX", "SpawnBlockPositionY", "SpawnBlockPositionZ"];
 const BEDSIDE: [&str; 3] = ["SpawnX", "SpawnY", "SpawnZ"];
 const SPAWN_DIMENSION: &str = "SpawnDimension";
@@ -132,6 +135,7 @@ impl PlayerData {
             enchant_seed: int(ENCHANT_SEED),
             tags: crate::actor_tags::read_tags(&player),
             unique_id: if let Some(Value::Long(id)) = player.get(UNIQUE_ID) { Some(*id) } else { None },
+            rested: int(RESTED),
         })
     }
 
@@ -171,6 +175,9 @@ impl PlayerData {
         }
         if let Some(id) = self.unique_id {
             set(&mut fields, UNIQUE_ID, Value::Long(id));
+        }
+        if let Some(rested) = self.rested {
+            set(&mut fields, RESTED, Value::Int(rested));
         }
         crate::actor_tags::write_tags(&mut fields, &self.tags);
         match self.effects.is_empty() {
