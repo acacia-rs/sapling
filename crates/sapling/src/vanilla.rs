@@ -16,23 +16,28 @@ mod access;
 mod allowlist;
 mod bans;
 mod blocks;
+mod camera;
 mod chat;
 mod clock;
 mod containers;
+mod controls;
 mod copying;
 mod damage;
 mod effects;
 mod enchanting;
 mod execute;
 mod items;
+mod loot;
 mod messaging;
 mod names;
 mod operators;
 mod players;
+mod recipes;
 mod regions;
 mod riding;
 mod rules;
 mod scoreboard;
+mod screen;
 mod scriptevent;
 mod selecting;
 mod session;
@@ -74,7 +79,9 @@ impl ServerBuilder {
         let messaging = admin.command::<messaging::Me>().command::<messaging::TellRaw>().command::<titles::Title>().command::<titles::TitleRaw>();
         let sounds = messaging.command::<sounds::PlaySound>().command::<sounds::StopSound>().command::<sounds::Particle>();
         let world_tools = sounds.command::<structure::StructureCommand>().command::<tickingarea::TickingAreaCommand>().command::<worldgen::Place>().command::<worldgen::Locate>();
-        world_tools.command::<scoreboard::Scoreboard>().command::<tag::Tag>().command::<scriptevent::ScriptEventCommand>().command::<riding::Ride>()
+        let world_tools = world_tools.command::<scoreboard::Scoreboard>().command::<tag::Tag>().command::<scriptevent::ScriptEventCommand>().command::<riding::Ride>().command::<loot::Loot>();
+        let screen = world_tools.command::<camera::Camera>().command::<camera::CameraShake>().command::<screen::Fog>().command::<screen::Hud>().command::<screen::PlayAnimation>().command::<screen::Music>();
+        screen.command::<controls::InputPermission>().command::<controls::MobEvent>().command::<controls::DayLock>().command::<recipes::Recipe>()
     }
 }
 

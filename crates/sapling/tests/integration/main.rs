@@ -6,6 +6,7 @@ mod access;
 mod api;
 mod blocks;
 mod chest;
+mod client_commands;
 mod craft;
 mod end;
 mod execute;

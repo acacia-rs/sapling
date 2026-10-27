@@ -166,11 +166,16 @@ fn show(start: Instant, shown: &[&str], who: &str, event: Option<BotEvent>) -> R
     } else if let Some(name) = acacia_bot::proto::packet_name(packet.id).filter(|name| ["Text", "SetTime", "SyncWorldClocks"].contains(name) || shown.contains(name)) {
         let text: String = dump::dump(&packet).unwrap_or_default().chars().take(SHOWN).collect();
         println!("{ms:>7} {who:<7} {name} {text}");
-    } else if acacia_bot::proto::packet_name(packet.id).is_none() && shown.contains(&"Unknown") {
+    } else if acacia_bot::proto::packet_name(packet.id).is_none() && (shown.contains(&"Unknown") || shown.contains(&"*")) {
         println!("{ms:>7} {who:<7} Unknown id {} {} bytes", packet.id, packet.body.len());
+    } else if let Some(name) = acacia_bot::proto::packet_name(packet.id).filter(|name| shown.contains(&"*") && !EVERY_TICK.contains(name)) {
+        println!("{ms:>7} {who:<7} {name} {} bytes", packet.body.len());
     }
     Ok(())
 }
+
+/// What a `*` drill leaves out: the packets that come whatever a command does.
+const EVERY_TICK: &[&str] = &["MovePlayer", "MoveEntityAbsolute", "MoveEntityDelta", "SetEntityMotion", "SetEntityData", "UpdateAttributes", "NetworkChunkPublisherUpdate", "LevelChunk", "SubChunk", "NetworkStackLatency", "CurrentStructureFeature"];
 
 /// Characters of a drill's own packets shown.
 const SHOWN: usize = 4000;
