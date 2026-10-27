@@ -25,7 +25,7 @@ use crate::sync::Told;
 use crate::{entities, inventory};
 
 pub(crate) use item::ROCKET;
-pub(crate) use recipes::crafted;
+pub(crate) use recipes::{crafted, dye};
 
 pub(crate) const KIND: &str = "minecraft:fireworks_rocket";
 const SIZE: [f32; 2] = [0.25, 0.25];

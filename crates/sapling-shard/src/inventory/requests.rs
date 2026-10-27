@@ -108,6 +108,8 @@ fn apply(inventory: &mut Inventory, request: &Request, creative: bool, at: &At) 
                 forge = Some(Forge::repair(inventory, name.map(String::as_str), creative)?);
             }
             (Action::CraftGrindstoneRequest(asked), Some(Bench::Grindstone)) if unstarted => forge = Some(Forge::grind(inventory, asked.recipe_network_id, asked.cost)?),
+            (Action::CraftLoomRequest(asked), Some(Bench::Loom)) if unstarted => forge = Some(Forge::loom(inventory, &asked.pattern)?),
+            (Action::BeaconPayment(paid), Some(Bench::Beacon(level))) if unstarted => forge = Some(Forge::beacon(inventory, *level, paid.primary_effect, paid.secondary_effect)?),
             (Action::CraftRecipe(asked), None) if unstarted => craft = Some(Craft::start(inventory, asked.recipe_network_id, asked.times_crafted, station, true)?),
             (Action::CraftRecipeAuto(asked), None) if unstarted => craft = Some(Craft::start(inventory, asked.recipe_network_id, asked.times_crafted, station, false)?),
             (Action::Create(asked), _) => craft.as_mut().ok_or(())?.create(inventory, asked.result_slot_id.into())?,
@@ -129,6 +131,12 @@ fn apply(inventory: &mut Inventory, request: &Request, creative: bool, at: &At) 
             (Action::Drop(thrown), _) => {
                 let from = applied.named(inventory, &thrown.source)?;
                 applied.dropped.push(inventory.take(from, thrown.count)?);
+            }
+            // A beacon's payment is destroyed, not consumed.
+            (Action::Destroy(destroy), _) if forge.is_some() => {
+                let from = applied.named(inventory, &destroy.source)?;
+                inventory.take(from, destroy.count)?;
+                forge.as_mut().expect("matched above").use_up(from, destroy.count);
             }
             (Action::Destroy(destroy), _) if creative => {
                 let from = applied.named(inventory, &destroy.source)?;

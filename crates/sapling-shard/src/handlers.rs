@@ -94,6 +94,7 @@ pub(crate) fn dispatch(world: &mut World) {
     containers::close_where_gone(world);
     furnaces::tick(world);
     crate::brewing::tick(world);
+    crate::beacons::tick(world);
     hoppers::tick(world);
     entities::remove_left(world);
     drops::fly(world);

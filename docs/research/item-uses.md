@@ -59,3 +59,15 @@ devbox's BDS; the captures are `research/captures/bds-<drill>.txt`, sapling's `s
   with the player as the entity; 20 ticks on CompletedUsingItem (method -1), windows resent, USING
   cleared. A use while cooling did nothing.
 - Spyglass: USING_ITEM set on use, cleared on release; nothing else.
+
+## Loom and beacon (`stations`; `inventory/forge/loom.rs`, `beacons.rs`)
+
+- **Loom**: ContainerOpen `Loom`; the banner Placed into `LoomInput` 9, the dye into `LoomDye` 10;
+  `CraftLoom{bo}` + ResultsDeprecated + Consume 9, Consume 10 + Place to the inventory, answered Ok
+  with those slots, nothing resent. The banner kept its Damage (15, white) and gained
+  `Patterns [{Color 1, Pattern bo}]` before `Type`.
+- **Beacon**: placed by /setblock it sent BlockEntityData `{primary 0, secondary 0}` twice (sapling
+  makes the entity at the first payment). The payment Placed into `BeaconPayment` 27 drew an
+  InventorySlot of window 3 slot 0; `BeaconPayment{1, 0}` + Destroy 27 answered Ok, no BlockEntityData.
+  On a one-layer iron pyramid speed came to the payer and the watcher as MobEffect Add, amplifier 0,
+  duration 220, ambient, particles, then Update every 80 ticks.

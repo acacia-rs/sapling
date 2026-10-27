@@ -1,5 +1,5 @@
 //! The workstations whose screens craft by the server's own reckoning: the enchanting table, the
-//! anvil, the grindstone and the smithing table. The craft itself is a request's
+//! anvil, the grindstone, the smithing table, the loom and a beacon's payment. The craft itself is a request's
 //! (inventory/forge.rs); here is what the table offers (enchanting.rs) and what a done craft
 //! leaves the world to do: a new enchanting seed, an anvil's wear (anvil.rs), a grindstone's
 //! experience. BDS's rules and numbers: docs/research/workstations.md.
@@ -27,6 +27,9 @@ pub(crate) enum Workstation {
     Smithing,
     /// Only read at: its book turns by LecternUpdate (blocks/lectern.rs).
     Lectern,
+    Loom,
+    /// Paid at (beacons.rs).
+    Beacon,
 }
 
 /// The workstation the block `block` is, and the screen it opens.
@@ -37,6 +40,8 @@ pub(crate) fn of_block(block: &str) -> Option<(Workstation, WindowType)> {
         "minecraft:grindstone" => (Workstation::Grindstone, WindowType::Grindstone),
         "minecraft:smithing_table" => (Workstation::Smithing, WindowType::SmithingTable),
         "minecraft:lectern" => (Workstation::Lectern, WindowType::Lectern),
+        "minecraft:loom" => (Workstation::Loom, WindowType::Loom),
+        "minecraft:beacon" => (Workstation::Beacon, WindowType::Beacon),
         _ => return None,
     })
 }
@@ -55,12 +60,14 @@ pub(crate) fn opened(world: &mut World, player: Entity, workstation: Workstation
 
 /// The workstation a player's request is made at, with what it offers: a trader's screen too.
 pub(crate) fn bench(world: &World, player: Entity) -> Option<Bench> {
-    let Some((workstation, ..)) = containers::workstation(world, player) else { return crate::creatures::bargains(world, player).map(Bench::Trade) };
+    let Some((workstation, layer, pos)) = containers::workstation(world, player) else { return crate::creatures::bargains(world, player).map(Bench::Trade) };
     Some(match workstation {
         Workstation::Enchanting => Bench::Enchanting(world.get::<Offers>(player).map(Offers::listed).unwrap_or_default()),
         Workstation::Anvil => Bench::Anvil,
         Workstation::Grindstone => Bench::Grindstone,
         Workstation::Smithing => Bench::Smithing,
+        Workstation::Loom => Bench::Loom,
+        Workstation::Beacon => Bench::Beacon(crate::beacons::level(world, layer, pos)),
         Workstation::Lectern => return None,
     })
 }
@@ -80,6 +87,7 @@ pub(crate) fn answered(world: &mut World, player: Entity, forged: Option<Forged>
             }
         }
         Some(Forged::Repaired) => anvil::wear(world, layer, pos, creative),
+        Some(Forged::Beaconed(effects)) => crate::beacons::pay(world, layer, pos, effects),
         Some(Forged::Ground([least, most])) => {
             let points = least + world.get_resource_or_insert_with(crate::blocks::Dice::default).roll(most - least + 1);
             orbs::pay_player(world, player, points as i32);
