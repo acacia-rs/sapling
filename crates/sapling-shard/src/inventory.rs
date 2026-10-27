@@ -2,6 +2,7 @@
 //! (docs/DESIGN.md "Inventories"). Stacks carry the ids clients name them by.
 
 mod armour_wear;
+mod bundles;
 mod crafting;
 mod death;
 mod enchanted;
@@ -13,16 +14,17 @@ mod plugin;
 mod requests;
 mod store;
 mod wear;
+mod wire;
 
-use acacia_proto::types::ItemV4;
 use bevy_ecs::prelude::*;
-use sapling_data::Stack;
 use sapling_world::ItemStack;
 
 use crate::components::Outgoing;
 use crate::experience::Experience;
 
 pub(crate) use armour_wear::{elytra_flies, wear_armour, wear_elytra, wear_thorny};
+pub(crate) use bundles::number as number_bundles;
+pub(crate) use wire::{stack, stacks_with, wire};
 pub(crate) use crafting::clear_grid;
 pub(crate) use forge::{Bargain, Bench, CARTOGRAPHY_INPUT, Chart, Forged, enchanting_input};
 pub(crate) use equipment::{announce, in_hand, screens, select, show_hand, spawn_packets};
@@ -65,6 +67,8 @@ pub(crate) enum Place {
     /// A slot of the `Ui` window past the cursor, where screens keep what is being worked on:
     /// the crafting grids' cells, a stonecutter's input.
     Ui(usize),
+    /// A slot of the bundle a request names, while it is answered (bundles.rs).
+    Bundle(usize),
 }
 
 #[derive(Component, Clone)]
@@ -80,6 +84,8 @@ pub(crate) struct Inventory {
     pub container: Vec<Option<Held>>,
     /// What the open container refuses in a slot, while it is lent.
     pub refuses: Option<fn(usize, &ItemStack) -> bool>,
+    /// The last bundle a request named, by number, and its slots under the ids the client knows.
+    bundle: Option<(i32, Vec<Option<Held>>)>,
     /// What the player's ender chests hold.
     pub ender: Vec<Option<Held>>,
     pub experience: Experience,
@@ -112,6 +118,7 @@ impl Default for Inventory {
             grid: vec![None; UI],
             container: Vec::new(),
             refuses: None,
+            bundle: None,
             ender: vec![None; ENDER],
             experience: Experience::default(),
             enchant_seed: 0,
@@ -127,20 +134,6 @@ impl Default for Inventory {
     }
 }
 
-pub(crate) fn stack(stored: &ItemStack) -> Stack<'_> {
-    Stack { name: &stored.name, count: stored.count, damage: stored.damage, block: stored.block, tag: stored.tag.as_ref() }
-}
-
-pub(crate) fn wire(slot: &Option<Held>, with_id: bool) -> ItemV4 {
-    let shown = |held: &Held| sapling_data::item(&stack(&held.stack), with_id.then_some(held.id));
-    slot.as_ref().and_then(shown).unwrap_or_else(sapling_data::no_item)
-}
-
-/// Whether two stacks are of one kind, so that one can go onto the other.
-pub(crate) fn stacks_with(a: &ItemStack, b: &ItemStack) -> bool {
-    (&a.name, a.damage, a.block, &a.tag) == (&b.name, b.damage, b.block, &b.tag)
-}
-
 impl Inventory {
     pub fn slot(&self, place: Place) -> Option<&Option<Held>> {
         match place {
@@ -151,6 +144,7 @@ impl Inventory {
             Place::Created => Some(&self.created),
             Place::Container(slot) => self.container.get(slot),
             Place::Ui(slot) => self.grid.get(slot),
+            Place::Bundle(slot) => self.bundle.as_ref()?.1.get(slot),
         }
     }
 
@@ -164,6 +158,7 @@ impl Inventory {
             Place::Created => Some(&mut self.created),
             Place::Container(slot) => self.container.get_mut(slot),
             Place::Ui(slot) => self.grid.get_mut(slot),
+            Place::Bundle(slot) => self.bundle.as_mut()?.1.get_mut(slot),
         }
     }
 
