@@ -317,8 +317,9 @@ piglin hunts any survival player, gold worn or not, and does not turn into a zom
 piglin's fellows do not join in, and a golem guards no villager. A llama hit spits once, 41 ticks
 after, for 1 and no throw (`arrows::SPIT`, aimed as the Java game's), and lets go 79 ticks after;
 it shows no charge. A panda and a bee hit take their hitter, hit it once and let go (`once`); a
-panda's other genes: `mob-kinds.md`, "Pandas' genes". A panda does not stand before it walks up,
-and a bee walks, keeps its sting and never dies of its sting.
+panda's other genes: `mob-kinds.md`, "Pandas' genes". A panda does not stand before it walks up.
+A bee flies at its hitter (`fights=flies`, creatures/bees.rs), angers the bees within 20, poisons on
+normal and hard, and dies 10 to 60 s after its sting (2026-10-27).
 
 A hoglin, a zoglin and a warden hunt as above with their numbers (`varies=` draws the hoglin's and
 zoglin's hits); the warden neither sniffs, roars, nor sonic-booms, and its anger is only `provoked`.

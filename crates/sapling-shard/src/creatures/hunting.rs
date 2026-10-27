@@ -165,13 +165,15 @@ fn take(world: &mut World, entity: Entity, layer: Entity, id: u64, kind: &str, b
 /// A player hit the mob: one that hunts none but its hitter, or a spider that hunts by dark
 /// (research/captures/bds-provoke.txt, bds-provoke2.txt), takes it for its prey at once, if it may be hunted.
 pub(super) fn provoke(world: &mut World, entity: Entity, layer: Entity, id: u64, kind: &str, body: &Body, player: Entity) {
-    let Some(hunts) = sapling_data::mob_traits(kind).hunts.filter(|hunts| (hunts.provoked || hunts.by_dark) && super::genes::fights(world, entity)) else { return };
+    let fights = super::genes::fights(world, entity) && !super::bees::is_spent(world, entity);
+    let Some(hunts) = sapling_data::mob_traits(kind).hunts.filter(|hunts| (hunts.provoked || hunts.by_dark) && fights) else { return };
     let hunted = world.resource::<Settings>().0.difficulty != Difficulty::Peaceful && seen(world, player, layer, body.at, hunts.sees).is_some() && !super::husbandry::is_owner(world, entity, player);
     if hunted && world.get::<Hunter>(entity).is_some_and(|hunter| hunter.prey != Some(player)) {
         take(world, entity, layer, id, kind, body, Some(player));
         // BDS's first hit back came a second or more after, a llama's spit as long as it aims.
         let now = world.resource::<Tick>().0;
         world.get_mut::<Hunter>(entity).expect("a hunter, above").ready = now + hunts.aims.map_or(COOLDOWN, u64::from);
+        super::bees::spread_anger(world, entity, layer, body.at, player);
     }
 }
 
@@ -207,6 +209,7 @@ pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity, id: u64, k
         Some("fireballs") => return super::ghasts::steer(world, entity, layer, id, kind, &body, prey),
         Some("swims") => return super::dolphins::steer(world, entity, layer, &body, prey),
         Some("hops") => return super::slimes::steer(world, entity, prey),
+        Some("flies") => return super::bees::steer(world, entity, layer, &body, prey),
         Some("charges") => {
             let prey = prey.and(world.get::<Hunter>(entity).and_then(|hunter| hunter.prey));
             return super::vexes::steer(world, entity, layer, id, kind, &body, prey);
@@ -241,7 +244,7 @@ pub(crate) fn on_difficulty(world: &World, harm: f32) -> Option<f32> {
 /// After its move: a hunter whose reach its prey is in swings and hits it, heard a tick later.
 pub(super) fn strike(world: &mut World, entity: Entity, layer: Entity, id: u64, kind: &str, body: &Body) -> Option<()> {
     let now = world.resource::<Tick>().0;
-    let hunts = sapling_data::mob_traits(kind).hunts.filter(|hunts| hunts.fights.is_none_or(|fights| fights == "swims"))?;
+    let hunts = sapling_data::mob_traits(kind).hunts.filter(|hunts| hunts.fights.is_none_or(|fights| fights == "swims" || fights == "flies"))?;
     let hunts = super::genes::hunts(world, entity, hunts);
     let harm = match hunts.upto {
         Some(most) => hunts.attack + world.get_resource_or_insert_with(crate::blocks::Dice::default).roll((most - hunts.attack) as u32 + 1) as f32,
@@ -290,6 +293,7 @@ pub(super) fn strike(world: &mut World, entity: Entity, layer: Entity, id: u64, 
     if hunts.once {
         take(world, entity, layer, id, kind, body, None);
     }
+    super::bees::stung(world, entity, prey, bitten);
     late_sounds::play_later(world, 1, layer, cell, sound("attack", id, kind, body, MIDDLE));
     Some(())
 }

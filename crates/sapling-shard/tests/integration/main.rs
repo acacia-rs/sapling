@@ -8,6 +8,7 @@ mod arenas;
 mod batched_blocks;
 mod armour_wear;
 mod attacks;
+mod bees;
 mod block_rules;
 mod block_use;
 mod bubble_columns;

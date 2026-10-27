@@ -145,8 +145,11 @@ effect in sapling) and hunting (`Target`). Sapling: `blocks/conduits.rs`.
 hive: `block.beehive.enter` at the block's corner, no entity shown; `block.beehive.work` at its centre now and then.
 A creative break of a hive with a bee in it left a beehive item whose tag holds `Occupants` (`ActorIdentifier`
 `minecraft:bee<>`, the bee's whole `SaveData`). At noon the other hive's bee came out: AddEntity at the middle of the
-cell in front (`direction` 1: west), yaw 90, with `block.beehive.exit` at the hive's corner. Sapling keeps no bees
-in hives: none ever go in (bee flight), so `Occupants` are neither written nor released.
+cell in front (`direction` 1: west), yaw 90, with `block.beehive.exit` at the hive's corner. Bees now fly, go in
+and come out (2026-10-27, `keephive`, `bees`, `beesout`; creatures/bees.rs and bees/hives.rs): `Occupants` hold
+`SaveData` with `properties` `minecraft:has_nectar` and `TicksLeftToStay` (600, 2400 with pollen), written as bees
+come and go only. A broken hive let its bee out at the block's middle (`bds-bees.txt` 110177), which took the
+breaker 4 ticks later with `mob.warning`. No `BlockEntityData` is sent for any of it.
 
 ## Open checks (one bot session on BDS)
 

@@ -1,4 +1,4 @@
-//! Bats, allays and parrots flying about, as BDS's flew in the `flyers` drill
+//! Bats, allays, bees (bees.rs steers them to flowers, hives and prey) and parrots flying about, as BDS's flew in the `flyers` drill
 //! (research/captures/bds-wander-findings.md), on the ghast's way of flying (ghasts.rs): each tick
 //! one is pushed along the line to its spot, after its kind's drag (`Physics::BAT`, `HOVER`,
 //! `PARROT`). A bat is pushed 0.1 and picks a spot up to 10 off across, 7 up or down and 2 lower
@@ -40,6 +40,9 @@ struct Wing {
 
 const BAT: Wing = Wing { push: 0.1, ramps: false, across: 10.0, up: 7.0, lower: 2.0, over: None, every: Some([2, 7]) };
 const ALLAY: Wing = Wing { push: 0.0098, ramps: true, across: 8.0, up: 8.0, lower: 1.0, over: Some([1.0, 4.0]), every: None };
+/// A bee hovers as an allay does with its own speed, 0.98 x 0.15² (research/captures/bds-keephive.txt:
+/// from rest 0.0063, 0.0121, 0.0193 ... up to 0.1627 a tick, as the allay's ramp gives).
+const BEE: Wing = Wing { push: 0.02205, ..ALLAY };
 /// A parrot's spot is kept this high over the ground (see the TODO).
 const HOVERS: [f32; 2] = [2.0, 8.0];
 const PARROT: Wing = Wing { push: 0.0188, ramps: false, across: 15.0, up: 1.0, lower: 0.0, over: Some(HOVERS), every: None };
@@ -48,6 +51,7 @@ fn wing(kind: &str) -> Option<&'static Wing> {
     match kind {
         "minecraft:bat" => Some(&BAT),
         "minecraft:allay" => Some(&ALLAY),
+        super::bees::KIND => Some(&BEE),
         "minecraft:parrot" => Some(&PARROT),
         _ => None,
     }
@@ -103,10 +107,17 @@ pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity, kind: &str
             picked
         }
     };
-    let Some(spot) = spot else { return true };
+    if let Some(spot) = spot {
+        fly_to(world, entity, wing, &body, spot);
+    }
+    true
+}
+
+/// Pushes the flyer a tick along the line to `spot` by its kind's wing, and turns it that way.
+fn fly_to(world: &mut World, entity: Entity, wing: &Wing, body: &Body, spot: [f32; 3]) {
     let towards: [f32; 3] = std::array::from_fn(|axis| spot[axis] - body.at[axis]);
     let long = towards.iter().map(|c| c * c).sum::<f32>().sqrt();
-    let Some(mut wings) = world.get_mut::<Wings>(entity) else { return true };
+    let Some(mut wings) = world.get_mut::<Wings>(entity) else { return };
     wings.pace = if wing.ramps { (wings.pace + PACE).min(1.0) } else { 1.0 };
     let push = wing.push * wings.pace;
     if long > 1e-4 {
@@ -118,5 +129,15 @@ pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity, kind: &str
             told.face(yaw, yaw);
         }
     }
+}
+
+/// Flies a flyer of `kind` a tick at `spot` (a bee to its flower, its hive or its prey), its
+/// spot about given up; false for a kind that does not fly about.
+pub(super) fn fly_at(world: &mut World, entity: Entity, kind: &str, spot: [f32; 3]) -> bool {
+    let (Some(wing), Some(body)) = (wing(kind), world.get::<Body>(entity).copied()) else { return false };
+    if let Some(mut wings) = world.get_mut::<Wings>(entity) {
+        wings.spot = None;
+    }
+    fly_to(world, entity, wing, &body, spot);
     true
 }

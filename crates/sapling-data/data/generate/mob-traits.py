@@ -57,7 +57,8 @@ def pace(entity, behaviour, movement_key="minecraft:movement"):
 
 # Drilled on BDS, not read from the packs (docs/research/mob-attacks.md, "Other kinds").
 HUNTS = {
-    "minecraft:bee": "attack=2 speed=0.42 sees=16 provoked once",
+    # Angry 25 s (`minecraft:angry`); flies at its prey (creatures/bees.rs).
+    "minecraft:bee": "attack=2 speed=0.42 sees=16 provoked once calms=500 fights=flies",
     "minecraft:blaze":"attack=0 speed=0.23 sees=48 shoots=173 aims=83 volley=3x6 shot=small_fireball",
     "minecraft:breeze": "attack=0 speed=0.48 sees=24 fights=leaps",
     "minecraft:bogged": "attack=0 speed=0.25 sees=16 shoots=71 hits=poison:112",
