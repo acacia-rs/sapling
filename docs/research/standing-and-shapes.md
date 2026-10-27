@@ -242,12 +242,17 @@ connectTo(R, other):                # neighbour re-shapes toward the new rail
 ```
 
 Removal: neighbours keep their shape (JAVA `affectNeighborsAfterRemoval` only sends updates: `pos+up` when the
-removed rail sloped, `pos` and `pos-down` for straight rails). Plain-rail redstone switching (`RailBlock.updateState`
-re-runs `place(.., always=false)` when 3 rails surround it) needs power: skip.
+removed rail sloped, `pos` and `pos-down` for straight rails).
 
 Pop (BDS `canSurvive` 142cd5660, = JAVA `shouldBeRemoved`): below lacks Support(Up, Edge), or shape AE and the block at
 x+1 (same y) lacks it, AW x-1, AN z-1, AS z+1. Placement needs only Support(Up, Center) below (142cd6c80).
-`rail_data_bit` stays 0 (no redstone; detector rails would set it while a minecart sits on them).
+
+Power (2026-10-27, `bds_command_probe rails`, research/captures/bds-rails.txt): a block of redstone beside the first
+of 12 golden rails lit rails 1 to 9, beside the 6th all 12 (each powered rail feeds 8 more along its line, JAVA
+`findPoweredRailSignal`), the same for activator rails, and up and down a slope. The line changed about 100 ms after
+the source, in one UpdateSubchunkBlocks. A plain rail placed at a T (rails west, east and south) took SE (6); a block
+of redstone beside it or under it turned it SW (7), taking it away back SE: `place(.., always=false)` with the
+powered order, as JAVA `RailBlock.updateState` (rail_line.rs, rails.rs `switch`).
 
 ## Open checks (one bot session on BDS: place, read back)
 

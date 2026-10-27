@@ -20,8 +20,8 @@ pub(super) enum User {
     Lamp { lit: bool },
     Opens(Opens),
     Hopper,
-    /// A powered or activator rail, on while powered (vehicles/rails.rs).
-    // TODO: power does not pass along a line of rails as in vanilla.
+    /// A powered or activator rail, on while powered or within reach of one along its line
+    /// (rail_line.rs, vehicles/rails.rs); a plain rail, which switches at a junction (rails.rs).
     Rail,
     Tnt,
     /// Pushes out of its `front`, where it takes no power.
@@ -102,7 +102,7 @@ impl Part {
             // Their strength is held by the circuit (`redstone::emit`), not their block.
             "target" | "jukebox" => Part::Producer { strength: 0, strong: None },
             "sculk_sensor" | "calibrated_sculk_sensor" => Part::Producer { strength: 0, strong: Some(Face::Down) },
-            "golden_rail" | "activator_rail" => Part::User(User::Rail),
+            "golden_rail" | "activator_rail" | "rail" => Part::User(User::Rail),
             // A minecart on it turns it on (vehicles/rails.rs).
             "detector_rail" => Part::Producer { strength: on("rail_data_bit"), strong: Some(Face::Down) },
             "tnt" => Part::User(User::Tnt),

@@ -87,13 +87,16 @@ fn use_signal(world: &mut World, layer: Entity, pos: BlockPos, id: u32, user: Us
             }
         }
         User::Lamp { lit: false } => {}
-        User::Hopper | User::Rail => {
-            let key = if user == User::Hopper { "toggle_bit" } else { "rail_data_bit" };
-            if let Some(id) = with(world, layer, pos, key, if signal > 0 { "1" } else { "0" }) {
+        User::Hopper => {
+            if let Some(id) = with(world, layer, pos, "toggle_bit", if signal > 0 { "1" } else { "0" }) {
                 send::set(world, layer, pos, id);
             }
         }
         User::Tnt => {
+        User::Rail => {
+            super::rail_line::relight(world, layer, pos);
+            crate::blocks::rails::switch(world, layer, pos, signal > 0);
+        }
             if signal > 0 {
                 crate::tnt::light(world, layer, pos);
             }
