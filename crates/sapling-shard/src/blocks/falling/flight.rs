@@ -26,6 +26,9 @@ const LINGER: u32 = 3;
 const WIRE_OFFSET: f32 = 0.49;
 /// BDS spawns it at the middle of the cell it leaves: its box starts this far above the floor.
 const SPAWN_LIFT: f32 = 0.01;
+const ANVIL_HARM: f32 = 2.0;
+const ANVIL_MOST: f32 = 40.0;
+const PLAYER: [f32; 2] = [0.6, 1.8];
 
 /// A falling block's own part; its [`Body`] and what viewers were told are beside it (entities.rs).
 #[derive(Component)]
@@ -34,6 +37,8 @@ pub(crate) struct FallingBlock {
     airborne: u32,
     landed_for: Option<u32>,
     refused: bool,
+    /// The height it began to fall from.
+    top: f32,
 }
 
 const KIND: &str = "minecraft:falling_block";
@@ -63,8 +68,24 @@ pub(super) fn start(world: &mut World, layer: Entity, block: u32, [x, y, z]: Blo
 fn spawn(world: &mut World, layer: Entity, block: u32, hash: u32, body: Body, airborne: u32) -> Option<Entity> {
     let entity = entities::spawn(world, layer, KIND, body, wire(body.at), |id| Some(announcement(id, &body, hash)))?;
     entities::flag_moving(world, entity, true);
-    world.entity_mut(entity).insert(FallingBlock { block, airborne, landed_for: None, refused: false });
+    world.entity_mut(entity).insert(FallingBlock { block, airborne, landed_for: None, refused: false, top: body.at[1] });
     Some(entity)
+}
+
+/// A landing anvil that fell `fallen` hurts the players its box meets: two for each block past the
+/// first, at most 40 (research/captures/bds-anvil.txt: 6 blocks cost 10, 16 killed).
+// TODO: what a helmet spares and how it wears; mobs under it; the anvil chipping.
+fn crush(world: &mut World, layer: Entity, body: &Body, fallen: f32) {
+    let amount = ((fallen - 1.0).ceil() * ANVIL_HARM).clamp(0.0, ANVIL_MOST);
+    let (low, high) = body.bounds();
+    let meets = |feet: [f32; 3]| (feet[0] - body.at[0]).abs() < (SIZE + PLAYER[0]) / 2.0 && (feet[2] - body.at[2]).abs() < (SIZE + PLAYER[0]) / 2.0 && feet[1] < high[1] && low[1] < feet[1] + PLAYER[1];
+    let struck: Vec<Entity> = crate::components::in_world(world)
+        .into_iter()
+        .filter(|player| world.get::<InLayer>(*player).is_some_and(|on| on.0 == layer) && world.get::<crate::components::Position>(*player).is_some_and(|position| meets(position.feet)))
+        .collect();
+    for player in struck.into_iter().filter(|_| amount > 0.0) {
+        crate::vitals::crushed(world, player, amount);
+    }
 }
 
 /// Makes a falling block a world folder kept (its actor compound `compound`) fall in `layer`
@@ -162,14 +183,16 @@ fn step(world: &mut World, entity: Entity, layer: Entity, id: u64) -> Option<Blo
     }
     let mut falling = world.get_mut::<FallingBlock>(entity)?;
     (falling.airborne, falling.landed_for) = (airborne, landed.then_some(0));
+    let top = falling.top;
     if !packets.is_empty() {
         let hash = level(world, layer).map_or(0, |level| level.registry().network_hash(block_id));
         mobs::reannounce(world, entity, announcement(id, &body, hash));
     }
     if landed {
         let is_anvil = block(world, layer, cell_of(at)).and_then(|(registry, _)| registry.get(block_id)).is_some_and(|state| state.name.ends_with("anvil"));
-        // BDS sends the sound before the landing move.
+        // BDS sends the sound before the landing move, after the hurt it did.
         if is_anvil {
+            crush(world, layer, &body, top - at[1]);
             packets.insert(0, event(LevelEventEvent::SoundAnvilFall, cell_of(at).map(|c| c as f32), 0));
         }
     }

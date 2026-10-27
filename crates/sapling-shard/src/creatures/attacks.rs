@@ -1,16 +1,13 @@
 //! A player's hit on a mob, as BDS answered one (docs/research/mob-damage.md, "Hits"), with
-//! what the weapon's enchantments add (enchanted.rs).
-// TODO: no critical hit or wear of the item; a hit mob does not
-// fight back; a hit on an armour stand, which has no health here, tires nobody; `REACH` is the nearest whole number to what BDS allowed.
+//! what the weapon's enchantments add (enchanted.rs) and a falling hitter's critical (blows.rs).
+// TODO: a hit mob does not fight back; a hit on an armour stand, which has no health here, tires nobody; `REACH` is the nearest whole number to what BDS allowed.
 
-use acacia_proto::packets::LevelSoundEvent;
-use acacia_proto::types::Vec3f;
 use bevy_ecs::prelude::*;
 use sapling_api::{EntityId, GameMode};
 use sapling_data::enchant::{self, Enchant};
 
 use super::Creature;
-use super::harm;
+use super::{blows, harm};
 use super::health::{Cause, Health};
 use crate::blocks::Dice;
 use crate::body::Body;
@@ -22,11 +19,6 @@ use crate::entities;
 const MAX_HITS_PER_TICK: usize = 4;
 /// How far from a player's eyes the nearest point of a mob it hits may be.
 const REACH: f32 = 3.0;
-/// The speed a hit throws a mob at, away from the hitter and up; what it moved at across counts half.
-const THROW: f32 = 0.4;
-const KEPT: f32 = 0.5;
-/// A player's sounds come from the middle of its box.
-const HALF_PLAYER: f32 = 0.9;
 
 /// A mob a player killed, the experience it leaves when it goes, and the Looting it was killed with.
 #[derive(Component)]
@@ -73,23 +65,12 @@ fn hit(world: &mut World, player: Entity, id: u64) -> Option<()> {
         return None;
     }
     let cell = body.at.map(|c| c.floor() as i32);
-    let [x, y, z] = from;
-    let swing = LevelSoundEvent {
-        sound_id: "attack.strong".into(),
-        position: Vec3f { x, y: y + HALF_PLAYER, z },
-        extra_data: -1,
-        entity_type: "minecraft:player".into(),
-        is_baby_mob: false,
-        is_global: false,
-        entity_unique_id: -1,
-        fire_at_position: None,
-    };
-    let mut packets = vec![sapling_net::encode(&swing)];
     let held = world.get::<Inventory>(player).and_then(|inventory| inventory.in_hand().as_ref().map(|held| held.stack.name.clone()));
     let weapon = crate::enchants::weapon(world, player);
     // The enchantments' bonus goes in before strength and weakness (BDS 1429e56c0).
-    let harm = crate::vitals::hits_for(world, player, sapling_data::item_attack(held.as_deref()) + enchant::melee_bonus(weapon.as_ref(), Some(kind.as_str())));
-    let harm = if kind == crate::dragon::DRAGON { crate::dragon::body_harm(harm) } else { harm };
+    let blow = blows::blow(world, player, crate::vitals::hits_for(world, player, sapling_data::item_attack(held.as_deref()) + enchant::melee_bonus(weapon.as_ref(), Some(kind.as_str()))));
+    let mut packets = vec![sapling_net::encode(&blows::sound(blow, from))];
+    let harm = if kind == crate::dragon::DRAGON { crate::dragon::body_harm(blow.harm) } else { blow.harm };
     let hitter = in_world_identity(world, player).map(sapling_api::Attacker::Player);
     let before = health.left();
     if crate::damage::ask(world, entity, harm, Cause::Attack, hitter).is_some_and(|harm| health.hurt(harm)) {
@@ -97,12 +78,14 @@ fn hit(world: &mut World, player: Entity, id: u64) -> Option<()> {
             crate::dragon::hurt(world, entity, before, &mut health);
         }
         packets.insert(0, harm::strike(id, &health, Cause::Attack, None));
+        if let Some(sparks) = blows::sparks(blow, id) {
+            packets.insert(1, sapling_net::encode(&sparks));
+        }
         let (dx, dz) = (body.at[0] - from[0], body.at[2] - from[2]);
         let far = (dx * dx + dz * dz).sqrt();
         let away = if far > 1e-4 { [dx / far, dz / far] } else { [0.0; 2] };
-        let [along, up] = enchant::knockback(enchant::level(weapon.as_ref(), Enchant::Knockback), [THROW; 2]);
         let mut thrown = world.get_mut::<Body>(entity)?;
-        let speed = [thrown.motion[0] * KEPT + away[0] * along, up, thrown.motion[2] * KEPT + away[1] * along];
+        let speed = enchant::knockback(enchant::level(weapon.as_ref(), Enchant::Knockback), blow.sprinting, thrown.motion, away);
         thrown.throw(speed);
         *world.get_mut::<Health>(entity)? = health;
         super::enchanted::struck(world, entity, &kind, weapon.as_ref());
@@ -113,6 +96,7 @@ fn hit(world: &mut World, player: Entity, id: u64) -> Option<()> {
         super::owner_hit(world, player, entity);
     }
     entities::tell_viewers(world, entity, layer, cell, packets);
+    blows::wear(world, player);
     if health.left() <= 0.0 {
         slay(world, entity, &kind, enchant::level(weapon.as_ref(), Enchant::Looting));
         super::die(world, entity, layer, &kind, &body);

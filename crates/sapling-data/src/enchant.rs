@@ -115,8 +115,16 @@ pub const BANE_SLOWNESS: u8 = 0;
 const BANE_TICKS: u32 = 20;
 const BANE_MORE: u32 = 10;
 const ASPECT_TICKS: u16 = 80;
-// TODO: BDS reckons 1.15 a level and how it throws by it was not traced; the Java game's half a block.
-const KNOCKBACK: f32 = 0.5;
+/// A melee hit's throw, BDS's `Mob::knockback` (1429e7130): across and up, the cap up, and what of
+/// the motion before it keeps; then a second throw, by Knockback's 1.15 a level and 1 for a
+/// sprinting hitter, of these times that (research/captures/bds-sprint.txt).
+const THROW: [f32; 3] = [0.4, 0.4, 0.4];
+const KEEPS: f32 = 0.5;
+const MORE: [f32; 2] = [0.4, 0.1];
+const KNOCKBACK: f32 = 1.15;
+const SPRINTING: f32 = 1.0;
+/// The up of a throw counts this much more.
+const UP_BY: f32 = 1.2;
 
 /// Ticks of slowness Bane of Arthropods at `level` gives; `roll` gives numbers in [0, 1).
 pub fn bane_slowness(level: u8, roll: &mut dyn FnMut() -> f32) -> u32 {
@@ -128,9 +136,13 @@ pub fn aspect_burn(level: u8) -> u16 {
     ASPECT_TICKS * u16::from(level)
 }
 
-/// The speed away and up a hit throws at with Knockback at `level`, from what it throws at without.
-pub fn knockback(level: u8, [along, up]: [f32; 2]) -> [f32; 2] {
-    [along + KNOCKBACK * f32::from(level), up]
+/// The motion a melee hit leaves on what moved at `motion`, thrown the way `away` (across, of length
+/// one or nought), with Knockback at `level` and from a hitter `sprinting` or not.
+pub fn knockback(level: u8, sprinting: bool, motion: [f32; 3], away: [f32; 2]) -> [f32; 3] {
+    let throw = |[x, y, z]: [f32; 3], [along, up, cap]: [f32; 3]| [x * KEEPS + away[0] * along, (y * KEEPS + up * UP_BY).min(cap), z * KEEPS + away[1] * along];
+    let thrown = throw(motion, THROW);
+    let more = KNOCKBACK * f32::from(level) + if sprinting { SPRINTING } else { 0.0 };
+    if more > 0.0 { throw(thrown, [MORE[0] * more, MORE[1] * more, THROW[2]]) } else { thrown }
 }
 
 /// Mending with an orb worth `value` on a stack worn by `damage`: what it mends, and what is left

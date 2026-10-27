@@ -192,6 +192,10 @@ fn fly(world: &mut World, arrow: Entity, layer: Entity, id: u64, now: u64) -> Op
                 body.at = at;
                 motion = [motion[0] * -0.01, motion[1] * -0.1, motion[2] * -0.01];
             }
+            After::Deflected => {
+                body.at = at;
+                motion = motion.map(|c| c * -0.1);
+            }
         }
     }
     let before = body.at;

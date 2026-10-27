@@ -97,6 +97,10 @@ pub(crate) fn blasted(world: &mut World, player: Entity, amount: f32, from: [f32
         throw(world, player, id, push);
         return false;
     }
+    if amount > 0.0 && super::shield::blocks(world, player, from, amount, Cause::EntityExplosion, false) {
+        pushed(world, player, push);
+        return false;
+    }
     amount > 0.0 && hit_from(world, player, amount, from, push, Cause::EntityExplosion)
 }
 
@@ -143,6 +147,11 @@ pub(crate) fn winded(world: &mut World, player: Entity, amount: f32, kind: &str,
         throw(world, player, id, std::array::from_fn(|axis| plain[axis] + push[axis]));
         took
     })
+}
+
+/// A falling anvil lands on a player for `amount`; false where it took nothing.
+pub(crate) fn crushed(world: &mut World, player: Entity, amount: f32) -> bool {
+    is_mortal(world, player) && hurt(world, player, amount, Cause::Anvil)
 }
 
 /// Lightning strikes a player for `amount` and sets one that fire can hurt alight for `burns`

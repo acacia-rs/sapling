@@ -34,8 +34,7 @@ const GOES_OUT: f32 = 6.0;
 const REACH: f32 = 0.8;
 const COOLDOWN: u64 = 20;
 /// The speed its hit throws a player at, away from it and up.
-const THROW: f32 = 0.4;
-/// Nearer than this to its prey it stands: their boxes touch.
+const THROW: f32 = 0.4;/// Nearer than this to its prey it stands: their boxes touch.
 const TOUCHING: f32 = 0.6;
 const PLAYER: [f32; 2] = [0.6, 1.8];
 /// How far apart a line of sight is looked at.
@@ -273,7 +272,12 @@ pub(super) fn strike(world: &mut World, entity: Entity, layer: Entity, id: u64, 
     let far = dx.hypot(dz);
     let away = if far > 1e-4 { [dx / far, dz / far] } else { [0.0; 2] };
     let [along, up] = if hunts.upto.is_some() { FLINGS } else { [THROW; 2] };
-    let bitten = vitals::bitten(world, prey, harm, kind, [away[0] * along, up, away[1] * along]);
+    let blocked = vitals::blocks(world, prey, body.at, harm, super::Cause::Attack, vitals::wields_axe(kind));
+    if blocked && let Some(mut thrown) = world.get_mut::<Body>(entity) {
+        let back = vitals::thrown_back(thrown.motion, [-away[0], -away[1]]);
+        thrown.throw(back);
+    }
+    let bitten = !blocked && vitals::bitten(world, prey, harm, kind, [away[0] * along, up, away[1] * along]);
     if let Some((effect, ticks)) = hunts.gives.filter(|_| bitten) {
         vitals::afflict(world, prey, effect, ticks);
     }

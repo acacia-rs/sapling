@@ -1,5 +1,5 @@
 //! What the place a living player stands in does to it each tick: a fall, fire, lava, water over
-//! its head (less often with Respiration), a block around it, and the hunger its moves cost;
+//! its head (less often with Respiration), a block around it, thorns and the void (hazards.rs), and the hunger its moves cost;
 //! boots with Frost Walker freeze the water around.
 
 use acacia_proto::packets::LevelSoundEvent;
@@ -8,6 +8,7 @@ use bevy_ecs::prelude::*;
 use sapling_data::EYE_HEIGHT;
 use sapling_data::enchant;
 
+use super::hazards;
 use super::{
     AIR, BREATH, DROWN_HARM, FIERY, GASP, JUMP_TIRES, LAVA, LEAP_TIRES, LONGEST_STEP, SIZE, SPRINT_TIRES, STARVED, Vitals, WALLED, WATER, dress, effects, flash, hunger,
     settle, tell,
@@ -44,6 +45,16 @@ fn sound_landing(world: &mut World, player: Entity, layer: Entity, from: [f32; 3
     }
 }
 
+/// Whether a player's hit now is critical: it falls, not in a liquid (which ends a fall), riding or
+/// blind (research/captures/bds-crit.txt).
+// TODO: nor climbing.
+pub(crate) fn falls_freely(world: &World, player: Entity) -> bool {
+    let (Some(vitals), Some(position)) = (world.get::<Vitals>(player), world.get::<Position>(player)) else { return false };
+    let blind = effects::level(world, player, sapling_api::Effect::Blindness).is_some();
+    let feet = position.feet[1];
+    !position.on_ground && vitals.health.is_airborne() && vitals.health.dropped(feet, feet) > 0.0 && !blind && world.get::<crate::riding::Riding>(player).is_none()
+}
+
 pub(super) fn stand(world: &mut World, player: Entity, layer: Entity) {
     dress(world, player);
     let warding = crate::enchants::warding(world, player);
@@ -53,6 +64,7 @@ pub(super) fn stand(world: &mut World, player: Entity, layer: Entity) {
     let rules = level.level().rules.clone();
     let body = Body::new(position.feet, [0.0; 3], SIZE);
     let (fire, lava, water) = (touches(level, &body, FIERY), touches(level, &body, LAVA), touches(level, &body, WATER));
+    let (thorns, in_void) = (hazards::thorns(level, &body), hazards::in_void(level, position.feet[1]));
     let [low, eyes] = [0.0, EYE_HEIGHT].map(|up| [position.feet[0], position.feet[1] + up, position.feet[2]].map(|c| c.floor() as i32));
     // BDS lays a player with only its head in a block down, unhurt.
     let (under_water, in_wall) = (holds(level, eyes, WATER) && !gilled, is_full_block(level, eyes) && is_full_block(level, low));
@@ -92,6 +104,13 @@ pub(super) fn stand(world: &mut World, player: Entity, layer: Entity) {
     let before = *health;
     let walled = health.smother(in_wall, WALLED).then_some(Cause::Suffocation);
     take(health, before, walled);
+    let before = *health;
+    let moved = [position.feet[0] - from[0], position.feet[2] - from[2]];
+    let pricked = (hazards::pricks(thorns, moved) && health.hurt(health.warded(health.shielded(hazards::PRICKS), Cause::Contact))).then_some(Cause::Contact);
+    take(health, before, pricked);
+    let before = *health;
+    let fell_out = (in_void && health.hurt(hazards::VOID_HARM)).then_some(Cause::Void);
+    take(health, before, fell_out);
     vitals.air = match under_water || in_wall {
         true if warding.respiration > 0 && world.get_resource_or_insert_with(Dice::default).fraction() < enchant::holds_breath(warding.respiration) => breath,
         true => breath - 1,
@@ -115,8 +134,11 @@ pub(super) fn stand(world: &mut World, player: Entity, layer: Entity) {
     {
         hits.clear();
     }
-    let is_alive = vitals.health.left() > 0.0;
     *world.get_mut::<Vitals>(player).expect("read above") = vitals;
+    if let Some(&cause) = hits.last() {
+        super::totem::rescue(world, player, cause);
+    }
+    let is_alive = world.get::<Vitals>(player).is_some_and(|vitals| vitals.health.left() > 0.0);
     if let Some(id) = world.get::<NetId>(player).map(|id| id.0).filter(|_| vitals.air != breath) {
         tell(world, player, &sapling_data::mob_air(id, vitals.air));
     }
