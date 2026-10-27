@@ -1,6 +1,7 @@
 //! The player drills of bds_command_probe: what a drill's `!` lines make the actor do, and which
 //! drill is in which file (harm and hunger: vitals_drill.rs; toil, armour, effects and beds:
-//! armour_drill.rs; a zombie's and what food does besides feeding: hunt_drill.rs).
+//! armour_drill.rs; a zombie's and what food does besides feeding: hunt_drill.rs; mobs left to
+//! themselves and the beasts' attacks: wander_drill.rs).
 
 use std::time::Duration;
 
@@ -28,6 +29,8 @@ mod uses;
 mod trades;
 #[path = "vitals_drill.rs"]
 mod vitals;
+#[path = "wander_drill.rs"]
+mod wander;
 
 /// A player's eyes are this far over its feet.
 const EYES: f32 = 1.62;
@@ -248,6 +251,13 @@ pub fn drill(name: &str) -> Option<(Vec<String>, &'static [&'static str])> {
         "wake" => (armour::wake(), WAKE_SHOWN),
         "fish" => (fishing::fish(), fishing::FISH_SHOWN),
         "brew" => (fishing::brew(), fishing::BREW_SHOWN),
+        "swimmers" => (wander::swimmers(), hunt::KINDS_SHOWN),
+        "flyers" => (wander::flyers(), hunt::KINDS_SHOWN),
+        "grazers" => (wander::grazers(), hunt::KINDS_SHOWN),
+        "amphibians" => (wander::amphibians(), hunt::KINDS_SHOWN),
+        "beasts" => (wander::beasts(), hunt::BITE_SHOWN),
+        "creaking" => (wander::creaking(), hunt::BITE_SHOWN),
+        "crowd" => (wander::crowd(), hunt::KINDS_SHOWN),
         _ => return uses::named(name),
     })
 }
