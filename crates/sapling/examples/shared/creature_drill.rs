@@ -98,7 +98,7 @@ pub fn keep_mobs() -> Vec<String> {
 /// Bees by a hive at night, which go in to shelter; left in the world when the bots go, for the
 /// hive's `Occupants` to be read. A bee by a flower at noon first, for its flight and its pollen.
 pub fn keep_hive() -> Vec<String> {
-    let mut lines = with(floor(), &["time set noon", "setblock 6 -26 0 beehive [\"direction\"=3]", "setblock 3 -26 4 poppy", "setblock 4 -26 4 dandelion", "summon bee 4.5 -25 2.5"]);
+    let mut lines = with(floor(), &["time set noon", "setblock 6 -26 0 beehive [\"direction\"=3]", "fill 3 -27 4 4 -27 4 grass_block", "setblock 3 -26 4 poppy", "setblock 4 -26 4 dandelion", "summon bee 4.5 -25 2.5"]);
     waits(&mut lines, 30);
     lines.extend(["summon bee 5.5 -25 -1.5", "summon bee 5.5 -24 -2.5", "time set midnight"].map(String::from));
     waits(&mut lines, 30);
