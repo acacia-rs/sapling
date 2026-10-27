@@ -67,7 +67,10 @@ HUNTS = {
     "minecraft:creeper": "attack=0 speed=0.25 sees=16 explodes=3",
     "minecraft:dolphin": "attack=3 speed=0.11 sees=48 provoked fights=swims",
     "minecraft:drowned": "attack=3 speed=0.23 sees=35",
+    # The pack's `minecraft:attack` 5 for both; they fire lasers (creatures/guardians.rs).
+    "minecraft:elder_guardian": "attack=5 speed=0.3 sees=16 fights=lasers",
     "minecraft:enderman": "attack=7 speed=0.45 sees=64 provoked",
+    "minecraft:guardian": "attack=5 speed=0.12 sees=16 fights=lasers",
     "minecraft:evocation_illager": "attack=0 speed=0.5 sees=20 fights=spells",
     "minecraft:ghast": "attack=0 speed=0.03 sees=28 fights=fireballs",
     "minecraft:endermite": "attack=2 speed=0.25 sees=16",

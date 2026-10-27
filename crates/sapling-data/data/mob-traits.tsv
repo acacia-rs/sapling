@@ -21,7 +21,7 @@ minecraft:creeper	floats xp=5-5 strolls=0.2 attack=0 speed=0.25 sees=16 explodes
 minecraft:dolphin	breath=4800 xp=1-3 swims=0.15 roams=20x7 attack=3 speed=0.11 sees=48 provoked fights=swims
 minecraft:donkey	floats xp=1-3 strolls=0.1225 panics=0.21
 minecraft:drowned	breathes_water burns_in_sun xp=5-5 strolls=0.23 attack=3 speed=0.23 sees=35
-minecraft:elder_guardian	breathes_water xp=10-10 swims=0.15 roams=10x7
+minecraft:elder_guardian	breathes_water xp=10-10 swims=0.15 roams=10x7 attack=5 speed=0.3 sees=16 fights=lasers
 minecraft:ender_crystal	fire_immune
 minecraft:ender_dragon	fire_immune no_fall steadfast
 minecraft:enderman	teleports floats xp=5-5 strolls=0.3 attack=7 speed=0.45 sees=64 provoked
@@ -32,7 +32,7 @@ minecraft:frog	breathes_water xp=1-3 strolls=0.1 panics=0.2
 minecraft:ghast	fire_immune no_fall floats xp=5-5 attack=0 speed=0.03 sees=28 fights=fireballs
 minecraft:glow_squid	breathes_water no_air xp=1-3
 minecraft:goat	floats xp=1-3 strolls=0.24 panics=0.4
-minecraft:guardian	breathes_water xp=10-10 swims=0.12 roams=10x7
+minecraft:guardian	breathes_water xp=10-10 swims=0.12 roams=10x7 attack=5 speed=0.12 sees=16 fights=lasers
 minecraft:happy_ghast	no_fall floats xp=1-3
 minecraft:hoglin	xp=5-5 strolls=0.12 attack=3 varies=9 speed=0.3 sees=16 every=40
 minecraft:horse	floats xp=1-3 strolls=0.1575 panics=0.27

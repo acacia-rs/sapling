@@ -45,6 +45,7 @@ mod foes;
 mod forms;
 mod ground;
 mod growth;
+mod guardians;
 mod handoff;
 mod hud;
 mod hunting;

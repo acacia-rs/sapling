@@ -26,6 +26,7 @@ mod flight;
 mod floating;
 mod genes;
 mod ghasts;
+mod guardians;
 mod harm;
 mod health;
 mod hits;
@@ -157,6 +158,7 @@ pub(crate) fn tick(world: &mut World) {
     fireballs::tick(world);
     wither::tick(world);
     bees::tick(world);
+    guardians::tick(world);
     husbandry::tick(world);
     crowding::tick(world);
     let now = world.resource::<Tick>().0;
