@@ -2,11 +2,13 @@
 //! sand and skulls (blocks/summoning.rs) it comes with 1 health and charges 200 ticks, healing
 //! and untouchable, then blows up with power 7. It flies at its prey, its heads shoot skulls
 //! (heads.rs, skulls.rs), it breaks the blocks about it a second after it is hurt (wreck.rs), and
-//! at half health it is armoured, blows up again and calls three wither skeletons. Its boss bar
+//! at half health it is armoured, blows up again, calls three wither skeletons and from then on
+//! dashes now and then (dash.rs). Its boss bar
 //! shows every second to players within 55; with none within 50 it heals 1 a second.
-// TODO: the armoured dash, a stored wither's shield, and the fire rate halving with each sixth of
-// its health lost are not done.
+// TODO: a stored wither's shield and the fire rate halving with each sixth of its health lost are
+// not done; one kept armoured does not dash until armoured again.
 
+mod dash;
 mod dying;
 mod heads;
 mod skulls;
@@ -65,6 +67,7 @@ pub(super) struct Wither {
     /// Ticks to its block breaking after it was hurt.
     wrecks: Option<u32>,
     heads: heads::Heads,
+    dash: dash::Dash,
 }
 
 /// Its own blasts and skulls do not hurt it while this is on.
@@ -179,8 +182,10 @@ fn armour(world: &mut World, wither: Entity, layer: Entity, body: &Body) {
     if !half || world.get::<Wither>(wither).is_none_or(|kept| kept.armoured) {
         return;
     }
+    let now = world.resource::<Tick>().0;
     if let Some(mut kept) = world.get_mut::<Wither>(wither) {
         (kept.armoured, kept.stunned) = (true, STUNNED);
+        kept.dash.arm(now);
     }
     tell(world, wither, layer, vec![(Key::WitherAerialAttack, Plain::Short(0))]);
     blow_up(world, wither, layer, [body.at[0], body.at[1] + HEAD_UP, body.at[2]]);
@@ -228,7 +233,14 @@ pub(super) fn steer(world: &mut World, wither: Entity, layer: Entity) -> bool {
         return true;
     }
     let prey = hunting::nearest(world, layer, &body, SIGHT).map(|(_, feet)| feet);
-    fly(world, wither, &body, prey);
+    let mut dash = world.get_mut::<Wither>(wither).map(|mut kept| std::mem::take(&mut kept.dash)).unwrap_or_default();
+    let dashing = dash::steer(world, wither, layer, &mut dash, &body, prey);
+    if let Some(mut kept) = world.get_mut::<Wither>(wither) {
+        kept.dash = dash;
+    }
+    if !dashing {
+        fly(world, wither, &body, prey);
+    }
     heads::tick(world, wither, layer, &body);
     true
 }

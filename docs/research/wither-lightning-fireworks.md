@@ -79,7 +79,11 @@ flips at 15 ticks and then whenever the last gap less one divides the tick (28, 
 64, 70, 72, 75, 76, 78, 80, 81, then every tick); `death.min.volume` at once, `death` at 80 and
 `death.mid.volume` at 140, 2.55 over its feet with its unique id; at 199 the power-7 blast 2.7 over its
 feet (as the charge's), its death shown again and its hands emptied; at 200 its loot and experience.
-Left out: the armoured dash (20 ticks aiming, 10 at 2 a tick, 15 to what it meets), fire rate halving each sixth of health lost, a blue skull's `max_resistance` 4, skulls meeting mobs,
+Its armoured dash, two `witherdash` runs (research/captures/bds-witherdash.txt at the warded actor,
+two dashes; an earlier run at an iron golem, not kept, one; creatures/wither/dash.rs): first 197 ticks after the
+half-health blast in both, the next 320 later; straight across at where its prey stood, 2 a tick for 9
+ticks (told as 1.82, after drag), through it (the actor was thrown, the golem hurt) and on, then
+dead still. Left out: the 15 it costs whom it meets (not seen, the actor warded), fire rate halving each sixth of health lost, a blue skull's `max_resistance` 4, skulls meeting mobs,
 `ShieldHealth`, `firerate` and `lastHealthInterval` (the charge, `Phase`, armour and `maxHealth` are
 kept: research/captures/bds-keepmobs.txt; a summoned wither charges as a built one, at its difficulty's
 share of the pack's 600), the soul particles of building, a lying T.

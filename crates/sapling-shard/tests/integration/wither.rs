@@ -119,6 +119,29 @@ fn at_half_health_it_is_armoured_and_calls_three_skeletons() {
     assert!(!ask(&mut h, move |ctx| ctx.hurt_entity(id, 5.0, DamageCause::Projectile)), "arrows glance off its armour");
 }
 
+/// Against research/captures/bds-witherdash.txt: 197 ticks after its blast, 2 a tick for 9 ticks.
+#[test]
+fn armoured_it_dashes_straight_at_its_prey_and_through() {
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    h.remote.run(|ctx| {
+        ctx.set_difficulty(Difficulty::Easy);
+        ctx.set_game_mode(ALEX, GameMode::Creative);
+    });
+    let id = ask(&mut h, |ctx| ctx.spawn_entity(WITHER, [6.5, 70.0, 6.5]).unwrap());
+    watch(&mut h, CHARGE);
+    h.remote.run(move |ctx| {
+        assert!(ctx.hurt_entity(id, 200.0, DamageCause::Attack));
+        ctx.set_game_mode(ALEX, GameMode::Survival);
+        ctx.give_effect(ALEX, sapling_api::Effect::Resistance, 1000, 4, false);
+    });
+    let feet: Vec<[f32; 3]> = (0..215).map(|_| ask(&mut h, move |ctx| ctx.entity(id).map_or([0.0; 3], |wither| wither.feet))).collect();
+    let steps: Vec<f32> = feet.windows(2).map(|pair| (pair[1][0] - pair[0][0]).hypot(pair[1][2] - pair[0][2])).collect();
+    let fast: Vec<usize> = steps.iter().enumerate().filter(|(_, step)| **step > 1.9).map(|(tick, _)| tick).collect();
+    assert_eq!(fast.len(), 9, "{steps:?}");
+    assert!(fast.windows(2).all(|pair| pair[1] == pair[0] + 1) && (195..=199).contains(&fast[0]), "{fast:?}");
+}
+
 #[test]
 fn its_heads_shoot_skulls_at_a_player_in_sight() {
     let mut h = Harness::new();
