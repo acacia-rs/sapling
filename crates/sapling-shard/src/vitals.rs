@@ -184,7 +184,7 @@ fn dress(world: &mut World, player: Entity) {
 }
 
 /// [`land`]s a hit once the world's rules and plugins let it; false where it took nothing.
-fn hurt(world: &mut World, player: Entity, amount: f32, cause: Cause) -> bool {
+pub(crate) fn hurt(world: &mut World, player: Entity, amount: f32, cause: Cause) -> bool {
     let spared = layer_of(world, player).and_then(|layer| world.get::<Layer>(layer)).is_some_and(|layer| crate::rules::spares_player(&layer.world.level().rules, cause));
     !spared && ask(world, player, amount, cause).is_some_and(|amount| land(world, player, amount, cause))
 }

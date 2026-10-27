@@ -6,6 +6,7 @@
 mod after_break;
 mod bonemeal;
 mod blown;
+mod bubbles;
 mod buckets;
 mod bulbs;
 mod composter;
@@ -14,6 +15,7 @@ mod crafter;
 mod daylight;
 mod dispensers;
 mod doors;
+mod drips;
 pub(crate) mod end_portal;
 mod entities;
 mod facing;

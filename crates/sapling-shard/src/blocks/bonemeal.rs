@@ -1,8 +1,8 @@
 //! Bone meal on a plant, as BDS grew them for a creative player (docs/research/bone-meal.md).
 // Saplings take theirs in saplings.rs.
 // TODO: outside creative a crop's step is the Java
-// game's 2 to 5, which BDS's steps of 2 to 4 fit; where grass and flowers come up, and which, is a guess at BDS's scatter; kelp,
-// vines, mushrooms, cocoa, moss, sea grass and the rest take none.
+// game's 2 to 5, which BDS's steps of 2 to 4 fit; where grass and flowers come up, and which, is a guess at BDS's scatter; vines,
+// cocoa, moss, sea grass and the rest take none.
 
 use acacia_proto::packets::{LevelEvent, LevelEventEvent};
 use acacia_proto::types::Vec3f;
@@ -26,6 +26,7 @@ const FLOWER_TRIES: usize = 6;
 const SPROUT_TRIES: usize = 24;
 const FLOWER_IN: f32 = 8.0;
 const ROLLS: usize = 3 * SPROUT_TRIES + 1;
+const MUSHROOM_ODDS: f32 = 0.4;
 
 type Level = sapling_world::World;
 
@@ -108,8 +109,63 @@ fn grown(level: &Level, pos: BlockPos, creative: bool, roll: &mut dyn FnMut() ->
     }
 }
 
+/// Bone meal on kelp, cave vines and mushrooms, by BDS's rules as decompiled (`None` for the rest):
+/// the top of a stalk of kelp grows the next tick if it waited to (142fdcbe0); a cave vine without
+/// berries gets them (148b219b0); a mushroom grows huge four times in ten, every time in creative
+/// (1465ead90), and takes the meal either way.
+fn wild(world: &mut World, layer: Entity, pos: BlockPos, creative: bool) -> Option<bool> {
+    let level = level(world, layer)?;
+    let [x, y, z] = pos;
+    let id = level.block(x, y, z);
+    let block = level.registry().get(id)?;
+    let (name, properties) = (block.name.strip_prefix("minecraft:").unwrap_or(block.name), block.properties);
+    match name {
+        "kelp" => Some(super::growth::meal_kelp(world, layer, pos)),
+        "cave_vines" => {
+            let has_vine_under = name_at(level, [x, y - 1, z]).is_some_and(|under| under.starts_with("cave_vines"));
+            let berries = state(level, if has_vine_under { "cave_vines_body_with_berries" } else { "cave_vines_head_with_berries" }, properties)?;
+            Some(send::set(world, layer, pos, berries))
+        }
+        "cave_vines_head_with_berries" | "cave_vines_body_with_berries" => Some(false),
+        "brown_mushroom" | "red_mushroom" => {
+            let grows = creative || world.get_resource_or_insert_with(Dice::default).fraction() < MUSHROOM_ODDS;
+            if grows {
+                huge_mushroom(world, layer, pos, name);
+            }
+            Some(true)
+        }
+        _ => None,
+    }
+}
+
+/// The huge mushroom of the mushroom `name` at `pos`, where it has room and soil: worldgen's
+/// feature, drawn until it comes out of that colour, as BDS's bone meal grows its own kind.
+fn huge_mushroom(world: &mut World, layer: Entity, pos: BlockPos, name: &str) {
+    const DRAWS: usize = 8;
+    let Some(air) = level(world, layer).map(|level| level.registry().air_id()) else { return };
+    let mushroom = level(world, layer).map_or(air, |level| level.block(pos[0], pos[1], pos[2]));
+    send::set_quietly(world, layer, pos, air);
+    let colour = format!("{name}_block");
+    for _ in 0..DRAWS {
+        let seed = world.get_resource_or_insert_with(Dice::default).roll(u32::MAX);
+        let Some(level) = level(world, layer) else { return };
+        let Some(grown) = level.place_feature("minecraft:huge_mushroom_feature", pos, seed).filter(|grown| !grown.is_empty()) else { break };
+        if grown.iter().any(|(_, id)| level.registry().get(*id).is_some_and(|state| state.name.ends_with(&colour))) {
+            send::set_many(world, layer, &grown);
+            return;
+        }
+    }
+    send::set_quietly(world, layer, pos, mushroom);
+}
+
 /// Bone meal on the block at `pos`: false when it takes none.
 pub(super) fn feed(world: &mut World, layer: Entity, pos: BlockPos, creative: bool) -> bool {
+    if let Some(took) = wild(world, layer, pos, creative) {
+        if took {
+            particle(world, layer, pos);
+        }
+        return took;
+    }
     if let Some(took) = super::saplings::fertilized(world, layer, pos, creative) {
         if took {
             particle(world, layer, pos);

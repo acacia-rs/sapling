@@ -4,6 +4,7 @@
 //! What viewers are told: sync.rs.
 // TODO: only items are lifted out of a block they are in, and only up.
 
+mod bubbles;
 mod liquid;
 mod physics;
 
@@ -152,6 +153,7 @@ impl Body {
             (InLiquid::Buoyant, Some(Liquid::Lava)) => liquid::throw_up(self, random),
             _ => self.motion[1] -= physics.gravity,
         }
+        bubbles::push(level, self);
         let wanted = self.motion;
         let landed = self.slide(level, wanted);
         self.on_ground = landed;
@@ -181,6 +183,7 @@ impl Body {
         if let Some(rise) = leaping {
             self.motion[1] = rise;
         }
+        bubbles::push(level, self);
         let wanted = self.motion;
         self.on_ground = self.travel(level, physics, wanted);
         if self.on_ground {

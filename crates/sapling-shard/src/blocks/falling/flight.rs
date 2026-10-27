@@ -9,7 +9,7 @@ use sapling_api::{BlockPos, Item};
 
 use super::super::place::gives_way;
 use super::super::{level, loot, send};
-use super::{SNOW, block, is_water, set_wet};
+use super::{SNOW, block, dripstone, is_water, set_wet};
 use crate::body::{Body, Physics};
 use crate::components::{InLayer, NetId};
 use crate::{entities, mobs};
@@ -37,8 +37,17 @@ pub(crate) struct FallingBlock {
     airborne: u32,
     landed_for: Option<u32>,
     refused: bool,
-    /// The height it began to fall from.
-    top: f32,
+    /// The height its fall began at: the floor of the cell it left.
+    from: f32,
+    /// What it costs what it lands on for each block it fell, past the first.
+    harm: f32,
+}
+
+/// Has the falling block `entity` hurt what it lands on, `per_block` for each block it fell.
+pub(super) fn hurts(world: &mut World, entity: Entity, per_block: f32) {
+    if let Some(mut falling) = world.get_mut::<FallingBlock>(entity) {
+        falling.harm = per_block;
+    }
 }
 
 const KIND: &str = "minecraft:falling_block";
@@ -68,7 +77,9 @@ pub(super) fn start(world: &mut World, layer: Entity, block: u32, [x, y, z]: Blo
 fn spawn(world: &mut World, layer: Entity, block: u32, hash: u32, body: Body, airborne: u32) -> Option<Entity> {
     let entity = entities::spawn(world, layer, KIND, body, wire(body.at), |id| Some(announcement(id, &body, hash)))?;
     entities::flag_moving(world, entity, true);
-    world.entity_mut(entity).insert(FallingBlock { block, airborne, landed_for: None, refused: false, top: body.at[1] });
+    // A new one is a tick into its fall, under the floor of its cell.
+    let from = body.at[1].round();
+    world.entity_mut(entity).insert(FallingBlock { block, airborne, landed_for: None, refused: false, from, harm: 0.0 });
     Some(entity)
 }
 
@@ -97,6 +108,10 @@ pub(crate) fn from_storage(world: &mut World, layer: Entity, at: [f32; 3], uniqu
     let Some(entity) = spawn(world, layer, block, hash, Body::new(at, [0.0; 3], [SIZE, SIZE]), u32::from(time)) else { return false };
     entities::keep(world, entity, layer, unique_id, compound);
     true
+}
+
+fn is_dripstone(world: &World, layer: Entity, block: u32) -> bool {
+    level(world, layer).is_some_and(|level| dripstone::is_dripstone(level.registry(), block))
 }
 
 fn wire([x, y, z]: [f32; 3]) -> [f32; 3] {
@@ -148,7 +163,15 @@ fn step(world: &mut World, entity: Entity, layer: Entity, id: u64) -> Option<Blo
         if waited >= PLACE_AFTER + LINGER {
             mobs::remove(world, entity);
         }
-        if waited != PLACE_AFTER || !send::set_quietly(world, layer, cell, block_id) {
+        if waited != PLACE_AFTER {
+            return None;
+        }
+        if is_dripstone(world, layer, block_id) {
+            world.entity_mut(entity).remove::<entities::Stored>();
+            dripstone::shatter(world, layer, block_id, cell);
+            return None;
+        }
+        if !send::set_quietly(world, layer, cell, block_id) {
             return None;
         }
         world.entity_mut(entity).remove::<entities::Stored>();
@@ -168,7 +191,8 @@ fn step(world: &mut World, entity: Entity, layer: Entity, id: u64) -> Option<Blo
     }
     let below_world = level(world, layer).is_some_and(|level| !level.in_height(cell_of(at)[1]) && !level.in_height(cell_of(at)[1] + 1));
     // Refused: it shatters now and goes, leaving its item, the next tick, as BDS was seen to.
-    if landed && !takes(world, layer, block_id, cell_of(at)) {
+    let is_dripstone = is_dripstone(world, layer, block_id);
+    if landed && !is_dripstone && !takes(world, layer, block_id, cell_of(at)) {
         shatter(world, layer, block_id, at);
         world.get_mut::<FallingBlock>(entity)?.refused = true;
         return None;
@@ -183,7 +207,7 @@ fn step(world: &mut World, entity: Entity, layer: Entity, id: u64) -> Option<Blo
     }
     let mut falling = world.get_mut::<FallingBlock>(entity)?;
     (falling.airborne, falling.landed_for) = (airborne, landed.then_some(0));
-    let top = falling.top;
+    let (fell, harm) = (falling.from - at[1], falling.harm);
     if !packets.is_empty() {
         let hash = level(world, layer).map_or(0, |level| level.registry().network_hash(block_id));
         mobs::reannounce(world, entity, announcement(id, &body, hash));
@@ -192,8 +216,12 @@ fn step(world: &mut World, entity: Entity, layer: Entity, id: u64) -> Option<Blo
         let is_anvil = block(world, layer, cell_of(at)).and_then(|(registry, _)| registry.get(block_id)).is_some_and(|state| state.name.ends_with("anvil"));
         // BDS sends the sound before the landing move, after the hurt it did.
         if is_anvil {
-            crush(world, layer, &body, top - at[1]);
+            crush(world, layer, &body, fell);
             packets.insert(0, event(LevelEventEvent::SoundAnvilFall, cell_of(at).map(|c| c as f32), 0));
+        }
+        if is_dripstone {
+            dripstone::hurt(world, layer, &body, harm, fell);
+            packets.splice(0..0, dripstone::landed(world, layer, block_id, cell_of(at)));
         }
     }
     send::to_viewers(world, layer, cell_of(at), &packets);

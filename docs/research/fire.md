@@ -56,6 +56,13 @@ BDS did not.
 - BDS's own rule and odds: the capture fits the Java game's only loosely, and its wool went in
   the tick it was lit.
 - Fire going out with `dofiretick` off as BDS's did.
-- Fire that a world folder holds does not tick until it is written again; lava, lightning and
-  burning arrows light none.
+- Burning arrows light none. Lava does, by BDS's random tick (`LiquidBlock::randomTick`
+  148b5cd10, decompiled, not drilled): with `doFireTick` on and air or something that burns over
+  it, up to ten cells within one each way are tried, and the first that burns gets fire in the first
+  air beside it, looked at +x, -x, +y, -y, +z, -z (`fire.rs` `kindled_by_lava`; sapling draws only
+  lava with air over it). Lightning's fire ticks as any written fire does.
+- Fire a world folder holds ticks only if its column kept its tick, as on BDS, where `FireBlock`
+  takes no random tick and nothing else starts it (vtable 14a8e5550). BDS keeps fire on its
+  random-tick queue, which runs `randomTickSpeed` steps a tick (see growth.md "Kelp"), so its fire
+  ticks faster with the rule; sapling's runs on game ticks, and saves the tick in `PendingTicks`.
 - What burns away leaves floating what stood on it.
