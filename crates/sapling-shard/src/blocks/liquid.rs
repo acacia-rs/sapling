@@ -125,6 +125,24 @@ fn schedule(world: &mut World, layer: Entity, pos: BlockPos, delay: u64, by_neig
     }
 }
 
+/// What waits to move, for its column to keep (pending.rs): each cell and when it is due.
+pub(super) fn waiting(world: &World) -> Vec<(Entity, BlockPos, u64)> {
+    world.get_resource::<Flows>().map(|flows| flows.due.iter().map(|(&(due, _), &(layer, pos))| (layer, pos, due)).collect()).unwrap_or_default()
+}
+
+/// Drops what waits where `saved` says its column kept it and is gone.
+pub(super) fn forget(world: &mut World, saved: &dyn Fn(Entity, BlockPos) -> bool) {
+    if let Some(mut flows) = world.get_resource_mut::<Flows>() {
+        flows.due.retain(|_, (layer, pos)| !saved(*layer, *pos));
+        flows.queued.retain(|(layer, pos, _)| !saved(*layer, *pos));
+    }
+}
+
+/// Queues the liquid at `pos` to move in `delay` ticks, as its column kept it.
+pub(super) fn again(world: &mut World, layer: Entity, pos: BlockPos, delay: u64) {
+    schedule(world, layer, pos, delay.max(1), true);
+}
+
 /// After a liquid moved into or out of `pos`: the liquid there and beside it is queued to move,
 /// and lava that now touches water hardens.
 pub(super) fn disturb(world: &mut World, layer: Entity, pos: BlockPos) {

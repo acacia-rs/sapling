@@ -1,6 +1,6 @@
 //! Block ticks queued for later, for the blocks that wait a while after a signal or a touch (BDS's
 //! `BlockTickingQueue`, docs/research/tick-queue.md): each job checks its block is still there.
-// TODO: not saved with the column, as BDS's `PendingTicks` are: a restart drops what waits.
+// What waits is saved with its column (pending.rs).
 
 use bevy_ecs::prelude::*;
 use sapling_api::BlockPos;
@@ -39,6 +39,42 @@ pub(crate) fn after(world: &mut World, layer: Entity, pos: BlockPos, delay: u64,
 pub(crate) fn cancel(world: &mut World, layer: Entity, pos: BlockPos, job: Job) {
     if let Some(mut queued) = world.get_resource_mut::<Queued>() {
         queued.0.retain(|(_, at_layer, at, waiting)| (*at_layer, *at, *waiting) != (layer, pos, job));
+    }
+}
+
+/// What waits, for its column to keep (pending.rs): each job's cell and when it is due.
+pub(super) fn waiting(world: &World) -> Vec<(Entity, BlockPos, u64)> {
+    world.get_resource::<Queued>().map(|queued| queued.0.iter().map(|&(when, layer, pos, _)| (layer, pos, when)).collect()).unwrap_or_default()
+}
+
+/// Drops what waits where `saved` says its column kept it and is gone.
+pub(super) fn forget(world: &mut World, saved: &dyn Fn(Entity, BlockPos) -> bool) {
+    if let Some(mut queued) = world.get_resource_mut::<Queued>() {
+        queued.0.retain(|&(_, layer, pos, _)| !saved(layer, pos));
+    }
+}
+
+/// The job the block `name` with `properties` waits for, to queue again what a column kept.
+pub(super) fn job_of(name: &str, properties: &str) -> Option<Job> {
+    Some(match name.strip_prefix("minecraft:")? {
+        // A lit crafter waits for its light to go out.
+        "crafter" if properties.split(',').any(|pair| pair == "crafting=1") => Job::Crafted,
+        "dispenser" | "dropper" | "crafter" => Job::Fire,
+        "target" => Job::TargetOff,
+        "lightning_rod" => Job::RodOff,
+        "tripwire" | "trip_wire" => Job::Tripwire,
+        "sculk_sensor" | "calibrated_sculk_sensor" | "sculk_shrieker" => Job::Sculk,
+        _ => return None,
+    })
+}
+
+/// [`after`], unless the same job already waits at that tick: a column saved and loaded again
+/// before its jobs ran brings them back a second time.
+pub(super) fn again(world: &mut World, layer: Entity, pos: BlockPos, delay: u64, job: Job) {
+    let when = world.resource::<Tick>().0 + delay.max(1);
+    let queued = world.get_resource::<Queued>().is_some_and(|queued| queued.0.contains(&(when, layer, pos, job)));
+    if !queued {
+        after(world, layer, pos, delay, job);
     }
 }
 

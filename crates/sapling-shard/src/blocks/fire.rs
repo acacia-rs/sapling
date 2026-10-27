@@ -88,6 +88,23 @@ fn schedule(world: &mut World, layer: Entity, pos: BlockPos, after: u64) {
     }
 }
 
+/// What waits, for its column to keep (pending.rs): each fire and when it ticks.
+pub(super) fn waiting(world: &World) -> Vec<(Entity, BlockPos, u64)> {
+    world.get_resource::<Fires>().map(|fires| fires.0.iter().map(|&(when, layer, pos)| (layer, pos, when)).collect()).unwrap_or_default()
+}
+
+/// Drops what waits where `saved` says its column kept it and is gone.
+pub(super) fn forget(world: &mut World, saved: &dyn Fn(Entity, BlockPos) -> bool) {
+    if let Some(mut fires) = world.get_resource_mut::<Fires>() {
+        fires.0.retain(|&(_, layer, pos)| !saved(layer, pos));
+    }
+}
+
+/// Has the fire at `pos` tick in `delay` ticks, as its column kept it.
+pub(super) fn again(world: &mut World, layer: Entity, pos: BlockPos, delay: u64) {
+    schedule(world, layer, pos, delay.max(1));
+}
+
 fn wait(world: &mut World) -> u64 {
     let [least, more] = EVERY;
     u64::from(least + world.get_resource_or_insert_with(Dice::default).roll(more))

@@ -194,7 +194,7 @@ mod tests {
         for (x, actors) in [(0, vec![1u8, 2, 3]), (9, Vec::new())] {
             let mut chunk = Chunk::empty(x, 0, Dimension::overworld(registry.air_id()));
             chunk.set(0, 64, 0, 0, stone);
-            storage.store_column(ChunkPos::new(x, 0), 0, &StoredColumn { chunk, block_entities: Vec::new(), actors }).unwrap();
+            storage.store_column(ChunkPos::new(x, 0), 0, &StoredColumn { actors, ..StoredColumn::of(chunk) }).unwrap();
         }
         let mut world = World::with_storage(storage);
         assert_eq!(world.load_all().unwrap(), 2);

@@ -23,11 +23,13 @@ pub struct StoredColumn {
     pub block_entities: Vec<u8>,
     /// The column's mobs, items and the like, in the same form (`sapling_leveldb::actors`).
     pub actors: Vec<u8>,
+    /// The block ticks waiting in it, as one compound (`sapling_leveldb::pending_ticks`).
+    pub pending_ticks: Vec<u8>,
 }
 
 impl StoredColumn {
     pub fn of(chunk: Chunk) -> Self {
-        Self { chunk, block_entities: Vec::new(), actors: Vec::new() }
+        Self { chunk, block_entities: Vec::new(), actors: Vec::new(), pending_ticks: Vec::new() }
     }
 }
 
@@ -228,11 +230,11 @@ fn game_version() -> [i32; 5] {
 impl WorldStorage for LevelDbStorage {
     fn load_column(&self, pos: ChunkPos, dimension: i32) -> Result<Option<StoredColumn>, StorageError> {
         let column = self.0.load_column(ChunkKey::new(pos.x, pos.z, dimension))?;
-        Ok(column.map(|c| StoredColumn { chunk: c.chunk, block_entities: c.block_entities, actors: c.actors }))
+        Ok(column.map(|c| StoredColumn { chunk: c.chunk, block_entities: c.block_entities, actors: c.actors, pending_ticks: c.pending_ticks }))
     }
 
     fn store_column(&self, pos: ChunkPos, dimension: i32, column: &StoredColumn) -> Result<(), StorageError> {
-        Ok(self.0.store_column(ChunkKey::new(pos.x, pos.z, dimension), &column.chunk, &column.block_entities, &column.actors)?)
+        Ok(self.0.store_column(ChunkKey::new(pos.x, pos.z, dimension), &column.chunk, &column.block_entities, &column.actors, &column.pending_ticks)?)
     }
 
     fn load_player(&self, id: &str) -> Result<Option<PlayerData>, StorageError> {
