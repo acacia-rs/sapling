@@ -18,6 +18,7 @@ pub fn drill(name: &str) -> Option<(Vec<String>, &'static [&'static str])> {
             "drowned" => drowned(),
             "barter" => barter(),
             "guardians" => guardians(),
+            "guardianhits" => guardian_hits(),
             "paintings" => paintings(),
             "armorstand" => armor_stand(),
             _ => return None,
@@ -168,8 +169,19 @@ fn pool(more: &[&str]) -> Vec<String> {
 
 /// A drowned with a trident in the pool, eight blocks off.
 pub fn drowned() -> Vec<String> {
-    let mut lines = pool(&["summon drowned 8.5 -25 0.5", "replaceitem entity @e[type=drowned] slot.weapon.mainhand 0 trident"]);
+    // Only one spawned `as_ranged_adult` throws (the pack's `mode_switcher`); one handed a trident
+    // walked up and hit (the first run).
+    let mut lines = pool(&["summon drowned 8.5 -25 0.5 0 0 minecraft:as_ranged_adult"]);
     waits(&mut lines, 15);
+    with(lines, &["gamemode creative @s"])
+}
+
+/// A guardian's laser and then an elder's on normal, the actor unshielded: what each hit costs.
+pub fn guardian_hits() -> Vec<String> {
+    let mut lines = with(floor(), &["fill 3 -27 -6 14 -21 6 water", "time set midnight", "difficulty normal", "gamemode survival @s", "summon guardian 8.5 -25 0.5"]);
+    waits(&mut lines, 7);
+    lines.extend(["effect @s instant_health 1 10 true", "kill @e[type=guardian]", "summon elder_guardian 8.5 -25 0.5"].map(String::from));
+    waits(&mut lines, 7);
     with(lines, &["gamemode creative @s"])
 }
 
