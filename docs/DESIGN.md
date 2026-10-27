@@ -308,7 +308,7 @@ it sends for `/title`, `/scoreboard`, `/gamemode`, `/tp`, a wither's bar and com
   (`handler_at`). Tasks run once a tick after the events, then `TickEvent` (`on_tick`).
 - **Keeping the API stable** (`sapling-api`). Enums that will grow (`DamageCause`, `Effect`, `Attacker`,
   `DeathMessage`, `Target`, `Sender`, `Scope`, form `Element`, `FormError`, `ParseError`, a command's `Selector`,
-  `Pick` and `Filter`, which took its arguments in 0.2.0) and the snapshots
+  `Pick` and `Filter`, which took its arguments in 0.2.0, a position's `Axis`, which took `^` in 0.3.0) and the snapshots
   plugins only read (`Player`, `Position`, `EntityInfo`, built with `new`) are `#[non_exhaustive]`; events
   keep private fields. Not marked: closed enums (`Face`, `GameMode`, `Difficulty`, `Slot`, `Priority`, ..),
   `ParamKind` (only the shard and the derive match it), and values plugins write as struct literals
@@ -361,7 +361,9 @@ it sends for `/title`, `/scoreboard`, `/gamemode`, `/tp`, a wither's bar and com
   (fields = parameters) or an enum (variants = sub-commands) writes `CommandSyntax`; the plugin writes
   `Command::run(self, ctx, sender, out)`. Parameters: integers, floats, `bool`, `String` (a word or a quoted
   run), `Text` (rest of the line), `Target` (an online player or `@s`), `GameMode`, any `#[derive(CommandEnum)]`,
-  and `Option<T>` for trailing optional ones. `Sender` is `Player | Console`; only players send yet.
+  and `Option<T>` for trailing optional ones. `Sender` is `Player | Console`, or `Executed` for a command an
+  `/execute` runs: who sent it, the executor, the place, turn, anchor and dimension it runs at (`~` and `^`
+  count from there, `@s` names the executor; research/captures/bds-execute-findings.md).
   - `AvailableCommands` is built once per permission level and sent when a player enters the world and when
     `ctx.set_permission` changes its level (`Member` / `Operator`). Hidden commands are left out entirely and
     answer as unknown; every command sent carries permission `"any"` and flags 0.
