@@ -83,8 +83,13 @@ pub(crate) fn dispatch(world: &mut World) {
     crate::light::relight(world);
     blocks::batched(world, blocks::random_ticks);
     inventory::dispatch(world);
+    inventory::dispatch_picks(world);
+    crate::workstations::dispatch_anvil_damage(world);
+    crate::join::dispatch_game_type_requests(world);
     blocks::dispatch_crafter_toggles(world);
     crate::books::dispatch(world);
+    crate::maps::dispatch(world);
+    crate::maps::tick(world);
     blocks::turn_lectern_pages(world);
     containers::dispatch_closes(world);
     containers::show_lids_again(world);

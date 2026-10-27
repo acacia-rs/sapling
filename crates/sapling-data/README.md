@@ -181,6 +181,20 @@ Read statically off BDS's block registration, not out of a pack or the Java jar;
 are less certain: sapling's `docs/research/waterlogging.md`. A block not listed is Blocking and keeps
 nothing, BDS's default.
 
+## Map colours
+
+`map-colours.tsv` (read by `map_colours.rs`): each block type's colour on a map, read off maps BDS drew
+of every block's default state laid in a grid (`tools/map-colours`, captures
+`research/captures/bds-mapgrid*`), by `data/generate/map-colours.py`: the block's
+`minecraft:map_color` component where it has one (with its tint), else the full-brightness pixel of a
+cell raised a block, else the one palette colour whose normal shade matches, else a colour between whole
+bytes (BDS keeps some as floats) fitted to both shades; `-` for blocks maps look through. Only default
+states were drawn: a block whose colour changes with its state (logs by axis, beds) has its default's.
+`map-tints.tsv` (`data/generate/map-tints.py`): each biome's grass, foliage and water tint, read off a
+grass block, oak leaves and water set where `/locate biome` led (`bds-maptints.cells`); biomes today's
+worldgen never makes take those of a found biome of the same climate. BDS blends tints between
+neighbouring biomes, so a value is the one at the probed spot.
+
 `game_rules`, `no_player_spawn` and `world_spawn` are built, not recorded: the rules are StartGame's, the
 spawn packets have the shape `bds_entity_probe` (join) and `bds_mob_recorder` (`/setworldspawn`) print.
 

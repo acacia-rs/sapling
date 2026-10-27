@@ -1,0 +1,140 @@
+## drill starts at 1793121852535
+## /gamemode creative @s
+     42 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamemode.success.self\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.creative\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "",
+     42 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"gameMode.changed\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.creative\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+     42 actor   CommandOutput success_count=1 data=None commands.gamemode.success.self success=true ["%createWorldScreen.gameMode.creative"]
+## /clear @s
+   1011 actor   InventorySlot InventorySlot { window_id: Ui, slot: 0, container: None, storage_item: None, item: ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) } }
+   1012 actor   InventoryContent InventoryContent { window_id: Inventory, input: [ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id:
+   1012 actor   InventoryContent InventoryContent { window_id: Armor, input: [ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: fal
+   1012 actor   InventoryContent InventoryContent { window_id: Ui, input: [ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false,
+   1012 actor   InventoryContent InventoryContent { window_id: Offhand, input: [ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }], container: FullContainerName { container_id: AnvilInput, dynamic_container_id: None }, storage_item: ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block
+   1012 actor   PlayerHotbar PlayerHotbar { selected_slot: 0, window_id: Inventory, select_slot: true }
+   1012 actor   CommandOutput success_count=0 data=None commands.clear.failure.no.items success=false ["CmdActor"]
+## /fill ~-2 ~-1 ~-2 ~6 ~-1 ~6 stone
+   2013 actor   CommandOutput success_count=0 data=None commands.fill.success success=false ["0"]
+## /fill ~-2 ~ ~-2 ~6 ~3 ~6 air
+   3015 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.fill.success\",\"with\":{\"rawtext\":[{\"text\":\"9\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_messa
+   3015 actor   CommandOutput success_count=1 data=None commands.fill.success success=true ["9"]
+## /!emote
+## sent !emote: true
+   5022 watcher Emote Emote { entity_id: 1, emote_id: "4c8ae710-df2e-47cd-814d-cc7bf21a3d67", emote_length_ticks: 60, xuid: "", platform_id: "", flags: ServerSide }
+## /!emotelist
+## sent !emotelist: true
+   7028 watcher EmoteList EmoteList { player_id: 1, emote_pieces: [Uuid([205, 71, 46, 223, 16, 231, 138, 76, 103, 61, 26, 242, 123, 204, 77, 129])] }
+## /setblock ~2 ~ ~ chest
+   9033 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   9033 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 2, y: -51, z: 0 }, block_runtime_id: 3162850062, flags: UpdateBlockFlags(3), layer: 0 }
+   9033 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+   9033 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 2, y: -51, z: 0 }, block_runtime_id: 3162850062, flags: UpdateBlockFlags(3), layer: 0 }
+## /replaceitem block ~2 ~ ~ slot.container 0 diamond 3
+  10022 actor   CommandOutput success_count=1 data=None commands.replaceitem.success success=true ["slot.container", "0", "3", "Diamond"]
+  10022 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.replaceitem.success\",\"with\":{\"rawtext\":[{\"text\":\"slot.container\"},{\"text\":\"0\"},{\"text\":\"3\"},{\"text\":\"Diamond\"}]}},{\"text\":\"]\"}]}\n" })
+## /!pick 2 0 0 0
+## sent !pick: true
+  12028 actor   InventoryContent InventoryContent { window_id: Inventory, input: [ItemV4 { network_id: 54, count: 1, metadata: 0, has_stack_id: true, stack_id: Some(1), block_runtime_id: 3162850062, extra: Default(Some(ItemExtraDataWithoutBlockingTick { has_nbt: False, nbt: None, can_place_on: [], can_destroy: [] })) }, ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: 
+  12028 actor   PlayerHotbar PlayerHotbar { selected_slot: 0, window_id: Inventory, select_slot: true }
+  12261 watcher MobEquipment MobEquipment { runtime_entity_id: 1, item: ItemV4 { network_id: 54, count: 1, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 3162850062, extra: Default(Some(ItemExtraDataWithoutBlockingTick { has_nbt: False, nbt: None, can_place_on: [], can_destroy: [] })) }, slot: 0, selected_slot: 0, window_id: Inventory }
+## /!pick 2 0 0 1
+## sent !pick: true
+  14032 actor   InventoryContent InventoryContent { window_id: Inventory, input: [ItemV4 { network_id: 54, count: 1, metadata: 0, has_stack_id: true, stack_id: Some(1), block_runtime_id: 3162850062, extra: Default(Some(ItemExtraDataWithoutBlockingTick { has_nbt: False, nbt: None, can_place_on: [], can_destroy: [] })) }, ItemV4 { network_id: 54, count: 1, metadata: 0, has_stack_id: true, stack_id: 
+  14032 actor   PlayerHotbar PlayerHotbar { selected_slot: 1, window_id: Inventory, select_slot: true }
+  14266 watcher MobEquipment MobEquipment { runtime_entity_id: 1, item: ItemV4 { network_id: 54, count: 1, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 3162850062, extra: Default(Some(ItemExtraDataWithoutBlockingTick { has_nbt: True, nbt: Some(ItemExtraDataWithoutBlockingTickNbt { version: 1, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("Findable", 
+## /setblock ~2 ~ ~ oak_log
+  16034 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  16034 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 2, y: -51, z: 0 }, block_runtime_id: 825916963, flags: UpdateBlockFlags(3), layer: 0 }
+  16034 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+  16034 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 2, y: -51, z: 0 }, block_runtime_id: 825916963, flags: UpdateBlockFlags(3), layer: 0 }
+## /!pick 2 0 0 0
+## sent !pick: true
+  18040 actor   InventoryContent InventoryContent { window_id: Inventory, input: [ItemV4 { network_id: 54, count: 1, metadata: 0, has_stack_id: true, stack_id: Some(1), block_runtime_id: 3162850062, extra: Default(Some(ItemExtraDataWithoutBlockingTick { has_nbt: False, nbt: None, can_place_on: [], can_destroy: [] })) }, ItemV4 { network_id: 54, count: 1, metadata: 0, has_stack_id: true, stack_id: 
+  18040 actor   PlayerHotbar PlayerHotbar { selected_slot: 2, window_id: Inventory, select_slot: true }
+  18172 watcher MobEquipment MobEquipment { runtime_entity_id: 1, item: ItemV4 { network_id: 17, count: 1, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 825916963, extra: Default(Some(ItemExtraDataWithoutBlockingTick { has_nbt: False, nbt: None, can_place_on: [], can_destroy: [] })) }, slot: 2, selected_slot: 2, window_id: Inventory }
+## /replaceitem entity @s slot.hotbar 0 oak_log
+  20033 actor   InventoryContent InventoryContent { window_id: Inventory, input: [ItemV4 { network_id: 17, count: 1, metadata: 0, has_stack_id: true, stack_id: Some(4), block_runtime_id: 825916963, extra: Default(Some(ItemExtraDataWithoutBlockingTick { has_nbt: False, nbt: None, can_place_on: [], can_destroy: [] })) }, ItemV4 { network_id: 54, count: 1, metadata: 0, has_stack_id: true, stack_id: S
+  20033 actor   InventoryContent InventoryContent { window_id: Armor, input: [ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: fal
+  20033 actor   InventoryContent InventoryContent { window_id: Ui, input: [ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false,
+  20033 actor   InventoryContent InventoryContent { window_id: Offhand, input: [ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }], container: FullContainerName { container_id: AnvilInput, dynamic_container_id: None }, storage_item: ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block
+  20033 actor   PlayerHotbar PlayerHotbar { selected_slot: 2, window_id: Inventory, select_slot: false }
+  20033 actor   CommandOutput success_count=1 data=None commands.replaceitem.success.entity success=true ["slot.hotbar", "0", "CmdActor", "1", "Oak Log"]
+  20034 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.replaceitem.success.entity\",\"with\":{\"rawtext\":[{\"text\":\"slot.hotbar\"},{\"text\":\"0\"},{\"text\":\"CmdActor\"},{\"text\":\"1\"},{\"text\":\"Oak Log\"}
+## /!pick 2 0 0 0
+## sent !pick: true
+  22052 actor   InventoryContent InventoryContent { window_id: Inventory, input: [ItemV4 { network_id: 17, count: 1, metadata: 0, has_stack_id: true, stack_id: Some(4), block_runtime_id: 825916963, extra: Default(Some(ItemExtraDataWithoutBlockingTick { has_nbt: False, nbt: None, can_place_on: [], can_destroy: [] })) }, ItemV4 { network_id: 54, count: 1, metadata: 0, has_stack_id: true, stack_id: S
+  22052 actor   PlayerHotbar PlayerHotbar { selected_slot: 2, window_id: Inventory, select_slot: true }
+## /summon cow ~3 ~ ~
+  24050 actor   CommandOutput success_count=1 data=None commands.summon.success success=true []
+  24050 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.summon.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /!pickentity cow
+## sent !pickentity: true
+## /kill @e[type=cow]
+  28053 actor   MobEquipment MobEquipment { runtime_entity_id: 25, item: ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, slot: 0, selected_slot: 0, window_id: Inventory }
+  28053 actor   MobEquipment MobEquipment { runtime_entity_id: 25, item: ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, slot: 1, selected_slot: 1, window_id: Offhand }
+  28053 actor   CommandOutput success_count=1 data=None commands.kill.successful success=true ["Cow"]
+  28053 watcher MobEquipment MobEquipment { runtime_entity_id: 25, item: ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, slot: 0, selected_slot: 0, window_id: Inventory }
+  28053 watcher MobEquipment MobEquipment { runtime_entity_id: 25, item: ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, slot: 1, selected_slot: 1, window_id: Offhand }
+  28053 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.kill.successful\",\"with\":{\"rawtext\":[{\"text\":\"Cow\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_
+## /!gametype 0
+## sent !gametype: true
+  30064 actor   UpdatePlayerGameType UpdatePlayerGameType { gamemode: Survival, player_unique_id: -51539607551, tick: 645 }
+  30064 watcher UpdatePlayerGameType UpdatePlayerGameType { gamemode: Survival, player_unique_id: -51539607551, tick: 645 }
+## /!gametype 1
+## sent !gametype: true
+  32059 actor   UpdatePlayerGameType UpdatePlayerGameType { gamemode: Creative, player_unique_id: -51539607551, tick: 684 }
+  32059 watcher UpdatePlayerGameType UpdatePlayerGameType { gamemode: Creative, player_unique_id: -51539607551, tick: 684 }
+## /gamemode survival @s
+  34063 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"gameMode.changed\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.survival\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  34063 actor   UpdatePlayerGameType UpdatePlayerGameType { gamemode: Survival, player_unique_id: -51539607551, tick: 724 }
+  34063 actor   CommandOutput success_count=1 data=None commands.gamemode.success.self success=true ["%createWorldScreen.gameMode.survival"]
+  34063 watcher UpdatePlayerGameType UpdatePlayerGameType { gamemode: Survival, player_unique_id: -51539607551, tick: 724 }
+  34063 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamemode.success.self\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.survival\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "",
+## /!gametype 1
+## sent !gametype: true
+  36068 watcher UpdatePlayerGameType UpdatePlayerGameType { gamemode: Creative, player_unique_id: -51539607551, tick: 763 }
+  36068 actor   UpdatePlayerGameType UpdatePlayerGameType { gamemode: Creative, player_unique_id: -51539607551, tick: 763 }
+## /gamemode creative @s
+  38062 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"gameMode.changed\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.creative\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  38062 actor   CommandOutput success_count=1 data=None commands.gamemode.success.self success=true ["%createWorldScreen.gameMode.creative"]
+  38063 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamemode.success.self\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.creative\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "",
+## /setblock ~2 ~ ~ anvil
+  40073 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+  40073 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  40082 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 2, y: -51, z: 0 }, block_runtime_id: 2412608681, flags: UpdateBlockFlags(3), layer: 0 }
+  40082 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 2, y: -51, z: 0 }, block_runtime_id: 2412608681, flags: UpdateBlockFlags(3), layer: 0 }
+## /!anvil 2 0 0
+## sent !anvil: true
+## /!anvil 2 0 0
+## sent !anvil: true
+## /!settings
+## sent !settings: true
+## /summon horse ~3 ~ ~
+  49081 actor   CommandOutput success_count=1 data=None commands.summon.success success=true []
+  49081 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.summon.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /ride @s start_riding @e[type=horse,c=1] teleport_rider
+  51084 actor   CommandOutput success_count=0 data=None commands.ride.startRiding.notRideable success=false []
+## /!riderjump 90
+## sent !riderjump: true
+## /ride @s stop_riding
+## /kill @e[type=horse]
+  57084 actor   MobEquipment MobEquipment { runtime_entity_id: 29, item: ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, slot: 0, selected_slot: 0, window_id: Inventory }
+  57084 actor   MobEquipment MobEquipment { runtime_entity_id: 29, item: ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, slot: 1, selected_slot: 1, window_id: Offhand }
+  57084 watcher MobEquipment MobEquipment { runtime_entity_id: 29, item: ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, slot: 0, selected_slot: 0, window_id: Inventory }
+  57084 watcher MobEquipment MobEquipment { runtime_entity_id: 29, item: ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, slot: 1, selected_slot: 1, window_id: Offhand }
+  57084 actor   CommandOutput success_count=1 data=None commands.kill.successful success=true ["Horse"]
+  57084 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.kill.successful\",\"with\":{\"rawtext\":[{\"text\":\"Horse\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtere
+## /clear @s
+  58083 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.clear.success\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor\"},{\"text\":\"3\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_messa
+  58083 actor   InventorySlot InventorySlot { window_id: Ui, slot: 0, container: None, storage_item: None, item: ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) } }
+  58084 actor   InventoryContent InventoryContent { window_id: Inventory, input: [ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id:
+  58084 actor   InventoryContent InventoryContent { window_id: Armor, input: [ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: fal
+  58084 actor   InventoryContent InventoryContent { window_id: Ui, input: [ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false,
+  58084 actor   InventoryContent InventoryContent { window_id: Offhand, input: [ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }], container: FullContainerName { container_id: AnvilInput, dynamic_container_id: None }, storage_item: ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block
+  58084 actor   PlayerHotbar PlayerHotbar { selected_slot: 2, window_id: Inventory, select_slot: true }
+  58084 actor   CommandOutput success_count=1 data=None commands.clear.success success=true ["CmdActor", "3"]
+  58203 watcher MobEquipment MobEquipment { runtime_entity_id: 1, item: ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, slot: 2, selected_slot: 2, window_id: Inventory }
+## /!skin
+## sent !skin: true
+  60093 watcher Text Text { needs_translation: true, category: Parameters, type: Translation, content: Translation(TextContentTranslation { message: "§e%multiplayer.player.left", parameters: ["CmdActor"] }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  60133 watcher PlayerList PlayerList { records: [PlayerRecord { type: Remove, legacy_type: 1, content: Remove(PlayerRecordContentRemove { uuid: Uuid([214, 57, 160, 218, 64, 243, 3, 95, 153, 233, 104, 83, 1, 2, 64, 141]) }) }] }
+Error: "actor disconnected: Transport(ServerClosed)"
+probe exit 1

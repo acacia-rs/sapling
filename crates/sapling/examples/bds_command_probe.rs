@@ -35,6 +35,10 @@ mod nature;
 mod execute;
 #[path = "shared/client_command_drill.rs"]
 mod client;
+#[path = "shared/maps_drill.rs"]
+mod maps;
+#[path = "shared/bundle_drill.rs"]
+mod bundles;
 
 use std::time::{Duration, Instant};
 
@@ -161,6 +165,10 @@ fn show(start: Instant, shown: &[&str], who: &str, event: Option<BotEvent>) -> R
         let rules = packet.decode::<packets::GameRulesChanged>().map_err(|e| e.to_string())?;
         let shown: Vec<String> = rules.rules.iter().map(|rule| format!("{}={:?}", rule.name, rule.value)).collect();
         println!("{ms:>7} {who:<7} GameRulesChanged {}", shown.join(" "));
+    } else if let Some(rows) = maps::pixels(&packet).filter(|_| shown.contains(&"MapPixels")) {
+        let text: String = dump::dump(&packet).unwrap_or_default().split(", pixels").next().unwrap_or_default().to_owned();
+        println!("{ms:>7} {who:<7} ClientboundMapItemData {text}");
+        rows.iter().for_each(|row| println!("{ms:>7} {who:<7} {row}"));
     } else if let Some(cells) = structures::block_names(&packet).filter(|_| shown.contains(&"UpdateSubchunkBlocks")) {
         println!("{ms:>7} {who:<7} {cells}");
     } else if let Some(name) = acacia_bot::proto::packet_name(packet.id).filter(|name| ["Text", "SetTime", "SyncWorldClocks"].contains(name) || shown.contains(name)) {
@@ -205,7 +213,11 @@ async fn strike(actor: &mut Bot, watcher: &mut Bot, start: Instant, shown: &[&st
 
 /// Does the actor's `!` line while the watcher's packets are shown, so they keep their times.
 async fn act(actor: &mut Bot, watcher: &mut Bot, start: Instant, shown: &[&str], line: &str) -> Result<(), String> {
-    let action = player::act(actor, line);
+    let action = async {
+        if !maps::act(actor, line).await && !bundles::act(actor, line).await {
+            player::act(actor, line).await;
+        }
+    };
     tokio::pin!(action);
     loop {
         tokio::select! {
@@ -252,7 +264,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         Some("worldcmds") => (world_commands::world(), world_commands::WORLD_SHOWN, SETTLE),
         Some("itemcmds") => (world_commands::items(), world_commands::ITEM_SHOWN, SETTLE),
         Some("functions") => (functions::functions(), functions::FUNCTIONS_SHOWN, SETTLE),
-        Some(other) => match player::drill(other).or_else(|| structures::drill(other)).or_else(|| nature::drill(other)).or_else(|| execute::drill(other)).or_else(|| client::drill(other)) {
+        Some(other) => match player::drill(other).or_else(|| structures::drill(other)).or_else(|| nature::drill(other)).or_else(|| execute::drill(other)).or_else(|| client::drill(other)).or_else(|| maps::drill(other)).or_else(|| bundles::drill(other)) {
             Some((lines, shown)) => (lines, shown, burn::BURN_SETTLE),
             None => return Err(format!("no drill {other}").into()),
         },

@@ -14,6 +14,8 @@ pub(crate) use struck::{bitten, blasted, crushed, electrocuted, fanged, firework
 mod hazards;
 mod hunger;
 mod kept;
+mod last_death;
+pub(crate) use last_death::{LastDeath, greeting as last_death_greeting};
 mod omens;
 mod splashed;
 mod stand;

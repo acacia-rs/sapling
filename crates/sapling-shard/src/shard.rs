@@ -18,7 +18,7 @@ use crate::roster::Elsewhere;
 use crate::timing::{Phase, ShardTiming, TickMeter};
 use crate::visibility::ToViewers;
 use crate::worlds::{Atlas, Changes, Scope};
-use crate::{actors, arenas, blobs, blocks, border, chunks, clock, commands, entities, handlers, handoff, idle, inventory, join, kept, mobs, movement, packs, scoreboard, ticking, visibility, worlds};
+use crate::{actors, arenas, blobs, blocks, border, chunks, clock, commands, emotes, entities, handlers, handoff, idle, inventory, join, kept, mobs, movement, packs, scoreboard, ticking, visibility, worlds};
 
 /// The disconnect screen of the players of a shard that stops.
 const CLOSED: &str = "disconnect.closed";
@@ -92,7 +92,7 @@ impl Shard {
         schedule.add_systems((join, clock::advance, chunks.chain(), items.chain(), join::initialized).chain());
         let mut after_handlers = Schedule::default();
         after_handlers.set_executor(SingleThreadedExecutor::new());
-        let viewers = (visibility::update, mobs::update, entities::send_held_moves, movement::announce, movement::relay_swings, inventory::announce, visibility::fan_out);
+        let viewers = (visibility::update, mobs::update, entities::send_held_moves, movement::announce, movement::relay_swings, emotes::relay, inventory::announce, visibility::fan_out);
         after_handlers.add_systems((viewers.chain(), commands::announce, scoreboard::send, flush).chain());
         sapling_data::set_shield_item_id();
         world.insert_resource(CommandLists::new(&Commands::default()));

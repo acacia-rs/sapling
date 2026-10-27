@@ -14,7 +14,7 @@ use bevy_ecs::prelude::*;
 
 use crate::blocks::{self, Dice};
 use crate::body::{Body, Physics};
-use crate::components::{InLayer, NetId, Position, Stage};
+use crate::components::{InLayer, Mode, NetId, Position, Stage};
 use crate::{entities, experience, mobs};
 
 /// How experience is split into orbs, largest first; above [`MANY`], into [`MANY_ORBS`] equal ones.
@@ -130,17 +130,17 @@ fn takes(world: &mut World, player: Entity) -> bool {
 
 /// The nearest player of `layer` in the world within [`FOLLOW`] blocks of `at`.
 fn nearest(world: &mut World, layer: Entity, at: [f32; 3]) -> Option<Entity> {
-    let mut players = world.query::<(Entity, &Stage, &InLayer, &Position)>();
+    let mut players = world.query::<(Entity, &Stage, &InLayer, &Position, Option<&Mode>)>();
     let distance = |feet: [f32; 3]| (0..3).map(|axis| (feet[axis] + if axis == 1 { sapling_data::EYE_HEIGHT } else { 0.0 } - at[axis]).powi(2)).sum::<f32>();
-    let near = players.iter(world).filter(|(_, stage, in_layer, _)| **stage == Stage::InWorld && in_layer.0 == layer).map(|(player, .., position)| (player, distance(position.feet)));
+    let near = players.iter(world).filter(|(_, stage, in_layer, _, mode)| **stage == Stage::InWorld && in_layer.0 == layer && crate::drops::takes_up(*mode)).map(|(player, _, _, position, _)| (player, distance(position.feet)));
     near.filter(|(_, distance)| *distance < FOLLOW * FOLLOW).min_by(|a, b| a.1.total_cmp(&b.1)).map(|(player, _)| player)
 }
 
 /// Each player takes an orb its pickup area touches (`drops::within_pickup`), from its own side
 /// as BDS's `Player::aiStep` does (docs/research/assumptions-checked.md 3), before the orbs move.
 pub(crate) fn touch(world: &mut World) {
-    let mut players = world.query::<(Entity, &Stage, &InLayer, &Position)>();
-    let standing: Vec<(Entity, Entity, [f32; 3])> = players.iter(world).filter(|(_, stage, ..)| **stage == Stage::InWorld).map(|(player, _, layer, position)| (player, layer.0, position.feet)).collect();
+    let mut players = world.query::<(Entity, &Stage, &InLayer, &Position, Option<&Mode>)>();
+    let standing: Vec<(Entity, Entity, [f32; 3])> = players.iter(world).filter(|(_, stage, .., mode)| **stage == Stage::InWorld && crate::drops::takes_up(*mode)).map(|(player, _, layer, position, _)| (player, layer.0, position.feet)).collect();
     for (player, layer, feet) in standing {
         let mut orbs = world.query::<(Entity, &InLayer, &Body, &Orb)>();
         let touched = orbs.iter(world).find(|(_, in_layer, body, _)| in_layer.0 == layer && crate::drops::within_pickup(feet, body.at, SIZE));

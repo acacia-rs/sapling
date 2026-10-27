@@ -1,6 +1,8 @@
 [workspace]
 resolver = "3"
 members = ["crates/*", "tools/*"]
+# A BDS script pack and its runner, no crate.
+exclude = ["tools/map-colours"]
 
 [workspace.package]
 edition = "2024"

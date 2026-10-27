@@ -327,7 +327,7 @@ it sends for `/title`, `/scoreboard`, `/gamemode`, `/tp`, a wither's bar and com
   `sapling:hunger` (no exhaustion), `sapling:liquidFlow` (due flows are dropped: liquids stand),
   `sapling:redstone` (circuits pause; what was written waits), `sapling:mobAi` (mobs fall and are hurt but
   decide nothing). `sendCommandFeedback` is under Commands. `doMobSpawning` stops natural spawning
-  (`spawning.rs`), not eggs or commands. Not read yet: `spawnRadius`, `doImmediateRespawn` (the client's),
+  (`spawning.rs`), not eggs or commands. `doImmediateRespawn` is the client's alone (docs/research/player-damage.md). Not read yet: `spawnRadius`,
   and rules for what sapling lacks (`doInsomnia`, command blocks).
 - **World events** (`sapling-api/src/world_event.rs`). What the world does on its own is offered with its
   world in focus (`plugins::offer_in`), so `Scope::World` listeners hear their world's; each is built only
@@ -450,6 +450,11 @@ it sends for `/title`, `/scoreboard`, `/gamemode`, `/tp`, a wither's bar and com
   are ignored until one carries `HandledTeleport`, and the teleport is repeated after 20 ticks without one.
 - **Game mode.** `ctx.set_game_mode` sends UpdatePlayerGameType to everyone in the world, the player
   included: all BDS's `/gamemode` sends besides chat lines (no SetPlayerGameType, no UpdateAbilities).
+  An operator's own `SetPlayerGameType` does the same, with no chat line, as on BDS.
+- **Client packets** (research/captures/bds-packets.txt). `Emote` and `EmoteList` go to the sender's
+  viewers (`emotes.rs`: its id, `ServerSide`); a creative `BlockPickRequest` selects or fills a hotbar
+  slot (`inventory/picking.rs`). BDS answered no `EntityPickRequest`, creative `AnvilDamage` or
+  `ServerSettingsRequest`; sapling neither. `PlayerSkin` is dropped: BDS disconnected the drill's sender.
 
 ## Step 5 as built (Worlds)
 
@@ -619,9 +624,10 @@ block action, and takes StopBreak and AbortBreak with a position.
   Java's, an upper bound on Bedrock's); otherwise the BreakEvent starts cancelled (a handler may allow it)
   and the client is shown the block. AbortBreak ends the clock. Unbreakable blocks and blocks of unknown
   hardness never pass in survival. Viewers get `BlockStartBreak` (block corner, 65535 / ticks) at the
-  start and `BlockStopBreak` on an abort. Creative breaks at once, as before. Not taken into account,
-  each of which would only lengthen a break: haste and mining fatigue (there are no effects), water and
-  being off the ground (the server's on-ground flag is a guess). BDS also sends `BlockBreakSpeed` and
+  start and `BlockStopBreak` on an abort. Creative breaks at once, as before. Haste multiplies the speed
+  by (1 + 0.2 n) 1.2^n and mining fatigue by 0.21^n for n levels, as BDS's stone breaks timed them
+  (research/captures/bds-dig.txt). Not taken into account, each of which would only lengthen a break:
+  water and being off the ground (the server's on-ground flag is a guess). BDS also sends `BlockBreakSpeed` and
   breaks the block itself when a refused break's time is up; sapling does neither.
 - **Turning and replacing** (`blocks/facing.rs`, `blocks/place.rs`). A placed block's state comes from
   the clicked face, how high on it the click was, and the placer's yaw and pitch. Every rule and its
@@ -705,17 +711,19 @@ block action, and takes StopBreak and AbortBreak with a position.
 - **Sleeping** (`sleep.rs`, `docs/research/beds-and-containers.md` sections 1 to 4). An allowed
   click on a bed checks as BDS's `BedBlock::use_sleep` does: occupied by another sleeper
   (`tile.bed.occupied`; a stale `occupied_bit` is cleared), eyes more than 3, 4, 3 blocks from
-  the head's corner (`tooFar`), then the bed becomes the player's spawn (`SetSpawnPosition`, and
-  `respawnSet` when it is a new one), then only between ticks 12541 and 23459 of the day
-  (`noSleep`). Messages are BDS's grey JSON `Text`. Lying down: the head gets `occupied_bit`, the
+  the head's corner (`tooFar`), no room to stand up (`obstructed`), then the bed becomes the
+  player's spawn (`SetSpawnPosition`, and `respawnSet` when it is a new one), then only between
+  ticks 12541 and 23459 of the day (12009 to 23991 in rain, always in a storm: `noSleep`), then,
+  out of creative and peaceful, no monster within 8, 5, 8 of the head (`notSafe`, `sleep/rest.rs`). Messages are BDS's grey JSON `Text`. Lying down: the head gets `occupied_bit`, the
   player's `PlayerFlags` sleep bit and `PlayerBedPosition` go to it and its viewers, and it lies
   at the head facing along the bed. It gets up on `PlayerAction StopSleeping`, when its bed is
-  gone or day comes: `Animate WakeUp`, the bit and flag cleared, put back where it lay down from.
-  When every non-spectator of a world has slept 100 ticks, all wake and the time jumps to the next
+  gone or day comes: `Animate WakeUp`, the bit and flag cleared, stood in the cell BDS's
+  `findStandUpPosition` picks (`sleep/stand.rs`). When every non-spectator of a world has slept
+  100 ticks of a night (a storm by day skips nothing), all wake and the time jumps to the next
   day's tick 0. Whenever someone lies down or gets up, the world's players are told how many sleep
   of how many: `LevelEventGeneric` 9801 with the Ints `ableToSleep`, `overworldPlayerCount`,
-  `sleepingPlayerCount` (BDS `updateSleepingPlayerList`). Not done: monsters near the bed (mobs
-  are statues), weather, BDS's stand-up search, and the spawn is never used.
+  `sleepingPlayerCount` (BDS `updateSleepingPlayerList`). Not done: the water check, `doInsomnia`
+  and phantoms.
 - **Ground truth for what follows**: `cargo build -p sapling --example bds_mechanism_probe`, then
   `tools/bds-drill.sh <bds dir> <port> bds_mechanism_probe <out>` runs drills (falls, plates, buckets,
   lava, waterlogging, the odd cases too) on a BDS with a fresh world, and `tools/sapling-drill.sh
@@ -1182,7 +1190,8 @@ Details and BDS evidence: docs/research/nether-dimension.md, docs/research/end-d
   each enchant) and the bookshelves, and sent as `PlayerEnchantOptions` with the answer to the
   request that laid the item in. The anvil charges BDS's levels (what enchantments gain, not Java's
   sums), wears 12% of crafts out of creative and says so (level events 1021, 1020); the grindstone
-  lets out experience at the player. Not done: the anvil's map recipes, `AnvilDamage` (ignored).
+  lets out experience at the player. A client's `AnvilDamage` rolls the wear again, as BDS's handler does.
+  Not done: the anvil's map recipes.
 - **API.** `ctx.item`, `set_item`, `give` (returns what did not fit), `clear_inventory`, `held_slot`,
   `held_item`, with `Item { name, count, damage }` and `Slot::{Main, Armor, Offhand}`; every change
   resends the four windows, as BDS does after `/give`. A stack's tag stays with it but does not show.

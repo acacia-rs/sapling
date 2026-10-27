@@ -188,6 +188,14 @@ pub fn recipe(network_id: u32) -> Option<&'static Recipe> {
 /// The network ids of the special recipes, whose result the grid's items decide.
 static SPECIAL: LazyLock<HashSet<u32>> = LazyLock::new(|| decode::<CraftingData>(CRAFTING_DATA).multi_recipes.into_iter().map(|recipe| recipe.network_id).collect());
 
+static MULTI: LazyLock<HashMap<String, u32>> =
+    LazyLock::new(|| decode::<CraftingData>(CRAFTING_DATA).multi_recipes.into_iter().map(|recipe| (recipe.uuid.to_string(), recipe.network_id)).collect());
+
+/// The network id CraftingData gives the special recipe of `uuid` (the cartography table's crafts).
+pub fn multi_recipe(uuid: &str) -> Option<u32> {
+    MULTI.get(uuid).copied()
+}
+
 /// Whether a client's craft request names one of the special recipes.
 pub fn is_special(network_id: u32) -> bool {
     crate::set_shield_item_id();
@@ -265,5 +273,6 @@ mod tests {
     fn the_special_recipes_are_known_by_id_and_listed_apart() {
         assert!(SPECIAL.len() >= 3, "{} special recipes", SPECIAL.len());
         assert!(SPECIAL.iter().all(|id| is_special(*id) && recipe(*id).is_none()));
+        assert!(multi_recipe("442d85ed-8272-4543-a6f1-418f90ded05d").is_some_and(is_special), "the cartography table's copy");
     }
 }
