@@ -11,6 +11,7 @@ pub fn drill(name: &str) -> Option<(Vec<String>, &'static [&'static str])> {
             "keepmobs" => keep_mobs(),
             "keephive" => keep_hive(),
             "bees" => bees(),
+            "beesout" => bees_out(),
             "witherdeath" => wither_death(),
             "witherdash" => wither_dash(),
             "snowgolem" => snow_golem(),
@@ -118,6 +119,18 @@ pub fn bees() -> Vec<String> {
     lines.extend(["setblock 2 -26 -3 beehive", "summon bee 3.5 -25 -5.5", "gamemode survival @s", "effect @s resistance 60 4 true", "", "!break 2 0 -3"].map(String::from));
     waits(&mut lines, 12);
     with(lines, &["gamemode creative @s"])
+}
+
+/// The bees drill's first hive watched long enough for its bees to come out: one in with pollen,
+/// two in for the night and then a noon of 150 s.
+pub fn bees_out() -> Vec<String> {
+    let mut lines = with(floor(), &["time set noon", "setblock 6 -26 0 beehive [\"direction\"=3]", "fill 3 -27 4 4 -27 4 grass_block", "setblock 3 -26 4 poppy", "setblock 4 -26 4 dandelion", "summon bee 4.5 -25 2.5"]);
+    waits(&mut lines, 14);
+    lines.extend(["summon bee 5.5 -25 -1.5", "summon bee 5.5 -24 -2.5", "time set midnight"].map(String::from));
+    waits(&mut lines, 6);
+    lines.push("time set noon".into());
+    waits(&mut lines, 150);
+    lines
 }
 
 /// A summoned wither past its charge, then killed: its 200 dying frames and what it leaves.
