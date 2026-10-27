@@ -1,5 +1,5 @@
-//! Mobs, spawned through the plugin API or kept by a world folder (birth.rs): bodies (body.rs) that fall and
-//! collide, stroll (strolling.rs), swim (swimming.rs, squids.rs), fly about (wings.rs), hunt if their kind does (hunting.rs) and are raised (husbandry.rs), shown as BDS announced their kind (`sapling_data::add_entity`) or
+//! Mobs, spawned through the plugin API or kept by a world folder (birth.rs): bodies (body.rs) that fall,
+//! collide and push each other (crowding.rs), stroll (strolling.rs), swim (swimming.rs, squids.rs), fly about (wings.rs), hunt if their kind does (hunting.rs) and are raised (husbandry.rs), shown as BDS announced their kind (`sapling_data::add_entity`) or
 //! as they were stored; and the entity side of the handlers' context (backend.rs).
 // TODO: no AI but strolling, swimming, flying about, hunting and raising; a spawned mob is
 // saved with the least a compound needs, which BDS was not tried on.
@@ -16,6 +16,7 @@ mod drinks;
 mod bullets;
 mod charges;
 mod creaking;
+mod crowding;
 mod death;
 mod duels;
 mod enchanted;
@@ -145,6 +146,7 @@ pub(crate) fn tick(world: &mut World) {
     fireballs::tick(world);
     wither::tick(world);
     husbandry::tick(world);
+    crowding::tick(world);
     let now = world.resource::<Tick>().0;
     let dead: Vec<Entity> = world.query::<(Entity, &Dying)>().iter(world).filter(|(_, dying)| now >= dying.0 + DYING).map(|(entity, _)| entity).collect();
     for entity in dead {

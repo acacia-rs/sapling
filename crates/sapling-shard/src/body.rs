@@ -43,6 +43,8 @@ pub(crate) struct Body {
     /// Whether a push up or down this tick left it on the ground: BDS pushes after the body's
     /// own move, so its next tick does not change what viewers are told (bds-shove.txt).
     pushed: Option<bool>,
+    /// What mobs crowding a mob push it by across in its next tick, after the drag.
+    jostled: [f32; 2],
 }
 
 /// A box in world coordinates: its lowest and highest corners.
@@ -50,7 +52,12 @@ type Bounds = ([f32; 3], [f32; 3]);
 
 impl Body {
     pub fn new(at: [f32; 3], motion: [f32; 3], size: [f32; 2]) -> Self {
-        Self { at, motion, size, on_ground: false, liquid: None, wave: 0.0, thrown: None, lift: 0.0, walking: [0.0; 3], leaping: None, stood: false, pushed: None }
+        Self { at, motion, size, on_ground: false, liquid: None, wave: 0.0, thrown: None, lift: 0.0, walking: [0.0; 3], leaping: None, stood: false, pushed: None, jostled: [0.0; 2] }
+    }
+
+    /// Has a mob crowding this one push it by `by` across in its next tick, after the drag.
+    pub fn jostle(&mut self, by: [f32; 2]) {
+        self.jostled = [self.jostled[0] + by[0], self.jostled[1] + by[1]];
     }
 
     /// Throws a mob at `speed`: its next tick moves it by that, and the tick after slows it as
@@ -171,6 +178,8 @@ impl Body {
     /// the motion it moved by.
     fn mob_step(&mut self, level: &Level, physics: &Physics, liquid: Option<Liquid>) -> [f32; 3] {
         let (walking, leaping) = (std::mem::take(&mut self.walking), std::mem::take(&mut self.leaping));
+        let [jostle_x, jostle_z] = std::mem::take(&mut self.jostled);
+        let walking = [walking[0] + jostle_x, walking[1], walking[2] + jostle_z];
         let stood = std::mem::replace(&mut self.stood, self.on_ground);
         if let Some(speed) = self.thrown.take() {
             self.motion = speed;
