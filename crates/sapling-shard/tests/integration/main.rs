@@ -83,6 +83,7 @@ mod tnt;
 mod vanilla_rules;
 mod vehicles;
 mod villagers;
+mod wild_plants;
 mod veto_events;
 mod vitals;
 mod wither;

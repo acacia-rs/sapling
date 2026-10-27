@@ -26,6 +26,8 @@ pub(crate) enum Job {
     Sculk,
     /// A water source or bubble column becomes what the block under it asks for (bubbles.rs).
     Bubbles,
+    /// A stalactite's drip reaches the cauldron under it (drips.rs).
+    Drip,
 }
 
 #[derive(Resource, Default)]
@@ -67,6 +69,7 @@ pub(super) fn job_of(name: &str, properties: &str) -> Option<Job> {
         "tripwire" | "trip_wire" => Job::Tripwire,
         "sculk_sensor" | "calibrated_sculk_sensor" | "sculk_shrieker" => Job::Sculk,
         "bubble_column" => Job::Bubbles,
+        "cauldron" => Job::Drip,
         _ => return None,
     })
 }
@@ -106,5 +109,6 @@ fn run(world: &mut World, layer: Entity, pos: BlockPos, job: Job) {
         Job::Tripwire => super::tripwire::recheck(world, layer, pos),
         Job::Sculk => super::sculk::step(world, layer, pos),
         Job::Bubbles => super::bubbles::settle(world, layer, pos),
+        Job::Drip => super::drips::fill(world, layer, pos),
     }
 }

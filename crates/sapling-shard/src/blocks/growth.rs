@@ -2,14 +2,18 @@
 //! bamboo, farmland, open dirt, smothered grass, lit ice and snow and marked leaf has the chance a
 //! tick that a cell picked at random around a player has on BDS (docs/research/growth.md); what a
 //! tick then does is in rules.rs and cover.rs, and snowfall.rs freezes water and lays snow.
-// A sapling whose tick comes up grows in saplings.rs.
-// TODO: mushrooms, vines, kelp and cave vines take no random tick; only a survival player treads
-// farmland down, no mob and no creative player.
+// A sapling whose tick comes up grows in saplings.rs; mushrooms, vines, cave vines, stalactites
+// and lava draw theirs (sampled.rs, wild.rs, vines.rs, drips.rs, fire.rs); kelp keeps its own (kelp.rs).
+// TODO: only a survival player treads farmland down, no mob and no creative player.
 
 mod copper;
 mod cover;
+mod kelp;
 mod rules;
+mod sampled;
 mod snowfall;
+mod vines;
+mod wild;
 
 use std::collections::HashSet;
 
@@ -19,6 +23,8 @@ use sapling_data::RuleValue;
 use sapling_world::ChunkPos;
 
 use super::{level, send};
+
+pub(super) use kelp::meal as meal_kelp;
 
 const RULE: &str = "randomTickSpeed";
 /// Ticks between a cell's random ticks for each unit of the rule: BDS's lit ores lasted 1760 on
@@ -66,18 +72,37 @@ fn ticked_at(world: &World, layer: Entity, pos: BlockPos) -> Option<&str> {
     kept(level(world, layer)?, pos)
 }
 
+/// Whether the block `name` with `properties` is one whose random ticks are drawn (sampled.rs):
+/// wild plants, stalactites and lava with air over it (BDS's also ticks lava under what burns).
+fn is_sampled(name: &str, properties: &str) -> bool {
+    wild::is_ticked(name) || name == "minecraft:pointed_dripstone" && properties.contains("hanging=1") || matches!(name, "minecraft:lava" | "minecraft:flowing_lava")
+}
+
+fn sampled_at(level: &sapling_world::World, [x, y, z]: BlockPos) -> Option<&'static str> {
+    let state = level.in_height(y).then(|| level.registry().get(level.block(x, y, z))).flatten().filter(|state| is_sampled(state.name, state.properties))?;
+    let is_lava = state.name.ends_with("lava");
+    let open = || level.in_height(y + 1) && level.registry().get(level.block(x, y + 1, z)).is_some_and(|over| over.is_air());
+    (!is_lava || open()).then_some(state.name)
+}
+
 /// A block was written at `pos`: one a random tick changes is kept track of, and one that
 /// shines enough to melt has the ice and snow near it looked at from the next tick, when its
 /// light is in.
 pub(super) fn written(world: &mut World, layer: Entity, pos: BlockPos) {
     // And the cell under it: dirt a block was taken off is open now, grass a block was put on is not.
     let mut cells: Vec<BlockPos> = [pos, [pos[0], pos[1] - 1, pos[2]]].into_iter().filter(|cell| ticked_at(world, layer, *cell).is_some()).collect();
+    let mut drawn = Vec::new();
     if let Some(level) = level(world, layer) {
         cells.extend(cover::melted_by(level, pos));
+        drawn.extend([pos, [pos[0], pos[1] - 1, pos[2]]].into_iter().filter(|cell| sampled_at(level, *cell).is_some()));
     }
     if !cells.is_empty() {
         world.get_resource_or_insert_with(Growing::default).0.extend(cells.into_iter().map(|cell| (layer, cell)));
     }
+    if !drawn.is_empty() {
+        sampled::keep(world, layer, drawn);
+    }
+    kelp::written(world, layer, pos);
 }
 
 /// A column a world folder held came in: what random ticks change in it is kept track of.
@@ -86,8 +111,34 @@ pub(crate) fn arrived(world: &mut World, layer: Entity, column: ChunkPos) {
     let registry = level.registry();
     let mut found = level.find_blocks(column, |id| registry.get(id).is_some_and(|state| rules::is_ticked(state.name, state.properties)));
     found.retain(|pos| kept(level, *pos).is_some());
+    let mut drawn = level.find_blocks(column, |id| registry.get(id).is_some_and(|state| is_sampled(state.name, state.properties)));
+    drawn.retain(|pos| sampled_at(level, *pos).is_some());
+    let kelp = level.find_blocks(column, |id| registry.get(id).is_some_and(|state| state.name == "minecraft:kelp"));
     if !found.is_empty() {
         world.get_resource_or_insert_with(Growing::default).0.extend(found.into_iter().map(|pos| (layer, pos)));
+    }
+    if !drawn.is_empty() {
+        sampled::keep(world, layer, drawn);
+    }
+    kelp::arrived(world, layer, &kelp);
+}
+
+/// The random ticks of the cells drawn rather than rolled (sampled.rs).
+fn draw_ticks(world: &mut World, picks: &mut Picks) {
+    for layer in sampled::layers(world) {
+        let Some((_, RuleValue::Int(rule))) = level(world, layer).and_then(|level| level.level().rules.get(RULE)) else { continue };
+        let chance = rule.max(0) as f32 / EVERY;
+        for pos in sampled::picked(world, layer, chance, picks) {
+            let Some(name) = level(world, layer).and_then(|level| sampled_at(level, pos)) else {
+                sampled::forget(world, layer, pos);
+                continue;
+            };
+            match name {
+                "minecraft:pointed_dripstone" => super::drips::ticked(world, layer, pos, &mut || picks.below(1 << 24) as f32 / (1 << 24) as f32),
+                "minecraft:lava" | "minecraft:flowing_lava" => super::fire::kindled_by_lava(world, layer, pos, &mut |sides| picks.below(sides)),
+                _ => wild::ticked(world, layer, pos, name, picks),
+            }
+        }
     }
 }
 
@@ -112,6 +163,8 @@ pub(crate) fn trample(world: &mut World, layer: Entity, feet: [f32; 3], dropped:
 pub(crate) fn tick(world: &mut World) {
     let mut picks = world.remove_resource::<Picks>().unwrap_or_default();
     snowfall::tick(world, &mut picks);
+    draw_ticks(world, &mut picks);
+    kelp::tick(world, &mut picks);
     let Some(growing) = world.get_resource::<Growing>().filter(|growing| !growing.0.is_empty()).map(|growing| growing.0.iter().copied().collect::<Vec<_>>()) else {
         world.insert_resource(picks);
         return;

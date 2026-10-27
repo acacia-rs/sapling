@@ -15,6 +15,7 @@ mod crafter;
 mod daylight;
 mod dispensers;
 mod doors;
+mod drips;
 pub(crate) mod end_portal;
 mod entities;
 mod facing;
