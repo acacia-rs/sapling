@@ -56,9 +56,30 @@ Drills in `crates/sapling/examples/shared/gameplay_drill.rs`; captures beside th
   leap) from the leap to the landing. Waits from landing to the next leap 7.5–9.2 s (pack
   cooldown_range 5–7 s).
 
-## Squid spurts (bds-swimmers.txt, squid 20, glow squid 21) — not copied
+## Squid swimming (bds-swimmers.txt, squid 20, glow squid 21; bdsre on 1.26.52)
 
-- Over ~5 s each squid got a kick every ~12 ticks (glow squid ~8): −0.0715 along z (constant),
-  across x drifting from +0.031 to −0.065 over the spurts; the kick decays ×0.62 a tick on top of
-  the steady 0.0146 drift. The goal behind it (`squid_idle`/`squid_flee`/`squid_dive`) is unnamed
-  in bdsre (only their definitions' cereal glue is), so the rule was not found.
+- `Squid::postAiStep` (0x1446f8c90, found by its 0.99/0.9/0.8/0.75 tentacle constants) in water,
+  server side: speed += (way − speed) × 0.22 each axis, after the water's 0.8; steps close 0.624
+  of the gap a tick, as recorded (0.00537, 0.00665, 0.00746 … 0.00879). Yaw += (−atan2(x, z)° −
+  yaw) × 0.1, pitch += (−atan2(across, y)° − pitch) × 0.1, unwrapped. Out of water: x, z 0,
+  y = (y − 0.08) × 0.98. Tentacle speed 0.2/(r + 1) scaled by air/max air (×1.75 a baby); the
+  tentacles only animate.
+- Goals: the way (Squid+0x494) is written by four goal functions, found as the only ones storing
+  to 0x494, 0x498 and 0x49c; their vtables at 0x14a994700:
+  - `squid_idle` (tick 0x149ff7580, canUse: in water; start sets its count to 200): each tick the
+    count rises; at 200 or more, or with the squid above its band and the way rising, a new way:
+    x, z = rand − 0.5, y = ((high − low) × rand + low − y) × 0.1, scaled to 0.5 and / 20. The band
+    (0x142f4ff40): from the squid's cell up to the first non-water block `top`; high = top − 1.5,
+    low = top − 5, each raised to floor + 0.5 where under the column's floor.
+  - `squid_flee` (tick 0x149ff70a0, canUse: hurt by a mob within 10 blocks, in water): away from
+    it, × 3 (less (d − 5)/5 past 5), no rise above the band, / 20; `squid_flee_particle` every 10th
+    tick from the 5th.
+  - `squid_dive` (start 0x149ff6b50, out of water over a non-solid block): (rand − 0.5, −1,
+    rand − 0.5) normalised × 0.5 / 20. `squid_out_of_water` (start 0x149ff7d50) and
+    `squid_move_away_from_ground` (start 0x149ff7b80, on colliding) were not followed further.
+- The steady drift 0.0146 = 0.22 × 0.025 / 0.376, the 0.025 way the idle goal picks.
+- Spurts, not found: over ~5 s each squid got a push every ~12 ticks (glow squid 8, later 14-15):
+  −0.0715 along z every time for both squids (whichever way they faced or drifted), across x
+  sliding from +0.031 to −0.065 (the residual of v' = 0.624 v + 0.376 drift).
+  No squid goal or postAiStep writes speed but the lerp; MOVING (flag 34) follows each push as the
+  speed rule of docs/research/moving-flag.md would.
