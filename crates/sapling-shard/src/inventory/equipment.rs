@@ -120,12 +120,12 @@ pub(crate) fn select(mut packets: ResMut<PacketQueues>, mut inputs: ResMut<crate
 /// Opens the inventory screen for a client that asks, which it waits for (as it does for the
 /// close: `containers::dispatch_closes`). The screen names no entity, as from BDS
 /// (`ServerPlayer::openInventory` passes -1). A rider's asks go to riding: to leave, and to open
-/// what it rides when that carries goods.
+/// what it rides when that carries goods or is a mob (a mount's inventory, else the player's own).
 pub(crate) fn screens(
     mut packets: ResMut<PacketQueues>,
     mut leaving: ResMut<crate::riding::Leaving>,
     mut cargo: ResMut<crate::vehicles::CargoAsked>,
-    carriers: Query<(), With<crate::vehicles::Cargo>>,
+    carriers: Query<(), Or<(With<crate::vehicles::Cargo>, With<crate::creatures::Raised>)>>,
     mut players: Query<(&Position, &mut Inventory, &mut Outgoing, Option<&crate::riding::Riding>)>,
 ) {
     for (entity, interact) in packets.take::<Interact>() {
@@ -136,8 +136,23 @@ pub(crate) fn screens(
         } else if let (InteractActionId::OpenInventory, Some(vehicle)) = (interact.action_id, carrier) {
             cargo.0.push((entity, vehicle));
         } else if interact.action_id == InteractActionId::OpenInventory {
-            let (window, block) = (inventory.next_window(), position.feet.map(|c| c.floor() as i32));
-            out.push(&sapling_data::inventory_screen(WindowID::from_raw(window.into()), block, NO_ENTITY));
+            out.push(&inventory.own_screen(position));
         }
+    }
+}
+
+impl Inventory {
+    /// The player's own inventory screen, under the next window id, where it stands.
+    fn own_screen(&mut self, position: &Position) -> acacia_proto::packets::ContainerOpen {
+        let (window, block) = (self.next_window(), position.feet.map(|c| c.floor() as i32));
+        sapling_data::inventory_screen(WindowID::from_raw(window.into()), block, NO_ENTITY)
+    }
+}
+
+/// Opens a player's own inventory screen: for a rider whose ride has none to show.
+pub(crate) fn open_own(world: &mut World, player: Entity) {
+    let mut query = world.query::<(&Position, &mut Inventory, &mut Outgoing)>();
+    if let Ok((position, mut inventory, mut out)) = query.get_mut(world, player) {
+        out.push(&inventory.own_screen(position));
     }
 }

@@ -49,7 +49,8 @@ fn place(info: &StackRequestSlotInfo) -> Option<Place> {
     match info.slot_type.container_id {
         // Which slots there are is the open container's to say: none while nothing is open.
         // `Container` is the protocol's `LevelEntity`: chests, hoppers, dispensers and droppers alike.
-        ContainerSlotType::Container | ContainerSlotType::Barrel | ContainerSlotType::Shulker | ContainerSlotType::Crafter => Some(Place::Container(slot)),
+        // A mount's tack slots are its inventory's 0 and 1, its chest's from 2 (riding/packs.rs).
+        ContainerSlotType::Container | ContainerSlotType::Barrel | ContainerSlotType::Shulker | ContainerSlotType::Crafter | ContainerSlotType::HorseEquip => Some(Place::Container(slot)),
         ContainerSlotType::FurnaceIngredient | ContainerSlotType::BlastFurnaceIngredient | ContainerSlotType::SmokerIngredient => Some(Place::Container(0)),
         ContainerSlotType::FurnaceFuel => Some(Place::Container(1)),
         ContainerSlotType::FurnaceOutput => Some(Place::Container(2)),

@@ -10,6 +10,7 @@ mod drive;
 mod exit;
 mod mounts;
 mod packets;
+mod packs;
 mod rearing;
 mod seats;
 
@@ -28,6 +29,7 @@ pub(crate) use drive::{Leaving, Reins, drive, is_driven};
 pub(crate) use mounts::{Rein, boost, reaches, steers, used_on};
 use mounts::predicted;
 pub(crate) use packets::sound as sound_packet;
+pub(crate) use packs::{load as load_pack, open as open_pack, refusal as pack_refusal, slots as pack_slots};
 pub(crate) use seats::layout;
 use seats::PLAYER;
 
@@ -229,9 +231,10 @@ fn retell(world: &mut World, vehicle: Entity) {
 struct Awaits(Vec<i64>);
 
 /// Seats the riders the just loaded `entity` was stored with, and puts it on a vehicle loaded
-/// before it that awaits it.
+/// before it that awaits it; a mount wears the armour it kept.
 // TODO: a player's `RideID` is neither kept nor read: a player loads standing.
 pub(crate) fn adopt(world: &mut World, entity: Entity) {
+    packs::adopt(world, entity);
     let riders = world.get::<Stored>(entity).map(|stored| sapling_world::actor_links(&stored.compound)).unwrap_or_default();
     if !riders.is_empty() {
         world.entity_mut(entity).insert(Awaits(riders));

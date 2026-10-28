@@ -44,14 +44,18 @@ pub(super) fn stow(world: &mut World, vehicle: Entity, kind: &str) {
     world.entity_mut(vehicle).insert(Cargo(slots));
 }
 
-/// The slots of `vehicle`; `None` for one that carries nothing or is gone.
+/// The slots of `vehicle`, or of a mount's inventory (riding/packs.rs); `None` for one that
+/// carries nothing or is gone.
 pub(crate) fn cargo(world: &World, vehicle: Entity) -> Option<Vec<Option<Held>>> {
-    world.get::<Cargo>(vehicle).map(|cargo| cargo.0.clone())
+    world.get::<Cargo>(vehicle).map(|cargo| cargo.0.clone()).or_else(|| crate::riding::pack_slots(world, vehicle))
 }
 
 /// Makes `slots` what `vehicle` carries: those who have it open see each changed slot, and its
 /// stored compound keeps them.
 pub(crate) fn load_cargo(world: &mut World, vehicle: Entity, slots: Vec<Option<Held>>) {
+    if world.get::<Cargo>(vehicle).is_none() {
+        return crate::riding::load_pack(world, vehicle, slots);
+    }
     let Some(before) = cargo(world, vehicle) else { return };
     let changed: Vec<usize> = (0..slots.len().min(before.len())).filter(|slot| before[*slot] != slots[*slot]).collect();
     if changed.is_empty() {
