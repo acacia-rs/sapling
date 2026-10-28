@@ -1,8 +1,8 @@
 //! Primed TNT, as BDS's burnt and burst (docs/research/block-uses.md, "TNT"): lit by flint and
 //! steel, a signal or a blast, the block becomes an entity that hops, burns its fuse and bursts.
 //! One is kept with its column, its fuse as BDS's `Fuse` byte (sapling_world::fused_actor).
-// TODO: the `MOVING` flag BDS turned on and off is not told; fire and burning arrows light none;
-// the fuse of one a blast lit is the Java game's, not measured.
+// TODO: the `MOVING` flag BDS turned on and off is not told; the fuse of one a blast lit is the
+// Java game's, not measured.
 
 use std::f32::consts::TAU;
 
