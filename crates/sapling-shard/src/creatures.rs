@@ -14,6 +14,7 @@ mod birth;
 mod blast;
 mod blows;
 mod breezes;
+mod captains;
 mod dolphins;
 mod drinks;
 mod drowned;
@@ -97,7 +98,7 @@ pub(crate) use omens::{Omens, befall, infested_hurt};
 pub(crate) use piglins::barter;
 pub(crate) use scooping::{held_kind as bucketed_kind, release as release_from_bucket, scoop};
 pub(crate) use struck::struck_by_lightning;
-pub(crate) use villagers::{bargains, interact as trade_with, stop_trading, traded};
+pub(crate) use villagers::{alarm as hear_bell, bargains, interact as trade_with, stop_trading, traded};
 pub(crate) use warden::hear as warden_hears;
 pub(crate) use wither::{build as build_wither, hurt as wither_hurt, spares};
 use crate::components::{InLayer, NetId, Tick};
@@ -138,6 +139,7 @@ pub(crate) fn keep_state(world: &mut World) {
     afflictions::keep(world);
     wither::keep(world);
     piglins::keep(world);
+    captains::keep(world);
 }
 
 /// Kills the entity `id` (see `ShardCtx::kill_entity`).
@@ -215,7 +217,7 @@ pub(crate) fn tick(world: &mut World) {
         }
         // A teleport starts the tick afresh where it landed: no fall from where it left.
         let Some(start) = world.get::<Body>(entity).copied() else { continue };
-        if thinks && !legs::ridden(world, entity, layer, &kind, &start) && !wither::steer(world, entity, layer) && !rams::steer(world, entity, layer, id, &kind) && !creaking::steer(world, entity, layer, id, &kind) && !warden::steer(world, entity, layer, id, &kind) && !hunting::steer(world, entity, layer, id, &kind) && !snow_golems::steer(world, entity, layer, id, &kind) && !piglins::steer(world, entity, layer, id, &kind) && !husbandry::steer(world, entity, layer, &kind) && !villagers::steer(world, entity, layer)
+        if thinks && !legs::ridden(world, entity, layer, &kind, &start) && !wither::steer(world, entity, layer) && !rams::steer(world, entity, layer, id, &kind) && !creaking::steer(world, entity, layer, id, &kind) && !warden::steer(world, entity, layer, id, &kind) && !hunting::steer(world, entity, layer, id, &kind) && !raids::steer(world, entity, layer, &kind) && !snow_golems::steer(world, entity, layer, id, &kind) && !piglins::steer(world, entity, layer, id, &kind) && !husbandry::steer(world, entity, layer, &kind) && !villagers::steer(world, entity, layer)
             && !frogs::steer(world, entity, layer, id) && !swimming::steer(world, entity, layer, &kind) && !squids::steer(world, entity, layer)&& !wings::steer(world, entity, layer, &kind)
         {
             let traits = sapling_data::mob_traits(&kind);

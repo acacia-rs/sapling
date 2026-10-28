@@ -20,7 +20,7 @@ fn distance(a: [f32; 3], b: [f32; 3]) -> f32 {
 }
 
 /// The middle of the village about `feet` in `layer`, if there is one.
-pub(super) fn centre(world: &mut World, layer: Entity, feet: [f32; 3]) -> Option<[f32; 3]> {
+pub(in crate::creatures) fn centre(world: &mut World, layer: Entity, feet: [f32; 3]) -> Option<[f32; 3]> {
     let level = &world.get::<Layer>(layer)?.world;
     let reach = (FINDS / 16.0).ceil() as i32;
     let home = ChunkPos::of_block(feet[0].floor() as i32, feet[2].floor() as i32);
@@ -44,8 +44,13 @@ pub(super) fn centre(world: &mut World, layer: Entity, feet: [f32; 3]) -> Option
     holds(world, layer, middle).then_some(middle)
 }
 
-/// Whether a villager lives within reach of the village's middle.
+/// Whether a villager lives within reach of the village's middle; true while that middle is not
+/// loaded, as a kept raid waits for its village.
 pub(super) fn holds(world: &mut World, layer: Entity, middle: [f32; 3]) -> bool {
+    let chunk = ChunkPos::of_block(middle[0].floor() as i32, middle[2].floor() as i32);
+    if world.get::<Layer>(layer).is_some_and(|kept| !kept.world.is_loaded(chunk)) {
+        return true;
+    }
     let near: Vec<Entity> = world
         .query::<(Entity, &InLayer, &Kind, &Body)>()
         .iter(world)

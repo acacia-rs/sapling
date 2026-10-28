@@ -114,6 +114,7 @@ fn hit(world: &mut World, player: Entity, id: u64) -> Option<()> {
         super::hunting::provoke(world, entity, layer, id, &kind, &body, player);
         super::teleports::startle(world, entity);
         super::owner_hit(world, player, entity);
+        super::villagers::hurt_standing(world, player, entity, layer, &kind, health.left() <= 0.0);
     }
     entities::tell_viewers(world, entity, layer, cell, packets);
     blows::wear(world, player);

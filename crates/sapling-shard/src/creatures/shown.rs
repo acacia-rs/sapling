@@ -87,6 +87,7 @@ fn shown_now(world: &World, entity: Entity) -> Option<Vec<Bytes>> {
     let mut shown = announcement(id, kind, body, (look, raised, world.get::<Properties>(entity), strides), world.get::<Health>(entity), yaw, world.get::<Gene>(entity).map_or(0, |gene| gene.0));
     shown.extend(super::drowned::held(world, entity, id));
     shown.extend(super::piglins::held(world, entity, id));
+    shown.extend(super::captains::worn(world, entity, id));
     let flags = world.get::<Told>(entity).and_then(Told::mob_flags);
     shown.extend(flags.and_then(|flags| super::husbandry::links_packet(world, entity, id, flags)));
     Some(super::villagers::dressed(world, entity, shown))

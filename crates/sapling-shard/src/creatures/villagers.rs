@@ -2,11 +2,17 @@
 //! skin and the job site it works at (jobs.rs), the offers it trades (deals.rs) on its trading
 //! screen (trading.rs), kept in its actor compound (storage.rs); the wandering trader's offers,
 //! llamas and the timer it leaves by (wandering.rs).
-// TODO: no gossip, reputation, sleeping or schedules but work, nor flight from raiders (Hero of the
-// Village pays less, trading.rs); villager breeding (husbandry) is to arm its baby with `arm(.., Some("minecraft:entity_born"))`.
+//! A villager keeps its pack's day (schedule.rs), sleeps in a bed it claims (beds.rs), flees what
+//! it fears and hides at a bell (fear.rs); a player's standing with its village (standing.rs).
+// TODO: no gossip (Hero of the Village pays less, trading.rs); villager breeding
+// (husbandry) is to arm its baby with `arm(.., Some("minecraft:entity_born"))`.
 
+mod beds;
 mod deals;
+mod fear;
 mod jobs;
+mod schedule;
+mod standing;
 mod storage;
 mod trading;
 mod wandering;
@@ -25,6 +31,8 @@ use crate::components::{InLayer, Layer, NetId, Tick};
 use crate::{entities, mobs};
 use deals::Deal;
 
+pub(crate) use fear::alarm;
+pub(super) use standing::{hit as hurt_standing, outlaw};
 pub(crate) use trading::{bargains, interact, stop_trading, traded};
 
 const VILLAGER: &str = "minecraft:villager_v2";
@@ -53,6 +61,8 @@ pub(crate) struct Trader {
     /// The experience each tier takes; empty for a trader without a table.
     tiers: Vec<i32>,
     job: Option<[i32; 3]>,
+    /// The head of the bed it claimed (beds.rs).
+    bed: Option<[i32; 3]>,
     /// The work period (jobs.rs) it last restocked in.
     restocked: Option<i64>,
     next_look: u64,
@@ -165,13 +175,19 @@ pub(super) fn tick(world: &mut World, entity: Entity, layer: Entity) -> bool {
     false
 }
 
-/// Before the trader's move: one with a customer stands still, a villager in working hours goes
-/// to its job site. False when it is free to stroll.
+/// Before the trader's move: one with a customer stands still; a villager hides, flees, then
+/// keeps its schedule, its pack's goals in their priority. False when it is free to stroll.
 pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity) -> bool {
-    let Some(served) = world.get::<Trader>(entity).map(|trader| trader.customer.is_some()) else { return false };
+    let (Some(served), Some(body)) = (world.get::<Trader>(entity).map(|trader| trader.customer.is_some()), world.get::<Body>(entity).copied()) else { return false };
     if served && trading::keeps_customer(world, entity) {
         super::legs::rest(world, entity);
         return true;
     }
-    jobs::work(world, entity, layer)
+    if fear::hides(world, entity, layer, &body) || fear::flees(world, entity, layer, &body) {
+        return true;
+    }
+    match schedule::now(world, entity, layer) {
+        Some(schedule::Activity::Work) | None => jobs::work(world, entity, layer),
+        Some(activity) => schedule::steer(world, entity, layer, activity),
+    }
 }
