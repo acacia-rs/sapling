@@ -215,6 +215,25 @@ fn actors_are_stored_by_id_and_listed_by_their_column() {
 }
 
 #[test]
+fn an_actor_that_moved_columns_survives_its_old_column_being_saved_after_its_new_one() {
+    let world = world();
+    let (from, to) = (ChunkKey::new(1, 12, 0), ChunkKey::new(1, 13, 0));
+    let horse = actor(-5, "minecraft:horse");
+    let store = |key: ChunkKey, actors: &[u8]| {
+        let column = world.load_column(key).unwrap().unwrap();
+        world.store_column(key, &column.chunk, &column.block_entities, actors, &[]).unwrap();
+    };
+    let held = |key: ChunkKey| actors(&world.load_column(key).unwrap().unwrap().actors).unwrap().len();
+    store(from, &horse);
+    // Two I/O threads may save the column it walked into first.
+    store(to, &horse);
+    store(from, &[]);
+    assert_eq!((held(from), held(to)), (0, 1));
+    store(to, &[]);
+    assert_eq!(world.db().get(&[&b"actorprefix"[..], &(-5i64).to_le_bytes()].concat()).unwrap(), None, "gone once no column has it");
+}
+
+#[test]
 fn what_is_stored_and_flushed_is_there_when_the_folder_opens_again() {
     let copy = copy_of_fixture("flush");
     let (key, stone) = (ChunkKey::new(1, 12, 0), registry().find("minecraft:stone", "").unwrap());

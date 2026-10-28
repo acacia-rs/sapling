@@ -74,6 +74,8 @@ fn shown_now(world: &World, entity: Entity) -> Option<Vec<Bytes>> {
     let look = world.get::<Creature>(entity).and_then(|creature| creature.look.as_ref());
     let yaw = world.get::<Legs>(entity).map_or(0.0, |legs| legs.yaw);
     let mut shown = announcement(id, kind, body, (look, raised), world.get::<Health>(entity), yaw, world.get::<Gene>(entity).map_or(0, |gene| gene.0));
+    shown.extend(super::drowned::held(world, entity, id));
+    shown.extend(super::piglins::held(world, entity, id));
     let flags = world.get::<Told>(entity).and_then(Told::mob_flags);
     shown.extend(flags.and_then(|flags| super::husbandry::links_packet(world, entity, id, flags)));
     Some(super::villagers::dressed(world, entity, shown))
@@ -116,6 +118,7 @@ pub(super) fn physics_of(kind: &str) -> &'static Physics {
         "minecraft:allay" | super::bees::KIND => &Physics::HOVER,
         "minecraft:parrot" => &Physics::PARROT,
         "minecraft:squid" | "minecraft:glow_squid" => &Physics::SWIMMER,
+        _ if super::swimming::is_fish(kind) => &Physics::FISH,
         _ if sapling_data::mob_traits(kind).swims.is_some() => &Physics::SWIMMER,
         _ => &Physics::MOB,
     }

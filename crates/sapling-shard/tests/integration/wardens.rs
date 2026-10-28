@@ -49,6 +49,9 @@ fn with_warden(feet: [f32; 3], event: Option<&'static str>, alex: GameMode) -> (
     let mut h = Harness::new();
     h.enter(1, "Alex");
     h.enter(2, "Steve");
+    // Off Alex's spot, so as not to push what comes to it twice over.
+    h.receive(2, &common::input_at([8.5, 65.0, 0.5]));
+    h.tick_all();
     h.remote.run(move |ctx| {
         ctx.set_difficulty(Difficulty::Easy);
         ctx.set_game_mode(PlayerId(1), alex);
@@ -76,25 +79,21 @@ fn a_warden_sniffs_goes_to_look_grows_angry_at_a_player_touching_it_and_roars_be
     assert!(sniffs <= 1 && timeline.contains(&(sniffs, Told::Heartbeat(40))), "{timeline:?}");
     assert_eq!(first(&timeline, Told::Flags(REST)), sniffs + 84, "a sniff of 4.16 s and a tick");
     let heard: Vec<(usize, &Told)> = timeline.iter().filter(|(_, told)| matches!(told, Told::Sound(_) | Told::Heartbeat(_) | Told::Ambient(_))).map(|(tick, told)| (*tick, told)).collect();
+    // A touch a second at most, 35 each. Pushed off and walking back, BDS's warden touched its
+    // player 20 and then 21 ticks apart (bds-warden.txt).
     let touched = first(&timeline, Told::Sound("listening".into()));
-    let expected = [
-        (touched, &Told::Sound("listening".into())),
-        (touched, &Told::Heartbeat(27)),
-        (touched + 20, &Told::Sound("listening_angry".into())),
-        (touched + 20, &Told::Ambient("agitated".into())),
-        (touched + 20, &Told::Heartbeat(14)),
-        (touched + 40, &Told::Sound("listening_angry".into())),
-        (touched + 40, &Told::Ambient("angry".into())),
-        (touched + 40, &Told::Heartbeat(10)),
-    ];
-    let mut got: Vec<(usize, &Told)> = heard.iter().copied().filter(|(tick, _)| (touched..=touched + 40).contains(tick)).collect();
-    got.sort_by_key(|(tick, told)| (*tick, matches!(told, Told::Heartbeat(_)), matches!(told, Told::Ambient(_))));
-    let mut want = expected.to_vec();
-    want.sort_by_key(|(tick, told)| (*tick, matches!(told, Told::Heartbeat(_)), matches!(told, Told::Ambient(_))));
-    assert_eq!(got, want, "a touch a second, 35 each");
-    assert_eq!(first(&timeline, Told::Flags(ROARING)), touched + 40, "angry, it roars at once");
-    assert_eq!(first(&timeline, Told::Target(1)), touched + 40 + 85, "and hunts when the roar is over");
-    assert_eq!(first(&timeline, Told::Sound("mob.warning".into())), touched + 40 + 86);
+    let touches: Vec<usize> = heard.iter().filter(|(_, told)| matches!(told, Told::Sound(sound) if sound.starts_with("listening"))).map(|(tick, _)| *tick).collect();
+    let [_, second, third, ..] = touches[..] else { panic!("{heard:?}") };
+    assert!((touched + 20..=touched + 25).contains(&second) && (second + 20..=second + 25).contains(&third), "{touches:?}");
+    let at = |tick: usize| -> Vec<&Told> {
+        let mut told: Vec<&Told> = heard.iter().filter(|(at, told)| *at == tick && !matches!(told, Told::Sound(_))).map(|(_, told)| *told).collect();
+        told.sort_by_key(|told| matches!(told, Told::Heartbeat(_)));
+        told
+    };
+    assert_eq!((at(touched), at(second), at(third)), (vec![&Told::Heartbeat(27)], vec![&Told::Ambient("agitated".into()), &Told::Heartbeat(14)], vec![&Told::Ambient("angry".into()), &Told::Heartbeat(10)]));
+    assert_eq!(first(&timeline, Told::Flags(ROARING)), third, "angry, it roars at once");
+    assert_eq!(first(&timeline, Told::Target(1)), third + 85, "and hunts when the roar is over");
+    assert_eq!(first(&timeline, Told::Sound("mob.warning".into())), third + 86);
 }
 
 #[test]

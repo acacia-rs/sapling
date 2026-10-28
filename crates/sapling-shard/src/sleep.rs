@@ -20,6 +20,7 @@ use bevy_ecs::prelude::*;
 use sapling_api::{BlockPos, Difficulty, GameMode};
 use sapling_data::EYE_HEIGHT;
 
+pub(crate) use rest::is_night;
 pub(crate) use spawn::{BedSpawn, Own, set_anchor_spawn, sound_anchor_spent, spawn_of, spend_anchor, tell_lapsed};
 
 use crate::blocks::{bed_head, set_network_only, with_property};

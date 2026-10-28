@@ -1,7 +1,11 @@
 //! Armour stands take what players hand them and change pose, as BDS's do: `ArmorStand::getInteraction`
 //! (1429b5e20) picks the slot, its swap (1429ba2c0) trades the stand's item for the player's, and a
 //! sneaking click moves the stand to its next pose (142a044f0). Evidence: docs/research/mob-kinds.md
-//! "Armour stands".
+//! "Armour stands". Hits knock them over (hits.rs).
+
+mod hits;
+
+pub(super) use hits::{struck, tick};
 
 use acacia_proto::packets::{MobArmorEquipment, MobEquipment, SetEntityData};
 use acacia_proto::types::{EntityProperties, MetadataDictionaryItem, MetadataDictionaryItemKey as Key, MetadataDictionaryItemType as Type, MetadataDictionaryItemValue as Value, MetadataDictionaryItemValueDefault as Plain, WindowID};

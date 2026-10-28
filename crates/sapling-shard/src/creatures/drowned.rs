@@ -4,10 +4,12 @@
 //! research/captures/bds-drowned.txt: shown holding the trident as it came; it swung, and the
 //! trident flew a tick later at 3.94 a tick, heard `item.trident.throw` from the drowned; it kept
 //! its own, and the thrown one stuck where it fell.
-// TODO: a viewer who comes later does not see the trident; its drop on death (the pack sets only
-// the offhand's chance), its enchantments and the 8% nautilus shell are not done.
+// A viewer who comes later is shown the trident with the drowned.
+// TODO: its drop on death (the pack sets only the offhand's chance; BDS's mainhand chance was not
+// drilled), its enchantments and the 8% nautilus shell (`drowned_ranged_equipment.json`) are not done.
 
 use bevy_ecs::prelude::*;
+use bytes::Bytes;
 
 use super::arrows::{self, ARROW, Shot};
 use super::hunting;
@@ -59,12 +61,19 @@ pub(super) fn arm(world: &mut World, drowned: Entity, kind: &str, event: Option<
     let armed = event == Some(RANGED) || event.is_none() && world.get_resource_or_insert_with(Dice::default).roll(OF) < ARMED;
     let Some(id) = world.get::<NetId>(drowned).map(|id| id.0).filter(|_| armed) else { return };
     world.entity_mut(drowned).insert(Thrower::default());
-    let stack = sapling_data::Stack { name: "minecraft:trident", count: 1, damage: 0, block: None, tag: None };
-    let (Some(held), Some(body)) = (sapling_data::mob_hand(id, &stack, false), world.get::<Body>(drowned).copied()) else { return };
+    super::reshow(world, drowned);
+    let (Some(held), Some(body)) = (held(world, drowned, id), world.get::<Body>(drowned).copied()) else { return };
     let layer = world.get::<crate::components::InLayer>(drowned).map(|layer| layer.0);
     if let Some(layer) = layer {
-        entities::tell_viewers(world, drowned, layer, body.at.map(|c| c.floor() as i32), vec![sapling_net::encode(&held)]);
+        entities::tell_viewers(world, drowned, layer, body.at.map(|c| c.floor() as i32), vec![held]);
     }
+}
+
+/// What shows an armed drowned's trident in its hand.
+pub(super) fn held(world: &World, drowned: Entity, id: u64) -> Option<Bytes> {
+    world.get::<Thrower>(drowned)?;
+    let stack = sapling_data::Stack { name: "minecraft:trident", count: 1, damage: 0, block: None, tag: None };
+    sapling_data::mob_hand(id, &stack, false).map(|held| sapling_net::encode(&held))
 }
 
 /// After its move: an armed drowned's throw, a tick after its swing.

@@ -127,6 +127,8 @@ pub(super) fn settle(world: &mut World, layer: Entity, pos: BlockPos) {
     for _ in 0..MAX_STEPS {
         let Some(pos) = changed.pop_front() else { return };
         liquid::neighbours_changed(world, layer, pos);
+        crate::creatures::heart_noticed(world, layer, pos);
+        Face::ALL.into_iter().for_each(|face| crate::creatures::heart_noticed(world, layer, face.neighbour(pos)));
         shapes::reshape_around(world, layer, pos);
         falling::unsettled(world, layer, pos, Change::Placed);
         for face in Face::ALL {
