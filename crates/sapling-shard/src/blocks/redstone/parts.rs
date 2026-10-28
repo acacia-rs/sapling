@@ -117,6 +117,8 @@ impl Part {
             _ if name.ends_with("trapdoor") => Part::User(User::Opens(Opens::Trapdoor)),
             _ if name.ends_with("door") => Part::User(User::Opens(Opens::Door)),
             _ if name.ends_with("fence_gate") => Part::User(User::Opens(Opens::Gate)),
+            // Java's: a powered lectern gives 15 around and strongly down.
+            "lectern" if on("powered_bit") > 0 => Part::Producer { strength: 15, strong: Some(Face::Down) },
             "slime" | "honey_block" | "mob_spawner" | "lectern" => Part::Cutter,
             "glowstone" => Part::Ledge,
             _ if name.ends_with("_slab") && !name.ends_with("double_slab") && get("minecraft:vertical_half") == Some("top") => Part::Ledge,

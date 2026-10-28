@@ -4,7 +4,7 @@ use crate::common;
 
 use acacia_proto::nbt::Value;
 use acacia_proto::packets::{
-    BlockEntityData, BookEdit, BookEditContent, BookEditContentReplacePage, BookEditContentSign, BookEditType, LecternUpdate, LevelSoundEvent, PlayerHotbar,
+    BlockEntityData, BookEdit, BookEditContent, BookEditContentReplacePage, BookEditContentSign, BookEditType, LecternUpdate, LevelSoundEvent, PlayerHotbar, UpdateBlock,
 };
 use acacia_proto::types::Vec3i;
 use common::shooting::{held, ready};
@@ -45,4 +45,9 @@ fn a_book_is_written_signed_and_put_on_a_lectern_whose_page_turns() {
     h.receive(1, &LecternUpdate { page: 1, page_count: 2, position: Vec3i { x: 0, y: 65, z: 2 } });
     let turned = all::<BlockEntityData>(h.tick_all().to(1)).pop().expect("the turned page");
     assert_eq!(turned.nbt.decode().unwrap().value.get("page"), Some(&Value::Int(1)));
+
+    // Back to page 0: powered from the next tick for two.
+    h.receive(1, &LecternUpdate { page: 0, page_count: 2, position: Vec3i { x: 0, y: 65, z: 2 } });
+    let updates: Vec<usize> = (0..5).map(|_| all::<UpdateBlock>(h.tick_all().to(1)).len()).collect();
+    assert_eq!(updates, [0, 1, 0, 1, 0]);
 }

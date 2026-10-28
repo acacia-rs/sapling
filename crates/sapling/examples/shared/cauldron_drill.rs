@@ -9,6 +9,7 @@ pub fn drill(name: &str) -> Option<(Vec<String>, &'static [&'static str])> {
         match name {
             "cauldrons" => cauldrons(),
             "cauldronrain" => rain(),
+            "cauldrons2" => buckets_and_banners(),
             _ => return None,
         },
         CAULDRON_SHOWN,
@@ -43,6 +44,33 @@ pub fn cauldrons() -> Vec<String> {
         lines.extend([format!("!click 2 0 {z}"), String::new()]);
     }
     lines.extend(["gamemode creative @s".to_owned(), "fill ~-2 ~ ~-6 ~10 ~6 ~6 air".to_owned(), "clear @s".to_owned(), String::new()]);
+    lines
+}
+
+/// The actor in survival takes a bucket to a full cauldron of swiftness, one of two levels and a full
+/// cauldron of water dyed red then blue, pours swiftness into plain water, then washes a banner
+/// patterned at a loom in a full cauldron of water, twice.
+pub fn buckets_and_banners() -> Vec<String> {
+    let mut lines = floor();
+    let set = ["setblock ~2 ~ ~0 cauldron", "setblock ~2 ~ ~-3 cauldron", "setblock ~2 ~ ~3 cauldron [\"fill_level\"=6]", "setblock ~5 ~ ~-3 cauldron [\"fill_level\"=6]", "setblock ~8 ~ ~0 cauldron [\"fill_level\"=3]", "setblock ~5 ~ ~3 loom"];
+    lines.extend(set.into_iter().chain(["gamemode survival @s", ""]).map(String::from));
+    let clicks = [
+        ("potion 1 14", "2 0 0"),
+        ("potion 1 14", "2 0 0"),
+        ("potion 1 14", "2 0 0"),
+        ("bucket 1", "2 0 0"),
+        ("potion 1 14", "2 0 -3"),
+        ("bucket 1", "2 0 -3"),
+        ("red_dye 1", "5 0 -3"),
+        ("blue_dye 1", "5 0 -3"),
+        ("bucket 1", "5 0 -3"),
+        ("potion 1 14", "8 0 0"),
+    ];
+    for (item, at) in clicks {
+        lines.extend([hold(item), format!("!click {at}"), String::new()]);
+    }
+    lines.extend(["replaceitem entity @s slot.hotbar 0 banner 1 15", "replaceitem entity @s slot.hotbar 1 red_dye 1", "", "!loom 5 0 3 bo", "", "!close", "", "!click 2 0 3", "", "!click 2 0 3", ""].map(String::from));
+    lines.extend(["gamemode creative @s", "fill ~-2 ~ ~-6 ~10 ~6 ~6 air", "clear @s", ""].map(String::from));
     lines
 }
 

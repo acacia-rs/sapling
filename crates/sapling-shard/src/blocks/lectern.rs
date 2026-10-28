@@ -2,8 +2,10 @@
 //! a written book puts it on an empty lectern, heard as `item.book.put` at the block's corner, and
 //! the entity keeps it (`book`, `hasBook`, `page` 0, `totalPages`); a click on one with a book
 //! opens its screen. LecternUpdate turns its page. A comparator reads it.
+//! A turn to page 0 powers it a tick later for two ticks, as BDS did; turns to other pages showed no
+//! power (bds-books.txt).
 // TODO: the book is not taken back from the screen (not drilled); broken, the lectern leaves the
-// book by its name only (entities.rs); the `powered_bit` pulse BDS gave a turn to page 0 is not.
+// book by its name only (entities.rs).
 
 use acacia_proto::nbt::Value;
 use acacia_proto::packets::LecternUpdate;
@@ -11,6 +13,7 @@ use bevy_ecs::prelude::*;
 use sapling_api::{BlockPos, GameMode};
 use sapling_world::ItemStack;
 
+use super::queued::{self, Job};
 use super::{fields, keep_entity, level, send};
 use crate::components::{InLayer, Mode, PacketQueues};
 use crate::inventory::{self, Inventory, Place};
@@ -19,6 +22,8 @@ const LECTERN: &str = "minecraft:lectern";
 const ENTITY: &str = "Lectern";
 pub(super) const BOOK: &str = "book";
 const BOOKS: [&str; 2] = ["minecraft:writable_book", "minecraft:written_book"];
+/// Ticks a turned lectern stays powered.
+const PULSE: u64 = 2;
 
 fn is_lectern(world: &World, layer: Entity, pos: BlockPos) -> bool {
     send::block_at(world, layer, pos).is_some_and(|block| block.name == LECTERN)
@@ -91,6 +96,23 @@ pub(crate) fn turn_pages(world: &mut World) {
         let Some((_, pages)) = opened_at(world, layer, pos).filter(|_| is_lectern(world, layer, pos) && super::reaches(world, player, pos)) else { continue };
         if i32::from(update.page) < pages.max(1) {
             keep(world, layer, pos, vec![("page", Value::Int(update.page.into()))]);
+            if update.page == 0 {
+                queued::cancel(world, layer, pos, Job::Lectern);
+                queued::after(world, layer, pos, 1, Job::Lectern);
+            }
         }
+    }
+}
+
+/// The page-turn pulse: an unpowered lectern is powered for [`PULSE`] ticks, a powered one goes off.
+pub(super) fn pulse(world: &mut World, layer: Entity, [x, y, z]: BlockPos) {
+    let Some(level) = level(world, layer).filter(|level| level.in_height(y)) else { return };
+    let id = level.block(x, y, z);
+    let Some(state) = level.registry().get(id).filter(|state| state.name == LECTERN) else { return };
+    let on = !state.properties.split(',').any(|pair| pair == "powered_bit=1");
+    let Some(set) = super::with_property(level.registry(), id, "powered_bit", if on { "1" } else { "0" }) else { return };
+    send::set(world, layer, [x, y, z], set);
+    if on {
+        queued::after(world, layer, [x, y, z], PULSE, Job::Lectern);
     }
 }
