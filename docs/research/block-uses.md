@@ -125,6 +125,10 @@ eighth a level), every sound at the block's middle.
 | water, 6 | the red cap | level 5, `CauldronCleanArmor` at the new surface with water's colour |
 | water, 5 | red shulker box | level 4, `CauldronCleanArmor` |
 | water, 4 | plain red banner | nothing |
+| swiftness, 6 or 2 | bucket | nothing at all (`bds-cauldrons2.txt`, as the rows below) |
+| red water, 6 | blue dye | `CustomColor` 0xFF763968, each channel the mean of the old and the dye's |
+| that water, 6 | bucket | empty, `CustomColor` gone, `CauldronTakeWater` at the old surface with the colour |
+| water, 6 | white banner with one pattern | level 5, `CauldronCleanBanner` at the new surface with water's colour; clicked again, nothing |
 
 Rain (`bds_command_probe cauldronrain`, `bds-cauldronrain.txt`, `randomtickspeed` 100): an empty cauldron under the
 sky filled a level at a time, six levels in 2.3 s starting 0.9 s after the rain, each with the block and its entity

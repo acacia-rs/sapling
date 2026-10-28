@@ -2,8 +2,9 @@
 //! docs/research/block-uses.md "Cauldrons"): the potion and the colour are in the cauldron's entity
 //! (`PotionId`, `PotionType`, `CustomColor`) over `cauldron_liquid=water`. Water by bucket and bottle
 //! is tools.rs's.
-// TODO: a second dye's blend, a banner's pattern washed off, a potion poured into plain or dyed
-// water, and snow falling into a cauldron were not drilled.
+//! A bucket takes a full cauldron of dyed water with its colour and does nothing to a potion; a
+//! banner loses its last pattern a level at a time (bds-cauldrons2.txt).
+// TODO: a potion poured into plain or dyed water, and snow falling into a cauldron, were not drilled.
 
 use acacia_proto::nbt::Value;
 use acacia_proto::packets::{LevelEvent, LevelEventEvent};
@@ -94,7 +95,9 @@ fn write(world: &mut World, layer: Entity, pos: BlockPos, outcome: &Outcome) {
         send::set(world, layer, pos, id);
     }
     let Value::Compound(mut kept) = entity else { return };
-    let (id, kind) = next.potion.unwrap_or((-1, 0));
+    let old = |key: &str| kept.iter().find(|(name, _)| name == key).and_then(|(_, value)| short(Some(value.clone())));
+    let had_potion = old("PotionId").is_some_and(|id| id >= 0);
+    let (id, kind) = next.potion.unwrap_or((-1, if had_potion { 0 } else { old("PotionType").unwrap_or(-1) }));
     kept.retain(|(name, _)| !matches!(name.as_str(), "PotionId" | "PotionType" | "CustomColor"));
     kept.extend([("PotionId".into(), Value::Short(id)), ("PotionType".into(), Value::Short(kind))]);
     kept.extend(next.colour.map(|colour| ("CustomColor".into(), Value::Int(colour))));
@@ -124,6 +127,16 @@ fn with_tag(hand: &ItemStack, key: &str, value: Option<Value>) -> ItemStack {
 fn blend(old: i32, rgb: u32) -> i32 {
     let mix = |shift: u32| (((old as u32 >> shift) & 0xFF) + ((rgb >> shift) & 0xFF)) / 2;
     (0xFF00_0000 | mix(16) << 16 | mix(8) << 8 | mix(0)) as i32
+}
+
+/// A patterned banner with its last pattern washed off; `None` for a plain or an ominous one.
+fn washed_banner(hand: &ItemStack) -> Option<ItemStack> {
+    let tag = hand.tag.as_ref()?;
+    (!matches!(tag.get("Type"), Some(Value::Int(1)))).then_some(())?;
+    let Some(Value::List(patterns)) = tag.get("Patterns") else { return None };
+    let (_, rest) = patterns.items.split_last()?;
+    let left = (!rest.is_empty()).then(|| Value::List(acacia_proto::nbt::List { tag: patterns.tag, items: rest.to_vec() }));
+    Some(with_tag(hand, "Patterns", left))
 }
 
 /// A potion poured in: like on like (or into an empty cauldron) two levels more and the last
@@ -179,6 +192,16 @@ fn change(hand: &ItemStack, held: Held) -> Option<Outcome> {
             Some(Outcome { next, told: None, sound: None, cost: Cost::Changed(tipped) })
         }
         _ if name.starts_with("minecraft:leather_") && held.level > 0 && held.potion.is_none() => leather(hand, held),
+        "minecraft:bucket" if held.level == FULL => {
+            let colour = held.colour?;
+            let next = Held { level: 0, potion: None, colour: None };
+            Some(Outcome { next, told: Some((LevelEventEvent::CauldronTakeWater, FULL, colour)), sound: None, cost: Cost::Becomes(stack("minecraft:water_bucket", 0)) })
+        }
+        "minecraft:banner" if held.level > 0 && plain => {
+            let washed = washed_banner(hand)?;
+            let next = Held { level: held.level - 1, ..held };
+            Some(Outcome { next, told: Some((LevelEventEvent::CauldronCleanBanner, next.level, WATER)), sound: None, cost: Cost::Changed(washed) })
+        }
         _ if name.ends_with("_shulker_box") && name != SHULKER_BOX && held.level > 0 && plain => {
             let next = Held { level: held.level - 1, ..held };
             let washed = ItemStack { name: SHULKER_BOX.to_owned(), block: None, ..hand.clone() };
@@ -210,6 +233,10 @@ pub(super) fn rained_in(level: &sapling_world::World, [x, y, z]: BlockPos) -> Op
 pub(super) fn use_on(world: &mut World, player: Entity, layer: Entity, pos: BlockPos, creative: bool) -> bool {
     let Some(held) = held_at(world, layer, pos) else { return false };
     let Some(hand) = world.get::<Inventory>(player).and_then(|inventory| inventory.in_hand().as_ref()).map(|held| held.stack.clone()) else { return false };
+    // BDS answered a bucket on a potion with nothing at all (bds-cauldrons2.txt).
+    if hand.name == "minecraft:bucket" && held.potion.is_some() {
+        return true;
+    }
     let Some(outcome) = change(&hand, held) else { return false };
     write(world, layer, pos, &outcome);
     if creative {
@@ -235,41 +262,4 @@ pub(super) fn use_on(world: &mut World, player: Entity, layer: Entity, pos: Bloc
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    fn held(level: u8, potion: Option<(i16, i16)>) -> Held {
-        Held { level, potion, colour: None }
-    }
-
-    fn after(hand: &ItemStack, before: Held) -> (Held, Option<(LevelEventEvent, u8, i32)>) {
-        let outcome = change(hand, before).expect("a change");
-        (outcome.next, outcome.told)
-    }
-
-    /// bds-cauldrons.txt: swiftness twice, slowness on it, swiftness, a bottle out, splash on top.
-    #[test]
-    fn potions_fill_by_two_burst_when_unlike_and_take_the_last_kind() {
-        let swift = stack("minecraft:potion", 14);
-        assert_eq!(after(&swift, held(0, None)), (held(2, Some((14, 0))), Some((LevelEventEvent::CauldronFillPotion, 2, -13_374_465))));
-        assert_eq!(after(&swift, held(2, Some((14, 0)))).0, held(4, Some((14, 0))));
-        assert_eq!(after(&stack("minecraft:potion", 17), held(4, Some((14, 0)))), (held(0, None), Some((LevelEventEvent::CauldronExplode, 0, WATER))));
-        assert_eq!(after(&stack("minecraft:glass_bottle", 0), held(4, Some((14, 0)))).0, held(2, Some((14, 0))));
-        assert_eq!(after(&stack("minecraft:splash_potion", 14), held(2, Some((14, 0)))).0, held(4, Some((14, 1))));
-        let arrows = ItemStack { count: 16, ..stack("minecraft:arrow", 0) };
-        assert_eq!(after(&arrows, held(4, Some((14, 1)))), (held(3, Some((14, 1))), None));
-        assert!(change(&stack("minecraft:potion", 0), held(3, None)).is_none(), "water by bottle is tools.rs's");
-    }
-
-    #[test]
-    fn dye_colours_water_which_dyes_leather_and_plain_water_washes_it() {
-        let (dyed, told) = after(&stack("minecraft:red_dye", 0), held(6, None));
-        assert_eq!((dyed.colour, told), (Some(-5_231_066), Some((LevelEventEvent::CauldronAddDye, 6, -5_231_066))));
-        assert_eq!(after(&stack("minecraft:leather_helmet", 0), dyed).1, Some((LevelEventEvent::CauldronDyeArmor, 5, -5_231_066)));
-        let Some(Outcome { cost: Cost::Changed(helmet), .. }) = change(&stack("minecraft:leather_helmet", 0), dyed) else { panic!("dyed") };
-        assert_eq!(after(&helmet, held(6, None)).1, Some((LevelEventEvent::CauldronCleanArmor, 5, WATER)));
-        assert!(change(&stack("minecraft:leather_helmet", 0), held(6, None)).is_none(), "an undyed cap");
-        assert_eq!(after(&stack("minecraft:red_shulker_box", 0), held(5, None)).1, Some((LevelEventEvent::CauldronCleanArmor, 4, WATER)));
-        assert!(change(&stack("minecraft:banner", 1), held(4, None)).is_none());
-    }
-}
+mod tests;

@@ -172,6 +172,8 @@ fn apply(inventory: &mut Inventory, request: &Request, creative: bool, at: &At) 
 /// What BDS answers a request a container refused to hold an item in (a furnace's fuel slot asked
 /// to take stone): this status, and nothing resent (research/captures/containers-findings.md D4).
 const CANNOT_HOLD: Status = Status::Unknown(55);
+/// What BDS answers a take out of an empty bundle slot, nothing resent (bds-bundlekeep.txt).
+const NOTHING_THERE: Status = Status::Unknown(49);
 
 fn refusal(request_id: i32, status: Status) -> ItemStackResponse {
     ItemStackResponse { responses: vec![ItemStackResponsesItem { status, request_id, containers: None }] }
@@ -215,6 +217,7 @@ fn answer(world: &mut World, entity: Entity, player: &Player, request: &Request)
     let refuses = containers::refusal(world, entity);
     (trial.container, trial.refuses) = (open.clone().unwrap_or_default(), refuses);
     bundles::lend(&mut trial, request);
+    let takes_nothing = bundles::takes_nothing(&trial, request);
     let mut unrefused = Inventory { refuses: None, ..trial.clone() };
     // Tried on a copy first: the handlers see a drop before anything has left the inventory.
     let tried = apply(&mut trial, request, creative, at);
@@ -243,6 +246,7 @@ fn answer(world: &mut World, entity: Entity, player: &Player, request: &Request)
             applied.dropped.into_iter().for_each(|stack| drops::throw(world, entity, stack));
             workstations::answered(world, entity, applied.forged);
         }
+        _ if failed && takes_nothing => out.push(&refusal(request.request_id, NOTHING_THERE)),
         // Only the container's refusal or a bundle's weight stood in the way: the client undoes it
         // by itself.
         _ if overfilled || (failed && apply(&mut unrefused, request, creative, at).is_ok()) => out.push(&refusal(request.request_id, CANNOT_HOLD)),

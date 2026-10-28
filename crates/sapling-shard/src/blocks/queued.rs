@@ -28,6 +28,8 @@ pub(crate) enum Job {
     Bubbles,
     /// A stalactite's drip reaches the cauldron under it (drips.rs).
     Drip,
+    /// A lectern's page-turn pulse starts or ends (lectern.rs).
+    Lectern,
 }
 
 #[derive(Resource, Default)]
@@ -70,6 +72,7 @@ pub(super) fn job_of(name: &str, properties: &str) -> Option<Job> {
         "sculk_sensor" | "calibrated_sculk_sensor" | "sculk_shrieker" => Job::Sculk,
         "bubble_column" => Job::Bubbles,
         "cauldron" => Job::Drip,
+        "lectern" => Job::Lectern,
         _ => return None,
     })
 }
@@ -110,5 +113,6 @@ fn run(world: &mut World, layer: Entity, pos: BlockPos, job: Job) {
         Job::Sculk => super::sculk::step(world, layer, pos),
         Job::Bubbles => super::bubbles::settle(world, layer, pos),
         Job::Drip => super::drips::fill(world, layer, pos),
+        Job::Lectern => super::lectern::pulse(world, layer, pos),
     }
 }

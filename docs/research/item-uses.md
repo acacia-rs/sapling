@@ -47,7 +47,8 @@ devbox's BDS; the captures are `research/captures/bds-<drill>.txt`, sapling's `s
   A click with the book on it opens ContainerOpen `Lectern`. LecternUpdate sets `page`, resent as
   BlockEntityData. The comparator read 15 with a book at page 0 and at page 1 of 3 (the comparator set
   again, so read afresh): no page dependence, unlike the Java game. A turn to page 0 pulsed
-  `powered_bit` for two ticks (not done). Broken, the lectern dropped the book with its tag.
+  `powered_bit` from the next tick for two ticks; a turn to another page resent the unpowered block two
+  ticks later and showed no power. Sapling pulses on page 0 only and resends nothing. Broken, the lectern dropped the book with its tag.
 
 ## Cooldowns and held uses (`small`; `cooldowns.rs`, `instruments.rs`)
 

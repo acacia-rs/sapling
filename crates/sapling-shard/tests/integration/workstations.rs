@@ -218,9 +218,10 @@ fn a_loom_adds_the_dyes_pattern_after_the_banners_own() {
     assert_eq!(kept.main[1].as_ref().map(|dye| dye.count), Some(1));
 }
 
-#[test]
-fn a_beacon_takes_its_payment_for_what_its_pyramid_offers_and_gives_it_around() {
-    let base: Vec<([i32; 3], &str)> = (0..3).flat_map(|x| (0..3).map(move |z| ([x, 63, z], "minecraft:iron_block"))).collect();
+/// A paid beacon on a one-layer pyramid, with `above` over it; what it gives in 80 ticks.
+fn beacon_gives(above: &[([i32; 3], &str)]) -> Vec<MobEffect> {
+    let mut base: Vec<([i32; 3], &str)> = (0..3).flat_map(|x| (0..3).map(move |z| ([x, 63, z], "minecraft:iron_block"))).collect();
+    base.extend_from_slice(above);
     let (mut h, _storage, opened) = at("minecraft:beacon", &base, PlayerData { main: vec![stack("minecraft:iron_ingot", 2, None)], ..PlayerData::default() });
     assert_eq!(all::<ContainerOpen>(&opened)[0].window_type, WindowType::Beacon);
     let pay = |primary: i32| vec![Action::BeaconPayment(Payment { primary_effect: primary, secondary_effect: 0 }), Action::Destroy(Destroy { count: 1, source: slot(Container::BeaconPayment, 27, 0) })];
@@ -229,6 +230,16 @@ fn a_beacon_takes_its_payment_for_what_its_pyramid_offers_and_gives_it_around() 
     assert_eq!(answer(&h.tick(1)).0, Status::Error, "strength needs three layers");
     h.receive(1, &request(-5, pay(1)));
     assert_eq!(answer(&h.tick(1)).0, Status::Ok);
-    let given: Vec<MobEffect> = (0..80).flat_map(|_| all::<MobEffect>(&h.tick(1))).collect();
-    assert_eq!(given.iter().map(|effect| (effect.effect_id, effect.amplifier, effect.duration)).collect::<Vec<_>>(), [(1, 0, 220)]);
+    (0..80).flat_map(|_| all::<MobEffect>(&h.tick(1))).collect()
+}
+
+#[test]
+fn a_beacon_takes_its_payment_for_what_its_pyramid_offers_and_gives_it_around() {
+    let given = beacon_gives(&[([1, 70, 1], "minecraft:glass"), ([1, 75, 1], "minecraft:bedrock")]);
+    assert_eq!(given.iter().map(|effect| (effect.effect_id, effect.amplifier, effect.duration, effect.ambient)).collect::<Vec<_>>(), [(1, 0, 220, true)]);
+}
+
+#[test]
+fn a_beacon_under_stone_gives_nothing() {
+    assert!(beacon_gives(&[([1, 70, 1], "minecraft:stone")]).is_empty());
 }

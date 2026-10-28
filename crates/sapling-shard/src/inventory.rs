@@ -88,6 +88,8 @@ pub(crate) struct Inventory {
     pub refuses: Option<fn(usize, &ItemStack) -> bool>,
     /// The last bundle a request named, by number, and its slots under the ids the client knows.
     bundle: Option<(i32, Vec<Option<Held>>)>,
+    /// The other bundles the client was shown, the same way.
+    bundles_shown: Vec<(i32, Vec<Option<Held>>)>,
     /// What the player's ender chests hold.
     pub ender: Vec<Option<Held>>,
     pub experience: Experience,
@@ -121,6 +123,7 @@ impl Default for Inventory {
             container: Vec::new(),
             refuses: None,
             bundle: None,
+            bundles_shown: Vec::new(),
             ender: vec![None; ENDER],
             experience: Experience::default(),
             enchant_seed: 0,

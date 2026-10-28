@@ -36,12 +36,16 @@ with ActorEvent 12 while the fish's spot is water, ActorEvent 13 at the bite, th
   early reel in water + 0, catches + 1, a hook against the pig's platform + 2.
 - A catch: AddItemEntity at the hook, `is_from_fishing` set, velocity toward the fisher:
   `d = (feet + 2.52 - item middle) * 0.1` per axis (y also `+ sqrt(|d|) * 0.08`); three catches agree to 1e-6.
-- Experience: `nextInt(5) + 1` per catch, as orbs at the feet + 0.7 up and half a block along the look.
+- Experience: `nextInt(5) + 1` per catch, as orbs at the feet + 0.7 up and half a block along the look, split
+  as any orbs are (4 comes as 3 + 1: the capture's one or two orbs per catch are that split, not a rule).
+- Cast (fishing/cast.rs): a `disappeared` sound at the fisher's feet + 0.9 before `throw`; the hook comes in
+  flagged Invisible, a tick later Invisible gives way to CanShowNametag and Moving, a tick after that Moving
+  goes with a `reappeared` sound at the hook + 0.075. The fisher shows using an item (flag 4) for the use's
+  tick only.
 
 ## sapling gaps
 
-- The hook's flag changes after the cast (Invisible cleared a tick later) and its `disappeared`/`reappeared`
-  sounds are not sent.
-- The nibble's downward tug sinks sapling's hook deeper than BDS's (catches 0.03-0.34 under the surface on BDS,
-  up to 1.2 in sapling).
+- The nibble's downward tug sinks sapling's hook deeper than BDS's (catches 0.1-0.6 under the surface on BDS,
+  up to 1.3 in sapling, 2026-10-28). The decompile adds `-0.5 * r1 * r2 * r3` to motion.y after the hook's
+  own move; moving the tug in between sapling's two moves did not change the depth.
 - A hooked mob or player: from BDSRE only; the drill's pig walked off its platform.
