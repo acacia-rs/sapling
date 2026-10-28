@@ -23,6 +23,7 @@ pub fn request(request_id: i32, actions: Vec<Action>) -> ItemStackRequest {
         Action::Drop(_) => (Kind::Drop, 3),
         Action::Destroy(_) => (Kind::Destroy, 4),
         Action::Consume(_) => (Kind::Consume, 5),
+        Action::Create(_) => (Kind::Create, 6),
         Action::CraftRecipe(_) => (Kind::CraftRecipe, 12),
         Action::CraftCreative(_) => (Kind::CraftCreative, 12),
         Action::Optional(_) => (Kind::Optional, 15),

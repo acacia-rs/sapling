@@ -38,14 +38,15 @@ fn laid_out(inventory: &Inventory, recipe: &Recipe, at: Station) -> Result<Vec<P
     recipe.is_laid_out(&grid).then(|| cells.filter(|slot| held(*slot).is_some()).map(Place::Ui).collect()).ok_or(())
 }
 
-/// A special recipe as what the grid at `at` holds makes of it (fireworks/recipes.rs): one of
-/// each filled cell for what it makes.
-fn special(inventory: &Inventory, at: Station) -> Option<Recipe> {
-    let cells = if at == Station::Table { TABLE_GRID } else { HAND_GRID };
-    let grid: Vec<&ItemStack> = cells.filter_map(|slot| inventory.slot(Place::Ui(slot)).and_then(Option::as_ref)).map(|held| &held.stack).collect();
-    let made = crate::fireworks::crafted(&grid)?;
-    let inputs = grid.iter().map(|stack| (Ingredient::Item { name: stack.name.clone(), damage: Some(stack.damage) }, 1)).collect();
-    Some(Recipe { inputs, outputs: vec![made], station: Station::Hand, shape: None })
+/// The special recipe `network_id` as what the grid at `at` holds makes of it (special.rs): one
+/// of each filled cell for what it makes.
+fn special(inventory: &Inventory, network_id: u32, at: Station) -> Option<Recipe> {
+    let (cells, width) = if at == Station::Table { (TABLE_GRID, 3) } else { (HAND_GRID, 2) };
+    let cells: Vec<Option<&ItemStack>> = cells.map(|slot| inventory.slot(Place::Ui(slot)).and_then(Option::as_ref).map(|held| &held.stack)).collect();
+    let grid = super::special::Grid { cells, width };
+    let outputs = super::special::crafted(network_id, &grid)?;
+    let inputs = grid.filled().iter().map(|stack| (Ingredient::Item { name: stack.name.clone(), damage: Some(stack.damage) }, 1)).collect();
+    Some(Recipe { inputs, outputs, station: Station::Hand, shape: None })
 }
 
 impl Craft {
@@ -60,7 +61,7 @@ impl Craft {
         };
         let recipe = match sapling_data::recipe(network_id) {
             Some(listed) => Cow::Borrowed(listed),
-            None if sapling_data::is_special_recipe(network_id) && at != Station::Stonecutter => Cow::Owned(special(inventory, at).ok_or(())?),
+            None if sapling_data::is_special_recipe(network_id) && at != Station::Stonecutter => Cow::Owned(special(inventory, network_id, at).ok_or(())?),
             None => return Err(()),
         };
         let recipe = Some(recipe).filter(|recipe| fits(&&**recipe)).filter(|_| times > 0).ok_or(())?;

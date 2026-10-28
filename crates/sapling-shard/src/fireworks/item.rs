@@ -99,6 +99,16 @@ pub(super) const RGB: [u32; 16] = [
     0x1D1D21, 0xB02E26, 0x5E7C16, 0x835432, 0x3C44AA, 0x8932B8, 0x169C9C, 0x9D9D97, 0x474F52, 0xF38BAA, 0x80C71F, 0xFED83D, 0x3AB3DA, 0xC74EBD, 0xF9801D, 0xF9FFFE,
 ];
 
+/// The dyes by dye colour number, and the older items that dye as one.
+const DYES: [&str; 16] = ["black", "red", "green", "brown", "blue", "purple", "cyan", "light_gray", "gray", "pink", "lime", "yellow", "light_blue", "magenta", "orange", "white"];
+const OLD_DYES: &[(&str, u8)] = &[("minecraft:ink_sac", 0), ("minecraft:cocoa_beans", 3), ("minecraft:lapis_lazuli", 4), ("minecraft:bone_meal", 15)];
+
+/// The dye colour number of a dye item, banners' numbering too.
+pub(crate) fn dye(name: &str) -> Option<u8> {
+    let named = name.strip_prefix("minecraft:").and_then(|bare| bare.strip_suffix("_dye")).and_then(|colour| DYES.iter().position(|dye| *dye == colour));
+    named.map(|colour| colour as u8).or_else(|| OLD_DYES.iter().find(|(old, _)| *old == name).map(|(_, colour)| *colour))
+}
+
 fn mean_colour(colours: &[u8]) -> Option<i32> {
     let known: Vec<u32> = colours.iter().filter_map(|colour| RGB.get(usize::from(*colour)).copied()).collect();
     if known.is_empty() {

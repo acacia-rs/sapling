@@ -14,6 +14,7 @@ mod picking;
 mod plugin;
 mod recipe_book;
 mod requests;
+mod special;
 mod store;
 mod wear;
 mod wire;
