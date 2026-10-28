@@ -1267,16 +1267,26 @@ it draws itself, and nothing is saved (BDS saves no light), so a column is lit a
 Off unless `ServerBuilder::nethernet` is called: a vanilla client probes `GET /v1/join` first and
 only falls back to RakNet when that fails, so turning it on moves every vanilla player over.
 
-- **One port.** RakNet and WebRTC share the game's UDP socket; HTTP signaling listens on the same
+- **One port** (unless `udp_ports`). RakNet and WebRTC share the game's UDP socket; HTTP signaling listens on the same
   port number over TCP. `acacia_nethernet::host::Host` claims a datagram if it is an ICE binding
   request carrying one of its connections' credentials, or comes from an address such a request
   bound; everything else goes to RakNet. An address can only be re-bound by a request that passes
   the STUN integrity check, so a spoofed datagram cannot steal a player's route.
-- **Links.** `sapling-net/src/links.rs` puts both transports behind `Link`; the login sessions,
-  backlog limit, kicks and `Left` reports are the same code for either. A NetherNet session starts
-  when both data channels are open and stays plaintext after the handshake (DTLS encrypts).
-- **Direct connect** (`http.rs`): one request per TCP connection, as BDS serves it. A TLS hello gets
-  the alert that makes the client retry over HTTP. `GET /v1/join` answers the status JSON (the
+- **Transports.** `sapling-net/src/transport.rs` `Transport` is the seam: RakNet and NetherNet
+  (`transports.rs`) implement it, and `ServerBuilder::transport` / `listen_with` add an embedder's
+  (dragonfly's `ListenNetwork`, at gophertunnel's `Network` level: below the login). `links.rs` puts
+  them behind `Link` (transport number, connection key); the login sessions, backlog limit, kicks and
+  `Left` reports are the same code for all. A game-socket datagram is offered to NetherNet, then
+  embedders' transports, RakNet last; one with sockets of its own polls them in `poll_ready`.
+  `Framing::Plain` (NetherNet) skips the `0xfe` header and encryption: a NetherNet session starts when
+  both data channels are open and stays plaintext after the handshake (DTLS encrypts).
+- **ICE servers, port range, HTTPS** (`NetherNet::ice_servers`, `udp_ports`, `tls`; research:
+  `docs/research/nethernet.md`). STUN gives a srflx and TURN a relay candidate, gathered by acacia's
+  `Host` on NetherNet's socket with one allocation shared by all peers; the signaling peer's address is
+  permitted on the relay. `udp_ports` moves NetherNet's datagrams to a socket of its own. `tls` serves
+  HTTPS beside HTTP on the signaling port. BDS has none of these for direct connect.
+- **Direct connect** (`http.rs`): one request per TCP connection, as BDS serves it. Without `tls` a
+  TLS hello gets the alert that makes the client retry over HTTP. `GET /v1/join` answers the status JSON (the
   NetherNet pong); `POST /v1/join/{id}` answers the SDP with one host candidate: the address the
   request arrived on, or `NetherNet::public_ip` behind a forwarded port.
 - **LAN** (`lan.rs`, `NetherNet::lan`): answers discovery on UDP 7551 with the same name and counts,
@@ -1289,8 +1299,9 @@ only falls back to RakNet when that fails, so turning it on moves every vanilla 
   be signed by the offer's key, and it is the Login that verifies the token itself.
 - **Host key.** Every answer is signed by `NetherNet::host_key`; clients pin it per address on
   first use, so `sapling::host_key(path)` keeps it in a file.
-- Tests: `sapling-net/tests/nethernet.rs` (both signaling paths, beside RakNet) and the NetherNet
-  bot in `sapling/tests/integration/join.rs`.
+- Tests: `sapling-net/tests/nethernet.rs` (both signaling paths, beside RakNet; ICE candidates; port
+  range), `signaling_tls.rs`, `transport.rs` (an embedder's transport) and the NetherNet bot in
+  `sapling/tests/integration/join.rs`.
 
 ## Server-side movement (Observe by default, Correct opt-in)
 
@@ -1428,9 +1439,10 @@ acacia-world = { path = "../acacia/acacia/crates/acacia-world" }
 - **NetherNet, only a vanilla client can confirm:** a direct-connect join and a LAN join by the real
   game (bots only so far); whether it wants the status JSON or BDS's empty body; whether the LAN
   list shows a server that answers from a dedicated process.
-- **NetherNet, left out:** the signaling service (friends list, Realms-style joins), TURN and
-  server-reflexive candidates, HTTPS signaling, IPv6 LAN discovery, rate limits on signaling (the
-  per-address admission counts a NetherNet connection once it opens, not its offers).
+- **NetherNet, left out:** the signaling service (friends list, Realms-style joins), TURN over TCP
+  or TLS, IPv6 LAN discovery, rate limits on signaling (the per-address admission counts a NetherNet
+  connection once it opens, not its offers). Only a vanilla client can confirm the relay, srflx and
+  HTTPS paths (`docs/research/nethernet.md` "Not drilled").
 - **Access lists, not checked against BDS:** the kick screen without a reason (`disconnect.kicked`)
   and with one (the reason alone); `/kick` refusing the sender; the allowlist list's "seen" count
   (sapling gives the entry count twice); whether `ignoresPlayerLimit` counts with the allowlist off;
