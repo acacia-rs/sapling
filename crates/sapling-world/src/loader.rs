@@ -174,6 +174,11 @@ impl Loader {
         self.saving.contains(&pos)
     }
 
+    /// Whether a column or player job is still on its way to or from storage.
+    pub fn writing(&self) -> bool {
+        !self.saving.is_empty() || self.player_jobs > 0
+    }
+
     /// Queues a save; the caller checks [`Loader::is_saving`] first.
     pub fn save(&mut self, pos: ChunkPos, column: StoredColumn) {
         self.saving.insert(pos);

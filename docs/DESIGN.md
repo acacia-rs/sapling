@@ -804,8 +804,13 @@ block action, and takes StopBreak and AbortBreak with a position.
   `ServerBuilder::access` adds `/allowlist` (`/whitelist`: add, remove, list, on, off, reload; on and
   off not saved, as on BDS) and Java's and PocketMine's `/ban <name> [reason]`, `/ban-ip <ip|player>
   [reason]`, `/pardon`, `/pardon-ip` and `/banlist [players|ips]` (BDS has none; operator-only,
-  answered under the client's old `commands.ban*` keys, `vanilla/bans.rs`). Not done: the rest of
-  vanilla's commands; `/give`'s `can_destroy` and `can_place_on` (stacks do not carry them); `/permission list|reload`; a ban's expiry from a command (the API takes one);
+  answered under the client's old `commands.ban*` keys, `vanilla/bans.rs`), and `/permission`
+  (`/ops`) `list|reload` over `permissions.json` (`vanilla/permission.rs`). `/list` (anyone), `/stop`
+  (asks `Server::stop_requested`), `/save hold|query|resume` (a backup hold over the shard's worlds:
+  `ShardCtx::hold_saves`, `sapling-shard/src/saving.rs`, `sapling-world/src/hold.rs`) and, with behavior
+  packs, `/reload` (the packs read again) answer under BDS's keys (docs/research/server-leftovers.md);
+  BDS keeps `/stop` and `/save` for its console. Not done: the rest of
+  vanilla's commands; `/give`'s `can_destroy` and `can_place_on` (stacks do not carry them); a ban's expiry from a command (the API takes one);
   `/kick` and `/op` reach players of the sender's shard only; `whitelist.json` is not read in place
   of `allowlist.json` as BDS does.
 - **Selectors** (`sapling-api/src/command/selector/`). Parsed into a `Selector` (`Named` or

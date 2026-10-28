@@ -153,6 +153,24 @@ impl AccessLists {
         Ok(())
     }
 
+    /// Reads `permissions.json` again (`/permission reload`); NotFound for lists kept in memory or
+    /// a folder without the file.
+    pub fn reload_permissions(&self) -> io::Result<()> {
+        let dir = self.shared.dir.as_ref().filter(|dir| dir.join(PERMISSIONS).is_file()).ok_or(io::ErrorKind::NotFound)?;
+        self.lists().grants = store::read(dir, PERMISSIONS)?;
+        Ok(())
+    }
+
+    /// The XUIDs `permissions.json` makes operators, in its order.
+    pub fn operators(&self) -> Vec<String> {
+        self.lists().grants.iter().filter(|grant| grant.role == Role::Operator).map(|grant| grant.xuid.clone()).collect()
+    }
+
+    /// Whether the lists are kept in files, not only in memory.
+    pub fn on_disk(&self) -> bool {
+        self.shared.dir.is_some()
+    }
+
     /// The role `permissions.json` gives this XUID.
     pub fn role(&self, xuid: &str) -> Option<Role> {
         self.lists().grants.iter().find(|grant| !xuid.is_empty() && grant.xuid == xuid).map(|grant| grant.role)

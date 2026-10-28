@@ -254,7 +254,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let builder = builder.game_mode(GameMode::Adventure).vanilla_commands();
     let builder = builder.command::<HubCommand>().command::<MenuCommand>().command::<SettingsCommand>().command::<WorldCommand>();
     let server = builder.start().await?;
-    tokio::signal::ctrl_c().await?;
+    tokio::select! {
+        signal = tokio::signal::ctrl_c() => signal?,
+        () = server.stop_requested() => {}
+    }
     tracing::info!("shutting down");
     server.shutdown().await;
     Ok(())

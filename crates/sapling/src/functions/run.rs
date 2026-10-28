@@ -9,7 +9,7 @@ use std::sync::Arc;
 
 use sapling_api::{Permission, RuleValue, Sender, ShardCtx};
 
-use super::{Function, Functions};
+use super::{Function, Functions, Library};
 
 /// BDS's cap when the world has no `functionCommandLimit`.
 const MAX_LINES: u32 = 10_000;
@@ -23,6 +23,7 @@ struct Frame {
 /// A shard's functions, which of them read as commands, and the lines still to run while one runs.
 #[derive(Default)]
 pub(crate) struct FunctionState {
+    library: Option<Library>,
     functions: Arc<Functions>,
     valid: HashMap<String, bool>,
     frames: Vec<Frame>,
@@ -30,11 +31,27 @@ pub(crate) struct FunctionState {
 }
 
 impl FunctionState {
-    pub fn install(&mut self, functions: Arc<Functions>) {
-        self.functions = functions;
+    pub fn install(&mut self, library: Library) {
+        self.library = Some(library);
+        self.refresh();
     }
 
-    pub fn tick_functions(&self) -> Vec<String> {
+    pub fn library(&self) -> Option<Library> {
+        self.library.clone()
+    }
+
+    /// Takes the library's functions if `/reload` replaced them; which read as commands is
+    /// then judged again.
+    fn refresh(&mut self) {
+        let Some(now) = self.library.as_ref().map(Library::functions) else { return };
+        if !Arc::ptr_eq(&now, &self.functions) {
+            self.functions = now;
+            self.valid.clear();
+        }
+    }
+
+    pub fn tick_functions(&mut self) -> Vec<String> {
+        self.refresh();
         self.functions.tick.clone()
     }
 
@@ -65,7 +82,11 @@ pub(crate) enum Called {
 
 /// The function `name`, if it exists here and every line of it reads as a command.
 pub(crate) fn find(ctx: &mut ShardCtx<'_>, name: &str) -> Option<Arc<Function>> {
-    let function = ctx.state::<FunctionState>().functions.by_name.get(name)?.clone();
+    let state = ctx.state::<FunctionState>();
+    if !state.running {
+        state.refresh();
+    }
+    let function = state.functions.by_name.get(name)?.clone();
     if let Some(valid) = ctx.state::<FunctionState>().valid.get(name) {
         return valid.then_some(function);
     }

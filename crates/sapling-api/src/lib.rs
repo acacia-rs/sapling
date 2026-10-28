@@ -57,7 +57,7 @@ pub use border::{BorderBackend, WorldBorder};
 pub use generation::{GenerationBackend, PlaceError};
 pub use structure::{Mirror, Rotation, StructureBackend, StructureError, StructureLoad};
 pub use ticking::{MOST_TICKING_AREAS, TickingArea, TickingBackend};
-pub use server::{ScriptEvent, ServerBackend};
+pub use server::{SaveState, SavedFile, ScriptEvent, ServerBackend};
 pub use spawns::SpawnBackend;
 pub use chat::ChatBackend;
 pub use movement::{MovementBackend, MovementPolicy};

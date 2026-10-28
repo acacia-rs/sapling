@@ -65,6 +65,10 @@ pub trait WorldStorage: Send + Sync + 'static {
     fn sync(&self) -> Result<(), StorageError> {
         Ok(())
     }
+    /// The folder the world's files are in; `None` for storage without one.
+    fn folder(&self) -> Option<std::path::PathBuf> {
+        None
+    }
     /// The block an eye of ender thrown from (x, z) flies to; `None` where storage makes no
     /// strongholds. Computes without disk, so a tick may call it.
     fn locate_stronghold(&self, _x: i32, _z: i32) -> Option<[i32; 3]> {
@@ -118,6 +122,9 @@ impl<S: WorldStorage + ?Sized> WorldStorage for std::sync::Arc<S> {
     }
     fn sync(&self) -> Result<(), StorageError> {
         (**self).sync()
+    }
+    fn folder(&self) -> Option<std::path::PathBuf> {
+        (**self).folder()
     }
     fn locate_stronghold(&self, x: i32, z: i32) -> Option<[i32; 3]> {
         (**self).locate_stronghold(x, z)
@@ -296,5 +303,9 @@ impl WorldStorage for LevelDbStorage {
 
     fn sync(&self) -> Result<(), StorageError> {
         Ok(self.0.db().flush()?)
+    }
+
+    fn folder(&self) -> Option<std::path::PathBuf> {
+        Some(self.0.folder().to_path_buf())
     }
 }

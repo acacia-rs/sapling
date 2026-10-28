@@ -75,6 +75,7 @@ mod riding;
 mod roster;
 mod rules;
 mod running;
+mod saving;
 mod scoreboard;
 mod screen;
 mod shard;
