@@ -104,10 +104,10 @@ use sapling_data::EYE_HEIGHT;
 
 use crate::components::{Layer, Mode, Position};
 
-/// Blocks from the eye to the middle of a block: BDS took a click at 6.4 and 12.2 (creative) and
-/// refused 7.3 and 13.2.
-const REACH: f32 = 7.0;
-const CREATIVE_REACH: f32 = 13.0;
+/// Blocks from the eye to a block's minimum corner, as BDS measures (no +0.5): it took a click with the
+/// corner 7.10 off (middle 7.56) and refused 7.30, in creative 12.40 and 12.60 (docs/research/reach.md).
+const REACH: f32 = 7.2;
+const CREATIVE_REACH: f32 = 12.5;
 
 fn level(world: &World, layer: Entity) -> Option<&sapling_world::World> {
     world.get::<Layer>(layer).map(|layer| &layer.world)
@@ -124,11 +124,11 @@ fn opposite(face: Face) -> Face {
     }
 }
 
-/// Whether the middle of the block at `pos` is within the player's reach of its eyes.
+/// Whether the block at `pos` is within the player's reach of its eyes.
 pub(crate) fn reaches(world: &World, player: Entity, pos: BlockPos) -> bool {
     let (Some(position), Some(mode)) = (world.get::<Position>(player), world.get::<Mode>(player)) else { return false };
     let eye = [position.feet[0], position.feet[1] + EYE_HEIGHT, position.feet[2]];
-    let distance: f32 = (0..3).map(|axis| (pos[axis] as f32 + 0.5 - eye[axis]).powi(2)).sum();
+    let distance: f32 = (0..3).map(|axis| (pos[axis] as f32 - eye[axis]).powi(2)).sum();
     let reach = if mode.0 == GameMode::Creative { CREATIVE_REACH } else { REACH };
     distance <= reach * reach
 }
