@@ -22,17 +22,20 @@ use crate::entities;
 /// BDS's cows were moved by twice over.
 const SHOVE: f32 = 0.1;
 const TOGETHER: f32 = 0.01;
-/// Boxes this much wider meet: BDS's cows 0.995 apart pushed, 0.9 wide, and 1.561 apart did not;
-/// its warden 0.897 off a player was pushed (bds-warden.txt).
+/// Two mobs' boxes this much wider meet: BDS's cows 0.995 apart pushed, 0.9 wide, and 1.561 apart
+/// did not. A player's box and a mob's must overlap, the Java game's `pushEntities` rule.
+// TODO: the player's gap is not drilled; any wider than a slime's touch (0.15, slimes.rs) and a
+// slime could never reach a player who stands still.
 const GRACE: f32 = 0.2;
+const PLAYER_GRACE: f32 = 0.0;
 /// Mobs are sorted into squares this wide, as wide as the widest mob that walks.
 const SQUARE: f32 = 4.0;
 const PLAYER_SIZE: [f32; 2] = [0.6, 1.8];
 
 /// The push across a mob at `from` takes from one at `to`, where their boxes meet.
-fn push(from: &Body, to: &Body) -> Option<[f32; 2]> {
+fn push(from: &Body, to: &Body, grace: f32) -> Option<[f32; 2]> {
     let (dx, dz) = (to.at[0] - from.at[0], to.at[2] - from.at[2]);
-    let reach = (from.size[0] + to.size[0]) / 2.0 + GRACE;
+    let reach = (from.size[0] + to.size[0]) / 2.0 + grace;
     let meet = dx.abs() < reach && dz.abs() < reach && from.at[1] < to.at[1] + to.size[1] && to.at[1] < from.at[1] + from.size[1];
     let apart = dx.abs().max(dz.abs());
     if !meet || apart < TOGETHER {
@@ -71,7 +74,8 @@ pub(super) fn tick(world: &mut World) {
         let near = (-1..=1).flat_map(|dx| (-1..=1).map(move |dz| [x + dx, z + dz])).filter_map(|at| squares.get(&(*layer, at))).flatten();
         for &other in near.filter(|other| **other > index) {
             let (other_entity, _, other_body) = &bodies[other];
-            if let Some([px, pz]) = push(body, other_body) {
+            let grace = if other >= mobs { PLAYER_GRACE } else { GRACE };
+            if let Some([px, pz]) = push(body, other_body, grace) {
                 pushes.extend([(*entity, [px, pz]), (*other_entity, [-px, -pz])]);
             }
         }
@@ -92,9 +96,9 @@ mod tests {
     fn crowding_cows_push_as_bdss_did() {
         // bds-crowd.txt: a cow 0.125 off two others on one spot was pushed 0.0707 more than its walk.
         let cow = |x: f32| Body::new([x, 0.0, 0.5], [0.0; 3], [0.9, 1.3]);
-        let [px, _] = push(&cow(4.625), &cow(4.5)).unwrap();
+        let [px, _] = push(&cow(4.625), &cow(4.5), GRACE).unwrap();
         assert!((2.0 * px - 0.0707).abs() < 1e-4, "{px}");
-        assert_eq!(push(&cow(4.5), &cow(4.505)), None, "on one spot");
-        assert!(push(&cow(4.5), &cow(5.495)).is_some() && push(&cow(4.5), &cow(6.061)).is_none(), "0.995 apart and 1.561");
+        assert_eq!(push(&cow(4.5), &cow(4.505), GRACE), None, "on one spot");
+        assert!(push(&cow(4.5), &cow(5.495), GRACE).is_some() && push(&cow(4.5), &cow(6.061), GRACE).is_none(), "0.995 apart and 1.561");
     }
 }
