@@ -28,7 +28,7 @@ pack() {
   else tar czf - -C "$root" --exclude=target --exclude=.git --exclude=./worlds --exclude=.testserver .; fi
 }
 upload() { pack | ssh $opts testbox "mkdir -p $run && cat > $run/$name.tgz"; }
-cargo_run() { echo "env SAPLING_ORACLE_WORLDS=\$HOME/oracle-worlds RUSTC_WRAPPER=\$HOME/.cargo/bin/sccache $2 \$HOME/.cargo/bin/cargo +stable $3 > \$RUN/$1.log 2>&1"; }
+cargo_run() { echo "env SAPLING_ORACLE_WORLDS=\$HOME/oracle-worlds RUSTC_WRAPPER=\$(command -v sccache || echo \$HOME/.cargo/bin/sccache) $2 \$HOME/.cargo/bin/cargo +stable $3 > \$RUN/$1.log 2>&1"; }
 if [ -n "${BATCH:-}" ]; then
   logs=$(cut -d'|' -f1 "$BATCH" | sed 's/$/.log/' | tr '\n' ' ')
   # Only the first run builds; the rest start together, JOBS at a time.
