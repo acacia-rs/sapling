@@ -289,5 +289,6 @@ pub(crate) fn tick(world: &mut World, actions: &[(Entity, PlayerAction)]) {
         everyone.into_iter().for_each(|player| wake(world, player));
         let time = world.get::<Layer>(layer).map_or(0, |layer| layer.world.level().time);
         crate::clock::set(world, layer, (time + DAY) / DAY * DAY);
+        crate::weather::stop(world, layer);
     }
 }

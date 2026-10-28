@@ -6,10 +6,14 @@ use std::sync::Arc;
 
 use acacia_proto::nbt::Value;
 use sapling_data::{GameRules, RuleValue};
-use sapling_leveldb::{DragonFightRecord, LevelDat, LevelDbWorld, PortalRecord, ScoreboardRecord, TickingAreaRecord};
+use sapling_leveldb::{DragonFightRecord, LevelDat, LevelDbWorld, PortalRecord, ScoreboardRecord, TickingAreaRecord, WeatherRecord};
+
+/// What a new BDS `LevelData` draws each weather spell from, `nextInt(168000) + 12000`
+/// (0x1408192b4): a world without storage takes the shortest.
+const FIRST_SPELL: i32 = 12_000;
 
 /// What a world keeps besides its columns; storage saves it when the world closes.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Level {
     /// The spawn block; y 32767 leaves the height to the surface, as vanilla saves it.
     pub spawn: Option<[i32; 3]>,
@@ -35,6 +39,10 @@ pub struct Level {
     pub ticking_areas: Vec<TickingAreaRecord>,
     /// `IsHardcore`: one life, after which a player only watches.
     pub hardcore: bool,
+    /// The weather, which the shard turns as BDS's `Weather::tick` does.
+    pub weather: WeatherRecord,
+    /// `Difficulty`, 0 peaceful to 3 hard: the shard's, written back when the world closes.
+    pub difficulty: Option<i32>,
 }
 
 impl Default for Level {
@@ -52,6 +60,8 @@ impl Default for Level {
             folder_structures: Arc::default(),
             ticking_areas: Vec::new(),
             hardcore: false,
+            weather: WeatherRecord { rain_level: 0.0, rain_time: FIRST_SPELL, lightning_level: 0.0, lightning_time: FIRST_SPELL },
+            difficulty: None,
         }
     }
 }

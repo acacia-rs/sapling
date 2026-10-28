@@ -169,6 +169,7 @@ fn take(world: &mut World, entity: Entity, layer: Entity, id: u64, kind: &str, b
 /// A player hit the mob: one that hunts none but its hitter, or a spider that hunts by dark
 /// (research/captures/bds-provoke.txt, bds-provoke2.txt), takes it for its prey at once, if it may be hunted.
 pub(super) fn provoke(world: &mut World, entity: Entity, layer: Entity, id: u64, kind: &str, body: &Body, player: Entity) {
+    super::warden::provoked(world, entity, player);
     let fights = super::genes::fights(world, entity) && !super::bees::is_spent(world, entity);
     let Some(hunts) = sapling_data::mob_traits(kind).hunts.filter(|hunts| (hunts.provoked || hunts.by_dark) && fights) else { return };
     let hunted = world.resource::<Settings>().0.difficulty != Difficulty::Peaceful && seen(world, player, layer, body.at, hunts.sees).is_some() && !super::husbandry::is_owner(world, entity, player);
@@ -250,6 +251,11 @@ pub(crate) fn on_difficulty(world: &World, harm: f32) -> Option<f32> {
 pub(super) fn quarry(world: &World, entity: Entity) -> Option<(Entity, u64)> {
     let hunter = world.get::<Hunter>(entity)?;
     Some((hunter.prey?, hunter.since))
+}
+
+/// The hunter takes `prey`, as at a look, which its viewers are told.
+pub(super) fn hunt(world: &mut World, entity: Entity, layer: Entity, id: u64, kind: &str, body: &Body, prey: Entity) {
+    take(world, entity, layer, id, kind, body, Some(prey));
 }
 
 /// The hunter lets its prey go, which its viewers are told; it may take it again at its next look.

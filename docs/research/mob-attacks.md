@@ -337,7 +337,9 @@ A bee flies at its hitter (`fights=flies`, creatures/bees.rs), angers the bees w
 normal and hard, and dies 10 to 60 s after its sting (2026-10-27).
 
 A hoglin, a zoglin and a warden hunt as above with their numbers (`varies=` draws the hoglin's and
-zoglin's hits); the warden neither sniffs, roars, nor sonic-booms, and its anger is only `provoked`.
+zoglin's hits). The warden (`creatures/warden.rs`, research/captures/bds-warden-findings.md) sniffs,
+looks at what disturbs it, grows angry at the player behind a step or a touch, roars, then hunts;
+it booms through armour at prey it cannot walk to, and climbs out and digs down (2026-10-28).
 A creaking (`creatures/creaking.rs`) freezes under a look within 60 degrees of its middle from 16
 blocks, the Java game's rule; it has no heart.
 

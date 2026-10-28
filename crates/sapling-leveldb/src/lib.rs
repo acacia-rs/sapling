@@ -50,7 +50,7 @@ pub use container::{container_items, new_block_entity, with_container_items};
 pub use data3d::Data3d;
 pub use db::{Batch, Db};
 pub use keys::{ChunkKey, ParsedKey, Tag};
-pub use level_dat::LevelDat;
+pub use level_dat::{LevelDat, WeatherRecord};
 pub use states::{BlockStates, PLACEHOLDER, block_of_hash, palette_block};
 pub use structure::{STRUCTURE_PREFIX, StructureTemplate, structure_name};
 pub use sub_chunk::{Layer, SubChunk};

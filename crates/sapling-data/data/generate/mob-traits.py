@@ -34,6 +34,14 @@ def experience(entity):
     return f"{rolled[1]}-{rolled[2]}" if rolled else f"{fixed[1]}-{fixed[1]}" if fixed else None
 
 
+def pushable(entity):
+    """Whether other entities push it, in its components or a group it may take (the warden's
+    `pushable`, the creaking's `minecraft:mobile`): `minecraft:pushable_by_entity`, or the older
+    `minecraft:pushable` with `is_pushable`."""
+    holders = [entity.get("components", {}), *entity.get("component_groups", {}).values()]
+    return any("minecraft:pushable_by_entity" in held or held.get("minecraft:pushable", {}).get("is_pushable", False) for held in holders)
+
+
 def middle(value):
     """A number, or a range's middle (a horse's movement)."""
     if isinstance(value, dict) and "range_min" in value:
@@ -120,8 +128,12 @@ for document in packs.entities().values():
         ("teleports", components.get("minecraft:teleport", {}).get("random_teleports", False) is True),
         ("floats", "minecraft:behavior.float" in components or "minecraft:behavior.slime_float" in components),
         ("steadfast", components.get("minecraft:knockback_resistance", {}).get("value", 0) >= 1),
+        ("unpushable", not pushable(entity)),
     ]
     held = [name for name, holds in traits if holds]
+    resists = components.get("minecraft:knockback_resistance", {}).get("value", 0)
+    if 0 < resists < 1:
+        held.append(f"resists={resists:g}")
     if breath.get("total_supply", 15) > 15:
         held.append(f"breath={breath['total_supply'] * 20}")
     if entity["description"]["identifier"] != "minecraft:player" and experience(entity):
